@@ -1,0 +1,1442 @@
+[
+  {
+    "id": "player-139",
+    "sport": "football",
+    "name": "MID Player 139 (Aston Villa)",
+    "position": "MID",
+    "team": "Aston Villa",
+    "salary": 46,
+    "tier": "ORANGE"
+  },
+  {
+    "id": "player-89",
+    "sport": "football",
+    "name": "MID Player 89 (Man United)",
+    "position": "MID",
+    "team": "Man United",
+    "salary": 46,
+    "tier": "ORANGE"
+  },
+  {
+    "id": "player-101",
+    "sport": "football",
+    "name": "MID Player 101 (Newcastle)",
+    "position": "MID",
+    "team": "Newcastle",
+    "salary": 47,
+    "tier": "ORANGE"
+  },
+  {
+    "id": "player-73",
+    "sport": "football",
+    "name": "MID Player 73 (Tottenham)",
+    "position": "MID",
+    "team": "Tottenham",
+    "salary": 48,
+    "tier": "ORANGE"
+  },
+  {
+    "id": "player-120",
+    "sport": "football",
+    "name": "MID Player 120 (Brighton)",
+    "position": "MID",
+    "team": "Brighton",
+    "salary": 48,
+    "tier": "ORANGE"
+  },
+  {
+    "id": "player-74",
+    "sport": "football",
+    "name": "MID Player 74 (Tottenham)",
+    "position": "MID",
+    "team": "Tottenham",
+    "salary": 49,
+    "tier": "ORANGE"
+  },
+  {
+    "id": "player-75",
+    "sport": "football",
+    "name": "MID Player 75 (Tottenham)",
+    "position": "MID",
+    "team": "Tottenham",
+    "salary": 49,
+    "tier": "ORANGE"
+  },
+  {
+    "id": "player-87",
+    "sport": "football",
+    "name": "MID Player 87 (Man United)",
+    "position": "MID",
+    "team": "Man United",
+    "salary": 50,
+    "tier": "ORANGE"
+  },
+  {
+    "id": "player-121",
+    "sport": "football",
+    "name": "MID Player 121 (Brighton)",
+    "position": "MID",
+    "team": "Brighton",
+    "salary": 51,
+    "tier": "ORANGE"
+  },
+  {
+    "id": "player-88",
+    "sport": "football",
+    "name": "MID Player 88 (Man United)",
+    "position": "MID",
+    "team": "Man United",
+    "salary": 51,
+    "tier": "ORANGE"
+  },
+  {
+    "id": "player-56",
+    "sport": "football",
+    "name": "MID Player 56 (Chelsea)",
+    "position": "MID",
+    "team": "Chelsea",
+    "salary": 52,
+    "tier": "ORANGE"
+  },
+  {
+    "id": "player-12",
+    "sport": "football",
+    "name": "MID Player 12 (Man City)",
+    "position": "MID",
+    "team": "Man City",
+    "salary": 53,
+    "tier": "ORANGE"
+  },
+  {
+    "id": "player-60",
+    "sport": "football",
+    "name": "MID Player 60 (Chelsea)",
+    "position": "MID",
+    "team": "Chelsea",
+    "salary": 53,
+    "tier": "ORANGE"
+  },
+  {
+    "id": "player-25",
+    "sport": "football",
+    "name": "MID Player 25 (Arsenal)",
+    "position": "MID",
+    "team": "Arsenal",
+    "salary": 54,
+    "tier": "ORANGE"
+  },
+  {
+    "id": "player-76",
+    "sport": "football",
+    "name": "MID Player 76 (Tottenham)",
+    "position": "MID",
+    "team": "Tottenham",
+    "salary": 54,
+    "tier": "ORANGE"
+  },
+  {
+    "id": "player-40",
+    "sport": "football",
+    "name": "MID Player 40 (Liverpool)",
+    "position": "MID",
+    "team": "Liverpool",
+    "salary": 55,
+    "tier": "ORANGE"
+  },
+  {
+    "id": "player-119",
+    "sport": "football",
+    "name": "MID Player 119 (Brighton)",
+    "position": "MID",
+    "team": "Brighton",
+    "salary": 36,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-136",
+    "sport": "football",
+    "name": "MID Player 136 (Aston Villa)",
+    "position": "MID",
+    "team": "Aston Villa",
+    "salary": 37,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-27",
+    "sport": "football",
+    "name": "MID Player 27 (Arsenal)",
+    "position": "MID",
+    "team": "Arsenal",
+    "salary": 37,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-13",
+    "sport": "football",
+    "name": "MID Player 13 (Man City)",
+    "position": "MID",
+    "team": "Man City",
+    "salary": 37,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-153",
+    "sport": "football",
+    "name": "MID Player 153 (West Ham)",
+    "position": "MID",
+    "team": "West Ham",
+    "salary": 38,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-11",
+    "sport": "football",
+    "name": "MID Player 11 (Man City)",
+    "position": "MID",
+    "team": "Man City",
+    "salary": 38,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-155",
+    "sport": "football",
+    "name": "MID Player 155 (West Ham)",
+    "position": "MID",
+    "team": "West Ham",
+    "salary": 38,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-42",
+    "sport": "football",
+    "name": "MID Player 42 (Liverpool)",
+    "position": "MID",
+    "team": "Liverpool",
+    "salary": 39,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-138",
+    "sport": "football",
+    "name": "MID Player 138 (Aston Villa)",
+    "position": "MID",
+    "team": "Aston Villa",
+    "salary": 39,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-59",
+    "sport": "football",
+    "name": "MID Player 59 (Chelsea)",
+    "position": "MID",
+    "team": "Chelsea",
+    "salary": 39,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-41",
+    "sport": "football",
+    "name": "MID Player 41 (Liverpool)",
+    "position": "MID",
+    "team": "Liverpool",
+    "salary": 40,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-10",
+    "sport": "football",
+    "name": "MID Player 10 (Man City)",
+    "position": "MID",
+    "team": "Man City",
+    "salary": 40,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-154",
+    "sport": "football",
+    "name": "MID Player 154 (West Ham)",
+    "position": "MID",
+    "team": "West Ham",
+    "salary": 40,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-86",
+    "sport": "football",
+    "name": "MID Player 86 (Man United)",
+    "position": "MID",
+    "team": "Man United",
+    "salary": 41,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-137",
+    "sport": "football",
+    "name": "MID Player 137 (Aston Villa)",
+    "position": "MID",
+    "team": "Aston Villa",
+    "salary": 41,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-103",
+    "sport": "football",
+    "name": "MID Player 103 (Newcastle)",
+    "position": "MID",
+    "team": "Newcastle",
+    "salary": 41,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-57",
+    "sport": "football",
+    "name": "MID Player 57 (Chelsea)",
+    "position": "MID",
+    "team": "Chelsea",
+    "salary": 42,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-26",
+    "sport": "football",
+    "name": "MID Player 26 (Arsenal)",
+    "position": "MID",
+    "team": "Arsenal",
+    "salary": 42,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-104",
+    "sport": "football",
+    "name": "MID Player 104 (Newcastle)",
+    "position": "MID",
+    "team": "Newcastle",
+    "salary": 42,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-135",
+    "sport": "football",
+    "name": "MID Player 135 (Aston Villa)",
+    "position": "MID",
+    "team": "Aston Villa",
+    "salary": 43,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-102",
+    "sport": "football",
+    "name": "MID Player 102 (Newcastle)",
+    "position": "MID",
+    "team": "Newcastle",
+    "salary": 43,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-58",
+    "sport": "football",
+    "name": "MID Player 58 (Chelsea)",
+    "position": "MID",
+    "team": "Chelsea",
+    "salary": 43,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-152",
+    "sport": "football",
+    "name": "MID Player 152 (West Ham)",
+    "position": "MID",
+    "team": "West Ham",
+    "salary": 44,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-108",
+    "sport": "football",
+    "name": "FWD Player 108 (Newcastle)",
+    "position": "FWD",
+    "team": "Newcastle",
+    "salary": 44,
+    "tier": "PURPLE"
+  },
+  {
+    "id": "player-106",
+    "sport": "football",
+    "name": "FWD Player 106 (Newcastle)",
+    "position": "FWD",
+    "team": "Newcastle",
+    "salary": 27,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-62",
+    "sport": "football",
+    "name": "FWD Player 62 (Chelsea)",
+    "position": "FWD",
+    "team": "Chelsea",
+    "salary": 27,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-61",
+    "sport": "football",
+    "name": "FWD Player 61 (Chelsea)",
+    "position": "FWD",
+    "team": "Chelsea",
+    "salary": 27,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-79",
+    "sport": "football",
+    "name": "FWD Player 79 (Tottenham)",
+    "position": "FWD",
+    "team": "Tottenham",
+    "salary": 28,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-28",
+    "sport": "football",
+    "name": "FWD Player 28 (Arsenal)",
+    "position": "FWD",
+    "team": "Arsenal",
+    "salary": 28,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-158",
+    "sport": "football",
+    "name": "FWD Player 158 (West Ham)",
+    "position": "FWD",
+    "team": "West Ham",
+    "salary": 28,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-122",
+    "sport": "football",
+    "name": "FWD Player 122 (Brighton)",
+    "position": "FWD",
+    "team": "Brighton",
+    "salary": 28,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-45",
+    "sport": "football",
+    "name": "FWD Player 45 (Liverpool)",
+    "position": "FWD",
+    "team": "Liverpool",
+    "salary": 28,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-141",
+    "sport": "football",
+    "name": "FWD Player 141 (Aston Villa)",
+    "position": "FWD",
+    "team": "Aston Villa",
+    "salary": 28,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-31",
+    "sport": "football",
+    "name": "FWD Player 31 (Arsenal)",
+    "position": "FWD",
+    "team": "Arsenal",
+    "salary": 29,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-43",
+    "sport": "football",
+    "name": "FWD Player 43 (Liverpool)",
+    "position": "FWD",
+    "team": "Liverpool",
+    "salary": 29,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-16",
+    "sport": "football",
+    "name": "FWD Player 16 (Man City)",
+    "position": "FWD",
+    "team": "Man City",
+    "salary": 29,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-125",
+    "sport": "football",
+    "name": "FWD Player 125 (Brighton)",
+    "position": "FWD",
+    "team": "Brighton",
+    "salary": 29,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-123",
+    "sport": "football",
+    "name": "FWD Player 123 (Brighton)",
+    "position": "FWD",
+    "team": "Brighton",
+    "salary": 29,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-64",
+    "sport": "football",
+    "name": "FWD Player 64 (Chelsea)",
+    "position": "FWD",
+    "team": "Chelsea",
+    "salary": 29,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-142",
+    "sport": "football",
+    "name": "FWD Player 142 (Aston Villa)",
+    "position": "FWD",
+    "team": "Aston Villa",
+    "salary": 29,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-92",
+    "sport": "football",
+    "name": "FWD Player 92 (Man United)",
+    "position": "FWD",
+    "team": "Man United",
+    "salary": 30,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-63",
+    "sport": "football",
+    "name": "FWD Player 63 (Chelsea)",
+    "position": "FWD",
+    "team": "Chelsea",
+    "salary": 30,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-22",
+    "sport": "football",
+    "name": "DEF Player 22 (Arsenal)",
+    "position": "DEF",
+    "team": "Arsenal",
+    "salary": 30,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-15",
+    "sport": "football",
+    "name": "FWD Player 15 (Man City)",
+    "position": "FWD",
+    "team": "Man City",
+    "salary": 30,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-126",
+    "sport": "football",
+    "name": "FWD Player 126 (Brighton)",
+    "position": "FWD",
+    "team": "Brighton",
+    "salary": 30,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-69",
+    "sport": "football",
+    "name": "DEF Player 69 (Tottenham)",
+    "position": "DEF",
+    "team": "Tottenham",
+    "salary": 30,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-124",
+    "sport": "football",
+    "name": "FWD Player 124 (Brighton)",
+    "position": "FWD",
+    "team": "Brighton",
+    "salary": 30,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-91",
+    "sport": "football",
+    "name": "FWD Player 91 (Man United)",
+    "position": "FWD",
+    "team": "Man United",
+    "salary": 31,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-78",
+    "sport": "football",
+    "name": "FWD Player 78 (Tottenham)",
+    "position": "FWD",
+    "team": "Tottenham",
+    "salary": 31,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-114",
+    "sport": "football",
+    "name": "DEF Player 114 (Brighton)",
+    "position": "DEF",
+    "team": "Brighton",
+    "salary": 31,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-77",
+    "sport": "football",
+    "name": "FWD Player 77 (Tottenham)",
+    "position": "FWD",
+    "team": "Tottenham",
+    "salary": 31,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-159",
+    "sport": "football",
+    "name": "FWD Player 159 (West Ham)",
+    "position": "FWD",
+    "team": "West Ham",
+    "salary": 31,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-14",
+    "sport": "football",
+    "name": "FWD Player 14 (Man City)",
+    "position": "FWD",
+    "team": "Man City",
+    "salary": 31,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-55",
+    "sport": "football",
+    "name": "DEF Player 55 (Chelsea)",
+    "position": "DEF",
+    "team": "Chelsea",
+    "salary": 32,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-150",
+    "sport": "football",
+    "name": "DEF Player 150 (West Ham)",
+    "position": "DEF",
+    "team": "West Ham",
+    "salary": 32,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-90",
+    "sport": "football",
+    "name": "FWD Player 90 (Man United)",
+    "position": "FWD",
+    "team": "Man United",
+    "salary": 32,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-105",
+    "sport": "football",
+    "name": "FWD Player 105 (Newcastle)",
+    "position": "FWD",
+    "team": "Newcastle",
+    "salary": 32,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-156",
+    "sport": "football",
+    "name": "FWD Player 156 (West Ham)",
+    "position": "FWD",
+    "team": "West Ham",
+    "salary": 32,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-133",
+    "sport": "football",
+    "name": "DEF Player 133 (Aston Villa)",
+    "position": "DEF",
+    "team": "Aston Villa",
+    "salary": 32,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-53",
+    "sport": "football",
+    "name": "DEF Player 53 (Chelsea)",
+    "position": "DEF",
+    "team": "Chelsea",
+    "salary": 32,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-107",
+    "sport": "football",
+    "name": "FWD Player 107 (Newcastle)",
+    "position": "FWD",
+    "team": "Newcastle",
+    "salary": 33,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-68",
+    "sport": "football",
+    "name": "DEF Player 68 (Tottenham)",
+    "position": "DEF",
+    "team": "Tottenham",
+    "salary": 33,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-99",
+    "sport": "football",
+    "name": "DEF Player 99 (Newcastle)",
+    "position": "DEF",
+    "team": "Newcastle",
+    "salary": 33,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-46",
+    "sport": "football",
+    "name": "FWD Player 46 (Liverpool)",
+    "position": "FWD",
+    "team": "Liverpool",
+    "salary": 33,
+    "tier": "BLUE"
+  },
+  {
+    "id": "player-54",
+    "sport": "football",
+    "name": "DEF Player 54 (Chelsea)",
+    "position": "DEF",
+    "team": "Chelsea",
+    "salary": 17,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-157",
+    "sport": "football",
+    "name": "FWD Player 157 (West Ham)",
+    "position": "FWD",
+    "team": "West Ham",
+    "salary": 17,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-143",
+    "sport": "football",
+    "name": "FWD Player 143 (Aston Villa)",
+    "position": "FWD",
+    "team": "Aston Villa",
+    "salary": 17,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-109",
+    "sport": "football",
+    "name": "FWD Player 109 (Newcastle)",
+    "position": "FWD",
+    "team": "Newcastle",
+    "salary": 18,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-30",
+    "sport": "football",
+    "name": "FWD Player 30 (Arsenal)",
+    "position": "FWD",
+    "team": "Arsenal",
+    "salary": 18,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-44",
+    "sport": "football",
+    "name": "FWD Player 44 (Liverpool)",
+    "position": "FWD",
+    "team": "Liverpool",
+    "salary": 18,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-23",
+    "sport": "football",
+    "name": "DEF Player 23 (Arsenal)",
+    "position": "DEF",
+    "team": "Arsenal",
+    "salary": 18,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-140",
+    "sport": "football",
+    "name": "FWD Player 140 (Aston Villa)",
+    "position": "FWD",
+    "team": "Aston Villa",
+    "salary": 18,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-70",
+    "sport": "football",
+    "name": "DEF Player 70 (Tottenham)",
+    "position": "DEF",
+    "team": "Tottenham",
+    "salary": 18,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-39",
+    "sport": "football",
+    "name": "DEF Player 39 (Liverpool)",
+    "position": "DEF",
+    "team": "Liverpool",
+    "salary": 19,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-116",
+    "sport": "football",
+    "name": "DEF Player 116 (Brighton)",
+    "position": "DEF",
+    "team": "Brighton",
+    "salary": 19,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-98",
+    "sport": "football",
+    "name": "DEF Player 98 (Newcastle)",
+    "position": "DEF",
+    "team": "Newcastle",
+    "salary": 19,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-6",
+    "sport": "football",
+    "name": "DEF Player 6 (Man City)",
+    "position": "DEF",
+    "team": "Man City",
+    "salary": 19,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-131",
+    "sport": "football",
+    "name": "DEF Player 131 (Aston Villa)",
+    "position": "DEF",
+    "team": "Aston Villa",
+    "salary": 19,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-151",
+    "sport": "football",
+    "name": "DEF Player 151 (West Ham)",
+    "position": "DEF",
+    "team": "West Ham",
+    "salary": 19,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-7",
+    "sport": "football",
+    "name": "DEF Player 7 (Man City)",
+    "position": "DEF",
+    "team": "Man City",
+    "salary": 19,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-9",
+    "sport": "football",
+    "name": "DEF Player 9 (Man City)",
+    "position": "DEF",
+    "team": "Man City",
+    "salary": 20,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-35",
+    "sport": "football",
+    "name": "DEF Player 35 (Liverpool)",
+    "position": "DEF",
+    "team": "Liverpool",
+    "salary": 20,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-71",
+    "sport": "football",
+    "name": "DEF Player 71 (Tottenham)",
+    "position": "DEF",
+    "team": "Tottenham",
+    "salary": 20,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-29",
+    "sport": "football",
+    "name": "FWD Player 29 (Arsenal)",
+    "position": "FWD",
+    "team": "Arsenal",
+    "salary": 20,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-97",
+    "sport": "football",
+    "name": "DEF Player 97 (Newcastle)",
+    "position": "DEF",
+    "team": "Newcastle",
+    "salary": 20,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-115",
+    "sport": "football",
+    "name": "DEF Player 115 (Brighton)",
+    "position": "DEF",
+    "team": "Brighton",
+    "salary": 20,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-83",
+    "sport": "football",
+    "name": "DEF Player 83 (Man United)",
+    "position": "DEF",
+    "team": "Man United",
+    "salary": 20,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-132",
+    "sport": "football",
+    "name": "DEF Player 132 (Aston Villa)",
+    "position": "DEF",
+    "team": "Aston Villa",
+    "salary": 21,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-100",
+    "sport": "football",
+    "name": "DEF Player 100 (Newcastle)",
+    "position": "DEF",
+    "team": "Newcastle",
+    "salary": 21,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-134",
+    "sport": "football",
+    "name": "DEF Player 134 (Aston Villa)",
+    "position": "DEF",
+    "team": "Aston Villa",
+    "salary": 21,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-8",
+    "sport": "football",
+    "name": "DEF Player 8 (Man City)",
+    "position": "DEF",
+    "team": "Man City",
+    "salary": 21,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-160",
+    "sport": "football",
+    "name": "FWD Player 160 (West Ham)",
+    "position": "FWD",
+    "team": "West Ham",
+    "salary": 21,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-84",
+    "sport": "football",
+    "name": "DEF Player 84 (Man United)",
+    "position": "DEF",
+    "team": "Man United",
+    "salary": 21,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-149",
+    "sport": "football",
+    "name": "DEF Player 149 (West Ham)",
+    "position": "DEF",
+    "team": "West Ham",
+    "salary": 22,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-36",
+    "sport": "football",
+    "name": "DEF Player 36 (Liverpool)",
+    "position": "DEF",
+    "team": "Liverpool",
+    "salary": 22,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-24",
+    "sport": "football",
+    "name": "DEF Player 24 (Arsenal)",
+    "position": "DEF",
+    "team": "Arsenal",
+    "salary": 22,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-85",
+    "sport": "football",
+    "name": "DEF Player 85 (Man United)",
+    "position": "DEF",
+    "team": "Man United",
+    "salary": 22,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-52",
+    "sport": "football",
+    "name": "DEF Player 52 (Chelsea)",
+    "position": "DEF",
+    "team": "Chelsea",
+    "salary": 22,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-72",
+    "sport": "football",
+    "name": "DEF Player 72 (Tottenham)",
+    "position": "DEF",
+    "team": "Tottenham",
+    "salary": 22,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-117",
+    "sport": "football",
+    "name": "DEF Player 117 (Brighton)",
+    "position": "DEF",
+    "team": "Brighton",
+    "salary": 22,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-118",
+    "sport": "football",
+    "name": "DEF Player 118 (Brighton)",
+    "position": "DEF",
+    "team": "Brighton",
+    "salary": 23,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-38",
+    "sport": "football",
+    "name": "DEF Player 38 (Liverpool)",
+    "position": "DEF",
+    "team": "Liverpool",
+    "salary": 23,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-37",
+    "sport": "football",
+    "name": "DEF Player 37 (Liverpool)",
+    "position": "DEF",
+    "team": "Liverpool",
+    "salary": 23,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-19",
+    "sport": "football",
+    "name": "GK Player 19 (Arsenal)",
+    "position": "GK",
+    "team": "Arsenal",
+    "salary": 23,
+    "tier": "GREEN"
+  },
+  {
+    "id": "player-47",
+    "sport": "football",
+    "name": "GK Player 47 (Chelsea)",
+    "position": "GK",
+    "team": "Chelsea",
+    "salary": 6,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-95",
+    "sport": "football",
+    "name": "GK Player 95 (Newcastle)",
+    "position": "GK",
+    "team": "Newcastle",
+    "salary": 6,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-65",
+    "sport": "football",
+    "name": "GK Player 65 (Tottenham)",
+    "position": "GK",
+    "team": "Tottenham",
+    "salary": 6,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-34",
+    "sport": "football",
+    "name": "GK Player 34 (Liverpool)",
+    "position": "GK",
+    "team": "Liverpool",
+    "salary": 7,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-32",
+    "sport": "football",
+    "name": "GK Player 32 (Liverpool)",
+    "position": "GK",
+    "team": "Liverpool",
+    "salary": 7,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-66",
+    "sport": "football",
+    "name": "GK Player 66 (Tottenham)",
+    "position": "GK",
+    "team": "Tottenham",
+    "salary": 7,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-110",
+    "sport": "football",
+    "name": "GK Player 110 (Brighton)",
+    "position": "GK",
+    "team": "Brighton",
+    "salary": 7,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-20",
+    "sport": "football",
+    "name": "GK Player 20 (Arsenal)",
+    "position": "GK",
+    "team": "Arsenal",
+    "salary": 7,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-93",
+    "sport": "football",
+    "name": "GK Player 93 (Newcastle)",
+    "position": "GK",
+    "team": "Newcastle",
+    "salary": 7,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-18",
+    "sport": "football",
+    "name": "GK Player 18 (Arsenal)",
+    "position": "GK",
+    "team": "Arsenal",
+    "salary": 8,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-1",
+    "sport": "football",
+    "name": "GK Player 1 (Man City)",
+    "position": "GK",
+    "team": "Man City",
+    "salary": 8,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-81",
+    "sport": "football",
+    "name": "GK Player 81 (Man United)",
+    "position": "GK",
+    "team": "Man United",
+    "salary": 8,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-94",
+    "sport": "football",
+    "name": "GK Player 94 (Newcastle)",
+    "position": "GK",
+    "team": "Newcastle",
+    "salary": 8,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-33",
+    "sport": "football",
+    "name": "GK Player 33 (Liverpool)",
+    "position": "GK",
+    "team": "Liverpool",
+    "salary": 8,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-96",
+    "sport": "football",
+    "name": "GK Player 96 (Newcastle)",
+    "position": "GK",
+    "team": "Newcastle",
+    "salary": 8,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-82",
+    "sport": "football",
+    "name": "GK Player 82 (Man United)",
+    "position": "GK",
+    "team": "Man United",
+    "salary": 8,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-112",
+    "sport": "football",
+    "name": "GK Player 112 (Brighton)",
+    "position": "GK",
+    "team": "Brighton",
+    "salary": 9,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-128",
+    "sport": "football",
+    "name": "GK Player 128 (Aston Villa)",
+    "position": "GK",
+    "team": "Aston Villa",
+    "salary": 9,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-127",
+    "sport": "football",
+    "name": "GK Player 127 (Aston Villa)",
+    "position": "GK",
+    "team": "Aston Villa",
+    "salary": 9,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-148",
+    "sport": "football",
+    "name": "GK Player 148 (West Ham)",
+    "position": "GK",
+    "team": "West Ham",
+    "salary": 9,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-4",
+    "sport": "football",
+    "name": "GK Player 4 (Man City)",
+    "position": "GK",
+    "team": "Man City",
+    "salary": 9,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-21",
+    "sport": "football",
+    "name": "GK Player 21 (Arsenal)",
+    "position": "GK",
+    "team": "Arsenal",
+    "salary": 9,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-130",
+    "sport": "football",
+    "name": "GK Player 130 (Aston Villa)",
+    "position": "GK",
+    "team": "Aston Villa",
+    "salary": 9,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-111",
+    "sport": "football",
+    "name": "GK Player 111 (Brighton)",
+    "position": "GK",
+    "team": "Brighton",
+    "salary": 10,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-49",
+    "sport": "football",
+    "name": "GK Player 49 (Chelsea)",
+    "position": "GK",
+    "team": "Chelsea",
+    "salary": 10,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-5",
+    "sport": "football",
+    "name": "GK Player 5 (Man City)",
+    "position": "GK",
+    "team": "Man City",
+    "salary": 10,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-67",
+    "sport": "football",
+    "name": "GK Player 67 (Tottenham)",
+    "position": "GK",
+    "team": "Tottenham",
+    "salary": 10,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-113",
+    "sport": "football",
+    "name": "GK Player 113 (Brighton)",
+    "position": "GK",
+    "team": "Brighton",
+    "salary": 10,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-17",
+    "sport": "football",
+    "name": "GK Player 17 (Arsenal)",
+    "position": "GK",
+    "team": "Arsenal",
+    "salary": 10,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-145",
+    "sport": "football",
+    "name": "GK Player 145 (West Ham)",
+    "position": "GK",
+    "team": "West Ham",
+    "salary": 11,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-80",
+    "sport": "football",
+    "name": "GK Player 80 (Man United)",
+    "position": "GK",
+    "team": "Man United",
+    "salary": 11,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-2",
+    "sport": "football",
+    "name": "GK Player 2 (Man City)",
+    "position": "GK",
+    "team": "Man City",
+    "salary": 11,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-3",
+    "sport": "football",
+    "name": "GK Player 3 (Man City)",
+    "position": "GK",
+    "team": "Man City",
+    "salary": 11,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-51",
+    "sport": "football",
+    "name": "GK Player 51 (Chelsea)",
+    "position": "GK",
+    "team": "Chelsea",
+    "salary": 11,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-50",
+    "sport": "football",
+    "name": "GK Player 50 (Chelsea)",
+    "position": "GK",
+    "team": "Chelsea",
+    "salary": 11,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-129",
+    "sport": "football",
+    "name": "GK Player 129 (Aston Villa)",
+    "position": "GK",
+    "team": "Aston Villa",
+    "salary": 11,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-144",
+    "sport": "football",
+    "name": "GK Player 144 (West Ham)",
+    "position": "GK",
+    "team": "West Ham",
+    "salary": 12,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-147",
+    "sport": "football",
+    "name": "GK Player 147 (West Ham)",
+    "position": "GK",
+    "team": "West Ham",
+    "salary": 12,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-146",
+    "sport": "football",
+    "name": "GK Player 146 (West Ham)",
+    "position": "GK",
+    "team": "West Ham",
+    "salary": 12,
+    "tier": "WHITE"
+  },
+  {
+    "id": "player-48",
+    "sport": "football",
+    "name": "GK Player 48 (Chelsea)",
+    "position": "GK",
+    "team": "Chelsea",
+    "salary": 12,
+    "tier": "WHITE"
+  }
+]

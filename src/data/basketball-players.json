@@ -1,0 +1,142 @@
+[
+  {
+    "id": "lebron-james",
+    "name": "LeBron James",
+    "position": "SF",
+    "salary": 25,
+    "team": "Lakers"
+  },
+  {
+    "id": "stephen-curry",
+    "name": "Stephen Curry",
+    "position": "PG",
+    "salary": 24,
+    "team": "Warriors"
+  },
+  {
+    "id": "kevin-durant",
+    "name": "Kevin Durant",
+    "position": "PF",
+    "salary": 23,
+    "team": "Suns"
+  },
+  {
+    "id": "giannis-antetokounmpo",
+    "name": "Giannis Antetokounmpo",
+    "position": "PF",
+    "salary": 26,
+    "team": "Bucks"
+  },
+  {
+    "id": "luka-doncic",
+    "name": "Luka Doncic",
+    "position": "PG",
+    "salary": 24,
+    "team": "Mavericks"
+  },
+  {
+    "id": "joel-embiid",
+    "name": "Joel Embiid",
+    "position": "C",
+    "salary": 25,
+    "team": "76ers"
+  },
+  {
+    "id": "jayson-tatum",
+    "name": "Jayson Tatum",
+    "position": "SF",
+    "salary": 23,
+    "team": "Celtics"
+  },
+  {
+    "id": "nikola-jokic",
+    "name": "Nikola Jokic",
+    "position": "C",
+    "salary": 26,
+    "team": "Nuggets"
+  },
+  {
+    "id": "jimmy-butler",
+    "name": "Jimmy Butler",
+    "position": "SG",
+    "salary": 20,
+    "team": "Heat"
+  },
+  {
+    "id": "kawhi-leonard",
+    "name": "Kawhi Leonard",
+    "position": "SF",
+    "salary": 22,
+    "team": "Clippers"
+  },
+  {
+    "id": "kyrie-irving",
+    "name": "Kyrie Irving",
+    "position": "PG",
+    "salary": 21,
+    "team": "Mavericks"
+  },
+  {
+    "id": "devin-booker",
+    "name": "Devin Booker",
+    "position": "SG",
+    "salary": 20,
+    "team": "Suns"
+  },
+  {
+    "id": "damian-lillard",
+    "name": "Damian Lillard",
+    "position": "PG",
+    "salary": 21,
+    "team": "Trail Blazers"
+  },
+  {
+    "id": "james-harden",
+    "name": "James Harden",
+    "position": "SG",
+    "salary": 19,
+    "team": "76ers"
+  },
+  {
+    "id": "anthony-davis",
+    "name": "Anthony Davis",
+    "position": "C",
+    "salary": 22,
+    "team": "Lakers"
+  },
+  {
+    "id": "jalen-brunson",
+    "name": "Jalen Brunson",
+    "position": "PG",
+    "salary": 17,
+    "team": "Knicks"
+  },
+  {
+    "id": "bam-adebayo",
+    "name": "Bam Adebayo",
+    "position": "C",
+    "salary": 18,
+    "team": "Heat"
+  },
+  {
+    "id": "jaylen-brown",
+    "name": "Jaylen Brown",
+    "position": "SG",
+    "salary": 18,
+    "team": "Celtics"
+  },
+  {
+    "id": "domantas-sabonis",
+    "name": "Domantas Sabonis",
+    "position": "PF",
+    "salary": 17,
+    "team": "Kings"
+  },
+  {
+    "id": "pascal-siakam",
+    "name": "Pascal Siakam",
+    "position": "PF",
+    "salary": 16,
+    "team": "Raptors"
+  }
+]

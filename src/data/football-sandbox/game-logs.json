@@ -1,0 +1,198 @@
+[
+  {
+    "playerId": "haaland-1",
+    "stats": {
+      "goals": 2,
+      "assists": 0,
+      "shots": 5
+    },
+    "events": {
+      "yellow_cards": 0,
+      "red_cards": 0
+    },
+    "gameDate": "2024-01-15",
+    "minutes": 90
+  },
+  {
+    "playerId": "haaland-1",
+    "stats": {
+      "goals": 1,
+      "assists": 1,
+      "shots": 4
+    },
+    "events": {
+      "yellow_cards": 0,
+      "red_cards": 0
+    },
+    "gameDate": "2024-01-22",
+    "minutes": 90
+  },
+  {
+    "playerId": "salah-1",
+    "stats": {
+      "goals": 1,
+      "assists": 2,
+      "shots": 6
+    },
+    "events": {
+      "yellow_cards": 0,
+      "red_cards": 0
+    },
+    "gameDate": "2024-01-16",
+    "minutes": 90
+  },
+  {
+    "playerId": "salah-1",
+    "stats": {
+      "goals": 2,
+      "assists": 0,
+      "shots": 7
+    },
+    "events": {
+      "yellow_cards": 1,
+      "red_cards": 0
+    },
+    "gameDate": "2024-01-23",
+    "minutes": 85
+  },
+  {
+    "playerId": "kane-1",
+    "stats": {
+      "goals": 1,
+      "assists": 0,
+      "shots": 3
+    },
+    "events": {
+      "yellow_cards": 0,
+      "red_cards": 0
+    },
+    "gameDate": "2024-01-17",
+    "minutes": 90
+  },
+  {
+    "playerId": "kane-1",
+    "stats": {
+      "goals": 0,
+      "assists": 2,
+      "shots": 2
+    },
+    "events": {
+      "yellow_cards": 0,
+      "red_cards": 0
+    },
+    "gameDate": "2024-01-24",
+    "minutes": 88
+  },
+  {
+    "playerId": "debruyne-1",
+    "stats": {
+      "goals": 0,
+      "assists": 3,
+      "shots": 2
+    },
+    "events": {
+      "yellow_cards": 0,
+      "red_cards": 0
+    },
+    "gameDate": "2024-01-18",
+    "minutes": 90
+  },
+  {
+    "playerId": "debruyne-1",
+    "stats": {
+      "goals": 1,
+      "assists": 1,
+      "shots": 4
+    },
+    "events": {
+      "yellow_cards": 0,
+      "red_cards": 0
+    },
+    "gameDate": "2024-01-25",
+    "minutes": 87
+  },
+  {
+    "playerId": "bellingham-1",
+    "stats": {
+      "goals": 1,
+      "assists": 1,
+      "shots": 3
+    },
+    "events": {
+      "yellow_cards": 0,
+      "red_cards": 0
+    },
+    "gameDate": "2024-01-19",
+    "minutes": 90
+  },
+  {
+    "playerId": "modric-1",
+    "stats": {
+      "goals": 0,
+      "assists": 1,
+      "shots": 1
+    },
+    "events": {
+      "yellow_cards": 0,
+      "red_cards": 0
+    },
+    "gameDate": "2024-01-20",
+    "minutes": 90
+  },
+  {
+    "playerId": "vandijk-1",
+    "stats": {
+      "goals": 0,
+      "assists": 0,
+      "shots": 0
+    },
+    "events": {
+      "yellow_cards": 1,
+      "red_cards": 0
+    },
+    "gameDate": "2024-01-21",
+    "minutes": 90
+  },
+  {
+    "playerId": "dias-1",
+    "stats": {
+      "goals": 0,
+      "assists": 0,
+      "shots": 1
+    },
+    "events": {
+      "yellow_cards": 0,
+      "red_cards": 0
+    },
+    "gameDate": "2024-01-22",
+    "minutes": 90
+  },
+  {
+    "playerId": "alisson-1",
+    "stats": {
+      "goals": 0,
+      "assists": 0,
+      "shots": 0
+    },
+    "events": {
+      "yellow_cards": 0,
+      "red_cards": 0
+    },
+    "gameDate": "2024-01-23",
+    "minutes": 90
+  },
+  {
+    "playerId": "ederson-1",
+    "stats": {
+      "goals": 0,
+      "assists": 0,
+      "shots": 0
+    },
+    "events": {
+      "yellow_cards": 0,
+      "red_cards": 0
+    },
+    "gameDate": "2024-01-24",
+    "minutes": 90
+  }
+]
