@@ -4,6 +4,23 @@ import { FantasyEngine } from '../engine/FantasyEngine';
 import { mean, median, stddev, percentile } from '../utils/stats';
 import { computeSeed, SeedMode } from '../utils/seed';
 
+function fingerprintUnordered(roster: any[], mode: "card" | "base" = "card"): string {
+  const ids = roster
+    .filter((s) => s?.player)
+    .map((s) => (mode === "base" ? (s.player.basePlayerId ?? s.player.id) : s.player.id))
+    .sort();
+  return ids.join("|");
+}
+
+function fingerprintOrdered(roster: any[], mode: "card" | "base" = "card"): string {
+  const ids = roster.map((s) => {
+    if (!s?.player) return "EMPTY";
+    return mode === "base" ? (s.player.basePlayerId ?? s.player.id) : s.player.id;
+  });
+  return ids.join("|");
+}
+
+
 export type SimulationConfig = {
   runs: number;
   seedMode: SeedMode;
@@ -232,7 +249,7 @@ export async function runSimulation(params: {
   const hhi = Object.values(pickCounts).map((c) => c / Math.max(1, totalPicks)).reduce((sum, p) => sum + p * p, 0) || 0;
   const effectivePool = hhi > 0 ? 1 / hhi : 0;
 
-  const topPicks = Object.entries(pickCounts).sort((a, b) => b[1] - a[1]).slice(0, 15);
+  const topPicks = Object.entries(pickCounts).sort((a, b) => b[1] - a[1]).slice(0, 50);
 
   // --- REPORTING ---
   console.log(`\n=== Simulation Report ===`);
