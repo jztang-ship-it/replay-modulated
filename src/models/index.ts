@@ -19,6 +19,13 @@ export interface Player {
   salary: number;
   team: string;
   tier?: 'ORANGE' | 'PURPLE' | 'BLUE' | 'GREEN' | 'WHITE';
+  
+  /**
+   * NEW: basePlayerId
+   * Used to identify the "human" across different season cards.
+   * If missing, the validation/generation engines will fall back to using 'id'.
+   */
+  basePlayerId?: string;
 }
 
 export interface GameLog {

@@ -9,11 +9,11 @@ import { FootballAchievements } from './achievements/footballAchievements';
 export const FootballSportConfig: SportConfig = {
   name: 'Football (Soccer)',
   positions: ['FWD', 'MID', 'DEF', 'GK'],
-  salaryCap: 120,
+  salaryCap: 150,
   minPlayers: 6,
   maxPlayers: 6,
   positionLimits: {
-    GK: { min: 1, max: 2 },
+    GK: { min: 1, max: 1 },
     FWD: { min: 1, max: 4 },
     MID: { min: 1, max: 4 },
     DEF: { min: 1, max: 4 },

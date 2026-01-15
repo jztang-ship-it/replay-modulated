@@ -13,6 +13,15 @@ async function main() {
     simulationConfig: {
       runs: 10000,
       seedMode: 'SESSION',
+
+      // ✅ this is the key your compiler hinted exists
+      slotPercentiles: {
+        small: 0.55,
+        medium: 0.8,
+        big: 0.93,
+        huge: 0.99,
+        jackpot: 0.999,
+      },
     },
   });
 }

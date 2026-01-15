@@ -1,89 +1,65 @@
 /**
- * GameLogFilterEngine - Filters historical game logs based on config rules
- * Sport-agnostic filtering based on SportConfig
+ * GameLogFilterEngine - Select eligible historical logs for a player
+ * Sport-agnostic filtering using SportConfig.historicalLogFilters
+ *
+ * IMPORTANT:
+ * - Some datasets store minutes/snaps/attempts as top-level fields
+ * - Others store them inside log.stats (e.g. stats.minutes)
+ * This engine supports BOTH to prevent "all logs filtered out" bugs.
  */
 
-import { GameLog, SportConfig, Player } from '../models';
+import { Player, GameLog, SportConfig } from '../models';
 
 export class GameLogFilterEngine {
-  /**
-   * Filter game logs for a player based on config rules
-   * Returns eligible logs that meet all criteria
-   */
-  static getEligibleLogs(
-    player: Player,
-    allLogs: GameLog[],
-    config: SportConfig
-  ): GameLog[] {
+  static getEligibleLogs(player: Player, allLogs: GameLog[], config: SportConfig): GameLog[] {
     const filters = config.historicalLogFilters;
-    const playerLogs = allLogs.filter((log) => log.playerId === player.id);
 
-    if (playerLogs.length === 0) {
-      return [];
-    }
+    // Pull logs for this player
+    let logs = allLogs.filter((l) => l.playerId === player.id);
 
-    // Filter by date (seasonsBack)
-    const cutoffDate = this.calculateCutoffDate(filters.seasonsBack);
-    let eligible = playerLogs.filter((log) => {
-      const logDate = new Date(log.gameDate);
-      return logDate >= cutoffDate;
-    });
+    if (logs.length === 0) return [];
 
-    // Filter by minMinutes if specified
-    if (filters.minMinutes !== undefined) {
-      eligible = eligible.filter((log) => {
-        const minutes = log.minutes ?? log.stats.minutes;
-        // Only filter if minutes field exists, otherwise include the log
-        return minutes === undefined || minutes >= filters.minMinutes!;
+    // Min minutes
+    if (filters?.minMinutes !== undefined) {
+      const minMins = filters.minMinutes;
+      logs = logs.filter((l) => {
+        const mins = (l.minutes ?? l.stats?.minutes ?? 0);
+        return mins >= minMins;
       });
     }
 
-    // Filter by minSnaps if specified
-    if (filters.minSnaps !== undefined) {
-      eligible = eligible.filter((log) => {
-        const snaps = log.snaps ?? log.stats.snaps;
-        // Only filter if snaps field exists, otherwise include the log
-        return snaps === undefined || snaps >= filters.minSnaps!;
+    // Min snaps (football/american football)
+    if (filters?.minSnaps !== undefined) {
+      const minSnaps = filters.minSnaps;
+      logs = logs.filter((l) => {
+        const snaps = (l.snaps ?? l.stats?.snaps ?? 0);
+        return snaps >= minSnaps;
       });
     }
 
-    // Filter by minAttempts if specified
-    if (filters.minAttempts !== undefined) {
-      eligible = eligible.filter((log) => {
-        const attempts = log.attempts ?? log.stats.attempts;
-        // Only filter if attempts field exists, otherwise include the log
-        return attempts === undefined || attempts >= filters.minAttempts!;
+    // Min attempts (baseball, etc.)
+    if (filters?.minAttempts !== undefined) {
+      const minAtt = filters.minAttempts;
+      logs = logs.filter((l) => {
+        const att = (l.attempts ?? l.stats?.attempts ?? 0);
+        return att >= minAtt;
       });
     }
 
-    return eligible;
-  }
+    // Seasons-back filter (safe + optional)
+    // If gameDate isn't parseable, we keep the log (do NOT accidentally drop everything).
+    if (filters?.seasonsBack !== undefined && filters.seasonsBack > 0) {
+      const cutoff = new Date();
+      cutoff.setFullYear(cutoff.getFullYear() - filters.seasonsBack);
 
-  /**
-   * Calculate cutoff date based on seasonsBack
-   * Uses approximate 6 months per season for date calculation
-   */
-  private static calculateCutoffDate(seasonsBack: number): Date {
-    const now = new Date();
-    const monthsBack = seasonsBack * 6; // Approximate 6 months per season
-    const cutoff = new Date(now);
-    cutoff.setMonth(cutoff.getMonth() - monthsBack);
-    return cutoff;
-  }
-
-  /**
-   * Get eligible logs for multiple players
-   */
-  static getEligibleLogsForPlayers(
-    players: Player[],
-    allLogs: GameLog[],
-    config: SportConfig
-  ): Map<string, GameLog[]> {
-    const result = new Map<string, GameLog[]>();
-    for (const player of players) {
-      const eligible = this.getEligibleLogs(player, allLogs, config);
-      result.set(player.id, eligible);
+      logs = logs.filter((l) => {
+        if (!l.gameDate) return true;
+        const d = new Date(l.gameDate);
+        if (Number.isNaN(d.getTime())) return true;
+        return d >= cutoff;
+      });
     }
-    return result;
+
+    return logs;
   }
 }

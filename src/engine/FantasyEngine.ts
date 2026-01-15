@@ -1,9 +1,3 @@
-/**
- * FantasyEngine - Core orchestration engine for fantasy sports gameplay
- * Coordinates all other engines and manages game flow through state machine
- * Sport-agnostic core logic
- */
-
 import {
   Player,
   GameLog,
@@ -14,6 +8,7 @@ import {
   Resolution,
   EngineContext,
 } from '../models';
+
 import { RandomEngine } from './RandomEngine';
 import { StateMachineEngine } from './StateMachineEngine';
 import { LineupGenerationEngine } from './LineupGenerationEngine';
@@ -28,6 +23,9 @@ export class FantasyEngine {
   private rng: RandomEngine;
   private session: GameSession | null = null;
 
+  // Cache resolutions after resolve() so getResolutions() returns the same ones
+  private resolvedCache: Resolution[] | null = null;
+
   constructor(context: EngineContext, dataProvider?: DataProvider) {
     this.config = context.sportConfig;
     this.players = context.players;
@@ -36,16 +34,14 @@ export class FantasyEngine {
     this.rng = new RandomEngine(context.seed);
   }
 
-  /**
-   * Create a new game session (IDLE -> INITIAL_DEAL)
-   */
   createSession(sessionId: string, sportId: string, seed?: number): GameSession {
     if (this.session && this.session.state !== GameState.RESULT) {
-      throw new Error('Active session exists. Complete or reset before creating new session.');
+      throw new Error('Active session exists.');
     }
 
     const sessionSeed = seed ?? this.rng.getSeed() ?? Date.now();
-    const session: GameSession = {
+
+    this.session = {
       sessionId,
       sportId,
       seed: sessionSeed,
@@ -56,189 +52,127 @@ export class FantasyEngine {
       winResult: null,
     };
 
-    this.session = session;
-    return session;
+    this.resolvedCache = null;
+    return this.session;
   }
 
-  /**
-   * Get current session
-   */
   getSession(): GameSession | null {
     return this.session;
   }
 
-  /**
-   * Initialize deal (IDLE -> INITIAL_DEAL -> HOLD_PHASE)
-   * Generates initial roster using deterministic algorithm
-   */
   initialDeal(): GameSession {
-    if (!this.session) {
-      throw new Error('No active session. Call createSession() first.');
-    }
+    if (!this.session) throw new Error('No active session.');
 
-    // Transition: IDLE -> INITIAL_DEAL
     this.session = StateMachineEngine.transition(this.session, GameState.INITIAL_DEAL);
 
-    // Generate initial roster
     const roster = LineupGenerationEngine.generateDeterministicLineup(
       this.config,
       this.players,
       this.rng
     );
 
-    // Calculate remaining cap
-    const usedSalary = roster.reduce(
-      (sum, slot) => sum + (slot.player?.salary || 0),
-      0
-    );
-    const remainingCap = this.config.salaryCap - usedSalary;
-
     this.session.roster = roster;
-    this.session.remainingCap = remainingCap;
 
-    // Transition to HOLD_PHASE
+    const used = roster.reduce((sum, s) => sum + (s.player?.salary || 0), 0);
+    this.session.remainingCap = this.config.salaryCap - used;
+
     this.session = StateMachineEngine.transition(this.session, GameState.HOLD_PHASE);
-
     return this.session;
   }
 
-  /**
-   * Toggle hold status for a roster slot (HOLD_PHASE only)
-   */
   toggleHold(slotIndex: number): GameSession {
-    if (!this.session) {
-      throw new Error('No active session.');
-    }
-
+    if (!this.session) throw new Error('No active session.');
     if (!StateMachineEngine.canToggleHold(this.session.state)) {
-      throw new Error(`Cannot toggle hold in state: ${this.session.state}`);
-    }
-
-    if (slotIndex < 0 || slotIndex >= this.session.roster.length) {
-      throw new Error(`Invalid slot index: ${slotIndex}`);
+      throw new Error('Cannot toggle now.');
     }
 
     const slot = this.session.roster[slotIndex];
-    if (!slot.player) {
-      throw new Error(`Cannot hold empty slot: ${slotIndex}`);
-    }
-
-    // Toggle hold status
-    slot.held = !slot.held;
+    if (slot && slot.player) slot.held = !slot.held;
 
     return this.session;
   }
 
-  /**
-   * Final draw - fill remaining slots after holds (HOLD_PHASE -> FINAL_DRAW -> RESOLUTION)
-   */
   finalDraw(): GameSession {
-    if (!this.session) {
-      throw new Error('No active session.');
-    }
+    if (!this.session) throw new Error('No active session.');
 
-    // Transition: HOLD_PHASE -> FINAL_DRAW
     this.session = StateMachineEngine.transition(this.session, GameState.FINAL_DRAW);
 
-    // Fill remaining empty slots
-    const updatedRoster = LineupGenerationEngine.fillRemainingSlots(
+    const updated = LineupGenerationEngine.fillRemainingSlots(
       this.session.roster,
       this.config,
       this.players,
       this.rng
     );
 
-    // Recalculate remaining cap
-    const usedSalary = updatedRoster.reduce(
-      (sum, slot) => sum + (slot.player?.salary || 0),
-      0
-    );
-    const remainingCap = this.config.salaryCap - usedSalary;
+    this.session.roster = updated;
 
-    this.session.roster = updatedRoster;
-    this.session.remainingCap = remainingCap;
+    const used = updated.reduce((sum, s) => sum + (s.player?.salary || 0), 0);
+    this.session.remainingCap = this.config.salaryCap - used;
 
-    // Transition to RESOLUTION
     this.session = StateMachineEngine.transition(this.session, GameState.RESOLUTION);
-
     return this.session;
   }
 
-  /**
-   * Resolve team fantasy points (RESOLUTION -> RESULT)
-   */
   resolve(opponentFP?: number): GameSession {
-    if (!this.session) {
-      throw new Error('No active session.');
+    if (!this.session || this.session.state !== GameState.RESOLUTION) {
+      throw new Error('Invalid state.');
     }
 
-    if (this.session.state !== GameState.RESOLUTION) {
-      throw new Error(`Cannot resolve in state: ${this.session.state}`);
-    }
-
-    // Resolve team FP and evaluate win condition
-    const { teamFP, winResult } = ResolutionEngine.resolveAndEvaluate(
-      this.session,
-      this.gameLogs,
-      this.config,
-      this.rng,
-      opponentFP
-    );
-
-    this.session.resolvedTeamFP = teamFP;
-    this.session.winResult = winResult;
-
-    // Transition to RESULT
-    this.session = StateMachineEngine.transition(this.session, GameState.RESULT);
-
-    return this.session;
-  }
-
-  /**
-   * Get resolutions for current session (after resolution)
-   */
-  getResolutions(): Resolution[] {
-    if (!this.session || this.session.state !== GameState.RESULT) {
-      throw new Error('Session must be in RESULT state to get resolutions.');
-    }
-
-    return ResolutionEngine.resolveTeamFP(
+    // Compute per-player resolutions ONCE
+    const resolutions = ResolutionEngine.resolveTeamFP(
       this.session.roster,
       this.gameLogs,
       this.config,
       this.rng
     );
+
+    // Canonical total = sum of final per-player fantasyPoints
+    const teamFP = resolutions.reduce((sum, r) => sum + (r.fantasyPoints ?? 0), 0);
+
+    this.session.resolvedTeamFP = teamFP;
+    this.session.winResult = ResolutionEngine.evaluateWinCondition(teamFP, this.config, opponentFP);
+
+    // Cache the exact resolutions we used for team total
+    this.resolvedCache = resolutions;
+
+    this.session = StateMachineEngine.transition(this.session, GameState.RESULT);
+    return this.session;
   }
 
-  /**
-   * Complete game flow from IDLE to RESULT (convenience method)
-   */
-  playCompleteGame(sessionId: string, sportId: string, seed?: number, opponentFP?: number): GameSession {
+  getResolutions(): Resolution[] {
+    if (!this.session || this.session.state !== GameState.RESULT) {
+      throw new Error('Not resolved.');
+    }
+
+    // Return cached resolutions from resolve() so it matches displayed totals
+    if (this.resolvedCache) return this.resolvedCache;
+
+    // Fallback (should be rare): recompute if cache missing
+    return ResolutionEngine.resolveTeamFP(this.session.roster, this.gameLogs, this.config, this.rng);
+  }
+
+  playCompleteGame(
+    sessionId: string,
+    sportId: string,
+    seed?: number,
+    opponentFP?: number
+  ): GameSession {
     this.createSession(sessionId, sportId, seed);
     this.initialDeal();
     this.finalDraw();
-    this.resolve(opponentFP);
-    return this.session!;
+    return this.resolve(opponentFP);
   }
 
-  /**
-   * Get the sport configuration
-   */
+  resetSession(): void {
+    this.session = null;
+    this.resolvedCache = null;
+  }
+
   getConfig(): SportConfig {
     return this.config;
   }
 
-  /**
-   * Get the random engine (for advanced usage)
-   */
   getRandomEngine(): RandomEngine {
     return this.rng;
-  }
-
-  /**
-   * Reset session (for testing/debugging)
-   */
-  resetSession(): void {
-    this.session = null;
   }
 }
