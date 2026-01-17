@@ -1,354 +1,414 @@
-import type { DealResult, PlayerCard, ResolveResult, TierColor, Position } from "./types";
+// apps/replay-ui/src/ui/engine/engineAdapter.ts
+// Matches GameView imports:
+// import { dealInitialRoster, redrawRoster, resolveRoster } from "./engine/engineAdapter";
 
-const CAP_MAX = 150;
-const MIN_REQ: Record<Position, number> = { GK: 1, DEF: 1, MID: 1, FWD: 1 };
+import type { PlayerCard } from "./types";
+
+// -------------------- CONFIG: set these to your real /public/data paths --------------------
+// These must be reachable in the browser at http://localhost:xxxx/<path>
+const PLAYERS_URL = "/data/players.json";
+const LOGS_URL = "/data/game-logs.json";
+
+
+// -------------------- GAME CONSTANTS --------------------
+const CAP_MAX = 180;
 const ROSTER_SIZE = 6;
+const MIN_MINUTES = 20;
 
-type AnyObj = Record<string, any>;
+// -------------------- RAW TYPES (what we load from JSON) --------------------
+type RawPlayer = {
+  id: string;
+  basePlayerId?: string;
+  name: string;
+  team?: string;
+  season: string | number;
+  position: string;
+  tier?: string;
+  salary: number | string;
+};
 
-function isSeasonCardLike(x: any): boolean {
-  return (
-    x &&
-    typeof x === "object" &&
-    typeof x.id === "string" &&
-    typeof x.season === "string" &&
-    typeof x.position === "string" &&
-    typeof x.salary === "number"
-  );
+type RawLog = {
+  playerId: string;
+  stats: Record<string, any>;
+  date?: string;
+  opponent?: string;
+  homeAway?: "H" | "A";
+};
+
+// -------------------- tiny utils --------------------
+function n(v: unknown): number {
+  const x = typeof v === "number" ? v : typeof v === "string" ? Number(v) : Number(v);
+  return Number.isFinite(x) ? x : 0;
 }
 
-function isGameLogLike(x: any): boolean {
-  return (
-    x &&
-    typeof x === "object" &&
-    (typeof x.playerId === "string" || typeof x.basePlayerId === "string") &&
-    (typeof x.date === "string" || typeof x.matchDate === "string" || typeof x.kickoff === "string")
-  );
+function clampInt(v: unknown, min: number, max: number): number {
+  const x = Math.trunc(n(v));
+  if (x < min) return min;
+  if (x > max) return max;
+  return x;
 }
 
-async function loadAllJsonCandidates(): Promise<AnyObj[]> {
-  // IMPORTANT: only scan inside the repo's data folders.
-  const globs = [
-    import.meta.glob<AnyObj>("../../../../../../data/**/*.json", { eager: true }),
-    import.meta.glob<AnyObj>("../../../../../../src/data/**/*.json", { eager: true }),
-  ];
-
-  const out: AnyObj[] = [];
-  for (const g of globs) {
-    for (const k of Object.keys(g)) {
-      const mod: any = (g as any)[k];
-      out.push({ __path: k, data: mod?.default ?? mod });
-    }
+function shuffleInPlace<T>(arr: T[], rng: () => number): void {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    const tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
   }
-  return out;
 }
 
-async function loadSeasonCardsAndLogs(): Promise<{ cards: any[]; logs: any[] }> {
-  const candidates = await loadAllJsonCandidates();
-
-  let bestCards: any[] = [];
-  let bestLogs: any[] = [];
-
-  for (const c of candidates) {
-    const data = c.data;
-
-    if (Array.isArray(data) && data.length) {
-      const cardHits = data.slice(0, 50).filter(isSeasonCardLike).length;
-      const logHits = data.slice(0, 50).filter(isGameLogLike).length;
-
-      // Cards: prefer the biggest card array we can find
-      if (cardHits >= 10 && data.length > bestCards.length) bestCards = data;
-
-      // Logs: prefer the biggest logs array
-      if (logHits >= 10 && data.length > bestLogs.length) bestLogs = data;
-    } else if (data && typeof data === "object") {
-      const values = Object.values(data);
-      for (const v of values) {
-        if (Array.isArray(v) && v.length) {
-          const cardHits = v.slice(0, 50).filter(isSeasonCardLike).length;
-          const logHits = v.slice(0, 50).filter(isGameLogLike).length;
-
-          if (cardHits >= 10 && v.length > bestCards.length) bestCards = v;
-          if (logHits >= 10 && v.length > bestLogs.length) bestLogs = v;
-        }
-      }
-    }
-  }
-
-  if (!bestCards.length) {
-    throw new Error(
-      "Could not find season cards JSON under /data or /src/data. Ensure processed season cards are committed as JSON."
-    );
-  }
-  if (!bestLogs.length) bestLogs = [];
-
-  return { cards: bestCards, logs: bestLogs };
+function mulberry32(seed: number) {
+  return function rng() {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
 }
 
-let CACHE: null | { cards: any[]; logs: any[] } = null;
-async function ensureCache() {
-  if (!CACHE) CACHE = await loadSeasonCardsAndLogs();
-  return CACHE;
+function baseId(p: { id: string; basePlayerId?: string }) {
+  const b = (p.basePlayerId ?? "").trim();
+  return b.length ? b : p.id;
 }
 
-function toTierColor(tier: any): TierColor {
-  const t = String(tier ?? "").toLowerCase();
-  if (t.includes("orange")) return "ORANGE";
-  if (t.includes("purple")) return "PURPLE";
-  if (t.includes("blue")) return "BLUE";
-  if (t.includes("green")) return "GREEN";
-  if (t.includes("white")) return "WHITE";
-  return "WHITE";
-}
+// -------------------- normalizers --------------------
+type Position = "GK" | "DEF" | "MID" | "FWD";
 
-function toPosition(rawPos: any): Position {
-  const p = String(rawPos ?? "").toUpperCase();
-  if (p === "GK" || p === "GKP" || p === "GOALKEEPER") return "GK";
-  if (p === "DEF" || p === "D" || p === "DEFENDER") return "DEF";
-  if (p === "MID" || p === "M" || p === "MIDFIELDER") return "MID";
-  if (p === "FWD" || p === "FW" || p === "F" || p === "FORWARD" || p === "ST" || p === "STRIKER") return "FWD";
+function asPosition(raw: unknown): Position {
+  const s = String(raw ?? "")
+    .trim()
+    .toUpperCase();
+
+  if (s === "GK" || s === "G" || s.includes("KEEP")) return "GK";
+
+  if (["DEF", "D", "CB", "LB", "RB", "LWB", "RWB"].includes(s) || s.includes("BACK")) return "DEF";
+  if (["MID", "M", "CM", "CDM", "CAM", "LM", "RM"].includes(s) || s.includes("MID")) return "MID";
+  if (["FWD", "F", "FW", "ST", "CF", "LW", "RW"].includes(s) || s.includes("WING") || s.includes("STRIK"))
+    return "FWD";
+
   return "MID";
 }
 
-function mapCard(raw: any): PlayerCard {
-  const cardId = String(raw.id);
-  const basePlayerId = String(raw.basePlayerId ?? raw.id);
-  const projected = Number(raw.avgFP ?? raw.projectedFp ?? raw.projFp ?? 0);
+// -------------------- objective FP (base units; UI scales x10) --------------------
+function computeFantasyPointsFromLog(log: RawLog): number {
+  const st = log?.stats ?? {};
 
+  const goals = n(st.goals ?? st.G ?? st.goal);
+  const assists = n(st.assists ?? st.A ?? st.ast);
+
+  const shots = n(st.shots ?? st.sh);
+  const shotsOnTarget = n(st.shotsOnTarget ?? st.sot);
+  const keyPasses = n(st.keyPasses ?? st.kp);
+
+  const tacklesWon = n(st.tacklesWon ?? st.tw);
+  const interceptions = n(st.interceptions ?? st.int);
+
+  const saves = n(st.saves ?? st.sv);
+  const cleanSheet = n(st.cleanSheet ?? st.cs);
+  const goalsConceded = n(st.goalsConceded ?? st.gc);
+
+  const yellow = n(st.yellowCards ?? st.yellow ?? st.yc);
+  const red = n(st.redCards ?? st.red ?? st.rc);
+
+  const minutes = n(st.minutes ?? st.min);
+
+  let fp = 0;
+
+  fp += goals * 10;
+  fp += assists * 6;
+
+  fp += shots * 0.5;
+  fp += shotsOnTarget * 1.0;
+  fp += keyPasses * 1.0;
+
+  fp += tacklesWon * 1.0;
+  fp += interceptions * 1.0;
+
+  fp += saves * 1.0;
+  fp += cleanSheet * 4.0;
+  fp -= goalsConceded * 1.0;
+
+  fp -= yellow * 1.0;
+  fp -= red * 3.0;
+
+  fp += Math.min(90, Math.max(0, minutes)) * 0.02;
+
+  if (fp < 0) fp = 0;
+  return fp;
+}
+
+// -------------------- data cache (browser) --------------------
+let _players: RawPlayer[] | null = null;
+let _logs: RawLog[] | null = null;
+
+async function loadJson<T>(url: string): Promise<T> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to load ${url}: ${res.status}`);
+  return (await res.json()) as T;
+}
+
+async function ensureDataLoaded(): Promise<{ players: RawPlayer[]; logs: RawLog[] }> {
+  if (_players && _logs) return { players: _players, logs: _logs };
+
+  const [players, logs] = await Promise.all([loadJson<RawPlayer[]>(PLAYERS_URL), loadJson<RawLog[]>(LOGS_URL)]);
+
+  _players = players;
+  _logs = logs;
+  return { players, logs };
+}
+
+// -------------------- card builder (matches your UI PlayerCard shape) --------------------
+function buildCard(p: RawPlayer): PlayerCard {
   return {
-    cardId,
-    basePlayerId,
-    name: String(raw.name ?? raw.playerName ?? raw.displayName ?? "Unknown"),
-    team: String(raw.team ?? raw.club ?? raw.squad ?? "Unknown"),
-    season: String(raw.season ?? "Unknown"),
-    position: toPosition(raw.position),
-    tier: toTierColor(raw.tier),
-    salary: Number(raw.salary ?? 0),
-    projectedFp: Number.isFinite(projected) ? projected : 0,
-  };
+    cardId: p.id,
+    basePlayerId: baseId(p),
+
+    name: p.name,
+    team: p.team ?? "Unknown",
+    season: String(p.season),
+    position: asPosition(p.position),
+    tier: (String(p.tier ?? "D").toUpperCase() as any) ?? "D",
+
+    salary: clampInt(n(p.salary), 1, 99),
+    projectedFp: 0,
+
+    actualFp: 0,
+    fpDelta: 0,
+    statLine: {},
+    achievements: [],
+    gameInfo: { date: "", opponent: "", homeAway: undefined },
+  } as PlayerCard;
 }
 
-function groupByPosition(cards: PlayerCard[]) {
-  const g: Record<Position, PlayerCard[]> = { GK: [], DEF: [], MID: [], FWD: [] };
-  for (const c of cards) g[c.position].push(c);
-  return g;
+// -------------------- log picker --------------------
+function getMinutes(log: RawLog): number {
+  const st = log?.stats ?? {};
+  return n(st.minutes ?? st.min ?? st.MIN);
 }
 
-function sumSalary(cards: PlayerCard[]) {
-  return cards.reduce((s, c) => s + c.salary, 0);
+function pickRandomLogForCard(cardId: string, logs: RawLog[], rng: () => number): RawLog | null {
+  const candidates = logs.filter(
+    (l) => l.playerId === cardId && getMinutes(l) >= MIN_MINUTES && l.stats && typeof l.stats === "object"
+  );
+  if (candidates.length === 0) return null;
+  return candidates[Math.floor(rng() * candidates.length)];
 }
 
-function uniqByBase(cards: PlayerCard[]) {
-  const seen = new Set<string>();
-  const out: PlayerCard[] = [];
-  for (const c of cards) {
-    if (seen.has(c.basePlayerId)) continue;
-    seen.add(c.basePlayerId);
-    out.push(c);
+// -------------------- roster sculptor (anchor + feasibility fill) --------------------
+function minSalaryInPool(pool: RawPlayer[], usedBase: Set<string>, allowGK: boolean): number {
+  let best = Infinity;
+  for (const p of pool) {
+    if (usedBase.has(baseId(p))) continue;
+    const pos = asPosition(p.position);
+    if (!allowGK && pos === "GK") continue;
+    const s = n(p.salary);
+    if (s > 0 && s < best) best = s;
   }
-  return out;
+  return best === Infinity ? 0 : best;
 }
 
-function pickOne<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
+function fillRosterSculpted(players: RawPlayer[], rng: () => number): RawPlayer[] {
+  const pool = [...players];
+  shuffleInPlace(pool, rng);
 
-function shuffle<T>(arr: T[]): T[] {
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+  const chosen: RawPlayer[] = [];
+  const usedBase = new Set<string>();
+  let capUsed = 0;
+
+  // ---- 0) anchors: pick up to 2 expensive-ish, but still feasible ----
+  const bySalaryDesc = [...pool].sort((a, b) => n(b.salary) - n(a.salary));
+  const anchorCand = bySalaryDesc.slice(0, Math.min(40, bySalaryDesc.length));
+
+  for (const p of anchorCand) {
+    if (chosen.length >= 2) break;
+    const b = baseId(p);
+    if (usedBase.has(b)) continue;
+
+    const s = n(p.salary);
+    if (capUsed + s > CAP_MAX) continue;
+
+    const slotsLeftAfter = ROSTER_SIZE - (chosen.length + 1);
+    const minRest = minSalaryInPool(pool, new Set([...usedBase, b]), false) * slotsLeftAfter;
+    if (capUsed + s + minRest > CAP_MAX) continue;
+
+    chosen.push(p);
+    usedBase.add(b);
+    capUsed += s;
   }
-  return a;
-}
 
-function buildRoster(allCards: PlayerCard[], locked: PlayerCard[] = []): PlayerCard[] {
-  const pool = uniqByBase(allCards);
-  const lockedBases = new Set(locked.map((c) => c.basePlayerId));
-  const byPos = groupByPosition(pool.filter((c) => !lockedBases.has(c.basePlayerId)));
+  // ---- 1) optional 1 GK early if feasible ----
+  if (!chosen.some((c) => asPosition(c.position) === "GK")) {
+    const gks = pool.filter((p) => asPosition(p.position) === "GK" && !usedBase.has(baseId(p)));
+    shuffleInPlace(gks, rng);
 
-  if (locked.length > ROSTER_SIZE) return locked.slice(0, ROSTER_SIZE);
-
-  const lockedCounts: Record<Position, number> = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
-  for (const c of locked) lockedCounts[c.position]++;
-
-  const needed: Position[] = [];
-  (Object.keys(MIN_REQ) as Position[]).forEach((pos) => {
-    const need = Math.max(0, MIN_REQ[pos] - lockedCounts[pos]);
-    for (let i = 0; i < need; i++) needed.push(pos);
-  });
-
-  const remainingSlots = ROSTER_SIZE - locked.length;
-  const flexPool = ([] as PlayerCard[]).concat(byPos.GK, byPos.DEF, byPos.MID, byPos.FWD);
-
-  for (let attempt = 0; attempt < 2000; attempt++) {
-    const picked: PlayerCard[] = [];
-
-    let ok = true;
-    for (const pos of needed) {
-      const candidates = byPos[pos];
-      if (!candidates.length) {
-        ok = false;
+    for (const gk of gks) {
+      const b = baseId(gk);
+      const s = n(gk.salary);
+      const slotsLeftAfter = ROSTER_SIZE - (chosen.length + 1);
+      const minRest = minSalaryInPool(pool, new Set([...usedBase, b]), false) * slotsLeftAfter;
+      if (capUsed + s + minRest <= CAP_MAX) {
+        chosen.push(gk);
+        usedBase.add(b);
+        capUsed += s;
         break;
       }
-      picked.push(pickOne(candidates));
     }
-    if (!ok) continue;
+  }
 
-    const bases = new Set<string>([...lockedBases, ...picked.map((c) => c.basePlayerId)]);
-    const flex = shuffle(flexPool).filter((c) => !bases.has(c.basePlayerId));
+  // ---- 2) ensure at least 1 DEF/MID/FWD ----
+  const need: Position[] = ["DEF", "MID", "FWD"];
+  for (const pos of need) {
+    if (chosen.some((c) => asPosition(c.position) === pos)) continue;
 
-    while (picked.length < remainingSlots && flex.length) {
-      const nxt = flex.shift()!;
-      bases.add(nxt.basePlayerId);
-      picked.push(nxt);
+    const candidates = pool.filter((p) => asPosition(p.position) === pos && !usedBase.has(baseId(p)));
+    shuffleInPlace(candidates, rng);
+
+    for (const cand of candidates) {
+      const b = baseId(cand);
+      const s = n(cand.salary);
+      const slotsLeftAfter = ROSTER_SIZE - (chosen.length + 1);
+      const minRest = minSalaryInPool(pool, new Set([...usedBase, b]), false) * slotsLeftAfter;
+
+      if (capUsed + s + minRest <= CAP_MAX) {
+        chosen.push(cand);
+        usedBase.add(b);
+        capUsed += s;
+        break;
+      }
     }
-    if (picked.length !== remainingSlots) continue;
-
-    const roster = locked.concat(picked);
-    const total = sumSalary(roster);
-    if (total !== CAP_MAX) continue;
-
-    const counts: Record<Position, number> = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
-    for (const c of roster) counts[c.position]++;
-
-    const meets = (Object.keys(MIN_REQ) as Position[]).every((p) => counts[p] >= MIN_REQ[p]);
-    if (!meets) continue;
-
-    return roster;
   }
 
-  const fallback = locked.concat(
-    shuffle(pool).filter((c) => !lockedBases.has(c.basePlayerId)).slice(0, remainingSlots)
-  );
-  return fallback.slice(0, ROSTER_SIZE);
-}
+  // ---- 3) fill remaining slots (no extra GK) ----
+  for (const p of pool) {
+    if (chosen.length >= ROSTER_SIZE) break;
 
-function normalizeDate(log: any): string {
-  const d = log.date ?? log.matchDate ?? log.kickoff ?? "";
-  return String(d).slice(0, 10) || "Unknown";
-}
+    const b = baseId(p);
+    if (usedBase.has(b)) continue;
 
-function extractOpponent(log: any): string {
-  return String(log.opponent ?? log.opp ?? log.vs ?? log.teamAgainst ?? "Unknown");
-}
+    if (asPosition(p.position) === "GK") continue;
 
-function extractHomeAway(log: any): "H" | "A" | undefined {
-  const v = log.homeAway ?? log.ha ?? log.venue ?? log.isHome;
-  if (v === "H" || v === "A") return v;
-  if (typeof v === "string") {
-    const s = v.toUpperCase();
-    if (s.startsWith("H")) return "H";
-    if (s.startsWith("A")) return "A";
+    const s = n(p.salary);
+    if (capUsed + s > CAP_MAX) continue;
+
+    const slotsLeftAfter = ROSTER_SIZE - (chosen.length + 1);
+    const minRest = minSalaryInPool(pool, new Set([...usedBase, b]), false) * slotsLeftAfter;
+    if (capUsed + s + minRest > CAP_MAX) continue;
+
+    chosen.push(p);
+    usedBase.add(b);
+    capUsed += s;
   }
-  if (typeof v === "boolean") return v ? "H" : "A";
-  return undefined;
-}
 
-function extractFp(log: any): number | null {
-  const candidates = [log.fantasyPoints, log.fp, log.totalFp, log.points, log.fplPoints, log.fpl];
-  for (const c of candidates) {
-    if (typeof c === "number" && Number.isFinite(c)) return c;
+  // ---- 4) last resort: cheapest fill under cap (outfield only) ----
+  if (chosen.length < ROSTER_SIZE) {
+    const rest = pool
+      .filter((p) => !usedBase.has(baseId(p)) && asPosition(p.position) !== "GK")
+      .sort((a, b) => n(a.salary) - n(b.salary));
+
+    for (const p of rest) {
+      if (chosen.length >= ROSTER_SIZE) break;
+      const s = n(p.salary);
+      if (capUsed + s > CAP_MAX) continue;
+      chosen.push(p);
+      usedBase.add(baseId(p));
+      capUsed += s;
+    }
   }
-  return null;
+
+  return chosen.slice(0, ROSTER_SIZE);
 }
 
-function extractStatLine(log: any): Record<string, number> {
-  const statLine: Record<string, number> = {};
-  const src = log.stats ?? log;
-  for (const [k, v] of Object.entries(src)) {
-    if (typeof v === "number" && Number.isFinite(v)) statLine[k] = v;
+// -------------------- module seed (so redraw changes) --------------------
+let _seed = Date.now();
+
+// -------------------- PUBLIC API (matches GameView) --------------------
+export async function dealInitialRoster(): Promise<{ cards: PlayerCard[]; capMax: number }> {
+  const { players, logs } = await ensureDataLoaded();
+  const rng = mulberry32(_seed++);
+
+  const rawRoster = fillRosterSculpted(players, rng);
+  const cards = rawRoster.map(buildCard);
+
+  // attach a random real log + compute actual fp (x10 UI scaling)
+  for (const card of cards) {
+    const log = pickRandomLogForCard(card.cardId, logs, rng);
+    if (!log) continue;
+
+    const actualFp = computeFantasyPointsFromLog(log) * 10;
+    card.actualFp = actualFp;
+    card.fpDelta = actualFp - (card.projectedFp ?? 0);
+    card.statLine = log.stats ?? {};
+    card.gameInfo = { date: log.date ?? "", opponent: log.opponent ?? "", homeAway: log.homeAway ?? undefined };
   }
-  return statLine;
+
+  return { cards, capMax: CAP_MAX };
 }
 
-function detectAchievements(position: Position, statLine: Record<string, number>) {
-  const ach: Array<{ id: string; label: string }> = [];
-  const saves = statLine.saves ?? 0;
-  const cs = statLine.cleanSheets ?? statLine.cleanSheet ?? 0;
-  const red = statLine.redCards ?? statLine.red ?? 0;
-
-  if (position === "GK" && cs >= 1) ach.push({ id: "clean-sheet-gk", label: "Clean Sheet" });
-  if (position === "GK" && saves >= 6) ach.push({ id: "shot-stopper", label: "Shot Stopper" });
-  if (red >= 1) ach.push({ id: "sent-off", label: "Sent Off" });
-
-  return ach;
-}
-
-function findLogsForCard(logs: any[], card: PlayerCard): any[] {
-  if (!logs.length) return [];
-  return logs.filter((l) => {
-    const pid = String(l.playerId ?? "");
-    const bid = String(l.basePlayerId ?? "");
-    return pid === card.cardId || bid === card.basePlayerId || pid === card.basePlayerId;
-  });
-}
-
-export async function dealInitialRoster(): Promise<DealResult> {
-  const { cards } = await ensureCache();
-  const mapped = cards.map(mapCard).filter((c) => c.salary > 0);
-
-  const roster = buildRoster(mapped, []);
-  return { cards: roster, capUsed: sumSalary(roster), capMax: CAP_MAX };
-}
-
-export async function redrawRoster(opts: {
+export async function redrawRoster(args: {
   currentCards: PlayerCard[];
   lockedCardIds: Set<string>;
-}): Promise<DealResult> {
-  const { cards } = await ensureCache();
-  const mapped = cards.map(mapCard).filter((c) => c.salary > 0);
+}): Promise<{ cards: PlayerCard[]; capMax: number }> {
+  const { players, logs } = await ensureDataLoaded();
+  const rng = mulberry32(_seed++);
 
-  const locked = opts.currentCards.filter((c) => opts.lockedCardIds.has(c.cardId));
-  const roster = buildRoster(mapped, locked);
+  const locked = args.currentCards.filter((c) => args.lockedCardIds.has(c.cardId));
+  const lockedBase = new Set(locked.map((c) => c.basePlayerId));
 
-  return { cards: roster, capUsed: sumSalary(roster), capMax: CAP_MAX };
+  // pool excludes locked base ids
+  const pool = players.filter((p) => !lockedBase.has(baseId(p)));
+  const rawRoster = fillRosterSculpted(pool, rng).map(buildCard);
+
+  // merge locked + new (avoid dup base)
+  const used = new Set(locked.map((c) => c.basePlayerId));
+  const merged: PlayerCard[] = [...locked];
+
+  for (const c of rawRoster) {
+    if (merged.length >= ROSTER_SIZE) break;
+    if (used.has(c.basePlayerId)) continue;
+    merged.push(c);
+    used.add(c.basePlayerId);
+  }
+
+  // attach logs for any new cards (locked cards keep their existing stats)
+  for (const card of merged) {
+    if (args.lockedCardIds.has(card.cardId)) continue; // keep locked as-is
+    const log = pickRandomLogForCard(card.cardId, logs, rng);
+    if (!log) continue;
+    const actualFp = computeFantasyPointsFromLog(log) * 10;
+    card.actualFp = actualFp;
+    card.fpDelta = actualFp - (card.projectedFp ?? 0);
+    card.statLine = log.stats ?? {};
+    card.gameInfo = { date: log.date ?? "", opponent: log.opponent ?? "", homeAway: log.homeAway ?? undefined };
+  }
+
+  return { cards: merged.slice(0, ROSTER_SIZE), capMax: CAP_MAX };
 }
 
-export async function resolveRoster(opts: { finalCards: PlayerCard[] }): Promise<ResolveResult> {
-  const { logs } = await ensureCache();
+export async function resolveRoster(args: {
+  finalCards: PlayerCard[];
+}): Promise<{
+  cards: PlayerCard[];
+  totalFp: number;
+  winTierLabel: string;
+  mvpCardId: string;
+  topContributors: { cardId: string; name: string; fp: number }[];
+}> {
+  const cards = args.finalCards;
 
-  const resolved: PlayerCard[] = opts.finalCards.map((c) => {
-    const candidates = findLogsForCard(logs, c);
-    const log = candidates.length ? pickOne(candidates) : null;
+  const totalFp = cards.reduce((s, c) => s + (Number.isFinite(c.actualFp) ? (c.actualFp as number) : 0), 0);
 
-    const fpFromLog = log ? extractFp(log) : null;
-    const noise = (Math.random() - 0.5) * 2.0;
-    const actualFp = Number(((fpFromLog ?? (c.projectedFp + noise))).toFixed(1));
-    const fpDelta = Number((actualFp - c.projectedFp).toFixed(1));
+  let winTierLabel: string;
+  if (totalFp >= 600) winTierLabel = "JACKPOT";
+  else if (totalFp >= 450) winTierLabel = "BIG WIN";
+  else if (totalFp >= 320) winTierLabel = "WIN";
+  else if (totalFp >= 220) winTierLabel = "SMALL WIN";
+  else winTierLabel = "NO WIN";
 
-    const statLine = log ? extractStatLine(log) : {};
-    const achievements = detectAchievements(c.position, statLine);
+  const sorted = [...cards].sort((a, b) => (b.actualFp || 0) - (a.actualFp || 0));
+  const topCards = sorted.slice(0, 3);
 
-    const gameInfo = log
-      ? {
-          date: normalizeDate(log),
-          opponent: extractOpponent(log),
-          homeAway: extractHomeAway(log),
-        }
-      : undefined;
-
-    return { ...c, actualFp, fpDelta, statLine, achievements, gameInfo };
-  });
-
-  const totalFp = Number(resolved.reduce((s, c) => s + (c.actualFp ?? 0), 0).toFixed(1));
-  const sorted = [...resolved].sort((a, b) => (b.actualFp ?? 0) - (a.actualFp ?? 0));
+  const topContributors = topCards.map((c) => ({ cardId: c.cardId, name: c.name, fp: c.actualFp || 0 }));
   const mvpCardId = sorted[0]?.cardId ?? "";
 
-  return {
-    cards: resolved,
-    totalFp,
-    winTierLabel: labelTier(totalFp),
-    topContributors: sorted.slice(0, 3).map((c) => ({ cardId: c.cardId, name: c.name, fp: c.actualFp ?? 0 })),
-    mvpCardId,
-  };
-}
-
-function labelTier(totalFp: number): string {
-  if (totalFp >= 81) return "Legendary";
-  if (totalFp >= 69) return "Epic";
-  if (totalFp >= 55) return "Big Win";
-  if (totalFp >= 45) return "Nice Win";
-  if (totalFp >= 36) return "Solid";
-  return "Try Again";
+  return { cards, totalFp, winTierLabel, mvpCardId, topContributors };
 }
