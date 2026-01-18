@@ -24,6 +24,7 @@ type RawPlayer = {
   position: string;
   tier?: string; // ORANGE/PURPLE/...
   salary: number | string;
+  photoCode?: string;
 };
 
 type RawLog = {
@@ -172,6 +173,7 @@ function buildCard(p: RawPlayer): PlayerCard {
     position: asPosition(p.position),
     tier: asTier(p.tier),
     salary: clampInt(n(p.salary), 1, 99),
+    photoCode: p.photoCode,
     projectedFp: 0,
     actualFp: 0,
     fpDelta: 0,
@@ -604,13 +606,12 @@ function lastResortBuild(pool0: RawPlayer[], rng: () => number): RawPlayer[] {
 let _seed = Date.now();
 
 // -------------------- PUBLIC API (GameView-compatible) --------------------
+// -------------------- PUBLIC API (GameView-compatible) --------------------
 export async function dealInitialRoster(): Promise<{ cards: PlayerCard[]; capMax: number }> {
   const { players, logs } = await ensureDataLoaded();
-  
   const rng = mulberry32(_seed++);
 
   const rawRoster = generateRosterSculpted(players, rng);
-
   const cards = rawRoster.map(buildCard);
 
   for (const card of cards) {
@@ -624,13 +625,6 @@ export async function dealInitialRoster(): Promise<{ cards: PlayerCard[]; capMax
     card.gameInfo = { date: log.date ?? "", opponent: log.opponent ?? "", homeAway: log.homeAway ?? undefined };
   }
 
-// DEBUG: verify stats attachment
-const attached = cards.filter(c => (c.actualFp ?? 0) > 0).length;
-const missing = cards.filter(
-  c => !c.statLine || Object.keys(c.statLine).length === 0
-).length;
-
-
   return { cards, capMax: CAP_MAX };
 }
 
@@ -643,29 +637,32 @@ export async function redrawRoster(args: {
 
   const locked = args.currentCards.filter((c) => args.lockedCardIds.has(c.cardId));
   const lockedBase = new Set(locked.map((c) => c.basePlayerId));
-
   const lockedSalary = locked.reduce((s, c) => s + (c.salary ?? 0), 0);
 
   // Pool excludes locked base ids
   const pool = players.filter((p) => !lockedBase.has(baseId(p)));
 
+  // Fresh candidates (already buildCard'd)
   const fresh = generateRosterSculpted(pool, rng).map(buildCard);
 
   const merged: PlayerCard[] = [...locked];
   const used = new Set(locked.map((c) => c.basePlayerId));
   let capUsed = lockedSalary;
 
+  // 1) Add fresh cards under cap, respecting uniqueness + GK rule
   for (const c of fresh) {
     if (merged.length >= ROSTER_SIZE) break;
     if (used.has(c.basePlayerId)) continue;
     if (c.position === "GK" && merged.some((x) => x.position === "GK")) continue; // exactly 1 GK
-    if (capUsed + (c.salary ?? 0) > CAP_MAX) continue;
+    const sal = c.salary ?? 0;
+    if (capUsed + sal > CAP_MAX) continue;
+
     merged.push(c);
     used.add(c.basePlayerId);
-    capUsed += c.salary ?? 0;
+    capUsed += sal;
   }
 
-  // If we still don't have 6, fill with cheapest legal (try to keep GK rule)
+  // 2) If short, fill with cheapest legal under cap (never exceed cap)
   if (merged.length < ROSTER_SIZE) {
     const used2 = new Set(merged.map((c) => c.basePlayerId));
     const fill = pool
@@ -675,8 +672,10 @@ export async function redrawRoster(args: {
 
     for (const p of fill) {
       if (merged.length >= ROSTER_SIZE) break;
+
       const sal = clampInt(n(p.salary), 1, 99);
       if (capUsed + sal > CAP_MAX) continue;
+
       const c = buildCard(p);
       merged.push(c);
       used2.add(c.basePlayerId);
@@ -684,25 +683,63 @@ export async function redrawRoster(args: {
     }
   }
 
-  // Final hard guard: if still short (rare), ignore cap for last slots but keep baseId uniqueness
-  if (merged.length < ROSTER_SIZE) {
-    const used3 = new Set(merged.map((c) => c.basePlayerId));
-    const fill2 = pool
-      .filter((p) => !used3.has(baseId(p)))
-      .filter((p) => asPosition(p.position) !== "GK" || !merged.some((c) => c.position === "GK"))
-      .sort((a, b) => n(a.salary) - n(b.salary));
-    for (const p of fill2) {
-      if (merged.length >= ROSTER_SIZE) break;
-      merged.push(buildCard(p));
-      used3.add(baseId(p));
+  // 3) If we have 6 but are below CAP_MIN, try to upgrade unlocked cards (best-effort).
+  // Greedy: upgrade cheapest unlocked first, same position only, keep uniqueness + GK rule, never exceed CAP_MAX.
+  if (merged.length === ROSTER_SIZE && capUsed < CAP_MIN) {
+    const lockedSet = args.lockedCardIds;
+
+    const upgradeTargets = merged
+      .map((c, i) => ({ c, i }))
+      .filter(({ c }) => !lockedSet.has(c.cardId))
+      .sort((a, b) => (a.c.salary ?? 0) - (b.c.salary ?? 0));
+
+    for (const { c: victim, i } of upgradeTargets) {
+      if (capUsed >= CAP_MIN) break;
+
+      const victimPos = victim.position;
+      const victimSal = victim.salary ?? 0;
+      const capAfterRemove = capUsed - victimSal;
+
+      const usedNow = new Set(merged.map((x) => x.basePlayerId));
+      usedNow.delete(victim.basePlayerId);
+
+      let bestP: RawPlayer | null = null;
+      let bestSal = -1;
+
+      for (const p of pool) {
+        const b = baseId(p);
+        if (usedNow.has(b)) continue;
+
+        const pos = asPosition(p.position);
+        if (pos !== victimPos) continue;
+
+        // GK rule: only one GK total
+        if (pos === "GK" && merged.some((x) => x.position === "GK" && x.cardId !== victim.cardId)) continue;
+
+        const sal = clampInt(n(p.salary), 1, 99);
+        if (capAfterRemove + sal > CAP_MAX) continue;
+
+        if (sal > bestSal) {
+          bestSal = sal;
+          bestP = p;
+        }
+      }
+
+      if (!bestP) continue;
+
+      const repl = buildCard(bestP);
+      merged[i] = repl;
+      capUsed = capAfterRemove + (repl.salary ?? 0);
     }
   }
 
-  // Attach logs only for new (unlocked) cards
+  // 4) Attach logs only for new (unlocked) cards
   for (const card of merged) {
     if (args.lockedCardIds.has(card.cardId)) continue;
+
     const log = pickRandomLogForCard(card.cardId, logs, rng, card.basePlayerId);
     if (!log) continue;
+
     const actualFp = computeFantasyPointsFromLog(log) * 10;
     card.actualFp = actualFp;
     card.fpDelta = actualFp - (card.projectedFp ?? 0);
@@ -712,6 +749,7 @@ export async function redrawRoster(args: {
 
   return { cards: merged.slice(0, ROSTER_SIZE), capMax: CAP_MAX };
 }
+
 
 export async function resolveRoster(args: { finalCards: PlayerCard[] }): Promise<ResolveResult> {
   const cards = args.finalCards;

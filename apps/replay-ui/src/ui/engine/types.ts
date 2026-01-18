@@ -18,6 +18,9 @@ export type PlayerCard = {
   cardId: string;
   basePlayerId: string;
 
+  photoCode?: string;
+
+
   // Front of card:
   name: string;
   team: string;

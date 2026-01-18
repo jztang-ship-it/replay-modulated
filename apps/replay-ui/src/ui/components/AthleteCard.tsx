@@ -1,5 +1,16 @@
-import { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import type { GamePhase, PlayerCard, Position, TierColor } from "../engine/types";
+
+function getInitials(name: string) {
+  const parts = String(name ?? "").trim().split(/\s+/);
+  const a = parts[0]?.[0] ?? "";
+  const b = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : "";
+  return (a + b).toUpperCase();
+}
+
+function plHeadshotUrl(photoCode: string) {
+  return `https://resources.premierleague.com/premierleague/photos/players/110x140/p${photoCode}.png`;
+}
 
 function tierStyle(tier: TierColor) {
   switch (tier) {
@@ -33,7 +44,7 @@ function round1(x: number) {
 function getStat(stats: Record<string, any> | undefined, keys: string[]): number {
   const s = stats ?? {};
   for (const k of keys) {
-    const v = s[k];
+    const v = (s as any)[k];
     const n = typeof v === "number" ? v : Number(v);
     if (Number.isFinite(n)) return n;
   }
@@ -42,7 +53,7 @@ function getStat(stats: Record<string, any> | undefined, keys: string[]): number
 
 function statRowsForPosition(pos: Position, stats: Record<string, any> | undefined) {
   const minutes = getStat(stats, ["minutes", "minutesPlayed"]);
-  const goals = getStat(stats, ["goals_scored"]);
+  const goals = getStat(stats, ["goals_scored", "goals"]);
   const assists = getStat(stats, ["assists"]);
   const cs = getStat(stats, ["clean_sheets"]);
   const gc = getStat(stats, ["goals_conceded"]);
@@ -108,6 +119,13 @@ function statRowsForPosition(pos: Position, stats: Record<string, any> | undefin
   ] as Array<[string, number]>;
 }
 
+/**
+ * AthleteCard
+ * - Designed to fit inside a fixed 2x3 grid (mobile) / 3x2 grid (desktop)
+ * - No intrinsic height; fills its parent grid cell
+ * - Headshot + Name dominate; salary/pos/proj are secondary chips
+ * - Headshot crop biased upward to reduce jersey/logo exposure
+ */
 export function AthleteCard(props: {
   card: PlayerCard;
   phase: GamePhase;
@@ -122,7 +140,10 @@ export function AthleteCard(props: {
   const t = tierStyle(card.tier);
   const seasonLabel = useMemo(() => fmtSeason(String(card.season ?? "")), [card.season]);
 
-  // IMPORTANT: no clamping — allow negative values
+  const photoCode = (card as any).photoCode as string | undefined;
+  const [imgBroken, setImgBroken] = useState(false);
+  const headshotSrc = !imgBroken && photoCode ? plHeadshotUrl(photoCode) : null;
+
   const proj = Number(card.projectedFp ?? 0);
   const actual = Number(card.actualFp ?? 0);
   const delta = Number(card.fpDelta ?? 0);
@@ -130,10 +151,12 @@ export function AthleteCard(props: {
   const showResults = phase === "RESULTS";
   const clickable = canFlip && phase === "RESULTS";
 
+  const rows = useMemo(() => statRowsForPosition(card.position, card.statLine as any), [card.position, card.statLine]);
+
   const containerStyle: React.CSSProperties = {
     width: "100%",
-    height: 160,
-    borderRadius: 14,
+    height: "100%",
+    borderRadius: 16,
     border: `2px solid ${t.border}`,
     background: "#fff",
     boxShadow: isLocked ? "0 0 0 2px rgba(0,0,0,0.06), 0 8px 20px rgba(0,0,0,0.08)" : "0 6px 18px rgba(0,0,0,0.06)",
@@ -152,10 +175,11 @@ export function AthleteCard(props: {
     background: isLocked ? "rgba(0,0,0,0.85)" : "transparent",
     color: "white",
     padding: "4px 34px",
-    fontSize: 11,
-    fontWeight: 800,
+    fontSize: 10,
+    fontWeight: 900,
     letterSpacing: 0.8,
     display: isLocked ? "block" : "none",
+    zIndex: 5,
   };
 
   const mvpBadge: React.CSSProperties = {
@@ -164,119 +188,139 @@ export function AthleteCard(props: {
     right: 10,
     background: "#f59e0b",
     color: "white",
-    fontSize: 11,
-    fontWeight: 900,
+    fontSize: 10,
+    fontWeight: 950,
     padding: "4px 8px",
     borderRadius: 999,
     display: isMvp ? "inline-flex" : "none",
     alignItems: "center",
     gap: 6,
+    zIndex: 5,
   };
 
-  const tierPill: React.CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 6,
-    padding: "3px 8px",
+  const chip: React.CSSProperties = {
+    fontSize: 10,
+    fontWeight: 900,
+    padding: "4px 8px",
     borderRadius: 999,
     background: "rgba(0,0,0,0.06)",
-    fontSize: 11,
-    fontWeight: 800,
+    border: "1px solid rgba(0,0,0,0.08)",
+    whiteSpace: "nowrap",
   };
 
-  const bigNumberBox: React.CSSProperties = {
-    border: "1px solid rgba(0,0,0,0.10)",
-    borderRadius: 12,
-    padding: "8px 10px",
-    minWidth: 90,
-    textAlign: "right",
-    background: "rgba(0,0,0,0.02)",
+  const deltaChip: React.CSSProperties = {
+    ...chip,
+    background: delta >= 0 ? "rgba(34,197,94,0.16)" : "rgba(107,114,128,0.18)",
+    border: "1px solid rgba(0,0,0,0.06)",
   };
 
-  const deltaStyle: React.CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "3px 8px",
-    borderRadius: 999,
-    fontSize: 12,
-    fontWeight: 900,
-    background: delta >= 0 ? "rgba(34,197,94,0.15)" : "rgba(107,114,128,0.18)",
-  };
+  const HEADSHOT = 86;
 
-  const rows = useMemo(() => statRowsForPosition(card.position, card.statLine as any), [card.position, card.statLine]);
+  const Headshot = (
+    <div
+      style={{
+        width: HEADSHOT,
+        height: HEADSHOT,
+        borderRadius: 18,
+        overflow: "hidden",
+        background: "rgba(0,0,0,0.06)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        border: "1px solid rgba(0,0,0,0.10)",
+        flex: "0 0 auto",
+      }}
+      title={String(card.name ?? "")}
+    >
+      {headshotSrc ? (
+        <img
+          src={headshotSrc}
+          alt={String(card.name ?? "Player")}
+          style={{
+            width: "100%",
+            height: "125%",           // zoom in
+            objectFit: "cover",
+            objectPosition: "50% 16%", // bias upward
+            display: "block",
+          }}
+          onError={() => setImgBroken(true)}
+        />
+      ) : (
+        <span style={{ fontWeight: 950, fontSize: 18, opacity: 0.85 }}>{getInitials(String(card.name ?? ""))}</span>
+      )}
+    </div>
+  );
 
   const Front = (
-    <div style={{ padding: 12, height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <span style={tierPill}>
-              <span style={{ width: 8, height: 8, borderRadius: 999, background: t.border, display: "inline-block" }} />
-              {card.position} • {t.label}
-            </span>
-          </div>
+    <div style={{ padding: 10, height: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        {Headshot}
 
-          <div style={{ marginTop: 8, fontSize: 16, fontWeight: 950, lineHeight: 1.15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div
+            style={{
+              fontSize: 16,
+              fontWeight: 950,
+              lineHeight: 1.05,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}
+          >
             {String(card.name ?? "Unknown").toUpperCase()}
           </div>
 
-          <div style={{ marginTop: 4, fontSize: 12, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap", gap: 6 }}>
+            <span style={chip}>
+              {card.position} • {t.label}
+            </span>
+            <span style={chip}>${card.salary}</span>
+            <span style={chip}>PROJ {round1(proj)}</span>
+            {showResults && <span style={chip}>ACT {round1(actual)}</span>}
+            {showResults && <span style={deltaChip}>{delta >= 0 ? `+${round1(delta)}` : `${round1(delta)}`}</span>}
+          </div>
+
+          <div style={{ marginTop: 6, fontSize: 11, opacity: 0.75, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {card.team ?? "Unknown"} • {seasonLabel}
-          </div>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
-          <div style={bigNumberBox}>
-            <div style={{ fontSize: 10, opacity: 0.7, fontWeight: 800 }}>SALARY</div>
-            <div style={{ fontSize: 18, fontWeight: 950 }}>${card.salary}</div>
-          </div>
-
-          <div style={bigNumberBox}>
-            <div style={{ fontSize: 10, opacity: 0.7, fontWeight: 800 }}>PROJ FP</div>
-            <div style={{ fontSize: 18, fontWeight: 950 }}>{round1(proj)}</div>
           </div>
         </div>
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-        <div style={{ fontSize: 11, opacity: 0.65 }}>
-          {clickable ? "Tap to view box score" : phase === "HOLD" ? "Tap to protect" : " "}
-        </div>
-
-        {showResults && (
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <div style={bigNumberBox}>
-              <div style={{ fontSize: 10, opacity: 0.7, fontWeight: 800 }}>ACT FP</div>
-              <div style={{ fontSize: 18, fontWeight: 950 }}>{round1(actual)}</div>
-            </div>
-
-            <div>
-              <div style={{ fontSize: 10, opacity: 0.7, fontWeight: 800, textAlign: "right" }}>VS PROJ</div>
-              <div style={deltaStyle}>{delta >= 0 ? `+${round1(delta)}` : `${round1(delta)}`}</div>
-            </div>
-          </div>
-        )}
+      <div style={{ marginTop: "auto", fontSize: 11, opacity: 0.65 }}>
+        {clickable ? "Tap to view box score" : phase === "HOLD" ? "Tap to protect" : " "}
       </div>
     </div>
   );
 
   const Back = (
-    <div style={{ padding: 12, height: "100%", display: "flex", flexDirection: "column" }}>
+    <div style={{ padding: 10, height: "100%", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10 }}>
-        <div style={{ fontSize: 14, fontWeight: 950, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <div style={{ fontSize: 13, fontWeight: 950, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {String(card.name ?? "Unknown").toUpperCase()}
         </div>
-        <div style={{ fontSize: 12, opacity: 0.8 }}>{card.team ?? "Unknown"} • {seasonLabel}</div>
+        <div style={{ fontSize: 11, opacity: 0.75, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {card.team ?? "Unknown"} • {seasonLabel}
+        </div>
       </div>
 
-      <div style={{ marginTop: 8, fontSize: 12, opacity: 0.85 }}>
-        Match Date: {card.gameInfo?.date ?? "N/A"}
+      <div style={{ marginTop: 6, fontSize: 11, opacity: 0.85 }}>
+        Match Date: {(card as any).gameInfo?.date ?? "N/A"}
       </div>
 
-      <div style={{ marginTop: 10, borderTop: "1px solid rgba(0,0,0,0.10)", paddingTop: 10, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+      <div
+        style={{
+          marginTop: 8,
+          borderTop: "1px solid rgba(0,0,0,0.10)",
+          paddingTop: 8,
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 6,
+          fontSize: 11,
+        }}
+      >
         {rows.slice(0, 10).map(([k, v]) => (
-          <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+          <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
             <span style={{ opacity: 0.75 }}>{k}</span>
             <span style={{ fontWeight: 900 }}>{v}</span>
           </div>
@@ -285,7 +329,9 @@ export function AthleteCard(props: {
 
       <div style={{ marginTop: "auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ fontSize: 11, opacity: 0.65 }}>Tap to flip back</div>
-        <div style={{ fontSize: 11, fontWeight: 900 }}>{card.position} • ${card.salary}</div>
+        <div style={{ fontSize: 11, fontWeight: 900 }}>
+          {card.position} • ${card.salary}
+        </div>
       </div>
     </div>
   );

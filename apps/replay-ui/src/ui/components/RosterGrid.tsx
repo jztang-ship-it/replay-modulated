@@ -1,46 +1,62 @@
+import { useMemo } from "react";
 import type { GamePhase, PlayerCard } from "../engine/types";
 import { CardSlot } from "./CardSlot";
 
+function cardKey(c: any): string {
+  return String(c?.cardId ?? c?.id ?? c?.playerId ?? c?.basePlayerId ?? c?.uid ?? c?.name ?? "");
+}
+
+
 export function RosterGrid(props: {
-  cards: PlayerCard[];
+  roster: PlayerCard[];
   phase: GamePhase;
-  lockedCardIds: Set<string>;
-  onToggleLock: (cardId: string) => void;
-  mvpCardId: string;
+
+  lockedIds: Set<string>;
+  mvpId?: string;
+  flippedId?: string | null;
+
+  onToggleLock: (cardKey: string) => void;
+  onToggleFlip: (cardKey: string) => void;
+
+  columns?: 2 | 3;
 }) {
-  const { cards, phase, lockedCardIds, onToggleLock, mvpCardId } = props;
+  const { roster, phase, lockedIds, mvpId, flippedId, onToggleLock, onToggleFlip, columns } = props;
+
+  const cols = useMemo(() => {
+    if (columns) return columns;
+    if (typeof window === "undefined") return 2;
+    return window.matchMedia?.("(min-width: 900px)")?.matches ? 3 : 2;
+  }, [columns]);
+
+  const cards = roster.slice(0, 6);
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8 }}>
-      {Array.from({ length: 6 }).map((_, idx) => {
-        const card = cards[idx];
-        if (!card) {
-          return (
-            <div
-              key={idx}
-              style={{
-                height: 190,
-                borderRadius: 16,
-                border: "1px dashed rgba(0,0,0,0.25)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                opacity: 0.6,
-              }}
-            >
-              Waiting…
-            </div>
-          );
-        }
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        overflow: "hidden",
+        display: "grid",
+        gap: 10,
+        gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+        gridAutoRows: "1fr",
+        alignContent: "stretch",
+      }}
+    >
+      {cards.map((card) => {
+        const key = cardKey(card) || String(Math.random());
 
         return (
           <CardSlot
-            key={card.cardId}
+            key={key}
             card={card}
             phase={phase}
-            locked={lockedCardIds.has(card.cardId)}
-            onToggleLock={() => onToggleLock(card.cardId)}
-            isMvp={phase === "RESULTS" && card.cardId === mvpCardId}
+            isLocked={lockedIds.has(key)}
+            isMvp={mvpId === key}
+            isFlipped={flippedId === key}
+            canFlip={phase === "RESULTS"}
+            onToggleLock={() => onToggleLock(key)}
+            onToggleFlip={() => onToggleFlip(key)}
           />
         );
       })}

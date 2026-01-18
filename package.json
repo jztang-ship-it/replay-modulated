@@ -4,9 +4,9 @@
   "description": "Core backend logic for iReplay instant fantasy sports game",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "scripts": {
+"scripts": {
     "build": "tsc",
-    "dev": "ts-node src/index.ts",
+    "dev": "npm --prefix apps/replay-ui run dev",
     "start": "node dist/index.js"
   },
   "keywords": [
