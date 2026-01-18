@@ -18,3 +18,4 @@ build/
 # Data (generated)
 src/data/**/processed*
 src/data/**/raw*
+*.zip
