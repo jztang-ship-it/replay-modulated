@@ -14,3 +14,7 @@ fpl_bootstrap.json
 restore_tmp/
 missing_photoCode.json
 _archive/
+
+# local processed data
+core/data/football/processed-epl/
+*.DS_Store
