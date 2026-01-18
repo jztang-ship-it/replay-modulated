@@ -1,3 +1,5 @@
+// apps/replay-ui/src/ui/engine/types.ts
+
 export type Position = "GK" | "DEF" | "MID" | "FWD";
 export type TierColor = "ORANGE" | "PURPLE" | "BLUE" | "GREEN" | "WHITE";
 export type GamePhase = "DEAL" | "HOLD" | "DRAW" | "RESULTS";
@@ -28,7 +30,7 @@ export type PlayerCard = {
 
   // Results-only:
   actualFp?: number; // shown in results
-  fpDelta?: number;  // actual - projected (UI computed ok)
+  fpDelta?: number;  // actual - projected
 
   // Back of card (results-only flip):
   gameInfo?: GameInfo;
@@ -45,7 +47,7 @@ export type DealResult = {
 export type ResolveResult = {
   cards: PlayerCard[];
   totalFp: number;
-  winTierLabel: string; // sports-friendly label
+  winTierLabel: string;
   topContributors: Array<{ cardId: string; name: string; fp: number }>;
   mvpCardId: string;
 };
