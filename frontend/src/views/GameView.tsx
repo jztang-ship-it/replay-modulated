@@ -6,13 +6,9 @@ import { ScoreHeader } from "../components/ScoreHeader";
 
 const CAP_MAX = 180;
 
-/**
- * IMPORTANT:
- * engineAdapter expects lockedCardIds to correspond to the card's real identifier.
- * PlayerCard in this repo apparently does NOT have `id` typed, so we infer a stable key.
- */
+type GameState = "IDLE" | "HOLD" | "RESULTS";
+
 function cardId(card: any): string {
-  // Prefer the most "card identity" fields first
   const v =
     card?.cardId ??
     card?.id ??
@@ -20,7 +16,6 @@ function cardId(card: any): string {
     card?.basePlayerId ??
     card?.uid ??
     card?.name;
-
   return String(v ?? "");
 }
 
@@ -29,17 +24,12 @@ function sumSalary(roster: PlayerCard[]) {
 }
 
 export default function GameView() {
-  const [phase, setPhase] = useState<GamePhase>("HOLD" as GamePhase);
+  const [gameState, setGameState] = useState<GameState>("IDLE");
   const [roster, setRoster] = useState<PlayerCard[]>([]);
-
-  // locks are stored by the same IDs we pass to the adapter
   const [lockedCardIds, setLockedCardIds] = useState<Set<string>>(new Set());
-
-  // flip uses same keying system
-  const [flippedId, setFlippedId] = useState<string | null>(null);
+  const [flippedIds, setFlippedIds] = useState<Set<string>>(new Set());
   const [mvpId, setMvpId] = useState<string | undefined>(undefined);
-
-  const isIdle = roster.length === 0;
+  const [betMultiplier, setBetMultiplier] = useState<number>(1);
 
   const capUsed = useMemo(() => sumSalary(roster), [roster]);
 
@@ -54,19 +44,24 @@ export default function GameView() {
   const capRemaining = useMemo(() => Math.max(0, CAP_MAX - capUsed), [capUsed]);
 
   const totalFp = useMemo(() => {
-    if (phase === "RESULTS") return roster.reduce((a, c: any) => a + Number(c?.actualFp ?? 0), 0);
+    if (gameState === "RESULTS") return roster.reduce((a, c: any) => a + Number(c?.actualFp ?? 0), 0);
     return roster.reduce((a, c: any) => a + Number(c?.projectedFp ?? 0), 0);
-  }, [roster, phase]);
+  }, [roster, gameState]);
 
   const subtitle = useMemo(() => {
-    if (isIdle) return "Tap DEAL to start";
-    if (phase === "HOLD") return "Tap cards to PROTECT, then REDRAW or REVEAL";
-    if (phase === "RESULTS") return "Tap cards to view box score";
+    if (gameState === "IDLE") return "Tap PLAY to start";
+    if (gameState === "HOLD") return "Tap cards to PROTECT, then hit DRAW";
+    if (gameState === "RESULTS") return "Tap cards to view stats";
     return "";
-  }, [phase, isIdle]);
+  }, [gameState]);
+
+  const phase: GamePhase = useMemo(() => {
+    if (gameState === "RESULTS") return "RESULTS";
+    return "HOLD";
+  }, [gameState]);
 
   function toggleLock(cardKey: string) {
-    if (phase !== "HOLD") return;
+    if (gameState !== "HOLD") return;
     setLockedCardIds((prev) => {
       const next = new Set(prev);
       if (next.has(cardKey)) next.delete(cardKey);
@@ -76,67 +71,91 @@ export default function GameView() {
   }
 
   function toggleFlip(cardKey: string) {
-    if (phase !== "RESULTS") return;
-    setFlippedId((prev) => (prev === cardKey ? null : cardKey));
-  }
-
-  async function onDeal() {
-    setFlippedId(null);
-    setMvpId(undefined);
-    setLockedCardIds(new Set());
-
-    const res: any = await dealInitialRoster();
-    const nextRoster: PlayerCard[] = (res?.roster ?? res?.cards ?? res?.lineup ?? []) as PlayerCard[];
-    setRoster(nextRoster);
-
-    setPhase("HOLD" as GamePhase);
-  }
-
-  async function onRedraw() {
-    if (phase !== "HOLD" || isIdle) return;
-
-    const res: any = await redrawRoster({
-      currentCards: roster,
-      lockedCardIds,
+    if (gameState !== "RESULTS") return;
+    setFlippedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(cardKey)) next.delete(cardKey); else next.add(cardKey);
+      return next;
     });
+  }
+  async function onPrimaryAction() {
+    if (gameState === "IDLE") {
+      setFlippedIds(new Set());
+      setLockedCardIds(new Set());
 
-    const nextRoster: PlayerCard[] = (res?.roster ?? res?.cards ?? res?.lineup ?? res?.finalCards ?? roster) as PlayerCard[];
-    setRoster(nextRoster);
+      const res: any = await dealInitialRoster();
+      const nextRoster: PlayerCard[] = (res?.roster ?? res?.cards ?? res?.lineup ?? []) as PlayerCard[];
+      
+      console.log("=== DEAL RECEIVED ===");
+      console.log("nextRoster length:", nextRoster.length);
+      console.log("nextRoster salaries:", nextRoster.map(c => c.salary));
+      
+      setRoster(nextRoster);
+      setGameState("HOLD");
+    } else if (gameState === "HOLD") {
+      const res: any = await redrawRoster({
+        currentCards: roster,
+        lockedCardIds,
+      });
 
-    // Keep HOLD phase (adapter likely does too)
-    setPhase("HOLD" as GamePhase);
+      const drawnRoster: PlayerCard[] = (res?.roster ?? res?.cards ?? res?.lineup ?? res?.finalCards ?? roster) as PlayerCard[];
+      
+      console.log("=== AFTER REDRAW ===");
+      console.log("drawnRoster length:", drawnRoster.length);
+      console.log("drawnRoster salaries:", drawnRoster.map(c => c.salary));
+
+      const resolveRes: any = await resolveRoster({
+        finalCards: drawnRoster,
+      });
+
+      const finalRoster: PlayerCard[] = (resolveRes?.roster ?? resolveRes?.cards ?? resolveRes?.finalCards ?? drawnRoster) as PlayerCard[];
+      
+      console.log("=== AFTER RESOLVE ===");
+      console.log("finalRoster length:", finalRoster.length);
+      console.log("finalRoster salaries:", finalRoster.map(c => c.salary));
+
+      setRoster(finalRoster);
+
+      const maybeMvp: string | undefined = resolveRes?.mvpId ?? resolveRes?.mvpCardId ?? resolveRes?.topCardId;
+      if (typeof maybeMvp === "string") setMvpId(maybeMvp);
+
+      setGameState("RESULTS");
+    } else if (gameState === "RESULTS") {
+      setRoster([]);
+      setLockedCardIds(new Set());
+      setFlippedIds(new Set());
+      setMvpId(undefined);
+      setGameState("IDLE");
+    }
   }
 
-  async function onReveal() {
-    if (phase !== "HOLD" || isIdle) return;
+  const primaryButtonLabel = useMemo(() => {
+    if (gameState === "IDLE") return "PLAY";
+    if (gameState === "HOLD") return "DRAW";
+    if (gameState === "RESULTS") return "PLAY AGAIN";
+    return "PLAY";
+  }, [gameState]);
 
-    // On reveal, we resolve the *final* current roster
-    const res: any = await resolveRoster({
-      finalCards: roster,
-    });
+  const primaryButtonStyle = useMemo(() => {
+    const base = {
+      flex: 1,
+      height: 54,
+      borderRadius: 16,
+      border: "2px solid rgba(0,0,0,0.12)",
+      fontWeight: 900,
+      fontSize: 18,
+      cursor: "pointer",
+      transition: "all 0.2s",
+    };
 
-    const nextRoster: PlayerCard[] = (res?.roster ?? res?.cards ?? res?.finalCards ?? roster) as PlayerCard[];
-    setRoster(nextRoster);
-
-    // Try to pick up MVP id if adapter provides it
-    const maybeMvp: string | undefined = res?.mvpId ?? res?.mvpCardId ?? res?.topCardId;
-    if (typeof maybeMvp === "string") setMvpId(maybeMvp);
-
-    setPhase("RESULTS" as GamePhase);
-  }
-
-  function onReset() {
-    setRoster([]);
-    setLockedCardIds(new Set());
-    setFlippedId(null);
-    setMvpId(undefined);
-    setPhase("HOLD" as GamePhase);
-  }
-
-  // IMPORTANT: RosterGrid expects lock set and flip id based on keys.
-  // Our RosterGrid implementation uses `cardKey()` internally (cardId/cardId fallback),
-  // but to avoid mismatch, we pass ids that match our `cardId` helper.
-  // RosterGrid uses Set<string> keys; we’re aligned.
+    if (gameState === "HOLD") {
+      return { ...base, background: "#4CAF50", color: "#fff", border: "2px solid #45a049" };
+    }
+    if (gameState === "RESULTS") {
+      return { ...base, background: "#2196F3", color: "#fff", border: "2px solid #1976D2" };
+    }
+    return { ...base, background: "#FF9800", color: "#fff", border: "2px solid #F57C00" };
+  }, [gameState]);
 
   return (
     <div
@@ -176,7 +195,7 @@ export default function GameView() {
             phase={phase}
             lockedIds={lockedCardIds}
             mvpId={mvpId}
-            flippedId={flippedId}
+            flippedIds={flippedIds}
             onToggleLock={(k) => toggleLock(k)}
             onToggleFlip={(k) => toggleFlip(k)}
           />
@@ -184,67 +203,30 @@ export default function GameView() {
       </div>
 
       <div style={{ flex: "0 0 auto", padding: 12 }}>
-        <div style={{ display: "flex", gap: 10 }}>
-          <button
-            onClick={onDeal}
-            style={{
-              flex: 1,
-              height: 44,
-              borderRadius: 12,
-              border: "1px solid rgba(0,0,0,0.12)",
-              background: "#fff",
-              fontWeight: 900,
-            }}
-          >
-            DEAL
-          </button>
-
-          <button
-            onClick={onRedraw}
-            disabled={isIdle || phase !== "HOLD"}
-            style={{
-              flex: 1,
-              height: 44,
-              borderRadius: 12,
-              border: "1px solid rgba(0,0,0,0.12)",
-              background: "#fff",
-              fontWeight: 900,
-              opacity: isIdle || phase !== "HOLD" ? 0.5 : 1,
-            }}
-          >
-            REDRAW
-          </button>
-
-          <button
-            onClick={onReveal}
-            disabled={isIdle || phase !== "HOLD"}
-            style={{
-              flex: 1,
-              height: 44,
-              borderRadius: 12,
-              border: "1px solid rgba(0,0,0,0.12)",
-              background: "#fff",
-              fontWeight: 900,
-              opacity: isIdle || phase !== "HOLD" ? 0.5 : 1,
-            }}
-          >
-            REVEAL
-          </button>
-
-          <button
-            onClick={onReset}
-            style={{
-              width: 90,
-              height: 44,
-              borderRadius: 12,
-              border: "1px solid rgba(0,0,0,0.12)",
-              background: "rgba(0,0,0,0.04)",
-              fontWeight: 900,
-            }}
-          >
-            RESET
-          </button>
+        <div style={{ display: "flex", gap: 8, marginBottom: 12, justifyContent: "center" }}>
+          {[1, 3, 5].map((mult) => (
+            <button
+              key={mult}
+              onClick={() => setBetMultiplier(mult)}
+              style={{
+                width: 60,
+                height: 36,
+                borderRadius: 8,
+                border: betMultiplier === mult ? "2px solid #2196F3" : "1px solid rgba(0,0,0,0.12)",
+                background: betMultiplier === mult ? "#E3F2FD" : "#fff",
+                fontWeight: betMultiplier === mult ? 900 : 600,
+                fontSize: 14,
+                cursor: "pointer",
+              }}
+            >
+              {mult}x
+            </button>
+          ))}
         </div>
+
+        <button onClick={onPrimaryAction} style={primaryButtonStyle}>
+          {primaryButtonLabel}
+        </button>
       </div>
     </div>
   );

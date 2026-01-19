@@ -51,81 +51,6 @@ function getStat(stats: Record<string, any> | undefined, keys: string[]): number
   return 0;
 }
 
-function statRowsForPosition(pos: Position, stats: Record<string, any> | undefined) {
-  const minutes = getStat(stats, ["minutes", "minutesPlayed"]);
-  const goals = getStat(stats, ["goals_scored", "goals"]);
-  const assists = getStat(stats, ["assists"]);
-  const cs = getStat(stats, ["clean_sheets"]);
-  const gc = getStat(stats, ["goals_conceded"]);
-  const saves = getStat(stats, ["saves"]);
-  const yc = getStat(stats, ["yellow_cards"]);
-  const rc = getStat(stats, ["red_cards"]);
-  const bonus = getStat(stats, ["bonus"]);
-  const bps = getStat(stats, ["bps"]);
-  const tp = getStat(stats, ["total_points"]);
-
-  if (pos === "GK") {
-    return [
-      ["Total Points", tp],
-      ["Minutes", minutes],
-      ["Saves", saves],
-      ["Goals Conceded", gc],
-      ["Clean Sheet", cs],
-      ["Yellow", yc],
-      ["Red", rc],
-      ["Bonus", bonus],
-      ["BPS", bps],
-    ] as Array<[string, number]>;
-  }
-
-  if (pos === "DEF") {
-    return [
-      ["Total Points", tp],
-      ["Minutes", minutes],
-      ["Clean Sheet", cs],
-      ["Goals Conceded", gc],
-      ["Goals", goals],
-      ["Assists", assists],
-      ["Yellow", yc],
-      ["Red", rc],
-      ["Bonus", bonus],
-      ["BPS", bps],
-    ] as Array<[string, number]>;
-  }
-
-  if (pos === "MID") {
-    return [
-      ["Total Points", tp],
-      ["Minutes", minutes],
-      ["Goals", goals],
-      ["Assists", assists],
-      ["Clean Sheet", cs],
-      ["Yellow", yc],
-      ["Red", rc],
-      ["Bonus", bonus],
-      ["BPS", bps],
-    ] as Array<[string, number]>;
-  }
-
-  return [
-    ["Total Points", tp],
-    ["Minutes", minutes],
-    ["Goals", goals],
-    ["Assists", assists],
-    ["Yellow", yc],
-    ["Red", rc],
-    ["Bonus", bonus],
-    ["BPS", bps],
-  ] as Array<[string, number]>;
-}
-
-/**
- * AthleteCard
- * - Designed to fit inside a fixed 2x3 grid (mobile) / 3x2 grid (desktop)
- * - No intrinsic height; fills its parent grid cell
- * - Headshot + Name dominate; salary/pos/proj are secondary chips
- * - Headshot crop biased upward to reduce jersey/logo exposure
- */
 export function AthleteCard(props: {
   card: PlayerCard;
   phase: GamePhase;
@@ -151,7 +76,9 @@ export function AthleteCard(props: {
   const showResults = phase === "RESULTS";
   const clickable = canFlip && phase === "RESULTS";
 
-  const rows = useMemo(() => statRowsForPosition(card.position, card.statLine as any), [card.position, card.statLine]);
+  // Extract all stats for back of card
+  const stats = card.statLine || {};
+  const statEntries = Object.entries(stats).filter(([k, v]) => typeof v === 'number' || !isNaN(Number(v)));
 
   const containerStyle: React.CSSProperties = {
     width: "100%",
@@ -238,9 +165,9 @@ export function AthleteCard(props: {
           alt={String(card.name ?? "Player")}
           style={{
             width: "100%",
-            height: "125%",           // zoom in
+            height: "125%",
             objectFit: "cover",
-            objectPosition: "50% 16%", // bias upward
+            objectPosition: "50% 16%",
             display: "block",
           }}
           onError={() => setImgBroken(true)}
@@ -276,8 +203,7 @@ export function AthleteCard(props: {
               {card.position} • {t.label}
             </span>
             <span style={chip}>${card.salary}</span>
-            <span style={chip}>PROJ {round1(proj)}</span>
-            {showResults && <span style={chip}>ACT {round1(actual)}</span>}
+            <span style={chip}>{showResults ? `ACT ${round1(actual)}` : `PROJ ${round1(proj)}`}</span>
             {showResults && <span style={deltaChip}>{delta >= 0 ? `+${round1(delta)}` : `${round1(delta)}`}</span>}
           </div>
 
@@ -288,7 +214,7 @@ export function AthleteCard(props: {
       </div>
 
       <div style={{ marginTop: "auto", fontSize: 11, opacity: 0.65 }}>
-        {clickable ? "Tap to view box score" : phase === "HOLD" ? "Tap to protect" : " "}
+        {clickable ? "Tap to view stats" : phase === "HOLD" ? "Tap to protect" : " "}
       </div>
     </div>
   );
@@ -300,12 +226,12 @@ export function AthleteCard(props: {
           {String(card.name ?? "Unknown").toUpperCase()}
         </div>
         <div style={{ fontSize: 11, opacity: 0.75, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-          {card.team ?? "Unknown"} • {seasonLabel}
+        FP: {round1(actual)}
         </div>
       </div>
 
       <div style={{ marginTop: 6, fontSize: 11, opacity: 0.85 }}>
-        Match Date: {(card as any).gameInfo?.date ?? "N/A"}
+        {card.gameInfo?.date || 'N/A'} • vs {card.gameInfo?.opponent || 'Unknown'}
       </div>
 
       <div
@@ -314,18 +240,30 @@ export function AthleteCard(props: {
           borderTop: "1px solid rgba(0,0,0,0.10)",
           paddingTop: 8,
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 6,
+          gridTemplateColumns: "1fr auto",
+          gap: "6px 12px",
           fontSize: 11,
+          maxHeight: "60%",
+          overflow: "auto",
         }}
       >
-        {rows.slice(0, 10).map(([k, v]) => (
-          <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-            <span style={{ opacity: 0.75 }}>{k}</span>
-            <span style={{ fontWeight: 900 }}>{v}</span>
-          </div>
+        {statEntries.slice(0, 12).map(([key, value]) => (
+          <React.Fragment key={key}>
+            <span style={{ opacity: 0.75, textTransform: "capitalize" }}>{key.replace(/_/g, ' ')}</span>
+            <span style={{ fontWeight: 900, textAlign: "right" }}>{Number(value).toFixed(0)}</span>
+          </React.Fragment>
         ))}
       </div>
+
+      {card.achievements && card.achievements.length > 0 && (
+        <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 4 }}>
+          {card.achievements.slice(0, 3).map((ach) => (
+            <span key={ach.id} style={{ ...chip, fontSize: 9, background: "rgba(34,197,94,0.16)" }}>
+              {ach.label}
+            </span>
+          ))}
+        </div>
+      )}
 
       <div style={{ marginTop: "auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ fontSize: 11, opacity: 0.65 }}>Tap to flip back</div>

@@ -34,8 +34,6 @@ export function ScoreHeader(props: {
                 <div style={{ fontSize: 16, fontWeight: 900 }}>{heldSalary}/{capMax}</div>
               </div>
               <div>
-                <div style={{ fontSize: 11, opacity: 0.7 }}>REMAINING</div>
-                <div style={{ fontSize: 16, fontWeight: 900 }}>{capRemaining}</div>
               </div>
             </div>
           ) : (

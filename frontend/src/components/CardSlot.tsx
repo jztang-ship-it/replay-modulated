@@ -16,14 +16,10 @@ export function CardSlot(props: {
 }) {
   const { card, phase, isLocked, isMvp, isFlipped, canFlip, onToggleLock, onToggleFlip } = props;
 
-  const handleClick = () => {
-    if (phase === "HOLD") onToggleLock();
-    if (phase === "RESULTS") onToggleFlip();
-  };
 
   return (
-    <div
-      onClick={handleClick}
+    <div onClick={phase === "HOLD" ? onToggleLock : undefined}
+      
       style={{
         width: "100%",
         height: "100%",
