@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { GamePhase, PlayerCard } from "../engine/types";
+import type { GamePhase, PlayerCard } from "../adapters/types";
 import { CardSlot } from "./CardSlot";
 
 function cardKey(c: any): string {

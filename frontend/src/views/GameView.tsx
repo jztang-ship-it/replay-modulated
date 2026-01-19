@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
-import type { GamePhase, PlayerCard } from "./engine/types";
-import { dealInitialRoster, redrawRoster, resolveRoster } from "./engine/engineAdapter";
-import { RosterGrid } from "./components/RosterGrid";
-import { ScoreHeader } from "./components/ScoreHeader";
+import type { GamePhase, PlayerCard } from "../adapters/types";
+import { dealInitialRoster, redrawRoster, resolveRoster } from "../adapters/gameAdapter";
+import { RosterGrid } from "../components/RosterGrid";
+import { ScoreHeader } from "../components/ScoreHeader";
 
 const CAP_MAX = 180;
 

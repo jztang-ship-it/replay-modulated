@@ -1,4 +1,4 @@
-import type { PlayerCard } from "../engine/types";
+import type { PlayerCard } from "../adapters/types";
 
 export function ResultsPanel(props: {
   totalFp: number;

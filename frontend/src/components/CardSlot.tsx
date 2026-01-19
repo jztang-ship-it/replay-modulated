@@ -1,4 +1,4 @@
-import type { GamePhase, PlayerCard } from "../engine/types";
+import type { GamePhase, PlayerCard } from "../adapters/types";
 import { AthleteCard } from "./AthleteCard";
 
 export function CardSlot(props: {

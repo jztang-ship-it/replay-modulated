@@ -2,8 +2,7 @@
  * Football (Soccer) sport configuration for iReplay
  * Defines all football-specific rules and settings
  */
-
-import { SportConfig } from '../models';
+import type { SportConfig } from '../models';
 import { FootballAchievements } from './achievements/footballAchievements';
 
 export const FootballSportConfig: SportConfig = {
@@ -20,7 +19,7 @@ export const FootballSportConfig: SportConfig = {
   },
   statCategories: [
     'minutes',
-    'goals',
+    'goals_scored',
     'assists',
     'shots',
     'shots_on_target',
@@ -35,18 +34,18 @@ export const FootballSportConfig: SportConfig = {
     'red_cards',
   ],
   projectionWeights: {
-    minutes: 0.0166667, // 0.5 per 30 minutes
-    goals: 8.0,
+    minutes: 0.0166667,
+    goals_scored: 8.0,
     assists: 6.0,
     shots: 0.8,
     shots_on_target: 1.2,
     key_passes: 2.0,
-    passes_completed: 0.04, // 1 per 25 passes
+    passes_completed: 0.04,
     tackles_won: 1.5,
     interceptions: 1.5,
     blocks: 2.0,
     saves: 2.0,
-    goals_conceded: -1.0, // Only meaningful for GK/DEF
+    goals_conceded: -1.0,
     yellow_cards: -2.0,
     red_cards: -6.0,
   },

@@ -1,6 +1,6 @@
 // apps/replay-ui/src/ui/engine/types.ts
 
-export type Position = "GK" | "DEF" | "MID" | "FWD";
+export type Position = string;
 export type TierColor = "ORANGE" | "PURPLE" | "BLUE" | "GREEN" | "WHITE";
 export type GamePhase = "DEAL" | "HOLD" | "DRAW" | "RESULTS";
 

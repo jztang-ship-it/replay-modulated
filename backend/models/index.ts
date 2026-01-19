@@ -3,14 +3,7 @@
  * These types are sport-agnostic and form the foundation of the system
  */
 
-export enum GameState {
-  IDLE = 'IDLE',
-  INITIAL_DEAL = 'INITIAL_DEAL',
-  HOLD_PHASE = 'HOLD_PHASE',
-  FINAL_DRAW = 'FINAL_DRAW',
-  RESOLUTION = 'RESOLUTION',
-  RESULT = 'RESULT',
-}
+export type GameState = 'IDLE' | 'INITIAL_DEAL' | 'HOLD_PHASE' | 'FINAL_DRAW' | 'RESOLUTION' | 'RESULT';
 
 export interface Player {
   id: string;

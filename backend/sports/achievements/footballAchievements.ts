@@ -3,7 +3,7 @@
  * Position-scoped achievements using stat gating (no position field in rules)
  */
 
-import { AchievementRule } from '../../models';
+import type { AchievementRule } from '../../models';
 
 export const FootballAchievements: AchievementRule[] = [
   // FWD-like: requires goals/shots_on_target
@@ -45,8 +45,6 @@ export const FootballAchievements: AchievementRule[] = [
       sound: 'achievement_rare',
     },
   },
-
-  // MID-like: requires high passes + key passes
   {
     id: 'playmaker',
     name: 'Playmaker',
@@ -85,8 +83,6 @@ export const FootballAchievements: AchievementRule[] = [
       sound: 'achievement_positive',
     },
   },
-
-  // DEF-like: requires blocks/tackles/interceptions
   {
     id: 'shutdown',
     name: 'Shutdown',
@@ -126,8 +122,6 @@ export const FootballAchievements: AchievementRule[] = [
       sound: 'achievement_positive',
     },
   },
-
-  // GK-like: requires saves
   {
     id: 'shot-stopper',
     name: 'Shot Stopper',
@@ -189,8 +183,6 @@ export const FootballAchievements: AchievementRule[] = [
       sound: 'achievement_rare',
     },
   },
-
-  // Negative: applies to anyone
   {
     id: 'sent-off',
     name: 'Sent Off',

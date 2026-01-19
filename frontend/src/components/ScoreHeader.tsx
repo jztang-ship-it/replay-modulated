@@ -1,4 +1,4 @@
-import type { GamePhase } from "../engine/types";
+import type { GamePhase } from "../adapters/types";
 
 export function ScoreHeader(props: {
   totalFp: number;

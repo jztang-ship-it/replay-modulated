@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { Position } from "../engine/types";
+import type { Position } from "../adapters/types";
 
 function label(k: string) {
   const map: Record<string, string> = {

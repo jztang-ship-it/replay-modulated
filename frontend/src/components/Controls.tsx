@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { GamePhase } from "../engine/types";
+import type { GamePhase } from "../adapters/types";
 
 function useIsNarrow(breakpointPx = 640) {
   const [isNarrow, setIsNarrow] = useState(() =>

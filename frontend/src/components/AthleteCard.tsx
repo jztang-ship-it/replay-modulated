@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import type { GamePhase, PlayerCard, Position, TierColor } from "../engine/types";
+import type { GamePhase, PlayerCard, Position, TierColor } from "../adapters/types";
 
 function getInitials(name: string) {
   const parts = String(name ?? "").trim().split(/\s+/);

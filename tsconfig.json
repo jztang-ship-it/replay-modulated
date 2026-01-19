@@ -1,35 +1,26 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "useDefineForClassFields": true,
+    "target": "ES2020",
     "module": "ESNext",
-    "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "skipLibCheck": true,
+    "lib": ["ES2020"],
     "moduleResolution": "node",
-    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
+    "allowJs": true,
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
-    "baseUrl": ".",
-    "paths": {
-      "@core/*": ["core/*"],
-      "@ui/*": ["ui/src/*"]
-    }
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "./dist",
+    "rootDir": "./backend"
   },
   "include": [
-    "core/**/*.ts", 
-    "ui/src/**/*.ts", 
-    "ui/src/**/*.tsx"
+    "backend/**/*.ts"
   ],
   "exclude": [
-    "node_modules", 
-    "dist", 
-    "ui/node_modules"
+    "node_modules",
+    "dist",
+    "frontend"
   ]
 }
