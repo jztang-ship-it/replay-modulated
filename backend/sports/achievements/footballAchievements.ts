@@ -6,7 +6,7 @@
 import type { AchievementRule } from '../../models';
 
 export const FootballAchievements: AchievementRule[] = [
-  // FWD-like: requires goals/shots_on_target
+  // FW-like: requires goals/shots_on_target
   {
     id: 'brace',
     name: 'Brace',

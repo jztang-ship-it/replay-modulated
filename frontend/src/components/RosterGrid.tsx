@@ -26,7 +26,7 @@ export function RosterGrid(props: {
   }, [columns]);
 
   const sortedCards = useMemo(() => {
-    const positionOrder = sportAdapter.positions; // e.g., ["FWD", "MID", "DEF", "GK"]
+    const positionOrder = sportAdapter.positions; // e.g., ["FW", "MD", "DE", "GK"]
 
     return [...roster]
       .sort((a, b) => {

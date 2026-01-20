@@ -125,8 +125,9 @@ export default function GameView() {
 
   const primaryButtonStyle = useMemo(() => {
     const base: React.CSSProperties = {
-      width: "100%",
-      height: 24, // 1/2 size feel
+      width: "50%",
+      height: 48, // 1/2 size feel
+      margin: "0 auto",
       borderRadius: 12,
       border: "1px solid rgba(255,255,255,0.14)",
       fontWeight: 950,

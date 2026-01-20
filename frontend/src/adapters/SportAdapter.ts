@@ -38,7 +38,7 @@ export class SportAdapter {
    * This prevents cards from "jumping" by keeping positions stationary.
    *
    * For football example (6 cards):
-   * ["GK","DEF","DEF","MID","MID","FWD"]
+   * ["GK","DE","DE","MD","MD","FW"]
    *
    * If config doesn't define an order, we derive a stable order from limits + positions.
    */
@@ -80,7 +80,7 @@ export class SportAdapter {
       }
     }
     
-    return (this.config.positions[0] || 'MID') as Position;
+    return (this.config.positions[0] || 'MD') as Position;
   }
 
   isValidPosition(pos: string): boolean {

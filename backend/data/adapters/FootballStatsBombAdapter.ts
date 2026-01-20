@@ -125,7 +125,7 @@ export class FootballStatsBombAdapter {
             id: playerId,
             sport: 'football',
             name: playerInfo.player_name,
-            position: 'FWD', // Default position - would need position data from StatsBomb
+            position: 'FW', // Default position - would need position data from StatsBomb
             team: lineup.team_name,
             salary: 0, // Will be calculated later
             tier: 'WHITE',

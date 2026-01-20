@@ -2,8 +2,8 @@
   {
     "id": "player-69",
     "sport": "football",
-    "name": "MID Player 69 (Tottenham)",
-    "position": "MID",
+    "name": "MD Player 69 (Tottenham)",
+    "position": "MD",
     "team": "Tottenham",
     "salary": 46,
     "tier": "ORANGE"
@@ -11,8 +11,8 @@
   {
     "id": "player-9",
     "sport": "football",
-    "name": "MID Player 9 (Man City)",
-    "position": "MID",
+    "name": "MD Player 9 (Man City)",
+    "position": "MD",
     "team": "Man City",
     "salary": 46,
     "tier": "ORANGE"
@@ -20,8 +20,8 @@
   {
     "id": "player-119",
     "sport": "football",
-    "name": "MID Player 119 (Brighton)",
-    "position": "MID",
+    "name": "MD Player 119 (Brighton)",
+    "position": "MD",
     "team": "Brighton",
     "salary": 47,
     "tier": "ORANGE"
@@ -29,8 +29,8 @@
   {
     "id": "player-121",
     "sport": "football",
-    "name": "MID Player 121 (Brighton)",
-    "position": "MID",
+    "name": "MD Player 121 (Brighton)",
+    "position": "MD",
     "team": "Brighton",
     "salary": 48,
     "tier": "ORANGE"
@@ -38,8 +38,8 @@
   {
     "id": "player-102",
     "sport": "football",
-    "name": "MID Player 102 (Newcastle)",
-    "position": "MID",
+    "name": "MD Player 102 (Newcastle)",
+    "position": "MD",
     "team": "Newcastle",
     "salary": 48,
     "tier": "ORANGE"
@@ -47,8 +47,8 @@
   {
     "id": "player-7",
     "sport": "football",
-    "name": "MID Player 7 (Man City)",
-    "position": "MID",
+    "name": "MD Player 7 (Man City)",
+    "position": "MD",
     "team": "Man City",
     "salary": 49,
     "tier": "ORANGE"
@@ -56,8 +56,8 @@
   {
     "id": "player-104",
     "sport": "football",
-    "name": "MID Player 104 (Newcastle)",
-    "position": "MID",
+    "name": "MD Player 104 (Newcastle)",
+    "position": "MD",
     "team": "Newcastle",
     "salary": 49,
     "tier": "ORANGE"
@@ -65,8 +65,8 @@
   {
     "id": "player-22",
     "sport": "football",
-    "name": "MID Player 22 (Arsenal)",
-    "position": "MID",
+    "name": "MD Player 22 (Arsenal)",
+    "position": "MD",
     "team": "Arsenal",
     "salary": 50,
     "tier": "ORANGE"
@@ -74,8 +74,8 @@
   {
     "id": "player-136",
     "sport": "football",
-    "name": "MID Player 136 (Aston Villa)",
-    "position": "MID",
+    "name": "MD Player 136 (Aston Villa)",
+    "position": "MD",
     "team": "Aston Villa",
     "salary": 51,
     "tier": "ORANGE"
@@ -83,8 +83,8 @@
   {
     "id": "player-134",
     "sport": "football",
-    "name": "MID Player 134 (Aston Villa)",
-    "position": "MID",
+    "name": "MD Player 134 (Aston Villa)",
+    "position": "MD",
     "team": "Aston Villa",
     "salary": 51,
     "tier": "ORANGE"
@@ -92,8 +92,8 @@
   {
     "id": "player-155",
     "sport": "football",
-    "name": "MID Player 155 (West Ham)",
-    "position": "MID",
+    "name": "MD Player 155 (West Ham)",
+    "position": "MD",
     "team": "West Ham",
     "salary": 52,
     "tier": "ORANGE"
@@ -101,8 +101,8 @@
   {
     "id": "player-8",
     "sport": "football",
-    "name": "MID Player 8 (Man City)",
-    "position": "MID",
+    "name": "MD Player 8 (Man City)",
+    "position": "MD",
     "team": "Man City",
     "salary": 53,
     "tier": "ORANGE"
@@ -110,8 +110,8 @@
   {
     "id": "player-72",
     "sport": "football",
-    "name": "MID Player 72 (Tottenham)",
-    "position": "MID",
+    "name": "MD Player 72 (Tottenham)",
+    "position": "MD",
     "team": "Tottenham",
     "salary": 53,
     "tier": "ORANGE"
@@ -119,8 +119,8 @@
   {
     "id": "player-133",
     "sport": "football",
-    "name": "MID Player 133 (Aston Villa)",
-    "position": "MID",
+    "name": "MD Player 133 (Aston Villa)",
+    "position": "MD",
     "team": "Aston Villa",
     "salary": 54,
     "tier": "ORANGE"
@@ -128,8 +128,8 @@
   {
     "id": "player-41",
     "sport": "football",
-    "name": "MID Player 41 (Liverpool)",
-    "position": "MID",
+    "name": "MD Player 41 (Liverpool)",
+    "position": "MD",
     "team": "Liverpool",
     "salary": 54,
     "tier": "ORANGE"
@@ -137,8 +137,8 @@
   {
     "id": "player-88",
     "sport": "football",
-    "name": "MID Player 88 (Man United)",
-    "position": "MID",
+    "name": "MD Player 88 (Man United)",
+    "position": "MD",
     "team": "Man United",
     "salary": 36,
     "tier": "PURPLE"
@@ -146,8 +146,8 @@
   {
     "id": "player-68",
     "sport": "football",
-    "name": "MID Player 68 (Tottenham)",
-    "position": "MID",
+    "name": "MD Player 68 (Tottenham)",
+    "position": "MD",
     "team": "Tottenham",
     "salary": 36,
     "tier": "PURPLE"
@@ -155,8 +155,8 @@
   {
     "id": "player-103",
     "sport": "football",
-    "name": "MID Player 103 (Newcastle)",
-    "position": "MID",
+    "name": "MD Player 103 (Newcastle)",
+    "position": "MD",
     "team": "Newcastle",
     "salary": 37,
     "tier": "PURPLE"
@@ -164,8 +164,8 @@
   {
     "id": "player-25",
     "sport": "football",
-    "name": "MID Player 25 (Arsenal)",
-    "position": "MID",
+    "name": "MD Player 25 (Arsenal)",
+    "position": "MD",
     "team": "Arsenal",
     "salary": 37,
     "tier": "PURPLE"
@@ -173,8 +173,8 @@
   {
     "id": "player-38",
     "sport": "football",
-    "name": "MID Player 38 (Liverpool)",
-    "position": "MID",
+    "name": "MD Player 38 (Liverpool)",
+    "position": "MD",
     "team": "Liverpool",
     "salary": 37,
     "tier": "PURPLE"
@@ -182,8 +182,8 @@
   {
     "id": "player-55",
     "sport": "football",
-    "name": "MID Player 55 (Chelsea)",
-    "position": "MID",
+    "name": "MD Player 55 (Chelsea)",
+    "position": "MD",
     "team": "Chelsea",
     "salary": 38,
     "tier": "PURPLE"
@@ -191,8 +191,8 @@
   {
     "id": "player-87",
     "sport": "football",
-    "name": "MID Player 87 (Man United)",
-    "position": "MID",
+    "name": "MD Player 87 (Man United)",
+    "position": "MD",
     "team": "Man United",
     "salary": 38,
     "tier": "PURPLE"
@@ -200,8 +200,8 @@
   {
     "id": "player-152",
     "sport": "football",
-    "name": "MID Player 152 (West Ham)",
-    "position": "MID",
+    "name": "MD Player 152 (West Ham)",
+    "position": "MD",
     "team": "West Ham",
     "salary": 38,
     "tier": "PURPLE"
@@ -209,8 +209,8 @@
   {
     "id": "player-40",
     "sport": "football",
-    "name": "MID Player 40 (Liverpool)",
-    "position": "MID",
+    "name": "MD Player 40 (Liverpool)",
+    "position": "MD",
     "team": "Liverpool",
     "salary": 39,
     "tier": "PURPLE"
@@ -218,8 +218,8 @@
   {
     "id": "player-137",
     "sport": "football",
-    "name": "MID Player 137 (Aston Villa)",
-    "position": "MID",
+    "name": "MD Player 137 (Aston Villa)",
+    "position": "MD",
     "team": "Aston Villa",
     "salary": 39,
     "tier": "PURPLE"
@@ -227,8 +227,8 @@
   {
     "id": "player-24",
     "sport": "football",
-    "name": "MID Player 24 (Arsenal)",
-    "position": "MID",
+    "name": "MD Player 24 (Arsenal)",
+    "position": "MD",
     "team": "Arsenal",
     "salary": 39,
     "tier": "PURPLE"
@@ -236,8 +236,8 @@
   {
     "id": "player-85",
     "sport": "football",
-    "name": "MID Player 85 (Man United)",
-    "position": "MID",
+    "name": "MD Player 85 (Man United)",
+    "position": "MD",
     "team": "Man United",
     "salary": 40,
     "tier": "PURPLE"
@@ -245,8 +245,8 @@
   {
     "id": "player-101",
     "sport": "football",
-    "name": "MID Player 101 (Newcastle)",
-    "position": "MID",
+    "name": "MD Player 101 (Newcastle)",
+    "position": "MD",
     "team": "Newcastle",
     "salary": 40,
     "tier": "PURPLE"
@@ -254,8 +254,8 @@
   {
     "id": "player-54",
     "sport": "football",
-    "name": "MID Player 54 (Chelsea)",
-    "position": "MID",
+    "name": "MD Player 54 (Chelsea)",
+    "position": "MD",
     "team": "Chelsea",
     "salary": 40,
     "tier": "PURPLE"
@@ -263,8 +263,8 @@
   {
     "id": "player-53",
     "sport": "football",
-    "name": "MID Player 53 (Chelsea)",
-    "position": "MID",
+    "name": "MD Player 53 (Chelsea)",
+    "position": "MD",
     "team": "Chelsea",
     "salary": 41,
     "tier": "PURPLE"
@@ -272,8 +272,8 @@
   {
     "id": "player-23",
     "sport": "football",
-    "name": "MID Player 23 (Arsenal)",
-    "position": "MID",
+    "name": "MD Player 23 (Arsenal)",
+    "position": "MD",
     "team": "Arsenal",
     "salary": 41,
     "tier": "PURPLE"
@@ -281,8 +281,8 @@
   {
     "id": "player-154",
     "sport": "football",
-    "name": "MID Player 154 (West Ham)",
-    "position": "MID",
+    "name": "MD Player 154 (West Ham)",
+    "position": "MD",
     "team": "West Ham",
     "salary": 41,
     "tier": "PURPLE"
@@ -290,8 +290,8 @@
   {
     "id": "player-135",
     "sport": "football",
-    "name": "MID Player 135 (Aston Villa)",
-    "position": "MID",
+    "name": "MD Player 135 (Aston Villa)",
+    "position": "MD",
     "team": "Aston Villa",
     "salary": 42,
     "tier": "PURPLE"
@@ -299,8 +299,8 @@
   {
     "id": "player-86",
     "sport": "football",
-    "name": "MID Player 86 (Man United)",
-    "position": "MID",
+    "name": "MD Player 86 (Man United)",
+    "position": "MD",
     "team": "Man United",
     "salary": 42,
     "tier": "PURPLE"
@@ -308,8 +308,8 @@
   {
     "id": "player-42",
     "sport": "football",
-    "name": "MID Player 42 (Liverpool)",
-    "position": "MID",
+    "name": "MD Player 42 (Liverpool)",
+    "position": "MD",
     "team": "Liverpool",
     "salary": 42,
     "tier": "PURPLE"
@@ -317,8 +317,8 @@
   {
     "id": "player-39",
     "sport": "football",
-    "name": "MID Player 39 (Liverpool)",
-    "position": "MID",
+    "name": "MD Player 39 (Liverpool)",
+    "position": "MD",
     "team": "Liverpool",
     "salary": 43,
     "tier": "PURPLE"
@@ -326,8 +326,8 @@
   {
     "id": "player-153",
     "sport": "football",
-    "name": "MID Player 153 (West Ham)",
-    "position": "MID",
+    "name": "MD Player 153 (West Ham)",
+    "position": "MD",
     "team": "West Ham",
     "salary": 43,
     "tier": "PURPLE"
@@ -335,8 +335,8 @@
   {
     "id": "player-10",
     "sport": "football",
-    "name": "MID Player 10 (Man City)",
-    "position": "MID",
+    "name": "MD Player 10 (Man City)",
+    "position": "MD",
     "team": "Man City",
     "salary": 43,
     "tier": "PURPLE"
@@ -344,8 +344,8 @@
   {
     "id": "player-151",
     "sport": "football",
-    "name": "MID Player 151 (West Ham)",
-    "position": "MID",
+    "name": "MD Player 151 (West Ham)",
+    "position": "MD",
     "team": "West Ham",
     "salary": 44,
     "tier": "PURPLE"
@@ -353,8 +353,8 @@
   {
     "id": "player-71",
     "sport": "football",
-    "name": "MID Player 71 (Tottenham)",
-    "position": "MID",
+    "name": "MD Player 71 (Tottenham)",
+    "position": "MD",
     "team": "Tottenham",
     "salary": 27,
     "tier": "BLUE"
@@ -362,8 +362,8 @@
   {
     "id": "player-120",
     "sport": "football",
-    "name": "MID Player 120 (Brighton)",
-    "position": "MID",
+    "name": "MD Player 120 (Brighton)",
+    "position": "MD",
     "team": "Brighton",
     "salary": 27,
     "tier": "BLUE"
@@ -371,8 +371,8 @@
   {
     "id": "player-70",
     "sport": "football",
-    "name": "MID Player 70 (Tottenham)",
-    "position": "MID",
+    "name": "MD Player 70 (Tottenham)",
+    "position": "MD",
     "team": "Tottenham",
     "salary": 27,
     "tier": "BLUE"
@@ -380,8 +380,8 @@
   {
     "id": "player-131",
     "sport": "football",
-    "name": "DEF Player 131 (Aston Villa)",
-    "position": "DEF",
+    "name": "DE Player 131 (Aston Villa)",
+    "position": "DE",
     "team": "Aston Villa",
     "salary": 28,
     "tier": "BLUE"
@@ -389,8 +389,8 @@
   {
     "id": "player-97",
     "sport": "football",
-    "name": "DEF Player 97 (Newcastle)",
-    "position": "DEF",
+    "name": "DE Player 97 (Newcastle)",
+    "position": "DE",
     "team": "Newcastle",
     "salary": 28,
     "tier": "BLUE"
@@ -398,8 +398,8 @@
   {
     "id": "player-67",
     "sport": "football",
-    "name": "DEF Player 67 (Tottenham)",
-    "position": "DEF",
+    "name": "DE Player 67 (Tottenham)",
+    "position": "DE",
     "team": "Tottenham",
     "salary": 28,
     "tier": "BLUE"
@@ -407,8 +407,8 @@
   {
     "id": "player-36",
     "sport": "football",
-    "name": "DEF Player 36 (Liverpool)",
-    "position": "DEF",
+    "name": "DE Player 36 (Liverpool)",
+    "position": "DE",
     "team": "Liverpool",
     "salary": 28,
     "tier": "BLUE"
@@ -416,8 +416,8 @@
   {
     "id": "player-34",
     "sport": "football",
-    "name": "DEF Player 34 (Liverpool)",
-    "position": "DEF",
+    "name": "DE Player 34 (Liverpool)",
+    "position": "DE",
     "team": "Liverpool",
     "salary": 28,
     "tier": "BLUE"
@@ -425,8 +425,8 @@
   {
     "id": "player-125",
     "sport": "football",
-    "name": "FWD Player 125 (Brighton)",
-    "position": "FWD",
+    "name": "FW Player 125 (Brighton)",
+    "position": "FW",
     "team": "Brighton",
     "salary": 28,
     "tier": "BLUE"
@@ -434,8 +434,8 @@
   {
     "id": "player-108",
     "sport": "football",
-    "name": "FWD Player 108 (Newcastle)",
-    "position": "FWD",
+    "name": "FW Player 108 (Newcastle)",
+    "position": "FW",
     "team": "Newcastle",
     "salary": 28,
     "tier": "BLUE"
@@ -443,8 +443,8 @@
   {
     "id": "player-6",
     "sport": "football",
-    "name": "DEF Player 6 (Man City)",
-    "position": "DEF",
+    "name": "DE Player 6 (Man City)",
+    "position": "DE",
     "team": "Man City",
     "salary": 29,
     "tier": "BLUE"
@@ -452,8 +452,8 @@
   {
     "id": "player-105",
     "sport": "football",
-    "name": "FWD Player 105 (Newcastle)",
-    "position": "FWD",
+    "name": "FW Player 105 (Newcastle)",
+    "position": "FW",
     "team": "Newcastle",
     "salary": 29,
     "tier": "BLUE"
@@ -461,8 +461,8 @@
   {
     "id": "player-81",
     "sport": "football",
-    "name": "DEF Player 81 (Man United)",
-    "position": "DEF",
+    "name": "DE Player 81 (Man United)",
+    "position": "DE",
     "team": "Man United",
     "salary": 29,
     "tier": "BLUE"
@@ -470,8 +470,8 @@
   {
     "id": "player-140",
     "sport": "football",
-    "name": "FWD Player 140 (Aston Villa)",
-    "position": "FWD",
+    "name": "FW Player 140 (Aston Villa)",
+    "position": "FW",
     "team": "Aston Villa",
     "salary": 29,
     "tier": "BLUE"
@@ -479,8 +479,8 @@
   {
     "id": "player-141",
     "sport": "football",
-    "name": "FWD Player 141 (Aston Villa)",
-    "position": "FWD",
+    "name": "FW Player 141 (Aston Villa)",
+    "position": "FW",
     "team": "Aston Villa",
     "salary": 29,
     "tier": "BLUE"
@@ -488,8 +488,8 @@
   {
     "id": "player-73",
     "sport": "football",
-    "name": "FWD Player 73 (Tottenham)",
-    "position": "FWD",
+    "name": "FW Player 73 (Tottenham)",
+    "position": "FW",
     "team": "Tottenham",
     "salary": 29,
     "tier": "BLUE"
@@ -497,8 +497,8 @@
   {
     "id": "player-11",
     "sport": "football",
-    "name": "FWD Player 11 (Man City)",
-    "position": "FWD",
+    "name": "FW Player 11 (Man City)",
+    "position": "FW",
     "team": "Man City",
     "salary": 30,
     "tier": "BLUE"
@@ -506,8 +506,8 @@
   {
     "id": "player-57",
     "sport": "football",
-    "name": "FWD Player 57 (Chelsea)",
-    "position": "FWD",
+    "name": "FW Player 57 (Chelsea)",
+    "position": "FW",
     "team": "Chelsea",
     "salary": 30,
     "tier": "BLUE"
@@ -515,8 +515,8 @@
   {
     "id": "player-51",
     "sport": "football",
-    "name": "DEF Player 51 (Chelsea)",
-    "position": "DEF",
+    "name": "DE Player 51 (Chelsea)",
+    "position": "DE",
     "team": "Chelsea",
     "salary": 30,
     "tier": "BLUE"
@@ -524,8 +524,8 @@
   {
     "id": "player-118",
     "sport": "football",
-    "name": "DEF Player 118 (Brighton)",
-    "position": "DEF",
+    "name": "DE Player 118 (Brighton)",
+    "position": "DE",
     "team": "Brighton",
     "salary": 30,
     "tier": "BLUE"
@@ -533,8 +533,8 @@
   {
     "id": "player-123",
     "sport": "football",
-    "name": "FWD Player 123 (Brighton)",
-    "position": "FWD",
+    "name": "FW Player 123 (Brighton)",
+    "position": "FW",
     "team": "Brighton",
     "salary": 30,
     "tier": "BLUE"
@@ -542,8 +542,8 @@
   {
     "id": "player-122",
     "sport": "football",
-    "name": "FWD Player 122 (Brighton)",
-    "position": "FWD",
+    "name": "FW Player 122 (Brighton)",
+    "position": "FW",
     "team": "Brighton",
     "salary": 30,
     "tier": "BLUE"
@@ -551,8 +551,8 @@
   {
     "id": "player-50",
     "sport": "football",
-    "name": "DEF Player 50 (Chelsea)",
-    "position": "DEF",
+    "name": "DE Player 50 (Chelsea)",
+    "position": "DE",
     "team": "Chelsea",
     "salary": 30,
     "tier": "BLUE"
@@ -560,8 +560,8 @@
   {
     "id": "player-115",
     "sport": "football",
-    "name": "DEF Player 115 (Brighton)",
-    "position": "DEF",
+    "name": "DE Player 115 (Brighton)",
+    "position": "DE",
     "team": "Brighton",
     "salary": 31,
     "tier": "BLUE"
@@ -569,8 +569,8 @@
   {
     "id": "player-148",
     "sport": "football",
-    "name": "DEF Player 148 (West Ham)",
-    "position": "DEF",
+    "name": "DE Player 148 (West Ham)",
+    "position": "DE",
     "team": "West Ham",
     "salary": 31,
     "tier": "BLUE"
@@ -578,8 +578,8 @@
   {
     "id": "player-52",
     "sport": "football",
-    "name": "DEF Player 52 (Chelsea)",
-    "position": "DEF",
+    "name": "DE Player 52 (Chelsea)",
+    "position": "DE",
     "team": "Chelsea",
     "salary": 31,
     "tier": "BLUE"
@@ -587,8 +587,8 @@
   {
     "id": "player-117",
     "sport": "football",
-    "name": "DEF Player 117 (Brighton)",
-    "position": "DEF",
+    "name": "DE Player 117 (Brighton)",
+    "position": "DE",
     "team": "Brighton",
     "salary": 31,
     "tier": "BLUE"
@@ -596,8 +596,8 @@
   {
     "id": "player-45",
     "sport": "football",
-    "name": "FWD Player 45 (Liverpool)",
-    "position": "FWD",
+    "name": "FW Player 45 (Liverpool)",
+    "position": "FW",
     "team": "Liverpool",
     "salary": 31,
     "tier": "BLUE"
@@ -605,8 +605,8 @@
   {
     "id": "player-66",
     "sport": "football",
-    "name": "DEF Player 66 (Tottenham)",
-    "position": "DEF",
+    "name": "DE Player 66 (Tottenham)",
+    "position": "DE",
     "team": "Tottenham",
     "salary": 31,
     "tier": "BLUE"
@@ -614,8 +614,8 @@
   {
     "id": "player-13",
     "sport": "football",
-    "name": "FWD Player 13 (Man City)",
-    "position": "FWD",
+    "name": "FW Player 13 (Man City)",
+    "position": "FW",
     "team": "Man City",
     "salary": 31,
     "tier": "BLUE"
@@ -623,8 +623,8 @@
   {
     "id": "player-64",
     "sport": "football",
-    "name": "DEF Player 64 (Tottenham)",
-    "position": "DEF",
+    "name": "DE Player 64 (Tottenham)",
+    "position": "DE",
     "team": "Tottenham",
     "salary": 32,
     "tier": "BLUE"
@@ -632,8 +632,8 @@
   {
     "id": "player-106",
     "sport": "football",
-    "name": "FWD Player 106 (Newcastle)",
-    "position": "FWD",
+    "name": "FW Player 106 (Newcastle)",
+    "position": "FW",
     "team": "Newcastle",
     "salary": 32,
     "tier": "BLUE"
@@ -641,8 +641,8 @@
   {
     "id": "player-20",
     "sport": "football",
-    "name": "DEF Player 20 (Arsenal)",
-    "position": "DEF",
+    "name": "DE Player 20 (Arsenal)",
+    "position": "DE",
     "team": "Arsenal",
     "salary": 32,
     "tier": "BLUE"
@@ -650,8 +650,8 @@
   {
     "id": "player-27",
     "sport": "football",
-    "name": "FWD Player 27 (Arsenal)",
-    "position": "FWD",
+    "name": "FW Player 27 (Arsenal)",
+    "position": "FW",
     "team": "Arsenal",
     "salary": 32,
     "tier": "BLUE"
@@ -659,8 +659,8 @@
   {
     "id": "player-132",
     "sport": "football",
-    "name": "DEF Player 132 (Aston Villa)",
-    "position": "DEF",
+    "name": "DE Player 132 (Aston Villa)",
+    "position": "DE",
     "team": "Aston Villa",
     "salary": 32,
     "tier": "BLUE"
@@ -668,8 +668,8 @@
   {
     "id": "player-147",
     "sport": "football",
-    "name": "DEF Player 147 (West Ham)",
-    "position": "DEF",
+    "name": "DE Player 147 (West Ham)",
+    "position": "DE",
     "team": "West Ham",
     "salary": 32,
     "tier": "BLUE"
@@ -677,8 +677,8 @@
   {
     "id": "player-91",
     "sport": "football",
-    "name": "FWD Player 91 (Man United)",
-    "position": "FWD",
+    "name": "FW Player 91 (Man United)",
+    "position": "FW",
     "team": "Man United",
     "salary": 33,
     "tier": "BLUE"
@@ -686,8 +686,8 @@
   {
     "id": "player-99",
     "sport": "football",
-    "name": "DEF Player 99 (Newcastle)",
-    "position": "DEF",
+    "name": "DE Player 99 (Newcastle)",
+    "position": "DE",
     "team": "Newcastle",
     "salary": 33,
     "tier": "BLUE"
@@ -695,8 +695,8 @@
   {
     "id": "player-83",
     "sport": "football",
-    "name": "DEF Player 83 (Man United)",
-    "position": "DEF",
+    "name": "DE Player 83 (Man United)",
+    "position": "DE",
     "team": "Man United",
     "salary": 33,
     "tier": "BLUE"
@@ -704,8 +704,8 @@
   {
     "id": "player-130",
     "sport": "football",
-    "name": "DEF Player 130 (Aston Villa)",
-    "position": "DEF",
+    "name": "DE Player 130 (Aston Villa)",
+    "position": "DE",
     "team": "Aston Villa",
     "salary": 33,
     "tier": "BLUE"
@@ -713,8 +713,8 @@
   {
     "id": "player-19",
     "sport": "football",
-    "name": "DEF Player 19 (Arsenal)",
-    "position": "DEF",
+    "name": "DE Player 19 (Arsenal)",
+    "position": "DE",
     "team": "Arsenal",
     "salary": 17,
     "tier": "GREEN"
@@ -722,8 +722,8 @@
   {
     "id": "player-82",
     "sport": "football",
-    "name": "DEF Player 82 (Man United)",
-    "position": "DEF",
+    "name": "DE Player 82 (Man United)",
+    "position": "DE",
     "team": "Man United",
     "salary": 17,
     "tier": "GREEN"
@@ -731,8 +731,8 @@
   {
     "id": "player-149",
     "sport": "football",
-    "name": "DEF Player 149 (West Ham)",
-    "position": "DEF",
+    "name": "DE Player 149 (West Ham)",
+    "position": "DE",
     "team": "West Ham",
     "salary": 17,
     "tier": "GREEN"
@@ -740,8 +740,8 @@
   {
     "id": "player-98",
     "sport": "football",
-    "name": "DEF Player 98 (Newcastle)",
-    "position": "DEF",
+    "name": "DE Player 98 (Newcastle)",
+    "position": "DE",
     "team": "Newcastle",
     "salary": 18,
     "tier": "GREEN"
@@ -749,8 +749,8 @@
   {
     "id": "player-35",
     "sport": "football",
-    "name": "DEF Player 35 (Liverpool)",
-    "position": "DEF",
+    "name": "DE Player 35 (Liverpool)",
+    "position": "DE",
     "team": "Liverpool",
     "salary": 18,
     "tier": "GREEN"
@@ -758,8 +758,8 @@
   {
     "id": "player-12",
     "sport": "football",
-    "name": "FWD Player 12 (Man City)",
-    "position": "FWD",
+    "name": "FW Player 12 (Man City)",
+    "position": "FW",
     "team": "Man City",
     "salary": 18,
     "tier": "GREEN"
@@ -767,8 +767,8 @@
   {
     "id": "player-28",
     "sport": "football",
-    "name": "FWD Player 28 (Arsenal)",
-    "position": "FWD",
+    "name": "FW Player 28 (Arsenal)",
+    "position": "FW",
     "team": "Arsenal",
     "salary": 18,
     "tier": "GREEN"
@@ -776,8 +776,8 @@
   {
     "id": "player-100",
     "sport": "football",
-    "name": "DEF Player 100 (Newcastle)",
-    "position": "DEF",
+    "name": "DE Player 100 (Newcastle)",
+    "position": "DE",
     "team": "Newcastle",
     "salary": 18,
     "tier": "GREEN"
@@ -785,8 +785,8 @@
   {
     "id": "player-92",
     "sport": "football",
-    "name": "FWD Player 92 (Man United)",
-    "position": "FWD",
+    "name": "FW Player 92 (Man United)",
+    "position": "FW",
     "team": "Man United",
     "salary": 18,
     "tier": "GREEN"
@@ -794,8 +794,8 @@
   {
     "id": "player-84",
     "sport": "football",
-    "name": "DEF Player 84 (Man United)",
-    "position": "DEF",
+    "name": "DE Player 84 (Man United)",
+    "position": "DE",
     "team": "Man United",
     "salary": 19,
     "tier": "GREEN"
@@ -803,8 +803,8 @@
   {
     "id": "player-43",
     "sport": "football",
-    "name": "FWD Player 43 (Liverpool)",
-    "position": "FWD",
+    "name": "FW Player 43 (Liverpool)",
+    "position": "FW",
     "team": "Liverpool",
     "salary": 19,
     "tier": "GREEN"
@@ -812,8 +812,8 @@
   {
     "id": "player-14",
     "sport": "football",
-    "name": "FWD Player 14 (Man City)",
-    "position": "FWD",
+    "name": "FW Player 14 (Man City)",
+    "position": "FW",
     "team": "Man City",
     "salary": 19,
     "tier": "GREEN"
@@ -821,8 +821,8 @@
   {
     "id": "player-65",
     "sport": "football",
-    "name": "DEF Player 65 (Tottenham)",
-    "position": "DEF",
+    "name": "DE Player 65 (Tottenham)",
+    "position": "DE",
     "team": "Tottenham",
     "salary": 19,
     "tier": "GREEN"
@@ -830,8 +830,8 @@
   {
     "id": "player-90",
     "sport": "football",
-    "name": "FWD Player 90 (Man United)",
-    "position": "FWD",
+    "name": "FW Player 90 (Man United)",
+    "position": "FW",
     "team": "Man United",
     "salary": 19,
     "tier": "GREEN"
@@ -839,8 +839,8 @@
   {
     "id": "player-29",
     "sport": "football",
-    "name": "FWD Player 29 (Arsenal)",
-    "position": "FWD",
+    "name": "FW Player 29 (Arsenal)",
+    "position": "FW",
     "team": "Arsenal",
     "salary": 19,
     "tier": "GREEN"
@@ -848,8 +848,8 @@
   {
     "id": "player-18",
     "sport": "football",
-    "name": "DEF Player 18 (Arsenal)",
-    "position": "DEF",
+    "name": "DE Player 18 (Arsenal)",
+    "position": "DE",
     "team": "Arsenal",
     "salary": 19,
     "tier": "GREEN"
@@ -857,8 +857,8 @@
   {
     "id": "player-80",
     "sport": "football",
-    "name": "DEF Player 80 (Man United)",
-    "position": "DEF",
+    "name": "DE Player 80 (Man United)",
+    "position": "DE",
     "team": "Man United",
     "salary": 20,
     "tier": "GREEN"
@@ -866,8 +866,8 @@
   {
     "id": "player-75",
     "sport": "football",
-    "name": "FWD Player 75 (Tottenham)",
-    "position": "FWD",
+    "name": "FW Player 75 (Tottenham)",
+    "position": "FW",
     "team": "Tottenham",
     "salary": 20,
     "tier": "GREEN"
@@ -875,8 +875,8 @@
   {
     "id": "player-114",
     "sport": "football",
-    "name": "DEF Player 114 (Brighton)",
-    "position": "DEF",
+    "name": "DE Player 114 (Brighton)",
+    "position": "DE",
     "team": "Brighton",
     "salary": 20,
     "tier": "GREEN"
@@ -884,8 +884,8 @@
   {
     "id": "player-138",
     "sport": "football",
-    "name": "FWD Player 138 (Aston Villa)",
-    "position": "FWD",
+    "name": "FW Player 138 (Aston Villa)",
+    "position": "FW",
     "team": "Aston Villa",
     "salary": 20,
     "tier": "GREEN"
@@ -893,8 +893,8 @@
   {
     "id": "player-107",
     "sport": "football",
-    "name": "FWD Player 107 (Newcastle)",
-    "position": "FWD",
+    "name": "FW Player 107 (Newcastle)",
+    "position": "FW",
     "team": "Newcastle",
     "salary": 20,
     "tier": "GREEN"
@@ -902,8 +902,8 @@
   {
     "id": "player-21",
     "sport": "football",
-    "name": "DEF Player 21 (Arsenal)",
-    "position": "DEF",
+    "name": "DE Player 21 (Arsenal)",
+    "position": "DE",
     "team": "Arsenal",
     "salary": 20,
     "tier": "GREEN"
@@ -911,8 +911,8 @@
   {
     "id": "player-158",
     "sport": "football",
-    "name": "FWD Player 158 (West Ham)",
-    "position": "FWD",
+    "name": "FW Player 158 (West Ham)",
+    "position": "FW",
     "team": "West Ham",
     "salary": 20,
     "tier": "GREEN"
@@ -920,8 +920,8 @@
   {
     "id": "player-37",
     "sport": "football",
-    "name": "DEF Player 37 (Liverpool)",
-    "position": "DEF",
+    "name": "DE Player 37 (Liverpool)",
+    "position": "DE",
     "team": "Liverpool",
     "salary": 21,
     "tier": "GREEN"
@@ -929,8 +929,8 @@
   {
     "id": "player-26",
     "sport": "football",
-    "name": "FWD Player 26 (Arsenal)",
-    "position": "FWD",
+    "name": "FW Player 26 (Arsenal)",
+    "position": "FW",
     "team": "Arsenal",
     "salary": 21,
     "tier": "GREEN"
@@ -938,8 +938,8 @@
   {
     "id": "player-74",
     "sport": "football",
-    "name": "FWD Player 74 (Tottenham)",
-    "position": "FWD",
+    "name": "FW Player 74 (Tottenham)",
+    "position": "FW",
     "team": "Tottenham",
     "salary": 21,
     "tier": "GREEN"
@@ -947,8 +947,8 @@
   {
     "id": "player-156",
     "sport": "football",
-    "name": "FWD Player 156 (West Ham)",
-    "position": "FWD",
+    "name": "FW Player 156 (West Ham)",
+    "position": "FW",
     "team": "West Ham",
     "salary": 21,
     "tier": "GREEN"
@@ -956,8 +956,8 @@
   {
     "id": "player-4",
     "sport": "football",
-    "name": "DEF Player 4 (Man City)",
-    "position": "DEF",
+    "name": "DE Player 4 (Man City)",
+    "position": "DE",
     "team": "Man City",
     "salary": 21,
     "tier": "GREEN"
@@ -965,8 +965,8 @@
   {
     "id": "player-89",
     "sport": "football",
-    "name": "FWD Player 89 (Man United)",
-    "position": "FWD",
+    "name": "FW Player 89 (Man United)",
+    "position": "FW",
     "team": "Man United",
     "salary": 21,
     "tier": "GREEN"
@@ -974,8 +974,8 @@
   {
     "id": "player-56",
     "sport": "football",
-    "name": "FWD Player 56 (Chelsea)",
-    "position": "FWD",
+    "name": "FW Player 56 (Chelsea)",
+    "position": "FW",
     "team": "Chelsea",
     "salary": 22,
     "tier": "GREEN"
@@ -983,8 +983,8 @@
   {
     "id": "player-5",
     "sport": "football",
-    "name": "DEF Player 5 (Man City)",
-    "position": "DEF",
+    "name": "DE Player 5 (Man City)",
+    "position": "DE",
     "team": "Man City",
     "salary": 22,
     "tier": "GREEN"
@@ -992,8 +992,8 @@
   {
     "id": "player-124",
     "sport": "football",
-    "name": "FWD Player 124 (Brighton)",
-    "position": "FWD",
+    "name": "FW Player 124 (Brighton)",
+    "position": "FW",
     "team": "Brighton",
     "salary": 22,
     "tier": "GREEN"
@@ -1001,8 +1001,8 @@
   {
     "id": "player-30",
     "sport": "football",
-    "name": "FWD Player 30 (Arsenal)",
-    "position": "FWD",
+    "name": "FW Player 30 (Arsenal)",
+    "position": "FW",
     "team": "Arsenal",
     "salary": 22,
     "tier": "GREEN"
@@ -1010,8 +1010,8 @@
   {
     "id": "player-44",
     "sport": "football",
-    "name": "FWD Player 44 (Liverpool)",
-    "position": "FWD",
+    "name": "FW Player 44 (Liverpool)",
+    "position": "FW",
     "team": "Liverpool",
     "salary": 22,
     "tier": "GREEN"
@@ -1019,8 +1019,8 @@
   {
     "id": "player-157",
     "sport": "football",
-    "name": "FWD Player 157 (West Ham)",
-    "position": "FWD",
+    "name": "FW Player 157 (West Ham)",
+    "position": "FW",
     "team": "West Ham",
     "salary": 22,
     "tier": "GREEN"
@@ -1028,8 +1028,8 @@
   {
     "id": "player-58",
     "sport": "football",
-    "name": "FWD Player 58 (Chelsea)",
-    "position": "FWD",
+    "name": "FW Player 58 (Chelsea)",
+    "position": "FW",
     "team": "Chelsea",
     "salary": 22,
     "tier": "GREEN"
@@ -1037,8 +1037,8 @@
   {
     "id": "player-139",
     "sport": "football",
-    "name": "FWD Player 139 (Aston Villa)",
-    "position": "FWD",
+    "name": "FW Player 139 (Aston Villa)",
+    "position": "FW",
     "team": "Aston Villa",
     "salary": 23,
     "tier": "GREEN"
@@ -1046,8 +1046,8 @@
   {
     "id": "player-150",
     "sport": "football",
-    "name": "DEF Player 150 (West Ham)",
-    "position": "DEF",
+    "name": "DE Player 150 (West Ham)",
+    "position": "DE",
     "team": "West Ham",
     "salary": 23,
     "tier": "GREEN"
@@ -1055,8 +1055,8 @@
   {
     "id": "player-116",
     "sport": "football",
-    "name": "DEF Player 116 (Brighton)",
-    "position": "DEF",
+    "name": "DE Player 116 (Brighton)",
+    "position": "DE",
     "team": "Brighton",
     "salary": 23,
     "tier": "GREEN"

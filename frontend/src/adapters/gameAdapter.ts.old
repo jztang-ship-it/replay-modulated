@@ -78,8 +78,8 @@ function asPosition(raw: unknown): Position {
   if (s === "GK" || s === "G" || s.includes("KEEP")) return "GK";
   if (["DEF", "D", "CB", "LB", "RB", "LWB", "RWB"].includes(s) || s.includes("BACK")) return "DEF";
   if (["MID", "M", "CM", "CDM", "CAM", "LM", "RM"].includes(s) || s.includes("MID")) return "MID";
-  if (["FWD", "F", "FW", "ST", "CF", "LW", "RW"].includes(s) || s.includes("WING") || s.includes("STRIK"))
-    return "FWD";
+  if (["FW", "F", "FW", "ST", "CF", "LW", "RW"].includes(s) || s.includes("WING") || s.includes("STRIK"))
+    return "FW";
   return "MID";
 }
 function asTier(raw: unknown): TierColor {
@@ -275,7 +275,7 @@ function isValidComposition(players: RawPlayer[]): boolean {
     countPos(players, "GK") === 1 &&
     countPos(players, "DEF") >= 1 &&
     countPos(players, "MID") >= 1 &&
-    countPos(players, "FWD") >= 1
+    countPos(players, "FW") >= 1
   );
 }
 function isValidSalary(players: RawPlayer[]): boolean {
@@ -366,7 +366,7 @@ function generateRosterSculpted(allPlayers: RawPlayer[], rng: () => number): Raw
     }
   }
 
-  const requiredOutfield: Position[] = ["DEF", "MID", "FWD"];
+  const requiredOutfield: Position[] = ["DEF", "MID", "FW"];
   for (const pos of requiredOutfield) {
     if (countPos(chosen, pos) >= 1) continue;
     const cands = poolBy(pool, usedBase, (p) => asPosition(p.position) === pos);
@@ -560,8 +560,8 @@ function lastResortBuild(pool0: RawPlayer[], rng: () => number): RawPlayer[] {
     used.add(baseId(gk));
   }
 
-  // need 1 DEF/MID/FWD
-  for (const pos of ["DEF", "MID", "FWD"] as const) {
+  // need 1 DEF/MID/FW
+  for (const pos of ["DEF", "MID", "FW"] as const) {
     const p = pool.find((x) => asPosition(x.position) === pos && !used.has(baseId(x)));
     if (p) {
       roster.push(p);

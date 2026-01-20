@@ -13,18 +13,18 @@ export const FootballDemoSportConfig: SportConfig = {
   name: "football-demo",
 
   // Core roster constraints (engine side)
-  positions: ["GK", "DEF", "MID", "FWD"],
+  positions: ["GK", "DE", "MD", "FW"],
   salaryCap: 150,
   minPlayers: 6,
   maxPlayers: 6,
 
   // Exactly 6 players:
-  // 1 GK required, at least 1 DEF/MID/FWD, remaining 2 are FLEX (DEF/MID/FWD)
+  // 1 GK required, at least 1 DE/MD/FW, remaining 2 are FLEX (DE/MD/FW)
   positionLimits: {
     GK: { min: 1, max: 1 },
-    DEF: { min: 1, max: 5 },
-    MID: { min: 1, max: 5 },
-    FWD: { min: 1, max: 5 },
+    DE: { min: 1, max: 5 },
+    MD: { min: 1, max: 5 },
+    FW: { min: 1, max: 5 },
   },
 
   // Objective-only stat keys (match your log.stats keys)
@@ -80,7 +80,7 @@ export const FootballDemoSportConfig: SportConfig = {
 
   // Optional knobs (if your lineup engine reads them)
   lineupGenerationMode: "STRICT",
-  requiredPositions: ["GK", "DEF", "MID", "FWD"],
+  requiredPositions: ["GK", "DE", "MD", "FW"],
   anchorStrategy: {
     mode: "ONE_ORANGE_OR_TWO_PURPLE",
     // you can later set minTotalSalary: 140 (or similar) to prevent tiny lineups

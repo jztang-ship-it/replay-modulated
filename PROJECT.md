@@ -44,12 +44,12 @@ Football-Specific Rules:
 typescript{
   rosterSize: 6,
   salaryCap: { min: 172, max: 180 },
-  positions: ["GK", "DEF", "MID", "FWD"],
+  positions: ["GK", "DE", "MD", "FW"],
   positionRequirements: {
     GK: { min: 1, max: 1 },
     DEF: { min: 1 },
-    MID: { min: 1 },
-    FWD: { min: 1 }
+    MD: { min: 1 },
+    FW: { min: 1 }
   },
   scoringRules: {
     goals: 10,
@@ -242,13 +242,13 @@ Roster Rules
 
 Size: 6 players exactly
 Salary Cap: $172 min, $180 max
-Positions: GK (Goalkeeper), DEF (Defender), MID (Midfielder), FWD (Forward)
+Positions: GK (Goalkeeper), DE (Defender), MD (Midfielder), FW (Forward)
 Position Requirements:
 
 Exactly 1 GK
-At least 1 DEF
-At least 1 MID
-At least 1 FWD
+At least 1 DE
+At least 1 MD
+At least 1 FW
 
 
 Eligibility: Players must have played 20+ minutes in the game
