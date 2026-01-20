@@ -1,5 +1,50 @@
 import React, { useMemo, useState } from "react";
-import type { GamePhase, PlayerCard, Position, TierColor } from "../adapters/types";
+import type { GamePhase, PlayerCard, TierColor } from "../adapters/types";
+
+/**
+ * AthleteCard
+ * Cornered UI, face-safe.
+ */
+
+const SAFE = 8;
+
+// Push heads DOWN a bit more
+const FACE_Y = "24%";
+const IMG_SCALE = 1.02;
+const IMG_TRANSLATE_Y = "12%"; // <— move the whole head down
+
+function plHeadshotUrl(photoCode: string) {
+  return `https://resources.premierleague.com/premierleague/photos/players/110x140/p${photoCode}.png`;
+}
+
+function pickHeadshotSrc(card: any) {
+  const direct =
+    card?.headshotUrl ??
+    card?.headshot ??
+    card?.photoUrl ??
+    card?.imageUrl ??
+    card?.imgUrl ??
+    card?.photo ??
+    card?.image ??
+    card?.avatarUrl ??
+    card?.portraitUrl;
+
+  if (typeof direct === "string" && direct.trim()) return direct.trim();
+
+  const code =
+    card?.photoCode ??
+    card?.photo_code ??
+    card?.plPhotoId ??
+    card?.pl_photo_id ??
+    card?.premierLeaguePhotoId ??
+    card?.playerPhotoId ??
+    card?.photoId;
+
+  if (typeof code === "number" && Number.isFinite(code)) return plHeadshotUrl(String(code));
+  if (typeof code === "string" && code.trim()) return plHeadshotUrl(code.trim());
+
+  return null;
+}
 
 function getInitials(name: string) {
   const parts = String(name ?? "").trim().split(/\s+/);
@@ -8,47 +53,35 @@ function getInitials(name: string) {
   return (a + b).toUpperCase();
 }
 
-function plHeadshotUrl(photoCode: string) {
-  return `https://resources.premierleague.com/premierleague/photos/players/110x140/p${photoCode}.png`;
+function fmtYearShort(season: string) {
+  const s = String(season ?? "").trim();
+  const m = s.match(/(\d{2})\s*-\s*(\d{2})$/);
+  if (m) return m[2];
+  const n = Number(s);
+  if (Number.isFinite(n)) return String(n + 1).slice(-2);
+  const m2 = s.match(/(\d{4})/);
+  if (m2) return String(Number(m2[1]) + 1).slice(-2);
+  return s.slice(-2);
 }
 
-function tierStyle(tier: TierColor) {
-  switch (tier) {
+function tierTheme(tier: TierColor | undefined) {
+  const t = String(tier ?? "WHITE").toUpperCase();
+  switch (t) {
     case "ORANGE":
-      return { border: "#f59e0b", label: "ORANGE" };
+      return { fill: "#B06B12", border: "rgba(245,158,11,0.55)", shine: 0.22 };
     case "PURPLE":
-      return { border: "#8b5cf6", label: "PURPLE" };
+      return { fill: "#3B2A6C", border: "rgba(139,92,246,0.55)", shine: 0.18 };
     case "BLUE":
-      return { border: "#3b82f6", label: "BLUE" };
+      return { fill: "#1D3B70", border: "rgba(59,130,246,0.55)", shine: 0.14 };
     case "GREEN":
-      return { border: "#22c55e", label: "GREEN" };
+      return { fill: "#145B3B", border: "rgba(34,197,94,0.50)", shine: 0.12 };
     default:
-      return { border: "#e5e7eb", label: "WHITE" };
+      return { fill: "#2A2F3A", border: "rgba(255,255,255,0.18)", shine: 0.06 };
   }
-}
-
-function fmtSeason(season: string) {
-  const n = Number(season);
-  if (Number.isFinite(n)) {
-    const yy = String(n).slice(-2);
-    const next = String(n + 1).slice(-2);
-    return `'${yy}-${next}`;
-  }
-  return season;
 }
 
 function round1(x: number) {
   return Math.round(x * 10) / 10;
-}
-
-function getStat(stats: Record<string, any> | undefined, keys: string[]): number {
-  const s = stats ?? {};
-  for (const k of keys) {
-    const v = (s as any)[k];
-    const n = typeof v === "number" ? v : Number(v);
-    if (Number.isFinite(n)) return n;
-  }
-  return 0;
 }
 
 export function AthleteCard(props: {
@@ -62,237 +95,278 @@ export function AthleteCard(props: {
 }) {
   const { card, phase, isLocked, isMvp, isFlipped, canFlip, onToggleFlip } = props;
 
-  const t = tierStyle(card.tier);
-  const seasonLabel = useMemo(() => fmtSeason(String(card.season ?? "")), [card.season]);
-
-  const photoCode = (card as any).photoCode as string | undefined;
-  const [imgBroken, setImgBroken] = useState(false);
-  const headshotSrc = !imgBroken && photoCode ? plHeadshotUrl(photoCode) : null;
-
-  const proj = Number(card.projectedFp ?? 0);
-  const actual = Number(card.actualFp ?? 0);
-  const delta = Number(card.fpDelta ?? 0);
-
   const showResults = phase === "RESULTS";
-  const clickable = canFlip && phase === "RESULTS";
+  const clickable = canFlip && showResults;
 
-  // Extract all stats for back of card
-  const stats = card.statLine || {};
-  const statEntries = Object.entries(stats).filter(([k, v]) => typeof v === 'number' || !isNaN(Number(v)));
+  const nameFull = String((card as any).name ?? "Unknown");
+  const parts = nameFull.trim().split(/\s+/);
+  const first = parts[0] ?? "";
+  const last = parts.length > 1 ? parts[parts.length - 1] : first;
 
-  const containerStyle: React.CSSProperties = {
+  const pos = String((card as any).position ?? "");
+  const team = String((card as any).team ?? "Unknown");
+  const year = useMemo(() => fmtYearShort(String((card as any).season ?? "")), [card]);
+
+  const salary = Number((card as any).salary ?? 0);
+  const proj = Number((card as any).projectedFp ?? (card as any).avgFP ?? 0);
+  const actual = Number((card as any).actualFp ?? 0);
+
+  const theme = tierTheme((card as any).tier);
+
+  const [imgBroken, setImgBroken] = useState(false);
+  const headshotSrc = useMemo(() => (!imgBroken ? pickHeadshotSrc(card as any) : null), [card, imgBroken]);
+
+  // --- sizing (you asked: roughly 1/2 the bottom text sizes) ---
+  const SALARY_FONT = 12; // used by HOLD too
+  const TEAM_FONT = 10;   // 1/2-ish
+  const FIRST_FONT = 11;  // 1/2-ish
+  const LAST_FONT = 16;   // 1/2-ish from the giant text
+
+  const container: React.CSSProperties = {
     width: "100%",
     height: "100%",
-    borderRadius: 16,
-    border: `2px solid ${t.border}`,
-    background: "#fff",
-    boxShadow: isLocked ? "0 0 0 2px rgba(0,0,0,0.06), 0 8px 20px rgba(0,0,0,0.08)" : "0 6px 18px rgba(0,0,0,0.06)",
+    borderRadius: 18,
     position: "relative",
     overflow: "hidden",
-    cursor: clickable ? "pointer" : "default",
     userSelect: "none",
-    transform: "translateZ(0)",
+    cursor: clickable ? "pointer" : "default",
+    background: theme.fill,
+    border: `2px solid ${theme.border}`,
+    boxShadow: isLocked ? "0 0 0 2px rgba(255,255,255,0.10), 0 14px 34px rgba(0,0,0,0.55)" : "0 14px 34px rgba(0,0,0,0.50)",
   };
 
-  const holdRibbon: React.CSSProperties = {
+  const shine: React.CSSProperties = {
     position: "absolute",
-    top: 10,
-    left: -28,
-    transform: "rotate(-20deg)",
-    background: isLocked ? "rgba(0,0,0,0.85)" : "transparent",
-    color: "white",
-    padding: "4px 34px",
-    fontSize: 10,
-    fontWeight: 900,
-    letterSpacing: 0.8,
-    display: isLocked ? "block" : "none",
-    zIndex: 5,
+    inset: 0,
+    pointerEvents: "none",
+    background:
+      `radial-gradient(120% 70% at 30% 0%, rgba(255,255,255,${theme.shine}) 0%, rgba(255,255,255,0) 55%),` +
+      `linear-gradient(180deg, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.30) 65%, rgba(0,0,0,0.52) 100%)`,
+    zIndex: 3,
   };
 
-  const mvpBadge: React.CSSProperties = {
+  // tighter corners (closer to the edges)
+  const topLeftPill: React.CSSProperties = {
     position: "absolute",
-    top: 10,
-    right: 10,
-    background: "#f59e0b",
-    color: "white",
-    fontSize: 10,
+    top: SAFE,
+    left: SAFE,
+    padding: "4px 9px",
+    borderRadius: 10,
+    background: isLocked ? "rgba(255,205,65,0.92)" : "rgba(0,0,0,0.18)",
+    border: isLocked ? "1px solid rgba(0,0,0,0.20)" : "1px solid rgba(255,255,255,0.14)",
+    color: isLocked ? "rgba(0,0,0,0.90)" : "rgba(255,255,255,0.0)",
+    fontSize: SALARY_FONT, // same as salary
     fontWeight: 950,
-    padding: "4px 8px",
-    borderRadius: 999,
-    display: isMvp ? "inline-flex" : "none",
+    letterSpacing: 0.8,
+    zIndex: 6,
+    backdropFilter: "blur(8px)",
+    minHeight: 22,
+    display: "inline-flex",
     alignItems: "center",
-    gap: 6,
-    zIndex: 5,
   };
 
-  const chip: React.CSSProperties = {
-    fontSize: 10,
-    fontWeight: 900,
-    padding: "4px 8px",
+  const topRightPill: React.CSSProperties = {
+    position: "absolute",
+    top: SAFE,
+    right: SAFE,
+    padding: "4px 9px",
     borderRadius: 999,
-    background: "rgba(0,0,0,0.06)",
-    border: "1px solid rgba(0,0,0,0.08)",
+    background: "rgba(0,0,0,0.28)",
+    border: "1px solid rgba(255,255,255,0.14)",
+    color: "rgba(255,255,255,0.92)",
+    fontSize: SALARY_FONT,
+    fontWeight: 900,
+    letterSpacing: 0.4,
+    backdropFilter: "blur(8px)",
+    zIndex: 6,
+    minHeight: 22,
+    display: "inline-flex",
+    alignItems: "center",
+  };
+
+  // hero headshot
+  const hero: React.CSSProperties = {
+    position: "absolute",
+    inset: 0,
+    zIndex: 2,
+    pointerEvents: "none",
+  };
+
+  const bottom: React.CSSProperties = {
+    position: "absolute",
+    left: SAFE,
+    right: SAFE,
+    bottom: SAFE,
+    zIndex: 6,
+    display: "grid",
+    gridTemplateColumns: "1fr auto",
+    columnGap: 10,
+    alignItems: "end",
+  };
+
+  const leftStack: React.CSSProperties = {
+    minWidth: 0,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start", // left-aligned
+    gap: 4,
+  };
+
+  const rightStack: React.CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-end",
+    gap: 4, // condensed to match left spacing
     whiteSpace: "nowrap",
   };
 
-  const deltaChip: React.CSSProperties = {
-    ...chip,
-    background: delta >= 0 ? "rgba(34,197,94,0.16)" : "rgba(107,114,128,0.18)",
-    border: "1px solid rgba(0,0,0,0.06)",
+  const teamLine: React.CSSProperties = {
+    fontSize: TEAM_FONT,
+    fontWeight: 900,
+    letterSpacing: 1.1,
+    opacity: 0.82,
+    color: "rgba(255,255,255,0.92)",
+    textTransform: "uppercase",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    maxWidth: "100%",
   };
 
-  const HEADSHOT = 86;
+  const firstLine: React.CSSProperties = {
+    fontSize: FIRST_FONT,
+    fontWeight: 900,
+    letterSpacing: 0.7,
+    opacity: 0.92,
+    color: "rgba(255,255,255,0.96)",
+    textTransform: "uppercase",
+    lineHeight: "12px",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    maxWidth: "100%",
+  };
 
-  const Headshot = (
-    <div
-      style={{
-        width: HEADSHOT,
-        height: HEADSHOT,
-        borderRadius: 18,
-        overflow: "hidden",
-        background: "rgba(0,0,0,0.06)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        border: "1px solid rgba(0,0,0,0.10)",
-        flex: "0 0 auto",
-      }}
-      title={String(card.name ?? "")}
-    >
-      {headshotSrc ? (
-        <img
-          src={headshotSrc}
-          alt={String(card.name ?? "Player")}
-          style={{
-            width: "100%",
-            height: "125%",
-            objectFit: "cover",
-            objectPosition: "50% 16%",
-            display: "block",
-          }}
-          onError={() => setImgBroken(true)}
-        />
-      ) : (
-        <span style={{ fontWeight: 950, fontSize: 18, opacity: 0.85 }}>{getInitials(String(card.name ?? ""))}</span>
-      )}
-    </div>
-  );
+  const lastLine: React.CSSProperties = {
+    fontSize: LAST_FONT,
+    fontWeight: 950,
+    letterSpacing: 0.9,
+    color: "rgba(255,255,255,0.98)",
+    textTransform: "uppercase",
+    lineHeight: "16px",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    maxWidth: "100%",
+  };
 
-  const Front = (
-    <div style={{ padding: 10, height: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
-      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-        {Headshot}
+  const posText: React.CSSProperties = {
+    fontSize: TEAM_FONT,
+    fontWeight: 950,
+    letterSpacing: 1.0,
+    opacity: 0.92,
+    textTransform: "uppercase",
+  };
 
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div
-            style={{
-              fontSize: 16,
-              fontWeight: 950,
-              lineHeight: 1.05,
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-            }}
-          >
-            {String(card.name ?? "Unknown").toUpperCase()}
-          </div>
+  const fpText: React.CSSProperties = {
+    fontSize: TEAM_FONT,
+    fontWeight: 950,
+    letterSpacing: 0.8,
+    opacity: 0.92,
+  };
 
-          <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap", gap: 6 }}>
-            <span style={chip}>
-              {card.position} • {t.label}
-            </span>
-            <span style={chip}>${card.salary}</span>
-            <span style={chip}>{showResults ? `ACT ${round1(actual)}` : `PROJ ${round1(proj)}`}</span>
-            {showResults && <span style={deltaChip}>{delta >= 0 ? `+${round1(delta)}` : `${round1(delta)}`}</span>}
-          </div>
-
-          <div style={{ marginTop: 6, fontSize: 11, opacity: 0.75, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {card.team ?? "Unknown"} • {seasonLabel}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ marginTop: "auto", fontSize: 11, opacity: 0.65 }}>
-        {clickable ? "Tap to view stats" : phase === "HOLD" ? "Tap to protect" : " "}
-      </div>
-    </div>
-  );
-
-  const Back = (
-    <div style={{ padding: 10, height: "100%", display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10 }}>
-        <div style={{ fontSize: 13, fontWeight: 950, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-          {String(card.name ?? "Unknown").toUpperCase()}
-        </div>
-        <div style={{ fontSize: 11, opacity: 0.75, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-        FP: {round1(actual)}
-        </div>
-      </div>
-
-      <div style={{ marginTop: 6, fontSize: 11, opacity: 0.85 }}>
-        {card.gameInfo?.date || 'N/A'} • vs {card.gameInfo?.opponent || 'Unknown'}
-      </div>
-
-      <div
-        style={{
-          marginTop: 8,
-          borderTop: "1px solid rgba(0,0,0,0.10)",
-          paddingTop: 8,
-          display: "grid",
-          gridTemplateColumns: "1fr auto",
-          gap: "6px 12px",
-          fontSize: 11,
-          maxHeight: "60%",
-          overflow: "auto",
-        }}
-      >
-        {statEntries.slice(0, 12).map(([key, value]) => (
-          <React.Fragment key={key}>
-            <span style={{ opacity: 0.75, textTransform: "capitalize" }}>{key.replace(/_/g, ' ')}</span>
-            <span style={{ fontWeight: 900, textAlign: "right" }}>{Number(value).toFixed(0)}</span>
-          </React.Fragment>
-        ))}
-      </div>
-
-      {card.achievements && card.achievements.length > 0 && (
-        <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 4 }}>
-          {card.achievements.slice(0, 3).map((ach) => (
-            <span key={ach.id} style={{ ...chip, fontSize: 9, background: "rgba(34,197,94,0.16)" }}>
-              {ach.label}
-            </span>
-          ))}
-        </div>
-      )}
-
-      <div style={{ marginTop: "auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontSize: 11, opacity: 0.65 }}>Tap to flip back</div>
-        <div style={{ fontSize: 11, fontWeight: 900 }}>
-          {card.position} • ${card.salary}
-        </div>
-      </div>
-    </div>
-  );
+  const projOrFp = showResults ? `FP ${round1(actual)}` : `PROJ ${round1(proj)}`;
 
   return (
-    <div style={containerStyle} onClick={clickable ? onToggleFlip : undefined}>
-      <div style={holdRibbon}>PROTECTED</div>
-      <div style={mvpBadge}>★ MVP</div>
+    <div style={container} onClick={clickable ? onToggleFlip : undefined}>
+      {/* HERO IMAGE */}
+      <div style={hero}>
+        {headshotSrc ? (
+          <img
+            src={headshotSrc}
+            alt={nameFull}
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+            onError={() => setImgBroken(true)}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: `50% ${FACE_Y}`,
+              transform: `scale(${IMG_SCALE}) translateY(${IMG_TRANSLATE_Y})`,
+              transformOrigin: "50% 15%",
+              // pop
+              filter: "drop-shadow(0 18px 30px rgba(0,0,0,0.40)) contrast(1.06) saturate(1.08) brightness(1.04)",
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 40,
+              fontWeight: 950,
+              color: "rgba(255,255,255,0.85)",
+              background: "rgba(0,0,0,0.20)",
+            }}
+          >
+            {getInitials(nameFull)}
+          </div>
+        )}
+      </div>
 
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transition: "transform 220ms ease",
-          transformStyle: "preserve-3d",
-          transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
-        }}
-      >
-        <div style={{ position: "absolute", inset: 0, backfaceVisibility: "hidden" }}>{Front}</div>
-        <div style={{ position: "absolute", inset: 0, backfaceVisibility: "hidden", transform: "rotateY(180deg)", background: "#fff" }}>
-          {Back}
+      {/* shine/vignette */}
+      <div style={shine} />
+
+      {/* TOP LEFT HOLD */}
+      <div style={topLeftPill}>{isLocked ? "HOLD" : ""}</div>
+
+      {/* TOP RIGHT SALARY */}
+      <div style={topRightPill}>${salary}</div>
+
+      {/* MVP small tag (keep it out of the face) */}
+      {isMvp ? (
+        <div
+          style={{
+            position: "absolute",
+            top: SAFE,
+            left: SAFE + 62,
+            zIndex: 6,
+            padding: "4px 8px",
+            borderRadius: 999,
+            fontSize: 11,
+            fontWeight: 950,
+            background: "rgba(0,0,0,0.25)",
+            border: "1px solid rgba(255,255,255,0.14)",
+            backdropFilter: "blur(8px)",
+            color: "rgba(255,255,255,0.92)",
+          }}
+        >
+          ★ MVP
+        </div>
+      ) : null}
+
+      {/* BOTTOM TEXT */}
+      <div style={bottom}>
+        <div style={leftStack}>
+          <div style={teamLine}>
+            {team} • {year}
+          </div>
+          <div style={firstLine}>{first}</div>
+          <div style={lastLine}>{last}</div>
+        </div>
+
+        <div style={rightStack}>
+          <div style={posText}>{pos}</div>
+          <div style={fpText}>{projOrFp}</div>
         </div>
       </div>
     </div>
   );
 }
+
+export default AthleteCard;

@@ -1,21 +1,16 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import type { GamePhase, PlayerCard } from "../adapters/types";
 import { dealInitialRoster, redrawRoster, resolveRoster } from "../adapters/gameAdapter";
 import { RosterGrid } from "../components/RosterGrid";
 import { ScoreHeader } from "../components/ScoreHeader";
+import { useResultsReveal } from "../ui/hooks/useResultsReveal";
 
 const CAP_MAX = 180;
 
 type GameState = "IDLE" | "HOLD" | "RESULTS";
 
 function cardId(card: any): string {
-  const v =
-    card?.cardId ??
-    card?.id ??
-    card?.playerId ??
-    card?.basePlayerId ??
-    card?.uid ??
-    card?.name;
+  const v = card?.cardId ?? card?.id ?? card?.playerId ?? card?.basePlayerId ?? card?.uid ?? card?.name;
   return String(v ?? "");
 }
 
@@ -31,6 +26,8 @@ export default function GameView() {
   const [mvpId, setMvpId] = useState<string | undefined>(undefined);
   const [betMultiplier, setBetMultiplier] = useState<number>(1);
 
+  const phase: GamePhase = useMemo(() => (gameState === "RESULTS" ? "RESULTS" : "HOLD"), [gameState]);
+
   const capUsed = useMemo(() => sumSalary(roster), [roster]);
 
   const heldSalary = useMemo(() => {
@@ -41,24 +38,26 @@ export default function GameView() {
     }, 0);
   }, [roster, lockedCardIds]);
 
-  const capRemaining = useMemo(() => Math.max(0, CAP_MAX - capUsed), [capUsed]);
+  const { revealedIds, runningTotalFp, isRevealing, skipToEnd } = useResultsReveal({
+    phase,
+    roster,
+    revealDelayMs: 450,
+    order: "roster",
+  });
+
+  const displayRoster = useMemo(() => {
+    if (phase !== "RESULTS") return roster;
+    return roster.map((c: any) => {
+      const id = cardId(c);
+      if (revealedIds.has(id)) return c;
+      return { ...c, actualFp: 0, fpDelta: 0, bonusFp: 0, bonusPoints: 0 } as PlayerCard;
+    });
+  }, [phase, roster, revealedIds]);
 
   const totalFp = useMemo(() => {
-    if (gameState === "RESULTS") return roster.reduce((a, c: any) => a + Number(c?.actualFp ?? 0), 0);
+    if (phase === "RESULTS") return runningTotalFp;
     return roster.reduce((a, c: any) => a + Number(c?.projectedFp ?? 0), 0);
-  }, [roster, gameState]);
-
-  const subtitle = useMemo(() => {
-    if (gameState === "IDLE") return "Tap PLAY to start";
-    if (gameState === "HOLD") return "Tap cards to PROTECT, then hit DRAW";
-    if (gameState === "RESULTS") return "Tap cards to view stats";
-    return "";
-  }, [gameState]);
-
-  const phase: GamePhase = useMemo(() => {
-    if (gameState === "RESULTS") return "RESULTS";
-    return "HOLD";
-  }, [gameState]);
+  }, [phase, roster, runningTotalFp]);
 
   function toggleLock(cardKey: string) {
     if (gameState !== "HOLD") return;
@@ -74,159 +73,195 @@ export default function GameView() {
     if (gameState !== "RESULTS") return;
     setFlippedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(cardKey)) next.delete(cardKey); else next.add(cardKey);
+      if (next.has(cardKey)) next.delete(cardKey);
+      else next.add(cardKey);
       return next;
     });
   }
+
   async function onPrimaryAction() {
     if (gameState === "IDLE") {
       setFlippedIds(new Set());
       setLockedCardIds(new Set());
+      setMvpId(undefined);
 
       const res: any = await dealInitialRoster();
       const nextRoster: PlayerCard[] = (res?.roster ?? res?.cards ?? res?.lineup ?? []) as PlayerCard[];
-      
-      console.log("=== DEAL RECEIVED ===");
-      console.log("nextRoster length:", nextRoster.length);
-      console.log("nextRoster salaries:", nextRoster.map(c => c.salary));
-      
       setRoster(nextRoster);
       setGameState("HOLD");
-    } else if (gameState === "HOLD") {
-      const res: any = await redrawRoster({
-        currentCards: roster,
-        lockedCardIds,
-      });
+      return;
+    }
+
+    if (gameState === "HOLD") {
+      const res: any = await redrawRoster({ currentCards: roster, lockedCardIds });
 
       const drawnRoster: PlayerCard[] = (res?.roster ?? res?.cards ?? res?.lineup ?? res?.finalCards ?? roster) as PlayerCard[];
-      
-      console.log("=== AFTER REDRAW ===");
-      console.log("drawnRoster length:", drawnRoster.length);
-      console.log("drawnRoster salaries:", drawnRoster.map(c => c.salary));
 
-      const resolveRes: any = await resolveRoster({
-        finalCards: drawnRoster,
-      });
+      const resolveRes: any = await resolveRoster({ finalCards: drawnRoster });
 
       const finalRoster: PlayerCard[] = (resolveRes?.roster ?? resolveRes?.cards ?? resolveRes?.finalCards ?? drawnRoster) as PlayerCard[];
-      
-      console.log("=== AFTER RESOLVE ===");
-      console.log("finalRoster length:", finalRoster.length);
-      console.log("finalRoster salaries:", finalRoster.map(c => c.salary));
-
       setRoster(finalRoster);
 
       const maybeMvp: string | undefined = resolveRes?.mvpId ?? resolveRes?.mvpCardId ?? resolveRes?.topCardId;
       if (typeof maybeMvp === "string") setMvpId(maybeMvp);
 
       setGameState("RESULTS");
-    } else if (gameState === "RESULTS") {
-      setRoster([]);
-      setLockedCardIds(new Set());
-      setFlippedIds(new Set());
-      setMvpId(undefined);
-      setGameState("IDLE");
+      return;
     }
+
+    setRoster([]);
+    setLockedCardIds(new Set());
+    setFlippedIds(new Set());
+    setMvpId(undefined);
+    setGameState("IDLE");
   }
 
   const primaryButtonLabel = useMemo(() => {
     if (gameState === "IDLE") return "PLAY";
     if (gameState === "HOLD") return "DRAW";
-    if (gameState === "RESULTS") return "PLAY AGAIN";
+    if (gameState === "RESULTS") return "REPLAY";
     return "PLAY";
   }, [gameState]);
 
   const primaryButtonStyle = useMemo(() => {
-    const base = {
-      flex: 1,
-      height: 54,
-      borderRadius: 16,
-      border: "2px solid rgba(0,0,0,0.12)",
-      fontWeight: 900,
-      fontSize: 18,
+    const base: React.CSSProperties = {
+      width: "100%",
+      height: 24, // 1/2 size feel
+      borderRadius: 12,
+      border: "1px solid rgba(255,255,255,0.14)",
+      fontWeight: 950,
+      fontSize: 14,
       cursor: "pointer",
-      transition: "all 0.2s",
+      letterSpacing: 1,
+      color: "#fff",
+      boxShadow: "0 10px 24px rgba(0,0,0,0.32)",
     };
 
-    if (gameState === "HOLD") {
-      return { ...base, background: "#4CAF50", color: "#fff", border: "2px solid #45a049" };
-    }
-    if (gameState === "RESULTS") {
-      return { ...base, background: "#2196F3", color: "#fff", border: "2px solid #1976D2" };
-    }
-    return { ...base, background: "#FF9800", color: "#fff", border: "2px solid #F57C00" };
+    if (gameState === "HOLD") return { ...base, background: "linear-gradient(180deg, #36D46B 0%, #1FA94B 100%)" };
+    if (gameState === "RESULTS") return { ...base, background: "linear-gradient(180deg, #3AA0FF 0%, #1D6DD7 100%)" };
+    return { ...base, background: "linear-gradient(180deg, #FFB14A 0%, #FF7A2F 100%)" };
   }, [gameState]);
 
+  const cabinetBg = useMemo(() => {
+    return {
+      background:
+        "radial-gradient(1200px 700px at 50% 0%, rgba(60,130,255,0.18) 0%, rgba(10,14,24,0) 55%)," +
+        "radial-gradient(900px 700px at 20% 10%, rgba(255,140,60,0.14) 0%, rgba(10,14,24,0) 60%)," +
+        "radial-gradient(900px 700px at 80% 15%, rgba(120,255,210,0.10) 0%, rgba(10,14,24,0) 60%)," +
+        "linear-gradient(180deg, #070A12 0%, #0A1020 38%, #070A12 100%)",
+    } as const;
+  }, []);
+
   return (
-    <div
-      style={{
-        height: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-        background: "#f6f7fb",
-      }}
-    >
-      <div style={{ flex: "0 0 auto", padding: 12 }}>
-        <ScoreHeader
-          totalFp={totalFp}
-          capUsed={capUsed}
-          capMax={CAP_MAX}
-          heldSalary={heldSalary}
-          capRemaining={capRemaining}
-          phase={phase}
-          subtitle={subtitle}
-        />
-      </div>
-
-      <div style={{ flex: "1 1 auto", padding: 12, overflow: "hidden" }}>
-        <div
-          style={{
-            height: "100%",
-            borderRadius: 16,
-            background: "rgba(255,255,255,0.7)",
-            border: "1px solid rgba(0,0,0,0.06)",
-            padding: 10,
-            overflow: "hidden",
-          }}
-        >
-          <RosterGrid
-            roster={roster}
-            phase={phase}
-            lockedIds={lockedCardIds}
-            mvpId={mvpId}
-            flippedIds={flippedIds}
-            onToggleLock={(k) => toggleLock(k)}
-            onToggleFlip={(k) => toggleFlip(k)}
-          />
+    <div style={{ position: "fixed", inset: 0, ...cabinetBg, overflow: "hidden", color: "#EAF0FF" }}>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          paddingTop: "max(env(safe-area-inset-top), 8px)",
+          paddingBottom: "max(env(safe-area-inset-bottom), 10px)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+        }}
+      >
+        {/* HEADER */}
+        <div style={{ flex: "0 0 auto", padding: "0 12px" }}>
+          <div
+            style={{
+              borderRadius: 18,
+              border: "1px solid rgba(255,255,255,0.10)",
+              background: "rgba(255,255,255,0.06)",
+              boxShadow: "0 14px 34px rgba(0,0,0,0.32)",
+              padding: "8px 10px",
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            <ScoreHeader
+              totalFp={totalFp}
+              capUsed={capUsed}
+              capMax={CAP_MAX}
+              heldSalary={heldSalary}
+              capRemaining={Math.max(0, CAP_MAX - capUsed)}
+              phase={phase}
+              subtitle={""}
+            />
+          </div>
         </div>
-      </div>
 
-      <div style={{ flex: "0 0 auto", padding: 12 }}>
-        <div style={{ display: "flex", gap: 8, marginBottom: 12, justifyContent: "center" }}>
-          {[1, 3, 5].map((mult) => (
-            <button
-              key={mult}
-              onClick={() => setBetMultiplier(mult)}
-              style={{
-                width: 60,
-                height: 36,
-                borderRadius: 8,
-                border: betMultiplier === mult ? "2px solid #2196F3" : "1px solid rgba(0,0,0,0.12)",
-                background: betMultiplier === mult ? "#E3F2FD" : "#fff",
-                fontWeight: betMultiplier === mult ? 900 : 600,
-                fontSize: 14,
-                cursor: "pointer",
-              }}
-            >
-              {mult}x
+        {/* PLAYFIELD */}
+        <div style={{ flex: "1 1 auto", minHeight: 0, padding: "0 12px" }}>
+          <div
+            onClick={phase === "RESULTS" && isRevealing ? skipToEnd : undefined}
+            style={{
+              height: "100%",
+              minHeight: 0,
+              borderRadius: 18,
+              border: "1px solid rgba(255,255,255,0.10)",
+              background: "rgba(255,255,255,0.04)",
+              boxShadow: "0 18px 60px rgba(0,0,0,0.45)",
+              backdropFilter: "blur(10px)",
+              padding: 10,
+              overflow: "hidden",
+              cursor: phase === "RESULTS" && isRevealing ? "pointer" : "default",
+            }}
+          >
+            <RosterGrid
+              roster={displayRoster}
+              phase={phase}
+              lockedIds={lockedCardIds}
+              mvpId={mvpId}
+              flippedIds={flippedIds}
+              onToggleLock={(k) => toggleLock(k)}
+              onToggleFlip={(k) => toggleFlip(k)}
+            />
+          </div>
+        </div>
+
+        {/* FOOTER */}
+        <div style={{ flex: "0 0 auto", padding: "0 12px" }}>
+          <div
+            style={{
+              borderRadius: 18,
+              border: "1px solid rgba(255,255,255,0.10)",
+              background: "rgba(255,255,255,0.06)",
+              boxShadow: "0 14px 34px rgba(0,0,0,0.32)",
+              padding: "8px 10px",
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            <div style={{ display: "flex", gap: 10, justifyContent: "center", marginBottom: 8 }}>
+              {[1, 3, 5, 10].map((mult) => {
+                const active = betMultiplier === mult;
+                const label = mult === 1 ? "Min" : mult === 10 ? "Max" : `${mult}x`;
+
+                return (
+                  <button
+                    key={mult}
+                    onClick={() => setBetMultiplier(mult)}
+                    style={{
+                      width: 74,
+                      height: 34,
+                      borderRadius: 12,
+                      border: active ? "1px solid rgba(100,180,255,0.8)" : "1px solid rgba(255,255,255,0.14)",
+                      background: active ? "rgba(80,150,255,0.18)" : "rgba(255,255,255,0.06)",
+                      color: "#EAF0FF",
+                      fontWeight: active ? 950 : 800,
+                      cursor: "pointer",
+                      fontSize: 14,
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button onClick={onPrimaryAction} style={primaryButtonStyle}>
+              {primaryButtonLabel}
             </button>
-          ))}
+          </div>
         </div>
-
-        <button onClick={onPrimaryAction} style={primaryButtonStyle}>
-          {primaryButtonLabel}
-        </button>
       </div>
     </div>
   );

@@ -25,15 +25,16 @@ export function RosterGrid(props: {
     return window.matchMedia?.("(min-width: 900px)")?.matches ? 3 : 2;
   }, [columns]);
 
-  // Sort by position priority (sport-agnostic)
   const sortedCards = useMemo(() => {
     const positionOrder = sportAdapter.positions; // e.g., ["FWD", "MID", "DEF", "GK"]
-    
-    return [...roster].sort((a, b) => {
-      const aIndex = positionOrder.indexOf(a.position);
-      const bIndex = positionOrder.indexOf(b.position);
-      return aIndex - bIndex;
-    }).slice(0, 6);
+
+    return [...roster]
+      .sort((a, b) => {
+        const aIndex = positionOrder.indexOf(a.position);
+        const bIndex = positionOrder.indexOf(b.position);
+        return aIndex - bIndex;
+      })
+      .slice(0, 6);
   }, [roster]);
 
   return (
@@ -43,15 +44,14 @@ export function RosterGrid(props: {
         height: "100%",
         overflow: "hidden",
         display: "grid",
-        gap: 10,
+        gap: 10, // spacing stays constant
         gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-        gridAutoRows: "1fr",
+        gridAutoRows: "1fr", // cards eat extra space proportionally
         alignContent: "stretch",
       }}
     >
       {sortedCards.map((card) => {
-        const key = cardKey(card) || String(Math.random());
-
+        const key = cardKey(card); // IMPORTANT: no Math.random()
         return (
           <CardSlot
             key={key}

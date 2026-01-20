@@ -1,5 +1,5 @@
 // Simulator type definitions
-import type { Resolution } from '../../models';
+import type { Resolution } from '../models';
 
 export interface SimulationResult {
   run: number;

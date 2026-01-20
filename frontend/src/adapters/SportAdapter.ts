@@ -33,6 +33,39 @@ export class SportAdapter {
   get positions(): string[] {
     return this.config.positions;
   }
+  /**
+   * Ordered, fixed UI slots for the roster grid.
+   * This prevents cards from "jumping" by keeping positions stationary.
+   *
+   * For football example (6 cards):
+   * ["GK","DEF","DEF","MID","MID","FWD"]
+   *
+   * If config doesn't define an order, we derive a stable order from limits + positions.
+   */
+  get rosterSlots(): string[] {
+    const explicit = (this.config as any).rosterSlots as string[] | undefined;
+    if (explicit && explicit.length) return explicit;
+
+    const size = this.rosterSize;
+    const limits = this.config.positionLimits || {};
+    const slots: string[] = [];
+
+    // 1) Fill required mins first in a stable positions order
+    for (const pos of this.config.positions) {
+      const min = limits[pos]?.min ?? 0;
+      for (let i = 0; i < min; i++) slots.push(pos);
+    }
+
+    // 2) Fill remaining slots by cycling through positions (stable)
+    let i = 0;
+    while (slots.length < size) {
+      slots.push(this.config.positions[i % this.config.positions.length]);
+      i++;
+    }
+
+    // 3) Trim (safety)
+    return slots.slice(0, size);
+  }
 
   // ========== POSITION LOGIC ==========
   normalizePosition(raw: unknown): Position {
