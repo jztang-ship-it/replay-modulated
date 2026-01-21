@@ -18,6 +18,10 @@ function sumSalary(roster: PlayerCard[]) {
   return roster.reduce((acc, c: any) => acc + Number(c?.salary ?? 0), 0);
 }
 
+function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 export default function GameView() {
   const [gameState, setGameState] = useState<GameState>("IDLE");
   const [roster, setRoster] = useState<PlayerCard[]>([]);
@@ -47,6 +51,8 @@ export default function GameView() {
 
   const displayRoster = useMemo(() => {
     if (phase !== "RESULTS") return roster;
+
+    // Keep roster items, but hide unrevealed points
     return roster.map((c: any) => {
       const id = cardId(c);
       if (revealedIds.has(id)) return c;
@@ -71,6 +77,8 @@ export default function GameView() {
 
   function toggleFlip(cardKey: string) {
     if (gameState !== "RESULTS") return;
+    if (isRevealing) return;
+
     setFlippedIds((prev) => {
       const next = new Set(prev);
       if (next.has(cardKey)) next.delete(cardKey);
@@ -93,15 +101,49 @@ export default function GameView() {
     }
 
     if (gameState === "HOLD") {
-      const res: any = await redrawRoster({ currentCards: roster, lockedCardIds });
+      // -------------------- VIDEO-POKER TENSION --------------------
+      // Flip only UNLOCKED cards to Back A
+      const unlocked = new Set<string>();
+      for (const c of roster) {
+        const id = cardId(c);
+        if (!lockedCardIds.has(id)) unlocked.add(id);
+      }
+      setFlippedIds(unlocked);
 
-      const drawnRoster: PlayerCard[] = (res?.roster ?? res?.cards ?? res?.lineup ?? res?.finalCards ?? roster) as PlayerCard[];
+      // Tension timings (tweak freely)
+      const BACK_BEFORE_SWAP_MS = 450; // show backs before swap
+      const BACK_AFTER_SWAP_MS = 900; // keep backs up after swap (key)
+      const REVEAL_STAGGER_MS = 140; // reveal one by one
+
+      await sleep(BACK_BEFORE_SWAP_MS);
+
+      // Swap + resolve while backs are still showing
+      const res: any = await redrawRoster({ currentCards: roster, lockedCardIds });
+      const drawnRoster: PlayerCard[] =
+        (res?.roster ?? res?.cards ?? res?.lineup ?? res?.finalCards ?? roster) as PlayerCard[];
 
       const resolveRes: any = await resolveRoster({ finalCards: drawnRoster });
+      const finalRoster: PlayerCard[] =
+        (resolveRes?.roster ?? resolveRes?.cards ?? resolveRes?.finalCards ?? drawnRoster) as PlayerCard[];
 
-      const finalRoster: PlayerCard[] = (resolveRes?.roster ?? resolveRes?.cards ?? resolveRes?.finalCards ?? drawnRoster) as PlayerCard[];
+      // Update roster while still flipped (so the reveal shows new faces)
       setRoster(finalRoster);
 
+      // Keep backs up long enough so the swap doesn't feel "magical"
+      await sleep(BACK_AFTER_SWAP_MS);
+
+      // Reveal one-by-one (video poker style)
+      const revealOrder = Array.from(unlocked);
+      for (const id of revealOrder) {
+        setFlippedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+        await sleep(REVEAL_STAGGER_MS);
+      }
+
+      // MVP + RESULTS
       const maybeMvp: string | undefined = resolveRes?.mvpId ?? resolveRes?.mvpCardId ?? resolveRes?.topCardId;
       if (typeof maybeMvp === "string") setMvpId(maybeMvp);
 
@@ -109,6 +151,7 @@ export default function GameView() {
       return;
     }
 
+    // REPLAY reset
     setRoster([]);
     setLockedCardIds(new Set());
     setFlippedIds(new Set());
@@ -126,7 +169,7 @@ export default function GameView() {
   const primaryButtonStyle = useMemo(() => {
     const base: React.CSSProperties = {
       width: "50%",
-      height: 48, // 1/2 size feel
+      height: 48,
       margin: "0 auto",
       borderRadius: 12,
       border: "1px solid rgba(255,255,255,0.14)",
@@ -213,6 +256,7 @@ export default function GameView() {
               lockedIds={lockedCardIds}
               mvpId={mvpId}
               flippedIds={flippedIds}
+              canFlip={phase === "RESULTS" && !isRevealing}
               onToggleLock={(k) => toggleLock(k)}
               onToggleFlip={(k) => toggleFlip(k)}
             />

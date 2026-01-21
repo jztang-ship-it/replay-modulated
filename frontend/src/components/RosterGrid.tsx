@@ -16,8 +16,9 @@ export function RosterGrid(props: {
   onToggleLock: (cardKey: string) => void;
   onToggleFlip: (cardKey: string) => void;
   columns?: 2 | 3;
+  canFlip?: boolean;
 }) {
-  const { roster, phase, lockedIds, mvpId, flippedIds, onToggleLock, onToggleFlip, columns } = props;
+  const { roster, phase, lockedIds, mvpId, flippedIds, onToggleLock, onToggleFlip, columns, canFlip } = props;
 
   const cols = useMemo(() => {
     if (columns) return columns;
@@ -26,16 +27,23 @@ export function RosterGrid(props: {
   }, [columns]);
 
   const sortedCards = useMemo(() => {
-    const positionOrder = sportAdapter.positions; // e.g., ["FW", "MD", "DE", "GK"]
+    const positionOrder = sportAdapter.positions ?? []; // e.g., ["FW", "MD", "DE", "GK"]
 
     return [...roster]
       .sort((a, b) => {
-        const aIndex = positionOrder.indexOf(a.position);
-        const bIndex = positionOrder.indexOf(b.position);
-        return aIndex - bIndex;
+        const aPos = String((a as any)?.position ?? "");
+        const bPos = String((b as any)?.position ?? "");
+        const aIndex = positionOrder.indexOf(aPos);
+        const bIndex = positionOrder.indexOf(bPos);
+        // unknown positions go last
+        const ai = aIndex === -1 ? 999 : aIndex;
+        const bi = bIndex === -1 ? 999 : bIndex;
+        return ai - bi;
       })
       .slice(0, 6);
   }, [roster]);
+
+  const allowFlip = canFlip ?? phase === "RESULTS";
 
   return (
     <div
@@ -44,14 +52,14 @@ export function RosterGrid(props: {
         height: "100%",
         overflow: "hidden",
         display: "grid",
-        gap: 10, // spacing stays constant
+        gap: 10,
         gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-        gridAutoRows: "1fr", // cards eat extra space proportionally
+        gridAutoRows: "1fr",
         alignContent: "stretch",
       }}
     >
       {sortedCards.map((card) => {
-        const key = cardKey(card); // IMPORTANT: no Math.random()
+        const key = cardKey(card);
         return (
           <CardSlot
             key={key}
@@ -60,7 +68,7 @@ export function RosterGrid(props: {
             isLocked={lockedIds.has(key)}
             isMvp={mvpId === key}
             isFlipped={flippedIds.has(key)}
-            canFlip={phase === "RESULTS"}
+            canFlip={allowFlip}
             onToggleLock={() => onToggleLock(key)}
             onToggleFlip={() => onToggleFlip(key)}
           />

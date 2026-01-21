@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import type { GamePhase, PlayerCard } from "../adapters/types";
+import { AthleteCardFront } from "./AthleteCardFront";
 
 type Props = {
   card: PlayerCard;
@@ -11,432 +12,301 @@ type Props = {
   onToggleFlip: () => void;
 };
 
-function clampText(v: any) {
-  return String(v ?? "").trim();
+function toNum(v: any) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
 }
 
-function initialsFromName(name: string) {
-  const parts = name.split(/\s+/).filter(Boolean);
-  const a = parts[0]?.[0] ?? "";
-  const b = parts[1]?.[0] ?? parts[0]?.[1] ?? "";
-  return (a + b).toUpperCase();
+function prettyKey(k: string) {
+  return String(k)
+    .replace(/_/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .toUpperCase();
 }
 
-function formatSeasonRange(season: any): string {
-  const s = clampText(season);
+function pickBreakdown(card: any): Record<string, number> | null {
+  const candidates = [
+    card?.fpBreakdown,
+    card?.pointsByStat,
+    card?.fpByStat,
+    card?.statFp,
+    card?.scoringBreakdown,
+    card?.fantasyPointsByStat,
+    card?.fantasyBreakdown,
+  ];
 
-  // 2024-2025 => 24-25
-  let m = s.match(/(\d{4})\D+(\d{4})/);
-  if (m) return `${m[1].slice(2)}-${m[2].slice(2)}`;
+  for (const c of candidates) {
+    if (!c) continue;
 
-  // 24-25 => 24-25
-  m = s.match(/(\d{2})\D+(\d{2})/);
-  if (m) return `${m[1]}-${m[2]}`;
+    if (typeof c === "object" && !Array.isArray(c)) {
+      const out: Record<string, number> = {};
+      for (const [k, v] of Object.entries(c)) {
+        const n = Number(v);
+        if (Number.isFinite(n) && n !== 0) out[String(k)] = n;
+      }
+      if (Object.keys(out).length) return out;
+    }
 
-  // 2024 => 24-25
-  m = s.match(/(\d{4})/);
-  if (m) {
-    const a = m[1].slice(2);
-    const b = String((Number(a) + 1) % 100).padStart(2, "0");
-    return `${a}-${b}`;
+    if (Array.isArray(c)) {
+      const out: Record<string, number> = {};
+      for (const row of c) {
+        const key = row?.stat ?? row?.key ?? row?.label ?? row?.name;
+        const val = row?.fp ?? row?.points ?? row?.value;
+        const n = Number(val);
+        if (key && Number.isFinite(n) && n !== 0) out[String(key)] = n;
+      }
+      if (Object.keys(out).length) return out;
+    }
   }
 
-  return s;
+  return null;
 }
 
-function buildHeadshotCandidates(card: any): string[] {
-  const direct =
-    card?.headshotUrl ||
-    card?.photoUrl ||
-    card?.imageUrl ||
-    card?.image ||
-    card?.portraitUrl ||
-    card?.headshot ||
-    card?.img ||
-    card?.player?.headshotUrl ||
-    card?.player?.photoUrl ||
-    card?.player?.imageUrl ||
-    card?.player?.portraitUrl ||
-    card?.player?.image;
+function pickStatsUsed(card: any): Record<string, any> | null {
+  const candidates = [
+    card?.statLine,
+    card?.statsUsed,
+    card?.gameInfo?.stats,
+    card?.stats,
+    card?.boxScore,
+    card?.gameLog?.stats,
+    card?.log?.stats,
+  ];
 
-  const picked = clampText(direct);
-  const out: string[] = [];
-  if (picked) out.push(picked);
+  for (const s of candidates) {
+    if (s && typeof s === "object" && !Array.isArray(s)) return s;
+  }
 
-  const codeRaw = clampText(card?.photoCode);
-  if (!codeRaw) return out;
-
-  const codeNoP = codeRaw.replace(/^p/i, "");
-  const pcode = `p${codeNoP}`;
-
-  out.push(`https://resources.premierleague.com/premierleague/photos/players/250x250/${pcode}.png`);
-  out.push(`https://resources.premierleague.com/premierleague/photos/players/110x140/${pcode}.png`);
-  out.push(`https://resources.premierleague.com/premierleague/photos/players/120x120/${pcode}.png`);
-  return out;
+  return null;
 }
 
-function tierTheme(tierRaw: any) {
-  const t = String(tierRaw ?? "").toUpperCase();
-
-  // slightly stronger than before so border reads clearly
-  const base = { frame: "rgba(120,150,255,0.90)", glow: "rgba(120,150,255,0.22)" };
-
-  if (t.includes("PURPLE")) return { frame: "rgba(170,110,255,0.92)", glow: "rgba(170,110,255,0.26)" };
-  if (t.includes("GREEN")) return { frame: "rgba(70,210,130,0.92)", glow: "rgba(70,210,130,0.24)" };
-  if (t.includes("ORANGE")) return { frame: "rgba(255,170,70,0.94)", glow: "rgba(255,170,70,0.26)" };
-  if (t.includes("BLUE")) return { frame: "rgba(80,160,255,0.92)", glow: "rgba(80,160,255,0.24)" };
-  if (t.includes("WHITE")) return { frame: "rgba(255,255,255,0.72)", glow: "rgba(255,255,255,0.16)" };
-
-  return base;
+function BackAReplace() {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        borderRadius: 18,
+        overflow: "hidden",
+        background: "linear-gradient(180deg, rgba(12,18,32,1) 0%, rgba(7,11,20,1) 100%)",
+        display: "grid",
+        placeItems: "center",
+        color: "rgba(255,255,255,0.92)",
+        fontWeight: 950,
+        letterSpacing: 1.2,
+        textTransform: "uppercase",
+        backfaceVisibility: "hidden",
+      }}
+    >
+      Replacing…
+    </div>
+  );
 }
 
-/** Always keep year fully visible by truncating team first. */
-function teamYearLine(team: string, seasonFmt: string, maxTeamChars = 14) {
-  const t = clampText(team).toUpperCase();
-  const y = clampText(seasonFmt);
-  if (!t) return y;
-  if (t.length <= maxTeamChars) return `${t} • ${y}`;
-  return `${t.slice(0, Math.max(0, maxTeamChars - 1))}… • ${y}`;
-}
+function BackBStats({ card }: { card: PlayerCard }) {
+  const anyCard: any = card;
 
-export function AthleteCard(props: Props) {
-  const { card, phase, isLocked } = props;
+  const breakdown = useMemo(() => pickBreakdown(anyCard), [anyCard]);
+  const statsUsed = useMemo(() => pickStatsUsed(anyCard), [anyCard]);
 
-  const name = clampText((card as any)?.name);
-  const team = clampText((card as any)?.team);
-  const season = (card as any)?.season ?? (card as any)?.year ?? (card as any)?.seasonLabel;
-  const seasonFmt = formatSeasonRange(season);
+  const breakdownRows = useMemo(() => {
+    if (!breakdown) return [];
+    return Object.entries(breakdown)
+      .map(([k, v]) => ({ k, v }))
+      .sort((a, b) => Math.abs(b.v) - Math.abs(a.v));
+  }, [breakdown]);
 
-  const posRaw = clampText((card as any)?.position);
-  const pos = posRaw ? posRaw.slice(0, 2).toUpperCase() : "";
+  const statsRows = useMemo(() => {
+    if (!statsUsed) return [];
+    return Object.entries(statsUsed)
+      .map(([k, v]) => ({ k, v }))
+      .filter((r) => r.k && r.v != null && r.v !== "" && r.v !== 0)
+      .slice(0, 28);
+  }, [statsUsed]);
 
-  const salary = Number((card as any)?.salary ?? 0);
+  // Date/Opponent extraction (try multiple shapes)
+  const gi = anyCard?.gameInfo ?? {};
+  const opponent = String(gi?.opponent ?? anyCard?.opponent ?? anyCard?.vs ?? anyCard?.matchup ?? "").trim();
+  const ha = String(gi?.homeAway ?? anyCard?.homeAway ?? "").trim();
+  const date = String(gi?.date ?? anyCard?.date ?? anyCard?.gameDate ?? anyCard?.matchDate ?? "").trim();
+  const title = opponent ? `${ha === "H" ? "vs" : "@"} ${opponent}` : "Game Log";
 
-  const showResults = phase === "RESULTS";
-  const proj = Number((card as any)?.projectedFp ?? 0);
-  const actual = Number((card as any)?.actualFp ?? 0);
-  const value = showResults ? actual : proj;
-  const label = showResults ? "FP" : "PROJ";
-  const valueText = Number.isFinite(value) ? value.toFixed(value % 1 === 0 ? 0 : 1) : "0";
-
-  const first = useMemo(() => {
-    const parts = name.split(/\s+/).filter(Boolean);
-    return clampText(parts[0] ?? "");
-  }, [name]);
-
-  const last = useMemo(() => {
-    const parts = name.split(/\s+/).filter(Boolean);
-    return clampText(parts.slice(1).join(" ") || parts[0] || "");
-  }, [name]);
-
-  const candidates = useMemo(() => buildHeadshotCandidates(card), [card]);
-  const [idx, setIdx] = useState(0);
-
-  useEffect(() => setIdx(0), [String((card as any)?.photoCode ?? "")]);
-
-  const headshotSrc = candidates[idx] ?? "";
-  const initials = initialsFromName(name || `${team} ${pos}`);
-  const tier = tierTheme((card as any)?.tier);
-
-  // -------------------- TUNING (ONLY WHAT YOU ASKED) --------------------
-  const CORNER_PAD = 8;
-  const DOCK_BORDER_SAFE = 6;
-
-
-  // 1) keep heads down; if you want more, change this only.
-  const HEAD_SHIFT_PX = 18;
-
-  // 2) Move dock DOWN to kiss bottom border but NOT cover colored tier border.
-  // Border is 2px; keep a small safety gap so ring stays visible.
-  
-  const DOCK_BOTTOM_GAP = 4;   // <-- this is the key: smaller = closer to border
-
-  // Keep the “good” dock height and content density (no added spacing)
-  const DOCK_HEIGHT = "24%";
-
-  // Tight row spacing (what you had)
-  const ROW_GAP = 1;
-
-  // -------------------- STYLES --------------------
-  const cardShell: React.CSSProperties = {
-    position: "relative",
-    width: "100%",
-    height: "100%",
-    borderRadius: 18,
-    overflow: "hidden",
-    background: "linear-gradient(180deg, #0B1220 0%, #070B14 100%)",
-    border: `2px solid ${tier.frame}`,
-    boxShadow: "0 18px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.08) inset",
-  };
-
-  const tierGlow: React.CSSProperties = {
-    position: "absolute",
-    inset: -40,
-    pointerEvents: "none",
-    background: `radial-gradient(closest-side at 20% 15%, ${tier.glow} 0%, rgba(0,0,0,0) 70%)`,
-    opacity: 0.55,
-  };
-
-  const topStrip: React.CSSProperties = {
-    position: "absolute",
-    top: CORNER_PAD,
-    left: CORNER_PAD,
-    right: CORNER_PAD,
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    zIndex: 6,
-    pointerEvents: "none",
-  };
-
-  const salaryTag: React.CSSProperties = {
-    padding: "6px 10px",
-    borderRadius: 12,
-    background: "rgba(15,18,24,0.55)",
-    border: "1px solid rgba(255,255,255,0.14)",
-    color: "rgba(255,255,255,0.95)",
-    fontWeight: 950,
-    fontSize: 12,
-    letterSpacing: 0.6,
-    backdropFilter: "blur(10px)",
-  };
-
-  // HOLD triangle (yellow) with centered H
-  const holdTri: React.CSSProperties = {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: 0,
-    height: 0,
-    borderTop: "42px solid rgba(245,200,80,0.95)",
-    borderRight: "42px solid transparent",
-    zIndex: 7,
-    pointerEvents: "none",
-  };
-
-  const holdText: React.CSSProperties = {
-    position: "absolute",
-    top: 14,
-    left: 14,
-    transform: "translate(-50%, -50%)",
-    zIndex: 8,
-    pointerEvents: "none",
-    fontSize: 12,
-    fontWeight: 950,
-    color: "rgba(0,0,0,0.92)",
-  };
-
-  const heroWrap: React.CSSProperties = {
-    position: "absolute",
-    inset: 0,
-    zIndex: 1,
-  };
-
-  const heroMask: React.CSSProperties = {
-    position: "absolute",
-    inset: 0,
-    borderRadius: 18,
-    overflow: "hidden",
-    transform: "translateZ(0)",
-  };
-
-  const heroImage: React.CSSProperties = {
-    position: "absolute",
-    inset: 0,
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    objectPosition: "50% 0%",
-    transform: `translateY(${HEAD_SHIFT_PX}px) scale(1.03)`,
-  };
-
-  const heroShade: React.CSSProperties = {
-    position: "absolute",
-    inset: 0,
-    pointerEvents: "none",
-    background:
-      "radial-gradient(110% 85% at 50% 20%, rgba(0,0,0,0.00) 0%, rgba(0,0,0,0.10) 60%, rgba(0,0,0,0.30) 100%)",
-  };
-
-  const placeholder: React.CSSProperties = {
-    position: "absolute",
-    inset: 0,
-    display: "grid",
-    placeItems: "center",
-    fontSize: 68,
-    fontWeight: 950,
-    letterSpacing: 2,
-    color: "rgba(255,255,255,0.70)",
-    textShadow: "0 10px 30px rgba(0,0,0,0.60)",
-    userSelect: "none",
-  };
-
-  // ✅ This is the SAME “nice pill” look you liked. Only moved down.
-  const dock: React.CSSProperties = {
-    position: "absolute",
-    left: DOCK_BORDER_SAFE,     // full width look, but keep border visible
-    right: DOCK_BORDER_SAFE,    // full width look, but keep border visible
-    bottom: DOCK_BOTTOM_GAP,
-    height: DOCK_HEIGHT,
-  
-    // Make it feel like it “belongs” to the bottom edge
-    borderRadius: 18,
-    padding: "6px 12px",        // tighter padding = less blocking
-  
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
-    gap: 10,
-  
-    // KEEP your nice glass gradient look
-    background: "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.62))",
-  
-    // REMOVE the left/right “lines” entirely
-    borderTop: "1px solid rgba(255,255,255,0.10)",
-    borderBottom: "1px solid rgba(255,255,255,0.08)",
-    borderLeft: "0px solid transparent",
-    borderRight: "0px solid transparent",
-  
-    boxShadow: "0 10px 22px rgba(0,0,0,0.28)",
-    backdropFilter: "blur(12px)",
-    zIndex: 6,
-  };
-  
-
-  const shadowText = "0 2px 8px rgba(0,0,0,0.55)";
-
-  const teamLine: React.CSSProperties = {
-    fontSize: 9,
-    fontWeight: 900,
-    letterSpacing: 1.0,
-    textTransform: "uppercase",
-    opacity: 0.9,
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    textShadow: shadowText,
-    textAlign: "center",
-    lineHeight: "1.05",
-  };
-  
-  const firstLine: React.CSSProperties = {
-    fontSize: 10,
-    fontWeight: 900,
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    textShadow: shadowText,
-    textAlign: "left",
-    lineHeight: "1.05",
-  };
-  
-  const lastLine: React.CSSProperties = {
-    fontSize: 13,
-    fontWeight: 950,
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    textShadow: shadowText,
-    textAlign: "left",
-    lineHeight: "1.05",
-  };
-  
-  const posLine: React.CSSProperties = {
-    fontSize: 10,              // same size as first name
-    fontWeight: 900,
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
-    textShadow: shadowText,
-    opacity: 0.95,
-    lineHeight: "1.05",
-  };
-  
-  const labelLine: React.CSSProperties = {
-    fontSize: 9,
-    fontWeight: 900,
-    letterSpacing: 1.0,
-    textShadow: shadowText,
-    opacity: 0.75,
-    lineHeight: "1.05",
-  };
-  
-  const valueLine: React.CSSProperties = {
-    fontSize: 12,              // keep like salary
-    fontWeight: 950,
-    letterSpacing: 0.2,
-    textShadow: shadowText,
-    opacity: 0.98,
-    lineHeight: "1.05",
-  };
-  
-
-  const teamSeason = teamYearLine(team, seasonFmt, 14);
+  const fp = toNum(anyCard?.actualFp);
+  const proj = toNum(anyCard?.projectedFp);
 
   return (
-    <div style={cardShell}>
-      <div style={tierGlow} />
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        borderRadius: 18,
+        overflow: "hidden",
+        background: "linear-gradient(180deg, rgba(12,18,32,1) 0%, rgba(7,11,20,1) 100%)",
+        color: "rgba(255,255,255,0.92)",
+        padding: 12,
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+        backfaceVisibility: "hidden",
+      }}
+    >
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontWeight: 950, letterSpacing: 0.8 }}>{title}</div>
+          <div style={{ opacity: 0.75, fontSize: 12 }}>{date || " "}</div>
+        </div>
 
-      {phase === "HOLD" && isLocked ? (
-        <>
-          <div style={holdTri} />
-          <div style={holdText}>H</div>
-        </>
-      ) : null}
-
-      <div style={topStrip}>
-        <div />
-        <div style={salaryTag}>${salary}</div>
-      </div>
-
-      <div style={heroWrap}>
-        <div style={heroMask}>
-          {headshotSrc ? (
-            <img
-              key={headshotSrc}
-              src={headshotSrc}
-              alt={name}
-              style={heroImage}
-              draggable={false}
-              referrerPolicy="no-referrer"
-              onError={() => {
-                if (idx < candidates.length - 1) setIdx((v) => v + 1);
-                else setIdx(candidates.length);
-              }}
-            />
-          ) : (
-            <div style={placeholder}>{initials}</div>
-          )}
-          <div style={heroShade} />
+        <div style={{ textAlign: "right" }}>
+          <div style={{ opacity: 0.75, fontSize: 12 }}>FP</div>
+          <div style={{ fontWeight: 950, fontSize: 18 }}>{Number.isFinite(fp) ? fp.toFixed(fp % 1 === 0 ? 0 : 1) : "0"}</div>
+          <div style={{ opacity: 0.65, fontSize: 11 }}>Proj {proj.toFixed(proj % 1 === 0 ? 0 : 1)}</div>
         </div>
       </div>
 
-      <div style={dock}>
-  {/* LEFT block is still the main text, but row2/row3 have right-aligned fields */}
-  <div style={{ minWidth: 0, flex: 1, display: "flex", flexDirection: "column", gap: ROW_GAP }}>
-    {/* 1) centered team-year (year always shown by your teamSeason formatter) */}
-    <div style={teamLine}>{teamSeason}</div>
+      {/* Breakdown */}
+      <div
+        style={{
+          borderRadius: 14,
+          border: "1px solid rgba(255,255,255,0.10)",
+          background: "rgba(255,255,255,0.04)",
+          padding: 10,
+        }}
+      >
+        <div style={{ fontWeight: 900, opacity: 0.9, marginBottom: 8 }}>FP Breakdown</div>
 
-    {/* 2) first name left, position right (same size text) */}
-    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
-      <div style={{ ...firstLine, minWidth: 0, flex: 1 }}>{first}</div>
-      <div style={posLine}>{pos}</div>
-    </div>
-
-    {/* 3) last name left, PROJ/FP + number right (compact, right aligned) */}
-    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
-      <div style={{ ...lastLine, minWidth: 0, flex: 1 }}>{last}</div>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 6, flexShrink: 0 }}>
-        <div style={labelLine}>{label}</div>
-        <div style={valueLine}>{valueText}</div>
+        {breakdownRows.length ? (
+          <div style={{ display: "grid", gap: 6 }}>
+            {breakdownRows.map((r) => (
+              <div key={r.k} style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                <div
+                  style={{
+                    opacity: 0.9,
+                    fontSize: 12,
+                    minWidth: 0,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {prettyKey(r.k)}
+                </div>
+                <div style={{ fontWeight: 950, fontSize: 12, flexShrink: 0 }}>
+                  {r.v > 0 ? `+${r.v}` : `${r.v}`}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ opacity: 0.75, fontSize: 12, lineHeight: 1.35 }}>
+            No per-stat FP breakdown found on this card yet.
+          </div>
+        )}
       </div>
-    </div>
-  </div>
-</div>
 
+      {/* Stats Used */}
+      <div style={{ flex: 1, overflow: "auto", borderRadius: 14, border: "1px solid rgba(255,255,255,0.10)", padding: 10 }}>
+        <div style={{ fontWeight: 900, opacity: 0.9, marginBottom: 8 }}>Stats Used</div>
+
+        {statsRows.length ? (
+          <div style={{ display: "grid", gap: 6 }}>
+            {statsRows.map((r) => (
+              <div key={r.k} style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                <div
+                  style={{
+                    opacity: 0.9,
+                    fontSize: 12,
+                    minWidth: 0,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {prettyKey(r.k)}
+                </div>
+                <div style={{ fontWeight: 900, fontSize: 12, flexShrink: 0 }}>{String(r.v)}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ opacity: 0.75, fontSize: 12, lineHeight: 1.35 }}>
+            No structured stats found on this card.
+            <div style={{ marginTop: 8, fontWeight: 900, opacity: 0.9 }}>Raw card fields:</div>
+            <pre style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 11, opacity: 0.85 }}>
+              {JSON.stringify(
+                {
+                  gameInfo: anyCard?.gameInfo ?? null,
+                  statLine: anyCard?.statLine ?? null,
+                  statsUsed: anyCard?.statsUsed ?? null,
+                  stats: anyCard?.stats ?? null,
+                },
+                null,
+                2
+              )}
+            </pre>
+          </div>
+        )}
+      </div>
+
+      <div style={{ textAlign: "center", opacity: 0.65, fontSize: 12 }}>Tap card to flip back</div>
+    </div>
+  );
+}
+
+function AthleteCardBack(props: Props) {
+  const { phase, isLocked, card } = props;
+
+  // Back A in HOLD for unheld cards
+  if (phase === "HOLD" && !isLocked) return <BackAReplace />;
+
+  // Back B in RESULTS
+  if (phase === "RESULTS") return <BackBStats card={card} />;
+
+  return <BackAReplace />;
+}
+
+export function AthleteCard(props: Props) {
+  const { isFlipped } = props;
+
+  const flipContainer: React.CSSProperties = {
+    perspective: "1200px",
+    width: "100%",
+    height: "100%",
+  };
+
+  const flipInner: React.CSSProperties = {
+    position: "relative",
+    width: "100%",
+    height: "100%",
+    transformStyle: "preserve-3d",
+    transition: "transform 520ms cubic-bezier(.2,.9,.2,1)",
+    transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+  };
+
+  const faceFront: React.CSSProperties = {
+    position: "absolute",
+    inset: 0,
+    backfaceVisibility: "hidden",
+  };
+
+  const faceBack: React.CSSProperties = {
+    position: "absolute",
+    inset: 0,
+    transform: "rotateY(180deg)",
+    backfaceVisibility: "hidden",
+  };
+
+  return (
+    <div style={flipContainer}>
+      <div style={flipInner}>
+        <div style={faceFront}>
+          <AthleteCardFront {...props} />
+        </div>
+
+        <div style={faceBack}>
+          <AthleteCardBack {...props} />
+        </div>
+      </div>
     </div>
   );
 }
