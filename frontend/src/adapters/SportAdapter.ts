@@ -10,7 +10,7 @@ import type { Position, TierColor, PlayerCard } from './types';
 import { FootballSportConfig } from '../../../backend/sports/football';
 
 export class SportAdapter {
-  private config: typeof FootballSportConfig;
+  public config: typeof FootballSportConfig;
 
   constructor(sportConfig: typeof FootballSportConfig) {
     this.config = sportConfig;
@@ -18,12 +18,19 @@ export class SportAdapter {
 
   // ========== SALARY CAP ==========
   get salaryCap(): number {
-    return this.config.salaryCap;
+    if (typeof this.config.salaryCap === 'number') {
+      return this.config.salaryCap;
+    }
+    return this.config.salaryCap.max;
   }
 
   get salaryCapMin(): number {
-    return Math.floor(this.config.salaryCap * 0.95);
+    if (typeof this.config.salaryCap === 'number') {
+      return Math.floor(this.config.salaryCap * 0.95);
+    }
+    return this.config.salaryCap.min;
   }
+
 
   // ========== ROSTER ==========
   get rosterSize(): number {

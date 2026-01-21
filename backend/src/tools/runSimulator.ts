@@ -32,6 +32,7 @@ async function main() {
   
   const summary = simulator.analyzeSummary(results);
   simulator.printSummary(summary);
+  simulator.analyzePositions(results);
 }
 
 main().catch(console.error);

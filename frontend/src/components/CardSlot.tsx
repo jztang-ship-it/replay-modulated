@@ -1,5 +1,5 @@
 import type { GamePhase, PlayerCard } from "../adapters/types";
-import AthleteCard from "./AthleteCard";
+import { AthleteCard } from "./AthleteCard";
 
 export function CardSlot(props: {
   card: PlayerCard;
@@ -16,15 +16,21 @@ export function CardSlot(props: {
 }) {
   const { card, phase, isLocked, isMvp, isFlipped, canFlip, onToggleLock, onToggleFlip } = props;
 
+  const onClick = () => {
+    if (phase === "HOLD") onToggleLock();
+    else if (phase === "RESULTS" && canFlip) onToggleFlip();
+  };
+
   return (
     <div
-      onClick={phase === "HOLD" ? onToggleLock : undefined}
+      onClick={onClick}
       style={{
         width: "100%",
         height: "100%",
         minWidth: 0,
         minHeight: 0,
         overflow: "hidden",
+        cursor: phase === "HOLD" || (phase === "RESULTS" && canFlip) ? "pointer" : "default",
       }}
     >
       <AthleteCard

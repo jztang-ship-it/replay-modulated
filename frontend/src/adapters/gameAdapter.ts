@@ -1,17 +1,18 @@
 // frontend/src/adapters/gameAdapter.ts
-// SPORT-AGNOSTIC VERSION - All sport-specific logic moved to SportAdapter
+// SPORT-AGNOSTIC VERSION - Uses backend LineupGenerationEngine
 
 import type { PlayerCard, ResolveResult, Position, TierColor } from "./types";
 import { sportAdapter } from "./SportAdapter";
+import { LineupGenerationEngine } from '../../../backend/engines/LineupGenerationEngine';
+import { RandomEngine } from '../../../backend/engines/RandomEngine';
+import type { RosterSlot } from '../../../backend/models';
 
 // Browser URLs (must exist under frontend/public)
 const PLAYERS_URL = "/data/players.json";
 const LOGS_URL = "/data/game-logs.json";
 
-// Get values from sport adapter instead of hardcoding
+// Get values from sport adapter
 const CAP_MAX = sportAdapter.salaryCap;
-const CAP_MIN = 172;
-const ROSTER_SIZE = sportAdapter.rosterSize;
 const MIN_MINUTES = 20;
 
 // -------------------- Raw data types --------------------
@@ -50,30 +51,12 @@ function clampInt(v: unknown, min: number, max: number): number {
   return sportAdapter.clamp(x, min, max);
 }
 
-function shuffleInPlace<T>(arr: T[], rng: () => number): void {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    const tmp = arr[i];
-    arr[i] = arr[j];
-    arr[j] = tmp;
-  }
-}
-
-function mulberry32(seed: number) {
-  return function rng() {
-    let t = (seed += 0x6d2b79f5);
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
 function baseId(p: { id: string; basePlayerId?: string }) {
   const b = (p.basePlayerId ?? "").trim();
   return b.length ? b : p.id;
 }
 
-// -------------------- normalizers (NOW USING SPORT ADAPTER) --------------------
+// -------------------- normalizers --------------------
 function asPosition(raw: unknown): Position {
   return sportAdapter.normalizePosition(raw);
 }
@@ -82,13 +65,7 @@ function asTier(raw: unknown): TierColor {
   return sportAdapter.normalizeTier(raw);
 }
 
-function isGK(pos: unknown): boolean {
-  const normalized = asPosition(pos);
-  const limits = sportAdapter.getPositionLimits(normalized);
-  return limits.max === 1 && limits.min === 1;
-}
-
-// -------------------- objective FP (NOW USING SPORT ADAPTER) --------------------
+// -------------------- objective FP --------------------
 function computeFantasyPointsFromLog(log: RawLog): number {
   const stats = log?.stats ?? {};
   const minutes = getMinutes(log);
@@ -212,268 +189,45 @@ function pickRandomLogForCard(cardId: string, logs: RawLog[], rng: () => number,
   return candidates[Math.floor(rng() * candidates.length)];
 }
 
-// -------------------- roster helpers (NOW SPORT-AGNOSTIC) --------------------
-function sumSalary(players: RawPlayer[]): number {
-  return players.reduce((s, p) => s + n(p.salary), 0);
-}
-
-function countPos(players: RawPlayer[], pos: Position): number {
-  return players.reduce((acc, p) => acc + (asPosition(p.position) === pos ? 1 : 0), 0);
-}
-
-function isValidComposition(players: RawPlayer[]): boolean {
-  for (const pos of sportAdapter.positions) {
-    const limits = sportAdapter.getPositionLimits(pos);
-    const count = countPos(players, pos as Position);
-    if (count < limits.min || count > limits.max) return false;
-  }
-  return true;
-}
-
-function isValidSalary(players: RawPlayer[]): boolean {
-  const total = sumSalary(players);
-  return total >= CAP_MIN && total <= CAP_MAX;
-}
-
-// -------------------- Strategy selection --------------------
-type Path = "A_SOLO_STAR" | "B_DUAL_ELITE" | "C_BALANCED";
-
-function choosePath(rng: () => number): Path {
-  const r = rng();
-  if (r < 0.34) return "A_SOLO_STAR";
-  if (r < 0.67) return "B_DUAL_ELITE";
-  return "C_BALANCED";
-}
-
-function poolBy(pool: RawPlayer[], usedBase: Set<string>, predicate: (p: RawPlayer) => boolean): RawPlayer[] {
-  return pool.filter((p) => !usedBase.has(baseId(p)) && predicate(p));
-}
-
-function pickClosestToTarget(cands: RawPlayer[], target: number, rng: () => number): RawPlayer | null {
-  if (cands.length === 0) return null;
-  const sorted = [...cands].sort((a, b) => Math.abs(n(a.salary) - target) - Math.abs(n(b.salary) - target));
-  const top = sorted.slice(0, Math.min(10, sorted.length));
-  return top[Math.floor(rng() * top.length)];
-}
-
-// -------------------- THE ROSTER SCULPTOR --------------------
-function generateRosterSculpted(allPlayers: RawPlayer[], rng: () => number): RawPlayer[] {
-  const pool = [...allPlayers];
-  shuffleInPlace(pool, rng);
-
-  const chosen: RawPlayer[] = [];
-  const usedBase = new Set<string>();
-
-  const path = choosePath(rng);
-
-  // ---- Step 1: Anchors ----
-  if (path === "A_SOLO_STAR") {
-    const oranges = poolBy(pool, usedBase, (p) => asTier(p.tier) === "ORANGE");
-    const pick = oranges.length
-      ? oranges[Math.floor(rng() * oranges.length)]
-      : [...poolBy(pool, usedBase, () => true)].sort((a, b) => n(b.salary) - n(a.salary))[0];
-
-    if (pick) {
-      chosen.push(pick);
-      usedBase.add(baseId(pick));
-    }
-  } else if (path === "B_DUAL_ELITE") {
-    const purples = poolBy(pool, usedBase, (p) => asTier(p.tier) === "PURPLE");
-    shuffleInPlace(purples, rng);
-    for (const p of purples) {
-      if (chosen.length >= 2) break;
-      chosen.push(p);
-      usedBase.add(baseId(p));
-    }
-    while (chosen.length < 2) {
-      const fallback = poolBy(pool, usedBase, (p) => !isGK(p.position)).sort((a, b) => n(b.salary) - n(a.salary))[0];
-      if (!fallback) break;
-      chosen.push(fallback);
-      usedBase.add(baseId(fallback));
-    }
-  } else {
-    while (chosen.length < 2) {
-      const bg = poolBy(pool, usedBase, (p) => {
-        const t = asTier(p.tier);
-        return t === "BLUE" || t === "GREEN";
-      });
-      if (bg.length === 0) break;
-      const p = bg[Math.floor(rng() * bg.length)];
-      chosen.push(p);
-      usedBase.add(baseId(p));
-    }
-  }
-
-  // ---- Step 2: Fill required positions ----
-  for (const pos of sportAdapter.positions) {
-    const limits = sportAdapter.getPositionLimits(pos);
-    let currentCount = countPos(chosen, pos as Position);
-    
-    while (currentCount < limits.min) {
-      const cands = poolBy(pool, usedBase, (p) => asPosition(p.position) === pos);
-      const pick = cands.length ? cands[Math.floor(rng() * cands.length)] : null;
-      if (!pick) break;
-      chosen.push(pick);
-      usedBase.add(baseId(pick));
-      currentCount++;
-    }
-  }
-
-  // ---- Step 3: Fill to 6 with budget-aware selection ----
-  while (chosen.length < ROSTER_SIZE) {
-    const total = sumSalary(chosen);
-    const remaining = CAP_MAX - total;
-    const slotsLeft = ROSTER_SIZE - chosen.length;
-    const targetAvg = remaining / Math.max(1, slotsLeft);
-
-    const flexCands = poolBy(pool, usedBase, (p) => {
-      const pos = asPosition(p.position);
-      const limits = sportAdapter.getPositionLimits(pos);
-      const currentCount = countPos(chosen, pos);
-      return currentCount < limits.max;
-    });
-
-    let pick = pickClosestToTarget(flexCands, targetAvg, rng);
-    
-    if (!pick && flexCands.length > 0) {
-      const sorted = [...flexCands].sort((a, b) => n(a.salary) - n(b.salary));
-      const cheapPool = sorted.slice(0, Math.min(20, sorted.length));
-      pick = cheapPool[Math.floor(rng() * cheapPool.length)];
-    }
-
-    if (!pick) break;
-
-    chosen.push(pick);
-    usedBase.add(baseId(pick));
-  }
-
-  let roster = chosen.slice(0, ROSTER_SIZE);
-
-  roster = repairSalaryBand(pool, roster, rng);
-
-  if (roster.length !== ROSTER_SIZE || !isValidComposition(roster) || !isValidSalary(roster)) {
-    roster = lastResortBuild(pool, rng);
-  }
-
-  return roster.slice(0, ROSTER_SIZE);
-}
-
-function repairSalaryBand(pool: RawPlayer[], roster0: RawPlayer[], rng: () => number): RawPlayer[] {
-  let roster = [...roster0].slice(0, ROSTER_SIZE);
-
-  const maxIter = 60;
-  for (let iter = 0; iter < maxIter; iter++) {
-    const total = sumSalary(roster);
-    if (total >= CAP_MIN && total <= CAP_MAX) return roster;
-
-    const used = new Set(roster.map((p) => baseId(p)));
-
-    if (total < CAP_MIN) {
-      const victimIdx = roster.map((p, i) => ({ p, i, sal: n(p.salary) })).sort((a, b) => a.sal - b.sal)[0]?.i;
-      if (victimIdx === undefined) break;
-
-      const victim = roster[victimIdx];
-      const pos = asPosition(victim.position);
-      const need = CAP_MIN - total;
-
-      const cands = pool
-        .filter((p) => asPosition(p.position) === pos)
-        .filter((p) => !used.has(baseId(p)))
-        .filter((p) => n(p.salary) > n(victim.salary))
-        .sort((a, b) => Math.abs(n(a.salary) - (n(victim.salary) + need)) - Math.abs(n(b.salary) - (n(victim.salary) + need)));
-
-      if (cands.length === 0) break;
-      const pick = cands[Math.floor(rng() * Math.min(8, cands.length))];
-      roster[victimIdx] = pick;
-      continue;
-    } else {
-      const victimIdx = roster.map((p, i) => ({ p, i, sal: n(p.salary) })).sort((a, b) => b.sal - a.sal)[0]?.i;
-      if (victimIdx === undefined) break;
-
-      const victim = roster[victimIdx];
-      const pos = asPosition(victim.position);
-      const over = total - CAP_MAX;
-
-      const cands = pool
-        .filter((p) => asPosition(p.position) === pos)
-        .filter((p) => !used.has(baseId(p)))
-        .filter((p) => n(p.salary) < n(victim.salary))
-        .sort((a, b) => Math.abs(n(victim.salary) - over - n(a.salary)) - Math.abs(n(victim.salary) - over - n(b.salary)));
-
-      if (cands.length === 0) break;
-      const pick = cands[Math.floor(rng() * Math.min(8, cands.length))];
-      roster[victimIdx] = pick;
-      continue;
-    }
-  }
-
-  return roster;
-}
-
-function lastResortBuild(pool0: RawPlayer[], rng: () => number): RawPlayer[] {
-  const pool = [...pool0];
-  shuffleInPlace(pool, rng);
-
-  const used = new Set<string>();
-  const roster: RawPlayer[] = [];
-
-  for (const pos of sportAdapter.positions) {
-    const limits = sportAdapter.getPositionLimits(pos);
-    for (let i = 0; i < limits.min; i++) {
-      const p = pool.find((x) => asPosition(x.position) === pos && !used.has(baseId(x)));
-      if (p) {
-        roster.push(p);
-        used.add(baseId(p));
-      }
-    }
-  }
-
-  while (roster.length < ROSTER_SIZE) {
-    const total = sumSalary(roster);
-    const remaining = CAP_MAX - total;
-    const slotsLeft = ROSTER_SIZE - roster.length;
-    const target = remaining / Math.max(1, slotsLeft);
-
-    const cands = pool.filter((p) => {
-      if (used.has(baseId(p))) return false;
-      const pos = asPosition(p.position);
-      const limits = sportAdapter.getPositionLimits(pos);
-      const currentCount = countPos(roster, pos);
-      return currentCount < limits.max;
-    });
-
-    const pick = pickClosestToTarget(cands, target, rng);
-    if (!pick) break;
-    roster.push(pick);
-    used.add(baseId(pick));
-  }
-
-  return repairSalaryBand(pool, roster.slice(0, ROSTER_SIZE), rng).slice(0, ROSTER_SIZE);
-}
-
+// -------------------- MAIN FUNCTIONS --------------------
 let _seed = Date.now();
 
 export async function dealInitialRoster(): Promise<{ cards: PlayerCard[]; capMax: number }> {
   const { players, logs } = await ensureDataLoaded();
-  const rng = mulberry32(_seed++);
+  const rng = new RandomEngine(_seed++);
 
-  const rawRoster = generateRosterSculpted(players, rng);
-  const cards = rawRoster.map(buildCard);
+  // Use the validated backend engine
+  const roster: RosterSlot[] = LineupGenerationEngine.generateDeterministicLineup(
+    sportAdapter.config,
+    players as any[],
+    rng,
+    []
+  );
 
   console.log("=== DEAL DEBUG ===");
-  console.log("Generated roster length:", rawRoster.length);
-  console.log("Salaries:", rawRoster.map(p => p.salary));
-  console.log("Total salary:", rawRoster.reduce((s, p) => s + Number(p.salary || 0), 0));
+  console.log("Generated roster length:", roster.length);
+  roster.forEach((slot, i) => {
+    if (slot.player) {
+      console.log(`Slot ${i}: ${slot.player.position} $${slot.player.salary}`);
+    }
+  });
 
-  for (const card of cards) {
-    const log = pickRandomLogForCard(card.cardId, logs, rng, card.basePlayerId);
-    if (!log) continue;
-
-    const actualFp = computeFantasyPointsFromLog(log) * 10;
-    card.actualFp = actualFp;
-    card.fpDelta = actualFp - (card.projectedFp ?? 0);
-    card.statLine = log.stats ?? {};
-    card.gameInfo = { date: log.date ?? "", opponent: log.opponent ?? "", homeAway: log.homeAway ?? undefined };
+  const cards: PlayerCard[] = [];
+  for (const slot of roster) {
+    if (!slot.player) continue;
+    
+    const card = buildCard(slot.player as any);
+    const log = pickRandomLogForCard(card.cardId, logs, () => rng.random(), card.basePlayerId);
+    
+    if (log) {
+      const actualFp = computeFantasyPointsFromLog(log) * 10;
+      card.actualFp = actualFp;
+      card.fpDelta = actualFp - (card.projectedFp ?? 0);
+      card.statLine = log.stats ?? {};
+      card.gameInfo = { date: log.date ?? "", opponent: log.opponent ?? "", homeAway: log.homeAway ?? undefined };
+    }
+    
+    cards.push(card);
   }
 
   return { cards, capMax: CAP_MAX };
@@ -484,42 +238,60 @@ export async function redrawRoster(args: {
   lockedCardIds: Set<string>;
 }): Promise<{ cards: PlayerCard[]; capMax: number }> {
   const { players, logs } = await ensureDataLoaded();
-  const rng = mulberry32(_seed++);
+  const rng = new RandomEngine(_seed++);
 
-  const locked = args.currentCards.filter((c) => args.lockedCardIds.has(c.cardId));
-  const lockedBase = new Set(locked.map((c) => c.basePlayerId));
-  const slotsNeeded = ROSTER_SIZE - locked.length;
-  const lockedSalary = locked.reduce((s, c) => s + (c.salary ?? 0), 0);
-  const budgetForNew = CAP_MAX - lockedSalary;
-  const targetPerSlot = Math.floor(budgetForNew / Math.max(1, slotsNeeded));
+  // Convert locked cards to RosterSlots
+  const heldSlots: RosterSlot[] = args.currentCards.map((card, index) => ({
+    index,
+    player: args.lockedCardIds.has(card.cardId) ? {
+      id: card.cardId,
+      basePlayerId: card.basePlayerId,
+      name: card.name,
+      position: card.position,
+      salary: card.salary,
+      team: card.team,
+      season: card.season,
+      tier: card.tier,
+    } as any : null,
+    held: args.lockedCardIds.has(card.cardId),
+  }));
 
-  const pool = players.filter((p) => !lockedBase.has(baseId(p)));
-  const allCandidates = pool.map(buildCard).filter(c => !lockedBase.has(c.basePlayerId)).sort((a, b) => Math.abs((a.salary || 0) - targetPerSlot) - Math.abs((b.salary || 0) - targetPerSlot));
-  const fresh: PlayerCard[] = [];
-  let budgetUsed = 0;
-  for (const card of allCandidates) {
-    if (fresh.length >= slotsNeeded) break;
-    if (budgetUsed + (card.salary || 0) <= budgetForNew) {
-      fresh.push(card);
-      budgetUsed += card.salary || 0;
+  // Use the validated backend engine with held slots
+  const roster: RosterSlot[] = LineupGenerationEngine.generateDeterministicLineup(
+    sportAdapter.config,
+    players as any[],
+    rng,
+    heldSlots
+  );
+
+  const cards: PlayerCard[] = [];
+  for (const slot of roster) {
+    if (!slot.player) continue;
+    
+    const card = buildCard(slot.player as any);
+    
+    // Don't re-resolve held cards
+    if (args.lockedCardIds.has(card.cardId)) {
+      const existing = args.currentCards.find(c => c.cardId === card.cardId);
+      if (existing) {
+        cards.push(existing);
+        continue;
+      }
     }
-  }
-  const merged = [...locked, ...fresh];
-
-  for (const card of merged) {
-    if (args.lockedCardIds.has(card.cardId)) continue;
-
-    const log = pickRandomLogForCard(card.cardId, logs, rng, card.basePlayerId);
-    if (!log) continue;
-
-    const actualFp = computeFantasyPointsFromLog(log) * 10;
-    card.actualFp = actualFp;
-    card.fpDelta = actualFp - (card.projectedFp ?? 0);
-    card.statLine = log.stats ?? {};
-    card.gameInfo = { date: log.date ?? "", opponent: log.opponent ?? "", homeAway: log.homeAway ?? undefined };
+    
+    const log = pickRandomLogForCard(card.cardId, logs, () => rng.random(), card.basePlayerId);
+    if (log) {
+      const actualFp = computeFantasyPointsFromLog(log) * 10;
+      card.actualFp = actualFp;
+      card.fpDelta = actualFp - (card.projectedFp ?? 0);
+      card.statLine = log.stats ?? {};
+      card.gameInfo = { date: log.date ?? "", opponent: log.opponent ?? "", homeAway: log.homeAway ?? undefined };
+    }
+    
+    cards.push(card);
   }
 
-  return { cards: merged, capMax: CAP_MAX };
+  return { cards, capMax: CAP_MAX };
 }
 
 export async function resolveRoster(args: { finalCards: PlayerCard[] }): Promise<ResolveResult> {

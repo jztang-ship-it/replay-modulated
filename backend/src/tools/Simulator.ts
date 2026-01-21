@@ -1,16 +1,16 @@
 import { ResolutionEngine } from '../../engines/ResolutionEngine';
 import { RandomEngine } from '../../engines/RandomEngine';
 import { LineupGenerationEngine } from '../../engines/LineupGenerationEngine';
-import type { SportConfig, GameLog, Player } from '../../models';
+import type { SportConfig, GameLog } from '../../models';
 import type { SimulationResult, SimulationSummary } from './SimulatorTypes';
 
 export class Simulator {
   private config: SportConfig;
   private allLogs: GameLog[];
-  private players: Player[];
+  private players: any[];
   private rosterSize: number;
   
-  constructor(config: SportConfig, allLogs: GameLog[], players: Player[], rosterSize: number = 6) {
+  constructor(config: SportConfig, allLogs: GameLog[], players: any[], rosterSize: number = 6) {
     this.config = config;
     this.allLogs = allLogs;
     this.players = players;
@@ -41,7 +41,14 @@ export class Simulator {
       
       const achievementBonus = resolutions.reduce((sum, r) => sum + r.achievementBonus, 0);
       
-      results.push({ run: i + 1, teamFP, won, resolutions, achievementBonus });
+      results.push({ 
+        run: i + 1, 
+        teamFP, 
+        won, 
+        resolutions, 
+        achievementBonus,
+        roster
+      });
       
       if ((i + 1) % 1000 === 0) console.log(`${i + 1}/${numRuns}...`);
     }
@@ -106,6 +113,30 @@ export class Simulator {
     const s = this.suggestThresholds(fps);
     msg += `\nSmall: ${s[0]} | Med: ${s[1]} | Big: ${s[2]} | Jackpot: ${s[3]}`;
     return msg;
+  }
+
+  analyzePositions(results: SimulationResult[]): void {
+    console.log('\n───────────────────────────────────────────────────────────');
+    console.log('POSITION & SALARY VALIDATION:');
+    console.log('───────────────────────────────────────────────────────────');
+    
+    for (let i = 0; i < Math.min(10, results.length); i++) {
+      const roster = results[i].roster;
+      const posCounts: Record<string, number> = { GK: 0, DE: 0, MD: 0, FW: 0 };
+      let totalSalary = 0;
+      
+      roster.forEach((slot: any) => {
+        if (slot.player) {
+          posCounts[slot.player.position] = (posCounts[slot.player.position] || 0) + 1;
+          totalSalary += slot.player.salary;
+        }
+      });
+      
+      const valid = posCounts.GK === 1 && posCounts.DE >= 1 && posCounts.MD >= 1 && posCounts.FW >= 1;
+      const salaryOK = totalSalary >= 172 && totalSalary <= 180;
+      
+      console.log(`Run ${i + 1}: GK=${posCounts.GK} DE=${posCounts.DE} MD=${posCounts.MD} FW=${posCounts.FW} | $${totalSalary} | ${valid && salaryOK ? '✅' : '❌'}`);
+    }
   }
 
   printSummary(s: SimulationSummary): void {

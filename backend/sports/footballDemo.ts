@@ -14,7 +14,7 @@ export const FootballDemoSportConfig: SportConfig = {
 
   // Core roster constraints (engine side)
   positions: ["GK", "DE", "MD", "FW"],
-  salaryCap: 150,
+  salaryCap: { min: 172, max: 180 },
   minPlayers: 6,
   maxPlayers: 6,
 

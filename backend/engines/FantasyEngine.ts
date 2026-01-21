@@ -13,6 +13,13 @@ import { StateMachineEngine } from "./StateMachineEngine";
 import { LineupGenerationEngine } from "./LineupGenerationEngine";
 import { ResolutionEngine } from "./ResolutionEngine";
 
+function getSalaryCapMax(config: SportConfig): number {
+  if (typeof config.salaryCap === 'number') {
+    return config.salaryCap;
+  }
+  return config.salaryCap.max;
+}
+
 export class FantasyEngine {
   private config: SportConfig;
   private players: Player[];
@@ -43,7 +50,7 @@ export class FantasyEngine {
       seed: sessionSeed,
       state: GameState.IDLE,
       roster: [],
-      remainingCap: this.config.salaryCap,
+      remainingCap: getSalaryCapMax(this.config),
       resolvedTeamFP: null,
       winResult: null,
     };
@@ -70,10 +77,10 @@ export class FantasyEngine {
     this.session.roster = roster;
 
     const used = roster.reduce((sum, s) => sum + (s.player?.salary || 0), 0);
-    this.session.remainingCap = this.config.salaryCap - used;
+    this.session.remainingCap = getSalaryCapMax(this.config) - used;
 
     this.session = StateMachineEngine.transition(this.session, GameState.HOLD_PHASE);
-    return this.session; // non-null because we threw if null
+    return this.session;
   }
 
   toggleHold(slotIndex: number): GameSession {
@@ -103,7 +110,7 @@ export class FantasyEngine {
     this.session.roster = updated;
 
     const used = updated.reduce((sum, s) => sum + (s.player?.salary || 0), 0);
-    this.session.remainingCap = this.config.salaryCap - used;
+    this.session.remainingCap = getSalaryCapMax(this.config) - used;
 
     this.session = StateMachineEngine.transition(this.session, GameState.RESOLUTION);
     return this.session;

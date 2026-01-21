@@ -24,12 +24,7 @@ function makeEmptyRoster(size: number): RosterSlot[] {
   for (let i = 0; i < size; i++) roster.push({ index: i, player: null, held: false });
   return roster;
 }
-function getSalaryCap(config: SportConfig): { min: number; max: number } {
-  if (typeof config.salaryCap === 'number') {
-    return { min: 0, max: config.salaryCap };
-  }
-  return config.salaryCap;
-}
+
 function getLimits(config: SportConfig, position: string) {
   const limits = config.positionLimits?.[position];
   return limits ?? { min: 0, max: Number.POSITIVE_INFINITY };
@@ -75,8 +70,7 @@ export class LineupGenerationEngine {
     heldSlots?: RosterSlot[]
   ): RosterSlot[] {
     const rosterSize = config.maxPlayers;
-    const salaryCapLimits = getSalaryCap(config);
-    const salaryCap = salaryCapLimits.max;
+    const salaryCap = config.salaryCap;
 
     // Start empty
     const roster = makeEmptyRoster(rosterSize);
@@ -236,25 +230,15 @@ export class LineupGenerationEngine {
         let candidates = bySalaryDesc.filter((p) => canUse(p, remainingCap));
         if (candidates.length === 0) throw new Error(`Cannot fill slot ${slotIndex + 1}: no eligible players`);
 
-      // STRICT POSITION ENFORCEMENT: If we still need minimums, prioritize/force those positions
-      if (stillNeeded > 0) {
-        const neededPositions = Object.entries(minPositionsNeeded)
-          .filter(([, count]) => count > 0)
-          .map(([pos]) => pos);
+        // If we have no slack, focus on needed positions if possible
+        if (stillNeeded > 0 && slotsRemaining <= stillNeeded) {
+          const neededPositions = Object.entries(minPositionsNeeded)
+            .filter(([, count]) => count > 0)
+            .map(([pos]) => pos);
 
-        const restricted = candidates.filter((p) => neededPositions.includes(p.position));
-        
-        // If slots remaining <= mins needed, FORCE needed positions only
-        if (slotsRemaining <= stillNeeded) {
-          if (restricted.length === 0) {
-            throw new Error(`Cannot satisfy position minimums at slot ${slotIndex + 1}`);
-          }
-          candidates = restricted;
-        } else if (restricted.length > 0 && slotsRemaining <= stillNeeded + 2) {
-          // Prioritize needed positions when close to running out of slots
-          candidates = restricted;
+          const restricted = candidates.filter((p) => neededPositions.includes(p.position));
+          if (restricted.length > 0) candidates = restricted;
         }
-      }
 
         // Wider early band reduces anchor repetition a lot
         const dynamicBandSize =
@@ -412,13 +396,7 @@ export class LineupGenerationEngine {
         if ((minPositionsNeeded[pickedRelaxed.position] ?? 0) > 0) minPositionsNeeded[pickedRelaxed.position]--;
       }
     }
-// Final validation: ensure salary minimum is met
-const totalSalary = roster.reduce((sum, slot) => sum + (slot.player?.salary ?? 0), 0);
-if (totalSalary < salaryCapLimits.min) {
-  throw new Error(`Lineup total salary ${totalSalary} is below minimum ${salaryCapLimits.min}`);
-}
 
-return roster;
     return roster;
   }
 

@@ -72,7 +72,7 @@ export interface SportConfig {
   rosterSlots?: string[];
   name: string;
   positions: string[];
-  salaryCap: number;
+  salaryCap: number | { min: number; max: number };
   minPlayers: number;
   maxPlayers: number;
   positionLimits: Record<string, { min: number; max: number }>;

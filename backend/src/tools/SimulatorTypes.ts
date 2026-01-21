@@ -1,4 +1,3 @@
-// Simulator type definitions
 import type { Resolution } from '../../models';
 
 export interface SimulationResult {
@@ -7,6 +6,7 @@ export interface SimulationResult {
   won: boolean;
   resolutions: Resolution[];
   achievementBonus: number;
+  roster: any[];
 }
 
 export interface SimulationSummary {
