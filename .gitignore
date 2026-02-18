@@ -1,22 +1,9 @@
-# OS / editor
-.DS_Store
-.vscode/
-.cursor/
-
-# deps / builds
 node_modules/
 dist/
-apps/**/dist/
-fpl_bootstrap.json
+.env
+.DS_Store
 *.log
-
-# temp
-restore_tmp/
-missing_photoCode.json
-_archive/
-
-# local processed data
-core/data/football/processed-epl/
-*.DS_Store
-backend/data/football/processed-epl/
-.vercel
+*.zip
+*.tar.gz
+*.tar
+.vite/
