@@ -4,10 +4,10 @@
  * This makes the frontend sport-agnostic by loading all rules from config
  */
 
-import type { Position, TierColor, PlayerCard } from './types';
+import type { Position, TierColor, PlayerCard } from "./types";
 
 // Import sport config - ONLY place we reference specific sport
-import { FootballSportConfig } from '../../../backend/sports/football';
+import { FootballSportConfig } from "../../../backend/sports/football";
 
 export class SportAdapter {
   public config: typeof FootballSportConfig;
@@ -18,19 +18,18 @@ export class SportAdapter {
 
   // ========== SALARY CAP ==========
   get salaryCap(): number {
-    if (typeof this.config.salaryCap === 'number') {
+    if (typeof this.config.salaryCap === "number") {
       return this.config.salaryCap;
     }
     return this.config.salaryCap.max;
   }
 
   get salaryCapMin(): number {
-    if (typeof this.config.salaryCap === 'number') {
+    if (typeof this.config.salaryCap === "number") {
       return Math.floor(this.config.salaryCap * 0.95);
     }
     return this.config.salaryCap.min;
   }
-
 
   // ========== ROSTER ==========
   get rosterSize(): number {
@@ -40,14 +39,10 @@ export class SportAdapter {
   get positions(): string[] {
     return this.config.positions;
   }
+
   /**
    * Ordered, fixed UI slots for the roster grid.
    * This prevents cards from "jumping" by keeping positions stationary.
-   *
-   * For football example (6 cards):
-   * ["GK","DE","DE","MD","MD","FW"]
-   *
-   * If config doesn't define an order, we derive a stable order from limits + positions.
    */
   get rosterSlots(): string[] {
     const explicit = (this.config as any).rosterSlots as string[] | undefined;
@@ -76,8 +71,8 @@ export class SportAdapter {
 
   // ========== POSITION LOGIC ==========
   normalizePosition(raw: unknown): Position {
-    const s = String(raw ?? '').trim().toUpperCase();
-    
+    const s = String(raw ?? "").trim().toUpperCase();
+
     for (const pos of this.config.positions) {
       const posUpper = pos.toUpperCase();
       if (s === posUpper) return pos as Position;
@@ -86,8 +81,8 @@ export class SportAdapter {
         return pos as Position;
       }
     }
-    
-    return (this.config.positions[0] || 'MD') as Position;
+
+    return (this.config.positions[0] || "MD") as Position;
   }
 
   isValidPosition(pos: string): boolean {
@@ -96,27 +91,43 @@ export class SportAdapter {
 
   // ========== TIER LOGIC ==========
   normalizeTier(raw: unknown): TierColor {
-    const s = String(raw ?? 'WHITE').trim().toUpperCase();
-    const validTiers: TierColor[] = ['ORANGE', 'PURPLE', 'BLUE', 'GREEN', 'WHITE'];
-    
+    const s = String(raw ?? "WHITE").trim().toUpperCase();
+    const validTiers: TierColor[] = ["ORANGE", "PURPLE", "BLUE", "GREEN", "WHITE"];
+
     if (validTiers.includes(s as TierColor)) {
       return s as TierColor;
     }
-    
-    return 'WHITE';
+
+    return "WHITE";
   }
 
   // ========== SCORING ==========
+  // Keep existing API for safety (nothing breaks)
   computeFantasyPoints(stats: Record<string, any>): number {
+    return this.computeFantasyPointsDetailed(stats).total;
+  }
+
+  // New: detailed scoring with breakdown
+  computeFantasyPointsDetailed(stats: Record<string, any>): { total: number; breakdown: Record<string, number> } {
     const weights = this.config.projectionWeights;
+    const breakdown: Record<string, number> = {};
     let fp = 0;
 
-    for (const [statKey, weight] of Object.entries(weights)) {
+    for (const [statKey, weightRaw] of Object.entries(weights)) {
+      const weight = typeof weightRaw === "number" ? weightRaw : Number(weightRaw);
+      if (!Number.isFinite(weight) || weight === 0) continue;
+
       const value = this.getStatValue(stats, statKey);
-      fp += value * weight;
+      const contrib = value * weight;
+
+      if (Number.isFinite(contrib) && contrib !== 0) {
+        breakdown[statKey] = contrib;
+        fp += contrib;
+      }
     }
 
-    return Math.max(0, fp);
+    fp = Number.isFinite(fp) ? fp : 0;
+    return { total: Math.max(0, fp), breakdown };
   }
 
   private getStatValue(stats: Record<string, any>, key: string): number {
@@ -126,7 +137,7 @@ export class SportAdapter {
 
     const lowerKey = key.toLowerCase();
     const camelCase = key.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
-    const noUnderscore = key.replace(/_/g, '');
+    const noUnderscore = key.replace(/_/g, "");
 
     for (const variant of [lowerKey, camelCase, noUnderscore]) {
       if (stats[variant] !== undefined) {
@@ -147,7 +158,7 @@ export class SportAdapter {
     if (roster.length !== this.rosterSize) return false;
 
     for (const [pos, limits] of Object.entries(this.config.positionLimits || {})) {
-      const count = roster.filter(c => c.position === pos).length;
+      const count = roster.filter((c) => c.position === pos).length;
       if (count < limits.min || count > limits.max) return false;
     }
 
@@ -170,8 +181,8 @@ export class SportAdapter {
 
   // ========== HELPERS ==========
   private coerceNumber(value: unknown): number {
-    if (typeof value === 'number' && Number.isFinite(value)) return value;
-    if (typeof value === 'string') {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string") {
       const parsed = Number(value);
       if (Number.isFinite(parsed)) return parsed;
     }

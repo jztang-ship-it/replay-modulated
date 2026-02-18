@@ -1,5 +1,5 @@
 import type { GamePhase, PlayerCard } from "../adapters/types";
-import { AthleteCard } from "./AthleteCard";
+import { AthleteCardLegacy } from "./AthleteCard";
 
 export function CardSlot(props: {
   card: PlayerCard;
@@ -8,17 +8,19 @@ export function CardSlot(props: {
   isLocked: boolean;
   isMvp: boolean;
   isFlipped: boolean;
+  isFaceDown?: boolean;  // true when showing generic back
 
   canFlip: boolean;
+  visibleFp?: number;  // NEW: For emotional reveal FP animation
 
   onToggleLock: () => void;
   onToggleFlip: () => void;
 }) {
-  const { card, phase, isLocked, isMvp, isFlipped, canFlip, onToggleLock, onToggleFlip } = props;
+  const { card, phase, isLocked, isMvp, isFlipped, isFaceDown, canFlip, visibleFp, onToggleLock, onToggleFlip } = props;
 
   const onClick = () => {
     if (phase === "HOLD") onToggleLock();
-    else if (phase === "RESULTS" && canFlip) onToggleFlip();
+    else if (phase === "RESULTS" && canFlip && !isFaceDown) onToggleFlip();
   };
 
   return (
@@ -30,10 +32,10 @@ export function CardSlot(props: {
         minWidth: 0,
         minHeight: 0,
         overflow: "hidden",
-        cursor: phase === "HOLD" || (phase === "RESULTS" && canFlip) ? "pointer" : "default",
+        cursor: phase === "HOLD" || (phase === "RESULTS" && canFlip && !isFaceDown) ? "pointer" : "default",
       }}
     >
-      <AthleteCard
+      <AthleteCardLegacy
         card={card}
         phase={phase}
         isLocked={isLocked}
@@ -41,6 +43,8 @@ export function CardSlot(props: {
         isFlipped={isFlipped}
         canFlip={canFlip}
         onToggleFlip={onToggleFlip}
+        isFaceDown={isFaceDown}
+        visibleFp={visibleFp}
       />
     </div>
   );

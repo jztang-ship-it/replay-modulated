@@ -34,7 +34,30 @@ function formatSeasonRange(season: any): string {
   return s;
 }
 
-function buildHeadshotCandidates(card: any): string[] {
+function safeKeyFor(card: any) {
+  const base = String(card?.basePlayerId ?? "").trim();
+  const season = String(card?.season ?? "").trim();
+  return `${base}|${season}`;
+}
+
+function buildHeadshotCandidates(card: any, safeCode?: string | null): string[] {
+  const out: string[] = [];
+
+  const addUnique = (url: string | undefined | null) => {
+    const u = clampText(url);
+    if (!u) return;
+    if (!out.includes(u)) out.push(u);
+  };
+
+  // ✅ SAFE photo code (only if safe for THIS player)
+  const codeRaw = clampText(safeCode);
+
+  // 1) Local first (SAFE ONLY)
+  if (codeRaw) {
+    addUnique(`/headshots/${codeRaw}.png`);
+  }
+
+  // 2) Direct URL next (always allowed)
   const direct =
     card?.headshotUrl ||
     card?.photoUrl ||
@@ -49,35 +72,80 @@ function buildHeadshotCandidates(card: any): string[] {
     card?.player?.portraitUrl ||
     card?.player?.image;
 
-  const picked = clampText(direct);
-  const out: string[] = [];
-  if (picked) out.push(picked);
+  addUnique(direct);
 
-  const codeRaw = clampText(card?.photoCode);
-  if (!codeRaw) return out;
+  // 3) Remote fallbacks last (SAFE ONLY)
+  if (codeRaw) {
+    const codeNoP = codeRaw.replace(/^p/i, "");
+    const pcode = `p${codeNoP}`;
 
-  const codeNoP = codeRaw.replace(/^p/i, "");
-  const pcode = `p${codeNoP}`;
+    addUnique(`https://resources.premierleague.com/premierleague/photos/players/250x250/${pcode}.png`);
+    addUnique(`https://resources.premierleague.com/premierleague/photos/players/110x140/${pcode}.png`);
+    addUnique(`https://resources.premierleague.com/premierleague/photos/players/120x120/${pcode}.png`);
+  }
 
-  out.push(`https://resources.premierleague.com/premierleague/photos/players/250x250/${pcode}.png`);
-  out.push(`https://resources.premierleague.com/premierleague/photos/players/110x140/${pcode}.png`);
-  out.push(`https://resources.premierleague.com/premierleague/photos/players/120x120/${pcode}.png`);
   return out;
 }
 
-function tierTheme(tierRaw: any) {
+
+
+
+
+
+
+type TierTheme = {
+  bg: string;          // solid card background gradient
+  frame: string;       // border / accent color
+  glow: string;        // radial glow tint
+  textOnDark: boolean; // whether text needs dark treatment (for WHITE)
+};
+
+function tierTheme(tierRaw: any): TierTheme {
   const t = String(tierRaw ?? "").toUpperCase();
 
-  // slightly stronger than before so border reads clearly
-  const base = { frame: "rgba(120,150,255,0.90)", glow: "rgba(120,150,255,0.22)" };
+  // ORANGE — top tier, warm gold-orange
+  if (t.includes("ORANGE")) return {
+    bg: "linear-gradient(160deg, #2A1500 0%, #1A0D00 40%, #0F0800 100%)",
+    frame: "rgba(255,160,50,0.90)",
+    glow: "rgba(255,140,30,0.28)",
+    textOnDark: false,
+  };
+  // PURPLE — second tier, rich violet
+  if (t.includes("PURPLE")) return {
+    bg: "linear-gradient(160deg, #1A0D2E 0%, #110920 40%, #080612 100%)",
+    frame: "rgba(175,100,255,0.88)",
+    glow: "rgba(160,90,255,0.26)",
+    textOnDark: false,
+  };
+  // BLUE — third tier
+  if (t.includes("BLUE")) return {
+    bg: "linear-gradient(160deg, #071828 0%, #04101C 40%, #020A12 100%)",
+    frame: "rgba(70,155,255,0.88)",
+    glow: "rgba(60,140,255,0.24)",
+    textOnDark: false,
+  };
+  // GREEN — fourth tier
+  if (t.includes("GREEN")) return {
+    bg: "linear-gradient(160deg, #061A0F 0%, #04120A 40%, #020A06 100%)",
+    frame: "rgba(60,210,120,0.88)",
+    glow: "rgba(50,200,110,0.22)",
+    textOnDark: false,
+  };
+  // WHITE — base tier, subtle dark-cool
+  if (t.includes("WHITE")) return {
+    bg: "linear-gradient(160deg, #141820 0%, #0D1118 40%, #080A10 100%)",
+    frame: "rgba(200,215,240,0.55)",
+    glow: "rgba(200,215,240,0.12)",
+    textOnDark: false,
+  };
 
-  if (t.includes("PURPLE")) return { frame: "rgba(170,110,255,0.92)", glow: "rgba(170,110,255,0.26)" };
-  if (t.includes("GREEN")) return { frame: "rgba(70,210,130,0.92)", glow: "rgba(70,210,130,0.24)" };
-  if (t.includes("ORANGE")) return { frame: "rgba(255,170,70,0.94)", glow: "rgba(255,170,70,0.26)" };
-  if (t.includes("BLUE")) return { frame: "rgba(80,160,255,0.92)", glow: "rgba(80,160,255,0.24)" };
-  if (t.includes("WHITE")) return { frame: "rgba(255,255,255,0.72)", glow: "rgba(255,255,255,0.16)" };
-
-  return base;
+  // fallback (BLUE-ish default)
+  return {
+    bg: "linear-gradient(160deg, #071828 0%, #04101C 40%, #020A12 100%)",
+    frame: "rgba(100,140,220,0.80)",
+    glow: "rgba(100,140,220,0.20)",
+    textOnDark: false,
+  };
 }
 
 /** Always keep year fully visible by truncating team first. */
@@ -97,8 +165,12 @@ export function AthleteCardFront(props: {
   isFlipped: boolean;
   canFlip: boolean;
   onToggleFlip: () => void;
+  // For emotional reveal
+  visibleFp?: number;
+  visibleBadgeCount?: number;
+  isRevealing?: boolean;  // True when this card is in reveal animation
 }) {
-  const { card, phase, isLocked } = props;
+  const { card, phase, isLocked, visibleFp, } = props;
 
   const name = clampText((card as any)?.name);
   const team = clampText((card as any)?.team);
@@ -113,26 +185,170 @@ export function AthleteCardFront(props: {
   const showResults = phase === "RESULTS";
   const proj = Number((card as any)?.projectedFp ?? 0);
   const actual = Number((card as any)?.actualFp ?? 0);
-  const value = showResults ? actual : proj;
-  const label = showResults ? "FP" : "PROJ";
-  const valueText = Number.isFinite(value) ? value.toFixed(value % 1 === 0 ? 0 : 1) : "0";
 
-  const first = useMemo(() => {
-    const parts = name.split(/\s+/).filter(Boolean);
-    return clampText(parts[0] ?? "");
-  }, [name]);
+  // Rolling FP animation state
+  const [displayedFp, setDisplayedFp] = useState(proj);
+  const [isRolling, setIsRolling] = useState(false);
+  // Latches true only once THIS card's own FP roll completes.
+  // Prevents headlines appearing when a *different* card reveals later.
+  const [rollComplete, setRollComplete] = useState(false);
 
-  const last = useMemo(() => {
-    const parts = name.split(/\s+/).filter(Boolean);
-    return clampText(parts.slice(1).join(" ") || parts[0] || "");
-  }, [name]);
+// ================= SAFE HEADSHOT MAP =================
+const [safeMap, setSafeMap] = useState<Record<string, string> | null>(null);
 
-  const candidates = useMemo(() => buildHeadshotCandidates(card), [card]);
-  const [idx, setIdx] = useState(0);
+useEffect(() => {
+  let alive = true;
 
-  useEffect(() => setIdx(0), [String((card as any)?.photoCode ?? "")]);
+  fetch("/headshots/safe-headshot-map.json")
+    .then((r) => (r.ok ? r.json() : {}))
+    .then((json) => {
+      if (alive) setSafeMap(json ?? {});
+    })
+    .catch(() => {
+      if (alive) setSafeMap({});
+    });
 
-  const headshotSrc = candidates[idx] ?? "";
+  return () => {
+    alive = false;
+  };
+}, []);
+
+// -------------------- REVEAL FP ROLL --------------------
+// When visibleFp changes during reveal, animate the roll
+useEffect(() => {
+  if (visibleFp === undefined) {
+    setDisplayedFp(showResults ? actual : proj);
+    return;
+  }
+
+  // If we have a target FP to roll to
+  if (visibleFp > 0 && displayedFp !== visibleFp) {
+    setIsRolling(true);
+
+    const startValue = displayedFp;
+    const endValue = visibleFp;
+    const duration = 500; // ms for roll animation
+    const startTime = Date.now();
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Ease out cubic for smooth deceleration
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = startValue + (endValue - startValue) * eased;
+
+      setDisplayedFp(current);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setDisplayedFp(endValue);
+        setIsRolling(false);
+        // Latch: this card's roll is done — headline can now appear
+        setRollComplete(true);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }
+}, [visibleFp]);
+
+// Reset latch when card identity changes (new game / new card in slot)
+useEffect(() => {
+  setRollComplete(false);
+  setDisplayedFp(proj);
+}, [safeKeyFor(card)]); // eslint-disable-line react-hooks/exhaustive-deps
+
+// Headline shows only after THIS card's own roll has latched complete
+const hasRevealed = rollComplete;
+
+// Performance headline logic
+// Only show after reveal, and only if we have valid projected FP
+const getPerformanceHeadline = (): { text: string; color: string; animation: string } | null => {
+  if (!hasRevealed || proj <= 0) return null;
+
+  const ratio = actual / proj;
+
+  if (ratio > 1.40) {
+    return {
+      text: "🚀 CAREER NIGHT",
+      color: "rgba(255, 215, 0, 0.95)",
+      animation: "headlinePop",
+    };
+  }
+  if (ratio > 1.15) {
+    return {
+      text: "🔥 ON FIRE",
+      color: "rgba(255, 140, 50, 0.95)",
+      animation: "headlinePop",
+    };
+  }
+  if (ratio <= 0.70) {
+    return {
+      text: "🥶 ICE COLD",
+      color: "rgba(130, 180, 220, 0.95)",
+      animation: "headlineDrop",
+    };
+  }
+
+  return null;
+};
+
+const headline = getPerformanceHeadline();
+
+// Determine what to show (front big number + label)
+//
+// HOLD: show projected
+// RESULTS: show rolling value if reveal is in-progress (visibleFp provided), otherwise final actual
+const fpValue = showResults ? (visibleFp !== undefined ? displayedFp : actual) : proj;
+
+const label = showResults ? "FP" : "PROJ";
+
+const valueText = Number.isFinite(fpValue) ? fpValue.toFixed(fpValue % 1 === 0 ? 0 : 1) : "0";
+
+const first = useMemo(() => {
+  const parts = name.split(/\s+/).filter(Boolean);
+  return clampText(parts[0] ?? "");
+}, [name]);
+
+const last = useMemo(() => {
+  const parts = name.split(/\s+/).filter(Boolean);
+  return clampText(parts.slice(1).join(" ") || parts[0] || "");
+}, [name]);
+
+// -------------------- SAFE HEADSHOT PICKING --------------------
+// stable identity for the card (prevents wrong reset behavior)
+const cardKey = useMemo(() => safeKeyFor(card), [card]);
+
+// safeCode comes ONLY from safe-headshot-map.json (prevents collisions / wrong faces)
+const safeCode = useMemo(() => {
+  if (!safeMap) return null;
+  return safeMap[cardKey] ?? null;
+}, [safeMap, cardKey]);
+
+// candidates are built from SAFE code + any direct URL + remote fallbacks (only if safe)
+const candidates = useMemo(() => {
+  return buildHeadshotCandidates(card, safeCode);
+}, [card, safeCode]);
+
+// DEV log: runs ONLY when candidates change (not every render)
+useEffect(() => {
+  if (import.meta.env.DEV) {
+    console.log("[HEADSHOT]", (card as any)?.name, { cardKey, safeCode, candidates });
+  }
+}, [cardKey, safeCode, candidates, card]);
+
+const [idx, setIdx] = useState(0);
+
+// reset fallback index when the *card identity* changes (not just photoCode)
+useEffect(() => {
+  setIdx(0);
+}, [cardKey]);
+
+const headshotSrc = candidates[idx] ?? "";
+
+
   const initials = initialsFromName(name || `${team} ${pos}`);
   const tier = tierTheme((card as any)?.tier);
 
@@ -155,17 +371,17 @@ export function AthleteCardFront(props: {
     height: "100%",
     borderRadius: 18,
     overflow: "hidden",
-    background: "linear-gradient(180deg, #0B1220 0%, #070B14 100%)",
+    background: tier.bg,
     border: `2px solid ${tier.frame}`,
-    boxShadow: "0 18px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.08) inset",
+    boxShadow: `0 18px 40px rgba(0,0,0,0.50), 0 0 0 1px rgba(255,255,255,0.06) inset, 0 0 30px ${tier.glow}`,
   };
 
   const tierGlow: React.CSSProperties = {
     position: "absolute",
     inset: -40,
     pointerEvents: "none",
-    background: `radial-gradient(closest-side at 20% 15%, ${tier.glow} 0%, rgba(0,0,0,0) 70%)`,
-    opacity: 0.55,
+    background: `radial-gradient(closest-side at 30% 20%, ${tier.glow} 0%, rgba(0,0,0,0) 70%)`,
+    opacity: 0.7,
   };
 
   const topStrip: React.CSSProperties = {
@@ -361,11 +577,13 @@ export function AthleteCardFront(props: {
 
   const teamSeason = teamYearLine(team, seasonFmt, 14);
 
+  const showHoldIndicator = isLocked || (card as any).wasHeld;
+
   return (
     <div style={cardShell}>
       <div style={tierGlow} />
 
-      {phase === "HOLD" && isLocked ? (
+      {showHoldIndicator ? (
         <>
           <div style={holdTri} />
           <div style={holdText}>H</div>
@@ -401,20 +619,48 @@ export function AthleteCardFront(props: {
 
       <div style={dock}>
         <div style={{ minWidth: 0, flex: 1, display: "flex", flexDirection: "column", gap: ROW_GAP }}>
+          
+          {/* Line 1: Team • Season (always shown) */}
           <div style={teamLine}>{teamSeason}</div>
 
+          {/* Line 2: First name + Position */}
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
             <div style={{ ...firstLine, minWidth: 0, flex: 1 }}>{first}</div>
             <div style={posLine}>{pos}</div>
           </div>
 
+          {/* Line 3: Last name + FP label/value */}
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
             <div style={{ ...lastLine, minWidth: 0, flex: 1 }}>{last}</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6, flexShrink: 0 }}>
               <div style={labelLine}>{label}</div>
-              <div style={valueLine}>{valueText}</div>
+              <div style={{
+                ...valueLine,
+                transition: isRolling ? "none" : "transform 150ms ease",
+                transform: isRolling ? "scale(1.05)" : "scale(1)",
+              }}>{valueText}</div>
             </div>
           </div>
+          
+          {/* Line 4: Performance headline — space ALWAYS reserved so lines 1-3 never shift */}
+          <div
+            style={{
+              fontSize: 9,
+              fontWeight: 900,
+              letterSpacing: 0.8,
+              color: headline ? headline.color : "transparent",
+              textAlign: "center",
+              textShadow: headline ? "0 1px 3px rgba(0,0,0,0.5)" : "none",
+              opacity: headline ? 1 : 0,
+              transition: "opacity 0.3s ease, color 0.2s ease",
+              // Reserve exact height whether or not headline is showing
+              minHeight: "1.1em",
+              lineHeight: "1.1",
+            }}
+          >
+            {headline ? headline.text : "\u00A0"}
+          </div>
+
         </div>
       </div>
     </div>

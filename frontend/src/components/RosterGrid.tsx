@@ -1,77 +1,82 @@
-import { useMemo } from "react";
-import type { GamePhase, PlayerCard } from "../adapters/types";
-import { CardSlot } from "./CardSlot";
-import { sportAdapter } from "../adapters/SportAdapter";
+// frontend/src/components/RosterGrid.tsx
 
-function cardKey(c: any): string {
-  return String(c?.cardId ?? c?.id ?? c?.playerId ?? c?.basePlayerId ?? c?.uid ?? c?.name ?? "");
-}
+import React, { useMemo } from "react";
+import type { GamePhase, PlayerCard } from "../adapters/types";
+import { AthleteCardLegacy } from "./AthleteCard";
 
 export function RosterGrid(props: {
   roster: PlayerCard[];
   phase: GamePhase;
+
   lockedIds: Set<string>;
   mvpId?: string;
+
   flippedIds: Set<string>;
-  onToggleLock: (cardKey: string) => void;
-  onToggleFlip: (cardKey: string) => void;
-  columns?: 2 | 3;
-  canFlip?: boolean;
+  faceDownIds: Set<string>;
+  visibleFpMap?: Map<string, number>;
+
+  canFlip: boolean;
+
+  onToggleLock: (cardId: string) => void;
+  onToggleFlip: (cardId: string) => void;
 }) {
-  const { roster, phase, lockedIds, mvpId, flippedIds, onToggleLock, onToggleFlip, columns, canFlip } = props;
+  const {
+    roster,
+    phase,
+    lockedIds,
+    mvpId,
+    flippedIds,
+    faceDownIds,
+    visibleFpMap,
+    canFlip,
+    onToggleLock,
+    onToggleFlip,
+  } = props;
 
-  const cols = useMemo(() => {
-    if (columns) return columns;
-    if (typeof window === "undefined") return 2;
-    return window.matchMedia?.("(min-width: 900px)")?.matches ? 3 : 2;
-  }, [columns]);
-
-  const sortedCards = useMemo(() => {
-    const positionOrder = sportAdapter.positions ?? []; // e.g., ["FW", "MD", "DE", "GK"]
-
-    return [...roster]
-      .sort((a, b) => {
-        const aPos = String((a as any)?.position ?? "");
-        const bPos = String((b as any)?.position ?? "");
-        const aIndex = positionOrder.indexOf(aPos);
-        const bIndex = positionOrder.indexOf(bPos);
-        // unknown positions go last
-        const ai = aIndex === -1 ? 999 : aIndex;
-        const bi = bIndex === -1 ? 999 : bIndex;
-        return ai - bi;
-      })
-      .slice(0, 6);
+  const cards = useMemo(() => {
+    // Always render in slot order so things don’t jump
+    return [...roster].sort((a, b) => (a.slotIndex ?? 0) - (b.slotIndex ?? 0));
   }, [roster]);
-
-  const allowFlip = canFlip ?? phase === "RESULTS";
 
   return (
     <div
       style={{
-        width: "100%",
         height: "100%",
-        overflow: "hidden",
+        width: "100%",
         display: "grid",
-        gap: 10,
-        gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+        gridTemplateColumns: "repeat(2, 1fr)",
         gridAutoRows: "1fr",
-        alignContent: "stretch",
+        gap: 10,
       }}
     >
-      {sortedCards.map((card) => {
-        const key = cardKey(card);
+      {cards.map((card) => {
+        const id = String(card.cardId);
+        const isLocked = lockedIds.has(id);
+        const isFlipped = flippedIds.has(id);
+        const isFaceDown = faceDownIds.has(id);
+        const visibleFp = visibleFpMap?.get(id);
+
+        // HOLD: tap locks
+        // RESULTS: tap flips stats back
+        const handleTap = () => {
+          if (phase === "HOLD") onToggleLock(id);
+          else if (canFlip) onToggleFlip(id);
+        };
+
         return (
-          <CardSlot
-            key={key}
-            card={card}
-            phase={phase}
-            isLocked={lockedIds.has(key)}
-            isMvp={mvpId === key}
-            isFlipped={flippedIds.has(key)}
-            canFlip={allowFlip}
-            onToggleLock={() => onToggleLock(key)}
-            onToggleFlip={() => onToggleFlip(key)}
-          />
+          <div key={id} onClick={handleTap} style={{ minHeight: 0 }}>
+            <AthleteCardLegacy
+              card={card}
+              phase={phase}
+              isLocked={isLocked}
+              isMvp={mvpId === id}
+              isFlipped={isFlipped}
+              canFlip={canFlip}
+              onToggleFlip={() => onToggleFlip(id)}
+              isFaceDown={isFaceDown}
+              visibleFp={visibleFp}
+            />
+          </div>
         );
       })}
     </div>

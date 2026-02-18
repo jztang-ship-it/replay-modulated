@@ -1,6 +1,6 @@
 /**
  * Football (Soccer) sport configuration for iReplay
- * DEines all football-specific rules and settings
+ * Defines all football-specific rules and settings
  */
 import type { SportConfig } from '../models';
 import { FootballAchievements } from './achievements/footballAchievements';
@@ -8,14 +8,14 @@ import { FootballAchievements } from './achievements/footballAchievements';
 export const FootballSportConfig: SportConfig = {
   name: 'Football (Soccer)',
   positions: ['FW', 'MD', 'DE', 'GK'],
-  rosterSlots: ["GK", "DE", "DE", "MD", "MD", "FW"],
+  rosterSlots: ["FW", "MD", "DE", "GK", "FLEX", "FLEX"],
   salaryCap: 180,
   minPlayers: 6,
   maxPlayers: 6,
   positionLimits: {
     GK: { min: 1, max: 1 },
     FW: { min: 1, max: 4 },
-    MID: { min: 1, max: 4 },
+    MD: { min: 1, max: 4 },
     DE: { min: 1, max: 4 },
   },
   statCategories: [

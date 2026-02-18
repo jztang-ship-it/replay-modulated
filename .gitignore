@@ -19,3 +19,4 @@ _archive/
 core/data/football/processed-epl/
 *.DS_Store
 backend/data/football/processed-epl/
+.vercel

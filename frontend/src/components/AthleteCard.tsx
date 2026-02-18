@@ -1,16 +1,29 @@
-import React, { useMemo } from "react";
-import type { GamePhase, PlayerCard } from "../adapters/types";
-import { AthleteCardFront } from "./AthleteCardFront";
+// src/components/AthleteCard.tsx
+// LAYER 1: Card with three visual states + stats back + legend modal
 
-type Props = {
+import React, { useMemo } from "react";
+import type { GamePhase, PlayerCard, Position } from "../adapters/types";
+import { AthleteCardFront } from "./AthleteCardFront";
+import { CardBackGeneric } from "./CardBackGeneric";
+
+export type CardDisplayMode = "facedown" | "faceup" | "stats";
+
+type AthleteCardProps = {
   card: PlayerCard;
   phase: GamePhase;
+  displayMode: CardDisplayMode;
+  isFlipping?: boolean;
   isLocked: boolean;
   isMvp: boolean;
-  isFlipped: boolean;
-  canFlip: boolean;
-  onToggleFlip: () => void;
+  canTapForStats: boolean;
+  onTapForStats?: () => void;
+  visibleBadgeCount?: number;
+  visibleFp?: number;
 };
+
+// ============================================================
+// HELPERS
+// ============================================================
 
 function toNum(v: any) {
   const n = Number(v);
@@ -21,7 +34,19 @@ function prettyKey(k: string) {
   return String(k)
     .replace(/_/g, " ")
     .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/\bTOTAL POINTS\b/i, "Base FP")
     .toUpperCase();
+}
+
+// Format date: "2023-04-15" → "23 - Apr 15"
+function formatDate(raw: string): string {
+  if (!raw) return "";
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return raw;
+  const yy = String(d.getFullYear()).slice(2);
+  const mon = d.toLocaleString("default", { month: "short" });
+  const day = d.getDate();
+  return `${yy} - ${mon} ${day}`;
 }
 
 function pickBreakdown(card: any): Record<string, number> | null {
@@ -37,102 +62,192 @@ function pickBreakdown(card: any): Record<string, number> | null {
 
   for (const c of candidates) {
     if (!c) continue;
-
     if (typeof c === "object" && !Array.isArray(c)) {
       const out: Record<string, number> = {};
       for (const [k, v] of Object.entries(c)) {
+        // Skip the FPL fast-path key — it's just the total, not useful
+        if (k === "TOTAL_POINTS") continue;
         const n = Number(v);
         if (Number.isFinite(n) && n !== 0) out[String(k)] = n;
       }
       if (Object.keys(out).length) return out;
     }
+  }
+  return null;
+}
 
-    if (Array.isArray(c)) {
-      const out: Record<string, number> = {};
-      for (const row of c) {
-        const key = row?.stat ?? row?.key ?? row?.label ?? row?.name;
-        const val = row?.fp ?? row?.points ?? row?.value;
-        const n = Number(val);
-        if (key && Number.isFinite(n) && n !== 0) out[String(key)] = n;
+// Position-aware stat keys — FPL naming convention from statLine
+// Layer 2 populates statLine from raw game log stats object
+// These keys cover both snake_case (FPL API) and camelCase variants
+const POSITION_STATS: Record<Position, Array<{ key: string; variants: string[]; abbrev: string }>> = {
+  FW: [
+    { key: "goals_scored",     variants: ["goals", "goalsScored", "goal"],           abbrev: "G" },
+    { key: "assists",          variants: ["assist"],                                   abbrev: "A" },
+    { key: "shots",            variants: ["shots_total", "shotsTotal"],                abbrev: "SH" },
+    { key: "shots_on_target",  variants: ["shotsOnTarget", "shots_on_goal"],           abbrev: "SOT" },
+    { key: "key_passes",       variants: ["keyPasses", "chances_created"],             abbrev: "KP" },
+    { key: "dribbles_completed", variants: ["dribbles", "dribblesCompleted"],          abbrev: "DRB" },
+    { key: "minutes",          variants: ["mins", "min", "minutes_played"],            abbrev: "MIN" },
+  ],
+  MD: [
+    { key: "goals_scored",     variants: ["goals", "goalsScored"],                     abbrev: "G" },
+    { key: "assists",          variants: ["assist"],                                    abbrev: "A" },
+    { key: "key_passes",       variants: ["keyPasses", "chances_created"],             abbrev: "KP" },
+    { key: "passes",           variants: ["passes_total", "passesTotal"],              abbrev: "PAS" },
+    { key: "pass_accuracy",    variants: ["passAccuracy", "passes_accuracy"],          abbrev: "PA%" },
+    { key: "tackles",          variants: ["tackles_total", "tacklesTotal"],            abbrev: "TKL" },
+    { key: "minutes",          variants: ["mins", "min", "minutes_played"],            abbrev: "MIN" },
+  ],
+  DE: [
+    { key: "tackles",          variants: ["tackles_total", "tacklesTotal"],            abbrev: "TKL" },
+    { key: "interceptions",    variants: ["interceptions_total"],                      abbrev: "INT" },
+    { key: "clearances",       variants: ["clearances_total", "clearancesTotal"],      abbrev: "CLR" },
+    { key: "blocks",           variants: ["blocked_shots", "blockedShots"],            abbrev: "BLK" },
+    { key: "clean_sheets",     variants: ["clean_sheet", "cleanSheet", "cleanSheets"], abbrev: "CS" },
+    { key: "goals_conceded",   variants: ["goalsConceded", "goals_allowed"],           abbrev: "GA" },
+    { key: "minutes",          variants: ["mins", "min", "minutes_played"],            abbrev: "MIN" },
+  ],
+  GK: [
+    { key: "saves",            variants: ["saves_total", "savesTotal"],                abbrev: "SV" },
+    { key: "clean_sheets",     variants: ["clean_sheet", "cleanSheet", "cleanSheets"], abbrev: "CS" },
+    { key: "goals_conceded",   variants: ["goalsConceded", "goals_allowed"],           abbrev: "GA" },
+    { key: "penalties_saved",  variants: ["penaltiesSaved", "penalty_saves"],          abbrev: "PKS" },
+    { key: "punches",          variants: ["punches_total"],                            abbrev: "PUN" },
+    { key: "high_claims",      variants: ["highClaims"],                               abbrev: "HC" },
+    { key: "minutes",          variants: ["mins", "min", "minutes_played"],            abbrev: "MIN" },
+  ],
+};
+
+function getPositionStats(
+  position: Position,
+  statLine: Record<string, any>
+): Array<{ key: string; abbrev: string; value: any }> {
+  const defs = POSITION_STATS[position] ?? POSITION_STATS["MD"];
+  const result: Array<{ key: string; abbrev: string; value: any }> = [];
+
+  for (const def of defs) {
+    // Try primary key then all variants
+    const allKeys = [def.key, ...def.variants];
+    let found: any = undefined;
+    for (const k of allKeys) {
+      if (statLine[k] !== undefined && statLine[k] !== null && statLine[k] !== "") {
+        found = statLine[k];
+        break;
       }
-      if (Object.keys(out).length) return out;
+      // Also try camelCase conversion
+      const camel = k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+      if (statLine[camel] !== undefined && statLine[camel] !== null) {
+        found = statLine[camel];
+        break;
+      }
+    }
+    if (found !== undefined) {
+      result.push({ key: def.key, abbrev: def.abbrev, value: found });
     }
   }
 
-  return null;
-}
-
-function pickStatsUsed(card: any): Record<string, any> | null {
-  const candidates = [
-    card?.statLine,
-    card?.statsUsed,
-    card?.gameInfo?.stats,
-    card?.stats,
-    card?.boxScore,
-    card?.gameLog?.stats,
-    card?.log?.stats,
-  ];
-
-  for (const s of candidates) {
-    if (s && typeof s === "object" && !Array.isArray(s)) return s;
+  // If position stats returned nothing, do a smart fallback:
+  // Show any numeric stats from statLine that look meaningful (non-zero, non-id)
+  if (result.length === 0) {
+    const SKIP_KEYS = new Set(["id", "player_id", "playerId", "element", "fixture", "team_h_score", "team_a_score", "round", "gameweek"]);
+    const fallback = Object.entries(statLine)
+      .filter(([k, v]) => {
+        if (SKIP_KEYS.has(k)) return false;
+        const n = Number(v);
+        return Number.isFinite(n) && n !== 0 && n > 0;
+      })
+      .slice(0, 6)
+      .map(([k, v]) => ({
+        key: k,
+        abbrev: k.replace(/_/g, " ").toUpperCase().slice(0, 3),
+        value: v,
+      }));
+    return fallback;
   }
 
-  return null;
+  return result;
 }
 
-function BackAReplace() {
-  return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        borderRadius: 18,
-        overflow: "hidden",
-        background: "linear-gradient(180deg, rgba(12,18,32,1) 0%, rgba(7,11,20,1) 100%)",
-        display: "grid",
-        placeItems: "center",
-        color: "rgba(255,255,255,0.92)",
-        fontWeight: 950,
-        letterSpacing: 1.2,
-        textTransform: "uppercase",
-        backfaceVisibility: "hidden",
-      }}
-    >
-      Replacing…
-    </div>
-  );
-}
+// ============================================================
+// LEGEND MODAL
+// ============================================================
+
+// ============================================================
+// STATS BACK
+// ============================================================
 
 function BackBStats({ card }: { card: PlayerCard }) {
   const anyCard: any = card;
+  const sl: Record<string, any> = anyCard?.statLine ?? {};
+  const gi: Record<string, any> = anyCard?.gameInfo ?? {};
 
-  const breakdown = useMemo(() => pickBreakdown(anyCard), [anyCard]);
-  const statsUsed = useMemo(() => pickStatsUsed(anyCard), [anyCard]);
+  // ── Date: try every possible field name FPL / generic logs use ──
+  const rawDate =
+    gi?.date || gi?.kickoff_time || gi?.game_date || gi?.gameDate ||
+    sl?.date || sl?.kickoff_time || sl?.game_date || sl?.gameDate ||
+    anyCard?.date || anyCard?.gameDate || "";
+  const date = formatDate(String(rawDate).trim());
 
-  const breakdownRows = useMemo(() => {
-    if (!breakdown) return [];
-    return Object.entries(breakdown)
-      .map(([k, v]) => ({ k, v }))
-      .sort((a, b) => Math.abs(b.v) - Math.abs(a.v));
-  }, [breakdown]);
+  // ── Opponent: try every possible field ──
+  const rawOpp =
+    gi?.opponent || gi?.opponent_team || gi?.opponentTeam || gi?.vs ||
+    sl?.opponent || sl?.opponent_team || sl?.opponentTeam || sl?.matchup ||
+    anyCard?.opponent || anyCard?.vs || "";
+  const opponent = String(rawOpp).trim();
 
-  const statsRows = useMemo(() => {
-    if (!statsUsed) return [];
-    return Object.entries(statsUsed)
-      .map(([k, v]) => ({ k, v }))
-      .filter((r) => r.k && r.v != null && r.v !== "" && r.v !== 0)
-      .slice(0, 28);
-  }, [statsUsed]);
+  // ── Home/Away ──
+  const rawHA =
+    gi?.homeAway ?? gi?.was_home ?? gi?.home ??
+    sl?.was_home ?? sl?.homeAway ?? anyCard?.homeAway;
+  // was_home is a boolean in FPL
+  const isHome = rawHA === true || rawHA === "H" || rawHA === "home" || rawHA === 1;
+  const isAway = rawHA === false || rawHA === "A" || rawHA === "away" || rawHA === 0;
+  const haSuffix = (rawHA !== undefined && rawHA !== null && rawHA !== "")
+    ? (isHome ? " (H)" : isAway ? " (A)" : "")
+    : "";
+  const matchup = opponent ? `${isHome ? "vs" : "@"} ${opponent.toUpperCase()}${haSuffix}` : "";
 
-  // Date/Opponent extraction (try multiple shapes)
-  const gi = anyCard?.gameInfo ?? {};
-  const opponent = String(gi?.opponent ?? anyCard?.opponent ?? anyCard?.vs ?? anyCard?.matchup ?? "").trim();
-  const ha = String(gi?.homeAway ?? anyCard?.homeAway ?? "").trim();
-  const date = String(gi?.date ?? anyCard?.date ?? anyCard?.gameDate ?? anyCard?.matchDate ?? "").trim();
-  const title = opponent ? `${ha === "H" ? "vs" : "@"} ${opponent}` : "Game Log";
-
+  // ── FP values ──
   const fp = toNum(anyCard?.actualFp);
   const proj = toNum(anyCard?.projectedFp);
+  const fpStr = fp.toFixed(1);
+  const projStr = proj.toFixed(1);
+
+  // ── Stats: show position-aware stats, fall back to ALL numeric fields ──
+  const posStats = useMemo(() =>
+    getPositionStats(card.position, sl),
+    [card.position, sl] // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
+  // If position stats found nothing, show every non-trivial numeric stat in statLine
+  const allStats = useMemo(() => {
+    if (posStats.length > 0) return posStats;
+    // Skip noise fields
+    const SKIP = new Set([
+      "id","element","fixture","round","gameweek","gw","season","season_id",
+      "team_h_score","team_a_score","team_h","team_a","was_home","kickoff_time",
+      "opponent_team","total_points","bps","ict_index","influence","creativity",
+      "threat","starts","value","selected","transfers_in","transfers_out",
+      "transfers_balance","in_dreamteam",
+    ]);
+    return Object.entries(sl)
+      .filter(([k, v]) => {
+        if (SKIP.has(k)) return false;
+        const n = Number(v);
+        return Number.isFinite(n) && n > 0;
+      })
+      .map(([k, v]) => ({
+        key: k,
+        abbrev: k.replace(/_/g,"").toUpperCase().slice(0, 4),
+        value: v,
+      }))
+      .slice(0, 9);
+  }, [posStats, sl]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const achievements: any[] = anyCard?.achievements ?? [];
+
+  // ── Debug: log what we're working with (remove after confirming data works) ──
+  // console.log("[CARD BACK]", { date, opponent, fp, proj, slKeys: Object.keys(sl), gi });
 
   return (
     <div
@@ -141,172 +256,202 @@ function BackBStats({ card }: { card: PlayerCard }) {
         inset: 0,
         borderRadius: 18,
         overflow: "hidden",
-        background: "linear-gradient(180deg, rgba(12,18,32,1) 0%, rgba(7,11,20,1) 100%)",
+        background: "linear-gradient(160deg, #0C1422 0%, #070B14 100%)",
+        border: "1px solid rgba(255,255,255,0.10)",
         color: "rgba(255,255,255,0.92)",
-        padding: 12,
+        padding: "10px 11px",
         display: "flex",
         flexDirection: "column",
-        gap: 10,
+        gap: 6,
         backfaceVisibility: "hidden",
       }}
     >
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontWeight: 950, letterSpacing: 0.8 }}>{title}</div>
-          <div style={{ opacity: 0.75, fontSize: 12 }}>{date || " "}</div>
-        </div>
-
-        <div style={{ textAlign: "right" }}>
-          <div style={{ opacity: 0.75, fontSize: 12 }}>FP</div>
-          <div style={{ fontWeight: 950, fontSize: 18 }}>{Number.isFinite(fp) ? fp.toFixed(fp % 1 === 0 ? 0 : 1) : "0"}</div>
-          <div style={{ opacity: 0.65, fontSize: 11 }}>Proj {proj.toFixed(proj % 1 === 0 ? 0 : 1)}</div>
-        </div>
+      {/* ── Row 1: Date + Matchup ── */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 4 }}>
+        <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 0.3, color: "rgba(255,255,255,0.4)", whiteSpace: "nowrap", flexShrink: 0 }}>
+          {date || "—"}
+        </span>
+        <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.5, color: "rgba(255,255,255,0.8)", textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {matchup || "—"}
+        </span>
       </div>
 
-      {/* Breakdown */}
-      <div
-        style={{
-          borderRadius: 14,
-          border: "1px solid rgba(255,255,255,0.10)",
-          background: "rgba(255,255,255,0.04)",
-          padding: 10,
-        }}
-      >
-        <div style={{ fontWeight: 900, opacity: 0.9, marginBottom: 8 }}>FP Breakdown</div>
-
-        {breakdownRows.length ? (
-          <div style={{ display: "grid", gap: 6 }}>
-            {breakdownRows.map((r) => (
-              <div key={r.k} style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                <div
-                  style={{
-                    opacity: 0.9,
-                    fontSize: 12,
-                    minWidth: 0,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {prettyKey(r.k)}
-                </div>
-                <div style={{ fontWeight: 950, fontSize: 12, flexShrink: 0 }}>
-                  {r.v > 0 ? `+${r.v}` : `${r.v}`}
-                </div>
-              </div>
+      {/* ── Row 2: FP + proj on same line ── */}
+      <div style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
+        <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1, textTransform: "uppercase", color: "rgba(255,255,255,0.4)", flexShrink: 0 }}>FP</span>
+        <span style={{ fontSize: 24, fontWeight: 950, letterSpacing: -0.5, lineHeight: 1, color: "#EAF0FF" }}>{fpStr}</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.3)", lineHeight: 1 }}>proj {projStr}</span>
+        {achievements.length > 0 && (
+          <div style={{ display: "flex", gap: 2, marginLeft: "auto" }}>
+            {achievements.map((a: any, i: number) => (
+              <span key={i} title={a.label} style={{ fontSize: 13, lineHeight: 1 }}>{a.icon ?? "⭐"}</span>
             ))}
-          </div>
-        ) : (
-          <div style={{ opacity: 0.75, fontSize: 12, lineHeight: 1.35 }}>
-            No per-stat FP breakdown found on this card yet.
           </div>
         )}
       </div>
 
-      {/* Stats Used */}
-      <div style={{ flex: 1, overflow: "auto", borderRadius: 14, border: "1px solid rgba(255,255,255,0.10)", padding: 10 }}>
-        <div style={{ fontWeight: 900, opacity: 0.9, marginBottom: 8 }}>Stats Used</div>
+      {/* ── Divider ── */}
+      <div style={{ height: 1, background: "rgba(255,255,255,0.07)", flexShrink: 0 }} />
 
-        {statsRows.length ? (
-          <div style={{ display: "grid", gap: 6 }}>
-            {statsRows.map((r) => (
-              <div key={r.k} style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                <div
-                  style={{
-                    opacity: 0.9,
-                    fontSize: 12,
-                    minWidth: 0,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {prettyKey(r.k)}
-                </div>
-                <div style={{ fontWeight: 900, fontSize: 12, flexShrink: 0 }}>{String(r.v)}</div>
+      {/* ── DEBUG PANEL: remove once data confirmed ── */}
+      {allStats.length === 0 && (
+        <div style={{ fontSize: 7, color: "rgba(255,200,0,0.7)", background: "rgba(255,200,0,0.07)", borderRadius: 6, padding: "4px 6px", lineHeight: 1.6, overflowY: "auto", maxHeight: 80 }}>
+          <div>gi: {JSON.stringify(gi).slice(0, 80)}</div>
+          <div>sl keys: {Object.keys(sl).join(", ").slice(0, 120) || "EMPTY"}</div>
+          <div>fp:{toNum(anyCard?.actualFp).toFixed(1)} proj:{toNum(anyCard?.projectedFp).toFixed(1)}</div>
+        </div>
+      )}
+
+      {/* ── Stats grid ── */}
+      {allStats.length > 0 ? (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "4px 3px", flex: 1 }}>
+          {allStats.map(s => (
+            <div
+              key={s.key}
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                borderRadius: 6,
+                padding: "4px 3px",
+                textAlign: "center",
+              }}
+            >
+              <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: 0.5, color: "rgba(255,255,255,0.38)", textTransform: "uppercase", marginBottom: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {s.abbrev}
               </div>
-            ))}
-          </div>
-        ) : (
-          <div style={{ opacity: 0.75, fontSize: 12, lineHeight: 1.35 }}>
-            No structured stats found on this card.
-            <div style={{ marginTop: 8, fontWeight: 900, opacity: 0.9 }}>Raw card fields:</div>
-            <pre style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 11, opacity: 0.85 }}>
-              {JSON.stringify(
-                {
-                  gameInfo: anyCard?.gameInfo ?? null,
-                  statLine: anyCard?.statLine ?? null,
-                  statsUsed: anyCard?.statsUsed ?? null,
-                  stats: anyCard?.stats ?? null,
-                },
-                null,
-                2
-              )}
-            </pre>
-          </div>
-        )}
-      </div>
+              <div style={{ fontSize: 14, fontWeight: 950, lineHeight: 1, color: "#EAF0FF" }}>
+                {s.value}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        /* Empty state with helpful debug info */
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4 }}>
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)" }}>No stats loaded</span>
+          <span style={{ fontSize: 8, color: "rgba(255,255,255,0.15)" }}>
+            {Object.keys(sl).length > 0 ? `${Object.keys(sl).length} fields in statLine` : "statLine is empty"}
+          </span>
+        </div>
+      )}
 
-      <div style={{ textAlign: "center", opacity: 0.65, fontSize: 12 }}>Tap card to flip back</div>
+      {/* ── Tap hint ── */}
+      <div style={{ textAlign: "center", fontSize: 8, fontWeight: 700, letterSpacing: 0.6, color: "rgba(255,255,255,0.18)", flexShrink: 0 }}>
+        TAP TO FLIP BACK
+      </div>
     </div>
   );
 }
 
-function AthleteCardBack(props: Props) {
-  const { phase, isLocked, card } = props;
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
 
-  // Back A in HOLD for unheld cards
-  if (phase === "HOLD" && !isLocked) return <BackAReplace />;
+export function AthleteCard({
+  card,
+  phase,
+  displayMode,
+  isFlipping,
+  isLocked,
+  isMvp,
+  canTapForStats,
+  onTapForStats,
+  visibleBadgeCount,
+  visibleFp,
+}: AthleteCardProps) {
+  const rotation = displayMode === "faceup" ? 0 : 180;
 
-  // Back B in RESULTS
-  if (phase === "RESULTS") return <BackBStats card={card} />;
-
-  return <BackAReplace />;
-}
-
-export function AthleteCard(props: Props) {
-  const { isFlipped } = props;
-
-  const flipContainer: React.CSSProperties = {
-    perspective: "1200px",
-    width: "100%",
-    height: "100%",
-  };
-
-  const flipInner: React.CSSProperties = {
-    position: "relative",
-    width: "100%",
-    height: "100%",
-    transformStyle: "preserve-3d",
-    transition: "transform 520ms cubic-bezier(.2,.9,.2,1)",
-    transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
-  };
-
-  const faceFront: React.CSSProperties = {
-    position: "absolute",
-    inset: 0,
-    backfaceVisibility: "hidden",
-  };
-
-  const faceBack: React.CSSProperties = {
-    position: "absolute",
-    inset: 0,
-    transform: "rotateY(180deg)",
-    backfaceVisibility: "hidden",
+  const handleClick = (e: React.MouseEvent) => {
+    if (canTapForStats && displayMode !== "facedown") {
+      e.stopPropagation();
+      onTapForStats?.();
+    }
   };
 
   return (
-    <div style={flipContainer}>
-      <div style={flipInner}>
-        <div style={faceFront}>
-          <AthleteCardFront {...props} />
-        </div>
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        perspective: "1000px",
+        cursor: canTapForStats && displayMode !== "facedown" ? "pointer" : "default",
+      }}
+      onClick={handleClick}
+    >
+        <div
+          style={{
+            position: "relative",
+            width: "100%",
+            height: "100%",
+            transformStyle: "preserve-3d",
+            transition: isFlipping
+              ? "transform 600ms cubic-bezier(.2,.85,.4,1)"
+              : "transform 400ms cubic-bezier(.2,.9,.2,1)",
+            transform: `rotateY(${rotation}deg)`,
+          }}
+        >
+          {/* Front */}
+          <div style={{ position: "absolute", inset: 0, backfaceVisibility: "hidden" }}>
+            <AthleteCardFront
+              card={card}
+              phase={phase}
+              isLocked={isLocked}
+              isMvp={isMvp}
+              isFlipped={displayMode === "stats"}
+              canFlip={canTapForStats}
+              onToggleFlip={onTapForStats || (() => {})}
+              visibleFp={visibleFp}
+              visibleBadgeCount={visibleBadgeCount}
+            />
+          </div>
 
-        <div style={faceBack}>
-          <AthleteCardBack {...props} />
+          {/* Back */}
+          <div style={{ position: "absolute", inset: 0, transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}>
+            {displayMode === "facedown"
+              ? <CardBackGeneric isFlipping={isFlipping} />
+              : <BackBStats card={card} />
+            }
+          </div>
         </div>
       </div>
-    </div>
+  );
+}
+
+// ============================================================
+// BACKWARD COMPATIBILITY WRAPPER
+// ============================================================
+
+export type LegacyAthleteCardProps = {
+  card: PlayerCard;
+  phase: GamePhase;
+  isLocked: boolean;
+  isMvp: boolean;
+  isFlipped: boolean;
+  canFlip: boolean;
+  onToggleFlip: () => void;
+  isFaceDown?: boolean;
+  visibleFp?: number;
+};
+
+export function AthleteCardLegacy({
+  card, phase, isLocked, isMvp, isFlipped, canFlip, onToggleFlip, isFaceDown, visibleFp,
+}: LegacyAthleteCardProps) {
+  let displayMode: CardDisplayMode = "faceup";
+  if (isFaceDown) displayMode = "facedown";
+  else if (isFlipped) displayMode = "stats";
+
+  return (
+    <AthleteCard
+      card={card}
+      phase={phase}
+      displayMode={displayMode}
+      isFlipping={isFaceDown}
+      isLocked={isLocked}
+      isMvp={isMvp}
+      canTapForStats={canFlip && !isFaceDown}
+      onTapForStats={onToggleFlip}
+      visibleFp={visibleFp}
+    />
   );
 }

@@ -1,16 +1,12 @@
 /**
  * LineupGenerationEngine - Deterministic lineup generation under cap + position rules
- * Sport-agnostic algorithm.
+ * Sport-agnostic algorithm with rosterSlots order support
  *
- * Key properties:
- * - Enforces salary cap
- * - Enforces position min/max from SportConfig
- * - Enforces "no duplicate base player" (season cards share basePlayerId)
- * - Adds controlled randomness to reduce repeated anchors (top-band weighted pick)
- * - Still deterministic for a given seed (RandomEngine)
+ * NEW: Now respects config.rosterSlots order (e.g., ["FW","MD","DE","GK","FLEX","FLEX"])
+ * to ensure generated players match the intended grid layout
  */
 
-import { Player, SportConfig, RosterSlot } from "../models";
+import type { Player, SportConfig, RosterSlot } from "../models";
 import { RandomEngine } from "./RandomEngine";
 
 /** Identity for season cards: basePlayerId (if present) else id */
@@ -81,6 +77,10 @@ export class LineupGenerationEngine {
     // Start empty
     const roster = makeEmptyRoster(rosterSize);
 
+    // NEW: Get the desired slot order from config (e.g., ["FW","MD","DE","GK","FLEX","FLEX"])
+    const rosterSlots = config.rosterSlots || [];
+    const slotPositions: string[] = rosterSlots.length === rosterSize ? rosterSlots : [];
+
     // State tracking
     let remainingCap = salaryCap;
     const usedBaseIds = new Set<string>();
@@ -138,6 +138,18 @@ export class LineupGenerationEngine {
       if (cur >= lim.max) return false;
 
       return true;
+    };
+
+    // NEW: Helper to check if a position is valid for a slot
+    const isValidForSlot = (position: string, slotIndex: number): boolean => {
+      if (slotPositions.length === 0) return true; // No slot constraints
+      
+      const slotPosition = slotPositions[slotIndex];
+      if (slotPosition === "FLEX") {
+        // FLEX can accept FW, MD, or DE (all non-GK positions in football)
+        return position !== "GK";
+      }
+      return position === slotPosition;
     };
 
     const minsRemaining = (pos: string): number => {
@@ -231,30 +243,41 @@ export class LineupGenerationEngine {
       for (let slotIndex = 0; slotIndex < slotsToFill; slotIndex++) {
         const slotsRemaining = slotsToFill - slotIndex;
         const stillNeeded = Object.values(minPositionsNeeded).reduce((s, c) => s + c, 0);
+        
+        // NEW: Get the actual roster index for this empty slot
+        const actualRosterIndex = emptySlots[slotIndex].index;
 
         // Candidates
-        let candidates = bySalaryDesc.filter((p) => canUse(p, remainingCap));
-        if (candidates.length === 0) throw new Error(`Cannot fill slot ${slotIndex + 1}: no eligible players`);
-
-      // STRICT POSITION ENFORCEMENT: If we still need minimums, prioritize/force those positions
-      if (stillNeeded > 0) {
-        const neededPositions = Object.entries(minPositionsNeeded)
-          .filter(([, count]) => count > 0)
-          .map(([pos]) => pos);
-
-        const restricted = candidates.filter((p) => neededPositions.includes(p.position));
+        let candidates = bySalaryDesc.filter((p) => {
+          // Must pass basic canUse check
+          if (!canUse(p, remainingCap)) return false;
+          // NEW: Must be valid for this slot position
+          return isValidForSlot(p.position, actualRosterIndex);
+        });
         
-        // If slots remaining <= mins needed, FORCE needed positions only
-        if (slotsRemaining <= stillNeeded) {
-          if (restricted.length === 0) {
-            throw new Error(`Cannot satisfy position minimums at slot ${slotIndex + 1}`);
-          }
-          candidates = restricted;
-        } else if (restricted.length > 0 && slotsRemaining <= stillNeeded + 2) {
-          // Prioritize needed positions when close to running out of slots
-          candidates = restricted;
+        if (candidates.length === 0) {
+          throw new Error(`Cannot fill slot ${slotIndex + 1}: no eligible players for position ${slotPositions[actualRosterIndex]}`);
         }
-      }
+
+        // STRICT POSITION ENFORCEMENT: If we still need minimums, prioritize/force those positions
+        if (stillNeeded > 0) {
+          const neededPositions = Object.entries(minPositionsNeeded)
+            .filter(([, count]) => count > 0)
+            .map(([pos]) => pos);
+
+          const restricted = candidates.filter((p) => neededPositions.includes(p.position));
+          
+          // If slots remaining <= mins needed, FORCE needed positions only
+          if (slotsRemaining <= stillNeeded) {
+            if (restricted.length === 0) {
+              throw new Error(`Cannot satisfy position minimums at slot ${slotIndex + 1}`);
+            }
+            candidates = restricted;
+          } else if (restricted.length > 0 && slotsRemaining <= stillNeeded + 2) {
+            // Prioritize needed positions when close to running out of slots
+            candidates = restricted;
+          }
+        }
 
         // Wider early band reduces anchor repetition a lot
         const dynamicBandSize =
@@ -355,6 +378,7 @@ export class LineupGenerationEngine {
 
       for (let i = 0; i < relaxedEmpty.length; i++) {
         const slotsRemaining = relaxedEmpty.length - i;
+        const actualRosterIndex = relaxedEmpty[i].index;
 
         // pick a needed position if any mins missing
         let neededPos: string | null = null;
@@ -362,7 +386,10 @@ export class LineupGenerationEngine {
           if (minsRemaining(pos) > 0) { neededPos = pos; break; }
         }
 
-        let pool = bySalaryDesc.filter((p) => canUse(p, remainingCap));
+        let pool = bySalaryDesc.filter((p) => {
+          if (!canUse(p, remainingCap)) return false;
+          return isValidForSlot(p.position, actualRosterIndex);
+        });
         if (pool.length === 0) break;
 
         if (neededPos) {
@@ -412,13 +439,13 @@ export class LineupGenerationEngine {
         if ((minPositionsNeeded[pickedRelaxed.position] ?? 0) > 0) minPositionsNeeded[pickedRelaxed.position]--;
       }
     }
-// Final validation: ensure salary minimum is met
-const totalSalary = roster.reduce((sum, slot) => sum + (slot.player?.salary ?? 0), 0);
-if (totalSalary < salaryCapLimits.min) {
-  throw new Error(`Lineup total salary ${totalSalary} is below minimum ${salaryCapLimits.min}`);
-}
+    
+    // Final validation: ensure salary minimum is met
+    const totalSalary = roster.reduce((sum, slot) => sum + (slot.player?.salary ?? 0), 0);
+    if (totalSalary < salaryCapLimits.min) {
+      throw new Error(`Lineup total salary ${totalSalary} is below minimum ${salaryCapLimits.min}`);
+    }
 
-return roster;
     return roster;
   }
 
