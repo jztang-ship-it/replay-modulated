@@ -1,312 +1,265 @@
-// src/ui/hooks/useEmotionalReveal.ts
-// LAYER 1: Sport-agnostic reveal sequence with conditional drama
-//
-// REVEAL SEQUENCE:
-// 1. Card flips face-up (fast or slow based on drama)
-// 2. Base FP rolls up on card + total
-// 3. If badges exist: each drops in with thud, FP added
-// 4. Next card
-//
-// DRAMA TRIGGERS (slow reveal):
-// - Overperformance: actual > projected * 1.30
-// - Underperformance: actual < projected * 0.70
-// - Has achievements/badges
-
-import { useCallback, useEffect, useRef, useState } from "react";
-
-// ============================================================
-// TYPES
-// ============================================================
-
-export type RevealState = "IDLE" | "REVEALING" | "COMPLETE";
-
-export type CardRevealPhase = 
-  | "HIDDEN"         // Face down
-  | "FLIPPING"       // Flip animation in progress
-  | "SHOWING_FP"     // Base FP visible, rolling up
-  | "DROPPING_BADGE" // Badge drop animation
-  | "COMPLETE";      // Done
-
-export type Badge = {
-  id: string;
-  icon: string;
-  label: string;
-  fp: number;
-};
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export type RevealableCard = {
   cardId: string;
+  slotIndex: number;
   actualFp: number;
   projectedFp: number;
-  badges: Badge[];
-  slotIndex: number;
+  tier: any;
+  badges?: Array<{ id: string; icon: string; label: string; fp: number }>;
 };
 
-export type DramaReason = "overperform" | "underperform" | "achievement" | null;
-
-export type CardRevealState = {
-  cardId: string;
-  phase: CardRevealPhase;
-  visibleFp: number;
-  visibleBadgeCount: number;
-  isDramatic: boolean;
-  dramaReason: DramaReason;
-};
-
-// ============================================================
-// TIMING (Layer 1 - same for all sports)
-// ============================================================
-
-const TIMING = {
-  FLIP_FAST_MS: 250,       // was 300
-  FLIP_SLOW_MS: 450,       // was 600  — dramatic still weighty but not sluggish
-  FP_ROLL_MS: 200,         // was 250
-  BADGE_DROP_MS: 400,      // was 500
-  BADGE_PAUSE_MS: 150,     // was 200
-  CARD_GAP_FAST_MS: 80,    // was 120  — nearly instant between normal cards
-  CARD_GAP_SLOW_MS: 280,   // was 400  — dramatic cards get a breath
-  TENSION_PAUSE_MS: 200,   // was 300  — pre-flip suspense, tight
-};
-
-// ============================================================
-// DRAMA DETECTION
-// ============================================================
-
-export function detectDrama(card: RevealableCard): { isDramatic: boolean; reason: DramaReason } {
-  const { actualFp, projectedFp, badges } = card;
-  
-  if (badges && badges.length > 0) {
-    return { isDramatic: true, reason: "achievement" };
-  }
-  
-  if (projectedFp > 0) {
-    const ratio = actualFp / projectedFp;
-    if (ratio > 1.30) return { isDramatic: true, reason: "overperform" };
-    if (ratio < 0.70) return { isDramatic: true, reason: "underperform" };
-  }
-  
-  return { isDramatic: false, reason: null };
-}
-
-// ============================================================
-// HOOK
-// ============================================================
-
-export function useEmotionalReveal(params: {
+type Params = {
   cards: RevealableCard[];
   isActive: boolean;
-  onCardFlipped?: (cardId: string) => void;
-  onFpRevealed?: (cardId: string, fp: number) => void;
-  onBadgeDropped?: (cardId: string, badge: Badge, newCardFp: number) => void;
-  onCardComplete?: (cardId: string, totalCardFp: number) => void;
+
+  onCardComplete?: (cardId: string) => void;
   onAllComplete?: (totalFp: number) => void;
-}) {
-  const { cards, isActive, onCardFlipped, onFpRevealed, onBadgeDropped, onCardComplete, onAllComplete } = params;
-  
-  const [revealState, setRevealState] = useState<RevealState>("IDLE");
-  const [currentCardIndex, setCurrentCardIndex] = useState(-1);
-  const [cardStates, setCardStates] = useState<Map<string, CardRevealState>>(new Map());
-  const [runningTotalFp, setRunningTotalFp] = useState(0);
-  
+};
+
+type AnimMaps = {
+  flipMsMap: Map<string, number>;
+  fpCountUpMsMap: Map<string, number>;
+  performanceTagMap: Map<string, string>;
+  pulseMap: Map<string, number>;
+};
+
+function nowMs() {
+  return typeof performance !== "undefined" ? performance.now() : Date.now();
+}
+
+function clamp(v: number, lo: number, hi: number) {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+function defaultTimingsForTier(tier: any): { flipMs: number; countMs: number } {
+  // Keep stable / predictable. Tune later.
+  const t = String(tier ?? "").toUpperCase();
+  if (t === "ORANGE") return { flipMs: 520, countMs: 900 };
+  if (t === "PURPLE") return { flipMs: 480, countMs: 820 };
+  if (t === "BLUE") return { flipMs: 440, countMs: 760 };
+  if (t === "GREEN") return { flipMs: 400, countMs: 700 };
+  return { flipMs: 380, countMs: 660 };
+}
+
+function perfTag(actual: number, proj: number) {
+  if (!proj || proj <= 0) return actual >= 10 ? "HOT" : "OK";
+  const r = actual / proj;
+  if (r >= 1.35) return "SMASH";
+  if (r >= 1.12) return "HOT";
+  if (r <= 0.72) return "COLD";
+  return "OK";
+}
+
+export function useEmotionalReveal(params: Params) {
+  const { cards, isActive, onCardComplete, onAllComplete } = params;
+
+  // Visible FP for each card (during reveal animation)
+  const [visibleFpMap, setVisibleFpMap] = useState<Map<string, number>>(() => new Map());
+
+  // Card state
+  const [visibleSet, setVisibleSet] = useState<Set<string>>(() => new Set()); // fully revealed (front shown)
+  const [flippingSet, setFlippingSet] = useState<Set<string>>(() => new Set()); // currently flipping
+
+  // Timing maps (stable across the run)
+  const animMapsRef = useRef<AnimMaps>({
+    flipMsMap: new Map(),
+    fpCountUpMsMap: new Map(),
+    performanceTagMap: new Map(),
+    pulseMap: new Map(),
+  });
+
+  // Internal run id, to cancel old timers
+  const runIdRef = useRef(0);
   const timersRef = useRef<number[]>([]);
-  const cancelledRef = useRef(false);
-  const revealStartedRef = useRef(false);
-  
-  // --- Helpers ---
-  
+
+  const orderedCards = useMemo(() => {
+    // Reveal worst performers first, anchors (highest salary) last
+    return [...cards].sort((a, b) => {
+      const salA = Number((a as any).salary ?? 0);
+      const salB = Number((b as any).salary ?? 0);
+      // Primary: salary ascending (cheapest first)
+      if (salA !== salB) return salA - salB;
+      // Secondary: actual FP ascending (worst first)
+      return Number(a.actualFp ?? 0) - Number(b.actualFp ?? 0);
+    });
+  }, [cards]);
+
   const clearTimers = useCallback(() => {
-    cancelledRef.current = true;
-    timersRef.current.forEach(t => window.clearTimeout(t));
+    for (const t of timersRef.current) window.clearTimeout(t);
     timersRef.current = [];
   }, []);
-  
-  const addTimer = useCallback((fn: () => void, ms: number) => {
-    const t = window.setTimeout(() => {
-      if (!cancelledRef.current) fn();
-    }, ms);
-    timersRef.current.push(t);
-  }, []);
-  
-  const updateCard = useCallback((cardId: string, update: Partial<CardRevealState>) => {
-    setCardStates(prev => {
-      const next = new Map(prev);
-      const curr = next.get(cardId);
-      if (curr) next.set(cardId, { ...curr, ...update });
-      return next;
-    });
-  }, []);
-  
-  // --- Reset ---
-  
+
   const reset = useCallback(() => {
+    runIdRef.current++;
     clearTimers();
-    cancelledRef.current = false;
-    revealStartedRef.current = false;
-    setRevealState("IDLE");
-    setCurrentCardIndex(-1);
-    setRunningTotalFp(0);
-    
-    const initial = new Map<string, CardRevealState>();
-    cards.forEach(c => {
-      const drama = detectDrama(c);
-      initial.set(c.cardId, {
-        cardId: c.cardId,
-        phase: "HIDDEN",
-        visibleFp: 0,
-        visibleBadgeCount: 0,
-        isDramatic: drama.isDramatic,
-        dramaReason: drama.reason,
-      });
-    });
-    setCardStates(initial);
-  }, [cards, clearTimers]);
-  
-  // --- Skip to End ---
-  
-  const skipToEnd = useCallback(() => {
-    clearTimers();
-    cancelledRef.current = false;
-    
-    const finalStates = new Map<string, CardRevealState>();
-    let total = 0;
-    
-    cards.forEach(c => {
-      const badgeFp = c.badges?.reduce((sum, b) => sum + b.fp, 0) || 0;
-      const totalCardFp = c.actualFp + badgeFp;
-      const drama = detectDrama(c);
-      
-      finalStates.set(c.cardId, {
-        cardId: c.cardId,
-        phase: "COMPLETE",
-        visibleFp: totalCardFp,
-        visibleBadgeCount: c.badges?.length || 0,
-        isDramatic: drama.isDramatic,
-        dramaReason: drama.reason,
-      });
-      total += totalCardFp;
-    });
-    
-    setCardStates(finalStates);
-    setRunningTotalFp(total);
-    setCurrentCardIndex(cards.length);
-    setRevealState("COMPLETE");
-    onAllComplete?.(total);
-  }, [cards, clearTimers, onAllComplete]);
-  
-  // --- Reveal Single Card ---
-  
-  const revealCardAt = useCallback((index: number, currentTotal: number) => {
-    if (index >= cards.length) {
-      setRevealState("COMPLETE");
-      onAllComplete?.(currentTotal);
-      return;
-    }
-    
-    const card = cards[index];
-    const drama = detectDrama(card);
-    const badges = card.badges || [];
-    
-    const flipMs = drama.isDramatic ? TIMING.FLIP_SLOW_MS : TIMING.FLIP_FAST_MS;
-    const prePause = drama.isDramatic ? TIMING.TENSION_PAUSE_MS : 0;
-    const postGap = drama.isDramatic ? TIMING.CARD_GAP_SLOW_MS : TIMING.CARD_GAP_FAST_MS;
-    
-    let t = 0;
-    let cardFp = 0;
-    let total = currentTotal;
-    
-    // Pre-flip tension
-    t += prePause;
-    
-    // Flip
-    addTimer(() => {
-      setCurrentCardIndex(index);
-      updateCard(card.cardId, { phase: "FLIPPING" });
-      onCardFlipped?.(card.cardId);
-    }, t);
-    t += flipMs;
-    
-    // Show base FP
-    addTimer(() => {
-      cardFp = card.actualFp;
-      total += card.actualFp;
-      updateCard(card.cardId, { phase: "SHOWING_FP", visibleFp: cardFp });
-      setRunningTotalFp(total);
-      onFpRevealed?.(card.cardId, card.actualFp);
-    }, t);
-    t += TIMING.FP_ROLL_MS;
-    
-    // Drop badges
-    badges.forEach((badge, i) => {
-      addTimer(() => {
-        cardFp += badge.fp;
-        total += badge.fp;
-        updateCard(card.cardId, { 
-          phase: "DROPPING_BADGE", 
-          visibleFp: cardFp, 
-          visibleBadgeCount: i + 1 
-        });
-        setRunningTotalFp(total);
-        onBadgeDropped?.(card.cardId, badge, cardFp);
-      }, t);
-      t += TIMING.BADGE_DROP_MS + TIMING.BADGE_PAUSE_MS;
-    });
-    
-    // Complete card
-    addTimer(() => {
-      updateCard(card.cardId, { phase: "COMPLETE" });
-      onCardComplete?.(card.cardId, cardFp);
-    }, t);
-    t += postGap;
-    
-    // Next card
-    addTimer(() => {
-      revealCardAt(index + 1, total);
-    }, t);
-    
-  }, [cards, addTimer, updateCard, onCardFlipped, onFpRevealed, onBadgeDropped, onCardComplete, onAllComplete]);
-  
-  // --- Start on isActive ---
-  
+    setVisibleFpMap(new Map());
+    setVisibleSet(new Set());
+    setFlippingSet(new Set());
+    animMapsRef.current = {
+      flipMsMap: new Map(),
+      fpCountUpMsMap: new Map(),
+      performanceTagMap: new Map(),
+      pulseMap: new Map(),
+    };
+  }, [clearTimers]);
+
+  // Build timing/perf maps any time cards change
   useEffect(() => {
-    if (!isActive) {
-      reset();
-      return;
+    const flipMsMap = new Map<string, number>();
+    const fpCountUpMsMap = new Map<string, number>();
+    const performanceTagMap = new Map<string, string>();
+    const pulseMap = new Map<string, number>();
+
+    for (const c of orderedCards) {
+      const { flipMs, countMs } = defaultTimingsForTier(c.tier);
+      flipMsMap.set(c.cardId, flipMs);
+      fpCountUpMsMap.set(c.cardId, countMs);
+      performanceTagMap.set(c.cardId, perfTag(Number(c.actualFp ?? 0), Number(c.projectedFp ?? 0)));
+      // pulse intensity (simple)
+      pulseMap.set(c.cardId, clamp(Math.abs((Number(c.actualFp ?? 0) - Number(c.projectedFp ?? 0)) / Math.max(1, Number(c.projectedFp ?? 0))), 0, 1));
     }
-    
-    if (cards.length === 0 || revealStartedRef.current) return;
-    
-    revealStartedRef.current = true;
-    reset();
-    cancelledRef.current = false;
-    setRevealState("REVEALING");
-    
-    addTimer(() => {
-      revealCardAt(0, 0);
-    }, 100);
-    
-    return () => clearTimers();
-  }, [isActive]);
-  
-  // --- Public API ---
-  
-  return {
-    revealState,
-    currentCardIndex,
-    runningTotalFp,
-    
-    getCardState: (id: string) => cardStates.get(id),
-    isCardVisible: (id: string) => {
-      const s = cardStates.get(id);
-      return s ? s.phase !== "HIDDEN" : false;
+
+    animMapsRef.current = { flipMsMap, fpCountUpMsMap, performanceTagMap, pulseMap };
+  }, [orderedCards]);
+
+  const isCardVisible = useCallback((id: string) => visibleSet.has(id), [visibleSet]);
+  const isCardFlipping = useCallback((id: string) => flippingSet.has(id), [flippingSet]);
+
+  const getVisibleFp = useCallback(
+    (id: string) => {
+      // If we have an animated number, return it; otherwise if card is fully visible return final actual.
+      if (visibleFpMap.has(id)) return visibleFpMap.get(id);
+      const c = orderedCards.find((x) => x.cardId === id);
+      if (!c) return undefined;
+      if (visibleSet.has(id)) return Number(c.actualFp ?? 0);
+      return undefined;
     },
-    isCardFlipping: (id: string) => cardStates.get(id)?.phase === "FLIPPING",
-    isCardComplete: (id: string) => cardStates.get(id)?.phase === "COMPLETE",
-    getVisibleFp: (id: string) => cardStates.get(id)?.visibleFp || 0,
-    getVisibleBadgeCount: (id: string) => cardStates.get(id)?.visibleBadgeCount || 0,
-    isDramatic: (id: string) => cardStates.get(id)?.isDramatic || false,
-    getDramaReason: (id: string) => cardStates.get(id)?.dramaReason || null,
-    
+    [visibleFpMap, orderedCards, visibleSet]
+  );
+
+  // ✅ runningTotalFp is always sum of visible FP values (ground truth of what UI shows)
+  const runningTotalFp = useMemo(() => {
+    let sum = 0;
+    for (const c of orderedCards) {
+      const v = getVisibleFp(c.cardId);
+      if (typeof v === "number" && Number.isFinite(v)) sum += v;
+    }
+    return sum;
+  }, [orderedCards, getVisibleFp]);
+
+  const skipToEnd = useCallback(() => {
+    const nextVisible = new Set<string>();
+    const nextMap = new Map<string, number>();
+
+    for (const c of orderedCards) {
+      nextVisible.add(c.cardId);
+      nextMap.set(c.cardId, Number(c.actualFp ?? 0));
+    }
+
+    setFlippingSet(new Set());
+    setVisibleSet(nextVisible);
+    setVisibleFpMap(nextMap);
+
+    const total = orderedCards.reduce((s, c) => s + Number(c.actualFp ?? 0), 0);
+    onAllComplete?.(total);
+  }, [orderedCards, onAllComplete]);
+
+  useEffect(() => {
+    if (!isActive) return;
+
+    // Start a new run
+    reset();
+    const myRunId = runIdRef.current;
+
+    const revealOne = (idx: number) => {
+      if (runIdRef.current !== myRunId) return;
+      const c = orderedCards[idx];
+      if (!c) {
+        const total = orderedCards.reduce((s, x) => s + Number(x.actualFp ?? 0), 0);
+        onAllComplete?.(total);
+        return;
+      }
+
+      // Mark flipping
+      setFlippingSet((prev) => new Set(prev).add(c.cardId));
+
+      const flipMs = animMapsRef.current.flipMsMap.get(c.cardId) ?? 420;
+      const countMs = animMapsRef.current.fpCountUpMsMap.get(c.cardId) ?? 720;
+
+      // After flip, count-up begins
+      const t1 = window.setTimeout(() => {
+        if (runIdRef.current !== myRunId) return;
+
+        setFlippingSet((prev) => {
+          const next = new Set(prev);
+          next.delete(c.cardId);
+          return next;
+        });
+
+        // Count-up animation
+        const start = nowMs();
+        const target = Math.max(0, Number(c.actualFp ?? 0));
+
+        const tick = () => {
+          if (runIdRef.current !== myRunId) return;
+
+          const t = clamp((nowMs() - start) / Math.max(1, countMs), 0, 1);
+          const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+          const val = Math.round(target * eased * 10) / 10; // one decimal if you want
+
+          setVisibleFpMap((prev) => {
+            const next = new Map(prev);
+            next.set(c.cardId, val);
+            return next;
+          });
+
+          if (t < 1) {
+            const tt = window.setTimeout(tick, 16);
+            timersRef.current.push(tt);
+          } else {
+            // Finalize card as visible
+            setVisibleFpMap((prev) => {
+              const next = new Map(prev);
+              next.set(c.cardId, target);
+              return next;
+            });
+            setVisibleSet((prev) => new Set(prev).add(c.cardId));
+            onCardComplete?.(c.cardId);
+
+            // Next card
+            revealOne(idx + 1);
+          }
+        };
+
+        tick();
+      }, flipMs);
+
+      timersRef.current.push(t1);
+    };
+
+    revealOne(0);
+
+    return () => {
+      // If reveal stops, we don't auto-complete; GameView decides.
+      // Just cancel timers.
+      clearTimers();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isActive]);
+
+  return {
+    runningTotalFp,
+    isCardVisible,
+    isCardFlipping,
+    getVisibleFp,
+    flipMsMap: animMapsRef.current.flipMsMap,
+    fpCountUpMsMap: animMapsRef.current.fpCountUpMsMap,
+    performanceTagMap: animMapsRef.current.performanceTagMap,
+    pulseMap: animMapsRef.current.pulseMap,
     skipToEnd,
     reset,
   };
 }
+
+export type { Params as UseEmotionalRevealParams };

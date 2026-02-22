@@ -9,16 +9,11 @@ import { WinCelebration } from "../components/WinCelebration";
 import { useEmotionalReveal, type RevealableCard } from "../ui/hooks/useEmotionalReveal";
 import { calculateWinTier, calculatePayout, type WinTier } from "../utils/payoutLogic";
 
-// ============================================================
-// CONSTANTS
-// ============================================================
-
 const CAP_MAX = sportAdapter.salaryCap;
 const ROSTER_SIZE = sportAdapter.rosterSize;
 const STARTING_BALANCE = 1000;
 const BASE_BET = 10;
 
-// Create empty placeholder cards for IDLE state display
 function createPlaceholderCards(): PlayerCard[] {
   return Array.from({ length: ROSTER_SIZE }, (_, i) => ({
     cardId: `placeholder-${i}`,
@@ -40,25 +35,27 @@ function createPlaceholderCards(): PlayerCard[] {
   }));
 }
 
-// ============================================================
-// TYPES
-// ============================================================
+type GameState =
+  | "IDLE"
+  | "DEALING"
+  | "HOLD"
+  | "DRAWING"
+  | "REVEALING"
+  | "RESULTS"
+  | "WIN_CELEBRATION";
 
-type GameState = 
-  | "IDLE"              // No cards dealt
-  | "DEALING"           // Cards being dealt (face down → face up)
-  | "HOLD"              // Player choosing which to hold
-  | "DRAWING"           // Non-held cards flipping to back, loading new cards
-  | "REVEALING"         // Cards flipping one by one with drama
-  | "RESULTS"           // All revealed, can tap to see stats
-  | "WIN_CELEBRATION";  // Showing win overlay
-
-// ============================================================
-// HELPERS
-// ============================================================
-
+/**
+ * IMPORTANT: Locks + UI identity should be driven by cardId.
+ * We keep fallbacks for robustness while you iterate adapters, but cardId is the canonical key.
+ */
 function cardId(card: any): string {
-  const v = card?.cardId ?? card?.id ?? card?.playerId ?? card?.basePlayerId ?? card?.uid ?? card?.name;
+  const v =
+    card?.cardId ??
+    card?.id ??
+    card?.playerId ??
+    card?.basePlayerId ??
+    card?.uid ??
+    card?.name;
   return String(v ?? "");
 }
 
@@ -75,24 +72,21 @@ function sumSalary(roster: PlayerCard[]) {
 }
 
 function sumLockedSalary(roster: PlayerCard[], lockedIds: Set<string>) {
-  return roster.reduce((acc, c: any) => 
-    lockedIds.has(cardId(c)) ? acc + salaryNum(c?.salary) : acc, 0
-  );
+  return roster.reduce((acc, c: any) => (lockedIds.has(cardId(c)) ? acc + salaryNum(c?.salary) : acc), 0);
 }
 
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-// Convert PlayerCard[] to RevealableCard[] for the reveal hook
-// Sorted by slotIndex for fixed reveal order: top-left → bottom-right
 function toRevealableCards(cards: PlayerCard[]): RevealableCard[] {
   return cards
-    .map(c => ({
+    .map((c) => ({
       cardId: cardId(c),
       actualFp: Number(c.actualFp ?? 0),
       projectedFp: Number(c.projectedFp ?? 0),
-      badges: (c.achievements || []).map(a => ({
+      tier: (c as any).tier ?? "WHITE",
+      badges: (c.achievements || []).map((a) => ({
         id: a.id,
         icon: a.icon || "⭐",
         label: a.label,
@@ -103,286 +97,209 @@ function toRevealableCards(cards: PlayerCard[]): RevealableCard[] {
     .sort((a, b) => a.slotIndex - b.slotIndex);
 }
 
-// ============================================================
-// MAIN COMPONENT
-// ============================================================
-
 export default function GameView() {
-  // Core game state
   const [gameState, setGameState] = useState<GameState>("IDLE");
   const [roster, setRoster] = useState<PlayerCard[]>(createPlaceholderCards());
+
   const [lockedCardIds, setLockedCardIds] = useState<Set<string>>(new Set());
-  const [statsFlippedIds, setStatsFlippedIds] = useState<Set<string>>(new Set()); // For tap-to-view stats
+  const [statsFlippedIds, setStatsFlippedIds] = useState<Set<string>>(new Set());
   const [mvpId, setMvpId] = useState<string | undefined>(undefined);
   const [betMultiplier, setBetMultiplier] = useState<number>(1);
-  
-  // Balance
   const [balance, setBalance] = useState<number>(STARTING_BALANCE);
   const [isBalanceAnimating, setIsBalanceAnimating] = useState(false);
-  
-  // Budget display
   const [displayBudget, setDisplayBudget] = useState<number>(CAP_MAX);
-  
-  // Win state
   const [winTier, setWinTier] = useState<WinTier | null>(null);
   const [winPayout, setWinPayout] = useState(0);
-  const [finalTotalFp, setFinalTotalFp] = useState<number | null>(null);
-  
-  // Real-time salary deduction during reveal
-  // Starts with salary of held cards, grows as each new card is revealed
   const [revealedSalary, setRevealedSalary] = useState(0);
+  const [noTransition, setNoTransition] = useState(false);
 
+  // Debug handles (optional)
   useEffect(() => {
-    console.log("[STATE]", gameState);
-  }, [gameState]);
-  useEffect(() => {
-    console.log("[FLIPPED IDS]", Array.from(statsFlippedIds));
-  }, [statsFlippedIds]);
-  
-  // ============================================================
-  // DERIVED STATE
-  // ============================================================
-  
-  const phase: GamePhase = useMemo(() => {
-    if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION" || gameState === "REVEALING") {
-      return "RESULTS";
+    (window as any).debugRoster = roster;
+    if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") {
+      (window as any).debugResolvedRoster = roster;
     }
+  }, [roster, gameState]);
+
+  // ✅ Your phase logic is fine. Keeping it verbatim.
+  const phase: GamePhase = useMemo(() => {
+    if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION" || gameState === "REVEALING") return "RESULTS";
     return "HOLD";
   }, [gameState]);
 
-  const holdRemaining = useMemo(() => {
-    return Math.max(0, CAP_MAX - sumLockedSalary(roster, lockedCardIds));
-  }, [roster, lockedCardIds]);
-
   const capUsed = useMemo(() => sumSalary(roster), [roster]);
-  // Salary of currently locked cards — used during HOLD to track deductions per hold/unhold
   const lockedSalary = useMemo(() => sumLockedSalary(roster, lockedCardIds), [roster, lockedCardIds]);
   const currentBet = BASE_BET * betMultiplier;
 
-  // ============================================================
-  // EMOTIONAL REVEAL HOOK
-  // ============================================================
-  
   const revealableCards = useMemo(() => toRevealableCards(roster), [roster]);
-  
+
   const {
     runningTotalFp,
     isCardVisible,
+    isCardFlipping,
     getVisibleFp,
+    flipMsMap,
+    fpCountUpMsMap,
+    performanceTagMap,
+    pulseMap,
     skipToEnd: skipReveal,
+    reset: resetReveal,
   } = useEmotionalReveal({
     cards: revealableCards,
     isActive: gameState === "REVEALING",
-    onCardComplete: useCallback((cardId: string) => {
-      // Only add salary for NEW (non-held) cards — held cards are already
-      // seeded into revealedSalary before REVEALING starts, so adding them
-      // again would push the budget negative.
-      const card = roster.find(c => String(c.cardId) === cardId);
-      if (card && !(card as any).wasHeld) {
-        const salary = Number((card as any).salary ?? 0);
-        setRevealedSalary(prev => prev + salary);
-      }
-    }, [roster]),
-    onAllComplete: useCallback((totalFp: number) => {
-      // Store final FP so it persists after reveal
-      setFinalTotalFp(totalFp);
-      
-      // Reveal done, calculate win
-      const tier = calculateWinTier(totalFp);
-      const payout = calculatePayout(tier, currentBet);
-      
-      setWinTier(tier);
-      setWinPayout(payout);
-      setGameState("WIN_CELEBRATION");
-    }, [currentBet]),
+    onCardComplete: useCallback(
+      (cId: string) => {
+        const card = roster.find((c) => cardId(c) === cId);
+        if (card && !(card as any).wasHeld) {
+          const salary = Number((card as any).salary ?? 0);
+          setRevealedSalary((prev) => prev + salary);
+        }
+      },
+      [roster]
+    ),
+    onAllComplete: useCallback(
+      (totalFp: number) => {
+        const tier = calculateWinTier(totalFp);
+        const payout = calculatePayout(tier, currentBet);
+        setWinTier(tier);
+        setWinPayout(payout);
+        setGameState("WIN_CELEBRATION");
+      },
+      [currentBet]
+    ),
   });
 
-  // ============================================================
-  // DISPLAY ROSTER
-  // ============================================================
-  
-  // Build display roster with reveal state info
+  // During REVEALING we render partial actualFp so cards animate their number up.
   const displayRoster = useMemo(() => {
+    if (gameState !== "REVEALING") return roster;
+
     return roster.map((c) => {
       const id = cardId(c);
-      
-      // During reveal, override actualFp with visible FP from reveal engine
-      if (gameState === "REVEALING") {
-        const visFp = getVisibleFp(id);
-        return { ...c, actualFp: visFp };
-      }
-      
-      return c;
+      const visFp = getVisibleFp(id);
+      if (visFp === undefined) return c;
+      return { ...c, actualFp: visFp };
     });
   }, [roster, gameState, getVisibleFp]);
 
-  // Total FP display
+  /**
+   * ✅ FIX: Total FP must ALWAYS be sum of the card FPs you are showing.
+   * - REVEALING: use runningTotalFp from hook
+   * - RESULTS/WIN: sum actualFp from roster (ground truth)
+   * - HOLD/others: 0
+   */
   const totalFp = useMemo(() => {
-    // After reveal complete, use stored final value
-    if ((gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && finalTotalFp !== null) {
-      return finalTotalFp;
+    if (gameState === "REVEALING") return runningTotalFp;
+
+    if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") {
+      return roster.reduce((s, c) => s + Number(c.actualFp ?? 0), 0);
     }
-    // During reveal, use running total from hook (ticks per card)
-    if (gameState === "REVEALING") {
-      return runningTotalFp;
-    }
-    // All other states (IDLE, DEALING, HOLD, DRAWING) — show zero
-    // Team FP is unknown until game logs are revealed
+
     return 0;
-  }, [gameState, roster, runningTotalFp, finalTotalFp]);
+  }, [gameState, runningTotalFp, roster]);
 
-  // ============================================================
-  // CARD STATE HELPERS (for RosterGrid)
-  // ============================================================
-  
-  // Cards showing generic back (face down / mystery state)
-  const faceDownIds = useMemo(() => {
-    const faceDown = new Set<string>();
-    
-    if (gameState === "IDLE") {
-      // All placeholder cards face down before deal
-      roster.forEach(c => {
+  // Cards start flipped (back face) for IDLE/DEALING/DRAWING; REVEALING unflips; RESULTS user flips for stats
+  const flippedIds = useMemo(() => {
+    if (gameState === "IDLE" || gameState === "DEALING" || gameState === "DRAWING") {
+      const ids = new Set<string>();
+      roster.forEach((c) => ids.add(cardId(c)));
+      return ids;
+    }
+
+    if (gameState === "REVEALING") {
+      const ids = new Set<string>();
+      roster.forEach((c) => {
         const id = cardId(c);
-        faceDown.add(id);
+        if (!isCardVisible(id) && !isCardFlipping(id)) ids.add(id);
       });
-    } else if (gameState === "DEALING") {
-      // All cards face down during initial deal
-      roster.forEach(c => {
+      return ids;
+    }
+
+    return statsFlippedIds;
+  }, [gameState, roster, statsFlippedIds, isCardVisible, isCardFlipping]);
+
+  const revealingIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (gameState === "REVEALING") {
+      roster.forEach((c) => {
         const id = cardId(c);
-        faceDown.add(id);
-      });
-    } else if (gameState === "DRAWING") {
-      // ALL cards flip to back (held AND non-held)
-      roster.forEach(c => {
-        const id = cardId(c);
-        faceDown.add(id);
-      });
-    } else if (gameState === "REVEALING") {
-      // Cards not yet visible are face down (ALL cards, including held)
-      roster.forEach(c => {
-        const id = cardId(c);
-        if (!isCardVisible(id)) {
-          faceDown.add(id);
-        }
+        if (isCardFlipping(id)) ids.add(id);
       });
     }
-    
-    return faceDown;
-  }, [gameState, roster, lockedCardIds, isCardVisible]);
+    return ids;
+  }, [gameState, roster, isCardFlipping]);
 
-  // Cards showing hold indicator (yellow H tag)
-  // During HOLD: use lockedCardIds (active selection)
-  // All other states: use wasHeld from card
   const heldCardIds = useMemo(() => {
+    if (gameState === "HOLD") return lockedCardIds;
     const held = new Set<string>();
-    
-    if (gameState === "HOLD") {
-      // Use active locks during hold phase
-      return lockedCardIds;
-    } else {
-      // Use wasHeld flag from cards (DRAWING, REVEALING, RESULTS, etc.)
-      roster.forEach(c => {
-        if (c.wasHeld) {
-          held.add(cardId(c));
-        }
-      });
-    }
-    
+    roster.forEach((c) => {
+      if (c.wasHeld) held.add(cardId(c));
+    });
     return held;
   }, [gameState, roster, lockedCardIds]);
 
-  // Cards showing stats back (user tapped to view)
-  // Only used in RESULTS / WIN_CELEBRATION
-
-  // ============================================================
-  // ACTIONS
-  // ============================================================
-  
   function toggleLock(cardKey: string) {
     if (gameState !== "HOLD") return;
-    
     setLockedCardIds((prev) => {
       const next = new Set(prev);
-      if (next.has(cardKey)) {
-        next.delete(cardKey);
-      } else {
-        next.add(cardKey);
-      }
+      if (next.has(cardKey)) next.delete(cardKey);
+      else next.add(cardKey);
       return next;
     });
   }
 
   function toggleStatsFlip(cardKey: string) {
-    console.log("[FLIP TRY]", { gameState, cardKey });
-  
-    if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") {
-      console.log("[FLIP BLOCKED] bad state", gameState);
-      return;
-    }
-  
+    if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
     setStatsFlippedIds((prev) => {
-      console.log("[FLIP SETTER] prev =", Array.from(prev));
-  
       const next = new Set(prev);
       if (next.has(cardKey)) next.delete(cardKey);
       else next.add(cardKey);
-  
-      console.log("[FLIP SETTER] next =", Array.from(next));
       return next;
     });
   }
-  
-  
 
   async function onPrimaryAction() {
-    // === DEAL ===
     if (gameState === "IDLE") {
       if (balance < currentBet) {
         alert("Insufficient balance!");
         return;
       }
 
+      resetReveal();
       setStatsFlippedIds(new Set());
       setLockedCardIds(new Set());
       setMvpId(undefined);
       setDisplayBudget(CAP_MAX);
-      setFinalTotalFp(null);
-      
-      // First load cards but show them face down
+      setRevealedSalary(0);
+
       const res: any = await dealInitialRoster();
       const nextRosterRaw: PlayerCard[] = (res?.roster ?? res?.cards ?? res?.lineup ?? []) as PlayerCard[];
       const nextRoster = nextRosterRaw.map((c: any) => ({ ...c, wasHeld: false }));
-      
+
+      setNoTransition(true);
       setRoster(nextRoster);
       setGameState("DEALING");
-      
-      // Brief pause to show face down cards
+      await sleep(50);
+      setNoTransition(false);
       await sleep(400);
-      
-      // Now flip to reveal (transition to HOLD)
+
       setDisplayBudget(CAP_MAX - sumSalary(nextRoster));
       setGameState("HOLD");
       return;
     }
 
-    // === DRAW ===
     if (gameState === "HOLD") {
       setBalance((prev) => prev - currentBet);
-      
-      // Mark current roster with wasHeld BEFORE changing state
-      // This ensures hold indicator stays visible during DRAWING
-      const markedRoster = roster.map(c => ({
-        ...c,
-        wasHeld: lockedCardIds.has(cardId(c))
-      }));
-      setRoster(markedRoster);
-      
-      setGameState("DRAWING");
-      
-      // Show cards flipping to back
-      await sleep(500);
 
-      // Load new cards
+      const markedRoster = roster.map((c) => ({
+        ...c,
+        wasHeld: lockedCardIds.has(cardId(c)),
+      }));
+
+      // flip all to back
+      setRoster(markedRoster);
+      setGameState("DRAWING");
+      await sleep(700);
+
       const res: any = await redrawRoster({ currentCards: markedRoster, lockedCardIds });
       const drawnRoster: PlayerCard[] =
         (res?.roster ?? res?.cards ?? res?.lineup ?? res?.finalCards ?? markedRoster) as PlayerCard[];
@@ -391,45 +308,55 @@ export default function GameView() {
       const finalRosterRaw: PlayerCard[] =
         (resolveRes?.roster ?? resolveRes?.cards ?? resolveRes?.finalCards ?? drawnRoster) as PlayerCard[];
 
-      // Mark held cards on final roster
-      const finalRoster = finalRosterRaw.map((c: any, i: number) => {
-        const prev = markedRoster[i];
-        return { ...c, wasHeld: prev?.wasHeld ?? false };
+      // Re-attach wasHeld by slotIndex and cardId fallback
+      const heldBySlot = new Map<number, boolean>();
+      const heldById = new Map<string, boolean>();
+      markedRoster.forEach((p: any, idx: number) => {
+        const slot = Number(p.slotIndex ?? idx);
+        heldBySlot.set(slot, !!p.wasHeld);
+        heldById.set(cardId(p), !!p.wasHeld);
       });
 
-      setRoster(finalRoster);
-      setDisplayBudget(CAP_MAX - sumSalary(finalRoster));
-      
+      const finalRoster: PlayerCard[] = finalRosterRaw.map((c: any, idx: number) => {
+        const slot = Number(c.slotIndex ?? idx);
+        const held = heldBySlot.get(slot) ?? heldById.get(cardId(c)) ?? false;
+        return { ...c, wasHeld: held };
+      });
+
       const maybeMvp: string | undefined = resolveRes?.mvpId ?? resolveRes?.mvpCardId ?? resolveRes?.topCardId;
       if (typeof maybeMvp === "string") setMvpId(maybeMvp);
 
-      // Small delay then start reveal
-      await sleep(300);
+      const heldSalary = finalRoster.reduce((sum, c: any) => (c.wasHeld ? sum + Number(c.salary ?? 0) : sum), 0);
+
+      // silent swap
+      setNoTransition(true);
+setRoster(finalRoster);
+      setDisplayBudget(CAP_MAX - sumSalary(finalRoster));
       setStatsFlippedIds(new Set());
-      
-      // Seed revealedSalary with held cards (they're already "deducted")
-      const heldSalary = finalRoster.reduce((sum, c: any) => 
-        c.wasHeld ? sum + Number(c.salary ?? 0) : sum, 0
-      );
       setRevealedSalary(heldSalary);
-      
+
+      await sleep(50);
+      setNoTransition(false);
+      await sleep(50);
+
       setGameState("REVEALING");
-      
       return;
     }
 
-    // === REPLAY ===
     if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") {
+      resetReveal();
+      setNoTransition(true);
       setRoster(createPlaceholderCards());
       setLockedCardIds(new Set());
       setStatsFlippedIds(new Set());
       setMvpId(undefined);
       setWinTier(null);
       setWinPayout(0);
-      setFinalTotalFp(null);
       setDisplayBudget(CAP_MAX);
       setRevealedSalary(0);
       setGameState("IDLE");
+      await sleep(50);
+      setNoTransition(false);
     }
   }
 
@@ -439,22 +366,13 @@ export default function GameView() {
       setBalance((prev) => prev + winPayout);
       setTimeout(() => setIsBalanceAnimating(false), 2000);
     }
-    
     setWinTier(null);
     setGameState("RESULTS");
   }
 
-  // ============================================================
-  // UI HELPERS
-  // ============================================================
-  
-  function buttonLabel() {
-    if (gameState === "IDLE") return "DEAL";
-    if (gameState === "DEALING") return "...";
-    if (gameState === "HOLD") return "DRAW";
-    if (gameState === "DRAWING") return "...";
-    if (gameState === "REVEALING") return "SKIP";
-    return "REPLAY";
+  function handleButtonClick() {
+    if (gameState === "REVEALING") skipReveal();
+    else onPrimaryAction();
   }
 
   function buttonStyle() {
@@ -471,47 +389,29 @@ export default function GameView() {
       boxShadow: "0 6px 20px rgba(0,0,0,0.35)",
       transition: "transform 80ms, box-shadow 80ms",
     };
-
     if (gameState === "HOLD") return { ...base, background: "linear-gradient(180deg, #36D46B 0%, #1FA94B 100%)" };
-    if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") return { ...base, background: "linear-gradient(180deg, #3AA0FF 0%, #1D6DD7 100%)" };
+    if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")
+      return { ...base, background: "linear-gradient(180deg, #3AA0FF 0%, #1D6DD7 100%)" };
     return { ...base, background: "linear-gradient(180deg, #FFB14A 0%, #FF7A2F 100%)" };
   }
 
-  function handleButtonClick() {
-    if (gameState === "REVEALING") {
-      skipReveal();
-    } else {
-      onPrimaryAction();
-    }
-  }
-
-  // ============================================================
-  // RENDER
-  // ============================================================
-  
   return (
     <div
       style={{
         width: "100vw",
         height: "100vh",
-        overflow: "hidden",
+        overflow: "clip",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        background:
-          "linear-gradient(180deg, #070A12 0%, #0A1020 38%, #070A12 100%)",
+        background: "linear-gradient(180deg, #070A12 0%, #0A1020 38%, #070A12 100%)",
         color: "#EAF0FF",
         fontFamily: "'Inter', system-ui, sans-serif",
         userSelect: "none",
       }}
     >
       {winTier && (
-        <WinCelebration
-          tier={winTier}
-          payout={winPayout}
-          multiplier={betMultiplier}
-          onComplete={onWinCelebrationComplete}
-        />
+        <WinCelebration tier={winTier} payout={winPayout} multiplier={betMultiplier} onComplete={onWinCelebrationComplete} />
       )}
 
       <div
@@ -526,7 +426,6 @@ export default function GameView() {
           boxSizing: "border-box",
         }}
       >
-        {/* ── TOP: App Header (nav + jackpot bar) ── */}
         <div
           style={{
             flex: "0 0 auto",
@@ -538,20 +437,10 @@ export default function GameView() {
             backdropFilter: "blur(10px)",
           }}
         >
-          <AppHeader
-            revealFillPct={Math.min(100, (totalFp / 100) * 100)}
-            betAdded={currentBet}
-            jackpotTarget={100}
-          />
+          <AppHeader revealFillPct={Math.min(100, (totalFp / 100) * 100)} betAdded={currentBet} jackpotTarget={100} />
         </div>
 
-        {/* ── MIDDLE: Card Grid ── */}
-        <div
-          style={{
-            flex: "1 1 auto",
-            minHeight: 0,
-          }}
-        >
+        <div style={{ flex: "1 1 auto", minHeight: 0 }}>
           <div
             onClick={gameState === "REVEALING" ? skipReveal : undefined}
             style={{
@@ -562,21 +451,25 @@ export default function GameView() {
               boxShadow: "0 18px 60px rgba(0,0,0,0.45)",
               backdropFilter: "blur(10px)",
               padding: 10,
-              overflow: "hidden",
               cursor: gameState === "REVEALING" ? "pointer" : "default",
             }}
           >
             <RosterGrid
+              flipMsMap={flipMsMap}
+              fpCountUpMsMap={fpCountUpMsMap}
+              performanceTagMap={performanceTagMap}
+              pulseMap={pulseMap}
               roster={displayRoster}
               phase={phase}
               lockedIds={heldCardIds}
               mvpId={mvpId}
-              flippedIds={statsFlippedIds}
-              faceDownIds={faceDownIds}
+              flippedIds={flippedIds}
+              revealingIds={revealingIds}
+              noTransition={noTransition}
               visibleFpMap={(() => {
                 const map = new Map<string, number>();
                 if (gameState === "REVEALING" || gameState === "RESULTS" || gameState === "WIN_CELEBRATION") {
-                  roster.forEach(c => {
+                  roster.forEach((c) => {
                     const id = cardId(c);
                     const fp = getVisibleFp(id);
                     if (fp !== undefined) map.set(id, fp);
@@ -591,7 +484,6 @@ export default function GameView() {
           </div>
         </div>
 
-        {/* ── BOTTOM: Game Bar (stats + bet + action) ── */}
         <div
           style={{
             flex: "0 0 auto",

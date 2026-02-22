@@ -1,34 +1,45 @@
 // ==================================================================
-// COMPLETE FIXED types.ts - WITH CORRECT TIER COLORS
+// frontend/src/adapters/types.ts
+// Single source of truth for UI + adapter types
 // ==================================================================
 
 export type Position = "FW" | "MD" | "DE" | "GK";
 
-// YOUR ACTUAL TIER COLORS (highest to lowest):
+// Tier colors (highest to lowest)
 export type TierColor = "ORANGE" | "PURPLE" | "BLUE" | "GREEN" | "WHITE";
 
-export type GamePhase = "HOLD" | "RESULTS";
+// IMPORTANT: Must match the UI state machine used in GameView + reveal flow
+export type GamePhase =
+  | "IDLE"
+  | "DEALING"
+  | "HOLD"
+  | "DRAWING"
+  | "REVEALING"
+  | "WIN_CELEBRATION"
+  | "RESULTS";
 
 export interface GameInfo {
-  date: string;
-  opponent: string;
+  date: string; // ISO string preferred
+  opponent: string; // short code or name (SUN / ARS / etc.)
   homeAway?: "H" | "A";
 }
 
 export interface Achievement {
   id: string;
   label: string;
-  // NEW: For emotional reveal badge drops
-  icon?: string;  // Emoji or icon identifier
-  fp?: number;    // Bonus FP from this achievement
+  icon?: string; // emoji/icon identifier
+  fp?: number; // optional bonus FP
 }
 
 export interface PlayerCard {
   cardId: string;
   basePlayerId: string;
+
+  // Optional presentation fields
   photoCode?: string;
-  
-  // Front of card:
+  headshotUrl?: string; // optional if you ever attach it
+
+  // Front of card
   name: string;
   team: string;
   season: string;
@@ -36,25 +47,30 @@ export interface PlayerCard {
   tier: TierColor;
   salary: number;
   projectedFp: number;
-  
-  // Results-only:
+
+  // Results-only
   actualFp: number;
   fpDelta: number;
-  
-  // Back of card (results-only flip):
+
+  // Back of card
   gameInfo: GameInfo;
   statLine: Record<string, any>;
   achievements: Achievement[];
-  
-  // NEW FIELDS:
+
+  // Slot / hold metadata
   slotIndex: number;
   wasHeld?: boolean;
+
+  // Optional: attach scoring breakdown if adapter provides it
+  fpBreakdown?: Record<string, number>;
 }
 
 export interface ResolveResult {
   cards: PlayerCard[];
   totalFp: number;
   winTierLabel: string;
+
+  // UI uses these (WinCelebration / recap)
   topContributors: Array<{ cardId: string; name: string; fp: number }>;
   mvpCardId: string;
 }

@@ -1,49 +1,41 @@
 import type { GamePhase, PlayerCard } from "../adapters/types";
-import { AthleteCardLegacy } from "./AthleteCard";
+import { AthleteCard } from "./AthleteCard";
 
 export function CardSlot(props: {
   card: PlayerCard;
   phase: GamePhase;
 
+  // Hold / lock
   isLocked: boolean;
-  isMvp: boolean;
-  isFlipped: boolean;
-  isFaceDown?: boolean;  // true when showing generic back
-
-  canFlip: boolean;
-  visibleFp?: number;  // NEW: For emotional reveal FP animation
-
   onToggleLock: () => void;
+
+  // MVP highlight
+  isMvp: boolean;
+
+  // Flip
+  isFlipped: boolean;
   onToggleFlip: () => void;
+  canFlip: boolean;
+
+  // Optional reveal helpers
+  visibleFp?: number;
+  isFaceDown?: boolean;
 }) {
-  const { card, phase, isLocked, isMvp, isFlipped, isFaceDown, canFlip, visibleFp, onToggleLock, onToggleFlip } = props;
+  const { card, phase, isLocked, onToggleLock, isMvp, isFlipped, onToggleFlip, canFlip, visibleFp, isFaceDown } = props;
 
-  const onClick = () => {
-    if (phase === "HOLD") onToggleLock();
-    else if (phase === "RESULTS" && canFlip && !isFaceDown) onToggleFlip();
-  };
-
+  // Let AthleteCard handle click-to-flip; we only pass the right props.
+  // (Wrapping div clicks often fight with button clicks inside the card.)
   return (
-    <div
-      onClick={onClick}
-      style={{
-        width: "100%",
-        height: "100%",
-        minWidth: 0,
-        minHeight: 0,
-        overflow: "hidden",
-        cursor: phase === "HOLD" || (phase === "RESULTS" && canFlip && !isFaceDown) ? "pointer" : "default",
-      }}
-    >
-      <AthleteCardLegacy
+    <div style={{ width: "100%", height: "100%", minWidth: 0, minHeight: 0, overflow: "hidden" }}>
+      <AthleteCard
         card={card}
         phase={phase}
-        isLocked={isLocked}
+        locked={isLocked}
+        onToggleLock={onToggleLock}
         isMvp={isMvp}
-        isFlipped={isFlipped}
-        canFlip={canFlip}
-        onToggleFlip={onToggleFlip}
-        isFaceDown={isFaceDown}
+        flipped={isFlipped}
+        onToggleFlip={isFaceDown ? undefined : onToggleFlip}
+        canFlip={canFlip && !isFaceDown}
         visibleFp={visibleFp}
       />
     </div>

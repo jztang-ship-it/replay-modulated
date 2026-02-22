@@ -1,22 +1,38 @@
-// frontend/src/components/RosterGrid.tsx
-
 import React, { useMemo } from "react";
 import type { GamePhase, PlayerCard } from "../adapters/types";
-import { AthleteCardLegacy } from "./AthleteCard";
+import { AthleteCard } from "./AthleteCard";
+
+function keyOf(card: any): string {
+  return String(
+    card?.cardId ??
+      card?.id ??
+      card?.playerId ??
+      card?.basePlayerId ??
+      card?.uid ??
+      card?.name ??
+      ""
+  );
+}
 
 export function RosterGrid(props: {
   roster: PlayerCard[];
   phase: GamePhase;
-
   lockedIds: Set<string>;
   mvpId?: string;
 
   flippedIds: Set<string>;
-  faceDownIds: Set<string>;
+  revealingIds?: Set<string>;
+  noTransition?: boolean;
+
   visibleFpMap?: Map<string, number>;
 
-  canFlip: boolean;
+  // emotion maps
+  flipMsMap?: Map<string, number>;
+  fpCountUpMsMap?: Map<string, number>;
+  performanceTagMap?: Map<string, any>;
+  pulseMap?: Map<string, any>;
 
+  canFlip: boolean;
   onToggleLock: (cardId: string) => void;
   onToggleFlip: (cardId: string) => void;
 }) {
@@ -26,15 +42,19 @@ export function RosterGrid(props: {
     lockedIds,
     mvpId,
     flippedIds,
-    faceDownIds,
+    revealingIds,
+    noTransition,
     visibleFpMap,
     canFlip,
     onToggleLock,
     onToggleFlip,
+    flipMsMap,
+    fpCountUpMsMap,
+    performanceTagMap,
+    pulseMap,
   } = props;
 
   const cards = useMemo(() => {
-    // Always render in slot order so things don’t jump
     return [...roster].sort((a, b) => (a.slotIndex ?? 0) - (b.slotIndex ?? 0));
   }, [roster]);
 
@@ -50,31 +70,46 @@ export function RosterGrid(props: {
       }}
     >
       {cards.map((card) => {
-        const id = String(card.cardId);
+        const id = keyOf(card);
         const isLocked = lockedIds.has(id);
         const isFlipped = flippedIds.has(id);
-        const isFaceDown = faceDownIds.has(id);
+        const isRevealing = revealingIds?.has(id) ?? false;
         const visibleFp = visibleFpMap?.get(id);
 
-        // HOLD: tap locks
-        // RESULTS: tap flips stats back
-        const handleTap = () => {
+        const flipMs = flipMsMap?.get(id);
+        const fpCountUpMs = fpCountUpMsMap?.get(id);
+        const performanceTag = performanceTagMap?.get(id);
+        const pulse = pulseMap?.get(id);
+
+        const handleTap = (e: React.MouseEvent) => {
+          e.stopPropagation();
           if (phase === "HOLD") onToggleLock(id);
           else if (canFlip) onToggleFlip(id);
         };
 
         return (
-          <div key={id} onClick={handleTap} style={{ minHeight: 0 }}>
-            <AthleteCardLegacy
+          <div
+            // IMPORTANT: slotIndex key keeps DOM stable per slot (no “jumping”)
+            key={card.slotIndex ?? id}
+            onClick={handleTap}
+            style={{ minHeight: 0, position: "relative", borderRadius: 18 }}
+          >
+            <AthleteCard
               card={card}
               phase={phase}
-              isLocked={isLocked}
+              locked={isLocked}
+              onToggleLock={() => onToggleLock(id)}
               isMvp={mvpId === id}
-              isFlipped={isFlipped}
-              canFlip={canFlip}
+              flipped={isFlipped && !isRevealing}
               onToggleFlip={() => onToggleFlip(id)}
-              isFaceDown={isFaceDown}
+              canFlip={canFlip}
               visibleFp={visibleFp}
+              noTransition={noTransition}
+              flipDurationMs={flipMs}
+              fpCountUpMs={fpCountUpMs}
+              performanceTag={performanceTag}
+              pulse={pulse}
+              isRevealing={isRevealing}
             />
           </div>
         );

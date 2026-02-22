@@ -11,6 +11,7 @@
 // Display format: "remaining / capMax" on one line, e.g. "126 / 180"
 
 import React, { useEffect, useRef, useState } from "react";
+import ReactDOM from "react-dom";
 
 // ============================================================
 // LEGEND MODAL
@@ -61,9 +62,11 @@ function LegendModal({ onClose }: { onClose: () => void }) {
         background: "rgba(0,0,0,0.80)",
         backdropFilter: "blur(6px)",
         display: "flex",
-        alignItems: "center",
+        alignItems: "flex-start",
         justifyContent: "center",
-        padding: "16px 16px 40vh 16px",
+        paddingTop: "8vh",
+        paddingLeft: 16,
+        paddingRight: 16,
         animation: "fadeInBg 200ms ease",
       }}
     >
@@ -345,7 +348,10 @@ export function GameBar({
 
   return (
     <>
-      {showLegend && <LegendModal onClose={() => setShowLegend(false)} />}
+      {showLegend && ReactDOM.createPortal(
+        <LegendModal onClose={() => setShowLegend(false)} />,
+        document.body
+      )}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
 
       {/* Row 1: Balance | Team FP | Budget */}

@@ -1,457 +1,408 @@
-// src/components/AthleteCard.tsx
-// LAYER 1: Card with three visual states + stats back + legend modal
-
-import React, { useMemo } from "react";
+import React, { useMemo, useRef, useEffect } from "react";
 import type { GamePhase, PlayerCard, Position } from "../adapters/types";
 import { AthleteCardFront } from "./AthleteCardFront";
 import { CardBackGeneric } from "./CardBackGeneric";
 
-export type CardDisplayMode = "facedown" | "faceup" | "stats";
+const FLIP_STYLE_ID = "athlete-card-flip-styles";
+if (typeof document !== "undefined" && !document.getElementById(FLIP_STYLE_ID)) {
+  const style = document.createElement("style");
+  style.id = FLIP_STYLE_ID;
+  style.textContent = `
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform var(--flip-ms, 450ms) cubic-bezier(0.4, 0.0, 0.2, 1);
+      will-change: transform;
+    }
+    .card-inner.no-transition { transition: none !important; }
+    .card-inner.is-flipped { transform: rotateY(180deg); }
+    .card-face {
+      position: absolute;
+      inset: 0;
+      border-radius: 18px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      overflow: hidden;
+    }
+    .card-face-back { transform: rotateY(180deg); }
+  `;
+  document.head.appendChild(style);
+}
 
-type AthleteCardProps = {
+type Props = {
   card: PlayerCard;
   phase: GamePhase;
-  displayMode: CardDisplayMode;
-  isFlipping?: boolean;
-  isLocked: boolean;
-  isMvp: boolean;
-  canTapForStats: boolean;
-  onTapForStats?: () => void;
-  visibleBadgeCount?: number;
+
+  locked?: boolean;
+  onToggleLock?: () => void;
+  isLocked?: boolean;
+
+  isMvp?: boolean;
+
+  flipped?: boolean;
+  onToggleFlip?: () => void;
+  isFlipped?: boolean;
+
+  isRevealing?: boolean;
+  canFlip?: boolean;
+
   visibleFp?: number;
+  visibleBadgeCount?: number;
+
+  noTransition?: boolean;
+
+  flipDurationMs?: number;
+  fpCountUpMs?: number;
+  performanceTag?: any;
+  pulse?: any;
 };
 
-// ============================================================
-// HELPERS
-// ============================================================
+type StatSpec = { key: string; variants: string[]; label: string };
 
-function toNum(v: any) {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
-}
-
-function prettyKey(k: string) {
-  return String(k)
-    .replace(/_/g, " ")
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/\bTOTAL POINTS\b/i, "Base FP")
-    .toUpperCase();
-}
-
-// Format date: "2023-04-15" → "23 - Apr 15"
-function formatDate(raw: string): string {
-  if (!raw) return "";
-  const d = new Date(raw);
-  if (isNaN(d.getTime())) return raw;
-  const yy = String(d.getFullYear()).slice(2);
-  const mon = d.toLocaleString("default", { month: "short" });
-  const day = d.getDate();
-  return `${yy} - ${mon} ${day}`;
-}
-
-function pickBreakdown(card: any): Record<string, number> | null {
-  const candidates = [
-    card?.fpBreakdown,
-    card?.pointsByStat,
-    card?.fpByStat,
-    card?.statFp,
-    card?.scoringBreakdown,
-    card?.fantasyPointsByStat,
-    card?.fantasyBreakdown,
-  ];
-
-  for (const c of candidates) {
-    if (!c) continue;
-    if (typeof c === "object" && !Array.isArray(c)) {
-      const out: Record<string, number> = {};
-      for (const [k, v] of Object.entries(c)) {
-        // Skip the FPL fast-path key — it's just the total, not useful
-        if (k === "TOTAL_POINTS") continue;
-        const n = Number(v);
-        if (Number.isFinite(n) && n !== 0) out[String(k)] = n;
-      }
-      if (Object.keys(out).length) return out;
-    }
-  }
-  return null;
-}
-
-// Position-aware stat keys — FPL naming convention from statLine
-// Layer 2 populates statLine from raw game log stats object
-// These keys cover both snake_case (FPL API) and camelCase variants
-const POSITION_STATS: Record<Position, Array<{ key: string; variants: string[]; abbrev: string }>> = {
+const POSITION_STATS: Record<Position, StatSpec[]> = {
   FW: [
-    { key: "goals_scored",     variants: ["goals", "goalsScored", "goal"],           abbrev: "G" },
-    { key: "assists",          variants: ["assist"],                                   abbrev: "A" },
-    { key: "shots",            variants: ["shots_total", "shotsTotal"],                abbrev: "SH" },
-    { key: "shots_on_target",  variants: ["shotsOnTarget", "shots_on_goal"],           abbrev: "SOT" },
-    { key: "key_passes",       variants: ["keyPasses", "chances_created"],             abbrev: "KP" },
-    { key: "dribbles_completed", variants: ["dribbles", "dribblesCompleted"],          abbrev: "DRB" },
-    { key: "minutes",          variants: ["mins", "min", "minutes_played"],            abbrev: "MIN" },
+    { key: "goals_scored", variants: ["goals", "goalsScored"], label: "Goals" },
+    { key: "assists", variants: ["assist"], label: "Assists" },
+    { key: "expected_goals", variants: ["xg", "expectedGoals"], label: "xG" },
+    { key: "expected_assists", variants: ["xa", "expectedAssists"], label: "xA" },
+    { key: "bonus", variants: ["bonus"], label: "Bonus" },
+    { key: "minutes", variants: ["mins", "min", "minutes_played"], label: "Minutes" },
   ],
   MD: [
-    { key: "goals_scored",     variants: ["goals", "goalsScored"],                     abbrev: "G" },
-    { key: "assists",          variants: ["assist"],                                    abbrev: "A" },
-    { key: "key_passes",       variants: ["keyPasses", "chances_created"],             abbrev: "KP" },
-    { key: "passes",           variants: ["passes_total", "passesTotal"],              abbrev: "PAS" },
-    { key: "pass_accuracy",    variants: ["passAccuracy", "passes_accuracy"],          abbrev: "PA%" },
-    { key: "tackles",          variants: ["tackles_total", "tacklesTotal"],            abbrev: "TKL" },
-    { key: "minutes",          variants: ["mins", "min", "minutes_played"],            abbrev: "MIN" },
+    { key: "assists", variants: ["assist"], label: "Assists" },
+    { key: "expected_assists", variants: ["xa", "expectedAssists"], label: "xA" },
+    { key: "creativity", variants: ["creativity"], label: "Creativity" },
+    { key: "influence", variants: ["influence"], label: "Influence" },
+    { key: "bonus", variants: ["bonus"], label: "Bonus" },
+    { key: "minutes", variants: ["mins", "min", "minutes_played"], label: "Minutes" },
   ],
   DE: [
-    { key: "tackles",          variants: ["tackles_total", "tacklesTotal"],            abbrev: "TKL" },
-    { key: "interceptions",    variants: ["interceptions_total"],                      abbrev: "INT" },
-    { key: "clearances",       variants: ["clearances_total", "clearancesTotal"],      abbrev: "CLR" },
-    { key: "blocks",           variants: ["blocked_shots", "blockedShots"],            abbrev: "BLK" },
-    { key: "clean_sheets",     variants: ["clean_sheet", "cleanSheet", "cleanSheets"], abbrev: "CS" },
-    { key: "goals_conceded",   variants: ["goalsConceded", "goals_allowed"],           abbrev: "GA" },
-    { key: "minutes",          variants: ["mins", "min", "minutes_played"],            abbrev: "MIN" },
+    { key: "clean_sheets", variants: ["clean_sheet", "cleanSheet"], label: "Clean sheet" },
+    { key: "goals_conceded", variants: ["goalsConceded"], label: "Conceded" },
+    { key: "expected_goals_conceded", variants: ["xgc", "expectedGoalsConceded"], label: "xGC" },
+    { key: "bps", variants: ["bps"], label: "BPS" },
+    { key: "bonus", variants: ["bonus"], label: "Bonus" },
+    { key: "minutes", variants: ["mins", "min", "minutes_played"], label: "Minutes" },
   ],
   GK: [
-    { key: "saves",            variants: ["saves_total", "savesTotal"],                abbrev: "SV" },
-    { key: "clean_sheets",     variants: ["clean_sheet", "cleanSheet", "cleanSheets"], abbrev: "CS" },
-    { key: "goals_conceded",   variants: ["goalsConceded", "goals_allowed"],           abbrev: "GA" },
-    { key: "penalties_saved",  variants: ["penaltiesSaved", "penalty_saves"],          abbrev: "PKS" },
-    { key: "punches",          variants: ["punches_total"],                            abbrev: "PUN" },
-    { key: "high_claims",      variants: ["highClaims"],                               abbrev: "HC" },
-    { key: "minutes",          variants: ["mins", "min", "minutes_played"],            abbrev: "MIN" },
+    { key: "saves", variants: ["saves_total", "savesTotal"], label: "Saves" },
+    { key: "clean_sheets", variants: ["clean_sheet", "cleanSheet"], label: "Clean sheet" },
+    { key: "goals_conceded", variants: ["goalsConceded"], label: "Conceded" },
+    { key: "penalties_saved", variants: ["penaltiesSaved", "penalty_saves"], label: "Pens saved" },
+    { key: "bonus", variants: ["bonus"], label: "Bonus" },
+    { key: "minutes", variants: ["mins", "min", "minutes_played"], label: "Minutes" },
   ],
 };
 
-function getPositionStats(
-  position: Position,
-  statLine: Record<string, any>
-): Array<{ key: string; abbrev: string; value: any }> {
-  const defs = POSITION_STATS[position] ?? POSITION_STATS["MD"];
-  const result: Array<{ key: string; abbrev: string; value: any }> = [];
+function safeNumber(v: any): number | undefined {
+  if (v === null || v === undefined || v === "") return undefined;
+  const n = typeof v === "number" ? v : Number(v);
+  return Number.isFinite(n) ? n : undefined;
+}
 
+function prettifyKey(k: string) {
+  return k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()).trim();
+}
+
+function getStatValue(sl: Record<string, any>, key: string, variants: string[]) {
+  for (const k of [key, ...variants]) {
+    const v = sl?.[k];
+    if (v !== undefined && v !== null && v !== "") return v;
+    const camel = k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+    const vc = sl?.[camel];
+    if (vc !== undefined && vc !== null && vc !== "") return vc;
+  }
+  return undefined;
+}
+
+function getPositionStats(pos: Position, sl: Record<string, any>) {
+  const defs = POSITION_STATS[pos] ?? POSITION_STATS.MD;
+  const result: Array<{ key: string; label: string; value: any }> = [];
   for (const def of defs) {
-    // Try primary key then all variants
-    const allKeys = [def.key, ...def.variants];
-    let found: any = undefined;
-    for (const k of allKeys) {
-      if (statLine[k] !== undefined && statLine[k] !== null && statLine[k] !== "") {
-        found = statLine[k];
-        break;
-      }
-      // Also try camelCase conversion
-      const camel = k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
-      if (statLine[camel] !== undefined && statLine[camel] !== null) {
-        found = statLine[camel];
-        break;
-      }
-    }
-    if (found !== undefined) {
-      result.push({ key: def.key, abbrev: def.abbrev, value: found });
-    }
+    const v = getStatValue(sl, def.key, def.variants);
+    if (v !== undefined) result.push({ key: def.key, label: def.label, value: v });
   }
-
-  // If position stats returned nothing, do a smart fallback:
-  // Show any numeric stats from statLine that look meaningful (non-zero, non-id)
-  if (result.length === 0) {
-    const SKIP_KEYS = new Set(["id", "player_id", "playerId", "element", "fixture", "team_h_score", "team_a_score", "round", "gameweek"]);
-    const fallback = Object.entries(statLine)
-      .filter(([k, v]) => {
-        if (SKIP_KEYS.has(k)) return false;
-        const n = Number(v);
-        return Number.isFinite(n) && n !== 0 && n > 0;
-      })
-      .slice(0, 6)
-      .map(([k, v]) => ({
-        key: k,
-        abbrev: k.replace(/_/g, " ").toUpperCase().slice(0, 3),
-        value: v,
-      }));
-    return fallback;
-  }
-
   return result;
 }
 
-// ============================================================
-// LEGEND MODAL
-// ============================================================
+function getFallbackStats(sl: Record<string, any>) {
+  const SKIP = new Set([
+    "selected",
+    "transfers_in",
+    "transfers_out",
+    "transfers_balance",
+    "value",
+    "id",
+    "element",
+    "fixture",
+    "round",
+    "gameweek",
+    "gw",
+    "season",
+    "season_id",
+    "team_h_score",
+    "team_a_score",
+    "team_h",
+    "team_a",
+    "was_home",
+    "kickoff_time",
+    "opponent_team",
+    "total_points",
+    "in_dreamteam",
+  ]);
+  const out: Array<{ key: string; label: string; value: any }> = [];
+  for (const [k, v] of Object.entries(sl || {})) {
+    if (SKIP.has(k)) continue;
+    const n = safeNumber(v);
+    if (n === undefined || n === 0) continue;
+    out.push({ key: k, label: prettifyKey(k), value: v });
+    if (out.length >= 9) break;
+  }
+  return out;
+}
 
-// ============================================================
-// STATS BACK
-// ============================================================
+function fmtDate(iso: string) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
+}
+
+function round1(n: number) {
+  return Math.round(n * 10) / 10;
+}
 
 function BackBStats({ card }: { card: PlayerCard }) {
-  const anyCard: any = card;
-  const sl: Record<string, any> = anyCard?.statLine ?? {};
-  const gi: Record<string, any> = anyCard?.gameInfo ?? {};
+  const gi = (card as any).gameInfo || {};
+  const sl = (card as any).statLine || {};
 
-  // ── Date: try every possible field name FPL / generic logs use ──
-  const rawDate =
-    gi?.date || gi?.kickoff_time || gi?.game_date || gi?.gameDate ||
-    sl?.date || sl?.kickoff_time || sl?.game_date || sl?.gameDate ||
-    anyCard?.date || anyCard?.gameDate || "";
-  const date = formatDate(String(rawDate).trim());
+  const posStats = useMemo(() => getPositionStats(card.position as Position, sl), [card.position, sl]);
+  const fallbackStats = useMemo(() => getFallbackStats(sl), [sl]);
+  const tiles = posStats.length > 0 ? posStats : fallbackStats;
 
-  // ── Opponent: try every possible field ──
-  const rawOpp =
-    gi?.opponent || gi?.opponent_team || gi?.opponentTeam || gi?.vs ||
-    sl?.opponent || sl?.opponent_team || sl?.opponentTeam || sl?.matchup ||
-    anyCard?.opponent || anyCard?.vs || "";
+  const actual = safeNumber((card as any).actualFp) ?? 0;
+  const proj = safeNumber((card as any).projectedFp) ?? 0;
+
+  const rawDate = gi.date || gi.kickoff_time || sl.kickoff_time || sl.date || "";
+  const dateStr = fmtDate(String(rawDate));
+  const rawOpp = gi.opponent || gi.opponent_team || sl.opponent || sl.opponent_team || "";
   const opponent = String(rawOpp).trim();
+  const ha = gi.homeAway || (sl.was_home === true ? "H" : sl.was_home === false ? "A" : "");
+  const oppStr = opponent ? `${ha === "H" ? "vs" : ha === "A" ? "@" : "vs"} ${opponent.toUpperCase()}${ha ? ` (${ha})` : ""}` : "";
 
-  // ── Home/Away ──
-  const rawHA =
-    gi?.homeAway ?? gi?.was_home ?? gi?.home ??
-    sl?.was_home ?? sl?.homeAway ?? anyCard?.homeAway;
-  // was_home is a boolean in FPL
-  const isHome = rawHA === true || rawHA === "H" || rawHA === "home" || rawHA === 1;
-  const isAway = rawHA === false || rawHA === "A" || rawHA === "away" || rawHA === 0;
-  const haSuffix = (rawHA !== undefined && rawHA !== null && rawHA !== "")
-    ? (isHome ? " (H)" : isAway ? " (A)" : "")
-    : "";
-  const matchup = opponent ? `${isHome ? "vs" : "@"} ${opponent.toUpperCase()}${haSuffix}` : "";
-
-  // ── FP values ──
-  const fp = toNum(anyCard?.actualFp);
-  const proj = toNum(anyCard?.projectedFp);
-  const fpStr = fp.toFixed(1);
-  const projStr = proj.toFixed(1);
-
-  // ── Stats: show position-aware stats, fall back to ALL numeric fields ──
-  const posStats = useMemo(() =>
-    getPositionStats(card.position, sl),
-    [card.position, sl] // eslint-disable-line react-hooks/exhaustive-deps
-  );
-
-  // If position stats found nothing, show every non-trivial numeric stat in statLine
-  const allStats = useMemo(() => {
-    if (posStats.length > 0) return posStats;
-    // Skip noise fields
-    const SKIP = new Set([
-      "id","element","fixture","round","gameweek","gw","season","season_id",
-      "team_h_score","team_a_score","team_h","team_a","was_home","kickoff_time",
-      "opponent_team","total_points","bps","ict_index","influence","creativity",
-      "threat","starts","value","selected","transfers_in","transfers_out",
-      "transfers_balance","in_dreamteam",
-    ]);
-    return Object.entries(sl)
-      .filter(([k, v]) => {
-        if (SKIP.has(k)) return false;
-        const n = Number(v);
-        return Number.isFinite(n) && n > 0;
-      })
-      .map(([k, v]) => ({
-        key: k,
-        abbrev: k.replace(/_/g,"").toUpperCase().slice(0, 4),
-        value: v,
-      }))
-      .slice(0, 9);
-  }, [posStats, sl]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const achievements: any[] = anyCard?.achievements ?? [];
-
-  // ── Debug: log what we're working with (remove after confirming data works) ──
-  // console.log("[CARD BACK]", { date, opponent, fp, proj, slKeys: Object.keys(sl), gi });
+  const badges = Array.isArray((card as any).achievements) ? (card as any).achievements.map((a: any) => a?.icon).filter(Boolean) : [];
+  const hasStats = Object.keys(sl).length > 0;
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        borderRadius: 18,
-        overflow: "hidden",
-        background: "linear-gradient(160deg, #0C1422 0%, #070B14 100%)",
-        border: "1px solid rgba(255,255,255,0.10)",
-        color: "rgba(255,255,255,0.92)",
-        padding: "10px 11px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 6,
-        backfaceVisibility: "hidden",
-      }}
-    >
-      {/* ── Row 1: Date + Matchup ── */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 4 }}>
-        <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 0.3, color: "rgba(255,255,255,0.4)", whiteSpace: "nowrap", flexShrink: 0 }}>
-          {date || "—"}
-        </span>
-        <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.5, color: "rgba(255,255,255,0.8)", textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {matchup || "—"}
-        </span>
+    <div style={S.backWrap}>
+      <div style={S.backTopRow}>
+        <div style={S.backDate}>{dateStr || "—"}</div>
+        <div style={S.backOpp}>{oppStr || "—"}</div>
       </div>
 
-      {/* ── Row 2: FP + proj on same line ── */}
-      <div style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
-        <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1, textTransform: "uppercase", color: "rgba(255,255,255,0.4)", flexShrink: 0 }}>FP</span>
-        <span style={{ fontSize: 24, fontWeight: 950, letterSpacing: -0.5, lineHeight: 1, color: "#EAF0FF" }}>{fpStr}</span>
-        <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.3)", lineHeight: 1 }}>proj {projStr}</span>
-        {achievements.length > 0 && (
-          <div style={{ display: "flex", gap: 2, marginLeft: "auto" }}>
-            {achievements.map((a: any, i: number) => (
-              <span key={i} title={a.label} style={{ fontSize: 13, lineHeight: 1 }}>{a.icon ?? "⭐"}</span>
+      <div style={S.backMidRow}>
+        <div style={S.fpLine}>
+          <span style={S.fpLabel}>FP</span>
+          <span style={S.fpValue}>{round1(actual)}</span>
+          <span style={S.fpSpacer} />
+          <span style={S.fpSubLabel}>Proj</span>
+          <span style={S.fpSubValue}>{round1(proj)}</span>
+        </div>
+
+        {badges.length > 0 && (
+          <div style={S.badgesInline}>
+            {badges.slice(0, 5).map((ic: string, i: number) => (
+              <span key={i} style={S.badgeIcon}>
+                {ic}
+              </span>
             ))}
           </div>
         )}
       </div>
 
-      {/* ── Divider ── */}
-      <div style={{ height: 1, background: "rgba(255,255,255,0.07)", flexShrink: 0 }} />
+      <div style={S.divider} />
 
-      {/* ── DEBUG PANEL: remove once data confirmed ── */}
-      {allStats.length === 0 && (
-        <div style={{ fontSize: 7, color: "rgba(255,200,0,0.7)", background: "rgba(255,200,0,0.07)", borderRadius: 6, padding: "4px 6px", lineHeight: 1.6, overflowY: "auto", maxHeight: 80 }}>
-          <div>gi: {JSON.stringify(gi).slice(0, 80)}</div>
-          <div>sl keys: {Object.keys(sl).join(", ").slice(0, 120) || "EMPTY"}</div>
-          <div>fp:{toNum(anyCard?.actualFp).toFixed(1)} proj:{toNum(anyCard?.projectedFp).toFixed(1)}</div>
+      {!hasStats ? (
+        <div style={S.noStatsWrap}>
+          <div style={S.noStatsText}>No stats loaded</div>
         </div>
-      )}
-
-      {/* ── Stats grid ── */}
-      {allStats.length > 0 ? (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "4px 3px", flex: 1 }}>
-          {allStats.map(s => (
-            <div
-              key={s.key}
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                borderRadius: 6,
-                padding: "4px 3px",
-                textAlign: "center",
-              }}
-            >
-              <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: 0.5, color: "rgba(255,255,255,0.38)", textTransform: "uppercase", marginBottom: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {s.abbrev}
-              </div>
-              <div style={{ fontSize: 14, fontWeight: 950, lineHeight: 1, color: "#EAF0FF" }}>
-                {s.value}
-              </div>
+      ) : tiles.length > 0 ? (
+        <div style={S.tilesGrid}>
+          {tiles.slice(0, 9).map((s) => (
+            <div key={s.key} style={S.tile}>
+              <div style={S.tileLabel}>{s.label}</div>
+              <div style={S.tileValue}>{String(s.value)}</div>
             </div>
           ))}
         </div>
       ) : (
-        /* Empty state with helpful debug info */
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4 }}>
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)" }}>No stats loaded</span>
-          <span style={{ fontSize: 8, color: "rgba(255,255,255,0.15)" }}>
-            {Object.keys(sl).length > 0 ? `${Object.keys(sl).length} fields in statLine` : "statLine is empty"}
-          </span>
+        <div style={S.noStatsWrap}>
+          <div style={S.noStatsText}>Stats available</div>
         </div>
       )}
 
-      {/* ── Tap hint ── */}
-      <div style={{ textAlign: "center", fontSize: 8, fontWeight: 700, letterSpacing: 0.6, color: "rgba(255,255,255,0.18)", flexShrink: 0 }}>
-        TAP TO FLIP BACK
+      <div style={S.tapHint}>TAP TO FLIP BACK</div>
+    </div>
+  );
+}
+
+export function AthleteCard(props: Props) {
+  const locked = props.locked ?? props.isLocked ?? false;
+  const flipped = props.flipped ?? props.isFlipped ?? false;
+  const canFlip = props.canFlip ?? false;
+
+  const {
+    card,
+    phase,
+    isMvp = false,
+    onToggleFlip,
+    isRevealing,
+    visibleFp,
+    visibleBadgeCount,
+    noTransition,
+    flipDurationMs,
+    fpCountUpMs,
+    performanceTag,
+    pulse,
+  } = props;
+
+  // ✅ ECONOMY FREEZE (fix border/tier/salary “changing”)
+  // Freeze tier/salary/projectedFp by cardId for UI stability.
+  const economyRef = useRef<Map<string, { tier: any; salary: any; projectedFp: any }>>(new Map());
+
+  const id = String((card as any).cardId ?? "");
+  useEffect(() => {
+    if (!id) return;
+    const m = economyRef.current;
+    if (!m.has(id)) {
+      m.set(id, { tier: (card as any).tier, salary: (card as any).salary, projectedFp: (card as any).projectedFp });
+    }
+  }, [id, card]);
+
+  const stableCard = useMemo(() => {
+    if (!id) return card;
+    const snap = economyRef.current.get(id);
+    if (!snap) return card;
+    return {
+      ...(card as any),
+      tier: snap.tier,
+      salary: snap.salary,
+      projectedFp: snap.projectedFp,
+    } as PlayerCard;
+  }, [card, id]);
+
+  const innerClass = ["card-inner", flipped ? "is-flipped" : "", noTransition ? "no-transition" : ""].filter(Boolean).join(" ");
+  const innerStyle = { ["--flip-ms" as any]: `${Math.max(0, flipDurationMs ?? 450)}ms` } as React.CSSProperties;
+
+  return (
+    <div style={{ width: "100%", height: "100%", perspective: "1000px" }}>
+      <div className={innerClass} style={innerStyle}>
+        <div className="card-face">
+          <AthleteCardFront
+            card={stableCard}
+            phase={phase}
+            isLocked={locked}
+            isMvp={isMvp}
+            isFlipped={flipped}
+            canFlip={canFlip}
+            onToggleFlip={onToggleFlip ?? (() => {})}
+            visibleFp={visibleFp}
+            visibleBadgeCount={visibleBadgeCount}
+            isRevealing={isRevealing}
+            performanceTag={performanceTag}
+            pulse={pulse}
+            fpCountUpMs={fpCountUpMs}
+          />
+        </div>
+
+        <div className="card-face card-face-back">{canFlip ? <BackBStats card={stableCard} /> : <CardBackGeneric />}</div>
       </div>
     </div>
   );
 }
 
-// ============================================================
-// MAIN COMPONENT
-// ============================================================
-
-export function AthleteCard({
-  card,
-  phase,
-  displayMode,
-  isFlipping,
-  isLocked,
-  isMvp,
-  canTapForStats,
-  onTapForStats,
-  visibleBadgeCount,
-  visibleFp,
-}: AthleteCardProps) {
-  const rotation = displayMode === "faceup" ? 0 : 180;
-
-  const handleClick = (e: React.MouseEvent) => {
-    if (canTapForStats && displayMode !== "facedown") {
-      e.stopPropagation();
-      onTapForStats?.();
-    }
-  };
-
-  return (
-    <div
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        perspective: "1000px",
-        cursor: canTapForStats && displayMode !== "facedown" ? "pointer" : "default",
-      }}
-      onClick={handleClick}
-    >
-        <div
-          style={{
-            position: "relative",
-            width: "100%",
-            height: "100%",
-            transformStyle: "preserve-3d",
-            transition: isFlipping
-              ? "transform 600ms cubic-bezier(.2,.85,.4,1)"
-              : "transform 400ms cubic-bezier(.2,.9,.2,1)",
-            transform: `rotateY(${rotation}deg)`,
-          }}
-        >
-          {/* Front */}
-          <div style={{ position: "absolute", inset: 0, backfaceVisibility: "hidden" }}>
-            <AthleteCardFront
-              card={card}
-              phase={phase}
-              isLocked={isLocked}
-              isMvp={isMvp}
-              isFlipped={displayMode === "stats"}
-              canFlip={canTapForStats}
-              onToggleFlip={onTapForStats || (() => {})}
-              visibleFp={visibleFp}
-              visibleBadgeCount={visibleBadgeCount}
-            />
-          </div>
-
-          {/* Back */}
-          <div style={{ position: "absolute", inset: 0, transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}>
-            {displayMode === "facedown"
-              ? <CardBackGeneric isFlipping={isFlipping} />
-              : <BackBStats card={card} />
-            }
-          </div>
-        </div>
-      </div>
-  );
+export function AthleteCardLegacy(props: Props) {
+  return <AthleteCard {...props} />;
 }
 
-// ============================================================
-// BACKWARD COMPATIBILITY WRAPPER
-// ============================================================
+const S: Record<string, React.CSSProperties> = {
+  backWrap: {
+    height: "100%",
+    padding: "10px 10px 8px",
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+    background: "linear-gradient(180deg,rgba(11,15,20,0.97),rgba(11,15,20,1.0))",
+    borderRadius: 18,
+    overflow: "hidden",
+    boxSizing: "border-box" as const,
+  },
+  backTopRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 },
+  backDate: { fontSize: 12, fontWeight: 900, color: "rgba(255,255,255,0.90)" },
+  backOpp: { fontSize: 12, fontWeight: 800, color: "rgba(255,255,255,0.65)", textAlign: "right" },
 
-export type LegacyAthleteCardProps = {
-  card: PlayerCard;
-  phase: GamePhase;
-  isLocked: boolean;
-  isMvp: boolean;
-  isFlipped: boolean;
-  canFlip: boolean;
-  onToggleFlip: () => void;
-  isFaceDown?: boolean;
-  visibleFp?: number;
+  backMidRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 },
+  fpLine: { display: "flex", alignItems: "baseline", gap: 8 },
+  fpLabel: { fontSize: 11, fontWeight: 900, color: "rgba(255,255,255,0.65)" },
+  fpValue: { fontSize: 22, fontWeight: 900, color: "rgba(255,255,255,0.95)" },
+  fpSpacer: { width: 10 },
+  fpSubLabel: { fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.45)" },
+  fpSubValue: { fontSize: 14, fontWeight: 900, color: "rgba(255,255,255,0.75)" },
+
+  badgesInline: { display: "flex", alignItems: "center", gap: 6 },
+  badgeIcon: { fontSize: 16, opacity: 0.95 },
+
+  divider: { height: 1, background: "rgba(255,255,255,0.08)" },
+
+  tilesGrid: {
+    flex: 1,
+    display: "grid",
+    gridTemplateColumns: "repeat(3,minmax(0,1fr))",
+    gap: 6,
+    alignContent: "start",
+    overflow: "hidden",
+    minWidth: 0,
+  },
+  tile: {
+    borderRadius: 10,
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    padding: "6px 8px",
+    display: "flex",
+    flexDirection: "column",
+    gap: 3,
+    minHeight: 40,
+    minWidth: 0,
+    overflow: "hidden",
+  },
+  tileLabel: {
+    fontSize: 9,
+    fontWeight: 900,
+    color: "rgba(255,255,255,0.55)",
+    lineHeight: "11px",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  tileValue: {
+    fontSize: 14,
+    fontWeight: 900,
+    color: "rgba(255,255,255,0.92)",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+
+  tapHint: {
+    fontSize: 10,
+    fontWeight: 900,
+    color: "rgba(255,255,255,0.30)",
+    letterSpacing: 0.4,
+    textAlign: "center",
+  },
+
+  noStatsWrap: { flex: 1, display: "flex", flexDirection: "column", gap: 10 },
+  noStatsText: { fontSize: 12, fontWeight: 900, color: "rgba(255,255,255,0.70)" },
 };
-
-export function AthleteCardLegacy({
-  card, phase, isLocked, isMvp, isFlipped, canFlip, onToggleFlip, isFaceDown, visibleFp,
-}: LegacyAthleteCardProps) {
-  let displayMode: CardDisplayMode = "faceup";
-  if (isFaceDown) displayMode = "facedown";
-  else if (isFlipped) displayMode = "stats";
-
-  return (
-    <AthleteCard
-      card={card}
-      phase={phase}
-      displayMode={displayMode}
-      isFlipping={isFaceDown}
-      isLocked={isLocked}
-      isMvp={isMvp}
-      canTapForStats={canFlip && !isFaceDown}
-      onTapForStats={onToggleFlip}
-      visibleFp={visibleFp}
-    />
-  );
-}
