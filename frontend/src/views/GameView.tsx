@@ -1,4 +1,11 @@
-import { useMemo, useState, useCallback, useEffect } from "react";
+/**
+ * GameView.tsx
+ * Orchestration only. No flip logic lives here.
+ * Flip state is owned by useCardFlipState.
+ * Reveal sequence is owned by useEmotionalReveal.
+ */
+
+import { useMemo, useState, useCallback, useRef } from "react";
 import type { GamePhase, PlayerCard } from "../adapters/types";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { dealInitialRoster, redrawRoster, resolveRoster } from "../adapters/gameAdapter";
@@ -6,7 +13,8 @@ import { RosterGrid } from "../components/RosterGrid";
 import { AppHeader } from "../components/AppHeader";
 import { GameBar } from "../components/GameBar";
 import { WinCelebration } from "../components/WinCelebration";
-import { useEmotionalReveal, type RevealableCard } from "../ui/hooks/useEmotionalReveal";
+import { useCardFlipState } from "../hooks/useCardFlipState";
+import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
 import { calculateWinTier, calculatePayout, type WinTier } from "../utils/payoutLogic";
 
 const CAP_MAX = sportAdapter.salaryCap;
@@ -14,7 +22,28 @@ const ROSTER_SIZE = sportAdapter.rosterSize;
 const STARTING_BALANCE = 1000;
 const BASE_BET = 10;
 
-function createPlaceholderCards(): PlayerCard[] {
+type GameState =
+  | "IDLE"
+  | "DEALING"
+  | "HOLD"
+  | "DRAWING"
+  | "REVEALING"
+  | "RESULTS"
+  | "WIN_CELEBRATION";
+
+function sleep(ms: number) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+function cardId(card: any): string {
+  return String(card?.cardId ?? card?.basePlayerId ?? "");
+}
+
+function sumSalary(roster: PlayerCard[]) {
+  return roster.reduce((s, c: any) => s + Number(c?.salary ?? 0), 0);
+}
+
+function createPlaceholders(): PlayerCard[] {
   return Array.from({ length: ROSTER_SIZE }, (_, i) => ({
     cardId: `placeholder-${i}`,
     basePlayerId: "",
@@ -35,108 +64,46 @@ function createPlaceholderCards(): PlayerCard[] {
   }));
 }
 
-type GameState =
-  | "IDLE"
-  | "DEALING"
-  | "HOLD"
-  | "DRAWING"
-  | "REVEALING"
-  | "RESULTS"
-  | "WIN_CELEBRATION";
-
-/**
- * IMPORTANT: Locks + UI identity should be driven by cardId.
- * We keep fallbacks for robustness while you iterate adapters, but cardId is the canonical key.
- */
-function cardId(card: any): string {
-  const v =
-    card?.cardId ??
-    card?.id ??
-    card?.playerId ??
-    card?.basePlayerId ??
-    card?.uid ??
-    card?.name;
-  return String(v ?? "");
-}
-
-function salaryNum(v: any): number {
-  if (typeof v === "number" && Number.isFinite(v)) return v;
-  const s = String(v ?? "").trim();
-  const cleaned = s.replace(/[^\d.-]/g, "");
-  const n = Number(cleaned);
-  return Number.isFinite(n) ? n : 0;
-}
-
-function sumSalary(roster: PlayerCard[]) {
-  return roster.reduce((acc, c: any) => acc + salaryNum(c?.salary), 0);
-}
-
-function sumLockedSalary(roster: PlayerCard[], lockedIds: Set<string>) {
-  return roster.reduce((acc, c: any) => (lockedIds.has(cardId(c)) ? acc + salaryNum(c?.salary) : acc), 0);
-}
-
-function sleep(ms: number) {
-  return new Promise((r) => setTimeout(r, ms));
-}
-
 function toRevealableCards(cards: PlayerCard[]): RevealableCard[] {
-  return cards
-    .map((c) => ({
-      cardId: cardId(c),
-      actualFp: Number(c.actualFp ?? 0),
-      projectedFp: Number(c.projectedFp ?? 0),
-      tier: (c as any).tier ?? "WHITE",
-      badges: (c.achievements || []).map((a) => ({
-        id: a.id,
-        icon: a.icon || "⭐",
-        label: a.label,
-        fp: a.fp || 0,
-      })),
-      slotIndex: c.slotIndex ?? 0,
-    }))
-    .sort((a, b) => a.slotIndex - b.slotIndex);
+  return cards.map(c => ({
+    cardId: cardId(c),
+    slotIndex: c.slotIndex ?? 0,
+    actualFp: Number(c.actualFp ?? 0),
+    projectedFp: Number(c.projectedFp ?? 0),
+    salary: Number((c as any).salary ?? 0),
+    tier: (c as any).tier ?? "WHITE",
+    badges: (c.achievements ?? []).map((a: any) => ({
+      id: a.id, icon: a.icon || "⭐", label: a.label, fp: a.fp || 0,
+    })),
+  }));
 }
 
 export default function GameView() {
-  const [gameState, setGameState] = useState<GameState>("IDLE");
-  const [roster, setRoster] = useState<PlayerCard[]>(createPlaceholderCards());
 
+  // Zone 1: State
+  const [gameState, setGameState] = useState<GameState>("IDLE");
+  const [roster, setRoster] = useState<PlayerCard[]>(createPlaceholders());
   const [lockedCardIds, setLockedCardIds] = useState<Set<string>>(new Set());
   const [statsFlippedIds, setStatsFlippedIds] = useState<Set<string>>(new Set());
-  const [mvpId, setMvpId] = useState<string | undefined>(undefined);
-  const [betMultiplier, setBetMultiplier] = useState<number>(1);
-  const [balance, setBalance] = useState<number>(STARTING_BALANCE);
+  const [mvpId, setMvpId] = useState<string | undefined>();
+  const [betMultiplier, setBetMultiplier] = useState(1);
+  const [balance, setBalance] = useState(STARTING_BALANCE);
   const [isBalanceAnimating, setIsBalanceAnimating] = useState(false);
-  const [displayBudget, setDisplayBudget] = useState<number>(CAP_MAX);
   const [winTier, setWinTier] = useState<WinTier | null>(null);
   const [winPayout, setWinPayout] = useState(0);
-  const [revealedSalary, setRevealedSalary] = useState(0);
   const [noTransition, setNoTransition] = useState(false);
+  // Tracks salary revealed so far during REVEALING phase (rolls down per card flip)
+  const [revealedSalary, setRevealedSalary] = useState(0);
+  // Ref to roster during reveal so onCardComplete closure always sees current cards
+  const rosterRef = useRef<PlayerCard[]>([]);
 
-  // Debug handles (optional)
-  useEffect(() => {
-    (window as any).debugRoster = roster;
-    if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") {
-      (window as any).debugResolvedRoster = roster;
-    }
-  }, [roster, gameState]);
-
-  // ✅ Your phase logic is fine. Keeping it verbatim.
-  const phase: GamePhase = useMemo(() => {
-    if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION" || gameState === "REVEALING") return "RESULTS";
-    return "HOLD";
-  }, [gameState]);
-
-  const capUsed = useMemo(() => sumSalary(roster), [roster]);
-  const lockedSalary = useMemo(() => sumLockedSalary(roster, lockedCardIds), [roster, lockedCardIds]);
-  const currentBet = BASE_BET * betMultiplier;
-
+  // Zone 1: Hooks
+  const flipState = useCardFlipState();
   const revealableCards = useMemo(() => toRevealableCards(roster), [roster]);
+  const currentBet = BASE_BET * betMultiplier;
 
   const {
     runningTotalFp,
-    isCardVisible,
-    isCardFlipping,
     getVisibleFp,
     flipMsMap,
     fpCountUpMsMap,
@@ -147,213 +114,193 @@ export default function GameView() {
   } = useEmotionalReveal({
     cards: revealableCards,
     isActive: gameState === "REVEALING",
-    onCardComplete: useCallback(
-      (cId: string) => {
-        const card = roster.find((c) => cardId(c) === cId);
-        if (card && !(card as any).wasHeld) {
-          const salary = Number((card as any).salary ?? 0);
-          setRevealedSalary((prev) => prev + salary);
-        }
-      },
-      [roster]
-    ),
-    onAllComplete: useCallback(
-      (totalFp: number) => {
-        const tier = calculateWinTier(totalFp);
-        const payout = calculatePayout(tier, currentBet);
-        setWinTier(tier);
-        setWinPayout(payout);
-        setGameState("WIN_CELEBRATION");
-      },
-      [currentBet]
-    ),
+    flipState,
+    onCardComplete: useCallback((cId: string) => {
+      // Add salary only for NON-held cards — held cards are pre-seeded into
+      // revealedSalary before the reveal starts, so counting them again would
+      // temporarily show the budget going over cap.
+      const card = rosterRef.current.find(c => cardId(c) === cId);
+      if (card && !card.wasHeld) {
+        setRevealedSalary(prev => prev + Number((card as any).salary ?? 0));
+      }
+    }, []),
+    onAllComplete: useCallback((totalFp: number) => {
+      const tier = calculateWinTier(totalFp);
+      const payout = calculatePayout(tier, currentBet);
+      setWinTier(tier);
+      setWinPayout(payout);
+      setGameState("WIN_CELEBRATION");
+    }, [currentBet]),
   });
 
-  // During REVEALING we render partial actualFp so cards animate their number up.
-  const displayRoster = useMemo(() => {
-    if (gameState !== "REVEALING") return roster;
+  // Zone 2: Derived values
+  const phase: GamePhase = useMemo(() => {
+    if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION" || gameState === "REVEALING") return "RESULTS";
+    return "HOLD";
+  }, [gameState]);
 
-    return roster.map((c) => {
-      const id = cardId(c);
-      const visFp = getVisibleFp(id);
-      if (visFp === undefined) return c;
-      return { ...c, actualFp: visFp };
-    });
-  }, [roster, gameState, getVisibleFp]);
+  const capUsed = useMemo(() => sumSalary(roster), [roster]);
 
-  /**
-   * ✅ FIX: Total FP must ALWAYS be sum of the card FPs you are showing.
-   * - REVEALING: use runningTotalFp from hook
-   * - RESULTS/WIN: sum actualFp from roster (ground truth)
-   * - HOLD/others: 0
-   */
+  const lockedSalary = useMemo(() =>
+    roster.reduce((s, c: any) => lockedCardIds.has(cardId(c)) ? s + Number(c?.salary ?? 0) : s, 0),
+    [roster, lockedCardIds]
+  );
+
   const totalFp = useMemo(() => {
     if (gameState === "REVEALING") return runningTotalFp;
-
     if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") {
       return roster.reduce((s, c) => s + Number(c.actualFp ?? 0), 0);
     }
-
     return 0;
   }, [gameState, runningTotalFp, roster]);
 
-  // Cards start flipped (back face) for IDLE/DEALING/DRAWING; REVEALING unflips; RESULTS user flips for stats
   const flippedIds = useMemo(() => {
-    if (gameState === "IDLE" || gameState === "DEALING" || gameState === "DRAWING") {
-      const ids = new Set<string>();
-      roster.forEach((c) => ids.add(cardId(c)));
-      return ids;
+    if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") return statsFlippedIds;
+    const ids = new Set<string>();
+    for (const c of roster) {
+      if (flipState.isBack(cardId(c))) ids.add(cardId(c));
     }
-
-    if (gameState === "REVEALING") {
-      const ids = new Set<string>();
-      roster.forEach((c) => {
-        const id = cardId(c);
-        if (!isCardVisible(id) && !isCardFlipping(id)) ids.add(id);
-      });
-      return ids;
-    }
-
-    return statsFlippedIds;
-  }, [gameState, roster, statsFlippedIds, isCardVisible, isCardFlipping]);
+    return ids;
+  }, [gameState, roster, flipState, statsFlippedIds]);
 
   const revealingIds = useMemo(() => {
     const ids = new Set<string>();
     if (gameState === "REVEALING") {
-      roster.forEach((c) => {
-        const id = cardId(c);
-        if (isCardFlipping(id)) ids.add(id);
-      });
+      for (const c of roster) {
+        if (flipState.isFlipping(cardId(c))) ids.add(cardId(c));
+      }
     }
     return ids;
-  }, [gameState, roster, isCardFlipping]);
+  }, [gameState, roster, flipState]);
+
+  const displayRoster = useMemo(() => {
+    if (gameState !== "REVEALING") return roster;
+    return roster.map(c => {
+      const visFp = getVisibleFp(cardId(c));
+      return visFp !== undefined ? { ...c, actualFp: visFp } : c;
+    });
+  }, [roster, gameState, getVisibleFp]);
+
+  const visibleFpMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const c of roster) {
+      const fp = getVisibleFp(cardId(c));
+      if (fp !== undefined) map.set(cardId(c), fp);
+    }
+    return map;
+  }, [roster, getVisibleFp]);
 
   const heldCardIds = useMemo(() => {
     if (gameState === "HOLD") return lockedCardIds;
     const held = new Set<string>();
-    roster.forEach((c) => {
-      if (c.wasHeld) held.add(cardId(c));
-    });
+    roster.forEach(c => { if (c.wasHeld) held.add(cardId(c)); });
     return held;
   }, [gameState, roster, lockedCardIds]);
 
+  // Zone 2: Handlers
   function toggleLock(cardKey: string) {
     if (gameState !== "HOLD") return;
-    setLockedCardIds((prev) => {
+    setLockedCardIds(prev => {
       const next = new Set(prev);
-      if (next.has(cardKey)) next.delete(cardKey);
-      else next.add(cardKey);
+      next.has(cardKey) ? next.delete(cardKey) : next.add(cardKey);
       return next;
     });
   }
 
   function toggleStatsFlip(cardKey: string) {
     if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
-    setStatsFlippedIds((prev) => {
+    setStatsFlippedIds(prev => {
       const next = new Set(prev);
-      if (next.has(cardKey)) next.delete(cardKey);
-      else next.add(cardKey);
+      next.has(cardKey) ? next.delete(cardKey) : next.add(cardKey);
       return next;
     });
   }
 
   async function onPrimaryAction() {
+    console.log("onPrimaryAction called, gameState:", gameState);
     if (gameState === "IDLE") {
-      if (balance < currentBet) {
-        alert("Insufficient balance!");
-        return;
-      }
-
+      if (balance < currentBet) { alert("Insufficient balance!"); return; }
       resetReveal();
-      setStatsFlippedIds(new Set());
       setLockedCardIds(new Set());
+      setStatsFlippedIds(new Set());
       setMvpId(undefined);
-      setDisplayBudget(CAP_MAX);
       setRevealedSalary(0);
-
       const res: any = await dealInitialRoster();
-      const nextRosterRaw: PlayerCard[] = (res?.roster ?? res?.cards ?? res?.lineup ?? []) as PlayerCard[];
-      const nextRoster = nextRosterRaw.map((c: any) => ({ ...c, wasHeld: false }));
-
+      console.log("dealInitialRoster result:", res);
+      const nextRoster = (res?.roster ?? res?.cards ?? []) as PlayerCard[];
+      console.log("nextRoster length:", nextRoster.length, nextRoster);
+      rosterRef.current = nextRoster;
       setNoTransition(true);
+      flipState.initCards(nextRoster.map(cardId));
       setRoster(nextRoster);
       setGameState("DEALING");
       await sleep(50);
       setNoTransition(false);
+      
+      // Flip all dealt cards to front
+      for (const c of nextRoster) {
+        flipState.revealCard(cardId(c));
+      }
+      await sleep(50);
+      for (const c of nextRoster) {
+        flipState.completeReveal(cardId(c));
+      }
+      
       await sleep(400);
-
-      setDisplayBudget(CAP_MAX - sumSalary(nextRoster));
       setGameState("HOLD");
       return;
     }
 
     if (gameState === "HOLD") {
-      setBalance((prev) => prev - currentBet);
-
-      const markedRoster = roster.map((c) => ({
-        ...c,
-        wasHeld: lockedCardIds.has(cardId(c)),
-      }));
-
-      // flip all to back
+      setBalance(prev => prev - currentBet);
+      const markedRoster = roster.map(c => ({ ...c, wasHeld: lockedCardIds.has(cardId(c)) }));
+      // ALL cards flip to back — held cards too, for suspense
+      const allIds = markedRoster.map(cardId);
+      flipState.beginDraw(allIds);
       setRoster(markedRoster);
       setGameState("DRAWING");
       await sleep(700);
-
-      const res: any = await redrawRoster({ currentCards: markedRoster, lockedCardIds });
-      const drawnRoster: PlayerCard[] =
-        (res?.roster ?? res?.cards ?? res?.lineup ?? res?.finalCards ?? markedRoster) as PlayerCard[];
-
+      const drawRes: any = await redrawRoster({ currentCards: markedRoster, lockedCardIds });
+      const drawnRoster = (drawRes?.roster ?? drawRes?.cards ?? markedRoster) as PlayerCard[];
       const resolveRes: any = await resolveRoster({ finalCards: drawnRoster });
-      const finalRosterRaw: PlayerCard[] =
-        (resolveRes?.roster ?? resolveRes?.cards ?? resolveRes?.finalCards ?? drawnRoster) as PlayerCard[];
+      const finalRoster = (resolveRes?.roster ?? resolveRes?.cards ?? drawnRoster) as PlayerCard[];
+      const mvp: string | undefined = resolveRes?.mvpCardId ?? resolveRes?.mvpId;
+      if (mvp) setMvpId(mvp);
 
-      // Re-attach wasHeld by slotIndex and cardId fallback
-      const heldBySlot = new Map<number, boolean>();
-      const heldById = new Map<string, boolean>();
-      markedRoster.forEach((p: any, idx: number) => {
-        const slot = Number(p.slotIndex ?? idx);
-        heldBySlot.set(slot, !!p.wasHeld);
-        heldById.set(cardId(p), !!p.wasHeld);
-      });
+      // Seed revealedSalary with held cards — they're already "spent" before reveal starts
+      const heldSalaryAtDraw = finalRoster.reduce(
+        (s, c: any) => c.wasHeld ? s + Number(c.salary ?? 0) : s,
+        0
+      );
+      setRevealedSalary(heldSalaryAtDraw);
 
-      const finalRoster: PlayerCard[] = finalRosterRaw.map((c: any, idx: number) => {
-        const slot = Number(c.slotIndex ?? idx);
-        const held = heldBySlot.get(slot) ?? heldById.get(cardId(c)) ?? false;
-        return { ...c, wasHeld: held };
-      });
-
-      const maybeMvp: string | undefined = resolveRes?.mvpId ?? resolveRes?.mvpCardId ?? resolveRes?.topCardId;
-      if (typeof maybeMvp === "string") setMvpId(maybeMvp);
-
-      const heldSalary = finalRoster.reduce((sum, c: any) => (c.wasHeld ? sum + Number(c.salary ?? 0) : sum), 0);
-
-      // silent swap
+      rosterRef.current = finalRoster;
       setNoTransition(true);
-setRoster(finalRoster);
-      setDisplayBudget(CAP_MAX - sumSalary(finalRoster));
+      flipState.initCards(finalRoster.map(cardId));
+      setRoster(finalRoster);
+      (window as any).debugRoster = finalRoster;
+      console.log("finalRoster sample:", JSON.stringify(finalRoster[0], null, 2));
       setStatsFlippedIds(new Set());
-      setRevealedSalary(heldSalary);
-
       await sleep(50);
       setNoTransition(false);
       await sleep(50);
-
       setGameState("REVEALING");
       return;
     }
 
     if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") {
       resetReveal();
+      setRevealedSalary(0);
       setNoTransition(true);
-      setRoster(createPlaceholderCards());
+      const placeholders = createPlaceholders();
+      flipState.initCards(placeholders.map(cardId));
+      setRoster(placeholders);
+      rosterRef.current = placeholders;
       setLockedCardIds(new Set());
       setStatsFlippedIds(new Set());
       setMvpId(undefined);
       setWinTier(null);
       setWinPayout(0);
-      setDisplayBudget(CAP_MAX);
-      setRevealedSalary(0);
       setGameState("IDLE");
       await sleep(50);
       setNoTransition(false);
@@ -363,7 +310,7 @@ setRoster(finalRoster);
   function onWinCelebrationComplete() {
     if (winPayout > 0) {
       setIsBalanceAnimating(true);
-      setBalance((prev) => prev + winPayout);
+      setBalance(prev => prev + winPayout);
       setTimeout(() => setIsBalanceAnimating(false), 2000);
     }
     setWinTier(null);
@@ -375,90 +322,45 @@ setRoster(finalRoster);
     else onPrimaryAction();
   }
 
-  function buttonStyle() {
-    const base = {
-      flex: 1,
-      borderRadius: 14,
-      border: "none",
-      padding: "14px 0",
-      fontWeight: 900,
-      fontSize: 15,
-      letterSpacing: 1.5,
-      textTransform: "uppercase" as const,
-      cursor: "pointer",
-      boxShadow: "0 6px 20px rgba(0,0,0,0.35)",
-      transition: "transform 80ms, box-shadow 80ms",
-    };
-    if (gameState === "HOLD") return { ...base, background: "linear-gradient(180deg, #36D46B 0%, #1FA94B 100%)" };
-    if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")
-      return { ...base, background: "linear-gradient(180deg, #3AA0FF 0%, #1D6DD7 100%)" };
-    return { ...base, background: "linear-gradient(180deg, #FFB14A 0%, #FF7A2F 100%)" };
-  }
-
+  // Zone 3: JSX
   return (
-    <div
-      style={{
-        width: "100vw",
-        height: "100vh",
-        overflow: "clip",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        background: "linear-gradient(180deg, #070A12 0%, #0A1020 38%, #070A12 100%)",
-        color: "#EAF0FF",
-        fontFamily: "'Inter', system-ui, sans-serif",
-        userSelect: "none",
-      }}
-    >
+    <div style={{
+      width: "100vw", height: "100vh", overflow: "clip",
+      display: "flex", flexDirection: "column", alignItems: "center",
+      background: "linear-gradient(180deg, #070A12 0%, #0A1020 38%, #070A12 100%)",
+      color: "#EAF0FF", fontFamily: "'Inter', system-ui, sans-serif", userSelect: "none",
+    }}>
       {winTier && (
         <WinCelebration tier={winTier} payout={winPayout} multiplier={betMultiplier} onComplete={onWinCelebrationComplete} />
       )}
-
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 460,
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          gap: 6,
-          padding: "env(safe-area-inset-top, 8px) 12px env(safe-area-inset-bottom, 8px)",
-          boxSizing: "border-box",
-        }}
-      >
-        <div
-          style={{
-            flex: "0 0 auto",
-            borderRadius: 16,
-            border: "1px solid rgba(255,255,255,0.10)",
-            background: "rgba(255,255,255,0.05)",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
-            padding: "8px 12px",
-            backdropFilter: "blur(10px)",
-          }}
-        >
+      <div style={{
+        width: "100%", maxWidth: 460, height: "100%",
+        display: "flex", flexDirection: "column", gap: 6,
+        padding: "env(safe-area-inset-top, 8px) 12px env(safe-area-inset-bottom, 8px)",
+        boxSizing: "border-box",
+      }}>
+        <div style={{
+          flex: "0 0 auto", borderRadius: 16,
+          border: "1px solid rgba(255,255,255,0.10)",
+          background: "rgba(255,255,255,0.05)",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
+          padding: "8px 12px", backdropFilter: "blur(10px)",
+        }}>
           <AppHeader revealFillPct={Math.min(100, (totalFp / 100) * 100)} betAdded={currentBet} jackpotTarget={100} />
         </div>
-
         <div style={{ flex: "1 1 auto", minHeight: 0 }}>
           <div
             onClick={gameState === "REVEALING" ? skipReveal : undefined}
             style={{
-              height: "100%",
-              borderRadius: 18,
+              height: "100%", borderRadius: 18,
               border: "1px solid rgba(255,255,255,0.10)",
               background: "rgba(255,255,255,0.03)",
               boxShadow: "0 18px 60px rgba(0,0,0,0.45)",
-              backdropFilter: "blur(10px)",
-              padding: 10,
+              backdropFilter: "blur(10px)", padding: 10,
               cursor: gameState === "REVEALING" ? "pointer" : "default",
             }}
           >
             <RosterGrid
-              flipMsMap={flipMsMap}
-              fpCountUpMsMap={fpCountUpMsMap}
-              performanceTagMap={performanceTagMap}
-              pulseMap={pulseMap}
               roster={displayRoster}
               phase={phase}
               lockedIds={heldCardIds}
@@ -466,35 +368,24 @@ setRoster(finalRoster);
               flippedIds={flippedIds}
               revealingIds={revealingIds}
               noTransition={noTransition}
-              visibleFpMap={(() => {
-                const map = new Map<string, number>();
-                if (gameState === "REVEALING" || gameState === "RESULTS" || gameState === "WIN_CELEBRATION") {
-                  roster.forEach((c) => {
-                    const id = cardId(c);
-                    const fp = getVisibleFp(id);
-                    if (fp !== undefined) map.set(id, fp);
-                  });
-                }
-                return map;
-              })()}
+              visibleFpMap={visibleFpMap}
               canFlip={gameState === "RESULTS" || gameState === "WIN_CELEBRATION"}
-              onToggleLock={(k) => toggleLock(k)}
-              onToggleFlip={(k) => toggleStatsFlip(k)}
+              flipMsMap={flipMsMap}
+              fpCountUpMsMap={fpCountUpMsMap}
+              performanceTagMap={performanceTagMap}
+              pulseMap={pulseMap}
+              onToggleLock={toggleLock}
+              onToggleFlip={toggleStatsFlip}
             />
           </div>
         </div>
-
-        <div
-          style={{
-            flex: "0 0 auto",
-            borderRadius: 18,
-            border: "1px solid rgba(255,255,255,0.10)",
-            background: "rgba(255,255,255,0.06)",
-            boxShadow: "0 14px 34px rgba(0,0,0,0.32)",
-            padding: "10px 12px",
-            backdropFilter: "blur(10px)",
-          }}
-        >
+        <div style={{
+          flex: "0 0 auto", borderRadius: 18,
+          border: "1px solid rgba(255,255,255,0.10)",
+          background: "rgba(255,255,255,0.06)",
+          boxShadow: "0 14px 34px rgba(0,0,0,0.32)",
+          padding: "10px 12px", backdropFilter: "blur(10px)",
+        }}>
           <GameBar
             gameState={gameState}
             balance={balance}

@@ -7,7 +7,42 @@
 import type { Position, TierColor, PlayerCard } from "./types";
 
 // Import sport config - ONLY place we reference specific sport
-import { FootballSportConfig } from "../../../backend/sports/football";
+// Football sport config — inlined so frontend has zero backend dependencies
+const FootballSportConfig = {
+  name: 'Football (Soccer)',
+  positions: ['FW', 'MD', 'DE', 'GK'] as string[],
+  rosterSlots: ["FW", "MD", "DE", "GK", "FLEX", "FLEX"] as string[],
+  salaryCap: 180,
+  minPlayers: 6,
+  maxPlayers: 6,
+  positionLimits: {
+    GK: { min: 1, max: 1 },
+    FW: { min: 1, max: 4 },
+    MD: { min: 1, max: 4 },
+    DE: { min: 1, max: 4 },
+  } as Record<string, { min: number; max: number }>,
+  statCategories: [
+    'minutes','goals_scored','assists','shots','shots_on_target',
+    'key_passes','passes_completed','tackles_won','interceptions',
+    'blocks','saves','goals_conceded','yellow_cards','red_cards',
+  ],
+  projectionWeights: {
+    minutes: 0.0166667, goals_scored: 8.0, assists: 6.0,
+    shots: 0.8, shots_on_target: 1.2, key_passes: 2.0,
+    passes_completed: 0.04, tackles_won: 1.5, interceptions: 1.5,
+    blocks: 2.0, saves: 2.0, goals_conceded: -1.0,
+    yellow_cards: -2.0, red_cards: -6.0,
+  },
+  historicalLogFilters: { seasonsBack: 10, minMinutes: 1 },
+  winCondition: {
+    type: 'FIXED_THRESHOLD',
+    thresholds: [
+      { tier: 'BRONZE', minFP: 30 }, { tier: 'SILVER', minFP: 50 },
+      { tier: 'GOLD', minFP: 70 },   { tier: 'PLATINUM', minFP: 90 },
+      { tier: 'DIAMOND', minFP: 110 },
+    ],
+  },
+};
 
 export class SportAdapter {
   public config: typeof FootballSportConfig;
@@ -18,17 +53,15 @@ export class SportAdapter {
 
   // ========== SALARY CAP ==========
   get salaryCap(): number {
-    if (typeof this.config.salaryCap === "number") {
-      return this.config.salaryCap;
-    }
-    return this.config.salaryCap.max;
+    return typeof this.config.salaryCap === 'number'
+      ? this.config.salaryCap
+      : (this.config.salaryCap as any).max;
   }
 
   get salaryCapMin(): number {
-    if (typeof this.config.salaryCap === "number") {
-      return Math.floor(this.config.salaryCap * 0.95);
-    }
-    return this.config.salaryCap.min;
+    return typeof this.config.salaryCap === 'number'
+    ? Math.floor((this.config.salaryCap as number) * 0.956)
+    : (this.config.salaryCap as any).min;
   }
 
   // ========== ROSTER ==========

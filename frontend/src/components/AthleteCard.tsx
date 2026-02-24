@@ -190,7 +190,7 @@ function BackBStats({ card }: { card: PlayerCard }) {
   const rawOpp = gi.opponent || gi.opponent_team || sl.opponent || sl.opponent_team || "";
   const opponent = String(rawOpp).trim();
   const ha = gi.homeAway || (sl.was_home === true ? "H" : sl.was_home === false ? "A" : "");
-  const oppStr = opponent ? `${ha === "H" ? "vs" : ha === "A" ? "@" : "vs"} ${opponent.toUpperCase()}${ha ? ` (${ha})` : ""}` : "";
+  const oppStr = opponent ? `${ha === "A" ? "@" : "vs"} ${opponent.toUpperCase()}` : "";
 
   const badges = Array.isArray((card as any).achievements) ? (card as any).achievements.map((a: any) => a?.icon).filter(Boolean) : [];
   const hasStats = Object.keys(sl).length > 0;
