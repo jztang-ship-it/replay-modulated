@@ -278,7 +278,7 @@ export function AthleteCardFront(props: {
   const actual = Number((card as any)?.actualFp ?? 0);
 
   // Rolling FP animation state
-  const [displayedFp, setDisplayedFp] = useState(proj);
+  const [displayedFp, setDisplayedFp] = useState(0);
   const [isRolling, setIsRolling] = useState(false);
 
   // Latch: only for THIS card
@@ -314,8 +314,8 @@ export function AthleteCardFront(props: {
   }, [safeMap, cardKey]);
 
   const candidates = useMemo(() => {
-    return buildHeadshotCandidates(card, safeCode);
-  }, [card, safeCode]);
+    return []; // headshot map has wrong mappings — show initials until rebuilt
+  }, []);
 
   const [idx, setIdx] = useState(0);
 
@@ -333,7 +333,7 @@ export function AthleteCardFront(props: {
   // else defaults to 500ms (your old behavior).
   useEffect(() => {
     if (visibleFp === undefined) {
-      setDisplayedFp(showResults ? actual : proj);
+      setDisplayedFp(showResults ? 0 : proj);
       return;
     }
 
@@ -341,7 +341,7 @@ export function AthleteCardFront(props: {
       setIsRolling(true);
       setRollComplete(false);
 
-      const startValue = displayedFp;
+      const startValue = 0;
       const endValue = visibleFp;
 
       const duration = Math.max(220, Math.min(2200, Number(fpCountUpMs ?? 500)));
@@ -376,14 +376,14 @@ export function AthleteCardFront(props: {
   // Reset latch when card identity changes
   useEffect(() => {
     setRollComplete(false);
-    setDisplayedFp(proj);
+    setDisplayedFp(0);
     setIsRolling(false);
   }, [cardKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Determine what to show
-  const fpValue = showResults ? (visibleFp !== undefined ? displayedFp : actual) : proj;
+  const fpValue = showResults ? (visibleFp !== undefined ? displayedFp : 0) : proj;
   const label = showResults ? "FP" : "PROJ";
-  const valueText = Number.isFinite(fpValue) ? fpValue.toFixed(fpValue % 1 === 0 ? 0 : 1) : "0";
+  const valueText = Number.isFinite(fpValue) ? fpValue.toFixed(1) : "0.0";
 
   const first = useMemo(() => {
     const parts = name.split(/\s+/).filter(Boolean);
@@ -435,7 +435,7 @@ export function AthleteCardFront(props: {
     background: tier.bg,
 
     // base tier frame + extra emotion frame tint
-    border: `2px solid ${showPulse ? pulsePal.frame : tier.frame}`,
+    border: `2px solid ${tier.frame}`,
 
     boxShadow: `0 18px 40px rgba(0,0,0,0.50),
       0 0 0 1px rgba(255,255,255,0.06) inset,
@@ -567,8 +567,8 @@ export function AthleteCardFront(props: {
     borderRadius: 18,
     padding: "6px 12px",
     display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 10,
     background: "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.62))",
     borderTop: "1px solid rgba(255,255,255,0.10)",
@@ -722,24 +722,7 @@ export function AthleteCardFront(props: {
             </div>
           </div>
 
-          {/* Line 4: Performance headline — reserved height so layout never shifts */}
-          <div
-            style={{
-              fontSize: 9,
-              fontWeight: 900,
-              letterSpacing: 0.8,
-              color: headline ? headline.color : "transparent",
-              textAlign: "center",
-              textShadow: headline ? "0 1px 3px rgba(0,0,0,0.5)" : "none",
-              opacity: headline ? 1 : 0,
-              transition: "opacity 0.25s ease, color 0.2s ease",
-              minHeight: "1.1em",
-              lineHeight: "1.1",
-              animation: headline ? `${headline.anim} 420ms ease both` : "none",
-            }}
-          >
-            {headline ? headline.text : "\u00A0"}
-          </div>
+           
         </div>
       </div>
     </div>

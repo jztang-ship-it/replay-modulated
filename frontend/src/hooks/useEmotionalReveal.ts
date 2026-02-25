@@ -1,11 +1,5 @@
 /**
  * useEmotionalReveal.ts
- *
- * Drives the card reveal sequence:
- * - Worst performers first, highest salary (anchor) last
- * - Per-card flip timing based on tier
- * - FP count-up animation after each flip
- * - Calls useCardFlipState actions to drive flip animations
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -21,6 +15,9 @@ export type RevealableCard = {
   badges?: Array<{ id: string; icon: string; label: string; fp: number }>;
 };
 
+export type ShakeType = "big" | "hype" | "cold" | null;
+export type ShakeInfo = { cardId: string; type: ShakeType } | null;
+
 type Params = {
   cards: RevealableCard[];
   isActive: boolean;
@@ -29,34 +26,42 @@ type Params = {
   onAllComplete?: (totalFp: number) => void;
 };
 
+const ANCHOR_PRE_FLIP_PAUSE_MS = 400;
+const SHAKE_DURATION_MS        = 600;
+const ANCHOR_COUNT_MULTIPLIER  = 1.8;
+const CAREER_NIGHT_RATIO       = 1.4;
+const ICE_COLD_RATIO           = 0.60;
+
 function nowMs() {
   return typeof performance !== "undefined" ? performance.now() : Date.now();
 }
-
 function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v));
 }
-
-function flipMsForTier(tier: string): number {
-  switch (tier.toUpperCase()) {
-    case "ORANGE": return 520;
-    case "PURPLE": return 480;
-    case "BLUE":   return 440;
-    case "GREEN":  return 400;
-    default:       return 380;
-  }
+function flipMsForTier(tier: string, isBig = false): number {
+  const base = (() => {
+    switch (tier.toUpperCase()) {
+      case "ORANGE": return 520;
+      case "PURPLE": return 480;
+      case "BLUE":   return 440;
+      case "GREEN":  return 400;
+      default:       return 380;
+    }
+  })();
+  return isBig ? Math.round(base * 1.8) : base;
 }
-
-function countMsForTier(tier: string): number {
-  switch (tier.toUpperCase()) {
-    case "ORANGE": return 900;
-    case "PURPLE": return 820;
-    case "BLUE":   return 760;
-    case "GREEN":  return 700;
-    default:       return 660;
-  }
+function countMsForTier(tier: string, isAnchor = false): number {
+  const base = (() => {
+    switch (tier.toUpperCase()) {
+      case "ORANGE": return 900;
+      case "PURPLE": return 820;
+      case "BLUE":   return 760;
+      case "GREEN":  return 700;
+      default:       return 660;
+    }
+  })();
+  return isAnchor ? Math.round(base * ANCHOR_COUNT_MULTIPLIER) : base;
 }
-
 function perfTag(actual: number, proj: number): string {
   if (!proj || proj <= 0) return actual >= 10 ? "HOT" : "OK";
   const r = actual / proj;
@@ -65,13 +70,27 @@ function perfTag(actual: number, proj: number): string {
   if (r <= 0.72) return "COLD";
   return "OK";
 }
+export function getShakeType(card: RevealableCard, isAnchor: boolean): ShakeType {
+  const proj   = Number(card.projectedFp ?? 0);
+  const actual = Number(card.actualFp ?? 0);
+  if (proj <= 0) return isAnchor ? "big" : null;
+  const ratio = actual / proj;
+  const isCareerNight = ratio >= CAREER_NIGHT_RATIO;
+  const isIceCold     = ratio <= ICE_COLD_RATIO;
+  if (isAnchor && isCareerNight) return "big";
+  if (isCareerNight)             return "hype";
+  if (isIceCold)                 return "cold";
+  if (isAnchor)                  return "big";
+  return null;
+}
 
 export function useEmotionalReveal(params: Params) {
   const { cards, isActive, flipState, onCardComplete, onAllComplete } = params;
 
   const [visibleFpMap, setVisibleFpMap] = useState<Map<string, number>>(new Map());
+  const [shakeInfo, setShakeInfo]       = useState<ShakeInfo>(null);
 
-  const runIdRef = useRef(0);
+  const runIdRef  = useRef(0);
   const timersRef = useRef<number[]>([]);
 
   const clearTimers = useCallback(() => {
@@ -83,12 +102,9 @@ export function useEmotionalReveal(params: Params) {
     runIdRef.current++;
     clearTimers();
     setVisibleFpMap(new Map());
+    setShakeInfo(null);
   }, [clearTimers]);
 
-  /**
-   * Reveal order: cheapest salary first, highest salary (anchor) last.
-   * Ties broken by worst actual FP first.
-   */
   const revealOrder = useMemo(() => {
     return [...cards].sort((a, b) => {
       const salDiff = (a.salary ?? 0) - (b.salary ?? 0);
@@ -97,13 +113,21 @@ export function useEmotionalReveal(params: Params) {
     });
   }, [cards]);
 
+  // Pre-computed shake types — known before reveal starts, no timing dependency
+  const cardShakeTypeMap = useMemo(() => {
+    const m = new Map<string, ShakeType>();
+    if (!isActive) return m;  // only compute during reveal
+    const anchorId = revealOrder[revealOrder.length - 1]?.cardId;
+    for (const c of cards) {
+      m.set(c.cardId, getShakeType(c, c.cardId === anchorId));
+    }
+    return m;
+  }, [cards, revealOrder, isActive]);
+
   const getVisibleFp = useCallback((id: string): number | undefined => {
     if (visibleFpMap.has(id)) return visibleFpMap.get(id);
-    const c = cards.find(x => x.cardId === id);
-    if (!c) return undefined;
-    if (flipState.isFront(id)) return Number(c.actualFp ?? 0);
     return undefined;
-  }, [visibleFpMap, cards, flipState]);
+  }, [visibleFpMap]);
 
   const runningTotalFp = useMemo(() => {
     let sum = 0;
@@ -125,7 +149,7 @@ export function useEmotionalReveal(params: Params) {
   const pulseMap = useMemo(() => {
     const m = new Map<string, number>();
     for (const c of cards) {
-      const proj = Number(c.projectedFp ?? 0);
+      const proj   = Number(c.projectedFp ?? 0);
       const actual = Number(c.actualFp ?? 0);
       m.set(c.cardId, clamp(Math.abs((actual - proj) / Math.max(1, proj)), 0, 1));
     }
@@ -133,92 +157,101 @@ export function useEmotionalReveal(params: Params) {
   }, [cards]);
 
   const flipMsMap = useMemo(() => {
+    const anchorId = revealOrder[revealOrder.length - 1]?.cardId;
     const m = new Map<string, number>();
-    for (const c of cards) m.set(c.cardId, flipMsForTier(c.tier ?? ""));
+    for (const c of cards) {
+      const isAnchor  = c.cardId === anchorId;
+      const st        = getShakeType(c, isAnchor);
+      m.set(c.cardId, flipMsForTier(c.tier ?? "", st === "big"));
+    }
     return m;
-  }, [cards]);
+  }, [cards, revealOrder]);
 
   const fpCountUpMsMap = useMemo(() => {
+    const anchorId = revealOrder[revealOrder.length - 1]?.cardId;
     const m = new Map<string, number>();
-    for (const c of cards) m.set(c.cardId, countMsForTier(c.tier ?? ""));
+    for (const c of cards) {
+      m.set(c.cardId, countMsForTier(c.tier ?? "", c.cardId === anchorId));
+    }
     return m;
-  }, [cards]);
+  }, [cards, revealOrder]);
 
   const skipToEnd = useCallback(() => {
     clearTimers();
     runIdRef.current++;
-
+    setShakeInfo(null);
     const nextMap = new Map<string, number>();
     for (const c of cards) {
       nextMap.set(c.cardId, Number(c.actualFp ?? 0));
       flipState.completeReveal(c.cardId);
     }
     setVisibleFpMap(nextMap);
-
     const total = cards.reduce((s, c) => s + Number(c.actualFp ?? 0), 0);
     onAllComplete?.(total);
   }, [cards, flipState, clearTimers, onAllComplete]);
 
   useEffect(() => {
     if (!isActive) return;
-
     reset();
-    const myRunId = runIdRef.current;
+    const myRunId  = runIdRef.current;
+    const anchorId = revealOrder[revealOrder.length - 1]?.cardId;
 
     flipState.beginReveal();
 
     const revealOne = (idx: number) => {
       if (runIdRef.current !== myRunId) return;
-
       const c = revealOrder[idx];
       if (!c) {
+        setShakeInfo(null);
         const total = revealOrder.reduce((s, x) => s + Number(x.actualFp ?? 0), 0);
         onAllComplete?.(total);
         return;
       }
 
-      const flipMs = flipMsForTier(c.tier ?? "");
-      const countMs = countMsForTier(c.tier ?? "");
+      const isAnchor  = c.cardId === anchorId;
+      const st        = getShakeType(c, isAnchor);
+      const flipMs    = flipMsForTier(c.tier ?? "", st === "big");
+      const countMs   = countMsForTier(c.tier ?? "", isAnchor);
+      const anchorDelay = isAnchor ? ANCHOR_PRE_FLIP_PAUSE_MS : 0;
+      const shakePre    = st !== null ? SHAKE_DURATION_MS : 0;
+      const totalPre    = shakePre + anchorDelay;
 
-      // Start flip animation
-      flipState.revealCard(c.cardId);
+      if (st !== null) setShakeInfo({ cardId: c.cardId, type: st });
 
-      // After flip completes, mark front and start count-up
-      const t1 = window.setTimeout(() => {
+      const t0 = window.setTimeout(() => {
         if (runIdRef.current !== myRunId) return;
+        flipState.revealCard(c.cardId);
 
-        flipState.completeReveal(c.cardId);
-
-        const start = nowMs();
-        const target = Math.max(0, Number(c.actualFp ?? 0));
-
-        const tick = () => {
+        const t1 = window.setTimeout(() => {
           if (runIdRef.current !== myRunId) return;
+          setShakeInfo(null);
+          flipState.completeReveal(c.cardId);
 
-          const elapsed = clamp((nowMs() - start) / Math.max(1, countMs), 0, 1);
-          const eased = 1 - Math.pow(1 - elapsed, 3); // easeOutCubic
-          const val = Math.round(target * eased * 10) / 10;
-
-          setVisibleFpMap(prev => new Map(prev).set(c.cardId, val));
-
-          if (elapsed < 1) {
-            const tt = window.setTimeout(tick, 16);
-            timersRef.current.push(tt);
-          } else {
-            setVisibleFpMap(prev => new Map(prev).set(c.cardId, target));
-            onCardComplete?.(c.cardId);
-            revealOne(idx + 1);
-          }
-        };
-
-        tick();
-      }, flipMs);
-
-      timersRef.current.push(t1);
+          const start  = nowMs();
+          const target = Math.max(0, Number(c.actualFp ?? 0));
+          const tick = () => {
+            if (runIdRef.current !== myRunId) return;
+            const elapsed = clamp((nowMs() - start) / Math.max(1, countMs), 0, 1);
+            const eased   = 1 - Math.pow(1 - elapsed, 3);
+            const val     = Math.round(target * eased * 10) / 10;
+            setVisibleFpMap(prev => new Map(prev).set(c.cardId, val));
+            if (elapsed < 1) {
+              const tt = window.setTimeout(tick, 16);
+              timersRef.current.push(tt);
+            } else {
+              setVisibleFpMap(prev => new Map(prev).set(c.cardId, target));
+              onCardComplete?.(c.cardId);
+              revealOne(idx + 1);
+            }
+          };
+          tick();
+        }, flipMs);
+        timersRef.current.push(t1);
+      }, totalPre);
+      timersRef.current.push(t0);
     };
 
     revealOne(0);
-
     return () => { clearTimers(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
@@ -230,6 +263,8 @@ export function useEmotionalReveal(params: Params) {
     fpCountUpMsMap,
     performanceTagMap,
     pulseMap,
+    shakeInfo,
+    cardShakeTypeMap,
     skipToEnd,
     reset,
   };

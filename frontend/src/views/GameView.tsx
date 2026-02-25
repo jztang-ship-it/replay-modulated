@@ -5,31 +5,33 @@
  * Reveal sequence is owned by useEmotionalReveal.
  */
 
-import { useMemo, useState, useCallback, useRef } from "react";
+import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import type { GamePhase, PlayerCard } from "../adapters/types";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { dealInitialRoster, redrawRoster, resolveRoster } from "../adapters/gameAdapter";
 import { RosterGrid } from "../components/RosterGrid";
 import { AppHeader } from "../components/AppHeader";
+import { resetAllOverlays } from "../components/AthleteCard";
 import { GameBar } from "../components/GameBar";
 import { WinCelebration } from "../components/WinCelebration";
 import { useCardFlipState } from "../hooks/useCardFlipState";
 import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
 import { calculateWinTier, calculatePayout, type WinTier } from "../utils/payoutLogic";
 
-const CAP_MAX = sportAdapter.salaryCap;
-const ROSTER_SIZE = sportAdapter.rosterSize;
+const CAP_MAX        = sportAdapter.salaryCap;
+const ROSTER_SIZE    = sportAdapter.rosterSize;
 const STARTING_BALANCE = 1000;
-const BASE_BET = 10;
+const BASE_BET       = 10;
+
+// ── Jackpot constants ──────────────────────────────────────────────────────
+const JACKPOT_SEED     = 12_451.29;
+const JACKPOT_BET_RAKE = 0.05;   // 5% of each bet added to pot
+const TICK_INTERVAL_MS = 3000;
+const TICK_AMOUNT      = 0.01;
 
 type GameState =
-  | "IDLE"
-  | "DEALING"
-  | "HOLD"
-  | "DRAWING"
-  | "REVEALING"
-  | "RESULTS"
-  | "WIN_CELEBRATION";
+  | "IDLE" | "DEALING" | "HOLD" | "DRAWING"
+  | "REVEALING" | "RESULTS" | "WIN_CELEBRATION";
 
 function sleep(ms: number) {
   return new Promise(r => setTimeout(r, ms));
@@ -78,29 +80,75 @@ function toRevealableCards(cards: PlayerCard[]): RevealableCard[] {
   }));
 }
 
+// ── JackpotRow — live ticking community jackpot, centered between header and cards ──
+
+function JackpotRow({ betAdded }: { betAdded: number }) {
+  const [amount, setAmount] = useState(JACKPOT_SEED);
+  const prevBetRef = useRef(0);
+
+  // Tick up every 3s (simulated community activity)
+  useEffect(() => {
+    const id = setInterval(() => {
+      setAmount(p => parseFloat((p + TICK_AMOUNT).toFixed(2)));
+    }, TICK_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  // Each bet contributes 5% rake to the pot
+  useEffect(() => {
+    if (betAdded > 0 && betAdded !== prevBetRef.current) {
+      prevBetRef.current = betAdded;
+      const contribution = parseFloat((betAdded * JACKPOT_BET_RAKE).toFixed(2));
+      if (contribution > 0) setAmount(p => parseFloat((p + contribution).toFixed(2)));
+    }
+  }, [betAdded]);
+
+  return (
+    <div style={{
+      flex: "0 0 auto",
+      display: "flex", justifyContent: "center",
+      padding: "2px 12px",
+    }}>
+      <div style={{
+        display: "inline-flex", alignItems: "center", gap: 6,
+        padding: "4px 14px", borderRadius: 20,
+        background: "rgba(255,215,0,0.06)",
+        border: "1px solid rgba(255,215,0,0.18)",
+      }}>
+        <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.2, color: "rgba(255,215,0,0.6)", textTransform: "uppercase" }}>
+          🏆 Jackpot
+        </span>
+        <span style={{ fontSize: 12, fontWeight: 950, color: "#FFD700", fontVariantNumeric: "tabular-nums", textShadow: "0 0 8px rgba(255,215,0,0.5)" }}>
+          ${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ── GameView ───────────────────────────────────────────────────────────────
+
 export default function GameView() {
 
   // Zone 1: State
-  const [gameState, setGameState] = useState<GameState>("IDLE");
-  const [roster, setRoster] = useState<PlayerCard[]>(createPlaceholders());
-  const [lockedCardIds, setLockedCardIds] = useState<Set<string>>(new Set());
+  const [gameState, setGameState]           = useState<GameState>("IDLE");
+  const [roster, setRoster]                 = useState<PlayerCard[]>(createPlaceholders());
+  const [lockedCardIds, setLockedCardIds]   = useState<Set<string>>(new Set());
   const [statsFlippedIds, setStatsFlippedIds] = useState<Set<string>>(new Set());
-  const [mvpId, setMvpId] = useState<string | undefined>();
-  const [betMultiplier, setBetMultiplier] = useState(1);
-  const [balance, setBalance] = useState(STARTING_BALANCE);
+  const [mvpId, setMvpId]                   = useState<string | undefined>();
+  const [betMultiplier, setBetMultiplier]   = useState(1);
+  const [balance, setBalance]               = useState(STARTING_BALANCE);
   const [isBalanceAnimating, setIsBalanceAnimating] = useState(false);
-  const [winTier, setWinTier] = useState<WinTier | null>(null);
-  const [winPayout, setWinPayout] = useState(0);
-  const [noTransition, setNoTransition] = useState(false);
-  // Tracks salary revealed so far during REVEALING phase (rolls down per card flip)
+  const [winTier, setWinTier]               = useState<WinTier | null>(null);
+  const [winPayout, setWinPayout]           = useState(0);
+  const [noTransition, setNoTransition]     = useState(false);
   const [revealedSalary, setRevealedSalary] = useState(0);
-  // Ref to roster during reveal so onCardComplete closure always sees current cards
   const rosterRef = useRef<PlayerCard[]>([]);
 
   // Zone 1: Hooks
-  const flipState = useCardFlipState();
+  const flipState       = useCardFlipState();
   const revealableCards = useMemo(() => toRevealableCards(roster), [roster]);
-  const currentBet = BASE_BET * betMultiplier;
+  const currentBet      = BASE_BET * betMultiplier;
 
   const {
     runningTotalFp,
@@ -109,6 +157,8 @@ export default function GameView() {
     fpCountUpMsMap,
     performanceTagMap,
     pulseMap,
+    shakeInfo,
+    cardShakeTypeMap,
     skipToEnd: skipReveal,
     reset: resetReveal,
   } = useEmotionalReveal({
@@ -116,16 +166,13 @@ export default function GameView() {
     isActive: gameState === "REVEALING",
     flipState,
     onCardComplete: useCallback((cId: string) => {
-      // Add salary only for NON-held cards — held cards are pre-seeded into
-      // revealedSalary before the reveal starts, so counting them again would
-      // temporarily show the budget going over cap.
       const card = rosterRef.current.find(c => cardId(c) === cId);
       if (card && !card.wasHeld) {
         setRevealedSalary(prev => prev + Number((card as any).salary ?? 0));
       }
     }, []),
     onAllComplete: useCallback((totalFp: number) => {
-      const tier = calculateWinTier(totalFp);
+      const tier   = calculateWinTier(totalFp);
       const payout = calculatePayout(tier, currentBet);
       setWinTier(tier);
       setWinPayout(payout);
@@ -217,35 +264,26 @@ export default function GameView() {
   }
 
   async function onPrimaryAction() {
-    console.log("onPrimaryAction called, gameState:", gameState);
     if (gameState === "IDLE") {
       if (balance < currentBet) { alert("Insufficient balance!"); return; }
       resetReveal();
+      resetAllOverlays();
       setLockedCardIds(new Set());
       setStatsFlippedIds(new Set());
       setMvpId(undefined);
       setRevealedSalary(0);
-      const res: any = await dealInitialRoster();
-      console.log("dealInitialRoster result:", res);
-      const nextRoster = (res?.roster ?? res?.cards ?? []) as PlayerCard[];
-      console.log("nextRoster length:", nextRoster.length, nextRoster);
-      rosterRef.current = nextRoster;
+      const res: any       = await dealInitialRoster();
+      const nextRoster     = (res?.roster ?? res?.cards ?? []) as PlayerCard[];
+      rosterRef.current    = nextRoster;
       setNoTransition(true);
       flipState.initCards(nextRoster.map(cardId));
       setRoster(nextRoster);
       setGameState("DEALING");
       await sleep(50);
       setNoTransition(false);
-      
-      // Flip all dealt cards to front
-      for (const c of nextRoster) {
-        flipState.revealCard(cardId(c));
-      }
+      for (const c of nextRoster) flipState.revealCard(cardId(c));
       await sleep(50);
-      for (const c of nextRoster) {
-        flipState.completeReveal(cardId(c));
-      }
-      
+      for (const c of nextRoster) flipState.completeReveal(cardId(c));
       await sleep(400);
       setGameState("HOLD");
       return;
@@ -254,23 +292,19 @@ export default function GameView() {
     if (gameState === "HOLD") {
       setBalance(prev => prev - currentBet);
       const markedRoster = roster.map(c => ({ ...c, wasHeld: lockedCardIds.has(cardId(c)) }));
-      // ALL cards flip to back — held cards too, for suspense
-      const allIds = markedRoster.map(cardId);
-      flipState.beginDraw(allIds);
+      flipState.beginDraw(markedRoster.map(cardId));
       setRoster(markedRoster);
       setGameState("DRAWING");
       await sleep(700);
-      const drawRes: any = await redrawRoster({ currentCards: markedRoster, lockedCardIds });
-      const drawnRoster = (drawRes?.roster ?? drawRes?.cards ?? markedRoster) as PlayerCard[];
+      const drawRes: any    = await redrawRoster({ currentCards: markedRoster, lockedCardIds });
+      const drawnRoster     = (drawRes?.roster ?? drawRes?.cards ?? markedRoster) as PlayerCard[];
       const resolveRes: any = await resolveRoster({ finalCards: drawnRoster });
-      const finalRoster = (resolveRes?.roster ?? resolveRes?.cards ?? drawnRoster) as PlayerCard[];
+      const finalRoster     = (resolveRes?.roster ?? resolveRes?.cards ?? drawnRoster) as PlayerCard[];
       const mvp: string | undefined = resolveRes?.mvpCardId ?? resolveRes?.mvpId;
       if (mvp) setMvpId(mvp);
 
-      // Seed revealedSalary with held cards — they're already "spent" before reveal starts
       const heldSalaryAtDraw = finalRoster.reduce(
-        (s, c: any) => c.wasHeld ? s + Number(c.salary ?? 0) : s,
-        0
+        (s, c: any) => c.wasHeld ? s + Number(c.salary ?? 0) : s, 0
       );
       setRevealedSalary(heldSalaryAtDraw);
 
@@ -279,7 +313,6 @@ export default function GameView() {
       flipState.initCards(finalRoster.map(cardId));
       setRoster(finalRoster);
       (window as any).debugRoster = finalRoster;
-      console.log("finalRoster sample:", JSON.stringify(finalRoster[0], null, 2));
       setStatsFlippedIds(new Set());
       await sleep(50);
       setNoTransition(false);
@@ -290,6 +323,7 @@ export default function GameView() {
 
     if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") {
       resetReveal();
+      resetAllOverlays();
       setRevealedSalary(0);
       setNoTransition(true);
       const placeholders = createPlaceholders();
@@ -339,6 +373,8 @@ export default function GameView() {
         padding: "env(safe-area-inset-top, 8px) 12px env(safe-area-inset-bottom, 8px)",
         boxSizing: "border-box",
       }}>
+
+        {/* Header: wordmark + tabs */}
         <div style={{
           flex: "0 0 auto", borderRadius: 16,
           border: "1px solid rgba(255,255,255,0.10)",
@@ -346,8 +382,13 @@ export default function GameView() {
           boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
           padding: "8px 12px", backdropFilter: "blur(10px)",
         }}>
-          <AppHeader revealFillPct={Math.min(100, (totalFp / 100) * 100)} betAdded={currentBet} jackpotTarget={100} />
+          <AppHeader />
         </div>
+
+        {/* Community jackpot — own centered row */}
+        <JackpotRow betAdded={currentBet} />
+
+        {/* Card grid */}
         <div style={{ flex: "1 1 auto", minHeight: 0 }}>
           <div
             onClick={gameState === "REVEALING" ? skipReveal : undefined}
@@ -361,24 +402,29 @@ export default function GameView() {
             }}
           >
             <RosterGrid
-              roster={displayRoster}
-              phase={phase}
-              lockedIds={heldCardIds}
-              mvpId={mvpId}
-              flippedIds={flippedIds}
-              revealingIds={revealingIds}
-              noTransition={noTransition}
-              visibleFpMap={visibleFpMap}
-              canFlip={gameState === "RESULTS" || gameState === "WIN_CELEBRATION"}
-              flipMsMap={flipMsMap}
-              fpCountUpMsMap={fpCountUpMsMap}
-              performanceTagMap={performanceTagMap}
-              pulseMap={pulseMap}
-              onToggleLock={toggleLock}
-              onToggleFlip={toggleStatsFlip}
-            />
+  roster={displayRoster}
+  phase={phase}
+  lockedIds={heldCardIds}
+  mvpId={mvpId}
+  flippedIds={flippedIds}
+  revealingIds={revealingIds}
+  noTransition={noTransition}
+  visibleFpMap={visibleFpMap}
+  canFlip={gameState === "RESULTS" || gameState === "WIN_CELEBRATION"}
+  flipMsMap={flipMsMap}
+  fpCountUpMsMap={fpCountUpMsMap}
+  performanceTagMap={performanceTagMap}
+  pulseMap={pulseMap}
+  shakingCardId={shakeInfo?.cardId ?? null}
+  shakeType={shakeInfo?.type ?? null}
+  cardShakeTypeMap={cardShakeTypeMap}   // ← add this
+  onToggleLock={toggleLock}
+  onToggleFlip={toggleStatsFlip}
+/>
           </div>
         </div>
+
+        {/* Bottom bar: tier progress + balance/fp/budget + bet + action */}
         <div style={{
           flex: "0 0 auto", borderRadius: 18,
           border: "1px solid rgba(255,255,255,0.10)",
