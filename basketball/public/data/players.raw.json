@@ -1,0 +1,5168 @@
+[
+  {
+    "id": "1630114",
+    "name": "Naz Reid",
+    "team": "MIN",
+    "cost": 2.3,
+    "pos": "C",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "2544",
+    "name": "LeBron James",
+    "team": "LAL",
+    "cost": 5,
+    "pos": "F",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "101108",
+    "name": "Chris Paul",
+    "team": "GSW",
+    "cost": 2.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "200768",
+    "name": "Kyle Lowry",
+    "team": "MIA",
+    "cost": 1.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "200782",
+    "name": "P.J. Tucker",
+    "team": "PHI",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "201142",
+    "name": "Kevin Durant",
+    "team": "PHX",
+    "cost": 4.7,
+    "pos": "F",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "201143",
+    "name": "Al Horford",
+    "team": "BOS",
+    "cost": 2.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "201144",
+    "name": "Mike Conley",
+    "team": "MIN",
+    "cost": 2.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "201145",
+    "name": "Jeff Green",
+    "team": "HOU",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "201152",
+    "name": "Thaddeus Young",
+    "team": "TOR",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "201565",
+    "name": "Derrick Rose",
+    "team": "MEM",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "201566",
+    "name": "Russell Westbrook",
+    "team": "LAC",
+    "cost": 3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "201567",
+    "name": "Kevin Love",
+    "team": "MIA",
+    "cost": 1.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "201568",
+    "name": "Danilo Gallinari",
+    "team": "WAS",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "201569",
+    "name": "Eric Gordon",
+    "team": "PHX",
+    "cost": 1.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "201572",
+    "name": "Brook Lopez",
+    "team": "MIL",
+    "cost": 3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "201587",
+    "name": "Nicolas Batum",
+    "team": "LAC",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "201599",
+    "name": "DeAndre Jordan",
+    "team": "DEN",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "201935",
+    "name": "James Harden",
+    "team": "LAC",
+    "cost": 4.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "201939",
+    "name": "Stephen Curry",
+    "team": "GSW",
+    "cost": 4.2,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "201942",
+    "name": "DeMar DeRozan",
+    "team": "CHI",
+    "cost": 4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "201950",
+    "name": "Jrue Holiday",
+    "team": "BOS",
+    "cost": 2.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "201959",
+    "name": "Taj Gibson",
+    "team": "NYK",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "201976",
+    "name": "Patrick Beverley",
+    "team": "PHI",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "201980",
+    "name": "Danny Green",
+    "team": "PHI",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "201988",
+    "name": "Patty Mills",
+    "team": "ATL",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "202066",
+    "name": "Garrett Temple",
+    "team": "TOR",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "202083",
+    "name": "Wesley Matthews",
+    "team": "ATL",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "202330",
+    "name": "Gordon Hayward",
+    "team": "CHA",
+    "cost": 2.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "202331",
+    "name": "Paul George",
+    "team": "LAC",
+    "cost": 3.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "202397",
+    "name": "Ish Smith",
+    "team": "CHA",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "202681",
+    "name": "Kyrie Irving",
+    "team": "DAL",
+    "cost": 4.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "202684",
+    "name": "Tristan Thompson",
+    "team": "CLE",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "202685",
+    "name": "Jonas Valančiūnas",
+    "team": "NOP",
+    "cost": 2.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "202687",
+    "name": "Bismack Biyombo",
+    "team": "MEM",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "1626157",
+    "name": "Karl-Anthony Towns",
+    "team": "MIN",
+    "cost": 4.5,
+    "pos": "C",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1626164",
+    "name": "Devin Booker",
+    "team": "PHX",
+    "cost": 4.5,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1626166",
+    "name": "Cameron Payne",
+    "team": "MIL",
+    "cost": 1.5,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1626167",
+    "name": "Myles Turner",
+    "team": "IND",
+    "cost": 3.4,
+    "pos": "C",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1626179",
+    "name": "Terry Rozier",
+    "team": "CHA",
+    "cost": 2.9,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1627734",
+    "name": "Domantas Sabonis",
+    "team": "SAC",
+    "cost": 5,
+    "pos": "C",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1627749",
+    "name": "Dejounte Murray",
+    "team": "ATL",
+    "cost": 4.3,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1627750",
+    "name": "Jamal Murray",
+    "team": "DEN",
+    "cost": 4.1,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1627783",
+    "name": "Pascal Siakam",
+    "team": "TOR",
+    "cost": 3.9,
+    "pos": "F",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1628368",
+    "name": "De'Aaron Fox",
+    "team": "SAC",
+    "cost": 4.6,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1628369",
+    "name": "Jayson Tatum",
+    "team": "BOS",
+    "cost": 5,
+    "pos": "F",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1628370",
+    "name": "Malik Monk",
+    "team": "SAC",
+    "cost": 3.2,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1628374",
+    "name": "Lauri Markkanen",
+    "team": "UTA",
+    "cost": 3.7,
+    "pos": "F",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1628378",
+    "name": "Donovan Mitchell",
+    "team": "CLE",
+    "cost": 4.5,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1628389",
+    "name": "Bam Adebayo",
+    "team": "MIA",
+    "cost": 4.3,
+    "pos": "C",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1628398",
+    "name": "Kyle Kuzma",
+    "team": "WAS",
+    "cost": 3.3,
+    "pos": "F",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1628969",
+    "name": "Mikal Bridges",
+    "team": "BKN",
+    "cost": 3.3,
+    "pos": "F",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1628973",
+    "name": "Jalen Brunson",
+    "team": "NYK",
+    "cost": 4.5,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1628983",
+    "name": "Shai Gilgeous-Alexander",
+    "team": "OKC",
+    "cost": 5.6,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1629008",
+    "name": "Michael Porter Jr.",
+    "team": "DEN",
+    "cost": 3.2,
+    "pos": "F",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1629014",
+    "name": "Anfernee Simons",
+    "team": "POR",
+    "cost": 3.4,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1629027",
+    "name": "Trae Young",
+    "team": "ATL",
+    "cost": 4.7,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1629028",
+    "name": "Deandre Ayton",
+    "team": "POR",
+    "cost": 3.6,
+    "pos": "C",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1629029",
+    "name": "Luka Dončić",
+    "team": "DAL",
+    "cost": 6.1,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1629628",
+    "name": "RJ Barrett",
+    "team": "NYK",
+    "cost": 3.7,
+    "pos": "F",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1629630",
+    "name": "Ja Morant",
+    "team": "MEM",
+    "cost": 4.3,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1629632",
+    "name": "Coby White",
+    "team": "CHI",
+    "cost": 3.4,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1629636",
+    "name": "Darius Garland",
+    "team": "CLE",
+    "cost": 3.6,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1629639",
+    "name": "Tyler Herro",
+    "team": "MIA",
+    "cost": 3.9,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1629640",
+    "name": "Keldon Johnson",
+    "team": "SAS",
+    "cost": 2.7,
+    "pos": "F",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1630162",
+    "name": "Anthony Edwards",
+    "team": "MIN",
+    "cost": 4.5,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1630163",
+    "name": "LaMelo Ball",
+    "team": "CHA",
+    "cost": 4.6,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1630169",
+    "name": "Tyrese Haliburton",
+    "team": "IND",
+    "cost": 4.5,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1630170",
+    "name": "Devin Vassell",
+    "team": "SAS",
+    "cost": 3.3,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1630178",
+    "name": "Tyrese Maxey",
+    "team": "PHI",
+    "cost": 4.5,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1630193",
+    "name": "Immanuel Quickley",
+    "team": "NYK",
+    "cost": 3.2,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1630217",
+    "name": "Desmond Bane",
+    "team": "MEM",
+    "cost": 4,
+    "pos": "F",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1630529",
+    "name": "Herbert Jones",
+    "team": "NOP",
+    "cost": 2.6,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1630543",
+    "name": "Isaiah Jackson",
+    "team": "IND",
+    "cost": 1.8,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1630558",
+    "name": "Davion Mitchell",
+    "team": "SAC",
+    "cost": 1.6,
+    "pos": "C",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1630560",
+    "name": "Cam Thomas",
+    "team": "BKN",
+    "cost": 3.4,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1630595",
+    "name": "Cade Cunningham",
+    "team": "DET",
+    "cost": 4.6,
+    "pos": "F",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1631093",
+    "name": "Jaden Ivey",
+    "team": "DET",
+    "cost": 2.9,
+    "pos": "C",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1631094",
+    "name": "Paolo Banchero",
+    "team": "ORL",
+    "cost": 4.4,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1631095",
+    "name": "Jabari Smith Jr.",
+    "team": "HOU",
+    "cost": 2.9,
+    "pos": "F",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1631097",
+    "name": "Bennedict Mathurin",
+    "team": "IND",
+    "cost": 2.6,
+    "pos": "C",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1631100",
+    "name": "AJ Griffin",
+    "team": "ATL",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631101",
+    "name": "Shaedon Sharpe",
+    "team": "POR",
+    "cost": 3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631103",
+    "name": "Malaki Branham",
+    "team": "SAS",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631104",
+    "name": "Blake Wesley",
+    "team": "SAS",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631105",
+    "name": "Jalen Duren",
+    "team": "DET",
+    "cost": 3.4,
+    "pos": "C",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "1631106",
+    "name": "Tari Eason",
+    "team": "HOU",
+    "cost": 2.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631107",
+    "name": "Nikola Jović",
+    "team": "MIA",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631108",
+    "name": "Max Christie",
+    "team": "LAL",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631109",
+    "name": "Mark Williams",
+    "team": "CHA",
+    "cost": 3.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631110",
+    "name": "Jeremy Sochan",
+    "team": "SAS",
+    "cost": 2.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631111",
+    "name": "Wendell Moore Jr.",
+    "team": "MIN",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631114",
+    "name": "Jalen Williams",
+    "team": "OKC",
+    "cost": 3.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631115",
+    "name": "Orlando Robinson",
+    "team": "MIA",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "202691",
+    "name": "Klay Thompson",
+    "team": "GSW",
+    "cost": 2.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "202692",
+    "name": "Alec Burks",
+    "team": "DET",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "202693",
+    "name": "Markieff Morris",
+    "team": "DAL",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "202694",
+    "name": "Marcus Morris Sr.",
+    "team": "PHI",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "202695",
+    "name": "Kawhi Leonard",
+    "team": "LAC",
+    "cost": 4.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "202696",
+    "name": "Nikola Vučević",
+    "team": "CHI",
+    "cost": 4.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "202699",
+    "name": "Tobias Harris",
+    "team": "PHI",
+    "cost": 3.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "202704",
+    "name": "Reggie Jackson",
+    "team": "DEN",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "202709",
+    "name": "Cory Joseph",
+    "team": "GSW",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "202710",
+    "name": "Jimmy Butler III",
+    "team": "MIA",
+    "cost": 3.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "202711",
+    "name": "Bojan Bogdanovic",
+    "team": "DET",
+    "cost": 2.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "202722",
+    "name": "Davis Bertans",
+    "team": "OKC",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203076",
+    "name": "Anthony Davis",
+    "team": "LAL",
+    "cost": 5.6,
+    "pos": "F",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "203078",
+    "name": "Bradley Beal",
+    "team": "PHX",
+    "cost": 3.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203081",
+    "name": "Damian Lillard",
+    "team": "MIL",
+    "cost": 4.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203083",
+    "name": "Andre Drummond",
+    "team": "CHI",
+    "cost": 2.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203084",
+    "name": "Harrison Barnes",
+    "team": "SAC",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203095",
+    "name": "Evan Fournier",
+    "team": "NYK",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203109",
+    "name": "Jae Crowder",
+    "team": "MIL",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203110",
+    "name": "Draymond Green",
+    "team": "GSW",
+    "cost": 3.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203114",
+    "name": "Khris Middleton",
+    "team": "MIL",
+    "cost": 2.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203200",
+    "name": "Justin Holiday",
+    "team": "DEN",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203458",
+    "name": "Alex Len",
+    "team": "SAC",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203468",
+    "name": "CJ McCollum",
+    "team": "NOP",
+    "cost": 3.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203471",
+    "name": "Dennis Schröder",
+    "team": "TOR",
+    "cost": 2.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203482",
+    "name": "Kelly Olynyk",
+    "team": "UTA",
+    "cost": 2.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203484",
+    "name": "Kentavious Caldwell-Pope",
+    "team": "DEN",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203486",
+    "name": "Mason Plumlee",
+    "team": "LAC",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203488",
+    "name": "Mike Muscala",
+    "team": "WAS",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203490",
+    "name": "Otto Porter Jr.",
+    "team": "TOR",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203493",
+    "name": "Reggie Bullock Jr.",
+    "team": "HOU",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203496",
+    "name": "Robert Covington",
+    "team": "LAC",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203497",
+    "name": "Rudy Gobert",
+    "team": "MIN",
+    "cost": 3.8,
+    "pos": "C",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "203500",
+    "name": "Steven Adams",
+    "team": "HOU",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203501",
+    "name": "Tim Hardaway Jr.",
+    "team": "DAL",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203507",
+    "name": "Giannis Antetokounmpo",
+    "team": "MIL",
+    "cost": 6,
+    "pos": "F",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "203552",
+    "name": "Seth Curry",
+    "team": "DAL",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203897",
+    "name": "Zach LaVine",
+    "team": "CHI",
+    "cost": 3.6,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "203901",
+    "name": "Elfrid Payton",
+    "team": "NOP",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203903",
+    "name": "Jordan Clarkson",
+    "team": "UTA",
+    "cost": 2.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203914",
+    "name": "Gary Harris",
+    "team": "ORL",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203915",
+    "name": "Spencer Dinwiddie",
+    "team": "BKN",
+    "cost": 2.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203924",
+    "name": "Jerami Grant",
+    "team": "POR",
+    "cost": 3.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203925",
+    "name": "Joe Harris",
+    "team": "DET",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203926",
+    "name": "Doug McDermott",
+    "team": "SAS",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203932",
+    "name": "Aaron Gordon",
+    "team": "DEN",
+    "cost": 3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203933",
+    "name": "T.J. Warren",
+    "team": "MIN",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203935",
+    "name": "Marcus Smart",
+    "team": "MEM",
+    "cost": 2.3,
+    "pos": "G",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "203937",
+    "name": "Kyle Anderson",
+    "team": "MIN",
+    "cost": 2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203939",
+    "name": "Dwight Powell",
+    "team": "DAL",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203944",
+    "name": "Julius Randle",
+    "team": "NYK",
+    "cost": 3.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203952",
+    "name": "Andrew Wiggins",
+    "team": "GSW",
+    "cost": 2.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203954",
+    "name": "Joel Embiid",
+    "team": "PHI",
+    "cost": 5.8,
+    "pos": "C",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "203957",
+    "name": "Danté Exum",
+    "team": "DAL",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203967",
+    "name": "Dario Šarić",
+    "team": "GSW",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203991",
+    "name": "Clint Capela",
+    "team": "ATL",
+    "cost": 3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203992",
+    "name": "Bogdan Bogdanović",
+    "team": "ATL",
+    "cost": 2.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203994",
+    "name": "Jusuf Nurkić",
+    "team": "PHX",
+    "cost": 3.2,
+    "pos": "C",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "203995",
+    "name": "Vasilije Micic",
+    "team": "OKC",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "203999",
+    "name": "Nikola Jokić",
+    "team": "DEN",
+    "cost": 6.4,
+    "pos": "C",
+    "active": true,
+    "created_at": "2026-01-01T08:05:40.52208+00:00"
+  },
+  {
+    "id": "204001",
+    "name": "Kristaps Porziņģis",
+    "team": "BOS",
+    "cost": 3.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "204060",
+    "name": "Joe Ingles",
+    "team": "ORL",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "204456",
+    "name": "T.J. McConnell",
+    "team": "IND",
+    "cost": 2.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "1626145",
+    "name": "Tyus Jones",
+    "team": "WAS",
+    "cost": 2.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "1626153",
+    "name": "Delon Wright",
+    "team": "WAS",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "1626156",
+    "name": "D'Angelo Russell",
+    "team": "LAL",
+    "cost": 3.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:02.448745+00:00"
+  },
+  {
+    "id": "1626158",
+    "name": "Richaun Holmes",
+    "team": "DAL",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1626162",
+    "name": "Kelly Oubre Jr.",
+    "team": "PHI",
+    "cost": 3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1626168",
+    "name": "Trey Lyles",
+    "team": "SAC",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1626171",
+    "name": "Bobby Portis",
+    "team": "MIL",
+    "cost": 3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1626172",
+    "name": "Kevon Looney",
+    "team": "GSW",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1626174",
+    "name": "Christian Wood",
+    "team": "LAL",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1626181",
+    "name": "Norman Powell",
+    "team": "LAC",
+    "cost": 2.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1626192",
+    "name": "Pat Connaughton",
+    "team": "MIL",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1626196",
+    "name": "Josh Richardson",
+    "team": "MIA",
+    "cost": 1.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1626204",
+    "name": "Larry Nance Jr.",
+    "team": "NOP",
+    "cost": 1.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1626220",
+    "name": "Royce O'Neale",
+    "team": "BKN",
+    "cost": 2.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1626224",
+    "name": "Cedi Osman",
+    "team": "SAS",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1627732",
+    "name": "Ben Simmons",
+    "team": "BKN",
+    "cost": 2.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1627736",
+    "name": "Malik Beasley",
+    "team": "MIL",
+    "cost": 2.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1627739",
+    "name": "Kris Dunn",
+    "team": "UTA",
+    "cost": 2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1627741",
+    "name": "Buddy Hield",
+    "team": "IND",
+    "cost": 2.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1627742",
+    "name": "Brandon Ingram",
+    "team": "NOP",
+    "cost": 3.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1627747",
+    "name": "Caris LeVert",
+    "team": "CLE",
+    "cost": 2.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1627751",
+    "name": "Jakob Poeltl",
+    "team": "TOR",
+    "cost": 3.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1627752",
+    "name": "Taurean Prince",
+    "team": "LAL",
+    "cost": 1.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1627759",
+    "name": "Jaylen Brown",
+    "team": "BOS",
+    "cost": 4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1627763",
+    "name": "Malcolm Brogdon",
+    "team": "POR",
+    "cost": 2.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1627777",
+    "name": "Georges Niang",
+    "team": "CLE",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1627780",
+    "name": "Gary Payton II",
+    "team": "GSW",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1627788",
+    "name": "Furkan Korkmaz",
+    "team": "PHI",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1627824",
+    "name": "Guerschon Yabusele",
+    "team": "PHI",
+    "cost": 2.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1627826",
+    "name": "Ivica Zubac",
+    "team": "LAC",
+    "cost": 3.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1627827",
+    "name": "Dorian Finney-Smith",
+    "team": "BKN",
+    "cost": 2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1627832",
+    "name": "Fred VanVleet",
+    "team": "HOU",
+    "cost": 3.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1627863",
+    "name": "Danuel House Jr.",
+    "team": "PHI",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1627884",
+    "name": "Derrick Jones Jr.",
+    "team": "DAL",
+    "cost": 1.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1627936",
+    "name": "Alex Caruso",
+    "team": "CHI",
+    "cost": 2.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628365",
+    "name": "Markelle Fultz",
+    "team": "ORL",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628366",
+    "name": "Lonzo Ball",
+    "team": "CHI",
+    "cost": 2.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628371",
+    "name": "Jonathan Isaac",
+    "team": "ORL",
+    "cost": 1.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628372",
+    "name": "Dennis Smith Jr.",
+    "team": "BKN",
+    "cost": 2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628373",
+    "name": "Frank Ntilikina",
+    "team": "CHA",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628379",
+    "name": "Luke Kennard",
+    "team": "MEM",
+    "cost": 2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628380",
+    "name": "Zach Collins",
+    "team": "SAS",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628381",
+    "name": "John Collins",
+    "team": "UTA",
+    "cost": 3.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628384",
+    "name": "OG Anunoby",
+    "team": "TOR",
+    "cost": 3.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628386",
+    "name": "Jarrett Allen",
+    "team": "CLE",
+    "cost": 3.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628391",
+    "name": "D.J. Wilson",
+    "team": "PHI",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628392",
+    "name": "Isaiah Hartenstein",
+    "team": "NYK",
+    "cost": 3.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628396",
+    "name": "Tony Bradley",
+    "team": "IND",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628401",
+    "name": "Derrick White",
+    "team": "BOS",
+    "cost": 3.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628404",
+    "name": "Josh Hart",
+    "team": "NYK",
+    "cost": 3.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628415",
+    "name": "Dillon Brooks",
+    "team": "HOU",
+    "cost": 2.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628418",
+    "name": "Thomas Bryant",
+    "team": "MIA",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628420",
+    "name": "Monte Morris",
+    "team": "DET",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628424",
+    "name": "Kobi Simmons",
+    "team": "TOR",
+    "cost": 1.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628426",
+    "name": "Sasha Vezenkov",
+    "team": "SAC",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628427",
+    "name": "Vlatko Čančar",
+    "team": "DEN",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628436",
+    "name": "Luke Kornet",
+    "team": "BOS",
+    "cost": 1.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628449",
+    "name": "Chris Boucher",
+    "team": "TOR",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628464",
+    "name": "Daniel Theis",
+    "team": "IND",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628467",
+    "name": "Maxi Kleber",
+    "team": "DAL",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628470",
+    "name": "Torrey Craig",
+    "team": "CHI",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628960",
+    "name": "Grayson Allen",
+    "team": "PHX",
+    "cost": 2.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628963",
+    "name": "Marvin Bagley III",
+    "team": "DET",
+    "cost": 1.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628964",
+    "name": "Mo Bamba",
+    "team": "PHI",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628966",
+    "name": "Keita Bates-Diop",
+    "team": "PHX",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628970",
+    "name": "Miles Bridges",
+    "team": "CHA",
+    "cost": 3.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628971",
+    "name": "Bruce Brown",
+    "team": "IND",
+    "cost": 2.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628972",
+    "name": "Troy Brown Jr.",
+    "team": "MIN",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628975",
+    "name": "Jevon Carter",
+    "team": "CHI",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628976",
+    "name": "Wendell Carter Jr.",
+    "team": "ORL",
+    "cost": 2.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628978",
+    "name": "Donte DiVincenzo",
+    "team": "NYK",
+    "cost": 2.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628981",
+    "name": "Bruno Fernando",
+    "team": "ATL",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628984",
+    "name": "Devonte' Graham",
+    "team": "SAS",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628988",
+    "name": "Aaron Holiday",
+    "team": "HOU",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628989",
+    "name": "Kevin Huerter",
+    "team": "SAC",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628991",
+    "name": "Jaren Jackson Jr.",
+    "team": "MEM",
+    "cost": 4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628995",
+    "name": "Kevin Knox II",
+    "team": "DET",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628997",
+    "name": "Caleb Martin",
+    "team": "MIA",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1628998",
+    "name": "Cody Martin",
+    "team": "CHA",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1629001",
+    "name": "De'Anthony Melton",
+    "team": "PHI",
+    "cost": 2.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1629002",
+    "name": "Chimezie Metu",
+    "team": "PHX",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1629003",
+    "name": "Shake Milton",
+    "team": "MIN",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1629004",
+    "name": "Svi Mykhailiuk",
+    "team": "BOS",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1629006",
+    "name": "Josh Okogie",
+    "team": "PHX",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.068313+00:00"
+  },
+  {
+    "id": "1629007",
+    "name": "Jontay Porter",
+    "team": "TOR",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629011",
+    "name": "Mitchell Robinson",
+    "team": "NYK",
+    "cost": 2.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629012",
+    "name": "Collin Sexton",
+    "team": "UTA",
+    "cost": 3.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629013",
+    "name": "Landry Shamet",
+    "team": "WAS",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629018",
+    "name": "Gary Trent Jr.",
+    "team": "TOR",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629020",
+    "name": "Jarred Vanderbilt",
+    "team": "LAL",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629021",
+    "name": "Moritz Wagner",
+    "team": "ORL",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629022",
+    "name": "Lonnie Walker IV",
+    "team": "BKN",
+    "cost": 1.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629023",
+    "name": "P.J. Washington",
+    "team": "CHA",
+    "cost": 3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629026",
+    "name": "Kenrich Williams",
+    "team": "OKC",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629048",
+    "name": "Goga Bitadze",
+    "team": "ORL",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629052",
+    "name": "Oshae Brissett",
+    "team": "BOS",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629056",
+    "name": "Terence Davis",
+    "team": "SAC",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629057",
+    "name": "Robert Williams III",
+    "team": "POR",
+    "cost": 2.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629060",
+    "name": "Rui Hachimura",
+    "team": "LAL",
+    "cost": 2.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629111",
+    "name": "Jock Landale",
+    "team": "HOU",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629117",
+    "name": "Wenyen Gabriel",
+    "team": "MEM",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629130",
+    "name": "Duncan Robinson",
+    "team": "MIA",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629139",
+    "name": "Yuta Watanabe",
+    "team": "PHX",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629162",
+    "name": "Jordan McLaughlin",
+    "team": "MIN",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629216",
+    "name": "Gabe Vincent",
+    "team": "LAL",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629234",
+    "name": "Drew Eubanks",
+    "team": "PHX",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629312",
+    "name": "Haywood Highsmith",
+    "team": "MIA",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629599",
+    "name": "Amir Coffey",
+    "team": "LAC",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629610",
+    "name": "DaQuan Jeffries",
+    "team": "NYK",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629611",
+    "name": "Terance Mann",
+    "team": "LAC",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629614",
+    "name": "Andrew Nembhard",
+    "team": "IND",
+    "cost": 2.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629618",
+    "name": "Jalen Pickett",
+    "team": "DEN",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629622",
+    "name": "Max Strus",
+    "team": "CLE",
+    "cost": 2.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629626",
+    "name": "Bol Bol",
+    "team": "PHX",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629627",
+    "name": "Zion Williamson",
+    "team": "NOP",
+    "cost": 4.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629629",
+    "name": "Cam Reddish",
+    "team": "LAL",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629631",
+    "name": "De'Andre Hunter",
+    "team": "ATL",
+    "cost": 2.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629634",
+    "name": "Brandon Clarke",
+    "team": "MEM",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629637",
+    "name": "Jaxson Hayes",
+    "team": "LAL",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629638",
+    "name": "Nickeil Alexander-Walker",
+    "team": "MIN",
+    "cost": 1.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629642",
+    "name": "Nassir Little",
+    "team": "PHX",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629643",
+    "name": "Chuma Okeke",
+    "team": "ORL",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629645",
+    "name": "Kevin Porter Jr.",
+    "team": "LAC",
+    "cost": 2.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629646",
+    "name": "Charles Bassey",
+    "team": "SAS",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629647",
+    "name": "Darius Bazley",
+    "team": "PHI",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629650",
+    "name": "Moses Brown",
+    "team": "POR",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629651",
+    "name": "Nic Claxton",
+    "team": "BKN",
+    "cost": 3.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629652",
+    "name": "Luguentz Dort",
+    "team": "OKC",
+    "cost": 2.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629655",
+    "name": "Daniel Gafford",
+    "team": "WAS",
+    "cost": 3.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629656",
+    "name": "Quentin Grimes",
+    "team": "NYK",
+    "cost": 2.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629659",
+    "name": "Talen Horton-Tucker",
+    "team": "UTA",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629660",
+    "name": "Ty Jerome",
+    "team": "CLE",
+    "cost": 2.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629661",
+    "name": "Cameron Johnson",
+    "team": "BKN",
+    "cost": 2.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629667",
+    "name": "Jalen McDaniels",
+    "team": "TOR",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629669",
+    "name": "Jaylen Nowell",
+    "team": "MEM",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629670",
+    "name": "Jordan Nwora",
+    "team": "IND",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629673",
+    "name": "Jordan Poole",
+    "team": "WAS",
+    "cost": 3.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629674",
+    "name": "Neemias Queta",
+    "team": "BOS",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629675",
+    "name": "Naz Reid",
+    "team": "MIN",
+    "cost": 2.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629677",
+    "name": "Luka Samanic",
+    "team": "UTA",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629680",
+    "name": "Matisse Thybulle",
+    "team": "POR",
+    "cost": 1.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629684",
+    "name": "Grant Williams",
+    "team": "DAL",
+    "cost": 2.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629716",
+    "name": "Marques Bolden",
+    "team": "MIL",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629717",
+    "name": "Armoni Brooks",
+    "team": "BKN",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629723",
+    "name": "John Konchar",
+    "team": "MEM",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629726",
+    "name": "Garrison Mathews",
+    "team": "ATL",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629731",
+    "name": "Dean Wade",
+    "team": "CLE",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629750",
+    "name": "Javonte Green",
+    "team": "CHI",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1629875",
+    "name": "Xavier Moon",
+    "team": "LAC",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1630164",
+    "name": "James Wiseman",
+    "team": "DET",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1630165",
+    "name": "Killian Hayes",
+    "team": "DET",
+    "cost": 2.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1630166",
+    "name": "Deni Avdija",
+    "team": "WAS",
+    "cost": 3.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1630167",
+    "name": "Obi Toppin",
+    "team": "IND",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1630168",
+    "name": "Onyeka Okongwu",
+    "team": "ATL",
+    "cost": 3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1630171",
+    "name": "Isaac Okoro",
+    "team": "CLE",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1630172",
+    "name": "Patrick Williams",
+    "team": "CHI",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1630173",
+    "name": "Precious Achiuwa",
+    "team": "TOR",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1630174",
+    "name": "Aaron Nesmith",
+    "team": "IND",
+    "cost": 2.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1630175",
+    "name": "Cole Anthony",
+    "team": "ORL",
+    "cost": 2.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1630177",
+    "name": "Theo Maledon",
+    "team": "CHA",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1630180",
+    "name": "Saddiq Bey",
+    "team": "ATL",
+    "cost": 2.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1630181",
+    "name": "R.J. Hampton",
+    "team": "MIA",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1630182",
+    "name": "Josh Green",
+    "team": "DAL",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1630183",
+    "name": "Jaden McDaniels",
+    "team": "MIN",
+    "cost": 2.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1630184",
+    "name": "Kira Lewis Jr.",
+    "team": "NOP",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1630186",
+    "name": "Jahmi'us Ramsey",
+    "team": "TOR",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1630188",
+    "name": "Jalen Smith",
+    "team": "IND",
+    "cost": 2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1630191",
+    "name": "Isaiah Stewart",
+    "team": "DET",
+    "cost": 2.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:03.6197+00:00"
+  },
+  {
+    "id": "1630192",
+    "name": "Zeke Nnaji",
+    "team": "DEN",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630194",
+    "name": "Paul Reed",
+    "team": "PHI",
+    "cost": 1.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630197",
+    "name": "Aleksej Pokusevski",
+    "team": "OKC",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630198",
+    "name": "Isaiah Joe",
+    "team": "OKC",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630200",
+    "name": "Tre Jones",
+    "team": "SAS",
+    "cost": 2.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630201",
+    "name": "Malachi Flynn",
+    "team": "TOR",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630202",
+    "name": "Payton Pritchard",
+    "team": "BOS",
+    "cost": 2.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630204",
+    "name": "Ashton Hagans",
+    "team": "POR",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630205",
+    "name": "Lamar Stevens",
+    "team": "BOS",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630208",
+    "name": "Nick Richards",
+    "team": "CHA",
+    "cost": 2.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630209",
+    "name": "Omer Yurtseven",
+    "team": "UTA",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630214",
+    "name": "Xavier Tillman",
+    "team": "MEM",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630215",
+    "name": "Jared Butler",
+    "team": "WAS",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630219",
+    "name": "Skylar Mays",
+    "team": "POR",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630224",
+    "name": "Jalen Green",
+    "team": "HOU",
+    "cost": 3.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630228",
+    "name": "Jonathan Kuminga",
+    "team": "GSW",
+    "cost": 2.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630230",
+    "name": "Naji Marshall",
+    "team": "NOP",
+    "cost": 2.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630231",
+    "name": "KJ Martin",
+    "team": "LAC",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630235",
+    "name": "Trent Forrest",
+    "team": "ATL",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630241",
+    "name": "Sam Merrill",
+    "team": "CLE",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630243",
+    "name": "Trevelin Queen",
+    "team": "ORL",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630245",
+    "name": "Ayo Dosunmu",
+    "team": "CHI",
+    "cost": 2.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630249",
+    "name": "Vít Krejčí",
+    "team": "ATL",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630256",
+    "name": "Jae'Sean Tate",
+    "team": "HOU",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630264",
+    "name": "Anthony Gill",
+    "team": "WAS",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630283",
+    "name": "Kylor Kelley",
+    "team": "DAL",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630285",
+    "name": "Zavier Simpson",
+    "team": "MEM",
+    "cost": 1.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630288",
+    "name": "Jeff Dowtin Jr.",
+    "team": "PHI",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630314",
+    "name": "Brandon Williams",
+    "team": "DAL",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630322",
+    "name": "Lindy Waters III",
+    "team": "OKC",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630346",
+    "name": "Matt Ryan",
+    "team": "NOP",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630526",
+    "name": "Jeremiah Robinson-Earl",
+    "team": "NOP",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630527",
+    "name": "Brandon Boston",
+    "team": "LAC",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630530",
+    "name": "Trey Murphy III",
+    "team": "NOP",
+    "cost": 3.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630531",
+    "name": "Jaden Springer",
+    "team": "PHI",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630532",
+    "name": "Franz Wagner",
+    "team": "ORL",
+    "cost": 3.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630533",
+    "name": "Ziaire Williams",
+    "team": "MEM",
+    "cost": 2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630534",
+    "name": "Ochai Agbaji",
+    "team": "UTA",
+    "cost": 1.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630537",
+    "name": "Chris Duarte",
+    "team": "SAC",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630538",
+    "name": "Bones Hyland",
+    "team": "LAC",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630539",
+    "name": "Kai Jones",
+    "team": "LAC",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630540",
+    "name": "Miles McBride",
+    "team": "NYK",
+    "cost": 1.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630541",
+    "name": "Moses Moody",
+    "team": "GSW",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630542",
+    "name": "Marcus Bagley",
+    "team": "PHI",
+    "cost": 2.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630544",
+    "name": "Tre Mann",
+    "team": "OKC",
+    "cost": 2.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630545",
+    "name": "Terrence Shannon Jr.",
+    "team": "MIN",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630548",
+    "name": "Johnny Juzang",
+    "team": "UTA",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630549",
+    "name": "Day'Ron Sharpe",
+    "team": "BKN",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630550",
+    "name": "JT Thor",
+    "team": "CHA",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630551",
+    "name": "Justin Champagnie",
+    "team": "WAS",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630552",
+    "name": "Jalen Johnson",
+    "team": "ATL",
+    "cost": 4.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630553",
+    "name": "Keon Johnson",
+    "team": "BKN",
+    "cost": 2.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630554",
+    "name": "Jason Preston",
+    "team": "UTA",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630556",
+    "name": "Kessler Edwards",
+    "team": "SAC",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630557",
+    "name": "Corey Kispert",
+    "team": "WAS",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630559",
+    "name": "Austin Reaves",
+    "team": "LAL",
+    "cost": 3.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630561",
+    "name": "David Duke Jr.",
+    "team": "SAS",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630562",
+    "name": "Matt Hurt",
+    "team": "MEM",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630564",
+    "name": "RaiQuan Gray",
+    "team": "SAS",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630567",
+    "name": "Scottie Barnes",
+    "team": "TOR",
+    "cost": 4.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630570",
+    "name": "Trendon Watford",
+    "team": "BKN",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630572",
+    "name": "Sandro Mamukelashvili",
+    "team": "SAS",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630573",
+    "name": "Sam Hauser",
+    "team": "BOS",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630574",
+    "name": "Ariel Hukporti",
+    "team": "NYK",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630577",
+    "name": "Julian Champagnie",
+    "team": "SAS",
+    "cost": 1.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630578",
+    "name": "Alperen Sengun",
+    "team": "HOU",
+    "cost": 4.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630579",
+    "name": "Jericho Sims",
+    "team": "NYK",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630581",
+    "name": "Josh Giddey",
+    "team": "OKC",
+    "cost": 3.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630583",
+    "name": "Santi Aldama",
+    "team": "MEM",
+    "cost": 2.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630585",
+    "name": "Marcus Garrett",
+    "team": "CHA",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630587",
+    "name": "Isaiah Livers",
+    "team": "DET",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630590",
+    "name": "Scotty Pippen Jr.",
+    "team": "MEM",
+    "cost": 2.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630591",
+    "name": "Jalen Suggs",
+    "team": "ORL",
+    "cost": 2.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630592",
+    "name": "Jalen Wilson",
+    "team": "BKN",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630596",
+    "name": "Evan Mobley",
+    "team": "CLE",
+    "cost": 4.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630598",
+    "name": "Aaron Wiggins",
+    "team": "OKC",
+    "cost": 1.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630600",
+    "name": "Isaiah Mobley",
+    "team": "CLE",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630610",
+    "name": "DeJon Jarreau",
+    "team": "MEM",
+    "cost": 1.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630611",
+    "name": "Gui Santos",
+    "team": "GSW",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630618",
+    "name": "D.J. Carton",
+    "team": "TOR",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630623",
+    "name": "Tyson Etienne",
+    "team": "BKN",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630625",
+    "name": "Dalano Banton",
+    "team": "BOS",
+    "cost": 1.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630631",
+    "name": "Jose Alvarado",
+    "team": "NOP",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630639",
+    "name": "A.J. Lawson",
+    "team": "DAL",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630641",
+    "name": "Ibou Badji",
+    "team": "POR",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630643",
+    "name": "Jay Huff",
+    "team": "DEN",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630647",
+    "name": "Eugene Omoruyi",
+    "team": "WAS",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630649",
+    "name": "Stanley Umude",
+    "team": "DET",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630658",
+    "name": "Colin Castleton",
+    "team": "LAL",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630692",
+    "name": "Jordan Goodwin",
+    "team": "PHX",
+    "cost": 1.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630695",
+    "name": "Micah Potter",
+    "team": "UTA",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630696",
+    "name": "Dru Smith",
+    "team": "MIA",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630699",
+    "name": "MarJon Beauchamp",
+    "team": "MIL",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.154439+00:00"
+  },
+  {
+    "id": "1630700",
+    "name": "Dyson Daniels",
+    "team": "NOP",
+    "cost": 3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1630702",
+    "name": "Jaden Hardy",
+    "team": "DAL",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1630703",
+    "name": "Scoot Henderson",
+    "team": "POR",
+    "cost": 2.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1630762",
+    "name": "Phillip Wheeler",
+    "team": "PHI",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1630811",
+    "name": "Keaton Wallace",
+    "team": "ATL",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631096",
+    "name": "Chet Holmgren",
+    "team": "OKC",
+    "cost": 3.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631098",
+    "name": "Johnny Davis",
+    "team": "WAS",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631099",
+    "name": "Keegan Murray",
+    "team": "SAC",
+    "cost": 2.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631116",
+    "name": "Patrick Baldwin Jr.",
+    "team": "WAS",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631117",
+    "name": "Walker Kessler",
+    "team": "UTA",
+    "cost": 3.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631119",
+    "name": "Jaylin Williams",
+    "team": "OKC",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631121",
+    "name": "Bryce McGowens",
+    "team": "CHA",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631123",
+    "name": "Jamaree Bouyea",
+    "team": "POR",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631124",
+    "name": "Julian Strawther",
+    "team": "DEN",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631128",
+    "name": "Christian Braun",
+    "team": "DEN",
+    "cost": 2.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631131",
+    "name": "Oscar Tshiebwe",
+    "team": "IND",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631132",
+    "name": "Christian Koloko",
+    "team": "LAL",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631133",
+    "name": "Jabari Walker",
+    "team": "POR",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631157",
+    "name": "Ryan Rollins",
+    "team": "WAS",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631165",
+    "name": "Keon Ellis",
+    "team": "SAC",
+    "cost": 1.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631166",
+    "name": "Drew Timme",
+    "team": "BKN",
+    "cost": 2.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631170",
+    "name": "Jaime Jaquez Jr.",
+    "team": "MIA",
+    "cost": 2.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631172",
+    "name": "Ousmane Dieng",
+    "team": "OKC",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631197",
+    "name": "Jared Rhoden",
+    "team": "DET",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631199",
+    "name": "Ron Harper Jr.",
+    "team": "TOR",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631200",
+    "name": "Kris Murray",
+    "team": "POR",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631204",
+    "name": "Marcus Sasser",
+    "team": "DET",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631205",
+    "name": "Buddy Boeheim",
+    "team": "DET",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631207",
+    "name": "Dalen Terry",
+    "team": "CHI",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631209",
+    "name": "Isaiah Wong",
+    "team": "IND",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631212",
+    "name": "Peyton Watson",
+    "team": "DEN",
+    "cost": 1.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631213",
+    "name": "Tyrese Martin",
+    "team": "BKN",
+    "cost": 1.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631216",
+    "name": "Caleb Houstan",
+    "team": "ORL",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631217",
+    "name": "Moussa Diabaté",
+    "team": "LAC",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631218",
+    "name": "Trayce Jackson-Davis",
+    "team": "GSW",
+    "cost": 2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631220",
+    "name": "Dereon Seabron",
+    "team": "NOP",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631221",
+    "name": "Collin Gillespie",
+    "team": "DEN",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631222",
+    "name": "Jake LaRavia",
+    "team": "MEM",
+    "cost": 2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631223",
+    "name": "David Roddy",
+    "team": "MEM",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631230",
+    "name": "Dominick Barlow",
+    "team": "SAS",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631232",
+    "name": "Keion Brooks Jr.",
+    "team": "NOP",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631241",
+    "name": "Javon Freeman-Liberty",
+    "team": "TOR",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631243",
+    "name": "Mouhamed Gueye",
+    "team": "ATL",
+    "cost": 1.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631245",
+    "name": "Quenton Jackson",
+    "team": "IND",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631246",
+    "name": "Vince Williams Jr.",
+    "team": "MEM",
+    "cost": 2.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631248",
+    "name": "Baylor Scheierman",
+    "team": "BOS",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631254",
+    "name": "Kenneth Lofton Jr.",
+    "team": "MEM",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631255",
+    "name": "Karlo Matković",
+    "team": "NOP",
+    "cost": 2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631260",
+    "name": "AJ Green",
+    "team": "MIL",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631288",
+    "name": "Jamal Cain",
+    "team": "MIA",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631298",
+    "name": "Jack White",
+    "team": "MEM",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631301",
+    "name": "Jaylen Sims",
+    "team": "CHA",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631303",
+    "name": "Justin Minaya",
+    "team": "POR",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631306",
+    "name": "Cole Swider",
+    "team": "MIA",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631311",
+    "name": "Lester Quinones",
+    "team": "GSW",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631323",
+    "name": "Simone Fontecchio",
+    "team": "UTA",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631338",
+    "name": "Mouhamadou Gueye",
+    "team": "TOR",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631342",
+    "name": "Daeqwon Plowden",
+    "team": "ATL",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631367",
+    "name": "Jacob Gilyard",
+    "team": "MEM",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1631386",
+    "name": "Taze Moore",
+    "team": "POR",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641705",
+    "name": "Victor Wembanyama",
+    "team": "SAS",
+    "cost": 5.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641706",
+    "name": "Brandon Miller",
+    "team": "CHA",
+    "cost": 3.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641707",
+    "name": "Taylor Hendricks",
+    "team": "UTA",
+    "cost": 1.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641708",
+    "name": "Amen Thompson",
+    "team": "HOU",
+    "cost": 3.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641709",
+    "name": "Ausar Thompson",
+    "team": "DET",
+    "cost": 2.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641710",
+    "name": "Anthony Black",
+    "team": "ORL",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641711",
+    "name": "Gradey Dick",
+    "team": "TOR",
+    "cost": 1.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641712",
+    "name": "Rayan Rupert",
+    "team": "POR",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641713",
+    "name": "GG Jackson",
+    "team": "MEM",
+    "cost": 2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641715",
+    "name": "Cam Whitmore",
+    "team": "HOU",
+    "cost": 1.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641716",
+    "name": "Jarace Walker",
+    "team": "IND",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641717",
+    "name": "Cason Wallace",
+    "team": "OKC",
+    "cost": 1.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641718",
+    "name": "Keyonte George",
+    "team": "UTA",
+    "cost": 2.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641720",
+    "name": "Jalen Hood-Schifino",
+    "team": "LAL",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641722",
+    "name": "Jordan Hawkins",
+    "team": "NOP",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641723",
+    "name": "Kobe Bufkin",
+    "team": "ATL",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641724",
+    "name": "Jett Howard",
+    "team": "ORL",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641726",
+    "name": "Dereck Lively II",
+    "team": "DAL",
+    "cost": 2.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641727",
+    "name": "Dariq Whitehead",
+    "team": "BKN",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641729",
+    "name": "Brice Sensabaugh",
+    "team": "UTA",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641730",
+    "name": "Noah Clowney",
+    "team": "BKN",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641731",
+    "name": "Bilal Coulibaly",
+    "team": "WAS",
+    "cost": 2.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641732",
+    "name": "Colby Jones",
+    "team": "SAC",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:04.692449+00:00"
+  },
+  {
+    "id": "1641733",
+    "name": "Nick Smith Jr.",
+    "team": "CHA",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641734",
+    "name": "Emoni Bates",
+    "team": "CLE",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641736",
+    "name": "Reece Beekman",
+    "team": "GSW",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641737",
+    "name": "Adem Bona",
+    "team": "PHI",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641739",
+    "name": "Toumani Camara",
+    "team": "POR",
+    "cost": 2.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641740",
+    "name": "Jaylen Clark",
+    "team": "MIN",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641741",
+    "name": "Ricky Council IV",
+    "team": "PHI",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641744",
+    "name": "Zach Edey",
+    "team": "MEM",
+    "cost": 2.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641748",
+    "name": "Andre Jackson Jr.",
+    "team": "MIL",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641757",
+    "name": "Jordan Miller",
+    "team": "LAC",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641763",
+    "name": "Julian Phillips",
+    "team": "CHI",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641764",
+    "name": "Brandin Podziemski",
+    "team": "GSW",
+    "cost": 2.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641765",
+    "name": "Olivier-Maxence Prosper",
+    "team": "DAL",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641767",
+    "name": "Ben Sheppard",
+    "team": "IND",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641772",
+    "name": "Nae'Qwan Tomlin",
+    "team": "CLE",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641774",
+    "name": "Tristan Vukcevic",
+    "team": "WAS",
+    "cost": 1.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641778",
+    "name": "Leaky Black",
+    "team": "CHA",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641783",
+    "name": "Tristan da Silva",
+    "team": "ORL",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641787",
+    "name": "Tosan Evbuomwan",
+    "team": "MEM",
+    "cost": 1.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641794",
+    "name": "Dillon Jones",
+    "team": "OKC",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641796",
+    "name": "Pelle Larsson",
+    "team": "MIA",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641798",
+    "name": "Jaylen Martin",
+    "team": "BKN",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641810",
+    "name": "Antonio Reeves",
+    "team": "NOP",
+    "cost": 1.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641824",
+    "name": "Matas Buzelis",
+    "team": "CHI",
+    "cost": 1.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641842",
+    "name": "Ronald Holland II",
+    "team": "DET",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641851",
+    "name": "Timmy Allen",
+    "team": "MEM",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641854",
+    "name": "Craig Porter Jr.",
+    "team": "CLE",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641871",
+    "name": "Duop Reath",
+    "team": "POR",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641877",
+    "name": "Nathan Mensah",
+    "team": "CHA",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641878",
+    "name": "Damion Baugh",
+    "team": "CHA",
+    "cost": 1.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641879",
+    "name": "Yuri Collins",
+    "team": "GSW",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641931",
+    "name": "Onuralp Bitim",
+    "team": "CHI",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641936",
+    "name": "Miles Norris",
+    "team": "BOS",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641970",
+    "name": "Maozinha Pereira",
+    "team": "MEM",
+    "cost": 1.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641989",
+    "name": "Elijah Harkless",
+    "team": "UTA",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1641998",
+    "name": "Trey Jemison III",
+    "team": "WAS",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642013",
+    "name": "Malik Williams",
+    "team": "TOR",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642024",
+    "name": "Alex Reese",
+    "team": "OKC",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642050",
+    "name": "Jackson Rowe",
+    "team": "GSW",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642258",
+    "name": "Zaccharie Risacher",
+    "team": "ATL",
+    "cost": 2.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642259",
+    "name": "Alex Sarr",
+    "team": "WAS",
+    "cost": 3.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642261",
+    "name": "Dalton Knecht",
+    "team": "LAL",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642262",
+    "name": "Cody Williams",
+    "team": "UTA",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642263",
+    "name": "Reed Sheppard",
+    "team": "HOU",
+    "cost": 1.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642264",
+    "name": "Stephon Castle",
+    "team": "SAS",
+    "cost": 2.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642265",
+    "name": "Rob Dillingham",
+    "team": "MIN",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642266",
+    "name": "Ja'Kobe Walter",
+    "team": "TOR",
+    "cost": 1.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642267",
+    "name": "Bub Carrington",
+    "team": "WAS",
+    "cost": 2.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642268",
+    "name": "Isaiah Collier",
+    "team": "UTA",
+    "cost": 2.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642269",
+    "name": "Devin Carter",
+    "team": "SAC",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642270",
+    "name": "Donovan Clingan",
+    "team": "POR",
+    "cost": 2.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642271",
+    "name": "Kyle Filipowski",
+    "team": "UTA",
+    "cost": 2.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642272",
+    "name": "Jared McCain",
+    "team": "PHI",
+    "cost": 2.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642273",
+    "name": "Kyshawn George",
+    "team": "WAS",
+    "cost": 2.2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642274",
+    "name": "Yves Missi",
+    "team": "NOP",
+    "cost": 2.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642275",
+    "name": "Tidjane Salaün",
+    "team": "CHA",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642276",
+    "name": "Kel'el Ware",
+    "team": "MIA",
+    "cost": 2.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642281",
+    "name": "Jaylon Tyson",
+    "team": "CLE",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642285",
+    "name": "Cam Spencer",
+    "team": "MEM",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642345",
+    "name": "Oso Ighodaro",
+    "team": "PHX",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642346",
+    "name": "Ryan Dunn",
+    "team": "PHX",
+    "cost": 1.6,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642347",
+    "name": "Jamal Shead",
+    "team": "TOR",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642348",
+    "name": "Justin Edwards",
+    "team": "PHI",
+    "cost": 2.1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642349",
+    "name": "Ajay Mitchell",
+    "team": "OKC",
+    "cost": 1.4,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642354",
+    "name": "KJ Simpson",
+    "team": "CHA",
+    "cost": 1.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642358",
+    "name": "AJ Johnson",
+    "team": "MIL",
+    "cost": 1.5,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642366",
+    "name": "Quinten Post",
+    "team": "GSW",
+    "cost": 1.7,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642367",
+    "name": "Jonathan Mogbo",
+    "team": "TOR",
+    "cost": 2,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642368",
+    "name": "N'Faly Dante",
+    "team": "HOU",
+    "cost": 1.8,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642377",
+    "name": "Jaylen Wells",
+    "team": "MEM",
+    "cost": 1.9,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642402",
+    "name": "Enrique Freeman",
+    "team": "IND",
+    "cost": 1,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642419",
+    "name": "Jamison Battle",
+    "team": "TOR",
+    "cost": 1.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  },
+  {
+    "id": "1642449",
+    "name": "Tolu Smith",
+    "team": "DET",
+    "cost": 2.3,
+    "pos": null,
+    "active": true,
+    "created_at": "2026-01-01T08:55:05.2218+00:00"
+  }
+]
