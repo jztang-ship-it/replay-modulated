@@ -66,6 +66,7 @@ export function RosterGrid(props: {
         const pulse          = pulseMap?.get(id);
         const isShaking      = shakingCardId === id;
         const liveShakeType: ShakeType  = isShaking ? (shakeType ?? null) : null;
+        const isSpotlight = activeRevealCardId === id;
         // Pre-computed shake type — always known, no timing dependency
         const cardShakeType = cardShakeTypeMap?.get(id) ?? null;
 
@@ -82,7 +83,8 @@ export function RosterGrid(props: {
             style={{
               minHeight: 0, position: "relative", borderRadius: 18,
               overflow: "visible",
-              zIndex: isShaking ? 10 : 1,
+              zIndex: isSpotlight ? 100 : isShaking ? 10 : 1,
+              background: "#0a0c10",
             }}
           >
             <AthleteCard

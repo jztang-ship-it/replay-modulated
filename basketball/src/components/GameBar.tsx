@@ -13,21 +13,21 @@ import ReactDOM from "react-dom";
 
 // ── Win tiers (must match payoutLogic.ts) ─────────────────────────────────
 const WIN_TIERS = [
-  { label: "BRONZE",  minFp: 115, color: "#CD7F32", glow: "rgba(205,127,50,0.6)"  },
-  { label: "GOLD",    minFp: 132, color: "#FFD700", glow: "rgba(255,215,0,0.6)"   },
-  { label: "MVP",     minFp: 160, color: "#C084FC", glow: "rgba(192,132,252,0.7)" },
-  { label: "JACKPOT", minFp: 180, color: "#FF4500", glow: "rgba(255,69,0,0.7)"    },
+  { label: "ROOKIE",  minFp: 125, color: "#CD7F32", glow: "rgba(205,127,50,0.6)"  },
+  { label: "STARTER", minFp: 150, color: "#FFD700", glow: "rgba(255,215,0,0.6)"   },
+  { label: "ALL-STAR",minFp: 170, color: "#C084FC", glow: "rgba(192,132,252,0.7)" },
+  { label: "MVP",     minFp: 200, color: "#FF4500", glow: "rgba(255,69,0,0.7)"    },
 ] as const;
 
 function getTierState(totalFp: number) {
   let hitIdx = -1;
-for (let i = 0; i < WIN_TIERS.length; i++) { if (totalFp >= WIN_TIERS[i].minFp) hitIdx = i; }
+  for (let i = 0; i < WIN_TIERS.length; i++) { if (totalFp >= WIN_TIERS[i].minFp) hitIdx = i; }
   const nextIdx = hitIdx + 1;
   const next = WIN_TIERS[nextIdx];
   const prev = WIN_TIERS[hitIdx];
 
   if (!next) {
-    return { label: "JACKPOT", fillPct: 100, color: WIN_TIERS[3].color, glow: WIN_TIERS[3].glow, fptNeeded: 0 };
+    return { label: "MVP", fillPct: 100, color: WIN_TIERS[3].color, glow: WIN_TIERS[3].glow, fptNeeded: 0 };
   }
 
   const floor   = prev?.minFp ?? 0;
@@ -53,7 +53,7 @@ function TierBar({ totalFp, gameState }: { totalFp: number; gameState: GameState
   const [burst, setBurst] = useState(false);
 
   useEffect(() => {
-    if (label !== prevLabelRef.current && prevLabelRef.current !== "BRONZE") {
+    if (label !== prevLabelRef.current && prevLabelRef.current !== "ROOKIE") {
       prevLabelRef.current = label;
       setBurst(true);
       const t = window.setTimeout(() => setBurst(false), 500);
@@ -81,19 +81,17 @@ function TierBar({ totalFp, gameState }: { totalFp: number; gameState: GameState
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
-      {/* Tier label */}
       <span style={{
         fontSize: 8, fontWeight: 900, letterSpacing: 1.2,
         textTransform: "uppercase", whiteSpace: "nowrap", flexShrink: 0,
         color: showBar ? color : "rgba(255,255,255,0.25)",
         textShadow: showBar ? `0 0 8px ${glow}` : "none",
         transition: "color 400ms ease, text-shadow 400ms ease",
-        minWidth: 48,
+        minWidth: 52,
       }}>
         {label}
       </span>
 
-      {/* Bar track */}
       <div style={{
         flex: 1, height: 4,
         background: "rgba(255,255,255,0.07)",
@@ -124,7 +122,6 @@ function TierBar({ totalFp, gameState }: { totalFp: number; gameState: GameState
         `}</style>
       </div>
 
-      {/* FP needed hint */}
       <span style={{
         fontSize: 7, fontWeight: 700, letterSpacing: 0.4,
         color: "rgba(255,255,255,0.25)", whiteSpace: "nowrap", flexShrink: 0,
@@ -139,38 +136,26 @@ function TierBar({ totalFp, gameState }: { totalFp: number; gameState: GameState
 // ── Legend modal ───────────────────────────────────────────────────────────
 
 const SCORING_RULES = [
-  { stat: "Goal",           pts: "+10", pos: "FW/MD" },
-  { stat: "Assist",         pts: "+6",  pos: "All"   },
-  { stat: "Shot on Target", pts: "+1",  pos: "FW/MD" },
-  { stat: "Key Pass",       pts: "+1",  pos: "MD"    },
-  { stat: "Tackle Won",     pts: "+1",  pos: "DE/MD" },
-  { stat: "Interception",   pts: "+1",  pos: "DE/MD" },
-  { stat: "Clean Sheet",    pts: "+4",  pos: "GK/DE" },
-  { stat: "Save",           pts: "+1",  pos: "GK"    },
-  { stat: "Goal Conceded",  pts: "-1",  pos: "GK/DE" },
-  { stat: "Yellow Card",    pts: "-1",  pos: "All"   },
-  { stat: "Red Card",       pts: "-3",  pos: "All"   },
+  { stat: "Point",    pts: "+1.0" },
+  { stat: "Rebound",  pts: "+1.2" },
+  { stat: "Assist",   pts: "+1.5" },
+  { stat: "Steal",    pts: "+2.0" },
+  { stat: "Block",    pts: "+2.0" },
+  { stat: "Turnover", pts: "-1.0" },
 ];
 
-const BADGE_RULES = [
-  { icon: "🚀", label: "CAREER NIGHT", condition: "FP > 140% of projection" },
-  { icon: "🔥", label: "ON FIRE",      condition: "FP > 115% of projection" },
-  { icon: "🥶", label: "ICE COLD",     condition: "FP < 70% of projection"  },
+const PAYOUT_TIERS = [
+  { label: "MVP",      score: "200+", payout: "15x", color: "#FF4500", bg: "rgba(255,69,0,0.10)",      border: "rgba(255,69,0,0.3)"      },
+  { label: "ALL-STAR", score: "170+", payout: "5x",  color: "#C084FC", bg: "rgba(192,132,252,0.10)",   border: "rgba(192,132,252,0.25)"  },
+  { label: "STARTER",  score: "150+", payout: "2.5x",color: "#FFD700", bg: "rgba(255,215,0,0.10)",     border: "rgba(255,215,0,0.25)"    },
+  { label: "ROOKIE",   score: "125+", payout: "1.5x",color: "#CD7F32", bg: "rgba(205,127,50,0.10)",    border: "rgba(205,127,50,0.25)"   },
+  { label: "BUST",     score: "<125", payout: "—",   color: "#6B7280", bg: "rgba(107,114,128,0.08)",   border: "rgba(107,114,128,0.2)"   },
 ];
 
 const colHdr: React.CSSProperties = {
   fontSize: 9, fontWeight: 900, letterSpacing: 1,
   textTransform: "uppercase", color: "rgba(255,255,255,0.35)",
 };
-
-// Payout tiers — kept in sync with payoutLogic.ts
-const PAYOUT_TIERS = [
-  { label: "JACKPOT", score: "180+", payout: "15x", color: "#FF4500", bg: "rgba(255,69,0,0.10)",     border: "rgba(255,69,0,0.3)"     },
-  { label: "MVP",     score: "160+", payout: "5x",  color: "#C084FC", bg: "rgba(192,132,252,0.10)", border: "rgba(192,132,252,0.25)" },
-  { label: "GOLD",    score: "132+", payout: "2.5x",color: "#FFD700", bg: "rgba(255,215,0,0.10)",   border: "rgba(255,215,0,0.25)"   },
-  { label: "BRONZE",  score: "115+", payout: "1.5x",color: "#CD7F32", bg: "rgba(205,127,50,0.10)",  border: "rgba(205,127,50,0.25)"  },
-  { label: "BUST",    score: "<115", payout: "—",   color: "#6B7280", bg: "rgba(107,114,128,0.08)", border: "rgba(107,114,128,0.2)"  },
-];
 
 function LegendModal({ onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState<"payouts" | "scoring" | "badges">("payouts");
@@ -214,6 +199,7 @@ function LegendModal({ onClose }: { onClose: () => void }) {
           ))}
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px 20px" }}>
+
           {tab === "payouts" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, paddingBottom: 6, borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: 2 }}>
@@ -237,25 +223,29 @@ function LegendModal({ onClose }: { onClose: () => void }) {
               </div>
             </div>
           )}
+
           {tab === "scoring" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, paddingBottom: 5, borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: 2 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, paddingBottom: 5, borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: 2 }}>
                 <span style={colHdr}>Stat</span>
-                <span style={{ ...colHdr, textAlign: "right" }}>Pos</span>
                 <span style={{ ...colHdr, textAlign: "right", minWidth: 32 }}>FP</span>
               </div>
               {SCORING_RULES.map(r => (
-                <div key={r.stat} style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, alignItems: "center", padding: "4px 2px" }}>
+                <div key={r.stat} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "center", padding: "4px 2px" }}>
                   <span style={{ fontSize: 12, color: "rgba(255,255,255,0.85)" }}>{r.stat}</span>
-                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", textAlign: "right", whiteSpace: "nowrap" }}>{r.pos}</span>
                   <span style={{ fontSize: 12, fontWeight: 900, textAlign: "right", minWidth: 32, color: r.pts.startsWith("+") ? "#36D46B" : "#ef4444" }}>{r.pts}</span>
                 </div>
               ))}
             </div>
           )}
+
           {tab === "badges" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {BADGE_RULES.map(b => (
+              <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, color: "rgba(255,255,255,0.35)", marginBottom: 4 }}>STAMPS</div>
+              {[
+                { icon: "🏆", label: "CAREER NIGHT", condition: "FP ≥ 140% of projection" },
+                { icon: "🧊", label: "ICE COLD",     condition: "FP ≤ 60% of projection"  },
+              ].map(b => (
                 <div key={b.label} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 12px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
                   <span style={{ fontSize: 26, lineHeight: 1, flexShrink: 0 }}>{b.icon}</span>
                   <div>
@@ -264,11 +254,26 @@ function LegendModal({ onClose }: { onClose: () => void }) {
                   </div>
                 </div>
               ))}
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginTop: 4, lineHeight: 1.6 }}>
-                Badges appear on both the card front and back after each reveal.
-              </div>
+              <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, color: "rgba(255,255,255,0.35)", marginTop: 8, marginBottom: 4 }}>BADGES</div>
+              {[
+                { icon: "👑", label: "TRIPLE DOUBLE", condition: "10+ in three stat categories" },
+                { icon: "🏀", label: "DOUBLE DOUBLE", condition: "10+ in two stat categories"   },
+                { icon: "🔥", label: "BUCKET",        condition: "30+ points"                   },
+                { icon: "✌️", label: "DIME",          condition: "7+ assists"                   },
+                { icon: "💪", label: "GLASS",         condition: "10+ rebounds"                 },
+                { icon: "🛡️", label: "LOCK",         condition: "3+ steals + blocks combined"  },
+              ].map(b => (
+                <div key={b.label} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 12px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <span style={{ fontSize: 26, lineHeight: 1, flexShrink: 0 }}>{b.icon}</span>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: 0.8, color: "#EAF0FF", marginBottom: 3 }}>{b.label}</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{b.condition}</div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
+
         </div>
         <button onClick={onClose} style={{
           padding: "14px 0", background: "rgba(255,255,255,0.04)",
@@ -386,24 +391,24 @@ export function GameBar({
       )}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
 
-        {/* Row 0: Tier progress bar — slim, lives at top of this box */}
+        {/* Row 0: Tier progress bar */}
         <TierBar totalFp={totalFp} gameState={gameState} />
 
         {/* Row 1: Balance | Team FP | Budget */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 8 }}>
           <div>
             <div style={labelStyle}>Balance</div>
-            <div style={{ fontSize: 20, fontWeight: 950, lineHeight: 1, color: isBalanceAnimating ? "#36D46B" : "#EAF0FF", transition: "color 300ms ease" }}>
+            <div style={{ fontSize: 17, fontWeight: 950, lineHeight: 1, color: isBalanceAnimating ? "#36D46B" : "#EAF0FF", transition: "color 300ms ease" }}>
               ${balance.toLocaleString()}
             </div>
           </div>
 
-          <div style={{ textAlign: "center", padding: "5px 18px", borderRadius: 12, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)" }}>
+          <div style={{ textAlign: "center", padding: "3px 14px", borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, marginBottom: 2 }}>
               <span style={{ ...labelStyle, textAlign: "center", marginBottom: 0 }}>Team FP</span>
               <button onClick={() => setShowLegend(true)} style={{ width: 14, height: 14, borderRadius: "50%", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.5)", fontSize: 8, fontWeight: 900, lineHeight: 1, cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>?</button>
             </div>
-            <div style={{ fontSize: 22, fontWeight: 950, letterSpacing: -0.5, color: "#EAF0FF", lineHeight: 1 }}>
+            <div style={{ fontSize: 18, fontWeight: 950, letterSpacing: -0.5, color: "#EAF0FF", lineHeight: 1 }}>
               <RollingNumber value={totalFp} decimals={1} />
             </div>
           </div>
@@ -411,7 +416,7 @@ export function GameBar({
           <div style={{ textAlign: "right" }}>
             <div style={{ ...labelStyle, textAlign: "right" }}>Budget</div>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "flex-end", gap: 3 }}>
-              <span style={{ fontSize: 20, fontWeight: 950, lineHeight: 1, color: overBudget ? "#ef4444" : "#EAF0FF", transition: "color 200ms ease" }}>
+              <span style={{ fontSize: 17, fontWeight: 950, lineHeight: 1, color: overBudget ? "#ef4444" : "#EAF0FF", transition: "color 200ms ease" }}>
                 {remaining}
               </span>
               <span style={{ fontSize: 13, fontWeight: 700, opacity: 0.4, lineHeight: 1 }}>/ {capMax}</span>

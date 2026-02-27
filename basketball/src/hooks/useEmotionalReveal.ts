@@ -253,21 +253,17 @@ export function useEmotionalReveal(params: Params) {
               setVisibleFpMap(prev => new Map(prev).set(c.cardId, target));
               const cardBadges = c.badges ?? [];
               if (cardBadges.length > 0) {
-                const badgeBonus = cardBadges.reduce((s: number, b: any) => s + b.fp, 0);
                 setVisibleBadgesMap(prev => new Map(prev).set(c.cardId, cardBadges));
-                const bt = window.setTimeout(() => {
-                  setVisibleFpMap(prev => new Map(prev).set(c.cardId, target + badgeBonus));
-                  const nt = window.setTimeout(() => {
-                    onCardComplete?.(c.cardId);
-                    revealOne(idx + 1);
-                  }, 300);
-                  timersRef.current.push(nt);
-                }, 500);
-                timersRef.current.push(bt);
-              } else {
+              }
+              const badgeMs = cardBadges.length > 0 ? 400 + (cardBadges.length - 1) * 120 : 0;
+              const stampMs = st !== null ? 300 : 0;
+              const postFpMs = badgeMs + stampMs;
+              const doneT = window.setTimeout(() => {
+                if (runIdRef.current !== myRunId) return;
                 onCardComplete?.(c.cardId);
                 revealOne(idx + 1);
-              }
+              }, postFpMs);
+              timersRef.current.push(doneT);
             }
           };
           tick();

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 // Must match payoutLogic.ts WinTier
-type WinTier = "BUST" | "BRONZE" | "GOLD" | "MVP" | "JACKPOT";
+type WinTier = "BUST" | "ROOKIE" | "STARTER" | "ALL_STAR" | "MVP";
 
 type Props = {
   tier: WinTier;
@@ -12,36 +12,36 @@ type Props = {
 
 function getTierConfig(tier: WinTier) {
   switch (tier) {
-    case "JACKPOT":
+    case "MVP":
       return {
-        label: "🎰 JACKPOT! 🎰",
-        color: "#FFD700",
-        glow: "rgba(255,215,0,0.4)",
+        label: "🏆 MVP PERFORMANCE! 🏆",
+        color: "#FF4500",
+        glow: "rgba(255,69,0,0.4)",
         scale: 1.2,
         confetti: true,
         duration: 4000,
       };
-    case "MVP":
+    case "ALL_STAR":
       return {
-        label: "🔥 MVP ROUND! 🔥",
-        color: "#FF6B35",
-        glow: "rgba(255,107,53,0.3)",
+        label: "⭐ ALL-STAR PERFORMANCE! ⭐",
+        color: "#C084FC",
+        glow: "rgba(192,132,252,0.35)",
         scale: 1.1,
         confetti: true,
         duration: 3500,
       };
-    case "GOLD":
+    case "STARTER":
       return {
-        label: "⭐ GOLD! ⭐",
+        label: "🔥 STARTER WIN!",
         color: "#FFD700",
         glow: "rgba(255,215,0,0.25)",
         scale: 1.05,
         confetti: false,
         duration: 3000,
       };
-    case "BRONZE":
+    case "ROOKIE":
       return {
-        label: "🥉 BRONZE",
+        label: "✅ ROOKIE WIN",
         color: "#CD7F32",
         glow: "rgba(205,127,50,0.2)",
         scale: 1.0,
@@ -122,7 +122,7 @@ export function WinCelebration({ tier, payout, multiplier, onComplete }: Props) 
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{
-          fontSize: 42,
+          fontSize: 36,
           fontWeight: 950,
           color: config.color,
           marginBottom: 20,
@@ -154,7 +154,7 @@ export function WinCelebration({ tier, payout, multiplier, onComplete }: Props) 
 }
 
 function Confetti({ color }: { color: string }) {
-  const colors = [color, "#FFD700", "#FF6B35", "#4ECDC4", "#A78BFA"];
+  const colors = [color, "#FFD700", "#FF4500", "#4ECDC4", "#A78BFA"];
   return (
     <div style={{ position: "fixed", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
       {Array.from({ length: 50 }).map((_, i) => {

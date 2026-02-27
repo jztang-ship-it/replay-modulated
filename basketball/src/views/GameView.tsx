@@ -107,7 +107,7 @@ function JackpotRow({ betAdded }: { betAdded: number }) {
     <div style={{
       flex: "0 0 auto",
       display: "flex", justifyContent: "center",
-      padding: "2px 12px",
+      padding: "0px 12px",
     }}>
       <div style={{
         display: "inline-flex", alignItems: "center", gap: 6,
@@ -171,12 +171,20 @@ export default function GameView() {
     flipState,
     onCardComplete: useCallback((cId: string) => {
       const card = rosterRef.current.find(c => cardId(c) === cId);
-      if (card && !card.wasHeld) {
+      if (card && !(card as any).wasHeld) {
         setRevealedSalary(prev => prev + Number((card as any).salary ?? 0));
       }
-      // salary tracking only — win celebration handled by onCardRollComplete
+    }, []),
+    onAllComplete: useCallback((totalFp: number) => {
+      clearActiveCard();
+      window.setTimeout(() => {
+        const tier = calculateWinTier(totalFp);
+        const payout = calculatePayout(tier, currentBet);
+        setWinTier(tier);
+        setWinPayout(payout);
+        setGameState("WIN_CELEBRATION");
+      }, 800);
     }, [currentBet]),
-    onAllComplete: undefined,
   });
 
   // Zone 2: Derived values
@@ -223,13 +231,7 @@ export default function GameView() {
     return ids;
   }, [gameState, roster, flipState, getVisibleFp]);
 
-  const displayRoster = useMemo(() => {
-    if (gameState !== "REVEALING") return roster;
-    return roster.map(c => {
-      const visFp = getVisibleFp(cardId(c));
-      return visFp !== undefined ? { ...c, actualFp: visFp } : c;
-    });
-  }, [roster, gameState, getVisibleFp]);
+  const displayRoster = roster;
 
   const visibleFpMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -315,7 +317,9 @@ export default function GameView() {
       rosterRef.current = finalRoster;
       completedCardsRef.current = new Set();
       finalRoster.forEach(c => {
-        if ((c as any).wasHeld) completedCardsRef.current.add(cardId(c));
+        if ((c as any).wasHeld) {
+          completedCardsRef.current.add(cardId(c));
+        }
       });
       setNoTransition(true);
       flipState.initCards(finalRoster.map(cardId));
@@ -378,8 +382,8 @@ export default function GameView() {
       )}
       <div style={{
         width: "100%", maxWidth: 460, height: "100%",
-        display: "flex", flexDirection: "column", gap: 6,
-        padding: "env(safe-area-inset-top, 8px) 12px env(safe-area-inset-bottom, 8px)",
+        display: "flex", flexDirection: "column", gap: 4,
+        padding: "env(safe-area-inset-top, 8px) 12px calc(env(safe-area-inset-bottom, 8px) + 6px)",
         boxSizing: "border-box",
       }}>
 
@@ -398,16 +402,17 @@ export default function GameView() {
         <JackpotRow betAdded={currentBet} />
 
         {/* Card grid */}
-        <div style={{ flex: "1 1 auto", minHeight: 0 }}>
+        <div style={{ flex: "1 1 auto", minHeight: 0, position: "relative", zIndex: 10, overflow: "hidden" }}>
           <div
             onClick={gameState === "REVEALING" ? skipReveal : undefined}
             style={{
               height: "100%", borderRadius: 18,
               border: "1px solid rgba(255,255,255,0.10)",
-              background: "rgba(255,255,255,0.03)",
+              background: "#070A12",
               boxShadow: "0 18px 60px rgba(0,0,0,0.45)",
               backdropFilter: "blur(10px)", padding: 10,
               cursor: gameState === "REVEALING" ? "pointer" : "default",
+              overflow: "hidden",
             }}
           >
             <RosterGrid
@@ -431,22 +436,6 @@ export default function GameView() {
   activeRevealCardId={activeRevealCardId}
   onToggleLock={toggleLock}
   onToggleFlip={toggleStatsFlip}
-  onCardRollComplete={(cId) => {
-    completedCardsRef.current.add(cId);
-    console.log('[complete] card done:', cId, 'completed:', [...completedCardsRef.current].length, 'of', rosterRef.current.length);
-    const allDone = rosterRef.current.length > 0 &&
-      rosterRef.current.every(c => completedCardsRef.current.has(cardId(c)));
-    console.log('[complete] allDone:', allDone, 'roster ids:', rosterRef.current.map(c => cardId(c)));
-    if (allDone) {
-      clearActiveCard();
-      const total = rosterRef.current.reduce((s, c) => s + Number((c as any).actualFp ?? 0), 0);
-      const tier = calculateWinTier(total);
-      const payout = calculatePayout(tier, currentBet);
-      setWinTier(tier);
-      setWinPayout(payout);
-      setGameState("WIN_CELEBRATION");
-    }
-  }}
 />
 
           </div>
@@ -454,11 +443,12 @@ export default function GameView() {
 
         {/* Bottom bar: tier progress + balance/fp/budget + bet + action */}
         <div style={{
-          flex: "0 0 auto", borderRadius: 18,
+          flex: "0 0 auto", borderRadius: 18, position: "relative", zIndex: 30,
           border: "1px solid rgba(255,255,255,0.10)",
           background: "rgba(255,255,255,0.06)",
           boxShadow: "0 14px 34px rgba(0,0,0,0.32)",
           padding: "10px 12px", backdropFilter: "blur(10px)",
+          
         }}>
           <GameBar
             gameState={gameState}
