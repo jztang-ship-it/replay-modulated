@@ -72,11 +72,10 @@ export const BasketballSportConfig = {
     winCondition: {
       type: 'FIXED_THRESHOLD',
       thresholds: [
-        { tier: 'BRONZE',   minFP: 100 },
-        { tier: 'SILVER',   minFP: 120 },
-        { tier: 'GOLD',     minFP: 150 },
-        { tier: 'PLATINUM', minFP: 200 },
-        { tier: 'DIAMOND',  minFP: 250 },
+        { tier: 'ROOKIE',   minFP: 135 },
+        { tier: 'STARTER',  minFP: 160 },
+        { tier: 'ALL_STAR', minFP: 180 },
+        { tier: 'MVP',      minFP: 205 },
       ],
     },
     badges: [

@@ -1,0 +1,394 @@
+/**
+ * worldcupConfig.ts — Layer 2 (World Cup specific)
+ * FP weights: 5x scaled, baked in.
+ * Salary: position-balanced (within-position scaling).
+ * Badges: position-specific, data-validated thresholds.
+ */
+
+import type { SportConfigShape } from "@shared/types";
+
+export const WorldCupSportConfig: SportConfigShape = {
+  sportKey: "worldcup",
+  sportLabel: "World Cup",
+
+  // ── Roster ────────────────────────────────────────────────────────────────
+  rosterSize: 6,
+maxPlayers: 6,
+rosterSlots: ["GK", "DEF", "MID", "FWD", "FLEX", "FLEX"],
+  excludeFromFlex: ["GK"],
+  salaryCap: 180,
+
+  // ── Positions ─────────────────────────────────────────────────────────────
+  positions: ["GK", "DEF", "MID", "FWD"],
+  positionAliases: {
+    "Goalkeeper": "GK",
+    "Center Back": "DEF", "Left Back": "DEF", "Right Back": "DEF",
+    "Left Wing Back": "DEF", "Right Wing Back": "DEF",
+    "Defensive Midfield": "MID", "Central Midfield": "MID",
+    "Left Midfield": "MID", "Right Midfield": "MID",
+    "Attacking Midfield": "MID", "Left Wing": "MID", "Right Wing": "MID",
+    "Center Forward": "FWD", "Left Center Forward": "FWD", "Right Center Forward": "FWD",
+    "Secondary Striker": "FWD",
+  },
+
+  // ── Economy ────────────────────────────────────────────────────────────────
+  economyConfig: {
+    capMax: 180,
+    capMin: 140,
+    salaryMin: 10,
+    salaryMax: 60,
+  },
+
+  // ── FP weights — position-specific (FPL/DraftKings design principle) ────────
+  // Each position has different weights for the same stats because:
+  // - Rarity matters: a GK goal is rarer than a FWD goal, so worth more
+  // - Role matters: tackles are core to DEF value, not FWD value
+  // - Calibrated so avg game ≈ 16-25 FP, elite game ≈ 68-73 FP (badges add 10-45)
+  // This is the correct architecture for any multi-position sport (hockey, NFL, etc.)
+  //
+  // projectionWeights is required by SportConfigShape — used as fallback only
+  projectionWeights: {
+    goals: 12.0, assists: 8.0, saves: 20.0,
+  },
+
+  positionProjectionWeights: {
+    GK: {
+      saves:              20.0,  // avg 1.14 saves → 22.8 FP (primary GK stat)
+      goals_conceded:     -6.0,  // avg 1.14 GA → -6.8 FP
+      clearances:          4.0,  // bonus
+      goals:              60.0,  // extremely rare — massive reward
+      yellow_cards:       -5.0,
+      red_cards:         -15.0,
+    },
+    DEF: {
+      goals:              18.0,  // rare for DEF — heavily rewarded
+      assists:             7.0,
+      tackles:             5.0,  // avg 0.84 → 4.2 FP
+      interceptions:       6.0,  // avg 0.66 → 4.0 FP
+      clearances:          1.5,  // avg 2.96 → 4.4 FP (high volume, low weight)
+      blocked_shots:       3.0,
+      pressures:           0.4,  // avg 9.35 → 3.7 FP
+      dribbles_completed:  2.0,
+      shots_on_target:     2.0,
+      key_passes:          3.0,
+      yellow_cards:       -5.0,
+      red_cards:         -15.0,
+    },
+    MID: {
+      goals:              12.0,  // avg 0.10 → 1.2 FP
+      assists:             8.0,  // avg 0.07 → 0.56 FP
+      shots_on_target:     3.0,  // avg 0.57 → 1.7 FP
+      key_passes:          5.0,  // avg 0.72 → 3.6 FP
+      tackles:             4.0,  // avg 0.85 → 3.4 FP
+      interceptions:       5.0,  // avg 0.56 → 2.8 FP
+      clearances:          1.5,  // avg 1.08 → 1.6 FP
+      pressures:           0.6,  // avg 14.51 → 8.7 FP (high volume)
+      dribbles_completed:  2.0,  // avg 0.73 → 1.46 FP
+      yellow_cards:       -5.0,
+      red_cards:         -15.0,
+    },
+    FWD: {
+      goals:              22.0,  // avg 0.24 → 5.3 FP (primary FWD stat)
+      assists:             8.0,  // avg 0.10 → 0.8 FP
+      shots_on_target:     4.0,  // avg 1.14 → 4.56 FP
+      key_passes:          3.0,  // avg 0.91 → 2.73 FP
+      dribbles_completed:  2.0,  // avg 1.22 → 2.44 FP
+      pressures:           0.2,  // avg 13.7 → 2.74 FP
+      tackles:             2.0,  // avg 0.53 → 1.06 FP
+      yellow_cards:       -5.0,
+      red_cards:         -15.0,
+    },
+  },
+
+
+  // ── Position FP multipliers ───────────────────────────────────────────────
+  // Normalizes raw FP output so top-tier players at every position
+  // produce a comparable FP range (~100 FP at top tier).
+  // Only GK needs scaling — DEF/MID/FWD already produce ~88-102 FP at top tier.
+  // GK top10 avg = 23.4 FP vs target ~90 FP → multiplier of 4.0.
+  // Badge bonuses are excluded from scaling (applied after).
+
+  // ── Tier thresholds (salary-based) ────────────────────────────────────────
+  tierThresholds: [
+    { tier: "ORANGE", minSalary: 52 },
+    { tier: "PURPLE", minSalary: 40 },
+    { tier: "BLUE",   minSalary: 28 },
+    { tier: "GREEN",  minSalary: 16 },
+    { tier: "WHITE",  minSalary: 0  },
+  ],
+
+  // ── Win tiers (from tier-biased simulator) ────────────────────────────────
+  winTiers: [
+    { name: "ROOKIE",   minFp: 155, multiplier: 1.5,  color: "#10B981" },
+    { name: "STARTER",  minFp: 180, multiplier: 2.5,  color: "#3B82F6" },
+    { name: "ALL_STAR", minFp: 200, multiplier: 5,    color: "#8B5CF6" },
+    { name: "MVP",      minFp: 230, multiplier: 15,   color: "#F59E0B" },
+  ],
+
+  // ── Badges ────────────────────────────────────────────────────────────────
+  // Suppression rules (only highest fires):
+  //   FWD:  HAT_TRICK > BRACE > POACHER  (goal-based)
+  //         CREATOR independent
+  //         SHARP independent (no goals)
+  //   MID:  MAESTRO > DYNAMO > PLAYMAKER (goal/assist/kp)
+  //         BOX_TO_BOX independent
+  //         PRESS_KING independent
+  //   DEF:  STOPPER > GUARDIAN > BULLDOZER (defensive combo)
+  //         OVERLAP independent
+  //         CLEAN_SHEET independent
+  //   GK:   WALL > KEEPER (save-based)
+  //         CLEAN_SHEET independent
+  badges: [
+
+    // ── FWD ────────────────────────────────────────────────────────────────
+    {
+      id: "HAT_TRICK",
+      position: "FWD",
+      icon: "🎩",
+      label: "HAT-TRICK",
+      fp: 30,
+      suppressedBy: [],
+      suppresses: ["BRACE", "POACHER"],
+      trigger: (s: Record<string, number>) => s.goals >= 3,
+    },
+    {
+      id: "BRACE",
+      position: "FWD",
+      icon: "⚡",
+      label: "BRACE",
+      fp: 15,
+      suppressedBy: ["HAT_TRICK"],
+      suppresses: ["POACHER"],
+      trigger: (s: Record<string, number>) => s.goals === 2,
+    },
+    {
+      id: "POACHER",
+      position: "FWD",
+      icon: "🎯",
+      label: "POACHER",
+      fp: 15,
+      suppressedBy: ["HAT_TRICK", "BRACE"],
+      suppresses: [],
+      trigger: (s: Record<string, number>) => s.goals >= 1 && s.assists >= 1,
+    },
+    {
+      id: "CREATOR",
+      position: "FWD",
+      icon: "🪄",
+      label: "CREATOR",
+      fp: 18,
+      suppressedBy: [],
+      suppresses: [],
+      trigger: (s: Record<string, number>) => s.assists >= 2,
+    },
+    {
+      id: "SHARP",
+      position: "FWD",
+      icon: "🔫",
+      label: "SHARP",
+      fp: 8,
+      suppressedBy: [],
+      suppresses: [],
+      trigger: (s: Record<string, number>) => s.shots_on_target >= 2 && s.goals === 0,
+    },
+
+    // ── MID ────────────────────────────────────────────────────────────────
+    {
+      id: "MAESTRO",
+      position: "MID",
+      icon: "🎼",
+      label: "MAESTRO",
+      fp: 20,
+      suppressedBy: [],
+      suppresses: ["DYNAMO", "PLAYMAKER"],
+      trigger: (s: Record<string, number>) => s.goals >= 1 && s.key_passes >= 2,
+    },
+    {
+      id: "DYNAMO",
+      position: "MID",
+      icon: "⚡",
+      label: "DYNAMO",
+      fp: 18,
+      suppressedBy: ["MAESTRO"],
+      suppresses: ["PLAYMAKER"],
+      trigger: (s: Record<string, number>) => s.assists >= 2,
+    },
+    {
+      id: "PLAYMAKER",
+      position: "MID",
+      icon: "🧠",
+      label: "PLAYMAKER",
+      fp: 12,
+      suppressedBy: ["MAESTRO", "DYNAMO"],
+      suppresses: [],
+      trigger: (s: Record<string, number>) => s.key_passes >= 2,
+    },
+    {
+      id: "BOX_TO_BOX",
+      position: "MID",
+      icon: "💪",
+      label: "BOX-TO-BOX",
+      fp: 10,
+      suppressedBy: [],
+      suppresses: [],
+      trigger: (s: Record<string, number>) => s.tackles >= 1 && s.key_passes >= 1,
+    },
+    {
+      id: "PRESS_KING",
+      position: "MID",
+      icon: "🔥",
+      label: "PRESS KING",
+      fp: 10,
+      suppressedBy: [],
+      suppresses: [],
+      trigger: (s: Record<string, number>) => s.pressures >= 20,
+    },
+
+    // ── DEF ────────────────────────────────────────────────────────────────
+    {
+      id: "STOPPER",
+      position: "DEF",
+      icon: "🔒",
+      label: "STOPPER",
+      fp: 20,
+      suppressedBy: [],
+      suppresses: ["GUARDIAN", "BULLDOZER"],
+      trigger: (s: Record<string, number>) => s.tackles >= 2 && s.interceptions >= 1 && s.clearances >= 2,
+    },
+    {
+      id: "GUARDIAN",
+      position: "DEF",
+      icon: "🛡️",
+      label: "GUARDIAN",
+      fp: 15,
+      suppressedBy: ["STOPPER"],
+      suppresses: ["BULLDOZER"],
+      trigger: (s: Record<string, number>) => s.tackles >= 2 && s.interceptions >= 2,
+    },
+    {
+      id: "BULLDOZER",
+      position: "DEF",
+      icon: "🏗️",
+      label: "BULLDOZER",
+      fp: 12,
+      suppressedBy: ["STOPPER", "GUARDIAN"],
+      suppresses: [],
+      trigger: (s: Record<string, number>) => s.clearances >= 6,
+    },
+    {
+      id: "OVERLAP",
+      position: "DEF",
+      icon: "🚀",
+      label: "OVERLAP",
+      fp: 15,
+      suppressedBy: [],
+      suppresses: [],
+      trigger: (s: Record<string, number>) => s.goals >= 1 || s.assists >= 1,
+    },
+    {
+      id: "CLEAN_SHEET_DEF",
+      position: "DEF",
+      icon: "🧱",
+      label: "CLEAN SHEET",
+      fp: 10,
+      suppressedBy: [],
+      suppresses: [],
+      trigger: (s: Record<string, number>) => s.goals_conceded === 0 && s.minutes_played >= 60,
+    },
+
+    // ── GK ─────────────────────────────────────────────────────────────────
+    {
+      id: "WALL",
+      position: "GK",
+      icon: "🧱",
+      label: "THE WALL",
+      fp: 10,
+      suppressedBy: [],
+      suppresses: ["KEEPER"],
+      trigger: (s: Record<string, number>) => s.saves >= 3,
+    },
+    {
+      id: "KEEPER",
+      position: "GK",
+      icon: "🧤",
+      label: "KEEPER",
+      fp: 5,
+      suppressedBy: ["WALL"],
+      suppresses: [],
+      trigger: (s: Record<string, number>) => s.saves >= 1 && s.saves <= 2,
+    },
+    {
+      id: "CLEAN_SHEET_GK",
+      position: "GK",
+      icon: "✨",
+      label: "CLEAN SHEET",
+      fp: 10,
+      suppressedBy: [],
+      suppresses: [],
+      trigger: (s: Record<string, number>) => s.goals_conceded === 0 && s.minutes_played >= 60,
+    },
+
+    // ── Discipline (all positions, visual only) ────────────────────────────
+    {
+      id: "YELLOW",
+      position: "ALL",
+      icon: "🟨",
+      label: "BOOKED",
+      fp: 0,
+      suppressedBy: [],
+      suppresses: [],
+      trigger: (s: Record<string, number>) => s.yellow_cards >= 1,
+    },
+    {
+      id: "RED",
+      position: "ALL",
+      icon: "🟥",
+      label: "SENT OFF",
+      fp: 0,
+      suppressedBy: [],
+      suppresses: [],
+      trigger: (s: Record<string, number>) => s.red_cards >= 1,
+    },
+  ],
+
+  // ── Stat display (card back, position-specific) ───────────────────────────
+  statDisplay: {
+    GK: [
+      { key: "saves",          label: "SV"  },
+      { key: "goals_conceded", label: "GC"  },
+      { key: "clearances",     label: "CLR" },
+      { key: "minutes_played", label: "MIN" },
+    ],
+    DEF: [
+      { key: "goals",          label: "G"   },
+      { key: "assists",        label: "A"   },
+      { key: "tackles",        label: "TKL" },
+      { key: "interceptions",  label: "INT" },
+      { key: "clearances",     label: "CLR" },
+    ],
+    MID: [
+      { key: "goals",          label: "G"   },
+      { key: "assists",        label: "A"   },
+      { key: "key_passes",     label: "KP"  },
+      { key: "tackles",        label: "TKL" },
+      { key: "pressures",      label: "PRS" },
+    ],
+    FWD: [
+      { key: "goals",          label: "G"   },
+      { key: "assists",        label: "A"   },
+      { key: "shots_on_target",label: "SOT" },
+      { key: "key_passes",     label: "KP"  },
+      { key: "dribbles_completed", label: "DRB" },
+    ],
+    default: [
+      { key: "goals",          label: "G"   },
+      { key: "assists",        label: "A"   },
+      { key: "minutes_played", label: "MIN" },
+    ],
+  },
+
+  // ── Headshots ─────────────────────────────────────────────────────────────
+  // StatsBomb player IDs don't map to a public CDN.
+  // UI renders national flag + last name instead.
+  headshotUrl: (_playerId: string) => null,
+};

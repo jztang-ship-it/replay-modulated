@@ -3,7 +3,8 @@
 // Single source of truth for UI + adapter types
 // ==================================================================
 
-export type Position = "FW" | "MD" | "DE" | "GK";
+// Position is sport-specific — Layer 2 config validates positions, Layer 1 uses string
+export type Position = string;
 
 // Tier colors (highest to lowest)
 export type TierColor = "ORANGE" | "PURPLE" | "BLUE" | "GREEN" | "WHITE";

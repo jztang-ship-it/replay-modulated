@@ -9,6 +9,7 @@ import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import type { GamePhase, PlayerCard } from "../adapters/types";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { dealInitialRoster, redrawRoster, resolveRoster } from "../adapters/gameAdapter";
+import { ensureLoaded } from "../engines/dataEngine";
 import { RosterGrid } from "../components/RosterGrid";
 import { AppHeader } from "../components/AppHeader";
 import { resetAllOverlays } from "../components/AthleteCard";
@@ -21,6 +22,17 @@ import { calculateWinTier, calculatePayout, type WinTier } from "../utils/payout
 const CAP_MAX        = sportAdapter.salaryCap;
 const ROSTER_SIZE    = sportAdapter.rosterSize;
 const STARTING_BALANCE = 1000;
+
+function loadBalance(): number {
+  try {
+    const v = localStorage.getItem("replaymod_balance");
+    const n = v ? Number(v) : NaN;
+    return Number.isFinite(n) && n >= 0 ? n : STARTING_BALANCE;
+  } catch { return STARTING_BALANCE; }
+}
+function saveBalance(v: number) {
+  try { localStorage.setItem("replaymod_balance", String(v)); } catch {}
+}
 const BASE_BET       = 10;
 
 // ── Jackpot constants ──────────────────────────────────────────────────────
@@ -108,6 +120,7 @@ function JackpotRow({ betAdded }: { betAdded: number }) {
       flex: "0 0 auto",
       display: "flex", justifyContent: "center",
       padding: "0px 12px",
+      marginTop: -1,
     }}>
       <div style={{
         display: "inline-flex", alignItems: "center", gap: 6,
@@ -132,12 +145,13 @@ export default function GameView() {
 
   // Zone 1: State
   const [gameState, setGameState]           = useState<GameState>("IDLE");
+  const [dataReady, setDataReady]           = useState(false);
   const [roster, setRoster]                 = useState<PlayerCard[]>(createPlaceholders());
   const [lockedCardIds, setLockedCardIds]   = useState<Set<string>>(new Set());
   const [statsFlippedIds, setStatsFlippedIds] = useState<Set<string>>(new Set());
   const [mvpId, setMvpId]                   = useState<string | undefined>();
   const [betMultiplier, setBetMultiplier]   = useState(1);
-  const [balance, setBalance]               = useState(STARTING_BALANCE);
+  const [balance, setBalance]               = useState(() => loadBalance());
   const [isBalanceAnimating, setIsBalanceAnimating] = useState(false);
   const [winTier, setWinTier]               = useState<WinTier | null>(null);
   const [winPayout, setWinPayout]           = useState(0);
@@ -147,6 +161,10 @@ export default function GameView() {
   const completedCardsRef = useRef<Set<string>>(new Set());
 
   // Zone 1: Hooks
+  useEffect(() => {
+    ensureLoaded().then(() => setDataReady(true)).catch(console.error);
+  }, []);
+
   const flipState       = useCardFlipState();
   const revealableCards = useMemo(() => toRevealableCards(roster), [roster]);
   const currentBet      = BASE_BET * betMultiplier;
@@ -296,7 +314,7 @@ export default function GameView() {
     }
 
     if (gameState === "HOLD") {
-      setBalance(prev => prev - currentBet);
+      setBalance(prev => { const next = prev - currentBet; saveBalance(next); return next; });
       const markedRoster = roster.map(c => ({ ...c, wasHeld: lockedCardIds.has(cardId(c)) }));
       flipState.beginDraw(markedRoster.map(cardId));
       setRoster(markedRoster);
@@ -357,7 +375,7 @@ export default function GameView() {
   function onWinCelebrationComplete() {
     if (winPayout > 0) {
       setIsBalanceAnimating(true);
-      setBalance(prev => prev + winPayout);
+      setBalance(prev => { const next = prev + winPayout; saveBalance(next); return next; });
       setTimeout(() => setIsBalanceAnimating(false), 2000);
     }
     setWinTier(null);
@@ -370,6 +388,24 @@ export default function GameView() {
   }
 
   // Zone 3: JSX
+  if (!dataReady) {
+    return (
+      <div style={{
+        width: "100vw", height: "100vh",
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        background: "linear-gradient(180deg, #070A12 0%, #0A1020 38%, #070A12 100%)",
+        color: "#EAF0FF", fontFamily: "'Inter', system-ui, sans-serif", gap: 16,
+      }}>
+        <div style={{ fontSize: 28, fontWeight: 950, letterSpacing: -0.5 }}>
+          REPLAY <span style={{ color: "#FFB14A" }}>FS</span>
+        </div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", letterSpacing: 2, textTransform: "uppercase" }}>
+          Loading...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{
       width: "100vw", height: "100vh", overflow: "clip",
@@ -382,8 +418,8 @@ export default function GameView() {
       )}
       <div style={{
         width: "100%", maxWidth: 460, height: "100%",
-        display: "flex", flexDirection: "column", gap: 4,
-        padding: "env(safe-area-inset-top, 8px) 12px calc(env(safe-area-inset-bottom, 8px) + 6px)",
+        display: "flex", flexDirection: "column", gap: 2,
+        padding: "env(safe-area-inset-top, 4px) 12px calc(env(safe-area-inset-bottom, 0px) + 2px)",
         boxSizing: "border-box",
       }}>
 
@@ -393,7 +429,7 @@ export default function GameView() {
           border: "1px solid rgba(255,255,255,0.10)",
           background: "rgba(255,255,255,0.05)",
           boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
-          padding: "8px 12px", backdropFilter: "blur(10px)",
+          padding: "5px 12px", backdropFilter: "blur(10px)",
         }}>
           <AppHeader />
         </div>
@@ -402,7 +438,7 @@ export default function GameView() {
         <JackpotRow betAdded={currentBet} />
 
         {/* Card grid */}
-        <div style={{ flex: "1 1 auto", minHeight: 0, position: "relative", zIndex: 10, overflow: "hidden" }}>
+        <div style={{ flex: "1 1 auto", minHeight: 0, position: "relative", zIndex: 20, overflow: "visible" }}>
           <div
             onClick={gameState === "REVEALING" ? skipReveal : undefined}
             style={{
@@ -412,7 +448,7 @@ export default function GameView() {
               boxShadow: "0 18px 60px rgba(0,0,0,0.45)",
               backdropFilter: "blur(10px)", padding: 10,
               cursor: gameState === "REVEALING" ? "pointer" : "default",
-              overflow: "hidden",
+              overflow: "visible",
             }}
           >
             <RosterGrid
@@ -447,7 +483,7 @@ export default function GameView() {
           border: "1px solid rgba(255,255,255,0.10)",
           background: "rgba(255,255,255,0.06)",
           boxShadow: "0 14px 34px rgba(0,0,0,0.32)",
-          padding: "10px 12px", backdropFilter: "blur(10px)",
+          padding: "6px 12px", backdropFilter: "blur(10px)",
           
         }}>
           <GameBar

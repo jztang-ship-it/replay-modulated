@@ -81,30 +81,45 @@ function TierBar({ totalFp, gameState }: { totalFp: number; gameState: GameState
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
-      <span style={{
-        fontSize: 8, fontWeight: 900, letterSpacing: 1.2,
-        textTransform: "uppercase", whiteSpace: "nowrap", flexShrink: 0,
-        color: showBar ? color : "rgba(255,255,255,0.25)",
-        textShadow: showBar ? `0 0 8px ${glow}` : "none",
-        transition: "color 400ms ease, text-shadow 400ms ease",
-        minWidth: 52,
-      }}>
-        {label}
-      </span>
-
       <div style={{
-        flex: 1, height: 4,
+        flex: 1, height: 18,
         background: "rgba(255,255,255,0.07)",
         borderRadius: 99, overflow: "hidden", position: "relative",
       }}>
+        {/* Fill */}
         <div style={{
           position: "absolute", left: 0, top: 0, bottom: 0,
           width: `${showBar ? animated : 0}%`,
-          background: `linear-gradient(90deg, ${color}88 0%, ${color} 100%)`,
+          background: `linear-gradient(90deg, ${color}66 0%, ${color} 100%)`,
           borderRadius: 99,
-          boxShadow: animated > 5 ? `0 0 6px ${glow}` : "none",
+          boxShadow: animated > 5 ? `0 0 8px ${glow}` : "none",
           transition: "background 400ms ease",
         }} />
+        {/* Label inside bar */}
+        <div style={{
+          position: "absolute", inset: 0,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "0 10px", pointerEvents: "none",
+        }}>
+          <span style={{
+            fontSize: 8, fontWeight: 900, letterSpacing: 1.4,
+            textTransform: "uppercase", whiteSpace: "nowrap",
+            color: showBar ? color : "rgba(255,255,255,0.25)",
+            textShadow: showBar ? `0 0 10px ${glow}` : "none",
+            transition: "color 400ms ease",
+            zIndex: 1,
+          }}>
+            {label}
+          </span>
+          <span style={{
+            fontSize: 7, fontWeight: 700, letterSpacing: 0.4,
+            color: "rgba(255,255,255,0.4)", whiteSpace: "nowrap",
+            zIndex: 1,
+          }}>
+            {showBar && fptNeeded > 0 ? `${fptNeeded} FP` : showBar ? "✓" : ""}
+          </span>
+        </div>
+        {/* Tip dot */}
         {animated > 3 && showBar && (
           <div style={{
             position: "absolute", top: "50%",
@@ -121,14 +136,6 @@ function TierBar({ totalFp, gameState }: { totalFp: number; gameState: GameState
           @keyframes tierBurst { 0%{transform:translateY(-50%) scale(1)} 50%{transform:translateY(-50%) scale(3.5)} 100%{transform:translateY(-50%) scale(1)} }
         `}</style>
       </div>
-
-      <span style={{
-        fontSize: 7, fontWeight: 700, letterSpacing: 0.4,
-        color: "rgba(255,255,255,0.25)", whiteSpace: "nowrap", flexShrink: 0,
-        minWidth: 38, textAlign: "right",
-      }}>
-        {showBar && fptNeeded > 0 ? `${fptNeeded} FP` : showBar ? "✓" : ""}
-      </span>
     </div>
   );
 }
@@ -403,12 +410,12 @@ export function GameBar({
             </div>
           </div>
 
-          <div style={{ textAlign: "center", padding: "3px 14px", borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, marginBottom: 2 }}>
+          <div style={{ textAlign: "center", padding: "2px 10px", borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, marginBottom: 1 }}>
               <span style={{ ...labelStyle, textAlign: "center", marginBottom: 0 }}>Team FP</span>
               <button onClick={() => setShowLegend(true)} style={{ width: 14, height: 14, borderRadius: "50%", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.5)", fontSize: 8, fontWeight: 900, lineHeight: 1, cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>?</button>
             </div>
-            <div style={{ fontSize: 18, fontWeight: 950, letterSpacing: -0.5, color: "#EAF0FF", lineHeight: 1 }}>
+            <div style={{ fontSize: 17, fontWeight: 950, letterSpacing: -0.5, color: "#EAF0FF", lineHeight: 1 }}>
               <RollingNumber value={totalFp} decimals={1} />
             </div>
           </div>

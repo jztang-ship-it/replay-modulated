@@ -1,0 +1,1 @@
+export { resolveCards, extractFpFromStats } from "@shared/engines/resolveEngine";

@@ -1,0 +1,333 @@
+#!/bin/bash
+
+# ReplayMod — Apply Audit Fixes
+# Run from: ~/ReplayMod/basketball
+# Usage: bash ~/Downloads/apply-fixes.sh
+
+set -e  # stop on any error
+
+BASKETBALL_DIR="$HOME/ReplayMod/basketball/src"
+
+echo "🔍 Checking you're in the right place..."
+if [ ! -d "$BASKETBALL_DIR" ]; then
+  echo "❌ Cannot find $BASKETBALL_DIR"
+  echo "   Make sure you're running this from the right machine."
+  exit 1
+fi
+
+echo "📦 Backing up current src to ~/ReplayMod/basketball/src.backup..."
+cp -r "$BASKETBALL_DIR" "$HOME/ReplayMod/basketball/src.backup"
+echo "✅ Backup created at src.backup (delete it later once confirmed working)"
+
+echo ""
+echo "🔧 Applying fixes..."
+
+# ── Fix 1: basketballConfig.ts — winCondition tier names ──────────────────
+python3 << 'PYEOF'
+import re
+path = f"{__import__('os').environ['HOME']}/ReplayMod/basketball/src/adapters/basketballConfig.ts"
+with open(path) as f: content = f.read()
+old = """    winCondition: {
+      type: 'FIXED_THRESHOLD',
+      ,
+        { tier: 'SILVER',   minFP: 120 },
+        { tier: 'GOLD',     minFP: 150 },
+        { tier: 'PLATINUM', minFP: 200 },
+        { tier: 'DIAMOND',  minFP: 250 },
+      ],
+    },"""
+new = """    winCondition: {
+      type: 'FIXED_THRESHOLD',
+      // Must match payoutLogic.ts thresholds (validated via 10k hand simulation)
+      thresholds: [
+        { tier: 'ROOKIE',   minFP: 125 },
+        { tier: 'STARTER',  minFP: 150 },
+        { tier: 'ALL_STAR', minFP: 175 },
+        { tier: 'MVP',      minFP: 200 },
+      ],
+    },"""
+if old not in content:
+    print("  ⚠️  basketballConfig winCondition: already updated or not found, skipping")
+else:
+    content = content.replace(old, new, 1)
+    with open(path, 'w') as f: f.write(content)
+    print("  ✅ basketballConfig.ts — winCondition tier names updated")
+PYEOF
+
+# ── Fix 2: resolveEngine.ts — replace hardcoded FP formula ────────────────
+python3 << 'PYEOF'
+import os
+path = f"{os.environ['HOME']}/ReplayMod/basketball/src/engines/resolveEngine.ts"
+with open(path) as f: content = f.read()
+old = """  // Basketball — compute from raw stats
+  const pts = toNum(stats.pts);
+  const reb = toNum(stats.reb);
+  const ast = toNum(stats.ast);
+  const stl = toNum(stats.stl);
+  const blk = toNum(stats.blk);
+  const tov = toNum(stats.turnovers ?? stats.tov ?? stats.to);
+  if (pts + reb + ast + stl + blk > 0) {
+    return (pts * 1.0) + (reb * 1.2) + (as.0);
+  }
+
+  return 0;"""
+new = """  // Delegate to sport adapter — reads weights from Layer 2 config, works for any sport
+  const adapterFp = sportAdapter.computeFantasyPoints(stats);
+  if (adapterFp !== 0) return adapterFp;
+
+  return 0;"""
+if old not in content:
+    print("  ⚠️  resolveEngine FP formula: already updated or not found, skipping")
+else:
+    content = content.replace(old, new, 1)
+    with open(path, 'w') as f: f.write(content)
+    print("  ✅ resolveEngine.ts — hardcoded FP formula replaced with sportAdapter call")
+PYEOF
+
+# ── Fix 3: resolveEngine.ts — delete dead computeFpScale ──────────────────
+python3 << 'PYEOF'
+import os
+path = f"{os.environ['HOME']}/ReplayMod/basketball/src/engines/resolveEngine.ts"
+with open(path) as f: content = f.read()
+old = """/**
+ * Compute auto-scale factor so FP numbers feel natural.
+ * Target mean FP across all players = targetMean.
+ */
+export funber>,
+  targetMean = 10.5
+): number {
+  let sum = 0;
+  let count = 0;
+  for (const v of projections.values()) {
+    if (Number.isFinite(v) && v > 0) { sum += v; count++; }
+  }
+  const mean = count ? sum / count : 0;
+  if (!mean) return 1;
+  return Math.max(0.75, Math.min(8, targetMean / mean));
+}"""
+if old not in content:
+    print("  ⚠️  computeFpScale: already removed or not found, skipping")
+else:
+    content = content.replace(old, '', 1)
+    with open(path, 'w') as f: f.write(content)
+    print("  ✅ resolveEngine.ts — dead computeFpScale() removed")
+PYEOF
+
+# ── Fix 4: types.ts — widen Position type ─────────────────────────────────
+python3 << 'PYEOF'
+import os
+path = f"{os.environ['HOME']}/ReplayMod/basketball/src/adapters/types.ts"
+with open(path) as f: content = f.read()
+old = 'export type Position = "FW" | "MD" | "DE" | "GK";'
+new = '// Position is sport-specific — Layer 2 config validates positionsprint("  ⚠️  types.ts Position: already updated or not found, skipping")
+else:
+    content = content.replace(old, new, 1)
+    with open(path, 'w') as f: f.write(content)
+    print("  ✅ types.ts — Position type widened to string")
+PYEOF
+
+# ── Fix 5: economyEngine.ts — fix comment ─────────────────────────────────
+python3 << 'PYEOF'
+import os
+path = f"{os.environ['HOME']}/ReplayMod/basketball/src/engines/economyEngine.ts"
+with open(path) as f: content = f.read()
+old = '/** Default football economy config (Layer 2 values passed in from SportAdapter) */'
+new = '/** Default economy config — overridden per sport via SportAdapter */'
+if old not in content:
+    print("  ⚠️  economyEngine comment: already updated or not found, skipping")
+else:
+    content = content.replace(old, new, 1)
+    with open(path, 'w') as f: f.write(content)
+    print("  ✅ economyEngine.ts — misleading comment fixed")
+PYEOF
+
+# ── Fix 6: Delete CardSdSlot.tsx"
+if [ -f "$CARDSLOT" ]; then
+  # Safety check — make sure nothing imports it
+  USAGE=$(grep -r "CardSlot" "$BASKETBALL_DIR" --include="*.tsx" --include="*.ts" -l 2>/dev/null | grep -v "CardSlot.tsx" || true)
+  if [ -n "$USAGE" ]; then
+    echo "  ⚠️  CardSlot.tsx: found imports in $USAGE — NOT deleting, manual review needed"
+  else
+    rm "$CARDSLOT"
+    echo "  ✅ CardSlot.tsx — deleted (confirmed no imports)"
+  fi
+else
+  echo "  ⚠️  CardSlot.tsx: already gone, skipping"
+fi
+
+# ── Fix 7: Add ErrorBoundary.tsx ───────────────────────────────────────────
+ERRFILE="$BASKETBALL_DIR/components/ErrorBoundary.tsx"
+if [ -f "$ERRFILE" ]; then
+  echo "  ⚠️  ErrorBoundary.tsx: already exists, skipping"
+else
+cat > "$ERRFILE" << 'TSEOF'
+import { Component, type ReactNode } from "react";
+
+interface Props { children: ReactNode; }
+interface State { hasError: boolean; error: Error | null; }
+
+export class Err{ hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, info: any) {
+    console.error("[ReplayMod] Uncaught error:", error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          width: "100vw", height: "100vh",
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          background: "#070A12", color: "#EAF0FF",
+          fontFamily: "'Inter', system-ui, sans-serif",
+          gap: 16, padding: 24, boxSizing: "border-box",
+        }}>
+          <div style={{ fontSize: 32 }}>⚠️</div>
+          <div style={{ fontSize: 18, fontWeight: 900 }}>Something went wrong</div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", textAlign: "center", maxWidth: 300 }}>
+        {this.state.error?.message ?? "Unexpected error"}
+          </div>
+          <button
+            onClick={() => { this.setState({ hasError: false, error: null }); window.location.reload(); }}
+            style={{
+              marginTop: 8, padding: "12px 24px", borderRadius: 12, border: "none",
+              background: "linear-gradient(180deg, #FFB14A 0%, #FF7A2F 100%)",
+              color: "#EAF0FF", fontWeight: 900, fontSize: 14,
+              letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer",
+            }}
+          >
+            Reload
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+TSEOF
+  echo "  ✅ ErrorBoundary.tsx — created"
+fi
+
+# ── Fix 8: App.tsx — add ErrorBoundar────────────────────────────
+python3 << 'PYEOF'
+import os
+path = f"{os.environ['HOME']}/ReplayMod/basketball/src/App.tsx"
+with open(path) as f: content = f.read()
+if 'ErrorBoundary' in content:
+    print("  ⚠️  App.tsx: ErrorBoundary already added, skipping")
+else:
+    new_content = '''import GameView from "./views/GameView";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <GameView />
+    </ErrorBoundary>
+  );
+}
+'''
+    with open(path, 'w') as f: f.write(new_content)
+    print("  ✅ App.tsx — wrapped in ErrorBoundary")
+PYEOF
+
+# ── Fix 9: GameView.tsx — balance persistence + loading state ─────────────
+python3 << 'PYEOF'
+import os
+path = f"{os.environ['HOME']}/ReplayMod/basketball/src/views/GameView.tsx"
+with open(path) as f: content = f.read()
+changed = False
+
+# Balance persistence helpers
+if 'loadBalance' not in content:
+    conten = 1000;
+
+function loadBalance(): number {
+  try {
+    const v = localStorage.getItem("replaymod_balance");
+    const n = v ? Number(v) : NaN;
+    return Number.isFinite(n) && n >= 0 ? n : STARTING_BALANCE;
+  } catch { return STARTING_BALANCE; }
+}
+function saveBalance(v: number) {
+  try { localStorage.setItem("replaymod_balance", String(v)); } catch {}
+}''', 1)
+    content = content.replace(
+        'const [balance, setBalance]               = useState(STARTING_BALANCE);',
+        'const [balance, setBalance]               = useState(() => loadBalance());', 1)
+    content = content.replace(
+        'setBalance(prev => prev - currentBet);',
+        'setBalance(prev => { const next = prev - currentBet; saveBalance(next); return next; });', 1)
+    content = content.replace(
+        'setBalance(prev => prev + winPayout);',
+        'setBalance(prev => { const next = prev + winPayout; saveBalance(next); return next; });', 1)
+    changed = True
+    print("  ✅ GameView.tsx — balance persistence added")
+else:
+  int("  ⚠️  GameView.tsx balance persistence: already added, skipping")
+
+# Data loading state
+if 'dataReady' not in content:
+    content = content.replace(
+        'import { dealInitialRoster, redrawRoster, resolveRoster } from "../adapters/gameAdapter";',
+        'import { dealInitialRoster, redrawRoster, resolveRoster } from "../adapters/gameAdapter";\nimport { ensureLoaded } from "../engines/dataEngine";', 1)
+    content = content.replace(
+        '  const [gameState, setGameState]           = useState<GameState>("IDLE");',
+        '  const [gameState, setGameState]           = useState<GameState>("IDLE");\n  const [dataReady, setDataReady]           = useState(false);', 1)
+    content = content.replace(
+        '  const flipState       = useCardFlipState();',
+        '''  // Preload data on mount so first DEAL is instant
+  useEffect(() => {
+    ensureLoaded().then(() => setDataReady(true)).catch(console.error);
+  }, []);
+
+  const flipState       = useCardFlipState();''', 1)
+    # Add loading screen be main return
+    content = content.replace(
+        '  // Zone 3: JSX\n  return (',
+        '''  // Zone 3: JSX
+  if (!dataReady) {
+    return (
+      <div style={{
+        width: "100vw", height: "100vh",
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        background: "linear-gradient(180deg, #070A12 0%, #0A1020 38%, #070A12 100%)",
+        color: "#EAF0FF", fontFamily: "'Inter', system-ui, sans-serif", gap: 16,
+      }}>
+        <div style={{ fontSize: 28, fontWeight: 950, letterSpacing: -0.5 }}>
+          REPLAY <span style={{ color: "#FFB14A" }}>FS</span>
+        </div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", letterSpacing: 2, textTransform: "uppercase" }}>
+          Loading...
+        </div>
+      </div>
+    );
+  }
+
+  return (''', 1)
+    changed = True
+    print("  ✅ GameView.tsx — data preload + loading screen added")
+else:
+    print("  ⚠️  GameView.tsx data loading: already added, skipping")
+
+if changed:
+    wipath, 'w') as f: f.write(content)
+PYEOF
+
+echo ""
+echo "🏀 All fixes applied!"
+echo ""
+echo "Next steps:"
+echo "  1. cd ~/ReplayMod/basketball"
+echo "  2. npm run dev"
+echo "  3. Test the game — should work identically + persist balance on refresh"
+echo ""
+echo "If anything breaks, restore with:"
+echo "  rm -rf ~/ReplayMod/basketball/src"
+echo "  mv ~/ReplayMod/basketball/src.backup ~/ReplayMod/basketball/src"

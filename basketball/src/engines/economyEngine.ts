@@ -25,7 +25,7 @@ export interface EconomyConfig {
   salaryRatioFloor: number;
 }
 
-/** Default football economy config (Layer 2 values passed in from SportAdapter) */
+/** Default economy config — overridden per sport via SportAdapter */
 export const DEFAULT_ECONOMY_CONFIG: EconomyConfig = {
   capMax: 180,
   salaryMin: 5,

@@ -1,140 +1,120 @@
-import { ensureLoaded, getPlayers, getLogsByKey } from "../engines/dataEngine";
-import { buildProjections } from "../engines/projectionEngine";
-import { DEFAULT_ECONOMY_CONFIG, salaryFromProjection, tierFromSalary } from "../engines/economyEngine";
-import {
-  generateRoster,
-  redrawRoster as engineRedrawRoster,
-  mulberry32,
-  randomSeed,
-  type PlayerEval,
-  type GeneratedCard,
-  type RosterConfig,
-} from "../engines/rosterEngine";
-import { resolveCards, type ResolveConfig } from "../engines/resolveEngine";
+/**
+ * gameAdapter.ts — Basketball
+ * Thin orchestration layer between GameView and the engines.
+ */
+
 import { sportAdapter } from "./SportAdapter";
+import { getPlayers, getLogsByKey } from "../engines/dataEngine";
+import { generateRoster, redrawRoster as engineRedraw, mulberry32, randomSeed } from "../engines/rosterEngine";
+import { resolveCards } from "../engines/resolveEngine";
+import { DEFAULT_ECONOMY_CONFIG } from "../engines/economyEngine";
 import type { PlayerCard } from "./types";
+import type { PlayerEval, GeneratedCard } from "../engines/rosterEngine";
+import type { EconomyConfig } from "../engines/economyEngine";
 
-const ECONOMY_CONFIG = {
-  ...DEFAULT_ECONOMY_CONFIG,
-  capMax: sportAdapter.salaryCap,
-};
-
-const ROSTER_CONFIG: RosterConfig = {
-  rosterSize:       sportAdapter.rosterSize,
-  slotRequirements: sportAdapter.rosterSlots,
-  excludeFromFlex:  ["GK"],
-};
-
-let _evalPool: PlayerEval[] | null = null;
-let _resolveConfig: ResolveConfig | null = null;
-
-async function getEvalPool(): Promise<{ pool: PlayerEval[]; resolveConfig: ResolveConfig }> {
-  await ensureLoaded();
-  if (_evalPool && _resolveConfig) return { pool: _evalPool, resolveConfig: _resolveConfig };
-  const players   = getPlayers();
-  const logsByKey = getLogsByKey();
-  const { projByBaseId, posMeans, fpScale } = buildProjections(players);
-  const logIds = new Set<string>(logsByKey.keys());
-  _evalPool = players
-    .filter(p => logIds.has(baseId(p)))
-    .map(p => {
-      const bid    = baseId(p);
-      const proj   = (projByBaseId.get(bid) ?? 0) * fpScale;
-      const pos    = String(p.position ?? "").toUpperCase() || "FLEX";
-      const mean   = (posMeans[pos] ?? 0) * fpScale;
-      const salary = Number((p as any).salary ?? salaryFromProjection(proj, mean, ECONOMY_CONFIG));
-      const tier   = String((p as any).tier   ?? tierFromSalary(salary, ECONOMY_CONFIG));
-      return {
-        id:           String(p.id),
-        basePlayerId: bid,
-        personKey:    `base:${bid}`,
-        cardId:       `${bid}|${String(p.season ?? "")}|${String(p.position ?? "")}`,
-        name:         String(p.name ?? ""),
-        team:         String(p.team ?? ""),
-        season:       String(p.season ?? ""),
-        position:     String(p.position ?? ""),
-        photoCode:    (p as any).photoCode ?? null,
-        projectedFp:  proj,
-        salary,
-        tier,
-      } as PlayerEval;
-    });
-  _resolveConfig = { fpScale };
-  return { pool: _evalPool, resolveConfig: _resolveConfig };
-}
-
-function baseId(p: any): string {
-  return String(p.basePlayerId ?? p.id ?? "");
-}
-
-export async function onPrimaryAction(
-  phase: string,
-  currentCards: PlayerCard[],
-  lockedIndices: number[]
-): Promise<{ cards: PlayerCard[] } | null> {
-  if (phase === "IDLE" || phase === "RESULTS") return dealInitialRoster();
-  if (phase === "HOLD") return redrawAndResolve(currentCards, lockedIndices);
-  return null;
-}
-
-export async function dealInitialRoster(): Promise<{ roster: any[]; cards: PlayerCard[] } | null> {
-  try {
-    const { pool, resolveConfig } = await getEvalPool();
-    const rnd  = mulberry32(randomSeed());
-    const hand = generateRoster(pool, ROSTER_CONFIG, ECONOMY_CONFIG, rnd);
-    if (!hand) return null;
-    const logsByKey = getLogsByKey();
-    const { resolved } = resolveCards(hand, logsByKey, resolveConfig, rnd);
-    const processedCards = resolved.map(toPlayerCard);
-    return { roster: processedCards, cards: processedCards };
-  } catch (e) {
-    console.error("[GameAdapter] dealInitialRoster error:", e);
-    return null;
+function buildProjections(players: any[]): { projByBaseId: Map<string, number> } {
+  const projByBaseId = new Map<string, number>();
+  for (const p of players) {
+    const bid = String(p.basePlayerId ?? p.id ?? "").trim();
+    const proj = Number(p.avgFP ?? p.projectedFp ?? 0);
+    if (bid) projByBaseId.set(bid, proj);
   }
+  return { projByBaseId };
 }
 
-export async function redrawAndResolve(
-  currentCards: PlayerCard[],
-  lockedIndices: number[]
-): Promise<{ cards: PlayerCard[] } | null> {
-  try {
-    const { pool, resolveConfig } = await getEvalPool();
-    const rnd          = mulberry32(randomSeed());
-    const currentEvals = currentCards.map(c => c as unknown as GeneratedCard);
-    const redrawn      = engineRedrawRoster(currentEvals, new Set(lockedIndices), pool, ROSTER_CONFIG, ECONOMY_CONFIG, rnd);
-    if (!redrawn) return null;
-    const logsByKey = getLogsByKey();
-    const { resolved } = resolveCards(redrawn, logsByKey, resolveConfig, rnd);
-    return { cards: resolved.map(toPlayerCard) };
-  } catch (e) {
-    console.error("[GameAdapter] redrawAndResolve error:", e);
-    return null;
-  }
-}
-
-
-function toPlayerCard(r: GeneratedCard): PlayerCard {
-  const headshotUrl = sportAdapter.getHeadshotUrl(r.basePlayerId);
+function getEconomyConfig(): EconomyConfig {
   return {
-    ...(r as any),
-    headshotUrl: headshotUrl ?? undefined,
-  } as unknown as PlayerCard;
+    ...DEFAULT_ECONOMY_CONFIG,
+    capMax: sportAdapter.salaryCap,
+  };
 }
 
-// ── GameView-compatible wrappers ──────────────────────────────────────────
-export async function redrawRoster({ currentCards, lockedCardIds }: {
+function toPlayerEval(p: any, projByBaseId: Map<string, number>): PlayerEval {
+  const baseId = String(p.basePlayerId ?? p.id ?? "");
+  const proj = projByBaseId.get(baseId) ?? Number(p.avgFP ?? p.projectedFp ?? 0);
+  const salary = Number(p.salary ?? 10);
+  return {
+    id: String(p.id),
+    basePlayerId: baseId,
+    personKey: baseId,
+    cardId: `${baseId}-${Math.random().toString(36).slice(2, 7)}`,
+    name: String(p.name ?? ""),
+    team: String(p.team ?? ""),
+    season: String(p.season ?? ""),
+    position: sportAdapter.normalizePosition(p.position),
+    photoCode: p.photoCode,
+    headshotUrl: `https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/${baseId}.png`,
+    projectedFp: proj,
+    salary,
+    tier: sportAdapter.normalizeTier(p.tier),
+  };
+}
+
+export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
+  const players = getPlayers();
+  const { projByBaseId } = buildProjections(players);
+  const evalPool = players.map(p => toPlayerEval(p, projByBaseId));
+
+  const rnd = mulberry32(randomSeed());
+  const rosterConfig = {
+    rosterSize: sportAdapter.rosterSize,
+    slotRequirements: sportAdapter.rosterSlots,
+    excludeFromFlex: [] as string[],
+  };
+
+  const cards = generateRoster(evalPool, rosterConfig, getEconomyConfig(), rnd);
+  return { roster: cards as unknown as PlayerCard[] };
+}
+
+export async function redrawRoster({
+  currentCards,
+  lockedCardIds,
+}: {
   currentCards: PlayerCard[];
   lockedCardIds: Set<string>;
-}): Promise<{ cards: PlayerCard[] } | null> {
-  const indices = currentCards
-    .map((c, i) => (lockedCardIds.has((c as any).cardId ?? (c as any).id) ? i : -1))
-    .filter(i => i !== -1);
-  return redrawAndResolve(currentCards, indices);
+}): Promise<{ roster: PlayerCard[] }> {
+  const players = getPlayers();
+  const { projByBaseId } = buildProjections(players);
+  const evalPool = players.map(p => toPlayerEval(p, projByBaseId));
+
+  const heldSlots = new Set<number>();
+  currentCards.forEach((c, i) => {
+    const id = String((c as any).cardId ?? (c as any).basePlayerId ?? "");
+    if (lockedCardIds.has(id)) heldSlots.add(i);
+  });
+
+  const rnd = mulberry32(randomSeed());
+  const rosterConfig = {
+    rosterSize: sportAdapter.rosterSize,
+    slotRequirements: sportAdapter.rosterSlots,
+    excludeFromFlex: [] as string[],
+  };
+
+  const cards = engineRedraw(
+    currentCards as unknown as GeneratedCard[],
+    heldSlots,
+    evalPool,
+    rosterConfig,
+    getEconomyConfig(),
+    rnd,
+  );
+  return { roster: cards as unknown as PlayerCard[] };
 }
 
-export async function resolveRoster({ finalCards }: {
+export async function resolveRoster({
+  finalCards,
+}: {
   finalCards: PlayerCard[];
-}): Promise<{ cards: PlayerCard[] } | null> {
-  // Cards are already resolved from redrawRoster — just return them
-  return { cards: finalCards };
+}): Promise<{ roster: PlayerCard[]; mvpCardId?: string }> {
+  const logsByKey = getLogsByKey();
+  const rnd = mulberry32(randomSeed());
+
+  const { resolved, mvpCardId } = resolveCards(
+    finalCards as unknown as GeneratedCard[],
+    logsByKey,
+    { fpScale: 1 },
+    rnd,
+  );
+
+  return { roster: resolved as unknown as PlayerCard[], mvpCardId };
 }

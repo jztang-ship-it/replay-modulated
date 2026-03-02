@@ -91,37 +91,14 @@ export function extractFpFromStats(stats: Record<string, any>): number {
   const direct = stats.fp ?? stats.fantasyPoints ?? stats.fantasy_points ?? stats.FP ?? stats.xP;
   const dv = toNum(direct);
   if (dv !== 0) return dv;
-  // Basketball — compute from raw stats
-  const pts = toNum(stats.pts);
-  const reb = toNum(stats.reb);
-  const ast = toNum(stats.ast);
-  const stl = toNum(stats.stl);
-  const blk = toNum(stats.blk);
-  const tov = toNum(stats.turnovers ?? stats.tov ?? stats.to);
-  if (pts + reb + ast + stl + blk > 0) {
-    return (pts * 1.0) + (reb * 1.2) + (ast * 1.5) + (stl * 2.0) + (blk * 2.0) + (tov * -1.0);
-  }
+  // Delegate to sport adapter — reads weights from Layer 2 config, works for any sport
+  const adapterFp = sportAdapter.computeFantasyPoints(stats);
+  if (adapterFp !== 0) return adapterFp;
 
   return 0;
 }
 
-/**
- * Compute auto-scale factor so FP numbers feel natural.
- * Target mean FP across all players = targetMean.
- */
-export function computeFpScale(
-  projections: Map<string, number>,
-  targetMean = 10.5
-): number {
-  let sum = 0;
-  let count = 0;
-  for (const v of projections.values()) {
-    if (Number.isFinite(v) && v > 0) { sum += v; count++; }
-  }
-  const mean = count ? sum / count : 0;
-  if (!mean) return 1;
-  return Math.max(0.75, Math.min(8, targetMean / mean));
-}
+
 
 // ── Achievements ───────────────────────────────────────────────────────────
 
@@ -210,10 +187,14 @@ function pickBiasedLog(
   if (!candidates.length) {
     candidates = logsByKey.get(base) ?? [];
   }
-  if (!candidates.length) return null;
-
-  // Single log — no choice to make
-  if (candidates.length === 1) return candidates[0];
+// Filter out DNP / zero-stat logs
+candidates = candidates.filter(l => {
+  const s = l.stats ?? {};
+  return ((s.pts ?? 0) + (s.reb ?? 0) + (s.ast ?? 0) + (s.stl ?? 0) + (s.blk ?? 0)) > 0;
+});
+if (!candidates.length) return null;
+// Single log — no choice to make
+if (candidates.length === 1) return candidates[0];
 
   // Sort logs best → worst by raw FP
   const sorted = [...candidates].sort((a, b) => {

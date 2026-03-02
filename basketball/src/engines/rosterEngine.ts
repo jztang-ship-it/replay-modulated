@@ -35,6 +35,7 @@ export interface PlayerEval {
   season: string;
   position: string;
   photoCode?: string | number;
+  headshotUrl?: string;
 
   // Economy
   projectedFp: number;

@@ -192,17 +192,22 @@ function BackBStats({ card }: { card: PlayerCard }) {
   const fallbackStats = useMemo(() => getFallbackStats(sl), [sl]);
 
   const BASKETBALL_ORDER = ["PTS","REB","AST","BLK","STL","TO"];
-const ALLOWED = new Set(BASKETBALL_ORDER);
-const raw   = (posStats.length > 0 ? posStats : fallbackStats)
-  .filter(t => ALLOWED.has(t.key.toUpperCase()));
+
+// Normalize stat keys to match BASKETBALL_ORDER
+const KEY_ALIASES: Record<string, string> = {
+  "TURNOVERS": "TO",
+  "TOV": "TO",
+  "TURNOVER": "TO",
+};
+
+const raw = (posStats.length > 0 ? posStats : fallbackStats).map(t => ({
+  ...t,
+  key: KEY_ALIASES[t.key.toUpperCase()] ?? t.key.toUpperCase(),
+}));
+
 const tiles = (() => {
-  const byKey = new Map(raw.map(t => [t.key.toUpperCase(), t]));
-  const ordered: typeof raw = [];
-  for (const k of BASKETBALL_ORDER) {
-    const found = byKey.get(k);
-    if (found) ordered.push(found);
-  }
-  return ordered;
+  const byKey = new Map(raw.map(t => [t.key, t]));
+  return BASKETBALL_ORDER.map(k => byKey.get(k) ?? { key: k, label: k, value: 0 });
 })();
   
 
@@ -224,7 +229,8 @@ const tiles = (() => {
         <div style={S.backOpp}>{oppStr||"—"}</div>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "nowrap", minWidth: 0 }}>
+      {/* FP row — fixed height, badges never push stats down */}
+      <div style={{ height: 28, display: "flex", alignItems: "center", gap: 8, flexWrap: "nowrap", minWidth: 0, overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 4, flexShrink: 0 }}>
           <span style={S.fpLabel}>FP</span>
           <span style={{ ...S.fpValue, fontSize: 18 }}>{round1(actual)}</span>
@@ -234,12 +240,12 @@ const tiles = (() => {
             </span>
           )}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 3, flexWrap: "wrap", flex: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 3, flexWrap: "nowrap", flex: 1, overflow: "hidden" }}>
           {badgesData.slice(0, 6).map((b: any, i: number) => (
             <div key={i} style={{
-              display: "flex", alignItems: "center", gap: 2,
+              display: "flex", alignItems: "center", gap: 2, flexShrink: 0,
               background: "rgba(0,0,0,0.55)", borderRadius: 6, padding: "2px 5px",
-              border: "1px solid rgba(255,255,255,0.18)", flexShrink: 0,
+              border: "1px solid rgba(255,255,255,0.18)",
             }}>
               <span style={{ fontSize: 13, lineHeight: 1 }}>{b.icon}</span>
               <span style={{ fontSize: 7, fontWeight: 700, color: "#FFD700", letterSpacing: 0.3 }}>+{b.fp}</span>
