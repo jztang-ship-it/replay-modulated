@@ -207,7 +207,7 @@ async function renderRaw(d){
 const TITLES={overview:'Overview',gameplay:'Gameplay',retention:'Retention',social:'Social / PvP',errors:'Errors',raw:'Raw Events'};
 async function load(){
   document.getElementById('status-bar').textContent='Loading...';
-  document.getElementById('page-title').textContent=TITLES[S.view(S.view==='gameplay'?' — '+S.product:'');
+  document.getElementById('page-title').textContent = TITLES[S.view] + (S.view === 'gameplay' ? (' — ' + S.product) : '');
   try{
     const data=await api(S.view);
     if(S.view==='overview')await renderOverview(data);
