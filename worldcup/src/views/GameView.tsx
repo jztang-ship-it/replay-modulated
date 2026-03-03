@@ -18,6 +18,7 @@ import { WinCelebration } from "../components/WinCelebration";
 import { useCardFlipState } from "../hooks/useCardFlipState";
 import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
 import { calculateWinTier, calculatePayout, type WinTier } from "../utils/payoutLogic";
+import { useGameAnalytics } from "../../../shared/analytics/useGameAnalytics";
 
 const CAP_MAX         = sportAdapter.salaryCap;
 const ROSTER_SIZE     = sportAdapter.rosterSize;
@@ -140,6 +141,7 @@ export default function GameView() {
   const flipState       = useCardFlipState();
   const revealableCards = useMemo(() => toRevealableCards(roster), [roster]);
   const currentBet      = BASE_BET * betMultiplier;
+  const gameAnalytics   = useGameAnalytics("worldcup");
 
   const {
     runningTotalFp,
@@ -171,9 +173,12 @@ export default function GameView() {
         const payout = calculatePayout(tier, currentBet);
         setWinTier(tier);
         setWinPayout(payout);
+        const bust = tier === "BUST";
+        const badges = rosterRef.current.reduce((s,c) => s + (c.achievements?.length ?? 0), 0);
+        gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
         setGameState("WIN_CELEBRATION");
       }, 800);
-    }, [currentBet]),
+    }, [currentBet, gameAnalytics]),
   });
 
   // ── Derived values ─────────────────────────────────────────────────────────
@@ -243,7 +248,7 @@ export default function GameView() {
     if (gameState !== "HOLD") return;
     setLockedCardIds(prev => {
       const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
+      if (next.has(key)) { next.delete(key); } else { next.add(key); const c = roster.find(x => cardId(x) === key); if (c) gameAnalytics.cardHeld(c); }
       return next;
     });
   }
@@ -270,6 +275,7 @@ export default function GameView() {
       const res: any        = await dealInitialRoster();
       const nextRoster      = (res?.roster ?? res?.cards ?? []) as PlayerCard[];
       rosterRef.current     = nextRoster;
+      gameAnalytics.handDealt(nextRoster);
       setNoTransition(true);
       flipState.initCards(nextRoster.map(cardId));
       setRoster(nextRoster);
@@ -320,6 +326,7 @@ export default function GameView() {
     }
 
     if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") {
+      gameAnalytics.sessionEnd();
       resetReveal();
       resetAllOverlays();
       completedCardsRef.current = new Set();
