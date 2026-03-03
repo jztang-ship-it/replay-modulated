@@ -13,15 +13,16 @@
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
     "declarationMap": true,
-    "outDir": "./dist",
-    "rootDir": "./backend"
+    "outDir": "./dist"
   },
   "include": [
-    "backend/**/*.ts"
+    "api/**/*.ts",
+    "shared/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "frontend"
+    "frontend",
+    "apps"
   ]
 }
