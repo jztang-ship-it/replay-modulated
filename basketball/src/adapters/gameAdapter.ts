@@ -43,7 +43,6 @@ function toPlayerEval(p: any, projByBaseId: Map<string, number>): PlayerEval {
     season: String(p.season ?? ""),
     position: sportAdapter.normalizePosition(p.position),
     photoCode: p.photoCode,
-    headshotUrl: `https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/${baseId}.png`,
     projectedFp: proj,
     salary,
     tier: sportAdapter.normalizeTier(p.tier),
@@ -113,6 +112,7 @@ export async function resolveRoster({
     finalCards as unknown as GeneratedCard[],
     logsByKey,
     { fpScale: 1 },
+    sportAdapter,
     rnd,
   );
 
