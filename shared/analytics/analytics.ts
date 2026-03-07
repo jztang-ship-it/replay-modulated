@@ -56,7 +56,7 @@ const DEFAULT_CONFIG: AnalyticsConfig = {
     endpoint:   '/api/analytics',
     appVersion: '1.0.0',
     platform:   'web',
-    debug:      typeof process !== 'undefined' && process.env?.NODE_ENV === 'development',
+    debug:      import.meta.env.MODE === 'development',
     batchSize:  10,
     batchMs:    5000,
     disabled:   typeof window !== 'undefined' && window.location.hostname === 'localhost',

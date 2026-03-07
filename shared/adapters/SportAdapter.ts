@@ -11,10 +11,10 @@ export class SportAdapter {
   constructor(sportConfig: SportConfigShape) { this.config = sportConfig; }
 
   get sportKey(): string { return this.config.sportKey; }
-  get displayName(): string { return this.config.displayName; }
+  get displayName(): string { return this.config.displayName ?? this.config.sportKey; }
   get salaryCap(): number { return Number(this.config.salaryCap); }
   get salaryCapMin(): number { return Math.floor(Number(this.config.salaryCap) * 0.956); }
-  get rosterSize(): number { return this.config.maxPlayers; }
+  get rosterSize(): number { return this.config.maxPlayers ?? this.config.positions.length; }
   get positions(): string[] { return this.config.positions; }
 
   get rosterSlots(): string[] {
