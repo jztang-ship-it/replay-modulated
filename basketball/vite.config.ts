@@ -4,12 +4,16 @@ import path from "node:path";
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      "@shared": path.resolve(__dirname, "../shared"),
+    },
+  },
   server: {
     fs: {
-      // allow reading files from the repo root (one level above /apps)
       allow: [
-        path.resolve(__dirname, "..", ".."), // <repo-root>
-        path.resolve(__dirname), // replay-ui
+        path.resolve(__dirname, ".."),
+        path.resolve(__dirname),
       ],
     },
   },
