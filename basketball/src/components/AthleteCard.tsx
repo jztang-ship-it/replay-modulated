@@ -230,7 +230,7 @@ const tiles = (() => {
       </div>
 
       {/* FP row — fixed height, badges never push stats down */}
-      <div style={{ height: 28, display: "flex", alignItems: "center", gap: 8, flexWrap: "nowrap", minWidth: 0, overflow: "hidden" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap", minWidth: 0, minHeight: 24 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 4, flexShrink: 0 }}>
           <span style={S.fpLabel}>FP</span>
           <span style={{ ...S.fpValue, fontSize: 18 }}>{round1(actual)}</span>
@@ -240,7 +240,7 @@ const tiles = (() => {
             </span>
           )}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 3, flexWrap: "nowrap", flex: 1, overflow: "hidden" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 3, flexWrap: "wrap", flex: 1 }}>
           {badgesData.slice(0, 6).map((b: any, i: number) => (
             <div key={i} style={{
               display: "flex", alignItems: "center", gap: 2, flexShrink: 0,

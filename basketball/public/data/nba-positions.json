@@ -1,0 +1,2274 @@
+{
+    "A.J. Lawson": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "AJ Green": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "AJ Griffin": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "AJ Johnson": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Aaron Gordon": {
+      "position": "PF",
+      "positionFull": "PF"
+    },
+    "Aaron Holiday": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Aaron Nesmith": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Aaron Wiggins": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Adem Bona": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Ajay Mitchell": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Al Horford": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Alec Burks": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Aleksej Pokusevski": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Alex Caruso": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Alex Len": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Alex Reese": {
+      "position": "PF",
+      "positionFull": "PF"
+    },
+    "Alex Sarr": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Alperen Sengun": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Amen Thompson": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Amir Coffey": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Andre Drummond": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Andre Jackson Jr.": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Andrew Nembhard": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Andrew Wiggins": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Anthony Black": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Anthony Gill": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Antonio Reeves": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Ariel Hukporti": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Armoni Brooks": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Ashton Hagans": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Ausar Thompson": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Austin Reaves": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Ayo Dosunmu": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Baylor Scheierman": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Ben Sheppard": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Ben Simmons": {
+      "position": "PF",
+      "positionFull": "PG/PF"
+    },
+    "Bilal Coulibaly": {
+      "position": "SF",
+      "positionFull": "SG/SF"
+    },
+    "Bismack Biyombo": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Blake Wesley": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Bobby Portis": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Bogdan Bogdanović": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Bojan Bogdanovic": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Bol Bol": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Bones Hyland": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Bradley Beal": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Brandin Podziemski": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Brandon Boston": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Brandon Clarke": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Brandon Ingram": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Brandon Miller": {
+      "position": "SF",
+      "positionFull": "SG/SF"
+    },
+    "Brandon Williams": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Brice Sensabaugh": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Brook Lopez": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Bruce Brown": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Bruno Fernando": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Bryce McGowens": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Bub Carrington": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Buddy Boeheim": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Buddy Hield": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "CJ McCollum": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Caleb Houstan": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Caleb Martin": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Cam Reddish": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Cam Spencer": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Cam Whitmore": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Cameron Johnson": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Caris LeVert": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Cason Wallace": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Cedi Osman": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Charles Bassey": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Chet Holmgren": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Chimezie Metu": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Chris Boucher": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Chris Duarte": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Chris Paul": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Christian Braun": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Christian Koloko": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Christian Wood": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Chuma Okeke": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Clint Capela": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Cody Martin": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Cody Williams": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Colby Jones": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Cole Anthony": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Cole Swider": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Colin Castleton": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Collin Gillespie": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Collin Sexton": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Corey Kispert": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Cory Joseph": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Craig Porter Jr.": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "D'Angelo Russell": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "D.J. Carton": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "DaQuan Jeffries": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Daeqwon Plowden": {
+      "position": "PF",
+      "positionFull": "PF"
+    },
+    "Dalano Banton": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Dalen Terry": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Dalton Knecht": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Damian Lillard": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Damion Baugh": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Daniel Gafford": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Daniel Theis": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Danilo Gallinari": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Danté Exum": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Danuel House Jr.": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Dario Šarić": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Dariq Whitehead": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Darius Bazley": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "David Duke Jr.": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "David Roddy": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Davis Bertans": {
+      "position": "PF",
+      "positionFull": "PF"
+    },
+    "Day'Ron Sharpe": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "De'Andre Hunter": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "De'Anthony Melton": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "DeAndre Jordan": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "DeJon Jarreau": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "DeMar DeRozan": {
+      "position": "SF",
+      "positionFull": "SG/SF"
+    },
+    "Dean Wade": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Delon Wright": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Deni Avdija": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Dennis Schröder": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Dennis Smith Jr.": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Dereck Lively II": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Dereon Seabron": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Derrick Jones Jr.": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Derrick Rose": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Derrick White": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Devin Carter": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Devonte' Graham": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Dillon Brooks": {
+      "position": "SF",
+      "positionFull": "SG/SF"
+    },
+    "Dillon Jones": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Dominick Barlow": {
+      "position": "PF",
+      "positionFull": "PF"
+    },
+    "Donovan Clingan": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Donte DiVincenzo": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Dorian Finney-Smith": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Doug McDermott": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Draymond Green": {
+      "position": "PF",
+      "positionFull": "PF"
+    },
+    "Drew Eubanks": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Drew Timme": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Dru Smith": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Duncan Robinson": {
+      "position": "SF",
+      "positionFull": "SG/SF"
+    },
+    "Duop Reath": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Dwight Powell": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Dyson Daniels": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Elfrid Payton": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Elijah Harkless": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Emoni Bates": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Enrique Freeman": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Eric Gordon": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Eugene Omoruyi": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Evan Fournier": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Evan Mobley": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Frank Ntilikina": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Franz Wagner": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Fred VanVleet": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Furkan Korkmaz": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "GG Jackson": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Gabe Vincent": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Garrett Temple": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Garrison Mathews": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Gary Harris": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Gary Payton II": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Gary Trent Jr.": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Georges Niang": {
+      "position": "PF",
+      "positionFull": "PF"
+    },
+    "Goga Bitadze": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Gordon Hayward": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Gradey Dick": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Grant Williams": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Grayson Allen": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Guerschon Yabusele": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Gui Santos": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Harrison Barnes": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Haywood Highsmith": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Ibou Badji": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Isaac Okoro": {
+      "position": "SF",
+      "positionFull": "SG/SF"
+    },
+    "Isaiah Collier": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Isaiah Hartenstein": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Isaiah Joe": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Isaiah Livers": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Isaiah Mobley": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Isaiah Stewart": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Isaiah Wong": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Ish Smith": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Ivica Zubac": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "JT Thor": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Ja'Kobe Walter": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Jabari Walker": {
+      "position": "PF",
+      "positionFull": "PF"
+    },
+    "Jack White": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Jackson Rowe": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Jacob Gilyard": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Jaden Hardy": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Jaden McDaniels": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Jaden Springer": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Jae Crowder": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Jae'Sean Tate": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Jahmi'us Ramsey": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Jaime Jaquez Jr.": {
+      "position": "SF",
+      "positionFull": "SG/SF"
+    },
+    "Jake LaRavia": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Jakob Poeltl": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Jalen Green": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Jalen Hood-Schifino": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Jalen Johnson": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Jalen McDaniels": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Jalen Pickett": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Jalen Smith": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Jalen Suggs": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Jalen Williams": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Jalen Wilson": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Jamal Cain": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Jamal Shead": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Jamaree Bouyea": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "James Harden": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "James Wiseman": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Jamison Battle": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Jarace Walker": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Jared Butler": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Jared McCain": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Jared Rhoden": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Jaren Jackson Jr.": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Jarred Vanderbilt": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Jarrett Allen": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Jason Preston": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Javon Freeman-Liberty": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Javonte Green": {
+      "position": "SF",
+      "positionFull": "SG/SF"
+    },
+    "Jaxson Hayes": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Jay Huff": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Jaylen Brown": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Jaylen Clark": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Jaylen Martin": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Jaylen Nowell": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Jaylen Sims": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Jaylen Wells": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Jaylin Williams": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Jaylon Tyson": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Jeff Dowtin Jr.": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Jeff Green": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Jerami Grant": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Jeremiah Robinson-Earl": {
+      "position": "PF",
+      "positionFull": "PF"
+    },
+    "Jeremy Sochan": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Jericho Sims": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Jett Howard": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Jevon Carter": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Jimmy Butler III": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Jock Landale": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Joe Harris": {
+      "position": "SF",
+      "positionFull": "SG/SF"
+    },
+    "Joe Ingles": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "John Collins": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "John Konchar": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Johnny Davis": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Johnny Juzang": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Jonas Valančiūnas": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Jonathan Isaac": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Jonathan Kuminga": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Jonathan Mogbo": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Jontay Porter": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Jordan Clarkson": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Jordan Goodwin": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Jordan Hawkins": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Jordan McLaughlin": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Jordan Miller": {
+      "position": "SF",
+      "positionFull": "SG/SF"
+    },
+    "Jordan Nwora": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Jordan Poole": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Jose Alvarado": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Josh Giddey": {
+      "position": "PG",
+      "positionFull": "PG/SF"
+    },
+    "Josh Green": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Josh Hart": {
+      "position": "SF",
+      "positionFull": "SG/SF"
+    },
+    "Josh Okogie": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Josh Richardson": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Jrue Holiday": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Julian Champagnie": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Julian Phillips": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Julian Strawther": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Julius Randle": {
+      "position": "PF",
+      "positionFull": "PF"
+    },
+    "Justin Champagnie": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Justin Edwards": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Justin Holiday": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Justin Minaya": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "KJ Martin": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "KJ Simpson": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Kai Jones": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Karlo Matković": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Kawhi Leonard": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Keaton Wallace": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Keegan Murray": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Keion Brooks Jr.": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Keita Bates-Diop": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Kel'el Ware": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Kelly Olynyk": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Kelly Oubre Jr.": {
+      "position": "SF",
+      "positionFull": "SG/SF"
+    },
+    "Kenneth Lofton Jr.": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Kenrich Williams": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Kentavious Caldwell-Pope": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Keon Ellis": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Keon Johnson": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Kessler Edwards": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Kevin Huerter": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Kevin Knox II": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Kevin Love": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Kevin Porter Jr.": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Kevon Looney": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Keyonte George": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Khris Middleton": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Killian Hayes": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Kira Lewis Jr.": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Klay Thompson": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Kobe Bufkin": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Kobi Simmons": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Kris Dunn": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Kris Murray": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Kristaps Porziņģis": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Kyle Anderson": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Kyle Filipowski": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Kyle Lowry": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Kylor Kelley": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Kyrie Irving": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Kyshawn George": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Lamar Stevens": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Landry Shamet": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Larry Nance Jr.": {
+      "position": "PF",
+      "positionFull": "PF"
+    },
+    "Leaky Black": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Lester Quinones": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Lindy Waters III": {
+      "position": "SF",
+      "positionFull": "SG/SF"
+    },
+    "Lonnie Walker IV": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Lonzo Ball": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Luguentz Dort": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Luka Samanic": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Luke Kennard": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Luke Kornet": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Malachi Flynn": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Malaki Branham": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Malcolm Brogdon": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Malik Beasley": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Malik Williams": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "MarJon Beauchamp": {
+      "position": "SF",
+      "positionFull": "SG/SF"
+    },
+    "Marcus Bagley": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Marcus Garrett": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Marcus Morris Sr.": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Marcus Sasser": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Mark Williams": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Markelle Fultz": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Markieff Morris": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Marques Bolden": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Marvin Bagley III": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Mason Plumlee": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Matas Buzelis": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Matisse Thybulle": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Matt Hurt": {
+      "position": "PF",
+      "positionFull": "PF"
+    },
+    "Matt Ryan": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Max Christie": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Max Strus": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Maxi Kleber": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Micah Potter": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Mike Conley": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Mike Muscala": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Miles Bridges": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Miles McBride": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Miles Norris": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Mitchell Robinson": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Mo Bamba": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Monte Morris": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Moritz Wagner": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Moses Brown": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Moses Moody": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Mouhamadou Gueye": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Mouhamed Gueye": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Moussa Diabaté": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "N'Faly Dante": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Nae'Qwan Tomlin": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Naji Marshall": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Nassir Little": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Nathan Mensah": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Naz Reid": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Neemias Queta": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Nic Claxton": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Nick Richards": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Nick Smith Jr.": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Nickeil Alexander-Walker": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Nicolas Batum": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Nikola Jović": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Nikola Vučević": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Noah Clowney": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Norman Powell": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "OG Anunoby": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Obi Toppin": {
+      "position": "PF",
+      "positionFull": "PF"
+    },
+    "Ochai Agbaji": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Olivier-Maxence Prosper": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Omer Yurtseven": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Onuralp Bitim": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Onyeka Okongwu": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Orlando Robinson": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Oscar Tshiebwe": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Oshae Brissett": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Oso Ighodaro": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Otto Porter Jr.": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Ousmane Dieng": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "P.J. Tucker": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "P.J. Washington": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Pat Connaughton": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Patrick Baldwin Jr.": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Patrick Beverley": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Patrick Williams": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Patty Mills": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Paul George": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Paul Reed": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Payton Pritchard": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Pelle Larsson": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Peyton Watson": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Phillip Wheeler": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Precious Achiuwa": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Quentin Grimes": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Quenton Jackson": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Quinten Post": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "R.J. Hampton": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "RaiQuan Gray": {
+      "position": "PF",
+      "positionFull": "PF"
+    },
+    "Rayan Rupert": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Reece Beekman": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Reed Sheppard": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Reggie Bullock Jr.": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Reggie Jackson": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Richaun Holmes": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Ricky Council IV": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Rob Dillingham": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Robert Covington": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Robert Williams III": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Ronald Holland II": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Royce O'Neale": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Rui Hachimura": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Russell Westbrook": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Ryan Dunn": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Ryan Rollins": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Saddiq Bey": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Sam Hauser": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Sam Merrill": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Sandro Mamukelashvili": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Santi Aldama": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Sasha Vezenkov": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Scoot Henderson": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Scottie Barnes": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Scotty Pippen Jr.": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Seth Curry": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Shaedon Sharpe": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Shake Milton": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Simone Fontecchio": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Skylar Mays": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Spencer Dinwiddie": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Stanley Umude": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Stephon Castle": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Steven Adams": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Svi Mykhailiuk": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "T.J. McConnell": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "T.J. Warren": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Taj Gibson": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Talen Horton-Tucker": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Tari Eason": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Taurean Prince": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Taylor Hendricks": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Taze Moore": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Terance Mann": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Terrence Shannon Jr.": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Thaddeus Young": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Theo Maledon": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Thomas Bryant": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Tidjane Salaün": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Tim Hardaway Jr.": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Timmy Allen": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Tobias Harris": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Tony Bradley": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Torrey Craig": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Tosan Evbuomwan": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Toumani Camara": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Trayce Jackson-Davis": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Tre Jones": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Tre Mann": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Trendon Watford": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Trent Forrest": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Trevelin Queen": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Trey Jemison III": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Trey Lyles": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Trey Murphy III": {
+      "position": "SF",
+      "positionFull": "SG/SF"
+    },
+    "Tristan Thompson": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Tristan Vukcevic": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Tristan da Silva": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Troy Brown Jr.": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Ty Jerome": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Tyrese Martin": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Tyson Etienne": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Tyus Jones": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Vasilije Micic": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Victor Wembanyama": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Vince Williams Jr.": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Vlatko Čančar": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Vít Krejčí": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Walker Kessler": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Wendell Carter Jr.": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Wendell Moore Jr.": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Wenyen Gabriel": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Wesley Matthews": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Xavier Moon": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Xavier Tillman": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Yuri Collins": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Yuta Watanabe": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Yves Missi": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Zaccharie Risacher": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Zach Collins": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Zach Edey": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Zavier Simpson": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Zeke Nnaji": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Ziaire Williams": {
+      "position": "SF",
+      "positionFull": "SF"
+    },
+    "Zion Williamson": {
+      "position": "PF",
+      "positionFull": "PF"
+    },
+    "Maozinha Pereira": {
+      "position": "PF",
+      "positionFull": "PF"
+    },
+    "Anfernee Simons": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Anthony Davis": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Anthony Edwards": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Bam Adebayo": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Bennedict Mathurin": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Cade Cunningham": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Cam Thomas": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Cameron Payne": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Coby White": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Darius Garland": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Davion Mitchell": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "De'Aaron Fox": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Deandre Ayton": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Dejounte Murray": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Desmond Bane": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Devin Booker": {
+      "position": "SG",
+      "positionFull": "SG"
+    },
+    "Devin Vassell": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Domantas Sabonis": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Donovan Mitchell": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Giannis Antetokounmpo": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Herbert Jones": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Immanuel Quickley": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Isaiah Jackson": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Ja Morant": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Jabari Smith Jr.": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "Jaden Ivey": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Jalen Brunson": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Jalen Duren": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Jamal Murray": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Jayson Tatum": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Joel Embiid": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Jusuf Nurkić": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Karl-Anthony Towns": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Keldon Johnson": {
+      "position": "SF",
+      "positionFull": "SG/SF"
+    },
+    "Kevin Durant": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Kyle Kuzma": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "LaMelo Ball": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Lauri Markkanen": {
+      "position": "PF",
+      "positionFull": "PF/C"
+    },
+    "LeBron James": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Luka Dončić": {
+      "position": "PG",
+      "positionFull": "PG/SF"
+    },
+    "Malik Monk": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Marcus Smart": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Michael Porter Jr.": {
+      "position": "SF",
+      "positionFull": "SF/PF"
+    },
+    "Mikal Bridges": {
+      "position": "SF",
+      "positionFull": "SG/SF"
+    },
+    "Myles Turner": {
+      "position": "C",
+      "positionFull": "PF/C"
+    },
+    "Nikola Jokić": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Paolo Banchero": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "Pascal Siakam": {
+      "position": "PF",
+      "positionFull": "SF/PF"
+    },
+    "RJ Barrett": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    },
+    "Rudy Gobert": {
+      "position": "C",
+      "positionFull": "C"
+    },
+    "Shai Gilgeous-Alexander": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Stephen Curry": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Terry Rozier": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Trae Young": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Tyler Herro": {
+      "position": "SG",
+      "positionFull": "PG/SG"
+    },
+    "Tyrese Haliburton": {
+      "position": "PG",
+      "positionFull": "PG"
+    },
+    "Tyrese Maxey": {
+      "position": "PG",
+      "positionFull": "PG/SG"
+    },
+    "Zach LaVine": {
+      "position": "SG",
+      "positionFull": "SG/SF"
+    }
+  }

@@ -31,8 +31,8 @@ export const DEFAULT_ECONOMY_CONFIG: EconomyConfig = {
   salaryMin: 5,
   salaryMax: 65,
   tierThresholds: [
-    { tier: "ORANGE", minSalary: 52 },
-    { tier: "PURPLE", minSalary: 40 },
+    { tier: "ORANGE", minSalary: 56 },
+    { tier: "PURPLE", minSalary: 43 },
     { tier: "BLUE",   minSalary: 28 },
     { tier: "GREEN",  minSalary: 16 },
     { tier: "WHITE",  minSalary: 0  },

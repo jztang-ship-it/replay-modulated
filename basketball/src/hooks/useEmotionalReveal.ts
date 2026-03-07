@@ -29,8 +29,10 @@ type Params = {
 const ANCHOR_PRE_FLIP_PAUSE_MS = 200;
 const SHAKE_DURATION_MS        = 400;
 const ANCHOR_COUNT_MULTIPLIER  = 1.5;
-const CAREER_NIGHT_RATIO       = 1.4;
-const ICE_COLD_RATIO           = 0.60;
+const LEGENDARY_RATIO          = 1.6;
+const ON_FIRE_RATIO            = 1.4;
+const COLD_RATIO               = 0.75;
+const BUST_RATIO               = 0.50;
 
 function nowMs() {
   return typeof performance !== "undefined" ? performance.now() : Date.now();
@@ -63,23 +65,28 @@ function countMsForTier(tier: string, isAnchor = false): number {
   return isAnchor ? Math.round(base * ANCHOR_COUNT_MULTIPLIER) : base;
 }
 function perfTag(actual: number, proj: number): string {
-  if (!proj || proj <= 0) return actual >= 10 ? "HOT" : "OK";
+  if (proj <= 0) return "";
   const r = actual / proj;
-  if (r >= 1.35) return "SMASH";
-  if (r >= 1.12) return "HOT";
-  if (r <= 0.72) return "COLD";
-  return "OK";
+  if (r >= LEGENDARY_RATIO) return "LEGENDARY";
+  if (r >= ON_FIRE_RATIO)   return "ON FIRE";
+  if (r <= BUST_RATIO)      return "BUST";
+  if (r <= COLD_RATIO)      return "COLD";
+  return "";
 }
 export function getShakeType(card: RevealableCard, isAnchor: boolean): ShakeType {
   const proj   = Number(card.projectedFp ?? 0);
   const actual = Number(card.actualFp ?? 0);
   if (proj <= 0) return isAnchor ? "big" : null;
   const ratio = actual / proj;
-  const isCareerNight = ratio >= CAREER_NIGHT_RATIO;
-  const isIceCold     = ratio <= ICE_COLD_RATIO;
-  if (isAnchor && isCareerNight) return "big";
-  if (isCareerNight)             return "hype";
-  if (isIceCold)                 return "cold";
+  const isLegendary = ratio >= LEGENDARY_RATIO;
+  const isOnFire    = ratio >= ON_FIRE_RATIO;
+  const isBust      = ratio <= BUST_RATIO;
+  const isCold      = ratio <= COLD_RATIO;
+  if (isAnchor && isLegendary) return "big";
+  if (isLegendary)             return "hype";
+  if (isOnFire)                return "hype";
+  if (isBust)                  return "cold";
+  if (isCold)                  return "cold";
   if (isAnchor)                  return "big";
   return null;
 }

@@ -14,7 +14,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import { writeFileSync, mkdirSync } from "fs";
+import { writeFileSync, readFileSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -54,16 +54,14 @@ function computeFp(row) {
 // Scale: avgFP maps to salary on a curve
 // Tier thresholds (salary-based, must match economyEngine.ts)
 function salaryFromAvgFp(avgFp) {
-  // Linear scale: avgFP 5 → $10, avgFP 50 → $60
-  const raw = 10 + ((avgFp - 5) / 45) * 50;
-  return Math.round(Math.min(60, Math.max(10, raw)));
+  const raw = avgFp * 1.45;
+  return Math.round(Math.min(90, Math.max(5, raw)));
 }
-
 function tierFromSalary(salary) {
-  if (salary >= 50) return "ORANGE";
-  if (salary >= 40) return "PURPLE";
-  if (salary >= 30) return "BLUE";
-  if (salary >= 20) return "GREEN";
+  if (salary >= 72) return "ORANGE";
+  if (salary >= 55) return "PURPLE";
+  if (salary >= 37) return "BLUE";
+  if (salary >= 22) return "GREEN";
   return "WHITE";
 }
 
@@ -86,6 +84,12 @@ async function fetchAll(table, query) {
 // ── Main ──────────────────────────────────────────────────────────────────
 async function main() {
   mkdirSync(OUT_DIR, { recursive: true });
+
+  // Load static positions lookup (keyed by player name)
+  const posLookup = JSON.parse(
+    readFileSync(join(OUT_DIR, "nba-positions.json"), "utf8")
+  );
+  console.log(`📋 Loaded ${Object.keys(posLookup).length} position entries`);
 
   // 1. Fetch all players
   console.log("\n📥 Fetching players...");
@@ -175,7 +179,8 @@ playerSeasonMap.get(key).logs.push(log);
       season,
       name:         rawPlayer.name,
       team:         rawPlayer.team,
-      position:     rawPlayer.pos,
+      position:     (rawPlayer.pos && !["G","F"].includes(rawPlayer.pos)) ? rawPlayer.pos : (posLookup[rawPlayer.name]?.position ?? rawPlayer.pos ?? "G"),
+      positionFull: (rawPlayer.pos && !["G","F"].includes(rawPlayer.pos)) ? rawPlayer.pos : (posLookup[rawPlayer.name]?.positionFull ?? rawPlayer.pos ?? "G"),
       salary,
       tier,
       avgFP,

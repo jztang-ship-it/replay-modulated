@@ -1,0 +1,103 @@
+cat > ~/ReplayMod/basketball/scripts/fetchPositions.mjs << 'EOF'
+/**
+ * fetchPositions.mjs
+ * Fetches NBA player positions from nba.com stats API
+ * and saves to public/data/positions.json
+ * Run once: node scripts/fetchPositions.mjs
+ */
+import { writeFileSync, mkdirSync } from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const OUT = path.join(__dirname, "../public/data/positions.json");
+
+async function fetchAllPlayers() {
+  const url = "https://stats.nba.com/stats/commonallplayers?LeagueID=00&Season=2024-25&IsOnlyCurrentSeason=0";
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0",
+      "Referer": "https://www.nba.com/",
+      "Accept": "application/json",
+    }
+  });
+  if (!res.ok) throw new Error("NBA API error: " + res.status);
+  const data = await res.json();
+  const headers = data.resultSets[0].headers;
+  const rows = data.resultSets[0].rowSet;
+  const idIdx = headers.indexOf("PERSON_ID");
+  const posIdx = headers.indexOf("ROSTERSTATUS");
+  // commonallplayers doesn't have position — use commonplayerinfo per player
+  return rows.map(r => ({ id: String(r[idIdx]) }));
+}
+
+// Better source — leaguedashplayerstats has position
+async function fetchPositions() {
+  const seasons = ["2023-24", "2024-25"];
+  const posMap = {};
+
+  for (const season of seasons) {
+    console.log(`Fetching ${season}...`);
+    const url = `https://stats.nba.com/stats/leaguedashplayerstats?Season=${season}&SeasonType=Regular+Season&PerMode=PerGame&MeasureType=Base&PlayerExperience=&PlayerPosition=&StarterBench=&GameScope=&DraftYear=&DraftPick=&College=&Country=&Height=&Weight=&LastNGames=0&LeagueID=00&Location=&Month=0&OpponentTeamID=0&PaceAdjust=N&PlusMinus=N&Rank=N&Conference=&Division=&TwoWay=0&DateFrom=&DateTo=`;
+    
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+        "Referer": "https://www.nba.com/",
+        "Accept": "application/json",
+        "x-nba-stats-origin": "stats",
+        "x-nba-stats-token": "true",
+      }
+    });
+    
+    if (!res.ok) { console.warn(`Failed ${season}: ${res.status}`); continue; }
+    const data = await res.json();
+    const headers = data.resultSets[0].headers;
+    const rows = data.resultSets[0].rowSet;
+    const idIdx = headers.indexOf("PLAYER_ID");
+    const posIdx = headers.indexOf("PLAYER_POSITION");
+    const nameIdx = headers.indexOf("PLAYER_NAME");
+    
+    for (const row of rows) {
+      const id = String(row[idIdx]);
+      const pos = row[posIdx] ?? "";
+      const name = row[nameIdx] ?? "";
+      if (!posMap[id]) posMap[id] = { id, name, positions: [] };
+      // NBA uses "Guard", "Forward", "Center", "Guard-Forward" etc
+      const mapped = mapPosition(pos);
+      if (mapped && !posMap[id].positions.includes(mapped)) {
+        posMap[id].positions.push(mapped);
+      }
+    }
+    await new Promise(r => setTimeout(r, 1000)); // rate limit
+  }
+  return posMap;
+}
+
+function mapPosition(nbaPos) {
+  const p = (nbaPos ?? "").toLowerCase();
+  if (p === "guard") return "G";
+  if (p === "forward") return "F";  
+  if (p === "center") return "C";
+  if (p === "guard-forward" || p === "forward-guard") return "G-F";
+  if (p === "forward-center" || p === "center-forward") return "F-C";
+  return null;
+}
+
+async function main() {
+  console.log("Fetching NBA positions...");
+  const posMap = await fetchPositions();
+  const count = Object.keys(posMap).length;
+  console.log(`Got positions for ${count} players`);
+  
+  mkdirSync(path.dirname(OUT), { recursive: true });
+  writeFileSync(OUT, JSON.stringify(posMap, null, 2));
+  console.log(`Written to ${OUT}`);
+  
+  // Sample output
+  const sample = Object.values(posMap).slice(0, 5);
+  for (const p of sample) console.log(`  ${p.name}: ${p.positions.join("/")}`);
+}
+
+main().catch(e => { console.error(e); process.exit(1); });
+EOF
