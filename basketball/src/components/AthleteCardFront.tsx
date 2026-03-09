@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import type { GamePhase, PlayerCard } from "../adapters/types";
+import { getTier } from "../theme";
 
 export type PerformanceTag = "ICE_COLD" | "COLD" | "OK" | "HOT" | "ON_FIRE" | "CAREER_NIGHT";
 export type PulseStyle = "NEG" | "NEUTRAL" | "POS" | "JACKPOT";
@@ -8,73 +9,54 @@ function clampText(v: any) { return String(v ?? "").trim(); }
 
 function initialsFromName(name: string) {
   const parts = name.split(/\s+/).filter(Boolean);
-  const a = parts[0]?.[0] ?? "";
-  const b = parts[1]?.[0] ?? parts[0]?.[1] ?? "";
-  return (a + b).toUpperCase();
+  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? parts[0]?.[1] ?? "")).toUpperCase();
 }
 
 function formatSeasonRange(season: any): string {
   const s = clampText(season);
-  // New format: "2324" → "23-24", "2425" → "24-25"
-  if (/^\d{4}$/.test(s)) {
-    return `${s.slice(0,2)}-${s.slice(2,4)}`;
-  }
-  // Legacy formats
+  if (/^\d{4}$/.test(s)) return `${s.slice(0,2)}-${s.slice(2,4)}`;
   let m = s.match(/(\d{4})\D+(\d{4})/);
   if (m) return `${m[1].slice(2)}-${m[2].slice(2)}`;
   m = s.match(/(\d{2})\D+(\d{2})/);
   if (m) return `${m[1]}-${m[2]}`;
   m = s.match(/(\d{4})/);
-  if (m) {
-    const a = m[1].slice(2);
-    const b = String((Number(a) + 1) % 100).padStart(2, "0");
-    return `${a}-${b}`;
-  }
+  if (m) { const a = m[1].slice(2); return `${a}-${String((Number(a)+1)%100).padStart(2,"0")}`; }
   return s;
 }
 
 function safeKeyFor(card: any) {
-  // Try season-specific key first, fall back to plain basePlayerId
   const base = String(card?.basePlayerId ?? "").trim();
   const season = String(card?.season ?? "").trim();
   return season ? `${base}|${season}` : base;
 }
 
-function truncateLast(last: string, max = 11): string {
-  if (last.length <= max) return last;
-  return last.slice(0, max - 1) + "…";
+function abbreviateName(name: string, maxLen = 13): string {
+  if (name.length <= maxLen) return name;
+  const parts = name.trim().split(/\s+/);
+  if (parts.length < 2) return name.slice(0, maxLen - 1) + "…";
+  const last = parts.slice(1).join(" ");
+  const abbr = `${parts[0][0]}. ${last}`;
+  return abbr.length <= maxLen ? abbr : abbr.slice(0, maxLen - 1) + "…";
 }
 
-type TierTheme = { bg: string; frame: string; glow: string; textOnDark: boolean };
-
-function tierTheme(tierRaw: any): TierTheme {
-  const t = String(tierRaw ?? "").toUpperCase();
-  if (t.includes("ORANGE")) return { bg: "linear-gradient(160deg, #2A1500 0%, #1A0D00 40%, #0F0800 100%)", frame: "rgba(255,160,50,0.90)", glow: "rgba(255,140,30,0.28)", textOnDark: false };
-  if (t.includes("PURPLE")) return { bg: "linear-gradient(160deg, #1A0D2E 0%, #110920 40%, #080612 100%)", frame: "rgba(175,100,255,0.88)", glow: "rgba(160,90,255,0.26)", textOnDark: false };
-  if (t.includes("BLUE"))   return { bg: "linear-gradient(160deg, #071828 0%, #04101C 40%, #020A12 100%)", frame: "rgba(70,155,255,0.88)",  glow: "rgba(60,140,255,0.24)",  textOnDark: false };
-  if (t.includes("GREEN"))  return { bg: "linear-gradient(160deg, #061A0F 0%, #04120A 40%, #020A06 100%)", frame: "rgba(60,210,120,0.88)",  glow: "rgba(50,200,110,0.22)",  textOnDark: false };
-  if (t.includes("WHITE"))  return { bg: "linear-gradient(160deg, #141820 0%, #0D1118 40%, #080A10 100%)", frame: "rgba(200,215,240,0.55)", glow: "rgba(200,215,240,0.12)", textOnDark: false };
-  return { bg: "linear-gradient(160deg, #071828 0%, #04101C 40%, #020A12 100%)", frame: "rgba(100,140,220,0.80)", glow: "rgba(100,140,220,0.20)", textOnDark: false };
+function pulsePalette(pulse?: PulseStyle) {
+  switch (pulse) {
+    case "JACKPOT": return { ring: "rgba(255,215,80,0.60)",  glow: "rgba(255,205,70,0.30)"  };
+    case "POS":     return { ring: "rgba(255,150,70,0.55)",  glow: "rgba(255,140,60,0.25)"  };
+    case "NEG":     return { ring: "rgba(120,180,235,0.55)", glow: "rgba(110,170,230,0.22)" };
+    default:        return { ring: "rgba(255,255,255,0.10)", glow: "rgba(255,255,255,0.06)" };
+  }
 }
 
-function teamYearLine(team: string, seasonFmt: string, maxTeamChars = 12) {
-  const t = clampText(team).toUpperCase();
-  const y = clampText(seasonFmt);
-  if (!t) return y;
-  if (t.length <= maxTeamChars) return `${t} • ${y}`;
-  return `${t.slice(0, Math.max(0, maxTeamChars - 1))}… • ${y}`;
-}
-
-const EMO_STYLE_ID = "athlete-card-emotion-styles-v3";
+const EMO_STYLE_ID = "athlete-card-emotion-styles-v4";
 if (typeof document !== "undefined" && !document.getElementById(EMO_STYLE_ID)) {
   const st = document.createElement("style");
   st.id = EMO_STYLE_ID;
   st.textContent = `
     @keyframes pulseRing {
-      0%   { transform: scale(1.00); opacity: 0.35; }
-      35%  { transform: scale(1.02); opacity: 0.70; }
-      70%  { transform: scale(1.01); opacity: 0.45; }
-      100% { transform: scale(1.00); opacity: 0.35; }
+      0%,100% { transform: scale(1.00); opacity: 0.35; }
+      35%     { transform: scale(1.02); opacity: 0.70; }
+      70%     { transform: scale(1.01); opacity: 0.45; }
     }
     @keyframes badgePop {
       0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
@@ -86,24 +68,7 @@ if (typeof document !== "undefined" && !document.getElementById(EMO_STYLE_ID)) {
   document.head.appendChild(st);
 }
 
-function pulsePalette(pulse?: PulseStyle) {
-  switch (pulse) {
-    case "JACKPOT": return { ring: "rgba(255,215,80,0.55)",  glow: "rgba(255,205,70,0.28)"  };
-    case "POS":     return { ring: "rgba(255,150,70,0.50)",  glow: "rgba(255,140,60,0.22)"  };
-    case "NEG":     return { ring: "rgba(120,180,235,0.50)", glow: "rgba(110,170,230,0.20)" };
-    default:        return { ring: "rgba(255,255,255,0.10)", glow: "rgba(255,255,255,0.06)" };
-  }
-}
-
-// ── Layout constants ───────────────────────────────────────────────────────
-// Dock = name pill only (team • season, first+pos, last+FP)
-// DOCK_H: height of just the name pill
-// BADGE_H: height of the badge row that floats above the dock
-// Together they form the bottom zone of the card
-const DOCK_H    = "18%";   // name pill only — tighter than before
-const BADGE_H   = 26;      // px — badge strip height, floats just above dock
-const DOCK_GAP  = 4;       // gap from card bottom edge
-const DOCK_PAD  = 6;       // horizontal inset
+const BADGE_H = 24;
 
 export function AthleteCardFront(props: {
   card: PlayerCard;
@@ -129,32 +94,24 @@ export function AthleteCardFront(props: {
     pulse, fpCountUpMs, stamp, onRollComplete, badges,
   } = props;
 
-  const fadeOpacity = (isRevealing && revealActive && visibleFp !== undefined && visibleFp > 0) ? 0.15 : 1;
-  const fadeTransition = "opacity 0.3s ease";
-
   const name      = clampText((card as any)?.name);
-  const team      = clampText((card as any)?.team);
+  const team      = clampText((card as any)?.team).toUpperCase();
   const season    = (card as any)?.season ?? (card as any)?.year ?? (card as any)?.seasonLabel;
   const seasonFmt = formatSeasonRange(season);
   const posRaw    = clampText((card as any)?.position);
   const posMap: Record<string, string> = {
-    "PG": "G", "SG": "G", "G": "G",
-    "SF": "F", "PF": "F", "F": "F",
-    "G/F": "G/F", "F/G": "G/F", "F/C": "F/C",
-    "C": "C",
+    "PG":"G","SG":"G","G":"G","SF":"F","PF":"F","F":"F",
+    "G/F":"G/F","F/G":"G/F","F/C":"F/C","C":"C",
   };
-  const pos = posRaw ? (posMap[posRaw.toUpperCase()] ?? "") : "";
-  const salary      = Number((card as any)?.salary ?? 0);
+  const pos       = posRaw ? (posMap[posRaw.toUpperCase()] ?? posRaw) : "";
+  const salary    = Number((card as any)?.salary ?? 0);
+  const proj      = Number((card as any)?.projectedFp ?? 0);
   const showResults = phase === "RESULTS";
-  const proj        = Number((card as any)?.projectedFp ?? 0);
 
   const [displayedFp,  setDisplayedFp]  = useState(0);
   const [isRolling,    setIsRolling]    = useState(false);
   const [rollComplete, setRollComplete] = useState(false);
-
-  const [imgReady, setImgReady] = useState(false);
-
-
+  const [imgReady,     setImgReady]     = useState(false);
   const cardKey     = useMemo(() => safeKeyFor(card), [card]);
   const targetFpRef = useRef<number | null>(null);
 
@@ -167,18 +124,13 @@ export function AthleteCardFront(props: {
 
   useEffect(() => { targetFpRef.current = null; }, [cardKey]);
 
-
-
   const headshotSrc = useMemo(() => {
     const base = String((card as any)?.basePlayerId ?? "").trim();
     return base ? `/headshots/${base}.png` : "";
   }, [card]);
 
   useEffect(() => { setImgReady(false); }, [headshotSrc]);
-  const initials    = initialsFromName(name || `${team} ${pos}`);
-  const tier        = tierTheme((card as any)?.tier);
 
-  // FP roll
   useEffect(() => {
     if (visibleFp === undefined) { setDisplayedFp(showResults ? 0 : proj); return; }
     if (isRevealing && !revealActive) return;
@@ -207,214 +159,252 @@ export function AthleteCardFront(props: {
   const fpValue      = showResults ? (visibleFp !== undefined ? displayedFp : 0) : proj;
   const valueText    = Number.isFinite(fpValue) ? fpValue.toFixed(1) : "0.0";
   const badgeBonusFp = useMemo(() => badges?.reduce((s, b) => s + (b.fp ?? 0), 0) ?? 0, [badges]);
-  const hasBadges    = badges && badges.length > 0;
+  const hasBadges    = (badges?.length ?? 0) > 0;
 
   const hasRevealed       = rollComplete || (!!isRevealing && !!revealActive && visibleFp !== undefined && visibleFp > 0);
-  const showHoldIndicator = isLocked || (card as any).wasHeld;
   const pulsePal          = pulsePalette(pulse);
   const showPulse         = !!pulse && pulse !== "NEUTRAL" && hasRevealed;
-  const teamSeason        = teamYearLine(team, seasonFmt, 12);
-  const shadowText        = "0 2px 8px rgba(0,0,0,0.55)";
+  const tier              = getTier((card as any)?.tier);
+  const isWhiteTier       = ((card as any)?.tier ?? "WHITE") === "WHITE";
+  const onCardText        = isWhiteTier ? "#FFFFFF" : "#000000";
+  const onCardTextMuted   = isWhiteTier ? "rgba(255,255,255,0.60)" : "rgba(0,0,0,0.55)";
+  const initials          = initialsFromName(name || `${team} ${pos}`);
+  const shortName         = abbreviateName(name, 13);
+  // During active reveal: only the bottom team/pos/FP strip fades; salary, proj, name stay visible
+  const isActiveReveal    = !!(isRevealing && revealActive && visibleFp !== undefined && visibleFp > 0);
+  const stripFadeOpacity  = isActiveReveal ? 0.08 : 1;
+  const fadeTransition    = "opacity 0.3s ease";
 
-  const first = useMemo(() => name.split(/\s+/).filter(Boolean)[0] ?? "", [name]);
-  const last  = useMemo(() => {
-    const parts = name.split(/\s+/).filter(Boolean);
-    return truncateLast(parts.slice(1).join(" ") || parts[0] || "", 11);
-  }, [name]);
+  // Unique clip ID per card instance to avoid collisions
+  const clipId = useMemo(() => `card-clip-${cardKey.replace(/[^a-z0-9]/gi, '_')}`, [cardKey]);
 
-  // Badge strip sits just above dock; stamp sits just above badge strip
-  // bottomZoneHeight = DOCK_GAP + DOCK_H (%) + BADGE_H px (if badges present)
-  // We position everything using `bottom` from card edge.
+  // ── Clip & border paths ──────────────────────────────────────────────────
+  // Measured from designer SVG — card width=344px (SVG cols at x=30,374,718 → pitch=344)
+  // objectBoundingBox fractions: x÷344, y÷503
+  //
+  // Notch geometry:
+  //   Shoulder left:  x=85/344 = 0.2486  (top of notch)
+  //   Shoulder right: x=239/344 = 0.6949
+  //   Notch depth:    y=25/503 = 0.0497  (where notch closes)
+  //   Inner walls:    x=110/344=0.3190, x=118/344=0.3418 (left), x=219/344=0.6356, x=226/344=0.6582 (right)
+  //   Corner radius:  ~23px → 0.0678 of width
+  //
 
-  // dock bottom edge = DOCK_GAP from card bottom
-  // badge strip bottom edge = DOCK_GAP + DOCK_H% + 4px gap
-  // stamp bottom edge = badge strip top + 4px gap
+  // CLIP_PATH: what gets clipped (the fill shape)
+  const CLIP_PATH =
+    "M 0.0678 0 L 0.2486 0 L 0.3190 0.0338 Q 0.3190 0.0497 0.3418 0.0497 " +
+    "L 0.6356 0.0497 Q 0.6582 0.0497 0.6582 0.0338 L 0.6949 0 L 0.9322 0 " +
+    "Q 1 0 1 0.0677 L 1 0.9323 Q 1 1 0.9322 1 L 0.0678 1 " +
+    "Q 0 1 0 0.9323 L 0 0.0677 Q 0 0 0.0678 0 Z";
+
+  // BORDER_PATH: IDENTICAL to CLIP_PATH so the stroke overlays the clip edge exactly.
+  // viewBox="0 0 1 1" with same objectBoundingBox-normalized coords guarantees
+  // the trim follows every curve and corner of the card shape perfectly.
+  const BORDER_PATH =
+    "M 0.0678 0 L 0.2486 0 L 0.3190 0.0338 Q 0.3190 0.0497 0.3418 0.0497 " +
+    "L 0.6356 0.0497 Q 0.6582 0.0497 0.6582 0.0338 L 0.6949 0 L 0.9322 0 " +
+    "Q 1 0 1 0.0677 L 1 0.9323 Q 1 1 0.9322 1 L 0.0678 1 " +
+    "Q 0 1 0 0.9323 L 0 0.0677 Q 0 0 0.0678 0 Z";
 
   return (
     <div style={{
-      position: "relative", width: "100%", height: "100%", borderRadius: 18, overflow: "hidden",
-      background: tier.bg,
-      border: `2px solid ${tier.frame}`,
-      boxShadow: `0 18px 40px rgba(0,0,0,0.50), 0 0 0 1px rgba(255,255,255,0.06) inset, 0 0 30px ${tier.glow}${showPulse ? `, 0 0 26px ${pulsePal.glow}` : ""}`,
+      position: "relative", width: "100%", height: "100%",
+      background: "transparent",
     }}>
+      <svg width="0" height="0" style={{ position: "absolute", top: 0, left: 0 }}>
+        <defs>
+          <clipPath id={clipId} clipPathUnits="objectBoundingBox">
+            <path d={CLIP_PATH} />
+          </clipPath>
+        </defs>
+      </svg>
 
-      {/* Tier corner glow */}
-      <div style={{ position: "absolute", inset: -40, pointerEvents: "none",
-        background: `radial-gradient(closest-side at 30% 20%, ${tier.glow} 0%, rgba(0,0,0,0) 70%)`, opacity: 0.7 }} />
+      {/* ── CLIPPED CARD CONTENT ── */}
+      <div style={{ position: "absolute", inset: 0, clipPath: `url(#${clipId})` }}>
 
-      {/* Pulse ring */}
-      {showPulse && (
-        <div style={{ position: "absolute", inset: -2, borderRadius: 20, pointerEvents: "none",
-          border: `2px solid ${pulsePal.ring}`,
-          animation: "pulseRing 950ms ease-in-out infinite",
-          filter: "blur(0.2px)", zIndex: 5 }} />
-      )}
+        {/* Full-card gradient */}
+        <div style={{
+          position: "absolute", inset: 0,
+          background: `linear-gradient(to bottom, ${tier.bg} 0%, ${tier.bgEnd} 70%, ${tier.bgEnd} 100%)`,
+        }} />
 
-      {/* Hold indicator */}
-      {showHoldIndicator && <>
-        <div style={{ position: "absolute", top: 0, left: 0, width: 0, height: 0,
-          borderTop: "42px solid rgba(245,200,80,0.95)", borderRight: "42px solid transparent",
-          zIndex: 7, pointerEvents: "none" }} />
-        <div style={{ position: "absolute", top: 14, left: 14, transform: "translate(-50%,-50%)",
-          zIndex: 8, pointerEvents: "none", fontSize: 12, fontWeight: 950, color: "rgba(0,0,0,0.92)" }}>H</div>
-      </>}
-
-      {/* Salary tag */}
-      <div style={{
-        position: "absolute", top: 8, right: 8, zIndex: 6, pointerEvents: "none",
-        padding: "5px 9px", borderRadius: 12,
-        background: "rgba(15,18,24,0.55)", border: "1px solid rgba(255,255,255,0.14)",
-        color: "rgba(255,255,255,0.95)", fontWeight: 950, fontSize: 12, letterSpacing: 0.6,
-        backdropFilter: "blur(10px)", opacity: fadeOpacity, transition: fadeTransition,
-      }}>${salary}</div>
-
-      {/* Hero — full card, dock + badges float on top */}
-      <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
-        <div style={{ position: "absolute", inset: 0, borderRadius: 18, overflow: "hidden", transform: "translateZ(0)" }}>
-          {headshotSrc && (
+        {/* HEADSHOT — overflow visible; parent clipPath handles all clipping */}
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: "27.4%" }}>
+          {headshotSrc ? (
             <img
               key={headshotSrc}
               src={headshotSrc}
               alt={name}
               style={{
-                position: "absolute", inset: 0, width: "100%", height: "100%",
-                objectFit: "cover", objectPosition: "50% 0%",
-                transform: "translateY(8px) scale(0.94)",
-                opacity: imgReady ? 1 : 0,
-                transition: "opacity 0.2s ease",
+                position: "absolute",
+                top: "12%", left: "-5%", width: "110%", height: "100%",
+                objectFit: "cover", objectPosition: "50% 10%",
+                opacity: imgReady ? 1 : 0, transition: "opacity 0.2s ease",
               }}
               draggable={false}
               onLoad={() => setImgReady(true)}
               onError={() => setImgReady(false)}
             />
-          )}
-          {(!headshotSrc || !imgReady) && (
+          ) : (
             <div style={{
               position: "absolute", inset: 0, display: "grid", placeItems: "center",
-              fontSize: 58, fontWeight: 950, letterSpacing: 2,
-              color: "rgba(255,255,255,0.70)", textShadow: "0 10px 30px rgba(0,0,0,0.60)", userSelect: "none",
+              fontSize: 32, fontWeight: 950, color: "rgba(255,255,255,0.70)", userSelect: "none",
             }}>{initials}</div>
           )}
-          {/* Bottom fade into dock */}
-          <div style={{
-            position: "absolute", inset: 0, pointerEvents: "none",
-            background: "linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(0,0,0,0.55) 100%)",
-          }} />
         </div>
-      </div>
 
-      {/* ── DOCK: name pill only, tight to bottom ─────────────────────── */}
-      <div style={{
-        position: "absolute", left: DOCK_PAD, right: DOCK_PAD,
-        bottom: DOCK_GAP, height: DOCK_H,
-        borderRadius: 12,
-        padding: "4px 10px",
-        display: "flex", flexDirection: "column", justifyContent: "center", gap: 1,
-        background: "linear-gradient(180deg, rgba(255,255,255,0.10), rgba(0,0,0,0.72))",
-        borderTop: "1px solid rgba(255,255,255,0.12)",
-        boxShadow: "0 8px 20px rgba(0,0,0,0.35)", backdropFilter: "blur(14px)", zIndex: 6,
-      }}>
-        {/* Team • Season */}
+        {/* SALARY — always visible */}
         <div style={{
-          fontSize: 8, fontWeight: 900, letterSpacing: 0.8, textTransform: "uppercase",
-          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-          textShadow: shadowText, textAlign: "center", lineHeight: "1.1",
-          color: "rgba(255,255,255,0.55)", opacity: fadeOpacity, transition: fadeTransition,
-        }}>{teamSeason}</div>
-
-        {/* First + pos */}
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 4 }}>
-          <div style={{
-            fontSize: 9, fontWeight: 900, letterSpacing: 0.4, textTransform: "uppercase",
-            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-            textShadow: shadowText, lineHeight: "1.1", minWidth: 0, flex: 1,
-            opacity: fadeOpacity, transition: fadeTransition,
-          }}>{first}</div>
-          <div style={{
-            fontSize: 9, fontWeight: 900, letterSpacing: 0.4, textTransform: "uppercase",
-            textShadow: shadowText, lineHeight: "1.1", flexShrink: 0,
-            color: "rgba(255,255,255,0.60)", opacity: fadeOpacity, transition: fadeTransition,
-          }}>{pos}</div>
+          position: "absolute", top: "6.5%", left: "6%",
+          zIndex: 8, pointerEvents: "none",
+          lineHeight: 1,
+        }}>
+          <span style={{
+            fontSize: 16, fontWeight: 900, fontStyle: "italic",
+            color: onCardText, letterSpacing: -0.5, lineHeight: 1,
+          }}>${salary}</span>
         </div>
 
-        {/* Last + FP */}
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 4 }}>
-          <div style={{
-            fontSize: 13, fontWeight: 950, letterSpacing: 0.5, textTransform: "uppercase",
+        {/* PROJ — always visible */}
+        <div style={{
+          position: "absolute", top: "6%", right: "6%",
+          zIndex: 8, pointerEvents: "none",
+          display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 1,
+        }}>
+          <span style={{ fontSize: 12, fontWeight: 900, fontStyle: "italic", color: onCardText, lineHeight: 1 }}>{proj.toFixed(1)}</span>
+          <span style={{ fontSize: 5, fontWeight: 800, color: onCardTextMuted, letterSpacing: 0.8, textTransform: "uppercase", lineHeight: 1 }}>PROJ</span>
+        </div>
+
+        {/* NAME STRIP — always solid, never fades. Centered text. */}
+        <div style={{
+          position: "absolute", left: 0, right: 0,
+          top: "72.6%", height: "11.7%",
+          background: "#000000",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          paddingLeft: 6, paddingRight: 6,
+          zIndex: 4,
+          overflow: "hidden",
+        }}>
+          <span style={{
+            fontSize: 11, fontWeight: 900, letterSpacing: 0.2,
+            textTransform: "uppercase", color: "#FFFFFF",
             whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-            textShadow: shadowText, lineHeight: "1.1", minWidth: 0, flex: 1,
-            opacity: fadeOpacity, transition: fadeTransition,
-          }}>{last}</div>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 3, flexShrink: 0 }}>
-            <div style={{
-              fontSize: 8, fontWeight: 900, letterSpacing: 0.8,
-              textShadow: shadowText, opacity: 0.60, lineHeight: "1.1",
-            }}>{showResults ? "FP" : "PROJ"}</div>
-            <div style={{
-              fontSize: 12, fontWeight: 950, letterSpacing: 0.2,
-              textShadow: shadowText, lineHeight: "1.1",
-              transition: isRolling ? "none" : "transform 150ms ease",
-              transform: isRolling ? "scale(1.05)" : "scale(1)",
-            }}>
-              {valueText}
-              {showResults && badgeBonusFp > 0 && (
-                <span style={{ fontSize: 8, fontWeight: 700, color: "#FFD700", marginLeft: 2, opacity: 0.90 }}>
-                  (+{badgeBonusFp})
-                </span>
+            lineHeight: 1, display: "block", textAlign: "center",
+          }}>{shortName}</span>
+        </div>
+
+        {/* TEAM / POS / FP STRIP — fades during reveal to let the action feel dramatic. FP appears only after reveal. */}
+        <div style={{
+          position: "absolute", left: 0, right: 0,
+          top: "84.3%", bottom: 0,
+          background: isWhiteTier ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.35)",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          paddingLeft: 6, paddingRight: 6,
+          zIndex: 4,
+          overflow: "hidden",
+          opacity: stripFadeOpacity, transition: fadeTransition,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
+            <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 0.3, textTransform: "uppercase", color: isWhiteTier ? "rgba(255,255,255,0.90)" : onCardText, lineHeight: 1 }}>
+              {team}
+            </span>
+            <span style={{ fontSize: 8, color: isWhiteTier ? "rgba(255,255,255,0.40)" : onCardTextMuted, lineHeight: 1 }}>·</span>
+            <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 0.3, textTransform: "uppercase", color: isWhiteTier ? "rgba(255,255,255,0.90)" : onCardText, lineHeight: 1 }}>
+              {pos}
+            </span>
+          </div>
+          {showResults && (
+            <div style={{ display: "flex", alignItems: "center", gap: 1, flexShrink: 0 }}>
+              <span style={{
+                fontSize: 13, fontWeight: 950,
+                color: isWhiteTier ? "#FFFFFF" : onCardText,
+                lineHeight: 1, fontVariantNumeric: "tabular-nums",
+                display: "inline-block",
+                transform: isRolling ? "scale(1.08)" : "scale(1)",
+                transition: isRolling ? "none" : "transform 100ms ease",
+              }}>
+                {valueText}
+              </span>
+              {badgeBonusFp > 0 && (
+                <span style={{ fontSize: 6, fontWeight: 700, color: "#FFEA86", marginLeft: 1 }}>+{badgeBonusFp}</span>
               )}
             </div>
-          </div>
+          )}
         </div>
+
+        {/* BADGES — float just above the name strip (name strip top = 72.6%) */}
+        {hasBadges && (
+          <div style={{
+            position: "absolute", left: 3, right: 3, bottom: "calc(27.4% + 3px)",
+            height: BADGE_H, display: "flex", gap: 2, justifyContent: "center", alignItems: "center",
+            zIndex: 7, pointerEvents: "none", flexWrap: "nowrap", overflow: "hidden",
+          }}>
+            {badges!.slice(0, 5).map((badge, i) => (
+              <div key={badge.id} style={{
+                animation: `badgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${i * 90}ms both`,
+                display: "flex", alignItems: "center", gap: 2,
+                background: "rgba(0,0,0,0.82)", borderRadius: 5, padding: "2px 4px",
+                border: "1px solid rgba(255,255,255,0.20)", flexShrink: 0,
+              }}>
+                <span style={{ fontSize: 11, lineHeight: 1 }}>{badge.icon}</span>
+                <span style={{ fontSize: 6.5, fontWeight: 700, color: "#FFEA86" }}>+{badge.fp}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* STAMP — float above badges/name strip */}
+        {stamp && (
+          <div style={{
+            position: "absolute",
+            bottom: hasBadges ? `calc(27.4% + ${BADGE_H + 6}px)` : "calc(27.4% + 3px)",
+            left: "50%", transform: "translateX(-50%) rotate(-3deg)",
+            zIndex: 40, pointerEvents: "none", whiteSpace: "nowrap",
+            fontSize: 10, fontWeight: 900, letterSpacing: 2,
+            textTransform: "uppercase" as const,
+            color: stamp === "CAREER NIGHT" ? "#FFD700" : "#7DD3FC",
+            textShadow: stamp === "CAREER NIGHT" ? "0 0 14px rgba(255,215,0,0.8), 0 2px 4px rgba(0,0,0,0.8)" : "0 0 14px rgba(125,211,252,0.8), 0 2px 4px rgba(0,0,0,0.8)",
+            border: `2px solid ${stamp === "CAREER NIGHT" ? "#FFD700" : "#7DD3FC"}`,
+            borderRadius: 4, padding: "2px 7px", background: "rgba(0,0,0,0.72)",
+          }}>{stamp}</div>
+        )}
+
+      </div>{/* end clipped content */}
+
+      {/* SEASON TEXT — outside clip, floats in the notch. Season only e.g. "23-24". */}
+      <div style={{
+        position: "absolute",
+        top: 0, height: "5.8%",
+        left: "24.9%", right: "30.5%",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        zIndex: 35, pointerEvents: "none",
+      }}>
+        <span style={{
+          fontSize: 8, fontWeight: 900, letterSpacing: 1.2,
+          textTransform: "uppercase", color: "rgba(255,255,255,0.92)",
+          whiteSpace: "nowrap", lineHeight: 1,
+        }}>{seasonFmt}</span>
       </div>
 
-      {/* ── BADGES: float just above the dock ─────────────────────────── */}
-      {hasBadges && (
-        <div style={{
-          position: "absolute",
-          left: DOCK_PAD, right: DOCK_PAD,
-          // sits directly above the dock with a 3px gap
-          bottom: `calc(${DOCK_H} + ${DOCK_GAP}px + 3px)`,
-          height: BADGE_H,
-          display: "flex", gap: 3, justifyContent: "center", alignItems: "center",
-          zIndex: 7, pointerEvents: "none",
-          flexWrap: "nowrap", overflow: "hidden",
-        }}>
-          {badges!.slice(0, 6).map((badge, i) => (
-            <div key={badge.id} style={{
-              animation: `badgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${i * 90}ms both`,
-              display: "flex", flexDirection: "row", alignItems: "center", gap: 2,
-              background: "rgba(0,0,0,0.70)", backdropFilter: "blur(6px)",
-              borderRadius: 6, padding: "2px 5px",
-              border: "1px solid rgba(255,255,255,0.18)", flexShrink: 0,
-            }}>
-              <span style={{ fontSize: 16, lineHeight: 1 }}>{badge.icon}</span>
-              <span style={{ fontSize: 8, fontWeight: 700, color: "#FFD700", letterSpacing: 0.3 }}>+{badge.fp}</span>
-            </div>
-          ))}
+      {/* Pulse ring — wrapped in clipPath div so it never bleeds outside card bounds */}
+      {showPulse && (
+        <div style={{ position: "absolute", inset: 0, clipPath: `url(#${clipId})`, pointerEvents: "none", zIndex: 25 }}>
+          <svg
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible" }}
+            viewBox="0 0 1 1"
+            preserveAspectRatio="none"
+          >
+            <path
+              d={BORDER_PATH}
+              fill="none"
+              stroke={pulsePal.ring}
+              strokeWidth="6"
+              strokeLinejoin="round"
+              vectorEffect="non-scaling-stroke"
+              style={{ animation: "pulseRing 950ms ease-in-out infinite" }}
+            />
+          </svg>
         </div>
-      )}
-
-      {/* ── STAMP: sits just above badge area (or above dock if no badges) ── */}
-      {stamp && (
-        <div style={{
-          position: "absolute",
-          // if badges present, sit above them; otherwise just above dock
-          bottom: hasBadges
-            ? `calc(${DOCK_H} + ${DOCK_GAP}px + ${BADGE_H + 6}px)`
-            : `calc(${DOCK_H} + ${DOCK_GAP}px + 6px)`,
-          left: "50%",
-          transform: "translateX(-50%) rotate(-3deg)",
-          zIndex: 40, pointerEvents: "none", whiteSpace: "nowrap",
-          fontSize: 13, fontWeight: 900, letterSpacing: 2.5,
-          textTransform: "uppercase" as const,
-          color: stamp === "CAREER NIGHT" ? "#FFD700" : "#7DD3FC",
-          textShadow: stamp === "CAREER NIGHT"
-            ? "0 0 20px rgba(255,215,0,0.8), 0 2px 4px rgba(0,0,0,0.8)"
-            : "0 0 20px rgba(125,211,252,0.8), 0 2px 4px rgba(0,0,0,0.8)",
-          border: `2px solid ${stamp === "CAREER NIGHT" ? "#FFD700" : "#7DD3FC"}`,
-          borderRadius: 4, padding: "4px 12px",
-          background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)",
-        }}>{stamp}</div>
       )}
 
     </div>

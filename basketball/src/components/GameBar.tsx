@@ -10,6 +10,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
+import { THEME } from "../theme";
 
 // ── Win tiers (must match payoutLogic.ts) ─────────────────────────────────
 const WIN_TIERS = [
@@ -80,52 +81,45 @@ function TierBar({ totalFp, gameState }: { totalFp: number; gameState: GameState
   const showBar = gameState !== "IDLE";
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%" }}>
+      {/* Label row: ROOKIE left, 125 FP right — matches SVG exactly */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{
+          fontSize: 11, fontWeight: 900, letterSpacing: 1.6,
+          textTransform: "uppercase",
+          color: showBar ? color : "rgba(255,255,255,0.30)",
+          textShadow: showBar ? `0 0 10px ${glow}` : "none",
+          transition: "color 400ms ease",
+        }}>{label}</span>
+        <span style={{
+          fontSize: 11, fontWeight: 700, letterSpacing: 0.4,
+          color: "rgba(255,255,255,0.45)",
+        }}>
+          {showBar && fptNeeded > 0 ? `${fptNeeded} FP` : showBar ? "✓" : "125 FP"}
+        </span>
+      </div>
+
+      {/* Progress bar — full width, thicker */}
       <div style={{
-        flex: 1, height: 18,
-        background: "rgba(255,255,255,0.07)",
-        borderRadius: 99, overflow: "hidden", position: "relative",
+        width: "100%", height: 10,
+        background: "rgba(255,255,255,0.12)",
+        borderRadius: 6, overflow: "hidden", position: "relative",
       }}>
-        {/* Fill */}
         <div style={{
           position: "absolute", left: 0, top: 0, bottom: 0,
           width: `${showBar ? animated : 0}%`,
-          background: `linear-gradient(90deg, ${color}66 0%, ${color} 100%)`,
-          borderRadius: 99,
+          background: `linear-gradient(90deg, ${color}99 0%, ${color} 100%)`,
+          borderRadius: 6,
           boxShadow: animated > 5 ? `0 0 8px ${glow}` : "none",
           transition: "background 400ms ease",
         }} />
-        {/* Label inside bar */}
-        <div style={{
-          position: "absolute", inset: 0,
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "0 10px", pointerEvents: "none",
-        }}>
-          <span style={{
-            fontSize: 8, fontWeight: 900, letterSpacing: 1.4,
-            textTransform: "uppercase", whiteSpace: "nowrap",
-            color: showBar ? color : "rgba(255,255,255,0.25)",
-            textShadow: showBar ? `0 0 10px ${glow}` : "none",
-            transition: "color 400ms ease",
-            zIndex: 1,
-          }}>
-            {label}
-          </span>
-          <span style={{
-            fontSize: 7, fontWeight: 700, letterSpacing: 0.4,
-            color: "rgba(255,255,255,0.4)", whiteSpace: "nowrap",
-            zIndex: 1,
-          }}>
-            {showBar && fptNeeded > 0 ? `${fptNeeded} FP` : showBar ? "✓" : ""}
-          </span>
-        </div>
         {/* Tip dot */}
         {animated > 3 && showBar && (
           <div style={{
             position: "absolute", top: "50%",
-            left: `calc(${Math.min(animated, 97)}% - 3px)`,
+            left: `calc(${Math.min(animated, 97)}% - 4px)`,
             transform: "translateY(-50%)",
-            width: 6, height: 6, borderRadius: "50%",
+            width: 7, height: 7, borderRadius: "50%",
             background: color,
             boxShadow: `0 0 6px 2px ${glow}`,
             animation: burst ? "tierBurst 0.5s ease-out" : "tipPulse 1.4s ease-in-out infinite",
@@ -171,8 +165,8 @@ function LegendModal({ onClose }: { onClose: () => void }) {
     <div onClick={onClose} style={{
       position: "fixed", inset: 0, zIndex: 300,
       background: "rgba(0,0,0,0.80)", backdropFilter: "blur(6px)",
-      display: "flex", alignItems: "flex-start", justifyContent: "center",
-      paddingTop: "8vh", paddingLeft: 16, paddingRight: 16,
+      display: "flex", alignItems: "flex-end", justifyContent: "flex-end",
+      paddingBottom: "10vh", paddingLeft: 16, paddingRight: 16,
       animation: "fadeInBg 200ms ease",
     }}>
       <style>{`
@@ -352,10 +346,17 @@ function actionLabel(state: GameStateLabel): string {
   return "REPLAY";
 }
 
-function actionGradient(state: GameStateLabel): string {
-  if (state === "HOLD") return "linear-gradient(180deg, #36D46B 0%, #1FA94B 100%)";
-  if (state === "RESULTS" || state === "WIN_CELEBRATION") return "linear-gradient(180deg, #3AA0FF 0%, #1D6DD7 100%)";
-  return "linear-gradient(180deg, #FFB14A 0%, #FF7A2F 100%)";
+function actionBackground(state: GameStateLabel): string {
+  if (state === "HOLD") return THEME.palette.green_primary;
+  if (state === "RESULTS" || state === "WIN_CELEBRATION") return THEME.palette.blue_secondary;
+  if (state === "IDLE") return THEME.palette.blue_primary;
+  return THEME.button.default;
+}
+
+function actionTextColor(state: GameStateLabel): string {
+  if (state === "HOLD") return THEME.palette.black;          // dark text on bright green
+  if (state === "IDLE") return THEME.palette.black;          // dark text on bright teal
+  return THEME.colors.textPrimary;
 }
 
 function isDisabled(state: GameStateLabel): boolean {
@@ -396,74 +397,94 @@ export function GameBar({
         <LegendModal onClose={() => setShowLegend(false)} />,
         document.body
       )}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", flexDirection: "column" }}>
 
-        {/* Row 0: Tier progress bar */}
+        {/* Row 0: Tier label + progress bar — SVG: tier at y=1287, bar at y=1331 */}
         <TierBar totalFp={totalFp} gameState={gameState} />
 
-        {/* Row 1: Balance | Team FP | Budget */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 8 }}>
-          <div>
-            <div style={labelStyle}>Balance</div>
-            <div style={{ fontSize: 17, fontWeight: 950, lineHeight: 1, color: isBalanceAnimating ? "#36D46B" : "#EAF0FF", transition: "color 300ms ease" }}>
+        {/* Row 1: TOTAL SCORE + BUDGET — SVG gap from progress bar: 92px / 633px gamebar = 14.5% */}
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-end", gap: 32, paddingTop: 12, paddingBottom: 2 }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 36, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic" }}>
+              <RollingNumber value={totalFp} decimals={1} />
+            </div>
+            <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 4 }}>
+              Total Score
+            </div>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 2, justifyContent: "center" }}>
+              <span style={{ fontSize: 36, fontWeight: 900, color: overBudget ? "#ef4444" : "#FFFFFF", lineHeight: 1, fontStyle: "italic" }}>
+                {remaining}
+              </span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.35)", lineHeight: 1, fontStyle: "italic" }}>
+                /{capMax}
+              </span>
+            </div>
+            <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 4 }}>
+              Budget
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2: Multiplier pills — SVG gap from score labels: 71px / 633px = 11.2% */}
+        <div style={{ display: "flex", gap: 8, justifyContent: "center", paddingTop: 10 }}>
+          {MULTIPLIERS.map((m: number) => {
+            const active = betMultiplier === m;
+            return (
+              <button key={m} onClick={() => onBetMultiplier(m)} disabled={betLocked} style={{
+                background: active ? THEME.button.multiplier.active.bg : THEME.button.multiplier.inactive.bg,
+                border: active ? "none" : THEME.button.multiplier.inactive.border,
+                borderRadius: 24, color: "#FFFFFF",
+                fontWeight: 900, fontSize: 14, padding: "9px 0",
+                cursor: betLocked ? "default" : "pointer",
+                opacity: betLocked ? 0.4 : 1,
+                transition: "all 150ms ease", lineHeight: 1,
+                flex: 1, maxWidth: 80,
+              }}>{m}X</button>
+            );
+          })}
+        </div>
+
+        {/* Row 3a: WALLET left | LEGEND right */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 18 }}>
+          <div style={{ flexShrink: 0 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>
+              Wallet
+            </div>
+            <div style={{ fontSize: 17, fontWeight: 900, color: isBalanceAnimating ? THEME.palette.green_primary : "#FFFFFF", transition: "color 300ms ease", lineHeight: 1, marginTop: 2 }}>
               ${balance.toLocaleString()}
             </div>
           </div>
 
-          <div style={{ textAlign: "center", padding: "2px 10px", borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, marginBottom: 1 }}>
-              <span style={{ ...labelStyle, textAlign: "center", marginBottom: 0 }}>Team FP</span>
-              <button onClick={() => setShowLegend(true)} style={{ width: 14, height: 14, borderRadius: "50%", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.5)", fontSize: 8, fontWeight: 900, lineHeight: 1, cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>?</button>
-            </div>
-            <div style={{ fontSize: 17, fontWeight: 950, letterSpacing: -0.5, color: "#EAF0FF", lineHeight: 1 }}>
-              <RollingNumber value={totalFp} decimals={1} />
-            </div>
-          </div>
-
-          <div style={{ textAlign: "right" }}>
-            <div style={{ ...labelStyle, textAlign: "right" }}>Budget</div>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "flex-end", gap: 3 }}>
-              <span style={{ fontSize: 17, fontWeight: 950, lineHeight: 1, color: overBudget ? "#ef4444" : "#EAF0FF", transition: "color 200ms ease" }}>
-                {remaining}
-              </span>
-              <span style={{ fontSize: 13, fontWeight: 700, opacity: 0.4, lineHeight: 1 }}>/ {capMax}</span>
-            </div>
-          </div>
+          <button onClick={() => setShowLegend(true)} style={{
+            width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
+            background: "transparent",
+            border: `2px solid ${THEME.colors.surfaceStroke}`,
+            color: "rgba(255,255,255,0.6)", fontSize: 14, fontWeight: 900,
+            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+          }}>i</button>
         </div>
 
-        {/* Row 2: Bet pills | cost | Action button */}
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <div style={{ display: "flex", gap: 4 }}>
-            {MULTIPLIERS.map((m: number) => {
-              const active = betMultiplier === m;
-              return (
-                <button key={m} onClick={() => onBetMultiplier(m)} disabled={betLocked} style={{
-                  background: active ? "rgba(100,180,255,0.22)" : "rgba(255,255,255,0.07)",
-                  border: active ? "1px solid rgba(100,180,255,0.75)" : "1px solid rgba(255,255,255,0.12)",
-                  borderRadius: 8, color: active ? "#8ec8ff" : "#EAF0FF",
-                  fontWeight: 900, fontSize: 12, padding: "7px 10px",
-                  cursor: betLocked ? "default" : "pointer",
-                  opacity: betLocked ? 0.4 : 1, transition: "all 150ms ease",
-                  whiteSpace: "nowrap", lineHeight: 1,
-                }}>{m}x</button>
-              );
-            })}
-          </div>
-          <div style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap", flexShrink: 0 }}>
-            ${currentBet}
-          </div>
+        {/* Row 3b: ACTION button centered, width = 3X→5X span */}
+        <div style={{ display: "flex", justifyContent: "center", paddingTop: 10 }}>
           <button onClick={onAction} disabled={isDisabled(gameState)} style={{
-            flex: 1, borderRadius: 12, border: "none", padding: "13px 0",
-            fontWeight: 900, fontSize: 14, letterSpacing: 1.8, textTransform: "uppercase",
+            width: "min(168px, 50%)",
+            borderRadius: THEME.button.action.borderRadius, border: "none",
+            padding: "11px 0",
+            fontWeight: 900, fontSize: 16, letterSpacing: 2, textTransform: "uppercase",
             cursor: isDisabled(gameState) ? "default" : "pointer",
-            background: isDisabled(gameState) ? "rgba(255,255,255,0.1)" : actionGradient(gameState),
-            color: "#EAF0FF", opacity: isDisabled(gameState) ? 0.45 : 1,
-            boxShadow: isDisabled(gameState) ? "none" : "0 6px 20px rgba(0,0,0,0.35)",
-            transition: "opacity 150ms ease, box-shadow 150ms ease", lineHeight: 1,
+            background: isDisabled(gameState) ? "rgba(255,255,255,0.10)" : actionBackground(gameState),
+            color: isDisabled(gameState) ? "rgba(255,255,255,0.35)" : actionTextColor(gameState),
+            opacity: isDisabled(gameState) ? 0.5 : 1,
+            boxShadow: isDisabled(gameState) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
+            transition: "opacity 150ms ease",
+            lineHeight: 1,
           }}>
             {actionLabel(gameState)}
           </button>
         </div>
+
       </div>
     </>
   );

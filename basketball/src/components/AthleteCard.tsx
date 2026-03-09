@@ -4,6 +4,7 @@ import { AthleteCardFront } from "./AthleteCardFront";
 import { CardBackGeneric } from "./CardBackGeneric";
 import type { ShakeType } from "../hooks/useEmotionalReveal";
 import { sportAdapter } from "../adapters/SportAdapter";
+import { getTier } from "../theme";
 
 // ── CSS ────────────────────────────────────────────────────────────────────
 
@@ -17,7 +18,7 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
       transform-style: preserve-3d;
       transition: transform var(--flip-ms, 450ms) cubic-bezier(0.4, 0.0, 0.2, 1);
       will-change: transform;
-      background: #0a0c10;
+      background: transparent;
       border-radius: 18px;
     }
     .card-inner.no-transition { transition: none !important; }
@@ -25,7 +26,6 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
     .card-face {
       position: absolute; inset: 0; border-radius: 18px;
       backface-visibility: hidden; -webkit-backface-visibility: hidden;
-      overflow: hidden;
     }
     .card-face-back { transform: rotateY(180deg); }
 
@@ -414,6 +414,14 @@ export function AthleteCard(props: Props) {
     background: "rgba(0,0,0,0.60)", backdropFilter: "blur(4px)",
   };
 
+  const tierTokens = getTier((card as any)?.tier);
+  // Card border path — objectBoundingBox normalized (0→1)
+  const CARD_BORDER_PATH =
+    "M 0.0678 0 L 0.2486 0 L 0.3190 0.0338 Q 0.3190 0.0497 0.3418 0.0497 " +
+    "L 0.6356 0.0497 Q 0.6582 0.0497 0.6582 0.0338 L 0.6949 0 L 0.9322 0 " +
+    "Q 1 0 1 0.0677 L 1 0.9323 Q 1 1 0.9322 1 L 0.0678 1 " +
+    "Q 0 1 0 0.9323 L 0 0.0677 Q 0 0 0.0678 0 Z";
+
   return (
     <div
       className={shakeClass}
@@ -425,7 +433,7 @@ export function AthleteCard(props: Props) {
         opacity: isDimmed ? 0.35 : 1,
         transition: "transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s ease",
         zIndex: isSpotlight ? 100 : 1,
-        background: "#0a0c10",
+        background: "transparent",
       }}
     >
       <div className={innerClass} style={innerStyle}>
@@ -454,6 +462,70 @@ export function AthleteCard(props: Props) {
           {canFlip ? <BackBStats card={stableCard}/> : <CardBackGeneric/>}
         </div>
       </div>
+
+      {/* BORDER TRIM — clip path embedded in SVG ensures stroke is always contained
+          exactly to the card silhouette, no corner bleed on any background.
+          The clipPath fills the card shape; stroke is centered on the path edge
+          so inner half shows, outer half is clipped away. */}
+      <svg
+        style={{
+          position: "absolute", inset: 0,
+          width: "100%", height: "100%",
+          pointerEvents: "none", zIndex: 50, overflow: "visible",
+        }}
+        viewBox="0 0 1 1"
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <clipPath id={`border-clip-${id}`} clipPathUnits="objectBoundingBox">
+            <path d={CARD_BORDER_PATH} />
+          </clipPath>
+        </defs>
+        <path
+          d={CARD_BORDER_PATH}
+          fill="none"
+          stroke={tierTokens.bg}
+          strokeWidth="2"
+          strokeOpacity="1.0"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+          clipPath={`url(#border-clip-${id})`}
+        />
+      </svg>
+
+      {/* HOLD INDICATOR — uses same card clipPath from AthleteCardFront (id = card-clip-{cardKey}).
+          The triangle path is drawn to fill the upper-left corner area, clipped by the card shape. */}
+      {locked && (() => {
+        const cardKey = String((card as any).basePlayerId ?? "").trim();
+        const season  = String((card as any).season ?? "").trim();
+        const frontClipId = `card-clip-${(season ? `${cardKey}|${season}` : cardKey).replace(/[^a-z0-9]/gi, '_')}`;
+        return (
+          <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 60,
+                        clipPath: `url(#${frontClipId})` }}>
+            <svg
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "hidden" }}
+              viewBox="0 0 1 1"
+              preserveAspectRatio="none"
+            >
+              {/* Triangle: top-left corner → 28% right along top → 20% down left side */}
+              <polygon
+                points="0,0 0.18,0 0,0.13"
+                fill="#F5C850"
+              />
+            </svg>
+            <span style={{
+              position: "absolute",
+              top: "2.5%", left: "3%",
+              fontSize: 8, fontWeight: 950,
+              color: "rgba(0,0,0,0.85)",
+              lineHeight: 1,
+              userSelect: "none",
+            }}>H</span>
+          </div>
+        );
+      })()}
+
     </div>
   );
 }
