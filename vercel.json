@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd basketball && npm install && ln -sf $(pwd)/node_modules ../shared/node_modules && npm run build",
+  "outputDirectory": "basketball/dist",
+  "installCommand": "echo skip"
+}
