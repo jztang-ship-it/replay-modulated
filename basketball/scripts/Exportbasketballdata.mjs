@@ -148,10 +148,11 @@ async function main() {
     if (!playerSeasonMap.has(key)) {
       playerSeasonMap.set(key, { playerId: log.basePlayerId, season: log.season, logs: [] });
     }
-    // Skip DNP logs (no stats)
-const s = log.stats;
-if ((s.pts + s.reb + s.ast + s.stl + s.blk) === 0) continue;
-playerSeasonMap.get(key).logs.push(log);
+    // Skip DNPs — no minutes played or all-zero stats
+    if (Number(log.min || 0) === 0) continue;
+    const s = log.stats ?? {};
+    if ((Number(s.pts||0) + Number(s.reb||0) + Number(s.ast||0) + Number(s.stl||0) + Number(s.blk||0)) === 0) continue;
+    playerSeasonMap.get(key).logs.push(log);
   }
 
   // 5. Build players array — one entry per player per season

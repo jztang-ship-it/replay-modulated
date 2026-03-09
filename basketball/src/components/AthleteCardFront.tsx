@@ -34,9 +34,10 @@ function formatSeasonRange(season: any): string {
 }
 
 function safeKeyFor(card: any) {
+  // Try season-specific key first, fall back to plain basePlayerId
   const base = String(card?.basePlayerId ?? "").trim();
   const season = String(card?.season ?? "").trim();
-  return `${base}|${season}`;
+  return season ? `${base}|${season}` : base;
 }
 
 function truncateLast(last: string, max = 11): string {
@@ -151,15 +152,8 @@ export function AthleteCardFront(props: {
   const [isRolling,    setIsRolling]    = useState(false);
   const [rollComplete, setRollComplete] = useState(false);
 
-  const [safeMap, setSafeMap] = useState<Record<string, string> | null>(null);
-  useEffect(() => {
-    let alive = true;
-    fetch("/headshots/safe-headshot-map.json")
-      .then(r => r.ok ? r.json() : {})
-      .then(json => { if (alive) setSafeMap(json ?? {}); })
-      .catch(() => { if (alive) setSafeMap({}); });
-    return () => { alive = false; };
-  }, []);
+  const [imgReady, setImgReady] = useState(false);
+
 
   const cardKey     = useMemo(() => safeKeyFor(card), [card]);
   const targetFpRef = useRef<number | null>(null);
@@ -173,20 +167,14 @@ export function AthleteCardFront(props: {
 
   useEffect(() => { targetFpRef.current = null; }, [cardKey]);
 
-  const safeCode = useMemo(() => safeMap ? (safeMap[cardKey] ?? null) : null, [safeMap, cardKey]);
 
-  const candidates = useMemo(() => {
-    const out: string[] = [];
-    const directUrl = (card as any)?.headshotUrl;
-    if (directUrl) out.push(directUrl);
-    if (safeCode) out.push(`/headshots/${safeCode}.png`);
-    return out;
-  }, [card, safeCode]);
 
-  const [idx, setIdx] = useState(0);
-  useEffect(() => { setIdx(0); }, [candidates]);
+  const headshotSrc = useMemo(() => {
+    const base = String((card as any)?.basePlayerId ?? "").trim();
+    return base ? `/headshots/${base}.png` : "";
+  }, [card]);
 
-  const headshotSrc = candidates[idx] ?? "";
+  useEffect(() => { setImgReady(false); }, [headshotSrc]);
   const initials    = initialsFromName(name || `${team} ${pos}`);
   const tier        = tierTheme((card as any)?.tier);
 
@@ -283,7 +271,7 @@ export function AthleteCardFront(props: {
       {/* Hero — full card, dock + badges float on top */}
       <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
         <div style={{ position: "absolute", inset: 0, borderRadius: 18, overflow: "hidden", transform: "translateZ(0)" }}>
-          {headshotSrc ? (
+          {headshotSrc && (
             <img
               key={headshotSrc}
               src={headshotSrc}
@@ -292,15 +280,15 @@ export function AthleteCardFront(props: {
                 position: "absolute", inset: 0, width: "100%", height: "100%",
                 objectFit: "cover", objectPosition: "50% 0%",
                 transform: "translateY(8px) scale(0.94)",
+                opacity: imgReady ? 1 : 0,
+                transition: "opacity 0.2s ease",
               }}
               draggable={false}
-              referrerPolicy="no-referrer"
-              onError={() => {
-                if (idx < candidates.length - 1) setIdx(v => v + 1);
-                else setIdx(candidates.length);
-              }}
+              onLoad={() => setImgReady(true)}
+              onError={() => setImgReady(false)}
             />
-          ) : (
+          )}
+          {(!headshotSrc || !imgReady) && (
             <div style={{
               position: "absolute", inset: 0, display: "grid", placeItems: "center",
               fontSize: 58, fontWeight: 950, letterSpacing: 2,
