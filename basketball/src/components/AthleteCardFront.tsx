@@ -297,7 +297,7 @@ export function AthleteCardFront(props: {
         <div style={{
           position: "absolute", left: 0, right: 0,
           top: "84%", bottom: 0,
-          background: isWhiteTier ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.85)",
+          background: tier.accent,
           display: "flex", alignItems: "center", justifyContent: "space-between",
           paddingLeft: 6, paddingRight: 6,
           zIndex: 4,
@@ -305,11 +305,11 @@ export function AthleteCardFront(props: {
           opacity: stripFadeOpacity, transition: fadeTransition,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
-            <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 0.3, textTransform: "uppercase", color: isWhiteTier ? "rgba(255,255,255,0.90)" : onCardText, lineHeight: 1 }}>
+            <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 0.3, textTransform: "uppercase", color: tier.isLight ? "rgba(0,0,0,0.85)" : "#FFFFFF", lineHeight: 1 }}>
               {team}
             </span>
             <span style={{ fontSize: 8, color: isWhiteTier ? "rgba(255,255,255,0.40)" : onCardTextMuted, lineHeight: 1 }}>·</span>
-            <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 0.3, textTransform: "uppercase", color: isWhiteTier ? "rgba(255,255,255,0.90)" : onCardText, lineHeight: 1 }}>
+            <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 0.3, textTransform: "uppercase", color: tier.isLight ? "rgba(0,0,0,0.85)" : "#FFFFFF", lineHeight: 1 }}>
               {pos}
             </span>
           </div>
