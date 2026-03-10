@@ -398,7 +398,7 @@ export default function GameView() {
   if (!dataReady) {
     return (
       <div style={{
-        width: "100vw", height: "100vh",
+        width: "100vw", height: "100vh", maxHeight: "-webkit-fill-available",
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
         background: "linear-gradient(180deg, #070A12 0%, #0A1020 38%, #070A12 100%)",
         color: "#EAF0FF", fontFamily: "'Inter', system-ui, sans-serif", gap: 16,
@@ -415,7 +415,7 @@ export default function GameView() {
 
   return (
     <div style={{
-      width: "100vw", height: "100vh", overflow: "clip",
+      width: "100vw", height: "100vh", maxHeight: "-webkit-fill-available", overflow: "clip",
       display: "flex", flexDirection: "column", alignItems: "center",
       background: "linear-gradient(180deg, #070A12 0%, #0A1020 38%, #070A12 100%)",
       color: "#EAF0FF", fontFamily: "'Inter', system-ui, sans-serif", userSelect: "none",
@@ -445,7 +445,7 @@ export default function GameView() {
         <JackpotRow betAdded={currentBet} />
 
         {/* Card grid */}
-        <div style={{ flex: "1 1 auto", minHeight: 0, maxHeight: "55vh", position: "relative", zIndex: 20, overflow: "visible" }}>
+        <div style={{ flex: "1 1 auto", minHeight: 0, maxHeight: "55dvh", position: "relative", zIndex: 20, overflow: "visible" }}>
           <div
             onClick={gameState === "REVEALING" ? skipReveal : undefined}
             style={{
