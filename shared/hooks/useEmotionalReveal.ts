@@ -296,11 +296,29 @@ export function useEmotionalReveal(params: Params) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
 
+  // performanceTagMap — neutral ratio bucket, sport-agnostic labels.
+  // Each sport's GameView can use this or ignore it; nothing in shared renders it.
+  const performanceTagMap = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const c of cards) {
+      const proj   = Number(c.projectedFp ?? 0);
+      const actual = Number(c.actualFp ?? 0);
+      if (proj <= 0) { m.set(c.cardId, ""); continue; }
+      const r = actual / proj;
+      if (r >= revealConfig.careerNightRatio) m.set(c.cardId, "GREAT");
+      else if (r >= revealConfig.hotRatio)    m.set(c.cardId, "GOOD");
+      else if (r <= revealConfig.coldRatio)   m.set(c.cardId, "COLD");
+      else                                    m.set(c.cardId, "");
+    }
+    return m;
+  }, [cards, revealConfig]);
+
   return {
     runningTotalFp,
     getVisibleFp,
     flipMsMap,
     fpCountUpMsMap,
+    performanceTagMap,
     pulseMap,
     shakeInfo,
     cardShakeTypeMap,
