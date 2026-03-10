@@ -229,7 +229,7 @@ export function AthleteCardFront(props: {
         }} />
 
         {/* HEADSHOT — overflow visible; parent clipPath handles all clipping */}
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: "27.4%" }}>
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: "26.5%" }}>
           {headshotSrc ? (
             <img
               key={headshotSrc}
@@ -278,7 +278,7 @@ export function AthleteCardFront(props: {
         {/* NAME STRIP — always solid, never fades. Centered text. */}
         <div style={{
           position: "absolute", left: 0, right: 0,
-          top: "72.6%", height: "11.7%",
+          top: "73.5%", height: "10.5%",
           background: "#000000",
           display: "flex", alignItems: "center", justifyContent: "center",
           paddingLeft: 6, paddingRight: 6,
@@ -296,8 +296,8 @@ export function AthleteCardFront(props: {
         {/* TEAM / POS / FP STRIP — fades during reveal to let the action feel dramatic. FP appears only after reveal. */}
         <div style={{
           position: "absolute", left: 0, right: 0,
-          top: "84.3%", bottom: 0,
-          background: isWhiteTier ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.35)",
+          top: "84%", bottom: 0,
+          background: isWhiteTier ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.85)",
           display: "flex", alignItems: "center", justifyContent: "space-between",
           paddingLeft: 6, paddingRight: 6,
           zIndex: 4,
@@ -335,7 +335,7 @@ export function AthleteCardFront(props: {
         {/* BADGES — float just above the name strip (name strip top = 72.6%) */}
         {hasBadges && (
           <div style={{
-            position: "absolute", left: 3, right: 3, bottom: "calc(27.4% + 3px)",
+            position: "absolute", left: 3, right: 3, bottom: "calc(22% + 3px)",
             height: BADGE_H, display: "flex", gap: 2, justifyContent: "center", alignItems: "center",
             zIndex: 7, pointerEvents: "none", flexWrap: "nowrap", overflow: "hidden",
           }}>

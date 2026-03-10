@@ -496,7 +496,7 @@ export function AthleteCard(props: Props) {
 
       {/* HOLD INDICATOR — uses same card clipPath from AthleteCardFront (id = card-clip-{cardKey}).
           The triangle path is drawn to fill the upper-left corner area, clipped by the card shape. */}
-      {locked && (() => {
+      {locked && !flipped && (() => {
         const cardKey = String((card as any).basePlayerId ?? "").trim();
         const season  = String((card as any).season ?? "").trim();
         const frontClipId = `card-clip-${(season ? `${cardKey}|${season}` : cardKey).replace(/[^a-z0-9]/gi, '_')}`;

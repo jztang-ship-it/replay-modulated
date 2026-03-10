@@ -445,7 +445,7 @@ export default function GameView() {
         <JackpotRow betAdded={currentBet} />
 
         {/* Card grid */}
-        <div style={{ flex: "1 1 auto", minHeight: 0, position: "relative", zIndex: 20, overflow: "visible" }}>
+        <div style={{ flex: "1 1 auto", minHeight: 0, maxHeight: "55vh", position: "relative", zIndex: 20, overflow: "visible" }}>
           <div
             onClick={gameState === "REVEALING" ? skipReveal : undefined}
             style={{
@@ -486,11 +486,7 @@ export default function GameView() {
 
         {/* Bottom bar: tier progress + balance/fp/budget + bet + action */}
         <div style={{
-          flex: "0 0 auto", borderRadius: 18, position: "relative", zIndex: 30,
-          border: "1px solid rgba(255,255,255,0.10)",
-          background: "rgba(255,255,255,0.06)",
-          boxShadow: "0 14px 34px rgba(0,0,0,0.32)",
-          padding: "6px 12px", backdropFilter: "blur(10px)",
+          flex: "0 0 auto", position: "relative", zIndex: 30, padding: "6px 12px 2px",
           
         }}>
           <GameBar
