@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import type { GamePhase, PlayerCard } from "../adapters/types";
-import { getTier } from "../theme";
+import { getTier } from "@shared/theme";
 
 export type PerformanceTag = "ICE_COLD" | "COLD" | "OK" | "HOT" | "ON_FIRE" | "CAREER_NIGHT";
 export type PulseStyle = "NEG" | "NEUTRAL" | "POS" | "JACKPOT";

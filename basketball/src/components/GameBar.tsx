@@ -10,7 +10,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
-import { THEME } from "../theme";
+import { THEME } from "@shared/theme";
 
 // ── Win tiers (must match payoutLogic.ts) ─────────────────────────────────
 const WIN_TIERS = [

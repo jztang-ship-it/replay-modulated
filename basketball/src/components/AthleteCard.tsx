@@ -4,7 +4,7 @@ import { AthleteCardFront } from "./AthleteCardFront";
 import { CardBackGeneric } from "./CardBackGeneric";
 import type { ShakeType } from "../hooks/useEmotionalReveal";
 import { sportAdapter } from "../adapters/SportAdapter";
-import { getTier } from "../theme";
+import { getTier } from "@shared/theme";
 
 // ── CSS ────────────────────────────────────────────────────────────────────
 
