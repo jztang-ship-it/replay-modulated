@@ -1,77 +1,14 @@
-// ==================================================================
-// frontend/src/adapters/types.ts
-// Single source of truth for UI + adapter types
-// ==================================================================
-
-// Position is sport-specific — Layer 2 config validates positions, Layer 1 uses string
-export type Position = string;
-
-// Tier colors (highest to lowest)
-export type TierColor = "ORANGE" | "PURPLE" | "BLUE" | "GREEN" | "WHITE";
-
-// IMPORTANT: Must match the UI state machine used in GameView + reveal flow
-export type GamePhase =
-  | "IDLE"
-  | "DEALING"
-  | "HOLD"
-  | "DRAWING"
-  | "REVEALING"
-  | "WIN_CELEBRATION"
-  | "RESULTS";
-
-export interface GameInfo {
-  date: string; // ISO string preferred
-  opponent: string; // short code or name (SUN / ARS / etc.)
-  homeAway?: "H" | "A";
-}
-
-export interface Achievement {
-  id: string;
-  label: string;
-  icon?: string; // emoji/icon identifier
-  fp?: number; // optional bonus FP
-}
-
-export interface PlayerCard {
-  cardId: string;
-  basePlayerId: string;
-
-  // Optional presentation fields
-  photoCode?: string;
-  headshotUrl?: string; // optional if you ever attach it
-
-  // Front of card
-  name: string;
-  team: string;
-  season: string;
-  position: Position;
-  tier: TierColor;
-  salary: number;
-  projectedFp: number;
-
-  // Results-only
-  actualFp: number;
-  fpDelta: number;
-
-  // Back of card
-  gameInfo: GameInfo;
-  statLine: Record<string, any>;
-  achievements: Achievement[];
-
-  // Slot / hold metadata
-  slotIndex: number;
-  wasHeld?: boolean;
-
-  // Optional: attach scoring breakdown if adapter provides it
-  fpBreakdown?: Record<string, number>;
-}
-
-export interface ResolveResult {
-  cards: PlayerCard[];
-  totalFp: number;
-  winTierLabel: string;
-
-  // UI uses these (WinCelebration / recap)
-  topContributors: Array<{ cardId: string; name: string; fp: number }>;
-  mvpCardId: string;
-}
+/**
+ * basketball/src/adapters/types.ts — re-export stub
+ * All shared types live in @shared/types. Import from here within
+ * basketball to keep existing import paths working unchanged.
+ */
+export type {
+  Position,
+  TierColor,
+  GamePhase,
+  GameInfo,
+  Achievement,
+  PlayerCard,
+  ResolveResult,
+} from "@shared/types";
