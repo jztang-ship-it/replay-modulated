@@ -314,7 +314,7 @@ export function CardFront(props: CardFrontProps) {
         {hasBadges && (
           <div style={{ position: "absolute", left: 3, right: 3, bottom: "calc(22% + 3px)", height: BADGE_H, display: "flex", gap: 2, justifyContent: "center", alignItems: "center", zIndex: 7, pointerEvents: "none", flexWrap: "nowrap", overflow: "hidden" }}>
             {badges!.slice(0, 5).map((badge, i) => (
-              <div key={badge.id} style={{ animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${i * 90}ms both`, display: "flex", alignItems: "center", gap: 2, background: "rgba(0,0,0,0.82)", borderRadius: 5, padding: "2px 4px", border: "1px solid rgba(255,255,255,0.20)", flexShrink: 0 }}>
+              <div key={badge.id ?? badge.label ?? i} style={{ animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${i * 90}ms both`, display: "flex", alignItems: "center", gap: 2, background: "rgba(0,0,0,0.82)", borderRadius: 5, padding: "2px 4px", border: "1px solid rgba(255,255,255,0.20)", flexShrink: 0 }}>
                 <span style={{ fontSize: 11, lineHeight: 1 }}>{badge.icon}</span>
                 <span style={{ fontSize: 6.5, fontWeight: 700, color: "#FFEA86" }}>+{badge.fp}</span>
               </div>

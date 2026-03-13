@@ -171,13 +171,13 @@ export function useEmotionalReveal(params: Params) {
   // Pre-computed shake types — known before reveal starts, no timing dependency
   const cardShakeTypeMap = useMemo(() => {
     const m = new Map<string, ShakeType>();
-    if (!isActive) return m;
+    // Keep map populated even after reveal completes so stamps stay visible
     const anchorId = revealOrder[revealOrder.length - 1]?.cardId;
     for (const c of cards) {
       m.set(c.cardId, getShakeType(c, c.cardId === anchorId, revealConfig));
     }
     return m;
-  }, [cards, revealOrder, isActive, revealConfig]);
+  }, [cards, revealOrder, revealConfig]);
 
   const getVisibleFp = useCallback((id: string): number | undefined => {
     if (visibleFpMap.has(id)) return visibleFpMap.get(id);
