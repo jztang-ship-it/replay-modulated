@@ -140,6 +140,10 @@ export interface CardFrontProps {
   badges?: Array<{ id: string; icon: string; label: string; fp: number }>;
   /** Sport injects its hero content (headshot, flag, etc.) */
   renderHero: (props: CardFrontHeroProps) => React.ReactNode;
+  /** tap mode: held card FP fades in after all unheld cards revealed */
+  heldFpVisible?: boolean;
+  /** tap mode: this card is waiting for a tap */
+  isTapTarget?: boolean;
 }
 
 // ── CardFront ──────────────────────────────────────────────────────────────
@@ -147,6 +151,7 @@ export interface CardFrontProps {
 export function CardFront(props: CardFrontProps) {
   const {
     card, phase, isLocked, visibleFp, isRevealing, revealActive,
+    heldFpVisible, isTapTarget,
     pulse, fpCountUpMs, stamp, onRollComplete, badges, renderHero,
   } = props;
 
@@ -162,7 +167,10 @@ export function CardFront(props: CardFrontProps) {
   const pos       = posRaw ? (posMap[posRaw.toUpperCase()] ?? posRaw) : "";
   const salary    = Number((card as any)?.salary ?? 0);
   const proj      = Number((card as any)?.projectedFp ?? 0);
-  const showResults = phase === "RESULTS";
+  const isHeldCard  = !!(card as any).wasHeld;
+  // Held cards always show the FP strip (opacity handles visibility)
+  // so the fade-in has something to transition into
+  const showResults = phase === "RESULTS" || isHeldCard;
 
   const [displayedFp,  setDisplayedFp]  = useState(0);
   const [isRolling,    setIsRolling]    = useState(false);
@@ -180,8 +188,8 @@ export function CardFront(props: CardFrontProps) {
   useEffect(() => { targetFpRef.current = null; }, [cardKey]);
 
   useEffect(() => {
-    if (visibleFp === undefined) { setDisplayedFp(showResults ? 0 : proj); return; }
-    if (isRevealing && !revealActive) return;
+    if (visibleFp === undefined) { setDisplayedFp(showResults ? Number((card as any)?.actualFp ?? proj) : proj); return; }
+    if (isRevealing && !revealActive && !isHeldCard) return;
     const target = targetFpRef.current ?? visibleFp;
     if (visibleFp > 0 && displayedFp !== target) {
       if (target === 0) { setDisplayedFp(0); setIsRolling(false); setRollComplete(true); onRollComplete?.(); return; }
@@ -204,15 +212,17 @@ export function CardFront(props: CardFrontProps) {
 
   useEffect(() => { setRollComplete(false); setDisplayedFp(0); setIsRolling(false); }, [cardKey]);
 
-  const fpValue      = showResults ? (visibleFp !== undefined ? displayedFp : 0) : proj;
+  const fpValue      = showResults ? (visibleFp !== undefined ? displayedFp : Number((card as any)?.actualFp ?? 0)) : proj;
   const valueText    = Number.isFinite(fpValue) ? fpValue.toFixed(1) : "0.0";
   const badgeBonusFp = useMemo(() => badges?.reduce((s, b) => s + (b.fp ?? 0), 0) ?? 0, [badges]);
   const hasBadges    = (badges?.length ?? 0) > 0;
   const hasRevealed  = rollComplete || (!!isRevealing && !!revealActive && visibleFp !== undefined && visibleFp > 0);
   const pulsePal     = pulsePalette(pulse);
   const showPulse    = !!pulse && pulse !== "NEUTRAL" && hasRevealed;
-  const tier         = getTier((card as any)?.tier);
-  const isWhiteTier  = ((card as any)?.tier ?? "WHITE") === "WHITE";
+  const cardSalary = Number((card as any)?.salary ?? 0);
+  const derivedTier = cardSalary >= 52 ? "ORANGE" : cardSalary >= 40 ? "PURPLE" : cardSalary >= 28 ? "BLUE" : cardSalary >= 16 ? "GREEN" : "WHITE";
+  const tier         = getTier(derivedTier);
+  const isWhiteTier  = derivedTier === "WHITE";
   const onCardText   = isWhiteTier ? "#FFFFFF" : "#000000";
   const onCardTextMuted = isWhiteTier ? "rgba(255,255,255,0.60)" : "rgba(0,0,0,0.55)";
   const initials     = initialsFromName(name || `${team} ${pos}`);
@@ -284,7 +294,12 @@ export function CardFront(props: CardFrontProps) {
             <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 0.3, textTransform: "uppercase", color: tier.isLight ? "rgba(0,0,0,0.85)" : "#FFFFFF", lineHeight: 1 }}>{pos}</span>
           </div>
           {showResults && (
-            <div style={{ display: "flex", alignItems: "center", gap: 1, flexShrink: 0 }}>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 1, flexShrink: 0,
+              // Held card FP fades in; normal cards show immediately
+              opacity: isHeldCard ? (heldFpVisible ? 1 : 0) : 1,
+              transition: isHeldCard ? "opacity 800ms ease" : "none",
+            }}>
               <span style={{ fontSize: 13, fontWeight: 950, color: isWhiteTier ? "#FFFFFF" : onCardText, lineHeight: 1, fontVariantNumeric: "tabular-nums", display: "inline-block", transform: isRolling ? "scale(1.08)" : "scale(1)", transition: isRolling ? "none" : "transform 100ms ease" }}>
                 {valueText}
               </span>
@@ -315,9 +330,9 @@ export function CardFront(props: CardFrontProps) {
             left: "50%", transform: "translateX(-50%) rotate(-3deg)",
             zIndex: 40, pointerEvents: "none", whiteSpace: "nowrap",
             fontSize: 10, fontWeight: 900, letterSpacing: 2, textTransform: "uppercase",
-            color: stamp === "CAREER NIGHT" ? "#FFD700" : "#7DD3FC",
-            textShadow: stamp === "CAREER NIGHT" ? "0 0 14px rgba(255,215,0,0.8), 0 2px 4px rgba(0,0,0,0.8)" : "0 0 14px rgba(125,211,252,0.8), 0 2px 4px rgba(0,0,0,0.8)",
-            border: `2px solid ${stamp === "CAREER NIGHT" ? "#FFD700" : "#7DD3FC"}`,
+            color: stamp === "LEGENDARY" ? "#FF6B00" : stamp === "CAREER NIGHT" ? "#FFD700" : stamp === "BRICK CITY" ? "#F87171" : stamp === "ICE COLD" ? "#93C5FD" : "#FFD700",
+            textShadow: stamp === "LEGENDARY" ? "0 0 14px rgba(255,107,0,0.9), 0 2px 4px rgba(0,0,0,0.8)" : stamp === "CAREER NIGHT" ? "0 0 14px rgba(255,215,0,0.8), 0 2px 4px rgba(0,0,0,0.8)" : "0 0 14px rgba(125,211,252,0.6), 0 2px 4px rgba(0,0,0,0.8)",
+            border: `2px solid ${stamp === "LEGENDARY" ? "#FF6B00" : stamp === "CAREER NIGHT" ? "#FFD700" : stamp === "BRICK CITY" ? "#F87171" : "#93C5FD"}`,
             borderRadius: 4, padding: "2px 7px", background: "rgba(0,0,0,0.72)",
           }}>{stamp}</div>
         )}

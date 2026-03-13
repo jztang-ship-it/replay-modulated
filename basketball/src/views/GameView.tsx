@@ -9,12 +9,14 @@ import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import type { GamePhase, PlayerCard } from "../adapters/types";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { dealInitialRoster, redrawRoster, resolveRoster } from "../adapters/gameAdapter";
+import { dealFTUERoster, redrawFTUERoster, resolveFTUERoster } from "../adapters/ftueRoster";
+import { CoachLayer } from "@shared/components/CoachLayer";
+import { useFTUE } from "@shared/hooks/useFTUE";
 import { ensureLoaded } from "../engines/dataEngine";
 import { RosterGrid } from "../components/RosterGrid";
 import { AppHeader } from "../components/AppHeader";
 import { resetAllOverlays } from "../components/AthleteCard";
-import { GameBar } from "../components/GameBar";
-import { WinCelebration } from "../components/WinCelebration";
+import { GameBar, type CelebrationData } from "../components/GameBar";
 import { useCardFlipState } from "../hooks/useCardFlipState";
 import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
 import { calculateWinTier, calculatePayout, type WinTier } from "../utils/payoutLogic";
@@ -23,6 +25,11 @@ import { useGameAnalytics } from "../../../shared/analytics/useGameAnalytics";
 const CAP_MAX        = sportAdapter.salaryCap;
 const ROSTER_SIZE    = sportAdapter.rosterSize;
 const STARTING_BALANCE = 1000;
+
+// ── Reveal mode toggle ─────────────────────────────────────────────────────
+// "auto" = cards flip automatically in sequence (original behaviour)
+// "tap"  = user taps each unheld card to reveal it; held FP fades in at end
+const REVEAL_MODE: "auto" | "tap" = "tap";
 
 function loadBalance(): number {
   try {
@@ -87,6 +94,7 @@ function toRevealableCards(cards: PlayerCard[]): RevealableCard[] {
     projectedFp: Number(c.projectedFp ?? 0),
     salary: Number((c as any).salary ?? 0),
     tier: (c as any).tier ?? "WHITE",
+    wasHeld: (c as any).wasHeld ?? false,
     badges: (c.achievements ?? []).map((a: any) => ({
       id: a.id, icon: a.icon || "⭐", label: a.label, fp: a.fp || 0,
     })),
@@ -159,7 +167,14 @@ export default function GameView() {
   const [noTransition, setNoTransition]     = useState(false);
   const [revealedSalary, setRevealedSalary] = useState(0);
   const rosterRef = useRef<PlayerCard[]>([]);
+  const { isFTUE } = useFTUE("basketball");
+  const [legendaryCardName, setLegendaryCardName] = useState<string | undefined>();
+  const [revealIndex, setRevealIndex] = useState(0);
   const completedCardsRef = useRef<Set<string>>(new Set());
+  // Near your other useState declarations in GameView.tsx
+const [streak, setStreak] = useState<number>(() =>
+  parseInt(localStorage.getItem("replaymod_streak") ?? "0", 10)
+);
 
   // Zone 1: Hooks
   useEffect(() => {
@@ -173,6 +188,12 @@ export default function GameView() {
 
   const {
     runningTotalFp,
+    lastCardProgress,
+    lastCardFp,
+    tapRevealCard,
+    heldFpVisible,
+    heldRevealedIds,
+    tappedCardIds,
     getVisibleFp,
     flipMsMap,
     fpCountUpMsMap,
@@ -188,25 +209,26 @@ export default function GameView() {
   } = useEmotionalReveal({
     cards: revealableCards,
     isActive: gameState === "REVEALING",
+    revealMode: REVEAL_MODE,
     flipState,
     onCardComplete: useCallback((cId: string) => {
       const card = rosterRef.current.find(c => cardId(c) === cId);
       if (card && !(card as any).wasHeld) {
         setRevealedSalary(prev => prev + Number((card as any).salary ?? 0));
       }
+      setRevealIndex(prev => prev + 1);
     }, []),
     onAllComplete: useCallback((totalFp: number) => {
       clearActiveCard();
-      window.setTimeout(() => {
-        const tier = calculateWinTier(totalFp);
-        const payout = calculatePayout(tier, currentBet);
-        setWinTier(tier);
-        setWinPayout(payout);
-        const bust = !tier || tier === "BUST";
-        const badges = rosterRef.current.reduce((s,c) => s + (c.achievements?.length ?? 0), 0);
-        gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
-        setGameState("WIN_CELEBRATION");
-      }, 800);
+      // Fire WIN_CELEBRATION immediately — the overshoot IS the dramatic pause
+      const tier = calculateWinTier(totalFp);
+      const payout = calculatePayout(tier, currentBet);
+      setWinTier(tier);
+      setWinPayout(payout);
+      const bust = !tier || tier === "BUST";
+      const badges = rosterRef.current.reduce((s,c) => s + (c.achievements?.length ?? 0), 0);
+      gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
+      setGameState("WIN_CELEBRATION");
     }, [currentBet, gameAnalytics]),
   });
 
@@ -215,6 +237,28 @@ export default function GameView() {
     if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION" || gameState === "REVEALING") return "RESULTS";
     return "HOLD";
   }, [gameState]);
+
+  // Tier color map — mirrors WIN_TIERS in basketball/GameBar.tsx
+  const CELEBRATION_TIER_COLORS: Record<string, { color: string; glow: string }> = {
+    MVP:      { color: "#FB923C", glow: "#FB923C55" },
+    ALL_STAR: { color: "#60A5FA", glow: "#60A5FA55" },
+    STARTER:  { color: "#22C55E", glow: "#22C55E55" },
+    ROOKIE:   { color: "#E5E7EB", glow: "#E5E7EB33" },
+    BUST:     { color: "#6B7280", glow: "#6B728033" },
+  };
+
+  const celebrationData: CelebrationData | undefined = useMemo(() => {
+    if (gameState !== "WIN_CELEBRATION" || !winTier) return undefined;
+    const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
+    return {
+      tierLabel: winTier.replace("_", "-"),
+      tierColor: tc.color,
+      tierGlow:  tc.glow,
+      payout:    winPayout,
+      streak,
+      isBust:    winTier === "BUST",
+    };
+  }, [gameState, winTier, winPayout, streak]); // eslint-disable-line
 
   const capUsed = useMemo(() => sumSalary(roster), [roster]);
 
@@ -301,7 +345,7 @@ export default function GameView() {
       setStatsFlippedIds(new Set());
       setMvpId(undefined);
       setRevealedSalary(0);
-      const res: any       = await dealInitialRoster();
+      const res: any       = isFTUE ? await dealFTUERoster() : await dealInitialRoster();
       const nextRoster     = (res?.roster ?? res?.cards ?? []) as PlayerCard[];
       rosterRef.current    = nextRoster;
       gameAnalytics.handDealt(nextRoster);
@@ -322,13 +366,17 @@ export default function GameView() {
     if (gameState === "HOLD") {
       setBalance(prev => { const next = prev - currentBet; saveBalance(next); return next; });
       const markedRoster = roster.map(c => ({ ...c, wasHeld: lockedCardIds.has(cardId(c)) }));
-      flipState.beginDraw(markedRoster.map(cardId));
+      flipState.beginDraw(markedRoster.filter(c => !(c as any).wasHeld).map(cardId));
       setRoster(markedRoster);
       setGameState("DRAWING");
       await sleep(700);
-      const drawRes: any    = await redrawRoster({ currentCards: markedRoster, lockedCardIds });
+      const drawRes: any    = isFTUE
+        ? await redrawFTUERoster({ currentCards: markedRoster, lockedCardIds })
+        : await redrawRoster({ currentCards: markedRoster, lockedCardIds });
       const drawnRoster     = (drawRes?.roster ?? drawRes?.cards ?? markedRoster) as PlayerCard[];
-      const resolveRes: any = await resolveRoster({ finalCards: drawnRoster });
+      const resolveRes: any = isFTUE
+        ? await resolveFTUERoster({ finalCards: drawnRoster })
+        : await resolveRoster({ finalCards: drawnRoster });
       const finalRoster     = (resolveRes?.roster ?? resolveRes?.cards ?? drawnRoster) as PlayerCard[];
       const mvp: string | undefined = resolveRes?.mvpCardId ?? resolveRes?.mvpId;
       if (mvp) setMvpId(mvp);
@@ -346,7 +394,13 @@ export default function GameView() {
         }
       });
       setNoTransition(true);
-      flipState.initCards(finalRoster.map(cardId));
+      // In tap mode: held cards stay FRONT, only non-held start BACK
+      const nonHeldIds = finalRoster.filter(c => !(c as any).wasHeld).map(cardId);
+      const heldIds    = finalRoster.filter(c =>  (c as any).wasHeld).map(cardId);
+      flipState.initCards(nonHeldIds);
+      // Force held cards to FRONT so they never show generic back
+      heldIds.forEach(id => flipState.revealCard(id));
+      setTimeout(() => heldIds.forEach(id => flipState.completeReveal(id)), 0);
       setRoster(finalRoster);
       (window as any).debugRoster = finalRoster;
       setStatsFlippedIds(new Set());
@@ -382,17 +436,40 @@ export default function GameView() {
   function onWinCelebrationComplete() {
     if (winPayout > 0) {
       setIsBalanceAnimating(true);
-      setBalance(prev => { const next = prev + winPayout; saveBalance(next); return next; });
+      setBalance(prev => prev + winPayout);
       setTimeout(() => setIsBalanceAnimating(false), 2000);
+      setStreak(prev => {
+        const next = prev + 1;
+        localStorage.setItem("replaymod_streak", String(next));
+        return next;
+      });
+    } else {
+      setStreak(0);
+      localStorage.setItem("replaymod_streak", "0");
     }
     setWinTier(null);
+    setWinPayout(0);
     setGameState("RESULTS");
   }
-
+  
   function handleButtonClick() {
     if (gameState === "REVEALING") skipReveal();
     else onPrimaryAction();
   }
+
+  // Zone 2.5: FTUE legendary detection
+  useEffect(() => {
+    if (!isFTUE || gameState !== "REVEALING") return;
+    for (const [cId, tag] of performanceTagMap.entries()) {
+      if (tag === "GREAT") {
+        const card = rosterRef.current.find(c => cardId(c) === cId);
+        if (card && card.name) {
+          setLegendaryCardName(card.name);
+          break;
+        }
+      }
+    }
+  }, [performanceTagMap, gameState, isFTUE]); // eslint-disable-line
 
   // Zone 3: JSX
   if (!dataReady) {
@@ -420,9 +497,6 @@ export default function GameView() {
       background: "linear-gradient(180deg, #070A12 0%, #0A1020 38%, #070A12 100%)",
       color: "#EAF0FF", fontFamily: "'Inter', system-ui, sans-serif", userSelect: "none",
     }}>
-      {winTier && (
-        <WinCelebration tier={winTier} payout={winPayout} multiplier={betMultiplier} onComplete={onWinCelebrationComplete} />
-      )}
       <div style={{
         width: "100%", maxWidth: 460, height: "100%",
         display: "flex", flexDirection: "column", gap: 2,
@@ -447,14 +521,14 @@ export default function GameView() {
         {/* Card grid */}
         <div style={{ flex: "1 1 auto", minHeight: 0, maxHeight: "55dvh", position: "relative", zIndex: 20, overflow: "visible" }}>
           <div
-            onClick={gameState === "REVEALING" ? skipReveal : undefined}
+            onClick={gameState === "REVEALING" && REVEAL_MODE === "auto" ? skipReveal : undefined}
             style={{
               height: "100%", borderRadius: 18,
               border: "1px solid rgba(255,255,255,0.10)",
               background: "#070A12",
               boxShadow: "0 18px 60px rgba(0,0,0,0.45)",
               backdropFilter: "blur(10px)", padding: 10,
-              cursor: gameState === "REVEALING" ? "pointer" : "default",
+              cursor: gameState === "REVEALING" && REVEAL_MODE === "auto" ? "pointer" : "default",
               overflow: "visible",
             }}
           >
@@ -479,6 +553,12 @@ export default function GameView() {
   activeRevealCardId={activeRevealCardId}
   onToggleLock={toggleLock}
   onToggleFlip={toggleStatsFlip}
+  revealMode={REVEAL_MODE}
+  onTapReveal={tapRevealCard}
+  heldFpVisible={heldFpVisible}
+  heldRevealedIds={heldRevealedIds}
+  tappedCardIds={tappedCardIds}
+  isRevealingPhase={gameState === "REVEALING"}
 />
 
           </div>
@@ -489,11 +569,22 @@ export default function GameView() {
           flex: "0 0 auto", position: "relative", zIndex: 30, padding: "6px 12px 2px",
           
         }}>
+          {/* FTUE Coach Bubbles */}
+          <CoachLayer
+            isFTUE={isFTUE}
+            gameState={gameState}
+            lockedCount={lockedCardIds.size}
+            revealIndex={revealIndex}
+            legendaryCardName={legendaryCardName}
+          />
+
           <GameBar
             gameState={gameState}
             balance={balance}
             isBalanceAnimating={isBalanceAnimating}
             totalFp={totalFp}
+            lastCardProgress={lastCardProgress}
+            lastCardFp={lastCardFp}
             capMax={CAP_MAX}
             capUsed={capUsed}
             lockedSalary={lockedSalary}
@@ -502,6 +593,8 @@ export default function GameView() {
             baseBet={BASE_BET}
             onBetMultiplier={setBetMultiplier}
             onAction={handleButtonClick}
+            celebration={celebrationData}
+            onWinCelebrationComplete={onWinCelebrationComplete}
           />
         </div>
       </div>

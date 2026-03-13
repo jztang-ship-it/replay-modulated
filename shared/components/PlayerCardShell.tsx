@@ -89,13 +89,20 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
     .pcs-shake-hype { animation: pcsShakeHype 0.6s cubic-bezier(0.36,0.07,0.19,0.97) both; }
     .pcs-shake-big  { animation: pcsShakeBig  0.6s cubic-bezier(0.36,0.07,0.19,0.97) both; }
     .pcs-shake-cold { animation: pcsShakeCold 0.65s ease-in-out both; }
+    @keyframes pcsTapBounce {
+      0%,100% { transform: translateY(0); }
+      40%     { transform: translateY(-6px); }
+      60%     { transform: translateY(-3px); }
+    }
+    .pcs-tap-bounce { animation: pcsTapBounce 1.4s ease-in-out infinite; }
+    @keyframes pcsTapHintPulse { 0%,100%{opacity:.4} 50%{opacity:.9} }
   `;
   document.head.appendChild(style);
 }
 
 // ── Public types ───────────────────────────────────────────────────────────
 
-export type OverlayStamp = "CAREER NIGHT" | "ICE COLD" | null;
+export type OverlayStamp = "LEGENDARY" | "CAREER NIGHT" | "ON FIRE" | "BRICK CITY" | "ICE COLD" | null;
 
 /** Everything the shell passes into the sport's front face renderer */
 export interface CardFrontProps {
@@ -115,6 +122,8 @@ export interface CardFrontProps {
   stamp: OverlayStamp;
   onRollComplete: () => void;
   badges?: Array<{ id: string; icon: string; label: string; fp: number }>;
+  heldFpVisible?: boolean;
+  isTapTarget?: boolean;
 }
 
 /** Everything the shell passes into the sport's back face renderer */
@@ -148,6 +157,8 @@ export interface CardShellProps {
   spotlightLevel?: number;
   isDimmed?: boolean;
   onRollComplete?: () => void;
+  heldFpVisible?: boolean;
+  isTapTarget?: boolean;
   /** Sport provides its own front face */
   renderFront: (props: CardFrontProps) => React.ReactNode;
   /** Sport provides its stats back face (only used when canFlip=true) */
@@ -172,7 +183,8 @@ export function PlayerCardShell(props: CardShellProps) {
     isRevealing, visibleFp, visibleBadgeCount,
     noTransition, flipDurationMs, fpCountUpMs,
     shakeType, cardShakeType, badges,
-    isSpotlight, spotlightLevel, isDimmed,
+    isSpotlight, spotlightLevel, isDimmed, onRollComplete,
+    heldFpVisible, isTapTarget,
     renderFront, renderBack,
   } = props;
 
@@ -238,7 +250,7 @@ export function PlayerCardShell(props: CardShellProps) {
       }
       return;
     }
-    const stamp: OverlayStamp = shake === "big" || shake === "hype" ? "CAREER NIGHT" : "ICE COLD";
+    const stamp: OverlayStamp = shake === "legendary" ? "LEGENDARY" : shake === "big" || shake === "hype" ? "CAREER NIGHT" : shake === "cold" ? "BRICK CITY" : "ICE COLD";
     const next: OverlayState = { stamp, stamping: true };
     overlayMap.set(id, next);
     setOverlay(next);
@@ -306,10 +318,20 @@ export function PlayerCardShell(props: CardShellProps) {
     stamp: overlay.stamp,
     onRollComplete: handleRollComplete,
     badges,
+    heldFpVisible,
+    isTapTarget,
   };
 
   return (
-    <div className={shakeClass} style={outerStyle}>
+    <div className={`${shakeClass}${isTapTarget ? " pcs-tap-bounce" : ""}`} style={outerStyle}>
+      {isTapTarget && (
+        <div style={{
+          position:"absolute", bottom:10, left:"50%", transform:"translateX(-50%)",
+          fontSize:9, fontWeight:800, letterSpacing:".12em", textTransform:"uppercase",
+          color:"rgba(255,255,255,0.6)", whiteSpace:"nowrap", pointerEvents:"none", zIndex:70,
+          animation:"pcsTapHintPulse 1.4s ease-in-out infinite",
+        }}>TAP</div>
+      )}
       <div className={innerClass} style={innerStyle}>
         <div className="pcs-face">
           {renderFront(frontProps)}

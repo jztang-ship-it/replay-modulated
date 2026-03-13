@@ -12,8 +12,10 @@ console.log('Sample player IDs:', [...playerIds].slice(0,5));
 console.log('Sample log IDs:   ', [...logIds].slice(0,5));
 
 function tierFromSalary(salary) {
-  if (salary >= 50) return 'ORANGE';
-  if (salary >= 36) return 'PURPLE';
+  if (salary >= 62) return 'ORANGE';
+  if (salary >= 45) return 'PURPLE';
+  if (salary >= 30) return 'BLUE';
+  if (salary >= 20) return 'GREEN';
   if (salary >= 24) return 'BLUE';
   if (salary >= 14) return 'GREEN';
   return 'WHITE';

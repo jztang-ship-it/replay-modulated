@@ -2,18 +2,16 @@
  * shared/components/GameBar.tsx
  * LAYER 1: Sport-agnostic bottom game bar.
  *
- * Sport-specific data is injected via props:
- *   winTiers     — FP thresholds + display colors (from sport adapter)
- *   scoringRules — stat/pts pairs shown in legend (from sport adapter)
- *   badges       — badge descriptions shown in legend (from sport adapter)
+ * WIN_CELEBRATION mode transforms the bar in-place:
+ *   - Zone above gauge (score/budget) → blurred, shows tier name + coins won
+ *   - Tier gauge + team FP → stays live, unblurred, same position
+ *   - Zone below gauge (multipliers/wallet/action) → blurred, shows streak hook
+ *   - Tap either blurred zone → onWinCelebrationComplete() → RESULTS
  *
- * The entire game mechanic (budget, multipliers, action button, tier bar)
- * is universal and lives here. Only the legend data changes per sport.
- *
- * All sports import from "@shared/components/GameBar".
+ * No separate PostGameOverlay needed. The celebration IS the GameBar.
  */
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import ReactDOM from "react-dom";
 import { THEME } from "@shared/theme";
 
@@ -48,6 +46,16 @@ export interface LegendData {
   badges: BadgeInfo[];
 }
 
+// Celebration data passed in when WIN_CELEBRATION is active
+export interface CelebrationData {
+  tierLabel: string;       // e.g. "ALL-STAR"
+  tierColor: string;       // e.g. "#C9A84C"
+  tierGlow: string;        // e.g. "#C9A84C55"
+  payout: number;          // coins earned
+  streak: number;          // current win streak
+  isBust: boolean;
+}
+
 type Props = {
   gameState: GameStateLabel;
   balance: number;
@@ -65,9 +73,18 @@ type Props = {
   winTiers: WinTierDisplay[];
   /** Sport-specific legend data */
   legend: LegendData;
+  /** 0→1 raw progress of last card FP rollup, drives overshoot in sync */
+  lastCardProgress?: number;
+  /** Actual FP of last card — scales overshoot magnitude */
+  lastCardFp?: number;
+  /** Required when gameState === WIN_CELEBRATION */
+  celebration?: CelebrationData;
+  /** Called when user taps blurred zone to exit celebration */
+  onWinCelebrationComplete?: () => void;
 };
 
 const MULTIPLIERS = [1, 3, 5, 10];
+const FF = "'Rajdhani','Arial Narrow',sans-serif";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -86,7 +103,7 @@ function getTierState(totalFp: number, winTiers: WinTierDisplay[]) {
   const floor   = prev?.minFp ?? 0;
   const ceiling = next.minFp;
   const fillPct = Math.min(100, Math.max(0, ((totalFp - floor) / (ceiling - floor)) * 100));
-  return { label: next.label, fillPct, color: next.color, glow: next.glow, fptNeeded: Math.max(0, Math.ceil(next.minFp - totalFp)) };
+  return { label: next.label, fillPct, color: next.color, glow: next.glow, fptNeeded: Math.max(0, ceiling - totalFp) };
 }
 
 function actionLabel(state: GameStateLabel): string {
@@ -123,9 +140,23 @@ function salarySpent(state: GameStateLabel, capUsed: number, lockedSalary: numbe
   return capUsed;
 }
 
-// ── Sub-components ─────────────────────────────────────────────────────────
+// ── Streak copy ────────────────────────────────────────────────────────────
 
-function RollingNumber({ value, decimals = 1 }: { value: number; decimals?: number }) {
+function getStreakCopy(streak: number, isBust: boolean): { head: string; sub: string } {
+  if (isBust) {
+    return streak > 0
+      ? { head: "STREAK BROKEN", sub: `${streak}-game run ended` }
+      : { head: "NO STREAK", sub: "Start one next game" };
+  }
+  if (streak === 1) return { head: "STREAK STARTED 🔥", sub: "Keep it alive" };
+  if (streak === 2) return { head: "2 IN A ROW 🔥", sub: "You're finding your rhythm" };
+  if (streak <= 4)  return { head: `${streak}-GAME STREAK 🔥`, sub: "Don't stop now" };
+  return { head: `${streak} STRAIGHT 🔥`, sub: "Insane. Come back and do it again." };
+}
+
+// ── RollingNumber ──────────────────────────────────────────────────────────
+
+function RollingNumber({ value, decimals = 1, duration: dur = 150 }: { value: number; decimals?: number; duration?: number }) {
   const [displayed, setDisplayed] = useState(value);
   const rafRef = useRef<number>(0);
   const prevRef = useRef(value);
@@ -133,7 +164,7 @@ function RollingNumber({ value, decimals = 1 }: { value: number; decimals?: numb
     const start = prevRef.current;
     const end = value;
     if (Math.abs(end - start) < 0.05) { setDisplayed(end); prevRef.current = end; return; }
-    const duration = 150;
+    const duration = dur;
     const startTime = performance.now();
     const animate = (now: number) => {
       const elapsed = now - startTime;
@@ -150,80 +181,245 @@ function RollingNumber({ value, decimals = 1 }: { value: number; decimals?: numb
   return <>{displayed.toFixed(decimals)}</>;
 }
 
-function TierBar({ totalFp, gameState, winTiers }: { totalFp: number; gameState: GameStateLabel; winTiers: WinTierDisplay[] }) {
+// ── CountUp ───────────────────────────────────────────────────────────────
+
+function useCountUp(target: number, duration = 900, delay = 0): number {
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    setVal(0);
+    let raf: number;
+    const t = setTimeout(() => {
+      let start: number | null = null;
+      const step = (ts: number) => {
+        if (!start) start = ts;
+        const p = Math.min((ts - start) / duration, 1);
+        const e = 1 - Math.pow(1 - p, 4);
+        setVal(Math.round(e * target));
+        if (p < 1) raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    }, delay);
+    return () => { clearTimeout(t); cancelAnimationFrame(raf); };
+  }, [target, duration, delay]);
+  return val;
+}
+
+// ── Coin Burst ─────────────────────────────────────────────────────────────
+
+function CoinBurst({ active, color }: { active: boolean; color: string }) {
+  const [particles, setParticles] = useState<
+    { id: number; vx: number; vy: number; scale: number; c: string }[]
+  >([]);
+
+  useEffect(() => {
+    if (!active) return;
+    const colors = ["#FFD700", "#FFC107", "#FFE066", color, "#FFFFFF"];
+    setParticles(
+      Array.from({ length: 12 }, (_, i) => ({
+        id: i,
+        vx: (Math.random() - 0.5) * 90,
+        vy: -(Math.random() * 55 + 15),
+        scale: Math.random() * 0.7 + 0.4,
+        c: colors[Math.floor(Math.random() * colors.length)],
+      }))
+    );
+    const t = setTimeout(() => setParticles([]), 1000);
+    return () => clearTimeout(t);
+  }, [active, color]);
+
+  if (!particles.length) return null;
+  return (
+    <div style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden", zIndex: 5 }}>
+      {particles.map((p) => (
+        <div key={p.id} style={{
+          position: "absolute", left: "50%", top: "60%",
+          width: 7, height: 7, borderRadius: "50%",
+          background: p.c, boxShadow: `0 0 5px ${p.c}`,
+          animation: `gb_burst_${p.id} 1s cubic-bezier(0.22,1,0.36,1) forwards`,
+        }} />
+      ))}
+      <style>{particles.map((p) =>
+        `@keyframes gb_burst_${p.id} {
+          0%   { transform:translate(0,0) scale(${p.scale}); opacity:1; }
+          70%  { opacity:1; }
+          100% { transform:translate(${p.vx}px,${p.vy}px) scale(0); opacity:0; }
+        }`
+      ).join("")}</style>
+    </div>
+  );
+}
+
+
+// ── TierBar ────────────────────────────────────────────────────────────────
+//
+// Overshoot = damped spring oscillation, driven directly by lastCardProgress.
+//
+// Timeline (last 30% of rollup, p: 0.7 → 1.0):
+//   Normalize t = (p - 0.7) / 0.3  →  0 to 1
+//   Spring: A * e^(-damping*t) * cos(freq*t)
+//   At t=0: displacement = +A (forward of target)
+//   Oscillates: forward → back past target → forward (smaller) → settles at 0 by t=1
+//
+// Magnitude A scales with the card's bar contribution so a big card = big tug.
+// Both the real FP and the spring use the same clock → always land together.
+
+function TierBar({
+  totalFp, gameState, winTiers, isCelebration,
+  lastCardProgress, lastCardFp, onOvershootSettled,
+}: {
+  totalFp: number;
+  gameState: GameStateLabel;
+  winTiers: WinTierDisplay[];
+  isCelebration: boolean;
+  lastCardProgress: number;
+  lastCardFp: number;
+  onOvershootSettled: () => void;
+}) {
   const { label, fillPct, color, glow, fptNeeded } = getTierState(totalFp, winTiers);
-  const [animated, setAnimated] = useState(0);
-  const rafRef = useRef<number>(0);
-  const prevLabelRef = useRef(label);
-  const [burst, setBurst] = useState(false);
-
-  useEffect(() => {
-    if (label !== prevLabelRef.current && prevLabelRef.current !== winTiers[0].label) {
-      prevLabelRef.current = label;
-      setBurst(true);
-      const t = window.setTimeout(() => setBurst(false), 500);
-      return () => window.clearTimeout(t);
-    }
-    prevLabelRef.current = label;
-  }, [label, winTiers]);
-
-  useEffect(() => {
-    const target = fillPct;
-    let cur = animated;
-    const step = () => {
-      const diff = target - cur;
-      if (Math.abs(diff) < 0.2) { setAnimated(target); return; }
-      cur += diff * 0.10;
-      setAnimated(cur);
-      rafRef.current = requestAnimationFrame(step);
-    };
-    cancelAnimationFrame(rafRef.current);
-    rafRef.current = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [fillPct]); // eslint-disable-line
-
   const showBar = gameState !== "IDLE";
 
+  const tierTop = winTiers[winTiers.length - 1].minFp;
+  function getColorAt(pct: number): { color: string; glow: string } {
+    const fakeFp = (pct / 100) * tierTop;
+    let hitIdx = -1;
+    for (let i = 0; i < winTiers.length; i++) {
+      if (fakeFp >= winTiers[i].minFp) hitIdx = i;
+    }
+    if (hitIdx < 0) return { color: "rgba(255,255,255,0.25)", glow: "rgba(255,255,255,0.08)" };
+    return { color: winTiers[hitIdx].color, glow: winTiers[hitIdx].glow };
+  }
+
+  // ── Spring physics ──────────────────────────────────────────────────────
+  // Card's bar contribution scales the amplitude so big cards = bigger tug
+  const cardBarContrib = (lastCardFp / tierTop) * 100;
+  // A = amplitude in % of bar width. Min 12 so it's always perceptible.
+  const A = Math.min(22, Math.max(12, cardBarContrib * 0.6));
+
+  // Keyframe spring: hardcoded offsets as multiples of A
+  // t=0: 0 (bar at real value, spring starts)
+  // bounce 1: peaks at +A (t≈0.20)  — surges PAST landing spot
+  // bounce 2: troughs at -0.8*A (t≈0.50) — pulls BACK below landing spot
+  // bounce 3: peaks at +0.4*A (t≈0.75) — small forward again
+  // t=1: 0 (lands exactly on truth)
+  //
+  // Implemented as piecewise linear between keyframes so the values are exact.
+  // Keyframes: [t, offset_multiple_of_A]
+  const KEYS: [number, number][] = [
+    [0.00,  0.0],   // start: bar at real value
+    [0.35,  1.0],   // +A   : surge forward past target  (feels like launch)
+    [0.60, -0.8],   // -0.8A: pulled back BELOW target   (the tug back)
+    [0.80,  0.4],   // +0.4A: small bounce forward again
+    [1.00,  0.0],   // land exactly on truth
+  ];
+
+  function springAtT(t: number): number {
+    for (let i = 0; i < KEYS.length - 1; i++) {
+      const [t0, v0] = KEYS[i];
+      const [t1, v1] = KEYS[i + 1];
+      if (t >= t0 && t <= t1) {
+        const frac = (t - t0) / (t1 - t0);
+        // Ease in-out within each segment for smooth transitions
+        const e = frac < 0.5 ? 2 * frac * frac : 1 - Math.pow(-2 * frac + 2, 2) / 2;
+        return (v0 + (v1 - v0) * e) * A;
+      }
+    }
+    return 0;
+  }
+
+  const isRevealing = gameState === "REVEALING";
+  const p = lastCardProgress;
+
+  let springOffset = 0;
+  if (isRevealing && p >= 0.65 && p < 1.0) {
+    const t = (p - 0.65) / 0.35; // normalize last 35% to 0→1
+    springOffset = springAtT(Math.min(t, 1));
+  }
+
+  const rawDisplayPct = showBar ? fillPct + springOffset : 0;
+  const displayPct    = Math.min(99, Math.max(0, rawDisplayPct));
+  const isLive        = Math.abs(springOffset) > 0.4;
+
+  const { color: displayColor, glow: displayGlow } = isLive
+    ? getColorAt(displayPct)
+    : { color, glow };
+
+  // Dot scale: blooms on positive overshoot, squishes slightly on negative bounce
+  const dotScale = springOffset > 0
+    ? 1 + (springOffset / A) * 2.0
+    : 1 + (springOffset / A) * 0.4; // subtle squish on pullback
+
+  // Signal GameBar to reveal celebration content once WIN_CELEBRATION starts
+  const settledFiredRef = useRef(false);
+  useEffect(() => {
+    if (!isCelebration) { settledFiredRef.current = false; return; }
+    if (!settledFiredRef.current) {
+      settledFiredRef.current = true;
+      onOvershootSettled();
+    }
+  }, [isCelebration]); // eslint-disable-line
+
+  const barH = isCelebration ? 14 : 11;
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{
-          fontSize: 11, fontWeight: 900, letterSpacing: 1.6, textTransform: "uppercase",
-          color: showBar ? color : "rgba(255,255,255,0.30)",
-          textShadow: showBar ? `0 0 10px ${glow}` : "none",
-          transition: "color 400ms ease",
-        }}>{label}</span>
-        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.4, color: "rgba(255,255,255,0.45)" }}>
-          {showBar && fptNeeded > 0 ? `${fptNeeded} FP` : showBar ? "✓" : `${winTiers[0].minFp} FP`}
+          fontSize: 12, fontWeight: 700, letterSpacing: 0.2, fontFamily: FF,
+          color: showBar ? (fptNeeded === 0 ? displayColor : "rgba(255,255,255,0.55)") : "rgba(255,255,255,0.30)",
+          transition: isLive ? "none" : "color 400ms ease",
+        }}>
+          {showBar
+            ? fptNeeded > 0 ? `${fptNeeded.toFixed(1)} pts to reach ${label}` : `✓ ${label}`
+            : `${winTiers[0].minFp} FP to ${winTiers[0].label}`}
+        </span>
+        <span style={{
+          fontSize: 13, fontWeight: 900, letterSpacing: -0.3, fontStyle: "italic", fontFamily: FF,
+          color: showBar ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.3)",
+        }}>
+          {showBar ? `${totalFp.toFixed(1)} FP` : ""}
         </span>
       </div>
-      <div style={{ width: "100%", height: 10, background: "rgba(255,255,255,0.12)", borderRadius: 6, overflow: "hidden", position: "relative" }}>
+
+      <div style={{
+        width: "100%", height: barH,
+        background: "rgba(255,255,255,0.10)",
+        borderRadius: 6, overflow: "visible", position: "relative",
+        transition: "height 200ms ease",
+      }}>
         <div style={{
           position: "absolute", left: 0, top: 0, bottom: 0,
-          width: `${showBar ? animated : 0}%`,
-          background: `linear-gradient(90deg, ${color}99 0%, ${color} 100%)`,
+          width: `${displayPct}%`,
+          background: `linear-gradient(90deg, ${displayColor}66 0%, ${displayColor} 100%)`,
           borderRadius: 6,
-          boxShadow: animated > 5 ? `0 0 8px ${glow}` : "none",
-          transition: "background 400ms ease",
+          boxShadow: displayPct > 5 ? `0 0 ${10 + Math.abs(springOffset) * 0.5}px ${displayGlow}` : "none",
+          transition: isLive ? "none" : "width 160ms ease-out, background 300ms ease",
         }} />
-        {animated > 3 && showBar && (
+
+        {showBar && displayPct > 2 && (
           <div style={{
             position: "absolute", top: "50%",
-            left: `calc(${Math.min(animated, 97)}% - 4px)`,
-            transform: "translateY(-50%)",
-            width: 7, height: 7, borderRadius: "50%",
-            background: color, boxShadow: `0 0 6px 2px ${glow}`,
-            animation: burst ? "tierBurst 0.5s ease-out" : "tipPulse 1.4s ease-in-out infinite",
+            left: `calc(${Math.min(displayPct, 98)}% - ${isCelebration ? 6 : 4}px)`,
+            width:  isCelebration ? 12 : 8,
+            height: isCelebration ? 12 : 8,
+            borderRadius: "50%",
+            background: displayColor,
+            boxShadow: `0 0 ${8 + Math.abs(springOffset) * 0.8}px ${displayGlow}`,
+            transform: `translateY(-50%) scale(${Math.max(0.7, dotScale)})`,
+            transition: isLive ? "none" : "all 300ms ease",
+            animation: (!isLive && !isCelebration) ? "tipPulse 1.4s ease-in-out infinite" : "none",
+            zIndex: 2,
           }} />
         )}
         <style>{`
-          @keyframes tipPulse  { 0%,100%{opacity:1;transform:translateY(-50%) scale(1)} 50%{opacity:.5;transform:translateY(-50%) scale(1.8)} }
-          @keyframes tierBurst { 0%{transform:translateY(-50%) scale(1)} 50%{transform:translateY(-50%) scale(3.5)} 100%{transform:translateY(-50%) scale(1)} }
+          @keyframes tipPulse { 0%,100%{opacity:1;transform:translateY(-50%) scale(1)} 50%{opacity:.4;transform:translateY(-50%) scale(2)} }
         `}</style>
       </div>
     </div>
   );
 }
+
+
+// ── Legend modal (unchanged) ────────────────────────────────────────────────
 
 const colHdr: React.CSSProperties = {
   fontSize: 9, fontWeight: 900, letterSpacing: 1,
@@ -232,12 +428,11 @@ const colHdr: React.CSSProperties = {
 
 function LegendModal({ onClose, legend }: { onClose: () => void; legend: LegendData }) {
   const [tab, setTab] = useState<"payouts" | "scoring" | "badges">("payouts");
-
   return (
     <div onClick={onClose} style={{
       position: "fixed", inset: 0, zIndex: 300,
       background: "rgba(0,0,0,0.80)", backdropFilter: "blur(6px)",
-      display: "flex", alignItems: "flex-end", justifyContent: "flex-end",
+      display: "flex", alignItems: "flex-end", justifyContent: "center",
       paddingBottom: "10vh", paddingLeft: 16, paddingRight: 16,
       animation: "fadeInBg 200ms ease",
     }}>
@@ -248,7 +443,7 @@ function LegendModal({ onClose, legend }: { onClose: () => void; legend: LegendD
       <div onClick={e => e.stopPropagation()} style={{
         background: "linear-gradient(160deg,#0E1628 0%,#080E1C 100%)",
         border: "1px solid rgba(255,255,255,0.12)", borderRadius: 18,
-        width: "100%", maxWidth: 380, maxHeight: "78vh",
+        width: "100%", maxWidth: 380, height: "78vh",
         display: "flex", flexDirection: "column", overflow: "hidden",
         boxShadow: "0 24px 80px rgba(0,0,0,0.8)",
         animation: "slideUp 250ms cubic-bezier(.2,.9,.4,1)",
@@ -272,7 +467,6 @@ function LegendModal({ onClose, legend }: { onClose: () => void; legend: LegendD
           ))}
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px 20px" }}>
-
           {tab === "payouts" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, paddingBottom: 6, borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: 2 }}>
@@ -292,7 +486,6 @@ function LegendModal({ onClose, legend }: { onClose: () => void; legend: LegendD
               </div>
             </div>
           )}
-
           {tab === "scoring" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, paddingBottom: 5, borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: 2 }}>
@@ -307,37 +500,32 @@ function LegendModal({ onClose, legend }: { onClose: () => void; legend: LegendD
               ))}
             </div>
           )}
-
           {tab === "badges" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {legend.stamps.length > 0 && (
-                <>
-                  <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, color: "rgba(255,255,255,0.35)", marginBottom: 4 }}>STAMPS</div>
-                  {legend.stamps.map(b => (
-                    <div key={b.label} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 12px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                      <span style={{ fontSize: 26, lineHeight: 1, flexShrink: 0 }}>{b.icon}</span>
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: 0.8, color: "#EAF0FF", marginBottom: 3 }}>{b.label}</div>
-                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{b.condition}</div>
-                      </div>
+              {legend.stamps.length > 0 && (<>
+                <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, color: "rgba(255,255,255,0.35)", marginBottom: 4 }}>STAMPS</div>
+                {legend.stamps.map(b => (
+                  <div key={b.label} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 12px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <span style={{ fontSize: 26, lineHeight: 1, flexShrink: 0 }}>{b.icon}</span>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: 0.8, color: "#EAF0FF", marginBottom: 3 }}>{b.label}</div>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{b.condition}</div>
                     </div>
-                  ))}
-                </>
-              )}
-              {legend.badges.length > 0 && (
-                <>
-                  <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, color: "rgba(255,255,255,0.35)", marginTop: 8, marginBottom: 4 }}>BADGES</div>
-                  {legend.badges.map(b => (
-                    <div key={b.label} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 12px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                      <span style={{ fontSize: 26, lineHeight: 1, flexShrink: 0 }}>{b.icon}</span>
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: 0.8, color: "#EAF0FF", marginBottom: 3 }}>{b.label}</div>
-                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{b.condition}</div>
-                      </div>
+                  </div>
+                ))}
+              </>)}
+              {legend.badges.length > 0 && (<>
+                <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, color: "rgba(255,255,255,0.35)", marginTop: 8, marginBottom: 4 }}>BADGES</div>
+                {legend.badges.map(b => (
+                  <div key={b.label} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 12px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <span style={{ fontSize: 26, lineHeight: 1, flexShrink: 0 }}>{b.icon}</span>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: 0.8, color: "#EAF0FF", marginBottom: 3 }}>{b.label}</div>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{b.condition}</div>
                     </div>
-                  ))}
-                </>
-              )}
+                  </div>
+                ))}
+              </>)}
             </div>
           )}
         </div>
@@ -352,21 +540,393 @@ function LegendModal({ onClose, legend }: { onClose: () => void; legend: LegendD
   );
 }
 
-// ── GameBar ────────────────────────────────────────────────────────────────
+// ── CelebrationTop ───────────────────────────────────────────────────────────
+// Shown in Zone A after the overshoot has settled.
+// Tier name (large) + coins won (large) side by side.
+// Tapping triggers coin-fly-to-wallet animation then calls onDismiss.
+
+function CelebrationTop({
+  celebration, onDismiss, walletRef,
+}: {
+  celebration: CelebrationData;
+  onDismiss: () => void;
+  walletRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const [phase, setPhase]       = useState(0);
+  const [burst, setBurst]       = useState(false);
+  const [flying, setFlying]     = useState(false);
+  const coinsRef                = useRef<HTMLDivElement>(null);
+  const animPay                 = useCountUp(celebration.payout, 850, 200);
+
+  useEffect(() => {
+    setPhase(0); setBurst(false); setFlying(false);
+    const t1 = setTimeout(() => setPhase(1), 40);
+    const t2 = setTimeout(() => { setPhase(2); if (!celebration.isBust) setBurst(true); }, 260);
+    const t3 = setTimeout(() => setBurst(false), 1260);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [celebration]);
+
+  function handleTap() {
+    if (celebration.isBust || celebration.payout === 0) { onDismiss(); return; }
+    if (flying) return;
+    // Launch coin particles from coins element toward wallet
+    setFlying(true);
+    setTimeout(onDismiss, 520);
+  }
+
+  return (
+    <div
+      onClick={handleTap}
+      style={{
+        width: "100%", height: "100%", position: "relative",
+        display: "flex", flexDirection: "row",
+        alignItems: "center", justifyContent: "center",
+        gap: 16, cursor: "pointer", overflow: "hidden",
+      }}
+    >
+      <CoinBurst active={burst} color={celebration.tierColor} />
+      {flying && walletRef.current != null && coinsRef.current && (
+        <CoinFlyToWallet
+          fromEl={coinsRef.current}
+          toEl={walletRef.current}
+          color={celebration.tierColor}
+          count={Math.min(8, Math.max(3, Math.round(celebration.payout / 30)))}
+        />
+      )}
+
+      {/* Ambient glow */}
+      <div style={{
+        position: "absolute", inset: 0, pointerEvents: "none",
+        background: `radial-gradient(ellipse at 50% 50%, ${celebration.tierGlow} 0%, transparent 68%)`,
+      }} />
+
+      {/* Tier name */}
+      <div style={{
+        position: "relative", zIndex: 1, textAlign: "center",
+        opacity: phase >= 1 ? 1 : 0,
+        transform: phase >= 1 ? "translateY(0)" : "translateY(-12px)",
+        transition: "opacity 0.34s ease, transform 0.34s ease",
+      }}>
+        <div style={{ fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontFamily: FF, marginBottom: 1 }}>
+          {celebration.isBust ? "Result" : "You hit"}
+        </div>
+        <div style={{
+          fontSize: 40, fontWeight: 800, letterSpacing: "-0.5px", lineHeight: 1,
+          color: celebration.tierColor, fontFamily: FF, textTransform: "uppercase",
+          textShadow: `0 0 28px ${celebration.tierGlow}, 0 0 50px ${celebration.tierGlow}55`,
+        }}>
+          {celebration.tierLabel}
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div style={{ width: 1, height: 48, background: "rgba(255,255,255,0.10)", flexShrink: 0, opacity: phase >= 1 ? 0.6 : 0, transition: "opacity 0.4s ease 0.1s" }} />
+
+      {/* Coins */}
+      <div ref={coinsRef} style={{
+        position: "relative", zIndex: 1,
+        display: "flex", flexDirection: "column", alignItems: "center", gap: 1,
+        opacity: phase >= 2 ? 1 : 0,
+        transform: phase >= 2 ? "translateY(0) scale(1)" : "translateY(-10px) scale(0.9)",
+        transition: "opacity 0.34s ease, transform 0.34s cubic-bezier(0.34,1.56,0.64,1)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontSize: 20 }}>{celebration.isBust ? "💸" : "🪙"}</span>
+          <span style={{
+            fontSize: 40, fontWeight: 800, letterSpacing: "-1.5px", lineHeight: 1,
+            color: celebration.isBust ? "#555" : "#FFD700",
+            textShadow: celebration.isBust ? "none" : "0 0 22px #FFD70060",
+            fontFamily: FF, fontVariantNumeric: "tabular-nums",
+          }}>
+            {celebration.isBust ? "0" : `+${animPay}`}
+          </span>
+        </div>
+        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: celebration.isBust ? "#444" : "#FFD70066", fontFamily: FF }}>
+          {celebration.isBust ? "no payout" : "tap to collect"}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+// ── CoinFlyToWallet ──────────────────────────────────────────────────────────
+// Spawns coin particles that arc from the coins display toward the wallet element.
+
+function CoinFlyToWallet({
+  fromEl, toEl, color, count,
+}: {
+  fromEl: HTMLElement | null;
+  toEl: HTMLElement | null;
+  color: string;
+  count: number;
+}) {
+  const [particles, setParticles] = useState<
+    { id: number; sx: number; sy: number; ex: number; ey: number; delay: number }[]
+  >([]);
+
+  useEffect(() => {
+    if (!fromEl || !toEl) return;
+    const fromR = fromEl.getBoundingClientRect();
+    const toR   = toEl.getBoundingClientRect();
+    const sx = fromR.left + fromR.width / 2;
+    const sy = fromR.top  + fromR.height / 2;
+    const ex = toR.left   + toR.width / 2;
+    const ey = toR.top    + toR.height / 2;
+
+    setParticles(
+      Array.from({ length: count }, (_, i) => ({
+        id: i,
+        sx: sx + (Math.random() - 0.5) * 24,
+        sy: sy + (Math.random() - 0.5) * 16,
+        ex: ex + (Math.random() - 0.5) * 14,
+        ey: ey + (Math.random() - 0.5) * 10,
+        delay: i * 42,
+      }))
+    );
+  }, []);
+
+  if (!particles.length) return null;
+
+  return (
+    <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 9999 }}>
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          style={{
+            position: "absolute",
+            left: p.sx, top: p.sy,
+            width: 10, height: 10,
+            borderRadius: "50%",
+            background: "#FFD700",
+            boxShadow: `0 0 8px #FFD700, 0 0 16px ${color}`,
+            animationName: `coinfly_${p.id}`,
+            animationDuration: "480ms",
+            animationDelay: `${p.delay}ms`,
+            animationFillMode: "both",
+            animationTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
+        />
+      ))}
+      <style>{particles.map((p) => `
+        @keyframes coinfly_${p.id} {
+          0%   { transform: translate(0,0) scale(1); opacity: 1; }
+          60%  { opacity: 1; }
+          100% { transform: translate(${p.ex - p.sx}px, ${p.ey - p.sy}px) scale(0.25); opacity: 0; }
+        }
+      `).join("")}</style>
+    </div>
+  );
+}
+
+
+// ── CoinFlyFromPoint ─────────────────────────────────────────────────────────
+// Same as CoinFlyToWallet but origin is a fixed {x,y} point (tap position).
+function CoinFlyFromPoint({
+  sx, sy, toEl, color, count,
+}: {
+  sx: number; sy: number;
+  toEl: HTMLElement | null;
+  color: string;
+  count: number;
+}) {
+  const [particles, setParticles] = useState<
+    { id: number; sx: number; sy: number; ex: number; ey: number; delay: number }[]
+  >([]);
+
+  useEffect(() => {
+    if (!toEl) return;
+    const toR = toEl.getBoundingClientRect();
+    const ex  = toR.left + toR.width  / 2;
+    const ey  = toR.top  + toR.height / 2;
+    setParticles(
+      Array.from({ length: count }, (_, i) => ({
+        id: i,
+        sx: sx + (Math.random() - 0.5) * 40,
+        sy: sy + (Math.random() - 0.5) * 40,
+        ex: ex + (Math.random() - 0.5) * 14,
+        ey: ey + (Math.random() - 0.5) * 10,
+        delay: i * 38,
+      }))
+    );
+  }, []);
+
+  if (!particles.length) return null;
+
+  return (
+    <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 9999 }}>
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          style={{
+            position: "absolute",
+            left: p.sx, top: p.sy,
+            width: 10, height: 10,
+            borderRadius: "50%",
+            background: "#FFD700",
+            boxShadow: `0 0 8px #FFD700, 0 0 16px ${color}`,
+            animationName: `coinfly_pt_${p.id}`,
+            animationDuration: "480ms",
+            animationDelay: `${p.delay}ms`,
+            animationFillMode: "both",
+            animationTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
+        />
+      ))}
+      <style>{particles.map((p) => `
+        @keyframes coinfly_pt_${p.id} {
+          0%   { transform: translate(0,0) scale(1); opacity: 1; }
+          60%  { opacity: 1; }
+          100% { transform: translate(${p.ex - p.sx}px, ${p.ey - p.sy}px) scale(0.25); opacity: 0; }
+        }
+      `).join("")}</style>
+    </div>
+  );
+}
+
+// ── CelebrationBottom ────────────────────────────────────────────────────────
+
+function CelebrationBottom({ celebration, onDismiss }: { celebration: CelebrationData; onDismiss: () => void }) {
+  const [visible, setVisible] = useState(false);
+  const copy = getStreakCopy(celebration.streak, celebration.isBust);
+
+  useEffect(() => {
+    setVisible(false);
+    const t = setTimeout(() => setVisible(true), 300);
+    return () => clearTimeout(t);
+  }, [celebration]);
+
+  const pipColor = celebration.isBust ? "#FF3B30" : "#FF8C00";
+  const pipGlow  = celebration.isBust ? "#FF3B3055" : "#FF8C0055";
+
+  return (
+    <div
+      onClick={onDismiss}
+      style={{
+        width: "100%", height: "100%",
+        display: "flex", flexDirection: "column", justifyContent: "center",
+        gap: 6, cursor: "pointer",
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(10px)",
+        transition: "opacity 0.42s ease, transform 0.42s ease",
+      }}
+    >
+      <div style={{
+        display: "flex", alignItems: "center", gap: 10,
+        background: celebration.isBust ? "rgba(255,59,48,0.07)" : "rgba(255,140,0,0.08)",
+        border: `1px solid ${celebration.isBust ? "#FF3B3020" : "#FF8C0020"}`,
+        borderRadius: 10, padding: "12px 14px",
+      }}>
+        <div style={{ display: "flex", gap: 4, flexShrink: 0, flexWrap: "wrap", maxWidth: 80 }}>
+          {Array.from({ length: Math.max(1, Math.min(celebration.streak, 6)) }).map((_, i) => (
+            <div key={i} style={{
+              width: 9, height: 9, borderRadius: "50%",
+              background: celebration.streak === 0 ? "#333" : pipColor,
+              boxShadow: celebration.streak === 0 ? "none" : `0 0 7px ${pipGlow}`,
+              animation: `pip_in 0.28s ease ${i * 0.06}s both`,
+            }} />
+          ))}
+          {celebration.streak > 6 && (
+            <span style={{ fontSize: 10, color: pipColor, alignSelf: "center", fontFamily: FF, marginLeft: 2 }}>
+              +{celebration.streak - 6}
+            </span>
+          )}
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: pipColor, fontFamily: FF, lineHeight: 1.2 }}>
+            {copy.head}
+          </div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 3, fontFamily: FF }}>
+            {copy.sub}
+          </div>
+        </div>
+        <div style={{ fontSize: 18, color: "rgba(255,255,255,0.18)", flexShrink: 0 }}>›</div>
+      </div>
+      <div style={{ textAlign: "center", fontSize: 10, color: "rgba(255,255,255,0.12)", letterSpacing: "0.08em", fontFamily: FF }}>
+        XP coming soon ⚡
+      </div>
+      <style>{`@keyframes pip_in { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }`}</style>
+    </div>
+  );
+}
+
+
+// ── GameBar ─────────────────────────────────────────────────────────────────
 
 export function GameBar({
   gameState, balance, isBalanceAnimating, totalFp,
+  lastCardProgress = 0,
+  lastCardFp = 0,
   capMax, capUsed, lockedSalary, revealedSalary,
   betMultiplier, baseBet, onBetMultiplier, onAction,
   winTiers, legend,
+  celebration, onWinCelebrationComplete,
 }: Props) {
   const betLocked = gameState === "DEALING" || gameState === "DRAWING" || gameState === "REVEALING";
   const [showLegend, setShowLegend] = useState(false);
+  const isCelebration = gameState === "WIN_CELEBRATION" && !!celebration;
 
-  const spent     = salarySpent(gameState, capUsed, lockedSalary, revealedSalary);
-  const remaining = capMax - spent;
+  // overshootSettled: false until TierBar calls back that the tug animation is done.
+  // Zone A shows celebration content only after this is true.
+  const [overshootSettled, setOvershootSettled] = useState(false);
+  const showCelebContent = isCelebration && overshootSettled;
+
+  // Reset when leaving celebration
+  useEffect(() => {
+    if (!isCelebration) setOvershootSettled(false);
+  }, [isCelebration]);
+
+  const walletRef       = useRef<HTMLDivElement>(null);
+  // walletTargetRef: invisible anchor outside the blur zone — coins fly to this
+  const walletTargetRef = useRef<HTMLDivElement>(null);
+  // Coin fly state — tapping anywhere in celebration triggers this
+  const [celebFlying, setCelebFlying]   = useState(false);
+  const [tapOrigin, setTapOrigin]       = useState<{x: number; y: number} | null>(null);
+  // Wallet display balance — lags real balance so roll-up starts when coins land
+  const [displayBalance, setDisplayBalance] = useState(balance);
+  useEffect(() => {
+    // Delay balance display update to sync with coin fly animation (~520ms)
+    const t = window.setTimeout(() => setDisplayBalance(balance), 540);
+    return () => clearTimeout(t);
+  }, [balance]);
+
+  function handleCelebTap(e: React.MouseEvent) {
+    if (!showCelebContent || !onWinCelebrationComplete) return;
+    if (celebFlying) return;
+    const payout = celebration?.payout ?? 0;
+    if (payout > 0) {
+      setTapOrigin({ x: e.clientX, y: e.clientY });
+      setCelebFlying(true);
+      setTimeout(() => {
+        setCelebFlying(false);
+        setTapOrigin(null);
+        onWinCelebrationComplete();
+      }, 520);
+    } else {
+      onWinCelebrationComplete();
+    }
+  }
+
+  // Keep walletTarget synced to wallet position so coins land in the right spot
+  useEffect(() => {
+    if (!walletRef.current || !walletTargetRef.current) return;
+    const sync = () => {
+      const r = walletRef.current!.getBoundingClientRect();
+      const t = walletTargetRef.current!;
+      t.style.position = "fixed";
+      t.style.left     = `${r.left}px`;
+      t.style.top      = `${r.top}px`;
+      t.style.width    = `${r.width}px`;
+      t.style.height   = `${r.height}px`;
+    };
+    sync();
+    window.addEventListener("resize", sync);
+    return () => window.removeEventListener("resize", sync);
+  }, [showCelebContent]);
+
+  const spent      = salarySpent(gameState, capUsed, lockedSalary, revealedSalary);
+  const remaining  = capMax - spent;
   const overBudget = remaining < 0;
-  const currentBet = baseBet * betMultiplier;
 
   return (
     <>
@@ -374,91 +934,183 @@ export function GameBar({
         <LegendModal onClose={() => setShowLegend(false)} legend={legend} />,
         document.body
       )}
-      <div style={{ display: "flex", flexDirection: "column" }}>
 
-        {/* Tier progress bar */}
-        <TierBar totalFp={totalFp} gameState={gameState} winTiers={winTiers} />
+      <div
+        onClick={showCelebContent ? handleCelebTap : undefined}
+        style={{
+          display: "flex", flexDirection: "column", position: "relative",
+          cursor: showCelebContent ? "pointer" : "default",
+        }}>
 
-        {/* Score + Budget */}
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-end", gap: 32, paddingTop: 12, paddingBottom: 2 }}>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 36, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic" }}>
-              <RollingNumber value={totalFp} decimals={1} />
-            </div>
-            <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 4 }}>
-              Total Score
-            </div>
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 2, justifyContent: "center" }}>
-              <span style={{ fontSize: 36, fontWeight: 900, color: overBudget ? "#ef4444" : "#FFFFFF", lineHeight: 1, fontStyle: "italic" }}>
-                {remaining}
-              </span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.35)", lineHeight: 1, fontStyle: "italic" }}>
-                /{capMax}
-              </span>
-            </div>
-            <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 4 }}>
-              Budget
-            </div>
-          </div>
-        </div>
+        {/* ── ZONE A: Score/Budget ↔ Tier name + Coins ─────────────── */}
+        <div style={{ position: "relative", minHeight: 100, overflow: "hidden" }}>
 
-        {/* Multiplier pills */}
-        <div style={{ display: "flex", gap: 8, justifyContent: "center", paddingTop: 10 }}>
-          {MULTIPLIERS.map((m: number) => {
-            const active = betMultiplier === m;
-            return (
-              <button key={m} onClick={() => onBetMultiplier(m)} disabled={betLocked} style={{
-                background: active ? THEME.button.multiplier.active.bg : THEME.button.multiplier.inactive.bg,
-                border: active ? "none" : THEME.button.multiplier.inactive.border,
-                borderRadius: 24, color: "#FFFFFF",
-                fontWeight: 900, fontSize: 14, padding: "9px 0",
-                cursor: betLocked ? "default" : "pointer",
-                opacity: betLocked ? 0.4 : 1,
-                transition: "all 150ms ease", lineHeight: 1,
-                flex: 1, maxWidth: 80,
-              }}>{m}X</button>
-            );
-          })}
-        </div>
-
-        {/* Wallet + Legend button */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 18 }}>
-          <div style={{ flexShrink: 0 }}>
-            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>
-              Wallet
-            </div>
-            <div style={{ fontSize: 17, fontWeight: 900, color: isBalanceAnimating ? THEME.palette.green_primary : "#FFFFFF", transition: "color 300ms ease", lineHeight: 1, marginTop: 2 }}>
-              ${balance.toLocaleString()}
-            </div>
-          </div>
-          <button onClick={() => setShowLegend(true)} style={{
-            width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
-            background: "transparent",
-            border: `2px solid ${THEME.colors.surfaceStroke}`,
-            color: "rgba(255,255,255,0.6)", fontSize: 14, fontWeight: 900,
-            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-          }}>i</button>
-        </div>
-
-        {/* Action button */}
-        <div style={{ display: "flex", justifyContent: "center", paddingTop: 10 }}>
-          <button onClick={onAction} disabled={isDisabled(gameState)} style={{
-            width: "min(168px, 50%)",
-            borderRadius: THEME.button.action.borderRadius, border: "none",
-            padding: "11px 0",
-            fontWeight: 900, fontSize: 16, letterSpacing: 2, textTransform: "uppercase",
-            cursor: isDisabled(gameState) ? "default" : "pointer",
-            background: isDisabled(gameState) ? "rgba(255,255,255,0.10)" : actionBackground(gameState),
-            color: isDisabled(gameState) ? "rgba(255,255,255,0.35)" : actionTextColor(gameState),
-            opacity: isDisabled(gameState) ? 0.5 : 1,
-            boxShadow: isDisabled(gameState) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
-            transition: "opacity 150ms ease",
-            lineHeight: 1,
+          {/* Normal content — fades out once celebration content is ready */}
+          <div style={{
+            display: "flex", justifyContent: "center", alignItems: "center",
+            gap: 40, paddingTop: 20, paddingBottom: 20,
+            filter: showCelebContent ? "blur(5px)" : "none",
+            opacity: showCelebContent ? 0 : 1,
+            transition: "filter 0.35s ease, opacity 0.35s ease",
+            pointerEvents: showCelebContent ? "none" : "auto",
           }}>
-            {actionLabel(gameState)}
-          </button>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 36, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic" }}>
+                <RollingNumber value={totalFp} decimals={1} />
+              </div>
+              <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 4 }}>
+                Total Score
+              </div>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 2, justifyContent: "center" }}>
+                <span style={{ fontSize: 36, fontWeight: 900, color: overBudget ? "#ef4444" : "#FFFFFF", lineHeight: 1, fontStyle: "italic" }}>
+                  {remaining}
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.35)", lineHeight: 1, fontStyle: "italic" }}>
+                  /{capMax}
+                </span>
+              </div>
+              <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 4 }}>
+                Budget
+              </div>
+            </div>
+          </div>
+
+          {/* Celebration content — fades in only after overshoot settles */}
+          {isCelebration && celebration && (
+            <div style={{
+              position: "absolute", inset: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              opacity: overshootSettled ? 1 : 0,
+              transition: "opacity 0.4s ease",
+              pointerEvents: overshootSettled ? "auto" : "none",
+            }}>
+              <CelebrationTop
+                celebration={celebration}
+                onDismiss={onWinCelebrationComplete ?? (() => {})}
+                walletRef={walletTargetRef}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* ── ZONE B: Tier gauge — always live, never blurred ──────── */}
+        <div style={{
+          paddingTop: 10, paddingBottom: 10,
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+        }}>
+          <TierBar
+            totalFp={totalFp}
+            gameState={gameState === "WIN_CELEBRATION" ? "RESULTS" : gameState}
+            winTiers={winTiers}
+            isCelebration={isCelebration}
+            lastCardProgress={lastCardProgress}
+            lastCardFp={lastCardFp}
+            onOvershootSettled={() => setOvershootSettled(true)}
+          />
+        </div>
+
+        {/* Invisible wallet target for coin fly — lives outside blur zone */}
+        <div ref={walletTargetRef} style={{ pointerEvents: "none", zIndex: 9998 }} />
+
+        {/* Coin fly from tap point → wallet */}
+        {celebFlying && tapOrigin && walletTargetRef.current && (
+          <CoinFlyFromPoint
+            sx={tapOrigin.x}
+            sy={tapOrigin.y}
+            toEl={walletTargetRef.current}
+            color="#FFD700"
+            count={Math.min(8, Math.max(3, Math.round((celebration?.payout ?? 0) / 30)))}
+          />
+        )}
+
+        {/* ── ZONE C: Multipliers/Wallet/Action ↔ Streak hook ─────── */}
+        <div style={{ position: "relative", minHeight: 148, overflow: "hidden" }}>
+
+          {/* Normal content */}
+          <div style={{
+            filter: showCelebContent ? "blur(5px)" : "none",
+            opacity: showCelebContent ? 0 : 1,
+            transition: "filter 0.35s ease, opacity 0.35s ease",
+            pointerEvents: showCelebContent ? "none" : "auto",
+          }}>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center", paddingTop: 8 }}>
+              {MULTIPLIERS.map((m: number) => {
+                const active = betMultiplier === m;
+                return (
+                  <button key={m} onClick={() => onBetMultiplier(m)} disabled={betLocked} style={{
+                    background: active ? THEME.button.multiplier.active.bg : THEME.button.multiplier.inactive.bg,
+                    border: active ? "none" : THEME.button.multiplier.inactive.border,
+                    borderRadius: 24, color: "#FFFFFF",
+                    fontWeight: 900, fontSize: 14, padding: "9px 0",
+                    cursor: betLocked ? "default" : "pointer",
+                    opacity: betLocked ? 0.4 : 1,
+                    transition: "all 150ms ease", lineHeight: 1,
+                    flex: 1, maxWidth: 80,
+                  }}>{m}X</button>
+                );
+              })}
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 18 }}>
+              <div ref={walletRef} style={{ flexShrink: 0 }}>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>
+                  Wallet
+                </div>
+                <div style={{ fontSize: 17, fontWeight: 900, color: isBalanceAnimating ? THEME.palette.green_primary : "#FFFFFF", transition: "color 300ms ease", lineHeight: 1, marginTop: 2 }}>
+                  $<RollingNumber value={displayBalance} decimals={0} duration={1200} />
+                </div>
+              </div>
+              <button onClick={() => setShowLegend(true)} style={{
+                width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
+                background: "transparent",
+                border: `2px solid ${THEME.colors.surfaceStroke}`,
+                color: "rgba(255,255,255,0.6)", fontSize: 14, fontWeight: 900,
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+              }}>i</button>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "center", paddingTop: 10 }}>
+              <button
+                onClick={onAction}
+                disabled={isDisabled(gameState)}
+                data-action={gameState === "IDLE" ? "deal" : gameState === "HOLD" ? "draw" : undefined}
+                style={{
+                width: "min(168px, 50%)",
+                borderRadius: THEME.button.action.borderRadius, border: "none",
+                padding: "11px 0",
+                fontWeight: 900, fontSize: 16, letterSpacing: 2, textTransform: "uppercase",
+                cursor: isDisabled(gameState) ? "default" : "pointer",
+                background: isDisabled(gameState) ? "rgba(255,255,255,0.10)" : actionBackground(gameState),
+                color: isDisabled(gameState) ? "rgba(255,255,255,0.35)" : actionTextColor(gameState),
+                opacity: isDisabled(gameState) ? 0.5 : 1,
+                boxShadow: isDisabled(gameState) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
+                transition: "opacity 150ms ease", lineHeight: 1,
+              }}>
+                {actionLabel(gameState)}
+              </button>
+            </div>
+          </div>
+
+          {/* Streak hook — fades in after overshoot settles */}
+          {isCelebration && celebration && (
+            <div style={{
+              position: "absolute", inset: 0,
+              display: "flex", flexDirection: "column",
+              alignItems: "stretch", justifyContent: "flex-start",
+              paddingTop: "12px",
+              opacity: overshootSettled ? 1 : 0,
+              transition: "opacity 0.4s ease",
+              pointerEvents: overshootSettled ? "auto" : "none",
+            }}>
+              <CelebrationBottom
+                celebration={celebration}
+                onDismiss={onWinCelebrationComplete ?? (() => {})}
+              />
+            </div>
+          )}
         </div>
 
       </div>

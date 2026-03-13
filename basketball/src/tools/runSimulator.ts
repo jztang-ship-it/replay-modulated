@@ -23,18 +23,39 @@ function computeFp(stats: Record<string, any>): number {
   );
 }
 
-// ── Badge bonus — must match resolveEngine exactly ────────────────────────
+// ── Badge bonus — mirrors basketballConfig.ts badges exactly ─────────────
 function computeBadgeBonus(stats: Record<string, any>): number {
   const g = (k: string) => Number(stats[k] ?? stats[k.toLowerCase()] ?? 0);
-  const pts = g("pts"), reb = g("reb"), ast = g("ast"), stl = g("stl"), blk = g("blk");
+  const pts = g("pts"), reb = g("reb"), ast = g("ast");
+  const stl = g("stl"), blk = g("blk"), to = g("turnovers");
   let bonus = 0;
-  const doubleCats = [pts >= 10, reb >= 10, ast >= 10].filter(Boolean).length;
-  if (doubleCats >= 3) bonus += 3;       // TRIPLE DOUBLE
-  else if (doubleCats >= 2) bonus += 2;  // DOUBLE DOUBLE
-  if (pts >= 30) bonus += 2;             // BUCKET
-  if (ast >= 7)  bonus += 2;             // DIME
-  if (reb >= 10) bonus += 1;             // GLASS
-  if (stl + blk >= 3) bonus += 2;       // LOCK
+  // Scoring
+  if (pts >= 50) bonus += 10;
+  else if (pts >= 40) bonus += 5;
+  else if (pts >= 30) bonus += 2;
+  // Rebounds
+  if (reb >= 15) bonus += 5;
+  else if (reb >= 10) bonus += 3;
+  // Assists
+  if (ast >= 15) bonus += 5;
+  else if (ast >= 10) bonus += 3;
+  // Steals
+  if (stl >= 5) bonus += 4;
+  else if (stl >= 3) bonus += 2;
+  // Blocks
+  if (blk >= 5) bonus += 4;
+  else if (blk >= 3) bonus += 2;
+  // Efficiency
+  if (ast >= 10 && to === 0) bonus += 8;
+  else if (ast >= 5 && to === 0) bonus += 3;
+  if (to >= 6) bonus -= 6;
+  else if (to >= 4) bonus -= 3;
+  // Milestones
+  const cats = [pts, reb, ast, stl, blk].filter(v => v >= 10).length;
+  if (cats >= 4) bonus += 30;
+  else if (cats >= 3) bonus += 8;
+  else if (cats >= 2) bonus += 2;
+  if ([pts,reb,ast,stl,blk].every(v => v >= 5)) bonus += 15;
   return bonus;
 }
 

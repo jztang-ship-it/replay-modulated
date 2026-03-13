@@ -216,6 +216,8 @@ type Props = {
   spotlightLevel?: number;
   isDimmed?: boolean;
   onRollComplete?: () => void;
+  heldFpVisible?: boolean;
+  isTapTarget?: boolean;
 };
 
 export function AthleteCard(props: Props) {

@@ -44,6 +44,8 @@ export type RosterGridCardProps = {
   isSpotlight: boolean;
   spotlightLevel: number;
   isDimmed: boolean;
+  heldFpVisible?: boolean;
+  isTapTarget?: boolean;
 };
 
 type Props = {
@@ -72,6 +74,14 @@ type Props = {
   onToggleLock: (cardId: string) => void;
   onToggleFlip: (cardId: string) => void;
   onCardRollComplete?: (cardId: string) => void;
+  // tap-to-reveal
+  revealMode?: "auto" | "tap";
+  onTapReveal?: (cardId: string) => void;
+  heldFpVisible?: boolean;
+  isTapTarget?: boolean;
+  heldRevealedIds?: Set<string>;
+  tappedCardIds?: Set<string>;
+  isRevealingPhase?: boolean;  // true when gameState === "REVEALING"
 };
 
 export function RosterGrid(props: Props) {
@@ -82,6 +92,7 @@ export function RosterGrid(props: Props) {
     visibleFpMap, canFlip, onToggleLock, onToggleFlip,
     flipMsMap, fpCountUpMsMap, performanceTagMap, pulseMap,
     shakingCardId, shakeType, cardShakeTypeMap, visibleBadgesMap, activeRevealCardId,
+    revealMode = "auto", onTapReveal, heldFpVisible = false, heldRevealedIds, tappedCardIds, isRevealingPhase = false,
   } = props;
 
   const cards = useMemo(() => {
@@ -112,10 +123,25 @@ export function RosterGrid(props: Props) {
         const isSpotlight    = activeRevealCardId === id;
         const cardShakeType  = cardShakeTypeMap?.get(id) ?? null;
 
+        // tap mode: a card is "held" if it has wasHeld flag
+        const wasHeld        = (card as any).wasHeld === true;
+        const isTapped       = tappedCardIds?.has(id) ?? false;
+        // In tap mode during REVEALING: unheld untapped cards are tappable
+        const isTapTarget    = revealMode === "tap" && isRevealingPhase
+                               && !wasHeld && !isTapped;
+        // Per-card: held card FP shows when its ID is in heldRevealedIds
+        const thisHeldRevealed = wasHeld && (heldRevealedIds?.has(id) ?? false);
+        const showHeldFp     = thisHeldRevealed;
+        // In tap mode, visibleFp for held card: undefined until revealed
+        const effectiveFp    = wasHeld
+          ? (thisHeldRevealed ? visibleFp ?? Number((card as any).actualFp ?? 0) : undefined)
+          : visibleFp;
+
         const handleTap = (e: React.MouseEvent) => {
           e.stopPropagation();
           if (phase === "HOLD") onToggleLock(id);
           else if (canFlip) onToggleFlip(id);
+          else if (isTapTarget) onTapReveal?.(id);
         };
 
         return (
@@ -127,6 +153,10 @@ export function RosterGrid(props: Props) {
               overflow: "visible",
               zIndex: isSpotlight ? 100 : isShaking ? 10 : 1,
               background: "#0a0c10",
+              cursor: isTapTarget ? "pointer" : "default",
+              // Subtle pulse ring on tappable cards
+              boxShadow: isTapTarget ? "0 0 0 2px rgba(255,255,255,0.25)" : "none",
+              transition: "box-shadow 300ms ease",
             }}
           >
             <CardComponent
@@ -138,11 +168,13 @@ export function RosterGrid(props: Props) {
               flipped={isFlipped}
               onToggleFlip={() => onToggleFlip(id)}
               canFlip={canFlip}
-              visibleFp={visibleFp}
+              visibleFp={effectiveFp}
               noTransition={noTransition}
               flipDurationMs={flipMs}
               fpCountUpMs={fpCountUpMs}
               performanceTag={performanceTag}
+              heldFpVisible={thisHeldRevealed}
+              isTapTarget={isTapTarget}
               pulse={pulse}
               isRevealing={isRevealing}
               shakeType={liveShakeType}

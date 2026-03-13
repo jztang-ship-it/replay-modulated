@@ -12,7 +12,9 @@ export { DEFAULT_REVEAL_CONFIG as BASKETBALL_REVEAL_CONFIG } from "@shared/hooks
 import type { RevealConfig } from "@shared/hooks/useEmotionalReveal";
 
 export const REVEAL_CONFIG: RevealConfig = {
-  careerNightRatio: 1.6,
-  hotRatio:         1.4,
-  coldRatio:        0.75,
+  legendaryRatio:   1.6,   // LEGENDARY   — historic performance
+  careerNightRatio: 1.4,   // CAREER NIGHT — great game
+  hotRatio:         1.2,   // ON FIRE      — above average
+  coldRatio:        0.60,  // BRICK CITY   — below expectations
+  frozenRatio:      0.40,  // ICE COLD     — bust game
 };

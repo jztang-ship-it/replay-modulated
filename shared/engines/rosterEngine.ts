@@ -33,7 +33,7 @@ export function generateRoster(evalPool: PlayerEval[], config: RosterConfig, eco
   const usedPeople = new Set<string>();
   const roster: Array<GeneratedCard | null> = Array(rosterSize).fill(null);
 
-  const anchorThreshold = economyConfig.tierThresholds.find(t => t.tier === "PURPLE")?.minSalary ?? 40;
+  const anchorThreshold = economyConfig.tierThresholds.find(t => t.tier === "ORANGE")?.minSalary ?? 52;
   const maxAnchorSalary = cap - (rosterSize - 1) * minSalary;
   // Find the anchor slot: first non-FLEX, non-GK required slot
   const anchorSlotIdx = slotRequirements.findIndex(req => req !== "FLEX" && req.toUpperCase() !== "GK");
@@ -96,9 +96,10 @@ export function generateRoster(evalPool: PlayerEval[], config: RosterConfig, eco
   const filled = roster.filter(Boolean) as GeneratedCard[];
   const arranged = arrangeAnchors(filled, slotRequirements);
   const result = enforceCapWithReplacement(arranged, evalPool, byPos, slotRequirements, economyConfig, rnd);
-  const finalTotal = totalSalary(result.map(c => c.salary));
+  const guaranteed = guaranteeTierFloor(result, evalPool, economyConfig, rnd);
+  const finalTotal = totalSalary(guaranteed.map(c => c.salary));
   if (finalTotal > cap) console.warn(`[RosterEngine] CAP BREACH: $${finalTotal} > $${cap}`);
-  return result;
+  return guaranteed;
 }
 
 export function redrawRoster(current: GeneratedCard[], heldSlots: Set<number>, evalPool: PlayerEval[], config: RosterConfig, economyConfig: EconomyConfig, rnd: () => number): GeneratedCard[] {
@@ -125,9 +126,63 @@ export function redrawRoster(current: GeneratedCard[], heldSlots: Set<number>, e
     openSlotsRemaining--;
     result[i] = { ...toGeneratedCard(picked, i), wasHeld: false };
   }
-  return enforceCapWithReplacement(result as GeneratedCard[], evalPool, buildPositionPools(evalPool), config.slotRequirements, economyConfig, rnd, heldMask);
+  const afterCap = enforceCapWithReplacement(result as GeneratedCard[], evalPool, buildPositionPools(evalPool), config.slotRequirements, economyConfig, rnd, heldMask);
+  return guaranteeTierFloor(afterCap, evalPool, economyConfig, rnd, heldMask);
 }
 
+function guaranteeTierFloor(roster, evalPool, economyConfig, rnd, heldMask) {
+  const orangeMin = economyConfig.tierThresholds.find(t => t.tier === "ORANGE")?.minSalary ?? 52;
+  const purpleMin = economyConfig.tierThresholds.find(t => t.tier === "PURPLE")?.minSalary ?? 40;
+  const cap = economyConfig.capMax;
+  const minSpend = cap - 6;
+  const result = [...roster];
+  const usedPeople = new Set(result.map(c => c.personKey));
+  function getSwappable() {
+    return result.map((c, i) => ({ i, c })).filter(({ i }) => !heldMask || !heldMask[i]).sort((a, b) => b.c.salary - a.c.salary);
+  }
+  function getHeadroom() {
+    return cap - totalSalary(result.map(c => c.salary));
+  }
+  function tryUpgrade(targetMin) {
+    for (const { i, c } of getSwappable()) {
+      if (c.salary >= targetMin) continue;
+      const budget = c.salary + getHeadroom();
+      const upgrades = evalPool.filter(p => (!usedPeople.has(p.personKey) || p.personKey === c.personKey) && p.salary >= targetMin && p.salary <= budget).sort((a, b) => b.salary - a.salary);
+      if (!upgrades.length) continue;
+      const excl = new Set([...usedPeople].filter(k => k !== c.personKey));
+      const picked = pickWeightedRandom(upgrades, excl, rnd) ?? upgrades[0];
+      usedPeople.delete(c.personKey);
+      usedPeople.add(picked.personKey);
+      result[i] = toGeneratedCard(picked, i);
+      return true;
+    }
+    return false;
+  }
+  const hasOrange = () => result.filter(c => c.salary >= orangeMin).length >= 1;
+  const hasTwoPurple = () => result.filter(c => c.salary >= purpleMin).length >= 2;
+  if (!hasOrange()) {
+    if (!tryUpgrade(orangeMin)) {
+      while (!hasTwoPurple()) { if (!tryUpgrade(purpleMin)) break; }
+    }
+  }
+  let spendTotal = totalSalary(result.map(c => c.salary));
+  if (spendTotal < minSpend) {
+    const sorted = result.map((c, i) => ({ i, c })).filter(({ i }) => !heldMask || !heldMask[i]).sort((a, b) => a.c.salary - b.c.salary);
+    for (const { i, c } of sorted) {
+      if (spendTotal >= minSpend) break;
+      const gap = minSpend - spendTotal;
+      const upgrades = evalPool.filter(p => (!usedPeople.has(p.personKey) || p.personKey === c.personKey) && p.salary > c.salary && p.salary <= c.salary + gap).sort((a, b) => b.salary - a.salary);
+      if (!upgrades.length) continue;
+      const excl = new Set([...usedPeople].filter(k => k !== c.personKey));
+      const picked = pickWeightedRandom(upgrades, excl, rnd) ?? upgrades[0];
+      usedPeople.delete(c.personKey);
+      usedPeople.add(picked.personKey);
+      spendTotal += picked.salary - c.salary;
+      result[i] = toGeneratedCard(picked, i);
+    }
+  }
+  return result;
+}
 function cheapestAvailable(pool: PlayerEval[], usedPeople: Set<string>, maxSalary: number): PlayerEval | null {
   return pool.filter(p => !usedPeople.has(p.personKey) && p.salary <= maxSalary).sort((a, b) => a.salary - b.salary)[0] ?? null;
 }
@@ -194,9 +249,11 @@ function enforceCapWithReplacement(roster: GeneratedCard[], evalPool: PlayerEval
     const candidates = posPool.filter(p => !usedPeople.has(p.personKey) && p.salary <= maxForSlot && p.salary < cur.salary);
     if (!candidates.length) break;
     candidates.sort((a, b) => b.salary - a.salary);
-    clone[idx] = toGeneratedCard(candidates[0], idx);
+    const replaced = toGeneratedCard(candidates[0], idx);
+    replaced.tier = tierFromSalary(replaced.salary, config);
+    clone[idx] = replaced;
   }
-  clone.forEach(c => { c.tier = tierFromSalary(c.salary, config); });
+  // Tier is frozen at deal time — do NOT re-tier held or existing cards
   clone.forEach((c, i) => { c.slotIndex = i; });
   return clone;
 }

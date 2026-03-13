@@ -13,7 +13,7 @@ export interface ResolvedCard extends GeneratedCard {
   achievements: Achievement[];
 }
 
-export interface ResolveConfig { fpScale: number; }
+export interface ResolveConfig { fpScale: number; minMinutes?: number; }
 
 export interface ResolveAdapter {
   computeFantasyPoints(stats: Record<string, any>): number;
@@ -24,7 +24,7 @@ export function resolveCards(cards: GeneratedCard[], logsByKey: Map<string, RawL
   let bestFp = -Infinity;
   let mvpCardId: string | undefined;
   const resolved: ResolvedCard[] = cards.map(card => {
-    const log = pickBiasedLog(card.basePlayerId, parseSeasonNum(card.season), card.tier, logsByKey, rnd);
+    const log = pickBiasedLog(card.basePlayerId, parseSeasonNum(card.season), card.tier, logsByKey, rnd, config.minMinutes ?? 8);
     const stats = log?.stats ?? {};
     // Inject _position BEFORE FP calc so positionProjectionWeights are used
     const statsWithPosition = { ...stats, _position: card.position ?? "" };
@@ -55,12 +55,29 @@ export function extractFpFromStats(stats: Record<string, any>, adapter: ResolveA
   return adapter.computeFantasyPoints(stats);
 }
 
-function pickBiasedLog(basePlayerId: string, season: number | null, tier: string, logsByKey: Map<string, RawLog[]>, rnd: () => number): RawLog | null {
+function pickBiasedLog(basePlayerId: string, season: number | null, tier: string, logsByKey: Map<string, RawLog[]>, rnd: () => number, minMinutes: number = 8): RawLog | null {
   const base = basePlayerId.trim();
   if (!base) return null;
   let candidates: RawLog[] = season !== null ? (logsByKey.get(`${base}|${season}`) ?? []) : [];
   if (!candidates.length) candidates = logsByKey.get(base) ?? [];
-  candidates = candidates.filter(l => Object.values(l.stats ?? {}).some(v => typeof v === "number" && (v as number) > 0));
+  // Filter out garbage logs:
+  // 1. Must have at least one positive stat value (all-zero = DNP or corrupt data)
+  // 2. If minutes field exists, must meet minMinutes threshold from config
+  //    (defaults to 8 if not set; basketballConfig sets 10)
+  // 3. If no minutes field, trust the stats — valid game, just missing metadata
+  const minMins = minMinutes;
+  candidates = candidates.filter(l => {
+    const stats = l.stats ?? {};
+    const hasStats = Object.values(stats).some(v => typeof v === "number" && (v as number) > 0);
+    if (!hasStats) return false;
+    const mp = stats.mp ?? stats.minutes ?? stats.min ?? stats.MIN ?? stats.minutesPlayed;
+    if (mp !== undefined && mp !== null) {
+      const mpStr = String(mp);
+      const mins = mpStr.includes(":") ? parseFloat(mpStr.split(":")[0]) : parseFloat(mpStr);
+      if (Number.isFinite(mins) && mins < minMins) return false;
+    }
+    return true;
+  });
   if (!candidates.length) return null;
   if (candidates.length === 1) return candidates[0];
   const sorted = [...candidates].sort((a, b) => sumStats(b.stats) - sumStats(a.stats));

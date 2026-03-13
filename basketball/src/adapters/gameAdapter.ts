@@ -50,7 +50,8 @@ function toPlayerEval(p: any, projByBaseId: Map<string, number>): PlayerEval {
 }
 
 export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
-  const players = getPlayers();
+  const allPlayers = getPlayers();
+  const players = allPlayers.filter((p: any) => String(p.id ?? '').includes('_2425'));
   const { projByBaseId } = buildProjections(players);
   const evalPool = players.map(p => toPlayerEval(p, projByBaseId));
 
@@ -72,7 +73,8 @@ export async function redrawRoster({
   currentCards: PlayerCard[];
   lockedCardIds: Set<string>;
 }): Promise<{ roster: PlayerCard[] }> {
-  const players = getPlayers();
+  const allPlayers = getPlayers();
+  const players = allPlayers.filter((p: any) => String(p.id ?? '').includes('_2425'));
   const { projByBaseId } = buildProjections(players);
   const evalPool = players.map(p => toPlayerEval(p, projByBaseId));
 
@@ -111,7 +113,7 @@ export async function resolveRoster({
   const { resolved, mvpCardId } = resolveCards(
     finalCards as unknown as GeneratedCard[],
     logsByKey,
-    { fpScale: 1 },
+    { fpScale: 1, minMinutes: (sportAdapter as any).config?.historicalLogFilters?.minMinutes ?? 10 },
     sportAdapter,
     rnd,
   );

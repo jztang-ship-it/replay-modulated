@@ -58,10 +58,10 @@ function salaryFromAvgFp(avgFp) {
   return Math.round(Math.min(90, Math.max(5, raw)));
 }
 function tierFromSalary(salary) {
-  if (salary >= 72) return "ORANGE";
-  if (salary >= 55) return "PURPLE";
-  if (salary >= 37) return "BLUE";
-  if (salary >= 22) return "GREEN";
+  if (salary >= 62) return "ORANGE";
+  if (salary >= 45) return "PURPLE";
+  if (salary >= 30) return "BLUE";
+  if (salary >= 20) return "GREEN";
   return "WHITE";
 }
 
