@@ -3,18 +3,18 @@
  * Re-exports shared hook with basketball-tuned RevealConfig.
  *
  * Basketball thresholds:
- *   Career Night: actual >= 1.6x projected  (legendary performance)
- *   Hot:          actual >= 1.4x projected  (on fire)
- *   Cold:         actual <= 0.75x projected (cold game)
+ *   Smoking Hot:  actual >= 1.6x projected  (elite performance)
+ *   On Fire:      actual >= 1.4x projected  (great game)
+ *   Ice Cold:     actual <= 0.8x projected  (below expectations)
+ *   Freezing:     actual <= 0.6x projected  (bust game)
  */
 export * from "@shared/hooks/useEmotionalReveal";
 export { DEFAULT_REVEAL_CONFIG as BASKETBALL_REVEAL_CONFIG } from "@shared/hooks/useEmotionalReveal";
 import type { RevealConfig } from "@shared/hooks/useEmotionalReveal";
 
 export const REVEAL_CONFIG: RevealConfig = {
-  legendaryRatio:   1.6,   // LEGENDARY   — historic performance
-  careerNightRatio: 1.4,   // CAREER NIGHT — great game
-  hotRatio:         1.2,   // ON FIRE      — above average
-  coldRatio:        0.60,  // BRICK CITY   — below expectations
-  frozenRatio:      0.40,  // ICE COLD     — bust game
+  smokingHotRatio:  1.6,   // SMOKING HOT  — elite performance
+  onFireRatio:      1.4,   // ON FIRE      — great game
+  iceColdRatio:     0.80,  // ICE COLD     — below expectations
+  freezingRatio:    0.60,  // FREEZING     — bust game
 };

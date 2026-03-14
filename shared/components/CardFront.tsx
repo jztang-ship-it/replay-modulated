@@ -189,7 +189,7 @@ export function CardFront(props: CardFrontProps) {
 
   useEffect(() => {
     if (visibleFp === undefined) { setDisplayedFp(showResults ? Number((card as any)?.actualFp ?? proj) : proj); return; }
-    if (isRevealing && !revealActive && !isHeldCard) return;
+    if (isRevealing && !revealActive && !isHeldCard && visibleFp === undefined) return;
     const target = targetFpRef.current ?? visibleFp;
     if (visibleFp > 0 && displayedFp !== target) {
       if (target === 0) { setDisplayedFp(0); setIsRolling(false); setRollComplete(true); onRollComplete?.(); return; }
@@ -330,9 +330,9 @@ export function CardFront(props: CardFrontProps) {
             left: "50%", transform: "translateX(-50%) rotate(-3deg)",
             zIndex: 40, pointerEvents: "none", whiteSpace: "nowrap",
             fontSize: 10, fontWeight: 900, letterSpacing: 2, textTransform: "uppercase",
-            color: stamp === "LEGENDARY" ? "#FF6B00" : stamp === "CAREER NIGHT" ? "#FFD700" : stamp === "BRICK CITY" ? "#F87171" : stamp === "ICE COLD" ? "#93C5FD" : "#FFD700",
-            textShadow: stamp === "LEGENDARY" ? "0 0 14px rgba(255,107,0,0.9), 0 2px 4px rgba(0,0,0,0.8)" : stamp === "CAREER NIGHT" ? "0 0 14px rgba(255,215,0,0.8), 0 2px 4px rgba(0,0,0,0.8)" : "0 0 14px rgba(125,211,252,0.6), 0 2px 4px rgba(0,0,0,0.8)",
-            border: `2px solid ${stamp === "LEGENDARY" ? "#FF6B00" : stamp === "CAREER NIGHT" ? "#FFD700" : stamp === "BRICK CITY" ? "#F87171" : "#93C5FD"}`,
+            color: stamp === "SMOKING HOT" ? "#EF4444" : stamp === "ON FIRE" ? "#FB923C" : stamp === "ICE COLD" ? "#9CA3AF" : stamp === "FREEZING" ? "#374151" : "#EF4444",
+            textShadow: stamp === "SMOKING HOT" ? "0 0 14px rgba(239,68,68,0.9), 0 2px 4px rgba(0,0,0,0.8)" : stamp === "ON FIRE" ? "0 0 14px rgba(251,146,60,0.8), 0 2px 4px rgba(0,0,0,0.8)" : "0 0 4px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.8)",
+            border: `2px solid ${stamp === "SMOKING HOT" ? "#EF4444" : stamp === "ON FIRE" ? "#FB923C" : stamp === "ICE COLD" ? "#6B7280" : "#1F2937"}`,
             borderRadius: 4, padding: "2px 7px", background: "rgba(0,0,0,0.72)",
           }}>{stamp}</div>
         )}

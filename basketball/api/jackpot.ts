@@ -1,14 +1,15 @@
 /**
- * basketball/api/jackpot.ts  (or basketball/src/api/jackpot.ts)
- * Vercel Serverless Function — handles jackpot pool read/write via KV.
+ * basketball/api/jackpot.ts
+ * Vercel serverless function — jackpot pool read/write via Vercel KV REST API.
  *
- * Deploy as: basketball/api/jackpot.ts
- * Vercel auto-routes GET/POST /api/jackpot to this handler.
+ * Routes:
+ *   GET  ?action=get              → { pool: number }
+ *   POST { action: "contribute", amount: number } → { pool: number }
+ *   POST { action: "claim" }      → { won: number, pool: number }
  *
- * Requires env vars:
- *   KV_REST_API_URL
- *   KV_REST_API_TOKEN
- * (set in Vercel dashboard → Project → Settings → Environment Variables)
+ * Env vars (set in Vercel dashboard → Project → Settings → Env Variables):
+ *   KV_REST_API_URL    — from your existing Vercel KV store
+ *   KV_REST_API_TOKEN  — from your existing Vercel KV store
  */
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
@@ -16,19 +17,18 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 const KV_URL   = process.env.KV_REST_API_URL!;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN!;
 const KV_KEY   = "jackpot:pool";
-const SEED     = 500;
+const SEED     = 12_451.29;
 
 async function kvGet(key: string): Promise<number> {
-  const res = await fetch(`${KV_URL}/get/${key}`, {
+  const r = await fetch(`${KV_URL}/get/${key}`, {
     headers: { Authorization: `Bearer ${KV_TOKEN}` },
   });
-  const data = await res.json() as { result: string | null };
-  return data.result ? parseFloat(data.result) : SEED;
+  const { result } = await r.json() as { result: string | null };
+  return result ? parseFloat(result) : SEED;
 }
 
 async function kvSet(key: string, value: number): Promise<void> {
   await fetch(`${KV_URL}/set/${key}/${value}`, {
-    method: "GET", // Vercel KV REST uses GET for set
     headers: { Authorization: `Bearer ${KV_TOKEN}` },
   });
 }
@@ -54,12 +54,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (action === "claim") {
       const won = await kvGet(KV_KEY);
-      await kvSet(KV_KEY, SEED); // reset to seed
+      await kvSet(KV_KEY, SEED);
       return res.status(200).json({ won, pool: SEED });
     }
 
     return res.status(400).json({ error: "Invalid action" });
   }
 
-  return res.status(405).json({ error: "Method not allowed" });
+  res.status(405).json({ error: "Method not allowed" });
 }

@@ -30,20 +30,18 @@ export type ShakeType = "legendary" | "big" | "hype" | "cold" | "frozen" | null;
 export type ShakeInfo = { cardId: string; type: ShakeType } | null;
 
 export interface RevealConfig {
-  legendaryRatio:   number;  /** ≥ this → LEGENDARY stamp */
-  careerNightRatio: number;  /** ≥ this → CAREER NIGHT stamp */
-  hotRatio:         number;  /** ≥ this → ON FIRE stamp */
-  coldRatio:        number;  /** ≤ this → BRICK CITY stamp */
-  frozenRatio:      number;  /** ≤ this → ICE COLD stamp */
+  smokingHotRatio:  number;  /** ≥ this → SMOKING HOT stamp */
+  onFireRatio:      number;  /** ≥ this → ON FIRE stamp */
+  iceColdRatio:     number;  /** ≤ this → ICE COLD stamp */
+  freezingRatio:    number;  /** ≤ this → FREEZING stamp */
 }
 
 /** Sensible defaults — basketball values */
 export const DEFAULT_REVEAL_CONFIG: RevealConfig = {
-  legendaryRatio:   1.6,
-  careerNightRatio: 1.4,
-  hotRatio:         1.2,
-  coldRatio:        0.60,
-  frozenRatio:      0.40,
+  smokingHotRatio:  1.6,
+  onFireRatio:      1.4,
+  iceColdRatio:     0.80,
+  freezingRatio:    0.60,
 };
 
 type Params = {
@@ -107,11 +105,10 @@ export function getShakeType(
   const actual = Number(card.actualFp ?? 0);
   if (proj <= 0) return isAnchor ? "big" : null;
   const ratio = actual / proj;
-  if (ratio >= config.legendaryRatio)   return "legendary";   // LEGENDARY   >=1.6x
-  if (ratio >= config.careerNightRatio) return "big";         // CAREER NIGHT >=1.4x
-  if (ratio >= config.hotRatio)         return "hype";        // ON FIRE      >=1.2x
-  if (ratio <= config.frozenRatio)      return "frozen";      // ICE COLD     <0.4x
-  if (ratio <= config.coldRatio)        return "cold";        // BRICK CITY   <0.6x
+  if (ratio >= config.smokingHotRatio)  return "legendary";  // SMOKING HOT  >=1.6x
+  if (ratio >= config.onFireRatio)      return "big";        // ON FIRE      >=1.4x
+  if (ratio <= config.freezingRatio)    return "frozen";     // FREEZING     <=0.6x
+  if (ratio <= config.iceColdRatio)     return "cold";       // ICE COLD     <=0.8x
   if (isAnchor)                         return "big";
   return null;
 }

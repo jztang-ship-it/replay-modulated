@@ -36,11 +36,10 @@ const LEGEND: LegendData = {
     { stat: "Turnover", pts: "-1.0" },
   ],
   stamps: [
-    { icon: "⚡", label: "LEGENDARY",   condition: "FP ≥ 160% of projection" },
-    { icon: "🌟", label: "CAREER NIGHT",condition: "FP ≥ 140% of projection" },
-    { icon: "🔥", label: "ON FIRE",     condition: "FP ≥ 120% of projection" },
-    { icon: "🧱", label: "BRICK CITY",  condition: "FP ≤ 60% of projection"  },
-    { icon: "🧊", label: "ICE COLD",    condition: "FP ≤ 40% of projection"  },
+    { icon: "🔴", label: "SMOKING HOT", condition: "FP ≥ 160% of projection" },
+    { icon: "🟠", label: "ON FIRE",     condition: "FP ≥ 140% of projection" },
+    { icon: "⬜", label: "ICE COLD",    condition: "FP ≤ 80% of projection"  },
+    { icon: "⬛", label: "FREEZING",    condition: "FP ≤ 60% of projection"  },
   ],
   badges: [
     { icon: "⚡",  label: "GOD MODE",         condition: "50+ points"            },

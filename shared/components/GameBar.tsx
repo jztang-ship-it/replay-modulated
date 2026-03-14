@@ -500,22 +500,24 @@ function LegendModal({ onClose, legend }: { onClose: () => void; legend: LegendD
                   <span style={{ fontSize: 12, fontWeight: 900, textAlign: "right", minWidth: 42, color: r.pts.startsWith("+") ? "#36D46B" : "#ef4444" }}>{r.pts}</span>
                 </div>
               ))}
+              {legend.stamps.length > 0 && (
+                <>
+                  <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, color: "rgba(255,255,255,0.35)", marginTop: 14, marginBottom: 4 }}>PERFORMANCE STAMPS</div>
+                  {legend.stamps.map(b => (
+                    <div key={b.label} style={{ display: "flex", gap: 10, alignItems: "center", padding: "7px 10px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                      <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>{b.icon}</span>
+                      <div>
+                        <span style={{ fontSize: 12, fontWeight: 900, letterSpacing: 0.8, color: "#EAF0FF" }}>{b.label}</span>
+                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginLeft: 8 }}>{b.condition}</span>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           )}
           {tab === "badges" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {legend.stamps.length > 0 && (<>
-                <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, color: "rgba(255,255,255,0.35)", marginBottom: 4 }}>STAMPS</div>
-                {legend.stamps.map(b => (
-                  <div key={b.label} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 12px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                    <span style={{ fontSize: 26, lineHeight: 1, flexShrink: 0 }}>{b.icon}</span>
-                    <div>
-                      <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: 0.8, color: "#EAF0FF", marginBottom: 3 }}>{b.label}</div>
-                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{b.condition}</div>
-                    </div>
-                  </div>
-                ))}
-              </>)}
               {legend.badges.length > 0 && (<>
                 <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, color: "rgba(255,255,255,0.35)", marginTop: 8, marginBottom: 4 }}>BADGES</div>
                 {legend.badges.map(b => (

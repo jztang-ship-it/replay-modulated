@@ -102,7 +102,7 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
 
 // ── Public types ───────────────────────────────────────────────────────────
 
-export type OverlayStamp = "LEGENDARY" | "CAREER NIGHT" | "ON FIRE" | "BRICK CITY" | "ICE COLD" | null;
+export type OverlayStamp = "SMOKING HOT" | "ON FIRE" | "ICE COLD" | "FREEZING" | null;
 
 /** Everything the shell passes into the sport's front face renderer */
 export interface CardFrontProps {
@@ -243,25 +243,21 @@ export function PlayerCardShell(props: CardShellProps) {
   }, [flipped, id, cardShakeType]);
 
   // ── Direct stamp trigger: fires when FP roll-up completes ──────────────
+  // visibleFp reaching actualFp is the reliable signal — it doesn't depend
+  // on isRevealing, revealActive, or gameState.
   const actualFp = Number((card as any).actualFp ?? 0);
   useEffect(() => {
-    console.log('[STAMP]', id, {
-      stampFired: stampFiredRef.current,
-      cardShakeType,
-      visibleFp,
-      actualFp,
-      flipped,
-    });
     if (stampFiredRef.current) return;
     if (!cardShakeType) return;
     if (visibleFp === undefined) return;
+    // visibleFp >= actualFp means roll-up is complete (or skipped)
     if (visibleFp < actualFp) return;
-    console.log('[STAMP FIRING]', id, cardShakeType);
     stampFiredRef.current = true;
     const stamp: OverlayStamp =
-      cardShakeType === "legendary" ? "LEGENDARY" :
-      cardShakeType === "big" || cardShakeType === "hype" ? "CAREER NIGHT" :
-      cardShakeType === "cold" ? "BRICK CITY" : "ICE COLD";
+      cardShakeType === "legendary" ? "SMOKING HOT" :
+      cardShakeType === "big"      ? "ON FIRE" :
+      cardShakeType === "frozen"   ? "FREEZING" :
+      cardShakeType === "cold"     ? "ICE COLD" : null;
     const next: OverlayState = { stamp, stamping: true };
     overlayMap.set(id, next);
     setOverlay(next);
