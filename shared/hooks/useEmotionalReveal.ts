@@ -55,6 +55,12 @@ type Params = {
   onAllComplete?: (totalFp: number) => void;
   /** "auto" = sequential auto-reveal (default). "tap" = user taps each card. */
   revealMode?: "auto" | "tap";
+  /**
+   * FTUE gate: called after last unheld card completes. Call the provided
+   * resume() callback when ready to start the held-card (Booker) reveal.
+   * If not provided, held reveal starts immediately.
+   */
+  onBeforeHeldReveal?: (resume: () => void) => void;
 };
 
 const ANCHOR_PRE_FLIP_PAUSE_MS = 200;
@@ -420,7 +426,11 @@ export function useEmotionalReveal(params: Params) {
       if (isLast) {
         setActiveRevealCardId(null);
         setShakeInfo(null);
-        revealHeldCards(myRunId);
+        if (params.onBeforeHeldReveal) {
+          params.onBeforeHeldReveal(() => revealHeldCards(myRunId));
+        } else {
+          revealHeldCards(myRunId);
+        }
       }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps

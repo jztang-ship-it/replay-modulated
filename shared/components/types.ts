@@ -5,4 +5,4 @@
  */
 
 /** Shake animation style for card reveal sequence */
-export type ShakeType = "big" | "hype" | "cold" | null;
+export type ShakeType = "legendary" | "big" | "hype" | "cold" | "frozen" | null;

@@ -169,7 +169,11 @@ export default function GameView() {
   const rosterRef = useRef<PlayerCard[]>([]);
   const { isFTUE } = useFTUE("basketball");
   const [legendaryCardName, setLegendaryCardName] = useState<string | undefined>();
-  const [revealIndex, setRevealIndex] = useState(0);
+  const [revealIndex, setRevealIndex]           = useState(0);
+  const [lastRevealedCardId, setLastRevealedCardId] = useState<string|null>(null);
+  const [celebrationHeld,    setCelebrationHeld]    = useState(false);
+  const pendingCelebration   = useRef<{totalFp:number}|null>(null);
+  const heldRevealResumeRef  = useRef<(() => void) | null>(null);
   const completedCardsRef = useRef<Set<string>>(new Set());
   // Near your other useState declarations in GameView.tsx
 const [streak, setStreak] = useState<number>(() =>
@@ -211,16 +215,20 @@ const [streak, setStreak] = useState<number>(() =>
     isActive: gameState === "REVEALING",
     revealMode: REVEAL_MODE,
     flipState,
+    onBeforeHeldReveal: isFTUE ? (resume) => {
+      // Store the resume fn — CoachLayer will call it after last card bubble dismissed
+      heldRevealResumeRef.current = resume;
+    } : undefined,
     onCardComplete: useCallback((cId: string) => {
       const card = rosterRef.current.find(c => cardId(c) === cId);
       if (card && !(card as any).wasHeld) {
         setRevealedSalary(prev => prev + Number((card as any).salary ?? 0));
       }
       setRevealIndex(prev => prev + 1);
+      setLastRevealedCardId(cId);
     }, []),
     onAllComplete: useCallback((totalFp: number) => {
       clearActiveCard();
-      // Fire WIN_CELEBRATION immediately — the overshoot IS the dramatic pause
       const tier = calculateWinTier(totalFp);
       const payout = calculatePayout(tier, currentBet);
       setWinTier(tier);
@@ -228,8 +236,14 @@ const [streak, setStreak] = useState<number>(() =>
       const bust = !tier || tier === "BUST";
       const badges = rosterRef.current.reduce((s,c) => s + (c.achievements?.length ?? 0), 0);
       gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
-      setGameState("WIN_CELEBRATION");
-    }, [currentBet, gameAnalytics]),
+      if (isFTUE) {
+        // In FTUE: hold celebration until Booker bubble is dismissed
+        pendingCelebration.current = { totalFp };
+        setCelebrationHeld(true);
+      } else {
+        setGameState("WIN_CELEBRATION");
+      }
+    }, [currentBet, gameAnalytics, isFTUE]),
   });
 
   // Zone 2: Derived values
@@ -240,10 +254,11 @@ const [streak, setStreak] = useState<number>(() =>
 
   // Tier color map — mirrors WIN_TIERS in basketball/GameBar.tsx
   const CELEBRATION_TIER_COLORS: Record<string, { color: string; glow: string }> = {
+    JACKPOT:  { color: "#FFD700", glow: "#FFD70099" },
     MVP:      { color: "#FB923C", glow: "#FB923C55" },
-    ALL_STAR: { color: "#60A5FA", glow: "#60A5FA55" },
-    STARTER:  { color: "#22C55E", glow: "#22C55E55" },
-    ROOKIE:   { color: "#E5E7EB", glow: "#E5E7EB33" },
+    ALL_STAR: { color: "#C084FC", glow: "#C084FC55" },
+    STARTER:  { color: "#FFD700", glow: "#FFD70055" },
+    ROOKIE:   { color: "#CD7F32", glow: "#CD7F3233" },
     BUST:     { color: "#6B7280", glow: "#6B728033" },
   };
 
@@ -345,6 +360,9 @@ const [streak, setStreak] = useState<number>(() =>
       setStatsFlippedIds(new Set());
       setMvpId(undefined);
       setRevealedSalary(0);
+      setLastRevealedCardId(null);
+      setCelebrationHeld(false);
+      pendingCelebration.current = null;
       const res: any       = isFTUE ? await dealFTUERoster() : await dealInitialRoster();
       const nextRoster     = (res?.roster ?? res?.cards ?? []) as PlayerCard[];
       rosterRef.current    = nextRoster;
@@ -559,6 +577,7 @@ const [streak, setStreak] = useState<number>(() =>
   heldRevealedIds={heldRevealedIds}
   tappedCardIds={tappedCardIds}
   isRevealingPhase={gameState === "REVEALING"}
+  ftueLockedSlot={isFTUE && gameState === "HOLD" && !heldCardIds.has("ftue-booker") ? 0 : null}
 />
 
           </div>
@@ -576,6 +595,27 @@ const [streak, setStreak] = useState<number>(() =>
             lockedCount={lockedCardIds.size}
             revealIndex={revealIndex}
             legendaryCardName={legendaryCardName}
+            lastRevealedCardId={lastRevealedCardId}
+            onResumeHeldReveal={() => {
+              // Called by CoachLayer after last non-Booker card bubble dismissed
+              const resume = heldRevealResumeRef.current;
+              heldRevealResumeRef.current = null;
+              resume?.();
+            }}
+            onCelebrationReady={() => {
+              setCelebrationHeld(false);
+              if (pendingCelebration.current) {
+                pendingCelebration.current = null;
+                setGameState("WIN_CELEBRATION");
+              }
+            }}
+            onReplay={() => {
+              setLastRevealedCardId(null);
+              setCelebrationHeld(false);
+              pendingCelebration.current = null;
+              heldRevealResumeRef.current = null;
+              handleButtonClick();
+            }}
           />
 
           <GameBar
@@ -595,6 +635,7 @@ const [streak, setStreak] = useState<number>(() =>
             onAction={handleButtonClick}
             celebration={celebrationData}
             onWinCelebrationComplete={onWinCelebrationComplete}
+            ftueDrawBlocked={isFTUE && gameState === "HOLD" && !heldCardIds.has("ftue-booker")}
           />
         </div>
       </div>

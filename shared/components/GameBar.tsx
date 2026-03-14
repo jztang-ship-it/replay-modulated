@@ -81,6 +81,8 @@ type Props = {
   celebration?: CelebrationData;
   /** Called when user taps blurred zone to exit celebration */
   onWinCelebrationComplete?: () => void;
+  /** FTUE: block the Draw button until Booker is held */
+  ftueDrawBlocked?: boolean;
 };
 
 const MULTIPLIERS = [1, 3, 5, 10];
@@ -861,6 +863,7 @@ export function GameBar({
   betMultiplier, baseBet, onBetMultiplier, onAction,
   winTiers, legend,
   celebration, onWinCelebrationComplete,
+  ftueDrawBlocked = false,
 }: Props) {
   const betLocked = gameState === "DEALING" || gameState === "DRAWING" || gameState === "REVEALING";
   const [showLegend, setShowLegend] = useState(false);
@@ -1075,18 +1078,18 @@ export function GameBar({
             <div style={{ display: "flex", justifyContent: "center", paddingTop: 10 }}>
               <button
                 onClick={onAction}
-                disabled={isDisabled(gameState)}
+                disabled={isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD")}
                 data-action={gameState === "IDLE" ? "deal" : gameState === "HOLD" ? "draw" : undefined}
                 style={{
                 width: "min(168px, 50%)",
                 borderRadius: THEME.button.action.borderRadius, border: "none",
                 padding: "11px 0",
                 fontWeight: 900, fontSize: 16, letterSpacing: 2, textTransform: "uppercase",
-                cursor: isDisabled(gameState) ? "default" : "pointer",
-                background: isDisabled(gameState) ? "rgba(255,255,255,0.10)" : actionBackground(gameState),
-                color: isDisabled(gameState) ? "rgba(255,255,255,0.35)" : actionTextColor(gameState),
-                opacity: isDisabled(gameState) ? 0.5 : 1,
-                boxShadow: isDisabled(gameState) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
+                cursor: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD")) ? "default" : "pointer",
+                background: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD")) ? "rgba(255,255,255,0.10)" : actionBackground(gameState),
+                color: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD")) ? "rgba(255,255,255,0.35)" : actionTextColor(gameState),
+                opacity: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD")) ? 0.5 : 1,
+                boxShadow: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD")) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
                 transition: "opacity 150ms ease", lineHeight: 1,
               }}>
                 {actionLabel(gameState)}

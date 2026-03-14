@@ -5,21 +5,19 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useFTUE } from "@shared/hooks/useFTUE";
 
 export default function App() {
-  const { completeFTUE } = useFTUE("basketball");
-  const isFTUE = false; // DEV: set true to test FTUE
+  const { isFTUE } = useFTUE("basketball");
 
-  // Veterans skip straight to game. First-timers see landing first.
-  const [view, setView] = useState<"landing" | "game">("game");
+  // First-timers see the landing page. Veterans skip straight to game.
+  const [view, setView] = useState<"landing" | "game">(
+    isFTUE ? "landing" : "game"
+  );
 
   return (
     <ErrorBoundary>
       {view === "landing" ? (
         <LandingPage onPlay={() => setView("game")} />
       ) : (
-        <GameView
-          isFTUE={isFTUE}
-          onFTUEComplete={completeFTUE}
-        />
+        <GameView />
       )}
     </ErrorBoundary>
   );

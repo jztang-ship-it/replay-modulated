@@ -1,46 +1,49 @@
 /**
- * ftueRoster.ts
- * Fully deterministic FTUE hand — hardcoded players + specific historical game logs.
- * FP is fixed every time so we can engineer a near-miss outcome.
+ * ftueRoster.ts — Deterministic FTUE using real 2024-25 NBA data
  *
- * FTUE hand design:
- *   Slot 0 — LeBron James     (ORANGE, held) — career night
- *   Slot 1 — Stephen Curry    (PURPLE, held) — on fire
- *   Slot 2 — Kevin Durant     (PURPLE, held) — strong game
- *   Slot 3 — Seth Curry       (BLUE,  swap)  — decent game (non-held)
- *   Slot 4 — Darius Garland   (BLUE,  swap)  — decent game (non-held)
- *   Slot 5 — Jalen Green      (GREEN, swap)  — average game (non-held)
+ * Tier thresholds (runtime, from economyEngine.ts):
+ *   ORANGE >= $52 | PURPLE >= $40 | BLUE >= $28 | GREEN >= $16 | WHITE < $16
+ * Cap: $200 | Min spend: $191
  *
- * After draw the three non-held slots get replaced by:
- *   Slot 3 — Tyrese Haliburton (BLUE)  — solid game
- *   Slot 4 — Jordan Clarkson   (GREEN) — average game
- *   Slot 5 — Matt Ryan         (WHITE) — minimal game
+ * LINEUP 1 (deal hand) — $200:
+ *   Booker $59 ORANGE  <- HOLD (anchor, coach guides user here)
+ *   LaMelo $57 ORANGE, Jrue $34 BLUE, Caruso $27 BLUE, Lowry $18 GREEN, Ingles $5 WHITE  <- swap
  *
- * Total FP (held LeBron+Curry+Durant) ≈ 89+52+48 = 189 → near-miss on ROOKIE tier (180+).
- * With replacement cards adding ≈ 42+22+12 = 76 → total ≈ 265 → lands in STARTER tier.
+ * LINEUP 2 (drawn hand) — $200:
+ *   Booker $59 ORANGE  <- was held
+ *   Westbrook $41 PURPLE, CP3 $36 BLUE, Klay $33 BLUE, K.Love $22 GREEN, Patty $9 WHITE  <- drawn
+ *
+ * Zero player overlap between swap slots and drawn slots. Booker is the only constant.
+ * All game logs are real 2024-25 season entries from game-logs.json.
  */
 
 import type { GeneratedCard } from "@shared/types";
 
-// Convenience alias
-type TierColor = "ORANGE"|"PURPLE"|"BLUE"|"GREEN"|"WHITE";
+type TierColor = "ORANGE" | "PURPLE" | "BLUE" | "GREEN" | "WHITE";
 
-// ── Helper to build a complete GeneratedCard ────────────────────────────────────
-function makeCard(overrides: {
-  cardId: string; basePlayerId: string; name: string; team: string;
-  position: string; tier: TierColor; salary: number;
-  projectedFp: number; actualFp: number;
-  date: string; opponent: string; homeAway: "H"|"A";
-  statLine: Record<string, number|string>;
-  achievements?: Array<{ id:string; icon:string; label:string; fp:number }>;
+function makeCard(o: {
+  cardId: string;
+  basePlayerId: string;
+  name: string;
+  team: string;
+  position: string;
+  tier: TierColor;
+  salary: number;
+  projectedFp: number;
+  actualFp: number;
+  date: string;
+  opponent: string;
+  homeAway: "H" | "A";
+  statLine: Record<string, number>;
+  achievements?: Array<{ id: string; icon: string; label: string; fp: number }>;
   slotIndex: number;
 }): GeneratedCard {
-  const { achievements = [], ...rest } = overrides;
+  const { achievements = [], ...rest } = o;
   return {
     ...rest,
-    id: rest.cardId,           // PlayerEval.id
-    personKey: rest.basePlayerId, // PlayerEval.personKey
-    season: "2023-24",
+    id: rest.cardId,
+    personKey: rest.basePlayerId,
+    season: "2024-25",
     fpDelta: rest.actualFp - rest.projectedFp,
     gameInfo: { date: rest.date, opponent: rest.opponent, homeAway: rest.homeAway },
     wasHeld: false,
@@ -48,112 +51,184 @@ function makeCard(overrides: {
   } as unknown as GeneratedCard;
 }
 
-// ── DEAL hand (6 cards shown to user) ───────────────────────────────────────
+// ─── LINEUP 1 (Deal hand) ────────────────────────────────────────────────────
+// $200 total. Coach guides user to hold Booker. All others are swap candidates.
+
 export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
-  const roster: GeneratedCard[] = [
-    makeCard({
-      cardId: "ftue-lebron", basePlayerId: "2544", name: "L. James",
-      team: "LAL", position: "SF", tier: "ORANGE", salary: 68, slotIndex: 0,
-      projectedFp: 72, actualFp: 89.5,
-      date: "2024-03-03", opponent: "GSW", homeAway: "H",
-      statLine: { PTS:40, REB:10, AST:9, STL:2, BLK:1, TO:3 },
-      achievements: [
-        { id:"pts-40", icon:"🔥", label:"40-Point Game", fp:8 },
-        { id:"td",     icon:"🎯", label:"Triple-Double", fp:5 },
-      ],
-    }),
-    makeCard({
-      cardId: "ftue-curry", basePlayerId: "201939", name: "S. Curry",
-      team: "GSW", position: "PG", tier: "PURPLE", salary: 52, slotIndex: 1,
-      projectedFp: 48, actualFp: 52.4,
-      date: "2024-03-03", opponent: "LAL", homeAway: "A",
-      statLine: { PTS:31, REB:5, AST:7, STL:2, BLK:0, TO:2 },
-      achievements: [
-        { id:"pts-30", icon:"⭐", label:"30-Point Game", fp:4 },
-      ],
-    }),
-    makeCard({
-      cardId: "ftue-durant", basePlayerId: "35", name: "K. Durant",
-      team: "PHX", position: "SF", tier: "PURPLE", salary: 48, slotIndex: 2,
-      projectedFp: 45, actualFp: 48.2,
-      date: "2024-02-28", opponent: "DEN", homeAway: "H",
-      statLine: { PTS:28, REB:8, AST:5, STL:1, BLK:2, TO:2 },
-    }),
-    makeCard({
-      cardId: "ftue-seth", basePlayerId: "1628384", name: "S. Curry",
-      team: "DAL", position: "SG", tier: "BLUE", salary: 28, slotIndex: 3,
-      projectedFp: 24, actualFp: 26.1,
-      date: "2024-02-25", opponent: "MEM", homeAway: "H",
-      statLine: { PTS:18, REB:4, AST:2, STL:1, BLK:0, TO:1 },
-    }),
-    makeCard({
-      cardId: "ftue-garland", basePlayerId: "1629636", name: "D. Garland",
-      team: "CLE", position: "PG", tier: "BLUE", salary: 30, slotIndex: 4,
-      projectedFp: 28, actualFp: 29.8,
-      date: "2024-02-27", opponent: "MIL", homeAway: "A",
-      statLine: { PTS:22, REB:3, AST:8, STL:1, BLK:0, TO:2 },
-    }),
-    makeCard({
-      cardId: "ftue-jgreen", basePlayerId: "1631105", name: "J. Green",
-      team: "HOU", position: "SG", tier: "GREEN", salary: 18, slotIndex: 5,
-      projectedFp: 18, actualFp: 19.3,
-      date: "2024-02-26", opponent: "SAC", homeAway: "H",
-      statLine: { PTS:14, REB:4, AST:2, STL:0, BLK:1, TO:1 },
-    }),
-  ];
-  return { roster };
+  return {
+    roster: [
+
+      // Slot 0 — Devin Booker | ORANGE $59 | HOLD
+      // LEGENDARY (2.25x proj) — 61pts 10reb 7ast monster game
+      // Badges: GOD_MODE + GLASS + DIME + PICKPOCKET + DOUBLE_DBL | FP=90.1
+      makeCard({
+        cardId: "ftue-booker", basePlayerId: "1626164",
+        name: "D. Booker", team: "PHX", position: "SG",
+        tier: "ORANGE", salary: 59, slotIndex: 0,
+        projectedFp: 40, actualFp: 90.1,
+        date: "2025-03-17", opponent: "TOR", homeAway: "H",
+        statLine: { pts: 61, reb: 10, ast: 7, stl: 3, blk: 1, turnovers: 1, min: 42 },
+        achievements: [
+          { id: "GOD_MODE",   icon: "👑", label: "God Mode",      fp: 10 },
+          { id: "GLASS",      icon: "🧲", label: "Glass",         fp: 3  },
+          { id: "DIME",       icon: "🧠", label: "Dime",          fp: 3  },
+          { id: "PICKPOCKET", icon: "👀", label: "Pickpocket",    fp: 2  },
+          { id: "DOUBLE_DBL", icon: "✌️", label: "Double Double", fp: 2  },
+        ],
+      }),
+
+      // Slot 1 — LaMelo Ball | ORANGE $57 | swap
+      // 2025-01-22 vs MEM (A) — 22pts solid but coach nudges user toward Booker
+      makeCard({
+        cardId: "ftue-lamelo", basePlayerId: "1630163",
+        name: "L. Ball", team: "CHA", position: "PG",
+        tier: "ORANGE", salary: 57, slotIndex: 1,
+        projectedFp: 39, actualFp: 38.6,
+        date: "2025-01-22", opponent: "MEM", homeAway: "A",
+        statLine: { pts: 22, reb: 8, ast: 6, stl: 0, blk: 0, turnovers: 2, min: 34 },
+      }),
+
+      // Slot 2 — Jrue Holiday | BLUE $34 | swap
+      // 2025-01-15 vs TOR (A) — decent but unremarkable
+      makeCard({
+        cardId: "ftue-jrue", basePlayerId: "201950",
+        name: "J. Holiday", team: "BOS", position: "SG",
+        tier: "BLUE", salary: 34, slotIndex: 2,
+        projectedFp: 23, actualFp: 23.2,
+        date: "2025-01-15", opponent: "TOR", homeAway: "A",
+        statLine: { pts: 12, reb: 6, ast: 2, stl: 1, blk: 0, turnovers: 1, min: 31 },
+      }),
+
+      // Slot 3 — Alex Caruso | BLUE $27 | swap
+      // 2024-11-08 vs HOU (H) — limited minutes
+      makeCard({
+        cardId: "ftue-caruso", basePlayerId: "1627936",
+        name: "A. Caruso", team: "OKC", position: "SG",
+        tier: "BLUE", salary: 27, slotIndex: 3,
+        projectedFp: 18, actualFp: 18.3,
+        date: "2024-11-08", opponent: "HOU", homeAway: "H",
+        statLine: { pts: 10, reb: 4, ast: 1, stl: 1, blk: 0, turnovers: 0, min: 14 },
+      }),
+
+      // Slot 4 — Kyle Lowry | GREEN $18 | swap
+      // 2024-10-27 vs IND (A) — quiet veteran game
+      makeCard({
+        cardId: "ftue-lowry", basePlayerId: "200768",
+        name: "K. Lowry", team: "PHI", position: "PG",
+        tier: "GREEN", salary: 18, slotIndex: 4,
+        projectedFp: 12, actualFp: 12.2,
+        date: "2024-10-27", opponent: "IND", homeAway: "A",
+        statLine: { pts: 6, reb: 1, ast: 2, stl: 1, blk: 0, turnovers: 0, min: 17 },
+      }),
+
+      // Slot 5 — Joe Ingles | WHITE $5 | swap
+      // 2025-02-10 vs CLE (A) — garbage time minutes
+      makeCard({
+        cardId: "ftue-ingles", basePlayerId: "204060",
+        name: "J. Ingles", team: "ORL", position: "SF",
+        tier: "WHITE", salary: 5, slotIndex: 5,
+        projectedFp: 6, actualFp: 5.2,
+        date: "2025-02-10", opponent: "CLE", homeAway: "A",
+        statLine: { pts: 0, reb: 1, ast: 2, stl: 1, blk: 0, turnovers: 1, min: 15 },
+      }),
+
+    ],
+  };
 }
 
-// ── REDRAW (replace non-held slots) ─────────────────────────────────────────
+// ─── LINEUP 2 (Drawn hand) ───────────────────────────────────────────────────
+// Booker held ($59) + 5 completely fresh drawn cards = $200 total.
+// Zero overlap with Lineup 1 swap slots.
+
+const DRAWN: Record<number, () => GeneratedCard> = {
+
+  // Slot 1 → Russell Westbrook | PURPLE $41 | drawn
+  // Normal (0.97x proj) — solid but unremarkable
+  // 11pts 6reb 7ast 1stl 0blk 2tov → FP=28.0
+  1: () => makeCard({
+    cardId: "ftue-westbrook", basePlayerId: "201566",
+    name: "R. Westbrook", team: "DEN", position: "PG",
+    tier: "PURPLE", salary: 41, slotIndex: 1,
+    projectedFp: 29, actualFp: 28.0,
+    date: "2024-12-28", opponent: "DET", homeAway: "H",
+    statLine: { pts: 11, reb: 6, ast: 7, stl: 1, blk: 0, turnovers: 2, min: 28 },
+  }),
+
+  // Slot 2 → Chris Paul | BLUE $36 | drawn
+  // CAREER NIGHT (1.46x proj) — 10ast DIME game
+  // 16pts 2reb 10ast 2stl 0blk 1tov → FP=36.4
+  2: () => makeCard({
+    cardId: "ftue-cp3", basePlayerId: "101108",
+    name: "C. Paul", team: "SAS", position: "PG",
+    tier: "BLUE", salary: 36, slotIndex: 2,
+    projectedFp: 25, actualFp: 36.4,
+    date: "2025-01-25", opponent: "IND", homeAway: "A",
+    statLine: { pts: 16, reb: 2, ast: 10, stl: 2, blk: 0, turnovers: 1, min: 30 },
+    achievements: [
+      { id: "DIME", icon: "🧠", label: "Dime", fp: 3 },
+    ],
+  }),
+
+  // Slot 3 → Klay Thompson | BLUE $33 | drawn
+  // ICE COLD (0.32x proj) — off night, barely played
+  // 6pts 2reb 0ast 0stl 0blk 1tov → FP=7.4
+  3: () => makeCard({
+    cardId: "ftue-klay", basePlayerId: "202691",
+    name: "K. Thompson", team: "DAL", position: "SG",
+    tier: "BLUE", salary: 33, slotIndex: 3,
+    projectedFp: 23, actualFp: 7.4,
+    date: "2025-02-21", opponent: "NOP", homeAway: "H",
+    statLine: { pts: 6, reb: 2, ast: 0, stl: 0, blk: 0, turnovers: 1, min: 22 },
+  }),
+
+  // Slot 4 → Kevin Love | GREEN $22 | drawn
+  // BRICK CITY (0.54x proj) — cold shooting, turnovers
+  // 5pts 3reb 1ast 0stl 0blk 2tov → FP=8.1
+  4: () => makeCard({
+    cardId: "ftue-klove", basePlayerId: "201567",
+    name: "K. Love", team: "CLE", position: "PF",
+    tier: "GREEN", salary: 22, slotIndex: 4,
+    projectedFp: 15, actualFp: 8.1,
+    date: "2024-11-29", opponent: "TOR", homeAway: "H",
+    statLine: { pts: 5, reb: 3, ast: 1, stl: 0, blk: 0, turnovers: 2, min: 12 },
+  }),
+
+  // Slot 5 → Patty Mills | WHITE $9 | drawn
+  // Normal game — veteran bench minutes
+  // 9pts 1reb 1ast 1stl 0blk 3tov → FP=10.7
+  5: () => makeCard({
+    cardId: "ftue-patty", basePlayerId: "201988",
+    name: "P. Mills", team: "ATL", position: "PG",
+    tier: "WHITE", salary: 9, slotIndex: 5,
+    projectedFp: 10, actualFp: 10.7,
+    date: "2024-10-31", opponent: "SAS", homeAway: "H",
+    statLine: { pts: 9, reb: 1, ast: 1, stl: 1, blk: 0, turnovers: 3, min: 16 },
+  }),
+
+};
+
 export async function redrawFTUERoster(params: {
   currentCards: GeneratedCard[];
   lockedCardIds: Set<string>;
-}): Promise<{ roster: GeneratedCard[] }> {
+}): Promise<{ roster: GeneratedCard[]; mvpCardId?: string }> {
   const { currentCards, lockedCardIds } = params;
 
-  // Replacement cards for the three non-held slots
-  const replacements: Record<number, GeneratedCard> = {
-    3: makeCard({
-      cardId: "ftue-hali", basePlayerId: "1630169", name: "T. Haliburton",
-      team: "IND", position: "PG", tier: "BLUE", salary: 32, slotIndex: 3,
-      projectedFp: 35, actualFp: 42.1,
-      date: "2024-03-01", opponent: "BOS", homeAway: "H",
-      statLine: { PTS:24, REB:4, AST:12, STL:2, BLK:0, TO:2 },
-    }),
-    4: makeCard({
-      cardId: "ftue-clarkson", basePlayerId: "203458", name: "J. Clarkson",
-      team: "UTA", position: "SG", tier: "GREEN", salary: 20, slotIndex: 4,
-      projectedFp: 20, actualFp: 22.3,
-      date: "2024-03-01", opponent: "OKC", homeAway: "A",
-      statLine: { PTS:17, REB:3, AST:3, STL:1, BLK:0, TO:1 },
-    }),
-    5: makeCard({
-      cardId: "ftue-mryann", basePlayerId: "1631257", name: "M. Ryan",
-      team: "ATL", position: "SF", tier: "WHITE", salary: 10, slotIndex: 5,
-      projectedFp: 10, actualFp: 12.2,
-      date: "2024-02-29", opponent: "CHA", homeAway: "H",
-      statLine: { PTS:9, REB:3, AST:1, STL:0, BLK:0, TO:0 },
-    }),
-  };
-
   const roster = currentCards.map((card, idx) => {
-    if (lockedCardIds.has(card.cardId)) {
-      return { ...card, wasHeld: true };
-    }
-    const replacement = replacements[idx];
-    if (replacement) return { ...replacement, slotIndex: idx, wasHeld: false };
+    const cId = String((card as any).cardId ?? (card as any).basePlayerId ?? "");
+    if (lockedCardIds.has(cId)) return { ...card, wasHeld: true };
+    const rep = DRAWN[idx];
+    if (rep) return { ...rep(), slotIndex: idx, wasHeld: false };
     return { ...card, wasHeld: false };
   });
 
   return { roster };
 }
 
-// ── RESOLVE (populate actual FP — already hardcoded, just return as-is) ──────
 export async function resolveFTUERoster(params: {
   finalCards: GeneratedCard[];
 }): Promise<{ roster: GeneratedCard[]; mvpCardId: string }> {
   return {
     roster: params.finalCards,
-    mvpCardId: "ftue-lebron",
+    mvpCardId: "ftue-booker",
   };
 }

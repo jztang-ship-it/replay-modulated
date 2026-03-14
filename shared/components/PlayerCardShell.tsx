@@ -219,42 +219,62 @@ export function PlayerCardShell(props: CardShellProps) {
   }, [card, id]);
 
   // ── Overlay / stamp state machine ─────────────────────────────────────
+  // Strategy: fire the stamp as soon as visibleFp reaches actualFp AND
+  // cardShakeType is known. This bypasses the onRollComplete callback chain
+  // which races against gameState changing (REVEALING → WIN_CELEBRATION).
   const [overlay, setOverlay]    = useState<OverlayState>({ stamp: null, stamping: false });
-  const latchedShakeType         = useRef<ShakeType>(null);
+  const stampFiredRef            = useRef(false);
   const rollCompleteFiredRef     = useRef(false);
 
+  // Reset when card identity changes
   useEffect(() => {
     setOverlay({ stamp: null, stamping: false });
-    latchedShakeType.current = null;
+    stampFiredRef.current = false;
     rollCompleteFiredRef.current = false;
   }, [id]);
 
+  // Clear stamp when card returns to pre-reveal state
   useEffect(() => {
-    if (!isRevealing || !cardShakeType || latchedShakeType.current) return;
-    latchedShakeType.current = cardShakeType;
-  }, [cardShakeType, isRevealing]);
-
-  useEffect(() => {
-    if (!flipped && !cardShakeType && !latchedShakeType.current) {
+    if (!flipped && !cardShakeType) {
       overlayMap.delete(id);
       setOverlay({ stamp: null, stamping: false });
+      stampFiredRef.current = false;
     }
   }, [flipped, id, cardShakeType]);
 
-  const handleRollComplete = useCallback(() => {
-    const shake = latchedShakeType.current ?? cardShakeType ?? null;
-    if (!shake) {
-      if (!rollCompleteFiredRef.current) {
-        rollCompleteFiredRef.current = true;
-        props.onRollComplete?.();
-      }
-      return;
-    }
-    const stamp: OverlayStamp = shake === "legendary" ? "LEGENDARY" : shake === "big" || shake === "hype" ? "CAREER NIGHT" : shake === "cold" ? "BRICK CITY" : "ICE COLD";
+  // ── Direct stamp trigger: fires when FP roll-up completes ──────────────
+  const actualFp = Number((card as any).actualFp ?? 0);
+  useEffect(() => {
+    console.log('[STAMP]', id, {
+      stampFired: stampFiredRef.current,
+      cardShakeType,
+      visibleFp,
+      actualFp,
+      flipped,
+    });
+    if (stampFiredRef.current) return;
+    if (!cardShakeType) return;
+    if (visibleFp === undefined) return;
+    if (visibleFp < actualFp) return;
+    console.log('[STAMP FIRING]', id, cardShakeType);
+    stampFiredRef.current = true;
+    const stamp: OverlayStamp =
+      cardShakeType === "legendary" ? "LEGENDARY" :
+      cardShakeType === "big" || cardShakeType === "hype" ? "CAREER NIGHT" :
+      cardShakeType === "cold" ? "BRICK CITY" : "ICE COLD";
     const next: OverlayState = { stamp, stamping: true };
     overlayMap.set(id, next);
     setOverlay(next);
-  }, [id, cardShakeType]);
+  }, [visibleFp, cardShakeType, id, actualFp]);
+
+  // Legacy onRollComplete path (kept for non-stamped cards)
+  const handleRollComplete = useCallback(() => {
+    if (rollCompleteFiredRef.current) return;
+    rollCompleteFiredRef.current = true;
+    if (!cardShakeType) {
+      props.onRollComplete?.();
+    }
+  }, [id, cardShakeType]); // eslint-disable-line
 
   useEffect(() => {
     if (overlay.stamping) {

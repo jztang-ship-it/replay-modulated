@@ -68,6 +68,8 @@ type Props = {
   shakingCardId?: string | null;
   shakeType?: ShakeType | null;
   cardShakeTypeMap?: Map<string, ShakeType | null>;
+  /** FTUE: slot indices to dim (all except Booker at slot 0) */
+  ftueDimmedSlots?: Set<number>;
   visibleBadgesMap?: Map<string, Array<{ id: string; icon: string; label: string; fp: number }>>;
   activeRevealCardId?: string | null;
   canFlip: boolean;
@@ -82,6 +84,7 @@ type Props = {
   heldRevealedIds?: Set<string>;
   tappedCardIds?: Set<string>;
   isRevealingPhase?: boolean;  // true when gameState === "REVEALING"
+  ftueLockedSlot?: number | null;  // FTUE: slot index that stays lit; all others dim
 };
 
 export function RosterGrid(props: Props) {
@@ -91,8 +94,8 @@ export function RosterGrid(props: Props) {
     flippedIds, revealingIds, noTransition,
     visibleFpMap, canFlip, onToggleLock, onToggleFlip,
     flipMsMap, fpCountUpMsMap, performanceTagMap, pulseMap,
-    shakingCardId, shakeType, cardShakeTypeMap, visibleBadgesMap, activeRevealCardId,
-    revealMode = "auto", onTapReveal, heldFpVisible = false, heldRevealedIds, tappedCardIds, isRevealingPhase = false,
+    shakingCardId, shakeType, cardShakeTypeMap, visibleBadgesMap, activeRevealCardId, ftueDimmedSlots,
+    revealMode = "auto", onTapReveal, heldFpVisible = false, heldRevealedIds, tappedCardIds, isRevealingPhase = false, ftueLockedSlot = null,
   } = props;
 
   const cards = useMemo(() => {
@@ -100,7 +103,7 @@ export function RosterGrid(props: Props) {
   }, [roster]);
 
   return (
-    <div style={{
+    <div className="roster-grid" style={{
       height: "100%", width: "100%",
       display: "grid",
       gridTemplateColumns: `repeat(${columns}, 1fr)`,
@@ -133,8 +136,11 @@ export function RosterGrid(props: Props) {
         const thisHeldRevealed = wasHeld && (heldRevealedIds?.has(id) ?? false);
         const showHeldFp     = thisHeldRevealed;
         // In tap mode, visibleFp for held card: undefined until revealed
+        // For held cards: only pass visibleFp once the rollup has actually set it
+        // (visibleFpMap value). Do NOT fall back to card.actualFp — that would
+        // make visibleFp === actualFp immediately and fire the stamp before rollup.
         const effectiveFp    = wasHeld
-          ? (thisHeldRevealed ? visibleFp ?? Number((card as any).actualFp ?? 0) : undefined)
+          ? (thisHeldRevealed ? visibleFp : undefined)
           : visibleFp;
 
         const handleTap = (e: React.MouseEvent) => {
@@ -147,6 +153,8 @@ export function RosterGrid(props: Props) {
         return (
           <div
             key={card.slotIndex ?? id}
+            className="card-slot"
+            data-slot={card.slotIndex ?? 0}
             onClick={handleTap}
             style={{
               minHeight: 0, position: "relative", borderRadius: 18,
@@ -156,7 +164,11 @@ export function RosterGrid(props: Props) {
               cursor: isTapTarget ? "pointer" : "default",
               // Subtle pulse ring on tappable cards
               boxShadow: isTapTarget ? "0 0 0 2px rgba(255,255,255,0.25)" : "none",
-              transition: "box-shadow 300ms ease",
+              transition: "box-shadow 300ms ease, opacity 0.3s ease, filter 0.3s ease",
+              // FTUE hold-phase dim: only the locked slot stays bright
+              ...(ftueLockedSlot !== null && (card.slotIndex ?? 0) !== ftueLockedSlot
+                ? { opacity: 0.18, filter: "brightness(0.4)", pointerEvents: "none" as const }
+                : {}),
             }}
           >
             <CardComponent

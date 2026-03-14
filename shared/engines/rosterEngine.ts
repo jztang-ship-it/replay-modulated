@@ -96,7 +96,7 @@ export function generateRoster(evalPool: PlayerEval[], config: RosterConfig, eco
   const filled = roster.filter(Boolean) as GeneratedCard[];
   const arranged = arrangeAnchors(filled, slotRequirements);
   const result = enforceCapWithReplacement(arranged, evalPool, byPos, slotRequirements, economyConfig, rnd);
-  const guaranteed = guaranteeTierFloor(result, evalPool, economyConfig, rnd);
+  const guaranteed = guaranteeTierFloor(result, evalPool, economyConfig, rnd, []);
   const finalTotal = totalSalary(guaranteed.map(c => c.salary));
   if (finalTotal > cap) console.warn(`[RosterEngine] CAP BREACH: $${finalTotal} > $${cap}`);
   return guaranteed;
@@ -130,9 +130,9 @@ export function redrawRoster(current: GeneratedCard[], heldSlots: Set<number>, e
   return guaranteeTierFloor(afterCap, evalPool, economyConfig, rnd, heldMask);
 }
 
-function guaranteeTierFloor(roster, evalPool, economyConfig, rnd, heldMask) {
-  const orangeMin = economyConfig.tierThresholds.find(t => t.tier === "ORANGE")?.minSalary ?? 52;
-  const purpleMin = economyConfig.tierThresholds.find(t => t.tier === "PURPLE")?.minSalary ?? 40;
+function guaranteeTierFloor(roster: GeneratedCard[], evalPool: PlayerEval[], economyConfig: EconomyConfig, rnd: () => number, heldMask: boolean[]) {
+  const orangeMin = economyConfig.tierThresholds.find((t: any) => t.tier === "ORANGE")?.minSalary ?? 52;
+  const purpleMin = economyConfig.tierThresholds.find((t: any) => t.tier === "PURPLE")?.minSalary ?? 40;
   const cap = economyConfig.capMax;
   const minSpend = cap - 6;
   const result = [...roster];
@@ -143,11 +143,11 @@ function guaranteeTierFloor(roster, evalPool, economyConfig, rnd, heldMask) {
   function getHeadroom() {
     return cap - totalSalary(result.map(c => c.salary));
   }
-  function tryUpgrade(targetMin) {
+  function tryUpgrade(targetMin: number) {
     for (const { i, c } of getSwappable()) {
       if (c.salary >= targetMin) continue;
       const budget = c.salary + getHeadroom();
-      const upgrades = evalPool.filter(p => (!usedPeople.has(p.personKey) || p.personKey === c.personKey) && p.salary >= targetMin && p.salary <= budget).sort((a, b) => b.salary - a.salary);
+      const upgrades = evalPool.filter((p: any) => (!usedPeople.has(p.personKey) || p.personKey === c.personKey) && p.salary >= targetMin && p.salary <= budget).sort((a: any, b: any) => b.salary - a.salary);
       if (!upgrades.length) continue;
       const excl = new Set([...usedPeople].filter(k => k !== c.personKey));
       const picked = pickWeightedRandom(upgrades, excl, rnd) ?? upgrades[0];
@@ -171,7 +171,7 @@ function guaranteeTierFloor(roster, evalPool, economyConfig, rnd, heldMask) {
     for (const { i, c } of sorted) {
       if (spendTotal >= minSpend) break;
       const gap = minSpend - spendTotal;
-      const upgrades = evalPool.filter(p => (!usedPeople.has(p.personKey) || p.personKey === c.personKey) && p.salary > c.salary && p.salary <= c.salary + gap).sort((a, b) => b.salary - a.salary);
+      const upgrades = evalPool.filter((p: any) => (!usedPeople.has(p.personKey) || p.personKey === c.personKey) && p.salary > c.salary && p.salary <= c.salary + gap).sort((a: any, b: any) => b.salary - a.salary);
       if (!upgrades.length) continue;
       const excl = new Set([...usedPeople].filter(k => k !== c.personKey));
       const picked = pickWeightedRandom(upgrades, excl, rnd) ?? upgrades[0];

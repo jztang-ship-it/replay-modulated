@@ -10,22 +10,14 @@ interface Props {
   revealIndex?: number;
   legendaryCardName?: string;
   lesson?: CoachLesson;
-}
-
-// ─── Inline styled chips ─────────────────────────────────────────────────────
-// These visually mirror the real Deal / Draw buttons so the user knows exactly
-// what to tap.
-
-function DealChip() {
-  return (
-    <span style={{
-      display: "inline-block", padding: "2px 10px",
-      background: "linear-gradient(135deg,#4B9EE8,#2B7EC8)",
-      color: "#fff", borderRadius: 4,
-      fontWeight: 900, fontSize: 14, letterSpacing: ".12em",
-      textTransform: "uppercase", verticalAlign: "middle", lineHeight: 1.5,
-    }}>DEAL</span>
-  );
+  /** cardId of the most recently completed card reveal */
+  lastRevealedCardId?: string | null;
+  /** Call this after the last non-Booker card bubble is dismissed to start Booker reveal */
+  onResumeHeldReveal?: () => void;
+  /** Call this after Booker bubble is dismissed to trigger WIN_CELEBRATION */
+  onCelebrationReady?: () => void;
+  /** Call this when user taps Replay to enter the real game */
+  onReplay?: () => void;
 }
 
 function DrawChip() {
@@ -40,153 +32,226 @@ function DrawChip() {
   );
 }
 
-// ─── Bubble content map ──────────────────────────────────────────────────────
-type BubbleId = "idle"|"hold"|"draw_pending"|"legendary"|"results";
-type Pulse    = "deal"|"draw"|null;
+function DealChip() {
+  return (
+    <span style={{
+      display: "inline-block", padding: "2px 10px",
+      background: "linear-gradient(135deg,#4B9EE8,#2B7EC8)",
+      color: "#fff", borderRadius: 4,
+      fontWeight: 900, fontSize: 14, letterSpacing: ".12em",
+      textTransform: "uppercase", verticalAlign: "middle", lineHeight: 1.5,
+    }}>DEAL</span>
+  );
+}
 
-const BUBBLE_CONTENT: Record<BubbleId, () => React.ReactNode> = {
-  idle: () => (
-    <span>Hit <DealChip /> to see<br />what players you got.</span>
-  ),
-  hold: () => (
+type Pulse = "deal" | "draw" | null;
+
+// Per-card bubbles — keyed by cardId
+const CARD_BUBBLES: Record<string, React.ReactNode> = {
+  "ftue-westbrook": (
     <span>
-      Interesting lineup. Tap to hold<br />
-      players you trust, then hit <DrawChip /><br />
-      for replacements.
+      Westbrook put in a solid shift — nothing flashy, just steady work.
+      That's what you want from a reliable piece of your lineup.&nbsp;💪
     </span>
   ),
-  draw_pending: () => (
+  "ftue-cp3": (
     <span>
-      Unheld players will be<br />
-      randomly replaced. Tap each<br />
-      card to see the result.
+      <strong style={{ color: "#FFD700" }}>Career Night!</strong> That means
+      CP3 outperformed his expected fantasy points —
+      a masterclass in running the offense.&nbsp;🧠
     </span>
   ),
-  legendary: () => null, // built dynamically with the player name
-  results: () => (
+  "ftue-klay": (
     <span>
-      You're on a streak. Two more<br />
-      wins and you get a special reward.&nbsp;🔥
+      Splash Brother no more… not the best night for Klay.
+      Ice cold from the field and it really hurt your squad.&nbsp;🧊
+    </span>
+  ),
+  "ftue-klove": (
+    <span>
+      Yikes. A game K.Love would love to forget — and so would you.
+      He sure didn't help your team tonight.&nbsp;😬
+    </span>
+  ),
+  // ftue-patty: intentionally omitted — no bubble
+  "ftue-booker": (
+    <span>
+      <strong style={{ color: "#FF6B00" }}>DEVIN the killing machine!</strong>{" "}
+      He absolutely carried your team's performance tonight.
+      Be legendary.&nbsp;🔥
     </span>
   ),
 };
 
-const AFTER_DISMISS: Record<BubbleId, Pulse> = {
-  idle:         "deal",
-  hold:         "draw",
-  draw_pending: null,
-  legendary:    null,
-  results:      null,
-};
+// Which cards are "last non-Booker" — i.e. Patty is last tappable, Klay second-last, etc.
+// We need to know: is this card the last one BEFORE Booker?
+// We detect this by checking if onResumeHeldReveal is pending when we dismiss.
+type PostPhase = "none" | "booker" | "streak_collect" | "runback";
 
 export function CoachLayer({
-  isFTUE, gameState, legendaryCardName,
+  isFTUE, gameState,
+  lastRevealedCardId,
+  onResumeHeldReveal, onCelebrationReady,
 }: Props) {
-  const [visible,      setVisible]      = useState(false);
-  const [content,      setContent]      = useState<React.ReactNode>(null);
-  const [animKey,      setAnimKey]      = useState(0);
-  // blocksInput: true while a bubble is pending or showing — swallows card taps
-  const [blocksInput,  setBlocksInput]  = useState(false);
-  const [pulsing,      setPulsing]      = useState<Pulse>(null);
+  const [visible,     setVisible]     = useState(false);
+  const [content,     setContent]     = useState<React.ReactNode>(null);
+  const [animKey,     setAnimKey]     = useState(0);
+  const [blocksInput, setBlocksInput] = useState(false);
+  const [pulsing,     setPulsing]     = useState<Pulse>(null);
+  const [postPhase,   setPostPhase]   = useState<PostPhase>("none");
 
-  const prevState       = useRef<GameState|null>(null);
-  const shownLegendary  = useRef(false);
-  const pendingPulse    = useRef<Pulse>(null);
-  const pulseTimer      = useRef<ReturnType<typeof setTimeout>|null>(null);
+  const prevState        = useRef<GameState|null>(null);
+  const shownCardBubbles = useRef<Set<string>>(new Set());
+  const pendingPulse     = useRef<Pulse>(null);
+  const pulseTimer       = useRef<ReturnType<typeof setTimeout>|null>(null);
+  // What action to take on next dismiss
+  const dismissAction    = useRef<
+    "resume_held" | "fire_celebration" | "pulse_replay" | "none"
+  >("none");
 
-  // ─── Apply / remove CSS animation on the real DOM button ────────────────
+  // ── Pulse DOM button ────────────────────────────────────────────────────
   useEffect(() => {
-    const btn = document.querySelector("[data-action]") as HTMLElement | null;
-    if (!btn) return;
-    if (pulsing) {
-      const action = btn.getAttribute("data-action");
-      if (action === pulsing) {
-        btn.style.animation = "coachBtnPulse 1s ease-in-out infinite";
-      }
-    } else {
-      btn.style.animation = "";
-    }
+    const btns = Array.from(document.querySelectorAll("[data-action]")) as HTMLElement[];
+    btns.forEach(btn => { btn.style.animation = ""; });
+    if (!pulsing) return;
+    const btn = btns.find(b => b.getAttribute("data-action") === pulsing);
+    if (btn) btn.style.animation = "coachBtnPulse 1s ease-in-out infinite";
   }, [pulsing]);
 
-  // ─── Start pulse timer ───────────────────────────────────────────────────
   function startPulse(target: Pulse) {
     if (!target) return;
     if (pulseTimer.current) clearTimeout(pulseTimer.current);
     setPulsing(target);
-    pulseTimer.current = setTimeout(() => setPulsing(null), 4000);
+    pulseTimer.current = setTimeout(() => setPulsing(null), 6000);
   }
 
-  // ─── Show a bubble ───────────────────────────────────────────────────────
-  function show(node: React.ReactNode, afterDismiss: Pulse) {
+  function show(node: React.ReactNode, afterDismiss: Pulse = null, blocks = true) {
     pendingPulse.current = afterDismiss;
     setContent(node);
     setAnimKey(k => k + 1);
     setVisible(true);
-    setBlocksInput(true);
-    setPulsing(null);                      // clear any running pulse
+    setBlocksInput(blocks);
+    setPulsing(null);
   }
 
-  // ─── Dismiss (called by "Got it" or tap anywhere on overlay) ────────────
   const dismiss = useCallback(() => {
     setVisible(false);
     setBlocksInput(false);
     const next = pendingPulse.current;
     pendingPulse.current = null;
     startPulse(next);
-  }, []); // eslint-disable-line
 
-  // ─── State-change handler ────────────────────────────────────────────────
+    const action = dismissAction.current;
+    dismissAction.current = "none";
+
+    if (action === "resume_held") {
+      onResumeHeldReveal?.();
+    } else if (action === "fire_celebration") {
+      onCelebrationReady?.();
+      setPostPhase("streak_collect");
+    } else if (action === "pulse_replay") {
+      startPulse("deal");
+    }
+  }, [onResumeHeldReveal, onCelebrationReady]);
+
+  // ── Post-phase side effects ──────────────────────────────────────────────
+  useEffect(() => {
+    if (postPhase === "streak_collect") {
+      setTimeout(() => show(
+        <span>
+          You're on a streak — two more wins and you get a special reward!&nbsp;🔥
+          <br />Don't forget to collect your rewards.&nbsp;🪙
+        </span>
+      ), 500);
+    }
+    // "runback" is triggered by RESULTS state below
+  }, [postPhase]); // eslint-disable-line
+
+  // ── State-change handler ─────────────────────────────────────────────────
   useEffect(() => {
     if (!isFTUE) return;
     if (gameState === prevState.current) return;
     prevState.current = gameState;
 
-    // Always clear bubble + blocker when state changes
-    setVisible(false);
-    setBlocksInput(false);
-    setPulsing(null);
+    if (gameState !== "REVEALING" && gameState !== "WIN_CELEBRATION") {
+      setVisible(false);
+      setBlocksInput(false);
+      setPulsing(null);
+    }
 
     if (gameState === "IDLE") {
-      setTimeout(() =>
-        show(BUBBLE_CONTENT.idle(), AFTER_DISMISS.idle), 500);
+      shownCardBubbles.current.clear();
+      dismissAction.current = "none";
+      setPostPhase("none");
+      setTimeout(() => show(
+        <span>Hit <DealChip /> to reveal your starting hand.</span>, "deal"
+      ), 500);
 
     } else if (gameState === "HOLD") {
-      setTimeout(() =>
-        show(BUBBLE_CONTENT.hold(), AFTER_DISMISS.hold), 700);
-
-    } else if (gameState === "DRAWING") {
-      // draw_pending bubble fires when DRAWING starts.
-      // cards stay blocked until the user taps "Got it".
-      shownLegendary.current = false;
-      setTimeout(() =>
-        show(BUBBLE_CONTENT.draw_pending(), AFTER_DISMISS.draw_pending), 400);
+      setTimeout(() => show(
+        <span>
+          Devin Booker is our most dependable player — tap him to hold,
+          then hit <DrawChip /> to get replacement players.
+        </span>, "draw"
+      ), 700);
 
     } else if (gameState === "REVEALING") {
-      // draw_pending already dismissed by this point → no new bubble.
-      // blocksInput is false so cards are tappable.
-    } else if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") {
-      setTimeout(() =>
-        show(BUBBLE_CONTENT.results(), AFTER_DISMISS.results), 800);
-    }
-  }, [gameState, isFTUE]); // eslint-disable-line
+      setTimeout(() => show(
+        <span>
+          You got five replacement players — let's see who you got.
+          Tap them to find out!&nbsp;🏀
+        </span>
+      ), 400);
 
-  // ─── Legendary card reaction ─────────────────────────────────────────────
+    } else if (gameState === "RESULTS") {
+      // Coins have been collected — now show the "run it back" bubble
+      if (postPhase === "streak_collect" || postPhase === "runback") {
+        setPostPhase("runback");
+        setTimeout(() => {
+          dismissAction.current = "pulse_replay";
+          setContent(
+            <span>
+              Darn it, if not for Klay or Love we would have won an extra 5x.
+              Flip cards over to see what their game logs are.
+              Ready to run it back?&nbsp;💪
+            </span>
+          );
+          setAnimKey(k => k + 1);
+          setVisible(true);
+          setBlocksInput(true);
+        }, 600);
+      }
+    }
+  }, [gameState, isFTUE, postPhase]); // eslint-disable-line
+
+  // ── Per-card reveal bubble ───────────────────────────────────────────────
   useEffect(() => {
     if (!isFTUE) return;
-    if (!legendaryCardName) return;
-    if (shownLegendary.current) return;
-    if (gameState !== "REVEALING" && gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
-    shownLegendary.current = true;
-    setVisible(false);
-    setTimeout(() => show(
-      <span>
-        You got lucky —{" "}
-        <strong style={{ color: "#FFD700" }}>{legendaryCardName}</strong>{" "}
-        had an awesome game. Career Night really boosts your team's points!&nbsp;🔥
-      </span>,
-      null,
-    ), 300);
-  }, [legendaryCardName, isFTUE, gameState]); // eslint-disable-line
+    if (!lastRevealedCardId) return;
+    if (shownCardBubbles.current.has(lastRevealedCardId)) return;
+    const node = CARD_BUBBLES[lastRevealedCardId];
+    if (!node) {
+      // No bubble for this card (Patty) — but if onResumeHeldReveal is pending,
+      // we still need to fire it (Patty is last unheld card, no bubble needed)
+      if (lastRevealedCardId !== "ftue-booker") {
+        // Small delay to let the reveal animation settle, then resume
+        setTimeout(() => onResumeHeldReveal?.(), 600);
+      }
+      return;
+    }
+    shownCardBubbles.current.add(lastRevealedCardId);
+
+    if (lastRevealedCardId === "ftue-booker") {
+      // Booker bubble → on dismiss, fire WIN_CELEBRATION
+      dismissAction.current = "fire_celebration";
+      setTimeout(() => show(node), 600);
+    } else {
+      // Non-Booker card bubble → on dismiss, resume held reveal
+      // (only relevant when this is the last non-Booker card)
+      dismissAction.current = "resume_held";
+      setTimeout(() => show(node), 400);
+    }
+  }, [lastRevealedCardId, isFTUE, onResumeHeldReveal]); // eslint-disable-line
 
   if (!isFTUE) return null;
 
@@ -199,12 +264,11 @@ export function CoachLayer({
           to   { opacity:1; transform:translateY(0)    scale(1)   }
         }
         @keyframes coachBtnPulse {
-          0%,100% { box-shadow: 0 0 0 0   rgba(75,158,232,0); }
-          50%     { box-shadow: 0 0 0 8px rgba(75,158,232,.38); }
+          0%,100% { box-shadow: 0 0 0 0   rgba(127,255,0,0); }
+          50%     { box-shadow: 0 0 0 10px rgba(127,255,0,0.4); }
         }
       `}</style>
 
-      {/* ── Transparent input-blocker (sits below the bubble, above cards) ── */}
       {blocksInput && !visible && (
         <div style={{
           position: "fixed", inset: 0, zIndex: 298,
@@ -212,7 +276,6 @@ export function CoachLayer({
         }} />
       )}
 
-      {/* ── Bubble overlay ─────────────────────────────────────────────────── */}
       {visible && (
         <div
           key={animKey}
@@ -225,7 +288,7 @@ export function CoachLayer({
             backdropFilter: "blur(6px)",
             WebkitBackdropFilter: "blur(6px)",
             animation: "coachFadeIn 0.2s ease forwards",
-            cursor: "pointer",
+            cursor: postPhase === "runback" ? "default" : "pointer",
           }}
         >
           <div
@@ -257,22 +320,93 @@ export function CoachLayer({
             }}>{content}</p>
 
             <div
-              onClick={dismiss}
-              style={{
-                display: "inline-block",
-                padding: "8px 22px",
-                background: "rgba(255,255,255,0.07)",
-                border: "1px solid rgba(255,255,255,0.15)",
-                borderRadius: 8,
-                fontSize: 12, fontWeight: 700,
-                color: "rgba(240,242,245,0.55)",
-                letterSpacing: "0.08em", textTransform: "uppercase",
-                cursor: "pointer",
-              }}
-            >Got it</div>
+                onClick={dismiss}
+                style={{
+                  display: "inline-block", padding: "8px 22px",
+                  background: "rgba(255,255,255,0.07)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: 8, fontSize: 12, fontWeight: 700,
+                  color: "rgba(240,242,245,0.55)",
+                  letterSpacing: "0.08em", textTransform: "uppercase",
+                  cursor: "pointer",
+                }}
+              >Got it</div>
           </div>
         </div>
       )}
+      {/* Booker flip hint — pulsing tab left of slot 0 during runback */}
+      {gameState === "RESULTS" && postPhase === "runback" && !visible && (
+        <BookerFlipHint />
+      )}
     </>
+  );
+}
+
+function BookerFlipHint() {
+  return (
+    <>
+      <style>{`
+        @keyframes hintPulse {
+          0%,100% { opacity: 0.7; transform: translateY(-50%) scale(1); }
+          50%      { opacity: 1;   transform: translateY(-50%) scale(1.06); }
+        }
+        @keyframes arrowBounce {
+          0%,100% { transform: translateX(0); }
+          50%      { transform: translateX(4px); }
+        }
+      `}</style>
+      <HintPositioner />
+    </>
+  );
+}
+
+function HintPositioner() {
+  const [pos, setPos] = useState<{top: number; left: number} | null>(null);
+
+  useEffect(() => {
+    function measure() {
+      // Find Booker's card slot (data-slot="0")
+      const slot = document.querySelector("[data-slot='0']") as HTMLElement | null;
+      if (!slot) return;
+      const rect = slot.getBoundingClientRect();
+      setPos({ top: rect.top + rect.height / 2, left: rect.left - 8 });
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  if (!pos) return null;
+
+  return (
+    <div style={{
+      position: "fixed",
+      top: pos.top,
+      left: pos.left,
+      transform: "translate(-100%, -50%)",
+      zIndex: 50,
+      display: "flex", alignItems: "center", gap: 6,
+      animation: "hintPulse 1.4s ease-in-out infinite",
+      pointerEvents: "none",
+    }}>
+      <div style={{
+        background: "rgba(255,215,0,0.92)",
+        color: "#070A12",
+        padding: "6px 10px",
+        borderRadius: 8,
+        fontSize: 11, fontWeight: 800,
+        letterSpacing: "0.06em", textTransform: "uppercase",
+        whiteSpace: "nowrap",
+        boxShadow: "0 2px 12px rgba(255,215,0,0.5)",
+      }}>
+        Tap to flip
+      </div>
+      <div style={{
+        fontSize: 16,
+        color: "#FFD700",
+        animation: "arrowBounce 0.8s ease-in-out infinite",
+        textShadow: "0 0 8px rgba(255,215,0,0.8)",
+      }}>→</div>
+    </div>
   );
 }

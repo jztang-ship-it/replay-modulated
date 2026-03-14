@@ -79,6 +79,7 @@ type Props = {
   onAction: () => void;
   celebration?: CelebrationData;
   onWinCelebrationComplete?: () => void;
+  ftueDrawBlocked?: boolean;
 };
 
 export function GameBar(props: Props) {

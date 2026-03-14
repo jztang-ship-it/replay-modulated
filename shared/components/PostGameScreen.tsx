@@ -21,7 +21,7 @@ import React, { useState, useEffect } from "react";
 
 // ─── TYPES ─────────────────────────────────────────────────────────────────
 
-export type WinTier = "MVP" | "ALL_STAR" | "STARTER" | "ROOKIE" | "BUST";
+export type WinTier = "JACKPOT" | "MVP" | "ALL_STAR" | "STARTER" | "ROOKIE" | "BUST" | "NONE";
 
 export type CardTier = "ORANGE" | "PURPLE" | "BLUE" | "GREEN" | "GREY";
 
@@ -69,11 +69,13 @@ export interface PostGameScreenProps {
 // ─── CONFIG ────────────────────────────────────────────────────────────────
 
 const TIER_CONFIG: Record<WinTier, { label: string; color: string; glow: string }> = {
+    JACKPOT:  { label: "JACKPOT",   color: "#FFD700", glow: "#FFD70099" },
     MVP:      { label: "MVP",       color: "#FF8C00", glow: "#FF8C0055" },
     ALL_STAR: { label: "ALL-STAR",  color: "#C9A84C", glow: "#C9A84C55" },
     STARTER:  { label: "STARTER",   color: "#9B4DFF", glow: "#9B4DFF44" },
     ROOKIE:   { label: "ROOKIE",    color: "#00E5FF", glow: "#00E5FF33" },
     BUST:     { label: "BUST",      color: "#666666", glow: "#66666633" },
+    NONE:     { label: "--",        color: "#444444", glow: "#44444433" },
   };
 
 const CARD_COLOR: Record<CardTier, string> = {
