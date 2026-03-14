@@ -33,6 +33,7 @@ import type {
     ALL_STAR: 183,
     MVP:      207,
     JACKPOT:  225,
+    BUST:     0,
   };
   
   function getNextTier(tier: WinTier): WinTier | null {

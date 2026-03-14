@@ -208,7 +208,7 @@ const DRAWN: Record<number, () => GeneratedCard> = {
 };
 
 export async function redrawFTUERoster(params: {
-  currentCards: GeneratedCard[];
+  currentCards: any[];
   lockedCardIds: Set<string>;
 }): Promise<{ roster: GeneratedCard[]; mvpCardId?: string }> {
   const { currentCards, lockedCardIds } = params;
@@ -225,7 +225,7 @@ export async function redrawFTUERoster(params: {
 }
 
 export async function resolveFTUERoster(params: {
-  finalCards: GeneratedCard[];
+  finalCards: any[];
 }): Promise<{ roster: GeneratedCard[]; mvpCardId: string }> {
   return {
     roster: params.finalCards,
