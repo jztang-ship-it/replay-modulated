@@ -69,12 +69,12 @@ export interface PostGameScreenProps {
 // ─── CONFIG ────────────────────────────────────────────────────────────────
 
 const TIER_CONFIG: Record<WinTier, { label: string; color: string; glow: string }> = {
-    JACKPOT:  { label: "JACKPOT",   color: "#FFD700", glow: "#FFD70099" },
-    MVP:      { label: "MVP",       color: "#FF8C00", glow: "#FF8C0055" },
-    ALL_STAR: { label: "ALL-STAR",  color: "#C9A84C", glow: "#C9A84C55" },
-    STARTER:  { label: "STARTER",   color: "#9B4DFF", glow: "#9B4DFF44" },
-    ROOKIE:   { label: "ROOKIE",    color: "#00E5FF", glow: "#00E5FF33" },
-    BUST:     { label: "BUST",      color: "#666666", glow: "#66666633" },
+    JACKPOT:  { label: "JACKPOT",   color: "#EF4444", glow: "#EF444499" },
+    MVP:      { label: "MVP",       color: "#FB923C", glow: "#FB923C55" },
+    ALL_STAR: { label: "ALL-STAR",  color: "#C084FC", glow: "#C084FC55" },
+    STARTER:  { label: "STARTER",   color: "#60A5FA", glow: "#60A5FA55" },
+    ROOKIE:   { label: "ROOKIE",    color: "#22C55E", glow: "#22C55E55" },
+    BUST:     { label: "BUST",      color: "#E5E7EB", glow: "#E5E7EB33" },
     NONE:     { label: "--",        color: "#444444", glow: "#44444433" },
   };
 

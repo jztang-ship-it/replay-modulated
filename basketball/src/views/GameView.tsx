@@ -254,12 +254,12 @@ const [streak, setStreak] = useState<number>(() =>
 
   // Tier color map — mirrors WIN_TIERS in basketball/GameBar.tsx
   const CELEBRATION_TIER_COLORS: Record<string, { color: string; glow: string }> = {
-    JACKPOT:  { color: "#FFD700", glow: "#FFD70099" },
+    JACKPOT:  { color: "#EF4444", glow: "#EF444499" },
     MVP:      { color: "#FB923C", glow: "#FB923C55" },
     ALL_STAR: { color: "#C084FC", glow: "#C084FC55" },
-    STARTER:  { color: "#FFD700", glow: "#FFD70055" },
-    ROOKIE:   { color: "#CD7F32", glow: "#CD7F3233" },
-    BUST:     { color: "#6B7280", glow: "#6B728033" },
+    STARTER:  { color: "#60A5FA", glow: "#60A5FA55" },
+    ROOKIE:   { color: "#22C55E", glow: "#22C55E55" },
+    BUST:     { color: "#E5E7EB", glow: "#E5E7EB33" },
   };
 
   const celebrationData: CelebrationData | undefined = useMemo(() => {

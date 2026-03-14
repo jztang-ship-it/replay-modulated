@@ -11,21 +11,21 @@ export type { CelebrationData };
 export type { GameStateLabel };
 
 const WIN_TIERS: WinTierDisplay[] = [
-  { label: "ROOKIE",   minFp: 133, color: "#CD7F32", glow: "rgba(205,127,50,0.6)"  },
-  { label: "STARTER",  minFp: 160, color: "#FFD700", glow: "rgba(255,215,0,0.6)"   },
-  { label: "ALL-STAR", minFp: 183, color: "#C084FC", glow: "rgba(192,132,252,0.7)" },
-  { label: "MVP",      minFp: 207, color: "#FF4500", glow: "rgba(255,69,0,0.7)"    },
-  { label: "JACKPOT",  minFp: 225, color: "#FFD700", glow: "rgba(255,215,0,0.9)"  },
+  { label: "ROOKIE",   minFp: 133, color: "#22C55E", glow: "rgba(34,197,94,0.6)"    },
+  { label: "STARTER",  minFp: 160, color: "#60A5FA", glow: "rgba(96,165,250,0.6)"   },
+  { label: "ALL-STAR", minFp: 183, color: "#C084FC", glow: "rgba(192,132,252,0.7)"  },
+  { label: "MVP",      minFp: 207, color: "#FB923C", glow: "rgba(251,146,60,0.7)"   },
+  { label: "JACKPOT",  minFp: 225, color: "#EF4444", glow: "rgba(239,68,68,0.9)"   },
 ];
 
 const LEGEND: LegendData = {
   payoutRows: [
-    { label: "JACKPOT",  score: "225+", payout: "POOL",  color: "#FFD700", bg: "rgba(255,215,0,0.15)",   border: "rgba(255,215,0,0.4)"    },
-    { label: "MVP",      score: "207+", payout: "15x",  color: "#FF4500", bg: "rgba(255,69,0,0.10)",    border: "rgba(255,69,0,0.3)"     },
-    { label: "ALL-STAR", score: "183+", payout: "7x",   color: "#C084FC", bg: "rgba(192,132,252,0.10)", border: "rgba(192,132,252,0.25)" },
-    { label: "STARTER",  score: "160+", payout: "2.5x", color: "#FFD700", bg: "rgba(255,215,0,0.10)",   border: "rgba(255,215,0,0.25)"   },
-    { label: "ROOKIE",   score: "133+", payout: "0.5x", color: "#CD7F32", bg: "rgba(205,127,50,0.10)",  border: "rgba(205,127,50,0.25)"  },
-    { label: "BUST",     score: "<133", payout: "--",   color: "#6B7280", bg: "rgba(107,114,128,0.08)", border: "rgba(107,114,128,0.2)"  },
+    { label: "JACKPOT",  score: "225+", payout: "POOL",  color: "#EF4444", bg: "rgba(239,68,68,0.15)",    border: "rgba(239,68,68,0.4)"     },
+    { label: "MVP",      score: "207+", payout: "15x",  color: "#FB923C", bg: "rgba(251,146,60,0.10)",   border: "rgba(251,146,60,0.3)"    },
+    { label: "ALL-STAR", score: "183+", payout: "7x",   color: "#C084FC", bg: "rgba(192,132,252,0.10)", border: "rgba(192,132,252,0.25)"  },
+    { label: "STARTER",  score: "160+", payout: "2.5x", color: "#60A5FA", bg: "rgba(96,165,250,0.10)",  border: "rgba(96,165,250,0.25)"   },
+    { label: "ROOKIE",   score: "133+", payout: "0.5x", color: "#22C55E", bg: "rgba(34,197,94,0.10)",   border: "rgba(34,197,94,0.25)"    },
+    { label: "BUST",     score: "<133", payout: "--",   color: "#E5E7EB", bg: "rgba(229,231,235,0.08)", border: "rgba(229,231,235,0.2)"   },
   ],
   scoringRules: [
     { stat: "Point",    pts: "+1.0" },
@@ -36,8 +36,11 @@ const LEGEND: LegendData = {
     { stat: "Turnover", pts: "-1.0" },
   ],
   stamps: [
-    { icon: "🏆", label: "CAREER NIGHT", condition: "FP ≥ 140% of projection" },
-    { icon: "🧊", label: "ICE COLD",     condition: "FP ≤ 60% of projection"  },
+    { icon: "⚡", label: "LEGENDARY",   condition: "FP ≥ 160% of projection" },
+    { icon: "🌟", label: "CAREER NIGHT",condition: "FP ≥ 140% of projection" },
+    { icon: "🔥", label: "ON FIRE",     condition: "FP ≥ 120% of projection" },
+    { icon: "🧱", label: "BRICK CITY",  condition: "FP ≤ 60% of projection"  },
+    { icon: "🧊", label: "ICE COLD",    condition: "FP ≤ 40% of projection"  },
   ],
   badges: [
     { icon: "⚡",  label: "GOD MODE",         condition: "50+ points"            },
