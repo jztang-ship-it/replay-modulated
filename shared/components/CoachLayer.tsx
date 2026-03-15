@@ -59,8 +59,8 @@ const CARD_BUBBLES: Record<string, React.ReactNode> = {
   ),
   "ftue-patty": (
     <span>
-      10.7 FP for Patty Mills isn't bad. Our players are ranked with salary
-      and color codes that rank players on their fantasy point returns.&nbsp;💡
+      10.7 isn't bad for a white card like Patty — our players are ranked by
+      salary and color code to tell you how they should do so.&nbsp;💡
     </span>
   ),
   "ftue-booker": (
