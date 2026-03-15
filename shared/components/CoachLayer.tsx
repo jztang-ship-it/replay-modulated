@@ -57,7 +57,12 @@ const CARD_BUBBLES: Record<string, React.ReactNode> = {
   "ftue-klove": (
     <span>Yikes, Love was <Stamp label="Ice Cold" {...STAMP_STYLES["ICE COLD"]} /> this game — a performance I'm sure you and him would both like to forget.&nbsp;🥶</span>
   ),
-  // ftue-patty: no bubble
+  "ftue-patty": (
+    <span>
+      10.7 FP for Patty Mills isn't bad. Our players are ranked with salary
+      and color codes that rank players on their fantasy point returns.&nbsp;💡
+    </span>
+  ),
   "ftue-booker": (
     <span>Devin was <Stamp label="Smoking Hot!" {...STAMP_STYLES["SMOKING HOT"]} /> He really carried your team tonight. Be legendary.&nbsp;🔥</span>
   ),
@@ -218,8 +223,11 @@ export function CoachLayer({
     }
 
     if (!node) {
-      // Patty — no bubble, just resume
-      setTimeout(() => onResumeHeldReveal?.(), 600);
+      // No bubble for this card — clear block and resume
+      setTimeout(() => {
+        onBubbleActive?.(false);
+        onResumeHeldReveal?.();
+      }, 600);
       return;
     }
 
