@@ -174,6 +174,7 @@ export default function GameView() {
   const [celebrationHeld,    setCelebrationHeld]    = useState(false);
   const [ftueCardsBlocked,   setFtueCardsBlocked]   = useState(false);
   const [ftueResultsDim,     setFtueResultsDim]     = useState(false);
+  const [ftueBookerFlipped,  setFtueBookerFlipped]  = useState(false);
   const pendingCelebration   = useRef<{totalFp:number}|null>(null);
   const heldRevealResumeRef  = useRef<(() => void) | null>(null);
   const completedCardsRef = useRef<Set<string>>(new Set());
@@ -348,11 +349,19 @@ const [streak, setStreak] = useState<number>(() =>
 
   function toggleStatsFlip(cardKey: string) {
     if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
+    // FTUE RESULTS: only Booker is flippable while dim is active
+    if (isFTUE && ftueResultsDim && cardKey !== "ftue-booker") return;
     setStatsFlippedIds(prev => {
       const next = new Set(prev);
       next.has(cardKey) ? next.delete(cardKey) : next.add(cardKey);
       return next;
     });
+    // Track when Booker is flipped in FTUE to trigger the final bubble
+    if (isFTUE && cardKey === "ftue-booker") {
+      setFtueBookerFlipped(true);
+      // Lift dim once Booker is flipped
+      setTimeout(() => setFtueResultsDim(false), 300);
+    }
   }
 
   async function onPrimaryAction() {
@@ -456,17 +465,14 @@ const [streak, setStreak] = useState<number>(() =>
     }
   }
 
-  // FTUE: when RESULTS starts, auto-flip Booker and briefly dim other cards
+  // FTUE: when RESULTS starts, dim non-Booker, show TAP hint on Booker
+  // User must manually tap Booker to flip — no auto-flip
   useEffect(() => {
     if (!isFTUE || gameState !== "RESULTS") return;
     setFtueResultsDim(true);
-    const t1 = setTimeout(() => {
-      setStatsFlippedIds(new Set(["ftue-booker"]));
-    }, 400);
-    const t2 = setTimeout(() => {
-      setFtueResultsDim(false);
-    }, 1300);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    // Clear any pre-flipped state so Booker starts face-up
+    setStatsFlippedIds(new Set());
+    return () => setFtueResultsDim(false);
   }, [gameState, isFTUE]); // eslint-disable-line
 
   function onWinCelebrationComplete() {
@@ -578,6 +584,7 @@ const [streak, setStreak] = useState<number>(() =>
   noTransition={noTransition}
   visibleFpMap={visibleFpMap}
   canFlip={gameState === "RESULTS" || gameState === "WIN_CELEBRATION"}
+  ftueFlipTargetId={isFTUE && ftueResultsDim ? "ftue-booker" : null}
   flipMsMap={flipMsMap}
   fpCountUpMsMap={fpCountUpMsMap}
   performanceTagMap={performanceTagMap}
@@ -614,6 +621,7 @@ const [streak, setStreak] = useState<number>(() =>
             revealIndex={revealIndex}
             legendaryCardName={legendaryCardName}
             lastRevealedCardId={lastRevealedCardId}
+            ftueBookerFlipped={ftueBookerFlipped}
             onResumeHeldReveal={() => {
               // Called by CoachLayer after last non-Booker card bubble dismissed
               const resume = heldRevealResumeRef.current;

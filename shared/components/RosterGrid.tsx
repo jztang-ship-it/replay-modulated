@@ -85,6 +85,7 @@ type Props = {
   tappedCardIds?: Set<string>;
   isRevealingPhase?: boolean;  // true when gameState === "REVEALING"
   ftueLockedSlot?: number | null;  // FTUE: slot index that stays lit; all others dim
+  ftueFlipTargetId?: string | null; // FTUE: show TAP hint on this card in RESULTS
 };
 
 export function RosterGrid(props: Props) {
@@ -95,7 +96,7 @@ export function RosterGrid(props: Props) {
     visibleFpMap, canFlip, onToggleLock, onToggleFlip,
     flipMsMap, fpCountUpMsMap, performanceTagMap, pulseMap,
     shakingCardId, shakeType, cardShakeTypeMap, visibleBadgesMap, activeRevealCardId, ftueDimmedSlots,
-    revealMode = "auto", onTapReveal, heldFpVisible = false, heldRevealedIds, tappedCardIds, isRevealingPhase = false, ftueLockedSlot = null,
+    revealMode = "auto", onTapReveal, heldFpVisible = false, heldRevealedIds, tappedCardIds, isRevealingPhase = false, ftueLockedSlot = null, ftueFlipTargetId = null,
   } = props;
 
   const cards = useMemo(() => {
@@ -130,8 +131,9 @@ export function RosterGrid(props: Props) {
         const wasHeld        = (card as any).wasHeld === true;
         const isTapped       = tappedCardIds?.has(id) ?? false;
         // In tap mode during REVEALING: unheld untapped cards are tappable
-        const isTapTarget    = revealMode === "tap" && isRevealingPhase
-                               && !wasHeld && !isTapped;
+        const isTapTarget    = (revealMode === "tap" && isRevealingPhase
+                               && !wasHeld && !isTapped)
+                               || (ftueFlipTargetId !== null && id === ftueFlipTargetId);
         // Per-card: held card FP shows when its ID is in heldRevealedIds
         const thisHeldRevealed = wasHeld && (heldRevealedIds?.has(id) ?? false);
         const showHeldFp     = thisHeldRevealed;

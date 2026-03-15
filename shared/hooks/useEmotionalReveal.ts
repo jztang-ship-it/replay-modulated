@@ -109,7 +109,7 @@ export function getShakeType(
   if (ratio >= config.onFireRatio)      return "big";        // ON FIRE      >=1.4x
   if (ratio <= config.freezingRatio)    return "frozen";     // FREEZING     <=0.6x
   if (ratio <= config.iceColdRatio)     return "cold";       // ICE COLD     <=0.8x
-  if (isAnchor)                         return "big";
+  // Anchor gets no forced stamp — the card's actual performance determines the stamp
   return null;
 }
 
