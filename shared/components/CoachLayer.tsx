@@ -60,7 +60,8 @@ const CARD_BUBBLES: Record<string, React.ReactNode> = {
   "ftue-patty": (
     <span>
       10.7 isn't bad for a white card like Patty — our players are ranked by
-      salary and color code to tell you how they should do so.&nbsp;💡
+      salary and color code to tell you how they should do, then actual game
+      logs are converted into fantasy points.&nbsp;💡
     </span>
   ),
   "ftue-booker": (
