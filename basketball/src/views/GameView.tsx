@@ -600,7 +600,10 @@ const [streak, setStreak] = useState<number>(() =>
   onToggleLock={toggleLock}
   onToggleFlip={toggleStatsFlip}
   revealMode={REVEAL_MODE}
-  onTapReveal={isFTUE && ftueCardsBlocked ? undefined : tapRevealCard}
+  onTapReveal={isFTUE && ftueCardsBlocked ? undefined : (isFTUE ? (cardId: string) => {
+    setFtueCardsBlocked(true); // block immediately, before bubble delay
+    tapRevealCard(cardId);
+  } : tapRevealCard)}
   heldFpVisible={heldFpVisible}
   heldRevealedIds={heldRevealedIds}
   tappedCardIds={tappedCardIds}

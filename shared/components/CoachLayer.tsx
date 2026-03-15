@@ -52,7 +52,7 @@ const CARD_BUBBLES: Record<string, React.ReactNode> = {
     <span><Stamp label="On Fire!" {...STAMP_STYLES["ON FIRE"]} /> CP3 outperformed his projected fantasy points — a masterclass in running the offense.&nbsp;🧠</span>
   ),
   "ftue-klay": (
-    <span>Klay's performance is <Stamp label="Freezing" {...STAMP_STYLES["FREEZING"]} /> — not the best night for Klay. Splash Brother no more.&nbsp;🧊</span>
+    <span>Klay was <Stamp label="Freezing" {...STAMP_STYLES["FREEZING"]} /> — not the best night for Klay. Splash Brother no more.&nbsp;🧊</span>
   ),
   "ftue-klove": (
     <span>Yikes, Love was <Stamp label="Ice Cold" {...STAMP_STYLES["ICE COLD"]} /> this game — a performance I'm sure you and him would both like to forget.&nbsp;🥶</span>
@@ -235,6 +235,9 @@ export function CoachLayer({
     if (!isFTUE || gameState !== "RESULTS") return;
     if (prevState.current === "RESULTS") return;
     prevState.current = "RESULTS";
+    // Clear any residual button pulse — replay only pulses after final bubble
+    if (pulseTimer.current) clearTimeout(pulseTimer.current);
+    setPulsing(null);
     enqueue({
       key: "results_intro",
       node: (
@@ -242,6 +245,7 @@ export function CoachLayer({
           All game logs are actual historical games — let's tap Booker's card to see what game we drew.&nbsp;🏀
         </span>
       ),
+      // No pulse here — replay only pulses after final bubble
     }, 500);
   }, [gameState, isFTUE]); // eslint-disable-line
 
@@ -250,17 +254,23 @@ export function CoachLayer({
     if (!isFTUE || !ftueBookerFlipped) return;
     if (bookerFlipBubbleShown.current) return;
     bookerFlipBubbleShown.current = true;
-    enqueue({
-      key: "final_not_bad",
-      node: (
-        <span>
-          Not bad for a newbie — you lucked out and drew one of Booker's strongest games of the season.
-          Win two more and you get a special reward. Run it back?&nbsp;🏀
-        </span>
-      ),
-      onDismiss: () => setReplayReady(true),
-    }, 600);
-  }, [ftueBookerFlipped, isFTUE]); // eslint-disable-line
+    // Immediately block so no other taps can interrupt
+    onBubbleActive?.(true);
+    // Clear from shown set so enqueue doesn't skip it, then enqueue after flip animation
+    setTimeout(() => {
+      shown.current.delete("final_not_bad");
+      enqueue({
+        key: "final_not_bad",
+        node: (
+          <span>
+            Not bad for a newbie — we lucked out and drew Booker's game against TOR on March 17th 2025, what a game! Two more wins and we unlock the 23-24 season game pack. Run it back?&nbsp;🏀
+          </span>
+        ),
+        onDismiss: () => setReplayReady(true),
+        pulse: "deal",
+      });
+    }, 800);
+  }, [ftueBookerFlipped, isFTUE, onBubbleActive]); // eslint-disable-line
 
   // When replayReady set, notify GameView to enable the replay button
   useEffect(() => {
