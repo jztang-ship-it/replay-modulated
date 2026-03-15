@@ -173,6 +173,7 @@ export default function GameView() {
   const [lastRevealedCardId, setLastRevealedCardId] = useState<string|null>(null);
   const [celebrationHeld,    setCelebrationHeld]    = useState(false);
   const [ftueCardsBlocked,   setFtueCardsBlocked]   = useState(false);
+  const [ftueReplayReady,    setFtueReplayReady]    = useState(false);
   const [ftueResultsDim,     setFtueResultsDim]     = useState(false);
   const [ftueBookerFlipped,  setFtueBookerFlipped]  = useState(false);
   const pendingCelebration   = useRef<{totalFp:number}|null>(null);
@@ -636,12 +637,15 @@ const [streak, setStreak] = useState<number>(() =>
               }
             }}
             onBubbleActive={(active) => setFtueCardsBlocked(active)}
+            onReplayReady={() => setFtueReplayReady(true)}
             onReplay={() => {
               // Mark FTUE complete — next visit goes straight to real game
               completeFTUE();
               setLastRevealedCardId(null);
               setCelebrationHeld(false);
               setFtueCardsBlocked(false);
+              setFtueReplayReady(false);
+              setFtueBookerFlipped(false);
               pendingCelebration.current = null;
               heldRevealResumeRef.current = null;
               handleButtonClick();
@@ -668,6 +672,7 @@ const [streak, setStreak] = useState<number>(() =>
             ftueDrawBlocked={isFTUE && gameState === "HOLD" && !heldCardIds.has("ftue-booker")}
             ftueHideSkip={isFTUE}
             ftuePulseNearMiss={isFTUE && gameState === "RESULTS"}
+            ftueReplayBlocked={isFTUE && gameState === "RESULTS" && !ftueReplayReady}
           />
         </div>
       </div>

@@ -12,6 +12,8 @@ interface Props {
   onCelebrationReady?: () => void;
   onBubbleActive?: (active: boolean) => void;
   onReplay?: () => void;
+  /** Called when replay button should become active (after final bubble dismissed) */
+  onReplayReady?: () => void;
   // compat
   lockedCount?: number; revealIndex?: number;
   legendaryCardName?: string; lesson?: CoachLesson;
@@ -47,13 +49,13 @@ const CARD_BUBBLES: Record<string, React.ReactNode> = {
     <span>Westbrook put in a solid shift — nothing flashy, just steady work. That's what you want from a reliable piece of your lineup.&nbsp;💪</span>
   ),
   "ftue-cp3": (
-    <span><Stamp label="On Fire!" {...STAMP_STYLES["ON FIRE"]} /> CP3 outperformed his expected fantasy points tonight — a masterclass in running the offense.&nbsp;🧠</span>
+    <span><Stamp label="On Fire!" {...STAMP_STYLES["ON FIRE"]} /> CP3 outperformed his projected fantasy points — a masterclass in running the offense.&nbsp;🧠</span>
   ),
   "ftue-klay": (
-    <span>Splash Brother no more… <Stamp label="Ice Cold" {...STAMP_STYLES["ICE COLD"]} /> from the field — not the best night for Klay, and it really hurt your squad.&nbsp;🧊</span>
+    <span>Klay's performance is <Stamp label="Freezing" {...STAMP_STYLES["FREEZING"]} /> — not the best night for Klay. Splash Brother no more.&nbsp;🧊</span>
   ),
   "ftue-klove": (
-    <span>Yikes. Love was <Stamp label="Freezing" {...STAMP_STYLES["FREEZING"]} /> — a game K. Love would love to forget. So would you.&nbsp;🥶</span>
+    <span>Yikes, Love was <Stamp label="Ice Cold" {...STAMP_STYLES["ICE COLD"]} /> this game — a performance I'm sure you and him would both like to forget.&nbsp;🥶</span>
   ),
   // ftue-patty: no bubble
   "ftue-booker": (
@@ -73,13 +75,15 @@ type Pulse = "deal" | "draw" | null;
 export function CoachLayer({
   isFTUE, gameState,
   lastRevealedCardId, ftueBookerFlipped,
-  onResumeHeldReveal, onCelebrationReady, onBubbleActive,
+  onResumeHeldReveal, onCelebrationReady, onBubbleActive, onReplayReady,
 }: Props) {
   const queue          = useRef<QueueEntry[]>([]);
   const shown          = useRef<Set<string>>(new Set());
   const [current,      setCurrent]   = useState<QueueEntry|null>(null);
   const [animKey,      setAnimKey]   = useState(0);
   const [pulsing,      setPulsing]   = useState<Pulse>(null);
+  const [showCollect,  setShowCollect] = useState(false);
+  const [replayReady,  setReplayReady] = useState(false);
   const pulseTimer     = useRef<ReturnType<typeof setTimeout>|null>(null);
   const prevState      = useRef<GameState|null>(null);
   const celebFired     = useRef(false);
@@ -190,19 +194,21 @@ export function CoachLayer({
             onCelebrationReady?.();
             // After 2.8s for tier gauge + coins to animate, show darn-it bubble
             setTimeout(() => {
+              setShowCollect(true);
               enqueue({
                 key: "darnit",
                 node: (
                   <span>
                     Darn it — we only missed the{" "}
                     <strong style={{color:"#C084FC",border:"1.5px solid #C084FC",padding:"1px 6px",borderRadius:4,fontSize:"0.92em"}}>All Star</strong>{" "}
-                    win by 2 points. If only Love or Klay showed up, we'd have won 7x.
+                    win by 2.4 points. If only Love or Klay showed up we would have won an extra 5x.
                     Don't forget to collect your rewards!&nbsp;🪙
                   </span>
                 ),
+                onDismiss: () => setShowCollect(false),
               });
               tryDrain();
-            }, 2800);
+            }, 1600);
           }
         },
       }, 600);
@@ -231,8 +237,7 @@ export function CoachLayer({
       key: "results_intro",
       node: (
         <span>
-          Players receive FP for real historical game logs — let's see what Booker's stats were.
-          Tap his card to find out.&nbsp;🏀
+          All game logs are actual historical games — let's tap Booker's card to see what game we drew.&nbsp;🏀
         </span>
       ),
     }, 500);
@@ -247,16 +252,18 @@ export function CoachLayer({
       key: "final_not_bad",
       node: (
         <span>
-          Not bad for a first timer — all game logs are{" "}
-          <strong style={{color:"#22C55E"}}>TRUE</strong>{" "}
-          games your players had last season.
-          Win three in a row for an extra bonus.
-          Ready to run it back?&nbsp;🏀
+          Not bad for a newbie — you lucked out and drew one of Booker's strongest games of the season.
+          Win two more and you get a special reward. Run it back?&nbsp;🏀
         </span>
       ),
-      pulse: "deal",
+      onDismiss: () => setReplayReady(true),
     }, 600);
   }, [ftueBookerFlipped, isFTUE]); // eslint-disable-line
+
+  // When replayReady set, notify GameView to enable the replay button
+  useEffect(() => {
+    if (replayReady) onReplayReady?.();
+  }, [replayReady]); // eslint-disable-line
 
   // ── Track other state transitions ─────────────────────────────────────
   useEffect(() => {
@@ -274,20 +281,33 @@ export function CoachLayer({
         @keyframes coachFadeIn  { from{opacity:0} to{opacity:1} }
         @keyframes coachSlideUp { from{opacity:0;transform:translateY(20px) scale(.94)} to{opacity:1;transform:translateY(0) scale(1)} }
         @keyframes coachBtnPulse { 0%,100%{box-shadow:0 0 0 0 rgba(127,255,0,0)} 50%{box-shadow:0 0 0 10px rgba(127,255,0,0.4)} }
-        @keyframes collectPulse { 0%,100%{opacity:0.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.05)} }
+        @keyframes collectPulse { 0%,100%{opacity:0.5;transform:translateY(0)} 50%{opacity:1;transform:translateY(-3px)} }
       `}</style>
+
+      {/* Pulsing "Tap to collect" — fixed below coins area, shows during WIN_CELEBRATION darnit phase */}
+      {showCollect && (
+        <div style={{
+          position:"fixed", bottom:140, left:"50%", transform:"translateX(-50%)",
+          zIndex:299, pointerEvents:"none",
+          display:"flex", flexDirection:"column", alignItems:"center", gap:4,
+          animation:"collectPulse 1.1s ease-in-out infinite",
+        }}>
+          <div style={{fontSize:18}}>🪙</div>
+          <div style={{
+            fontSize:11, fontWeight:900, letterSpacing:"0.1em", textTransform:"uppercase",
+            color:"#FFD700",
+            textShadow:"0 0 10px rgba(255,215,0,0.6)",
+          }}>Tap to collect</div>
+          <div style={{fontSize:14, color:"#FFD700", opacity:0.8}}>↓</div>
+        </div>
+      )}
 
       {current && (
         <div key={animKey} onClick={dismiss} style={{position:"fixed",inset:0,zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 28px",background:"rgba(0,0,0,0.68)",backdropFilter:"blur(6px)",WebkitBackdropFilter:"blur(6px)",animation:"coachFadeIn 0.2s ease forwards",cursor:"pointer"}}>
           <div onClick={e => e.stopPropagation()} style={{animation:"coachSlideUp 0.3s cubic-bezier(.2,.8,.4,1) forwards",background:"rgba(10,13,20,0.98)",border:"1px solid rgba(255,255,255,0.13)",borderRadius:20,padding:"32px 32px 24px",maxWidth:320,width:"100%",textAlign:"center",boxShadow:"0 28px 80px rgba(0,0,0,0.7)",cursor:"default"}}>
             <div style={{width:48,height:48,borderRadius:"50%",background:"linear-gradient(135deg,#1a2540,#0d1320)",border:"1.5px solid rgba(255,255,255,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,margin:"0 auto 18px"}}>🏀</div>
             <p style={{fontFamily:"system-ui,-apple-system,sans-serif",fontSize:18,fontWeight:500,color:"#F0F2F5",lineHeight:1.65,margin:"0 0 22px",letterSpacing:"0.01em"}}>{current.node}</p>
-            {/* Show pulsing "Tap to collect" hint on the darnit bubble */}
-            {current.key === "darnit" && (
-              <div style={{fontSize:12,fontWeight:900,color:"#FFD700",letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:12,animation:"collectPulse 1.2s ease-in-out infinite"}}>
-                ↓ Tap coins to collect ↓
-              </div>
-            )}
+
             <div onClick={dismiss} style={{display:"inline-block",padding:"8px 22px",background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:8,fontSize:12,fontWeight:700,color:"rgba(240,242,245,0.55)",letterSpacing:"0.08em",textTransform:"uppercase",cursor:"pointer"}}>Got it</div>
           </div>
         </div>

@@ -84,6 +84,7 @@ type Props = {
   ftueDrawBlocked?: boolean;
   ftueHideSkip?: boolean;
   ftuePulseNearMiss?: boolean;
+  ftueReplayBlocked?: boolean;
 };
 
 export function GameBar(props: Props) {

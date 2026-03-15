@@ -87,6 +87,8 @@ type Props = {
   ftueHideSkip?: boolean;
   /** FTUE: pulse the near-miss bar to draw attention (shown during runback) */
   ftuePulseNearMiss?: boolean;
+  /** FTUE: block the replay/deal button (before final bubble dismissed) */
+  ftueReplayBlocked?: boolean;
 };
 
 const MULTIPLIERS = [1, 3, 5, 10];
@@ -371,19 +373,19 @@ function TierBar({
     <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{
-          fontSize: 12, fontWeight: 700, letterSpacing: 0.2, fontFamily: FF,
-          color: showBar ? (fptNeeded === 0 ? displayColor : "rgba(255,255,255,0.55)") : "rgba(255,255,255,0.30)",
+          fontSize: 12, fontWeight: 900, letterSpacing: -0.2, fontFamily: FF, fontStyle: "italic",
+          color: showBar ? displayColor : "rgba(255,255,255,0.30)",
           transition: isLive ? "none" : "color 400ms ease",
         }}>
-          {showBar
-            ? fptNeeded > 0 ? `${fptNeeded.toFixed(1)} pts to reach ${label}` : `✓ ${label}`
-            : `${winTiers[0].minFp} FP to ${winTiers[0].label}`}
+          {showBar ? `${totalFp.toFixed(1)} FP` : ""}
         </span>
         <span style={{
-          fontSize: 13, fontWeight: 900, letterSpacing: -0.3, fontStyle: "italic", fontFamily: FF,
-          color: showBar ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.3)",
+          fontSize: 11, fontWeight: 700, letterSpacing: 0.1, fontFamily: FF,
+          color: showBar ? (fptNeeded === 0 ? displayColor : "rgba(255,255,255,0.50)") : "rgba(255,255,255,0.30)",
         }}>
-          {showBar ? `${totalFp.toFixed(1)} FP` : ""}
+          {showBar
+            ? fptNeeded > 0 ? `${fptNeeded.toFixed(1)} pts to ${label}` : `✓ ${label}`
+            : `${winTiers[0].minFp} FP to ${winTiers[0].label}`}
         </span>
       </div>
 
@@ -888,6 +890,7 @@ export function GameBar({
   ftueDrawBlocked = false,
   ftueHideSkip = false,
   ftuePulseNearMiss = false,
+  ftueReplayBlocked = false,
 }: Props) {
   const betLocked = gameState === "DEALING" || gameState === "DRAWING" || gameState === "REVEALING";
   const [showLegend, setShowLegend] = useState(false);
@@ -1103,19 +1106,19 @@ export function GameBar({
             <div style={{ display: "flex", justifyContent: "center", paddingTop: 10 }}>
               <button
                 onClick={onAction}
-                disabled={isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD")}
+                disabled={isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked}
                 data-action={gameState === "IDLE" ? "deal" : gameState === "HOLD" ? "draw" : undefined}
                 style={{
                 width: "min(168px, 50%)",
                 borderRadius: THEME.button.action.borderRadius, border: "none",
                 padding: "11px 0",
                 fontWeight: 900, fontSize: 16, letterSpacing: 2, textTransform: "uppercase",
-                cursor: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD")) ? "default" : "pointer",
-                background: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD")) ? "rgba(255,255,255,0.10)" : actionBackground(gameState),
-                color: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD")) ? "rgba(255,255,255,0.35)" : actionTextColor(gameState),
-                opacity: (ftueHideSkip && gameState === "REVEALING") ? 0 : (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD")) ? 0.5 : 1,
-                pointerEvents: (ftueHideSkip && gameState === "REVEALING") ? "none" as const : "auto" as const,
-                boxShadow: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD")) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
+                cursor: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "default" : "pointer",
+                background: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "rgba(255,255,255,0.10)" : actionBackground(gameState),
+                color: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "rgba(255,255,255,0.35)" : actionTextColor(gameState),
+                opacity: (ftueHideSkip && gameState === "REVEALING") ? 0 : (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? 0.3 : 1,
+                pointerEvents: (ftueHideSkip && gameState === "REVEALING" || ftueReplayBlocked) ? "none" as const : "auto" as const,
+                boxShadow: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
                 transition: "opacity 150ms ease", lineHeight: 1,
               }}>
                 {actionLabel(gameState)}
