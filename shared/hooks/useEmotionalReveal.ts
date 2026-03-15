@@ -442,11 +442,11 @@ export function useEmotionalReveal(params: Params) {
       const actual = Number(c.actualFp ?? 0);
       if (proj <= 0) { m.set(c.cardId, ""); continue; }
       const r = actual / proj;
-      if (r >= revealConfig.legendaryRatio)   m.set(c.cardId, "LEGENDARY");
-      else if (r >= revealConfig.careerNightRatio) m.set(c.cardId, "GREAT");
-      else if (r <= revealConfig.frozenRatio)      m.set(c.cardId, "FROZEN");
-      else if (r <= revealConfig.coldRatio)        m.set(c.cardId, "COLD");
-      else                                    m.set(c.cardId, "");
+      if (r >= revealConfig.smokingHotRatio)  m.set(c.cardId, "SMOKING HOT");
+      else if (r >= revealConfig.onFireRatio)      m.set(c.cardId, "ON FIRE");
+      else if (r <= revealConfig.freezingRatio)    m.set(c.cardId, "FREEZING");
+      else if (r <= revealConfig.iceColdRatio)     m.set(c.cardId, "ICE COLD");
+      else                                         m.set(c.cardId, "");
     }
     return m;
   }, [cards, revealConfig]);
