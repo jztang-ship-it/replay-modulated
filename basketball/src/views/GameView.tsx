@@ -673,7 +673,7 @@ const [streak, setStreak] = useState<number>(() =>
             onWinCelebrationComplete={onWinCelebrationComplete}
             ftueDrawBlocked={isFTUE && gameState === "HOLD" && !heldCardIds.has("ftue-booker")}
             ftueHideSkip={isFTUE}
-            ftuePulseNearMiss={isFTUE && gameState === "RESULTS"}
+            ftuePulseNearMiss={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")}
             ftueReplayBlocked={isFTUE && gameState === "RESULTS" && !ftueReplayReady}
           />
         </div>

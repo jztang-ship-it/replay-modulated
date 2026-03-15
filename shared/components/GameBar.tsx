@@ -111,7 +111,10 @@ function getTierState(totalFp: number, winTiers: WinTierDisplay[]) {
   const floor   = prev?.minFp ?? 0;
   const ceiling = next.minFp;
   const fillPct = Math.min(100, Math.max(0, ((totalFp - floor) / (ceiling - floor)) * 100));
-  return { label: next.label, fillPct, color: next.color, glow: next.glow, fptNeeded: Math.max(0, ceiling - totalFp) };
+  // Fill color = current tier already achieved (prev), label = next tier to reach
+  const fillColor = prev?.color ?? "rgba(255,255,255,0.4)";
+  const fillGlow  = prev?.glow  ?? "rgba(255,255,255,0.15)";
+  return { label: next.label, fillPct, color: fillColor, glow: fillGlow, fptNeeded: Math.max(0, ceiling - totalFp) };
 }
 
 function actionLabel(state: GameStateLabel): string {
@@ -667,7 +670,12 @@ function CelebrationTop({
             {celebration.isBust ? "0" : `+${animPay}`}
           </span>
         </div>
-        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: celebration.isBust ? "#444" : "#FFD70066", fontFamily: FF }}>
+        <div style={{
+          fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase",
+          color: celebration.isBust ? "#444" : "#FFD700",
+          fontFamily: FF,
+          animation: celebration.isBust ? "none" : "tapCollectPulse 1.1s ease-in-out infinite",
+        }}>
           {celebration.isBust ? "no payout" : "tap to collect"}
         </div>
       </div>
@@ -882,7 +890,7 @@ function CelebrationBottom({ celebration, onDismiss, isFTUE = false }: { celebra
       <div style={{ textAlign: "center", fontSize: 10, color: "rgba(255,255,255,0.12)", letterSpacing: "0.08em", fontFamily: FF }}>
         XP coming soon ⚡
       </div>
-      <style>{`@keyframes pip_in { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }`}</style>
+      <style>{`@keyframes pip_in { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} } @keyframes tapCollectPulse { 0%,100%{opacity:0.4} 50%{opacity:1} }`}</style>
     </div>
   );
 }
