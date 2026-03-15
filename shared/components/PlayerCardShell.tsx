@@ -342,11 +342,14 @@ export function PlayerCardShell(props: CardShellProps) {
     <div className={`${shakeClass}${isTapTarget ? " pcs-tap-bounce" : ""}`} style={outerStyle}>
       {isTapTarget && (
         <div style={{
-          position:"absolute", bottom:10, left:"50%", transform:"translateX(-50%)",
-          fontSize:9, fontWeight:800, letterSpacing:".12em", textTransform:"uppercase",
-          color:"rgba(255,255,255,0.6)", whiteSpace:"nowrap", pointerEvents:"none", zIndex:70,
+          position:"absolute", bottom:68, left:"50%", transform:"translateX(-50%)",
+          fontSize:11, fontWeight:900, letterSpacing:".14em", textTransform:"uppercase",
+          color:"#FFD700", whiteSpace:"nowrap", pointerEvents:"none", zIndex:70,
+          background:"rgba(7,10,18,0.85)", padding:"5px 14px", borderRadius:20,
+          border:"1.5px solid rgba(255,215,0,0.6)",
+          boxShadow:"0 0 12px rgba(255,215,0,0.3)",
           animation:"pcsTapHintPulse 1.4s ease-in-out infinite",
-        }}>TAP</div>
+        }}>TAP ▼</div>
       )}
       <div className={innerClass} style={innerStyle}>
         <div className="pcs-face">

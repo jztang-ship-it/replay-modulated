@@ -167,11 +167,12 @@ export default function GameView() {
   const [noTransition, setNoTransition]     = useState(false);
   const [revealedSalary, setRevealedSalary] = useState(0);
   const rosterRef = useRef<PlayerCard[]>([]);
-  const { isFTUE } = useFTUE("basketball");
+  const { isFTUE, completeFTUE } = useFTUE("basketball");
   const [legendaryCardName, setLegendaryCardName] = useState<string | undefined>();
   const [revealIndex, setRevealIndex]           = useState(0);
   const [lastRevealedCardId, setLastRevealedCardId] = useState<string|null>(null);
   const [celebrationHeld,    setCelebrationHeld]    = useState(false);
+  const [ftueCardsBlocked,   setFtueCardsBlocked]   = useState(false);
   const pendingCelebration   = useRef<{totalFp:number}|null>(null);
   const heldRevealResumeRef  = useRef<(() => void) | null>(null);
   const completedCardsRef = useRef<Set<string>>(new Set());
@@ -254,12 +255,12 @@ const [streak, setStreak] = useState<number>(() =>
 
   // Tier color map — mirrors WIN_TIERS in basketball/GameBar.tsx
   const CELEBRATION_TIER_COLORS: Record<string, { color: string; glow: string }> = {
-    JACKPOT:  { color: "#EF4444", glow: "#EF444499" },
+    JACKPOT:  { color: "#FFD700", glow: "#FFD70099" },
     MVP:      { color: "#FB923C", glow: "#FB923C55" },
     ALL_STAR: { color: "#C084FC", glow: "#C084FC55" },
-    STARTER:  { color: "#60A5FA", glow: "#60A5FA55" },
-    ROOKIE:   { color: "#22C55E", glow: "#22C55E55" },
-    BUST:     { color: "#E5E7EB", glow: "#E5E7EB33" },
+    STARTER:  { color: "#FFD700", glow: "#FFD70055" },
+    ROOKIE:   { color: "#CD7F32", glow: "#CD7F3233" },
+    BUST:     { color: "#6B7280", glow: "#6B728033" },
   };
 
   const celebrationData: CelebrationData | undefined = useMemo(() => {
@@ -334,6 +335,9 @@ const [streak, setStreak] = useState<number>(() =>
   // Zone 2: Handlers
   function toggleLock(cardKey: string) {
     if (gameState !== "HOLD") return;
+    // FTUE: only Booker can be toggled, and once held cannot unhold
+    if (isFTUE && cardKey !== "ftue-booker") return;
+    if (isFTUE && cardKey === "ftue-booker" && lockedCardIds.has(cardKey)) return;
     setLockedCardIds(prev => {
       const next = new Set(prev);
       if (next.has(cardKey)) { next.delete(cardKey); } else { next.add(cardKey); const c = roster.find(x => cardId(x) === cardKey); if (c) gameAnalytics.cardHeld(c); }
@@ -572,7 +576,7 @@ const [streak, setStreak] = useState<number>(() =>
   onToggleLock={toggleLock}
   onToggleFlip={toggleStatsFlip}
   revealMode={REVEAL_MODE}
-  onTapReveal={tapRevealCard}
+  onTapReveal={isFTUE && ftueCardsBlocked ? undefined : tapRevealCard}
   heldFpVisible={heldFpVisible}
   heldRevealedIds={heldRevealedIds}
   tappedCardIds={tappedCardIds}
@@ -609,9 +613,13 @@ const [streak, setStreak] = useState<number>(() =>
                 setGameState("WIN_CELEBRATION");
               }
             }}
+            onBubbleActive={(active) => setFtueCardsBlocked(active)}
             onReplay={() => {
+              // Mark FTUE complete — next visit goes straight to real game
+              completeFTUE();
               setLastRevealedCardId(null);
               setCelebrationHeld(false);
+              setFtueCardsBlocked(false);
               pendingCelebration.current = null;
               heldRevealResumeRef.current = null;
               handleButtonClick();
@@ -636,6 +644,8 @@ const [streak, setStreak] = useState<number>(() =>
             celebration={celebrationData}
             onWinCelebrationComplete={onWinCelebrationComplete}
             ftueDrawBlocked={isFTUE && gameState === "HOLD" && !heldCardIds.has("ftue-booker")}
+            ftueHideSkip={isFTUE}
+            ftuePulseNearMiss={isFTUE && gameState === "RESULTS"}
           />
         </div>
       </div>

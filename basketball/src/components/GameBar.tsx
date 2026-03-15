@@ -82,6 +82,8 @@ type Props = {
   celebration?: CelebrationData;
   onWinCelebrationComplete?: () => void;
   ftueDrawBlocked?: boolean;
+  ftueHideSkip?: boolean;
+  ftuePulseNearMiss?: boolean;
 };
 
 export function GameBar(props: Props) {

@@ -18,6 +18,8 @@ interface Props {
   onCelebrationReady?: () => void;
   /** Call this when user taps Replay to enter the real game */
   onReplay?: () => void;
+  /** Called with true when a bubble shows, false when dismissed — for blocking card taps */
+  onBubbleActive?: (active: boolean) => void;
 }
 
 function DrawChip() {
@@ -56,8 +58,8 @@ const CARD_BUBBLES: Record<string, React.ReactNode> = {
   ),
   "ftue-cp3": (
     <span>
-      <strong style={{ color: "#FFD700" }}>Career Night!</strong> That means
-      CP3 outperformed his expected fantasy points —
+      <strong style={{ color: "#FB923C" }}>On Fire!</strong> CP3 outperformed
+      his expected fantasy points tonight —
       a masterclass in running the offense.&nbsp;🧠
     </span>
   ),
@@ -91,7 +93,7 @@ type PostPhase = "none" | "booker" | "streak_collect" | "runback";
 export function CoachLayer({
   isFTUE, gameState,
   lastRevealedCardId,
-  onResumeHeldReveal, onCelebrationReady,
+  onResumeHeldReveal, onCelebrationReady, onBubbleActive,
 }: Props) {
   const [visible,     setVisible]     = useState(false);
   const [content,     setContent]     = useState<React.ReactNode>(null);
@@ -132,11 +134,13 @@ export function CoachLayer({
     setVisible(true);
     setBlocksInput(blocks);
     setPulsing(null);
+    onBubbleActive?.(true);
   }
 
   const dismiss = useCallback(() => {
     setVisible(false);
     setBlocksInput(false);
+    onBubbleActive?.(false);
     const next = pendingPulse.current;
     pendingPulse.current = null;
     startPulse(next);
@@ -147,8 +151,10 @@ export function CoachLayer({
     if (action === "resume_held") {
       onResumeHeldReveal?.();
     } else if (action === "fire_celebration") {
+      // Fire celebration immediately so tier gauge + coins start
       onCelebrationReady?.();
-      setPostPhase("streak_collect");
+      // Wait 2.8s for tier gauge to roll up and coins to animate, THEN show streak bubble
+      setTimeout(() => setPostPhase("streak_collect"), 2800);
     } else if (action === "pulse_replay") {
       startPulse("deal");
     }
@@ -160,7 +166,9 @@ export function CoachLayer({
       setTimeout(() => show(
         <span>
           You're on a streak — two more wins and you get a special reward!&nbsp;🔥
-          <br />Don't forget to collect your rewards.&nbsp;🪙
+          <br /><br />
+          Don't forget to collect your rewards&nbsp;🪙 —
+          tap the <strong style={{ color: "#FFD700" }}>coins area</strong> to collect.
         </span>
       ), 500);
     }
@@ -211,9 +219,10 @@ export function CoachLayer({
           dismissAction.current = "pulse_replay";
           setContent(
             <span>
-              Darn it, if not for Klay or Love we would have won an extra 5x.
-              Flip cards over to see what their game logs are.
-              Ready to run it back?&nbsp;💪
+              Darn it — see that bar at the bottom?&nbsp;📊 You were{" "}
+              <strong style={{ color: "#C084FC" }}>just 2 points away</strong> from
+              ALL-STAR tier. If Klay or Love had shown up, we'd have won 7x.
+              Flip the cards to see their game logs. Ready to run it back?&nbsp;💪
             </span>
           );
           setAnimKey(k => k + 1);

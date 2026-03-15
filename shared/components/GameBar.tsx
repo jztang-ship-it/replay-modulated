@@ -83,6 +83,10 @@ type Props = {
   onWinCelebrationComplete?: () => void;
   /** FTUE: block the Draw button until Booker is held */
   ftueDrawBlocked?: boolean;
+  /** FTUE: hide the SKIP button during reveal */
+  ftueHideSkip?: boolean;
+  /** FTUE: pulse the near-miss bar to draw attention (shown during runback) */
+  ftuePulseNearMiss?: boolean;
 };
 
 const MULTIPLIERS = [1, 3, 5, 10];
@@ -267,7 +271,7 @@ function CoinBurst({ active, color }: { active: boolean; color: string }) {
 
 function TierBar({
   totalFp, gameState, winTiers, isCelebration,
-  lastCardProgress, lastCardFp, onOvershootSettled,
+  lastCardProgress, lastCardFp, onOvershootSettled, ftuePulseNearMiss = false,
 }: {
   totalFp: number;
   gameState: GameStateLabel;
@@ -276,6 +280,7 @@ function TierBar({
   lastCardProgress: number;
   lastCardFp: number;
   onOvershootSettled: () => void;
+  ftuePulseNearMiss?: boolean;
 }) {
   const { label, fillPct, color, glow, fptNeeded } = getTierState(totalFp, winTiers);
   const showBar = gameState !== "IDLE";
@@ -414,7 +419,22 @@ function TierBar({
         )}
         <style>{`
           @keyframes tipPulse { 0%,100%{opacity:1;transform:translateY(-50%) scale(1)} 50%{opacity:.4;transform:translateY(-50%) scale(2)} }
+          @keyframes nearMissPulse { 0%,100%{opacity:0.15} 50%{opacity:0.55} }
         `}</style>
+        {/* FTUE near-miss pulsing segment — shows gap from current fill to next tier */}
+        {ftuePulseNearMiss && fptNeeded > 0 && displayPct < 99 && (() => {
+          const nextTierPct = Math.min(100, displayPct + (fptNeeded / tierTop) * 100);
+          const gapWidth = Math.max(1, nextTierPct - displayPct);
+          return (
+            <div style={{
+              position: "absolute", left: `${displayPct}%`, top: 0, bottom: 0,
+              width: `${gapWidth}%`,
+              background: `linear-gradient(90deg, ${displayColor}44, ${displayColor}99)`,
+              borderRadius: "0 6px 6px 0",
+              animation: "nearMissPulse 1.2s ease-in-out infinite",
+            }} />
+          );
+        })()}
       </div>
     </div>
   );
@@ -866,6 +886,8 @@ export function GameBar({
   winTiers, legend,
   celebration, onWinCelebrationComplete,
   ftueDrawBlocked = false,
+  ftueHideSkip = false,
+  ftuePulseNearMiss = false,
 }: Props) {
   const betLocked = gameState === "DEALING" || gameState === "DRAWING" || gameState === "REVEALING";
   const [showLegend, setShowLegend] = useState(false);
@@ -1014,6 +1036,7 @@ export function GameBar({
             lastCardProgress={lastCardProgress}
             lastCardFp={lastCardFp}
             onOvershootSettled={() => setOvershootSettled(true)}
+            ftuePulseNearMiss={ftuePulseNearMiss}
           />
         </div>
 
@@ -1090,7 +1113,8 @@ export function GameBar({
                 cursor: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD")) ? "default" : "pointer",
                 background: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD")) ? "rgba(255,255,255,0.10)" : actionBackground(gameState),
                 color: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD")) ? "rgba(255,255,255,0.35)" : actionTextColor(gameState),
-                opacity: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD")) ? 0.5 : 1,
+                opacity: (ftueHideSkip && gameState === "REVEALING") ? 0 : (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD")) ? 0.5 : 1,
+                pointerEvents: (ftueHideSkip && gameState === "REVEALING") ? "none" as const : "auto" as const,
                 boxShadow: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD")) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
                 transition: "opacity 150ms ease", lineHeight: 1,
               }}>
