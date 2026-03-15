@@ -82,7 +82,7 @@ export function CoachLayer({
   const [current,      setCurrent]   = useState<QueueEntry|null>(null);
   const [animKey,      setAnimKey]   = useState(0);
   const [pulsing,      setPulsing]   = useState<Pulse>(null);
-  const [showCollect,  setShowCollect] = useState(false);
+
   const [replayReady,  setReplayReady] = useState(false);
   const pulseTimer     = useRef<ReturnType<typeof setTimeout>|null>(null);
   const prevState      = useRef<GameState|null>(null);
@@ -92,15 +92,15 @@ export function CoachLayer({
 
   // ── Drain / enqueue ────────────────────────────────────────────────────
   const tryDrain = useCallback(() => {
+    // Use functional update to avoid stale closure, check queue outside
+    const next = queue.current[0];
+    if (!next) return;
     setCurrent(prev => {
-      if (prev) return prev; // already showing
-      const next = queue.current.shift();
-      if (next) {
-        setAnimKey(k => k + 1);
-        onBubbleActive?.(true);
-        return next;
-      }
-      return null;
+      if (prev) return prev; // already showing, don't drain
+      queue.current.shift(); // consume
+      setAnimKey(k => k + 1);
+      setTimeout(() => onBubbleActive?.(true), 0);
+      return next;
     });
   }, [onBubbleActive]);
 
@@ -109,33 +109,35 @@ export function CoachLayer({
     shown.current.add(entry.key);
     const go = () => {
       queue.current.push(entry);
-      tryDrain();
+      // Always defer drain to next tick to avoid batching issues
+      setTimeout(tryDrain, 0);
     };
     if (delayMs > 0) setTimeout(go, delayMs);
     else go();
   }
 
   const dismiss = useCallback(() => {
+    let dismissEntry: QueueEntry | null = null;
     setCurrent(prev => {
       if (!prev) return null;
-      prev.onDismiss?.();
-      if (prev.pulse) {
-        if (pulseTimer.current) clearTimeout(pulseTimer.current);
-        setPulsing(prev.pulse);
-        pulseTimer.current = setTimeout(() => setPulsing(null), 8000);
-      }
+      dismissEntry = prev;
       return null;
     });
-    onBubbleActive?.(false);
+    // Run side effects after state cleared
     setTimeout(() => {
-      const next = queue.current.shift();
-      if (next) {
-        setCurrent(next);
-        setAnimKey(k => k + 1);
-        onBubbleActive?.(true);
+      if (dismissEntry) {
+        dismissEntry.onDismiss?.();
+        if (dismissEntry.pulse) {
+          if (pulseTimer.current) clearTimeout(pulseTimer.current);
+          setPulsing(dismissEntry.pulse);
+          pulseTimer.current = setTimeout(() => setPulsing(null), 8000);
+        }
       }
-    }, 120);
-  }, [onBubbleActive]);
+      onBubbleActive?.(false);
+      // Drain next bubble after a short gap
+      setTimeout(tryDrain, 150);
+    }, 0);
+  }, [onBubbleActive, tryDrain]);
 
   // ── Pulse DOM button ─────────────────────────────────────────────────
   useEffect(() => {
@@ -194,7 +196,7 @@ export function CoachLayer({
             onCelebrationReady?.();
             // After 2.8s for tier gauge + coins to animate, show darn-it bubble
             setTimeout(() => {
-              setShowCollect(true);
+
               enqueue({
                 key: "darnit",
                 node: (
@@ -205,9 +207,9 @@ export function CoachLayer({
                     Don't forget to collect your rewards!&nbsp;🪙
                   </span>
                 ),
-                onDismiss: () => setShowCollect(false),
+
               });
-              tryDrain();
+              // enqueue already defers drain via setTimeout
             }, 1600);
           }
         },
@@ -281,26 +283,9 @@ export function CoachLayer({
         @keyframes coachFadeIn  { from{opacity:0} to{opacity:1} }
         @keyframes coachSlideUp { from{opacity:0;transform:translateY(20px) scale(.94)} to{opacity:1;transform:translateY(0) scale(1)} }
         @keyframes coachBtnPulse { 0%,100%{box-shadow:0 0 0 0 rgba(127,255,0,0)} 50%{box-shadow:0 0 0 10px rgba(127,255,0,0.4)} }
-        @keyframes collectPulse { 0%,100%{opacity:0.5;transform:translateY(0)} 50%{opacity:1;transform:translateY(-3px)} }
       `}</style>
 
-      {/* Pulsing "Tap to collect" — fixed below coins area, shows during WIN_CELEBRATION darnit phase */}
-      {showCollect && (
-        <div style={{
-          position:"fixed", bottom:140, left:"50%", transform:"translateX(-50%)",
-          zIndex:299, pointerEvents:"none",
-          display:"flex", flexDirection:"column", alignItems:"center", gap:4,
-          animation:"collectPulse 1.1s ease-in-out infinite",
-        }}>
-          <div style={{fontSize:18}}>🪙</div>
-          <div style={{
-            fontSize:11, fontWeight:900, letterSpacing:"0.1em", textTransform:"uppercase",
-            color:"#FFD700",
-            textShadow:"0 0 10px rgba(255,215,0,0.6)",
-          }}>Tap to collect</div>
-          <div style={{fontSize:14, color:"#FFD700", opacity:0.8}}>↓</div>
-        </div>
-      )}
+
 
       {current && (
         <div key={animKey} onClick={dismiss} style={{position:"fixed",inset:0,zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 28px",background:"rgba(0,0,0,0.68)",backdropFilter:"blur(6px)",WebkitBackdropFilter:"blur(6px)",animation:"coachFadeIn 0.2s ease forwards",cursor:"pointer"}}>

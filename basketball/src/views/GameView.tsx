@@ -350,6 +350,8 @@ const [streak, setStreak] = useState<number>(() =>
 
   function toggleStatsFlip(cardKey: string) {
     if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
+    // FTUE: block ALL flips when a bubble is active
+    if (isFTUE && ftueCardsBlocked) return;
     // FTUE RESULTS: only Booker is flippable while dim is active
     if (isFTUE && ftueResultsDim && cardKey !== "ftue-booker") return;
     setStatsFlippedIds(prev => {

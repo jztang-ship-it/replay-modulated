@@ -431,9 +431,9 @@ function TierBar({
             <div style={{
               position: "absolute", left: `${displayPct}%`, top: 0, bottom: 0,
               width: `${gapWidth}%`,
-              background: `linear-gradient(90deg, ${displayColor}44, ${displayColor}99)`,
+              background: "linear-gradient(90deg, #C084FC33, #C084FC88)",
               borderRadius: "0 6px 6px 0",
-              animation: "nearMissPulse 1.2s ease-in-out infinite",
+              animation: "nearMissPulse 1.0s ease-in-out infinite",
             }} />
           );
         })()}
@@ -812,7 +812,7 @@ function CoinFlyFromPoint({
 
 // ── CelebrationBottom ────────────────────────────────────────────────────────
 
-function CelebrationBottom({ celebration, onDismiss }: { celebration: CelebrationData; onDismiss: () => void }) {
+function CelebrationBottom({ celebration, onDismiss, isFTUE = false }: { celebration: CelebrationData; onDismiss: () => void; isFTUE?: boolean }) {
   const [visible, setVisible] = useState(false);
   const copy = getStreakCopy(celebration.streak, celebration.isBust);
 
@@ -843,27 +843,38 @@ function CelebrationBottom({ celebration, onDismiss }: { celebration: Celebratio
         border: `1px solid ${celebration.isBust ? "#FF3B3020" : "#FF8C0020"}`,
         borderRadius: 10, padding: "12px 14px",
       }}>
-        <div style={{ display: "flex", gap: 4, flexShrink: 0, flexWrap: "wrap", maxWidth: 80 }}>
-          {Array.from({ length: Math.max(1, Math.min(celebration.streak, 6)) }).map((_, i) => (
-            <div key={i} style={{
-              width: 9, height: 9, borderRadius: "50%",
-              background: celebration.streak === 0 ? "#333" : pipColor,
-              boxShadow: celebration.streak === 0 ? "none" : `0 0 7px ${pipGlow}`,
-              animation: `pip_in 0.28s ease ${i * 0.06}s both`,
-            }} />
-          ))}
-          {celebration.streak > 6 && (
-            <span style={{ fontSize: 10, color: pipColor, alignSelf: "center", fontFamily: FF, marginLeft: 2 }}>
-              +{celebration.streak - 6}
-            </span>
+        <div style={{ display: "flex", gap: 4, flexShrink: 0, alignItems: "center" }}>
+          {isFTUE ? (
+            // FTUE: always show 1 solid + 2 empty dots
+            <>
+              <div style={{ width: 9, height: 9, borderRadius: "50%", background: pipColor, boxShadow: `0 0 7px ${pipGlow}` }} />
+              <div style={{ width: 9, height: 9, borderRadius: "50%", background: "transparent", border: `1.5px solid ${pipColor}55` }} />
+              <div style={{ width: 9, height: 9, borderRadius: "50%", background: "transparent", border: `1.5px solid ${pipColor}55` }} />
+            </>
+          ) : (
+            <>
+              {Array.from({ length: Math.max(1, Math.min(celebration.streak, 6)) }).map((_, i) => (
+                <div key={i} style={{
+                  width: 9, height: 9, borderRadius: "50%",
+                  background: celebration.streak === 0 ? "#333" : pipColor,
+                  boxShadow: celebration.streak === 0 ? "none" : `0 0 7px ${pipGlow}`,
+                  animation: `pip_in 0.28s ease ${i * 0.06}s both`,
+                }} />
+              ))}
+              {celebration.streak > 6 && (
+                <span style={{ fontSize: 10, color: pipColor, alignSelf: "center", fontFamily: FF, marginLeft: 2 }}>
+                  +{celebration.streak - 6}
+                </span>
+              )}
+            </>
           )}
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: pipColor, fontFamily: FF, lineHeight: 1.2 }}>
-            {copy.head}
+            {isFTUE ? "WIN STREAK STARTED 🔥" : copy.head}
           </div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 3, fontFamily: FF }}>
-            {copy.sub}
+            {isFTUE ? "Unlock 23-24 Season" : copy.sub}
           </div>
         </div>
         <div style={{ fontSize: 18, color: "rgba(255,255,255,0.18)", flexShrink: 0 }}>›</div>
@@ -1140,6 +1151,7 @@ export function GameBar({
               <CelebrationBottom
                 celebration={celebration}
                 onDismiss={onWinCelebrationComplete ?? (() => {})}
+                isFTUE={ftueHideSkip}
               />
             </div>
           )}
