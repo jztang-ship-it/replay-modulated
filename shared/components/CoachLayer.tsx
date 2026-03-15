@@ -59,22 +59,24 @@ const CARD_BUBBLES: Record<string, React.ReactNode> = {
   ),
   "ftue-klay": (
     <span>
-      Splash Brother no more… not the best night for Klay.
-      Ice cold from the field and it really hurt your squad.&nbsp;🧊
+      Splash Brother no more… not the best night for Klay.{" "}
+      <strong style={{color:"#9CA3AF", WebkitTextStroke:"0.5px #6B7280"}}>Ice Cold</strong>
+      {" "}from the field and it really hurt your squad.&nbsp;🧊
     </span>
   ),
   "ftue-klove": (
     <span>
-      Yikes. A game K.Love would love to forget — and so would you.
-      He sure didn't help your team tonight.&nbsp;😬
+      Yikes. Love was{" "}
+      <strong style={{color:"#1E40AF", WebkitTextStroke:"0.5px #1F2937"}}>Freezing</strong>
+      {" "}— a game K. Love would love to forget. So would you.&nbsp;🥶
     </span>
   ),
   // ftue-patty: no bubble intentionally
   "ftue-booker": (
     <span>
-      <strong style={{color:"#FF6B00"}}>DEVIN the killing machine!</strong>{" "}
-      He absolutely carried your team's performance tonight.
-      Be legendary.&nbsp;🔥
+      Devin was{" "}
+      <strong style={{color:"#EF4444", border:"1.5px solid #EF4444", padding:"1px 6px", borderRadius:4, fontSize:"0.95em"}}>Smoking Hot!</strong>
+      {" "}He really carried your team tonight. Be legendary.&nbsp;🔥
     </span>
   ),
 };
@@ -297,7 +299,8 @@ export function CoachLayer({
     }, 400);
   }, [lastRevealedCardId, isFTUE]); // eslint-disable-line
 
-  // ── RESULTS bubble (after coins collected) ───────────────────────────────
+  // ── RESULTS bubbles (after coins collected) ──────────────────────────────
+  // Sequence: 1) near-miss/runback → 2) "not bad for a first timer" → pulse replay
   useEffect(() => {
     if (!isFTUE || gameState !== "RESULTS") return;
     if (prevState.current === "RESULTS") return;
@@ -308,14 +311,29 @@ export function CoachLayer({
       key: "runback",
       node: (
         <span>
-          Darn it — see that bar at the bottom?&nbsp;📊 You were{" "}
-          <strong style={{color:"#C084FC"}}>just 2 points away</strong> from
-          ALL-STAR tier. If Klay or Love had shown up, we'd have won 7x.
-          Flip the cards to see their game logs. Ready to run it back?&nbsp;💪
+          Darn it — see that bar below in{" "}
+          <strong style={{color:"#C084FC"}}>purple</strong>.
+          You were just 2 points away from an{" "}
+          <strong style={{color:"#C084FC"}}>All Star</strong>{" "}
+          win. If only Klay or Love showed up we'd have won an extra 5x.
+          Flip the cards to see their game logs.
+        </span>
+      ),
+    }, 600);
+    // Enqueue the final bubble immediately after — it will wait in queue
+    enqueue({
+      key: "final_runback",
+      node: (
+        <span>
+          Not bad for a first timer — all game logs are{" "}
+          <strong style={{color:"#22C55E"}}>TRUE</strong>{" "}
+          games your players had last season.
+          Win three in a row for an extra bonus.
+          Ready to run it back?&nbsp;🏀
         </span>
       ),
       pulse: "deal",
-    }, 600);
+    });
   }, [gameState, isFTUE]); // eslint-disable-line
 
   // ── Track gameState transitions not handled above ────────────────────────
@@ -428,7 +446,7 @@ function BookerFlipHint() {
       const slot = document.querySelector("[data-slot='0']") as HTMLElement|null;
       if (!slot) return;
       const r = slot.getBoundingClientRect();
-      setPos({ top: r.top + r.height / 2, left: r.left - 8 });
+      setPos({ top: r.top + r.height / 2, left: r.left + r.width / 2 });
     }
     measure();
     window.addEventListener("resize", measure);
@@ -437,25 +455,23 @@ function BookerFlipHint() {
   if (!pos) return null;
   return (
     <div style={{
-      position:"fixed", top:pos.top, left:pos.left,
-      transform:"translate(-100%,-50%)",
+      position:"fixed",
+      top: pos.top,
+      left: pos.left,
+      transform:"translate(-50%,-50%)",
       zIndex:50,
-      display:"flex", alignItems:"center", gap:6,
       animation:"hintPulse 1.4s ease-in-out infinite",
       pointerEvents:"none",
     }}>
       <div style={{
         background:"rgba(255,215,0,0.92)", color:"#070A12",
-        padding:"6px 10px", borderRadius:8,
-        fontSize:11, fontWeight:800,
+        padding:"7px 14px", borderRadius:8,
+        fontSize:12, fontWeight:900,
         letterSpacing:"0.06em", textTransform:"uppercase",
-        whiteSpace:"nowrap", boxShadow:"0 2px 12px rgba(255,215,0,0.5)",
+        whiteSpace:"nowrap",
+        boxShadow:"0 0 16px rgba(255,215,0,0.6), 0 2px 8px rgba(0,0,0,0.4)",
+        border:"1.5px solid rgba(255,215,0,0.8)",
       }}>Tap to flip</div>
-      <div style={{
-        fontSize:16, color:"#FFD700",
-        animation:"arrowBounce 0.8s ease-in-out infinite",
-        textShadow:"0 0 8px rgba(255,215,0,0.8)",
-      }}>→</div>
     </div>
   );
 }

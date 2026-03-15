@@ -173,6 +173,7 @@ export default function GameView() {
   const [lastRevealedCardId, setLastRevealedCardId] = useState<string|null>(null);
   const [celebrationHeld,    setCelebrationHeld]    = useState(false);
   const [ftueCardsBlocked,   setFtueCardsBlocked]   = useState(false);
+  const [ftueResultsDim,     setFtueResultsDim]     = useState(false);
   const pendingCelebration   = useRef<{totalFp:number}|null>(null);
   const heldRevealResumeRef  = useRef<(() => void) | null>(null);
   const completedCardsRef = useRef<Set<string>>(new Set());
@@ -455,6 +456,19 @@ const [streak, setStreak] = useState<number>(() =>
     }
   }
 
+  // FTUE: when RESULTS starts, auto-flip Booker and briefly dim other cards
+  useEffect(() => {
+    if (!isFTUE || gameState !== "RESULTS") return;
+    setFtueResultsDim(true);
+    const t1 = setTimeout(() => {
+      setStatsFlippedIds(new Set(["ftue-booker"]));
+    }, 400);
+    const t2 = setTimeout(() => {
+      setFtueResultsDim(false);
+    }, 1300);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [gameState, isFTUE]); // eslint-disable-line
+
   function onWinCelebrationComplete() {
     if (winPayout > 0) {
       setIsBalanceAnimating(true);
@@ -581,7 +595,7 @@ const [streak, setStreak] = useState<number>(() =>
   heldRevealedIds={heldRevealedIds}
   tappedCardIds={tappedCardIds}
   isRevealingPhase={gameState === "REVEALING"}
-  ftueLockedSlot={isFTUE && gameState === "HOLD" && !heldCardIds.has("ftue-booker") ? 0 : null}
+  ftueLockedSlot={(isFTUE && gameState === "HOLD" && !heldCardIds.has("ftue-booker")) || (isFTUE && ftueResultsDim) ? 0 : null}
 />
 
           </div>

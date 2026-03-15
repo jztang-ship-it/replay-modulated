@@ -65,7 +65,7 @@ export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
         cardId: "ftue-booker", basePlayerId: "1626164",
         name: "D. Booker", team: "PHX", position: "SG",
         tier: "ORANGE", salary: 59, slotIndex: 0,
-        projectedFp: 40, actualFp: 90.1,
+        projectedFp: 40, actualFp: 87.6,
         date: "2025-03-17", opponent: "TOR", homeAway: "H",
         statLine: { pts: 61, reb: 10, ast: 7, stl: 3, blk: 1, turnovers: 1, min: 42 },
         achievements: [
@@ -188,9 +188,9 @@ const DRAWN: Record<number, () => GeneratedCard> = {
     cardId: "ftue-klove", basePlayerId: "201567",
     name: "K. Love", team: "CLE", position: "PF",
     tier: "GREEN", salary: 22, slotIndex: 4,
-    projectedFp: 15, actualFp: 8.1,
+    projectedFp: 15, actualFp: 10.5,
     date: "2024-11-29", opponent: "TOR", homeAway: "H",
-    statLine: { pts: 5, reb: 3, ast: 1, stl: 0, blk: 0, turnovers: 2, min: 12 },
+    statLine: { pts: 7, reb: 2, ast: 1, stl: 0, blk: 0, turnovers: 1, min: 14 },
   }),
 
   // Slot 5 → Patty Mills | WHITE $9 | drawn
