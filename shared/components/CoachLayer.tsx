@@ -199,8 +199,7 @@ export function CoachLayer({
         onDismiss: () => {
           if (!celebFired.current) {
             celebFired.current = true;
-            onCelebrationReady?.();
-            // Wait 2.8s for PostGameScreen to fully render + animate, then show bubble
+            // Show "Darn it" bubble FIRST — PostGameScreen appears only after user dismisses it
             setTimeout(() => {
               enqueue({
                 key: "darnit",
@@ -212,8 +211,9 @@ export function CoachLayer({
                     Don't forget to collect your rewards!&nbsp;🪙
                   </span>
                 ),
+                onDismiss: () => onCelebrationReady?.(),
               });
-            }, 2800);
+            }, 800);
           }
         },
       }, 600);

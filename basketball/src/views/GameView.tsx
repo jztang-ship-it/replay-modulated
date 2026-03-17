@@ -811,8 +811,11 @@ const [streak, setStreak] = useState<number>(() =>
     ftueHideSkip={isFTUE}
     ftuePulseNearMiss={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")}
     ftueReplayBlocked={isFTUE && gameState === "RESULTS" && !ftueReplayReady}
-    tierGaugeSlot={!isFTUE ? (
-      <TierGauge
+  />
+
+  {/* ── Tier gauge — shown in both real game and FTUE ── */}
+  <div style={{ paddingTop: 4, paddingBottom: 2 }}>
+    <TierGauge
         totalFp={totalFp}
         thresholds={[
           { tier: 'ROOKIE',   minFP: 133 },
@@ -823,8 +826,7 @@ const [streak, setStreak] = useState<number>(() =>
         ]}
         visible={gameState === 'REVEALING' || gameState === 'RESULTS' || gameState === 'WIN_CELEBRATION'}
       />
-    ) : undefined}
-  />
+  </div>
 </div>
 
 {/* ── Hot Streak Overlay ── */}
