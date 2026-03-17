@@ -200,9 +200,8 @@ export function CoachLayer({
           if (!celebFired.current) {
             celebFired.current = true;
             onCelebrationReady?.();
-            // After 2.8s for tier gauge + coins to animate, show darn-it bubble
+            // Wait 2.8s for PostGameScreen to fully render + animate, then show bubble
             setTimeout(() => {
-
               enqueue({
                 key: "darnit",
                 node: (
@@ -213,10 +212,8 @@ export function CoachLayer({
                     Don't forget to collect your rewards!&nbsp;🪙
                   </span>
                 ),
-
               });
-              // enqueue already defers drain via setTimeout
-            }, 1600);
+            }, 2800);
           }
         },
       }, 600);
@@ -272,7 +269,7 @@ export function CoachLayer({
         key: "final_not_bad",
         node: (
           <span>
-            Not bad for a newbie — we lucked out and drew Booker's game against TOR on March 17th 2025, what a game! Two more wins and we unlock the 23-24 season game pack. Run it back?&nbsp;🏀
+            Not bad for a newbie — we lucked out and drew Booker's game against TOR on March 17th 2025, what a game! Two more wins and we unlock 5% of the bonus pool. Run it back?&nbsp;🏀
           </span>
         ),
         onDismiss: () => setReplayReady(true),

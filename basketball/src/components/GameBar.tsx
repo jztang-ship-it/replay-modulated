@@ -84,7 +84,10 @@ type Props = {
   ftueHideSkip?: boolean;
   ftuePulseNearMiss?: boolean;
   ftueReplayBlocked?: boolean;
+  tierGaugeSlot?: React.ReactNode;
 };
+
+import React from 'react';
 
 export function GameBar(props: Props) {
   return (

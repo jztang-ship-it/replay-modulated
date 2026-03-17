@@ -13,7 +13,7 @@ export interface ResolvedCard extends GeneratedCard {
   achievements: Achievement[];
 }
 
-export interface ResolveConfig { fpScale: number; minMinutes?: number; }
+export interface ResolveConfig { fpScale: number; minMinutes?: number; handCount?: number; }
 
 export interface ResolveAdapter {
   computeFantasyPoints(stats: Record<string, any>): number;
@@ -24,7 +24,7 @@ export function resolveCards(cards: GeneratedCard[], logsByKey: Map<string, RawL
   let bestFp = -Infinity;
   let mvpCardId: string | undefined;
   const resolved: ResolvedCard[] = cards.map(card => {
-    const log = pickBiasedLog(card.basePlayerId, parseSeasonNum(card.season), card.tier, logsByKey, rnd, config.minMinutes ?? 8);
+    const log = pickBiasedLog(card.basePlayerId, parseSeasonNum(card.season), card.tier, logsByKey, rnd, config.minMinutes ?? 8, config.handCount ?? 999);
     const stats = log?.stats ?? {};
     // Inject _position BEFORE FP calc so positionProjectionWeights are used
     const statsWithPosition = { ...stats, _position: card.position ?? "" };
@@ -55,7 +55,7 @@ export function extractFpFromStats(stats: Record<string, any>, adapter: ResolveA
   return adapter.computeFantasyPoints(stats);
 }
 
-function pickBiasedLog(basePlayerId: string, season: number | null, tier: string, logsByKey: Map<string, RawLog[]>, rnd: () => number, minMinutes: number = 8): RawLog | null {
+function pickBiasedLog(basePlayerId: string, season: number | null, tier: string, logsByKey: Map<string, RawLog[]>, rnd: () => number, minMinutes: number = 8, handCount: number = 999): RawLog | null {
   const base = basePlayerId.trim();
   if (!base) return null;
   let candidates: RawLog[] = season !== null ? (logsByKey.get(`${base}|${season}`) ?? []) : [];
@@ -83,8 +83,13 @@ function pickBiasedLog(basePlayerId: string, season: number | null, tier: string
   const sorted = [...candidates].sort((a, b) => sumStats(b.stats) - sumStats(a.stats));
   const n = sorted.length;
   const t = (tier ?? "").toUpperCase();
+  // Protected mode: hands 2-30 sample from top 60% of logs regardless of tier
+  // This gives newbie players better game nights without changing thresholds
+  const isProtected = handCount >= 2 && handCount <= 30;
   let lo: number, hi: number;
-  if (t === "ORANGE")      { lo = 0;                       hi = Math.max(1, Math.ceil(n * 0.40)); }
+  if (isProtected) {
+    lo = 0; hi = Math.max(1, Math.ceil(n * 0.60));
+  } else if (t === "ORANGE")      { lo = 0;                       hi = Math.max(1, Math.ceil(n * 0.40)); }
   else if (t === "PURPLE") { lo = 0;                       hi = Math.max(1, Math.ceil(n * 0.55)); }
   else if (t === "BLUE")   { lo = Math.floor(n * 0.20);    hi = Math.min(n, Math.ceil(n * 0.70)); }
   else if (t === "GREEN")  { lo = Math.floor(n * 0.30);    hi = Math.min(n, Math.ceil(n * 0.80)); }

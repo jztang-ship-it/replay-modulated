@@ -104,8 +104,10 @@ export async function redrawRoster({
 
 export async function resolveRoster({
   finalCards,
+  handCount,
 }: {
   finalCards: PlayerCard[];
+  handCount?: number;
 }): Promise<{ roster: PlayerCard[]; mvpCardId?: string }> {
   const logsByKey = getLogsByKey();
   const rnd = mulberry32(randomSeed());
@@ -113,7 +115,11 @@ export async function resolveRoster({
   const { resolved, mvpCardId } = resolveCards(
     finalCards as unknown as GeneratedCard[],
     logsByKey,
-    { fpScale: 1, minMinutes: (sportAdapter as any).config?.historicalLogFilters?.minMinutes ?? 10 },
+    {
+      fpScale: 1,
+      minMinutes: (sportAdapter as any).config?.historicalLogFilters?.minMinutes ?? 10,
+      handCount: handCount ?? 999,
+    },
     sportAdapter,
     rnd,
   );

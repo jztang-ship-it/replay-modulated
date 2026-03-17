@@ -4,7 +4,8 @@
 // Persists to localStorage. Auto-resets daily counters at midnight.
 
 import { useState, useEffect, useCallback } from 'react';
-import { DAILY_TASKS, TaskId } from './tasks.config';
+import { DAILY_TASKS } from './tasks.config';
+import type { TaskId } from './tasks.config';
 
 // ── Storage keys ──────────────────────────────────────────────────────────────
 const KEYS = {
@@ -41,9 +42,9 @@ export interface EngagementState {
   taskStates:     TaskState[];
   coins:          number;
   xp:             number;
-  hotStreak:      boolean;   // 3+ consecutive wins this session
+  hotStreak:      boolean;
   sessionWins:    number;
-  dailyTasksDone: number;    // how many of the 3 daily tasks completed today
+  dailyTasksDone: number;
 }
 
 export interface EngagementActions {
@@ -52,10 +53,11 @@ export interface EngagementActions {
   recordHandLost:   () => void;
   awardCoins:       (amount: number) => void;
   awardXP:          (amount: number) => void;
+  collectTask:      (taskId: string) => void;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const todayStr = () => new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+const todayStr = () => new Date().toISOString().slice(0, 10);
 
 function loadJSON<T>(key: string, fallback: T): T {
   try {
@@ -72,7 +74,8 @@ function save(key: string, value: unknown) {
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 export function useEngagement(): EngagementState & EngagementActions {
-  // ── Init state from localStorage ─────────────────────────────────────────
+  const todayKey = todayStr();
+
   const [loginStreak, setLoginStreak] = useState<number>(() =>
     loadJSON(KEYS.streak, 0)
   );
@@ -89,19 +92,17 @@ export function useEngagement(): EngagementState & EngagementActions {
   const [coins, setCoins] = useState<number>(() => loadJSON(KEYS.coins, 0));
   const [xp, setXP]       = useState<number>(() => loadJSON(KEYS.xp, 0));
 
-  // todayKey — stable daily string used for collected rewards
-  const todayKey = new Date().toISOString().slice(0, 10);
-
+  // Collected rewards — keyed by today so they reset daily
   const [tasksCollected, setTasksCollected] = useState<Set<string>>(() => {
     try {
-      const raw = localStorage.getItem('rp_tasks_collected_' + todayKey);
+      const raw = localStorage.getItem('rp_tasks_collected_' + todayStr());
       return raw ? new Set(JSON.parse(raw)) : new Set<string>();
     } catch { return new Set<string>(); }
   });
 
-  // Session-only (not persisted)
-  const [sessionWins, setSessionWins]         = useState(0);
-  const [sessionConsecutive, setConsecutive]  = useState(0);
+  // Session-only
+  const [sessionWins, setSessionWins]        = useState(0);
+  const [sessionConsecutive, setConsecutive] = useState(0);
 
   // ── Daily reset ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -109,27 +110,22 @@ export function useEngagement(): EngagementState & EngagementActions {
     const today     = todayStr();
 
     if (lastLogin !== today) {
-      // New day — reset daily progress
       const freshProgress: TaskProgress = { handsPlayed: 0, handsWon: 0, loggedIn: true };
       setTaskProgress(freshProgress);
       save(KEYS.taskProgress, freshProgress);
-
       setTasksDone(new Set());
       save(KEYS.tasksDone, []);
+      setTasksCollected(new Set());
 
-      // Update streak
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = yesterday.toISOString().slice(0, 10);
       const isConsecutive = lastLogin === yesterdayStr;
-
       const newStreak = isConsecutive ? loginStreak + 1 : 1;
       setLoginStreak(newStreak);
       save(KEYS.streak, newStreak);
-
       localStorage.setItem(KEYS.lastLogin, today);
     } else {
-      // Same day — mark login task complete if not already
       if (!taskProgress.loggedIn) {
         const updated = { ...taskProgress, loggedIn: true };
         setTaskProgress(updated);
@@ -140,7 +136,6 @@ export function useEngagement(): EngagementState & EngagementActions {
   }, []);
 
   // ── Task evaluation ───────────────────────────────────────────────────────
-  // Runs whenever taskProgress changes — checks if any tasks newly completed
   useEffect(() => {
     let coinsEarned = 0;
     let xpEarned    = 0;
@@ -148,17 +143,15 @@ export function useEngagement(): EngagementState & EngagementActions {
     let changed     = false;
 
     for (const task of DAILY_TASKS) {
-      if (newlyDone.has(task.id)) continue; // already done
-
+      if (newlyDone.has(task.id)) continue;
       let met = false;
       if (task.id === 'daily_login')        met = taskProgress.loggedIn;
       if (task.id === 'daily_play_5_hands') met = taskProgress.handsPlayed >= task.target;
       if (task.id === 'daily_win_2_hands')  met = taskProgress.handsWon    >= task.target;
-
       if (met) {
         newlyDone.add(task.id);
         coinsEarned += task.rewardCoins;
-        xpEarned    += task.rewardCoins; // 1 XP per coin for now
+        xpEarned    += task.rewardCoins;
         changed      = true;
       }
     }
@@ -166,7 +159,6 @@ export function useEngagement(): EngagementState & EngagementActions {
     if (changed) {
       setTasksDone(newlyDone);
       save(KEYS.tasksDone, Array.from(newlyDone));
-
       if (coinsEarned > 0) {
         setCoins(prev => { const n = prev + coinsEarned; save(KEYS.coins, n); return n; });
         setXP(prev    => { const n = prev + xpEarned;    save(KEYS.xp, n);    return n; });
@@ -194,7 +186,7 @@ export function useEngagement(): EngagementState & EngagementActions {
   }, []);
 
   const recordHandLost = useCallback(() => {
-    setConsecutive(0); // break the hot streak
+    setConsecutive(0);
   }, []);
 
   const awardCoins = useCallback((amount: number) => {
@@ -204,6 +196,20 @@ export function useEngagement(): EngagementState & EngagementActions {
   const awardXP = useCallback((amount: number) => {
     setXP(prev => { const n = prev + amount; save(KEYS.xp, n); return n; });
   }, []);
+
+  const collectTask = useCallback((taskId: string) => {
+    if (tasksCollected.has(taskId)) return;
+    const task = DAILY_TASKS.find(t => t.id === taskId);
+    if (!task) return;
+    const next = new Set(tasksCollected).add(taskId);
+    setTasksCollected(next);
+    try {
+      localStorage.setItem('rp_tasks_collected_' + todayKey, JSON.stringify([...next]));
+    } catch {}
+    if (task.rewardCoins) {
+      setCoins(prev => { const n = prev + task.rewardCoins; save(KEYS.coins, n); return n; });
+    }
+  }, [tasksCollected, todayKey]);
 
   // ── Derived ───────────────────────────────────────────────────────────────
   const taskStates: TaskState[] = DAILY_TASKS.map(task => {
@@ -226,19 +232,6 @@ export function useEngagement(): EngagementState & EngagementActions {
     };
   });
 
-  function collectTask(taskId: string) {
-    if (tasksCollected.has(taskId)) return;
-    const task = DAILY_TASKS.find(t => t.id === taskId);
-    if (!task) return;
-    const next = new Set(tasksCollected).add(taskId);
-    setTasksCollected(next);
-    try {
-      localStorage.setItem('rp_tasks_collected_' + todayKey, JSON.stringify([...next]));
-    } catch {}
-    if (task.rewardCoins) awardCoins(task.rewardCoins);
-    if ((task as any).rewardXP) awardXP((task as any).rewardXP);
-  }
-
   return {
     loginStreak,
     taskStates,
@@ -247,7 +240,6 @@ export function useEngagement(): EngagementState & EngagementActions {
     hotStreak:      sessionConsecutive >= 3,
     sessionWins,
     dailyTasksDone: tasksDone.size,
-
     recordHandPlayed,
     recordHandWon,
     recordHandLost,

@@ -1,8 +1,8 @@
 /**
  * TierGauge.tsx
  * Exact visual match to PostGameScreen NearMissBar.
- * Shows during REVEALING and RESULTS phases only.
- * Color always fades LEFT (current/bust gray) → RIGHT (next tier color).
+ * Only renders when visible=true AND totalFp > 0.
+ * Color fades LEFT (current tier) → RIGHT (next tier).
  */
 
 import { useEffect, useState } from "react";
@@ -37,7 +37,7 @@ export function TierGauge({ totalFp, thresholds, visible }: TierGaugeProps) {
 
   const sorted = [...thresholds].sort((a, b) => a.minFP - b.minFP);
 
-  // Determine current tier (highest threshold crossed)
+  // Find current tier (highest threshold crossed) and next tier
   let currentTier: GaugeTier = "BUST";
   let nextTier: GaugeTier | null = sorted[0]?.tier ?? null;
   let nextTierThreshold = sorted[0]?.minFP ?? 133;
@@ -50,15 +50,13 @@ export function TierGauge({ totalFp, thresholds, visible }: TierGaugeProps) {
     }
   }
 
-  const tierCfg    = TIER_CONFIG[currentTier] ?? TIER_CONFIG.BUST;
-  const nextCfg    = nextTier ? (TIER_CONFIG[nextTier] ?? TIER_CONFIG.BUST) : null;
-
-  // When BUST, target is first threshold (ROOKIE)
-  const targetCfg       = nextCfg ?? (TIER_CONFIG[sorted[0]?.tier ?? "ROOKIE"]);
+  const tierCfg = TIER_CONFIG[currentTier] ?? TIER_CONFIG.BUST;
+  // When BUST, target is ROOKIE (first threshold)
+  const targetTier      = nextTier ?? (sorted[0]?.tier ?? "ROOKIE");
+  const targetCfg       = TIER_CONFIG[targetTier] ?? TIER_CONFIG.ROOKIE;
   const targetThreshold = nextTier ? nextTierThreshold : (sorted[0]?.minFP ?? 133);
   const gap             = Math.max(0, targetThreshold - totalFp);
 
-  // Bar fill: what fraction of the way to next tier are we?
   const rawPct     = Math.min(1, totalFp / targetThreshold);
   const displayPct = Math.min(0.95, Math.max(0.02, rawPct));
 
@@ -69,16 +67,6 @@ export function TierGauge({ totalFp, thresholds, visible }: TierGaugeProps) {
   }, [displayPct, visible, totalFp]);
 
   if (!visible || totalFp <= 0) return null;
-
-  // Left label: current tier (BUST if below ROOKIE)
-  // Right label: next tier to hit
-  const leftLabel  = tierCfg.label;
-  const rightLabel = targetCfg.label;
-
-  // Color fade: gray (bust) or current tier color → next tier color
-  const fromColor = tierCfg.color;   // gray when BUST, tier color when won
-  const toColor   = targetCfg.color; // always the target tier color
-  const glowColor = targetCfg.glow;
 
   return (
     <div style={{
@@ -91,7 +79,7 @@ export function TierGauge({ totalFp, thresholds, visible }: TierGaugeProps) {
       gap: 8,
     }}>
 
-      {/* Gap callout — matches PostGameScreen exactly */}
+      {/* Gap callout — matches PostGameScreen */}
       <div style={{
         display: "flex",
         alignItems: "center",
@@ -101,7 +89,7 @@ export function TierGauge({ totalFp, thresholds, visible }: TierGaugeProps) {
         <span style={{
           fontSize: 26,
           fontWeight: 800,
-          color: toColor,
+          color: targetCfg.color,
           fontFamily: FF,
           letterSpacing: "-0.5px",
         }}>
@@ -114,11 +102,11 @@ export function TierGauge({ totalFp, thresholds, visible }: TierGaugeProps) {
           letterSpacing: "0.08em",
           textTransform: "uppercase",
         }}>
-          pts to {rightLabel}
+          pts to {targetCfg.label}
         </span>
       </div>
 
-      {/* Bar — same height (8px), same gradient, same glow as PostGameScreen */}
+      {/* Bar — same 8px height, same gradient, same glow as PostGameScreen */}
       <div style={{
         position: "relative",
         height: 8,
@@ -133,32 +121,21 @@ export function TierGauge({ totalFp, thresholds, visible }: TierGaugeProps) {
           height: "100%",
           borderRadius: 999,
           width: `${barFill * 100}%`,
-          background: `linear-gradient(90deg, ${fromColor}88, ${toColor})`,
-          boxShadow: `0 0 12px ${glowColor}`,
+          background: `linear-gradient(90deg, ${tierCfg.color}88, ${targetCfg.color})`,
+          boxShadow: `0 0 12px ${targetCfg.glow}`,
           transition: "width 1.2s cubic-bezier(0.22, 1, 0.36, 1)",
         }} />
       </div>
 
-      {/* Tier labels — left=current, right=target */}
+      {/* Labels — left=current, right=target */}
       <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <span style={{
-          color: fromColor,
-          fontSize: 10,
-          fontFamily: FF,
-          letterSpacing: "0.08em",
-        }}>
-          {leftLabel}
+        <span style={{ color: tierCfg.color, fontSize: 10, fontFamily: FF, letterSpacing: "0.08em" }}>
+          {tierCfg.label}
         </span>
-        <span style={{
-          color: toColor,
-          fontSize: 10,
-          fontFamily: FF,
-          letterSpacing: "0.08em",
-        }}>
-          {rightLabel}
+        <span style={{ color: targetCfg.color, fontSize: 10, fontFamily: FF, letterSpacing: "0.08em" }}>
+          {targetCfg.label}
         </span>
       </div>
-
     </div>
   );
 }

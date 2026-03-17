@@ -296,6 +296,12 @@ const [streak, setStreak] = useState<number>(() =>
   parseInt(localStorage.getItem("replaymod_streak") ?? "0", 10)
 );
 
+  // Hand count — drives Protected mode (hands 2-30 get top-60% log sampling)
+  // Hand 1 is always FTUE. Persisted across sessions.
+  const [handCount, setHandCount] = useState<number>(() =>
+    parseInt(localStorage.getItem("replaymod_hand_count") ?? "1", 10)
+  );
+
   // Zone 1: Hooks
   useEffect(() => {
     ensureLoaded().then(() => setDataReady(true)).catch(console.error);
@@ -526,7 +532,7 @@ const [streak, setStreak] = useState<number>(() =>
       const drawnRoster     = (drawRes?.roster ?? drawRes?.cards ?? markedRoster) as PlayerCard[];
       const resolveRes: any = isFTUE
         ? await resolveFTUERoster({ finalCards: drawnRoster })
-        : await resolveRoster({ finalCards: drawnRoster });
+        : await resolveRoster({ finalCards: drawnRoster, handCount });
       const finalRoster     = (resolveRes?.roster ?? resolveRes?.cards ?? drawnRoster) as PlayerCard[];
       const mvp: string | undefined = resolveRes?.mvpCardId ?? resolveRes?.mvpId;
       if (mvp) setMvpId(mvp);
@@ -594,6 +600,14 @@ const [streak, setStreak] = useState<number>(() =>
   }, [gameState, isFTUE]); // eslint-disable-line
 
   function onWinCelebrationComplete() {
+    // Increment hand count for Protected mode tracking
+    if (!isFTUE) {
+      setHandCount(prev => {
+        const next = prev + 1;
+        localStorage.setItem("replaymod_hand_count", String(next));
+        return next;
+      });
+    }
     if (winPayout > 0) {
       setIsBalanceAnimating(true);
       setBalance(prev => prev + winPayout);

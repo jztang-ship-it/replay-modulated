@@ -15,20 +15,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
-    const { event, date } = body ?? {}
 
-    if (!event || !date) {
-      return res.status(400).json({ error: 'Missing event or date' })
+    // Support both batch (array) and single event payloads
+    const events = Array.isArray(body) ? body : (body?.events ?? [body])
+
+    if (!events.length) {
+      return res.status(400).json({ error: 'Missing events' })
     }
 
-    const d = String(date)
+    const d = new Date().toISOString().slice(0, 10)
 
-    if (event === 'hands_dealt') {
-      await inc(`gameplay:hands_dealt:${d}`, 1, YEAR)
-    } else if (event === 'game_won') {
-      await inc(`gameplay:wins:${d}`, 1, YEAR)
-    } else if (event === 'challenge_sent') {
-      await inc(`pvp:challenges_sent:${d}`, 1, YEAR)
+    for (const evt of events) {
+      if (!evt) continue
+      const feature = String(evt.feature ?? '')
+      const action  = String(evt.action ?? evt.event ?? '')
+
+      // Map feature/action -> storage keys
+      if (feature === 'gameplay' || action === 'hands_dealt') {
+        await inc(`gameplay:hands_dealt:${d}`, 1, YEAR)
+      }
+      if (action === 'hand_resolved' || action === 'game_won') {
+        const bust = evt.props?.bust ?? evt.bust
+        if (!bust) await inc(`gameplay:wins:${d}`, 1, YEAR)
+        await inc(`gameplay:hands_resolved:${d}`, 1, YEAR)
+      }
+      if (feature === 'session' && action === 'session_end') {
+        await inc(`gameplay:sessions:${d}`, 1, YEAR)
+      }
     }
 
     return res.status(200).json({ success: true })
