@@ -13,12 +13,12 @@ export type { WinTierKey };
 export type WinTier = WinTierKey;
 
 export const BASKETBALL_WIN_TIERS: WinTierMap = {
-  JACKPOT:  { minFp: 225, multiplier: 50  },  // ~1%  — community pool
-  MVP:      { minFp: 207, multiplier: 15  },  // ~2%
+  JACKPOT:  { minFp: 225, multiplier: 50  },  // ~0.1% — community pool
+  MVP:      { minFp: 207, multiplier: 15  },  // ~1%
   ALL_STAR: { minFp: 183, multiplier: 7   },  // ~5%
   STARTER:  { minFp: 160, multiplier: 2.5 },  // ~13%
-  ROOKIE:   { minFp: 133, multiplier: 0.5 },  // ~34%
-  BUST:     { minFp: 0,   multiplier: 0   },  // ~46%
+  ROOKIE:   { minFp: 133, multiplier: 0.5 },  // ~29%
+  BUST:     { minFp: 0,   multiplier: 0   },  // rest
 };
 
 export function calculateWinTier(totalFp: number): WinTierKey {

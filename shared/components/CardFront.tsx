@@ -161,7 +161,7 @@ export function CardFront(props: CardFrontProps) {
   const seasonFmt = formatSeasonRange(season);
   const posRaw    = clampText((card as any)?.position);
   const posMap: Record<string, string> = {
-    "PG":"G","SG":"G","G":"G","SF":"F","PF":"F","F":"F",
+    "PG":"PG","SG":"SG","G":"G","SF":"SF","PF":"PF","F":"F",
     "G/F":"G/F","F/G":"G/F","F/C":"F/C","C":"C",
   };
   const pos       = posRaw ? (posMap[posRaw.toUpperCase()] ?? posRaw) : "";

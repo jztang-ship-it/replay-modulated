@@ -89,6 +89,10 @@ type Props = {
   ftuePulseNearMiss?: boolean;
   /** FTUE: block the replay/deal button (before final bubble dismissed) */
   ftueReplayBlocked?: boolean;
+  /** Hide the built-in TierBar — use when an external TierGauge is shown */
+  hideTierBar?: boolean;
+  /** Slot rendered between tier bar and multipliers — used for external TierGauge */
+  tierGaugeSlot?: React.ReactNode;
 };
 
 const MULTIPLIERS = [1, 3, 5, 10];
@@ -910,6 +914,8 @@ export function GameBar({
   ftueHideSkip = false,
   ftuePulseNearMiss = false,
   ftueReplayBlocked = false,
+  hideTierBar = false,
+  tierGaugeSlot,
 }: Props) {
   const betLocked = gameState === "DEALING" || gameState === "DRAWING" || gameState === "REVEALING";
   const [showLegend, setShowLegend] = useState(false);
@@ -1044,8 +1050,8 @@ export function GameBar({
           )}
         </div>
 
-        {/* ── ZONE B: Tier gauge — always live, never blurred ──────── */}
-        <div style={{
+        {/* ── ZONE B: Tier gauge — hidden when external TierGauge is used ── */}
+        {!hideTierBar && <div style={{
           paddingTop: 10, paddingBottom: 10,
           borderTop: "1px solid rgba(255,255,255,0.06)",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
@@ -1060,7 +1066,7 @@ export function GameBar({
             onOvershootSettled={() => setOvershootSettled(true)}
             ftuePulseNearMiss={ftuePulseNearMiss}
           />
-        </div>
+        </div>}
 
         {/* Invisible wallet target for coin fly — lives outside blur zone */}
         <div ref={walletTargetRef} style={{ pointerEvents: "none", zIndex: 9998 }} />
@@ -1074,6 +1080,13 @@ export function GameBar({
             color="#FFD700"
             count={Math.min(8, Math.max(3, Math.round((celebration?.payout ?? 0) / 30)))}
           />
+        )}
+
+        {/* ── ZONE B.5: External tier gauge slot ── */}
+        {tierGaugeSlot && (
+          <div style={{ paddingTop: 2, paddingBottom: 12 }}>
+            {tierGaugeSlot}
+          </div>
         )}
 
         {/* ── ZONE C: Multipliers/Wallet/Action ↔ Streak hook ─────── */}

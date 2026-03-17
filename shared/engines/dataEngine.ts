@@ -6,7 +6,7 @@
 import type { RawPlayer, RawLog } from "../types";
 
 let PLAYERS_URL = "/data/players.json";
-let LOGS_URL_PRIMARY = "/data/game-logs.enriched.json";
+let LOGS_URL_PRIMARY = "/data/game-logs.json";
 let LOGS_URL_FALLBACK = "/data/game-logs.json";
 
 export function configure(urls: { players: string; logsPrimary?: string; logsFallback: string }): void {

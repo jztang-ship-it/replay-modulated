@@ -309,46 +309,135 @@ async function main() {
   console.log("  Max:    " + allFps[allFps.length-1].toFixed(1));
   console.log("  Avg badge/hand: +" + avgBdg.toFixed(1));
 
-  if (winTiers.length) {
-    const TARGET: Record<string,number> = { ROOKIE:32, STARTER:13, ALL_STAR:5, MVP:1 };
-    console.log("\n=== WIN TIER HIT RATES ===");
-    let needsAdj = false;
-    for (const tier of winTiers) {
-      const rate = allFps.filter(f=>f>=tier.minFp).length/N*100;
-      const target = TARGET[tier.name]??5;
-      const flag = rate>target*1.5 ? "TOO EASY" : rate<target*0.5 ? "TOO HARD" : "GOOD";
-      if (flag!=="GOOD") needsAdj=true;
-      console.log("  " + tier.name.padEnd(9) + " >=" + String(tier.minFp).padStart(4) + " FP (" + tier.multiplier + "x)  " + rate.toFixed(1) + "%  " + bar(rate) + "  " + flag);
+  // === MULTI-SCENARIO THRESHOLD COMPARISON ===
+  type TierDef = { tier: string; minFP: number; multiplier: number };
+
+  const SCENARIOS: { label: string; desc: string; tiers: TierDef[] }[] = [
+    {
+      label: "CURRENT (baseline)",
+      desc:  "Existing thresholds — for reference only",
+      tiers: [
+        { tier: "ROOKIE",   minFP: 133, multiplier: 0.5  },
+        { tier: "STARTER",  minFP: 160, multiplier: 2.5  },
+        { tier: "ALL_STAR", minFP: 183, multiplier: 7.0  },
+        { tier: "MVP",      minFP: 207, multiplier: 15.0 },
+        { tier: "JACKPOT",  minFP: 225, multiplier: 0    },
+      ],
+    },
+    {
+      label: "PROTECTED (hands 2-30)",
+      desc:  "Newbie phase — tighter gap vs Live, floor guarantee does the heavy lifting",
+      tiers: [
+        { tier: "ROOKIE",   minFP: 118, multiplier: 0.5  },
+        { tier: "STARTER",  minFP: 150, multiplier: 2.5  },
+        { tier: "ALL_STAR", minFP: 178, multiplier: 7.0  },
+        { tier: "MVP",      minFP: 205, multiplier: 15.0 },
+        { tier: "JACKPOT",  minFP: 225, multiplier: 0    },
+      ],
+    },
+    {
+      label: "LIVE (hand 31+)",
+      desc:  "Standard play — same ROOKIE threshold, no floor boost",
+      tiers: [
+        { tier: "ROOKIE",   minFP: 118, multiplier: 0.5  },
+        { tier: "STARTER",  minFP: 155, multiplier: 2.5  },
+        { tier: "ALL_STAR", minFP: 180, multiplier: 7.0  },
+        { tier: "MVP",      minFP: 205, multiplier: 15.0 },
+        { tier: "JACKPOT",  minFP: 225, multiplier: 0    },
+      ],
+    },
+    {
+      label: "LIVE ALT (slightly easier)",
+      desc:  "If Live EV still too punishing — nudge ROOKIE down to 113",
+      tiers: [
+        { tier: "ROOKIE",   minFP: 113, multiplier: 0.5  },
+        { tier: "STARTER",  minFP: 155, multiplier: 2.5  },
+        { tier: "ALL_STAR", minFP: 180, multiplier: 7.0  },
+        { tier: "MVP",      minFP: 205, multiplier: 15.0 },
+        { tier: "JACKPOT",  minFP: 225, multiplier: 0    },
+      ],
+    },
+  ];
+
+  const STREAK_TARGETS = [2, 3, 4, 5, 7];
+  const BONUS_LABELS: Record<number,string> = { 3: "+5% bonus", 5: "+15% bonus", 7: "jackpot" };
+  const SESSION_HANDS = 10;
+  const NUM_SESSIONS = Math.max(N, 10000);
+
+  function calcEV(tiers: TierDef[], fps: number[]): number {
+    const sorted = [...tiers].filter(t => t.multiplier > 0).sort((a,b) => b.minFP - a.minFP);
+    let ev = 0;
+    for (let i = 0; i < sorted.length; i++) {
+      const lo = sorted[i].minFP;
+      const hi = i === 0 ? Infinity : sorted[i-1].minFP;
+      ev += fps.filter(f => f >= lo && f < hi).length / fps.length * sorted[i].multiplier;
     }
-    if (needsAdj) {
-      const sorted = [...winTiers].sort((a,b)=>b.minFp-a.minFp);
-      console.log("\n=== SUGGESTED THRESHOLDS ===");
-      const out: {name:string;minFp:number;mult:number}[] = [];
-      for (const tier of sorted) {
-        const tp = TARGET[tier.name]??5;
-        const rounded = Math.round(pct(allFps,100-tp)/5)*5;
-        const actual = allFps.filter(f=>f>=rounded).length/N*100;
-        out.push({name:tier.name,minFp:rounded,mult:tier.multiplier});
-        console.log("  " + tier.name.padEnd(9) + " >=" + rounded + " FP (" + tier.multiplier + "x)  ->" + actual.toFixed(1) + "%");
+    return ev;
+  }
+
+  function runStreaks(rookieFP: number, fps: number[]): Record<number,number> {
+    const counts: Record<number,number> = {};
+    STREAK_TARGETS.forEach(t => counts[t] = 0);
+    for (let s = 0; s < NUM_SESSIONS; s++) {
+      let cur = 0, max = 0;
+      for (let h = 0; h < SESSION_HANDS; h++) {
+        const fp = fps[Math.floor(Math.random() * fps.length)];
+        if (fp >= rookieFP) { cur++; if (cur > max) max = cur; } else cur = 0;
       }
-      console.log("\n  Paste into winTiers:");
-      for (const s of out.sort((a,b)=>a.minFp-b.minFp)) {
-        console.log('    { name: "' + s.name + '", minFp: ' + s.minFp + ', multiplier: ' + s.mult + ' },');
-      }
+      STREAK_TARGETS.forEach(t => { if (max >= t) counts[t]++; });
+    }
+    return counts;
+  }
+
+  console.log("\n" + "=".repeat(65));
+  console.log("  SCENARIO COMPARISON  (" + NUM_SESSIONS.toLocaleString() + " sessions x " + SESSION_HANDS + " hands)");
+  console.log("=".repeat(65));
+
+  for (const scenario of SCENARIOS) {
+    const rookieTier = scenario.tiers.find(t => t.tier === "ROOKIE")!;
+    const winRate = allFps.filter(f => f >= rookieTier.minFP).length / N * 100;
+    const ev = calcEV(scenario.tiers, allFps);
+    const evFlag = ev > 1 ? "HOUSE LOSES" : ev > 0.85 ? "TOO GENEROUS" : ev >= 0.70 ? "TARGET ZONE" : ev >= 0.55 ? "SLIGHTLY PUNISHING" : "TOO PUNISHING";
+    const streaks = runStreaks(rookieTier.minFP, allFps);
+
+    console.log("\n--- " + scenario.label + " ---");
+    console.log("    " + scenario.desc);
+    console.log("");
+
+    // Tier hit rates
+    for (const t of scenario.tiers) {
+      const rate = allFps.filter(f => f >= t.minFP).length / N * 100;
+      const barW = Math.round(Math.min(rate, 50) / 50 * 20);
+      console.log("    " + t.tier.padEnd(9) + " >=" + String(t.minFP).padStart(4) + " FP  " +
+        String(rate.toFixed(1) + "%").padStart(6) + "  [" + "#".repeat(barW) + ".".repeat(20-barW) + "]");
     }
 
-    const sorted = [...winTiers].sort((a,b)=>b.minFp-a.minFp);
-    let ev = 0;
-    for (let i=0;i<sorted.length;i++) {
-      const lo=sorted[i].minFp, hi=i===0?Infinity:sorted[i-1].minFp;
-      ev+=allFps.filter(f=>f>=lo&&f<hi).length/N*sorted[i].multiplier;
+    console.log("");
+    console.log("    Win rate (ROOKIE+): " + winRate.toFixed(1) + "%");
+    console.log("    EV:                 " + ev.toFixed(3) + "  " + evFlag);
+
+    // Streak rates
+    console.log("    Streaks (per " + SESSION_HANDS + "-hand session):");
+    for (const t of STREAK_TARGETS) {
+      const rate = streaks[t] / NUM_SESSIONS * 100;
+      const feel = rate > 40 ? "very common" : rate > 20 ? "common" : rate > 8 ? "occasional" : rate > 2 ? "rare" : "very rare";
+      const bonus = BONUS_LABELS[t] ? " <- " + BONUS_LABELS[t] : "";
+      console.log("      " + String(t + "-win:").padEnd(8) + String(rate.toFixed(1) + "%").padStart(6) + "  " + feel + bonus);
     }
-    console.log("\n  EV: " + ev.toFixed(3) + (ev>1?"  HOUSE LOSES":ev<0.5?"  TOO PUNISHING":"  OK") + "  (target 0.70-0.85)");
   }
+
+  console.log("\n" + "=".repeat(65));
+  console.log("  RECOMMENDATION SUMMARY");
+  console.log("=".repeat(65));
+  console.log("  Hand 1:      FTUE (Devin Booker, hardcoded, guaranteed good)");
+  console.log("  Hands 2-30:  PROTECTED thresholds (invisible to user)");
+  console.log("  Hand 31+:    LIVE thresholds");
+  console.log("  Bonus tiers: 3-win=+5%  5-win=+15%  (7-win jackpot: post-beta)");
+  console.log("");
 
   if (verbose) {
     console.log("\n=== TOP 20 HANDS ===");
-    allFps.slice(-20).reverse().forEach((fp,i)=>console.log("  #"+(i+1)+": "+fp.toFixed(1)+" FP"));
+    allFps.slice(-20).reverse().forEach((fp,i) => console.log("  #"+(i+1)+": "+fp.toFixed(1)+" FP"));
   }
 }
 

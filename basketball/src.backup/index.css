@@ -66,3 +66,7 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+@keyframes flameWiggle {
+  from { transform: rotate(-8deg) scale(1);    }
+  to   { transform: rotate( 8deg) scale(1.15); }
+}

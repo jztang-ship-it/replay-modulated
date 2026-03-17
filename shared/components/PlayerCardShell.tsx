@@ -86,9 +86,31 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
       88%  { transform: translate(1px,0) rotate(0.2deg); }
       100% { transform: translate(0,0) rotate(0deg); }
     }
-    .pcs-shake-hype { animation: pcsShakeHype 0.6s cubic-bezier(0.36,0.07,0.19,0.97) both; }
-    .pcs-shake-big  { animation: pcsShakeBig  0.6s cubic-bezier(0.36,0.07,0.19,0.97) both; }
-    .pcs-shake-cold { animation: pcsShakeCold 0.65s ease-in-out both; }
+      @keyframes pcsShakeLegendary {
+      0%   { transform: translate(0,0) rotate(0deg) scale(1); }
+      10%  { transform: translate(-4px,-3px) rotate(-2deg) scale(1.04); }
+      20%  { transform: translate(4px,3px) rotate(2deg) scale(1.06); }
+      30%  { transform: translate(-5px,2px) rotate(-1.5deg) scale(1.05); }
+      40%  { transform: translate(5px,-2px) rotate(1.5deg) scale(1.04); }
+      50%  { transform: translate(-3px,3px) rotate(-1deg) scale(1.03); }
+      60%  { transform: translate(3px,-1px) rotate(1deg) scale(1.02); }
+      75%  { transform: translate(-2px,1px) rotate(-0.5deg) scale(1.01); }
+      90%  { transform: translate(1px,0) rotate(0.3deg) scale(1); }
+      100% { transform: translate(0,0) rotate(0deg) scale(1); }
+    }
+    @keyframes pcsShakeFrozen {
+      0%   { transform: translate(0,0) rotate(0deg); filter: brightness(1); }
+      20%  { transform: translate(-3px,0) rotate(-0.5deg); filter: brightness(0.85); }
+      40%  { transform: translate(3px,0) rotate(0.5deg); filter: brightness(0.8); }
+      60%  { transform: translate(-2px,0) rotate(-0.3deg); filter: brightness(0.85); }
+      80%  { transform: translate(2px,0) rotate(0.3deg); filter: brightness(0.9); }
+      100% { transform: translate(0,0) rotate(0deg); filter: brightness(1); }
+    }
+    .pcs-shake-hype     { animation: pcsShakeHype     0.6s cubic-bezier(0.36,0.07,0.19,0.97) both; }
+    .pcs-shake-big      { animation: pcsShakeBig      0.6s cubic-bezier(0.36,0.07,0.19,0.97) both; }
+    .pcs-shake-cold     { animation: pcsShakeCold     0.65s ease-in-out both; }
+    .pcs-shake-legendary { animation: pcsShakeLegendary 0.7s cubic-bezier(0.36,0.07,0.19,0.97) both; }
+    .pcs-shake-frozen   { animation: pcsShakeFrozen   0.8s ease-in-out both; }
     @keyframes pcsTapBounce {
       0%,100% { transform: translateY(0); }
       40%     { transform: translateY(-6px); }
@@ -291,9 +313,11 @@ export function PlayerCardShell(props: CardShellProps) {
 
   // ── Classes + styles ──────────────────────────────────────────────────
   const shakeClass =
-    shakeType === "big"  ? "pcs-shake-big"  :
-    shakeType === "hype" ? "pcs-shake-hype" :
-    shakeType === "cold" ? "pcs-shake-cold" : "";
+    shakeType === "big"      ? "pcs-shake-big"      :
+    shakeType === "hype"     ? "pcs-shake-hype"     :
+    shakeType === "cold"     ? "pcs-shake-cold"     :
+    shakeType === "legendary" ? "pcs-shake-legendary" :
+    shakeType === "frozen"   ? "pcs-shake-frozen"   : "";
 
   const innerClass = [
     "pcs-inner",

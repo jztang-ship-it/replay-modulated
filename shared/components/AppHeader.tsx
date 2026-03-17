@@ -21,9 +21,11 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
 
 type Props = {
   sportLabel?: string;
+  onCollect?: () => void;
+  hasUncollected?: boolean;
 };
 
-export function AppHeader({ sportLabel }: Props) {
+export function AppHeader({ sportLabel, onCollect, hasUncollected }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>("home");
 
   return (
@@ -50,29 +52,46 @@ export function AppHeader({ sportLabel }: Props) {
       <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
         {TABS.map(({ id, label, icon }) => {
           const active   = activeTab === id;
-          const disabled = id !== "home";
+          const disabled = id === "pulse" || id === "profile";
+          const isCollect = id === "collect";
+          function handleClick() {
+            if (disabled) return;
+            if (isCollect) { onCollect?.(); return; }
+            setActiveTab(id);
+          }
           return (
-            <button
-              key={id}
-              onClick={() => !disabled && setActiveTab(id)}
-              disabled={disabled}
-              style={{
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 1,
-                padding: "3px 8px",
-                background: active ? "rgba(255,177,74,0.12)" : "transparent",
-                border: active ? "1px solid rgba(255,177,74,0.3)" : "1px solid transparent",
-                borderRadius: 8,
-                cursor: disabled ? "default" : "pointer",
-                opacity: disabled ? 0.35 : 1,
-                transition: "all 150ms ease",
-                minWidth: 40,
-              }}
-            >
-              <span style={{ fontSize: 14, lineHeight: 1 }}>{icon}</span>
-              <span style={{ fontSize: 7, fontWeight: 900, letterSpacing: 0.6, textTransform: "uppercase", color: active ? "#FFB14A" : "#EAF0FF" }}>
-                {label}
-              </span>
-            </button>
+            <div key={id} style={{ position: "relative" }}>
+              <button
+                onClick={handleClick}
+                disabled={disabled}
+                style={{
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 1,
+                  padding: "3px 8px",
+                  background: active ? "rgba(255,177,74,0.12)" : "transparent",
+                  border: active ? "1px solid rgba(255,177,74,0.3)" : "1px solid transparent",
+                  borderRadius: 8,
+                  cursor: disabled ? "default" : "pointer",
+                  opacity: disabled ? 0.35 : 1,
+                  transition: "all 150ms ease",
+                  minWidth: 40,
+                }}
+              >
+                <span style={{ fontSize: 14, lineHeight: 1 }}>{icon}</span>
+                <span style={{ fontSize: 7, fontWeight: 900, letterSpacing: 0.6, textTransform: "uppercase", color: active ? "#FFB14A" : "#EAF0FF" }}>
+                  {label}
+                </span>
+              </button>
+              {/* Red dot for Collect tab */}
+              {isCollect && hasUncollected && (
+                <div style={{
+                  position: "absolute", top: 0, right: 2,
+                  width: 7, height: 7, borderRadius: "50%",
+                  background: "#EF4444",
+                  border: "1.5px solid #070A12",
+                  pointerEvents: "none",
+                }} />
+              )}
+            </div>
           );
         })}
       </div>

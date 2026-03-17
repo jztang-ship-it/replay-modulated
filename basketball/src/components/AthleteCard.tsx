@@ -144,7 +144,7 @@ function BackBStats({ card }: { card: PlayerCard }) {
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:3, flexWrap:"wrap", flex:1 }}>
           {badgesData.slice(0,6).map((b:any, i:number) => (
-            <div key={i} style={{ display:"flex", alignItems:"center", gap:2, flexShrink:0, background:"rgba(0,0,0,0.55)", borderRadius:6, padding:"2px 5px", border:"1px solid rgba(255,255,255,0.18)" }}>
+            <div key={b.id ?? b.label ?? i} style={{ display:"flex", alignItems:"center", gap:2, flexShrink:0, background:"rgba(0,0,0,0.55)", borderRadius:6, padding:"2px 5px", border:"1px solid rgba(255,255,255,0.18)" }}>
               <span style={{ fontSize:13, lineHeight:1 }}>{b.icon}</span>
               <span style={{ fontSize:7, fontWeight:700, color:"#FFD700", letterSpacing:0.3 }}>+{b.fp}</span>
             </div>

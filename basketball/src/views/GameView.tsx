@@ -21,6 +21,15 @@ import { useCardFlipState } from "../hooks/useCardFlipState";
 import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
 import { calculateWinTier, calculatePayout, type WinTier } from "../utils/payoutLogic";
 import { useGameAnalytics } from "../../../shared/analytics/useGameAnalytics";
+import PostGameScreen, { PostGameOverlay } from "@shared/components/PostGameScreen";
+import { buildPostGameResult } from "../utils/buildPostGameResult";
+import { HotStreakOverlay } from '@shared/engagement/HotStreakOverlay';
+import { CollectScreen }  from '@shared/engagement/CollectScreen';
+import { TierGauge }      from '@shared/components/TierGauge';
+import { useEngagement }    from '@shared/engagement/useEngagement';
+import { CoinDisplay }      from '@shared/engagement/CoinDisplay';
+import { DailyTasksPanel }  from '@shared/engagement/DailyTasksPanel';
+import { XPBar }            from '@shared/engagement/XPBar';
 
 const CAP_MAX        = sportAdapter.salaryCap;
 const ROSTER_SIZE    = sportAdapter.rosterSize;
@@ -101,13 +110,39 @@ function toRevealableCards(cards: PlayerCard[]): RevealableCard[] {
   }));
 }
 
-// ── JackpotRow — live ticking community jackpot, centered between header and cards ──
+// ── BonusRow — streak-based bonus pool with next milestone hint ─────────────
 
-function JackpotRow({ betAdded }: { betAdded: number }) {
+const BONUS_TIERS = [
+  { wins: 3, pct: 5,   color: "#FFD700", glow: "#FFD70099" },
+  { wins: 5, pct: 15,  color: "#FB923C", glow: "#FB923C99" },
+];
+
+// Dot config: 5 total — 3 for first tier, 2 for second
+const BONUS_DOTS = [
+  { threshold: 1, tierIdx: 0 },
+  { threshold: 2, tierIdx: 0 },
+  { threshold: 3, tierIdx: 0 },
+  { threshold: 4, tierIdx: 1 },
+  { threshold: 5, tierIdx: 1 },
+];
+
+function BonusRow({ betAdded, streak }: { betAdded: number; streak: number }) {
   const [amount, setAmount] = useState(JACKPOT_SEED);
+  const [prevStreak, setPrevStreak] = useState(streak);
+  const [pulsingDot, setPulsingDot] = useState<number | null>(null);
   const prevBetRef = useRef(0);
 
-  // Tick up every 3s (simulated community activity)
+  // Detect streak increment → pulse the newly lit dot
+  useEffect(() => {
+    if (streak > prevStreak && streak > 0) {
+      setPulsingDot(streak); // dot at this position just lit
+      const t = setTimeout(() => setPulsingDot(null), 1200);
+      setPrevStreak(streak);
+      return () => clearTimeout(t);
+    }
+    setPrevStreak(streak);
+  }, [streak]); // eslint-disable-line
+
   useEffect(() => {
     const id = setInterval(() => {
       setAmount(p => parseFloat((p + TICK_AMOUNT).toFixed(2)));
@@ -115,7 +150,6 @@ function JackpotRow({ betAdded }: { betAdded: number }) {
     return () => clearInterval(id);
   }, []);
 
-  // Each bet contributes 5% rake to the pot
   useEffect(() => {
     if (betAdded > 0 && betAdded !== prevBetRef.current) {
       prevBetRef.current = betAdded;
@@ -124,13 +158,20 @@ function JackpotRow({ betAdded }: { betAdded: number }) {
     }
   }, [betAdded]);
 
+  // What milestone are we working toward?
+  const nextTier = BONUS_TIERS.find(t => streak < t.wins);
+  const earnedTier = [...BONUS_TIERS].reverse().find(t => streak >= t.wins);
+  const winsNeeded = nextTier ? nextTier.wins - streak : 0;
+
   return (
     <div style={{
       flex: "0 0 auto",
-      display: "flex", justifyContent: "center",
+      display: "flex", flexDirection: "column", alignItems: "center",
       padding: "0px 12px",
       marginTop: -1,
+      gap: 5,
     }}>
+      {/* Bonus pool amount */}
       <div style={{
         display: "inline-flex", alignItems: "center", gap: 6,
         padding: "4px 14px", borderRadius: 20,
@@ -138,12 +179,70 @@ function JackpotRow({ betAdded }: { betAdded: number }) {
         border: "1px solid rgba(255,215,0,0.18)",
       }}>
         <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.2, color: "rgba(255,215,0,0.6)", textTransform: "uppercase" }}>
-          🏆 Jackpot
+          Bonus Pool
         </span>
         <span style={{ fontSize: 12, fontWeight: 950, color: "#FFD700", fontVariantNumeric: "tabular-nums", textShadow: "0 0 8px rgba(255,215,0,0.5)" }}>
           ${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </span>
       </div>
+
+      {/* Dot tracker + reward label */}
+      <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+        {BONUS_DOTS.map((dot, i) => {
+          const filled = streak >= dot.threshold;
+          const isPulsing = pulsingDot === dot.threshold;
+          const tierColor = BONUS_TIERS[dot.tierIdx].color;
+          const tierGlow  = BONUS_TIERS[dot.tierIdx].glow;
+          const isBreak = i === 2;
+
+          return (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 3 }}>
+              <div style={{
+                width: filled ? 8 : 7,
+                height: filled ? 8 : 7,
+                borderRadius: "50%",
+                background: filled ? tierColor : "rgba(255,255,255,0.12)",
+                boxShadow: isPulsing
+                  ? `0 0 0 4px ${tierGlow}, 0 0 12px ${tierColor}`
+                  : filled
+                  ? `0 0 6px ${tierGlow}`
+                  : "none",
+                transform: isPulsing ? "scale(1.5)" : "scale(1)",
+                transition: "all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
+              }} />
+              {isBreak && (
+                <div style={{
+                  width: 14, height: 1,
+                  background: "rgba(255,255,255,0.1)",
+                  margin: "0 2px",
+                }} />
+              )}
+            </div>
+          );
+        })}
+
+        {/* Reward label — what you get or what you're chasing */}
+        <span style={{
+          fontSize: 9, fontWeight: 700, marginLeft: 6,
+          color: earnedTier ? earnedTier.color : "rgba(255,255,255,0.25)",
+          letterSpacing: "0.06em",
+          textShadow: earnedTier ? `0 0 8px ${earnedTier.glow}` : "none",
+          transition: "color 0.4s ease",
+        }}>
+          {earnedTier ? `+${earnedTier.pct}%` : nextTier ? `+${nextTier.pct}%` : ""}
+        </span>
+      </div>
+
+      {/* Contextual hint line */}
+      {nextTier && (
+        <div style={{
+          fontSize: 8, fontWeight: 600,
+          color: "rgba(255,255,255,0.25)",
+          letterSpacing: "0.05em",
+        }}>
+          {winsNeeded} more {winsNeeded === 1 ? "win" : "wins"} for {nextTier.pct}% of pool
+        </div>
+      )}
     </div>
   );
 }
@@ -154,6 +253,19 @@ export default function GameView() {
 
   // Zone 1: State
   const [gameState, setGameState]           = useState<GameState>("IDLE");
+  const {
+    hotStreak,
+    sessionWins,
+    taskStates,
+    loginStreak,
+    coins,
+    xp,
+    recordHandPlayed,
+    recordHandWon,
+    recordHandLost,
+    collectTask,
+  } = useEngagement();
+  const [showCollect, setShowCollect] = useState(false);
   const [dataReady, setDataReady]           = useState(false);
   const [roster, setRoster]                 = useState<PlayerCard[]>(createPlaceholders());
   const [lockedCardIds, setLockedCardIds]   = useState<Set<string>>(new Set());
@@ -240,6 +352,9 @@ const [streak, setStreak] = useState<number>(() =>
       const bust = !tier || tier === "BUST";
       const badges = rosterRef.current.reduce((s,c) => s + (c.achievements?.length ?? 0), 0);
       gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
+      recordHandPlayed();
+      if (!bust) recordHandWon();
+      else recordHandLost();
       if (isFTUE) {
         // In FTUE: hold celebration until Booker bubble is dismissed
         pendingCelebration.current = { totalFp };
@@ -247,7 +362,7 @@ const [streak, setStreak] = useState<number>(() =>
       } else {
         setGameState("WIN_CELEBRATION");
       }
-    }, [currentBet, gameAnalytics, isFTUE]),
+    }, [currentBet, gameAnalytics, isFTUE, recordHandPlayed, recordHandWon, recordHandLost]),
   });
 
   // Zone 2: Derived values
@@ -557,11 +672,14 @@ const [streak, setStreak] = useState<number>(() =>
           boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
           padding: "5px 12px", backdropFilter: "blur(10px)",
         }}>
-          <AppHeader />
+          <AppHeader
+            onCollect={() => setShowCollect(true)}
+            hasUncollected={taskStates.some(t => t.progress >= t.target && !t.collected)}
+          />
         </div>
 
-        {/* Community jackpot — own centered row */}
-        <JackpotRow betAdded={currentBet} />
+        {/* Bonus pool row */}
+        <BonusRow betAdded={currentBet} streak={streak} />
 
         {/* Card grid */}
         <div style={{ flex: "1 1 auto", minHeight: 0, maxHeight: "55dvh", position: "relative", zIndex: 20, overflow: "visible" }}>
@@ -657,30 +775,78 @@ const [streak, setStreak] = useState<number>(() =>
             }}
           />
 
-          <GameBar
-            gameState={gameState}
-            balance={balance}
-            isBalanceAnimating={isBalanceAnimating}
-            totalFp={totalFp}
-            lastCardProgress={lastCardProgress}
-            lastCardFp={lastCardFp}
-            capMax={CAP_MAX}
-            capUsed={capUsed}
-            lockedSalary={lockedSalary}
-            revealedSalary={revealedSalary}
-            betMultiplier={betMultiplier}
-            baseBet={BASE_BET}
-            onBetMultiplier={setBetMultiplier}
-            onAction={handleButtonClick}
-            celebration={celebrationData}
-            onWinCelebrationComplete={onWinCelebrationComplete}
-            ftueDrawBlocked={isFTUE && gameState === "HOLD" && !heldCardIds.has("ftue-booker")}
-            ftueHideSkip={isFTUE}
-            ftuePulseNearMiss={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")}
-            ftueReplayBlocked={isFTUE && gameState === "RESULTS" && !ftueReplayReady}
+<div style={{ position: 'relative', width: '100%' }}>
+  <GameBar
+    gameState={gameState}
+    balance={balance}
+    isBalanceAnimating={isBalanceAnimating}
+    totalFp={totalFp}
+    lastCardProgress={lastCardProgress}
+    lastCardFp={lastCardFp}
+    capMax={CAP_MAX}
+    capUsed={capUsed}
+    lockedSalary={lockedSalary}
+    revealedSalary={revealedSalary}
+    betMultiplier={betMultiplier}
+    baseBet={BASE_BET}
+    onBetMultiplier={setBetMultiplier}
+    onAction={handleButtonClick}
+    celebration={celebrationData}
+    onWinCelebrationComplete={onWinCelebrationComplete}
+    ftueDrawBlocked={isFTUE && gameState === "HOLD" && !heldCardIds.has("ftue-booker")}
+    ftueHideSkip={isFTUE}
+    ftuePulseNearMiss={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")}
+    ftueReplayBlocked={isFTUE && gameState === "RESULTS" && !ftueReplayReady}
+    tierGaugeSlot={!isFTUE ? (
+      <TierGauge
+        totalFp={totalFp}
+        thresholds={[
+          { tier: 'ROOKIE',   minFP: 133 },
+          { tier: 'STARTER',  minFP: 160 },
+          { tier: 'ALL_STAR', minFP: 183 },
+          { tier: 'MVP',      minFP: 207 },
+          { tier: 'JACKPOT',  minFP: 225 },
+        ]}
+        visible={gameState === 'REVEALING' || gameState === 'RESULTS' || gameState === 'WIN_CELEBRATION'}
+      />
+    ) : undefined}
+  />
+</div>
+
+{/* ── Hot Streak Overlay ── */}
+<HotStreakOverlay active={hotStreak} winCount={sessionWins} />
+
+{/* ── Collect full screen ── */}
+{showCollect && !isFTUE && (
+  <CollectScreen
+    taskStates={taskStates}
+    loginStreak={loginStreak}
+    coins={coins}
+    xp={xp}
+    onClose={() => setShowCollect(false)}
+    onCollect={(id) => { collectTask?.(id); }}
+  />
+)}
+
+{/* ── PostGameScreen Overlay ── */}
+{gameState === "WIN_CELEBRATION" && winTier && (
+        <PostGameOverlay>
+          <PostGameScreen
+            result={buildPostGameResult(
+              roster,
+              winTier,
+              winPayout,
+              balance,
+              streak,
+              !winTier || winTier === 'BUST',
+            )}
+            onPlayAgain={onWinCelebrationComplete}
           />
-        </div>
-      </div>
-    </div>
-  );
+        </PostGameOverlay>
+      )}
+
+</div>
+  </div>
+</div>
+);
 }
