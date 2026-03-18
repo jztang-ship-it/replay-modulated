@@ -991,64 +991,12 @@ export function GameBar({
       )}
 
       <div
-        onClick={showCelebContent ? handleCelebTap : undefined}
         style={{
           display: "flex", flexDirection: "column", position: "relative",
-          cursor: showCelebContent ? "pointer" : "default",
+          cursor: "default",
         }}>
 
-        {/* ── ZONE A: Score/Budget ↔ Tier name + Coins ─────────────── */}
-        <div style={{ position: "relative", minHeight: 100, overflow: "hidden" }}>
-
-          {/* Normal content — fades out once celebration content is ready */}
-          <div style={{
-            display: "flex", justifyContent: "center", alignItems: "center",
-            gap: 40, paddingTop: 20, paddingBottom: 20,
-            filter: showCelebContent ? "blur(5px)" : "none",
-            opacity: showCelebContent ? 0 : 1,
-            transition: "filter 0.35s ease, opacity 0.35s ease",
-            pointerEvents: showCelebContent ? "none" : "auto",
-          }}>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 36, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic" }}>
-                <RollingNumber value={totalFp} decimals={1} />
-              </div>
-              <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 4 }}>
-                Total Score
-              </div>
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 2, justifyContent: "center" }}>
-                <span style={{ fontSize: 36, fontWeight: 900, color: overBudget ? "#ef4444" : "#FFFFFF", lineHeight: 1, fontStyle: "italic" }}>
-                  {remaining}
-                </span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.35)", lineHeight: 1, fontStyle: "italic" }}>
-                  /{capMax}
-                </span>
-              </div>
-              <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 4 }}>
-                Budget
-              </div>
-            </div>
-          </div>
-
-          {/* Celebration content — fades in only after overshoot settles */}
-          {isCelebration && celebration && (
-            <div style={{
-              position: "absolute", inset: 0,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              opacity: overshootSettled ? 1 : 0,
-              transition: "opacity 0.4s ease",
-              pointerEvents: overshootSettled ? "auto" : "none",
-            }}>
-              <CelebrationTop
-                celebration={celebration}
-                onDismiss={onWinCelebrationComplete ?? (() => {})}
-                walletRef={walletTargetRef}
-              />
-            </div>
-          )}
-        </div>
+        {/* Zone A removed — score/budget and celebration handled in GameView */}
 
         {/* ── ZONE B: Tier gauge — hidden when external TierGauge is used ── */}
         {!hideTierBar && <div style={{
@@ -1082,15 +1030,13 @@ export function GameBar({
           />
         )}
 
-        {/* ── ZONE B.5: External tier gauge slot ── */}
-        {tierGaugeSlot && (
-          <div style={{ paddingTop: 2, paddingBottom: 12 }}>
-            {tierGaugeSlot}
-          </div>
-        )}
+        {/* ── ZONE B.5: Tier gauge — fixed height slot, always present ── */}
+        <div style={{ height: 56, flexShrink: 0, overflow: "visible" }}>
+          {tierGaugeSlot}
+        </div>
 
         {/* ── ZONE C: Multipliers/Wallet/Action ↔ Streak hook ─────── */}
-        <div style={{ position: "relative", minHeight: 148, overflow: "hidden" }}>
+        <div style={{ position: "relative", minHeight: 110, overflow: "hidden" }}>
 
           {/* Normal content */}
           <div style={{
@@ -1099,7 +1045,7 @@ export function GameBar({
             transition: "filter 0.35s ease, opacity 0.35s ease",
             pointerEvents: showCelebContent ? "none" : "auto",
           }}>
-            <div style={{ display: "flex", gap: 8, justifyContent: "center", paddingTop: 8 }}>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center", paddingTop: 4 }}>
               {MULTIPLIERS.map((m: number) => {
                 const active = betMultiplier === m;
                 return (
@@ -1117,7 +1063,7 @@ export function GameBar({
               })}
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 18 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 6 }}>
               <div ref={walletRef} style={{ flexShrink: 0 }}>
                 <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>
                   Wallet
@@ -1135,7 +1081,7 @@ export function GameBar({
               }}>i</button>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "center", paddingTop: 10 }}>
+            <div style={{ display: "flex", justifyContent: "center", paddingTop: 6 }}>
               <button
                 onClick={onAction}
                 disabled={isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked}

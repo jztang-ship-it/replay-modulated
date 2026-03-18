@@ -229,20 +229,64 @@ export function useEmotionalReveal(params: Params) {
   const skipToEnd = useCallback(() => {
     clearTimers();
     runIdRef.current++;
+    const myRunId = runIdRef.current;
     setShakeInfo(null);
-    const nextMap = new Map<string, number>();
-    for (const c of cards) {
-      nextMap.set(c.cardId, Number(c.actualFp ?? 0));
-      flipState.completeReveal(c.cardId);
-    }
-    setVisibleFpMap(nextMap);
+    setActiveRevealCardId(null);
+    setTappedCardIds(new Set(cards.map(c => c.cardId)));
+
+    // Keep FP at zero — nothing shows while cards are face-down or flipping
+    const zeroMap = new Map<string, number>();
+    for (const c of cards) zeroMap.set(c.cardId, 0);
+    setVisibleFpMap(zeroMap);
+
+    // Badges ready to show once cards are front
     const badgeMap = new Map<string, Array<{id:string;icon:string;label:string;fp:number}>>();
     for (const c of cards) {
       if (c.badges?.length) badgeMap.set(c.cardId, c.badges);
     }
     setVisibleBadgesMap(badgeMap);
-    const total = cards.reduce((s, c) => s + Number(c.actualFp ?? 0), 0);
-    onAllComplete?.(total);
+
+    // Targets for rollup
+    const targets = new Map<string, number>();
+    const total = cards.reduce((s, c) => {
+      targets.set(c.cardId, Number(c.actualFp ?? 0));
+      return s + Number(c.actualFp ?? 0);
+    }, 0);
+
+    // Step 1: trigger flip animation on all cards simultaneously
+    for (const c of cards) flipState.revealCard(c.cardId);
+
+    // Step 2: after flip CSS animation completes (~450ms default), complete the flip
+    const FLIP_DURATION_MS = 450;
+    const flipDone = window.setTimeout(() => {
+      if (runIdRef.current !== myRunId) return;
+      for (const c of cards) flipState.completeReveal(c.cardId);
+
+      // Step 3: immediately start FP rollup across all cards simultaneously
+      const ROLL_MS = 600;
+      const startTime = performance.now();
+
+      const tick = () => {
+        if (runIdRef.current !== myRunId) return;
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(elapsed / ROLL_MS, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const frame = new Map<string, number>();
+        for (const [id, target] of targets) {
+          frame.set(id, Math.round(target * eased * 10) / 10);
+        }
+        setVisibleFpMap(frame);
+        if (progress < 1) {
+          const t = window.setTimeout(tick, 16);
+          timersRef.current.push(t);
+        } else {
+          setVisibleFpMap(new Map(targets));
+          onAllComplete?.(total);
+        }
+      };
+      tick();
+    }, FLIP_DURATION_MS);
+    timersRef.current.push(flipDone);
   }, [cards, flipState, clearTimers, onAllComplete]);
 
   // ── Core reveal function — runs one card through flip + FP rollup ──────────

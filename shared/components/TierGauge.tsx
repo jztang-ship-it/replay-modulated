@@ -70,13 +70,10 @@ export function TierGauge({ totalFp, thresholds, visible }: TierGaugeProps) {
 
   return (
     <div style={{
-      background: "#0E1420",
-      border: "1px solid #ffffff0d",
-      borderRadius: 14,
-      padding: "12px 18px",
+      padding: "4px 0 2px",
       display: "flex",
       flexDirection: "column",
-      gap: 8,
+      gap: 4,
     }}>
 
       {/* Gap callout — matches PostGameScreen */}
@@ -87,7 +84,7 @@ export function TierGauge({ totalFp, thresholds, visible }: TierGaugeProps) {
         gap: 6,
       }}>
         <span style={{
-          fontSize: 26,
+          fontSize: 18,
           fontWeight: 800,
           color: targetCfg.color,
           fontFamily: FF,

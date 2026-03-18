@@ -168,9 +168,10 @@ export function CardFront(props: CardFrontProps) {
   const salary    = Number((card as any)?.salary ?? 0);
   const proj      = Number((card as any)?.projectedFp ?? 0);
   const isHeldCard  = !!(card as any).wasHeld;
-  // Held cards always show the FP strip (opacity handles visibility)
-  // so the fade-in has something to transition into
-  const showResults = phase === "RESULTS" || isHeldCard;
+  // isPreReveal: waiting to be tapped — treat exactly like back of card, no FP shown
+  const isPreReveal = !!(isRevealing && !isHeldCard && visibleFp === undefined);
+  // showResults drives whether the FP strip renders at all
+  const showResults = !isPreReveal && (phase === "RESULTS" || isHeldCard);
 
   const [displayedFp,  setDisplayedFp]  = useState(0);
   const [isRolling,    setIsRolling]    = useState(false);
@@ -188,7 +189,12 @@ export function CardFront(props: CardFrontProps) {
   useEffect(() => { targetFpRef.current = null; }, [cardKey]);
 
   useEffect(() => {
-    if (visibleFp === undefined) { setDisplayedFp(showResults ? Number((card as any)?.actualFp ?? proj) : proj); return; }
+    if (visibleFp === undefined) {
+      // Pre-reveal and held cards stay at 0 until visibleFp arrives
+      if (isHeldCard) { setDisplayedFp(0); return; }
+      setDisplayedFp(showResults ? Number((card as any)?.actualFp ?? proj) : proj);
+      return;
+    }
     if (isRevealing && !revealActive && !isHeldCard && visibleFp === undefined) return;
     const target = targetFpRef.current ?? visibleFp;
     if (visibleFp > 0 && displayedFp !== target) {
@@ -212,7 +218,9 @@ export function CardFront(props: CardFrontProps) {
 
   useEffect(() => { setRollComplete(false); setDisplayedFp(0); setIsRolling(false); }, [cardKey]);
 
-  const fpValue      = showResults ? (visibleFp !== undefined ? displayedFp : Number((card as any)?.actualFp ?? 0)) : proj;
+  const fpValue      = showResults
+    ? (visibleFp !== undefined ? displayedFp : Number((card as any)?.actualFp ?? 0))
+    : proj;
   const valueText    = Number.isFinite(fpValue) ? fpValue.toFixed(1) : "0.0";
   const badgeBonusFp = useMemo(() => badges?.reduce((s, b) => s + (b.fp ?? 0), 0) ?? 0, [badges]);
   const hasBadges    = (badges?.length ?? 0) > 0;
@@ -296,7 +304,7 @@ export function CardFront(props: CardFrontProps) {
           {showResults && (
             <div style={{
               display: "flex", alignItems: "center", gap: 1, flexShrink: 0,
-              // Held card FP fades in; normal cards show immediately
+              // Held card FP fades in; tapped cards appear as showResults becomes true mid-countup
               opacity: isHeldCard ? (heldFpVisible ? 1 : 0) : 1,
               transition: isHeldCard ? "opacity 800ms ease" : "none",
             }}>

@@ -25,17 +25,16 @@ export function useFTUE(sport: string) {
   const KEY = `replaymod_ftue_${sport}`;
 
   const [isFTUE] = useState<boolean>(() => {
-    // ?ftue=1 in URL forces FTUE mode (for testing / sharing onboarding link)
-    if (typeof window !== "undefined") {
+    if (import.meta.env.DEV) return false;
+  
+    try {
       const params = new URLSearchParams(window.location.search);
       if (params.get("ftue") === "1") return true;
-    }
-    try {
-      // Already completed if KEY is "1" OR the legacy "ftue_completed" key exists
+  
       return localStorage.getItem(KEY) !== "1" &&
              localStorage.getItem("ftue_completed") !== "true";
     } catch {
-      return false;
+      return true;
     }
   });
 

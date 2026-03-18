@@ -105,12 +105,11 @@ export function RosterGrid(props: Props) {
 
   return (
     <div className="roster-grid" style={{
-      height: "100%", width: "100%",
+      width: "100%",
       display: "grid",
-      gridTemplateColumns: `repeat(${columns}, 1fr)`,
-      gridAutoRows: "1fr",
-      gap: 10,
-      overflow: "visible",
+      gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+      gap: 8,
+      boxSizing: "border-box",
     }}>
       {cards.map((card) => {
         const id             = keyOf(card);
@@ -159,15 +158,16 @@ export function RosterGrid(props: Props) {
             data-slot={card.slotIndex ?? 0}
             onClick={handleTap}
             style={{
-              minHeight: 0, position: "relative", borderRadius: 18,
-              overflow: "visible",
+              position: "relative",
+              borderRadius: 18,
+              overflow: "hidden",
+              width: "100%",
+              aspectRatio: "329 / 478",
               zIndex: isSpotlight ? 100 : isShaking ? 10 : 1,
               background: "#0a0c10",
               cursor: isTapTarget ? "pointer" : "default",
-              // Subtle pulse ring on tappable cards
               boxShadow: isTapTarget ? "0 0 0 2px rgba(255,255,255,0.25)" : "none",
               transition: "box-shadow 300ms ease, opacity 0.3s ease, filter 0.3s ease",
-              // FTUE hold-phase dim: only the locked slot stays bright
               ...(ftueLockedSlot !== null && (card.slotIndex ?? 0) !== ftueLockedSlot
                 ? { opacity: 0.18, filter: "brightness(0.4)", pointerEvents: "none" as const }
                 : {}),
