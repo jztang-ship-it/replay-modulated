@@ -136,7 +136,7 @@ function RollingNumber({ value, decimals = 0, duration = 400 }: { value: number;
 
 const BONUS_TIERS = [
   { wins: 3, pct: 5,   color: "#FFD700", glow: "#FFD70099" },
-  { wins: 5, pct: 15,  color: "#FB923C", glow: "#FB923C99" },
+  { wins: 5, pct: 15,  color: "#FFD700", glow: "#FFD70099" },
 ];
 
 // Dot config: 5 total — 3 for first tier, 2 for second
@@ -399,19 +399,25 @@ const [streak, setStreak] = useState<number>(() =>
 
   // Tier color map — mirrors WIN_TIERS in basketball/GameBar.tsx
   const CELEBRATION_TIER_COLORS: Record<string, { color: string; glow: string }> = {
-    JACKPOT:  { color: "#FFD700", glow: "#FFD70099" },
+    GOAT:     { color: "#EF4444", glow: "#EF444499" },
     MVP:      { color: "#FB923C", glow: "#FB923C55" },
     ALL_STAR: { color: "#C084FC", glow: "#C084FC55" },
-    STARTER:  { color: "#FFD700", glow: "#FFD70055" },
-    ROOKIE:   { color: "#CD7F32", glow: "#CD7F3233" },
+    STARTER:  { color: "#00FFD8", glow: "#00FFD855" },
+    ROOKIE:   { color: "#22C55E", glow: "#22C55E55" },
     BUST:     { color: "#6B7280", glow: "#6B728033" },
+  };
+
+  const formatTierLabel = (tier: string) => {
+    if (tier === "BUST") return "BUST";
+    if (tier === "GOAT") return "G.O.A.T.";
+    return tier.replace("_", "-");
   };
 
   const celebrationData: CelebrationData | undefined = useMemo(() => {
     if (gameState !== "WIN_CELEBRATION" || !winTier) return undefined;
     const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
     return {
-      tierLabel: winTier.replace("_", "-"),
+      tierLabel: formatTierLabel(winTier),
       tierColor: tc.color,
       tierGlow:  tc.glow,
       payout:    winPayout,
@@ -646,13 +652,18 @@ const [streak, setStreak] = useState<number>(() =>
     setGameState("RESULTS");
   }
   
+  const [wasSkipped, setWasSkipped] = useState(false);
+
   function handleButtonClick() {
     if (gameState === "REVEALING") {
-      // Set revealedSalary to full capUsed so budget display jumps to final
       setRevealedSalary(capUsed);
+      setWasSkipped(true);
       skipReveal();
     }
-    else onPrimaryAction();
+    else {
+      setWasSkipped(false);
+      onPrimaryAction();
+    }
   }
 
   // Zone 2.5: FTUE legendary detection
@@ -723,7 +734,7 @@ const [streak, setStreak] = useState<number>(() =>
       }}>
 
         {/* ── Top shell: header + bonus row ── */}
-        <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", gap: 2, padding: "3px 10px 2px" }}>
+        <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", gap: 6, padding: "14px 10px 0px" }}>
           <div style={{
             borderRadius: 16,
             border: "1px solid rgba(255,255,255,0.10)",
@@ -747,7 +758,7 @@ const [streak, setStreak] = useState<number>(() =>
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "center",
-          padding: "2px 8px 0",
+          padding: "14px 8px 0",
           zIndex: 20,
         }}>
           <div
@@ -819,8 +830,8 @@ const [streak, setStreak] = useState<number>(() =>
             justifyContent: "center",
             alignItems: "center",
             gap: 40,
-            padding: "10px 10px 0",
-            minHeight: 56,
+            padding: gameState === "WIN_CELEBRATION" ? "18px 10px 0" : "10px 10px 0",
+            minHeight: gameState === "WIN_CELEBRATION" ? 0 : 56,
             cursor: gameState === "WIN_CELEBRATION" ? "pointer" : "default",
           }}
         >
@@ -836,7 +847,7 @@ const [streak, setStreak] = useState<number>(() =>
                       color: tc.color, textShadow: `0 0 20px ${tc.glow}`,
                       lineHeight: 1,
                     }}>
-                      {winTier === "BUST" ? "BUST" : winTier.replace("_", "-")}
+                      {formatTierLabel(winTier)}
                     </div>
                     {winPayout > 0 && (
                       <div style={{
@@ -876,7 +887,7 @@ const [streak, setStreak] = useState<number>(() =>
                         <RollingNumber value={totalFp} decimals={1} duration={300} />
                       </div>
                       <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 3 }}>
-                        Total Score
+                        Team FP
                       </div>
                     </div>
                     <div style={{ textAlign: "center" }}>
@@ -899,9 +910,10 @@ const [streak, setStreak] = useState<number>(() =>
           )}
         </div>
 
-        {/* Result label — fixed 24px slot */}
+        {/* Result label — fixed slot */}
         <div style={{
-          flex: "0 0 24px",
+          flex: "0 0 auto",
+          minHeight: gameState === "WIN_CELEBRATION" ? 32 : 24,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -914,7 +926,7 @@ const [streak, setStreak] = useState<number>(() =>
           )}
           {winTier && gameState === "RESULTS" && (() => {
             const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
-            const label = winTier === "BUST" ? "BUST" : winTier.replace("_", "-");
+            const label = formatTierLabel(winTier);
             return (
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{
@@ -1012,12 +1024,15 @@ const [streak, setStreak] = useState<number>(() =>
       <TierGauge
         totalFp={totalFp}
         thresholds={[
-          { tier: 'ROOKIE',   minFP: 133 },
-          { tier: 'STARTER',  minFP: 160 },
-          { tier: 'ALL_STAR', minFP: 183 },
-          { tier: 'MVP',      minFP: 207 },
-          { tier: 'JACKPOT',  minFP: 225 },
+          { tier: 'ROOKIE',   minFP: 155 },
+          { tier: 'STARTER',  minFP: 175 },
+          { tier: 'ALL_STAR', minFP: 195 },
+          { tier: 'MVP',      minFP: 215 },
+          { tier: 'GOAT' as any, minFP: 235 },
         ]}
+        winTier={winTier ?? undefined}
+        lastCardFp={lastCardFp}
+        isSkip={wasSkipped}
         visible={gameState === 'REVEALING' || gameState === 'RESULTS' || gameState === 'WIN_CELEBRATION'}
       />
     }

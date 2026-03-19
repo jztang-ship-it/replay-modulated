@@ -68,8 +68,13 @@ function pickBiasedLog(basePlayerId: string, season: number | null, tier: string
   const minMins = minMinutes;
   candidates = candidates.filter(l => {
     const stats = l.stats ?? {};
-    const hasStats = Object.values(stats).some(v => typeof v === "number" && (v as number) > 0);
-    if (!hasStats) return false;
+    // Must have minimum meaningful FP — filter out DNP/garbage logs
+    // Compute a quick FP estimate: pts*1 + reb*1.2 + ast*1.5 (ignore stl/blk edge cases)
+    const pts = Number(stats.pts ?? stats.points ?? stats.PTS ?? 0);
+    const reb = Number(stats.reb ?? stats.rebounds ?? stats.REB ?? stats.trb ?? 0);
+    const ast = Number(stats.ast ?? stats.assists ?? stats.AST ?? 0);
+    const quickFp = pts * 1.0 + reb * 1.2 + ast * 1.5;
+    if (quickFp < 3) return false;  // filter out near-zero game logs
     const mp = stats.mp ?? stats.minutes ?? stats.min ?? stats.MIN ?? stats.minutesPlayed;
     if (mp !== undefined && mp !== null) {
       const mpStr = String(mp);

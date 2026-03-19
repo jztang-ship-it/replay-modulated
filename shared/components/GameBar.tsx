@@ -41,6 +41,7 @@ export interface BadgeInfo {
 
 export interface LegendData {
   payoutRows: Array<{ label: string; score: string; payout: string; color: string; bg: string; border: string }>;
+  bonusRows?: Array<{ label: string; condition: string; reward: string }>;
   scoringRules: ScoringRule[];
   stamps: BadgeInfo[];
   badges: BadgeInfo[];
@@ -391,7 +392,7 @@ function TierBar({
           color: showBar ? (fptNeeded === 0 ? displayColor : "rgba(255,255,255,0.50)") : "rgba(255,255,255,0.30)",
         }}>
           {showBar
-            ? fptNeeded > 0 ? `${fptNeeded.toFixed(1)} pts to ${label}` : `✓ ${label}`
+            ? fptNeeded > 0 ? `${fptNeeded.toFixed(1)} FP to ${label}` : `✓ ${label}`
             : `${winTiers[0].minFp} FP to ${winTiers[0].label}`}
         </span>
       </div>
@@ -515,6 +516,28 @@ function LegendModal({ onClose, legend }: { onClose: () => void; legend: LegendD
               <div style={{ marginTop: 8, fontSize: 10, color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
                 Team FP = sum of all 6 players' fantasy points. Payout = bet × multiplier.
               </div>
+
+              {legend.bonusRows && legend.bonusRows.length > 0 && (
+                <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+                  <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1.2, color: "#FFD700", textTransform: "uppercase", marginBottom: 10 }}>
+                    Streak Wins
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {legend.bonusRows.map(r => (
+                      <div key={r.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", borderRadius: 10, background: "rgba(255,215,0,0.07)", border: "1px solid rgba(255,215,0,0.22)" }}>
+                        <div>
+                          <span style={{ fontSize: 12, fontWeight: 900, color: "#FFD700", letterSpacing: 0.5 }}>{r.label}</span>
+                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.40)", marginLeft: 8 }}>{r.condition}</span>
+                        </div>
+                        <span style={{ fontSize: 13, fontWeight: 900, color: "#FFD700", whiteSpace: "nowrap" }}>{r.reward}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginTop: 8, fontSize: 10, color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
+                    Bonus pool funded by 5% rake per hand. Resets after payout.
+                  </div>
+                </div>
+              )}
             </div>
           )}
           {tab === "scoring" && (
@@ -1031,12 +1054,12 @@ export function GameBar({
         )}
 
         {/* ── ZONE B.5: Tier gauge — fixed height slot, always present ── */}
-        <div style={{ height: 56, flexShrink: 0, overflow: "visible" }}>
+        <div style={{ height: 56, flexShrink: 0, overflow: "visible", marginBottom: 20 }}>
           {tierGaugeSlot}
         </div>
 
         {/* ── ZONE C: Multipliers/Wallet/Action ↔ Streak hook ─────── */}
-        <div style={{ position: "relative", minHeight: 110, overflow: "hidden" }}>
+        <div style={{ position: "relative", minHeight: 110, overflow: "hidden", paddingBottom: "max(28px, env(safe-area-inset-bottom, 28px))" }}>
 
           {/* Normal content */}
           <div style={{

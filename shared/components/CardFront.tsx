@@ -2,28 +2,18 @@
  * shared/components/CardFront.tsx
  * LAYER 1: Universal notched card front face.
  *
- * Owns all visual structure that is ReplayMod brand identity:
+ * Layout (per 3/18 designer spec — 329×478px):
  *   - Notched SVG clip-path shape
  *   - Tier gradient background
- *   - Salary (top-left), Proj (top-right)
- *   - Season text in the notch
- *   - Name strip (black bar)
- *   - Team/pos/FP strip (tier accent)
- *   - Badges strip
- *   - Stamp overlay (CAREER NIGHT / ICE COLD)
- *   - Pulse ring
- *   - Hold indicator (gold triangle)
- *   - FP count-up animation
- *
- * Sport-specific hero content injected via:
- *   renderHero(card: PlayerCard) → ReactNode
- *
- * Basketball: headshot photo (or initials fallback)
- * Worldcup:   flag emoji + initials
- * Future sports: jersey, action photo, etc.
- *
- * Usage:
- *   import { CardFront, type CardFrontHeroProps } from "@shared/components/CardFront";
+ *   - Salary (top-left, italic bold)
+ *   - Position only (top-right, e.g. PG / SG / C)
+ *   - Season + team in the notch (e.g. "LAL 24-25")
+ *   - Hero area (headshot)
+ *   - Black strip (~72%–86%): name on top 2 lines, FP row below
+ *     - Pre-reveal: shows "FP" label + projected value (greyed)
+ *     - Post-reveal: fades to actual FP number
+ *   - Accent strip (~86%–99%): badges only
+ *   - Stamp overlay, pulse ring, hold indicator
  */
 
 import { useEffect, useMemo, useState, useRef } from "react";
@@ -33,7 +23,7 @@ import type { OverlayStamp } from "@shared/components/PlayerCardShell";
 
 // ── CSS injected once ──────────────────────────────────────────────────────
 
-const STYLE_ID = "card-front-styles-v1";
+const STYLE_ID = "card-front-styles-v2";
 if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
   const st = document.createElement("style");
   st.id = STYLE_ID;
@@ -48,6 +38,14 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
       60%  { transform: scale(1.3) rotate(5deg);  opacity: 1; }
       80%  { transform: scale(0.9) rotate(-2deg); }
       100% { transform: scale(1)   rotate(0deg);  opacity: 1; }
+    }
+    @keyframes cfFpFadeIn {
+      0%   { opacity: 0; transform: translateY(3px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes cfFpFadeOut {
+      0%   { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-3px); }
     }
   `;
   document.head.appendChild(st);
@@ -82,13 +80,13 @@ function safeKeyFor(card: any) {
   return season ? `${base}|${season}` : base;
 }
 
-function abbreviateName(name: string, maxLen = 13): string {
-  if (name.length <= maxLen) return name;
+/** Split a player name into two display lines */
+function splitNameLines(name: string): [string, string] {
   const parts = name.trim().split(/\s+/);
-  if (parts.length < 2) return name.slice(0, maxLen - 1) + "…";
-  const last = parts.slice(1).join(" ");
-  const abbr = `${parts[0][0]}. ${last}`;
-  return abbr.length <= maxLen ? abbr : abbr.slice(0, maxLen - 1) + "…";
+  if (parts.length === 1) return [parts[0], ""];
+  if (parts.length === 2) return [parts[0], parts[1]];
+  // 3+ parts: first name on line 1, rest on line 2
+  return [parts[0], parts.slice(1).join(" ")];
 }
 
 function pulsePalette(pulse?: PulseStyle) {
@@ -100,10 +98,7 @@ function pulsePalette(pulse?: PulseStyle) {
   }
 }
 
-const BADGE_H = 24;
-
 // Card shape paths — objectBoundingBox normalized (0→1)
-// Notch geometry measured from designer SVG (card 344×503px)
 const CARD_PATH =
   "M 0.0678 0 L 0.2486 0 L 0.3190 0.0338 Q 0.3190 0.0497 0.3418 0.0497 " +
   "L 0.6356 0.0497 Q 0.6582 0.0497 0.6582 0.0338 L 0.6949 0 L 0.9322 0 " +
@@ -112,12 +107,9 @@ const CARD_PATH =
 
 // ── Public types ───────────────────────────────────────────────────────────
 
-/** Props the sport provides to customize the hero area */
 export interface CardFrontHeroProps {
   card: PlayerCard;
-  /** Precomputed initials fallback (sport can use or ignore) */
   initials: string;
-  /** True while card is in active reveal animation */
   isActiveReveal: boolean;
 }
 
@@ -138,11 +130,8 @@ export interface CardFrontProps {
   stamp: OverlayStamp;
   onRollComplete?: () => void;
   badges?: Array<{ id: string; icon: string; label: string; fp: number }>;
-  /** Sport injects its hero content (headshot, flag, etc.) */
   renderHero: (props: CardFrontHeroProps) => React.ReactNode;
-  /** tap mode: held card FP fades in after all unheld cards revealed */
   heldFpVisible?: boolean;
-  /** tap mode: this card is waiting for a tap */
   isTapTarget?: boolean;
 }
 
@@ -161,21 +150,22 @@ export function CardFront(props: CardFrontProps) {
   const seasonFmt = formatSeasonRange(season);
   const posRaw    = clampText((card as any)?.position);
   const posMap: Record<string, string> = {
-    "PG":"PG","SG":"SG","G":"G","SF":"SF","PF":"PF","F":"F",
-    "G/F":"G/F","F/G":"G/F","F/C":"F/C","C":"C",
+    "PG":"PG","SG":"SG","G":"PG","SF":"SF","PF":"PF","F":"SF",
+    "G/F":"SG","F/G":"SG","F/C":"PF","C":"C",
   };
   const pos       = posRaw ? (posMap[posRaw.toUpperCase()] ?? posRaw) : "";
   const salary    = Number((card as any)?.salary ?? 0);
   const proj      = Number((card as any)?.projectedFp ?? 0);
   const isHeldCard  = !!(card as any).wasHeld;
-  // isPreReveal: waiting to be tapped — treat exactly like back of card, no FP shown
   const isPreReveal = !!(isRevealing && !isHeldCard && visibleFp === undefined);
-  // showResults drives whether the FP strip renders at all
+  // showResults: whether actual FP is visible (post-reveal or held after all revealed)
   const showResults = !isPreReveal && (phase === "RESULTS" || isHeldCard);
 
   const [displayedFp,  setDisplayedFp]  = useState(0);
   const [isRolling,    setIsRolling]    = useState(false);
   const [rollComplete, setRollComplete] = useState(false);
+  // fpRevealed: true once we've shown the actual FP (drives the fade swap)
+  const [fpRevealed,   setFpRevealed]   = useState(false);
   const cardKey     = useMemo(() => safeKeyFor(card), [card]);
   const targetFpRef = useRef<number | null>(null);
 
@@ -190,15 +180,18 @@ export function CardFront(props: CardFrontProps) {
 
   useEffect(() => {
     if (visibleFp === undefined) {
-      // Pre-reveal and held cards stay at 0 until visibleFp arrives
+      // visibleFp not in map at all — held card waiting for reveal sequence
       if (isHeldCard) { setDisplayedFp(0); return; }
       setDisplayedFp(showResults ? Number((card as any)?.actualFp ?? proj) : proj);
       return;
     }
+    // visibleFp is set (either 0 during skip rollup or actual value)
+    // Don't short-circuit for held cards here — let the countup run
     if (isRevealing && !revealActive && !isHeldCard && visibleFp === undefined) return;
     const target = targetFpRef.current ?? visibleFp;
     if (visibleFp > 0 && displayedFp !== target) {
       if (target === 0) { setDisplayedFp(0); setIsRolling(false); setRollComplete(true); onRollComplete?.(); return; }
+      setFpRevealed(true);
       setIsRolling(true); setRollComplete(false);
       const duration = Math.max(220, Math.min(2200, Number(fpCountUpMs ?? 500)));
       const startTime = Date.now();
@@ -216,29 +209,36 @@ export function CardFront(props: CardFrontProps) {
     }
   }, [visibleFp, fpCountUpMs, revealActive, isRevealing]);
 
-  useEffect(() => { setRollComplete(false); setDisplayedFp(0); setIsRolling(false); }, [cardKey]);
+  useEffect(() => {
+    setRollComplete(false); setDisplayedFp(0); setIsRolling(false); setFpRevealed(false);
+  }, [cardKey]);
 
-  const fpValue      = showResults
+  // Determine what to show in the FP slot
+  // Pre-reveal (isTapTarget or phase != RESULTS): show projected FP greyed out
+  // Post-reveal: show actual FP with count-up
+  const isShowingActualFp = fpRevealed || (showResults && !isPreReveal);
+  const fpValue = isShowingActualFp
     ? (visibleFp !== undefined ? displayedFp : Number((card as any)?.actualFp ?? 0))
     : proj;
-  const valueText    = Number.isFinite(fpValue) ? fpValue.toFixed(1) : "0.0";
+  const fpText = Number.isFinite(fpValue) && fpValue > 0 ? fpValue.toFixed(1) : proj.toFixed(1);
+
   const badgeBonusFp = useMemo(() => badges?.reduce((s, b) => s + (b.fp ?? 0), 0) ?? 0, [badges]);
   const hasBadges    = (badges?.length ?? 0) > 0;
   const hasRevealed  = rollComplete || (!!isRevealing && !!revealActive && visibleFp !== undefined && visibleFp > 0);
   const pulsePal     = pulsePalette(pulse);
   const showPulse    = !!pulse && pulse !== "NEUTRAL" && hasRevealed;
+
   const cardSalary = Number((card as any)?.salary ?? 0);
   const derivedTier = cardSalary >= 52 ? "ORANGE" : cardSalary >= 40 ? "PURPLE" : cardSalary >= 28 ? "BLUE" : cardSalary >= 16 ? "GREEN" : "WHITE";
   const tier         = getTier(derivedTier);
   const isWhiteTier  = derivedTier === "WHITE";
   const onCardText   = isWhiteTier ? "#FFFFFF" : "#000000";
-  const onCardTextMuted = isWhiteTier ? "rgba(255,255,255,0.60)" : "rgba(0,0,0,0.55)";
   const initials     = initialsFromName(name || `${team} ${pos}`);
-  const shortName    = abbreviateName(name, 13);
+  const [nameLine1, nameLine2] = splitNameLines(name);
   const isActiveReveal = !!(isRevealing && revealActive && visibleFp !== undefined && visibleFp > 0);
-  const stripFadeOpacity = isActiveReveal ? 0.08 : 1;
-  const fadeTransition   = "opacity 0.3s ease";
   const clipId = useMemo(() => `card-clip-${cardKey.replace(/[^a-z0-9]/gi, "_")}`, [cardKey]);
+
+
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%", background: "transparent" }}>
@@ -260,81 +260,146 @@ export function CardFront(props: CardFrontProps) {
           background: `linear-gradient(to bottom, ${tier.bg} 0%, ${tier.bgEnd} 70%, ${tier.bgEnd} 100%)`,
         }} />
 
-        {/* HERO — sport-specific content (headshot, flag, etc.) */}
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: "26.5%" }}>
+        {/* HERO — sport-specific content, covers top 72% */}
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: "27.8%" }}>
           {renderHero({ card, initials, isActiveReveal })}
         </div>
 
-        {/* SALARY */}
+        {/* SALARY — top-left */}
         <div style={{ position: "absolute", top: "6.5%", left: "6%", zIndex: 8, pointerEvents: "none", lineHeight: 1 }}>
-          <span style={{ fontSize: 16, fontWeight: 900, fontStyle: "italic", color: onCardText, letterSpacing: -0.5, lineHeight: 1 }}>${salary}</span>
-        </div>
-
-        {/* PROJ */}
-        <div style={{ position: "absolute", top: "6%", right: "6%", zIndex: 8, pointerEvents: "none", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 1 }}>
-          <span style={{ fontSize: 12, fontWeight: 900, fontStyle: "italic", color: onCardText, lineHeight: 1 }}>{proj.toFixed(1)}</span>
-          <span style={{ fontSize: 5, fontWeight: 800, color: onCardTextMuted, letterSpacing: 0.8, textTransform: "uppercase", lineHeight: 1 }}>PROJ</span>
-        </div>
-
-        {/* NAME STRIP */}
-        <div style={{
-          position: "absolute", left: 0, right: 0, top: "73.5%", height: "10.5%",
-          background: "#000000",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          paddingLeft: 6, paddingRight: 6, zIndex: 4, overflow: "hidden",
-        }}>
-          <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: 0.2, textTransform: "uppercase", color: "#FFFFFF", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1, display: "block", textAlign: "center" }}>
-            {shortName}
+          <span style={{ fontSize: 16, fontWeight: 900, fontStyle: "italic", color: onCardText, letterSpacing: -0.5, lineHeight: 1 }}>
+            ${salary}
           </span>
         </div>
 
-        {/* TEAM / POS / FP STRIP */}
-        <div style={{
-          position: "absolute", left: 0, right: 0, top: "84%", bottom: 0,
-          background: tier.accent,
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          paddingLeft: 6, paddingRight: 6, zIndex: 4, overflow: "hidden",
-          opacity: stripFadeOpacity, transition: fadeTransition,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
-            <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 0.3, textTransform: "uppercase", color: tier.isLight ? "rgba(0,0,0,0.85)" : "#FFFFFF", lineHeight: 1 }}>{team}</span>
-            <span style={{ fontSize: 8, color: isWhiteTier ? "rgba(255,255,255,0.40)" : onCardTextMuted, lineHeight: 1 }}>·</span>
-            <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 0.3, textTransform: "uppercase", color: tier.isLight ? "rgba(0,0,0,0.85)" : "#FFFFFF", lineHeight: 1 }}>{pos}</span>
-          </div>
-          {showResults && (
-            <div style={{
-              display: "flex", alignItems: "center", gap: 1, flexShrink: 0,
-              // Held card FP fades in; tapped cards appear as showResults becomes true mid-countup
-              opacity: isHeldCard ? (heldFpVisible ? 1 : 0) : 1,
-              transition: isHeldCard ? "opacity 800ms ease" : "none",
-            }}>
-              <span style={{ fontSize: 13, fontWeight: 950, color: isWhiteTier ? "#FFFFFF" : onCardText, lineHeight: 1, fontVariantNumeric: "tabular-nums", display: "inline-block", transform: isRolling ? "scale(1.08)" : "scale(1)", transition: isRolling ? "none" : "transform 100ms ease" }}>
-                {valueText}
-              </span>
-              {badgeBonusFp > 0 && (
-                <span style={{ fontSize: 6, fontWeight: 700, color: "#FFEA86", marginLeft: 1 }}>+{badgeBonusFp}</span>
-              )}
-            </div>
-          )}
+        {/* POSITION — top-right, matches salary weight/size/style */}
+        <div style={{ position: "absolute", top: "6%", right: "6%", zIndex: 8, pointerEvents: "none" }}>
+          <span style={{ fontSize: 16, fontWeight: 900, fontStyle: "italic", color: onCardText, letterSpacing: -0.5, lineHeight: 1, textTransform: "uppercase" }}>
+            {pos}
+          </span>
         </div>
 
-        {/* BADGES */}
-        {hasBadges && (
-          <div style={{ position: "absolute", left: 3, right: 3, bottom: "calc(22% + 3px)", height: BADGE_H, display: "flex", gap: 2, justifyContent: "center", alignItems: "center", zIndex: 7, pointerEvents: "none", flexWrap: "nowrap", overflow: "hidden" }}>
-            {badges!.slice(0, 5).map((badge, i) => (
-              <div key={badge.id ?? badge.label ?? i} style={{ animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${i * 90}ms both`, display: "flex", alignItems: "center", gap: 2, background: "rgba(0,0,0,0.82)", borderRadius: 5, padding: "2px 4px", border: "1px solid rgba(255,255,255,0.20)", flexShrink: 0 }}>
-                <span style={{ fontSize: 11, lineHeight: 1 }}>{badge.icon}</span>
-                <span style={{ fontSize: 6.5, fontWeight: 700, color: "#FFEA86" }}>+{badge.fp}</span>
-              </div>
-            ))}
+        {/* ── BLACK STRIP (72% → 86.2%) — left: name 2 lines | right: FP ── */}
+        <div style={{
+          position: "absolute", left: 0, right: 0, top: "72%", height: "14.2%",
+          background: "#000000",
+          display: "flex", flexDirection: "row",
+          alignItems: "stretch",
+          paddingLeft: 7, paddingRight: 7,
+          gap: 6,           // minimum guaranteed gap between name and FP
+          zIndex: 4, overflow: "hidden",
+        }}>
+          {/* LEFT — player name, two lines, vertically centered */}
+          <div style={{
+            flex: 1,
+            display: "flex", flexDirection: "column",
+            alignItems: "flex-start", justifyContent: "center",
+            gap: 2, minWidth: 0,
+          }}>
+            {nameLine1 && (
+              <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.4, textTransform: "uppercase", color: "#FFFFFF", lineHeight: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block", maxWidth: "100%" }}>
+                {nameLine1}
+              </span>
+            )}
+            {nameLine2 && (
+              <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.4, textTransform: "uppercase", color: "#FFFFFF", lineHeight: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block", maxWidth: "100%" }}>
+                {nameLine2}
+              </span>
+            )}
           </div>
-        )}
+
+          {/* RIGHT — FP column */}
+          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "flex-end", flexShrink: 0, minWidth: 52, maxWidth: 68 }}>
+
+            {/* PRE-REVEAL layer: "PROJ" label + projected number */}
+            <div style={{
+              position: "absolute", inset: 0,
+              display: "flex", flexDirection: "column",
+              alignItems: "flex-end", justifyContent: "center",
+              gap: 2,
+              opacity: isShowingActualFp ? 0 : 1,
+              transition: "opacity 350ms ease",
+              pointerEvents: "none",
+            }}>
+              <span style={{ fontSize: 7, fontWeight: 700, color: "rgba(255,255,255,0.38)", letterSpacing: 1, textTransform: "uppercase", lineHeight: 1 }}>PROJ</span>
+              <span style={{ fontSize: 14, fontWeight: 900, color: "rgba(255,255,255,0.40)", letterSpacing: -0.3, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                {proj.toFixed(1)}
+              </span>
+            </div>
+
+            {/* POST-REVEAL layer: big actual FP — no label, fills both line heights */}
+            <div style={{
+              position: "absolute", inset: 0,
+              display: "flex", flexDirection: "column",
+              alignItems: "flex-end", justifyContent: "center",
+              opacity: isShowingActualFp ? (isHeldCard ? ((heldFpVisible || fpRevealed) ? 1 : 0) : 1) : 0,
+              transition: isHeldCard ? "opacity 800ms ease" : "opacity 350ms ease",
+              pointerEvents: "none",
+            }}>
+              {/* FP number — no badge bonus here, that lives in accent strip */}
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 0 }}>
+                <span style={{
+                  fontSize: 22, fontWeight: 950, color: "#FFFFFF", letterSpacing: -0.5,
+                  lineHeight: 1, fontVariantNumeric: "tabular-nums", display: "inline-block",
+                  transform: isRolling ? "scale(1.06)" : "scale(1)",
+                  transition: isRolling ? "none" : "transform 100ms ease",
+                }}>
+                  {isShowingActualFp ? displayedFp.toFixed(1) : fpText}
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* ── ACCENT STRIP (86.2% → 99%) — badges + total bonus ── */}
+        <div style={{
+          position: "absolute", left: 0, right: 0, top: "86.2%", bottom: 0,
+          background: tier.accent,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          paddingLeft: 4, paddingRight: 4,
+          zIndex: 4, overflow: "hidden",
+          gap: 3,
+        }}>
+          {hasBadges ? (
+            <>
+              {badges!.slice(0, 5).map((badge, i) => (
+                <div
+                  key={badge.id ?? badge.label ?? i}
+                  style={{
+                    animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${i * 90}ms both`,
+                    display: "flex", alignItems: "center", gap: 1,
+                    background: "rgba(0,0,0,0.60)", borderRadius: 5,
+                    padding: "2px 3px",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    flexShrink: 0,
+                  }}
+                >
+                  <span style={{ fontSize: 9, lineHeight: 1 }}>{badge.icon}</span>
+                </div>
+              ))}
+              {/* Total badge bonus — shown as +X after all badge icons */}
+              {badgeBonusFp > 0 && (
+                <div style={{
+                  animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${(Math.min(badges!.length, 5)) * 90}ms both`,
+                  display: "flex", alignItems: "center",
+                  background: "rgba(0,0,0,0.70)", borderRadius: 5,
+                  padding: "2px 4px",
+                  border: "1px solid rgba(255,234,134,0.35)",
+                  flexShrink: 0,
+                }}>
+                  <span style={{ fontSize: 7, fontWeight: 800, color: "#FFEA86", letterSpacing: 0.3 }}>+{badgeBonusFp}</span>
+                </div>
+              )}
+            </>
+          ) : null}
+        </div>
 
         {/* STAMP */}
         {stamp && (
           <div style={{
             position: "absolute",
-            bottom: hasBadges ? `calc(27.4% + ${BADGE_H + 6}px)` : "calc(27.4% + 3px)",
+            bottom: "calc(28% + 6px)",
             left: "50%", transform: "translateX(-50%) rotate(-3deg)",
             zIndex: 40, pointerEvents: "none", whiteSpace: "nowrap",
             fontSize: 10, fontWeight: 900, letterSpacing: 2, textTransform: "uppercase",
@@ -347,9 +412,12 @@ export function CardFront(props: CardFrontProps) {
 
       </div>{/* end clipped content */}
 
-      {/* SEASON TEXT — outside clip, floats in the notch */}
-      <div style={{ position: "absolute", top: 0, height: "5.8%", left: "24.9%", right: "30.5%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 35, pointerEvents: "none" }}>
-        <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.2, textTransform: "uppercase", color: "rgba(255,255,255,0.92)", whiteSpace: "nowrap", lineHeight: 1 }}>{seasonFmt}</span>
+      {/* SEASON + TEAM — centered inside notch inner flat (34.2%→63.6%) */}
+      {/* Using the inner-flat bounds guarantees text never touches the slanted walls */}
+      <div style={{ position: "absolute", top: 0, height: "5.8%", left: "34.2%", right: "36.4%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 35, pointerEvents: "none", overflow: "hidden" }}>
+        <span style={{ fontSize: 6.5, fontWeight: 900, letterSpacing: 0.5, textTransform: "uppercase", color: "rgba(255,255,255,0.92)", whiteSpace: "nowrap", lineHeight: 1 }}>
+          {team ? `${team} ${seasonFmt}` : seasonFmt}
+        </span>
       </div>
 
       {/* HOLD INDICATOR */}
@@ -374,7 +442,7 @@ export function CardFront(props: CardFrontProps) {
         </div>
       )}
 
-      {/* BORDER TRIM — always on top, contained by clip */}
+      {/* BORDER TRIM */}
       <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 50, overflow: "visible" }} viewBox="0 0 1 1" preserveAspectRatio="none">
         <defs>
           <clipPath id={`border-clip-${cardKey.replace(/[^a-z0-9]/gi, "_")}`} clipPathUnits="objectBoundingBox">

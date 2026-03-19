@@ -281,6 +281,7 @@ export function useEmotionalReveal(params: Params) {
           timersRef.current.push(t);
         } else {
           setVisibleFpMap(new Map(targets));
+          setHeldFpVisible(true);
           onAllComplete?.(total);
         }
       };

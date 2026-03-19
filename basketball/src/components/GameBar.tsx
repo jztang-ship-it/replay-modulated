@@ -9,22 +9,28 @@ import { GameBar as SharedGameBar, type GameStateLabel, type WinTierDisplay, typ
 export type { CelebrationData };
 export type { GameStateLabel };
 
+// Thresholds calibrated for biased engine (top-60% log sampling, March 2026)
+// Targets: ~55% BUST, ~25% ROOKIE, ~12% STARTER, ~5% ALL-STAR, ~2% MVP, ~0.5% GOAT
 const WIN_TIERS: WinTierDisplay[] = [
-  { label: "ROOKIE",   minFp: 133, color: "#22C55E", glow: "rgba(34,197,94,0.6)"    },
-  { label: "STARTER",  minFp: 160, color: "#FFD700", glow: "rgba(255,215,0,0.6)"   },
-  { label: "ALL-STAR", minFp: 183, color: "#C084FC", glow: "rgba(192,132,252,0.7)"  },
-  { label: "MVP",      minFp: 207, color: "#FB923C", glow: "rgba(251,146,60,0.7)"   },
-  { label: "JACKPOT",  minFp: 225, color: "#EF4444", glow: "rgba(239,68,68,0.9)"   },
+  { label: "ROOKIE",   minFp: 155, color: "#22C55E", glow: "rgba(34,197,94,0.6)"    },
+  { label: "STARTER",  minFp: 175, color: "#00FFD8", glow: "rgba(0,255,216,0.6)"   },
+  { label: "ALL-STAR", minFp: 195, color: "#C084FC", glow: "rgba(192,132,252,0.7)"  },
+  { label: "MVP",      minFp: 215, color: "#FB923C", glow: "rgba(251,146,60,0.7)"   },
+  { label: "G.O.A.T.", minFp: 235, color: "#EF4444", glow: "rgba(239,68,68,0.9)"   },
 ];
 
 const LEGEND: LegendData = {
   payoutRows: [
-    { label: "JACKPOT",  score: "225+", payout: "POOL",  color: "#EF4444", bg: "rgba(239,68,68,0.15)",    border: "rgba(239,68,68,0.4)"     },
-    { label: "MVP",      score: "207+", payout: "15x",   color: "#FB923C", bg: "rgba(251,146,60,0.10)",   border: "rgba(251,146,60,0.3)"    },
-    { label: "ALL-STAR", score: "183+", payout: "7x",    color: "#C084FC", bg: "rgba(192,132,252,0.10)",  border: "rgba(192,132,252,0.25)"  },
-    { label: "STARTER",  score: "160+", payout: "2.5x",  color: "#FFD700", bg: "rgba(255,215,0,0.10)",   border: "rgba(255,215,0,0.25)"   },
-    { label: "ROOKIE",   score: "133+", payout: "0.5x",  color: "#22C55E", bg: "rgba(34,197,94,0.10)",   border: "rgba(34,197,94,0.25)"    },
-    { label: "BUST",     score: "<133", payout: "--",     color: "#E5E7EB", bg: "rgba(229,231,235,0.08)", border: "rgba(229,231,235,0.2)"   },
+    { label: "G.O.A.T.", score: "235+", payout: "BONUS", color: "#EF4444", bg: "rgba(239,68,68,0.12)",    border: "rgba(239,68,68,0.35)"    },
+    { label: "MVP",      score: "215+", payout: "15x",   color: "#FB923C", bg: "rgba(251,146,60,0.10)",   border: "rgba(251,146,60,0.3)"    },
+    { label: "ALL-STAR", score: "195+", payout: "7x",    color: "#C084FC", bg: "rgba(192,132,252,0.10)",  border: "rgba(192,132,252,0.25)"  },
+    { label: "STARTER",  score: "175+", payout: "2.5x",  color: "#00FFD8", bg: "rgba(0,255,216,0.08)",  border: "rgba(0,255,216,0.25)"   },
+    { label: "ROOKIE",   score: "155+", payout: "0.5x",  color: "#22C55E", bg: "rgba(34,197,94,0.10)",   border: "rgba(34,197,94,0.25)"    },
+    { label: "BUST",     score: "<155", payout: "—",     color: "#6B7280", bg: "rgba(107,114,128,0.08)", border: "rgba(107,114,128,0.2)"   },
+  ],
+  bonusRows: [
+    { label: "3-WIN STREAK", condition: "3 wins in a row", reward: "+5% of pool"   },
+    { label: "5-WIN STREAK", condition: "5 wins in a row", reward: "+15% of pool"  },
   ],
   scoringRules: [
     { stat: "Point",    pts: "+1.0" },
