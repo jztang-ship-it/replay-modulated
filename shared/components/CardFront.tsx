@@ -185,9 +185,16 @@ export function CardFront(props: CardFrontProps) {
       setDisplayedFp(showResults ? Number((card as any)?.actualFp ?? proj) : proj);
       return;
     }
-    // visibleFp is set (either 0 during skip rollup or actual value)
-    // Don't short-circuit for held cards here — let the countup run
-    if (isRevealing && !revealActive && !isHeldCard && visibleFp === undefined) return;
+    // For held cards during skip, visibleFp is driven by useEmotionalReveal's tick.
+    // Just mirror it directly — no internal countup needed (would fight the external one).
+    if (isHeldCard) {
+      if (visibleFp > 0) {
+        setFpRevealed(true);
+        setDisplayedFp(visibleFp);
+      }
+      return;
+    }
+    if (isRevealing && !revealActive && visibleFp === undefined) return;
     const target = targetFpRef.current ?? visibleFp;
     if (visibleFp > 0 && displayedFp !== target) {
       if (target === 0) { setDisplayedFp(0); setIsRolling(false); setRollComplete(true); onRollComplete?.(); return; }

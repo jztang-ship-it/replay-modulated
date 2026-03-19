@@ -133,8 +133,9 @@ export function RosterGrid(props: Props) {
         const isTapTarget    = (revealMode === "tap" && isRevealingPhase
                                && !wasHeld && !isTapped)
                                || (ftueFlipTargetId !== null && id === ftueFlipTargetId);
-        // Per-card: held card FP shows when its ID is in heldRevealedIds
-        const thisHeldRevealed = wasHeld && (heldRevealedIds?.has(id) ?? false);
+        // Per-card: held card FP shows when its ID is in heldRevealedIds OR
+        // when heldFpVisible is true (set by skip path after rollup completes)
+        const thisHeldRevealed = wasHeld && ((heldRevealedIds?.has(id) ?? false) || (heldFpVisible ?? false));
         const showHeldFp     = thisHeldRevealed;
         // In tap mode, visibleFp for held card: undefined until revealed
         // For held cards: only pass visibleFp once the rollup has actually set it
