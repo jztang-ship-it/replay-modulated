@@ -1,7 +1,16 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 type GameState = "IDLE"|"DEALING"|"HOLD"|"DRAWING"|"REVEALING"|"RESULTS"|"WIN_CELEBRATION";
 export type CoachLesson = "ftue_basics";
+
+/** Where to place the callout so it points at gameplay UI instead of covering it */
+export type BubbleAnchor =
+  | "deal"
+  | "draw"
+  | "roster"
+  | "gauge"
+  | "center"
+  | { cardId: string };
 
 interface Props {
   isFTUE: boolean;
@@ -44,7 +53,7 @@ const STAMP_STYLES: Record<string, { color: string; border: string }> = {
   "FREEZING":    { color: "#1E40AF", border: "#1F2937" },
 };
 
-const CARD_BUBBLES: Record<string, React.ReactNode> = {
+const CARD_BUBBLES: Record<string, ReactNode> = {
   "ftue-westbrook": (
     <span>Westbrook put in a solid shift — nothing flashy, just steady work. That's what you want from a reliable piece of your lineup.&nbsp;💪</span>
   ),
@@ -66,17 +75,41 @@ const CARD_BUBBLES: Record<string, React.ReactNode> = {
   ),
   "ftue-booker": (
     <span>Devin was <Stamp label="Smoking Hot!" {...STAMP_STYLES["SMOKING HOT"]} /> He really carried your team tonight. Be legendary.&nbsp;🔥</span>
-  ),
+ ),
 };
 
 type OnDismiss = () => void;
 interface QueueEntry {
   key: string;
-  node: React.ReactNode;
+  node: ReactNode;
   onDismiss?: OnDismiss;
   pulse?: "deal" | "draw";
+  anchor?: BubbleAnchor;
 }
 type Pulse = "deal" | "draw" | null;
+
+const FTUE_SPOTLIGHT_STYLE_ID = "ftue-coach-spotlight-styles";
+
+function ensureSpotlightStylesInjected() {
+  if (typeof document === "undefined") return;
+  if (document.getElementById(FTUE_SPOTLIGHT_STYLE_ID)) return;
+  const st = document.createElement("style");
+  st.id = FTUE_SPOTLIGHT_STYLE_ID;
+  st.textContent = `.ftue-spotlight {}`;
+  document.head.appendChild(st);
+}
+
+function resolveAnchorElement(anchor: BubbleAnchor | undefined): HTMLElement | null {
+  if (!anchor || anchor === "center") return null;
+  if (typeof anchor === "object") {
+    return document.querySelector(`[data-ftue-card="${anchor.cardId}"]`) as HTMLElement | null;
+  }
+  if (anchor === "deal") return document.querySelector('[data-ftue-anchor="deal"]') as HTMLElement | null;
+  if (anchor === "draw") return document.querySelector('[data-ftue-anchor="draw"]') as HTMLElement | null;
+  if (anchor === "roster") return document.querySelector('[data-ftue-anchor="roster"]') as HTMLElement | null;
+  if (anchor === "gauge") return document.querySelector('[data-ftue-anchor="tier-gauge"]') as HTMLElement | null;
+  return null;
+}
 
 export function CoachLayer({
   isFTUE, gameState,
@@ -98,12 +131,11 @@ export function CoachLayer({
 
   // ── Drain / enqueue ────────────────────────────────────────────────────
   const tryDrain = useCallback(() => {
-    // Use functional update to avoid stale closure, check queue outside
     const next = queue.current[0];
     if (!next) return;
     setCurrent(prev => {
-      if (prev) return prev; // already showing, don't drain
-      queue.current.shift(); // consume
+      if (prev) return prev;
+      queue.current.shift();
       setAnimKey(k => k + 1);
       setTimeout(() => onBubbleActive?.(true), 0);
       return next;
@@ -115,7 +147,6 @@ export function CoachLayer({
     shown.current.add(entry.key);
     const go = () => {
       queue.current.push(entry);
-      // Always defer drain to next tick to avoid batching issues
       setTimeout(tryDrain, 0);
     };
     if (delayMs > 0) setTimeout(go, delayMs);
@@ -129,7 +160,6 @@ export function CoachLayer({
       dismissEntry = prev;
       return null;
     });
-    // Run side effects after state cleared
     setTimeout(() => {
       if (dismissEntry) {
         dismissEntry.onDismiss?.();
@@ -140,10 +170,19 @@ export function CoachLayer({
         }
       }
       onBubbleActive?.(false);
-      // Drain next bubble after a short gap
       setTimeout(tryDrain, 150);
     }, 0);
   }, [onBubbleActive, tryDrain]);
+
+  useEffect(() => {
+    if (!isFTUE || !current) return;
+    ensureSpotlightStylesInjected();
+    const el = resolveAnchorElement(current.anchor);
+    if (el) el.classList.add("ftue-spotlight");
+    return () => {
+      if (el) el.classList.remove("ftue-spotlight");
+    };
+  }, [isFTUE, current, animKey]);
 
   // ── Pulse DOM button ─────────────────────────────────────────────────
   useEffect(() => {
@@ -166,7 +205,7 @@ export function CoachLayer({
     bookerFlipBubbleShown.current = false;
     setCurrent(null);
     onBubbleActive?.(false);
-    enqueue({ key: "idle_deal", node: <span>Hit <DealChip /> to reveal your starting hand.</span>, pulse: "deal" }, 500);
+    enqueue({ key: "idle_deal", node: <span>Hit <DealChip /> to reveal your starting hand.</span>, pulse: "deal", anchor: "deal" }, 500);
   }, [gameState, isFTUE]); // eslint-disable-line
 
   // ── HOLD ──────────────────────────────────────────────────────────────
@@ -174,7 +213,12 @@ export function CoachLayer({
     if (!isFTUE || gameState !== "HOLD") return;
     if (prevState.current === "HOLD") return;
     prevState.current = "HOLD";
-    enqueue({ key: "hold_booker", node: <span>Devin Booker is our most dependable player — tap him to hold, then hit <DrawChip /> to get replacement players.</span>, pulse: "draw" }, 700);
+    enqueue({
+      key: "hold_booker",
+      node: <span>Devin Booker is our most dependable player — tap him to hold, then hit <DrawChip /> to get replacement players.</span>,
+      pulse: "draw",
+      anchor: "roster",
+    }, 700);
   }, [gameState, isFTUE]); // eslint-disable-line
 
   // ── REVEALING intro ───────────────────────────────────────────────────
@@ -184,22 +228,27 @@ export function CoachLayer({
     prevState.current = "REVEALING";
     if (revealIntroShown.current) return;
     revealIntroShown.current = true;
-    enqueue({ key: "reveal_intro", node: <span>You got five replacement players — let's see who you got. Tap them to find out!&nbsp;🏀</span> }, 400);
+    enqueue({
+      key: "reveal_intro",
+      node: <span>You got five replacement players — let's see who you got. Tap them to find out!&nbsp;🏀</span>,
+      anchor: "roster",
+    }, 400);
   }, [gameState, isFTUE]); // eslint-disable-line
 
   // ── Per-card reveal bubbles ───────────────────────────────────────────
   useEffect(() => {
     if (!isFTUE || !lastRevealedCardId) return;
     const node = CARD_BUBBLES[lastRevealedCardId];
+    const cardAnchor: BubbleAnchor = { cardId: lastRevealedCardId };
 
     if (lastRevealedCardId === "ftue-booker") {
       enqueue({
         key: "card_ftue-booker",
         node,
+        anchor: cardAnchor,
         onDismiss: () => {
           if (!celebFired.current) {
             celebFired.current = true;
-            // Show "Darn it" bubble FIRST — PostGameScreen appears only after user dismisses it
             setTimeout(() => {
               enqueue({
                 key: "darnit",
@@ -211,6 +260,7 @@ export function CoachLayer({
                     Don't forget to collect your rewards!&nbsp;🪙
                   </span>
                 ),
+                anchor: "gauge",
                 onDismiss: () => onCelebrationReady?.(),
               });
             }, 800);
@@ -221,7 +271,6 @@ export function CoachLayer({
     }
 
     if (!node) {
-      // No bubble for this card — clear block and resume
       setTimeout(() => {
         onBubbleActive?.(false);
         onResumeHeldReveal?.();
@@ -232,6 +281,7 @@ export function CoachLayer({
     enqueue({
       key: `card_${lastRevealedCardId}`,
       node,
+      anchor: cardAnchor,
       onDismiss: () => onResumeHeldReveal?.(),
     }, 400);
   }, [lastRevealedCardId, isFTUE]); // eslint-disable-line
@@ -241,7 +291,6 @@ export function CoachLayer({
     if (!isFTUE || gameState !== "RESULTS") return;
     if (prevState.current === "RESULTS") return;
     prevState.current = "RESULTS";
-    // Clear any residual button pulse — replay only pulses after final bubble
     if (pulseTimer.current) clearTimeout(pulseTimer.current);
     setPulsing(null);
     enqueue({
@@ -251,7 +300,7 @@ export function CoachLayer({
           All game logs are actual historical games — let's tap Booker's card to see what game we drew.&nbsp;🏀
         </span>
       ),
-      // No pulse here — replay only pulses after final bubble
+      anchor: { cardId: "ftue-booker" },
     }, 500);
   }, [gameState, isFTUE]); // eslint-disable-line
 
@@ -260,9 +309,7 @@ export function CoachLayer({
     if (!isFTUE || !ftueBookerFlipped) return;
     if (bookerFlipBubbleShown.current) return;
     bookerFlipBubbleShown.current = true;
-    // Immediately block so no other taps can interrupt
     onBubbleActive?.(true);
-    // Clear from shown set so enqueue doesn't skip it, then enqueue after flip animation
     setTimeout(() => {
       shown.current.delete("final_not_bad");
       enqueue({
@@ -274,16 +321,15 @@ export function CoachLayer({
         ),
         onDismiss: () => setReplayReady(true),
         pulse: "deal",
+        anchor: "deal",
       });
     }, 800);
   }, [ftueBookerFlipped, isFTUE, onBubbleActive]); // eslint-disable-line
 
-  // When replayReady set, notify GameView to enable the replay button
   useEffect(() => {
     if (replayReady) onReplayReady?.();
   }, [replayReady]); // eslint-disable-line
 
-  // ── Track other state transitions ─────────────────────────────────────
   useEffect(() => {
     if (!isFTUE) return;
     if (["DRAWING","DEALING","WIN_CELEBRATION"].includes(gameState)) {
@@ -296,22 +342,46 @@ export function CoachLayer({
   return (
     <>
       <style>{`
-        @keyframes coachFadeIn  { from{opacity:0} to{opacity:1} }
-        @keyframes coachSlideUp { from{opacity:0;transform:translateY(20px) scale(.94)} to{opacity:1;transform:translateY(0) scale(1)} }
         @keyframes coachBtnPulse { 0%,100%{box-shadow:0 0 0 0 rgba(127,255,0,0)} 50%{box-shadow:0 0 0 10px rgba(127,255,0,0.4)} }
       `}</style>
 
-
-
       {current && (
-        <div key={animKey} onClick={dismiss} style={{position:"fixed",inset:0,zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 28px",background:"rgba(0,0,0,0.68)",backdropFilter:"blur(6px)",WebkitBackdropFilter:"blur(6px)",animation:"coachFadeIn 0.2s ease forwards",cursor:"pointer"}}>
-          <div onClick={e => e.stopPropagation()} style={{animation:"coachSlideUp 0.3s cubic-bezier(.2,.8,.4,1) forwards",background:"rgba(10,13,20,0.98)",border:"1px solid rgba(255,255,255,0.13)",borderRadius:20,padding:"32px 32px 24px",maxWidth:320,width:"100%",textAlign:"center",boxShadow:"0 28px 80px rgba(0,0,0,0.7)",cursor:"default"}}>
-            <div style={{width:48,height:48,borderRadius:"50%",background:"linear-gradient(135deg,#1a2540,#0d1320)",border:"1.5px solid rgba(255,255,255,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,margin:"0 auto 18px"}}>🏀</div>
-            <p style={{fontFamily:"system-ui,-apple-system,sans-serif",fontSize:18,fontWeight:500,color:"#F0F2F5",lineHeight:1.65,margin:"0 0 22px",letterSpacing:"0.01em"}}>{current.node}</p>
-
-            <div onClick={dismiss} style={{display:"inline-block",padding:"8px 22px",background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:8,fontSize:12,fontWeight:700,color:"rgba(240,242,245,0.55)",letterSpacing:"0.08em",textTransform:"uppercase",cursor:"pointer"}}>Got it</div>
+        <>
+          <div
+            key={animKey}
+            role="button"
+            tabIndex={0}
+            aria-label="Continue"
+            onClick={dismiss}
+            onKeyDown={(e) => { if (e.key === "Escape" || e.key === "Enter") dismiss(); }}
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 999,
+              background: "rgba(0,0,0,0)",
+              cursor: "pointer",
+            }}
+          />
+          <div
+            style={{
+              position: "fixed",
+              bottom: 140,
+              left: 0,
+              right: 0,
+              zIndex: 1001,
+              textAlign: "center",
+              color: "#FFFFFF",
+              fontSize: 15,
+              fontWeight: 600,
+              padding: "0 32px",
+              pointerEvents: "none",
+              lineHeight: 1.45,
+              fontFamily: "system-ui, -apple-system, sans-serif",
+            }}
+          >
+            {current.node}
           </div>
-        </div>
+        </>
       )}
     </>
   );

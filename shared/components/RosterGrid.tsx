@@ -157,6 +157,7 @@ export function RosterGrid(props: Props) {
             key={card.slotIndex ?? id}
             className="card-slot"
             data-slot={card.slotIndex ?? 0}
+            data-ftue-card={id}
             onClick={handleTap}
             style={{
               position: "relative",

@@ -18,7 +18,7 @@
 
 import { useEffect, useMemo, useState, useRef } from "react";
 import type { GamePhase, PlayerCard } from "@shared/types";
-import { getTier } from "@shared/theme";
+import { getTier, type TierKey, TIER_POSITION_TEXT } from "@shared/theme";
 import type { OverlayStamp } from "@shared/components/PlayerCardShell";
 
 // ── CSS injected once ──────────────────────────────────────────────────────
@@ -80,13 +80,17 @@ function safeKeyFor(card: any) {
   return season ? `${base}|${season}` : base;
 }
 
-/** Split a player name into two display lines */
 function splitNameLines(name: string): [string, string] {
   const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return [parts[0], ""];
-  if (parts.length === 2) return [parts[0], parts[1]];
-  // 3+ parts: first name on line 1, rest on line 2
-  return [parts[0], parts.slice(1).join(" ")];
+  if (parts.length === 1) {
+    const n = parts[0];
+    return [n.length > 10 ? n.slice(0, 10) + "." : n, ""];
+  }
+  const firstName = parts[0];
+  const lastName = parts.slice(1).join(" ");
+  const line1 = firstName.length > 10 ? firstName.slice(0, 10) + "." : firstName;
+  const line2 = lastName.length > 10 ? lastName.slice(0, 10) + "." : lastName;
+  return [line1, line2];
 }
 
 function pulsePalette(pulse?: PulseStyle) {
@@ -240,6 +244,7 @@ export function CardFront(props: CardFrontProps) {
   const tier         = getTier(derivedTier);
   const isWhiteTier  = derivedTier === "WHITE";
   const onCardText   = isWhiteTier ? "#FFFFFF" : "#000000";
+  const positionTextColor = TIER_POSITION_TEXT[(derivedTier as TierKey)] ?? TIER_POSITION_TEXT.WHITE;
   const initials     = initialsFromName(name || `${team} ${pos}`);
   const [nameLine1, nameLine2] = splitNameLines(name);
   const isActiveReveal = !!(isRevealing && revealActive && visibleFp !== undefined && visibleFp > 0);
@@ -279,9 +284,9 @@ export function CardFront(props: CardFrontProps) {
           </span>
         </div>
 
-        {/* POSITION — top-right, matches salary weight/size/style */}
+        {/* POSITION — top-right; tier-colored per designer (salary left still uses onCardText) */}
         <div style={{ position: "absolute", top: "6%", right: "6%", zIndex: 8, pointerEvents: "none" }}>
-          <span style={{ fontSize: 16, fontWeight: 900, fontStyle: "italic", color: onCardText, letterSpacing: -0.5, lineHeight: 1, textTransform: "uppercase" }}>
+          <span style={{ fontSize: 16, fontWeight: 900, fontStyle: "italic", color: positionTextColor, letterSpacing: -0.5, lineHeight: 1, textTransform: "uppercase" }}>
             {pos}
           </span>
         </div>
@@ -301,15 +306,15 @@ export function CardFront(props: CardFrontProps) {
             flex: 1,
             display: "flex", flexDirection: "column",
             alignItems: "flex-start", justifyContent: "center",
-            gap: 2, minWidth: 0,
+            gap: 2, minWidth: 0, maxWidth: "55%",
           }}>
             {nameLine1 && (
-              <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.4, textTransform: "uppercase", color: "#FFFFFF", lineHeight: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block", maxWidth: "100%" }}>
+              <span style={{ fontSize: 7, fontWeight: 900, letterSpacing: 0.4, textTransform: "uppercase", color: "#FFFFFF", lineHeight: 1, whiteSpace: "nowrap", display: "block", maxWidth: "100%" }}>
                 {nameLine1}
               </span>
             )}
             {nameLine2 && (
-              <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.4, textTransform: "uppercase", color: "#FFFFFF", lineHeight: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block", maxWidth: "100%" }}>
+              <span style={{ fontSize: 7, fontWeight: 900, letterSpacing: 0.4, textTransform: "uppercase", color: "#FFFFFF", lineHeight: 1, whiteSpace: "nowrap", display: "block", maxWidth: "100%" }}>
                 {nameLine2}
               </span>
             )}
@@ -422,7 +427,7 @@ export function CardFront(props: CardFrontProps) {
       {/* SEASON + TEAM — centered inside notch inner flat (34.2%→63.6%) */}
       {/* Using the inner-flat bounds guarantees text never touches the slanted walls */}
       <div style={{ position: "absolute", top: 0, height: "5.8%", left: "34.2%", right: "36.4%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 35, pointerEvents: "none", overflow: "hidden" }}>
-        <span style={{ fontSize: 6.5, fontWeight: 900, letterSpacing: 0.5, textTransform: "uppercase", color: "rgba(255,255,255,0.92)", whiteSpace: "nowrap", lineHeight: 1 }}>
+        <span style={{ fontSize: 5.5, fontWeight: 900, letterSpacing: 0.5, textTransform: "uppercase", color: "rgba(255,255,255,0.92)", whiteSpace: "nowrap", lineHeight: 1 }}>
           {team ? `${team} ${seasonFmt}` : seasonFmt}
         </span>
       </div>

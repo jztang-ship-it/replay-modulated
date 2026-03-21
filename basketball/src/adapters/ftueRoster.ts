@@ -63,7 +63,7 @@ export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
       // Badges: GOD_MODE + GLASS + DIME + PICKPOCKET + DOUBLE_DBL | FP=90.1
       makeCard({
         cardId: "ftue-booker", basePlayerId: "1626164",
-        name: "D. Booker", team: "PHX", position: "SG",
+        name: "Devin Booker", team: "PHX", position: "SG",
         tier: "ORANGE", salary: 59, slotIndex: 0,
         projectedFp: 40, actualFp: 87.6,
         date: "2025-03-17", opponent: "TOR", homeAway: "H",
@@ -81,7 +81,7 @@ export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
       // 2025-01-22 vs MEM (A) — 22pts solid but coach nudges user toward Booker
       makeCard({
         cardId: "ftue-lamelo", basePlayerId: "1630163",
-        name: "L. Ball", team: "CHA", position: "PG",
+        name: "LaMelo Ball", team: "CHA", position: "PG",
         tier: "ORANGE", salary: 57, slotIndex: 1,
         projectedFp: 39, actualFp: 38.6,
         date: "2025-01-22", opponent: "MEM", homeAway: "A",
@@ -92,7 +92,7 @@ export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
       // 2025-01-15 vs TOR (A) — decent but unremarkable
       makeCard({
         cardId: "ftue-jrue", basePlayerId: "201950",
-        name: "J. Holiday", team: "BOS", position: "SG",
+        name: "Jrue Holiday", team: "BOS", position: "SG",
         tier: "BLUE", salary: 34, slotIndex: 2,
         projectedFp: 23, actualFp: 23.2,
         date: "2025-01-15", opponent: "TOR", homeAway: "A",
@@ -103,7 +103,7 @@ export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
       // 2024-11-08 vs HOU (H) — limited minutes
       makeCard({
         cardId: "ftue-caruso", basePlayerId: "1627936",
-        name: "A. Caruso", team: "OKC", position: "SG",
+        name: "Alex Caruso", team: "OKC", position: "SG",
         tier: "BLUE", salary: 27, slotIndex: 3,
         projectedFp: 18, actualFp: 18.3,
         date: "2024-11-08", opponent: "HOU", homeAway: "H",
@@ -114,7 +114,7 @@ export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
       // 2024-10-27 vs IND (A) — quiet veteran game
       makeCard({
         cardId: "ftue-lowry", basePlayerId: "200768",
-        name: "K. Lowry", team: "PHI", position: "PG",
+        name: "Kyle Lowry", team: "PHI", position: "PG",
         tier: "GREEN", salary: 18, slotIndex: 4,
         projectedFp: 12, actualFp: 12.2,
         date: "2024-10-27", opponent: "IND", homeAway: "A",
@@ -125,7 +125,7 @@ export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
       // 2025-02-10 vs CLE (A) — garbage time minutes
       makeCard({
         cardId: "ftue-ingles", basePlayerId: "204060",
-        name: "J. Ingles", team: "ORL", position: "SF",
+        name: "Joe Ingles", team: "ORL", position: "SF",
         tier: "WHITE", salary: 5, slotIndex: 5,
         projectedFp: 6, actualFp: 5.2,
         date: "2025-02-10", opponent: "CLE", homeAway: "A",
@@ -147,7 +147,7 @@ const DRAWN: Record<number, () => GeneratedCard> = {
   // 11pts 6reb 7ast 1stl 0blk 2tov → FP=28.0
   1: () => makeCard({
     cardId: "ftue-westbrook", basePlayerId: "201566",
-    name: "R. Westbrook", team: "DEN", position: "PG",
+    name: "Russell Westbrook", team: "DEN", position: "PG",
     tier: "PURPLE", salary: 41, slotIndex: 1,
     projectedFp: 29, actualFp: 28.0,
     date: "2024-12-28", opponent: "DET", homeAway: "H",
@@ -159,7 +159,7 @@ const DRAWN: Record<number, () => GeneratedCard> = {
   // 16pts 2reb 10ast 2stl 0blk 1tov → FP=36.4
   2: () => makeCard({
     cardId: "ftue-cp3", basePlayerId: "101108",
-    name: "C. Paul", team: "SAS", position: "PG",
+    name: "Chris Paul", team: "SAS", position: "PG",
     tier: "BLUE", salary: 36, slotIndex: 2,
     projectedFp: 25, actualFp: 36.4,
     date: "2025-01-25", opponent: "IND", homeAway: "A",
@@ -174,7 +174,7 @@ const DRAWN: Record<number, () => GeneratedCard> = {
   // 6pts 2reb 0ast 0stl 0blk 1tov → FP=7.4
   3: () => makeCard({
     cardId: "ftue-klay", basePlayerId: "202691",
-    name: "K. Thompson", team: "DAL", position: "SG",
+    name: "Klay Thompson", team: "DAL", position: "SG",
     tier: "BLUE", salary: 33, slotIndex: 3,
     projectedFp: 23, actualFp: 7.4,
     date: "2025-02-21", opponent: "NOP", homeAway: "H",
@@ -186,7 +186,7 @@ const DRAWN: Record<number, () => GeneratedCard> = {
   // 5pts 3reb 1ast 0stl 0blk 2tov → FP=8.1
   4: () => makeCard({
     cardId: "ftue-klove", basePlayerId: "201567",
-    name: "K. Love", team: "CLE", position: "PF",
+    name: "Kevin Love", team: "CLE", position: "PF",
     tier: "GREEN", salary: 22, slotIndex: 4,
     projectedFp: 15, actualFp: 10.5,
     date: "2024-11-29", opponent: "TOR", homeAway: "H",
@@ -198,7 +198,7 @@ const DRAWN: Record<number, () => GeneratedCard> = {
   // 9pts 1reb 1ast 1stl 0blk 3tov → FP=10.7
   5: () => makeCard({
     cardId: "ftue-patty", basePlayerId: "201988",
-    name: "P. Mills", team: "ATL", position: "PG",
+    name: "Patty Mills", team: "ATL", position: "PG",
     tier: "WHITE", salary: 9, slotIndex: 5,
     projectedFp: 10, actualFp: 10.7,
     date: "2024-10-31", opponent: "SAS", homeAway: "H",

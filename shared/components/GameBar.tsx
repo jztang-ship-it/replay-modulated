@@ -90,10 +90,17 @@ type Props = {
   ftuePulseNearMiss?: boolean;
   /** FTUE: block the replay/deal button (before final bubble dismissed) */
   ftueReplayBlocked?: boolean;
+  /** FTUE: CoachLayer spotlight target for primary action (Deal / Draw / replay) */
+  dataFtuePrimaryAnchor?: "deal" | "draw";
   /** Hide the built-in TierBar — use when an external TierGauge is shown */
   hideTierBar?: boolean;
   /** Slot rendered between tier bar and multipliers — used for external TierGauge */
   tierGaugeSlot?: React.ReactNode;
+  /** When set, multiplier row and wallet/action render into these DOM nodes (single GameBar instance, split layout) */
+  splitFooter?: {
+    multipliersHost: HTMLElement | null;
+    controlsHost: HTMLElement | null;
+  };
 };
 
 const MULTIPLIERS = [1, 3, 5, 10];
@@ -937,10 +944,17 @@ export function GameBar({
   ftueHideSkip = false,
   ftuePulseNearMiss = false,
   ftueReplayBlocked = false,
+  dataFtuePrimaryAnchor,
   hideTierBar = false,
   tierGaugeSlot,
+  splitFooter,
 }: Props) {
   const betLocked = gameState === "DEALING" || gameState === "DRAWING" || gameState === "REVEALING";
+  const splitRequested = splitFooter != null;
+  const split =
+    splitRequested &&
+    splitFooter!.multipliersHost != null &&
+    splitFooter!.controlsHost != null;
   const [showLegend, setShowLegend] = useState(false);
   const isCelebration = gameState === "WIN_CELEBRATION" && !!celebration;
 
@@ -1006,6 +1020,143 @@ export function GameBar({
   const remaining  = capMax - spent;
   const overBudget = remaining < 0;
 
+  const multiplierRow = (
+    <div style={{ display: "flex", gap: 8, justifyContent: "center", alignItems: "center", width: "100%", boxSizing: "border-box" }}>
+      {MULTIPLIERS.map((m: number) => {
+        const active = betMultiplier === m;
+        return (
+          <button key={m} onClick={() => onBetMultiplier(m)} disabled={betLocked} style={{
+            background: active ? THEME.button.multiplier.active.bg : THEME.button.multiplier.inactive.bg,
+            border: active ? "none" : THEME.button.multiplier.inactive.border,
+            borderRadius: 24, color: "#FFFFFF",
+            fontWeight: 900, fontSize: 14, padding: "9px 0",
+            cursor: betLocked ? "default" : "pointer",
+            opacity: betLocked ? 0.4 : 1,
+            transition: "all 150ms ease", lineHeight: 1,
+            flex: 1, maxWidth: 80,
+          }}>{m}X</button>
+        );
+      })}
+    </div>
+  );
+
+  const controlsFooter = (
+    <>
+      <div ref={walletTargetRef} style={{ pointerEvents: "none", zIndex: 9998 }} />
+      {celebFlying && tapOrigin && walletTargetRef.current && (
+        <CoinFlyFromPoint
+          sx={tapOrigin.x}
+          sy={tapOrigin.y}
+          toEl={walletTargetRef.current}
+          color="#FFD700"
+          count={Math.min(8, Math.max(3, Math.round((celebration?.payout ?? 0) / 30)))}
+        />
+      )}
+      <div style={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        minHeight: 0,
+        flex: 1,
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-end",
+        boxSizing: "border-box",
+      }}>
+        <div style={{
+          filter: showCelebContent ? "blur(5px)" : "none",
+          opacity: showCelebContent ? 0 : 1,
+          transition: "filter 0.35s ease, opacity 0.35s ease",
+          pointerEvents: showCelebContent ? "none" : "auto",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 0 }}>
+            <div ref={walletRef} style={{ flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>Wallet</span>
+                <span style={{ fontSize: 17, fontWeight: 900, color: isBalanceAnimating ? THEME.palette.green_primary : "#FFFFFF", lineHeight: 1, transition: "color 300ms ease" }}>
+                  $<RollingNumber value={displayBalance} decimals={0} duration={1200} />
+                </span>
+              </div>
+            </div>
+            <button onClick={() => setShowLegend(true)} style={{
+              width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+              background: "transparent",
+              border: `2px solid ${THEME.colors.surfaceStroke}`,
+              color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: 900,
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+            }}>i</button>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "center", paddingTop: 4 }}>
+            <button
+              onClick={onAction}
+              disabled={isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked}
+              data-action={gameState === "IDLE" ? "deal" : gameState === "HOLD" ? "draw" : undefined}
+              data-ftue-anchor={dataFtuePrimaryAnchor}
+              style={{
+                width: "min(168px, 50%)",
+                borderRadius: THEME.button.action.borderRadius, border: "none",
+                padding: "11px 0",
+                fontWeight: 900, fontSize: 16, letterSpacing: 2, textTransform: "uppercase",
+                cursor: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "default" : "pointer",
+                background: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "rgba(255,255,255,0.10)" : actionBackground(gameState),
+                color: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "rgba(255,255,255,0.35)" : actionTextColor(gameState),
+                opacity: (ftueHideSkip && gameState === "REVEALING") ? 0 : (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? 0.3 : 1,
+                pointerEvents: (ftueHideSkip && gameState === "REVEALING" || ftueReplayBlocked) ? "none" as const : "auto" as const,
+                boxShadow: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
+                transition: "opacity 150ms ease", lineHeight: 1,
+              }}>
+              {actionLabel(gameState)}
+            </button>
+          </div>
+        </div>
+
+        {isCelebration && celebration && (
+          <div style={{
+            position: "absolute", inset: 0,
+            display: "flex", flexDirection: "column",
+            alignItems: "stretch", justifyContent: "flex-start",
+            paddingTop: "12px",
+            opacity: overshootSettled ? 1 : 0,
+            transition: "opacity 0.4s ease",
+            pointerEvents: overshootSettled ? "auto" : "none",
+          }}>
+            <CelebrationBottom
+              celebration={celebration}
+              onDismiss={onWinCelebrationComplete ?? (() => {})}
+              isFTUE={ftueHideSkip}
+            />
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  if (splitRequested && !split) {
+    return (
+      <>
+        {showLegend && ReactDOM.createPortal(
+          <LegendModal onClose={() => setShowLegend(false)} legend={legend} />,
+          document.body
+        )}
+      </>
+    );
+  }
+
+  if (split) {
+    return (
+      <>
+        {showLegend && ReactDOM.createPortal(
+          <LegendModal onClose={() => setShowLegend(false)} legend={legend} />,
+          document.body
+        )}
+        {ReactDOM.createPortal(multiplierRow, splitFooter!.multipliersHost as Element)}
+        {ReactDOM.createPortal(controlsFooter, splitFooter!.controlsHost as Element)}
+      </>
+    );
+  }
+
   return (
     <>
       {showLegend && ReactDOM.createPortal(
@@ -1053,13 +1204,15 @@ export function GameBar({
           />
         )}
 
-        {/* ── ZONE B.5: Tier gauge — fixed height slot, always present ── */}
-        <div style={{ height: 56, flexShrink: 0, overflow: "visible", marginBottom: 20 }}>
-          {tierGaugeSlot}
-        </div>
+        {/* ── ZONE B.5: external TierGauge slot (e.g. GameView) — omit wrapper when unused so footer height isn’t reserved ── */}
+        {tierGaugeSlot != null && tierGaugeSlot !== false && (
+          <div style={{ height: 54, flexShrink: 0, overflow: "visible", marginBottom: 12 }}>
+            {tierGaugeSlot}
+          </div>
+        )}
 
         {/* ── ZONE C: Multipliers/Wallet/Action ↔ Streak hook ─────── */}
-        <div style={{ position: "relative", minHeight: 110, overflow: "hidden", paddingBottom: "max(28px, env(safe-area-inset-bottom, 28px))" }}>
+        <div style={{ position: "relative", minHeight: 86, overflow: "hidden", paddingBottom: "max(20px, env(safe-area-inset-bottom, 16px))" }}>
 
           {/* Normal content */}
           <div style={{
@@ -1068,47 +1221,32 @@ export function GameBar({
             transition: "filter 0.35s ease, opacity 0.35s ease",
             pointerEvents: showCelebContent ? "none" : "auto",
           }}>
-            <div style={{ display: "flex", gap: 8, justifyContent: "center", paddingTop: 4 }}>
-              {MULTIPLIERS.map((m: number) => {
-                const active = betMultiplier === m;
-                return (
-                  <button key={m} onClick={() => onBetMultiplier(m)} disabled={betLocked} style={{
-                    background: active ? THEME.button.multiplier.active.bg : THEME.button.multiplier.inactive.bg,
-                    border: active ? "none" : THEME.button.multiplier.inactive.border,
-                    borderRadius: 24, color: "#FFFFFF",
-                    fontWeight: 900, fontSize: 14, padding: "9px 0",
-                    cursor: betLocked ? "default" : "pointer",
-                    opacity: betLocked ? 0.4 : 1,
-                    transition: "all 150ms ease", lineHeight: 1,
-                    flex: 1, maxWidth: 80,
-                  }}>{m}X</button>
-                );
-              })}
-            </div>
+            {multiplierRow}
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 6 }}>
               <div ref={walletRef} style={{ flexShrink: 0 }}>
-                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>
-                  Wallet
-                </div>
-                <div style={{ fontSize: 17, fontWeight: 900, color: isBalanceAnimating ? THEME.palette.green_primary : "#FFFFFF", transition: "color 300ms ease", lineHeight: 1, marginTop: 2 }}>
-                  $<RollingNumber value={displayBalance} decimals={0} duration={1200} />
+                <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                  <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>Wallet</span>
+                  <span style={{ fontSize: 17, fontWeight: 900, color: isBalanceAnimating ? THEME.palette.green_primary : "#FFFFFF", lineHeight: 1, transition: "color 300ms ease" }}>
+                    $<RollingNumber value={displayBalance} decimals={0} duration={1200} />
+                  </span>
                 </div>
               </div>
               <button onClick={() => setShowLegend(true)} style={{
-                width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
+                width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
                 background: "transparent",
                 border: `2px solid ${THEME.colors.surfaceStroke}`,
-                color: "rgba(255,255,255,0.6)", fontSize: 14, fontWeight: 900,
+                color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: 900,
                 cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
               }}>i</button>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "center", paddingTop: 6 }}>
+            <div style={{ display: "flex", justifyContent: "center", paddingTop: 4 }}>
               <button
                 onClick={onAction}
                 disabled={isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked}
                 data-action={gameState === "IDLE" ? "deal" : gameState === "HOLD" ? "draw" : undefined}
+                data-ftue-anchor={dataFtuePrimaryAnchor}
                 style={{
                 width: "min(168px, 50%)",
                 borderRadius: THEME.button.action.borderRadius, border: "none",

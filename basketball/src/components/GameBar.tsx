@@ -90,7 +90,13 @@ type Props = {
   ftueHideSkip?: boolean;
   ftuePulseNearMiss?: boolean;
   ftueReplayBlocked?: boolean;
+  /** FTUE: sets data-ftue-anchor on Deal/Draw/replay primary button for CoachLayer */
+  dataFtuePrimaryAnchor?: "deal" | "draw";
   tierGaugeSlot?: React.ReactNode;
+  splitFooter?: {
+    multipliersHost: HTMLElement | null;
+    controlsHost: HTMLElement | null;
+  };
 };
 
 import React from 'react';

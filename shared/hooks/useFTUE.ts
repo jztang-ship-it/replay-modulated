@@ -19,24 +19,36 @@
  * to replay the FTUE without clearing all storage.
  */
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
+
+function readFtueActive(KEY: string): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("ftue") === "1") return true;
+    if (localStorage.getItem(KEY) === "1") return false;
+    if (localStorage.getItem("ftue_completed") === "true") return false;
+    return true;
+  } catch {
+    return true;
+  }
+}
 
 export function useFTUE(sport: string) {
   const KEY = `replaymod_ftue_${sport}`;
 
-  const [isFTUE] = useState<boolean>(() => {
-    return false;
-  });
+  const [isFTUE, setIsFTUE] = useState<boolean>(() => readFtueActive(KEY));
 
   /** Call once when user completes the FTUE flow. */
-  function completeFTUE() {
+  const completeFTUE = useCallback(() => {
     try {
       localStorage.setItem(KEY, "1");
       localStorage.setItem("ftue_completed", "true");
     } catch {
-      // ignore
+      /* ignore */
     }
-  }
+    setIsFTUE(false);
+  }, [KEY]);
 
   return { isFTUE, completeFTUE };
 }

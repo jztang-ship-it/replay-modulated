@@ -9,6 +9,15 @@ export interface TierTokens {
   glow: string;
 }
 
+/** Top-right position text (e.g. PG / C) — designer palette; salary tier breakpoints unchanged */
+export const TIER_POSITION_TEXT: Record<TierKey, string> = {
+  ORANGE: "#d16523",
+  PURPLE: "#8524cd",
+  GREEN:  "#74ab1d",
+  BLUE:   "#1caebf",
+  WHITE:  "#4d525f",
+};
+
 export const TIER_TOKENS: Record<TierKey, TierTokens> = {
   ORANGE: { bg: "#FC7100", bgEnd: "#FFA200", accent: "#FFA200", isLight: false, frame: "rgba(255,160,50,0.90)",  glow: "rgba(255,140,30,0.28)"  },
   PURPLE: { bg: "#7E00FF", bgEnd: "#1A0033", accent: "#BB5BFF", isLight: false, frame: "rgba(175,100,255,0.88)", glow: "rgba(160,90,255,0.26)"  },

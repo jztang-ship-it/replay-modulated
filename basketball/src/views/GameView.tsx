@@ -5,7 +5,7 @@
  * Reveal sequence is owned by useEmotionalReveal.
  */
 
-import { useMemo, useState, useCallback, useRef, useEffect } from "react";
+import { useMemo, useState, useCallback, useRef, useEffect, useLayoutEffect, type ReactNode } from "react";
 import type { GamePhase, PlayerCard } from "../adapters/types";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { dealInitialRoster, redrawRoster, resolveRoster } from "../adapters/gameAdapter";
@@ -47,6 +47,57 @@ function loadBalance(): number {
 }
 function saveBalance(v: number) {
   try { localStorage.setItem("replaymod_balance", String(v)); } catch {}
+}
+
+/** Scales the 2×3 roster so both rows always fit the middle grid row (no clipping onto Team FP). */
+function RosterGridScaleFit({ children }: { children: ReactNode }) {
+  const portRef = useRef<HTMLDivElement>(null);
+  const measRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useLayoutEffect(() => {
+    const port = portRef.current;
+    const meas = measRef.current;
+    if (!port || !meas) return;
+    const run = () => {
+      const pw = port.clientWidth;
+      const ph = port.clientHeight;
+      const mw = meas.scrollWidth;
+      const mh = meas.scrollHeight;
+      if (!pw || !ph || !mw || !mh) return;
+      setScale(Math.min(1, pw / mw, ph / mh));
+    };
+    run();
+    const ro = new ResizeObserver(run);
+    ro.observe(port);
+    ro.observe(meas);
+    return () => ro.disconnect();
+  }, [children]);
+
+  return (
+    <div
+      ref={portRef}
+      data-ftue-anchor="roster"
+      style={{
+        width: "100%",
+        height: "100%",
+        minHeight: 0,
+        overflow: "hidden",
+        position: "relative",
+      }}
+    >
+      <div
+        ref={measRef}
+        style={{
+          width: "100%",
+          transform: `scale(${scale})`,
+          transformOrigin: "top center",
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
 }
 const BASE_BET       = 10;
 
@@ -288,6 +339,8 @@ export default function GameView() {
     collectTask,
   } = useEngagement();
   const [showCollect, setShowCollect] = useState(false);
+  const [multipliersHost, setMultipliersHost] = useState<HTMLDivElement | null>(null);
+  const [controlsHost, setControlsHost] = useState<HTMLDivElement | null>(null);
   const [dataReady, setDataReady]           = useState(false);
   const [roster, setRoster]                 = useState<PlayerCard[]>(createPlaceholders());
   const [lockedCardIds, setLockedCardIds]   = useState<Set<string>>(new Set());
@@ -706,8 +759,6 @@ const [streak, setStreak] = useState<number>(() =>
       maxHeight: "-webkit-fill-available",
       display: "flex",
       flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
       overflow: "hidden",
       background: "linear-gradient(180deg, #070A12 0%, #0A1020 38%, #070A12 100%)",
       color: "#EAF0FF",
@@ -715,26 +766,30 @@ const [streak, setStreak] = useState<number>(() =>
       userSelect: "none",
       boxSizing: "border-box",
       paddingTop: "env(safe-area-inset-top, 0px)",
-      paddingBottom: "env(safe-area-inset-bottom, 0px)",
     }}>
-      {/* ── Inner game column — phone-proportioned, centered on desktop ── */}
+      {/* ── Inner game column — 14+48+14+20 = 96dvh (4 bands; ~4dvh buffer) ── */}
       <div style={{
         flex: 1,
-        width: "100%",
-        maxWidth: "min(480px, 100%)",
-        // Cap height to ~phone aspect ratio so cards don't stretch on wide screens
-        // 480px wide × 1.95 = 936px — a typical tall phone. On desktop this centers it.
-        maxHeight: "min(100%, 936px)",
-        margin: "auto",
         display: "flex",
         flexDirection: "column",
-        minHeight: 0,
-        overflow: "hidden",
+        overflowY: "hidden",
+        overflowX: "hidden",
+        width: "100%",
+        maxWidth: "min(480px, 100%)",
+        margin: "0 auto",
         boxSizing: "border-box",
       }}>
 
-        {/* ── Top shell: header + bonus row ── */}
-        <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", gap: 6, padding: "14px 10px 0px" }}>
+        {/* 1 — Header */}
+        <div style={{
+          flex: "0 0 14dvh",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-end",
+          padding: "0 10px 2px",
+          boxSizing: "border-box",
+          overflow: "hidden",
+        }}>
           <div style={{
             borderRadius: 16,
             border: "1px solid rgba(255,255,255,0.10)",
@@ -751,24 +806,27 @@ const [streak, setStreak] = useState<number>(() =>
           <BonusRow betAdded={currentBet} streak={streak} />
         </div>
 
-        {/* ── Card stage: hero zone. Cards size by WIDTH, aspect-ratio locks height ── */}
+        {/* 2 — Card stage */}
         <div style={{
-          flex: "1 1 auto",
-          minHeight: 0,
+          flex: "0 0 48dvh",
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "center",
-          padding: "14px 8px 0",
-          zIndex: 20,
+          padding: "2px 4px 6px 4px",
+          boxSizing: "border-box",
+          overflow: "hidden",
         }}>
           <div
             onClick={gameState === "REVEALING" && REVEAL_MODE === "auto" ? skipReveal : undefined}
             style={{
               width: "100%",
+              height: "100%",
               cursor: gameState === "REVEALING" && REVEAL_MODE === "auto" ? "pointer" : "default",
               boxSizing: "border-box",
+              overflow: "hidden",
             }}
           >
+            <RosterGridScaleFit>
             <RosterGrid
   roster={displayRoster}
   phase={phase}
@@ -812,52 +870,65 @@ const [streak, setStreak] = useState<number>(() =>
   isRevealingPhase={gameState === "REVEALING"}
   ftueLockedSlot={(isFTUE && gameState === "HOLD" && !heldCardIds.has("ftue-booker")) || (isFTUE && ftueResultsDim) ? 0 : null}
 />
+            </RosterGridScaleFit>
           </div>
         </div>
 
-        {/* ══════════════════════════════════════════════════════════════
-            PINNED FOOTER — all sections fixed height, nothing moves
-            Order: score/budget → result label → tier gauge → multipliers → wallet/action
-        ══════════════════════════════════════════════════════════════ */}
-
-        {/* Score / Budget — always present, pinned position.
-            Transforms to celebration display during WIN_CELEBRATION */}
+        {/* 3 — Score + TierGauge (8+6 = 14dvh) */}
+        <div style={{
+          flex: "0 0 14dvh",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-start",
+          minHeight: 0,
+          overflow: "hidden",
+          boxSizing: "border-box",
+        }}>
         <div
           onClick={gameState === "WIN_CELEBRATION" ? onWinCelebrationComplete : undefined}
           style={{
-            flex: "0 0 auto",
+            flex: "0 0 8dvh",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            gap: 40,
-            padding: gameState === "WIN_CELEBRATION" ? "18px 10px 0" : "10px 10px 0",
-            minHeight: gameState === "WIN_CELEBRATION" ? 0 : 56,
+            padding: "0 10px",
+            boxSizing: "border-box",
+            overflow: "hidden",
             cursor: gameState === "WIN_CELEBRATION" ? "pointer" : "default",
           }}
         >
           {gameState === "WIN_CELEBRATION" && winTier && celebrationData ? (
-            /* ── Celebration: tier + coins won ── */
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, width: "100%" }}>
               {(() => {
                 const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
                 return (
                   <>
                     <div style={{
-                      fontSize: 32, fontWeight: 900, letterSpacing: 1, fontStyle: "italic",
-                      color: tc.color, textShadow: `0 0 20px ${tc.glow}`,
-                      lineHeight: 1,
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "baseline",
+                      justifyContent: "center",
+                      gap: 8,
+                      flexWrap: "wrap",
                     }}>
-                      {formatTierLabel(winTier)}
-                    </div>
-                    {winPayout > 0 && (
-                      <div style={{
-                        fontSize: 13, fontWeight: 700,
-                        color: "rgba(255,255,255,0.55)",
-                        letterSpacing: "0.05em",
+                      <span style={{
+                        fontSize: 24, fontWeight: 900, letterSpacing: 1, fontStyle: "italic",
+                        color: tc.color, textShadow: `0 0 20px ${tc.glow}`,
+                        lineHeight: 1,
                       }}>
-                        +{winPayout} coins
-                      </div>
-                    )}
+                        {formatTierLabel(winTier)}
+                      </span>
+                      {winPayout > 0 && (
+                        <span style={{
+                          fontSize: 15, fontWeight: 800,
+                          color: "rgba(255,255,255,0.6)",
+                          letterSpacing: "0.04em",
+                          lineHeight: 1,
+                        }}>
+                          +{winPayout}
+                        </span>
+                      )}
+                    </div>
                     {winTier === "BUST" && (
                       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.05em" }}>
                         Better luck next hand
@@ -868,8 +939,7 @@ const [streak, setStreak] = useState<number>(() =>
               })()}
             </div>
           ) : (
-            /* ── Normal: score + budget ── */
-            <>
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 48, width: "100%" }}>
               {(() => {
                 const spent =
                   gameState === "IDLE"      ? 0 :
@@ -906,61 +976,103 @@ const [streak, setStreak] = useState<number>(() =>
                   </>
                 );
               })()}
-            </>
-          )}
-        </div>
-
-        {/* Result label — fixed slot */}
-        <div style={{
-          flex: "0 0 auto",
-          minHeight: gameState === "WIN_CELEBRATION" ? 32 : 24,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-        }}>
-          {gameState === "WIN_CELEBRATION" && (
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-              tap to continue
             </div>
           )}
-          {winTier && gameState === "RESULTS" && (() => {
-            const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
-            const label = formatTierLabel(winTier);
-            return (
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{
-                  fontSize: 12, fontWeight: 900, letterSpacing: 2,
-                  textTransform: "uppercase", color: tc.color,
-                  textShadow: `0 0 10px ${tc.glow}`,
-                  fontStyle: "italic",
-                }}>
-                  {label}
-                </span>
-                {winPayout > 0 && (
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.05em" }}>
-                    +{winPayout} coins
-                  </span>
-                )}
-                {winTier === "BUST" && (
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
-                    Better luck next hand
-                  </span>
-                )}
-              </div>
-            );
-          })()}
         </div>
 
-        {/* Bottom shell: tier gauge + multipliers + wallet/action */}
         <div style={{
-          flex: "0 0 auto",
-          position: "relative",
-          zIndex: 30,
-          padding: "0 10px 10px",
+          flex: "0 0 6dvh",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-start",
+          alignItems: "center",
+          padding: "0 10px",
+          paddingTop: 2,
+          marginBottom: 6,
+          boxSizing: "border-box",
+          overflow: "hidden",
+        }}>
+          <div data-ftue-anchor="tier-gauge" style={{ width: "100%", overflow: "hidden" }}>
+            <TierGauge
+              totalFp={totalFp}
+              thresholds={[
+                { tier: "ROOKIE",   minFP: 155 },
+                { tier: "STARTER",  minFP: 175 },
+                { tier: "ALL_STAR", minFP: 195 },
+                { tier: "MVP",      minFP: 215 },
+                { tier: "GOAT" as any, minFP: 235 },
+              ]}
+              winTier={winTier ?? undefined}
+              lastCardFp={lastCardFp}
+              isSkip={wasSkipped}
+              visible={gameState === "REVEALING" || gameState === "RESULTS" || gameState === "WIN_CELEBRATION"}
+            />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", width: "100%" }}>
+            {winTier && gameState === "RESULTS" && (() => {
+              const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
+              const label = formatTierLabel(winTier);
+              return (
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{
+                    fontSize: 12, fontWeight: 900, letterSpacing: 2,
+                    textTransform: "uppercase", color: tc.color,
+                    textShadow: `0 0 10px ${tc.glow}`,
+                    fontStyle: "italic",
+                  }}>
+                    {label}
+                  </span>
+                  {winPayout > 0 && (
+                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.05em" }}>
+                      +{winPayout} coins
+                    </span>
+                  )}
+                  {winTier === "BUST" && (
+                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
+                      Better luck next hand
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+        </div>
+
+        {/* 4 — Bottom: multipliers + controls (20dvh), pinned to end */}
+        <div style={{
+          flex: "0 0 20dvh",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-end",
+          gap: 4,
+          minHeight: 0,
+          overflow: "hidden",
           boxSizing: "border-box",
         }}>
-          {/* FTUE Coach Bubbles */}
+        <div
+          ref={(el) => setMultipliersHost(el)}
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "0 10px",
+            boxSizing: "border-box",
+            overflow: "hidden",
+          }}
+        />
+
+        <div
+          ref={(el) => setControlsHost(el)}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-end",
+            padding: "0 10px calc(env(safe-area-inset-bottom, 0px) + 16px)",
+            boxSizing: "border-box",
+            overflow: "hidden",
+          }}
+        >
           <CoachLayer
             isFTUE={isFTUE}
             gameState={gameState}
@@ -970,7 +1082,6 @@ const [streak, setStreak] = useState<number>(() =>
             lastRevealedCardId={lastRevealedCardId}
             ftueBookerFlipped={ftueBookerFlipped}
             onResumeHeldReveal={() => {
-              // Called by CoachLayer after last non-Booker card bubble dismissed
               const resume = heldRevealResumeRef.current;
               heldRevealResumeRef.current = null;
               resume?.();
@@ -985,7 +1096,6 @@ const [streak, setStreak] = useState<number>(() =>
             onBubbleActive={(active) => setFtueCardsBlocked(active)}
             onReplayReady={() => setFtueReplayReady(true)}
             onReplay={() => {
-              // Mark FTUE complete — next visit goes straight to real game
               completeFTUE();
               setLastRevealedCardId(null);
               setCelebrationHeld(false);
@@ -997,65 +1107,48 @@ const [streak, setStreak] = useState<number>(() =>
               handleButtonClick();
             }}
           />
+          <HotStreakOverlay active={hotStreak} winCount={sessionWins} />
+          {showCollect && !isFTUE && (
+            <CollectScreen
+              taskStates={taskStates}
+              loginStreak={loginStreak}
+              coins={coins}
+              xp={xp}
+              onClose={() => setShowCollect(false)}
+              onCollect={(id) => { collectTask?.(id); }}
+            />
+          )}
+        </div>
+        </div>
 
-<div style={{ position: 'relative', width: '100%' }}>
-  <GameBar
-    gameState={gameState}
-    balance={balance}
-    isBalanceAnimating={isBalanceAnimating}
-    totalFp={totalFp}
-    lastCardProgress={lastCardProgress}
-    lastCardFp={lastCardFp}
-    capMax={CAP_MAX}
-    capUsed={capUsed}
-    lockedSalary={lockedSalary}
-    revealedSalary={revealedSalary}
-    betMultiplier={betMultiplier}
-    baseBet={BASE_BET}
-    onBetMultiplier={setBetMultiplier}
-    onAction={handleButtonClick}
-    celebration={celebrationData}
-    onWinCelebrationComplete={onWinCelebrationComplete}
-    ftueDrawBlocked={isFTUE && gameState === "HOLD" && !heldCardIds.has("ftue-booker")}
-    ftueHideSkip={isFTUE}
-    ftuePulseNearMiss={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")}
-    ftueReplayBlocked={isFTUE && gameState === "RESULTS" && !ftueReplayReady}
-    tierGaugeSlot={
-      <TierGauge
+      </div>
+
+      {/* Portals only — sibling of inner column */}
+      <GameBar
+        gameState={gameState}
+        balance={balance}
+        isBalanceAnimating={isBalanceAnimating}
         totalFp={totalFp}
-        thresholds={[
-          { tier: 'ROOKIE',   minFP: 155 },
-          { tier: 'STARTER',  minFP: 175 },
-          { tier: 'ALL_STAR', minFP: 195 },
-          { tier: 'MVP',      minFP: 215 },
-          { tier: 'GOAT' as any, minFP: 235 },
-        ]}
-        winTier={winTier ?? undefined}
+        lastCardProgress={lastCardProgress}
         lastCardFp={lastCardFp}
-        isSkip={wasSkipped}
-        visible={gameState === 'REVEALING' || gameState === 'RESULTS' || gameState === 'WIN_CELEBRATION'}
+        capMax={CAP_MAX}
+        capUsed={capUsed}
+        lockedSalary={lockedSalary}
+        revealedSalary={revealedSalary}
+        betMultiplier={betMultiplier}
+        baseBet={BASE_BET}
+        onBetMultiplier={setBetMultiplier}
+        onAction={handleButtonClick}
+        celebration={celebrationData}
+        onWinCelebrationComplete={onWinCelebrationComplete}
+        ftueDrawBlocked={isFTUE && gameState === "HOLD" && !heldCardIds.has("ftue-booker")}
+        ftueHideSkip={isFTUE}
+        ftuePulseNearMiss={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")}
+        ftueReplayBlocked={isFTUE && gameState === "RESULTS" && !ftueReplayReady}
+        dataFtuePrimaryAnchor={isFTUE ? (gameState === "HOLD" ? "draw" : "deal") : undefined}
+        splitFooter={{ multipliersHost, controlsHost }}
       />
-    }
-  />
-</div>
 
-{/* ── Hot Streak Overlay ── */}
-<HotStreakOverlay active={hotStreak} winCount={sessionWins} />
-
-{/* ── Collect full screen ── */}
-{showCollect && !isFTUE && (
-  <CollectScreen
-    taskStates={taskStates}
-    loginStreak={loginStreak}
-    coins={coins}
-    xp={xp}
-    onClose={() => setShowCollect(false)}
-    onCollect={(id) => { collectTask?.(id); }}
-  />
-)}
-
-</div>
-  </div>
-</div>
-);
+    </div>
+  );
 }
