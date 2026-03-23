@@ -1229,7 +1229,10 @@ const [streak, setStreak] = useState<number>(() =>
             onReplayReady={() => setFtueReplayReady(true)}
             onFtueReadyToFlip={() => setFtueBookerPulse(true)}
             onFtueBookerHeld={() => { /* draw pulse handled inside CoachLayer */ }}
-            onFtueAllDone={() => setFtueResultsDim(false)}
+            onFtueAllDone={() => {
+              completeFTUE();
+              setFtueResultsDim(false);
+            }}
             onReplay={() => {
               completeFTUE();
               setLastRevealedCardId(null);
