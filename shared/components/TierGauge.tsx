@@ -53,6 +53,8 @@ interface TierGaugeProps {
   onFtueOscillateComplete?: () => void;
   /** FTUE: after scripted oscillation, lock bar — no near-miss / skip animations until next hand */
   ftueLockStaticBar?: boolean;
+  /** Regular game: trigger one-shot spring when final anchor card has finished counting */
+  regularFinalCardKick?: boolean;
 }
 
 const TIER_CFG: Record<string, { label: string; color: string; glow: string }> = {
@@ -113,6 +115,7 @@ export function TierGauge({
   ftueOscillate = false,
   onFtueOscillateComplete,
   ftueLockStaticBar = false,
+  regularFinalCardKick = false,
 }: TierGaugeProps) {
   const [barFill,   setBarFill]   = useState(0);
   const [barColor,  setBarColor]  = useState("transparent");
@@ -338,13 +341,16 @@ export function TierGauge({
     const delta     = finalFill - startFill;
 
     // ── Determine animation mode ──────────────────────────────────────────
-    type AnimMode = "goat" | "near_miss_spring" | "tier_cross" | "skip_spring" | "ease";
+    type AnimMode = "goat" | "near_miss_spring" | "tier_cross" | "skip_spring" | "final_card_spring" | "ease";
     let mode: AnimMode = "ease";
     let duration = 300;
 
     if (isGoat) {
       mode = "goat";
       duration = 900;
+    } else if (regularFinalCardKick) {
+      mode = "final_card_spring";
+      duration = 1100;
     } else if (isNearMiss) {
       mode = "near_miss_spring";
       duration = 1600;
@@ -368,6 +374,7 @@ export function TierGauge({
       near_miss_spring: { zeta: 0.28, wn: 9  },
       skip_spring:      { zeta: 0.45, wn: 8  },
       tier_cross:       { zeta: 0.50, wn: 8  },
+      final_card_spring:{ zeta: 0.44, wn: 8.5 },
       goat:             { zeta: 1.00, wn: 5  }, // critically damped — smooth fill
       ease:             { zeta: 1.00, wn: 5  }, // unused for ease mode
     };
@@ -406,6 +413,16 @@ export function TierGauge({
             pos = startFill + raw * (finalFill - startFill);
             break;
           }
+          case "final_card_spring": {
+            // Slot-machine style: overshoot ~5% of current target, then bounce back.
+            const oscFp = totalFp * 1.05;
+            const target = isMaxLevel
+              ? 1
+              : Math.min(1, Math.max(0, (oscFp - curMin) / tierSpan));
+            const raw = spring(t * 1.55, zeta, wn);
+            pos = startFill + raw * (target - startFill);
+            break;
+          }
 
           default:
             // Simple ease-out — no spring, no nonsense
@@ -416,7 +433,7 @@ export function TierGauge({
         setBarFill(barWidth);
 
         // Color: show next-tier color when overshooting past 1.0
-        if (mode === "near_miss_spring" && pos > finalFill + 0.005) {
+        if ((mode === "near_miss_spring" || mode === "final_card_spring") && pos > finalFill + 0.005) {
           setBarColor(overshootColor);
         } else {
           setBarColor(normalColor);
@@ -443,7 +460,7 @@ export function TierGauge({
       clearTimeout(delayId);
       cancelAnimationFrame(rafRef.current);
     };
-  }, [totalFp, visible, ftueSuppressNormal, ftueOscillate, ftueLockStaticBar, finalFill, normalColor, derivedTier]); // eslint-disable-line
+  }, [totalFp, visible, ftueSuppressNormal, ftueOscillate, ftueLockStaticBar, regularFinalCardKick, finalFill, normalColor, derivedTier]); // eslint-disable-line
 
   useEffect(() => {
     if (!visible) {

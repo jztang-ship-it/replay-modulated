@@ -4,9 +4,19 @@
  * Universal event pipeline for ReplayMod.
  * ONE function call from anywhere in any product.
  *
+ * Events go to TWO destinations simultaneously:
+ *   1. /api/analytics  — Vercel KV (aggregated counters, your dashboard)
+ *   2. PostHog         — raw event stream (funnels, retention, session replay)
+ *
  * HOW TO USE:
  *   import { track } from '@shared/analytics/analytics';
  *   track('gameplay', 'hand_resolved', { score: 142, tier: 'STARTER', bust: false });
+ *
+ * HOW TO ENABLE POSTHOG:
+ *   Add to Vercel environment variables:
+ *     VITE_POSTHOG_KEY=phc_xxxxxxxxxxxxxxxxxxxx
+ *   Get your key from posthog.com → Project Settings → Project API Key
+ *   That's it. Events start flowing immediately.
  *
  * HOW TO ADD A NEW PRODUCT:
  *   1. Add to Product type below (one line)
@@ -52,15 +62,21 @@ interface AnalyticsConfig {
   batchMs:    number;
   disabled:   boolean;
 }
+
 const DEFAULT_CONFIG: AnalyticsConfig = {
-    endpoint:   '/api/analytics',
-    appVersion: '1.0.0',
-    platform:   'web',
-    debug:      import.meta.env.MODE === 'development',
-    batchSize:  10,
-    batchMs:    5000,
-    disabled:   typeof window !== 'undefined' && window.location.hostname === 'localhost',
+  endpoint:   '/api/analytics',
+  appVersion: '1.0.0',
+  platform:   'web',
+  debug:      import.meta.env.MODE === 'development',
+  batchSize:  10,
+  batchMs:    5000,
+  disabled:   typeof window !== 'undefined' && window.location.hostname === 'localhost',
 };
+
+// ── PostHog config ────────────────────────────────────────────────────────────
+// Set VITE_POSTHOG_KEY in Vercel env vars. If not set, PostHog is silently skipped.
+const POSTHOG_KEY  = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
+const POSTHOG_HOST = 'https://us.i.posthog.com'; // or 'https://eu.i.posthog.com' for EU data residency
 
 function getOrCreateUserId(): string {
   try {
@@ -148,7 +164,8 @@ class Analytics {
   flush(): void {
     if (!this.queue.length) return;
     const batch = this.queue.splice(0);
-    this.send(batch);
+    this.sendToKV(batch);
+    this.sendToPostHog(batch);
   }
 
   private scheduleFlush(): void {
@@ -156,15 +173,56 @@ class Analytics {
     this.flushTimer = setTimeout(() => { this.flush(); this.scheduleFlush(); }, this.config.batchMs);
   }
 
-  private async send(events: ReplayEvent[]): Promise<void> {
+  // ── Destination 1: Vercel KV via your /api/analytics route ───────────────
+  private async sendToKV(events: ReplayEvent[]): Promise<void> {
     try {
       await fetch(this.config.endpoint, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ events }), keepalive: true,
       });
     } catch (e) {
-      if (this.config.debug) console.warn('[Analytics] Send failed:', e);
+      if (this.config.debug) console.warn('[Analytics] KV send failed:', e);
+      // Re-queue on failure so we don't lose events
       if (this.queue.length < 100) this.queue.unshift(...events);
+    }
+  }
+
+  // ── Destination 2: PostHog capture API (no SDK, no extra bundle) ──────────
+  // Each ReplayMod event maps to a PostHog event named "{product}/{feature}/{action}"
+  // so they're easy to filter and funnel in the PostHog UI.
+  // e.g. "basketball/gameplay/hand_resolved", "worldcup/gameplay/hand_dealt"
+  private async sendToPostHog(events: ReplayEvent[]): Promise<void> {
+    if (!POSTHOG_KEY) return; // key not set → silently skip
+
+    const batch = events.map(e => ({
+      event:        `${e.product}/${e.feature}/${e.action}`,
+      distinct_id:  e.userId,
+      timestamp:    new Date(e.timestamp).toISOString(),
+      properties: {
+        // Standard PostHog props
+        $session_id:  e.sessionId,
+        $lib:         'replaymod-web',
+        // ReplayMod structure fields — queryable as top-level props in PostHog
+        product:      e.product,
+        feature:      e.feature,
+        action:       e.action,
+        platform:     e.platform,
+        app_version:  e.appVersion,
+        // Spread all game-specific props (score, tier, bust, salary, etc.)
+        ...e.props,
+      },
+    }));
+
+    try {
+      await fetch(`${POSTHOG_HOST}/batch/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: POSTHOG_KEY, batch }),
+        keepalive: true,
+      });
+    } catch (e) {
+      // PostHog is non-critical — log in debug, never re-queue, never block
+      if (this.config.debug) console.warn('[Analytics] PostHog send failed:', e);
     }
   }
 }

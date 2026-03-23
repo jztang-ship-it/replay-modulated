@@ -116,8 +116,8 @@ interface QueueEntry {
   pulse?: "deal" | "draw";
   anchor?: BubbleAnchor;
   position?: BubblePosition;
-  /** When set, pill is vertically centered in the viewport (spotlight still uses anchor) */
-  pillLayout?: "anchor" | "viewport-center" | "above-spotlight";
+  /** Explicit pill placement mode; spotlight anchor is still independent */
+  pillLayout?: "anchor" | "viewport-center" | "above-spotlight" | "page-center";
   pulseCardLabels?: boolean;
 }
 type Pulse = "deal" | "draw" | null;
@@ -512,7 +512,7 @@ export function CoachLayer({
         ),
         anchor: "ftue-darnit-focus",
         position: "above",
-        pillLayout: "above-spotlight",
+        pillLayout: "page-center",
         onDismiss: () => {
           shown.current.delete("results_devin");
           enqueue({
@@ -597,10 +597,19 @@ export function CoachLayer({
 
   // When bubble has an anchor, wait for spotlightRect before showing pill
   // This prevents pill rendering at wrong position before spotlight resolves
-  const pillReady = current?.anchor == null || spotlightRect != null;
+  const pillReady = current?.key === "darnit" || current?.anchor == null || spotlightRect != null;
+
+  const isDarnit = current?.key === "darnit";
 
   const pillPlacement: React.CSSProperties =
-    current?.pillLayout === "above-spotlight" && spotlightRect
+    current?.pillLayout === "page-center"
+      ? {
+          top: "50vh",
+          left: 16,
+          right: 16,
+          transform: "translateY(-50%)",
+        }
+      : current?.pillLayout === "above-spotlight" && spotlightRect
       ? computePillPlacement(spotlightRect, current?.position ?? "above", activePad, 28)
       : current?.pillLayout === "viewport-center"
         ? { top: "38%", left: 16, right: 16 }
@@ -681,7 +690,38 @@ export function CoachLayer({
           )}
 
           {/* Message pill — only render once spotlight is resolved */}
-          {pillReady && <div
+          {pillReady && (isDarnit ? (
+            <div
+              key={`text-${animKey}`}
+              style={{
+                position: "fixed",
+                inset: 0,
+                zIndex: 1002,
+                display: "grid",
+                placeItems: "center",
+                pointerEvents: "none",
+                padding: "0 16px",
+                textAlign: "center",
+              }}
+            >
+              <div style={{
+                display: "inline-block",
+                background: "rgba(10,12,20,0.93)",
+                border: "1px solid rgba(255,255,255,0.14)",
+                borderRadius: 16,
+                padding: "12px 20px",
+                maxWidth: 340,
+                color: "#FFFFFF",
+                fontSize: 15,
+                fontWeight: 600,
+                lineHeight: 1.5,
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                backdropFilter: "blur(4px)",
+              }}>
+                {current.node}
+              </div>
+            </div>
+          ) : <div
             key={`text-${animKey}`}
             style={{
               position: "fixed",
@@ -690,7 +730,7 @@ export function CoachLayer({
               zIndex: 1002,
               textAlign: "center",
               pointerEvents: "none",
-              animation: "coachTextIn 0.25s ease-out both",
+              animation: current.pillLayout === "page-center" ? "none" : "coachTextIn 0.25s ease-out both",
               ...pillPlacement,
             }}
           >
@@ -710,7 +750,7 @@ export function CoachLayer({
             }}>
               {current.node}
             </div>
-          </div>}
+          </div>)}
         </>
       )}
     </>

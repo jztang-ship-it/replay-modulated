@@ -376,6 +376,7 @@ export default function GameView() {
   const ftueLastHandFpRef    = useRef(0);
   const heldRevealResumeRef  = useRef<(() => void) | null>(null);
   const completedCardsRef = useRef<Set<string>>(new Set());
+  const regularFinalGaugeKickFiredRef = useRef(false);
   // Near your other useState declarations in GameView.tsx
 const [streak, setStreak] = useState<number>(() =>
   parseInt(localStorage.getItem("replaymod_streak") ?? "0", 10)
@@ -401,6 +402,7 @@ const [streak, setStreak] = useState<number>(() =>
     runningTotalFp,
     lastCardProgress,
     lastCardFp,
+    anchorCardId,
     tapRevealCard,
     heldFpVisible,
     heldRevealedIds,
@@ -512,6 +514,33 @@ const [streak, setStreak] = useState<number>(() =>
     }
     return 0;
   }, [gameState, runningTotalFp, roster, isFTUE]);
+
+  // Regular mode: let final anchor card FP count up first, then animate gauge jump.
+  // While anchor is actively rolling up, freeze gauge at pre-anchor total.
+  const gaugeTotalFp = useMemo(() => {
+    if (isFTUE || gameState !== "REVEALING" || !anchorCardId) return totalFp;
+    if (activeRevealCardId !== anchorCardId) return totalFp;
+    if (lastCardProgress >= 1) return totalFp;
+    const anchorVisible = getVisibleFp(anchorCardId) ?? 0;
+    return Math.max(0, totalFp - anchorVisible);
+  }, [isFTUE, gameState, anchorCardId, activeRevealCardId, lastCardProgress, getVisibleFp, totalFp]);
+
+  const regularFinalGaugeKick =
+    !isFTUE &&
+    gameState === "REVEALING" &&
+    !!anchorCardId &&
+    lastRevealedCardId === anchorCardId &&
+    lastCardProgress >= 1 &&
+    !regularFinalGaugeKickFiredRef.current;
+
+  useEffect(() => {
+    if (regularFinalGaugeKick) regularFinalGaugeKickFiredRef.current = true;
+  }, [regularFinalGaugeKick]);
+
+  useEffect(() => {
+    if (isFTUE) return;
+    if (gameState === "REVEALING") regularFinalGaugeKickFiredRef.current = false;
+  }, [gameState, isFTUE]);
 
   const flippedIds = useMemo(() => {
     if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") return statsFlippedIds;
@@ -1075,7 +1104,7 @@ const [streak, setStreak] = useState<number>(() =>
         }}>
           <div data-ftue-anchor="tier-gauge" style={{ width: "100%", overflow: "hidden" }}>
             <TierGauge
-              totalFp={totalFp}
+              totalFp={gaugeTotalFp}
               thresholds={[
                 { tier: "ROOKIE",   minFP: 155 },
                 { tier: "STARTER",  minFP: 175 },
@@ -1090,6 +1119,7 @@ const [streak, setStreak] = useState<number>(() =>
               ftueSuppressNormal={isFTUE && gameState === "REVEALING" && !ftueOscillating}
               ftueOscillate={isFTUE && ftueOscillating}
               ftueLockStaticBar={isFTUE && ftueGaugeOscDone}
+              regularFinalCardKick={regularFinalGaugeKick}
               onFtueOscillateComplete={() => {
                 setFtueGaugeOscDone(true);
                 setFtueOscillating(false);

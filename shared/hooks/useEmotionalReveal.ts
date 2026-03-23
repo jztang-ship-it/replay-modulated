@@ -170,6 +170,7 @@ export function useEmotionalReveal(params: Params) {
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cards, revealMode]);
+  const anchorCardId = revealOrder[revealOrder.length - 1]?.cardId ?? null;
 
   // Pre-computed shake types — known before reveal starts, no timing dependency
   const cardShakeTypeMap = useMemo(() => {
@@ -530,6 +531,7 @@ export function useEmotionalReveal(params: Params) {
     heldFpVisible,
     heldRevealedIds,
     tappedCardIds,
+    anchorCardId,
   };
 }
 
