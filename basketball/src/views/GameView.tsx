@@ -88,6 +88,7 @@ function RosterGridScaleFit({ children }: { children: ReactNode }) {
     >
       <div
         ref={measRef}
+        data-ftue-anchor="roster-inner"
         style={{
           width: "100%",
           transform: `scale(${scale})`,
@@ -363,7 +364,16 @@ export default function GameView() {
   const [ftueReplayReady,    setFtueReplayReady]    = useState(false);
   const [ftueResultsDim,     setFtueResultsDim]     = useState(false);
   const [ftueBookerFlipped,  setFtueBookerFlipped]  = useState(false);
+  const [ftueOscillating,          setFtueOscillating]          = useState(false);
+  /** After FTUE scripted gauge animation completes — bar stays frozen until next hand */
+  const [ftueGaugeOscDone,         setFtueGaugeOscDone]         = useState(false);
+  const [ftueWinCelebrationActive, setFtueWinCelebrationActive] = useState(false);
+  const [ftueBookerPulse,          setFtueBookerPulse]          = useState(false);
+  const [ftueHoldSpotlight,        setFtueHoldSpotlight]        = useState(false);
+  const [ftueCoachBubbleKey,     setFtueCoachBubbleKey]       = useState<string | null>(null);
   const pendingCelebration   = useRef<{totalFp:number}|null>(null);
+  /** FTUE: roster sum can read 0 briefly in RESULTS — keep last resolved hand FP for TierGauge */
+  const ftueLastHandFpRef    = useRef(0);
   const heldRevealResumeRef  = useRef<(() => void) | null>(null);
   const completedCardsRef = useRef<Set<string>>(new Set());
   // Near your other useState declarations in GameView.tsx
@@ -419,9 +429,15 @@ const [streak, setStreak] = useState<number>(() =>
     onCardComplete: useCallback((cId: string) => {
       setRevealIndex(prev => prev + 1);
       setLastRevealedCardId(cId);
-    }, []),
+      // FTUE: start gauge oscillation shortly after Booker's stamp lands
+      // 100ms delay lets onAllComplete fire first (sets winTier/winPayout)
+      if (isFTUE && cId === "ftue-booker") {
+        setTimeout(() => setFtueOscillating(true), 100);
+      }
+    }, [isFTUE]),
     onAllComplete: useCallback((totalFp: number) => {
       clearActiveCard();
+      if (isFTUE) ftueLastHandFpRef.current = totalFp;
       const tier = calculateWinTier(totalFp);
       const payout = calculatePayout(tier, currentBet);
       setWinTier(tier);
@@ -489,10 +505,13 @@ const [streak, setStreak] = useState<number>(() =>
   const totalFp = useMemo(() => {
     if (gameState === "REVEALING") return runningTotalFp;
     if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") {
-      return roster.reduce((s, c) => s + Number(c.actualFp ?? 0), 0);
+      const sum = roster.reduce((s, c) => s + Number(c.actualFp ?? 0), 0);
+      if (sum > 0) return sum;
+      if (isFTUE && ftueLastHandFpRef.current > 0) return ftueLastHandFpRef.current;
+      return 0;
     }
     return 0;
-  }, [gameState, runningTotalFp, roster]);
+  }, [gameState, runningTotalFp, roster, isFTUE]);
 
   const flippedIds = useMemo(() => {
     if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") return statsFlippedIds;
@@ -562,8 +581,8 @@ const [streak, setStreak] = useState<number>(() =>
     // Track when Booker is flipped in FTUE to trigger the final bubble
     if (isFTUE && cardKey === "ftue-booker") {
       setFtueBookerFlipped(true);
-      // Lift dim once Booker is flipped
-      setTimeout(() => setFtueResultsDim(false), 300);
+      setFtueBookerPulse(false);
+      // Dim stays active — lifted only after final_replay bubble is dismissed
     }
   }
 
@@ -579,7 +598,13 @@ const [streak, setStreak] = useState<number>(() =>
       setRevealedSalary(0);
       setLastRevealedCardId(null);
       setCelebrationHeld(false);
+      setFtueOscillating(false);
+      setFtueGaugeOscDone(false);
+      setFtueWinCelebrationActive(false);
+      setFtueBookerPulse(false);
+      setFtueHoldSpotlight(false);
       pendingCelebration.current = null;
+      ftueLastHandFpRef.current = 0;
       const res: any       = isFTUE ? await dealFTUERoster() : await dealInitialRoster();
       const nextRoster     = (res?.roster ?? res?.cards ?? []) as PlayerCard[];
       rosterRef.current    = nextRoster;
@@ -650,6 +675,8 @@ const [streak, setStreak] = useState<number>(() =>
       gameAnalytics.sessionEnd();
       resetReveal();
       resetAllOverlays();
+      ftueLastHandFpRef.current = 0;
+      setFtueGaugeOscDone(false);
       completedCardsRef.current = new Set();
       setRevealedSalary(0);
       setNoTransition(true);
@@ -668,15 +695,23 @@ const [streak, setStreak] = useState<number>(() =>
     }
   }
 
-  // FTUE: when RESULTS starts, dim non-Booker, show TAP hint on Booker
-  // User must manually tap Booker to flip — no auto-flip
+  // FTUE: when RESULTS starts, dim non-Booker, fire bubble
   useEffect(() => {
     if (!isFTUE || gameState !== "RESULTS") return;
     setFtueResultsDim(true);
-    // Clear any pre-flipped state so Booker starts face-up
     setStatsFlippedIds(new Set());
-    return () => setFtueResultsDim(false);
+    // Fire the "Darn it" bubble chain after a short settle delay
+    const t = setTimeout(() => setFtueWinCelebrationActive(true), 300);
+    return () => {
+      setFtueResultsDim(false);
+      clearTimeout(t);
+    };
   }, [gameState, isFTUE]); // eslint-disable-line
+
+  // FTUE: lift dim only after final_replay bubble dismissed (onFtueAllDone)
+  useEffect(() => {
+    if (ftueReplayReady) setFtueResultsDim(false);
+  }, [ftueReplayReady]); // eslint-disable-line
 
   function onWinCelebrationComplete() {
     // Increment hand count for Protected mode tracking
@@ -790,7 +825,7 @@ const [streak, setStreak] = useState<number>(() =>
           boxSizing: "border-box",
           overflow: "hidden",
         }}>
-          <div style={{
+          <div data-ftue-chrome="true" style={{
             borderRadius: 16,
             border: "1px solid rgba(255,255,255,0.10)",
             background: "rgba(255,255,255,0.05)",
@@ -803,7 +838,9 @@ const [streak, setStreak] = useState<number>(() =>
               hasUncollected={taskStates.some(t => t.progress >= t.target && !t.collected)}
             />
           </div>
-          <BonusRow betAdded={currentBet} streak={streak} />
+          <div data-ftue-chrome="true">
+            <BonusRow betAdded={currentBet} streak={streak} />
+          </div>
         </div>
 
         {/* 2 — Card stage */}
@@ -837,7 +874,7 @@ const [streak, setStreak] = useState<number>(() =>
   noTransition={noTransition}
   visibleFpMap={visibleFpMap}
   canFlip={gameState === "RESULTS" || gameState === "WIN_CELEBRATION"}
-  ftueFlipTargetId={isFTUE && ftueResultsDim ? "ftue-booker" : null}
+  ftueFlipTargetId={isFTUE && ftueBookerPulse ? "ftue-booker" : null}
   flipMsMap={flipMsMap}
   fpCountUpMsMap={fpCountUpMsMap}
   performanceTagMap={performanceTagMap}
@@ -851,7 +888,6 @@ const [streak, setStreak] = useState<number>(() =>
   onToggleFlip={toggleStatsFlip}
   revealMode={REVEAL_MODE}
   onTapReveal={isFTUE && ftueCardsBlocked ? undefined : (isFTUE ? (cardId: string) => {
-    setFtueCardsBlocked(true);
     tapRevealCard(cardId);
   } : (cardId: string) => {
     // Immediately add this card's salary so budget rolls down in sync with FP roll up
@@ -868,14 +904,24 @@ const [streak, setStreak] = useState<number>(() =>
   heldRevealedIds={heldRevealedIds}
   tappedCardIds={tappedCardIds}
   isRevealingPhase={gameState === "REVEALING"}
-  ftueLockedSlot={(isFTUE && gameState === "HOLD" && !heldCardIds.has("ftue-booker")) || (isFTUE && ftueResultsDim) ? 0 : null}
+  ftueLockedSlot={
+    (isFTUE && ftueResultsDim)
+      ? 0
+      : (isFTUE && (ftueHoldSpotlight || heldCardIds.has("ftue-booker")) && gameState === "HOLD")
+      ? 0
+      : null
+  }
 />
             </RosterGridScaleFit>
           </div>
         </div>
 
         {/* 3 — Score + TierGauge (8+6 = 14dvh) */}
-        <div style={{
+        <div
+          {...(isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")
+            ? { "data-ftue-anchor": "ftue-darnit-focus" }
+            : {})}
+          style={{
           flex: "0 0 14dvh",
           display: "flex",
           flexDirection: "column",
@@ -885,6 +931,7 @@ const [streak, setStreak] = useState<number>(() =>
           boxSizing: "border-box",
         }}>
         <div
+          data-ftue-anchor="score-row"
           onClick={gameState === "WIN_CELEBRATION" ? onWinCelebrationComplete : undefined}
           style={{
             flex: "0 0 8dvh",
@@ -935,6 +982,40 @@ const [streak, setStreak] = useState<number>(() =>
                       </div>
                     )}
                   </>
+                );
+              })()}
+            </div>
+          ) : isFTUE && gameState === "RESULTS" && winTier ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, width: "100%" }}>
+              {(() => {
+                const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
+                return (
+                  <div style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "baseline",
+                    justifyContent: "center",
+                    gap: 10,
+                    flexWrap: "wrap",
+                  }}>
+                    <span style={{
+                      fontSize: 30, fontWeight: 950, letterSpacing: 0.5, fontStyle: "italic",
+                      color: tc.color, textShadow: `0 0 22px ${tc.glow}`,
+                      lineHeight: 1,
+                    }}>
+                      {formatTierLabel(winTier)}
+                    </span>
+                    {winPayout > 0 && (
+                      <span style={{
+                        fontSize: 22, fontWeight: 800,
+                        color: "rgba(255,255,255,0.72)",
+                        letterSpacing: "0.04em",
+                        lineHeight: 1,
+                      }}>
+                        +{winPayout} coins
+                      </span>
+                    )}
+                  </div>
                 );
               })()}
             </div>
@@ -1006,10 +1087,22 @@ const [streak, setStreak] = useState<number>(() =>
               lastCardFp={lastCardFp}
               isSkip={wasSkipped}
               visible={gameState === "REVEALING" || gameState === "RESULTS" || gameState === "WIN_CELEBRATION"}
+              ftueSuppressNormal={isFTUE && gameState === "REVEALING" && !ftueOscillating}
+              ftueOscillate={isFTUE && ftueOscillating}
+              ftueLockStaticBar={isFTUE && ftueGaugeOscDone}
+              onFtueOscillateComplete={() => {
+                setFtueGaugeOscDone(true);
+                setFtueOscillating(false);
+                setCelebrationHeld(false);
+                pendingCelebration.current = null;
+                setGameState("RESULTS");
+                // CoachLayer listens for this to enqueue darnit → results_devin (RESULTS effect also schedules — backup if that timeout is cleared)
+                setTimeout(() => setFtueWinCelebrationActive(true), 300);
+              }}
             />
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", width: "100%" }}>
-            {winTier && gameState === "RESULTS" && (() => {
+            {winTier && gameState === "RESULTS" && !isFTUE && (() => {
               const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
               const label = formatTierLabel(winTier);
               return (
@@ -1051,6 +1144,7 @@ const [streak, setStreak] = useState<number>(() =>
           boxSizing: "border-box",
         }}>
         <div
+          data-ftue-chrome="true"
           ref={(el) => setMultipliersHost(el)}
           style={{
             display: "flex",
@@ -1081,20 +1175,31 @@ const [streak, setStreak] = useState<number>(() =>
             legendaryCardName={legendaryCardName}
             lastRevealedCardId={lastRevealedCardId}
             ftueBookerFlipped={ftueBookerFlipped}
+            onCoachBubbleKey={(key) => {
+              setFtueCoachBubbleKey(key);
+              if (key === "hold_booker") setFtueHoldSpotlight(true);
+            }}
             onResumeHeldReveal={() => {
               const resume = heldRevealResumeRef.current;
               heldRevealResumeRef.current = null;
               resume?.();
             }}
             onCelebrationReady={() => {
-              setCelebrationHeld(false);
-              if (pendingCelebration.current) {
-                pendingCelebration.current = null;
-                setGameState("WIN_CELEBRATION");
+              // Non-FTUE: CoachLayer calls this after Booker bubble dismiss
+              if (!isFTUE) {
+                setCelebrationHeld(false);
+                if (pendingCelebration.current) {
+                  pendingCelebration.current = null;
+                  setGameState("WIN_CELEBRATION");
+                }
               }
             }}
             onBubbleActive={(active) => setFtueCardsBlocked(active)}
+            ftueWinCelebrationActive={ftueWinCelebrationActive}
             onReplayReady={() => setFtueReplayReady(true)}
+            onFtueReadyToFlip={() => setFtueBookerPulse(true)}
+            onFtueBookerHeld={() => { /* draw pulse handled inside CoachLayer */ }}
+            onFtueAllDone={() => setFtueResultsDim(false)}
             onReplay={() => {
               completeFTUE();
               setLastRevealedCardId(null);
@@ -1102,6 +1207,9 @@ const [streak, setStreak] = useState<number>(() =>
               setFtueCardsBlocked(false);
               setFtueReplayReady(false);
               setFtueBookerFlipped(false);
+              setFtueBookerPulse(false);
+              setFtueHoldSpotlight(false);
+              setFtueGaugeOscDone(false);
               pendingCelebration.current = null;
               heldRevealResumeRef.current = null;
               handleButtonClick();
@@ -1143,7 +1251,7 @@ const [streak, setStreak] = useState<number>(() =>
         onWinCelebrationComplete={onWinCelebrationComplete}
         ftueDrawBlocked={isFTUE && gameState === "HOLD" && !heldCardIds.has("ftue-booker")}
         ftueHideSkip={isFTUE}
-        ftuePulseNearMiss={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")}
+        ftuePulseNearMiss={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && !ftueGaugeOscDone}
         ftueReplayBlocked={isFTUE && gameState === "RESULTS" && !ftueReplayReady}
         dataFtuePrimaryAnchor={isFTUE ? (gameState === "HOLD" ? "draw" : "deal") : undefined}
         splitFooter={{ multipliersHost, controlsHost }}

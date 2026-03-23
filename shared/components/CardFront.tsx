@@ -10,7 +10,7 @@
  *   - Season + team in the notch (e.g. "LAL 24-25")
  *   - Hero area (headshot)
  *   - Black strip (~72%–86%): name on top 2 lines, FP row below
- *     - Pre-reveal: shows "FP" label + projected value (greyed)
+ *     - Pre-reveal: shows "AVG" label + average FP value (greyed)
  *     - Post-reveal: fades to actual FP number
  *   - Accent strip (~86%–99%): badges only
  *   - Stamp overlay, pulse ring, hold indicator
@@ -144,7 +144,7 @@ export interface CardFrontProps {
 export function CardFront(props: CardFrontProps) {
   const {
     card, phase, isLocked, visibleFp, isRevealing, revealActive,
-    heldFpVisible, isTapTarget,
+    isFlipped, heldFpVisible, isTapTarget,
     pulse, fpCountUpMs, stamp, onRollComplete, badges, renderHero,
   } = props;
 
@@ -164,6 +164,10 @@ export function CardFront(props: CardFrontProps) {
   const isPreReveal = !!(isRevealing && !isHeldCard && visibleFp === undefined);
   // showResults: whether actual FP is visible (post-reveal or held after all revealed)
   const showResults = !isPreReveal && (phase === "RESULTS" || isHeldCard);
+  // showTierColors: hide tier gradient/border/text when card back is showing
+  // Exception: show during active reveal (card is mid-flip from back to front)
+  // revealActive = this card is the one currently being flipped in REVEALING phase
+  const showTierColors = (!isFlipped && !isPreReveal) || revealActive || isLocked;
 
   const [displayedFp,  setDisplayedFp]  = useState(0);
   const [isRolling,    setIsRolling]    = useState(false);
@@ -266,11 +270,11 @@ export function CardFront(props: CardFrontProps) {
       {/* ── CLIPPED CARD CONTENT ── */}
       <div style={{ position: "absolute", inset: 0, clipPath: `url(#${clipId})` }}>
 
-        {/* Tier gradient */}
-        <div style={{
+        {/* Tier gradient — hidden until card face is visible */}
+        {showTierColors && <div style={{
           position: "absolute", inset: 0,
           background: `linear-gradient(to bottom, ${tier.bg} 0%, ${tier.bgEnd} 70%, ${tier.bgEnd} 100%)`,
-        }} />
+        }} />}
 
         {/* HERO — sport-specific content, covers top 72% */}
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: "27.8%" }}>
@@ -279,7 +283,7 @@ export function CardFront(props: CardFrontProps) {
 
         {/* SALARY — top-left */}
         <div style={{ position: "absolute", top: "6.5%", left: "6%", zIndex: 8, pointerEvents: "none", lineHeight: 1 }}>
-          <span style={{ fontSize: 16, fontWeight: 900, fontStyle: "italic", color: onCardText, letterSpacing: -0.5, lineHeight: 1 }}>
+          <span data-ftue-label="salary" style={{ fontSize: 16, fontWeight: 900, fontStyle: "italic", color: onCardText, letterSpacing: -0.5, lineHeight: 1 }}>
             ${salary}
           </span>
         </div>
@@ -323,7 +327,7 @@ export function CardFront(props: CardFrontProps) {
           {/* RIGHT — FP column */}
           <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "flex-end", flexShrink: 0, minWidth: 52, maxWidth: 68 }}>
 
-            {/* PRE-REVEAL layer: "PROJ" label + projected number */}
+            {/* PRE-REVEAL layer: "AVG" label + average FP number */}
             <div style={{
               position: "absolute", inset: 0,
               display: "flex", flexDirection: "column",
@@ -333,8 +337,8 @@ export function CardFront(props: CardFrontProps) {
               transition: "opacity 350ms ease",
               pointerEvents: "none",
             }}>
-              <span style={{ fontSize: 7, fontWeight: 700, color: "rgba(255,255,255,0.38)", letterSpacing: 1, textTransform: "uppercase", lineHeight: 1 }}>PROJ</span>
-              <span style={{ fontSize: 14, fontWeight: 900, color: "rgba(255,255,255,0.40)", letterSpacing: -0.3, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+              <span data-ftue-label="avg" style={{ fontSize: 7, fontWeight: 700, color: "rgba(255,255,255,0.38)", letterSpacing: 1, textTransform: "uppercase", lineHeight: 1 }}>AVG</span>
+              <span data-ftue-label="avg" style={{ fontSize: 14, fontWeight: 900, color: "rgba(255,255,255,0.40)", letterSpacing: -0.3, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
                 {proj.toFixed(1)}
               </span>
             </div>
@@ -424,13 +428,14 @@ export function CardFront(props: CardFrontProps) {
 
       </div>{/* end clipped content */}
 
-      {/* SEASON + TEAM — centered inside notch inner flat (34.2%→63.6%) */}
-      {/* Using the inner-flat bounds guarantees text never touches the slanted walls */}
-      <div style={{ position: "absolute", top: 0, height: "5.8%", left: "34.2%", right: "36.4%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 35, pointerEvents: "none", overflow: "hidden" }}>
-        <span style={{ fontSize: 5.5, fontWeight: 900, letterSpacing: 0.5, textTransform: "uppercase", color: "rgba(255,255,255,0.92)", whiteSpace: "nowrap", lineHeight: 1 }}>
-          {team ? `${team} ${seasonFmt}` : seasonFmt}
-        </span>
-      </div>
+      {/* SEASON + TEAM — hidden when card is face-down to prevent mirror bleed */}
+      {showTierColors && (
+        <div style={{ position: "absolute", top: 0, height: "5.8%", left: "34.2%", right: "36.4%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 35, pointerEvents: "none", overflow: "hidden" }}>
+          <span style={{ fontSize: 5.5, fontWeight: 900, letterSpacing: 0.5, textTransform: "uppercase", color: "rgba(255,255,255,0.92)", whiteSpace: "nowrap", lineHeight: 1 }}>
+            {team ? `${team} ${seasonFmt}` : seasonFmt}
+          </span>
+        </div>
+      )}
 
       {/* HOLD INDICATOR */}
       {isLocked && (() => {
@@ -454,15 +459,17 @@ export function CardFront(props: CardFrontProps) {
         </div>
       )}
 
-      {/* BORDER TRIM */}
-      <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 50, overflow: "visible" }} viewBox="0 0 1 1" preserveAspectRatio="none">
-        <defs>
-          <clipPath id={`border-clip-${cardKey.replace(/[^a-z0-9]/gi, "_")}`} clipPathUnits="objectBoundingBox">
-            <path d={CARD_PATH} />
-          </clipPath>
-        </defs>
-        <path d={CARD_PATH} fill="none" stroke={tier.bg} strokeWidth="2" strokeOpacity="1.0" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" clipPath={`url(#border-clip-${cardKey.replace(/[^a-z0-9]/gi, "_")})`} />
-      </svg>
+      {/* BORDER TRIM — hidden until card face is visible */}
+      {showTierColors && (
+        <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 50, overflow: "hidden" }} viewBox="0 0 1 1" preserveAspectRatio="none">
+          <defs>
+            <clipPath id={`border-clip-${cardKey.replace(/[^a-z0-9]/gi, "_")}`} clipPathUnits="objectBoundingBox">
+              <path d={CARD_PATH} />
+            </clipPath>
+          </defs>
+          <path d={CARD_PATH} fill="none" stroke={tier.bg} strokeWidth="2" strokeOpacity="1.0" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" clipPath={`url(#border-clip-${cardKey.replace(/[^a-z0-9]/gi, "_")})`} />
+        </svg>
+      )}
 
     </div>
   );

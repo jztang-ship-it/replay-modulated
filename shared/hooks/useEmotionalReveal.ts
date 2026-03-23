@@ -234,10 +234,19 @@ export function useEmotionalReveal(params: Params) {
     setActiveRevealCardId(null);
     setTappedCardIds(new Set(cards.map(c => c.cardId)));
 
-    // Keep FP at zero — nothing shows while cards are face-down or flipping
-    const zeroMap = new Map<string, number>();
-    for (const c of cards) zeroMap.set(c.cardId, 0);
-    setVisibleFpMap(zeroMap);
+    // CONTINUATION PRINCIPLE: visibleFpMap is the source of truth for what the
+    // player has already seen. Capture it now — skipToEnd only adds to it, never resets it.
+    // This ensures the TierGauge never goes backward and FP never recounts from zero.
+    const alreadyVisible = new Map<string, number>();
+    setVisibleFpMap(prev => {
+      const m = new Map<string, number>();
+      for (const c of cards) {
+        const seen = prev.get(c.cardId) ?? 0;
+        m.set(c.cardId, seen);
+        alreadyVisible.set(c.cardId, seen);
+      }
+      return m;
+    });
 
     // Badges ready to show once cards are front
     const badgeMap = new Map<string, Array<{id:string;icon:string;label:string;fp:number}>>();
@@ -246,23 +255,22 @@ export function useEmotionalReveal(params: Params) {
     }
     setVisibleBadgesMap(badgeMap);
 
-    // Targets for rollup
+    // Targets: each card rolls up from what was already visible to its actual FP
     const targets = new Map<string, number>();
     const total = cards.reduce((s, c) => {
       targets.set(c.cardId, Number(c.actualFp ?? 0));
       return s + Number(c.actualFp ?? 0);
     }, 0);
 
-    // Step 1: trigger flip animation on all cards simultaneously
+    // Flip all unrevealed cards simultaneously
     for (const c of cards) flipState.revealCard(c.cardId);
 
-    // Step 2: after flip CSS animation completes (~450ms default), complete the flip
     const FLIP_DURATION_MS = 450;
     const flipDone = window.setTimeout(() => {
       if (runIdRef.current !== myRunId) return;
       for (const c of cards) flipState.completeReveal(c.cardId);
 
-      // Step 3: immediately start FP rollup across all cards simultaneously
+      // Roll up from each card's already-visible value to its actual FP
       const ROLL_MS = 600;
       const startTime = performance.now();
 
@@ -273,7 +281,9 @@ export function useEmotionalReveal(params: Params) {
         const eased = 1 - Math.pow(1 - progress, 3);
         const frame = new Map<string, number>();
         for (const [id, target] of targets) {
-          frame.set(id, Math.round(target * eased * 10) / 10);
+          const start = alreadyVisible.get(id) ?? 0;
+          // Only count up the delta — never go below what was already shown
+          frame.set(id, Math.round((start + (target - start) * eased) * 10) / 10);
         }
         setVisibleFpMap(frame);
         if (progress < 1) {
@@ -438,7 +448,10 @@ export function useEmotionalReveal(params: Params) {
       // Mark this card as revealed (shows FP strip)
       setHeldRevealedIds(prev => new Set(prev).add(hc.cardId));
       // Run the full flip+rollup reveal for this held card
-      runCardReveal(hc, hc.cardId === anchorId, myRunId, () => revealOne(idx + 1), true);
+      runCardReveal(hc, hc.cardId === anchorId, myRunId, () => {
+        onCardComplete?.(hc.cardId);
+        revealOne(idx + 1);
+      }, true);
     };
 
     // Pre-pause before first held card

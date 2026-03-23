@@ -37,7 +37,7 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
       transform-style: preserve-3d;
       transition: transform var(--flip-ms, 450ms) cubic-bezier(0.4, 0.0, 0.2, 1);
       will-change: transform;
-      background: transparent;
+      background: #0a0c10;
       border-radius: 18px;
     }
     .pcs-inner.no-transition { transition: none !important; }
@@ -46,8 +46,9 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
       position: absolute; inset: 0; border-radius: 18px;
       backface-visibility: hidden; -webkit-backface-visibility: hidden;
       overflow: hidden;
+      transform: translateZ(0);
     }
-    .pcs-face-back { transform: rotateY(180deg); }
+    .pcs-face-back { transform: rotateY(180deg) translateZ(0); }
 
     @keyframes pcsShakeHype {
       0%   { transform: translate(0,0) rotate(0deg); }
@@ -366,15 +367,12 @@ export function PlayerCardShell(props: CardShellProps) {
     <div className={`${shakeClass}${isTapTarget ? " pcs-tap-bounce" : ""}`} style={outerStyle}>
       {isTapTarget && (
         <div style={{
-          position:"absolute", top:"50%", left:"50%",
-          transform:"translate(-50%,-50%)",
-          fontSize:12, fontWeight:900, letterSpacing:".1em", textTransform:"uppercase",
-          color:"#070A12", whiteSpace:"nowrap", pointerEvents:"none", zIndex:70,
-          background:"rgba(255,215,0,0.92)", padding:"7px 16px", borderRadius:20,
-          border:"1.5px solid rgba(255,215,0,0.8)",
-          boxShadow:"0 0 16px rgba(255,215,0,0.6), 0 2px 8px rgba(0,0,0,0.4)",
-          animation:"pcsTapHintPulse 1.4s ease-in-out infinite",
-        }}>TAP</div>
+          position: "absolute", inset: -3, borderRadius: 21,
+          border: "2px solid rgba(255,255,255,0.7)",
+          pointerEvents: "none", zIndex: 70,
+          animation: "pcsTapHintPulse 1.4s ease-in-out infinite",
+          boxShadow: "0 0 12px rgba(255,255,255,0.35)",
+        }} />
       )}
       <div className={innerClass} style={innerStyle}>
         <div className="pcs-face">

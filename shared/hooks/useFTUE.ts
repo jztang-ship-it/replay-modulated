@@ -26,6 +26,7 @@ function readFtueActive(KEY: string): boolean {
   try {
     const params = new URLSearchParams(window.location.search);
     if (params.get("ftue") === "1") return true;
+    if (params.get("skip") === "1") return false;   // ← ADD THIS LINE
     if (localStorage.getItem(KEY) === "1") return false;
     if (localStorage.getItem("ftue_completed") === "true") return false;
     return true;

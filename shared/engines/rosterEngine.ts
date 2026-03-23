@@ -170,7 +170,9 @@ function guaranteeTierFloor(roster: GeneratedCard[], evalPool: PlayerEval[], eco
     const sorted = result.map((c, i) => ({ i, c })).filter(({ i }) => !heldMask || !heldMask[i]).sort((a, b) => a.c.salary - b.c.salary);
     for (const { i, c } of sorted) {
       if (spendTotal >= minSpend) break;
-      const gap = minSpend - spendTotal;
+      // Recalculate gap each iteration so upgrades never push total past cap
+      const gap = Math.min(minSpend - spendTotal, cap - spendTotal);
+      if (gap <= 0) break;
       const upgrades = evalPool.filter((p: any) => (!usedPeople.has(p.personKey) || p.personKey === c.personKey) && p.salary > c.salary && p.salary <= c.salary + gap).sort((a: any, b: any) => b.salary - a.salary);
       if (!upgrades.length) continue;
       const excl = new Set([...usedPeople].filter(k => k !== c.personKey));

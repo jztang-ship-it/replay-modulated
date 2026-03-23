@@ -45,6 +45,14 @@ interface TierGaugeProps {
   lastCardFp?: number;
   /** True when user pressed SKIP — triggers full spring sequence */
   isSkip?: boolean;
+  /** FTUE: when true, suppress normal bar animation — gauge stays hidden until oscillation fires */
+  ftueSuppressNormal?: boolean;
+  /** FTUE: when true, run the scripted overshoot-to-All-Star animation */
+  ftueOscillate?: boolean;
+  /** Called when the FTUE oscillation animation completes */
+  onFtueOscillateComplete?: () => void;
+  /** FTUE: after scripted oscillation, lock bar — no near-miss / skip animations until next hand */
+  ftueLockStaticBar?: boolean;
 }
 
 const TIER_CFG: Record<string, { label: string; color: string; glow: string }> = {
@@ -60,6 +68,12 @@ const FF            = "'Rajdhani', 'Oswald', 'Arial Narrow', sans-serif";
 const NEAR_MISS_PTS = 8;
 const MAX_FP        = 235;   // GOAT threshold, used for duration scaling
 const BIG_CARD_FP   = 35;    // single card FP above this = "big card"
+
+/** FTUE Booker hand: five drawn cards only (see ftueRoster.ts) — bar starts here before scripted gauge */
+const FTUE_FIVE_CARDS_FP = 105;
+const FTUE_FINAL_FP      = 192.6;
+/** Imagined peak FP for the “past Starter into All-Star” hero beat (All-Star line = 195) */
+const FTUE_IMAGINE_PEAK_FP = 198;
 
 // Underdamped spring: starts at 0, settles at 1. Never negative.
 function spring(t: number, zeta: number, wn: number): number {
@@ -95,13 +109,21 @@ export function TierGauge({
   winTier: winTierProp,
   lastCardFp = 0,
   isSkip = false,
+  ftueSuppressNormal = false,
+  ftueOscillate = false,
+  onFtueOscillateComplete,
+  ftueLockStaticBar = false,
 }: TierGaugeProps) {
   const [barFill,   setBarFill]   = useState(0);
   const [barColor,  setBarColor]  = useState("transparent");
+  const [ftueOscGlow, setFtueOscGlow] = useState<string | null>(null);
   const [isDinging, setIsDinging] = useState(false);
   const rafRef      = useRef<number>(0);
   const prevFillRef = useRef<number>(0);
   const prevTierRef = useRef<string>("BUST");
+  const ftueOscCompleteFiredRef = useRef(false);
+  const onFtueOscillateCompleteRef = useRef(onFtueOscillateComplete);
+  onFtueOscillateCompleteRef.current = onFtueOscillateComplete;
 
   // Gauge stops — GOAT/JACKPOT are bonus pool wins, not gauge stops
   const sorted = [...thresholds]
@@ -119,7 +141,7 @@ export function TierGauge({
       derivedTier = sorted[i].tier;
       curMin      = sorted[i].minFP;
       nextTier    = sorted[i + 1]?.tier ?? null;
-      nextMin     = sorted[i + 1]?.minFP ?? sorted[i].minFP;
+      nextMin     = sorted[i + 1]?.minFP ?? 9999;
     }
   }
 
@@ -161,10 +183,144 @@ export function TierGauge({
     : `linear-gradient(90deg, ${tierCfg.color}88, ${targetCfg.color})`;
   const overshootColor = `linear-gradient(90deg, ${tierCfg.color}88 0%, ${targetCfg.color} 50%, ${targetCfg.color} 100%)`;
 
-  // Detect tier crossing (this update moved into a new tier)
-  const tierCrossed = derivedTier !== prevTierRef.current && prevTierRef.current !== "BUST";
+  // Detect tier crossing (this update moved into a new tier band, including BUST → first tier)
+  const tierCrossed = derivedTier !== prevTierRef.current;
+
+  // ── FTUE oscillation — runs once when ftueOscillate becomes true ─────
+  // Ease FP to 198 (3 FP into All-Star vs floor 195): bar shows a *small* All-Star segment
+  // (proportional within the All-Star→MVP band), then springs down to 192.6 Starter and settles.
+  useEffect(() => {
+    if (!ftueOscillate || !visible) return;
+    cancelAnimationFrame(rafRef.current);
+    ftueOscCompleteFiredRef.current = false;
+
+    // Must match basketball FTUE TierGauge thresholds (GameView)
+    const rookieMin   = 155;
+    const starterMin  = 175;
+    const allStarMin  = 195;
+    const mvpMin      = 215;
+    const starterSpan = Math.max(1, allStarMin - starterMin);
+    const allStarSpan = Math.max(1, mvpMin - allStarMin);
+
+    /** Map animated FP to bar fill + colors — same tier-band math as live gauge */
+    function fpToOscVisual(fp: number): { fill: number; color: string; glow: string } {
+      if (fp < rookieMin) {
+        const fill = Math.min(1, Math.max(0, fp / rookieMin));
+        return {
+          fill,
+          color: `linear-gradient(90deg, ${TIER_CFG.BUST.color}88, ${TIER_CFG.ROOKIE.color})`,
+          glow: TIER_CFG.ROOKIE.glow,
+        };
+      }
+      if (fp < starterMin) {
+        const fill = Math.min(1, Math.max(0, (fp - rookieMin) / (starterMin - rookieMin)));
+        return {
+          fill,
+          color: `linear-gradient(90deg, ${TIER_CFG.ROOKIE.color}88, ${TIER_CFG.STARTER.color})`,
+          glow: TIER_CFG.STARTER.glow,
+        };
+      }
+      if (fp < allStarMin) {
+        const fill = Math.min(1, Math.max(0, (fp - starterMin) / starterSpan));
+        return {
+          fill,
+          color: `linear-gradient(90deg, ${TIER_CFG.STARTER.color}88, ${TIER_CFG.ALL_STAR.color})`,
+          glow: TIER_CFG.STARTER.glow,
+        };
+      }
+      // All-Star band: narrow left segment (e.g. 198 → 3/20 across All-Star→MVP)
+      const fill = Math.min(1, Math.max(0, (fp - allStarMin) / allStarSpan));
+      return {
+        fill,
+        color: `linear-gradient(90deg, ${TIER_CFG.ALL_STAR.color}88, ${TIER_CFG.MVP.color}88)`,
+        glow: TIER_CFG.ALL_STAR.glow,
+      };
+    }
+
+    const startFp = FTUE_FIVE_CARDS_FP;
+    const peakFp  = FTUE_IMAGINE_PEAK_FP;
+    const realFp  = FTUE_FINAL_FP;
+    const realFill = Math.min(1, Math.max(0, (realFp - starterMin) / starterSpan));
+
+    // Slower than normal play — FTUE “slot machine” near-miss read (linger on tier crossing + wobble)
+    const PHASE1_MS = 1650;
+    const PHASE2_MS = 5200;
+    const ENVELOPE_DECAY = 1.55;
+    const OMEGA        = 2 * Math.PI * 0.62;
+
+    const v0 = fpToOscVisual(startFp);
+    prevFillRef.current = v0.fill;
+    setBarFill(v0.fill);
+    setBarColor(v0.color);
+    setFtueOscGlow(v0.glow);
+
+    const t0 = performance.now();
+
+    function finish() {
+      setBarFill(realFill);
+      setBarColor(
+        `linear-gradient(90deg, ${TIER_CFG.STARTER.color}88, ${TIER_CFG.ALL_STAR.color})`,
+      );
+      setFtueOscGlow(null);
+      prevFillRef.current = realFill;
+      if (!ftueOscCompleteFiredRef.current) {
+        ftueOscCompleteFiredRef.current = true;
+        onFtueOscillateCompleteRef.current?.();
+      }
+    }
+
+    function tick(now: number) {
+      const elapsed = now - t0;
+
+      if (elapsed < PHASE1_MS) {
+        const u  = elapsed / PHASE1_MS;
+        const fp = startFp + (peakFp - startFp) * easeOut(u);
+        const v  = fpToOscVisual(fp);
+        setBarFill(v.fill);
+        setBarColor(v.color);
+        setFtueOscGlow(v.glow);
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
+
+      const t2   = elapsed - PHASE1_MS;
+      const tSec = t2 / 1000;
+      const env  = Math.exp(-ENVELOPE_DECAY * tSec);
+      const fp   = realFp + (peakFp - realFp) * env * Math.cos(OMEGA * tSec);
+      const v    = fpToOscVisual(fp);
+      setBarFill(v.fill);
+      setBarColor(v.color);
+      setFtueOscGlow(v.glow);
+
+      const settled = env < 0.022 && Math.abs(fp - realFp) < 0.35;
+      if (t2 >= PHASE2_MS || settled) {
+        finish();
+        return;
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    }
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      setFtueOscGlow(null);
+    };
+  }, [ftueOscillate, visible]);
 
   useEffect(() => {
+    // Never interfere with the FTUE oscillation
+    if (ftueOscillate) return;
+    // FTUE: scripted oscillation already ran — hold bar steady (skip near-miss spring, etc.)
+    if (ftueLockStaticBar) {
+      cancelAnimationFrame(rafRef.current);
+      prevFillRef.current = finalFill;
+      prevTierRef.current = derivedTier;
+      setBarFill(finalFill);
+      setBarColor(normalColor);
+      setFtueOscGlow(null);
+      return;
+    }
+    if (ftueSuppressNormal) { cancelAnimationFrame(rafRef.current); setBarFill(0); setBarColor("transparent"); return; }
     if (!visible || totalFp <= 0) {
       cancelAnimationFrame(rafRef.current);
       prevFillRef.current = 0;
@@ -176,7 +332,9 @@ export function TierGauge({
 
     cancelAnimationFrame(rafRef.current);
 
-    const startFill = prevFillRef.current;
+    // On tier crossing, always start visually from 0 within the new tier band
+    // so the bar animates rightward, never left
+    const startFill = tierCrossed ? 0 : prevFillRef.current;
     const delta     = finalFill - startFill;
 
     // ── Determine animation mode ──────────────────────────────────────────
@@ -285,7 +443,7 @@ export function TierGauge({
       clearTimeout(delayId);
       cancelAnimationFrame(rafRef.current);
     };
-  }, [totalFp, visible]); // eslint-disable-line
+  }, [totalFp, visible, ftueSuppressNormal, ftueOscillate, ftueLockStaticBar, finalFill, normalColor, derivedTier]); // eslint-disable-line
 
   useEffect(() => {
     if (!visible) {
@@ -294,7 +452,7 @@ export function TierGauge({
     }
   }, [visible]);
 
-  if (!visible || totalFp <= 0) return null;
+  if (!visible || totalFp <= 0 || ftueSuppressNormal) return null;
 
   return (
     <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", gap: 4 }}>
@@ -323,21 +481,9 @@ export function TierGauge({
           position: "absolute", left: 0, top: 0, height: "100%", borderRadius: 999,
           width: `${barFill * 100}%`,
           background: barColor,
-          boxShadow: `0 0 12px ${targetCfg.glow}`,
+          boxShadow: `0 0 12px ${ftueOscGlow ?? targetCfg.glow}`,
           animation: isDinging ? "tgDing 0.30s ease-in-out 5, tgGlow 0.60s ease-in-out 3" : "none",
         }} />
-      </div>
-
-      {/* Labels: left = actual win tier, right = next tier */}
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <span style={{ color: tierCfg.color, fontSize: 10, fontFamily: FF, letterSpacing: "0.08em" }}>
-          {tierCfg.label}
-        </span>
-        {!isMaxLevel && nextTier && (
-          <span style={{ color: targetCfg.color, fontSize: 10, fontFamily: FF, letterSpacing: "0.08em" }}>
-            {targetCfg.label}
-          </span>
-        )}
       </div>
     </div>
   );

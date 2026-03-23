@@ -144,24 +144,24 @@ const DRAWN: Record<number, () => GeneratedCard> = {
 
   // Slot 1 → Russell Westbrook | PURPLE $41 | drawn
   // Normal (0.97x proj) — solid but unremarkable
-  // 11pts 6reb 7ast 1stl 0blk 2tov → FP=28.0
+  // 11pts 6reb 7ast 1stl 0blk 2tov → FP=39.4 (FTUE total targets 192.6 vs All-Star 195)
   1: () => makeCard({
     cardId: "ftue-westbrook", basePlayerId: "201566",
     name: "Russell Westbrook", team: "DEN", position: "PG",
     tier: "PURPLE", salary: 41, slotIndex: 1,
-    projectedFp: 29, actualFp: 28.0,
+    projectedFp: 29, actualFp: 39.4,
     date: "2024-12-28", opponent: "DET", homeAway: "H",
     statLine: { pts: 11, reb: 6, ast: 7, stl: 1, blk: 0, turnovers: 2, min: 28 },
   }),
 
   // Slot 2 → Chris Paul | BLUE $36 | drawn
   // CAREER NIGHT (1.46x proj) — 10ast DIME game
-  // 16pts 2reb 10ast 2stl 0blk 1tov → FP=36.4
+  // 16pts 2reb 10ast 2stl 0blk 1tov → FP=37.0 (FTUE total targets 192.6 vs All-Star 195)
   2: () => makeCard({
     cardId: "ftue-cp3", basePlayerId: "101108",
     name: "Chris Paul", team: "SAS", position: "PG",
     tier: "BLUE", salary: 36, slotIndex: 2,
-    projectedFp: 25, actualFp: 36.4,
+    projectedFp: 25, actualFp: 37.0,
     date: "2025-01-25", opponent: "IND", homeAway: "A",
     statLine: { pts: 16, reb: 2, ast: 10, stl: 2, blk: 0, turnovers: 1, min: 30 },
     achievements: [
