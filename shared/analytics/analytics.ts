@@ -13,9 +13,11 @@
  *   track('gameplay', 'hand_resolved', { score: 142, tier: 'STARTER', bust: false });
  *
  * HOW TO ENABLE POSTHOG:
- *   Add to Vercel environment variables:
+ *   Add environment variables (Vercel + local .env if needed):
  *     VITE_POSTHOG_KEY=phc_xxxxxxxxxxxxxxxxxxxx
- *   Get your key from posthog.com → Project Settings → Project API Key
+ *     VITE_POSTHOG_HOST=https://us.i.posthog.com   // or https://eu.i.posthog.com
+ *     VITE_ANALYTICS_DISABLED=false                // optional override
+ *   Get your key from PostHog → Project Settings → Project API Key
  *   That's it. Events start flowing immediately.
  *
  * HOW TO ADD A NEW PRODUCT:
@@ -68,15 +70,22 @@ const DEFAULT_CONFIG: AnalyticsConfig = {
   appVersion: '1.0.0',
   platform:   'web',
   debug:      import.meta.env.MODE === 'development',
-  batchSize:  10,
-  batchMs:    5000,
-  disabled:   typeof window !== 'undefined' && window.location.hostname === 'localhost',
+  batchSize:  1,
+  batchMs:    1000,
+  disabled:   false,
 };
 
 // ── PostHog config ────────────────────────────────────────────────────────────
 // Set VITE_POSTHOG_KEY in Vercel env vars. If not set, PostHog is silently skipped.
 const POSTHOG_KEY  = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
-const POSTHOG_HOST = 'https://us.i.posthog.com'; // or 'https://eu.i.posthog.com' for EU data residency
+const POSTHOG_HOST = (import.meta.env.VITE_POSTHOG_HOST as string | undefined) || 'https://us.i.posthog.com';
+const ANALYTICS_DISABLED_ENV = (import.meta.env.VITE_ANALYTICS_DISABLED as string | undefined)?.toLowerCase();
+const ANALYTICS_DISABLED =
+  ANALYTICS_DISABLED_ENV === 'true'
+    ? true
+    : ANALYTICS_DISABLED_ENV === 'false'
+      ? false
+      : (typeof window !== 'undefined' && window.location.hostname === 'localhost');
 
 function getOrCreateUserId(): string {
   try {
@@ -125,7 +134,7 @@ class Analytics {
   private middleware: ((e: ReplayEvent) => ReplayEvent | null)[] = [];
 
   constructor(config: Partial<AnalyticsConfig> = {}) {
-    this.config    = { ...DEFAULT_CONFIG, ...config };
+    this.config    = { ...DEFAULT_CONFIG, disabled: ANALYTICS_DISABLED, ...config };
     this.userId    = getOrCreateUserId();
     this.sessionId = getOrCreateSessionId();
     this.platform  = getPlatform();
