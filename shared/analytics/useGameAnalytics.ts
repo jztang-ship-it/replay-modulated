@@ -28,6 +28,7 @@ export function useGameAnalytics(sport: AnalyticsSport) {
 
   return {
     handDealt(roster: any[]) {
+      console.log('ANALYTICS TRACK called');
       const cost = roster.reduce((s: number, c: any) => s + Number(c?.salary ?? 0), 0);
       track("gameplay", "hand_dealt", { sport, rosterCost: cost, playerCount: roster.length });
     },
