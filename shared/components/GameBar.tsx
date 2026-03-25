@@ -14,6 +14,13 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import ReactDOM from "react-dom";
 import { THEME } from "@shared/theme";
+import type { JSX as ReactJSX } from "react";
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements extends ReactJSX.IntrinsicElements {}
+  }
+}
 
 // ── Public types ───────────────────────────────────────────────────────────
 
@@ -479,7 +486,7 @@ function LegendModal({ onClose, legend }: { onClose: () => void; legend: LegendD
         @keyframes fadeInBg { from{opacity:0} to{opacity:1} }
         @keyframes slideUp  { from{transform:translateY(100%)} to{transform:translateY(0)} }
       `}</style>
-      <div onClick={e => e.stopPropagation()} style={{
+      <div onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()} style={{
         background: "linear-gradient(160deg,#0E1628 0%,#080E1C 100%)",
         border: "1px solid rgba(255,255,255,0.12)", borderRadius: 18,
         width: "100%", maxWidth: 380, height: "78vh",
@@ -895,7 +902,7 @@ function CelebrationBottom({ celebration, onDismiss, isFTUE = false }: { celebra
             </>
           ) : (
             <>
-              {Array.from({ length: Math.max(1, Math.min(celebration.streak, 6)) }).map((_, i) => (
+              {Array.from({ length: Math.max(1, Math.min(celebration.streak, 6)) }).map((_: unknown, i: number) => (
                 <div key={i} style={{
                   width: 9, height: 9, borderRadius: "50%",
                   background: celebration.streak === 0 ? "#333" : pipColor,
