@@ -638,6 +638,7 @@ const [streak, setStreak] = useState<number>(() =>
       const nextRoster     = (res?.roster ?? res?.cards ?? []) as PlayerCard[];
       rosterRef.current    = nextRoster;
       console.log('HAND DEALT CALLED');
+      console.log('DEALT');
       gameAnalytics.handDealt(nextRoster);
       setNoTransition(true);
       flipState.initCards(nextRoster.map(cardId));
@@ -773,6 +774,7 @@ const [streak, setStreak] = useState<number>(() =>
   const [wasSkipped, setWasSkipped] = useState(false);
 
   function handleButtonClick() {
+    console.log('BTN', gameState);
     console.log('BUTTON CLICKED', gameState);
     if (gameState === "REVEALING") {
       setRevealedSalary(capUsed);
