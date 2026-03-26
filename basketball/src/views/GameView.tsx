@@ -404,6 +404,19 @@ const [streak, setStreak] = useState<number>(() =>
   const currentBet      = BASE_BET * betMultiplier;
   const gameAnalytics   = useGameAnalytics("basketball");
 
+  function handleCardRevealStart(cardId: string, tierArg: string) {
+    setGlowCardId(cardId);
+    setGlowTier(tierArg ?? "WHITE");
+    // High tier (ORANGE/PURPLE) keeps full glow duration even on skip
+    // All other tiers get 150ms flat when skipping
+    const tier = tierArg?.toUpperCase();
+    const isHighTier = tier === "ORANGE" || tier === "PURPLE";
+    const normalDuration = tier === "ORANGE" ? 600 : tier === "PURPLE" ? 500 : 300;
+    const duration = isSkippingRef.current && !isHighTier ? 150 : normalDuration;
+    setGlowDurationMs(duration);
+    setTimeout(() => setGlowCardId(null), duration + 50);
+  }
+
   const {
     runningTotalFp,
     lastCardProgress,
@@ -421,6 +434,7 @@ const [streak, setStreak] = useState<number>(() =>
     shakeInfo,
     cardShakeTypeMap,
     activeRevealCardId,
+    isSkippingRef,
     clearActiveCard,
     visibleBadgesMap,
     skipToEnd: skipReveal,
@@ -434,12 +448,7 @@ const [streak, setStreak] = useState<number>(() =>
       // Store the resume fn — CoachLayer will call it after last card bubble dismissed
       heldRevealResumeRef.current = resume;
     } : undefined,
-    onCardRevealStart: useCallback((cardId: string, tier: string) => {
-      setGlowCardId(cardId);
-      setGlowTier(tier ?? "WHITE");
-      setGlowDurationMs(400);
-      setTimeout(() => setGlowCardId(null), 400);
-    }, []),
+    onCardRevealStart: handleCardRevealStart,
     onCardComplete: useCallback((cId: string) => {
       setRevealIndex(prev => prev + 1);
       setLastRevealedCardId(cId);

@@ -65,6 +65,12 @@ type Params = {
 const ANCHOR_PRE_FLIP_PAUSE_MS = 200;
 const SHAKE_DURATION_MS        = 400;
 const ANCHOR_COUNT_MULTIPLIER  = 1.5;
+// ── Skip-mode timing constants ─────────────────────────────────────────────
+const SKIP_GLOW_HIGH_TIER_MS   = null;   // null = use full normal duration
+const SKIP_GLOW_DEFAULT_MS     = 150;    // BLUE/GREEN/WHITE/ICE COLD/FREEZING
+const SKIP_BADGE_INTERVAL_MS   = 30;     // vs 80ms normal
+const SKIP_COUNT_MS            = 150;    // flat for all tiers (vs 400–700ms normal)
+const SKIP_INTER_CARD_PAUSE_MS = 100;    // vs 300ms normal
 
 function nowMs() {
   return typeof performance !== "undefined" ? performance.now() : Date.now();
@@ -140,6 +146,7 @@ export function useEmotionalReveal(params: Params) {
   const tapRevealFnRef = useRef<((cardId: string) => void) | null>(null);
 
   const runIdRef  = useRef(0);
+  const isSkippingRef = useRef(false);
   const timersRef = useRef<number[]>([]);
 
   const clearTimers = useCallback(() => {
@@ -150,6 +157,7 @@ export function useEmotionalReveal(params: Params) {
   const reset = useCallback(() => {
     setActiveRevealCardId(null);
     runIdRef.current++;
+    isSkippingRef.current = false;
     clearTimers();
     setVisibleFpMap(new Map());
     setLastCardProgress(0);
@@ -232,39 +240,13 @@ export function useEmotionalReveal(params: Params) {
     clearTimers();
     runIdRef.current++;
     const myRunId = runIdRef.current;
+    isSkippingRef.current = true;
+
     setShakeInfo(null);
     setActiveRevealCardId(null);
     setTappedCardIds(new Set(cards.map(c => c.cardId)));
 
-    // CONTINUATION PRINCIPLE: visibleFpMap is the source of truth for what the
-    // player has already seen. Capture it now — skipToEnd only adds to it, never resets it.
-    // This ensures the TierGauge never goes backward and FP never recounts from zero.
-    const alreadyVisible = new Map<string, number>();
-    setVisibleFpMap(prev => {
-      const m = new Map<string, number>();
-      for (const c of cards) {
-        const seen = prev.get(c.cardId) ?? 0;
-        m.set(c.cardId, seen);
-        alreadyVisible.set(c.cardId, seen);
-      }
-      return m;
-    });
-
-    // Badges ready to show once cards are front
-    const badgeMap = new Map<string, Array<{id:string;icon:string;label:string;fp:number}>>();
-    for (const c of cards) {
-      if (c.badges?.length) badgeMap.set(c.cardId, c.badges);
-    }
-    setVisibleBadgesMap(badgeMap);
-
-    // Targets: each card rolls up from what was already visible to its actual FP
-    const targets = new Map<string, number>();
-    const total = cards.reduce((s, c) => {
-      targets.set(c.cardId, Number(c.actualFp ?? 0));
-      return s + Number(c.actualFp ?? 0);
-    }, 0);
-
-    // Flip all unrevealed cards simultaneously
+    // Flip all unrevealed cards face-up simultaneously first
     for (const c of cards) flipState.revealCard(c.cardId);
 
     const FLIP_DURATION_MS = 450;
@@ -272,32 +254,44 @@ export function useEmotionalReveal(params: Params) {
       if (runIdRef.current !== myRunId) return;
       for (const c of cards) flipState.completeReveal(c.cardId);
 
-      // Roll up from each card's already-visible value to its actual FP
-      const ROLL_MS = 600;
-      const startTime = performance.now();
+      // Now run each card through full sequence at skip speed
+      // Order: non-held lowest→highest salary, then held lowest→highest salary
+      // Anchor (highest salary overall) always goes last
+      const nonHeld = [...cards.filter(c => !(c as any).wasHeld)]
+        .sort((a, b) => (a.salary ?? 0) - (b.salary ?? 0));
+      const held = [...cards.filter(c => (c as any).wasHeld)]
+        .sort((a, b) => (a.salary ?? 0) - (b.salary ?? 0));
 
-      const tick = () => {
+      // Anchor = highest salary card across all cards
+      const allSorted = [...cards].sort((a, b) => (a.salary ?? 0) - (b.salary ?? 0));
+      const anchorId = allSorted[allSorted.length - 1]?.cardId;
+
+      // Pull anchor out of wherever it sits and place it last
+      const sequence = [...nonHeld, ...held].filter(c => c.cardId !== anchorId);
+      const anchor = cards.find(c => c.cardId === anchorId);
+      if (anchor) sequence.push(anchor);
+
+      const revealOne = (idx: number) => {
         if (runIdRef.current !== myRunId) return;
-        const elapsed = performance.now() - startTime;
-        const progress = Math.min(elapsed / ROLL_MS, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        const frame = new Map<string, number>();
-        for (const [id, target] of targets) {
-          const start = alreadyVisible.get(id) ?? 0;
-          // Only count up the delta — never go below what was already shown
-          frame.set(id, Math.round((start + (target - start) * eased) * 10) / 10);
-        }
-        setVisibleFpMap(frame);
-        if (progress < 1) {
-          const t = window.setTimeout(tick, 16);
-          timersRef.current.push(t);
-        } else {
-          setVisibleFpMap(new Map(targets));
+        const c = sequence[idx];
+        if (!c) {
+          setActiveRevealCardId(null);
+          setShakeInfo(null);
           setHeldFpVisible(true);
+          const total = cards.reduce((s, x) => s + Number(x.actualFp ?? 0), 0);
           onAllComplete?.(total);
+          return;
         }
+        const isAnchor = c.cardId === anchorId;
+        // Anchor plays at full normal speed; everyone else fast-forwards
+        runCardReveal(c, isAnchor, myRunId, () => {
+          const pause = isAnchor ? 300 : SKIP_INTER_CARD_PAUSE_MS;
+          const t = window.setTimeout(() => revealOne(idx + 1), pause);
+          timersRef.current.push(t);
+        }, !!(c as any).wasHeld, !isAnchor /* isSkip */);
       };
-      tick();
+
+      revealOne(0);
     }, FLIP_DURATION_MS);
     timersRef.current.push(flipDone);
   }, [cards, flipState, clearTimers, onAllComplete]);
@@ -309,11 +303,14 @@ export function useEmotionalReveal(params: Params) {
     isAnchor: boolean,
     myRunId: number,
     onDone: () => void,
-    skipFlip = false   // held cards are already FRONT — skip the 3D flip
+    skipFlip = false,   // held cards are already FRONT — skip the 3D flip
+    isSkip = false
   ) {
     const st          = getShakeType(c, isAnchor, revealConfig);
-    const flipMs      = skipFlip ? 0 : flipMsForTier(c.tier ?? "", st === "big");
-    const countMs     = countMsForTier(c.tier ?? "", isAnchor);
+    const flipMs = skipFlip ? 0 : flipMsForTier(c.tier ?? "", st === "big");
+    const countMs = isSkip
+      ? SKIP_COUNT_MS
+      : countMsForTier(c.tier ?? "", isAnchor);
     const anchorDelay = isAnchor ? ANCHOR_PRE_FLIP_PAUSE_MS : 0;
     const shakePre    = st !== null ? SHAKE_DURATION_MS : 0;
     const totalPre    = skipFlip ? 0 : (shakePre + anchorDelay);
@@ -323,13 +320,13 @@ export function useEmotionalReveal(params: Params) {
 
     const t0 = window.setTimeout(() => {
       if (runIdRef.current !== myRunId) return;
-      onCardRevealStart?.(c.cardId, c.tier ?? "WHITE");
       if (!skipFlip) flipState.revealCard(c.cardId);
 
       const t1 = window.setTimeout(() => {
         if (runIdRef.current !== myRunId) return;
         setShakeInfo(null);
         if (!skipFlip) flipState.completeReveal(c.cardId);
+        onCardRevealStart?.(c.cardId, c.tier ?? "WHITE");
 
         const start  = nowMs();
         const target = Math.max(0, Number(c.actualFp ?? 0));
@@ -350,8 +347,10 @@ export function useEmotionalReveal(params: Params) {
             if (cardBadges.length > 0) {
               setVisibleBadgesMap(prev => new Map(prev).set(c.cardId, cardBadges));
             }
-            const badgeMs  = cardBadges.length > 0 ? 400 + (cardBadges.length - 1) * 120 : 0;
-            const stampMs  = st !== null ? 300 : 0;
+            const badgeMs = cardBadges.length > 0
+              ? (isSkip ? 60 + (cardBadges.length - 1) * SKIP_BADGE_INTERVAL_MS : 400 + (cardBadges.length - 1) * 120)
+              : 0;
+            const stampMs = st !== null ? (isSkip ? 150 : 300) : 0;
             const doneT = window.setTimeout(() => {
               if (runIdRef.current !== myRunId) return;
               onCardComplete?.(c.cardId);
@@ -534,6 +533,7 @@ export function useEmotionalReveal(params: Params) {
     heldRevealedIds,
     tappedCardIds,
     anchorCardId,
+    isSkippingRef,
   };
 }
 

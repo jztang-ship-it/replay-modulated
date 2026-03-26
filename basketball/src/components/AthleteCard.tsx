@@ -218,12 +218,24 @@ type Props = {
   onRollComplete?: () => void;
   heldFpVisible?: boolean;
   isTapTarget?: boolean;
+  glowActive?: boolean;
+  glowTier?: string;
+  glowDurationMs?: number;
 };
 
 export function AthleteCard(props: Props) {
+  const {
+    glowActive,
+    glowTier,
+    glowDurationMs,
+    ...rest
+  } = props;
   return (
     <PlayerCardShell
-      {...props}
+      {...rest}
+      glowActive={glowActive}
+      glowTier={glowTier}
+      glowDurationMs={glowDurationMs}
       renderFront={(p: ShellFrontProps) => (
         <CardFront
           {...p}
