@@ -29,6 +29,9 @@ import { CoinDisplay }      from '@shared/engagement/CoinDisplay';
 import { DailyTasksPanel }  from '@shared/engagement/DailyTasksPanel';
 import { XPBar }            from '@shared/engagement/XPBar';
 
+// Test-wire only: allow passing glow props even if wrapper prop types lag behind.
+const RosterGridAny = RosterGrid as any;
+
 const CAP_MAX        = sportAdapter.salaryCap;
 const ROSTER_SIZE    = sportAdapter.rosterSize;
 const STARTING_BALANCE = 1000;
@@ -365,6 +368,9 @@ export default function GameView() {
   const [ftueResultsDim,     setFtueResultsDim]     = useState(false);
   const [ftueBookerFlipped,  setFtueBookerFlipped]  = useState(false);
   const [ftueOscillating,          setFtueOscillating]          = useState(false);
+  const [glowCardId, setGlowCardId] = useState<string | null>(null);
+  const [glowTier, setGlowTier] = useState<string>("WHITE");
+  const [glowDurationMs, setGlowDurationMs] = useState(300);
   /** After FTUE scripted gauge animation completes — bar stays frozen until next hand */
   const [ftueGaugeOscDone,         setFtueGaugeOscDone]         = useState(false);
   const [ftueWinCelebrationActive, setFtueWinCelebrationActive] = useState(false);
@@ -431,6 +437,17 @@ const [streak, setStreak] = useState<number>(() =>
     onCardComplete: useCallback((cId: string) => {
       setRevealIndex(prev => prev + 1);
       setLastRevealedCardId(cId);
+
+      const card = rosterRef.current.find(c => {
+        const id = String(c?.cardId ?? c?.basePlayerId ?? "");
+        return id === cId;
+      });
+      const cardId = cId;
+      setGlowCardId(cardId);
+      setGlowTier((card as any)?.tier ?? "WHITE");
+      setGlowDurationMs(400);
+      setTimeout(() => setGlowCardId(null), 400);
+
       // FTUE: start gauge oscillation shortly after Booker's stamp lands
       // 100ms delay lets onAllComplete fire first (sets winTier/winPayout)
       if (isFTUE && cId === "ftue-booker") {
@@ -897,7 +914,7 @@ const [streak, setStreak] = useState<number>(() =>
             }}
           >
             <RosterGridScaleFit>
-            <RosterGrid
+            <RosterGridAny
   roster={displayRoster}
   phase={phase}
   lockedIds={heldCardIds}
@@ -916,6 +933,9 @@ const [streak, setStreak] = useState<number>(() =>
   shakeType={shakeInfo?.type ?? null}
   cardShakeTypeMap={cardShakeTypeMap}
   visibleBadgesMap={visibleBadgesMap}
+  glowCardId={glowCardId}
+  glowTier={glowTier}
+  glowDurationMs={glowDurationMs}
   activeRevealCardId={activeRevealCardId}
   onToggleLock={toggleLock}
   onToggleFlip={toggleStatsFlip}

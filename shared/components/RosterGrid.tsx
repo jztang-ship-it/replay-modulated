@@ -84,6 +84,9 @@ type Props = {
   heldRevealedIds?: Set<string>;
   tappedCardIds?: Set<string>;
   isRevealingPhase?: boolean;  // true when gameState === "REVEALING"
+  glowCardId?: string | null;
+  glowTier?: string;
+  glowDurationMs?: number;
   ftueLockedSlot?: number | null;  // FTUE: slot index that stays lit; all others dim
   ftueFlipTargetId?: string | null; // FTUE: show TAP hint on this card in RESULTS
 };
@@ -97,6 +100,7 @@ export function RosterGrid(props: Props) {
     flipMsMap, fpCountUpMsMap, performanceTagMap, pulseMap,
     shakingCardId, shakeType, cardShakeTypeMap, visibleBadgesMap, activeRevealCardId, ftueDimmedSlots,
     revealMode = "auto", onTapReveal, heldFpVisible = false, heldRevealedIds, tappedCardIds, isRevealingPhase = false, ftueLockedSlot = null, ftueFlipTargetId = null,
+    glowCardId, glowTier, glowDurationMs,
   } = props;
 
   const cards = useMemo(() => {
@@ -197,6 +201,9 @@ export function RosterGrid(props: Props) {
               onRollComplete={() => onCardRollComplete?.(id)}
               cardShakeType={cardShakeType}
               badges={visibleBadgesMap?.get(id) ?? []}
+              glowActive={glowCardId === (card as any).cardId}
+              glowTier={glowTier}
+              glowDurationMs={glowDurationMs}
               isSpotlight={activeRevealCardId === id}
               spotlightLevel={
                 activeRevealCardId === id ? (
