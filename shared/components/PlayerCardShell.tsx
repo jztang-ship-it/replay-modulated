@@ -119,6 +119,12 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
     }
     .pcs-tap-bounce { animation: pcsTapBounce 1.4s ease-in-out infinite; }
     @keyframes pcsTapHintPulse { 0%,100%{opacity:.4} 50%{opacity:.9} }
+    @keyframes pcsGlowFlash {
+      0%   { opacity: 0; }
+      20%  { opacity: 1; }
+      80%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
   `;
   document.head.appendChild(style);
 }
@@ -182,6 +188,9 @@ export interface CardShellProps {
   onRollComplete?: () => void;
   heldFpVisible?: boolean;
   isTapTarget?: boolean;
+  glowActive?: boolean;
+  glowTier?: string;
+  glowDurationMs?: number;
   /** Sport provides its own front face */
   renderFront: (props: CardFrontProps) => React.ReactNode;
   /** Sport provides its stats back face (only used when canFlip=true) */
@@ -193,6 +202,15 @@ export interface CardShellProps {
 type OverlayState = { stamp: OverlayStamp; stamping: boolean };
 const overlayMap = new Map<string, OverlayState>();
 export function resetAllOverlays() { overlayMap.clear(); }
+
+function tierToGlowFile(tier: string): string {
+  const t = tier?.toUpperCase();
+  if (t === "ORANGE") return "orange";
+  if (t === "PURPLE") return "purple";
+  if (t === "BLUE")   return "blue";
+  if (t === "GREEN")  return "green";
+  return "white";
+}
 
 // ── PlayerCardShell ────────────────────────────────────────────────────────
 
@@ -208,6 +226,7 @@ export function PlayerCardShell(props: CardShellProps) {
     shakeType, cardShakeType, badges,
     isSpotlight, spotlightLevel, isDimmed, onRollComplete,
     heldFpVisible, isTapTarget,
+    glowActive, glowTier, glowDurationMs,
     renderFront, renderBack,
   } = props;
 
@@ -377,6 +396,21 @@ export function PlayerCardShell(props: CardShellProps) {
       <div className={innerClass} style={innerStyle}>
         <div className="pcs-face">
           {renderFront(frontProps)}
+          {glowActive && (
+            <img
+              src={`/glow-${tierToGlowFile(glowTier ?? "WHITE")}.png`}
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                mixBlendMode: "screen",
+                pointerEvents: "none",
+                animation: `pcsGlowFlash ${glowDurationMs ?? 300}ms ease-in-out forwards`,
+                zIndex: 20,
+              }}
+            />
+          )}
         </div>
         <div className="pcs-face pcs-face-back">
           {canFlip
