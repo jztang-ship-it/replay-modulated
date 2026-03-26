@@ -47,10 +47,6 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
       0%   { opacity: 1; transform: translateY(0); }
       100% { opacity: 0; transform: translateY(-3px); }
     }
-    @keyframes cfStampIn {
-      0%   { opacity: 0; transform: translateX(-50%) translateY(6px) rotate(-6deg) scale(0.85); }
-      100% { opacity: 1; transform: translateX(-50%) translateY(0) rotate(-3deg) scale(1); }
-    }
   `;
   document.head.appendChild(st);
 }
@@ -147,7 +143,7 @@ export interface CardFrontProps {
 
 export function CardFront(props: CardFrontProps) {
   const {
-    card, phase, isLocked, visibleFp, visibleBadgeCount, isRevealing, revealActive,
+    card, phase, isLocked, visibleFp, isRevealing, revealActive,
     isFlipped, heldFpVisible, isTapTarget,
     pulse, fpCountUpMs, stamp, onRollComplete, badges, renderHero,
   } = props;
@@ -241,13 +237,8 @@ export function CardFront(props: CardFrontProps) {
     : proj;
   const fpText = Number.isFinite(fpValue) && fpValue > 0 ? fpValue.toFixed(1) : proj.toFixed(1);
 
-  const badgesShown = useMemo(() => {
-    const list = badges ?? [];
-    if (visibleBadgeCount !== undefined) return list.slice(0, visibleBadgeCount);
-    return list;
-  }, [badges, visibleBadgeCount]);
-  const badgeBonusFp = useMemo(() => badgesShown.reduce((s, b) => s + (b.fp ?? 0), 0), [badgesShown]);
-  const hasBadges    = badgesShown.length > 0;
+  const badgeBonusFp = useMemo(() => badges?.reduce((s, b) => s + (b.fp ?? 0), 0) ?? 0, [badges]);
+  const hasBadges    = (badges?.length ?? 0) > 0;
   const hasRevealed  = rollComplete || (!!isRevealing && !!revealActive && visibleFp !== undefined && visibleFp > 0);
   const pulsePal     = pulsePalette(pulse);
   const showPulse    = !!pulse && pulse !== "NEUTRAL" && hasRevealed;
@@ -388,11 +379,11 @@ export function CardFront(props: CardFrontProps) {
         }}>
           {hasBadges ? (
             <>
-              {badgesShown.slice(0, 5).map((badge, i) => (
+              {badges!.slice(0, 5).map((badge, i) => (
                 <div
                   key={badge.id ?? badge.label ?? i}
                   style={{
-                    animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${i * 80}ms both`,
+                    animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${i * 90}ms both`,
                     display: "flex", alignItems: "center", gap: 1,
                     background: "rgba(0,0,0,0.60)", borderRadius: 5,
                     padding: "2px 3px",
@@ -406,7 +397,7 @@ export function CardFront(props: CardFrontProps) {
               {/* Total badge bonus — shown as +X after all badge icons */}
               {badgeBonusFp > 0 && (
                 <div style={{
-                  animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${(Math.min(badgesShown.length, 5)) * 80}ms both`,
+                  animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${(Math.min(badges!.length, 5)) * 90}ms both`,
                   display: "flex", alignItems: "center",
                   background: "rgba(0,0,0,0.70)", borderRadius: 5,
                   padding: "2px 4px",
@@ -426,7 +417,6 @@ export function CardFront(props: CardFrontProps) {
             position: "absolute",
             bottom: "calc(28% + 6px)",
             left: "50%", transform: "translateX(-50%) rotate(-3deg)",
-            animation: "cfStampIn 0.38s cubic-bezier(0.34,1.2,0.64,1) both",
             zIndex: 40, pointerEvents: "none", whiteSpace: "nowrap",
             fontSize: 10, fontWeight: 900, letterSpacing: 2, textTransform: "uppercase",
             color: stamp === "SMOKING HOT" ? "#EF4444" : stamp === "ON FIRE" ? "#FB923C" : stamp === "ICE COLD" ? "#9CA3AF" : stamp === "FREEZING" ? "#1E40AF" : "#EF4444",

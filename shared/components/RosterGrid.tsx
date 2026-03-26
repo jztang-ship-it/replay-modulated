@@ -46,11 +46,6 @@ export type RosterGridCardProps = {
   isDimmed: boolean;
   heldFpVisible?: boolean;
   isTapTarget?: boolean;
-  visibleBadgeCount?: number;
-  glowActive?: boolean;
-  glowTier?: string;
-  glowDurationMs?: number;
-  stampRevealActive?: boolean;
 };
 
 type Props = {
@@ -89,11 +84,6 @@ type Props = {
   heldRevealedIds?: Set<string>;
   tappedCardIds?: Set<string>;
   isRevealingPhase?: boolean;  // true when gameState === "REVEALING"
-  visibleBadgeCountMap?: Map<string, number>;
-  glowCardId?: string | null;
-  glowTier?: string;
-  glowDurationMs?: number;
-  stampRevealActiveId?: string | null;
   ftueLockedSlot?: number | null;  // FTUE: slot index that stays lit; all others dim
   ftueFlipTargetId?: string | null; // FTUE: show TAP hint on this card in RESULTS
 };
@@ -107,7 +97,6 @@ export function RosterGrid(props: Props) {
     flipMsMap, fpCountUpMsMap, performanceTagMap, pulseMap,
     shakingCardId, shakeType, cardShakeTypeMap, visibleBadgesMap, activeRevealCardId, ftueDimmedSlots,
     revealMode = "auto", onTapReveal, heldFpVisible = false, heldRevealedIds, tappedCardIds, isRevealingPhase = false, ftueLockedSlot = null, ftueFlipTargetId = null,
-    visibleBadgeCountMap, glowCardId = null, glowTier = "WHITE", glowDurationMs = 300, stampRevealActiveId = null,
   } = props;
 
   const cards = useMemo(() => {
@@ -155,16 +144,6 @@ export function RosterGrid(props: Props) {
         const effectiveFp    = wasHeld
           ? (thisHeldRevealed ? visibleFp : undefined)
           : visibleFp;
-
-        const achievementsRaw = ((card as any).achievements ?? []) as Array<{ id?: string; icon?: string; label?: string; fp?: number }>;
-        const mappedAchievements = achievementsRaw.map((a, i) => ({
-          id: String(a.id ?? a.label ?? `b${i}`),
-          icon: a.icon || "⭐",
-          label: a.label ?? "",
-          fp: a.fp ?? 0,
-        }));
-        const badgeCountCap = visibleBadgeCountMap?.get(id);
-        const badgesForCard = visibleBadgesMap?.get(id) ?? mappedAchievements;
 
         const handleTap = (e: React.MouseEvent) => {
           e.stopPropagation();
@@ -217,12 +196,7 @@ export function RosterGrid(props: Props) {
               shakeType={liveShakeType}
               onRollComplete={() => onCardRollComplete?.(id)}
               cardShakeType={cardShakeType}
-              badges={badgesForCard}
-              visibleBadgeCount={badgeCountCap}
-              glowActive={glowCardId === id}
-              glowTier={glowCardId === id ? glowTier : "WHITE"}
-              glowDurationMs={glowCardId === id ? glowDurationMs : 300}
-              stampRevealActive={stampRevealActiveId === id}
+              badges={visibleBadgesMap?.get(id) ?? []}
               isSpotlight={activeRevealCardId === id}
               spotlightLevel={
                 activeRevealCardId === id ? (
