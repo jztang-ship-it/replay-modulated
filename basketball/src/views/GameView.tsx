@@ -434,19 +434,15 @@ const [streak, setStreak] = useState<number>(() =>
       // Store the resume fn — CoachLayer will call it after last card bubble dismissed
       heldRevealResumeRef.current = resume;
     } : undefined,
+    onCardRevealStart: useCallback((cardId: string, tier: string) => {
+      setGlowCardId(cardId);
+      setGlowTier(tier ?? "WHITE");
+      setGlowDurationMs(400);
+      setTimeout(() => setGlowCardId(null), 400);
+    }, []),
     onCardComplete: useCallback((cId: string) => {
       setRevealIndex(prev => prev + 1);
       setLastRevealedCardId(cId);
-
-      const card = rosterRef.current.find(c => {
-        const id = String(c?.cardId ?? c?.basePlayerId ?? "");
-        return id === cId;
-      });
-      const cardId = cId;
-      setGlowCardId(cardId);
-      setGlowTier((card as any)?.tier ?? "WHITE");
-      setGlowDurationMs(400);
-      setTimeout(() => setGlowCardId(null), 400);
 
       // FTUE: start gauge oscillation shortly after Booker's stamp lands
       // 100ms delay lets onAllComplete fire first (sets winTier/winPayout)

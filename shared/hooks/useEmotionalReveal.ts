@@ -50,6 +50,7 @@ type Params = {
   flipState: CardFlipState;
   revealConfig?: RevealConfig;
   onCardComplete?: (cardId: string) => void;
+  onCardRevealStart?: (cardId: string, tier: string) => void;
   onAllComplete?: (totalFp: number) => void;
   /** "auto" = sequential auto-reveal (default). "tap" = user taps each card. */
   revealMode?: "auto" | "tap";
@@ -117,7 +118,7 @@ export function useEmotionalReveal(params: Params) {
   const {
     cards, isActive, flipState,
     revealConfig = DEFAULT_REVEAL_CONFIG,
-    onCardComplete, onAllComplete,
+    onCardComplete, onCardRevealStart, onAllComplete,
     revealMode = "auto",
   } = params;
 
@@ -322,6 +323,7 @@ export function useEmotionalReveal(params: Params) {
 
     const t0 = window.setTimeout(() => {
       if (runIdRef.current !== myRunId) return;
+      onCardRevealStart?.(c.cardId, c.tier ?? "WHITE");
       if (!skipFlip) flipState.revealCard(c.cardId);
 
       const t1 = window.setTimeout(() => {
