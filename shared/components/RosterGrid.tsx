@@ -46,6 +46,9 @@ export type RosterGridCardProps = {
   isDimmed: boolean;
   heldFpVisible?: boolean;
   isTapTarget?: boolean;
+  glowActive?: boolean;
+  glowTier?: string;
+  glowDurationMs?: number;
 };
 
 type Props = {
