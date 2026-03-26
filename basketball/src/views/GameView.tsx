@@ -417,6 +417,11 @@ const [streak, setStreak] = useState<number>(() =>
     activeRevealCardId,
     clearActiveCard,
     visibleBadgesMap,
+    glowCardId,
+    glowTier,
+    glowDurationMs,
+    visibleBadgeCountMap,
+    stampRevealActiveId,
     skipToEnd: skipReveal,
     reset: resetReveal,
   } = useEmotionalReveal({
@@ -916,6 +921,11 @@ const [streak, setStreak] = useState<number>(() =>
   shakeType={shakeInfo?.type ?? null}
   cardShakeTypeMap={cardShakeTypeMap}
   visibleBadgesMap={visibleBadgesMap}
+  visibleBadgeCountMap={visibleBadgeCountMap}
+  glowCardId={glowCardId}
+  glowTier={glowTier}
+  glowDurationMs={glowDurationMs}
+  stampRevealActiveId={stampRevealActiveId}
   activeRevealCardId={activeRevealCardId}
   onToggleLock={toggleLock}
   onToggleFlip={toggleStatsFlip}

@@ -218,6 +218,10 @@ type Props = {
   onRollComplete?: () => void;
   heldFpVisible?: boolean;
   isTapTarget?: boolean;
+  glowActive?: boolean;
+  glowTier?: string;
+  glowDurationMs?: number;
+  stampRevealActive?: boolean;
 };
 
 export function AthleteCard(props: Props) {

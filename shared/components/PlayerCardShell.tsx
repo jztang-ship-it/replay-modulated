@@ -119,6 +119,12 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
     }
     .pcs-tap-bounce { animation: pcsTapBounce 1.4s ease-in-out infinite; }
     @keyframes pcsTapHintPulse { 0%,100%{opacity:.4} 50%{opacity:.9} }
+    @keyframes pcsGlowFlash {
+      0%   { opacity: 0; }
+      18%  { opacity: 1; }
+      82%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
   `;
   document.head.appendChild(style);
 }
@@ -182,6 +188,12 @@ export interface CardShellProps {
   onRollComplete?: () => void;
   heldFpVisible?: boolean;
   isTapTarget?: boolean;
+  /** Tier glow flash during reveal (basketball/public/glow-*.png) */
+  glowActive?: boolean;
+  glowTier?: string;
+  glowDurationMs?: number;
+  /** Show performance stamp during staged reveal (before FP rollup completes) */
+  stampRevealActive?: boolean;
   /** Sport provides its own front face */
   renderFront: (props: CardFrontProps) => React.ReactNode;
   /** Sport provides its stats back face (only used when canFlip=true) */
@@ -193,6 +205,24 @@ export interface CardShellProps {
 type OverlayState = { stamp: OverlayStamp; stamping: boolean };
 const overlayMap = new Map<string, OverlayState>();
 export function resetAllOverlays() { overlayMap.clear(); }
+
+function stampFromShakeType(st: ShakeType | null | undefined): OverlayStamp {
+  if (!st) return null;
+  if (st === "legendary") return "SMOKING HOT";
+  if (st === "big") return "ON FIRE";
+  if (st === "frozen") return "FREEZING";
+  if (st === "cold") return "ICE COLD";
+  return null;
+}
+
+function tierToGlowFile(tier: string): string {
+  const t = (tier ?? "WHITE").toUpperCase();
+  if (t === "ORANGE") return "orange";
+  if (t === "PURPLE") return "purple";
+  if (t === "BLUE") return "blue";
+  if (t === "GREEN") return "green";
+  return "white";
+}
 
 // ── PlayerCardShell ────────────────────────────────────────────────────────
 
@@ -208,6 +238,10 @@ export function PlayerCardShell(props: CardShellProps) {
     shakeType, cardShakeType, badges,
     isSpotlight, spotlightLevel, isDimmed, onRollComplete,
     heldFpVisible, isTapTarget,
+    glowActive = false,
+    glowTier = "WHITE",
+    glowDurationMs = 300,
+    stampRevealActive = false,
     renderFront, renderBack,
   } = props;
 
@@ -270,6 +304,16 @@ export function PlayerCardShell(props: CardShellProps) {
   // on isRevealing, revealActive, or gameState.
   const actualFp = Number((card as any).actualFp ?? 0);
   useEffect(() => {
+    if (stampRevealActive && cardShakeType) {
+      const s = stampFromShakeType(cardShakeType);
+      if (s) {
+        stampFiredRef.current = true;
+        const next: OverlayState = { stamp: s, stamping: true };
+        overlayMap.set(id, next);
+        setOverlay(next);
+      }
+      return;
+    }
     if (stampFiredRef.current) return;
     if (!cardShakeType) return;
     if (visibleFp === undefined) return;
@@ -284,7 +328,7 @@ export function PlayerCardShell(props: CardShellProps) {
     const next: OverlayState = { stamp, stamping: true };
     overlayMap.set(id, next);
     setOverlay(next);
-  }, [visibleFp, cardShakeType, id, actualFp]);
+  }, [visibleFp, cardShakeType, id, actualFp, stampRevealActive]);
 
   // Legacy onRollComplete path (kept for non-stamped cards)
   const handleRollComplete = useCallback(() => {
@@ -356,7 +400,7 @@ export function PlayerCardShell(props: CardShellProps) {
     isRevealing,
     revealActive: !!(isRevealing && isSpotlight),
     fpCountUpMs,
-    stamp: overlay.stamp,
+    stamp: (stampRevealActive && cardShakeType) ? (stampFromShakeType(cardShakeType) ?? overlay.stamp) : overlay.stamp,
     onRollComplete: handleRollComplete,
     badges,
     heldFpVisible,
@@ -375,7 +419,26 @@ export function PlayerCardShell(props: CardShellProps) {
         }} />
       )}
       <div className={innerClass} style={innerStyle}>
-        <div className="pcs-face">
+        <div className="pcs-face" style={{ position: "relative" }}>
+          {glowActive && glowDurationMs > 0 && (
+            <img
+              key={`glow-${glowDurationMs}-${tierToGlowFile(glowTier)}`}
+              src={`/glow-${tierToGlowFile(glowTier)}.png`}
+              alt=""
+              draggable={false}
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                mixBlendMode: "screen",
+                pointerEvents: "none",
+                zIndex: 50,
+                animation: `pcsGlowFlash ${glowDurationMs}ms linear forwards`,
+              }}
+            />
+          )}
           {renderFront(frontProps)}
         </div>
         <div className="pcs-face pcs-face-back">

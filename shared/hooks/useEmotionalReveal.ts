@@ -3,14 +3,10 @@
  *
  * Orchestrates the sequential card reveal sequence. Sport-agnostic.
  *
- * Sport-specific thresholds (what counts as a great/bad performance)
- * are injected via RevealConfig so each sport can tune its own feel:
- *   - careerNightRatio: actual/proj ratio that triggers "big" shake
- *   - hotRatio:         ratio that triggers "hype" shake
- *   - coldRatio:        ratio that triggers "cold" shake
+ * Reveal order: all non-held (low→high salary), then held (low→high salary),
+ * with the highest-salary card (anchor) always last.
  *
- * The CAREER NIGHT / ICE COLD stamp labels are fixed brand identity
- * (same as the card shell stamps) — the ratios are what differs.
+ * Per-card stages: glow flash → badges (staggered) → stamp → FP rollup → pause.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -23,6 +19,7 @@ export type RevealableCard = {
   projectedFp: number;
   salary: number;
   tier: string;
+  wasHeld?: boolean;
   badges?: Array<{ id: string; icon: string; label: string; fp: number }>;
 };
 
@@ -30,13 +27,12 @@ export type ShakeType = "legendary" | "big" | "hype" | "cold" | "frozen" | null;
 export type ShakeInfo = { cardId: string; type: ShakeType } | null;
 
 export interface RevealConfig {
-  smokingHotRatio:  number;  /** ≥ this → SMOKING HOT stamp */
-  onFireRatio:      number;  /** ≥ this → ON FIRE stamp */
-  iceColdRatio:     number;  /** ≤ this → ICE COLD stamp */
-  freezingRatio:    number;  /** ≤ this → FREEZING stamp */
+  smokingHotRatio:  number;
+  onFireRatio:      number;
+  iceColdRatio:     number;
+  freezingRatio:    number;
 }
 
-/** Sensible defaults — basketball values */
 export const DEFAULT_REVEAL_CONFIG: RevealConfig = {
   smokingHotRatio:  1.6,
   onFireRatio:      1.4,
@@ -51,19 +47,15 @@ type Params = {
   revealConfig?: RevealConfig;
   onCardComplete?: (cardId: string) => void;
   onAllComplete?: (totalFp: number) => void;
-  /** "auto" = sequential auto-reveal (default). "tap" = user taps each card. */
   revealMode?: "auto" | "tap";
-  /**
-   * FTUE gate: called after last unheld card completes. Call the provided
-   * resume() callback when ready to start the held-card (Booker) reveal.
-   * If not provided, held reveal starts immediately.
-   */
   onBeforeHeldReveal?: (resume: () => void) => void;
 };
 
-const ANCHOR_PRE_FLIP_PAUSE_MS = 200;
-const SHAKE_DURATION_MS        = 400;
-const ANCHOR_COUNT_MULTIPLIER  = 1.5;
+const FLIP_MS                 = 450;
+const BADGE_STAGGER_MS        = 80;
+const STAMP_MS                = 300;
+const BETWEEN_CARDS_PAUSE_MS  = 300;
+const ANCHOR_PRE_FLIP_PAUSE_MS = 0;
 
 function nowMs() {
   return typeof performance !== "undefined" ? performance.now() : Date.now();
@@ -71,29 +63,45 @@ function nowMs() {
 function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v));
 }
-function flipMsForTier(tier: string, isBig = false): number {
-  const base = (() => {
-    switch (tier.toUpperCase()) {
-      case "ORANGE": return 380;
-      case "PURPLE": return 340;
-      case "BLUE":   return 300;
-      case "GREEN":  return 280;
-      default:       return 260;
-    }
-  })();
-  return isBig ? Math.round(base * 1.8) : base;
+
+function salaryOf(c: RevealableCard): number {
+  return Number(c.salary ?? 0);
 }
-function countMsForTier(tier: string, isAnchor = false): number {
-  const base = (() => {
-    switch (tier.toUpperCase()) {
-      case "ORANGE": return 600;
-      case "PURPLE": return 550;
-      case "BLUE":   return 500;
-      case "GREEN":  return 450;
-      default:       return 400;
-    }
-  })();
-  return isAnchor ? Math.round(base * ANCHOR_COUNT_MULTIPLIER) : base;
+
+/** Highest salary last; before that: all non-held (low→high), then held (low→high). */
+export function buildRevealOrder(cards: RevealableCard[]): RevealableCard[] {
+  if (cards.length === 0) return [];
+  let anchor = cards[0];
+  for (const c of cards) {
+    if (salaryOf(c) > salaryOf(anchor)) anchor = c;
+    else if (salaryOf(c) === salaryOf(anchor) && String(c.cardId) > String(anchor.cardId)) anchor = c;
+  }
+  const anchorId = anchor.cardId;
+  const nonHeldNonAnchor = cards
+    .filter(c => !c.wasHeld && c.cardId !== anchorId)
+    .sort((a, b) => salaryOf(a) - salaryOf(b));
+  const heldNonAnchor = cards
+    .filter(c => !!c.wasHeld && c.cardId !== anchorId)
+    .sort((a, b) => salaryOf(a) - salaryOf(b));
+  return [...nonHeldNonAnchor, ...heldNonAnchor, anchor];
+}
+
+function buildHeldRevealOrder(heldCards: RevealableCard[], globalAnchorId: string): RevealableCard[] {
+  const nonAnchor = heldCards
+    .filter(c => c.cardId !== globalAnchorId)
+    .sort((a, b) => salaryOf(a) - salaryOf(b));
+  const anchor = heldCards.find(c => c.cardId === globalAnchorId);
+  return anchor ? [...nonAnchor, anchor] : nonAnchor;
+}
+
+function glowFlashDurationMs(st: ShakeType): number {
+  if (st === "legendary" || st === "big") return 600;
+  if (st === "cold" || st === "frozen") return 200;
+  return 300;
+}
+
+function fpRollupMs(c: RevealableCard): number {
+  return (c.tier ?? "").toUpperCase() === "ORANGE" ? 700 : 400;
 }
 
 export function getShakeType(
@@ -105,11 +113,10 @@ export function getShakeType(
   const actual = Number(card.actualFp ?? 0);
   if (proj <= 0) return isAnchor ? "big" : null;
   const ratio = actual / proj;
-  if (ratio >= config.smokingHotRatio)  return "legendary";  // SMOKING HOT  >=1.6x
-  if (ratio >= config.onFireRatio)      return "big";        // ON FIRE      >=1.4x
-  if (ratio <= config.freezingRatio)    return "frozen";     // FREEZING     <=0.6x
-  if (ratio <= config.iceColdRatio)     return "cold";       // ICE COLD     <=0.8x
-  // Anchor gets no forced stamp — the card's actual performance determines the stamp
+  if (ratio >= config.smokingHotRatio)  return "legendary";
+  if (ratio >= config.onFireRatio)      return "big";
+  if (ratio <= config.freezingRatio)    return "frozen";
+  if (ratio <= config.iceColdRatio)     return "cold";
   return null;
 }
 
@@ -122,21 +129,20 @@ export function useEmotionalReveal(params: Params) {
   } = params;
 
   const [visibleFpMap,     setVisibleFpMap]     = useState<Map<string, number>>(new Map());
-  // 0→1 progress of the last card's FP rollup — used to drive gauge overshoot in sync
   const [lastCardProgress, setLastCardProgress] = useState(0);
-  // Actual FP of the last card — so gauge knows how big the overshoot should be
   const [lastCardFp, setLastCardFp]             = useState(0);
   const [shakeInfo,        setShakeInfo]         = useState<ShakeInfo>(null);
   const [visibleBadgesMap, setVisibleBadgesMap]  = useState<Map<string, Array<{id:string;icon:string;label:string;fp:number}>>>(new Map());
   const [activeRevealCardId, setActiveRevealCardId] = useState<string | null>(null);
-  // tap mode: tracks which unheld cards the user has tapped
   const [tappedCardIds, setTappedCardIds]       = useState<Set<string>>(new Set());
-  // tap mode: true after all held cards revealed (used to gate onAllComplete)
   const [heldFpVisible, setHeldFpVisible]       = useState(false);
-  // tap mode: set of held card IDs whose FP has been revealed (per-card sequential)
   const [heldRevealedIds, setHeldRevealedIds]   = useState<Set<string>>(new Set());
-  // tap mode: ref to the revealOne function so tapRevealCard can call it
-  const tapRevealFnRef = useRef<((cardId: string) => void) | null>(null);
+
+  const [glowCardId, setGlowCardId]             = useState<string | null>(null);
+  const [glowTier, setGlowTier]                 = useState<string>("WHITE");
+  const [glowDurationMs, setGlowDurationMs]     = useState(300);
+  const [visibleBadgeCountMap, setVisibleBadgeCountMap] = useState<Map<string, number>>(new Map());
+  const [stampRevealActiveId, setStampRevealActiveId] = useState<string | null>(null);
 
   const runIdRef  = useRef(0);
   const timersRef = useRef<number[]>([]);
@@ -155,27 +161,25 @@ export function useEmotionalReveal(params: Params) {
     setLastCardFp(0);
     setVisibleBadgesMap(new Map());
     setShakeInfo(null);
+    setGlowCardId(null);
+    setGlowTier("WHITE");
+    setGlowDurationMs(300);
+    setVisibleBadgeCountMap(new Map());
+    setStampRevealActiveId(null);
   }, [clearTimers]);
 
   const revealOrder = useMemo(() => {
-    // Tap mode: only reveal unheld cards; held cards show FP separately.
-    // Auto mode: also filters wasHeld since the auto effect guards it inline.
     const base = revealMode === "tap"
-      ? cards.filter(c => !(c as any).wasHeld)
+      ? cards.filter(c => !c.wasHeld)
       : cards;
-    return [...base].sort((a, b) => {
-      const salDiff = (a.salary ?? 0) - (b.salary ?? 0);
-      if (salDiff !== 0) return salDiff;
-      return (a.actualFp ?? 0) - (b.actualFp ?? 0);
-    });
+    return buildRevealOrder(base);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cards, revealMode]);
+
   const anchorCardId = revealOrder[revealOrder.length - 1]?.cardId ?? null;
 
-  // Pre-computed shake types — known before reveal starts, no timing dependency
   const cardShakeTypeMap = useMemo(() => {
     const m = new Map<string, ShakeType>();
-    // Keep map populated even after reveal completes so stamps stay visible
     const anchorId = revealOrder[revealOrder.length - 1]?.cardId;
     for (const c of cards) {
       m.set(c.cardId, getShakeType(c, c.cardId === anchorId, revealConfig));
@@ -208,24 +212,28 @@ export function useEmotionalReveal(params: Params) {
   }, [cards]);
 
   const flipMsMap = useMemo(() => {
-    const anchorId = revealOrder[revealOrder.length - 1]?.cardId;
     const m = new Map<string, number>();
     for (const c of cards) {
-      const isAnchor = c.cardId === anchorId;
-      const st       = getShakeType(c, isAnchor, revealConfig);
-      m.set(c.cardId, flipMsForTier(c.tier ?? "", st === "big"));
+      m.set(c.cardId, FLIP_MS);
     }
     return m;
-  }, [cards, revealOrder, revealConfig]);
+  }, [cards]);
 
   const fpCountUpMsMap = useMemo(() => {
-    const anchorId = revealOrder[revealOrder.length - 1]?.cardId;
     const m = new Map<string, number>();
     for (const c of cards) {
-      m.set(c.cardId, countMsForTier(c.tier ?? "", c.cardId === anchorId));
+      m.set(c.cardId, fpRollupMs(c));
     }
     return m;
-  }, [cards, revealOrder]);
+  }, [cards]);
+
+  const schedule = useCallback((myRunId: number, delay: number, fn: () => void) => {
+    const id = window.setTimeout(() => {
+      if (runIdRef.current !== myRunId) return;
+      fn();
+    }, delay);
+    timersRef.current.push(id);
+  }, []);
 
   const skipToEnd = useCallback(() => {
     clearTimers();
@@ -233,11 +241,13 @@ export function useEmotionalReveal(params: Params) {
     const myRunId = runIdRef.current;
     setShakeInfo(null);
     setActiveRevealCardId(null);
+    setGlowCardId(null);
+    setGlowTier("WHITE");
+    setGlowDurationMs(300);
+    setStampRevealActiveId(null);
+    setVisibleBadgeCountMap(new Map());
     setTappedCardIds(new Set(cards.map(c => c.cardId)));
 
-    // CONTINUATION PRINCIPLE: visibleFpMap is the source of truth for what the
-    // player has already seen. Capture it now — skipToEnd only adds to it, never resets it.
-    // This ensures the TierGauge never goes backward and FP never recounts from zero.
     const alreadyVisible = new Map<string, number>();
     setVisibleFpMap(prev => {
       const m = new Map<string, number>();
@@ -249,120 +259,200 @@ export function useEmotionalReveal(params: Params) {
       return m;
     });
 
-    // Badges ready to show once cards are front
     const badgeMap = new Map<string, Array<{id:string;icon:string;label:string;fp:number}>>();
     for (const c of cards) {
       if (c.badges?.length) badgeMap.set(c.cardId, c.badges);
     }
     setVisibleBadgesMap(badgeMap);
 
-    // Targets: each card rolls up from what was already visible to its actual FP
     const targets = new Map<string, number>();
     const total = cards.reduce((s, c) => {
       targets.set(c.cardId, Number(c.actualFp ?? 0));
       return s + Number(c.actualFp ?? 0);
     }, 0);
 
-    // Flip all unrevealed cards simultaneously
-    for (const c of cards) flipState.revealCard(c.cardId);
+    const anchorId = anchorCardId;
+    if (!anchorId) {
+      onAllComplete?.(total);
+      return;
+    }
 
-    const FLIP_DURATION_MS = 450;
-    const flipDone = window.setTimeout(() => {
+    const nonHeldIds = cards.filter(c => !c.wasHeld).map(c => c.cardId);
+    for (const id of nonHeldIds) flipState.revealCard(id);
+
+    schedule(myRunId, FLIP_MS, () => {
       if (runIdRef.current !== myRunId) return;
-      for (const c of cards) flipState.completeReveal(c.cardId);
+      for (const id of nonHeldIds) flipState.completeReveal(id);
 
-      // Roll up from each card's already-visible value to its actual FP
-      const ROLL_MS = 600;
-      const startTime = performance.now();
+      const nextFp = new Map<string, number>();
+      for (const c of cards) {
+        if (c.cardId === anchorId) continue;
+        nextFp.set(c.cardId, targets.get(c.cardId) ?? 0);
+      }
+      setVisibleFpMap(prev => {
+        const m = new Map(prev);
+        for (const [id, v] of nextFp) m.set(id, v);
+        return m;
+      });
 
-      const tick = () => {
+      const heldNonAnchor = cards.filter(c => c.wasHeld && c.cardId !== anchorId);
+      if (heldNonAnchor.length === 0) {
+        runAnchorSkipSequence(myRunId, anchorId, total);
+        return;
+      }
+      for (const c of heldNonAnchor) flipState.revealCard(c.cardId);
+      schedule(myRunId, FLIP_MS, () => {
         if (runIdRef.current !== myRunId) return;
-        const elapsed = performance.now() - startTime;
-        const progress = Math.min(elapsed / ROLL_MS, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        const frame = new Map<string, number>();
-        for (const [id, target] of targets) {
-          const start = alreadyVisible.get(id) ?? 0;
-          // Only count up the delta — never go below what was already shown
-          frame.set(id, Math.round((start + (target - start) * eased) * 10) / 10);
-        }
-        setVisibleFpMap(frame);
-        if (progress < 1) {
-          const t = window.setTimeout(tick, 16);
-          timersRef.current.push(t);
-        } else {
-          setVisibleFpMap(new Map(targets));
-          setHeldFpVisible(true);
-          onAllComplete?.(total);
-        }
-      };
-      tick();
-    }, FLIP_DURATION_MS);
-    timersRef.current.push(flipDone);
-  }, [cards, flipState, clearTimers, onAllComplete]);
+        for (const c of heldNonAnchor) flipState.completeReveal(c.cardId);
+        setVisibleFpMap(prev => {
+          const m = new Map(prev);
+          for (const c of heldNonAnchor) {
+            m.set(c.cardId, targets.get(c.cardId) ?? 0);
+          }
+          return m;
+        });
+        runAnchorSkipSequence(myRunId, anchorId, total);
+      });
+    });
 
-  // ── Core reveal function — runs one card through flip + FP rollup ──────────
-  // Shared by both auto and tap modes.
-  function runCardReveal(
+    function runAnchorSkipSequence(
+      rid: number,
+      aid: string,
+      tot: number,
+    ) {
+      const anchorCard = cards.find(c => c.cardId === aid);
+      if (!anchorCard) {
+        setHeldFpVisible(true);
+        onAllComplete?.(tot);
+        return;
+      }
+      const anchorSkipFlip = !anchorCard.wasHeld;
+      runCardRevealSequence(anchorCard, true, rid, () => {
+        setHeldFpVisible(true);
+        onAllComplete?.(tot);
+      }, anchorSkipFlip);
+    }
+  }, [cards, flipState, clearTimers, onAllComplete, anchorCardId, schedule]);
+
+  function runCardRevealSequence(
     c: RevealableCard,
     isAnchor: boolean,
     myRunId: number,
     onDone: () => void,
-    skipFlip = false   // held cards are already FRONT — skip the 3D flip
+    skipFlip: boolean,
   ) {
     const st          = getShakeType(c, isAnchor, revealConfig);
-    const flipMs      = skipFlip ? 0 : flipMsForTier(c.tier ?? "", st === "big");
-    const countMs     = countMsForTier(c.tier ?? "", isAnchor);
-    const anchorDelay = isAnchor ? ANCHOR_PRE_FLIP_PAUSE_MS : 0;
-    const shakePre    = st !== null ? SHAKE_DURATION_MS : 0;
-    const totalPre    = skipFlip ? 0 : (shakePre + anchorDelay);
+    const glowMs      = glowFlashDurationMs(st);
+    const countMs     = fpRollupMs(c);
+    const badgeList   = c.badges ?? [];
+    const nBadges     = badgeList.length;
 
-    if (st !== null) setShakeInfo({ cardId: c.cardId, type: st });
+    setShakeInfo(null);
     setActiveRevealCardId(c.cardId);
 
-    const t0 = window.setTimeout(() => {
-      if (runIdRef.current !== myRunId) return;
-      if (!skipFlip) flipState.revealCard(c.cardId);
+    const target = Math.max(0, Number(c.actualFp ?? 0));
 
-      const t1 = window.setTimeout(() => {
+    const afterFp = () => {
+      setVisibleFpMap(prev => new Map(prev).set(c.cardId, target));
+      if (isAnchor) {
+        setLastCardProgress(1);
+        setLastCardFp(target);
+      }
+      setVisibleBadgesMap(prev => new Map(prev).set(c.cardId, c.badges ?? []));
+      setVisibleBadgeCountMap(prev => {
+        const m = new Map(prev);
+        m.delete(c.cardId);
+        return m;
+      });
+      onCardComplete?.(c.cardId);
+      schedule(myRunId, BETWEEN_CARDS_PAUSE_MS, () => {
         if (runIdRef.current !== myRunId) return;
-        setShakeInfo(null);
-        if (!skipFlip) flipState.completeReveal(c.cardId);
+        onDone();
+      });
+    };
 
-        const start  = nowMs();
-        const target = Math.max(0, Number(c.actualFp ?? 0));
-        if (isAnchor) setLastCardFp(target);
-        const tick = () => {
-          if (runIdRef.current !== myRunId) return;
-          const elapsed = clamp((nowMs() - start) / Math.max(1, countMs), 0, 1);
-          const eased   = 1 - Math.pow(1 - elapsed, 3);
-          const val     = Math.round(target * eased * 10) / 10;
-          setVisibleFpMap(prev => new Map(prev).set(c.cardId, val));
-          if (isAnchor) setLastCardProgress(elapsed);
-          if (elapsed < 1) {
-            const tt = window.setTimeout(tick, 16);
-            timersRef.current.push(tt);
-          } else {
-            setVisibleFpMap(prev => new Map(prev).set(c.cardId, target));
-            const cardBadges = c.badges ?? [];
-            if (cardBadges.length > 0) {
-              setVisibleBadgesMap(prev => new Map(prev).set(c.cardId, cardBadges));
-            }
-            const badgeMs  = cardBadges.length > 0 ? 400 + (cardBadges.length - 1) * 120 : 0;
-            const stampMs  = st !== null ? 300 : 0;
-            const doneT = window.setTimeout(() => {
-              if (runIdRef.current !== myRunId) return;
-              onCardComplete?.(c.cardId);
-              onDone();
-            }, badgeMs + stampMs);
-            timersRef.current.push(doneT);
-          }
-        };
-        tick();
-      }, flipMs);
-      timersRef.current.push(t1);
-    }, totalPre);
-    timersRef.current.push(t0);
+    const startFpRollup = () => {
+      const start = nowMs();
+      const tick = () => {
+        if (runIdRef.current !== myRunId) return;
+        const elapsed = clamp((nowMs() - start) / Math.max(1, countMs), 0, 1);
+        const eased   = 1 - Math.pow(1 - elapsed, 3);
+        const val     = Math.round(target * eased * 10) / 10;
+        setVisibleFpMap(prev => new Map(prev).set(c.cardId, val));
+        if (isAnchor) {
+          setLastCardProgress(elapsed);
+          setLastCardFp(target);
+        }
+        if (elapsed < 1) {
+          schedule(myRunId, 16, tick);
+        } else {
+          setVisibleFpMap(prev => new Map(prev).set(c.cardId, target));
+          afterFp();
+        }
+      };
+      tick();
+    };
+
+    const doStampOrFp = () => {
+      if (st === null) {
+        startFpRollup();
+        return;
+      }
+      setStampRevealActiveId(c.cardId);
+      schedule(myRunId, STAMP_MS, () => {
+        if (runIdRef.current !== myRunId) return;
+        setStampRevealActiveId(null);
+        startFpRollup();
+      });
+    };
+
+    const doBadges = () => {
+      if (nBadges === 0) {
+        doStampOrFp();
+        return;
+      }
+      let idx = 0;
+      const step = () => {
+        if (runIdRef.current !== myRunId) return;
+        idx++;
+        setVisibleBadgeCountMap(prev => new Map(prev).set(c.cardId, idx));
+        if (idx < nBadges) {
+          schedule(myRunId, BADGE_STAGGER_MS, step);
+        } else {
+          doStampOrFp();
+        }
+      };
+      schedule(myRunId, 0, step);
+    };
+
+    const doGlow = () => {
+      setGlowDurationMs(glowMs);
+      setGlowCardId(c.cardId);
+      setGlowTier((c.tier ?? "WHITE").toUpperCase());
+      schedule(myRunId, glowMs, () => {
+        if (runIdRef.current !== myRunId) return;
+        setGlowCardId(null);
+        setGlowTier("WHITE");
+        setGlowDurationMs(300);
+        doBadges();
+      });
+    };
+
+    const afterFlip = () => {
+      const pre = isAnchor ? ANCHOR_PRE_FLIP_PAUSE_MS : 0;
+      schedule(myRunId, pre, doGlow);
+    };
+
+    if (!skipFlip) {
+      flipState.revealCard(c.cardId);
+      schedule(myRunId, FLIP_MS, () => {
+        if (runIdRef.current !== myRunId) return;
+        flipState.completeReveal(c.cardId);
+        afterFlip();
+      });
+    } else {
+      afterFlip();
+    }
   }
 
   // ── AUTO mode ─────────────────────────────────────────────────────────────
@@ -376,27 +466,36 @@ export function useEmotionalReveal(params: Params) {
     const anchorId = revealOrder[revealOrder.length - 1]?.cardId;
     flipState.beginReveal();
 
-    const revealOne = (idx: number) => {
-      if (runIdRef.current !== myRunId) return;
-      const c = revealOrder[idx];
-      if (!c) {
-        setActiveRevealCardId(null);
-        setShakeInfo(null);
-        const total = revealOrder.reduce((s, x) => s + Number(x.actualFp ?? 0), 0);
-        onAllComplete?.(total);
-        return;
-      }
-      runCardReveal(c, c.cardId === anchorId, myRunId, () => revealOne(idx + 1));
-    };
+    const nonHeldIds = cards.filter(c => !c.wasHeld).map(c => c.cardId);
+    for (const id of nonHeldIds) flipState.revealCard(id);
 
-    revealOne(0);
+    schedule(myRunId, FLIP_MS, () => {
+      if (runIdRef.current !== myRunId) return;
+      for (const id of nonHeldIds) flipState.completeReveal(id);
+
+      const revealOne = (idx: number) => {
+        if (runIdRef.current !== myRunId) return;
+        const card = revealOrder[idx];
+        if (!card) {
+          setActiveRevealCardId(null);
+          setShakeInfo(null);
+          setGlowCardId(null);
+          setGlowDurationMs(300);
+          const total = cards.reduce((s, x) => s + Number(x.actualFp ?? 0), 0);
+          onAllComplete?.(total);
+          return;
+        }
+        const isAnchor = card.cardId === anchorId;
+        const skipFlip = !card.wasHeld;
+        runCardRevealSequence(card, isAnchor, myRunId, () => revealOne(idx + 1), skipFlip);
+      };
+      revealOne(0);
+    });
     return () => { clearTimers(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive, revealMode]);
 
   // ── TAP mode ──────────────────────────────────────────────────────────────
-  // On activation: just wait. Cards sit face-down. User taps each unheld card.
-  // Edge case: if ALL cards are held, skip tap phase and reveal held cards directly.
   useEffect(() => {
     if (!isActive || revealMode !== "tap") return;
     reset();
@@ -405,7 +504,6 @@ export function useEmotionalReveal(params: Params) {
     setHeldRevealedIds(new Set());
     flipState.beginReveal();
 
-    // All-held edge case: no unheld cards to tap, reveal immediately
     const myRunId = runIdRef.current;
     if (revealOrder.length === 0) {
       revealHeldCards(myRunId);
@@ -415,61 +513,57 @@ export function useEmotionalReveal(params: Params) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive, revealMode]);
 
-  // ── revealHeldCards: sequential FP reveal for held cards ─────────────────
-  // Reveals held cards one by one lowest→highest salary via runCardReveal,
-  // so the last (highest) card drives the tier gauge exactly like auto mode.
   function revealHeldCards(myRunId: number) {
-    const PRE_PAUSE_MS = 800; // suspense pause before first held card
-
-    const heldCards = [...cards.filter(x => (x as any).wasHeld)]
-      .sort((a, b) => (Number(a.salary ?? 0)) - (Number(b.salary ?? 0)));
-
-    if (heldCards.length === 0) {
+    const PRE_PAUSE_MS = 800;
+    const globalAnchorId = anchorCardId;
+    if (!globalAnchorId) {
       const total = cards.reduce((s, x) => s + Number(x.actualFp ?? 0), 0);
       onAllComplete?.(total);
       return;
     }
 
-    // Last held card = anchor: gets 1.5x count time and drives the gauge
-    const anchorId = heldCards[heldCards.length - 1].cardId;
+    const heldCards = cards.filter(x => !!x.wasHeld);
+    const heldOrder = buildHeldRevealOrder(heldCards, globalAnchorId);
 
-    // Chain reveals sequentially: each card calls revealOne(i+1) when done
+    if (heldOrder.length === 0) {
+      const total = cards.reduce((s, x) => s + Number(x.actualFp ?? 0), 0);
+      onAllComplete?.(total);
+      return;
+    }
+
     const revealOne = (idx: number) => {
       if (runIdRef.current !== myRunId) return;
-      const hc = heldCards[idx];
+      const hc = heldOrder[idx];
       if (!hc) {
-        // All done
         setActiveRevealCardId(null);
         setShakeInfo(null);
+        setGlowCardId(null);
+        setGlowDurationMs(300);
         setHeldFpVisible(true);
         const total = cards.reduce((s, x) => s + Number(x.actualFp ?? 0), 0);
         onAllComplete?.(total);
         return;
       }
-      // Mark this card as revealed (shows FP strip)
       setHeldRevealedIds(prev => new Set(prev).add(hc.cardId));
-      // Run the full flip+rollup reveal for this held card
-      runCardReveal(hc, hc.cardId === anchorId, myRunId, () => {
+      const isAnchor = hc.cardId === globalAnchorId;
+      runCardRevealSequence(hc, isAnchor, myRunId, () => {
         onCardComplete?.(hc.cardId);
         revealOne(idx + 1);
       }, true);
     };
 
-    // Pre-pause before first held card
-    window.setTimeout(() => {
+    schedule(myRunId, PRE_PAUSE_MS, () => {
       if (runIdRef.current !== myRunId) return;
       revealOne(0);
-    }, PRE_PAUSE_MS);
+    });
   }
 
-  // tapRevealCard: called when user taps an unheld card in tap mode.
-  // Only acts if card hasn't been tapped yet and reveal is active.
   const tapRevealCard = useCallback((cardId: string) => {
     if (!isActive || revealMode !== "tap") return;
     if (tappedCardIds.has(cardId)) return;
 
     const myRunId  = runIdRef.current;
-    const unheldCards = revealOrder; // revealOrder only contains unheld cards
+    const unheldCards = revealOrder;
     const anchorId = unheldCards[unheldCards.length - 1]?.cardId;
     const c = unheldCards.find(x => x.cardId === cardId);
     if (!c) return;
@@ -478,22 +572,21 @@ export function useEmotionalReveal(params: Params) {
     setTappedCardIds(newTapped);
     const isLast = newTapped.size === unheldCards.length;
 
-    runCardReveal(c, c.cardId === anchorId, myRunId, () => {
+    runCardRevealSequence(c, c.cardId === anchorId, myRunId, () => {
       if (isLast) {
         setActiveRevealCardId(null);
         setShakeInfo(null);
+        setGlowCardId(null);
         if (params.onBeforeHeldReveal) {
           params.onBeforeHeldReveal(() => revealHeldCards(myRunId));
         } else {
           revealHeldCards(myRunId);
         }
       }
-    });
+    }, false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive, revealMode, tappedCardIds, revealOrder, cards]);
 
-  // performanceTagMap — neutral ratio bucket, sport-agnostic labels.
-  // Each sport's GameView can use this or ignore it; nothing in shared renders it.
   const performanceTagMap = useMemo(() => {
     const m = new Map<string, string>();
     for (const c of cards) {
@@ -526,12 +619,16 @@ export function useEmotionalReveal(params: Params) {
     visibleBadgesMap,
     activeRevealCardId,
     clearActiveCard: () => setActiveRevealCardId(null),
-    // tap mode
     tapRevealCard,
     heldFpVisible,
     heldRevealedIds,
     tappedCardIds,
     anchorCardId,
+    glowCardId,
+    glowTier,
+    glowDurationMs,
+    visibleBadgeCountMap,
+    stampRevealActiveId,
   };
 }
 
