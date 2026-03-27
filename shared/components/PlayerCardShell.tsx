@@ -412,27 +412,28 @@ export function PlayerCardShell(props: CardShellProps) {
         <div className="pcs-face">
           {renderFront(frontProps)}
         </div>
-        {glowActive && (
-          <div
-            key={`glow-${(card as any).cardId}-${glowTier}-${Date.now()}`}
-            style={{
-              position: "absolute",
-              inset: 0,
-              borderRadius: 18,
-              pointerEvents: "none",
-              zIndex: 200,
-              boxShadow: tierToGlowShadow((card as any).tier ?? glowTier ?? "WHITE"),
-              animation: `pcsGlowFlash ${glowDurationMs ?? 300}ms ease-in-out forwards`,
-            }}
-          />
-        )}
         <div className="pcs-face pcs-face-back">
           {canFlip
             ? renderBack({ card, stableCard })
             : <CardBackGeneric />
           }
         </div>
-      </div>
+      </div>{/* end pcs-inner */}
+      {glowActive && (
+        <div
+          key={`glow-${(card as any).cardId}-${glowTier}`}
+          style={{
+            position: "absolute",
+            inset: -8,
+            borderRadius: 26,
+            pointerEvents: "none",
+            zIndex: 999,
+            outline: "4px solid red",
+            boxShadow: tierToGlowShadow((card as any).tier ?? glowTier ?? "WHITE"),
+            animation: `pcsGlowFlash ${glowDurationMs ?? 300}ms ease-in-out forwards`,
+          }}
+        />
+      )}
     </div>
   );
 }

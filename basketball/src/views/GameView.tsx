@@ -501,6 +501,7 @@ const [streak, setStreak] = useState<number>(() =>
   // Zone 2: Derived values
   const phase: GamePhase = useMemo(() => {
     if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION" || gameState === "REVEALING") return "RESULTS";
+    if (gameState === "DRAWING") return "DRAWING";
     return "HOLD";
   }, [gameState]);
 

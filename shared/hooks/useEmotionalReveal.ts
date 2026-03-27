@@ -311,6 +311,7 @@ export function useEmotionalReveal(params: Params) {
     skipFlip = false,   // held cards are already FRONT — skip the 3D flip
     isSkip = false
   ) {
+    console.log("[Reveal] runCardReveal called", c.cardId, c.tier, "myRunId:", myRunId, "currentRunId:", runIdRef.current);
     const st          = getShakeType(c, isAnchor, revealConfig);
     const flipMs = skipFlip ? 0 : flipMsForTier(c.tier ?? "", st === "big");
     const countMs = isSkip
@@ -325,10 +326,12 @@ export function useEmotionalReveal(params: Params) {
 
     const t0 = window.setTimeout(() => {
       if (runIdRef.current !== myRunId) return;
+      console.log("[Reveal] t0 fired ok", c.cardId);
       if (!skipFlip) flipState.revealCard(c.cardId);
 
       const t1 = window.setTimeout(() => {
         if (runIdRef.current !== myRunId) return;
+        console.log("[Reveal] t1 fired ok — about to call onCardRevealStart", c.cardId, c.tier);
         setShakeInfo(null);
         if (!skipFlip) flipState.completeReveal(c.cardId);
         onCardRevealStart?.(c.cardId, c.tier ?? "WHITE");

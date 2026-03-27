@@ -119,6 +119,7 @@ export interface CardFrontHeroProps {
 
 export interface CardFrontProps {
   card: PlayerCard;
+  stableCard?: PlayerCard;
   phase: GamePhase;
   isLocked: boolean;
   isMvp: boolean;
@@ -143,7 +144,7 @@ export interface CardFrontProps {
 
 export function CardFront(props: CardFrontProps) {
   const {
-    card, phase, isLocked, visibleFp, isRevealing, revealActive,
+    card, stableCard, phase, isLocked, visibleFp, isRevealing, revealActive,
     isFlipped, heldFpVisible, isTapTarget,
     pulse, fpCountUpMs, stamp, onRollComplete, badges, renderHero,
   } = props;
@@ -161,13 +162,10 @@ export function CardFront(props: CardFrontProps) {
   const salary    = Number((card as any)?.salary ?? 0);
   const proj      = Number((card as any)?.projectedFp ?? 0);
   const isHeldCard  = !!(card as any).wasHeld;
+  const isDrawing   = phase === ("DRAWING" as any);
   const isPreReveal = !!(isRevealing && !isHeldCard && visibleFp === undefined);
-  // showResults: whether actual FP is visible (post-reveal or held after all revealed)
   const showResults = !isPreReveal && (phase === "RESULTS" || isHeldCard);
-  // showTierColors: hide tier gradient/border/text when card back is showing
-  // Exception: show during active reveal (card is mid-flip from back to front)
-  // revealActive = this card is the one currently being flipped in REVEALING phase
-  const showTierColors = (!isFlipped && !isPreReveal) || revealActive || isLocked;
+  const showTierColors = (!isFlipped && !isPreReveal) || revealActive || isLocked || isRevealing || isDrawing;
 
   const [displayedFp,  setDisplayedFp]  = useState(0);
   const [isRolling,    setIsRolling]    = useState(false);
@@ -243,7 +241,7 @@ export function CardFront(props: CardFrontProps) {
   const pulsePal     = pulsePalette(pulse);
   const showPulse    = !!pulse && pulse !== "NEUTRAL" && hasRevealed;
 
-  const cardSalary = Number((card as any)?.salary ?? 0);
+  const cardSalary = Number((stableCard as any)?.salary ?? (card as any)?.salary ?? 0);
   const derivedTier = cardSalary >= 52 ? "ORANGE" : cardSalary >= 40 ? "PURPLE" : cardSalary >= 28 ? "BLUE" : cardSalary >= 16 ? "GREEN" : "WHITE";
   const tier         = getTier(derivedTier);
   const isWhiteTier  = derivedTier === "WHITE";
