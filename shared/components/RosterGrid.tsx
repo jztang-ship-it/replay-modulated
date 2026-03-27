@@ -90,6 +90,7 @@ type Props = {
   glowCardId?: string | null;
   glowTier?: string;
   glowDurationMs?: number;
+  isSkipping?: boolean;
   ftueLockedSlot?: number | null;  // FTUE: slot index that stays lit; all others dim
   ftueFlipTargetId?: string | null; // FTUE: show TAP hint on this card in RESULTS
 };
@@ -104,6 +105,7 @@ export function RosterGrid(props: Props) {
     shakingCardId, shakeType, cardShakeTypeMap, visibleBadgesMap, activeRevealCardId, ftueDimmedSlots,
     revealMode = "auto", onTapReveal, heldFpVisible = false, heldRevealedIds, tappedCardIds, isRevealingPhase = false, ftueLockedSlot = null, ftueFlipTargetId = null,
     glowCardId, glowTier, glowDurationMs,
+    isSkipping = false,
   } = props;
 
   const cards = useMemo(() => {
@@ -215,7 +217,7 @@ export function RosterGrid(props: Props) {
                   ((visibleBadgesMap?.get(id)?.length ?? 0) >= 2) ? 1 : 0
                 ) : 0
               }
-              isDimmed={activeRevealCardId !== null && activeRevealCardId !== id}
+              isDimmed={!isSkipping && activeRevealCardId !== null && activeRevealCardId !== id}
             />
           </div>
         );

@@ -136,6 +136,7 @@ export function useEmotionalReveal(params: Params) {
   const [shakeInfo,        setShakeInfo]         = useState<ShakeInfo>(null);
   const [visibleBadgesMap, setVisibleBadgesMap]  = useState<Map<string, Array<{id:string;icon:string;label:string;fp:number}>>>(new Map());
   const [activeRevealCardId, setActiveRevealCardId] = useState<string | null>(null);
+  const [isSkipping, setIsSkipping] = useState(false);
   // tap mode: tracks which unheld cards the user has tapped
   const [tappedCardIds, setTappedCardIds]       = useState<Set<string>>(new Set());
   // tap mode: true after all held cards revealed (used to gate onAllComplete)
@@ -158,6 +159,7 @@ export function useEmotionalReveal(params: Params) {
     setActiveRevealCardId(null);
     runIdRef.current++;
     isSkippingRef.current = false;
+    setIsSkipping(false);
     clearTimers();
     setVisibleFpMap(new Map());
     setLastCardProgress(0);
@@ -241,6 +243,7 @@ export function useEmotionalReveal(params: Params) {
     runIdRef.current++;
     const myRunId = runIdRef.current;
     isSkippingRef.current = true;
+    setIsSkipping(true);
 
     setShakeInfo(null);
     setActiveRevealCardId(null);
@@ -277,6 +280,8 @@ export function useEmotionalReveal(params: Params) {
         if (!c) {
           setActiveRevealCardId(null);
           setShakeInfo(null);
+          isSkippingRef.current = false;
+          setIsSkipping(false);
           setHeldFpVisible(true);
           const total = cards.reduce((s, x) => s + Number(x.actualFp ?? 0), 0);
           onAllComplete?.(total);
@@ -533,6 +538,7 @@ export function useEmotionalReveal(params: Params) {
     heldRevealedIds,
     tappedCardIds,
     anchorCardId,
+    isSkipping,
     isSkippingRef,
   };
 }

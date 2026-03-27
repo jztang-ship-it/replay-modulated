@@ -37,7 +37,6 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
       transform-style: preserve-3d;
       transition: transform var(--flip-ms, 450ms) cubic-bezier(0.4, 0.0, 0.2, 1);
       will-change: transform;
-      background: #0a0c10;
       border-radius: 18px;
     }
     .pcs-inner.no-transition { transition: none !important; }
@@ -120,10 +119,10 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
     .pcs-tap-bounce { animation: pcsTapBounce 1.4s ease-in-out infinite; }
     @keyframes pcsTapHintPulse { 0%,100%{opacity:.4} 50%{opacity:.9} }
     @keyframes pcsGlowFlash {
-      0%   { opacity: 0; }
-      20%  { opacity: 1; }
-      80%  { opacity: 1; }
-      100% { opacity: 0; }
+      0%   { opacity: 0; transform: scale(0.95); }
+      15%  { opacity: 1; transform: scale(1.02); }
+      80%  { opacity: 1; transform: scale(1.0); }
+      100% { opacity: 0; transform: scale(1.0); }
     }
   `;
   document.head.appendChild(style);
@@ -212,6 +211,16 @@ function tierToGlowFile(tier: string): string {
   return "white";
 }
 
+function tierToGlowShadow(tier: string): string {
+  const t = tier?.toUpperCase();
+  console.log("[Glow][PlayerCardShell] tierToGlowShadow input", { tier, normalized: t });
+  if (t === "ORANGE") return "0 0 12px 4px #ff8c00, 0 0 32px 8px #ff6600, 0 0 60px 16px #ff440066";
+  if (t === "PURPLE") return "0 0 12px 4px #c084fc, 0 0 32px 8px #a855f7, 0 0 60px 16px #7c3aed66";
+  if (t === "BLUE")   return "0 0 12px 4px #60a5fa, 0 0 32px 8px #3b82f6, 0 0 60px 16px #1d4ed866";
+  if (t === "GREEN")  return "0 0 12px 4px #4ade80, 0 0 32px 8px #22c55e, 0 0 60px 16px #15803d66";
+  return "0 0 12px 4px #e2e8f0, 0 0 32px 8px #cbd5e1, 0 0 60px 16px #94a3b866";
+}
+
 // ── PlayerCardShell ────────────────────────────────────────────────────────
 
 export function PlayerCardShell(props: CardShellProps) {
@@ -231,6 +240,12 @@ export function PlayerCardShell(props: CardShellProps) {
   } = props;
 
   const id = String((card as any).cardId ?? "");
+  console.log("[Glow][PlayerCardShell] render gate", {
+    cardId: id,
+    glowActive,
+    glowTier,
+    glowDurationMs,
+  });
 
   // ── Economy freeze ────────────────────────────────────────────────────
   const economyRef = useRef<Map<string, { tier: any; salary: any; projectedFp: any; headshotUrl: any }>>(new Map());
@@ -396,22 +411,21 @@ export function PlayerCardShell(props: CardShellProps) {
       <div className={innerClass} style={innerStyle}>
         <div className="pcs-face">
           {renderFront(frontProps)}
-          {glowActive && (
-            <img
-              src={`/glow-${tierToGlowFile(glowTier ?? "WHITE")}.png`}
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                mixBlendMode: "screen",
-                pointerEvents: "none",
-                animation: `pcsGlowFlash ${glowDurationMs ?? 300}ms ease-in-out forwards`,
-                zIndex: 20,
-              }}
-            />
-          )}
         </div>
+        {glowActive && (
+          <div
+            key={`glow-${(card as any).cardId}-${glowTier}-${Date.now()}`}
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: 18,
+              pointerEvents: "none",
+              zIndex: 200,
+              boxShadow: tierToGlowShadow((card as any).tier ?? glowTier ?? "WHITE"),
+              animation: `pcsGlowFlash ${glowDurationMs ?? 300}ms ease-in-out forwards`,
+            }}
+          />
+        )}
         <div className="pcs-face pcs-face-back">
           {canFlip
             ? renderBack({ card, stableCard })

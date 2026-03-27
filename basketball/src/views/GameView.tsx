@@ -149,18 +149,21 @@ function createPlaceholders(): PlayerCard[] {
 }
 
 function toRevealableCards(cards: PlayerCard[]): RevealableCard[] {
-  return cards.map(c => ({
-    cardId: cardId(c),
-    slotIndex: c.slotIndex ?? 0,
-    actualFp: Number(c.actualFp ?? 0),
-    projectedFp: Number(c.projectedFp ?? 0),
-    salary: Number((c as any).salary ?? 0),
-    tier: (c as any).tier ?? "WHITE",
-    wasHeld: (c as any).wasHeld ?? false,
-    badges: (c.achievements ?? []).map((a: any) => ({
-      id: a.id, icon: a.icon || "⭐", label: a.label, fp: a.fp || 0,
-    })),
-  }));
+  return cards.map(c => {
+    console.log("[toRevealable] card tier:", (c as any).tier, "cardId:", (c as any).cardId);
+    return {
+      cardId: cardId(c),
+      slotIndex: c.slotIndex ?? 0,
+      actualFp: Number(c.actualFp ?? 0),
+      projectedFp: Number(c.projectedFp ?? 0),
+      salary: Number((c as any).salary ?? 0),
+      tier: (c as any).tier ?? "WHITE",
+      wasHeld: (c as any).wasHeld ?? false,
+      badges: (c.achievements ?? []).map((a: any) => ({
+        id: a.id, icon: a.icon || "⭐", label: a.label, fp: a.fp || 0,
+      })),
+    };
+  });
 }
 
 // ── RollingNumber — animates between numeric values ──────────────────────
@@ -368,9 +371,9 @@ export default function GameView() {
   const [ftueResultsDim,     setFtueResultsDim]     = useState(false);
   const [ftueBookerFlipped,  setFtueBookerFlipped]  = useState(false);
   const [ftueOscillating,          setFtueOscillating]          = useState(false);
-  const [glowCardId, setGlowCardId] = useState<string | null>(null);
-  const [glowTier, setGlowTier] = useState<string>("WHITE");
-  const [glowDurationMs, setGlowDurationMs] = useState(300);
+  const [glowState, setGlowState] = useState<{ cardId: string | null; tier: string; durationMs: number }>({
+    cardId: null, tier: "WHITE", durationMs: 300
+  });
   /** After FTUE scripted gauge animation completes — bar stays frozen until next hand */
   const [ftueGaugeOscDone,         setFtueGaugeOscDone]         = useState(false);
   const [ftueWinCelebrationActive, setFtueWinCelebrationActive] = useState(false);
@@ -405,16 +408,26 @@ const [streak, setStreak] = useState<number>(() =>
   const gameAnalytics   = useGameAnalytics("basketball");
 
   function handleCardRevealStart(cardId: string, tierArg: string) {
-    setGlowCardId(cardId);
-    setGlowTier(tierArg ?? "WHITE");
-    // High tier (ORANGE/PURPLE) keeps full glow duration even on skip
-    // All other tiers get 150ms flat when skipping
-    const tier = tierArg?.toUpperCase();
+    const tier = tierArg?.toUpperCase() ?? "WHITE";
     const isHighTier = tier === "ORANGE" || tier === "PURPLE";
     const normalDuration = tier === "ORANGE" ? 600 : tier === "PURPLE" ? 500 : 300;
     const duration = isSkippingRef.current && !isHighTier ? 150 : normalDuration;
-    setGlowDurationMs(duration);
-    setTimeout(() => setGlowCardId(null), duration + 50);
+    console.log("[Glow][GameView] handleCardRevealStart", {
+      cardId,
+      tierArg,
+      tier,
+      isHighTier,
+      normalDuration,
+      duration,
+      isSkipping: isSkippingRef.current,
+    });
+    // Force a null flash first so React sees a genuine state change
+    // even if the same card fires twice in a row
+    setGlowState({ cardId: null, tier, durationMs: duration });
+    requestAnimationFrame(() => {
+      setGlowState({ cardId, tier, durationMs: duration });
+      setTimeout(() => setGlowState(prev => ({ ...prev, cardId: null })), duration + 50);
+    });
   }
 
   const {
@@ -434,6 +447,7 @@ const [streak, setStreak] = useState<number>(() =>
     shakeInfo,
     cardShakeTypeMap,
     activeRevealCardId,
+    isSkipping,
     isSkippingRef,
     clearActiveCard,
     visibleBadgesMap,
@@ -938,9 +952,10 @@ const [streak, setStreak] = useState<number>(() =>
   shakeType={shakeInfo?.type ?? null}
   cardShakeTypeMap={cardShakeTypeMap}
   visibleBadgesMap={visibleBadgesMap}
-  glowCardId={glowCardId}
-  glowTier={glowTier}
-  glowDurationMs={glowDurationMs}
+  glowCardId={glowState.cardId}
+  glowTier={glowState.tier}
+  glowDurationMs={glowState.durationMs}
+  isSkipping={isSkipping}
   activeRevealCardId={activeRevealCardId}
   onToggleLock={toggleLock}
   onToggleFlip={toggleStatsFlip}
