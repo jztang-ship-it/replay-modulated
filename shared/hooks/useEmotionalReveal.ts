@@ -413,9 +413,11 @@ export function useEmotionalReveal(params: Params) {
               const tt = window.setTimeout(driveTick, gaugeTickInterval);
               timersRef.current.push(tt);
             } else {
-              // driveTick complete. Do NOT set visibleFpMap to target —
-              // that second change re-triggers CardFront useEffect and causes double rollup.
-              // CardFront's RAF already animates to actual independently.
+              // driveTick complete. Set final value so runningTotalFp/TierGauge updates.
+              // CardFront is protected from re-animating by two guards:
+              //   1. animatingRef stays true after animation ends (never reset)
+              //   2. rollComplete guard returns early if animation already finished
+              setVisibleFpMap(prev => new Map(prev).set(c.cardId, target));
               if (isAnchor) setLastCardProgress(1);
               const cardBadges = c.badges ?? [];
               if (cardBadges.length > 0) {
