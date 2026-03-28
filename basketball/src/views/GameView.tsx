@@ -466,7 +466,6 @@ const [streak, setStreak] = useState<number>(() =>
     visibleBadgesMap,
     skipToEnd: skipReveal,
     reset: resetReveal,
-    notifyRollComplete,
   } = useEmotionalReveal({
     cards: revealableCards,
     isActive: gameState === "REVEALING",
@@ -973,7 +972,6 @@ const [streak, setStreak] = useState<number>(() =>
   glowTier={glowState.tier}
   glowDurationMs={glowState.durationMs}
   isSkipping={isSkipping}
-  onCardRollComplete={notifyRollComplete}
   activeRevealCardId={activeRevealCardId}
   onToggleLock={toggleLock}
   onToggleFlip={toggleStatsFlip}
