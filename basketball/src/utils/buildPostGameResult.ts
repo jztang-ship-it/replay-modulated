@@ -20,7 +20,7 @@ import type {
     STARTER:  160,
     ALL_STAR: 183,
     MVP:      207,
-    BONUS_POOL: 225,
+    BONUS_POOL:  225,
   };
   
   function getNextTier(tier: WinTier): WinTier | null {

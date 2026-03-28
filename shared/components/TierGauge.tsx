@@ -128,9 +128,9 @@ export function TierGauge({
   const onFtueOscillateCompleteRef = useRef(onFtueOscillateComplete);
   onFtueOscillateCompleteRef.current = onFtueOscillateComplete;
 
-  // Gauge stops — GOAT/JACKPOT are bonus pool wins, not gauge stops
+  // Gauge stops — GOAT/BONUS_POOL are bonus pool wins, not gauge stops
   const sorted = [...thresholds]
-    .filter(t => (t.tier as string) !== "JACKPOT" && (t.tier as string) !== "GOAT")
+    .filter(t => (t.tier as string) !== "BONUS_POOL" && (t.tier as string) !== "GOAT")
     .sort((a, b) => a.minFP - b.minFP);
 
   // Derive tier position from totalFp

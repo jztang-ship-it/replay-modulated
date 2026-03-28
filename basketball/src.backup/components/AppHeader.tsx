@@ -1,6 +1,6 @@
 // src/components/AppHeader.tsx
 // LAYER 1: Sport-agnostic top header — wordmark + nav tabs only.
-// Jackpot lives in JackpotRow (GameView.tsx).
+// Bonus pool lives in BonusPoolRow (GameView.tsx).
 
 import { useState } from "react";
 

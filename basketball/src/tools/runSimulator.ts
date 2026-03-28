@@ -201,7 +201,7 @@ function main() {
     { name: "BRONZE",  minFp: 115, payout: "1.5x" },
     { name: "GOLD",    minFp: 132, payout: "2.5x" },
     { name: "MVP",     minFp: 160, payout: "5x"   },
-    { name: "JACKPOT", minFp: 180, payout: "15x"  },
+    { name: "BONUS_POOL", minFp: 180, payout: "15x"  },
   ];
   console.log("\n=== CURRENT THRESHOLDS — HIT RATES ===");
   for (const tier of CURRENT) {
@@ -215,16 +215,16 @@ function main() {
   }
 
   // ── Slot-machine targets ─────────────────────────────────────────────
-  // Goal: BRONZE ~30-35%, GOLD ~12-15%, MVP ~4-6%, JACKPOT ~1%
+  // Goal: BRONZE ~30-35%, GOLD ~12-15%, MVP ~4-6%, BONUS_POOL ~1%
   const targets = [
     { name: "BRONZE",  targetPct: 32, payout: "1.5x" },
     { name: "GOLD",    targetPct: 14, payout: "2.5x" },
     { name: "MVP",     targetPct: 5,  payout: "5x"   },
-    { name: "JACKPOT", targetPct: 1,  payout: "15x"  },
+    { name: "BONUS_POOL", targetPct: 1,  payout: "15x"  },
   ];
 
   console.log("\n=== SUGGESTED THRESHOLDS (slot-machine feel) ===");
-  console.log("  ~32% BRONZE, ~14% GOLD, ~5% MVP, ~1% JACKPOT\n");
+  console.log("  ~32% BRONZE, ~14% GOLD, ~5% MVP, ~1% BONUS_POOL\n");
   const suggested: number[] = [];
   for (const t of targets) {
     const threshold = pct(allFps, 100 - t.targetPct);
@@ -238,7 +238,7 @@ function main() {
   console.log(`  BRONZE:  minFp: ${suggested[0]}`);
   console.log(`  GOLD:    minFp: ${suggested[1]}`);
   console.log(`  MVP:     minFp: ${suggested[2]}`);
-  console.log(`  JACKPOT: minFp: ${suggested[3]}`);
+  console.log(`  BONUS_POOL: minFp: ${suggested[3]}`);
 
   if (verbose) {
     console.log("\n=== SAMPLE TOP 10 HANDS ===");

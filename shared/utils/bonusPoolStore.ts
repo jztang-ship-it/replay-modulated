@@ -2,16 +2,16 @@
  * shared/utils/bonusPoolStore.ts
  *
  * Progressive bonus pool — Vercel KV backed.
- * Rake: 5% of each bet (matches JACKPOT_BET_RAKE in GameView)
- * Seed: $12,451.29 on reset (matches JACKPOT_SEED in GameView)
- * Hit threshold: 225+ FP (JACKPOT tier)
+ * Rake: 5% of each bet (matches BONUS_POOL_RAKE in GameView)
+ * Seed: $12,451.29 on reset (matches BONUS_POOL_SEED in GameView)
+ * Hit threshold: 225+ FP (BONUS_POOL tier)
  *
  * Three functions used by GameView:
  *   contributeBet(amount) — call after each hand resolves
- *   claimBonusPool()      — call when JACKPOT tier hit
- *   getBonusPool()        — call on mount + every 30s for live display
+ *   claimBonusPool()        — call when BONUS_POOL tier hit
+ *   getBonusPool()      — call on mount + every 30s for live display
  *
- * The existing JackpotRow component in GameView handles the UI display.
+ * The existing BonusPoolRow component in GameView handles the UI display.
  * This store handles persistence to Vercel KV via /api/bonus-pool endpoint.
  */
 
@@ -73,7 +73,7 @@ export async function contributeBet(betAmount: number): Promise<number> {
 
 /**
  * Claim bonus pool — atomically reads pool value and resets to SEED.
- * Returns the amount won. Call only when JACKPOT tier is confirmed.
+ * Returns the amount won. Call only when BONUS_POOL tier is confirmed.
  */
 export async function claimBonusPool(): Promise<number> {
   try {

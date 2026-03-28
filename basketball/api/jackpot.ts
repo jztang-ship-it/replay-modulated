@@ -1,6 +1,5 @@
 /**
- * basketball/api/jackpot.ts
- * Vercel serverless function — jackpot pool read/write via Vercel KV REST API.
+ * Bonus pool KV handler — Vercel serverless function, read/write via Vercel KV REST API.
  *
  * Routes:
  *   GET  ?action=get              → { pool: number }

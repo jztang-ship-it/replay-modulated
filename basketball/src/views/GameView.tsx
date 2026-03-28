@@ -107,9 +107,9 @@ function RosterGridScaleFit({ children }: { children: ReactNode }) {
 }
 const BASE_BET       = 10;
 
-// ── Jackpot constants ──────────────────────────────────────────────────────
-const JACKPOT_SEED     = 12_451.29;
-const JACKPOT_BET_RAKE = 0.05;   // 5% of each bet added to pot
+// ── Bonus Pool constants ───────────────────────────────────────────────────
+const BONUS_POOL_SEED     = 12_451.29;
+const BONUS_POOL_RAKE = 0.05;   // 5% of each bet added to pot
 const TICK_INTERVAL_MS = 3000;
 const TICK_AMOUNT      = 0.01;
 
@@ -215,7 +215,7 @@ const BONUS_DOTS = [
 ];
 
 function BonusRow({ betAdded, streak }: { betAdded: number; streak: number }) {
-  const [amount, setAmount] = useState(JACKPOT_SEED);
+  const [amount, setAmount] = useState(BONUS_POOL_SEED);
   const [prevStreak, setPrevStreak] = useState(streak);
   const [pulsingDot, setPulsingDot] = useState<number | null>(null);
   const prevBetRef = useRef(0);
@@ -241,7 +241,7 @@ function BonusRow({ betAdded, streak }: { betAdded: number; streak: number }) {
   useEffect(() => {
     if (betAdded > 0 && betAdded !== prevBetRef.current) {
       prevBetRef.current = betAdded;
-      const contribution = parseFloat((betAdded * JACKPOT_BET_RAKE).toFixed(2));
+      const contribution = parseFloat((betAdded * BONUS_POOL_RAKE).toFixed(2));
       if (contribution > 0) setAmount(p => parseFloat((p + contribution).toFixed(2)));
     }
   }, [betAdded]);
@@ -407,7 +407,10 @@ const [streak, setStreak] = useState<number>(() =>
 
   // Zone 1: Hooks
   useEffect(() => {
-    ensureLoaded().then(() => setDataReady(true)).catch(console.error);
+    ensureLoaded().then(() => setDataReady(true)).catch((err) => {
+      console.error('Data load failed — starting anyway:', err);
+      setDataReady(true);
+    });
   }, []);
 
   const flipState       = useCardFlipState();
@@ -463,6 +466,7 @@ const [streak, setStreak] = useState<number>(() =>
     visibleBadgesMap,
     skipToEnd: skipReveal,
     reset: resetReveal,
+    notifyRollComplete,
   } = useEmotionalReveal({
     cards: revealableCards,
     isActive: gameState === "REVEALING",
@@ -969,6 +973,7 @@ const [streak, setStreak] = useState<number>(() =>
   glowTier={glowState.tier}
   glowDurationMs={glowState.durationMs}
   isSkipping={isSkipping}
+  onCardRollComplete={notifyRollComplete}
   activeRevealCardId={activeRevealCardId}
   onToggleLock={toggleLock}
   onToggleFlip={toggleStatsFlip}
@@ -1008,7 +1013,7 @@ const [streak, setStreak] = useState<number>(() =>
             ? { "data-ftue-anchor": "ftue-darnit-focus" }
             : {})}
           style={{
-          flex: "0 0 11dvh",
+          flex: "0 0 13dvh",
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-start",
@@ -1221,7 +1226,7 @@ const [streak, setStreak] = useState<number>(() =>
 
         {/* 4 — Bottom: multipliers + controls (20dvh), pinned to end */}
         <div style={{
-          flex: "0 0 20dvh",
+          flex: "0 0 19dvh",
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",

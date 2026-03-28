@@ -5,7 +5,7 @@
  * POST { action: "contribute", amount: number } → { pool: number }
  * POST { action: "claim" }      → { won: number, pool: number }
  *
- * KV key: "jackpot:pool" (shared with legacy jackpot handler).
+ * KV key: "jackpot:pool" (must match basketball/api KV handler; legacy key name).
  * If KV fails, responses use SEED 12451.29 — handlers never throw to the client.
  */
 

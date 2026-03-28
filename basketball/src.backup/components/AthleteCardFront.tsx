@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useRef } from "react";
 import type { GamePhase, PlayerCard } from "../adapters/types";
 
 export type PerformanceTag = "ICE_COLD" | "COLD" | "OK" | "HOT" | "ON_FIRE" | "CAREER_NIGHT";
-export type PulseStyle = "NEG" | "NEUTRAL" | "POS" | "JACKPOT";
+export type PulseStyle = "NEG" | "NEUTRAL" | "POS" | "BONUS_POOL";
 
 function clampText(v: any) { return String(v ?? "").trim(); }
 
@@ -87,7 +87,7 @@ if (typeof document !== "undefined" && !document.getElementById(EMO_STYLE_ID)) {
 
 function pulsePalette(pulse?: PulseStyle) {
   switch (pulse) {
-    case "JACKPOT": return { ring: "rgba(255,215,80,0.55)",  glow: "rgba(255,205,70,0.28)"  };
+    case "BONUS_POOL": return { ring: "rgba(255,215,80,0.55)",  glow: "rgba(255,205,70,0.28)"  };
     case "POS":     return { ring: "rgba(255,150,70,0.50)",  glow: "rgba(255,140,60,0.22)"  };
     case "NEG":     return { ring: "rgba(120,180,235,0.50)", glow: "rgba(110,170,230,0.20)" };
     default:        return { ring: "rgba(255,255,255,0.10)", glow: "rgba(255,255,255,0.06)" };

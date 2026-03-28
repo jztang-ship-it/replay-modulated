@@ -23,9 +23,9 @@ const ROSTER_SIZE    = sportAdapter.rosterSize;
 const STARTING_BALANCE = 1000;
 const BASE_BET       = 10;
 
-// ── Jackpot constants ──────────────────────────────────────────────────────
-const JACKPOT_SEED     = 12_451.29;
-const JACKPOT_BET_RAKE = 0.05;   // 5% of each bet added to pot
+// ── Bonus pool constants ──────────────────────────────────────────────────────
+const BONUS_POOL_SEED     = 12_451.29;
+const BONUS_POOL_BET_RAKE = 0.05;   // 5% of each bet added to pot
 const TICK_INTERVAL_MS = 3000;
 const TICK_AMOUNT      = 0.01;
 
@@ -80,10 +80,10 @@ function toRevealableCards(cards: PlayerCard[]): RevealableCard[] {
   }));
 }
 
-// ── JackpotRow — live ticking community jackpot, centered between header and cards ──
+// ── BonusPoolRow — live ticking community bonus pool, centered between header and cards ──
 
-function JackpotRow({ betAdded }: { betAdded: number }) {
-  const [amount, setAmount] = useState(JACKPOT_SEED);
+function BonusPoolRow({ betAdded }: { betAdded: number }) {
+  const [amount, setAmount] = useState(BONUS_POOL_SEED);
   const prevBetRef = useRef(0);
 
   // Tick up every 3s (simulated community activity)
@@ -98,7 +98,7 @@ function JackpotRow({ betAdded }: { betAdded: number }) {
   useEffect(() => {
     if (betAdded > 0 && betAdded !== prevBetRef.current) {
       prevBetRef.current = betAdded;
-      const contribution = parseFloat((betAdded * JACKPOT_BET_RAKE).toFixed(2));
+      const contribution = parseFloat((betAdded * BONUS_POOL_BET_RAKE).toFixed(2));
       if (contribution > 0) setAmount(p => parseFloat((p + contribution).toFixed(2)));
     }
   }, [betAdded]);
@@ -116,7 +116,7 @@ function JackpotRow({ betAdded }: { betAdded: number }) {
         border: "1px solid rgba(255,215,0,0.18)",
       }}>
         <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.2, color: "rgba(255,215,0,0.6)", textTransform: "uppercase" }}>
-          🏆 Jackpot
+          🏆 Bonus pool
         </span>
         <span style={{ fontSize: 12, fontWeight: 950, color: "#FFD700", fontVariantNumeric: "tabular-nums", textShadow: "0 0 8px rgba(255,215,0,0.5)" }}>
           ${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -398,8 +398,8 @@ export default function GameView() {
           <AppHeader />
         </div>
 
-        {/* Community jackpot — own centered row */}
-        <JackpotRow betAdded={currentBet} />
+        {/* Community bonus pool — own centered row */}
+        <BonusPoolRow betAdded={currentBet} />
 
         {/* Card grid */}
         <div style={{ flex: "1 1 auto", minHeight: 0, position: "relative", zIndex: 10, overflow: "hidden" }}>

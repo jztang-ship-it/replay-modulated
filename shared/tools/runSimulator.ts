@@ -321,7 +321,7 @@ async function main() {
         { tier: "STARTER",  minFP: 160, multiplier: 2.5  },
         { tier: "ALL_STAR", minFP: 183, multiplier: 7.0  },
         { tier: "MVP",      minFP: 207, multiplier: 15.0 },
-        { tier: "JACKPOT",  minFP: 225, multiplier: 0    },
+        { tier: "BONUS_POOL",  minFP: 225, multiplier: 0    },
       ],
     },
     {
@@ -332,7 +332,7 @@ async function main() {
         { tier: "STARTER",  minFP: 150, multiplier: 2.5  },
         { tier: "ALL_STAR", minFP: 178, multiplier: 7.0  },
         { tier: "MVP",      minFP: 205, multiplier: 15.0 },
-        { tier: "JACKPOT",  minFP: 225, multiplier: 0    },
+        { tier: "BONUS_POOL",  minFP: 225, multiplier: 0    },
       ],
     },
     {
@@ -343,7 +343,7 @@ async function main() {
         { tier: "STARTER",  minFP: 155, multiplier: 2.5  },
         { tier: "ALL_STAR", minFP: 180, multiplier: 7.0  },
         { tier: "MVP",      minFP: 205, multiplier: 15.0 },
-        { tier: "JACKPOT",  minFP: 225, multiplier: 0    },
+        { tier: "BONUS_POOL",  minFP: 225, multiplier: 0    },
       ],
     },
     {
@@ -354,13 +354,13 @@ async function main() {
         { tier: "STARTER",  minFP: 155, multiplier: 2.5  },
         { tier: "ALL_STAR", minFP: 180, multiplier: 7.0  },
         { tier: "MVP",      minFP: 205, multiplier: 15.0 },
-        { tier: "JACKPOT",  minFP: 225, multiplier: 0    },
+        { tier: "BONUS_POOL",  minFP: 225, multiplier: 0    },
       ],
     },
   ];
 
   const STREAK_TARGETS = [2, 3, 4, 5, 7];
-  const BONUS_LABELS: Record<number,string> = { 3: "+5% bonus", 5: "+15% bonus", 7: "jackpot" };
+  const BONUS_LABELS: Record<number,string> = { 3: "+5% bonus", 5: "+15% bonus", 7: "bonus pool" };
   const SESSION_HANDS = 10;
   const NUM_SESSIONS = Math.max(N, 10000);
 
@@ -432,7 +432,7 @@ async function main() {
   console.log("  Hand 1:      FTUE (Devin Booker, hardcoded, guaranteed good)");
   console.log("  Hands 2-30:  PROTECTED thresholds (invisible to user)");
   console.log("  Hand 31+:    LIVE thresholds");
-  console.log("  Bonus tiers: 3-win=+5%  5-win=+15%  (7-win jackpot: post-beta)");
+  console.log("  Bonus tiers: 3-win=+5%  5-win=+15%  (7-win bonus pool: post-beta)");
   console.log("");
 
   if (verbose) {

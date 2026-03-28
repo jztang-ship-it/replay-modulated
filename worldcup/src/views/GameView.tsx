@@ -19,13 +19,14 @@ import { useCardFlipState } from "../hooks/useCardFlipState";
 import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
 import { calculateWinTier, calculatePayout, type WinTier } from "../utils/payoutLogic";
 import { useGameAnalytics } from "../../../shared/analytics/useGameAnalytics";
-import { BONUS_POOL_SEED, BONUS_POOL_RAKE_RATE as BONUS_POOL_RAKE } from "@shared/utils/bonusPoolStore";
 
 const CAP_MAX         = sportAdapter.salaryCap;
 const ROSTER_SIZE     = sportAdapter.rosterSize;
 const STARTING_BALANCE = 1000;
 const BASE_BET        = 10;
 
+const BONUS_POOL_SEED     = 12_451.29;
+const BONUS_POOL_RAKE = 0.05;
 const TICK_INTERVAL_MS = 3000;
 const TICK_AMOUNT      = 0.01;
 
@@ -79,9 +80,9 @@ function toRevealableCards(cards: PlayerCard[]): RevealableCard[] {
   }));
 }
 
-// ── Jackpot row ──────────────────────────────────────────────────────────────
+// ── Bonus Pool row ──────────────────────────────────────────────────────────────
 
-function JackpotRow({ betAdded }: { betAdded: number }) {
+function BonusPoolRow({ betAdded }: { betAdded: number }) {
   const [amount, setAmount] = useState(BONUS_POOL_SEED);
   const prevBetRef = useRef(0);
 
@@ -103,7 +104,7 @@ function JackpotRow({ betAdded }: { betAdded: number }) {
   return (
     <div style={{ flex: "0 0 auto", display: "flex", justifyContent: "center", padding: "0px 12px", marginTop: -1 }}>
       <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 14px", borderRadius: 20, background: "rgba(255,215,0,0.06)", border: "1px solid rgba(255,215,0,0.18)" }}>
-        <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.2, color: "rgba(255,215,0,0.6)", textTransform: "uppercase" }}>🏆 Jackpot</span>
+        <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.2, color: "rgba(255,215,0,0.6)", textTransform: "uppercase" }}>🏆 Bonus Pool</span>
         <span style={{ fontSize: 12, fontWeight: 950, color: "#FFD700", fontVariantNumeric: "tabular-nums", textShadow: "0 0 8px rgba(255,215,0,0.5)" }}>
           ${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </span>
@@ -387,7 +388,7 @@ export default function GameView() {
           <AppHeader />
         </div>
 
-        <JackpotRow betAdded={currentBet} />
+        <BonusPoolRow betAdded={currentBet} />
 
         <div style={{ flex: "1 1 auto", minHeight: 0, position: "relative", zIndex: 20, overflow: "visible" }}>
           <div
