@@ -884,7 +884,7 @@ const [streak, setStreak] = useState<number>(() =>
       boxSizing: "border-box",
       paddingTop: "env(safe-area-inset-top, 0px)",
     }}>
-      {/* ── Inner game column — 14+54+13+19 = 100dvh ── */}
+      {/* ── Inner game column — 14+54+16+16 = 100dvh ── */}
       <div style={{
         flex: 1,
         display: "flex",
@@ -1008,7 +1008,7 @@ const [streak, setStreak] = useState<number>(() =>
             ? { "data-ftue-anchor": "ftue-darnit-focus" }
             : {})}
           style={{
-          flex: "0 0 13dvh",
+          flex: "0 0 16dvh",
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-start",
@@ -1221,7 +1221,7 @@ const [streak, setStreak] = useState<number>(() =>
 
         {/* 4 — Bottom: multipliers + controls (20dvh), pinned to end */}
         <div style={{
-          flex: "0 0 19dvh",
+          flex: "0 0 16dvh",
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",

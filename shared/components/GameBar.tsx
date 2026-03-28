@@ -1028,19 +1028,19 @@ export function GameBar({
   const overBudget = remaining < 0;
 
   const multiplierRow = (
-    <div style={{ display: "flex", gap: 8, justifyContent: "center", alignItems: "center", width: "100%", boxSizing: "border-box" }}>
+    <div style={{ display: "flex", gap: 6, justifyContent: "center", alignItems: "center", width: "100%", boxSizing: "border-box" }}>
       {MULTIPLIERS.map((m: number) => {
         const active = betMultiplier === m;
         return (
           <button key={m} onClick={() => onBetMultiplier(m)} disabled={betLocked} style={{
             background: active ? THEME.button.multiplier.active.bg : THEME.button.multiplier.inactive.bg,
             border: active ? "none" : THEME.button.multiplier.inactive.border,
-            borderRadius: 24, color: "#FFFFFF",
-            fontWeight: 900, fontSize: 14, padding: "9px 0",
+            borderRadius: 20, color: "#FFFFFF",
+            fontWeight: 800, fontSize: 12, padding: "6px 0",
             cursor: betLocked ? "default" : "pointer",
             opacity: betLocked ? 0.4 : 1,
             transition: "all 150ms ease", lineHeight: 1,
-            flex: 1, maxWidth: 80,
+            flex: 1, maxWidth: 64,
           }}>{m}X</button>
         );
       })}
