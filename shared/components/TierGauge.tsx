@@ -482,11 +482,14 @@ export function TierGauge({
           </span>
         ) : (
           <>
-            <span style={{ fontSize: 18, fontWeight: 800, color: targetCfg.color, fontFamily: FF, letterSpacing: "-0.5px" }}>
+            <span style={{ fontSize: 18, fontWeight: 800, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px" }}>
               {gap.toFixed(1)}
             </span>
-            <span style={{ fontSize: 12, color: "#555", fontFamily: FF, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-              FP to {targetCfg.label}
+            <span style={{ fontSize: 12, color: "#888", fontFamily: FF, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              {" "}FP TO{" "}
+            </span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: targetCfg.color, fontFamily: FF, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              {targetCfg.label}
             </span>
           </>
         )}

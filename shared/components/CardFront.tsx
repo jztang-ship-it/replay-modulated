@@ -195,7 +195,8 @@ export function CardFront(props: CardFrontProps) {
       return;
     }
     if (visibleFp <= 0) return;
-    if (animatingRef.current) return; // already animating for this card, don't restart
+    if (animatingRef.current) return;
+    if (rollComplete) return; // already done — ignore any late visibleFp updates
 
     const actual = Math.max(0, Number((card as any)?.actualFp ?? 0));
     setFpRevealed(true);
@@ -221,8 +222,8 @@ export function CardFront(props: CardFrontProps) {
       } else {
         setDisplayedFp(actual);
         setIsRolling(false); setRollComplete(true);
-        animatingRef.current = false;
         onRollComplete?.();
+        // animatingRef intentionally stays true — blocks any re-trigger from late visibleFp updates
       }
     };
     animRafRef.current = requestAnimationFrame(animate);

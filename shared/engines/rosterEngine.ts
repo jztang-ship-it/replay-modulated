@@ -236,12 +236,18 @@ function enforceCapWithReplacement(roster: GeneratedCard[], evalPool: PlayerEval
   let guard = 0;
   while (totalSalary(clone.map(c => c.salary)) > config.capMax && guard++ < 200) {
     const currentTotal = totalSalary(clone.map(c => c.salary));
-    const swappable = clone.map((c, i) => ({ i, c })).filter(({ i, c }) => {
+    // First try to swap non-orange/purple cards, then fall back to any non-held card
+    let swappable = clone.map((c, i) => ({ i, c })).filter(({ i, c }) => {
       if (isHeld(i)) return false;
       const tier = (c.tier ?? "").toUpperCase();
       return tier !== "ORANGE" && tier !== "PURPLE";
     }).sort((a, b) => b.c.salary - a.c.salary);
-    if (!swappable.length) break;
+    // If no non-premium cards to swap, allow swapping premium non-held cards too
+    if (!swappable.length) {
+      swappable = clone.map((c, i) => ({ i, c }))
+        .filter(({ i }) => !isHeld(i))
+        .sort((a, b) => b.c.salary - a.c.salary);
+    }
     const { i: idx, c: cur } = swappable[0];
     const req = slotRequirements[idx] ?? "FLEX";
     const maxForSlot = config.capMax - (currentTotal - cur.salary);

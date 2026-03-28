@@ -179,7 +179,6 @@ export function useEmotionalReveal(params: Params) {
   const isTapRevealingRef = useRef(false);   // mutex: one card fully completes before next starts
   const pendingTapQueue   = useRef<string[]>([]); // queued card IDs waiting to reveal
   const tappedCountRef    = useRef(0);            // ref-based count — never stale inside closures
-  const tappedIdsRef      = useRef<Set<string>>(new Set()); // ref mirror of tappedCardIds, never stale
 
   const clearTimers = useCallback(() => {
     for (const t of timersRef.current) {
@@ -198,7 +197,6 @@ export function useEmotionalReveal(params: Params) {
     isTapRevealingRef.current = false;
     pendingTapQueue.current = [];
     tappedCountRef.current = 0;
-    tappedIdsRef.current = new Set();
     setVisibleFpMap(new Map());
     setLastCardProgress(0);
     setLastCardFp(0);
@@ -285,25 +283,17 @@ export function useEmotionalReveal(params: Params) {
 
     setShakeInfo(null);
     setActiveRevealCardId(null);
-    // Snapshot already-tapped cards from the ref (never stale)
-    const alreadyTapped = new Set(tappedIdsRef.current);
     setTappedCardIds(new Set(cards.map(c => c.cardId)));
-    // Only clear FP for cards not yet revealed — already-revealed keep their values
-    setVisibleFpMap(prev => {
-      const next = new Map(prev);
-      for (const c of cards) {
-        const cid = (c as any).cardId;
-        if (!alreadyTapped.has(cid)) next.delete(cid);
-      }
-      return next;
-    });
+    setVisibleFpMap(new Map());   // clear stale mid-values so every card animates from 0
     isTapRevealingRef.current = false;
     pendingTapQueue.current = [];
     tappedCountRef.current = 0;
-    tappedIdsRef.current = new Set(cards.map(c => (c as any).cardId));
 
-    // Only sequence cards not yet tapped. Already-revealed cards stay as-is.
-    const nonHeld = [...cards.filter(c => !(c as any).wasHeld && !alreadyTapped.has((c as any).cardId))]
+    // DO NOT bulk-flip all cards. Each card flips individually in sequence
+    // so blast fires during the flip before anything is revealed.
+    // Order: non-held lowest→highest salary, then held lowest→highest salary.
+    // Anchor (highest salary overall) always goes last at full speed.
+    const nonHeld = [...cards.filter(c => !(c as any).wasHeld)]
       .sort((a, b) => (a.salary ?? 0) - (b.salary ?? 0));
     const held = [...cards.filter(c => (c as any).wasHeld)]
       .sort((a, b) => (a.salary ?? 0) - (b.salary ?? 0));
@@ -312,7 +302,7 @@ export function useEmotionalReveal(params: Params) {
     const anchorId = allSorted[allSorted.length - 1]?.cardId;
 
     const sequence = [...nonHeld, ...held].filter(c => c.cardId !== anchorId);
-    const anchor = alreadyTapped.has(anchorId ?? '') ? undefined : cards.find(c => c.cardId === anchorId);
+    const anchor = cards.find(c => c.cardId === anchorId);
     if (anchor) sequence.push(anchor);
 
     const revealOne = (idx: number) => {
@@ -423,7 +413,9 @@ export function useEmotionalReveal(params: Params) {
               const tt = window.setTimeout(driveTick, gaugeTickInterval);
               timersRef.current.push(tt);
             } else {
-              setVisibleFpMap(prev => new Map(prev).set(c.cardId, target));
+              // driveTick complete. Do NOT set visibleFpMap to target —
+              // that second change re-triggers CardFront useEffect and causes double rollup.
+              // CardFront's RAF already animates to actual independently.
               if (isAnchor) setLastCardProgress(1);
               const cardBadges = c.badges ?? [];
               if (cardBadges.length > 0) {
@@ -580,7 +572,6 @@ export function useEmotionalReveal(params: Params) {
     tappedCountRef.current += 1;
     const isLast = tappedCountRef.current >= unheldCards.length;
 
-    tappedIdsRef.current = new Set(tappedIdsRef.current).add(cardId);
     setTappedCardIds(prev => new Set(prev).add(cardId));
     isTapRevealingRef.current = true;
 
