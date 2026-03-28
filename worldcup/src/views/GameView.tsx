@@ -19,14 +19,13 @@ import { useCardFlipState } from "../hooks/useCardFlipState";
 import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
 import { calculateWinTier, calculatePayout, type WinTier } from "../utils/payoutLogic";
 import { useGameAnalytics } from "../../../shared/analytics/useGameAnalytics";
+import { BONUS_POOL_SEED, BONUS_POOL_RAKE_RATE as BONUS_POOL_RAKE } from "@shared/utils/bonusPoolStore";
 
 const CAP_MAX         = sportAdapter.salaryCap;
 const ROSTER_SIZE     = sportAdapter.rosterSize;
 const STARTING_BALANCE = 1000;
 const BASE_BET        = 10;
 
-const JACKPOT_SEED     = 12_451.29;
-const JACKPOT_BET_RAKE = 0.05;
 const TICK_INTERVAL_MS = 3000;
 const TICK_AMOUNT      = 0.01;
 
@@ -83,7 +82,7 @@ function toRevealableCards(cards: PlayerCard[]): RevealableCard[] {
 // ── Jackpot row ──────────────────────────────────────────────────────────────
 
 function JackpotRow({ betAdded }: { betAdded: number }) {
-  const [amount, setAmount] = useState(JACKPOT_SEED);
+  const [amount, setAmount] = useState(BONUS_POOL_SEED);
   const prevBetRef = useRef(0);
 
   useEffect(() => {
@@ -96,7 +95,7 @@ function JackpotRow({ betAdded }: { betAdded: number }) {
   useEffect(() => {
     if (betAdded > 0 && betAdded !== prevBetRef.current) {
       prevBetRef.current = betAdded;
-      const contribution = parseFloat((betAdded * JACKPOT_BET_RAKE).toFixed(2));
+      const contribution = parseFloat((betAdded * BONUS_POOL_RAKE).toFixed(2));
       if (contribution > 0) setAmount(p => parseFloat((p + contribution).toFixed(2)));
     }
   }, [betAdded]);

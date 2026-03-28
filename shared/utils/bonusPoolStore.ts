@@ -1,25 +1,25 @@
 /**
- * shared/utils/jackpotStore.ts
+ * shared/utils/bonusPoolStore.ts
  *
- * Progressive jackpot pool — Vercel KV backed.
+ * Progressive bonus pool — Vercel KV backed.
  * Rake: 5% of each bet (matches JACKPOT_BET_RAKE in GameView)
  * Seed: $12,451.29 on reset (matches JACKPOT_SEED in GameView)
  * Hit threshold: 225+ FP (JACKPOT tier)
  *
  * Three functions used by GameView:
  *   contributeBet(amount) — call after each hand resolves
- *   claimJackpot()        — call when JACKPOT tier hit
- *   getJackpotPool()      — call on mount + every 30s for live display
+ *   claimBonusPool()      — call when JACKPOT tier hit
+ *   getBonusPool()        — call on mount + every 30s for live display
  *
  * The existing JackpotRow component in GameView handles the UI display.
- * This store handles persistence to Vercel KV via /api/jackpot endpoint.
+ * This store handles persistence to Vercel KV via /api/bonus-pool endpoint.
  */
 
-export const JACKPOT_RAKE_RATE = 0.05;      // 5% — matches GameView constant
-export const JACKPOT_SEED      = 12_451.29; // Reset value — matches GameView constant
-export const JACKPOT_MIN_FP    = 225;       // Tier threshold — matches payoutLogic
+export const BONUS_POOL_RAKE_RATE = 0.05;      // 5% — matches GameView constant
+export const BONUS_POOL_SEED      = 12_451.29; // Reset value — matches GameView constant
+export const BONUS_POOL_MIN_FP    = 225;       // Tier threshold — matches payoutLogic
 
-const API_BASE = "/api/jackpot";
+const API_BASE = "/api/bonus-pool";
 
 // ── Local cache ─────────────────────────────────────────────────────────────
 let _cachedPool: number | null = null;
@@ -27,10 +27,10 @@ let _cacheExpiry = 0;
 const CACHE_MS = 30_000; // 30s poll interval
 
 /**
- * Get current jackpot pool from KV (cached 30s).
- * Falls back to JACKPOT_SEED if KV unavailable.
+ * Get current bonus pool from KV (cached 30s).
+ * Falls back to BONUS_POOL_SEED if KV unavailable.
  */
-export async function getJackpotPool(): Promise<number> {
+export async function getBonusPool(): Promise<number> {
   const now = Date.now();
   if (_cachedPool !== null && now < _cacheExpiry) return _cachedPool;
   try {
@@ -41,7 +41,7 @@ export async function getJackpotPool(): Promise<number> {
     _cacheExpiry = now + CACHE_MS;
     return pool;
   } catch {
-    return _cachedPool ?? JACKPOT_SEED;
+    return _cachedPool ?? BONUS_POOL_SEED;
   }
 }
 
@@ -50,8 +50,8 @@ export async function getJackpotPool(): Promise<number> {
  * Returns updated pool total.
  */
 export async function contributeBet(betAmount: number): Promise<number> {
-  const rake = parseFloat((betAmount * JACKPOT_RAKE_RATE).toFixed(2));
-  if (rake <= 0) return _cachedPool ?? JACKPOT_SEED;
+  const rake = parseFloat((betAmount * BONUS_POOL_RAKE_RATE).toFixed(2));
+  if (rake <= 0) return _cachedPool ?? BONUS_POOL_SEED;
   // Optimistic update
   if (_cachedPool !== null) {
     _cachedPool = parseFloat((_cachedPool + rake).toFixed(2));
@@ -67,15 +67,15 @@ export async function contributeBet(betAmount: number): Promise<number> {
     _cachedPool = pool;
     return pool;
   } catch {
-    return _cachedPool ?? JACKPOT_SEED;
+    return _cachedPool ?? BONUS_POOL_SEED;
   }
 }
 
 /**
- * Claim jackpot — atomically reads pool value and resets to SEED.
+ * Claim bonus pool — atomically reads pool value and resets to SEED.
  * Returns the amount won. Call only when JACKPOT tier is confirmed.
  */
-export async function claimJackpot(): Promise<number> {
+export async function claimBonusPool(): Promise<number> {
   try {
     const res = await fetch(API_BASE, {
       method: "POST",
@@ -83,18 +83,18 @@ export async function claimJackpot(): Promise<number> {
       body: JSON.stringify({ action: "claim" }),
     });
     const { won } = await res.json() as { won: number };
-    _cachedPool = JACKPOT_SEED;
+    _cachedPool = BONUS_POOL_SEED;
     _cacheExpiry = Date.now() + CACHE_MS;
     return won;
   } catch {
-    const won = _cachedPool ?? JACKPOT_SEED;
-    _cachedPool = JACKPOT_SEED;
+    const won = _cachedPool ?? BONUS_POOL_SEED;
+    _cachedPool = BONUS_POOL_SEED;
     return won;
   }
 }
 
-/** Force-refresh the cache on next getJackpotPool() call */
-export function invalidateJackpotCache() {
+/** Force-refresh the cache on next getBonusPool() call */
+export function invalidateBonusPoolCache() {
   _cachedPool = null;
   _cacheExpiry = 0;
 }

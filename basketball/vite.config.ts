@@ -22,6 +22,7 @@ export default defineConfig({
     },
   },
   server: {
+    allowedHosts: ['all'],
     fs: {
       allow: [
         path.resolve(__dirname, ".."),
