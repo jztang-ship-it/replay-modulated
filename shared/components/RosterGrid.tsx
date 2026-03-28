@@ -133,6 +133,7 @@ export function RosterGrid(props: Props) {
         const isShaking      = shakingCardId === id;
         const liveShakeType: ShakeType = isShaking ? (shakeType ?? null) : null;
         const isSpotlight    = activeRevealCardId === id;
+        const isDimmed       = !isSkipping && activeRevealCardId !== null && activeRevealCardId !== id;
         const cardShakeType  = cardShakeTypeMap?.get(id) ?? null;
 
         // tap mode: a card is "held" if it has wasHeld flag
@@ -170,11 +171,11 @@ export function RosterGrid(props: Props) {
             onClick={handleTap}
             style={{
               position: "relative",
-              borderRadius: 18,
-              overflow: "hidden",
+              overflow: "visible",
               width: "100%",
               aspectRatio: "329 / 478",
               zIndex: isSpotlight ? 100 : isShaking ? 10 : 1,
+              filter: isDimmed ? "brightness(0.35)" : "none",
               background: "#0a0c10",
               cursor: isTapTarget ? "pointer" : "default",
               boxShadow: isTapTarget ? "0 0 0 2px rgba(255,255,255,0.25)" : "none",
@@ -217,7 +218,7 @@ export function RosterGrid(props: Props) {
                   ((visibleBadgesMap?.get(id)?.length ?? 0) >= 2) ? 1 : 0
                 ) : 0
               }
-              isDimmed={!isSkipping && activeRevealCardId !== null && activeRevealCardId !== id}
+              isDimmed={isDimmed}
             />
           </div>
         );

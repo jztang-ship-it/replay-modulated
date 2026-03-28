@@ -49,6 +49,42 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
     }
     .pcs-face-back { transform: rotateY(180deg) translateZ(0); }
 
+    /* Blast overlay — floods the card face at impact, hiding the player briefly */
+    .pcs-face::before {
+      content: ""; position: absolute; inset: 0; z-index: 90;
+      opacity: 0; pointer-events: none; border-radius: 18px;
+    }
+    @keyframes pcsBlastOrange {
+      0%   { opacity: 1;    background: radial-gradient(ellipse at center, rgba(255,220,140,1) 0%, rgba(255,140,0,0.95) 50%, rgba(200,80,0,0.85) 100%); }
+      40%  { opacity: 0.9;  background: radial-gradient(ellipse at center, rgba(255,200,100,0.95) 0%, rgba(255,120,0,0.85) 60%, rgba(180,60,0,0.7) 100%); }
+      100% { opacity: 0; }
+    }
+    @keyframes pcsBlastPurple {
+      0%   { opacity: 1;    background: radial-gradient(ellipse at center, rgba(240,210,255,1) 0%, rgba(192,132,252,0.95) 50%, rgba(130,60,220,0.85) 100%); }
+      40%  { opacity: 0.9;  background: radial-gradient(ellipse at center, rgba(220,180,255,0.95) 0%, rgba(168,100,240,0.85) 60%, rgba(110,40,200,0.7) 100%); }
+      100% { opacity: 0; }
+    }
+    @keyframes pcsBlastBlue {
+      0%   { opacity: 1;    background: radial-gradient(ellipse at center, rgba(200,230,255,1) 0%, rgba(96,165,250,0.95) 50%, rgba(30,80,200,0.85) 100%); }
+      40%  { opacity: 0.9;  background: radial-gradient(ellipse at center, rgba(170,210,255,0.95) 0%, rgba(70,140,240,0.85) 60%, rgba(20,60,180,0.7) 100%); }
+      100% { opacity: 0; }
+    }
+    @keyframes pcsBlastGreen {
+      0%   { opacity: 1;    background: radial-gradient(ellipse at center, rgba(200,255,220,1) 0%, rgba(74,222,128,0.95) 50%, rgba(20,140,60,0.85) 100%); }
+      40%  { opacity: 0.9;  background: radial-gradient(ellipse at center, rgba(170,255,200,0.95) 0%, rgba(50,200,100,0.85) 60%, rgba(10,120,50,0.7) 100%); }
+      100% { opacity: 0; }
+    }
+    @keyframes pcsBlastWhite {
+      0%   { opacity: 1;    background: radial-gradient(ellipse at center, rgba(255,255,255,1) 0%, rgba(220,230,240,0.95) 50%, rgba(160,180,200,0.85) 100%); }
+      40%  { opacity: 0.9;  background: radial-gradient(ellipse at center, rgba(240,245,255,0.95) 0%, rgba(190,210,230,0.85) 60%, rgba(130,160,190,0.7) 100%); }
+      100% { opacity: 0; }
+    }
+    .pcs-glow-orange .pcs-face::before { animation: pcsBlastOrange var(--glow-ms, 700ms) ease-out forwards; }
+    .pcs-glow-purple .pcs-face::before { animation: pcsBlastPurple var(--glow-ms, 700ms) ease-out forwards; }
+    .pcs-glow-blue   .pcs-face::before { animation: pcsBlastBlue   var(--glow-ms, 700ms) ease-out forwards; }
+    .pcs-glow-green  .pcs-face::before { animation: pcsBlastGreen  var(--glow-ms, 700ms) ease-out forwards; }
+    .pcs-glow-white  .pcs-face::before { animation: pcsBlastWhite  var(--glow-ms, 700ms) ease-out forwards; }
+
     @keyframes pcsShakeHype {
       0%   { transform: translate(0,0) rotate(0deg); }
       10%  { transform: translate(-3px,-2px) rotate(-1.5deg); }
@@ -118,12 +154,41 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
     }
     .pcs-tap-bounce { animation: pcsTapBounce 1.4s ease-in-out infinite; }
     @keyframes pcsTapHintPulse { 0%,100%{opacity:.4} 50%{opacity:.9} }
-    @keyframes pcsGlowFlash {
-      0%   { opacity: 0; transform: scale(0.95); }
-      15%  { opacity: 1; transform: scale(1.02); }
-      80%  { opacity: 1; transform: scale(1.0); }
-      100% { opacity: 0; transform: scale(1.0); }
+    @keyframes pcsGlowOrange {
+      0%   { box-shadow: 0 0 0px   0px rgba(255,140,0,0); }
+      12%  { box-shadow: 0 0 80px 60px rgba(255,140,0,0.85), 0 0 140px 90px rgba(255,100,0,0.45); }
+      45%  { box-shadow: 0 0 70px 55px rgba(255,140,0,0.75), 0 0 120px 80px rgba(255,100,0,0.35); }
+      100% { box-shadow: 0 0 0px   0px rgba(255,140,0,0); }
     }
+    @keyframes pcsGlowPurple {
+      0%   { box-shadow: 0 0 0px   0px rgba(192,132,252,0); }
+      12%  { box-shadow: 0 0 80px 60px rgba(192,132,252,0.85), 0 0 140px 90px rgba(168,85,247,0.45); }
+      45%  { box-shadow: 0 0 70px 55px rgba(192,132,252,0.75), 0 0 120px 80px rgba(168,85,247,0.35); }
+      100% { box-shadow: 0 0 0px   0px rgba(192,132,252,0); }
+    }
+    @keyframes pcsGlowBlue {
+      0%   { box-shadow: 0 0 0px   0px rgba(96,165,250,0); }
+      12%  { box-shadow: 0 0 80px 60px rgba(96,165,250,0.85), 0 0 140px 90px rgba(59,130,246,0.45); }
+      45%  { box-shadow: 0 0 70px 55px rgba(96,165,250,0.75), 0 0 120px 80px rgba(59,130,246,0.35); }
+      100% { box-shadow: 0 0 0px   0px rgba(96,165,250,0); }
+    }
+    @keyframes pcsGlowGreen {
+      0%   { box-shadow: 0 0 0px   0px rgba(74,222,128,0); }
+      12%  { box-shadow: 0 0 80px 60px rgba(74,222,128,0.85), 0 0 140px 90px rgba(34,197,94,0.45); }
+      45%  { box-shadow: 0 0 70px 55px rgba(74,222,128,0.75), 0 0 120px 80px rgba(34,197,94,0.35); }
+      100% { box-shadow: 0 0 0px   0px rgba(74,222,128,0); }
+    }
+    @keyframes pcsGlowWhite {
+      0%   { box-shadow: 0 0 0px   0px rgba(226,232,240,0); }
+      12%  { box-shadow: 0 0 80px 60px rgba(226,232,240,0.75), 0 0 140px 90px rgba(200,210,220,0.35); }
+      45%  { box-shadow: 0 0 70px 55px rgba(226,232,240,0.65), 0 0 120px 80px rgba(200,210,220,0.25); }
+      100% { box-shadow: 0 0 0px   0px rgba(226,232,240,0); }
+    }
+    .pcs-glow-orange { animation: pcsGlowOrange var(--glow-ms, 700ms) ease-out forwards; }
+    .pcs-glow-purple { animation: pcsGlowPurple var(--glow-ms, 700ms) ease-out forwards; }
+    .pcs-glow-blue   { animation: pcsGlowBlue   var(--glow-ms, 700ms) ease-out forwards; }
+    .pcs-glow-green  { animation: pcsGlowGreen  var(--glow-ms, 700ms) ease-out forwards; }
+    .pcs-glow-white  { animation: pcsGlowWhite  var(--glow-ms, 700ms) ease-out forwards; }
   `;
   document.head.appendChild(style);
 }
@@ -152,6 +217,10 @@ export interface CardFrontProps {
   badges?: Array<{ id: string; icon: string; label: string; fp: number }>;
   heldFpVisible?: boolean;
   isTapTarget?: boolean;
+  glowActive?: boolean;
+  glowSrc?: string;
+  glowDurationMs?: number;
+  glowTier?: string;
 }
 
 /** Everything the shell passes into the sport's back face renderer */
@@ -211,14 +280,10 @@ function tierToGlowFile(tier: string): string {
   return "white";
 }
 
-function tierToGlowShadow(tier: string): string {
-  const t = tier?.toUpperCase();
-  console.log("[Glow][PlayerCardShell] tierToGlowShadow input", { tier, normalized: t });
-  if (t === "ORANGE") return "0 0 12px 4px #ff8c00, 0 0 32px 8px #ff6600, 0 0 60px 16px #ff440066";
-  if (t === "PURPLE") return "0 0 12px 4px #c084fc, 0 0 32px 8px #a855f7, 0 0 60px 16px #7c3aed66";
-  if (t === "BLUE")   return "0 0 12px 4px #60a5fa, 0 0 32px 8px #3b82f6, 0 0 60px 16px #1d4ed866";
-  if (t === "GREEN")  return "0 0 12px 4px #4ade80, 0 0 32px 8px #22c55e, 0 0 60px 16px #15803d66";
-  return "0 0 12px 4px #e2e8f0, 0 0 32px 8px #cbd5e1, 0 0 60px 16px #94a3b866";
+/** Same breakpoints as CardFront salary tier (fallback when glowTier prop missing). */
+function tierFromSalaryForGlow(salary: number): string {
+  const s = Number(salary ?? 0);
+  return s >= 52 ? "ORANGE" : s >= 40 ? "PURPLE" : s >= 28 ? "BLUE" : s >= 16 ? "GREEN" : "WHITE";
 }
 
 // ── PlayerCardShell ────────────────────────────────────────────────────────
@@ -240,12 +305,6 @@ export function PlayerCardShell(props: CardShellProps) {
   } = props;
 
   const id = String((card as any).cardId ?? "");
-  console.log("[Glow][PlayerCardShell] render gate", {
-    cardId: id,
-    glowActive,
-    glowTier,
-    glowDurationMs,
-  });
 
   // ── Economy freeze ────────────────────────────────────────────────────
   const economyRef = useRef<Map<string, { tier: any; salary: any; projectedFp: any; headshotUrl: any }>>(new Map());
@@ -354,18 +413,30 @@ export function PlayerCardShell(props: CardShellProps) {
     shakeType === "legendary" ? "pcs-shake-legendary" :
     shakeType === "frozen"   ? "pcs-shake-frozen"   : "";
 
+  const glowClass = glowActive ? (() => {
+    const t = (glowTier ?? "").toUpperCase();
+    if (t === "ORANGE") return "pcs-glow-orange";
+    if (t === "PURPLE") return "pcs-glow-purple";
+    if (t === "BLUE")   return "pcs-glow-blue";
+    if (t === "GREEN")  return "pcs-glow-green";
+    return "pcs-glow-white";
+  })() : "";
+
   const innerClass = [
     "pcs-inner",
     flipped ? "is-flipped" : "",
     noTransition ? "no-transition" : "",
+    glowClass,
   ].filter(Boolean).join(" ");
 
   const innerStyle = {
     ["--flip-ms" as any]: `${Math.max(0, flipDurationMs ?? 450)}ms`,
+    ["--glow-ms" as any]: `${glowDurationMs ?? 700}ms`,
   } as React.CSSProperties;
 
   const outerStyle: React.CSSProperties = {
     width: "100%", height: "100%", perspective: "1000px", position: "relative",
+    isolation: "isolate",
     transform: isSpotlight
       ? `scale(${spotlightLevel === 3 ? 1.08 : spotlightLevel === 2 ? 1.06 : 1.04})`
       : isDimmed ? "scale(0.97)" : "scale(1)",
@@ -395,6 +466,17 @@ export function PlayerCardShell(props: CardShellProps) {
     badges,
     heldFpVisible,
     isTapTarget,
+    glowActive: !!glowActive,
+    glowSrc: glowActive
+      ? `${import.meta.env.BASE_URL}glow-${tierToGlowFile(
+          glowTier
+            ?? tierFromSalaryForGlow(Number((stableCard as any).salary ?? (card as any).salary ?? 0)),
+        )}.png`
+      : undefined,
+    glowDurationMs,
+    glowTier:
+      glowTier
+      ?? tierFromSalaryForGlow(Number((stableCard as any).salary ?? (card as any).salary ?? 0)),
   };
 
   return (
@@ -419,21 +501,7 @@ export function PlayerCardShell(props: CardShellProps) {
           }
         </div>
       </div>{/* end pcs-inner */}
-      {glowActive && (
-        <div
-          key={`glow-${(card as any).cardId}-${glowTier}`}
-          style={{
-            position: "absolute",
-            inset: -8,
-            borderRadius: 26,
-            pointerEvents: "none",
-            zIndex: 999,
-            outline: "4px solid red",
-            boxShadow: tierToGlowShadow((card as any).tier ?? glowTier ?? "WHITE"),
-            animation: `pcsGlowFlash ${glowDurationMs ?? 300}ms ease-in-out forwards`,
-          }}
-        />
-      )}
+
     </div>
   );
 }

@@ -34,7 +34,8 @@ const RosterGridAny = RosterGrid as any;
 
 const CAP_MAX        = sportAdapter.salaryCap;
 const ROSTER_SIZE    = sportAdapter.rosterSize;
-const STARTING_BALANCE = 1000;
+const STARTING_BALANCE = 100000;
+const MIN_BALANCE_FLOOR = 500; // auto-refill for testing if balance runs too low
 
 // ── Reveal mode toggle ─────────────────────────────────────────────────────
 // "auto" = cards flip automatically in sequence (original behaviour)
@@ -45,7 +46,8 @@ function loadBalance(): number {
   try {
     const v = localStorage.getItem("replaymod_balance");
     const n = v ? Number(v) : NaN;
-    return Number.isFinite(n) && n >= 0 ? n : STARTING_BALANCE;
+    if (Number.isFinite(n) && n >= MIN_BALANCE_FLOOR) return n;
+    return STARTING_BALANCE; // reset if missing, NaN, or below floor
   } catch { return STARTING_BALANCE; }
 }
 function saveBalance(v: number) {
@@ -148,16 +150,22 @@ function createPlaceholders(): PlayerCard[] {
   }));
 }
 
+/** Must match salary → tier thresholds in shared/components/CardFront.tsx (derivedTier). */
+function tierFromSalary(salary: number): string {
+  const s = Number(salary ?? 0);
+  return s >= 52 ? "ORANGE" : s >= 40 ? "PURPLE" : s >= 28 ? "BLUE" : s >= 16 ? "GREEN" : "WHITE";
+}
+
 function toRevealableCards(cards: PlayerCard[]): RevealableCard[] {
   return cards.map(c => {
-    console.log("[toRevealable] card tier:", (c as any).tier, "cardId:", (c as any).cardId);
+    const salary = Number((c as any).salary ?? 0);
     return {
       cardId: cardId(c),
       slotIndex: c.slotIndex ?? 0,
       actualFp: Number(c.actualFp ?? 0),
       projectedFp: Number(c.projectedFp ?? 0),
-      salary: Number((c as any).salary ?? 0),
-      tier: (c as any).tier ?? "WHITE",
+      salary,
+      tier: tierFromSalary(salary),
       wasHeld: (c as any).wasHeld ?? false,
       badges: (c.achievements ?? []).map((a: any) => ({
         id: a.id, icon: a.icon || "⭐", label: a.label, fp: a.fp || 0,
@@ -412,22 +420,8 @@ const [streak, setStreak] = useState<number>(() =>
     const isHighTier = tier === "ORANGE" || tier === "PURPLE";
     const normalDuration = tier === "ORANGE" ? 600 : tier === "PURPLE" ? 500 : 300;
     const duration = isSkippingRef.current && !isHighTier ? 150 : normalDuration;
-    console.log("[Glow][GameView] handleCardRevealStart", {
-      cardId,
-      tierArg,
-      tier,
-      isHighTier,
-      normalDuration,
-      duration,
-      isSkipping: isSkippingRef.current,
-    });
-    // Force a null flash first so React sees a genuine state change
-    // even if the same card fires twice in a row
-    setGlowState({ cardId: null, tier, durationMs: duration });
-    requestAnimationFrame(() => {
-      setGlowState({ cardId, tier, durationMs: duration });
-      setTimeout(() => setGlowState(prev => ({ ...prev, cardId: null })), duration + 50);
-    });
+    setGlowState({ cardId, tier, durationMs: duration });
+    setTimeout(() => setGlowState(prev => ({ ...prev, cardId: null })), duration + 50);
   }
 
   const {

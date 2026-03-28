@@ -20,6 +20,7 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import type { GamePhase, PlayerCard } from "@shared/types";
 import { getTier, type TierKey, TIER_POSITION_TEXT } from "@shared/theme";
 import type { OverlayStamp } from "@shared/components/PlayerCardShell";
+import { CARD_CLIP_PATH_OBJECT_BOX } from "@shared/components/cardClipShape";
 
 // ── CSS injected once ──────────────────────────────────────────────────────
 
@@ -46,6 +47,12 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
     @keyframes cfFpFadeOut {
       0%   { opacity: 1; transform: translateY(0); }
       100% { opacity: 0; transform: translateY(-3px); }
+    }
+    @keyframes cfGlowFlash {
+      0%   { opacity: 0; }
+      12%  { opacity: 1; }
+      48%  { opacity: 0.98; }
+      100% { opacity: 0; }
     }
   `;
   document.head.appendChild(st);
@@ -102,12 +109,7 @@ function pulsePalette(pulse?: PulseStyle) {
   }
 }
 
-// Card shape paths — objectBoundingBox normalized (0→1)
-const CARD_PATH =
-  "M 0.0678 0 L 0.2486 0 L 0.3190 0.0338 Q 0.3190 0.0497 0.3418 0.0497 " +
-  "L 0.6356 0.0497 Q 0.6582 0.0497 0.6582 0.0338 L 0.6949 0 L 0.9322 0 " +
-  "Q 1 0 1 0.0677 L 1 0.9323 Q 1 1 0.9322 1 L 0.0678 1 " +
-  "Q 0 1 0 0.9323 L 0 0.0677 Q 0 0 0.0678 0 Z";
+const CARD_PATH = CARD_CLIP_PATH_OBJECT_BOX;
 
 // ── Public types ───────────────────────────────────────────────────────────
 
@@ -138,6 +140,11 @@ export interface CardFrontProps {
   renderHero: (props: CardFrontHeroProps) => React.ReactNode;
   heldFpVisible?: boolean;
   isTapTarget?: boolean;
+  /** Tier PNG glow — rendered inside the notched clip (full card), not in the shell. */
+  glowActive?: boolean;
+  glowSrc?: string;
+  glowDurationMs?: number;
+  glowTier?: string;
 }
 
 // ── CardFront ──────────────────────────────────────────────────────────────
@@ -147,6 +154,7 @@ export function CardFront(props: CardFrontProps) {
     card, stableCard, phase, isLocked, visibleFp, isRevealing, revealActive,
     isFlipped, heldFpVisible, isTapTarget,
     pulse, fpCountUpMs, stamp, onRollComplete, badges, renderHero,
+    glowActive, glowSrc, glowDurationMs, glowTier,
   } = props;
 
   const name      = clampText((card as any)?.name);
@@ -423,6 +431,9 @@ export function CardFront(props: CardFrontProps) {
             borderRadius: 4, padding: "2px 7px", background: "rgba(0,0,0,0.72)",
           }}>{stamp}</div>
         )}
+
+        {/* Glow burst is now rendered in PlayerCardShell as a sibling of pcs-inner,
+            outside pcs-face overflow:hidden, so it can bloom beyond card boundaries. */}
 
       </div>{/* end clipped content */}
 

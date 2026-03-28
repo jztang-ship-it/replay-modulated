@@ -249,56 +249,47 @@ export function useEmotionalReveal(params: Params) {
     setActiveRevealCardId(null);
     setTappedCardIds(new Set(cards.map(c => c.cardId)));
 
-    // Flip all unrevealed cards face-up simultaneously first
-    for (const c of cards) flipState.revealCard(c.cardId);
+    // DO NOT bulk-flip all cards. Each card flips individually in sequence
+    // so blast fires during the flip before anything is revealed.
+    // Order: non-held lowest→highest salary, then held lowest→highest salary.
+    // Anchor (highest salary overall) always goes last at full speed.
+    const nonHeld = [...cards.filter(c => !(c as any).wasHeld)]
+      .sort((a, b) => (a.salary ?? 0) - (b.salary ?? 0));
+    const held = [...cards.filter(c => (c as any).wasHeld)]
+      .sort((a, b) => (a.salary ?? 0) - (b.salary ?? 0));
 
-    const FLIP_DURATION_MS = 450;
-    const flipDone = window.setTimeout(() => {
+    const allSorted = [...cards].sort((a, b) => (a.salary ?? 0) - (b.salary ?? 0));
+    const anchorId = allSorted[allSorted.length - 1]?.cardId;
+
+    const sequence = [...nonHeld, ...held].filter(c => c.cardId !== anchorId);
+    const anchor = cards.find(c => c.cardId === anchorId);
+    if (anchor) sequence.push(anchor);
+
+    const revealOne = (idx: number) => {
       if (runIdRef.current !== myRunId) return;
-      for (const c of cards) flipState.completeReveal(c.cardId);
+      const c = sequence[idx];
+      if (!c) {
+        setActiveRevealCardId(null);
+        setShakeInfo(null);
+        isSkippingRef.current = false;
+        setIsSkipping(false);
+        setHeldFpVisible(true);
+        const total = cards.reduce((s, x) => s + Number(x.actualFp ?? 0), 0);
+        onAllComplete?.(total);
+        return;
+      }
+      const isAnchor = c.cardId === anchorId;
+      const wasHeld  = !!(c as any).wasHeld;
+      // skipFlip=wasHeld: held cards already face-up, skip the 3D flip
+      // isSkip=!isAnchor: anchor plays at full normal speed
+      runCardReveal(c, isAnchor, myRunId, () => {
+        const pause = isAnchor ? 300 : SKIP_INTER_CARD_PAUSE_MS;
+        const t = window.setTimeout(() => revealOne(idx + 1), pause);
+        timersRef.current.push(t);
+      }, wasHeld, !isAnchor /* isSkip */);
+    };
 
-      // Now run each card through full sequence at skip speed
-      // Order: non-held lowest→highest salary, then held lowest→highest salary
-      // Anchor (highest salary overall) always goes last
-      const nonHeld = [...cards.filter(c => !(c as any).wasHeld)]
-        .sort((a, b) => (a.salary ?? 0) - (b.salary ?? 0));
-      const held = [...cards.filter(c => (c as any).wasHeld)]
-        .sort((a, b) => (a.salary ?? 0) - (b.salary ?? 0));
-
-      // Anchor = highest salary card across all cards
-      const allSorted = [...cards].sort((a, b) => (a.salary ?? 0) - (b.salary ?? 0));
-      const anchorId = allSorted[allSorted.length - 1]?.cardId;
-
-      // Pull anchor out of wherever it sits and place it last
-      const sequence = [...nonHeld, ...held].filter(c => c.cardId !== anchorId);
-      const anchor = cards.find(c => c.cardId === anchorId);
-      if (anchor) sequence.push(anchor);
-
-      const revealOne = (idx: number) => {
-        if (runIdRef.current !== myRunId) return;
-        const c = sequence[idx];
-        if (!c) {
-          setActiveRevealCardId(null);
-          setShakeInfo(null);
-          isSkippingRef.current = false;
-          setIsSkipping(false);
-          setHeldFpVisible(true);
-          const total = cards.reduce((s, x) => s + Number(x.actualFp ?? 0), 0);
-          onAllComplete?.(total);
-          return;
-        }
-        const isAnchor = c.cardId === anchorId;
-        // Anchor plays at full normal speed; everyone else fast-forwards
-        runCardReveal(c, isAnchor, myRunId, () => {
-          const pause = isAnchor ? 300 : SKIP_INTER_CARD_PAUSE_MS;
-          const t = window.setTimeout(() => revealOne(idx + 1), pause);
-          timersRef.current.push(t);
-        }, !!(c as any).wasHeld, !isAnchor /* isSkip */);
-      };
-
-      revealOne(0);
-    }, FLIP_DURATION_MS);
-    timersRef.current.push(flipDone);
+    revealOne(0);
   }, [cards, flipState, clearTimers, onAllComplete]);
 
   // ── Core reveal function — runs one card through flip + FP rollup ──────────
@@ -329,45 +320,60 @@ export function useEmotionalReveal(params: Params) {
       console.log("[Reveal] t0 fired ok", c.cardId);
       if (!skipFlip) flipState.revealCard(c.cardId);
 
+      // Fire blast immediately when flip starts — card face is blinded during the flip.
+      // glowMs must match the duration set by handleCardRevealStart in GameView.
+      const glowMs = (() => {
+        const tier = (c.tier ?? "").toUpperCase();
+        const isHighTier = tier === "ORANGE" || tier === "PURPLE";
+        if (isSkip && !isHighTier) return 150;
+        return tier === "ORANGE" ? 600 : tier === "PURPLE" ? 500 : 300;
+      })();
+      onCardRevealStart?.(c.cardId, c.tier ?? "WHITE");
+
       const t1 = window.setTimeout(() => {
         if (runIdRef.current !== myRunId) return;
-        console.log("[Reveal] t1 fired ok — about to call onCardRevealStart", c.cardId, c.tier);
+        console.log("[Reveal] t1 fired ok — flip complete, blast clearing", c.cardId, c.tier);
         setShakeInfo(null);
         if (!skipFlip) flipState.completeReveal(c.cardId);
-        onCardRevealStart?.(c.cardId, c.tier ?? "WHITE");
 
-        const start  = nowMs();
-        const target = Math.max(0, Number(c.actualFp ?? 0));
-        if (isAnchor) setLastCardFp(target);
-        const tick = () => {
+        // Delay FP rollup until blast has cleared — player is now visible
+        const postBlastDelay = Math.max(0, glowMs - flipMs);
+        const t2 = window.setTimeout(() => {
           if (runIdRef.current !== myRunId) return;
-          const elapsed = clamp((nowMs() - start) / Math.max(1, countMs), 0, 1);
-          const eased   = 1 - Math.pow(1 - elapsed, 3);
-          const val     = Math.round(target * eased * 10) / 10;
-          setVisibleFpMap(prev => new Map(prev).set(c.cardId, val));
-          if (isAnchor) setLastCardProgress(elapsed);
-          if (elapsed < 1) {
-            const tt = window.setTimeout(tick, 16);
-            timersRef.current.push(tt);
-          } else {
-            setVisibleFpMap(prev => new Map(prev).set(c.cardId, target));
-            const cardBadges = c.badges ?? [];
-            if (cardBadges.length > 0) {
-              setVisibleBadgesMap(prev => new Map(prev).set(c.cardId, cardBadges));
+          const start  = nowMs();
+          const target = Math.max(0, Number(c.actualFp ?? 0));
+          if (isAnchor) setLastCardFp(target);
+          const tick = () => {
+            if (runIdRef.current !== myRunId) return;
+            const elapsed = clamp((nowMs() - start) / Math.max(1, countMs), 0, 1);
+            const eased   = 1 - Math.pow(1 - elapsed, 3);
+            const val     = Math.round(target * eased * 10) / 10;
+            setVisibleFpMap(prev => new Map(prev).set(c.cardId, val));
+            if (isAnchor) setLastCardProgress(elapsed);
+            if (elapsed < 1) {
+              const tt = window.setTimeout(tick, 16);
+              timersRef.current.push(tt);
+            } else {
+              setVisibleFpMap(prev => new Map(prev).set(c.cardId, target));
+              const cardBadges = c.badges ?? [];
+              if (cardBadges.length > 0) {
+                setVisibleBadgesMap(prev => new Map(prev).set(c.cardId, cardBadges));
+              }
+              const badgeMs = cardBadges.length > 0
+                ? (isSkip ? 60 + (cardBadges.length - 1) * SKIP_BADGE_INTERVAL_MS : 400 + (cardBadges.length - 1) * 120)
+                : 0;
+              const stampMs = st !== null ? (isSkip ? 150 : 300) : 0;
+              const doneT = window.setTimeout(() => {
+                if (runIdRef.current !== myRunId) return;
+                onCardComplete?.(c.cardId);
+                onDone();
+              }, badgeMs + stampMs);
+              timersRef.current.push(doneT);
             }
-            const badgeMs = cardBadges.length > 0
-              ? (isSkip ? 60 + (cardBadges.length - 1) * SKIP_BADGE_INTERVAL_MS : 400 + (cardBadges.length - 1) * 120)
-              : 0;
-            const stampMs = st !== null ? (isSkip ? 150 : 300) : 0;
-            const doneT = window.setTimeout(() => {
-              if (runIdRef.current !== myRunId) return;
-              onCardComplete?.(c.cardId);
-              onDone();
-            }, badgeMs + stampMs);
-            timersRef.current.push(doneT);
-          }
-        };
-        tick();
+          };
+          tick();
+        }, postBlastDelay);
+        timersRef.current.push(t2);
       }, flipMs);
       timersRef.current.push(t1);
     }, totalPre);
