@@ -133,7 +133,8 @@ export function RosterGrid(props: Props) {
         const isShaking      = shakingCardId === id;
         const liveShakeType: ShakeType = isShaking ? (shakeType ?? null) : null;
         const isSpotlight    = activeRevealCardId === id;
-        const isDimmed       = !isSkipping && activeRevealCardId !== null && activeRevealCardId !== id;
+        const isFaceDown     = flippedIds.has(id);
+        const isDimmed       = !isSkipping && activeRevealCardId !== null && activeRevealCardId !== id && !isFaceDown;
         const cardShakeType  = cardShakeTypeMap?.get(id) ?? null;
 
         // tap mode: a card is "held" if it has wasHeld flag
@@ -175,16 +176,24 @@ export function RosterGrid(props: Props) {
               width: "100%",
               aspectRatio: "329 / 478",
               zIndex: isSpotlight ? 100 : isShaking ? 10 : 1,
-              filter: isDimmed ? "brightness(0.35)" : "none",
               background: "#0a0c10",
               cursor: isTapTarget ? "pointer" : "default",
               boxShadow: isTapTarget ? "0 0 0 2px rgba(255,255,255,0.25)" : "none",
-              transition: "box-shadow 300ms ease, opacity 0.3s ease, filter 0.3s ease",
+              transition: "box-shadow 300ms ease",
               ...(ftueLockedSlot !== null && (card.slotIndex ?? 0) !== ftueLockedSlot
-                ? { opacity: 0.18, filter: "brightness(0.4)", pointerEvents: "none" as const }
+                ? { opacity: 0.18, pointerEvents: "none" as const }
                 : {}),
             }}
           >
+            {/* Dim overlay — sits above 3D card as a sibling, never touches preserve-3d */}
+            {isDimmed && (
+              <div style={{
+                position: "absolute", inset: 0, borderRadius: 18,
+                background: "rgba(4,8,16,0.45)",
+                pointerEvents: "none", zIndex: 120,
+                transition: "opacity 0.3s ease",
+              }} />
+            )}
             <CardComponent
               card={card}
               phase={phase}

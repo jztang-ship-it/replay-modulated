@@ -178,59 +178,62 @@ export function CardFront(props: CardFrontProps) {
   const [displayedFp,  setDisplayedFp]  = useState(0);
   const [isRolling,    setIsRolling]    = useState(false);
   const [rollComplete, setRollComplete] = useState(false);
-  // fpRevealed: true once we've shown the actual FP (drives the fade swap)
   const [fpRevealed,   setFpRevealed]   = useState(false);
-  const cardKey     = useMemo(() => safeKeyFor(card), [card]);
-  const targetFpRef = useRef<number | null>(null);
+  const cardKey       = useMemo(() => safeKeyFor(card), [card]);
+  const animRafRef    = useRef<number>(0);
+  const animStartRef  = useRef<number | null>(null);
+  const animatingRef  = useRef(false);
 
-  useEffect(() => {
-    if (!isRevealing || !revealActive) return;
-    const finalTarget = Number((card as any)?.actualFp ?? 0);
-    if (!Number.isFinite(finalTarget) || finalTarget <= 0) return;
-    if (targetFpRef.current === null) targetFpRef.current = finalTarget;
-  }, [card, isRevealing, revealActive]);
-
-  useEffect(() => { targetFpRef.current = null; }, [cardKey]);
-
+  // Triggered once when visibleFp first goes above 0 — runs its own RAF loop
+  // to completion. Never cancelled by other cards tapping (no revealActive in deps).
   useEffect(() => {
     if (visibleFp === undefined) {
-      // visibleFp not in map at all — held card waiting for reveal sequence
-      if (isHeldCard) { setDisplayedFp(0); return; }
-      setDisplayedFp(showResults ? Number((card as any)?.actualFp ?? proj) : proj);
+      // visibleFpMap was cleared (skip triggered) — reset so animation can restart
+      cancelAnimationFrame(animRafRef.current);
+      animatingRef.current = false;
+      animStartRef.current = null;
       return;
     }
-    // For held cards during skip, visibleFp is driven by useEmotionalReveal's tick.
-    // Just mirror it directly — no internal countup needed (would fight the external one).
-    if (isHeldCard) {
-      if (visibleFp > 0) {
-        setFpRevealed(true);
-        setDisplayedFp(visibleFp);
+    if (visibleFp <= 0) return;
+    if (animatingRef.current) return; // already animating for this card, don't restart
+
+    const actual = Math.max(0, Number((card as any)?.actualFp ?? 0));
+    setFpRevealed(true);
+
+    if (actual <= 0) {
+      setDisplayedFp(0); setIsRolling(false); setRollComplete(true); onRollComplete?.(); return;
+    }
+
+    animatingRef.current = true;
+    animStartRef.current = null;
+    setIsRolling(true); setRollComplete(false);
+
+    const duration = Math.max(300, Math.min(2200, Number(fpCountUpMs ?? 500)));
+
+    const animate = (timestamp: number) => {
+      if (animStartRef.current === null) animStartRef.current = timestamp;
+      const elapsed  = timestamp - animStartRef.current;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased    = 1 - Math.pow(1 - progress, 3);
+      setDisplayedFp(Math.round(actual * eased * 10) / 10);
+      if (progress < 1) {
+        animRafRef.current = requestAnimationFrame(animate);
+      } else {
+        setDisplayedFp(actual);
+        setIsRolling(false); setRollComplete(true);
+        animatingRef.current = false;
+        onRollComplete?.();
       }
-      return;
-    }
-    if (isRevealing && !revealActive && visibleFp === undefined) return;
-    const target = targetFpRef.current ?? visibleFp;
-    if (visibleFp > 0 && displayedFp !== target) {
-      if (target === 0) { setDisplayedFp(0); setIsRolling(false); setRollComplete(true); onRollComplete?.(); return; }
-      setFpRevealed(true);
-      setIsRolling(true); setRollComplete(false);
-      const duration = Math.max(220, Math.min(2200, Number(fpCountUpMs ?? 500)));
-      const startTime = Date.now();
-      let raf = 0;
-      const animate = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        setDisplayedFp(target * eased);
-        if (progress < 1) { raf = requestAnimationFrame(animate); }
-        else { setDisplayedFp(target); setIsRolling(false); setRollComplete(true); onRollComplete?.(); }
-      };
-      raf = requestAnimationFrame(animate);
-      return () => cancelAnimationFrame(raf);
-    }
-  }, [visibleFp, fpCountUpMs, revealActive, isRevealing]);
+    };
+    animRafRef.current = requestAnimationFrame(animate);
+    // No cleanup cancellation — intentional. Cancelling on dep change would kill
+    // this card's animation when other cards are tapped. Reset only on cardKey change.
+  }, [visibleFp]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    cancelAnimationFrame(animRafRef.current);
+    animatingRef.current = false;
+    animStartRef.current = null;
     setRollComplete(false); setDisplayedFp(0); setIsRolling(false); setFpRevealed(false);
   }, [cardKey]);
 
@@ -240,8 +243,8 @@ export function CardFront(props: CardFrontProps) {
   const isShowingActualFp = fpRevealed || (showResults && !isPreReveal);
   const fpValue = isShowingActualFp
     ? (visibleFp !== undefined ? displayedFp : Number((card as any)?.actualFp ?? 0))
-    : proj;
-  const fpText = Number.isFinite(fpValue) && fpValue > 0 ? fpValue.toFixed(1) : proj.toFixed(1);
+    : 0;
+  const fpText = Number.isFinite(fpValue) && fpValue > 0 ? fpValue.toFixed(1) : "0.0";
 
   const badgeBonusFp = useMemo(() => badges?.reduce((s, b) => s + (b.fp ?? 0), 0) ?? 0, [badges]);
   const hasBadges    = (badges?.length ?? 0) > 0;
@@ -385,32 +388,35 @@ export function CardFront(props: CardFrontProps) {
         }}>
           {hasBadges ? (
             <>
-              {badges!.slice(0, 5).map((badge, i) => (
+              {badges!.slice(0, 4).map((badge, i) => (
                 <div
                   key={badge.id ?? badge.label ?? i}
                   style={{
                     animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${i * 90}ms both`,
-                    display: "flex", alignItems: "center", gap: 1,
+                    display: "flex", alignItems: "center", gap: 2,
                     background: "rgba(0,0,0,0.60)", borderRadius: 5,
-                    padding: "2px 3px",
+                    padding: "2px 4px",
                     border: "1px solid rgba(255,255,255,0.15)",
                     flexShrink: 0,
                   }}
                 >
                   <span style={{ fontSize: 9, lineHeight: 1 }}>{badge.icon}</span>
+                  {badge.fp > 0 && (
+                    <span style={{ fontSize: 7, fontWeight: 800, color: "#FFEA86", letterSpacing: 0.2, lineHeight: 1 }}>+{badge.fp}</span>
+                  )}
                 </div>
               ))}
-              {/* Total badge bonus — shown as +X after all badge icons */}
+              {/* Total bonus pill — only show if >1 badge or badges were clipped */}
               {badgeBonusFp > 0 && (
                 <div style={{
-                  animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${(Math.min(badges!.length, 5)) * 90}ms both`,
-                  display: "flex", alignItems: "center",
-                  background: "rgba(0,0,0,0.70)", borderRadius: 5,
-                  padding: "2px 4px",
-                  border: "1px solid rgba(255,234,134,0.35)",
+                  animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${Math.min(badges!.length, 4) * 90}ms both`,
+                  display: "flex", alignItems: "center", gap: 2,
+                  background: "rgba(255,234,134,0.18)", borderRadius: 5,
+                  padding: "2px 5px",
+                  border: "1px solid rgba(255,234,134,0.45)",
                   flexShrink: 0,
                 }}>
-                  <span style={{ fontSize: 7, fontWeight: 800, color: "#FFEA86", letterSpacing: 0.3 }}>+{badgeBonusFp}</span>
+                  <span style={{ fontSize: 8, fontWeight: 900, color: "#FFEA86", letterSpacing: 0.3 }}>+{badgeBonusFp}</span>
                 </div>
               )}
             </>

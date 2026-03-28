@@ -50,7 +50,7 @@ type Params = {
   flipState: CardFlipState;
   revealConfig?: RevealConfig;
   onCardComplete?: (cardId: string) => void;
-  onCardRevealStart?: (cardId: string, tier: string) => void;
+  onCardRevealStart?: (cardId: string, tier: string, shakeType: ShakeType) => void;
   onAllComplete?: (totalFp: number) => void;
   /** "auto" = sequential auto-reveal (default). "tap" = user taps each card. */
   revealMode?: "auto" | "tap";
@@ -63,14 +63,41 @@ type Params = {
 };
 
 const ANCHOR_PRE_FLIP_PAUSE_MS = 200;
-const SHAKE_DURATION_MS        = 400;
+// Shake pre-duration varies by result intensity
+const SHAKE_DURATION_MS_DEFAULT   = 400;
+const SHAKE_DURATION_MS_BIG       = 550;  // ON FIRE
+const SHAKE_DURATION_MS_LEGENDARY = 700;  // SMOKING HOT — maximum buildup
 const ANCHOR_COUNT_MULTIPLIER  = 1.5;
 // ── Skip-mode timing constants ─────────────────────────────────────────────
 const SKIP_GLOW_HIGH_TIER_MS   = null;   // null = use full normal duration
-const SKIP_GLOW_DEFAULT_MS     = 150;    // BLUE/GREEN/WHITE/ICE COLD/FREEZING
 const SKIP_BADGE_INTERVAL_MS   = 30;     // vs 80ms normal
-const SKIP_COUNT_MS            = 150;    // flat for all tiers (vs 400–700ms normal)
+const SKIP_COUNT_MS            = 300;    // fast but visibly animating on mobile (150 was too quick)
 const SKIP_INTER_CARD_PAUSE_MS = 100;    // vs 300ms normal
+
+// ── Blast (glow) duration by tier + result ────────────────────────────────
+function glowMsForReveal(tier: string, st: ShakeType, isSkip: boolean): number {
+  const t = tier.toUpperCase();
+  // Base duration by tier
+  const base = t === "ORANGE" ? 900
+             : t === "PURPLE" ? 700
+             : t === "BLUE"   ? 400
+             : t === "GREEN"  ? 350
+             :                  250;  // WHITE
+  // Result modifier: big scores extend suspense, bad scores cut it short
+  const modifier = st === "legendary" ?  300   // SMOKING HOT: +300ms
+                 : st === "big"       ?  150   // ON FIRE:     +150ms
+                 : st === "frozen"    ? -100   // FREEZING:    -100ms (get it over with)
+                 : st === "cold"      ?  -50   // ICE COLD:    -50ms
+                 :                        0;
+  const normal = Math.max(150, base + modifier);
+  if (!isSkip) return normal;
+  // Skip: compress but preserve relative feel — high tiers still noticeably longer
+  return t === "ORANGE" ? (st === "legendary" ? 500 : 400)
+       : t === "PURPLE" ? (st === "legendary" || st === "big" ? 350 : 300)
+       : t === "BLUE"   ? 200
+       : t === "GREEN"  ? 175
+       :                  125;  // WHITE
+}
 
 function nowMs() {
   return typeof performance !== "undefined" ? performance.now() : Date.now();
@@ -149,9 +176,16 @@ export function useEmotionalReveal(params: Params) {
   const runIdRef  = useRef(0);
   const isSkippingRef = useRef(false);
   const timersRef = useRef<number[]>([]);
+  const isTapRevealingRef = useRef(false);   // mutex: one card fully completes before next starts
+  const pendingTapQueue   = useRef<string[]>([]); // queued card IDs waiting to reveal
+  const tappedCountRef    = useRef(0);            // ref-based count — never stale inside closures
+  const tappedIdsRef      = useRef<Set<string>>(new Set()); // ref mirror of tappedCardIds, never stale
 
   const clearTimers = useCallback(() => {
-    for (const t of timersRef.current) window.clearTimeout(t);
+    for (const t of timersRef.current) {
+      window.clearTimeout(t);
+      window.cancelAnimationFrame(t);
+    }
     timersRef.current = [];
   }, []);
 
@@ -161,6 +195,10 @@ export function useEmotionalReveal(params: Params) {
     isSkippingRef.current = false;
     setIsSkipping(false);
     clearTimers();
+    isTapRevealingRef.current = false;
+    pendingTapQueue.current = [];
+    tappedCountRef.current = 0;
+    tappedIdsRef.current = new Set();
     setVisibleFpMap(new Map());
     setLastCardProgress(0);
     setLastCardFp(0);
@@ -247,13 +285,25 @@ export function useEmotionalReveal(params: Params) {
 
     setShakeInfo(null);
     setActiveRevealCardId(null);
+    // Snapshot already-tapped cards from the ref (never stale)
+    const alreadyTapped = new Set(tappedIdsRef.current);
     setTappedCardIds(new Set(cards.map(c => c.cardId)));
+    // Only clear FP for cards not yet revealed — already-revealed keep their values
+    setVisibleFpMap(prev => {
+      const next = new Map(prev);
+      for (const c of cards) {
+        const cid = (c as any).cardId;
+        if (!alreadyTapped.has(cid)) next.delete(cid);
+      }
+      return next;
+    });
+    isTapRevealingRef.current = false;
+    pendingTapQueue.current = [];
+    tappedCountRef.current = 0;
+    tappedIdsRef.current = new Set(cards.map(c => (c as any).cardId));
 
-    // DO NOT bulk-flip all cards. Each card flips individually in sequence
-    // so blast fires during the flip before anything is revealed.
-    // Order: non-held lowest→highest salary, then held lowest→highest salary.
-    // Anchor (highest salary overall) always goes last at full speed.
-    const nonHeld = [...cards.filter(c => !(c as any).wasHeld)]
+    // Only sequence cards not yet tapped. Already-revealed cards stay as-is.
+    const nonHeld = [...cards.filter(c => !(c as any).wasHeld && !alreadyTapped.has((c as any).cardId))]
       .sort((a, b) => (a.salary ?? 0) - (b.salary ?? 0));
     const held = [...cards.filter(c => (c as any).wasHeld)]
       .sort((a, b) => (a.salary ?? 0) - (b.salary ?? 0));
@@ -262,7 +312,7 @@ export function useEmotionalReveal(params: Params) {
     const anchorId = allSorted[allSorted.length - 1]?.cardId;
 
     const sequence = [...nonHeld, ...held].filter(c => c.cardId !== anchorId);
-    const anchor = cards.find(c => c.cardId === anchorId);
+    const anchor = alreadyTapped.has(anchorId ?? '') ? undefined : cards.find(c => c.cardId === anchorId);
     if (anchor) sequence.push(anchor);
 
     const revealOne = (idx: number) => {
@@ -280,10 +330,13 @@ export function useEmotionalReveal(params: Params) {
       }
       const isAnchor = c.cardId === anchorId;
       const wasHeld  = !!(c as any).wasHeld;
+      // For held cards: mark as revealed NOW so RosterGrid passes visibleFp through
+      // to CardFront. Without this, effectiveFp stays undefined and FP never animates.
+      if (wasHeld) setHeldRevealedIds(prev => new Set(prev).add(c.cardId));
       // skipFlip=wasHeld: held cards already face-up, skip the 3D flip
       // isSkip=!isAnchor: anchor plays at full normal speed
       runCardReveal(c, isAnchor, myRunId, () => {
-        const pause = isAnchor ? 300 : SKIP_INTER_CARD_PAUSE_MS;
+        const pause = isAnchor ? 300 : Math.max(SKIP_INTER_CARD_PAUSE_MS, 50);
         const t = window.setTimeout(() => revealOne(idx + 1), pause);
         timersRef.current.push(t);
       }, wasHeld, !isAnchor /* isSkip */);
@@ -309,7 +362,11 @@ export function useEmotionalReveal(params: Params) {
       ? SKIP_COUNT_MS
       : countMsForTier(c.tier ?? "", isAnchor);
     const anchorDelay = isAnchor ? ANCHOR_PRE_FLIP_PAUSE_MS : 0;
-    const shakePre    = st !== null ? SHAKE_DURATION_MS : 0;
+    // Shake pre-duration scales with result intensity for more buildup on big cards
+    const shakePre = st === "legendary" ? SHAKE_DURATION_MS_LEGENDARY
+                   : st === "big"       ? SHAKE_DURATION_MS_BIG
+                   : st !== null        ? SHAKE_DURATION_MS_DEFAULT
+                   : 0;
     const totalPre    = skipFlip ? 0 : (shakePre + anchorDelay);
 
     if (st !== null) setShakeInfo({ cardId: c.cardId, type: st });
@@ -320,15 +377,10 @@ export function useEmotionalReveal(params: Params) {
       console.log("[Reveal] t0 fired ok", c.cardId);
       if (!skipFlip) flipState.revealCard(c.cardId);
 
-      // Fire blast immediately when flip starts — card face is blinded during the flip.
-      // glowMs must match the duration set by handleCardRevealStart in GameView.
-      const glowMs = (() => {
-        const tier = (c.tier ?? "").toUpperCase();
-        const isHighTier = tier === "ORANGE" || tier === "PURPLE";
-        if (isSkip && !isHighTier) return 150;
-        return tier === "ORANGE" ? 600 : tier === "PURPLE" ? 500 : 300;
-      })();
-      onCardRevealStart?.(c.cardId, c.tier ?? "WHITE");
+      // Blast duration: tiered by color + boosted/reduced by result.
+      // Passes st so GameView can set the correct CSS animation duration.
+      const glowMs = glowMsForReveal(c.tier ?? "WHITE", st, isSkip);
+      onCardRevealStart?.(c.cardId, c.tier ?? "WHITE", st);
 
       const t1 = window.setTimeout(() => {
         if (runIdRef.current !== myRunId) return;
@@ -336,25 +388,43 @@ export function useEmotionalReveal(params: Params) {
         setShakeInfo(null);
         if (!skipFlip) flipState.completeReveal(c.cardId);
 
-        // Delay FP rollup until blast has cleared — player is now visible
-        const postBlastDelay = Math.max(0, glowMs - flipMs);
+        // FP starts after blast clears but capped — long blasts fade while FP rolls,
+        // avoiding excessive delay. 200ms max post-flip wait feels snappy but intentional.
+        const postBlastDelay = Math.min(200, Math.max(0, glowMs - flipMs));
         const t2 = window.setTimeout(() => {
           if (runIdRef.current !== myRunId) return;
-          const start  = nowMs();
+
+          // Post-blast celebration shake for SMOKING HOT — fires the moment player is revealed,
+          // as FP starts rolling up. Double-impact: suspense before, celebration after.
+          if (st === "legendary") {
+            setShakeInfo({ cardId: c.cardId, type: "legendary" });
+            window.setTimeout(() => {
+              if (runIdRef.current !== myRunId) return;
+              setShakeInfo(null);
+            }, SHAKE_DURATION_MS_DEFAULT);
+          }
+
           const target = Math.max(0, Number(c.actualFp ?? 0));
           if (isAnchor) setLastCardFp(target);
-          const tick = () => {
+
+          // Signal CardFront to START its animation by setting a small non-zero value.
+          // CardFront's own RAF loop handles all visual interpolation from 0 → target.
+          // The hook only needs to signal start, drive the gauge progress, then fire onDone.
+          setVisibleFpMap(prev => new Map(prev).set(c.cardId, 0.001));
+
+          const start = nowMs();
+          const gaugeTickInterval = 16;
+          const driveTick = () => {
             if (runIdRef.current !== myRunId) return;
             const elapsed = clamp((nowMs() - start) / Math.max(1, countMs), 0, 1);
             const eased   = 1 - Math.pow(1 - elapsed, 3);
-            const val     = Math.round(target * eased * 10) / 10;
-            setVisibleFpMap(prev => new Map(prev).set(c.cardId, val));
-            if (isAnchor) setLastCardProgress(elapsed);
+            if (isAnchor) setLastCardProgress(eased);
             if (elapsed < 1) {
-              const tt = window.setTimeout(tick, 16);
+              const tt = window.setTimeout(driveTick, gaugeTickInterval);
               timersRef.current.push(tt);
             } else {
               setVisibleFpMap(prev => new Map(prev).set(c.cardId, target));
+              if (isAnchor) setLastCardProgress(1);
               const cardBadges = c.badges ?? [];
               if (cardBadges.length > 0) {
                 setVisibleBadgesMap(prev => new Map(prev).set(c.cardId, cardBadges));
@@ -371,7 +441,7 @@ export function useEmotionalReveal(params: Params) {
               timersRef.current.push(doneT);
             }
           };
-          tick();
+          driveTick();
         }, postBlastDelay);
         timersRef.current.push(t2);
       }, flipMs);
@@ -478,22 +548,44 @@ export function useEmotionalReveal(params: Params) {
   }
 
   // tapRevealCard: called when user taps an unheld card in tap mode.
-  // Only acts if card hasn't been tapped yet and reveal is active.
+  // Uses a queue + mutex so each card fully completes before the next starts,
+  // even if user taps multiple cards rapidly.
   const tapRevealCard = useCallback((cardId: string) => {
     if (!isActive || revealMode !== "tap") return;
     if (tappedCardIds.has(cardId)) return;
+    if (pendingTapQueue.current.includes(cardId)) return; // already queued
 
-    const myRunId  = runIdRef.current;
-    const unheldCards = revealOrder; // revealOrder only contains unheld cards
-    const anchorId = unheldCards[unheldCards.length - 1]?.cardId;
-    const c = unheldCards.find(x => x.cardId === cardId);
-    if (!c) return;
+    pendingTapQueue.current.push(cardId);
+    processTapQueue();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isActive, revealMode, tappedCardIds, revealOrder, cards]);
 
-    const newTapped = new Set(tappedCardIds).add(cardId);
-    setTappedCardIds(newTapped);
-    const isLast = newTapped.size === unheldCards.length;
+  // Internal: drains the tap queue one card at a time.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  function processTapQueue() {
+    if (isTapRevealingRef.current) return; // busy — queue will drain when current card finishes
+    if (pendingTapQueue.current.length === 0) return;
+
+    const cardId = pendingTapQueue.current.shift()!;
+    // Re-check — might have been tapped by a previous drain
+    if (tappedCardIds.has(cardId)) { processTapQueue(); return; }
+
+    const myRunId     = runIdRef.current;
+    const unheldCards = revealOrder;
+    const anchorId    = unheldCards[unheldCards.length - 1]?.cardId;
+    const c           = unheldCards.find(x => x.cardId === cardId);
+    if (!c) { processTapQueue(); return; }
+
+    // Use ref-based counter — tappedCardIds is React state and is stale inside this closure
+    tappedCountRef.current += 1;
+    const isLast = tappedCountRef.current >= unheldCards.length;
+
+    tappedIdsRef.current = new Set(tappedIdsRef.current).add(cardId);
+    setTappedCardIds(prev => new Set(prev).add(cardId));
+    isTapRevealingRef.current = true;
 
     runCardReveal(c, c.cardId === anchorId, myRunId, () => {
+      isTapRevealingRef.current = false;
       if (isLast) {
         setActiveRevealCardId(null);
         setShakeInfo(null);
@@ -502,10 +594,11 @@ export function useEmotionalReveal(params: Params) {
         } else {
           revealHeldCards(myRunId);
         }
+      } else {
+        processTapQueue(); // reveal next queued card
       }
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActive, revealMode, tappedCardIds, revealOrder, cards]);
+  }
 
   // performanceTagMap — neutral ratio bucket, sport-agnostic labels.
   // Each sport's GameView can use this or ignore it; nothing in shared renders it.
@@ -549,6 +642,7 @@ export function useEmotionalReveal(params: Params) {
     anchorCardId,
     isSkipping,
     isSkippingRef,
+
   };
 }
 

@@ -47,7 +47,10 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
       overflow: hidden;
       transform: translateZ(0);
     }
-    .pcs-face-back { transform: rotateY(180deg) translateZ(0); }
+    .pcs-face-back {
+      transform: rotateY(180deg) translateZ(0);
+      background: linear-gradient(160deg, #0E1628 0%, #080E1C 50%, #050810 100%);
+    }
 
     /* Blast overlay — floods the card face at impact, hiding the player briefly */
     .pcs-face::before {
@@ -379,14 +382,14 @@ export function PlayerCardShell(props: CardShellProps) {
     setOverlay(next);
   }, [visibleFp, cardShakeType, id, actualFp]);
 
-  // Legacy onRollComplete path (kept for non-stamped cards)
+  // onRollComplete fires when CardFront's FP animation finishes.
+  // Fire unconditionally — the stamp animation is purely visual and must not
+  // block the sequencing chain. pendingDoneRef in the hook receives this signal.
   const handleRollComplete = useCallback(() => {
     if (rollCompleteFiredRef.current) return;
     rollCompleteFiredRef.current = true;
-    if (!cardShakeType) {
-      props.onRollComplete?.();
-    }
-  }, [id, cardShakeType]); // eslint-disable-line
+    props.onRollComplete?.();
+  }, [id]); // eslint-disable-line
 
   useEffect(() => {
     if (overlay.stamping) {
@@ -436,12 +439,10 @@ export function PlayerCardShell(props: CardShellProps) {
 
   const outerStyle: React.CSSProperties = {
     width: "100%", height: "100%", perspective: "1000px", position: "relative",
-    isolation: "isolate",
     transform: isSpotlight
       ? `scale(${spotlightLevel === 3 ? 1.08 : spotlightLevel === 2 ? 1.06 : 1.04})`
-      : isDimmed ? "scale(0.97)" : "scale(1)",
-    opacity: isDimmed ? 0.35 : 1,
-    transition: "transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s ease",
+      : "scale(1)",
+    transition: "transform 0.35s cubic-bezier(0.34,1.56,0.64,1)",
     zIndex: isSpotlight ? 100 : 1,
     background: "transparent",
   };

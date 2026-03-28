@@ -81,20 +81,20 @@ function BasketballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) 
   })();
   return (
     <>
-      {headshotSrc ? (
+      {/* Initials always rendered as fallback — visible when image hasn't loaded yet */}
+      <div style={{ position:"absolute", inset:0, display:"grid", placeItems:"center", fontSize:32, fontWeight:950, color:"rgba(255,255,255,0.50)", userSelect:"none" }}>
+        {initials}
+      </div>
+      {headshotSrc && (
         <img
           key={headshotSrc}
           src={headshotSrc}
           alt={String((card as any)?.name ?? "")}
-          style={{ position:"absolute", top:"12%", left:"-5%", width:"110%", height:"100%", objectFit:"cover", objectPosition:"50% 10%", opacity:imgReady?1:0, transition:"opacity 0.2s ease" }}
+          style={{ position:"absolute", top:"12%", left:"-5%", width:"110%", height:"100%", objectFit:"cover", objectPosition:"50% 10%", opacity:imgReady?1:0, transition:"opacity 0.3s ease" }}
           draggable={false}
           onLoad={() => setImgReady(true)}
           onError={() => setImgReady(false)}
         />
-      ) : (
-        <div style={{ position:"absolute", inset:0, display:"grid", placeItems:"center", fontSize:32, fontWeight:950, color:"rgba(255,255,255,0.70)", userSelect:"none" }}>
-          {initials}
-        </div>
       )}
     </>
   );

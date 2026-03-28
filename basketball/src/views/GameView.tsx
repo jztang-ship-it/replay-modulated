@@ -415,11 +415,27 @@ const [streak, setStreak] = useState<number>(() =>
   const currentBet      = BASE_BET * betMultiplier;
   const gameAnalytics   = useGameAnalytics("basketball");
 
-  function handleCardRevealStart(cardId: string, tierArg: string) {
+  function handleCardRevealStart(cardId: string, tierArg: string, shakeType?: string | null) {
     const tier = tierArg?.toUpperCase() ?? "WHITE";
-    const isHighTier = tier === "ORANGE" || tier === "PURPLE";
-    const normalDuration = tier === "ORANGE" ? 600 : tier === "PURPLE" ? 500 : 300;
-    const duration = isSkippingRef.current && !isHighTier ? 150 : normalDuration;
+    const st = shakeType ?? null;
+    // Must match glowMsForReveal() in useEmotionalReveal
+    const base = tier === "ORANGE" ? 900
+               : tier === "PURPLE" ? 700
+               : tier === "BLUE"   ? 400
+               : tier === "GREEN"  ? 350
+               :                     250;
+    const modifier = st === "legendary" ?  300
+                   : st === "big"       ?  150
+                   : st === "frozen"    ? -100
+                   : st === "cold"      ?  -50
+                   :                        0;
+    const duration = isSkippingRef.current
+      ? (tier === "ORANGE" ? (st === "legendary" ? 500 : 400)
+       : tier === "PURPLE" ? (st === "legendary" || st === "big" ? 350 : 300)
+       : tier === "BLUE"   ? 200
+       : tier === "GREEN"  ? 175
+       :                     125)
+      : Math.max(150, base + modifier);
     setGlowState({ cardId, tier, durationMs: duration });
     setTimeout(() => setGlowState(prev => ({ ...prev, cardId: null })), duration + 50);
   }
@@ -853,9 +869,11 @@ const [streak, setStreak] = useState<number>(() =>
 
   return (
     <div style={{
-      width: "100vw",
-      height: "100dvh",
-      maxHeight: "-webkit-fill-available",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
       display: "flex",
       flexDirection: "column",
       overflow: "hidden",
