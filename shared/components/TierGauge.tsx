@@ -128,9 +128,9 @@ export function TierGauge({
   const onFtueOscillateCompleteRef = useRef(onFtueOscillateComplete);
   onFtueOscillateCompleteRef.current = onFtueOscillateComplete;
 
-  // Gauge stops — GOAT/BONUS_POOL are bonus pool wins, not gauge stops
+  // Gauge stops — GOAT/JACKPOT are bonus pool wins, not gauge stops
   const sorted = [...thresholds]
-    .filter(t => (t.tier as string) !== "BONUS_POOL" && (t.tier as string) !== "GOAT")
+    .filter(t => (t.tier as string) !== "JACKPOT" && (t.tier as string) !== "GOAT")
     .sort((a, b) => a.minFP - b.minFP);
 
   // Derive tier position from totalFp
@@ -324,12 +324,17 @@ export function TierGauge({
       return;
     }
     if (ftueSuppressNormal) { cancelAnimationFrame(rafRef.current); setBarFill(0); setBarColor("transparent"); return; }
-    if (!visible || totalFp <= 0) {
+    if (!visible) {
       cancelAnimationFrame(rafRef.current);
       prevFillRef.current = 0;
       prevTierRef.current = "BUST";
       setBarFill(0);
       setBarColor("transparent");
+      return;
+    }
+    if (totalFp <= 0) {
+      // Don't hide bar — totalFp can briefly be 0 during state transitions.
+      // Just skip animation until we have a real value.
       return;
     }
 
@@ -469,7 +474,7 @@ export function TierGauge({
     }
   }, [visible]);
 
-  if (!visible || totalFp <= 0 || ftueSuppressNormal) return null;
+  if (!visible || ftueSuppressNormal) return null;
 
   return (
     <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", gap: 4 }}>
