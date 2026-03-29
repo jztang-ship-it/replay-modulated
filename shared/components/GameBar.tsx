@@ -1028,10 +1028,10 @@ export function GameBar({
   const overBudget = remaining < 0;
 
   const MULTIPLIER_COLORS: Record<number, { active: string; glow: string }> = {
-    1:  { active: "rgba(100,180,255,0.25)",  glow: "none" },
-    3:  { active: "rgba(34,197,94,0.35)",    glow: "0 0 12px rgba(34,197,94,0.4)" },
-    5:  { active: "rgba(192,132,252,0.40)",  glow: "0 0 14px rgba(192,132,252,0.5)" },
-    10: { active: "rgba(251,146,60,0.45)",   glow: "0 0 18px rgba(251,146,60,0.6)" },
+    1:  { active: "rgba(100,180,255,0.25)", glow: "none" },
+    3:  { active: "rgba(34,197,94,0.35)",   glow: "0 0 12px rgba(34,197,94,0.4)" },
+    5:  { active: "rgba(192,132,252,0.40)", glow: "0 0 14px rgba(192,132,252,0.5)" },
+    10: { active: "rgba(251,146,60,0.45)",  glow: "0 0 18px rgba(251,146,60,0.6)" },
   };
 
   const multiplierRow = (
