@@ -259,7 +259,7 @@ function BonusRow({ betAdded, streak }: { betAdded: number; streak: number }) {
       marginTop: 0,
       gap: 1,
     }}>
-      {/* Bonus pool amount only — streak dots moved to zone 3 */}
+      {/* Bonus pool amount */}
       <div style={{
         display: "inline-flex", alignItems: "center", gap: 6,
         padding: "4px 14px", borderRadius: 20,
@@ -273,6 +273,64 @@ function BonusRow({ betAdded, streak }: { betAdded: number; streak: number }) {
           ${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </span>
       </div>
+
+      {/* Dot tracker + reward label */}
+      <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+        {BONUS_DOTS.map((dot, i) => {
+          const filled = streak >= dot.threshold;
+          const isPulsing = pulsingDot === dot.threshold;
+          const tierColor = BONUS_TIERS[dot.tierIdx].color;
+          const tierGlow  = BONUS_TIERS[dot.tierIdx].glow;
+          const isBreak = i === 2;
+
+          return (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 3 }}>
+              <div style={{
+                width: filled ? 8 : 7,
+                height: filled ? 8 : 7,
+                borderRadius: "50%",
+                background: filled ? tierColor : "rgba(255,255,255,0.12)",
+                boxShadow: isPulsing
+                  ? `0 0 0 4px ${tierGlow}, 0 0 12px ${tierColor}`
+                  : filled
+                  ? `0 0 6px ${tierGlow}`
+                  : "none",
+                transform: isPulsing ? "scale(1.5)" : "scale(1)",
+                transition: "all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
+              }} />
+              {isBreak && (
+                <div style={{
+                  width: 14, height: 1,
+                  background: "rgba(255,255,255,0.1)",
+                  margin: "0 2px",
+                }} />
+              )}
+            </div>
+          );
+        })}
+
+        {/* Reward label — what you get or what you're chasing */}
+        <span style={{
+          fontSize: 9, fontWeight: 700, marginLeft: 6,
+          color: earnedTier ? earnedTier.color : "rgba(255,255,255,0.25)",
+          letterSpacing: "0.06em",
+          textShadow: earnedTier ? `0 0 8px ${earnedTier.glow}` : "none",
+          transition: "color 0.4s ease",
+        }}>
+          {earnedTier ? `+${earnedTier.pct}%` : nextTier ? `+${nextTier.pct}%` : ""}
+        </span>
+      </div>
+
+      {/* Contextual hint line */}
+      {nextTier && (
+        <div style={{
+          fontSize: 8, fontWeight: 600,
+          color: "rgba(255,255,255,0.25)",
+          letterSpacing: "0.05em",
+        }}>
+          {winsNeeded} more {winsNeeded === 1 ? "win" : "wins"} for {nextTier.pct}% of pool
+        </div>
+      )}
     </div>
   );
 }
@@ -841,11 +899,12 @@ const [streak, setStreak] = useState<number>(() =>
 
         {/* 1 — Header */}
         <div style={{
-          flex: "0 0 12dvh",
+          flex: "0 0 14dvh",
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",
-          padding: "0 10px 2px",
+          gap: 6,
+          padding: "0 10px 6px",
           boxSizing: "border-box",
           overflow: "hidden",
         }}>
@@ -873,7 +932,7 @@ const [streak, setStreak] = useState<number>(() =>
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "center",
-          padding: "2px 4px 6px 4px",
+          padding: "6px 4px 8px 4px",
           boxSizing: "border-box",
           overflow: "hidden",
         }}>
@@ -950,10 +1009,11 @@ const [streak, setStreak] = useState<number>(() =>
             ? { "data-ftue-anchor": "ftue-darnit-focus" }
             : {})}
           style={{
-          flex: "0 0 20dvh",
+          flex: "0 0 16dvh",
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-start",
+          paddingTop: 6,
           minHeight: 0,
           overflow: "hidden",
           boxSizing: "border-box",
@@ -1000,7 +1060,7 @@ const [streak, setStreak] = useState<number>(() =>
                           letterSpacing: "0.04em",
                           lineHeight: 1,
                         }}>
-                          +{winPayout}{betMultiplier > 1 ? <span style={{ fontSize: 11, color: "#FFD700", fontWeight: 900, marginLeft: 3 }}>×{betMultiplier}</span> : null}
+                          +{winPayout}
                         </span>
                       )}
                     </div>
@@ -1040,7 +1100,7 @@ const [streak, setStreak] = useState<number>(() =>
                         letterSpacing: "0.04em",
                         lineHeight: 1,
                       }}>
-                        +{winPayout} coins{betMultiplier > 1 ? <span style={{ color: "#FFD700", fontWeight: 900, marginLeft: 3 }}>×{betMultiplier}</span> : null}
+                        +{winPayout} coins
                       </span>
                     )}
                   </div>
@@ -1146,7 +1206,7 @@ const [streak, setStreak] = useState<number>(() =>
                   </span>
                   {winPayout > 0 && (
                     <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.05em" }}>
-                      +{winPayout} coins{betMultiplier > 1 ? <span style={{ color: "#FFD700", fontWeight: 900, marginLeft: 3 }}>×{betMultiplier}</span> : null}
+                      +{winPayout} coins
                     </span>
                   )}
                   {winTier === "BUST" && (
@@ -1158,62 +1218,16 @@ const [streak, setStreak] = useState<number>(() =>
               );
             })()}
           </div>
-
-          {/* Streak tracker — shows below gauge only when streak > 0 in RESULTS/WIN_CELEBRATION */}
-          {streak > 0 && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && (() => {
-            const nextTier = BONUS_TIERS.find(t => streak < t.wins);
-            const earnedTier = [...BONUS_TIERS].reverse().find(t => streak >= t.wins);
-            const winsNeeded = nextTier ? nextTier.wins - streak : 0;
-            const isClose = nextTier && winsNeeded === 1;
-            return (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, marginTop: 5 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  {BONUS_DOTS.map((dot, i) => {
-                    const filled = streak >= dot.threshold;
-                    const tierColor = BONUS_TIERS[dot.tierIdx].color;
-                    const tierGlow  = BONUS_TIERS[dot.tierIdx].glow;
-                    return (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                        <div style={{
-                          width: filled ? 8 : 7, height: filled ? 8 : 7, borderRadius: "50%",
-                          background: filled ? tierColor : "rgba(255,255,255,0.12)",
-                          boxShadow: filled ? `0 0 6px ${tierGlow}` : "none",
-                          transition: "all 0.3s ease",
-                        }} />
-                        {i === 2 && <div style={{ width: 12, height: 1, background: "rgba(255,255,255,0.1)" }} />}
-                      </div>
-                    );
-                  })}
-                  <span style={{
-                    fontSize: 9, fontWeight: 700, marginLeft: 4,
-                    color: earnedTier ? earnedTier.color : "rgba(255,255,255,0.3)",
-                  }}>
-                    {earnedTier ? `+${earnedTier.pct}%` : nextTier ? `+${nextTier.pct}%` : ""}
-                  </span>
-                </div>
-                {nextTier && (
-                  <div style={{
-                    fontSize: isClose ? 10 : 8,
-                    fontWeight: isClose ? 700 : 500,
-                    color: isClose ? "#FFD700" : "rgba(255,255,255,0.25)",
-                    letterSpacing: "0.05em",
-                  }}>
-                    {winsNeeded} more {winsNeeded === 1 ? "win" : "wins"} for {nextTier.pct}% of pool
-                  </div>
-                )}
-              </div>
-            );
-          })()}
         </div>
         </div>
 
-        {/* 4 — Bottom: multipliers + controls, pinned to end */}
+        {/* 4 — Bottom: multipliers + controls (20dvh), pinned to end */}
         <div style={{
-          flex: "0 0 14dvh",
+          flex: "0 0 16dvh",
           display: "flex",
           flexDirection: "column",
-          justifyContent: "flex-end",
-          gap: 4,
+          justifyContent: "space-between",
+          gap: 0,
           minHeight: 0,
           overflow: "hidden",
           boxSizing: "border-box",
@@ -1222,10 +1236,10 @@ const [streak, setStreak] = useState<number>(() =>
           data-ftue-chrome="true"
           ref={(el) => setMultipliersHost(el)}
           style={{
-            display: (gameState === "IDLE" || gameState === "HOLD" || gameState === "DEALING" || gameState === "DRAWING") ? "flex" : "none",
+            display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            padding: "0 10px",
+            padding: "8px 10px 4px",
             boxSizing: "border-box",
             overflow: "hidden",
           }}

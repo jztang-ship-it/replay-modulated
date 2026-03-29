@@ -1027,20 +1027,30 @@ export function GameBar({
   const remaining  = capMax - spent;
   const overBudget = remaining < 0;
 
+  const MULTIPLIER_COLORS: Record<number, { active: string; glow: string }> = {
+    1:  { active: "rgba(100,180,255,0.25)",  glow: "none" },
+    3:  { active: "rgba(34,197,94,0.35)",    glow: "0 0 12px rgba(34,197,94,0.4)" },
+    5:  { active: "rgba(192,132,252,0.40)",  glow: "0 0 14px rgba(192,132,252,0.5)" },
+    10: { active: "rgba(251,146,60,0.45)",   glow: "0 0 18px rgba(251,146,60,0.6)" },
+  };
+
   const multiplierRow = (
-    <div style={{ display: "flex", gap: 6, justifyContent: "center", alignItems: "center", width: "100%", boxSizing: "border-box" }}>
+    <div style={{ display: "flex", gap: 8, justifyContent: "center", alignItems: "center", width: "100%", boxSizing: "border-box", padding: "0 10px" }}>
       {MULTIPLIERS.map((m: number) => {
         const active = betMultiplier === m;
+        const mc = MULTIPLIER_COLORS[m] ?? MULTIPLIER_COLORS[1];
         return (
           <button key={m} onClick={() => onBetMultiplier(m)} disabled={betLocked} style={{
-            background: active ? THEME.button.multiplier.active.bg : THEME.button.multiplier.inactive.bg,
-            border: active ? "none" : THEME.button.multiplier.inactive.border,
-            borderRadius: 20, color: "#FFFFFF",
-            fontWeight: 800, fontSize: 12, padding: "6px 0",
+            background: active ? mc.active : THEME.button.multiplier.inactive.bg,
+            border: active ? `1px solid ${mc.active}` : THEME.button.multiplier.inactive.border,
+            borderRadius: 14, color: "#FFFFFF",
+            fontWeight: 900, fontSize: active ? 15 : 13,
+            padding: active ? "10px 0" : "8px 0",
             cursor: betLocked ? "default" : "pointer",
             opacity: betLocked ? 0.4 : 1,
-            transition: "all 150ms ease", lineHeight: 1,
-            flex: 1, maxWidth: 64,
+            boxShadow: active ? mc.glow : "none",
+            transition: "all 200ms ease", lineHeight: 1,
+            flex: 1, maxWidth: 80,
           }}>{m}X</button>
         );
       })}
