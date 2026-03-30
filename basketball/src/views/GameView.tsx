@@ -1011,7 +1011,7 @@ const [streak, setStreak] = useState<number>(() =>
   noTransition={noTransition}
   visibleFpMap={visibleFpMap}
   canFlip={gameState === "RESULTS" || gameState === "WIN_CELEBRATION"}
-  ftueFlipTargetId={isFTUE && ftueBookerPulse ? "ftue-booker" : null}
+  ftueFlipTargetId={isFTUE && (ftueBookerPulse || ftueHoldSpotlight) ? "ftue-booker" : null}
   flipMsMap={flipMsMap}
   fpCountUpMsMap={fpCountUpMsMap}
   performanceTagMap={performanceTagMap}

@@ -223,8 +223,9 @@ function computePillPlacement(
     // Pin pill bottom edge at gapPx above spotlight top
     return { bottom: vh - spotTop + gapPx };
   } else {
-    // Pin pill top edge at gapPx below spotlight bottom
-    return { top: spotBottom + gapPx };
+    // Pin pill top edge at gapPx below spotlight bottom, clamped to not clip off viewport
+    const maxTop = vh - 120; // leave at least 120px from bottom for content
+    return { top: Math.min(spotBottom + gapPx, maxTop) };
   }
 }
 
@@ -443,8 +444,8 @@ export function CoachLayer({
           Players are ranked by color and salary — guides to help you build your best lineup with a $200 salary cap. The higher ranked players have higher average fantasy points.&nbsp;🎯
         </span>
       ),
-      anchor: "score-row",
-      position: "above",
+      anchor: "roster-and-score",
+      position: "below",
       pulseCardLabels: true,
       onDismiss: () => {
         shown.current.delete("hold_booker");

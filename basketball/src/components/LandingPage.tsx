@@ -129,7 +129,7 @@ export function LandingPage({ onPlay }: Props) {
                     <CardBackGeneric />
                     {!isFlipped && (
                       <span style={{
-                        position: "absolute", top: "28%", left: 0, right: 0, textAlign: "center",
+                        position: "absolute", top: "20%", left: 0, right: 0, textAlign: "center",
                         fontSize: 8, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase",
                         color: "rgba(255,255,255,0.35)",
                         animation: "lp-tap-pulse 1.8s ease-in-out infinite",
