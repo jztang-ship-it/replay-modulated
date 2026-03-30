@@ -15,6 +15,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CardFlipState } from "@shared/hooks/useCardFlipState";
+import { soundManager } from "@shared/utils/soundManager";
 
 export type RevealableCard = {
   cardId: string;
@@ -367,7 +368,11 @@ export function useEmotionalReveal(params: Params) {
     const t0 = window.setTimeout(() => {
       if (runIdRef.current !== myRunId) return;
       console.log("[Reveal] t0 fired ok", c.cardId);
-      if (!skipFlip) flipState.revealCard(c.cardId);
+      if (!skipFlip) {
+        soundManager.playRevealAmbience(); // starts on first flip, no-ops if already playing
+        soundManager.playCardFlip();
+        flipState.revealCard(c.cardId);
+      }
 
       // Blast duration: tiered by color + boosted/reduced by result.
       // Passes st so GameView can set the correct CSS animation duration.

@@ -50,11 +50,11 @@ function toPlayerEval(p: any, projByBaseId: Map<string, number>): PlayerEval {
 }
 
 /** Returns true if this player has at least one meaningful 2425 season game log.
- *  Must have 2425-specific logs (no fallback to older seasons) with quickFP >= 8. */
+ *  Must have 2425-specific logs with quickFP >= 8 AND minutes >= 10 (matches resolve filter). */
 function hasValidLogs(basePlayerId: string, logsByKey: Map<string, any[]>): boolean {
   const base = basePlayerId.trim();
   if (!base) return false;
-  // ONLY check 2425 season logs — players with only older season data get excluded
+  const minMins = (sportAdapter as any).config?.historicalLogFilters?.minMinutes ?? 10;
   const candidates = logsByKey.get(`${base}|2425`) ?? [];
   if (candidates.length === 0) return false;
   return candidates.some((l: any) => {
@@ -62,7 +62,15 @@ function hasValidLogs(basePlayerId: string, logsByKey: Map<string, any[]>): bool
     const pts = Number(s.pts ?? s.points ?? s.PTS ?? 0);
     const reb = Number(s.reb ?? s.rebounds ?? s.REB ?? s.trb ?? 0);
     const ast = Number(s.ast ?? s.assists ?? s.AST ?? 0);
-    return (pts * 1.0 + reb * 1.2 + ast * 1.5) >= 8;
+    if ((pts * 1.0 + reb * 1.2 + ast * 1.5) < 8) return false;
+    // Also check minutes — must match the resolve-time filter
+    const mp = s.mp ?? s.minutes ?? s.min ?? s.MIN ?? s.minutesPlayed;
+    if (mp !== undefined && mp !== null) {
+      const mpStr = String(mp);
+      const mins = mpStr.includes(":") ? parseFloat(mpStr.split(":")[0]) : parseFloat(mpStr);
+      if (Number.isFinite(mins) && mins < minMins) return false;
+    }
+    return true;
   });
 }
 

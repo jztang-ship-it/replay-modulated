@@ -7,6 +7,9 @@
 
 import { useState } from "react";
 import type { TaskState } from "@shared/engagement/useEngagement";
+import { Leaderboard } from "@shared/components/Leaderboard";
+import { PWAInstallPrompt } from "@shared/components/PWAInstallPrompt";
+import { getPlayerUid } from "@shared/utils/playerIdentity";
 
 const FF = "'Rajdhani', 'Arial Narrow', sans-serif";
 
@@ -308,6 +311,14 @@ export function CollectScreen({
         {taskStates.map(task => (
           <TaskRow key={task.id} task={task} onCollect={onCollect} />
         ))}
+
+        {/* PWA Install Prompt */}
+        <PWAInstallPrompt rewardCoins={50} onInstalled={() => {}} />
+
+        {/* Leaderboard */}
+        <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+          <Leaderboard currentUid={getPlayerUid()} />
+        </div>
 
         {/* Future sections placeholder */}
         <div style={{

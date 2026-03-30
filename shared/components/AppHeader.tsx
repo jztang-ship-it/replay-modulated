@@ -10,6 +10,7 @@
  */
 
 import { useState } from "react";
+import { soundManager } from "@shared/utils/soundManager";
 
 type TabId = "home" | "pulse" | "collect" | "profile";
 const TABS: { id: TabId; label: string; icon: string }[] = [
@@ -27,16 +28,21 @@ type Props = {
 
 export function AppHeader({ sportLabel, onCollect, hasUncollected }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>("home");
+  const [muted, setMuted] = useState(soundManager.isMuted());
 
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
 
-      {/* Wordmark + optional sport badge */}
+      {/* Wordmark + mute + optional sport badge */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, paddingLeft: 2 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
           <span style={{ fontSize: 16, fontWeight: 950, letterSpacing: -0.5, color: "#EAF0FF" }}>REPLAY</span>
           <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 2, color: "#FFB14A", marginLeft: 2 }}>IFS</span>
         </div>
+        <span
+          onClick={(e) => { e.stopPropagation(); soundManager.toggleMute(); setMuted(soundManager.isMuted()); }}
+          style={{ fontSize: 14, cursor: "pointer", opacity: 0.5, userSelect: "none" }}
+        >{muted ? "🔇" : "🔊"}</span>
         {sportLabel && (
           <span style={{
             fontSize: 9, fontWeight: 700, letterSpacing: 1.5,

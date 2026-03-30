@@ -28,6 +28,8 @@ import { useEngagement }    from '@shared/engagement/useEngagement';
 import { CoinDisplay }      from '@shared/engagement/CoinDisplay';
 import { DailyTasksPanel }  from '@shared/engagement/DailyTasksPanel';
 import { XPBar }            from '@shared/engagement/XPBar';
+import { soundManager }     from '@shared/utils/soundManager';
+import { getPlayerUid, getNickname, setNickname } from '@shared/utils/playerIdentity';
 
 // Test-wire only: allow passing glow props even if wrapper prop types lag behind.
 const RosterGridAny = RosterGrid as any;
@@ -119,6 +121,19 @@ type GameState =
 
 function sleep(ms: number) {
   return new Promise(r => setTimeout(r, ms));
+}
+
+async function submitToLeaderboard(metric: "streak" | "wins" | "fp", value: number) {
+  const uid = getPlayerUid();
+  const nickname = getNickname();
+  if (!uid || value <= 0) return;
+  try {
+    await fetch("/api/leaderboard", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "submit", metric, value, uid, nickname }),
+    });
+  } catch {} // Non-critical — never block game flow
 }
 
 function cardId(card: any): string {
@@ -342,6 +357,8 @@ export default function GameView() {
     collectTask,
   } = useEngagement();
   const [showCollect, setShowCollect] = useState(false);
+  const [showNamePrompt, setShowNamePrompt] = useState(false);
+  const [nameInput, setNameInput] = useState(() => getNickname());
   const [multipliersHost, setMultipliersHost] = useState<HTMLDivElement | null>(null);
   const [controlsHost, setControlsHost] = useState<HTMLDivElement | null>(null);
   const [dataReady, setDataReady]           = useState(false);
@@ -487,12 +504,23 @@ const [streak, setStreak] = useState<number>(() =>
     }, [isFTUE]),
     onAllComplete: useCallback((totalFp: number) => {
       clearActiveCard();
+      soundManager.stopRevealAmbience();
       if (isFTUE) ftueLastHandFpRef.current = totalFp;
       const tier = calculateWinTier(totalFp);
       const payout = calculatePayout(tier, currentBet);
       setWinTier(tier);
       setWinPayout(payout);
       const bust = !tier || tier === "BUST";
+      // Result sounds by outcome
+      if (tier === "MVP" || tier === "GOAT") {
+        soundManager.playBigWin();
+      } else if (tier === "ALL_STAR" || tier === "STARTER") {
+        soundManager.playTierSlam();
+      } else if (tier === "ROOKIE") {
+        soundManager.playNearMiss();
+      } else if (bust) {
+        soundManager.playBust();
+      }
       const badges = rosterRef.current.reduce((s,c) => s + (c.achievements?.length ?? 0), 0);
       gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
       recordHandPlayed();
@@ -599,6 +627,7 @@ const [streak, setStreak] = useState<number>(() =>
   const handleTierCross = useCallback((tier: string) => {
     if (isFTUE) return;
     if (tier === prevRevealTierRef.current) return;
+    soundManager.playTierCross(tier);
 
     // Clear any pending flip chain
     tierFlipTimersRef.current.forEach(clearTimeout);
@@ -862,11 +891,26 @@ const [streak, setStreak] = useState<number>(() =>
       setStreak(prev => {
         const next = prev + 1;
         localStorage.setItem("replaymod_streak", String(next));
+        if (next === 3 || next === 5 || next === 10) soundManager.playStreakMilestone(next);
+        // Submit streak to leaderboard
+        submitToLeaderboard("streak", next);
         return next;
       });
+      // Submit win + FP
+      submitToLeaderboard("wins", 1);
+      const gameFp = roster.reduce((s, c) => s + Number(c.actualFp ?? 0), 0);
+      if (gameFp > 0) submitToLeaderboard("fp", gameFp);
     } else {
       setStreak(0);
       localStorage.setItem("replaymod_streak", "0");
+    }
+    // Name prompt after hand 3
+    if (!isFTUE) {
+      const hc = parseInt(localStorage.getItem("replaymod_hand_count") ?? "0", 10);
+      if (hc >= 3 && !localStorage.getItem("replaymod_name_prompted")) {
+        localStorage.setItem("replaymod_name_prompted", "true");
+        setTimeout(() => setShowNamePrompt(true), 1500);
+      }
     }
     setWinTier(null);
     setWinPayout(0);
@@ -1535,6 +1579,47 @@ const [streak, setStreak] = useState<number>(() =>
               onClose={() => setShowCollect(false)}
               onCollect={(id) => { collectTask?.(id); }}
             />
+          )}
+          {/* Name change prompt — after hand 3 */}
+          {showNamePrompt && (
+            <div style={{
+              position: "fixed", inset: 0, zIndex: 9999,
+              background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center",
+            }} onClick={() => setShowNamePrompt(false)}>
+              <div onClick={e => e.stopPropagation()} style={{
+                background: "#111827", borderRadius: 16, padding: "24px 20px",
+                width: "min(320px, 90vw)", display: "flex", flexDirection: "column", gap: 12,
+                border: "1px solid rgba(255,215,0,0.2)",
+              }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: "#EAF0FF" }}>
+                  You're on the leaderboard as:
+                </div>
+                <input
+                  value={nameInput}
+                  onChange={e => setNameInput(e.target.value)}
+                  maxLength={20}
+                  style={{
+                    background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)",
+                    borderRadius: 8, padding: "10px 12px", color: "#FFD700", fontSize: 16, fontWeight: 700,
+                    outline: "none", width: "100%", boxSizing: "border-box",
+                  }}
+                />
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => {
+                    setNickname(nameInput);
+                    setShowNamePrompt(false);
+                  }} style={{
+                    flex: 1, padding: "10px 0", background: "rgba(255,215,0,0.85)", color: "#070A12",
+                    border: "none", borderRadius: 8, fontWeight: 800, fontSize: 13, cursor: "pointer",
+                  }}>Save name</button>
+                  <button onClick={() => setShowNamePrompt(false)} style={{
+                    flex: 1, padding: "10px 0", background: "rgba(255,255,255,0.08)",
+                    color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer",
+                  }}>Keep this name</button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
         </div>

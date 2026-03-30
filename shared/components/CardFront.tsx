@@ -19,6 +19,7 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import type { GamePhase, PlayerCard } from "@shared/types";
 import { getTier, type TierKey, TIER_POSITION_TEXT } from "@shared/theme";
+import { soundManager } from "@shared/utils/soundManager";
 import type { OverlayStamp } from "@shared/components/PlayerCardShell";
 import { CARD_CLIP_PATH_OBJECT_BOX } from "@shared/components/cardClipShape";
 
@@ -234,6 +235,8 @@ export function CardFront(props: CardFrontProps) {
       const eased    = 1 - Math.pow(1 - progress, 3);
       setDisplayedFp(Math.round(actual * eased * 10) / 10);
       if (progress < 1) {
+        // Tick sound every ~50ms (not every frame) for slot machine feel
+        if (elapsed % 50 < 17) soundManager.playFpTick();
         animRafRef.current = requestAnimationFrame(animate);
       } else {
         setDisplayedFp(actual);
@@ -253,6 +256,18 @@ export function CardFront(props: CardFrontProps) {
     animStartRef.current = null;
     setRollComplete(false); setDisplayedFp(0); setIsRolling(false); setFpRevealed(false);
   }, [cardKey]);
+
+  // Sound 5 — fire/ice reveal sound, fires once when stamp first appears
+  const heatSoundFiredRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!stamp || heatSoundFiredRef.current === stamp) return;
+    const isHot = stamp === "SMOKING HOT" || stamp === "ON FIRE";
+    const isCold = stamp === "ICE COLD" || stamp === "FREEZING";
+    if (isHot || isCold) {
+      heatSoundFiredRef.current = stamp;
+      soundManager.playHeatReveal(isHot);
+    }
+  }, [stamp]);
 
   // Determine what to show in the FP slot
   // Pre-reveal (isTapTarget or phase != RESULTS): show projected FP greyed out
