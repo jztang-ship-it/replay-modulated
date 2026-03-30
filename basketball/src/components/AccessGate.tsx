@@ -57,7 +57,7 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
       {/* Wordmark */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
         <div style={{ fontSize: 28, fontWeight: 950, letterSpacing: -0.5, color: "#EAF0FF" }}>
-          REPLAY <span style={{ color: "#FFB14A" }}>FS</span>
+          REPLAY <span style={{ color: "#FFB14A" }}>IFS</span>
         </div>
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: 2, textTransform: "uppercase" }}>
           Enter access code

@@ -434,6 +434,7 @@ export function CoachLayer({
     prevState.current = "HOLD";
 
     // 1st: spotlight all 6 cards + Team FP/Budget row, salary+avg pulse
+    // 800ms delay so deal animation completes and cards are visible before bubble appears
     // hold_booker only fires after this is dismissed — guaranteed ordering via onDismiss
     enqueue({
       key: "hold_roster_intro",
@@ -459,7 +460,7 @@ export function CoachLayer({
           position: "below",
         });
       },
-    }, 50);
+    }, 800);
   }, [gameState, isFTUE]); // eslint-disable-line
 
   // ── REVEALING — no intro bubble, go straight to per-card reveals ─────
@@ -575,8 +576,11 @@ export function CoachLayer({
     if (!isFTUE) return;
     if (["DRAWING","DEALING","WIN_CELEBRATION"].includes(gameState)) {
       prevState.current = gameState as GameState;
+      // Auto-dismiss any active bubble during transitions (removes blank screen after Deal)
+      setCurrent(null);
+      onBubbleActive?.(false);
     }
-  }, [gameState, isFTUE]);
+  }, [gameState, isFTUE]); // eslint-disable-line
 
   // ── Add/remove ftue-results-phase body class for chrome dimming ───────
   useEffect(() => {

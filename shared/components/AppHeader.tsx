@@ -35,7 +35,7 @@ export function AppHeader({ sportLabel, onCollect, hasUncollected }: Props) {
       <div style={{ display: "flex", alignItems: "center", gap: 8, paddingLeft: 2 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
           <span style={{ fontSize: 16, fontWeight: 950, letterSpacing: -0.5, color: "#EAF0FF" }}>REPLAY</span>
-          <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 2, color: "#FFB14A", marginLeft: 2 }}>FS</span>
+          <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 2, color: "#FFB14A", marginLeft: 2 }}>IFS</span>
         </div>
         {sportLabel && (
           <span style={{

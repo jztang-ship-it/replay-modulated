@@ -72,6 +72,10 @@ export function LandingPage({ onPlay }: Props) {
         .lp-card-back { transform: rotateY(0deg); }
         .lp-card-front { transform: rotateY(180deg); }
         @keyframes lp-tap-pulse { 0%,100% { opacity:.4; } 50% { opacity:.9; } }
+        @keyframes lp-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-5px); }
+        }
       `}</style>
 
       {/* NAV */}
@@ -80,7 +84,7 @@ export function LandingPage({ onPlay }: Props) {
         padding: "10px 24px",
       }}>
         <div style={{ fontWeight: 950, fontSize: 22, letterSpacing: -0.5 }}>
-          REPLAY <span style={{ color: "#FFB14A" }}>FS</span>
+          REPLAY <span style={{ color: "#FFB14A" }}>IFS</span>
         </div>
       </nav>
 
@@ -88,9 +92,9 @@ export function LandingPage({ onPlay }: Props) {
       <main style={{
         flex: 1, minHeight: 0,
         display: "flex", flexDirection: "column", alignItems: "center",
-        justifyContent: "center",
-        padding: "0 16px",
-        gap: 16,
+        justifyContent: "flex-start",
+        padding: "12px 16px 0",
+        gap: 0,
         textAlign: "center",
       }}>
 
@@ -101,6 +105,7 @@ export function LandingPage({ onPlay }: Props) {
           gap: 8,
           width: "100%",
           maxWidth: 340,
+          marginBottom: 20,
         }}>
           {CARDS.map(c => {
             const isFlipped = flipped.has(c.id);
@@ -112,6 +117,7 @@ export function LandingPage({ onPlay }: Props) {
                   aspectRatio: "329 / 478",
                   perspective: "800px",
                   cursor: "pointer",
+                  animation: `lp-float ${1.8 + parseInt(c.id.slice(1)) * 0.2}s ease-in-out infinite`,
                 }}
               >
                 <div className={`lp-card-inner${isFlipped ? " flipped" : ""}`}>
@@ -123,7 +129,7 @@ export function LandingPage({ onPlay }: Props) {
                     <CardBackGeneric />
                     {!isFlipped && (
                       <span style={{
-                        position: "absolute", bottom: 10, left: 0, right: 0, textAlign: "center",
+                        position: "absolute", top: "28%", left: 0, right: 0, textAlign: "center",
                         fontSize: 8, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase",
                         color: "rgba(255,255,255,0.35)",
                         animation: "lp-tap-pulse 1.8s ease-in-out infinite",
@@ -152,7 +158,7 @@ export function LandingPage({ onPlay }: Props) {
         </div>
 
         {/* HEADLINE + CTA */}
-        <div style={{ maxWidth: 360, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+        <div style={{ maxWidth: 360, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
           <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".3em", textTransform: "uppercase", color: GOLD, margin: 0 }}>
             Beta · Free to Play · No Sign-Up
           </p>
@@ -163,10 +169,10 @@ export function LandingPage({ onPlay }: Props) {
             You already know who balled out.<br />
             <em style={{ color: GOLD, fontStyle: "normal" }}>Prove it.</em>
           </h1>
-          <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, margin: 0 }}>
+          <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.6, margin: 0 }}>
             A new way to sports entertainment — <strong style={{ color: TEXT }}>INSTANT</strong> fantasy sports.
           </p>
-          <button className="lp-cta" onClick={onPlay} style={{ padding: "14px 52px", fontSize: 16, marginTop: 4 }}>
+          <button className="lp-cta" onClick={onPlay} style={{ padding: "14px 52px", fontSize: 16 }}>
             Play IFS
           </button>
           <span style={{ fontSize: 10, color: MUTED }}>

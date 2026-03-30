@@ -89,7 +89,7 @@ export function CardBackGeneric({ isFlipping }: Props) {
           textTransform: "uppercase",
         }}
       >
-        REPLAY FS
+        REPLAY IFS
       </div>
 
     </div>

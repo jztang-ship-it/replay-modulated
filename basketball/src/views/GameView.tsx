@@ -911,7 +911,7 @@ const [streak, setStreak] = useState<number>(() =>
         color: "#EAF0FF", fontFamily: "'Inter', system-ui, sans-serif", gap: 16,
       }}>
         <div style={{ fontSize: 28, fontWeight: 950, letterSpacing: -0.5 }}>
-          REPLAY <span style={{ color: "#FFB14A" }}>FS</span>
+          REPLAY <span style={{ color: "#FFB14A" }}>IFS</span>
         </div>
         <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", letterSpacing: 2, textTransform: "uppercase" }}>
           Loading...
