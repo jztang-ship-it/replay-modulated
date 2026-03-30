@@ -82,4 +82,8 @@ export const THEME = {
   radiusCard:     18,
   radiusPanel:    16,
   radiusPill:     99,
+  /** Wallet label row ↔ primary action button (GameBar footers; keep in sync across screens) */
+  layout: {
+    walletActionGapPx: 14,
+  },
 } as const;

@@ -283,6 +283,7 @@ export function useEmotionalReveal(params: Params) {
 
     setShakeInfo(null);
     setActiveRevealCardId(null);
+    const alreadyTappedIds = new Set(tappedCardIds);
     setTappedCardIds(new Set(cards.map(c => c.cardId)));
     setVisibleFpMap(new Map());   // clear stale mid-values so every card animates from 0
     isTapRevealingRef.current = false;
@@ -329,7 +330,7 @@ export function useEmotionalReveal(params: Params) {
         const pause = isAnchor ? 300 : Math.max(SKIP_INTER_CARD_PAUSE_MS, 50);
         const t = window.setTimeout(() => revealOne(idx + 1), pause);
         timersRef.current.push(t);
-      }, wasHeld, !isAnchor /* isSkip */);
+      }, wasHeld, !isAnchor /* isSkip */, alreadyTappedIds.has(c.cardId) /* skipBlast */);
     };
 
     revealOne(0);
@@ -343,7 +344,8 @@ export function useEmotionalReveal(params: Params) {
     myRunId: number,
     onDone: () => void,
     skipFlip = false,   // held cards are already FRONT — skip the 3D flip
-    isSkip = false
+    isSkip = false,
+    skipBlast = false
   ) {
     console.log("[Reveal] runCardReveal called", c.cardId, c.tier, "myRunId:", myRunId, "currentRunId:", runIdRef.current);
     const st          = getShakeType(c, isAnchor, revealConfig);
@@ -370,7 +372,7 @@ export function useEmotionalReveal(params: Params) {
       // Blast duration: tiered by color + boosted/reduced by result.
       // Passes st so GameView can set the correct CSS animation duration.
       const glowMs = glowMsForReveal(c.tier ?? "WHITE", st, isSkip);
-      onCardRevealStart?.(c.cardId, c.tier ?? "WHITE", st);
+      if (!skipBlast) onCardRevealStart?.(c.cardId, c.tier ?? "WHITE", st);
 
       const t1 = window.setTimeout(() => {
         if (runIdRef.current !== myRunId) return;
@@ -409,6 +411,8 @@ export function useEmotionalReveal(params: Params) {
             const elapsed = clamp((nowMs() - start) / Math.max(1, countMs), 0, 1);
             const eased   = 1 - Math.pow(1 - elapsed, 3);
             if (isAnchor) setLastCardProgress(eased);
+            // Update visibleFpMap with interpolated FP so runningTotalFp & gauge track smoothly
+            setVisibleFpMap(prev => new Map(prev).set(c.cardId, Math.max(0.001, eased * target)));
             if (elapsed < 1) {
               const tt = window.setTimeout(driveTick, gaugeTickInterval);
               timersRef.current.push(tt);

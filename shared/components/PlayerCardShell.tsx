@@ -48,8 +48,9 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
       transform: translateZ(0);
     }
     .pcs-face-back {
-      transform: rotateY(180deg) translateZ(0);
-      background: linear-gradient(160deg, #0E1628 0%, #080E1C 50%, #050810 100%);
+      transform: rotateY(180deg) translateZ(0.5px);
+      background: linear-gradient(160deg, #1A2540 0%, #111828 50%, #0C1220 100%);
+      box-shadow: 0 0 0 2px #070A12;
     }
 
     /* Blast overlay — floods the card face at impact, hiding the player briefly */
@@ -482,15 +483,7 @@ export function PlayerCardShell(props: CardShellProps) {
 
   return (
     <div className={`${shakeClass}${isTapTarget ? " pcs-tap-bounce" : ""}`} style={outerStyle}>
-      {isTapTarget && (
-        <div style={{
-          position: "absolute", inset: -3, borderRadius: 21,
-          border: "2px solid rgba(255,255,255,0.7)",
-          pointerEvents: "none", zIndex: 70,
-          animation: "pcsTapHintPulse 1.4s ease-in-out infinite",
-          boxShadow: "0 0 12px rgba(255,255,255,0.35)",
-        }} />
-      )}
+      {/* Tap target pulse — bounce animation only, no border overlay */}
       <div className={innerClass} style={innerStyle}>
         <div className="pcs-face">
           {renderFront(frontProps)}

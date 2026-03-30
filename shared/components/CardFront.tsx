@@ -54,6 +54,22 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
       48%  { opacity: 0.98; }
       100% { opacity: 0; }
     }
+    @keyframes cfFireA {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.15; }
+    }
+    @keyframes cfFireB {
+      0%, 100% { opacity: 0.15; }
+      50% { opacity: 1; }
+    }
+    @keyframes cfIceA {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.1; }
+    }
+    @keyframes cfIceB {
+      0%, 100% { opacity: 0.1; }
+      50% { opacity: 1; }
+    }
   `;
   document.head.appendChild(st);
 }
@@ -389,55 +405,51 @@ export function CardFront(props: CardFrontProps) {
         }}>
           {hasBadges ? (
             <>
-              {badges!.slice(0, 4).map((badge, i) => (
-                <div
+              {badges!.slice(0, 6).map((badge, i) => (
+                <span
                   key={badge.id ?? badge.label ?? i}
                   style={{
-                    animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${i * 90}ms both`,
-                    display: "flex", alignItems: "center", gap: 2,
-                    background: "rgba(0,0,0,0.60)", borderRadius: 5,
-                    padding: "2px 4px",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                    flexShrink: 0,
+                    animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${i * 70}ms both`,
+                    fontSize: 8, lineHeight: 1, flexShrink: 0,
                   }}
-                >
-                  <span style={{ fontSize: 9, lineHeight: 1 }}>{badge.icon}</span>
-                  {badge.fp > 0 && (
-                    <span style={{ fontSize: 7, fontWeight: 800, color: "#FFEA86", letterSpacing: 0.2, lineHeight: 1 }}>+{badge.fp}</span>
-                  )}
-                </div>
+                >{badge.icon}</span>
               ))}
-              {/* Total bonus pill — only show if >1 badge or badges were clipped */}
               {badgeBonusFp > 0 && (
-                <div style={{
-                  animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${Math.min(badges!.length, 4) * 90}ms both`,
-                  display: "flex", alignItems: "center", gap: 2,
-                  background: "rgba(255,234,134,0.18)", borderRadius: 5,
-                  padding: "2px 5px",
-                  border: "1px solid rgba(255,234,134,0.45)",
-                  flexShrink: 0,
-                }}>
-                  <span style={{ fontSize: 8, fontWeight: 900, color: "#FFEA86", letterSpacing: 0.3 }}>+{badgeBonusFp}</span>
-                </div>
+                <span style={{
+                  animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${Math.min(badges!.length, 6) * 70}ms both`,
+                  fontSize: 8, fontWeight: 900, color: "#FFEA86", letterSpacing: 0.3, flexShrink: 0,
+                }}>+{badgeBonusFp}</span>
               )}
             </>
           ) : null}
         </div>
 
-        {/* STAMP */}
-        {stamp && (
-          <div style={{
-            position: "absolute",
-            bottom: "calc(28% + 6px)",
-            left: "50%", transform: "translateX(-50%) rotate(-3deg)",
-            zIndex: 40, pointerEvents: "none", whiteSpace: "nowrap",
-            fontSize: 10, fontWeight: 900, letterSpacing: 2, textTransform: "uppercase",
-            color: stamp === "SMOKING HOT" ? "#EF4444" : stamp === "ON FIRE" ? "#FB923C" : stamp === "ICE COLD" ? "#9CA3AF" : stamp === "FREEZING" ? "#1E40AF" : "#EF4444",
-            textShadow: stamp === "SMOKING HOT" ? "0 0 14px rgba(239,68,68,0.9), 0 2px 4px rgba(0,0,0,0.8)" : stamp === "ON FIRE" ? "0 0 14px rgba(251,146,60,0.8), 0 2px 4px rgba(0,0,0,0.8)" : stamp === "ICE COLD" ? "0 0 6px rgba(156,163,175,0.5), 0 2px 4px rgba(0,0,0,0.8)" : "0 0 8px rgba(30,64,175,0.6), 0 2px 4px rgba(0,0,0,0.8)",
-            border: `2px solid ${stamp === "SMOKING HOT" ? "#EF4444" : stamp === "ON FIRE" ? "#FB923C" : stamp === "ICE COLD" ? "#6B7280" : "#1E40AF"}`,
-            borderRadius: 4, padding: "2px 7px", background: "rgba(0,0,0,0.72)",
-          }}>{stamp}</div>
-        )}
+        {/* FIRE/ICE EFFECT — two overlay images flickering out of phase, clipped above badges */}
+        {(stamp === "SMOKING HOT" || stamp === "ON FIRE" || stamp === "ICE COLD" || stamp === "FREEZING") && (() => {
+          const isFire = stamp === "SMOKING HOT" || stamp === "ON FIRE";
+          const isIntense = stamp === "SMOKING HOT" || stamp === "FREEZING";
+          const src = isFire ? "/火焰.png" : "/冰雪.png";
+          const opA = isIntense ? 0.55 : 0.38;
+          const opB = isIntense ? 0.55 : 0.38;
+          const animSpeed = isFire ? "1.4s" : "2s";
+          const animA = isFire ? "cfFireA" : "cfIceA";
+          const animB = isFire ? "cfFireB" : "cfIceB";
+          const clipStyle: React.CSSProperties = {
+            position: "absolute", top: -4, left: -4, right: -4, bottom: "13%",
+            borderRadius: "20px 20px 0 0", overflow: "hidden",
+            pointerEvents: "none", zIndex: 39,
+          };
+          const imgBase: React.CSSProperties = {
+            position: "absolute", inset: 0, width: "100%", height: "100%",
+            objectFit: "cover", mixBlendMode: "screen",
+          };
+          return (
+            <div style={clipStyle}>
+              <img src={src} style={{ ...imgBase, opacity: opA, animation: `${animA} ${animSpeed} ease-in-out infinite` }} />
+              <img src={src} style={{ ...imgBase, opacity: opB, transform: "scaleX(-1)", animation: `${animB} ${animSpeed} ease-in-out infinite` }} />
+            </div>
+          );
+        })()}
 
         {/* Glow burst is now rendered in PlayerCardShell as a sibling of pcs-inner,
             outside pcs-face overflow:hidden, so it can bloom beyond card boundaries. */}

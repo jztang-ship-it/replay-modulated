@@ -97,6 +97,7 @@ type Props = {
     multipliersHost: HTMLElement | null;
     controlsHost: HTMLElement | null;
   };
+  splitMultiplierRowVisible?: boolean;
 };
 
 import React from 'react';

@@ -198,14 +198,75 @@ function RollingNumber({ value, decimals = 0, duration = 400 }: { value: number;
   return <>{displayed.toFixed(decimals)}</>;
 }
 
-// ── BonusRow — streak-based bonus pool with next milestone hint ─────────────
+// ── Tier flip display helpers ──────────────────────────────────────
+function deriveTierFromFp(fp: number): string {
+  if (fp >= 235) return "GOAT";
+  if (fp >= 215) return "MVP";
+  if (fp >= 195) return "ALL_STAR";
+  if (fp >= 175) return "STARTER";
+  if (fp >= 155) return "ROOKIE";
+  return "BUST";
+}
+
+const TIER_IMAGE_MAP: Record<string, string> = {
+  BUST: "bust1.png",
+  ROOKIE: "Rookie2.png",
+  STARTER: "Starter3.png",
+  ALL_STAR: "All_Star_4.png",
+  MVP: "MVP5.png",
+  GOAT: "GOAT6.png",
+};
+
+const GV_STYLE_ID = "gv-tier-flip";
+if (typeof document !== "undefined" && !document.getElementById(GV_STYLE_ID)) {
+  const st = document.createElement("style");
+  st.id = GV_STYLE_ID;
+  st.textContent = `
+    @keyframes tierFlip {
+      0% { transform: perspective(400px) rotateX(90deg); filter: blur(6px); opacity: 0; }
+      35% { transform: perspective(400px) rotateX(-15deg); filter: blur(0); opacity: 1; }
+      55% { transform: perspective(400px) rotateX(8deg); opacity: 1; }
+      75% { transform: perspective(400px) rotateX(-3deg); opacity: 1; }
+      100% { transform: perspective(400px) rotateX(0deg); opacity: 1; }
+    }
+    @keyframes tierSlam {
+      0% { transform: scale(0.1) translateY(-10px); opacity: 0; }
+      22% { transform: scale(1.45) translateY(2px); opacity: 1; }
+      38% { transform: scale(0.85) translateY(-1px); opacity: 1; }
+      52% { transform: scale(1.15) translateY(1px); opacity: 1; }
+      66% { transform: scale(0.95) translateY(0); opacity: 1; }
+      80% { transform: scale(1.03) translateY(0); opacity: 1; }
+      100% { transform: scale(1.0) translateY(0); opacity: 1; }
+    }
+    @keyframes tierSlamFlash {
+      0% { opacity: 0; }
+      15% { opacity: 0.35; }
+      40% { opacity: 0; }
+      100% { opacity: 0; }
+    }
+    @keyframes tierInfoFadeIn {
+      0% { opacity: 0; transform: translateY(8px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+  `;
+  document.head.appendChild(st);
+}
+
+/** Gold ×N next to payout when multiplier &gt; 1 */
+function BetMultSuffix({ m }: { m: number }) {
+  if (m <= 1) return null;
+  return (
+    <span style={{ fontSize: 11, color: "#F59E0B", fontWeight: 900, marginLeft: 4 }}>×{m}</span>
+  );
+}
+
+// ── BonusRow — community bonus pool pill (streak UI lives in Zone 3) ─────────
 
 const BONUS_TIERS = [
   { wins: 3, pct: 5,   color: "#FFD700", glow: "#FFD70099" },
   { wins: 5, pct: 15,  color: "#FFD700", glow: "#FFD70099" },
 ];
 
-// Dot config: 5 total — 3 for first tier, 2 for second
 const BONUS_DOTS = [
   { threshold: 1, tierIdx: 0 },
   { threshold: 2, tierIdx: 0 },
@@ -214,22 +275,12 @@ const BONUS_DOTS = [
   { threshold: 5, tierIdx: 1 },
 ];
 
-function BonusRow({ betAdded, streak }: { betAdded: number; streak: number }) {
+function BonusRow({ betAdded, streak = 0 }: { betAdded: number; streak?: number }) {
   const [amount, setAmount] = useState(JACKPOT_SEED);
-  const [prevStreak, setPrevStreak] = useState(streak);
-  const [pulsingDot, setPulsingDot] = useState<number | null>(null);
   const prevBetRef = useRef(0);
-
-  // Detect streak increment → pulse the newly lit dot
-  useEffect(() => {
-    if (streak > prevStreak && streak > 0) {
-      setPulsingDot(streak); // dot at this position just lit
-      const t = setTimeout(() => setPulsingDot(null), 1200);
-      setPrevStreak(streak);
-      return () => clearTimeout(t);
-    }
-    setPrevStreak(streak);
-  }, [streak]); // eslint-disable-line
+  const streakGlow = streak >= 5 ? 0.22 : streak >= 3 ? 0.14 : streak >= 1 ? 0.08 : 0.06;
+  const streakBorder = streak >= 5 ? "rgba(255,215,0,0.55)" : streak >= 3 ? "rgba(255,215,0,0.38)" : streak >= 1 ? "rgba(255,215,0,0.25)" : "rgba(255,215,0,0.18)";
+  const streakShadow = streak > 0 ? `0 0 ${6 + streak * 3}px rgba(255,215,0,${streakGlow})` : "none";
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -246,11 +297,6 @@ function BonusRow({ betAdded, streak }: { betAdded: number; streak: number }) {
     }
   }, [betAdded]);
 
-  // What milestone are we working toward?
-  const nextTier = BONUS_TIERS.find(t => streak < t.wins);
-  const earnedTier = [...BONUS_TIERS].reverse().find(t => streak >= t.wins);
-  const winsNeeded = nextTier ? nextTier.wins - streak : 0;
-
   return (
     <div style={{
       flex: "0 0 auto",
@@ -261,8 +307,9 @@ function BonusRow({ betAdded, streak }: { betAdded: number; streak: number }) {
       <div style={{
         display: "inline-flex", alignItems: "center", gap: 6,
         padding: "4px 14px", borderRadius: 20,
-        background: "rgba(255,215,0,0.06)",
-        border: "1px solid rgba(255,215,0,0.18)",
+        background: `rgba(255,215,0,${streakGlow})`,
+        border: `1px solid ${streakBorder}`,
+        boxShadow: streakShadow,
       }}>
         <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.2, color: "rgba(255,215,0,0.6)", textTransform: "uppercase" }}>
           Bonus Pool
@@ -303,13 +350,15 @@ export default function GameView() {
   const [statsFlippedIds, setStatsFlippedIds] = useState<Set<string>>(new Set());
   const [mvpId, setMvpId]                   = useState<string | undefined>();
   const [betMultiplier, setBetMultiplier]   = useState(1);
-  // Reset raw score toggle on new hand
-  useEffect(() => { if (gameState === "IDLE" || gameState === "HOLD") setShowRawScore(false); }, [gameState]);
   const [balance, setBalance]               = useState(() => loadBalance());
   const [isBalanceAnimating, setIsBalanceAnimating] = useState(false);
   const [winTier, setWinTier]               = useState<WinTier | null>(null);
   const [winPayout, setWinPayout]           = useState(0);
-  const [showRawScore, setShowRawScore]       = useState(false);
+  const [showRawScore, setShowRawScore]     = useState(false);
+
+  useEffect(() => {
+    if (gameState === "IDLE" || gameState === "HOLD") setShowRawScore(false);
+  }, [gameState]);
   const [noTransition, setNoTransition]     = useState(false);
   const [revealedSalary, setRevealedSalary] = useState(0);
   const rosterRef = useRef<PlayerCard[]>([]);
@@ -342,6 +391,16 @@ export default function GameView() {
 const [streak, setStreak] = useState<number>(() =>
   parseInt(localStorage.getItem("replaymod_streak") ?? "0", 10)
 );
+
+  // Tier flip display state
+  const [tierFlipKey, setTierFlipKey] = useState(0);
+  const [displayTier, setDisplayTier] = useState("BUST");
+  const prevRevealTierRef = useRef("BUST");
+  const lastTierFlipTimeRef = useRef(0);
+  const tierFlipTimerRef = useRef<number | null>(null);
+  const latestGaugeFpRef = useRef(0);
+  // Phase 1 = big PNG slam, Phase 2 = settled info view
+  const [tierResultPhase, setTierResultPhase] = useState<1 | 2>(1);
 
   // Hand count — drives Protected mode (hands 2-30 get top-60% log sampling)
   // Hand 1 is always FTUE. Persisted across sessions.
@@ -422,7 +481,6 @@ const [streak, setStreak] = useState<number>(() =>
       setLastRevealedCardId(cId);
 
       // FTUE: start gauge oscillation shortly after Booker's stamp lands
-      // 100ms delay lets onAllComplete fire first (sets winTier/winPayout)
       if (isFTUE && cId === "ftue-booker") {
         setTimeout(() => setFtueOscillating(true), 100);
       }
@@ -458,6 +516,16 @@ const [streak, setStreak] = useState<number>(() =>
     if (gameState === "DRAWING") return "DRAWING";
     return "HOLD";
   }, [gameState]);
+
+  const isPreRevealFooter =
+    gameState === "IDLE" ||
+    gameState === "HOLD" ||
+    gameState === "DEALING" ||
+    gameState === "DRAWING";
+  const showGaugeInZone3 =
+    gameState === "REVEALING" ||
+    gameState === "RESULTS" ||
+    gameState === "WIN_CELEBRATION";
 
   // Tier color map — mirrors WIN_TIERS in basketball/GameBar.tsx
   const CELEBRATION_TIER_COLORS: Record<string, { color: string; glow: string }> = {
@@ -506,32 +574,73 @@ const [streak, setStreak] = useState<number>(() =>
     return 0;
   }, [gameState, runningTotalFp, roster, isFTUE]);
 
-  // Regular mode: let final anchor card FP count up first, then animate gauge jump.
-  // While anchor is actively rolling up, freeze gauge at pre-anchor total.
-  const gaugeTotalFp = useMemo(() => {
-    if (isFTUE || gameState !== "REVEALING" || !anchorCardId) return totalFp;
-    if (activeRevealCardId !== anchorCardId) return totalFp;
-    if (lastCardProgress >= 1) return totalFp;
-    const anchorVisible = getVisibleFp(anchorCardId) ?? 0;
-    return Math.max(0, totalFp - anchorVisible);
-  }, [isFTUE, gameState, anchorCardId, activeRevealCardId, lastCardProgress, getVisibleFp, totalFp]);
+  // Gauge: direct pass-through — totalFp updates every frame via interpolated visibleFpMap
+  const gaugeTotalFp = totalFp;
+  latestGaugeFpRef.current = gaugeTotalFp;
 
-  const regularFinalGaugeKick =
-    !isFTUE &&
-    gameState === "REVEALING" &&
-    !!anchorCardId &&
-    lastRevealedCardId === anchorCardId &&
-    lastCardProgress >= 1 &&
-    !regularFinalGaugeKickFiredRef.current;
+  // No spring on results — direct-set keeps bar accurate. Spring to be added later.
+  const regularFinalGaugeKick = false;
 
+  // Tier result phase: Phase 1 = big slam, Phase 2 = info view
   useEffect(() => {
-    if (regularFinalGaugeKick) regularFinalGaugeKickFiredRef.current = true;
-  }, [regularFinalGaugeKick]);
+    if ((gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !isFTUE) {
+      setTierResultPhase(1);
+      const t = setTimeout(() => setTierResultPhase(2), 1800);
+      return () => clearTimeout(t);
+    }
+  }, [gameState, winTier, isFTUE]);
 
-  useEffect(() => {
+  // Track tier boundary crossings — paced flip with minimum display time per tier
+  // Tier flip — shows EVERY intermediate tier for 600ms each.
+  // When gauge crosses multiple tiers, schedules each one on a 600ms chain.
+  const TIER_ORDER_LIST = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "GOAT"];
+  const tierFlipTimersRef = useRef<number[]>([]);
+
+  const handleTierCross = useCallback((tier: string) => {
     if (isFTUE) return;
-    if (gameState === "REVEALING") regularFinalGaugeKickFiredRef.current = false;
-  }, [gameState, isFTUE]);
+    if (tier === prevRevealTierRef.current) return;
+
+    // Clear any pending flip chain
+    tierFlipTimersRef.current.forEach(clearTimeout);
+    tierFlipTimersRef.current = [];
+
+    const fromIdx = TIER_ORDER_LIST.indexOf(prevRevealTierRef.current);
+    const toIdx = TIER_ORDER_LIST.indexOf(tier);
+    if (toIdx <= fromIdx) {
+      prevRevealTierRef.current = tier;
+      setDisplayTier(tier);
+      setTierFlipKey(k => k + 1);
+      return;
+    }
+
+    // Schedule each intermediate tier + final tier at 600ms intervals
+    const steps = TIER_ORDER_LIST.slice(fromIdx + 1, toIdx + 1);
+    steps.forEach((t, i) => {
+      if (i === 0) {
+        // First one fires immediately
+        prevRevealTierRef.current = t;
+        setDisplayTier(t);
+        setTierFlipKey(k => k + 1);
+      } else {
+        const timerId = window.setTimeout(() => {
+          prevRevealTierRef.current = t;
+          setDisplayTier(t);
+          setTierFlipKey(k => k + 1);
+        }, i * 600);
+        tierFlipTimersRef.current.push(timerId);
+      }
+    });
+  }, [isFTUE]); // eslint-disable-line
+
+  // Reset on state change
+  useEffect(() => {
+    if (gameState !== "REVEALING" && gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") {
+      prevRevealTierRef.current = "BUST";
+      setDisplayTier("BUST");
+      tierFlipTimersRef.current.forEach(clearTimeout);
+      tierFlipTimersRef.current = [];
+    }
+  }, [gameState]);
 
   const flippedIds = useMemo(() => {
     if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") return statsFlippedIds;
@@ -612,6 +721,8 @@ const [streak, setStreak] = useState<number>(() =>
       resetReveal();
       resetAllOverlays();
       completedCardsRef.current = new Set();
+      setDisplayTier("BUST");
+      setTierResultPhase(1);
       setLockedCardIds(new Set());
       setStatsFlippedIds(new Set());
       setMvpId(undefined);
@@ -765,8 +876,6 @@ const [streak, setStreak] = useState<number>(() =>
   const [wasSkipped, setWasSkipped] = useState(false);
 
   function handleButtonClick() {
-    console.log('BTN', gameState);
-    console.log('BUTTON CLICKED', gameState);
     if (gameState === "REVEALING") {
       setRevealedSalary(capUsed);
       setWasSkipped(true);
@@ -828,7 +937,7 @@ const [streak, setStreak] = useState<number>(() =>
       boxSizing: "border-box",
       paddingTop: "env(safe-area-inset-top, 0px)",
     }}>
-      {/* ── Inner game column — 14+54+16+16 = 100dvh ── */}
+      {/* ── Inner game column — 12+54+22+12 = 100dvh ── */}
       <div style={{
         flex: 1,
         display: "flex",
@@ -848,7 +957,8 @@ const [streak, setStreak] = useState<number>(() =>
           flexDirection: "column",
           justifyContent: "flex-end",
           gap: 4,
-          padding: "0 10px 4px",
+          padding: "0 10px 0",
+          marginBottom: 8,
           boxSizing: "border-box",
           overflow: "hidden",
         }}>
@@ -876,7 +986,7 @@ const [streak, setStreak] = useState<number>(() =>
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "center",
-          padding: "6px 4px 8px 4px",
+          padding: "8px 4px 6px 4px",
           boxSizing: "border-box",
           overflow: "hidden",
         }}>
@@ -947,291 +1057,419 @@ const [streak, setStreak] = useState<number>(() =>
           </div>
         </div>
 
-        {/* 3 — Score + TierGauge (8+6 = 14dvh) */}
+        {/* 3 — Zone 3: Row A score + Row B (multipliers pre-reveal / gauge post-reveal) = 22dvh */}
         <div
           {...(isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")
             ? { "data-ftue-anchor": "ftue-darnit-focus" }
             : {})}
           style={{
-          flex: "0 0 22dvh",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "flex-start",
-          gap: 2,
-          minHeight: 0,
-          overflow: "hidden",
-          boxSizing: "border-box",
-        }}>
-        <div
-          data-ftue-anchor="score-row"
-          onClick={() => {
-            if (gameState === "WIN_CELEBRATION") { onWinCelebrationComplete(); return; }
-            if ((gameState === "RESULTS") && winTier && !showRawScore) setShowRawScore(true);
-          }}
-          style={{
-            flex: "0 0 8dvh",
+            flex: "0 0 20dvh",
             display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "0 10px",
-            boxSizing: "border-box",
+            flexDirection: "column",
+            minHeight: 0,
             overflow: "hidden",
-            cursor: (gameState === "WIN_CELEBRATION" || (gameState === "RESULTS" && winTier && !showRawScore)) ? "pointer" : "default",
+            boxSizing: "border-box",
           }}
         >
-          {gameState === "WIN_CELEBRATION" && winTier && celebrationData ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, width: "100%" }}>
-              {(() => {
-                const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
-                return (
-                  <>
+          {/* ROW A — score / tier result */}
+          <div
+            data-ftue-anchor="score-row"
+            onClick={() => {
+              if (gameState === "WIN_CELEBRATION" && showRawScore) {
+                onWinCelebrationComplete();
+                return;
+              }
+              if (gameState === "WIN_CELEBRATION" && !showRawScore) {
+                setShowRawScore(true);
+                return;
+              }
+              if (gameState === "RESULTS" && winTier && !showRawScore) setShowRawScore(true);
+            }}
+            style={{
+              flex: "0 0 72px",
+              height: 72,
+              minHeight: 72,
+              maxHeight: 72,
+              flexShrink: 0,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: "4px 10px 2px",
+              boxSizing: "border-box",
+              overflow: "hidden",
+              cursor:
+                (gameState === "WIN_CELEBRATION" ||
+                  (gameState === "RESULTS" && winTier && !showRawScore))
+                  ? "pointer"
+                  : "default",
+            }}
+          >
+            {!isFTUE && gameState === "REVEALING" ? (
+              <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%", height: "100%", gap: 3 }}>
+                {displayTier !== "BUST" ? (
+                  /* Tier crossed — show tier PNG with flip animation via wrapper div */
+                  <div
+                    key={`flip-wrap-${tierFlipKey}`}
+                    style={{
+                      animation: tierFlipKey > 0 ? "tierFlip 500ms cubic-bezier(0.22, 1, 0.36, 1)" : "none",
+                      display: "flex", justifyContent: "center", alignItems: "center",
+                    }}
+                  >
+                    <img
+                      src={`/${TIER_IMAGE_MAP[displayTier] ?? "bust1.png"}`}
+                      alt={formatTierLabel(displayTier)}
+                      style={{ height: 48, maxWidth: "90%", objectFit: "contain" }}
+                    />
+                  </div>
+                ) : null}
+                <span style={{
+                  fontSize: displayTier === "BUST" ? 30 : 15,
+                  fontWeight: 900,
+                  color: displayTier === "BUST" ? "#FFFFFF" : "rgba(255,255,255,0.55)",
+                  letterSpacing: displayTier === "BUST" ? "-0.5px" : "0.03em",
+                  lineHeight: 1,
+                  fontVariantNumeric: "tabular-nums",
+                  fontStyle: displayTier === "BUST" ? "italic" : "normal",
+                }}>
+                  <RollingNumber value={totalFp} decimals={1} duration={300} /> FP
+                </span>
+              </div>
+            ) : !isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (
+              tierResultPhase === 1 ? (
+                /* Phase 1: Big tier PNG slam — fills the row with flash */
+                <div style={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center", width: "100%", height: "100%" }}>
+                  {/* Screen flash behind the slam */}
+                  <div
+                    key={`flash-${winTier}-${gameState}`}
+                    style={{
+                      position: "absolute", inset: -40, borderRadius: 30,
+                      background: `radial-gradient(ellipse at center, ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).color}44 0%, transparent 70%)`,
+                      animation: "tierSlamFlash 600ms ease-out forwards",
+                      pointerEvents: "none",
+                    }}
+                  />
+                  <img
+                    key={`slam-${winTier}-${gameState}`}
+                    src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
+                    alt={formatTierLabel(winTier)}
+                    style={{
+                      maxHeight: 70,
+                      maxWidth: "95%",
+                      objectFit: "contain",
+                      animation: "tierSlam 900ms cubic-bezier(0.22, 1, 0.36, 1)",
+                      filter: `drop-shadow(0 0 24px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`,
+                      position: "relative", zIndex: 1,
+                    }}
+                  />
+                </div>
+              ) : (
+                /* Phase 2: Settled info — PNG + FP + streak, fades in */
+                <div style={{
+                  display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center",
+                  width: "100%", height: "100%", gap: 1,
+                  animation: "tierInfoFadeIn 400ms ease-out",
+                }}>
+                  <img
+                    src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
+                    alt={formatTierLabel(winTier)}
+                    style={{ maxHeight: 36, maxWidth: "70%", objectFit: "contain" }}
+                  />
+                  <span style={{
+                    fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.4)",
+                    letterSpacing: "0.04em", lineHeight: 1,
+                  }}>
+                    {totalFp.toFixed(1)} FP{winPayout > 0 ? ` · +${winPayout}` : ""}
+                    {winPayout > 0 && <BetMultSuffix m={betMultiplier} />}
+                    {winTier === "BUST" && " · Better luck next hand"}
+                  </span>
+                  {(() => {
+                    const _nt = BONUS_TIERS.find(t => streak < t.wins);
+                    const _et = [...BONUS_TIERS].reverse().find(t => streak >= t.wins);
+                    const _wn = _nt ? _nt.wins - streak : 0;
+                    return (
+                      <span style={{ fontSize: 10, fontWeight: 700, color: _et ? "#FFD700" : "rgba(255,255,255,0.3)", lineHeight: 1 }}>
+                        {streak === 0
+                          ? "Win 3 in a row for +5% bonus pool"
+                          : _et && !_nt
+                          ? `🔥 +${_et.pct}% bonus pool active`
+                          : _et
+                          ? `🔥 +${_et.pct}% · ${_wn} ${_wn === 1 ? "win" : "wins"} to +${_nt!.pct}%`
+                          : `${_wn} ${_wn === 1 ? "win" : "wins"} to +${_nt!.pct}% bonus`}
+                      </span>
+                    );
+                  })()}
+                </div>
+              )
+            ) : gameState === "WIN_CELEBRATION" && winTier && celebrationData && !showRawScore ? (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, width: "100%" }}>
+                {(() => {
+                  const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
+                  return (
+                    <>
+                      <div style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "baseline",
+                        justifyContent: "center",
+                        gap: 8,
+                        flexWrap: "wrap",
+                      }}>
+                        <span style={{
+                          fontSize: 24, fontWeight: 900, letterSpacing: 1, fontStyle: "italic",
+                          color: tc.color, textShadow: `0 0 20px ${tc.glow}`,
+                          lineHeight: 1,
+                        }}>
+                          {formatTierLabel(winTier)}
+                        </span>
+                        {winPayout > 0 && (
+                          <span style={{
+                            fontSize: 15, fontWeight: 800,
+                            color: "rgba(255,255,255,0.6)",
+                            letterSpacing: "0.04em",
+                            lineHeight: 1,
+                          }}>
+                            +{winPayout}
+                            <BetMultSuffix m={betMultiplier} />
+                          </span>
+                        )}
+                      </div>
+                      {winTier === "BUST" && (
+                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.05em" }}>
+                          Better luck next hand
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            ) : isFTUE && gameState === "RESULTS" && winTier && !showRawScore ? (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, width: "100%" }}>
+                {(() => {
+                  const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
+                  return (
                     <div style={{
                       display: "flex",
                       flexDirection: "row",
                       alignItems: "baseline",
                       justifyContent: "center",
-                      gap: 8,
+                      gap: 10,
                       flexWrap: "wrap",
                     }}>
                       <span style={{
-                        fontSize: 24, fontWeight: 900, letterSpacing: 1, fontStyle: "italic",
-                        color: tc.color, textShadow: `0 0 20px ${tc.glow}`,
+                        fontSize: 30, fontWeight: 950, letterSpacing: 0.5, fontStyle: "italic",
+                        color: tc.color, textShadow: `0 0 22px ${tc.glow}`,
                         lineHeight: 1,
                       }}>
                         {formatTierLabel(winTier)}
                       </span>
                       {winPayout > 0 && (
                         <span style={{
-                          fontSize: 15, fontWeight: 800,
-                          color: "rgba(255,255,255,0.6)",
+                          fontSize: 22, fontWeight: 800,
+                          color: "rgba(255,255,255,0.72)",
                           letterSpacing: "0.04em",
                           lineHeight: 1,
                         }}>
-                          +{winPayout}{betMultiplier > 1 ? <span style={{ fontSize: 11, color: "#FFD700", fontWeight: 900, marginLeft: 3 }}>×{betMultiplier}</span> : null}
+                          +{winPayout} coins
+                          <BetMultSuffix m={betMultiplier} />
                         </span>
                       )}
                     </div>
-                    {winTier === "BUST" && (
-                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.05em" }}>
-                        Better luck next hand
+                  );
+                })()}
+              </div>
+            ) : (
+              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 48, width: "100%" }}>
+                {(() => {
+                  const spent =
+                    gameState === "IDLE"      ? 0 :
+                    gameState === "DEALING"   ? 0 :
+                    gameState === "HOLD"      ? lockedSalary :
+                    gameState === "DRAWING"   ? lockedSalary :
+                    gameState === "REVEALING" ? revealedSalary :
+                    capUsed;
+                  const remaining = CAP_MAX - spent;
+                  const overBudget = remaining < 0;
+                  return (
+                    <>
+                      <div style={{ textAlign: "center" }}>
+                        <div style={{ fontSize: 30, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic" }}>
+                          <RollingNumber value={totalFp} decimals={1} duration={300} />
+                        </div>
+                        <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 3 }}>
+                          Team FP
+                        </div>
                       </div>
-                    )}
-                  </>
-                );
-              })()}
-            </div>
-          ) : isFTUE && gameState === "RESULTS" && winTier ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, width: "100%" }}>
-              {(() => {
-                const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
-                return (
-                  <div style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    alignItems: "baseline",
-                    justifyContent: "center",
-                    gap: 10,
-                    flexWrap: "wrap",
-                  }}>
-                    <span style={{
-                      fontSize: 30, fontWeight: 950, letterSpacing: 0.5, fontStyle: "italic",
-                      color: tc.color, textShadow: `0 0 22px ${tc.glow}`,
-                      lineHeight: 1,
-                    }}>
-                      {formatTierLabel(winTier)}
-                    </span>
-                    {winPayout > 0 && (
-                      <span style={{
-                        fontSize: 22, fontWeight: 800,
-                        color: "rgba(255,255,255,0.72)",
-                        letterSpacing: "0.04em",
-                        lineHeight: 1,
-                      }}>
-                        +{winPayout} coins{betMultiplier > 1 ? <span style={{ color: "#FFD700", fontWeight: 900, marginLeft: 3 }}>×{betMultiplier}</span> : null}
-                      </span>
-                    )}
-                  </div>
-                );
-              })()}
-            </div>
-          ) : (
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 48, width: "100%" }}>
-              {(() => {
-                const spent =
-                  gameState === "IDLE"      ? 0 :
-                  gameState === "DEALING"   ? 0 :
-                  gameState === "HOLD"      ? lockedSalary :
-                  gameState === "DRAWING"   ? lockedSalary :
-                  gameState === "REVEALING" ? revealedSalary :
-                  capUsed;
-                const remaining = CAP_MAX - spent;
-                const overBudget = remaining < 0;
-                return (
-                  <>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: 30, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic" }}>
-                        <RollingNumber value={totalFp} decimals={1} duration={300} />
+                      <div style={{ textAlign: "center" }}>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: 2, justifyContent: "center" }}>
+                          <span style={{ fontSize: 30, fontWeight: 900, color: overBudget ? "#ef4444" : "#FFFFFF", lineHeight: 1, fontStyle: "italic" }}>
+                            <RollingNumber value={remaining} decimals={0} duration={300} />
+                          </span>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.35)", lineHeight: 1, fontStyle: "italic" }}>
+                            /{CAP_MAX}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 3 }}>
+                          Budget
+                        </div>
                       </div>
-                      <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 3 }}>
-                        Team FP
-                      </div>
-                    </div>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ display: "flex", alignItems: "baseline", gap: 2, justifyContent: "center" }}>
-                        <span style={{ fontSize: 30, fontWeight: 900, color: overBudget ? "#ef4444" : "#FFFFFF", lineHeight: 1, fontStyle: "italic" }}>
-                          <RollingNumber value={remaining} decimals={0} duration={300} />
-                        </span>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.35)", lineHeight: 1, fontStyle: "italic" }}>
-                          /{CAP_MAX}
-                        </span>
-                      </div>
-                      <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 3 }}>
-                        Budget
-                      </div>
-                    </div>
-                  </>
-                );
-              })()}
-            </div>
-          )}
-        </div>
+                    </>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
 
-        <div style={{
-          flex: "0 0 6dvh",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "flex-start",
-          alignItems: "center",
-          padding: "0 10px",
-          paddingTop: 2,
-          marginBottom: 6,
-          boxSizing: "border-box",
-          overflow: "hidden",
-        }}>
-          <div data-ftue-anchor="tier-gauge" style={{ width: "100%", overflow: "hidden" }}>
-            <TierGauge
-              totalFp={gaugeTotalFp}
-              thresholds={[
-                { tier: "ROOKIE",   minFP: 155 },
-                { tier: "STARTER",  minFP: 175 },
-                { tier: "ALL_STAR", minFP: 195 },
-                { tier: "MVP",      minFP: 215 },
-                { tier: "GOAT" as any, minFP: 235 },
-              ]}
-              winTier={winTier ?? undefined}
-              lastCardFp={lastCardFp}
-              isSkip={wasSkipped}
-              visible={gameState === "REVEALING" || gameState === "RESULTS" || gameState === "WIN_CELEBRATION"}
-              ftueSuppressNormal={isFTUE && gameState === "REVEALING" && !ftueOscillating}
-              ftueOscillate={isFTUE && ftueOscillating}
-              ftueLockStaticBar={isFTUE && ftueGaugeOscDone}
-              regularFinalCardKick={regularFinalGaugeKick}
-              onFtueOscillateComplete={() => {
-                setFtueGaugeOscDone(true);
-                setFtueOscillating(false);
-                setCelebrationHeld(false);
-                pendingCelebration.current = null;
-                setGameState("RESULTS");
-                // CoachLayer listens for this to enqueue darnit → results_devin (RESULTS effect also schedules — backup if that timeout is cleared)
-                setTimeout(() => setFtueWinCelebrationActive(true), 300);
+          {/* ROW B — fixed-height gauge slot so TierGauge Y position never shifts vs Team FP row */}
+          <div
+            style={{
+              flex: 1,
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-start",
+              alignItems: "stretch",
+              padding: "2px 10px 2px",
+              boxSizing: "border-box",
+              overflow: "visible",
+            }}
+          >
+            <div
+              style={{
+                width: "100%",
+                height: 56,
+                minHeight: 56,
+                maxHeight: 56,
+                flexShrink: 0,
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "visible",
+                boxSizing: "border-box",
               }}
-            />
-          </div>
-          {/* Score row: tier result (tappable→raw score) or raw Team FP/Budget */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", width: "100%" }}>
-            {winTier && gameState === "RESULTS" && !isFTUE && !showRawScore && (() => {
-              const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
-              const label = formatTierLabel(winTier);
-              return (
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{
-                    fontSize: 12, fontWeight: 900, letterSpacing: 2,
-                    textTransform: "uppercase", color: tc.color,
-                    textShadow: `0 0 10px ${tc.glow}`,
-                    fontStyle: "italic",
-                  }}>
-                    {label}
-                  </span>
-                  {winPayout > 0 && (
-                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.05em" }}>
-                      +{winPayout} coins{betMultiplier > 1 ? <span style={{ color: "#FFD700", fontWeight: 900, marginLeft: 3 }}>×{betMultiplier}</span> : null}
-                    </span>
-                  )}
-                  {winTier === "BUST" && (
-                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
-                      Better luck next hand
-                    </span>
-                  )}
-                  <span style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginLeft: 4 }}>tap for score</span>
+            >
+              <div
+                ref={(el) => setMultipliersHost(el)}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  display: isPreRevealFooter ? "flex" : "none",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxSizing: "border-box",
+                  pointerEvents: "auto",
+                }}
+              />
+              {showGaugeInZone3 ? (
+                <div
+                  data-ftue-anchor="tier-gauge"
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: isPreRevealFooter ? "none" : "flex",
+                    flexDirection: "column",
+                    alignItems: "stretch",
+                    justifyContent: "center",
+                    width: "100%",
+                    overflow: "visible",
+                    boxSizing: "border-box",
+                    padding: "0 2px",
+                  }}
+                >
+                  <TierGauge
+                    totalFp={gaugeTotalFp}
+                    thresholds={[
+                      { tier: "ROOKIE",   minFP: 155 },
+                      { tier: "STARTER",  minFP: 175 },
+                      { tier: "ALL_STAR", minFP: 195 },
+                      { tier: "MVP",      minFP: 215 },
+                      { tier: "GOAT" as any, minFP: 235 },
+                    ]}
+                    winTier={undefined}
+                    lastCardFp={lastCardFp}
+                    isSkip={false}
+                    visible
+                    ftueSuppressNormal={isFTUE && gameState === "REVEALING" && !ftueOscillating}
+                    ftueOscillate={isFTUE && ftueOscillating}
+                    ftueLockStaticBar={isFTUE && ftueGaugeOscDone}
+                    regularFinalCardKick={regularFinalGaugeKick}
+                    onTierCross={handleTierCross}
+                    onFtueOscillateComplete={() => {
+                      setFtueGaugeOscDone(true);
+                      setFtueOscillating(false);
+                      setCelebrationHeld(false);
+                      pendingCelebration.current = null;
+                      setGameState("RESULTS");
+                      setTimeout(() => setFtueWinCelebrationActive(true), 300);
+                    }}
+                  />
                 </div>
-              );
-            })()}
-          </div>
-
-          {/* Streak tracker — below gauge, only when streak > 0 in RESULTS/WIN_CELEBRATION */}
-          {streak > 0 && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && (() => {
-            const _nt = BONUS_TIERS.find(t => streak < t.wins);
-            const _et = [...BONUS_TIERS].reverse().find(t => streak >= t.wins);
-            const _wn = _nt ? _nt.wins - streak : 0;
-            return (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, marginTop: 4 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  {BONUS_DOTS.map((dot, i) => {
+              ) : null}
+            </div>
+            {showGaugeInZone3 && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && (() => {
+              const _nt = BONUS_TIERS.find(t => streak < t.wins);
+              const _et = [...BONUS_TIERS].reverse().find(t => streak >= t.wins);
+              const _wn = _nt ? _nt.wins - streak : 0;
+              const isBust = winTier === "BUST";
+              return (
+                <div style={{
+                  display: "flex", flexDirection: "row", alignItems: "center",
+                  justifyContent: "center", flexWrap: "nowrap", gap: 5,
+                  marginTop: 4, flexShrink: 0, height: 18, maxHeight: 18, overflow: "hidden",
+                }}>
+                  {streak > 0 && BONUS_DOTS.map((dot, i) => {
                     const filled = streak >= dot.threshold;
                     const tc = BONUS_TIERS[dot.tierIdx].color;
                     const tg = BONUS_TIERS[dot.tierIdx].glow;
                     return (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                        <div style={{ width: filled ? 8 : 7, height: filled ? 8 : 7, borderRadius: "50%", background: filled ? tc : "rgba(255,255,255,0.12)", boxShadow: filled ? `0 0 6px ${tg}` : "none", transition: "all 0.3s ease" }} />
-                        {i === 2 && <div style={{ width: 12, height: 1, background: "rgba(255,255,255,0.1)" }} />}
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: filled ? tc : "rgba(255,255,255,0.12)", boxShadow: filled ? `0 0 4px ${tg}` : "none", flexShrink: 0 }} />
+                        {i === 2 && <div style={{ width: 6, height: 1, background: "rgba(255,255,255,0.1)", flexShrink: 0 }} />}
                       </div>
                     );
                   })}
-                  <span style={{ fontSize: 9, fontWeight: 700, marginLeft: 4, color: _et ? _et.color : "rgba(255,255,255,0.3)" }}>
-                    {_et ? `+${_et.pct}%` : _nt ? `+${_nt.pct}%` : ""}
-                  </span>
+                  {streak > 0 && (_et || _nt) && (
+                    <span style={{ fontSize: 9, fontWeight: 700, color: _et ? _et.color : "rgba(255,255,255,0.4)", flexShrink: 0 }}>
+                      {_et && !_nt ? `+${_et.pct}% bonus pool active 🔥` : _et ? `+${_et.pct}%` : `+${_nt!.pct}%`}
+                    </span>
+                  )}
+                  {streak > 0 && _nt && _wn > 0 && (
+                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", flexShrink: 0 }}>
+                      · {_wn} {_wn === 1 ? "win" : "wins"} away
+                    </span>
+                  )}
+                  {streak === 0 && (
+                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", letterSpacing: "0.04em", flexShrink: 0 }}>
+                      Win 3 in a row for +5% bonus pool
+                    </span>
+                  )}
                 </div>
-                {_nt && (
-                  <div style={{ fontSize: _wn === 1 ? 10 : 8, fontWeight: _wn === 1 ? 700 : 500, color: _wn === 1 ? "#FFD700" : "rgba(255,255,255,0.25)", letterSpacing: "0.05em" }}>
-                    {_wn} more {_wn === 1 ? "win" : "wins"} for {_nt.pct}% of pool
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-        </div>
+              );
+            })()}
+          </div>
         </div>
 
-        {/* 4 — Bottom: multipliers (hidden after reveal) + wallet/action always visible */}
-        <div style={{
-          flex: "0 0 12dvh",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          minHeight: 0,
-          overflow: "hidden",
-          boxSizing: "border-box",
-        }}>
+        {/* 4 — Wallet + action only (14dvh) */}
         <div
-          data-ftue-chrome="true"
-          ref={(el) => setMultipliersHost(el)}
           style={{
-            display: (gameState === "IDLE" || gameState === "HOLD" || gameState === "DEALING" || gameState === "DRAWING") ? "flex" : "none",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "4px 10px",
-            boxSizing: "border-box",
-            overflow: "hidden",
-          }}
-        />
-
-        <div
-          ref={(el) => setControlsHost(el)}
-          style={{
+            flex: "0 0 14dvh",
             display: "flex",
             flexDirection: "column",
             justifyContent: "flex-end",
-            padding: "0 10px calc(env(safe-area-inset-bottom, 0px) + 16px)",
+            minHeight: 0,
+            overflow: "visible",
+            boxSizing: "border-box",
+          }}
+        >
+        <div
+          ref={(el) => setControlsHost(el)}
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            minHeight: 0,
+            padding: "0 10px max(env(safe-area-inset-bottom, 0px) + 8px, 16px)",
             boxSizing: "border-box",
             overflow: "hidden",
           }}
@@ -1327,6 +1565,7 @@ const [streak, setStreak] = useState<number>(() =>
         ftueReplayBlocked={isFTUE && gameState === "RESULTS" && !ftueReplayReady}
         dataFtuePrimaryAnchor={isFTUE ? (gameState === "HOLD" ? "draw" : "deal") : undefined}
         splitFooter={{ multipliersHost, controlsHost }}
+        splitMultiplierRowVisible={isPreRevealFooter}
       />
 
     </div>

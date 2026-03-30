@@ -49,11 +49,32 @@ function toPlayerEval(p: any, projByBaseId: Map<string, number>): PlayerEval {
   };
 }
 
+/** Returns true if this player has at least one meaningful 2425 season game log.
+ *  Must have 2425-specific logs (no fallback to older seasons) with quickFP >= 8. */
+function hasValidLogs(basePlayerId: string, logsByKey: Map<string, any[]>): boolean {
+  const base = basePlayerId.trim();
+  if (!base) return false;
+  // ONLY check 2425 season logs — players with only older season data get excluded
+  const candidates = logsByKey.get(`${base}|2425`) ?? [];
+  if (candidates.length === 0) return false;
+  return candidates.some((l: any) => {
+    const s = l.stats ?? {};
+    const pts = Number(s.pts ?? s.points ?? s.PTS ?? 0);
+    const reb = Number(s.reb ?? s.rebounds ?? s.REB ?? s.trb ?? 0);
+    const ast = Number(s.ast ?? s.assists ?? s.AST ?? 0);
+    return (pts * 1.0 + reb * 1.2 + ast * 1.5) >= 8;
+  });
+}
+
 export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
   const allPlayers = getPlayers();
+  const logs = getLogsByKey();
   const players = allPlayers.filter((p: any) => String(p.id ?? '').includes('_2425'));
   const { projByBaseId } = buildProjections(players);
-  const evalPool = players.map(p => toPlayerEval(p, projByBaseId));
+  // Exclude players with no valid game logs — prevents zero-stat white tier cards
+  const evalPool = players
+    .filter((p: any) => hasValidLogs(String(p.basePlayerId ?? p.id ?? ''), logs))
+    .map(p => toPlayerEval(p, projByBaseId));
 
   const rnd = mulberry32(randomSeed());
   const rosterConfig = {
@@ -74,9 +95,12 @@ export async function redrawRoster({
   lockedCardIds: Set<string>;
 }): Promise<{ roster: PlayerCard[] }> {
   const allPlayers = getPlayers();
+  const logs = getLogsByKey();
   const players = allPlayers.filter((p: any) => String(p.id ?? '').includes('_2425'));
   const { projByBaseId } = buildProjections(players);
-  const evalPool = players.map(p => toPlayerEval(p, projByBaseId));
+  const evalPool = players
+    .filter((p: any) => hasValidLogs(String(p.basePlayerId ?? p.id ?? ''), logs))
+    .map(p => toPlayerEval(p, projByBaseId));
 
   const heldSlots = new Set<number>();
   currentCards.forEach((c, i) => {

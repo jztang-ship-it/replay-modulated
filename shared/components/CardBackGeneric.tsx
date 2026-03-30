@@ -21,8 +21,7 @@ export function CardBackGeneric({ isFlipping }: Props) {
         inset: 0,
         borderRadius: 18,
         overflow: "hidden",
-        background: "linear-gradient(160deg, #0E1628 0%, #080E1C 50%, #050810 100%)",
-        border: "2px solid rgba(255,177,74,0.20)",
+        background: "linear-gradient(160deg, #1A2540 0%, #111828 50%, #0C1220 100%)",
         boxShadow: isFlipping
           ? "0 20px 50px rgba(0,0,0,0.6), 0 0 30px rgba(255,177,74,0.12)"
           : "0 8px 24px rgba(0,0,0,0.4)",
@@ -93,19 +92,6 @@ export function CardBackGeneric({ isFlipping }: Props) {
         REPLAY FS
       </div>
 
-      {/* Corner marks */}
-      <Corner style={{ position: "absolute", top: 10, left: 10, opacity: 0.18 }} />
-      <Corner style={{ position: "absolute", top: 10, right: 10, opacity: 0.18, transform: "scaleX(-1)" }} />
-      <Corner style={{ position: "absolute", bottom: 10, left: 10, opacity: 0.18, transform: "scaleY(-1)" }} />
-      <Corner style={{ position: "absolute", bottom: 10, right: 10, opacity: 0.18, transform: "scale(-1)" }} />
     </div>
-  );
-}
-
-function Corner({ style }: { style: React.CSSProperties }) {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={style}>
-      <path d="M0 0 L14 0 L14 3 L3 3 L3 14 L0 14 Z" fill="rgba(255,177,74,0.9)" />
-    </svg>
   );
 }

@@ -127,6 +127,7 @@ function BackBStats({ card }: { card: PlayerCard }) {
   const badgesData: Array<{icon:string;label:string;fp:number}> = Array.isArray((card as any).achievements) ? (card as any).achievements.filter(Boolean) : [];
   const badgeFpBonus = badgesData.reduce((s, b) => s + (b.fp ?? 0), 0);
   const hasStats     = Object.keys(sl).length > 0;
+  const allZero      = tiles.every(t => Number(t.value) === 0);
 
   return (
     <div style={S.backWrap}>
@@ -142,18 +143,15 @@ function BackBStats({ card }: { card: PlayerCard }) {
             <span style={{ fontSize:10, fontWeight:700, color:"#FFD700", alignSelf:"flex-end", marginBottom:2 }}>(+{badgeFpBonus})</span>
           )}
         </div>
-        <div style={{ display:"flex", alignItems:"center", gap:3, flexWrap:"wrap", flex:1 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:2, flex:1, flexWrap:"wrap" }}>
           {badgesData.slice(0,6).map((b:any, i:number) => (
-            <div key={b.id ?? b.label ?? i} style={{ display:"flex", alignItems:"center", gap:2, flexShrink:0, background:"rgba(0,0,0,0.55)", borderRadius:6, padding:"2px 5px", border:"1px solid rgba(255,255,255,0.18)" }}>
-              <span style={{ fontSize:13, lineHeight:1 }}>{b.icon}</span>
-              <span style={{ fontSize:7, fontWeight:700, color:"#FFD700", letterSpacing:0.3 }}>+{b.fp}</span>
-            </div>
+            <span key={b.id ?? b.label ?? i} style={{ fontSize:11, lineHeight:1, flexShrink:0 }}>{b.icon}</span>
           ))}
         </div>
       </div>
       <div style={S.divider}/>
-      {!hasStats ? (
-        <div style={S.noStatsWrap}><div style={S.noStatsText}>No stats loaded</div></div>
+      {!hasStats || allZero ? (
+        <div style={S.noStatsWrap}><div style={S.noStatsText}>No game log</div></div>
       ) : tiles.length > 0 ? (
         <div style={S.tilesGrid}>
           {tiles.slice(0,9).map(s => (
@@ -164,7 +162,7 @@ function BackBStats({ card }: { card: PlayerCard }) {
           ))}
         </div>
       ) : (
-        <div style={S.noStatsWrap}><div style={S.noStatsText}>Stats available</div></div>
+        <div style={S.noStatsWrap}><div style={S.noStatsText}>No game log</div></div>
       )}
       <div style={S.tapHint}>TAP TO FLIP BACK</div>
     </div>

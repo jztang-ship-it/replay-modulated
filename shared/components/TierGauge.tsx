@@ -55,6 +55,10 @@ interface TierGaugeProps {
   ftueLockStaticBar?: boolean;
   /** Regular game: trigger one-shot spring when final anchor card has finished counting */
   regularFinalCardKick?: boolean;
+  /** True when the anchor (last) card's FP is being added — triggers dramatic deceleration */
+  isAnchorReveal?: boolean;
+  /** Called when the animated gauge bar crosses a tier boundary — used for tier name flip */
+  onTierCross?: (tier: string) => void;
 }
 
 const TIER_CFG: Record<string, { label: string; color: string; glow: string }> = {
@@ -90,6 +94,162 @@ function easeOut(t: number): number {
   return 1 - Math.pow(1 - Math.min(1, t), 3);
 }
 
+/** Sorted gauge stops (excludes GOAT/BONUS_POOL as bar segments). */
+function sortedGaugeThresholds(thresholds: TierThreshold[]) {
+  return [...thresholds]
+    .filter(t => (t.tier as string) !== "BONUS_POOL" && (t.tier as string) !== "GOAT")
+    .sort((a, b) => a.minFP - b.minFP);
+}
+
+export function computeGaugeState(
+  fp: number,
+  thresholds: TierThreshold[],
+  winTierProp: string | null | undefined,
+  nearMissPts: number,
+) {
+  const sorted = sortedGaugeThresholds(thresholds);
+  let derivedTier = "BUST";
+  let nextTier: string | null = sorted[0]?.tier ?? null;
+  let curMin = 0;
+  let nextMin = sorted[0]?.minFP ?? 155;
+
+  for (let i = 0; i < sorted.length; i++) {
+    if (fp >= sorted[i].minFP) {
+      derivedTier = sorted[i].tier;
+      curMin = sorted[i].minFP;
+      nextTier = sorted[i + 1]?.tier ?? null;
+      nextMin = sorted[i + 1]?.minFP ?? 9999;
+    }
+  }
+
+  const goatMin = thresholds.find(t => (t.tier as string) === "GOAT")?.minFP ?? 235;
+  const isGoat = fp >= goatMin;
+
+  if (derivedTier === "MVP" && nextTier === null) {
+    nextTier = "GOAT";
+    nextMin = goatMin;
+  }
+
+  const actualTier = winTierProp ?? (isGoat ? "GOAT" : derivedTier);
+  const isMaxLevel = isGoat || actualTier === "GOAT";
+
+  const tierCfg = TIER_CFG[actualTier] ?? TIER_CFG.BUST;
+  const targetCfg = isMaxLevel ? TIER_CFG.GOAT : (TIER_CFG[nextTier ?? ""] ?? tierCfg);
+
+  const gap = isMaxLevel ? 0 : Math.max(0, nextMin - fp);
+  const isNearMiss = !isMaxLevel && winTierProp != null && gap > 0 && gap <= nearMissPts;
+
+  const tierSpan = Math.max(1, nextMin - curMin);
+  const finalFill = isMaxLevel ? 1.0 : Math.min(1, Math.max(0, (fp - curMin) / tierSpan));
+
+  const normalColor = isGoat
+    ? TIER_CFG.GOAT.color
+    : `linear-gradient(90deg, ${tierCfg.color}88, ${targetCfg.color})`;
+  const overshootColor = `linear-gradient(90deg, ${tierCfg.color}88 0%, ${targetCfg.color} 50%, ${targetCfg.color} 100%)`;
+
+  return {
+    derivedTier,
+    nextTier,
+    curMin,
+    nextMin,
+    goatMin,
+    isGoat,
+    actualTier,
+    isMaxLevel,
+    tierCfg,
+    targetCfg,
+    gap,
+    isNearMiss,
+    tierSpan,
+    finalFill,
+    normalColor,
+    overshootColor,
+  };
+}
+
+/** Count tier minFP boundaries strictly crossed when FP rises from → to. */
+function countTierBoundaryCrossings(fromFp: number, toFp: number, thresholds: TierThreshold[]): number {
+  if (toFp <= fromFp + 0.001) return 0;
+  const sorted = sortedGaugeThresholds(thresholds);
+  const mins = sorted.map(t => t.minFP).filter(m => m > 0);
+  let n = 0;
+  for (const m of mins) {
+    if (fromFp < m && m <= toFp + 0.001) n++;
+  }
+  const goatMin = thresholds.find(t => (t.tier as string) === "GOAT")?.minFP;
+  if (goatMin && fromFp < goatMin && toFp >= goatMin) n++;
+  return n;
+}
+
+const TIER_ROLL_PAUSE_MS = 350;
+
+/** Dramatic easing: fast start (70% of distance in first 50%), then decelerating crawl.
+ *  "Can I reach the next tier?" — roulette ball losing momentum. */
+function dramaticEase(t: number): number {
+  const u = Math.min(1, Math.max(0, t));
+  if (u < 0.5) {
+    const s = u / 0.5;
+    return 0.7 * (1 - Math.pow(1 - s, 2));  // fast ease-out — covers 70% in first half
+  }
+  const s = (u - 0.5) / 0.5;
+  return 0.7 + 0.3 * (s * s);               // slow ease-in — crawls through last 30%
+}
+
+/** FP waypoints for roll-up: start, each tier min strictly between from→to, end (GOAT line included). */
+function buildFpWaypoints(fromFp: number, toFp: number, thresholds: TierThreshold[]): number[] {
+  if (toFp <= fromFp + 0.001) return [fromFp, toFp];
+  const w: number[] = [fromFp];
+  const sorted = sortedGaugeThresholds(thresholds);
+  for (const t of sorted) {
+    const m = t.minFP;
+    if (m > fromFp + 0.001 && m < toFp - 0.001) w.push(m);
+  }
+  const goatMin = thresholds.find(tt => (tt.tier as string) === "GOAT")?.minFP;
+  if (goatMin != null && goatMin > fromFp + 0.001 && goatMin < toFp - 0.001) {
+    if (!w.some(x => Math.abs(x - goatMin) < 0.01)) w.push(goatMin);
+  }
+  w.sort((a, b) => a - b);
+  if (Math.abs(w[w.length - 1] - toFp) > 0.01) w.push(toFp);
+  return w;
+}
+
+function totalTierPacedRollMs(waypoints: number[], motionMs: number, pauseMs: number): number {
+  if (waypoints.length < 2) return 0;
+  return motionMs + Math.max(0, waypoints.length - 2) * pauseMs;
+}
+
+/** Elapsed time → FP: dramatic ease per segment + spring overshoot at tier boundaries. */
+function fpAtDramaticRoll(elapsedMs: number, waypoints: number[], motionMs: number, pauseMs: number): number {
+  if (waypoints.length < 2) return waypoints[0] ?? 0;
+  const nSeg = waypoints.length - 1;
+  const totalDelta = waypoints[nSeg] - waypoints[0];
+  const segDeltas = waypoints.slice(1).map((v, i) => v - waypoints[i]);
+  const segMotion = segDeltas.map(df =>
+    totalDelta > 0.001 ? (df / totalDelta) * motionMs : motionMs / Math.max(1, nSeg),
+  );
+
+  let acc = 0;
+  for (let i = 0; i < nSeg; i++) {
+    const dur = segMotion[i];
+    if (elapsedMs < acc + dur) {
+      const u = dur > 0.001 ? (elapsedMs - acc) / dur : 1;
+      const eased = dramaticEase(Math.min(1, Math.max(0, u)));
+      return waypoints[i] + eased * segDeltas[i];
+    }
+    acc += dur;
+    if (i < nSeg - 1) {
+      // At tier boundary — spring overshoot during pause
+      if (elapsedMs < acc + pauseMs) {
+        const pt = (elapsedMs - acc) / pauseMs;
+        const overshoot = 3.5 * Math.exp(-4.5 * pt) * Math.sin(pt * Math.PI * 2.2);
+        return waypoints[i + 1] + overshoot;
+      }
+      acc += pauseMs;
+    }
+  }
+  return waypoints[nSeg];
+}
+
 const STYLE_ID = "tg-v5";
 if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
   const st = document.createElement("style");
@@ -116,78 +276,48 @@ export function TierGauge({
   onFtueOscillateComplete,
   ftueLockStaticBar = false,
   regularFinalCardKick = false,
+  isAnchorReveal = false,
+  onTierCross,
 }: TierGaugeProps) {
   const [barFill,   setBarFill]   = useState(0);
   const [barColor,  setBarColor]  = useState("transparent");
   const [ftueOscGlow, setFtueOscGlow] = useState<string | null>(null);
   const [isDinging, setIsDinging] = useState(false);
   const rafRef      = useRef<number>(0);
+  const delayRef    = useRef<number>(0);
+  const animatedFpRef = useRef<number>(0);
+  const animTierRef  = useRef<string>("BUST");
+  const onTierCrossRef = useRef(onTierCross);
+  onTierCrossRef.current = onTierCross;
   const prevFillRef = useRef<number>(0);
   const prevTierRef = useRef<string>("BUST");
+  /** Last totalFp we fully animated to — prevents duplicate roll-up on re-renders */
+  const lastAnimatedTotalFpRef = useRef<number | null>(null);
   const ftueOscCompleteFiredRef = useRef(false);
   const onFtueOscillateCompleteRef = useRef(onFtueOscillateComplete);
   onFtueOscillateCompleteRef.current = onFtueOscillateComplete;
 
-  // Gauge stops — GOAT/JACKPOT are bonus pool wins, not gauge stops
-  const sorted = [...thresholds]
-    .filter(t => (t.tier as string) !== "JACKPOT" && (t.tier as string) !== "GOAT")
-    .sort((a, b) => a.minFP - b.minFP);
+  const snap = computeGaugeState(totalFp, thresholds, winTierProp ?? null, NEAR_MISS_PTS);
+  const {
+    derivedTier,
+    nextTier,
+    curMin,
+    nextMin,
+    isGoat,
+    actualTier,
+    isMaxLevel,
+    tierCfg,
+    targetCfg,
+    gap,
+    isNearMiss,
+    tierSpan,
+    finalFill,
+    normalColor,
+    overshootColor,
+  } = snap;
 
-  // Derive tier position from totalFp
-  let derivedTier = "BUST";
-  let nextTier: string | null = sorted[0]?.tier ?? null;
-  let curMin = 0;
-  let nextMin = sorted[0]?.minFP ?? 155;
-
-  for (let i = 0; i < sorted.length; i++) {
-    if (totalFp >= sorted[i].minFP) {
-      derivedTier = sorted[i].tier;
-      curMin      = sorted[i].minFP;
-      nextTier    = sorted[i + 1]?.tier ?? null;
-      nextMin     = sorted[i + 1]?.minFP ?? 9999;
-    }
-  }
-
-  const goatMin    = thresholds.find(t => (t.tier as string) === "GOAT")?.minFP ?? 235;
-  const isGoat     = totalFp >= goatMin;
-
-  // When derivedTier is MVP (last gauge stop), nextTier should be GOAT — not null
-  // This gives us the orange→red gradient and correct right label
-  if (derivedTier === "MVP" && nextTier === null) {
-    nextTier = "GOAT";
-    nextMin  = goatMin;
-  }
-
-  // actualTier: winTierProp is post-reveal source of truth (from calculateWinTier)
-  // During live flips winTierProp is null — use derivedTier
-  const actualTier = winTierProp ?? (isGoat ? "GOAT" : derivedTier);
-
-  // isMaxLevel: ONLY when score is at or above GOAT threshold
-  // MVP is NOT max level — it still shows progress toward GOAT on the gauge
-  // (right label = G.O.A.T. in red when in MVP band)
-  const isMaxLevel = isGoat || actualTier === "GOAT";
-
-  const tierCfg   = TIER_CFG[actualTier] ?? TIER_CFG.BUST;
-  const targetCfg = isMaxLevel ? TIER_CFG.GOAT : (TIER_CFG[nextTier ?? ""] ?? tierCfg);
-
-  const gap        = isMaxLevel ? 0 : Math.max(0, nextMin - totalFp);
-  const isNearMiss = !isMaxLevel && winTierProp != null && gap > 0 && gap <= NEAR_MISS_PTS;
-
-  // Bar fill: progress within current tier band (0→1)
-  const tierSpan  = Math.max(1, nextMin - curMin);
-  const finalFill = isMaxLevel ? 1.0 : Math.min(1, Math.max(0, (totalFp - curMin) / tierSpan));
-
-  // Near-miss overshoot: more so-close = more overshoot
   const nmOvershoot = isNearMiss ? 0.11 * (1 - gap / NEAR_MISS_PTS) : 0;
   const nmTarget    = Math.min(1.12, 1.0 + nmOvershoot);
-
-  const normalColor    = isGoat
-    ? TIER_CFG.GOAT.color
-    : `linear-gradient(90deg, ${tierCfg.color}88, ${targetCfg.color})`;
-  const overshootColor = `linear-gradient(90deg, ${tierCfg.color}88 0%, ${targetCfg.color} 50%, ${targetCfg.color} 100%)`;
-
-  // Detect tier crossing (this update moved into a new tier band, including BUST → first tier)
-  const tierCrossed = derivedTier !== prevTierRef.current;
 
   // ── FTUE oscillation — runs once when ftueOscillate becomes true ─────
   // Ease FP to 198 (3 FP into All-Star vs floor 195): bar shows a *small* All-Star segment
@@ -266,6 +396,7 @@ export function TierGauge({
       );
       setFtueOscGlow(null);
       prevFillRef.current = realFill;
+      lastAnimatedTotalFpRef.current = realFp;
       if (!ftueOscCompleteFiredRef.current) {
         ftueOscCompleteFiredRef.current = true;
         onFtueOscillateCompleteRef.current?.();
@@ -318,6 +449,7 @@ export function TierGauge({
       cancelAnimationFrame(rafRef.current);
       prevFillRef.current = finalFill;
       prevTierRef.current = derivedTier;
+      lastAnimatedTotalFpRef.current = totalFp;
       setBarFill(finalFill);
       setBarColor(normalColor);
       setFtueOscGlow(null);
@@ -328,6 +460,7 @@ export function TierGauge({
       cancelAnimationFrame(rafRef.current);
       prevFillRef.current = 0;
       prevTierRef.current = "BUST";
+      lastAnimatedTotalFpRef.current = null;
       setBarFill(0);
       setBarColor("transparent");
       return;
@@ -338,15 +471,37 @@ export function TierGauge({
       return;
     }
 
-    cancelAnimationFrame(rafRef.current);
+    // Already settled at this totalFp — avoid restarting animation on dependency churn
+    if (lastAnimatedTotalFpRef.current !== null && Math.abs(totalFp - lastAnimatedTotalFpRef.current) < 0.05) {
+      return;
+    }
 
-    // On tier crossing, always start visually from 0 within the new tier band
-    // so the bar animates rightward, never left
-    const startFill = tierCrossed ? 0 : prevFillRef.current;
+    cancelAnimationFrame(rafRef.current);
+    clearTimeout(delayRef.current);
+
+    // ── Direct-set: bar tracks totalFp frame-by-frame, always ──────────
+    if (!isGoat && !regularFinalCardKick && !isNearMiss && !isSkip) {
+      const snap = computeGaugeState(totalFp, thresholds, winTierProp ?? null, NEAR_MISS_PTS);
+      prevFillRef.current = snap.finalFill;
+      prevTierRef.current = snap.derivedTier;
+      animatedFpRef.current = totalFp;
+      lastAnimatedTotalFpRef.current = totalFp;
+      setBarFill(snap.finalFill);
+      setBarColor(snap.normalColor);
+      // Fire tier cross callback when tier changes
+      if (snap.derivedTier !== animTierRef.current) {
+        animTierRef.current = snap.derivedTier;
+        onTierCrossRef.current?.(snap.derivedTier);
+      }
+      return;
+    }
+
+    // Always animate from last bar end (never reset to 0 on tier cross) for spring modes
+    const startFill = prevFillRef.current;
     const delta     = finalFill - startFill;
 
     // ── Determine animation mode ──────────────────────────────────────────
-    type AnimMode = "goat" | "near_miss_spring" | "tier_cross" | "skip_spring" | "final_card_spring" | "ease";
+    type AnimMode = "goat" | "near_miss_spring" | "skip_spring" | "final_card_spring" | "ease";
     let mode: AnimMode = "ease";
     let duration = 300;
 
@@ -363,13 +518,10 @@ export function TierGauge({
       // Skip: duration proportional to score; mild spring for high tiers
       duration = Math.max(500, Math.round(totalFp / MAX_FP * 1400));
       mode = (actualTier === "MVP" || actualTier === "ALL_STAR") ? "skip_spring" : "ease";
-    } else if (tierCrossed) {
-      mode = "tier_cross";
-      duration = 550;
     } else {
-      // Single card: duration proportional to this card's FP delta
-      duration = lastCardFp > BIG_CARD_FP ? 480 : Math.max(220, Math.round(lastCardFp / 40 * 400));
+      // Unreachable if FP roll-up path is correct — keep short ease fallback
       mode = "ease";
+      duration = 300;
     }
 
     // ── Spring params by mode ─────────────────────────────────────────────
@@ -378,7 +530,6 @@ export function TierGauge({
     const springCfg = {
       near_miss_spring: { zeta: 0.28, wn: 9  },
       skip_spring:      { zeta: 0.45, wn: 8  },
-      tier_cross:       { zeta: 0.50, wn: 8  },
       final_card_spring:{ zeta: 0.44, wn: 8.5 },
       goat:             { zeta: 1.00, wn: 5  }, // critically damped — smooth fill
       ease:             { zeta: 1.00, wn: 5  }, // unused for ease mode
@@ -411,7 +562,6 @@ export function TierGauge({
             break;
           }
 
-          case "tier_cross":
           case "skip_spring": {
             // Spring from start to finalFill — mild natural bounce
             const raw = spring(t * 1.5, zeta, wn);
@@ -449,6 +599,7 @@ export function TierGauge({
         } else {
           prevFillRef.current = finalFill;
           prevTierRef.current = derivedTier;
+          lastAnimatedTotalFpRef.current = totalFp;
           setBarFill(finalFill);
           setBarColor(normalColor);
           if (isGoat) {
@@ -465,21 +616,40 @@ export function TierGauge({
       clearTimeout(delayId);
       cancelAnimationFrame(rafRef.current);
     };
-  }, [totalFp, visible, ftueSuppressNormal, ftueOscillate, ftueLockStaticBar, regularFinalCardKick, finalFill, normalColor, derivedTier]); // eslint-disable-line
+  }, [totalFp, visible, ftueSuppressNormal, ftueOscillate, ftueLockStaticBar, regularFinalCardKick, isSkip, isNearMiss, isGoat, thresholds]); // eslint-disable-line
 
   useEffect(() => {
     if (!visible) {
       prevFillRef.current = 0;
       prevTierRef.current = "BUST";
+      lastAnimatedTotalFpRef.current = null;
     }
   }, [visible]);
 
   if (!visible || ftueSuppressNormal) return null;
 
   return (
-    <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", gap: 4 }}>
+    <div style={{
+      padding: "3px 0 4px",
+      display: "flex",
+      flexDirection: "column",
+      gap: 6,
+      overflow: "visible",
+      boxSizing: "border-box",
+    }}>
 
-      {/* Gap callout */}
+      {/* Bar — min 14px track */}
+      <div style={{ position: "relative", height: 14, minHeight: 14, background: "#ffffff0d", borderRadius: 999, overflow: "hidden" }}>
+        <div style={{
+          position: "absolute", left: 0, top: 0, height: "100%", borderRadius: 999,
+          width: `${barFill * 100}%`,
+          background: barColor,
+          boxShadow: `0 0 12px ${ftueOscGlow ?? targetCfg.glow}`,
+          animation: isDinging ? "tgDing 0.30s ease-in-out 5, tgGlow 0.60s ease-in-out 3" : "none",
+        }} />
+      </div>
+
+      {/* Gap callout — below bar */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
         {isMaxLevel ? (
           <span style={{ fontSize: 13, fontWeight: 800, color: TIER_CFG.GOAT.color, fontFamily: FF, letterSpacing: "0.06em", textTransform: "uppercase" }}>
@@ -498,17 +668,6 @@ export function TierGauge({
             </span>
           </>
         )}
-      </div>
-
-      {/* Bar */}
-      <div style={{ position: "relative", height: 8, background: "#ffffff0d", borderRadius: 999, overflow: "hidden" }}>
-        <div style={{
-          position: "absolute", left: 0, top: 0, height: "100%", borderRadius: 999,
-          width: `${barFill * 100}%`,
-          background: barColor,
-          boxShadow: `0 0 12px ${ftueOscGlow ?? targetCfg.glow}`,
-          animation: isDinging ? "tgDing 0.30s ease-in-out 5, tgGlow 0.60s ease-in-out 3" : "none",
-        }} />
       </div>
     </div>
   );

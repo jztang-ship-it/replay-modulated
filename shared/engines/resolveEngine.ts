@@ -74,7 +74,7 @@ function pickBiasedLog(basePlayerId: string, season: number | null, tier: string
     const reb = Number(stats.reb ?? stats.rebounds ?? stats.REB ?? stats.trb ?? 0);
     const ast = Number(stats.ast ?? stats.assists ?? stats.AST ?? 0);
     const quickFp = pts * 1.0 + reb * 1.2 + ast * 1.5;
-    if (quickFp < 3) return false;  // filter out near-zero game logs
+    if (quickFp < 8) return false;  // filter out garbage-time / near-zero game logs
     const mp = stats.mp ?? stats.minutes ?? stats.min ?? stats.MIN ?? stats.minutesPlayed;
     if (mp !== undefined && mp !== null) {
       const mpStr = String(mp);

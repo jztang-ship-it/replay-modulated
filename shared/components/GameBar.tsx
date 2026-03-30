@@ -108,6 +108,8 @@ type Props = {
     multipliersHost: HTMLElement | null;
     controlsHost: HTMLElement | null;
   };
+  /** When false with splitFooter, multiplier buttons are not portaled (host can stay mounted). Default true. */
+  splitMultiplierRowVisible?: boolean;
 };
 
 const MULTIPLIERS = [1, 3, 5, 10];
@@ -955,6 +957,7 @@ export function GameBar({
   hideTierBar = false,
   tierGaugeSlot,
   splitFooter,
+  splitMultiplierRowVisible = true,
 }: Props) {
   const betLocked = gameState === "DEALING" || gameState === "DRAWING" || gameState === "REVEALING";
   const splitRequested = splitFooter != null;
@@ -1027,28 +1030,30 @@ export function GameBar({
   const remaining  = capMax - spent;
   const overBudget = remaining < 0;
 
-  const MULTIPLIER_COLORS: Record<number, { active: string; glow: string }> = {
-    1:  { active: "rgba(100,180,255,0.25)", glow: "none" },
-    3:  { active: "rgba(34,197,94,0.35)",   glow: "0 0 12px rgba(34,197,94,0.4)" },
-    5:  { active: "rgba(192,132,252,0.40)", glow: "0 0 14px rgba(192,132,252,0.5)" },
-    10: { active: "rgba(251,146,60,0.45)",  glow: "0 0 18px rgba(251,146,60,0.6)" },
+  /** Active (selected) multiplier: text + border + bg tint per tier */
+  const MULTIPLIER_ACTIVE: Record<number, { text: string; border: string; bg: string }> = {
+    1:  { text: "#3B82F6", border: "#3B82F6", bg: "rgba(59,130,246,0.18)" },
+    3:  { text: "#22C55E", border: "#22C55E", bg: "rgba(34,197,94,0.18)" },
+    5:  { text: "#C084FC", border: "#C084FC", bg: "rgba(192,132,252,0.18)" },
+    10: { text: "#FB923C", border: "#FB923C", bg: "rgba(251,146,60,0.18)" },
   };
 
   const multiplierRow = (
     <div style={{ display: "flex", gap: 8, justifyContent: "center", alignItems: "center", width: "100%", boxSizing: "border-box", padding: "0 10px" }}>
       {MULTIPLIERS.map((m: number) => {
         const active = betMultiplier === m;
-        const mc = MULTIPLIER_COLORS[m] ?? MULTIPLIER_COLORS[1];
+        const ma = MULTIPLIER_ACTIVE[m] ?? MULTIPLIER_ACTIVE[1];
         return (
           <button key={m} onClick={() => onBetMultiplier(m)} disabled={betLocked} style={{
-            background: active ? mc.active : THEME.button.multiplier.inactive.bg,
-            border: active ? `1px solid ${mc.active}` : THEME.button.multiplier.inactive.border,
-            borderRadius: 14, color: "#FFFFFF",
+            background: active ? ma.bg : THEME.button.multiplier.inactive.bg,
+            border: active ? `1px solid ${ma.border}` : THEME.button.multiplier.inactive.border,
+            borderRadius: 14,
+            color: active ? ma.text : "#6B7280",
             fontWeight: 900, fontSize: active ? 15 : 13,
-            padding: active ? "10px 0" : "8px 0",
+            padding: active ? "10px" : "8px",
             cursor: betLocked ? "default" : "pointer",
             opacity: betLocked ? 0.4 : 1,
-            boxShadow: active ? mc.glow : "none",
+            boxShadow: "none",
             transition: "all 200ms ease", lineHeight: 1,
             flex: 1, maxWidth: 80,
           }}>{m}X</button>
@@ -1087,7 +1092,7 @@ export function GameBar({
           transition: "filter 0.35s ease, opacity 0.35s ease",
           pointerEvents: showCelebContent ? "none" : "auto",
         }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 0, marginBottom: 6 }}>
             <div ref={walletRef} style={{ flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
                 <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>Wallet</span>
@@ -1105,7 +1110,7 @@ export function GameBar({
             }}>i</button>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "center", paddingTop: 4 }}>
+          <div style={{ display: "flex", justifyContent: "center", paddingTop: 0 }}>
             <button
               onClick={onAction}
               disabled={isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked}
@@ -1168,7 +1173,10 @@ export function GameBar({
           <LegendModal onClose={() => setShowLegend(false)} legend={legend} />,
           document.body
         )}
-        {ReactDOM.createPortal(multiplierRow, splitFooter!.multipliersHost as Element)}
+        {ReactDOM.createPortal(
+          splitMultiplierRowVisible ? multiplierRow : <></>,
+          splitFooter!.multipliersHost as Element
+        )}
         {ReactDOM.createPortal(controlsFooter, splitFooter!.controlsHost as Element)}
       </>
     );
@@ -1240,7 +1248,7 @@ export function GameBar({
           }}>
             {multiplierRow}
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 6, marginBottom: 6 }}>
               <div ref={walletRef} style={{ flexShrink: 0 }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
                   <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>Wallet</span>
@@ -1258,7 +1266,7 @@ export function GameBar({
               }}>i</button>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "center", paddingTop: 4 }}>
+            <div style={{ display: "flex", justifyContent: "center", paddingTop: 0 }}>
               <button
                 onClick={onAction}
                 disabled={isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked}

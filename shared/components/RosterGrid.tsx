@@ -176,9 +176,9 @@ export function RosterGrid(props: Props) {
               width: "100%",
               aspectRatio: "329 / 478",
               zIndex: isSpotlight ? 100 : isShaking ? 10 : 1,
-              background: "#0a0c10",
+              background: "transparent",
               cursor: isTapTarget ? "pointer" : "default",
-              boxShadow: isTapTarget ? "0 0 0 2px rgba(255,255,255,0.25)" : "none",
+              boxShadow: "none",
               transition: "box-shadow 300ms ease",
               ...(ftueLockedSlot !== null && (card.slotIndex ?? 0) !== ftueLockedSlot
                 ? { opacity: 0.18, pointerEvents: "none" as const }

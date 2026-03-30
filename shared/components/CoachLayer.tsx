@@ -8,6 +8,7 @@ export type BubbleAnchor =
   | "draw"
   | "roster"
   | "roster-and-score"
+  | "score-row"
   | "booker-and-gauge"
   | "ftue-darnit-focus"
   | "gauge"
@@ -441,8 +442,8 @@ export function CoachLayer({
           Players are ranked by color and salary — guides to help you build your best lineup with a $200 salary cap. The higher ranked players have higher average fantasy points.&nbsp;🎯
         </span>
       ),
-      anchor: "roster-and-score",
-      position: "below",
+      anchor: "score-row",
+      position: "above",
       pulseCardLabels: true,
       onDismiss: () => {
         shown.current.delete("hold_booker");
@@ -510,9 +511,8 @@ export function CoachLayer({
             tier by 2.4 points. If only Love or Klay showed up tonight we would have won an extra 5x.&nbsp;😤
           </span>
         ),
-        anchor: "ftue-darnit-focus",
-        position: "above",
-        pillLayout: "page-center",
+        anchor: { cardId: "ftue-booker" },
+        position: "below",
         onDismiss: () => {
           shown.current.delete("results_devin");
           enqueue({
