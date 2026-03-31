@@ -29,6 +29,7 @@ import { CoinDisplay }      from '@shared/engagement/CoinDisplay';
 import { DailyTasksPanel }  from '@shared/engagement/DailyTasksPanel';
 import { XPBar }            from '@shared/engagement/XPBar';
 import { soundManager }     from '@shared/utils/soundManager';
+import { audioDirector }   from '@shared/utils/audioDirector';
 import { getPlayerUid, getNickname, setNickname } from '@shared/utils/playerIdentity';
 
 // Test-wire only: allow passing glow props even if wrapper prop types lag behind.
@@ -426,6 +427,21 @@ const [streak, setStreak] = useState<number>(() =>
   );
 
   // Zone 1: Hooks
+
+  // ── Audio phase sync — maps GameState to AudioPhase ──────────────────
+  useEffect(() => {
+    const phaseMap: Record<GameState, import('@shared/utils/audioDirector').AudioPhase> = {
+      IDLE:             "IDLE",
+      DEALING:          "DEAL",
+      HOLD:             "HOLD",
+      DRAWING:          "DRAW",
+      REVEALING:        "REVEAL",
+      RESULTS:          "RESULTS",
+      WIN_CELEBRATION:  "CELEBRATION",
+    };
+    audioDirector.setPhase(phaseMap[gameState] ?? "IDLE");
+  }, [gameState]);
+
   useEffect(() => {
     ensureLoaded().then(() => setDataReady(true)).catch(console.error);
   }, []);
@@ -494,7 +510,11 @@ const [streak, setStreak] = useState<number>(() =>
     } : undefined,
     onCardRevealStart: handleCardRevealStart,
     onCardComplete: useCallback((cId: string) => {
-      setRevealIndex(prev => prev + 1);
+      setRevealIndex(prev => {
+        const next = prev + 1;
+        audioDirector.setRevealProgress(next, rosterRef.current.length);
+        return next;
+      });
       setLastRevealedCardId(cId);
 
       // FTUE: start gauge oscillation shortly after Booker's stamp lands
@@ -720,7 +740,15 @@ const [streak, setStreak] = useState<number>(() =>
     if (isFTUE && cardKey === "ftue-booker" && lockedCardIds.has(cardKey)) return;
     setLockedCardIds(prev => {
       const next = new Set(prev);
-      if (next.has(cardKey)) { next.delete(cardKey); } else { next.add(cardKey); const c = roster.find(x => cardId(x) === cardKey); if (c) gameAnalytics.cardHeld(c); }
+      if (next.has(cardKey)) {
+        next.delete(cardKey);
+        soundManager.playHoldOff();
+      } else {
+        next.add(cardKey);
+        soundManager.playHoldOn();
+        const c = roster.find(x => cardId(x) === cardKey);
+        if (c) gameAnalytics.cardHeld(c);
+      }
       return next;
     });
   }
@@ -876,13 +904,18 @@ const [streak, setStreak] = useState<number>(() =>
   }, [ftueReplayReady]); // eslint-disable-line
 
   function onWinCelebrationComplete() {
-    // Increment hand count for Protected mode tracking
+    // Increment hand count — read from localStorage (always current)
+    // then sync React state, avoiding stale-closure issues.
     if (!isFTUE) {
-      setHandCount(prev => {
-        const next = prev + 1;
-        localStorage.setItem("replaymod_hand_count", String(next));
-        return next;
-      });
+      const next = parseInt(localStorage.getItem("replaymod_hand_count") ?? "0", 10) + 1;
+      localStorage.setItem("replaymod_hand_count", String(next));
+      setHandCount(next);
+
+      // Name prompt trigger — fires once after hand 3
+      if (next >= 3 && !localStorage.getItem("replaymod_name_prompted")) {
+        localStorage.setItem("replaymod_name_prompted", "true");
+        setTimeout(() => setShowNamePrompt(true), 1500);
+      }
     }
     if (winPayout > 0) {
       setIsBalanceAnimating(true);
@@ -903,14 +936,6 @@ const [streak, setStreak] = useState<number>(() =>
     } else {
       setStreak(0);
       localStorage.setItem("replaymod_streak", "0");
-    }
-    // Name prompt after hand 3
-    if (!isFTUE) {
-      const hc = parseInt(localStorage.getItem("replaymod_hand_count") ?? "0", 10);
-      if (hc >= 3 && !localStorage.getItem("replaymod_name_prompted")) {
-        localStorage.setItem("replaymod_name_prompted", "true");
-        setTimeout(() => setShowNamePrompt(true), 1500);
-      }
     }
     setWinTier(null);
     setWinPayout(0);

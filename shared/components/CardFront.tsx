@@ -236,7 +236,7 @@ export function CardFront(props: CardFrontProps) {
       setDisplayedFp(Math.round(actual * eased * 10) / 10);
       if (progress < 1) {
         // Tick sound every ~50ms (not every frame) for slot machine feel
-        if (elapsed % 50 < 17) soundManager.playFpTick();
+        if (elapsed % 50 < 17) soundManager.playFpTick(progress);
         animRafRef.current = requestAnimationFrame(animate);
       } else {
         setDisplayedFp(actual);
