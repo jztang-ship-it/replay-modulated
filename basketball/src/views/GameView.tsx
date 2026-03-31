@@ -914,7 +914,7 @@ const [streak, setStreak] = useState<number>(() =>
       // Name prompt trigger — fires once after hand 3
       if (next >= 3 && !localStorage.getItem("replaymod_name_prompted")) {
         localStorage.setItem("replaymod_name_prompted", "true");
-        setTimeout(() => setShowNamePrompt(true), 1500);
+        setTimeout(() => setShowNamePrompt(true), 3500);
       }
     }
     if (winPayout > 0) {
@@ -1617,7 +1617,7 @@ const [streak, setStreak] = useState<number>(() =>
                 border: "1px solid rgba(255,215,0,0.2)",
               }}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: "#EAF0FF" }}>
-                  You're on the leaderboard as:
+                  Want to save your results? You're currently listed as:
                 </div>
                 <input
                   value={nameInput}
@@ -1636,12 +1636,12 @@ const [streak, setStreak] = useState<number>(() =>
                   }} style={{
                     flex: 1, padding: "10px 0", background: "rgba(255,215,0,0.85)", color: "#070A12",
                     border: "none", borderRadius: 8, fontWeight: 800, fontSize: 13, cursor: "pointer",
-                  }}>Save name</button>
+                  }}>Change Name</button>
                   <button onClick={() => setShowNamePrompt(false)} style={{
                     flex: 1, padding: "10px 0", background: "rgba(255,255,255,0.08)",
                     color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.1)",
                     borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer",
-                  }}>Keep this name</button>
+                  }}>Use This Name</button>
                 </div>
               </div>
             </div>
