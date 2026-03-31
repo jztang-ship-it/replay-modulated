@@ -1,87 +1,82 @@
 /**
- * shared/utils/audioDirector.ts — Emotional phase-based audio system
+ * shared/utils/audioDirector.ts — Phase-based layered audio system
  *
  * Three always-running layers:
- *   BED    — warm arena presence. Never silent. The "room tone" that makes
- *            the player feel like they're somewhere. Subtle enough to forget,
- *            noticeable the instant it disappears.
- *   STATE  — emotional tension/energy that shifts with game phase:
- *            anticipation → commitment → suspense → release.
- *   EVENT  — one-shot sounds that punctuate moments (from SoundManager).
+ *   BED    — always-on arena crowd presence
+ *   STATE  — crowd-based tension/energy that shifts with game phase
+ *   EVENT  — one-shot sounds (from SoundManager)
  *
- * Emotional arc per hand:
- *   IDLE        warm hum, player is comfortable, wants to press DEAL
- *   DEAL        spark of energy — "something is about to happen"
- *   HOLD        quiet focus — player is making decisions, don't distract
- *   DRAW        commitment anxiety — cards leaving, new ones incoming
- *   REVEAL      escalating suspense — tension builds card by card
- *   RESULTS     silence-as-punctuation — then result sound fills the space
- *   CELEBRATION crowd energy — dopamine payoff
+ * Content strategy:
+ *   1. Try to play real audio assets from the sound pack (basketball crowd recordings)
+ *   2. Fall back to procedural filtered noise if assets aren't loaded yet
+ *   3. LFO modulation and gain control are always procedural (control logic)
+ *
+ * The director owns routing, phase management, ducking, and gain scheduling.
+ * It does NOT decide what sounds to use — it asks the SoundPackLoader for content.
  */
 
+import { soundPackLoader } from "./soundPack";
+
 // ═══════════════════════════════════════════════════════════════════════════
-// TUNING CONSTANTS — every number here is a knob. Adjust by ear.
+// TUNING CONSTANTS
 // ═══════════════════════════════════════════════════════════════════════════
 
 export const GAINS = {
   MASTER: 1.0,
 
   // ── Bed layer ──────────────────────────────────────────────────────────
-  // Always present. Should feel like "being in the arena" at a whisper.
-  BED_MURMUR:       0.14,    // low crowd rumble (300–400 Hz)
-  BED_CHATTER:      0.05,    // mid presence — voices in the distance
-  BED_PAD:          0.07,    // tonal warmth — prevents "digital silence"
-  BED_PAD_FREQ:     55,      // A1 — felt more than heard
-  BED_LFO_RATE:     0.25,    // Hz — slow crowd wave (4-second period)
-  BED_LFO_DEPTH:    0.035,   // subtle gain modulation on murmur
+  BED_ASSET:        0.18,    // volume for real crowd bed asset
+  BED_LOW:          0.14,    // procedural fallback: low crowd rumble
+  BED_MID:          0.05,    // procedural fallback: mid chatter
+  BED_HIGH:         0.025,   // procedural fallback: upper arena air
+  BED_LFO_RATE:     0.25,    // Hz — slow crowd wave
+  BED_LFO_DEPTH:    0.035,   // subtle gain modulation
 
   // ── Bed phase modulation ───────────────────────────────────────────────
-  // Bed gain multiplier per phase (1.0 = normal, <1 = quieter, >1 = louder)
   BED_PHASE_IDLE:        1.0,
-  BED_PHASE_DEAL:        1.15,   // crowd stirs slightly
-  BED_PHASE_HOLD:        0.85,   // quiet down for decisions
-  BED_PHASE_DRAW:        1.1,    // slight energy
-  BED_PHASE_REVEAL:      0.7,    // pull back to make room for tension layer
-  BED_PHASE_RESULTS:     0.3,    // way down — result sound owns the space
-  BED_PHASE_CELEBRATION: 0.5,    // low — event layer crowd takes over
+  BED_PHASE_DEAL:        1.15,
+  BED_PHASE_HOLD:        0.85,
+  BED_PHASE_DRAW:        1.1,
+  BED_PHASE_REVEAL:      0.7,
+  BED_PHASE_RESULTS:     0.3,
+  BED_PHASE_CELEBRATION: 0.5,
 
-  // ── State layer (tension/energy) ───────────────────────────────────────
-  STATE_IDLE:        0.0,     // silence — bed is enough
-  STATE_DEAL:        0.06,    // tiny anticipation lift
-  STATE_HOLD:        0.0,     // clean decision space
-  STATE_DRAW:        0.10,    // rising commitment energy
-  STATE_REVEAL_BASE: 0.12,    // starting reveal tension
-  STATE_REVEAL_PEAK: 0.30,    // peak tension on last cards
-  STATE_RESULTS:     0.0,     // cut to zero — silence before result
-  STATE_CELEBRATION: 0.0,     // event layer handles it
+  // ── State layer ────────────────────────────────────────────────────────
+  STATE_IDLE:        0.0,
+  STATE_DEAL:        0.06,
+  STATE_HOLD:        0.0,
+  STATE_DRAW:        0.10,
+  STATE_REVEAL_BASE: 0.12,
+  STATE_REVEAL_PEAK: 0.30,
+  STATE_RESULTS:     0.0,
+  STATE_CELEBRATION: 0.0,
 
-  // ── State layer musical parameters ─────────────────────────────────────
-  REVEAL_DRONE_BASE: 55,      // A1 — low rumble
-  REVEAL_DRONE_FIFTH:82.5,    // E2 — power chord
-  REVEAL_TREMOLO_HZ: 2.5,     // pulse rate — heartbeat speed
-  REVEAL_TREMOLO_DEPTH: 0.15, // how much the pulse swells
-  REVEAL_NOISE_FREQ: 250,     // gritty filtered noise center
-  REVEAL_PITCH_RISE: 20,      // Hz — drone rises as reveal progresses
-
-  DRAW_TONE_START:   60,      // Hz — low hum at draw start
-  DRAW_TONE_END:     110,     // Hz — rises to just before reveal
-  DRAW_NOISE_SWEEP:  [300, 800] as readonly [number, number], // filter sweep
+  // State crowd shaping (procedural fallback)
+  DEAL_CROWD_FREQ:     [400, 600] as readonly [number, number],
+  DRAW_CROWD_LO:       [350, 700] as readonly [number, number],
+  DRAW_CROWD_HI:       [1200, 2000] as readonly [number, number],
+  REVEAL_CROWD_LOW:    300,
+  REVEAL_CROWD_MID:    1000,
+  REVEAL_CROWD_HIGH:   2800,
+  REVEAL_LFO_HZ:       2.0,
+  REVEAL_LFO_DEPTH:    0.12,
+  REVEAL_FREQ_RISE:    150,
 
   // ── Event layer ────────────────────────────────────────────────────────
   EVENT_MASTER:      1.0,
 
   // ── Ducking ────────────────────────────────────────────────────────────
-  DUCK_HEAVY:        0.25,    // bed drops to 25% for big moments
-  DUCK_LIGHT:        0.55,    // lighter duck for tier crosses
+  DUCK_HEAVY:        0.25,
+  DUCK_LIGHT:        0.55,
   DUCK_NONE:         1.0,
 
   // ── Timing (seconds) ──────────────────────────────────────────────────
-  FADE_BED_IN:       2.0,     // slow warm fade-in
-  FADE_BED_PHASE:    0.6,     // bed level shifts between phases
-  FADE_STATE_IN:     0.5,     // state layer builds in
-  FADE_STATE_OUT:    0.25,    // state layer cuts fairly fast
-  FADE_DUCK:         0.08,    // snap duck
-  FADE_UNDUCK:       0.8,     // slow recovery — let result sound breathe
+  FADE_BED_IN:       2.0,
+  FADE_BED_PHASE:    0.6,
+  FADE_STATE_IN:     0.5,
+  FADE_STATE_OUT:    0.25,
+  FADE_DUCK:         0.08,
+  FADE_UNDUCK:       0.8,
 } as const;
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -96,27 +91,24 @@ class AudioDirector {
   private muted: boolean;
   private started = false;
   private phase: AudioPhase = "IDLE";
+  private packLoaded = false;
 
   // Routing
-  private bedBus: GainNode | null = null;     // bed content → bedBus → duckGain → master
-  private duckGain: GainNode | null = null;    // sits between bed and master
-  private stateBus: GainNode | null = null;    // state content → stateBus → master
-  private eventBus: GainNode | null = null;    // events → eventBus → master
+  private bedBus: GainNode | null = null;
+  private duckGain: GainNode | null = null;
+  private stateBus: GainNode | null = null;
+  private eventBus: GainNode | null = null;
 
   // Bed nodes (persistent)
   private bedSources: AudioBufferSourceNode[] = [];
   private bedOscs: OscillatorNode[] = [];
-  private bedGains: GainNode[] = [];  // individual layer gains for phase modulation
-  private bedMurmurGain: GainNode | null = null; // reference for LFO target
+  private bedGains: GainNode[] = [];
 
   // State nodes (replaced on phase change)
   private stateSources: AudioBufferSourceNode[] = [];
   private stateOscs: OscillatorNode[] = [];
   private stateGains: GainNode[] = [];
-
-  // Reveal escalation
-  private revealDroneGains: GainNode[] = [];
-  private revealDroneOscs: OscillatorNode[] = [];
+  private stateFilters: BiquadFilterNode[] = [];
 
   constructor() {
     this.muted = localStorage.getItem("replaymod_muted") === "true";
@@ -148,11 +140,25 @@ class AudioDirector {
 
     this.stateBus = this.ctx.createGain();
     this.stateBus.gain.value = 0;
-    this.stateBus.connect(this.masterGain); // state NOT ducked — tension persists
+    this.stateBus.connect(this.masterGain);
 
     this.eventBus = this.ctx.createGain();
     this.eventBus.gain.value = GAINS.EVENT_MASTER;
     this.eventBus.connect(this.masterGain);
+
+    // Kick off asset loading (non-blocking — procedural runs until ready)
+    this.loadPack();
+  }
+
+  private async loadPack() {
+    if (!this.ctx) return;
+    await soundPackLoader.preloadAll(this.ctx);
+    this.packLoaded = true;
+    // If bed is already running with procedural, rebuild with assets
+    if (this.started && soundPackLoader.hasCrowdAssets()) {
+      this.teardownBed();
+      this.bootBed();
+    }
   }
 
   // ── Public API ────────────────────────────────────────────────────────────
@@ -168,6 +174,7 @@ class AudioDirector {
 
   isMuted(): boolean { return this.muted; }
   getPhase(): AudioPhase { return this.phase; }
+  isPackLoaded(): boolean { return this.packLoaded; }
 
   toggleMute() {
     this.muted = !this.muted;
@@ -203,30 +210,27 @@ class AudioDirector {
     this.duckForPhase(phase);
   }
 
-  /** Called per card during reveal — escalates tension */
   setRevealProgress(cardIndex: number, totalCards: number) {
     if (this.phase !== "REVEAL" || !this.ctx || !this.stateBus) return;
     const progress = totalCards > 1 ? cardIndex / (totalCards - 1) : 1;
     const now = this.ctx.currentTime;
 
-    // Escalate state bus gain
+    // Escalate crowd gain
     const gain = GAINS.STATE_REVEAL_BASE +
       (GAINS.STATE_REVEAL_PEAK - GAINS.STATE_REVEAL_BASE) * progress;
     this.stateBus.gain.cancelScheduledValues(now);
     this.stateBus.gain.setValueAtTime(this.stateBus.gain.value, now);
     this.stateBus.gain.linearRampToValueAtTime(gain, now + 0.4);
 
-    // Raise drone pitch slightly as we go
-    const pitchOffset = GAINS.REVEAL_PITCH_RISE * progress;
-    this.revealDroneOscs.forEach((osc, i) => {
-      const base = i === 0 ? GAINS.REVEAL_DRONE_BASE : GAINS.REVEAL_DRONE_FIFTH;
-      osc.frequency.cancelScheduledValues(now);
-      osc.frequency.setValueAtTime(osc.frequency.value, now);
-      osc.frequency.linearRampToValueAtTime(base + pitchOffset, now + 0.5);
-    });
+    // Shift procedural crowd filters up (no-op if using assets — filters array empty)
+    const freqRise = GAINS.REVEAL_FREQ_RISE * progress;
+    if (this.stateFilters.length >= 3) {
+      this.stateFilters[0].frequency.setValueAtTime(GAINS.REVEAL_CROWD_LOW + freqRise * 0.5, now);
+      this.stateFilters[1].frequency.setValueAtTime(GAINS.REVEAL_CROWD_MID + freqRise, now);
+      this.stateFilters[2].frequency.setValueAtTime(GAINS.REVEAL_CROWD_HIGH + freqRise, now);
+    }
   }
 
-  /** Event-triggered duck — bed drops, auto-recovers */
   duckForEvent(durationSec: number, heavy = true) {
     if (!this.ctx || !this.duckGain) return;
     const now = this.ctx.currentTime;
@@ -237,68 +241,75 @@ class AudioDirector {
     this.duckGain.gain.linearRampToValueAtTime(GAINS.DUCK_NONE, now + GAINS.FADE_DUCK + durationSec + GAINS.FADE_UNDUCK);
   }
 
-  // ── Bed layer (always on) ─────────────────────────────────────────────────
+  // ═════════════════════════════════════════════════════════════════════════
+  // BED LAYER
+  // Strategy: use real crowd bed asset if available, else procedural noise.
+  // LFO breathing is always procedural (control, not content).
+  // ═════════════════════════════════════════════════════════════════════════
+
   private bootBed() {
     if (!this.ctx || this.bedSources.length > 0) return;
     const ctx = this.ctx;
     const now = ctx.currentTime;
 
-    // Layer 1: Low crowd murmur — the "room"
-    const murmurBuf = this.noiseBuffer(8);
-    const murmur = ctx.createBufferSource();
-    murmur.buffer = murmurBuf;
-    murmur.loop = true;
-    const murmurBp = ctx.createBiquadFilter();
-    murmurBp.type = "bandpass";
-    murmurBp.frequency.value = 350;
-    murmurBp.Q.value = 0.3;
-    const murmurG = ctx.createGain();
-    murmurG.gain.setValueAtTime(0, now);
-    murmurG.gain.linearRampToValueAtTime(GAINS.BED_MURMUR, now + GAINS.FADE_BED_IN);
-    murmur.connect(murmurBp).connect(murmurG).connect(this.bedBus!);
-    murmur.start(now);
-    this.bedSources.push(murmur);
-    this.bedGains.push(murmurG);
-    this.bedMurmurGain = murmurG;
+    const bedBuffer = soundPackLoader.getRandomBuffer("crowd", "bed");
 
-    // Layer 2: Mid chatter — distant voices
-    const chatterBuf = this.noiseBuffer(5);
-    const chatter = ctx.createBufferSource();
-    chatter.buffer = chatterBuf;
-    chatter.loop = true;
-    const chatterBp = ctx.createBiquadFilter();
-    chatterBp.type = "bandpass";
-    chatterBp.frequency.value = 1600;
-    chatterBp.Q.value = 0.45;
-    const chatterG = ctx.createGain();
-    chatterG.gain.setValueAtTime(0, now);
-    chatterG.gain.linearRampToValueAtTime(GAINS.BED_CHATTER, now + GAINS.FADE_BED_IN);
-    chatter.connect(chatterBp).connect(chatterG).connect(this.bedBus!);
-    chatter.start(now);
-    this.bedSources.push(chatter);
-    this.bedGains.push(chatterG);
+    if (bedBuffer) {
+      // ── Asset-driven bed ──────────────────────────────────────────────
+      const src = ctx.createBufferSource();
+      src.buffer = bedBuffer;
+      src.loop = true;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(GAINS.BED_ASSET, now + GAINS.FADE_BED_IN);
+      src.connect(g).connect(this.bedBus!);
+      src.start(now);
+      this.bedSources.push(src);
+      this.bedGains.push(g);
 
-    // Layer 3: Tonal pad — warmth, prevents dead-digital silence
-    const pad = ctx.createOscillator();
-    pad.type = "sine";
-    pad.frequency.value = GAINS.BED_PAD_FREQ;
-    const padG = ctx.createGain();
-    padG.gain.setValueAtTime(0, now);
-    padG.gain.linearRampToValueAtTime(GAINS.BED_PAD, now + GAINS.FADE_BED_IN);
-    pad.connect(padG).connect(this.bedBus!);
-    pad.start(now);
-    this.bedOscs.push(pad);
-    this.bedGains.push(padG);
+      // Optional: keep a quiet procedural low-end underneath for sub-bass fill
+      this.addProceduralBand(ctx, now, 200, 0.25, GAINS.BED_LOW * 0.4, 8);
+    } else {
+      // ── Procedural fallback ───────────────────────────────────────────
+      this.addProceduralBand(ctx, now, 350, 0.3, GAINS.BED_LOW, 8);
+      this.addProceduralBand(ctx, now, 1400, 0.45, GAINS.BED_MID, 5);
+      this.addProceduralBand(ctx, now, 3000, 0.5, GAINS.BED_HIGH, 4);
+    }
 
-    // LFO: slow crowd wave — makes noise feel alive, not static
-    const lfo = ctx.createOscillator();
-    lfo.type = "sine";
-    lfo.frequency.value = GAINS.BED_LFO_RATE;
-    const lfoG = ctx.createGain();
-    lfoG.gain.value = GAINS.BED_LFO_DEPTH;
-    lfo.connect(lfoG).connect(murmurG.gain);
-    lfo.start(now);
-    this.bedOscs.push(lfo);
+    // LFO: slow crowd wave (always procedural — it's gain control, not content)
+    const mainGain = this.bedGains[0];
+    if (mainGain) {
+      const lfo = ctx.createOscillator();
+      lfo.type = "sine";
+      lfo.frequency.value = GAINS.BED_LFO_RATE;
+      const lfoG = ctx.createGain();
+      lfoG.gain.value = GAINS.BED_LFO_DEPTH;
+      lfo.connect(lfoG).connect(mainGain.gain);
+      lfo.start(now);
+      this.bedOscs.push(lfo);
+    }
+  }
+
+  /** Creates one filtered-noise band for procedural crowd. */
+  private addProceduralBand(
+    ctx: AudioContext, now: number,
+    freq: number, q: number, gain: number, bufSec: number,
+  ): GainNode {
+    const src = ctx.createBufferSource();
+    src.buffer = this.noiseBuffer(bufSec);
+    src.loop = true;
+    const bp = ctx.createBiquadFilter();
+    bp.type = "bandpass";
+    bp.frequency.value = freq;
+    bp.Q.value = q;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(gain, now + GAINS.FADE_BED_IN);
+    src.connect(bp).connect(g).connect(this.bedBus!);
+    src.start(now);
+    this.bedSources.push(src);
+    this.bedGains.push(g);
+    return g;
   }
 
   private teardownBed() {
@@ -307,11 +318,9 @@ class AudioDirector {
     this.bedSources = [];
     this.bedOscs = [];
     this.bedGains = [];
-    this.bedMurmurGain = null;
     this.started = false;
   }
 
-  /** Smoothly shift bed volume for each phase */
   private modulateBedForPhase(phase: AudioPhase) {
     if (!this.ctx || !this.bedBus) return;
     const now = this.ctx.currentTime;
@@ -334,21 +343,23 @@ class AudioDirector {
     }
   }
 
-  // ── State layer ───────────────────────────────────────────────────────────
+  // ═════════════════════════════════════════════════════════════════════════
+  // STATE LAYER
+  // Strategy: use real crowd assets if available, else procedural noise.
+  // REVEAL always gets LFO pulse (procedural control on top of any source).
+  // ═════════════════════════════════════════════════════════════════════════
+
   private transitionState(phase: AudioPhase) {
     if (!this.ctx || !this.stateBus) return;
     const ctx = this.ctx;
     const now = ctx.currentTime;
 
-    // Fade out + teardown old state
     this.fadeOutState(now);
-    // Small delay so old layer fades before new one starts
     setTimeout(() => this.teardownState(), (GAINS.FADE_STATE_OUT + 0.05) * 1000);
 
     const targetGain = this.stateGainForPhase(phase);
     if (targetGain <= 0) return;
 
-    // Build new state content
     if (phase === "DEAL") {
       this.buildDealState(ctx, now, targetGain);
     } else if (phase === "DRAW") {
@@ -359,106 +370,145 @@ class AudioDirector {
   }
 
   private buildDealState(ctx: AudioContext, now: number, targetGain: number) {
-    // Spark of anticipation: gentle filtered noise that brightens slightly
-    const src = ctx.createBufferSource();
-    src.buffer = this.noiseBuffer(3);
-    src.loop = true;
-    const bp = ctx.createBiquadFilter();
-    bp.type = "bandpass";
-    bp.frequency.setValueAtTime(500, now);
-    bp.frequency.linearRampToValueAtTime(700, now + 1.5);
-    bp.Q.value = 0.5;
-    const g = ctx.createGain();
-    g.gain.value = 1.0;
-    src.connect(bp).connect(g).connect(this.stateBus!);
-    src.start(now);
-    this.stateSources.push(src);
-    this.stateGains.push(g);
+    // Try anticipation asset at low volume for a gentle crowd stir
+    const buf = soundPackLoader.getRandomBuffer("crowd", "anticipation");
+    if (buf) {
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.loop = true;
+      const g = ctx.createGain();
+      g.gain.value = 0.6; // quieter — just a stir, not full anticipation
+      src.connect(g).connect(this.stateBus!);
+      src.start(now);
+      this.stateSources.push(src);
+      this.stateGains.push(g);
+    } else {
+      // Procedural: gentle filtered noise brightening slightly
+      const src = ctx.createBufferSource();
+      src.buffer = this.noiseBuffer(3);
+      src.loop = true;
+      const bp = ctx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.frequency.setValueAtTime(GAINS.DEAL_CROWD_FREQ[0], now);
+      bp.frequency.linearRampToValueAtTime(GAINS.DEAL_CROWD_FREQ[1], now + 1.5);
+      bp.Q.value = 0.5;
+      const g = ctx.createGain();
+      g.gain.value = 1.0;
+      src.connect(bp).connect(g).connect(this.stateBus!);
+      src.start(now);
+      this.stateSources.push(src);
+      this.stateGains.push(g);
+    }
 
     this.stateBus!.gain.setValueAtTime(0, now);
     this.stateBus!.gain.linearRampToValueAtTime(targetGain, now + GAINS.FADE_STATE_IN);
   }
 
   private buildDrawState(ctx: AudioContext, now: number, targetGain: number) {
-    // Commitment energy: rising filtered noise + ascending sub-bass tone
-    const src = ctx.createBufferSource();
-    src.buffer = this.noiseBuffer(4);
-    src.loop = true;
-    const bp = ctx.createBiquadFilter();
-    bp.type = "bandpass";
-    bp.frequency.setValueAtTime(GAINS.DRAW_NOISE_SWEEP[0], now);
-    bp.frequency.linearRampToValueAtTime(GAINS.DRAW_NOISE_SWEEP[1], now + 2.5);
-    bp.Q.value = 0.7;
-    const ng = ctx.createGain();
-    ng.gain.value = 0.8;
-    src.connect(bp).connect(ng).connect(this.stateBus!);
-    src.start(now);
-    this.stateSources.push(src);
-    this.stateGains.push(ng);
+    // Try anticipation asset at higher volume
+    const buf = soundPackLoader.getRandomBuffer("crowd", "anticipation");
+    if (buf) {
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.loop = true;
+      const g = ctx.createGain();
+      g.gain.value = 1.0;
+      src.connect(g).connect(this.stateBus!);
+      src.start(now);
+      this.stateSources.push(src);
+      this.stateGains.push(g);
+    } else {
+      // Procedural: two rising noise bands
+      const lo = ctx.createBufferSource();
+      lo.buffer = this.noiseBuffer(4);
+      lo.loop = true;
+      const loBp = ctx.createBiquadFilter();
+      loBp.type = "bandpass";
+      loBp.frequency.setValueAtTime(GAINS.DRAW_CROWD_LO[0], now);
+      loBp.frequency.linearRampToValueAtTime(GAINS.DRAW_CROWD_LO[1], now + 2.5);
+      loBp.Q.value = 0.5;
+      const loG = ctx.createGain();
+      loG.gain.value = 0.8;
+      lo.connect(loBp).connect(loG).connect(this.stateBus!);
+      lo.start(now);
+      this.stateSources.push(lo);
+      this.stateGains.push(loG);
 
-    // Rising undertone — "here it comes"
-    const osc = ctx.createOscillator();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(GAINS.DRAW_TONE_START, now);
-    osc.frequency.linearRampToValueAtTime(GAINS.DRAW_TONE_END, now + 2.5);
-    const og = ctx.createGain();
-    og.gain.value = 0.6;
-    osc.connect(og).connect(this.stateBus!);
-    osc.start(now);
-    this.stateOscs.push(osc);
-    this.stateGains.push(og);
+      const hi = ctx.createBufferSource();
+      hi.buffer = this.noiseBuffer(3);
+      hi.loop = true;
+      const hiBp = ctx.createBiquadFilter();
+      hiBp.type = "bandpass";
+      hiBp.frequency.setValueAtTime(GAINS.DRAW_CROWD_HI[0], now);
+      hiBp.frequency.linearRampToValueAtTime(GAINS.DRAW_CROWD_HI[1], now + 2.5);
+      hiBp.Q.value = 0.6;
+      const hiG = ctx.createGain();
+      hiG.gain.value = 0.5;
+      hi.connect(hiBp).connect(hiG).connect(this.stateBus!);
+      hi.start(now);
+      this.stateSources.push(hi);
+      this.stateGains.push(hiG);
+    }
 
     this.stateBus!.gain.setValueAtTime(0, now);
     this.stateBus!.gain.linearRampToValueAtTime(targetGain, now + GAINS.FADE_STATE_IN);
   }
 
   private buildRevealState(ctx: AudioContext, now: number, targetGain: number) {
-    this.revealDroneOscs = [];
-    this.revealDroneGains = [];
+    this.stateFilters = [];
 
-    // Two-voice drone — low power chord (felt in the chest)
-    [GAINS.REVEAL_DRONE_BASE, GAINS.REVEAL_DRONE_FIFTH].forEach(freq => {
-      const osc = ctx.createOscillator();
-      osc.type = "sine";
-      osc.frequency.value = freq;
+    const buf = soundPackLoader.getRandomBuffer("crowd", "anticipation");
+    if (buf) {
+      // ── Asset-driven reveal tension ───────────────────────────────────
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.loop = true;
       const g = ctx.createGain();
-      g.gain.value = 0.5;
-      osc.connect(g).connect(this.stateBus!);
-      osc.start(now);
-      this.stateOscs.push(osc);
+      g.gain.value = 1.0;
+      src.connect(g).connect(this.stateBus!);
+      src.start(now);
+      this.stateSources.push(src);
       this.stateGains.push(g);
-      this.revealDroneOscs.push(osc);
-      this.revealDroneGains.push(g);
-    });
+      // No stateFilters needed — gain escalation via setRevealProgress is enough
+    } else {
+      // ── Procedural fallback ───────────────────────────────────────────
+      const bands: Array<{ freq: number; q: number; vol: number; bufSec: number }> = [
+        { freq: GAINS.REVEAL_CROWD_LOW,  q: 0.4, vol: 0.5, bufSec: 8 },
+        { freq: GAINS.REVEAL_CROWD_MID,  q: 0.5, vol: 0.4, bufSec: 6 },
+        { freq: GAINS.REVEAL_CROWD_HIGH, q: 0.6, vol: 0.25, bufSec: 4 },
+      ];
 
-    // Gritty noise layer — adds edge/anxiety
-    const noise = ctx.createBufferSource();
-    noise.buffer = this.noiseBuffer(8);
-    noise.loop = true;
-    const nBp = ctx.createBiquadFilter();
-    nBp.type = "bandpass";
-    nBp.frequency.value = GAINS.REVEAL_NOISE_FREQ;
-    nBp.Q.value = 0.4;
-    const ng = ctx.createGain();
-    ng.gain.value = 0.35;
-    noise.connect(nBp).connect(ng).connect(this.stateBus!);
-    noise.start(now);
-    this.stateSources.push(noise);
-    this.stateGains.push(ng);
+      bands.forEach(band => {
+        const src = ctx.createBufferSource();
+        src.buffer = this.noiseBuffer(band.bufSec);
+        src.loop = true;
+        const bp = ctx.createBiquadFilter();
+        bp.type = "bandpass";
+        bp.frequency.value = band.freq;
+        bp.Q.value = band.q;
+        const g = ctx.createGain();
+        g.gain.value = band.vol;
+        src.connect(bp).connect(g).connect(this.stateBus!);
+        src.start(now);
+        this.stateSources.push(src);
+        this.stateGains.push(g);
+        this.stateFilters.push(bp);
+      });
+    }
 
-    // Heartbeat tremolo — pulsing that makes it feel alive and urgent
-    const lfo = ctx.createOscillator();
-    lfo.type = "sine";
-    lfo.frequency.value = GAINS.REVEAL_TREMOLO_HZ;
-    const lfoG = ctx.createGain();
-    lfoG.gain.value = GAINS.REVEAL_TREMOLO_DEPTH;
-    lfo.connect(lfoG);
-    // Modulate all state gains for unified pulse
-    this.stateGains.forEach(g => lfoG.connect(g.gain));
-    lfo.start(now);
-    this.stateOscs.push(lfo);
+    // LFO pulse — always procedural (crowd heartbeat control)
+    if (this.stateGains.length > 0) {
+      const lfo = ctx.createOscillator();
+      lfo.type = "sine";
+      lfo.frequency.value = GAINS.REVEAL_LFO_HZ;
+      const lfoG = ctx.createGain();
+      lfoG.gain.value = GAINS.REVEAL_LFO_DEPTH;
+      lfo.connect(lfoG);
+      this.stateGains.forEach(g => lfoG.connect(g.gain));
+      lfo.start(now);
+      this.stateOscs.push(lfo);
+    }
 
-    // Fade in at base level — setRevealProgress escalates from here
     this.stateBus!.gain.setValueAtTime(0, now);
     this.stateBus!.gain.linearRampToValueAtTime(targetGain, now + GAINS.FADE_STATE_IN);
   }
@@ -476,8 +526,7 @@ class AudioDirector {
     this.stateSources = [];
     this.stateOscs = [];
     this.stateGains = [];
-    this.revealDroneOscs = [];
-    this.revealDroneGains = [];
+    this.stateFilters = [];
   }
 
   private stateGainForPhase(phase: AudioPhase): number {
@@ -493,21 +542,21 @@ class AudioDirector {
   private duckForPhase(phase: AudioPhase) {
     if (!this.ctx || !this.duckGain) return;
     const now = this.ctx.currentTime;
-    // RESULTS: hard duck so result sound has clean space
-    // CELEBRATION: lighter duck, event-layer crowd fills in
     if (phase === "RESULTS") {
-      this.duckGain.gain.cancelScheduledValues(now);
-      this.duckGain.gain.setValueAtTime(this.duckGain.gain.value, now);
-      this.duckGain.gain.linearRampToValueAtTime(GAINS.DUCK_HEAVY, now + GAINS.FADE_DUCK);
+      this.setDuck(GAINS.DUCK_HEAVY, now);
     } else if (phase === "CELEBRATION") {
-      this.duckGain.gain.cancelScheduledValues(now);
-      this.duckGain.gain.setValueAtTime(this.duckGain.gain.value, now);
-      this.duckGain.gain.linearRampToValueAtTime(GAINS.DUCK_LIGHT, now + GAINS.FADE_DUCK);
+      this.setDuck(GAINS.DUCK_LIGHT, now);
     } else {
-      this.duckGain.gain.cancelScheduledValues(now);
-      this.duckGain.gain.setValueAtTime(this.duckGain.gain.value, now);
-      this.duckGain.gain.linearRampToValueAtTime(GAINS.DUCK_NONE, now + GAINS.FADE_UNDUCK);
+      this.setDuck(GAINS.DUCK_NONE, now);
     }
+  }
+
+  private setDuck(target: number, now: number) {
+    if (!this.duckGain) return;
+    const fadeTime = target < GAINS.DUCK_NONE ? GAINS.FADE_DUCK : GAINS.FADE_UNDUCK;
+    this.duckGain.gain.cancelScheduledValues(now);
+    this.duckGain.gain.setValueAtTime(this.duckGain.gain.value, now);
+    this.duckGain.gain.linearRampToValueAtTime(target, now + fadeTime);
   }
 
   // ── Utility ───────────────────────────────────────────────────────────────

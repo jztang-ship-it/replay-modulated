@@ -20,6 +20,7 @@
  */
 
 import { audioDirector } from "./audioDirector";
+import { soundPackLoader, type SoundPackManifest } from "./soundPack";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // VOLUME KNOBS — tune by ear
@@ -99,6 +100,28 @@ class SoundManager {
 
   toggleMute() { audioDirector.toggleMute(); }
   isMuted() { return audioDirector.isMuted(); }
+
+  /**
+   * Play a sound pack asset as a one-shot. Returns true if asset was found and played.
+   * If asset isn't loaded, returns false so caller can fall back to procedural.
+   */
+  private playAsset(
+    category: keyof SoundPackManifest, key: string,
+    volume: number, loop = false,
+  ): boolean {
+    const ctx = this.ensureCtx();
+    if (!ctx) return false;
+    const buf = soundPackLoader.getRandomBuffer(category, key);
+    if (!buf) return false;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.loop = loop;
+    const g = ctx.createGain();
+    g.gain.value = volume;
+    src.connect(g).connect(this.out);
+    src.start(ctx.currentTime);
+    return true;
+  }
 
   // ─── CARD FLIP ────────────────────────────────────────────────────────────
   // Emotional job: anticipation punctuation. "What's under this card?"
@@ -440,8 +463,10 @@ class SoundManager {
     tex.start(now);
     tex.stop(now + 0.1);
 
-    // Crowd "oh!" — quick burst
-    this.crowdBurst(V.SLAM_CROWD, 0.06, 0.5);
+    // Crowd "oh!" — try real asset, fall back to procedural burst
+    if (!this.playAsset("crowd", "reactionSmall", V.SLAM_CROWD)) {
+      this.crowdBurst(V.SLAM_CROWD, 0.06, 0.5);
+    }
   }
 
   // ─── BIG WIN (MVP / GOAT) ────────────────────────────────────────────────
@@ -474,49 +499,56 @@ class SoundManager {
     impact.start(breathEnd);
     impact.stop(breathEnd + 0.21);
 
-    // Net swish — basketball identity on the impact
-    const swish = ctx.createBufferSource();
-    swish.buffer = this.noiseBuffer(0.2);
-    const swBp = ctx.createBiquadFilter();
-    swBp.type = "bandpass";
-    swBp.frequency.setValueAtTime(5500, breathEnd);
-    swBp.frequency.exponentialRampToValueAtTime(800, breathEnd + 0.18);
-    swBp.Q.value = 1.0;
-    const swG = ctx.createGain();
-    swG.gain.setValueAtTime(0, breathEnd);
-    swG.gain.linearRampToValueAtTime(V.BIG_SWISH, breathEnd + 0.008);
-    swG.gain.linearRampToValueAtTime(0, breathEnd + 0.2);
-    swish.connect(swBp).connect(swG).connect(this.out);
-    swish.start(breathEnd);
-    swish.stop(breathEnd + 0.22);
+    // Net swish — try real asset, fall back to procedural
+    if (!this.playAsset("events", "swish", V.BIG_SWISH)) {
+      const swish = ctx.createBufferSource();
+      swish.buffer = this.noiseBuffer(0.2);
+      const swBp = ctx.createBiquadFilter();
+      swBp.type = "bandpass";
+      swBp.frequency.setValueAtTime(5500, breathEnd);
+      swBp.frequency.exponentialRampToValueAtTime(800, breathEnd + 0.18);
+      swBp.Q.value = 1.0;
+      const swG = ctx.createGain();
+      swG.gain.setValueAtTime(0, breathEnd);
+      swG.gain.linearRampToValueAtTime(V.BIG_SWISH, breathEnd + 0.008);
+      swG.gain.linearRampToValueAtTime(0, breathEnd + 0.2);
+      swish.connect(swBp).connect(swG).connect(this.out);
+      swish.start(breathEnd);
+      swish.stop(breathEnd + 0.22);
+    }
 
     // ── Stage 3: Arena horn (200ms in, sustained 1.8s) ────────────────────
-    this.arenaHorn(breathEnd + 0.16, 1.8, V.BIG_HORN);
+    if (!this.playAsset("events", "horn", V.BIG_HORN)) {
+      this.arenaHorn(breathEnd + 0.16, 1.8, V.BIG_HORN);
+    }
 
     // ── Stage 4: Crowd eruption (250ms in, 3s duration) ───────────────────
-    const crowdStart = breathEnd + 0.2;
-    const crowdDur = 3.0;
-    [
-      { freq: 250, q: 0.3, peak: V.BIG_CROWD },
-      { freq: 800, q: 0.5, peak: V.BIG_CROWD * 0.8 },
-      { freq: 2200, q: 0.8, peak: V.BIG_CROWD * 0.5 },
-      { freq: 5000, q: 1.2, peak: V.BIG_CROWD * 0.2 },
-    ].forEach(band => {
-      const n = ctx.createBufferSource();
-      n.buffer = this.noiseBuffer(crowdDur + 0.3);
-      const bp = ctx.createBiquadFilter();
-      bp.type = "bandpass";
-      bp.frequency.value = band.freq;
-      bp.Q.value = band.q;
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0, crowdStart);
-      g.gain.linearRampToValueAtTime(band.peak, crowdStart + 0.35);   // fast swell
-      g.gain.setValueAtTime(band.peak * 0.9, crowdStart + crowdDur * 0.4);
-      g.gain.linearRampToValueAtTime(0, crowdStart + crowdDur);
-      n.connect(bp).connect(g).connect(this.out);
-      n.start(crowdStart);
-      n.stop(crowdStart + crowdDur + 0.05);
-    });
+    if (!this.playAsset("crowd", "eruption", V.BIG_CROWD)) {
+      // Procedural fallback
+      const crowdStart = breathEnd + 0.2;
+      const crowdDur = 3.0;
+      [
+        { freq: 250, q: 0.3, peak: V.BIG_CROWD },
+        { freq: 800, q: 0.5, peak: V.BIG_CROWD * 0.8 },
+        { freq: 2200, q: 0.8, peak: V.BIG_CROWD * 0.5 },
+        { freq: 5000, q: 1.2, peak: V.BIG_CROWD * 0.2 },
+      ].forEach(band => {
+        const n = ctx.createBufferSource();
+        n.buffer = this.noiseBuffer(crowdDur + 0.3);
+        const bp = ctx.createBiquadFilter();
+        bp.type = "bandpass";
+        bp.frequency.value = band.freq;
+        bp.Q.value = band.q;
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0, crowdStart);
+        g.gain.linearRampToValueAtTime(band.peak, crowdStart + 0.35);
+        g.gain.setValueAtTime(band.peak * 0.9, crowdStart + crowdDur * 0.4);
+        g.gain.linearRampToValueAtTime(0, crowdStart + crowdDur);
+        n.connect(bp).connect(g).connect(this.out);
+        n.start(crowdStart);
+        n.stop(crowdStart + crowdDur + 0.05);
+      });
+    }
 
     // Rhythmic stomps — crowd pounding bleachers
     for (let i = 0; i < 8; i++) {
@@ -548,7 +580,9 @@ class SoundManager {
     // Brief pause (30ms) — micro-suspense before the rim sound
     const t0 = now + 0.03;
 
-    // Rim hit — metallic, bouncing off
+    // Rim hit — try real asset first
+    this.playAsset("events", "rimOut", V.MISS_RIM);
+    // Procedural rim (plays alongside or as fallback)
     const rim = ctx.createOscillator();
     rim.type = "triangle";
     rim.frequency.setValueAtTime(1100, t0);
@@ -574,21 +608,23 @@ class SoundManager {
     rim2.start(t0 + 0.12);
     rim2.stop(t0 + 0.31);
 
-    // Short crowd sigh — brief and motivating, not depressing
-    const sigh = ctx.createBufferSource();
-    sigh.buffer = this.noiseBuffer(0.7);
-    const bp = ctx.createBiquadFilter();
-    bp.type = "bandpass";
-    bp.frequency.value = 400;
-    bp.Q.value = 0.5;
-    const sG = ctx.createGain();
-    sG.gain.setValueAtTime(0, t0 + 0.08);
-    sG.gain.linearRampToValueAtTime(V.MISS_GROAN, t0 + 0.2);
-    sG.gain.linearRampToValueAtTime(V.MISS_GROAN * 0.5, t0 + 0.4);
-    sG.gain.linearRampToValueAtTime(0, t0 + 0.65);
-    sigh.connect(bp).connect(sG).connect(this.out);
-    sigh.start(t0 + 0.08);
-    sigh.stop(t0 + 0.7);
+    // Short crowd sigh — try real groan asset, fall back to procedural
+    if (!this.playAsset("crowd", "groan", V.MISS_GROAN)) {
+      const sigh = ctx.createBufferSource();
+      sigh.buffer = this.noiseBuffer(0.7);
+      const bp = ctx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.frequency.value = 400;
+      bp.Q.value = 0.5;
+      const sG = ctx.createGain();
+      sG.gain.setValueAtTime(0, t0 + 0.08);
+      sG.gain.linearRampToValueAtTime(V.MISS_GROAN, t0 + 0.2);
+      sG.gain.linearRampToValueAtTime(V.MISS_GROAN * 0.5, t0 + 0.4);
+      sG.gain.linearRampToValueAtTime(0, t0 + 0.65);
+      sigh.connect(bp).connect(sG).connect(this.out);
+      sigh.start(t0 + 0.08);
+      sigh.stop(t0 + 0.7);
+    }
   }
 
   // ─── BUST ─────────────────────────────────────────────────────────────────
