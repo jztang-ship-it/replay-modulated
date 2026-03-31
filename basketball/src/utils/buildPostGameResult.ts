@@ -5,6 +5,7 @@
 
 import type {
     PostGameResult,
+    ShareableCard,
     WinTier,
   } from "@shared/components/PostGameScreen";
   
@@ -50,6 +51,17 @@ import type {
     const nextTier = getNextTier(winTier);
     const nextTierThreshold = nextTier ? WIN_TIER_THRESHOLDS[nextTier] : 0;
   
+    const rosterCards: ShareableCard[] = roster.map(card => ({
+      name: String(card.name ?? ''),
+      photoCode: String(card.photoCode ?? card.basePlayerId ?? ''),
+      actualFp: parseFloat(card.actualFp ?? card.fp ?? 0),
+      stamp: card.stamp ?? card.heatLabel ?? undefined,
+    }));
+
+    const stampPriority = ['SMOKING HOT', 'ON FIRE', 'ICE COLD', 'FREEZING'];
+    const allStamps = rosterCards.map(c => c.stamp).filter(Boolean);
+    const bestStamp = stampPriority.find(s => allStamps.includes(s)) ?? undefined;
+
     return {
       tier: winTier,
       totalFP,
@@ -58,5 +70,7 @@ import type {
       streak: displayStreak,
       nextTier,
       nextTierThreshold,
+      rosterCards,
+      bestStamp,
     };
   }

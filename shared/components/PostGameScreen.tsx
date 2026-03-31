@@ -4,10 +4,18 @@
  */
 
 import React, { useState, useEffect } from "react";
+import { ShareResultCard } from "./ShareResultCard";
 
 // ─── TYPES ─────────────────────────────────────────────────────────────────
 
 export type WinTier = "BONUS_POOL" | "MVP" | "ALL_STAR" | "STARTER" | "ROOKIE" | "BUST" | "NONE";
+
+export interface ShareableCard {
+  name: string;
+  photoCode: string;
+  actualFp: number;
+  stamp?: string;
+}
 
 export interface PostGameResult {
   tier: WinTier;
@@ -17,6 +25,8 @@ export interface PostGameResult {
   streak: number;
   nextTier: WinTier | null;
   nextTierThreshold: number;
+  rosterCards?: ShareableCard[];
+  bestStamp?: string;
 }
 
 export interface PostGameScreenProps {
@@ -211,7 +221,7 @@ export default function PostGameScreen({ result, onPlayAgain }: PostGameScreenPr
   const animStreak = useCountUp(result.streak, 600, 100);
 
   useEffect(() => {
-    const delays = [100, 400, 900, 1500];
+    const delays = [100, 400, 900, 1200, 1800];
     const timers = delays.map((d, i) => setTimeout(() => setPhase(i + 1), d));
     return () => timers.forEach(clearTimeout);
   }, []);
@@ -380,6 +390,20 @@ export default function PostGameScreen({ result, onPlayAgain }: PostGameScreenPr
         />
       </div>
 
+      {/* ── ZONE 3.5: Share Result ── */}
+      <div style={{
+        position: "relative",
+        zIndex: 1,
+        width: "100%",
+        maxWidth: 360,
+        marginTop: 4,
+        opacity: phase >= 4 ? 1 : 0,
+        transform: phase >= 4 ? "translateY(0)" : "translateY(10px)",
+        transition: "all 0.5s ease",
+      }}>
+        <ShareResultCard result={result} />
+      </div>
+
       {/* ── ZONE 4: Play Again ── */}
       <div style={{
         position: "relative",
@@ -387,8 +411,8 @@ export default function PostGameScreen({ result, onPlayAgain }: PostGameScreenPr
         width: "100%",
         maxWidth: 360,
         marginTop: 8,
-        opacity: phase >= 4 ? 1 : 0,
-        transform: phase >= 4 ? "translateY(0)" : "translateY(16px)",
+        opacity: phase >= 5 ? 1 : 0,
+        transform: phase >= 5 ? "translateY(0)" : "translateY(16px)",
         transition: "all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)",
       }}>
         <button
