@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd basketball && npm install && npm run build",
+  "buildCommand": "cd basketball && npm install && VITE_HEADSHOT_BASE_URL=https://hnhrpwwznzokkfagfumb.supabase.co/storage/v1/object/public/headshots/nba npm run build",
   "outputDirectory": "basketball/dist",
   "installCommand": "cd basketball && npm install"
 }
