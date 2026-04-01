@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import type { PostGameResult } from './PostGameScreen';
+import { headshotUrl } from '../utils/headshotUrl';
 
 const TIER_COLORS: Record<string, string> = {
   BONUS_POOL: '#EF4444',
@@ -126,7 +127,7 @@ export function ShareResultCard({ result }: { result: PostGameResult }) {
 
         // Headshot
         try {
-          const img = await loadImage(`/headshots/${card.photoCode}.png`);
+          const img = await loadImage(headshotUrl(card.photoCode));
           ctx.save();
           ctx.beginPath();
           safeRoundRect(ctx, x + 4, y + 4, cardW - 8, cardH - 50, 8);

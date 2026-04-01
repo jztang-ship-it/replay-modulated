@@ -13,6 +13,7 @@ import type { CardFrontProps as ShellFrontProps, CardBackProps } from "@shared/c
 import { CardFront, type CardFrontHeroProps } from "@shared/components/CardFront";
 import type { ShakeType } from "../hooks/useEmotionalReveal";
 import { sportAdapter } from "../adapters/SportAdapter";
+import { headshotUrl } from "@shared/utils/headshotUrl";
 
 
 export { resetAllOverlays };
@@ -77,7 +78,7 @@ function BasketballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) 
   const [imgReady, setImgReady] = React.useState(false);
   const headshotSrc = (() => {
     const base = String((card as any)?.basePlayerId ?? "").trim();
-    return base ? `/headshots/${base}.png` : "";
+    return headshotUrl(base);
   })();
   return (
     <>

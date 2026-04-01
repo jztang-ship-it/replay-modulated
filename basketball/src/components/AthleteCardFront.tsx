@@ -5,13 +5,14 @@
 
 import { useState } from "react";
 import { CardFront, type CardFrontProps, type CardFrontHeroProps } from "@shared/components/CardFront";
+import { headshotUrl } from "@shared/utils/headshotUrl";
 import type { PlayerCard } from "@shared/types";
 
 function BasketballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
   const [imgReady, setImgReady] = useState(false);
   const headshotSrc = (() => {
     const base = String((card as any)?.basePlayerId ?? "").trim();
-    return base ? `/headshots/${base}.png` : "";
+    return headshotUrl(base);
   })();
 
   return (
