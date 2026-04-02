@@ -3,7 +3,7 @@ import type { PostGameResult } from './PostGameScreen';
 import { headshotUrl } from '../utils/headshotUrl';
 
 const TIER_COLORS: Record<string, string> = {
-  BONUS_POOL: '#EF4444',
+  GOAT:       '#EF4444',
   MVP:        '#FB923C',
   ALL_STAR:   '#C084FC',
   STARTER:    '#F59E0B',
@@ -13,7 +13,7 @@ const TIER_COLORS: Record<string, string> = {
 };
 
 const TIER_LABELS: Record<string, string> = {
-  BONUS_POOL: 'BONUS POOL',
+  GOAT:       'G.O.A.T.',
   MVP:        'MVP',
   ALL_STAR:   'ALL-STAR',
   STARTER:    'STARTER',

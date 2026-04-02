@@ -2,22 +2,19 @@
  * shared/utils/bonusPoolStore.ts
  *
  * Progressive bonus pool — Vercel KV backed.
- * Rake: 5% of each bet (matches BONUS_POOL_RAKE in GameView)
- * Seed: $12,451.29 on reset (matches BONUS_POOL_SEED in GameView)
- * Hit threshold: 225+ FP (BONUS_POOL tier)
+ * Rake: 5% of each bet contributed to the pool.
+ * Seed: $12,451.29 on reset.
+ * Payout: streak-based (3 wins = 5%, 5 wins = 15%).
+ * NOT a team-FP tier — GOAT is the top tier. This is a separate reward system.
  *
  * Three functions used by GameView:
  *   contributeBet(amount) — call after each hand resolves
- *   claimBonusPool()        — call when BONUS_POOL tier hit
- *   getBonusPool()      — call on mount + every 30s for live display
- *
- * The existing BonusPoolRow component in GameView handles the UI display.
- * This store handles persistence to Vercel KV via /api/bonus-pool endpoint.
+ *   claimBonusPool()      — call when streak milestone hit
+ *   getBonusPool()        — call on mount + every 30s for live display
  */
 
-export const BONUS_POOL_RAKE_RATE = 0.05;      // 5% — matches GameView constant
-export const BONUS_POOL_SEED      = 12_451.29; // Reset value — matches GameView constant
-export const BONUS_POOL_MIN_FP    = 225;       // Tier threshold — matches payoutLogic
+export const BONUS_POOL_RAKE_RATE = 0.05;      // 5% of each bet
+export const BONUS_POOL_SEED      = 12_451.29; // Reset value
 
 const API_BASE = "/api/bonus-pool";
 
@@ -73,7 +70,7 @@ export async function contributeBet(betAmount: number): Promise<number> {
 
 /**
  * Claim bonus pool — atomically reads pool value and resets to SEED.
- * Returns the amount won. Call only when BONUS_POOL tier is confirmed.
+ * Returns the amount won. Call when streak milestone is hit.
  */
 export async function claimBonusPool(): Promise<number> {
   try {

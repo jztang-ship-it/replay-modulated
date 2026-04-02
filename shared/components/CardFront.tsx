@@ -77,7 +77,7 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-export type PulseStyle = "NEG" | "NEUTRAL" | "POS" | "BONUS_POOL";
+export type PulseStyle = "NEG" | "NEUTRAL" | "POS" | "GOAT";
 
 function clampText(v: any) { return String(v ?? "").trim(); }
 
@@ -119,7 +119,7 @@ function splitNameLines(name: string): [string, string] {
 
 function pulsePalette(pulse?: PulseStyle) {
   switch (pulse) {
-    case "BONUS_POOL": return { ring: "rgba(255,215,80,0.60)", glow: "rgba(255,205,70,0.30)" };
+    case "GOAT": return { ring: "rgba(255,215,80,0.60)", glow: "rgba(255,205,70,0.30)" };
     case "POS": return { ring: "rgba(255,150,70,0.55)", glow: "rgba(255,140,60,0.25)" };
     case "NEG": return { ring: "rgba(120,180,235,0.55)", glow: "rgba(110,170,230,0.22)" };
     default: return { ring: "rgba(255,255,255,0.10)", glow: "rgba(255,255,255,0.06)" };

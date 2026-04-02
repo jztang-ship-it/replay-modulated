@@ -832,17 +832,18 @@ export default function GameView() {
     return buildPostRevealCopy({
       totalFp: displayFp,
       winTier,
-      nextTier: gaugeSnap.nextTier,
-      tierFloor: gaugeSnap.curMin,
-      nextTierMin: gaugeSnap.nextMin > 0 && gaugeSnap.nextMin < 9999 ? gaugeSnap.nextMin : 0,
       roster: roster.map(c => ({
         name: String((c as any).name ?? ""),
         actualFp: Number((c as any).actualFp ?? 0),
         projectedFp: Number((c as any).projectedFp ?? 0) || undefined,
+        opponent: (c as any).gameInfo?.opponent ?? undefined,
+        badges: ((c as any).achievements ?? []).map((a: any) => String(a.id ?? a.label ?? "")),
+        statLine: (c as any).statLine ?? undefined,
       })),
       streak,
       prevStreak: winTier === "BUST" ? streak : Math.max(0, streak - 1),
       isBust: winTier === "BUST",
+      streakMilestone: streakMilestone ?? undefined,
     });
   }, [gameState, winTier, springSettled, displayFp, roster, streak]); // eslint-disable-line
 

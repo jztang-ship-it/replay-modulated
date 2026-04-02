@@ -96,10 +96,10 @@ function easeOut(t: number): number {
   return 1 - Math.pow(1 - Math.min(1, t), 3);
 }
 
-/** Sorted gauge stops (excludes GOAT/BONUS_POOL as bar segments). */
+/** Sorted gauge stops (excludes GOAT as a bar segment — it's the overflow tier). */
 function sortedGaugeThresholds(thresholds: TierThreshold[]) {
   return [...thresholds]
-    .filter(t => (t.tier as string) !== "BONUS_POOL" && (t.tier as string) !== "GOAT")
+    .filter(t => (t.tier as string) !== "GOAT")
     .sort((a, b) => a.minFP - b.minFP);
 }
 

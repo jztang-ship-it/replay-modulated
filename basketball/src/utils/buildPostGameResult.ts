@@ -10,7 +10,7 @@ import type {
   } from "@shared/components/PostGameScreen";
   
   const WIN_TIER_ORDER: WinTier[] = [
-    "NONE", "BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "BONUS_POOL",
+    "NONE", "BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "GOAT",
   ];
   
   // Canonical thresholds — must match payoutLogic.ts exactly
@@ -21,7 +21,7 @@ import type {
     STARTER:  160,
     ALL_STAR: 183,
     MVP:      207,
-    BONUS_POOL:  225,
+    GOAT:     235,
   };
   
   function getNextTier(tier: WinTier): WinTier | null {

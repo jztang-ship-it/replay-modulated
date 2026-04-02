@@ -8,7 +8,7 @@ import { ShareResultCard } from "./ShareResultCard";
 
 // ─── TYPES ─────────────────────────────────────────────────────────────────
 
-export type WinTier = "BONUS_POOL" | "MVP" | "ALL_STAR" | "STARTER" | "ROOKIE" | "BUST" | "NONE";
+export type WinTier = "GOAT" | "MVP" | "ALL_STAR" | "STARTER" | "ROOKIE" | "BUST" | "NONE";
 
 export interface ShareableCard {
   name: string;
@@ -37,7 +37,7 @@ export interface PostGameScreenProps {
 // ─── CONFIG ────────────────────────────────────────────────────────────────
 
 const TIER_CONFIG: Record<WinTier, { label: string; color: string; glow: string }> = {
-  BONUS_POOL:  { label: "BONUS POOL",  color: "#EF4444", glow: "#EF444499" },
+  GOAT:     { label: "G.O.A.T.",   color: "#EF4444", glow: "#EF444499" },
   MVP:      { label: "MVP",      color: "#FB923C", glow: "#FB923C55" },
   ALL_STAR: { label: "ALL-STAR", color: "#C084FC", glow: "#C084FC55" },
   STARTER:  { label: "STARTER",  color: "#F59E0B", glow: "#F59E0B55" },
