@@ -221,6 +221,13 @@ export interface CardFrontProps {
   badges?: Array<{ id: string; icon: string; label: string; fp: number }>;
   heldFpVisible?: boolean;
   isTapTarget?: boolean;
+  /**
+   * Performance percentile 0–100. Derived from actualFp / projectedFp ratio,
+   * clamped and mapped to a 0–100 scale so players can see how good their pull
+   * was relative to that player's typical output.
+   * null = not yet revealed / projected is 0.
+   */
+  perfPct?: number | null;
   glowActive?: boolean;
   glowSrc?: string;
   glowDurationMs?: number;
@@ -279,8 +286,8 @@ function tierToGlowFile(tier: string): string {
   const t = tier?.toUpperCase();
   if (t === "ORANGE") return "orange";
   if (t === "PURPLE") return "purple";
-  if (t === "BLUE")   return "blue";
-  if (t === "GREEN")  return "green";
+  if (t === "BLUE") return "blue";
+  if (t === "GREEN") return "green";
   return "white";
 }
 
@@ -293,7 +300,7 @@ function tierFromSalaryForGlow(salary: number): string {
 // ── PlayerCardShell ────────────────────────────────────────────────────────
 
 export function PlayerCardShell(props: CardShellProps) {
-  const locked  = props.locked ?? props.isLocked ?? false;
+  const locked = props.locked ?? props.isLocked ?? false;
   const flipped = props.flipped ?? props.isFlipped ?? false;
   const canFlip = props.canFlip ?? false;
 
@@ -342,9 +349,9 @@ export function PlayerCardShell(props: CardShellProps) {
   // Strategy: fire the stamp as soon as visibleFp reaches actualFp AND
   // cardShakeType is known. This bypasses the onRollComplete callback chain
   // which races against gameState changing (REVEALING → WIN_CELEBRATION).
-  const [overlay, setOverlay]    = useState<OverlayState>({ stamp: null, stamping: false });
-  const stampFiredRef            = useRef(false);
-  const rollCompleteFiredRef     = useRef(false);
+  const [overlay, setOverlay] = useState<OverlayState>({ stamp: null, stamping: false });
+  const stampFiredRef = useRef(false);
+  const rollCompleteFiredRef = useRef(false);
 
   // Reset when card identity changes
   useEffect(() => {
@@ -375,9 +382,9 @@ export function PlayerCardShell(props: CardShellProps) {
     stampFiredRef.current = true;
     const stamp: OverlayStamp =
       cardShakeType === "legendary" ? "SMOKING HOT" :
-      cardShakeType === "big"      ? "ON FIRE" :
-      cardShakeType === "frozen"   ? "FREEZING" :
-      cardShakeType === "cold"     ? "ICE COLD" : null;
+        cardShakeType === "big" ? "ON FIRE" :
+          cardShakeType === "frozen" ? "FREEZING" :
+            cardShakeType === "cold" ? "ICE COLD" : null;
     const next: OverlayState = { stamp, stamping: true };
     overlayMap.set(id, next);
     setOverlay(next);
@@ -411,18 +418,18 @@ export function PlayerCardShell(props: CardShellProps) {
 
   // ── Classes + styles ──────────────────────────────────────────────────
   const shakeClass =
-    shakeType === "big"      ? "pcs-shake-big"      :
-    shakeType === "hype"     ? "pcs-shake-hype"     :
-    shakeType === "cold"     ? "pcs-shake-cold"     :
-    shakeType === "legendary" ? "pcs-shake-legendary" :
-    shakeType === "frozen"   ? "pcs-shake-frozen"   : "";
+    shakeType === "big" ? "pcs-shake-big" :
+      shakeType === "hype" ? "pcs-shake-hype" :
+        shakeType === "cold" ? "pcs-shake-cold" :
+          shakeType === "legendary" ? "pcs-shake-legendary" :
+            shakeType === "frozen" ? "pcs-shake-frozen" : "";
 
   const glowClass = glowActive ? (() => {
     const t = (glowTier ?? "").toUpperCase();
     if (t === "ORANGE") return "pcs-glow-orange";
     if (t === "PURPLE") return "pcs-glow-purple";
-    if (t === "BLUE")   return "pcs-glow-blue";
-    if (t === "GREEN")  return "pcs-glow-green";
+    if (t === "BLUE") return "pcs-glow-blue";
+    if (t === "GREEN") return "pcs-glow-green";
     return "pcs-glow-white";
   })() : "";
 
@@ -448,6 +455,21 @@ export function PlayerCardShell(props: CardShellProps) {
     background: "transparent",
   };
 
+  // ── Performance percentile ────────────────────────────────────────────
+  // actualFp / projectedFp ratio, mapped to 0–100 percentile scale.
+  // Uses the same ratio thresholds as the stamp / shakeType system so
+  // the number is always consistent with the fire/ice animation shown.
+  // Ratio scale: 0.6x (freezing) → ~5th, 1.0x (avg) → ~50th, 1.6x (legendary) → ~95th
+  const perfPct = useMemo(() => {
+    const proj = Number((stableCard as any).projectedFp ?? (card as any).projectedFp ?? 0);
+    const actual = Number((card as any).actualFp ?? 0);
+    if (proj <= 0 || actual <= 0) return null;
+    const ratio = actual / proj;
+    // Map ratio → percentile: clamp 0.4–2.0 range → 0–100
+    const pct = Math.round(((ratio - 0.4) / (2.0 - 0.4)) * 100);
+    return Math.max(1, Math.min(99, pct));
+  }, [(card as any).actualFp, (stableCard as any).projectedFp, (card as any).projectedFp]); // eslint-disable-line
+
   // ── Front face props ──────────────────────────────────────────────────
   const frontProps: CardFrontProps = {
     card: { ...(stableCard as any), headshotUrl: (card as any).headshotUrl } as PlayerCard,
@@ -457,7 +479,7 @@ export function PlayerCardShell(props: CardShellProps) {
     isMvp,
     isFlipped: flipped,
     canFlip,
-    onToggleFlip: onToggleFlip ?? (() => {}),
+    onToggleFlip: onToggleFlip ?? (() => { }),
     visibleFp,
     visibleBadgeCount,
     isRevealing,
@@ -468,12 +490,13 @@ export function PlayerCardShell(props: CardShellProps) {
     badges,
     heldFpVisible,
     isTapTarget,
+    perfPct,
     glowActive: !!glowActive,
     glowSrc: glowActive
       ? `${import.meta.env.BASE_URL}glow-${tierToGlowFile(
-          glowTier
-            ?? tierFromSalaryForGlow(Number((stableCard as any).salary ?? (card as any).salary ?? 0)),
-        )}.png`
+        glowTier
+        ?? tierFromSalaryForGlow(Number((stableCard as any).salary ?? (card as any).salary ?? 0)),
+      )}.png`
       : undefined,
     glowDurationMs,
     glowTier:

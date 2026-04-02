@@ -59,7 +59,7 @@ export interface CelebrationData {
   tierLabel: string;       // e.g. "ALL-STAR"
   tierColor: string;       // e.g. "#C9A84C"
   tierGlow: string;        // e.g. "#C9A84C55"
-  payout: number;          // coins earned
+  payout: number;          // coins earned (tier win only, not including bonus)
   streak: number;          // current win streak
   isBust: boolean;
   betMultiplier: number;   // user-selected multiplier (1/3/5/10)
@@ -67,6 +67,8 @@ export interface CelebrationData {
   baseBet: number;         // base wager amount (10)
   isLoss: boolean;         // true for ROOKIE (partial loss) and BUST (full loss)
   lossAmount: number;      // amount lost (0 for wins, baseBet*betMultiplier for bust, half for rookie)
+  streakMilestonePct?: number;  // 5 or 15 if streak milestone hit this hand
+  bonusPoolWin?: number;        // coins won from bonus pool (0 or undefined if no milestone)
 }
 
 type Props = {
@@ -988,7 +990,7 @@ if (typeof document !== "undefined" && !document.getElementById(WAGE_STYLE_ID)) 
 }
 
 // ── Wage animation state machine ──────────────────────────────────────────
-type WagePhase = "idle" | "glow" | "thud" | "flip" | "fly" | "settled";
+type WagePhase = "idle" | "glow" | "thud" | "bonus" | "flip" | "fly" | "settled";
 
 function WageDisplay({
   baseBet, betMultiplier, celebration, onFlyComplete,
@@ -1015,15 +1017,30 @@ function WageDisplay({
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [];
 
-    const t1 = window.setTimeout(() => setPhase("glow"),    0);
-    const t2 = window.setTimeout(() => setPhase("thud"),    800);
-    const t3 = window.setTimeout(() => setPhase("flip"),    2000);
-    const t4 = window.setTimeout(() => setPhase("fly"),     2500);
-    const t5 = window.setTimeout(() => {
-      setPhase("settled");
-      onFlyComplete(celebration?.isLoss ?? true);
-    }, 3150);
-    timersRef.current = [t1, t2, t3, t4, t5];
+    const hasMilestone = !!(celebration?.streakMilestonePct);
+    if (hasMilestone) {
+      // Extended sequence: glow → thud → bonus pool reveal → flip to total → fly → settled
+      const t1 = window.setTimeout(() => setPhase("glow"),    0);
+      const t2 = window.setTimeout(() => setPhase("thud"),    800);
+      const t3 = window.setTimeout(() => setPhase("bonus"),  2000); // bonus pool amount thuds in
+      const t4 = window.setTimeout(() => setPhase("flip"),   3200); // flip to combined total
+      const t5 = window.setTimeout(() => setPhase("fly"),    3700);
+      const t6 = window.setTimeout(() => {
+        setPhase("settled");
+        onFlyComplete(celebration?.isLoss ?? true);
+      }, 4350);
+      timersRef.current = [t1, t2, t3, t4, t5, t6];
+    } else {
+      const t1 = window.setTimeout(() => setPhase("glow"),    0);
+      const t2 = window.setTimeout(() => setPhase("thud"),    800);
+      const t3 = window.setTimeout(() => setPhase("flip"),   2000);
+      const t4 = window.setTimeout(() => setPhase("fly"),    2500);
+      const t5 = window.setTimeout(() => {
+        setPhase("settled");
+        onFlyComplete(celebration?.isLoss ?? true);
+      }, 3150);
+      timersRef.current = [t1, t2, t3, t4, t5];
+    }
     return () => timersRef.current.forEach(clearTimeout);
   }, [celebration]); // eslint-disable-line
 
@@ -1105,7 +1122,34 @@ function WageDisplay({
     );
   }
 
+  // Bonus phase — only for streak milestones: shows bonus pool amount thuding in
+  if (phase === "bonus") {
+    const bonusAmt  = celebration?.bonusPoolWin ?? 0;
+    const bonusPct  = celebration?.streakMilestonePct ?? 0;
+    return (
+      <div style={{ display: "flex", alignItems: "baseline", gap: 4, overflow: "visible" }}>
+        {wageLabel}
+        <span style={{ fontSize: 13, fontWeight: 800, color: multColor, lineHeight: 1 }}>×{betMultiplier}</span>
+        {tierMult > 0 && (
+          <span style={{ fontSize: 14, fontWeight: 900, color: "#FFD700", lineHeight: 1 }}>×{tierMult}</span>
+        )}
+        <span style={{
+          fontSize: 11, fontWeight: 900, color: "#FFD700", lineHeight: 1,
+          display: "inline-block",
+          animation: "tierMultThud 450ms cubic-bezier(0.22,1,0.36,1) forwards",
+          whiteSpace: "nowrap",
+        }}>
+          🏆+{bonusAmt} ({bonusPct}%)
+        </span>
+      </div>
+    );
+  }
+
   if (phase === "flip") {
+    // For milestones, flip shows tier win + bonus combined
+    const bonusAmt   = celebration?.bonusPoolWin ?? 0;
+    const totalWin   = isWin ? amount + bonusAmt : amount;
+    const displayAmt = totalWin;
     return (
       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
         {wageLabel}
@@ -1124,7 +1168,7 @@ function WageDisplay({
             whiteSpace: "nowrap", opacity: 0,
             animation: "payoutFlipIn 280ms ease-out 220ms forwards",
           }}>
-            {sign}{amount}
+            {sign}{displayAmt}
           </span>
         </div>
       </div>
@@ -1132,6 +1176,8 @@ function WageDisplay({
   }
 
   if (phase === "fly") {
+    const bonusAmt  = celebration?.bonusPoolWin ?? 0;
+    const totalAmt  = isWin ? amount + bonusAmt : amount;
     return (
       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
         {wageLabel}
@@ -1140,18 +1186,20 @@ function WageDisplay({
           whiteSpace: "nowrap", display: "inline-block",
           animation: "payoutFlyToBalance 600ms ease-in forwards",
         }}>
-          {sign}{amount}
+          {sign}{totalAmt}
         </span>
       </div>
     );
   }
 
-  // settled
+  // settled — static until Replay
+  const bonusAmtSettled = celebration?.bonusPoolWin ?? 0;
+  const totalAmtSettled = isWin ? amount + bonusAmtSettled : amount;
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
       {wageLabel}
       <span style={{ fontSize: 16, fontWeight: 900, color: amtColor, lineHeight: 1, whiteSpace: "nowrap" }}>
-        {sign}{amount}
+        {sign}{totalAmtSettled}
       </span>
     </div>
   );

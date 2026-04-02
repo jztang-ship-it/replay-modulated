@@ -25,58 +25,58 @@ export const GAINS = {
   MASTER: 1.0,
 
   // ── Bed layer ──────────────────────────────────────────────────────────
-  BED_ASSET:        0.18,    // volume for real crowd bed asset
-  BED_LOW:          0.14,    // procedural fallback: low crowd rumble
-  BED_MID:          0.05,    // procedural fallback: mid chatter
-  BED_HIGH:         0.025,   // procedural fallback: upper arena air
-  BED_LFO_RATE:     0.25,    // Hz — slow crowd wave
-  BED_LFO_DEPTH:    0.035,   // subtle gain modulation
+  BED_ASSET: 0.18,    // volume for real crowd bed asset
+  BED_LOW: 0.14,    // procedural fallback: low crowd rumble
+  BED_MID: 0.05,    // procedural fallback: mid chatter
+  BED_HIGH: 0.025,   // procedural fallback: upper arena air
+  BED_LFO_RATE: 0.25,    // Hz — slow crowd wave
+  BED_LFO_DEPTH: 0.035,   // subtle gain modulation
 
   // ── Bed phase modulation ───────────────────────────────────────────────
-  BED_PHASE_IDLE:        1.0,
-  BED_PHASE_DEAL:        1.15,
-  BED_PHASE_HOLD:        0.85,
-  BED_PHASE_DRAW:        1.1,
-  BED_PHASE_REVEAL:      0.7,
-  BED_PHASE_RESULTS:     0.3,
+  BED_PHASE_IDLE: 1.0,
+  BED_PHASE_DEAL: 1.15,
+  BED_PHASE_HOLD: 0.85,
+  BED_PHASE_DRAW: 1.1,
+  BED_PHASE_REVEAL: 0.7,
+  BED_PHASE_RESULTS: 0.3,
   BED_PHASE_CELEBRATION: 0.5,
 
   // ── State layer ────────────────────────────────────────────────────────
-  STATE_IDLE:        0.0,
-  STATE_DEAL:        0.06,
-  STATE_HOLD:        0.0,
-  STATE_DRAW:        0.10,
+  STATE_IDLE: 0.0,
+  STATE_DEAL: 0.06,
+  STATE_HOLD: 0.0,
+  STATE_DRAW: 0.10,
   STATE_REVEAL_BASE: 0.12,
   STATE_REVEAL_PEAK: 0.30,
-  STATE_RESULTS:     0.0,
+  STATE_RESULTS: 0.0,
   STATE_CELEBRATION: 0.0,
 
   // State crowd shaping (procedural fallback)
-  DEAL_CROWD_FREQ:     [400, 600] as readonly [number, number],
-  DRAW_CROWD_LO:       [350, 700] as readonly [number, number],
-  DRAW_CROWD_HI:       [1200, 2000] as readonly [number, number],
-  REVEAL_CROWD_LOW:    300,
-  REVEAL_CROWD_MID:    1000,
-  REVEAL_CROWD_HIGH:   2800,
-  REVEAL_LFO_HZ:       2.0,
-  REVEAL_LFO_DEPTH:    0.12,
-  REVEAL_FREQ_RISE:    150,
+  DEAL_CROWD_FREQ: [400, 600] as readonly [number, number],
+  DRAW_CROWD_LO: [350, 700] as readonly [number, number],
+  DRAW_CROWD_HI: [1200, 2000] as readonly [number, number],
+  REVEAL_CROWD_LOW: 300,
+  REVEAL_CROWD_MID: 1000,
+  REVEAL_CROWD_HIGH: 2800,
+  REVEAL_LFO_HZ: 2.0,
+  REVEAL_LFO_DEPTH: 0.12,
+  REVEAL_FREQ_RISE: 150,
 
   // ── Event layer ────────────────────────────────────────────────────────
-  EVENT_MASTER:      1.0,
+  EVENT_MASTER: 1.0,
 
   // ── Ducking ────────────────────────────────────────────────────────────
-  DUCK_HEAVY:        0.25,
-  DUCK_LIGHT:        0.55,
-  DUCK_NONE:         1.0,
+  DUCK_HEAVY: 0.25,
+  DUCK_LIGHT: 0.55,
+  DUCK_NONE: 1.0,
 
   // ── Timing (seconds) ──────────────────────────────────────────────────
-  FADE_BED_IN:       2.0,
-  FADE_BED_PHASE:    0.6,
-  FADE_STATE_IN:     0.5,
-  FADE_STATE_OUT:    0.25,
-  FADE_DUCK:         0.08,
-  FADE_UNDUCK:       0.8,
+  FADE_BED_IN: 2.0,
+  FADE_BED_PHASE: 0.6,
+  FADE_STATE_IN: 0.5,
+  FADE_STATE_OUT: 0.25,
+  FADE_DUCK: 0.08,
+  FADE_UNDUCK: 0.8,
 } as const;
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -205,6 +205,12 @@ class AudioDirector {
       this.started = true;
     }
 
+    // Kick off music prefetch as soon as reveal starts — by the time cards
+    // finish revealing the track will be decoded and ready in memory.
+    if (phase === "REVEAL" && this.ctx) {
+      soundPackLoader.prefetchMusic(this.ctx);
+    }
+
     this.modulateBedForPhase(phase);
     this.transitionState(phase);
     this.duckForPhase(phase);
@@ -313,8 +319,8 @@ class AudioDirector {
   }
 
   private teardownBed() {
-    this.bedSources.forEach(s => { try { s.stop(); } catch {} });
-    this.bedOscs.forEach(o => { try { o.stop(); } catch {} });
+    this.bedSources.forEach(s => { try { s.stop(); } catch { } });
+    this.bedOscs.forEach(o => { try { o.stop(); } catch { } });
     this.bedSources = [];
     this.bedOscs = [];
     this.bedGains = [];
@@ -332,14 +338,14 @@ class AudioDirector {
 
   private bedPhaseMultiplier(phase: AudioPhase): number {
     switch (phase) {
-      case "IDLE":        return GAINS.BED_PHASE_IDLE;
-      case "DEAL":        return GAINS.BED_PHASE_DEAL;
-      case "HOLD":        return GAINS.BED_PHASE_HOLD;
-      case "DRAW":        return GAINS.BED_PHASE_DRAW;
-      case "REVEAL":      return GAINS.BED_PHASE_REVEAL;
-      case "RESULTS":     return GAINS.BED_PHASE_RESULTS;
+      case "IDLE": return GAINS.BED_PHASE_IDLE;
+      case "DEAL": return GAINS.BED_PHASE_DEAL;
+      case "HOLD": return GAINS.BED_PHASE_HOLD;
+      case "DRAW": return GAINS.BED_PHASE_DRAW;
+      case "REVEAL": return GAINS.BED_PHASE_REVEAL;
+      case "RESULTS": return GAINS.BED_PHASE_RESULTS;
       case "CELEBRATION": return GAINS.BED_PHASE_CELEBRATION;
-      default:            return 1.0;
+      default: return 1.0;
     }
   }
 
@@ -473,8 +479,8 @@ class AudioDirector {
     } else {
       // ── Procedural fallback ───────────────────────────────────────────
       const bands: Array<{ freq: number; q: number; vol: number; bufSec: number }> = [
-        { freq: GAINS.REVEAL_CROWD_LOW,  q: 0.4, vol: 0.5, bufSec: 8 },
-        { freq: GAINS.REVEAL_CROWD_MID,  q: 0.5, vol: 0.4, bufSec: 6 },
+        { freq: GAINS.REVEAL_CROWD_LOW, q: 0.4, vol: 0.5, bufSec: 8 },
+        { freq: GAINS.REVEAL_CROWD_MID, q: 0.5, vol: 0.4, bufSec: 6 },
         { freq: GAINS.REVEAL_CROWD_HIGH, q: 0.6, vol: 0.25, bufSec: 4 },
       ];
 
@@ -521,8 +527,8 @@ class AudioDirector {
   }
 
   private teardownState() {
-    this.stateSources.forEach(s => { try { s.stop(); } catch {} });
-    this.stateOscs.forEach(o => { try { o.stop(); } catch {} });
+    this.stateSources.forEach(s => { try { s.stop(); } catch { } });
+    this.stateOscs.forEach(o => { try { o.stop(); } catch { } });
     this.stateSources = [];
     this.stateOscs = [];
     this.stateGains = [];
@@ -531,10 +537,10 @@ class AudioDirector {
 
   private stateGainForPhase(phase: AudioPhase): number {
     switch (phase) {
-      case "DEAL":        return GAINS.STATE_DEAL;
-      case "DRAW":        return GAINS.STATE_DRAW;
-      case "REVEAL":      return GAINS.STATE_REVEAL_BASE;
-      default:            return 0;
+      case "DEAL": return GAINS.STATE_DEAL;
+      case "DRAW": return GAINS.STATE_DRAW;
+      case "REVEAL": return GAINS.STATE_REVEAL_BASE;
+      default: return 0;
     }
   }
 
@@ -543,7 +549,11 @@ class AudioDirector {
     if (!this.ctx || !this.duckGain) return;
     const now = this.ctx.currentTime;
     if (phase === "RESULTS") {
-      this.setDuck(GAINS.DUCK_HEAVY, now);
+      // Slow fade to heavy duck over 600ms — avoids the jarring silence cut
+      // that previously happened when reveal ended and results phase snapped in.
+      this.duckGain.gain.cancelScheduledValues(now);
+      this.duckGain.gain.setValueAtTime(this.duckGain.gain.value, now);
+      this.duckGain.gain.linearRampToValueAtTime(GAINS.DUCK_HEAVY, now + 0.6);
     } else if (phase === "CELEBRATION") {
       this.setDuck(GAINS.DUCK_LIGHT, now);
     } else {

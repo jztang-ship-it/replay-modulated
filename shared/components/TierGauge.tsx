@@ -59,6 +59,8 @@ interface TierGaugeProps {
   isAnchorReveal?: boolean;
   /** Called when the animated gauge bar crosses a tier boundary — used for tier name flip */
   onTierCross?: (tier: string) => void;
+  /** Smart post-reveal copy — replaces gap callout after results settle */
+  postRevealCopy?: { primary: string; secondary?: string } | null;
 }
 
 const TIER_CFG: Record<string, { label: string; color: string; glow: string }> = {
@@ -278,6 +280,7 @@ export function TierGauge({
   regularFinalCardKick = false,
   isAnchorReveal = false,
   onTierCross,
+  postRevealCopy,
 }: TierGaugeProps) {
   const [barFill,   setBarFill]   = useState(0);
   const [barColor,  setBarColor]  = useState("transparent");
@@ -472,9 +475,12 @@ export function TierGauge({
     }
 
     // Already settled at this totalFp — avoid restarting animation on dependency churn.
-    // External spring in GameView handles all oscillation.
+    // Exception: if isNearMiss just became true (winTier was just set), allow spring to fire
+    // even though totalFp hasn't changed.
     if (lastAnimatedTotalFpRef.current !== null && Math.abs(totalFp - lastAnimatedTotalFpRef.current) < 0.05) {
-      return;
+      if (!isNearMiss) return;
+      // Near-miss: reset so spring runs from current fill position
+      lastAnimatedTotalFpRef.current = null;
     }
 
     cancelAnimationFrame(rafRef.current);
@@ -650,14 +656,25 @@ export function TierGauge({
         }} />
       </div>
 
-      {/* Gap callout — below bar */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-        {isMaxLevel ? (
+      {/* Gap callout — below bar: pre-reveal shows X FP TO NEXT TIER, post-reveal shows smart copy */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, flexDirection: "column", minHeight: 28, textAlign: "center" }}>
+        {postRevealCopy ? (
+          <>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#CCCCCC", fontFamily: FF, letterSpacing: "0.04em", lineHeight: 1.3 }}>
+              {postRevealCopy.primary}
+            </span>
+            {postRevealCopy.secondary && (
+              <span style={{ fontSize: 10, color: "#666", fontFamily: FF, letterSpacing: "0.04em" }}>
+                {postRevealCopy.secondary}
+              </span>
+            )}
+          </>
+        ) : isMaxLevel ? (
           <span style={{ fontSize: 13, fontWeight: 800, color: TIER_CFG.GOAT.color, fontFamily: FF, letterSpacing: "0.06em", textTransform: "uppercase" }}>
             You've reached the maximum level
           </span>
         ) : (
-          <>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <span style={{ fontSize: 18, fontWeight: 800, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px" }}>
               {gap.toFixed(1)}
             </span>
@@ -667,7 +684,7 @@ export function TierGauge({
             <span style={{ fontSize: 12, fontWeight: 800, color: targetCfg.color, fontFamily: FF, letterSpacing: "0.08em", textTransform: "uppercase" }}>
               {targetCfg.label}
             </span>
-          </>
+          </div>
         )}
       </div>
     </div>

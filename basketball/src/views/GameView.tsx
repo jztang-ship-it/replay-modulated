@@ -20,6 +20,7 @@ import { GameBar, type CelebrationData } from "../components/GameBar";
 import { useCardFlipState } from "../hooks/useCardFlipState";
 import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
 import { calculateWinTier, calculatePayout, BASKETBALL_WIN_TIERS, type WinTier } from "../utils/payoutLogic";
+import { buildPostRevealCopy } from "../utils/buildPostRevealCopy";
 import { useGameAnalytics } from "../../../shared/analytics/useGameAnalytics";
 import { HotStreakOverlay } from '@shared/engagement/HotStreakOverlay';
 import { CollectScreen } from '@shared/engagement/CollectScreen';
@@ -31,7 +32,6 @@ import { XPBar } from '@shared/engagement/XPBar';
 import { soundManager } from '@shared/utils/soundManager';
 import { audioDirector } from '@shared/utils/audioDirector';
 import { getPlayerUid, getNickname, setNickname } from '@shared/utils/playerIdentity';
-import { buildPostRevealCopy, type PostRevealInput } from '../utils/postRevealCopy';
 
 // Test-wire only: allow passing glow props even if wrapper prop types lag behind.
 const RosterGridAny = RosterGrid as any;
@@ -245,7 +245,7 @@ const SPRING_TIERS = [
 ];
 const SPRING_TIER_SPAN = 20.0;
 
-function computeSpringWaypoints(startFp: number, finalFp: number): number[] {
+function computeSpringWaypoints(finalFp: number): number[] {
   const tier = SPRING_TIERS.find(t => finalFp >= t.lo && finalFp < t.hi)
     ?? SPRING_TIERS[SPRING_TIERS.length - 1];
   const margin = finalFp - tier.lo;
@@ -256,16 +256,15 @@ function computeSpringWaypoints(startFp: number, finalFp: number): number[] {
   const amplitude = baseAmp * marginFactor;
   const damping = 0.45;
 
-  // Spring starts at startFp (before last card), rises through finalFp,
-  // overshoots, oscillates, then settles at finalFp.
-  const waypoints: number[] = [startFp];
+  // Always exactly 3 swings: up → down (crosses boundary) → small up → settle
+  const waypoints: number[] = [finalFp];
   let amp = amplitude;
-  waypoints.push(finalFp + amp);       // overshoot up through finalFp
+  waypoints.push(finalFp + amp);          // swing 1: up
   amp *= damping;
-  waypoints.push(finalFp - amp);       // dip below
+  waypoints.push(finalFp - amp);          // swing 2: down (may cross boundary)
   amp *= damping;
-  waypoints.push(finalFp + amp);       // small overshoot up
-  waypoints.push(finalFp);            // settle
+  waypoints.push(finalFp + amp);          // swing 3: small up
+  waypoints.push(finalFp);               // settle
   return waypoints;
 }
 
@@ -320,6 +319,12 @@ if (typeof document !== "undefined" && !document.getElementById(GV_STYLE_ID)) {
       30%  { transform: perspective(400px) rotateX(20deg) scale(0.95); opacity: 0.6; }
       100% { transform: perspective(400px) rotateX(90deg) scale(0.85); opacity: 0; }
     }
+    @keyframes bonusPoolPulse {
+      0%   { box-shadow: 0 0 0px rgba(255,215,0,0); }
+      30%  { box-shadow: 0 0 28px rgba(255,215,0,0.95), 0 0 56px rgba(255,215,0,0.5); }
+      65%  { box-shadow: 0 0 18px rgba(255,215,0,0.7); }
+      100% { box-shadow: 0 0 6px rgba(255,215,0,0.3); }
+    }
   `;
   document.head.appendChild(st);
 }
@@ -347,27 +352,40 @@ const BONUS_DOTS = [
   { threshold: 5, tierIdx: 1 },
 ];
 
-function BonusRow({ betAdded, streak = 0 }: { betAdded: number; streak?: number }) {
+function BonusRow({ betAdded, streak = 0, milestoneHit = false, onAmountChange }: {
+  betAdded: number; streak?: number; milestoneHit?: boolean;
+  onAmountChange?: (v: number) => void;
+}) {
   const [amount, setAmount] = useState(JACKPOT_SEED);
   const prevBetRef = useRef(0);
+  const onAmountChangeRef = useRef(onAmountChange);
+  onAmountChangeRef.current = onAmountChange;
   const streakGlow = streak >= 5 ? 0.22 : streak >= 3 ? 0.14 : streak >= 1 ? 0.08 : 0.06;
   const streakBorder = streak >= 5 ? "rgba(255,215,0,0.55)" : streak >= 3 ? "rgba(255,215,0,0.38)" : streak >= 1 ? "rgba(255,215,0,0.25)" : "rgba(255,215,0,0.18)";
   const streakShadow = streak > 0 ? `0 0 ${6 + streak * 3}px rgba(255,215,0,${streakGlow})` : "none";
 
   useEffect(() => {
     const id = setInterval(() => {
-      setAmount(p => parseFloat((p + TICK_AMOUNT).toFixed(2)));
+      setAmount(p => {
+        const next = parseFloat((p + TICK_AMOUNT).toFixed(2));
+        onAmountChangeRef.current?.(next);
+        return next;
+      });
     }, TICK_INTERVAL_MS);
     return () => clearInterval(id);
-  }, []);
+  }, []); // eslint-disable-line
 
   useEffect(() => {
     if (betAdded > 0 && betAdded !== prevBetRef.current) {
       prevBetRef.current = betAdded;
       const contribution = parseFloat((betAdded * JACKPOT_BET_RAKE).toFixed(2));
-      if (contribution > 0) setAmount(p => parseFloat((p + contribution).toFixed(2)));
+      if (contribution > 0) setAmount(p => {
+        const next = parseFloat((p + contribution).toFixed(2));
+        onAmountChangeRef.current?.(next);
+        return next;
+      });
     }
-  }, [betAdded]);
+  }, [betAdded]); // eslint-disable-line
 
   return (
     <div style={{
@@ -381,7 +399,11 @@ function BonusRow({ betAdded, streak = 0 }: { betAdded: number; streak?: number 
         padding: "4px 14px", borderRadius: 20,
         background: `rgba(255,215,0,${streakGlow})`,
         border: `1px solid ${streakBorder}`,
-        boxShadow: streakShadow,
+        boxShadow: milestoneHit
+          ? `0 0 0 2px #FFD700, 0 0 32px rgba(255,215,0,0.9), 0 0 64px rgba(255,215,0,0.5)`
+          : streakShadow,
+        animation: milestoneHit ? "bonusPoolPulse 1.4s ease-out forwards" : "none",
+        transition: "box-shadow 300ms ease",
       }}>
         <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.2, color: "rgba(255,215,0,0.6)", textTransform: "uppercase" }}>
           Bonus Pool
@@ -465,10 +487,6 @@ export default function GameView() {
   const [streak, setStreak] = useState<number>(() =>
     parseInt(localStorage.getItem("replaymod_streak") ?? "0", 10)
   );
-  const [lossStreak, setLossStreak] = useState<number>(() =>
-    parseInt(localStorage.getItem("replaymod_loss_streak") ?? "0", 10)
-  );
-  const [streakMilestone, setStreakMilestone] = useState<{ wins: number; pct: number } | null>(null);
 
   // Tier flip display state
   const [tierFlipKey, setTierFlipKey] = useState(0);
@@ -488,46 +506,29 @@ export default function GameView() {
   const springRafRef = useRef<number>(0);
   const springTimersRef = useRef<number[]>([]);
   const pendingBalanceUpdateRef = useRef<(() => void) | null>(null);
-  const springHasFiredRef = useRef(false);
-  const lockedFpRef = useRef<number | null>(null);
-  const onAnchorSettledRef = useRef<(() => void) | null>(null);
-  const springSettledRef = useRef(false);
-  const displayTierLockedRef = useRef(false);
-  const springStartFpRef = useRef<number>(0);
-  const lastCardFpRef = useRef<number>(0);
+  const jackpotAmountRef = useRef<number>(JACKPOT_SEED); // mirrors BonusRow amount for milestone calc
 
   const runSpring = useCallback((finalFp: number, onSettled: () => void) => {
-    if (springHasFiredRef.current) return;
-    springHasFiredRef.current = true;
     cancelAnimationFrame(springRafRef.current);
     springTimersRef.current.forEach(clearTimeout);
     springTimersRef.current = [];
 
-    const startFp = springStartFpRef.current;
-    const waypoints = computeSpringWaypoints(startFp, finalFp);
-    const TOTAL_MS  = 2000; // slightly longer — covers card 6's FP range too
+    const waypoints = computeSpringWaypoints(finalFp);
+    const TOTAL_MS  = 1800;
     const segCount  = waypoints.length - 1;
     const segMs     = TOTAL_MS / segCount;
 
     let segIndex = 0;
     let segStart: number | null = null;
 
+    setSpringFp(finalFp);
     setSpringSettled(false);
 
     function tick(now: number) {
       if (segIndex >= segCount) {
         setSpringFp(null);
         setSpringSettled(true);
-        springSettledRef.current = true;
-        // Lock tier display at final position
-        const finalTier = deriveTierFromFp(finalFp);
-        setDisplayTier(finalTier);
-        displayTierLockedRef.current = true;
         onSettled();
-        if (onAnchorSettledRef.current) {
-          onAnchorSettledRef.current();
-          onAnchorSettledRef.current = null;
-        }
         return;
       }
       if (segStart === null) segStart = now;
@@ -545,21 +546,18 @@ export default function GameView() {
 
   // Near-miss copy — motivating one-liner shown in Phase 2 for BUST/ROOKIE.
   // Picked once when winTier is set; stable for the lifetime of the result screen.
-  const postRevealCopy = useMemo(() => {
+  const nearMissCopy = useMemo(() => {
+    const copies: Partial<Record<string, string[]>> = {
+      BUST:     ["So close.", "Right there.", "Next hand."],
+      ROOKIE:   ["Just a few more FP.", "Run it back.", "So close."],
+      STARTER:  ["Right on the edge.", "Almost there.", "Run it back."],
+      ALL_STAR: ["One strong hand away.", "So close.", "Push harder."],
+    };
     if (!winTier) return null;
-    return buildPostRevealCopy({
-      tier: winTier,
-      totalFp: lockedFpRef.current ?? totalFp,
-      roster: roster.map(c => ({
-        name: (c as any).name ?? "",
-        actualFp: Number((c as any).actualFp ?? 0),
-        projectedFp: Number((c as any).projectedFp ?? 0),
-      })),
-      streak,
-      lossStreak,
-      streakMilestone,
-    });
-  }, [winTier, streak, lossStreak, streakMilestone]); // eslint-disable-line
+    const opts = copies[winTier];
+    if (!opts) return null;
+    return opts[Math.floor(Math.random() * opts.length)];
+  }, [winTier]); // eslint-disable-line
 
   // Hand count — drives Protected mode (hands 2-30 get top-60% log sampling)
   // Hand 1 is always FTUE. Persisted across sessions.
@@ -650,11 +648,6 @@ export default function GameView() {
       heldRevealResumeRef.current = resume;
     } : undefined,
     onCardRevealStart: handleCardRevealStart,
-    onAnchorFpComplete: useCallback((totalFp: number) => {
-      if (isFTUE) return;
-      springStartFpRef.current = Math.max(0, totalFp - lastCardFpRef.current);
-      runSpring(totalFp, () => {}); // spring settled — onAnchorSettledRef handles results
-    }, [isFTUE, runSpring]),
     onCardComplete: useCallback((cId: string) => {
       setRevealIndex(prev => {
         const next = prev + 1;
@@ -692,9 +685,8 @@ export default function GameView() {
         return;
       }
 
-      // Spring was already started by onAnchorFpComplete — store results callback
-      onAnchorSettledRef.current = () => {
-        lockedFpRef.current = totalFp;
+      // Run spring oscillation — results lock in only when spring is truly done
+      runSpring(totalFp, () => {
         setWinTier(tier);
         setWinPayout(payout);
         const bust = !tier || tier === "BUST";
@@ -704,6 +696,7 @@ export default function GameView() {
         recordHandPlayed();
         if (!bust) recordHandWon(); else recordHandLost();
 
+        // Store balance + streak update — fires when wage animation completes
         pendingBalanceUpdateRef.current = () => {
           if (payout > 0) {
             setBalance(prev => { const next = prev + payout; saveBalance(next); return next; });
@@ -713,24 +706,14 @@ export default function GameView() {
               const next = prev + 1;
               localStorage.setItem("replaymod_streak", String(next));
               if (next === 3 || next === 5 || next === 10) soundManager.playStreakMilestone(next);
-              // Streak milestone detection
-              if (next === 3) setStreakMilestone({ wins: 3, pct: 5 });
-              else if (next === 5) setStreakMilestone({ wins: 5, pct: 15 });
               submitToLeaderboard("streak", next);
               return next;
             });
-            setLossStreak(0);
-            localStorage.setItem("replaymod_loss_streak", "0");
             submitToLeaderboard("wins", 1);
             submitToLeaderboard("fp", totalFp);
           } else {
             setStreak(0);
             localStorage.setItem("replaymod_streak", "0");
-            setLossStreak(prev => {
-              const next = prev + 1;
-              localStorage.setItem("replaymod_loss_streak", String(next));
-              return next;
-            });
           }
         };
 
@@ -739,17 +722,9 @@ export default function GameView() {
           else setGameState("WIN_CELEBRATION");
         }, 1200);
         springTimersRef.current.push(t);
-      };
-      // If spring already settled before onAllComplete fired, call immediately
-      if (springSettledRef.current) {
-        onAnchorSettledRef.current();
-        onAnchorSettledRef.current = null;
-      }
-    }, [currentBet, gameAnalytics, isFTUE, recordHandPlayed, recordHandWon, recordHandLost]),
+      });
+    }, [currentBet, gameAnalytics, isFTUE, recordHandPlayed, recordHandWon, recordHandLost, runSpring]),
   });
-
-  // Keep lastCardFpRef in sync for spring startFp computation
-  lastCardFpRef.current = lastCardFp;
 
   // Zone 2: Derived values
   const phase: GamePhase = useMemo(() => {
@@ -790,6 +765,12 @@ export default function GameView() {
     const tierMult = BASKETBALL_WIN_TIERS[winTier]?.multiplier ?? 0;
     const isLoss = winTier === "BUST"; // ROOKIE is a partial win, not a loss
     const lossAmount = winTier === "BUST" ? BASE_BET * betMultiplier : 0;
+    // Streak milestone bonus pool win
+    const milestoneTier = BONUS_TIERS.find(t => streak === t.wins);
+    const streakMilestonePct = milestoneTier?.pct;
+    const bonusPoolWin = streakMilestonePct
+      ? Math.floor(jackpotAmountRef.current * (streakMilestonePct / 100))
+      : undefined;
     return {
       tierLabel: formatTierLabel(winTier),
       tierColor: tc.color,
@@ -802,6 +783,8 @@ export default function GameView() {
       baseBet: BASE_BET,
       isLoss,
       lossAmount,
+      streakMilestonePct,
+      bonusPoolWin,
     };
   }, [gameState, winTier, winPayout, streak, betMultiplier]); // eslint-disable-line
 
@@ -831,9 +814,31 @@ export default function GameView() {
     return Math.min(100, Math.round((totalFp / maxPossible) * 100));
   }, [gameState, roster, totalFp]);
 
+  // Smart post-reveal copy — replaces "X FP to NEXT TIER" under gauge after results settle
+  const postRevealCopy = useMemo(() => {
+    if ((gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") || !winTier || !springSettled) return null;
+    const gaugeSnap = computeGaugeState(displayFp, GAUGE_THRESHOLDS as any, winTier, 8);
+    return buildPostRevealCopy({
+      totalFp: displayFp,
+      winTier,
+      nextTier: gaugeSnap.nextTier,
+      tierFloor: gaugeSnap.curMin,
+      nextTierMin: gaugeSnap.nextMin > 0 && gaugeSnap.nextMin < 9999 ? gaugeSnap.nextMin : 0,
+      roster: roster.map(c => ({
+        name: String((c as any).name ?? ""),
+        actualFp: Number((c as any).actualFp ?? 0),
+        projectedFp: Number((c as any).projectedFp ?? 0) || undefined,
+      })),
+      streak,
+      prevStreak: winTier === "BUST" ? streak : Math.max(0, streak - 1),
+      isBust: winTier === "BUST",
+    });
+  }, [gameState, winTier, springSettled, displayFp, roster, streak]); // eslint-disable-line
+
+
   // Gauge: direct pass-through — totalFp updates every frame via interpolated visibleFpMap
   // When spring is active, all displays use springFp. Otherwise fall back to totalFp.
-  const displayFp = springFp ?? lockedFpRef.current ?? totalFp;
+  const displayFp = springFp ?? totalFp;
   const gaugeTotalFp = displayFp;
   latestGaugeFpRef.current = gaugeTotalFp;
 
@@ -842,17 +847,7 @@ export default function GameView() {
     ? deriveTierFromFp(springFp)
     : (winTier ?? deriveTierFromFp(totalFp));
 
-  // Drive displayTier from springFp during spring oscillation
-  useEffect(() => {
-    if (displayTierLockedRef.current) return; // locked — ignore
-    if (springFp !== null) {
-      const t = deriveTierFromFp(springFp);
-      if (t !== displayTier) {
-        setDisplayTier(t);
-        setTierFlipKey(prev => prev + 1);
-      }
-    }
-  }, [springFp]); // eslint-disable-line
+  // displayTier is driven only by handleTierCross during normal reveal — not during spring
 
   // No spring on results — direct-set keeps bar accurate. Spring to be added later.
   const regularFinalGaugeKick = false;
@@ -886,7 +881,6 @@ export default function GameView() {
 
   const handleTierCross = useCallback((tier: string) => {
     if (isFTUE) return;
-    if (displayTierLockedRef.current) return; // spring settled — no more flips
     if (tier === prevRevealTierRef.current) return;
     soundManager.playTierCross(tier);
 
@@ -936,13 +930,6 @@ export default function GameView() {
       setSpringFp(null);
       setSpringSettled(false);
       pendingBalanceUpdateRef.current = null;
-      springHasFiredRef.current = false;
-      lockedFpRef.current = null;
-      onAnchorSettledRef.current = null;
-      springSettledRef.current = false;
-      displayTierLockedRef.current = false;
-      springStartFpRef.current = 0;
-      setStreakMilestone(null);
     }
   }, [gameState]);
 
@@ -1284,7 +1271,12 @@ export default function GameView() {
             />
           </div>
           <div data-ftue-chrome="true">
-            <BonusRow betAdded={currentBet} streak={streak} />
+            <BonusRow
+              betAdded={currentBet}
+              streak={streak}
+              milestoneHit={streak === 3 || streak === 5}
+              onAmountChange={(v) => { jackpotAmountRef.current = v; }}
+            />
           </div>
         </div>
 
@@ -1413,31 +1405,13 @@ export default function GameView() {
             }}
           >
             {!isFTUE && gameState === "REVEALING" ? (
+              /* During spring: only FP number — no tier PNG, no flips.
+                 The tier sign appears once as the final slam after spring settles. */
               <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%", height: "100%", gap: 3 }}>
-                {displayTier !== "BUST" ? (
-                  /* Tier crossed — show tier PNG with flip animation via wrapper div */
-                  <div
-                    key={`flip-wrap-${tierFlipKey}`}
-                    style={{
-                      animation: tierFlipKey > 0 ? "tierFlip 500ms cubic-bezier(0.22, 1, 0.36, 1)" : "none",
-                      display: "flex", justifyContent: "center", alignItems: "center",
-                    }}
-                  >
-                    <img
-                      src={`/${TIER_IMAGE_MAP[displayTier] ?? "bust1.png"}`}
-                      alt={formatTierLabel(displayTier)}
-                      style={{ height: 48, maxWidth: "90%", objectFit: "contain" }}
-                    />
-                  </div>
-                ) : null}
                 <span style={{
-                  fontSize: displayTier === "BUST" ? 30 : 15,
-                  fontWeight: 900,
-                  color: displayTier === "BUST" ? "#FFFFFF" : "rgba(255,255,255,0.55)",
-                  letterSpacing: displayTier === "BUST" ? "-0.5px" : "0.03em",
-                  lineHeight: 1,
-                  fontVariantNumeric: "tabular-nums",
-                  fontStyle: displayTier === "BUST" ? "italic" : "normal",
+                  fontSize: 30, fontWeight: 900, color: "#FFFFFF",
+                  letterSpacing: "-0.5px", lineHeight: 1,
+                  fontVariantNumeric: "tabular-nums", fontStyle: "italic",
                 }}>
                   {displayFp.toFixed(1)} FP
                 </span>
@@ -1491,7 +1465,7 @@ export default function GameView() {
                   />
                 </div>
               ) : (
-                /* Phase 2: Settled info — tier PNG + personalized copy */
+                /* Phase 2: Settled info — two lines only */
                 <div style={{
                   display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center",
                   width: "100%", height: "100%", gap: 4,
@@ -1503,34 +1477,20 @@ export default function GameView() {
                     alt={formatTierLabel(winTier)}
                     style={{ maxHeight: 36, maxWidth: "70%", objectFit: "contain" }}
                   />
-                  {/* Line 2: FP */}
+                  {/* Line 2: FP · % of possible score */}
                   <span style={{
                     fontSize: 15, fontWeight: 800, color: "rgba(255,255,255,0.55)",
-                    letterSpacing: "0.02em", lineHeight: 1, textAlign: "center",
+                    letterSpacing: "0.02em", lineHeight: 1.3, textAlign: "center",
                     fontVariantNumeric: "tabular-nums",
                   }}>
                     {displayFp.toFixed(1)} FP
+                    {ceilingPct != null && (
+                      <span style={{ fontWeight: 600, color: "rgba(255,255,255,0.35)", fontSize: 12 }}>
+                        {" · "}{ceilingPct}% of possible score
+                      </span>
+                    )}
                   </span>
-                  {/* Line 3: Post-reveal copy — personalized */}
-                  {postRevealCopy && (
-                    <span style={{
-                      fontSize: 11, fontWeight: 700,
-                      color: streakMilestone ? "#FFD700"
-                        : winTier === "BUST" ? "rgba(255,255,255,0.35)"
-                        : "#22C55E",
-                      letterSpacing: "0.05em", lineHeight: 1.3, textAlign: "center",
-                      textTransform: "uppercase",
-                      animation: "tierInfoFadeIn 500ms ease-out 300ms both",
-                      maxWidth: "90%",
-                    }}>
-                      {postRevealCopy.primary}
-                      {postRevealCopy.secondary && (
-                        <span style={{ display: "block", fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.30)", marginTop: 2, textTransform: "none" }}>
-                          {postRevealCopy.secondary}
-                        </span>
-                      )}
-                    </span>
-                  )}
+                  {/* Streak + near-miss removed for beta */}
                 </div>
               )
             ) : gameState === "WIN_CELEBRATION" && winTier && celebrationData && !showRawScore ? (
@@ -1565,16 +1525,20 @@ export default function GameView() {
                           </span>
                         )}
                       </div>
-                      {postRevealCopy && (
+                      {winTier === "BUST" && (
+                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.05em" }}>
+                          Better luck next hand
+                        </div>
+                      )}
+                      {nearMissCopy && (winTier === "BUST" || winTier === "ROOKIE" || winTier === "STARTER" || winTier === "ALL_STAR") && (
                         <div style={{
                           fontSize: 11, fontWeight: 700,
-                          color: streakMilestone ? "#FFD700"
-                            : winTier === "BUST" ? "rgba(255,255,255,0.3)" : "#22C55E",
-                          letterSpacing: "0.05em",
+                          color: winTier === "BUST" ? "rgba(255,255,255,0.3)" : "#22C55E",
+                          letterSpacing: "0.07em",
                           textTransform: "uppercase",
                           animation: "tierInfoFadeIn 500ms ease-out 600ms both",
                         }}>
-                          {postRevealCopy.primary}
+                          {nearMissCopy}
                         </div>
                       )}
                     </>
@@ -1723,7 +1687,7 @@ export default function GameView() {
                       { tier: "MVP", minFP: 215 },
                       { tier: "GOAT" as any, minFP: 235 },
                     ]}
-                    winTier={undefined}
+                    winTier={springSettled ? (winTier ?? undefined) : undefined}
                     lastCardFp={lastCardFp}
                     isSkip={false}
                     visible
@@ -1731,7 +1695,8 @@ export default function GameView() {
                     ftueOscillate={isFTUE && ftueOscillating}
                     ftueLockStaticBar={isFTUE && ftueGaugeOscDone}
                     regularFinalCardKick={regularFinalGaugeKick}
-                    onTierCross={handleTierCross}
+                    onTierCross={undefined}
+                    postRevealCopy={postRevealCopy}
                     onFtueOscillateComplete={() => {
                       setFtueGaugeOscDone(true);
                       setFtueOscillating(false);
