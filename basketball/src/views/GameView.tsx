@@ -245,7 +245,8 @@ const SPRING_TIERS = [
 ];
 const SPRING_TIER_SPAN = 20.0;
 
-function computeSpringWaypoints(finalFp: number): number[] {
+/** Compute spring amplitude based on where finalFp lands relative to tier boundaries */
+function computeSpringAmplitude(finalFp: number): number {
   const tier = SPRING_TIERS.find(t => finalFp >= t.lo && finalFp < t.hi)
     ?? SPRING_TIERS[SPRING_TIERS.length - 1];
   const margin = finalFp - tier.lo;
@@ -253,24 +254,7 @@ function computeSpringWaypoints(finalFp: number): number[] {
   const fpNorm = Math.min(1, Math.max(0, (finalFp - 155) / 80));
   const baseAmp = 4.0 + fpNorm * 6.0;
   const marginFactor = 1.0 - marginNorm * 0.75;
-  const amplitude = baseAmp * marginFactor;
-  const damping = 0.45;
-
-  // Four movements, each single-direction, fully extended before reversing:
-  // A. Shoot UP past finalFp (overshoot)
-  // B. Come DOWN below finalFp
-  // C. Rise UP slightly above finalFp
-  // D. Settle exactly at finalFp
-  // Start from finalFp — the count-up already brought us here.
-  const waypoints: number[] = [finalFp];
-  let amp = amplitude;
-  waypoints.push(finalFp + amp);    // A: shoot up to peak
-  amp *= damping;
-  waypoints.push(finalFp - amp);    // B: drop below
-  amp *= damping;
-  waypoints.push(finalFp + amp);    // C: small rise
-  waypoints.push(finalFp);          // D: settle
-  return waypoints;
+  return baseAmp * marginFactor;
 }
 
 const TIER_IMAGE_MAP: Record<string, string> = {
@@ -515,42 +499,43 @@ export default function GameView() {
   const springHasFiredRef = useRef(false);
 
   const runSpring = useCallback((finalFp: number, onSettled: () => void) => {
-    lockedGaugeFpRef.current = finalFp; // freeze gauge immediately — no 1-frame gap
+    lockedGaugeFpRef.current = finalFp;
     cancelAnimationFrame(springRafRef.current);
     springTimersRef.current.forEach(clearTimeout);
     springTimersRef.current = [];
 
-    const waypoints = computeSpringWaypoints(finalFp);
-    const TOTAL_MS  = 1800;
-    const segCount  = waypoints.length - 1;
-    const segMs     = TOTAL_MS / segCount;
+    // Physics-based spring: one continuous smooth motion.
+    // Damped harmonic oscillator: x(t) = A * e^(-decay*t) * sin(freq*t)
+    // No waypoints, no segments, no joins — just smooth physics.
+    const amplitude = computeSpringAmplitude(finalFp);
+    const DURATION_MS = 1800;
+    const decay = 3.5;   // damping — higher = settles faster
+    const freq = 8.0;    // oscillation frequency — higher = faster bounces
 
-    let segIndex = 0;
-    let segStart: number | null = null;
-
+    let startTime: number | null = null;
     setSpringFp(finalFp);
     setSpringSettled(false);
 
     function tick(now: number) {
-      if (segIndex >= segCount) {
+      if (startTime === null) startTime = now;
+      const elapsed = now - startTime;
+      const t = elapsed / DURATION_MS; // 0→1 over duration
+
+      if (t >= 1) {
         lockedGaugeFpRef.current = finalFp;
         setSpringFp(null);
         setSpringSettled(true);
         onSettled();
         return;
       }
-      if (segStart === null) segStart = now;
-      const elapsed = now - segStart;
-      const t = Math.min(1, elapsed / segMs);
-      // First segment (shoot up): ease-out for instant response
-      // Other segments: ease-in-out for natural spring feel
-      const eased = segIndex === 0
-        ? 1 - Math.pow(1 - t, 3)  // cubic ease-out — starts fast, decelerates
-        : t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-      const from = waypoints[segIndex];
-      const to   = waypoints[segIndex + 1];
-      setSpringFp(from + eased * (to - from));
-      if (t >= 1) { segIndex++; segStart = null; }
+
+      // Damped sine: starts with full amplitude, decays smoothly
+      // sin starts at 0, peaks at π/2 — offset so first movement is UP
+      const envelope = Math.exp(-decay * t);
+      const oscillation = Math.sin(freq * t * Math.PI);
+      const offset = amplitude * envelope * oscillation;
+      setSpringFp(finalFp + offset);
+
       springRafRef.current = requestAnimationFrame(tick);
     }
     springRafRef.current = requestAnimationFrame(tick);
@@ -903,36 +888,10 @@ export default function GameView() {
     if (tier === prevRevealTierRef.current) return;
     soundManager.playTierCross(tier);
 
-    // Clear any pending flip chain
-    tierFlipTimersRef.current.forEach(clearTimeout);
-    tierFlipTimersRef.current = [];
-
-    const fromIdx = TIER_ORDER_LIST.indexOf(prevRevealTierRef.current);
-    const toIdx = TIER_ORDER_LIST.indexOf(tier);
-    if (toIdx <= fromIdx) {
-      prevRevealTierRef.current = tier;
-      setDisplayTier(tier);
-      setTierFlipKey(k => k + 1);
-      return;
-    }
-
-    // Schedule each intermediate tier + final tier at 600ms intervals
-    const steps = TIER_ORDER_LIST.slice(fromIdx + 1, toIdx + 1);
-    steps.forEach((t, i) => {
-      if (i === 0) {
-        // First one fires immediately
-        prevRevealTierRef.current = t;
-        setDisplayTier(t);
-        setTierFlipKey(k => k + 1);
-      } else {
-        const timerId = window.setTimeout(() => {
-          prevRevealTierRef.current = t;
-          setDisplayTier(t);
-          setTierFlipKey(k => k + 1);
-        }, i * 600);
-        tierFlipTimersRef.current.push(timerId);
-      }
-    });
+    // Jump directly to the final tier — no intermediate flips
+    prevRevealTierRef.current = tier;
+    setDisplayTier(tier);
+    setTierFlipKey(k => k + 1);
   }, [isFTUE]); // eslint-disable-line
 
   // Reset on state change
@@ -1440,12 +1399,15 @@ export default function GameView() {
                 </span>
               </div>
             ) : !isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (
-              tierResultPhase === 1 ? (
-                /* Phase 1: Big tier PNG slam — fills the row with flash */
-                <div style={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center", width: "100%", height: "100%" }}>
-                  {/* Screen flash behind the slam */}
+              /* Tier result — single continuous animation: slam in big, shrink to settled */
+              <div style={{
+                display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center",
+                width: "100%", height: "100%", gap: tierResultPhase === 2 ? 4 : 0,
+              }}>
+                {/* Glow flash */}
+                {tierResultPhase === 1 && (
                   <div
-                    key={`flash-${winTier}-${gameState}`}
+                    key={`flash-${winTier}`}
                     style={{
                       position: "absolute", inset: -40, borderRadius: 30,
                       background: `radial-gradient(ellipse at center, ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).color}44 0%, transparent 70%)`,
@@ -1453,61 +1415,35 @@ export default function GameView() {
                       pointerEvents: "none",
                     }}
                   />
-                  {nearMissTeasing && (() => {
-                    const gaugeSnap = computeGaugeState(totalFp, GAUGE_THRESHOLDS as any, winTier, NEAR_MISS_FP);
-                    const nextTierKey = gaugeSnap.nextTier ?? winTier;
-                    const teaseColors = CELEBRATION_TIER_COLORS[nextTierKey] ?? CELEBRATION_TIER_COLORS.BUST;
-                    return (
-                      <img
-                        key={`tease-${nextTierKey}`}
-                        src={`/${TIER_IMAGE_MAP[nextTierKey] ?? "bust1.png"}`}
-                        alt={nextTierKey}
-                        style={{
-                          position: "absolute", maxHeight: 70, maxWidth: "95%", objectFit: "contain",
-                          animation: "tierTeaseIn 350ms cubic-bezier(0.22, 1, 0.36, 1)",
-                          filter: `drop-shadow(0 0 20px ${teaseColors.glow})`,
-                          zIndex: 2, opacity: 0.88,
-                        }}
-                      />
-                    );
-                  })()}
-                  <img
-                    key={`slam-${winTier}-${nearMissTeasing}`}
-                    src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
-                    alt={formatTierLabel(winTier)}
-                    style={{
-                      maxHeight: 70,
-                      maxWidth: "95%",
-                      objectFit: "contain",
-                      animation: nearMissTeasing ? "none" : "tierSlam 900ms cubic-bezier(0.22, 1, 0.36, 1)",
-                      filter: `drop-shadow(0 0 24px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`,
-                      position: "relative", zIndex: 1,
-                      opacity: nearMissTeasing ? 0.3 : 1,
-                      transition: "opacity 200ms ease",
-                    }}
-                  />
-                </div>
-              ) : (
-                /* Phase 2: Settled — tier PNG + FP only. Explanation lives in TierGauge. */
-                <div style={{
-                  display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center",
-                  width: "100%", height: "100%", gap: 4,
-                  animation: "tierInfoFadeIn 400ms ease-out",
-                }}>
-                  <img
-                    src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
-                    alt={formatTierLabel(winTier)}
-                    style={{ maxHeight: 36, maxWidth: "70%", objectFit: "contain" }}
-                  />
+                )}
+                {/* Tier PNG — one element, animates from big slam to small settled */}
+                <img
+                  key={`tier-${winTier}`}
+                  src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
+                  alt={formatTierLabel(winTier)}
+                  style={{
+                    maxHeight: tierResultPhase === 1 ? 70 : 36,
+                    maxWidth: tierResultPhase === 1 ? "95%" : "70%",
+                    objectFit: "contain",
+                    filter: tierResultPhase === 1
+                      ? `drop-shadow(0 0 24px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`
+                      : "none",
+                    animation: tierResultPhase === 1 ? "tierSlam 900ms cubic-bezier(0.22, 1, 0.36, 1)" : "none",
+                    transition: "max-height 500ms ease, max-width 500ms ease, filter 500ms ease",
+                  }}
+                />
+                {/* FP number — fades in for Phase 2 */}
+                {tierResultPhase === 2 && (
                   <span style={{
                     fontSize: 15, fontWeight: 800, color: "rgba(255,255,255,0.55)",
                     letterSpacing: "0.02em", lineHeight: 1, textAlign: "center",
                     fontVariantNumeric: "tabular-nums",
+                    animation: "tierInfoFadeIn 400ms ease-out",
                   }}>
                     {displayFp.toFixed(1)} FP
                   </span>
-                </div>
-              )
+                )}
+              </div>
             ) : gameState === "WIN_CELEBRATION" && winTier && celebrationData && !showRawScore ? (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, width: "100%" }}>
                 {(() => {

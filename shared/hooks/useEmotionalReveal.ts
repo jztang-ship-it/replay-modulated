@@ -432,9 +432,10 @@ export function useEmotionalReveal(params: Params) {
               setVisibleFpMap(prev => new Map(prev).set(c.cardId, target));
               if (isAnchor) setLastCardProgress(1);
               // Fire spring trigger immediately — before badge/stamp delay
+              // Use ALL cards (including held) for the total, not just revealOrder
               if (isAnchor) {
-                const runningTotal = revealOrder.reduce((s, x) => s + Number(x.actualFp ?? 0), 0);
-                onAnchorFpComplete?.(runningTotal);
+                const allTotal = cards.reduce((s, x) => s + Number(x.actualFp ?? 0), 0);
+                onAnchorFpComplete?.(allTotal);
               }
               const cardBadges = c.badges ?? [];
               if (cardBadges.length > 0) {
