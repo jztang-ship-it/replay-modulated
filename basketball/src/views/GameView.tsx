@@ -256,18 +256,20 @@ function computeSpringWaypoints(finalFp: number): number[] {
   const amplitude = baseAmp * marginFactor;
   const damping = 0.45;
 
-  // Start slightly below finalFp so the bar continues its upward roll-up motion
-  // seamlessly through finalFp and past it — no pause at the landing point.
-  // The first segment sweeps from (finalFp - lead) through finalFp to overshoot.
-  const lead = amplitude * 0.3; // 30% of amplitude as lead-in
-  const waypoints: number[] = [finalFp - lead];
+  // Four movements, each single-direction, fully extended before reversing:
+  // A. Shoot UP past finalFp (overshoot)
+  // B. Come DOWN below finalFp
+  // C. Rise UP slightly above finalFp
+  // D. Settle exactly at finalFp
+  // Start from finalFp — the count-up already brought us here.
+  const waypoints: number[] = [finalFp];
   let amp = amplitude;
-  waypoints.push(finalFp + amp);          // overshoot up (one continuous sweep)
+  waypoints.push(finalFp + amp);    // A: shoot up to peak
   amp *= damping;
-  waypoints.push(finalFp - amp);          // bounce down
+  waypoints.push(finalFp - amp);    // B: drop below
   amp *= damping;
-  waypoints.push(finalFp + amp);          // small bounce up
-  waypoints.push(finalFp);               // settle
+  waypoints.push(finalFp + amp);    // C: small rise
+  waypoints.push(finalFp);          // D: settle
   return waypoints;
 }
 
@@ -540,7 +542,11 @@ export default function GameView() {
       if (segStart === null) segStart = now;
       const elapsed = now - segStart;
       const t = Math.min(1, elapsed / segMs);
-      const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      // First segment (shoot up): ease-out for instant response
+      // Other segments: ease-in-out for natural spring feel
+      const eased = segIndex === 0
+        ? 1 - Math.pow(1 - t, 3)  // cubic ease-out — starts fast, decelerates
+        : t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
       const from = waypoints[segIndex];
       const to   = waypoints[segIndex + 1];
       setSpringFp(from + eased * (to - from));
@@ -822,13 +828,17 @@ export default function GameView() {
   const gaugeTotalFp = displayFp;
   latestGaugeFpRef.current = gaugeTotalFp;
 
-  // Smart post-reveal copy — replaces "X FP to NEXT TIER" under gauge after results settle
-  // Must be after displayFp is declared
+  // Smart post-reveal copy — computed once when spring settles, then locked for the hand.
+  // Uses a ref so the copy never changes mid-display from dependency churn.
+  const postRevealCopyRef = useRef<ReturnType<typeof buildPostRevealCopy> | null>(null);
   const postRevealCopy = useMemo(() => {
+    // Once computed, lock it — never recompute until next hand
+    if (postRevealCopyRef.current) return postRevealCopyRef.current;
     if ((gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") || !winTier || !springSettled) return null;
-    const gaugeSnap = computeGaugeState(displayFp, GAUGE_THRESHOLDS as any, winTier, 8);
-    return buildPostRevealCopy({
-      totalFp: displayFp,
+    const fp = lockedGaugeFpRef.current ?? displayFp;
+    const gaugeSnap = computeGaugeState(fp, GAUGE_THRESHOLDS as any, winTier, 8);
+    const copy = buildPostRevealCopy({
+      totalFp: fp,
       winTier,
       nextTier: gaugeSnap.nextTier,
       tierFloor: gaugeSnap.curMin,
@@ -848,6 +858,8 @@ export default function GameView() {
       isBust: winTier === "BUST",
       ceilingPct: ceilingPct ?? undefined,
     });
+    postRevealCopyRef.current = copy;
+    return copy;
   }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct]); // eslint-disable-line
 
   // Never show intermediate tiers during spring — only show final tier after spring settles
@@ -939,6 +951,7 @@ export default function GameView() {
       pendingBalanceUpdateRef.current = null;
       lockedGaugeFpRef.current = null;
       springHasFiredRef.current = false;
+      postRevealCopyRef.current = null;
       setStreakMilestone(null);
     }
   }, [gameState]);
