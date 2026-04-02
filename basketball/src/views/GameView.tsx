@@ -502,7 +502,6 @@ export default function GameView() {
     let segIndex = 0;
     let segStart: number | null = null;
 
-    setSpringFp(finalFp);
     setSpringSettled(false);
 
     function tick(now: number) {
