@@ -482,8 +482,12 @@ export default function GameView() {
   const springRafRef = useRef<number>(0);
   const springTimersRef = useRef<number[]>([]);
   const pendingBalanceUpdateRef = useRef<(() => void) | null>(null);
+  const springHasFiredRef = useRef(false);
+  const lockedFpRef = useRef<number | null>(null);
 
   const runSpring = useCallback((finalFp: number, onSettled: () => void) => {
+    if (springHasFiredRef.current) return; // already fired this hand
+    springHasFiredRef.current = true;
     cancelAnimationFrame(springRafRef.current);
     springTimersRef.current.forEach(clearTimeout);
     springTimersRef.current = [];
@@ -662,6 +666,7 @@ export default function GameView() {
 
       // Run spring oscillation — results lock in only when spring is truly done
       runSpring(totalFp, () => {
+        lockedFpRef.current = totalFp; // lock — bar never moves from here
         setWinTier(tier);
         setWinPayout(payout);
         const bust = !tier || tier === "BUST";
@@ -783,7 +788,7 @@ export default function GameView() {
 
   // Gauge: direct pass-through — totalFp updates every frame via interpolated visibleFpMap
   // When spring is active, all displays use springFp. Otherwise fall back to totalFp.
-  const displayFp = springFp ?? totalFp;
+  const displayFp = springFp ?? lockedFpRef.current ?? totalFp;
   const gaugeTotalFp = displayFp;
   latestGaugeFpRef.current = gaugeTotalFp;
 
@@ -884,6 +889,8 @@ export default function GameView() {
       setSpringFp(null);
       setSpringSettled(false);
       pendingBalanceUpdateRef.current = null;
+      springHasFiredRef.current = false;
+      lockedFpRef.current = null;
     }
   }, [gameState]);
 
@@ -1654,7 +1661,7 @@ export default function GameView() {
                       { tier: "MVP", minFP: 215 },
                       { tier: "GOAT" as any, minFP: 235 },
                     ]}
-                    winTier={springSettled ? (winTier ?? undefined) : undefined}
+                    winTier={undefined}
                     lastCardFp={lastCardFp}
                     isSkip={false}
                     visible

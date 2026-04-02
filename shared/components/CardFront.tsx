@@ -88,13 +88,13 @@ function initialsFromName(name: string) {
 
 function formatSeasonRange(season: any): string {
   const s = clampText(season);
-  if (/^\d{4}$/.test(s)) return `${s.slice(0,2)}-${s.slice(2,4)}`;
+  if (/^\d{4}$/.test(s)) return `${s.slice(0, 2)}-${s.slice(2, 4)}`;
   let m = s.match(/(\d{4})\D+(\d{4})/);
   if (m) return `${m[1].slice(2)}-${m[2].slice(2)}`;
   m = s.match(/(\d{2})\D+(\d{2})/);
   if (m) return `${m[1]}-${m[2]}`;
   m = s.match(/(\d{4})/);
-  if (m) { const a = m[1].slice(2); return `${a}-${String((Number(a)+1)%100).padStart(2,"0")}`; }
+  if (m) { const a = m[1].slice(2); return `${a}-${String((Number(a) + 1) % 100).padStart(2, "0")}`; }
   return s;
 }
 
@@ -119,10 +119,10 @@ function splitNameLines(name: string): [string, string] {
 
 function pulsePalette(pulse?: PulseStyle) {
   switch (pulse) {
-    case "BONUS_POOL": return { ring: "rgba(255,215,80,0.60)",  glow: "rgba(255,205,70,0.30)"  };
-    case "POS":     return { ring: "rgba(255,150,70,0.55)",  glow: "rgba(255,140,60,0.25)"  };
-    case "NEG":     return { ring: "rgba(120,180,235,0.55)", glow: "rgba(110,170,230,0.22)" };
-    default:        return { ring: "rgba(255,255,255,0.10)", glow: "rgba(255,255,255,0.06)" };
+    case "BONUS_POOL": return { ring: "rgba(255,215,80,0.60)", glow: "rgba(255,205,70,0.30)" };
+    case "POS": return { ring: "rgba(255,150,70,0.55)", glow: "rgba(255,140,60,0.25)" };
+    case "NEG": return { ring: "rgba(120,180,235,0.55)", glow: "rgba(110,170,230,0.22)" };
+    default: return { ring: "rgba(255,255,255,0.10)", glow: "rgba(255,255,255,0.06)" };
   }
 }
 
@@ -157,6 +157,11 @@ export interface CardFrontProps {
   renderHero: (props: CardFrontHeroProps) => React.ReactNode;
   heldFpVisible?: boolean;
   isTapTarget?: boolean;
+  /**
+   * Performance percentile (0–100) derived from actualFp / projectedFp ratio.
+   * Shown in accent strip after FP roll completes. Null = don't show.
+   */
+  perfPct?: number | null;
   /** Tier PNG glow — rendered inside the notched clip (full card), not in the shell. */
   glowActive?: boolean;
   glowSrc?: string;
@@ -171,35 +176,35 @@ export function CardFront(props: CardFrontProps) {
     card, stableCard, phase, isLocked, visibleFp, isRevealing, revealActive,
     isFlipped, heldFpVisible, isTapTarget,
     pulse, fpCountUpMs, stamp, onRollComplete, badges, renderHero,
-    glowActive, glowSrc, glowDurationMs, glowTier,
+    glowActive, glowSrc, glowDurationMs, glowTier, perfPct,
   } = props;
 
-  const name      = clampText((card as any)?.name);
-  const team      = clampText((card as any)?.team).toUpperCase();
-  const season    = (card as any)?.season ?? (card as any)?.year ?? (card as any)?.seasonLabel;
+  const name = clampText((card as any)?.name);
+  const team = clampText((card as any)?.team).toUpperCase();
+  const season = (card as any)?.season ?? (card as any)?.year ?? (card as any)?.seasonLabel;
   const seasonFmt = formatSeasonRange(season);
-  const posRaw    = clampText((card as any)?.position);
+  const posRaw = clampText((card as any)?.position);
   const posMap: Record<string, string> = {
-    "PG":"PG","SG":"SG","G":"PG","SF":"SF","PF":"PF","F":"SF",
-    "G/F":"SG","F/G":"SG","F/C":"PF","C":"C",
+    "PG": "PG", "SG": "SG", "G": "PG", "SF": "SF", "PF": "PF", "F": "SF",
+    "G/F": "SG", "F/G": "SG", "F/C": "PF", "C": "C",
   };
-  const pos       = posRaw ? (posMap[posRaw.toUpperCase()] ?? posRaw) : "";
-  const salary    = Number((card as any)?.salary ?? 0);
-  const proj      = Number((card as any)?.projectedFp ?? 0);
-  const isHeldCard  = !!(card as any).wasHeld;
-  const isDrawing   = phase === ("DRAWING" as any);
+  const pos = posRaw ? (posMap[posRaw.toUpperCase()] ?? posRaw) : "";
+  const salary = Number((card as any)?.salary ?? 0);
+  const proj = Number((card as any)?.projectedFp ?? 0);
+  const isHeldCard = !!(card as any).wasHeld;
+  const isDrawing = phase === ("DRAWING" as any);
   const isPreReveal = !!(isRevealing && !isHeldCard && visibleFp === undefined);
   const showResults = !isPreReveal && (phase === "RESULTS" || isHeldCard);
   const showTierColors = (!isFlipped && !isPreReveal) || revealActive || isLocked || isRevealing || isDrawing;
 
-  const [displayedFp,  setDisplayedFp]  = useState(0);
-  const [isRolling,    setIsRolling]    = useState(false);
+  const [displayedFp, setDisplayedFp] = useState(0);
+  const [isRolling, setIsRolling] = useState(false);
   const [rollComplete, setRollComplete] = useState(false);
-  const [fpRevealed,   setFpRevealed]   = useState(false);
-  const cardKey       = useMemo(() => safeKeyFor(card), [card]);
-  const animRafRef    = useRef<number>(0);
-  const animStartRef  = useRef<number | null>(null);
-  const animatingRef  = useRef(false);
+  const [fpRevealed, setFpRevealed] = useState(false);
+  const cardKey = useMemo(() => safeKeyFor(card), [card]);
+  const animRafRef = useRef<number>(0);
+  const animStartRef = useRef<number | null>(null);
+  const animatingRef = useRef(false);
 
   // Triggered once when visibleFp first goes above 0 — runs its own RAF loop
   // to completion. Never cancelled by other cards tapping (no revealActive in deps).
@@ -230,9 +235,9 @@ export function CardFront(props: CardFrontProps) {
 
     const animate = (timestamp: number) => {
       if (animStartRef.current === null) animStartRef.current = timestamp;
-      const elapsed  = timestamp - animStartRef.current;
+      const elapsed = timestamp - animStartRef.current;
       const progress = Math.min(elapsed / duration, 1);
-      const eased    = 1 - Math.pow(1 - progress, 3);
+      const eased = 1 - Math.pow(1 - progress, 3);
       setDisplayedFp(Math.round(actual * eased * 10) / 10);
       if (progress < 1) {
         // Tick sound every ~50ms (not every frame) for slot machine feel
@@ -279,18 +284,18 @@ export function CardFront(props: CardFrontProps) {
   const fpText = Number.isFinite(fpValue) && fpValue > 0 ? fpValue.toFixed(1) : "0.0";
 
   const badgeBonusFp = useMemo(() => badges?.reduce((s, b) => s + (b.fp ?? 0), 0) ?? 0, [badges]);
-  const hasBadges    = (badges?.length ?? 0) > 0;
-  const hasRevealed  = rollComplete || (!!isRevealing && !!revealActive && visibleFp !== undefined && visibleFp > 0);
-  const pulsePal     = pulsePalette(pulse);
-  const showPulse    = !!pulse && pulse !== "NEUTRAL" && hasRevealed;
+  const hasBadges = (badges?.length ?? 0) > 0;
+  const hasRevealed = rollComplete || (!!isRevealing && !!revealActive && visibleFp !== undefined && visibleFp > 0);
+  const pulsePal = pulsePalette(pulse);
+  const showPulse = !!pulse && pulse !== "NEUTRAL" && hasRevealed;
 
   const cardSalary = Number((stableCard as any)?.salary ?? (card as any)?.salary ?? 0);
   const derivedTier = cardSalary >= 52 ? "ORANGE" : cardSalary >= 40 ? "PURPLE" : cardSalary >= 28 ? "BLUE" : cardSalary >= 16 ? "GREEN" : "WHITE";
-  const tier         = getTier(derivedTier);
-  const isWhiteTier  = derivedTier === "WHITE";
-  const onCardText   = isWhiteTier ? "#FFFFFF" : "#000000";
+  const tier = getTier(derivedTier);
+  const isWhiteTier = derivedTier === "WHITE";
+  const onCardText = isWhiteTier ? "#FFFFFF" : "#000000";
   const positionTextColor = TIER_POSITION_TEXT[(derivedTier as TierKey)] ?? TIER_POSITION_TEXT.WHITE;
-  const initials     = initialsFromName(name || `${team} ${pos}`);
+  const initials = initialsFromName(name || `${team} ${pos}`);
   const [nameLine1, nameLine2] = splitNameLines(name);
   const isActiveReveal = !!(isRevealing && revealActive && visibleFp !== undefined && visibleFp > 0);
   const clipId = useMemo(() => `card-clip-${cardKey.replace(/[^a-z0-9]/gi, "_")}`, [cardKey]);
@@ -409,7 +414,7 @@ export function CardFront(props: CardFrontProps) {
           </div>
         </div>
 
-        {/* ── ACCENT STRIP (86.2% → 99%) — badges + total bonus ── */}
+        {/* ── ACCENT STRIP (86.2% → 99%) — badges + total bonus + perf percentile ── */}
         <div style={{
           position: "absolute", left: 0, right: 0, top: "86.2%", bottom: 0,
           background: tier.accent,
@@ -437,31 +442,37 @@ export function CardFront(props: CardFrontProps) {
               )}
             </>
           ) : null}
+
+          {/* PERF PERCENTILE text removed — ratio expressed via fire/ice overlay instead */}
         </div>
 
         {/* FIRE/ICE EFFECT — two overlay images flickering out of phase, clipped above badges */}
         {(stamp === "SMOKING HOT" || stamp === "ON FIRE" || stamp === "ICE COLD" || stamp === "FREEZING") && (() => {
           const isFire = stamp === "SMOKING HOT" || stamp === "ON FIRE";
-          const isIntense = stamp === "SMOKING HOT" || stamp === "FREEZING";
           const src = isFire ? "/火焰.png" : "/冰雪.png";
-          const opA = isIntense ? 0.55 : 0.38;
-          const opB = isIntense ? 0.55 : 0.38;
-          const animSpeed = isFire ? "1.4s" : "2s";
           const animA = isFire ? "cfFireA" : "cfIceA";
           const animB = isFire ? "cfFireB" : "cfIceB";
+          const intensity = (stamp === "SMOKING HOT" || stamp === "FREEZING") ? 1.0 : 0.4;
+          const opacity = isFire ? 0.28 + intensity * 0.32 : 0.22 + intensity * 0.30;
+          const animSpeed = isFire ? `${2.2 - intensity * 0.9}s` : `${3.0 - intensity * 1.2}s`;
+          const spreadH = intensity * 18;
+          const spreadTop = intensity * 24;
+          const tintFilter = isFire
+            ? `hue-rotate(${intensity * 15}deg) saturate(${1 + intensity * 0.6}) brightness(${1 - intensity * 0.15})`
+            : `hue-rotate(${intensity * -20}deg) saturate(${1 - intensity * 0.4}) brightness(${1 + intensity * 0.5})`;
+          const twinOpacity = 0.15 + intensity * 0.40;
           const clipStyle: React.CSSProperties = {
-            position: "absolute", top: -4, left: -4, right: -4, bottom: "13%",
-            borderRadius: "20px 20px 0 0", overflow: "hidden",
-            pointerEvents: "none", zIndex: 39,
+            position: "absolute", top: -spreadTop, left: -spreadH, right: -spreadH, bottom: "28%",
+            borderRadius: "20px 20px 0 0", overflow: "hidden", pointerEvents: "none", zIndex: 39,
           };
           const imgBase: React.CSSProperties = {
             position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover", mixBlendMode: "screen",
+            objectFit: "cover", mixBlendMode: "screen", filter: tintFilter,
           };
           return (
             <div style={clipStyle}>
-              <img src={src} style={{ ...imgBase, opacity: opA, animation: `${animA} ${animSpeed} ease-in-out infinite` }} />
-              <img src={src} style={{ ...imgBase, opacity: opB, transform: "scaleX(-1)", animation: `${animB} ${animSpeed} ease-in-out infinite` }} />
+              <img src={src} style={{ ...imgBase, opacity, animation: `${animA} ${animSpeed} ease-in-out infinite` }} />
+              <img src={src} style={{ ...imgBase, opacity: twinOpacity, transform: "scaleX(-1)", animation: `${animB} ${animSpeed} ease-in-out infinite` }} />
             </div>
           );
         })()}
