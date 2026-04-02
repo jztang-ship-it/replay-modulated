@@ -69,7 +69,7 @@ function lastName(fullName: string): string {
   return parts[parts.length - 1] ?? fullName;
 }
 
-function cap(s: string, max = 46): string {
+function cap(s: string, max = 52): string {
   if (s.length <= max) return s;
   const cut = s.lastIndexOf(" ", max - 1);
   return cut > 20 ? s.slice(0, cut) : s.slice(0, max - 1) + "…";
@@ -188,35 +188,35 @@ function buildLine2(
   const blk = statN(subject, "blk");
   const tov = statN(subject, "turnovers");
 
-  // Natural basketball language. ≤46 chars target.
-  if (bid === "QUAD_DBL") return pick([`${name} with the Quad Double${o} ${em}`, `${name} stuffed the whole sheet ${em}`], seed2);
-  if (bid === "5X5") return pick([`${name} went 5x5${o} ${em}`, `${name} touched every column ${em}`], seed2);
-  if (bid === "TRIPLE_DBL") return pick([`${name} Triple Double${o} ${em}`, `${name} filled it all up${o} ${em}`], seed2);
-  if (bid === "MAESTRO") return pick([`${name} ran the show${o} ${em}`, `${name} with ${ast} dimes and no TOs ${em}`], seed2);
-  if (bid === "GOD_MODE") return pick([`${name} dropped ${pts}${o} and was in God Mode ${em}`, `${name} couldn't be stopped${o} ${em}`], seed2);
-  if (bid === "FIRE") return pick([`${name} was cooking${o} with ${pts} ${em}`, `${name} caught fire${o} for ${pts} ${em}`], seed2);
-  if (bid === "BUCKET") return pick([`${name} got busy${o} with ${pts} ${em}`, `${name} was getting buckets${o} ${em}`], seed2);
-  if (bid === "BEAST") return pick([`${name} beasted${o} with ${reb} boards ${em}`, `${name} was a problem inside${o} ${em}`], seed2);
-  if (bid === "GLASS") return pick([`${name} owned the glass${o} with ${reb} ${em}`, `${name} cleaned up everything${o} ${em}`], seed2);
-  if (bid === "WIZARD") return pick([`${name} was dealing${o} with ${ast} dimes ${em}`, `${name} had the whole offense flowing ${em}`], seed2);
-  if (bid === "DIME") return pick([`${name} dished ${ast} dimes${o} ${em}`, `${name} was finding everyone${o} ${em}`], seed2);
-  if (bid === "SWAT") return pick([`${name} swatted ${blk}${o} ${em}`, `${name} was protecting the rim${o} ${em}`], seed2);
-  if (bid === "REJECTION") return pick([`${name} blocked ${blk}${o} ${em}`, `${name} was at the rim all night ${em}`], seed2);
-  if (bid === "THIEF" || bid === "PICKPOCKET") return pick([`${name} with ${stl} steals${o} ${em}`, `${name} had the quickest hands${o} ${em}`], seed2);
-  if (bid === "PURE") return pick([`${name} was surgical${o} ${em}`, `${name} with ${ast} dimes and zero TOs ${em}`], seed2);
-  if (bid === "DOUBLE_DBL") return pick([`${name} Double Double${o} ${em}`, `${name} filled two columns${o} ${em}`], seed2);
-  if (bid === "TURNOVER_MACHINE") return pick([`${name} gave it away ${tov} times${o} ${em}`, `${name} couldn't hold onto it${o} ${em}`], seed2);
-  if (bid === "SLOPPY") return pick([`${name} was loose with it${o} ${em}`, `${name} had ${tov} turnovers${o} ${em}`], seed2);
+  // 8-10 words target per line. Natural basketball with context.
+  if (bid === "QUAD_DBL") return pick([`${name} posted a Quad Double${o} and stuffed the sheet ${em}`, `${name} hit a rare Quad Double${o} — legendary game ${em}`], seed2);
+  if (bid === "5X5") return pick([`${name} went 5x5${o} and touched every stat column ${em}`, `${name} hit a 5x5${o} — all over the floor ${em}`], seed2);
+  if (bid === "TRIPLE_DBL") return pick([`${name} Triple Double${o} — filled it all up ${em}`, `${name} tripled up${o} and did everything tonight ${em}`], seed2);
+  if (bid === "MAESTRO") return pick([`${name} ran the show${o} with ${ast} dimes and zero TOs ${em}`, `${name} was surgical${o} — ${ast} assists, no turnovers ${em}`], seed2);
+  if (bid === "GOD_MODE") return pick([`${name} dropped ${pts}${o} in God Mode — unstoppable ${em}`, `${name} hung ${pts}${o} and couldn't be guarded ${em}`], seed2);
+  if (bid === "FIRE") return pick([`${name} was cooking${o} and poured in ${pts} points ${em}`, `${name} caught fire${o} with ${pts} — had the hot hand ${em}`], seed2);
+  if (bid === "BUCKET") return pick([`${name} got busy${o} with ${pts} points — steady buckets ${em}`, `${name} was getting buckets all night${o} with ${pts} ${em}`], seed2);
+  if (bid === "BEAST") return pick([`${name} beasted${o} and hauled in ${reb} boards ${em}`, `${name} was a problem inside${o} with ${reb} rebounds ${em}`], seed2);
+  if (bid === "GLASS") return pick([`${name} owned the glass${o} with ${reb} boards — a force ${em}`, `${name} cleaned up everything${o} — ${reb} rebounds ${em}`], seed2);
+  if (bid === "WIZARD") return pick([`${name} was dealing${o} with ${ast} dimes — ran the offense ${em}`, `${name} had everyone eating${o} with ${ast} assists ${em}`], seed2);
+  if (bid === "DIME") return pick([`${name} dished out ${ast} dimes${o} — playmaking on point ${em}`, `${name} was finding everyone open${o} with ${ast} assists ${em}`], seed2);
+  if (bid === "SWAT") return pick([`${name} swatted ${blk} shots${o} — protecting the paint ${em}`, `${name} was a wall at the rim${o} with ${blk} blocks ${em}`], seed2);
+  if (bid === "REJECTION") return pick([`${name} blocked ${blk}${o} and was active at the rim ${em}`, `${name} rejected ${blk} shots${o} — rim protection on lock ${em}`], seed2);
+  if (bid === "THIEF" || bid === "PICKPOCKET") return pick([`${name} picked up ${stl} steals${o} — hands were everywhere ${em}`, `${name} had the quickest hands${o} with ${stl} steals ${em}`], seed2);
+  if (bid === "PURE") return pick([`${name} was surgical${o} — ${ast} dimes with zero turnovers ${em}`, `${name} played a clean game${o} — ${ast} assists, no TOs ${em}`], seed2);
+  if (bid === "DOUBLE_DBL") return pick([`${name} Double Double${o} — two-way production all night ${em}`, `${name} filled two columns${o} — solid two-way game ${em}`], seed2);
+  if (bid === "TURNOVER_MACHINE") return pick([`${name} gave it away ${tov} times${o} — too many turnovers ${em}`, `${name} couldn't hold onto it${o} — ${tov} giveaways hurt ${em}`], seed2);
+  if (bid === "SLOPPY") return pick([`${name} was loose with the ball${o} — ${tov} turnovers ${em}`, `${name} had ${tov} turnovers${o} — that hurt the lineup ${em}`], seed2);
 
-  if (pts >= 40) return pick([`${name} dropped ${pts}${o} — was in a zone ${E.SOLID}`, `${name} hung ${pts}${o} — different level ${E.SOLID}`], seed2);
-  if (pts >= 30) return pick([`${name} put up ${pts}${o} — carried his weight`, `${name} got his${o} with ${pts}`], seed2);
-  if (reb >= 12) return `${name} grabbed ${reb} boards${o} ${E.SOLID}`;
-  if (ast >= 10) return `${name} with ${ast} dimes${o} — kept it moving ${E.SOLID}`;
-  if (pts >= 20) return pick([`${name} got his ${pts}${o} — did his job`, `${name} put up ${pts}${o} — solid shift`], seed2);
+  if (pts >= 40) return pick([`${name} dropped ${pts}${o} and was in a whole different zone ${E.SOLID}`, `${name} hung ${pts}${o} — carried that slot all night ${E.SOLID}`], seed2);
+  if (pts >= 30) return pick([`${name} put up ${pts}${o} — carried his weight tonight`, `${name} scored ${pts}${o} and held up that slot`], seed2);
+  if (reb >= 12) return `${name} grabbed ${reb} boards${o} — dominated on the glass ${E.SOLID}`;
+  if (ast >= 10) return `${name} dished out ${ast} dimes${o} — kept the offense flowing ${E.SOLID}`;
+  if (pts >= 20) return pick([`${name} put up ${pts}${o} — did his job in that slot`, `${name} scored ${pts}${o} — held it down tonight`], seed2);
 
-  if (isNegativeStory) return pick([`${name} never got going${o} ${E.BUST}`, `${name} was quiet all night${o} ${E.BUST}`], seed2);
+  if (isNegativeStory) return pick([`${name} never got going${o} — that slot was cold all night ${E.BUST}`, `${name} was quiet all night${o} — needed more from that card ${E.BUST}`], seed2);
 
-  return pick([`${name} held it down${o}`, `${name} did his thing${o}`], seed2);
+  return pick([`${name} held it down${o} — no real spike but steady`, `${name} did his thing${o} — solid shift overall`], seed2);
 }
 
 // ─── Basketball pack ─────────────────────────────────────────────────────────
@@ -254,11 +254,11 @@ const basketballPack: SportCopyPack = {
 
     function line2(isNegative = false): string {
       if (!subject) return `Lineup held together — no real spike`;
-      return cap(buildLine2(subject, seed2, seed3, isNegative), 46);
+      return cap(buildLine2(subject, seed2, seed3, isNegative), 52);
     }
 
     function ret(primary: string, secondary?: string): PostRevealCopy {
-      return { primary: cap(primary, 46), secondary: secondary ? cap(secondary, 46) : undefined };
+      return { primary: cap(primary, 52), secondary: secondary ? cap(secondary, 52) : undefined };
     }
 
     // ── RULE 0: G.O.A.T. ────────────────────────────────────────────────

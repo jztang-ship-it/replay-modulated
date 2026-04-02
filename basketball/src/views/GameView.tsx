@@ -658,10 +658,12 @@ export default function GameView() {
         setTimeout(() => setFtueOscillating(true), 100);
       }
     }, [isFTUE]),
-    onAnchorFpComplete: useCallback((totalFp: number) => {
+    onAnchorFpComplete: useCallback((_hookTotal: number) => {
       if (isFTUE) return;
       if (springHasFiredRef.current) return;
       springHasFiredRef.current = true;
+      // Always compute from rosterRef — guaranteed to have all 6 resolved cards
+      const totalFp = rosterRef.current.reduce((s, c) => s + Number((c as any).actualFp ?? 0), 0);
       runSpring(totalFp, () => {
         lockedGaugeFpRef.current = totalFp;
         const tier = calculateWinTier(totalFp);
