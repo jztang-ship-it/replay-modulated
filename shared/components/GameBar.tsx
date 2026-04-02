@@ -971,9 +971,9 @@ if (typeof document !== "undefined" && !document.getElementById(WAGE_STYLE_ID)) 
       100% { transform: perspective(300px) rotateX(0deg);   opacity: 1; }
     }
     @keyframes payoutFlyRight {
-      0%   { transform: translateX(0)    scale(1);   opacity: 1; }
-      40%  { transform: translateX(20px) scale(1.1); opacity: 1; }
-      100% { transform: translateX(80px) scale(0.6); opacity: 0; }
+      0%   { transform: translateX(0)     scale(1);   opacity: 1; }
+      40%  { transform: translateX(-20px) scale(1.1); opacity: 1; }
+      100% { transform: translateX(-90px) scale(0.5); opacity: 0; }
     }
   `;
   document.head.appendChild(st);
@@ -1276,7 +1276,7 @@ export function GameBar({
               <WageDisplay
                 baseBet={baseBet}
                 betMultiplier={betMultiplier}
-                celebration={showCelebContent ? celebration : undefined}
+                celebration={isCelebration ? celebration : undefined}
                 walletRef={walletRef}
                 onFlyComplete={() => {
                   if (celebration && (celebration.payout > 0 || celebration.isLoss)) {
@@ -1450,7 +1450,7 @@ export function GameBar({
                 <WageDisplay
                   baseBet={baseBet}
                   betMultiplier={betMultiplier}
-                  celebration={showCelebContent ? celebration : undefined}
+                  celebration={isCelebration ? celebration : undefined}
                   walletRef={walletRef}
                   onFlyComplete={() => {
                     if (celebration && (celebration.payout > 0 || celebration.isLoss)) {

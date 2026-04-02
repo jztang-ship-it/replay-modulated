@@ -253,20 +253,17 @@ function computeSpringWaypoints(finalFp: number): number[] {
   const baseAmp = 4.0 + fpNorm * 6.0;
   const marginFactor = 1.0 - marginNorm * 0.75;
   const amplitude = baseAmp * marginFactor;
-  const oscCount = (fpNorm > 0.6 || marginNorm < 0.15) ? 3 : 2;
   const damping = 0.45;
 
+  // Always exactly 3 swings: up → down (crosses boundary) → small up → settle
   const waypoints: number[] = [finalFp];
   let amp = amplitude;
-  for (let i = 0; i < oscCount * 2; i++) {
-    if (i % 2 === 0) {
-      waypoints.push(finalFp + amp);
-    } else {
-      waypoints.push(finalFp - amp);
-      amp *= damping;
-    }
-  }
-  waypoints.push(finalFp);
+  waypoints.push(finalFp + amp);          // swing 1: up
+  amp *= damping;
+  waypoints.push(finalFp - amp);          // swing 2: down (may cross boundary)
+  amp *= damping;
+  waypoints.push(finalFp + amp);          // swing 3: small up
+  waypoints.push(finalFp);               // settle
   return waypoints;
 }
 
@@ -485,15 +482,15 @@ export default function GameView() {
   const springRafRef = useRef<number>(0);
   const springTimersRef = useRef<number[]>([]);
 
-  const runSpring = useCallback((finalFp: number) => {
+  const runSpring = useCallback((finalFp: number, onSettled: () => void) => {
     cancelAnimationFrame(springRafRef.current);
     springTimersRef.current.forEach(clearTimeout);
     springTimersRef.current = [];
 
     const waypoints = computeSpringWaypoints(finalFp);
-    const TOTAL_MS = 1800;
-    const segCount = waypoints.length - 1;
-    const segMs = TOTAL_MS / segCount;
+    const TOTAL_MS  = 1800;
+    const segCount  = waypoints.length - 1;
+    const segMs     = TOTAL_MS / segCount;
 
     let segIndex = 0;
     let segStart: number | null = null;
@@ -505,27 +502,19 @@ export default function GameView() {
       if (segIndex >= segCount) {
         setSpringFp(null);
         setSpringSettled(true);
+        onSettled();
         return;
       }
       if (segStart === null) segStart = now;
       const elapsed = now - segStart;
       const t = Math.min(1, elapsed / segMs);
-      const eased = t < 0.5
-        ? 2 * t * t
-        : 1 - Math.pow(-2 * t + 2, 2) / 2;
-
+      const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
       const from = waypoints[segIndex];
       const to   = waypoints[segIndex + 1];
-      const current = from + eased * (to - from);
-      setSpringFp(current);
-
-      if (t >= 1) {
-        segIndex++;
-        segStart = null;
-      }
+      setSpringFp(from + eased * (to - from));
+      if (t >= 1) { segIndex++; segStart = null; }
       springRafRef.current = requestAnimationFrame(tick);
     }
-
     springRafRef.current = requestAnimationFrame(tick);
   }, []); // eslint-disable-line
 
@@ -670,33 +659,25 @@ export default function GameView() {
         return;
       }
 
-      // Run spring oscillation — results lock in after spring settles
-      runSpring(totalFp);
-
-      const t = window.setTimeout(() => {
+      // Run spring oscillation — results lock in only when spring is truly done
+      runSpring(totalFp, () => {
         setWinTier(tier);
         setWinPayout(payout);
         const bust = !tier || tier === "BUST";
-        // Result sounds by outcome
-        if (tier === "MVP" || tier === "GOAT") {
-          soundManager.playBigWin();
-        } else if (tier === "ALL_STAR" || tier === "STARTER") {
-          soundManager.playTierSlam();
-        } else if (tier === "ROOKIE") {
-          soundManager.playNearMiss();
-        } else if (bust) {
-          soundManager.playBust();
-        }
+        if (tier === "MVP" || tier === "GOAT") soundManager.playBigWin();
+        else if (tier === "ALL_STAR" || tier === "STARTER") soundManager.playTierSlam();
+        else if (tier === "ROOKIE") soundManager.playNearMiss();
+        else if (bust) soundManager.playBust();
         const badges = rosterRef.current.reduce((s, c) => s + (c.achievements?.length ?? 0), 0);
         gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
         recordHandPlayed();
         if (!bust) recordHandWon(); else recordHandLost();
-        // Pause before celebration kicks in
-        setTimeout(() => {
-          setGameState("WIN_CELEBRATION");
+        const t = window.setTimeout(() => {
+          if (isFTUE) { pendingCelebration.current = { totalFp }; setCelebrationHeld(true); }
+          else setGameState("WIN_CELEBRATION");
         }, 1200);
-      }, 1900);
-      springTimersRef.current.push(t);
+        springTimersRef.current.push(t);
+      });
     }, [currentBet, gameAnalytics, isFTUE, recordHandPlayed, recordHandWon, recordHandLost, runSpring]),
   });
 
@@ -1402,7 +1383,7 @@ export default function GameView() {
                   fontVariantNumeric: "tabular-nums",
                   fontStyle: displayTier === "BUST" ? "italic" : "normal",
                 }}>
-                  <RollingNumber value={totalFp} decimals={1} duration={300} /> FP
+                  {displayFp.toFixed(1)} FP
                 </span>
               </div>
             ) : !isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (
