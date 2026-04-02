@@ -233,6 +233,43 @@ function deriveTierFromFp(fp: number): string {
   return "BUST";
 }
 
+// ── Spring oscillation waypoints ────────────────────────────────────────────
+const SPRING_TIERS = [
+  { name: "BUST",     lo: 0,   hi: 155 },
+  { name: "ROOKIE",   lo: 155, hi: 175 },
+  { name: "STARTER",  lo: 175, hi: 195 },
+  { name: "ALL_STAR", lo: 195, hi: 215 },
+  { name: "MVP",      lo: 215, hi: 235 },
+  { name: "GOAT",     lo: 235, hi: 9999 },
+];
+const SPRING_TIER_SPAN = 20.0;
+
+function computeSpringWaypoints(finalFp: number): number[] {
+  const tier = SPRING_TIERS.find(t => finalFp >= t.lo && finalFp < t.hi)
+    ?? SPRING_TIERS[SPRING_TIERS.length - 1];
+  const margin = finalFp - tier.lo;
+  const marginNorm = Math.min(1, margin / SPRING_TIER_SPAN);
+  const fpNorm = Math.min(1, Math.max(0, (finalFp - 155) / 80));
+  const baseAmp = 4.0 + fpNorm * 6.0;
+  const marginFactor = 1.0 - marginNorm * 0.75;
+  const amplitude = baseAmp * marginFactor;
+  const oscCount = (fpNorm > 0.6 || marginNorm < 0.15) ? 3 : 2;
+  const damping = 0.45;
+
+  const waypoints: number[] = [finalFp];
+  let amp = amplitude;
+  for (let i = 0; i < oscCount * 2; i++) {
+    if (i % 2 === 0) {
+      waypoints.push(finalFp + amp);
+    } else {
+      waypoints.push(finalFp - amp);
+      amp *= damping;
+    }
+  }
+  waypoints.push(finalFp);
+  return waypoints;
+}
+
 const TIER_IMAGE_MAP: Record<string, string> = {
   BUST: "bust1.png",
   ROOKIE: "Rookie2.png",
@@ -442,6 +479,56 @@ export default function GameView() {
   const [nearMissTeasing, setNearMissTeasing] = useState(false);
   const nearMissChoreTimersRef = useRef<number[]>([]);
 
+  // Spring oscillation phase — fires after all cards settle, before results lock in
+  const [springFp, setSpringFp] = useState<number | null>(null);
+  const [springSettled, setSpringSettled] = useState(false);
+  const springRafRef = useRef<number>(0);
+  const springTimersRef = useRef<number[]>([]);
+
+  const runSpring = useCallback((finalFp: number) => {
+    cancelAnimationFrame(springRafRef.current);
+    springTimersRef.current.forEach(clearTimeout);
+    springTimersRef.current = [];
+
+    const waypoints = computeSpringWaypoints(finalFp);
+    const TOTAL_MS = 1800;
+    const segCount = waypoints.length - 1;
+    const segMs = TOTAL_MS / segCount;
+
+    let segIndex = 0;
+    let segStart: number | null = null;
+
+    setSpringFp(finalFp);
+    setSpringSettled(false);
+
+    function tick(now: number) {
+      if (segIndex >= segCount) {
+        setSpringFp(null);
+        setSpringSettled(true);
+        return;
+      }
+      if (segStart === null) segStart = now;
+      const elapsed = now - segStart;
+      const t = Math.min(1, elapsed / segMs);
+      const eased = t < 0.5
+        ? 2 * t * t
+        : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+      const from = waypoints[segIndex];
+      const to   = waypoints[segIndex + 1];
+      const current = from + eased * (to - from);
+      setSpringFp(current);
+
+      if (t >= 1) {
+        segIndex++;
+        segStart = null;
+      }
+      springRafRef.current = requestAnimationFrame(tick);
+    }
+
+    springRafRef.current = requestAnimationFrame(tick);
+  }, []); // eslint-disable-line
+
   // Near-miss copy — motivating one-liner shown in Phase 2 for BUST/ROOKIE.
   // Picked once when winTier is set; stable for the lifetime of the result screen.
   const nearMissCopy = useMemo(() => {
@@ -563,36 +650,54 @@ export default function GameView() {
       clearActiveCard();
       soundManager.stopRevealAmbience();
       if (isFTUE) ftueLastHandFpRef.current = totalFp;
+
       const tier = calculateWinTier(totalFp);
       const payout = calculatePayout(tier, currentBet);
-      setWinTier(tier);
-      setWinPayout(payout);
-      const bust = !tier || tier === "BUST";
-      // Result sounds by outcome
-      if (tier === "MVP" || tier === "GOAT") {
-        soundManager.playBigWin();
-      } else if (tier === "ALL_STAR" || tier === "STARTER") {
-        soundManager.playTierSlam();
-      } else if (tier === "ROOKIE") {
-        soundManager.playNearMiss();
-      } else if (bust) {
-        soundManager.playBust();
-      }
-      const badges = rosterRef.current.reduce((s, c) => s + (c.achievements?.length ?? 0), 0);
-      gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
-      recordHandPlayed();
-      if (!bust) recordHandWon();
-      else recordHandLost();
-      // Pause 1200ms on final score — user sees the total before celebration kicks in
-      setTimeout(() => {
-        if (isFTUE) {
+
+      // FTUE: skip spring, go straight to results
+      if (isFTUE) {
+        setWinTier(tier);
+        setWinPayout(payout);
+        const bust = !tier || tier === "BUST";
+        const badges = rosterRef.current.reduce((s, c) => s + (c.achievements?.length ?? 0), 0);
+        gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
+        recordHandPlayed();
+        if (!bust) recordHandWon(); else recordHandLost();
+        setTimeout(() => {
           pendingCelebration.current = { totalFp };
           setCelebrationHeld(true);
-        } else {
-          setGameState("WIN_CELEBRATION");
+        }, 1200);
+        return;
+      }
+
+      // Run spring oscillation — results lock in after spring settles
+      runSpring(totalFp);
+
+      const t = window.setTimeout(() => {
+        setWinTier(tier);
+        setWinPayout(payout);
+        const bust = !tier || tier === "BUST";
+        // Result sounds by outcome
+        if (tier === "MVP" || tier === "GOAT") {
+          soundManager.playBigWin();
+        } else if (tier === "ALL_STAR" || tier === "STARTER") {
+          soundManager.playTierSlam();
+        } else if (tier === "ROOKIE") {
+          soundManager.playNearMiss();
+        } else if (bust) {
+          soundManager.playBust();
         }
-      }, 1200);
-    }, [currentBet, gameAnalytics, isFTUE, recordHandPlayed, recordHandWon, recordHandLost]),
+        const badges = rosterRef.current.reduce((s, c) => s + (c.achievements?.length ?? 0), 0);
+        gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
+        recordHandPlayed();
+        if (!bust) recordHandWon(); else recordHandLost();
+        // Pause before celebration kicks in
+        setTimeout(() => {
+          setGameState("WIN_CELEBRATION");
+        }, 1200);
+      }, 1900);
+      springTimersRef.current.push(t);
+    }, [currentBet, gameAnalytics, isFTUE, recordHandPlayed, recordHandWon, recordHandLost, runSpring]),
   });
 
   // Zone 2: Derived values
@@ -680,8 +785,26 @@ export default function GameView() {
   }, [gameState, roster, totalFp]);
 
   // Gauge: direct pass-through — totalFp updates every frame via interpolated visibleFpMap
-  const gaugeTotalFp = totalFp;
+  // When spring is active, all displays use springFp. Otherwise fall back to totalFp.
+  const displayFp = springFp ?? totalFp;
+  const gaugeTotalFp = displayFp;
   latestGaugeFpRef.current = gaugeTotalFp;
+
+  // During spring, derive tier live from animated FP so sign flips at boundary crossings
+  const activeTierForDisplay = springFp !== null
+    ? deriveTierFromFp(springFp)
+    : (winTier ?? deriveTierFromFp(totalFp));
+
+  // Drive displayTier from springFp during spring oscillation
+  useEffect(() => {
+    if (springFp !== null) {
+      const t = deriveTierFromFp(springFp);
+      if (t !== displayTier) {
+        setDisplayTier(t);
+        setTierFlipKey(prev => prev + 1);
+      }
+    }
+  }, [springFp]); // eslint-disable-line
 
   // No spring on results — direct-set keeps bar accurate. Spring to be added later.
   const regularFinalGaugeKick = false;
@@ -757,6 +880,12 @@ export default function GameView() {
       setDisplayTier("BUST");
       tierFlipTimersRef.current.forEach(clearTimeout);
       tierFlipTimersRef.current = [];
+      // Reset spring
+      cancelAnimationFrame(springRafRef.current);
+      springTimersRef.current.forEach(clearTimeout);
+      springTimersRef.current = [];
+      setSpringFp(null);
+      setSpringSettled(false);
     }
   }, [gameState]);
 
@@ -1343,7 +1472,7 @@ export default function GameView() {
                     letterSpacing: "0.02em", lineHeight: 1.3, textAlign: "center",
                     fontVariantNumeric: "tabular-nums",
                   }}>
-                    {totalFp.toFixed(1)} FP
+                    {displayFp.toFixed(1)} FP
                     {ceilingPct != null && (
                       <span style={{ fontWeight: 600, color: "rgba(255,255,255,0.35)", fontSize: 12 }}>
                         {" · "}{ceilingPct}% of possible score
@@ -1547,7 +1676,7 @@ export default function GameView() {
                       { tier: "MVP", minFP: 215 },
                       { tier: "GOAT" as any, minFP: 235 },
                     ]}
-                    winTier={winTier ?? undefined}
+                    winTier={springSettled ? (winTier ?? undefined) : undefined}
                     lastCardFp={lastCardFp}
                     isSkip={false}
                     visible

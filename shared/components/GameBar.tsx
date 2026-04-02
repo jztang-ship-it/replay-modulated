@@ -1260,7 +1260,7 @@ export function GameBar({
           transition: "filter 0.35s ease, opacity 0.35s ease",
           pointerEvents: showCelebContent ? "none" : "auto",
         }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
             {/* Balance — left */}
             <div ref={walletRef} style={{ flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
@@ -1271,18 +1271,20 @@ export function GameBar({
               </div>
             </div>
 
-            {/* Wage display — animated sequence on results */}
-            <WageDisplay
-              baseBet={baseBet}
-              betMultiplier={betMultiplier}
-              celebration={showCelebContent ? celebration : undefined}
-              walletRef={walletRef}
-              onFlyComplete={() => {
-                if (celebration && (celebration.payout > 0 || celebration.isLoss)) {
-                  setCelebFlying(true);
-                }
-              }}
-            />
+            {/* Wage — true center */}
+            <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", pointerEvents: "none" }}>
+              <WageDisplay
+                baseBet={baseBet}
+                betMultiplier={betMultiplier}
+                celebration={showCelebContent ? celebration : undefined}
+                walletRef={walletRef}
+                onFlyComplete={() => {
+                  if (celebration && (celebration.payout > 0 || celebration.isLoss)) {
+                    setCelebFlying(true);
+                  }
+                }}
+              />
+            </div>
 
             {/* Legend — right */}
             <button onClick={() => setShowLegend(true)} style={{
@@ -1432,7 +1434,7 @@ export function GameBar({
           }}>
             {multiplierRow}
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 6, marginBottom: 6 }}>
+            <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 6, marginBottom: 6 }}>
               {/* Balance — left */}
               <div ref={walletRef} style={{ flexShrink: 0 }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
@@ -1443,18 +1445,20 @@ export function GameBar({
                 </div>
               </div>
 
-              {/* Wage display — animated sequence on results */}
-              <WageDisplay
-                baseBet={baseBet}
-                betMultiplier={betMultiplier}
-                celebration={showCelebContent ? celebration : undefined}
-                walletRef={walletRef}
-                onFlyComplete={() => {
-                  if (celebration && (celebration.payout > 0 || celebration.isLoss)) {
-                    setCelebFlying(true);
-                  }
-                }}
-              />
+              {/* Wage — true center */}
+              <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", pointerEvents: "none" }}>
+                <WageDisplay
+                  baseBet={baseBet}
+                  betMultiplier={betMultiplier}
+                  celebration={showCelebContent ? celebration : undefined}
+                  walletRef={walletRef}
+                  onFlyComplete={() => {
+                    if (celebration && (celebration.payout > 0 || celebration.isLoss)) {
+                      setCelebFlying(true);
+                    }
+                  }}
+                />
+              </div>
 
               {/* Legend — right */}
               <button onClick={() => setShowLegend(true)} style={{
