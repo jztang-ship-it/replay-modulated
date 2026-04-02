@@ -710,24 +710,18 @@ export default function GameView() {
     onAllComplete: useCallback((_totalFp: number) => {
       clearActiveCard();
       soundManager.stopRevealAmbience();
-      if (isFTUE) {
-        const totalFp = _totalFp;
-        ftueLastHandFpRef.current = totalFp;
-        const tier = calculateWinTier(totalFp);
-        const payout = calculatePayout(tier, currentBet);
-        setWinTier(tier);
-        setWinPayout(payout);
-        const bust = !tier || tier === "BUST";
-        const badges = rosterRef.current.reduce((s, c) => s + (c.achievements?.length ?? 0), 0);
-        gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
-        recordHandPlayed();
-        if (!bust) recordHandWon(); else recordHandLost();
-        setTimeout(() => {
-          pendingCelebration.current = { totalFp };
-          setCelebrationHeld(true);
-        }, 1200);
-      }
-      // Non-FTUE: everything already handled in onAnchorFpComplete
+      if (!isFTUE) return;
+      ftueLastHandFpRef.current = _totalFp;
+      const tier   = calculateWinTier(_totalFp);
+      const payout = calculatePayout(tier, currentBet);
+      setWinTier(tier);
+      setWinPayout(payout);
+      const bust = !tier || tier === "BUST";
+      const badges = rosterRef.current.reduce((s, c) => s + (c.achievements?.length ?? 0), 0);
+      gameAnalytics.handResolved(_totalFp, String(tier), bust, badges, Date.now());
+      recordHandPlayed();
+      if (!bust) recordHandWon(); else recordHandLost();
+      setTimeout(() => { pendingCelebration.current = { totalFp: _totalFp }; setCelebrationHeld(true); }, 1200);
     }, [isFTUE, currentBet, gameAnalytics, recordHandPlayed, recordHandWon, recordHandLost]), // eslint-disable-line
   });
 
