@@ -728,7 +728,7 @@ export default function GameView() {
         }, 1200);
       }
       // Non-FTUE: everything already handled in onAnchorFpComplete
-    }, [isFTUE, currentBet, gameAnalytics, recordHandPlayed, recordHandWon, recordHandLost, clearActiveCard]),
+    }, [isFTUE, currentBet, gameAnalytics, recordHandPlayed, recordHandWon, recordHandLost]), // eslint-disable-line
   });
 
   // Zone 2: Derived values
