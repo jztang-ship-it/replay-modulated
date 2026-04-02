@@ -256,14 +256,17 @@ function computeSpringWaypoints(finalFp: number): number[] {
   const amplitude = baseAmp * marginFactor;
   const damping = 0.45;
 
-  // Always exactly 3 swings: up → down (crosses boundary) → small up → settle
-  const waypoints: number[] = [finalFp];
+  // Start slightly below finalFp so the bar continues its upward roll-up motion
+  // seamlessly through finalFp and past it — no pause at the landing point.
+  // The first segment sweeps from (finalFp - lead) through finalFp to overshoot.
+  const lead = amplitude * 0.3; // 30% of amplitude as lead-in
+  const waypoints: number[] = [finalFp - lead];
   let amp = amplitude;
-  waypoints.push(finalFp + amp);          // swing 1: up
+  waypoints.push(finalFp + amp);          // overshoot up (one continuous sweep)
   amp *= damping;
-  waypoints.push(finalFp - amp);          // swing 2: down (may cross boundary)
+  waypoints.push(finalFp - amp);          // bounce down
   amp *= damping;
-  waypoints.push(finalFp + amp);          // swing 3: small up
+  waypoints.push(finalFp + amp);          // small bounce up
   waypoints.push(finalFp);               // settle
   return waypoints;
 }
@@ -1472,32 +1475,24 @@ export default function GameView() {
                   />
                 </div>
               ) : (
-                /* Phase 2: Settled info — two lines only */
+                /* Phase 2: Settled — tier PNG + FP only. Explanation lives in TierGauge. */
                 <div style={{
                   display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center",
                   width: "100%", height: "100%", gap: 4,
                   animation: "tierInfoFadeIn 400ms ease-out",
                 }}>
-                  {/* Line 1: Tier PNG */}
                   <img
                     src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
                     alt={formatTierLabel(winTier)}
                     style={{ maxHeight: 36, maxWidth: "70%", objectFit: "contain" }}
                   />
-                  {/* Line 2: FP · % of possible score */}
                   <span style={{
                     fontSize: 15, fontWeight: 800, color: "rgba(255,255,255,0.55)",
-                    letterSpacing: "0.02em", lineHeight: 1.3, textAlign: "center",
+                    letterSpacing: "0.02em", lineHeight: 1, textAlign: "center",
                     fontVariantNumeric: "tabular-nums",
                   }}>
                     {displayFp.toFixed(1)} FP
-                    {ceilingPct != null && (
-                      <span style={{ fontWeight: 600, color: "rgba(255,255,255,0.35)", fontSize: 12 }}>
-                        {" · "}{ceilingPct}% of possible score
-                      </span>
-                    )}
                   </span>
-                  {/* Streak + near-miss removed for beta */}
                 </div>
               )
             ) : gameState === "WIN_CELEBRATION" && winTier && celebrationData && !showRawScore ? (
@@ -1532,22 +1527,7 @@ export default function GameView() {
                           </span>
                         )}
                       </div>
-                      {winTier === "BUST" && (
-                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.05em" }}>
-                          Better luck next hand
-                        </div>
-                      )}
-                      {nearMissCopy && (winTier === "BUST" || winTier === "ROOKIE" || winTier === "STARTER" || winTier === "ALL_STAR") && (
-                        <div style={{
-                          fontSize: 11, fontWeight: 700,
-                          color: winTier === "BUST" ? "rgba(255,255,255,0.3)" : "#22C55E",
-                          letterSpacing: "0.07em",
-                          textTransform: "uppercase",
-                          animation: "tierInfoFadeIn 500ms ease-out 600ms both",
-                        }}>
-                          {nearMissCopy}
-                        </div>
-                      )}
+                      {/* Explanation text lives in TierGauge only */}
                     </>
                   );
                 })()}
