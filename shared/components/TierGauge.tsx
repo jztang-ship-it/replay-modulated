@@ -471,9 +471,13 @@ export function TierGauge({
       return;
     }
 
-    // Already settled at this totalFp — avoid restarting animation on dependency churn
+    // Already settled at this totalFp — avoid restarting animation on dependency churn.
+    // Exception: if isNearMiss just became true (winTier was just set), allow spring to fire
+    // even though totalFp hasn't changed.
     if (lastAnimatedTotalFpRef.current !== null && Math.abs(totalFp - lastAnimatedTotalFpRef.current) < 0.05) {
-      return;
+      if (!isNearMiss) return;
+      // Near-miss: reset so spring runs from current fill position
+      lastAnimatedTotalFpRef.current = null;
     }
 
     cancelAnimationFrame(rafRef.current);
@@ -616,7 +620,7 @@ export function TierGauge({
       clearTimeout(delayId);
       cancelAnimationFrame(rafRef.current);
     };
-  }, [totalFp, visible, ftueSuppressNormal, ftueOscillate, ftueLockStaticBar, regularFinalCardKick, isSkip, isNearMiss, isGoat, thresholds]); // eslint-disable-line
+  }, [totalFp, winTierProp, visible, ftueSuppressNormal, ftueOscillate, ftueLockStaticBar, regularFinalCardKick, isSkip, isNearMiss, isGoat, thresholds]); // eslint-disable-line
 
   useEffect(() => {
     if (!visible) {

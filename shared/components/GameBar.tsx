@@ -18,7 +18,7 @@ import type { JSX as ReactJSX } from "react";
 
 declare global {
   namespace JSX {
-    interface IntrinsicElements extends ReactJSX.IntrinsicElements {}
+    interface IntrinsicElements extends ReactJSX.IntrinsicElements { }
   }
 }
 
@@ -62,6 +62,11 @@ export interface CelebrationData {
   payout: number;          // coins earned
   streak: number;          // current win streak
   isBust: boolean;
+  betMultiplier: number;   // user-selected multiplier (1/3/5/10)
+  tierMultiplier: number;  // tier payout multiplier (0/0.5/3/8/15/50)
+  baseBet: number;         // base wager amount (10)
+  isLoss: boolean;         // true for ROOKIE (partial loss) and BUST (full loss)
+  lossAmount: number;      // amount lost (0 for wins, baseBet*betMultiplier for bust, half for rookie)
 }
 
 type Props = {
@@ -91,7 +96,7 @@ type Props = {
   onWinCelebrationComplete?: () => void;
   /** FTUE: block the Draw button until Booker is held */
   ftueDrawBlocked?: boolean;
-  /** FTUE: hide the SKIP button during reveal */
+  /** FTUE: hide the AUTO button during reveal */
   ftueHideSkip?: boolean;
   /** FTUE: pulse the near-miss bar to draw attention (shown during runback) */
   ftuePulseNearMiss?: boolean;
@@ -129,21 +134,21 @@ function getTierState(totalFp: number, winTiers: WinTierDisplay[]) {
   if (!next) {
     return { label: last.label, fillPct: 100, color: last.color, glow: last.glow, fptNeeded: 0 };
   }
-  const floor   = prev?.minFp ?? 0;
+  const floor = prev?.minFp ?? 0;
   const ceiling = next.minFp;
   const fillPct = Math.min(100, Math.max(0, ((totalFp - floor) / (ceiling - floor)) * 100));
   // Fill color = current tier already achieved (prev), label = next tier to reach
   const fillColor = prev?.color ?? "rgba(255,255,255,0.4)";
-  const fillGlow  = prev?.glow  ?? "rgba(255,255,255,0.15)";
+  const fillGlow = prev?.glow ?? "rgba(255,255,255,0.15)";
   return { label: next.label, fillPct, color: fillColor, glow: fillGlow, fptNeeded: Math.max(0, ceiling - totalFp) };
 }
 
 function actionLabel(state: GameStateLabel): string {
-  if (state === "IDLE")      return "DEAL";
-  if (state === "DEALING")   return "...";
-  if (state === "HOLD")      return "DRAW";
-  if (state === "DRAWING")   return "...";
-  if (state === "REVEALING") return "SKIP";
+  if (state === "IDLE") return "DEAL";
+  if (state === "DEALING") return "...";
+  if (state === "HOLD") return "DRAW";
+  if (state === "DRAWING") return "...";
+  if (state === "REVEALING") return "AUTO";
   return "REPLAY";
 }
 
@@ -165,9 +170,9 @@ function isDisabled(state: GameStateLabel): boolean {
 }
 
 function salarySpent(state: GameStateLabel, capUsed: number, lockedSalary: number, revealedSalary: number): number {
-  if (state === "IDLE")      return 0;
-  if (state === "HOLD")      return lockedSalary;
-  if (state === "DRAWING")   return lockedSalary;
+  if (state === "IDLE") return 0;
+  if (state === "HOLD") return lockedSalary;
+  if (state === "DRAWING") return lockedSalary;
   if (state === "REVEALING") return revealedSalary;
   return capUsed;
 }
@@ -182,7 +187,7 @@ function getStreakCopy(streak: number, isBust: boolean): { head: string; sub: st
   }
   if (streak === 1) return { head: "STREAK STARTED 🔥", sub: "Keep it alive" };
   if (streak === 2) return { head: "2 IN A ROW 🔥", sub: "You're finding your rhythm" };
-  if (streak <= 4)  return { head: `${streak}-GAME STREAK 🔥`, sub: "Don't stop now" };
+  if (streak <= 4) return { head: `${streak}-GAME STREAK 🔥`, sub: "Don't stop now" };
   return { head: `${streak} STRAIGHT 🔥`, sub: "Insane. Come back and do it again." };
 }
 
@@ -338,11 +343,11 @@ function TierBar({
   // Implemented as piecewise linear between keyframes so the values are exact.
   // Keyframes: [t, offset_multiple_of_A]
   const KEYS: [number, number][] = [
-    [0.00,  0.0],   // start: bar at real value
-    [0.35,  1.0],   // +A   : surge forward past target  (feels like launch)
+    [0.00, 0.0],   // start: bar at real value
+    [0.35, 1.0],   // +A   : surge forward past target  (feels like launch)
     [0.60, -0.8],   // -0.8A: pulled back BELOW target   (the tug back)
-    [0.80,  0.4],   // +0.4A: small bounce forward again
-    [1.00,  0.0],   // land exactly on truth
+    [0.80, 0.4],   // +0.4A: small bounce forward again
+    [1.00, 0.0],   // land exactly on truth
   ];
 
   function springAtT(t: number): number {
@@ -369,8 +374,8 @@ function TierBar({
   }
 
   const rawDisplayPct = showBar ? fillPct + springOffset : 0;
-  const displayPct    = Math.min(99, Math.max(0, rawDisplayPct));
-  const isLive        = Math.abs(springOffset) > 0.4;
+  const displayPct = Math.min(99, Math.max(0, rawDisplayPct));
+  const isLive = Math.abs(springOffset) > 0.4;
 
   const { color: displayColor, glow: displayGlow } = isLive
     ? getColorAt(displayPct)
@@ -432,7 +437,7 @@ function TierBar({
           <div style={{
             position: "absolute", top: "50%",
             left: `calc(${Math.min(displayPct, 98)}% - ${isCelebration ? 6 : 4}px)`,
-            width:  isCelebration ? 12 : 8,
+            width: isCelebration ? 12 : 8,
             height: isCelebration ? 12 : 8,
             borderRadius: "50%",
             background: displayColor,
@@ -624,11 +629,11 @@ function CelebrationTop({
   onDismiss: () => void;
   walletRef: React.RefObject<HTMLDivElement | null>;
 }) {
-  const [phase, setPhase]       = useState(0);
-  const [burst, setBurst]       = useState(false);
-  const [flying, setFlying]     = useState(false);
-  const coinsRef                = useRef<HTMLDivElement>(null);
-  const animPay                 = useCountUp(celebration.payout, 850, 200);
+  const [phase, setPhase] = useState(0);
+  const [burst, setBurst] = useState(false);
+  const [flying, setFlying] = useState(false);
+  const coinsRef = useRef<HTMLDivElement>(null);
+  const animPay = useCountUp(celebration.payout, 850, 200);
 
   useEffect(() => {
     setPhase(0); setBurst(false); setFlying(false);
@@ -745,11 +750,11 @@ function CoinFlyToWallet({
   useEffect(() => {
     if (!fromEl || !toEl) return;
     const fromR = fromEl.getBoundingClientRect();
-    const toR   = toEl.getBoundingClientRect();
+    const toR = toEl.getBoundingClientRect();
     const sx = fromR.left + fromR.width / 2;
-    const sy = fromR.top  + fromR.height / 2;
-    const ex = toR.left   + toR.width / 2;
-    const ey = toR.top    + toR.height / 2;
+    const sy = fromR.top + fromR.height / 2;
+    const ex = toR.left + toR.width / 2;
+    const ey = toR.top + toR.height / 2;
 
     setParticles(
       Array.from({ length: count }, (_, i) => ({
@@ -814,8 +819,8 @@ function CoinFlyFromPoint({
   useEffect(() => {
     if (!toEl) return;
     const toR = toEl.getBoundingClientRect();
-    const ex  = toR.left + toR.width  / 2;
-    const ey  = toR.top  + toR.height / 2;
+    const ex = toR.left + toR.width / 2;
+    const ey = toR.top + toR.height / 2;
     setParticles(
       Array.from({ length: count }, (_, i) => ({
         id: i,
@@ -874,7 +879,7 @@ function CelebrationBottom({ celebration, onDismiss, isFTUE = false }: { celebra
   }, [celebration]);
 
   const pipColor = celebration.isBust ? "#FF3B30" : "#FF8C00";
-  const pipGlow  = celebration.isBust ? "#FF3B3055" : "#FF8C0055";
+  const pipGlow = celebration.isBust ? "#FF3B3055" : "#FF8C0055";
 
   return (
     <div
@@ -939,6 +944,169 @@ function CelebrationBottom({ celebration, onDismiss, isFTUE = false }: { celebra
 }
 
 
+// ── Wage animation keyframes ─────────────────────────────────────────────────
+const WAGE_STYLE_ID = "gb-wage-anim";
+if (typeof document !== "undefined" && !document.getElementById(WAGE_STYLE_ID)) {
+  const st = document.createElement("style");
+  st.id = WAGE_STYLE_ID;
+  st.textContent = `
+    @keyframes wageMultGlow {
+      0%   { transform: translateY(0);   text-shadow: none; }
+      30%  { transform: translateY(-6px); text-shadow: 0 0 12px currentColor, 0 0 24px currentColor; }
+      60%  { transform: translateY(0);   text-shadow: 0 0 8px currentColor; }
+      100% { transform: translateY(0);   text-shadow: none; }
+    }
+    @keyframes tierMultThud {
+      0%   { transform: translateY(-28px); opacity: 0; }
+      55%  { transform: translateY(3px);   opacity: 1; }
+      75%  { transform: translateY(-2px);  opacity: 1; }
+      100% { transform: translateY(0);     opacity: 1; }
+    }
+    @keyframes wageFlipOut {
+      0%   { transform: perspective(300px) rotateX(0deg);   opacity: 1; }
+      100% { transform: perspective(300px) rotateX(90deg);  opacity: 0; }
+    }
+    @keyframes payoutFlipIn {
+      0%   { transform: perspective(300px) rotateX(-90deg); opacity: 0; }
+      100% { transform: perspective(300px) rotateX(0deg);   opacity: 1; }
+    }
+    @keyframes payoutFlyRight {
+      0%   { transform: translateX(0)    scale(1);   opacity: 1; }
+      40%  { transform: translateX(20px) scale(1.1); opacity: 1; }
+      100% { transform: translateX(80px) scale(0.6); opacity: 0; }
+    }
+  `;
+  document.head.appendChild(st);
+}
+
+// ── Wage animation state machine ──────────────────────────────────────────
+type WagePhase = "idle" | "glow" | "thud" | "flip" | "fly" | "settled";
+
+function WageDisplay({
+  baseBet, betMultiplier, celebration, walletRef, onFlyComplete,
+}: {
+  baseBet: number;
+  betMultiplier: number;
+  celebration?: CelebrationData;
+  walletRef: React.RefObject<HTMLDivElement | null>;
+  onFlyComplete: () => void;
+}) {
+  const [phase, setPhase] = useState<WagePhase>("idle");
+  const timersRef = useRef<number[]>([]);
+  const prevCelebRef = useRef<CelebrationData | undefined>(undefined);
+
+  useEffect(() => {
+    if (!celebration || prevCelebRef.current === celebration) return;
+    prevCelebRef.current = celebration;
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+
+    const t1 = window.setTimeout(() => setPhase("glow"),    100);
+    const t2 = window.setTimeout(() => setPhase("thud"),    700);
+    const t3 = window.setTimeout(() => setPhase("flip"),   1400);
+    const t4 = window.setTimeout(() => setPhase("fly"),    1900);
+    const t5 = window.setTimeout(() => {
+      setPhase("settled");
+      onFlyComplete();
+    }, 2500);
+    timersRef.current = [t1, t2, t3, t4, t5];
+    return () => timersRef.current.forEach(clearTimeout);
+  }, [celebration]); // eslint-disable-line
+
+  useEffect(() => {
+    if (!celebration) { setPhase("idle"); prevCelebRef.current = undefined; }
+  }, [celebration]);
+
+  const isWin  = celebration ? !celebration.isLoss : false;
+  const payout = celebration?.payout ?? 0;
+  const loss   = celebration?.lossAmount ?? 0;
+  const tierMult = celebration?.tierMultiplier ?? 0;
+
+  const multColor = betMultiplier === 10 ? "#FB923C"
+    : betMultiplier === 5  ? "#C084FC"
+    : betMultiplier === 3  ? "#22C55E"
+    : "#3B82F6";
+
+  if (phase === "idle" || !celebration) {
+    return (
+      <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+        <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.38)", textTransform: "uppercase" }}>Wage</span>
+        <span style={{ fontSize: 15, fontWeight: 900, color: "rgba(255,255,255,0.7)", lineHeight: 1 }}>{baseBet}</span>
+        {betMultiplier > 1 && (
+          <span style={{ fontSize: 13, fontWeight: 800, color: multColor, lineHeight: 1 }}>×{betMultiplier}</span>
+        )}
+      </div>
+    );
+  }
+
+  if (phase === "glow") {
+    return (
+      <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+        <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.38)", textTransform: "uppercase" }}>Wage</span>
+        <span style={{ fontSize: 15, fontWeight: 900, color: "rgba(255,255,255,0.7)", lineHeight: 1 }}>{baseBet}</span>
+        <span style={{ fontSize: 13, fontWeight: 800, color: multColor, lineHeight: 1,
+          animation: "wageMultGlow 600ms ease-out forwards" }}>×{betMultiplier}</span>
+      </div>
+    );
+  }
+
+  if (phase === "thud") {
+    return (
+      <div style={{ display: "flex", alignItems: "baseline", gap: 4, overflow: "visible" }}>
+        <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.38)", textTransform: "uppercase" }}>Wage</span>
+        <span style={{ fontSize: 15, fontWeight: 900, color: "rgba(255,255,255,0.7)", lineHeight: 1 }}>{baseBet}</span>
+        <span style={{ fontSize: 13, fontWeight: 800, color: multColor, lineHeight: 1 }}>×{betMultiplier}</span>
+        {tierMult > 0 && (
+          <span style={{ fontSize: 13, fontWeight: 800, color: "#FFD700", lineHeight: 1,
+            animation: "tierMultThud 350ms cubic-bezier(0.22,1,0.36,1) forwards" }}>
+            ×{tierMult}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  if (phase === "flip") {
+    const sign   = isWin ? "+" : "-";
+    const amount = isWin ? payout : loss;
+    const color  = isWin ? "#22C55E" : "#FF3B30";
+    return (
+      <div style={{ position: "relative", height: 24, display: "flex", alignItems: "center" }}>
+        <span style={{ position: "absolute", fontSize: 15, fontWeight: 900, color: "rgba(255,255,255,0.7)",
+          animation: "wageFlipOut 200ms ease-in forwards" }}>
+          Wage {baseBet} ×{betMultiplier}{tierMult > 0 ? ` ×${tierMult}` : ""}
+        </span>
+        <span style={{ position: "absolute", fontSize: 17, fontWeight: 900, color,
+          animation: "payoutFlipIn 250ms ease-out 200ms forwards", opacity: 0 }}>
+          {sign}{amount}
+        </span>
+      </div>
+    );
+  }
+
+  if (phase === "fly") {
+    const sign   = isWin ? "+" : "-";
+    const amount = isWin ? payout : loss;
+    const color  = isWin ? "#22C55E" : "#FF3B30";
+    return (
+      <span style={{ fontSize: 17, fontWeight: 900, color,
+        animation: "payoutFlyRight 600ms ease-in forwards" }}>
+        {sign}{amount}
+      </span>
+    );
+  }
+
+  // settled
+  const sign   = isWin ? "+" : "-";
+  const amount = isWin ? payout : loss;
+  const color  = isWin ? "#22C55E" : "#FF3B30";
+  return (
+    <span style={{ fontSize: 15, fontWeight: 900, color, lineHeight: 1 }}>
+      {sign}{amount}
+    </span>
+  );
+}
+
 // ── GameBar ─────────────────────────────────────────────────────────────────
 
 export function GameBar({
@@ -978,12 +1146,12 @@ export function GameBar({
     if (!isCelebration) setOvershootSettled(false);
   }, [isCelebration]);
 
-  const walletRef       = useRef<HTMLDivElement>(null);
+  const walletRef = useRef<HTMLDivElement>(null);
   // walletTargetRef: invisible anchor outside the blur zone — coins fly to this
   const walletTargetRef = useRef<HTMLDivElement>(null);
   // Coin fly state — tapping anywhere in celebration triggers this
-  const [celebFlying, setCelebFlying]   = useState(false);
-  const [tapOrigin, setTapOrigin]       = useState<{x: number; y: number} | null>(null);
+  const [celebFlying, setCelebFlying] = useState(false);
+  const [tapOrigin, setTapOrigin] = useState<{ x: number; y: number } | null>(null);
   // Wallet display balance — lags real balance so roll-up starts when coins land
   const [displayBalance, setDisplayBalance] = useState(balance);
   useEffect(() => {
@@ -1016,25 +1184,25 @@ export function GameBar({
       const r = walletRef.current!.getBoundingClientRect();
       const t = walletTargetRef.current!;
       t.style.position = "fixed";
-      t.style.left     = `${r.left}px`;
-      t.style.top      = `${r.top}px`;
-      t.style.width    = `${r.width}px`;
-      t.style.height   = `${r.height}px`;
+      t.style.left = `${r.left}px`;
+      t.style.top = `${r.top}px`;
+      t.style.width = `${r.width}px`;
+      t.style.height = `${r.height}px`;
     };
     sync();
     window.addEventListener("resize", sync);
     return () => window.removeEventListener("resize", sync);
   }, [showCelebContent]);
 
-  const spent      = salarySpent(gameState, capUsed, lockedSalary, revealedSalary);
-  const remaining  = capMax - spent;
+  const spent = salarySpent(gameState, capUsed, lockedSalary, revealedSalary);
+  const remaining = capMax - spent;
   const overBudget = remaining < 0;
 
   /** Active (selected) multiplier: text + border + bg tint per tier */
   const MULTIPLIER_ACTIVE: Record<number, { text: string; border: string; bg: string }> = {
-    1:  { text: "#3B82F6", border: "#3B82F6", bg: "rgba(59,130,246,0.18)" },
-    3:  { text: "#22C55E", border: "#22C55E", bg: "rgba(34,197,94,0.18)" },
-    5:  { text: "#C084FC", border: "#C084FC", bg: "rgba(192,132,252,0.18)" },
+    1: { text: "#3B82F6", border: "#3B82F6", bg: "rgba(59,130,246,0.18)" },
+    3: { text: "#22C55E", border: "#22C55E", bg: "rgba(34,197,94,0.18)" },
+    5: { text: "#C084FC", border: "#C084FC", bg: "rgba(192,132,252,0.18)" },
     10: { text: "#FB923C", border: "#FB923C", bg: "rgba(251,146,60,0.18)" },
   };
 
@@ -1092,15 +1260,31 @@ export function GameBar({
           transition: "filter 0.35s ease, opacity 0.35s ease",
           pointerEvents: showCelebContent ? "none" : "auto",
         }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 0, marginBottom: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+            {/* Balance — left */}
             <div ref={walletRef} style={{ flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>Wallet</span>
+                <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>Balance</span>
                 <span style={{ fontSize: 17, fontWeight: 900, color: isBalanceAnimating ? THEME.palette.green_primary : "#FFFFFF", lineHeight: 1, transition: "color 300ms ease" }}>
                   $<RollingNumber value={displayBalance} decimals={0} duration={1200} />
                 </span>
               </div>
             </div>
+
+            {/* Wage display — animated sequence on results */}
+            <WageDisplay
+              baseBet={baseBet}
+              betMultiplier={betMultiplier}
+              celebration={showCelebContent ? celebration : undefined}
+              walletRef={walletRef}
+              onFlyComplete={() => {
+                if (celebration && (celebration.payout > 0 || celebration.isLoss)) {
+                  setCelebFlying(true);
+                }
+              }}
+            />
+
+            {/* Legend — right */}
             <button onClick={() => setShowLegend(true)} style={{
               width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
               background: "transparent",
@@ -1146,7 +1330,7 @@ export function GameBar({
           }}>
             <CelebrationBottom
               celebration={celebration}
-              onDismiss={onWinCelebrationComplete ?? (() => {})}
+              onDismiss={onWinCelebrationComplete ?? (() => { })}
               isFTUE={ftueHideSkip}
             />
           </div>
@@ -1249,14 +1433,30 @@ export function GameBar({
             {multiplierRow}
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 6, marginBottom: 6 }}>
+              {/* Balance — left */}
               <div ref={walletRef} style={{ flexShrink: 0 }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                  <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>Wallet</span>
+                  <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>Balance</span>
                   <span style={{ fontSize: 17, fontWeight: 900, color: isBalanceAnimating ? THEME.palette.green_primary : "#FFFFFF", lineHeight: 1, transition: "color 300ms ease" }}>
                     $<RollingNumber value={displayBalance} decimals={0} duration={1200} />
                   </span>
                 </div>
               </div>
+
+              {/* Wage display — animated sequence on results */}
+              <WageDisplay
+                baseBet={baseBet}
+                betMultiplier={betMultiplier}
+                celebration={showCelebContent ? celebration : undefined}
+                walletRef={walletRef}
+                onFlyComplete={() => {
+                  if (celebration && (celebration.payout > 0 || celebration.isLoss)) {
+                    setCelebFlying(true);
+                  }
+                }}
+              />
+
+              {/* Legend — right */}
               <button onClick={() => setShowLegend(true)} style={{
                 width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
                 background: "transparent",
@@ -1273,18 +1473,18 @@ export function GameBar({
                 data-action={gameState === "IDLE" ? "deal" : gameState === "HOLD" ? "draw" : undefined}
                 data-ftue-anchor={dataFtuePrimaryAnchor}
                 style={{
-                width: "min(168px, 50%)",
-                borderRadius: THEME.button.action.borderRadius, border: "none",
-                padding: "11px 0",
-                fontWeight: 900, fontSize: 16, letterSpacing: 2, textTransform: "uppercase",
-                cursor: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "default" : "pointer",
-                background: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "rgba(255,255,255,0.10)" : actionBackground(gameState),
-                color: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "rgba(255,255,255,0.35)" : actionTextColor(gameState),
-                opacity: (ftueHideSkip && gameState === "REVEALING") ? 0 : (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? 0.3 : 1,
-                pointerEvents: (ftueHideSkip && gameState === "REVEALING" || ftueReplayBlocked) ? "none" as const : "auto" as const,
-                boxShadow: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
-                transition: "opacity 150ms ease", lineHeight: 1,
-              }}>
+                  width: "min(168px, 50%)",
+                  borderRadius: THEME.button.action.borderRadius, border: "none",
+                  padding: "11px 0",
+                  fontWeight: 900, fontSize: 16, letterSpacing: 2, textTransform: "uppercase",
+                  cursor: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "default" : "pointer",
+                  background: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "rgba(255,255,255,0.10)" : actionBackground(gameState),
+                  color: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "rgba(255,255,255,0.35)" : actionTextColor(gameState),
+                  opacity: (ftueHideSkip && gameState === "REVEALING") ? 0 : (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? 0.3 : 1,
+                  pointerEvents: (ftueHideSkip && gameState === "REVEALING" || ftueReplayBlocked) ? "none" as const : "auto" as const,
+                  boxShadow: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
+                  transition: "opacity 150ms ease", lineHeight: 1,
+                }}>
                 {actionLabel(gameState)}
               </button>
             </div>
@@ -1303,7 +1503,7 @@ export function GameBar({
             }}>
               <CelebrationBottom
                 celebration={celebration}
-                onDismiss={onWinCelebrationComplete ?? (() => {})}
+                onDismiss={onWinCelebrationComplete ?? (() => { })}
                 isFTUE={ftueHideSkip}
               />
             </div>

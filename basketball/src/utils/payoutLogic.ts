@@ -14,11 +14,11 @@ export type { WinTierKey };
 export type WinTier = WinTierKey;
 
 export const BASKETBALL_WIN_TIERS: WinTierMap = {
-  GOAT:     { minFp: 235, multiplier: 0   },  // ~0.5% — bonus pool
+  GOAT:     { minFp: 235, multiplier: 50  },  // ~0.5% — massive direct payout + pool
   MVP:      { minFp: 215, multiplier: 15  },  // ~2%
-  ALL_STAR: { minFp: 195, multiplier: 7   },  // ~5%
-  STARTER:  { minFp: 175, multiplier: 2.5 },  // ~12%
-  ROOKIE:   { minFp: 155, multiplier: 0.5 },  // ~25%
+  ALL_STAR: { minFp: 195, multiplier: 8   },  // ~5%
+  STARTER:  { minFp: 175, multiplier: 3   },  // ~12%
+  ROOKIE:   { minFp: 155, multiplier: 0.5 },  // ~25% — consolation, half back
   BUST:     { minFp: 0,   multiplier: 0   },  // ~55%
 };
 

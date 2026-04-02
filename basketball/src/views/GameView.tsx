@@ -19,24 +19,24 @@ import { resetAllOverlays } from "../components/AthleteCard";
 import { GameBar, type CelebrationData } from "../components/GameBar";
 import { useCardFlipState } from "../hooks/useCardFlipState";
 import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
-import { calculateWinTier, calculatePayout, type WinTier } from "../utils/payoutLogic";
+import { calculateWinTier, calculatePayout, BASKETBALL_WIN_TIERS, type WinTier } from "../utils/payoutLogic";
 import { useGameAnalytics } from "../../../shared/analytics/useGameAnalytics";
 import { HotStreakOverlay } from '@shared/engagement/HotStreakOverlay';
-import { CollectScreen }  from '@shared/engagement/CollectScreen';
-import { TierGauge }      from '@shared/components/TierGauge';
-import { useEngagement }    from '@shared/engagement/useEngagement';
-import { CoinDisplay }      from '@shared/engagement/CoinDisplay';
-import { DailyTasksPanel }  from '@shared/engagement/DailyTasksPanel';
-import { XPBar }            from '@shared/engagement/XPBar';
-import { soundManager }     from '@shared/utils/soundManager';
-import { audioDirector }   from '@shared/utils/audioDirector';
+import { CollectScreen } from '@shared/engagement/CollectScreen';
+import { TierGauge, computeGaugeState } from '@shared/components/TierGauge';
+import { useEngagement } from '@shared/engagement/useEngagement';
+import { CoinDisplay } from '@shared/engagement/CoinDisplay';
+import { DailyTasksPanel } from '@shared/engagement/DailyTasksPanel';
+import { XPBar } from '@shared/engagement/XPBar';
+import { soundManager } from '@shared/utils/soundManager';
+import { audioDirector } from '@shared/utils/audioDirector';
 import { getPlayerUid, getNickname, setNickname } from '@shared/utils/playerIdentity';
 
 // Test-wire only: allow passing glow props even if wrapper prop types lag behind.
 const RosterGridAny = RosterGrid as any;
 
-const CAP_MAX        = sportAdapter.salaryCap;
-const ROSTER_SIZE    = sportAdapter.rosterSize;
+const CAP_MAX = sportAdapter.salaryCap;
+const ROSTER_SIZE = sportAdapter.rosterSize;
 const STARTING_BALANCE = 100000;
 const MIN_BALANCE_FLOOR = 500; // auto-refill for testing if balance runs too low
 
@@ -54,7 +54,7 @@ function loadBalance(): number {
   } catch { return STARTING_BALANCE; }
 }
 function saveBalance(v: number) {
-  try { localStorage.setItem("replaymod_balance", String(v)); } catch {}
+  try { localStorage.setItem("replaymod_balance", String(v)); } catch { }
 }
 
 /** Scales the 2×3 roster so both rows always fit the middle grid row (no clipping onto Team FP). */
@@ -108,13 +108,13 @@ function RosterGridScaleFit({ children }: { children: ReactNode }) {
     </div>
   );
 }
-const BASE_BET       = 10;
+const BASE_BET = 10;
 
 // ── Jackpot constants ──────────────────────────────────────────────────────
-const JACKPOT_SEED     = 12_451.29;
+const JACKPOT_SEED = 12_451.29;
 const JACKPOT_BET_RAKE = 0.05;   // 5% of each bet added to pot
 const TICK_INTERVAL_MS = 3000;
-const TICK_AMOUNT      = 0.01;
+const TICK_AMOUNT = 0.01;
 
 type GameState =
   | "IDLE" | "DEALING" | "HOLD" | "DRAWING"
@@ -134,7 +134,7 @@ async function submitToLeaderboard(metric: "streak" | "wins" | "fp", value: numb
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "submit", metric, value, uid, nickname }),
     });
-  } catch {} // Non-critical — never block game flow
+  } catch { } // Non-critical — never block game flow
 }
 
 function cardId(card: any): string {
@@ -165,6 +165,15 @@ function createPlaceholders(): PlayerCard[] {
     wasHeld: false,
   }));
 }
+
+const GAUGE_THRESHOLDS = [
+  { tier: "ROOKIE",   minFP: 155 },
+  { tier: "STARTER",  minFP: 175 },
+  { tier: "ALL_STAR", minFP: 195 },
+  { tier: "MVP",      minFP: 215 },
+  { tier: "GOAT",     minFP: 235 },
+];
+const NEAR_MISS_FP = 5;
 
 /** Must match salary → tier thresholds in shared/components/CardFront.tsx (derivedTier). */
 function tierFromSalary(salary: number): string {
@@ -264,6 +273,17 @@ if (typeof document !== "undefined" && !document.getElementById(GV_STYLE_ID)) {
       0% { opacity: 0; transform: translateY(8px); }
       100% { opacity: 1; transform: translateY(0); }
     }
+    @keyframes tierTeaseIn {
+      0%   { transform: perspective(400px) rotateX(90deg) scale(0.9); opacity: 0; }
+      40%  { transform: perspective(400px) rotateX(-12deg) scale(1.05); opacity: 1; }
+      65%  { transform: perspective(400px) rotateX(6deg) scale(0.98); opacity: 1; }
+      100% { transform: perspective(400px) rotateX(0deg) scale(1); opacity: 1; }
+    }
+    @keyframes tierTeaseOut {
+      0%   { transform: perspective(400px) rotateX(0deg) scale(1); opacity: 1; }
+      30%  { transform: perspective(400px) rotateX(20deg) scale(0.95); opacity: 0.6; }
+      100% { transform: perspective(400px) rotateX(90deg) scale(0.85); opacity: 0; }
+    }
   `;
   document.head.appendChild(st);
 }
@@ -279,8 +299,8 @@ function BetMultSuffix({ m }: { m: number }) {
 // ── BonusRow — community bonus pool pill (streak UI lives in Zone 3) ─────────
 
 const BONUS_TIERS = [
-  { wins: 3, pct: 5,   color: "#FFD700", glow: "#FFD70099" },
-  { wins: 5, pct: 15,  color: "#FFD700", glow: "#FFD70099" },
+  { wins: 3, pct: 5, color: "#FFD700", glow: "#FFD70099" },
+  { wins: 5, pct: 15, color: "#FFD700", glow: "#FFD70099" },
 ];
 
 const BONUS_DOTS = [
@@ -344,7 +364,7 @@ function BonusRow({ betAdded, streak = 0 }: { betAdded: number; streak?: number 
 export default function GameView() {
 
   // Zone 1: State
-  const [gameState, setGameState]           = useState<GameState>("IDLE");
+  const [gameState, setGameState] = useState<GameState>("IDLE");
   const {
     hotStreak,
     sessionWins,
@@ -362,53 +382,53 @@ export default function GameView() {
   const [nameInput, setNameInput] = useState(() => getNickname());
   const [multipliersHost, setMultipliersHost] = useState<HTMLDivElement | null>(null);
   const [controlsHost, setControlsHost] = useState<HTMLDivElement | null>(null);
-  const [dataReady, setDataReady]           = useState(false);
-  const [roster, setRoster]                 = useState<PlayerCard[]>(createPlaceholders());
-  const [lockedCardIds, setLockedCardIds]   = useState<Set<string>>(new Set());
+  const [dataReady, setDataReady] = useState(false);
+  const [roster, setRoster] = useState<PlayerCard[]>(createPlaceholders());
+  const [lockedCardIds, setLockedCardIds] = useState<Set<string>>(new Set());
   const [statsFlippedIds, setStatsFlippedIds] = useState<Set<string>>(new Set());
-  const [mvpId, setMvpId]                   = useState<string | undefined>();
-  const [betMultiplier, setBetMultiplier]   = useState(1);
-  const [balance, setBalance]               = useState(() => loadBalance());
+  const [mvpId, setMvpId] = useState<string | undefined>();
+  const [betMultiplier, setBetMultiplier] = useState(1);
+  const [balance, setBalance] = useState(() => loadBalance());
   const [isBalanceAnimating, setIsBalanceAnimating] = useState(false);
-  const [winTier, setWinTier]               = useState<WinTier | null>(null);
-  const [winPayout, setWinPayout]           = useState(0);
-  const [showRawScore, setShowRawScore]     = useState(false);
+  const [winTier, setWinTier] = useState<WinTier | null>(null);
+  const [winPayout, setWinPayout] = useState(0);
+  const [showRawScore, setShowRawScore] = useState(false);
 
   useEffect(() => {
     if (gameState === "IDLE" || gameState === "HOLD") setShowRawScore(false);
   }, [gameState]);
-  const [noTransition, setNoTransition]     = useState(false);
+  const [noTransition, setNoTransition] = useState(false);
   const [revealedSalary, setRevealedSalary] = useState(0);
   const rosterRef = useRef<PlayerCard[]>([]);
   const { isFTUE, completeFTUE } = useFTUE("basketball");
   const [legendaryCardName, setLegendaryCardName] = useState<string | undefined>();
-  const [revealIndex, setRevealIndex]           = useState(0);
-  const [lastRevealedCardId, setLastRevealedCardId] = useState<string|null>(null);
-  const [celebrationHeld,    setCelebrationHeld]    = useState(false);
-  const [ftueCardsBlocked,   setFtueCardsBlocked]   = useState(false);
-  const [ftueReplayReady,    setFtueReplayReady]    = useState(false);
-  const [ftueResultsDim,     setFtueResultsDim]     = useState(false);
-  const [ftueBookerFlipped,  setFtueBookerFlipped]  = useState(false);
-  const [ftueOscillating,          setFtueOscillating]          = useState(false);
+  const [revealIndex, setRevealIndex] = useState(0);
+  const [lastRevealedCardId, setLastRevealedCardId] = useState<string | null>(null);
+  const [celebrationHeld, setCelebrationHeld] = useState(false);
+  const [ftueCardsBlocked, setFtueCardsBlocked] = useState(false);
+  const [ftueReplayReady, setFtueReplayReady] = useState(false);
+  const [ftueResultsDim, setFtueResultsDim] = useState(false);
+  const [ftueBookerFlipped, setFtueBookerFlipped] = useState(false);
+  const [ftueOscillating, setFtueOscillating] = useState(false);
   const [glowState, setGlowState] = useState<{ cardId: string | null; tier: string; durationMs: number }>({
     cardId: null, tier: "WHITE", durationMs: 300
   });
   /** After FTUE scripted gauge animation completes — bar stays frozen until next hand */
-  const [ftueGaugeOscDone,         setFtueGaugeOscDone]         = useState(false);
+  const [ftueGaugeOscDone, setFtueGaugeOscDone] = useState(false);
   const [ftueWinCelebrationActive, setFtueWinCelebrationActive] = useState(false);
-  const [ftueBookerPulse,          setFtueBookerPulse]          = useState(false);
-  const [ftueHoldSpotlight,        setFtueHoldSpotlight]        = useState(false);
-  const [ftueCoachBubbleKey,     setFtueCoachBubbleKey]       = useState<string | null>(null);
-  const pendingCelebration   = useRef<{totalFp:number}|null>(null);
+  const [ftueBookerPulse, setFtueBookerPulse] = useState(false);
+  const [ftueHoldSpotlight, setFtueHoldSpotlight] = useState(false);
+  const [ftueCoachBubbleKey, setFtueCoachBubbleKey] = useState<string | null>(null);
+  const pendingCelebration = useRef<{ totalFp: number } | null>(null);
   /** FTUE: roster sum can read 0 briefly in RESULTS — keep last resolved hand FP for TierGauge */
-  const ftueLastHandFpRef    = useRef(0);
-  const heldRevealResumeRef  = useRef<(() => void) | null>(null);
+  const ftueLastHandFpRef = useRef(0);
+  const heldRevealResumeRef = useRef<(() => void) | null>(null);
   const completedCardsRef = useRef<Set<string>>(new Set());
   const regularFinalGaugeKickFiredRef = useRef(false);
   // Near your other useState declarations in GameView.tsx
-const [streak, setStreak] = useState<number>(() =>
-  parseInt(localStorage.getItem("replaymod_streak") ?? "0", 10)
-);
+  const [streak, setStreak] = useState<number>(() =>
+    parseInt(localStorage.getItem("replaymod_streak") ?? "0", 10)
+  );
 
   // Tier flip display state
   const [tierFlipKey, setTierFlipKey] = useState(0);
@@ -419,6 +439,23 @@ const [streak, setStreak] = useState<number>(() =>
   const latestGaugeFpRef = useRef(0);
   // Phase 1 = big PNG slam, Phase 2 = settled info view
   const [tierResultPhase, setTierResultPhase] = useState<1 | 2>(1);
+  const [nearMissTeasing, setNearMissTeasing] = useState(false);
+  const nearMissChoreTimersRef = useRef<number[]>([]);
+
+  // Near-miss copy — motivating one-liner shown in Phase 2 for BUST/ROOKIE.
+  // Picked once when winTier is set; stable for the lifetime of the result screen.
+  const nearMissCopy = useMemo(() => {
+    const copies: Partial<Record<string, string[]>> = {
+      BUST:     ["So close.", "Right there.", "Next hand."],
+      ROOKIE:   ["Just a few more FP.", "Run it back.", "So close."],
+      STARTER:  ["Right on the edge.", "Almost there.", "Run it back."],
+      ALL_STAR: ["One strong hand away.", "So close.", "Push harder."],
+    };
+    if (!winTier) return null;
+    const opts = copies[winTier];
+    if (!opts) return null;
+    return opts[Math.floor(Math.random() * opts.length)];
+  }, [winTier]); // eslint-disable-line
 
   // Hand count — drives Protected mode (hands 2-30 get top-60% log sampling)
   // Hand 1 is always FTUE. Persisted across sessions.
@@ -431,13 +468,13 @@ const [streak, setStreak] = useState<number>(() =>
   // ── Audio phase sync — maps GameState to AudioPhase ──────────────────
   useEffect(() => {
     const phaseMap: Record<GameState, import('@shared/utils/audioDirector').AudioPhase> = {
-      IDLE:             "IDLE",
-      DEALING:          "DEAL",
-      HOLD:             "HOLD",
-      DRAWING:          "DRAW",
-      REVEALING:        "REVEAL",
-      RESULTS:          "RESULTS",
-      WIN_CELEBRATION:  "CELEBRATION",
+      IDLE: "IDLE",
+      DEALING: "DEAL",
+      HOLD: "HOLD",
+      DRAWING: "DRAW",
+      REVEALING: "REVEAL",
+      RESULTS: "RESULTS",
+      WIN_CELEBRATION: "CELEBRATION",
     };
     audioDirector.setPhase(phaseMap[gameState] ?? "IDLE");
   }, [gameState]);
@@ -446,31 +483,31 @@ const [streak, setStreak] = useState<number>(() =>
     ensureLoaded().then(() => setDataReady(true)).catch(console.error);
   }, []);
 
-  const flipState       = useCardFlipState();
+  const flipState = useCardFlipState();
   const revealableCards = useMemo(() => toRevealableCards(roster), [roster]);
-  const currentBet      = BASE_BET * betMultiplier;
-  const gameAnalytics   = useGameAnalytics("basketball");
+  const currentBet = BASE_BET * betMultiplier;
+  const gameAnalytics = useGameAnalytics("basketball");
 
   function handleCardRevealStart(cardId: string, tierArg: string, shakeType?: string | null) {
     const tier = tierArg?.toUpperCase() ?? "WHITE";
     const st = shakeType ?? null;
     // Must match glowMsForReveal() in useEmotionalReveal
     const base = tier === "ORANGE" ? 900
-               : tier === "PURPLE" ? 700
-               : tier === "BLUE"   ? 400
-               : tier === "GREEN"  ? 350
-               :                     250;
-    const modifier = st === "legendary" ?  300
-                   : st === "big"       ?  150
-                   : st === "frozen"    ? -100
-                   : st === "cold"      ?  -50
-                   :                        0;
+      : tier === "PURPLE" ? 700
+        : tier === "BLUE" ? 400
+          : tier === "GREEN" ? 350
+            : 250;
+    const modifier = st === "legendary" ? 300
+      : st === "big" ? 150
+        : st === "frozen" ? -100
+          : st === "cold" ? -50
+            : 0;
     const duration = isSkippingRef.current
       ? (tier === "ORANGE" ? (st === "legendary" ? 500 : 400)
-       : tier === "PURPLE" ? (st === "legendary" || st === "big" ? 350 : 300)
-       : tier === "BLUE"   ? 200
-       : tier === "GREEN"  ? 175
-       :                     125)
+        : tier === "PURPLE" ? (st === "legendary" || st === "big" ? 350 : 300)
+          : tier === "BLUE" ? 200
+            : tier === "GREEN" ? 175
+              : 125)
       : Math.max(150, base + modifier);
     setGlowState({ cardId, tier, durationMs: duration });
     setTimeout(() => setGlowState(prev => ({ ...prev, cardId: null })), duration + 50);
@@ -541,7 +578,7 @@ const [streak, setStreak] = useState<number>(() =>
       } else if (bust) {
         soundManager.playBust();
       }
-      const badges = rosterRef.current.reduce((s,c) => s + (c.achievements?.length ?? 0), 0);
+      const badges = rosterRef.current.reduce((s, c) => s + (c.achievements?.length ?? 0), 0);
       gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
       recordHandPlayed();
       if (!bust) recordHandWon();
@@ -577,12 +614,12 @@ const [streak, setStreak] = useState<number>(() =>
 
   // Tier color map — mirrors WIN_TIERS in basketball/GameBar.tsx
   const CELEBRATION_TIER_COLORS: Record<string, { color: string; glow: string }> = {
-    GOAT:     { color: "#EF4444", glow: "#EF444499" },
-    MVP:      { color: "#FB923C", glow: "#FB923C55" },
+    GOAT: { color: "#EF4444", glow: "#EF444499" },
+    MVP: { color: "#FB923C", glow: "#FB923C55" },
     ALL_STAR: { color: "#C084FC", glow: "#C084FC55" },
-    STARTER:  { color: "#00FFD8", glow: "#00FFD855" },
-    ROOKIE:   { color: "#22C55E", glow: "#22C55E55" },
-    BUST:     { color: "#6B7280", glow: "#6B728033" },
+    STARTER: { color: "#00FFD8", glow: "#00FFD855" },
+    ROOKIE: { color: "#22C55E", glow: "#22C55E55" },
+    BUST: { color: "#6B7280", glow: "#6B728033" },
   };
 
   const formatTierLabel = (tier: string) => {
@@ -594,15 +631,27 @@ const [streak, setStreak] = useState<number>(() =>
   const celebrationData: CelebrationData | undefined = useMemo(() => {
     if (gameState !== "WIN_CELEBRATION" || !winTier) return undefined;
     const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
+    const tierMult = BASKETBALL_WIN_TIERS[winTier]?.multiplier ?? 0;
+    const isLoss = winTier === "BUST" || winTier === "ROOKIE";
+    const lossAmount = winTier === "BUST"
+      ? BASE_BET * betMultiplier
+      : winTier === "ROOKIE"
+        ? Math.round(BASE_BET * betMultiplier * 0.5)
+        : 0;
     return {
       tierLabel: formatTierLabel(winTier),
       tierColor: tc.color,
-      tierGlow:  tc.glow,
-      payout:    winPayout,
+      tierGlow: tc.glow,
+      payout: winPayout,
       streak,
-      isBust:    winTier === "BUST",
+      isBust: winTier === "BUST",
+      betMultiplier,
+      tierMultiplier: tierMult,
+      baseBet: BASE_BET,
+      isLoss,
+      lossAmount,
     };
-  }, [gameState, winTier, winPayout, streak]); // eslint-disable-line
+  }, [gameState, winTier, winPayout, streak, betMultiplier]); // eslint-disable-line
 
   const capUsed = useMemo(() => sumSalary(roster), [roster]);
 
@@ -622,6 +671,14 @@ const [streak, setStreak] = useState<number>(() =>
     return 0;
   }, [gameState, runningTotalFp, roster, isFTUE]);
 
+  const ceilingPct = useMemo(() => {
+    if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return null;
+    // Max possible = projectedFp × 2.0 (salaryRatioCeiling) per card
+    const maxPossible = roster.reduce((s, c: any) => s + Number(c.projectedFp ?? 0) * 2.0, 0);
+    if (maxPossible <= 0 || totalFp <= 0) return null;
+    return Math.min(100, Math.round((totalFp / maxPossible) * 100));
+  }, [gameState, roster, totalFp]);
+
   // Gauge: direct pass-through — totalFp updates every frame via interpolated visibleFpMap
   const gaugeTotalFp = totalFp;
   latestGaugeFpRef.current = gaugeTotalFp;
@@ -629,14 +686,26 @@ const [streak, setStreak] = useState<number>(() =>
   // No spring on results — direct-set keeps bar accurate. Spring to be added later.
   const regularFinalGaugeKick = false;
 
-  // Tier result phase: Phase 1 = big slam, Phase 2 = info view
+  // Tier result phase: Phase 1 = big slam (with optional near-miss tease), Phase 2 = info view
   useEffect(() => {
     if ((gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !isFTUE) {
+      nearMissChoreTimersRef.current.forEach(clearTimeout);
+      nearMissChoreTimersRef.current = [];
+      setNearMissTeasing(false);
       setTierResultPhase(1);
-      const t = setTimeout(() => setTierResultPhase(2), 1800);
-      return () => clearTimeout(t);
+      const gaugeSnap = computeGaugeState(totalFp, GAUGE_THRESHOLDS as any, winTier, NEAR_MISS_FP);
+      if (gaugeSnap.isNearMiss && gaugeSnap.nextTier != null) {
+        const t1 = setTimeout(() => setNearMissTeasing(true),  400);
+        const t2 = setTimeout(() => setNearMissTeasing(false), 1200);
+        const t3 = setTimeout(() => setTierResultPhase(2),     1800);
+        nearMissChoreTimersRef.current = [t1, t2, t3];
+      } else {
+        const t = setTimeout(() => setTierResultPhase(2), 1800);
+        nearMissChoreTimersRef.current = [t];
+      }
+      return () => { nearMissChoreTimersRef.current.forEach(clearTimeout); };
     }
-  }, [gameState, winTier, isFTUE]);
+  }, [gameState, winTier, isFTUE]); // eslint-disable-line
 
   // Track tier boundary crossings — paced flip with minimum display time per tier
   // Tier flip — shows EVERY intermediate tier for 600ms each.
@@ -793,9 +862,9 @@ const [streak, setStreak] = useState<number>(() =>
       setFtueHoldSpotlight(false);
       pendingCelebration.current = null;
       ftueLastHandFpRef.current = 0;
-      const res: any       = isFTUE ? await dealFTUERoster() : await dealInitialRoster();
-      const nextRoster     = (res?.roster ?? res?.cards ?? []) as PlayerCard[];
-      rosterRef.current    = nextRoster;
+      const res: any = isFTUE ? await dealFTUERoster() : await dealInitialRoster();
+      const nextRoster = (res?.roster ?? res?.cards ?? []) as PlayerCard[];
+      rosterRef.current = nextRoster;
       console.log('HAND DEALT CALLED');
       console.log('DEALT');
       gameAnalytics.handDealt(nextRoster);
@@ -820,14 +889,14 @@ const [streak, setStreak] = useState<number>(() =>
       setRoster(markedRoster);
       setGameState("DRAWING");
       await sleep(700);
-      const drawRes: any    = isFTUE
+      const drawRes: any = isFTUE
         ? await redrawFTUERoster({ currentCards: markedRoster, lockedCardIds })
         : await redrawRoster({ currentCards: markedRoster, lockedCardIds });
-      const drawnRoster     = (drawRes?.roster ?? drawRes?.cards ?? markedRoster) as PlayerCard[];
+      const drawnRoster = (drawRes?.roster ?? drawRes?.cards ?? markedRoster) as PlayerCard[];
       const resolveRes: any = isFTUE
         ? await resolveFTUERoster({ finalCards: drawnRoster })
         : await resolveRoster({ finalCards: drawnRoster, handCount });
-      const finalRoster     = (resolveRes?.roster ?? resolveRes?.cards ?? drawnRoster) as PlayerCard[];
+      const finalRoster = (resolveRes?.roster ?? resolveRes?.cards ?? drawnRoster) as PlayerCard[];
       const mvp: string | undefined = resolveRes?.mvpCardId ?? resolveRes?.mvpId;
       if (mvp) setMvpId(mvp);
 
@@ -846,7 +915,7 @@ const [streak, setStreak] = useState<number>(() =>
       setNoTransition(true);
       // In tap mode: held cards stay FRONT, only non-held start BACK
       const nonHeldIds = finalRoster.filter(c => !(c as any).wasHeld).map(cardId);
-      const heldIds    = finalRoster.filter(c =>  (c as any).wasHeld).map(cardId);
+      const heldIds = finalRoster.filter(c => (c as any).wasHeld).map(cardId);
       flipState.initCards(nonHeldIds);
       // Force held cards to FRONT so they never show generic back
       heldIds.forEach(id => flipState.revealCard(id));
@@ -941,7 +1010,7 @@ const [streak, setStreak] = useState<number>(() =>
     setWinPayout(0);
     setGameState("RESULTS");
   }
-  
+
   const [wasSkipped, setWasSkipped] = useState(false);
 
   function handleButtonClick() {
@@ -951,6 +1020,10 @@ const [streak, setStreak] = useState<number>(() =>
       skipReveal();
     }
     else {
+      // Fade out big win music if it's still playing (MVP/GOAT celebration)
+      if (gameState === "WIN_CELEBRATION") {
+        soundManager.stopBigWin();
+      }
       setWasSkipped(false);
       onPrimaryAction();
     }
@@ -1070,58 +1143,58 @@ const [streak, setStreak] = useState<number>(() =>
             }}
           >
             <RosterGridScaleFit>
-            <RosterGridAny
-  roster={displayRoster}
-  phase={phase}
-  lockedIds={heldCardIds}
-  mvpId={mvpId}
-  flippedIds={flippedIds}
-  revealingIds={revealingIds}
-  noTransition={noTransition}
-  visibleFpMap={visibleFpMap}
-  canFlip={gameState === "RESULTS" || gameState === "WIN_CELEBRATION"}
-  ftueFlipTargetId={isFTUE && (ftueBookerPulse || ftueHoldSpotlight) ? "ftue-booker" : null}
-  flipMsMap={flipMsMap}
-  fpCountUpMsMap={fpCountUpMsMap}
-  performanceTagMap={performanceTagMap}
-  pulseMap={pulseMap}
-  shakingCardId={shakeInfo?.cardId ?? null}
-  shakeType={shakeInfo?.type ?? null}
-  cardShakeTypeMap={cardShakeTypeMap}
-  visibleBadgesMap={visibleBadgesMap}
-  glowCardId={glowState.cardId}
-  glowTier={glowState.tier}
-  glowDurationMs={glowState.durationMs}
-  isSkipping={isSkipping}
-  activeRevealCardId={activeRevealCardId}
-  onToggleLock={toggleLock}
-  onToggleFlip={toggleStatsFlip}
-  revealMode={REVEAL_MODE}
-  onTapReveal={isFTUE && ftueCardsBlocked ? undefined : (isFTUE ? (cardId: string) => {
-    tapRevealCard(cardId);
-  } : (cardId: string) => {
-    // Immediately add this card's salary so budget rolls down in sync with FP roll up
-    const card = rosterRef.current.find(c => {
-      const id = String(c?.cardId ?? c?.basePlayerId ?? "");
-      return id === cardId;
-    });
-    if (card && !(card as any).wasHeld) {
-      setRevealedSalary(prev => prev + Number((card as any).salary ?? 0));
-    }
-    tapRevealCard(cardId);
-  })}
-  heldFpVisible={heldFpVisible}
-  heldRevealedIds={heldRevealedIds}
-  tappedCardIds={tappedCardIds}
-  isRevealingPhase={gameState === "REVEALING"}
-  ftueLockedSlot={
-    (isFTUE && ftueResultsDim)
-      ? 0
-      : (isFTUE && (ftueHoldSpotlight || heldCardIds.has("ftue-booker")) && gameState === "HOLD")
-      ? 0
-      : null
-  }
-/>
+              <RosterGridAny
+                roster={displayRoster}
+                phase={phase}
+                lockedIds={heldCardIds}
+                mvpId={mvpId}
+                flippedIds={flippedIds}
+                revealingIds={revealingIds}
+                noTransition={noTransition}
+                visibleFpMap={visibleFpMap}
+                canFlip={gameState === "RESULTS" || gameState === "WIN_CELEBRATION"}
+                ftueFlipTargetId={isFTUE && (ftueBookerPulse || ftueHoldSpotlight) ? "ftue-booker" : null}
+                flipMsMap={flipMsMap}
+                fpCountUpMsMap={fpCountUpMsMap}
+                performanceTagMap={performanceTagMap}
+                pulseMap={pulseMap}
+                shakingCardId={shakeInfo?.cardId ?? null}
+                shakeType={shakeInfo?.type ?? null}
+                cardShakeTypeMap={cardShakeTypeMap}
+                visibleBadgesMap={visibleBadgesMap}
+                glowCardId={glowState.cardId}
+                glowTier={glowState.tier}
+                glowDurationMs={glowState.durationMs}
+                isSkipping={isSkipping}
+                activeRevealCardId={activeRevealCardId}
+                onToggleLock={toggleLock}
+                onToggleFlip={toggleStatsFlip}
+                revealMode={REVEAL_MODE}
+                onTapReveal={isFTUE && ftueCardsBlocked ? undefined : (isFTUE ? (cardId: string) => {
+                  tapRevealCard(cardId);
+                } : (cardId: string) => {
+                  // Immediately add this card's salary so budget rolls down in sync with FP roll up
+                  const card = rosterRef.current.find(c => {
+                    const id = String(c?.cardId ?? c?.basePlayerId ?? "");
+                    return id === cardId;
+                  });
+                  if (card && !(card as any).wasHeld) {
+                    setRevealedSalary(prev => prev + Number((card as any).salary ?? 0));
+                  }
+                  tapRevealCard(cardId);
+                })}
+                heldFpVisible={heldFpVisible}
+                heldRevealedIds={heldRevealedIds}
+                tappedCardIds={tappedCardIds}
+                isRevealingPhase={gameState === "REVEALING"}
+                ftueLockedSlot={
+                  (isFTUE && ftueResultsDim)
+                    ? 0
+                    : (isFTUE && (ftueHoldSpotlight || heldCardIds.has("ftue-booker")) && gameState === "HOLD")
+                      ? 0
+                      : null
+                }
+              />
             </RosterGridScaleFit>
           </div>
         </div>
@@ -1217,56 +1290,67 @@ const [streak, setStreak] = useState<number>(() =>
                       pointerEvents: "none",
                     }}
                   />
+                  {nearMissTeasing && (() => {
+                    const gaugeSnap = computeGaugeState(totalFp, GAUGE_THRESHOLDS as any, winTier, NEAR_MISS_FP);
+                    const nextTierKey = gaugeSnap.nextTier ?? winTier;
+                    const teaseColors = CELEBRATION_TIER_COLORS[nextTierKey] ?? CELEBRATION_TIER_COLORS.BUST;
+                    return (
+                      <img
+                        key={`tease-${nextTierKey}`}
+                        src={`/${TIER_IMAGE_MAP[nextTierKey] ?? "bust1.png"}`}
+                        alt={nextTierKey}
+                        style={{
+                          position: "absolute", maxHeight: 70, maxWidth: "95%", objectFit: "contain",
+                          animation: "tierTeaseIn 350ms cubic-bezier(0.22, 1, 0.36, 1)",
+                          filter: `drop-shadow(0 0 20px ${teaseColors.glow})`,
+                          zIndex: 2, opacity: 0.88,
+                        }}
+                      />
+                    );
+                  })()}
                   <img
-                    key={`slam-${winTier}-${gameState}`}
+                    key={`slam-${winTier}-${nearMissTeasing}`}
                     src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
                     alt={formatTierLabel(winTier)}
                     style={{
                       maxHeight: 70,
                       maxWidth: "95%",
                       objectFit: "contain",
-                      animation: "tierSlam 900ms cubic-bezier(0.22, 1, 0.36, 1)",
+                      animation: nearMissTeasing ? "none" : "tierSlam 900ms cubic-bezier(0.22, 1, 0.36, 1)",
                       filter: `drop-shadow(0 0 24px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`,
                       position: "relative", zIndex: 1,
+                      opacity: nearMissTeasing ? 0.3 : 1,
+                      transition: "opacity 200ms ease",
                     }}
                   />
                 </div>
               ) : (
-                /* Phase 2: Settled info — PNG + FP + streak, fades in */
+                /* Phase 2: Settled info — two lines only */
                 <div style={{
                   display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center",
-                  width: "100%", height: "100%", gap: 1,
+                  width: "100%", height: "100%", gap: 4,
                   animation: "tierInfoFadeIn 400ms ease-out",
                 }}>
+                  {/* Line 1: Tier PNG */}
                   <img
                     src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
                     alt={formatTierLabel(winTier)}
                     style={{ maxHeight: 36, maxWidth: "70%", objectFit: "contain" }}
                   />
+                  {/* Line 2: FP · % of possible score */}
                   <span style={{
-                    fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.4)",
-                    letterSpacing: "0.04em", lineHeight: 1,
+                    fontSize: 15, fontWeight: 800, color: "rgba(255,255,255,0.55)",
+                    letterSpacing: "0.02em", lineHeight: 1.3, textAlign: "center",
+                    fontVariantNumeric: "tabular-nums",
                   }}>
-                    {totalFp.toFixed(1)} FP{winPayout > 0 ? ` · +${winPayout}` : ""}
-                    {winPayout > 0 && <BetMultSuffix m={betMultiplier} />}
-                    {winTier === "BUST" && " · Better luck next hand"}
-                  </span>
-                  {(() => {
-                    const _nt = BONUS_TIERS.find(t => streak < t.wins);
-                    const _et = [...BONUS_TIERS].reverse().find(t => streak >= t.wins);
-                    const _wn = _nt ? _nt.wins - streak : 0;
-                    return (
-                      <span style={{ fontSize: 10, fontWeight: 700, color: _et ? "#FFD700" : "rgba(255,255,255,0.3)", lineHeight: 1 }}>
-                        {streak === 0
-                          ? "Win 3 in a row for +5% bonus pool"
-                          : _et && !_nt
-                          ? `🔥 +${_et.pct}% bonus pool active`
-                          : _et
-                          ? `🔥 +${_et.pct}% · ${_wn} ${_wn === 1 ? "win" : "wins"} to +${_nt!.pct}%`
-                          : `${_wn} ${_wn === 1 ? "win" : "wins"} to +${_nt!.pct}% bonus`}
+                    {totalFp.toFixed(1)} FP
+                    {ceilingPct != null && (
+                      <span style={{ fontWeight: 600, color: "rgba(255,255,255,0.35)", fontSize: 12 }}>
+                        {" · "}{ceilingPct}% of possible score
                       </span>
-                    );
-                  })()}
+                    )}
+                  </span>
+                  {/* Streak + near-miss removed for beta */}
                 </div>
               )
             ) : gameState === "WIN_CELEBRATION" && winTier && celebrationData && !showRawScore ? (
@@ -1298,13 +1382,23 @@ const [streak, setStreak] = useState<number>(() =>
                             lineHeight: 1,
                           }}>
                             +{winPayout}
-                            <BetMultSuffix m={betMultiplier} />
                           </span>
                         )}
                       </div>
                       {winTier === "BUST" && (
                         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.05em" }}>
                           Better luck next hand
+                        </div>
+                      )}
+                      {nearMissCopy && (winTier === "BUST" || winTier === "ROOKIE" || winTier === "STARTER" || winTier === "ALL_STAR") && (
+                        <div style={{
+                          fontSize: 11, fontWeight: 700,
+                          color: winTier === "BUST" ? "rgba(255,255,255,0.3)" : "#22C55E",
+                          letterSpacing: "0.07em",
+                          textTransform: "uppercase",
+                          animation: "tierInfoFadeIn 500ms ease-out 600ms both",
+                        }}>
+                          {nearMissCopy}
                         </div>
                       )}
                     </>
@@ -1339,7 +1433,6 @@ const [streak, setStreak] = useState<number>(() =>
                           lineHeight: 1,
                         }}>
                           +{winPayout} coins
-                          <BetMultSuffix m={betMultiplier} />
                         </span>
                       )}
                     </div>
@@ -1350,12 +1443,12 @@ const [streak, setStreak] = useState<number>(() =>
               <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 48, width: "100%" }}>
                 {(() => {
                   const spent =
-                    gameState === "IDLE"      ? 0 :
-                    gameState === "DEALING"   ? 0 :
-                    gameState === "HOLD"      ? lockedSalary :
-                    gameState === "DRAWING"   ? lockedSalary :
-                    gameState === "REVEALING" ? revealedSalary :
-                    capUsed;
+                    gameState === "IDLE" ? 0 :
+                      gameState === "DEALING" ? 0 :
+                        gameState === "HOLD" ? lockedSalary :
+                          gameState === "DRAWING" ? lockedSalary :
+                            gameState === "REVEALING" ? revealedSalary :
+                              capUsed;
                   const remaining = CAP_MAX - spent;
                   const overBudget = remaining < 0;
                   return (
@@ -1448,13 +1541,13 @@ const [streak, setStreak] = useState<number>(() =>
                   <TierGauge
                     totalFp={gaugeTotalFp}
                     thresholds={[
-                      { tier: "ROOKIE",   minFP: 155 },
-                      { tier: "STARTER",  minFP: 175 },
+                      { tier: "ROOKIE", minFP: 155 },
+                      { tier: "STARTER", minFP: 175 },
                       { tier: "ALL_STAR", minFP: 195 },
-                      { tier: "MVP",      minFP: 215 },
+                      { tier: "MVP", minFP: 215 },
                       { tier: "GOAT" as any, minFP: 235 },
                     ]}
-                    winTier={undefined}
+                    winTier={winTier ?? undefined}
                     lastCardFp={lastCardFp}
                     isSkip={false}
                     visible
@@ -1475,46 +1568,7 @@ const [streak, setStreak] = useState<number>(() =>
                 </div>
               ) : null}
             </div>
-            {showGaugeInZone3 && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && (() => {
-              const _nt = BONUS_TIERS.find(t => streak < t.wins);
-              const _et = [...BONUS_TIERS].reverse().find(t => streak >= t.wins);
-              const _wn = _nt ? _nt.wins - streak : 0;
-              const isBust = winTier === "BUST";
-              return (
-                <div style={{
-                  display: "flex", flexDirection: "row", alignItems: "center",
-                  justifyContent: "center", flexWrap: "nowrap", gap: 5,
-                  marginTop: 4, flexShrink: 0, height: 18, maxHeight: 18, overflow: "hidden",
-                }}>
-                  {streak > 0 && BONUS_DOTS.map((dot, i) => {
-                    const filled = streak >= dot.threshold;
-                    const tc = BONUS_TIERS[dot.tierIdx].color;
-                    const tg = BONUS_TIERS[dot.tierIdx].glow;
-                    return (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
-                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: filled ? tc : "rgba(255,255,255,0.12)", boxShadow: filled ? `0 0 4px ${tg}` : "none", flexShrink: 0 }} />
-                        {i === 2 && <div style={{ width: 6, height: 1, background: "rgba(255,255,255,0.1)", flexShrink: 0 }} />}
-                      </div>
-                    );
-                  })}
-                  {streak > 0 && (_et || _nt) && (
-                    <span style={{ fontSize: 9, fontWeight: 700, color: _et ? _et.color : "rgba(255,255,255,0.4)", flexShrink: 0 }}>
-                      {_et && !_nt ? `+${_et.pct}% bonus pool active 🔥` : _et ? `+${_et.pct}%` : `+${_nt!.pct}%`}
-                    </span>
-                  )}
-                  {streak > 0 && _nt && _wn > 0 && (
-                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", flexShrink: 0 }}>
-                      · {_wn} {_wn === 1 ? "win" : "wins"} away
-                    </span>
-                  )}
-                  {streak === 0 && (
-                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", letterSpacing: "0.04em", flexShrink: 0 }}>
-                      Win 3 in a row for +5% bonus pool
-                    </span>
-                  )}
-                </div>
-              );
-            })()}
+            {/* Streak progression UI removed for beta */}
           </div>
         </div>
 
@@ -1530,123 +1584,123 @@ const [streak, setStreak] = useState<number>(() =>
             boxSizing: "border-box",
           }}
         >
-        <div
-          ref={(el) => setControlsHost(el)}
-          style={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            minHeight: 0,
-            padding: "0 10px max(env(safe-area-inset-bottom, 0px) + 8px, 16px)",
-            boxSizing: "border-box",
-            overflow: "hidden",
-          }}
-        >
-          <CoachLayer
-            isFTUE={isFTUE}
-            gameState={gameState}
-            lockedCount={lockedCardIds.size}
-            revealIndex={revealIndex}
-            legendaryCardName={legendaryCardName}
-            lastRevealedCardId={lastRevealedCardId}
-            ftueBookerFlipped={ftueBookerFlipped}
-            onCoachBubbleKey={(key) => {
-              setFtueCoachBubbleKey(key);
-              if (key === "hold_booker") setFtueHoldSpotlight(true);
+          <div
+            ref={(el) => setControlsHost(el)}
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              minHeight: 0,
+              padding: "0 10px max(env(safe-area-inset-bottom, 0px) + 8px, 16px)",
+              boxSizing: "border-box",
+              overflow: "hidden",
             }}
-            onResumeHeldReveal={() => {
-              const resume = heldRevealResumeRef.current;
-              heldRevealResumeRef.current = null;
-              resume?.();
-            }}
-            onCelebrationReady={() => {
-              // Non-FTUE: CoachLayer calls this after Booker bubble dismiss
-              if (!isFTUE) {
-                setCelebrationHeld(false);
-                if (pendingCelebration.current) {
-                  pendingCelebration.current = null;
-                  setGameState("WIN_CELEBRATION");
+          >
+            <CoachLayer
+              isFTUE={isFTUE}
+              gameState={gameState}
+              lockedCount={lockedCardIds.size}
+              revealIndex={revealIndex}
+              legendaryCardName={legendaryCardName}
+              lastRevealedCardId={lastRevealedCardId}
+              ftueBookerFlipped={ftueBookerFlipped}
+              onCoachBubbleKey={(key) => {
+                setFtueCoachBubbleKey(key);
+                if (key === "hold_booker") setFtueHoldSpotlight(true);
+              }}
+              onResumeHeldReveal={() => {
+                const resume = heldRevealResumeRef.current;
+                heldRevealResumeRef.current = null;
+                resume?.();
+              }}
+              onCelebrationReady={() => {
+                // Non-FTUE: CoachLayer calls this after Booker bubble dismiss
+                if (!isFTUE) {
+                  setCelebrationHeld(false);
+                  if (pendingCelebration.current) {
+                    pendingCelebration.current = null;
+                    setGameState("WIN_CELEBRATION");
+                  }
                 }
-              }
-            }}
-            onBubbleActive={(active) => setFtueCardsBlocked(active)}
-            ftueWinCelebrationActive={ftueWinCelebrationActive}
-            onReplayReady={() => setFtueReplayReady(true)}
-            onFtueReadyToFlip={() => setFtueBookerPulse(true)}
-            onFtueBookerHeld={() => { /* draw pulse handled inside CoachLayer */ }}
-            onFtueAllDone={() => {
-              completeFTUE();
-              setFtueResultsDim(false);
-            }}
-            onReplay={() => {
-              completeFTUE();
-              setLastRevealedCardId(null);
-              setCelebrationHeld(false);
-              setFtueCardsBlocked(false);
-              setFtueReplayReady(false);
-              setFtueBookerFlipped(false);
-              setFtueBookerPulse(false);
-              setFtueHoldSpotlight(false);
-              setFtueGaugeOscDone(false);
-              pendingCelebration.current = null;
-              heldRevealResumeRef.current = null;
-              handleButtonClick();
-            }}
-          />
-          <HotStreakOverlay active={hotStreak} winCount={sessionWins} />
-          {showCollect && !isFTUE && (
-            <CollectScreen
-              taskStates={taskStates}
-              loginStreak={loginStreak}
-              coins={coins}
-              xp={xp}
-              onClose={() => setShowCollect(false)}
-              onCollect={(id) => { collectTask?.(id); }}
+              }}
+              onBubbleActive={(active) => setFtueCardsBlocked(active)}
+              ftueWinCelebrationActive={ftueWinCelebrationActive}
+              onReplayReady={() => setFtueReplayReady(true)}
+              onFtueReadyToFlip={() => setFtueBookerPulse(true)}
+              onFtueBookerHeld={() => { /* draw pulse handled inside CoachLayer */ }}
+              onFtueAllDone={() => {
+                completeFTUE();
+                setFtueResultsDim(false);
+              }}
+              onReplay={() => {
+                completeFTUE();
+                setLastRevealedCardId(null);
+                setCelebrationHeld(false);
+                setFtueCardsBlocked(false);
+                setFtueReplayReady(false);
+                setFtueBookerFlipped(false);
+                setFtueBookerPulse(false);
+                setFtueHoldSpotlight(false);
+                setFtueGaugeOscDone(false);
+                pendingCelebration.current = null;
+                heldRevealResumeRef.current = null;
+                handleButtonClick();
+              }}
             />
-          )}
-          {/* Name change prompt — after hand 3 */}
-          {showNamePrompt && (
-            <div style={{
-              position: "fixed", inset: 0, zIndex: 9999,
-              background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center",
-            }} onClick={() => setShowNamePrompt(false)}>
-              <div onClick={e => e.stopPropagation()} style={{
-                background: "#111827", borderRadius: 16, padding: "24px 20px",
-                width: "min(320px, 90vw)", display: "flex", flexDirection: "column", gap: 12,
-                border: "1px solid rgba(255,215,0,0.2)",
-              }}>
-                <div style={{ fontSize: 14, fontWeight: 800, color: "#EAF0FF" }}>
-                  Want to save your results? You're currently listed as:
-                </div>
-                <input
-                  value={nameInput}
-                  onChange={e => setNameInput(e.target.value)}
-                  maxLength={20}
-                  style={{
-                    background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)",
-                    borderRadius: 8, padding: "10px 12px", color: "#FFD700", fontSize: 16, fontWeight: 700,
-                    outline: "none", width: "100%", boxSizing: "border-box",
-                  }}
-                />
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => {
-                    setNickname(nameInput);
-                    setShowNamePrompt(false);
-                  }} style={{
-                    flex: 1, padding: "10px 0", background: "rgba(255,215,0,0.85)", color: "#070A12",
-                    border: "none", borderRadius: 8, fontWeight: 800, fontSize: 13, cursor: "pointer",
-                  }}>Change Name</button>
-                  <button onClick={() => setShowNamePrompt(false)} style={{
-                    flex: 1, padding: "10px 0", background: "rgba(255,255,255,0.08)",
-                    color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.1)",
-                    borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer",
-                  }}>Use This Name</button>
+            <HotStreakOverlay active={hotStreak} winCount={sessionWins} />
+            {showCollect && !isFTUE && (
+              <CollectScreen
+                taskStates={taskStates}
+                loginStreak={loginStreak}
+                coins={coins}
+                xp={xp}
+                onClose={() => setShowCollect(false)}
+                onCollect={(id) => { collectTask?.(id); }}
+              />
+            )}
+            {/* Name change prompt — after hand 3 */}
+            {showNamePrompt && (
+              <div style={{
+                position: "fixed", inset: 0, zIndex: 9999,
+                background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center",
+              }} onClick={() => setShowNamePrompt(false)}>
+                <div onClick={e => e.stopPropagation()} style={{
+                  background: "#111827", borderRadius: 16, padding: "24px 20px",
+                  width: "min(320px, 90vw)", display: "flex", flexDirection: "column", gap: 12,
+                  border: "1px solid rgba(255,215,0,0.2)",
+                }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: "#EAF0FF" }}>
+                    Want to save your results? You're currently listed as:
+                  </div>
+                  <input
+                    value={nameInput}
+                    onChange={e => setNameInput(e.target.value)}
+                    maxLength={20}
+                    style={{
+                      background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)",
+                      borderRadius: 8, padding: "10px 12px", color: "#FFD700", fontSize: 16, fontWeight: 700,
+                      outline: "none", width: "100%", boxSizing: "border-box",
+                    }}
+                  />
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={() => {
+                      setNickname(nameInput);
+                      setShowNamePrompt(false);
+                    }} style={{
+                      flex: 1, padding: "10px 0", background: "rgba(255,215,0,0.85)", color: "#070A12",
+                      border: "none", borderRadius: 8, fontWeight: 800, fontSize: 13, cursor: "pointer",
+                    }}>Change Name</button>
+                    <button onClick={() => setShowNamePrompt(false)} style={{
+                      flex: 1, padding: "10px 0", background: "rgba(255,255,255,0.08)",
+                      color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer",
+                    }}>Use This Name</button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
         </div>
 
       </div>
