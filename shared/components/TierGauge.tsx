@@ -610,7 +610,7 @@ export function TierGauge({
           lastAnimatedTotalFpRef.current = totalFp;
           setBarFill(finalFill);
           setBarColor(normalColor);
-          hasLockedRef.current = true; // animation done — lock forever until visible resets
+          if (winTierProp) hasLockedRef.current = true; // post-spring: lock forever
           if (isGoat) {
             setIsDinging(true);
             setTimeout(() => setIsDinging(false), 1500);

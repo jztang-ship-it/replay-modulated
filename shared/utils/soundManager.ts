@@ -100,8 +100,7 @@ class SoundManager {
   private ensureCtx(): AudioContext | null { return audioDirector.getContext(); }
   private get out(): AudioNode { return audioDirector.getEventOutput(); }
 
-  private noiseBuffer(duration: number): AudioBuffer {
-    const ctx = this.ensureCtx()!;
+  private noiseBuffer(duration: number, ctx: AudioContext): AudioBuffer {
     const len = Math.ceil(ctx.sampleRate * duration);
     const buf = ctx.createBuffer(1, len, ctx.sampleRate);
     const d = buf.getChannelData(0);
@@ -144,7 +143,7 @@ class SoundManager {
 
     // Whoosh — descending noise sweep = something moving fast
     const whoosh = ctx.createBufferSource();
-    whoosh.buffer = this.noiseBuffer(0.1);
+    whoosh.buffer = this.noiseBuffer(0.1, ctx);
     const wBp = ctx.createBiquadFilter();
     wBp.type = "bandpass";
     wBp.frequency.setValueAtTime(4500, now);
@@ -231,7 +230,7 @@ class SoundManager {
     // Micro texture — barely-there court squeak (basketball identity)
     if (Math.random() < 0.4) { // only 40% of ticks — avoids fatiguing
       const sq = ctx.createBufferSource();
-      sq.buffer = this.noiseBuffer(0.015);
+      sq.buffer = this.noiseBuffer(0.015, ctx);
       const bp = ctx.createBiquadFilter();
       bp.type = "bandpass";
       bp.frequency.value = 3000 + Math.random() * 1200;
@@ -349,7 +348,7 @@ class SoundManager {
     // Layer 3: Swish tail — basketball identity (subtle on low tiers)
     if (intensity >= 0.5) {
       const sw = ctx.createBufferSource();
-      sw.buffer = this.noiseBuffer(0.15);
+      sw.buffer = this.noiseBuffer(0.15, ctx);
       const bp = ctx.createBiquadFilter();
       bp.type = "bandpass";
       bp.frequency.setValueAtTime(3000 + intensity * 2000, now + 0.02);
@@ -390,7 +389,7 @@ class SoundManager {
 
       // Crackle texture
       const crackle = ctx.createBufferSource();
-      crackle.buffer = this.noiseBuffer(0.25);
+      crackle.buffer = this.noiseBuffer(0.25, ctx);
       const bp = ctx.createBiquadFilter();
       bp.type = "bandpass";
       bp.frequency.setValueAtTime(3500, now);
@@ -423,7 +422,7 @@ class SoundManager {
 
       // Tiny crowd murmur — barely there
       const murmur = ctx.createBufferSource();
-      murmur.buffer = this.noiseBuffer(0.2);
+      murmur.buffer = this.noiseBuffer(0.2, ctx);
       const bp = ctx.createBiquadFilter();
       bp.type = "bandpass";
       bp.frequency.value = 350;
@@ -462,7 +461,7 @@ class SoundManager {
 
     // Noise texture — physical weight
     const tex = ctx.createBufferSource();
-    tex.buffer = this.noiseBuffer(0.1);
+    tex.buffer = this.noiseBuffer(0.1, ctx);
     const lp = ctx.createBiquadFilter();
     lp.type = "lowpass";
     lp.frequency.value = 1800;
@@ -550,7 +549,7 @@ class SoundManager {
 
     if (!this.playAsset("events", "swish", V.BIG_SWISH)) {
       const swish = ctx.createBufferSource();
-      swish.buffer = this.noiseBuffer(0.2);
+      swish.buffer = this.noiseBuffer(0.2, ctx);
       const swBp = ctx.createBiquadFilter();
       swBp.type = "bandpass";
       swBp.frequency.setValueAtTime(5500, breathEnd);
@@ -579,7 +578,7 @@ class SoundManager {
         { freq: 5000, q: 1.2, peak: V.BIG_CROWD * 0.2 },
       ].forEach(band => {
         const n = ctx.createBufferSource();
-        n.buffer = this.noiseBuffer(crowdDur + 0.3);
+        n.buffer = this.noiseBuffer(crowdDur + 0.3, ctx);
         const bp = ctx.createBiquadFilter();
         bp.type = "bandpass";
         bp.frequency.value = band.freq;
@@ -678,7 +677,7 @@ class SoundManager {
     // Short crowd sigh — try real groan asset, fall back to procedural
     if (!this.playAsset("crowd", "groan", V.MISS_GROAN)) {
       const sigh = ctx.createBufferSource();
-      sigh.buffer = this.noiseBuffer(0.7);
+      sigh.buffer = this.noiseBuffer(0.7, ctx);
       const bp = ctx.createBiquadFilter();
       bp.type = "bandpass";
       bp.frequency.value = 400;
@@ -722,7 +721,7 @@ class SoundManager {
 
     // Tiny crowd deflation — barely audible
     const deflate = ctx.createBufferSource();
-    deflate.buffer = this.noiseBuffer(0.4);
+    deflate.buffer = this.noiseBuffer(0.4, ctx);
     const bp = ctx.createBiquadFilter();
     bp.type = "bandpass";
     bp.frequency.setValueAtTime(400, now + 0.03);
@@ -875,7 +874,7 @@ class SoundManager {
       { freq: 3500, q: 1.0, g: vol * V.STREAK_CROWD * 0.4 },
     ].forEach(band => {
       const n = ctx.createBufferSource();
-      n.buffer = this.noiseBuffer(dur + 0.2);
+      n.buffer = this.noiseBuffer(dur + 0.2, ctx);
       const bp = ctx.createBiquadFilter();
       bp.type = "bandpass";
       bp.frequency.value = band.freq;
@@ -962,7 +961,7 @@ class SoundManager {
 
     [400, 1500].forEach((freq, i) => {
       const n = ctx.createBufferSource();
-      n.buffer = this.noiseBuffer(duration + 0.1);
+      n.buffer = this.noiseBuffer(duration + 0.1, ctx);
       const bp = ctx.createBiquadFilter();
       bp.type = "bandpass";
       bp.frequency.value = freq;

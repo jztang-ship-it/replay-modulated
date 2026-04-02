@@ -509,6 +509,7 @@ export default function GameView() {
   const springHasFiredRef = useRef(false);
 
   const runSpring = useCallback((finalFp: number, onSettled: () => void) => {
+    lockedGaugeFpRef.current = finalFp; // freeze gauge immediately — no 1-frame gap
     cancelAnimationFrame(springRafRef.current);
     springTimersRef.current.forEach(clearTimeout);
     springTimersRef.current = [];
@@ -816,10 +817,9 @@ export default function GameView() {
   }, [gameState, roster, totalFp]);
 
 
-  // Gauge: direct pass-through — totalFp updates every frame via interpolated visibleFpMap
-  // When spring is active, all displays use springFp. Otherwise fall back to totalFp.
-  const displayFp = springFp ?? totalFp;
-  const gaugeTotalFp = lockedGaugeFpRef.current ?? displayFp;
+  // lockedGaugeFpRef freezes the gauge the instant spring starts and forever after
+  const displayFp    = springFp ?? (lockedGaugeFpRef.current ?? totalFp);
+  const gaugeTotalFp = displayFp;
   latestGaugeFpRef.current = gaugeTotalFp;
 
   // Smart post-reveal copy — replaces "X FP to NEXT TIER" under gauge after results settle
