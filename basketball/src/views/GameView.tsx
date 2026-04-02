@@ -31,6 +31,7 @@ import { XPBar } from '@shared/engagement/XPBar';
 import { soundManager } from '@shared/utils/soundManager';
 import { audioDirector } from '@shared/utils/audioDirector';
 import { getPlayerUid, getNickname, setNickname } from '@shared/utils/playerIdentity';
+import { buildPostRevealCopy, type PostRevealInput } from '../utils/postRevealCopy';
 
 // Test-wire only: allow passing glow props even if wrapper prop types lag behind.
 const RosterGridAny = RosterGrid as any;
@@ -464,6 +465,10 @@ export default function GameView() {
   const [streak, setStreak] = useState<number>(() =>
     parseInt(localStorage.getItem("replaymod_streak") ?? "0", 10)
   );
+  const [lossStreak, setLossStreak] = useState<number>(() =>
+    parseInt(localStorage.getItem("replaymod_loss_streak") ?? "0", 10)
+  );
+  const [streakMilestone, setStreakMilestone] = useState<{ wins: number; pct: number } | null>(null);
 
   // Tier flip display state
   const [tierFlipKey, setTierFlipKey] = useState(0);
@@ -540,18 +545,21 @@ export default function GameView() {
 
   // Near-miss copy — motivating one-liner shown in Phase 2 for BUST/ROOKIE.
   // Picked once when winTier is set; stable for the lifetime of the result screen.
-  const nearMissCopy = useMemo(() => {
-    const copies: Partial<Record<string, string[]>> = {
-      BUST:     ["So close.", "Right there.", "Next hand."],
-      ROOKIE:   ["Just a few more FP.", "Run it back.", "So close."],
-      STARTER:  ["Right on the edge.", "Almost there.", "Run it back."],
-      ALL_STAR: ["One strong hand away.", "So close.", "Push harder."],
-    };
+  const postRevealCopy = useMemo(() => {
     if (!winTier) return null;
-    const opts = copies[winTier];
-    if (!opts) return null;
-    return opts[Math.floor(Math.random() * opts.length)];
-  }, [winTier]); // eslint-disable-line
+    return buildPostRevealCopy({
+      tier: winTier,
+      totalFp: lockedFpRef.current ?? totalFp,
+      roster: roster.map(c => ({
+        name: (c as any).name ?? "",
+        actualFp: Number((c as any).actualFp ?? 0),
+        projectedFp: Number((c as any).projectedFp ?? 0),
+      })),
+      streak,
+      lossStreak,
+      streakMilestone,
+    });
+  }, [winTier, streak, lossStreak, streakMilestone]); // eslint-disable-line
 
   // Hand count — drives Protected mode (hands 2-30 get top-60% log sampling)
   // Hand 1 is always FTUE. Persisted across sessions.
@@ -705,14 +713,24 @@ export default function GameView() {
               const next = prev + 1;
               localStorage.setItem("replaymod_streak", String(next));
               if (next === 3 || next === 5 || next === 10) soundManager.playStreakMilestone(next);
+              // Streak milestone detection
+              if (next === 3) setStreakMilestone({ wins: 3, pct: 5 });
+              else if (next === 5) setStreakMilestone({ wins: 5, pct: 15 });
               submitToLeaderboard("streak", next);
               return next;
             });
+            setLossStreak(0);
+            localStorage.setItem("replaymod_loss_streak", "0");
             submitToLeaderboard("wins", 1);
             submitToLeaderboard("fp", totalFp);
           } else {
             setStreak(0);
             localStorage.setItem("replaymod_streak", "0");
+            setLossStreak(prev => {
+              const next = prev + 1;
+              localStorage.setItem("replaymod_loss_streak", String(next));
+              return next;
+            });
           }
         };
 
@@ -924,6 +942,7 @@ export default function GameView() {
       springSettledRef.current = false;
       displayTierLockedRef.current = false;
       springStartFpRef.current = 0;
+      setStreakMilestone(null);
     }
   }, [gameState]);
 
@@ -1472,7 +1491,7 @@ export default function GameView() {
                   />
                 </div>
               ) : (
-                /* Phase 2: Settled info — two lines only */
+                /* Phase 2: Settled info — tier PNG + personalized copy */
                 <div style={{
                   display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center",
                   width: "100%", height: "100%", gap: 4,
@@ -1484,20 +1503,34 @@ export default function GameView() {
                     alt={formatTierLabel(winTier)}
                     style={{ maxHeight: 36, maxWidth: "70%", objectFit: "contain" }}
                   />
-                  {/* Line 2: FP · % of possible score */}
+                  {/* Line 2: FP */}
                   <span style={{
                     fontSize: 15, fontWeight: 800, color: "rgba(255,255,255,0.55)",
-                    letterSpacing: "0.02em", lineHeight: 1.3, textAlign: "center",
+                    letterSpacing: "0.02em", lineHeight: 1, textAlign: "center",
                     fontVariantNumeric: "tabular-nums",
                   }}>
                     {displayFp.toFixed(1)} FP
-                    {ceilingPct != null && (
-                      <span style={{ fontWeight: 600, color: "rgba(255,255,255,0.35)", fontSize: 12 }}>
-                        {" · "}{ceilingPct}% of possible score
-                      </span>
-                    )}
                   </span>
-                  {/* Streak + near-miss removed for beta */}
+                  {/* Line 3: Post-reveal copy — personalized */}
+                  {postRevealCopy && (
+                    <span style={{
+                      fontSize: 11, fontWeight: 700,
+                      color: streakMilestone ? "#FFD700"
+                        : winTier === "BUST" ? "rgba(255,255,255,0.35)"
+                        : "#22C55E",
+                      letterSpacing: "0.05em", lineHeight: 1.3, textAlign: "center",
+                      textTransform: "uppercase",
+                      animation: "tierInfoFadeIn 500ms ease-out 300ms both",
+                      maxWidth: "90%",
+                    }}>
+                      {postRevealCopy.primary}
+                      {postRevealCopy.secondary && (
+                        <span style={{ display: "block", fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.30)", marginTop: 2, textTransform: "none" }}>
+                          {postRevealCopy.secondary}
+                        </span>
+                      )}
+                    </span>
+                  )}
                 </div>
               )
             ) : gameState === "WIN_CELEBRATION" && winTier && celebrationData && !showRawScore ? (
@@ -1532,20 +1565,16 @@ export default function GameView() {
                           </span>
                         )}
                       </div>
-                      {winTier === "BUST" && (
-                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.05em" }}>
-                          Better luck next hand
-                        </div>
-                      )}
-                      {nearMissCopy && (winTier === "BUST" || winTier === "ROOKIE" || winTier === "STARTER" || winTier === "ALL_STAR") && (
+                      {postRevealCopy && (
                         <div style={{
                           fontSize: 11, fontWeight: 700,
-                          color: winTier === "BUST" ? "rgba(255,255,255,0.3)" : "#22C55E",
-                          letterSpacing: "0.07em",
+                          color: streakMilestone ? "#FFD700"
+                            : winTier === "BUST" ? "rgba(255,255,255,0.3)" : "#22C55E",
+                          letterSpacing: "0.05em",
                           textTransform: "uppercase",
                           animation: "tierInfoFadeIn 500ms ease-out 600ms both",
                         }}>
-                          {nearMissCopy}
+                          {postRevealCopy.primary}
                         </div>
                       )}
                     </>
