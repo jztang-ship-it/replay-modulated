@@ -244,7 +244,7 @@ const SPRING_TIERS = [
 ];
 const SPRING_TIER_SPAN = 20.0;
 
-function computeSpringWaypoints(finalFp: number): number[] {
+function computeSpringWaypoints(startFp: number, finalFp: number): number[] {
   const tier = SPRING_TIERS.find(t => finalFp >= t.lo && finalFp < t.hi)
     ?? SPRING_TIERS[SPRING_TIERS.length - 1];
   const margin = finalFp - tier.lo;
@@ -255,15 +255,16 @@ function computeSpringWaypoints(finalFp: number): number[] {
   const amplitude = baseAmp * marginFactor;
   const damping = 0.45;
 
-  // Always exactly 3 swings: up → down (crosses boundary) → small up → settle
-  const waypoints: number[] = [finalFp];
+  // Spring starts at startFp (before last card), rises through finalFp,
+  // overshoots, oscillates, then settles at finalFp.
+  const waypoints: number[] = [startFp];
   let amp = amplitude;
-  waypoints.push(finalFp + amp);          // swing 1: up
+  waypoints.push(finalFp + amp);       // overshoot up through finalFp
   amp *= damping;
-  waypoints.push(finalFp - amp);          // swing 2: down (may cross boundary)
+  waypoints.push(finalFp - amp);       // dip below
   amp *= damping;
-  waypoints.push(finalFp + amp);          // swing 3: small up
-  waypoints.push(finalFp);               // settle
+  waypoints.push(finalFp + amp);       // small overshoot up
+  waypoints.push(finalFp);            // settle
   return waypoints;
 }
 
@@ -486,16 +487,20 @@ export default function GameView() {
   const lockedFpRef = useRef<number | null>(null);
   const onAnchorSettledRef = useRef<(() => void) | null>(null);
   const springSettledRef = useRef(false);
+  const displayTierLockedRef = useRef(false);
+  const springStartFpRef = useRef<number>(0);
+  const lastCardFpRef = useRef<number>(0);
 
   const runSpring = useCallback((finalFp: number, onSettled: () => void) => {
-    if (springHasFiredRef.current) return; // already fired this hand
+    if (springHasFiredRef.current) return;
     springHasFiredRef.current = true;
     cancelAnimationFrame(springRafRef.current);
     springTimersRef.current.forEach(clearTimeout);
     springTimersRef.current = [];
 
-    const waypoints = computeSpringWaypoints(finalFp);
-    const TOTAL_MS  = 1800;
+    const startFp = springStartFpRef.current;
+    const waypoints = computeSpringWaypoints(startFp, finalFp);
+    const TOTAL_MS  = 2000; // slightly longer — covers card 6's FP range too
     const segCount  = waypoints.length - 1;
     const segMs     = TOTAL_MS / segCount;
 
@@ -509,8 +514,11 @@ export default function GameView() {
         setSpringFp(null);
         setSpringSettled(true);
         springSettledRef.current = true;
+        // Lock tier display at final position
+        const finalTier = deriveTierFromFp(finalFp);
+        setDisplayTier(finalTier);
+        displayTierLockedRef.current = true;
         onSettled();
-        // Fire results callback if onAllComplete already stored it
         if (onAnchorSettledRef.current) {
           onAnchorSettledRef.current();
           onAnchorSettledRef.current = null;
@@ -636,9 +644,8 @@ export default function GameView() {
     onCardRevealStart: handleCardRevealStart,
     onAnchorFpComplete: useCallback((totalFp: number) => {
       if (isFTUE) return;
-      runSpring(totalFp, () => {
-        // Spring settled — onAnchorSettledRef handles results
-      });
+      springStartFpRef.current = Math.max(0, totalFp - lastCardFpRef.current);
+      runSpring(totalFp, () => {}); // spring settled — onAnchorSettledRef handles results
     }, [isFTUE, runSpring]),
     onCardComplete: useCallback((cId: string) => {
       setRevealIndex(prev => {
@@ -722,6 +729,9 @@ export default function GameView() {
       }
     }, [currentBet, gameAnalytics, isFTUE, recordHandPlayed, recordHandWon, recordHandLost]),
   });
+
+  // Keep lastCardFpRef in sync for spring startFp computation
+  lastCardFpRef.current = lastCardFp;
 
   // Zone 2: Derived values
   const phase: GamePhase = useMemo(() => {
@@ -816,6 +826,7 @@ export default function GameView() {
 
   // Drive displayTier from springFp during spring oscillation
   useEffect(() => {
+    if (displayTierLockedRef.current) return; // locked — ignore
     if (springFp !== null) {
       const t = deriveTierFromFp(springFp);
       if (t !== displayTier) {
@@ -857,6 +868,7 @@ export default function GameView() {
 
   const handleTierCross = useCallback((tier: string) => {
     if (isFTUE) return;
+    if (displayTierLockedRef.current) return; // spring settled — no more flips
     if (tier === prevRevealTierRef.current) return;
     soundManager.playTierCross(tier);
 
@@ -910,6 +922,8 @@ export default function GameView() {
       lockedFpRef.current = null;
       onAnchorSettledRef.current = null;
       springSettledRef.current = false;
+      displayTierLockedRef.current = false;
+      springStartFpRef.current = 0;
     }
   }, [gameState]);
 
