@@ -484,6 +484,8 @@ export default function GameView() {
   const pendingBalanceUpdateRef = useRef<(() => void) | null>(null);
   const springHasFiredRef = useRef(false);
   const lockedFpRef = useRef<number | null>(null);
+  const onAnchorSettledRef = useRef<(() => void) | null>(null);
+  const springSettledRef = useRef(false);
 
   const runSpring = useCallback((finalFp: number, onSettled: () => void) => {
     if (springHasFiredRef.current) return; // already fired this hand
@@ -507,7 +509,13 @@ export default function GameView() {
       if (segIndex >= segCount) {
         setSpringFp(null);
         setSpringSettled(true);
+        springSettledRef.current = true;
         onSettled();
+        // Fire results callback if onAllComplete already stored it
+        if (onAnchorSettledRef.current) {
+          onAnchorSettledRef.current();
+          onAnchorSettledRef.current = null;
+        }
         return;
       }
       if (segStart === null) segStart = now;
@@ -627,6 +635,12 @@ export default function GameView() {
       heldRevealResumeRef.current = resume;
     } : undefined,
     onCardRevealStart: handleCardRevealStart,
+    onAnchorFpComplete: useCallback((totalFp: number) => {
+      if (isFTUE) return;
+      runSpring(totalFp, () => {
+        // Spring settled — onAnchorSettledRef handles results
+      });
+    }, [isFTUE, runSpring]),
     onCardComplete: useCallback((cId: string) => {
       setRevealIndex(prev => {
         const next = prev + 1;
@@ -664,9 +678,9 @@ export default function GameView() {
         return;
       }
 
-      // Run spring oscillation — results lock in only when spring is truly done
-      runSpring(totalFp, () => {
-        lockedFpRef.current = totalFp; // lock — bar never moves from here
+      // Spring was already started by onAnchorFpComplete — store results callback
+      onAnchorSettledRef.current = () => {
+        lockedFpRef.current = totalFp;
         setWinTier(tier);
         setWinPayout(payout);
         const bust = !tier || tier === "BUST";
@@ -676,7 +690,6 @@ export default function GameView() {
         recordHandPlayed();
         if (!bust) recordHandWon(); else recordHandLost();
 
-        // Store balance + streak update — fires when wage animation completes
         pendingBalanceUpdateRef.current = () => {
           if (payout > 0) {
             setBalance(prev => { const next = prev + payout; saveBalance(next); return next; });
@@ -702,8 +715,13 @@ export default function GameView() {
           else setGameState("WIN_CELEBRATION");
         }, 1200);
         springTimersRef.current.push(t);
-      });
-    }, [currentBet, gameAnalytics, isFTUE, recordHandPlayed, recordHandWon, recordHandLost, runSpring]),
+      };
+      // If spring already settled before onAllComplete fired, call immediately
+      if (springSettledRef.current) {
+        onAnchorSettledRef.current();
+        onAnchorSettledRef.current = null;
+      }
+    }, [currentBet, gameAnalytics, isFTUE, recordHandPlayed, recordHandWon, recordHandLost]),
   });
 
   // Zone 2: Derived values
@@ -891,6 +909,8 @@ export default function GameView() {
       pendingBalanceUpdateRef.current = null;
       springHasFiredRef.current = false;
       lockedFpRef.current = null;
+      onAnchorSettledRef.current = null;
+      springSettledRef.current = false;
     }
   }, [gameState]);
 

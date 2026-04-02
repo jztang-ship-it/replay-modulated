@@ -53,6 +53,9 @@ type Params = {
   onCardComplete?: (cardId: string) => void;
   onCardRevealStart?: (cardId: string, tier: string, shakeType: ShakeType) => void;
   onAllComplete?: (totalFp: number) => void;
+  /** Fires the instant the anchor card's FP count-up RAF finishes — before badge/stamp delay.
+   *  Use this to start spring oscillation seamlessly as a continuation of the roll-up. */
+  onAnchorFpComplete?: (totalFp: number) => void;
   /** "auto" = sequential auto-reveal (default). "tap" = user taps each card. */
   revealMode?: "auto" | "tap";
   /**
@@ -152,7 +155,7 @@ export function useEmotionalReveal(params: Params) {
   const {
     cards, isActive, flipState,
     revealConfig = DEFAULT_REVEAL_CONFIG,
-    onCardComplete, onCardRevealStart, onAllComplete,
+    onCardComplete, onCardRevealStart, onAllComplete, onAnchorFpComplete,
     revealMode = "auto",
   } = params;
 
@@ -428,6 +431,11 @@ export function useEmotionalReveal(params: Params) {
               //   2. rollComplete guard returns early if animation already finished
               setVisibleFpMap(prev => new Map(prev).set(c.cardId, target));
               if (isAnchor) setLastCardProgress(1);
+              // Fire spring trigger immediately — before badge/stamp delay
+              if (isAnchor) {
+                const runningTotal = revealOrder.reduce((s, x) => s + Number(x.actualFp ?? 0), 0);
+                onAnchorFpComplete?.(runningTotal);
+              }
               const cardBadges = c.badges ?? [];
               if (cardBadges.length > 0) {
                 setVisibleBadgesMap(prev => new Map(prev).set(c.cardId, cardBadges));
