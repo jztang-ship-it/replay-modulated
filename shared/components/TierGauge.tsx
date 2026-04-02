@@ -668,7 +668,7 @@ export function TierGauge({
               {postRevealCopy.primary}
             </span>
             {postRevealCopy.secondary && (
-              <span style={{ fontSize: 10, color: "#666", fontFamily: FF, letterSpacing: "0.04em" }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#CCCCCC", fontFamily: FF, letterSpacing: "0.04em", lineHeight: 1.3 }}>
                 {postRevealCopy.secondary}
               </span>
             )}

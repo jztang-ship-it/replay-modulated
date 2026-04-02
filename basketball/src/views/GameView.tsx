@@ -485,6 +485,7 @@ export default function GameView() {
   const [streak, setStreak] = useState<number>(() =>
     parseInt(localStorage.getItem("replaymod_streak") ?? "0", 10)
   );
+  const [streakMilestone, setStreakMilestone] = useState<{ wins: number; pct: number } | null>(null);
 
   // Tier flip display state
   const [tierFlipKey, setTierFlipKey] = useState(0);
@@ -688,6 +689,8 @@ export default function GameView() {
               const next = prev + 1;
               localStorage.setItem("replaymod_streak", String(next));
               if (next === 3 || next === 5 || next === 10) soundManager.playStreakMilestone(next);
+              if (next === 3) setStreakMilestone({ wins: 3, pct: 5 });
+              else if (next === 5) setStreakMilestone({ wins: 5, pct: 15 });
               submitToLeaderboard("streak", next);
               return next;
             });
@@ -834,6 +837,7 @@ export default function GameView() {
         name: String((c as any).name ?? ""),
         actualFp: Number((c as any).actualFp ?? 0),
         projectedFp: Number((c as any).projectedFp ?? 0) || undefined,
+        salary: Number((c as any).salary ?? 0),
         opponent: (c as any).gameInfo?.opponent ?? undefined,
         badges: ((c as any).achievements ?? []).map((a: any) => String(a.id ?? a.label ?? "")),
         statLine: (c as any).statLine ?? undefined,
@@ -934,6 +938,7 @@ export default function GameView() {
       pendingBalanceUpdateRef.current = null;
       lockedGaugeFpRef.current = null;
       springHasFiredRef.current = false;
+      setStreakMilestone(null);
     }
   }, [gameState]);
 

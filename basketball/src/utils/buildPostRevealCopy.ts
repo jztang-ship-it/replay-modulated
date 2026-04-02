@@ -1,22 +1,17 @@
 /**
  * buildPostRevealCopy.ts — Basketball-specific 2-line post-reveal summary.
  *
- * Line 1 = what happened to the lineup (near miss / dominant / barely made / bust)
- * Line 2 = why — who drove it, what badge/stat mattered, opponent city if available
+ * Line 1 = what happened (near miss / dominant / barely made / bust)
+ * Line 2 = why — headline card story (badge, stat, opponent)
  *
- * Priority:
- *   1. Streak bonus milestone (3 wins = 5%, 5 wins = 15%)
- *   2. Dominant clear (12+ FP above tier floor)
- *   3. Near miss (within 8 FP of next tier)
- *   4. Barely made current tier (within 5 FP above floor)
- *   5. Bust
- *   6. Carry / underperform explanation
- *   7. Balanced fallback
- *
- * All selection is deterministic — no Math.random().
+ * CRITICAL: Line 2 almost always features the anchor/star card, not scrubs.
+ * Selection uses a "headline score" that biases heavily toward:
+ *   - higher salary (card importance)
+ *   - higher actual FP (impact)
+ *   - notable badges / milestone stats
+ * Low-salary filler cards only win when they're truly extreme outliers.
  */
 
-// ── Thresholds ──────────────────────────────────────────────────────────────
 const NEAR_MISS_FP   = 8;
 const BARELY_MADE_FP = 5;
 const DOMINANT_FP    = 12;
@@ -25,11 +20,9 @@ const TIER_LABELS: Record<string, string> = {
   BUST: "Bust", ROOKIE: "Rookie", STARTER: "Starter",
   ALL_STAR: "All-Star", MVP: "MVP", GOAT: "G.O.A.T.",
 };
-
 const TIER_MIN: Record<string, number> = {
   BUST: 0, ROOKIE: 155, STARTER: 175, ALL_STAR: 195, MVP: 215, GOAT: 235,
 };
-
 const TIER_ORDER = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "GOAT"];
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -38,11 +31,9 @@ export interface RosterCardInfo {
   name: string;
   actualFp: number;
   projectedFp?: number;
-  /** Opponent team from the sampled historical game log */
+  salary?: number;
   opponent?: string;
-  /** Badge IDs earned by this card (e.g. "god_mode", "triple_double") */
   badges?: string[];
-  /** Raw stat line from the sampled log */
   statLine?: Record<string, number>;
 }
 
@@ -50,10 +41,9 @@ export interface PostRevealCopyInput {
   totalFp: number;
   winTier: string;
   roster: RosterCardInfo[];
-  streak: number;       // streak AFTER this hand (0 on bust)
-  prevStreak: number;   // streak BEFORE this hand
+  streak: number;
+  prevStreak: number;
   isBust: boolean;
-  /** Set when streak hits a milestone this hand */
   streakMilestone?: { wins: number; pct: number } | null;
 }
 
@@ -71,33 +61,21 @@ function lastName(name: string): string {
   return name.trim().split(/\s+/).pop() ?? name;
 }
 
-/** Extract city from opponent string: "Toronto Raptors" → "Toronto" */
 function opponentCity(opp?: string): string | null {
   if (!opp) return null;
   const parts = opp.trim().split(/\s+/);
   if (parts.length <= 1) return opp;
-  // Handle multi-word cities: "New York Knicks" → "New York", "Golden State Warriors" → "Golden State"
-  const knownTwo = ["New York", "New Orleans", "Golden State", "Oklahoma City", "San Antonio", "Los Angeles"];
   const twoWord = parts.slice(0, 2).join(" ");
+  const knownTwo = ["New York", "New Orleans", "Golden State", "Oklahoma City", "San Antonio", "Los Angeles"];
   if (knownTwo.includes(twoWord)) return twoWord;
   return parts[0];
 }
 
-// ── Badge/stat analysis ─────────────────────────────────────────────────────
+// ── Badge + stat analysis ───────────────────────────────────────────────────
 
-interface StandoutPlayer {
-  name: string;
-  actualFp: number;
-  ratio: number;         // actual/projected
-  opponent: string | null;
-  topBadge: string | null;
-  statHighlight: string | null;
-}
-
-// Human-readable badge phrasing — two variants each for variety
 const BADGE_COPY: Record<string, [string, string]> = {
   god_mode:        ["God Mode", "absolutely cooking"],
-  fire:            ["Fire", "was on fire"],
+  fire:            ["Fire", "on fire"],
   bucket:          ["Bucket", "couldn't miss"],
   beast:           ["Beast", "dominated inside"],
   glass:           ["Glass", "owned the glass"],
@@ -117,23 +95,21 @@ const BADGE_COPY: Record<string, [string, string]> = {
   double_double:   ["Double Double", "solid across two categories"],
 };
 
-// Priority order for positive badges (most notable first)
-const BADGE_PRIORITY = [
+const BADGE_PRIORITY_POS = [
   "quad_double", "5x5", "triple_double", "god_mode",
   "beast", "fire", "bucket", "glass", "swat", "rejection",
   "wizard", "dime", "thief", "pickpocket", "maestro", "pure",
   "double_double",
 ];
-
-const NEG_BADGES = ["turnover_machine", "sloppy"];
+const BADGE_PRIORITY_NEG = ["turnover_machine", "sloppy"];
 
 function buildStatHighlight(s?: Record<string, number>): string | null {
   if (!s) return null;
   const pts = Number(s.pts ?? s.points ?? 0);
   const reb = Number(s.reb ?? s.rebounds ?? s.trb ?? 0);
   const ast = Number(s.ast ?? s.assists ?? 0);
-  const stl = Number(s.stl ?? s.steals ?? 0);
   const blk = Number(s.blk ?? s.blocks ?? 0);
+  const stl = Number(s.stl ?? s.steals ?? 0);
 
   if (pts >= 50) return `${pts} points`;
   if (pts >= 40) return `${pts} points`;
@@ -151,33 +127,64 @@ function buildStatHighlight(s?: Record<string, number>): string | null {
   return null;
 }
 
-function findStandout(roster: RosterCardInfo[], positive: boolean): StandoutPlayer | null {
-  let best: StandoutPlayer | null = null;
-  let bestScore = 0;
+// ── Headline card selection ─────────────────────────────────────────────────
+// Biased toward star/anchor cards. Low-salary scrubs almost never win.
+
+interface HeadlineCard {
+  name: string;
+  actualFp: number;
+  salary: number;
+  ratio: number;
+  opponent: string | null;
+  topBadge: string | null;
+  statHighlight: string | null;
+  isPositive: boolean;
+  headlineScore: number;
+}
+
+function selectHeadline(roster: RosterCardInfo[], positive: boolean): HeadlineCard | null {
+  const maxSalary = Math.max(...roster.map(c => c.salary ?? 0), 1);
+  let best: HeadlineCard | null = null;
 
   for (const c of roster) {
     const proj = Number(c.projectedFp ?? 0);
+    const salary = Number(c.salary ?? 0);
     const ratio = proj > 0 ? c.actualFp / proj : 1;
-    const isExtreme = positive ? ratio >= 1.3 : ratio <= 0.7;
-    if (!isExtreme) continue;
 
-    const score = positive ? ratio : (1 / ratio);
-    if (score <= bestScore) continue;
+    // For positive: ratio >= 1.2 or actualFp >= 35 (star performance regardless of proj)
+    // For negative: ratio <= 0.75
+    const isExtreme = positive
+      ? (ratio >= 1.2 || c.actualFp >= 35)
+      : ratio <= 0.75;
+    if (!isExtreme) continue;
 
     const badges = (c.badges ?? []).map(b => b.toLowerCase().replace(/\s+/g, "_"));
     const topBadge = positive
-      ? BADGE_PRIORITY.find(b => badges.includes(b)) ?? null
-      : NEG_BADGES.find(b => badges.includes(b)) ?? null;
+      ? BADGE_PRIORITY_POS.find(b => badges.includes(b)) ?? null
+      : BADGE_PRIORITY_NEG.find(b => badges.includes(b)) ?? null;
 
-    best = {
-      name: lastName(c.name),
-      actualFp: c.actualFp,
-      ratio,
-      opponent: opponentCity(c.opponent),
-      topBadge,
-      statHighlight: buildStatHighlight(c.statLine),
-    };
-    bestScore = score;
+    // Headline score: heavily biased toward salary, actualFp, badges
+    const salaryWeight = (salary / maxSalary) * 40;        // 0-40 points for salary importance
+    const fpWeight = Math.min(c.actualFp / 5, 20);          // 0-20 points for raw FP output
+    const badgeWeight = topBadge ? 15 : 0;                   // 15 bonus for any badge
+    const milestoneBonus = (topBadge && ["quad_double", "5x5", "triple_double"].includes(topBadge)) ? 20 : 0;
+    const ratioWeight = positive ? Math.max(0, (ratio - 1) * 10) : Math.max(0, (1 - ratio) * 10); // 0-10
+
+    const headlineScore = salaryWeight + fpWeight + badgeWeight + milestoneBonus + ratioWeight;
+
+    if (!best || headlineScore > best.headlineScore) {
+      best = {
+        name: lastName(c.name),
+        actualFp: c.actualFp,
+        salary,
+        ratio,
+        opponent: opponentCity(c.opponent),
+        topBadge,
+        statHighlight: buildStatHighlight(c.statLine),
+        isPositive: positive,
+        headlineScore,
+      };
+    }
   }
 
   return best;
@@ -185,63 +192,48 @@ function findStandout(roster: RosterCardInfo[], positive: boolean): StandoutPlay
 
 // ── Line 2 builder ──────────────────────────────────────────────────────────
 
-function buildLine2(star: StandoutPlayer, seed: number): string {
-  const name = star.name;
-  const opp = star.opponent;
-  const badge = star.topBadge;
-  const stat = star.statHighlight;
+function buildLine2(h: HeadlineCard, seed: number): string {
+  const { name, opponent: opp, topBadge: badge, statHighlight: stat } = h;
   const bc = badge ? BADGE_COPY[badge] : null;
 
-  // Best case: stat + opponent + badge
   if (stat && opp && bc) {
     return pick([
       `${name} dropped ${stat} on ${opp} and hit ${bc[0]} — ${bc[1]}.`,
       `${name} went ${stat} against ${opp} — ${bc[1]}.`,
     ], seed);
   }
-
-  // Stat + badge (no opponent)
   if (stat && bc) {
     return pick([
       `${name} went ${stat} and hit ${bc[0]} — ${bc[1]}.`,
       `${name} put up ${stat} — ${bc[1]}.`,
     ], seed);
   }
-
-  // Stat + opponent (no badge)
   if (stat && opp) {
     return pick([
       `${name} dropped ${stat} on ${opp} — big night.`,
       `${name} went ${stat} against ${opp}.`,
     ], seed);
   }
-
-  // Badge only
   if (bc) {
     return pick([
       `${name} hit ${bc[0]} — ${bc[1]}.`,
       `${name} ${bc[1]}.`,
     ], seed);
   }
-
-  // Stat only
   if (stat) {
     return pick([
-      `${name} went ${stat} — that slot carried.`,
+      `${name} went ${stat} — that card carried.`,
       `${name} put up ${stat}.`,
     ], seed);
   }
-
-  // Generic overperformer
   return pick([
     `${name} went off — that card was different.`,
     `Big night from ${name}.`,
   ], seed);
 }
 
-function buildNegLine2(star: StandoutPlayer, seed: number): string {
-  const name = star.name;
-  const badge = star.topBadge;
+function buildNegLine2(h: HeadlineCard, seed: number): string {
+  const { name, topBadge: badge } = h;
   const bc = badge ? BADGE_COPY[badge] : null;
 
   if (bc) {
@@ -250,7 +242,6 @@ function buildNegLine2(star: StandoutPlayer, seed: number): string {
       `${name} ${bc[1]} — that slot gave points away.`,
     ], seed);
   }
-
   return pick([
     `${name} never got going — cold slot.`,
     `One cold card held this back.`,
@@ -275,15 +266,14 @@ export function buildPostRevealCopy(input: PostRevealCopyInput): PostRevealCopy 
   const barelyMade = !isBust && margin >= 0 && margin <= BARELY_MADE_FP && winTier !== "BUST";
   const dominant = !isBust && margin >= DOMINANT_FP && winTier !== "BUST";
 
-  const star = findStandout(roster, true);
-  const dud = findStandout(roster, false);
+  const star = selectHeadline(roster, true);
+  const dud = selectHeadline(roster, false);
 
   // ── 1. Streak milestone ───────────────────────────────────────────────
   if (streakMilestone) {
     const primary = pick([
       `${streakMilestone.wins} straight — that's a ${streakMilestone.pct}% hit.`,
       `Heater. ${streakMilestone.wins} in a row — streak paid out.`,
-      `You cashed the ${streakMilestone.pct}% bonus. Keep it alive.`,
     ], seed);
     const secondary = star ? buildLine2(star, seed) : "Bonus pool reward locked.";
     return { primary, secondary };
@@ -293,7 +283,6 @@ export function buildPostRevealCopy(input: PostRevealCopyInput): PostRevealCopy 
   if (dominant && tierIdx >= 4) {
     const primary = pick([
       `Way past ${tierLabel} — that lineup was different.`,
-      "Everything hit. That's dominance.",
       `Cruised past ${tierLabel}. No sweat.`,
     ], seed);
     const secondary = star ? buildLine2(star, seed) : undefined;
@@ -304,15 +293,12 @@ export function buildPostRevealCopy(input: PostRevealCopyInput): PostRevealCopy 
   if (isNearMiss) {
     const nextLabel = TIER_LABELS[nextTier!] ?? nextTier;
     const primary = pick([
-      `Just ${gap.toFixed(1)} FP short of ${nextLabel} — that was right there.`,
+      `Just ${gap.toFixed(1)} FP short of ${nextLabel} — right there.`,
       `${gap.toFixed(1)} away from ${nextLabel}. One play.`,
-      `You were right there — ${gap.toFixed(1)} FP from the jump.`,
     ], seed);
-    const secondary = dud
-      ? buildNegLine2(dud, seed)
-      : star
-        ? `${star.name} was the swing — needed one more push.`
-        : "Needed one more pop.";
+    const secondary = dud ? buildNegLine2(dud, seed)
+      : star ? buildLine2(star, seed)
+      : "Needed one more push.";
     return { primary, secondary };
   }
 
@@ -321,7 +307,6 @@ export function buildPostRevealCopy(input: PostRevealCopyInput): PostRevealCopy 
     const primary = pick([
       `Snuck into ${tierLabel}. We take that.`,
       `Just enough for ${tierLabel} — barely caught the line.`,
-      `That one slipped through into ${tierLabel}.`,
     ], seed);
     const secondary = star ? buildLine2(star, seed) : "That last push got you there.";
     return { primary, secondary };
@@ -333,44 +318,31 @@ export function buildPostRevealCopy(input: PostRevealCopyInput): PostRevealCopy 
       "Didn't hit — next one can.",
       "Cold hand. Reset fast.",
       "Not this one. Run it back.",
-      "Shake it off. Next hand.",
     ], seed);
-    const secondary = dud
-      ? buildNegLine2(dud, seed)
-      : prevStreak >= 2 ? "This turns fast." : "Needed one real spark.";
+    const secondary = dud ? buildNegLine2(dud, seed) : "Needed one real spark.";
     return { primary, secondary };
   }
 
-  // ── 6. Carry / underperform ───────────────────────────────────────────
+  // ── 6. Star carry ─────────────────────────────────────────────────────
   if (star) {
     const primary = pick([
       `${star.name} went off — almost carried you higher.`,
-      `Big night from ${star.name}. Team almost followed.`,
+      `Big night from ${star.name}.`,
     ], seed);
     return { primary, secondary: buildLine2(star, seed) };
   }
 
-  if (dud && !star) {
-    const primary = pick([
-      "The lineup had enough, but one spot stalled it out.",
-      "One cold card cost the jump.",
-    ], seed);
-    return { primary, secondary: buildNegLine2(dud, seed) };
-  }
-
-  // ── 7. Dominant (lower tiers) ─────────────────────────────────────────
+  // ── 7. Dominant lower tier ────────────────────────────────────────────
   if (dominant) {
-    const primary = pick([
-      `Clear ${tierLabel}. Solid result.`,
-      "No sweat — clean win.",
-    ], seed);
-    return { primary };
+    return {
+      primary: pick([`Clear ${tierLabel}. Solid result.`, "No sweat — clean win."], seed),
+    };
   }
 
-  // ── 8. Win streak momentum ────────────────────────────────────────────
+  // ── 8. Streak momentum ────────────────────────────────────────────────
   if (streak >= 2) {
     return {
-      primary: pick([`That's ${streak} straight. Stay hot.`, "Streak's alive. Momentum's yours."], seed),
+      primary: pick([`That's ${streak} straight. Stay hot.`, "Streak's alive."], seed),
     };
   }
 
@@ -380,7 +352,6 @@ export function buildPostRevealCopy(input: PostRevealCopyInput): PostRevealCopy 
       "A solid result, but not enough to crack the next tier.",
       "No major badge hit — the lineup needed one real spike.",
       "Well built. Missing the breakout.",
-      "One pop game and this jumps.",
     ], seed),
   };
 }
