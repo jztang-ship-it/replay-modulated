@@ -1069,7 +1069,7 @@ function WageDisplay({
     return (
       <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
         {wageLabel}
-        <span style={{ fontSize: 15, fontWeight: 900, color: "rgba(255,255,255,0.7)", lineHeight: 1 }}>
+        <span style={{ fontSize: 17, fontWeight: 900, color: "rgba(255,255,255,0.7)", lineHeight: 1 }}>
           {baseBet}
         </span>
         {betMultiplier > 1 && (
@@ -1085,7 +1085,7 @@ function WageDisplay({
     return (
       <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
         {wageLabel}
-        <span style={{ fontSize: 15, fontWeight: 900, color: "rgba(255,255,255,0.7)", lineHeight: 1 }}>
+        <span style={{ fontSize: 17, fontWeight: 900, color: "rgba(255,255,255,0.7)", lineHeight: 1 }}>
           {baseBet}
         </span>
         <span style={{
@@ -1103,7 +1103,7 @@ function WageDisplay({
     return (
       <div style={{ display: "flex", alignItems: "baseline", gap: 4, overflow: "visible" }}>
         {wageLabel}
-        <span style={{ fontSize: 15, fontWeight: 900, color: "rgba(255,255,255,0.7)", lineHeight: 1 }}>
+        <span style={{ fontSize: 17, fontWeight: 900, color: "rgba(255,255,255,0.7)", lineHeight: 1 }}>
           {baseBet}
         </span>
         <span style={{ fontSize: 13, fontWeight: 800, color: multColor, lineHeight: 1 }}>
@@ -1198,7 +1198,7 @@ function WageDisplay({
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
       {wageLabel}
-      <span style={{ fontSize: 16, fontWeight: 900, color: amtColor, lineHeight: 1, whiteSpace: "nowrap" }}>
+      <span style={{ fontSize: 17, fontWeight: 900, color: amtColor, lineHeight: 1, whiteSpace: "nowrap" }}>
         {sign}{totalAmtSettled}
       </span>
     </div>
