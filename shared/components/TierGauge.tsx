@@ -64,22 +64,22 @@ interface TierGaugeProps {
 }
 
 const TIER_CFG: Record<string, { label: string; color: string; glow: string }> = {
-  GOAT:     { label: "G.O.A.T.", color: "#EF4444", glow: "#EF444455" },
-  MVP:      { label: "MVP",      color: "#FB923C", glow: "#FB923C55" },
+  GOAT: { label: "G.O.A.T.", color: "#EF4444", glow: "#EF444455" },
+  MVP: { label: "MVP", color: "#FB923C", glow: "#FB923C55" },
   ALL_STAR: { label: "ALL-STAR", color: "#C084FC", glow: "#C084FC55" },
-  STARTER:  { label: "STARTER",  color: "#00FFD8", glow: "#00FFD855" },
-  ROOKIE:   { label: "ROOKIE",   color: "#22C55E", glow: "#22C55E55" },
-  BUST:     { label: "BUST",     color: "#6B7280", glow: "#6B728033" },
+  STARTER: { label: "STARTER", color: "#00FFD8", glow: "#00FFD855" },
+  ROOKIE: { label: "ROOKIE", color: "#22C55E", glow: "#22C55E55" },
+  BUST: { label: "BUST", color: "#6B7280", glow: "#6B728033" },
 };
 
-const FF            = "'Rajdhani', 'Oswald', 'Arial Narrow', sans-serif";
+const FF = "'Rajdhani', 'Oswald', 'Arial Narrow', sans-serif";
 const NEAR_MISS_PTS = 8;
-const MAX_FP        = 235;   // GOAT threshold, used for duration scaling
-const BIG_CARD_FP   = 35;    // single card FP above this = "big card"
+const MAX_FP = 235;   // GOAT threshold, used for duration scaling
+const BIG_CARD_FP = 35;    // single card FP above this = "big card"
 
 /** FTUE Booker hand: five drawn cards only (see ftueRoster.ts) — bar starts here before scripted gauge */
 const FTUE_FIVE_CARDS_FP = 105;
-const FTUE_FINAL_FP      = 192.6;
+const FTUE_FINAL_FP = 192.6;
 /** Imagined peak FP for the “past Starter into All-Star” hero beat (All-Star line = 195) */
 const FTUE_IMAGINE_PEAK_FP = 198;
 
@@ -87,7 +87,7 @@ const FTUE_IMAGINE_PEAK_FP = 198;
 function spring(t: number, zeta: number, wn: number): number {
   if (t <= 0) return 0;
   const wd = wn * Math.sqrt(Math.max(0, 1 - zeta * zeta));
-  const d  = Math.exp(-zeta * wn * t);
+  const d = Math.exp(-zeta * wn * t);
   if (wd < 0.001) return 1 - d * (1 + zeta * wn * t);
   return 1 - d * (Math.cos(wd * t) + (zeta / Math.sqrt(1 - zeta * zeta)) * Math.sin(wd * t));
 }
@@ -286,14 +286,14 @@ export function TierGauge({
   onTierCross,
   postRevealCopy,
 }: TierGaugeProps) {
-  const [barFill,   setBarFill]   = useState(0);
-  const [barColor,  setBarColor]  = useState("transparent");
+  const [barFill, setBarFill] = useState(0);
+  const [barColor, setBarColor] = useState("transparent");
   const [ftueOscGlow, setFtueOscGlow] = useState<string | null>(null);
   const [isDinging, setIsDinging] = useState(false);
-  const rafRef      = useRef<number>(0);
-  const delayRef    = useRef<number>(0);
+  const rafRef = useRef<number>(0);
+  const delayRef = useRef<number>(0);
   const animatedFpRef = useRef<number>(0);
-  const animTierRef  = useRef<string>("BUST");
+  const animTierRef = useRef<string>("BUST");
   const onTierCrossRef = useRef(onTierCross);
   onTierCrossRef.current = onTierCross;
   const prevFillRef = useRef<number>(0);
@@ -302,6 +302,7 @@ export function TierGauge({
   const lastAnimatedTotalFpRef = useRef<number | null>(null);
   const nearMissSpringFiredRef = useRef(false);
   const hasLockedRef = useRef(false);
+  const animRunningRef = useRef(false); // true while a spring/ease RAF loop is in-flight
   const ftueOscCompleteFiredRef = useRef(false);
   const onFtueOscillateCompleteRef = useRef(onFtueOscillateComplete);
   onFtueOscillateCompleteRef.current = onFtueOscillateComplete;
@@ -326,7 +327,7 @@ export function TierGauge({
   } = snap;
 
   const nmOvershoot = isNearMiss ? 0.11 * (1 - gap / NEAR_MISS_PTS) : 0;
-  const nmTarget    = Math.min(1.12, 1.0 + nmOvershoot);
+  const nmTarget = Math.min(1.12, 1.0 + nmOvershoot);
 
   // ── FTUE oscillation — runs once when ftueOscillate becomes true ─────
   // Ease FP to 198 (3 FP into All-Star vs floor 195): bar shows a *small* All-Star segment
@@ -337,10 +338,10 @@ export function TierGauge({
     ftueOscCompleteFiredRef.current = false;
 
     // Must match basketball FTUE TierGauge thresholds (GameView)
-    const rookieMin   = 155;
-    const starterMin  = 175;
-    const allStarMin  = 195;
-    const mvpMin      = 215;
+    const rookieMin = 155;
+    const starterMin = 175;
+    const allStarMin = 195;
+    const mvpMin = 215;
     const starterSpan = Math.max(1, allStarMin - starterMin);
     const allStarSpan = Math.max(1, mvpMin - allStarMin);
 
@@ -380,15 +381,15 @@ export function TierGauge({
     }
 
     const startFp = FTUE_FIVE_CARDS_FP;
-    const peakFp  = FTUE_IMAGINE_PEAK_FP;
-    const realFp  = FTUE_FINAL_FP;
+    const peakFp = FTUE_IMAGINE_PEAK_FP;
+    const realFp = FTUE_FINAL_FP;
     const realFill = Math.min(1, Math.max(0, (realFp - starterMin) / starterSpan));
 
     // Slower than normal play — FTUE “slot machine” near-miss read (linger on tier crossing + wobble)
     const PHASE1_MS = 1650;
     const PHASE2_MS = 5200;
     const ENVELOPE_DECAY = 1.55;
-    const OMEGA        = 2 * Math.PI * 0.62;
+    const OMEGA = 2 * Math.PI * 0.62;
 
     const v0 = fpToOscVisual(startFp);
     prevFillRef.current = v0.fill;
@@ -416,9 +417,9 @@ export function TierGauge({
       const elapsed = now - t0;
 
       if (elapsed < PHASE1_MS) {
-        const u  = elapsed / PHASE1_MS;
+        const u = elapsed / PHASE1_MS;
         const fp = startFp + (peakFp - startFp) * easeOut(u);
-        const v  = fpToOscVisual(fp);
+        const v = fpToOscVisual(fp);
         setBarFill(v.fill);
         setBarColor(v.color);
         setFtueOscGlow(v.glow);
@@ -426,11 +427,11 @@ export function TierGauge({
         return;
       }
 
-      const t2   = elapsed - PHASE1_MS;
+      const t2 = elapsed - PHASE1_MS;
       const tSec = t2 / 1000;
-      const env  = Math.exp(-ENVELOPE_DECAY * tSec);
-      const fp   = realFp + (peakFp - realFp) * env * Math.cos(OMEGA * tSec);
-      const v    = fpToOscVisual(fp);
+      const env = Math.exp(-ENVELOPE_DECAY * tSec);
+      const fp = realFp + (peakFp - realFp) * env * Math.cos(OMEGA * tSec);
+      const v = fpToOscVisual(fp);
       setBarFill(v.fill);
       setBarColor(v.color);
       setFtueOscGlow(v.glow);
@@ -478,10 +479,10 @@ export function TierGauge({
       return;
     }
 
-    // Once winTier is set and we've done one final animation, lock forever
+    // Once locked (post-spring), bar never moves again until next hand
     if (hasLockedRef.current) return;
 
-    // Already settled at this totalFp — avoid restarting animation on dependency churn
+    // Already at this totalFp — skip (no exceptions)
     if (lastAnimatedTotalFpRef.current !== null && Math.abs(totalFp - lastAnimatedTotalFpRef.current) < 0.05) {
       return;
     }
@@ -489,10 +490,11 @@ export function TierGauge({
     cancelAnimationFrame(rafRef.current);
     clearTimeout(delayRef.current);
 
-    // ── Direct-set: bar tracks totalFp frame-by-frame ──────────────────
-    // If winTier not yet set, bar is being driven externally (by spring in GameView).
-    // Always direct-set — TierGauge must be a passive follower, no internal spring.
-    if (!winTierProp || (!isGoat && !regularFinalCardKick && !isNearMiss && !isSkip)) {
+    // ── Direct-set: TierGauge is a passive follower ──────────────────────
+    // GameView's springFp drives gaugeTotalFp frame-by-frame during spring.
+    // TierGauge just maps FP→fill and sets the bar. No internal spring.
+    const hasActiveAnimation = isGoat || isSkip;
+    if (!hasActiveAnimation) {
       const snap = computeGaugeState(totalFp, thresholds, winTierProp ?? null, NEAR_MISS_PTS);
       prevFillRef.current = snap.finalFill;
       prevTierRef.current = snap.derivedTier;
@@ -500,7 +502,6 @@ export function TierGauge({
       lastAnimatedTotalFpRef.current = totalFp;
       setBarFill(snap.finalFill);
       setBarColor(snap.normalColor);
-      // Fire tier cross callback when tier changes
       if (snap.derivedTier !== animTierRef.current) {
         animTierRef.current = snap.derivedTier;
         onTierCrossRef.current?.(snap.derivedTier);
@@ -508,52 +509,51 @@ export function TierGauge({
       return;
     }
 
-    // Always animate from last bar end (never reset to 0 on tier cross) for spring modes
+    // Always animate from last bar end
     const startFill = prevFillRef.current;
-    const delta     = finalFill - startFill;
+    const delta = finalFill - startFill;
 
     // ── Determine animation mode ──────────────────────────────────────────
-    type AnimMode = "goat" | "near_miss_spring" | "skip_spring" | "final_card_spring" | "ease";
+    type AnimMode = "goat" | "near_miss_spring" | "post_reveal" | "skip_spring" | "ease";
     let mode: AnimMode = "ease";
     let duration = 300;
 
     if (isGoat) {
       mode = "goat";
       duration = 900;
-    } else if (regularFinalCardKick) {
-      mode = "final_card_spring";
-      duration = 1100;
     } else if (isNearMiss) {
       mode = "near_miss_spring";
       duration = 1600;
+    } else if (regularFinalCardKick) {
+      mode = "post_reveal";
+      duration = 1800;
     } else if (isSkip) {
-      // Skip: duration proportional to score; mild spring for high tiers
       duration = Math.max(500, Math.round(totalFp / MAX_FP * 1400));
       mode = (actualTier === "MVP" || actualTier === "ALL_STAR") ? "skip_spring" : "ease";
     } else {
-      // Unreachable if FP roll-up path is correct — keep short ease fallback
       mode = "ease";
       duration = 300;
     }
 
     // ── Spring params by mode ─────────────────────────────────────────────
-    // zeta: damping ratio. Lower = more oscillations. 0.3 = springy, 0.8 = barely bounces.
-    // wn: natural frequency. Higher = faster oscillation.
-    const springCfg = {
-      near_miss_spring: { zeta: 0.28, wn: 9  },
-      skip_spring:      { zeta: 0.45, wn: 8  },
-      final_card_spring:{ zeta: 0.44, wn: 8.5 },
-      goat:             { zeta: 1.00, wn: 5  }, // critically damped — smooth fill
-      ease:             { zeta: 1.00, wn: 5  }, // unused for ease mode
+    const springCfg: Record<string, { zeta: number; wn: number }> = {
+      near_miss_spring: { zeta: 0.28, wn: 9 },
+      post_reveal: { zeta: 0.40, wn: 7 },
+      skip_spring: { zeta: 0.45, wn: 8 },
+      goat: { zeta: 1.00, wn: 5 },
+      ease: { zeta: 1.00, wn: 5 },
     };
     const { zeta, wn } = springCfg[mode] ?? springCfg.ease;
+
+    const alreadyAtFinal = Math.abs(startFill - finalFill) < 0.015;
+    const startupDelay = alreadyAtFinal ? 0 : 60;
 
     const delayId = setTimeout(() => {
       const t0 = performance.now();
 
       function tick(now: number) {
         const elapsed = (now - t0) / duration;
-        const t       = Math.min(elapsed, 1);
+        const t = Math.min(elapsed, 1);
         let pos: number;
 
         switch (mode) {
@@ -562,45 +562,43 @@ export function TierGauge({
             break;
 
           case "near_miss_spring": {
-            // Phase 1 (0→0.6): ease-out to finalFill
-            // Phase 2 (0.6→1.0): spring overshoots nmTarget then snaps back to finalFill
-            if (t < 0.6) {
+            if (alreadyAtFinal) {
+              const raw = spring(t * 1.8, zeta, wn);
+              pos = finalFill + raw * (nmTarget - finalFill);
+            } else if (t < 0.6) {
               pos = startFill + easeOut(t / 0.6) * (finalFill - startFill);
             } else {
-              const t2  = (t - 0.6) / 0.4;
+              const t2 = (t - 0.6) / 0.4;
               const raw = spring(t2 * 1.8, zeta, wn);
               pos = finalFill + raw * (nmTarget - finalFill);
             }
             break;
           }
 
+          case "post_reveal": {
+            // Fill-space spring from startFill to finalFill.
+            // Target is finalFill exactly — the underdamped spring (zeta<1) naturally
+            // overshoots past finalFill during oscillation for the springy feel.
+            // Do NOT use a target > finalFill here, that caused the bar to pin at 100%.
+            const raw = spring(t * 1.6, zeta, wn);
+            pos = startFill + raw * (finalFill - startFill);
+            break;
+          }
+
           case "skip_spring": {
-            // Spring from start to finalFill — mild natural bounce
             const raw = spring(t * 1.5, zeta, wn);
             pos = startFill + raw * (finalFill - startFill);
             break;
           }
-          case "final_card_spring": {
-            // Slot-machine style: overshoot ~5% of current target, then bounce back.
-            const oscFp = totalFp * 1.05;
-            const target = isMaxLevel
-              ? 1
-              : Math.min(1, Math.max(0, (oscFp - curMin) / tierSpan));
-            const raw = spring(t * 1.55, zeta, wn);
-            pos = startFill + raw * (target - startFill);
-            break;
-          }
 
           default:
-            // Simple ease-out — no spring, no nonsense
             pos = startFill + easeOut(t) * delta;
         }
 
         const barWidth = Math.min(1, Math.max(0, pos));
         setBarFill(barWidth);
 
-        // Color: show next-tier color when overshooting past 1.0
-        if ((mode === "near_miss_spring" || mode === "final_card_spring") && pos > finalFill + 0.005) {
+        if (mode === "near_miss_spring" && pos > finalFill + 0.005) {
           setBarColor(overshootColor);
         } else {
           setBarColor(normalColor);
@@ -614,7 +612,7 @@ export function TierGauge({
           lastAnimatedTotalFpRef.current = totalFp;
           setBarFill(finalFill);
           setBarColor(normalColor);
-          if (winTierProp) hasLockedRef.current = true; // post-spring: lock forever
+          if (winTierProp) hasLockedRef.current = true;
           if (isGoat) {
             setIsDinging(true);
             setTimeout(() => setIsDinging(false), 1500);
@@ -623,11 +621,14 @@ export function TierGauge({
       }
 
       rafRef.current = requestAnimationFrame(tick);
-    }, 60);
+    }, startupDelay);
 
     return () => {
       clearTimeout(delayId);
       cancelAnimationFrame(rafRef.current);
+      // Do NOT reset animRunningRef here — the in-flight guard must persist across
+      // re-renders triggered by setBarFill(). It is cleared only when the animation
+      // completes (t>=1) or when a legitimate new animation mode takes over below.
     };
   }, [totalFp, winTierProp, visible, ftueSuppressNormal, ftueOscillate, ftueLockStaticBar, regularFinalCardKick, isSkip, isNearMiss, isGoat, thresholds]); // eslint-disable-line
 
@@ -638,6 +639,7 @@ export function TierGauge({
       lastAnimatedTotalFpRef.current = null;
       nearMissSpringFiredRef.current = false;
       hasLockedRef.current = false;
+      animRunningRef.current = false;
     }
   }, [visible]);
 

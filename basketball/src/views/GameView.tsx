@@ -168,11 +168,11 @@ function createPlaceholders(): PlayerCard[] {
 }
 
 const GAUGE_THRESHOLDS = [
-  { tier: "ROOKIE",   minFP: 155 },
-  { tier: "STARTER",  minFP: 175 },
+  { tier: "ROOKIE", minFP: 155 },
+  { tier: "STARTER", minFP: 175 },
   { tier: "ALL_STAR", minFP: 195 },
-  { tier: "MVP",      minFP: 215 },
-  { tier: "GOAT",     minFP: 235 },
+  { tier: "MVP", minFP: 215 },
+  { tier: "GOAT", minFP: 235 },
 ];
 const NEAR_MISS_FP = 5;
 
@@ -236,12 +236,12 @@ function deriveTierFromFp(fp: number): string {
 
 // ── Spring oscillation waypoints ────────────────────────────────────────────
 const SPRING_TIERS = [
-  { name: "BUST",     lo: 0,   hi: 155 },
-  { name: "ROOKIE",   lo: 155, hi: 175 },
-  { name: "STARTER",  lo: 175, hi: 195 },
+  { name: "BUST", lo: 0, hi: 155 },
+  { name: "ROOKIE", lo: 155, hi: 175 },
+  { name: "STARTER", lo: 175, hi: 195 },
   { name: "ALL_STAR", lo: 195, hi: 215 },
-  { name: "MVP",      lo: 215, hi: 235 },
-  { name: "GOAT",     lo: 235, hi: 9999 },
+  { name: "MVP", lo: 215, hi: 235 },
+  { name: "GOAT", lo: 235, hi: 9999 },
 ];
 const SPRING_TIER_SPAN = 20.0;
 
@@ -254,7 +254,13 @@ function computeSpringAmplitude(finalFp: number): number {
   const fpNorm = Math.min(1, Math.max(0, (finalFp - 155) / 80));
   const baseAmp = 4.0 + fpNorm * 6.0;
   const marginFactor = 1.0 - marginNorm * 0.75;
-  return baseAmp * marginFactor;
+  const rawAmplitude = baseAmp * marginFactor;
+  // Hard cap: never let the spring push past the current tier ceiling.
+  // Without this, a score near the top of a tier (e.g. 167 in ROOKIE 155-175)
+  // makes the bar visually shoot to near-100% fill then snap back.
+  // Leave 0.5 FP of clearance. GOAT tier has no ceiling so skip cap there.
+  const headroom = tier.hi === 9999 ? rawAmplitude : Math.max(0, tier.hi - finalFp - 0.5);
+  return Math.min(rawAmplitude, headroom);
 }
 
 const TIER_IMAGE_MAP: Record<string, string> = {
@@ -494,48 +500,49 @@ export default function GameView() {
   const springRafRef = useRef<number>(0);
   const springTimersRef = useRef<number[]>([]);
   const pendingBalanceUpdateRef = useRef<(() => void) | null>(null);
-  const jackpotAmountRef = useRef<number>(JACKPOT_SEED); // mirrors BonusRow amount for milestone calc
+  const jackpotAmountRef = useRef<number>(JACKPOT_SEED);
   const lockedGaugeFpRef = useRef<number | null>(null);
   const springHasFiredRef = useRef(false);
 
   const runSpring = useCallback((finalFp: number, onSettled: () => void) => {
-    lockedGaugeFpRef.current = finalFp;
+    lockedGaugeFpRef.current = finalFp; // freeze gauge source immediately
     cancelAnimationFrame(springRafRef.current);
     springTimersRef.current.forEach(clearTimeout);
     springTimersRef.current = [];
 
-    // Physics-based spring: one continuous smooth motion.
-    // Damped harmonic oscillator: x(t) = A * e^(-decay*t) * sin(freq*t)
-    // No waypoints, no segments, no joins — just smooth physics.
-    const amplitude = computeSpringAmplitude(finalFp);
-    const DURATION_MS = 1800;
-    const decay = 3.5;   // damping — higher = settles faster
-    const freq = 8.0;    // oscillation frequency — higher = faster bounces
+    // Amplitude based on tier margin
+    const tier = SPRING_TIERS.find(t => finalFp >= t.lo && finalFp < t.hi)
+      ?? SPRING_TIERS[SPRING_TIERS.length - 1];
+    const margin = finalFp - tier.lo;
+    const marginNorm = Math.min(1, margin / SPRING_TIER_SPAN);
+    const fpNorm = Math.min(1, Math.max(0, (finalFp - 155) / 80));
+    const baseAmp = 4.0 + fpNorm * 6.0;
+    const amplitude = baseAmp * (1.0 - marginNorm * 0.75);
+    // Clamp so spring never crosses into next tier
+    const headroom = tier.hi - finalFp - 0.5;
+    const clampedAmp = Math.min(amplitude, Math.max(1, headroom));
 
+    const DURATION_MS = 1800;
+    const decay = 3.5;
+    const freq = 8.0;
     let startTime: number | null = null;
+
     setSpringFp(finalFp);
     setSpringSettled(false);
 
     function tick(now: number) {
       if (startTime === null) startTime = now;
-      const elapsed = now - startTime;
-      const t = elapsed / DURATION_MS; // 0→1 over duration
-
+      const t = (now - startTime) / DURATION_MS;
       if (t >= 1) {
-        lockedGaugeFpRef.current = finalFp;
         setSpringFp(null);
         setSpringSettled(true);
         onSettled();
         return;
       }
-
-      // Damped sine: starts with full amplitude, decays smoothly
-      // sin starts at 0, peaks at π/2 — offset so first movement is UP
       const envelope = Math.exp(-decay * t);
       const oscillation = Math.sin(freq * t * Math.PI);
-      const offset = amplitude * envelope * oscillation;
+      const offset = clampedAmp * envelope * oscillation;
       setSpringFp(finalFp + offset);
-
       springRafRef.current = requestAnimationFrame(tick);
     }
     springRafRef.current = requestAnimationFrame(tick);
@@ -545,9 +552,9 @@ export default function GameView() {
   // Picked once when winTier is set; stable for the lifetime of the result screen.
   const nearMissCopy = useMemo(() => {
     const copies: Partial<Record<string, string[]>> = {
-      BUST:     ["So close.", "Right there.", "Next hand."],
-      ROOKIE:   ["Just a few more FP.", "Run it back.", "So close."],
-      STARTER:  ["Right on the edge.", "Almost there.", "Run it back."],
+      BUST: ["So close.", "Right there.", "Next hand."],
+      ROOKIE: ["Just a few more FP.", "Run it back.", "So close."],
+      STARTER: ["Right on the edge.", "Almost there.", "Run it back."],
       ALL_STAR: ["One strong hand away.", "So close.", "Push harder."],
     };
     if (!winTier) return null;
@@ -708,7 +715,7 @@ export default function GameView() {
       soundManager.stopRevealAmbience();
       if (!isFTUE) return;
       ftueLastHandFpRef.current = _totalFp;
-      const tier   = calculateWinTier(_totalFp);
+      const tier = calculateWinTier(_totalFp);
       const payout = calculatePayout(tier, currentBet);
       setWinTier(tier);
       setWinPayout(payout);
@@ -810,8 +817,8 @@ export default function GameView() {
   }, [gameState, roster, totalFp]);
 
 
-  // lockedGaugeFpRef freezes the gauge the instant spring starts and forever after
-  const displayFp    = springFp ?? (lockedGaugeFpRef.current ?? totalFp);
+  // lockedGaugeFpRef freezes the gauge FP the instant the anchor card finishes
+  const displayFp = springFp ?? (lockedGaugeFpRef.current ?? totalFp);
   const gaugeTotalFp = displayFp;
   latestGaugeFpRef.current = gaugeTotalFp;
 
@@ -831,14 +838,14 @@ export default function GameView() {
       tierFloor: gaugeSnap.curMin,
       nextTierMin: gaugeSnap.nextMin > 0 && gaugeSnap.nextMin < 9999 ? gaugeSnap.nextMin : 0,
       roster: roster.map(c => ({
-        name:         String((c as any).name ?? ""),
-        salary:       Number((c as any).salary ?? 0),
-        actualFp:     Number((c as any).actualFp ?? 0),
-        projectedFp:  Number((c as any).projectedFp ?? 0) || undefined,
+        name: String((c as any).name ?? ""),
+        salary: Number((c as any).salary ?? 0),
+        actualFp: Number((c as any).actualFp ?? 0),
+        projectedFp: Number((c as any).projectedFp ?? 0) || undefined,
         achievements: ((c as any).achievements ?? []) as Array<{ id: string; label: string; icon?: string; fp?: number }>,
-        opponent:     String((c as any).gameInfo?.opponent ?? ""),
-        gameDate:     String((c as any).gameInfo?.date ?? ""),
-        statLine:     ((c as any).statLine ?? {}) as Record<string, any>,
+        opponent: String((c as any).gameInfo?.opponent ?? ""),
+        gameDate: String((c as any).gameInfo?.date ?? ""),
+        statLine: ((c as any).statLine ?? {}) as Record<string, any>,
       })),
       streak,
       prevStreak: winTier === "BUST" ? streak : Math.max(0, streak - 1),
@@ -854,8 +861,9 @@ export default function GameView() {
 
   // displayTier is driven only by handleTierCross during normal reveal — not during spring
 
-  // No spring on results — direct-set keeps bar accurate. Spring to be added later.
-  const regularFinalGaugeKick = false;
+  // Signal TierGauge to run its fill-space spring while we wait for onSettled.
+  // True from anchor card lock until springSettled fires.
+  const regularFinalGaugeKick = false; // TierGauge is passive — spring lives in GameView
 
   // Tier result phase: Phase 1 = big slam (with optional near-miss tease), Phase 2 = info view
   useEffect(() => {
@@ -866,9 +874,9 @@ export default function GameView() {
       setTierResultPhase(1);
       const gaugeSnap = computeGaugeState(totalFp, GAUGE_THRESHOLDS as any, winTier, NEAR_MISS_FP);
       if (gaugeSnap.isNearMiss && gaugeSnap.nextTier != null) {
-        const t1 = setTimeout(() => setNearMissTeasing(true),  400);
+        const t1 = setTimeout(() => setNearMissTeasing(true), 400);
         const t2 = setTimeout(() => setNearMissTeasing(false), 1200);
-        const t3 = setTimeout(() => setTierResultPhase(2),     1800);
+        const t3 = setTimeout(() => setTierResultPhase(2), 1800);
         nearMissChoreTimersRef.current = [t1, t2, t3];
       } else {
         const t = setTimeout(() => setTierResultPhase(2), 1800);
