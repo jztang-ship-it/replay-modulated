@@ -846,8 +846,9 @@ export default function GameView() {
       prevStreak: winTier === "BUST" ? streak : Math.max(0, streak - 1),
       isBust: winTier === "BUST",
       streakMilestone: streakMilestone ?? undefined,
+      ceilingPct: ceilingPct ?? undefined,
     });
-  }, [gameState, winTier, springSettled, displayFp, roster, streak]); // eslint-disable-line
+  }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct]); // eslint-disable-line
 
   // Never show intermediate tiers during spring — only show final tier after spring settles
   const activeTierForDisplay = winTier ?? deriveTierFromFp(totalFp);

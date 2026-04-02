@@ -264,6 +264,10 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
     @keyframes tgGlow {
       0%,100%{box-shadow:0 0 8px #EF444455} 50%{box-shadow:0 0 32px #EF4444cc}
     }
+    @keyframes tgTextReveal {
+      from { clip-path: inset(0 100% 0 0); opacity: 0.4; }
+      to   { clip-path: inset(0 0% 0 0);   opacity: 1;   }
+    }
   `;
   document.head.appendChild(st);
 }
@@ -664,11 +668,20 @@ export function TierGauge({
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, flexDirection: "column", minHeight: 28, textAlign: "center" }}>
         {postRevealCopy ? (
           <>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#CCCCCC", fontFamily: FF, letterSpacing: "0.04em", lineHeight: 1.3 }}>
+            <span style={{
+              fontSize: 12, fontWeight: 700, color: "#CCCCCC", fontFamily: FF,
+              letterSpacing: "0.04em", lineHeight: 1.3,
+              display: "inline-block",
+              animation: "tgTextReveal 0.6s cubic-bezier(0.22,1,0.36,1) both",
+            }}>
               {postRevealCopy.primary}
             </span>
             {postRevealCopy.secondary && (
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#CCCCCC", fontFamily: FF, letterSpacing: "0.04em", lineHeight: 1.3 }}>
+              <span style={{
+                fontSize: 10, color: "#888", fontFamily: FF, letterSpacing: "0.04em",
+                display: "inline-block",
+                animation: "tgTextReveal 0.6s cubic-bezier(0.22,1,0.36,1) 0.15s both",
+              }}>
                 {postRevealCopy.secondary}
               </span>
             )}

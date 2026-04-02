@@ -1,20 +1,14 @@
 /**
  * buildPostRevealCopy.ts — Basketball-specific 2-line post-reveal summary.
  *
- * Line 1 = what happened (near miss / dominant / barely made / bust)
- * Line 2 = why — headline card story (badge, stat, opponent)
+ * Line 1 = what happened to the lineup
+ * Line 2 = why — anchor/star card story first, scrubs only if extreme
  *
- * CRITICAL: Line 2 almost always features the anchor/star card, not scrubs.
- * Selection uses a "headline score" that biases heavily toward:
- *   - higher salary (card importance)
- *   - higher actual FP (impact)
- *   - notable badges / milestone stats
- * Low-salary filler cards only win when they're truly extreme outliers.
+ * All selection deterministic. No Math.random().
  */
 
 const NEAR_MISS_FP   = 8;
 const BARELY_MADE_FP = 5;
-const DOMINANT_FP    = 12;
 
 const TIER_LABELS: Record<string, string> = {
   BUST: "Bust", ROOKIE: "Rookie", STARTER: "Starter",
@@ -45,6 +39,8 @@ export interface PostRevealCopyInput {
   prevStreak: number;
   isBust: boolean;
   streakMilestone?: { wins: number; pct: number } | null;
+  /** % of theoretical max score (0–100) */
+  ceilingPct?: number | null;
 }
 
 export interface PostRevealCopy {
@@ -52,7 +48,8 @@ export interface PostRevealCopy {
   secondary?: string;
 }
 
-// ── Deterministic pick ──────────────────────────────────────────────────────
+// ── Utilities ───────────────────────────────────────────────────────────────
+
 function pick<T>(arr: T[], seed: number): T {
   return arr[Math.abs(Math.floor(seed)) % arr.length];
 }
@@ -61,197 +58,54 @@ function lastName(name: string): string {
   return name.trim().split(/\s+/).pop() ?? name;
 }
 
-function opponentCity(opp?: string): string | null {
-  if (!opp) return null;
-  const parts = opp.trim().split(/\s+/);
-  if (parts.length <= 1) return opp;
-  const twoWord = parts.slice(0, 2).join(" ");
-  const knownTwo = ["New York", "New Orleans", "Golden State", "Oklahoma City", "San Antonio", "Los Angeles"];
-  if (knownTwo.includes(twoWord)) return twoWord;
-  return parts[0];
+function cap(s: string, max = 48): string {
+  return s.length <= max ? s : s.slice(0, max - 1) + "…";
 }
 
-// ── Badge + stat analysis ───────────────────────────────────────────────────
-
-const BADGE_COPY: Record<string, [string, string]> = {
-  god_mode:        ["God Mode", "absolutely cooking"],
-  fire:            ["Fire", "on fire"],
-  bucket:          ["Bucket", "couldn't miss"],
-  beast:           ["Beast", "dominated inside"],
-  glass:           ["Glass", "owned the glass"],
-  wizard:          ["Wizard", "was dealing"],
-  dime:            ["Dime", "threading the needle"],
-  thief:           ["Thief", "picked pockets all night"],
-  pickpocket:      ["Pickpocket", "ripped it clean"],
-  swat:            ["Swat", "was everywhere defensively"],
-  rejection:       ["Rejection", "sent it back"],
-  maestro:         ["Maestro", "ran the show"],
-  pure:            ["Pure", "zero turnovers, all precision"],
-  sloppy:          ["Sloppy", "too many giveaways"],
-  turnover_machine:["Turnover Machine", "coughed it up all night"],
-  quad_double:     ["Quad Double", "filled everything up"],
-  "5x5":           ["5x5", "a stat sheet stuffer"],
-  triple_double:   ["Triple Double", "filled it all up"],
-  double_double:   ["Double Double", "solid across two categories"],
-};
-
-const BADGE_PRIORITY_POS = [
-  "quad_double", "5x5", "triple_double", "god_mode",
-  "beast", "fire", "bucket", "glass", "swat", "rejection",
-  "wizard", "dime", "thief", "pickpocket", "maestro", "pure",
-  "double_double",
-];
-const BADGE_PRIORITY_NEG = ["turnover_machine", "sloppy"];
-
-function buildStatHighlight(s?: Record<string, number>): string | null {
-  if (!s) return null;
-  const pts = Number(s.pts ?? s.points ?? 0);
-  const reb = Number(s.reb ?? s.rebounds ?? s.trb ?? 0);
-  const ast = Number(s.ast ?? s.assists ?? 0);
-  const blk = Number(s.blk ?? s.blocks ?? 0);
-  const stl = Number(s.stl ?? s.steals ?? 0);
-
-  if (pts >= 50) return `${pts} points`;
-  if (pts >= 40) return `${pts} points`;
-  if (pts >= 30 && reb >= 10) return `${pts} and ${reb}`;
-  if (pts >= 30 && ast >= 10) return `${pts} and ${ast} dimes`;
-  if (pts >= 30) return `${pts} points`;
-  if (reb >= 15) return `${reb} boards`;
-  if (ast >= 15) return `${ast} assists`;
-  if (blk >= 5) return `${blk} blocks`;
-  if (stl >= 5) return `${stl} steals`;
-  if (reb >= 10) return `${reb} boards`;
-  if (ast >= 10) return `${ast} assists`;
-  if (blk >= 3) return `${blk} blocks`;
-  if (stl >= 3) return `${stl} steals`;
-  return null;
+function ratio(c: RosterCardInfo): number {
+  const proj = Number(c.projectedFp ?? 0);
+  return proj > 0 ? c.actualFp / proj : 1;
 }
 
-// ── Headline card selection ─────────────────────────────────────────────────
-// Biased toward star/anchor cards. Low-salary scrubs almost never win.
-
-interface HeadlineCard {
-  name: string;
-  actualFp: number;
-  salary: number;
-  ratio: number;
-  opponent: string | null;
-  topBadge: string | null;
-  statHighlight: string | null;
-  isPositive: boolean;
-  headlineScore: number;
+function anchorPlayer(roster: RosterCardInfo[]): RosterCardInfo | null {
+  if (roster.length === 0) return null;
+  return [...roster].sort((a, b) => (b.salary ?? 0) - (a.salary ?? 0))[0];
 }
 
-function selectHeadline(roster: RosterCardInfo[], positive: boolean): HeadlineCard | null {
-  const maxSalary = Math.max(...roster.map(c => c.salary ?? 0), 1);
-  let best: HeadlineCard | null = null;
-
+function topOverperformer(roster: RosterCardInfo[]): RosterCardInfo | null {
+  let best: RosterCardInfo | null = null;
+  let bestScore = 0;
+  const maxSal = Math.max(...roster.map(c => c.salary ?? 0), 1);
   for (const c of roster) {
-    const proj = Number(c.projectedFp ?? 0);
-    const salary = Number(c.salary ?? 0);
-    const ratio = proj > 0 ? c.actualFp / proj : 1;
-
-    // For positive: ratio >= 1.2 or actualFp >= 35 (star performance regardless of proj)
-    // For negative: ratio <= 0.75
-    const isExtreme = positive
-      ? (ratio >= 1.2 || c.actualFp >= 35)
-      : ratio <= 0.75;
-    if (!isExtreme) continue;
-
-    const badges = (c.badges ?? []).map(b => b.toLowerCase().replace(/\s+/g, "_"));
-    const topBadge = positive
-      ? BADGE_PRIORITY_POS.find(b => badges.includes(b)) ?? null
-      : BADGE_PRIORITY_NEG.find(b => badges.includes(b)) ?? null;
-
-    // Headline score: heavily biased toward salary, actualFp, badges
-    const salaryWeight = (salary / maxSalary) * 40;        // 0-40 points for salary importance
-    const fpWeight = Math.min(c.actualFp / 5, 20);          // 0-20 points for raw FP output
-    const badgeWeight = topBadge ? 15 : 0;                   // 15 bonus for any badge
-    const milestoneBonus = (topBadge && ["quad_double", "5x5", "triple_double"].includes(topBadge)) ? 20 : 0;
-    const ratioWeight = positive ? Math.max(0, (ratio - 1) * 10) : Math.max(0, (1 - ratio) * 10); // 0-10
-
-    const headlineScore = salaryWeight + fpWeight + badgeWeight + milestoneBonus + ratioWeight;
-
-    if (!best || headlineScore > best.headlineScore) {
-      best = {
-        name: lastName(c.name),
-        actualFp: c.actualFp,
-        salary,
-        ratio,
-        opponent: opponentCity(c.opponent),
-        topBadge,
-        statHighlight: buildStatHighlight(c.statLine),
-        isPositive: positive,
-        headlineScore,
-      };
-    }
+    const r = ratio(c);
+    if (r < 1.2 && c.actualFp < 35) continue;
+    const score = (r - 1) * 10 + ((c.salary ?? 0) / maxSal) * 30 + Math.min(c.actualFp / 5, 15);
+    if (score > bestScore) { best = c; bestScore = score; }
   }
-
   return best;
 }
 
-// ── Line 2 builder ──────────────────────────────────────────────────────────
-
-function buildLine2(h: HeadlineCard, seed: number): string {
-  const { name, opponent: opp, topBadge: badge, statHighlight: stat } = h;
-  const bc = badge ? BADGE_COPY[badge] : null;
-
-  if (stat && opp && bc) {
-    return pick([
-      `${name} dropped ${stat} on ${opp} and hit ${bc[0]} — ${bc[1]}.`,
-      `${name} went ${stat} against ${opp} — ${bc[1]}.`,
-    ], seed);
+function topUnderperformer(roster: RosterCardInfo[]): RosterCardInfo | null {
+  let worst: RosterCardInfo | null = null;
+  let worstScore = 0;
+  const maxSal = Math.max(...roster.map(c => c.salary ?? 0), 1);
+  for (const c of roster) {
+    const r = ratio(c);
+    if (r > 0.75) continue;
+    const score = (1 - r) * 10 + ((c.salary ?? 0) / maxSal) * 30;
+    if (score > worstScore) { worst = c; worstScore = score; }
   }
-  if (stat && bc) {
-    return pick([
-      `${name} went ${stat} and hit ${bc[0]} — ${bc[1]}.`,
-      `${name} put up ${stat} — ${bc[1]}.`,
-    ], seed);
-  }
-  if (stat && opp) {
-    return pick([
-      `${name} dropped ${stat} on ${opp} — big night.`,
-      `${name} went ${stat} against ${opp}.`,
-    ], seed);
-  }
-  if (bc) {
-    return pick([
-      `${name} hit ${bc[0]} — ${bc[1]}.`,
-      `${name} ${bc[1]}.`,
-    ], seed);
-  }
-  if (stat) {
-    return pick([
-      `${name} went ${stat} — that card carried.`,
-      `${name} put up ${stat}.`,
-    ], seed);
-  }
-  return pick([
-    `${name} went off — that card was different.`,
-    `Big night from ${name}.`,
-  ], seed);
+  return worst;
 }
 
-function buildNegLine2(h: HeadlineCard, seed: number): string {
-  const { name, topBadge: badge } = h;
-  const bc = badge ? BADGE_COPY[badge] : null;
-
-  if (bc) {
-    return pick([
-      `${name} hit ${bc[0]} — ${bc[1]}.`,
-      `${name} ${bc[1]} — that slot gave points away.`,
-    ], seed);
-  }
-  return pick([
-    `${name} never got going — cold slot.`,
-    `One cold card held this back.`,
-  ], seed);
+function countOver(roster: RosterCardInfo[], minRatio = 1.1): number {
+  return roster.filter(c => ratio(c) >= minRatio).length;
 }
 
 // ── Main builder ────────────────────────────────────────────────────────────
 
 export function buildPostRevealCopy(input: PostRevealCopyInput): PostRevealCopy {
-  const { totalFp, winTier, roster, streak, prevStreak, isBust, streakMilestone } = input;
+  const { totalFp, winTier, roster, streak, prevStreak, isBust, streakMilestone, ceilingPct } = input;
 
   const seed = Math.floor(totalFp * 10) + streak * 7 + (isBust ? 3 : 0);
   const tierIdx = TIER_ORDER.indexOf(winTier);
@@ -264,94 +118,122 @@ export function buildPostRevealCopy(input: PostRevealCopyInput): PostRevealCopy 
   const gap = nextMin - totalFp;
   const isNearMiss = !isBust && nextTier && gap > 0 && gap <= NEAR_MISS_FP;
   const barelyMade = !isBust && margin >= 0 && margin <= BARELY_MADE_FP && winTier !== "BUST";
-  const dominant = !isBust && margin >= DOMINANT_FP && winTier !== "BUST";
 
-  const star = selectHeadline(roster, true);
-  const dud = selectHeadline(roster, false);
+  const anchor = anchorPlayer(roster);
+  const anchorR = anchor ? ratio(anchor) : 1;
+  const anchorName = anchor ? lastName(anchor.name) : null;
+  const over = topOverperformer(roster);
+  const under = topUnderperformer(roster);
+  const overName = over ? lastName(over.name) : null;
+  const underName = under ? lastName(under.name) : null;
 
-  // ── 1. Streak milestone ───────────────────────────────────────────────
-  if (streakMilestone) {
-    const primary = pick([
-      `${streakMilestone.wins} straight — that's a ${streakMilestone.pct}% hit.`,
-      `Heater. ${streakMilestone.wins} in a row — streak paid out.`,
-    ], seed);
-    const secondary = star ? buildLine2(star, seed) : "Bonus pool reward locked.";
-    return { primary, secondary };
+  function r(primary: string, secondary?: string): PostRevealCopy {
+    return { primary: cap(primary), secondary: secondary ? cap(secondary) : undefined };
   }
 
-  // ── 2. Dominant clear ─────────────────────────────────────────────────
-  if (dominant && tierIdx >= 4) {
-    const primary = pick([
-      `Way past ${tierLabel} — that lineup was different.`,
-      `Cruised past ${tierLabel}. No sweat.`,
-    ], seed);
-    const secondary = star ? buildLine2(star, seed) : undefined;
-    return { primary, secondary };
+  // ── Rule 0: GOAT tier ─────────────────────────────────────────────────
+  if (winTier === "GOAT") {
+    const n = countOver(roster, 1.3);
+    const sec = n >= 4 ? `${n} of your 6 outperformed their average 🔥`
+      : n >= 2 ? "Half your lineup went off 🔥"
+      : n === 1 ? "One standout lifted everyone."
+      : "Balanced and dominant top to bottom.";
+    return r("Your entire team showed up tonight.", sec);
   }
 
-  // ── 3. Near miss ──────────────────────────────────────────────────────
+  // ── Rule 1: Ceiling ≥ 80% (dominant team, non-GOAT) ───────────────────
+  if (ceilingPct != null && ceilingPct >= 80) {
+    const n = countOver(roster, 1.1);
+    const primary = pick([
+      "That lineup was elite tonight.",
+      `Way past ${tierLabel}. Full team effort.`,
+    ], seed);
+    return r(primary, `${n} players beat their projection.`);
+  }
+
+  // ── Rule 2: Streak milestone 5 ────────────────────────────────────────
+  if (streakMilestone && streakMilestone.wins >= 5) {
+    return r("5 straight — 15% bonus pool hit.", "Bonus locked in.");
+  }
+
+  // ── Rule 3: Streak milestone 3 ────────────────────────────────────────
+  if (streakMilestone && streakMilestone.wins >= 3) {
+    return r("3 in a row — 5% bonus pool hit.", "Keep the streak alive.");
+  }
+
+  // ── Rule 4: Near miss ─────────────────────────────────────────────────
   if (isNearMiss) {
     const nextLabel = TIER_LABELS[nextTier!] ?? nextTier;
-    const primary = pick([
-      `Just ${gap.toFixed(1)} FP short of ${nextLabel} — right there.`,
-      `${gap.toFixed(1)} away from ${nextLabel}. One play.`,
-    ], seed);
-    const secondary = dud ? buildNegLine2(dud, seed)
-      : star ? buildLine2(star, seed)
-      : "Needed one more push.";
-    return { primary, secondary };
+    const primary = `${gap.toFixed(1)} FP short of ${nextLabel} — right there.`;
+    let secondary: string;
+    if (anchor && anchorR < 0.9 && anchorName) {
+      secondary = `${anchorName} had an off night — that was the gap.`;
+    } else if (overName) {
+      secondary = `${overName} was your best, needed one more.`;
+    } else {
+      secondary = "Needed one more push.";
+    }
+    return r(primary, secondary);
   }
 
-  // ── 4. Barely made tier ───────────────────────────────────────────────
+  // ── Rule 5: Barely made tier ──────────────────────────────────────────
   if (barelyMade) {
     const primary = pick([
       `Snuck into ${tierLabel}. We take that.`,
-      `Just enough for ${tierLabel} — barely caught the line.`,
+      `Just enough for ${tierLabel}.`,
     ], seed);
-    const secondary = star ? buildLine2(star, seed) : "That last push got you there.";
-    return { primary, secondary };
+    const secondary = overName
+      ? `${overName} pushed you over the line.`
+      : "That last push got you there.";
+    return r(primary, secondary);
   }
 
-  // ── 5. Bust ───────────────────────────────────────────────────────────
+  // ── Rule 6: Bust ──────────────────────────────────────────────────────
   if (isBust) {
-    const primary = pick([
-      "Didn't hit — next one can.",
-      "Cold hand. Reset fast.",
-      "Not this one. Run it back.",
-    ], seed);
-    const secondary = dud ? buildNegLine2(dud, seed) : "Needed one real spark.";
-    return { primary, secondary };
+    let primary: string;
+    if (anchor && anchorR < 0.7 && anchorName) {
+      primary = `${anchorName} had a rough one.`;
+    } else if (underName) {
+      primary = `${underName} held this back.`;
+    } else {
+      primary = pick(["Cold hand — reset fast.", "Not this one. Run it back."], seed);
+    }
+    const secondary = prevStreak >= 2 ? `Streak snapped at ${prevStreak}.` : undefined;
+    return r(primary, secondary);
   }
 
-  // ── 6. Star carry ─────────────────────────────────────────────────────
-  if (star) {
-    const primary = pick([
-      `${star.name} went off — almost carried you higher.`,
-      `Big night from ${star.name}.`,
-    ], seed);
-    return { primary, secondary: buildLine2(star, seed) };
+  // ── Rule 7: Anchor carried ────────────────────────────────────────────
+  if (anchor && anchorR >= 1.4 && anchorName && tierIdx >= 2) {
+    return r(`${anchorName} carried the lineup tonight.`, "Anchor delivered — build around that.");
   }
 
-  // ── 7. Dominant lower tier ────────────────────────────────────────────
-  if (dominant) {
-    return {
-      primary: pick([`Clear ${tierLabel}. Solid result.`, "No sweat — clean win."], seed),
-    };
+  // ── Rule 8: Anchor underperformed (team still won) ────────────────────
+  if (anchor && anchorR < 0.75 && anchorName && !isBust) {
+    const sec = overName
+      ? `${overName} picked up the slack.`
+      : "Rest of the lineup held it together.";
+    return r(`${anchorName} had an off night.`, sec);
   }
 
-  // ── 8. Streak momentum ────────────────────────────────────────────────
+  // ── Rule 9: Individual standout ───────────────────────────────────────
+  if (over && ratio(over) >= 1.5) {
+    return r(`${overName} went off — big night.`);
+  }
+
+  // ── Rule 10: Underperformer dragged ───────────────────────────────────
+  if (under && ratio(under) <= 0.6) {
+    return r(`${underName} held this one back.`, "Fix that slot — this lineup climbs.");
+  }
+
+  // ── Rule 11: Streak momentum ──────────────────────────────────────────
   if (streak >= 2) {
-    return {
-      primary: pick([`That's ${streak} straight. Stay hot.`, "Streak's alive."], seed),
-    };
+    return r(`That's ${streak} straight — stay hot.`);
   }
 
-  // ── 9. Balanced fallback ──────────────────────────────────────────────
-  return {
-    primary: pick([
-      "A solid result, but not enough to crack the next tier.",
-      "No major badge hit — the lineup needed one real spike.",
-      "Well built. Missing the breakout.",
-    ], seed),
-  };
+  // ── Rule 12: Balanced fallback ────────────────────────────────────────
+  return r(pick([
+    "Solid lineup — needed a spark.",
+    "Well built — missing the breakout.",
+    "One pop game and this jumps.",
+  ], seed));
 }
