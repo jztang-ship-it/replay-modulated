@@ -32,7 +32,8 @@ function getEconomyConfig(): EconomyConfig {
 function toPlayerEval(p: any, projByBaseId: Map<string, number>): PlayerEval {
   const baseId = String(p.basePlayerId ?? p.id ?? "");
   const proj = projByBaseId.get(baseId) ?? Number(p.avgFP ?? p.projectedFp ?? 0);
-  const salary = Number(p.salary ?? 10);
+  const eco = getEconomyConfig();
+  const salary = Math.max(eco.salaryMin, Math.min(Number(p.salary ?? 10), eco.salaryMax));
   return {
     id: String(p.id),
     basePlayerId: baseId,

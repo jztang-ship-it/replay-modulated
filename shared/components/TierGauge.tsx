@@ -296,6 +296,7 @@ export function TierGauge({
   const prevTierRef = useRef<string>("BUST");
   /** Last totalFp we fully animated to — prevents duplicate roll-up on re-renders */
   const lastAnimatedTotalFpRef = useRef<number | null>(null);
+  const nearMissSpringFiredRef = useRef(false);
   const ftueOscCompleteFiredRef = useRef(false);
   const onFtueOscillateCompleteRef = useRef(onFtueOscillateComplete);
   onFtueOscillateCompleteRef.current = onFtueOscillateComplete;
@@ -479,7 +480,8 @@ export function TierGauge({
     // even though totalFp hasn't changed.
     if (lastAnimatedTotalFpRef.current !== null && Math.abs(totalFp - lastAnimatedTotalFpRef.current) < 0.05) {
       if (!isNearMiss) return;
-      // Near-miss: reset so spring runs from current fill position
+      if (nearMissSpringFiredRef.current) return; // already ran once — don't re-fire
+      nearMissSpringFiredRef.current = true;
       lastAnimatedTotalFpRef.current = null;
     }
 
@@ -630,6 +632,7 @@ export function TierGauge({
       prevFillRef.current = 0;
       prevTierRef.current = "BUST";
       lastAnimatedTotalFpRef.current = null;
+      nearMissSpringFiredRef.current = false;
     }
   }, [visible]);
 

@@ -358,8 +358,6 @@ function BonusRow({ betAdded, streak = 0, milestoneHit = false, onAmountChange }
 }) {
   const [amount, setAmount] = useState(JACKPOT_SEED);
   const prevBetRef = useRef(0);
-  const onAmountChangeRef = useRef(onAmountChange);
-  onAmountChangeRef.current = onAmountChange;
   const streakGlow = streak >= 5 ? 0.22 : streak >= 3 ? 0.14 : streak >= 1 ? 0.08 : 0.06;
   const streakBorder = streak >= 5 ? "rgba(255,215,0,0.55)" : streak >= 3 ? "rgba(255,215,0,0.38)" : streak >= 1 ? "rgba(255,215,0,0.25)" : "rgba(255,215,0,0.18)";
   const streakShadow = streak > 0 ? `0 0 ${6 + streak * 3}px rgba(255,215,0,${streakGlow})` : "none";
@@ -368,7 +366,7 @@ function BonusRow({ betAdded, streak = 0, milestoneHit = false, onAmountChange }
     const id = setInterval(() => {
       setAmount(p => {
         const next = parseFloat((p + TICK_AMOUNT).toFixed(2));
-        onAmountChangeRef.current?.(next);
+        onAmountChange?.(next);
         return next;
       });
     }, TICK_INTERVAL_MS);
@@ -381,7 +379,7 @@ function BonusRow({ betAdded, streak = 0, milestoneHit = false, onAmountChange }
       const contribution = parseFloat((betAdded * JACKPOT_BET_RAKE).toFixed(2));
       if (contribution > 0) setAmount(p => {
         const next = parseFloat((p + contribution).toFixed(2));
-        onAmountChangeRef.current?.(next);
+        onAmountChange?.(next);
         return next;
       });
     }
@@ -507,6 +505,8 @@ export default function GameView() {
   const springTimersRef = useRef<number[]>([]);
   const pendingBalanceUpdateRef = useRef<(() => void) | null>(null);
   const jackpotAmountRef = useRef<number>(JACKPOT_SEED); // mirrors BonusRow amount for milestone calc
+  const lockedGaugeFpRef = useRef<number | null>(null);
+  const springHasFiredRef = useRef(false);
 
   const runSpring = useCallback((finalFp: number, onSettled: () => void) => {
     cancelAnimationFrame(springRafRef.current);
@@ -526,6 +526,7 @@ export default function GameView() {
 
     function tick(now: number) {
       if (segIndex >= segCount) {
+        lockedGaugeFpRef.current = finalFp;
         setSpringFp(null);
         setSpringSettled(true);
         onSettled();
@@ -686,6 +687,8 @@ export default function GameView() {
       }
 
       // Run spring oscillation — results lock in only when spring is truly done
+      if (springHasFiredRef.current) return; // already fired this hand
+      springHasFiredRef.current = true;
       runSpring(totalFp, () => {
         setWinTier(tier);
         setWinPayout(payout);
@@ -814,7 +817,15 @@ export default function GameView() {
     return Math.min(100, Math.round((totalFp / maxPossible) * 100));
   }, [gameState, roster, totalFp]);
 
+
+  // Gauge: direct pass-through — totalFp updates every frame via interpolated visibleFpMap
+  // When spring is active, all displays use springFp. Otherwise fall back to totalFp.
+  const displayFp = springFp ?? totalFp;
+  const gaugeTotalFp = lockedGaugeFpRef.current ?? displayFp;
+  latestGaugeFpRef.current = gaugeTotalFp;
+
   // Smart post-reveal copy — replaces "X FP to NEXT TIER" under gauge after results settle
+  // Must be after displayFp is declared
   const postRevealCopy = useMemo(() => {
     if ((gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") || !winTier || !springSettled) return null;
     const gaugeSnap = computeGaugeState(displayFp, GAUGE_THRESHOLDS as any, winTier, 8);
@@ -834,13 +845,6 @@ export default function GameView() {
       isBust: winTier === "BUST",
     });
   }, [gameState, winTier, springSettled, displayFp, roster, streak]); // eslint-disable-line
-
-
-  // Gauge: direct pass-through — totalFp updates every frame via interpolated visibleFpMap
-  // When spring is active, all displays use springFp. Otherwise fall back to totalFp.
-  const displayFp = springFp ?? totalFp;
-  const gaugeTotalFp = displayFp;
-  latestGaugeFpRef.current = gaugeTotalFp;
 
   // During spring, derive tier live from animated FP so sign flips at boundary crossings
   const activeTierForDisplay = springFp !== null
@@ -930,6 +934,8 @@ export default function GameView() {
       setSpringFp(null);
       setSpringSettled(false);
       pendingBalanceUpdateRef.current = null;
+      lockedGaugeFpRef.current = null;
+      springHasFiredRef.current = false;
     }
   }, [gameState]);
 
