@@ -481,6 +481,7 @@ export default function GameView() {
   const [springSettled, setSpringSettled] = useState(false);
   const springRafRef = useRef<number>(0);
   const springTimersRef = useRef<number[]>([]);
+  const pendingBalanceUpdateRef = useRef<(() => void) | null>(null);
 
   const runSpring = useCallback((finalFp: number, onSettled: () => void) => {
     cancelAnimationFrame(springRafRef.current);
@@ -669,6 +670,28 @@ export default function GameView() {
         gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
         recordHandPlayed();
         if (!bust) recordHandWon(); else recordHandLost();
+
+        // Store balance + streak update — fires when wage animation completes
+        pendingBalanceUpdateRef.current = () => {
+          if (payout > 0) {
+            setBalance(prev => { const next = prev + payout; saveBalance(next); return next; });
+          }
+          if (!bust) {
+            setStreak(prev => {
+              const next = prev + 1;
+              localStorage.setItem("replaymod_streak", String(next));
+              if (next === 3 || next === 5 || next === 10) soundManager.playStreakMilestone(next);
+              submitToLeaderboard("streak", next);
+              return next;
+            });
+            submitToLeaderboard("wins", 1);
+            submitToLeaderboard("fp", totalFp);
+          } else {
+            setStreak(0);
+            localStorage.setItem("replaymod_streak", "0");
+          }
+        };
+
         const t = window.setTimeout(() => {
           if (isFTUE) { pendingCelebration.current = { totalFp }; setCelebrationHeld(true); }
           else setGameState("WIN_CELEBRATION");
@@ -715,12 +738,8 @@ export default function GameView() {
     if (gameState !== "WIN_CELEBRATION" || !winTier) return undefined;
     const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
     const tierMult = BASKETBALL_WIN_TIERS[winTier]?.multiplier ?? 0;
-    const isLoss = winTier === "BUST" || winTier === "ROOKIE";
-    const lossAmount = winTier === "BUST"
-      ? BASE_BET * betMultiplier
-      : winTier === "ROOKIE"
-        ? Math.round(BASE_BET * betMultiplier * 0.5)
-        : 0;
+    const isLoss = winTier === "BUST"; // ROOKIE is a partial win, not a loss
+    const lossAmount = winTier === "BUST" ? BASE_BET * betMultiplier : 0;
     return {
       tierLabel: formatTierLabel(winTier),
       tierColor: tc.color,
@@ -864,6 +883,7 @@ export default function GameView() {
       springTimersRef.current = [];
       setSpringFp(null);
       setSpringSettled(false);
+      pendingBalanceUpdateRef.current = null;
     }
   }, [gameState]);
 
@@ -1080,8 +1100,7 @@ export default function GameView() {
   }, [ftueReplayReady]); // eslint-disable-line
 
   function onWinCelebrationComplete() {
-    // Increment hand count — read from localStorage (always current)
-    // then sync React state, avoiding stale-closure issues.
+    // Increment hand count
     if (!isFTUE) {
       const next = parseInt(localStorage.getItem("replaymod_hand_count") ?? "0", 10) + 1;
       localStorage.setItem("replaymod_hand_count", String(next));
@@ -1093,26 +1112,7 @@ export default function GameView() {
         setTimeout(() => setShowNamePrompt(true), 3500);
       }
     }
-    if (winPayout > 0) {
-      setIsBalanceAnimating(true);
-      setBalance(prev => prev + winPayout);
-      setTimeout(() => setIsBalanceAnimating(false), 2000);
-      setStreak(prev => {
-        const next = prev + 1;
-        localStorage.setItem("replaymod_streak", String(next));
-        if (next === 3 || next === 5 || next === 10) soundManager.playStreakMilestone(next);
-        // Submit streak to leaderboard
-        submitToLeaderboard("streak", next);
-        return next;
-      });
-      // Submit win + FP
-      submitToLeaderboard("wins", 1);
-      const gameFp = roster.reduce((s, c) => s + Number(c.actualFp ?? 0), 0);
-      if (gameFp > 0) submitToLeaderboard("fp", gameFp);
-    } else {
-      setStreak(0);
-      localStorage.setItem("replaymod_streak", "0");
-    }
+    // Balance + streak updates already fired via pendingBalanceUpdateRef (wage animation)
     setWinTier(null);
     setWinPayout(0);
     setGameState("RESULTS");
@@ -1830,6 +1830,10 @@ export default function GameView() {
         onAction={handleButtonClick}
         celebration={celebrationData}
         onWinCelebrationComplete={onWinCelebrationComplete}
+        onWageAnimationComplete={() => {
+          pendingBalanceUpdateRef.current?.();
+          pendingBalanceUpdateRef.current = null;
+        }}
         ftueDrawBlocked={isFTUE && gameState === "HOLD" && !heldCardIds.has("ftue-booker")}
         ftueHideSkip={isFTUE}
         ftuePulseNearMiss={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && !ftueGaugeOscDone}

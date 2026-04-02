@@ -94,6 +94,7 @@ type Props = {
   celebration?: CelebrationData;
   /** Called when user taps blurred zone to exit celebration */
   onWinCelebrationComplete?: () => void;
+  onWageAnimationComplete?: () => void;
   /** FTUE: block the Draw button until Booker is held */
   ftueDrawBlocked?: boolean;
   /** FTUE: hide the AUTO button during reveal */
@@ -995,7 +996,7 @@ function WageDisplay({
   baseBet: number;
   betMultiplier: number;
   celebration?: CelebrationData;
-  onFlyComplete: () => void;
+  onFlyComplete: (isLoss: boolean) => void;
 }) {
   const [phase, setPhase] = useState<WagePhase>("idle");
   const prevKeyRef = useRef<string>("");
@@ -1020,7 +1021,7 @@ function WageDisplay({
     const t4 = window.setTimeout(() => setPhase("fly"),     2500);
     const t5 = window.setTimeout(() => {
       setPhase("settled");
-      onFlyComplete();
+      onFlyComplete(celebration?.isLoss ?? true);
     }, 3150);
     timersRef.current = [t1, t2, t3, t4, t5];
     return () => timersRef.current.forEach(clearTimeout);
@@ -1165,7 +1166,7 @@ export function GameBar({
   capMax, capUsed, lockedSalary, revealedSalary,
   betMultiplier, baseBet, onBetMultiplier, onAction,
   winTiers, legend,
-  celebration, onWinCelebrationComplete,
+  celebration, onWinCelebrationComplete, onWageAnimationComplete,
   ftueDrawBlocked = false,
   ftueHideSkip = false,
   ftuePulseNearMiss = false,
@@ -1192,7 +1193,7 @@ export function GameBar({
 
   // Reset when leaving celebration
   useEffect(() => {
-    if (!isCelebration) { setOvershootSettled(false); setBalanceBlinking(null); }
+    if (!isCelebration) { setOvershootSettled(false); setBalanceColor("default"); }
   }, [isCelebration]);
 
   const walletRef = useRef<HTMLDivElement>(null);
@@ -1200,14 +1201,13 @@ export function GameBar({
   const walletTargetRef = useRef<HTMLDivElement>(null);
   // Coin fly state — tapping anywhere in celebration triggers this
   const [celebFlying, setCelebFlying] = useState(false);
-  const [balanceBlinking, setBalanceBlinking] = useState<"win" | "loss" | null>(null);
+  const [balanceColor, setBalanceColor] = useState<"win" | "loss" | "default">("default");
   const [tapOrigin, setTapOrigin] = useState<{ x: number; y: number } | null>(null);
   // Wallet display balance — lags real balance so roll-up starts when coins land
   const [displayBalance, setDisplayBalance] = useState(balance);
   useEffect(() => {
-    // Delay balance display update to sync with coin fly animation (~520ms)
-    const t = window.setTimeout(() => setDisplayBalance(balance), 540);
-    return () => clearTimeout(t);
+    // Update display balance immediately — timing controlled by onFlyComplete
+    setDisplayBalance(balance);
   }, [balance]);
 
   function handleCelebTap(e: React.MouseEvent) {
@@ -1317,8 +1317,8 @@ export function GameBar({
                 <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>Balance</span>
                 <span style={{
                   fontSize: 17, fontWeight: 900, lineHeight: 1,
-                  color: balanceBlinking === "win" ? "#22C55E" : balanceBlinking === "loss" ? "#FF3B30" : "#FFFFFF",
-                  filter: balanceBlinking ? `drop-shadow(0 0 6px ${balanceBlinking === "win" ? "#22C55E" : "#FF3B30"})` : "none",
+                  color: balanceColor === "win" ? "#22C55E" : balanceColor === "loss" ? "#FF3B30" : "#FFFFFF",
+                  filter: balanceColor !== "default" ? `drop-shadow(0 0 5px ${balanceColor === "win" ? "#22C55E88" : "#FF3B3088"})` : "none",
                   transition: "color 300ms ease, filter 300ms ease",
                 }}>
                   $<RollingNumber value={displayBalance} decimals={0} duration={1200} />
@@ -1332,11 +1332,12 @@ export function GameBar({
                 baseBet={baseBet}
                 betMultiplier={betMultiplier}
                 celebration={isCelebration ? celebration : undefined}
-                onFlyComplete={() => {
-                  if (!celebration) return;
-                  setBalanceBlinking(celebration.isLoss ? "loss" : "win");
-                  setCelebFlying(true);
-                  window.setTimeout(() => setBalanceBlinking(null), 1800);
+                onFlyComplete={(isLoss) => {
+                  setBalanceColor(isLoss ? "loss" : "win");
+                  if (celebration && (celebration.payout > 0 || celebration.isLoss)) {
+                    setCelebFlying(true);
+                  }
+                  onWageAnimationComplete?.();
                 }}
               />
             </div>
@@ -1496,8 +1497,8 @@ export function GameBar({
                   <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>Balance</span>
                   <span style={{
                   fontSize: 17, fontWeight: 900, lineHeight: 1,
-                  color: balanceBlinking === "win" ? "#22C55E" : balanceBlinking === "loss" ? "#FF3B30" : "#FFFFFF",
-                  filter: balanceBlinking ? `drop-shadow(0 0 6px ${balanceBlinking === "win" ? "#22C55E" : "#FF3B30"})` : "none",
+                  color: balanceColor === "win" ? "#22C55E" : balanceColor === "loss" ? "#FF3B30" : "#FFFFFF",
+                  filter: balanceColor !== "default" ? `drop-shadow(0 0 5px ${balanceColor === "win" ? "#22C55E88" : "#FF3B3088"})` : "none",
                   transition: "color 300ms ease, filter 300ms ease",
                 }}>
                     $<RollingNumber value={displayBalance} decimals={0} duration={1200} />
@@ -1511,11 +1512,12 @@ export function GameBar({
                   baseBet={baseBet}
                   betMultiplier={betMultiplier}
                   celebration={isCelebration ? celebration : undefined}
-                  onFlyComplete={() => {
-                    if (!celebration) return;
-                    setBalanceBlinking(celebration.isLoss ? "loss" : "win");
-                    setCelebFlying(true);
-                    window.setTimeout(() => setBalanceBlinking(null), 1800);
+                  onFlyComplete={(isLoss) => {
+                    setBalanceColor(isLoss ? "loss" : "win");
+                    if (celebration && (celebration.payout > 0 || celebration.isLoss)) {
+                      setCelebFlying(true);
+                    }
+                    onWageAnimationComplete?.();
                   }}
                 />
               </div>
