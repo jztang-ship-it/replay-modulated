@@ -669,7 +669,7 @@ export function TierGauge({
         {postRevealCopy ? (
           <>
             <span style={{
-              fontSize: 12, fontWeight: 700, color: "#FFFFFF",
+              fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.85)",
               fontFamily: FF, letterSpacing: "0.03em", lineHeight: 1.4,
               display: "inline-block", textAlign: "center",
               animation: "tgTextReveal 0.55s cubic-bezier(0.22,1,0.36,1) both",
@@ -678,7 +678,7 @@ export function TierGauge({
             </span>
             {postRevealCopy.secondary && (
               <span style={{
-                fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.82)",
+                fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.85)",
                 fontFamily: FF, letterSpacing: "0.03em", lineHeight: 1.4,
                 display: "inline-block", textAlign: "center",
                 animation: "tgTextReveal 0.55s cubic-bezier(0.22,1,0.36,1) 0.2s both",

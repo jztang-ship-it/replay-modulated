@@ -69,8 +69,10 @@ function lastName(fullName: string): string {
   return parts[parts.length - 1] ?? fullName;
 }
 
-function cap(s: string, max = 50): string {
-  return s.length <= max ? s : s.slice(0, max - 1) + "…";
+function cap(s: string, max = 46): string {
+  if (s.length <= max) return s;
+  const cut = s.lastIndexOf(" ", max - 1);
+  return cut > 20 ? s.slice(0, cut) : s.slice(0, max - 1) + "…";
 }
 
 function statN(card: PostRevealRosterCard, key: string): number {
@@ -160,10 +162,9 @@ function cityOf(card: PostRevealRosterCard): string {
   return CITY[opp.toUpperCase()] ?? opp;
 }
 
-function opp(card: PostRevealRosterCard, seed: number): string {
+function opp(card: PostRevealRosterCard): string {
   const c = cityOf(card);
-  if (!c) return "";
-  return pick([` on ${c}`, ` against ${c}`], seed);
+  return c ? ` on ${c}` : "";
 }
 
 // ─── Line 2 builder ──────────────────────────────────────────────────────────
@@ -175,7 +176,7 @@ function buildLine2(
   isNegativeStory: boolean,
 ): string {
   const name  = lastName(subject.name);
-  const oppS  = opp(subject, seed1);
+  const o     = opp(subject);
   const badge = topBadge(subject);
   const bid   = badge?.id ?? "";
   const em    = BADGE_EMOJI[bid] ?? "";
@@ -187,34 +188,35 @@ function buildLine2(
   const blk = statN(subject, "blk");
   const tov = statN(subject, "turnovers");
 
-  if (bid === "QUAD_DBL") return pick([`${name} hit a Quad Double${oppS} — absurd ${em}`, `${name} Quad Double${oppS} — legendary ${em}`], seed2);
-  if (bid === "5X5") return pick([`${name} went 5x5${oppS} — touched every column ${em}`, `${name} hit a 5x5${oppS} — everywhere ${em}`], seed2);
-  if (bid === "TRIPLE_DBL") return pick([`${name} tripled up${oppS} — filled every column ${em}`, `${name} hit a Triple Double${oppS} — had it all ${em}`, `${name} ran the full stat sheet${oppS} ${em}`], seed2);
-  if (bid === "MAESTRO") return pick([`${name} dropped ${ast} dimes${oppS} — zero giveaways ${em}`, `${name} ran it clean${oppS} — ${ast} assists, no TOs ${em}`], seed2);
-  if (bid === "GOD_MODE") return pick([`${name} dropped ${pts}${oppS} — couldn't be stopped ${em}`, `${name} hung ${pts}${oppS} — different zone ${em}`, `${name} went for ${pts}${oppS} — hot hand ${em}`], seed2);
-  if (bid === "FIRE") return pick([`${name} dropped ${pts}${oppS} — was cooking ${em}`, `${name} hung ${pts}${oppS} — had it going ${em}`, `${name} went for ${pts}${oppS} — in a bag ${em}`], seed2);
-  if (bid === "BUCKET") return pick([`${name} hung ${pts}${oppS} — solid bucket night ${em}`, `${name} put up ${pts}${oppS} and delivered ${em}`], seed2);
-  if (bid === "BEAST") return pick([`${name} hauled in ${reb} boards${oppS} — owned the glass ${em}`, `${name} grabbed ${reb} rebounds${oppS} — menace down low ${em}`], seed2);
-  if (bid === "GLASS") return pick([`${name} grabbed ${reb} boards${oppS} — owned the glass ${em}`, `${name} was a problem on the boards${oppS} — ${reb} rebounds ${em}`], seed2);
-  if (bid === "WIZARD") return pick([`${name} dropped ${ast} dimes${oppS} — was dealing ${em}`, `${name} had ${ast} assists${oppS} — running the show ${em}`], seed2);
-  if (bid === "DIME") return pick([`${name} dished ${ast} assists${oppS} — that slot was dealing ${em}`, `${name} set everyone up${oppS} — ${ast} dimes ${em}`], seed2);
-  if (bid === "SWAT") return pick([`${name} swatted ${blk} shots${oppS} — was everywhere ${em}`, `${name} put up ${blk} blocks${oppS} — flying around ${em}`], seed2);
-  if (bid === "REJECTION") return pick([`${name} blocked ${blk}${oppS} — protecting the rim ${em}`, `${name} came up with ${blk} blocks${oppS} — active at the rim ${em}`], seed2);
-  if (bid === "THIEF" || bid === "PICKPOCKET") return pick([`${name} swiped ${stl} steals${oppS} — all over them ${em}`, `${name} had active hands${oppS} — ${stl} steals ${em}`], seed2);
-  if (bid === "PURE") return pick([`${name} ran it clean${oppS} — ${ast} dimes, zero giveaways ${em}`, `${name} was efficient${oppS} — ${ast} assists, no TOs ${em}`], seed2);
-  if (bid === "DOUBLE_DBL") return pick([`${name} doubled up${oppS} — two-way night ${em}`, `${name} hit a Double Double${oppS} — solid ${em}`], seed2);
-  if (bid === "TURNOVER_MACHINE") return pick([`${name} coughed it up ${tov} times${oppS} — cost the lineup ${em}`, `Too many giveaways from ${name}${oppS} — ${tov} TOs ${em}`], seed2);
-  if (bid === "SLOPPY") return pick([`${name} had ${tov} turnovers${oppS} — gave points away ${em}`, `${name} was careless${oppS} — ${tov} TOs cost this ${em}`], seed2);
+  // All templates ≤46 chars. Priority: name → stat → emoji. City dropped if too long.
+  if (bid === "QUAD_DBL") return pick([`${name} Quad Double${o} ${em}`, `${name} hit a Quad Double ${em}`], seed2);
+  if (bid === "5X5") return pick([`${name} went 5x5${o} ${em}`, `${name} hit a 5x5 ${em}`], seed2);
+  if (bid === "TRIPLE_DBL") return pick([`${name} tripled up${o} ${em}`, `${name} Triple Double${o} ${em}`], seed2);
+  if (bid === "MAESTRO") return pick([`${name} ${ast} dimes, zero TOs${o} ${em}`, `${name} ran it clean${o} ${em}`], seed2);
+  if (bid === "GOD_MODE") return pick([`${name} dropped ${pts}${o} ${em}`, `${name} hung ${pts}${o} ${em}`], seed2);
+  if (bid === "FIRE") return pick([`${name} dropped ${pts}${o} ${em}`, `${name} was cooking${o} ${em}`], seed2);
+  if (bid === "BUCKET") return pick([`${name} hung ${pts}${o} ${em}`, `${name} put up ${pts}${o} ${em}`], seed2);
+  if (bid === "BEAST") return pick([`${name} ${reb} boards${o} ${em}`, `${name} owned the glass${o} ${em}`], seed2);
+  if (bid === "GLASS") return pick([`${name} grabbed ${reb} boards${o} ${em}`, `${name} ${reb} rebounds${o} ${em}`], seed2);
+  if (bid === "WIZARD") return pick([`${name} ${ast} dimes${o} ${em}`, `${name} was dealing${o} ${em}`], seed2);
+  if (bid === "DIME") return pick([`${name} dished ${ast} assists${o} ${em}`, `${name} ${ast} dimes${o} ${em}`], seed2);
+  if (bid === "SWAT") return pick([`${name} swatted ${blk}${o} ${em}`, `${name} ${blk} blocks${o} ${em}`], seed2);
+  if (bid === "REJECTION") return o ? `${name} blocked ${blk}${o} ${em}` : `${name} with ${blk} blocks ${em}`;
+  if (bid === "THIEF" || bid === "PICKPOCKET") return pick([`${name} ${stl} steals${o} ${em}`, `${name} active hands${o} ${em}`], seed2);
+  if (bid === "PURE") return pick([`${name} ${ast} dimes, zero TOs${o} ${em}`, `${name} ran it clean${o} ${em}`], seed2);
+  if (bid === "DOUBLE_DBL") return pick([`${name} doubled up${o} ${em}`, `${name} Double Double${o} ${em}`], seed2);
+  if (bid === "TURNOVER_MACHINE") return pick([`${name} ${tov} TOs${o} ${em}`, `${name} coughed it up${o} ${em}`], seed2);
+  if (bid === "SLOPPY") return pick([`${name} ${tov} turnovers${o} ${em}`, `${name} was careless${o} ${em}`], seed2);
 
-  if (pts >= 40) return pick([`${name} dropped ${pts}${oppS} — carried that slot ${E.SOLID}`, `${name} hung ${pts}${oppS} — locked in ${E.SOLID}`], seed2);
-  if (pts >= 30) return pick([`${name} put up ${pts}${oppS} — strong offensive night`, `${name} hung ${pts}${oppS} — did his part`], seed2);
-  if (reb >= 12) return `${name} grabbed ${reb} boards${oppS} — dominated the glass ${E.SOLID}`;
-  if (ast >= 10) return `${name} dished ${ast} assists${oppS} — running the floor ${E.SOLID}`;
-  if (pts >= 20) return pick([`${name} contributed ${pts}${oppS} — held up his end`, `${name} put up ${pts}${oppS} — lineup leaned on that`], seed2);
+  if (pts >= 40) return pick([`${name} dropped ${pts}${o} ${E.SOLID}`, `${name} hung ${pts}${o} ${E.SOLID}`], seed2);
+  if (pts >= 30) return pick([`${name} put up ${pts}${o}`, `${name} hung ${pts}${o}`], seed2);
+  if (reb >= 12) return `${name} grabbed ${reb} boards${o} ${E.SOLID}`;
+  if (ast >= 10) return `${name} dished ${ast} assists${o} ${E.SOLID}`;
+  if (pts >= 20) return pick([`${name} put up ${pts}${o}`, `${name} contributed ${pts}${o}`], seed2);
 
-  if (isNegativeStory) return pick([`${name} had an off night${oppS} — underdelivered ${E.BUST}`, `${name} went quiet${oppS} — below what was needed ${E.BUST}`, `${name} never found rhythm${oppS} — that was the gap ${E.NEAR_MISS}`], seed2);
+  if (isNegativeStory) return pick([`${name} had an off night${o} ${E.BUST}`, `${name} went quiet${o} ${E.BUST}`], seed2);
 
-  return pick([`${name} held up his end${oppS} — no real spike though`, `${name} did his part${oppS} — lineup stayed together`], seed2);
+  return pick([`${name} held up his end${o}`, `${name} did his part${o}`], seed2);
 }
 
 // ─── Basketball pack ─────────────────────────────────────────────────────────
@@ -252,11 +254,11 @@ const basketballPack: SportCopyPack = {
 
     function line2(isNegative = false): string {
       if (!subject) return `Lineup held together — no real spike`;
-      return cap(buildLine2(subject, seed2, seed3, isNegative), 54);
+      return cap(buildLine2(subject, seed2, seed3, isNegative), 46);
     }
 
     function ret(primary: string, secondary?: string): PostRevealCopy {
-      return { primary: cap(primary, 50), secondary: secondary ? cap(secondary, 54) : undefined };
+      return { primary: cap(primary, 46), secondary: secondary ? cap(secondary, 46) : undefined };
     }
 
     // ── RULE 0: G.O.A.T. ────────────────────────────────────────────────
@@ -279,7 +281,7 @@ const basketballPack: SportCopyPack = {
     }
 
     // ── RULE 2-3: Streak milestones ─────────────────────────────────────
-    if (!isBust && streak === 5) return ret(`5 straight — 15% bonus pool just hit ${E.STREAK}`, subject ? cap(`${lastName(subject.name)} leading the way — keep it alive ${E.STREAK}`, 54) : `Keep the streak alive ${E.STREAK}`);
+    if (!isBust && streak === 5) return ret(`5 straight — 15% bonus pool hit ${E.STREAK}`, subject ? cap(`${lastName(subject.name)} leading the way ${E.STREAK}`, 46) : `Keep the streak alive ${E.STREAK}`);
     if (!isBust && streak === 3) return ret(`3 in a row — 5% bonus pool hit ${E.STREAK}`, `Streak's alive — keep the pressure on ${E.STREAK}`);
 
     // ── RULE 4: Near miss ───────────────────────────────────────────────
@@ -296,7 +298,7 @@ const basketballPack: SportCopyPack = {
     if (isBust) {
       const l2 = line2(true);
       return ret(pick([`Lineup went cold — never found a rhythm ${E.BUST}`, `Cold hand — lineup stalled out ${E.BUST}`, `Couldn't get it going — bricks across the board ${E.BUST}`], seed1),
-        prevStreak >= 2 ? cap(`${l2.replace(/[.!]$/, "")} — streak snapped at ${prevStreak}`, 54) : l2);
+        prevStreak >= 2 ? cap(`${l2.replace(/[.!]$/, "")} — snapped at ${prevStreak}`, 46) : l2);
     }
 
     // ── RULE 7: Dominant clear ──────────────────────────────────────────
