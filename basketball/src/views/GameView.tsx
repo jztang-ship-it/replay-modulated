@@ -662,34 +662,14 @@ export default function GameView() {
         setTimeout(() => setFtueOscillating(true), 100);
       }
     }, [isFTUE]),
-    onAllComplete: useCallback((totalFp: number) => {
-      clearActiveCard();
-      soundManager.stopRevealAmbience();
-      if (isFTUE) ftueLastHandFpRef.current = totalFp;
-
-      const tier = calculateWinTier(totalFp);
-      const payout = calculatePayout(tier, currentBet);
-
-      // FTUE: skip spring, go straight to results
-      if (isFTUE) {
-        setWinTier(tier);
-        setWinPayout(payout);
-        const bust = !tier || tier === "BUST";
-        const badges = rosterRef.current.reduce((s, c) => s + (c.achievements?.length ?? 0), 0);
-        gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
-        recordHandPlayed();
-        if (!bust) recordHandWon(); else recordHandLost();
-        setTimeout(() => {
-          pendingCelebration.current = { totalFp };
-          setCelebrationHeld(true);
-        }, 1200);
-        return;
-      }
-
-      // Run spring oscillation — results lock in only when spring is truly done
-      if (springHasFiredRef.current) return; // already fired this hand
+    onAnchorFpComplete: useCallback((totalFp: number) => {
+      if (isFTUE) return;
+      if (springHasFiredRef.current) return;
       springHasFiredRef.current = true;
       runSpring(totalFp, () => {
+        lockedGaugeFpRef.current = totalFp;
+        const tier = calculateWinTier(totalFp);
+        const payout = calculatePayout(tier, currentBet);
         setWinTier(tier);
         setWinPayout(payout);
         const bust = !tier || tier === "BUST";
@@ -698,8 +678,6 @@ export default function GameView() {
         gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
         recordHandPlayed();
         if (!bust) recordHandWon(); else recordHandLost();
-
-        // Store balance + streak update — fires when wage animation completes
         pendingBalanceUpdateRef.current = () => {
           if (payout > 0) {
             setBalance(prev => { const next = prev + payout; saveBalance(next); return next; });
@@ -719,14 +697,34 @@ export default function GameView() {
             localStorage.setItem("replaymod_streak", "0");
           }
         };
-
         const t = window.setTimeout(() => {
-          if (isFTUE) { pendingCelebration.current = { totalFp }; setCelebrationHeld(true); }
-          else setGameState("WIN_CELEBRATION");
+          setGameState("WIN_CELEBRATION");
         }, 1200);
         springTimersRef.current.push(t);
       });
-    }, [currentBet, gameAnalytics, isFTUE, recordHandPlayed, recordHandWon, recordHandLost, runSpring]),
+    }, [isFTUE, currentBet, gameAnalytics, recordHandPlayed, recordHandWon, recordHandLost, runSpring]),
+    onAllComplete: useCallback((_totalFp: number) => {
+      clearActiveCard();
+      soundManager.stopRevealAmbience();
+      if (isFTUE) {
+        const totalFp = _totalFp;
+        ftueLastHandFpRef.current = totalFp;
+        const tier = calculateWinTier(totalFp);
+        const payout = calculatePayout(tier, currentBet);
+        setWinTier(tier);
+        setWinPayout(payout);
+        const bust = !tier || tier === "BUST";
+        const badges = rosterRef.current.reduce((s, c) => s + (c.achievements?.length ?? 0), 0);
+        gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
+        recordHandPlayed();
+        if (!bust) recordHandWon(); else recordHandLost();
+        setTimeout(() => {
+          pendingCelebration.current = { totalFp };
+          setCelebrationHeld(true);
+        }, 1200);
+      }
+      // Non-FTUE: everything already handled in onAnchorFpComplete
+    }, [isFTUE, currentBet, gameAnalytics, recordHandPlayed, recordHandWon, recordHandLost]),
   });
 
   // Zone 2: Derived values
@@ -847,10 +845,8 @@ export default function GameView() {
     });
   }, [gameState, winTier, springSettled, displayFp, roster, streak]); // eslint-disable-line
 
-  // During spring, derive tier live from animated FP so sign flips at boundary crossings
-  const activeTierForDisplay = springFp !== null
-    ? deriveTierFromFp(springFp)
-    : (winTier ?? deriveTierFromFp(totalFp));
+  // Never show intermediate tiers during spring — only show final tier after spring settles
+  const activeTierForDisplay = winTier ?? deriveTierFromFp(totalFp);
 
   // displayTier is driven only by handleTierCross during normal reveal — not during spring
 
@@ -886,6 +882,7 @@ export default function GameView() {
 
   const handleTierCross = useCallback((tier: string) => {
     if (isFTUE) return;
+    if (springHasFiredRef.current) return; // spring in progress — no tier flips
     if (tier === prevRevealTierRef.current) return;
     soundManager.playTierCross(tier);
 

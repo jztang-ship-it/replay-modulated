@@ -297,6 +297,7 @@ export function TierGauge({
   /** Last totalFp we fully animated to — prevents duplicate roll-up on re-renders */
   const lastAnimatedTotalFpRef = useRef<number | null>(null);
   const nearMissSpringFiredRef = useRef(false);
+  const hasLockedRef = useRef(false);
   const ftueOscCompleteFiredRef = useRef(false);
   const onFtueOscillateCompleteRef = useRef(onFtueOscillateComplete);
   onFtueOscillateCompleteRef.current = onFtueOscillateComplete;
@@ -470,26 +471,24 @@ export function TierGauge({
       return;
     }
     if (totalFp <= 0) {
-      // Don't hide bar — totalFp can briefly be 0 during state transitions.
-      // Just skip animation until we have a real value.
       return;
     }
 
-    // Already settled at this totalFp — avoid restarting animation on dependency churn.
-    // Exception: if isNearMiss just became true (winTier was just set), allow spring to fire
-    // even though totalFp hasn't changed.
+    // Once winTier is set and we've done one final animation, lock forever
+    if (hasLockedRef.current) return;
+
+    // Already settled at this totalFp — avoid restarting animation on dependency churn
     if (lastAnimatedTotalFpRef.current !== null && Math.abs(totalFp - lastAnimatedTotalFpRef.current) < 0.05) {
-      if (!isNearMiss) return;
-      if (nearMissSpringFiredRef.current) return; // already ran once — don't re-fire
-      nearMissSpringFiredRef.current = true;
-      lastAnimatedTotalFpRef.current = null;
+      return;
     }
 
     cancelAnimationFrame(rafRef.current);
     clearTimeout(delayRef.current);
 
-    // ── Direct-set: bar tracks totalFp frame-by-frame, always ──────────
-    if (!isGoat && !regularFinalCardKick && !isNearMiss && !isSkip) {
+    // ── Direct-set: bar tracks totalFp frame-by-frame ──────────────────
+    // If winTier not yet set, bar is being driven externally (by spring in GameView).
+    // Always direct-set — TierGauge must be a passive follower, no internal spring.
+    if (!winTierProp || (!isGoat && !regularFinalCardKick && !isNearMiss && !isSkip)) {
       const snap = computeGaugeState(totalFp, thresholds, winTierProp ?? null, NEAR_MISS_PTS);
       prevFillRef.current = snap.finalFill;
       prevTierRef.current = snap.derivedTier;
@@ -611,6 +610,7 @@ export function TierGauge({
           lastAnimatedTotalFpRef.current = totalFp;
           setBarFill(finalFill);
           setBarColor(normalColor);
+          hasLockedRef.current = true; // animation done — lock forever until visible resets
           if (isGoat) {
             setIsDinging(true);
             setTimeout(() => setIsDinging(false), 1500);
@@ -633,6 +633,7 @@ export function TierGauge({
       prevTierRef.current = "BUST";
       lastAnimatedTotalFpRef.current = null;
       nearMissSpringFiredRef.current = false;
+      hasLockedRef.current = false;
     }
   }, [visible]);
 
