@@ -951,21 +951,21 @@ if (typeof document !== "undefined" && !document.getElementById(WAGE_STYLE_ID)) 
   st.id = WAGE_STYLE_ID;
   st.textContent = `
     @keyframes wageMultGlow {
-      0%   { transform: scale(1);    filter: brightness(1);   }
-      25%  { transform: scale(1.25); filter: brightness(2.2) drop-shadow(0 0 6px currentColor); }
-      55%  { transform: scale(1.1);  filter: brightness(1.6) drop-shadow(0 0 4px currentColor); }
-      100% { transform: scale(1);    filter: brightness(1);   }
+      0%   { transform: scale(1);    filter: brightness(1);   opacity: 1; }
+      30%  { transform: scale(1.35); filter: brightness(2.4) drop-shadow(0 0 8px currentColor); opacity: 1; }
+      60%  { transform: scale(1.12); filter: brightness(1.7) drop-shadow(0 0 4px currentColor); opacity: 1; }
+      100% { transform: scale(1);    filter: brightness(1);   opacity: 1; }
     }
     @keyframes tierMultThud {
-      0%   { transform: translateY(-40px) scale(0.6); opacity: 0;   }
-      55%  { transform: translateY(5px)   scale(1.2); opacity: 1;   }
-      72%  { transform: translateY(-3px)  scale(0.95); opacity: 1; }
-      85%  { transform: translateY(2px)   scale(1.05); opacity: 1; }
-      100% { transform: translateY(0)     scale(1);   opacity: 1;   }
+      0%   { transform: translateY(-44px) scale(0.5); opacity: 0; }
+      52%  { transform: translateY(6px)   scale(1.22); opacity: 1; }
+      70%  { transform: translateY(-3px)  scale(0.94); opacity: 1; }
+      84%  { transform: translateY(2px)   scale(1.04); opacity: 1; }
+      100% { transform: translateY(0)     scale(1);    opacity: 1; }
     }
     @keyframes wageFlipOut {
-      0%   { transform: perspective(300px) rotateX(0deg);   opacity: 1; }
-      100% { transform: perspective(300px) rotateX(90deg);  opacity: 0; }
+      0%   { transform: perspective(300px) rotateX(0deg);  opacity: 1; }
+      100% { transform: perspective(300px) rotateX(90deg); opacity: 0; }
     }
     @keyframes payoutFlipIn {
       0%   { transform: perspective(300px) rotateX(-90deg); opacity: 0; }
@@ -973,8 +973,14 @@ if (typeof document !== "undefined" && !document.getElementById(WAGE_STYLE_ID)) 
     }
     @keyframes payoutFlyToBalance {
       0%   { transform: translateX(0)      scale(1);    opacity: 1; }
-      30%  { transform: translateX(-15px)  scale(1.15); opacity: 1; }
-      100% { transform: translateX(-100px) scale(0.4);  opacity: 0; }
+      30%  { transform: translateX(-12px)  scale(1.12); opacity: 1; }
+      100% { transform: translateX(-110px) scale(0.3);  opacity: 0; }
+    }
+    @keyframes balanceBlink {
+      0%   { color: #FFFFFF; }
+      15%  { color: var(--blink-color); filter: drop-shadow(0 0 6px var(--blink-color)); }
+      45%  { color: var(--blink-color); filter: drop-shadow(0 0 4px var(--blink-color)); }
+      100% { color: #FFFFFF; filter: none; }
     }
   `;
   document.head.appendChild(st);
@@ -984,57 +990,74 @@ if (typeof document !== "undefined" && !document.getElementById(WAGE_STYLE_ID)) 
 type WagePhase = "idle" | "glow" | "thud" | "flip" | "fly" | "settled";
 
 function WageDisplay({
-  baseBet, betMultiplier, celebration, walletRef, onFlyComplete,
+  baseBet, betMultiplier, celebration, onFlyComplete,
 }: {
   baseBet: number;
   betMultiplier: number;
   celebration?: CelebrationData;
-  walletRef: React.RefObject<HTMLDivElement | null>;
   onFlyComplete: () => void;
 }) {
   const [phase, setPhase] = useState<WagePhase>("idle");
-  const timersRef = useRef<number[]>([]);
-  const prevCelebRef = useRef<CelebrationData | undefined>(undefined);
+  const prevKeyRef = useRef<string>("");
+  const timersRef  = useRef<number[]>([]);
 
   useEffect(() => {
-    if (!celebration || prevCelebRef.current === celebration) return;
-    prevCelebRef.current = celebration;
+    if (!celebration) {
+      setPhase("idle");
+      prevKeyRef.current = "";
+      timersRef.current.forEach(clearTimeout);
+      return;
+    }
+    const key = `${celebration.payout}-${celebration.tierMultiplier}-${celebration.betMultiplier}`;
+    if (prevKeyRef.current === key) return;
+    prevKeyRef.current = key;
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [];
 
-    const t1 = window.setTimeout(() => setPhase("glow"),    200);
-    const t2 = window.setTimeout(() => setPhase("thud"),   1000);
-    const t3 = window.setTimeout(() => setPhase("flip"),   2200);
-    const t4 = window.setTimeout(() => setPhase("fly"),    3200);
+    const t1 = window.setTimeout(() => setPhase("glow"),    0);
+    const t2 = window.setTimeout(() => setPhase("thud"),    800);
+    const t3 = window.setTimeout(() => setPhase("flip"),    2000);
+    const t4 = window.setTimeout(() => setPhase("fly"),     2500);
     const t5 = window.setTimeout(() => {
       setPhase("settled");
       onFlyComplete();
-    }, 3800);
+    }, 3150);
     timersRef.current = [t1, t2, t3, t4, t5];
     return () => timersRef.current.forEach(clearTimeout);
   }, [celebration]); // eslint-disable-line
 
-  useEffect(() => {
-    if (!celebration) { setPhase("idle"); prevCelebRef.current = undefined; }
-  }, [celebration]);
-
-  const isWin  = celebration ? !celebration.isLoss : false;
-  const payout = celebration?.payout ?? 0;
-  const loss   = celebration?.lossAmount ?? 0;
+  const isWin    = celebration ? !celebration.isLoss : true;
+  const payout   = celebration?.payout ?? 0;
+  const loss     = celebration?.lossAmount ?? 0;
   const tierMult = celebration?.tierMultiplier ?? 0;
+  const amount   = isWin ? payout : loss;
+  const sign     = isWin ? "+" : "-";
+  const amtColor = isWin ? "#22C55E" : "#FF3B30";
 
   const multColor = betMultiplier === 10 ? "#FB923C"
     : betMultiplier === 5  ? "#C084FC"
     : betMultiplier === 3  ? "#22C55E"
     : "#3B82F6";
 
+  const wageLabel = (
+    <span style={{
+      fontSize: 8, fontWeight: 700, letterSpacing: 1.2,
+      color: "rgba(255,255,255,0.38)", textTransform: "uppercase" as const,
+      flexShrink: 0,
+    }}>Wage</span>
+  );
+
   if (phase === "idle" || !celebration) {
     return (
       <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-        <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.38)", textTransform: "uppercase" }}>Wage</span>
-        <span style={{ fontSize: 15, fontWeight: 900, color: "rgba(255,255,255,0.7)", lineHeight: 1 }}>{baseBet}</span>
+        {wageLabel}
+        <span style={{ fontSize: 15, fontWeight: 900, color: "rgba(255,255,255,0.7)", lineHeight: 1 }}>
+          {baseBet}
+        </span>
         {betMultiplier > 1 && (
-          <span style={{ fontSize: 13, fontWeight: 800, color: multColor, lineHeight: 1 }}>×{betMultiplier}</span>
+          <span style={{ fontSize: 13, fontWeight: 800, color: multColor, lineHeight: 1 }}>
+            ×{betMultiplier}
+          </span>
         )}
       </div>
     );
@@ -1043,10 +1066,17 @@ function WageDisplay({
   if (phase === "glow") {
     return (
       <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-        <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.38)", textTransform: "uppercase" }}>Wage</span>
-        <span style={{ fontSize: 15, fontWeight: 900, color: "rgba(255,255,255,0.7)", lineHeight: 1 }}>{baseBet}</span>
-        <span style={{ fontSize: 13, fontWeight: 800, color: multColor, lineHeight: 1,
-          animation: "wageMultGlow 600ms ease-out forwards" }}>×{betMultiplier}</span>
+        {wageLabel}
+        <span style={{ fontSize: 15, fontWeight: 900, color: "rgba(255,255,255,0.7)", lineHeight: 1 }}>
+          {baseBet}
+        </span>
+        <span style={{
+          fontSize: 13, fontWeight: 800, color: multColor, lineHeight: 1,
+          display: "inline-block",
+          animation: "wageMultGlow 700ms cubic-bezier(0.22,1,0.36,1) forwards",
+        }}>
+          ×{betMultiplier}
+        </span>
       </div>
     );
   }
@@ -1054,12 +1084,19 @@ function WageDisplay({
   if (phase === "thud") {
     return (
       <div style={{ display: "flex", alignItems: "baseline", gap: 4, overflow: "visible" }}>
-        <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.38)", textTransform: "uppercase" }}>Wage</span>
-        <span style={{ fontSize: 15, fontWeight: 900, color: "rgba(255,255,255,0.7)", lineHeight: 1 }}>{baseBet}</span>
-        <span style={{ fontSize: 13, fontWeight: 800, color: multColor, lineHeight: 1 }}>×{betMultiplier}</span>
+        {wageLabel}
+        <span style={{ fontSize: 15, fontWeight: 900, color: "rgba(255,255,255,0.7)", lineHeight: 1 }}>
+          {baseBet}
+        </span>
+        <span style={{ fontSize: 13, fontWeight: 800, color: multColor, lineHeight: 1 }}>
+          ×{betMultiplier}
+        </span>
         {tierMult > 0 && (
-          <span style={{ fontSize: 13, fontWeight: 800, color: "#FFD700", lineHeight: 1,
-            animation: "tierMultThud 350ms cubic-bezier(0.22,1,0.36,1) forwards" }}>
+          <span style={{
+            fontSize: 14, fontWeight: 900, color: "#FFD700", lineHeight: 1,
+            display: "inline-block",
+            animation: "tierMultThud 500ms cubic-bezier(0.22,1,0.36,1) forwards",
+          }}>
             ×{tierMult}
           </span>
         )}
@@ -1068,43 +1105,54 @@ function WageDisplay({
   }
 
   if (phase === "flip") {
-    const sign   = isWin ? "+" : "-";
-    const amount = isWin ? payout : loss;
-    const color  = isWin ? "#22C55E" : "#FF3B30";
     return (
-      <div style={{ position: "relative", height: 24, display: "flex", alignItems: "center" }}>
-        <span style={{ position: "absolute", fontSize: 15, fontWeight: 900, color: "rgba(255,255,255,0.7)",
-          animation: "wageFlipOut 200ms ease-in forwards" }}>
-          Wage {baseBet} ×{betMultiplier}{tierMult > 0 ? ` ×${tierMult}` : ""}
-        </span>
-        <span style={{ position: "absolute", fontSize: 17, fontWeight: 900, color,
-          animation: "payoutFlipIn 250ms ease-out 200ms forwards", opacity: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+        {wageLabel}
+        <div style={{ position: "relative", height: 20, minWidth: 60 }}>
+          <span style={{
+            position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)",
+            fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.6)",
+            whiteSpace: "nowrap",
+            animation: "wageFlipOut 220ms ease-in forwards",
+          }}>
+            {baseBet}{betMultiplier > 1 ? ` ×${betMultiplier}` : ""}{tierMult > 0 ? ` ×${tierMult}` : ""}
+          </span>
+          <span style={{
+            position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)",
+            fontSize: 17, fontWeight: 900, color: amtColor,
+            whiteSpace: "nowrap", opacity: 0,
+            animation: "payoutFlipIn 280ms ease-out 220ms forwards",
+          }}>
+            {sign}{amount}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === "fly") {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+        {wageLabel}
+        <span style={{
+          fontSize: 17, fontWeight: 900, color: amtColor,
+          whiteSpace: "nowrap", display: "inline-block",
+          animation: "payoutFlyToBalance 600ms ease-in forwards",
+        }}>
           {sign}{amount}
         </span>
       </div>
     );
   }
 
-  if (phase === "fly") {
-    const sign   = isWin ? "+" : "-";
-    const amount = isWin ? payout : loss;
-    const color  = isWin ? "#22C55E" : "#FF3B30";
-    return (
-      <span style={{ fontSize: 17, fontWeight: 900, color,
-        animation: "payoutFlyToBalance 600ms ease-in forwards" }}>
+  // settled
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+      {wageLabel}
+      <span style={{ fontSize: 16, fontWeight: 900, color: amtColor, lineHeight: 1, whiteSpace: "nowrap" }}>
         {sign}{amount}
       </span>
-    );
-  }
-
-  // settled
-  const sign   = isWin ? "+" : "-";
-  const amount = isWin ? payout : loss;
-  const color  = isWin ? "#22C55E" : "#FF3B30";
-  return (
-    <span style={{ fontSize: 15, fontWeight: 900, color, lineHeight: 1 }}>
-      {sign}{amount}
-    </span>
+    </div>
   );
 }
 
@@ -1144,7 +1192,7 @@ export function GameBar({
 
   // Reset when leaving celebration
   useEffect(() => {
-    if (!isCelebration) setOvershootSettled(false);
+    if (!isCelebration) { setOvershootSettled(false); setBalanceBlinking(null); }
   }, [isCelebration]);
 
   const walletRef = useRef<HTMLDivElement>(null);
@@ -1152,6 +1200,7 @@ export function GameBar({
   const walletTargetRef = useRef<HTMLDivElement>(null);
   // Coin fly state — tapping anywhere in celebration triggers this
   const [celebFlying, setCelebFlying] = useState(false);
+  const [balanceBlinking, setBalanceBlinking] = useState<"win" | "loss" | null>(null);
   const [tapOrigin, setTapOrigin] = useState<{ x: number; y: number } | null>(null);
   // Wallet display balance — lags real balance so roll-up starts when coins land
   const [displayBalance, setDisplayBalance] = useState(balance);
@@ -1266,7 +1315,12 @@ export function GameBar({
             <div ref={walletRef} style={{ flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
                 <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>Balance</span>
-                <span style={{ fontSize: 17, fontWeight: 900, color: isBalanceAnimating ? THEME.palette.green_primary : "#FFFFFF", lineHeight: 1, transition: "color 300ms ease" }}>
+                <span style={{
+                  fontSize: 17, fontWeight: 900, lineHeight: 1,
+                  color: balanceBlinking === "win" ? "#22C55E" : balanceBlinking === "loss" ? "#FF3B30" : "#FFFFFF",
+                  filter: balanceBlinking ? `drop-shadow(0 0 6px ${balanceBlinking === "win" ? "#22C55E" : "#FF3B30"})` : "none",
+                  transition: "color 300ms ease, filter 300ms ease",
+                }}>
                   $<RollingNumber value={displayBalance} decimals={0} duration={1200} />
                 </span>
               </div>
@@ -1278,11 +1332,11 @@ export function GameBar({
                 baseBet={baseBet}
                 betMultiplier={betMultiplier}
                 celebration={isCelebration ? celebration : undefined}
-                walletRef={walletRef}
                 onFlyComplete={() => {
-                  if (celebration && (celebration.payout > 0 || celebration.isLoss)) {
-                    setCelebFlying(true);
-                  }
+                  if (!celebration) return;
+                  setBalanceBlinking(celebration.isLoss ? "loss" : "win");
+                  setCelebFlying(true);
+                  window.setTimeout(() => setBalanceBlinking(null), 1800);
                 }}
               />
             </div>
@@ -1440,7 +1494,12 @@ export function GameBar({
               <div ref={walletRef} style={{ flexShrink: 0 }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
                   <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>Balance</span>
-                  <span style={{ fontSize: 17, fontWeight: 900, color: isBalanceAnimating ? THEME.palette.green_primary : "#FFFFFF", lineHeight: 1, transition: "color 300ms ease" }}>
+                  <span style={{
+                  fontSize: 17, fontWeight: 900, lineHeight: 1,
+                  color: balanceBlinking === "win" ? "#22C55E" : balanceBlinking === "loss" ? "#FF3B30" : "#FFFFFF",
+                  filter: balanceBlinking ? `drop-shadow(0 0 6px ${balanceBlinking === "win" ? "#22C55E" : "#FF3B30"})` : "none",
+                  transition: "color 300ms ease, filter 300ms ease",
+                }}>
                     $<RollingNumber value={displayBalance} decimals={0} duration={1200} />
                   </span>
                 </div>
@@ -1452,11 +1511,11 @@ export function GameBar({
                   baseBet={baseBet}
                   betMultiplier={betMultiplier}
                   celebration={isCelebration ? celebration : undefined}
-                  walletRef={walletRef}
                   onFlyComplete={() => {
-                    if (celebration && (celebration.payout > 0 || celebration.isLoss)) {
-                      setCelebFlying(true);
-                    }
+                    if (!celebration) return;
+                    setBalanceBlinking(celebration.isLoss ? "loss" : "win");
+                    setCelebFlying(true);
+                    window.setTimeout(() => setBalanceBlinking(null), 1800);
                   }}
                 />
               </div>
