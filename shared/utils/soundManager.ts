@@ -27,60 +27,71 @@ import { soundPackLoader, type SoundPackManifest } from "./soundPack";
 // ═══════════════════════════════════════════════════════════════════════════
 const V = {
   // Card flip layers
-  FLIP_WHOOSH:       0.65,
-  FLIP_CLICK:        0.50,
-  FLIP_BODY:         0.35,   // sub-bass "weight" — felt not heard
+  FLIP_WHOOSH: 0.75,   // was 0.65
+  FLIP_CLICK: 0.60,   // was 0.50
+  FLIP_BODY: 0.40,   // was 0.35 — sub-bass "weight" — felt not heard
 
   // FP count-up
-  TICK_BASE:         0.22,   // starting volume
-  TICK_PEAK:         0.38,   // volume at end of count (swells)
-  TICK_PITCH_LO:     700,    // Hz start
-  TICK_PITCH_HI:     1100,   // Hz end — ascending = rewarding
-  TICK_TEXTURE:      0.07,   // micro-squeak undertone
+  TICK_BASE: 0.30,   // was 0.22 — starting volume
+  TICK_PEAK: 0.52,   // was 0.38 — volume at end of count (swells)
+  TICK_PITCH_LO: 700,    // Hz start
+  TICK_PITCH_HI: 1100,   // Hz end — ascending = rewarding
+  TICK_TEXTURE: 0.10,   // was 0.07 — micro-squeak undertone
 
   // Hold
-  HOLD_ON:           0.45,
-  HOLD_OFF:          0.25,
+  HOLD_ON: 0.50,   // was 0.45
+  HOLD_OFF: 0.30,   // was 0.25
 
   // Tier crossing
-  TIER_THUMP:        0.60,
-  TIER_CHIME:        0.55,
-  TIER_RING:         0.25,   // harmonic tail / fifth
-  TIER_SWISH:        0.20,   // basketball texture (background)
+  TIER_THUMP: 0.65,   // was 0.60
+  TIER_CHIME: 0.60,   // was 0.55
+  TIER_RING: 0.30,   // was 0.25 — harmonic tail / fifth
+  TIER_SWISH: 0.25,   // was 0.20 — basketball texture (background)
 
   // Heat stamps
-  HOT_SHIMMER:       0.50,
-  HOT_CRACKLE:       0.55,
-  HOT_CROWD:         0.30,
-  COLD_CLANK:        0.40,
-  COLD_MURMUR:       0.15,
+  HOT_SHIMMER: 0.55,   // was 0.50
+  HOT_CRACKLE: 0.60,   // was 0.55
+  HOT_CROWD: 0.35,   // was 0.30
+  COLD_CLANK: 0.45,   // was 0.40
+  COLD_MURMUR: 0.20,   // was 0.15
 
   // Medium win (STARTER / ALL_STAR)
-  SLAM_HIT:          0.75,
-  SLAM_TEXTURE:      0.50,
-  SLAM_CROWD:        0.45,
+  SLAM_HIT: 0.85,   // was 0.75
+  SLAM_TEXTURE: 0.55,   // was 0.50
+  SLAM_CROWD: 0.50,   // was 0.45
 
-  // Big win (MVP / GOAT)
-  BIG_BREATH:        0.0,    // silence IS the breath — no sound for 40ms
-  BIG_IMPACT:        0.80,
-  BIG_SWISH:         0.60,
-  BIG_HORN:          0.55,
-  BIG_CROWD:         0.55,
-  BIG_STOMP:         0.40,
+  // Big win (MVP / GOAT) — procedural fallback only; real track used when loaded
+  BIG_BREATH: 0.0,    // silence IS the breath — no sound for 40ms
+  BIG_IMPACT: 0.85,   // was 0.80
+  BIG_SWISH: 0.65,   // was 0.60
+  BIG_HORN: 0.60,   // was 0.55
+  BIG_CROWD: 0.60,   // was 0.55
+  BIG_STOMP: 0.45,   // was 0.40
+  // Music track volume — normalized slightly below peak (track peaks at 0dBFS)
+  BIG_MUSIC: 0.78,
 
   // Near miss (ROOKIE)
-  MISS_RIM:          0.55,
-  MISS_RIM2:         0.30,
-  MISS_GROAN:        0.35,
+  MISS_RIM: 0.70,   // was 0.55
+  MISS_RIM2: 0.40,   // was 0.30
+  MISS_GROAN: 0.40,   // was 0.35
 
   // Bust
-  BUST_BUZZ:         0.35,   // soft — not punishing
-  BUST_CROWD:        0.20,   // tiny deflation
+  BUST_BUZZ: 0.45,   // was 0.35 — soft — not punishing
+  BUST_CROWD: 0.25,   // was 0.20 — tiny deflation
+
+  // Tier result sounds
+  ROOKIE_CHIME: 0.55,
+  ROOKIE_CROWD: 0.30,
+  STARTER_FANFARE: 0.65,
+  STARTER_CROWD: 0.45,
+  ALL_STAR_HORN: 0.70,
+  ALL_STAR_CROWD: 0.55,
+  ALL_STAR_STOMP: 0.40,
 
   // Streak milestones
-  STREAK_CROWD:      0.55,
-  STREAK_STOMP:      0.45,
-  STREAK_HORN:       0.45,
+  STREAK_CROWD: 0.60,   // was 0.55
+  STREAK_STOMP: 0.50,   // was 0.45
+  STREAK_HORN: 0.50,   // was 0.45
 } as const;
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -471,35 +482,72 @@ class SoundManager {
 
   // ─── BIG WIN (MVP / GOAT) ────────────────────────────────────────────────
   // Emotional job: STAGED ERUPTION. The biggest dopamine hit in the game.
-  // Sequence: micro-breath (40ms silence) → impact+swish → arena horn → crowd eruption + stomps
-  // The brief silence before impact is crucial — it's the held breath.
+  //
+  // PRIMARY PATH (music track loaded from Supabase):
+  //   Impact thud → music track fades in over 300ms → plays for up to 30s
+  //   → fades out over 2s as player transitions to deal screen.
+  //   stopBigWin() triggers the fade-out when the user taps Deal.
+  //
+  // FALLBACK PATH (track not yet loaded — procedural):
+  //   Sequence: micro-breath (40ms silence) → impact+swish → arena horn → crowd eruption + stomps
+  //
+  private bigWinMusicSource: AudioBufferSourceNode | null = null;
+  private bigWinMusicGain: GainNode | null = null;
+
   playBigWin() {
     const ctx = this.ensureCtx();
     if (!ctx) return;
     const now = ctx.currentTime;
 
-    audioDirector.duckForEvent(2.8);
+    audioDirector.duckForEvent(3.0);
 
-    // ── Stage 1: Micro-breath (0–40ms) ────────────────────────────────────
-    // Silence. The held breath. Nothing plays for 40ms.
-    // This is the most important 40ms in the entire audio system.
-    const breathEnd = now + 0.04;
-
-    // ── Stage 2: Impact + swish (40ms–300ms) ──────────────────────────────
-    // Sub-bass impact — the "moment of truth" lands
+    // ── Always: sub-bass impact thud (the "moment of truth") ─────────────
     const impact = ctx.createOscillator();
     impact.type = "sine";
-    impact.frequency.setValueAtTime(180, breathEnd);
-    impact.frequency.exponentialRampToValueAtTime(35, breathEnd + 0.15);
+    impact.frequency.setValueAtTime(180, now);
+    impact.frequency.exponentialRampToValueAtTime(35, now + 0.15);
     const impG = ctx.createGain();
-    impG.gain.setValueAtTime(0, breathEnd);
-    impG.gain.linearRampToValueAtTime(V.BIG_IMPACT, breathEnd + 0.005);
-    impG.gain.exponentialRampToValueAtTime(0.01, breathEnd + 0.2);
+    impG.gain.setValueAtTime(0, now);
+    impG.gain.linearRampToValueAtTime(V.BIG_IMPACT, now + 0.005);
+    impG.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
     impact.connect(impG).connect(this.out);
-    impact.start(breathEnd);
-    impact.stop(breathEnd + 0.21);
+    impact.start(now);
+    impact.stop(now + 0.21);
 
-    // Net swish — try real asset, fall back to procedural
+    // ── Try music track (Supabase asset) ─────────────────────────────────
+    const musicBuf = soundPackLoader.getRandomBuffer("music", "bigWin");
+    if (musicBuf) {
+      // Stop any existing music (shouldn't happen, but be safe)
+      this.stopBigWin(/* immediate */ true);
+
+      const src = ctx.createBufferSource();
+      src.buffer = musicBuf;
+      src.loop = false;
+
+      const g = ctx.createGain();
+      // Fade in over 300ms starting 200ms after impact — music emerges from the thud
+      g.gain.setValueAtTime(0, now);
+      g.gain.setValueAtTime(0, now + 0.2);
+      g.gain.linearRampToValueAtTime(V.BIG_MUSIC, now + 0.5);
+
+      src.connect(g).connect(this.out);
+      src.start(now);
+
+      this.bigWinMusicSource = src;
+      this.bigWinMusicGain = g;
+
+      // Auto-stop: fade out gracefully near end of track (track is ~35s)
+      const autoFadeAt = now + Math.max(musicBuf.duration - 2.5, 5);
+      const autoStop = window.setTimeout(() => this.stopBigWin(), 0);
+      // Override: schedule based on track duration
+      window.clearTimeout(autoStop);
+      window.setTimeout(() => this.stopBigWin(), (musicBuf.duration - 2.5) * 1000);
+      return;
+    }
+
+    // ── Procedural fallback (music not loaded yet) ────────────────────────
+    const breathEnd = now + 0.04;
+
     if (!this.playAsset("events", "swish", V.BIG_SWISH)) {
       const swish = ctx.createBufferSource();
       swish.buffer = this.noiseBuffer(0.2);
@@ -517,14 +565,11 @@ class SoundManager {
       swish.stop(breathEnd + 0.22);
     }
 
-    // ── Stage 3: Arena horn (200ms in, sustained 1.8s) ────────────────────
     if (!this.playAsset("events", "horn", V.BIG_HORN)) {
       this.arenaHorn(breathEnd + 0.16, 1.8, V.BIG_HORN);
     }
 
-    // ── Stage 4: Crowd eruption (250ms in, 3s duration) ───────────────────
     if (!this.playAsset("crowd", "eruption", V.BIG_CROWD)) {
-      // Procedural fallback
       const crowdStart = breathEnd + 0.2;
       const crowdDur = 3.0;
       [
@@ -550,7 +595,6 @@ class SoundManager {
       });
     }
 
-    // Rhythmic stomps — crowd pounding bleachers
     for (let i = 0; i < 8; i++) {
       const t = breathEnd + 0.5 + i * 0.2;
       const stomp = ctx.createOscillator();
@@ -565,6 +609,29 @@ class SoundManager {
       stomp.start(t);
       stomp.stop(t + 0.1);
     }
+  }
+
+  /**
+   * Fade out and stop the big win music track.
+   * Called when the player taps Deal (transitions away from celebration).
+   * @param immediate — skip fade, stop right now (used when starting a new track)
+   */
+  stopBigWin(immediate = false) {
+    const ctx = this.ensureCtx();
+    if (!this.bigWinMusicGain || !this.bigWinMusicSource || !ctx) return;
+    const src = this.bigWinMusicSource;
+    const gain = this.bigWinMusicGain;
+    this.bigWinMusicSource = null;
+    this.bigWinMusicGain = null;
+    if (immediate) {
+      try { src.stop(); } catch { }
+      return;
+    }
+    const now = ctx.currentTime;
+    gain.gain.cancelScheduledValues(now);
+    gain.gain.setValueAtTime(gain.gain.value, now);
+    gain.gain.linearRampToValueAtTime(0, now + 2.0);
+    window.setTimeout(() => { try { src.stop(); } catch { } }, 2200);
   }
 
   // ─── NEAR MISS (ROOKIE) ──────────────────────────────────────────────────
@@ -670,6 +737,123 @@ class SoundManager {
     deflate.stop(now + 0.4);
   }
 
+  // ─── UNIFIED TIER RESULT SOUND ─────────────────────────────────────────────
+  playTierResult(tier: string) {
+    switch (tier) {
+      case "GOAT":
+      case "MVP":
+        this.playBigWin();
+        break;
+      case "ALL_STAR":
+        this.playAllStarResult();
+        break;
+      case "STARTER":
+        this.playStarterResult();
+        break;
+      case "ROOKIE":
+        this.playNearMiss();
+        break;
+      case "BUST":
+      default:
+        this.playBust();
+        break;
+    }
+  }
+
+  // ─── STARTER RESULT ──────────────────────────────────────────────────────
+  // Emotional job: HAPPY SURPRISE. Ascending two-tone chime + small crowd pop.
+  private playStarterResult() {
+    const ctx = this.ensureCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    audioDirector.duckForEvent(0.8);
+
+    const note1 = ctx.createOscillator();
+    note1.type = "sine";
+    note1.frequency.value = 523;
+    const g1 = ctx.createGain();
+    g1.gain.setValueAtTime(0, now);
+    g1.gain.linearRampToValueAtTime(V.STARTER_FANFARE, now + 0.008);
+    g1.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+    note1.connect(g1).connect(this.out);
+    note1.start(now);
+    note1.stop(now + 0.36);
+
+    const note2 = ctx.createOscillator();
+    note2.type = "sine";
+    note2.frequency.value = 659;
+    const g2 = ctx.createGain();
+    g2.gain.setValueAtTime(0, now + 0.12);
+    g2.gain.linearRampToValueAtTime(V.STARTER_FANFARE * 0.9, now + 0.13);
+    g2.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+    note2.connect(g2).connect(this.out);
+    note2.start(now + 0.12);
+    note2.stop(now + 0.52);
+
+    if (!this.playAsset("crowd", "reactionSmall", V.STARTER_CROWD)) {
+      this.crowdBurst(V.STARTER_CROWD, 0.08, 0.4);
+    }
+  }
+
+  // ─── ALL_STAR RESULT ─────────────────────────────────────────────────────
+  // Emotional job: BUILDING EXCITEMENT. Arena horn stab + crowd swell.
+  private playAllStarResult() {
+    const ctx = this.ensureCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    audioDirector.duckForEvent(1.2);
+
+    const horn = ctx.createOscillator();
+    horn.type = "sawtooth";
+    horn.frequency.setValueAtTime(220, now);
+    horn.frequency.linearRampToValueAtTime(233, now + 0.08);
+    const bp = ctx.createBiquadFilter();
+    bp.type = "bandpass";
+    bp.frequency.value = 900;
+    bp.Q.value = 1.2;
+    const hG = ctx.createGain();
+    hG.gain.setValueAtTime(0, now);
+    hG.gain.linearRampToValueAtTime(V.ALL_STAR_HORN, now + 0.012);
+    hG.gain.setValueAtTime(V.ALL_STAR_HORN * 0.8, now + 0.15);
+    hG.gain.exponentialRampToValueAtTime(0.01, now + 0.55);
+    horn.connect(bp).connect(hG).connect(this.out);
+    horn.start(now);
+    horn.stop(now + 0.56);
+
+    const horn2 = ctx.createOscillator();
+    horn2.type = "sawtooth";
+    horn2.frequency.value = 330;
+    const bp2 = ctx.createBiquadFilter();
+    bp2.type = "bandpass";
+    bp2.frequency.value = 1100;
+    bp2.Q.value = 1.0;
+    const h2G = ctx.createGain();
+    h2G.gain.setValueAtTime(0, now + 0.04);
+    h2G.gain.linearRampToValueAtTime(V.ALL_STAR_HORN * 0.6, now + 0.055);
+    h2G.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+    horn2.connect(bp2).connect(h2G).connect(this.out);
+    horn2.start(now + 0.04);
+    horn2.stop(now + 0.52);
+
+    const stomp = ctx.createOscillator();
+    stomp.type = "sine";
+    stomp.frequency.setValueAtTime(80, now + 0.1);
+    stomp.frequency.exponentialRampToValueAtTime(30, now + 0.25);
+    const sG = ctx.createGain();
+    sG.gain.setValueAtTime(0, now + 0.1);
+    sG.gain.linearRampToValueAtTime(V.ALL_STAR_STOMP, now + 0.114);
+    sG.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+    stomp.connect(sG).connect(this.out);
+    stomp.start(now + 0.1);
+    stomp.stop(now + 0.32);
+
+    if (!this.playAsset("crowd", "reactionSmall", V.ALL_STAR_CROWD)) {
+      this.crowdBurst(V.ALL_STAR_CROWD, 0.06, 0.8);
+    }
+  }
+
   // ─── STREAK MILESTONE ────────────────────────────────────────────────────
   // Emotional job: escalating crowd energy. Reinforces winning streaks.
   playStreakMilestone(streak: number) {
@@ -730,8 +914,8 @@ class SoundManager {
   }
 
   // ─── DEPRECATED (bed/state handled by director) ───────────────────────────
-  playRevealAmbience() {}
-  stopRevealAmbience() {}
+  playRevealAmbience() { }
+  stopRevealAmbience() { }
 
   // ─── HELPERS ──────────────────────────────────────────────────────────────
   private arenaHorn(start: number, duration: number, volume: number) {

@@ -951,16 +951,17 @@ if (typeof document !== "undefined" && !document.getElementById(WAGE_STYLE_ID)) 
   st.id = WAGE_STYLE_ID;
   st.textContent = `
     @keyframes wageMultGlow {
-      0%   { transform: translateY(0);   text-shadow: none; }
-      30%  { transform: translateY(-6px); text-shadow: 0 0 12px currentColor, 0 0 24px currentColor; }
-      60%  { transform: translateY(0);   text-shadow: 0 0 8px currentColor; }
-      100% { transform: translateY(0);   text-shadow: none; }
+      0%   { transform: scale(1);    filter: brightness(1);   }
+      25%  { transform: scale(1.25); filter: brightness(2.2) drop-shadow(0 0 6px currentColor); }
+      55%  { transform: scale(1.1);  filter: brightness(1.6) drop-shadow(0 0 4px currentColor); }
+      100% { transform: scale(1);    filter: brightness(1);   }
     }
     @keyframes tierMultThud {
-      0%   { transform: translateY(-28px); opacity: 0; }
-      55%  { transform: translateY(3px);   opacity: 1; }
-      75%  { transform: translateY(-2px);  opacity: 1; }
-      100% { transform: translateY(0);     opacity: 1; }
+      0%   { transform: translateY(-40px) scale(0.6); opacity: 0;   }
+      55%  { transform: translateY(5px)   scale(1.2); opacity: 1;   }
+      72%  { transform: translateY(-3px)  scale(0.95); opacity: 1; }
+      85%  { transform: translateY(2px)   scale(1.05); opacity: 1; }
+      100% { transform: translateY(0)     scale(1);   opacity: 1;   }
     }
     @keyframes wageFlipOut {
       0%   { transform: perspective(300px) rotateX(0deg);   opacity: 1; }
@@ -970,10 +971,10 @@ if (typeof document !== "undefined" && !document.getElementById(WAGE_STYLE_ID)) 
       0%   { transform: perspective(300px) rotateX(-90deg); opacity: 0; }
       100% { transform: perspective(300px) rotateX(0deg);   opacity: 1; }
     }
-    @keyframes payoutFlyRight {
-      0%   { transform: translateX(0)     scale(1);   opacity: 1; }
-      40%  { transform: translateX(-20px) scale(1.1); opacity: 1; }
-      100% { transform: translateX(-90px) scale(0.5); opacity: 0; }
+    @keyframes payoutFlyToBalance {
+      0%   { transform: translateX(0)      scale(1);    opacity: 1; }
+      30%  { transform: translateX(-15px)  scale(1.15); opacity: 1; }
+      100% { transform: translateX(-100px) scale(0.4);  opacity: 0; }
     }
   `;
   document.head.appendChild(st);
@@ -1001,14 +1002,14 @@ function WageDisplay({
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [];
 
-    const t1 = window.setTimeout(() => setPhase("glow"),    100);
-    const t2 = window.setTimeout(() => setPhase("thud"),    700);
-    const t3 = window.setTimeout(() => setPhase("flip"),   1400);
-    const t4 = window.setTimeout(() => setPhase("fly"),    1900);
+    const t1 = window.setTimeout(() => setPhase("glow"),    200);
+    const t2 = window.setTimeout(() => setPhase("thud"),   1000);
+    const t3 = window.setTimeout(() => setPhase("flip"),   2200);
+    const t4 = window.setTimeout(() => setPhase("fly"),    3200);
     const t5 = window.setTimeout(() => {
       setPhase("settled");
       onFlyComplete();
-    }, 2500);
+    }, 3800);
     timersRef.current = [t1, t2, t3, t4, t5];
     return () => timersRef.current.forEach(clearTimeout);
   }, [celebration]); // eslint-disable-line
@@ -1090,7 +1091,7 @@ function WageDisplay({
     const color  = isWin ? "#22C55E" : "#FF3B30";
     return (
       <span style={{ fontSize: 17, fontWeight: 900, color,
-        animation: "payoutFlyRight 600ms ease-in forwards" }}>
+        animation: "payoutFlyToBalance 600ms ease-in forwards" }}>
         {sign}{amount}
       </span>
     );

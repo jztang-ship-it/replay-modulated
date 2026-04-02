@@ -664,10 +664,7 @@ export default function GameView() {
         setWinTier(tier);
         setWinPayout(payout);
         const bust = !tier || tier === "BUST";
-        if (tier === "MVP" || tier === "GOAT") soundManager.playBigWin();
-        else if (tier === "ALL_STAR" || tier === "STARTER") soundManager.playTierSlam();
-        else if (tier === "ROOKIE") soundManager.playNearMiss();
-        else if (bust) soundManager.playBust();
+        soundManager.playTierResult(tier);
         const badges = rosterRef.current.reduce((s, c) => s + (c.achievements?.length ?? 0), 0);
         gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
         recordHandPlayed();
