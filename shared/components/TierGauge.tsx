@@ -493,8 +493,9 @@ export function TierGauge({
     // ── Direct-set: TierGauge is a passive follower ──────────────────────
     // GameView's springFp drives gaugeTotalFp frame-by-frame.
     // TierGauge just maps FP→fill and sets the bar immediately.
-    // Only isGoat and isSkip get their own animation (ding effect / skip ease).
-    const hasActiveAnimation = isGoat || isSkip;
+    // Only isSkip gets its own animation. isGoat ding only fires when winTierProp is set
+    // (post-spring). During reveal/spring, always direct-set — the spring drives totalFp.
+    const hasActiveAnimation = (isGoat && winTierProp != null) || isSkip;
     if (!hasActiveAnimation) {
       const snap = computeGaugeState(totalFp, thresholds, winTierProp ?? null, NEAR_MISS_PTS);
       prevFillRef.current = snap.finalFill;
