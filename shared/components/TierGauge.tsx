@@ -637,28 +637,28 @@ export function TierGauge({
       </div>
 
       {/* Gap callout — below bar: pre-reveal shows X FP TO NEXT TIER, post-reveal shows smart copy */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, flexDirection: "column", minHeight: 28, textAlign: "center" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, flexDirection: "column", minHeight: 36, textAlign: "center" }}>
         {postRevealCopy ? (
-          <>
+          <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
             <span style={{
               fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.85)",
               fontFamily: FF, letterSpacing: "0.03em", lineHeight: 1.4,
-              display: "inline-block", textAlign: "center",
+              display: "block", textAlign: "center",
               animation: "tgTextReveal 0.55s cubic-bezier(0.22,1,0.36,1) both",
             }}>
               {postRevealCopy.primary}
             </span>
             {postRevealCopy.secondary && (
               <span style={{
-                fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.85)",
+                fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.65)",
                 fontFamily: FF, letterSpacing: "0.03em", lineHeight: 1.4,
-                display: "inline-block", textAlign: "center",
+                display: "block", textAlign: "center",
                 animation: "tgTextReveal 0.55s cubic-bezier(0.22,1,0.36,1) 0.2s both",
               }}>
                 {postRevealCopy.secondary}
               </span>
             )}
-          </>
+          </div>
         ) : isMaxLevel ? (
           <span style={{ fontSize: 13, fontWeight: 800, color: TIER_CFG.GOAT.color, fontFamily: FF, letterSpacing: "0.06em", textTransform: "uppercase" }}>
             You've reached the maximum level

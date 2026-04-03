@@ -785,6 +785,7 @@ export default function GameView() {
     gameState === "REVEALING" ||
     gameState === "RESULTS" ||
     gameState === "WIN_CELEBRATION";
+  const isPostReveal = (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier != null;
 
   // Tier color map — mirrors WIN_TIERS in basketball/GameBar.tsx
   const CELEBRATION_TIER_COLORS: Record<string, { color: string; glow: string }> = {
@@ -897,6 +898,8 @@ export default function GameView() {
       prevStreak: winTier === "BUST" ? streak : Math.max(0, streak - 1),
       isBust: winTier === "BUST",
       ceilingPct: ceilingPct ?? undefined,
+      isFTUE,
+      handCount,
       handCount,
     });
     postRevealCopyRef.current = copy;
@@ -1322,7 +1325,7 @@ export default function GameView() {
 
         {/* 2 — Card stage */}
         <div style={{
-          flex: "0 0 54dvh",
+          flex: isPostReveal ? "0 0 52dvh" : "0 0 54dvh",
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "center",
@@ -1403,11 +1406,11 @@ export default function GameView() {
             ? { "data-ftue-anchor": "ftue-darnit-focus" }
             : {})}
           style={{
-            flex: "0 0 20dvh",
+            flex: isPostReveal ? "0 0 22dvh" : "0 0 20dvh",
             display: "flex",
             flexDirection: "column",
             minHeight: 0,
-            overflow: "hidden",
+            overflow: isPostReveal ? "visible" : "hidden",
             boxSizing: "border-box",
           }}
         >
@@ -1426,10 +1429,10 @@ export default function GameView() {
               if (gameState === "RESULTS" && winTier && !showRawScore) setShowRawScore(true);
             }}
             style={{
-              flex: "0 0 72px",
-              height: 72,
-              minHeight: 72,
-              maxHeight: 72,
+              flex: isPostReveal ? "0 0 52px" : "0 0 72px",
+              height: isPostReveal ? 52 : 72,
+              minHeight: isPostReveal ? 52 : 72,
+              maxHeight: isPostReveal ? 52 : 72,
               flexShrink: 0,
               display: "flex",
               justifyContent: "center",
@@ -1480,7 +1483,7 @@ export default function GameView() {
                   src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
                   alt={formatTierLabel(winTier)}
                   style={{
-                    maxHeight: tierResultPhase === 1 ? 70 : 36,
+                    maxHeight: tierResultPhase === 1 ? 70 : (isPostReveal ? 28 : 36),
                     maxWidth: tierResultPhase === 1 ? "95%" : "70%",
                     objectFit: "contain",
                     filter: tierResultPhase === 1
@@ -1498,7 +1501,11 @@ export default function GameView() {
                     fontVariantNumeric: "tabular-nums",
                     animation: "tierInfoFadeIn 400ms ease-out",
                   }}>
-                    {displayFp.toFixed(1)} FP
+                    {displayFp.toFixed(1)} FP{ceilingPct != null && (
+                      <span style={{ fontWeight: 600, color: "rgba(255,255,255,0.35)", fontSize: 12 }}>
+                        {" · "}{ceilingPct}% of possible
+                      </span>
+                    )}
                   </span>
                 )}
               </div>
@@ -1632,9 +1639,9 @@ export default function GameView() {
             <div
               style={{
                 width: "100%",
-                height: 56,
-                minHeight: 56,
-                maxHeight: 56,
+                height: isPostReveal ? 72 : 56,
+                minHeight: isPostReveal ? 72 : 56,
+                maxHeight: isPostReveal ? 72 : 56,
                 flexShrink: 0,
                 position: "relative",
                 display: "flex",
