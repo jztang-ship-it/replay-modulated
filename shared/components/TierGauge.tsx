@@ -507,8 +507,6 @@ export function TierGauge({
         animTierRef.current = snap.derivedTier;
         onTierCrossRef.current?.(snap.derivedTier);
       }
-      // Lock when winTier is set — spring in GameView has settled
-      if (winTierProp) hasLockedRef.current = true;
       return;
     }
 
