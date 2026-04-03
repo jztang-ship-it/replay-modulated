@@ -479,10 +479,10 @@ export function TierGauge({
       return;
     }
 
-    // Once locked (post-spring), bar never moves again until next hand
+    // Once locked after spring settles, bar never moves again
     if (hasLockedRef.current) return;
 
-    // Already at this totalFp — skip (no exceptions)
+    // Already at this totalFp — skip unconditionally
     if (lastAnimatedTotalFpRef.current !== null && Math.abs(totalFp - lastAnimatedTotalFpRef.current) < 0.05) {
       return;
     }
@@ -491,8 +491,9 @@ export function TierGauge({
     clearTimeout(delayRef.current);
 
     // ── Direct-set: TierGauge is a passive follower ──────────────────────
-    // GameView's springFp drives gaugeTotalFp frame-by-frame during spring.
-    // TierGauge just maps FP→fill and sets the bar. No internal spring.
+    // GameView's springFp drives gaugeTotalFp frame-by-frame.
+    // TierGauge just maps FP→fill and sets the bar immediately.
+    // Only isGoat and isSkip get their own animation (ding effect / skip ease).
     const hasActiveAnimation = isGoat || isSkip;
     if (!hasActiveAnimation) {
       const snap = computeGaugeState(totalFp, thresholds, winTierProp ?? null, NEAR_MISS_PTS);
@@ -506,6 +507,8 @@ export function TierGauge({
         animTierRef.current = snap.derivedTier;
         onTierCrossRef.current?.(snap.derivedTier);
       }
+      // Lock when winTier is set — spring in GameView has settled
+      if (winTierProp) hasLockedRef.current = true;
       return;
     }
 
@@ -513,20 +516,14 @@ export function TierGauge({
     const startFill = prevFillRef.current;
     const delta = finalFill - startFill;
 
-    // ── Determine animation mode ──────────────────────────────────────────
-    type AnimMode = "goat" | "near_miss_spring" | "post_reveal" | "skip_spring" | "ease";
+    // ── Determine animation mode (only goat/skip reach here) ───────────────
+    type AnimMode = "goat" | "skip_spring" | "ease";
     let mode: AnimMode = "ease";
     let duration = 300;
 
     if (isGoat) {
       mode = "goat";
       duration = 900;
-    } else if (isNearMiss) {
-      mode = "near_miss_spring";
-      duration = 1600;
-    } else if (regularFinalCardKick) {
-      mode = "post_reveal";
-      duration = 1800;
     } else if (isSkip) {
       duration = Math.max(500, Math.round(totalFp / MAX_FP * 1400));
       mode = (actualTier === "MVP" || actualTier === "ALL_STAR") ? "skip_spring" : "ease";
@@ -537,8 +534,6 @@ export function TierGauge({
 
     // ── Spring params by mode ─────────────────────────────────────────────
     const springCfg: Record<string, { zeta: number; wn: number }> = {
-      near_miss_spring: { zeta: 0.28, wn: 9 },
-      post_reveal: { zeta: 0.40, wn: 7 },
       skip_spring: { zeta: 0.45, wn: 8 },
       goat: { zeta: 1.00, wn: 5 },
       ease: { zeta: 1.00, wn: 5 },
@@ -547,6 +542,9 @@ export function TierGauge({
 
     const alreadyAtFinal = Math.abs(startFill - finalFill) < 0.015;
     const startupDelay = alreadyAtFinal ? 0 : 60;
+
+    // Mark animation in-flight — blocks re-entry from dependency-churn re-renders
+    animRunningRef.current = true;
 
     const delayId = setTimeout(() => {
       const t0 = performance.now();
@@ -561,30 +559,6 @@ export function TierGauge({
             pos = easeOut(t);
             break;
 
-          case "near_miss_spring": {
-            if (alreadyAtFinal) {
-              const raw = spring(t * 1.8, zeta, wn);
-              pos = finalFill + raw * (nmTarget - finalFill);
-            } else if (t < 0.6) {
-              pos = startFill + easeOut(t / 0.6) * (finalFill - startFill);
-            } else {
-              const t2 = (t - 0.6) / 0.4;
-              const raw = spring(t2 * 1.8, zeta, wn);
-              pos = finalFill + raw * (nmTarget - finalFill);
-            }
-            break;
-          }
-
-          case "post_reveal": {
-            // Fill-space spring from startFill to finalFill.
-            // Target is finalFill exactly — the underdamped spring (zeta<1) naturally
-            // overshoots past finalFill during oscillation for the springy feel.
-            // Do NOT use a target > finalFill here, that caused the bar to pin at 100%.
-            const raw = spring(t * 1.6, zeta, wn);
-            pos = startFill + raw * (finalFill - startFill);
-            break;
-          }
-
           case "skip_spring": {
             const raw = spring(t * 1.5, zeta, wn);
             pos = startFill + raw * (finalFill - startFill);
@@ -595,18 +569,15 @@ export function TierGauge({
             pos = startFill + easeOut(t) * delta;
         }
 
+        // Cap bar width to valid range
         const barWidth = Math.min(1, Math.max(0, pos));
         setBarFill(barWidth);
-
-        if (mode === "near_miss_spring" && pos > finalFill + 0.005) {
-          setBarColor(overshootColor);
-        } else {
-          setBarColor(normalColor);
-        }
+        setBarColor(normalColor);
 
         if (t < 1) {
           rafRef.current = requestAnimationFrame(tick);
         } else {
+          animRunningRef.current = false;
           prevFillRef.current = finalFill;
           prevTierRef.current = derivedTier;
           lastAnimatedTotalFpRef.current = totalFp;
