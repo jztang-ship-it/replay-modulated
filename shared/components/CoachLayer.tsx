@@ -61,23 +61,6 @@ function DealChip() {
   );
 }
 
-function Stamp({ label, color, border }: { label: string; color: string; border: string }) {
-  return (
-    <strong style={{
-      color, border: `1.5px solid ${border}`,
-      padding: "1px 7px", borderRadius: 4,
-      fontSize: "0.92em", letterSpacing: "0.05em",
-    }}>{label}</strong>
-  );
-}
-
-const STAMP_STYLES: Record<string, { color: string; border: string }> = {
-  "SMOKING HOT": { color: "#EF4444", border: "#EF4444" },
-  "ON FIRE":     { color: "#FB923C", border: "#FB923C" },
-  "ICE COLD":    { color: "#9CA3AF", border: "#6B7280" },
-  "FREEZING":    { color: "#1E40AF", border: "#1F2937" },
-};
-
 // Row 1 (slots 0-2): message below card. Row 2 (slots 3-5): message above card.
 const CARD_POSITION: Record<string, BubblePosition> = {
   "ftue-booker":    "below",
@@ -90,22 +73,22 @@ const CARD_POSITION: Record<string, BubblePosition> = {
 
 const CARD_BUBBLES: Record<string, ReactNode> = {
   "ftue-westbrook": (
-    <span>Westbrook put in a solid shift — nothing flashy, just steady work. That's what you want from a reliable piece of your lineup.&nbsp;💪</span>
+    <span>Brodie delivered — 39.4 FP on a $41 card, right on his line. Steady work from a reliable slot. 💪</span>
   ),
   "ftue-cp3": (
-    <span><Stamp label="On Fire!" {...STAMP_STYLES["ON FIRE"]} /> CP3 outperformed his average fantasy points — a masterclass in running the offense.&nbsp;🧠</span>
+    <span>CP3 earned the Dime badge 🧠 — 10 assists, 1 turnover. He ran the offense clean and outplayed his projection.</span>
   ),
   "ftue-klay": (
-    <span>Klay was <Stamp label="Freezing" {...STAMP_STYLES["FREEZING"]} /> — not the best night for Klay. Splash Brother no more.&nbsp;🧊</span>
+    <span>See the ice on Klay? 7.4 FP on a $33 card. The draw pulled a rough game for him tonight. Not every card runs hot. 🧊</span>
   ),
   "ftue-klove": (
-    <span>Yikes, Love was <Stamp label="Ice Cold" {...STAMP_STYLES["ICE COLD"]} /> this game — a performance I'm sure you and him would both like to forget.&nbsp;🥶</span>
+    <span>Love fell short — 10.5 FP against a 15 FP average. The draw pulled a quiet game. Sometimes that's the hand. 🥶</span>
   ),
   "ftue-patty": (
-    <span>10.7 isn't bad for a white card like Patty — remember, colors help you see what average fantasy points to expect.&nbsp;💡</span>
+    <span>Patty held his own — $9 card, right on his 10 FP average. Minimum salary, minimum drama. Every FP counts. 💡</span>
   ),
   "ftue-booker": (
-    <span>Devin was <Stamp label="Smoking Hot!" {...STAMP_STYLES["SMOKING HOT"]} /> He really carried your team tonight. Be legendary.&nbsp;🔥</span>
+    <span>Book is on fire — literally. 🔥 God Mode ⚡ tonight: 61 points, 87.6 FP, more than double his average. That game is worth looking up. Tap his card.</span>
   ),
 };
 
@@ -422,7 +405,7 @@ export function CoachLayer({
     onBubbleActive?.(false);
     enqueue({
       key: "idle_deal",
-      node: <span>Hit <DealChip /> to reveal your starting hand.</span>,
+      node: <span>Welcome. Hit <DealChip /> to see your six players.</span>,
       pulse: "deal",
       // no anchor → pill centers vertically, deal button stays visible below
     }, 500);
@@ -441,7 +424,7 @@ export function CoachLayer({
       key: "hold_roster_intro",
       node: (
         <span>
-          Players are ranked by color and salary — guides to help you build your best lineup with a $200 salary cap. The higher ranked players have higher average fantasy points.&nbsp;🎯
+          Six players. $200 salary cap. Orange cards average the most FP — white cards the least. You decide who stays and who gets replaced.
         </span>
       ),
       anchor: "roster-and-score",
@@ -454,7 +437,7 @@ export function CoachLayer({
           key: "hold_booker",
           node: (
             <span>
-              Devin Booker is our most dependable player — tap him to hold, then hit <DrawChip /> to get replacement players.
+              Tap Booker to hold. At $59 he's your anchor — the highest-salary card. Hit <DrawChip /> to replace the rest.
             </span>
           ),
           anchor: { cardId: "ftue-booker" },
@@ -508,9 +491,7 @@ export function CoachLayer({
         key: "darnit",
         node: (
           <span>
-            Darn it — we only missed the{" "}
-            <strong style={{ color:"#C084FC", border:"1.5px solid #C084FC", padding:"1px 6px", borderRadius:4, fontSize:"0.92em" }}>All‑Star</strong>{" "}
-            tier by 2.4 points. If only Love or Klay showed up tonight we would have won an extra 5x.&nbsp;😤
+            2.4 FP from All-Star — that's the 8x payout. Klay and Love combined for 17.9 FP on a $55 salary. They needed 20. 😤
           </span>
         ),
         anchor: { cardId: "ftue-booker" },
@@ -521,7 +502,7 @@ export function CoachLayer({
             key: "results_devin",
             node: (
               <span>
-                Devin was <Stamp label="Smoking Hot!" {...STAMP_STYLES["SMOKING HOT"]} /> tonight. He really carried your team. Flip his card to see what game he pulled.&nbsp;🔥
+                Booker carried this hand. 87.6 FP — without him you don't hit Starter. Flip his card and see which game you drew. 🔥
               </span>
             ),
             anchor: { cardId: "ftue-booker" },
@@ -546,7 +527,7 @@ export function CoachLayer({
         key: "booker_gamelogs",
         node: (
           <span>
-            Devin pulled the March 17th, 2025 game against TOR — he had himself A GAME. Fantasy points are all computed from real historical games. Be Legendary!&nbsp;🔥
+            March 17th, 2025. Booker vs Toronto. 61 points, 10 rebounds, 7 assists. A real game that really happened. Every FP in this game comes from nights like that. 🔥
           </span>
         ),
         anchor: { cardId: "ftue-booker" },
@@ -557,7 +538,7 @@ export function CoachLayer({
             key: "final_replay",
             node: (
               <span>
-                Relive history by pulling all past games of these players. You did good for a newbie — two more wins and we unlock a special reward. Run it back?&nbsp;🏀
+                Every hand draws from real history. Two more wins and the bonus pool opens up. Run it back? 🏀
               </span>
             ),
             onDismiss: () => { onFtueAllDone?.(); setReplayReady(true); },
