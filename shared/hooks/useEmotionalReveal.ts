@@ -414,32 +414,22 @@ export function useEmotionalReveal(params: Params) {
 
           const start = nowMs();
           const gaugeTickInterval = 16;
-          let springTriggered = false;
           const driveTick = () => {
             if (runIdRef.current !== myRunId) return;
             const elapsed = clamp((nowMs() - start) / Math.max(1, countMs), 0, 1);
             const eased   = 1 - Math.pow(1 - elapsed, 3);
             if (isAnchor) setLastCardProgress(eased);
+            // For anchor card: only animate the CARD face number, NOT the tier bar.
+            // The tier bar stays frozen at the 5-card total until onAnchorFpComplete fires.
             setVisibleFpMap(prev => new Map(prev).set(c.cardId, Math.max(0.001, eased * target)));
-
-            // Fire spring at 75% of anchor count-up — while bar still has momentum.
-            // This lets the spring carry the bar through the final 25% + overshoot
-            // as one continuous motion with no velocity discontinuity.
-            if (isAnchor && !springTriggered && elapsed >= 0.75) {
-              springTriggered = true;
-              const allTotal = cards.reduce((s, x) => s + Number(x.actualFp ?? 0), 0);
-              onAnchorFpComplete?.(allTotal);
-            }
-
             if (elapsed < 1) {
               const tt = window.setTimeout(driveTick, gaugeTickInterval);
               timersRef.current.push(tt);
             } else {
               setVisibleFpMap(prev => new Map(prev).set(c.cardId, target));
               if (isAnchor) setLastCardProgress(1);
-              // If spring wasn't triggered yet (non-anchor or very fast count), fire now
-              if (isAnchor && !springTriggered) {
-                springTriggered = true;
+              // Card 6 number has settled — NOW fire the tier bar spring
+              if (isAnchor) {
                 const allTotal = cards.reduce((s, x) => s + Number(x.actualFp ?? 0), 0);
                 onAnchorFpComplete?.(allTotal);
               }

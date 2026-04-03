@@ -503,40 +503,52 @@ export default function GameView() {
   const jackpotAmountRef = useRef<number>(JACKPOT_SEED);
   const lockedGaugeFpRef = useRef<number | null>(null);
   const springHasFiredRef = useRef(false);
+  const frozenBarFpRef = useRef<number | null>(null); // freezes bar at 5-card total during anchor count-up
 
   const runSpring = useCallback((finalFp: number, onSettled: () => void) => {
     cancelAnimationFrame(springRafRef.current);
     springTimersRef.current.forEach(clearTimeout);
     springTimersRef.current = [];
 
-    // Where the bar is RIGHT NOW (75% through anchor count-up)
-    const currentFp = latestGaugeFpRef.current;
-    // How far still to go from current position to finalFp
-    const remaining = finalFp - currentFp;
+    // Bar is currently at the 5-card total (frozen during anchor count-up).
+    // The anchor card's number has already settled on the card face.
+    // Now the tier bar does one smooth spring motion adding card 6's FP.
+    const startFp = frozenBarFpRef.current ?? latestGaugeFpRef.current;
+    const anchorFp = finalFp - startFp; // card 6's contribution
 
-    // Amplitude for overshoot — based on tier margin
+    // Overshoot = 10% of the anchor card's FP (proportional, not fixed)
+    const overshoot = anchorFp * 0.10;
     const tier = SPRING_TIERS.find(t => finalFp >= t.lo && finalFp < t.hi)
       ?? SPRING_TIERS[SPRING_TIERS.length - 1];
-    const margin = finalFp - tier.lo;
-    const marginNorm = Math.min(1, margin / SPRING_TIER_SPAN);
-    const fpNorm = Math.min(1, Math.max(0, (finalFp - 155) / 80));
-    const baseAmp = 4.0 + fpNorm * 6.0;
-    const amplitude = baseAmp * (1.0 - marginNorm * 0.75);
     const headroom = tier.hi - finalFp - 0.5;
-    const clampedAmp = Math.min(amplitude, Math.max(1, headroom));
+    const clampedOvershoot = Math.min(overshoot, Math.max(0.5, headroom));
 
-    // Phase 1: ease from currentFp to finalFp (completes the count-up smoothly)
-    // Phase 2: damped oscillation around finalFp (overshoot + settle)
-    // Both are one continuous RAF — no gap, no velocity discontinuity.
-    const EASE_MS = 350;     // time to cover remaining distance
-    const SPRING_MS = 1400;  // oscillation duration
-    const TOTAL_MS = EASE_MS + SPRING_MS;
-    const decay = 3.5;
-    const freq = 8.0;
+    // Waypoints — each is a direction change, fully extended before reversing:
+    // A: startFp → finalFp + overshoot  (shoot up past target)
+    // B: peak → finalFp - undershoot     (back down below target)
+    // C: bottom → finalFp + tiny         (small rise above)
+    // D: settle at finalFp
+    const damping = 0.4;
+    const peak = finalFp + clampedOvershoot;
+    const bottom = finalFp - clampedOvershoot * damping;
+    const smallUp = finalFp + clampedOvershoot * damping * damping;
+
+    // Timing: each segment decelerates (longer duration for smaller moves)
+    // Total ~2000ms, considerably slower than the card-by-card gauge roll
+    const segA = 700;   // longest — the main sweep
+    const segB = 500;   // recoil
+    const segC = 400;   // small bounce
+    const segD = 300;   // settle
+    const TOTAL_MS = segA + segB + segC + segD;
+    const segments = [
+      { from: startFp, to: peak,    dur: segA },
+      { from: peak,    to: bottom,  dur: segB },
+      { from: bottom,  to: smallUp, dur: segC },
+      { from: smallUp, to: finalFp, dur: segD },
+    ];
+
     let startTime: number | null = null;
-
-    // Don't lock gaugeFp yet — let the bar keep tracking springFp
-    setSpringFp(currentFp); // start from where we ARE, not where we're going
+    setSpringFp(startFp);
     setSpringSettled(false);
 
     function tick(now: number) {
@@ -545,24 +557,26 @@ export default function GameView() {
 
       if (elapsed >= TOTAL_MS) {
         lockedGaugeFpRef.current = finalFp;
+        frozenBarFpRef.current = null;
         setSpringFp(null);
         setSpringSettled(true);
         onSettled();
         return;
       }
 
-      let fp: number;
-      if (elapsed < EASE_MS) {
-        // Phase 1: smooth ease from currentFp to finalFp
-        const t = elapsed / EASE_MS;
-        const eased = 1 - Math.pow(1 - t, 2); // quadratic ease-out
-        fp = currentFp + remaining * eased;
-      } else {
-        // Phase 2: damped oscillation around finalFp
-        const t2 = (elapsed - EASE_MS) / SPRING_MS;
-        const envelope = Math.exp(-decay * t2);
-        const oscillation = Math.sin(freq * t2 * Math.PI);
-        fp = finalFp + clampedAmp * envelope * oscillation;
+      // Find which segment we're in
+      let cumulative = 0;
+      let fp = finalFp;
+      for (const seg of segments) {
+        if (elapsed < cumulative + seg.dur) {
+          const segElapsed = elapsed - cumulative;
+          const t = segElapsed / seg.dur;
+          // Deceleration easing — each move slows as it reaches its peak
+          const eased = 1 - Math.pow(1 - t, 3); // cubic ease-out
+          fp = seg.from + (seg.to - seg.from) * eased;
+          break;
+        }
+        cumulative += seg.dur;
       }
 
       setSpringFp(fp);
@@ -618,6 +632,10 @@ export default function GameView() {
   const gameAnalytics = useGameAnalytics("basketball");
 
   function handleCardRevealStart(cardId: string, tierArg: string, shakeType?: string | null) {
+    // Freeze bar at 5-card total when anchor starts — bar won't move during anchor count-up
+    if (cardId === anchorCardId && !isFTUE) {
+      frozenBarFpRef.current = latestGaugeFpRef.current;
+    }
     const tier = tierArg?.toUpperCase() ?? "WHITE";
     const st = shakeType ?? null;
     // Must match glowMsForReveal() in useEmotionalReveal
@@ -840,8 +858,10 @@ export default function GameView() {
   }, [gameState, roster, totalFp]);
 
 
-  // lockedGaugeFpRef freezes the gauge FP the instant the anchor card finishes
-  const displayFp = springFp ?? (lockedGaugeFpRef.current ?? totalFp);
+  // During anchor count-up: bar frozen at 5-card total (frozenBarFpRef)
+  // During spring: springFp drives the bar
+  // After spring: lockedGaugeFpRef holds the final value
+  const displayFp = springFp ?? (frozenBarFpRef.current ?? (lockedGaugeFpRef.current ?? totalFp));
   const gaugeTotalFp = displayFp;
   latestGaugeFpRef.current = gaugeTotalFp;
 
@@ -943,6 +963,7 @@ export default function GameView() {
       pendingBalanceUpdateRef.current = null;
       lockedGaugeFpRef.current = null;
       springHasFiredRef.current = false;
+      frozenBarFpRef.current = null;
       postRevealCopyRef.current = null;
       setStreakMilestone(null);
     }
