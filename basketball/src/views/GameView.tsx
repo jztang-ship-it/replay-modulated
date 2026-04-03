@@ -505,12 +505,16 @@ export default function GameView() {
   const springHasFiredRef = useRef(false);
 
   const runSpring = useCallback((finalFp: number, onSettled: () => void) => {
-    lockedGaugeFpRef.current = finalFp; // freeze gauge source immediately
     cancelAnimationFrame(springRafRef.current);
     springTimersRef.current.forEach(clearTimeout);
     springTimersRef.current = [];
 
-    // Amplitude based on tier margin
+    // Where the bar is RIGHT NOW (75% through anchor count-up)
+    const currentFp = latestGaugeFpRef.current;
+    // How far still to go from current position to finalFp
+    const remaining = finalFp - currentFp;
+
+    // Amplitude for overshoot — based on tier margin
     const tier = SPRING_TIERS.find(t => finalFp >= t.lo && finalFp < t.hi)
       ?? SPRING_TIERS[SPRING_TIERS.length - 1];
     const margin = finalFp - tier.lo;
@@ -518,31 +522,50 @@ export default function GameView() {
     const fpNorm = Math.min(1, Math.max(0, (finalFp - 155) / 80));
     const baseAmp = 4.0 + fpNorm * 6.0;
     const amplitude = baseAmp * (1.0 - marginNorm * 0.75);
-    // Clamp so spring never crosses into next tier
     const headroom = tier.hi - finalFp - 0.5;
     const clampedAmp = Math.min(amplitude, Math.max(1, headroom));
 
-    const DURATION_MS = 1800;
+    // Phase 1: ease from currentFp to finalFp (completes the count-up smoothly)
+    // Phase 2: damped oscillation around finalFp (overshoot + settle)
+    // Both are one continuous RAF — no gap, no velocity discontinuity.
+    const EASE_MS = 350;     // time to cover remaining distance
+    const SPRING_MS = 1400;  // oscillation duration
+    const TOTAL_MS = EASE_MS + SPRING_MS;
     const decay = 3.5;
     const freq = 8.0;
     let startTime: number | null = null;
 
-    setSpringFp(finalFp);
+    // Don't lock gaugeFp yet — let the bar keep tracking springFp
+    setSpringFp(currentFp); // start from where we ARE, not where we're going
     setSpringSettled(false);
 
     function tick(now: number) {
       if (startTime === null) startTime = now;
-      const t = (now - startTime) / DURATION_MS;
-      if (t >= 1) {
+      const elapsed = now - startTime;
+
+      if (elapsed >= TOTAL_MS) {
+        lockedGaugeFpRef.current = finalFp;
         setSpringFp(null);
         setSpringSettled(true);
         onSettled();
         return;
       }
-      const envelope = Math.exp(-decay * t);
-      const oscillation = Math.sin(freq * t * Math.PI);
-      const offset = clampedAmp * envelope * oscillation;
-      setSpringFp(finalFp + offset);
+
+      let fp: number;
+      if (elapsed < EASE_MS) {
+        // Phase 1: smooth ease from currentFp to finalFp
+        const t = elapsed / EASE_MS;
+        const eased = 1 - Math.pow(1 - t, 2); // quadratic ease-out
+        fp = currentFp + remaining * eased;
+      } else {
+        // Phase 2: damped oscillation around finalFp
+        const t2 = (elapsed - EASE_MS) / SPRING_MS;
+        const envelope = Math.exp(-decay * t2);
+        const oscillation = Math.sin(freq * t2 * Math.PI);
+        fp = finalFp + clampedAmp * envelope * oscillation;
+      }
+
+      setSpringFp(fp);
       springRafRef.current = requestAnimationFrame(tick);
     }
     springRafRef.current = requestAnimationFrame(tick);

@@ -414,26 +414,32 @@ export function useEmotionalReveal(params: Params) {
 
           const start = nowMs();
           const gaugeTickInterval = 16;
+          let springTriggered = false;
           const driveTick = () => {
             if (runIdRef.current !== myRunId) return;
             const elapsed = clamp((nowMs() - start) / Math.max(1, countMs), 0, 1);
             const eased   = 1 - Math.pow(1 - elapsed, 3);
             if (isAnchor) setLastCardProgress(eased);
-            // Update visibleFpMap with interpolated FP so runningTotalFp & gauge track smoothly
             setVisibleFpMap(prev => new Map(prev).set(c.cardId, Math.max(0.001, eased * target)));
+
+            // Fire spring at 75% of anchor count-up — while bar still has momentum.
+            // This lets the spring carry the bar through the final 25% + overshoot
+            // as one continuous motion with no velocity discontinuity.
+            if (isAnchor && !springTriggered && elapsed >= 0.75) {
+              springTriggered = true;
+              const allTotal = cards.reduce((s, x) => s + Number(x.actualFp ?? 0), 0);
+              onAnchorFpComplete?.(allTotal);
+            }
+
             if (elapsed < 1) {
               const tt = window.setTimeout(driveTick, gaugeTickInterval);
               timersRef.current.push(tt);
             } else {
-              // driveTick complete. Set final value so runningTotalFp/TierGauge updates.
-              // CardFront is protected from re-animating by two guards:
-              //   1. animatingRef stays true after animation ends (never reset)
-              //   2. rollComplete guard returns early if animation already finished
               setVisibleFpMap(prev => new Map(prev).set(c.cardId, target));
               if (isAnchor) setLastCardProgress(1);
-              // Fire spring trigger immediately — before badge/stamp delay
-              // Use ALL cards (including held) for the total, not just revealOrder
-              if (isAnchor) {
+              // If spring wasn't triggered yet (non-anchor or very fast count), fire now
+              if (isAnchor && !springTriggered) {
+                springTriggered = true;
                 const allTotal = cards.reduce((s, x) => s + Number(x.actualFp ?? 0), 0);
                 onAnchorFpComplete?.(allTotal);
               }
