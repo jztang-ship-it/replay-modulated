@@ -79,7 +79,7 @@ const BIG_CARD_FP = 35;    // single card FP above this = "big card"
 
 /** FTUE Booker hand: five drawn cards only (see ftueRoster.ts) — bar starts here before scripted gauge */
 const FTUE_FIVE_CARDS_FP = 105;
-const FTUE_FINAL_FP = 192.6;
+const FTUE_FINAL_FP = 189.4;
 /** Imagined peak FP for the “past Starter into All-Star” hero beat (All-Star line = 195) */
 const FTUE_IMAGINE_PEAK_FP = 198;
 
@@ -641,8 +641,8 @@ export function TierGauge({
         {postRevealCopy ? (
           <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
             <span style={{
-              fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.85)",
-              fontFamily: FF, letterSpacing: "0.03em", lineHeight: 1.4,
+              fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.85)",
+              fontFamily: FF, letterSpacing: "0.03em", lineHeight: 1.5,
               display: "block", textAlign: "center",
               animation: "tgTextReveal 0.55s cubic-bezier(0.22,1,0.36,1) both",
             }}>
@@ -650,8 +650,8 @@ export function TierGauge({
             </span>
             {postRevealCopy.secondary && (
               <span style={{
-                fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.65)",
-                fontFamily: FF, letterSpacing: "0.03em", lineHeight: 1.4,
+                fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.80)",
+                fontFamily: FF, letterSpacing: "0.03em", lineHeight: 1.5,
                 display: "block", textAlign: "center",
                 animation: "tgTextReveal 0.55s cubic-bezier(0.22,1,0.36,1) 0.2s both",
               }}>

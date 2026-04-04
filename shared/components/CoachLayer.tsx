@@ -73,22 +73,22 @@ const CARD_POSITION: Record<string, BubblePosition> = {
 
 const CARD_BUBBLES: Record<string, ReactNode> = {
   "ftue-westbrook": (
-    <span>Brodie delivered — 39.4 FP on a $41 card, right on his line. Steady work from a reliable slot. 💪</span>
+    <span>Brodie delivered — 39.5 FP on a $41 card, right on his line. Steady work from a reliable vet. 💪</span>
   ),
   "ftue-cp3": (
-    <span>CP3 earned the Dime badge 🧠 — 10 assists, 1 turnover. He ran the offense clean and outplayed his projection.</span>
+    <span>Paul was on fire — 13 assists and a Double Double. He earned the Wizard badge 🪄 running the offense. That's why they call him the Point God.</span>
   ),
   "ftue-klay": (
-    <span>See the ice on Klay? 7.4 FP on a $33 card. The draw pulled a rough game for him tonight. Not every card runs hot. 🧊</span>
+    <span>See the ice on Klay? That tells you how cold he was. Only 4.6 FP on a $33 card. Underachieving games like this are going to come back and bite you. 🧊</span>
   ),
   "ftue-klove": (
-    <span>Love fell short — 10.5 FP against a 15 FP average. The draw pulled a quiet game. Sometimes that's the hand. 🥶</span>
+    <span>Love came in cold too — 9.5 FP against a 15 FP average. Not as frozen as Klay, but still below the line. 🥶</span>
   ),
   "ftue-patty": (
-    <span>Patty held his own — $9 card, right on his 10 FP average. Minimum salary, minimum drama. Every FP counts. 💡</span>
+    <span>Patty held his own — $9 card, right on his 10 FP average. Minimum salary, minimum drama. Not great but not terrible either. 💡</span>
   ),
   "ftue-booker": (
-    <span>Book is on fire — literally. 🔥 God Mode ⚡ tonight: 61 points, 87.6 FP, more than double his average. That game is worth looking up. Tap his card.</span>
+    <span>Book is on fire — literally. 🔥 God Mode ⚡ tonight: 62 points, 86.0 FP, more than double his average. That game is worth looking up. Tap his card.</span>
   ),
 };
 
@@ -405,7 +405,7 @@ export function CoachLayer({
     onBubbleActive?.(false);
     enqueue({
       key: "idle_deal",
-      node: <span>Welcome. Hit <DealChip /> to see your six players.</span>,
+      node: <span>Welcome to Replay, where you relive real NBA history. Hit <DealChip /> to see the lineup you were dealt.</span>,
       pulse: "deal",
       // no anchor → pill centers vertically, deal button stays visible below
     }, 500);
@@ -424,7 +424,7 @@ export function CoachLayer({
       key: "hold_roster_intro",
       node: (
         <span>
-          Six players. $200 salary cap. Orange cards average the most FP — white cards the least. You decide who stays and who gets replaced.
+          Six players, $200 salary cap. Your job: build the lineup that scores the most Fantasy Points. FP comes from real historical games — points, assists, rebounds all add up. Players are color coded to help you decide who to keep. You call — who do we keep?
         </span>
       ),
       anchor: "roster-and-score",
@@ -437,7 +437,7 @@ export function CoachLayer({
           key: "hold_booker",
           node: (
             <span>
-              Tap Booker to hold. At $59 he's your anchor — the highest-salary card. Hit <DrawChip /> to replace the rest.
+              Booker has a $59 salary — he's your anchor and most dependable player. Tap him to hold, then hit <DrawChip /> to replace the rest.
             </span>
           ),
           anchor: { cardId: "ftue-booker" },
@@ -491,10 +491,10 @@ export function CoachLayer({
         key: "darnit",
         node: (
           <span>
-            2.4 FP from All-Star — that's the 8x payout. Klay and Love combined for 17.9 FP on a $55 salary. They needed 20. 😤
+            So close it hurts — only 5.6 FP from the All-Star win. If only Love or Klay had a decent game we'd be celebrating an 8x score. 😤
           </span>
         ),
-        anchor: { cardId: "ftue-booker" },
+        anchor: "booker-and-gauge",
         position: "below",
         onDismiss: () => {
           shown.current.delete("results_devin");
@@ -502,7 +502,7 @@ export function CoachLayer({
             key: "results_devin",
             node: (
               <span>
-                Booker carried this hand. 87.6 FP — without him you don't hit Starter. Flip his card and see which game you drew. 🔥
+                Booker on the other hand really carried your team tonight. 86.0 FP is superman status. Flip his card to see what happened. 🔥
               </span>
             ),
             anchor: { cardId: "ftue-booker" },
@@ -527,7 +527,7 @@ export function CoachLayer({
         key: "booker_gamelogs",
         node: (
           <span>
-            March 17th, 2025. Booker vs Toronto. 61 points, 10 rebounds, 7 assists. A real game that really happened. Every FP in this game comes from nights like that. 🔥
+            Look at that stat line — 62 points on January 26, 2024 against Indiana. That's 76.0 base FP. The God Mode badge added 10 bonus points on top. That's how you get to 86.0. Badges are real. 🔥
           </span>
         ),
         anchor: { cardId: "ftue-booker" },
@@ -538,7 +538,7 @@ export function CoachLayer({
             key: "final_replay",
             node: (
               <span>
-                Every hand draws from real history. Two more wins and the bonus pool opens up. Run it back? 🏀
+                Every one of our game logs is a true historical game. Replay lets you relive every historical game in a fantasy format. Two more wins for the bonus pool. Let's run it back. 🏀
               </span>
             ),
             onDismiss: () => { onFtueAllDone?.(); setReplayReady(true); },

@@ -784,7 +784,8 @@ export default function GameView() {
   const showGaugeInZone3 =
     gameState === "REVEALING" ||
     gameState === "RESULTS" ||
-    gameState === "WIN_CELEBRATION";
+    gameState === "WIN_CELEBRATION" ||
+    (gameState === "DRAWING" && isFTUE);
   const isPostReveal = (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier != null;
 
   // Tier color map — mirrors WIN_TIERS in basketball/GameBar.tsx
@@ -873,6 +874,12 @@ export default function GameView() {
     // Once computed, lock it — never recompute until next hand
     if (postRevealCopyRef.current) return postRevealCopyRef.current;
     if ((gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") || !winTier || !springSettled) return null;
+    // FTUE: hardcoded near-miss commentary so new users see the commentary area in action
+    if (isFTUE) {
+      const ftueCopy = { primary: "5.6 FP from All-Star — the 8x payout.", secondary: "Klay and Love left points on the floor." };
+      postRevealCopyRef.current = ftueCopy;
+      return ftueCopy;
+    }
     const fp = lockedGaugeFpRef.current ?? displayFp;
     const gaugeSnap = computeGaugeState(fp, GAUGE_THRESHOLDS as any, winTier, 8);
     const copy = buildPostRevealCopy({
@@ -1639,9 +1646,9 @@ export default function GameView() {
             <div
               style={{
                 width: "100%",
-                height: isPostReveal ? 72 : 56,
-                minHeight: isPostReveal ? 72 : 56,
-                maxHeight: isPostReveal ? 72 : 56,
+                height: isPostReveal ? 80 : 56,
+                minHeight: isPostReveal ? 80 : 56,
+                maxHeight: isPostReveal ? 80 : 56,
                 flexShrink: 0,
                 position: "relative",
                 display: "flex",

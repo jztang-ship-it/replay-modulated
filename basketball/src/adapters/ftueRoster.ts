@@ -59,21 +59,17 @@ export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
     roster: [
 
       // Slot 0 — Devin Booker | ORANGE $59 | HOLD
-      // LEGENDARY (2.25x proj) — 61pts 10reb 7ast monster game
-      // Badges: GOD_MODE + GLASS + DIME + PICKPOCKET + DOUBLE_DBL | FP=90.1
+      // LEGENDARY (2.15x proj) — 62pts 5reb 4ast 1stl 2blk 4to real game Jan 26 2024 vs IND
+      // Badges: GOD_MODE | base=76.0 + badge=10 → FP=86.0
       makeCard({
         cardId: "ftue-booker", basePlayerId: "1626164",
         name: "Devin Booker", team: "PHX", position: "SG",
         tier: "ORANGE", salary: 59, slotIndex: 0,
-        projectedFp: 40, actualFp: 87.6,
-        date: "2025-03-17", opponent: "TOR", homeAway: "H",
-        statLine: { pts: 61, reb: 10, ast: 7, stl: 3, blk: 1, turnovers: 1, min: 42 },
+        projectedFp: 40, actualFp: 86.0,
+        date: "2024-01-26", opponent: "IND", homeAway: "A",
+        statLine: { pts: 62, reb: 5, ast: 4, stl: 1, blk: 2, turnovers: 4, min: 38 },
         achievements: [
-          { id: "GOD_MODE",   icon: "👑", label: "God Mode",      fp: 10 },
-          { id: "GLASS",      icon: "🧲", label: "Glass",         fp: 3  },
-          { id: "DIME",       icon: "🧠", label: "Dime",          fp: 3  },
-          { id: "PICKPOCKET", icon: "👀", label: "Pickpocket",    fp: 2  },
-          { id: "DOUBLE_DBL", icon: "✌️", label: "Double Double", fp: 2  },
+          { id: "GOD_MODE", icon: "👑", label: "God Mode", fp: 10 },
         ],
       }),
 
@@ -143,59 +139,60 @@ export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
 const DRAWN: Record<number, () => GeneratedCard> = {
 
   // Slot 1 → Russell Westbrook | PURPLE $41 | drawn
-  // Normal (0.97x proj) — solid but unremarkable
-  // 11pts 6reb 7ast 1stl 0blk 2tov → FP=39.4 (FTUE total targets 192.6 vs All-Star 195)
+  // On-pace (1.01x proj) — 25pts 5reb 3ast real game 2025-03-05 vs SAC
+  // FP=39.5 | Badges: BUCKET, SLOPPY
   1: () => makeCard({
     cardId: "ftue-westbrook", basePlayerId: "201566",
     name: "Russell Westbrook", team: "DEN", position: "PG",
     tier: "PURPLE", salary: 41, slotIndex: 1,
-    projectedFp: 29, actualFp: 39.4,
-    date: "2024-12-28", opponent: "DET", homeAway: "H",
-    statLine: { pts: 11, reb: 6, ast: 7, stl: 1, blk: 0, turnovers: 2, min: 28 },
+    projectedFp: 39, actualFp: 39.5,
+    date: "2025-03-05", opponent: "SAC", homeAway: "H",
+    statLine: { pts: 25, reb: 5, ast: 3, stl: 2, blk: 2, turnovers: 4, min: 35 },
   }),
 
   // Slot 2 → Chris Paul | BLUE $36 | drawn
-  // CAREER NIGHT (1.46x proj) — 10ast DIME game
-  // 16pts 2reb 10ast 2stl 0blk 1tov → FP=37.0 (FTUE total targets 192.6 vs All-Star 195)
+  // ON FIRE (1.56x proj) — 11pts 8reb 13ast real game 2024-12-06 vs SAC
+  // FP=39.1 | Badges: WIZARD, DOUBLE_DBL | Total=192.8, gap to AS=2.2
   2: () => makeCard({
     cardId: "ftue-cp3", basePlayerId: "101108",
     name: "Chris Paul", team: "SAS", position: "PG",
     tier: "BLUE", salary: 36, slotIndex: 2,
-    projectedFp: 25, actualFp: 37.0,
-    date: "2025-01-25", opponent: "IND", homeAway: "A",
-    statLine: { pts: 16, reb: 2, ast: 10, stl: 2, blk: 0, turnovers: 1, min: 30 },
+    projectedFp: 25, actualFp: 39.1,
+    date: "2024-12-06", opponent: "SAC", homeAway: "H",
+    statLine: { pts: 11, reb: 8, ast: 13, stl: 1, blk: 0, turnovers: 3, min: 29 },
     achievements: [
-      { id: "DIME", icon: "🧠", label: "Dime", fp: 3 },
+      { id: "WIZARD", icon: "🪄", label: "Wizard", fp: 0 },
+      { id: "DOUBLE_DBL", icon: "✌️", label: "Double Double", fp: 0 },
     ],
   }),
 
   // Slot 3 → Klay Thompson | BLUE $33 | drawn
-  // ICE COLD (0.32x proj) — off night, barely played
-  // 6pts 2reb 0ast 0stl 0blk 1tov → FP=7.4
+  // FREEZING (0.20x proj) — 3pts 3reb 0ast real game 2025-03-03 vs SAC
+  // FP=4.6
   3: () => makeCard({
     cardId: "ftue-klay", basePlayerId: "202691",
     name: "Klay Thompson", team: "DAL", position: "SG",
     tier: "BLUE", salary: 33, slotIndex: 3,
-    projectedFp: 23, actualFp: 7.4,
-    date: "2025-02-21", opponent: "NOP", homeAway: "H",
-    statLine: { pts: 6, reb: 2, ast: 0, stl: 0, blk: 0, turnovers: 1, min: 22 },
+    projectedFp: 23, actualFp: 4.6,
+    date: "2025-03-03", opponent: "SAC", homeAway: "H",
+    statLine: { pts: 3, reb: 3, ast: 0, stl: 0, blk: 0, turnovers: 2, min: 25 },
   }),
 
   // Slot 4 → Kevin Love | GREEN $22 | drawn
-  // BRICK CITY (0.54x proj) — cold shooting, turnovers
-  // 5pts 3reb 1ast 0stl 0blk 2tov → FP=8.1
+  // ICE COLD (0.63x proj) — 4pts 5reb 1ast real game 2024-12-16 vs DET
+  // FP=9.5
   4: () => makeCard({
     cardId: "ftue-klove", basePlayerId: "201567",
-    name: "Kevin Love", team: "CLE", position: "PF",
+    name: "Kevin Love", team: "MIA", position: "PF",
     tier: "GREEN", salary: 22, slotIndex: 4,
-    projectedFp: 15, actualFp: 10.5,
-    date: "2024-11-29", opponent: "TOR", homeAway: "H",
-    statLine: { pts: 7, reb: 2, ast: 1, stl: 0, blk: 0, turnovers: 1, min: 14 },
+    projectedFp: 15, actualFp: 9.5,
+    date: "2024-12-16", opponent: "DET", homeAway: "A",
+    statLine: { pts: 4, reb: 5, ast: 1, stl: 0, blk: 0, turnovers: 2, min: 12 },
   }),
 
   // Slot 5 → Patty Mills | WHITE $9 | drawn
-  // Normal game — veteran bench minutes
-  // 9pts 1reb 1ast 1stl 0blk 3tov → FP=10.7
+  // Normal game — 9pts 1reb 1ast real game 2024-10-31 vs SAS (VERIFIED MATCH)
+  // FP=10.7
   5: () => makeCard({
     cardId: "ftue-patty", basePlayerId: "201988",
     name: "Patty Mills", team: "ATL", position: "PG",
