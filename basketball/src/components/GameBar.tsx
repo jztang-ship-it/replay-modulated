@@ -40,12 +40,7 @@ const LEGEND: LegendData = {
     { stat: "Block",    pts: "+2.0" },
     { stat: "Turnover", pts: "-1.0" },
   ],
-  stamps: [
-    { icon: "🔴", label: "SMOKING HOT", condition: "FP ≥ 160% of average" },
-    { icon: "🟠", label: "ON FIRE",     condition: "FP ≥ 140% of average" },
-    { icon: "⬜", label: "ICE COLD",    condition: "FP ≤ 80% of average"  },
-    { icon: "⬛", label: "FREEZING",    condition: "FP ≤ 60% of average"  },
-  ],
+  stamps: [],
   badges: [
     { icon: "⚡",  label: "GOD MODE",         condition: "50+ points"            },
     { icon: "🔥",  label: "FIRE",             condition: "40-49 points"          },

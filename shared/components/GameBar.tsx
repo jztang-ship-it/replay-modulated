@@ -50,7 +50,7 @@ export interface LegendData {
   payoutRows: Array<{ label: string; score: string; payout: string; color: string; bg: string; border: string }>;
   bonusRows?: Array<{ label: string; condition: string; reward: string }>;
   scoringRules: ScoringRule[];
-  stamps: BadgeInfo[];
+  stamps?: BadgeInfo[];
   badges: BadgeInfo[];
 }
 
@@ -576,20 +576,25 @@ function LegendModal({ onClose, legend }: { onClose: () => void; legend: LegendD
                   <span style={{ fontSize: 12, fontWeight: 900, textAlign: "right", minWidth: 42, color: r.pts.startsWith("+") ? "#36D46B" : "#ef4444" }}>{r.pts}</span>
                 </div>
               ))}
-              {legend.stamps.length > 0 && (
-                <>
-                  <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, color: "rgba(255,255,255,0.35)", marginTop: 14, marginBottom: 4 }}>PERFORMANCE STAMPS</div>
-                  {legend.stamps.map(b => (
-                    <div key={b.label} style={{ display: "flex", gap: 10, alignItems: "center", padding: "7px 10px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                      <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>{b.icon}</span>
-                      <div>
-                        <span style={{ fontSize: 12, fontWeight: 900, letterSpacing: 0.8, color: "#EAF0FF" }}>{b.label}</span>
-                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginLeft: 8 }}>{b.condition}</span>
-                      </div>
+              <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+                <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, color: "rgba(255,255,255,0.35)", marginBottom: 8 }}>CARD TEMPERATURE</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <div style={{ display: "flex", gap: 10, alignItems: "center", padding: "7px 10px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>🔥</span>
+                    <div>
+                      <span style={{ fontSize: 12, fontWeight: 900, letterSpacing: 0.8, color: "#EAF0FF" }}>Fire</span>
+                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginLeft: 8 }}>Player exceeded their average FP</span>
                     </div>
-                  ))}
-                </>
-              )}
+                  </div>
+                  <div style={{ display: "flex", gap: 10, alignItems: "center", padding: "7px 10px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>🧊</span>
+                    <div>
+                      <span style={{ fontSize: 12, fontWeight: 900, letterSpacing: 0.8, color: "#EAF0FF" }}>Ice</span>
+                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginLeft: 8 }}>Player fell below their average FP</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
           {tab === "badges" && (

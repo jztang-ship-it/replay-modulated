@@ -514,7 +514,7 @@ export function PlayerCardShell(props: CardShellProps) {
         <div className="pcs-face pcs-face-back">
           {canFlip
             ? renderBack({ card, stableCard })
-            : <CardBackGeneric />
+            : <CardBackGeneric isTapTarget={isTapTarget} />
           }
         </div>
       </div>{/* end pcs-inner */}

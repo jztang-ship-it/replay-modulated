@@ -35,6 +35,7 @@ export interface PostRevealCopyInput {
   isBust: boolean;
   ceilingPct?: number;
   handCount: number;
+  isFTUE?: boolean;
 }
 
 export interface PostRevealCopy { primary: string; secondary?: string; }
@@ -260,9 +261,16 @@ const basketballPack: SportCopyPack = {
     let line1: string;
     if (isNearMiss) {
       const nextLabel = TIER_LABEL[nextTier!] ?? nextTier ?? "next tier";
-      const gapStr = gap.toFixed(1);
-      const pool = gap <= 2 ? NM_TINY : gap <= 5 ? NM_SMALL : NM_MED;
-      line1 = pick(pool, seed).replace("{gap}", gapStr).replace("{next}", nextLabel);
+      const NEXT_TIER_MULT: Record<string, string> = {
+        ROOKIE: "0.5x", STARTER: "3x", ALL_STAR: "8x", MVP: "15x", GOAT: "50x",
+      };
+      const multLabel = nextTier ? (NEXT_TIER_MULT[nextTier] ?? "") : "";
+      const multSuffix = multLabel ? ` — that's the ${multLabel} payout` : "";
+      line1 = gap <= 2
+        ? pick([`${gap.toFixed(1)} FP from ${nextLabel}${multSuffix}. One play.`, `${nextLabel} was one play away${multSuffix}. ${gap.toFixed(1)} FP.`], seed)
+        : gap <= 5
+        ? pick([`${gap.toFixed(1)} FP short of ${nextLabel}${multSuffix}. Stings.`, `${nextLabel} slipped away — ${gap.toFixed(1)} FP${multSuffix}.`], seed)
+        : pick([`${gap.toFixed(1)} FP from ${nextLabel} ${E.NEAR_MISS}${multSuffix}.`, `That was right there — ${gap.toFixed(1)} short of ${nextLabel}${multSuffix}.`], seed);
     } else if (winTier === "GOAT") {
       line1 = pick(GOAT_L1, seed);
     } else if (winTier === "MVP") {

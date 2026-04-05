@@ -11,9 +11,10 @@ import React from "react";
 
 type Props = {
   isFlipping?: boolean;
+  isTapTarget?: boolean;
 };
 
-export function CardBackGeneric({ isFlipping }: Props) {
+export function CardBackGeneric({ isFlipping, isTapTarget = false }: Props) {
   return (
     <div
       style={{
@@ -91,6 +92,20 @@ export function CardBackGeneric({ isFlipping }: Props) {
       >
         REPLAY IFS
       </div>
+      {isTapTarget && (
+        <>
+          <style>{`@keyframes lp-tap-pulse { 0%,100% { opacity:.4; } 50% { opacity:.9; } }`}</style>
+          <span style={{
+            position: "absolute", top: "16%", left: 0, right: 0,
+            textAlign: "center", fontSize: 8, fontWeight: 800,
+            letterSpacing: 2, textTransform: "uppercase",
+            color: "rgba(255,255,255,0.45)",
+            animation: "lp-tap-pulse 1.8s ease-in-out infinite",
+            zIndex: 2,
+            pointerEvents: "none",
+          }}>TAP</span>
+        </>
+      )}
 
     </div>
   );

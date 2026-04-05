@@ -23,6 +23,7 @@ interface Props {
   lastRevealedCardId?: string | null;
   ftueBookerFlipped?: boolean;
   ftueWinCelebrationActive?: boolean;
+  ftueCommentaryDone?: boolean;
   /** Active coach queue key (e.g. hold_roster_intro, hold_booker, card_ftue-westbrook) — for GameView roster highlight */
   onCoachBubbleKey?: (key: string | null) => void;
   onResumeHeldReveal?: () => void;
@@ -76,19 +77,19 @@ const CARD_BUBBLES: Record<string, ReactNode> = {
     <span>Brodie delivered — 39.5 FP on a $41 card, right on his line. Steady work from a reliable vet. 💪</span>
   ),
   "ftue-cp3": (
-    <span>Paul was on fire — 13 assists and a Double Double. He earned the Wizard badge 🪄 running the offense. That's why they call him the Point God.</span>
+    <span>CP3 earned his Dime badge 🧠 — 11 assists, only 2 turnovers. That game he also logged his 12,000th career assist, joining Stockton and Kidd. The Point God still has it. 🏀</span>
   ),
   "ftue-klay": (
     <span>See the ice on Klay? That tells you how cold he was. Only 4.6 FP on a $33 card. Underachieving games like this are going to come back and bite you. 🧊</span>
   ),
   "ftue-klove": (
-    <span>Love came in cold too — 9.5 FP against a 15 FP average. Not as frozen as Klay, but still below the line. 🥶</span>
+    <span>Love came in cold — 9.5 against a 15 FP average. He definitely didn't help your team's total score.</span>
   ),
   "ftue-patty": (
-    <span>Patty held his own — $9 card, right on his 10 FP average. Minimum salary, minimum drama. Not great but not terrible either. 💡</span>
+    <span>Patty held his own — $9 card, right on his 10 FP average. Minimum salary, minimum drama. Not great but not terrible either.</span>
   ),
   "ftue-booker": (
-    <span>Book is on fire — literally. 🔥 God Mode ⚡ tonight: 62 points, 86.0 FP, more than double his average. That game is worth looking up. Tap his card.</span>
+    <span>Book is on fire — literally. 🔥 God Mode ⚡ tonight: 62 points, 89.4 FP, more than double his average. That game is worth looking up. Tap his card.</span>
   ),
 };
 
@@ -101,13 +102,13 @@ interface QueueEntry {
   anchor?: BubbleAnchor;
   position?: BubblePosition;
   /** Explicit pill placement mode; spotlight anchor is still independent */
-  pillLayout?: "anchor" | "viewport-center" | "above-spotlight" | "page-center";
+  pillLayout?: "anchor" | "viewport-center" | "above-spotlight" | "page-center" | "below-score-row";
   pulseCardLabels?: boolean;
 }
 type Pulse = "deal" | "draw" | null;
 
 // Gap between spotlight edge and message pill (px)
-const PILL_GAP = 22;
+const PILL_GAP = 10;
 // Padding around spotlight rect — smaller for individual cards so we don't
 // bleed into adjacent cards (grid gap is 8px, safe pad is 3px)
 const PAD_CARD  = 3;
@@ -169,6 +170,7 @@ function resolveAnchorElement(anchor: BubbleAnchor | undefined): HTMLElement | n
   if (anchor === "ftue-darnit-focus") {
     return document.querySelector('[data-ftue-anchor="ftue-darnit-focus"]') as HTMLElement | null;
   }
+  if (anchor === "score-row") return document.querySelector('[data-ftue-anchor="score-row"]') as HTMLElement | null;
   if (anchor === "roster-and-score") {
     const rect = unionRosterAndScoreRect();
     if (!rect) return null;
@@ -207,14 +209,14 @@ function computePillPlacement(
     return { bottom: vh - spotTop + gapPx };
   } else {
     // Pin pill top edge at gapPx below spotlight bottom, clamped to not clip off viewport
-    const maxTop = vh - 120; // leave at least 120px from bottom for content
+    const maxTop = vh - 40; // leave at least 40px from bottom for content
     return { top: Math.min(spotBottom + gapPx, maxTop) };
   }
 }
 
 export function CoachLayer({
   isFTUE, gameState,
-  lastRevealedCardId, ftueBookerFlipped, ftueWinCelebrationActive,
+  lastRevealedCardId, ftueBookerFlipped, ftueWinCelebrationActive, ftueCommentaryDone,
   lockedCount,
   onCoachBubbleKey,
   onResumeHeldReveal, onCelebrationReady, onFtueReadyToFlip, onFtueBookerHeld, onFtueAllDone, onBubbleActive, onReplayReady,
@@ -424,11 +426,12 @@ export function CoachLayer({
       key: "hold_roster_intro",
       node: (
         <span>
-          Six players, $200 salary cap. Your job: build the lineup that scores the most Fantasy Points. FP comes from real historical games — points, assists, rebounds all add up. Players are color coded to help you decide who to keep. You call — who do we keep?
+          Six players, $200 cap. Build the lineup that scores the most Fantasy Points — points, assists, rebounds all count. Color coding shows who's worth keeping. Who do we keep?
         </span>
       ),
       anchor: "roster-and-score",
       position: "below",
+      pillLayout: "below-score-row",
       pulseCardLabels: true,
       onDismiss: () => {
         shown.current.delete("hold_booker");
@@ -481,9 +484,10 @@ export function CoachLayer({
     }, 0);
   }, [lastRevealedCardId, isFTUE]); // eslint-disable-line
 
-  // After gauge oscillation → RESULTS: "Darn it" (gauge) → dismiss → Devin flip hint (Booker card)
+  // After commentary typewriter finishes → "Darn it" bubble → dismiss → Devin flip hint
   useEffect(() => {
     if (!ftueWinCelebrationActive) return;
+    if (!ftueCommentaryDone) return;
     shown.current.delete("darnit");
     shown.current.delete("results_devin");
     const t = setTimeout(() => {
@@ -491,7 +495,7 @@ export function CoachLayer({
         key: "darnit",
         node: (
           <span>
-            So close it hurts — only 5.6 FP from the All-Star win. If only Love or Klay had a decent game we'd be celebrating an 8x score. 😤
+            So close it hurts — only 4.4 FP from the All-Star win. If only Love or Klay made one extra play we'd be celebrating an 8x score. 😤
           </span>
         ),
         anchor: "booker-and-gauge",
@@ -502,7 +506,7 @@ export function CoachLayer({
             key: "results_devin",
             node: (
               <span>
-                Booker on the other hand really carried your team tonight. 86.0 FP is superman status. Flip his card to see what happened. 🔥
+                Booker on the other hand really carried your team tonight. 89.4 FP is superman status. Flip his card to see what happened. 🔥
               </span>
             ),
             anchor: { cardId: "ftue-booker" },
@@ -513,7 +517,7 @@ export function CoachLayer({
       });
     }, 600);
     return () => clearTimeout(t);
-  }, [ftueWinCelebrationActive]); // eslint-disable-line
+  }, [ftueWinCelebrationActive, ftueCommentaryDone]); // eslint-disable-line
 
   // ── After Booker flipped — game log bubble → final centered bubble ───
   useEffect(() => {
@@ -527,7 +531,7 @@ export function CoachLayer({
         key: "booker_gamelogs",
         node: (
           <span>
-            Look at that stat line — 62 points on January 26, 2024 against Indiana. That's 76.0 base FP. The God Mode badge added 10 bonus points on top. That's how you get to 86.0. Badges are real. 🔥
+            Look at that stat line — 62 points on January 26, 2024 against Indiana. That's 79.4 base FP. The God Mode badge added 10 bonus points on top. That's how you get to 89.4. Badges are real. 🔥
           </span>
         ),
         anchor: { cardId: "ftue-booker" },
@@ -538,7 +542,7 @@ export function CoachLayer({
             key: "final_replay",
             node: (
               <span>
-                Every one of our game logs is a true historical game. Replay lets you relive every historical game in a fantasy format. Two more wins for the bonus pool. Let's run it back. 🏀
+                Every game log comes from true historical games. Replay lets you relive basketball history at your fingertips, in a fantasy format. Two more wins to get a piece of that bonus pool, lets run it back. 🏀
               </span>
             ),
             onDismiss: () => { onFtueAllDone?.(); setReplayReady(true); },
@@ -587,23 +591,29 @@ export function CoachLayer({
 
   const isDarnit = current?.key === "darnit";
 
-  const pillPlacement: React.CSSProperties =
-    current?.pillLayout === "page-center"
-      ? {
-          top: "50vh",
-          left: 16,
-          right: 16,
-          transform: "translateY(-50%)",
-        }
-      : current?.pillLayout === "above-spotlight" && spotlightRect
-      ? computePillPlacement(spotlightRect, current?.position ?? "above", activePad, 28)
-      : current?.pillLayout === "viewport-center"
-        ? { top: "38%", left: 16, right: 16 }
-        : spotlightRect
-          ? computePillPlacement(spotlightRect, current?.position ?? "below", activePad)
-          : (current?.anchor == null)
-            ? { top: "38%" }
-            : { bottom: 110 };
+  const pillPlacement: React.CSSProperties = (() => {
+    if (current?.pillLayout === "page-center") {
+      return { top: "50vh", left: 16, right: 16, transform: "translateY(-50%)" };
+    }
+    if (current?.pillLayout === "below-score-row") {
+      const scoreEl = document.querySelector('[data-ftue-anchor="score-row"]');
+      if (scoreEl) {
+        const r = scoreEl.getBoundingClientRect();
+        return { top: r.bottom + 4 };
+      }
+    }
+    if (current?.pillLayout === "above-spotlight" && spotlightRect) {
+      return computePillPlacement(spotlightRect, current?.position ?? "above", activePad, 28);
+    }
+    if (current?.pillLayout === "viewport-center") {
+      return { top: "38%", left: 16, right: 16 };
+    }
+    if (spotlightRect) {
+      return computePillPlacement(spotlightRect, current?.position ?? "below", activePad);
+    }
+    if (current?.anchor == null) return { top: "38%" };
+    return { bottom: 110 };
+  })();
 
   return (
     <>
@@ -717,6 +727,8 @@ export function CoachLayer({
               textAlign: "center",
               pointerEvents: "none",
               animation: current.pillLayout === "page-center" ? "none" : "coachTextIn 0.25s ease-out both",
+              maxHeight: "30vh",
+              overflow: "auto",
               ...pillPlacement,
             }}
           >

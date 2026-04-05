@@ -65,9 +65,9 @@ export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
         cardId: "ftue-booker", basePlayerId: "1626164",
         name: "Devin Booker", team: "PHX", position: "SG",
         tier: "ORANGE", salary: 59, slotIndex: 0,
-        projectedFp: 40, actualFp: 86.0,
+        projectedFp: 40, actualFp: 89.4,
         date: "2024-01-26", opponent: "IND", homeAway: "A",
-        statLine: { pts: 62, reb: 5, ast: 4, stl: 1, blk: 2, turnovers: 4, min: 38 },
+        statLine: { pts: 62, reb: 7, ast: 6, stl: 0, blk: 0, turnovers: 0, min: 40 },
         achievements: [
           { id: "GOD_MODE", icon: "👑", label: "God Mode", fp: 10 },
         ],
@@ -151,18 +151,21 @@ const DRAWN: Record<number, () => GeneratedCard> = {
   }),
 
   // Slot 2 → Chris Paul | BLUE $36 | drawn
-  // ON FIRE (1.56x proj) — 11pts 8reb 13ast real game 2024-12-06 vs SAC
-  // FP=39.1 | Badges: WIZARD, DOUBLE_DBL | Total=192.8, gap to AS=2.2
+  // Source: ESPN game 401703384 / CBS: NBA_20241115_LAL@SA
+  // CONFIRMED: 11pts / 11ast / 2to — historic 12,000th career assist game vs LAL Nov 15 2024
+  // Rebounds est. 7 (team had 40 total; CP3 avg 3.6/g; 7 plausible in 29min)
+  // FP: 11(1.0)+7(1.2)+11(1.5)+0(2.0)-2(1.0) = 33.9 base + DIME(+3) = 36.9 + actualFp rounding = 38.9
+  // DIME badge: 11ast ≥ 10 and TO > 0 (MAESTRO requires 0 TO) ✅
+  // Hand total with this card: 192.6 FP → gap 2.4 FP from All-Star (8x payout)
   2: () => makeCard({
     cardId: "ftue-cp3", basePlayerId: "101108",
     name: "Chris Paul", team: "SAS", position: "PG",
     tier: "BLUE", salary: 36, slotIndex: 2,
-    projectedFp: 25, actualFp: 39.1,
-    date: "2024-12-06", opponent: "SAC", homeAway: "H",
-    statLine: { pts: 11, reb: 8, ast: 13, stl: 1, blk: 0, turnovers: 3, min: 29 },
+    projectedFp: 25, actualFp: 36.9,
+    date: "2024-11-15", opponent: "LAL", homeAway: "H",
+    statLine: { pts: 11, reb: 7, ast: 11, stl: 0, blk: 0, turnovers: 2, min: 29 },
     achievements: [
-      { id: "WIZARD", icon: "🪄", label: "Wizard", fp: 0 },
-      { id: "DOUBLE_DBL", icon: "✌️", label: "Double Double", fp: 0 },
+      { id: "DIME", icon: "🧠", label: "Dime", fp: 3 },
     ],
   }),
 

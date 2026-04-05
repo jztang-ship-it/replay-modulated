@@ -1,33 +1,86 @@
 /**
  * LandingPage.tsx — Single screen, no scroll.
- * 6 cards in a 3x2 grid, tappable to flip. "Play IFS" CTA below.
+ * 6 cards in a 3x2 grid. Start face-down with TAP prompt.
+ * Tap to flip and reveal real in-game card fronts with headshots.
  */
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import type { GamePhase, PlayerCard, Achievement } from "../adapters/types";
+import { AthleteCard } from "./AthleteCard";
 import { CardBackGeneric } from "./CardBackGeneric";
+import { headshotUrl } from "@shared/utils/headshotUrl";
 
-// ─── tokens ──────────────────────────────────────────────────────────────
-const BLACK  = "#070A12";
-const TEXT   = "#F0F2F5";
-const MUTED  = "rgba(240,242,245,0.38)";
-const GOLD   = "#C9A84C";
-const GREEN  = "#7FFF00";
+// ─── Card definitions ────────────────────────────────────────────────────────
 
-// ─── card definitions ────────────────────────────────────────────────────
-type Card = { id: string; name: string; pos: string; fp: string; color: string; salary: string };
+type LandingCardDef = {
+  id: string;
+  name: string;
+  pos: string;
+  salary: number;
+  fp: number;
+  team: string;
+  season: string;
+  basePlayerId: string;
+  achievements: Achievement[];
+};
 
-const CARDS: Card[] = [
-  { id:"c1", name:"Trae Young",     pos:"PG", fp:"43.5", color:"#4B9EE8", salary:"$38" },
-  { id:"c2", name:"De'Aaron Fox",   pos:"PG", fp:"61.2", color:"#4B9EE8", salary:"$45" },
-  { id:"c3", name:"Nikola Jokic",   pos:"C",  fp:"68.4", color:"#E8631A", salary:"$63" },
-  { id:"c4", name:"LeBron James",   pos:"SF", fp:"89.5", color:"#E8631A", salary:"$59" },
-  { id:"c5", name:"Stephen Curry",  pos:"PG", fp:"77.8", color:"#8B5CF6", salary:"$52" },
-  { id:"c6", name:"Kevin Durant",   pos:"SF", fp:"71.2", color:"#8B5CF6", salary:"$55" },
+const CARDS: LandingCardDef[] = [
+  {
+    id: "c1", name: "Ja Morant", pos: "PG", salary: 35, fp: 48.2,
+    team: "MEM", season: "2024-25", basePlayerId: "1629630",
+    achievements: [
+      { id: "MAESTRO", icon: "🎼", label: "Maestro", fp: 8 },
+      { id: "PURE", icon: "🎯", label: "Pure", fp: 3 },
+    ],
+  },
+  {
+    id: "c2", name: "Stephen Curry", pos: "PG", salary: 52, fp: 77.8,
+    team: "GSW", season: "2024-25", basePlayerId: "201939",
+    achievements: [
+      { id: "FIRE", icon: "🔥", label: "Fire", fp: 5 },
+      { id: "DIME", icon: "🧠", label: "Dime", fp: 5 },
+    ],
+  },
+  {
+    id: "c3", name: "Jayson Tatum", pos: "SF", salary: 49, fp: 62.1,
+    team: "BOS", season: "2024-25", basePlayerId: "1628369",
+    achievements: [
+      { id: "GOD_MODE", icon: "⚡", label: "God Mode", fp: 10 },
+      { id: "WIZARD", icon: "🪄", label: "Wizard", fp: 5 },
+    ],
+  },
+  {
+    id: "c4", name: "LeBron James", pos: "SF", salary: 59, fp: 89.5,
+    team: "LAL", season: "2024-25", basePlayerId: "2544",
+    achievements: [
+      { id: "GOD_MODE", icon: "⚡", label: "God Mode", fp: 10 },
+      { id: "QUAD_DBL", icon: "🦕", label: "Quad Double", fp: 30 },
+    ],
+  },
+  {
+    id: "c5", name: "Anthony Edwards", pos: "SG", salary: 48, fp: 64.8,
+    team: "MIN", season: "2024-25", basePlayerId: "1630162",
+    achievements: [
+      { id: "FIRE", icon: "🔥", label: "Fire", fp: 5 },
+      { id: "TRIPLE_DBL", icon: "👑", label: "Triple Double", fp: 8 },
+    ],
+  },
+  {
+    id: "c6", name: "Kevin Durant", pos: "SF", salary: 55, fp: 71.2,
+    team: "PHX", season: "2024-25", basePlayerId: "201142",
+    achievements: [
+      { id: "BUCKET", icon: "🏀", label: "Bucket", fp: 2 },
+      { id: "DOUBLE_DBL", icon: "✌️", label: "Double Double", fp: 2 },
+    ],
+  },
 ];
+
+// ─── Component ───────────────────────────────────────────────────────────────
 
 interface Props { onPlay: () => void; }
 
 export function LandingPage({ onPlay }: Props) {
   const [flipped, setFlipped] = useState<Set<string>>(new Set());
+  const phase: GamePhase = "RESULTS";
 
   function toggleCard(id: string) {
     setFlipped(prev => {
@@ -37,10 +90,36 @@ export function LandingPage({ onPlay }: Props) {
     });
   }
 
+  const playerCards = useMemo(() => {
+    return CARDS.map((d, slotIndex) => {
+      const cardId = `landing-${d.id}`;
+      return {
+        cardId,
+        basePlayerId: d.basePlayerId,
+        photoCode: d.basePlayerId,
+        headshotUrl: headshotUrl(d.basePlayerId),
+        name: d.name,
+        team: d.team,
+        season: d.season,
+        position: d.pos,
+        tier: "WHITE" as PlayerCard["tier"],
+        salary: d.salary,
+        projectedFp: d.fp,
+        actualFp: d.fp,
+        fpDelta: 0,
+        gameInfo: { date: "", opponent: "", homeAway: "" as any },
+        statLine: {},
+        achievements: d.achievements,
+        slotIndex,
+        wasHeld: false,
+      } satisfies PlayerCard;
+    });
+  }, []);
+
   return (
     <div style={{
-      background: `linear-gradient(180deg, ${BLACK} 0%, #0A1020 38%, ${BLACK} 100%)`,
-      color: TEXT,
+      background: "linear-gradient(180deg, #070A12 0%, #0A1020 38%, #070A12 100%)",
+      color: "#F0F2F5",
       fontFamily: "'Inter', system-ui, sans-serif",
       height: "100dvh", maxHeight: "100dvh", overflow: "hidden",
       display: "flex", flexDirection: "column",
@@ -93,22 +172,18 @@ export function LandingPage({ onPlay }: Props) {
         flex: 1, minHeight: 0,
         display: "flex", flexDirection: "column", alignItems: "center",
         justifyContent: "flex-start",
-        padding: "12px 16px 0",
-        gap: 0,
-        textAlign: "center",
+        padding: "12px 16px 0", gap: 0, textAlign: "center",
       }}>
 
         {/* 3x2 CARD GRID */}
         <div style={{
           display: "grid",
           gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-          gap: 8,
-          width: "100%",
-          maxWidth: 340,
-          marginBottom: 20,
+          gap: 8, width: "100%", maxWidth: 340, marginBottom: 20,
         }}>
-          {CARDS.map(c => {
+          {CARDS.map((c, i) => {
             const isFlipped = flipped.has(c.id);
+            const card = playerCards[i];
             return (
               <div
                 key={c.id}
@@ -117,39 +192,38 @@ export function LandingPage({ onPlay }: Props) {
                   aspectRatio: "329 / 478",
                   perspective: "800px",
                   cursor: "pointer",
-                  animation: `lp-float ${1.8 + parseInt(c.id.slice(1)) * 0.2}s ease-in-out infinite`,
+                  animation: `lp-float ${1.8 + i * 0.2}s ease-in-out infinite`,
                 }}
               >
                 <div className={`lp-card-inner${isFlipped ? " flipped" : ""}`}>
-                  {/* Back (face-down) */}
-                  <div className="lp-card-face lp-card-back" style={{
-                    background: "linear-gradient(160deg, #1A2540 0%, #111828 50%, #0C1220 100%)",
-                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                  }}>
+                  {/* Back (face-down) — generic card back with logo */}
+                  <div className="lp-card-face lp-card-back">
                     <CardBackGeneric />
                     {!isFlipped && (
                       <span style={{
-                        position: "absolute", top: "20%", left: 0, right: 0, textAlign: "center",
+                        position: "absolute", top: "16%", left: 0, right: 0, textAlign: "center",
                         fontSize: 8, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase",
                         color: "rgba(255,255,255,0.35)",
                         animation: "lp-tap-pulse 1.8s ease-in-out infinite",
+                        zIndex: 2,
                       }}>TAP</span>
                     )}
                   </div>
-                  {/* Front (face-up) */}
-                  <div className="lp-card-face lp-card-front" style={{
-                    background: `linear-gradient(160deg, ${c.color}22 0%, ${c.color}44 100%)`,
-                    border: `1.5px solid ${c.color}66`,
-                    display: "flex", flexDirection: "column", justifyContent: "flex-end",
-                    padding: "8px 6px 6px",
-                  }}>
-                    <div style={{ position: "absolute", top: 6, left: 6, fontSize: 10, fontWeight: 900, color: c.color }}>{c.salary}</div>
-                    <div style={{ position: "absolute", top: 6, right: 6, fontSize: 7, fontWeight: 700, color: "rgba(255,255,255,0.5)" }}>{c.pos}</div>
-                    <div style={{ marginTop: "auto" }}>
-                      <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: 0.3, color: "rgba(255,255,255,0.9)", lineHeight: 1.2 }}>{c.name}</div>
-                      <div style={{ fontSize: 18, fontWeight: 950, color: c.color, lineHeight: 1 }}>{c.fp}</div>
-                      <div style={{ fontSize: 7, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: 0.5 }}>FP</div>
-                    </div>
+                  {/* Front (face-up) — real in-game card with headshot */}
+                  <div className="lp-card-face lp-card-front">
+                    <AthleteCard
+                      card={card}
+                      phase={phase}
+                      canFlip={false}
+                      noTransition
+                      visibleFp={card.actualFp}
+                      badges={(card.achievements ?? []).map(a => ({
+                        id: a.id,
+                        icon: a.icon || "⭐",
+                        label: a.label,
+                        fp: a.fp ?? 0,
+                      }))}
+                    />
                   </div>
                 </div>
               </div>
@@ -159,7 +233,10 @@ export function LandingPage({ onPlay }: Props) {
 
         {/* HEADLINE + CTA */}
         <div style={{ maxWidth: 360, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-          <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".3em", textTransform: "uppercase", color: GOLD, margin: 0 }}>
+          <p style={{
+            fontSize: 10, fontWeight: 700, letterSpacing: ".3em", textTransform: "uppercase",
+            color: "#C9A84C", margin: 0,
+          }}>
             Beta · Free to Play · No Sign-Up
           </p>
           <h1 style={{
@@ -167,21 +244,20 @@ export function LandingPage({ onPlay }: Props) {
             fontSize: "clamp(24px, 5vw, 40px)", textTransform: "uppercase", lineHeight: 0.95, margin: 0,
           }}>
             You already know who balled out.<br />
-            <em style={{ color: GOLD, fontStyle: "normal" }}>Prove it.</em>
+            <em style={{ color: "#C9A84C", fontStyle: "normal" }}>Prove it.</em>
           </h1>
-          <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.6, margin: 0 }}>
-            A new way to sports entertainment — <strong style={{ color: TEXT }}>INSTANT</strong> fantasy sports.
+          <p style={{ fontSize: 12, color: "rgba(240,242,245,0.38)", lineHeight: 1.6, margin: 0 }}>
+            A new way to sports entertainment — <strong style={{ color: "#F0F2F5" }}>INSTANT</strong> fantasy sports.
           </p>
           <button className="lp-cta" onClick={onPlay} style={{ padding: "14px 52px", fontSize: 16 }}>
             Play IFS
           </button>
-          <span style={{ fontSize: 10, color: MUTED }}>
-            <span style={{ color: GREEN }}>✓</span> Skill based &nbsp;·&nbsp;
-            <span style={{ color: GREEN }}>✓</span> Fantasy &nbsp;·&nbsp;
-            <span style={{ color: GREEN }}>✓</span> Instant results
+          <span style={{ fontSize: 10, color: "rgba(240,242,245,0.38)" }}>
+            <span style={{ color: "#7FFF00" }}>✓</span> Skill based &nbsp;·&nbsp;
+            <span style={{ color: "#7FFF00" }}>✓</span> Fantasy &nbsp;·&nbsp;
+            <span style={{ color: "#7FFF00" }}>✓</span> Instant results
           </span>
         </div>
-
       </main>
     </div>
   );

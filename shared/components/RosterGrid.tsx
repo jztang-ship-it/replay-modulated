@@ -87,6 +87,8 @@ type Props = {
   heldRevealedIds?: Set<string>;
   tappedCardIds?: Set<string>;
   isRevealingPhase?: boolean;  // true when gameState === "REVEALING"
+  isFTUEHoldPhase?: boolean;   // true when isFTUE && gameState === "HOLD"
+  isFTUEDrawingPhase?: boolean; // true when isFTUE && gameState === "DRAWING"
   glowCardId?: string | null;
   glowTier?: string;
   glowDurationMs?: number;
@@ -103,7 +105,7 @@ export function RosterGrid(props: Props) {
     visibleFpMap, canFlip, onToggleLock, onToggleFlip,
     flipMsMap, fpCountUpMsMap, performanceTagMap, pulseMap,
     shakingCardId, shakeType, cardShakeTypeMap, visibleBadgesMap, activeRevealCardId, ftueDimmedSlots,
-    revealMode = "auto", onTapReveal, heldFpVisible = false, heldRevealedIds, tappedCardIds, isRevealingPhase = false, ftueLockedSlot = null, ftueFlipTargetId = null,
+    revealMode = "auto", onTapReveal, heldFpVisible = false, heldRevealedIds, tappedCardIds, isRevealingPhase = false, isFTUEHoldPhase = false, isFTUEDrawingPhase = false, ftueLockedSlot = null, ftueFlipTargetId = null,
     glowCardId, glowTier, glowDurationMs,
     isSkipping = false,
   } = props;
@@ -143,7 +145,9 @@ export function RosterGrid(props: Props) {
         // In tap mode during REVEALING: unheld untapped cards are tappable
         const isTapTarget    = (revealMode === "tap" && isRevealingPhase
                                && !wasHeld && !isTapped)
-                               || (ftueFlipTargetId !== null && id === ftueFlipTargetId);
+                               || (ftueFlipTargetId !== null && id === ftueFlipTargetId)
+                               || (isFTUEHoldPhase && !wasHeld)
+                               || (isFTUEDrawingPhase && !wasHeld);
         // Per-card: held card FP shows when its ID is in heldRevealedIds OR
         // when heldFpVisible is true (set by skip path after rollup completes)
         const thisHeldRevealed = wasHeld && ((heldRevealedIds?.has(id) ?? false) || (heldFpVisible ?? false));

@@ -461,6 +461,7 @@ export default function GameView() {
   const [ftueResultsDim, setFtueResultsDim] = useState(false);
   const [ftueBookerFlipped, setFtueBookerFlipped] = useState(false);
   const [ftueOscillating, setFtueOscillating] = useState(false);
+  const [ftueCommentaryDone, setFtueCommentaryDone] = useState(false);
   const [glowState, setGlowState] = useState<{ cardId: string | null; tier: string; durationMs: number }>({
     cardId: null, tier: "WHITE", durationMs: 300
   });
@@ -504,6 +505,7 @@ export default function GameView() {
   const lockedGaugeFpRef = useRef<number | null>(null);
   const springHasFiredRef = useRef(false);
   const frozenBarFpRef = useRef<number | null>(null); // freezes bar at 5-card total during anchor count-up
+  const anchorFpCallCountRef = useRef(0); // FTUE: tracks onAnchorFpComplete calls to skip non-held anchor
 
   const runSpring = useCallback((finalFp: number, onSettled: () => void) => {
     cancelAnimationFrame(springRafRef.current);
@@ -633,7 +635,11 @@ export default function GameView() {
 
   function handleCardRevealStart(cardId: string, tierArg: string, shakeType?: string | null) {
     // Freeze bar at 5-card total when anchor starts — bar won't move during anchor count-up
-    if (cardId === anchorCardId && !isFTUE) {
+    // In FTUE: anchorCardId = Westbrook (non-held), but the real anchor is Booker (held).
+    // Freeze when any held card starts revealing (Booker), or when anchorCardId matches (real game).
+    const card = rosterRef.current.find(c => cardId === ((c as any).cardId ?? (c as any).basePlayerId));
+    const isHeldCard = !!(card as any)?.wasHeld;
+    if (cardId === anchorCardId || (isFTUE && isHeldCard)) {
       frozenBarFpRef.current = latestGaugeFpRef.current;
     }
     const tier = tierArg?.toUpperCase() ?? "WHITE";
@@ -707,8 +713,14 @@ export default function GameView() {
       }
     }, [isFTUE]),
     onAnchorFpComplete: useCallback((_hookTotal: number) => {
-      if (isFTUE) return;
       if (springHasFiredRef.current) return;
+      // In FTUE tap mode, onAnchorFpComplete fires twice: once for the non-held
+      // anchor (Westbrook) and once for the held anchor (Booker). Only spring on
+      // the second call (Booker) — skip the first.
+      if (isFTUE && anchorFpCallCountRef.current === 0) {
+        anchorFpCallCountRef.current = 1;
+        return; // Westbrook's call — skip
+      }
       springHasFiredRef.current = true;
       // Always compute from rosterRef — guaranteed to have all 6 resolved cards
       const totalFp = rosterRef.current.reduce((s, c) => s + Number((c as any).actualFp ?? 0), 0);
@@ -724,49 +736,47 @@ export default function GameView() {
         gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
         recordHandPlayed();
         if (!bust) recordHandWon(); else recordHandLost();
-        pendingBalanceUpdateRef.current = () => {
-          if (payout > 0) {
-            setBalance(prev => { const next = prev + payout; saveBalance(next); return next; });
-          }
-          if (!bust) {
-            setStreak(prev => {
-              const next = prev + 1;
-              localStorage.setItem("replaymod_streak", String(next));
-              if (next === 3 || next === 5 || next === 10) soundManager.playStreakMilestone(next);
-              if (next === 3) setStreakMilestone({ wins: 3, pct: 5 });
-              else if (next === 5) setStreakMilestone({ wins: 5, pct: 15 });
-              submitToLeaderboard("streak", next);
-              return next;
-            });
-            submitToLeaderboard("wins", 1);
-            submitToLeaderboard("fp", totalFp);
-          } else {
-            setStreak(0);
-            localStorage.setItem("replaymod_streak", "0");
-          }
-        };
-        const t = window.setTimeout(() => {
-          setGameState("WIN_CELEBRATION");
-        }, 1200);
-        springTimersRef.current.push(t);
+        if (isFTUE) {
+          // FTUE: after spring settles, transition same as real game
+          ftueLastHandFpRef.current = totalFp;
+          const t = window.setTimeout(() => {
+            setGameState("RESULTS");
+            setTimeout(() => setFtueWinCelebrationActive(true), 300);
+          }, 1200);
+          springTimersRef.current.push(t);
+        } else {
+          pendingBalanceUpdateRef.current = () => {
+            if (payout > 0) {
+              setBalance(prev => { const next = prev + payout; saveBalance(next); return next; });
+            }
+            if (!bust) {
+              setStreak(prev => {
+                const next = prev + 1;
+                localStorage.setItem("replaymod_streak", String(next));
+                if (next === 3 || next === 5 || next === 10) soundManager.playStreakMilestone(next);
+                if (next === 3) setStreakMilestone({ wins: 3, pct: 5 });
+                else if (next === 5) setStreakMilestone({ wins: 5, pct: 15 });
+                submitToLeaderboard("streak", next);
+                return next;
+              });
+              submitToLeaderboard("wins", 1);
+              submitToLeaderboard("fp", totalFp);
+            } else {
+              setStreak(0);
+              localStorage.setItem("replaymod_streak", "0");
+            }
+          };
+          const t = window.setTimeout(() => {
+            setGameState("WIN_CELEBRATION");
+          }, 1200);
+          springTimersRef.current.push(t);
+        }
       });
     }, [isFTUE, currentBet, gameAnalytics, recordHandPlayed, recordHandWon, recordHandLost, runSpring]),
     onAllComplete: useCallback((_totalFp: number) => {
       clearActiveCard();
       soundManager.stopRevealAmbience();
-      if (!isFTUE) return;
-      ftueLastHandFpRef.current = _totalFp;
-      const tier = calculateWinTier(_totalFp);
-      const payout = calculatePayout(tier, currentBet);
-      setWinTier(tier);
-      setWinPayout(payout);
-      const bust = !tier || tier === "BUST";
-      const badges = rosterRef.current.reduce((s, c) => s + (c.achievements?.length ?? 0), 0);
-      gameAnalytics.handResolved(_totalFp, String(tier), bust, badges, Date.now());
-      recordHandPlayed();
-      if (!bust) recordHandWon(); else recordHandLost();
-      setTimeout(() => { pendingCelebration.current = { totalFp: _totalFp }; setCelebrationHeld(true); }, 1200);
-    }, [isFTUE, currentBet, gameAnalytics, recordHandPlayed, recordHandWon, recordHandLost]), // eslint-disable-line
+    }, []), // eslint-disable-line
   });
 
   // Zone 2: Derived values
@@ -784,8 +794,7 @@ export default function GameView() {
   const showGaugeInZone3 =
     gameState === "REVEALING" ||
     gameState === "RESULTS" ||
-    gameState === "WIN_CELEBRATION" ||
-    (gameState === "DRAWING" && isFTUE);
+    gameState === "WIN_CELEBRATION";
   const isPostReveal = (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier != null;
 
   // Tier color map — mirrors WIN_TIERS in basketball/GameBar.tsx
@@ -876,7 +885,7 @@ export default function GameView() {
     if ((gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") || !winTier || !springSettled) return null;
     // FTUE: hardcoded near-miss commentary so new users see the commentary area in action
     if (isFTUE) {
-      const ftueCopy = { primary: "5.6 FP from All-Star — the 8x payout.", secondary: "Klay and Love left points on the floor." };
+      const ftueCopy = { primary: "4.4 FP from All-Star — the 8x payout.", secondary: "Klay and Love left points on the floor." };
       postRevealCopyRef.current = ftueCopy;
       return ftueCopy;
     }
@@ -978,6 +987,7 @@ export default function GameView() {
       lockedGaugeFpRef.current = null;
       springHasFiredRef.current = false;
       frozenBarFpRef.current = null;
+      anchorFpCallCountRef.current = 0;
       postRevealCopyRef.current = null;
       setStreakMilestone(null);
     }
@@ -1080,6 +1090,7 @@ export default function GameView() {
       setCelebrationHeld(false);
       setFtueOscillating(false);
       setFtueGaugeOscDone(false);
+      setFtueCommentaryDone(false);
       setFtueWinCelebrationActive(false);
       setFtueBookerPulse(false);
       setFtueHoldSpotlight(false);
@@ -1395,6 +1406,8 @@ export default function GameView() {
                 heldRevealedIds={heldRevealedIds}
                 tappedCardIds={tappedCardIds}
                 isRevealingPhase={gameState === "REVEALING"}
+                isFTUEHoldPhase={isFTUE && gameState === "HOLD"}
+                isFTUEDrawingPhase={isFTUE && gameState === "DRAWING"}
                 ftueLockedSlot={
                   (isFTUE && ftueResultsDim)
                     ? 0
@@ -1413,7 +1426,7 @@ export default function GameView() {
             ? { "data-ftue-anchor": "ftue-darnit-focus" }
             : {})}
           style={{
-            flex: isPostReveal ? "0 0 22dvh" : "0 0 20dvh",
+            flex: (isPostReveal || isFTUE) ? "0 0 22dvh" : "0 0 20dvh",
             display: "flex",
             flexDirection: "column",
             minHeight: 0,
@@ -1436,10 +1449,10 @@ export default function GameView() {
               if (gameState === "RESULTS" && winTier && !showRawScore) setShowRawScore(true);
             }}
             style={{
-              flex: isPostReveal ? "0 0 52px" : "0 0 72px",
-              height: isPostReveal ? 52 : 72,
-              minHeight: isPostReveal ? 52 : 72,
-              maxHeight: isPostReveal ? 52 : 72,
+              flex: (isPostReveal || isFTUE) ? "0 0 52px" : "0 0 72px",
+              height: (isPostReveal || isFTUE) ? 52 : 72,
+              minHeight: (isPostReveal || isFTUE) ? 52 : 72,
+              maxHeight: (isPostReveal || isFTUE) ? 52 : 72,
               flexShrink: 0,
               display: "flex",
               justifyContent: "center",
@@ -1646,9 +1659,9 @@ export default function GameView() {
             <div
               style={{
                 width: "100%",
-                height: isPostReveal ? 80 : 56,
-                minHeight: isPostReveal ? 80 : 56,
-                maxHeight: isPostReveal ? 80 : 56,
+                height: (isPostReveal || isFTUE) ? 80 : 56,
+                minHeight: (isPostReveal || isFTUE) ? 80 : 56,
+                maxHeight: (isPostReveal || isFTUE) ? 80 : 56,
                 flexShrink: 0,
                 position: "relative",
                 display: "flex",
@@ -1699,12 +1712,19 @@ export default function GameView() {
                     lastCardFp={lastCardFp}
                     isSkip={false}
                     visible
-                    ftueSuppressNormal={isFTUE && gameState === "REVEALING" && !ftueOscillating}
-                    ftueOscillate={isFTUE && ftueOscillating}
-                    ftueLockStaticBar={isFTUE && ftueGaugeOscDone}
+                    ftueSuppressNormal={false}
+                    ftueOscillate={false}
+                    ftueLockStaticBar={false}
                     regularFinalCardKick={regularFinalGaugeKick}
                     onTierCross={undefined}
                     postRevealCopy={postRevealCopy}
+                    ftueTypewriter={isFTUE}
+                    onCommentaryDone={() => {
+                      // After typewriter finishes, trigger "so close" bubble with slight delay
+                      if (isFTUE) {
+                        setTimeout(() => setFtueCommentaryDone(true), 800);
+                      }
+                    }}
                     onFtueOscillateComplete={() => {
                       setFtueGaugeOscDone(true);
                       setFtueOscillating(false);
@@ -1775,6 +1795,7 @@ export default function GameView() {
               }}
               onBubbleActive={(active) => setFtueCardsBlocked(active)}
               ftueWinCelebrationActive={ftueWinCelebrationActive}
+              ftueCommentaryDone={ftueCommentaryDone}
               onReplayReady={() => setFtueReplayReady(true)}
               onFtueReadyToFlip={() => setFtueBookerPulse(true)}
               onFtueBookerHeld={() => { /* draw pulse handled inside CoachLayer */ }}

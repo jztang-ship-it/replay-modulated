@@ -31,7 +31,7 @@
  * NEVER resets to 0 mid-hand. Animates from prevFill always.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type GaugeTier = "MVP" | "ALL_STAR" | "STARTER" | "ROOKIE" | "BUST" | "NONE";
 export interface TierThreshold { tier: GaugeTier; minFP: number; }
@@ -61,6 +61,10 @@ interface TierGaugeProps {
   onTierCross?: (tier: string) => void;
   /** Smart post-reveal copy — replaces gap callout after results settle */
   postRevealCopy?: { primary: string; secondary?: string } | null;
+  /** FTUE: use typewriter reveal for commentary text */
+  ftueTypewriter?: boolean;
+  /** FTUE: called when typewriter commentary finishes */
+  onCommentaryDone?: () => void;
 }
 
 const TIER_CFG: Record<string, { label: string; color: string; glow: string }> = {
@@ -272,6 +276,23 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
   document.head.appendChild(st);
 }
 
+function Typewriter({ text, style, onDone, msPerChar = 25 }: {
+  text: string; style: React.CSSProperties; onDone?: () => void; msPerChar?: number;
+}) {
+  const [charCount, setCharCount] = useState(0);
+  const doneRef = useRef(false);
+  useEffect(() => {
+    if (charCount >= text.length) {
+      if (!doneRef.current) { doneRef.current = true; onDone?.(); }
+      return;
+    }
+    const t = setTimeout(() => setCharCount(c => c + 1), msPerChar);
+    return () => clearTimeout(t);
+  }, [charCount, text.length, msPerChar, onDone]);
+  useEffect(() => { setCharCount(0); doneRef.current = false; }, [text]);
+  return <span style={style}>{text.slice(0, charCount)}</span>;
+}
+
 export function TierGauge({
   totalFp, thresholds, visible,
   winTier: winTierProp,
@@ -285,6 +306,8 @@ export function TierGauge({
   isAnchorReveal = false,
   onTierCross,
   postRevealCopy,
+  ftueTypewriter = false,
+  onCommentaryDone,
 }: TierGaugeProps) {
   const [barFill, setBarFill] = useState(0);
   const [barColor, setBarColor] = useState("transparent");
@@ -639,26 +662,52 @@ export function TierGauge({
       {/* Gap callout — below bar: pre-reveal shows X FP TO NEXT TIER, post-reveal shows smart copy */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, flexDirection: "column", minHeight: 36, textAlign: "center" }}>
         {postRevealCopy ? (
-          <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-            <span style={{
-              fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.85)",
-              fontFamily: FF, letterSpacing: "0.03em", lineHeight: 1.5,
-              display: "block", textAlign: "center",
-              animation: "tgTextReveal 0.55s cubic-bezier(0.22,1,0.36,1) both",
-            }}>
-              {postRevealCopy.primary}
-            </span>
-            {postRevealCopy.secondary && (
+          ftueTypewriter ? (
+            <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+              <Typewriter
+                text={postRevealCopy.primary}
+                style={{
+                  fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.85)",
+                  fontFamily: FF, letterSpacing: "0.03em", lineHeight: 1.5,
+                  display: "block", textAlign: "center",
+                }}
+                msPerChar={22}
+              />
+              {postRevealCopy.secondary && (
+                <Typewriter
+                  text={postRevealCopy.secondary}
+                  style={{
+                    fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.80)",
+                    fontFamily: FF, letterSpacing: "0.03em", lineHeight: 1.5,
+                    display: "block", textAlign: "center",
+                  }}
+                  msPerChar={22}
+                  onDone={onCommentaryDone}
+                />
+              )}
+            </div>
+          ) : (
+            <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
               <span style={{
-                fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.80)",
+                fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.85)",
                 fontFamily: FF, letterSpacing: "0.03em", lineHeight: 1.5,
                 display: "block", textAlign: "center",
-                animation: "tgTextReveal 0.55s cubic-bezier(0.22,1,0.36,1) 0.2s both",
+                animation: "tgTextReveal 0.55s cubic-bezier(0.22,1,0.36,1) both",
               }}>
-                {postRevealCopy.secondary}
+                {postRevealCopy.primary}
               </span>
-            )}
-          </div>
+              {postRevealCopy.secondary && (
+                <span style={{
+                  fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.80)",
+                  fontFamily: FF, letterSpacing: "0.03em", lineHeight: 1.5,
+                  display: "block", textAlign: "center",
+                  animation: "tgTextReveal 0.55s cubic-bezier(0.22,1,0.36,1) 0.2s both",
+                }}>
+                  {postRevealCopy.secondary}
+                </span>
+              )}
+            </div>
+          )
         ) : isMaxLevel ? (
           <span style={{ fontSize: 13, fontWeight: 800, color: TIER_CFG.GOAT.color, fontFamily: FF, letterSpacing: "0.06em", textTransform: "uppercase" }}>
             You've reached the maximum level
