@@ -425,25 +425,42 @@ export function CardFront(props: CardFrontProps) {
           zIndex: 4, overflow: "hidden",
           gap: 3,
         }}>
-          {hasBadges ? (
-            <>
-              {badges!.slice(0, 6).map((badge, i) => (
-                <span
-                  key={badge.id ?? badge.label ?? i}
-                  style={{
-                    animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${i * 70}ms both`,
-                    fontSize: 8, lineHeight: 1, flexShrink: 0,
-                  }}
-                >{badge.icon}</span>
-              ))}
-              {badgeBonusFp > 0 && (
-                <span style={{
-                  animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${Math.min(badges!.length, 6) * 70}ms both`,
-                  fontSize: 8, fontWeight: 900, color: "#FFEA86", letterSpacing: 0.3, flexShrink: 0,
-                }}>+{badgeBonusFp}</span>
-              )}
-            </>
-          ) : null}
+          {hasBadges ? (() => {
+            const isLightAccent = derivedTier === "GREEN" || derivedTier === "BLUE" || derivedTier === "WHITE";
+            const textColor = isLightAccent ? "#1A1A1A" : "#FFEA86";
+            const MAX_VISIBLE = 4;
+            const visibleBadges = badges!.slice(0, MAX_VISIBLE);
+            const overflowCount = (badges?.length ?? 0) - MAX_VISIBLE;
+            return (
+              <>
+                {visibleBadges.map((badge, i) => (
+                  <span
+                    key={badge.id ?? badge.label ?? i}
+                    style={{
+                      animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${i * 70}ms both`,
+                      fontSize: 12, lineHeight: 1, flexShrink: 0,
+                    }}
+                  >{badge.icon}</span>
+                ))}
+                {overflowCount > 0 && (
+                  <span style={{
+                    animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${MAX_VISIBLE * 70}ms both`,
+                    fontSize: 9, fontWeight: 900, color: textColor,
+                    letterSpacing: 0.2, flexShrink: 0, opacity: 0.8,
+                  }}>+{overflowCount}</span>
+                )}
+                {badgeBonusFp > 0 && (
+                  <span style={{
+                    animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${Math.min(badges!.length, MAX_VISIBLE) * 70 + (overflowCount > 0 ? 70 : 0)}ms both`,
+                    fontSize: 11, fontWeight: 900, color: textColor,
+                    letterSpacing: 0.3, flexShrink: 0,
+                    background: isLightAccent ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.15)",
+                    borderRadius: 4, padding: "1px 4px",
+                  }}>+{badgeBonusFp}</span>
+                )}
+              </>
+            );
+          })() : null}
 
           {/* PERF PERCENTILE text removed — ratio expressed via fire/ice overlay instead */}
         </div>

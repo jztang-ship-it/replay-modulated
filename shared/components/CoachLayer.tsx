@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
-type GameState = "IDLE"|"DEALING"|"HOLD"|"DRAWING"|"REVEALING"|"RESULTS"|"WIN_CELEBRATION";
+type GameState = "IDLE" | "DEALING" | "HOLD" | "DRAWING" | "REVEALING" | "RESULTS" | "WIN_CELEBRATION";
 export type CoachLesson = "ftue_basics";
 
 export type BubbleAnchor =
@@ -34,6 +34,8 @@ interface Props {
   onBubbleActive?: (active: boolean) => void;
   onReplay?: () => void;
   onReplayReady?: () => void;
+  /** Routes bubble text into the commentary area instead of a floating pill */
+  onCommentaryText?: (parts: string[] | null) => void;
   lockedCount?: number; revealIndex?: number;
   legendaryCardName?: string; lesson?: CoachLesson;
 }
@@ -64,12 +66,12 @@ function DealChip() {
 
 // Row 1 (slots 0-2): message below card. Row 2 (slots 3-5): message above card.
 const CARD_POSITION: Record<string, BubblePosition> = {
-  "ftue-booker":    "below",
+  "ftue-booker": "below",
   "ftue-westbrook": "below",
-  "ftue-cp3":       "below",
-  "ftue-klay":      "above",
-  "ftue-klove":     "above",
-  "ftue-patty":     "above",
+  "ftue-cp3": "below",
+  "ftue-klay": "above",
+  "ftue-klove": "above",
+  "ftue-patty": "above",
 };
 
 const CARD_BUBBLES: Record<string, ReactNode> = {
@@ -83,7 +85,7 @@ const CARD_BUBBLES: Record<string, ReactNode> = {
     <span>See the ice on Klay? That tells you how cold he was. Only 4.6 FP on a $33 card. Underachieving games like this are going to come back and bite you. 🧊</span>
   ),
   "ftue-klove": (
-    <span>Love came in cold — 9.5 against a 15 FP average. He definitely didn't help your team's total score.</span>
+    <span>Love came in cold - 9.5 FP against a 15 FP average. Below the line of what we expected.</span>
   ),
   "ftue-patty": (
     <span>Patty held his own — $9 card, right on his 10 FP average. Minimum salary, minimum drama. Not great but not terrible either.</span>
@@ -111,20 +113,20 @@ type Pulse = "deal" | "draw" | null;
 const PILL_GAP = 10;
 // Padding around spotlight rect — smaller for individual cards so we don't
 // bleed into adjacent cards (grid gap is 8px, safe pad is 3px)
-const PAD_CARD  = 3;
+const PAD_CARD = 3;
 const PAD_OTHER = 10;
 
 /** Full grid stage (all 6 cards) + Team FP / Budget row — outer roster port + score row */
 function unionRosterAndScoreRect(): DOMRect | null {
   const rosterEl = document.querySelector('[data-ftue-anchor="roster-inner"]') ?? document.querySelector('[data-ftue-anchor="roster"]');
-  const scoreEl  = document.querySelector('[data-ftue-anchor="score-row"]');
+  const scoreEl = document.querySelector('[data-ftue-anchor="score-row"]');
   if (!rosterEl) return null;
   const r1 = rosterEl.getBoundingClientRect();
   const r2 = scoreEl ? scoreEl.getBoundingClientRect() : r1;
-  const top    = Math.min(r1.top,    r2.top);
+  const top = Math.min(r1.top, r2.top);
   const bottom = Math.max(r1.bottom, r2.bottom);
-  const left   = Math.min(r1.left,   r2.left);
-  const right  = Math.max(r1.right,  r2.right);
+  const left = Math.min(r1.left, r2.left);
+  const right = Math.max(r1.right, r2.right);
   return {
     top, bottom, left, right,
     width: right - left,
@@ -138,16 +140,16 @@ function unionRosterAndScoreRect(): DOMRect | null {
 /** Booker card + TierGauge + score row — for the FTUE RESULTS dual spotlight */
 function unionBookerAndGaugeRect(): DOMRect | null {
   const bookerEl = document.querySelector('[data-ftue-card="ftue-booker"]');
-  const gaugeEl  = document.querySelector('[data-ftue-anchor="tier-gauge"]');
-  const scoreEl  = document.querySelector('[data-ftue-anchor="score-row"]');
+  const gaugeEl = document.querySelector('[data-ftue-anchor="tier-gauge"]');
+  const scoreEl = document.querySelector('[data-ftue-anchor="score-row"]');
   if (!bookerEl || !gaugeEl) return null;
   const r1 = bookerEl.getBoundingClientRect();
   const r2 = gaugeEl.getBoundingClientRect();
   const r3 = scoreEl ? scoreEl.getBoundingClientRect() : r2;
-  const top    = Math.min(r1.top,    r2.top,    r3.top);
+  const top = Math.min(r1.top, r2.top, r3.top);
   const bottom = Math.max(r1.bottom, r2.bottom, r3.bottom);
-  const left   = Math.min(r1.left,   r2.left,   r3.left);
-  const right  = Math.max(r1.right,  r2.right,  r3.right);
+  const left = Math.min(r1.left, r2.left, r3.left);
+  const right = Math.max(r1.right, r2.right, r3.right);
   return {
     top, bottom, left, right,
     width: right - left,
@@ -163,10 +165,10 @@ function resolveAnchorElement(anchor: BubbleAnchor | undefined): HTMLElement | n
   if (typeof anchor === "object") {
     return document.querySelector(`[data-ftue-card="${anchor.cardId}"]`) as HTMLElement | null;
   }
-  if (anchor === "deal")   return document.querySelector('[data-ftue-anchor="deal"]') as HTMLElement | null;
-  if (anchor === "draw")   return document.querySelector('[data-ftue-anchor="draw"]') as HTMLElement | null;
+  if (anchor === "deal") return document.querySelector('[data-ftue-anchor="deal"]') as HTMLElement | null;
+  if (anchor === "draw") return document.querySelector('[data-ftue-anchor="draw"]') as HTMLElement | null;
   if (anchor === "roster") return document.querySelector('[data-ftue-anchor="roster"]') as HTMLElement | null;
-  if (anchor === "gauge")  return document.querySelector('[data-ftue-anchor="tier-gauge"]') as HTMLElement | null;
+  if (anchor === "gauge") return document.querySelector('[data-ftue-anchor="tier-gauge"]') as HTMLElement | null;
   if (anchor === "ftue-darnit-focus") {
     return document.querySelector('[data-ftue-anchor="ftue-darnit-focus"]') as HTMLElement | null;
   }
@@ -196,7 +198,7 @@ function computePillPlacement(
   gapPx: number = PILL_GAP,
 ): { top: number } | { bottom: number } {
   const vh = window.innerHeight;
-  const spotTop    = rect.top    - pad;
+  const spotTop = rect.top - pad;
   const spotBottom = rect.bottom + pad;
 
   const side: "above" | "below" =
@@ -220,16 +222,17 @@ export function CoachLayer({
   lockedCount,
   onCoachBubbleKey,
   onResumeHeldReveal, onCelebrationReady, onFtueReadyToFlip, onFtueBookerHeld, onFtueAllDone, onBubbleActive, onReplayReady,
+  onCommentaryText,
 }: Props) {
-  const queue            = useRef<QueueEntry[]>([]);
-  const shown            = useRef<Set<string>>(new Set());
-  const [current,        setCurrent]   = useState<QueueEntry|null>(null);
-  const [animKey,        setAnimKey]   = useState(0);
-  const [pulsing,        setPulsing]   = useState<Pulse>(null);
-  const [replayReady,    setReplayReady] = useState(false);
-  const [spotlightRect,  setSpotlightRect] = useState<DOMRect | null>(null);
-  const pulseTimer       = useRef<ReturnType<typeof setTimeout>|null>(null);
-  const prevState        = useRef<GameState|null>(null);
+  const queue = useRef<QueueEntry[]>([]);
+  const shown = useRef<Set<string>>(new Set());
+  const [current, setCurrent] = useState<QueueEntry | null>(null);
+  const [animKey, setAnimKey] = useState(0);
+  const [pulsing, setPulsing] = useState<Pulse>(null);
+  const [replayReady, setReplayReady] = useState(false);
+  const [spotlightRect, setSpotlightRect] = useState<DOMRect | null>(null);
+  const pulseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevState = useRef<GameState | null>(null);
   const revealIntroShown = useRef(false);
   const bookerFlipBubbleShown = useRef(false);
 
@@ -261,9 +264,8 @@ export function CoachLayer({
       if (prev.pulse) {
         if (pulseTimer.current) clearTimeout(pulseTimer.current);
         setPulsing(prev.pulse);
-        if (prev.pulse === "deal") {
-          pulseTimer.current = setTimeout(() => setPulsing(null), 8000);
-        }
+        // DRAW pulse has no timeout — clears when user hits DRAW
+        // DEAL pulse also loops indefinitely until user taps DEAL
       }
       // Swap directly to next — single React render, zero gap
       const next = queue.current.shift();
@@ -387,6 +389,14 @@ export function CoachLayer({
     }
   }, [gameState, pulsing]);
 
+  // ── Clear deal pulse when user actually hits DEAL ─────────────────────
+  useEffect(() => {
+    if (gameState === "DEALING" && pulsing === "deal") {
+      setPulsing(null);
+      if (pulseTimer.current) clearTimeout(pulseTimer.current);
+    }
+  }, [gameState, pulsing]);
+
   // ── Draw pulse fires once Booker is held (lockedCount > 0 in HOLD) ───
   useEffect(() => {
     if (!isFTUE || gameState !== "HOLD" || (lockedCount ?? 0) === 0) return;
@@ -407,7 +417,7 @@ export function CoachLayer({
     onBubbleActive?.(false);
     enqueue({
       key: "idle_deal",
-      node: <span>Welcome to Replay, where you relive real NBA history. Hit <DealChip /> to see the lineup you were dealt.</span>,
+      node: <span>Real stats. Real history. Your fantasy result instantly. Hit <DealChip /> to get started.</span>,
       pulse: "deal",
       // no anchor → pill centers vertically, deal button stays visible below
     }, 500);
@@ -457,17 +467,24 @@ export function CoachLayer({
     prevState.current = "REVEALING";
   }, [gameState, isFTUE]); // eslint-disable-line
 
-  // ── Per-card reveal bubbles ───────────────────────────────────────────
+  // ── Per-card reveal bubbles → commentary area ────────────────────────
   useEffect(() => {
     if (!isFTUE || !lastRevealedCardId) return;
-    // Booker's reveal is handled by the gauge oscillation + darnit flow — no bubble here
     if (lastRevealedCardId === "ftue-booker") return;
 
-    const node = CARD_BUBBLES[lastRevealedCardId];
+    const CARD_TEXTS: Record<string, string> = {
+      "ftue-westbrook": "Brodie delivered — 39.5 FP on a $41 card, right on his line. Steady work from a reliable vet. 💪",
+      "ftue-cp3": "CP3 earned his dime badge, 11 assists. The same night he joined Stockton and Kidd as only players to have more than 12,000 assists. That's why they call him the point god.",
+      "ftue-klay": "See the ice on Klay? That tells you how cold he was. Only 4.6 FP on a $33 card. Underachieving games like this are going to come back and bite you. 🧊",
+      "ftue-klove": "Love came in cold — 9.5 FP against a 15 FP average. Below the line of what we expected.",
+      "ftue-patty": "Patty held his own — $9 card, right on his 10 FP average. Minimum salary, minimum drama. Not great but not terrible either.",
+    };
+
+    const text = CARD_TEXTS[lastRevealedCardId];
     const cardAnchor: BubbleAnchor = { cardId: lastRevealedCardId };
     const cardPos: BubblePosition = CARD_POSITION[lastRevealedCardId] ?? "below";
 
-    if (!node) {
+    if (!text) {
       setTimeout(() => {
         onBubbleActive?.(false);
         onResumeHeldReveal?.();
@@ -475,43 +492,49 @@ export function CoachLayer({
       return;
     }
 
+    // Send text to commentary area
+    onCommentaryText?.([text]);
+
+    // Still spotlight the card via a no-text bubble entry
     enqueue({
       key: `card_${lastRevealedCardId}`,
-      node,
+      node: null as any, // spotlight only — text is in commentary
       anchor: cardAnchor,
       position: cardPos,
-      onDismiss: () => onResumeHeldReveal?.(),
+      onDismiss: () => {
+        onCommentaryText?.(null);
+        onResumeHeldReveal?.();
+      },
     }, 0);
   }, [lastRevealedCardId, isFTUE]); // eslint-disable-line
 
-  // After commentary typewriter finishes → "Darn it" bubble → dismiss → Devin flip hint
+  // After commentary typewriter finishes → "Darn it" → commentary → Booker flip hint → commentary
   useEffect(() => {
     if (!ftueWinCelebrationActive) return;
     if (!ftueCommentaryDone) return;
     shown.current.delete("darnit");
     shown.current.delete("results_devin");
     const t = setTimeout(() => {
+      // Send darnit text to commentary
+      onCommentaryText?.(["So close it hurts — only 4.4 FP from the All-Star win. If only Love or Klay made one extra play we'd be celebrating an 8x score. 😤"]);
+      // Spotlight booker+gauge, dismiss advances to results_devin
       enqueue({
         key: "darnit",
-        node: (
-          <span>
-            So close it hurts — only 4.4 FP from the All-Star win. If only Love or Klay made one extra play we'd be celebrating an 8x score. 😤
-          </span>
-        ),
+        node: null as any,
         anchor: "booker-and-gauge",
         position: "below",
         onDismiss: () => {
           shown.current.delete("results_devin");
+          onCommentaryText?.(["Booker on the other hand really carried your team tonight. 89.4 FP is superman status. Flip his card to see what happened. 🔥"]);
           enqueue({
             key: "results_devin",
-            node: (
-              <span>
-                Booker on the other hand really carried your team tonight. 89.4 FP is superman status. Flip his card to see what happened. 🔥
-              </span>
-            ),
+            node: null as any,
             anchor: { cardId: "ftue-booker" },
             position: "below",
-            onDismiss: () => onFtueReadyToFlip?.(),
+            onDismiss: () => {
+              onCommentaryText?.(null);
+              onFtueReadyToFlip?.();
+            },
           });
         },
       });
@@ -519,7 +542,7 @@ export function CoachLayer({
     return () => clearTimeout(t);
   }, [ftueWinCelebrationActive, ftueCommentaryDone]); // eslint-disable-line
 
-  // ── After Booker flipped — game log bubble → final centered bubble ───
+  // ── After Booker flipped — two-part commentary: gamelogs then final replay ──
   useEffect(() => {
     if (!isFTUE || !ftueBookerFlipped) return;
     if (bookerFlipBubbleShown.current) return;
@@ -527,27 +550,25 @@ export function CoachLayer({
     onBubbleActive?.(true);
     setTimeout(() => {
       shown.current.delete("booker_gamelogs");
+      // Send both parts as tap-to-advance commentary
+      onCommentaryText?.([
+        "Look at that stat line — 62 points on January 26, 2024 against Indiana. That's 79.4 base FP. The God Mode badge added 10 bonus points on top. That's how you get to 89.4. Badges are real. 🔥",
+        "Every game log comes from true historical games. Replay lets you relive basketball history at your fingertips, in a fantasy format. Two more wins to get a piece of that bonus pool, lets run it back. 🏀",
+      ]);
+      // Spotlight Booker card while both parts show — dismiss after second part
       enqueue({
         key: "booker_gamelogs",
-        node: (
-          <span>
-            Look at that stat line — 62 points on January 26, 2024 against Indiana. That's 79.4 base FP. The God Mode badge added 10 bonus points on top. That's how you get to 89.4. Badges are real. 🔥
-          </span>
-        ),
+        node: null as any,
         anchor: { cardId: "ftue-booker" },
         position: "below",
         onDismiss: () => {
+          onCommentaryText?.(null);
           shown.current.delete("final_replay");
           enqueue({
             key: "final_replay",
-            node: (
-              <span>
-                Every game log comes from true historical games. Replay lets you relive basketball history at your fingertips, in a fantasy format. Two more wins to get a piece of that bonus pool, lets run it back. 🏀
-              </span>
-            ),
+            node: null as any,
             onDismiss: () => { onFtueAllDone?.(); setReplayReady(true); },
             pulse: "deal",
-            // no anchor → centered on screen
           });
         },
       });
@@ -560,7 +581,7 @@ export function CoachLayer({
 
   useEffect(() => {
     if (!isFTUE) return;
-    if (["DRAWING","DEALING","WIN_CELEBRATION"].includes(gameState)) {
+    if (["DRAWING", "DEALING", "WIN_CELEBRATION"].includes(gameState)) {
       prevState.current = gameState as GameState;
       // Auto-dismiss any active bubble during transitions (removes blank screen after Deal)
       setCurrent(null);
@@ -670,9 +691,9 @@ export function CoachLayer({
               onClick={dismiss}
               style={{
                 position: "fixed",
-                top:    spotlightRect.top    - activePad,
-                left:   spotlightRect.left   - activePad,
-                width:  spotlightRect.width  + activePad * 2,
+                top: spotlightRect.top - activePad,
+                left: spotlightRect.left - activePad,
+                width: spotlightRect.width + activePad * 2,
                 height: spotlightRect.height + activePad * 2,
                 borderRadius: isCardAnchor ? 18 : 14,
                 zIndex: 1001,
@@ -685,8 +706,8 @@ export function CoachLayer({
             />
           )}
 
-          {/* Message pill — only render once spotlight is resolved */}
-          {pillReady && (isDarnit ? (
+          {/* Message pill — only render once spotlight is resolved, and only if node is non-null */}
+          {pillReady && current.node != null && (isDarnit ? (
             <div
               key={`text-${animKey}`}
               style={{

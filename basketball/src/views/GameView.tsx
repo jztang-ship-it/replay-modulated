@@ -32,6 +32,9 @@ import { XPBar } from '@shared/engagement/XPBar';
 import { soundManager } from '@shared/utils/soundManager';
 import { audioDirector } from '@shared/utils/audioDirector';
 import { getPlayerUid, getNickname, setNickname } from '@shared/utils/playerIdentity';
+import { PostHandSheet } from '@shared/components/PostHandSheet';
+import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
+import { ProfileScreen } from '@shared/components/ProfileScreen';
 
 // Test-wire only: allow passing glow props even if wrapper prop types lag behind.
 const RosterGridAny = RosterGrid as any;
@@ -125,7 +128,7 @@ function sleep(ms: number) {
   return new Promise(r => setTimeout(r, ms));
 }
 
-async function submitToLeaderboard(metric: "streak" | "wins" | "fp", value: number) {
+async function submitToLeaderboard(metric: string, value: number, extra?: Record<string, unknown>) {
   const uid = getPlayerUid();
   const nickname = getNickname();
   if (!uid || value <= 0) return;
@@ -133,7 +136,7 @@ async function submitToLeaderboard(metric: "streak" | "wins" | "fp", value: numb
     await fetch("/api/leaderboard", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "submit", metric, value, uid, nickname }),
+      body: JSON.stringify({ action: "submit", metric, value, uid, nickname, ...extra }),
     });
   } catch { } // Non-critical — never block game flow
 }
@@ -444,6 +447,9 @@ export default function GameView() {
   const [winTier, setWinTier] = useState<WinTier | null>(null);
   const [winPayout, setWinPayout] = useState(0);
   const [showRawScore, setShowRawScore] = useState(false);
+  const [showPostHandSheet, setShowPostHandSheet] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
     if (gameState === "IDLE" || gameState === "HOLD") setShowRawScore(false);
@@ -462,6 +468,7 @@ export default function GameView() {
   const [ftueBookerFlipped, setFtueBookerFlipped] = useState(false);
   const [ftueOscillating, setFtueOscillating] = useState(false);
   const [ftueCommentaryDone, setFtueCommentaryDone] = useState(false);
+  const [ftueCommentaryOverride, setFtueCommentaryOverride] = useState<{ parts: string[] } | null>(null);
   const [glowState, setGlowState] = useState<{ cardId: string | null; tier: string; durationMs: number }>({
     cardId: null, tier: "WHITE", durationMs: 300
   });
@@ -543,9 +550,9 @@ export default function GameView() {
     const segD = 300;   // settle
     const TOTAL_MS = segA + segB + segC + segD;
     const segments = [
-      { from: startFp, to: peak,    dur: segA },
-      { from: peak,    to: bottom,  dur: segB },
-      { from: bottom,  to: smallUp, dur: segC },
+      { from: startFp, to: peak, dur: segA },
+      { from: peak, to: bottom, dur: segB },
+      { from: bottom, to: smallUp, dur: segC },
       { from: smallUp, to: finalFp, dur: segD },
     ];
 
@@ -634,12 +641,18 @@ export default function GameView() {
   const gameAnalytics = useGameAnalytics("basketball");
 
   function handleCardRevealStart(cardId: string, tierArg: string, shakeType?: string | null) {
-    // Freeze bar at 5-card total when anchor starts — bar won't move during anchor count-up
-    // In FTUE: anchorCardId = Westbrook (non-held), but the real anchor is Booker (held).
-    // Freeze when any held card starts revealing (Booker), or when anchorCardId matches (real game).
+    // Freeze bar when the TRUE anchor starts — the last card whose spring drives the final total.
+    // When held cards exist: the true anchor is the last held card (highest salary held).
+    // The non-held anchor (e.g. Westbrook) should NOT freeze — its FP rolls into the gauge normally.
     const card = rosterRef.current.find(c => cardId === ((c as any).cardId ?? (c as any).basePlayerId));
     const isHeldCard = !!(card as any)?.wasHeld;
-    if (cardId === anchorCardId || (isFTUE && isHeldCard)) {
+    const hasHeldCards = rosterRef.current.some((c: any) => c.wasHeld);
+    // Find the true anchor: last held card by salary if held cards exist, otherwise anchorCardId
+    const heldCards = rosterRef.current.filter((c: any) => c.wasHeld).sort((a: any, b: any) => (a.salary ?? 0) - (b.salary ?? 0));
+    const trueAnchorId = heldCards.length > 0
+      ? ((heldCards[heldCards.length - 1] as any).cardId ?? (heldCards[heldCards.length - 1] as any).basePlayerId)
+      : anchorCardId;
+    if (cardId === trueAnchorId) {
       frozenBarFpRef.current = latestGaugeFpRef.current;
     }
     const tier = tierArg?.toUpperCase() ?? "WHITE";
@@ -714,12 +727,14 @@ export default function GameView() {
     }, [isFTUE]),
     onAnchorFpComplete: useCallback((_hookTotal: number) => {
       if (springHasFiredRef.current) return;
-      // In FTUE tap mode, onAnchorFpComplete fires twice: once for the non-held
-      // anchor (Westbrook) and once for the held anchor (Booker). Only spring on
-      // the second call (Booker) — skip the first.
-      if (isFTUE && anchorFpCallCountRef.current === 0) {
+      // In tap mode with held cards, onAnchorFpComplete fires twice: once for the
+      // non-held anchor and once for the held anchor. Skip the first call so held
+      // cards' FP rolls up independently. In skipToEnd mode, all cards are in one
+      // sequence with one anchor — never skip.
+      const hasHeldCards = rosterRef.current.some((c: any) => c.wasHeld);
+      if (hasHeldCards && anchorFpCallCountRef.current === 0 && !isSkippingRef.current) {
         anchorFpCallCountRef.current = 1;
-        return; // Westbrook's call — skip
+        return; // Non-held anchor's call in tap mode — skip, wait for held anchor
       }
       springHasFiredRef.current = true;
       // Always compute from rosterRef — guaranteed to have all 6 resolved cards
@@ -742,6 +757,7 @@ export default function GameView() {
           const t = window.setTimeout(() => {
             setGameState("RESULTS");
             setTimeout(() => setFtueWinCelebrationActive(true), 300);
+            setTimeout(() => setShowPostHandSheet(true), 1500);
           }, 1200);
           springTimersRef.current.push(t);
         } else {
@@ -761,6 +777,21 @@ export default function GameView() {
               });
               submitToLeaderboard("wins", 1);
               submitToLeaderboard("fp", totalFp);
+              submitToLeaderboard("hand_best", totalFp);
+              submitToLeaderboard("hand_avg", totalFp, { handCount });
+              submitToLeaderboard("money_won", payout);
+
+              // Update personal bests
+              const prevBest = parseFloat(localStorage.getItem("rm_best_hand") ?? "0");
+              if (totalFp > prevBest) {
+                localStorage.setItem("rm_best_hand", totalFp.toFixed(1));
+              }
+              const tierRanks = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "GOAT"];
+              const prevTierRank = tierRanks.indexOf(localStorage.getItem("rm_best_tier") ?? "BUST");
+              const newTierRank = tierRanks.indexOf(tier ?? "BUST");
+              if (newTierRank > prevTierRank) {
+                localStorage.setItem("rm_best_tier", tier ?? "BUST");
+              }
             } else {
               setStreak(0);
               localStorage.setItem("replaymod_streak", "0");
@@ -768,6 +799,7 @@ export default function GameView() {
           };
           const t = window.setTimeout(() => {
             setGameState("WIN_CELEBRATION");
+            setTimeout(() => setShowPostHandSheet(true), 2000);
           }, 1200);
           springTimersRef.current.push(t);
         }
@@ -794,7 +826,10 @@ export default function GameView() {
   const showGaugeInZone3 =
     gameState === "REVEALING" ||
     gameState === "RESULTS" ||
-    gameState === "WIN_CELEBRATION";
+    gameState === "WIN_CELEBRATION" ||
+    (gameState === "DRAWING" && isFTUE) ||
+    (gameState === "HOLD" && isFTUE) ||
+    (gameState === "DEALING" && isFTUE);
   const isPostReveal = (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier != null;
 
   // Tier color map — mirrors WIN_TIERS in basketball/GameBar.tsx
@@ -857,6 +892,9 @@ export default function GameView() {
       if (isFTUE && ftueLastHandFpRef.current > 0) return ftueLastHandFpRef.current;
       return 0;
     }
+    if (gameState === "DEALING" || gameState === "HOLD" || gameState === "DRAWING") {
+      return roster.reduce((sum, c) => sum + (c.fp ?? 0), 0);
+    }
     return 0;
   }, [gameState, runningTotalFp, roster, isFTUE]);
 
@@ -898,17 +936,17 @@ export default function GameView() {
       tierFloor: gaugeSnap.curMin,
       nextTierMin: gaugeSnap.nextMin > 0 && gaugeSnap.nextMin < 9999 ? gaugeSnap.nextMin : 0,
       roster: roster.map(c => ({
-        name:         String((c as any).name ?? ""),
-        salary:       Number((c as any).salary ?? 0),
-        actualFp:     Number((c as any).actualFp ?? 0),
-        projectedFp:  Number((c as any).projectedFp ?? 0) || undefined,
+        name: String((c as any).name ?? ""),
+        salary: Number((c as any).salary ?? 0),
+        actualFp: Number((c as any).actualFp ?? 0),
+        projectedFp: Number((c as any).projectedFp ?? 0) || undefined,
         achievements: ((c as any).achievements ?? []) as Array<{ id: string; label: string; icon?: string; fp?: number }>,
-        opponent:     String((c as any).gameInfo?.opponent ?? ""),
-        gameDate:     String((c as any).gameInfo?.date ?? ""),
-        statLine:     ((c as any).statLine ?? {}) as Record<string, any>,
-        wasHeld:      Boolean((c as any).wasHeld ?? false),
-        homeAway:     String((c as any).gameInfo?.homeAway ?? "") as "H" | "A" | "",
-        cardTier:     String((c as any).tier ?? ""),
+        opponent: String((c as any).gameInfo?.opponent ?? ""),
+        gameDate: String((c as any).gameInfo?.date ?? ""),
+        statLine: ((c as any).statLine ?? {}) as Record<string, any>,
+        wasHeld: Boolean((c as any).wasHeld ?? false),
+        homeAway: String((c as any).gameInfo?.homeAway ?? "") as "H" | "A" | "",
+        cardTier: String((c as any).tier ?? ""),
       })),
       streak,
       prevStreak: winTier === "BUST" ? streak : Math.max(0, streak - 1),
@@ -933,7 +971,7 @@ export default function GameView() {
 
   // Tier result phase: Phase 1 = big slam (with optional near-miss tease), Phase 2 = info view
   useEffect(() => {
-    if ((gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !isFTUE) {
+    if ((gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier) {
       nearMissChoreTimersRef.current.forEach(clearTimeout);
       nearMissChoreTimersRef.current = [];
       setNearMissTeasing(false);
@@ -1091,6 +1129,7 @@ export default function GameView() {
       setFtueOscillating(false);
       setFtueGaugeOscDone(false);
       setFtueCommentaryDone(false);
+      setFtueCommentaryOverride(null);
       setFtueWinCelebrationActive(false);
       setFtueBookerPulse(false);
       setFtueHoldSpotlight(false);
@@ -1238,6 +1277,7 @@ export default function GameView() {
       if (gameState === "WIN_CELEBRATION") {
         soundManager.stopBigWin();
       }
+      setShowPostHandSheet(false);
       setWasSkipped(false);
       onPrimaryAction();
     }
@@ -1328,6 +1368,7 @@ export default function GameView() {
           }}>
             <AppHeader
               onCollect={() => setShowCollect(true)}
+              onProfile={() => setShowProfile(true)}
               hasUncollected={taskStates.some(t => t.progress >= t.target && !t.collected)}
             />
           </div>
@@ -1343,7 +1384,7 @@ export default function GameView() {
 
         {/* 2 — Card stage */}
         <div style={{
-          flex: isPostReveal ? "0 0 52dvh" : "0 0 54dvh",
+          flex: "0 0 52dvh",
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "center",
@@ -1390,6 +1431,14 @@ export default function GameView() {
                 onToggleFlip={toggleStatsFlip}
                 revealMode={REVEAL_MODE}
                 onTapReveal={isFTUE && ftueCardsBlocked ? undefined : (isFTUE ? (cardId: string) => {
+                  // FTUE: also tick budget down per card flip
+                  const card = rosterRef.current.find(c => {
+                    const id = String(c?.cardId ?? c?.basePlayerId ?? "");
+                    return id === cardId;
+                  });
+                  if (card && !(card as any).wasHeld) {
+                    setRevealedSalary(prev => prev + Number((card as any).salary ?? 0));
+                  }
                   tapRevealCard(cardId);
                 } : (cardId: string) => {
                   // Immediately add this card's salary so budget rolls down in sync with FP roll up
@@ -1408,6 +1457,7 @@ export default function GameView() {
                 isRevealingPhase={gameState === "REVEALING"}
                 isFTUEHoldPhase={isFTUE && gameState === "HOLD"}
                 isFTUEDrawingPhase={isFTUE && gameState === "DRAWING"}
+                isFTUE={isFTUE && (gameState === "HOLD" || gameState === "DRAWING")}
                 ftueLockedSlot={
                   (isFTUE && ftueResultsDim)
                     ? 0
@@ -1426,11 +1476,11 @@ export default function GameView() {
             ? { "data-ftue-anchor": "ftue-darnit-focus" }
             : {})}
           style={{
-            flex: (isPostReveal || isFTUE) ? "0 0 22dvh" : "0 0 20dvh",
+            flex: "0 0 22dvh",
             display: "flex",
             flexDirection: "column",
             minHeight: 0,
-            overflow: isPostReveal ? "visible" : "hidden",
+            overflow: "visible",
             boxSizing: "border-box",
           }}
         >
@@ -1449,10 +1499,10 @@ export default function GameView() {
               if (gameState === "RESULTS" && winTier && !showRawScore) setShowRawScore(true);
             }}
             style={{
-              flex: (isPostReveal || isFTUE) ? "0 0 52px" : "0 0 72px",
-              height: (isPostReveal || isFTUE) ? 52 : 72,
-              minHeight: (isPostReveal || isFTUE) ? 52 : 72,
-              maxHeight: (isPostReveal || isFTUE) ? 52 : 72,
+              flex: "0 0 52px",
+              height: 52,
+              minHeight: 52,
+              maxHeight: 52,
               flexShrink: 0,
               display: "flex",
               justifyContent: "center",
@@ -1479,7 +1529,7 @@ export default function GameView() {
                   {displayFp.toFixed(1)} FP
                 </span>
               </div>
-            ) : !isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (
+            ) : (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (
               /* Tier result — single continuous animation: slam in big, shrink to settled */
               <div style={{
                 display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center",
@@ -1523,7 +1573,7 @@ export default function GameView() {
                   }}>
                     {displayFp.toFixed(1)} FP{ceilingPct != null && (
                       <span style={{ fontWeight: 600, color: "rgba(255,255,255,0.35)", fontSize: 12 }}>
-                        {" · "}{ceilingPct}% of possible
+                        {" · "}{ceilingPct}% of possible score
                       </span>
                     )}
                   </span>
@@ -1563,40 +1613,6 @@ export default function GameView() {
                       </div>
                       {/* Explanation text lives in TierGauge only */}
                     </>
-                  );
-                })()}
-              </div>
-            ) : isFTUE && gameState === "RESULTS" && winTier && !showRawScore ? (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, width: "100%" }}>
-                {(() => {
-                  const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
-                  return (
-                    <div style={{
-                      display: "flex",
-                      flexDirection: "row",
-                      alignItems: "baseline",
-                      justifyContent: "center",
-                      gap: 10,
-                      flexWrap: "wrap",
-                    }}>
-                      <span style={{
-                        fontSize: 30, fontWeight: 950, letterSpacing: 0.5, fontStyle: "italic",
-                        color: tc.color, textShadow: `0 0 22px ${tc.glow}`,
-                        lineHeight: 1,
-                      }}>
-                        {formatTierLabel(winTier)}
-                      </span>
-                      {winPayout > 0 && (
-                        <span style={{
-                          fontSize: 22, fontWeight: 800,
-                          color: "rgba(255,255,255,0.72)",
-                          letterSpacing: "0.04em",
-                          lineHeight: 1,
-                        }}>
-                          +{winPayout} coins
-                        </span>
-                      )}
-                    </div>
                   );
                 })()}
               </div>
@@ -1659,9 +1675,9 @@ export default function GameView() {
             <div
               style={{
                 width: "100%",
-                height: (isPostReveal || isFTUE) ? 80 : 56,
-                minHeight: (isPostReveal || isFTUE) ? 80 : 56,
-                maxHeight: (isPostReveal || isFTUE) ? 80 : 56,
+                height: 84,
+                minHeight: 84,
+                maxHeight: 84,
                 flexShrink: 0,
                 position: "relative",
                 display: "flex",
@@ -1696,7 +1712,7 @@ export default function GameView() {
                     width: "100%",
                     overflow: "visible",
                     boxSizing: "border-box",
-                    padding: "0 2px",
+                    padding: "4px 2px 0",
                   }}
                 >
                   <TierGauge
@@ -1719,6 +1735,8 @@ export default function GameView() {
                     onTierCross={undefined}
                     postRevealCopy={postRevealCopy}
                     ftueTypewriter={isFTUE}
+                    commentaryOverride={ftueCommentaryOverride}
+                    onCommentaryOverrideDone={() => setFtueCommentaryOverride(null)}
                     onCommentaryDone={() => {
                       // After typewriter finishes, trigger "so close" bubble with slight delay
                       if (isFTUE) {
@@ -1796,6 +1814,7 @@ export default function GameView() {
               onBubbleActive={(active) => setFtueCardsBlocked(active)}
               ftueWinCelebrationActive={ftueWinCelebrationActive}
               ftueCommentaryDone={ftueCommentaryDone}
+              onCommentaryText={(parts) => setFtueCommentaryOverride(parts ? { parts } : null)}
               onReplayReady={() => setFtueReplayReady(true)}
               onFtueReadyToFlip={() => setFtueBookerPulse(true)}
               onFtueBookerHeld={() => { /* draw pulse handled inside CoachLayer */ }}
@@ -1903,8 +1922,46 @@ export default function GameView() {
         ftueReplayBlocked={isFTUE && gameState === "RESULTS" && !ftueReplayReady}
         dataFtuePrimaryAnchor={isFTUE ? (gameState === "HOLD" ? "draw" : "deal") : undefined}
         splitFooter={{ multipliersHost, controlsHost }}
-        splitMultiplierRowVisible={isPreRevealFooter}
+        splitMultiplierRowVisible={isPreRevealFooter && !isFTUE}
       />
+
+      {showPostHandSheet && !isFTUE && (() => {
+        const gs = computeGaugeState(totalFp, GAUGE_THRESHOLDS as any, winTier ?? "BUST", NEAR_MISS_FP);
+        const nmGap = gs.nextMin > 0 && gs.nextMin < 9999 ? Math.max(0, gs.nextMin - totalFp) : 0;
+        return (
+          <PostHandSheet
+            totalFp={totalFp}
+            winTier={winTier ?? "BUST"}
+            isBust={!winTier || winTier === "BUST"}
+            nearMissGap={nmGap}
+            nearMissNextTier={gs.nextTier ?? null}
+            winPayout={winPayout}
+            currentUid={getPlayerUid()}
+            onPlayAgain={() => {
+              setShowPostHandSheet(false);
+              handleButtonClick();
+            }}
+            onViewLeaderboard={() => {
+              setShowPostHandSheet(false);
+              setShowLeaderboard(true);
+            }}
+          />
+        );
+      })()}
+
+      {showLeaderboard && !isFTUE && (
+        <LeaderboardScreen
+          currentUid={getPlayerUid()}
+          onClose={() => setShowLeaderboard(false)}
+        />
+      )}
+
+      {showProfile && (
+        <ProfileScreen
+          currentUid={getPlayerUid()}
+          onClose={() => setShowProfile(false)}
+        />
+      )}
 
     </div>
   );

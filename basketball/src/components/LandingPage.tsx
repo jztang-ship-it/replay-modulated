@@ -3,7 +3,7 @@
  * 6 cards in a 3x2 grid. Start face-down with TAP prompt.
  * Tap to flip and reveal real in-game card fronts with headshots.
  */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import type { GamePhase, PlayerCard, Achievement } from "../adapters/types";
 import { AthleteCard } from "./AthleteCard";
 import { CardBackGeneric } from "./CardBackGeneric";
@@ -81,6 +81,41 @@ interface Props { onPlay: () => void; }
 export function LandingPage({ onPlay }: Props) {
   const [flipped, setFlipped] = useState<Set<string>>(new Set());
   const phase: GamePhase = "RESULTS";
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const startAudio = useCallback(() => {
+    if (audioRef.current) return;
+    const a = new Audio("/audio/basketball/crowd/bed-murmur.mp3");
+    a.loop = true;
+    a.volume = 0.15;
+    audioRef.current = a;
+    a.play().catch(() => {
+      // Autoplay blocked — start on first user interaction
+      const resume = () => {
+        a.play().catch(() => {});
+        window.removeEventListener("pointerdown", resume);
+      };
+      window.addEventListener("pointerdown", resume, { once: true });
+    });
+  }, []);
+
+  useEffect(() => {
+    startAudio();
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, [startAudio]);
+
+  const handlePlay = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    onPlay();
+  }, [onPlay]);
 
   function toggleCard(id: string) {
     setFlipped(prev => {
@@ -247,9 +282,9 @@ export function LandingPage({ onPlay }: Props) {
             <em style={{ color: "#C9A84C", fontStyle: "normal" }}>Prove it.</em>
           </h1>
           <p style={{ fontSize: 12, color: "rgba(240,242,245,0.38)", lineHeight: 1.6, margin: 0 }}>
-            A new way to sports entertainment — <strong style={{ color: "#F0F2F5" }}>INSTANT</strong> fantasy sports.
+            Real stats. Real history. Your fantasy result instantly.
           </p>
-          <button className="lp-cta" onClick={onPlay} style={{ padding: "14px 52px", fontSize: 16 }}>
+          <button className="lp-cta" onClick={handlePlay} style={{ padding: "14px 52px", fontSize: 16 }}>
             Play IFS
           </button>
           <span style={{ fontSize: 10, color: "rgba(240,242,245,0.38)" }}>

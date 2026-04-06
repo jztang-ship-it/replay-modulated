@@ -95,6 +95,7 @@ type Props = {
   isSkipping?: boolean;
   ftueLockedSlot?: number | null;  // FTUE: slot index that stays lit; all others dim
   ftueFlipTargetId?: string | null; // FTUE: show TAP hint on this card in RESULTS
+  isFTUE?: boolean; // FTUE: gold pulse on card backs
 };
 
 export function RosterGrid(props: Props) {
@@ -108,6 +109,7 @@ export function RosterGrid(props: Props) {
     revealMode = "auto", onTapReveal, heldFpVisible = false, heldRevealedIds, tappedCardIds, isRevealingPhase = false, isFTUEHoldPhase = false, isFTUEDrawingPhase = false, ftueLockedSlot = null, ftueFlipTargetId = null,
     glowCardId, glowTier, glowDurationMs,
     isSkipping = false,
+    isFTUE = false,
   } = props;
 
   const cards = useMemo(() => {
@@ -123,40 +125,40 @@ export function RosterGrid(props: Props) {
       boxSizing: "border-box",
     }}>
       {cards.map((card) => {
-        const id             = keyOf(card);
-        const isLocked       = lockedIds.has(id);
-        const isFlipped      = flippedIds.has(id);
-        const isRevealing    = revealingIds?.has(id) ?? false;
-        const visibleFp      = visibleFpMap?.get(id);
-        const flipMs         = flipMsMap?.get(id);
-        const fpCountUpMs    = fpCountUpMsMap?.get(id);
+        const id = keyOf(card);
+        const isLocked = lockedIds.has(id);
+        const isFlipped = flippedIds.has(id);
+        const isRevealing = revealingIds?.has(id) ?? false;
+        const visibleFp = visibleFpMap?.get(id);
+        const flipMs = flipMsMap?.get(id);
+        const fpCountUpMs = fpCountUpMsMap?.get(id);
         const performanceTag = performanceTagMap?.get(id);
-        const pulse          = pulseMap?.get(id);
-        const isShaking      = shakingCardId === id;
+        const pulse = pulseMap?.get(id);
+        const isShaking = shakingCardId === id;
         const liveShakeType: ShakeType = isShaking ? (shakeType ?? null) : null;
-        const isSpotlight    = activeRevealCardId === id;
-        const isFaceDown     = flippedIds.has(id);
-        const isDimmed       = !isSkipping && activeRevealCardId !== null && activeRevealCardId !== id && !isFaceDown;
-        const cardShakeType  = cardShakeTypeMap?.get(id) ?? null;
+        const isSpotlight = activeRevealCardId === id;
+        const isFaceDown = flippedIds.has(id);
+        const isDimmed = !isSkipping && activeRevealCardId !== null && activeRevealCardId !== id && !isFaceDown;
+        const cardShakeType = cardShakeTypeMap?.get(id) ?? null;
 
         // tap mode: a card is "held" if it has wasHeld flag
-        const wasHeld        = (card as any).wasHeld === true;
-        const isTapped       = tappedCardIds?.has(id) ?? false;
+        const wasHeld = (card as any).wasHeld === true;
+        const isTapped = tappedCardIds?.has(id) ?? false;
         // In tap mode during REVEALING: unheld untapped cards are tappable
-        const isTapTarget    = (revealMode === "tap" && isRevealingPhase
-                               && !wasHeld && !isTapped)
-                               || (ftueFlipTargetId !== null && id === ftueFlipTargetId)
-                               || (isFTUEHoldPhase && !wasHeld)
-                               || (isFTUEDrawingPhase && !wasHeld);
+        const isTapTarget = (revealMode === "tap" && isRevealingPhase
+          && !wasHeld && !isTapped)
+          || (ftueFlipTargetId !== null && id === ftueFlipTargetId)
+          || (isFTUEHoldPhase && !wasHeld)
+          || (isFTUEDrawingPhase && !wasHeld);
         // Per-card: held card FP shows when its ID is in heldRevealedIds OR
         // when heldFpVisible is true (set by skip path after rollup completes)
         const thisHeldRevealed = wasHeld && ((heldRevealedIds?.has(id) ?? false) || (heldFpVisible ?? false));
-        const showHeldFp     = thisHeldRevealed;
+        const showHeldFp = thisHeldRevealed;
         // In tap mode, visibleFp for held card: undefined until revealed
         // For held cards: only pass visibleFp once the rollup has actually set it
         // (visibleFpMap value). Do NOT fall back to card.actualFp — that would
         // make visibleFp === actualFp immediately and fire the stamp before rollup.
-        const effectiveFp    = wasHeld
+        const effectiveFp = wasHeld
           ? (thisHeldRevealed ? visibleFp : undefined)
           : visibleFp;
 
@@ -227,11 +229,12 @@ export function RosterGrid(props: Props) {
               spotlightLevel={
                 activeRevealCardId === id ? (
                   (card as any).tier === "ORANGE" ? 3 :
-                  (card as any).tier === "PURPLE" ? 2 :
-                  ((visibleBadgesMap?.get(id)?.length ?? 0) >= 2) ? 1 : 0
+                    (card as any).tier === "PURPLE" ? 2 :
+                      ((visibleBadgesMap?.get(id)?.length ?? 0) >= 2) ? 1 : 0
                 ) : 0
               }
               isDimmed={isDimmed}
+              isFTUE={isFTUE && !isFlipped && !isRevealing}
             />
           </div>
         );

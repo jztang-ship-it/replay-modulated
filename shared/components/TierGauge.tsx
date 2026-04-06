@@ -65,6 +65,10 @@ interface TierGaugeProps {
   ftueTypewriter?: boolean;
   /** FTUE: called when typewriter commentary finishes */
   onCommentaryDone?: () => void;
+  /** Override commentary with multi-part bubble text — tap advances to next part */
+  commentaryOverride?: { parts: string[] } | null;
+  /** Called when user taps through all parts of commentaryOverride */
+  onCommentaryOverrideDone?: () => void;
 }
 
 const TIER_CFG: Record<string, { label: string; color: string; glow: string }> = {
@@ -308,11 +312,16 @@ export function TierGauge({
   postRevealCopy,
   ftueTypewriter = false,
   onCommentaryDone,
+  commentaryOverride = null,
+  onCommentaryOverrideDone,
 }: TierGaugeProps) {
   const [barFill, setBarFill] = useState(0);
   const [barColor, setBarColor] = useState("transparent");
   const [ftueOscGlow, setFtueOscGlow] = useState<string | null>(null);
   const [isDinging, setIsDinging] = useState(false);
+  // Commentary override state — multi-part tap-to-advance
+  const [overridePart, setOverridePart] = useState(0);
+  const [overrideTyping, setOverrideTyping] = useState(false);
   const rafRef = useRef<number>(0);
   const delayRef = useRef<number>(0);
   const animatedFpRef = useRef<number>(0);
@@ -636,6 +645,12 @@ export function TierGauge({
     }
   }, [visible]);
 
+  // Reset override part index when a new override arrives
+  useEffect(() => {
+    setOverridePart(0);
+    setOverrideTyping(!!commentaryOverride);
+  }, [commentaryOverride]);
+
   if (!visible || ftueSuppressNormal) return null;
 
   return (
@@ -659,39 +674,75 @@ export function TierGauge({
         }} />
       </div>
 
-      {/* Gap callout — below bar: pre-reveal shows X FP TO NEXT TIER, post-reveal shows smart copy */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, flexDirection: "column", minHeight: 36, textAlign: "center" }}>
-        {postRevealCopy ? (
+      {/* Commentary area — override (FTUE bubble texts) > postRevealCopy > gap callout */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, flexDirection: "column", minHeight: 80, textAlign: "center" }}>
+        {commentaryOverride && commentaryOverride.parts.length > 0 ? (
+          /* Multi-part FTUE commentary — tap to advance */
+          <div
+            onClick={() => {
+              if (overrideTyping) { setOverrideTyping(false); return; }
+              const nextPart = overridePart + 1;
+              if (nextPart < commentaryOverride.parts.length) {
+                setOverridePart(nextPart);
+                setOverrideTyping(true);
+              } else {
+                onCommentaryOverrideDone?.();
+              }
+            }}
+            style={{ padding: "6px 4px 2px", width: "100%", cursor: "pointer" }}
+          >
+            <Typewriter
+              key={`override-${overridePart}`}
+              text={commentaryOverride.parts[overridePart]}
+              style={{
+                fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.92)",
+                fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
+                textAlign: "center", maxWidth: "100%", display: "block",
+              }}
+              msPerChar={18}
+              onDone={() => setOverrideTyping(false)}
+            />
+            {!overrideTyping && overridePart < commentaryOverride.parts.length - 1 && (
+              <div style={{
+                marginTop: 6, fontSize: 10, color: "rgba(255,255,255,0.35)",
+                letterSpacing: "0.12em", textTransform: "uppercase",
+                animation: "tgTextReveal 0.4s ease both",
+              }}>
+                TAP FOR MORE
+              </div>
+            )}
+          </div>
+        ) : postRevealCopy ? (
           ftueTypewriter ? (
-            <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+            <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, maxWidth: "100%" }}>
               <Typewriter
                 text={postRevealCopy.primary}
                 style={{
-                  fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.85)",
-                  fontFamily: FF, letterSpacing: "0.03em", lineHeight: 1.5,
-                  display: "block", textAlign: "center",
+                  fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.92)",
+                  fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
+                  textAlign: "center", maxWidth: "100%",
                 }}
-                msPerChar={22}
+                msPerChar={18}
               />
               {postRevealCopy.secondary && (
                 <Typewriter
                   text={postRevealCopy.secondary}
                   style={{
                     fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.80)",
-                    fontFamily: FF, letterSpacing: "0.03em", lineHeight: 1.5,
-                    display: "block", textAlign: "center",
+                    fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
+                    textAlign: "center", maxWidth: "100%",
                   }}
-                  msPerChar={22}
+                  msPerChar={18}
                   onDone={onCommentaryDone}
                 />
               )}
             </div>
           ) : (
-            <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+            <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, maxWidth: "100%" }}>
               <span style={{
-                fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.85)",
-                fontFamily: FF, letterSpacing: "0.03em", lineHeight: 1.5,
-                display: "block", textAlign: "center",
+                fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.92)",
+                fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
+                textAlign: "center", maxWidth: "100%",
                 animation: "tgTextReveal 0.55s cubic-bezier(0.22,1,0.36,1) both",
               }}>
                 {postRevealCopy.primary}
@@ -699,8 +750,8 @@ export function TierGauge({
               {postRevealCopy.secondary && (
                 <span style={{
                   fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.80)",
-                  fontFamily: FF, letterSpacing: "0.03em", lineHeight: 1.5,
-                  display: "block", textAlign: "center",
+                  fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
+                  textAlign: "center", maxWidth: "100%",
                   animation: "tgTextReveal 0.55s cubic-bezier(0.22,1,0.36,1) 0.2s both",
                 }}>
                   {postRevealCopy.secondary}

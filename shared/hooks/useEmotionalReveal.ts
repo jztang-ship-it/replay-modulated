@@ -329,12 +329,12 @@ export function useEmotionalReveal(params: Params) {
       // to CardFront. Without this, effectiveFp stays undefined and FP never animates.
       if (wasHeld) setHeldRevealedIds(prev => new Set(prev).add(c.cardId));
       // skipFlip=wasHeld: held cards already face-up, skip the 3D flip
-      // isSkip=!isAnchor: anchor plays at full normal speed
+      // isSkip=true for ALL cards during skipToEnd so each FP rolls up at the same pace
       runCardReveal(c, isAnchor, myRunId, () => {
         const pause = isAnchor ? 300 : Math.max(SKIP_INTER_CARD_PAUSE_MS, 50);
         const t = window.setTimeout(() => revealOne(idx + 1), pause);
         timersRef.current.push(t);
-      }, wasHeld, !isAnchor /* isSkip */, alreadyTappedIds.has(c.cardId) /* skipBlast */);
+      }, wasHeld, true /* isSkip */, alreadyTappedIds.has(c.cardId) /* skipBlast */);
     };
 
     revealOne(0);
@@ -545,7 +545,7 @@ export function useEmotionalReveal(params: Params) {
       runCardReveal(hc, hc.cardId === anchorId, myRunId, () => {
         onCardComplete?.(hc.cardId);
         revealOne(idx + 1);
-      }, true);
+      }, true, hc.cardId !== anchorId /* isSkip: non-anchor held cards roll up fast */);
     };
 
     // Pre-pause before first held card

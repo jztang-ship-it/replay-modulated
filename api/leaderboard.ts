@@ -1,8 +1,8 @@
 /**
  * api/leaderboard.ts — Vercel serverless function.
  *
- * POST { action: "submit", metric: "streak"|"wins"|"fp", value: number, uid: string, nickname: string }
- * GET  ?metric=streak|wins|fp&scope=daily|alltime&limit=20
+ * POST { action: "submit", metric: "streak"|"wins"|"fp"|"hand_best"|"hand_avg"|"money_won", value: number, uid: string, nickname: string }
+ * GET  ?metric=streak|wins|fp|hand_best|hand_avg|money_won&scope=daily|alltime&limit=20
  *
  * KV keys: lb:{metric}:daily:{YYYY-MM-DD} and lb:{metric}:alltime
  */
@@ -20,7 +20,7 @@ function todayUTC(): string {
   return new Date().toISOString().split("T")[0];
 }
 
-const VALID_METRICS = ["streak", "wins", "fp"];
+const VALID_METRICS = ["streak", "wins", "fp", "hand_best", "hand_avg", "money_won"];
 const TTL_48H = 172800;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -48,6 +48,28 @@ async function handleSubmit(req: VercelRequest, res: VercelResponse) {
   if (action !== "submit") return json(res, 400, { error: "Invalid action" });
   if (!VALID_METRICS.includes(metric)) return json(res, 400, { error: "Invalid metric" });
   if (typeof value !== "number" || value <= 0) return json(res, 400, { error: "Invalid value" });
+  // Sanity ceilings — physically impossible scores get rejected
+  if (metric === "fp" && value > 350) {
+    return res.status(400).json({ error: "Invalid score" });
+  }
+  if (metric === "streak" && value > 500) {
+    return res.status(400).json({ error: "Invalid score" });
+  }
+  if (metric === "hand_best" && value > 350) {
+    return res.status(400).json({ error: "Invalid score" });
+  }
+  if (metric === "hand_avg" && value > 350) {
+    return res.status(400).json({ error: "Invalid score" });
+  }
+  if (metric === "money_won" && value > 10000000) {
+    return res.status(400).json({ error: "Invalid score" });
+  }
+  if (metric === "hand_avg") {
+    const { handCount } = req.body ?? {};
+    if (typeof handCount !== "number" || handCount < 5) {
+      return json(res, 400, { error: "hand_avg requires handCount >= 5" });
+    }
+  }
   if (!uid || typeof uid !== "string") return json(res, 400, { error: "Missing uid" });
 
   const member = `${uid}:${nickname ?? "Player"}`;
@@ -55,8 +77,8 @@ async function handleSubmit(req: VercelRequest, res: VercelResponse) {
   const dailyKey = `lb:${metric}:daily:${today}`;
   const alltimeKey = `lb:${metric}:alltime`;
 
-  if (metric === "wins") {
-    // Wins are additive — increment
+  if (metric === "wins" || metric === "money_won") {
+    // Wins and money_won are additive — increment
     // Vercel KV (Upstash) supports zincrby
     try {
       await kv.zincrby(dailyKey, value, member);
@@ -69,7 +91,7 @@ async function handleSubmit(req: VercelRequest, res: VercelResponse) {
       await kv.zadd(alltimeKey, { score: Number(currentAll) + value, member });
     }
   } else {
-    // streak or fp — only update if personal best
+    // streak, fp, hand_best, hand_avg — only update if personal best
     const currentAll = (await kv.zscore(alltimeKey, member)) ?? 0;
     if (value > Number(currentAll)) {
       await kv.zadd(alltimeKey, { score: value, member });

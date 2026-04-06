@@ -23,10 +23,11 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
 type Props = {
   sportLabel?: string;
   onCollect?: () => void;
+  onProfile?: () => void;
   hasUncollected?: boolean;
 };
 
-export function AppHeader({ sportLabel, onCollect, hasUncollected }: Props) {
+export function AppHeader({ sportLabel, onCollect, onProfile, hasUncollected }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>("home");
   const [muted, setMuted] = useState(soundManager.isMuted());
 
@@ -58,11 +59,12 @@ export function AppHeader({ sportLabel, onCollect, hasUncollected }: Props) {
       <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
         {TABS.map(({ id, label, icon }) => {
           const active   = activeTab === id;
-          const disabled = id === "pulse" || id === "profile";
+          const disabled = id === "pulse";
           const isCollect = id === "collect";
           function handleClick() {
             if (disabled) return;
             if (isCollect) { onCollect?.(); return; }
+            if (id === "profile") { onProfile?.(); return; }
             setActiveTab(id);
           }
           return (
