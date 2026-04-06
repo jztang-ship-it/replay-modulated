@@ -9,3 +9,9 @@ dist/
 *.tar
 .vite/
 replaymod_src/
+basketball/src/utils/culture_review.ts
+baseball/src/utils/culture_review.ts
+basketball/src/utils/culture_update.ts
+baseball/src/utils/culture_update.ts
+basketball/src/utils/culture_failed.json
+baseball/src/utils/culture_failed.json
