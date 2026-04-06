@@ -432,17 +432,17 @@ export function CoachLayer({
     if (prevState.current === "HOLD") return;
     prevState.current = "HOLD";
 
-    // Show intro commentary, then auto-advance to Booker spotlight
-    onCommentaryText?.([
-      "Six players, $200 cap. Fantasy Points come from real stats — points, assists, rebounds. Who do we keep?"
-    ]);
+    // Step 1: "Six players..." — no spotlight, full screen visible
+    onCommentaryText?.(["Six players, $200 cap. Fantasy Points come from real stats — points, assists, rebounds. Who do we keep?"]);
 
-    // After user taps commentary, advance to Booker spotlight
-    // The TierGauge onCommentaryOverrideDone clears the override,
-    // then this timeout fires the Booker step
-    setTimeout(() => {
-      // Wait for commentary tap, then show Booker
-      const checkAndAdvance = () => {
+    enqueue({
+      key: "hold_roster_intro",
+      node: null as any,
+      anchor: "roster-and-score",
+      position: "below",
+      pulseCardLabels: true,
+      onDismiss: () => {
+        // Step 2: After tap — spotlight Booker only, "Booker is your anchor..." text appears
         onCommentaryText?.([
           <span>Booker is your $59 anchor - most dependable player. Tap him to hold, hit <DrawChip /> to replace the rest, then tap every card to see your replacements.</span>
         ]);
@@ -451,18 +451,11 @@ export function CoachLayer({
           node: null as any,
           anchor: { cardId: "ftue-booker" },
           position: "below",
+          // Text stays until user taps Booker to hold — onDismiss fires when bubble is dismissed
         });
-      };
-      // Enqueue roster spotlight — tapping it advances to Booker
-      enqueue({
-        key: "hold_roster_intro",
-        node: null as any,
-        anchor: "roster-and-score",
-        position: "below",
-        pulseCardLabels: true,
-        onDismiss: checkAndAdvance,
-      });
-    }, 300);
+        onCoachBubbleKey?.("hold_booker");
+      },
+    });
   }, [gameState, isFTUE]); // eslint-disable-line
 
   // ── REVEALING — no intro bubble, go straight to per-card reveals ─────

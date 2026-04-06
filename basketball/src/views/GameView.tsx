@@ -1143,7 +1143,7 @@ export default function GameView() {
       setFtueHoldSpotlight(false);
       pendingCelebration.current = null;
       ftueLastHandFpRef.current = 0;
-      const ftueStillActive = localStorage.getItem("replaymod_ftue_basketball") !== "1";
+      const ftueStillActive = isFTUE;
       const res: any = ftueStillActive ? await dealFTUERoster() : await dealInitialRoster();
       const nextRoster = (res?.roster ?? res?.cards ?? []) as PlayerCard[];
       rosterRef.current = nextRoster;
