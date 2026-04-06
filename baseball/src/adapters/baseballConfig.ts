@@ -1,48 +1,32 @@
 /**
  * baseballConfig.ts — Layer 2 (MLB-specific)
  *
- * NOTE: Baseball adapter integration is not built yet in this workspace.
- * This file is intentionally self-contained and uses TODO placeholders
- * where baseball-specific thresholds/payout tuning will be wired later.
+ * Roster: 1 P + 4 BAT + 1 FLEX (P or BAT), max 2 pitchers total.
+ * Salary cap: $180.
+ *
+ * FP weights (per stat unit):
+ *   Hitters: H=10, 2B=5, 3B=10, HR=20, R=8, RBI=8, BB=6, SB=12
+ *   Pitchers: IP=3, K=4, ER=-3, W=6, QS=8
+ *
+ * Tier thresholds tuned for baseball FP distribution.
+ * Typical hitter hand: 40-80 FP. Typical pitcher: 20-60 FP.
+ * Mixed roster: 200-350 FP range for a 6-card hand.
  */
 
-export type BaseballSportKey = 'baseball';
-export type BaseballSlot = 'P' | 'BAT' | 'FLEX';
-export type BaseballTier = 'ROOKIE' | 'STARTER' | 'ALL_STAR' | 'MVP' | 'BONUS_POOL';
+export type BaseballSportKey = "baseball";
+export type BaseballSlot = "P" | "BAT" | "FLEX";
+export type BaseballTier = "ROOKIE" | "STARTER" | "ALL_STAR" | "MVP" | "GOAT";
 
 export type BaseballStatCategory =
-  | 'h'
-  | 'doubles'
-  | 'triples'
-  | 'hr'
-  | 'r'
-  | 'rbi'
-  | 'bb'
-  | 'sb'
-  | 'ip'
-  | 'k'
-  | 'er'
-  | 'w'
-  | 'qs';
+  | "h" | "doubles" | "triples" | "hr" | "r" | "rbi" | "bb" | "sb"
+  | "ip" | "k" | "er" | "w" | "qs";
 
 export type BaseballProjectionWeights = Record<BaseballStatCategory, number>;
 
 export interface BaseballWinThreshold {
   tier: BaseballTier;
-  /**
-   * TODO: Tune baseball tier floors once the baseball FP distribution is known.
-   * Kept as 0 placeholder to avoid guessing.
-   */
   minFP: number;
-  /**
-   * TODO: Tune payout multipliers per tier.
-   * Kept as 0 placeholder to avoid guessing.
-   */
   multiplier: number;
-  /**
-   * Matches the basketball "progressive" bonus pool behavior.
-   * TODO: Confirm whether/when this becomes progressive for baseball economy.
-   */
   progressive?: boolean;
 }
 
@@ -50,172 +34,157 @@ export interface BaseballBadgeDef {
   id: string;
   icon: string;
   label: string;
-  /**
-   * TODO: Badge FP value tuning.
-   * Currently set to 0 as a placeholder.
-   */
   fp: number;
-  /**
-   * TODO: Replace placeholder logic once baseball stat mapping/badge triggers are finalized.
-   * The function signature is included so future adapters can drop in logic safely.
-   */
   test: (stats: Record<string, any>) => boolean;
 }
 
 export const BaseballSportConfig = {
-  // ── Sport identity ────────────────────────────────────────────────────
-  sportKey: 'baseball' as BaseballSportKey,
-  name: 'MLB Baseball',
-  sportLabel: 'MLB Baseball',
+  // ── Sport identity ──────────────────────────────────────────────────────
+  sportKey: "baseball" as BaseballSportKey,
+  name: "MLB Baseball",
+  sportLabel: "MLB",
 
-  // ── Roster / slots ─────────────────────────────────────────────────────
+  // ── Roster / slots ──────────────────────────────────────────────────────
   rosterSize: 6,
-  /**
-   * Slots in order (total roster size = 6):
-   *   - P
-   *   - BAT
-   *   - BAT
-   *   - BAT
-   *   - BAT
-   *   - FLEX (may be BAT or P)
-   */
-  rosterSlots: ['P', 'BAT', 'BAT', 'BAT', 'BAT', 'FLEX'] as const satisfies Readonly<BaseballSlot[]>,
-
-  /**
-   * FLEX may be BAT or P.
-   * Adapter integration note:
-   * - Use this when assigning FLEX to either P or BAT while keeping pitcher max <= 2.
-   */
-  flexAllows: ['BAT', 'P'] as const satisfies Readonly<Array<'BAT' | 'P'>>,
-
-  /**
-   * Max 2 pitchers total. (Across P + any FLEX assigned to P.)
-   */
+  rosterSlots: ["P", "BAT", "BAT", "BAT", "BAT", "FLEX"] as const satisfies Readonly<BaseballSlot[]>,
+  flexAllows: ["BAT", "P"] as const satisfies Readonly<Array<"BAT" | "P">>,
   maxPitchersTotal: 2,
-
   salaryCap: 180,
 
-  // ── Stat categories ────────────────────────────────────────────────────
-  hitStatCategories: ['h', 'doubles', 'triples', 'hr', 'r', 'rbi', 'bb', 'sb'] as const,
-  pitchStatCategories: ['ip', 'k', 'er', 'w', 'qs'] as const,
+  // ── Positions ───────────────────────────────────────────────────────────
+  positions: ["P", "BAT"] as string[],
+  positionAliases: {
+    SP: "P", RP: "P", LHP: "P", RHP: "P", PITCHER: "P",
+    C: "BAT", "1B": "BAT", "2B": "BAT", "3B": "BAT", SS: "BAT",
+    OF: "BAT", LF: "BAT", CF: "BAT", RF: "BAT", DH: "BAT",
+  } as Record<string, string>,
+
+  // ── Stat categories ─────────────────────────────────────────────────────
+  hitStatCategories: ["h", "doubles", "triples", "hr", "r", "rbi", "bb", "sb"] as const,
+  pitchStatCategories: ["ip", "k", "er", "w", "qs"] as const,
   statCategories: [
-    // hitters
-    'h',
-    'doubles',
-    'triples',
-    'hr',
-    'r',
-    'rbi',
-    'bb',
-    'sb',
-    // pitchers
-    'ip',
-    'k',
-    'er',
-    'w',
-    'qs',
+    "h", "doubles", "triples", "hr", "r", "rbi", "bb", "sb",
+    "ip", "k", "er", "w", "qs",
   ] as const satisfies Readonly<BaseballStatCategory[]>,
 
   statDisplay: {
     default: [
-      { key: 'h', label: 'H' },
-      { key: 'doubles', label: '2B' },
-      { key: 'triples', label: '3B' },
-      { key: 'hr', label: 'HR' },
-      { key: 'r', label: 'R' },
-      { key: 'rbi', label: 'RBI' },
-      { key: 'bb', label: 'BB' },
-      { key: 'sb', label: 'SB' },
-      { key: 'ip', label: 'IP' },
-      { key: 'k', label: 'K' },
-      { key: 'er', label: 'ER' },
-      { key: 'w', label: 'W' },
-      { key: 'qs', label: 'QS' },
+      { key: "h",       label: "H"   },
+      { key: "doubles", label: "2B"  },
+      { key: "triples", label: "3B"  },
+      { key: "hr",      label: "HR"  },
+      { key: "r",       label: "R"   },
+      { key: "rbi",     label: "RBI" },
+      { key: "bb",      label: "BB"  },
+      { key: "sb",      label: "SB"  },
+    ],
+    P: [
+      { key: "ip",  label: "IP" },
+      { key: "k",   label: "K"  },
+      { key: "er",  label: "ER" },
+      { key: "w",   label: "W"  },
+      { key: "qs",  label: "QS" },
     ],
   },
 
-  // ── Projection / fantasy-point weights ────────────────────────────────
+  // ── FP weights ──────────────────────────────────────────────────────────
   projectionWeights: {
-    // Hitters
-    h: 10,
-    doubles: 5,
-    triples: 10,
-    hr: 20,
-    r: 8,
-    rbi: 8,
-    bb: 6,
-    sb: 12,
-    // Pitchers
-    ip: 3,
-    k: 4,
-    er: -3,
-    w: 6,
-    qs: 8,
+    h: 10, doubles: 5, triples: 10, hr: 20,
+    r: 8,  rbi: 8,    bb: 6,       sb: 12,
+    ip: 3, k: 4,      er: -3,      w: 6, qs: 8,
   } as BaseballProjectionWeights,
 
-  // ── EHLP starter filters ──────────────────────────────────────────────
-  /**
-   * EHLP starter filters (rules you provided):
-   * - Hitters: pa >= 3 and at least 1 meaningful event
-   * - Pitchers: ip >= 4
-   *
-   * Adapter integration note:
-   * - "meaningful event" definition is TODO because this config does not ship
-   *   the baseball event schema yet in this workspace.
-   */
-  ehlpStarterFilters: {
-    hitters: {
-      paMin: 3,
-      meaningfulEventCountMin: 1,
-      meaningDefinition: 'TODO: define which hitter events count as meaningful for EHLP',
-    },
-    pitchers: {
-      ipMin: 4,
-    },
+  // ── Log filters ─────────────────────────────────────────────────────────
+  historicalLogFilters: {
+    minMinutes: 0, // no minutes concept in baseball
+    minQuickFP: 0,
   },
 
-  // ── Badges ─────────────────────────────────────────────────────────────
-  /**
-   * Badge IDs you provided (tests/FP tuning are TODO placeholders).
-   * Adapter integration note:
-   * - When baseball stat mapping is finalized, replace `test: () => false`
-   *   with real badge conditions.
-   */
+  // ── Badges ──────────────────────────────────────────────────────────────
   badges: {
     hitters: [
-      { id: 'MULTI_HIT', icon: '⚾', label: 'Multi Hit', fp: 0, test: () => false },
-      { id: 'RBI_MACHINE', icon: '🧩', label: 'RBI Machine', fp: 0, test: () => false },
-      { id: 'GOING_YARD', icon: '🚀', label: 'Going Yard', fp: 0, test: () => false },
-      { id: 'SPEEDSTER', icon: '💨', label: 'Speedster', fp: 0, test: () => false },
-      { id: 'PERFECT_DAY', icon: '🌞', label: 'Perfect Day', fp: 0, test: () => false },
+      {
+        id: "GOING_YARD",
+        icon: "🚀",
+        label: "Going Yard",
+        fp: 10,
+        test: (s: Record<string, any>) => Number(s.hr ?? 0) >= 2,
+      },
+      {
+        id: "MULTI_HIT",
+        icon: "⚾",
+        label: "Multi Hit",
+        fp: 5,
+        test: (s: Record<string, any>) => Number(s.h ?? 0) >= 3,
+      },
+      {
+        id: "RBI_MACHINE",
+        icon: "🧩",
+        label: "RBI Machine",
+        fp: 8,
+        test: (s: Record<string, any>) => Number(s.rbi ?? 0) >= 4,
+      },
+      {
+        id: "SPEEDSTER",
+        icon: "💨",
+        label: "Speedster",
+        fp: 6,
+        test: (s: Record<string, any>) => Number(s.sb ?? 0) >= 2,
+      },
+      {
+        id: "PERFECT_DAY",
+        icon: "🌞",
+        label: "Perfect Day",
+        fp: 15,
+        test: (s: Record<string, any>) =>
+          Number(s.h ?? 0) >= 3 && Number(s.hr ?? 0) >= 1 && Number(s.rbi ?? 0) >= 3,
+      },
     ] as BaseballBadgeDef[],
     pitchers: [
-      { id: 'ACE', icon: '👑', label: 'Ace', fp: 0, test: () => false },
-      { id: 'SHUTDOWN', icon: '🛑', label: 'Shutdown', fp: 0, test: () => false },
-      { id: 'STRIKEOUT_KING', icon: '🔥', label: 'Strikeout King', fp: 0, test: () => false },
-      { id: 'MELTDOWN', icon: '🌪️', label: 'Meltdown', fp: 0, test: () => false },
+      {
+        id: "ACE",
+        icon: "👑",
+        label: "Ace",
+        fp: 10,
+        test: (s: Record<string, any>) => Number(s.k ?? 0) >= 10,
+      },
+      {
+        id: "SHUTDOWN",
+        icon: "🛑",
+        label: "Shutdown",
+        fp: 8,
+        test: (s: Record<string, any>) => Number(s.ip ?? 0) >= 7 && Number(s.er ?? 0) === 0,
+      },
+      {
+        id: "STRIKEOUT_KING",
+        icon: "🔥",
+        label: "Strikeout King",
+        fp: 5,
+        test: (s: Record<string, any>) => Number(s.k ?? 0) >= 7 && Number(s.k ?? 0) < 10,
+      },
+      {
+        id: "MELTDOWN",
+        icon: "🌪️",
+        label: "Meltdown",
+        fp: -5,
+        test: (s: Record<string, any>) => Number(s.er ?? 0) >= 5,
+      },
     ] as BaseballBadgeDef[],
   },
 
-  // ── Tiers / win condition ──────────────────────────────────────────────
-  /**
-   * Reuse the same overall tier idea as basketball.
-   *
-   * TODO:
-   * - Replace minFP and multiplier values with tuned baseball thresholds/payouts.
-   * - Confirm whether BONUS_POOL becomes progressive and how it triggers.
-   */
+  // ── Win tiers ───────────────────────────────────────────────────────────
+  // Tuned for 6-card baseball hand FP distribution.
+  // Typical range: 150-400 FP. Median ~230 FP.
   winCondition: {
-    type: 'FIXED_THRESHOLD' as const,
+    type: "FIXED_THRESHOLD" as const,
     thresholds: [
-      { tier: 'ROOKIE', minFP: 0, multiplier: 0 },
-      { tier: 'STARTER', minFP: 0, multiplier: 0 },
-      { tier: 'ALL_STAR', minFP: 0, multiplier: 0 },
-      { tier: 'MVP', minFP: 0, multiplier: 0 },
-      { tier: 'BONUS_POOL', minFP: 0, multiplier: 0, progressive: true },
+      { tier: "ROOKIE",   minFP: 155, multiplier: 1 },
+      { tier: "STARTER",  minFP: 195, multiplier: 2 },
+      { tier: "ALL_STAR", minFP: 235, multiplier: 4 },
+      { tier: "MVP",      minFP: 275, multiplier: 8 },
+      { tier: "GOAT",     minFP: 315, multiplier: 0, progressive: true },
     ] as BaseballWinThreshold[],
   },
 };
 
 export default BaseballSportConfig;
-

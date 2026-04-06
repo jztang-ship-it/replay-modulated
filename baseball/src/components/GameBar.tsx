@@ -1,0 +1,100 @@
+/**
+ * baseball/src/components/GameBar.tsx
+ * Thin wrapper — injects baseball win tiers into shared GameBar.
+ */
+
+import React from "react";
+import { GameBar as SharedGameBar, type GameStateLabel, type WinTierDisplay, type LegendData, type CelebrationData } from "@shared/components/GameBar";
+
+export type { CelebrationData };
+export type { GameStateLabel };
+
+const WIN_TIERS: WinTierDisplay[] = [
+  { label: "ROOKIE",   minFp: 155, color: "#22C55E", glow: "rgba(34,197,94,0.6)"   },
+  { label: "STARTER",  minFp: 195, color: "#00FFD8", glow: "rgba(0,255,216,0.6)"   },
+  { label: "ALL-STAR", minFp: 235, color: "#C084FC", glow: "rgba(192,132,252,0.7)" },
+  { label: "MVP",      minFp: 275, color: "#FB923C", glow: "rgba(251,146,60,0.7)"  },
+  { label: "G.O.A.T.", minFp: 315, color: "#EF4444", glow: "rgba(239,68,68,0.9)"  },
+];
+
+const LEGEND: LegendData = {
+  payoutRows: [
+    { label: "G.O.A.T.", score: "315+ FP", payout: "50x",  color: "#EF4444", bg: "rgba(239,68,68,0.12)",    border: "rgba(239,68,68,0.3)"    },
+    { label: "MVP",      score: "275+ FP", payout: "15x",  color: "#FB923C", bg: "rgba(251,146,60,0.10)",   border: "rgba(251,146,60,0.28)"  },
+    { label: "ALL-STAR", score: "235+ FP", payout: "8x",   color: "#C084FC", bg: "rgba(192,132,252,0.10)",  border: "rgba(192,132,252,0.28)" },
+    { label: "STARTER",  score: "195+ FP", payout: "3x",   color: "#00FFD8", bg: "rgba(0,255,216,0.08)",    border: "rgba(0,255,216,0.25)"   },
+    { label: "ROOKIE",   score: "155+ FP", payout: "0.5x", color: "#22C55E", bg: "rgba(34,197,94,0.08)",    border: "rgba(34,197,94,0.22)"   },
+    { label: "BUST",     score: "< 155 FP",payout: "—",    color: "#6B7280", bg: "rgba(107,114,128,0.06)",  border: "rgba(107,114,128,0.18)" },
+  ],
+  scoringRules: [
+    { stat: "Single",   pts: "+3 FP" },
+    { stat: "Double",   pts: "+5 FP" },
+    { stat: "Triple",   pts: "+8 FP" },
+    { stat: "HR",       pts: "+10 FP" },
+    { stat: "RBI",      pts: "+2 FP" },
+    { stat: "Run",      pts: "+2 FP" },
+    { stat: "Walk/HBP", pts: "+2 FP" },
+    { stat: "SB",       pts: "+5 FP" },
+    { stat: "K (batter)", pts: "-1 FP" },
+    { stat: "IP",       pts: "+3 FP" },
+    { stat: "K (pitcher)", pts: "+3 FP" },
+    { stat: "ER",       pts: "-3 FP" },
+    { stat: "Win",      pts: "+5 FP" },
+    { stat: "Save",     pts: "+5 FP" },
+  ],
+  badges: [
+    // Hitter badges
+    { icon: "🚀", label: "GOING YARD",      condition: "2+ HR (+10 FP)"          },
+    { icon: "⚾", label: "MULTI HIT",       condition: "3+ hits (+5 FP)"         },
+    { icon: "🧩", label: "RBI MACHINE",     condition: "4+ RBI (+8 FP)"          },
+    { icon: "💨", label: "SPEEDSTER",       condition: "2+ SB (+6 FP)"           },
+    { icon: "🌞", label: "PERFECT DAY",     condition: "3H + 1HR + 3RBI (+15 FP)"},
+    // Pitcher badges
+    { icon: "👑", label: "ACE",             condition: "10+ K (+10 FP)"          },
+    { icon: "🛑", label: "SHUTDOWN",        condition: "7+ IP, 0 ER (+8 FP)"     },
+    { icon: "🔥", label: "STRIKEOUT KING",  condition: "7-9 K (+5 FP)"           },
+    { icon: "🌪️",label: "MELTDOWN",        condition: "5+ ER (-5 FP)"           },
+  ],
+};
+
+type Props = {
+  gameState: GameStateLabel;
+  balance: number;
+  isBalanceAnimating?: boolean;
+  totalFp: number;
+  lastCardProgress?: number;
+  lastCardFp?: number;
+  capMax: number;
+  capUsed: number;
+  lockedSalary: number;
+  revealedSalary: number;
+  betMultiplier: number;
+  baseBet: number;
+  onBetMultiplier: (m: number) => void;
+  onAction: () => void;
+  celebration?: CelebrationData;
+  onWinCelebrationComplete?: () => void;
+  onWageAnimationComplete?: () => void;
+  ftueDrawBlocked?: boolean;
+  ftueHideSkip?: boolean;
+  ftuePulseNearMiss?: boolean;
+  ftueReplayBlocked?: boolean;
+  dataFtuePrimaryAnchor?: "deal" | "draw";
+  tierGaugeSlot?: React.ReactNode;
+  splitFooter?: {
+    multipliersHost: HTMLElement | null;
+    controlsHost: HTMLElement | null;
+  };
+  splitMultiplierRowVisible?: boolean;
+};
+
+export function GameBar(props: Props) {
+  return (
+    <SharedGameBar
+      {...props}
+      winTiers={WIN_TIERS}
+      legend={LEGEND}
+      hideTierBar={true}
+    />
+  );
+}

@@ -109,7 +109,7 @@ export function CardBackGeneric({ isFlipping, isTapTarget = false, isFTUE = fals
             position: "absolute", top: "16%", left: 0, right: 0,
             textAlign: "center", fontSize: 8, fontWeight: 800,
             letterSpacing: 2, textTransform: "uppercase",
-            color: "rgba(255,255,255,0.45)",
+            color: "rgba(255,177,74,0.85)",
             animation: "lp-tap-pulse 1.8s ease-in-out infinite",
             zIndex: 2,
             pointerEvents: "none",

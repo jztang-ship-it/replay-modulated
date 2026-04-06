@@ -9,19 +9,18 @@ import { useMemo, useState, useCallback, useRef, useEffect, useLayoutEffect, typ
 import type { GamePhase, PlayerCard } from "../adapters/types";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { dealInitialRoster, redrawRoster, resolveRoster } from "../adapters/gameAdapter";
-import { dealFTUERoster, redrawFTUERoster, resolveFTUERoster } from "../adapters/ftueRoster";
 import { CoachLayer } from "@shared/components/CoachLayer";
 import { useFTUE } from "@shared/hooks/useFTUE";
 import { ensureLoaded } from "../engines/dataEngine";
 import { RosterGrid } from "../components/RosterGrid";
 import { AppHeader } from "../components/AppHeader";
-import { resetAllOverlays } from "../components/AthleteCard";
+import { resetAllOverlays } from "../components/BaseballCard";
 import { GameBar, type CelebrationData } from "../components/GameBar";
 import { useCardFlipState } from "../hooks/useCardFlipState";
 import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
-import { calculateWinTier, calculatePayout, BASKETBALL_WIN_TIERS, type WinTier } from "../utils/payoutLogic";
-import { buildPostRevealCopy } from "../utils/buildPostRevealCopy";
-import { useGameAnalytics } from "../../../shared/analytics/useGameAnalytics";
+import { calculateWinTier, calculatePayout, BASEBALL_WIN_TIERS, type WinTier } from "../utils/payoutLogic";
+
+import { useGameAnalytics } from "@shared/analytics/useGameAnalytics";
 import { HotStreakOverlay } from '@shared/engagement/HotStreakOverlay';
 import { CollectScreen } from '@shared/engagement/CollectScreen';
 import { TierGauge, computeGaugeState } from '@shared/components/TierGauge';
@@ -171,11 +170,11 @@ function createPlaceholders(): PlayerCard[] {
 }
 
 const GAUGE_THRESHOLDS = [
-  { tier: "ROOKIE", minFP: 155 },
-  { tier: "STARTER", minFP: 175 },
-  { tier: "ALL_STAR", minFP: 195 },
-  { tier: "MVP", minFP: 215 },
-  { tier: "GOAT", minFP: 235 },
+  { tier: "ROOKIE",   minFP: 155 },
+  { tier: "STARTER",  minFP: 195 },
+  { tier: "ALL_STAR", minFP: 235 },
+  { tier: "MVP",      minFP: 275 },
+  { tier: "GOAT",     minFP: 315 },
 ];
 const NEAR_MISS_FP = 5;
 
@@ -457,7 +456,7 @@ export default function GameView() {
   const [noTransition, setNoTransition] = useState(false);
   const [revealedSalary, setRevealedSalary] = useState(0);
   const rosterRef = useRef<PlayerCard[]>([]);
-  const { isFTUE, completeFTUE } = useFTUE("basketball");
+  const { isFTUE, completeFTUE } = useFTUE("baseball");
   const [legendaryCardName, setLegendaryCardName] = useState<string | undefined>();
   const [revealIndex, setRevealIndex] = useState(0);
   const [lastRevealedCardId, setLastRevealedCardId] = useState<string | null>(null);
@@ -469,7 +468,6 @@ export default function GameView() {
   const [ftueOscillating, setFtueOscillating] = useState(false);
   const [ftueCommentaryDone, setFtueCommentaryDone] = useState(false);
   const [ftueCommentaryOverride, setFtueCommentaryOverride] = useState<{ parts: React.ReactNode[] } | null>(null);
-  const coachDismissRef = useRef<(() => void) | null>(null);
   const [glowState, setGlowState] = useState<{ cardId: string | null; tier: string; durationMs: number }>({
     cardId: null, tier: "WHITE", durationMs: 300
   });
@@ -502,7 +500,7 @@ export default function GameView() {
   const [tierResultPhase, setTierResultPhase] = useState<1 | 2>(1);
   const ftueTierSlamPlayedRef = useRef(false);
   const [nearMissTeasing, setNearMissTeasing] = useState(false);
-  const nearMissChoreTimersRef = useRef<number[]>([]);
+  const nearMissChoreTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   // Spring oscillation phase — fires after all cards settle, before results lock in
   const [springFp, setSpringFp] = useState<number | null>(null);
@@ -640,7 +638,7 @@ export default function GameView() {
   const flipState = useCardFlipState();
   const revealableCards = useMemo(() => toRevealableCards(roster), [roster]);
   const currentBet = BASE_BET * betMultiplier;
-  const gameAnalytics = useGameAnalytics("basketball");
+  const gameAnalytics = useGameAnalytics("baseball");
 
   function handleCardRevealStart(cardId: string, tierArg: string, shakeType?: string | null) {
     // Freeze bar when the TRUE anchor starts — the last card whose spring drives the final total.
@@ -754,15 +752,11 @@ export default function GameView() {
         recordHandPlayed();
         if (!bust) recordHandWon(); else recordHandLost();
         if (isFTUE) {
-          // FTUE: same flow as real game — WIN_CELEBRATION triggers wage animation
+          // FTUE: after spring settles, transition same as real game
           ftueLastHandFpRef.current = totalFp;
-          pendingBalanceUpdateRef.current = () => {
-            if (payout > 0) {
-              setBalance(prev => { const next = prev + payout; saveBalance(next); return next; });
-            }
-          };
           const t = window.setTimeout(() => {
-            setGameState("WIN_CELEBRATION");
+            setGameState("RESULTS");
+            setTimeout(() => setFtueWinCelebrationActive(true), 300);
           }, 1200);
           springTimersRef.current.push(t);
         } else {
@@ -857,7 +851,7 @@ export default function GameView() {
   const celebrationData: CelebrationData | undefined = useMemo(() => {
     if (gameState !== "WIN_CELEBRATION" || !winTier) return undefined;
     const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
-    const tierMult = BASKETBALL_WIN_TIERS[winTier]?.multiplier ?? 0;
+    const tierMult = BASEBALL_WIN_TIERS[winTier]?.multiplier ?? 0;
     const isLoss = winTier === "BUST"; // ROOKIE is a partial win, not a loss
     const lossAmount = winTier === "BUST" ? BASE_BET * betMultiplier : 0;
     // Streak milestone bonus pool win
@@ -899,7 +893,7 @@ export default function GameView() {
       return 0;
     }
     if (gameState === "DEALING" || gameState === "HOLD" || gameState === "DRAWING") {
-      return roster.reduce((sum, c) => sum + (c.fp ?? 0), 0);
+      return roster.reduce((sum, c) => sum + ((c as any).actualFp ?? 0), 0);
     }
     return 0;
   }, [gameState, runningTotalFp, roster, isFTUE]);
@@ -921,45 +915,28 @@ export default function GameView() {
   latestGaugeFpRef.current = gaugeTotalFp;
 
   // Smart post-reveal copy — computed once when spring settles, then locked for the hand.
-  // Uses a ref so the copy never changes mid-display from dependency churn.
-  const postRevealCopyRef = useRef<ReturnType<typeof buildPostRevealCopy> | null>(null);
+  const postRevealCopyRef = useRef<{ primary: string; secondary?: string } | null>(null);
   const postRevealCopy = useMemo(() => {
-    // Once computed, lock it — never recompute until next hand
     if (postRevealCopyRef.current) return postRevealCopyRef.current;
     if ((gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") || !winTier || !springSettled) return null;
-    // FTUE: no postRevealCopy — commentary handled by CoachLayer
     if (isFTUE) {
+      if (springSettled && !ftueCommentaryDone) {
+        setTimeout(() => setFtueCommentaryDone(true), 2000);
+      }
       return null;
     }
     const fp = lockedGaugeFpRef.current ?? displayFp;
     const gaugeSnap = computeGaugeState(fp, GAUGE_THRESHOLDS as any, winTier, 8);
-    const copy = buildPostRevealCopy({
-      totalFp: fp,
-      winTier,
-      nextTier: gaugeSnap.nextTier,
-      tierFloor: gaugeSnap.curMin,
-      nextTierMin: gaugeSnap.nextMin > 0 && gaugeSnap.nextMin < 9999 ? gaugeSnap.nextMin : 0,
-      roster: roster.map(c => ({
-        name: String((c as any).name ?? ""),
-        salary: Number((c as any).salary ?? 0),
-        actualFp: Number((c as any).actualFp ?? 0),
-        projectedFp: Number((c as any).projectedFp ?? 0) || undefined,
-        achievements: ((c as any).achievements ?? []) as Array<{ id: string; label: string; icon?: string; fp?: number }>,
-        opponent: String((c as any).gameInfo?.opponent ?? ""),
-        gameDate: String((c as any).gameInfo?.date ?? ""),
-        statLine: ((c as any).statLine ?? {}) as Record<string, any>,
-        wasHeld: Boolean((c as any).wasHeld ?? false),
-        homeAway: String((c as any).gameInfo?.homeAway ?? "") as "H" | "A" | "",
-        cardTier: String((c as any).tier ?? ""),
-      })),
-      streak,
-      prevStreak: winTier === "BUST" ? streak : Math.max(0, streak - 1),
-      isBust: winTier === "BUST",
-      ceilingPct: ceilingPct ?? undefined,
-      isFTUE,
-      handCount,
-      handCount,
-    });
+    // Baseball commentary — simple tier + FP summary (full commentary system TODO)
+    const nearMiss = gaugeSnap.nextMin > 0 && gaugeSnap.nextMin < 9999
+      ? +(gaugeSnap.nextMin - fp).toFixed(1)
+      : 0;
+    const copy = {
+      primary: winTier === "BUST"
+        ? `${fp.toFixed(1)} FP — just below the line. ${nearMiss > 0 ? `${nearMiss} FP short.` : ""}`
+        : `${winTier} — ${fp.toFixed(1)} FP${nearMiss > 0 && nearMiss <= 15 ? `. ${nearMiss} FP from the next tier.` : "."}`,
+      secondary: undefined as string | undefined,
+    };
     postRevealCopyRef.current = copy;
     return copy;
   }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct]); // eslint-disable-line
@@ -976,12 +953,12 @@ export default function GameView() {
   // Tier result phase: Phase 1 = big slam (with optional near-miss tease), Phase 2 = info view
   useEffect(() => {
     if ((gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier) {
-      // FTUE: only play slam animation once — never re-enter after first run
-      if (isFTUE && ftueTierSlamPlayedRef.current) return;
-      if (isFTUE) ftueTierSlamPlayedRef.current = true;
       nearMissChoreTimersRef.current.forEach(clearTimeout);
       nearMissChoreTimersRef.current = [];
       setNearMissTeasing(false);
+      // FTUE: only play slam animation once — keep phase 2 after first settle
+      if (isFTUE && ftueTierSlamPlayedRef.current) return;
+      if (isFTUE) ftueTierSlamPlayedRef.current = true;
       setTierResultPhase(1);
       const gaugeSnap = computeGaugeState(totalFp, GAUGE_THRESHOLDS as any, winTier, NEAR_MISS_FP);
       if (gaugeSnap.isNearMiss && gaugeSnap.nextTier != null) {
@@ -1143,8 +1120,7 @@ export default function GameView() {
       setFtueHoldSpotlight(false);
       pendingCelebration.current = null;
       ftueLastHandFpRef.current = 0;
-      const ftueStillActive = localStorage.getItem("replaymod_ftue_basketball") !== "1";
-      const res: any = ftueStillActive ? await dealFTUERoster() : await dealInitialRoster();
+      const res: any = isFTUE ? await dealInitialRoster() : await dealInitialRoster();
       const nextRoster = (res?.roster ?? res?.cards ?? []) as PlayerCard[];
       rosterRef.current = nextRoster;
       console.log('HAND DEALT CALLED');
@@ -1172,11 +1148,11 @@ export default function GameView() {
       setGameState("DRAWING");
       await sleep(700);
       const drawRes: any = isFTUE
-        ? await redrawFTUERoster({ currentCards: markedRoster, lockedCardIds })
+        ? await redrawRoster({ currentCards: markedRoster, lockedCardIds })
         : await redrawRoster({ currentCards: markedRoster, lockedCardIds });
       const drawnRoster = (drawRes?.roster ?? drawRes?.cards ?? markedRoster) as PlayerCard[];
       const resolveRes: any = isFTUE
-        ? await resolveFTUERoster({ finalCards: drawnRoster })
+        ? await resolveRoster({ finalCards: drawnRoster })
         : await resolveRoster({ finalCards: drawnRoster, handCount });
       const finalRoster = (resolveRes?.roster ?? resolveRes?.cards ?? drawnRoster) as PlayerCard[];
       const mvp: string | undefined = resolveRes?.mvpCardId ?? resolveRes?.mvpId;
@@ -1508,10 +1484,10 @@ export default function GameView() {
               if (gameState === "RESULTS" && winTier && !showRawScore) setShowRawScore(true);
             }}
             style={{
-              flex: "0 0 64px",
-              height: 64,
-              minHeight: 64,
-              maxHeight: 64,
+              flex: "0 0 52px",
+              height: 52,
+              minHeight: 52,
+              maxHeight: 52,
               flexShrink: 0,
               display: "flex",
               justifyContent: "center",
@@ -1684,9 +1660,9 @@ export default function GameView() {
             <div
               style={{
                 width: "100%",
-                height: 72,
-                minHeight: 72,
-                maxHeight: 72,
+                height: 84,
+                minHeight: 84,
+                maxHeight: 84,
                 flexShrink: 0,
                 position: "relative",
                 display: "flex",
@@ -1728,11 +1704,11 @@ export default function GameView() {
                   <TierGauge
                     totalFp={gaugeTotalFp}
                     thresholds={[
-                      { tier: "ROOKIE", minFP: 155 },
-                      { tier: "STARTER", minFP: 175 },
-                      { tier: "ALL_STAR", minFP: 195 },
-                      { tier: "MVP", minFP: 215 },
-                      { tier: "GOAT" as any, minFP: 235 },
+                      { tier: "ROOKIE",   minFP: 155 },
+                      { tier: "STARTER",  minFP: 195 },
+                      { tier: "ALL_STAR", minFP: 235 },
+                      { tier: "MVP",      minFP: 275 },
+                      { tier: "GOAT" as any, minFP: 315 },
                     ]}
                     winTier={springSettled ? (winTier ?? undefined) : undefined}
                     lastCardFp={lastCardFp}
@@ -1745,13 +1721,8 @@ export default function GameView() {
                     onTierCross={undefined}
                     postRevealCopy={postRevealCopy}
                     ftueTypewriter={isFTUE}
-                    stickyLastOverride={isFTUE && ftueReplayReady}
                     commentaryOverride={ftueCommentaryOverride}
-                    onCommentaryOverrideDone={() => {
-                      setFtueCommentaryOverride(null);
-                      // Auto-dismiss CoachLayer spotlight so user doesn't need extra tap
-                      coachDismissRef.current?.();
-                    }}
+                    onCommentaryOverrideDone={() => setFtueCommentaryOverride(null)}
                     onCommentaryDone={() => {
                       // After typewriter finishes, trigger "so close" bubble with slight delay
                       if (isFTUE) {
@@ -1830,19 +1801,15 @@ export default function GameView() {
               ftueWinCelebrationActive={ftueWinCelebrationActive}
               ftueCommentaryDone={ftueCommentaryDone}
               onCommentaryText={(parts) => setFtueCommentaryOverride(parts ? { parts } : null)}
-              dismissRef={coachDismissRef}
               onReplayReady={() => setFtueReplayReady(true)}
               onFtueReadyToFlip={() => setFtueBookerPulse(true)}
               onFtueBookerHeld={() => { /* draw pulse handled inside CoachLayer */ }}
               onFtueAllDone={() => {
-                // Don't completeFTUE here — isFTUE must stay true for stickyLastOverride
+                completeFTUE();
                 setFtueResultsDim(false);
               }}
               onReplay={() => {
                 completeFTUE();
-                setFtueCommentaryOverride(null);
-                setFtueCommentaryDone(false);
-                setFtueWinCelebrationActive(false);
                 setLastRevealedCardId(null);
                 setCelebrationHeld(false);
                 setFtueCardsBlocked(false);
@@ -1851,11 +1818,9 @@ export default function GameView() {
                 setFtueBookerPulse(false);
                 setFtueHoldSpotlight(false);
                 setFtueGaugeOscDone(false);
-                ftueTierSlamPlayedRef.current = false;
                 pendingCelebration.current = null;
                 heldRevealResumeRef.current = null;
-                // Delay handleButtonClick so completeFTUE state propagates first
-                setTimeout(() => handleButtonClick(), 0);
+                handleButtonClick();
               }}
             />
             <HotStreakOverlay active={hotStreak} winCount={sessionWins} />
@@ -1936,19 +1901,11 @@ export default function GameView() {
         onWageAnimationComplete={() => {
           pendingBalanceUpdateRef.current?.();
           pendingBalanceUpdateRef.current = null;
-          // FTUE: trigger commentary flow after balance roll up completes
-          if (isFTUE) {
-            setTimeout(() => {
-              setFtueWinCelebrationActive(true);
-              setFtueCommentaryDone(true);
-            }, 800);
-          }
         }}
         ftueDrawBlocked={isFTUE && gameState === "HOLD" && !heldCardIds.has("ftue-booker")}
         ftueHideSkip={isFTUE}
         ftuePulseNearMiss={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && !ftueGaugeOscDone}
-        ftueReplayBlocked={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && !ftueReplayReady}
-        ftueReplayPulse={isFTUE && ftueReplayReady}
+        ftueReplayBlocked={isFTUE && gameState === "RESULTS" && !ftueReplayReady}
         dataFtuePrimaryAnchor={isFTUE ? (gameState === "HOLD" ? "draw" : "deal") : undefined}
         splitFooter={{ multipliersHost, controlsHost }}
         splitMultiplierRowVisible={isPreRevealFooter && !isFTUE}

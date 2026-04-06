@@ -38,7 +38,6 @@ export class SportAdapter {
   }
 
   get salaryCapMin(): number {
-    // Keep the same "min cap" convention as other sports.
     return Math.floor(Number(this.config.salaryCap) * 0.956);
   }
 
@@ -48,6 +47,12 @@ export class SportAdapter {
 
   get rosterSlots(): readonly BaseballSlot[] {
     return this.config.rosterSlots;
+  }
+
+  normalizeTier(raw: unknown): "ORANGE" | "PURPLE" | "BLUE" | "GREEN" | "WHITE" {
+    const s = String(raw ?? "WHITE").trim().toUpperCase();
+    const valid = ["ORANGE", "PURPLE", "BLUE", "GREEN", "WHITE"] as const;
+    return valid.includes(s as any) ? (s as typeof valid[number]) : "WHITE";
   }
 
   get maxPitchersTotal(): number {

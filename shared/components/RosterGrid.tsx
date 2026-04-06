@@ -49,6 +49,7 @@ export type RosterGridCardProps = {
   glowActive?: boolean;
   glowTier?: string;
   glowDurationMs?: number;
+  isFTUE?: boolean;
 };
 
 type Props = {

@@ -31,7 +31,7 @@
  * NEVER resets to 0 mid-hand. Animates from prevFill always.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 export type GaugeTier = "MVP" | "ALL_STAR" | "STARTER" | "ROOKIE" | "BUST" | "NONE";
 export interface TierThreshold { tier: GaugeTier; minFP: number; }
@@ -63,10 +63,12 @@ interface TierGaugeProps {
   postRevealCopy?: { primary: string; secondary?: string } | null;
   /** FTUE: use typewriter reveal for commentary text */
   ftueTypewriter?: boolean;
+  /** When true, the last commentary override part stays visible (no dismiss, no "TAP TO CONTINUE") */
+  stickyLastOverride?: boolean;
   /** FTUE: called when typewriter commentary finishes */
   onCommentaryDone?: () => void;
-  /** Override commentary with multi-part bubble text — tap advances to next part */
-  commentaryOverride?: { parts: string[] } | null;
+  /** Override commentary with multi-part bubble content — tap advances to next part */
+  commentaryOverride?: { parts: ReactNode[] } | null;
   /** Called when user taps through all parts of commentaryOverride */
   onCommentaryOverrideDone?: () => void;
 }
@@ -311,6 +313,7 @@ export function TierGauge({
   onTierCross,
   postRevealCopy,
   ftueTypewriter = false,
+  stickyLastOverride = false,
   onCommentaryDone,
   commentaryOverride = null,
   onCommentaryOverrideDone,
@@ -675,44 +678,69 @@ export function TierGauge({
       </div>
 
       {/* Commentary area — override (FTUE bubble texts) > postRevealCopy > gap callout */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, flexDirection: "column", minHeight: 80, textAlign: "center" }}>
-        {commentaryOverride && commentaryOverride.parts.length > 0 ? (
-          /* Multi-part FTUE commentary — tap to advance */
-          <div
-            onClick={() => {
-              if (overrideTyping) { setOverrideTyping(false); return; }
-              const nextPart = overridePart + 1;
-              if (nextPart < commentaryOverride.parts.length) {
-                setOverridePart(nextPart);
-                setOverrideTyping(true);
-              } else {
-                onCommentaryOverrideDone?.();
-              }
-            }}
-            style={{ padding: "6px 4px 2px", width: "100%", cursor: "pointer" }}
-          >
-            <Typewriter
-              key={`override-${overridePart}`}
-              text={commentaryOverride.parts[overridePart]}
-              style={{
-                fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.92)",
-                fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
-                textAlign: "center", maxWidth: "100%", display: "block",
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, flexDirection: "column", minHeight: 80, textAlign: "center", position: "relative", zIndex: commentaryOverride ? 1100 : undefined }}>
+        {commentaryOverride && commentaryOverride.parts.length > 0 ? (() => {
+          const part = commentaryOverride.parts[overridePart];
+          const isString = typeof part === "string";
+          const isLast = overridePart >= commentaryOverride.parts.length - 1;
+          return (
+            <div
+              onClick={() => {
+                if (overrideTyping) { setOverrideTyping(false); return; }
+                if (!isLast) {
+                  setOverridePart(overridePart + 1);
+                  setOverrideTyping(true);
+                } else if (stickyLastOverride) {
+                  // Final FTUE message — stays visible until Replay
+                  return;
+                } else {
+                  onCommentaryOverrideDone?.();
+                }
               }}
-              msPerChar={18}
-              onDone={() => setOverrideTyping(false)}
-            />
-            {!overrideTyping && overridePart < commentaryOverride.parts.length - 1 && (
-              <div style={{
-                marginTop: 6, fontSize: 10, color: "rgba(255,255,255,0.35)",
-                letterSpacing: "0.12em", textTransform: "uppercase",
-                animation: "tgTextReveal 0.4s ease both",
-              }}>
-                TAP FOR MORE
-              </div>
-            )}
-          </div>
-        ) : postRevealCopy ? (
+              style={{ padding: "6px 4px 2px", width: "100%", cursor: "pointer" }}
+            >
+              {isString ? (
+                <Typewriter
+                  key={`override-${overridePart}`}
+                  text={part as string}
+                  style={{
+                    fontSize: 13, fontWeight: 700, color: "#FFFFFF",
+                    fontFamily: FF, letterSpacing: "0.01em", lineHeight: 1.45,
+                    textAlign: "center", maxWidth: "100%",
+                    display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as any,
+                    overflow: "hidden",
+                  }}
+                  msPerChar={20}
+                  onDone={() => setOverrideTyping(false)}
+                />
+              ) : (
+                <div
+                  key={`override-${overridePart}`}
+                  style={{
+                    fontSize: 13, fontWeight: 700, color: "#FFFFFF",
+                    fontFamily: FF, letterSpacing: "0.01em", lineHeight: 1.45,
+                    textAlign: "center", maxWidth: "100%",
+                    display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as any,
+                    overflow: "hidden",
+                    animation: "tgTextReveal 0.5s ease both",
+                  }}
+                  ref={() => { setTimeout(() => setOverrideTyping(false), 500); }}
+                >
+                  {part}
+                </div>
+              )}
+              {!overrideTyping && !(isLast && stickyLastOverride) && (
+                <div style={{
+                  marginTop: 6, fontSize: 10, color: "rgba(255,177,74,0.7)",
+                  letterSpacing: "0.12em", textTransform: "uppercase",
+                  animation: "tgTextReveal 0.4s ease both",
+                }}>
+                  {isLast ? "TAP TO CONTINUE" : "TAP FOR MORE"}
+                </div>
+              )}
+            </div>
+          );
+        })() : postRevealCopy ? (
           ftueTypewriter ? (
             <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, maxWidth: "100%" }}>
               <Typewriter
@@ -763,6 +791,9 @@ export function TierGauge({
           <span style={{ fontSize: 13, fontWeight: 800, color: TIER_CFG.GOAT.color, fontFamily: FF, letterSpacing: "0.06em", textTransform: "uppercase" }}>
             You've reached the maximum level
           </span>
+        ) : commentaryOverride === null && ftueTypewriter ? (
+          // FTUE: hide gap callout when between commentary instructions
+          null
         ) : (
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <span style={{ fontSize: 18, fontWeight: 800, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px" }}>

@@ -11,6 +11,6 @@ export function headshotUrl(photoCode: string | undefined | null, sport = 'nba')
   // If env var is set, it already includes the sport segment (e.g. .../headshots/nba)
   // If falling back to local, just use /headshots/{code}.png
   if (BASE === '/headshots') return `/headshots/${photoCode}.png`;
-  const base = sport === 'nba' ? BASE : BASE.replace('/nba', `/${sport}`);
+  const base = sport === 'nba' ? BASE : (BASE || '').replace('/nba', `/${sport}`);
   return `${base}/${photoCode}.png`;
 }

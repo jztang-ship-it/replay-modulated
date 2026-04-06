@@ -10,6 +10,7 @@ export type BubbleAnchor =
   | "roster-and-score"
   | "score-row"
   | "booker-and-gauge"
+  | "booker-gauge-balance"
   | "ftue-darnit-focus"
   | "gauge"
   | "center"
@@ -35,7 +36,9 @@ interface Props {
   onReplay?: () => void;
   onReplayReady?: () => void;
   /** Routes bubble text into the commentary area instead of a floating pill */
-  onCommentaryText?: (parts: string[] | null) => void;
+  onCommentaryText?: (parts: React.ReactNode[] | null) => void;
+  /** Called by GameView when commentary override is tapped — auto-dismisses current spotlight */
+  dismissRef?: React.MutableRefObject<(() => void) | null>;
   lockedCount?: number; revealIndex?: number;
   legendaryCardName?: string; lesson?: CoachLesson;
 }
@@ -109,8 +112,6 @@ interface QueueEntry {
 }
 type Pulse = "deal" | "draw" | null;
 
-// Gap between spotlight edge and message pill (px)
-const PILL_GAP = 10;
 // Padding around spotlight rect — smaller for individual cards so we don't
 // bleed into adjacent cards (grid gap is 8px, safe pad is 3px)
 const PAD_CARD = 3;
@@ -160,6 +161,21 @@ function unionBookerAndGaugeRect(): DOMRect | null {
   } as DOMRect;
 }
 
+/** Booker + score row + gauge + balance/wage row — full FTUE results spotlight */
+function unionBookerGaugeBalanceRect(): DOMRect | null {
+  const bookerEl = document.querySelector('[data-ftue-card="ftue-booker"]');
+  const gaugeEl = document.querySelector('[data-ftue-anchor="tier-gauge"]');
+  const scoreEl = document.querySelector('[data-ftue-anchor="score-row"]');
+  const balanceEl = document.querySelector('[data-ftue-anchor="balance-row"]');
+  if (!bookerEl || !gaugeEl) return null;
+  const rects = [bookerEl, gaugeEl, scoreEl, balanceEl].filter(Boolean).map(el => el!.getBoundingClientRect());
+  const top = Math.min(...rects.map(r => r.top));
+  const bottom = Math.max(...rects.map(r => r.bottom));
+  const left = Math.min(...rects.map(r => r.left));
+  const right = Math.max(...rects.map(r => r.right));
+  return { top, bottom, left, right, width: right - left, height: bottom - top, x: left, y: top, toJSON: () => ({}) } as DOMRect;
+}
+
 function resolveAnchorElement(anchor: BubbleAnchor | undefined): HTMLElement | null {
   if (!anchor || anchor === "center") return null;
   if (typeof anchor === "object") {
@@ -183,37 +199,12 @@ function resolveAnchorElement(anchor: BubbleAnchor | undefined): HTMLElement | n
     if (!rect) return null;
     return { getBoundingClientRect: () => rect } as unknown as HTMLElement;
   }
-  return null;
-}
-
-/**
- * Returns a CSS position spec for the message pill container.
- * Uses `bottom` (distance from viewport bottom) when placing above,
- * `top` when placing below — so the pill never clips off screen.
- */
-function computePillPlacement(
-  rect: DOMRect,
-  position: BubblePosition,
-  pad: number,
-  gapPx: number = PILL_GAP,
-): { top: number } | { bottom: number } {
-  const vh = window.innerHeight;
-  const spotTop = rect.top - pad;
-  const spotBottom = rect.bottom + pad;
-
-  const side: "above" | "below" =
-    position === "auto"
-      ? (spotBottom > vh * 0.55 ? "above" : "below")
-      : position;
-
-  if (side === "above") {
-    // Pin pill bottom edge at gapPx above spotlight top
-    return { bottom: vh - spotTop + gapPx };
-  } else {
-    // Pin pill top edge at gapPx below spotlight bottom, clamped to not clip off viewport
-    const maxTop = vh - 40; // leave at least 40px from bottom for content
-    return { top: Math.min(spotBottom + gapPx, maxTop) };
+  if (anchor === "booker-gauge-balance") {
+    const rect = unionBookerGaugeBalanceRect();
+    if (!rect) return null;
+    return { getBoundingClientRect: () => rect } as unknown as HTMLElement;
   }
+  return null;
 }
 
 export function CoachLayer({
@@ -223,6 +214,7 @@ export function CoachLayer({
   onCoachBubbleKey,
   onResumeHeldReveal, onCelebrationReady, onFtueReadyToFlip, onFtueBookerHeld, onFtueAllDone, onBubbleActive, onReplayReady,
   onCommentaryText,
+  dismissRef,
 }: Props) {
   const queue = useRef<QueueEntry[]>([]);
   const shown = useRef<Set<string>>(new Set());
@@ -284,6 +276,12 @@ export function CoachLayer({
     onCoachBubbleKey?.(current?.key ?? null);
   }, [current, onCoachBubbleKey]);
 
+  // Expose dismiss so GameView can auto-dismiss when commentary is tapped
+  useEffect(() => {
+    if (dismissRef) dismissRef.current = dismiss;
+    return () => { if (dismissRef) dismissRef.current = null; };
+  }, [dismiss, dismissRef]);
+
   // ── Resolve spotlight rect (double rAF = after layout; card holes line up with taps) ──
   const prevAnchorRef = useRef<string>("");
   useEffect(() => {
@@ -329,6 +327,11 @@ export function CoachLayer({
       }
       if (snapshot.anchor === "booker-and-gauge") {
         const rect = unionBookerAndGaugeRect();
+        applyRect(rect);
+        return;
+      }
+      if (snapshot.anchor === "booker-gauge-balance") {
+        const rect = unionBookerGaugeBalanceRect();
         applyRect(rect);
         return;
       }
@@ -415,11 +418,11 @@ export function CoachLayer({
     bookerFlipBubbleShown.current = false;
     setCurrent(null);
     onBubbleActive?.(false);
-    enqueue({
-      key: "idle_deal",
-      node: <span>Real stats. Real history. Your fantasy result instantly. Hit <DealChip /> to get started.</span>,
-      pulse: "deal",
-      // no anchor → pill centers vertically, deal button stays visible below
+    setTimeout(() => {
+      onCommentaryText?.([
+        <span>Real stats. Real history. Your fantasy result instantly. Hit <DealChip /> to get started.</span>
+      ]);
+      setPulsing("deal");
     }, 500);
   }, [gameState, isFTUE]); // eslint-disable-line
 
@@ -429,35 +432,37 @@ export function CoachLayer({
     if (prevState.current === "HOLD") return;
     prevState.current = "HOLD";
 
-    // 1st: spotlight all 6 cards + Team FP/Budget row, salary+avg pulse
-    // 800ms delay so deal animation completes and cards are visible before bubble appears
-    // hold_booker only fires after this is dismissed — guaranteed ordering via onDismiss
-    enqueue({
-      key: "hold_roster_intro",
-      node: (
-        <span>
-          Six players, $200 cap. Build the lineup that scores the most Fantasy Points — points, assists, rebounds all count. Color coding shows who's worth keeping. Who do we keep?
-        </span>
-      ),
-      anchor: "roster-and-score",
-      position: "below",
-      pillLayout: "below-score-row",
-      pulseCardLabels: true,
-      onDismiss: () => {
-        shown.current.delete("hold_booker");
-        queue.current = queue.current.filter(e => e.key !== "hold_booker");
+    // Show intro commentary, then auto-advance to Booker spotlight
+    onCommentaryText?.([
+      "Six players, $200 cap. Fantasy Points come from real stats — points, assists, rebounds. Who do we keep?"
+    ]);
+
+    // After user taps commentary, advance to Booker spotlight
+    // The TierGauge onCommentaryOverrideDone clears the override,
+    // then this timeout fires the Booker step
+    setTimeout(() => {
+      // Wait for commentary tap, then show Booker
+      const checkAndAdvance = () => {
+        onCommentaryText?.([
+          <span>Booker is your $59 anchor - most dependable player. Tap him to hold, hit <DrawChip /> to replace the rest, then tap every card to see your replacements.</span>
+        ]);
         enqueue({
           key: "hold_booker",
-          node: (
-            <span>
-              Booker has a $59 salary — he's your anchor and most dependable player. Tap him to hold, then hit <DrawChip /> to replace the rest.
-            </span>
-          ),
+          node: null as any,
           anchor: { cardId: "ftue-booker" },
           position: "below",
         });
-      },
-    }, 800);
+      };
+      // Enqueue roster spotlight — tapping it advances to Booker
+      enqueue({
+        key: "hold_roster_intro",
+        node: null as any,
+        anchor: "roster-and-score",
+        position: "below",
+        pulseCardLabels: true,
+        onDismiss: checkAndAdvance,
+      });
+    }, 300);
   }, [gameState, isFTUE]); // eslint-disable-line
 
   // ── REVEALING — no intro bubble, go straight to per-card reveals ─────
@@ -474,7 +479,7 @@ export function CoachLayer({
 
     const CARD_TEXTS: Record<string, string> = {
       "ftue-westbrook": "Brodie delivered — 39.5 FP on a $41 card, right on his line. Steady work from a reliable vet. 💪",
-      "ftue-cp3": "CP3 earned his dime badge, 11 assists. The same night he joined Stockton and Kidd as only players to have more than 12,000 assists. That's why they call him the point god.",
+      "ftue-cp3": "CP3 earned his Dime badge — 11 assists. He joined Stockton and Kidd at 12,000+ career assists. The Point God. 🧠",
       "ftue-klay": "See the ice on Klay? That tells you how cold he was. Only 4.6 FP on a $33 card. Underachieving games like this are going to come back and bite you. 🧊",
       "ftue-klove": "Love came in cold — 9.5 FP against a 15 FP average. Below the line of what we expected.",
       "ftue-patty": "Patty held his own — $9 card, right on his 10 FP average. Minimum salary, minimum drama. Not great but not terrible either.",
@@ -508,28 +513,25 @@ export function CoachLayer({
     }, 0);
   }, [lastRevealedCardId, isFTUE]); // eslint-disable-line
 
-  // After commentary typewriter finishes → "Darn it" → commentary → Booker flip hint → commentary
+  // After tier slam settles → "So close" → tap → Booker flip hint (spotlight booker+gauge)
   useEffect(() => {
     if (!ftueWinCelebrationActive) return;
     if (!ftueCommentaryDone) return;
-    shown.current.delete("darnit");
-    shown.current.delete("results_devin");
     const t = setTimeout(() => {
-      // Send darnit text to commentary
+      // Show "So close" commentary — spotlight booker+gauge+balance
       onCommentaryText?.(["So close it hurts — only 4.4 FP from the All-Star win. If only Love or Klay made one extra play we'd be celebrating an 8x score. 😤"]);
-      // Spotlight booker+gauge, dismiss advances to results_devin
       enqueue({
         key: "darnit",
         node: null as any,
-        anchor: "booker-and-gauge",
+        anchor: "booker-gauge-balance",
         position: "below",
         onDismiss: () => {
-          shown.current.delete("results_devin");
-          onCommentaryText?.(["Booker on the other hand really carried your team tonight. 89.4 FP is superman status. Flip his card to see what happened. 🔥"]);
+          // Booker flip hint — spotlight booker+gauge+balance, other cards dark
+          onCommentaryText?.(["Booker on the other hand really saved your bacon tonight, 89.4 FP is superman status. Flip his card to see what happened. 🔥"]);
           enqueue({
             key: "results_devin",
             node: null as any,
-            anchor: { cardId: "ftue-booker" },
+            anchor: "booker-gauge-balance",
             position: "below",
             onDismiss: () => {
               onCommentaryText?.(null);
@@ -542,34 +544,32 @@ export function CoachLayer({
     return () => clearTimeout(t);
   }, [ftueWinCelebrationActive, ftueCommentaryDone]); // eslint-disable-line
 
-  // ── After Booker flipped — two-part commentary: gamelogs then final replay ──
+  // ── After Booker flipped — spotlight Booker for stat explanation, then light up screen for final text ──
   useEffect(() => {
     if (!isFTUE || !ftueBookerFlipped) return;
     if (bookerFlipBubbleShown.current) return;
     bookerFlipBubbleShown.current = true;
     onBubbleActive?.(true);
     setTimeout(() => {
-      shown.current.delete("booker_gamelogs");
-      // Send both parts as tap-to-advance commentary
+      // Part 1: Spotlight Booker — explain the stat line + badges
       onCommentaryText?.([
-        "Look at that stat line — 62 points on January 26, 2024 against Indiana. That's 79.4 base FP. The God Mode badge added 10 bonus points on top. That's how you get to 89.4. Badges are real. 🔥",
-        "Every game log comes from true historical games. Replay lets you relive basketball history at your fingertips, in a fantasy format. Two more wins to get a piece of that bonus pool, lets run it back. 🏀",
+        "62 points against Indiana. 79.4 base FP + 10 from God Mode badge = 89.4. Badges are real. 🔥",
       ]);
-      // Spotlight Booker card while both parts show — dismiss after second part
       enqueue({
         key: "booker_gamelogs",
         node: null as any,
-        anchor: { cardId: "ftue-booker" },
+        anchor: "booker-gauge-balance",
         position: "below",
         onDismiss: () => {
-          onCommentaryText?.(null);
-          shown.current.delete("final_replay");
-          enqueue({
-            key: "final_replay",
-            node: null as any,
-            onDismiss: () => { onFtueAllDone?.(); setReplayReady(true); },
-            pulse: "deal",
-          });
+          // Part 2: Screen lights up — no spotlight, final text in commentary
+          onBubbleActive?.(false);
+          setCurrent(null);
+          // Set replay ready BEFORE setting commentary so stickyLastOverride is true on first render
+          onFtueAllDone?.();
+          onReplayReady?.();
+          onCommentaryText?.([
+            "Every game log comes from true historical games. Replay lets you relive basketball history at your fingertips. Hit Replay to start playing for real. 🏀",
+          ]);
         },
       });
     }, 800);
@@ -602,39 +602,9 @@ export function CoachLayer({
 
   if (!isFTUE) return null;
 
-  // ── Compute pill placement ────────────────────────────────────────────
+  // ── Spotlight padding ─────────────────────────────────────────────────
   const isCardAnchor = current?.anchor != null && typeof current.anchor === "object";
   const activePad = isCardAnchor ? PAD_CARD : PAD_OTHER;
-
-  // When bubble has an anchor, wait for spotlightRect before showing pill
-  // This prevents pill rendering at wrong position before spotlight resolves
-  const pillReady = current?.key === "darnit" || current?.anchor == null || spotlightRect != null;
-
-  const isDarnit = current?.key === "darnit";
-
-  const pillPlacement: React.CSSProperties = (() => {
-    if (current?.pillLayout === "page-center") {
-      return { top: "50vh", left: 16, right: 16, transform: "translateY(-50%)" };
-    }
-    if (current?.pillLayout === "below-score-row") {
-      const scoreEl = document.querySelector('[data-ftue-anchor="score-row"]');
-      if (scoreEl) {
-        const r = scoreEl.getBoundingClientRect();
-        return { top: r.bottom + 4 };
-      }
-    }
-    if (current?.pillLayout === "above-spotlight" && spotlightRect) {
-      return computePillPlacement(spotlightRect, current?.position ?? "above", activePad, 28);
-    }
-    if (current?.pillLayout === "viewport-center") {
-      return { top: "38%", left: 16, right: 16 };
-    }
-    if (spotlightRect) {
-      return computePillPlacement(spotlightRect, current?.position ?? "below", activePad);
-    }
-    if (current?.anchor == null) return { top: "38%" };
-    return { bottom: 110 };
-  })();
 
   return (
     <>
@@ -646,10 +616,6 @@ export function CoachLayer({
         @keyframes spotlightPulse {
           0%,100% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.92), 0 0 0 0 rgba(255,255,255,0) }
           50%      { box-shadow: 0 0 0 9999px rgba(0,0,0,0.92), 0 0 20px 6px rgba(255,255,255,0.22) }
-        }
-        @keyframes coachTextIn {
-          from { opacity: 0; transform: translateY(8px); }
-          to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes labelPulse {
           0%,100% { opacity: 1; }
@@ -705,71 +671,7 @@ export function CoachLayer({
               }}
             />
           )}
-
-          {/* Message pill — only render once spotlight is resolved, and only if node is non-null */}
-          {pillReady && current.node != null && (isDarnit ? (
-            <div
-              key={`text-${animKey}`}
-              style={{
-                position: "fixed",
-                inset: 0,
-                zIndex: 1002,
-                display: "grid",
-                placeItems: "center",
-                pointerEvents: "none",
-                padding: "0 16px",
-                textAlign: "center",
-              }}
-            >
-              <div style={{
-                display: "inline-block",
-                background: "rgba(10,12,20,0.93)",
-                border: "1px solid rgba(255,255,255,0.14)",
-                borderRadius: 16,
-                padding: "12px 20px",
-                maxWidth: 340,
-                color: "#FFFFFF",
-                fontSize: 15,
-                fontWeight: 600,
-                lineHeight: 1.5,
-                fontFamily: "system-ui, -apple-system, sans-serif",
-                backdropFilter: "blur(4px)",
-              }}>
-                {current.node}
-              </div>
-            </div>
-          ) : <div
-            key={`text-${animKey}`}
-            style={{
-              position: "fixed",
-              left: 16,
-              right: 16,
-              zIndex: 1002,
-              textAlign: "center",
-              pointerEvents: "none",
-              animation: current.pillLayout === "page-center" ? "none" : "coachTextIn 0.25s ease-out both",
-              maxHeight: "30vh",
-              overflow: "auto",
-              ...pillPlacement,
-            }}
-          >
-            <div style={{
-              display: "inline-block",
-              background: "rgba(10,12,20,0.93)",
-              border: "1px solid rgba(255,255,255,0.14)",
-              borderRadius: 16,
-              padding: "12px 20px",
-              maxWidth: 340,
-              color: "#FFFFFF",
-              fontSize: 15,
-              fontWeight: 600,
-              lineHeight: 1.5,
-              fontFamily: "system-ui, -apple-system, sans-serif",
-              backdropFilter: "blur(4px)",
-            }}>
-              {current.node}
-            </div>
-          </div>)}
+          {/* All text routes to TierGauge commentary via onCommentaryText — no pill rendered here */}
         </>
       )}
     </>

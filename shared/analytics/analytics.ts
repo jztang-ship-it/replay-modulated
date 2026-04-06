@@ -177,16 +177,29 @@ class Analytics {
   }
 
   // ── Destination 1: Vercel KV via your /api/analytics route ───────────────
+  private kvFailCount = 0;
+
   private async sendToKV(events: ReplayEvent[]): Promise<void> {
     try {
-      await fetch(this.config.endpoint, {
+      const res = await fetch(this.config.endpoint, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ events }), keepalive: true,
       });
+      if (res.ok) { this.kvFailCount = 0; return; }
+      // 4xx → permanent failure, don't requeue
+      if (res.status >= 400 && res.status < 500) {
+        if (this.config.debug) console.warn(`[Analytics] KV send got ${res.status}, dropping batch`);
+        return;
+      }
     } catch (e) {
       if (this.config.debug) console.warn('[Analytics] KV send failed:', e);
-      // Re-queue on failure so we don't lose events
-      if (this.queue.length < 100) this.queue.unshift(...events);
+    }
+    // Re-queue on network/5xx failure, but only retry once
+    this.kvFailCount++;
+    if (this.kvFailCount <= 1 && this.queue.length < 100) {
+      this.queue.unshift(...events);
+    } else if (this.config.debug) {
+      console.warn('[Analytics] KV max retries reached, dropping batch');
     }
   }
 

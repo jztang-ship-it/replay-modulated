@@ -105,6 +105,8 @@ type Props = {
   ftuePulseNearMiss?: boolean;
   /** FTUE: block the replay/deal button (before final bubble dismissed) */
   ftueReplayBlocked?: boolean;
+  /** FTUE: pulse the replay button to draw attention */
+  ftueReplayPulse?: boolean;
   /** FTUE: CoachLayer spotlight target for primary action (Deal / Draw / replay) */
   dataFtuePrimaryAnchor?: "deal" | "draw";
   /** Hide the built-in TierBar — use when an external TierGauge is shown */
@@ -1224,6 +1226,7 @@ export function GameBar({
   ftueHideSkip = false,
   ftuePulseNearMiss = false,
   ftueReplayBlocked = false,
+  ftueReplayPulse = false,
   dataFtuePrimaryAnchor,
   hideTierBar = false,
   tierGaugeSlot,
@@ -1363,7 +1366,7 @@ export function GameBar({
           transition: "filter 0.35s ease, opacity 0.35s ease",
           pointerEvents: showCelebContent ? "none" : "auto",
         }}>
-          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+          <div data-ftue-anchor="balance-row" style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
             {/* Balance — left */}
             <div ref={walletRef} style={{ flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
@@ -1423,7 +1426,9 @@ export function GameBar({
                 pointerEvents: (ftueHideSkip && gameState === "REVEALING" || ftueReplayBlocked) ? "none" as const : "auto" as const,
                 boxShadow: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
                 transition: "opacity 150ms ease", lineHeight: 1,
+                animation: ftueReplayPulse ? "ftueReplayPulse 1.2s ease-in-out infinite" : "none",
               }}>
+              {ftueReplayPulse && <style>{`@keyframes ftueReplayPulse { 0%,100% { box-shadow: 0 4px 14px rgba(0,0,0,0.3); } 50% { box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 6px rgba(58,160,255,0.5), 0 0 20px rgba(58,160,255,0.3); } }`}</style>}
               {actionLabel(gameState)}
             </button>
           </div>
