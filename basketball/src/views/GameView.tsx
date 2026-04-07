@@ -1003,7 +1003,6 @@ export default function GameView() {
       ceilingPct: ceilingPct ?? undefined,
       isFTUE,
       handCount,
-      handCount,
       leaderboardLine: pendingLbLineRef.current,
     });
     pendingLbLineRef.current = null;
