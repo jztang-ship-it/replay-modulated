@@ -93,6 +93,8 @@ type Props = {
     controlsHost: HTMLElement | null;
   };
   splitMultiplierRowVisible?: boolean;
+  /** Tap target for the trophy button to the right of the action button. */
+  onViewLeaderboard?: () => void;
 };
 
 import React from 'react';

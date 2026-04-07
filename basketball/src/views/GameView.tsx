@@ -34,6 +34,7 @@ import { audioDirector } from '@shared/utils/audioDirector';
 import { getPlayerUid, getNickname, setNickname } from '@shared/utils/playerIdentity';
 import { PostHandSheet } from '@shared/components/PostHandSheet';
 import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
+import { fetchLeaderboardContext } from '@shared/utils/leaderboardContext';
 import { ProfileScreen } from '@shared/components/ProfileScreen';
 
 // Test-wire only: allow passing glow props even if wrapper prop types lag behind.
@@ -450,6 +451,10 @@ export default function GameView() {
   const [showPostHandSheet, setShowPostHandSheet] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  // Bumped when fetchLeaderboardContext patches postRevealCopyRef.current.secondary,
+  // forcing the postRevealCopy useMemo to re-read the ref. Each new hand resets the
+  // ref to null and we kick off a fresh fetch.
+  const [lbContextNonce, setLbContextNonce] = useState(0);
 
   useEffect(() => {
     if (gameState === "IDLE" || gameState === "HOLD") setShowRawScore(false);
@@ -458,6 +463,9 @@ export default function GameView() {
   const [revealedSalary, setRevealedSalary] = useState(0);
   const rosterRef = useRef<PlayerCard[]>([]);
   const { isFTUE, completeFTUE } = useFTUE("basketball");
+  // Ref mirror so async closures always read the latest isFTUE without stale capture
+  const isFTUERef = useRef(isFTUE);
+  useEffect(() => { isFTUERef.current = isFTUE; }, [isFTUE]);
   const [legendaryCardName, setLegendaryCardName] = useState<string | undefined>();
   const [revealIndex, setRevealIndex] = useState(0);
   const [lastRevealedCardId, setLastRevealedCardId] = useState<string | null>(null);
@@ -782,24 +790,58 @@ export default function GameView() {
               });
               submitToLeaderboard("wins", 1);
               submitToLeaderboard("fp", totalFp);
-              submitToLeaderboard("hand_best", totalFp);
               submitToLeaderboard("hand_avg", totalFp, { handCount });
               submitToLeaderboard("money_won", payout);
-
-              // Update personal bests
-              const prevBest = parseFloat(localStorage.getItem("rm_best_hand") ?? "0");
-              if (totalFp > prevBest) {
-                localStorage.setItem("rm_best_hand", totalFp.toFixed(1));
-              }
-              const tierRanks = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "GOAT"];
-              const prevTierRank = tierRanks.indexOf(localStorage.getItem("rm_best_tier") ?? "BUST");
-              const newTierRank = tierRanks.indexOf(tier ?? "BUST");
-              if (newTierRank > prevTierRank) {
-                localStorage.setItem("rm_best_tier", tier ?? "BUST");
-              }
             } else {
               setStreak(0);
               localStorage.setItem("replaymod_streak", "0");
+            }
+
+            // hand_best + leaderboard context fire on every hand (wins AND busts).
+            // Players need to know where they stand even on losing hands.
+            submitToLeaderboard("hand_best", totalFp);
+
+            // Smart leaderboard awareness — fire-and-forget. After the board has
+            // had a chance to ingest the submit above, fetch context and patch the
+            // postRevealCopy secondary line for THIS hand only. Failures are silent.
+            const lbTier = tier ?? "BUST";
+            const lbBust = bust;
+            const lbFp = totalFp;
+            const lbUid = getPlayerUid() ?? "";
+            setTimeout(() => {
+              fetchLeaderboardContext({
+                myFp: lbFp,
+                winTier: lbTier,
+                isBust: lbBust,
+                myUid: lbUid,
+              }).then(line => {
+                if (!line) return;
+                // Patch the locked copy in place. The useMemo short-circuits on
+                // postRevealCopyRef.current, so we bump a nonce to force re-read.
+                if (postRevealCopyRef.current) {
+                  postRevealCopyRef.current = {
+                    primary: postRevealCopyRef.current.primary,
+                    secondary: line,
+                  };
+                } else {
+                  // Copy hasn't been built yet (spring not settled). Stash the
+                  // line on a ref so the useMemo can pick it up when it runs.
+                  pendingLbLineRef.current = line;
+                }
+                setLbContextNonce(n => n + 1);
+              }).catch(() => { /* silent */ });
+            }, 250);
+
+            // Update personal bests on every hand
+            const prevBest = parseFloat(localStorage.getItem("rm_best_hand") ?? "0");
+            if (totalFp > prevBest) {
+              localStorage.setItem("rm_best_hand", totalFp.toFixed(1));
+            }
+            const tierRanks = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "GOAT"];
+            const prevTierRank = tierRanks.indexOf(localStorage.getItem("rm_best_tier") ?? "BUST");
+            const newTierRank = tierRanks.indexOf(tier ?? "BUST");
+            if (newTierRank > prevTierRank) {
+              localStorage.setItem("rm_best_tier", tier ?? "BUST");
             }
           };
           const t = window.setTimeout(() => {
@@ -923,6 +965,9 @@ export default function GameView() {
   // Smart post-reveal copy — computed once when spring settles, then locked for the hand.
   // Uses a ref so the copy never changes mid-display from dependency churn.
   const postRevealCopyRef = useRef<ReturnType<typeof buildPostRevealCopy> | null>(null);
+  // Holds a leaderboard-context line that arrived BEFORE the postRevealCopy was first
+  // built (race: spring not yet settled). Consumed on first build, then cleared.
+  const pendingLbLineRef = useRef<string | null>(null);
   const postRevealCopy = useMemo(() => {
     // Once computed, lock it — never recompute until next hand
     if (postRevealCopyRef.current) return postRevealCopyRef.current;
@@ -959,10 +1004,12 @@ export default function GameView() {
       isFTUE,
       handCount,
       handCount,
+      leaderboardLine: pendingLbLineRef.current,
     });
+    pendingLbLineRef.current = null;
     postRevealCopyRef.current = copy;
     return copy;
-  }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct]); // eslint-disable-line
+  }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct, lbContextNonce]); // eslint-disable-line
 
   // Never show intermediate tiers during spring — only show final tier after spring settles
   const activeTierForDisplay = winTier ?? deriveTierFromFp(totalFp);
@@ -1034,6 +1081,7 @@ export default function GameView() {
       frozenBarFpRef.current = null;
       anchorFpCallCountRef.current = 0;
       postRevealCopyRef.current = null;
+      pendingLbLineRef.current = null;
       setStreakMilestone(null);
     }
   }, [gameState]);
@@ -1143,7 +1191,21 @@ export default function GameView() {
       setFtueHoldSpotlight(false);
       pendingCelebration.current = null;
       ftueLastHandFpRef.current = 0;
-      const ftueStillActive = isFTUE;
+      // Read FTUE state from localStorage directly — completeFTUE() writes synchronously
+      // before setIsFTUE(), so this avoids any React state/effect timing issues.
+      // Mirrors useFTUE.readFtueActive() logic for the ?ftue=1 URL override.
+      const ftueStillActive = (() => {
+        try {
+          const params = new URLSearchParams(window.location.search);
+          if (params.get("ftue") === "1") return true;
+          if (params.get("skip") === "1") return false;
+          if (localStorage.getItem("replaymod_ftue_basketball") === "1") return false;
+          if (localStorage.getItem("ftue_completed") === "true") return false;
+          return true;
+        } catch {
+          return true;
+        }
+      })();
       const res: any = ftueStillActive ? await dealFTUERoster() : await dealInitialRoster();
       const nextRoster = (res?.roster ?? res?.cards ?? []) as PlayerCard[];
       rosterRef.current = nextRoster;
@@ -1213,6 +1275,24 @@ export default function GameView() {
     }
 
     if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") {
+      // FTUE: tapping Replay completes the FTUE — write localStorage synchronously
+      // so the next deal routes to dealInitialRoster() instead of dealFTUERoster()
+      if (isFTUE) {
+        try {
+          localStorage.setItem("replaymod_ftue_basketball", "1");
+          localStorage.setItem("ftue_completed", "true");
+        } catch { /* ignore */ }
+        completeFTUE();
+        setFtueCommentaryOverride(null);
+        setFtueCommentaryDone(false);
+        setFtueWinCelebrationActive(false);
+        setFtueReplayReady(false);
+        setFtueBookerFlipped(false);
+        setFtueBookerPulse(false);
+        setFtueHoldSpotlight(false);
+        setFtueResultsDim(false);
+        ftueTierSlamPlayedRef.current = false;
+      }
       gameAnalytics.sessionEnd();
       resetReveal();
       resetAllOverlays();
@@ -1952,6 +2032,7 @@ export default function GameView() {
         dataFtuePrimaryAnchor={isFTUE ? (gameState === "HOLD" ? "draw" : "deal") : undefined}
         splitFooter={{ multipliersHost, controlsHost }}
         splitMultiplierRowVisible={isPreRevealFooter && !isFTUE}
+        onViewLeaderboard={() => setShowLeaderboard(true)}
       />
 
       {showPostHandSheet && !isFTUE && (() => {

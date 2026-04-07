@@ -140,23 +140,58 @@ function main() {
   }
 
   const rnd    = makeRng(42);
+  const CAP_MAX = 200;
+  const ROSTER_SIZE = 6;
+  const MIN_SALARY = 5; // assume floor for skip checks
   const allFps: number[] = [];
+  const allSalaries: number[] = [];
   let   totalBadgeBonus  = 0;
+  let   skippedHands     = 0;
 
   const start = Date.now();
 
   for (let i = 0; i < N; i++) {
     if (i > 0 && i % 2000 === 0) process.stdout.write(`  ${i.toLocaleString()}/${N.toLocaleString()}...\n`);
 
-    // Pick 6 unique players
-    const lineup: any[] = [];
-    const used = new Set<string>();
-    let attempts = 0;
-    while (lineup.length < 6 && attempts < 200) {
-      const p = playablePool[Math.floor(rnd() * playablePool.length)];
-      const key = String(p.basePlayerId ?? "");
-      if (!used.has(key)) { used.add(key); lineup.push(p); }
-      attempts++;
+    // Build a valid lineup respecting the $200 cap.
+    // Greedy: pick a random player; if adding them keeps the cap reachable, take them.
+    // Try up to 300 attempts; skip the hand if no valid lineup forms.
+    let lineup: any[] = [];
+    let lineupSalary = 0;
+    let buildAttempts = 0;
+    let built = false;
+
+    while (buildAttempts < 300) {
+      buildAttempts++;
+      lineup = [];
+      lineupSalary = 0;
+      const used = new Set<string>();
+      let pickAttempts = 0;
+      while (lineup.length < ROSTER_SIZE && pickAttempts < 500) {
+        pickAttempts++;
+        const p = playablePool[Math.floor(rnd() * playablePool.length)];
+        const key = String(p.basePlayerId ?? "");
+        if (used.has(key)) continue;
+        const sal = Number(p.salary ?? 0);
+        const slotsLeft = ROSTER_SIZE - lineup.length;
+        // Reject if adding this player makes it impossible to fill remaining slots within cap
+        if (lineupSalary + sal + (slotsLeft - 1) * MIN_SALARY > CAP_MAX) continue;
+        used.add(key);
+        lineup.push(p);
+        lineupSalary += sal;
+      }
+      if (lineup.length === ROSTER_SIZE && lineupSalary <= CAP_MAX) {
+        built = true;
+        break;
+      }
+    }
+
+    if (!built) {
+      skippedHands++;
+      if (skippedHands <= 5) {
+        console.warn(`  ⚠ Could not build valid lineup after 300 attempts (hand ${i + 1})`);
+      }
+      continue;
     }
 
     let handFp = 0;
@@ -173,17 +208,32 @@ function main() {
     }
 
     allFps.push(handFp);
+    allSalaries.push(lineupSalary);
   }
 
   const elapsed = ((Date.now() - start) / 1000).toFixed(2);
   allFps.sort((a, b) => a - b);
+  allSalaries.sort((a, b) => a - b);
 
-  const avg    = allFps.reduce((s, v) => s + v, 0) / N;
-  const avgBadge = totalBadgeBonus / N;
+  const handsBuilt = allFps.length;
+  const avg    = allFps.reduce((s, v) => s + v, 0) / handsBuilt;
+  const avgBadge = totalBadgeBonus / handsBuilt;
+  const avgSalary = allSalaries.reduce((s, v) => s + v, 0) / handsBuilt;
 
   console.log(`\n✅ Completed in ${elapsed}s`);
+  if (skippedHands > 0) {
+    console.log(`⚠ Skipped ${skippedHands.toLocaleString()} hands (no valid lineup within $${CAP_MAX} cap after 300 attempts)`);
+  }
+
+  console.log("\n=== SALARY STATS (per hand) ===");
+  console.log(`  Hands built:  ${handsBuilt.toLocaleString()} / ${N.toLocaleString()}`);
+  console.log(`  Avg salary:   $${avgSalary.toFixed(1)} / $${CAP_MAX}`);
+  console.log(`  Min:          $${allSalaries[0]}`);
+  console.log(`  Max:          $${allSalaries[allSalaries.length - 1]}`);
+  console.log(`  Cap violations: ${allSalaries.filter(s => s > CAP_MAX).length} (must be 0)`);
+
   console.log("\n=== FP DISTRIBUTION (Team FP per hand) ===");
-  console.log(`  Hands:   ${N.toLocaleString()}`);
+  console.log(`  Hands:   ${handsBuilt.toLocaleString()}`);
   console.log(`  Min:     ${allFps[0].toFixed(1)}`);
   console.log(`  P10:     ${pct(allFps, 10).toFixed(1)}`);
   console.log(`  P25:     ${pct(allFps, 25).toFixed(1)}`);
@@ -197,48 +247,72 @@ function main() {
   console.log(`  Avg badge bonus/hand: ${avgBadge.toFixed(2)}`);
 
   // ── Current threshold check ──────────────────────────────────────────
+  // Tiers (BUST is implicit — anything below ROOKIE)
   const CURRENT = [
-    { name: "BRONZE",  minFp: 115, payout: "1.5x" },
-    { name: "GOLD",    minFp: 132, payout: "2.5x" },
-    { name: "MVP",     minFp: 160, payout: "5x"   },
-    { name: "BONUS_POOL", minFp: 180, payout: "15x"  },
+    { name: "ROOKIE",   minFp: 133, payout: "0.5x" },
+    { name: "STARTER",  minFp: 160, payout: "3x"   },
+    { name: "ALL_STAR", minFp: 183, payout: "8x"   },
+    { name: "MVP",      minFp: 207, payout: "15x"  },
+    { name: "GOAT",     minFp: 235, payout: "50x"  },
   ];
   console.log("\n=== CURRENT THRESHOLDS — HIT RATES ===");
+  // BUST = anything below the lowest tier (ROOKIE)
+  const bustRate = allFps.filter(f => f < CURRENT[0].minFp).length / handsBuilt * 100;
+  const bustFlag = bustRate > 70 ? "⚠️  TOO PUNISHING"
+                 : bustRate < 35 ? "⚠️  TOO GENEROUS"
+                 : "✅ OK";
+  console.log(`  BUST       <${String(CURRENT[0].minFp).padStart(4)} FP  ${payout("0x")}  hit: ${bustRate.toFixed(1).padStart(5)}%  ${bustFlag}`);
   for (const tier of CURRENT) {
-    const rate = allFps.filter(f => f >= tier.minFp).length / N * 100;
-    const flag = rate > 60 ? "⚠️  WAY TOO EASY"
-               : rate > 35 ? "⚠️  TOO EASY"
-               : rate < 0.5 ? "❌ NEARLY IMPOSSIBLE"
-               : rate < 3 ? "⚠️  VERY RARE"
+    // "Hit rate" for a tier = lands in this tier exactly (>= this min, < next min)
+    const nextIdx = CURRENT.indexOf(tier) + 1;
+    const nextMin = nextIdx < CURRENT.length ? CURRENT[nextIdx].minFp : Infinity;
+    const inTier = allFps.filter(f => f >= tier.minFp && f < nextMin).length / handsBuilt * 100;
+    const cumRate = allFps.filter(f => f >= tier.minFp).length / handsBuilt * 100;
+    const flag = inTier > 60 ? "⚠️  WAY TOO EASY"
+               : inTier > 35 ? "⚠️  TOO EASY"
+               : cumRate < 0.2 ? "❌ NEARLY IMPOSSIBLE"
                : "✅ OK";
-    console.log(`  ${tier.name.padEnd(10)} ≥${String(tier.minFp).padStart(4)} FP  ${payout(tier.payout)}  hit: ${rate.toFixed(1).padStart(5)}%  ${flag}`);
+    console.log(`  ${tier.name.padEnd(10)} ≥${String(tier.minFp).padStart(4)} FP  ${payout(tier.payout)}  in tier: ${inTier.toFixed(1).padStart(5)}%  (cum: ${cumRate.toFixed(1).padStart(5)}%)  ${flag}`);
   }
 
   // ── Slot-machine targets ─────────────────────────────────────────────
-  // Goal: BRONZE ~30-35%, GOLD ~12-15%, MVP ~4-6%, BONUS_POOL ~1%
+  // Target distribution: BUST ~50%, ROOKIE ~25%, STARTER ~15%, ALL_STAR ~7%, MVP ~2.5%, GOAT ~0.5%
+  // Cumulative: ROOKIE+ 50%, STARTER+ 25%, ALL_STAR+ 10%, MVP+ 3%, GOAT+ 0.5%
   const targets = [
-    { name: "BRONZE",  targetPct: 32, payout: "1.5x" },
-    { name: "GOLD",    targetPct: 14, payout: "2.5x" },
-    { name: "MVP",     targetPct: 5,  payout: "5x"   },
-    { name: "BONUS_POOL", targetPct: 1,  payout: "15x"  },
+    { name: "ROOKIE",   cumPct: 50,  payout: "0.5x" },
+    { name: "STARTER",  cumPct: 25,  payout: "3x"   },
+    { name: "ALL_STAR", cumPct: 10,  payout: "8x"   },
+    { name: "MVP",      cumPct: 3,   payout: "15x"  },
+    { name: "GOAT",     cumPct: 0.5, payout: "50x"  },
   ];
 
   console.log("\n=== SUGGESTED THRESHOLDS (slot-machine feel) ===");
-  console.log("  ~32% BRONZE, ~14% GOLD, ~5% MVP, ~1% BONUS_POOL\n");
-  const suggested: number[] = [];
+  console.log("  Target: BUST ~50%, ROOKIE ~25%, STARTER ~15%, ALL_STAR ~7%, MVP ~2.5%, GOAT ~0.5%\n");
+  const suggested: Record<string, number> = {};
   for (const t of targets) {
-    const threshold = pct(allFps, 100 - t.targetPct);
-    const rounded   = Math.round(threshold / 5) * 5; // round to nearest 5
-    const actual    = allFps.filter(f => f >= rounded).length / N * 100;
-    suggested.push(rounded);
-    console.log(`  ${t.name.padEnd(10)} ≥${String(rounded).padStart(4)} FP  ${payout(t.payout)}  → ~${actual.toFixed(1)}% of hands`);
+    const threshold = pct(allFps, 100 - t.cumPct);
+    const rounded   = Math.round(threshold / 1); // round to nearest int
+    suggested[t.name] = rounded;
+  }
+  // Compute in-tier % for the suggested thresholds
+  const tierOrder = ["ROOKIE", "STARTER", "ALL_STAR", "MVP", "GOAT"];
+  const suggBust = allFps.filter(f => f < suggested["ROOKIE"]).length / handsBuilt * 100;
+  console.log(`  BUST       <${String(suggested["ROOKIE"]).padStart(4)} FP  ${payout("0x")}     → ~${suggBust.toFixed(1)}% in tier`);
+  for (let i = 0; i < tierOrder.length; i++) {
+    const name = tierOrder[i];
+    const minFp = suggested[name];
+    const nextMin = i + 1 < tierOrder.length ? suggested[tierOrder[i + 1]] : Infinity;
+    const inTier = allFps.filter(f => f >= minFp && f < nextMin).length / handsBuilt * 100;
+    const tier = targets.find(t => t.name === name)!;
+    console.log(`  ${name.padEnd(10)} ≥${String(minFp).padStart(4)} FP  ${payout(tier.payout)}  → ~${inTier.toFixed(1)}% in tier`);
   }
 
   console.log("\n=== COPY THIS INTO payoutLogic.ts + GameBar.tsx ===");
-  console.log(`  BRONZE:  minFp: ${suggested[0]}`);
-  console.log(`  GOLD:    minFp: ${suggested[1]}`);
-  console.log(`  MVP:     minFp: ${suggested[2]}`);
-  console.log(`  BONUS_POOL: minFp: ${suggested[3]}`);
+  console.log(`  ROOKIE:   minFp: ${suggested["ROOKIE"]}`);
+  console.log(`  STARTER:  minFp: ${suggested["STARTER"]}`);
+  console.log(`  ALL_STAR: minFp: ${suggested["ALL_STAR"]}`);
+  console.log(`  MVP:      minFp: ${suggested["MVP"]}`);
+  console.log(`  GOAT:     minFp: ${suggested["GOAT"]}`);
 
   if (verbose) {
     console.log("\n=== SAMPLE TOP 10 HANDS ===");

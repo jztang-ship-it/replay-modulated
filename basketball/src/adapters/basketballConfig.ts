@@ -111,7 +111,7 @@ export const BasketballSportConfig = {
       { tier: 'ROOKIE',   minFP: 133, multiplier: 0.5  },
       { tier: 'STARTER',  minFP: 160, multiplier: 2.5  },
       { tier: 'ALL_STAR', minFP: 183, multiplier: 7.0  },
-      { tier: 'MVP',      minFP: 207, multiplier: 15.0 },
+      { tier: 'MVP',      minFP: 215, multiplier: 15.0 },
       { tier: 'GOAT',  minFP: 235, multiplier: 50 },
     ],
   },

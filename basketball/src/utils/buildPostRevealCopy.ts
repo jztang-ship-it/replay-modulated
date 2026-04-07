@@ -36,6 +36,13 @@ export interface PostRevealCopyInput {
   ceilingPct?: number;
   handCount: number;
   isFTUE?: boolean;
+  /**
+   * Optional override produced by the leaderboard awareness system
+   * (see shared/utils/leaderboardContext.ts). When non-null, replaces the
+   * secondary line for this hand only. Primary is never overridden — the
+   * score/tier voice stays untouched.
+   */
+  leaderboardLine?: string | null;
 }
 
 export interface PostRevealCopy { primary: string; secondary?: string; }
@@ -45,7 +52,13 @@ export function buildPostRevealCopy(
   input: PostRevealCopyInput,
   pack: SportCopyPack = basketballPack,
 ): PostRevealCopy {
-  return pack.build(input);
+  const copy = pack.build(input);
+  // Leaderboard awareness override — replaces secondary only.
+  // Primary (score/tier flavor) stays the voice of the hand.
+  if (input.leaderboardLine && input.leaderboardLine.length > 0) {
+    return { primary: copy.primary, secondary: input.leaderboardLine };
+  }
+  return copy;
 }
 
 // ─── Utilities ────────────────────────────────────────────────────────────────

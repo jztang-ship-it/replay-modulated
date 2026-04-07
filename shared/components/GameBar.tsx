@@ -120,6 +120,12 @@ type Props = {
   };
   /** When false with splitFooter, multiplier buttons are not portaled (host can stay mounted). Default true. */
   splitMultiplierRowVisible?: boolean;
+  /**
+   * Tap target for the leaderboard trophy button rendered to the right of the
+   * primary action button (DEAL / DRAW / REPLAY). Hidden during FTUE
+   * (gated on ftueHideSkip).
+   */
+  onViewLeaderboard?: () => void;
 };
 
 const MULTIPLIERS = [1, 3, 5, 10];
@@ -1232,7 +1238,43 @@ export function GameBar({
   tierGaugeSlot,
   splitFooter,
   splitMultiplierRowVisible = true,
+  onViewLeaderboard,
 }: Props) {
+  // Trophy button: 36×36 circular, sits absolutely positioned right of the
+  // action button row's container. Border + icon flip to gold once the user
+  // has landed on the daily leaderboard (rm_on_board_today === "1"). Hidden
+  // during FTUE (gated on ftueHideSkip).
+  const trophyOnBoard = (() => {
+    if (typeof window === "undefined") return false;
+    try { return localStorage.getItem("rm_on_board_today") === "1"; } catch { return false; }
+  })();
+  const TrophyButton = onViewLeaderboard && !ftueHideSkip ? (
+    <button
+      type="button"
+      aria-label="View leaderboard"
+      onClick={onViewLeaderboard}
+      style={{
+        position: "absolute",
+        right: 0,
+        top: "50%",
+        transform: "translateY(-50%)",
+        width: 36,
+        height: 36,
+        borderRadius: "50%",
+        background: "transparent",
+        border: `1px solid ${trophyOnBoard ? "rgba(255,215,0,0.3)" : "rgba(255,255,255,0.1)"}`,
+        color: trophyOnBoard ? "#FFD700" : "rgba(255,255,255,0.3)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        fontSize: 16,
+        padding: 0,
+      }}
+    >
+      🏆
+    </button>
+  ) : null;
   const betLocked = gameState === "DEALING" || gameState === "DRAWING" || gameState === "REVEALING";
   const splitRequested = splitFooter != null;
   const split =
@@ -1408,7 +1450,7 @@ export function GameBar({
             }}>i</button>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "center", paddingTop: 0 }}>
+          <div style={{ display: "flex", justifyContent: "center", paddingTop: 0, position: "relative" }}>
             <button
               onClick={onAction}
               disabled={isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked}
@@ -1431,6 +1473,7 @@ export function GameBar({
               {ftueReplayPulse && <style>{`@keyframes ftueReplayPulse { 0%,100% { box-shadow: 0 4px 14px rgba(0,0,0,0.3); } 50% { box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 6px rgba(58,160,255,0.5), 0 0 20px rgba(58,160,255,0.3); } }`}</style>}
               {actionLabel(gameState)}
             </button>
+            {TrophyButton}
           </div>
         </div>
 
@@ -1590,7 +1633,7 @@ export function GameBar({
               }}>i</button>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "center", paddingTop: 0 }}>
+            <div style={{ display: "flex", justifyContent: "center", paddingTop: 0, position: "relative" }}>
               <button
                 onClick={onAction}
                 disabled={isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked}
@@ -1611,6 +1654,7 @@ export function GameBar({
                 }}>
                 {actionLabel(gameState)}
               </button>
+              {TrophyButton}
             </div>
           </div>
 

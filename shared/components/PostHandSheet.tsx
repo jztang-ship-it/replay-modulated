@@ -21,8 +21,6 @@ function formatTierLabel(tier: string): string {
   return tier.charAt(0) + tier.slice(1).toLowerCase();
 }
 
-type Entry = { uid: string; nickname: string; score: number };
-
 interface Props {
   totalFp: number;
   winTier: string;
@@ -39,36 +37,14 @@ export function PostHandSheet({
   totalFp, winTier, isBust, nearMissGap, nearMissNextTier,
   winPayout, currentUid, onPlayAgain, onViewLeaderboard,
 }: Props) {
-  const [rank, setRank] = useState<number | null>(null);
-  const [gapToTop10, setGapToTop10] = useState<number | null>(null);
   const [challenge, setChallenge] = useState<{ nickname: string; score: number; metric: string } | null>(null);
-  const [prevRank, setPrevRank] = useState<number | null>(null);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem("rm_challenge_target");
       if (raw) setChallenge(JSON.parse(raw));
     } catch { }
-
-    const prev = localStorage.getItem("rm_last_rank");
-    if (prev) setPrevRank(parseInt(prev, 10));
-
-    fetch(`/api/leaderboard?metric=hand_best&scope=daily&limit=50`)
-      .then(r => r.json())
-      .then(data => {
-        const entries: Entry[] = data.entries ?? [];
-        const myIdx = entries.findIndex(e => e.uid === currentUid);
-        if (myIdx >= 0) {
-          const r = myIdx + 1;
-          setRank(r);
-          localStorage.setItem("rm_last_rank", String(r));
-          if (r > 10 && entries.length >= 10) {
-            setGapToTop10(entries[9].score - totalFp);
-          }
-        }
-      })
-      .catch(() => { });
-  }, [currentUid, totalFp]);
+  }, []);
 
   function clearChallenge() {
     localStorage.removeItem("rm_challenge_target");
@@ -125,35 +101,14 @@ export function PostHandSheet({
           </span>
         </div>
 
-        {/* Row 2 — Rank line */}
-        {rank != null && rank <= 50 ? (
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
-            #{rank} on today's leaderboard
-            {prevRank != null && rank < prevRank && (
-              <span style={{ color: "#22C55E" }}> &uarr; from #{prevRank}</span>
-            )}
-          </div>
-        ) : (
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
-            Play more to get on the board
-          </div>
-        )}
-
-        {/* Row 3 — Gap to top 10 */}
-        {rank != null && rank > 10 && gapToTop10 != null && gapToTop10 > 0 && (
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>
-            {gapToTop10.toFixed(1)} FP from the top 10
-          </div>
-        )}
-
-        {/* Row 4 — Near miss hook */}
+        {/* Near-miss hook — primary retention line, the most important thing on this sheet */}
         {nearMissGap > 0 && nearMissGap <= 8 && nearMissNextTier && (
-          <div style={{ fontSize: 15, fontWeight: 700, color: "#FFB14A" }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: "#FFB14A" }}>
             {nearMissGap.toFixed(1)} FP from {formatTierLabel(nearMissNextTier)}. One hand.
           </div>
         )}
 
-        {/* Row 5 — Challenge target */}
+        {/* Challenge target */}
         {challenge && (
           <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
             <span>Chasing {challenge.nickname}: {formatChallengeScore(challenge)}</span>
@@ -161,29 +116,28 @@ export function PostHandSheet({
           </div>
         )}
 
-        {/* Row 6 — Buttons */}
-        <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-          <button
-            onClick={onPlayAgain}
-            style={{
-              flex: 1, background: "#EAF0FF", color: "#070A12",
-              fontWeight: 800, fontSize: 14, padding: "12px 0",
-              borderRadius: 10, border: "none", cursor: "pointer",
-            }}
-          >
-            PLAY AGAIN
-          </button>
-          <button
-            onClick={onViewLeaderboard}
-            style={{
-              flex: 1, background: "rgba(255,255,255,0.07)", color: "#EAF0FF",
-              fontWeight: 700, fontSize: 14, padding: "12px 0",
-              borderRadius: 10, border: "1px solid rgba(255,255,255,0.15)",
-              cursor: "pointer",
-            }}
-          >
-            LEADERBOARD
-          </button>
+        {/* Primary CTA — single full-width PLAY AGAIN button */}
+        <button
+          onClick={onPlayAgain}
+          style={{
+            width: "100%", background: "#EAF0FF", color: "#070A12",
+            fontWeight: 800, fontSize: 14, padding: "12px 0",
+            borderRadius: 10, border: "none", cursor: "pointer",
+            marginTop: 4,
+          }}
+        >
+          PLAY AGAIN
+        </button>
+
+        {/* Subtle leaderboard link — accessible but never competing with PLAY AGAIN */}
+        <div
+          onClick={onViewLeaderboard}
+          style={{
+            fontSize: 12, color: "rgba(255,255,255,0.25)",
+            textAlign: "center", cursor: "pointer", paddingTop: 8,
+          }}
+        >
+          🏆 View Leaderboard
         </div>
       </div>
     </>

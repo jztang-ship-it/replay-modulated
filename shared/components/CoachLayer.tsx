@@ -411,7 +411,7 @@ export function CoachLayer({
   useEffect(() => {
     if (!isFTUE || gameState !== "IDLE") return;
     if (prevState.current === "IDLE") return;
-    prevState.current = "IDLE";
+    prevState.current = null; // reset so HOLD/REVEALING gates re-arm for next hand
     queue.current = [];
     shown.current.clear();
     revealIntroShown.current = false;
@@ -429,7 +429,7 @@ export function CoachLayer({
   // ── HOLD — roster+score overview first, then Booker spotlight ────────
   useEffect(() => {
     if (!isFTUE || gameState !== "HOLD") return;
-    if (prevState.current === "HOLD") return;
+    if (prevState.current === "HOLD") return; // already ran this hand
     prevState.current = "HOLD";
 
     // Step 1: "Six players..." — no spotlight, full screen visible
