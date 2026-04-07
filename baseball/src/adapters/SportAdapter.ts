@@ -55,10 +55,6 @@ export class SportAdapter {
     return valid.includes(s as any) ? (s as typeof valid[number]) : "WHITE";
   }
 
-  get maxPitchersTotal(): number {
-    return this.config.maxPitchersTotal;
-  }
-
   get statCategories(): BaseballStatCategory[] {
     return [...this.config.statCategories];
   }
@@ -73,14 +69,12 @@ export class SportAdapter {
    * - All other players -> `BAT`
    */
   /**
-   * Normalize a raw roster slot into one of: `P`, `BAT`, `FLEX`.
+   * Normalize a raw roster slot into one of: `P`, `BAT`.
    */
   normalizeRosterSlot(raw: unknown): BaseballSlot {
     const s = String(raw ?? "").trim().toUpperCase();
     if (s === "P") return "P";
-    if (s === "BAT") return "BAT";
-    if (s === "FLEX") return "FLEX";
-    return "FLEX";
+    return "BAT";
   }
 
   /**
@@ -124,21 +118,16 @@ export class SportAdapter {
    * Check whether a player role can fit a given roster slot.
    * - `P` requires role `P`
    * - `BAT` requires role `BAT`
-   * - `FLEX` accepts either (subject to max pitchers total elsewhere)
    */
   canPlayerFitRosterSlot(playerRawPosition: unknown, rosterSlotRaw: unknown): boolean {
     const rosterSlot = this.normalizeRosterSlot(rosterSlotRaw);
     const role = this.normalizeRawPlayerPositionToPOrBAT(playerRawPosition);
-
-    if (rosterSlot === "P") return role === "P";
-    if (rosterSlot === "BAT") return role === "BAT";
-    // FLEX
-    return (this.config.flexAllows as ReadonlyArray<PlayerRole>).includes(role);
+    return rosterSlot === role;
   }
 
   isValidRosterSlot(rawSlot: unknown): boolean {
     const s = String(rawSlot ?? "").trim().toUpperCase();
-    return s === "P" || s === "BAT" || s === "FLEX";
+    return s === "P" || s === "BAT";
   }
 
   /**
@@ -173,7 +162,7 @@ export class SportAdapter {
       const canFit = requiredSlot ? this.canPlayerFitRosterSlot(card.position, requiredSlot) : false;
       return {
         slotIndex,
-        requiredSlot: requiredSlot ?? "FLEX",
+        requiredSlot: requiredSlot ?? "BAT",
         role,
         canFit,
         salary: Number(card.salary ?? 0),
@@ -190,11 +179,7 @@ export class SportAdapter {
       }
     }
 
-    // Max pitchers total (across P + any FLEX assigned to P).
     const pitcherCount = assigned.reduce((s, a) => s + (a.role === "P" ? 1 : 0), 0);
-    if (pitcherCount > this.maxPitchersTotal) {
-      errors.push(`Too many pitchers: ${pitcherCount} > ${this.maxPitchersTotal}.`);
-    }
 
     return {
       valid: errors.length === 0,

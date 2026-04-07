@@ -1,11 +1,11 @@
 /**
  * baseballConfig.ts — Layer 2 (MLB-specific)
  *
- * Roster: 1 P + 4 BAT + 1 FLEX (P or BAT), max 2 pitchers total.
+ * Roster: 1 P + 4 BAT.
  * Salary cap: $180.
  *
  * FP weights (per stat unit):
- *   Hitters: H=10, 2B=5, 3B=10, HR=20, R=8, RBI=8, BB=6, SB=12
+ *   Hitters: H=12, 2B=5, 3B=10, HR=20, R=9, RBI=9, BB=6, SB=12
  *   Pitchers: IP=3, K=4, ER=-3, W=6, QS=8
  *
  * Tier thresholds tuned for baseball FP distribution.
@@ -14,7 +14,7 @@
  */
 
 export type BaseballSportKey = "baseball";
-export type BaseballSlot = "P" | "BAT" | "FLEX";
+export type BaseballSlot = "P" | "BAT";
 export type BaseballTier = "ROOKIE" | "STARTER" | "ALL_STAR" | "MVP" | "GOAT";
 
 export type BaseballStatCategory =
@@ -45,10 +45,8 @@ export const BaseballSportConfig = {
   sportLabel: "MLB",
 
   // ── Roster / slots ──────────────────────────────────────────────────────
-  rosterSize: 6,
-  rosterSlots: ["P", "BAT", "BAT", "BAT", "BAT", "FLEX"] as const satisfies Readonly<BaseballSlot[]>,
-  flexAllows: ["BAT", "P"] as const satisfies Readonly<Array<"BAT" | "P">>,
-  maxPitchersTotal: 2,
+  rosterSize: 5,
+  rosterSlots: ["P", "BAT", "BAT", "BAT", "BAT"] as const satisfies Readonly<BaseballSlot[]>,
   salaryCap: 180,
 
   // ── Positions ───────────────────────────────────────────────────────────
@@ -89,8 +87,8 @@ export const BaseballSportConfig = {
 
   // ── FP weights ──────────────────────────────────────────────────────────
   projectionWeights: {
-    h: 10, doubles: 5, triples: 10, hr: 20,
-    r: 8,  rbi: 8,    bb: 6,       sb: 12,
+    h: 12, doubles: 5, triples: 10, hr: 20,
+    r: 9,  rbi: 9,    bb: 6,       sb: 12,
     ip: 3, k: 4,      er: -3,      w: 6, qs: 8,
   } as BaseballProjectionWeights,
 
