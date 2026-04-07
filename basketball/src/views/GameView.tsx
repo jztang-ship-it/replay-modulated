@@ -1200,7 +1200,6 @@ export default function GameView() {
           if (params.get("ftue") === "1") return true;
           if (params.get("skip") === "1") return false;
           if (localStorage.getItem("replaymod_ftue_basketball") === "1") return false;
-          if (localStorage.getItem("ftue_completed") === "true") return false;
           return true;
         } catch {
           return true;
@@ -1280,7 +1279,6 @@ export default function GameView() {
       if (isFTUE) {
         try {
           localStorage.setItem("replaymod_ftue_basketball", "1");
-          localStorage.setItem("ftue_completed", "true");
         } catch { /* ignore */ }
         completeFTUE();
         setFtueCommentaryOverride(null);
