@@ -170,11 +170,11 @@ function createPlaceholders(): PlayerCard[] {
 }
 
 const GAUGE_THRESHOLDS = [
-  { tier: "ROOKIE",   minFP: 155 },
-  { tier: "STARTER",  minFP: 195 },
-  { tier: "ALL_STAR", minFP: 235 },
-  { tier: "MVP",      minFP: 275 },
-  { tier: "GOAT",     minFP: 315 },
+  { tier: "ROOKIE",   minFP: 102 },
+  { tier: "STARTER",  minFP: 128 },
+  { tier: "ALL_STAR", minFP: 150 },
+  { tier: "MVP",      minFP: 171 },
+  { tier: "GOAT",     minFP: 209 },
 ];
 const NEAR_MISS_FP = 5;
 
@@ -798,7 +798,9 @@ export default function GameView() {
           };
           const t = window.setTimeout(() => {
             setGameState("WIN_CELEBRATION");
-            setTimeout(() => setShowPostHandSheet(true), 2000);
+            // PostHandSheet overlay disabled for baseball — old design, blocks play.
+            // Trophy button on GameBar opens LeaderboardScreen instead.
+            // setTimeout(() => setShowPostHandSheet(true), 2000);
           }, 1200);
           springTimersRef.current.push(t);
         }
@@ -1909,6 +1911,7 @@ export default function GameView() {
         dataFtuePrimaryAnchor={isFTUE ? (gameState === "HOLD" ? "draw" : "deal") : undefined}
         splitFooter={{ multipliersHost, controlsHost }}
         splitMultiplierRowVisible={isPreRevealFooter && !isFTUE}
+        onViewLeaderboard={() => setShowLeaderboard(true)}
       />
 
       {showPostHandSheet && !isFTUE && (() => {

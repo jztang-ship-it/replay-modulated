@@ -1,9 +1,11 @@
 /**
  * baseball/src/utils/payoutLogic.ts
- * Thresholds tuned for baseball FP distribution.
- * 6-card hand typical range: 150–400 FP, median ~230 FP.
- * Targets: ~50% BUST, ~25% ROOKIE, ~13% STARTER, ~7% ALL_STAR, ~3% MVP, ~1% GOAT
- * MUST stay in sync with TierGauge GAUGE_THRESHOLDS in GameView.tsx.
+ * Thresholds tuned via scripts/simulate.mjs for the 5-card baseball roster
+ * (1P + 4BAT). Blended bust rate 45.1% at default archetype weights.
+ * MUST stay in sync with:
+ *   - baseball/src/adapters/baseballConfig.ts winCondition.thresholds
+ *   - baseball/src/views/GameView.tsx GAUGE_THRESHOLDS
+ *   - baseball/src/components/GameBar.tsx WIN_TIERS / LEGEND.payoutRows
  */
 import {
   calculateWinTier as _calculateWinTier,
@@ -15,12 +17,12 @@ export type { WinTierKey };
 export type WinTier = WinTierKey;
 
 export const BASEBALL_WIN_TIERS: WinTierMap = {
-  GOAT:     { minFp: 315, multiplier: 50  },  // ~1%  — legendary hand
-  MVP:      { minFp: 275, multiplier: 15  },  // ~3%
-  ALL_STAR: { minFp: 235, multiplier: 8   },  // ~7%
-  STARTER:  { minFp: 195, multiplier: 3   },  // ~13%
-  ROOKIE:   { minFp: 155, multiplier: 0.5 },  // ~25% — consolation
-  BUST:     { minFp: 0,   multiplier: 0   },  // ~50%
+  GOAT:     { minFp: 209, multiplier: 50  },  // ~2%  — legendary hand
+  MVP:      { minFp: 171, multiplier: 15  },  // ~5%
+  ALL_STAR: { minFp: 150, multiplier: 7   },  // ~8%
+  STARTER:  { minFp: 128, multiplier: 2.5 },  // ~15%
+  ROOKIE:   { minFp: 102, multiplier: 0.5 },  // ~25% — consolation
+  BUST:     { minFp: 0,   multiplier: 0   },  // ~45%
 };
 
 export function calculateWinTier(totalFp: number): WinTierKey {
