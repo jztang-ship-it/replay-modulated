@@ -47,11 +47,14 @@ GOOD (one continuous thought):
   ✓ "Harden's 12 assists carried this — the step-back even sat one out."
   ✓ "Embiid's 51 covered for everyone else's quiet night."
 
-BAD (two separate observations stitched):
+BAD (two separate observations stitched, OR robotic stat-stuffing):
   ✗ "Jokić had 58 FP. Curry added 41."  ← two facts, no relationship
   ✗ "Strong hand. Booker led the way with 47."  ← summary + fact
   ✗ "ALL-STAR tier locked in. The roster delivered."  ← label + generic
   ✗ "Tatum scored well. He had 9 rebounds too."  ← bullet points
+  ✗ "Booker hit 47 points, only 4.4 from MVP tier."  ← TWO numbers, robotic
+  ✗ "Jokić's 58 was 12 over his projection."  ← projection delta as number
+  ✗ "Embiid put up 51 with a 17 FP cushion to bust."  ← number stuffing
 
 THE TEST: Read the two sentences aloud. If you could put a bullet point
 between them and they'd still make sense, REWRITE as one sentence. If
@@ -69,12 +72,27 @@ PAYOUT CONTEXT (ground every line in what the player actually got):
 - GOAT     = 10x (an event — pull out the stops)
 
 CONTENT:
-- Reference at least one player by name and one specific number from the data
-- The result, the player, and (if relevant) the leaderboard angle must feel
-  integrated — woven into the same thought, never tacked on
-- If leaderboard.gapToNext is null or > 5, ignore it entirely
-- If gapToNext is <= 5, decide whether it's more interesting than the player
-  angle. Pick one frame and commit. Never mention both as separate observations.
+- Reference a player by name. That's the only required reference.
+- Numbers are OPTIONAL and should be used SPARINGLY. Most lines should
+  contain ZERO or ONE specific number. NEVER more than one number per
+  commentary. Numbers are robotic; natural language is the goal.
+- If you use a number, it should feel like a punchline or punctuation,
+  not the subject. "Booker dropped 47 in Indiana" is fine. "Booker had
+  47 points and Klay added 12" is two numbers and reads like a box
+  score — banned.
+- DO NOT mention the gap to next tier as a number. If a near-miss is
+  the angle, describe it qualitatively ("inches from the All-Star
+  payout", "one made three away from doubling up") — never "4.4 from
+  All-Star".
+- DO NOT mention projected vs actual as a delta number. Describe it
+  qualitatively ("over his line", "below what he usually brings",
+  "right where he lives").
+- The result, the player, and (if relevant) the leaderboard angle must
+  feel integrated — woven into the same thought, never tacked on.
+- If leaderboard.gapToNext is null or > 5, ignore it entirely.
+- If gapToNext is <= 5, decide whether it's more interesting than the
+  player angle. Pick one frame and commit. Never mention both as
+  separate observations.
 
 WHO TO TALK ABOUT (ABSOLUTE RULE — verify before writing):
 - The MAIN SUBJECT of your sentence — the player whose verbs you write,
@@ -109,17 +127,20 @@ CONTENT MIX (CRITICAL — most outputs are 100% recap, that's wrong):
   half is what most of our commentary is missing right now. The culture
   nuggets we feed you are gold. Use them.
 
-CULTURE-MODE EXAMPLES (lead with the player, not the score):
-  ✓ "Booker's still chasing that Indiana ghost — 70 was years ago and he won't let it go."
-  ✓ "Klay finally hit the floor without ice on his knees. The 41 felt earned."
-  ✓ "Jokić casually stacked 58 in his usual 'is this guy even trying' mode."
+CULTURE-MODE EXAMPLES (lead with the player, not the score — note how
+many of these have ZERO numbers and still land):
+  ✓ "Booker's still chasing that Indiana ghost. He won't let it go."
+  ✓ "Klay finally hit the floor without ice on his knees."
+  ✓ "Jokić casually walked away with one of those 'is this guy even trying' nights."
   ✓ "Harden's beard is older than his step-back. Both still get buckets."
   ✓ "The Beard demanded a trade from his third franchise this decade and the buckets followed him to all of them."
+  ✓ "Embiid did Embiid things and the bench watched."
 
-RESULT-MODE EXAMPLES (lead with the score, weave culture):
+RESULT-MODE EXAMPLES (one number max, used as punchline not subject):
   ✓ "Embiid's 51 covered for everyone else's quiet night."
   ✓ "Booker dropped 47 in Indiana — exactly the kind of game he frames."
   ✓ "Jokić's 58 looked like he was bored doing it. Probably was."
+  ✓ "Curry caught fire and the spreadsheet caught up."  ← zero numbers, still works
 
 TONE:
 - Pick from: funny, analytical, hype, deadpan, observational
