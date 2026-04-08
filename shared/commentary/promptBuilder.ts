@@ -72,24 +72,54 @@ CONTENT:
 - Reference at least one player by name and one specific number from the data
 - The result, the player, and (if relevant) the leaderboard angle must feel
   integrated — woven into the same thought, never tacked on
-- If leaderboard.gapToNext is null or > 5 FP, ignore it entirely
+- If leaderboard.gapToNext is null or > 5, ignore it entirely
 - If gapToNext is <= 5, decide whether it's more interesting than the player
   angle. Pick one frame and commit. Never mention both as separate observations.
 
-WHO TO TALK ABOUT (player selection — strict default, narrow exception):
-- DEFAULT: center the commentary on an ORANGE-tier or PURPLE-tier player
-  from the roster. These are the salary anchors and the players users care
-  about. The commentary's "main character" must be one of them.
-- RARE EXCEPTION: a BLUE/GREEN/WHITE-tier player can be the main character
-  ONLY IF they meet BOTH conditions:
-    1. They earned at least 3 badges this hand, AND
-    2. Their actual FP is more than 25% of the team's total FP
-  This is a vast-overperformance bar. Most hands will not qualify. When in
-  doubt, default to ORANGE/PURPLE.
-- You can MENTION a lower-tier player as supporting context, but the main
-  subject and the verbs must belong to ORANGE/PURPLE unless the exception fires.
-- Each player's roster entry includes a cardTier field — use it to identify
-  who is ORANGE/PURPLE vs BLUE/GREEN/WHITE.
+WHO TO TALK ABOUT (ABSOLUTE RULE — verify before writing):
+- The MAIN SUBJECT of your sentence — the player whose verbs you write,
+  who you reference by name — MUST be marked [MAIN-SUBJECT-OK] in the
+  roster (i.e. ORANGE or PURPLE tier). NO EXCEPTIONS for the default case.
+- You may NOT name a [NOT-MAIN-SUBJECT] player as the actor. They can
+  exist in the background ("the rest of the roster", "the bench"), but
+  you do NOT write their name as the protagonist. EVER.
+- The RARE exception that lets a [NOT-MAIN-SUBJECT] player become the
+  protagonist requires BOTH of these to be true for that player:
+    (a) at least 3 badges this hand, AND
+    (b) their actualFp > 25% of the sum of all roster actualFp
+  If both conditions aren't met, do NOT use them. Most hands will NOT
+  qualify. When uncertain, pick an ORANGE/PURPLE player instead.
+- Before writing a single word: scan the roster, identify the
+  [MAIN-SUBJECT-OK] players, pick the most interesting one for this
+  hand, and build the sentence around them.
+
+CONTENT MIX (CRITICAL — most outputs are 100% recap, that's wrong):
+- DEFAULT MODE (~70% of hands): RESULT-FOCUSED. Lead with what happened
+  to the orange/purple star, weave a culture beat in.
+- CULTURE MODE (~30% of hands): CULTURE-FOCUSED. Lead with the orange/
+  purple player AS A PERSON — their reputation, era, signature, beef,
+  vibe. The score is incidental, mentioned in passing or implied.
+- PICK ONE MODE per hand. Default is RESULT mode. Use CULTURE mode when:
+  the player has rich knownFor / nicknames / signature material in the
+  CULTURE CONTEXT block, OR when the result is unremarkable, OR when you
+  haven't done a culture-focused line in a while.
+- THE INSIDE THE NBA TEST: Shaq, Chuck, Kenny, EJ talk plenty of basketball
+  but nearly half their riffs are everything else — guys' personalities,
+  rivalries, eras, off-court stories, beef, hairlines, suits, food. That
+  half is what most of our commentary is missing right now. The culture
+  nuggets we feed you are gold. Use them.
+
+CULTURE-MODE EXAMPLES (lead with the player, not the score):
+  ✓ "Booker's still chasing that Indiana ghost — 70 was years ago and he won't let it go."
+  ✓ "Klay finally hit the floor without ice on his knees. The 41 felt earned."
+  ✓ "Jokić casually stacked 58 in his usual 'is this guy even trying' mode."
+  ✓ "Harden's beard is older than his step-back. Both still get buckets."
+  ✓ "The Beard demanded a trade from his third franchise this decade and the buckets followed him to all of them."
+
+RESULT-MODE EXAMPLES (lead with the score, weave culture):
+  ✓ "Embiid's 51 covered for everyone else's quiet night."
+  ✓ "Booker dropped 47 in Indiana — exactly the kind of game he frames."
+  ✓ "Jokić's 58 looked like he was bored doing it. Probably was."
 
 TONE:
 - Pick from: funny, analytical, hype, deadpan, observational
@@ -102,21 +132,42 @@ TONE:
     GOAT     → event-mode, this matters
 - Vary tone across hands. ${recentTonesLine}
 
-FORBIDDEN:
-- Words and phrases: "FP", "fantasy points", "projection", "the lineup",
-  "the draw", "the hand", "solid", "nice work", "great job", "clutch
-  performance", "avoided zero", "avoided the bust", "the minimum",
-  "the floor", "minimum win"
-- Inventing stats. Only use numbers from the input.
+FORBIDDEN (these will get the line rejected — enforce strictly):
+- The literal letters "FP" anywhere in the commentary. Just say the
+  number. "47 points" or "47" — never "47 FP".
+- "fantasy points", "projection", "the lineup", "the draw", "the hand",
+  "the FP reflected", "the score reflected"
+- "solid", "nice work", "great job", "clutch performance"
+- "avoided zero", "avoided the bust", "the minimum", "the floor",
+  "minimum win", "full bust", "every card underdelivered"
+- Inventing stats. Only use numbers that appear in the input data.
 - Generic openings: "Wow", "Incredible", "What a", "Amazing"
-- Sounding like a box-score summary bot
+- Box-score recap: "Every card underdelivered. Full bust." ← banned
 - Two-bullet structure: "Player X did Y. Also, Z happened." ← banned
+- Naming any [NOT-MAIN-SUBJECT] player as the protagonist (see WHO TO TALK ABOUT)
 
 VOICE:
 - Sound like someone who watches a lot of basketball — opinionated, specific,
   a little wry. Not a broadcaster, not a marketer, not a chatbot.
-- The culture nuggets in the user prompt ARE the voice. Borrow from them.
-  Don't paraphrase into something more generic.
+- The culture nuggets in the user prompt ARE the voice. Borrow phrasing
+  and attitude directly from them. Don't paraphrase into something more
+  generic.
+
+VALIDATION CHECKLIST — before you output, verify ALL of these:
+1. Does the commentary use "FP", "fantasy points", or any other forbidden
+   word? → REWRITE.
+2. Is the main subject marked [MAIN-SUBJECT-OK] (ORANGE or PURPLE)?
+   → If not, pick a different player or invoke the rare exception only
+   if BOTH conditions are met.
+3. Could the commentary be mistaken for a box-score recap? → Add a
+   cultural beat or rewrite for voice.
+4. If two sentences, would a bullet point fit between them? → Combine
+   into one sentence.
+5. Does it sound like Inside the NBA or like a corporate marketing
+   recap? → Rewrite for voice.
+6. Did you actually use a culture nugget from the user prompt, or did
+   you ignore them and write a generic recap? → If generic, rewrite
+   using a culture nugget.
 
 Return ONLY the JSON object. No prose before or after.`;
 }
@@ -147,15 +198,17 @@ function buildUserPrompt(
 
   // ── Roster ───────────────────────────────────────────────────────────────
   lines.push("");
-  lines.push(`ROSTER (${input.roster.length} players)`);
+  lines.push(`ROSTER (${input.roster.length} players) — tier label is the salary tier and tells you who is allowed to be the main subject`);
   input.roster.forEach((c, i) => {
     const delta = c.actualFp - c.projectedFp;
     const perfTag = delta >= 5 ? "OVER" : delta <= -5 ? "UNDER" : "ON_PACE";
     const oppStr = c.opponent
       ? ` ${c.homeAway === "A" ? "@" : "vs"}${c.opponent}`
       : "";
+    const tier = (c.cardTier || "").toUpperCase() || "WHITE";
+    const allowed = (tier === "ORANGE" || tier === "PURPLE") ? "[MAIN-SUBJECT-OK]" : "[NOT-MAIN-SUBJECT]";
     lines.push(
-      `${i + 1}. ${c.name} — salary ${c.salary}, projected ${c.projectedFp.toFixed(1)}, actual ${c.actualFp.toFixed(1)} (${perfTag} by ${Math.abs(delta).toFixed(1)})${oppStr}`,
+      `${i + 1}. ${c.name} [${tier} ${allowed}] — salary ${c.salary}, projected ${c.projectedFp.toFixed(1)}, actual ${c.actualFp.toFixed(1)} (${perfTag} by ${Math.abs(delta).toFixed(1)})${oppStr}`,
     );
   });
 
