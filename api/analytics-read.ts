@@ -4,7 +4,7 @@
  * Views: overview | gameplay | retention | social | errors | raw
  */
 
-import type { VercelRequest, VercelRespon } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { kv } from '@vercel/kv';
 
 const DAY_MS = 86400000;
