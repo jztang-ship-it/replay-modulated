@@ -110,12 +110,9 @@ const SPORT_CONFIGS = {
 
     cap: 180,
     minSpend: 180 - 6,
-    // 1P + 4BAT + 1 FLEX — matches baseballConfig.ts.
-    rosterSlots: ["P", "BAT", "BAT", "BAT", "BAT", "FLEX"],
+    // 1P + 4BAT — no FLEX.
+    rosterSlots: ["P", "BAT", "BAT", "BAT", "BAT"],
     positions: ["P", "BAT"],
-    // FLEX in baseball can be BAT or P (spec: maxPitchersTotal=2).
-    flexAllows: ["BAT", "P"],
-    maxPitchers: 2,
 
     // Tiers match observed salary distribution in baseball/public/data/players.json.
     // ORANGE starts at $55 (not $52) because baseball has a tighter salary spread.
@@ -168,11 +165,11 @@ const SPORT_CONFIGS = {
     // Tuned via scripts/simulate.mjs to hit target economy.
     payoutTiers: [
       { tier: "BUST",     minFp:   0, mult: 0,    source: "tuned" },
-      { tier: "ROOKIE",   minFp: 107, mult: 0.5,  source: "tuned" },
-      { tier: "STARTER",  minFp: 135, mult: 2.5,  source: "tuned" },
-      { tier: "ALL_STAR", minFp: 160, mult: 7.0,  source: "tuned" },
-      { tier: "MVP",      minFp: 183, mult: 15.0, source: "tuned" },
-      { tier: "GOAT",     minFp: 225, mult: 50.0, source: "tuned" },
+      { tier: "ROOKIE",   minFp: 102, mult: 0.5,  source: "tuned" },
+      { tier: "STARTER",  minFp: 128, mult: 2.5,  source: "tuned" },
+      { tier: "ALL_STAR", minFp: 150, mult: 7.0,  source: "tuned" },
+      { tier: "MVP",      minFp: 171, mult: 15.0, source: "tuned" },
+      { tier: "GOAT",     minFp: 209, mult: 50.0, source: "tuned" },
     ],
   },
 };
