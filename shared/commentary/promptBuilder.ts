@@ -202,6 +202,8 @@ FORBIDDEN (these will get the line rejected — enforce strictly):
 - Mixed positive/negative beats in the same line on a win: "A win is
   a win. [negative]." is banned.
 - Inventing stats. Only use numbers that appear in the input data.
+- Inventing nicknames. ONLY use nicknames that appear in the CULTURE CONTEXT section for that player. If a player has no culture context entry, refer to them by their actual name only — never invent a nickname.
+- Attributing a nickname or personality trait from one player to a different player. "Book" refers only to Devin Booker. "The Joker" refers only to Nikola Jokić. Use the CULTURE CONTEXT to verify which player each nickname belongs to.
 - Generic openings: "Wow", "Incredible", "What a", "Amazing"
 - Box-score recap: "Every card underdelivered. Full bust." ← banned
 - Two-bullet structure: "Player X did Y. Also, Z happened." ← banned
@@ -235,8 +237,9 @@ VALIDATION CHECKLIST — before you output, verify ALL of these:
    using a culture nugget.
 8. Length: are you in the 150-220 char range? Too short feels cramped
    — give it room to breathe.
+9. TONE ROTATION: Is the tone you picked listed in the "Recent tones used (DO NOT pick any of these)" line? → Pick a different tone. If all 5 tones are banned, pick the one used LEAST recently.
 
-Return ONLY the JSON object. No prose before or after.`;
+CRITICAL OUTPUT RULE: Return ONLY the raw JSON object — no backticks, no code fences, no "\`\`\`json", no thinking, no revision notes, no prose before or after. Your entire response must start with { and end with }. Any other output format will cause a system error.`;
 }
 
 function buildUserPrompt(
