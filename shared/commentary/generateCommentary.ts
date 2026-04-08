@@ -32,7 +32,7 @@ export async function generateCommentary(
     const r = await fetch(ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ system, user }),
+      body: JSON.stringify({ system, user, tier: input.winTier }),
       signal: ctrl.signal,
     });
     clearTimeout(timer);

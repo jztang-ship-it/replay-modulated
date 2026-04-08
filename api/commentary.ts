@@ -1,21 +1,17 @@
 /**
  * api/commentary.ts — Vercel serverless function.
+ * Proxies commentary generation through the multi-LLM router.
+ * ANTHROPIC_API_KEY, GROQ_API_KEY, DEEPSEEK_API_KEY stay server-side.
  *
- * Proxies commentary generation requests to the Anthropic API. The
- * ANTHROPIC_API_KEY env var stays server-side and never reaches the client.
- *
- * POST { system: string, user: string }
+ * POST { system: string, user: string, tier?: string }
  *   → { commentary: string, tone: string }
- *
- * Mirrors api/leaderboard.ts conventions (CORS, json helper, error shape).
  */
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { routeCommentary } from "../shared/router/llmRouter";
+import type { RouterConfig, PayoutTier } from "../shared/router/types";
 
-const MODEL = "claude-haiku-4-5";
-const MAX_TOKENS = 320;
-const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-const API_VERSION = "2023-06-01";
+const VALID_TIERS = new Set(['BUST','ROOKIE','STARTER','ALL_STAR','MVP','GOAT'])
 
 function json(res: VercelResponse, status: number, body: Record<string, unknown>) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -24,7 +20,6 @@ function json(res: VercelResponse, status: number, body: Record<string, unknown>
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS preflight
   if (req.method === "OPTIONS") {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
@@ -32,69 +27,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(204).end();
   }
 
-  if (req.method !== "POST") {
-    return json(res, 405, { error: "Method not allowed" });
-  }
+  if (req.method !== "POST") return json(res, 405, { error: "Method not allowed" });
 
-  const apiKey = process.env.COMMENTARY_API_KEY;
-  if (!apiKey) {
-    return json(res, 500, { error: "COMMENTARY_API_KEY not configured" });
-  }
+  const anthropicApiKey = process.env.COMMENTARY_API_KEY;
+  if (!anthropicApiKey) return json(res, 500, { error: "COMMENTARY_API_KEY not configured" });
 
-  const body = (req.body ?? {}) as { system?: string; user?: string };
-  if (!body.system || !body.user) {
-    return json(res, 400, { error: "system and user prompts required" });
+  const body = (req.body ?? {}) as { system?: string; user?: string; tier?: string };
+  if (!body.system || !body.user) return json(res, 400, { error: "system and user prompts required" });
+
+  const tier = (body.tier && VALID_TIERS.has(body.tier) ? body.tier : 'BUST') as PayoutTier
+
+  const config: RouterConfig = {
+    namespace: 'replaymod',
+    defaultPrimary: 'claude-haiku-4-5',
+    anthropicApiKey,
+    groqApiKey: process.env.GROQ_API_KEY,
+    deepseekApiKey: process.env.DEEPSEEK_API_KEY,
+    patchWindowMs: 1500,
   }
 
   try {
-    const upstream = await fetch(ANTHROPIC_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": API_VERSION,
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: MAX_TOKENS,
-        system: body.system,
-        messages: [{ role: "user", content: body.user }],
-      }),
-    });
-
-    if (!upstream.ok) {
-      const errText = await upstream.text();
-      console.error("Anthropic error:", upstream.status, errText);
-      return json(res, 502, { error: "upstream_error", status: upstream.status });
-    }
-
-    const payload = (await upstream.json()) as {
-      content?: Array<{ type: string; text?: string }>;
-    };
-
-    const text = payload.content?.[0]?.text?.trim() ?? "";
-    if (!text) return json(res, 502, { error: "empty_response" });
-
-    // Parse the model's JSON output. Be forgiving of leading/trailing prose.
-    let parsed: { commentary?: string; tone?: string } = {};
-    try {
-      const start = text.indexOf("{");
-      const end = text.lastIndexOf("}");
-      if (start >= 0 && end > start) {
-        parsed = JSON.parse(text.slice(start, end + 1));
-      } else {
-        parsed = { commentary: text };
-      }
-    } catch {
-      parsed = { commentary: text };
-    }
-
-    if (!parsed.commentary) return json(res, 502, { error: "missing_commentary" });
-
-    return json(res, 200, {
-      commentary: parsed.commentary,
-      tone: parsed.tone ?? "observational",
-    });
+    const result = await routeCommentary(body.system, body.user, tier, config)
+    return json(res, 200, { commentary: result.commentary, tone: result.tone })
   } catch (err: any) {
     console.error("Commentary handler error:", err);
     return json(res, 500, { error: "internal_error", message: err?.message });
