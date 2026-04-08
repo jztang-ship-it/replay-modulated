@@ -75,8 +75,10 @@ export async function getRecentPhrases(kv: Redis, ns: string): Promise<string[]>
 
 export async function recordRecentPhrase(kv: Redis, ns: string, phrase: string): Promise<void> {
   try {
-    await kv.lpush(recentPhrasesKey(ns), phrase)
-    await kv.ltrim(recentPhrasesKey(ns), 0, 19)
+    const pipe = kv.pipeline()
+    pipe.lpush(recentPhrasesKey(ns), phrase)
+    pipe.ltrim(recentPhrasesKey(ns), 0, 19)
+    await pipe.exec()
   } catch {
     // non-blocking — fail silently
   }
@@ -117,7 +119,7 @@ export async function maybePromoteModel(
   tier?: PayoutTier,
 ): Promise<boolean> {
   const gap = currentGrade.composite - grade.composite
-  if (gap > -0.5) return false // challenger not close enough
+  if (gap > 0.5) return false // primary is more than 0.5 better — don't promote yet
 
   try {
     if (tier) {
