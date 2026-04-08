@@ -44,6 +44,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 async function handleSubmit(req: VercelRequest, res: VercelResponse) {
   const { action, metric, value, uid, nickname } = req.body ?? {};
+  const sessionId = ((req.body?.session_id ?? '') as string).toString().slice(0, 32) || null;
 
   if (action !== "submit") return json(res, 400, { error: "Invalid action" });
   if (!VALID_METRICS.includes(metric)) return json(res, 400, { error: "Invalid metric" });
@@ -72,7 +73,7 @@ async function handleSubmit(req: VercelRequest, res: VercelResponse) {
   }
   if (!uid || typeof uid !== "string") return json(res, 400, { error: "Missing uid" });
 
-  const member = `${uid}:${nickname ?? "Player"}`;
+  const member = `${uid}:${nickname ?? "Player"}:${sessionId ?? ''}`;
   const today = todayUTC();
   const dailyKey = `lb:${metric}:daily:${today}`;
   const alltimeKey = `lb:${metric}:alltime`;
@@ -122,29 +123,35 @@ async function handleGet(req: VercelRequest, res: VercelResponse) {
 
   // zrange with withScores returns [member, score, member, score, ...] or [{member, score}, ...]
   // Handle both formats
-  const entries: { uid: string; nickname: string; score: number }[] = [];
+  const entries: { uid: string; nickname: string; score: number; session_id: string | null }[] = [];
+
+  function parseMember(raw: string): { uid: string; nickname: string; session_id: string | null } {
+    // Format: uid:nickname:sessionId (new) or uid:nickname (legacy)
+    const firstColon = raw.indexOf(":");
+    const uid = raw.slice(0, firstColon);
+    const rest = raw.slice(firstColon + 1);
+    const lastColon = rest.lastIndexOf(":");
+    // If rest contains another colon it's the new format
+    if (lastColon > 0 && lastColon < rest.length - 1) {
+      const nickname = rest.slice(0, lastColon);
+      const session_id = rest.slice(lastColon + 1) || null;
+      return { uid, nickname, session_id };
+    }
+    // Legacy format — no session_id
+    return { uid, nickname: rest, session_id: null };
+  }
 
   if (raw.length > 0 && typeof raw[0] === "object" && "member" in raw[0]) {
     // Object format: [{ member, score }, ...]
     for (const item of raw) {
-      const colonIdx = String(item.member).indexOf(":");
-      entries.push({
-        uid: String(item.member).slice(0, colonIdx),
-        nickname: String(item.member).slice(colonIdx + 1),
-        score: Number(item.score),
-      });
+      const parsed = parseMember(String(item.member));
+      entries.push({ ...parsed, score: Number(item.score) });
     }
   } else {
     // Flat format: [member, score, member, score, ...]
     for (let i = 0; i < raw.length; i += 2) {
-      const member = String(raw[i]);
-      const score = Number(raw[i + 1] ?? 0);
-      const colonIdx = member.indexOf(":");
-      entries.push({
-        uid: member.slice(0, colonIdx),
-        nickname: member.slice(colonIdx + 1),
-        score,
-      });
+      const parsed = parseMember(String(raw[i]));
+      entries.push({ ...parsed, score: Number(raw[i + 1] ?? 0) });
     }
   }
 

@@ -9,7 +9,7 @@ const FF = "'Rajdhani', 'Arial Narrow', sans-serif";
 
 type Metric = "hand_best" | "hand_avg" | "money_won";
 type Scope = "daily" | "alltime";
-type Entry = { uid: string; nickname: string; score: number };
+type Entry = { uid: string; nickname: string; score: number; session_id?: string | null };
 
 const METRICS: { id: Metric; label: string }[] = [
   { id: "hand_best", label: "Best Hand" },
@@ -50,7 +50,11 @@ export function LeaderboardScreen({ currentUid, onClose }: Props) {
         setEntries(all);
 
         // Check for rank-up into top 10
-        const myIdx = all.findIndex(e => e.uid === currentUid);
+        const sessId = typeof localStorage !== 'undefined' ? localStorage.getItem('rm_session_id') : null;
+        const myIdx = all.findIndex(e =>
+          (currentUid && e.uid === currentUid) ||
+          (sessId && e.session_id && e.session_id === sessId)
+        );
         if (myIdx >= 0 && myIdx < 10 && scope === "daily") {
           const key = todayKey(metric);
           if (!localStorage.getItem(key)) {
@@ -74,8 +78,16 @@ export function LeaderboardScreen({ currentUid, onClose }: Props) {
     setTimeout(() => setToast(null), 2000);
   }, [metric]);
 
+  const mySessionId = typeof localStorage !== 'undefined' ? localStorage.getItem('rm_session_id') : null;
+
+  function isMyEntry(e: Entry): boolean {
+    if (currentUid && e.uid === currentUid) return true;
+    if (mySessionId && e.session_id && e.session_id === mySessionId) return true;
+    return false;
+  }
+
   const top25 = entries.slice(0, 25);
-  const myIdxInAll = entries.findIndex(e => e.uid === currentUid);
+  const myIdxInAll = entries.findIndex(isMyEntry);
   const myEntryOutside = myIdxInAll >= 25 ? entries[myIdxInAll] : null;
 
   const tabStyle = (active: boolean): React.CSSProperties => ({
@@ -159,7 +171,7 @@ export function LeaderboardScreen({ currentUid, onClose }: Props) {
           </div>
         ) : (
           top25.map((e, i) => {
-            const isMe = e.uid === currentUid;
+            const isMe = isMyEntry(e);
             return (
               <div key={`${e.uid}-${i}`} style={{
                 display: "flex", alignItems: "center", gap: 8,
@@ -188,6 +200,12 @@ export function LeaderboardScreen({ currentUid, onClose }: Props) {
                 }}>
                   {formatScore(metric, e.score)}
                 </span>
+                {isMe && (
+                  <span style={{
+                    fontSize: 9, fontWeight: 900, color: "#FFD700",
+                    textTransform: "uppercase", letterSpacing: 2, marginLeft: 2,
+                  }}>YOU</span>
+                )}
                 {!isMe && (
                   <button
                     onClick={() => handleChallenge(e)}

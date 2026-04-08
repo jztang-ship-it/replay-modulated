@@ -31,7 +31,7 @@ import { DailyTasksPanel } from '@shared/engagement/DailyTasksPanel';
 import { XPBar } from '@shared/engagement/XPBar';
 import { soundManager } from '@shared/utils/soundManager';
 import { audioDirector } from '@shared/utils/audioDirector';
-import { getPlayerUid, getNickname, setNickname } from '@shared/utils/playerIdentity';
+import { getPlayerUid, getNickname, setNickname, getSessionId } from '@shared/utils/playerIdentity';
 import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
 import { generateCommentary } from "@shared/commentary/generateCommentary";
 import type { CommentaryInput, CommentaryOutput, CommentaryRosterCard } from "@shared/commentary/types";
@@ -138,7 +138,7 @@ async function submitToLeaderboard(metric: string, value: number, extra?: Record
     await fetch("/api/leaderboard", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "submit", metric, value, uid, nickname, ...extra }),
+      body: JSON.stringify({ action: "submit", metric, value, uid, nickname, session_id: getSessionId(), ...extra }),
     });
   } catch { } // Non-critical — never block game flow
 }

@@ -31,3 +31,12 @@ export function getNickname(): string {
 export function getPlayerUid(): string {
   return localStorage.getItem("rm_uid") ?? "";
 }
+
+export function getSessionId(): string {
+  let id = localStorage.getItem("rm_session_id");
+  if (!id) {
+    id = Math.random().toString(36).slice(2, 12);
+    localStorage.setItem("rm_session_id", id);
+  }
+  return id;
+}
