@@ -114,13 +114,16 @@ const SPORT_CONFIGS = {
     rosterSlots: ["P", "BAT", "BAT", "BAT", "BAT"],
     positions: ["P", "BAT"],
 
-    // Tiers match observed salary distribution in baseball/public/data/players.json.
-    // ORANGE starts at $55 (not $52) because baseball has a tighter salary spread.
+    // Tier thresholds now reflect avgFP (not salary) — matches the re-graded
+    // tiers in baseball/public/data/players.json (see scripts/recalc-tiers.mjs).
+    // Note: the simulator's archetype selection + anchor logic compares these
+    // against player.salary, so interpret them with that in mind — see blended
+    // result for economy impact.
     tierThresholds: {
-      ORANGE: 55,
-      PURPLE: 40,
-      BLUE:   28,
-      GREEN:  16,
+      ORANGE: 40,
+      PURPLE: 32,
+      BLUE:   29,
+      GREEN:  24,
       WHITE:   0,
     },
     positionAliases: {
@@ -138,15 +141,19 @@ const SPORT_CONFIGS = {
     },
     // baseballConfig.ts badges (flat list — test() reads stat keys).
     badges: [
-      { id: "GOING_YARD",   fp: 10, test: s => (s.hr|0) >= 2 },
-      { id: "MULTI_HIT",    fp: 5,  test: s => (s.h|0)  >= 3 },
-      { id: "RBI_MACHINE",  fp: 8,  test: s => (s.rbi|0)>= 4 },
-      { id: "SPEEDSTER",    fp: 6,  test: s => (s.sb|0) >= 2 },
-      { id: "PERFECT_DAY",  fp: 15, test: s => (s.h|0)>=3 && (s.hr|0)>=1 && (s.rbi|0)>=3 },
-      { id: "ACE",          fp: 10, test: s => (s.k|0) >= 10 },
-      { id: "SHUTDOWN",     fp: 8,  test: s => (s.ip|0) >= 7 && (s.er|0) === 0 },
-      { id: "STRIKEOUT_K",  fp: 5,  test: s => (s.k|0) >= 7 && (s.k|0) < 10 },
-      { id: "MELTDOWN",     fp: -5, test: s => (s.er|0) >= 5 },
+      { id: "GOING_YARD",    fp: 12, test: s => (s.hr  ?? 0) >= 2 },
+      { id: "HIT_MACHINE",   fp: 5,  test: s => (s.h   ?? 0) >= 3 },
+      { id: "CLEANUP",       fp: 8,  test: s => (s.rbi ?? 0) >= 4 },
+      { id: "EYE_PLATE",     fp: 8,  test: s => (s.bb  ?? 0) >= 3 },
+      { id: "SPEEDSTER",     fp: 6,  test: s => (s.sb  ?? 0) >= 2 },
+      { id: "PERFECT_DAY",   fp: 15, test: s => (s.h ?? 0) >= 3 && (s.hr ?? 0) >= 1 && (s.rbi ?? 0) >= 3 },
+      { id: "CYCLE_WATCH",   fp: 25, test: s => (s.h ?? 0) >= 1 && (s.doubles ?? 0) >= 1 && (s.triples ?? 0) >= 1 && (s.hr ?? 0) >= 1 },
+      { id: "ACE",           fp: 10, test: s => (s.k  ?? 0) >= 10 },
+      { id: "SHUTDOWN",      fp: 8,  test: s => (s.ip ?? 0) >= 7 && (s.er ?? 0) === 0 },
+      { id: "QUALITY_START", fp: 6,  test: s => (s.ip ?? 0) >= 6 && (s.er ?? 0) <= 3 },
+      { id: "MELTDOWN",      fp: -5, test: s => (s.er ?? 0) >= 5 },
+      { id: "WILD_THING",    fp: -5, test: s => (s.bb ?? 0) >= 4 },
+      { id: "NO_NO_WATCH",   fp: 30, test: s => (s.ip ?? 0) >= 7 && (s.h ?? 0) === 0 && (s.er ?? 0) === 0 },
     ],
 
     // EHLP filter (spec): Hitters PA>=3 + >=1 scoring event. Pitchers IP>=4.
@@ -165,11 +172,11 @@ const SPORT_CONFIGS = {
     // Tuned via scripts/simulate.mjs to hit target economy.
     payoutTiers: [
       { tier: "BUST",     minFp:   0, mult: 0,    source: "tuned" },
-      { tier: "ROOKIE",   minFp: 102, mult: 0.5,  source: "tuned" },
-      { tier: "STARTER",  minFp: 128, mult: 2.5,  source: "tuned" },
-      { tier: "ALL_STAR", minFp: 150, mult: 7.0,  source: "tuned" },
-      { tier: "MVP",      minFp: 171, mult: 15.0, source: "tuned" },
-      { tier: "GOAT",     minFp: 209, mult: 50.0, source: "tuned" },
+      { tier: "ROOKIE",   minFp: 108, mult: 0.5,  source: "tuned" },
+      { tier: "STARTER",  minFp: 135, mult: 2.5,  source: "tuned" },
+      { tier: "ALL_STAR", minFp: 160, mult: 7.0,  source: "tuned" },
+      { tier: "MVP",      minFp: 182, mult: 15.0, source: "tuned" },
+      { tier: "GOAT",     minFp: 220, mult: 50.0, source: "tuned" },
     ],
   },
 };
@@ -263,7 +270,6 @@ const ARCHETYPES = {
       const roster = new Array(cfg.rosterSlots.length).fill(null);
       const used = new Set();
       let budget = cfg.cap;
-      const t = cfg.tierThresholds;
 
       // Pick 1-2 ORANGE anchors into the first compatible non-FLEX slots.
       const wantAnchors = rng() < 0.4 ? 2 : 1;
@@ -273,7 +279,7 @@ const ARCHETYPES = {
         if (req === "FLEX") continue;
         const candidates = pool.filter(p =>
           !used.has(p.id) &&
-          p.salary >= t.ORANGE &&
+          p.tier === "ORANGE" &&
           p.salary <= budget - (cfg.rosterSlots.length - placed - 1) * minSalaryInPool(pool) &&
           slotFits(p, req, cfg)
         );
@@ -287,7 +293,7 @@ const ARCHETYPES = {
       }
       return fillRemainingSlots(roster, used, budget, pool, cfg, rng);
     },
-    shouldHold(card, cfg) { return card.salary >= cfg.tierThresholds.ORANGE; },
+    shouldHold(card, _cfg) { return card.tier === "ORANGE"; },
   },
 
   "Middle Safe": {
@@ -297,7 +303,6 @@ const ARCHETYPES = {
       const roster = new Array(cfg.rosterSlots.length).fill(null);
       const used = new Set();
       let budget = cfg.cap;
-      const t = cfg.tierThresholds;
 
       // Pick 2-3 PURPLE cards deliberately.
       const wantMids = 2 + (rng() < 0.5 ? 1 : 0);
@@ -307,7 +312,7 @@ const ARCHETYPES = {
         if (req === "FLEX") continue;
         const candidates = pool.filter(p =>
           !used.has(p.id) &&
-          p.salary >= t.PURPLE && p.salary < t.ORANGE &&
+          p.tier === "PURPLE" &&
           p.salary <= budget - (cfg.rosterSlots.length - placed - 1) * minSalaryInPool(pool) &&
           slotFits(p, req, cfg)
         );
@@ -320,9 +325,8 @@ const ARCHETYPES = {
       }
       return fillRemainingSlots(roster, used, budget, pool, cfg, rng);
     },
-    shouldHold(card, cfg) {
-      const t = cfg.tierThresholds;
-      return card.salary >= t.PURPLE; // PURPLE and ORANGE
+    shouldHold(card, _cfg) {
+      return card.tier === "ORANGE" || card.tier === "PURPLE";
     },
   },
 
@@ -333,7 +337,6 @@ const ARCHETYPES = {
       const roster = new Array(cfg.rosterSlots.length).fill(null);
       const used = new Set();
       let budget = cfg.cap;
-      const t = cfg.tierThresholds;
 
       // Pick 2-3 cheap (WHITE/GREEN) cards deliberately.
       const wantCheap = 2 + (rng() < 0.5 ? 1 : 0);
@@ -343,7 +346,7 @@ const ARCHETYPES = {
         if (req === "FLEX") continue;
         const candidates = pool.filter(p =>
           !used.has(p.id) &&
-          p.salary < t.BLUE && // cheap = below BLUE floor
+          (p.tier === "GREEN" || p.tier === "WHITE") &&
           slotFits(p, req, cfg)
         );
         if (!candidates.length) break;
@@ -355,9 +358,8 @@ const ARCHETYPES = {
       }
       return fillRemainingSlots(roster, used, budget, pool, cfg, rng);
     },
-    shouldHold(card, cfg) {
-      // Hold the cheapest 2 cards by tier (≤ GREEN).
-      return card.salary < cfg.tierThresholds.BLUE;
+    shouldHold(card, _cfg) {
+      return card.tier === "GREEN" || card.tier === "WHITE";
     },
   },
 
@@ -435,7 +437,7 @@ function fillRemainingSlots(roster, used, budget, pool, cfg, rng, randomMode = f
   // Anchor logic: if no ORANGE-tier player is placed yet AND the first empty
   // non-FLEX slot can hold one, slam an ORANGE there before anything else.
   if (!randomMode) {
-    const hasOrange = roster.some(c => c && c.salary >= cfg.tierThresholds.ORANGE);
+    const hasOrange = roster.some(c => c && c.tier === "ORANGE");
     if (!hasOrange) {
       const anchorSlot = roster.findIndex((c, i) => c === null && slots[i] !== "FLEX");
       if (anchorSlot >= 0) {
@@ -443,7 +445,7 @@ function fillRemainingSlots(roster, used, budget, pool, cfg, rng, randomMode = f
         const cap = maxForSlot();
         const candidates = pool.filter(p =>
           !used.has(p.id) &&
-          p.salary >= cfg.tierThresholds.ORANGE &&
+          p.tier === "ORANGE" &&
           p.salary <= cap &&
           slotFits(p, req, cfg) &&
           pitcherAllowed(p)
@@ -517,13 +519,12 @@ function fillRemainingSlots(roster, used, budget, pool, cfg, rng, randomMode = f
 }
 
 function guaranteeTierFloor(roster, pool, cfg, rng, heldIdx) {
-  const t = cfg.tierThresholds;
-  const hasOrange = () => roster.some(c => c && c.salary >= t.ORANGE);
-  const countPurple = () => roster.filter(c => c && c.salary >= t.PURPLE).length;
+  const hasOrange = () => roster.some(c => c && c.tier === "ORANGE");
+  const countPurple = () => roster.filter(c => c && (c.tier === "ORANGE" || c.tier === "PURPLE")).length;
   if (hasOrange()) return;
 
-  const tryUpgradeTo = (targetMin) => {
-    // Swap the lowest-salary non-held card for a player >= targetMin if budget allows.
+  const tryUpgradeTo = (targetTier) => {
+    // Swap the lowest-salary non-held card for a player of targetTier if budget allows.
     const swappable = roster
       .map((c, i) => ({ c, i }))
       .filter(({ c, i }) => c && !heldIdx.has(i))
@@ -536,7 +537,7 @@ function guaranteeTierFloor(roster, pool, cfg, rng, heldIdx) {
       const budget = c.salary + headroom;
       const upgrades = pool.filter(p =>
         !used.has(p.id) &&
-        p.salary >= targetMin &&
+        p.tier === targetTier &&
         p.salary <= budget &&
         slotFits(p, slotReq, cfg) &&
         (cfg.maxPitchers == null || p.position !== "P" ||
@@ -551,11 +552,11 @@ function guaranteeTierFloor(roster, pool, cfg, rng, heldIdx) {
     return false;
   };
 
-  if (!tryUpgradeTo(t.ORANGE)) {
-    // Fallback: aim for 2 PURPLE.
+  if (!tryUpgradeTo("ORANGE")) {
+    // Fallback: aim for 2 PURPLE-or-better.
     let guard = 0;
     while (countPurple() < 2 && guard++ < 4) {
-      if (!tryUpgradeTo(t.PURPLE)) break;
+      if (!tryUpgradeTo("PURPLE")) break;
     }
   }
 }
