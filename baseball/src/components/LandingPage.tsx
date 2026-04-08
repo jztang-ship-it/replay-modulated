@@ -1,9 +1,9 @@
 /**
  * LandingPage.tsx — Single screen, no scroll.
- * 5 cards in a 3+2 grid. Start face-down with TAP prompt.
- * Tap to flip and reveal real in-game card fronts with headshots.
+ * 5 cards in a 2P+3BAT grid (3 top row, 2 bottom row centered).
+ * Start face-down with TAP prompt. Tap to flip and reveal real in-game card fronts.
  */
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import type { GamePhase, PlayerCard, Achievement } from "../adapters/types";
 import { BaseballCard } from "./BaseballCard";
 import { CardBackGeneric } from "./CardBackGeneric";
@@ -26,7 +26,7 @@ type LandingCardDef = {
 const CARDS: LandingCardDef[] = [
   {
     id: "c1", name: "Shohei Ohtani", pos: "P", salary: 70, fp: 42.3,
-    team: "Los Angeles Dodgers", season: "2024-25", basePlayerId: "660271",
+    team: "Los Angeles Dodgers", season: "2425", basePlayerId: "660271",
     achievements: [
       { id: "ACE", icon: "👑", label: "Ace", fp: 10 },
       { id: "STRIKEOUT_KING", icon: "🔥", label: "Strikeout King", fp: 5 },
@@ -34,7 +34,7 @@ const CARDS: LandingCardDef[] = [
   },
   {
     id: "c2", name: "Freddie Freeman", pos: "1B", salary: 60, fp: 33.6,
-    team: "Los Angeles Dodgers", season: "2024-25", basePlayerId: "518692",
+    team: "Los Angeles Dodgers", season: "2425", basePlayerId: "518692",
     achievements: [
       { id: "MULTI_HIT", icon: "⚾", label: "Multi Hit", fp: 5 },
       { id: "RBI_MACHINE", icon: "🧩", label: "RBI Machine", fp: 8 },
@@ -42,7 +42,7 @@ const CARDS: LandingCardDef[] = [
   },
   {
     id: "c3", name: "Mookie Betts", pos: "OF", salary: 56, fp: 31.0,
-    team: "Los Angeles Dodgers", season: "2024-25", basePlayerId: "605141",
+    team: "Los Angeles Dodgers", season: "2425", basePlayerId: "605141",
     achievements: [
       { id: "GOING_YARD", icon: "🚀", label: "Going Yard", fp: 10 },
       { id: "SPEEDSTER", icon: "💨", label: "Speedster", fp: 6 },
@@ -50,7 +50,7 @@ const CARDS: LandingCardDef[] = [
   },
   {
     id: "c4", name: "Fernando Tatis Jr.", pos: "SS", salary: 63, fp: 34.8,
-    team: "San Diego Padres", season: "2024-25", basePlayerId: "665487",
+    team: "San Diego Padres", season: "2425", basePlayerId: "665487",
     achievements: [
       { id: "PERFECT_DAY", icon: "🌞", label: "Perfect Day", fp: 15 },
       { id: "GOING_YARD", icon: "🚀", label: "Going Yard", fp: 10 },
@@ -58,13 +58,16 @@ const CARDS: LandingCardDef[] = [
   },
   {
     id: "c5", name: "Yordan Alvarez", pos: "DH", salary: 56, fp: 31.2,
-    team: "Houston Astros", season: "2024-25", basePlayerId: "670541",
+    team: "Houston Astros", season: "2425", basePlayerId: "670541",
     achievements: [
       { id: "RBI_MACHINE", icon: "🧩", label: "RBI Machine", fp: 8 },
       { id: "MULTI_HIT", icon: "⚾", label: "Multi Hit", fp: 5 },
     ],
   },
 ];
+
+// gridColumn for each card index in the 6-column 3+2 layout
+const GRID_COLUMNS = ["1 / span 2", "3 / span 2", "5 / span 2", "2 / span 2", "4 / span 2"];
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -73,41 +76,8 @@ interface Props { onPlay: () => void; }
 export function LandingPage({ onPlay }: Props) {
   const [flipped, setFlipped] = useState<Set<string>>(new Set());
   const phase: GamePhase = "RESULTS";
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const startAudio = useCallback(() => {
-    if (audioRef.current) return;
-    const a = new Audio("/audio/basketball/crowd/bed-murmur.mp3");
-    a.loop = true;
-    a.volume = 0.15;
-    audioRef.current = a;
-    a.play().catch(() => {
-      // Autoplay blocked — start on first user interaction
-      const resume = () => {
-        a.play().catch(() => {});
-        window.removeEventListener("pointerdown", resume);
-      };
-      window.addEventListener("pointerdown", resume, { once: true });
-    });
-  }, []);
-
-  useEffect(() => {
-    startAudio();
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, [startAudio]);
-
-  const handlePlay = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-    onPlay();
-  }, [onPlay]);
+  const handlePlay = useCallback(() => { onPlay(); }, [onPlay]);
 
   function toggleCard(id: string) {
     setFlipped(prev => {
@@ -129,7 +99,7 @@ export function LandingPage({ onPlay }: Props) {
         team: d.team,
         season: d.season,
         position: d.pos,
-        tier: "WHITE" as PlayerCard["tier"],
+        tier: (d.salary >= 52 ? "ORANGE" : d.salary >= 40 ? "PURPLE" : d.salary >= 28 ? "BLUE" : d.salary >= 16 ? "GREEN" : "WHITE") as PlayerCard["tier"],
         salary: d.salary,
         projectedFp: d.fp,
         actualFp: d.fp,
@@ -202,10 +172,10 @@ export function LandingPage({ onPlay }: Props) {
         padding: "12px 16px 0", gap: 0, textAlign: "center",
       }}>
 
-        {/* 3+2 CARD GRID */}
+        {/* 3+2 CARD GRID — 6-column, row 1: slots 0-2, row 2: slots 3-4 centered */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+          gridTemplateColumns: "repeat(6, 1fr)",
           gap: 8, width: "100%", maxWidth: 340, marginBottom: 20,
         }}>
           {CARDS.map((c, i) => {
@@ -216,6 +186,7 @@ export function LandingPage({ onPlay }: Props) {
                 key={c.id}
                 onClick={() => toggleCard(c.id)}
                 style={{
+                  gridColumn: GRID_COLUMNS[i],
                   aspectRatio: "329 / 478",
                   perspective: "800px",
                   cursor: "pointer",
