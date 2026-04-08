@@ -16,7 +16,7 @@ import { buildPrompt } from "./promptBuilder";
 
 const TIMEOUT_MS = 3000;
 const ENDPOINT = "/api/commentary";
-const HARD_CHAR_CAP = 200;
+const HARD_CHAR_CAP = 280;
 
 export async function generateCommentary(
   input: CommentaryInput,

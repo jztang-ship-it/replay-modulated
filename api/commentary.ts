@@ -13,7 +13,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 const MODEL = "claude-haiku-4-5";
-const MAX_TOKENS = 200;
+const MAX_TOKENS = 320;
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 const API_VERSION = "2023-06-01";
 
