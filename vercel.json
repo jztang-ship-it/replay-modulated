@@ -1,43 +1,9 @@
 {
-  "builds": [
-    {
-      "src": "api/*.ts",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "basketball/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist",
-        "buildCommand": "npm install && npm run build"
-      }
-    },
-    {
-      "src": "baseball/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist",
-        "buildCommand": "npm install && npm run build"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.+)",
-      "dest": "/api/$1"
-    },
-    { "handle": "filesystem" },
-    {
-      "src": "/baseball/(.*)",
-      "dest": "/baseball/$1"
-    },
-    {
-      "src": "/baseball",
-      "dest": "/baseball/index.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/basketball/$1"
-    }
+  "buildCommand": "bash scripts/build-vercel.sh",
+  "outputDirectory": "dist",
+  "installCommand": "echo 'install handled by build-vercel.sh'",
+  "rewrites": [
+    { "source": "/baseball/:path*", "destination": "/baseball/index.html" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
