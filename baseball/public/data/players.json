@@ -7,7 +7,7 @@
     "team": "Detroit Tigers",
     "position": "P",
     "salary": 63,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 35,
     "photoCode": "434378"
   },
@@ -19,7 +19,7 @@
     "team": "Kansas City Royals",
     "position": "P",
     "salary": 25,
-    "tier": "GREEN",
+    "tier": "WHITE",
     "avgFP": 14,
     "photoCode": "448179"
   },
@@ -31,7 +31,7 @@
     "team": "Atlanta Braves",
     "position": "P",
     "salary": 66,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 36.7,
     "photoCode": "450203"
   },
@@ -43,7 +43,7 @@
     "team": "Toronto Blue Jays",
     "position": "P",
     "salary": 62,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 34.5,
     "photoCode": "453286"
   },
@@ -55,8 +55,8 @@
     "team": "Indios de Mayaguez",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 26,
+    "tier": "GREEN",
+    "avgFP": 29.5,
     "photoCode": "455117"
   },
   {
@@ -67,8 +67,8 @@
     "team": "Texas Rangers",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.7,
+    "tier": "BLUE",
+    "avgFP": 31.5,
     "photoCode": "456781"
   },
   {
@@ -79,8 +79,8 @@
     "team": "Texas Rangers",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 26.3,
+    "tier": "GREEN",
+    "avgFP": 29.5,
     "photoCode": "457705"
   },
   {
@@ -91,8 +91,8 @@
     "team": "Chicago Cubs",
     "position": "BAT",
     "salary": 30,
-    "tier": "BLUE",
-    "avgFP": 16.9,
+    "tier": "WHITE",
+    "avgFP": 19.1,
     "photoCode": "457759"
   },
   {
@@ -103,8 +103,8 @@
     "team": "Arizona Diamondbacks",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.5,
+    "tier": "BLUE",
+    "avgFP": 29.7,
     "photoCode": "467793"
   },
   {
@@ -115,7 +115,7 @@
     "team": "Gwinnett Stripers",
     "position": "P",
     "salary": 38,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 21.2,
     "photoCode": "471911"
   },
@@ -127,7 +127,7 @@
     "team": "Los Angeles Dodgers",
     "position": "P",
     "salary": 57,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 31.8,
     "photoCode": "477132"
   },
@@ -139,7 +139,7 @@
     "team": "Cincinnati Reds",
     "position": "P",
     "salary": 44,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 24.5,
     "photoCode": "489119"
   },
@@ -151,8 +151,8 @@
     "team": "El Paso Chihuahuas",
     "position": "BAT",
     "salary": 33,
-    "tier": "BLUE",
-    "avgFP": 18.2,
+    "tier": "WHITE",
+    "avgFP": 20.2,
     "photoCode": "493329"
   },
   {
@@ -163,8 +163,8 @@
     "team": "Los Angeles Dodgers",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.3,
+    "tier": "GREEN",
+    "avgFP": 28.5,
     "photoCode": "500743"
   },
   {
@@ -175,7 +175,7 @@
     "team": "Colorado Rockies",
     "position": "P",
     "salary": 55,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 30.3,
     "photoCode": "500779"
   },
@@ -187,7 +187,7 @@
     "team": "Durham Bulls",
     "position": "P",
     "salary": 25,
-    "tier": "GREEN",
+    "tier": "WHITE",
     "avgFP": 14,
     "photoCode": "502043"
   },
@@ -199,8 +199,8 @@
     "team": "Syracuse Mets",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.3,
+    "tier": "BLUE",
+    "avgFP": 31.8,
     "photoCode": "502054"
   },
   {
@@ -211,8 +211,8 @@
     "team": "New York Yankees",
     "position": "BAT",
     "salary": 57,
-    "tier": "ORANGE",
-    "avgFP": 31.5,
+    "tier": "PURPLE",
+    "avgFP": 35.7,
     "photoCode": "502671"
   },
   {
@@ -223,7 +223,7 @@
     "team": "San Diego Padres",
     "position": "P",
     "salary": 53,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 29.7,
     "photoCode": "506433"
   },
@@ -236,7 +236,7 @@
     "position": "BAT",
     "salary": 59,
     "tier": "ORANGE",
-    "avgFP": 32.8,
+    "avgFP": 36.8,
     "photoCode": "514888"
   },
   {
@@ -248,7 +248,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 29.9,
+    "avgFP": 33.6,
     "photoCode": "516782"
   },
   {
@@ -259,8 +259,8 @@
     "team": "Los Angeles Angels",
     "position": "BAT",
     "salary": 45,
-    "tier": "PURPLE",
-    "avgFP": 25.2,
+    "tier": "GREEN",
+    "avgFP": 28.3,
     "photoCode": "518595"
   },
   {
@@ -272,7 +272,7 @@
     "position": "BAT",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 33.6,
+    "avgFP": 37.7,
     "photoCode": "518692"
   },
   {
@@ -283,8 +283,8 @@
     "team": "San Diego Padres",
     "position": "BAT",
     "salary": 43,
-    "tier": "PURPLE",
-    "avgFP": 24,
+    "tier": "GREEN",
+    "avgFP": 26.9,
     "photoCode": "518792"
   },
   {
@@ -307,8 +307,8 @@
     "team": "New York Yankees",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.4,
+    "tier": "GREEN",
+    "avgFP": 27.7,
     "photoCode": "518934"
   },
   {
@@ -332,7 +332,7 @@
     "position": "BAT",
     "salary": 68,
     "tier": "ORANGE",
-    "avgFP": 37.5,
+    "avgFP": 41.6,
     "photoCode": "519317"
   },
   {
@@ -344,7 +344,7 @@
     "position": "BAT",
     "salary": 59,
     "tier": "ORANGE",
-    "avgFP": 33,
+    "avgFP": 37,
     "photoCode": "521692"
   },
   {
@@ -356,7 +356,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.2,
+    "avgFP": 32.9,
     "photoCode": "527038"
   },
   {
@@ -368,7 +368,7 @@
     "position": "P",
     "salary": 65,
     "tier": "ORANGE",
-    "avgFP": 36.2,
+    "avgFP": 42.3,
     "photoCode": "527048"
   },
   {
@@ -379,8 +379,8 @@
     "team": "Pittsburgh Pirates",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.1,
+    "tier": "BLUE",
+    "avgFP": 31.2,
     "photoCode": "542303"
   },
   {
@@ -391,8 +391,8 @@
     "team": "Los Angeles Angels",
     "position": "P",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.7,
+    "tier": "GREEN",
+    "avgFP": 26.9,
     "photoCode": "542881"
   },
   {
@@ -403,8 +403,8 @@
     "team": "Chicago Cubs",
     "position": "BAT",
     "salary": 42,
-    "tier": "PURPLE",
-    "avgFP": 23.3,
+    "tier": "GREEN",
+    "avgFP": 26.1,
     "photoCode": "542932"
   },
   {
@@ -416,7 +416,7 @@
     "position": "BAT",
     "salary": 68,
     "tier": "ORANGE",
-    "avgFP": 38,
+    "avgFP": 45,
     "photoCode": "542963"
   },
   {
@@ -427,7 +427,7 @@
     "team": "Arizona Diamondbacks",
     "position": "P",
     "salary": 49,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 27.4,
     "photoCode": "543101"
   },
@@ -463,7 +463,7 @@
     "team": "Los Angeles Angels",
     "position": "P",
     "salary": 53,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 29.2,
     "photoCode": "543294"
   },
@@ -476,7 +476,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 30.1,
+    "avgFP": 33.8,
     "photoCode": "543309"
   },
   {
@@ -488,7 +488,7 @@
     "position": "BAT",
     "salary": 58,
     "tier": "ORANGE",
-    "avgFP": 32,
+    "avgFP": 36.1,
     "photoCode": "543510"
   },
   {
@@ -499,8 +499,8 @@
     "team": "Gwinnett Stripers",
     "position": "BAT",
     "salary": 32,
-    "tier": "BLUE",
-    "avgFP": 17.5,
+    "tier": "WHITE",
+    "avgFP": 20.3,
     "photoCode": "543592"
   },
   {
@@ -511,8 +511,8 @@
     "team": "New York Mets",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.1,
+    "tier": "BLUE",
+    "avgFP": 31.4,
     "photoCode": "543760"
   },
   {
@@ -524,7 +524,7 @@
     "position": "BAT",
     "salary": 70,
     "tier": "ORANGE",
-    "avgFP": 39.6,
+    "avgFP": 44,
     "photoCode": "543807"
   },
   {
@@ -535,8 +535,8 @@
     "team": "Houston Astros",
     "position": "BAT",
     "salary": 39,
-    "tier": "BLUE",
-    "avgFP": 21.4,
+    "tier": "WHITE",
+    "avgFP": 24.1,
     "photoCode": "543877"
   },
   {
@@ -547,8 +547,8 @@
     "team": "Arizona Diamondbacks",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.3,
+    "tier": "BLUE",
+    "avgFP": 32.3,
     "photoCode": "545121"
   },
   {
@@ -559,8 +559,8 @@
     "team": "New York Yankees",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 26,
+    "tier": "GREEN",
+    "avgFP": 29.3,
     "photoCode": "545341"
   },
   {
@@ -571,8 +571,8 @@
     "team": "Los Angeles Angels",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.7,
+    "tier": "PURPLE",
+    "avgFP": 34,
     "photoCode": "545361"
   },
   {
@@ -583,7 +583,7 @@
     "team": "Colorado Rockies",
     "position": "P",
     "salary": 61,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 33.7,
     "photoCode": "547179"
   },
@@ -596,7 +596,7 @@
     "position": "BAT",
     "salary": 61,
     "tier": "ORANGE",
-    "avgFP": 34,
+    "avgFP": 37.7,
     "photoCode": "547180"
   },
   {
@@ -608,7 +608,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.3,
+    "avgFP": 33,
     "photoCode": "553869"
   },
   {
@@ -619,8 +619,8 @@
     "team": "Sultanes de Monterrey",
     "position": "BAT",
     "salary": 38,
-    "tier": "BLUE",
-    "avgFP": 21.3,
+    "tier": "WHITE",
+    "avgFP": 24,
     "photoCode": "553882"
   },
   {
@@ -632,7 +632,7 @@
     "position": "BAT",
     "salary": 70,
     "tier": "ORANGE",
-    "avgFP": 38.7,
+    "avgFP": 42.8,
     "photoCode": "553993"
   },
   {
@@ -655,8 +655,8 @@
     "team": "Minnesota Twins",
     "position": "BAT",
     "salary": 39,
-    "tier": "BLUE",
-    "avgFP": 21.9,
+    "tier": "WHITE",
+    "avgFP": 25,
     "photoCode": "570482"
   },
   {
@@ -667,7 +667,7 @@
     "team": "Toros del Este",
     "position": "P",
     "salary": 39,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 21.5,
     "photoCode": "570632"
   },
@@ -679,8 +679,8 @@
     "team": "Arizona Diamondbacks",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.7,
+    "tier": "BLUE",
+    "avgFP": 30.1,
     "photoCode": "571448"
   },
   {
@@ -691,8 +691,8 @@
     "team": "Round Rock Express",
     "position": "BAT",
     "salary": 32,
-    "tier": "BLUE",
-    "avgFP": 18,
+    "tier": "WHITE",
+    "avgFP": 21,
     "photoCode": "571466"
   },
   {
@@ -703,7 +703,7 @@
     "team": "Chicago Cubs",
     "position": "P",
     "salary": 70,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 38.8,
     "photoCode": "571510"
   },
@@ -715,7 +715,7 @@
     "team": "Texas Rangers",
     "position": "P",
     "salary": 57,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 31.4,
     "photoCode": "571578"
   },
@@ -727,8 +727,8 @@
     "team": "Atlanta Braves",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.4,
+    "tier": "GREEN",
+    "avgFP": 28.7,
     "photoCode": "571657"
   },
   {
@@ -739,8 +739,8 @@
     "team": "Los Angeles Dodgers",
     "position": "P",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.6,
+    "tier": "BLUE",
+    "avgFP": 31,
     "photoCode": "571760"
   },
   {
@@ -751,8 +751,8 @@
     "team": "Los Angeles Dodgers",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.8,
+    "tier": "PURPLE",
+    "avgFP": 34.4,
     "photoCode": "571771"
   },
   {
@@ -763,8 +763,8 @@
     "team": "ACL Royals",
     "position": "BAT",
     "salary": 32,
-    "tier": "BLUE",
-    "avgFP": 17.7,
+    "tier": "WHITE",
+    "avgFP": 19.7,
     "photoCode": "571912"
   },
   {
@@ -775,7 +775,7 @@
     "team": "Tampa Bay Rays",
     "position": "P",
     "salary": 56,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 31.3,
     "photoCode": "571927"
   },
@@ -787,7 +787,7 @@
     "team": "Washington Nationals",
     "position": "P",
     "salary": 47,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 26.3,
     "photoCode": "571945"
   },
@@ -800,7 +800,7 @@
     "position": "BAT",
     "salary": 62,
     "tier": "ORANGE",
-    "avgFP": 34.6,
+    "avgFP": 38.2,
     "photoCode": "571970"
   },
   {
@@ -811,8 +811,8 @@
     "team": "Tomateros de Culiacan",
     "position": "BAT",
     "salary": 18,
-    "tier": "GREEN",
-    "avgFP": 10,
+    "tier": "WHITE",
+    "avgFP": 12,
     "photoCode": "572138"
   },
   {
@@ -823,8 +823,8 @@
     "team": "Chicago White Sox",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.7,
+    "tier": "PURPLE",
+    "avgFP": 34.2,
     "photoCode": "572191"
   },
   {
@@ -836,7 +836,7 @@
     "position": "BAT",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 33.2,
+    "avgFP": 37.2,
     "photoCode": "572233"
   },
   {
@@ -847,7 +847,7 @@
     "team": "New York Yankees",
     "position": "P",
     "salary": 41,
-    "tier": "PURPLE",
+    "tier": "WHITE",
     "avgFP": 22.7,
     "photoCode": "573186"
   },
@@ -859,8 +859,8 @@
     "team": "Atlanta Braves",
     "position": "BAT",
     "salary": 52,
-    "tier": "PURPLE",
-    "avgFP": 29.1,
+    "tier": "BLUE",
+    "avgFP": 32.3,
     "photoCode": "573262"
   },
   {
@@ -871,8 +871,8 @@
     "team": "Boston Red Sox",
     "position": "BAT",
     "salary": 56,
-    "tier": "ORANGE",
-    "avgFP": 31.2,
+    "tier": "PURPLE",
+    "avgFP": 34.9,
     "photoCode": "575929"
   },
   {
@@ -883,8 +883,8 @@
     "team": "San Diego Padres",
     "position": "BAT",
     "salary": 40,
-    "tier": "PURPLE",
-    "avgFP": 22.3,
+    "tier": "WHITE",
+    "avgFP": 25.2,
     "photoCode": "578428"
   },
   {
@@ -895,7 +895,7 @@
     "team": "Los Angeles Angels",
     "position": "P",
     "salary": 66,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 36.4,
     "photoCode": "579328"
   },
@@ -907,8 +907,8 @@
     "team": "Colorado Rockies",
     "position": "BAT",
     "salary": 38,
-    "tier": "BLUE",
-    "avgFP": 21.2,
+    "tier": "WHITE",
+    "avgFP": 24.2,
     "photoCode": "592178"
   },
   {
@@ -919,8 +919,8 @@
     "team": "Round Rock Express",
     "position": "BAT",
     "salary": 34,
-    "tier": "BLUE",
-    "avgFP": 18.9,
+    "tier": "WHITE",
+    "avgFP": 21.8,
     "photoCode": "592192"
   },
   {
@@ -931,8 +931,8 @@
     "team": "San Diego Padres",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.5,
+    "tier": "BLUE",
+    "avgFP": 32.1,
     "photoCode": "592206"
   },
   {
@@ -967,7 +967,7 @@
     "team": "Texas Rangers",
     "position": "P",
     "salary": 52,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 29,
     "photoCode": "592351"
   },
@@ -980,7 +980,7 @@
     "position": "BAT",
     "salary": 70,
     "tier": "ORANGE",
-    "avgFP": 42.8,
+    "avgFP": 47.3,
     "photoCode": "592450"
   },
   {
@@ -992,7 +992,7 @@
     "position": "BAT",
     "salary": 64,
     "tier": "ORANGE",
-    "avgFP": 35.6,
+    "avgFP": 39.9,
     "photoCode": "592518"
   },
   {
@@ -1003,8 +1003,8 @@
     "team": "Texas Rangers",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 25.9,
+    "tier": "GREEN",
+    "avgFP": 28.8,
     "photoCode": "592626"
   },
   {
@@ -1015,7 +1015,7 @@
     "team": "San Francisco Giants",
     "position": "P",
     "salary": 70,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 39.2,
     "photoCode": "592662"
   },
@@ -1027,8 +1027,8 @@
     "team": "Philadelphia Phillies",
     "position": "BAT",
     "salary": 49,
-    "tier": "PURPLE",
-    "avgFP": 27.3,
+    "tier": "BLUE",
+    "avgFP": 30.9,
     "photoCode": "592663"
   },
   {
@@ -1039,8 +1039,8 @@
     "team": "Kansas City Royals",
     "position": "BAT",
     "salary": 29,
-    "tier": "BLUE",
-    "avgFP": 16.2,
+    "tier": "WHITE",
+    "avgFP": 18.4,
     "photoCode": "592669"
   },
   {
@@ -1051,8 +1051,8 @@
     "team": "Chicago Cubs",
     "position": "P",
     "salary": 62,
-    "tier": "ORANGE",
-    "avgFP": 34.5,
+    "tier": "PURPLE",
+    "avgFP": 37.9,
     "photoCode": "592791"
   },
   {
@@ -1063,7 +1063,7 @@
     "team": "Philadelphia Phillies",
     "position": "P",
     "salary": 41,
-    "tier": "PURPLE",
+    "tier": "WHITE",
     "avgFP": 22.8,
     "photoCode": "592836"
   },
@@ -1075,7 +1075,7 @@
     "team": "Washington Nationals",
     "position": "P",
     "salary": 41,
-    "tier": "PURPLE",
+    "tier": "WHITE",
     "avgFP": 23,
     "photoCode": "592866"
   },
@@ -1088,7 +1088,7 @@
     "position": "BAT",
     "salary": 65,
     "tier": "ORANGE",
-    "avgFP": 36,
+    "avgFP": 40.2,
     "photoCode": "592885"
   },
   {
@@ -1099,7 +1099,7 @@
     "team": "New York Mets",
     "position": "P",
     "salary": 40,
-    "tier": "PURPLE",
+    "tier": "WHITE",
     "avgFP": 22.4,
     "photoCode": "593423"
   },
@@ -1112,7 +1112,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.5,
+    "avgFP": 33,
     "photoCode": "593428"
   },
   {
@@ -1124,7 +1124,7 @@
     "position": "BAT",
     "salary": 59,
     "tier": "ORANGE",
-    "avgFP": 32.8,
+    "avgFP": 36.6,
     "photoCode": "593871"
   },
   {
@@ -1135,8 +1135,8 @@
     "team": "Arizona Diamondbacks",
     "position": "P",
     "salary": 60,
-    "tier": "ORANGE",
-    "avgFP": 33.1,
+    "tier": "PURPLE",
+    "avgFP": 34.7,
     "photoCode": "593958"
   },
   {
@@ -1159,7 +1159,7 @@
     "team": "Columbus Clippers",
     "position": "P",
     "salary": 44,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 24.7,
     "photoCode": "594902"
   },
@@ -1171,8 +1171,8 @@
     "team": "Omaha Storm Chasers",
     "position": "BAT",
     "salary": 38,
-    "tier": "BLUE",
-    "avgFP": 21.3,
+    "tier": "WHITE",
+    "avgFP": 24.5,
     "photoCode": "595751"
   },
   {
@@ -1184,7 +1184,7 @@
     "position": "BAT",
     "salary": 64,
     "tier": "ORANGE",
-    "avgFP": 35.5,
+    "avgFP": 39.3,
     "photoCode": "595777"
   },
   {
@@ -1196,7 +1196,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 30.2,
+    "avgFP": 34.3,
     "photoCode": "595879"
   },
   {
@@ -1207,8 +1207,8 @@
     "team": "Cleveland Guardians",
     "position": "BAT",
     "salary": 38,
-    "tier": "BLUE",
-    "avgFP": 20.9,
+    "tier": "WHITE",
+    "avgFP": 23.1,
     "photoCode": "595978"
   },
   {
@@ -1220,7 +1220,7 @@
     "position": "BAT",
     "salary": 69,
     "tier": "ORANGE",
-    "avgFP": 38.2,
+    "avgFP": 42.5,
     "photoCode": "596019"
   },
   {
@@ -1231,8 +1231,8 @@
     "team": "Miami Marlins",
     "position": "BAT",
     "salary": 56,
-    "tier": "ORANGE",
-    "avgFP": 30.9,
+    "tier": "PURPLE",
+    "avgFP": 34.6,
     "photoCode": "596103"
   },
   {
@@ -1244,7 +1244,7 @@
     "position": "BAT",
     "salary": 68,
     "tier": "ORANGE",
-    "avgFP": 37.8,
+    "avgFP": 42.2,
     "photoCode": "596115"
   },
   {
@@ -1256,7 +1256,7 @@
     "position": "BAT",
     "salary": 70,
     "tier": "ORANGE",
-    "avgFP": 42.7,
+    "avgFP": 47.9,
     "photoCode": "596142"
   },
   {
@@ -1267,8 +1267,8 @@
     "team": "Philadelphia Phillies",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.3,
+    "tier": "BLUE",
+    "avgFP": 31.5,
     "photoCode": "596146"
   },
   {
@@ -1279,7 +1279,7 @@
     "team": "Tacoma Rainiers",
     "position": "P",
     "salary": 41,
-    "tier": "PURPLE",
+    "tier": "WHITE",
     "avgFP": 22.5,
     "photoCode": "596271"
   },
@@ -1291,8 +1291,8 @@
     "team": "Round Rock Express",
     "position": "P",
     "salary": 27,
-    "tier": "GREEN",
-    "avgFP": 14.9,
+    "tier": "WHITE",
+    "avgFP": 17.8,
     "photoCode": "596295"
   },
   {
@@ -1303,8 +1303,8 @@
     "team": "Los Angeles Angels",
     "position": "BAT",
     "salary": 36,
-    "tier": "BLUE",
-    "avgFP": 19.9,
+    "tier": "WHITE",
+    "avgFP": 21.9,
     "photoCode": "600869"
   },
   {
@@ -1327,8 +1327,8 @@
     "team": "St. Louis Cardinals",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.9,
+    "tier": "BLUE",
+    "avgFP": 30.2,
     "photoCode": "602104"
   },
   {
@@ -1339,8 +1339,8 @@
     "team": "New York Mets",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 26.2,
+    "tier": "BLUE",
+    "avgFP": 30,
     "photoCode": "605131"
   },
   {
@@ -1351,7 +1351,7 @@
     "team": "Baltimore Orioles",
     "position": "P",
     "salary": 67,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 37.4,
     "photoCode": "605135"
   },
@@ -1363,8 +1363,8 @@
     "team": "Minnesota Twins",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.1,
+    "tier": "BLUE",
+    "avgFP": 31.4,
     "photoCode": "605137"
   },
   {
@@ -1375,8 +1375,8 @@
     "team": "Los Angeles Dodgers",
     "position": "BAT",
     "salary": 56,
-    "tier": "ORANGE",
-    "avgFP": 31,
+    "tier": "PURPLE",
+    "avgFP": 34.8,
     "photoCode": "605141"
   },
   {
@@ -1388,7 +1388,7 @@
     "position": "BAT",
     "salary": 52,
     "tier": "PURPLE",
-    "avgFP": 28.9,
+    "avgFP": 32.6,
     "photoCode": "605170"
   },
   {
@@ -1399,7 +1399,7 @@
     "team": "New York Mets",
     "position": "P",
     "salary": 55,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 30.7,
     "photoCode": "605280"
   },
@@ -1411,7 +1411,7 @@
     "team": "San Francisco Giants",
     "position": "P",
     "salary": 63,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 35,
     "photoCode": "605288"
   },
@@ -1435,8 +1435,8 @@
     "team": "Las Vegas Aviators",
     "position": "BAT",
     "salary": 45,
-    "tier": "PURPLE",
-    "avgFP": 24.8,
+    "tier": "GREEN",
+    "avgFP": 28.1,
     "photoCode": "605361"
   },
   {
@@ -1447,7 +1447,7 @@
     "team": "Philadelphia Phillies",
     "position": "P",
     "salary": 67,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 37.3,
     "photoCode": "605400"
   },
@@ -1471,7 +1471,7 @@
     "team": "Athletics",
     "position": "P",
     "salary": 64,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 35.6,
     "photoCode": "605488"
   },
@@ -1495,8 +1495,8 @@
     "team": "St. Paul Saints",
     "position": "BAT",
     "salary": 40,
-    "tier": "PURPLE",
-    "avgFP": 22.4,
+    "tier": "GREEN",
+    "avgFP": 25.5,
     "photoCode": "606115"
   },
   {
@@ -1508,7 +1508,7 @@
     "position": "BAT",
     "salary": 59,
     "tier": "ORANGE",
-    "avgFP": 32.5,
+    "avgFP": 36.5,
     "photoCode": "606192"
   },
   {
@@ -1520,7 +1520,7 @@
     "position": "BAT",
     "salary": 64,
     "tier": "ORANGE",
-    "avgFP": 35.3,
+    "avgFP": 39.3,
     "photoCode": "606466"
   },
   {
@@ -1531,8 +1531,8 @@
     "team": "Sacramento River Cats",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.7,
+    "tier": "GREEN",
+    "avgFP": 27.9,
     "photoCode": "606992"
   },
   {
@@ -1543,7 +1543,7 @@
     "team": "San Diego Padres",
     "position": "P",
     "salary": 43,
-    "tier": "PURPLE",
+    "tier": "WHITE",
     "avgFP": 23.8,
     "photoCode": "606996"
   },
@@ -1556,7 +1556,7 @@
     "position": "BAT",
     "salary": 58,
     "tier": "ORANGE",
-    "avgFP": 32.3,
+    "avgFP": 36.2,
     "photoCode": "607043"
   },
   {
@@ -1567,7 +1567,7 @@
     "team": "Chicago Cubs",
     "position": "P",
     "salary": 53,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 29.7,
     "photoCode": "607067"
   },
@@ -1603,8 +1603,8 @@
     "team": "Chicago White Sox",
     "position": "P",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 22.8,
+    "tier": "GREEN",
+    "avgFP": 25.4,
     "photoCode": "607200"
   },
   {
@@ -1616,7 +1616,7 @@
     "position": "BAT",
     "salary": 64,
     "tier": "ORANGE",
-    "avgFP": 35.3,
+    "avgFP": 39.6,
     "photoCode": "607208"
   },
   {
@@ -1627,8 +1627,8 @@
     "team": "Tampa Bay Rays",
     "position": "P",
     "salary": 58,
-    "tier": "ORANGE",
-    "avgFP": 32.2,
+    "tier": "BLUE",
+    "avgFP": 33.9,
     "photoCode": "607259"
   },
   {
@@ -1639,7 +1639,7 @@
     "team": "Colorado Rockies",
     "position": "P",
     "salary": 56,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 30.9,
     "photoCode": "607536"
   },
@@ -1651,8 +1651,8 @@
     "team": "Kansas City Royals",
     "position": "P",
     "salary": 63,
-    "tier": "ORANGE",
-    "avgFP": 34.9,
+    "tier": "PURPLE",
+    "avgFP": 36.6,
     "photoCode": "607625"
   },
   {
@@ -1663,8 +1663,8 @@
     "team": "Texas Rangers",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.8,
+    "tier": "BLUE",
+    "avgFP": 31.6,
     "photoCode": "607680"
   },
   {
@@ -1675,8 +1675,8 @@
     "team": "Norfolk Tides",
     "position": "BAT",
     "salary": 38,
-    "tier": "BLUE",
-    "avgFP": 21.2,
+    "tier": "WHITE",
+    "avgFP": 24.1,
     "photoCode": "607732"
   },
   {
@@ -1688,7 +1688,7 @@
     "position": "BAT",
     "salary": 66,
     "tier": "ORANGE",
-    "avgFP": 36.6,
+    "avgFP": 40.5,
     "photoCode": "608070"
   },
   {
@@ -1699,8 +1699,8 @@
     "team": "Chicago Cubs",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.8,
+    "tier": "PURPLE",
+    "avgFP": 34.5,
     "photoCode": "608324"
   },
   {
@@ -1723,7 +1723,7 @@
     "team": "Indianapolis Indians",
     "position": "P",
     "salary": 43,
-    "tier": "PURPLE",
+    "tier": "WHITE",
     "avgFP": 23.7,
     "photoCode": "608334"
   },
@@ -1735,7 +1735,7 @@
     "team": "Boston Red Sox",
     "position": "P",
     "salary": 69,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 38.5,
     "photoCode": "608337"
   },
@@ -1748,7 +1748,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.6,
+    "avgFP": 33.1,
     "photoCode": "608348"
   },
   {
@@ -1759,8 +1759,8 @@
     "team": "Texas Rangers",
     "position": "BAT",
     "salary": 58,
-    "tier": "ORANGE",
-    "avgFP": 32.4,
+    "tier": "PURPLE",
+    "avgFP": 36,
     "photoCode": "608369"
   },
   {
@@ -1771,7 +1771,7 @@
     "team": "Colorado Rockies",
     "position": "P",
     "salary": 53,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 29.2,
     "photoCode": "608372"
   },
@@ -1783,7 +1783,7 @@
     "team": "Kansas City Royals",
     "position": "P",
     "salary": 58,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 32.1,
     "photoCode": "608379"
   },
@@ -1796,7 +1796,7 @@
     "position": "BAT",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 33.3,
+    "avgFP": 37.2,
     "photoCode": "608385"
   },
   {
@@ -1807,8 +1807,8 @@
     "team": "San Diego Padres",
     "position": "P",
     "salary": 42,
-    "tier": "PURPLE",
-    "avgFP": 23.2,
+    "tier": "GREEN",
+    "avgFP": 27.7,
     "photoCode": "608566"
   },
   {
@@ -1819,7 +1819,7 @@
     "team": "Baltimore Orioles",
     "position": "P",
     "salary": 36,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 20,
     "photoCode": "608650"
   },
@@ -1831,8 +1831,8 @@
     "team": "Syracuse Mets",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 22.9,
+    "tier": "GREEN",
+    "avgFP": 26.1,
     "photoCode": "608671"
   },
   {
@@ -1843,8 +1843,8 @@
     "team": "Seattle Mariners",
     "position": "BAT",
     "salary": 57,
-    "tier": "ORANGE",
-    "avgFP": 31.8,
+    "tier": "PURPLE",
+    "avgFP": 35.5,
     "photoCode": "608701"
   },
   {
@@ -1856,7 +1856,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.3,
+    "avgFP": 33.3,
     "photoCode": "609280"
   },
   {
@@ -1867,8 +1867,8 @@
     "team": "Round Rock Express",
     "position": "P",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 22.9,
+    "tier": "WHITE",
+    "avgFP": 24.1,
     "photoCode": "615698"
   },
   {
@@ -1879,8 +1879,8 @@
     "team": "New York Mets",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 26,
+    "tier": "GREEN",
+    "avgFP": 29.3,
     "photoCode": "620443"
   },
   {
@@ -1891,8 +1891,8 @@
     "team": "Chicago Cubs",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.8,
+    "tier": "PURPLE",
+    "avgFP": 34.4,
     "photoCode": "621020"
   },
   {
@@ -1903,8 +1903,8 @@
     "team": "Omaha Storm Chasers",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.3,
+    "tier": "GREEN",
+    "avgFP": 27.5,
     "photoCode": "621028"
   },
   {
@@ -1915,8 +1915,8 @@
     "team": "Salt Lake Bees",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.4,
+    "tier": "BLUE",
+    "avgFP": 31.8,
     "photoCode": "621035"
   },
   {
@@ -1927,8 +1927,8 @@
     "team": "Houston Astros",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.6,
+    "tier": "BLUE",
+    "avgFP": 32.4,
     "photoCode": "621043"
   },
   {
@@ -1939,7 +1939,7 @@
     "team": "Baltimore Orioles",
     "position": "P",
     "salary": 53,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 29.7,
     "photoCode": "621107"
   },
@@ -1951,7 +1951,7 @@
     "team": "San Diego Padres",
     "position": "P",
     "salary": 51,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 28.4,
     "photoCode": "621111"
   },
@@ -1963,7 +1963,7 @@
     "team": "New York Yankees",
     "position": "P",
     "salary": 39,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 21.7,
     "photoCode": "621112"
   },
@@ -1975,7 +1975,7 @@
     "team": "Houston Astros",
     "position": "P",
     "salary": 70,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 39.2,
     "photoCode": "621121"
   },
@@ -1987,7 +1987,7 @@
     "team": "Toronto Blue Jays",
     "position": "P",
     "salary": 61,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 34,
     "photoCode": "621244"
   },
@@ -1999,8 +1999,8 @@
     "team": "New York Mets",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.3,
+    "tier": "GREEN",
+    "avgFP": 27.4,
     "photoCode": "621438"
   },
   {
@@ -2012,7 +2012,7 @@
     "position": "BAT",
     "salary": 70,
     "tier": "ORANGE",
-    "avgFP": 42.1,
+    "avgFP": 46.6,
     "photoCode": "621439"
   },
   {
@@ -2024,7 +2024,7 @@
     "position": "BAT",
     "salary": 61,
     "tier": "ORANGE",
-    "avgFP": 33.8,
+    "avgFP": 37.4,
     "photoCode": "621493"
   },
   {
@@ -2035,8 +2035,8 @@
     "team": "Toledo Mud Hens",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 22.6,
+    "tier": "GREEN",
+    "avgFP": 26.6,
     "photoCode": "621512"
   },
   {
@@ -2048,7 +2048,7 @@
     "position": "BAT",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 33.5,
+    "avgFP": 37.4,
     "photoCode": "621566"
   },
   {
@@ -2059,8 +2059,8 @@
     "team": "Salt Lake Bees",
     "position": "BAT",
     "salary": 23,
-    "tier": "GREEN",
-    "avgFP": 13,
+    "tier": "WHITE",
+    "avgFP": 15,
     "photoCode": "622268"
   },
   {
@@ -2071,7 +2071,7 @@
     "team": "Aguilas Cibaenas",
     "position": "P",
     "salary": 27,
-    "tier": "GREEN",
+    "tier": "WHITE",
     "avgFP": 15,
     "photoCode": "622379"
   },
@@ -2083,7 +2083,7 @@
     "team": "Seattle Mariners",
     "position": "P",
     "salary": 67,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 37,
     "photoCode": "622491"
   },
@@ -2095,7 +2095,7 @@
     "team": "Round Rock Express",
     "position": "P",
     "salary": 51,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 28.5,
     "photoCode": "622503"
   },
@@ -2107,8 +2107,8 @@
     "team": "Toledo Mud Hens",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.7,
+    "tier": "GREEN",
+    "avgFP": 29,
     "photoCode": "622534"
   },
   {
@@ -2119,8 +2119,8 @@
     "team": "El Paso Chihuahuas",
     "position": "BAT",
     "salary": 18,
-    "tier": "GREEN",
-    "avgFP": 10,
+    "tier": "WHITE",
+    "avgFP": 11.3,
     "photoCode": "622569"
   },
   {
@@ -2131,8 +2131,8 @@
     "team": "Colorado Rockies",
     "position": "P",
     "salary": 28,
-    "tier": "BLUE",
-    "avgFP": 15.8,
+    "tier": "WHITE",
+    "avgFP": 17.3,
     "photoCode": "622608"
   },
   {
@@ -2143,8 +2143,8 @@
     "team": "Athletics",
     "position": "P",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.3,
+    "tier": "BLUE",
+    "avgFP": 33,
     "photoCode": "622663"
   },
   {
@@ -2155,8 +2155,8 @@
     "team": "Atlanta Braves",
     "position": "BAT",
     "salary": 56,
-    "tier": "ORANGE",
-    "avgFP": 31.2,
+    "tier": "PURPLE",
+    "avgFP": 33.8,
     "photoCode": "622761"
   },
   {
@@ -2167,7 +2167,7 @@
     "team": "Chicago Cubs",
     "position": "P",
     "salary": 24,
-    "tier": "GREEN",
+    "tier": "WHITE",
     "avgFP": 13.5,
     "photoCode": "623167"
   },
@@ -2179,8 +2179,8 @@
     "team": "Toronto Blue Jays",
     "position": "BAT",
     "salary": 49,
-    "tier": "PURPLE",
-    "avgFP": 27.1,
+    "tier": "BLUE",
+    "avgFP": 30.7,
     "photoCode": "623168"
   },
   {
@@ -2191,8 +2191,8 @@
     "team": "Toronto Blue Jays",
     "position": "BAT",
     "salary": 39,
-    "tier": "BLUE",
-    "avgFP": 21.6,
+    "tier": "WHITE",
+    "avgFP": 24.1,
     "photoCode": "623993"
   },
   {
@@ -2216,7 +2216,7 @@
     "position": "BAT",
     "salary": 66,
     "tier": "ORANGE",
-    "avgFP": 36.9,
+    "avgFP": 41.2,
     "photoCode": "624413"
   },
   {
@@ -2227,8 +2227,8 @@
     "team": "Sugar Land Space Cowboys",
     "position": "BAT",
     "salary": 28,
-    "tier": "BLUE",
-    "avgFP": 15.3,
+    "tier": "WHITE",
+    "avgFP": 16.9,
     "photoCode": "624415"
   },
   {
@@ -2239,8 +2239,8 @@
     "team": "Chicago Cubs",
     "position": "BAT",
     "salary": 43,
-    "tier": "PURPLE",
-    "avgFP": 24,
+    "tier": "GREEN",
+    "avgFP": 26.7,
     "photoCode": "624424"
   },
   {
@@ -2251,8 +2251,8 @@
     "team": "Los Angeles Angels",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 25.9,
+    "tier": "GREEN",
+    "avgFP": 29.4,
     "photoCode": "624428"
   },
   {
@@ -2263,8 +2263,8 @@
     "team": "Cincinnati Reds",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.5,
+    "tier": "GREEN",
+    "avgFP": 27.9,
     "photoCode": "624431"
   },
   {
@@ -2276,7 +2276,7 @@
     "position": "BAT",
     "salary": 68,
     "tier": "ORANGE",
-    "avgFP": 37.5,
+    "avgFP": 41.9,
     "photoCode": "624512"
   },
   {
@@ -2288,7 +2288,7 @@
     "position": "BAT",
     "salary": 65,
     "tier": "ORANGE",
-    "avgFP": 36,
+    "avgFP": 42,
     "photoCode": "624513"
   },
   {
@@ -2299,8 +2299,8 @@
     "team": "Los Angeles Angels",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.7,
+    "tier": "BLUE",
+    "avgFP": 30.9,
     "photoCode": "624585"
   },
   {
@@ -2312,7 +2312,7 @@
     "position": "BAT",
     "salary": 58,
     "tier": "ORANGE",
-    "avgFP": 32.3,
+    "avgFP": 36.4,
     "photoCode": "624641"
   },
   {
@@ -2323,7 +2323,7 @@
     "team": "Atlanta Braves",
     "position": "P",
     "salary": 18,
-    "tier": "GREEN",
+    "tier": "WHITE",
     "avgFP": 10,
     "photoCode": "625643"
   },
@@ -2335,8 +2335,8 @@
     "team": "Athletics",
     "position": "BAT",
     "salary": 57,
-    "tier": "ORANGE",
-    "avgFP": 31.5,
+    "tier": "PURPLE",
+    "avgFP": 35.5,
     "photoCode": "628451"
   },
   {
@@ -2347,8 +2347,8 @@
     "team": "San Diego Padres",
     "position": "BAT",
     "salary": 45,
-    "tier": "PURPLE",
-    "avgFP": 25.2,
+    "tier": "GREEN",
+    "avgFP": 28.2,
     "photoCode": "630105"
   },
   {
@@ -2359,7 +2359,7 @@
     "team": "New York Mets",
     "position": "P",
     "salary": 52,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 29.1,
     "photoCode": "640455"
   },
@@ -2371,8 +2371,8 @@
     "team": "Jacksonville Jumbo Shrimp",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.5,
+    "tier": "GREEN",
+    "avgFP": 28,
     "photoCode": "640459"
   },
   {
@@ -2383,8 +2383,8 @@
     "team": "Gwinnett Stripers",
     "position": "BAT",
     "salary": 37,
-    "tier": "BLUE",
-    "avgFP": 20.5,
+    "tier": "WHITE",
+    "avgFP": 24,
     "photoCode": "640492"
   },
   {
@@ -2395,8 +2395,8 @@
     "team": "Tacoma Rainiers",
     "position": "BAT",
     "salary": 31,
-    "tier": "BLUE",
-    "avgFP": 17.3,
+    "tier": "WHITE",
+    "avgFP": 19.7,
     "photoCode": "640902"
   },
   {
@@ -2407,7 +2407,7 @@
     "team": "Minnesota Twins",
     "position": "P",
     "salary": 65,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 36.3,
     "photoCode": "641154"
   },
@@ -2419,7 +2419,7 @@
     "team": "Texas Rangers",
     "position": "P",
     "salary": 52,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 28.8,
     "photoCode": "641302"
   },
@@ -2431,8 +2431,8 @@
     "team": "Los Angeles Angels",
     "position": "BAT",
     "salary": 35,
-    "tier": "BLUE",
-    "avgFP": 19.5,
+    "tier": "WHITE",
+    "avgFP": 22.4,
     "photoCode": "641313"
   },
   {
@@ -2443,8 +2443,8 @@
     "team": "Milwaukee Brewers",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.2,
+    "tier": "BLUE",
+    "avgFP": 31.2,
     "photoCode": "641343"
   },
   {
@@ -2456,7 +2456,7 @@
     "position": "BAT",
     "salary": 63,
     "tier": "ORANGE",
-    "avgFP": 34.9,
+    "avgFP": 38.9,
     "photoCode": "641355"
   },
   {
@@ -2467,7 +2467,7 @@
     "team": "San Diego Padres",
     "position": "P",
     "salary": 63,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 35.2,
     "photoCode": "641482"
   },
@@ -2479,8 +2479,8 @@
     "team": "Seattle Mariners",
     "position": "BAT",
     "salary": 49,
-    "tier": "PURPLE",
-    "avgFP": 27.2,
+    "tier": "BLUE",
+    "avgFP": 30.6,
     "photoCode": "641487"
   },
   {
@@ -2491,8 +2491,8 @@
     "team": "New York Yankees",
     "position": "BAT",
     "salary": 42,
-    "tier": "PURPLE",
-    "avgFP": 23.1,
+    "tier": "GREEN",
+    "avgFP": 25.6,
     "photoCode": "641555"
   },
   {
@@ -2503,8 +2503,8 @@
     "team": "Tampa Bay Rays",
     "position": "BAT",
     "salary": 58,
-    "tier": "ORANGE",
-    "avgFP": 32.1,
+    "tier": "PURPLE",
+    "avgFP": 35.9,
     "photoCode": "641584"
   },
   {
@@ -2515,8 +2515,8 @@
     "team": "Seattle Mariners",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 25.9,
+    "tier": "GREEN",
+    "avgFP": 28.9,
     "photoCode": "641598"
   },
   {
@@ -2527,8 +2527,8 @@
     "team": "Tiburones de La Guaira",
     "position": "BAT",
     "salary": 28,
-    "tier": "BLUE",
-    "avgFP": 15.3,
+    "tier": "WHITE",
+    "avgFP": 18,
     "photoCode": "641645"
   },
   {
@@ -2539,8 +2539,8 @@
     "team": "Louisville Bats",
     "position": "BAT",
     "salary": 34,
-    "tier": "BLUE",
-    "avgFP": 18.7,
+    "tier": "WHITE",
+    "avgFP": 20.8,
     "photoCode": "641658"
   },
   {
@@ -2551,7 +2551,7 @@
     "team": "Reno Aces",
     "position": "P",
     "salary": 44,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 24.3,
     "photoCode": "641672"
   },
@@ -2563,8 +2563,8 @@
     "team": "Atlanta Braves",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 25.9,
+    "tier": "GREEN",
+    "avgFP": 29.1,
     "photoCode": "641680"
   },
   {
@@ -2575,7 +2575,7 @@
     "team": "Toronto Blue Jays",
     "position": "P",
     "salary": 59,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 33,
     "photoCode": "641778"
   },
@@ -2587,7 +2587,7 @@
     "team": "Washington Nationals",
     "position": "P",
     "salary": 59,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 32.9,
     "photoCode": "641793"
   },
@@ -2599,7 +2599,7 @@
     "team": "San Francisco Giants",
     "position": "P",
     "salary": 64,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 35.7,
     "photoCode": "641816"
   },
@@ -2611,8 +2611,8 @@
     "team": "Round Rock Express",
     "position": "BAT",
     "salary": 27,
-    "tier": "GREEN",
-    "avgFP": 15.2,
+    "tier": "WHITE",
+    "avgFP": 17.3,
     "photoCode": "641856"
   },
   {
@@ -2624,7 +2624,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 30.1,
+    "avgFP": 33.5,
     "photoCode": "641857"
   },
   {
@@ -2635,7 +2635,7 @@
     "team": "Minnesota Twins",
     "position": "P",
     "salary": 54,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 29.8,
     "photoCode": "641927"
   },
@@ -2647,8 +2647,8 @@
     "team": "Baltimore Orioles",
     "position": "BAT",
     "salary": 56,
-    "tier": "ORANGE",
-    "avgFP": 30.9,
+    "tier": "PURPLE",
+    "avgFP": 34.2,
     "photoCode": "641933"
   },
   {
@@ -2659,8 +2659,8 @@
     "team": "Charlotte Knights",
     "position": "BAT",
     "salary": 35,
-    "tier": "BLUE",
-    "avgFP": 19.2,
+    "tier": "WHITE",
+    "avgFP": 21.5,
     "photoCode": "641943"
   },
   {
@@ -2672,7 +2672,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.5,
+    "avgFP": 33.4,
     "photoCode": "642086"
   },
   {
@@ -2683,8 +2683,8 @@
     "team": "Gwinnett Stripers",
     "position": "BAT",
     "salary": 49,
-    "tier": "PURPLE",
-    "avgFP": 27.2,
+    "tier": "BLUE",
+    "avgFP": 30.4,
     "photoCode": "642133"
   },
   {
@@ -2695,8 +2695,8 @@
     "team": "Worcester Red Sox",
     "position": "BAT",
     "salary": 40,
-    "tier": "PURPLE",
-    "avgFP": 22.1,
+    "tier": "WHITE",
+    "avgFP": 24.9,
     "photoCode": "642136"
   },
   {
@@ -2707,8 +2707,8 @@
     "team": "Round Rock Express",
     "position": "BAT",
     "salary": 34,
-    "tier": "BLUE",
-    "avgFP": 18.8,
+    "tier": "WHITE",
+    "avgFP": 21.2,
     "photoCode": "642180"
   },
   {
@@ -2719,8 +2719,8 @@
     "team": "Atlanta Braves",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.8,
+    "tier": "PURPLE",
+    "avgFP": 34.4,
     "photoCode": "642201"
   },
   {
@@ -2731,8 +2731,8 @@
     "team": "Norfolk Tides",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.4,
+    "tier": "BLUE",
+    "avgFP": 31.4,
     "photoCode": "642215"
   },
   {
@@ -2755,8 +2755,8 @@
     "team": "New York Yankees",
     "position": "P",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.6,
+    "tier": "BLUE",
+    "avgFP": 32.2,
     "photoCode": "642232"
   },
   {
@@ -2767,8 +2767,8 @@
     "team": "Salt Lake Bees",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 22.8,
+    "tier": "WHITE",
+    "avgFP": 24.8,
     "photoCode": "642350"
   },
   {
@@ -2791,8 +2791,8 @@
     "team": "New York Yankees",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.7,
+    "tier": "BLUE",
+    "avgFP": 31.4,
     "photoCode": "642708"
   },
   {
@@ -2803,8 +2803,8 @@
     "team": "San Francisco Giants",
     "position": "BAT",
     "salary": 57,
-    "tier": "ORANGE",
-    "avgFP": 31.8,
+    "tier": "PURPLE",
+    "avgFP": 35.2,
     "photoCode": "642715"
   },
   {
@@ -2815,8 +2815,8 @@
     "team": "Baltimore Orioles",
     "position": "BAT",
     "salary": 49,
-    "tier": "PURPLE",
-    "avgFP": 27.4,
+    "tier": "BLUE",
+    "avgFP": 31.2,
     "photoCode": "642731"
   },
   {
@@ -2828,7 +2828,7 @@
     "position": "BAT",
     "salary": 67,
     "tier": "ORANGE",
-    "avgFP": 37.2,
+    "avgFP": 41.8,
     "photoCode": "642851"
   },
   {
@@ -2840,7 +2840,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.7,
+    "avgFP": 33.2,
     "photoCode": "643217"
   },
   {
@@ -2851,8 +2851,8 @@
     "team": "Atlanta Braves",
     "position": "BAT",
     "salary": 45,
-    "tier": "PURPLE",
-    "avgFP": 24.8,
+    "tier": "GREEN",
+    "avgFP": 28.1,
     "photoCode": "643289"
   },
   {
@@ -2863,8 +2863,8 @@
     "team": "Texas Rangers",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 26.2,
+    "tier": "GREEN",
+    "avgFP": 29,
     "photoCode": "643376"
   },
   {
@@ -2875,8 +2875,8 @@
     "team": "Boston Red Sox",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 23,
+    "tier": "GREEN",
+    "avgFP": 26.1,
     "photoCode": "643396"
   },
   {
@@ -2887,8 +2887,8 @@
     "team": "Athletics",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.4,
+    "tier": "GREEN",
+    "avgFP": 29.5,
     "photoCode": "643446"
   },
   {
@@ -2899,8 +2899,8 @@
     "team": "Syracuse Mets",
     "position": "BAT",
     "salary": 52,
-    "tier": "PURPLE",
-    "avgFP": 28.9,
+    "tier": "BLUE",
+    "avgFP": 32.5,
     "photoCode": "643565"
   },
   {
@@ -2911,8 +2911,8 @@
     "team": "Gwinnett Stripers",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.3,
+    "tier": "BLUE",
+    "avgFP": 31.3,
     "photoCode": "644433"
   },
   {
@@ -2923,8 +2923,8 @@
     "team": "Miami Marlins",
     "position": "P",
     "salary": 59,
-    "tier": "ORANGE",
-    "avgFP": 32.7,
+    "tier": "BLUE",
+    "avgFP": 34.1,
     "photoCode": "645261"
   },
   {
@@ -2935,8 +2935,8 @@
     "team": "Atlanta Braves",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.5,
+    "tier": "BLUE",
+    "avgFP": 32,
     "photoCode": "645277"
   },
   {
@@ -2947,8 +2947,8 @@
     "team": "Seattle Mariners",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 26.2,
+    "tier": "BLUE",
+    "avgFP": 29.5,
     "photoCode": "645302"
   },
   {
@@ -2959,8 +2959,8 @@
     "team": "Scranton/Wilkes-Barre RailRiders",
     "position": "BAT",
     "salary": 31,
-    "tier": "BLUE",
-    "avgFP": 17,
+    "tier": "WHITE",
+    "avgFP": 19.7,
     "photoCode": "645305"
   },
   {
@@ -2971,8 +2971,8 @@
     "team": "Round Rock Express",
     "position": "BAT",
     "salary": 39,
-    "tier": "BLUE",
-    "avgFP": 21.9,
+    "tier": "WHITE",
+    "avgFP": 24.6,
     "photoCode": "645444"
   },
   {
@@ -2984,7 +2984,7 @@
     "position": "BAT",
     "salary": 59,
     "tier": "ORANGE",
-    "avgFP": 32.7,
+    "avgFP": 36.2,
     "photoCode": "646240"
   },
   {
@@ -2996,7 +2996,7 @@
     "position": "BAT",
     "salary": 62,
     "tier": "ORANGE",
-    "avgFP": 34.3,
+    "avgFP": 38.3,
     "photoCode": "647304"
   },
   {
@@ -3007,7 +3007,7 @@
     "team": "Arizona Diamondbacks",
     "position": "P",
     "salary": 58,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 32.4,
     "photoCode": "647336"
   },
@@ -3019,8 +3019,8 @@
     "team": "Omaha Storm Chasers",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.8,
+    "tier": "BLUE",
+    "avgFP": 30.3,
     "photoCode": "647351"
   },
   {
@@ -3031,8 +3031,8 @@
     "team": "Reno Aces",
     "position": "BAT",
     "salary": 39,
-    "tier": "BLUE",
-    "avgFP": 21.5,
+    "tier": "WHITE",
+    "avgFP": 24.2,
     "photoCode": "649966"
   },
   {
@@ -3043,8 +3043,8 @@
     "team": "San Francisco Giants",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.3,
+    "tier": "BLUE",
+    "avgFP": 32.2,
     "photoCode": "650333"
   },
   {
@@ -3055,8 +3055,8 @@
     "team": "Detroit Tigers",
     "position": "BAT",
     "salary": 52,
-    "tier": "PURPLE",
-    "avgFP": 29,
+    "tier": "BLUE",
+    "avgFP": 32.4,
     "photoCode": "650402"
   },
   {
@@ -3067,8 +3067,8 @@
     "team": "Colorado Rockies",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.9,
+    "tier": "BLUE",
+    "avgFP": 31.2,
     "photoCode": "650489"
   },
   {
@@ -3080,7 +3080,7 @@
     "position": "BAT",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 33.3,
+    "avgFP": 37.5,
     "photoCode": "650490"
   },
   {
@@ -3091,8 +3091,8 @@
     "team": "Lehigh Valley IronPigs",
     "position": "BAT",
     "salary": 32,
-    "tier": "BLUE",
-    "avgFP": 17.6,
+    "tier": "WHITE",
+    "avgFP": 20,
     "photoCode": "650559"
   },
   {
@@ -3115,8 +3115,8 @@
     "team": "Athletics",
     "position": "P",
     "salary": 49,
-    "tier": "PURPLE",
-    "avgFP": 27.2,
+    "tier": "GREEN",
+    "avgFP": 29.2,
     "photoCode": "650644"
   },
   {
@@ -3127,8 +3127,8 @@
     "team": "Milwaukee Brewers",
     "position": "BAT",
     "salary": 43,
-    "tier": "PURPLE",
-    "avgFP": 24,
+    "tier": "GREEN",
+    "avgFP": 27.1,
     "photoCode": "650859"
   },
   {
@@ -3151,8 +3151,8 @@
     "team": "St. Louis Cardinals",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 22.5,
+    "tier": "WHITE",
+    "avgFP": 25.4,
     "photoCode": "650968"
   },
   {
@@ -3163,8 +3163,8 @@
     "team": "Boston Red Sox",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 26.1,
+    "tier": "GREEN",
+    "avgFP": 29.5,
     "photoCode": "655316"
   },
   {
@@ -3175,8 +3175,8 @@
     "team": "Rochester Red Wings",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.8,
+    "tier": "BLUE",
+    "avgFP": 30.1,
     "photoCode": "656180"
   },
   {
@@ -3187,8 +3187,8 @@
     "team": "Albuquerque Isotopes",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.3,
+    "tier": "BLUE",
+    "avgFP": 31.3,
     "photoCode": "656248"
   },
   {
@@ -3199,7 +3199,7 @@
     "team": "San Diego Padres",
     "position": "P",
     "salary": 61,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 33.8,
     "photoCode": "656288"
   },
@@ -3211,7 +3211,7 @@
     "team": "Toronto Blue Jays",
     "position": "P",
     "salary": 70,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 38.7,
     "photoCode": "656302"
   },
@@ -3223,8 +3223,8 @@
     "team": "San Francisco Giants",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.8,
+    "tier": "PURPLE",
+    "avgFP": 34.1,
     "photoCode": "656305"
   },
   {
@@ -3235,8 +3235,8 @@
     "team": "Columbus Clippers",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.2,
+    "tier": "GREEN",
+    "avgFP": 27,
     "photoCode": "656413"
   },
   {
@@ -3247,7 +3247,7 @@
     "team": "Detroit Tigers",
     "position": "P",
     "salary": 69,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 38.2,
     "photoCode": "656427"
   },
@@ -3259,8 +3259,8 @@
     "team": "Minnesota Twins",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.6,
+    "tier": "BLUE",
+    "avgFP": 31.9,
     "photoCode": "656484"
   },
   {
@@ -3271,8 +3271,8 @@
     "team": "Chicago White Sox",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.5,
+    "tier": "GREEN",
+    "avgFP": 28.6,
     "photoCode": "656537"
   },
   {
@@ -3283,8 +3283,8 @@
     "team": "Albuquerque Isotopes",
     "position": "BAT",
     "salary": 33,
-    "tier": "BLUE",
-    "avgFP": 18.2,
+    "tier": "WHITE",
+    "avgFP": 20,
     "photoCode": "656541"
   },
   {
@@ -3295,7 +3295,7 @@
     "team": "Atlanta Braves",
     "position": "P",
     "salary": 70,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 39.2,
     "photoCode": "656550"
   },
@@ -3307,8 +3307,8 @@
     "team": "Cleveland Guardians",
     "position": "BAT",
     "salary": 52,
-    "tier": "PURPLE",
-    "avgFP": 28.8,
+    "tier": "BLUE",
+    "avgFP": 32,
     "photoCode": "656555"
   },
   {
@@ -3319,7 +3319,7 @@
     "team": "Boston Red Sox",
     "position": "P",
     "salary": 54,
-    "tier": "PURPLE",
+    "tier": "BLUE",
     "avgFP": 30,
     "photoCode": "656557"
   },
@@ -3331,8 +3331,8 @@
     "team": "St. Paul Saints",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.8,
+    "tier": "PURPLE",
+    "avgFP": 34.4,
     "photoCode": "656577"
   },
   {
@@ -3343,8 +3343,8 @@
     "team": "Tacoma Rainiers",
     "position": "BAT",
     "salary": 37,
-    "tier": "BLUE",
-    "avgFP": 20.6,
+    "tier": "WHITE",
+    "avgFP": 23,
     "photoCode": "656582"
   },
   {
@@ -3355,7 +3355,7 @@
     "team": "Pittsburgh Pirates",
     "position": "P",
     "salary": 64,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 35.3,
     "photoCode": "656605"
   },
@@ -3367,7 +3367,7 @@
     "team": "Texas Rangers",
     "position": "P",
     "salary": 46,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 25.4,
     "photoCode": "656641"
   },
@@ -3379,8 +3379,8 @@
     "team": "Detroit Tigers",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.7,
+    "tier": "PURPLE",
+    "avgFP": 34.2,
     "photoCode": "656716"
   },
   {
@@ -3391,7 +3391,7 @@
     "team": "New York Mets",
     "position": "P",
     "salary": 70,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 39.1,
     "photoCode": "656731"
   },
@@ -3403,8 +3403,8 @@
     "team": "Tampa Bay Rays",
     "position": "BAT",
     "salary": 57,
-    "tier": "ORANGE",
-    "avgFP": 31.4,
+    "tier": "PURPLE",
+    "avgFP": 34.7,
     "photoCode": "656775"
   },
   {
@@ -3415,7 +3415,7 @@
     "team": "Chicago White Sox",
     "position": "P",
     "salary": 47,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 26.1,
     "photoCode": "656794"
   },
@@ -3427,8 +3427,8 @@
     "team": "Pittsburgh Pirates",
     "position": "BAT",
     "salary": 52,
-    "tier": "PURPLE",
-    "avgFP": 28.8,
+    "tier": "BLUE",
+    "avgFP": 32.4,
     "photoCode": "656811"
   },
   {
@@ -3439,7 +3439,7 @@
     "team": "New York Mets",
     "position": "P",
     "salary": 69,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 38.6,
     "photoCode": "656849"
   },
@@ -3451,7 +3451,7 @@
     "team": "Tampa Bay Rays",
     "position": "P",
     "salary": 61,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 34.1,
     "photoCode": "656876"
   },
@@ -3463,8 +3463,8 @@
     "team": "Puerto Rico",
     "position": "BAT",
     "salary": 36,
-    "tier": "BLUE",
-    "avgFP": 19.8,
+    "tier": "WHITE",
+    "avgFP": 22.8,
     "photoCode": "656896"
   },
   {
@@ -3476,7 +3476,7 @@
     "position": "BAT",
     "salary": 70,
     "tier": "ORANGE",
-    "avgFP": 39,
+    "avgFP": 42.9,
     "photoCode": "656941"
   },
   {
@@ -3487,8 +3487,8 @@
     "team": "Arizona Diamondbacks",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.5,
+    "tier": "BLUE",
+    "avgFP": 31.8,
     "photoCode": "656976"
   },
   {
@@ -3499,7 +3499,7 @@
     "team": "Chicago Cubs",
     "position": "P",
     "salary": 63,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 35.2,
     "photoCode": "657006"
   },
@@ -3511,8 +3511,8 @@
     "team": "Kansas City Royals",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 26,
+    "tier": "GREEN",
+    "avgFP": 28.8,
     "photoCode": "657041"
   },
   {
@@ -3523,8 +3523,8 @@
     "team": "El Paso Chihuahuas",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 22.8,
+    "tier": "GREEN",
+    "avgFP": 26.1,
     "photoCode": "657077"
   },
   {
@@ -3535,8 +3535,8 @@
     "team": "Boston Red Sox",
     "position": "BAT",
     "salary": 33,
-    "tier": "BLUE",
-    "avgFP": 18.3,
+    "tier": "WHITE",
+    "avgFP": 20.7,
     "photoCode": "657136"
   },
   {
@@ -3559,7 +3559,7 @@
     "team": "New York Yankees",
     "position": "P",
     "salary": 70,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 39.3,
     "photoCode": "657376"
   },
@@ -3571,8 +3571,8 @@
     "team": "Scranton/Wilkes-Barre RailRiders",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.1,
+    "tier": "BLUE",
+    "avgFP": 31.6,
     "photoCode": "657557"
   },
   {
@@ -3584,7 +3584,7 @@
     "position": "BAT",
     "salary": 62,
     "tier": "ORANGE",
-    "avgFP": 34.2,
+    "avgFP": 38.3,
     "photoCode": "657656"
   },
   {
@@ -3607,8 +3607,8 @@
     "team": "San Diego Padres",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.6,
+    "tier": "PURPLE",
+    "avgFP": 34.3,
     "photoCode": "657757"
   },
   {
@@ -3620,7 +3620,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.7,
+    "avgFP": 33,
     "photoCode": "660162"
   },
   {
@@ -3632,7 +3632,7 @@
     "position": "BAT",
     "salary": 70,
     "tier": "ORANGE",
-    "avgFP": 42.3,
+    "avgFP": 46.8,
     "photoCode": "660271"
   },
   {
@@ -3643,7 +3643,7 @@
     "team": "Lehigh Valley IronPigs",
     "position": "P",
     "salary": 56,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 31,
     "photoCode": "660604"
   },
@@ -3655,8 +3655,8 @@
     "team": "Syracuse Mets",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 26.1,
+    "tier": "BLUE",
+    "avgFP": 29.7,
     "photoCode": "660644"
   },
   {
@@ -3668,7 +3668,7 @@
     "position": "BAT",
     "salary": 68,
     "tier": "ORANGE",
-    "avgFP": 37.8,
+    "avgFP": 41.8,
     "photoCode": "660670"
   },
   {
@@ -3679,8 +3679,8 @@
     "team": "Washington Nationals",
     "position": "BAT",
     "salary": 43,
-    "tier": "PURPLE",
-    "avgFP": 24,
+    "tier": "GREEN",
+    "avgFP": 27.7,
     "photoCode": "660688"
   },
   {
@@ -3691,7 +3691,7 @@
     "team": "Arizona Diamondbacks",
     "position": "P",
     "salary": 32,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 18,
     "photoCode": "660730"
   },
@@ -3703,8 +3703,8 @@
     "team": "San Diego Padres",
     "position": "BAT",
     "salary": 30,
-    "tier": "BLUE",
-    "avgFP": 16.7,
+    "tier": "WHITE",
+    "avgFP": 19.4,
     "photoCode": "660757"
   },
   {
@@ -3727,8 +3727,8 @@
     "team": "Toronto Blue Jays",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.4,
+    "tier": "PURPLE",
+    "avgFP": 34,
     "photoCode": "660821"
   },
   {
@@ -3739,8 +3739,8 @@
     "team": "Seattle Mariners",
     "position": "BAT",
     "salary": 43,
-    "tier": "PURPLE",
-    "avgFP": 23.8,
+    "tier": "GREEN",
+    "avgFP": 26.5,
     "photoCode": "660844"
   },
   {
@@ -3751,8 +3751,8 @@
     "team": "Milwaukee Brewers",
     "position": "BAT",
     "salary": 57,
-    "tier": "ORANGE",
-    "avgFP": 31.4,
+    "tier": "PURPLE",
+    "avgFP": 35.1,
     "photoCode": "661388"
   },
   {
@@ -3763,7 +3763,7 @@
     "team": "Scranton/Wilkes-Barre RailRiders",
     "position": "P",
     "salary": 56,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 31,
     "photoCode": "661563"
   },
@@ -3776,7 +3776,7 @@
     "position": "BAT",
     "salary": 70,
     "tier": "ORANGE",
-    "avgFP": 42.6,
+    "avgFP": 47.2,
     "photoCode": "662139"
   },
   {
@@ -3788,7 +3788,7 @@
     "position": "BAT",
     "salary": 62,
     "tier": "ORANGE",
-    "avgFP": 34.3,
+    "avgFP": 38.2,
     "photoCode": "663330"
   },
   {
@@ -3799,7 +3799,7 @@
     "team": "El Paso Chihuahuas",
     "position": "P",
     "salary": 23,
-    "tier": "GREEN",
+    "tier": "WHITE",
     "avgFP": 12.6,
     "photoCode": "663362"
   },
@@ -3811,8 +3811,8 @@
     "team": "Milwaukee Brewers",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.3,
+    "tier": "PURPLE",
+    "avgFP": 33.8,
     "photoCode": "663368"
   },
   {
@@ -3823,7 +3823,7 @@
     "team": "Colorado Rockies",
     "position": "P",
     "salary": 58,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 32.1,
     "photoCode": "663372"
   },
@@ -3835,7 +3835,7 @@
     "team": "Syracuse Mets",
     "position": "P",
     "salary": 43,
-    "tier": "PURPLE",
+    "tier": "WHITE",
     "avgFP": 23.9,
     "photoCode": "663399"
   },
@@ -3847,7 +3847,7 @@
     "team": "Chicago White Sox",
     "position": "P",
     "salary": 53,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 29.7,
     "photoCode": "663436"
   },
@@ -3859,8 +3859,8 @@
     "team": "St. Louis Cardinals",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.6,
+    "tier": "BLUE",
+    "avgFP": 31,
     "photoCode": "663457"
   },
   {
@@ -3883,7 +3883,7 @@
     "team": "Cleveland Guardians",
     "position": "P",
     "salary": 41,
-    "tier": "PURPLE",
+    "tier": "WHITE",
     "avgFP": 22.7,
     "photoCode": "663465"
   },
@@ -3895,8 +3895,8 @@
     "team": "Columbus Clingstones",
     "position": "BAT",
     "salary": 18,
-    "tier": "GREEN",
-    "avgFP": 9.8,
+    "tier": "WHITE",
+    "avgFP": 11,
     "photoCode": "663536"
   },
   {
@@ -3907,8 +3907,8 @@
     "team": "Chicago Cubs",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.4,
+    "tier": "PURPLE",
+    "avgFP": 34.3,
     "photoCode": "663538"
   },
   {
@@ -3919,7 +3919,7 @@
     "team": "Detroit Tigers",
     "position": "P",
     "salary": 68,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 37.9,
     "photoCode": "663554"
   },
@@ -3931,8 +3931,8 @@
     "team": "Kansas City Royals",
     "position": "P",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.6,
+    "tier": "GREEN",
+    "avgFP": 28,
     "photoCode": "663559"
   },
   {
@@ -3943,7 +3943,7 @@
     "team": "Kansas City Royals",
     "position": "P",
     "salary": 57,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 31.8,
     "photoCode": "663568"
   },
@@ -3955,8 +3955,8 @@
     "team": "Syracuse Mets",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.5,
+    "tier": "GREEN",
+    "avgFP": 28.1,
     "photoCode": "663584"
   },
   {
@@ -3968,7 +3968,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.5,
+    "avgFP": 33.3,
     "photoCode": "663586"
   },
   {
@@ -3979,8 +3979,8 @@
     "team": "Milwaukee Brewers",
     "position": "BAT",
     "salary": 42,
-    "tier": "PURPLE",
-    "avgFP": 23.3,
+    "tier": "GREEN",
+    "avgFP": 26.3,
     "photoCode": "663604"
   },
   {
@@ -3991,8 +3991,8 @@
     "team": "Reno Aces",
     "position": "BAT",
     "salary": 22,
-    "tier": "GREEN",
-    "avgFP": 12.4,
+    "tier": "WHITE",
+    "avgFP": 14,
     "photoCode": "663609"
   },
   {
@@ -4003,8 +4003,8 @@
     "team": "Minnesota Twins",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.1,
+    "tier": "BLUE",
+    "avgFP": 31.5,
     "photoCode": "663616"
   },
   {
@@ -4015,7 +4015,7 @@
     "team": "Washington Nationals",
     "position": "P",
     "salary": 49,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 27,
     "photoCode": "663623"
   },
@@ -4027,8 +4027,8 @@
     "team": "Baltimore Orioles",
     "position": "BAT",
     "salary": 49,
-    "tier": "PURPLE",
-    "avgFP": 27.3,
+    "tier": "BLUE",
+    "avgFP": 31,
     "photoCode": "663624"
   },
   {
@@ -4039,8 +4039,8 @@
     "team": "Cincinnati Reds",
     "position": "BAT",
     "salary": 45,
-    "tier": "PURPLE",
-    "avgFP": 25,
+    "tier": "GREEN",
+    "avgFP": 28.3,
     "photoCode": "663647"
   },
   {
@@ -4052,7 +4052,7 @@
     "position": "BAT",
     "salary": 62,
     "tier": "ORANGE",
-    "avgFP": 34.6,
+    "avgFP": 38.3,
     "photoCode": "663656"
   },
   {
@@ -4064,7 +4064,7 @@
     "position": "BAT",
     "salary": 64,
     "tier": "ORANGE",
-    "avgFP": 35.8,
+    "avgFP": 40.8,
     "photoCode": "663662"
   },
   {
@@ -4075,8 +4075,8 @@
     "team": "Kansas City Royals",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 26.3,
+    "tier": "BLUE",
+    "avgFP": 29.6,
     "photoCode": "663697"
   },
   {
@@ -4087,8 +4087,8 @@
     "team": "Pittsburgh Pirates",
     "position": "BAT",
     "salary": 45,
-    "tier": "PURPLE",
-    "avgFP": 24.8,
+    "tier": "GREEN",
+    "avgFP": 27.9,
     "photoCode": "663698"
   },
   {
@@ -4100,7 +4100,7 @@
     "position": "BAT",
     "salary": 70,
     "tier": "ORANGE",
-    "avgFP": 40.5,
+    "avgFP": 44.5,
     "photoCode": "663728"
   },
   {
@@ -4111,8 +4111,8 @@
     "team": "Omaha Storm Chasers",
     "position": "BAT",
     "salary": 22,
-    "tier": "GREEN",
-    "avgFP": 12,
+    "tier": "WHITE",
+    "avgFP": 13.5,
     "photoCode": "663731"
   },
   {
@@ -4123,8 +4123,8 @@
     "team": "Tampa Bay Rays",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 22.9,
+    "tier": "GREEN",
+    "avgFP": 25.9,
     "photoCode": "663743"
   },
   {
@@ -4136,7 +4136,7 @@
     "position": "BAT",
     "salary": 61,
     "tier": "ORANGE",
-    "avgFP": 33.9,
+    "avgFP": 37.4,
     "photoCode": "663757"
   },
   {
@@ -4147,7 +4147,7 @@
     "team": "Milwaukee Brewers",
     "position": "P",
     "salary": 23,
-    "tier": "GREEN",
+    "tier": "WHITE",
     "avgFP": 13,
     "photoCode": "663765"
   },
@@ -4159,7 +4159,7 @@
     "team": "New York Mets",
     "position": "P",
     "salary": 47,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 26.2,
     "photoCode": "663795"
   },
@@ -4171,8 +4171,8 @@
     "team": "Sultanes de Monterrey",
     "position": "BAT",
     "salary": 25,
-    "tier": "GREEN",
-    "avgFP": 14,
+    "tier": "WHITE",
+    "avgFP": 16.5,
     "photoCode": "663796"
   },
   {
@@ -4183,8 +4183,8 @@
     "team": "Detroit Tigers",
     "position": "BAT",
     "salary": 32,
-    "tier": "BLUE",
-    "avgFP": 17.5,
+    "tier": "WHITE",
+    "avgFP": 19.8,
     "photoCode": "663837"
   },
   {
@@ -4196,7 +4196,7 @@
     "position": "BAT",
     "salary": 62,
     "tier": "ORANGE",
-    "avgFP": 34.2,
+    "avgFP": 38.7,
     "photoCode": "663853"
   },
   {
@@ -4207,7 +4207,7 @@
     "team": "Chicago White Sox",
     "position": "P",
     "salary": 51,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 28.4,
     "photoCode": "663855"
   },
@@ -4219,8 +4219,8 @@
     "team": "Cincinnati Reds",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.5,
+    "tier": "PURPLE",
+    "avgFP": 34,
     "photoCode": "663886"
   },
   {
@@ -4231,8 +4231,8 @@
     "team": "Gwinnett Stripers",
     "position": "BAT",
     "salary": 33,
-    "tier": "BLUE",
-    "avgFP": 18.3,
+    "tier": "WHITE",
+    "avgFP": 20.7,
     "photoCode": "663897"
   },
   {
@@ -4243,8 +4243,8 @@
     "team": "Worcester Red Sox",
     "position": "BAT",
     "salary": 42,
-    "tier": "PURPLE",
-    "avgFP": 23.1,
+    "tier": "GREEN",
+    "avgFP": 26,
     "photoCode": "663898"
   },
   {
@@ -4267,7 +4267,7 @@
     "team": "Sacramento River Cats",
     "position": "P",
     "salary": 41,
-    "tier": "PURPLE",
+    "tier": "WHITE",
     "avgFP": 22.7,
     "photoCode": "663941"
   },
@@ -4279,8 +4279,8 @@
     "team": "Sugar Land Space Cowboys",
     "position": "BAT",
     "salary": 36,
-    "tier": "BLUE",
-    "avgFP": 20,
+    "tier": "WHITE",
+    "avgFP": 22.5,
     "photoCode": "663967"
   },
   {
@@ -4292,7 +4292,7 @@
     "position": "BAT",
     "salary": 52,
     "tier": "PURPLE",
-    "avgFP": 29.1,
+    "avgFP": 32.9,
     "photoCode": "663968"
   },
   {
@@ -4303,7 +4303,7 @@
     "team": "Miami Marlins",
     "position": "P",
     "salary": 45,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 25,
     "photoCode": "663969"
   },
@@ -4315,8 +4315,8 @@
     "team": "Miami Marlins",
     "position": "P",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.6,
+    "tier": "GREEN",
+    "avgFP": 27.9,
     "photoCode": "663978"
   },
   {
@@ -4328,7 +4328,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.7,
+    "avgFP": 33.1,
     "photoCode": "663993"
   },
   {
@@ -4340,7 +4340,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 30.1,
+    "avgFP": 33.4,
     "photoCode": "664023"
   },
   {
@@ -4351,8 +4351,8 @@
     "team": "San Diego Padres",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.4,
+    "tier": "BLUE",
+    "avgFP": 30.2,
     "photoCode": "664034"
   },
   {
@@ -4363,8 +4363,8 @@
     "team": "Pittsburgh Pirates",
     "position": "BAT",
     "salary": 57,
-    "tier": "ORANGE",
-    "avgFP": 31.9,
+    "tier": "PURPLE",
+    "avgFP": 35.7,
     "photoCode": "664040"
   },
   {
@@ -4375,8 +4375,8 @@
     "team": "San Francisco Giants",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.1,
+    "tier": "BLUE",
+    "avgFP": 31.6,
     "photoCode": "664056"
   },
   {
@@ -4387,8 +4387,8 @@
     "team": "Texas Rangers",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.7,
+    "tier": "BLUE",
+    "avgFP": 31,
     "photoCode": "664059"
   },
   {
@@ -4399,7 +4399,7 @@
     "team": "Oklahoma City Comets",
     "position": "P",
     "salary": 58,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 32.3,
     "photoCode": "664062"
   },
@@ -4411,8 +4411,8 @@
     "team": "Chicago Cubs",
     "position": "BAT",
     "salary": 38,
-    "tier": "BLUE",
-    "avgFP": 21,
+    "tier": "WHITE",
+    "avgFP": 23.7,
     "photoCode": "664068"
   },
   {
@@ -4423,7 +4423,7 @@
     "team": "San Francisco Giants",
     "position": "P",
     "salary": 40,
-    "tier": "PURPLE",
+    "tier": "WHITE",
     "avgFP": 22,
     "photoCode": "664141"
   },
@@ -4435,8 +4435,8 @@
     "team": "Philadelphia Phillies",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.3,
+    "tier": "PURPLE",
+    "avgFP": 33.6,
     "photoCode": "664238"
   },
   {
@@ -4459,7 +4459,7 @@
     "team": "Houston Astros",
     "position": "P",
     "salary": 58,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 32.2,
     "photoCode": "664299"
   },
@@ -4472,7 +4472,7 @@
     "position": "BAT",
     "salary": 59,
     "tier": "ORANGE",
-    "avgFP": 32.5,
+    "avgFP": 36.6,
     "photoCode": "664702"
   },
   {
@@ -4483,8 +4483,8 @@
     "team": "Kansas City Royals",
     "position": "BAT",
     "salary": 42,
-    "tier": "PURPLE",
-    "avgFP": 23.1,
+    "tier": "GREEN",
+    "avgFP": 26.3,
     "photoCode": "664728"
   },
   {
@@ -4495,8 +4495,8 @@
     "team": "Philadelphia Phillies",
     "position": "BAT",
     "salary": 49,
-    "tier": "PURPLE",
-    "avgFP": 27.1,
+    "tier": "BLUE",
+    "avgFP": 30.8,
     "photoCode": "664761"
   },
   {
@@ -4507,8 +4507,8 @@
     "team": "Toronto Blue Jays",
     "position": "BAT",
     "salary": 56,
-    "tier": "ORANGE",
-    "avgFP": 31,
+    "tier": "PURPLE",
+    "avgFP": 34.9,
     "photoCode": "664770"
   },
   {
@@ -4519,8 +4519,8 @@
     "team": "Charlotte Knights",
     "position": "BAT",
     "salary": 42,
-    "tier": "PURPLE",
-    "avgFP": 23.4,
+    "tier": "GREEN",
+    "avgFP": 26.1,
     "photoCode": "664774"
   },
   {
@@ -4531,8 +4531,8 @@
     "team": "Somerset Patriots",
     "position": "BAT",
     "salary": 37,
-    "tier": "BLUE",
-    "avgFP": 20.6,
+    "tier": "WHITE",
+    "avgFP": 22.8,
     "photoCode": "664913"
   },
   {
@@ -4544,7 +4544,7 @@
     "position": "BAT",
     "salary": 70,
     "tier": "ORANGE",
-    "avgFP": 40,
+    "avgFP": 45,
     "photoCode": "664954"
   },
   {
@@ -4555,8 +4555,8 @@
     "team": "Colorado Rockies",
     "position": "BAT",
     "salary": 42,
-    "tier": "PURPLE",
-    "avgFP": 23.4,
+    "tier": "GREEN",
+    "avgFP": 26.2,
     "photoCode": "664983"
   },
   {
@@ -4567,8 +4567,8 @@
     "team": "Minnesota Twins",
     "position": "BAT",
     "salary": 59,
-    "tier": "ORANGE",
-    "avgFP": 32.5,
+    "tier": "PURPLE",
+    "avgFP": 36,
     "photoCode": "665019"
   },
   {
@@ -4580,7 +4580,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 29.8,
+    "avgFP": 33.4,
     "photoCode": "665052"
   },
   {
@@ -4591,7 +4591,7 @@
     "team": "Norfolk Tides",
     "position": "P",
     "salary": 60,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 33.5,
     "photoCode": "665152"
   },
@@ -4603,8 +4603,8 @@
     "team": "Charlotte Knights",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 25.9,
+    "tier": "GREEN",
+    "avgFP": 28.7,
     "photoCode": "665155"
   },
   {
@@ -4616,7 +4616,7 @@
     "position": "BAT",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 33.5,
+    "avgFP": 37.6,
     "photoCode": "665161"
   },
   {
@@ -4628,7 +4628,7 @@
     "position": "BAT",
     "salary": 63,
     "tier": "ORANGE",
-    "avgFP": 34.8,
+    "avgFP": 38.5,
     "photoCode": "665487"
   },
   {
@@ -4640,7 +4640,7 @@
     "position": "BAT",
     "salary": 59,
     "tier": "ORANGE",
-    "avgFP": 32.9,
+    "avgFP": 36.9,
     "photoCode": "665489"
   },
   {
@@ -4651,8 +4651,8 @@
     "team": "Philadelphia Phillies",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.7,
+    "tier": "BLUE",
+    "avgFP": 30,
     "photoCode": "665561"
   },
   {
@@ -4664,7 +4664,7 @@
     "position": "BAT",
     "salary": 69,
     "tier": "ORANGE",
-    "avgFP": 38.5,
+    "avgFP": 42.2,
     "photoCode": "665742"
   },
   {
@@ -4675,8 +4675,8 @@
     "team": "Baltimore Orioles",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.6,
+    "tier": "BLUE",
+    "avgFP": 32,
     "photoCode": "665750"
   },
   {
@@ -4687,7 +4687,7 @@
     "team": "Chicago Cubs",
     "position": "P",
     "salary": 66,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 36.9,
     "photoCode": "665795"
   },
@@ -4700,7 +4700,7 @@
     "position": "BAT",
     "salary": 69,
     "tier": "ORANGE",
-    "avgFP": 38.5,
+    "avgFP": 43.4,
     "photoCode": "665804"
   },
   {
@@ -4711,8 +4711,8 @@
     "team": "Scranton/Wilkes-Barre RailRiders",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.2,
+    "tier": "BLUE",
+    "avgFP": 32,
     "photoCode": "665828"
   },
   {
@@ -4724,7 +4724,7 @@
     "position": "BAT",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 33.4,
+    "avgFP": 36.5,
     "photoCode": "665833"
   },
   {
@@ -4735,8 +4735,8 @@
     "team": "Indianapolis Indians",
     "position": "BAT",
     "salary": 42,
-    "tier": "PURPLE",
-    "avgFP": 23.4,
+    "tier": "GREEN",
+    "avgFP": 26.2,
     "photoCode": "665839"
   },
   {
@@ -4747,8 +4747,8 @@
     "team": "Salt Lake Bees",
     "position": "BAT",
     "salary": 38,
-    "tier": "BLUE",
-    "avgFP": 21.3,
+    "tier": "WHITE",
+    "avgFP": 24.2,
     "photoCode": "665861"
   },
   {
@@ -4760,7 +4760,7 @@
     "position": "BAT",
     "salary": 69,
     "tier": "ORANGE",
-    "avgFP": 38.1,
+    "avgFP": 41.9,
     "photoCode": "665862"
   },
   {
@@ -4771,7 +4771,7 @@
     "team": "Iowa Cubs",
     "position": "P",
     "salary": 46,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 25.7,
     "photoCode": "665871"
   },
@@ -4783,8 +4783,8 @@
     "team": "St. Louis Cardinals",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.6,
+    "tier": "GREEN",
+    "avgFP": 28.5,
     "photoCode": "665877"
   },
   {
@@ -4795,8 +4795,8 @@
     "team": "Miami Marlins",
     "position": "BAT",
     "salary": 25,
-    "tier": "GREEN",
-    "avgFP": 14,
+    "tier": "WHITE",
+    "avgFP": 15,
     "photoCode": "665923"
   },
   {
@@ -4807,8 +4807,8 @@
     "team": "Toronto Blue Jays",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.8,
+    "tier": "BLUE",
+    "avgFP": 30,
     "photoCode": "665926"
   },
   {
@@ -4819,8 +4819,8 @@
     "team": "Rochester Red Wings",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 22.9,
+    "tier": "GREEN",
+    "avgFP": 25.9,
     "photoCode": "665953"
   },
   {
@@ -4832,7 +4832,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.7,
+    "avgFP": 33.2,
     "photoCode": "665966"
   },
   {
@@ -4844,7 +4844,7 @@
     "position": "BAT",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 33.1,
+    "avgFP": 37.4,
     "photoCode": "666018"
   },
   {
@@ -4855,8 +4855,8 @@
     "team": "San Diego Padres",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 22.5,
+    "tier": "GREEN",
+    "avgFP": 25.7,
     "photoCode": "666023"
   },
   {
@@ -4867,8 +4867,8 @@
     "team": "Athletics",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.5,
+    "tier": "BLUE",
+    "avgFP": 29.9,
     "photoCode": "666126"
   },
   {
@@ -4879,8 +4879,8 @@
     "team": "Columbus Clippers",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.5,
+    "tier": "GREEN",
+    "avgFP": 27.4,
     "photoCode": "666134"
   },
   {
@@ -4891,8 +4891,8 @@
     "team": "Los Angeles Angels",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.8,
+    "tier": "PURPLE",
+    "avgFP": 34.3,
     "photoCode": "666139"
   },
   {
@@ -4915,8 +4915,8 @@
     "team": "San Francisco Giants",
     "position": "BAT",
     "salary": 42,
-    "tier": "PURPLE",
-    "avgFP": 23.1,
+    "tier": "GREEN",
+    "avgFP": 25.8,
     "photoCode": "666149"
   },
   {
@@ -4928,7 +4928,7 @@
     "position": "BAT",
     "salary": 65,
     "tier": "ORANGE",
-    "avgFP": 36,
+    "avgFP": 39.8,
     "photoCode": "666150"
   },
   {
@@ -4940,7 +4940,7 @@
     "position": "BAT",
     "salary": 62,
     "tier": "ORANGE",
-    "avgFP": 34.6,
+    "avgFP": 38.1,
     "photoCode": "666152"
   },
   {
@@ -4963,8 +4963,8 @@
     "team": "Tampa Bay Rays",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.4,
+    "tier": "GREEN",
+    "avgFP": 28.7,
     "photoCode": "666158"
   },
   {
@@ -4976,7 +4976,7 @@
     "position": "BAT",
     "salary": 61,
     "tier": "ORANGE",
-    "avgFP": 34,
+    "avgFP": 38,
     "photoCode": "666160"
   },
   {
@@ -4987,8 +4987,8 @@
     "team": "Syracuse Mets",
     "position": "BAT",
     "salary": 35,
-    "tier": "BLUE",
-    "avgFP": 19.4,
+    "tier": "WHITE",
+    "avgFP": 21.8,
     "photoCode": "666163"
   },
   {
@@ -4999,8 +4999,8 @@
     "team": "Durham Bulls",
     "position": "BAT",
     "salary": 22,
-    "tier": "GREEN",
-    "avgFP": 12.3,
+    "tier": "WHITE",
+    "avgFP": 13.7,
     "photoCode": "666165"
   },
   {
@@ -5012,7 +5012,7 @@
     "position": "BAT",
     "salary": 62,
     "tier": "ORANGE",
-    "avgFP": 34.2,
+    "avgFP": 38.1,
     "photoCode": "666176"
   },
   {
@@ -5024,7 +5024,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 29.9,
+    "avgFP": 33.4,
     "photoCode": "666181"
   },
   {
@@ -5036,7 +5036,7 @@
     "position": "BAT",
     "salary": 63,
     "tier": "ORANGE",
-    "avgFP": 35.2,
+    "avgFP": 39.8,
     "photoCode": "666182"
   },
   {
@@ -5047,8 +5047,8 @@
     "team": "Chicago Cubs",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.3,
+    "tier": "GREEN",
+    "avgFP": 28.2,
     "photoCode": "666185"
   },
   {
@@ -5059,8 +5059,8 @@
     "team": "Lehigh Valley IronPigs",
     "position": "BAT",
     "salary": 25,
-    "tier": "GREEN",
-    "avgFP": 14,
+    "tier": "WHITE",
+    "avgFP": 16.5,
     "photoCode": "666198"
   },
   {
@@ -5083,8 +5083,8 @@
     "team": "Sugar Land Space Cowboys",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 26.1,
+    "tier": "GREEN",
+    "avgFP": 29,
     "photoCode": "666211"
   },
   {
@@ -5095,7 +5095,7 @@
     "team": "Atlanta Braves",
     "position": "P",
     "salary": 57,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 31.5,
     "photoCode": "666214"
   },
@@ -5107,8 +5107,8 @@
     "team": "Cleveland Guardians",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.2,
+    "tier": "BLUE",
+    "avgFP": 31.3,
     "photoCode": "666310"
   },
   {
@@ -5119,8 +5119,8 @@
     "team": "Colorado Rockies",
     "position": "BAT",
     "salary": 38,
-    "tier": "BLUE",
-    "avgFP": 21.2,
+    "tier": "WHITE",
+    "avgFP": 23.8,
     "photoCode": "666397"
   },
   {
@@ -5132,7 +5132,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 29.9,
+    "avgFP": 33.4,
     "photoCode": "666464"
   },
   {
@@ -5144,7 +5144,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 29.8,
+    "avgFP": 33.2,
     "photoCode": "666624"
   },
   {
@@ -5155,8 +5155,8 @@
     "team": "Omaha Storm Chasers",
     "position": "BAT",
     "salary": 31,
-    "tier": "BLUE",
-    "avgFP": 17.4,
+    "tier": "WHITE",
+    "avgFP": 19.6,
     "photoCode": "666915"
   },
   {
@@ -5168,7 +5168,7 @@
     "position": "BAT",
     "salary": 59,
     "tier": "ORANGE",
-    "avgFP": 32.6,
+    "avgFP": 36.5,
     "photoCode": "666969"
   },
   {
@@ -5179,8 +5179,8 @@
     "team": "Arizona Diamondbacks",
     "position": "BAT",
     "salary": 58,
-    "tier": "ORANGE",
-    "avgFP": 32.1,
+    "tier": "PURPLE",
+    "avgFP": 36,
     "photoCode": "666971"
   },
   {
@@ -5192,7 +5192,7 @@
     "position": "BAT",
     "salary": 70,
     "tier": "ORANGE",
-    "avgFP": 46,
+    "avgFP": 52,
     "photoCode": "667452"
   },
   {
@@ -5203,8 +5203,8 @@
     "team": "Cincinnati Reds",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.8,
+    "tier": "BLUE",
+    "avgFP": 31.1,
     "photoCode": "667472"
   },
   {
@@ -5216,7 +5216,7 @@
     "position": "BAT",
     "salary": 61,
     "tier": "ORANGE",
-    "avgFP": 34.1,
+    "avgFP": 38.1,
     "photoCode": "667670"
   },
   {
@@ -5227,7 +5227,7 @@
     "team": "Los Angeles Angels",
     "position": "P",
     "salary": 70,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 38.8,
     "photoCode": "667755"
   },
@@ -5240,7 +5240,7 @@
     "position": "BAT",
     "salary": 63,
     "tier": "ORANGE",
-    "avgFP": 34.9,
+    "avgFP": 38.7,
     "photoCode": "668227"
   },
   {
@@ -5251,8 +5251,8 @@
     "team": "Detroit Tigers",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.5,
+    "tier": "BLUE",
+    "avgFP": 30.6,
     "photoCode": "668670"
   },
   {
@@ -5263,7 +5263,7 @@
     "team": "Arizona Diamondbacks",
     "position": "P",
     "salary": 63,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 35,
     "photoCode": "668678"
   },
@@ -5275,8 +5275,8 @@
     "team": "Louisville Bats",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.6,
+    "tier": "BLUE",
+    "avgFP": 31.8,
     "photoCode": "668709"
   },
   {
@@ -5287,8 +5287,8 @@
     "team": "Cincinnati Reds",
     "position": "BAT",
     "salary": 57,
-    "tier": "ORANGE",
-    "avgFP": 31.6,
+    "tier": "PURPLE",
+    "avgFP": 35.3,
     "photoCode": "668715"
   },
   {
@@ -5311,8 +5311,8 @@
     "team": "Milwaukee Brewers",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.5,
+    "tier": "GREEN",
+    "avgFP": 28,
     "photoCode": "668731"
   },
   {
@@ -5323,8 +5323,8 @@
     "team": "Seattle Mariners",
     "position": "BAT",
     "salary": 39,
-    "tier": "BLUE",
-    "avgFP": 21.8,
+    "tier": "WHITE",
+    "avgFP": 24.7,
     "photoCode": "668800"
   },
   {
@@ -5335,8 +5335,8 @@
     "team": "Pittsburgh Pirates",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.3,
+    "tier": "PURPLE",
+    "avgFP": 34.1,
     "photoCode": "668804"
   },
   {
@@ -5347,8 +5347,8 @@
     "team": "Gwinnett Stripers",
     "position": "BAT",
     "salary": 33,
-    "tier": "BLUE",
-    "avgFP": 18.3,
+    "tier": "WHITE",
+    "avgFP": 21.5,
     "photoCode": "668845"
   },
   {
@@ -5371,8 +5371,8 @@
     "team": "Minnesota Twins",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 26.1,
+    "tier": "GREEN",
+    "avgFP": 29.2,
     "photoCode": "668885"
   },
   {
@@ -5383,8 +5383,8 @@
     "team": "New York Mets",
     "position": "BAT",
     "salary": 49,
-    "tier": "PURPLE",
-    "avgFP": 27.1,
+    "tier": "BLUE",
+    "avgFP": 30.4,
     "photoCode": "668901"
   },
   {
@@ -5396,7 +5396,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 29.9,
+    "avgFP": 33.5,
     "photoCode": "668904"
   },
   {
@@ -5420,7 +5420,7 @@
     "position": "BAT",
     "salary": 62,
     "tier": "ORANGE",
-    "avgFP": 34.2,
+    "avgFP": 38.3,
     "photoCode": "668930"
   },
   {
@@ -5431,8 +5431,8 @@
     "team": "Baltimore Orioles",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.5,
+    "tier": "GREEN",
+    "avgFP": 27.4,
     "photoCode": "668939"
   },
   {
@@ -5443,8 +5443,8 @@
     "team": "Omaha Storm Chasers",
     "position": "BAT",
     "salary": 33,
-    "tier": "BLUE",
-    "avgFP": 18.2,
+    "tier": "WHITE",
+    "avgFP": 20.4,
     "photoCode": "668942"
   },
   {
@@ -5455,8 +5455,8 @@
     "team": "St. Paul Saints",
     "position": "BAT",
     "salary": 30,
-    "tier": "BLUE",
-    "avgFP": 16.9,
+    "tier": "WHITE",
+    "avgFP": 18.4,
     "photoCode": "668952"
   },
   {
@@ -5467,7 +5467,7 @@
     "team": "New York Mets",
     "position": "P",
     "salary": 35,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 19.4,
     "photoCode": "668964"
   },
@@ -5479,8 +5479,8 @@
     "team": "Norfolk Tides",
     "position": "BAT",
     "salary": 25,
-    "tier": "GREEN",
-    "avgFP": 13.7,
+    "tier": "WHITE",
+    "avgFP": 15.5,
     "photoCode": "668974"
   },
   {
@@ -5491,8 +5491,8 @@
     "team": "Milwaukee Brewers",
     "position": "BAT",
     "salary": 42,
-    "tier": "PURPLE",
-    "avgFP": 23.5,
+    "tier": "GREEN",
+    "avgFP": 26.1,
     "photoCode": "669003"
   },
   {
@@ -5503,8 +5503,8 @@
     "team": "Syracuse Mets",
     "position": "BAT",
     "salary": 37,
-    "tier": "BLUE",
-    "avgFP": 20.5,
+    "tier": "WHITE",
+    "avgFP": 22.7,
     "photoCode": "669004"
   },
   {
@@ -5516,7 +5516,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.6,
+    "avgFP": 33.2,
     "photoCode": "669016"
   },
   {
@@ -5539,8 +5539,8 @@
     "team": "Lehigh Valley IronPigs",
     "position": "P",
     "salary": 22,
-    "tier": "GREEN",
-    "avgFP": 12,
+    "tier": "WHITE",
+    "avgFP": 15.2,
     "photoCode": "669060"
   },
   {
@@ -5552,7 +5552,7 @@
     "position": "BAT",
     "salary": 64,
     "tier": "ORANGE",
-    "avgFP": 35.3,
+    "avgFP": 39.4,
     "photoCode": "669065"
   },
   {
@@ -5563,8 +5563,8 @@
     "team": "Norfolk Tides",
     "position": "BAT",
     "salary": 43,
-    "tier": "PURPLE",
-    "avgFP": 24.1,
+    "tier": "GREEN",
+    "avgFP": 27,
     "photoCode": "669087"
   },
   {
@@ -5576,7 +5576,7 @@
     "position": "BAT",
     "salary": 70,
     "tier": "ORANGE",
-    "avgFP": 38.8,
+    "avgFP": 43.3,
     "photoCode": "669127"
   },
   {
@@ -5611,7 +5611,7 @@
     "team": "St. Louis Cardinals",
     "position": "P",
     "salary": 59,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 32.9,
     "photoCode": "669160"
   },
@@ -5623,7 +5623,7 @@
     "team": "Arizona Diamondbacks",
     "position": "P",
     "salary": 62,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 34.4,
     "photoCode": "669194"
   },
@@ -5635,8 +5635,8 @@
     "team": "El Paso Chihuahuas",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 26.3,
+    "tier": "GREEN",
+    "avgFP": 29,
     "photoCode": "669200"
   },
   {
@@ -5659,8 +5659,8 @@
     "team": "Seattle Mariners",
     "position": "BAT",
     "salary": 27,
-    "tier": "GREEN",
-    "avgFP": 15.1,
+    "tier": "WHITE",
+    "avgFP": 16.8,
     "photoCode": "669208"
   },
   {
@@ -5671,8 +5671,8 @@
     "team": "Atlanta Braves",
     "position": "BAT",
     "salary": 58,
-    "tier": "ORANGE",
-    "avgFP": 32.2,
+    "tier": "PURPLE",
+    "avgFP": 35.6,
     "photoCode": "669221"
   },
   {
@@ -5683,8 +5683,8 @@
     "team": "New York Yankees",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.5,
+    "tier": "PURPLE",
+    "avgFP": 33.9,
     "photoCode": "669224"
   },
   {
@@ -5695,8 +5695,8 @@
     "team": "Durham Bulls",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.3,
+    "tier": "GREEN",
+    "avgFP": 27.1,
     "photoCode": "669234"
   },
   {
@@ -5707,8 +5707,8 @@
     "team": "Baltimore Orioles",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.5,
+    "tier": "BLUE",
+    "avgFP": 31.1,
     "photoCode": "669236"
   },
   {
@@ -5720,7 +5720,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 30,
+    "avgFP": 33.7,
     "photoCode": "669242"
   },
   {
@@ -5731,8 +5731,8 @@
     "team": "El Paso Chihuahuas",
     "position": "BAT",
     "salary": 18,
-    "tier": "GREEN",
-    "avgFP": 10,
+    "tier": "WHITE",
+    "avgFP": 12,
     "photoCode": "669256"
   },
   {
@@ -5744,7 +5744,7 @@
     "position": "BAT",
     "salary": 59,
     "tier": "ORANGE",
-    "avgFP": 33,
+    "avgFP": 36.8,
     "photoCode": "669257"
   },
   {
@@ -5755,8 +5755,8 @@
     "team": "Oklahoma City Comets",
     "position": "BAT",
     "salary": 42,
-    "tier": "PURPLE",
-    "avgFP": 23.4,
+    "tier": "GREEN",
+    "avgFP": 25.7,
     "photoCode": "669261"
   },
   {
@@ -5767,8 +5767,8 @@
     "team": "Jacksonville Jumbo Shrimp",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.4,
+    "tier": "BLUE",
+    "avgFP": 29.6,
     "photoCode": "669288"
   },
   {
@@ -5779,8 +5779,8 @@
     "team": "Los Angeles Dodgers",
     "position": "BAT",
     "salary": 38,
-    "tier": "BLUE",
-    "avgFP": 21,
+    "tier": "WHITE",
+    "avgFP": 24,
     "photoCode": "669289"
   },
   {
@@ -5803,8 +5803,8 @@
     "team": "El Paso Chihuahuas",
     "position": "BAT",
     "salary": 45,
-    "tier": "PURPLE",
-    "avgFP": 25.2,
+    "tier": "GREEN",
+    "avgFP": 28.6,
     "photoCode": "669304"
   },
   {
@@ -5815,8 +5815,8 @@
     "team": "Los Angeles Angels",
     "position": "BAT",
     "salary": 39,
-    "tier": "BLUE",
-    "avgFP": 21.5,
+    "tier": "WHITE",
+    "avgFP": 24,
     "photoCode": "669326"
   },
   {
@@ -5827,7 +5827,7 @@
     "team": "Baltimore Orioles",
     "position": "P",
     "salary": 64,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 35.7,
     "photoCode": "669330"
   },
@@ -5839,8 +5839,8 @@
     "team": "St. Louis Cardinals",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.5,
+    "tier": "BLUE",
+    "avgFP": 31.7,
     "photoCode": "669357"
   },
   {
@@ -5852,7 +5852,7 @@
     "position": "P",
     "salary": 70,
     "tier": "ORANGE",
-    "avgFP": 38.7,
+    "avgFP": 40.3,
     "photoCode": "669358"
   },
   {
@@ -5863,8 +5863,8 @@
     "team": "Miami Marlins",
     "position": "BAT",
     "salary": 52,
-    "tier": "PURPLE",
-    "avgFP": 28.8,
+    "tier": "BLUE",
+    "avgFP": 32.6,
     "photoCode": "669364"
   },
   {
@@ -5875,8 +5875,8 @@
     "team": "San Diego Padres",
     "position": "BAT",
     "salary": 37,
-    "tier": "BLUE",
-    "avgFP": 20.7,
+    "tier": "WHITE",
+    "avgFP": 24.1,
     "photoCode": "669369"
   },
   {
@@ -5887,7 +5887,7 @@
     "team": "Athletics",
     "position": "P",
     "salary": 59,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 33,
     "photoCode": "669372"
   },
@@ -5911,8 +5911,8 @@
     "team": "Oklahoma City Comets",
     "position": "BAT",
     "salary": 28,
-    "tier": "BLUE",
-    "avgFP": 15.4,
+    "tier": "WHITE",
+    "avgFP": 17.8,
     "photoCode": "669374"
   },
   {
@@ -5923,8 +5923,8 @@
     "team": "Pittsburgh Pirates",
     "position": "P",
     "salary": 36,
-    "tier": "BLUE",
-    "avgFP": 20.2,
+    "tier": "WHITE",
+    "avgFP": 23.5,
     "photoCode": "669387"
   },
   {
@@ -5935,7 +5935,7 @@
     "team": "Charlotte Knights",
     "position": "P",
     "salary": 42,
-    "tier": "PURPLE",
+    "tier": "WHITE",
     "avgFP": 23.3,
     "photoCode": "669391"
   },
@@ -5947,8 +5947,8 @@
     "team": "El Paso Chihuahuas",
     "position": "BAT",
     "salary": 32,
-    "tier": "BLUE",
-    "avgFP": 18,
+    "tier": "WHITE",
+    "avgFP": 21,
     "photoCode": "669392"
   },
   {
@@ -5959,8 +5959,8 @@
     "team": "Texas Rangers",
     "position": "BAT",
     "salary": 56,
-    "tier": "ORANGE",
-    "avgFP": 30.9,
+    "tier": "PURPLE",
+    "avgFP": 34.8,
     "photoCode": "669394"
   },
   {
@@ -5971,8 +5971,8 @@
     "team": "Houston Astros",
     "position": "BAT",
     "salary": 37,
-    "tier": "BLUE",
-    "avgFP": 20.3,
+    "tier": "WHITE",
+    "avgFP": 23.1,
     "photoCode": "669397"
   },
   {
@@ -5983,8 +5983,8 @@
     "team": "Toledo Mud Hens",
     "position": "BAT",
     "salary": 53,
-    "tier": "PURPLE",
-    "avgFP": 29.5,
+    "tier": "BLUE",
+    "avgFP": 32.5,
     "photoCode": "669398"
   },
   {
@@ -5995,7 +5995,7 @@
     "team": "Oklahoma City Comets",
     "position": "P",
     "salary": 39,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 21.4,
     "photoCode": "669422"
   },
@@ -6019,8 +6019,8 @@
     "team": "Durham Bulls",
     "position": "BAT",
     "salary": 36,
-    "tier": "BLUE",
-    "avgFP": 20.1,
+    "tier": "WHITE",
+    "avgFP": 22.2,
     "photoCode": "669450"
   },
   {
@@ -6031,7 +6031,7 @@
     "team": "Toronto Blue Jays",
     "position": "P",
     "salary": 68,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 38,
     "photoCode": "669456"
   },
@@ -6043,8 +6043,8 @@
     "team": "St. Louis Cardinals",
     "position": "P",
     "salary": 57,
-    "tier": "ORANGE",
-    "avgFP": 31.8,
+    "tier": "BLUE",
+    "avgFP": 33.1,
     "photoCode": "669461"
   },
   {
@@ -6055,8 +6055,8 @@
     "team": "St. Louis Cardinals",
     "position": "P",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 26.3,
+    "tier": "GREEN",
+    "avgFP": 27.3,
     "photoCode": "669467"
   },
   {
@@ -6067,8 +6067,8 @@
     "team": "San Francisco Giants",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.5,
+    "tier": "BLUE",
+    "avgFP": 29.8,
     "photoCode": "669477"
   },
   {
@@ -6079,8 +6079,8 @@
     "team": "Texas Rangers",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 28,
+    "tier": "BLUE",
+    "avgFP": 31.5,
     "photoCode": "669701"
   },
   {
@@ -6091,8 +6091,8 @@
     "team": "Pittsburgh Pirates",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 26.3,
+    "tier": "GREEN",
+    "avgFP": 29.2,
     "photoCode": "669707"
   },
   {
@@ -6103,7 +6103,7 @@
     "team": "Houston Astros",
     "position": "P",
     "salary": 56,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 31,
     "photoCode": "669713"
   },
@@ -6115,8 +6115,8 @@
     "team": "Tacoma Rainiers",
     "position": "BAT",
     "salary": 33,
-    "tier": "BLUE",
-    "avgFP": 18.4,
+    "tier": "WHITE",
+    "avgFP": 20.8,
     "photoCode": "669717"
   },
   {
@@ -6128,7 +6128,7 @@
     "position": "BAT",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 33.1,
+    "avgFP": 37.2,
     "photoCode": "669720"
   },
   {
@@ -6139,7 +6139,7 @@
     "team": "Louisville Bats",
     "position": "P",
     "salary": 37,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 20.5,
     "photoCode": "669721"
   },
@@ -6152,7 +6152,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 30,
+    "avgFP": 33.6,
     "photoCode": "669722"
   },
   {
@@ -6164,7 +6164,7 @@
     "position": "BAT",
     "salary": 52,
     "tier": "PURPLE",
-    "avgFP": 29,
+    "avgFP": 32.7,
     "photoCode": "669743"
   },
   {
@@ -6175,7 +6175,7 @@
     "team": "Houston Astros",
     "position": "P",
     "salary": 70,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 39.3,
     "photoCode": "669854"
   },
@@ -6187,8 +6187,8 @@
     "team": "Louisville Bats",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.8,
+    "tier": "BLUE",
+    "avgFP": 29.8,
     "photoCode": "669911"
   },
   {
@@ -6199,7 +6199,7 @@
     "team": "Sugar Land Space Cowboys",
     "position": "P",
     "salary": 63,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 35.1,
     "photoCode": "669920"
   },
@@ -6223,7 +6223,7 @@
     "team": "Durham Bulls",
     "position": "P",
     "salary": 70,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 39.3,
     "photoCode": "669947"
   },
@@ -6235,8 +6235,8 @@
     "team": "Albuquerque Isotopes",
     "position": "BAT",
     "salary": 35,
-    "tier": "BLUE",
-    "avgFP": 19.3,
+    "tier": "WHITE",
+    "avgFP": 21,
     "photoCode": "670032"
   },
   {
@@ -6247,8 +6247,8 @@
     "team": "Seattle Mariners",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.3,
+    "tier": "GREEN",
+    "avgFP": 28.3,
     "photoCode": "670042"
   },
   {
@@ -6259,8 +6259,8 @@
     "team": "El Paso Chihuahuas",
     "position": "BAT",
     "salary": 29,
-    "tier": "BLUE",
-    "avgFP": 16.3,
+    "tier": "WHITE",
+    "avgFP": 18.7,
     "photoCode": "670092"
   },
   {
@@ -6271,8 +6271,8 @@
     "team": "Rochester Red Wings",
     "position": "BAT",
     "salary": 52,
-    "tier": "PURPLE",
-    "avgFP": 28.9,
+    "tier": "BLUE",
+    "avgFP": 32.3,
     "photoCode": "670097"
   },
   {
@@ -6283,7 +6283,7 @@
     "team": "Toronto Blue Jays",
     "position": "P",
     "salary": 53,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 29.4,
     "photoCode": "670102"
   },
@@ -6296,7 +6296,7 @@
     "position": "BAT",
     "salary": 52,
     "tier": "PURPLE",
-    "avgFP": 29,
+    "avgFP": 32.6,
     "photoCode": "670156"
   },
   {
@@ -6307,8 +6307,8 @@
     "team": "Rochester Red Wings",
     "position": "BAT",
     "salary": 52,
-    "tier": "PURPLE",
-    "avgFP": 28.7,
+    "tier": "BLUE",
+    "avgFP": 31.8,
     "photoCode": "670223"
   },
   {
@@ -6319,8 +6319,8 @@
     "team": "Omaha Storm Chasers",
     "position": "BAT",
     "salary": 49,
-    "tier": "PURPLE",
-    "avgFP": 27.2,
+    "tier": "BLUE",
+    "avgFP": 30.3,
     "photoCode": "670224"
   },
   {
@@ -6331,8 +6331,8 @@
     "team": "Omaha Storm Chasers",
     "position": "BAT",
     "salary": 43,
-    "tier": "PURPLE",
-    "avgFP": 23.8,
+    "tier": "GREEN",
+    "avgFP": 26.4,
     "photoCode": "670231"
   },
   {
@@ -6344,7 +6344,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 29.8,
+    "avgFP": 32.8,
     "photoCode": "670242"
   },
   {
@@ -6355,8 +6355,8 @@
     "team": "Houston Astros",
     "position": "BAT",
     "salary": 56,
-    "tier": "ORANGE",
-    "avgFP": 31.2,
+    "tier": "PURPLE",
+    "avgFP": 34.9,
     "photoCode": "670541"
   },
   {
@@ -6367,8 +6367,8 @@
     "team": "Houston Astros",
     "position": "BAT",
     "salary": 56,
-    "tier": "ORANGE",
-    "avgFP": 31,
+    "tier": "PURPLE",
+    "avgFP": 34.5,
     "photoCode": "670623"
   },
   {
@@ -6379,8 +6379,8 @@
     "team": "Tampa Bay Rays",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.5,
+    "tier": "GREEN",
+    "avgFP": 28.4,
     "photoCode": "670764"
   },
   {
@@ -6391,8 +6391,8 @@
     "team": "Cincinnati Reds",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.3,
+    "tier": "BLUE",
+    "avgFP": 31.7,
     "photoCode": "670770"
   },
   {
@@ -6403,7 +6403,7 @@
     "team": "El Paso Chihuahuas",
     "position": "P",
     "salary": 18,
-    "tier": "GREEN",
+    "tier": "WHITE",
     "avgFP": 10,
     "photoCode": "670810"
   },
@@ -6415,7 +6415,7 @@
     "team": "Boston Red Sox",
     "position": "P",
     "salary": 54,
-    "tier": "PURPLE",
+    "tier": "BLUE",
     "avgFP": 30.2,
     "photoCode": "670912"
   },
@@ -6428,7 +6428,7 @@
     "position": "BAT",
     "salary": 59,
     "tier": "ORANGE",
-    "avgFP": 32.5,
+    "avgFP": 36.4,
     "photoCode": "671056"
   },
   {
@@ -6439,8 +6439,8 @@
     "team": "Sacramento River Cats",
     "position": "BAT",
     "salary": 26,
-    "tier": "GREEN",
-    "avgFP": 14.5,
+    "tier": "WHITE",
+    "avgFP": 16,
     "photoCode": "671083"
   },
   {
@@ -6451,7 +6451,7 @@
     "team": "Cincinnati Reds",
     "position": "P",
     "salary": 69,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 38.1,
     "photoCode": "671096"
   },
@@ -6463,8 +6463,8 @@
     "team": "Columbus Clippers",
     "position": "P",
     "salary": 53,
-    "tier": "PURPLE",
-    "avgFP": 29.2,
+    "tier": "BLUE",
+    "avgFP": 31.7,
     "photoCode": "671106"
   },
   {
@@ -6475,7 +6475,7 @@
     "team": "Washington Nationals",
     "position": "P",
     "salary": 53,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 29.5,
     "photoCode": "671109"
   },
@@ -6487,7 +6487,7 @@
     "team": "Tampa Bay Rays",
     "position": "P",
     "salary": 58,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 32,
     "photoCode": "671212"
   },
@@ -6499,8 +6499,8 @@
     "team": "Boston Red Sox",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 22.5,
+    "tier": "WHITE",
+    "avgFP": 25.1,
     "photoCode": "671213"
   },
   {
@@ -6512,7 +6512,7 @@
     "position": "BAT",
     "salary": 52,
     "tier": "PURPLE",
-    "avgFP": 29,
+    "avgFP": 32.7,
     "photoCode": "671218"
   },
   {
@@ -6523,8 +6523,8 @@
     "team": "Omaha Storm Chasers",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 22.8,
+    "tier": "GREEN",
+    "avgFP": 26,
     "photoCode": "671221"
   },
   {
@@ -6536,7 +6536,7 @@
     "position": "BAT",
     "salary": 59,
     "tier": "ORANGE",
-    "avgFP": 32.8,
+    "avgFP": 36.8,
     "photoCode": "671277"
   },
   {
@@ -6548,7 +6548,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 29.9,
+    "avgFP": 32.8,
     "photoCode": "671284"
   },
   {
@@ -6559,8 +6559,8 @@
     "team": "Baltimore Orioles",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.5,
+    "tier": "BLUE",
+    "avgFP": 31.8,
     "photoCode": "671286"
   },
   {
@@ -6571,8 +6571,8 @@
     "team": "Colorado Rockies",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 26.3,
+    "tier": "BLUE",
+    "avgFP": 29.7,
     "photoCode": "671289"
   },
   {
@@ -6583,8 +6583,8 @@
     "team": "Cleveland Guardians",
     "position": "BAT",
     "salary": 59,
-    "tier": "ORANGE",
-    "avgFP": 32.8,
+    "tier": "PURPLE",
+    "avgFP": 36,
     "photoCode": "671655"
   },
   {
@@ -6596,7 +6596,7 @@
     "position": "BAT",
     "salary": 61,
     "tier": "ORANGE",
-    "avgFP": 33.9,
+    "avgFP": 37.7,
     "photoCode": "671732"
   },
   {
@@ -6607,8 +6607,8 @@
     "team": "Minnesota Twins",
     "position": "P",
     "salary": 61,
-    "tier": "ORANGE",
-    "avgFP": 33.7,
+    "tier": "PURPLE",
+    "avgFP": 36.8,
     "photoCode": "671737"
   },
   {
@@ -6619,8 +6619,8 @@
     "team": "Atlanta Braves",
     "position": "BAT",
     "salary": 57,
-    "tier": "ORANGE",
-    "avgFP": 31.8,
+    "tier": "PURPLE",
+    "avgFP": 35.8,
     "photoCode": "671739"
   },
   {
@@ -6631,8 +6631,8 @@
     "team": "Nashville Sounds",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.5,
+    "tier": "GREEN",
+    "avgFP": 29.5,
     "photoCode": "672012"
   },
   {
@@ -6643,8 +6643,8 @@
     "team": "Athletics",
     "position": "BAT",
     "salary": 45,
-    "tier": "PURPLE",
-    "avgFP": 25.1,
+    "tier": "GREEN",
+    "avgFP": 28.1,
     "photoCode": "672016"
   },
   {
@@ -6655,8 +6655,8 @@
     "team": "San Francisco Giants",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.8,
+    "tier": "GREEN",
+    "avgFP": 29.2,
     "photoCode": "672275"
   },
   {
@@ -6667,8 +6667,8 @@
     "team": "Oklahoma City Comets",
     "position": "BAT",
     "salary": 31,
-    "tier": "BLUE",
-    "avgFP": 17,
+    "tier": "WHITE",
+    "avgFP": 19.5,
     "photoCode": "672279"
   },
   {
@@ -6679,8 +6679,8 @@
     "team": "Charlotte Knights",
     "position": "BAT",
     "salary": 42,
-    "tier": "PURPLE",
-    "avgFP": 23.6,
+    "tier": "GREEN",
+    "avgFP": 26.3,
     "photoCode": "672284"
   },
   {
@@ -6691,8 +6691,8 @@
     "team": "Cleveland Guardians",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 28,
+    "tier": "BLUE",
+    "avgFP": 31.4,
     "photoCode": "672356"
   },
   {
@@ -6704,7 +6704,7 @@
     "position": "BAT",
     "salary": 14,
     "tier": "WHITE",
-    "avgFP": 8,
+    "avgFP": 9,
     "photoCode": "672359"
   },
   {
@@ -6715,8 +6715,8 @@
     "team": "Toronto Blue Jays",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.6,
+    "tier": "PURPLE",
+    "avgFP": 34.4,
     "photoCode": "672386"
   },
   {
@@ -6727,7 +6727,7 @@
     "team": "Toledo Mud Hens",
     "position": "P",
     "salary": 49,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 27.3,
     "photoCode": "672456"
   },
@@ -6740,7 +6740,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 30.2,
+    "avgFP": 34.1,
     "photoCode": "672515"
   },
   {
@@ -6752,7 +6752,7 @@
     "position": "BAT",
     "salary": 67,
     "tier": "ORANGE",
-    "avgFP": 37.2,
+    "avgFP": 40.7,
     "photoCode": "672569"
   },
   {
@@ -6763,8 +6763,8 @@
     "team": "Kansas City Royals",
     "position": "BAT",
     "salary": 57,
-    "tier": "ORANGE",
-    "avgFP": 31.6,
+    "tier": "PURPLE",
+    "avgFP": 35.4,
     "photoCode": "672580"
   },
   {
@@ -6776,7 +6776,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 30.2,
+    "avgFP": 33.9,
     "photoCode": "672640"
   },
   {
@@ -6800,7 +6800,7 @@
     "position": "BAT",
     "salary": 63,
     "tier": "ORANGE",
-    "avgFP": 34.8,
+    "avgFP": 38.8,
     "photoCode": "672695"
   },
   {
@@ -6811,7 +6811,7 @@
     "team": "Colorado Rockies",
     "position": "P",
     "salary": 37,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 20.3,
     "photoCode": "672710"
   },
@@ -6823,8 +6823,8 @@
     "team": "Los Angeles Angels",
     "position": "BAT",
     "salary": 42,
-    "tier": "PURPLE",
-    "avgFP": 23.1,
+    "tier": "GREEN",
+    "avgFP": 25.8,
     "photoCode": "672724"
   },
   {
@@ -6835,8 +6835,8 @@
     "team": "Leones del Escogido",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.5,
+    "tier": "BLUE",
+    "avgFP": 29.8,
     "photoCode": "672744"
   },
   {
@@ -6847,8 +6847,8 @@
     "team": "Toledo Mud Hens",
     "position": "BAT",
     "salary": 52,
-    "tier": "PURPLE",
-    "avgFP": 28.8,
+    "tier": "BLUE",
+    "avgFP": 32.1,
     "photoCode": "672761"
   },
   {
@@ -6859,7 +6859,7 @@
     "team": "Tampa Bay Rays",
     "position": "P",
     "salary": 51,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 28.4,
     "photoCode": "672782"
   },
@@ -6872,7 +6872,7 @@
     "position": "BAT",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 33.1,
+    "avgFP": 37.4,
     "photoCode": "672820"
   },
   {
@@ -6883,8 +6883,8 @@
     "team": "Houston Astros",
     "position": "BAT",
     "salary": 56,
-    "tier": "ORANGE",
-    "avgFP": 30.9,
+    "tier": "PURPLE",
+    "avgFP": 34.9,
     "photoCode": "673237"
   },
   {
@@ -6896,7 +6896,7 @@
     "position": "BAT",
     "salary": 62,
     "tier": "ORANGE",
-    "avgFP": 34.3,
+    "avgFP": 37.8,
     "photoCode": "673357"
   },
   {
@@ -6907,8 +6907,8 @@
     "team": "Atlanta Braves",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.9,
+    "tier": "BLUE",
+    "avgFP": 30.1,
     "photoCode": "673490"
   },
   {
@@ -6919,7 +6919,7 @@
     "team": "New York Mets",
     "position": "P",
     "salary": 62,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 34.6,
     "photoCode": "673540"
   },
@@ -6932,7 +6932,7 @@
     "position": "BAT",
     "salary": 61,
     "tier": "ORANGE",
-    "avgFP": 33.8,
+    "avgFP": 37.6,
     "photoCode": "673548"
   },
   {
@@ -6944,7 +6944,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.6,
+    "avgFP": 33.5,
     "photoCode": "673962"
   },
   {
@@ -6955,7 +6955,7 @@
     "team": "Reno Aces",
     "position": "P",
     "salary": 56,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 31,
     "photoCode": "674072"
   },
@@ -6967,8 +6967,8 @@
     "team": "Atlanta Braves",
     "position": "P",
     "salary": 39,
-    "tier": "BLUE",
-    "avgFP": 21.7,
+    "tier": "GREEN",
+    "avgFP": 24.5,
     "photoCode": "674370"
   },
   {
@@ -6980,7 +6980,7 @@
     "position": "BAT",
     "salary": 14,
     "tier": "WHITE",
-    "avgFP": 8,
+    "avgFP": 9,
     "photoCode": "674441"
   },
   {
@@ -6991,7 +6991,7 @@
     "team": "Rochester Red Wings",
     "position": "P",
     "salary": 59,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 32.5,
     "photoCode": "674841"
   },
@@ -7016,7 +7016,7 @@
     "position": "P",
     "salary": 69,
     "tier": "ORANGE",
-    "avgFP": 38.3,
+    "avgFP": 40.3,
     "photoCode": "675911"
   },
   {
@@ -7027,8 +7027,8 @@
     "team": "Tampa Bay Rays",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.2,
+    "tier": "GREEN",
+    "avgFP": 27.5,
     "photoCode": "676044"
   },
   {
@@ -7040,7 +7040,7 @@
     "position": "BAT",
     "salary": 68,
     "tier": "ORANGE",
-    "avgFP": 37.7,
+    "avgFP": 42.4,
     "photoCode": "676059"
   },
   {
@@ -7051,8 +7051,8 @@
     "team": "Reno Aces",
     "position": "BAT",
     "salary": 30,
-    "tier": "BLUE",
-    "avgFP": 16.9,
+    "tier": "WHITE",
+    "avgFP": 19.1,
     "photoCode": "676070"
   },
   {
@@ -7063,7 +7063,7 @@
     "team": "Miami Marlins",
     "position": "P",
     "salary": 51,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 28.2,
     "photoCode": "676083"
   },
@@ -7075,7 +7075,7 @@
     "team": "Seattle Mariners",
     "position": "P",
     "salary": 50,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 27.6,
     "photoCode": "676106"
   },
@@ -7087,8 +7087,8 @@
     "team": "Norfolk Tides",
     "position": "BAT",
     "salary": 33,
-    "tier": "BLUE",
-    "avgFP": 18.3,
+    "tier": "WHITE",
+    "avgFP": 19.8,
     "photoCode": "676116"
   },
   {
@@ -7099,7 +7099,7 @@
     "team": "Cleveland Guardians",
     "position": "P",
     "salary": 64,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 35.6,
     "photoCode": "676282"
   },
@@ -7111,8 +7111,8 @@
     "team": "Tampa Bay Rays",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 25.9,
+    "tier": "GREEN",
+    "avgFP": 29.1,
     "photoCode": "676356"
   },
   {
@@ -7123,8 +7123,8 @@
     "team": "Toronto Blue Jays",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.4,
+    "tier": "PURPLE",
+    "avgFP": 34.5,
     "photoCode": "676391"
   },
   {
@@ -7135,8 +7135,8 @@
     "team": "Tampa Bay Rays",
     "position": "BAT",
     "salary": 34,
-    "tier": "BLUE",
-    "avgFP": 18.8,
+    "tier": "WHITE",
+    "avgFP": 20.7,
     "photoCode": "676439"
   },
   {
@@ -7147,7 +7147,7 @@
     "team": "Cleveland Guardians",
     "position": "P",
     "salary": 63,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 35.1,
     "photoCode": "676440"
   },
@@ -7159,8 +7159,8 @@
     "team": "Sugar Land Space Cowboys",
     "position": "BAT",
     "salary": 23,
-    "tier": "GREEN",
-    "avgFP": 12.5,
+    "tier": "WHITE",
+    "avgFP": 14.5,
     "photoCode": "676466"
   },
   {
@@ -7171,7 +7171,7 @@
     "team": "Sugar Land Space Cowboys",
     "position": "P",
     "salary": 45,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 25.1,
     "photoCode": "676467"
   },
@@ -7184,7 +7184,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.4,
+    "avgFP": 33.2,
     "photoCode": "676475"
   },
   {
@@ -7195,8 +7195,8 @@
     "team": "Norfolk Tides",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.8,
+    "tier": "BLUE",
+    "avgFP": 31,
     "photoCode": "676480"
   },
   {
@@ -7207,7 +7207,7 @@
     "team": "Los Angeles Dodgers",
     "position": "P",
     "salary": 37,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 20.5,
     "photoCode": "676508"
   },
@@ -7220,7 +7220,7 @@
     "position": "BAT",
     "salary": 70,
     "tier": "ORANGE",
-    "avgFP": 54,
+    "avgFP": 60,
     "photoCode": "676551"
   },
   {
@@ -7231,8 +7231,8 @@
     "team": "St. Paul Saints",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.9,
+    "tier": "BLUE",
+    "avgFP": 30.4,
     "photoCode": "676572"
   },
   {
@@ -7244,7 +7244,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.7,
+    "avgFP": 32.7,
     "photoCode": "676609"
   },
   {
@@ -7255,7 +7255,7 @@
     "team": "El Paso Chihuahuas",
     "position": "P",
     "salary": 56,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 31.2,
     "photoCode": "676664"
   },
@@ -7267,8 +7267,8 @@
     "team": "Norfolk Tides",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.4,
+    "tier": "GREEN",
+    "avgFP": 29.3,
     "photoCode": "676679"
   },
   {
@@ -7280,7 +7280,7 @@
     "position": "BAT",
     "salary": 52,
     "tier": "PURPLE",
-    "avgFP": 28.9,
+    "avgFP": 32.7,
     "photoCode": "676694"
   },
   {
@@ -7291,8 +7291,8 @@
     "team": "Round Rock Express",
     "position": "BAT",
     "salary": 30,
-    "tier": "BLUE",
-    "avgFP": 16.9,
+    "tier": "WHITE",
+    "avgFP": 19.4,
     "photoCode": "676701"
   },
   {
@@ -7303,8 +7303,8 @@
     "team": "New York Mets",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.2,
+    "tier": "BLUE",
+    "avgFP": 31.2,
     "photoCode": "676724"
   },
   {
@@ -7315,8 +7315,8 @@
     "team": "Iowa Cubs",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 22.7,
+    "tier": "GREEN",
+    "avgFP": 25.6,
     "photoCode": "676801"
   },
   {
@@ -7327,8 +7327,8 @@
     "team": "Minnesota Twins",
     "position": "BAT",
     "salary": 20,
-    "tier": "GREEN",
-    "avgFP": 11,
+    "tier": "WHITE",
+    "avgFP": 12.8,
     "photoCode": "676812"
   },
   {
@@ -7339,8 +7339,8 @@
     "team": "Toronto Blue Jays",
     "position": "BAT",
     "salary": 59,
-    "tier": "ORANGE",
-    "avgFP": 32.6,
+    "tier": "PURPLE",
+    "avgFP": 36.1,
     "photoCode": "676914"
   },
   {
@@ -7351,7 +7351,7 @@
     "team": "Washington Nationals",
     "position": "P",
     "salary": 54,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 29.8,
     "photoCode": "676917"
   },
@@ -7375,7 +7375,7 @@
     "team": "Chicago Cubs",
     "position": "P",
     "salary": 54,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 29.9,
     "photoCode": "676962"
   },
@@ -7388,7 +7388,7 @@
     "position": "P",
     "salary": 69,
     "tier": "ORANGE",
-    "avgFP": 38.3,
+    "avgFP": 42.1,
     "photoCode": "676974"
   },
   {
@@ -7411,8 +7411,8 @@
     "team": "Baltimore Orioles",
     "position": "BAT",
     "salary": 49,
-    "tier": "PURPLE",
-    "avgFP": 27.1,
+    "tier": "BLUE",
+    "avgFP": 30.6,
     "photoCode": "677008"
   },
   {
@@ -7423,8 +7423,8 @@
     "team": "Albuquerque Isotopes",
     "position": "BAT",
     "salary": 25,
-    "tier": "GREEN",
-    "avgFP": 14,
+    "tier": "WHITE",
+    "avgFP": 16.5,
     "photoCode": "677060"
   },
   {
@@ -7435,7 +7435,7 @@
     "team": "Worcester Red Sox",
     "position": "P",
     "salary": 50,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 28,
     "photoCode": "677161"
   },
@@ -7448,7 +7448,7 @@
     "position": "BAT",
     "salary": 61,
     "tier": "ORANGE",
-    "avgFP": 34,
+    "avgFP": 37.4,
     "photoCode": "677347"
   },
   {
@@ -7459,8 +7459,8 @@
     "team": "Cleveland Guardians",
     "position": "BAT",
     "salary": 45,
-    "tier": "PURPLE",
-    "avgFP": 25,
+    "tier": "GREEN",
+    "avgFP": 28.2,
     "photoCode": "677587"
   },
   {
@@ -7471,8 +7471,8 @@
     "team": "Washington Nationals",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 26,
+    "tier": "GREEN",
+    "avgFP": 29.3,
     "photoCode": "677588"
   },
   {
@@ -7483,8 +7483,8 @@
     "team": "Chicago White Sox",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.9,
+    "tier": "BLUE",
+    "avgFP": 30.8,
     "photoCode": "677592"
   },
   {
@@ -7496,7 +7496,7 @@
     "position": "BAT",
     "salary": 66,
     "tier": "ORANGE",
-    "avgFP": 36.4,
+    "avgFP": 40.5,
     "photoCode": "677594"
   },
   {
@@ -7507,8 +7507,8 @@
     "team": "Syracuse Mets",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.8,
+    "tier": "BLUE",
+    "avgFP": 31,
     "photoCode": "677595"
   },
   {
@@ -7519,8 +7519,8 @@
     "team": "Texas Rangers",
     "position": "BAT",
     "salary": 40,
-    "tier": "PURPLE",
-    "avgFP": 22.4,
+    "tier": "GREEN",
+    "avgFP": 25.6,
     "photoCode": "677649"
   },
   {
@@ -7544,7 +7544,7 @@
     "position": "BAT",
     "salary": 64,
     "tier": "ORANGE",
-    "avgFP": 35.7,
+    "avgFP": 39.7,
     "photoCode": "677800"
   },
   {
@@ -7555,8 +7555,8 @@
     "team": "Miami Marlins",
     "position": "BAT",
     "salary": 52,
-    "tier": "PURPLE",
-    "avgFP": 29,
+    "tier": "BLUE",
+    "avgFP": 31,
     "photoCode": "677870"
   },
   {
@@ -7567,8 +7567,8 @@
     "team": "Baltimore Orioles",
     "position": "BAT",
     "salary": 49,
-    "tier": "PURPLE",
-    "avgFP": 27.2,
+    "tier": "BLUE",
+    "avgFP": 30.5,
     "photoCode": "677942"
   },
   {
@@ -7579,7 +7579,7 @@
     "team": "Cleveland Guardians",
     "position": "P",
     "salary": 62,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 34.4,
     "photoCode": "677944"
   },
@@ -7591,8 +7591,8 @@
     "team": "Arizona Diamondbacks",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.7,
+    "tier": "BLUE",
+    "avgFP": 30.2,
     "photoCode": "677950"
   },
   {
@@ -7604,7 +7604,7 @@
     "position": "BAT",
     "salary": 65,
     "tier": "ORANGE",
-    "avgFP": 36.3,
+    "avgFP": 40.5,
     "photoCode": "677951"
   },
   {
@@ -7615,7 +7615,7 @@
     "team": "Pittsburgh Pirates",
     "position": "P",
     "salary": 54,
-    "tier": "PURPLE",
+    "tier": "BLUE",
     "avgFP": 30.2,
     "photoCode": "677952"
   },
@@ -7628,7 +7628,7 @@
     "position": "BAT",
     "salary": 62,
     "tier": "ORANGE",
-    "avgFP": 34.6,
+    "avgFP": 38.4,
     "photoCode": "677956"
   },
   {
@@ -7639,7 +7639,7 @@
     "team": "Texas Rangers",
     "position": "P",
     "salary": 56,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 31.3,
     "photoCode": "677958"
   },
@@ -7651,7 +7651,7 @@
     "team": "New York Yankees",
     "position": "P",
     "salary": 56,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 31,
     "photoCode": "677960"
   },
@@ -7663,7 +7663,7 @@
     "team": "Tacoma Rainiers",
     "position": "P",
     "salary": 29,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 16.3,
     "photoCode": "677976"
   },
@@ -7675,8 +7675,8 @@
     "team": "Detroit Tigers",
     "position": "BAT",
     "salary": 42,
-    "tier": "PURPLE",
-    "avgFP": 23.1,
+    "tier": "GREEN",
+    "avgFP": 25.9,
     "photoCode": "678009"
   },
   {
@@ -7687,8 +7687,8 @@
     "team": "Boston Red Sox",
     "position": "BAT",
     "salary": 40,
-    "tier": "PURPLE",
-    "avgFP": 22.1,
+    "tier": "WHITE",
+    "avgFP": 24.8,
     "photoCode": "678011"
   },
   {
@@ -7699,7 +7699,7 @@
     "team": "Las Vegas Aviators",
     "position": "P",
     "salary": 64,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 35.3,
     "photoCode": "678022"
   },
@@ -7711,7 +7711,7 @@
     "team": "Chicago White Sox",
     "position": "P",
     "salary": 45,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 24.8,
     "photoCode": "678024"
   },
@@ -7723,8 +7723,8 @@
     "team": "Syracuse Mets",
     "position": "BAT",
     "salary": 29,
-    "tier": "BLUE",
-    "avgFP": 16,
+    "tier": "WHITE",
+    "avgFP": 16.8,
     "photoCode": "678225"
   },
   {
@@ -7735,8 +7735,8 @@
     "team": "Chicago White Sox",
     "position": "BAT",
     "salary": 56,
-    "tier": "ORANGE",
-    "avgFP": 31,
+    "tier": "PURPLE",
+    "avgFP": 34.6,
     "photoCode": "678246"
   },
   {
@@ -7747,7 +7747,7 @@
     "team": "Albuquerque Isotopes",
     "position": "P",
     "salary": 39,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 21.7,
     "photoCode": "678368"
   },
@@ -7759,8 +7759,8 @@
     "team": "Washington Nationals",
     "position": "BAT",
     "salary": 34,
-    "tier": "BLUE",
-    "avgFP": 18.9,
+    "tier": "WHITE",
+    "avgFP": 21.1,
     "photoCode": "678391"
   },
   {
@@ -7771,7 +7771,7 @@
     "team": "Boston Red Sox",
     "position": "P",
     "salary": 62,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 34.2,
     "photoCode": "678394"
   },
@@ -7783,8 +7783,8 @@
     "team": "Arizona Diamondbacks",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.9,
+    "tier": "BLUE",
+    "avgFP": 31.6,
     "photoCode": "678489"
   },
   {
@@ -7795,8 +7795,8 @@
     "team": "Washington Nationals",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.6,
+    "tier": "GREEN",
+    "avgFP": 27.8,
     "photoCode": "678554"
   },
   {
@@ -7807,8 +7807,8 @@
     "team": "Colorado Rockies",
     "position": "BAT",
     "salary": 56,
-    "tier": "ORANGE",
-    "avgFP": 31.1,
+    "tier": "PURPLE",
+    "avgFP": 35.1,
     "photoCode": "678662"
   },
   {
@@ -7819,8 +7819,8 @@
     "team": "Norfolk Tides",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.3,
+    "tier": "BLUE",
+    "avgFP": 31.8,
     "photoCode": "678877"
   },
   {
@@ -7831,8 +7831,8 @@
     "team": "Boston Red Sox",
     "position": "BAT",
     "salary": 58,
-    "tier": "ORANGE",
-    "avgFP": 32.1,
+    "tier": "PURPLE",
+    "avgFP": 36,
     "photoCode": "678882"
   },
   {
@@ -7843,8 +7843,8 @@
     "team": "Lehigh Valley IronPigs",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.8,
+    "tier": "GREEN",
+    "avgFP": 28.6,
     "photoCode": "678894"
   },
   {
@@ -7855,7 +7855,7 @@
     "team": "Houston Astros",
     "position": "P",
     "salary": 67,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 37.1,
     "photoCode": "678906"
   },
@@ -7867,8 +7867,8 @@
     "team": "Philadelphia Phillies",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.5,
+    "tier": "BLUE",
+    "avgFP": 30.7,
     "photoCode": "679032"
   },
   {
@@ -7879,8 +7879,8 @@
     "team": "Detroit Tigers",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.5,
+    "tier": "PURPLE",
+    "avgFP": 33.9,
     "photoCode": "679529"
   },
   {
@@ -7891,8 +7891,8 @@
     "team": "Kansas City Royals",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.4,
+    "tier": "BLUE",
+    "avgFP": 31.7,
     "photoCode": "679845"
   },
   {
@@ -7903,8 +7903,8 @@
     "team": "Scranton/Wilkes-Barre RailRiders",
     "position": "BAT",
     "salary": 35,
-    "tier": "BLUE",
-    "avgFP": 19.2,
+    "tier": "WHITE",
+    "avgFP": 21.5,
     "photoCode": "680474"
   },
   {
@@ -7915,7 +7915,7 @@
     "team": "Minnesota Twins",
     "position": "P",
     "salary": 56,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 31.2,
     "photoCode": "680573"
   },
@@ -7927,8 +7927,8 @@
     "team": "Cincinnati Reds",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 28,
+    "tier": "BLUE",
+    "avgFP": 31.2,
     "photoCode": "680574"
   },
   {
@@ -7939,8 +7939,8 @@
     "team": "Gwinnett Stripers",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.5,
+    "tier": "GREEN",
+    "avgFP": 28.3,
     "photoCode": "680577"
   },
   {
@@ -7951,8 +7951,8 @@
     "team": "Athletics",
     "position": "P",
     "salary": 39,
-    "tier": "BLUE",
-    "avgFP": 21.9,
+    "tier": "GREEN",
+    "avgFP": 26.6,
     "photoCode": "680684"
   },
   {
@@ -7976,7 +7976,7 @@
     "position": "BAT",
     "salary": 61,
     "tier": "ORANGE",
-    "avgFP": 34,
+    "avgFP": 38.1,
     "photoCode": "680700"
   },
   {
@@ -7988,7 +7988,7 @@
     "position": "BAT",
     "salary": 50,
     "tier": "PURPLE",
-    "avgFP": 28,
+    "avgFP": 33,
     "photoCode": "680716"
   },
   {
@@ -8000,7 +8000,7 @@
     "position": "BAT",
     "salary": 61,
     "tier": "ORANGE",
-    "avgFP": 33.8,
+    "avgFP": 37.7,
     "photoCode": "680718"
   },
   {
@@ -8011,8 +8011,8 @@
     "team": "Arizona Diamondbacks",
     "position": "BAT",
     "salary": 43,
-    "tier": "PURPLE",
-    "avgFP": 24,
+    "tier": "GREEN",
+    "avgFP": 27.3,
     "photoCode": "680728"
   },
   {
@@ -8023,8 +8023,8 @@
     "team": "Rochester Red Wings",
     "position": "P",
     "salary": 45,
-    "tier": "PURPLE",
-    "avgFP": 25,
+    "tier": "GREEN",
+    "avgFP": 28.5,
     "photoCode": "680730"
   },
   {
@@ -8035,8 +8035,8 @@
     "team": "Chicago White Sox",
     "position": "P",
     "salary": 58,
-    "tier": "ORANGE",
-    "avgFP": 32.4,
+    "tier": "BLUE",
+    "avgFP": 33.9,
     "photoCode": "680732"
   },
   {
@@ -8047,7 +8047,7 @@
     "team": "Los Angeles Dodgers",
     "position": "P",
     "salary": 56,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 31.2,
     "photoCode": "680736"
   },
@@ -8060,7 +8060,7 @@
     "position": "BAT",
     "salary": 63,
     "tier": "ORANGE",
-    "avgFP": 35.2,
+    "avgFP": 39,
     "photoCode": "680737"
   },
   {
@@ -8072,7 +8072,7 @@
     "position": "BAT",
     "salary": 52,
     "tier": "PURPLE",
-    "avgFP": 29,
+    "avgFP": 32.7,
     "photoCode": "680757"
   },
   {
@@ -8083,8 +8083,8 @@
     "team": "Sugar Land Space Cowboys",
     "position": "BAT",
     "salary": 18,
-    "tier": "GREEN",
-    "avgFP": 10,
+    "tier": "WHITE",
+    "avgFP": 12,
     "photoCode": "680769"
   },
   {
@@ -8095,8 +8095,8 @@
     "team": "Boston Red Sox",
     "position": "BAT",
     "salary": 58,
-    "tier": "ORANGE",
-    "avgFP": 32.2,
+    "tier": "PURPLE",
+    "avgFP": 35.9,
     "photoCode": "680776"
   },
   {
@@ -8107,8 +8107,8 @@
     "team": "Minnesota Twins",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.6,
+    "tier": "BLUE",
+    "avgFP": 31,
     "photoCode": "680777"
   },
   {
@@ -8119,8 +8119,8 @@
     "team": "Pittsburgh Pirates",
     "position": "BAT",
     "salary": 43,
-    "tier": "PURPLE",
-    "avgFP": 23.7,
+    "tier": "GREEN",
+    "avgFP": 26.5,
     "photoCode": "680779"
   },
   {
@@ -8131,8 +8131,8 @@
     "team": "Oklahoma City Comets",
     "position": "BAT",
     "salary": 57,
-    "tier": "ORANGE",
-    "avgFP": 31.8,
+    "tier": "PURPLE",
+    "avgFP": 35,
     "photoCode": "680837"
   },
   {
@@ -8143,8 +8143,8 @@
     "team": "Round Rock Express",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.3,
+    "tier": "GREEN",
+    "avgFP": 28.2,
     "photoCode": "680862"
   },
   {
@@ -8155,8 +8155,8 @@
     "team": "Las Vegas Aviators",
     "position": "BAT",
     "salary": 49,
-    "tier": "PURPLE",
-    "avgFP": 27.1,
+    "tier": "BLUE",
+    "avgFP": 30.5,
     "photoCode": "680869"
   },
   {
@@ -8180,7 +8180,7 @@
     "position": "BAT",
     "salary": 13,
     "tier": "WHITE",
-    "avgFP": 7,
+    "avgFP": 7.5,
     "photoCode": "680911"
   },
   {
@@ -8192,7 +8192,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.6,
+    "avgFP": 33.5,
     "photoCode": "680977"
   },
   {
@@ -8203,8 +8203,8 @@
     "team": "Philadelphia Phillies",
     "position": "BAT",
     "salary": 57,
-    "tier": "ORANGE",
-    "avgFP": 31.8,
+    "tier": "PURPLE",
+    "avgFP": 35.5,
     "photoCode": "681082"
   },
   {
@@ -8215,8 +8215,8 @@
     "team": "Round Rock Express",
     "position": "BAT",
     "salary": 33,
-    "tier": "BLUE",
-    "avgFP": 18.6,
+    "tier": "WHITE",
+    "avgFP": 21.1,
     "photoCode": "681146"
   },
   {
@@ -8227,7 +8227,7 @@
     "team": "San Diego Padres",
     "position": "P",
     "salary": 48,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 26.4,
     "photoCode": "681190"
   },
@@ -8239,8 +8239,8 @@
     "team": "Baltimore Orioles",
     "position": "BAT",
     "salary": 56,
-    "tier": "ORANGE",
-    "avgFP": 31,
+    "tier": "PURPLE",
+    "avgFP": 34.1,
     "photoCode": "681297"
   },
   {
@@ -8251,7 +8251,7 @@
     "team": "Chicago White Sox",
     "position": "P",
     "salary": 61,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 33.7,
     "photoCode": "681343"
   },
@@ -8263,7 +8263,7 @@
     "team": "Houston Astros",
     "position": "P",
     "salary": 56,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 31,
     "photoCode": "681347"
   },
@@ -8275,8 +8275,8 @@
     "team": "Los Angeles Angels",
     "position": "BAT",
     "salary": 52,
-    "tier": "PURPLE",
-    "avgFP": 29,
+    "tier": "BLUE",
+    "avgFP": 32.5,
     "photoCode": "681351"
   },
   {
@@ -8287,8 +8287,8 @@
     "team": "Miami Marlins",
     "position": "BAT",
     "salary": 52,
-    "tier": "PURPLE",
-    "avgFP": 28.7,
+    "tier": "BLUE",
+    "avgFP": 32.4,
     "photoCode": "681393"
   },
   {
@@ -8299,8 +8299,8 @@
     "team": "Chicago White Sox",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.7,
+    "tier": "BLUE",
+    "avgFP": 29.8,
     "photoCode": "681460"
   },
   {
@@ -8312,7 +8312,7 @@
     "position": "BAT",
     "salary": 68,
     "tier": "ORANGE",
-    "avgFP": 37.8,
+    "avgFP": 42.3,
     "photoCode": "681481"
   },
   {
@@ -8323,8 +8323,8 @@
     "team": "Worcester Red Sox",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.7,
+    "tier": "GREEN",
+    "avgFP": 27.5,
     "photoCode": "681508"
   },
   {
@@ -8335,8 +8335,8 @@
     "team": "Minnesota Twins",
     "position": "BAT",
     "salary": 53,
-    "tier": "PURPLE",
-    "avgFP": 29.4,
+    "tier": "BLUE",
+    "avgFP": 32.4,
     "photoCode": "681546"
   },
   {
@@ -8347,8 +8347,8 @@
     "team": "Syracuse Mets",
     "position": "BAT",
     "salary": 36,
-    "tier": "BLUE",
-    "avgFP": 20.2,
+    "tier": "WHITE",
+    "avgFP": 22.6,
     "photoCode": "681584"
   },
   {
@@ -8360,7 +8360,7 @@
     "position": "BAT",
     "salary": 61,
     "tier": "ORANGE",
-    "avgFP": 33.8,
+    "avgFP": 37.9,
     "photoCode": "681624"
   },
   {
@@ -8372,7 +8372,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 30.2,
+    "avgFP": 33.9,
     "photoCode": "681715"
   },
   {
@@ -8383,7 +8383,7 @@
     "team": "Buffalo Bisons",
     "position": "P",
     "salary": 45,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 25,
     "photoCode": "681751"
   },
@@ -8395,8 +8395,8 @@
     "team": "Cleveland Guardians",
     "position": "BAT",
     "salary": 57,
-    "tier": "ORANGE",
-    "avgFP": 31.9,
+    "tier": "PURPLE",
+    "avgFP": 35.4,
     "photoCode": "681807"
   },
   {
@@ -8407,7 +8407,7 @@
     "team": "Syracuse Mets",
     "position": "P",
     "salary": 58,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 32,
     "photoCode": "681810"
   },
@@ -8419,7 +8419,7 @@
     "team": "Detroit Tigers",
     "position": "P",
     "salary": 60,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 33.4,
     "photoCode": "681857"
   },
@@ -8443,8 +8443,8 @@
     "team": "Worcester Red Sox",
     "position": "BAT",
     "salary": 32,
-    "tier": "BLUE",
-    "avgFP": 18,
+    "tier": "WHITE",
+    "avgFP": 20.4,
     "photoCode": "681962"
   },
   {
@@ -8455,8 +8455,8 @@
     "team": "Worcester Red Sox",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 25.9,
+    "tier": "GREEN",
+    "avgFP": 29.2,
     "photoCode": "681987"
   },
   {
@@ -8479,8 +8479,8 @@
     "team": "Cleveland Guardians",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.6,
+    "tier": "BLUE",
+    "avgFP": 31.8,
     "photoCode": "682177"
   },
   {
@@ -8491,8 +8491,8 @@
     "team": "Albuquerque Isotopes",
     "position": "BAT",
     "salary": 34,
-    "tier": "BLUE",
-    "avgFP": 19,
+    "tier": "WHITE",
+    "avgFP": 21,
     "photoCode": "682183"
   },
   {
@@ -8503,7 +8503,7 @@
     "team": "Seattle Mariners",
     "position": "P",
     "salary": 42,
-    "tier": "PURPLE",
+    "tier": "WHITE",
     "avgFP": 23.4,
     "photoCode": "682243"
   },
@@ -8515,8 +8515,8 @@
     "team": "Sacramento River Cats",
     "position": "BAT",
     "salary": 36,
-    "tier": "BLUE",
-    "avgFP": 20,
+    "tier": "WHITE",
+    "avgFP": 22.5,
     "photoCode": "682515"
   },
   {
@@ -8528,7 +8528,7 @@
     "position": "BAT",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 33.5,
+    "avgFP": 37.6,
     "photoCode": "682622"
   },
   {
@@ -8540,7 +8540,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.7,
+    "avgFP": 33.2,
     "photoCode": "682626"
   },
   {
@@ -8551,8 +8551,8 @@
     "team": "Iowa Cubs",
     "position": "BAT",
     "salary": 22,
-    "tier": "GREEN",
-    "avgFP": 12,
+    "tier": "WHITE",
+    "avgFP": 13.5,
     "photoCode": "682634"
   },
   {
@@ -8564,7 +8564,7 @@
     "position": "BAT",
     "salary": 64,
     "tier": "ORANGE",
-    "avgFP": 35.8,
+    "avgFP": 39.9,
     "photoCode": "682641"
   },
   {
@@ -8575,8 +8575,8 @@
     "team": "Rochester Red Wings",
     "position": "BAT",
     "salary": 56,
-    "tier": "ORANGE",
-    "avgFP": 31.2,
+    "tier": "PURPLE",
+    "avgFP": 35.2,
     "photoCode": "682653"
   },
   {
@@ -8587,8 +8587,8 @@
     "team": "Cleveland Guardians",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.5,
+    "tier": "BLUE",
+    "avgFP": 29.9,
     "photoCode": "682657"
   },
   {
@@ -8600,7 +8600,7 @@
     "position": "BAT",
     "salary": 62,
     "tier": "ORANGE",
-    "avgFP": 34.4,
+    "avgFP": 38.4,
     "photoCode": "682663"
   },
   {
@@ -8611,8 +8611,8 @@
     "team": "Chicago White Sox",
     "position": "BAT",
     "salary": 43,
-    "tier": "PURPLE",
-    "avgFP": 24.1,
+    "tier": "GREEN",
+    "avgFP": 27.2,
     "photoCode": "682668"
   },
   {
@@ -8623,8 +8623,8 @@
     "team": "Buffalo Bisons",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.6,
+    "tier": "BLUE",
+    "avgFP": 29.8,
     "photoCode": "682729"
   },
   {
@@ -8636,7 +8636,7 @@
     "position": "BAT",
     "salary": 62,
     "tier": "ORANGE",
-    "avgFP": 34.4,
+    "avgFP": 38.2,
     "photoCode": "682829"
   },
   {
@@ -8647,8 +8647,8 @@
     "team": "Cleveland Guardians",
     "position": "P",
     "salary": 65,
-    "tier": "ORANGE",
-    "avgFP": 36.1,
+    "tier": "PURPLE",
+    "avgFP": 38.5,
     "photoCode": "682847"
   },
   {
@@ -8659,8 +8659,8 @@
     "team": "Indianapolis Indians",
     "position": "BAT",
     "salary": 27,
-    "tier": "GREEN",
-    "avgFP": 15.1,
+    "tier": "WHITE",
+    "avgFP": 17,
     "photoCode": "682848"
   },
   {
@@ -8671,8 +8671,8 @@
     "team": "Norfolk Tides",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 23,
+    "tier": "GREEN",
+    "avgFP": 26,
     "photoCode": "682868"
   },
   {
@@ -8683,8 +8683,8 @@
     "team": "Indianapolis Indians",
     "position": "BAT",
     "salary": 35,
-    "tier": "BLUE",
-    "avgFP": 19.4,
+    "tier": "WHITE",
+    "avgFP": 21.9,
     "photoCode": "682927"
   },
   {
@@ -8696,7 +8696,7 @@
     "position": "BAT",
     "salary": 65,
     "tier": "ORANGE",
-    "avgFP": 35.9,
+    "avgFP": 40.1,
     "photoCode": "682928"
   },
   {
@@ -8708,7 +8708,7 @@
     "position": "BAT",
     "salary": 66,
     "tier": "ORANGE",
-    "avgFP": 36.5,
+    "avgFP": 40.9,
     "photoCode": "682985"
   },
   {
@@ -8719,8 +8719,8 @@
     "team": "Arizona Diamondbacks",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.5,
+    "tier": "GREEN",
+    "avgFP": 27.3,
     "photoCode": "682988"
   },
   {
@@ -8731,7 +8731,7 @@
     "team": "Los Angeles Angels",
     "position": "P",
     "salary": 26,
-    "tier": "GREEN",
+    "tier": "WHITE",
     "avgFP": 14.3,
     "photoCode": "682989"
   },
@@ -8743,7 +8743,7 @@
     "team": "Milwaukee Brewers",
     "position": "P",
     "salary": 62,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 34.5,
     "photoCode": "682990"
   },
@@ -8756,7 +8756,7 @@
     "position": "BAT",
     "salary": 70,
     "tier": "ORANGE",
-    "avgFP": 40,
+    "avgFP": 44.1,
     "photoCode": "682998"
   },
   {
@@ -8767,8 +8767,8 @@
     "team": "Baltimore Orioles",
     "position": "BAT",
     "salary": 57,
-    "tier": "ORANGE",
-    "avgFP": 31.9,
+    "tier": "PURPLE",
+    "avgFP": 35.5,
     "photoCode": "683002"
   },
   {
@@ -8779,7 +8779,7 @@
     "team": "Texas Rangers",
     "position": "P",
     "salary": 65,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 36,
     "photoCode": "683004"
   },
@@ -8792,7 +8792,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 30,
+    "avgFP": 33.4,
     "photoCode": "683011"
   },
   {
@@ -8803,8 +8803,8 @@
     "team": "Las Vegas Aviators",
     "position": "BAT",
     "salary": 22,
-    "tier": "GREEN",
-    "avgFP": 12,
+    "tier": "WHITE",
+    "avgFP": 13.5,
     "photoCode": "683021"
   },
   {
@@ -8816,7 +8816,7 @@
     "position": "BAT",
     "salary": 69,
     "tier": "ORANGE",
-    "avgFP": 38.6,
+    "avgFP": 42.4,
     "photoCode": "683083"
   },
   {
@@ -8827,8 +8827,8 @@
     "team": "Salt Lake Bees",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.7,
+    "tier": "BLUE",
+    "avgFP": 31.4,
     "photoCode": "683090"
   },
   {
@@ -8839,8 +8839,8 @@
     "team": "New York Mets",
     "position": "BAT",
     "salary": 57,
-    "tier": "ORANGE",
-    "avgFP": 31.6,
+    "tier": "PURPLE",
+    "avgFP": 35.3,
     "photoCode": "683146"
   },
   {
@@ -8851,7 +8851,7 @@
     "team": "Las Vegas Aviators",
     "position": "P",
     "salary": 16,
-    "tier": "GREEN",
+    "tier": "WHITE",
     "avgFP": 9,
     "photoCode": "683155"
   },
@@ -8863,8 +8863,8 @@
     "team": "Texas Rangers",
     "position": "BAT",
     "salary": 52,
-    "tier": "PURPLE",
-    "avgFP": 28.8,
+    "tier": "BLUE",
+    "avgFP": 32.5,
     "photoCode": "683227"
   },
   {
@@ -8875,8 +8875,8 @@
     "team": "Miami Marlins",
     "position": "BAT",
     "salary": 58,
-    "tier": "ORANGE",
-    "avgFP": 32,
+    "tier": "PURPLE",
+    "avgFP": 35.7,
     "photoCode": "683357"
   },
   {
@@ -8899,8 +8899,8 @@
     "team": "Milwaukee Brewers",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.1,
+    "tier": "BLUE",
+    "avgFP": 31.7,
     "photoCode": "683734"
   },
   {
@@ -8912,7 +8912,7 @@
     "position": "BAT",
     "salary": 66,
     "tier": "ORANGE",
-    "avgFP": 36.7,
+    "avgFP": 40.8,
     "photoCode": "683737"
   },
   {
@@ -8923,8 +8923,8 @@
     "team": "Durham Bulls",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 23,
+    "tier": "WHITE",
+    "avgFP": 25.4,
     "photoCode": "683748"
   },
   {
@@ -8935,8 +8935,8 @@
     "team": "San Francisco Giants",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.5,
+    "tier": "GREEN",
+    "avgFP": 28.9,
     "photoCode": "683766"
   },
   {
@@ -8947,8 +8947,8 @@
     "team": "Norfolk Tides",
     "position": "BAT",
     "salary": 27,
-    "tier": "GREEN",
-    "avgFP": 14.8,
+    "tier": "WHITE",
+    "avgFP": 17.1,
     "photoCode": "683770"
   },
   {
@@ -8959,7 +8959,7 @@
     "team": "Chicago Cubs",
     "position": "P",
     "salary": 65,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 36.2,
     "photoCode": "684007"
   },
@@ -8971,7 +8971,7 @@
     "team": "Albuquerque Isotopes",
     "position": "P",
     "salary": 64,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 35.8,
     "photoCode": "685299"
   },
@@ -8983,8 +8983,8 @@
     "team": "Oklahoma City Comets",
     "position": "BAT",
     "salary": 52,
-    "tier": "PURPLE",
-    "avgFP": 28.8,
+    "tier": "BLUE",
+    "avgFP": 32,
     "photoCode": "685301"
   },
   {
@@ -8995,7 +8995,7 @@
     "team": "Colorado Rockies",
     "position": "P",
     "salary": 43,
-    "tier": "PURPLE",
+    "tier": "WHITE",
     "avgFP": 24.1,
     "photoCode": "685326"
   },
@@ -9020,7 +9020,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.7,
+    "avgFP": 33.5,
     "photoCode": "686217"
   },
   {
@@ -9043,8 +9043,8 @@
     "team": "Washington Nationals",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.1,
+    "tier": "BLUE",
+    "avgFP": 31.7,
     "photoCode": "686452"
   },
   {
@@ -9056,7 +9056,7 @@
     "position": "BAT",
     "salary": 59,
     "tier": "ORANGE",
-    "avgFP": 32.7,
+    "avgFP": 36.7,
     "photoCode": "686469"
   },
   {
@@ -9068,7 +9068,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.6,
+    "avgFP": 32.8,
     "photoCode": "686475"
   },
   {
@@ -9080,7 +9080,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 29.8,
+    "avgFP": 33.6,
     "photoCode": "686527"
   },
   {
@@ -9091,8 +9091,8 @@
     "team": "Charlotte Knights",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 26.3,
+    "tier": "BLUE",
+    "avgFP": 29.7,
     "photoCode": "686554"
   },
   {
@@ -9104,7 +9104,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 29.9,
+    "avgFP": 33.3,
     "photoCode": "686555"
   },
   {
@@ -9115,7 +9115,7 @@
     "team": "Charlotte Knights",
     "position": "P",
     "salary": 52,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 28.9,
     "photoCode": "686563"
   },
@@ -9127,8 +9127,8 @@
     "team": "Rochester Red Wings",
     "position": "BAT",
     "salary": 52,
-    "tier": "PURPLE",
-    "avgFP": 28.8,
+    "tier": "BLUE",
+    "avgFP": 32,
     "photoCode": "686611"
   },
   {
@@ -9152,7 +9152,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 30.2,
+    "avgFP": 33.9,
     "photoCode": "686668"
   },
   {
@@ -9163,8 +9163,8 @@
     "team": "Charlotte Knights",
     "position": "BAT",
     "salary": 58,
-    "tier": "ORANGE",
-    "avgFP": 32,
+    "tier": "PURPLE",
+    "avgFP": 36,
     "photoCode": "686676"
   },
   {
@@ -9175,8 +9175,8 @@
     "team": "Kansas City Royals",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.6,
+    "tier": "GREEN",
+    "avgFP": 28.2,
     "photoCode": "686681"
   },
   {
@@ -9187,7 +9187,7 @@
     "team": "Omaha Storm Chasers",
     "position": "P",
     "salary": 55,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 30.7,
     "photoCode": "686701"
   },
@@ -9199,7 +9199,7 @@
     "team": "Louisville Bats",
     "position": "P",
     "salary": 50,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 27.5,
     "photoCode": "686730"
   },
@@ -9211,7 +9211,7 @@
     "team": "Tampa Bay Rays",
     "position": "P",
     "salary": 70,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 39.7,
     "photoCode": "686752"
   },
@@ -9223,8 +9223,8 @@
     "team": "Worcester Red Sox",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.4,
+    "tier": "GREEN",
+    "avgFP": 27.7,
     "photoCode": "686765"
   },
   {
@@ -9235,8 +9235,8 @@
     "team": "St. Louis Cardinals",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.8,
+    "tier": "GREEN",
+    "avgFP": 29.2,
     "photoCode": "686780"
   },
   {
@@ -9259,8 +9259,8 @@
     "team": "Minnesota Twins",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.8,
+    "tier": "BLUE",
+    "avgFP": 31.4,
     "photoCode": "686797"
   },
   {
@@ -9271,8 +9271,8 @@
     "team": "Los Angeles Angels",
     "position": "P",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 22.5,
+    "tier": "WHITE",
+    "avgFP": 23.9,
     "photoCode": "686799"
   },
   {
@@ -9283,8 +9283,8 @@
     "team": "Sacramento River Cats",
     "position": "BAT",
     "salary": 29,
-    "tier": "BLUE",
-    "avgFP": 16,
+    "tier": "WHITE",
+    "avgFP": 18,
     "photoCode": "686823"
   },
   {
@@ -9295,7 +9295,7 @@
     "team": "Reno Aces",
     "position": "P",
     "salary": 48,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 26.8,
     "photoCode": "686826"
   },
@@ -9307,8 +9307,8 @@
     "team": "Washington Nationals",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.7,
+    "tier": "BLUE",
+    "avgFP": 31.1,
     "photoCode": "686894"
   },
   {
@@ -9319,7 +9319,7 @@
     "team": "Las Vegas Aviators",
     "position": "P",
     "salary": 34,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 18.7,
     "photoCode": "686930"
   },
@@ -9332,7 +9332,7 @@
     "position": "BAT",
     "salary": 59,
     "tier": "ORANGE",
-    "avgFP": 32.9,
+    "avgFP": 36.9,
     "photoCode": "686948"
   },
   {
@@ -9343,8 +9343,8 @@
     "team": "Norfolk Tides",
     "position": "P",
     "salary": 42,
-    "tier": "PURPLE",
-    "avgFP": 23.5,
+    "tier": "GREEN",
+    "avgFP": 26,
     "photoCode": "687064"
   },
   {
@@ -9355,7 +9355,7 @@
     "team": "Milwaukee Brewers",
     "position": "P",
     "salary": 50,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 27.9,
     "photoCode": "687075"
   },
@@ -9367,8 +9367,8 @@
     "team": "Jacksonville Jumbo Shrimp",
     "position": "P",
     "salary": 32,
-    "tier": "BLUE",
-    "avgFP": 17.7,
+    "tier": "WHITE",
+    "avgFP": 20.5,
     "photoCode": "687134"
   },
   {
@@ -9379,8 +9379,8 @@
     "team": "Los Angeles Dodgers",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.6,
+    "tier": "GREEN",
+    "avgFP": 28.9,
     "photoCode": "687221"
   },
   {
@@ -9391,8 +9391,8 @@
     "team": "Albuquerque Isotopes",
     "position": "P",
     "salary": 25,
-    "tier": "GREEN",
-    "avgFP": 14.1,
+    "tier": "WHITE",
+    "avgFP": 16.9,
     "photoCode": "687223"
   },
   {
@@ -9403,8 +9403,8 @@
     "team": "Athletics",
     "position": "BAT",
     "salary": 45,
-    "tier": "PURPLE",
-    "avgFP": 25.1,
+    "tier": "GREEN",
+    "avgFP": 28.3,
     "photoCode": "687231"
   },
   {
@@ -9416,7 +9416,7 @@
     "position": "BAT",
     "salary": 65,
     "tier": "ORANGE",
-    "avgFP": 36.1,
+    "avgFP": 40.1,
     "photoCode": "687263"
   },
   {
@@ -9427,7 +9427,7 @@
     "team": "Lehigh Valley IronPigs",
     "position": "P",
     "salary": 37,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 20.4,
     "photoCode": "687362"
   },
@@ -9439,8 +9439,8 @@
     "team": "St. Louis Cardinals",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.7,
+    "tier": "BLUE",
+    "avgFP": 30.7,
     "photoCode": "687363"
   },
   {
@@ -9451,8 +9451,8 @@
     "team": "Milwaukee Brewers",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.5,
+    "tier": "BLUE",
+    "avgFP": 32.1,
     "photoCode": "687401"
   },
   {
@@ -9464,7 +9464,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 29.9,
+    "avgFP": 33.6,
     "photoCode": "687462"
   },
   {
@@ -9475,7 +9475,7 @@
     "team": "Jacksonville Jumbo Shrimp",
     "position": "P",
     "salary": 57,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 31.7,
     "photoCode": "687473"
   },
@@ -9487,8 +9487,8 @@
     "team": "Pittsburgh Pirates",
     "position": "BAT",
     "salary": 19,
-    "tier": "GREEN",
-    "avgFP": 10.5,
+    "tier": "WHITE",
+    "avgFP": 12,
     "photoCode": "687478"
   },
   {
@@ -9500,7 +9500,7 @@
     "position": "BAT",
     "salary": 63,
     "tier": "ORANGE",
-    "avgFP": 34.8,
+    "avgFP": 38.9,
     "photoCode": "687515"
   },
   {
@@ -9512,7 +9512,7 @@
     "position": "BAT",
     "salary": 59,
     "tier": "ORANGE",
-    "avgFP": 33,
+    "avgFP": 36.5,
     "photoCode": "687529"
   },
   {
@@ -9524,7 +9524,7 @@
     "position": "BAT",
     "salary": 58,
     "tier": "ORANGE",
-    "avgFP": 32.3,
+    "avgFP": 36.1,
     "photoCode": "687551"
   },
   {
@@ -9536,7 +9536,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 30,
+    "avgFP": 33.7,
     "photoCode": "687597"
   },
   {
@@ -9559,8 +9559,8 @@
     "team": "Baltimore Orioles",
     "position": "BAT",
     "salary": 52,
-    "tier": "PURPLE",
-    "avgFP": 29.1,
+    "tier": "BLUE",
+    "avgFP": 32,
     "photoCode": "687637"
   },
   {
@@ -9571,7 +9571,7 @@
     "team": "Omaha Storm Chasers",
     "position": "P",
     "salary": 42,
-    "tier": "PURPLE",
+    "tier": "WHITE",
     "avgFP": 23.4,
     "photoCode": "687765"
   },
@@ -9583,7 +9583,7 @@
     "team": "Detroit Tigers",
     "position": "P",
     "salary": 36,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 20,
     "photoCode": "687830"
   },
@@ -9595,8 +9595,8 @@
     "team": "Colorado Rockies",
     "position": "BAT",
     "salary": 57,
-    "tier": "ORANGE",
-    "avgFP": 31.5,
+    "tier": "PURPLE",
+    "avgFP": 35.6,
     "photoCode": "687859"
   },
   {
@@ -9619,7 +9619,7 @@
     "team": "Toronto Blue Jays",
     "position": "P",
     "salary": 54,
-    "tier": "PURPLE",
+    "tier": "BLUE",
     "avgFP": 30,
     "photoCode": "687922"
   },
@@ -9631,7 +9631,7 @@
     "team": "Sacramento River Cats",
     "position": "P",
     "salary": 38,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 21.3,
     "photoCode": "687931"
   },
@@ -9643,8 +9643,8 @@
     "team": "Louisville Bats",
     "position": "BAT",
     "salary": 57,
-    "tier": "ORANGE",
-    "avgFP": 31.6,
+    "tier": "PURPLE",
+    "avgFP": 35.5,
     "photoCode": "687952"
   },
   {
@@ -9655,8 +9655,8 @@
     "team": "Charlotte Knights",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.3,
+    "tier": "GREEN",
+    "avgFP": 27.5,
     "photoCode": "687957"
   },
   {
@@ -9667,7 +9667,7 @@
     "team": "Seattle Mariners",
     "position": "P",
     "salary": 48,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 26.7,
     "photoCode": "688138"
   },
@@ -9679,8 +9679,8 @@
     "team": "Miami Marlins",
     "position": "BAT",
     "salary": 45,
-    "tier": "PURPLE",
-    "avgFP": 25,
+    "tier": "GREEN",
+    "avgFP": 27.8,
     "photoCode": "688363"
   },
   {
@@ -9692,7 +9692,7 @@
     "position": "BAT",
     "salary": 63,
     "tier": "ORANGE",
-    "avgFP": 34.8,
+    "avgFP": 38.5,
     "photoCode": "688760"
   },
   {
@@ -9703,7 +9703,7 @@
     "team": "Los Angeles Dodgers",
     "position": "P",
     "salary": 59,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 32.7,
     "photoCode": "689017"
   },
@@ -9715,8 +9715,8 @@
     "team": "Tacoma Rainiers",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.5,
+    "tier": "GREEN",
+    "avgFP": 29.5,
     "photoCode": "689041"
   },
   {
@@ -9727,8 +9727,8 @@
     "team": "Atlanta Braves",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 22.5,
+    "tier": "WHITE",
+    "avgFP": 25.3,
     "photoCode": "689172"
   },
   {
@@ -9739,8 +9739,8 @@
     "team": "Durham Bulls",
     "position": "BAT",
     "salary": 31,
-    "tier": "BLUE",
-    "avgFP": 17.1,
+    "tier": "WHITE",
+    "avgFP": 18.9,
     "photoCode": "689200"
   },
   {
@@ -9751,8 +9751,8 @@
     "team": "Miami Marlins",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.2,
+    "tier": "GREEN",
+    "avgFP": 27.3,
     "photoCode": "689414"
   },
   {
@@ -9763,8 +9763,8 @@
     "team": "Colorado Rockies",
     "position": "BAT",
     "salary": 39,
-    "tier": "BLUE",
-    "avgFP": 21.4,
+    "tier": "WHITE",
+    "avgFP": 24.2,
     "photoCode": "690022"
   },
   {
@@ -9775,8 +9775,8 @@
     "team": "Toledo Mud Hens",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 22.9,
+    "tier": "GREEN",
+    "avgFP": 25.7,
     "photoCode": "690291"
   },
   {
@@ -9787,7 +9787,7 @@
     "team": "Memphis Redbirds",
     "position": "P",
     "salary": 56,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 31.1,
     "photoCode": "690916"
   },
@@ -9799,8 +9799,8 @@
     "team": "Colorado Rockies",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.9,
+    "tier": "BLUE",
+    "avgFP": 30.4,
     "photoCode": "690924"
   },
   {
@@ -9811,7 +9811,7 @@
     "team": "St. Louis Cardinals",
     "position": "P",
     "salary": 50,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 27.9,
     "photoCode": "690928"
   },
@@ -9823,7 +9823,7 @@
     "team": "Minnesota Twins",
     "position": "P",
     "salary": 69,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 38.6,
     "photoCode": "690953"
   },
@@ -9835,8 +9835,8 @@
     "team": "Los Angeles Dodgers",
     "position": "BAT",
     "salary": 37,
-    "tier": "BLUE",
-    "avgFP": 20.7,
+    "tier": "WHITE",
+    "avgFP": 23.3,
     "photoCode": "690976"
   },
   {
@@ -9847,8 +9847,8 @@
     "team": "Columbus Clippers",
     "position": "BAT",
     "salary": 58,
-    "tier": "ORANGE",
-    "avgFP": 32,
+    "tier": "PURPLE",
+    "avgFP": 36,
     "photoCode": "690984"
   },
   {
@@ -9859,7 +9859,7 @@
     "team": "Milwaukee Brewers",
     "position": "P",
     "salary": 52,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 29.1,
     "photoCode": "690986"
   },
@@ -9871,8 +9871,8 @@
     "team": "Rochester Red Wings",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 22.8,
+    "tier": "GREEN",
+    "avgFP": 25.8,
     "photoCode": "690987"
   },
   {
@@ -9883,8 +9883,8 @@
     "team": "Chicago Cubs",
     "position": "P",
     "salary": 60,
-    "tier": "ORANGE",
-    "avgFP": 33.4,
+    "tier": "PURPLE",
+    "avgFP": 35.1,
     "photoCode": "690990"
   },
   {
@@ -9896,7 +9896,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.7,
+    "avgFP": 33.4,
     "photoCode": "690993"
   },
   {
@@ -9919,8 +9919,8 @@
     "team": "Athletics",
     "position": "BAT",
     "salary": 58,
-    "tier": "ORANGE",
-    "avgFP": 32.1,
+    "tier": "PURPLE",
+    "avgFP": 36,
     "photoCode": "691016"
   },
   {
@@ -9932,7 +9932,7 @@
     "position": "BAT",
     "salary": 52,
     "tier": "PURPLE",
-    "avgFP": 29.1,
+    "avgFP": 32.6,
     "photoCode": "691019"
   },
   {
@@ -9943,8 +9943,8 @@
     "team": "St. Louis Cardinals",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.5,
+    "tier": "GREEN",
+    "avgFP": 28.7,
     "photoCode": "691023"
   },
   {
@@ -9955,8 +9955,8 @@
     "team": "St. Louis Cardinals",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.5,
+    "tier": "BLUE",
+    "avgFP": 32.2,
     "photoCode": "691026"
   },
   {
@@ -9968,7 +9968,7 @@
     "position": "BAT",
     "salary": 61,
     "tier": "ORANGE",
-    "avgFP": 34,
+    "avgFP": 37.8,
     "photoCode": "691176"
   },
   {
@@ -9979,8 +9979,8 @@
     "team": "Albuquerque Isotopes",
     "position": "BAT",
     "salary": 38,
-    "tier": "BLUE",
-    "avgFP": 21.1,
+    "tier": "WHITE",
+    "avgFP": 23.6,
     "photoCode": "691182"
   },
   {
@@ -9991,8 +9991,8 @@
     "team": "Miami Marlins",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.5,
+    "tier": "GREEN",
+    "avgFP": 27.2,
     "photoCode": "691185"
   },
   {
@@ -10003,8 +10003,8 @@
     "team": "Indianapolis Indians",
     "position": "BAT",
     "salary": 19,
-    "tier": "GREEN",
-    "avgFP": 10.5,
+    "tier": "WHITE",
+    "avgFP": 11.5,
     "photoCode": "691373"
   },
   {
@@ -10016,7 +10016,7 @@
     "position": "BAT",
     "salary": 68,
     "tier": "ORANGE",
-    "avgFP": 37.7,
+    "avgFP": 41.9,
     "photoCode": "691406"
   },
   {
@@ -10027,8 +10027,8 @@
     "team": "Miami Marlins",
     "position": "P",
     "salary": 64,
-    "tier": "ORANGE",
-    "avgFP": 35.3,
+    "tier": "PURPLE",
+    "avgFP": 37.4,
     "photoCode": "691587"
   },
   {
@@ -10039,8 +10039,8 @@
     "team": "Miami Marlins",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.2,
+    "tier": "BLUE",
+    "avgFP": 31.7,
     "photoCode": "691594"
   },
   {
@@ -10052,7 +10052,7 @@
     "position": "BAT",
     "salary": 68,
     "tier": "ORANGE",
-    "avgFP": 37.8,
+    "avgFP": 41.9,
     "photoCode": "691718"
   },
   {
@@ -10063,8 +10063,8 @@
     "team": "Colorado Rockies",
     "position": "BAT",
     "salary": 40,
-    "tier": "PURPLE",
-    "avgFP": 22.1,
+    "tier": "WHITE",
+    "avgFP": 25.1,
     "photoCode": "691720"
   },
   {
@@ -10075,8 +10075,8 @@
     "team": "Baltimore Orioles",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.8,
+    "tier": "GREEN",
+    "avgFP": 28.7,
     "photoCode": "691723"
   },
   {
@@ -10087,8 +10087,8 @@
     "team": "Colorado Rockies",
     "position": "BAT",
     "salary": 34,
-    "tier": "BLUE",
-    "avgFP": 18.8,
+    "tier": "WHITE",
+    "avgFP": 20.7,
     "photoCode": "691728"
   },
   {
@@ -10099,8 +10099,8 @@
     "team": "Athletics",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.7,
+    "tier": "BLUE",
+    "avgFP": 30,
     "photoCode": "691777"
   },
   {
@@ -10111,8 +10111,8 @@
     "team": "Washington Nationals",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.8,
+    "tier": "BLUE",
+    "avgFP": 31.6,
     "photoCode": "691781"
   },
   {
@@ -10123,8 +10123,8 @@
     "team": "Arizona Diamondbacks",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 23,
+    "tier": "GREEN",
+    "avgFP": 25.7,
     "photoCode": "691783"
   },
   {
@@ -10135,8 +10135,8 @@
     "team": "Boston Red Sox",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.6,
+    "tier": "BLUE",
+    "avgFP": 30,
     "photoCode": "691785"
   },
   {
@@ -10147,7 +10147,7 @@
     "team": "Salt Lake Bees",
     "position": "P",
     "salary": 33,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 18.1,
     "photoCode": "691951"
   },
@@ -10159,8 +10159,8 @@
     "team": "Cleveland Guardians",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.7,
+    "tier": "BLUE",
+    "avgFP": 30.9,
     "photoCode": "692216"
   },
   {
@@ -10171,8 +10171,8 @@
     "team": "Worcester Red Sox",
     "position": "BAT",
     "salary": 47,
-    "tier": "PURPLE",
-    "avgFP": 26.1,
+    "tier": "GREEN",
+    "avgFP": 29.2,
     "photoCode": "692225"
   },
   {
@@ -10183,8 +10183,8 @@
     "team": "Scranton/Wilkes-Barre RailRiders",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 22.9,
+    "tier": "GREEN",
+    "avgFP": 26,
     "photoCode": "692585"
   },
   {
@@ -10195,8 +10195,8 @@
     "team": "Pittsburgh Pirates",
     "position": "BAT",
     "salary": 45,
-    "tier": "PURPLE",
-    "avgFP": 24.8,
+    "tier": "GREEN",
+    "avgFP": 28.4,
     "photoCode": "693304"
   },
   {
@@ -10207,8 +10207,8 @@
     "team": "Detroit Tigers",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.2,
+    "tier": "BLUE",
+    "avgFP": 32,
     "photoCode": "693307"
   },
   {
@@ -10219,7 +10219,7 @@
     "team": "Sacramento River Cats",
     "position": "P",
     "salary": 47,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 26,
     "photoCode": "693313"
   },
@@ -10231,8 +10231,8 @@
     "team": "Memphis Redbirds",
     "position": "BAT",
     "salary": 18,
-    "tier": "GREEN",
-    "avgFP": 10,
+    "tier": "WHITE",
+    "avgFP": 12,
     "photoCode": "693409"
   },
   {
@@ -10267,7 +10267,7 @@
     "team": "Atlanta Braves",
     "position": "P",
     "salary": 63,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 35.2,
     "photoCode": "693821"
   },
@@ -10279,7 +10279,7 @@
     "team": "Tampa Bay Rays",
     "position": "P",
     "salary": 66,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 36.6,
     "photoCode": "693855"
   },
@@ -10292,7 +10292,7 @@
     "position": "BAT",
     "salary": 65,
     "tier": "ORANGE",
-    "avgFP": 36.2,
+    "avgFP": 40.5,
     "photoCode": "694192"
   },
   {
@@ -10303,8 +10303,8 @@
     "team": "Salt Lake Bees",
     "position": "BAT",
     "salary": 56,
-    "tier": "ORANGE",
-    "avgFP": 31.2,
+    "tier": "PURPLE",
+    "avgFP": 35,
     "photoCode": "694203"
   },
   {
@@ -10316,7 +10316,7 @@
     "position": "BAT",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 33.3,
+    "avgFP": 37.3,
     "photoCode": "694208"
   },
   {
@@ -10327,8 +10327,8 @@
     "team": "Baltimore Orioles",
     "position": "BAT",
     "salary": 48,
-    "tier": "PURPLE",
-    "avgFP": 26.9,
+    "tier": "BLUE",
+    "avgFP": 30.1,
     "photoCode": "694212"
   },
   {
@@ -10339,7 +10339,7 @@
     "team": "Arizona Diamondbacks",
     "position": "P",
     "salary": 60,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 33.1,
     "photoCode": "694297"
   },
@@ -10352,7 +10352,7 @@
     "position": "BAT",
     "salary": 14,
     "tier": "WHITE",
-    "avgFP": 8,
+    "avgFP": 9,
     "photoCode": "694359"
   },
   {
@@ -10363,8 +10363,8 @@
     "team": "Louisville Bats",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.7,
+    "tier": "GREEN",
+    "avgFP": 28.5,
     "photoCode": "694362"
   },
   {
@@ -10375,8 +10375,8 @@
     "team": "Arizona Diamondbacks",
     "position": "BAT",
     "salary": 52,
-    "tier": "PURPLE",
-    "avgFP": 29.1,
+    "tier": "BLUE",
+    "avgFP": 32.3,
     "photoCode": "694374"
   },
   {
@@ -10387,8 +10387,8 @@
     "team": "Houston Astros",
     "position": "BAT",
     "salary": 45,
-    "tier": "PURPLE",
-    "avgFP": 25,
+    "tier": "GREEN",
+    "avgFP": 28.3,
     "photoCode": "694376"
   },
   {
@@ -10399,8 +10399,8 @@
     "team": "Pittsburgh Pirates",
     "position": "BAT",
     "salary": 40,
-    "tier": "PURPLE",
-    "avgFP": 22.1,
+    "tier": "WHITE",
+    "avgFP": 25,
     "photoCode": "694377"
   },
   {
@@ -10412,7 +10412,7 @@
     "position": "BAT",
     "salary": 54,
     "tier": "PURPLE",
-    "avgFP": 29.8,
+    "avgFP": 33.5,
     "photoCode": "694384"
   },
   {
@@ -10424,7 +10424,7 @@
     "position": "BAT",
     "salary": 58,
     "tier": "ORANGE",
-    "avgFP": 32.2,
+    "avgFP": 36.7,
     "photoCode": "694388"
   },
   {
@@ -10435,7 +10435,7 @@
     "team": "Atlanta Braves",
     "position": "P",
     "salary": 70,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 39.8,
     "photoCode": "694462"
   },
@@ -10447,7 +10447,7 @@
     "team": "Milwaukee Brewers",
     "position": "P",
     "salary": 58,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 32.1,
     "photoCode": "694477"
   },
@@ -10460,7 +10460,7 @@
     "position": "BAT",
     "salary": 63,
     "tier": "ORANGE",
-    "avgFP": 35,
+    "avgFP": 38.8,
     "photoCode": "694497"
   },
   {
@@ -10471,7 +10471,7 @@
     "team": "Norfolk Tides",
     "position": "P",
     "salary": 21,
-    "tier": "GREEN",
+    "tier": "WHITE",
     "avgFP": 11.6,
     "photoCode": "694646"
   },
@@ -10483,8 +10483,8 @@
     "team": "Texas Rangers",
     "position": "BAT",
     "salary": 57,
-    "tier": "ORANGE",
-    "avgFP": 31.9,
+    "tier": "PURPLE",
+    "avgFP": 35.3,
     "photoCode": "694671"
   },
   {
@@ -10496,7 +10496,7 @@
     "position": "BAT",
     "salary": 70,
     "tier": "ORANGE",
-    "avgFP": 42,
+    "avgFP": 46.1,
     "photoCode": "694728"
   },
   {
@@ -10507,7 +10507,7 @@
     "team": "San Francisco Giants",
     "position": "P",
     "salary": 69,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 38.1,
     "photoCode": "694738"
   },
@@ -10531,7 +10531,7 @@
     "team": "Sacramento River Cats",
     "position": "P",
     "salary": 38,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 21.3,
     "photoCode": "694918"
   },
@@ -10555,8 +10555,8 @@
     "team": "San Diego Padres",
     "position": "BAT",
     "salary": 39,
-    "tier": "BLUE",
-    "avgFP": 21.5,
+    "tier": "WHITE",
+    "avgFP": 24.3,
     "photoCode": "695238"
   },
   {
@@ -10567,8 +10567,8 @@
     "team": "Pittsburgh Pirates",
     "position": "BAT",
     "salary": 32,
-    "tier": "BLUE",
-    "avgFP": 18,
+    "tier": "WHITE",
+    "avgFP": 21,
     "photoCode": "695257"
   },
   {
@@ -10579,8 +10579,8 @@
     "team": "St. Louis Cardinals",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.3,
+    "tier": "GREEN",
+    "avgFP": 27.8,
     "photoCode": "695336"
   },
   {
@@ -10591,8 +10591,8 @@
     "team": "Las Vegas Aviators",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 22.5,
+    "tier": "GREEN",
+    "avgFP": 25.5,
     "photoCode": "695391"
   },
   {
@@ -10603,7 +10603,7 @@
     "team": "Washington Nationals",
     "position": "P",
     "salary": 47,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 26.3,
     "photoCode": "695418"
   },
@@ -10627,8 +10627,8 @@
     "team": "Kansas City Royals",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.6,
+    "tier": "GREEN",
+    "avgFP": 28.4,
     "photoCode": "695506"
   },
   {
@@ -10639,7 +10639,7 @@
     "team": "Detroit Tigers",
     "position": "P",
     "salary": 54,
-    "tier": "PURPLE",
+    "tier": "BLUE",
     "avgFP": 30,
     "photoCode": "695549"
   },
@@ -10652,7 +10652,7 @@
     "position": "BAT",
     "salary": 64,
     "tier": "ORANGE",
-    "avgFP": 35.3,
+    "avgFP": 39.1,
     "photoCode": "695578"
   },
   {
@@ -10664,7 +10664,7 @@
     "position": "BAT",
     "salary": 68,
     "tier": "ORANGE",
-    "avgFP": 37.7,
+    "avgFP": 42,
     "photoCode": "695600"
   },
   {
@@ -10676,7 +10676,7 @@
     "position": "BAT",
     "salary": 67,
     "tier": "ORANGE",
-    "avgFP": 37.1,
+    "avgFP": 41.1,
     "photoCode": "695657"
   },
   {
@@ -10687,8 +10687,8 @@
     "team": "Rochester Red Wings",
     "position": "BAT",
     "salary": 18,
-    "tier": "GREEN",
-    "avgFP": 10,
+    "tier": "WHITE",
+    "avgFP": 12,
     "photoCode": "695670"
   },
   {
@@ -10699,8 +10699,8 @@
     "team": "Salt Lake Bees",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.8,
+    "tier": "GREEN",
+    "avgFP": 28.6,
     "photoCode": "695681"
   },
   {
@@ -10712,7 +10712,7 @@
     "position": "BAT",
     "salary": 59,
     "tier": "ORANGE",
-    "avgFP": 33,
+    "avgFP": 37.1,
     "photoCode": "695734"
   },
   {
@@ -10723,8 +10723,8 @@
     "team": "Round Rock Express",
     "position": "BAT",
     "salary": 37,
-    "tier": "BLUE",
-    "avgFP": 20.5,
+    "tier": "WHITE",
+    "avgFP": 22.8,
     "photoCode": "696030"
   },
   {
@@ -10736,7 +10736,7 @@
     "position": "BAT",
     "salary": 66,
     "tier": "ORANGE",
-    "avgFP": 36.4,
+    "avgFP": 40.8,
     "photoCode": "696100"
   },
   {
@@ -10747,7 +10747,7 @@
     "team": "Omaha Storm Chasers",
     "position": "P",
     "salary": 41,
-    "tier": "PURPLE",
+    "tier": "WHITE",
     "avgFP": 23,
     "photoCode": "696131"
   },
@@ -10759,7 +10759,7 @@
     "team": "Pittsburgh Pirates",
     "position": "P",
     "salary": 64,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 35.6,
     "photoCode": "696149"
   },
@@ -10771,8 +10771,8 @@
     "team": "Washington Nationals",
     "position": "BAT",
     "salary": 41,
-    "tier": "PURPLE",
-    "avgFP": 22.5,
+    "tier": "WHITE",
+    "avgFP": 25.2,
     "photoCode": "696285"
   },
   {
@@ -10783,8 +10783,8 @@
     "team": "Memphis Redbirds",
     "position": "BAT",
     "salary": 44,
-    "tier": "PURPLE",
-    "avgFP": 24.4,
+    "tier": "GREEN",
+    "avgFP": 27.6,
     "photoCode": "699625"
   },
   {
@@ -10795,8 +10795,8 @@
     "team": "St. Louis Cardinals",
     "position": "P",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 28,
+    "tier": "GREEN",
+    "avgFP": 29.8,
     "photoCode": "700241"
   },
   {
@@ -10807,8 +10807,8 @@
     "team": "Detroit Tigers",
     "position": "BAT",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 28,
+    "tier": "BLUE",
+    "avgFP": 31.3,
     "photoCode": "700242"
   },
   {
@@ -10820,7 +10820,7 @@
     "position": "BAT",
     "salary": 64,
     "tier": "ORANGE",
-    "avgFP": 35.3,
+    "avgFP": 39.1,
     "photoCode": "700246"
   },
   {
@@ -10831,7 +10831,7 @@
     "team": "Norfolk Tides",
     "position": "P",
     "salary": 54,
-    "tier": "PURPLE",
+    "tier": "BLUE",
     "avgFP": 30.1,
     "photoCode": "700249"
   },
@@ -10844,7 +10844,7 @@
     "position": "BAT",
     "salary": 62,
     "tier": "ORANGE",
-    "avgFP": 34.6,
+    "avgFP": 38.5,
     "photoCode": "700250"
   },
   {
@@ -10855,8 +10855,8 @@
     "team": "Chicago White Sox",
     "position": "BAT",
     "salary": 45,
-    "tier": "PURPLE",
-    "avgFP": 25,
+    "tier": "GREEN",
+    "avgFP": 28.5,
     "photoCode": "700337"
   },
   {
@@ -10867,7 +10867,7 @@
     "team": "Atlanta Braves",
     "position": "P",
     "salary": 70,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 39.5,
     "photoCode": "700363"
   },
@@ -10879,7 +10879,7 @@
     "team": "Memphis Redbirds",
     "position": "P",
     "salary": 68,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 38,
     "photoCode": "700669"
   },
@@ -10891,8 +10891,8 @@
     "team": "Cleveland Guardians",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.7,
+    "tier": "PURPLE",
+    "avgFP": 34.1,
     "photoCode": "700932"
   },
   {
@@ -10903,8 +10903,8 @@
     "team": "Houston Astros",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.4,
+    "tier": "BLUE",
+    "avgFP": 31.9,
     "photoCode": "701305"
   },
   {
@@ -10916,7 +10916,7 @@
     "position": "BAT",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 33.6,
+    "avgFP": 37.7,
     "photoCode": "701350"
   },
   {
@@ -10927,8 +10927,8 @@
     "team": "Houston Astros",
     "position": "BAT",
     "salary": 49,
-    "tier": "PURPLE",
-    "avgFP": 27,
+    "tier": "BLUE",
+    "avgFP": 30.3,
     "photoCode": "701358"
   },
   {
@@ -10940,7 +10940,7 @@
     "position": "BAT",
     "salary": 70,
     "tier": "ORANGE",
-    "avgFP": 41.5,
+    "avgFP": 46.2,
     "photoCode": "701398"
   },
   {
@@ -10951,7 +10951,7 @@
     "team": "Colorado Rockies",
     "position": "P",
     "salary": 38,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 21,
     "photoCode": "701487"
   },
@@ -10963,7 +10963,7 @@
     "team": "Minnesota Twins",
     "position": "P",
     "salary": 39,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 21.7,
     "photoCode": "701519"
   },
@@ -10976,7 +10976,7 @@
     "position": "BAT",
     "salary": 59,
     "tier": "ORANGE",
-    "avgFP": 32.9,
+    "avgFP": 37,
     "photoCode": "701538"
   },
   {
@@ -10987,7 +10987,7 @@
     "team": "New York Yankees",
     "position": "P",
     "salary": 61,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 34.1,
     "photoCode": "701542"
   },
@@ -10999,7 +10999,7 @@
     "team": "Minnesota Twins",
     "position": "P",
     "salary": 53,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 29.3,
     "photoCode": "701581"
   },
@@ -11023,8 +11023,8 @@
     "team": "St. Louis Cardinals",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.7,
+    "tier": "GREEN",
+    "avgFP": 29,
     "photoCode": "701675"
   },
   {
@@ -11036,7 +11036,7 @@
     "position": "BAT",
     "salary": 70,
     "tier": "ORANGE",
-    "avgFP": 39.9,
+    "avgFP": 44.2,
     "photoCode": "701762"
   },
   {
@@ -11047,7 +11047,7 @@
     "team": "Toronto Blue Jays",
     "position": "P",
     "salary": 58,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 32.3,
     "photoCode": "702056"
   },
@@ -11059,8 +11059,8 @@
     "team": "Kansas City Royals",
     "position": "P",
     "salary": 64,
-    "tier": "ORANGE",
-    "avgFP": 35.5,
+    "tier": "PURPLE",
+    "avgFP": 37.2,
     "photoCode": "702070"
   },
   {
@@ -11071,8 +11071,8 @@
     "team": "St. Paul Saints",
     "position": "BAT",
     "salary": 45,
-    "tier": "PURPLE",
-    "avgFP": 25.2,
+    "tier": "GREEN",
+    "avgFP": 28.4,
     "photoCode": "702176"
   },
   {
@@ -11083,8 +11083,8 @@
     "team": "Seattle Mariners",
     "position": "BAT",
     "salary": 45,
-    "tier": "PURPLE",
-    "avgFP": 25.2,
+    "tier": "GREEN",
+    "avgFP": 28.2,
     "photoCode": "702284"
   },
   {
@@ -11095,8 +11095,8 @@
     "team": "Boston Red Sox",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.4,
+    "tier": "PURPLE",
+    "avgFP": 34.2,
     "photoCode": "702332"
   },
   {
@@ -11108,7 +11108,7 @@
     "position": "BAT",
     "salary": 50,
     "tier": "PURPLE",
-    "avgFP": 28,
+    "avgFP": 33,
     "photoCode": "702358"
   },
   {
@@ -11119,8 +11119,8 @@
     "team": "Norfolk Tides",
     "position": "BAT",
     "salary": 52,
-    "tier": "PURPLE",
-    "avgFP": 28.7,
+    "tier": "BLUE",
+    "avgFP": 32.1,
     "photoCode": "702616"
   },
   {
@@ -11131,7 +11131,7 @@
     "team": "ACL Angels",
     "position": "P",
     "salary": 57,
-    "tier": "ORANGE",
+    "tier": "BLUE",
     "avgFP": 31.9,
     "photoCode": "702674"
   },
@@ -11155,7 +11155,7 @@
     "team": "Miami Marlins",
     "position": "P",
     "salary": 37,
-    "tier": "BLUE",
+    "tier": "WHITE",
     "avgFP": 20.7,
     "photoCode": "800049"
   },
@@ -11167,7 +11167,7 @@
     "team": "Gwinnett Stripers",
     "position": "P",
     "salary": 27,
-    "tier": "GREEN",
+    "tier": "WHITE",
     "avgFP": 15,
     "photoCode": "800311"
   },
@@ -11191,7 +11191,7 @@
     "team": "Colorado Rockies",
     "position": "P",
     "salary": 51,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 28.4,
     "photoCode": "801403"
   },
@@ -11203,8 +11203,8 @@
     "team": "Tampa Bay Rays",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.6,
+    "tier": "PURPLE",
+    "avgFP": 34.4,
     "photoCode": "802415"
   },
   {
@@ -11215,7 +11215,7 @@
     "team": "Indianapolis Indians",
     "position": "P",
     "salary": 23,
-    "tier": "GREEN",
+    "tier": "WHITE",
     "avgFP": 12.5,
     "photoCode": "802419"
   },
@@ -11239,8 +11239,8 @@
     "team": "Indianapolis Indians",
     "position": "BAT",
     "salary": 22,
-    "tier": "GREEN",
-    "avgFP": 12.3,
+    "tier": "WHITE",
+    "avgFP": 13.7,
     "photoCode": "804668"
   },
   {
@@ -11251,7 +11251,7 @@
     "team": "Houston Astros",
     "position": "P",
     "salary": 51,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 28.3,
     "photoCode": "805123"
   },
@@ -11264,7 +11264,7 @@
     "position": "BAT",
     "salary": 53,
     "tier": "PURPLE",
-    "avgFP": 29.3,
+    "avgFP": 32.8,
     "photoCode": "805249"
   },
   {
@@ -11276,7 +11276,7 @@
     "position": "BAT",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 33.3,
+    "avgFP": 37.2,
     "photoCode": "805300"
   },
   {
@@ -11287,8 +11287,8 @@
     "team": "Chicago White Sox",
     "position": "BAT",
     "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.5,
+    "tier": "GREEN",
+    "avgFP": 28.8,
     "photoCode": "805367"
   },
   {
@@ -11299,8 +11299,8 @@
     "team": "Gwinnett Stripers",
     "position": "BAT",
     "salary": 43,
-    "tier": "PURPLE",
-    "avgFP": 23.7,
+    "tier": "GREEN",
+    "avgFP": 27,
     "photoCode": "805373"
   },
   {
@@ -11311,7 +11311,7 @@
     "team": "St. Paul Saints",
     "position": "P",
     "salary": 63,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 35.2,
     "photoCode": "805673"
   },
@@ -11323,8 +11323,8 @@
     "team": "Athletics",
     "position": "BAT",
     "salary": 57,
-    "tier": "ORANGE",
-    "avgFP": 31.6,
+    "tier": "PURPLE",
+    "avgFP": 36,
     "photoCode": "805779"
   },
   {
@@ -11335,8 +11335,8 @@
     "team": "Sacramento River Cats",
     "position": "BAT",
     "salary": 31,
-    "tier": "BLUE",
-    "avgFP": 17.4,
+    "tier": "WHITE",
+    "avgFP": 19,
     "photoCode": "805811"
   },
   {
@@ -11348,7 +11348,7 @@
     "position": "BAT",
     "salary": 70,
     "tier": "ORANGE",
-    "avgFP": 43.6,
+    "avgFP": 48,
     "photoCode": "805904"
   },
   {
@@ -11359,8 +11359,8 @@
     "team": "San Francisco Giants",
     "position": "P",
     "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 27.8,
+    "tier": "BLUE",
+    "avgFP": 31.9,
     "photoCode": "806185"
   },
   {
@@ -11371,7 +11371,7 @@
     "team": "Athletics",
     "position": "P",
     "salary": 64,
-    "tier": "ORANGE",
+    "tier": "PURPLE",
     "avgFP": 35.5,
     "photoCode": "806960"
   },
@@ -11383,8 +11383,8 @@
     "team": "Minnesota Twins",
     "position": "BAT",
     "salary": 58,
-    "tier": "ORANGE",
-    "avgFP": 32.3,
+    "tier": "PURPLE",
+    "avgFP": 36.1,
     "photoCode": "807712"
   },
   {
@@ -11395,8 +11395,8 @@
     "team": "Chicago Cubs",
     "position": "BAT",
     "salary": 49,
-    "tier": "PURPLE",
-    "avgFP": 27,
+    "tier": "BLUE",
+    "avgFP": 30,
     "photoCode": "807713"
   },
   {
@@ -11407,8 +11407,8 @@
     "team": "Boston Red Sox",
     "position": "BAT",
     "salary": 55,
-    "tier": "ORANGE",
-    "avgFP": 30.5,
+    "tier": "PURPLE",
+    "avgFP": 34.5,
     "photoCode": "807799"
   },
   {
@@ -11419,8 +11419,8 @@
     "team": "Los Angeles Dodgers",
     "position": "P",
     "salary": 40,
-    "tier": "PURPLE",
-    "avgFP": 22.1,
+    "tier": "GREEN",
+    "avgFP": 27.1,
     "photoCode": "808963"
   },
   {
@@ -11443,8 +11443,8 @@
     "team": "Oklahoma City Comets",
     "position": "BAT",
     "salary": 58,
-    "tier": "ORANGE",
-    "avgFP": 32,
+    "tier": "PURPLE",
+    "avgFP": 36.1,
     "photoCode": "808975"
   },
   {
@@ -11455,8 +11455,8 @@
     "team": "San Francisco Giants",
     "position": "BAT",
     "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.5,
+    "tier": "BLUE",
+    "avgFP": 32.1,
     "photoCode": "808982"
   },
   {
@@ -11467,8 +11467,8 @@
     "team": "Tampa Bay Rays",
     "position": "BAT",
     "salary": 43,
-    "tier": "PURPLE",
-    "avgFP": 24.1,
+    "tier": "GREEN",
+    "avgFP": 27.6,
     "photoCode": "810938"
   },
   {
@@ -11491,7 +11491,7 @@
     "team": "Salt Lake Bees",
     "position": "P",
     "salary": 46,
-    "tier": "PURPLE",
+    "tier": "GREEN",
     "avgFP": 25.7,
     "photoCode": "815083"
   },
@@ -11503,7 +11503,7 @@
     "team": "Harrisburg Senators",
     "position": "P",
     "salary": 20,
-    "tier": "GREEN",
+    "tier": "WHITE",
     "avgFP": 11,
     "photoCode": "829272"
   }
