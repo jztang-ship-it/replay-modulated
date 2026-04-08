@@ -52,9 +52,9 @@ function toPlayerEval(p: any, projByBaseId: Map<string, number>): PlayerEval {
 }
 
 /**
- * Baseball log validity check.
- * Hitters: must have pa >= 2 and at least one positive stat.
- * Pitchers: must have ip >= 1.
+ * Baseball log validity check — thresholds match recalc-tiers.mjs EHLP filters.
+ * Pitchers: ip >= 4 (qualifying start).
+ * Hitters: pa >= 3 AND at least one counting event.
  */
 function hasValidLogs(basePlayerId: string, position: string, logsByKey: Map<string, any[]>): boolean {
   const base = basePlayerId.trim();
@@ -68,14 +68,13 @@ function hasValidLogs(basePlayerId: string, position: string, logsByKey: Map<str
     const s = l.stats ?? {};
     if (isPitcher) {
       const ip = Number(s.ip ?? 0);
-      return ip >= 1;
+      return ip >= 4;
     } else {
       const pa = Number(s.pa ?? 0);
-      const h = Number(s.h ?? 0);
-      const hr = Number(s.hr ?? 0);
-      const bb = Number(s.bb ?? 0);
-      const r = Number(s.r ?? 0);
-      return pa >= 2 && (h + hr + bb + r) > 0;
+      const events = Number(s.h ?? 0) + Number(s.hr ?? 0) + Number(s.r ?? 0) +
+                     Number(s.rbi ?? 0) + Number(s.bb ?? 0) + Number(s.sb ?? 0) +
+                     Number(s.doubles ?? 0) + Number(s.triples ?? 0);
+      return pa >= 3 && events >= 1;
     }
   });
 }
@@ -93,6 +92,10 @@ export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
       logs
     ))
     .map(p => toPlayerEval(p, projByBaseId));
+
+  if (evalPool.length === 0) {
+    console.error('[gameAdapter] evalPool is empty — game-logs.json missing or all players filtered out');
+  }
 
   const rnd = mulberry32(randomSeed());
   const rosterConfig = {

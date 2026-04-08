@@ -5,8 +5,8 @@
 import { configure } from "@shared/engines/dataEngine";
 
 configure({
-  players: "/baseball/data/players.json",
-  logsFallback: "/baseball/data/game-logs.json",
+  players: "/data/players.json",
+  logsFallback: "/data/game-logs.json",
 });
 
 export * from "@shared/engines/dataEngine";
