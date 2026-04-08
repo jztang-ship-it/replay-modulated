@@ -171,16 +171,16 @@ export const BaseballSportConfig = {
   },
 
   // ── Win tiers ───────────────────────────────────────────────────────────
-  // Tuned for 6-card baseball hand FP distribution.
+  // Tuned for 5-card baseball hand FP distribution.
   // Typical range: 150-400 FP. Median ~230 FP.
   winCondition: {
     type: "FIXED_THRESHOLD" as const,
     thresholds: [
-      { tier: "ROOKIE",   minFP: 155, multiplier: 1 },
-      { tier: "STARTER",  minFP: 195, multiplier: 2 },
-      { tier: "ALL_STAR", minFP: 235, multiplier: 4 },
-      { tier: "MVP",      minFP: 275, multiplier: 8 },
-      { tier: "GOAT",     minFP: 315, multiplier: 0, progressive: true },
+      { tier: "ROOKIE",   minFP: 102, multiplier: 0.5 },
+      { tier: "STARTER",  minFP: 128, multiplier: 2.5 },
+      { tier: "ALL_STAR", minFP: 150, multiplier: 7 },
+      { tier: "MVP",      minFP: 171, multiplier: 15 },
+      { tier: "GOAT",     minFP: 209, multiplier: 50, progressive: true },
     ] as BaseballWinThreshold[],
   },
 };
