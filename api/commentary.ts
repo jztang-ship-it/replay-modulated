@@ -36,9 +36,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return json(res, 405, { error: "Method not allowed" });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.COMMENTARY_API_KEY;
   if (!apiKey) {
-    return json(res, 500, { error: "ANTHROPIC_API_KEY not configured" });
+    return json(res, 500, { error: "COMMENTARY_API_KEY not configured" });
   }
 
   const body = (req.body ?? {}) as { system?: string; user?: string };
