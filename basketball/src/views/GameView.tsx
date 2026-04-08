@@ -34,6 +34,9 @@ import { audioDirector } from '@shared/utils/audioDirector';
 import { getPlayerUid, getNickname, setNickname } from '@shared/utils/playerIdentity';
 import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
 import { fetchLeaderboardContext } from '@shared/utils/leaderboardContext';
+import { generateCommentary } from "@shared/commentary/generateCommentary";
+import type { CommentaryInput, CommentaryOutput, CommentaryRosterCard } from "@shared/commentary/types";
+import { buildBasketballContext } from "../utils/buildBasketballContext";
 import { ProfileScreen } from '@shared/components/ProfileScreen';
 
 // Test-wire only: allow passing glow props even if wrapper prop types lag behind.
@@ -814,6 +817,10 @@ export default function GameView() {
                 myUid: lbUid,
               }).then(line => {
                 if (!line) return;
+                // Skip if Claude commentary already populated — we don't want
+                // to overwrite the integrated single-string commentary with a
+                // separate leaderboard line.
+                if (commentaryRef.current) return;
                 // Patch the locked copy in place. The useMemo short-circuits on
                 // postRevealCopyRef.current, so we bump a nonce to force re-read.
                 if (postRevealCopyRef.current) {
@@ -965,6 +972,13 @@ export default function GameView() {
   // Holds a leaderboard-context line that arrived BEFORE the postRevealCopy was first
   // built (race: spring not yet settled). Consumed on first build, then cleared.
   const pendingLbLineRef = useRef<string | null>(null);
+  // Claude-generated commentary, populated by the REVEALING-phase pre-fetch effect.
+  // postRevealCopy memo prefers this over the template fallback. Reset per hand.
+  const commentaryRef = useRef<CommentaryOutput | null>(null);
+  // Per-hand dedup so the pre-fetch effect fires exactly once per hand.
+  const commentaryFiredHandRef = useRef<number>(-1);
+  // Last 3 tones used by Claude — passed back into the prompt to enforce variation.
+  const recentTonesRef = useRef<string[]>([]);
   const postRevealCopy = useMemo(() => {
     // Once computed, lock it — never recompute until next hand
     if (postRevealCopyRef.current) return postRevealCopyRef.current;
@@ -972,6 +986,12 @@ export default function GameView() {
     // FTUE: no postRevealCopy — commentary handled by CoachLayer
     if (isFTUE) {
       return null;
+    }
+    // Tier 1: Claude commentary if it landed before the spring settled.
+    if (commentaryRef.current?.commentary) {
+      const copy = { primary: commentaryRef.current.commentary, secondary: "" };
+      postRevealCopyRef.current = copy;
+      return copy;
     }
     const fp = lockedGaugeFpRef.current ?? displayFp;
     const gaugeSnap = computeGaugeState(fp, GAUGE_THRESHOLDS as any, winTier, 8);
@@ -1003,6 +1023,21 @@ export default function GameView() {
       leaderboardLine: pendingLbLineRef.current,
     });
     pendingLbLineRef.current = null;
+    // Tier 3: static fallback if template returned an unusable result.
+    if (!copy?.primary) {
+      const fpStr = fp.toFixed(1);
+      const staticMap: Record<string, string> = {
+        BUST: "Off night. The numbers don't lie.",
+        ROOKIE: `${fpStr} on the board. Take it.`,
+        STARTER: `${fpStr} — that's a real hand.`,
+        ALL_STAR: `${fpStr}. Now we're talking.`,
+        MVP: `${fpStr}. That's a number.`,
+        GOAT: `${fpStr}. Insane.`,
+      };
+      const staticCopy = { primary: staticMap[winTier] ?? staticMap.STARTER, secondary: "" };
+      postRevealCopyRef.current = staticCopy;
+      return staticCopy;
+    }
     postRevealCopyRef.current = copy;
     return copy;
   }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct, lbContextNonce]); // eslint-disable-line
@@ -1078,9 +1113,81 @@ export default function GameView() {
       anchorFpCallCountRef.current = 0;
       postRevealCopyRef.current = null;
       pendingLbLineRef.current = null;
+      commentaryRef.current = null;
+      commentaryFiredHandRef.current = -1;
       setStreakMilestone(null);
     }
   }, [gameState]);
+
+  // ── Claude commentary pre-fetch ─────────────────────────────────────────
+  // Fire as soon as REVEALING starts. By then rosterRef holds finalized cards
+  // (actualFp is already resolved server-side; the reveal phase is animation).
+  // Result lands in commentaryRef and the postRevealCopy memo prefers it.
+  // Per-hand dedup via commentaryFiredHandRef.
+  useEffect(() => {
+    if (gameState !== "REVEALING") return;
+    if (isFTUE) return;
+    if (commentaryFiredHandRef.current === handCount) return;
+    commentaryFiredHandRef.current = handCount;
+
+    const finalRoster = rosterRef.current;
+    if (!finalRoster.length) return;
+
+    const finalFp = finalRoster.reduce(
+      (s, c: any) => s + Number(c.actualFp ?? 0),
+      0,
+    );
+    const finalTier = (deriveTierFromFp(finalFp) ?? "BUST") as any;
+    const gauge = computeGaugeState(
+      finalFp,
+      GAUGE_THRESHOLDS as any,
+      finalTier,
+      8,
+    );
+
+    const rosterShape: CommentaryRosterCard[] = finalRoster.map((c: any) => ({
+      name: String(c.name ?? ""),
+      salary: Number(c.salary ?? 0),
+      actualFp: Number(c.actualFp ?? 0),
+      projectedFp: Number(c.projectedFp ?? 0),
+      cardTier: String(c.tier ?? ""),
+      opponent: String(c.gameInfo?.opponent ?? ""),
+      homeAway: String(c.gameInfo?.homeAway ?? "") as "H" | "A" | "",
+      statLine: c.statLine ?? {},
+    }));
+
+    const culture = buildBasketballContext(rosterShape);
+
+    const input: CommentaryInput = {
+      sport: "basketball",
+      totalFp: finalFp,
+      winTier: finalTier,
+      nextTier: gauge.nextTier as any,
+      tierFloor: gauge.curMin,
+      nextTierMin: gauge.nextMin > 0 && gauge.nextMin < 9999 ? gauge.nextMin : undefined,
+      streak,
+      prevStreak: finalTier === "BUST" ? streak : Math.max(0, streak - 1),
+      isBust: finalTier === "BUST",
+      handCount,
+      roster: rosterShape,
+      // TODO: leaderboard rank/gap input — requires exposing raw rank from
+      // leaderboardContext alongside its current string output. Until then,
+      // Claude generates without leaderboard awareness; the legacy patch
+      // path still adds a nudge line when Claude is unavailable.
+    };
+
+    generateCommentary(input, culture, recentTonesRef.current).then(result => {
+      if (!result) return;
+      commentaryRef.current = result;
+      // Force memo to recompute and pick Claude (clear the locked ref).
+      postRevealCopyRef.current = null;
+      if (result.tone) {
+        const next = [result.tone, ...recentTonesRef.current.filter(t => t !== result.tone)].slice(0, 3);
+        recentTonesRef.current = next;
+      }
+      setLbContextNonce(n => n + 1);
+    }).catch(() => { /* silent — fallback tiers handle it */ });
+  }, [gameState, isFTUE, handCount, streak]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const flippedIds = useMemo(() => {
     if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") return statsFlippedIds;
