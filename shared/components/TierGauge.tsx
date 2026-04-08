@@ -68,7 +68,7 @@ interface TierGaugeProps {
   /** FTUE: called when typewriter commentary finishes */
   onCommentaryDone?: () => void;
   /** Override commentary with multi-part bubble content — tap advances to next part */
-  commentaryOverride?: { parts: ReactNode[] } | null;
+  commentaryOverride?: { parts: ReactNode[]; sticky?: boolean } | null;
   /** Called when user taps through all parts of commentaryOverride */
   onCommentaryOverrideDone?: () => void;
 }
@@ -692,6 +692,11 @@ export function TierGauge({
                   setOverrideTyping(true);
                 } else if (stickyLastOverride) {
                   // Final FTUE message — stays visible until Replay
+                  return;
+                } else if (commentaryOverride?.sticky) {
+                  // Per-bubble sticky commentary — text stays until something
+                  // explicitly replaces it via a new onCommentaryText call.
+                  // Tap on the commentary area is a no-op for this bubble.
                   return;
                 } else {
                   onCommentaryOverrideDone?.();

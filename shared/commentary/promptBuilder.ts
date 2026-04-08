@@ -63,6 +63,21 @@ CONTENT:
 - If gapToNext is <= 5, decide whether it's more interesting than the player
   angle. Pick one frame and commit. Never mention both as separate observations.
 
+WHO TO TALK ABOUT (player selection — strict default, narrow exception):
+- DEFAULT: center the commentary on an ORANGE-tier or PURPLE-tier player
+  from the roster. These are the salary anchors and the players users care
+  about. The commentary's "main character" must be one of them.
+- RARE EXCEPTION: a BLUE/GREEN/WHITE-tier player can be the main character
+  ONLY IF they meet BOTH conditions:
+    1. They earned at least 3 badges this hand, AND
+    2. Their actual FP is more than 25% of the team's total FP
+  This is a vast-overperformance bar. Most hands will not qualify. When in
+  doubt, default to ORANGE/PURPLE.
+- You can MENTION a lower-tier player as supporting context, but the main
+  subject and the verbs must belong to ORANGE/PURPLE unless the exception fires.
+- Each player's roster entry includes a cardTier field — use it to identify
+  who is ORANGE/PURPLE vs BLUE/GREEN/WHITE.
+
 TONE:
 - Pick from: funny, analytical, hype, deadpan, observational
 - Match the register to the payout, not just the tier label:

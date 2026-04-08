@@ -477,7 +477,7 @@ export default function GameView() {
   const [ftueBookerFlipped, setFtueBookerFlipped] = useState(false);
   const [ftueOscillating, setFtueOscillating] = useState(false);
   const [ftueCommentaryDone, setFtueCommentaryDone] = useState(false);
-  const [ftueCommentaryOverride, setFtueCommentaryOverride] = useState<{ parts: React.ReactNode[] } | null>(null);
+  const [ftueCommentaryOverride, setFtueCommentaryOverride] = useState<{ parts: React.ReactNode[]; sticky?: boolean } | null>(null);
   const coachDismissRef = useRef<(() => void) | null>(null);
   const [glowState, setGlowState] = useState<{ cardId: string | null; tier: string; durationMs: number }>({
     cardId: null, tier: "WHITE", durationMs: 300
@@ -2034,7 +2034,7 @@ export default function GameView() {
               onBubbleActive={(active) => setFtueCardsBlocked(active)}
               ftueWinCelebrationActive={ftueWinCelebrationActive}
               ftueCommentaryDone={ftueCommentaryDone}
-              onCommentaryText={(parts) => setFtueCommentaryOverride(parts ? { parts } : null)}
+              onCommentaryText={(parts, sticky) => setFtueCommentaryOverride(parts ? { parts, sticky } : null)}
               dismissRef={coachDismissRef}
               onReplayReady={() => setFtueReplayReady(true)}
               onFtueReadyToFlip={() => setFtueBookerPulse(true)}

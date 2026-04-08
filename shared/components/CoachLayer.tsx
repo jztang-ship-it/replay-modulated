@@ -36,7 +36,7 @@ interface Props {
   onReplay?: () => void;
   onReplayReady?: () => void;
   /** Routes bubble text into the commentary area instead of a floating pill */
-  onCommentaryText?: (parts: React.ReactNode[] | null) => void;
+  onCommentaryText?: (parts: React.ReactNode[] | null, sticky?: boolean) => void;
   /** Called by GameView when commentary override is tapped — auto-dismisses current spotlight */
   dismissRef?: React.MutableRefObject<(() => void) | null>;
   lockedCount?: number; revealIndex?: number;
@@ -442,10 +442,12 @@ export function CoachLayer({
       position: "below",
       pulseCardLabels: true,
       onDismiss: () => {
-        // Step 2: After tap — spotlight Booker only, "Booker is your anchor..." text appears
+        // Step 2: After tap — spotlight Booker only, "Booker is your anchor..." text appears.
+        // Marked sticky so tapping the commentary area doesn't clear it; only the first
+        // card-reveal commentary will replace it once REVEALING starts.
         onCommentaryText?.([
           <span>Booker is your $59 anchor - most dependable player. Tap him to hold, hit <DrawChip /> to replace the rest, then tap every card to see your replacements.</span>
-        ]);
+        ], true);
         enqueue({
           key: "hold_booker",
           node: null as any,
@@ -490,8 +492,9 @@ export function CoachLayer({
       return;
     }
 
-    // Send text to commentary area
-    onCommentaryText?.([text]);
+    // Send text to commentary area. Marked sticky so the text persists until the
+    // NEXT card's commentary replaces it (instead of clearing on tap).
+    onCommentaryText?.([text], true);
 
     // Still spotlight the card via a no-text bubble entry
     enqueue({
@@ -500,7 +503,7 @@ export function CoachLayer({
       anchor: cardAnchor,
       position: cardPos,
       onDismiss: () => {
-        onCommentaryText?.(null);
+        // Don't clear commentary — let the next card's reveal replace it.
         onResumeHeldReveal?.();
       },
     }, 0);
@@ -519,15 +522,18 @@ export function CoachLayer({
         anchor: "booker-gauge-balance",
         position: "below",
         onDismiss: () => {
-          // Booker flip hint — spotlight booker+gauge+balance, other cards dark
-          onCommentaryText?.(["Booker on the other hand really saved your bacon tonight, 89.4 FP is superman status. Flip his card to see what happened. 🔥"]);
+          // Booker flip hint — spotlight booker+gauge+balance, other cards dark.
+          // Marked sticky so the text persists until the user flips Booker, which
+          // triggers the booker_gamelogs effect that replaces it with the stat line.
+          onCommentaryText?.(["Booker on the other hand really saved your bacon tonight, 89.4 FP is superman status. Flip his card to see what happened. 🔥"], true);
           enqueue({
             key: "results_devin",
             node: null as any,
             anchor: "booker-gauge-balance",
             position: "below",
             onDismiss: () => {
-              onCommentaryText?.(null);
+              // Don't clear commentary — let the booker_gamelogs effect replace it
+              // when the user actually flips the card.
               onFtueReadyToFlip?.();
             },
           });
@@ -607,8 +613,8 @@ export function CoachLayer({
           50%      { box-shadow: 0 0 0 10px rgba(127,255,0,0.4) }
         }
         @keyframes spotlightPulse {
-          0%,100% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.92), 0 0 0 0 rgba(255,255,255,0) }
-          50%      { box-shadow: 0 0 0 9999px rgba(0,0,0,0.92), 0 0 20px 6px rgba(255,255,255,0.22) }
+          0%,100% { box-shadow: 0 0 0 9999px rgba(0,0,0,1), 0 0 0 0 rgba(255,255,255,0) }
+          50%      { box-shadow: 0 0 0 9999px rgba(0,0,0,1), 0 0 20px 6px rgba(255,255,255,0.22) }
         }
         @keyframes labelPulse {
           0%,100% { opacity: 1; }
@@ -639,7 +645,7 @@ export function CoachLayer({
               position: "fixed",
               inset: 0,
               zIndex: 999,
-              background: spotlightRect ? "transparent" : "rgba(0,0,0,0.92)",
+              background: spotlightRect ? "transparent" : "rgba(0,0,0,1)",
               cursor: "pointer",
             }}
           />
@@ -659,7 +665,7 @@ export function CoachLayer({
                 cursor: "pointer",
                 pointerEvents: "all",
                 animation: "spotlightPulse 2s ease-in-out infinite",
-                boxShadow: "0 0 0 9999px rgba(0,0,0,0.92)",
+                boxShadow: "0 0 0 9999px rgba(0,0,0,1)",
                 background: "transparent",
               }}
             />
