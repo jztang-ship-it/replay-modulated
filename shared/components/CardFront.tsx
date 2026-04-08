@@ -86,6 +86,57 @@ function initialsFromName(name: string) {
   return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? parts[0]?.[1] ?? "")).toUpperCase();
 }
 
+// MLB team name → 3-letter abbrev. Non-MLB / minor league teams fall through
+// to the generic "first 3 letters of last word" rule below. Short codes
+// (basketball "MEM", "GSW" etc.) pass through untouched.
+const MLB_TEAM_ABBREV: Record<string, string> = {
+  "ARIZONA DIAMONDBACKS": "ARI",
+  "ATLANTA BRAVES":       "ATL",
+  "BALTIMORE ORIOLES":    "BAL",
+  "BOSTON RED SOX":       "BOS",
+  "CHICAGO CUBS":         "CHC",
+  "CHICAGO WHITE SOX":    "CHW",
+  "CINCINNATI REDS":      "CIN",
+  "CLEVELAND GUARDIANS":  "CLE",
+  "COLORADO ROCKIES":     "COL",
+  "DETROIT TIGERS":       "DET",
+  "HOUSTON ASTROS":       "HOU",
+  "KANSAS CITY ROYALS":   "KC",
+  "LOS ANGELES ANGELS":   "LAA",
+  "LOS ANGELES DODGERS":  "LAD",
+  "MIAMI MARLINS":        "MIA",
+  "MILWAUKEE BREWERS":    "MIL",
+  "MINNESOTA TWINS":      "MIN",
+  "NEW YORK METS":        "NYM",
+  "NEW YORK YANKEES":     "NYY",
+  "ATHLETICS":            "OAK",
+  "PHILADELPHIA PHILLIES":"PHI",
+  "PITTSBURGH PIRATES":   "PIT",
+  "SAN DIEGO PADRES":     "SD",
+  "SAN FRANCISCO GIANTS": "SF",
+  "SEATTLE MARINERS":     "SEA",
+  "ST. LOUIS CARDINALS":  "STL",
+  "TAMPA BAY RAYS":       "TB",
+  "TEXAS RANGERS":        "TEX",
+  "TORONTO BLUE JAYS":    "TOR",
+  "WASHINGTON NATIONALS": "WSH",
+};
+
+function teamAbbrev(raw: string): string {
+  const up = clampText(raw).toUpperCase();
+  if (!up) return "";
+  // Already short (≤ 4 chars) — assume it's an abbrev (basketball MEM/GSW etc.)
+  if (up.length <= 4) return up;
+  // MLB table hit
+  const hit = MLB_TEAM_ABBREV[up];
+  if (hit) return hit;
+  // Fallback: first 3 letters of the last word (handles minor league +
+  // international teams without cluttering the MLB table).
+  const words = up.split(/\s+/).filter(Boolean);
+  const last = words[words.length - 1] ?? up;
+  return last.slice(0, 3);
+}
+
 function formatSeasonRange(season: any): string {
   const s = clampText(season);
   if (/^\d{4}$/.test(s)) return `${s.slice(0, 2)}-${s.slice(2, 4)}`;
@@ -180,13 +231,18 @@ export function CardFront(props: CardFrontProps) {
   } = props;
 
   const name = clampText((card as any)?.name);
-  const team = clampText((card as any)?.team).toUpperCase();
+  const team = teamAbbrev(clampText((card as any)?.team));
   const season = (card as any)?.season ?? (card as any)?.year ?? (card as any)?.seasonLabel;
   const seasonFmt = formatSeasonRange(season);
   const posRaw = clampText((card as any)?.position);
   const posMap: Record<string, string> = {
+    // Basketball
     "PG": "PG", "SG": "SG", "G": "PG", "SF": "SF", "PF": "PF", "F": "SF",
     "G/F": "SG", "F/G": "SG", "F/C": "PF", "C": "C",
+    // Baseball — BAT displays as "B"; real baseball positions pass through
+    "BAT": "B", "P": "P", "SP": "P", "RP": "P",
+    "1B": "1B", "2B": "2B", "3B": "3B", "SS": "SS",
+    "OF": "OF", "LF": "LF", "CF": "CF", "RF": "RF", "DH": "DH",
   };
   const pos = posRaw ? (posMap[posRaw.toUpperCase()] ?? posRaw) : "";
   const salary = Number((card as any)?.salary ?? 0);

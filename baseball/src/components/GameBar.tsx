@@ -27,20 +27,21 @@ const LEGEND: LegendData = {
     { label: "BUST",     score: "< 102 FP",payout: "—",    color: "#6B7280", bg: "rgba(107,114,128,0.06)",  border: "rgba(107,114,128,0.18)" },
   ],
   scoringRules: [
-    { stat: "Single",   pts: "+3 FP" },
-    { stat: "Double",   pts: "+5 FP" },
-    { stat: "Triple",   pts: "+8 FP" },
-    { stat: "HR",       pts: "+10 FP" },
-    { stat: "RBI",      pts: "+2 FP" },
-    { stat: "Run",      pts: "+2 FP" },
-    { stat: "Walk/HBP", pts: "+2 FP" },
-    { stat: "SB",       pts: "+5 FP" },
-    { stat: "K (batter)", pts: "-1 FP" },
-    { stat: "IP",       pts: "+3 FP" },
-    { stat: "K (pitcher)", pts: "+3 FP" },
-    { stat: "ER",       pts: "-3 FP" },
-    { stat: "Win",      pts: "+5 FP" },
-    { stat: "Save",     pts: "+5 FP" },
+    // Hitter stat weights (match baseballConfig.ts projectionWeights)
+    { stat: "Hit",       pts: "+12" },
+    { stat: "Double",    pts: "+5"  },
+    { stat: "Triple",    pts: "+10" },
+    { stat: "Home Run",  pts: "+20" },
+    { stat: "Run",       pts: "+9"  },
+    { stat: "RBI",       pts: "+9"  },
+    { stat: "Walk",      pts: "+6"  },
+    { stat: "Stolen Base", pts: "+12" },
+    // Pitcher stat weights
+    { stat: "IP",        pts: "+3"  },
+    { stat: "K",         pts: "+4"  },
+    { stat: "Earned Run", pts: "-3" },
+    { stat: "Win",       pts: "+6"  },
+    { stat: "Quality Start", pts: "+8" },
   ],
   badges: [
     // Hitter badges
@@ -86,6 +87,8 @@ type Props = {
     controlsHost: HTMLElement | null;
   };
   splitMultiplierRowVisible?: boolean;
+  /** Tap target for the leaderboard trophy button on GameBar. */
+  onViewLeaderboard?: () => void;
 };
 
 export function GameBar(props: Props) {
