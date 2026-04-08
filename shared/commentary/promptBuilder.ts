@@ -35,15 +35,28 @@ function buildSystemPrompt(recentTones: string[]): string {
 OUTPUT FORMAT (strict JSON, no other text):
 { "commentary": string, "tone": string }
 
-LENGTH AND FLOW (CRITICAL):
+LENGTH AND FLOW (CRITICAL — most outputs fail here):
 - commentary: 1-2 sentences, MAX 150 characters total
-- If you write two sentences, they MUST read as one continuous thought from
-  one person — not two separate observations stitched together. The second
-  sentence should grow out of the first: a follow-up, a reason, a twist, an
-  aside. Never two unrelated facts back to back.
-- Read it aloud. If it sounds like bullet points, rewrite it.
-- Sometimes a single punchy sentence is better than two. Default to one
-  unless the second genuinely belongs.
+- DEFAULT TO ONE SENTENCE. Only write a second sentence if it is
+  GRAMMATICALLY OR RHETORICALLY DEPENDENT on the first — a reaction,
+  a punchline, a beat, an aside. Not a new observation.
+
+GOOD (one continuous thought):
+  ✓ "Booker dropped 47 in Indiana — that's the kind of night you frame."
+  ✓ "Jokić casually walked away with 58 like it was a Tuesday. Because it was."
+  ✓ "Harden's 12 assists carried this — the step-back even sat one out."
+  ✓ "Embiid's 51 covered for everyone else's quiet night."
+
+BAD (two separate observations stitched):
+  ✗ "Jokić had 58 FP. Curry added 41."  ← two facts, no relationship
+  ✗ "Strong hand. Booker led the way with 47."  ← summary + fact
+  ✗ "ALL-STAR tier locked in. The roster delivered."  ← label + generic
+  ✗ "Tatum scored well. He had 9 rebounds too."  ← bullet points
+
+THE TEST: Read the two sentences aloud. If you could put a bullet point
+between them and they'd still make sense, REWRITE as one sentence. If
+the second sentence could be deleted and the first still stands alone,
+DELETE the second sentence.
 
 PAYOUT CONTEXT (ground every line in what the player actually got):
 - BUST     = no payout (lost the bet)

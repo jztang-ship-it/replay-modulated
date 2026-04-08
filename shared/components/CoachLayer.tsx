@@ -513,7 +513,8 @@ export function CoachLayer({
   useEffect(() => {
     if (!ftueWinCelebrationActive) return;
     if (!ftueCommentaryDone) return;
-    const t = setTimeout(() => {
+    // Fire immediately — no artificial delay between tier panel landing and commentary.
+    {
       // Show "So close" commentary — spotlight booker+gauge+balance
       onCommentaryText?.(["So close it hurts — only 4.4 FP from the All-Star win. If only Love or Klay made one extra play we'd be celebrating an 8x score. 😤"]);
       enqueue({
@@ -539,8 +540,7 @@ export function CoachLayer({
           });
         },
       });
-    }, 600);
-    return () => clearTimeout(t);
+    }
   }, [ftueWinCelebrationActive, ftueCommentaryDone]); // eslint-disable-line
 
   // ── After Booker flipped — spotlight Booker for stat explanation, then light up screen for final text ──

@@ -33,7 +33,6 @@ import { soundManager } from '@shared/utils/soundManager';
 import { audioDirector } from '@shared/utils/audioDirector';
 import { getPlayerUid, getNickname, setNickname } from '@shared/utils/playerIdentity';
 import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
-import { fetchLeaderboardContext } from '@shared/utils/leaderboardContext';
 import { generateCommentary } from "@shared/commentary/generateCommentary";
 import type { CommentaryInput, CommentaryOutput, CommentaryRosterCard } from "@shared/commentary/types";
 import { buildBasketballContext } from "../utils/buildBasketballContext";
@@ -798,44 +797,8 @@ export default function GameView() {
               localStorage.setItem("replaymod_streak", "0");
             }
 
-            // hand_best + leaderboard context fire on every hand (wins AND busts).
-            // Players need to know where they stand even on losing hands.
+            // hand_best fires on every hand (wins AND busts).
             submitToLeaderboard("hand_best", totalFp);
-
-            // Smart leaderboard awareness — fire-and-forget. After the board has
-            // had a chance to ingest the submit above, fetch context and patch the
-            // postRevealCopy secondary line for THIS hand only. Failures are silent.
-            const lbTier = tier ?? "BUST";
-            const lbBust = bust;
-            const lbFp = totalFp;
-            const lbUid = getPlayerUid() ?? "";
-            setTimeout(() => {
-              fetchLeaderboardContext({
-                myFp: lbFp,
-                winTier: lbTier,
-                isBust: lbBust,
-                myUid: lbUid,
-              }).then(line => {
-                if (!line) return;
-                // Skip if Claude commentary already populated — we don't want
-                // to overwrite the integrated single-string commentary with a
-                // separate leaderboard line.
-                if (commentaryRef.current) return;
-                // Patch the locked copy in place. The useMemo short-circuits on
-                // postRevealCopyRef.current, so we bump a nonce to force re-read.
-                if (postRevealCopyRef.current) {
-                  postRevealCopyRef.current = {
-                    primary: postRevealCopyRef.current.primary,
-                    secondary: line,
-                  };
-                } else {
-                  // Copy hasn't been built yet (spring not settled). Stash the
-                  // line on a ref so the useMemo can pick it up when it runs.
-                  pendingLbLineRef.current = line;
-                }
-                setLbContextNonce(n => n + 1);
-              }).catch(() => { /* silent */ });
-            }, 250);
 
             // Update personal bests on every hand
             const prevBest = parseFloat(localStorage.getItem("rm_best_hand") ?? "0");
@@ -969,9 +932,6 @@ export default function GameView() {
   // Smart post-reveal copy — computed once when spring settles, then locked for the hand.
   // Uses a ref so the copy never changes mid-display from dependency churn.
   const postRevealCopyRef = useRef<ReturnType<typeof buildPostRevealCopy> | null>(null);
-  // Holds a leaderboard-context line that arrived BEFORE the postRevealCopy was first
-  // built (race: spring not yet settled). Consumed on first build, then cleared.
-  const pendingLbLineRef = useRef<string | null>(null);
   // Claude-generated commentary, populated by the REVEALING-phase pre-fetch effect.
   // postRevealCopy memo prefers this over the template fallback. Reset per hand.
   const commentaryRef = useRef<CommentaryOutput | null>(null);
@@ -1034,9 +994,7 @@ export default function GameView() {
       ceilingPct: ceilingPct ?? undefined,
       isFTUE,
       handCount,
-      leaderboardLine: pendingLbLineRef.current,
     });
-    pendingLbLineRef.current = null;
     // Tier 3: static fallback if template returned an unusable result.
     if (!copy?.primary) {
       const fpStr = fp.toFixed(1);
@@ -1126,7 +1084,6 @@ export default function GameView() {
       frozenBarFpRef.current = null;
       anchorFpCallCountRef.current = 0;
       postRevealCopyRef.current = null;
-      pendingLbLineRef.current = null;
       commentaryRef.current = null;
       commentaryStatusRef.current = 'idle';
       commentaryFiredHandRef.current = -1;
@@ -1958,9 +1915,9 @@ export default function GameView() {
                       coachDismissRef.current?.();
                     }}
                     onCommentaryDone={() => {
-                      // After typewriter finishes, trigger "so close" bubble with slight delay
+                      // Fire immediately when typewriter completes — no artificial pacing delay.
                       if (isFTUE) {
-                        setTimeout(() => setFtueCommentaryDone(true), 800);
+                        setFtueCommentaryDone(true);
                       }
                     }}
                     onFtueOscillateComplete={() => {
