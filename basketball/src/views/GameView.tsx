@@ -32,7 +32,6 @@ import { XPBar } from '@shared/engagement/XPBar';
 import { soundManager } from '@shared/utils/soundManager';
 import { audioDirector } from '@shared/utils/audioDirector';
 import { getPlayerUid, getNickname, setNickname } from '@shared/utils/playerIdentity';
-import { PostHandSheet } from '@shared/components/PostHandSheet';
 import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
 import { fetchLeaderboardContext } from '@shared/utils/leaderboardContext';
 import { ProfileScreen } from '@shared/components/ProfileScreen';
@@ -448,7 +447,6 @@ export default function GameView() {
   const [winTier, setWinTier] = useState<WinTier | null>(null);
   const [winPayout, setWinPayout] = useState(0);
   const [showRawScore, setShowRawScore] = useState(false);
-  const [showPostHandSheet, setShowPostHandSheet] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   // Bumped when fetchLeaderboardContext patches postRevealCopyRef.current.secondary,
@@ -846,7 +844,6 @@ export default function GameView() {
           };
           const t = window.setTimeout(() => {
             setGameState("WIN_CELEBRATION");
-            setTimeout(() => setShowPostHandSheet(true), 2000);
           }, 1200);
           springTimersRef.current.push(t);
         }
@@ -1363,7 +1360,6 @@ export default function GameView() {
       if (gameState === "WIN_CELEBRATION") {
         soundManager.stopBigWin();
       }
-      setShowPostHandSheet(false);
       setWasSkipped(false);
       onPrimaryAction();
     }
@@ -2031,30 +2027,6 @@ export default function GameView() {
         splitMultiplierRowVisible={isPreRevealFooter && !isFTUE}
         onViewLeaderboard={() => setShowLeaderboard(true)}
       />
-
-      {showPostHandSheet && !isFTUE && (() => {
-        const gs = computeGaugeState(totalFp, GAUGE_THRESHOLDS as any, winTier ?? "BUST", NEAR_MISS_FP);
-        const nmGap = gs.nextMin > 0 && gs.nextMin < 9999 ? Math.max(0, gs.nextMin - totalFp) : 0;
-        return (
-          <PostHandSheet
-            totalFp={totalFp}
-            winTier={winTier ?? "BUST"}
-            isBust={!winTier || winTier === "BUST"}
-            nearMissGap={nmGap}
-            nearMissNextTier={gs.nextTier ?? null}
-            winPayout={winPayout}
-            currentUid={getPlayerUid()}
-            onPlayAgain={() => {
-              setShowPostHandSheet(false);
-              handleButtonClick();
-            }}
-            onViewLeaderboard={() => {
-              setShowPostHandSheet(false);
-              setShowLeaderboard(true);
-            }}
-          />
-        );
-      })()}
 
       {showLeaderboard && !isFTUE && (
         <LeaderboardScreen
