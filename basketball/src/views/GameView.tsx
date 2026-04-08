@@ -975,6 +975,12 @@ export default function GameView() {
   // Claude-generated commentary, populated by the REVEALING-phase pre-fetch effect.
   // postRevealCopy memo prefers this over the template fallback. Reset per hand.
   const commentaryRef = useRef<CommentaryOutput | null>(null);
+  // Status of the Claude pre-fetch for the CURRENT hand. The memo blocks rendering
+  // (returns null → empty commentary box) while 'pending', so the template never
+  // shows-then-swaps. Only after 'succeeded' or 'failed' does the memo populate.
+  // 'idle' = no fetch yet; 'pending' = fetch in flight; 'succeeded' = use Claude;
+  // 'failed' = use template fallback (or static).
+  const commentaryStatusRef = useRef<'idle' | 'pending' | 'succeeded' | 'failed'>('idle');
   // Per-hand dedup so the pre-fetch effect fires exactly once per hand.
   const commentaryFiredHandRef = useRef<number>(-1);
   // Last 3 tones used by Claude — passed back into the prompt to enforce variation.
@@ -987,8 +993,16 @@ export default function GameView() {
     if (isFTUE) {
       return null;
     }
-    // Tier 1: Claude commentary if it landed before the spring settled.
-    if (commentaryRef.current?.commentary) {
+    // While Claude is in flight, render NOTHING. We deliberately wait so the
+    // template never shows-then-swaps. The pre-fetch effect transitions status
+    // to 'succeeded' or 'failed' on resolve and bumps lbContextNonce to re-run
+    // this memo. The 3s timeout in generateCommentary guarantees we never wait
+    // forever.
+    if (commentaryStatusRef.current === 'pending') {
+      return null;
+    }
+    // Tier 1: Claude commentary if it landed.
+    if (commentaryStatusRef.current === 'succeeded' && commentaryRef.current?.commentary) {
       const copy = { primary: commentaryRef.current.commentary, secondary: "" };
       postRevealCopyRef.current = copy;
       return copy;
@@ -1114,6 +1128,7 @@ export default function GameView() {
       postRevealCopyRef.current = null;
       pendingLbLineRef.current = null;
       commentaryRef.current = null;
+      commentaryStatusRef.current = 'idle';
       commentaryFiredHandRef.current = -1;
       setStreakMilestone(null);
     }
@@ -1129,9 +1144,13 @@ export default function GameView() {
     if (isFTUE) return;
     if (commentaryFiredHandRef.current === handCount) return;
     commentaryFiredHandRef.current = handCount;
+    commentaryStatusRef.current = 'pending';
 
     const finalRoster = rosterRef.current;
-    if (!finalRoster.length) return;
+    if (!finalRoster.length) {
+      commentaryStatusRef.current = 'failed';
+      return;
+    }
 
     const finalFp = finalRoster.reduce(
       (s, c: any) => s + Number(c.actualFp ?? 0),
@@ -1177,16 +1196,22 @@ export default function GameView() {
     };
 
     generateCommentary(input, culture, recentTonesRef.current).then(result => {
-      if (!result) return;
-      commentaryRef.current = result;
-      // Force memo to recompute and pick Claude (clear the locked ref).
-      postRevealCopyRef.current = null;
-      if (result.tone) {
-        const next = [result.tone, ...recentTonesRef.current.filter(t => t !== result.tone)].slice(0, 3);
-        recentTonesRef.current = next;
+      if (result) {
+        commentaryRef.current = result;
+        if (result.tone) {
+          const next = [result.tone, ...recentTonesRef.current.filter(t => t !== result.tone)].slice(0, 3);
+          recentTonesRef.current = next;
+        }
       }
+      commentaryStatusRef.current = result ? 'succeeded' : 'failed';
+      // Clear the locked ref so the memo recomputes and picks the new tier.
+      postRevealCopyRef.current = null;
       setLbContextNonce(n => n + 1);
-    }).catch(() => { /* silent — fallback tiers handle it */ });
+    }).catch(() => {
+      commentaryStatusRef.current = 'failed';
+      postRevealCopyRef.current = null;
+      setLbContextNonce(n => n + 1);
+    });
   }, [gameState, isFTUE, handCount, streak]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const flippedIds = useMemo(() => {
