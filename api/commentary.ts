@@ -10,6 +10,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { routeCommentary } from "../shared/router/llmRouter";
 import type { RouterConfig, PayoutTier } from "../shared/router/types";
+import { makeKV, getRecentPhrases } from "../shared/router/kvStore";
 
 const VALID_TIERS = new Set(['BUST','ROOKIE','STARTER','ALL_STAR','MVP','GOAT'])
 
@@ -46,8 +47,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     patchWindowMs: 1500,
   }
 
+  // Fetch recent banned phrases from KV for anti-redundancy injection
+  const kv = makeKV()
+  const bannedPhrases = await getRecentPhrases(kv, 'replaymod')
+  const systemWithBanned = bannedPhrases.length > 0
+    ? body.system + `\n\nSESSION-BANNED PHRASES (used recently — NEVER use any of these in your output):\n${bannedPhrases.slice(0, 15).map(p => `- "${p}"`).join('\n')}`
+    : body.system
+
   try {
-    const result = await routeCommentary(body.system, body.user, tier, config)
+    const result = await routeCommentary(systemWithBanned, body.user, tier, config)
     return json(res, 200, { commentary: result.commentary, tone: result.tone })
   } catch (err: any) {
     console.error("Commentary handler error:", err);
