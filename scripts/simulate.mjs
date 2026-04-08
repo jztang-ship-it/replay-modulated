@@ -108,10 +108,10 @@ const SPORT_CONFIGS = {
     label: "Baseball (MLB)",
     dataDir: join(REPO_ROOT, "baseball", "public", "data"),
 
-    cap: 180,
-    minSpend: 180 - 6,
-    // 1P + 4BAT — no FLEX.
-    rosterSlots: ["P", "BAT", "BAT", "BAT", "BAT"],
+    cap: 220,
+    minSpend: 220 - 6,
+    // 2P + 3BAT — no FLEX.
+    rosterSlots: ["P", "P", "BAT", "BAT", "BAT"],
     positions: ["P", "BAT"],
 
     // Tier thresholds now reflect avgFP (not salary) — matches the re-graded
@@ -172,11 +172,11 @@ const SPORT_CONFIGS = {
     // Tuned via scripts/simulate.mjs to hit target economy.
     payoutTiers: [
       { tier: "BUST",     minFp:   0, mult: 0,    source: "tuned" },
-      { tier: "ROOKIE",   minFp: 108, mult: 0.5,  source: "tuned" },
-      { tier: "STARTER",  minFp: 135, mult: 2.5,  source: "tuned" },
-      { tier: "ALL_STAR", minFp: 160, mult: 7.0,  source: "tuned" },
-      { tier: "MVP",      minFp: 182, mult: 15.0, source: "tuned" },
-      { tier: "GOAT",     minFp: 220, mult: 50.0, source: "tuned" },
+      { tier: "ROOKIE",   minFp: 135, mult: 0.5,  source: "tuned" },
+      { tier: "STARTER",  minFp: 165, mult: 2.5,  source: "tuned" },
+      { tier: "ALL_STAR", minFp: 195, mult: 7.0,  source: "tuned" },
+      { tier: "MVP",      minFp: 228, mult: 15.0, source: "tuned" },
+      { tier: "GOAT",     minFp: 268, mult: 50.0, source: "tuned" },
     ],
   },
 };

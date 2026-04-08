@@ -1,8 +1,8 @@
 /**
  * baseballConfig.ts — Layer 2 (MLB-specific)
  *
- * Roster: 1 P + 4 BAT.
- * Salary cap: $180.
+ * Roster: 2 P + 3 BAT.
+ * Salary cap: $220.
  *
  * FP weights (per stat unit):
  *   Hitters: H=12, 2B=5, 3B=10, HR=20, R=9, RBI=9, BB=6, SB=12
@@ -46,8 +46,8 @@ export const BaseballSportConfig = {
 
   // ── Roster / slots ──────────────────────────────────────────────────────
   rosterSize: 5,
-  rosterSlots: ["P", "BAT", "BAT", "BAT", "BAT"] as const satisfies Readonly<BaseballSlot[]>,
-  salaryCap: 180,
+  rosterSlots: ["P", "P", "BAT", "BAT", "BAT"] as const satisfies Readonly<BaseballSlot[]>,
+  salaryCap: 220,
 
   // ── Positions ───────────────────────────────────────────────────────────
   positions: ["P", "BAT"] as string[],
@@ -120,16 +120,16 @@ export const BaseballSportConfig = {
   },
 
   // ── Win tiers ───────────────────────────────────────────────────────────
-  // Tuned for 5-card baseball hand FP distribution.
-  // Typical range: 150-400 FP. Median ~230 FP.
+  // Tuned for 2P+3BAT hand FP distribution (cap $220).
+  // Target economy: bust 47.5%, ROOKIE 25%, STARTER 15%, ALL_STAR 8%, MVP 3%, GOAT 1%.
   winCondition: {
     type: "FIXED_THRESHOLD" as const,
     thresholds: [
-      { tier: "ROOKIE",   minFP: 102, multiplier: 0.5 },
-      { tier: "STARTER",  minFP: 128, multiplier: 2.5 },
-      { tier: "ALL_STAR", minFP: 150, multiplier: 7 },
-      { tier: "MVP",      minFP: 171, multiplier: 15 },
-      { tier: "GOAT",     minFP: 209, multiplier: 50, progressive: true },
+      { tier: "ROOKIE",   minFP: 135, multiplier: 0.5 },
+      { tier: "STARTER",  minFP: 165, multiplier: 2.5 },
+      { tier: "ALL_STAR", minFP: 195, multiplier: 7 },
+      { tier: "MVP",      minFP: 228, multiplier: 15 },
+      { tier: "GOAT",     minFP: 268, multiplier: 50, progressive: true },
     ] as BaseballWinThreshold[],
   },
 };
