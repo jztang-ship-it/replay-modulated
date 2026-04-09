@@ -93,7 +93,10 @@ function extractCommentary(text: string): string | null {
         const jsonSlice = cleaned.slice(start, end + 1)
         const obj = JSON.parse(jsonSlice) as Record<string, unknown>
         if (typeof obj.commentary === 'string' && obj.commentary.trim()) {
-          return obj.commentary.trim()
+          const candidate = obj.commentary.trim()
+          const META_MARKERS = /(```|"commentary"|let me|checking:|remove it|that's an error|reconsidering|hmm\b|actually,?\s|^wait\b|i should|let me fix)/i
+          if (META_MARKERS.test(candidate)) return null
+          return candidate
         }
       }
     }

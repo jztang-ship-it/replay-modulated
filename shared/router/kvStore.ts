@@ -64,12 +64,28 @@ export async function recordModelScore(
 
 // ── Recent phrases (anti-redundancy) ─────────────────────────────────────────
 
+export const STATIC_BANNED_PHRASES = [
+  "the rest of the roster",
+  "rest of the squad",
+  "supporting cast",
+  "pick up the slack",
+  "went nuclear",
+  "showed up",
+  "couldn't carry",
+  "carry the load",
+  "off night",
+  "quiet night",
+]
+
 export async function getRecentPhrases(kv: Redis, ns: string): Promise<string[]> {
   try {
     const raw = await kv.lrange(recentPhrasesKey(ns), 0, 19)
-    return raw.map(String)
+    const fromKv = raw.map(String)
+    const merged = [...STATIC_BANNED_PHRASES]
+    for (const p of fromKv) if (!merged.includes(p)) merged.push(p)
+    return merged
   } catch {
-    return []
+    return [...STATIC_BANNED_PHRASES]
   }
 }
 
