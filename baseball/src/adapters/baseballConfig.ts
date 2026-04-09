@@ -102,12 +102,12 @@ export const BaseballSportConfig = {
   // ── Badges ──────────────────────────────────────────────────────────────
   badges: {
     hitters: [
-      { id: "GOING_YARD",    icon: "⚾", label: "Going Yard",       fp: 12, test: (s: Record<string, any>) => Number(s.hr  ?? 0) >= 2 },
-      { id: "HIT_MACHINE",   icon: "🎯", label: "Hit Machine",      fp: 5,  test: (s: Record<string, any>) => Number(s.h   ?? 0) >= 3 },
-      { id: "CLEANUP",       icon: "🧹", label: "Cleanup Hitter",   fp: 8,  test: (s: Record<string, any>) => Number(s.rbi ?? 0) >= 4 },
-      { id: "EYE_PLATE",     icon: "👁️", label: "Eye at the Plate", fp: 8,  test: (s: Record<string, any>) => Number(s.bb  ?? 0) >= 3 },
-      { id: "SPEEDSTER",     icon: "💨", label: "Speedster",        fp: 6,  test: (s: Record<string, any>) => Number(s.sb  ?? 0) >= 2 },
-      { id: "PERFECT_DAY",   icon: "🌞", label: "Perfect Day",      fp: 15, test: (s: Record<string, any>) => Number(s.h ?? 0) >= 3 && Number(s.hr ?? 0) >= 1 && Number(s.rbi ?? 0) >= 3 },
+      { id: "HIT_MACHINE",   icon: "🎯", label: "Hit Machine",      fp: 3,  test: (s: Record<string, any>) => Number(s.h   ?? 0) >= 2 },
+      { id: "GOING_YARD",    icon: "⚾", label: "Going Yard",       fp: 8,  test: (s: Record<string, any>) => Number(s.hr  ?? 0) >= 1 },
+      { id: "CLEANUP",       icon: "🧹", label: "Cleanup Hitter",   fp: 8,  test: (s: Record<string, any>) => Number(s.rbi ?? 0) >= 3 },
+      { id: "EYE_PLATE",     icon: "👁️", label: "Eye at the Plate", fp: 5,  test: (s: Record<string, any>) => Number(s.bb  ?? 0) >= 2 },
+      { id: "SPEEDSTER",     icon: "💨", label: "Speedster",        fp: 4,  test: (s: Record<string, any>) => Number(s.sb  ?? 0) >= 1 },
+      { id: "PERFECT_DAY",   icon: "🌞", label: "Perfect Day",      fp: 15, test: (s: Record<string, any>) => Number(s.h ?? 0) >= 2 && Number(s.hr ?? 0) >= 1 && Number(s.rbi ?? 0) >= 2 },
       { id: "CYCLE_WATCH",   icon: "🌀", label: "Cycle Watch",      fp: 25, test: (s: Record<string, any>) => Number(s.h ?? 0) >= 1 && Number(s.doubles ?? 0) >= 1 && Number(s.triples ?? 0) >= 1 && Number(s.hr ?? 0) >= 1 },
     ] as BaseballBadgeDef[],
     pitchers: [
@@ -115,7 +115,7 @@ export const BaseballSportConfig = {
       { id: "SHUTDOWN",      icon: "🛑", label: "Shutdown",         fp: 8,  test: (s: Record<string, any>) => Number(s.ip ?? 0) >= 7 && Number(s.er ?? 0) === 0 },
       { id: "QUALITY_START", icon: "✅", label: "Quality Start",    fp: 6,  test: (s: Record<string, any>) => Number(s.ip ?? 0) >= 6 && Number(s.er ?? 0) <= 3 },
       { id: "MELTDOWN",      icon: "🌪️", label: "Meltdown",         fp: -5, test: (s: Record<string, any>) => Number(s.er ?? 0) >= 5 },
-      { id: "WILD_THING",    icon: "🎳", label: "Wild Thing",       fp: -5, test: (s: Record<string, any>) => Number(s.bb ?? 0) >= 4 },
+      { id: "WILD_THING",    icon: "🎳", label: "Wild Thing",       fp: -5, test: (s: Record<string, any>) => Number(s.bb ?? 0) >= 3 },
       { id: "NO_NO_WATCH",   icon: "🚫", label: "No-No Watch",      fp: 30, test: (s: Record<string, any>) => Number(s.ip ?? 0) >= 7 && Number(s.h  ?? 0) === 0 && Number(s.er ?? 0) === 0 },
     ] as BaseballBadgeDef[],
   },

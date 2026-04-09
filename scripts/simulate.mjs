@@ -143,19 +143,19 @@ const SPORT_CONFIGS = {
     // baseballConfig.ts badges — includes display metadata for fire-rate report.
     badges: [
       // Hitter badges
-      { id: "HIT_MACHINE",   fp: 5,  type: "hitter",  label: "Hit Machine",    icon: "🎯", cond: "h>=3",         test: s => (s.h   ?? 0) >= 3 },
-      { id: "GOING_YARD",    fp: 12, type: "hitter",  label: "Going Yard",     icon: "⚾", cond: "hr>=2",        test: s => (s.hr  ?? 0) >= 2 },
-      { id: "CLEANUP",       fp: 8,  type: "hitter",  label: "Cleanup Hitter", icon: "🧹", cond: "rbi>=4",       test: s => (s.rbi ?? 0) >= 4 },
-      { id: "EYE_PLATE",     fp: 8,  type: "hitter",  label: "Eye at Plate",   icon: "👁️", cond: "bb>=3",        test: s => (s.bb  ?? 0) >= 3 },
-      { id: "SPEEDSTER",     fp: 6,  type: "hitter",  label: "Speedster",      icon: "💨", cond: "sb>=2",        test: s => (s.sb  ?? 0) >= 2 },
-      { id: "PERFECT_DAY",   fp: 15, type: "hitter",  label: "Perfect Day",    icon: "🌞", cond: "h>=3+hr>=1",   test: s => (s.h ?? 0) >= 3 && (s.hr ?? 0) >= 1 && (s.rbi ?? 0) >= 3 },
+      { id: "HIT_MACHINE",   fp: 3,  type: "hitter",  label: "Hit Machine",    icon: "🎯", cond: "h>=2",         test: s => (s.h   ?? 0) >= 2 },
+      { id: "GOING_YARD",    fp: 8,  type: "hitter",  label: "Going Yard",     icon: "⚾", cond: "hr>=1",        test: s => (s.hr  ?? 0) >= 1 },
+      { id: "CLEANUP",       fp: 8,  type: "hitter",  label: "Cleanup Hitter", icon: "🧹", cond: "rbi>=3",       test: s => (s.rbi ?? 0) >= 3 },
+      { id: "EYE_PLATE",     fp: 5,  type: "hitter",  label: "Eye at Plate",   icon: "👁️", cond: "bb>=2",        test: s => (s.bb  ?? 0) >= 2 },
+      { id: "SPEEDSTER",     fp: 4,  type: "hitter",  label: "Speedster",      icon: "💨", cond: "sb>=1",        test: s => (s.sb  ?? 0) >= 1 },
+      { id: "PERFECT_DAY",   fp: 15, type: "hitter",  label: "Perfect Day",    icon: "🌞", cond: "h>=2+hr>=1",   test: s => (s.h ?? 0) >= 2 && (s.hr ?? 0) >= 1 && (s.rbi ?? 0) >= 2 },
       { id: "CYCLE_WATCH",   fp: 25, type: "hitter",  label: "Cycle Watch",    icon: "🌀", cond: "h+2b+3b+hr",   test: s => (s.h ?? 0) >= 1 && (s.doubles ?? 0) >= 1 && (s.triples ?? 0) >= 1 && (s.hr ?? 0) >= 1 },
       // Pitcher badges
       { id: "QUALITY_START", fp: 6,  type: "pitcher", label: "Quality Start",  icon: "✅", cond: "ip>=6,er<=3",  test: s => (s.ip ?? 0) >= 6 && (s.er ?? 0) <= 3 },
       { id: "ACE",           fp: 10, type: "pitcher", label: "Ace",            icon: "👑", cond: "k>=10",        test: s => (s.k  ?? 0) >= 10 },
       { id: "SHUTDOWN",      fp: 8,  type: "pitcher", label: "Shutdown",       icon: "🛑", cond: "ip>=7,er=0",   test: s => (s.ip ?? 0) >= 7 && (s.er ?? 0) === 0 },
       { id: "MELTDOWN",      fp: -5, type: "pitcher", label: "Meltdown",       icon: "🌪️", cond: "er>=5",        test: s => (s.er ?? 0) >= 5 },
-      { id: "WILD_THING",    fp: -5, type: "pitcher", label: "Wild Thing",     icon: "🎳", cond: "bb>=4",        test: s => (s.bb ?? 0) >= 4 },
+      { id: "WILD_THING",    fp: -5, type: "pitcher", label: "Wild Thing",     icon: "🎳", cond: "bb>=3",        test: s => (s.bb ?? 0) >= 3 },
       { id: "NO_NO_WATCH",   fp: 30, type: "pitcher", label: "No-No Watch",    icon: "🚫", cond: "ip>=7,h=0",    test: s => (s.ip ?? 0) >= 7 && (s.h ?? 0) === 0 && (s.er ?? 0) === 0 },
     ],
 
