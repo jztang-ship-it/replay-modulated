@@ -121,16 +121,16 @@ export const BaseballSportConfig = {
   },
 
   // ── Win tiers ───────────────────────────────────────────────────────────
-  // Tuned for 2P+3BAT hand FP distribution (cap $220).
-  // Target economy: bust 47.5%, ROOKIE 25%, STARTER 15%, ALL_STAR 8%, MVP 3%, GOAT 1%.
+  // Tuned for 2P+3BAT, 617-player pool, pyramid tiers (cap $220).
+  // Bust 46.6%, ROOKIE 23.7%, STARTER 16.1%, ALL_STAR 8.9%, MVP 3.7%, GOAT 0.9%.
   winCondition: {
     type: "FIXED_THRESHOLD" as const,
     thresholds: [
-      { tier: "ROOKIE",   minFP: 135, multiplier: 0.5 },
-      { tier: "STARTER",  minFP: 165, multiplier: 2.5 },
-      { tier: "ALL_STAR", minFP: 195, multiplier: 7 },
-      { tier: "MVP",      minFP: 228, multiplier: 15 },
-      { tier: "GOAT",     minFP: 268, multiplier: 50, progressive: true },
+      { tier: "ROOKIE",   minFP: 148, multiplier: 0.5 },
+      { tier: "STARTER",  minFP: 178, multiplier: 2.5 },
+      { tier: "ALL_STAR", minFP: 208, multiplier: 7 },
+      { tier: "MVP",      minFP: 240, multiplier: 15 },
+      { tier: "GOAT",     minFP: 280, multiplier: 50, progressive: true },
     ] as BaseballWinThreshold[],
   },
 };

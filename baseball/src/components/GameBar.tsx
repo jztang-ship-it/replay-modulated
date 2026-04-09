@@ -10,21 +10,21 @@ export type { CelebrationData };
 export type { GameStateLabel };
 
 const WIN_TIERS: WinTierDisplay[] = [
-  { label: "ROOKIE",   minFp: 135, color: "#22C55E", glow: "rgba(34,197,94,0.6)"   },
-  { label: "STARTER",  minFp: 165, color: "#00FFD8", glow: "rgba(0,255,216,0.6)"   },
-  { label: "ALL-STAR", minFp: 195, color: "#C084FC", glow: "rgba(192,132,252,0.7)" },
-  { label: "MVP",      minFp: 228, color: "#FB923C", glow: "rgba(251,146,60,0.7)"  },
-  { label: "G.O.A.T.", minFp: 268, color: "#EF4444", glow: "rgba(239,68,68,0.9)"  },
+  { label: "ROOKIE",   minFp: 148, color: "#22C55E", glow: "rgba(34,197,94,0.6)"   },
+  { label: "STARTER",  minFp: 178, color: "#00FFD8", glow: "rgba(0,255,216,0.6)"   },
+  { label: "ALL-STAR", minFp: 208, color: "#C084FC", glow: "rgba(192,132,252,0.7)" },
+  { label: "MVP",      minFp: 240, color: "#FB923C", glow: "rgba(251,146,60,0.7)"  },
+  { label: "G.O.A.T.", minFp: 280, color: "#EF4444", glow: "rgba(239,68,68,0.9)"  },
 ];
 
 const LEGEND: LegendData = {
   payoutRows: [
-    { label: "G.O.A.T.", score: "268+ FP", payout: "50x",  color: "#EF4444", bg: "rgba(239,68,68,0.12)",    border: "rgba(239,68,68,0.3)"    },
-    { label: "MVP",      score: "228+ FP", payout: "15x",  color: "#FB923C", bg: "rgba(251,146,60,0.10)",   border: "rgba(251,146,60,0.28)"  },
-    { label: "ALL-STAR", score: "195+ FP", payout: "8x",   color: "#C084FC", bg: "rgba(192,132,252,0.10)",  border: "rgba(192,132,252,0.28)" },
-    { label: "STARTER",  score: "165+ FP", payout: "3x",   color: "#00FFD8", bg: "rgba(0,255,216,0.08)",    border: "rgba(0,255,216,0.25)"   },
-    { label: "ROOKIE",   score: "135+ FP", payout: "0.5x", color: "#22C55E", bg: "rgba(34,197,94,0.08)",    border: "rgba(34,197,94,0.22)"   },
-    { label: "BUST",     score: "< 135 FP",payout: "—",    color: "#6B7280", bg: "rgba(107,114,128,0.06)",  border: "rgba(107,114,128,0.18)" },
+    { label: "G.O.A.T.", score: "280+ FP", payout: "50x",  color: "#EF4444", bg: "rgba(239,68,68,0.12)",    border: "rgba(239,68,68,0.3)"    },
+    { label: "MVP",      score: "240+ FP", payout: "15x",  color: "#FB923C", bg: "rgba(251,146,60,0.10)",   border: "rgba(251,146,60,0.28)"  },
+    { label: "ALL-STAR", score: "208+ FP", payout: "8x",   color: "#C084FC", bg: "rgba(192,132,252,0.10)",  border: "rgba(192,132,252,0.28)" },
+    { label: "STARTER",  score: "178+ FP", payout: "3x",   color: "#00FFD8", bg: "rgba(0,255,216,0.08)",    border: "rgba(0,255,216,0.25)"   },
+    { label: "ROOKIE",   score: "148+ FP", payout: "0.5x", color: "#22C55E", bg: "rgba(34,197,94,0.08)",    border: "rgba(34,197,94,0.22)"   },
+    { label: "BUST",     score: "< 148 FP",payout: "—",    color: "#6B7280", bg: "rgba(107,114,128,0.06)",  border: "rgba(107,114,128,0.18)" },
   ],
   scoringRules: [
     // Hitter stat weights (match baseballConfig.ts projectionWeights)
