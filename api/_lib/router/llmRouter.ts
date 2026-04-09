@@ -221,12 +221,28 @@ async function runBackgroundChecks(opts: {
 }) {
   const { system, user, tier, config, kv, ns, primaryCommentary, primaryModel, isChallenger, challengerModel, bannedPhrases, rosterSummary } = opts
 
-  if (!config.groqApiKey) return
+  console.log('[DEBUG] GRADER START')
+  console.log('[DEBUG] GROQ_API_KEY exists:', !!config.groqApiKey)
+  console.log('[DEBUG] KV client exists:', !!kv)
+
+  if (!config.groqApiKey) { console.log('[DEBUG] GRADER SKIPPED — no GROQ key'); return }
 
   // Grade primary
-  const primaryGrade = await gradeCommentary(primaryCommentary, tier, rosterSummary, bannedPhrases, config.groqApiKey)
+  let primaryGrade: Awaited<ReturnType<typeof gradeCommentary>> = null
+  try {
+    primaryGrade = await gradeCommentary(primaryCommentary, tier, rosterSummary, bannedPhrases, config.groqApiKey)
+    console.log('[DEBUG] GRADER SUCCESS — composite:', primaryGrade?.composite?.toFixed(2) ?? 'null')
+  } catch (err) {
+    console.error('[DEBUG] GRADER FAILED:', err instanceof Error ? err.message : err)
+  }
+
   if (primaryGrade) {
-    await recordModelScore(kv, ns, primaryModel, primaryGrade, tier)
+    try {
+      await recordModelScore(kv, ns, primaryModel, primaryGrade, tier)
+      console.log('[DEBUG] KV model score written for', primaryModel)
+    } catch (err) {
+      console.error('[DEBUG] KV model score write FAILED:', err instanceof Error ? err.message : err)
+    }
     // Record notable phrases to KV for future anti-redundancy
     const notablePhrases = [
       "couldn't carry",
@@ -242,9 +258,16 @@ async function runBackgroundChecks(opts: {
     ]
     for (const phrase of notablePhrases) {
       if (primaryCommentary.toLowerCase().includes(phrase)) {
-        await recordRecentPhrase(kv, ns, phrase)
+        try {
+          await recordRecentPhrase(kv, ns, phrase)
+          console.log('[DEBUG] KV recent phrase written:', phrase)
+        } catch (err) {
+          console.error('[DEBUG] KV recent phrase write FAILED:', err instanceof Error ? err.message : err)
+        }
       }
     }
+  } else {
+    console.log('[DEBUG] GRADER returned null — no KV writes')
   }
 
   // On challenger rounds: get the challenger model to generate, grade it
