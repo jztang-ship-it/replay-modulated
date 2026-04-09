@@ -36,6 +36,8 @@ import { getPlayerUid, getNickname, setNickname } from '@shared/utils/playerIden
 import { PostHandSheet } from '@shared/components/PostHandSheet';
 import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
 import { ProfileScreen } from '@shared/components/ProfileScreen';
+import { generateCommentary } from "@shared/commentary/generateCommentary";
+import type { CommentaryInput, CommentaryRosterCard, CommentaryOutput } from "@shared/commentary/types";
 
 // Test-wire only: allow passing glow props even if wrapper prop types lag behind.
 const RosterGridAny = RosterGrid as any;
@@ -536,6 +538,7 @@ export default function GameView() {
   // Spring oscillation phase — fires after all cards settle, before results lock in
   const [springFp, setSpringFp] = useState<number | null>(null);
   const [springSettled, setSpringSettled] = useState(false);
+  const [lbContextNonce, setLbContextNonce] = useState(0);
   const springRafRef = useRef<number>(0);
   const springTimersRef = useRef<number[]>([]);
   const pendingBalanceUpdateRef = useRef<(() => void) | null>(null);
@@ -947,6 +950,12 @@ export default function GameView() {
   const gaugeTotalFp = displayFp;
   latestGaugeFpRef.current = gaugeTotalFp;
 
+  // ── Claude commentary ────────────────────────────────────────────────────
+  const commentaryRef = useRef<CommentaryOutput | null>(null);
+  const commentaryStatusRef = useRef<'idle' | 'pending' | 'succeeded' | 'failed'>('idle');
+  const recentTonesRef = useRef<string[]>([]);
+  const commentaryFiredHandRef = useRef(-1);
+
   // Smart post-reveal copy — computed once when spring settles, then locked for the hand.
   const postRevealCopyRef = useRef<{ primary: string; secondary?: string } | null>(null);
   const postRevealCopy = useMemo(() => {
@@ -958,9 +967,17 @@ export default function GameView() {
       }
       return null;
     }
+    // Wait for Claude while pending — never show template then swap
+    if (commentaryStatusRef.current === 'pending') return null;
+    // Prefer Claude commentary if it landed
+    if (commentaryStatusRef.current === 'succeeded' && commentaryRef.current?.commentary) {
+      const copy = { primary: commentaryRef.current.commentary, secondary: "" };
+      postRevealCopyRef.current = copy;
+      return copy;
+    }
+    // Fallback: simple template
     const fp = lockedGaugeFpRef.current ?? displayFp;
     const gaugeSnap = computeGaugeState(fp, GAUGE_THRESHOLDS as any, winTier, 8);
-    // Baseball commentary — simple tier + FP summary (full commentary system TODO)
     const nearMiss = gaugeSnap.nextMin > 0 && gaugeSnap.nextMin < 9999
       ? +(gaugeSnap.nextMin - fp).toFixed(1)
       : 0;
@@ -972,7 +989,7 @@ export default function GameView() {
     };
     postRevealCopyRef.current = copy;
     return copy;
-  }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct]); // eslint-disable-line
+  }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct, lbContextNonce]); // eslint-disable-line
 
   // Never show intermediate tiers during spring — only show final tier after spring settles
   const activeTierForDisplay = winTier ?? deriveTierFromFp(totalFp);
@@ -1044,9 +1061,80 @@ export default function GameView() {
       frozenBarFpRef.current = null;
       anchorFpCallCountRef.current = 0;
       postRevealCopyRef.current = null;
+      commentaryRef.current = null;
+      commentaryStatusRef.current = 'idle';
       setStreakMilestone(null);
     }
   }, [gameState]);
+
+  // ── Claude commentary pre-fetch ─────────────────────────────────────────
+  // Fire as soon as REVEALING starts. By then rosterRef holds finalized cards.
+  // Result lands in commentaryRef and the postRevealCopy memo prefers it.
+  useEffect(() => {
+    if (gameState !== "REVEALING") return;
+    if (isFTUE) return;
+    if (commentaryFiredHandRef.current === handCount) return;
+    commentaryFiredHandRef.current = handCount;
+    commentaryStatusRef.current = 'pending';
+
+    const finalRoster = rosterRef.current;
+    if (!finalRoster.length) {
+      commentaryStatusRef.current = 'failed';
+      return;
+    }
+
+    const finalFp = finalRoster.reduce(
+      (s, c: any) => s + Number(c.actualFp ?? 0), 0,
+    );
+    const finalTier = (deriveTierFromFp(finalFp) ?? "BUST") as any;
+    const gauge = computeGaugeState(finalFp, GAUGE_THRESHOLDS as any, finalTier, 8);
+
+    const rosterShape: CommentaryRosterCard[] = finalRoster.map((c: any) => ({
+      name: String(c.name ?? ""),
+      salary: Number(c.salary ?? 0),
+      actualFp: Number(c.actualFp ?? 0),
+      projectedFp: Number(c.projectedFp ?? 0),
+      cardTier: String(c.tier ?? ""),
+      opponent: String(c.gameInfo?.opponent ?? ""),
+      homeAway: String(c.gameInfo?.homeAway ?? "") as "H" | "A" | "",
+      statLine: c.statLine ?? {},
+    }));
+
+    const input: CommentaryInput = {
+      sport: "baseball",
+      totalFp: finalFp,
+      winTier: finalTier,
+      nextTier: gauge.nextTier as any,
+      tierFloor: gauge.curMin,
+      nextTierMin: gauge.nextMin > 0 && gauge.nextMin < 9999 ? gauge.nextMin : undefined,
+      streak,
+      prevStreak: finalTier === "BUST" ? streak : Math.max(0, streak - 1),
+      isBust: finalTier === "BUST",
+      handCount,
+      roster: rosterShape,
+    };
+
+    // Empty culture for now — LLM still generates commentary from roster stats.
+    // Baseball playerCulture can be added later for richer personality.
+    const culture: any[] = [];
+
+    generateCommentary(input, culture, recentTonesRef.current).then(result => {
+      if (result) {
+        commentaryRef.current = result;
+        if (result.tone) {
+          const next = [result.tone, ...recentTonesRef.current.filter(t => t !== result.tone)].slice(0, 6);
+          recentTonesRef.current = next;
+        }
+      }
+      commentaryStatusRef.current = result ? 'succeeded' : 'failed';
+      postRevealCopyRef.current = null;
+      setLbContextNonce(n => n + 1);
+    }).catch(() => {
+      commentaryStatusRef.current = 'failed';
+      postRevealCopyRef.current = null;
+      setLbContextNonce(n => n + 1);
+    });
+  }, [gameState, isFTUE, handCount, streak]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const flippedIds = useMemo(() => {
     if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") return statsFlippedIds;
