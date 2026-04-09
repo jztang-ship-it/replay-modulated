@@ -105,6 +105,7 @@ const SPORT_CONFIGS = {
   },
 
   baseball: {
+    sportKey: "baseball",
     label: "Baseball (MLB)",
     dataDir: join(REPO_ROOT, "baseball", "public", "data"),
 
@@ -139,21 +140,23 @@ const SPORT_CONFIGS = {
       r: 9,  rbi: 9,     bb: 6,       sb: 12,
       ip: 3, k: 4,       er: -3,      w: 6, qs: 8,
     },
-    // baseballConfig.ts badges (flat list — test() reads stat keys).
+    // baseballConfig.ts badges — includes display metadata for fire-rate report.
     badges: [
-      { id: "GOING_YARD",    fp: 12, test: s => (s.hr  ?? 0) >= 2 },
-      { id: "HIT_MACHINE",   fp: 5,  test: s => (s.h   ?? 0) >= 3 },
-      { id: "CLEANUP",       fp: 8,  test: s => (s.rbi ?? 0) >= 4 },
-      { id: "EYE_PLATE",     fp: 8,  test: s => (s.bb  ?? 0) >= 3 },
-      { id: "SPEEDSTER",     fp: 6,  test: s => (s.sb  ?? 0) >= 2 },
-      { id: "PERFECT_DAY",   fp: 15, test: s => (s.h ?? 0) >= 3 && (s.hr ?? 0) >= 1 && (s.rbi ?? 0) >= 3 },
-      { id: "CYCLE_WATCH",   fp: 25, test: s => (s.h ?? 0) >= 1 && (s.doubles ?? 0) >= 1 && (s.triples ?? 0) >= 1 && (s.hr ?? 0) >= 1 },
-      { id: "ACE",           fp: 10, test: s => (s.k  ?? 0) >= 10 },
-      { id: "SHUTDOWN",      fp: 8,  test: s => (s.ip ?? 0) >= 7 && (s.er ?? 0) === 0 },
-      { id: "QUALITY_START", fp: 6,  test: s => (s.ip ?? 0) >= 6 && (s.er ?? 0) <= 3 },
-      { id: "MELTDOWN",      fp: -5, test: s => (s.er ?? 0) >= 5 },
-      { id: "WILD_THING",    fp: -5, test: s => (s.bb ?? 0) >= 4 },
-      { id: "NO_NO_WATCH",   fp: 30, test: s => (s.ip ?? 0) >= 7 && (s.h ?? 0) === 0 && (s.er ?? 0) === 0 },
+      // Hitter badges
+      { id: "HIT_MACHINE",   fp: 5,  type: "hitter",  label: "Hit Machine",    icon: "🎯", cond: "h>=3",         test: s => (s.h   ?? 0) >= 3 },
+      { id: "GOING_YARD",    fp: 12, type: "hitter",  label: "Going Yard",     icon: "⚾", cond: "hr>=2",        test: s => (s.hr  ?? 0) >= 2 },
+      { id: "CLEANUP",       fp: 8,  type: "hitter",  label: "Cleanup Hitter", icon: "🧹", cond: "rbi>=4",       test: s => (s.rbi ?? 0) >= 4 },
+      { id: "EYE_PLATE",     fp: 8,  type: "hitter",  label: "Eye at Plate",   icon: "👁️", cond: "bb>=3",        test: s => (s.bb  ?? 0) >= 3 },
+      { id: "SPEEDSTER",     fp: 6,  type: "hitter",  label: "Speedster",      icon: "💨", cond: "sb>=2",        test: s => (s.sb  ?? 0) >= 2 },
+      { id: "PERFECT_DAY",   fp: 15, type: "hitter",  label: "Perfect Day",    icon: "🌞", cond: "h>=3+hr>=1",   test: s => (s.h ?? 0) >= 3 && (s.hr ?? 0) >= 1 && (s.rbi ?? 0) >= 3 },
+      { id: "CYCLE_WATCH",   fp: 25, type: "hitter",  label: "Cycle Watch",    icon: "🌀", cond: "h+2b+3b+hr",   test: s => (s.h ?? 0) >= 1 && (s.doubles ?? 0) >= 1 && (s.triples ?? 0) >= 1 && (s.hr ?? 0) >= 1 },
+      // Pitcher badges
+      { id: "QUALITY_START", fp: 6,  type: "pitcher", label: "Quality Start",  icon: "✅", cond: "ip>=6,er<=3",  test: s => (s.ip ?? 0) >= 6 && (s.er ?? 0) <= 3 },
+      { id: "ACE",           fp: 10, type: "pitcher", label: "Ace",            icon: "👑", cond: "k>=10",        test: s => (s.k  ?? 0) >= 10 },
+      { id: "SHUTDOWN",      fp: 8,  type: "pitcher", label: "Shutdown",       icon: "🛑", cond: "ip>=7,er=0",   test: s => (s.ip ?? 0) >= 7 && (s.er ?? 0) === 0 },
+      { id: "MELTDOWN",      fp: -5, type: "pitcher", label: "Meltdown",       icon: "🌪️", cond: "er>=5",        test: s => (s.er ?? 0) >= 5 },
+      { id: "WILD_THING",    fp: -5, type: "pitcher", label: "Wild Thing",     icon: "🎳", cond: "bb>=4",        test: s => (s.bb ?? 0) >= 4 },
+      { id: "NO_NO_WATCH",   fp: 30, type: "pitcher", label: "No-No Watch",    icon: "🚫", cond: "ip>=7,h=0",    test: s => (s.ip ?? 0) >= 7 && (s.h ?? 0) === 0 && (s.er ?? 0) === 0 },
     ],
 
     // EHLP filter (spec): Hitters PA>=3 + >=1 scoring event. Pitchers IP>=4.
@@ -671,31 +674,40 @@ function fpFromStats(stats, cfg) {
 }
 
 // Pick a usable log for the given slot. Loops a bounded number of times, then
-// falls back to any log for that player. Returns {fp, log} or null.
+// falls back to any log for that player. Returns { fp, stats }.
 function rollPlayerFp(player, slotReq, cfg, rng) {
   const logs = player.logs;
-  if (!logs.length) return 0;
+  if (!logs.length) return { fp: 0, stats: {} };
   // Most logs are usable. Do up to 5 tries with validateLog, else fall back.
   for (let tries = 0; tries < 5; tries++) {
     const log = logs[Math.floor(rng() * logs.length)];
-    if (cfg.validateLog(log, slotReq)) return fpFromStats(log.stats ?? {}, cfg);
+    if (cfg.validateLog(log, slotReq)) {
+      const stats = log.stats ?? {};
+      return { fp: fpFromStats(stats, cfg), stats };
+    }
   }
   // Fallback: first log that validates; if none, score it anyway with zeroes
   // (rare — e.g. every log for a pitcher slotted into BAT will fail).
   const valid = logs.find(l => cfg.validateLog(l, slotReq));
-  if (valid) return fpFromStats(valid.stats ?? {}, cfg);
-  return 0;
+  if (valid) {
+    const stats = valid.stats ?? {};
+    return { fp: fpFromStats(stats, cfg), stats };
+  }
+  return { fp: 0, stats: {} };
 }
 
 function scoreRoster(roster, cfg, rng) {
   let total = 0;
+  const cardResults = [];
   for (let i = 0; i < roster.length; i++) {
     const card = roster[i];
-    if (!card) continue;
+    if (!card) { cardResults.push(null); continue; }
     const slotReq = cfg.rosterSlots[i] ?? "FLEX";
-    total += rollPlayerFp(card, slotReq, cfg, rng);
+    const { fp, stats } = rollPlayerFp(card, slotReq, cfg, rng);
+    total += fp;
+    cardResults.push({ stats, slotReq, position: card.position });
   }
-  return total;
+  return { total, cardResults };
 }
 
 // ─── Simulation ──────────────────────────────────────────────────────────────
@@ -717,7 +729,8 @@ function simulateHand(archetypeName, pool, cfg, rng) {
   // Redraw non-held. For Pure Random, redraw is also random with no holds.
   const final = redrawRoster(initial, heldIdx, pool, cfg, rng, randomMode);
 
-  return scoreRoster(final, cfg, rng);
+  const { total, cardResults } = scoreRoster(final, cfg, rng);
+  return { fp: total, cardResults };
 }
 
 function classify(fp, tiers) {
@@ -729,13 +742,29 @@ function classify(fp, tiers) {
 function runArchetype(archName, pool, cfg, hands, rng) {
   const fps = [];
   const tierCounts = Object.fromEntries(cfg.payoutTiers.map(t => [t.tier, 0]));
+  // Badge tracking (populated only when cfg.badges have type metadata).
+  const hasBadgeTypes = cfg.badges?.some(b => b.type);
+  const badgeCounts = hasBadgeTypes ? Object.fromEntries(cfg.badges.map(b => [b.id, 0])) : null;
+  let hitterCards = 0, pitcherCards = 0, totalBadgeFires = 0;
+
   for (let i = 0; i < hands; i++) {
-    const fp = simulateHand(archName, pool, cfg, rng);
+    const { fp, cardResults } = simulateHand(archName, pool, cfg, rng);
     fps.push(fp);
     tierCounts[classify(fp, cfg.payoutTiers)]++;
+
+    if (badgeCounts && cardResults) {
+      for (const c of cardResults) {
+        if (!c) continue;
+        const isPitcher = c.slotReq === "P" || c.position === "P";
+        if (isPitcher) pitcherCards++; else hitterCards++;
+        for (const b of cfg.badges) {
+          try { if (b.test(c.stats)) { badgeCounts[b.id]++; totalBadgeFires++; } } catch {}
+        }
+      }
+    }
   }
   fps.sort((a, b) => a - b);
-  return { fps, tierCounts };
+  return { fps, tierCounts, badgeCounts, hitterCards, pitcherCards, totalBadgeFires };
 }
 
 // ─── Reporting ───────────────────────────────────────────────────────────────
@@ -819,6 +848,53 @@ function formatBlendedReport(blendedRates, cfg) {
   } else {
     lines.push(`    OK  bust rate inside target ${(BUST_TARGET_LOW*100)|0}-${(BUST_TARGET_HIGH*100)|0}% band`);
   }
+  return lines.join("\n");
+}
+
+function formatBadgeReport(results, cfg, weights) {
+  const hasBadgeTypes = cfg.badges?.some(b => b.type);
+  if (!hasBadgeTypes) return "";
+
+  // Aggregate across all archetypes (raw totals, not weighted — fire rate is per-card).
+  const totalByBadge = {};
+  let totalHitter = 0, totalPitcher = 0, totalBadgeFires = 0, totalHands = 0;
+  for (const name of Object.keys(results)) {
+    const r = results[name];
+    if (!r.badgeCounts) continue;
+    for (const [id, count] of Object.entries(r.badgeCounts)) {
+      totalByBadge[id] = (totalByBadge[id] ?? 0) + count;
+    }
+    totalHitter += r.hitterCards;
+    totalPitcher += r.pitcherCards;
+    totalBadgeFires += r.totalBadgeFires;
+    totalHands += r.fps.length;
+  }
+
+  const hitterBadges = cfg.badges.filter(b => b.type === "hitter");
+  const pitcherBadges = cfg.badges.filter(b => b.type === "pitcher");
+
+  const lines = [];
+  lines.push("");
+  lines.push(`═══ BADGE FIRE RATES (per card, ${cfg.sportKey ?? "baseball"}) ══════════════════════`);
+  lines.push("");
+  lines.push(`    HITTERS (per batter card dealt, n=${totalHitter})`);
+  for (const b of hitterBadges) {
+    const count = totalByBadge[b.id] ?? 0;
+    const rate = totalHitter > 0 ? count / totalHitter : 0;
+    lines.push(`    ${b.label.padEnd(16)} ${b.icon.padEnd(3)} ${b.cond.padEnd(14)} ${fmtPct(rate)}`);
+  }
+  lines.push("");
+  lines.push(`    PITCHERS (per pitcher card dealt, n=${totalPitcher})`);
+  for (const b of pitcherBadges) {
+    const count = totalByBadge[b.id] ?? 0;
+    const rate = totalPitcher > 0 ? count / totalPitcher : 0;
+    lines.push(`    ${b.label.padEnd(16)} ${b.icon.padEnd(3)} ${b.cond.padEnd(14)} ${fmtPct(rate)}`);
+  }
+
+  const avgPerHand = totalHands > 0 ? totalBadgeFires / totalHands : 0;
+  lines.push("");
+  lines.push(`    Avg badges per hand: ${avgPerHand.toFixed(2)}`);
+
   return lines.join("\n");
 }
 
@@ -935,6 +1011,7 @@ async function main() {
   const blended = blend(results, weights);
   console.log(formatBlendedReport(blended, cfg));
   console.log(formatHoldGap(results));
+  console.log(formatBadgeReport(results, cfg, weights));
   console.log("");
 }
 
