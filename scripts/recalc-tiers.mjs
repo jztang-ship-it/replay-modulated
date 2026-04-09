@@ -64,20 +64,23 @@ const TIER_ORDER = ["ORANGE", "PURPLE", "BLUE", "GREEN", "WHITE"];
 
 /**
  * Assign tiers by percentile within a ranked (descending) player array.
- * Top 20% = ORANGE, next 20% = PURPLE, etc. Bottom 20% = WHITE.
- * Players with identical values keep stable order (sort is stable).
+ * Pyramid distribution matching basketball's rarity curve:
+ *   ORANGE ~2%  (elite)
+ *   PURPLE ~6%  (star)
+ *   BLUE   ~17% (solid)
+ *   GREEN  ~35% (average)
+ *   WHITE  ~40% (deep bench)
  */
 function assignTiers(sortedDesc) {
   const n = sortedDesc.length;
   if (n === 0) return;
-  // Cut points: index < n*0.2 → ORANGE, < n*0.4 → PURPLE, ...
   for (let i = 0; i < n; i++) {
     const pct = (i + 0.5) / n; // center of bucket
     let tier;
-    if      (pct < 0.20) tier = "ORANGE";
-    else if (pct < 0.40) tier = "PURPLE";
-    else if (pct < 0.60) tier = "BLUE";
-    else if (pct < 0.80) tier = "GREEN";
+    if      (pct < 0.02) tier = "ORANGE";
+    else if (pct < 0.08) tier = "PURPLE";
+    else if (pct < 0.25) tier = "BLUE";
+    else if (pct < 0.60) tier = "GREEN";
     else                 tier = "WHITE";
     sortedDesc[i]._newTier = tier;
   }

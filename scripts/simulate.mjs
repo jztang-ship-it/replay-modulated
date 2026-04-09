@@ -175,11 +175,11 @@ const SPORT_CONFIGS = {
     // Tuned via scripts/simulate.mjs to hit target economy.
     payoutTiers: [
       { tier: "BUST",     minFp:   0, mult: 0,    source: "tuned" },
-      { tier: "ROOKIE",   minFp: 135, mult: 0.5,  source: "tuned" },
-      { tier: "STARTER",  minFp: 165, mult: 2.5,  source: "tuned" },
-      { tier: "ALL_STAR", minFp: 195, mult: 7.0,  source: "tuned" },
-      { tier: "MVP",      minFp: 228, mult: 15.0, source: "tuned" },
-      { tier: "GOAT",     minFp: 268, mult: 50.0, source: "tuned" },
+      { tier: "ROOKIE",   minFp: 148, mult: 0.5,  source: "tuned" },
+      { tier: "STARTER",  minFp: 178, mult: 2.5,  source: "tuned" },
+      { tier: "ALL_STAR", minFp: 208, mult: 7.0,  source: "tuned" },
+      { tier: "MVP",      minFp: 240, mult: 15.0, source: "tuned" },
+      { tier: "GOAT",     minFp: 280, mult: 50.0, source: "tuned" },
     ],
   },
 };
