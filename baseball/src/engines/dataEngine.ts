@@ -4,9 +4,10 @@
  */
 import { configure } from "@shared/engines/dataEngine";
 
+// Vite base is "/baseball/" so public/ files are served at /baseball/data/.
 configure({
-  players: "/data/players.json",
-  logsFallback: "/data/game-logs.json",
+  players: "/baseball/data/players.json",
+  logsFallback: "/baseball/data/game-logs.json",
 });
 
 export * from "@shared/engines/dataEngine";
