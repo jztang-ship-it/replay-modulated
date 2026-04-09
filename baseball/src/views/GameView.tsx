@@ -38,6 +38,7 @@ import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
 import { ProfileScreen } from '@shared/components/ProfileScreen';
 import { generateCommentary } from "@shared/commentary/generateCommentary";
 import type { CommentaryInput, CommentaryRosterCard, CommentaryOutput } from "@shared/commentary/types";
+import { buildBaseballContext } from "../utils/buildBaseballContext";
 
 // Test-wire only: allow passing glow props even if wrapper prop types lag behind.
 const RosterGridAny = RosterGrid as any;
@@ -1114,9 +1115,7 @@ export default function GameView() {
       roster: rosterShape,
     };
 
-    // Empty culture for now — LLM still generates commentary from roster stats.
-    // Baseball playerCulture can be added later for richer personality.
-    const culture: any[] = [];
+    const culture = buildBaseballContext(rosterShape);
 
     generateCommentary(input, culture, recentTonesRef.current).then(result => {
       if (result) {
