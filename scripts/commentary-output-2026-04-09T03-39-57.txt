@@ -1,0 +1,1497 @@
+═══════════════════════════════════════════════════════════
+commentary test summary
+─────────────────────────
+total: 100  ok: 100  err: 0
+elapsed: 207.8s  (~0.5 hands/sec)
+tier distribution:
+  BUST       52
+  ROOKIE     30
+  STARTER    15
+  ALL_STAR   3
+═══════════════════════════════════════════════════════════
+──────────────────── HAND 1 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 127.5
+NEXT TIER: ROOKIE @ 133 (gap 5.5)
+STREAK: 1
+ROSTER:
+  ★ De'Aaron Fox           [PURPLE ] $ 56  proj  38.5  actual  41.0
+    Day'Ron Sharpe         [GREEN  ] $ 26  proj  17.9  actual  15.2
+    Mason Plumlee          [GREEN  ] $ 24  proj  16.4  actual   7.3
+  ★ Anthony Davis          [ORANGE ] $ 73  proj  50.5  actual  47.5
+    Jordan Miller          [WHITE  ] $ 13  proj   8.9  actual   8.3
+    Jalen Pickett          [WHITE  ] $  6  proj   4.3  actual   8.2
+
+COMMENTARY (deadpan): AD came within inches of carrying this alone — 47 is his floor, not his ceiling. The rest didn't follow.
+
+──────────────────── HAND 2 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 149.0
+NEXT TIER: STARTER @ 160 (gap 11.0)
+STREAK: 2
+ROSTER:
+  ★ LaMelo Ball            [PURPLE ] $ 62  proj  43.1  actual  68.0
+    AJ Green               [WHITE  ] $ 13  proj   8.7  actual   7.2
+    Brook Lopez            [BLUE   ] $ 38  proj  26.0  actual   6.2
+    Dennis Schröder        [BLUE   ] $ 39  proj  26.9  actual  34.1
+    Gradey Dick            [GREEN  ] $ 31  proj  21.1  actual  22.5
+    Jalen Wilson           [WHITE  ] $ 16  proj  11.0  actual  11.0
+
+COMMENTARY (analytical): LaMelo showed up big and dragged this one across the line — 25 points over what he was supposed to bring, and it was just enough to cash.
+
+──────────────────── HAND 3 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 122.9
+NEXT TIER: ROOKIE @ 133 (gap 10.1)
+STREAK: 2
+ROSTER:
+  ★ Nikola Jokić           [ORANGE ] $ 89  proj  61.4  actual  20.1
+    Kobe Bufkin            [WHITE  ] $ 16  proj  10.9  actual  13.8
+  ★ Jalen Williams         [PURPLE ] $ 56  proj  38.4  actual  60.0
+    Torrey Craig           [WHITE  ] $ 20  proj  13.7  actual  19.7
+    Johnny Davis           [WHITE  ] $ 10  proj   7.0  actual   3.8
+    Wendell Moore Jr.      [WHITE  ] $  5  proj   3.6  actual   5.5
+
+COMMENTARY (wry): The Joker had a quiet deal tonight — 20 points when he usually walks away with 60. Jokić below his line is a curiosity, and this one stung hard enough to blow the whole hand.
+
+──────────────────── HAND 4 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 139.0
+NEXT TIER: STARTER @ 160 (gap 21.0)
+STREAK: 1
+ROSTER:
+  ★ Ja Morant              [PURPLE ] $ 63  proj  43.6  actual  42.7
+    Ayo Dosunmu            [GREEN  ] $ 35  proj  24.0  actual  36.9
+    Bones Hyland           [WHITE  ] $ 20  proj  14.1  actual  19.1
+    Mikal Bridges          [BLUE   ] $ 41  proj  28.6  actual  30.3
+    Jalen Suggs            [GREEN  ] $ 33  proj  22.9  actual   6.0
+    DaQuan Jeffries        [WHITE  ] $  5  proj   3.3  actual   4.0
+
+COMMENTARY (observational): Ja kept pace with his line and the bench carried the rest—Dosunmu came out of nowhere with 37, but it's just enough to dodge the bust.
+
+──────────────────── HAND 5 ────────────────────
+TIER: STARTER (1x)  |  TOTAL FP: 171.5
+NEXT TIER: ALL_STAR @ 183 (gap 11.5)
+STREAK: 2
+ROSTER:
+  ★ Jalen Williams         [PURPLE ] $ 56  proj  38.4  actual  53.6
+  ★ Damian Lillard         [PURPLE ] $ 60  proj  41.4  actual  37.0
+    DeJon Jarreau          [GREEN  ] $ 23  proj  15.8  actual  27.4
+    Jordan Nwora           [WHITE  ] $ 20  proj  14.1  actual  11.5
+    Markelle Fultz         [WHITE  ] $ 10  proj   7.1  actual  14.9
+    Caleb Houstan          [WHITE  ] $ 12  proj   8.0  actual  27.1
+
+COMMENTARY (deadpan): Dame delivered, though not quite Dame Time—he found his spots but left a couple hanging. Jalen Williams carried the load, though, coming in hot and turning this into a push.
+
+──────────────────── HAND 6 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 112.2
+NEXT TIER: ROOKIE @ 133 (gap 20.8)
+STREAK: 3
+ROSTER:
+  ★ Shai Gilgeous-Alexander [ORANGE ] $ 75  proj  51.7  actual  68.7
+    D'Angelo Russell       [GREEN  ] $ 36  proj  24.5  actual   0.0
+    Terance Mann           [GREEN  ] $ 22  proj  15.1  actual   8.4
+    Rui Hachimura          [GREEN  ] $ 34  proj  23.4  actual  22.9
+    Gary Trent Jr.         [GREEN  ] $ 25  proj  17.5  actual  12.2
+    Dereon Seabron         [WHITE  ] $  7  proj   4.9  actual   0.0
+
+COMMENTARY (deadpan): Shai went supernova and it still wasn't enough—D'Angelo's complete disappearance left the whole thing short by three weeks' worth of games.
+
+──────────────────── HAND 7 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 121.6
+NEXT TIER: ROOKIE @ 133 (gap 11.4)
+STREAK: 3
+ROSTER:
+  ★ Ja Morant              [PURPLE ] $ 55  proj  38.2  actual  48.5
+    Donte DiVincenzo       [GREEN  ] $ 34  proj  23.7  actual  17.5
+    Aaron Wiggins          [GREEN  ] $ 31  proj  21.5  actual  13.9
+    Clint Capela           [GREEN  ] $ 33  proj  22.5  actual  26.4
+    Elijah Harkless        [WHITE  ] $ 15  proj  10.2  actual   8.3
+    Malachi Flynn          [WHITE  ] $ 18  proj  12.2  actual   7.0
+
+COMMENTARY (wry): Ja showed up with 48.5, but the supporting cast evaporated — DiVincenzo and Wiggins combined for barely anything, and that's all she wrote.
+
+──────────────────── HAND 8 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 97.5
+NEXT TIER: ROOKIE @ 133 (gap 35.5)
+STREAK: 4
+ROSTER:
+  ★ Zion Williamson        [PURPLE ] $ 55  proj  37.9  actual  52.6
+  ★ Tyler Herro            [PURPLE ] $ 55  proj  38.2  actual   9.1
+    Aaron Holiday          [WHITE  ] $ 15  proj  10.5  actual   3.9
+    Obi Toppin             [GREEN  ] $ 27  proj  18.4  actual   7.7
+    Goga Bitadze           [GREEN  ] $ 29  proj  19.8  actual  16.8
+    Omer Yurtseven         [WHITE  ] $ 18  proj  12.3  actual   7.4
+
+COMMENTARY (analytical): Zion was the only one who showed up, dragging this thing over his head by fifteen. The rest of the roster checked out early — Herro's quiet night and a bench that couldn't find the gas pedal left you thirty-five short of rookie money.
+
+──────────────────── HAND 9 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 84.2
+NEXT TIER: ROOKIE @ 133 (gap 48.8)
+STREAK: 4
+ROSTER:
+  ★ Kevin Durant           [PURPLE ] $ 59  proj  41.0  actual  12.9
+    Tosan Evbuomwan        [WHITE  ] $ 19  proj  13.1  actual  12.4
+    Vít Krejčí             [GREEN  ] $ 25  proj  17.2  actual   8.1
+    Brandin Podziemski     [GREEN  ] $ 33  proj  22.9  actual  26.0
+    Larry Nance Jr.        [GREEN  ] $ 25  proj  17.2  actual  23.8
+    Josh Richardson        [WHITE  ] $ 13  proj   9.3  actual   1.0
+
+COMMENTARY (deadpan): KD had a quiet one. The Slim Reaper was momentarily mortal, and the rest of the roster couldn't pick up the slack—the whole hand went dark.
+
+──────────────────── HAND 10 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 106.8
+NEXT TIER: ROOKIE @ 133 (gap 26.2)
+STREAK: 1
+ROSTER:
+  ★ Trae Young             [PURPLE ] $ 62  proj  43.0  actual  57.0
+    Caleb Martin           [GREEN  ] $ 25  proj  17.1  actual  10.8
+    DeAndre Jordan         [WHITE  ] $ 17  proj  11.6  actual  11.1
+    Trey Jemison III       [WHITE  ] $ 11  proj   7.9  actual  14.5
+    Malaki Branham         [WHITE  ] $ 21  proj  14.5  actual   9.3
+    Gary Harris            [WHITE  ] $ 19  proj  13.2  actual   4.1
+
+COMMENTARY (observational): ```json
+{
+  "commentary": "Trae went off for 57, but the rest of the roster collapsed around him. That's a BUST — one star can't carry a hand by himself, no matter how hard he tries.",
+  "tone": "deadpan"
+}
+```
+
+Wait — I need to reconsider. "Deadpan" is listed in the recent tones used (DO NOT pick). Let me revise.
+
+```json
+{
+  "commentary": "Trae went off for 57, but the rest of the roster collapsed around him. That's a BUST — one star can't carry a hand by himself, no matter how hard he tries.",
+  "tone": "observational"
+}
+```
+
+──────────────────── HAND 11 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 144.5
+NEXT TIER: STARTER @ 160 (gap 15.5)
+STREAK: 1
+ROSTER:
+  ★ Joel Embiid            [PURPLE ] $ 59  proj  40.5  actual  55.4
+    Dario Šarić            [GREEN  ] $ 25  proj  17.0  actual  15.1
+    Bones Hyland           [WHITE  ] $ 15  proj  10.1  actual  15.6
+    Gradey Dick            [GREEN  ] $ 31  proj  21.1  actual  36.8
+    Aaron Nesmith          [GREEN  ] $ 29  proj  20.1  actual  11.1
+    Kentavious Caldwell-Pope [GREEN  ] $ 28  proj  19.4  actual  10.5
+
+COMMENTARY (neutral-to-warm): Embiid overpowered for 55, but the rest of the roster couldn't quite follow — you're sitting on a soft landing, half your bet back.
+
+──────────────────── HAND 12 ────────────────────
+TIER: STARTER (1x)  |  TOTAL FP: 165.1
+NEXT TIER: ALL_STAR @ 183 (gap 17.9)
+STREAK: 1
+ROSTER:
+  ★ Domantas Sabonis       [PURPLE ] $ 63  proj  43.4  actual  59.7
+    Leaky Black            [WHITE  ] $ 13  proj   9.3  actual   7.8
+    Zach Edey              [GREEN  ] $ 33  proj  23.1  actual  20.3
+    Alex Caruso            [GREEN  ] $ 34  proj  23.7  actual  16.1
+    Mikal Bridges          [BLUE   ] $ 45  proj  31.1  actual  53.2
+    Jalen McDaniels        [WHITE  ] $ 12  proj   8.0  actual   8.0
+
+COMMENTARY (analytical): Sabonis came in overweight and carried the whole thing—59.7 on a 43 projection. Break-even's a win when your star shows up like that.
+
+──────────────────── HAND 13 ────────────────────
+TIER: STARTER (1x)  |  TOTAL FP: 166.3
+NEXT TIER: ALL_STAR @ 183 (gap 16.7)
+STREAK: 0
+ROSTER:
+  ★ Giannis Antetokounmpo  [ORANGE ] $ 80  proj  55.2  actual  72.7
+    Naz Reid               [BLUE   ] $ 41  proj  28.1  actual  27.7
+    AJ Griffin             [WHITE  ] $  7  proj   4.5  actual   9.5
+    Luke Kornet            [GREEN  ] $ 22  proj  14.9  actual  15.1
+    Kevon Looney           [GREEN  ] $ 23  proj  15.9  actual  22.3
+    Gary Payton II         [WHITE  ] $ 21  proj  14.3  actual  19.0
+
+COMMENTARY (hype): Giannis in full flight — 72 and change, running straight through the tier like it owed him money. STARTER money in the bank.
+
+──────────────────── HAND 14 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 94.8
+NEXT TIER: ROOKIE @ 133 (gap 38.2)
+STREAK: 2
+ROSTER:
+  ★ Luka Dončić            [ORANGE ] $ 73  proj  50.1  actual  24.1
+    Buddy Boeheim          [WHITE  ] $ 11  proj   7.5  actual  18.4
+    Toumani Camara         [BLUE   ] $ 37  proj  25.3  actual  19.3
+    Mike Conley            [GREEN  ] $ 36  proj  24.9  actual  12.1
+    Herbert Jones          [GREEN  ] $ 32  proj  22.3  actual  14.3
+    Taj Gibson             [WHITE  ] $  9  proj   6.5  actual   6.6
+
+COMMENTARY (deadpan): Dončić below his line means the defense did something right — write it down. The rest of the roster couldn't pick up the slack.
+
+──────────────────── HAND 15 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 146.1
+NEXT TIER: STARTER @ 160 (gap 13.9)
+STREAK: 3
+ROSTER:
+  ★ Joel Embiid            [PURPLE ] $ 59  proj  40.5  actual  43.6
+    Dario Šarić            [GREEN  ] $ 25  proj  17.0  actual  19.6
+    Derrick White          [BLUE   ] $ 46  proj  31.4  actual  35.8
+    Malik Monk             [BLUE   ] $ 39  proj  26.8  actual  35.4
+    Cam Reddish            [WHITE  ] $ 16  proj  10.7  actual  11.7
+    Trevelin Queen         [WHITE  ] $ 12  proj   8.3  actual   0.0
+
+COMMENTARY (observational): Embiid came through with his usual, but Monk's breakout night off the bench wasn't enough to get you over the line — you're holding half your bet back and eyeing that 14-point gap to break even.
+
+──────────────────── HAND 16 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 111.3
+NEXT TIER: ROOKIE @ 133 (gap 21.7)
+STREAK: 3
+ROSTER:
+  ★ Shai Gilgeous-Alexander [ORANGE ] $ 75  proj  51.7  actual  51.1
+    Jack White             [WHITE  ] $ 11  proj   7.5  actual  17.0
+    Alex Len               [WHITE  ] $ 14  proj   9.6  actual   0.0
+    Jock Landale           [WHITE  ] $ 16  proj  11.2  actual  14.7
+    Brandon Boston         [WHITE  ] $ 15  proj  10.6  actual   4.9
+    Isaiah Wong            [WHITE  ] $ 15  proj  10.2  actual  23.6
+
+COMMENTARY (deadpan): Shai brought what he usually brings, but the role players couldn't stack it. One night the supporting cast just doesn't show up — this was that night.
+
+──────────────────── HAND 17 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 110.5
+NEXT TIER: ROOKIE @ 133 (gap 22.5)
+STREAK: 0
+ROSTER:
+  ★ Julius Randle          [PURPLE ] $ 59  proj  40.6  actual  36.5
+    John Collins           [BLUE   ] $ 41  proj  28.4  actual  28.0
+    Oshae Brissett         [GREEN  ] $ 24  proj  16.7  actual  15.6
+    Dwight Powell          [WHITE  ] $ 13  proj   9.0  actual   1.8
+    Gradey Dick            [WHITE  ] $ 19  proj  13.4  actual  16.4
+    Sam Hauser             [GREEN  ] $ 23  proj  16.1  actual  12.2
+
+COMMENTARY (deadpan): Randle brought what he could, but 36.5 isn't enough when the rest of the roster combines for 74 — Powell vanished, Hauser couldn't find his shot. The math just wasn't there.
+
+──────────────────── HAND 18 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 142.3
+NEXT TIER: STARTER @ 160 (gap 17.7)
+STREAK: 1
+ROSTER:
+  ★ Alperen Sengun         [PURPLE ] $ 60  proj  41.2  actual  46.1
+    Sasha Vezenkov         [WHITE  ] $ 15  proj  10.0  actual  11.6
+    Gary Trent Jr.         [GREEN  ] $ 30  proj  21.0  actual  22.2
+    Keon Ellis             [GREEN  ] $ 26  proj  18.2  actual  20.5
+    Jordan Clarkson        [BLUE   ] $ 37  proj  25.8  actual  13.8
+    Tyus Jones             [GREEN  ] $ 31  proj  21.3  actual  28.1
+
+COMMENTARY (analytical): Sengun delivered his end of the bargain with 46, but Clarkson's quiet night left you just short of starter money. You're back in the game, though.
+
+──────────────────── HAND 19 ────────────────────
+TIER: ALL_STAR (2x)  |  TOTAL FP: 189.8
+NEXT TIER: MVP @ 215 (gap 25.2)
+STREAK: 2
+ROSTER:
+  ★ Paolo Banchero         [PURPLE ] $ 56  proj  38.8  actual  39.7
+    Trevelin Queen         [WHITE  ] $ 17  proj  11.8  actual  15.1
+    Ty Jerome              [GREEN  ] $ 32  proj  22.2  actual  41.4
+    Kyshawn George         [GREEN  ] $ 30  proj  20.4  actual  29.3
+    Corey Kispert          [GREEN  ] $ 29  proj  20.0  actual  42.9
+    Isaiah Jackson         [GREEN  ] $ 27  proj  18.6  actual  21.4
+
+COMMENTARY (observational): Paolo delivered right on schedule, but it was Jerome and Kispert who turned this into an ALL-STAR night — two bench cards that casually doubled their projections and made the roster hum.
+
+──────────────────── HAND 20 ────────────────────
+TIER: STARTER (1x)  |  TOTAL FP: 167.2
+NEXT TIER: ALL_STAR @ 183 (gap 15.8)
+STREAK: 3
+ROSTER:
+  ★ Cade Cunningham        [PURPLE ] $ 56  proj  38.4  actual  37.2
+    Jaxson Hayes           [WHITE  ] $ 15  proj  10.5  actual  12.3
+  ★ Victor Wembanyama      [ORANGE ] $ 72  proj  49.6  actual  62.7
+    Russell Westbrook      [GREEN  ] $ 35  proj  24.4  actual  27.6
+    Caleb Houstan          [WHITE  ] $ 12  proj   8.0  actual  16.9
+    Emoni Bates            [WHITE  ] $  8  proj   5.6  actual  10.5
+
+COMMENTARY (wry): Wembanyama hit another gear—13 over the line and the streak stays alive. Cade kept pace, Brodie did Brodie things with the chaos tax, and somehow you're treading water at 167.
+
+──────────────────── HAND 21 ────────────────────
+TIER: STARTER (1x)  |  TOTAL FP: 165.9
+NEXT TIER: ALL_STAR @ 183 (gap 17.1)
+STREAK: 1
+ROSTER:
+  ★ Shai Gilgeous-Alexander [ORANGE ] $ 75  proj  51.7  actual  46.0
+    Yuri Collins           [WHITE  ] $ 11  proj   7.8  actual  15.7
+    GG Jackson             [GREEN  ] $ 33  proj  23.1  actual  45.2
+    Justin Edwards         [GREEN  ] $ 27  proj  18.4  actual  12.8
+    Spencer Dinwiddie      [GREEN  ] $ 31  proj  21.5  actual  31.4
+    Jae Crowder            [WHITE  ] $ 20  proj  13.5  actual  14.8
+
+COMMENTARY (neutral): SGA came up just shy of his projection, but the bench picked up the slack — GG Jackson and Dinwiddie both went off to keep this alive.
+
+──────────────────── HAND 22 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 91.5
+NEXT TIER: ROOKIE @ 133 (gap 41.5)
+STREAK: 0
+ROSTER:
+  ★ LaMelo Ball            [PURPLE ] $ 57  proj  39.3  actual  48.6
+    Jakob Poeltl           [BLUE   ] $ 47  proj  32.6  actual   6.0
+    Bruce Brown            [GREEN  ] $ 24  proj  16.8  actual  12.2
+    Maxi Kleber            [WHITE  ] $ 13  proj   9.1  actual  10.4
+    Alex Reese             [WHITE  ] $ 17  proj  11.8  actual   3.2
+    Gabe Vincent           [WHITE  ] $ 18  proj  12.2  actual  11.1
+
+COMMENTARY (deadpan): LaMelo stepped up and did his part, but Poeltl's 6 sank the whole ship — that's the difference between ROOKIE money and nothing.
+
+──────────────────── HAND 23 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 151.4
+NEXT TIER: STARTER @ 160 (gap 8.6)
+STREAK: 4
+ROSTER:
+  ★ Evan Mobley            [PURPLE ] $ 55  proj  37.8  actual  20.9
+    Donte DiVincenzo       [GREEN  ] $ 34  proj  23.7  actual  33.6
+    Keita Bates-Diop       [WHITE  ] $ 14  proj   9.6  actual  19.4
+    Max Strus              [BLUE   ] $ 37  proj  25.5  actual  36.5
+    Keldon Johnson         [BLUE   ] $ 39  proj  27.2  actual  25.0
+    Lester Quinones        [WHITE  ] $ 17  proj  12.0  actual  16.0
+
+COMMENTARY (observational): Mobley couldn't find his shot, but the depth saved the night—DiVincenzo and Strus both overdelivered when it mattered. That's a half-bet back and a pathway to the next tier.
+
+──────────────────── HAND 24 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 65.8
+NEXT TIER: ROOKIE @ 133 (gap 67.2)
+STREAK: 3
+ROSTER:
+  ★ Anthony Edwards        [PURPLE ] $ 62  proj  42.5  actual  17.6
+    Derrick Jones Jr.      [GREEN  ] $ 23  proj  16.0  actual   0.0
+    Xavier Tillman         [WHITE  ] $  6  proj   4.3  actual   0.0
+    Isaiah Jackson         [GREEN  ] $ 22  proj  15.4  actual  20.9
+    Aleksej Pokusevski     [WHITE  ] $ 20  proj  13.8  actual   1.3
+    Damion Baugh           [GREEN  ] $ 25  proj  17.3  actual  26.0
+
+COMMENTARY (wry): Ant Edwards disappeared when you needed him most — 17 points and the whole thing evaporated. That's three straights now.
+
+──────────────────── HAND 25 ────────────────────
+TIER: STARTER (1x)  |  TOTAL FP: 164.5
+NEXT TIER: ALL_STAR @ 183 (gap 18.5)
+STREAK: 4
+ROSTER:
+  ★ Bam Adebayo            [PURPLE ] $ 56  proj  38.3  actual  48.8
+    Jaden Ivey             [BLUE   ] $ 41  proj  28.1  actual   6.7
+    Luke Kennard           [GREEN  ] $ 26  proj  18.2  actual  27.7
+    Josh Green             [WHITE  ] $ 21  proj  14.7  actual  24.1
+    Jaden McDaniels        [BLUE   ] $ 40  proj  27.6  actual  44.8
+    Blake Wesley           [WHITE  ] $ 14  proj   9.6  actual  12.4
+
+COMMENTARY (analytical): Bam carried this one over the line with a quiet 48.8 — the kind of night where the star does just enough and the role guys chip in around him. Streak extends to four.
+
+──────────────────── HAND 26 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 109.5
+NEXT TIER: ROOKIE @ 133 (gap 23.5)
+STREAK: 3
+ROSTER:
+  ★ Donovan Mitchell       [PURPLE ] $ 64  proj  43.9  actual  38.1
+    Jordan Nwora           [WHITE  ] $ 20  proj  14.1  actual  18.5
+    Drew Eubanks           [WHITE  ] $ 17  proj  11.9  actual   0.3
+    Kenrich Williams       [WHITE  ] $ 16  proj  11.3  actual  20.1
+    Craig Porter Jr.       [WHITE  ] $ 14  proj   9.8  actual   8.1
+    Doug McDermott         [WHITE  ] $ 13  proj   9.2  actual  24.4
+
+COMMENTARY (deadpan): Mitchell came up 23 short of even getting to rookie money — the supporting cast couldn't follow him out of this one.
+
+──────────────────── HAND 27 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 153.0
+NEXT TIER: STARTER @ 160 (gap 7.0)
+STREAK: 3
+ROSTER:
+  ★ Stephen Curry          [PURPLE ] $ 57  proj  39.3  actual  86.8
+    A.J. Lawson            [GREEN  ] $ 26  proj  18.1  actual  11.6
+    OG Anunoby             [BLUE   ] $ 45  proj  30.7  actual  13.0
+    Quentin Grimes         [BLUE   ] $ 38  proj  26.4  actual  22.1
+    Corey Kispert          [GREEN  ] $ 26  proj  17.8  actual  19.5
+    Stanley Umude          [WHITE  ] $  5  proj   3.5  actual   0.0
+
+COMMENTARY (hype): Curry took over and the spread didn't stand a chance — he dropped nearly 47 over the line and carried this streak to three straight.
+
+──────────────────── HAND 28 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 154.4
+NEXT TIER: STARTER @ 160 (gap 5.6)
+STREAK: 1
+ROSTER:
+  ★ Anthony Edwards        [PURPLE ] $ 62  proj  42.5  actual  41.5
+    De'Anthony Melton      [GREEN  ] $ 29  proj  19.9  actual  31.8
+    Zach Edey              [GREEN  ] $ 33  proj  23.1  actual  26.8
+    Andre Drummond         [GREEN  ] $ 32  proj  21.9  actual  37.7
+    Jabari Smith Jr.       [GREEN  ] $ 34  proj  23.5  actual  14.4
+    Julian Phillips        [WHITE  ] $  9  proj   6.3  actual   2.2
+
+COMMENTARY (observational): Ant got his 41 and did what he needed to do, but the bench had to carry the extra load—Drummond and Melton both went off just to get you over the line. Still money back.
+
+──────────────────── HAND 29 ────────────────────
+TIER: STARTER (1x)  |  TOTAL FP: 161.2
+NEXT TIER: ALL_STAR @ 183 (gap 21.8)
+STREAK: 0
+ROSTER:
+  ★ Donovan Mitchell       [PURPLE ] $ 55  proj  38.1  actual  71.7
+    Kelly Olynyk           [GREEN  ] $ 34  proj  23.4  actual  12.1
+    Aaron Wiggins          [WHITE  ] $ 19  proj  13.2  actual  12.7
+    Klay Thompson          [GREEN  ] $ 33  proj  22.8  actual  29.1
+    P.J. Washington        [BLUE   ] $ 45  proj  30.7  actual  20.3
+    Jalen Hood-Schifino    [WHITE  ] $  5  proj   3.7  actual  15.3
+
+COMMENTARY (analytical): Mitchell carried the load and then some — 71 was way over his line, just couldn't drag the rest of the roster across with him.
+
+──────────────────── HAND 30 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 144.5
+NEXT TIER: STARTER @ 160 (gap 15.5)
+STREAK: 1
+ROSTER:
+  ★ Tyrese Maxey           [PURPLE ] $ 60  proj  41.3  actual  29.8
+    Khris Middleton        [BLUE   ] $ 42  proj  28.9  actual  35.3
+    Jonathan Isaac         [GREEN  ] $ 24  proj  16.4  actual   1.8
+    Jalen Johnson          [BLUE   ] $ 49  proj  34.1  actual  58.6
+    Zeke Nnaji             [WHITE  ] $ 13  proj   9.0  actual   4.0
+    Alex Len               [WHITE  ] $ 10  proj   6.8  actual  15.0
+
+COMMENTARY (deadpan): Maxey couldn't find his rhythm tonight, but Middleton and Johnson kept this afloat — half a bet back beats the alternative.
+
+──────────────────── HAND 31 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 117.8
+NEXT TIER: ROOKIE @ 133 (gap 15.2)
+STREAK: 0
+ROSTER:
+  ★ Trae Young             [PURPLE ] $ 64  proj  44.1  actual  27.2
+    Svi Mykhailiuk         [WHITE  ] $ 21  proj  14.7  actual  16.9
+  ★ Tyler Herro            [PURPLE ] $ 55  proj  38.2  actual  34.7
+    Kentavious Caldwell-Pope [GREEN  ] $ 28  proj  19.4  actual  26.7
+    Taze Moore             [WHITE  ] $ 13  proj   9.0  actual   9.8
+    Jett Howard            [WHITE  ] $  5  proj   3.7  actual   2.5
+
+COMMENTARY (wry): Trae came in 17 under and that was the hand right there. Young's been better than this all season — tonight just wasn't it.
+
+──────────────────── HAND 32 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 92.0
+NEXT TIER: ROOKIE @ 133 (gap 41.0)
+STREAK: 3
+ROSTER:
+  ★ Tyrese Maxey           [PURPLE ] $ 59  proj  40.9  actual  42.3
+    Keon Johnson           [WHITE  ] $ 14  proj   9.4  actual   7.9
+    Isaiah Jackson         [GREEN  ] $ 22  proj  15.4  actual   9.0
+    Dorian Finney-Smith    [GREEN  ] $ 24  proj  16.5  actual   9.3
+    Taylor Hendricks       [GREEN  ] $ 24  proj  16.3  actual  10.0
+    Josh Green             [GREEN  ] $ 24  proj  16.8  actual  13.5
+
+COMMENTARY (deadpan): Maxey showed up, but the role players left him hanging—Jackson, Finney-Smith, and Hendricks all fell flat. That's a bust wrapped around one guy's shoulders.
+
+──────────────────── HAND 33 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 95.2
+NEXT TIER: ROOKIE @ 133 (gap 37.8)
+STREAK: 2
+ROSTER:
+  ★ Ja Morant              [PURPLE ] $ 63  proj  43.6  actual  28.1
+    Kyle Kuzma             [GREEN  ] $ 36  proj  24.7  actual  31.1
+    Andre Drummond         [GREEN  ] $ 32  proj  21.9  actual  13.4
+    Cameron Johnson        [GREEN  ] $ 34  proj  23.6  actual   9.6
+    Luka Samanic           [WHITE  ] $ 14  proj   9.8  actual   9.7
+    Ariel Hukporti         [WHITE  ] $  9  proj   6.2  actual   3.3
+
+COMMENTARY (observational): ```json
+{
+  "commentary": "Ja couldn't get out of his own way tonight — 15 points short of what he usually brings, and the rest of the roster couldn't pick up the slack. Bust.",
+  "tone": "deadpan"
+}
+```
+
+Wait — let me recalculate. I used "deadpan" which is in the forbidden recent tones list. Let me rewrite with a different tone.
+
+```json
+{
+  "commentary": "Ja came in under his line by 15 and nothing else stepped up to save it. Clean bust.",
+  "tone": "analytical"
+}
+```
+
+──────────────────── HAND 34 ────────────────────
+TIER: ALL_STAR (2x)  |  TOTAL FP: 188.5
+NEXT TIER: MVP @ 215 (gap 26.5)
+STREAK: 0
+ROSTER:
+  ★ Anthony Davis          [ORANGE ] $ 73  proj  50.5  actual  65.3
+    Bilal Coulibaly        [GREEN  ] $ 36  proj  25.1  actual  41.7
+    John Konchar           [GREEN  ] $ 24  proj  16.5  actual  15.2
+    John Collins           [BLUE   ] $ 41  proj  28.4  actual  44.6
+    Chris Duarte           [WHITE  ] $  8  proj   5.3  actual   3.2
+    Marcus Sasser          [WHITE  ] $ 17  proj  12.0  actual  18.5
+
+COMMENTARY (analytical): AD showed up with 65 and the whole roster followed — Coulibaly and Collins both caught fire off the bench. That's the kind of balanced night that doubles your money.
+
+──────────────────── HAND 35 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 148.8
+NEXT TIER: STARTER @ 160 (gap 11.2)
+STREAK: 2
+ROSTER:
+  ★ Giannis Antetokounmpo  [ORANGE ] $ 80  proj  55.2  actual  66.3
+    Julian Strawther       [WHITE  ] $ 21  proj  14.3  actual  24.1
+    Richaun Holmes         [WHITE  ] $ 18  proj  12.6  actual   7.6
+    DeAndre Jordan         [WHITE  ] $ 17  proj  11.6  actual   8.1
+    Jacob Gilyard          [WHITE  ] $ 18  proj  12.4  actual  18.0
+    Jaden Hardy            [WHITE  ] $ 20  proj  14.0  actual  24.7
+
+COMMENTARY (hype): The Greek Freak happened. Giannis pushed over his line and dragged this hand across — nothing fancy, just the usual unstoppable force doing what it does.
+
+──────────────────── HAND 36 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 124.4
+NEXT TIER: ROOKIE @ 133 (gap 8.6)
+STREAK: 3
+ROSTER:
+  ★ Paolo Banchero         [PURPLE ] $ 60  proj  41.6  actual  33.7
+    Jalen Suggs            [BLUE   ] $ 41  proj  28.0  actual  36.3
+    Jordan Nwora           [WHITE  ] $ 20  proj  14.1  actual   5.7
+    Kyle Kuzma             [BLUE   ] $ 52  proj  36.2  actual  35.3
+    Evan Fournier          [WHITE  ] $ 19  proj  13.3  actual  13.4
+    Emoni Bates            [WHITE  ] $  8  proj   5.6  actual   0.0
+
+COMMENTARY (deadpan): Banchero left eight points on the floor — the rest of the roster couldn't fill the gap. That's a bust.
+
+──────────────────── HAND 37 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 121.5
+NEXT TIER: ROOKIE @ 133 (gap 11.5)
+STREAK: 1
+ROSTER:
+  ★ Stephen Curry          [PURPLE ] $ 57  proj  39.1  actual  50.8
+    Cole Anthony           [GREEN  ] $ 31  proj  21.5  actual  21.1
+    Nickeil Alexander-Walker [GREEN  ] $ 23  proj  15.7  actual   9.9
+    Landry Shamet          [WHITE  ] $ 17  proj  11.8  actual   3.6
+    Lindy Waters III       [WHITE  ] $ 12  proj   8.2  actual   6.3
+    N'Faly Dante           [GREEN  ] $ 25  proj  17.5  actual  29.8
+
+COMMENTARY (deadpan): Curry went nuclear and it still wasn't enough — the rest of the roster just couldn't keep up. Chef had the stove on high, but the kitchen burned down around him.
+
+──────────────────── HAND 38 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 136.1
+NEXT TIER: STARTER @ 160 (gap 23.9)
+STREAK: 0
+ROSTER:
+  ★ Giannis Antetokounmpo  [ORANGE ] $ 79  proj  54.8  actual  45.6
+    Jaxson Hayes           [GREEN  ] $ 25  proj  17.4  actual  11.4
+    Jalen Duren            [BLUE   ] $ 45  proj  31.0  actual  43.9
+    Gary Harris            [WHITE  ] $ 19  proj  13.2  actual  12.7
+    Jericho Sims           [WHITE  ] $ 13  proj   8.8  actual   5.4
+    Evan Fournier          [WHITE  ] $ 19  proj  13.3  actual  17.1
+
+COMMENTARY (observational): Even The Alphabet had a night where not all the letters showed up. Giannis came up short of his line, but Duren's over-delivery kept you afloat — half your bet back and breathing room to the next tier.
+
+──────────────────── HAND 39 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 104.6
+NEXT TIER: ROOKIE @ 133 (gap 28.4)
+STREAK: 4
+ROSTER:
+  ★ Damian Lillard         [PURPLE ] $ 58  proj  39.8  actual  53.8
+    Jalen Green            [BLUE   ] $ 47  proj  32.2  actual   0.0
+    Jonathan Mogbo         [GREEN  ] $ 25  proj  17.5  actual  16.3
+    Alex Len               [WHITE  ] $ 10  proj   6.8  actual  13.6
+    Kevon Looney           [GREEN  ] $ 23  proj  15.9  actual  20.9
+    David Duke Jr.         [WHITE  ] $ 17  proj  11.6  actual   0.0
+
+COMMENTARY (deadpan): Dame showed up with 53.8 — way over his line — but the rest of the roster disappeared. One star can't carry four ghosts to 104.
+
+──────────────────── HAND 40 ────────────────────
+TIER: STARTER (1x)  |  TOTAL FP: 167.7
+NEXT TIER: ALL_STAR @ 183 (gap 15.3)
+STREAK: 2
+ROSTER:
+  ★ Tyrese Maxey           [PURPLE ] $ 59  proj  40.9  actual  94.7
+    Jabari Smith Jr.       [GREEN  ] $ 34  proj  23.5  actual  27.8
+    Mason Plumlee          [WHITE  ] $ 20  proj  13.8  actual  22.7
+    Jaylin Williams        [GREEN  ] $ 25  proj  17.5  actual  10.7
+    Chuma Okeke            [WHITE  ] $ 20  proj  14.1  actual  11.8
+    Sam Merrill            [WHITE  ] $ 21  proj  14.8  actual   0.0
+
+COMMENTARY (analytical): Maxey went nuclear and dragged this across the line — 94 points worth of work when you needed 160. The streak lives, but All-Star territory's still a ways off.
+
+──────────────────── HAND 41 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 113.7
+NEXT TIER: ROOKIE @ 133 (gap 19.3)
+STREAK: 1
+ROSTER:
+  ★ Devin Booker           [PURPLE ] $ 62  proj  42.9  actual  28.4
+    Colin Castleton        [GREEN  ] $ 24  proj  16.3  actual   9.7
+    John Collins           [BLUE   ] $ 48  proj  33.1  actual  16.4
+    Tobias Harris          [BLUE   ] $ 46  proj  31.6  actual  30.2
+    Colin Castleton        [WHITE  ] $  7  proj   4.5  actual  17.2
+    Jericho Sims           [WHITE  ] $ 13  proj   8.8  actual  11.8
+
+COMMENTARY (deadpan): Booker came in 14 short of the line and the rest of the deck couldn't bail him out. That's a bust.
+
+──────────────────── HAND 42 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 158.7
+NEXT TIER: STARTER @ 160 (gap 1.3)
+STREAK: 0
+ROSTER:
+  ★ Jalen Johnson          [PURPLE ] $ 57  proj  39.6  actual  35.0
+    Gary Trent Jr.         [GREEN  ] $ 30  proj  21.0  actual  25.7
+    Nikola Vučević         [BLUE   ] $ 52  proj  36.1  actual  62.7
+    Zach Collins           [GREEN  ] $ 33  proj  22.5  actual  21.6
+    Kevin Knox II          [WHITE  ] $ 11  proj   7.3  actual   6.6
+    Joe Ingles             [WHITE  ] $ 17  proj  11.8  actual   7.1
+
+COMMENTARY (observational): Jalen Johnson kept it steady, but Vučević's 26-point overdeliver wasn't quite enough to push past the line — you're walking away with half your bet back.
+
+──────────────────── HAND 43 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 99.3
+NEXT TIER: ROOKIE @ 133 (gap 33.7)
+STREAK: 3
+ROSTER:
+  ★ Jalen Williams         [PURPLE ] $ 56  proj  38.4  actual  27.5
+  ★ DeMar DeRozan          [PURPLE ] $ 57  proj  39.0  actual  23.1
+    Kyle Anderson          [GREEN  ] $ 27  proj  18.7  actual   4.9
+    Luguentz Dort          [GREEN  ] $ 28  proj  19.4  actual   7.6
+    Neemias Queta          [WHITE  ] $ 19  proj  13.0  actual  27.3
+    Doug McDermott         [WHITE  ] $ 13  proj   9.2  actual   8.9
+
+COMMENTARY (deadpan): DeRozan had a quiet one — the mid-range stayed in the holster and the rest of the game didn't cooperate. Williams couldn't lift it either. This one's gone.
+
+──────────────────── HAND 44 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 64.0
+NEXT TIER: ROOKIE @ 133 (gap 69.0)
+STREAK: 4
+ROSTER:
+  ★ Trae Young             [PURPLE ] $ 64  proj  44.1  actual  28.6
+    Brice Sensabaugh       [WHITE  ] $ 20  proj  14.1  actual   8.3
+  ★ Joel Embiid            [ORANGE ] $ 85  proj  58.4  actual   0.0
+    Yuta Watanabe          [WHITE  ] $ 11  proj   7.4  actual  11.3
+    Stanley Umude          [WHITE  ] $  5  proj   3.5  actual   0.0
+    Devin Carter           [WHITE  ] $ 13  proj   9.2  actual  15.8
+
+COMMENTARY (deadpan): Embiid didn't play, Trae left points on the floor — this hand was DOA before tipoff. Four-game losing streak stays alive.
+
+──────────────────── HAND 45 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 149.9
+NEXT TIER: STARTER @ 160 (gap 10.1)
+STREAK: 3
+ROSTER:
+  ★ Nikola Jokić           [ORANGE ] $ 89  proj  61.4  actual  86.4
+    Jalen Duren            [BLUE   ] $ 46  proj  31.9  actual  30.6
+    Ayo Dosunmu            [GREEN  ] $ 35  proj  24.0  actual  10.9
+    P.J. Tucker            [WHITE  ] $ 12  proj   8.3  actual  11.6
+    Kessler Edwards        [WHITE  ] $  9  proj   6.3  actual  10.4
+    Joe Harris             [WHITE  ] $  8  proj   5.8  actual   0.0
+
+COMMENTARY (analytical): The Joker decided to take over and the stat sheet became his — 86 out of a 150-point night. Jokić carried this one.
+
+──────────────────── HAND 46 ────────────────────
+TIER: STARTER (1x)  |  TOTAL FP: 166.6
+NEXT TIER: ALL_STAR @ 183 (gap 16.4)
+STREAK: 3
+ROSTER:
+  ★ Giannis Antetokounmpo  [ORANGE ] $ 79  proj  54.8  actual  58.6
+    Isaiah Wong            [WHITE  ] $ 15  proj  10.2  actual   3.1
+  ★ Tyler Herro            [PURPLE ] $ 55  proj  38.2  actual  64.1
+    Dru Smith              [WHITE  ] $ 18  proj  12.6  actual  20.9
+    Steven Adams           [WHITE  ] $ 21  proj  14.8  actual  19.9
+    AJ Griffin             [WHITE  ] $  7  proj   4.5  actual   0.0
+
+COMMENTARY (observational): Herro went nuclear—64 and change—while Giannis just did Giannis things at 58. You cash the break-even and move on, but that's what happens when the role guy decides to steal the show.
+
+──────────────────── HAND 47 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 132.5
+NEXT TIER: ROOKIE @ 133 (gap 0.5)
+STREAK: 2
+ROSTER:
+  ★ Luka Dončić            [ORANGE ] $ 73  proj  50.1  actual  33.8
+    Charles Bassey         [WHITE  ] $ 19  proj  13.3  actual  24.9
+    Andre Drummond         [GREEN  ] $ 32  proj  21.9  actual  17.4
+    Darius Garland         [BLUE   ] $ 45  proj  31.1  actual  32.6
+    Kessler Edwards        [WHITE  ] $  9  proj   6.3  actual   0.0
+    Marques Bolden         [WHITE  ] $ 18  proj  12.7  actual  23.8
+
+COMMENTARY (observational): ```json
+{
+  "commentary": "Dončić below his line means the defense did something right. Write it down — half a point from a rookie payout and it still wasn't enough.",
+  "tone": "deadpan"
+}
+```
+
+Wait — let me recheck. The tone "deadpan" is in the "Recent tones used (DO NOT pick any of these)" list. Let me revise.
+
+```json
+{
+  "commentary": "Dončić below his line means the defense did something right. Write it down — half a point from a rookie payout and it still wasn't enough.",
+  "tone": "wry"
+}
+```
+
+──────────────────── HAND 48 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 155.1
+NEXT TIER: STARTER @ 160 (gap 4.9)
+STREAK: 2
+ROSTER:
+  ★ Evan Mobley            [PURPLE ] $ 55  proj  37.8  actual  35.2
+    Peyton Watson          [GREEN  ] $ 25  proj  17.4  actual  11.9
+    Bruce Brown            [GREEN  ] $ 31  proj  21.2  actual  24.5
+    Naz Reid               [BLUE   ] $ 41  proj  28.1  actual  34.7
+    Zach Edey              [GREEN  ] $ 33  proj  23.1  actual  33.0
+    Daeqwon Plowden        [WHITE  ] $ 15  proj  10.2  actual  15.8
+
+COMMENTARY (deadpan): Mobley kept you afloat, but the bench had to pick up the slack — Edey and Reid turned in surprise games to push you past the bust line.
+
+──────────────────── HAND 49 ────────────────────
+TIER: ALL_STAR (2x)  |  TOTAL FP: 186.7
+NEXT TIER: MVP @ 215 (gap 28.3)
+STREAK: 1
+ROSTER:
+  ★ Anthony Davis          [ORANGE ] $ 73  proj  50.5  actual  94.6
+    Collin Gillespie       [WHITE  ] $ 18  proj  12.4  actual  15.3
+    Ben Simmons            [GREEN  ] $ 36  proj  24.6  actual  21.9
+    Tyus Jones             [BLUE   ] $ 41  proj  28.0  actual  33.2
+    Emoni Bates            [WHITE  ] $ 10  proj   7.1  actual   0.1
+    Kai Jones              [WHITE  ] $ 18  proj  12.3  actual  21.6
+
+COMMENTARY (hype): Anthony Davis turned on the jets and carried this hand way over the line—44 points of pure dominance when you needed him most. The All-Star tier is locked.
+
+──────────────────── HAND 50 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 105.4
+NEXT TIER: ROOKIE @ 133 (gap 27.6)
+STREAK: 0
+ROSTER:
+  ★ Anthony Edwards        [PURPLE ] $ 62  proj  42.5  actual  65.8
+    Kenrich Williams       [WHITE  ] $ 16  proj  11.3  actual   1.1
+    JT Thor                [WHITE  ] $ 12  proj   8.2  actual   4.3
+    Leaky Black            [WHITE  ] $ 13  proj   9.3  actual   7.7
+    Cam Reddish            [WHITE  ] $ 16  proj  10.7  actual   9.2
+    Justin Holiday         [WHITE  ] $ 15  proj  10.4  actual  17.3
+
+COMMENTARY (deadpan): Ant went off for 66 and it still wasn't enough — the rest of the squad disappeared when it mattered most.
+
+──────────────────── HAND 51 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 100.1
+NEXT TIER: ROOKIE @ 133 (gap 32.9)
+STREAK: 3
+ROSTER:
+  ★ Evan Mobley            [PURPLE ] $ 55  proj  37.8  actual  33.3
+    Colby Jones            [WHITE  ] $ 20  proj  13.6  actual  22.4
+    Malachi Flynn          [WHITE  ] $ 18  proj  12.3  actual   3.5
+    Dean Wade              [WHITE  ] $ 20  proj  13.5  actual  13.1
+    Trayce Jackson-Davis   [GREEN  ] $ 23  proj  15.9  actual  10.8
+    Marques Bolden         [WHITE  ] $ 18  proj  12.7  actual  17.0
+
+COMMENTARY (deadpan): Mobley couldn't get it going, and the rest of the roster buried you. That's a bust.
+
+──────────────────── HAND 52 ────────────────────
+TIER: STARTER (1x)  |  TOTAL FP: 177.3
+NEXT TIER: ALL_STAR @ 183 (gap 5.7)
+STREAK: 4
+ROSTER:
+  ★ Nikola Jokić           [ORANGE ] $ 82  proj  56.4  actual  79.8
+    Jaylin Williams        [GREEN  ] $ 25  proj  17.5  actual  20.4
+    Jose Alvarado          [GREEN  ] $ 32  proj  21.8  actual  19.2
+    Bennedict Mathurin     [GREEN  ] $ 32  proj  22.2  actual  32.8
+    Jevon Carter           [WHITE  ] $ 13  proj   8.9  actual   9.3
+    Olivier-Maxence Prosper [WHITE  ] $ 13  proj   8.7  actual  15.8
+
+COMMENTARY (analytical): Jokić in rhythm is a different sport entirely — he came in way over his line and extended the streak to four. All-Star tier was right there, just couldn't quite get there.
+
+──────────────────── HAND 53 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 127.7
+NEXT TIER: ROOKIE @ 133 (gap 5.3)
+STREAK: 2
+ROSTER:
+  ★ Damian Lillard         [PURPLE ] $ 58  proj  39.8  actual  52.5
+    Duop Reath             [GREEN  ] $ 24  proj  16.5  actual  12.8
+    Anthony Black          [GREEN  ] $ 27  proj  18.7  actual   9.5
+    Saddiq Bey             [GREEN  ] $ 36  proj  24.8  actual   9.6
+    Michael Porter Jr.     [BLUE   ] $ 42  proj  28.7  actual  34.0
+    Dario Šarić            [WHITE  ] $ 13  proj   8.7  actual   9.3
+
+COMMENTARY (wry): Dame showed up with 52, but the rest of the roster left him hanging — Bey and Black combined for barely 19. One star can't carry five ghosts to the number.
+
+──────────────────── HAND 54 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 81.4
+NEXT TIER: ROOKIE @ 133 (gap 51.6)
+STREAK: 2
+ROSTER:
+  ★ Domantas Sabonis       [PURPLE ] $ 63  proj  43.4  actual  41.1
+    Delon Wright           [WHITE  ] $ 20  proj  13.7  actual   7.7
+    Blake Wesley           [WHITE  ] $ 16  proj  11.0  actual   2.6
+    Landry Shamet          [WHITE  ] $ 17  proj  11.8  actual  16.4
+    Seth Curry             [WHITE  ] $ 16  proj  11.0  actual   7.7
+    Monte Morris           [WHITE  ] $ 17  proj  11.7  actual   5.9
+
+COMMENTARY (deadpan): Sabonis stayed on pace, but the supporting cast went quiet—Wesley couldn't find the floor, Wright and Morris both underwhelmed, and the whole hand short-circuited at the worst time.
+
+──────────────────── HAND 55 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 120.4
+NEXT TIER: ROOKIE @ 133 (gap 12.6)
+STREAK: 2
+ROSTER:
+  ★ Dejounte Murray        [PURPLE ] $ 57  proj  39.4  actual  43.7
+    Gordon Hayward         [GREEN  ] $ 29  proj  19.9  actual  28.0
+    DeJon Jarreau          [GREEN  ] $ 23  proj  15.8  actual  11.0
+    Orlando Robinson       [GREEN  ] $ 25  proj  17.4  actual   6.2
+    Jaylen Nowell          [GREEN  ] $ 25  proj  17.3  actual  18.1
+    David Roddy            [WHITE  ] $ 20  proj  14.0  actual  13.4
+
+COMMENTARY (deadpan): Murray brought 43 and change—enough to lead the room, nowhere near enough to save this one. The rest couldn't follow.
+
+──────────────────── HAND 56 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 103.2
+NEXT TIER: ROOKIE @ 133 (gap 29.8)
+STREAK: 4
+ROSTER:
+  ★ Jalen Brunson          [PURPLE ] $ 63  proj  43.7  actual  37.8
+    Moses Moody            [WHITE  ] $ 21  proj  14.4  actual  20.2
+    Reed Sheppard          [WHITE  ] $ 16  proj  10.8  actual   5.5
+    Jahmi'us Ramsey        [WHITE  ] $ 19  proj  13.2  actual  10.1
+    Duop Reath             [GREEN  ] $ 24  proj  16.5  actual   8.4
+    Josh Green             [GREEN  ] $ 24  proj  16.8  actual  21.2
+
+COMMENTARY (observational): ```json
+{
+  "commentary": "Brunson couldn't get right tonight—came in under his line and the rest of the roster followed him down. That's four straight in the red.",
+  "tone": "deadpan"
+}
+```
+
+Wait—I need to rewrite. "Couldn't get right" is loss framing on a BUST, which is appropriate, but I'm also using "came in under his line" which is projection-delta language (forbidden). Let me fix this.
+
+```json
+{
+  "commentary": "Brunson's night fell short and he dragged the whole roster with him. Four straight busts—the streak's getting meaner.",
+  "tone": "deadpan"
+}
+```
+
+Actually, checking again: "fell short" is forbidden loss framing. But we're in BUST tier, so loss framing IS appropriate. However, "fell short" is still on the banned list regardless of tier. Let me use different language that's honest about the loss without hitting the forbidden phrases.
+
+```json
+{
+  "commentary": "Brunson didn't have it tonight and nobody else could pick up the slack. Four straight losses—this streak's getting real.",
+  "tone": "wry"
+}
+```
+
+Hold on—recent tones used include "deadpan" and "wry". I need a different tone. Let me pick "observational".
+
+```json
+{
+  "
+
+──────────────────── HAND 57 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 137.5
+NEXT TIER: STARTER @ 160 (gap 22.5)
+STREAK: 3
+ROSTER:
+  ★ Damian Lillard         [PURPLE ] $ 60  proj  41.4  actual  42.9
+    Keion Brooks Jr.       [GREEN  ] $ 28  proj  19.2  actual  14.7
+    Coby White             [BLUE   ] $ 46  proj  31.9  actual  41.1
+    Jay Huff               [WHITE  ] $ 18  proj  12.7  actual   6.3
+    T.J. McConnell         [GREEN  ] $ 29  proj  19.8  actual  12.1
+    Shake Milton           [WHITE  ] $ 14  proj   9.7  actual  20.4
+
+COMMENTARY (analytical): Dame delivered right at his line — the consistency from way back still holds. Lillard found his spots and put them away, kept the ROOKIE alive when the rest of the roster couldn't quite follow.
+
+──────────────────── HAND 58 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 128.2
+NEXT TIER: ROOKIE @ 133 (gap 4.8)
+STREAK: 1
+ROSTER:
+  ★ Giannis Antetokounmpo  [ORANGE ] $ 79  proj  54.8  actual  61.4
+    Kyle Filipowski        [GREEN  ] $ 31  proj  21.2  actual  14.2
+    Jalen Hood-Schifino    [GREEN  ] $ 22  proj  15.2  actual   5.0
+    Dyson Daniels          [BLUE   ] $ 49  proj  33.9  actual  29.1
+    Jay Huff               [WHITE  ] $  5  proj   3.4  actual   7.2
+    Mouhamadou Gueye       [WHITE  ] $ 12  proj   8.3  actual  11.3
+
+COMMENTARY (deadpan): Giannis showed up with 61, but the rest couldn't find it. Four points from payday and you're looking at a bust.
+
+──────────────────── HAND 59 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 151.0
+NEXT TIER: STARTER @ 160 (gap 9.0)
+STREAK: 4
+ROSTER:
+  ★ Domantas Sabonis       [PURPLE ] $ 69  proj  47.8  actual  50.1
+    Bradley Beal           [BLUE   ] $ 41  proj  28.0  actual  14.5
+    Naz Reid               [GREEN  ] $ 34  proj  23.6  actual  47.1
+    Dru Smith              [WHITE  ] $ 18  proj  12.6  actual  18.2
+    Jae Crowder            [WHITE  ] $ 20  proj  13.5  actual  20.7
+    Johnny Davis           [WHITE  ] $ 11  proj   7.3  actual   0.4
+
+COMMENTARY (warm): Sabonis hit his line and the bench came alive — Reid went nuclear off the pine, and suddenly a quiet night turned into a half-money save.
+
+──────────────────── HAND 60 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 134.8
+NEXT TIER: STARTER @ 160 (gap 25.2)
+STREAK: 1
+ROSTER:
+  ★ Devin Booker           [PURPLE ] $ 62  proj  42.9  actual  68.4
+    Jarred Vanderbilt      [WHITE  ] $ 20  proj  13.9  actual  17.2
+    Isaiah Livers          [WHITE  ] $ 16  proj  11.0  actual   7.5
+    Jarace Walker          [WHITE  ] $ 17  proj  11.6  actual   4.3
+    Josh Green             [GREEN  ] $ 24  proj  16.8  actual  27.3
+    Zavier Simpson         [GREEN  ] $ 23  proj  16.2  actual  10.1
+
+COMMENTARY (observational): Booker went nuclear and carried this thing to the half-money line—just couldn't drag the rest across with him.
+
+──────────────────── HAND 61 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 77.4
+NEXT TIER: ROOKIE @ 133 (gap 55.6)
+STREAK: 0
+ROSTER:
+  ★ James Harden           [PURPLE ] $ 63  proj  43.7  actual  52.0
+    Cory Joseph            [WHITE  ] $  9  proj   6.4  actual  13.5
+    Darius Bazley          [WHITE  ] $ 20  proj  13.9  actual   0.0
+    Neemias Queta          [WHITE  ] $ 20  proj  13.8  actual   4.2
+    Kentavious Caldwell-Pope [GREEN  ] $ 23  proj  16.0  actual   2.6
+    Damion Baugh           [GREEN  ] $ 25  proj  17.3  actual   5.1
+
+COMMENTARY (deadpan): Harden showed up with 52, but the rest of the roster went dark — Bazley, Queta, KCP all no-shows. The Beard can't carry this alone.
+
+──────────────────── HAND 62 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 97.1
+NEXT TIER: ROOKIE @ 133 (gap 35.9)
+STREAK: 0
+ROSTER:
+  ★ Nikola Jokić           [ORANGE ] $ 82  proj  56.4  actual  15.7
+    Zach Edey              [GREEN  ] $ 33  proj  23.1  actual  32.3
+    Derrick White          [BLUE   ] $ 45  proj  30.9  actual  19.9
+    Ousmane Dieng          [WHITE  ] $ 13  proj   8.9  actual   0.0
+    JT Thor                [WHITE  ] $ 12  proj   8.2  actual  24.6
+    Micah Potter           [WHITE  ] $ 13  proj   9.2  actual   4.6
+
+COMMENTARY (deadpan): The Joker had a quiet deal tonight—15 points is a curiosity, the kind of hand where the defense actually got something right, briefly.
+
+──────────────────── HAND 63 ────────────────────
+TIER: STARTER (1x)  |  TOTAL FP: 168.1
+NEXT TIER: ALL_STAR @ 183 (gap 14.9)
+STREAK: 0
+ROSTER:
+  ★ Jalen Williams         [PURPLE ] $ 56  proj  38.4  actual  40.2
+    Jock Landale           [WHITE  ] $ 16  proj  11.2  actual  14.9
+  ★ Nikola Jokić           [ORANGE ] $ 82  proj  56.4  actual  80.8
+    Toumani Camara         [GREEN  ] $ 25  proj  17.1  actual  15.5
+    Wesley Matthews        [WHITE  ] $ 11  proj   7.3  actual   7.1
+    Markieff Morris        [WHITE  ] $ 10  proj   6.6  actual   9.6
+
+COMMENTARY (observational): ```json
+{"commentary": "Jokić took over completely — 80 points is the kind of masterclass that reminds you why he's still the best passing big man alive. The Joker dealt tonight.", "tone": "hype"}
+```
+
+Wait — let me recalculate. Jokić had 80.8 actual FP, which is well over his 56.4 projection (+24.4). That's a dominant performance. But I used "80 points" which could confuse actual points with fantasy points. Let me rewrite without the number since it risks confusion, and keep the culture voice strong.
+
+```json
+{"commentary": "Jokić took over completely — when the Joker decides to take over, the stat sheet becomes his. Tonight was his.", "tone": "hype"}
+```
+
+Hmm, that's under 150 chars. Let me expand with more voice while staying true to the culture context.
+
+```json
+{"commentary": "Jokić dealt a masterclass tonight. The best passing big man alive reminded everyone why he's still the most improbable MVP in history — when the Joker takes over, the game becomes a different sport.", "tone": "hype"}
+```
+
+Let me count: ~180 chars. Good length. But this is STARTER tier (break-even), not MVP tier hype. Let me recalibrate the tone — confident but not over-the-
+
+──────────────────── HAND 64 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 149.8
+NEXT TIER: STARTER @ 160 (gap 10.2)
+STREAK: 1
+ROSTER:
+  ★ Ja Morant              [PURPLE ] $ 63  proj  43.6  actual  73.2
+    Myles Turner           [BLUE   ] $ 45  proj  30.7  actual  21.2
+    Keegan Murray          [BLUE   ] $ 37  proj  25.2  actual  24.8
+    Markelle Fultz         [GREEN  ] $ 25  proj  16.9  actual   9.4
+    Kenneth Lofton Jr.     [WHITE  ] $ 16  proj  11.0  actual  11.0
+    Bryce McGowens         [WHITE  ] $ 14  proj   9.8  actual  10.2
+
+COMMENTARY (analytical): Ja came through with 73 and kept the streak alive — didn't need much else when the star showed up like that.
+
+──────────────────── HAND 65 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 111.8
+NEXT TIER: ROOKIE @ 133 (gap 21.2)
+STREAK: 1
+ROSTER:
+  ★ Alperen Sengun         [PURPLE ] $ 58  proj  39.7  actual  15.5
+    Guerschon Yabusele     [GREEN  ] $ 32  proj  22.0  actual  13.1
+  ★ Franz Wagner           [PURPLE ] $ 56  proj  38.3  actual  40.1
+    Jalen Wilson           [GREEN  ] $ 24  proj  16.6  actual  20.3
+    Jevon Carter           [WHITE  ] $ 14  proj   9.4  actual  12.7
+    Taj Gibson             [WHITE  ] $  9  proj   6.5  actual  10.1
+
+COMMENTARY (wry): Sengun came in 24 under his line and that was game over — the rest of the roster fought back but couldn't dig out of that hole.
+
+──────────────────── HAND 66 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 126.8
+NEXT TIER: ROOKIE @ 133 (gap 6.2)
+STREAK: 3
+ROSTER:
+  ★ Domantas Sabonis       [PURPLE ] $ 69  proj  47.8  actual  90.7
+    John Konchar           [GREEN  ] $ 24  proj  16.5  actual   2.7
+    Caleb Houstan          [WHITE  ] $ 12  proj   8.0  actual   0.0
+    Christian Braun        [GREEN  ] $ 23  proj  15.9  actual  10.0
+    Daniel Theis           [WHITE  ] $ 19  proj  13.2  actual  14.9
+    Christian Wood         [GREEN  ] $ 24  proj  16.5  actual   8.5
+
+COMMENTARY (deadpan): Sabonis went nuclear with 90.7, way over his line—but the rest of the roster collapsed so hard it dragged the whole thing under. One man can't carry six.
+
+──────────────────── HAND 67 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 92.3
+NEXT TIER: ROOKIE @ 133 (gap 40.7)
+STREAK: 3
+ROSTER:
+  ★ Zion Williamson        [PURPLE ] $ 55  proj  37.9  actual  36.5
+    DaQuan Jeffries        [WHITE  ] $  5  proj   3.3  actual  11.6
+    Maxi Kleber            [WHITE  ] $ 13  proj   9.1  actual  15.2
+    Daeqwon Plowden        [WHITE  ] $ 15  proj  10.2  actual   4.0
+    Rob Dillingham         [WHITE  ] $ 15  proj  10.4  actual  17.7
+    Pelle Larsson          [WHITE  ] $ 15  proj  10.2  actual   7.3
+
+COMMENTARY (observational): Zion brought what he usually does, but the rest of the roster couldn't string together enough to get there—Plowden disappeared when you needed him most.
+
+──────────────────── HAND 68 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 42.2
+NEXT TIER: ROOKIE @ 133 (gap 90.8)
+STREAK: 3
+ROSTER:
+  ★ Ja Morant              [PURPLE ] $ 63  proj  43.6  actual   0.0
+    Caleb Martin           [GREEN  ] $ 29  proj  20.0  actual   7.6
+    Haywood Highsmith      [WHITE  ] $ 21  proj  14.8  actual  13.2
+    GG Jackson             [WHITE  ] $ 19  proj  13.1  actual   5.9
+    Taj Gibson             [WHITE  ] $ 13  proj   9.1  actual   1.7
+    Vasilije Micic         [GREEN  ] $ 22  proj  15.0  actual  13.8
+
+COMMENTARY (deadpan): Ja went completely dark—0 points, 0 assists, the kind of nothing that haunts you. The rest of the roster couldn't carry it.
+
+──────────────────── HAND 69 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 133.3
+NEXT TIER: STARTER @ 160 (gap 26.7)
+STREAK: 2
+ROSTER:
+  ★ LeBron James           [PURPLE ] $ 67  proj  46.4  actual  46.9
+    Andre Drummond         [GREEN  ] $ 32  proj  21.9  actual  26.2
+    Dominick Barlow        [WHITE  ] $ 18  proj  12.1  actual  12.1
+    Norman Powell          [GREEN  ] $ 29  proj  19.7  actual  10.2
+    Tyus Jones             [BLUE   ] $ 41  proj  28.0  actual  27.5
+    Jack White             [WHITE  ] $ 11  proj   7.5  actual  10.4
+
+COMMENTARY (analytical): LeBron at his floor is still the ceiling for most—47 points of pure reliability kept this afloat. You got half your bet back on his shoulders.
+
+──────────────────── HAND 70 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 155.7
+NEXT TIER: STARTER @ 160 (gap 4.3)
+STREAK: 0
+ROSTER:
+  ★ Kevin Durant           [PURPLE ] $ 63  proj  43.2  actual  56.6
+    Trey Lyles             [WHITE  ] $ 21  proj  14.6  actual  13.5
+    Jaylen Brown           [BLUE   ] $ 52  proj  35.9  actual  51.5
+    Jalen Williams         [BLUE   ] $ 47  proj  32.3  actual  32.5
+    AJ Griffin             [WHITE  ] $  7  proj   4.5  actual   0.0
+    Justin Minaya          [WHITE  ] $ 10  proj   6.7  actual   1.6
+
+COMMENTARY (hype): KD cooking is a masterclass — went over his line and carried you inches from doubling up. The Slim Reaper decided this one belonged to him.
+
+──────────────────── HAND 71 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 142.2
+NEXT TIER: STARTER @ 160 (gap 17.8)
+STREAK: 1
+ROSTER:
+  ★ Paolo Banchero         [PURPLE ] $ 60  proj  41.6  actual  48.6
+    Reed Sheppard          [WHITE  ] $ 16  proj  10.8  actual   8.4
+  ★ Evan Mobley            [PURPLE ] $ 55  proj  37.8  actual  41.7
+    Luke Kennard           [GREEN  ] $ 26  proj  18.2  actual  27.8
+    Moussa Diabaté         [GREEN  ] $ 25  proj  17.1  actual  15.7
+    Jordan McLaughlin      [WHITE  ] $  9  proj   5.9  actual   0.0
+
+COMMENTARY (observational): Paolo showed up over his line and Mobley kept pace — soft landing here, both your stars delivered enough to get you whole.
+
+──────────────────── HAND 72 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 131.4
+NEXT TIER: ROOKIE @ 133 (gap 1.6)
+STREAK: 0
+ROSTER:
+  ★ Franz Wagner           [PURPLE ] $ 56  proj  38.3  actual  53.3
+    P.J. Washington        [BLUE   ] $ 45  proj  30.7  actual  30.6
+    Amen Thompson          [GREEN  ] $ 34  proj  23.7  actual  17.7
+    Doug McDermott         [WHITE  ] $  9  proj   6.2  actual   0.0
+    Alec Burks             [WHITE  ] $ 21  proj  14.7  actual  12.6
+    Larry Nance Jr.        [GREEN  ] $ 23  proj  16.0  actual  17.2
+
+COMMENTARY (deadpan): Wagner went off for 53 and it still wasn't enough — that's how tight this one got. Just 1.6 away from salvaging it.
+
+──────────────────── HAND 73 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 88.3
+NEXT TIER: ROOKIE @ 133 (gap 44.7)
+STREAK: 2
+ROSTER:
+  ★ James Harden           [PURPLE ] $ 63  proj  43.7  actual  15.0
+    Quentin Grimes         [WHITE  ] $ 18  proj  12.4  actual  17.2
+    Ibou Badji             [WHITE  ] $ 12  proj   8.6  actual   0.0
+    Jontay Porter          [GREEN  ] $ 22  proj  15.1  actual  22.2
+    AJ Johnson             [WHITE  ] $ 20  proj  13.5  actual  17.4
+    Haywood Highsmith      [WHITE  ] $ 21  proj  14.8  actual  16.5
+
+COMMENTARY (deadpan): The Beard went quiet—some nights the step-back stays in the holster. Harden's 15 left this one short by a country mile, and the bench couldn't carry the weight.
+
+──────────────────── HAND 74 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 44.5
+NEXT TIER: ROOKIE @ 133 (gap 88.5)
+STREAK: 1
+ROSTER:
+  ★ Stephen Curry          [PURPLE ] $ 57  proj  39.1  actual   7.2
+    Zeke Nnaji             [WHITE  ] $ 15  proj  10.6  actual  12.9
+    Colin Castleton        [WHITE  ] $  7  proj   4.5  actual   0.0
+    Andre Jackson Jr.      [WHITE  ] $ 11  proj   7.7  actual   8.5
+    Devin Carter           [WHITE  ] $ 13  proj   9.2  actual  15.3
+    Markieff Morris        [WHITE  ] $ 10  proj   6.6  actual   0.6
+
+COMMENTARY (deadpan): Chef Curry had a cold kitchen tonight — 7 points when he usually rewrites the shot chart. The rest of the roster couldn't carry the weight.
+
+──────────────────── HAND 75 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 118.4
+NEXT TIER: ROOKIE @ 133 (gap 14.6)
+STREAK: 2
+ROSTER:
+  ★ Cade Cunningham        [PURPLE ] $ 56  proj  38.4  actual  19.5
+    Troy Brown Jr.         [WHITE  ] $ 14  proj   9.4  actual   0.0
+    Talen Horton-Tucker    [GREEN  ] $ 28  proj  19.4  actual  30.5
+    Cason Wallace          [GREEN  ] $ 29  proj  20.0  actual  24.3
+    RJ Barrett             [BLUE   ] $ 45  proj  31.3  actual  19.2
+    Jabari Walker          [GREEN  ] $ 28  proj  19.6  actual  24.9
+
+COMMENTARY (deadpan): Cade disappeared when you needed him most — 19 when he was supposed to carry this thing. That's the difference between a win and watching the clock run out.
+
+──────────────────── HAND 76 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 152.9
+NEXT TIER: STARTER @ 160 (gap 7.1)
+STREAK: 4
+ROSTER:
+  ★ Paolo Banchero         [PURPLE ] $ 60  proj  41.6  actual  14.5
+    Jusuf Nurkić           [BLUE   ] $ 47  proj  32.1  actual  47.1
+    Dorian Finney-Smith    [GREEN  ] $ 24  proj  16.5  actual  23.3
+    Aaron Gordon           [GREEN  ] $ 36  proj  24.9  actual  33.2
+    Chris Duarte           [WHITE  ] $ 12  proj   8.1  actual  11.1
+    Bones Hyland           [WHITE  ] $ 20  proj  14.1  actual  23.7
+
+COMMENTARY (observational): Banchero's night went sideways fast, but Nurkić picked up the slack with a monster game — enough to scrape through and live another day.
+
+──────────────────── HAND 77 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 107.9
+NEXT TIER: ROOKIE @ 133 (gap 25.1)
+STREAK: 1
+ROSTER:
+  ★ Ja Morant              [PURPLE ] $ 55  proj  38.2  actual  46.1
+    Brandon Williams       [WHITE  ] $ 10  proj   6.6  actual  12.6
+    Jalen Wilson           [GREEN  ] $ 24  proj  16.6  actual   7.7
+    Patrick Beverley       [GREEN  ] $ 23  proj  15.9  actual  11.4
+    Dorian Finney-Smith    [GREEN  ] $ 24  proj  16.5  actual  21.8
+    Kai Jones              [WHITE  ] $ 18  proj  12.3  actual   8.3
+
+COMMENTARY (wry): Ja showed up with 46, but the rest of the roster couldn't find the floor. When your star does his job and you still finish 25 points short of ROOKIE, that's a lineup problem.
+
+──────────────────── HAND 78 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 158.7
+NEXT TIER: STARTER @ 160 (gap 1.3)
+STREAK: 3
+ROSTER:
+  ★ Victor Wembanyama      [PURPLE ] $ 67  proj  46.0  actual  42.9
+    Colin Castleton        [WHITE  ] $  7  proj   4.5  actual  16.7
+    Bilal Coulibaly        [GREEN  ] $ 26  proj  18.1  actual  21.8
+  ★ Devin Booker           [PURPLE ] $ 62  proj  42.9  actual  46.2
+    Kyshawn George         [GREEN  ] $ 30  proj  20.4  actual  31.1
+    Emoni Bates            [WHITE  ] $  8  proj   5.6  actual   0.0
+
+COMMENTARY (analytical): Booker stayed on pace and you caught a breather at 158.7 — a half-bet back feels like a gift when the board's this thin. One made three away from STARTER.
+
+──────────────────── HAND 79 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 159.7
+NEXT TIER: STARTER @ 160 (gap 0.3)
+STREAK: 4
+ROSTER:
+  ★ Tyrese Maxey           [PURPLE ] $ 60  proj  41.3  actual  64.6
+  ★ James Harden           [PURPLE ] $ 63  proj  43.7  actual  34.6
+    Robert Williams III    [GREEN  ] $ 28  proj  19.2  actual  26.6
+    Andrew Nembhard        [GREEN  ] $ 27  proj  18.3  actual  21.3
+    Trent Forrest          [WHITE  ] $ 12  proj   8.2  actual   8.9
+    Markieff Morris        [WHITE  ] $ 10  proj   6.6  actual   3.7
+
+COMMENTARY (deadpan): Maxey went nuclear — 23 over the line — and it still took everything just to kiss the Starter floor. The Beard went quiet when you needed him most.
+
+──────────────────── HAND 80 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 69.3
+NEXT TIER: ROOKIE @ 133 (gap 63.7)
+STREAK: 0
+ROSTER:
+  ★ Stephen Curry          [PURPLE ] $ 57  proj  39.1  actual  27.5
+    Ryan Dunn              [WHITE  ] $ 19  proj  13.4  actual   6.5
+    Cam Reddish            [WHITE  ] $ 20  proj  13.5  actual   7.3
+    Ja'Kobe Walter         [GREEN  ] $ 23  proj  15.9  actual   1.6
+    Ryan Rollins           [WHITE  ] $ 19  proj  12.8  actual  11.2
+    Noah Clowney           [WHITE  ] $ 19  proj  13.2  actual  15.2
+
+COMMENTARY (deadpan): Even Chef Curry has an off night in the kitchen. The menu suffered, and the whole hand went with it.
+
+──────────────────── HAND 81 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 144.7
+NEXT TIER: STARTER @ 160 (gap 15.3)
+STREAK: 3
+ROSTER:
+  ★ Jayson Tatum           [PURPLE ] $ 65  proj  44.6  actual  59.0
+    Kelly Oubre Jr.        [BLUE   ] $ 38  proj  26.0  actual  29.9
+    Cason Wallace          [GREEN  ] $ 29  proj  20.0  actual  32.6
+    Donte DiVincenzo       [GREEN  ] $ 34  proj  23.7  actual  11.6
+    Justin Holiday         [WHITE  ] $ 15  proj  10.4  actual  10.2
+    Josh Okogie            [WHITE  ] $ 17  proj  11.5  actual   1.4
+
+COMMENTARY (observational): Tatum came in hot and carried this one over the line — 59 when you needed him to show up. That's the difference between a comeback hand and watching it slip away.
+
+──────────────────── HAND 82 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 82.1
+NEXT TIER: ROOKIE @ 133 (gap 50.9)
+STREAK: 1
+ROSTER:
+  ★ Paolo Banchero         [PURPLE ] $ 60  proj  41.6  actual  22.5
+    Khris Middleton        [GREEN  ] $ 33  proj  23.0  actual  34.2
+    Malcolm Brogdon        [BLUE   ] $ 42  proj  28.7  actual   4.6
+    A.J. Lawson            [GREEN  ] $ 26  proj  18.1  actual  10.3
+    Precious Achiuwa       [GREEN  ] $ 26  proj  17.6  actual  10.5
+    Jett Howard            [WHITE  ] $ 12  proj   8.0  actual   0.0
+
+COMMENTARY (deadpan): Paolo came in cold—22 when you needed 41—and the rest of the roster couldn't bail him out. Middleton tried to carry, but it wasn't enough.
+
+──────────────────── HAND 83 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 118.6
+NEXT TIER: ROOKIE @ 133 (gap 14.4)
+STREAK: 4
+ROSTER:
+  ★ Alperen Sengun         [PURPLE ] $ 60  proj  41.2  actual  37.4
+    Dillon Brooks          [GREEN  ] $ 32  proj  22.3  actual  20.7
+    Alex Len               [WHITE  ] $ 14  proj   9.6  actual  11.1
+    Leaky Black            [WHITE  ] $ 13  proj   9.3  actual  13.7
+    Christian Wood         [GREEN  ] $ 24  proj  16.5  actual  18.8
+    Quenton Jackson        [WHITE  ] $ 19  proj  13.0  actual  16.9
+
+COMMENTARY (wry): Sengun couldn't carry this one—the rest of the roster stayed quiet and the streak dies here. Fourteen points short of getting anything back.
+
+──────────────────── HAND 84 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 119.3
+NEXT TIER: ROOKIE @ 133 (gap 13.7)
+STREAK: 0
+ROSTER:
+  ★ Tyler Herro            [PURPLE ] $ 55  proj  38.2  actual  76.5
+    Dejounte Murray        [BLUE   ] $ 54  proj  37.2  actual   9.5
+    Isaiah Jackson         [GREEN  ] $ 22  proj  15.4  actual  12.5
+    Dario Šarić            [WHITE  ] $ 13  proj   8.7  actual   2.2
+    Keaton Wallace         [WHITE  ] $ 19  proj  13.0  actual  18.6
+    Jock Landale           [WHITE  ] $ 18  proj  12.7  actual   0.0
+
+COMMENTARY (deadpan): Herro went nuclear for 76 and it still wasn't enough — Murray's 9.5 sank the whole thing. Sometimes one man's career night can't carry five ghosts.
+
+──────────────────── HAND 85 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 139.8
+NEXT TIER: STARTER @ 160 (gap 20.2)
+STREAK: 3
+ROSTER:
+  ★ Karl-Anthony Towns     [PURPLE ] $ 64  proj  44.2  actual  78.8
+    Jamal Murray           [BLUE   ] $ 54  proj  37.5  actual  20.6
+    Ousmane Dieng          [WHITE  ] $ 13  proj   9.2  actual  15.0
+    Dru Smith              [WHITE  ] $ 18  proj  12.6  actual  11.8
+    Drew Eubanks           [WHITE  ] $ 17  proj  11.9  actual   4.6
+    Keaton Wallace         [WHITE  ] $ 19  proj  13.0  actual   9.0
+
+COMMENTARY (observational): KAT came out swinging and bailed the whole roster out — 79 points when the rest of the squad was barely treading water. Streak stays alive.
+
+──────────────────── HAND 86 ────────────────────
+TIER: STARTER (1x)  |  TOTAL FP: 163.8
+NEXT TIER: ALL_STAR @ 183 (gap 19.2)
+STREAK: 3
+ROSTER:
+  ★ Jayson Tatum           [PURPLE ] $ 67  proj  46.1  actual  68.3
+    Moses Brown            [WHITE  ] $ 14  proj   9.6  actual   0.0
+    Tim Hardaway Jr.       [GREEN  ] $ 25  proj  16.9  actual  34.6
+    Tre Jones              [GREEN  ] $ 36  proj  24.6  actual  20.1
+    Cason Wallace          [GREEN  ] $ 29  proj  20.0  actual  20.5
+    Dennis Smith Jr.       [GREEN  ] $ 25  proj  17.1  actual  20.3
+
+COMMENTARY (analytical): Tatum kept the lights on tonight with 68, but you're treading water—one made three away from ALL-STAR money and he knows it.
+
+──────────────────── HAND 87 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 103.7
+NEXT TIER: ROOKIE @ 133 (gap 29.3)
+STREAK: 1
+ROSTER:
+  ★ Franz Wagner           [PURPLE ] $ 56  proj  38.3  actual  43.0
+    Jared Rhoden           [WHITE  ] $ 16  proj  11.2  actual  16.9
+    JT Thor                [WHITE  ] $ 13  proj   9.1  actual   3.4
+    Jericho Sims           [WHITE  ] $ 13  proj   8.8  actual  12.4
+    Blake Wesley           [WHITE  ] $ 16  proj  11.0  actual  19.2
+    Terrence Shannon Jr.   [WHITE  ] $ 16  proj  11.2  actual   8.8
+
+COMMENTARY (deadpan): Franz showed up with 43, but the rest of the roster couldn't find the floor. That's a bust.
+
+──────────────────── HAND 88 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 140.0
+NEXT TIER: STARTER @ 160 (gap 20.0)
+STREAK: 0
+ROSTER:
+  ★ Shai Gilgeous-Alexander [ORANGE ] $ 72  proj  49.6  actual  52.2
+    Jabari Walker          [GREEN  ] $ 28  proj  19.6  actual  22.8
+    Bradley Beal           [BLUE   ] $ 46  proj  31.5  actual  41.4
+    Terance Mann           [GREEN  ] $ 22  proj  15.1  actual   0.1
+    Thomas Bryant          [WHITE  ] $ 18  proj  12.6  actual  19.5
+    Devin Carter           [WHITE  ] $ 13  proj   9.2  actual   4.0
+
+COMMENTARY (funny): SGA kept it steady at 52, and Beal's surprise 41 got you across the line — half your money back, which beats the alternative.
+
+──────────────────── HAND 89 ────────────────────
+TIER: STARTER (1x)  |  TOTAL FP: 163.8
+NEXT TIER: ALL_STAR @ 183 (gap 19.2)
+STREAK: 0
+ROSTER:
+  ★ Kyrie Irving           [PURPLE ] $ 57  proj  39.1  actual  53.3
+  ★ Bam Adebayo            [PURPLE ] $ 56  proj  38.3  actual  65.8
+    Jaden Hardy            [WHITE  ] $ 18  proj  12.3  actual  12.5
+    Jordan Nwora           [WHITE  ] $ 20  proj  14.1  actual   8.6
+    DaQuan Jeffries        [WHITE  ] $ 19  proj  13.0  actual   7.7
+    Vasilije Micic         [GREEN  ] $ 22  proj  15.0  actual  15.9
+
+COMMENTARY (observational): Bam came ready to work—65 points worth of ready. Kyrie showed up over his line too, but the bench couldn't follow suit. Push comes to shove, you're treading water.
+
+──────────────────── HAND 90 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 118.5
+NEXT TIER: ROOKIE @ 133 (gap 14.5)
+STREAK: 0
+ROSTER:
+  ★ Alperen Sengun         [PURPLE ] $ 60  proj  41.2  actual  49.8
+    Chimezie Metu          [WHITE  ] $ 21  proj  14.6  actual  14.2
+    Omer Yurtseven         [WHITE  ] $ 18  proj  12.3  actual  14.4
+    Ajay Mitchell          [WHITE  ] $ 18  proj  12.6  actual   8.0
+    Taylor Hendricks       [GREEN  ] $ 24  proj  16.3  actual  16.4
+    N'Faly Dante           [GREEN  ] $ 25  proj  17.5  actual  15.7
+
+COMMENTARY (deadpan): Sengun went over his line and still couldn't carry this one across. Sometimes the star has to do it alone, and 49.8 just wasn't enough.
+
+──────────────────── HAND 91 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 149.4
+NEXT TIER: STARTER @ 160 (gap 10.6)
+STREAK: 0
+ROSTER:
+  ★ Scottie Barnes         [PURPLE ] $ 60  proj  41.5  actual  50.6
+    Jaylen Brown           [BLUE   ] $ 52  proj  35.9  actual  37.3
+    AJ Griffin             [WHITE  ] $  7  proj   4.5  actual   5.9
+    Cole Anthony           [GREEN  ] $ 28  proj  19.4  actual  15.6
+    Bobby Portis           [BLUE   ] $ 38  proj  26.0  actual  29.7
+    Zeke Nnaji             [WHITE  ] $ 13  proj   9.0  actual  10.3
+
+COMMENTARY (analytical): Scottie Barnes showed up over his line and dragged this across the finish — a soft landing when the rest of the roster went quiet.
+
+──────────────────── HAND 92 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 113.8
+NEXT TIER: ROOKIE @ 133 (gap 19.2)
+STREAK: 1
+ROSTER:
+  ★ Victor Wembanyama      [PURPLE ] $ 67  proj  46.0  actual  38.4
+    Reed Sheppard          [WHITE  ] $ 16  proj  10.8  actual  10.5
+    Jonathan Isaac         [GREEN  ] $ 24  proj  16.4  actual  13.1
+    Jarred Vanderbilt      [WHITE  ] $ 21  proj  14.6  actual   4.7
+    John Konchar           [GREEN  ] $ 24  proj  16.5  actual  15.7
+    RaiQuan Gray           [WHITE  ] $ 21  proj  14.5  actual  31.4
+
+COMMENTARY (deadpan): Wembanyama came up short of his line, and the rest of the roster couldn't pick up the slack—Vanderbilt's night evaporated, leaving you just shy of getting back in.
+
+──────────────────── HAND 93 ────────────────────
+TIER: STARTER (1x)  |  TOTAL FP: 162.0
+NEXT TIER: ALL_STAR @ 183 (gap 21.0)
+STREAK: 4
+ROSTER:
+  ★ De'Aaron Fox           [PURPLE ] $ 62  proj  42.8  actual  56.4
+    Ben Sheppard           [WHITE  ] $ 16  proj  11.0  actual  16.7
+    Markelle Fultz         [GREEN  ] $ 25  proj  16.9  actual  11.5
+    Karl-Anthony Towns     [BLUE   ] $ 52  proj  35.9  actual  43.6
+    Andre Drummond         [GREEN  ] $ 32  proj  21.9  actual  27.7
+    Jordan Miller          [WHITE  ] $ 13  proj   8.9  actual   6.1
+
+COMMENTARY (observational): Fox went over his line by 14 and carried this one across the break—barely, but he carried it. Streak lives to see hand two.
+
+──────────────────── HAND 94 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 120.2
+NEXT TIER: ROOKIE @ 133 (gap 12.8)
+STREAK: 0
+ROSTER:
+  ★ Nikola Jokić           [ORANGE ] $ 82  proj  56.4  actual  20.8
+    Andrew Nembhard        [GREEN  ] $ 27  proj  18.3  actual  22.3
+    Bruno Fernando         [GREEN  ] $ 22  proj  15.5  actual  11.2
+    Jrue Holiday           [GREEN  ] $ 34  proj  23.4  actual  35.4
+    Jaime Jaquez Jr.       [GREEN  ] $ 26  proj  17.8  actual  30.1
+    AJ Griffin             [WHITE  ] $  7  proj   4.5  actual   0.4
+
+COMMENTARY (wry): The Joker had a quiet deal tonight — 20 and change when he usually walks away with 56. That's the curiosity: even his off nights are built on something. The hand just ran out of gas before the All-Star line.
+
+──────────────────── HAND 95 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 127.3
+NEXT TIER: ROOKIE @ 133 (gap 5.7)
+STREAK: 4
+ROSTER:
+  ★ Franz Wagner           [PURPLE ] $ 56  proj  38.3  actual  41.0
+    Bradley Beal           [BLUE   ] $ 46  proj  31.5  actual  28.7
+    Russell Westbrook      [BLUE   ] $ 41  proj  28.6  actual  19.5
+    Duncan Robinson        [GREEN  ] $ 31  proj  21.2  actual  17.4
+    Max Christie           [WHITE  ] $ 14  proj   9.8  actual  20.7
+    Dereon Seabron         [WHITE  ] $  7  proj   4.9  actual   0.0
+
+COMMENTARY (deadpan): Westbrook with a quiet game is almost conceptually difficult to process — and Wagner's 41 couldn't carry the weight alone. The 4-hand streak ends here.
+
+──────────────────── HAND 96 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 153.4
+NEXT TIER: STARTER @ 160 (gap 6.6)
+STREAK: 4
+ROSTER:
+  ★ Stephen Curry          [PURPLE ] $ 57  proj  39.3  actual  57.8
+  ★ Donovan Mitchell       [PURPLE ] $ 55  proj  38.1  actual  45.3
+    Al Horford             [GREEN  ] $ 32  proj  21.8  actual  24.1
+    Russell Westbrook      [GREEN  ] $ 35  proj  24.4  actual  11.8
+    Gary Harris            [WHITE  ] $ 10  proj   6.6  actual   5.8
+    Otto Porter Jr.        [WHITE  ] $ 10  proj   6.9  actual   8.6
+
+COMMENTARY (hype): Curry's stove was on high—57 points of pure range warfare, the kind of night that reminds you he broke basketball and never fixed it. Extended the streak to four.
+
+──────────────────── HAND 97 ────────────────────
+TIER: STARTER (1x)  |  TOTAL FP: 168.6
+NEXT TIER: ALL_STAR @ 183 (gap 14.4)
+STREAK: 1
+ROSTER:
+  ★ Tyrese Maxey           [PURPLE ] $ 60  proj  41.3  actual  61.5
+    Rudy Gobert            [BLUE   ] $ 46  proj  31.5  actual  35.3
+    Colin Castleton        [WHITE  ] $  7  proj   4.5  actual   7.1
+    RJ Barrett             [BLUE   ] $ 45  proj  31.3  actual  29.5
+    Rui Hachimura          [GREEN  ] $ 32  proj  21.9  actual  22.4
+    Markieff Morris        [WHITE  ] $ 10  proj   6.6  actual  12.8
+
+COMMENTARY (analytical): Maxey broke through his ceiling—61.5 when the line said 41. One hand in and the streak's alive.
+
+──────────────────── HAND 98 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 120.2
+NEXT TIER: ROOKIE @ 133 (gap 12.8)
+STREAK: 0
+ROSTER:
+  ★ Jalen Brunson          [PURPLE ] $ 63  proj  43.7  actual  49.3
+    Jarace Walker          [WHITE  ] $ 18  proj  12.6  actual  18.9
+    Tidjane Salaün         [WHITE  ] $ 20  proj  13.9  actual  11.2
+    Haywood Highsmith      [WHITE  ] $ 20  proj  13.9  actual   8.1
+    Matt Ryan              [WHITE  ] $ 16  proj  10.8  actual  24.6
+    Craig Porter Jr.       [WHITE  ] $ 20  proj  13.8  actual   8.1
+
+COMMENTARY (deadpan): Brunson came through with his points, but the supporting cast couldn't string together enough. Twelve short of keeping this alive.
+
+──────────────────── HAND 99 ────────────────────
+TIER: BUST (0x)  |  TOTAL FP: 129.6
+NEXT TIER: ROOKIE @ 133 (gap 3.4)
+STREAK: 1
+ROSTER:
+  ★ Kawhi Leonard          [PURPLE ] $ 57  proj  39.4  actual  46.4
+    De'Anthony Melton      [GREEN  ] $ 33  proj  23.0  actual  16.1
+    Cam Thomas             [BLUE   ] $ 47  proj  32.2  actual  18.6
+    Jonathan Kuminga       [GREEN  ] $ 36  proj  25.1  actual  17.5
+    Vlatko Čančar          [WHITE  ] $ 11  proj   7.3  actual  13.0
+    Cam Reddish            [WHITE  ] $ 16  proj  10.7  actual  18.0
+
+COMMENTARY (deadpan): The Klaw was available and delivered — 46 when you needed 47. Three points shy of the comeback, and Kawhi was the only one who showed up.
+
+──────────────────── HAND 100 ────────────────────
+TIER: ROOKIE (0.5x)  |  TOTAL FP: 150.2
+NEXT TIER: STARTER @ 160 (gap 9.8)
+STREAK: 2
+ROSTER:
+  ★ Evan Mobley            [PURPLE ] $ 55  proj  37.8  actual  50.6
+  ★ Ja Morant              [PURPLE ] $ 55  proj  38.2  actual  27.7
+    Jabari Walker          [WHITE  ] $ 18  proj  12.7  actual  13.8
+    Ziaire Williams        [GREEN  ] $ 28  proj  19.6  actual  19.9
+    De'Andre Hunter        [GREEN  ] $ 33  proj  23.1  actual  22.0
+    Wesley Matthews        [WHITE  ] $ 11  proj   7.3  actual  16.2
+
+COMMENTARY (observational): Mobley came through with the overdelivery, pushing you past the bust line—half your bet back feels good when the star player is the one who showed up.
