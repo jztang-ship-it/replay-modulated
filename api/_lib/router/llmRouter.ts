@@ -60,7 +60,7 @@ async function callDeepSeek(system: string, user: string, apiKey: string): Promi
 }
 
 /** Extract commentary string from JSON or raw text. Strips code fences and reasoning. */
-function extractCommentary(text: string): string | null {
+export function extractCommentary(text: string): string | null {
   if (!text) return null
 
   // Strip code fences first (```json ... ``` or ``` ... ```)
@@ -111,7 +111,7 @@ function extractCommentary(text: string): string | null {
 
 const ALLOWED_TONES = new Set(['deadpan', 'observational', 'analytical', 'wry', 'hype', 'warm'])
 
-function extractTone(text: string): string {
+export function extractTone(text: string): string {
   try {
     const start = text.indexOf('{')
     if (start < 0) return 'observational'
