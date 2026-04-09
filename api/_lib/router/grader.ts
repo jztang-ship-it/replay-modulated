@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import type { GradeScore, RouterModel } from './types'
+import type { GradeScore, RouterModel } from './types.js'
 
 // ── Weights (must sum to 1.0) ─────────────────────────────────────────────────
 const WEIGHTS = {

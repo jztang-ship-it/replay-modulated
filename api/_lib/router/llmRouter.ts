@@ -1,12 +1,12 @@
 import OpenAI from 'openai'
 import Anthropic from '@anthropic-ai/sdk'
-import { gradeCommentary } from './grader'
+import { gradeCommentary } from './grader.js'
 import {
   makeKV, getRecentPhrases, recordRecentPhrase, recordModelScore,
   getPrimaryModel, getAndIncrementChallengerCounter,
-} from './kvStore'
-import { isChallengerTurn, pickChallengerModel } from './challengerCycle'
-import type { RouterConfig, RouterResult, RouterModel, PayoutTier } from './types'
+} from './kvStore.js'
+import { isChallengerTurn, pickChallengerModel } from './challengerCycle.js'
+import type { RouterConfig, RouterResult, RouterModel, PayoutTier } from './types.js'
 
 // ── Model callers ─────────────────────────────────────────────────────────────
 

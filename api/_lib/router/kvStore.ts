@@ -1,5 +1,5 @@
 import { Redis } from '@upstash/redis'
-import type { RouterModel, PayoutTier, GradeScore } from './types'
+import type { RouterModel, PayoutTier, GradeScore } from './types.js'
 
 // ── Key builders (exported for tests) ────────────────────────────────────────
 

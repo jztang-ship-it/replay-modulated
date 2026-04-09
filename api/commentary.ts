@@ -8,9 +8,9 @@
  */
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { routeCommentary } from "./_lib/router/llmRouter";
-import type { RouterConfig, PayoutTier } from "./_lib/router/types";
-import { makeKV, getRecentPhrases } from "./_lib/router/kvStore";
+import { routeCommentary } from "./_lib/router/llmRouter.js";
+import type { RouterConfig, PayoutTier } from "./_lib/router/types.js";
+import { makeKV, getRecentPhrases } from "./_lib/router/kvStore.js";
 
 const VALID_TIERS = new Set(['BUST','ROOKIE','STARTER','ALL_STAR','MVP','GOAT'])
 
