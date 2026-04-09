@@ -59,31 +59,75 @@ async function callDeepSeek(system: string, user: string, apiKey: string): Promi
   }
 }
 
-/** Extract commentary string from JSON or raw text */
+/** Extract commentary string from JSON or raw text. Strips code fences and reasoning. */
 function extractCommentary(text: string): string | null {
   if (!text) return null
+
+  // Strip code fences first (```json ... ``` or ``` ... ```)
+  let cleaned = text.trim()
+  cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '')
+  // Cut off anything after the first complete JSON object (strips trailing reasoning)
+
+  // Try JSON parse
   try {
-    const start = text.indexOf('{')
-    const end = text.lastIndexOf('}')
-    if (start >= 0 && end > start) {
-      const obj = JSON.parse(text.slice(start, end + 1)) as Record<string, unknown>
-      if (typeof obj.commentary === 'string' && obj.commentary.trim()) {
-        return obj.commentary.trim()
+    const start = cleaned.indexOf('{')
+    if (start >= 0) {
+      // Find matching closing brace via depth counting
+      let depth = 0
+      let end = -1
+      let inString = false
+      let escape = false
+      for (let i = start; i < cleaned.length; i++) {
+        const ch = cleaned[i]
+        if (escape) { escape = false; continue }
+        if (ch === '\\') { escape = true; continue }
+        if (ch === '"') { inString = !inString; continue }
+        if (inString) continue
+        if (ch === '{') depth++
+        else if (ch === '}') {
+          depth--
+          if (depth === 0) { end = i; break }
+        }
+      }
+      if (end > start) {
+        const jsonSlice = cleaned.slice(start, end + 1)
+        const obj = JSON.parse(jsonSlice) as Record<string, unknown>
+        if (typeof obj.commentary === 'string' && obj.commentary.trim()) {
+          return obj.commentary.trim()
+        }
       }
     }
-  } catch { /* fall through to raw text */ }
-  // If no JSON, use raw text only if it doesn't look like debugging output
-  if (!text.includes('```') && !text.includes('"commentary"')) return text
-  return null
+  } catch { /* fall through */ }
+
+  // Never return text that contains fences, JSON markers, or reasoning leaks
+  if (cleaned.includes('```') || cleaned.includes('"commentary"') || /^(wait|let me|actually|hmm|reconsider)/i.test(cleaned)) {
+    return null
+  }
+  return cleaned || null
 }
+
+const ALLOWED_TONES = new Set(['deadpan', 'observational', 'analytical', 'wry', 'hype', 'warm'])
 
 function extractTone(text: string): string {
   try {
     const start = text.indexOf('{')
-    const end = text.lastIndexOf('}')
-    if (start >= 0 && end > start) {
+    if (start < 0) return 'observational'
+    let depth = 0, end = -1, inString = false, escape = false
+    for (let i = start; i < text.length; i++) {
+      const ch = text[i]
+      if (escape) { escape = false; continue }
+      if (ch === '\\') { escape = true; continue }
+      if (ch === '"') { inString = !inString; continue }
+      if (inString) continue
+      if (ch === '{') depth++
+      else if (ch === '}') { depth--; if (depth === 0) { end = i; break } }
+    }
+    if (end > start) {
       const obj = JSON.parse(text.slice(start, end + 1)) as Record<string, unknown>
-      if (typeof obj.tone === 'string') return obj.tone
+      if (typeof obj.tone === 'string') {
+        const t = obj.tone.toLowerCase().trim()
+        return ALLOWED_TONES.has(t) ? t : 'observational'
+      }
     }
   } catch { /* ignore */ }
   return 'observational'
@@ -181,7 +225,18 @@ async function runBackgroundChecks(opts: {
   if (primaryGrade) {
     await recordModelScore(kv, ns, primaryModel, primaryGrade, tier)
     // Record notable phrases to KV for future anti-redundancy
-    const notablePhrases = ["couldn't carry", 'the rest of the roster', 'went nuclear', 'showed up', 'disappeared']
+    const notablePhrases = [
+      "couldn't carry",
+      "the rest of the roster",
+      "went nuclear",
+      "showed up",
+      "disappeared",
+      "carry the load",
+      "off night",
+      "rest of the squad",
+      "the supporting cast",
+      "quiet night",
+    ]
     for (const phrase of notablePhrases) {
       if (primaryCommentary.toLowerCase().includes(phrase)) {
         await recordRecentPhrase(kv, ns, phrase)

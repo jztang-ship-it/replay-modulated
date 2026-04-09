@@ -61,7 +61,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     opponentFlavor: { CLE: "Back in Cleveland. This one always has a temperature.", MIA: "South Beach chapter. The Heat years were something.", GSW: "Warriors Finals matchups made careers and ended debates.", SAS: "LeBron vs Spurs Finals. A few different decades, a few different results." },
   },
   antetokounmpo: {
-    nicknames: ["The Greek Freak", "Giannis", "The Letter", "The Alphabet"],
+    nicknames: ["Greek Freak", "Giannis"],
     knownFor: "Came from Lagos via Athens with nothing, became a two-time MVP and a champion, and runs at the basket like it owes him money",
     salaryTier: "max",
     tier1: ["The Greek Freak is exactly what it says on the box.", "From selling things on the streets of Athens to MVP. One of the real ones."],

@@ -186,6 +186,7 @@ TONE:
     MVP      → hype but earned, point at the number
     GOAT     → event-mode, this matters
 - Vary tone across hands. ${recentTonesLine}
+- STRICT TONE ENFORCEMENT: You must return exactly one of these tones in the "tone" field: "deadpan", "observational", "analytical", "wry", "hype", "warm". Do NOT invent tones like "neutral-to-warm", "funny", or hyphenated combinations. If you're unsure, pick "observational".
 
 FORBIDDEN (these will get the line rejected — enforce strictly):
 - The literal letters "FP" anywhere in the commentary. Just say the
@@ -208,6 +209,11 @@ FORBIDDEN (these will get the line rejected — enforce strictly):
 - Box-score recap: "Every card underdelivered. Full bust." ← banned
 - Two-bullet structure: "Player X did Y. Also, Z happened." ← banned
 - Naming any [NOT-MAIN-SUBJECT] player as the protagonist (see WHO TO TALK ABOUT)
+- The phrase "the rest of the roster" and any close variant ("rest of the squad", "the supporting cast", "the others"). Instead, NAME the specific players or describe what the rest of the roster actually did with concrete stats.
+- The phrase "showed up" as a verb for a player scoring well. Find a more specific verb.
+- The phrase "went nuclear" — stale. Use something else.
+- The phrase "couldn't carry the load" or "carry the load" in any form.
+- Generic closers like "off night", "quiet night" without specificity.
 
 VOICE:
 - Sound like someone who watches a lot of basketball — opinionated, specific,

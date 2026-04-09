@@ -1156,7 +1156,7 @@ export default function GameView() {
       if (result) {
         commentaryRef.current = result;
         if (result.tone) {
-          const next = [result.tone, ...recentTonesRef.current.filter(t => t !== result.tone)].slice(0, 3);
+          const next = [result.tone, ...recentTonesRef.current.filter(t => t !== result.tone)].slice(0, 6);
           recentTonesRef.current = next;
         }
       }
