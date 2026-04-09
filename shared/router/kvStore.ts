@@ -23,22 +23,31 @@ export const gradesAllKey = (ns: string) => `${ns}:grades:all`
 
 // ── KV client factory ─────────────────────────────────────────────────────────
 
-export function makeKV(): Redis {
-  return new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL!,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-  })
+export function makeKV(): Redis | null {
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!url || !token) {
+    console.warn('[KV] Upstash env vars missing — KV operations will be skipped')
+    return null
+  }
+  try {
+    return new Redis({ url, token })
+  } catch (err) {
+    console.error('[KV] Failed to construct Redis client:', err instanceof Error ? err.message : err)
+    return null
+  }
 }
 
 // ── Score recording ───────────────────────────────────────────────────────────
 
 export async function recordModelScore(
-  kv: Redis,
+  kv: Redis | null,
   ns: string,
   model: RouterModel,
   grade: GradeScore,
   tier?: PayoutTier,
 ): Promise<void> {
+  if (!kv) return
   const pipe = kv.pipeline()
 
   // Global model scores
@@ -77,7 +86,8 @@ export const STATIC_BANNED_PHRASES = [
   "quiet night",
 ]
 
-export async function getRecentPhrases(kv: Redis, ns: string): Promise<string[]> {
+export async function getRecentPhrases(kv: Redis | null, ns: string): Promise<string[]> {
+  if (!kv) return [...STATIC_BANNED_PHRASES]
   try {
     const raw = await kv.lrange(recentPhrasesKey(ns), 0, 19)
     const fromKv = raw.map(String)
@@ -89,7 +99,8 @@ export async function getRecentPhrases(kv: Redis, ns: string): Promise<string[]>
   }
 }
 
-export async function recordRecentPhrase(kv: Redis, ns: string, phrase: string): Promise<void> {
+export async function recordRecentPhrase(kv: Redis | null, ns: string, phrase: string): Promise<void> {
+  if (!kv) return
   try {
     const pipe = kv.pipeline()
     pipe.lpush(recentPhrasesKey(ns), phrase)
@@ -103,11 +114,12 @@ export async function recordRecentPhrase(kv: Redis, ns: string, phrase: string):
 // ── Routing decisions ─────────────────────────────────────────────────────────
 
 export async function getPrimaryModel(
-  kv: Redis,
+  kv: Redis | null,
   ns: string,
   defaultModel: RouterModel,
   tier?: PayoutTier,
 ): Promise<RouterModel> {
+  if (!kv) return defaultModel
   try {
     // Check tier-specific routing first
     if (tier) {
@@ -126,7 +138,7 @@ export async function getPrimaryModel(
 }
 
 export async function maybePromoteModel(
-  kv: Redis,
+  kv: Redis | null,
   ns: string,
   challenger: RouterModel,
   current: RouterModel,
@@ -134,6 +146,7 @@ export async function maybePromoteModel(
   currentGrade: GradeScore,
   tier?: PayoutTier,
 ): Promise<boolean> {
+  if (!kv) return false
   const gap = currentGrade.composite - grade.composite
   if (gap > 0.5) return false // primary is more than 0.5 better — don't promote yet
 
@@ -156,9 +169,10 @@ export async function maybePromoteModel(
 // ── Challenger counter ────────────────────────────────────────────────────────
 
 export async function getAndIncrementChallengerCounter(
-  kv: Redis,
+  kv: Redis | null,
   ns: string,
 ): Promise<number> {
+  if (!kv) return 0
   try {
     const counter = await kv.incr(challengerCounterKey(ns))
     if (counter >= 5) await kv.set(challengerCounterKey(ns), 0)

@@ -48,17 +48,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Fetch recent banned phrases from KV for anti-redundancy injection
-  const kv = makeKV()
-  const bannedPhrases = await getRecentPhrases(kv, 'replaymod')
-  const systemWithBanned = bannedPhrases.length > 0
-    ? body.system + `\n\nSESSION-BANNED PHRASES (used recently — NEVER use any of these in your output):\n${bannedPhrases.slice(0, 15).map(p => `- "${p}"`).join('\n')}`
-    : body.system
+  let systemWithBanned = body.system
+  try {
+    const kv = makeKV()
+    const bannedPhrases = await getRecentPhrases(kv, 'replaymod')
+    if (bannedPhrases.length > 0) {
+      systemWithBanned = body.system + `\n\nSESSION-BANNED PHRASES (used recently — NEVER use any of these in your output):\n${bannedPhrases.slice(0, 15).map(p => `- "${p}"`).join('\n')}`
+    }
+  } catch (err) {
+    console.error('[COMMENTARY] KV fetch failed, proceeding without banned phrases:', err instanceof Error ? err.message : err)
+  }
 
   try {
     const result = await routeCommentary(systemWithBanned, body.user, tier, config)
     return json(res, 200, { commentary: result.commentary, tone: result.tone })
   } catch (err: any) {
     console.error("Commentary handler error:", err);
-    return json(res, 500, { error: "internal_error", message: err?.message });
+    // Never 500 — return a safe fallback so the game keeps running
+    return json(res, 200, {
+      commentary: "Off night. The numbers don't lie.",
+      tone: "deadpan"
+    })
   }
 }
