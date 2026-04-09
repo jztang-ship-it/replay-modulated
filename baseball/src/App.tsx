@@ -2,10 +2,15 @@ import { useState } from "react";
 import { LandingPage } from "./components/LandingPage";
 import GameView from "./views/GameView";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { useFTUE } from "@shared/hooks/useFTUE";
 
 export default function App() {
-  // Landing page is the default entry. Tap "Play IFS" hands off to GameView.
-  const [view, setView] = useState<"landing" | "game">("landing");
+  const { isFTUE } = useFTUE("baseball");
+
+  // First-timers see the landing page. Veterans skip straight to game.
+  const [view, setView] = useState<"landing" | "game">(
+    isFTUE ? "landing" : "game"
+  );
 
   return (
     <ErrorBoundary>

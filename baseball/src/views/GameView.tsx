@@ -10,7 +10,9 @@ import type { GamePhase, PlayerCard } from "../adapters/types";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { dealInitialRoster, redrawRoster, resolveRoster } from "../adapters/gameAdapter";
 import { CoachLayer } from "@shared/components/CoachLayer";
+import type { FTUETextConfig } from "@shared/components/CoachLayer";
 import { useFTUE } from "@shared/hooks/useFTUE";
+import { dealFTUERoster, redrawFTUERoster, resolveFTUERoster } from "../adapters/ftueRoster";
 import { ensureLoaded } from "../engines/dataEngine";
 import { RosterGrid } from "../components/RosterGrid";
 import { AppHeader } from "../components/AppHeader";
@@ -412,6 +414,35 @@ function BonusRow({ betAdded, streak = 0, milestoneHit = false, onAmountChange }
   );
 }
 
+// ── FTUE text config (baseball) ───────────────────────────────────────────
+const BASEBALL_FTUE_CONFIG: FTUETextConfig = {
+  anchorCardId: "ftue-ohtani",
+  rosterCount: 5,
+  salaryCap: 220,
+  sportLabel: "baseball",
+  cardPositions: {
+    "ftue-ohtani": "above",
+    "ftue-soto": "below",
+    "ftue-betts": "below",
+    "ftue-freeman": "below",
+    "ftue-burnes": "above",
+  },
+  cardTexts: {
+    "ftue-soto": "Soto walked 3 times and drove in a run — 41 FP. Eye at the Plate badge earned. Patient approach pays off. 👁️",
+    "ftue-betts": "Betts went 0-for with a walk — 6 FP on a $40 card. Even MVPs have off nights. That's variance. 🧊",
+    "ftue-freeman": "Freeman went 2-for-4 with a double — 32 FP with a Hit Machine badge. Solid veteran floor. ⚾",
+    "ftue-burnes": "Burnes got the win with 6 innings and a Quality Start badge. 47 FP from a $22 card. Pitchers carry weight here. ✅",
+  },
+  anchorRevealText: "Ohtani was lights-out tonight. 🔥 6 shutout innings, 8 Ks, Quality Start badge ✅. 64 FP — that's why you held him.",
+  idleText: "Real stats. Real history. Your fantasy result instantly. Hit DEAL to get started." as any,
+  holdIntroText: "Five players, $220 cap. Fantasy Points come from real stats — hits, home runs, strikeouts. Who do we keep?",
+  holdAnchorText: "Ohtani is your $70 ace — most dominant pitcher in baseball. Tap him to hold, hit DRAW to replace the rest, then tap every card to see your replacements." as any,
+  nearMissText: "So close — only 5 FP from the All-Star win. One hit from Betts and we'd be celebrating a 7x score. ⚾",
+  anchorFlipHintText: "Ohtani carried this whole hand — 64 FP is elite. Flip his card to see the full stat line. 🔥",
+  anchorStatText: "6 IP, 8 K, 0 ER against Arizona. 58 base FP + 6 from Quality Start badge = 64. Badges are real. ✅",
+  finalText: "Every game log comes from true historical games. Replay lets you relive baseball history at your fingertips. Hit Replay to start playing for real. ⚾",
+};
+
 // ── GameView ───────────────────────────────────────────────────────────────
 
 export default function GameView() {
@@ -464,7 +495,7 @@ export default function GameView() {
   const [ftueCardsBlocked, setFtueCardsBlocked] = useState(false);
   const [ftueReplayReady, setFtueReplayReady] = useState(false);
   const [ftueResultsDim, setFtueResultsDim] = useState(false);
-  const [ftueBookerFlipped, setFtueBookerFlipped] = useState(false);
+  const [ftueOhtaniFlipped, setFtueOhtaniFlipped] = useState(false);
   const [ftueOscillating, setFtueOscillating] = useState(false);
   const [ftueCommentaryDone, setFtueCommentaryDone] = useState(false);
   const [ftueCommentaryOverride, setFtueCommentaryOverride] = useState<{ parts: React.ReactNode[] } | null>(null);
@@ -474,7 +505,7 @@ export default function GameView() {
   /** After FTUE scripted gauge animation completes — bar stays frozen until next hand */
   const [ftueGaugeOscDone, setFtueGaugeOscDone] = useState(false);
   const [ftueWinCelebrationActive, setFtueWinCelebrationActive] = useState(false);
-  const [ftueBookerPulse, setFtueBookerPulse] = useState(false);
+  const [ftueOhtaniPulse, setFtueOhtaniPulse] = useState(false);
   const [ftueHoldSpotlight, setFtueHoldSpotlight] = useState(false);
   const [ftueCoachBubbleKey, setFtueCoachBubbleKey] = useState<string | null>(null);
   const pendingCelebration = useRef<{ totalFp: number } | null>(null);
@@ -721,7 +752,7 @@ export default function GameView() {
       setLastRevealedCardId(cId);
 
       // FTUE: start gauge oscillation shortly after Booker's stamp lands
-      if (isFTUE && cId === "ftue-booker") {
+      if (isFTUE && cId === "ftue-ohtani") {
         setTimeout(() => setFtueOscillating(true), 100);
       }
     }, [isFTUE]),
@@ -1062,8 +1093,8 @@ export default function GameView() {
   function toggleLock(cardKey: string) {
     if (gameState !== "HOLD") return;
     // FTUE: only Booker can be toggled, and once held cannot unhold
-    if (isFTUE && cardKey !== "ftue-booker") return;
-    if (isFTUE && cardKey === "ftue-booker" && lockedCardIds.has(cardKey)) return;
+    if (isFTUE && cardKey !== "ftue-ohtani") return;
+    if (isFTUE && cardKey === "ftue-ohtani" && lockedCardIds.has(cardKey)) return;
     setLockedCardIds(prev => {
       const next = new Set(prev);
       if (next.has(cardKey)) {
@@ -1084,16 +1115,16 @@ export default function GameView() {
     // FTUE: block ALL flips when a bubble is active
     if (isFTUE && ftueCardsBlocked) return;
     // FTUE RESULTS: only Booker is flippable while dim is active
-    if (isFTUE && ftueResultsDim && cardKey !== "ftue-booker") return;
+    if (isFTUE && ftueResultsDim && cardKey !== "ftue-ohtani") return;
     setStatsFlippedIds(prev => {
       const next = new Set(prev);
       next.has(cardKey) ? next.delete(cardKey) : next.add(cardKey);
       return next;
     });
     // Track when Booker is flipped in FTUE to trigger the final bubble
-    if (isFTUE && cardKey === "ftue-booker") {
-      setFtueBookerFlipped(true);
-      setFtueBookerPulse(false);
+    if (isFTUE && cardKey === "ftue-ohtani") {
+      setFtueOhtaniFlipped(true);
+      setFtueOhtaniPulse(false);
       // Dim stays active — lifted only after final_replay bubble is dismissed
     }
   }
@@ -1118,11 +1149,11 @@ export default function GameView() {
       setFtueCommentaryDone(false);
       setFtueCommentaryOverride(null);
       setFtueWinCelebrationActive(false);
-      setFtueBookerPulse(false);
+      setFtueOhtaniPulse(false);
       setFtueHoldSpotlight(false);
       pendingCelebration.current = null;
       ftueLastHandFpRef.current = 0;
-      const res: any = isFTUE ? await dealInitialRoster() : await dealInitialRoster();
+      const res: any = isFTUE ? await dealFTUERoster() : await dealInitialRoster();
       const nextRoster = (res?.roster ?? res?.cards ?? []) as PlayerCard[];
       rosterRef.current = nextRoster;
       console.log('HAND DEALT CALLED');
@@ -1150,11 +1181,11 @@ export default function GameView() {
       setGameState("DRAWING");
       await sleep(700);
       const drawRes: any = isFTUE
-        ? await redrawRoster({ currentCards: markedRoster, lockedCardIds })
+        ? await redrawFTUERoster({ currentCards: markedRoster, lockedCardIds })
         : await redrawRoster({ currentCards: markedRoster, lockedCardIds });
       const drawnRoster = (drawRes?.roster ?? drawRes?.cards ?? markedRoster) as PlayerCard[];
       const resolveRes: any = isFTUE
-        ? await resolveRoster({ finalCards: drawnRoster })
+        ? await resolveFTUERoster({ finalCards: drawnRoster })
         : await resolveRoster({ finalCards: drawnRoster, handCount });
       const finalRoster = (resolveRes?.roster ?? resolveRes?.cards ?? drawnRoster) as PlayerCard[];
       const mvp: string | undefined = resolveRes?.mvpCardId ?? resolveRes?.mvpId;
@@ -1400,7 +1431,7 @@ export default function GameView() {
                 noTransition={noTransition}
                 visibleFpMap={visibleFpMap}
                 canFlip={gameState === "RESULTS" || gameState === "WIN_CELEBRATION"}
-                ftueFlipTargetId={isFTUE && (ftueBookerPulse || ftueHoldSpotlight) ? "ftue-booker" : null}
+                ftueFlipTargetId={isFTUE && (ftueOhtaniPulse || ftueHoldSpotlight) ? "ftue-ohtani" : null}
                 flipMsMap={flipMsMap}
                 fpCountUpMsMap={fpCountUpMsMap}
                 performanceTagMap={performanceTagMap}
@@ -1448,7 +1479,7 @@ export default function GameView() {
                 ftueLockedSlot={
                   (isFTUE && ftueResultsDim)
                     ? 0
-                    : (isFTUE && (ftueHoldSpotlight || heldCardIds.has("ftue-booker")) && gameState === "HOLD")
+                    : (isFTUE && (ftueHoldSpotlight || heldCardIds.has("ftue-ohtani")) && gameState === "HOLD")
                       ? 0
                       : null
                 }
@@ -1774,15 +1805,16 @@ export default function GameView() {
           >
             <CoachLayer
               isFTUE={isFTUE}
+              ftueTextConfig={BASEBALL_FTUE_CONFIG}
               gameState={gameState}
               lockedCount={lockedCardIds.size}
               revealIndex={revealIndex}
               legendaryCardName={legendaryCardName}
               lastRevealedCardId={lastRevealedCardId}
-              ftueBookerFlipped={ftueBookerFlipped}
+              ftueBookerFlipped={ftueOhtaniFlipped}
               onCoachBubbleKey={(key) => {
                 setFtueCoachBubbleKey(key);
-                if (key === "hold_booker") setFtueHoldSpotlight(true);
+                if (key === "hold_ohtani") setFtueHoldSpotlight(true);
               }}
               onResumeHeldReveal={() => {
                 const resume = heldRevealResumeRef.current;
@@ -1804,7 +1836,7 @@ export default function GameView() {
               ftueCommentaryDone={ftueCommentaryDone}
               onCommentaryText={(parts) => setFtueCommentaryOverride(parts ? { parts } : null)}
               onReplayReady={() => setFtueReplayReady(true)}
-              onFtueReadyToFlip={() => setFtueBookerPulse(true)}
+              onFtueReadyToFlip={() => setFtueOhtaniPulse(true)}
               onFtueBookerHeld={() => { /* draw pulse handled inside CoachLayer */ }}
               onFtueAllDone={() => {
                 completeFTUE();
@@ -1816,8 +1848,8 @@ export default function GameView() {
                 setCelebrationHeld(false);
                 setFtueCardsBlocked(false);
                 setFtueReplayReady(false);
-                setFtueBookerFlipped(false);
-                setFtueBookerPulse(false);
+                setFtueOhtaniFlipped(false);
+                setFtueOhtaniPulse(false);
                 setFtueHoldSpotlight(false);
                 setFtueGaugeOscDone(false);
                 pendingCelebration.current = null;
@@ -1904,7 +1936,7 @@ export default function GameView() {
           pendingBalanceUpdateRef.current?.();
           pendingBalanceUpdateRef.current = null;
         }}
-        ftueDrawBlocked={isFTUE && gameState === "HOLD" && !heldCardIds.has("ftue-booker")}
+        ftueDrawBlocked={isFTUE && gameState === "HOLD" && !heldCardIds.has("ftue-ohtani")}
         ftueHideSkip={isFTUE}
         ftuePulseNearMiss={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && !ftueGaugeOscDone}
         ftueReplayBlocked={isFTUE && gameState === "RESULTS" && !ftueReplayReady}
