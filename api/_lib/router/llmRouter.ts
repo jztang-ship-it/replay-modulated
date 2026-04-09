@@ -188,9 +188,9 @@ export async function routeCommentary(
     source: 'router',
   }
 
-  // 5. Fire background cross-checking and grading (non-blocking)
+  // 5. Background cross-checking and grading — caller must pass to waitUntil()
   const rosterSummary = buildRosterSummary(user)
-  runBackgroundChecks({
+  const backgroundWork = runBackgroundChecks({
     system, user, tier, config, kv, ns,
     primaryCommentary: result.commentary,
     primaryModel,
@@ -200,7 +200,7 @@ export async function routeCommentary(
     rosterSummary,
   }).catch(err => console.error('[ROUTER] Background error:', err))
 
-  return result
+  return { ...result, backgroundWork }
 }
 
 // ── Background work (fire-and-forget) ────────────────────────────────────────

@@ -8,6 +8,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { waitUntil } from "@vercel/functions";
 import { routeCommentary } from "./_lib/router/llmRouter.js";
 import type { RouterConfig, PayoutTier } from "./_lib/router/types.js";
 import { makeKV, getRecentPhrases } from "./_lib/router/kvStore.js";
@@ -61,6 +62,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const result = await routeCommentary(systemWithBanned, body.user, tier, config)
+    // Keep function alive for background grading while response ships immediately
+    if (result.backgroundWork) waitUntil(result.backgroundWork)
     return json(res, 200, { commentary: result.commentary, tone: result.tone })
   } catch (err: any) {
     console.error("Commentary handler error:", err);

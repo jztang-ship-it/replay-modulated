@@ -32,6 +32,8 @@ export interface RouterResult {
   tone: string
   modelUsed: RouterModel
   source: 'router' | 'fallback'
+  /** Background grading/cross-check promise — pass to waitUntil() so Vercel keeps the function alive */
+  backgroundWork?: Promise<void>
 }
 
 /** Config passed by each project to llmRouter */
