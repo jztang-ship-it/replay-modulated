@@ -524,7 +524,7 @@ export function CardFront(props: CardFrontProps) {
         {/* FIRE/ICE EFFECT — two overlay images flickering out of phase, clipped above badges */}
         {(stamp === "SMOKING HOT" || stamp === "ON FIRE" || stamp === "ICE COLD" || stamp === "FREEZING") && (() => {
           const isFire = stamp === "SMOKING HOT" || stamp === "ON FIRE";
-          const src = isFire ? "/火焰.png" : "/冰雪.png";
+          const src = isFire ? `${import.meta.env.BASE_URL}火焰.png` : `${import.meta.env.BASE_URL}冰雪.png`;
           const animA = isFire ? "cfFireA" : "cfIceA";
           const animB = isFire ? "cfFireB" : "cfIceB";
           const intensity = (stamp === "SMOKING HOT" || stamp === "FREEZING") ? 1.0 : 0.4;

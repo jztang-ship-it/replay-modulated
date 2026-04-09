@@ -1537,7 +1537,7 @@ export default function GameView() {
                 {/* Tier PNG — one element, animates from big slam to small settled */}
                 <img
                   key={`tier-${winTier}`}
-                  src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
+                  src={`${import.meta.env.BASE_URL}${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
                   alt={formatTierLabel(winTier)}
                   style={{
                     maxHeight: tierResultPhase === 1 ? 70 : (isPostReveal ? 28 : 36),

@@ -46,7 +46,8 @@ export const BaseballSportConfig = {
 
   // ── Roster / slots ──────────────────────────────────────────────────────
   rosterSize: 5,
-  rosterSlots: ["P", "P", "BAT", "BAT", "BAT"] as const satisfies Readonly<BaseballSlot[]>,
+  // Layout order: row 1 = slots 0-2 (3 BAT), row 2 = slots 3-4 (2 P centered).
+  rosterSlots: ["BAT", "BAT", "BAT", "P", "P"] as const satisfies Readonly<BaseballSlot[]>,
   salaryCap: 220,
 
   // ── Positions ───────────────────────────────────────────────────────────

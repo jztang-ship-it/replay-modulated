@@ -24,16 +24,9 @@ type LandingCardDef = {
 };
 
 const CARDS: LandingCardDef[] = [
+  // Row 1 — three batters
   {
-    id: "c1", name: "Shohei Ohtani", pos: "P", salary: 70, fp: 42.3,
-    team: "Los Angeles Dodgers", season: "2425", basePlayerId: "660271",
-    achievements: [
-      { id: "ACE", icon: "👑", label: "Ace", fp: 10 },
-      { id: "STRIKEOUT_KING", icon: "🔥", label: "Strikeout King", fp: 5 },
-    ],
-  },
-  {
-    id: "c2", name: "Freddie Freeman", pos: "1B", salary: 60, fp: 33.6,
+    id: "c1", name: "Freddie Freeman", pos: "1B", salary: 60, fp: 33.6,
     team: "Los Angeles Dodgers", season: "2425", basePlayerId: "518692",
     achievements: [
       { id: "MULTI_HIT", icon: "⚾", label: "Multi Hit", fp: 5 },
@@ -41,7 +34,7 @@ const CARDS: LandingCardDef[] = [
     ],
   },
   {
-    id: "c3", name: "Mookie Betts", pos: "OF", salary: 56, fp: 31.0,
+    id: "c2", name: "Mookie Betts", pos: "OF", salary: 56, fp: 31.0,
     team: "Los Angeles Dodgers", season: "2425", basePlayerId: "605141",
     achievements: [
       { id: "GOING_YARD", icon: "🚀", label: "Going Yard", fp: 10 },
@@ -49,19 +42,28 @@ const CARDS: LandingCardDef[] = [
     ],
   },
   {
-    id: "c4", name: "Fernando Tatis Jr.", pos: "SS", salary: 63, fp: 34.8,
+    id: "c3", name: "Fernando Tatis Jr.", pos: "SS", salary: 63, fp: 34.8,
     team: "San Diego Padres", season: "2425", basePlayerId: "665487",
     achievements: [
       { id: "PERFECT_DAY", icon: "🌞", label: "Perfect Day", fp: 15 },
       { id: "GOING_YARD", icon: "🚀", label: "Going Yard", fp: 10 },
     ],
   },
+  // Row 2 — two pitchers
   {
-    id: "c5", name: "Yordan Alvarez", pos: "DH", salary: 56, fp: 31.2,
-    team: "Houston Astros", season: "2425", basePlayerId: "670541",
+    id: "c4", name: "Shohei Ohtani", pos: "P", salary: 70, fp: 42.3,
+    team: "Los Angeles Dodgers", season: "2425", basePlayerId: "660271",
     achievements: [
-      { id: "RBI_MACHINE", icon: "🧩", label: "RBI Machine", fp: 8 },
-      { id: "MULTI_HIT", icon: "⚾", label: "Multi Hit", fp: 5 },
+      { id: "ACE", icon: "👑", label: "Ace", fp: 10 },
+      { id: "STRIKEOUT_KING", icon: "🔥", label: "Strikeout King", fp: 5 },
+    ],
+  },
+  {
+    id: "c5", name: "Gerrit Cole", pos: "P", salary: 65, fp: 38.1,
+    team: "New York Yankees", season: "2425", basePlayerId: "543037",
+    achievements: [
+      { id: "ACE", icon: "👑", label: "Ace", fp: 10 },
+      { id: "QUALITY_START", icon: "✅", label: "Quality Start", fp: 6 },
     ],
   },
 ];
