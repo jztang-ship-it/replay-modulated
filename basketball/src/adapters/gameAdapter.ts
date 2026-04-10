@@ -84,6 +84,7 @@ function buildEvalPool(players: any[], logs: Map<string, any[]>, projByBaseId: M
     .filter((p: any) => String(p.tier ?? "").toUpperCase() === "ORANGE")
     .map((p: any) => String(p.basePlayerId ?? p.id ?? ""));
   const activeOrange = getDailyOrangePool(allOrangeIds, DAILY_ORANGE_COUNT);
+  console.log(`[roster] pool=${players.length} orange=${allOrangeIds.length} active=${[...activeOrange].join(",")}`);
 
   return players
     .filter((p: any) => {
