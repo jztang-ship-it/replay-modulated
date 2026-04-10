@@ -96,14 +96,23 @@ type Props = {
   onViewLeaderboard?: () => void;
 };
 
-import React from 'react';
+import React, { useMemo } from 'react';
+import { getTodaysStars } from "../adapters/gameAdapter";
 
 export function GameBar(props: Props) {
+  const legendWithStars = useMemo(() => {
+    try {
+      const stars = getTodaysStars();
+      if (stars.length > 0) return { ...LEGEND, todaysStars: stars };
+    } catch { /* data not loaded yet */ }
+    return LEGEND;
+  }, []);
+
   return (
     <SharedGameBar
       {...props}
       winTiers={WIN_TIERS}
-      legend={LEGEND}
+      legend={legendWithStars}
       hideTierBar={true}
     />
   );

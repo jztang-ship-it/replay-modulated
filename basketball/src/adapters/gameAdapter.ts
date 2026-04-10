@@ -8,9 +8,12 @@ import { getPlayers, getLogsByKey } from "../engines/dataEngine";
 import { generateRoster, redrawRoster as engineRedraw, mulberry32, randomSeed } from "../engines/rosterEngine";
 import { resolveCards } from "../engines/resolveEngine";
 import { DEFAULT_ECONOMY_CONFIG } from "../engines/economyEngine";
+import { getDailyOrangePool } from "@shared/utils/dailyRotation";
 import type { PlayerCard } from "./types";
 import type { PlayerEval, GeneratedCard } from "../engines/rosterEngine";
 import type { EconomyConfig } from "../engines/economyEngine";
+
+const DAILY_ORANGE_COUNT = 4;
 
 function buildProjections(players: any[]): { projByBaseId: Map<string, number> } {
   const projByBaseId = new Map<string, number>();
@@ -75,15 +78,45 @@ function hasValidLogs(basePlayerId: string, logsByKey: Map<string, any[]>): bool
   });
 }
 
+/** Build the eval pool with daily ORANGE rotation applied. */
+function buildEvalPool(players: any[], logs: Map<string, any[]>, projByBaseId: Map<string, number>): PlayerEval[] {
+  const allOrangeIds = players
+    .filter((p: any) => String(p.tier ?? "").toUpperCase() === "ORANGE")
+    .map((p: any) => String(p.basePlayerId ?? p.id ?? ""));
+  const activeOrange = getDailyOrangePool(allOrangeIds, DAILY_ORANGE_COUNT);
+
+  return players
+    .filter((p: any) => {
+      if (!hasValidLogs(String(p.basePlayerId ?? p.id ?? ""), logs)) return false;
+      // ORANGE players only appear if in today's rotation
+      const tier = String(p.tier ?? "").toUpperCase();
+      if (tier === "ORANGE") {
+        const baseId = String(p.basePlayerId ?? p.id ?? "");
+        return activeOrange.has(baseId);
+      }
+      return true;
+    })
+    .map(p => toPlayerEval(p, projByBaseId));
+}
+
+/** Get today's active ORANGE star names + IDs (for legend modal). */
+export function getTodaysStars(): Array<{ name: string; basePlayerId: string; salary: number }> {
+  const allPlayers = getPlayers();
+  const players = allPlayers.filter((p: any) => String(p.id ?? "").includes("_2425"));
+  const orangePlayers = players.filter((p: any) => String(p.tier ?? "").toUpperCase() === "ORANGE");
+  const allOrangeIds = orangePlayers.map((p: any) => String(p.basePlayerId ?? p.id ?? ""));
+  const activeIds = getDailyOrangePool(allOrangeIds, DAILY_ORANGE_COUNT);
+  return orangePlayers
+    .filter((p: any) => activeIds.has(String(p.basePlayerId ?? p.id ?? "")))
+    .map((p: any) => ({ name: String(p.name ?? ""), basePlayerId: String(p.basePlayerId ?? p.id ?? ""), salary: Number(p.salary ?? 0) }));
+}
+
 export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
   const allPlayers = getPlayers();
   const logs = getLogsByKey();
   const players = allPlayers.filter((p: any) => String(p.id ?? '').includes('_2425'));
   const { projByBaseId } = buildProjections(players);
-  // Exclude players with no valid game logs — prevents zero-stat white tier cards
-  const evalPool = players
-    .filter((p: any) => hasValidLogs(String(p.basePlayerId ?? p.id ?? ''), logs))
-    .map(p => toPlayerEval(p, projByBaseId));
+  const evalPool = buildEvalPool(players, logs, projByBaseId);
 
   const rnd = mulberry32(randomSeed());
   const rosterConfig = {
@@ -107,9 +140,7 @@ export async function redrawRoster({
   const logs = getLogsByKey();
   const players = allPlayers.filter((p: any) => String(p.id ?? '').includes('_2425'));
   const { projByBaseId } = buildProjections(players);
-  const evalPool = players
-    .filter((p: any) => hasValidLogs(String(p.basePlayerId ?? p.id ?? ''), logs))
-    .map(p => toPlayerEval(p, projByBaseId));
+  const evalPool = buildEvalPool(players, logs, projByBaseId);
 
   const heldSlots = new Set<number>();
   currentCards.forEach((c, i) => {

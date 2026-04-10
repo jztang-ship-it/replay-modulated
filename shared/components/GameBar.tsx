@@ -52,6 +52,8 @@ export interface LegendData {
   scoringRules: ScoringRule[];
   stamps?: BadgeInfo[];
   badges: BadgeInfo[];
+  /** Daily ORANGE rotation — shown at top of legend modal. */
+  todaysStars?: Array<{ name: string; basePlayerId: string }>;
 }
 
 // Celebration data passed in when WIN_CELEBRATION is active
@@ -533,6 +535,22 @@ function LegendModal({ onClose, legend }: { onClose: () => void; legend: LegendD
         <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px 20px" }}>
           {tab === "payouts" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {legend.todaysStars && legend.todaysStars.length > 0 && (
+                <div style={{ marginBottom: 10, paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+                  <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1.2, color: "#FB923C", textTransform: "uppercase", marginBottom: 8 }}>
+                    ★ TODAY'S STARS
+                  </div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {legend.todaysStars.map(s => (
+                      <div key={s.basePlayerId} style={{
+                        padding: "5px 12px", borderRadius: 8,
+                        background: "rgba(251,146,60,0.12)", border: "1px solid rgba(251,146,60,0.3)",
+                        fontSize: 11, fontWeight: 800, color: "#FB923C",
+                      }}>{s.name}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, paddingBottom: 6, borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: 2 }}>
                 <span style={colHdr}>Tier</span>
                 <span style={{ ...colHdr, textAlign: "right" }}>Team FP</span>
