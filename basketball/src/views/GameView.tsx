@@ -174,11 +174,11 @@ function createPlaceholders(): PlayerCard[] {
 }
 
 const GAUGE_THRESHOLDS = [
-  { tier: "ROOKIE", minFP: 148 },
-  { tier: "STARTER", minFP: 168 },
-  { tier: "ALL_STAR", minFP: 188 },
-  { tier: "MVP", minFP: 210 },
-  { tier: "GOAT", minFP: 238 },
+  { tier: "ROOKIE", minFP: 130 },
+  { tier: "STARTER", minFP: 155 },
+  { tier: "ALL_STAR", minFP: 180 },
+  { tier: "MVP", minFP: 205 },
+  { tier: "GOAT", minFP: 235 },
 ];
 const NEAR_MISS_FP = 5;
 
@@ -232,22 +232,22 @@ function RollingNumber({ value, decimals = 0, duration = 400 }: { value: number;
 
 // ── Tier flip display helpers ──────────────────────────────────────
 function deriveTierFromFp(fp: number): string {
-  if (fp >= 238) return "GOAT";
-  if (fp >= 210) return "MVP";
-  if (fp >= 188) return "ALL_STAR";
-  if (fp >= 168) return "STARTER";
-  if (fp >= 148) return "ROOKIE";
+  if (fp >= 235) return "GOAT";
+  if (fp >= 205) return "MVP";
+  if (fp >= 180) return "ALL_STAR";
+  if (fp >= 155) return "STARTER";
+  if (fp >= 130) return "ROOKIE";
   return "BUST";
 }
 
 // ── Spring oscillation waypoints ────────────────────────────────────────────
 const SPRING_TIERS = [
-  { name: "BUST", lo: 0, hi: 148 },
-  { name: "ROOKIE", lo: 148, hi: 168 },
-  { name: "STARTER", lo: 168, hi: 188 },
-  { name: "ALL_STAR", lo: 188, hi: 210 },
-  { name: "MVP", lo: 210, hi: 238 },
-  { name: "GOAT", lo: 238, hi: 9999 },
+  { name: "BUST", lo: 0, hi: 130 },
+  { name: "ROOKIE", lo: 130, hi: 155 },
+  { name: "STARTER", lo: 155, hi: 180 },
+  { name: "ALL_STAR", lo: 180, hi: 205 },
+  { name: "MVP", lo: 205, hi: 235 },
+  { name: "GOAT", lo: 235, hi: 9999 },
 ];
 const SPRING_TIER_SPAN = 20.0;
 
@@ -1892,11 +1892,11 @@ export default function GameView() {
                   <TierGauge
                     totalFp={gaugeTotalFp}
                     thresholds={[
-                      { tier: "ROOKIE", minFP: 148 },
-                      { tier: "STARTER", minFP: 168 },
-                      { tier: "ALL_STAR", minFP: 188 },
-                      { tier: "MVP", minFP: 210 },
-                      { tier: "GOAT" as any, minFP: 238 },
+                      { tier: "ROOKIE", minFP: 130 },
+                      { tier: "STARTER", minFP: 155 },
+                      { tier: "ALL_STAR", minFP: 180 },
+                      { tier: "MVP", minFP: 205 },
+                      { tier: "GOAT" as any, minFP: 235 },
                     ]}
                     winTier={springSettled ? (winTier ?? undefined) : undefined}
                     lastCardFp={lastCardFp}
