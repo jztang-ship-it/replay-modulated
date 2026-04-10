@@ -17,51 +17,78 @@ import { buildPrompt } from "./promptBuilder";
 const TIMEOUT_MS = 3000;
 const ENDPOINT = "/api/commentary";
 const HARD_CHAR_CAP = 280;
-
-/** Banned phrases — if any appear in the output, reject it entirely. */
-const BANNED_PHRASES = [
-  "every card underdelivered",
-  "full bust",
-  "avoided zero",
-  "avoided the bust",
-  "the minimum",
-  "the floor",
-  "minimum win",
-  "came up short",
-  "still lost",
-  "couldn't overcome",
-  "fell short",
-  "barely lost",
-  "nice work",
-  "great job",
-  "clutch performance",
-  "the rest of the roster",
-  "showed up",
-  "went nuclear",
-  "carry the load",
-  "carried the load",
-  "pick up the slack",
-  "picked up the slack",
-  "disappeared",
-];
+const MIN_CHAR_LENGTH = 80; // reject fragments
 
 /**
- * Check if commentary mentions a NOT-MAIN-SUBJECT player by name.
- * Returns true if the output is clean (only star players named).
+ * Strict quality gate. Returns null (reject) or cleaned commentary.
+ * Every check here exists because Haiku violated the prompt rule.
  */
-function passesStarFilter(commentary: string, roster: CommentaryInput["roster"]): boolean {
-  const lower = commentary.toLowerCase();
+function qualityGate(raw: string, roster: CommentaryInput["roster"]): string | null {
+  let text = raw.trim();
+
+  // 1. Hard reject: contains "FP" anywhere (case-insensitive)
+  if (/\bfp\b/i.test(text)) return null;
+
+  // 2. Hard reject: too short (fragments, taglines)
+  if (text.length < MIN_CHAR_LENGTH) return null;
+
+  // 3. Hard reject: ends with a short fragment after a period ("The gap.", "That's it.")
+  const lastDot = text.lastIndexOf(".", text.length - 2);
+  if (lastDot > 0) {
+    const lastSentence = text.slice(lastDot + 1).trim();
+    if (lastSentence.length > 0 && lastSentence.length < 20) return null;
+  }
+
+  // 4. Hard reject: contains banned words/phrases
+  const lower = text.toLowerCase();
+  const banned = [
+    "every card", "full bust", "avoided zero", "the minimum", "the floor",
+    "came up short", "still lost", "couldn't overcome", "fell short",
+    "nice work", "great job", "clutch performance", "went nuclear",
+    "carry the load", "carried the load", "pick up the slack",
+    "the rest of the roster", "fantasy points", "projection",
+    "the lineup", "the draw", "the hand", "reflected it",
+  ];
+  if (banned.some(b => lower.includes(b))) return null;
+
+  // 5. Hard reject: names a non-star player
   for (const card of roster) {
     const tier = (card.cardTier ?? "").toUpperCase();
-    if (tier === "ORANGE" || tier === "PURPLE") continue; // stars are OK to name
-    // Check if this non-star player's last name appears in the commentary
-    const nameParts = card.name.trim().split(/\s+/);
-    const lastName = nameParts[nameParts.length - 1]?.toLowerCase();
-    if (lastName && lastName.length > 2 && lower.includes(lastName)) {
-      return false; // named a non-star player — reject
-    }
+    if (tier === "ORANGE" || tier === "PURPLE") continue;
+    const parts = card.name.trim().split(/\s+/);
+    const last = parts[parts.length - 1]?.toLowerCase();
+    if (last && last.length > 2 && lower.includes(last)) return null;
   }
-  return true;
+
+  // 6. Hard reject: no star player's FULL NAME (first AND last) appears
+  const stars = roster.filter(c => {
+    const t = (c.cardTier ?? "").toUpperCase();
+    return t === "ORANGE" || t === "PURPLE";
+  });
+  const hasFullStarName = stars.some(c => {
+    const full = c.name.trim().toLowerCase();
+    return full.length > 4 && lower.includes(full);
+  });
+  // Also accept last name if it's distinctive (>= 5 chars)
+  const hasDistinctiveLastName = stars.some(c => {
+    const parts = c.name.trim().split(/\s+/);
+    const last = parts[parts.length - 1]?.toLowerCase() ?? "";
+    return last.length >= 5 && lower.includes(last);
+  });
+  if (!hasFullStarName && !hasDistinctiveLastName) return null;
+
+  // 7. Hard reject: mentions a player NOT in the roster at all
+  //    (catches hallucinated players like "CP3" when CP3 isn't in the hand)
+  //    Skip this check — too complex to implement reliably with nicknames
+
+  // 8. Length cap
+  if (text.length > HARD_CHAR_CAP) {
+    const truncated = text.slice(0, HARD_CHAR_CAP);
+    const lastPunct = Math.max(truncated.lastIndexOf("."), truncated.lastIndexOf("!"), truncated.lastIndexOf("?"));
+    text = lastPunct > 50 ? truncated.slice(0, lastPunct + 1) : truncated;
+  }
+
+  return text;
 }
 
 export async function generateCommentary(
@@ -90,39 +117,12 @@ export async function generateCommentary(
       return null;
     }
 
-    let commentary = data.commentary.trim();
-
-    // Hard cap — truncate at last sentence boundary
-    if (commentary.length > HARD_CHAR_CAP) {
-      const truncated = commentary.slice(0, HARD_CHAR_CAP);
-      const lastPunct = Math.max(
-        truncated.lastIndexOf("."),
-        truncated.lastIndexOf("!"),
-        truncated.lastIndexOf("?"),
-      );
-      commentary = lastPunct > 50 ? truncated.slice(0, lastPunct + 1) : truncated;
-    }
-
-    // Reject if commentary contains banned phrases
-    const lower = commentary.toLowerCase();
-    if (BANNED_PHRASES.some(p => lower.includes(p))) return null;
-
-    // Reject if commentary names a non-star player
-    if (!passesStarFilter(commentary, input.roster)) return null;
-
-    // Reject if commentary uses "he" or "him" without a player name
-    // (vague pronouns with no antecedent = bad UX)
-    const hasStarName = input.roster
-      .filter(c => (c.cardTier ?? "").toUpperCase() === "ORANGE" || (c.cardTier ?? "").toUpperCase() === "PURPLE")
-      .some(c => {
-        const parts = c.name.trim().split(/\s+/);
-        const last = parts[parts.length - 1]?.toLowerCase() ?? "";
-        return last.length > 2 && lower.includes(last);
-      });
-    if (!hasStarName && commentary.length > 30) return null; // no star name at all = reject
+    // Run through strict quality gate — rejects bad Haiku output
+    const cleaned = qualityGate(data.commentary as string, input.roster);
+    if (!cleaned) return null;
 
     return {
-      commentary,
+      commentary: cleaned,
       tone: typeof data.tone === "string" ? data.tone : "observational",
       source: "claude",
     };

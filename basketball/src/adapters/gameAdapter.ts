@@ -98,7 +98,7 @@ function buildEvalPool(players: any[], logs: Map<string, any[]>, projByBaseId: M
     .map(p => toPlayerEval(p, projByBaseId));
 
   const orangeInPool = result.filter(p => (p.tier ?? "").toUpperCase() === "ORANGE");
-  console.log(`[roster] pool=${result.length} orangeInPool=${orangeInPool.length} names=${orangeInPool.map(p => p.name).join(",")}`);
+  console.log(`[roster v3] pool=${result.length} orangeInPool=${orangeInPool.length} names=${orangeInPool.map(p => p.name).join(",")}`);
   return result;
 }
 
