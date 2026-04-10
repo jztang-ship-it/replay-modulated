@@ -119,11 +119,10 @@ function lookupCulture(name: string): PlayerCulture | null {
   return PLAYER_CULTURE[lastName(name).toLowerCase()] ?? null;
 }
 
-function nameFor(c: PostRevealRosterCard, seed: number): string {
-  const culture = lookupCulture(c.name);
-  if (!culture || !culture.nicknames.length) return lastName(c.name);
-  const opts = [...culture.nicknames, lastName(c.name), c.name.split(" ")[0] ?? lastName(c.name)];
-  return opts[Math.abs(seed) % opts.length];
+function nameFor(c: PostRevealRosterCard, _seed: number): string {
+  // Always use full name — never just first name or nickname alone.
+  // Users need to know WHO is being talked about.
+  return c.name;
 }
 
 // ─── Headline selection ───────────────────────────────────────────────────────
@@ -253,61 +252,61 @@ const BUST_L1 = [
   "Rough from the first flip to the last.",
   "Every card underdelivered. Full bust.",
   "Fell short of 155. Not one bright spot.",
-  "Nothing clicked. Zero momentum.",
-  "Full bust. Nobody had their night.",
-  "Short across the board. Never found it.",
-  "155 was the target. Nobody got close.",
+  "The whole roster came in flat tonight — nobody had the game you needed.",
+  "Not enough from anyone to get this hand across the line.",
+  "Short across the board — the roster never found its rhythm.",
+  "Bust. The numbers don't lie and tonight they weren't kind.",
 ];
 const ROOKIE_L1 = [
-  "Scraped to Rookie. Half pay, still here.",
-  "Made it to 155. Not pretty but it counts.",
-  "Rookie payout. Somebody showed up.",
-  "Minimum cash. Just enough to avoid zero.",
-  "155 and change. Somebody saved this hand.",
-  "Barely cleared Rookie. One card away.",
+  "Rookie tier — half the bet comes back, and that's better than nothing.",
+  "Scraped into Rookie territory, which means you're walking away with something.",
+  "Just enough to clear the Rookie line — not pretty, but the payout is real.",
+  "Rookie win — the roster didn't dominate, but it didn't collapse either.",
 ];
 const STARTER_BARELY_L1 = [
-  "Caught the Starter line. Ugly but it counts.",
-  "Scraped into Starter. A win is a win.",
-  "Right on the edge of Starter. Barely.",
-  "175 by the skin of it. Close call.",
-  "Just made Starter. The roster held.",
+  "Right on the Starter line — one bad play away from dropping a tier.",
+  "Barely caught Starter, but a win is a win and the money counts.",
+  "Starter by the thinnest margin possible — the hand held together just enough.",
 ];
 const STARTER_L1 = [
-  "Solid Starter. Nobody had a disaster.",
-  "Made it to Starter. Consistent roster.",
-  "175 and above. The hand came through.",
-  "Clean Starter. No stars, no disasters.",
-  "Starter territory. The roster held.",
-  "Three times the entry. Hand delivered.",
+  "Clean Starter result — the roster delivered a solid, professional performance.",
+  "Starter territory with room to breathe — that's a comfortable 2.5x return.",
+  "This is what a Starter hand looks like when everything goes according to plan.",
 ];
 const STARTER_DOM_L1 = [
-  "Comfortable Starter. Room to spare.",
-  "Easy Starter. Nobody had a bad night.",
-  "Cruised to 175. Never really in doubt.",
-  "Dominant Starter. Everyone contributed.",
-  "Starter with margin. That's how it goes.",
+  "Dominant Starter — this hand was knocking on the All-Star door.",
+  "Comfortable Starter with real margin — the kind of hand you feel good about.",
+  "Cruised through Starter — the roster came through and then some.",
 ];
 const ALLSTAR_L1 = [
-  "All-Star. Not many rosters get here.",
-  "195 FP. Somebody had a real night.",
-  "All-Star territory. Hand came through.",
-  "Deep into All-Star. Everything clicked.",
+  "All-Star tier — that's a 7x return and a hand worth remembering.",
+  "All-Star territory — this roster put together something special tonight.",
+  "Deep into All-Star — not many hands get here and the payout reflects it.",
   "Eight times the entry. Hand earned it.",
   "All-Star. Someone went above average.",
 ];
 const MVP_L1 = [
-  "MVP territory. That's a rare hand.",
-  "215 FP. Someone went off tonight.",
-  "MVP money. Something special here.",
-  "Fifteen times payout. Hand was built right.",
-  "Rare night. MVP doesn't happen by accident.",
-  "215 and above. The lineup peaked.",
+  "MVP tier — that's 15x the bet and a hand that doesn't come around often.",
+  "MVP territory — someone on this roster absolutely went off tonight.",
+  "This is what an MVP hand looks like — rare, real, and the payout proves it.",
 ];
-const GOAT_L1 = ["I GUARANTEE IT. That lineup just hit G.O.A.T. 🐐", "235+ FP. This goes in the memory. 🐐", "That's not a normal night. That's a different conversation. 🐐", "The FP don't lie. G.O.A.T. tier confirmed. 🐐"];
-const NM_TINY = ["{gap} FP from {next}. One bucket. That's it.", "That was right there. {gap} FP is a foul shot.", "{next} was one play away. {gap} FP."];
-const NM_SMALL = ["{next} slipped away. {gap} FP short.", "{gap} FP from {next}. One good quarter from anybody.", "All the way to the edge and {gap} FP short. That stings."];
-const NM_MED = ["{gap} FP from {next}. One card away.", "Close enough to feel it. Not close enough to have it.", "{next} was visible and then it wasn't. {gap} FP gap."];
+const GOAT_L1 = [
+  "G.O.A.T. tier — the biggest payout in the game and a hand worth framing.",
+  "This roster just hit G.O.A.T. — that's a different conversation entirely.",
+  "G.O.A.T. doesn't happen by accident — this hand was something special.",
+];
+const NM_TINY = [
+  "Just {gap} points from {next} tier — one bucket changes everything.",
+  "That was right there — {gap} points is literally a free throw away from {next}.",
+];
+const NM_SMALL = [
+  "{next} slipped away by {gap} points — one good quarter from anybody closes that gap.",
+  "All the way to the edge of {next} and {gap} points short — that stings.",
+];
+const NM_MED = [
+  "{gap} points from {next} — one card having a better night and you're there.",
+  "Close enough to see {next} tier and not close enough to touch it.",
+];
 
 // ─── Basketball pack ──────────────────────────────────────────────────────────
 

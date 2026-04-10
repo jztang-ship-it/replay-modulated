@@ -84,9 +84,7 @@ function buildEvalPool(players: any[], logs: Map<string, any[]>, projByBaseId: M
     .filter((p: any) => String(p.tier ?? "").toUpperCase() === "ORANGE")
     .map((p: any) => String(p.basePlayerId ?? p.id ?? ""));
   const activeOrange = getDailyOrangePool(allOrangeIds, DAILY_ORANGE_COUNT);
-  console.log(`[roster] pool=${players.length} orange=${allOrangeIds.length} active=${[...activeOrange].join(",")}`);
-
-  return players
+  const result = players
     .filter((p: any) => {
       if (!hasValidLogs(String(p.basePlayerId ?? p.id ?? ""), logs)) return false;
       // ORANGE players only appear if in today's rotation
@@ -98,6 +96,10 @@ function buildEvalPool(players: any[], logs: Map<string, any[]>, projByBaseId: M
       return true;
     })
     .map(p => toPlayerEval(p, projByBaseId));
+
+  const orangeInPool = result.filter(p => (p.tier ?? "").toUpperCase() === "ORANGE");
+  console.log(`[roster] pool=${result.length} orangeInPool=${orangeInPool.length} names=${orangeInPool.map(p => p.name).join(",")}`);
+  return result;
 }
 
 /** Get today's active ORANGE star names + IDs (for legend modal). */
@@ -127,6 +129,10 @@ export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
   };
 
   const cards = generateRoster(evalPool, rosterConfig, getEconomyConfig(), rnd);
+  const orangeDealt = cards.filter((c: any) => (c.tier ?? "").toUpperCase() === "ORANGE");
+  if (orangeDealt.length > 0) {
+    console.log(`[roster] DEALT orange: ${orangeDealt.map((c: any) => c.name).join(", ")}`);
+  }
   return { roster: cards as unknown as PlayerCard[] };
 }
 
