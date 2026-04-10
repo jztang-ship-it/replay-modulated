@@ -50,19 +50,20 @@ function smartThreshold(entries: LbEntry[]): number {
 }
 
 /**
- * Tier helper — Trigger 2 fires for MVP-or-better tiers.
- * The basketball tier set is BUST/ROOKIE/STARTER/ALL_STAR/MVP/GOAT.
- * The spec says MVP+ qualifies for Trigger 2 (you got on the board).
+ * Tier helper — Trigger 2 fires for tiers that qualify for "on the board."
+ * Default: MVP+ (basketball). Override via args.onBoardTiers for other sports.
  */
-function isOnBoardTier(winTier: string): boolean {
-  return winTier === "MVP" || winTier === "GOAT";
-}
+const DEFAULT_ON_BOARD_TIERS = new Set(["MVP", "GOAT"]);
 
 export interface LeaderboardContextArgs {
   myFp: number;
   winTier: string;        // BUST | ROOKIE | STARTER | ALL_STAR | MVP | GOAT
   isBust: boolean;
   myUid: string;          // from getPlayerUid()
+  /** Tiers that qualify for "on the board" (default: MVP, GOAT). */
+  onBoardTiers?: string[];
+  /** MVP threshold FP for intro message (default: 215). */
+  mvpThresholdFp?: number;
 }
 
 /**
@@ -80,7 +81,9 @@ export interface LeaderboardContextArgs {
 export async function fetchLeaderboardContext(
   args: LeaderboardContextArgs
 ): Promise<string | null> {
-  const { myFp, winTier, isBust, myUid } = args;
+  const { myFp, winTier, isBust, myUid, onBoardTiers, mvpThresholdFp } = args;
+  const boardTiers = onBoardTiers ? new Set(onBoardTiers) : DEFAULT_ON_BOARD_TIERS;
+  const mvpFp = mvpThresholdFp ?? 215;
 
   const introCount = parseInt(localStorage.getItem("rm_whisper_intro_count") || "0", 10);
   const everOnBoard = localStorage.getItem("rm_ever_on_board") === "1";
@@ -90,8 +93,8 @@ export async function fetchLeaderboardContext(
     const next = introCount + 1;
     localStorage.setItem("rm_whisper_intro_count", String(next));
     return next === 1
-      ? "Top players hit MVP tier (215+ FP) to get on the leaderboard"
-      : "215 FP gets you on the board — you're learning the range";
+      ? `Top players hit MVP tier (${mvpFp}+ FP) to get on the leaderboard`
+      : `${mvpFp} FP gets you on the board — you're learning the range`;
   };
 
   const entries = await fetchBoard();
@@ -116,8 +119,8 @@ export async function fetchLeaderboardContext(
   }
 
   // ── Trigger 2: You got on the board ─────────────────────────────────────
-  // MVP+ tier, not previously on the board today, and confirmed present.
-  if (!isBust && isOnBoardTier(winTier)) {
+  // Board-qualifying tier, not previously on the board today, and confirmed present.
+  if (!isBust && boardTiers.has(winTier)) {
     const onBoardToday = localStorage.getItem("rm_on_board_today") === "1";
     if (!onBoardToday && myRank != null) {
       localStorage.setItem("rm_on_board_today", "1");
