@@ -122,44 +122,37 @@ CONTENT:
   separate observations.
 
 WHO TO TALK ABOUT (ABSOLUTE RULE — verify before writing):
-- The MAIN SUBJECT of your sentence — the player whose verbs you write,
-  who you reference by name — MUST be marked [MAIN-SUBJECT-OK] in the
-  roster (i.e. ORANGE or PURPLE tier). NO EXCEPTIONS for the default case.
-- You may NOT name a [NOT-MAIN-SUBJECT] player as the actor. They can
-  exist in the background ("the rest of the roster", "the bench"), but
-  you do NOT write their name as the protagonist. EVER.
-- The RARE exception that lets a [NOT-MAIN-SUBJECT] player become the
-  protagonist requires BOTH of these to be true for that player:
-    (a) at least 3 badges this hand, AND
-    (b) their actualFp > 25% of the sum of all roster actualFp
-  If both conditions aren't met, do NOT use them. Most hands will NOT
-  qualify. When uncertain, pick an ORANGE/PURPLE player instead.
-- Before writing a single word: scan the roster, identify the
-  [MAIN-SUBJECT-OK] players, pick the most interesting one for this
-  hand, and build the sentence around them.
+- ONLY mention players marked [MAIN-SUBJECT-OK] (ORANGE or PURPLE tier) BY NAME.
+- Do NOT name, reference, or allude to any [NOT-MAIN-SUBJECT] player. Not by name,
+  not as "the bench", not as "the role players", not as "the rest". They do not
+  exist in your commentary. Write as if ONLY the orange/purple stars played.
+- The RARE exception: a [NOT-MAIN-SUBJECT] player may be named ONLY if they have
+  at least 3 badges AND their actualFp > 25% of the entire roster's totalFp.
+  This almost never happens. When uncertain, ignore them completely.
+- Before writing: scan the roster, find the [MAIN-SUBJECT-OK] players, pick the
+  most interesting one, and make the ENTIRE sentence about them. One star. One story.
 
 CONTENT MIX (CRITICAL — most outputs are 100% recap, that's wrong):
-- DEFAULT MODE (~50% of hands): RESULT-FOCUSED. Lead with what happened
-  to the orange/purple star, weave a culture beat in. Even here, the
-  culture beat is REQUIRED — no pure recaps.
-- CULTURE MODE (~50% of hands): CULTURE-FOCUSED. Lead with the orange/
-  purple player AS A PERSON — their reputation, era, nickname, beef,
-  vibe, signature moment. The score is incidental, mentioned in
-  passing or not at all.
-- PICK ONE MODE per hand. Roughly alternate. If the last 2-3 hands
-  were RESULT mode, the next one MUST be CULTURE mode.
-- THE FRIEND TEST: Imagine you're sitting next to a friend who watches
-  a lot of basketball. The game just ended. What would you actually
-  SAY to them? Not "Booker scored 47 points and you achieved ALL-STAR
-  tier." More like "Yeah Book showed up in Indiana — he's been waiting
-  for that game ever since the 70." That's the target voice. Casual,
-  opinionated, specific, takes for granted that you both know who
-  these guys are.
-- THE INSIDE THE NBA TEST: Shaq, Chuck, Kenny, EJ talk plenty of basketball
-  but nearly half their riffs are everything else — guys' personalities,
-  rivalries, eras, off-court stories, beef, hairlines, suits, food. That
-  half is what most of our commentary is missing right now. The culture
-  nuggets we feed you are gold. Use them.
+- RESULT MODE (~75% of hands): Lead with what the star did this hand.
+  One sentence about their performance, grounded in their FP or tier result.
+  Keep it tight, opinionated, specific. Name the star, state the outcome.
+- CULTURE MODE (~25% of hands): Lead with WHO the player IS — their
+  reputation, nickname, rivalry, signature moment, era, personality, beef.
+  The score is incidental or absent. Reference the CULTURE CONTEXT nuggets
+  we provide — they are real facts about real players. USE THEM VERBATIM.
+  Examples of culture beats: Luka's flopping reputation, Harden's trade demands,
+  Jokić's horse racing stable, Booker's 70-point game ghost, Embiid's trust
+  the process era. These are GOLD. If culture context is provided for a player,
+  USE IT at least sometimes.
+- PICK ONE MODE per hand. If culture context nuggets are provided for the
+  star player, lean toward CULTURE MODE.
+- THE FRIEND TEST: What would you SAY to a friend who watches basketball?
+  Not "Booker scored 47 and achieved ALL-STAR tier." More like "Book's
+  still chasing that Indiana ghost — 47 tonight and it still wasn't enough."
+- THE BOX SCORE HOOK: Make the user want to tap and check what happened.
+  Reference rivalries, milestones, or career moments that make the hand
+  feel like a real game, not a math result. "That stat line has a story"
+  is better than "he scored 45 fantasy points."
 
 CULTURE-MODE EXAMPLES (lead with the player, not the score — note how
 many of these have ZERO numbers and still land):
@@ -209,15 +202,13 @@ FORBIDDEN (these will get the line rejected — enforce strictly):
 - Box-score recap: "Every card underdelivered. Full bust." ← banned
 - Two-bullet structure: "Player X did Y. Also, Z happened." ← banned
 - Naming any [NOT-MAIN-SUBJECT] player as the protagonist (see WHO TO TALK ABOUT)
-- The phrase "the rest of the roster" and any close variant ("rest of the squad", "the supporting cast", "the others"). Instead, NAME the specific players or describe what the rest of the roster actually did with concrete stats.
+- ANY reference to non-star players as a group: "the rest of the roster", "rest of the squad", "the supporting cast", "the others", "the bench", "role players", "the depth". DO NOT MENTION THEM AT ALL. Your commentary is about the STAR only. If only the star exists, the sentence is simpler and better.
 - The phrase "showed up" as a verb for a player scoring well. Find a more specific verb.
 - The phrase "went nuclear" — stale. Use something else.
 - The phrase "couldn't carry the load" or "carry the load" in any form.
-- Generic closers like "off night", "quiet night" without specificity.
-- "the rest of the roster" / "rest of the squad" / "supporting cast" — NAME the players by real name instead.
 - "pick up the slack" — stale, forbidden.
-- "went nuclear" — stale, forbidden.
 - "disappeared" as a verb for a player scoring low — find a specific verb.
+- Generic closers like "off night", "quiet night" without specificity.
 
 Your commentary MUST be: (a) one sentence about what happened to THIS specific roster, (b) use only nicknames from CULTURE CONTEXT, (c) not contain any banned phrase, (d) use a tone NOT in "recent tones used".
 
