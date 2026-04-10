@@ -27,205 +27,39 @@ export function buildPrompt(
 
 function buildSystemPrompt(recentTones: string[]): string {
   const recentTonesLine = recentTones.length > 0
-    ? `Recent tones used (DO NOT pick any of these): ${recentTones.join(", ")}.`
-    : `No recent tone history.`;
+    ? `Recent tones (avoid these): ${recentTones.join(", ")}.`
+    : "";
 
-  return `You write basketball post-hand commentary for a fantasy game.
+  return `You write post-hand commentary for a fantasy sports game.
 
-OUTPUT FORMAT (strict JSON, no other text):
-{ "commentary": string, "tone": string }
+OUTPUT: Return ONLY raw JSON. No backticks, no explanation.
+{ "commentary": "your line here", "tone": "wry" }
 
-LENGTH AND FLOW:
-- commentary: 1-3 sentences, target 150-220 characters, hard max 240
-- Aim for the upper end of that range. Short and punchy is good but
-  cramped is not. Give the line room to breathe and land.
-- If you write multiple sentences, they MUST flow as one continuous
-  voice — a single person riffing, not a list of observations. Think
-  of it like a tweet from a basketball-watching friend, not a press
-  release. The second/third sentence is a reaction, a tangent, a
-  callback, a punchline — not a new fact.
+RULES:
+1. Write 1-2 COMPLETE sentences. Target 160-230 characters. Must sound like natural English a human would say to a friend.
+2. ALWAYS use the FULL NAME of the [MAIN-SUBJECT-OK] star player. Never "he", never just a first name, never just a nickname without the full name first. Example: "Jayson Tatum went 48 tonight and made it look routine" — NOT "He went 48" or "Tatum did well."
+3. ONLY name [MAIN-SUBJECT-OK] players (ORANGE or PURPLE tier). NEVER mention any [NOT-MAIN-SUBJECT] player by name, first name, last name, or nickname. Refer to them as "the bench" or "the supporting cast" only.
+4. NEVER use the letters "FP" in commentary. Say "points" or just the number.
+5. BUST = deadpan/wry honesty. ROOKIE/STARTER = it's a win, not a loss. ALL_STAR+ = real celebration.
+6. Write like a basketball-watching friend, not a robot. No fragments. No taglines. Full sentences with subject-verb-object.
 
-GOOD (one continuous thought):
-  ✓ "Booker dropped 47 in Indiana — that's the kind of night you frame."
-  ✓ "Jokić casually walked away with 58 like it was a Tuesday. Because it was."
-  ✓ "Harden's 12 assists carried this — the step-back even sat one out."
-  ✓ "Embiid's 51 covered for everyone else's quiet night."
+BAD (reject these patterns):
+- "Cold from the first tip." ← fragment, no player name
+- "Hawkins: 7 FP on a 18 average. The gap." ← names a non-star, uses FP, fragment
+- "Somebody had a real night." ← vague, no name
+- "The gap." ← not a sentence
 
-BAD (two separate observations stitched, OR robotic stat-stuffing):
-  ✗ "Jokić had 58 FP. Curry added 41."  ← two facts, no relationship
-  ✗ "Strong hand. Booker led the way with 47."  ← summary + fact
-  ✗ "ALL-STAR tier locked in. The roster delivered."  ← label + generic
-  ✗ "Tatum scored well. He had 9 rebounds too."  ← bullet points
-  ✗ "Booker hit 47 points, only 4.4 from MVP tier."  ← TWO numbers, robotic
-  ✗ "Jokić's 58 was 12 over his projection."  ← projection delta as number
-  ✗ "Embiid put up 51 with a 17 FP cushion to bust."  ← number stuffing
+GOOD:
+- "Jayson Tatum's 48 points against Indiana is the kind of night that sticks with you — the rest of the lineup just had to stay out of the way."
+- "Nikola Jokić made 62 look casual, which is basically his whole career in one sentence."
+- "Giannis Antetokounmpo went to war tonight and the scoreboard agreed — 55 points and no one else needed to do much."
+- "LeBron James at 39 is still doing things that shouldn't be physically possible, and tonight's 44 was proof."
 
-THE TEST: Read the two sentences aloud. If you could put a bullet point
-between them and they'd still make sense, REWRITE as one sentence. If
-the second sentence could be deleted and the first still stands alone,
-DELETE the second sentence.
+TONE: Pick one of "deadpan", "observational", "analytical", "wry", "hype", "warm". ${recentTonesLine}
 
-PAYOUT CONTEXT (ground every line in what the player actually got):
-- BUST     = no payout. The bet is gone. Wry, deadpan, honest. Don't
-             sugarcoat. NEVER frame as "almost won" or "good effort".
-- ROOKIE   = 0.5x back. HALF YOUR BET BACK. THIS IS A WIN, not a loss.
-             A soft landing, a partial recovery, dodged the worst.
-             NEVER say "came up short", "still lost", "couldn't overcome",
-             "barely lost", or any failure framing. ROOKIE is the
-             "you're fine" tier. Treat it that way.
-- STARTER  = 1x. Break-even, your money back. Survived. Treading water.
-             A push. NEVER frame as a loss. NEVER say "couldn't overcome"
-             or "came up short."
-- ALL_STAR = 2x. Doubled up. Real win. Confident, the win is earned.
-- MVP      = 5x. Big number. Earned hype, point at the moment.
-- GOAT     = 10x. An event. Pull out the stops. This matters.
+NICKNAMES: ONLY use nicknames from the CULTURE CONTEXT. If a player has no culture entry, use their full real name. Never invent nicknames. Never apply one player's nickname to another player.
 
-CRITICAL: For any non-BUST tier, the line CANNOT use loss framing. The
-player got money back. Even a near-miss to the next tier is still a
-WIN at the current tier. Never imply otherwise.
-
-NARRATIVE COHESION (CRITICAL — recent failures):
-- Pick ONE narrative direction per commentary and commit to it.
-- If the result is a WIN (ROOKIE through GOAT), every beat in your line
-  must serve the win story. You can name a player who underperformed,
-  but only if the line frames it consistently with the win — e.g.,
-  "Booker carried this even with Doncic's six giveaways" — NOT
-  "Doncic had six turnovers, couldn't overcome it" (that's a loss
-  framing on a win result).
-- If the result is a BUST, every beat must serve the loss story.
-- DO NOT mix a positive beat with a negative beat in the same line.
-  "A win is a win. Couldn't overcome it." is a contradiction — banned.
-- Read your line aloud. If a friend hearing it would ask "wait, did
-  they win or lose?", REWRITE.
-
-CONTENT:
-- Reference a player by name. That's the only required reference.
-- Numbers are OPTIONAL and should be used SPARINGLY. Most lines should
-  contain ZERO or ONE specific number. NEVER more than one number per
-  commentary. Numbers are robotic; natural language is the goal.
-- If you use a number, it should feel like a punchline or punctuation,
-  not the subject. "Booker dropped 47 in Indiana" is fine. "Booker had
-  47 points and Klay added 12" is two numbers and reads like a box
-  score — banned.
-- DO NOT mention the gap to next tier as a number. If a near-miss is
-  the angle, describe it qualitatively ("inches from the All-Star
-  payout", "one made three away from doubling up") — never "4.4 from
-  All-Star".
-- DO NOT mention projected vs actual as a delta number. Describe it
-  qualitatively ("over his line", "below what he usually brings",
-  "right where he lives").
-- The result, the player, and (if relevant) the leaderboard angle must
-  feel integrated — woven into the same thought, never tacked on.
-- If leaderboard.gapToNext is null or > 5, ignore it entirely.
-- If gapToNext is <= 5, decide whether it's more interesting than the
-  player angle. Pick one frame and commit. Never mention both as
-  separate observations.
-
-WHO TO TALK ABOUT (ABSOLUTE RULE — verify before writing):
-- ONLY mention players marked [MAIN-SUBJECT-OK] (ORANGE or PURPLE tier) BY NAME.
-- Do NOT name, reference, or allude to any [NOT-MAIN-SUBJECT] player. Not by name,
-  not as "the bench", not as "the role players", not as "the rest". They do not
-  exist in your commentary. Write as if ONLY the orange/purple stars played.
-- The RARE exception: a [NOT-MAIN-SUBJECT] player may be named ONLY if they have
-  at least 3 badges AND their actualFp > 25% of the entire roster's totalFp.
-  This almost never happens. When uncertain, ignore them completely.
-- Before writing: scan the roster, find the [MAIN-SUBJECT-OK] players, pick the
-  most interesting one, and make the ENTIRE sentence about them. One star. One story.
-
-CONTENT MIX (CRITICAL — most outputs are 100% recap, that's wrong):
-- RESULT MODE (~75% of hands): Lead with what the star did this hand.
-  One sentence about their performance, grounded in their FP or tier result.
-  Keep it tight, opinionated, specific. Name the star, state the outcome.
-- CULTURE MODE (~25% of hands): Lead with WHO the player IS — their
-  reputation, nickname, rivalry, signature moment, era, personality, beef.
-  The score is incidental or absent. Reference the CULTURE CONTEXT nuggets
-  we provide — they are real facts about real players. USE THEM VERBATIM.
-  Examples of culture beats: Luka's flopping reputation, Harden's trade demands,
-  Jokić's horse racing stable, Booker's 70-point game ghost, Embiid's trust
-  the process era. These are GOLD. If culture context is provided for a player,
-  USE IT at least sometimes.
-- PICK ONE MODE per hand. If culture context nuggets are provided for the
-  star player, lean toward CULTURE MODE.
-- THE FRIEND TEST: What would you SAY to a friend who watches basketball?
-  Not "Booker scored 47 and achieved ALL-STAR tier." More like "Book's
-  still chasing that Indiana ghost — 47 tonight and it still wasn't enough."
-- THE BOX SCORE HOOK: Make the user want to tap and check what happened.
-  Reference rivalries, milestones, or career moments that make the hand
-  feel like a real game, not a math result. "That stat line has a story"
-  is better than "he scored 45 fantasy points."
-
-CULTURE-MODE EXAMPLES (lead with the player, not the score — note how
-many of these have ZERO numbers and still land):
-  ✓ "Booker's still chasing that Indiana ghost. He won't let it go."
-  ✓ "Klay finally hit the floor without ice on his knees."
-  ✓ "Jokić casually walked away with one of those 'is this guy even trying' nights."
-  ✓ "Harden's beard is older than his step-back. Both still get buckets."
-  ✓ "The Beard demanded a trade from his third franchise this decade and the buckets followed him to all of them."
-  ✓ "Embiid did Embiid things and the bench watched."
-
-RESULT-MODE EXAMPLES (one number max, used as punchline not subject):
-  ✓ "Embiid's 51 covered for everyone else's quiet night."
-  ✓ "Booker dropped 47 in Indiana — exactly the kind of game he frames."
-  ✓ "Jokić's 58 looked like he was bored doing it. Probably was."
-  ✓ "Curry caught fire and the spreadsheet caught up."  ← zero numbers, still works
-
-TONE:
-- Pick from: funny, analytical, hype, deadpan, observational
-- Match the register to the payout, not just the tier label:
-    BUST     → wry, deadpan, honest about the loss
-    ROOKIE   → neutral-to-warm, "got something back" framing
-    STARTER  → neutral, break-even acknowledgment
-    ALL_STAR → confident, the win is real
-    MVP      → hype but earned, point at the number
-    GOAT     → event-mode, this matters
-- Vary tone across hands. ${recentTonesLine}
-- STRICT TONE ENFORCEMENT: You must return exactly one of these tones in the "tone" field: "deadpan", "observational", "analytical", "wry", "hype", "warm". Do NOT invent tones like "neutral-to-warm", "funny", or hyphenated combinations. If you're unsure, pick "observational".
-
-FORBIDDEN (these will get the line rejected — enforce strictly):
-- The literal letters "FP" anywhere in the commentary. Just say the
-  number. "47 points" or "47" — never "47 FP".
-- "fantasy points", "projection", "the lineup", "the draw", "the hand",
-  "the FP reflected", "the score reflected"
-- "solid", "nice work", "great job", "clutch performance"
-- "avoided zero", "avoided the bust", "the minimum", "the floor",
-  "minimum win", "full bust", "every card underdelivered"
-- LOSS framing on a non-BUST result (CRITICAL): "came up short",
-  "still lost", "couldn't overcome", "fell short", "barely lost",
-  "you still came up short", "missed out". These are banned for
-  ROOKIE/STARTER/ALL_STAR/MVP/GOAT — those are all wins of varying size.
-- Mixed positive/negative beats in the same line on a win: "A win is
-  a win. [negative]." is banned.
-- Inventing stats. Only use numbers that appear in the input data.
-- Inventing nicknames. ONLY use nicknames that appear in the CULTURE CONTEXT section for that player. If a player has no culture context entry, refer to them by their actual name only — never invent a nickname.
-- Attributing a nickname or personality trait from one player to a different player. "Book" refers only to Devin Booker. "The Joker" refers only to Nikola Jokić. Use the CULTURE CONTEXT to verify which player each nickname belongs to.
-- Generic openings: "Wow", "Incredible", "What a", "Amazing"
-- Box-score recap: "Every card underdelivered. Full bust." ← banned
-- Two-bullet structure: "Player X did Y. Also, Z happened." ← banned
-- Naming any [NOT-MAIN-SUBJECT] player as the protagonist (see WHO TO TALK ABOUT)
-- ANY reference to non-star players as a group: "the rest of the roster", "rest of the squad", "the supporting cast", "the others", "the bench", "role players", "the depth". DO NOT MENTION THEM AT ALL. Your commentary is about the STAR only. If only the star exists, the sentence is simpler and better.
-- The phrase "showed up" as a verb for a player scoring well. Find a more specific verb.
-- The phrase "went nuclear" — stale. Use something else.
-- The phrase "couldn't carry the load" or "carry the load" in any form.
-- "pick up the slack" — stale, forbidden.
-- "disappeared" as a verb for a player scoring low — find a specific verb.
-- Generic closers like "off night", "quiet night" without specificity.
-
-Your commentary MUST be: (a) one sentence about what happened to THIS specific roster, (b) use only nicknames from CULTURE CONTEXT, (c) not contain any banned phrase, (d) use a tone NOT in "recent tones used".
-
-VOICE:
-- Sound like someone who watches a lot of basketball — opinionated, specific,
-  a little wry. Not a broadcaster, not a marketer, not a chatbot.
-- The culture nuggets in the user prompt ARE the voice. Borrow phrasing
-  and attitude directly from them. Don't paraphrase into something more
-  generic.
-
-NEVER OUTPUT (these destroy the response):
-- Any meta-commentary about your own process. Never say "Checking:", "Let me", "Remove it", "That's an error", "Reconsidering", "Wait", "Actually", "Let me fix", "I should", "Hmm".
-- Any reasoning about the rules. Never mention the forbidden list, the checklist, or your decision process.
-- Any JSON markers inside the "commentary" string value. No backticks, no fences, no "commentary":, no curly braces.
-- Multiple JSON objects. Exactly one { ... } with commentary and tone fields. Nothing before it, nothing after it.
-
-CRITICAL OUTPUT RULE: Return ONLY the raw JSON object — no backticks, no code fences, no "\`\`\`json", no thinking, no revision notes, no prose before or after. Your entire response must start with { and end with }. Any other output format will cause a system error.`;
+Return ONLY the JSON object. Start with { and end with }. Nothing else.`;
 }
 
 function buildUserPrompt(
@@ -283,6 +117,36 @@ function buildUserPrompt(
       if (nug.relevantTones?.length) {
         lines.push(`  voice samples (borrow phrasing/attitude):`);
         nug.relevantTones.forEach((t) => lines.push(`    - ${t}`));
+      }
+      // New rich culture fields
+      if (nug.salaryNarrative?.length) {
+        lines.push(`  salary takes:`);
+        nug.salaryNarrative.forEach((s) => lines.push(`    - ${s}`));
+      }
+      if (nug.draftAndPath?.length) {
+        lines.push(`  draft/path: ${nug.draftAndPath[0]}`);
+      }
+      if (nug.teamContext?.length) {
+        lines.push(`  team context: ${nug.teamContext[0]}`);
+      }
+      if (nug.formerTeam?.length) {
+        lines.push(`  former team flavor: ${nug.formerTeam[0]}`);
+      }
+      if (nug.rivalry?.length) {
+        lines.push(`  rivalry: ${nug.rivalry[0]}`);
+      }
+      if (nug.milestones?.length) {
+        lines.push(`  milestone: ${nug.milestones[0]}`);
+      }
+      if (nug.streakLines?.length) {
+        lines.push(`  streak context:`);
+        nug.streakLines.forEach((s) => lines.push(`    - ${s}`));
+      }
+      if (nug.signatureGames?.length) {
+        lines.push(`  SIGNATURE GAMES (real performances — reference these):`);
+        nug.signatureGames.forEach((g) =>
+          lines.push(`    - ${g.date} vs ${g.opponent}: ${g.fp} FP — ${g.line}`),
+        );
       }
     });
   }
