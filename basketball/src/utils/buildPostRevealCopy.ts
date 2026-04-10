@@ -206,9 +206,9 @@ function famousPhrase(input: PostRevealCopyInput, subject: PostRevealRosterCard 
   if (blk >= 5 && subject.homeAway === "H") return "Not in his house tonight.";
   if (blk >= 5 && subject.homeAway === "A") return `${lastName(subject.name)} had 5 blocks on the road. Took over someone else's building.`;
   if (blk >= 4 && subject.homeAway === "H") return "Lots of finger wagging tonight.";
-  if (anchor && anchor.salary >= 40 && anchorR < 0.75 && cheapOverperformer && cheapOverperformer.salary <= 20) {
-    const cheapName = lastName(cheapOverperformer.name);
-    return `${cheapName} at $${cheapOverperformer.salary} outplayed the anchor.`;
+  if (anchor && anchor.salary >= 40 && anchorR < 0.75) {
+    const an = nameFor(anchor, seed2);
+    return `${an} came in below the line tonight — the anchor didn't hold.`;
   }
   if (!isBust && anchorR >= 0.95 && anchorR <= 1.05) {
     if ((Math.floor(input.totalFp * 7)) % 4 === 0) return "As cool as the other side of the pillow.";
@@ -226,10 +226,10 @@ function gmVoice(input: PostRevealCopyInput, subject: PostRevealRosterCard, seed
   const r = ratio(subject);
   const proj = Math.round(subject.projectedFp ?? 0);
 
-  if (subject.wasHeld && r >= 1.25) return `Held ${name} and he delivered. That read paid off.`;
-  if (subject.wasHeld && r <= 0.75) return `Held ${name} at $${subject.salary} and he left points behind. Tough call.`;
-  if (!subject.wasHeld && r >= 1.6 && subject.salary <= 20) return `${name}: ${Math.round(subject.actualFp)} FP on a ${proj} avg.`;
-  if ((subject.cardTier === "GREEN" || subject.cardTier === "WHITE") && r >= 1.5) return `$${subject.salary} card doing $${Math.round(subject.salary * 3)} FP damage. The cap math worked out.`;
+  if (subject.wasHeld && r >= 1.25) return `${name} delivered tonight — holding that card was the right call.`;
+  if (subject.wasHeld && r <= 0.75) return `${name} didn't bring it tonight despite the hold. Tough break at $${subject.salary}.`;
+  if (!subject.wasHeld && r >= 1.6 && subject.salary >= 40) return `${name} went well above the average tonight — that's the upside you pay for.`;
+  if (!subject.wasHeld && r >= 1.6 && subject.salary < 40) return null; // Don't name cheap non-star overperformers
 
   // Near-miss with culprit
   const gap = input.nextTierMin > 0 ? input.nextTierMin - input.totalFp : 0;
@@ -488,15 +488,22 @@ const basketballPack: SportCopyPack = {
 
     // Register gate — on a bust, don't lead with good news
     if (isBust && subject) {
-      const bestCard = [...roster].sort((a, b) => ratio(b) - ratio(a))[0];
-      const worstCard = [...roster].sort((a, b) => ratio(a) - ratio(b))[0];
-      const worstName = nameFor(worstCard, seed2);
-      const worstOpp = oppPhrase(worstCard, "against");
-      const worstR = ratio(worstCard);
-      if (worstR <= 0.6) {
-        return toneRet(line1, `${worstName}: ${Math.round(worstCard.actualFp)} FP on a ${Math.round(worstCard.projectedFp ?? 0)} average. The gap.`);
+      // Only reference star players (ORANGE/PURPLE) even on bust — never name bench players
+      const starCards = roster.filter(c => {
+        const t = String(c.cardTier ?? "").toUpperCase();
+        return t === "ORANGE" || t === "PURPLE";
+      });
+      const underStar = starCards.find(c => ratio(c) <= 0.7);
+      const overStar = starCards.find(c => ratio(c) >= 1.2);
+      if (underStar) {
+        const n = nameFor(underStar, seed2);
+        return toneRet(line1, `Even ${n} couldn't save this one — well below the line tonight.`);
       }
-      // If nobody had a catastrophic night, fall through to culture/flavor lines
+      if (overStar) {
+        const n = nameFor(overStar, seed2);
+        return toneRet(line1, `${n} did the work but nobody else showed up to help.`);
+      }
+      // If no star had a notable performance, fall through to culture/flavor lines
     }
 
     // 8. Anchor significantly overperformed
