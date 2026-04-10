@@ -6,7 +6,10 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "echo \"skip root build\"",
-    "dev": "npm --prefix apps/replay-ui run dev",
+    "dev": "npm --prefix basketball run dev",
+    "dev:basketball": "npm --prefix basketball run dev",
+    "dev:baseball": "npm --prefix baseball run dev",
+    "dev:worldcup": "npm --prefix worldcup run dev",
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest"
