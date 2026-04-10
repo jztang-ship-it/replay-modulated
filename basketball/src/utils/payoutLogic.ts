@@ -1,7 +1,7 @@
 /**
  * basketball/src/utils/payoutLogic.ts
- * Thresholds calibrated for biased engine (top-60% log sampling, March 2026).
- * Targets: ~55% BUST, ~25% ROOKIE, ~12% STARTER, ~5% ALL-STAR, ~2% MVP, ~0.5% GOAT
+ * Thresholds tuned for 362-player pool (2425 only, avgMin>=15, pyramid tiers).
+ * Bust 43.6%, ROOKIE 25.7%, STARTER 17.9%, ALL_STAR 8.8%, MVP 3.4%, GOAT 0.6%
  * MUST stay in sync with TierGauge thresholds in GameView.tsx.
  */
 import {
@@ -14,12 +14,12 @@ export type { WinTierKey };
 export type WinTier = WinTierKey;
 
 export const BASKETBALL_WIN_TIERS: WinTierMap = {
-  GOAT:     { minFp: 235, multiplier: 50  },  // ~0.5% — massive direct payout + pool
-  MVP:      { minFp: 215, multiplier: 15  },  // ~2%
-  ALL_STAR: { minFp: 195, multiplier: 8   },  // ~5%
-  STARTER:  { minFp: 175, multiplier: 3   },  // ~12%
-  ROOKIE:   { minFp: 155, multiplier: 0.5 },  // ~25% — consolation, half back
-  BUST:     { minFp: 0,   multiplier: 0   },  // ~55%
+  GOAT:     { minFp: 238, multiplier: 50  },  // ~0.6%
+  MVP:      { minFp: 210, multiplier: 15  },  // ~3.4%
+  ALL_STAR: { minFp: 188, multiplier: 7   },  // ~8.8%
+  STARTER:  { minFp: 168, multiplier: 2.5 },  // ~17.9%
+  ROOKIE:   { minFp: 148, multiplier: 0.5 },  // ~25.7%
+  BUST:     { minFp: 0,   multiplier: 0   },  // ~43.6%
 };
 
 export function calculateWinTier(totalFp: number): WinTierKey {

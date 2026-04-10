@@ -108,11 +108,11 @@ export const BasketballSportConfig = {
   winCondition: {
     type: 'FIXED_THRESHOLD',
     thresholds: [
-      { tier: 'ROOKIE',   minFP: 133, multiplier: 0.5  },
-      { tier: 'STARTER',  minFP: 160, multiplier: 2.5  },
-      { tier: 'ALL_STAR', minFP: 183, multiplier: 7.0  },
-      { tier: 'MVP',      minFP: 215, multiplier: 15.0 },
-      { tier: 'GOAT',  minFP: 235, multiplier: 50 },
+      { tier: 'ROOKIE',   minFP: 148, multiplier: 0.5  },
+      { tier: 'STARTER',  minFP: 168, multiplier: 2.5  },
+      { tier: 'ALL_STAR', minFP: 188, multiplier: 7.0  },
+      { tier: 'MVP',      minFP: 210, multiplier: 15.0 },
+      { tier: 'GOAT',  minFP: 238, multiplier: 50 },
     ],
   },
 
