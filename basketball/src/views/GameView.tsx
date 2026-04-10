@@ -32,6 +32,7 @@ import { XPBar } from '@shared/engagement/XPBar';
 import { soundManager } from '@shared/utils/soundManager';
 import { audioDirector } from '@shared/utils/audioDirector';
 import { getPlayerUid, getNickname, setNickname, getSessionId } from '@shared/utils/playerIdentity';
+import { buildScoreProof } from '@shared/utils/scoreProof';
 import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
 import { generateCommentary } from "@shared/commentary/generateCommentary";
 import type { CommentaryInput, CommentaryOutput, CommentaryRosterCard } from "@shared/commentary/types";
@@ -798,7 +799,8 @@ export default function GameView() {
             }
 
             // hand_best fires on every hand (wins AND busts).
-            submitToLeaderboard("hand_best", totalFp);
+            const proof = buildScoreProof(rosterRef.current as any[], totalFp);
+            submitToLeaderboard("hand_best", totalFp, { proof });
 
             // Update personal bests on every hand
             const prevBest = parseFloat(localStorage.getItem("rm_best_hand") ?? "0");

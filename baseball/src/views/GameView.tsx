@@ -33,6 +33,7 @@ import { XPBar } from '@shared/engagement/XPBar';
 import { soundManager } from '@shared/utils/soundManager';
 import { audioDirector } from '@shared/utils/audioDirector';
 import { getPlayerUid, getNickname, setNickname, getSessionId } from '@shared/utils/playerIdentity';
+import { buildScoreProof } from '@shared/utils/scoreProof';
 import { PostHandSheet } from '@shared/components/PostHandSheet';
 import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
 import { ProfileScreen } from '@shared/components/ProfileScreen';
@@ -811,7 +812,7 @@ export default function GameView() {
               });
               submitToLeaderboard("wins", 1);
               submitToLeaderboard("fp", totalFp);
-              submitToLeaderboard("hand_best", totalFp);
+              submitToLeaderboard("hand_best", totalFp, { proof: buildScoreProof(rosterRef.current as any[], totalFp) });
               submitToLeaderboard("hand_avg", totalFp, { handCount });
               submitToLeaderboard("money_won", payout);
 

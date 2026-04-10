@@ -43,27 +43,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 }
 
 async function handleSubmit(req: VercelRequest, res: VercelResponse) {
-  const { action, metric, value, uid, nickname } = req.body ?? {};
+  const { action, metric, value, uid, nickname, proof } = req.body ?? {};
   const sessionId = ((req.body?.session_id ?? '') as string).toString().slice(0, 32) || null;
 
   if (action !== "submit") return json(res, 400, { error: "Invalid action" });
   if (!VALID_METRICS.includes(metric)) return json(res, 400, { error: "Invalid metric" });
   if (typeof value !== "number" || value <= 0) return json(res, 400, { error: "Invalid value" });
-  // Sanity ceilings — physically impossible scores get rejected
-  if (metric === "fp" && value > 350) {
-    return res.status(400).json({ error: "Invalid score" });
+  // Sanity ceilings — physically impossible scores get rejected.
+  // 6 cards × ~60 max FP + badges ≈ 300 realistic ceiling.
+  const FP_CEILING = 300;
+  if ((metric === "fp" || metric === "hand_best" || metric === "hand_avg") && value > FP_CEILING) {
+    return json(res, 400, { error: "Invalid score" });
   }
-  if (metric === "streak" && value > 500) {
-    return res.status(400).json({ error: "Invalid score" });
+  if (metric === "streak" && value > 100) {
+    return json(res, 400, { error: "Invalid score" });
   }
-  if (metric === "hand_best" && value > 350) {
-    return res.status(400).json({ error: "Invalid score" });
+  if (metric === "money_won" && value > 1000000) {
+    return json(res, 400, { error: "Invalid score" });
   }
-  if (metric === "hand_avg" && value > 350) {
-    return res.status(400).json({ error: "Invalid score" });
-  }
-  if (metric === "money_won" && value > 10000000) {
-    return res.status(400).json({ error: "Invalid score" });
+  // hand_best requires a proof payload (roster IDs + checksum).
+  // Missing proof is allowed for backward compat but logged.
+  if (metric === "hand_best" && proof) {
+    if (!proof.checksum || typeof proof.checksum !== "string" || proof.checksum.length < 5) {
+      return json(res, 400, { error: "Invalid proof" });
+    }
   }
   if (metric === "hand_avg") {
     const { handCount } = req.body ?? {};
