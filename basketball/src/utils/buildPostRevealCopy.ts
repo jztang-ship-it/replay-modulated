@@ -235,9 +235,9 @@ function gmVoice(input: PostRevealCopyInput, subject: PostRevealRosterCard, seed
   if (gap > 0 && gap <= 8 && input.nextTier) {
     const { tovCulprit } = findNearMissCulprit(input.roster, gap);
     if (tovCulprit) {
-      const mult = TIER_MULTIPLIERS[input.nextTier] ?? "";
       const culpritName = nameFor(tovCulprit, seed + 3);
-      return `${culpritName}'s TOs cost you ${TIER_LABEL[input.nextTier]}.`;
+      const tov = statN(tovCulprit, "turnovers");
+      return `${culpritName} had ${tov} turnovers. That's the gap.`;
     }
   }
   return null;
@@ -246,54 +246,52 @@ function gmVoice(input: PostRevealCopyInput, subject: PostRevealRosterCard, seed
 // ─── Line 1 pools ─────────────────────────────────────────────────────────────
 
 const BUST_L1 = [
-  "Nobody showed up. Every card fell short.",
+  "Nobody had a good night. Not one card pulled its weight.",
   "Cold from the jump. Never recovered.",
-  "Couldn't get to 155. Too many quiet cards.",
+  "Too many quiet cards — the whole roster came up short.",
   "Rough from the first flip to the last.",
-  "Every card underdelivered. Full bust.",
-  "Fell short of 155. Not one bright spot.",
-  "The whole roster came in flat tonight — nobody had the game you needed.",
+  "Flat across the board. This one didn't have it.",
   "Not enough from anyone to get this hand across the line.",
   "Short across the board — the roster never found its rhythm.",
-  "Bust. The numbers don't lie and tonight they weren't kind.",
+  "The numbers don't lie and tonight they weren't kind.",
 ];
 const ROOKIE_L1 = [
-  "Rookie tier — half the bet comes back, and that's better than nothing.",
-  "Scraped into Rookie territory, which means you're walking away with something.",
-  "Just enough to clear the Rookie line — not pretty, but the payout is real.",
-  "Rookie win — the roster didn't dominate, but it didn't collapse either.",
+  "Barely got there, but you're walking away with something.",
+  "Scraped across the line — not pretty, but the payout is real.",
+  "Just enough to cash — the roster held together when it counted.",
+  "Won it. The roster didn't dominate, but it didn't collapse either.",
 ];
 const STARTER_BARELY_L1 = [
-  "Right on the Starter line — one bad play away from dropping a tier.",
-  "Barely caught Starter, but a win is a win and the money counts.",
-  "Starter by the thinnest margin possible — the hand held together just enough.",
+  "Held on by the thinnest margin — one bad play away from nothing.",
+  "Squeaked through, but a win is a win and the money counts.",
+  "The hand held together just enough. Barely, but enough.",
 ];
 const STARTER_L1 = [
-  "Clean Starter result — the roster delivered a solid, professional performance.",
-  "Starter territory with room to breathe — that's a comfortable 2.5x return.",
-  "This is what a Starter hand looks like when everything goes according to plan.",
+  "Solid hand — the roster delivered a clean, professional performance.",
+  "Comfortable margin, nothing flashy — this is what a good roster looks like.",
+  "Everything went according to plan. That doesn't happen by accident.",
 ];
 const STARTER_DOM_L1 = [
-  "Dominant Starter — this hand was knocking on the All-Star door.",
-  "Comfortable Starter with real margin — the kind of hand you feel good about.",
-  "Cruised through Starter — the roster came through and then some.",
+  "Dominant — this hand was knocking on the door of something bigger.",
+  "Comfortable margin with room to spare — the kind of hand you feel good about.",
+  "Cruised through. The roster came through and then some.",
 ];
 const ALLSTAR_L1 = [
-  "All-Star tier — that's a 7x return and a hand worth remembering.",
-  "All-Star territory — this roster put together something special tonight.",
-  "Deep into All-Star — not many hands get here and the payout reflects it.",
-  "Eight times the entry. Hand earned it.",
-  "All-Star. Someone went above average.",
+  "That's a rare night. This hand earned a real return.",
+  "Something special happened here — not many rosters put this together.",
+  "Deep run. Hands like this don't come around every session.",
+  "Big payout. Hand earned every dollar of it.",
+  "Someone went way above their average and the whole hand benefited.",
 ];
 const MVP_L1 = [
-  "MVP tier — that's 15x the bet and a hand that doesn't come around often.",
-  "MVP territory — someone on this roster absolutely went off tonight.",
-  "This is what an MVP hand looks like — rare, real, and the payout proves it.",
+  "That's one of the best hands you can put together. Rare and real.",
+  "Someone on this roster absolutely went off tonight — the whole hand felt it.",
+  "This is what it looks like when a star card takes over a hand.",
 ];
 const GOAT_L1 = [
-  "G.O.A.T. tier — the biggest payout in the game and a hand worth framing.",
-  "This roster just hit G.O.A.T. — that's a different conversation entirely.",
-  "G.O.A.T. doesn't happen by accident — this hand was something special.",
+  "The biggest night in the game. This hand was something you remember.",
+  "Doesn't happen by accident — this roster hit a different level.",
+  "One of those hands that doesn't come around often. The payout reflects it.",
 ];
 const NM_TINY = [
   "Just {gap} points from {next} tier — one bucket changes everything.",
@@ -345,28 +343,22 @@ const basketballPack: SportCopyPack = {
     // ── Line 1 ────────────────────────────────────────────────────────────
     let line1: string;
     if (isNearMiss) {
-      const nextLabel = TIER_LABEL[nextTier!] ?? nextTier ?? "next tier";
-      const NEXT_TIER_MULT: Record<string, string> = {
-        ROOKIE: "0.5x", STARTER: "3x", ALL_STAR: "8x", MVP: "15x", GOAT: "50x",
-      };
-      const multLabel = nextTier ? (NEXT_TIER_MULT[nextTier] ?? "") : "";
-      const multSuffix = multLabel ? ` (${multLabel})` : "";
       line1 = gap <= 2
         ? pick([
-            `${nextLabel} by one play. ${gap.toFixed(1)} FP${multSuffix}.`,
-            `${gap.toFixed(1)} FP from ${nextLabel}${multSuffix}.`,
-            `One possession from ${nextLabel}${multSuffix}.`,
+            "One play away. That one stings.",
+            "Right there. Couldn't grab it.",
+            "One possession was all it needed.",
           ], seed)
         : gap <= 5
         ? pick([
-            `${gap.toFixed(1)} short of ${nextLabel}${multSuffix}.`,
-            `${nextLabel} slipped away. ${gap.toFixed(1)} FP${multSuffix}.`,
-            `Came up ${gap.toFixed(1)} short${multSuffix}. Stings.`,
+            "Came up just short. Stings.",
+            "Almost got there — one card having a better night closes it.",
+            "Slipped away at the end. Was right in reach.",
           ], seed)
         : pick([
-            `${gap.toFixed(1)} from ${nextLabel}${multSuffix}. Close.`,
-            `${gap.toFixed(1)} short of ${nextLabel}${multSuffix}.`,
-            `${nextLabel} was right there${multSuffix}.`,
+            "Close, but not close enough.",
+            "The next level was right there — just short.",
+            "Came up short. Another night.",
           ], seed);
     } else if (winTier === "GOAT") {
       line1 = pick(GOAT_L1, seed);
@@ -408,15 +400,13 @@ const basketballPack: SportCopyPack = {
     // 3. Near-miss with culprit — line 2 must connect to the gap
     if (isNearMiss) {
       const { tovCulprit, underachiever } = findNearMissCulprit(roster, gap);
-      const nextLabel = TIER_LABEL[nextTier!] ?? nextTier ?? "next tier";
       if (tovCulprit) {
         const cn = nameFor(tovCulprit, seed2 + 5);
         const tov = statN(tovCulprit, "turnovers");
-        const fpFromTov = (tov * 1.0).toFixed(1);
         return toneRet(line1, pick([
-          `${cn} had ${tov} turnovers. One back and you're cashing ${nextLabel}.`,
-          `${tov} turnovers from ${cn}. That's the gap right there.`,
-          `One fewer giveaway from ${cn} and that hand pays ${nextLabel}.`,
+          `${cn} had ${tov} turnovers. One back and this hand cashes bigger.`,
+          `${tov} turnovers from ${cn}. That's where the gap came from.`,
+          `One fewer giveaway from ${cn} and this is a different result.`,
         ], seed2));
       }
       if (underachiever) {
@@ -424,9 +414,9 @@ const basketballPack: SportCopyPack = {
         const proj = Math.round(underachiever.projectedFp ?? 0);
         const actual = Math.round(underachiever.actualFp);
         return toneRet(line1, pick([
-          `${un} averages ${proj}. Gave you ${actual}. That's your ${nextLabel} gap.`,
+          `${un} averages ${proj} and gave you ${actual}. That's your gap.`,
           `${un} came in ${proj - actual} below his average. That's the difference.`,
-          `If ${un} hits his average, you're in ${nextLabel}. He didn't.`,
+          `If ${un} hits his average, this hand pays out more. He didn't.`,
         ], seed2));
       }
       const gm = gmVoice(input, subject, seed2);
@@ -516,8 +506,7 @@ const basketballPack: SportCopyPack = {
 
     // 9. Near-miss generic
     if (isNearMiss) {
-      const nextLabel = TIER_LABEL[nextTier!] ?? nextTier;
-      return toneRet(line1, `${nextLabel} was right there. One card away from a different night.`);
+      return toneRet(line1, "One card away from a different night.");
     }
 
     // 11. Common badge + culture
@@ -527,7 +516,7 @@ const basketballPack: SportCopyPack = {
       const badgeLabel = subject.achievements.find(a => a.id === commonHit)?.label ?? "";
       if (r >= 1.2 && culture?.overperform?.length) return toneRet(line1, pick(culture.overperform, seed2));
       if (r <= 0.8 && culture?.underperform?.length) return toneRet(line1, pick(culture.underperform, seed2));
-      return toneRet(line1, `${name} hit ${badgeLabel}${opp}. The FP reflected it.`);
+      return toneRet(line1, `${name} hit ${badgeLabel}${opp}.`);
     }
 
     // 12. High stats without badge
