@@ -30,5 +30,13 @@ export default defineConfig({
         path.resolve(__dirname),
       ],
     },
+    // Proxy /api calls to the deployed Vercel backend so dev mode works without vercel dev
+    proxy: {
+      '/api': {
+        target: 'https://replay-mod-git-working-john-tangs-projects-1c51aca7.vercel.app',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
   },
 });
