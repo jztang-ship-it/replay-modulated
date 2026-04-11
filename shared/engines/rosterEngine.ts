@@ -3,7 +3,7 @@
  */
 
 import type { EconomyConfig, SlotRequirement, RosterConfig, PlayerEval, GeneratedCard } from "../types";
-import { tierFromSalary, totalSalary } from "./economyEngine";
+import { totalSalary } from "./economyEngine";
 
 export type { SlotRequirement, RosterConfig, PlayerEval, GeneratedCard };
 
@@ -268,7 +268,6 @@ function enforceCapWithReplacement(roster: GeneratedCard[], evalPool: PlayerEval
     if (!candidates.length) break;
     candidates.sort((a, b) => b.salary - a.salary);
     const replaced = toGeneratedCard(candidates[0], idx);
-    replaced.tier = tierFromSalary(replaced.salary, config);
     clone[idx] = replaced;
   }
   // Tier is frozen at deal time — do NOT re-tier held or existing cards
