@@ -39,7 +39,7 @@ RULES:
 1. Write 1-2 COMPLETE sentences. Target 160-230 characters. Must sound like natural English a human would say to a friend.
 2. ALWAYS use the FULL NAME of the [MAIN-SUBJECT-OK] star player. Never "he", never just a first name, never just a nickname without the full name first. Example: "Jayson Tatum went 48 tonight and made it look routine" — NOT "He went 48" or "Tatum did well."
 3. ONLY name [MAIN-SUBJECT-OK] players (ORANGE or PURPLE tier). NEVER mention any [NOT-MAIN-SUBJECT] player by name, first name, last name, or nickname. Refer to them as "the bench" or "the supporting cast" only.
-4. NEVER use the letters "FP" in commentary. Say "points" or just the number.
+4. NEVER use the letters "FP" in commentary. Also NEVER mention the "perf" score numbers from the roster (those are engine internals, not real stats). Only reference real basketball stats like points, rebounds, assists from the stat line.
 5. BUST = deadpan/wry honesty. ROOKIE/STARTER = it's a win, not a loss. ALL_STAR+ = real celebration.
 6. Write like a basketball-watching friend, not a robot. No fragments. No taglines. Full sentences with subject-verb-object.
 
@@ -89,16 +89,25 @@ function buildUserPrompt(
   // ── Roster ───────────────────────────────────────────────────────────────
   lines.push("");
   lines.push(`ROSTER (${input.roster.length} players) — tier label is the salary tier and tells you who is allowed to be the main subject`);
+  lines.push(`NOTE: "perf" is a game-engine score (fantasy points), NOT real basketball points. Do NOT mention these numbers in commentary. Use the perf tag (BIG/COLD/FLAT) and the real stat line instead.`);
   input.roster.forEach((c, i) => {
     const delta = c.actualFp - c.projectedFp;
-    const perfTag = delta >= 5 ? "OVER" : delta <= -5 ? "UNDER" : "ON_PACE";
+    // Use descriptive tag instead of raw delta — prevents model from echoing FP numbers as basketball stats
+    const perfTag = delta >= 20 ? "BIG" : delta >= 5 ? "ABOVE" : delta <= -20 ? "COLD" : delta <= -5 ? "BELOW" : "FLAT";
     const oppStr = c.opponent
       ? ` ${c.homeAway === "A" ? "@" : "vs"}${c.opponent}`
       : "";
     const tier = (c.cardTier || "").toUpperCase() || "WHITE";
     const allowed = (tier === "ORANGE" || tier === "PURPLE") ? "[MAIN-SUBJECT-OK]" : "[NOT-MAIN-SUBJECT]";
+    // Include real stat line if available (pts/reb/ast) — model should prefer these over FP numbers
+    const s = c.statLine as any;
+    const hasPts = s && (s.pts != null || s.points != null || s.PTS != null);
+    const pts = hasPts ? (s.pts ?? s.points ?? s.PTS ?? 0) : null;
+    const reb = hasPts ? (s.reb ?? s.rebounds ?? s.REB ?? s.trb ?? 0) : null;
+    const ast = hasPts ? (s.ast ?? s.assists ?? s.AST ?? 0) : null;
+    const statStr = (pts != null && pts > 0) ? ` [${pts}pts ${reb}reb ${ast}ast]` : "";
     lines.push(
-      `${i + 1}. ${c.name} [${tier} ${allowed}] — salary ${c.salary}, projected ${c.projectedFp.toFixed(1)}, actual ${c.actualFp.toFixed(1)} (${perfTag} by ${Math.abs(delta).toFixed(1)})${oppStr}`,
+      `${i + 1}. ${c.name} [${tier} ${allowed}] — perf:${perfTag}${statStr}${oppStr}`,
     );
   });
 
@@ -145,7 +154,7 @@ function buildUserPrompt(
       if (nug.signatureGames?.length) {
         lines.push(`  SIGNATURE GAMES (real performances — reference these):`);
         nug.signatureGames.forEach((g) =>
-          lines.push(`    - ${g.date} vs ${g.opponent}: ${g.fp} FP — ${g.line}`),
+          lines.push(`    - ${g.date} vs ${g.opponent}: ${g.line}`),
         );
       }
     });
