@@ -60,7 +60,6 @@ export function getDailyOrangePool(
     return new Set(allOrangeIds);
   }
 
-  const dateKey = getRotationDateKey(date);
   const seed = hashStr(`orange-rotation-${dateKey}`);
   const rng = seededRng(seed);
 

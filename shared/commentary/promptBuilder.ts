@@ -39,9 +39,10 @@ RULES:
 1. Write 1-2 COMPLETE sentences. Target 160-230 characters. Must sound like natural English a human would say to a friend.
 2. ALWAYS use the FULL NAME of the [MAIN-SUBJECT-OK] star player. Never "he", never just a first name, never just a nickname without the full name first. Example: "Jayson Tatum went 48 tonight and made it look routine" — NOT "He went 48" or "Tatum did well."
 3. ONLY name [MAIN-SUBJECT-OK] players (ORANGE or PURPLE tier). NEVER mention any [NOT-MAIN-SUBJECT] player by name, first name, last name, or nickname. Refer to them as "the bench" or "the supporting cast" only.
-4. NEVER use the letters "FP" in commentary. Also NEVER mention the "perf" score numbers from the roster (those are engine internals, not real stats). Only reference real basketball stats like points, rebounds, assists from the stat line.
-5. BUST = deadpan/wry honesty. ROOKIE/STARTER = it's a win, not a loss. ALL_STAR+ = real celebration.
-6. Write like a basketball-watching friend, not a robot. No fragments. No taglines. Full sentences with subject-verb-object.
+4. NEVER use the letters "FP" in commentary. Also NEVER mention "perf" numbers (engine internals, not real stats). Only reference real basketball stats from the stat line.
+5. NEVER use game tier names: ROOKIE, STARTER, ALL_STAR, MVP, GOAT, BUST. These are game mechanics that mean nothing to a basketball fan.
+6. "loss" outcome = deadpan/wry honesty. "win" = it's a win, celebrate it. "close win" = acknowledge the near-miss.
+7. Write like a basketball-watching friend, not a robot. No fragments. No taglines. Full sentences with subject-verb-object.
 
 BAD (reject these patterns):
 - "Cold from the first tip." ← fragment, no player name
@@ -69,22 +70,22 @@ function buildUserPrompt(
   const lines: string[] = [];
 
   // ── Hand result ──────────────────────────────────────────────────────────
+  // Tier names and gap numbers are NOT shown — they are game mechanics that leak
+  // into commentary as basketball concepts ("starter money", "3.4 short of GOAT").
+  // Outcome is described purely as win/loss/near-miss language.
+  const isBust = input.winTier === "BUST";
+  const isNearMiss = !isBust && input.nextTier != null &&
+    input.nextTierMin != null && (input.nextTierMin - input.totalFp) < 10;
+  const isWin = !isBust;
+  const outcomeLabel = isBust ? "loss" : isNearMiss ? "close win" : "win";
   lines.push("HAND RESULT");
   lines.push(`- sport: ${input.sport}`);
-  lines.push(`- totalFp: ${input.totalFp.toFixed(1)}`);
-  lines.push(`- winTier: ${input.winTier}`);
-  if (input.tierFloor != null) lines.push(`- tierFloor: ${input.tierFloor}`);
-  if (input.nextTier && input.nextTierMin != null) {
-    const gap = Math.max(0, input.nextTierMin - input.totalFp);
-    lines.push(
-      `- nextTier: ${input.nextTier} (min ${input.nextTierMin}, gap ${gap.toFixed(1)})`,
-    );
-  }
+  lines.push(`- outcome: ${outcomeLabel}`);
+  if (isNearMiss) lines.push(`- note: very close to the next level`);
   const streakNote =
     input.streak > input.prevStreak ? " (extended)" :
     input.streak < input.prevStreak ? " (broken)" : "";
   lines.push(`- streak: ${input.streak}${streakNote}`);
-  lines.push(`- handCount: ${input.handCount}`);
 
   // ── Roster ───────────────────────────────────────────────────────────────
   lines.push("");

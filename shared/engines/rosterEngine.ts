@@ -131,23 +131,33 @@ export function redrawRoster(current: GeneratedCard[], heldSlots: Set<number>, e
 }
 
 function guaranteeTierFloor(roster: GeneratedCard[], evalPool: PlayerEval[], economyConfig: EconomyConfig, rnd: () => number, heldMask: boolean[]) {
-  const orangeMin = economyConfig.tierThresholds.find((t: any) => t.tier === "ORANGE")?.minSalary ?? 52;
-  const purpleMin = economyConfig.tierThresholds.find((t: any) => t.tier === "PURPLE")?.minSalary ?? 40;
   const cap = economyConfig.capMax;
   const minSpend = cap - 6;
   const result = [...roster];
   const usedPeople = new Set(result.map(c => c.personKey));
+
+  const tierOf = (c: { tier?: string }) => String(c.tier ?? "").toUpperCase();
+  const isOrange = (c: { tier?: string }) => tierOf(c) === "ORANGE";
+  const isPurpleOrBetter = (c: { tier?: string }) => tierOf(c) === "PURPLE" || tierOf(c) === "ORANGE";
+
   function getSwappable() {
     return result.map((c, i) => ({ i, c })).filter(({ i }) => !heldMask || !heldMask[i]).sort((a, b) => b.c.salary - a.c.salary);
   }
   function getHeadroom() {
     return cap - totalSalary(result.map(c => c.salary));
   }
-  function tryUpgrade(targetMin: number) {
+  // Upgrade a slot to a player of the exact targetTier (not just salary threshold)
+  function tryUpgradeByTier(targetTier: "ORANGE" | "PURPLE") {
     for (const { i, c } of getSwappable()) {
-      if (c.salary >= targetMin) continue;
+      if (tierOf(c) === targetTier) continue;
       const budget = c.salary + getHeadroom();
-      const upgrades = evalPool.filter((p: any) => (!usedPeople.has(p.personKey) || p.personKey === c.personKey) && p.salary >= targetMin && p.salary <= budget).sort((a: any, b: any) => b.salary - a.salary);
+      const upgrades = evalPool
+        .filter((p: any) =>
+          (!usedPeople.has(p.personKey) || p.personKey === c.personKey) &&
+          String(p.tier ?? "").toUpperCase() === targetTier &&
+          p.salary <= budget,
+        )
+        .sort((a: any, b: any) => b.salary - a.salary);
       if (!upgrades.length) continue;
       const excl = new Set([...usedPeople].filter(k => k !== c.personKey));
       const picked = pickWeightedRandom(upgrades, excl, rnd) ?? upgrades[0];
@@ -158,11 +168,11 @@ function guaranteeTierFloor(roster: GeneratedCard[], evalPool: PlayerEval[], eco
     }
     return false;
   }
-  const hasOrange = () => result.filter(c => c.salary >= orangeMin).length >= 1;
-  const hasTwoPurple = () => result.filter(c => c.salary >= purpleMin).length >= 2;
+  const hasOrange = () => result.some(isOrange);
+  const hasTwoPurpleOrBetter = () => result.filter(isPurpleOrBetter).length >= 2;
   if (!hasOrange()) {
-    if (!tryUpgrade(orangeMin)) {
-      while (!hasTwoPurple()) { if (!tryUpgrade(purpleMin)) break; }
+    if (!tryUpgradeByTier("ORANGE")) {
+      while (!hasTwoPurpleOrBetter()) { if (!tryUpgradeByTier("PURPLE")) break; }
     }
   }
   let spendTotal = totalSalary(result.map(c => c.salary));

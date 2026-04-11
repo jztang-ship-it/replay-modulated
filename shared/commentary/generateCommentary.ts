@@ -39,7 +39,7 @@ function qualityGate(raw: string, roster: CommentaryInput["roster"]): string | n
     if (lastSentence.length > 0 && lastSentence.length < 20) return null;
   }
 
-  // 4. Hard reject: contains banned words/phrases
+  // 4. Hard reject: contains banned words/phrases or game tier names
   const lower = text.toLowerCase();
   const banned = [
     "every card", "full bust", "avoided zero", "the minimum", "the floor",
@@ -48,8 +48,13 @@ function qualityGate(raw: string, roster: CommentaryInput["roster"]): string | n
     "carry the load", "carried the load", "pick up the slack",
     "the rest of the roster", "fantasy points", "projection",
     "the lineup", "the draw", "the hand", "reflected it",
+    // Game tier names — these are mechanics, not basketball concepts
+    "rookie tier", "starter tier", "all-star tier", "mvp tier", "goat tier",
+    "rookie money", "starter money", "all-star money",
   ];
   if (banned.some(b => lower.includes(b))) return null;
+  // Also reject phrasing that uses STARTER as a payout tier (never a real basketball concept)
+  if (/\bstarter (money|tier|level|payout|threshold|floor|ceiling)\b/i.test(text)) return null;
 
   // 5. Hard reject: names a non-star player
   for (const card of roster) {
