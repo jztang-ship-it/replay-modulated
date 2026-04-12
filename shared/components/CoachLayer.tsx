@@ -91,20 +91,20 @@ function DealChip() {
 
 // Row 1 (slots 0-2): message below card. Row 2 (slots 3-5): message above card.
 const DEFAULT_CARD_POSITION: Record<string, BubblePosition> = {
-  "ftue-booker": "below",
-  "ftue-westbrook": "below",
-  "ftue-cp3": "below",
-  "ftue-klay": "above",
-  "ftue-klove": "above",
-  "ftue-patty": "above",
+  "ftue-tatum": "below",
+  "ftue-curry": "below",
+  "ftue-og": "below",
+  "ftue-draymond": "above",
+  "ftue-lowry": "above",
+  "ftue-reddish": "above",
 };
 
 const DEFAULT_CARD_TEXTS: Record<string, string> = {
-  "ftue-westbrook": "Brodie delivered — 39.5 FP on a $41 card, right on his line. Steady work from a reliable vet. 💪",
-  "ftue-cp3": "CP3 earned his Dime badge — 11 assists. He joined Stockton and Kidd at 12,000+ career assists. The Point God. 🧠",
-  "ftue-klay": "See the ice on Klay? That tells you how cold he was. Only 4.6 FP on a $33 card. Underachieving games like this are going to come back and bite you. 🧊",
-  "ftue-klove": "Love came in cold — 9.5 FP against a 15 FP average. Below the line of what we expected.",
-  "ftue-patty": "Patty held his own — $9 card, right on his 10 FP average. Minimum salary, minimum drama. Not great but not terrible either.",
+  "ftue-curry": "Steph went off — 26 points and 10 assists for 52 FP. Dime badge for the double-digit dimes. That's a hot card. 🔥",
+  "ftue-og": "OG earned his Pickpocket badge — 3 steals plus 2 blocks. Elite two-way wing doing it on both ends. 39.6 FP on a $46 card. 👀",
+  "ftue-draymond": "See the ice on Draymond? Only 9.5 FP on a $43 card. 2 points and 3 turnovers at Miami. Cold games like this are what cost you MVP. 🧊",
+  "ftue-lowry": "Kyle Lowry with the Pure badge — 5 assists, zero turnovers. 18.9 FP from a $20 card. Clean and efficient. 🎯",
+  "ftue-reddish": "Cam went cold too — 12.1 FP on 5 points at Minnesota. If Cam or Dray had one more play, we'd be celebrating MVP right now. 😤",
 };
 
 type OnDismiss = () => void;
@@ -227,7 +227,7 @@ export function CoachLayer({
   ftueTextConfig: cfg,
 }: Props) {
   // Resolve sport-specific text — defaults are basketball
-  const anchorCardId = cfg?.anchorCardId ?? "ftue-booker";
+  const anchorCardId = cfg?.anchorCardId ?? "ftue-tatum";
   const CARD_POS = cfg?.cardPositions ?? DEFAULT_CARD_POSITION;
   const CARD_TXT = cfg?.cardTexts ?? DEFAULT_CARD_TEXTS;
   const queue = useRef<QueueEntry[]>([]);
@@ -447,7 +447,7 @@ export function CoachLayer({
     prevState.current = "HOLD";
 
     // Step 1: roster overview — no spotlight, full screen visible
-    onCommentaryText?.([cfg?.holdIntroText ?? "Six players, $200 cap. Fantasy Points come from real stats — points, assists, rebounds. Who do we keep?"]);
+    onCommentaryText?.([cfg?.holdIntroText ?? "Six players, $250 cap. Fantasy Points come from real stats — points, assists, rebounds. Who do we keep?"]);
 
     enqueue({
       key: "hold_roster_intro",
@@ -458,7 +458,7 @@ export function CoachLayer({
       onDismiss: () => {
         // Step 2: After tap — spotlight anchor card, anchor text appears.
         onCommentaryText?.([
-          cfg?.holdAnchorText ?? <span>Booker is your $59 anchor - most dependable player. Tap him to hold, hit <DrawChip /> to replace the rest, then tap every card to see your replacements.</span>
+          cfg?.holdAnchorText ?? <span>Tatum is your $66 anchor - most dependable player. Tap him to hold him then hit <DrawChip /> to see your replacements.</span>
         ], true);
         const holdKey = `hold_${anchorCardId.replace("ftue-", "")}`;
         enqueue({
@@ -519,15 +519,15 @@ export function CoachLayer({
     if (!ftueCommentaryDone) return;
     // Fire immediately — no artificial delay between tier panel landing and commentary.
     {
-      // Show "So close" commentary — spotlight booker+gauge+balance
-      onCommentaryText?.([cfg?.nearMissText ?? "So close it hurts — only 4.4 FP from the All-Star win. If only Love or Klay made one extra play we'd be celebrating an 8x score. 😤"]);
+      // Show "So close" commentary — spotlight entire lineup + tier gauge
+      onCommentaryText?.([cfg?.nearMissText ?? "So close it hurts, we're only 0.9 FP away from winning that MVP 15x win."]);
       enqueue({
         key: "darnit",
         node: null as any,
-        anchor: "anchor-gauge-balance",
+        anchor: "roster-and-score",
         position: "below",
         onDismiss: () => {
-          onCommentaryText?.([cfg?.anchorFlipHintText ?? "Booker on the other hand really saved your bacon tonight, 89.4 FP is superman status. Flip his card to see what happened. 🔥"], true);
+          onCommentaryText?.([cfg?.anchorFlipHintText ?? "Tatum on the other hand really saved your bacon tonight. 92 FP is a great score. Flip his card to see what happened."], true);
           enqueue({
             key: "results_anchor",
             node: null as any,
@@ -553,7 +553,7 @@ export function CoachLayer({
     setTimeout(() => {
       // Part 1: Spotlight anchor — explain the stat line + badges
       onCommentaryText?.([
-        cfg?.anchorStatText ?? "62 points against Indiana. 79.4 base FP + 10 from God Mode badge = 89.4. Badges are real. 🔥",
+        cfg?.anchorStatText ?? "43 points, 15 rebounds and 10 assists against Chicago. A triple-double! He also got rewarded 20 extra bonus points for special achievement badges. Getting badges are key to winning.",
       ]);
       enqueue({
         key: "anchor_gamelogs",

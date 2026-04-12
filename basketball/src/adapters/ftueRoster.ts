@@ -5,19 +5,20 @@
  *   RED >= $73 | ORANGE >= $58 | PURPLE >= $44 | BLUE >= $30 | GREEN >= $23 | WHITE < $23
  *
  * LINEUP 1 (deal hand) — $245 total:
- *   Tatum  $66 ORANGE SF  ← HOLD (anchor — coach guides user here, 66 FP Christmas Day triple-stuff)
+ *   Tatum  $66 ORANGE SF  ← HOLD (anchor — 92 FP triple-double at CHI)
  *   LaMelo $58 ORANGE PG, JBrown $53 PURPLE SG,
  *   Klay   $33 BLUE   SG  (cold, obvious swap),
  *   Merrill $21 WHITE SG, Kleber $14 WHITE PF   ← swap candidates
  *
  * LINEUP 2 (drawn hand) — $248 total:
  *   Tatum $66 ORANGE SF  ← was held
- *   Curry $57 PURPLE PG, OG $46 PURPLE SF, Draymond $43 BLUE PF,
- *   Lowry $20 WHITE PG, Reddish $16 WHITE SF  ← drawn
+ *   Curry $57 PURPLE PG (HOT 52 FP), OG $46 PURPLE SF (normal 39.6),
+ *   Draymond $43 BLUE PF (COLD 9.5), Lowry $20 WHITE PG (normal 18.9),
+ *   Reddish $16 WHITE SF (COLD 12.1)  ← drawn
  *
- * TOTAL FP: 223.3 — near-miss of MVP tier (225). Gap: 1.7 FP.
- * Cam's 28.6 FP solid night was one bucket short.
- * "One more shot from Cam — that's the difference."
+ * TOTAL FP: 224.1 — near-miss of MVP tier (225). Gap: 0.9 FP.
+ * Draymond (9.5) and Reddish (12.1) went cold — one more play and it's MVP.
+ * "If Dray or Cam made one more play — that's the difference."
  *
  * Zero player overlap between swap slots and drawn slots. Tatum is the only constant.
  * All game logs are real 2024-25 season entries from game-logs.json.
@@ -94,19 +95,22 @@ export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
       }),
 
       // Slot 2 — Jayson Tatum | ORANGE $66 | SF | HOLD ← ANCHOR
-      // 2024-12-25 vs PHI (H) — Christmas Day — 32pts / 15reb / 4ast / 1stl / 1blk → 66 FP
-      // Badges: BUCKET(30+pts) + BEAST(15+reb) + DOUBLE_DBL = +9 FP
-      // Coach: "Tatum just had a 66 FP Christmas Day — hold that card and draw new ones."
+      // 2024-12-21 at CHI — TRIPLE DOUBLE: 43pts / 15reb / 10ast / 4to → 92 FP
+      // Badges: FIRE(+5) + BEAST(+5) + DIME(+3) + SLOPPY(-3) + TRIPLE_DBL(+8) + DOUBLE_DBL(+2) = +20
+      // Coach: "Tatum just dropped 92 FP — hold that card and draw new ones."
       makeCard({
         cardId: "ftue-tatum", basePlayerId: "1628369",
         name: "Jayson Tatum", team: "BOS", position: "SF",
         tier: "ORANGE", salary: 66, slotIndex: 2,
-        projectedFp: 42, actualFp: 66.0,
-        date: "2024-12-25", opponent: "PHI", homeAway: "H",
-        statLine: { pts: 32, reb: 15, ast: 4, stl: 1, blk: 1, turnovers: 3, min: 42 },
+        projectedFp: 42, actualFp: 92.0,
+        date: "2024-12-21", opponent: "CHI", homeAway: "A",
+        statLine: { pts: 43, reb: 15, ast: 10, stl: 0, blk: 0, turnovers: 4, min: 36 },
         achievements: [
-          { id: "BUCKET",     icon: "🏀", label: "Bucket",        fp: 2 },
+          { id: "FIRE",       icon: "🔥", label: "Fire",          fp: 5 },
           { id: "BEAST",      icon: "🦍", label: "Beast",         fp: 5 },
+          { id: "DIME",       icon: "🧠", label: "Dime",          fp: 3 },
+          { id: "SLOPPY",     icon: "💦", label: "Sloppy",        fp: -3 },
+          { id: "TRIPLE_DBL", icon: "👑", label: "Triple Double", fp: 8 },
           { id: "DOUBLE_DBL", icon: "✌️", label: "Double Double", fp: 2 },
         ],
       }),
@@ -150,32 +154,35 @@ export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
 }
 
 // ─── LINEUP 2 (Drawn hand) ───────────────────────────────────────────────────
-// Tatum held ($66) + 5 completely fresh drawn cards = $242 total.
+// Tatum held ($66) + 5 completely fresh drawn cards = $248 total.
 // Zero overlap with Lineup 1 swap slots. Tatum is the only shared player.
 //
 // FINAL FP BREAKDOWN:
-//   Tatum    $66 ORANGE: 66.0 FP  (Christmas Day — 32pts/15reb/4ast vs PHI, BUCKET+BEAST+DD)
-//   Curry    $57 PURPLE: 35.1 FP  (quiet 19pt night at HOU — off game)
-//   OG       $46 PURPLE: 39.6 FP  (elite two-way — 22pts/3stl/2blk vs UTA, PICKPOCKET)
-//   Draymond $43 BLUE  : 35.1 FP  (do-everything game — 18pts/8reb/5ast vs WAS)
-//   Lowry    $20 WHITE : 18.9 FP  (PURE badge — 0pt/5ast/2stl/1blk, 0 TOs at UTA)
-//   Reddish  $16 WHITE : 28.6 FP  ← "One more shot from Cam — 1.7 FP from MVP."
-//                                    16pts / 3reb / 6ast vs TOR
+//   Tatum    $66 ORANGE: 92.0 FP  (TRIPLE DOUBLE at CHI — 43pts/15reb/10ast, FIRE+BEAST+DIME+SLOPPY+TD+DD)
+//   Curry    $57 PURPLE: 52.0 FP  (HOT — 26pts/10ast vs DAL, DIME+DD)
+//   OG       $46 PURPLE: 39.6 FP  (normal — 22pts/3stl/2blk vs UTA, PICKPOCKET)
+//   Draymond $43 BLUE  :  9.5 FP  ← COLD (2pts/5reb/3ast/3to at MIA — rough night)
+//   Lowry    $20 WHITE : 18.9 FP  (normal — PURE badge, 0pt/5ast/2stl/1blk/0 TOs at UTA)
+//   Reddish  $16 WHITE : 12.1 FP  ← COLD (5pts/3reb/1ast/2stl at MIN — quiet)
 // ─────────────────────────────────────────────────────────────────────────────
-//   TOTAL: 223.3 FP → ALL-STAR tier (210+). MVP requires 225. Gap: 1.7 FP.
+//   TOTAL: 224.1 FP → ALL-STAR tier (210+). MVP requires 225. Gap: 0.9 FP.
 
 const DRAWN: Record<number, () => GeneratedCard> = {
 
-  // Slot 0 → Steph Curry | PURPLE $57 | PG | drawn
-  // 2024-12-11 at HOU — 19pts / 3reb / 5ast / 2stl / 1blk / 1to → 35.1 FP (no badges)
-  // Off night for Steph — the supporting cast that keeps you just short of MVP.
+  // Slot 0 → Steph Curry | PURPLE $57 | PG | drawn | HOT
+  // 2024-12-15 vs DAL (H) — 26pts / 5reb / 10ast / 1stl / 2to → 52 FP (DIME + DOUBLE_DBL)
+  // Steph's playmaking night — 10 dimes against Dallas. The hot card.
   0: () => makeCard({
     cardId: "ftue-curry", basePlayerId: "201939",
     name: "Steph Curry", team: "GSW", position: "PG",
     tier: "PURPLE", salary: 57, slotIndex: 0,
-    projectedFp: 40, actualFp: 35.1,
-    date: "2024-12-11", opponent: "HOU", homeAway: "A",
-    statLine: { pts: 19, reb: 3, ast: 5, stl: 2, blk: 1, turnovers: 1, min: 34 },
+    projectedFp: 40, actualFp: 52.0,
+    date: "2024-12-15", opponent: "DAL", homeAway: "H",
+    statLine: { pts: 26, reb: 5, ast: 10, stl: 1, blk: 0, turnovers: 2, min: 35 },
+    achievements: [
+      { id: "DIME",       icon: "🧠", label: "Dime",          fp: 3 },
+      { id: "DOUBLE_DBL", icon: "✌️", label: "Double Double", fp: 2 },
+    ],
   }),
 
   // Slot 1 → OG Anunoby | PURPLE $46 | SF | drawn
@@ -193,15 +200,16 @@ const DRAWN: Record<number, () => GeneratedCard> = {
     ],
   }),
 
-  // Slot 3 → Draymond Green | BLUE $43 | PF | drawn
-  // 2024-11-04 at WAS — 18pts / 8reb / 5ast / 1blk / 2to → 35.1 FP (no badges)
+  // Slot 3 → Draymond Green | BLUE $43 | PF | drawn | COLD
+  // 2025-03-25 at MIA — 2pts / 5reb / 3ast / 3to → 9.5 FP (no badges)
+  // Rough night for Dray — way below his $43 projection. Classic cold card.
   3: () => makeCard({
     cardId: "ftue-draymond", basePlayerId: "203110",
     name: "Draymond Green", team: "GSW", position: "PF",
     tier: "BLUE", salary: 43, slotIndex: 3,
-    projectedFp: 31, actualFp: 35.1,
-    date: "2024-11-04", opponent: "WAS", homeAway: "A",
-    statLine: { pts: 18, reb: 8, ast: 5, stl: 0, blk: 1, turnovers: 2, min: 29 },
+    projectedFp: 31, actualFp: 9.5,
+    date: "2025-03-25", opponent: "MIA", homeAway: "A",
+    statLine: { pts: 2, reb: 5, ast: 3, stl: 0, blk: 0, turnovers: 3, min: 23 },
   }),
 
   // Slot 4 → Kyle Lowry | WHITE $20 | PG | drawn
@@ -219,17 +227,16 @@ const DRAWN: Record<number, () => GeneratedCard> = {
     ],
   }),
 
-  // Slot 5 → Cam Reddish | WHITE $16 | SF | drawn
-  // 2024-11-24 vs TOR (H) — 16pts / 3reb / 6ast / 1stl → 28.6 FP (no badges)
-  // Solid role player night — good effort, but one bucket short of MVP.
-  // "One more shot from Cam — that's it."
+  // Slot 5 → Cam Reddish | WHITE $16 | SF | drawn | COLD
+  // 2024-12-13 at MIN — 5pts / 3reb / 1ast / 2stl / 2to → 12.1 FP (no badges)
+  // Quiet night for Cam — one more play from him or Dray and it's MVP.
   5: () => makeCard({
     cardId: "ftue-reddish", basePlayerId: "1629629",
     name: "Cam Reddish", team: "LAL", position: "SF",
     tier: "WHITE", salary: 16, slotIndex: 5,
-    projectedFp: 20, actualFp: 28.6,
-    date: "2024-11-24", opponent: "TOR", homeAway: "H",
-    statLine: { pts: 16, reb: 3, ast: 6, stl: 1, blk: 0, turnovers: 2, min: 31 },
+    projectedFp: 20, actualFp: 12.1,
+    date: "2024-12-13", opponent: "MIN", homeAway: "A",
+    statLine: { pts: 5, reb: 3, ast: 1, stl: 2, blk: 0, turnovers: 2, min: 23 },
   }),
 
 };

@@ -8,6 +8,7 @@ import type { GamePhase, PlayerCard, Achievement } from "../adapters/types";
 import { AthleteCard } from "./AthleteCard";
 import { CardBackGeneric } from "./CardBackGeneric";
 import { headshotUrl } from "@shared/utils/headshotUrl";
+import { tierFromSalary, DEFAULT_ECONOMY_CONFIG } from "@shared/engines/economyEngine";
 
 // ─── Card definitions ────────────────────────────────────────────────────────
 
@@ -25,7 +26,7 @@ type LandingCardDef = {
 
 const CARDS: LandingCardDef[] = [
   {
-    id: "c1", name: "Ja Morant", pos: "PG", salary: 35, fp: 48.2,
+    id: "c1", name: "Ja Morant", pos: "PG", salary: 55, fp: 48.2,
     team: "MEM", season: "2024-25", basePlayerId: "1629630",
     achievements: [
       { id: "MAESTRO", icon: "🎼", label: "Maestro", fp: 8 },
@@ -33,7 +34,7 @@ const CARDS: LandingCardDef[] = [
     ],
   },
   {
-    id: "c2", name: "Stephen Curry", pos: "PG", salary: 52, fp: 77.8,
+    id: "c2", name: "Stephen Curry", pos: "PG", salary: 57, fp: 77.8,
     team: "GSW", season: "2024-25", basePlayerId: "201939",
     achievements: [
       { id: "FIRE", icon: "🔥", label: "Fire", fp: 5 },
@@ -41,7 +42,7 @@ const CARDS: LandingCardDef[] = [
     ],
   },
   {
-    id: "c3", name: "Jayson Tatum", pos: "SF", salary: 49, fp: 62.1,
+    id: "c3", name: "Jayson Tatum", pos: "SF", salary: 66, fp: 62.1,
     team: "BOS", season: "2024-25", basePlayerId: "1628369",
     achievements: [
       { id: "GOD_MODE", icon: "⚡", label: "God Mode", fp: 10 },
@@ -49,7 +50,7 @@ const CARDS: LandingCardDef[] = [
     ],
   },
   {
-    id: "c4", name: "LeBron James", pos: "SF", salary: 59, fp: 89.5,
+    id: "c4", name: "LeBron James", pos: "SF", salary: 67, fp: 89.5,
     team: "LAL", season: "2024-25", basePlayerId: "2544",
     achievements: [
       { id: "GOD_MODE", icon: "⚡", label: "God Mode", fp: 10 },
@@ -57,7 +58,7 @@ const CARDS: LandingCardDef[] = [
     ],
   },
   {
-    id: "c5", name: "Anthony Edwards", pos: "SG", salary: 48, fp: 64.8,
+    id: "c5", name: "Anthony Edwards", pos: "SG", salary: 62, fp: 64.8,
     team: "MIN", season: "2024-25", basePlayerId: "1630162",
     achievements: [
       { id: "FIRE", icon: "🔥", label: "Fire", fp: 5 },
@@ -65,7 +66,7 @@ const CARDS: LandingCardDef[] = [
     ],
   },
   {
-    id: "c6", name: "Kevin Durant", pos: "SF", salary: 55, fp: 71.2,
+    id: "c6", name: "Kevin Durant", pos: "SF", salary: 60, fp: 71.2,
     team: "PHX", season: "2024-25", basePlayerId: "201142",
     achievements: [
       { id: "BUCKET", icon: "🏀", label: "Bucket", fp: 2 },
@@ -137,7 +138,7 @@ export function LandingPage({ onPlay }: Props) {
         team: d.team,
         season: d.season,
         position: d.pos,
-        tier: "WHITE" as PlayerCard["tier"],
+        tier: tierFromSalary(d.salary, DEFAULT_ECONOMY_CONFIG),
         salary: d.salary,
         projectedFp: d.fp,
         actualFp: d.fp,
