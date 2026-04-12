@@ -8,9 +8,9 @@ function calcFp(stats: Record<string,number>, badgeFp: number): number {
 
 async function verify() {
   const { roster } = await dealFTUERoster();
-  const drawn = await redrawFTUERoster({ currentCards: roster, lockedCardIds: new Set(["ftue-booker"]) });
+  const drawn = await redrawFTUERoster({ currentCards: roster, lockedCardIds: new Set(["ftue-tatum"]) });
   const cards = [
-    roster.find((c:any) => c.cardId === "ftue-booker"),
+    roster.find((c:any) => c.cardId === "ftue-tatum"),
     ...drawn.roster.filter((c:any) => !c.wasHeld),
   ].filter(Boolean);
 
