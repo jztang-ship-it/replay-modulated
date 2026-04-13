@@ -649,7 +649,8 @@ export function CardFront(props: CardFrontProps) {
           const tCurve = t * t;                  // quadratic — mild end much fainter, extreme ramps up fast
           const op1 = 0.08 + tCurve * 0.52;    // 0.08 → 0.60
           const op2 = 0.04 + tCurve * 0.41;    // 0.04 → 0.45
-          const useThirdLayer = t > 0.6;
+          // Layer count scales with severity: 1 (light dusting) → 2 (mid) → 3 (full ice)
+          const layers = t > 0.7 ? 3 : t > 0.45 ? 2 : 1;
           const tintFilter = `hue-rotate(${hue}deg) saturate(${sat}) brightness(${bright})`;
           const clipStyle: React.CSSProperties = {
             position: "absolute", top: 0, left: 0, right: 0, bottom: `${bottomPct}%`,
@@ -662,10 +663,12 @@ export function CardFront(props: CardFrontProps) {
           return (
             <div style={clipStyle}>
               <img src={src} style={{ ...imgBase, opacity: op1, animation: `cfFreezeSheetA ${speed}s ease-in-out infinite` }} />
-              <div style={{ position: "absolute", inset: 0, transform: "scaleX(-1)" }}>
-                <img src={src} style={{ ...imgBase, opacity: op2, animation: `cfFreezeSheetB ${speed}s ease-in-out infinite` }} />
-              </div>
-              {useThirdLayer && (
+              {layers >= 2 && (
+                <div style={{ position: "absolute", inset: 0, transform: "scaleX(-1)" }}>
+                  <img src={src} style={{ ...imgBase, opacity: op2, animation: `cfFreezeSheetB ${speed}s ease-in-out infinite` }} />
+                </div>
+              )}
+              {layers >= 3 && (
                 <div style={{ position: "absolute", inset: 0, transform: "scaleY(-1)" }}>
                   <img src={src} style={{ ...imgBase, opacity: op2 * 0.75, animation: `cfFreezeSheetA ${speed * 1.2}s ease-in-out infinite 1s` }} />
                 </div>
