@@ -100,9 +100,9 @@ ROOKIE is 0.5x payout. ~40% of ROOKIE win messages should acknowledge this reali
 
 ## 6. Star Identification (Step 3)
 
-**80–90% of messages must start with or prominently feature a nameable player.**
+**80–90% of messages must prominently feature a nameable player.**
 
-The star is always identified. The trigger threshold determines intensity of language, not whether the player is named:
+The star is always identified. The trigger threshold determines intensity of language, not whether the player is named.
 
 | Star ratio | Win language | Loss language |
 |-----------|-------------|---------------|
@@ -116,6 +116,43 @@ The star is always identified. The trigger threshold determines intensity of lan
 Star selection: highest `headlineScore` among nameable players (RED/ORANGE/PURPLE). Uses existing `headlineScore()` formula (salary × 2.5 + actualFp × 1.5 + badgeFp × 4).
 
 If no nameable player exists on the roster (rare), fall through to `clean_win` / `everyone_flat` generic messaging. This should be <10% of hands.
+
+### Sentence structure variety (anti-robot)
+
+The star must always be named, but the sentence structure must NOT be rigid. "Player name + what happened + emphasis" every time sounds like a template engine. Templates must vary where the player name appears and how the causal story is structured.
+
+**Name placement patterns (randomized per message):**
+
+| Pattern | Example |
+|---------|---------|
+| Name leads | "Anthony Edwards dropped 48 on Indiana. Take your money." |
+| Name mid-sentence | "Nobody was stopping Anthony Edwards tonight — 48 and counting." |
+| Name after setup | "48 points against Indiana. That was all Anthony Edwards." |
+| Name as punchline | "Someone had to go for 48 tonight. Ant decided it was him." |
+
+Templates should be written across all four patterns to prevent the "Player Name did X" repetition.
+
+### Name form variety
+
+Player references must rotate between available name forms to sound human. A real commentator doesn't say "Anthony Edwards" five times — they say "Edwards", then "Ant", then "Anthony Edwards" for emphasis.
+
+**Available name forms (resolved at composition time):**
+
+| Token | Resolves to | Example |
+|-------|------------|---------|
+| `{name}` | Full name | "Anthony Edwards" |
+| `{last}` | Last name only | "Edwards" |
+| `{first}` | First name only | "Anthony" |
+| `{nick}` | Primary nickname from culture DB | "Ant" |
+| `{nick2}` | Secondary nickname if available | "Ant-Man" |
+
+**Rules:**
+- Full name (`{name}`) should appear in ~40% of messages — used for emphasis or when the player hasn't been mentioned recently
+- Last name (`{last}`) is the most common form (~30%) — natural, how fans talk
+- Nickname (`{nick}`) ~20% — adds personality, requires culture DB entry
+- First name (`{first}`) ~10% — intimate, used sparingly for warmth ("Anthony had a night")
+- If a player has no nicknames in the culture DB, fall back to last name
+- Within a single message, never repeat the same form twice if the player is referenced more than once
 
 ---
 
@@ -237,8 +274,11 @@ interface CommentaryTemplate {
 
 Each template is a single cohesive message (1-2 sentences, ~100-200 chars) with placeholder tokens:
 
-- `{name}` — star player full name
-- `{nick}` — star player nickname (from culture, if available)
+- `{name}` — star player full name ("Anthony Edwards")
+- `{last}` — last name only ("Edwards")
+- `{first}` — first name only ("Anthony")
+- `{nick}` — primary nickname from culture DB ("Ant"), falls back to `{last}`
+- `{nick2}` — secondary nickname if available ("Ant-Man"), falls back to `{nick}`
 - `{pts}` / `{reb}` / `{ast}` — stat values
 - `{opp}` — opponent phrase ("against Indiana", "in Phoenix")
 - `{badge}` — badge label
@@ -247,52 +287,62 @@ Each template is a single cohesive message (1-2 sentences, ~100-200 chars) with 
 
 ### Example templates
 
-**Win + star_went_off + hype:**
+**Win + star_went_off + hype (varied sentence structures):**
 ```
-"{name} dropped {pts} on {opp} and this hand rode that wave all the way to the bank."
-"{name} went for {pts} tonight. That's not a stat line, that's a statement."
+"{name} dropped {pts}{opp} and this hand rode that wave all the way to the bank."
+"{pts} points. That was all {last}. Statement game."
+"Nobody was stopping {nick} tonight — {pts} and counting."
 ```
 
-**Win + star_went_off + culture_wry:**
+**Win + star_went_off + culture_wry (varied name forms):**
 ```
-"{name} put up {pts}{opp} and honestly, someone should check on the opposing defense."
+"{last} put up {pts}{opp} and honestly, someone should check on the opposing defense."
 "{nick} decided to remind everyone tonight. {pts} points. Message received."
+"Someone had to go for {pts}. {first} decided it was him."
 ```
 
-**Win + star_went_off + warm:**
+**Win + star_went_off + warm (name mid/end):**
 ```
 "Good night to have {name} on your roster. {pts} points, clean and efficient."
-"{name} set the tone early and never let up. {pts}{opp}. That's your guy."
+"{pts}{opp}. That's {last} doing exactly what you paid for."
+"The roster had a guy tonight. {name} set the tone and never let up."
 ```
 
 **Win + star_went_off + deadpan:**
 ```
-"{name} went for {pts}. Won. On to the next one."
+"{last} went for {pts}. Won. On to the next one."
+"{pts} from {nick}. That'll do."
 ```
 
-**Loss + star_no_showed + culture_wry:**
+**Loss + star_no_showed + culture_wry (varied structures):**
 ```
-"{name} had more turnovers than highlights tonight and that's genuinely hard to do."
+"{last} had more turnovers than highlights tonight and that's genuinely hard to do."
 "{nick} picked tonight to take a personal day. The roster noticed."
+"Way below his usual night. {name} owes the supporting cast an apology."
 ```
 
 **Loss + star_no_showed + deadpan:**
 ```
-"{name} came in way below his line. Not much else to say about this one."
+"{last} came in way below his line. Not much else to say about this one."
+"Needed {nick} to show up. He didn't. Happens."
 ```
 
-**Win + ROOKIE + warm (half-back variant):**
+**Win + ROOKIE + warm (half-back, varied):**
 ```
-"Half your money back. {name} did just enough to keep this one from going sideways."
-"Not the night you drew up, but {name} kept the roster alive. Half back is better than empty."
+"Half your money back. {last} did just enough to keep this one from going sideways."
+"Not the night you drew up, but {nick} kept the roster alive. Half back beats empty."
+"Got some of it back. {name} held it together — barely."
 ```
 
 ### Template token resolution
 
 The composer resolves tokens using the input data:
 
-- `{name}` → `subject.name` (always full name via `nameFor()`)
-- `{nick}` → first nickname from `lookupCulture(subject.name)?.nicknames[0]`, falls back to `{name}`
+- `{name}` → `subject.name` (full name, e.g. "Anthony Edwards")
+- `{last}` → `lastName(subject.name)` (e.g. "Edwards")
+- `{first}` → first word of `subject.name` (e.g. "Anthony")
+- `{nick}` → `lookupCulture(subject.name)?.nicknames[0]`, falls back to `{last}`
+- `{nick2}` → `lookupCulture(subject.name)?.nicknames[1]`, falls back to `{nick}`
 - Stats pulled from `statN()` helper
 - `{opp}` → `oppPhrase()` helper (existing)
 - `{badge}` → from subject's achievements array
@@ -366,18 +416,28 @@ The audit harness will flag culture lines that get used with wry tone but score 
 
 ---
 
-## 11. File Architecture
+## 11. File Architecture — Sport-Agnostic by Design
+
+The composer, tone engine, story selector, and template resolver are fully sport-agnostic. They live in `shared/` and operate on the existing `PostRevealCopyInput` interface which is already sport-agnostic. The only sport-specific pieces are the template bank (phrasing) and the culture/flavor databases (content). Adding baseball (or any future sport) means:
+
+1. Create `baseball/src/utils/playerCulture.ts` — player culture DB for MLB
+2. Create `baseball/src/utils/teamFlavor.ts` — team humor/identity for MLB
+3. Create `shared/commentary/templateBank.baseball.ts` — baseball-specific templates using the same `(register, story, tone)` keying
+4. The composer auto-selects the right template bank based on `input.sport`
+
+No changes to the composer, tone engine, story selector, or resolver. The formula (register → intensity → star → story → tone → compose) works identically for any sport. "Star went off" in baseball might be "Ohtani went 4-for-4 with 2 homers" instead of "Edwards dropped 48" — the structure is the same, only the templates differ.
 
 ```
 shared/commentary/
-  composeCommentary.ts       — NEW: the unified composer (Steps 1-6)
-  toneEngine.ts              — NEW: weighted random + session-aware anti-redundancy
-  storySelector.ts           — NEW: star-first causal logic + detail assembly
-  templateBank.ts            — NEW: structured phrase bank keyed by (register, story, tone)
-  templateResolver.ts        — NEW: token resolution + detail injection + char cap
-  types.ts                   — EXISTING: add CommentaryTemplate type
-  promptBuilder.ts           — EXISTING: unchanged (for future LLM re-enable)
-  generateCommentary.ts      — EXISTING: unchanged (for future LLM re-enable)
+  composeCommentary.ts           — NEW: the unified composer (Steps 1-6), sport-agnostic
+  toneEngine.ts                  — NEW: weighted random + session-aware anti-redundancy
+  storySelector.ts               — NEW: star-first causal logic + detail assembly
+  templateBank.ts                — NEW: template bank loader + registry by sport
+  templateBank.basketball.ts     — NEW: basketball templates keyed by (register, story, tone)
+  templateResolver.ts            — NEW: token resolution + detail injection + char cap
+  types.ts                       — EXISTING: add CommentaryTemplate type
+  promptBuilder.ts               — EXISTING: unchanged (for future LLM re-enable)
+  generateCommentary.ts          — EXISTING: unchanged (for future LLM re-enable)
 
 basketball/src/utils/
   buildPostRevealCopy.ts     — EXISTING: kept as fallback, feature flag switches
@@ -534,6 +594,6 @@ Flagged culture lines (used with wry tone, low humor score):
 
 - **LLM-assisted template rewriting** — future enhancement plugging into the audit pipeline
 - **Runtime LLM commentary** — stays disabled. The phrase bank is the runtime engine.
-- **Baseball/multi-sport** — NBA only. The composer is sport-agnostic by design, but templates are basketball-specific.
+- **Baseball template bank + culture DB** — this spec builds basketball first. The architecture is sport-agnostic (see Section 11) so baseball plugs in by adding templates and culture content, no composer changes needed.
 - **Audio integration** — no changes to sound system.
 - **Leaderboard context override** — remove. All commentary flows through the composer. If leaderboard data is relevant, it becomes a supporting detail, not a replacement.
