@@ -60,6 +60,9 @@ export interface LegendData {
   badges: BadgeInfo[];
   /** Today's 3 hot-bonus players — rotates every UTC midnight. */
   todaysStars?: Array<{ name: string; basePlayerId: string; tier?: string; bonus?: 5 | 10 | 20 }>;
+  /** Daily mystery score target — exact hit wins instant bonus. */
+  mysteryScore?: number;
+  mysteryBonus?: number;
 }
 
 // Celebration data passed in when WIN_CELEBRATION is active
@@ -585,6 +588,21 @@ function LegendModal({ onClose, legend }: { onClose: () => void; legend: LegendD
                   <div style={{ marginTop: 8, fontSize: 9, color: "rgba(255,255,255,0.32)", lineHeight: 1.5 }}>
                     Pick these players — they add bonus FP on top of their real game. Rotates at UTC midnight.
                   </div>
+                  {/* Mystery score target */}
+                  {legend.mysteryScore != null && (
+                    <div style={{
+                      marginTop: 10, padding: "8px 12px", borderRadius: 10,
+                      background: "rgba(138,43,226,0.12)", border: "1px solid rgba(138,43,226,0.3)",
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                    }}>
+                      <span style={{ fontSize: 10, fontWeight: 800, color: "rgba(138,43,226,0.8)", textTransform: "uppercase", letterSpacing: 0.8 }}>
+                        Mystery Score
+                      </span>
+                      <span style={{ fontSize: 14, fontWeight: 900, color: "#B366FF", fontVariantNumeric: "tabular-nums" }}>
+                        {legend.mysteryScore.toFixed(1)} FP = +{legend.mysteryBonus ?? 200}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, paddingBottom: 6, borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: 2 }}>

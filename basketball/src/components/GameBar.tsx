@@ -28,8 +28,9 @@ const LEGEND: LegendData = {
     { label: "BUST",     score: "<180", payout: "—",     color: "#6B7280", bg: "rgba(107,114,128,0.08)",  border: "rgba(107,114,128,0.2)"   },
   ],
   bonusRows: [
-    { label: "3-WIN STREAK", condition: "3 wins in a row", reward: "+5% of pool"   },
-    { label: "5-WIN STREAK", condition: "5 wins in a row", reward: "+15% of pool"  },
+    { label: "3-WIN STREAK", condition: "3 wins in a row", reward: "1.2x payout"  },
+    { label: "5-WIN STREAK", condition: "5 wins in a row", reward: "1.5x payout"  },
+    { label: "10-WIN STREAK", condition: "10 wins in a row", reward: "2.0x payout" },
   ],
   scoringRules: [
     { stat: "Point",    pts: "+1.0" },
@@ -94,18 +95,26 @@ type Props = {
   splitMultiplierRowVisible?: boolean;
   /** Tap target for the trophy button to the right of the action button. */
   onViewLeaderboard?: () => void;
+  onWageAnimationComplete?: () => void;
+  ftueReplayPulse?: boolean;
+  legendPulsing?: boolean;
+  onLegendOpened?: () => void;
 };
 
 import React, { useMemo } from 'react';
 import { getTodaysStars } from "../adapters/gameAdapter";
+import { getDailyMysteryScore, MYSTERY_SCORE_BONUS } from "@shared/utils/mysteryScore";
 
 export function GameBar(props: Props) {
   const legendWithStars = useMemo(() => {
+    const extra: Partial<LegendData> = {};
     try {
       const stars = getTodaysStars();
-      if (stars.length > 0) return { ...LEGEND, todaysStars: stars };
+      if (stars.length > 0) extra.todaysStars = stars;
     } catch { /* data not loaded yet */ }
-    return LEGEND;
+    extra.mysteryScore = getDailyMysteryScore();
+    extra.mysteryBonus = MYSTERY_SCORE_BONUS;
+    return { ...LEGEND, ...extra };
   }, []);
 
   return (

@@ -19,7 +19,8 @@ import { resetAllOverlays } from "../components/AthleteCard";
 import { GameBar, type CelebrationData } from "../components/GameBar";
 import { useCardFlipState } from "../hooks/useCardFlipState";
 import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
-import { calculateWinTier, calculatePayout, BASKETBALL_WIN_TIERS, type WinTier } from "../utils/payoutLogic";
+import { calculateWinTier, calculatePayout, calculatePayoutWithStreak, getStreakMultiplier, BASKETBALL_WIN_TIERS, STREAK_TIERS, type WinTier } from "../utils/payoutLogic";
+import { checkMysteryScore, getDailyMysteryScore, MYSTERY_SCORE_BONUS } from "@shared/utils/mysteryScore";
 import { buildPostRevealCopy } from "../utils/buildPostRevealCopy";
 import { composeCommentary } from "../../../shared/commentary/composeCommentary";
 import { useGameAnalytics } from "../../../shared/analytics/useGameAnalytics";
@@ -119,10 +120,9 @@ function RosterGridScaleFit({ children }: { children: ReactNode }) {
 const BASE_BET = 10;
 
 // ── Jackpot constants ──────────────────────────────────────────────────────
-const JACKPOT_SEED = 12_451.29;
-const JACKPOT_BET_RAKE = 0.05;   // 5% of each bet added to pot
-const TICK_INTERVAL_MS = 3000;
-const TICK_AMOUNT = 0.01;
+// ── Economy constants (new system) ────────────────────────────────────────
+const POOL_DRIP_INTERVAL_MS = 3000;
+const POOL_DRIP_AMOUNT = 0.07; // ~1.4 coins/min at 3s interval
 
 type GameState =
   | "IDLE" | "DEALING" | "HOLD" | "DRAWING"
@@ -339,80 +339,86 @@ function BetMultSuffix({ m }: { m: number }) {
   );
 }
 
-// ── BonusRow — community bonus pool pill (streak UI lives in Zone 3) ─────────
+// ── StreakDisplay — fire emojis showing current streak progress ───────────────
+// 0 wins:  🔥🔥🔥 x1.2  (all dim)
+// 3 wins:  🔥🔥🔥 x1.2 ✓ → 🔥🔥 x1.5 appears
+// 5 wins:  ✓ ✓ → 🔥🔥🔥🔥🔥 x2.0 appears
+// 10 wins: all lit, 2.0x active
 
-const BONUS_TIERS = [
-  { wins: 3, pct: 5, color: "#FFD700", glow: "#FFD70099" },
-  { wins: 5, pct: 15, color: "#FFD700", glow: "#FFD70099" },
-];
+function StreakFires({ count, lit, label }: { count: number; lit: number; label: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+      {Array.from({ length: count }, (_, i) => (
+        <span key={i} style={{ fontSize: 12, opacity: i < lit ? 1 : 0.2, filter: i < lit ? "none" : "grayscale(1)" }}>🔥</span>
+      ))}
+      <span style={{ fontSize: 9, fontWeight: 800, color: lit >= count ? "#FFD700" : "rgba(255,255,255,0.35)", marginLeft: 2 }}>{label}</span>
+    </div>
+  );
+}
 
-const BONUS_DOTS = [
-  { threshold: 1, tierIdx: 0 },
-  { threshold: 2, tierIdx: 0 },
-  { threshold: 3, tierIdx: 0 },
-  { threshold: 4, tierIdx: 1 },
-  { threshold: 5, tierIdx: 1 },
-];
+function StreakDisplay({ streak }: { streak: number }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-start" }}>
+      <StreakFires count={3} lit={Math.min(streak, 3)} label="x1.2" />
+      {streak >= 3 && <StreakFires count={2} lit={Math.min(streak - 3, 2)} label="x1.5" />}
+      {streak >= 5 && <StreakFires count={5} lit={Math.min(streak - 5, 5)} label="x2.0" />}
+    </div>
+  );
+}
 
-function BonusRow({ betAdded, streak = 0, milestoneHit = false, onAmountChange }: {
-  betAdded: number; streak?: number; milestoneHit?: boolean;
+// ── BonusPoolPill — jackpot-style pool meter with drip + blink ───────────────
+
+function BonusPoolPill({ betAdded, onAmountChange }: {
+  betAdded: number;
   onAmountChange?: (v: number) => void;
 }) {
-  const [amount, setAmount] = useState(JACKPOT_SEED);
+  const [amount, setAmount] = useState(1000);
+  const [blink, setBlink] = useState(false);
   const prevBetRef = useRef(0);
-  const streakGlow = streak >= 5 ? 0.22 : streak >= 3 ? 0.14 : streak >= 1 ? 0.08 : 0.06;
-  const streakBorder = streak >= 5 ? "rgba(255,215,0,0.55)" : streak >= 3 ? "rgba(255,215,0,0.38)" : streak >= 1 ? "rgba(255,215,0,0.25)" : "rgba(255,215,0,0.18)";
-  const streakShadow = streak > 0 ? `0 0 ${6 + streak * 3}px rgba(255,215,0,${streakGlow})` : "none";
 
+  // Passive drip
   useEffect(() => {
     const id = setInterval(() => {
       setAmount(p => {
-        const next = parseFloat((p + TICK_AMOUNT).toFixed(2));
+        const next = parseFloat((p + POOL_DRIP_AMOUNT).toFixed(2));
         onAmountChange?.(next);
         return next;
       });
-    }, TICK_INTERVAL_MS);
+    }, POOL_DRIP_INTERVAL_MS);
     return () => clearInterval(id);
   }, []); // eslint-disable-line
 
+  // Gold blink on bet
   useEffect(() => {
     if (betAdded > 0 && betAdded !== prevBetRef.current) {
       prevBetRef.current = betAdded;
-      const contribution = parseFloat((betAdded * JACKPOT_BET_RAKE).toFixed(2));
-      if (contribution > 0) setAmount(p => {
-        const next = parseFloat((p + contribution).toFixed(2));
-        onAmountChange?.(next);
-        return next;
-      });
+      const rake = parseFloat((betAdded * 0.05).toFixed(2));
+      if (rake > 0) {
+        setAmount(p => {
+          const next = parseFloat((p + rake).toFixed(2));
+          onAmountChange?.(next);
+          return next;
+        });
+        setBlink(true);
+        setTimeout(() => setBlink(false), 600);
+      }
     }
   }, [betAdded]); // eslint-disable-line
 
   return (
     <div style={{
-      flex: "0 0 auto",
-      display: "flex", flexDirection: "column", alignItems: "center",
-      padding: "0px 12px",
+      display: "inline-flex", alignItems: "center", gap: 6,
+      padding: "4px 14px", borderRadius: 20,
+      background: blink ? "rgba(255,215,0,0.25)" : "rgba(255,215,0,0.06)",
+      border: `1px solid rgba(255,215,0,${blink ? 0.7 : 0.18})`,
+      transition: "background 300ms ease, border-color 300ms ease",
     }}>
-      {/* Bonus pool pill only — streak lives in zone 3 under gauge */}
-      <div style={{
-        display: "inline-flex", alignItems: "center", gap: 6,
-        padding: "4px 14px", borderRadius: 20,
-        background: `rgba(255,215,0,${streakGlow})`,
-        border: `1px solid ${streakBorder}`,
-        boxShadow: milestoneHit
-          ? `0 0 0 2px #FFD700, 0 0 32px rgba(255,215,0,0.9), 0 0 64px rgba(255,215,0,0.5)`
-          : streakShadow,
-        animation: milestoneHit ? "bonusPoolPulse 1.4s ease-out forwards" : "none",
-        transition: "box-shadow 300ms ease",
-      }}>
-        <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.2, color: "rgba(255,215,0,0.6)", textTransform: "uppercase" }}>
-          Bonus Pool
-        </span>
-        <span style={{ fontSize: 12, fontWeight: 950, color: "#FFD700", fontVariantNumeric: "tabular-nums", textShadow: "0 0 8px rgba(255,215,0,0.5)" }}>
-          ${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-        </span>
-      </div>
-
+      <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.2, color: "rgba(255,215,0,0.6)", textTransform: "uppercase" }}>
+        Bonus Pool
+      </span>
+      <span style={{ fontSize: 12, fontWeight: 950, color: "#FFD700", fontVariantNumeric: "tabular-nums", textShadow: "0 0 8px rgba(255,215,0,0.5)" }}>
+        ${amount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+      </span>
     </div>
   );
 }
@@ -517,7 +523,7 @@ export default function GameView() {
   const [streak, setStreak] = useState<number>(() =>
     parseInt(localStorage.getItem("replaymod_streak") ?? "0", 10)
   );
-  const [streakMilestone, setStreakMilestone] = useState<{ wins: number; pct: number } | null>(null);
+  // streakMilestone removed — streak now directly multiplies payout
 
   // Tier flip display state
   const [tierFlipKey, setTierFlipKey] = useState(0);
@@ -771,7 +777,7 @@ export default function GameView() {
       runSpring(totalFp, () => {
         lockedGaugeFpRef.current = totalFp;
         const tier = calculateWinTier(totalFp);
-        const payout = calculatePayout(tier, currentBet);
+        const payout = calculatePayoutWithStreak(tier, currentBet, streak);
         setWinTier(tier);
         setWinPayout(payout);
         const bust = !tier || tier === "BUST";
@@ -802,8 +808,6 @@ export default function GameView() {
                 const next = prev + 1;
                 localStorage.setItem("replaymod_streak", String(next));
                 if (next === 3 || next === 5 || next === 10) soundManager.playStreakMilestone(next);
-                if (next === 3) setStreakMilestone({ wins: 3, pct: 5 });
-                else if (next === 5) setStreakMilestone({ wins: 5, pct: 15 });
                 submitToLeaderboard("streak", next);
                 return next;
               });
@@ -811,9 +815,32 @@ export default function GameView() {
               submitToLeaderboard("fp", totalFp);
               submitToLeaderboard("hand_avg", totalFp, { handCount });
               submitToLeaderboard("money_won", payout);
+              // Top 3 combined: track best 3 hands today, submit sum
+              const top3Key = "rm_top3_today";
+              const top3DateKey = "rm_top3_date";
+              const today = new Date().toISOString().slice(0, 10);
+              let top3: number[] = [];
+              try {
+                if (localStorage.getItem(top3DateKey) === today) {
+                  top3 = JSON.parse(localStorage.getItem(top3Key) ?? "[]");
+                }
+              } catch {}
+              top3.push(totalFp);
+              top3.sort((a, b) => b - a);
+              top3 = top3.slice(0, 3);
+              localStorage.setItem(top3Key, JSON.stringify(top3));
+              localStorage.setItem(top3DateKey, today);
+              if (top3.length >= 1) {
+                const combined = top3.reduce((s, v) => s + v, 0);
+                submitToLeaderboard("top3_combined", parseFloat(combined.toFixed(1)));
+              }
             } else {
               setStreak(0);
               localStorage.setItem("replaymod_streak", "0");
+            }
+            // Mystery score check — exact hit = instant bonus
+            if (checkMysteryScore(totalFp)) {
+              setBalance(prev => { const next = prev + MYSTERY_SCORE_BONUS; saveBalance(next); return next; });
             }
 
             // hand_best fires on every hand (wins AND busts).
@@ -889,12 +916,7 @@ export default function GameView() {
     const tierMult = BASKETBALL_WIN_TIERS[winTier]?.multiplier ?? 0;
     const isLoss = winTier === "BUST"; // ROOKIE is a partial win, not a loss
     const lossAmount = winTier === "BUST" ? BASE_BET * betMultiplier : 0;
-    // Streak milestone bonus pool win
-    const milestoneTier = BONUS_TIERS.find(t => streak === t.wins);
-    const streakMilestonePct = milestoneTier?.pct;
-    const bonusPoolWin = streakMilestonePct
-      ? Math.floor(jackpotAmountRef.current * (streakMilestonePct / 100))
-      : undefined;
+    const streakMult = getStreakMultiplier(streak);
     return {
       tierLabel: formatTierLabel(winTier),
       tierColor: tc.color,
@@ -904,11 +926,10 @@ export default function GameView() {
       isBust: winTier === "BUST",
       betMultiplier,
       tierMultiplier: tierMult,
+      streakMultiplier: streakMult,
       baseBet: BASE_BET,
       isLoss,
       lossAmount,
-      streakMilestonePct,
-      bonusPoolWin,
     };
   }, [gameState, winTier, winPayout, streak, betMultiplier]); // eslint-disable-line
 
@@ -1122,7 +1143,7 @@ export default function GameView() {
       commentaryRef.current = null;
       commentaryStatusRef.current = 'idle';
       commentaryFiredHandRef.current = -1;
-      setStreakMilestone(null);
+      // streakMilestone removed
     }
   }, [gameState]);
 
@@ -1635,11 +1656,9 @@ export default function GameView() {
               hasUncollected={taskStates.some(t => t.progress >= t.target && !t.collected)}
             />
           </div>
-          <div data-ftue-chrome="true">
-            <BonusRow
+          <div data-ftue-chrome="true" style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "0 12px" }}>
+            <BonusPoolPill
               betAdded={currentBet}
-              streak={streak}
-              milestoneHit={streak === 3 || streak === 5}
               onAmountChange={(v) => { jackpotAmountRef.current = v; }}
             />
           </div>
@@ -2078,7 +2097,12 @@ export default function GameView() {
                 </div>
               ) : null}
             </div>
-            {/* Streak progression UI removed for beta */}
+            {/* Streak fire display — visible during pre-reveal phases */}
+            {isPreRevealFooter && !isFTUE && (
+              <div style={{ position: "absolute", bottom: 4, left: 10, zIndex: 5, pointerEvents: "none" }}>
+                <StreakDisplay streak={streak} />
+              </div>
+            )}
           </div>
         </div>
 

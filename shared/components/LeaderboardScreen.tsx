@@ -7,18 +7,22 @@ import { useEffect, useState, useCallback } from "react";
 
 const FF = "'Rajdhani', 'Arial Narrow', sans-serif";
 
-type Metric = "hand_best" | "hand_avg" | "money_won";
+type Metric = "hand_best" | "top3_combined" | "hand_avg" | "money_won";
 type Scope = "daily" | "alltime";
 type Entry = { uid: string; nickname: string; score: number; session_id?: string | null };
 
 const METRICS: { id: Metric; label: string }[] = [
-  { id: "hand_best", label: "Best Hand" },
-  { id: "hand_avg", label: "Avg Score" },
-  { id: "money_won", label: "Most Won" },
+  { id: "hand_best",      label: "Best Hand" },
+  { id: "top3_combined",  label: "Top 3" },
+  { id: "hand_avg",       label: "Avg Score" },
 ];
+
+/** Pool distribution percentages for top 10 per lane. */
+const POOL_PCT = [35, 20, 12, 8, 6, 5, 4, 4, 3, 3];
 
 function formatScore(metric: Metric, score: number): string {
   if (metric === "hand_best") return `${score.toFixed(1)} FP`;
+  if (metric === "top3_combined") return `${score.toFixed(1)} FP`;
   if (metric === "hand_avg") return `${score.toFixed(1)} FP avg`;
   return `${score.toLocaleString()} coins`;
 }
@@ -200,6 +204,15 @@ export function LeaderboardScreen({ currentUid, onClose }: Props) {
                 }}>
                   {formatScore(metric, e.score)}
                 </span>
+                {scope === "daily" && i < POOL_PCT.length && (
+                  <span style={{
+                    fontSize: 8, fontWeight: 700,
+                    color: "rgba(255,215,0,0.5)",
+                    minWidth: 28, textAlign: "right",
+                  }}>
+                    {POOL_PCT[i]}%
+                  </span>
+                )}
                 {isMe && (
                   <span style={{
                     fontSize: 9, fontWeight: 900, color: "#FFD700",
