@@ -143,44 +143,23 @@ function BackBStats({ card }: { card: PlayerCard }) {
           <span style={{ fontSize: 10, fontWeight: 700, color: badgeFpBonus > 0 ? "#FFD700" : "#FF6B6B", alignSelf: "flex-end", marginBottom: 2 }}>({badgeFpBonus > 0 ? "+" : ""}{badgeFpBonus})</span>
         )}
       </div>
-      {/* Badge grid — 3 per row, earned badges bright, unearned greyed */}
-      {(() => {
-        const ALL_BADGES: Array<{ id: string; icon: string; label: string; fp: number }> = [
-          { id: "GOD_MODE", icon: "⚡", label: "God Mode", fp: 10 },
-          { id: "FIRE", icon: "🔥", label: "Fire", fp: 5 },
-          { id: "BUCKET", icon: "🏀", label: "Bucket", fp: 2 },
-          { id: "BEAST", icon: "🦍", label: "Beast", fp: 5 },
-          { id: "GLASS", icon: "🧲", label: "Glass", fp: 3 },
-          { id: "DIME", icon: "🧠", label: "Dime", fp: 3 },
-          { id: "PICKPOCKET", icon: "👀", label: "Pickpocket", fp: 2 },
-          { id: "REJECTION", icon: "🛡️", label: "Rejection", fp: 2 },
-          { id: "PURE", icon: "🎯", label: "Pure", fp: 3 },
-          { id: "DOUBLE_DBL", icon: "✌️", label: "Dbl Dbl", fp: 2 },
-          { id: "TRIPLE_DBL", icon: "👑", label: "Triple Dbl", fp: 8 },
-          { id: "SLOPPY", icon: "💦", label: "Sloppy", fp: -3 },
-        ];
-        const earnedIds = new Set(badgesData.map((b: any) => b.id));
-        return (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 3 }}>
-            {ALL_BADGES.map(b => {
-              const earned = earnedIds.has(b.id);
-              return (
-                <div key={b.id} style={{
-                  display: "flex", alignItems: "center", gap: 3,
-                  padding: "2px 4px", borderRadius: 6,
-                  background: earned ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.02)",
-                  opacity: earned ? 1 : 0.28,
-                }}>
-                  <span style={{ fontSize: 10, lineHeight: 1, flexShrink: 0 }}>{b.icon}</span>
-                  <span style={{ fontSize: 7, fontWeight: 700, color: earned ? "#fff" : "rgba(255,255,255,0.5)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {b.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        );
-      })()}
+      {/* Earned badges — 3 per row */}
+      {badgesData.length > 0 && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 3 }}>
+          {badgesData.slice(0, 9).map((b: any, i: number) => (
+            <div key={b.id ?? b.label ?? i} style={{
+              display: "flex", alignItems: "center", gap: 3,
+              padding: "2px 4px", borderRadius: 6,
+              background: "rgba(255,255,255,0.08)",
+            }}>
+              <span style={{ fontSize: 10, lineHeight: 1, flexShrink: 0 }}>{b.icon}</span>
+              <span style={{ fontSize: 7, fontWeight: 700, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {b.label}{b.fp ? ` ${b.fp > 0 ? "+" : ""}${b.fp}` : ""}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
       <div style={S.divider} />
       {!hasStats || allZero ? (
         <div style={S.noStatsWrap}><div style={S.noStatsText}>No game log</div></div>

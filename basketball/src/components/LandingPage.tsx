@@ -104,7 +104,15 @@ export function LandingPage({ onPlay }: Props) {
 
   useEffect(() => {
     startAudio();
+    // Poll mute state so toggling mute while on landing page pauses/resumes audio
+    const poll = setInterval(() => {
+      const a = audioRef.current;
+      if (!a) return;
+      if (soundManager.isMuted() && !a.paused) a.pause();
+      else if (!soundManager.isMuted() && a.paused) a.play().catch(() => {});
+    }, 300);
     return () => {
+      clearInterval(poll);
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
