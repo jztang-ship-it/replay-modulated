@@ -42,6 +42,10 @@ import { generateCommentary } from "@shared/commentary/generateCommentary";
 import type { CommentaryInput, CommentaryOutput, CommentaryRosterCard } from "@shared/commentary/types";
 import { buildBasketballContext } from "../utils/buildBasketballContext";
 import { ProfileScreen } from '@shared/components/ProfileScreen';
+import { useAuth } from "@shared/auth/useAuth";
+import { RegisterNudge } from "@shared/components/RegisterNudge";
+import { RegisterModal } from "@shared/components/RegisterModal";
+import { PwaInstallPrompt } from "@shared/components/PwaInstallPrompt";
 
 // Test-wire only: allow passing glow props even if wrapper prop types lag behind.
 const RosterGridAny = RosterGrid as any;
@@ -537,6 +541,10 @@ export default function GameView() {
   const [showRawScore, setShowRawScore] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const { isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [bigWinFired, setBigWinFired] = useState(false);
+  const sessionCount = useRef(parseInt(localStorage.getItem("rm_session_count") ?? "0", 10));
   // Bumped when fetchLeaderboardContext patches postRevealCopyRef.current.secondary,
   // forcing the postRevealCopy useMemo to re-read the ref. Each new hand resets the
   // ref to null and we kick off a fresh fetch.
@@ -545,6 +553,12 @@ export default function GameView() {
   useEffect(() => {
     if (gameState === "IDLE" || gameState === "HOLD") setShowRawScore(false);
   }, [gameState]);
+
+  useEffect(() => {
+    const next = sessionCount.current + 1;
+    sessionCount.current = next;
+    localStorage.setItem("rm_session_count", String(next));
+  }, []);
   const [noTransition, setNoTransition] = useState(false);
   const [revealedSalary, setRevealedSalary] = useState(0);
   const [gameError, setGameError] = useState<string | null>(null);
@@ -873,6 +887,10 @@ export default function GameView() {
         const isStreakWin = !bust && tier !== "ROOKIE";  // STARTER+ advances streak
         const isStreakLoss = bust;                        // only BUST resets streak
         soundManager.playTierResult(tier);
+        // Nudge trigger: first ALL_STAR+ hit for anonymous users
+        if (["ALL_STAR", "MVP", "LEGEND"].includes(tier) && isAnonymous) {
+          setBigWinFired(true);
+        }
         const badges = rosterRef.current.reduce((s, c) => s + (c.achievements?.length ?? 0), 0);
         gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
         recordHandPlayed();
@@ -2368,6 +2386,47 @@ export default function GameView() {
         <ProfileScreen
           currentUid={getPlayerUid()}
           onClose={() => setShowProfile(false)}
+        />
+      )}
+
+      {/* Registration nudges — only for anonymous users during IDLE/RESULTS */}
+      {isAnonymous && (gameState === "IDLE" || gameState === "RESULTS") && (
+        <>
+          <RegisterNudge
+            nudgeId="nudge_big_win"
+            message="Nice hit! Save your progress so you don't lose it."
+            active={bigWinFired}
+            onRegister={() => setShowRegisterModal(true)}
+          />
+          <RegisterNudge
+            nudgeId="nudge_leaderboard"
+            message="You're on the board! Claim your spot — add an email."
+            active={localStorage.getItem("rm_on_board_today") === "1"}
+            onRegister={() => setShowRegisterModal(true)}
+          />
+          <RegisterNudge
+            nudgeId="nudge_retention"
+            message="Having fun? Save your account to play on any device."
+            active={handCount >= 12}
+            onRegister={() => setShowRegisterModal(true)}
+          />
+        </>
+      )}
+
+      {/* PWA install prompt — fires on session 2+ */}
+      {(gameState === "IDLE" || gameState === "RESULTS") && (
+        <PwaInstallPrompt active={sessionCount.current >= 2} />
+      )}
+
+      {/* Registration modal */}
+      {showRegisterModal && (
+        <RegisterModal
+          onClose={() => setShowRegisterModal(false)}
+          onSuccess={() => setShowRegisterModal(false)}
+          signUp={signUp}
+          linkGoogle={linkGoogle}
+          signIn={signIn}
+          signInGoogle={signInGoogle}
         />
       )}
 
