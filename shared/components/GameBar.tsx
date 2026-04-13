@@ -1535,29 +1535,33 @@ export function GameBar({
             }}>i</button>
           </div>
 
-          {/* Streak fire emojis — under balance, left of action button */}
+          {/* Streak fire emojis — two rows: line 1 = fires 1-5, line 2 = fires 6-10 */}
           {streak != null && !ftueHideSkip && (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "2px 0 4px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 1 }}>
-                {Array.from({ length: 3 }, (_, i) => (
-                  <span key={`s1-${i}`} style={{ fontSize: 11, opacity: i < Math.min(streak, 3) ? 1 : 0.2, filter: i < Math.min(streak, 3) ? "none" : "grayscale(1)" }}>🔥</span>
-                ))}
-                <span style={{ fontSize: 8, fontWeight: 800, color: streak >= 3 ? "#FFD700" : "rgba(255,255,255,0.3)", marginLeft: 2 }}>1.2x</span>
-              </div>
-              {streak >= 3 && (
-                <div style={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  {Array.from({ length: 2 }, (_, i) => (
-                    <span key={`s2-${i}`} style={{ fontSize: 11, opacity: i < Math.min(streak - 3, 2) ? 1 : 0.2, filter: i < Math.min(streak - 3, 2) ? "none" : "grayscale(1)" }}>🔥</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "2px 0 4px" }}>
+              {/* Row 1: 🔥🔥🔥 x1.2  🔥🔥 x1.5 */}
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  {Array.from({ length: 3 }, (_, i) => (
+                    <span key={`s1-${i}`} style={{ fontSize: 15, opacity: i < Math.min(streak, 3) ? 1 : 0.2, filter: i < Math.min(streak, 3) ? "none" : "grayscale(1)" }}>🔥</span>
                   ))}
-                  <span style={{ fontSize: 8, fontWeight: 800, color: streak >= 5 ? "#FFD700" : "rgba(255,255,255,0.3)", marginLeft: 2 }}>1.5x</span>
+                  <span style={{ fontSize: 9, fontWeight: 800, color: streak >= 3 ? "#FFD700" : "rgba(255,255,255,0.3)", marginLeft: 2 }}>1.2x</span>
                 </div>
-              )}
+                {streak >= 3 && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    {Array.from({ length: 2 }, (_, i) => (
+                      <span key={`s2-${i}`} style={{ fontSize: 15, opacity: i < Math.min(streak - 3, 2) ? 1 : 0.2, filter: i < Math.min(streak - 3, 2) ? "none" : "grayscale(1)" }}>🔥</span>
+                    ))}
+                    <span style={{ fontSize: 9, fontWeight: 800, color: streak >= 5 ? "#FFD700" : "rgba(255,255,255,0.3)", marginLeft: 2 }}>1.5x</span>
+                  </div>
+                )}
+              </div>
+              {/* Row 2: 🔥🔥🔥🔥🔥 x2.0 (appears after 5 wins) */}
               {streak >= 5 && (
-                <div style={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
                   {Array.from({ length: 5 }, (_, i) => (
-                    <span key={`s3-${i}`} style={{ fontSize: 11, opacity: i < Math.min(streak - 5, 5) ? 1 : 0.2, filter: i < Math.min(streak - 5, 5) ? "none" : "grayscale(1)" }}>🔥</span>
+                    <span key={`s3-${i}`} style={{ fontSize: 15, opacity: i < Math.min(streak - 5, 5) ? 1 : 0.2, filter: i < Math.min(streak - 5, 5) ? "none" : "grayscale(1)" }}>🔥</span>
                   ))}
-                  <span style={{ fontSize: 8, fontWeight: 800, color: streak >= 10 ? "#FFD700" : "rgba(255,255,255,0.3)", marginLeft: 2 }}>2.0x</span>
+                  <span style={{ fontSize: 9, fontWeight: 800, color: streak >= 10 ? "#FFD700" : "rgba(255,255,255,0.3)", marginLeft: 2 }}>2.0x</span>
                 </div>
               )}
             </div>
