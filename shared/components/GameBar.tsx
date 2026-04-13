@@ -1535,31 +1535,29 @@ export function GameBar({
             }}>i</button>
           </div>
 
-          {/* Streak fire emojis — progressive reveal */}
+          {/* Streak fire emojis — only show current tier being chased */}
           {streak != null && !ftueHideSkip && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 1, padding: "2px 0 3px" }}>
-              {/* Row 1: 🔥🔥🔥 1.2x  + 🔥🔥 1.5x (1.5x appears only after 3rd win) */}
-              <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 3, padding: "2px 0 3px" }}>
+              {streak < 3 && (<>
                 {Array.from({ length: 3 }, (_, i) => (
-                  <span key={`s1-${i}`} style={{ fontSize: 13, opacity: i < Math.min(streak, 3) ? 1 : 0.2, filter: i < Math.min(streak, 3) ? "none" : "grayscale(1)" }}>🔥</span>
+                  <span key={`s1-${i}`} style={{ fontSize: 13, opacity: i < streak ? 1 : 0.2, filter: i < streak ? "none" : "grayscale(1)" }}>🔥</span>
                 ))}
-                <span style={{ fontSize: 8, fontWeight: 800, color: streak >= 3 ? "#FFD700" : "rgba(255,255,255,0.3)" }}>1.2x</span>
-                {streak >= 3 && (<>
-                  <span style={{ color: "rgba(255,255,255,0.1)", fontSize: 8, margin: "0 1px" }}>|</span>
-                  {Array.from({ length: 2 }, (_, i) => (
-                    <span key={`s2-${i}`} style={{ fontSize: 13, opacity: i < Math.min(streak - 3, 2) ? 1 : 0.2, filter: i < Math.min(streak - 3, 2) ? "none" : "grayscale(1)" }}>🔥</span>
-                  ))}
-                  <span style={{ fontSize: 8, fontWeight: 800, color: streak >= 5 ? "#FFD700" : "rgba(255,255,255,0.3)" }}>1.5x</span>
-                </>)}
-              </div>
-              {/* Row 2: 🔥🔥🔥🔥🔥 2.0x (appears only after 5th win) */}
-              {streak >= 5 && (
-                <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <span key={`s3-${i}`} style={{ fontSize: 13, opacity: i < Math.min(streak - 5, 5) ? 1 : 0.2, filter: i < Math.min(streak - 5, 5) ? "none" : "grayscale(1)" }}>🔥</span>
-                  ))}
-                  <span style={{ fontSize: 8, fontWeight: 800, color: streak >= 10 ? "#FFD700" : "rgba(255,255,255,0.3)" }}>2.0x</span>
-                </div>
+                <span style={{ fontSize: 8, fontWeight: 800, color: "rgba(255,255,255,0.3)" }}>1.2x</span>
+              </>)}
+              {streak >= 3 && streak < 5 && (<>
+                {Array.from({ length: 2 }, (_, i) => (
+                  <span key={`s2-${i}`} style={{ fontSize: 13, opacity: i < streak - 3 ? 1 : 0.2, filter: i < streak - 3 ? "none" : "grayscale(1)" }}>🔥</span>
+                ))}
+                <span style={{ fontSize: 8, fontWeight: 800, color: "rgba(255,255,255,0.3)" }}>1.5x</span>
+              </>)}
+              {streak >= 5 && streak < 10 && (<>
+                {Array.from({ length: 5 }, (_, i) => (
+                  <span key={`s3-${i}`} style={{ fontSize: 13, opacity: i < streak - 5 ? 1 : 0.2, filter: i < streak - 5 ? "none" : "grayscale(1)" }}>🔥</span>
+                ))}
+                <span style={{ fontSize: 8, fontWeight: 800, color: "rgba(255,255,255,0.3)" }}>2.0x</span>
+              </>)}
+              {streak >= 10 && (
+                <span style={{ fontSize: 10, fontWeight: 900, color: "#FFD700" }}>🔥 2.0x active</span>
               )}
             </div>
           )}
