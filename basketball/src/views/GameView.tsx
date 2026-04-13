@@ -901,7 +901,8 @@ export default function GameView() {
               // Session score: cumulative non-bust FP today (additive)
               submitToLeaderboard("session_score", parseFloat(totalFp.toFixed(1)));
               // Check if player is now on either daily leaderboard top 10 → light up trophy
-              checkLeaderboardRank();
+              // Delay 2s to let KV writes propagate before reading
+              setTimeout(() => checkLeaderboardRank(), 2000);
             } else {
               setStreak(0);
               localStorage.setItem("replaymod_streak", "0");
@@ -2164,12 +2165,7 @@ export default function GameView() {
             boxSizing: "border-box",
           }}
         >
-          {/* Streak fire display — always visible, above wallet */}
-          {!isFTUE && (
-            <div style={{ padding: "0 14px 4px", flexShrink: 0 }}>
-              <StreakDisplay streak={streak} />
-            </div>
-          )}
+          {/* Streak display removed — rendered inside GameBar balance row */}
           <div
             ref={(el) => setControlsHost(el)}
             style={{
@@ -2338,6 +2334,7 @@ export default function GameView() {
         splitMultiplierRowVisible={isPreRevealFooter && !isFTUE}
         onViewLeaderboard={() => setShowLeaderboard(true)}
         legendPulsing={legendGold && !isFTUE}
+        streak={streak}
         onLegendOpened={() => {
           const today = new Date().toISOString().slice(0, 10);
           localStorage.setItem("replaymod_legend_seen_date", today);

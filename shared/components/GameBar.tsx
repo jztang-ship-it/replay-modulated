@@ -140,6 +140,8 @@ type Props = {
   onViewLeaderboard?: () => void;
   /** Pulse the legend (ⓘ) icon to draw attention — e.g. daily bonus refresh */
   legendPulsing?: boolean;
+  /** Current win streak for fire emoji display under balance */
+  streak?: number;
   /** Called when user opens the legend modal — parent can clear pulse state */
   onLegendOpened?: () => void;
 };
@@ -1319,6 +1321,7 @@ export function GameBar({
   splitMultiplierRowVisible = true,
   onViewLeaderboard,
   legendPulsing = false,
+  streak = 0,
   onLegendOpened,
 }: Props) {
   // Trophy button: 36×36 circular, sits absolutely positioned right of the
@@ -1531,6 +1534,34 @@ export function GameBar({
               cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
             }}>i</button>
           </div>
+
+          {/* Streak fire emojis — under balance, left of action button */}
+          {streak != null && !ftueHideSkip && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "2px 0 4px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 1 }}>
+                {Array.from({ length: 3 }, (_, i) => (
+                  <span key={`s1-${i}`} style={{ fontSize: 11, opacity: i < Math.min(streak, 3) ? 1 : 0.2, filter: i < Math.min(streak, 3) ? "none" : "grayscale(1)" }}>🔥</span>
+                ))}
+                <span style={{ fontSize: 8, fontWeight: 800, color: streak >= 3 ? "#FFD700" : "rgba(255,255,255,0.3)", marginLeft: 2 }}>1.2x</span>
+              </div>
+              {streak >= 3 && (
+                <div style={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  {Array.from({ length: 2 }, (_, i) => (
+                    <span key={`s2-${i}`} style={{ fontSize: 11, opacity: i < Math.min(streak - 3, 2) ? 1 : 0.2, filter: i < Math.min(streak - 3, 2) ? "none" : "grayscale(1)" }}>🔥</span>
+                  ))}
+                  <span style={{ fontSize: 8, fontWeight: 800, color: streak >= 5 ? "#FFD700" : "rgba(255,255,255,0.3)", marginLeft: 2 }}>1.5x</span>
+                </div>
+              )}
+              {streak >= 5 && (
+                <div style={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <span key={`s3-${i}`} style={{ fontSize: 11, opacity: i < Math.min(streak - 5, 5) ? 1 : 0.2, filter: i < Math.min(streak - 5, 5) ? "none" : "grayscale(1)" }}>🔥</span>
+                  ))}
+                  <span style={{ fontSize: 8, fontWeight: 800, color: streak >= 10 ? "#FFD700" : "rgba(255,255,255,0.3)", marginLeft: 2 }}>2.0x</span>
+                </div>
+              )}
+            </div>
+          )}
 
           <div style={{ display: "flex", justifyContent: "center", paddingTop: 0, position: "relative" }}>
             <button

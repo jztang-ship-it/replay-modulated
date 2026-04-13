@@ -532,7 +532,7 @@ export function CardFront(props: CardFrontProps) {
           {(() => {
             const isLightAccent = derivedTier === "GREEN" || derivedTier === "BLUE" || derivedTier === "WHITE";
             const textColor = isLightAccent ? "#1A1A1A" : "#FFEA86";
-            const MAX_VISIBLE = 4;
+            const MAX_VISIBLE = 8;
             const visibleBadges = hasBadges ? badges!.slice(0, MAX_VISIBLE) : [];
             const overflowCount = hasBadges ? Math.max(0, (badges?.length ?? 0) - MAX_VISIBLE) : 0;
             const totalBonus = badgeBonusFp + dailyBonus;
@@ -544,7 +544,7 @@ export function CardFront(props: CardFrontProps) {
                     key={badge.id ?? badge.label ?? i}
                     style={{
                       animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${i * 70}ms both`,
-                      fontSize: 12, lineHeight: 1, flexShrink: 0,
+                      fontSize: visibleBadges.length > 5 ? 10 : 12, lineHeight: 1, flexShrink: 0,
                     }}
                   >{badge.icon}</span>
                 ))}

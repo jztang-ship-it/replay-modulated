@@ -98,6 +98,8 @@ type Props = {
   onWageAnimationComplete?: () => void;
   ftueReplayPulse?: boolean;
   legendPulsing?: boolean;
+  /** Current win streak for fire emoji display */
+  streak?: number;
   onLegendOpened?: () => void;
 };
 
