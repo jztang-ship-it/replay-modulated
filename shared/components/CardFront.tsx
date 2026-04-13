@@ -64,18 +64,29 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
       50% { opacity: 1; }
     }
     @keyframes cfSmokingA {
-      0%   { opacity: 1;    transform: scaleY(1.00); }
-      25%  { opacity: 0.70; transform: scaleY(1.03); }
-      50%  { opacity: 0.20; transform: scaleY(0.97); }
-      75%  { opacity: 0.85; transform: scaleY(1.02); }
-      100% { opacity: 1;    transform: scaleY(1.00); }
+      0%   { opacity: 1; }
+      15%  { opacity: 0.55; }
+      35%  { opacity: 0.90; }
+      50%  { opacity: 0.20; }
+      65%  { opacity: 0.80; }
+      85%  { opacity: 0.40; }
+      100% { opacity: 1; }
     }
     @keyframes cfSmokingB {
-      0%   { opacity: 0.20; transform: scaleY(1.02); }
-      25%  { opacity: 0.90; transform: scaleY(0.98); }
-      50%  { opacity: 1;    transform: scaleY(1.01); }
-      75%  { opacity: 0.30; transform: scaleY(1.03); }
-      100% { opacity: 0.20; transform: scaleY(1.02); }
+      0%   { opacity: 0.20; }
+      20%  { opacity: 0.85; }
+      40%  { opacity: 0.35; }
+      50%  { opacity: 1; }
+      60%  { opacity: 0.50; }
+      80%  { opacity: 0.90; }
+      100% { opacity: 0.20; }
+    }
+    @keyframes cfSmokingC {
+      0%   { opacity: 0.50; }
+      25%  { opacity: 1; }
+      50%  { opacity: 0.30; }
+      75%  { opacity: 0.75; }
+      100% { opacity: 0.50; }
     }
     @keyframes cfIceA {
       0%, 100% { opacity: 1; }
@@ -577,7 +588,7 @@ export function CardFront(props: CardFrontProps) {
          *   ratio ≥ 2.00 → max fire (red, fast turbulent, 3 layers)
          *
          * Within each zone, all parameters lerp continuously:
-         *   ICE:  coverage 50%→86%, opacity 0.18→0.60, speed 4.0s→3.0s, brightness 1.2→1.6
+         *   ICE:  coverage 50%→72%, opacity 0.18→0.60, speed 4.0s→3.0s, brightness 1.2→1.6
          *   FIRE: hue +25°→-15°, speed 2.4s→0.9s, opacity 0.35→0.65, spread 7→24px
          */}
         {(stamp === "SMOKING HOT" || stamp === "ON FIRE" || stamp === "ICE COLD" || stamp === "FREEZING") && (() => {
@@ -613,18 +624,24 @@ export function CardFront(props: CardFrontProps) {
             return (
               <div style={clipStyle}>
                 <img src={src} style={{ ...imgBase, opacity: op1, animation: `${animA} ${speed}s ease-in-out infinite` }} />
-                <img src={src} style={{ ...imgBase, opacity: op2, transform: "scaleX(-1)", animation: `${animB} ${speed}s ease-in-out infinite` }} />
+                <div style={{ position: "absolute", inset: 0, transform: "scaleX(-1)" }}>
+                  <img src={src} style={{ ...imgBase, opacity: op2, animation: `${animB} ${speed}s ease-in-out infinite` }} />
+                </div>
                 {useThirdLayer && (
-                  <img src={src} style={{ ...imgBase, opacity: op2 * 0.55, transform: "scaleY(-1)", animation: `${animA} ${speed * 1.2}s ease-in-out infinite 0.3s` }} />
+                  <div style={{ position: "absolute", inset: 0, transform: "scaleY(-1)" }}>
+                    <img src={src} style={{ ...imgBase, opacity: op2 * 0.55, animation: `cfSmokingC ${speed * 1.2}s ease-in-out infinite 0.3s` }} />
+                  </div>
                 )}
               </div>
             );
           }
 
           // ── ICE ZONE: continuous from ratio 0.80 (mild frost) to 0.30 (max ice sheet) ──
+          // Ice stops at name strip (~28% from bottom), same boundary as fire.
+          // Coverage lerps within that zone: mild=top 40%, max=top 72% (bottom always 28%).
           const t = Math.min(1, Math.max(0, (0.80 - ratio) / (0.80 - 0.30))); // 0=mild, 1=max
           const src = `${import.meta.env.BASE_URL}冰雪.png`;
-          const coverage = 50 + t * 36;        // 50% → 86% of card covered (14% always clear for name/FP)
+          const bottomPct = 28 + (1 - t) * 22; // 50% (mild) → 28% (max) from bottom
           const hue = -12 - t * 13;            // -12° → -25°
           const sat = 0.75 - t * 0.25;         // 0.75 → 0.50
           const bright = 1.2 + t * 0.4;        // 1.2 → 1.6
@@ -633,9 +650,8 @@ export function CardFront(props: CardFrontProps) {
           const op2 = 0.10 + t * 0.35;         // 0.10 → 0.45
           const useThirdLayer = t > 0.6;
           const tintFilter = `hue-rotate(${hue}deg) saturate(${sat}) brightness(${bright})`;
-          const bottomPct = `${100 - coverage}%`;
           const clipStyle: React.CSSProperties = {
-            position: "absolute", top: 0, left: 0, right: 0, bottom: bottomPct,
+            position: "absolute", top: 0, left: 0, right: 0, bottom: `${bottomPct}%`,
             borderRadius: "20px 20px 0 0", overflow: "hidden", pointerEvents: "none", zIndex: 39,
           };
           const imgBase: React.CSSProperties = {
@@ -645,9 +661,13 @@ export function CardFront(props: CardFrontProps) {
           return (
             <div style={clipStyle}>
               <img src={src} style={{ ...imgBase, opacity: op1, animation: `cfFreezeSheetA ${speed}s ease-in-out infinite` }} />
-              <img src={src} style={{ ...imgBase, opacity: op2, transform: "scaleX(-1)", animation: `cfFreezeSheetB ${speed}s ease-in-out infinite` }} />
+              <div style={{ position: "absolute", inset: 0, transform: "scaleX(-1)" }}>
+                <img src={src} style={{ ...imgBase, opacity: op2, animation: `cfFreezeSheetB ${speed}s ease-in-out infinite` }} />
+              </div>
               {useThirdLayer && (
-                <img src={src} style={{ ...imgBase, opacity: op2 * 0.75, transform: "scaleY(-1)", animation: `cfFreezeSheetA ${speed * 1.2}s ease-in-out infinite 1s` }} />
+                <div style={{ position: "absolute", inset: 0, transform: "scaleY(-1)" }}>
+                  <img src={src} style={{ ...imgBase, opacity: op2 * 0.75, animation: `cfFreezeSheetA ${speed * 1.2}s ease-in-out infinite 1s` }} />
+                </div>
               )}
             </div>
           );
