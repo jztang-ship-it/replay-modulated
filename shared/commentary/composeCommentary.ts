@@ -12,30 +12,36 @@ import { selectStory, selectStar } from "./storySelector";
 import { lookupTemplates, lookupFallbackTemplates } from "./templateBank";
 import { buildTemplateData, composeMessage } from "./templateResolver";
 
-// ─── Culture lookup (basketball-specific for now) ───────────────────────────
+// ─── Culture lookup ──────────────────────────────────────────────────────────
 // Lazy-loaded to avoid circular deps and to keep composer sport-agnostic.
-let _cultureDb: Record<string, { nicknames?: string[] }> | null = null;
+let _cultureDb: Record<string, Record<string, { nicknames?: string[] }>> = {};
 
-function getCultureDb(): Record<string, { nicknames?: string[] }> {
-  if (!_cultureDb) {
+function getCultureDb(sport: string): Record<string, { nicknames?: string[] }> {
+  if (!_cultureDb[sport]) {
     try {
-      // Dynamic require — works in Vite/bundler environments
-      // @ts-ignore
-      const mod = require("../../basketball/src/utils/playerCulture");
-      _cultureDb = mod.PLAYER_CULTURE ?? {};
+      if (sport === "baseball") {
+        // @ts-ignore
+        const mod = require("../../baseball/src/utils/playerCulture");
+        _cultureDb[sport] = mod.PLAYER_CULTURE ?? {};
+      } else {
+        // Dynamic require — works in Vite/bundler environments
+        // @ts-ignore
+        const mod = require("../../basketball/src/utils/playerCulture");
+        _cultureDb[sport] = mod.PLAYER_CULTURE ?? {};
+      }
     } catch {
-      _cultureDb = {};
+      _cultureDb[sport] = {};
     }
   }
-  return _cultureDb!;
+  return _cultureDb[sport]!;
 }
 
-function lookupCulture(name: string): { nicknames?: string[] } | null {
+function lookupCulture(name: string, sport: string): { nicknames?: string[] } | null {
   const parts = name.trim().split(/\s+/);
   const suffixes = new Set(["II", "III", "IV", "V", "Jr.", "Jr", "Sr.", "Sr"]);
   while (parts.length > 1 && suffixes.has(parts[parts.length - 1])) parts.pop();
   const last = (parts[parts.length - 1] ?? "").toLowerCase();
-  return getCultureDb()[last] ?? null;
+  return getCultureDb(sport)[last] ?? null;
 }
 
 // ─── Step 1: Register ───────────────────────────────────────────────────────
@@ -103,10 +109,10 @@ export function composeCommentary(input: CommentaryInput & { sport?: string }): 
 
   // Step 3: Star
   const star = selectStar(input.roster);
-  const culture = star ? lookupCulture(star.name) : null;
+  const culture = star ? lookupCulture(star.name, sport) : null;
 
   // Step 4: Story + details
-  const { storyId, details, recordEvents } = selectStory(input, seed);
+  const { storyId, details, recordEvents } = selectStory(input, seed, sport);
 
   // Step 5: Tone
   const tone = selectTone(intensity, seed);

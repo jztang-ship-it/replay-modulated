@@ -5,21 +5,24 @@
 
 import type { RecordEvent } from "../commentary/types";
 import { NBA_SINGLE_GAME_RECORDS, STAT_ALIASES } from "./nbaRecords";
+import { MLB_SINGLE_GAME_RECORDS, MLB_STAT_ALIASES } from "./mlbRecords";
 
-function getStatValue(statLine: Record<string, any>, stat: string): number {
-  const aliases = STAT_ALIASES[stat] ?? [stat];
-  for (const alias of aliases) {
+function getStatValue(statLine: Record<string, any>, stat: string, aliases: Record<string, string[]>): number {
+  const aliasList = aliases[stat] ?? [stat];
+  for (const alias of aliasList) {
     const val = statLine[alias];
     if (val != null && typeof val === "number" && val > 0) return val;
   }
   return 0;
 }
 
-export function detectRecords(statLine: Record<string, any>): RecordEvent[] {
+export function detectRecords(statLine: Record<string, any>, sport: string = "basketball"): RecordEvent[] {
+  const records = sport === "baseball" ? MLB_SINGLE_GAME_RECORDS : NBA_SINGLE_GAME_RECORDS;
+  const aliases = sport === "baseball" ? MLB_STAT_ALIASES : STAT_ALIASES;
   const events: RecordEvent[] = [];
 
-  for (const rec of NBA_SINGLE_GAME_RECORDS) {
-    const value = getStatValue(statLine, rec.stat);
+  for (const rec of records) {
+    const value = getStatValue(statLine, rec.stat, aliases);
     if (value <= 0) continue;
 
     if (value >= rec.record) {
@@ -38,7 +41,7 @@ export function detectRecords(statLine: Record<string, any>): RecordEvent[] {
         value,
         record: rec.record,
         holder: rec.holder,
-        label: `${value} ${rec.stat} — NBA record is ${rec.record} (${rec.holder})`,
+        label: `${value} ${rec.stat} — record is ${rec.record} (${rec.holder})`,
       });
     }
   }

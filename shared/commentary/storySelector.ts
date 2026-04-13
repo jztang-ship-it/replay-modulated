@@ -155,11 +155,11 @@ function assembleLossDetails(
 
 // ─── Public API ─────────────────────────────────────────────────────────────
 
-export function selectStory(input: CommentaryInput, seed: number): StoryResult {
+export function selectStory(input: CommentaryInput, seed: number, sport: string = "basketball"): StoryResult {
   const register: Register = input.isBust ? "loss" : "win";
   const star = selectStar(input.roster);
   const storyId = pickStoryId(register, star);
-  const recordEvents = star?.statLine ? detectRecords(star.statLine) : [];
+  const recordEvents = star?.statLine ? detectRecords(star.statLine, sport) : [];
 
   const details = register === "win"
     ? assembleWinDetails(input, star, recordEvents, seed)

@@ -5,9 +5,11 @@
 
 import type { CommentaryTemplate, Register, StoryId, ToneId } from "./types";
 import { BASKETBALL_TEMPLATES } from "./templateBank.basketball";
+import { BASEBALL_TEMPLATES } from "./templateBank.baseball";
 
 const BANKS: Record<string, CommentaryTemplate[]> = {
   basketball: BASKETBALL_TEMPLATES,
+  baseball: BASEBALL_TEMPLATES,
 };
 
 /**
