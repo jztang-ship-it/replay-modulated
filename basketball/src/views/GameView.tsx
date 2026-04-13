@@ -490,18 +490,22 @@ export default function GameView() {
   const [ftueBookerPulse, setFtueBookerPulse] = useState(false);
   const [ftueHoldSpotlight, setFtueHoldSpotlight] = useState(false);
   const [ftueCoachBubbleKey, setFtueCoachBubbleKey] = useState<string | null>(null);
-  /** Legend icon pulses daily until user opens it — resets each day with bonus refresh */
-  const [legendPulsing, setLegendPulsing] = useState(() => {
-    if (typeof window === "undefined") return false;
-    const today = new Date().toISOString().slice(0, 10);
-    return localStorage.getItem("replaymod_legend_seen_date") !== today;
-  });
   /** Pre-game message shown in bet multiplier area — dismissed on tap, then multipliers appear */
   const [preGameMsg, setPreGameMsg] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
     if (localStorage.getItem("replaymod_ftue_basketball") !== "1") return null; // still in FTUE
     const seen = localStorage.getItem("replaymod_pregame_intro_basketball");
     if (seen === "1") return null;
     return "PREGAME_DAILY_BONUS";
+  });
+  /** Legend icon gold-filled when pre-game msg is active OR daily bonus unseen */
+  const [legendGold, setLegendGold] = useState(() => {
+    if (typeof window === "undefined") return false;
+    if (localStorage.getItem("replaymod_ftue_basketball") !== "1") return false;
+    const today = new Date().toISOString().slice(0, 10);
+    const seenToday = localStorage.getItem("replaymod_legend_seen_date") === today;
+    const introSeen = localStorage.getItem("replaymod_pregame_intro_basketball") === "1";
+    return !seenToday || !introSeen;
   });
   const pendingCelebration = useRef<{ totalFp: number } | null>(null);
   /** FTUE: roster sum can read 0 briefly in RESULTS — keep last resolved hand FP for TierGauge */
@@ -2000,8 +2004,9 @@ export default function GameView() {
                     <span style={{
                       display: "inline-flex", alignItems: "center", justifyContent: "center",
                       width: 18, height: 18, borderRadius: "50%",
-                      border: "2px solid rgba(255,255,255,0.6)",
-                      color: "rgba(255,255,255,0.8)", fontSize: 10, fontWeight: 900,
+                      background: "rgba(255,215,0,0.9)",
+                      border: "2px solid rgba(255,215,0,0.9)",
+                      color: "#070A12", fontSize: 10, fontWeight: 900,
                       verticalAlign: "middle", lineHeight: 1,
                     }}>i</span>
                     {" "}to see all scoring rules.
@@ -2256,11 +2261,11 @@ export default function GameView() {
         splitFooter={{ multipliersHost, controlsHost }}
         splitMultiplierRowVisible={isPreRevealFooter && !isFTUE}
         onViewLeaderboard={() => setShowLeaderboard(true)}
-        legendPulsing={legendPulsing && !isFTUE}
+        legendPulsing={legendGold && !isFTUE}
         onLegendOpened={() => {
           const today = new Date().toISOString().slice(0, 10);
           localStorage.setItem("replaymod_legend_seen_date", today);
-          setLegendPulsing(false);
+          setLegendGold(false);
         }}
       />
 
