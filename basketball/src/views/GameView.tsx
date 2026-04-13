@@ -21,6 +21,7 @@ import { useCardFlipState } from "../hooks/useCardFlipState";
 import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
 import { calculateWinTier, calculatePayout, BASKETBALL_WIN_TIERS, type WinTier } from "../utils/payoutLogic";
 import { buildPostRevealCopy } from "../utils/buildPostRevealCopy";
+import { composeCommentary } from "../../../shared/commentary/composeCommentary";
 import { useGameAnalytics } from "../../../shared/analytics/useGameAnalytics";
 import { HotStreakOverlay } from '@shared/engagement/HotStreakOverlay';
 import { CollectScreen } from '@shared/engagement/CollectScreen';
@@ -489,12 +490,18 @@ export default function GameView() {
   const [ftueBookerPulse, setFtueBookerPulse] = useState(false);
   const [ftueHoldSpotlight, setFtueHoldSpotlight] = useState(false);
   const [ftueCoachBubbleKey, setFtueCoachBubbleKey] = useState<string | null>(null);
+  /** Legend icon pulses daily until user opens it — resets each day with bonus refresh */
+  const [legendPulsing, setLegendPulsing] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const today = new Date().toISOString().slice(0, 10);
+    return localStorage.getItem("replaymod_legend_seen_date") !== today;
+  });
   /** Pre-game message shown in bet multiplier area — dismissed on tap, then multipliers appear */
   const [preGameMsg, setPreGameMsg] = useState<string | null>(() => {
     if (localStorage.getItem("replaymod_ftue_basketball") !== "1") return null; // still in FTUE
     const seen = localStorage.getItem("replaymod_pregame_intro_basketball");
     if (seen === "1") return null;
-    return "Every 24hrs three random players will have special bonuses. Holding or drawing them will give your team an extra boost. Click the ⓘ to see all scoring.";
+    return "Every 24hrs, 3 random players get bonuses — hold or draw them for a boost. Tap the ⓘ to see all scoring rules.";
   });
   const pendingCelebration = useRef<{ totalFp: number } | null>(null);
   /** FTUE: roster sum can read 0 briefly in RESULTS — keep last resolved hand FP for TierGauge */
@@ -986,7 +993,9 @@ export default function GameView() {
     }
     const fp = lockedGaugeFpRef.current ?? displayFp;
     const gaugeSnap = computeGaugeState(fp, GAUGE_THRESHOLDS as any, winTier, 8);
-    const copy = buildPostRevealCopy({
+    const USE_NEW_COMMENTARY = true; // Feature flag — flip to false to revert
+
+    const copyInput = {
       totalFp: fp,
       winTier,
       nextTier: gaugeSnap.nextTier,
@@ -1011,7 +1020,12 @@ export default function GameView() {
       ceilingPct: ceilingPct ?? undefined,
       isFTUE,
       handCount,
-    });
+      sport: "basketball",
+    };
+
+    const copy = USE_NEW_COMMENTARY
+      ? composeCommentary(copyInput as any)
+      : buildPostRevealCopy(copyInput as any);
     // Tier 3: static fallback if template returned an unusable result.
     if (!copy?.primary) {
       const fpStr = fp.toFixed(1);
@@ -2234,6 +2248,12 @@ export default function GameView() {
         splitFooter={{ multipliersHost, controlsHost }}
         splitMultiplierRowVisible={isPreRevealFooter && !isFTUE}
         onViewLeaderboard={() => setShowLeaderboard(true)}
+        legendPulsing={legendPulsing && !isFTUE}
+        onLegendOpened={() => {
+          const today = new Date().toISOString().slice(0, 10);
+          localStorage.setItem("replaymod_legend_seen_date", today);
+          setLegendPulsing(false);
+        }}
       />
 
       {showLeaderboard && !isFTUE && (
