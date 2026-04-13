@@ -50,6 +50,7 @@ export interface BadgeInfo {
   icon: string;
   label: string;
   condition: string;
+  fp?: number;
 }
 
 export interface LegendData {
@@ -682,12 +683,18 @@ function LegendModal({ onClose, legend }: { onClose: () => void; legend: LegendD
               {legend.badges.length > 0 && (<>
                 <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, color: "rgba(255,255,255,0.35)", marginTop: 8, marginBottom: 4 }}>BADGES</div>
                 {legend.badges.map(b => (
-                  <div key={b.label} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 12px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div key={b.label} style={{ display: "flex", gap: 12, alignItems: "center", padding: "10px 12px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
                     <span style={{ fontSize: 26, lineHeight: 1, flexShrink: 0 }}>{b.icon}</span>
-                    <div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: 0.8, color: "#EAF0FF", marginBottom: 3 }}>{b.label}</div>
                       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{b.condition}</div>
                     </div>
+                    {b.fp != null && (
+                      <span style={{
+                        fontSize: 13, fontWeight: 900, flexShrink: 0,
+                        color: b.fp < 0 ? "#FF6B6B" : "#FFD700",
+                      }}>{b.fp > 0 ? "+" : ""}{b.fp}</span>
+                    )}
                   </div>
                 ))}
               </>)}
