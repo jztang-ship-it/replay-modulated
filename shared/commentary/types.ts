@@ -127,6 +127,7 @@ export type DetailId =
   | "zero_card"
   | "turnover_problem"
   | "injury_cost"
+  | "streak_proximity"
   | "streak_broken";
 
 export interface RecordEvent {

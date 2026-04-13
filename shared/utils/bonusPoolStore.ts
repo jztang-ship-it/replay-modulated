@@ -24,8 +24,14 @@ export const BONUS_POOL_SEED = 1_000;            // Starting/reset value
 export const BONUS_POOL_DRIP_PER_MIN = 1.39;    // ~2000 coins/day passive
 
 /** Leaderboard lanes for pool distribution. */
-export const POOL_LANES = ["hand_best", "top3_combined", "hand_avg"] as const;
+export const POOL_LANES = ["hand_best", "session_score"] as const;
 export type PoolLane = (typeof POOL_LANES)[number];
+
+/** Pool split: Best Hand 40%, Session Score 60% (rewards volume + quality). */
+export const POOL_LANE_SPLIT: Record<PoolLane, number> = {
+  hand_best: 0.40,
+  session_score: 0.60,
+};
 
 /** Top 10 payout distribution per lane (must sum to 100). */
 export const POOL_DISTRIBUTION = [35, 20, 12, 8, 6, 5, 4, 4, 3, 3] as const;
@@ -36,9 +42,9 @@ export function calculateLanePrizes(lanePool: number): number[] {
   return POOL_DISTRIBUTION.map(pct => Math.round(lanePool * pct / 100));
 }
 
-/** Calculate total pool split per lane (pool / 3). */
-export function poolPerLane(totalPool: number): number {
-  return Math.round(totalPool / POOL_LANES.length);
+/** Calculate pool allocation for a specific lane. */
+export function poolForLane(totalPool: number, lane: PoolLane): number {
+  return Math.round(totalPool * (POOL_LANE_SPLIT[lane] ?? 0));
 }
 
 const API_BASE = "/api/bonus-pool";

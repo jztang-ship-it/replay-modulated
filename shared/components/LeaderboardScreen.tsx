@@ -1,111 +1,97 @@
 /**
  * shared/components/LeaderboardScreen.tsx
- * Full-screen leaderboard overlay with new metrics.
+ * Side-by-side leaderboard: Best Hand (40%) | Session Score (60%)
+ * Pool header with running value, your rank + gap at bottom.
  */
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 
 const FF = "'Rajdhani', 'Arial Narrow', sans-serif";
 
-type Metric = "hand_best" | "top3_combined" | "hand_avg" | "money_won";
-type Scope = "daily" | "alltime";
 type Entry = { uid: string; nickname: string; score: number; session_id?: string | null };
-
-const METRICS: { id: Metric; label: string }[] = [
-  { id: "hand_best",      label: "Best Hand" },
-  { id: "top3_combined",  label: "Top 3" },
-  { id: "hand_avg",       label: "Avg Score" },
-];
 
 /** Pool distribution percentages for top 10 per lane. */
 const POOL_PCT = [35, 20, 12, 8, 6, 5, 4, 4, 3, 3];
-
-function formatScore(metric: Metric, score: number): string {
-  if (metric === "hand_best") return `${score.toFixed(1)} FP`;
-  if (metric === "top3_combined") return `${score.toFixed(1)} FP`;
-  if (metric === "hand_avg") return `${score.toFixed(1)} FP avg`;
-  return `${score.toLocaleString()} coins`;
-}
-
-function todayKey(metric: string) {
-  return `rm_rankup_shown_${metric}_${new Date().toISOString().split("T")[0]}`;
-}
 
 interface Props {
   currentUid: string;
   onClose: () => void;
 }
 
-export function LeaderboardScreen({ currentUid, onClose }: Props) {
-  const [metric, setMetric] = useState<Metric>("hand_best");
-  const [scope, setScope] = useState<Scope>("daily");
-  const [entries, setEntries] = useState<Entry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState<string | null>(null);
-  const [showRankUp, setShowRankUp] = useState(false);
-  const [rankUpInfo, setRankUpInfo] = useState<{ rank: number; label: string } | null>(null);
+function isMe(e: Entry, uid: string, sessId: string | null): boolean {
+  if (uid && e.uid === uid) return true;
+  if (sessId && e.session_id && e.session_id === sessId) return true;
+  return false;
+}
 
+function EntryRow({ e, rank, me, poolPct }: { e: Entry; rank: number; me: boolean; poolPct?: number }) {
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 4,
+      padding: "4px 6px", borderRadius: 5,
+      background: me ? "rgba(255,215,0,0.10)" : "transparent",
+      borderLeft: me ? "2px solid #FFD700" : "2px solid transparent",
+    }}>
+      <span style={{
+        fontSize: 10, fontWeight: 900,
+        color: rank <= 3 ? "#FFD700" : "rgba(255,255,255,0.3)",
+        minWidth: 16, textAlign: "right",
+      }}>{rank}</span>
+      <span style={{
+        flex: 1, fontSize: 11, fontWeight: me ? 800 : 600,
+        color: me ? "#FFD700" : "rgba(255,255,255,0.65)",
+        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+      }}>{me ? "YOU" : e.nickname}</span>
+      <span style={{
+        fontSize: 11, fontWeight: 900,
+        color: me ? "#FFD700" : "#EAF0FF",
+        fontVariantNumeric: "tabular-nums",
+      }}>{e.score >= 1000 ? `${(e.score / 1000).toFixed(1)}k` : e.score.toFixed(1)}</span>
+      {poolPct != null && (
+        <span style={{ fontSize: 7, fontWeight: 700, color: "rgba(255,215,0,0.45)", minWidth: 18, textAlign: "right" }}>{poolPct}%</span>
+      )}
+    </div>
+  );
+}
+
+export function LeaderboardScreen({ currentUid, onClose }: Props) {
+  const [bestEntries, setBestEntries] = useState<Entry[]>([]);
+  const [sessionEntries, setSessionEntries] = useState<Entry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [poolValue, setPoolValue] = useState(1000);
+
+  const sessId = typeof localStorage !== "undefined" ? localStorage.getItem("rm_session_id") : null;
+
+  // Fetch both lanes + pool in parallel
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/leaderboard?metric=${metric}&scope=${scope}&limit=50`)
-      .then(r => r.json())
-      .then(data => {
-        const all: Entry[] = data.entries ?? [];
-        setEntries(all);
+    Promise.all([
+      fetch("/api/leaderboard?metric=hand_best&scope=daily&limit=10").then(r => r.json()).catch(() => ({ entries: [] })),
+      fetch("/api/leaderboard?metric=session_score&scope=daily&limit=10").then(r => r.json()).catch(() => ({ entries: [] })),
+      fetch("/api/bonus-pool?action=get").then(r => r.json()).catch(() => ({ pool: 1000 })),
+    ]).then(([best, session, pool]) => {
+      setBestEntries(best.entries ?? []);
+      setSessionEntries(session.entries ?? []);
+      setPoolValue(pool.pool ?? 1000);
+    }).finally(() => setLoading(false));
+  }, []);
 
-        // Check for rank-up into top 10
-        const sessId = typeof localStorage !== 'undefined' ? localStorage.getItem('rm_session_id') : null;
-        const myIdx = all.findIndex(e =>
-          (currentUid && e.uid === currentUid) ||
-          (sessId && e.session_id && e.session_id === sessId)
-        );
-        if (myIdx >= 0 && myIdx < 10 && scope === "daily") {
-          const key = todayKey(metric);
-          if (!localStorage.getItem(key)) {
-            localStorage.setItem(key, "1");
-            const label = METRICS.find(m => m.id === metric)?.label ?? metric;
-            setRankUpInfo({ rank: myIdx + 1, label });
-            setShowRankUp(true);
-            setTimeout(() => setShowRankUp(false), 2500);
-          }
-        }
-      })
-      .catch(() => setEntries([]))
-      .finally(() => setLoading(false));
-  }, [metric, scope, currentUid]);
+  // Pool drip
+  useEffect(() => {
+    const id = setInterval(() => setPoolValue(p => parseFloat((p + 0.07).toFixed(2))), 3000);
+    return () => clearInterval(id);
+  }, []);
 
-  const handleChallenge = useCallback((e: Entry) => {
-    localStorage.setItem("rm_challenge_target", JSON.stringify({
-      nickname: e.nickname, score: e.score, metric,
-    }));
-    setToast(`Challenging ${e.nickname}`);
-    setTimeout(() => setToast(null), 2000);
-  }, [metric]);
+  const bestPool = Math.round(poolValue * 0.40);
+  const sessionPool = Math.round(poolValue * 0.60);
 
-  const mySessionId = typeof localStorage !== 'undefined' ? localStorage.getItem('rm_session_id') : null;
-
-  function isMyEntry(e: Entry): boolean {
-    if (currentUid && e.uid === currentUid) return true;
-    if (mySessionId && e.session_id && e.session_id === mySessionId) return true;
-    return false;
-  }
-
-  const top25 = entries.slice(0, 25);
-  const myIdxInAll = entries.findIndex(isMyEntry);
-  const myEntryOutside = myIdxInAll >= 25 ? entries[myIdxInAll] : null;
-
-  const tabStyle = (active: boolean): React.CSSProperties => ({
-    padding: "5px 12px",
-    borderRadius: 6,
-    fontSize: 11,
-    fontWeight: 800,
-    letterSpacing: 0.5,
-    cursor: "pointer",
-    background: active ? "rgba(255,215,0,0.15)" : "rgba(255,255,255,0.05)",
-    color: active ? "#FFD700" : "rgba(255,255,255,0.4)",
-    border: active ? "1px solid rgba(255,215,0,0.3)" : "1px solid rgba(255,255,255,0.08)",
-    transition: "all 0.2s",
-  });
+  // Find user's best rank across both lanes
+  const myBestIdx = bestEntries.findIndex(e => isMe(e, currentUid, sessId));
+  const mySessionIdx = sessionEntries.findIndex(e => isMe(e, currentUid, sessId));
+  const myBestScore = myBestIdx >= 0 ? bestEntries[myBestIdx].score : parseFloat(localStorage.getItem("rm_best_hand") ?? "0");
+  const gapToBest10 = bestEntries.length >= 10 && myBestIdx < 0
+    ? (bestEntries[9].score - myBestScore).toFixed(1)
+    : null;
 
   return (
     <div style={{
@@ -119,191 +105,119 @@ export function LeaderboardScreen({ currentUid, onClose }: Props) {
       {/* Header */}
       <div style={{
         display: "flex", justifyContent: "space-between", alignItems: "center",
-        padding: "14px 16px 10px",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        padding: "14px 16px 8px",
       }}>
-        <span style={{ fontSize: 18, fontWeight: 800, color: "#EAF0FF", fontFamily: FF }}>
-          LEADERBOARD
+        <span style={{ fontSize: 16, fontWeight: 900, color: "#EAF0FF", fontFamily: FF, letterSpacing: 1 }}>
+          DAILY LEADERBOARD
         </span>
-        <button
-          onClick={onClose}
-          style={{
-            background: "rgba(255,255,255,0.07)",
-            border: "1px solid rgba(255,255,255,0.12)",
-            borderRadius: 8,
-            padding: "5px 10px",
-            color: "rgba(255,255,255,0.5)",
-            fontSize: 13,
-            cursor: "pointer",
-            fontFamily: FF,
-          }}
-        >
-          Done
-        </button>
+        <button onClick={onClose} style={{
+          background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
+          borderRadius: 8, padding: "5px 10px", color: "rgba(255,255,255,0.5)",
+          fontSize: 12, cursor: "pointer",
+        }}>Done</button>
       </div>
 
-      {/* Metric tabs */}
-      <div style={{ display: "flex", gap: 6, padding: "10px 16px 0" }}>
-        {METRICS.map(m => (
-          <div key={m.id} onClick={() => setMetric(m.id)} style={tabStyle(metric === m.id)}>
-            {m.label}
-          </div>
-        ))}
+      {/* Pool header */}
+      <div style={{
+        margin: "0 16px 10px", padding: "10px 14px", borderRadius: 12,
+        background: "rgba(255,215,0,0.06)", border: "1px solid rgba(255,215,0,0.2)",
+        textAlign: "center",
+      }}>
+        <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,215,0,0.5)", textTransform: "uppercase", marginBottom: 4 }}>
+          Daily Bonus Pool
+        </div>
+        <div style={{ fontSize: 22, fontWeight: 950, color: "#FFD700", fontVariantNumeric: "tabular-nums", textShadow: "0 0 12px rgba(255,215,0,0.4)" }}>
+          ${poolValue.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+        </div>
+        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>
+          Top 10 in each lane split the pool daily
+        </div>
       </div>
 
-      {/* Scope toggle */}
-      <div style={{ display: "flex", gap: 6, padding: "8px 16px 12px" }}>
-        {(["daily", "alltime"] as Scope[]).map(s => (
-          <div key={s} onClick={() => setScope(s)} style={tabStyle(scope === s)}>
-            {s === "daily" ? "Today" : "All Time"}
+      {/* Side-by-side lanes */}
+      <div style={{ flex: 1, display: "flex", gap: 8, padding: "0 12px", overflow: "hidden" }}>
+        {/* Best Hand — 40% */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{ padding: "0 4px 6px" }}>
+            <div style={{ fontSize: 11, fontWeight: 900, color: "#FFD700", letterSpacing: 0.5 }}>
+              Best Hand
+            </div>
+            <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>
+              Highest single hand · ${bestPool} pool
+            </div>
           </div>
-        ))}
+          <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
+            {loading ? (
+              [1,2,3].map(i => <div key={i} style={{ height: 28, borderRadius: 5, background: "rgba(255,255,255,0.03)" }} />)
+            ) : bestEntries.length === 0 ? (
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", textAlign: "center", padding: 16 }}>No entries yet</div>
+            ) : (
+              bestEntries.slice(0, 10).map((e, i) => (
+                <EntryRow key={`b-${i}`} e={e} rank={i + 1} me={isMe(e, currentUid, sessId)} poolPct={POOL_PCT[i]} />
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div style={{ width: 1, background: "rgba(255,255,255,0.06)", flexShrink: 0 }} />
+
+        {/* Session Score — 60% */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{ padding: "0 4px 6px" }}>
+            <div style={{ fontSize: 11, fontWeight: 900, color: "#FFD700", letterSpacing: 0.5 }}>
+              Session Score
+            </div>
+            <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>
+              Total FP today (non-bust) · ${sessionPool} pool
+            </div>
+          </div>
+          <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
+            {loading ? (
+              [1,2,3].map(i => <div key={i} style={{ height: 28, borderRadius: 5, background: "rgba(255,255,255,0.03)" }} />)
+            ) : sessionEntries.length === 0 ? (
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", textAlign: "center", padding: 16 }}>No entries yet</div>
+            ) : (
+              sessionEntries.slice(0, 10).map((e, i) => (
+                <EntryRow key={`s-${i}`} e={e} rank={i + 1} me={isMe(e, currentUid, sessId)} poolPct={POOL_PCT[i]} />
+              ))
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Entry list */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "0 16px", display: "flex", flexDirection: "column", gap: 3 }}>
-        {loading ? (
-          [1, 2, 3].map(i => (
-            <div key={i} style={{
-              height: 38, borderRadius: 6,
-              background: "rgba(255,255,255,0.03)",
-            }} />
-          ))
-        ) : top25.length === 0 ? (
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", textAlign: "center", padding: 24 }}>
-            No entries yet — play a hand to get on the board
+      {/* Your position summary */}
+      <div style={{
+        padding: "10px 16px 16px",
+        borderTop: "1px solid rgba(255,255,255,0.06)",
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 3 }}>
+              Your Best Hand
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 900, color: myBestIdx >= 0 && myBestIdx < 10 ? "#FFD700" : "#EAF0FF" }}>
+              {myBestScore > 0 ? `${myBestScore.toFixed(1)} FP` : "—"}
+              {myBestIdx >= 0 && <span style={{ fontSize: 10, color: "#FFD700", marginLeft: 6 }}>#{myBestIdx + 1}</span>}
+            </div>
           </div>
-        ) : (
-          top25.map((e, i) => {
-            const isMe = isMyEntry(e);
-            return (
-              <div key={`${e.uid}-${i}`} style={{
-                display: "flex", alignItems: "center", gap: 8,
-                padding: "6px 10px", borderRadius: 6,
-                background: isMe ? "rgba(255,215,0,0.08)" : "rgba(255,255,255,0.03)",
-                border: isMe ? "1px solid rgba(255,215,0,0.25)" : "1px solid transparent",
-              }}>
-                <span style={{
-                  fontSize: 11, fontWeight: 900,
-                  color: i < 3 ? "#FFD700" : "rgba(255,255,255,0.35)",
-                  minWidth: 20, textAlign: "right",
-                }}>
-                  {i + 1}.
-                </span>
-                <span style={{
-                  flex: 1, fontSize: 12, fontWeight: isMe ? 800 : 600,
-                  color: isMe ? "#FFD700" : "rgba(255,255,255,0.7)",
-                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                }}>
-                  {isMe && "YOU \u2192 "}{e.nickname}
-                </span>
-                <span style={{
-                  fontSize: 13, fontWeight: 900,
-                  color: isMe ? "#FFD700" : "#EAF0FF",
-                  fontVariantNumeric: "tabular-nums",
-                }}>
-                  {formatScore(metric, e.score)}
-                </span>
-                {scope === "daily" && i < POOL_PCT.length && (
-                  <span style={{
-                    fontSize: 8, fontWeight: 700,
-                    color: "rgba(255,215,0,0.5)",
-                    minWidth: 28, textAlign: "right",
-                  }}>
-                    {POOL_PCT[i]}%
-                  </span>
-                )}
-                {isMe && (
-                  <span style={{
-                    fontSize: 9, fontWeight: 900, color: "#FFD700",
-                    textTransform: "uppercase", letterSpacing: 2, marginLeft: 2,
-                  }}>YOU</span>
-                )}
-                {!isMe && (
-                  <button
-                    onClick={() => handleChallenge(e)}
-                    style={{
-                      fontSize: 9, padding: "2px 7px",
-                      background: "rgba(255,255,255,0.07)",
-                      border: "1px solid rgba(255,255,255,0.15)",
-                      borderRadius: 5,
-                      color: "rgba(255,255,255,0.5)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    CHALLENGE
-                  </button>
-                )}
+          <div style={{ textAlign: "right" }}>
+            {gapToBest10 && Number(gapToBest10) > 0 ? (
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>
+                {gapToBest10} FP from top 10
               </div>
-            );
-          })
-        )}
-
-        {/* User row if outside top 25 */}
-        {myEntryOutside && (
-          <div style={{
-            position: "sticky", bottom: 0,
-            display: "flex", alignItems: "center", gap: 8,
-            padding: "6px 10px", borderRadius: 6,
-            background: "rgba(255,215,0,0.08)",
-            border: "1px solid rgba(255,215,0,0.25)",
-            marginTop: 4,
-          }}>
-            <span style={{ fontSize: 11, fontWeight: 900, color: "rgba(255,255,255,0.35)", minWidth: 20, textAlign: "right" }}>
-              {myIdxInAll + 1}.
-            </span>
-            <span style={{ flex: 1, fontSize: 12, fontWeight: 800, color: "#FFD700", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              YOU &rarr; {myEntryOutside.nickname}
-            </span>
-            <span style={{ fontSize: 13, fontWeight: 900, color: "#FFD700", fontVariantNumeric: "tabular-nums" }}>
-              {formatScore(metric, myEntryOutside.score)}
-            </span>
+            ) : myBestIdx >= 0 && myBestIdx < 10 ? (
+              <div style={{ fontSize: 10, color: "#FFD700" }}>
+                You're on the board!
+              </div>
+            ) : (
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)" }}>
+                Play a hand to compete
+              </div>
+            )}
           </div>
-        )}
-      </div>
-
-      {/* Footer count */}
-      <div style={{ padding: "10px 16px 16px", textAlign: "center" }}>
-        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>
-          {entries.length} players on the board today
-        </span>
-      </div>
-
-      {/* Toast */}
-      {toast && (
-        <div style={{
-          position: "fixed", bottom: 80, left: "50%", transform: "translateX(-50%)",
-          background: "rgba(0,0,0,0.85)", color: "#EAF0FF",
-          padding: "8px 18px", borderRadius: 8, fontSize: 12, fontWeight: 700,
-          zIndex: 100, pointerEvents: "none",
-        }}>
-          {toast}
         </div>
-      )}
-
-      {/* Rank-up overlay */}
-      {showRankUp && rankUpInfo && (
-        <div style={{
-          position: "fixed", inset: 0, zIndex: 100,
-          background: "rgba(0,0,0,0.7)",
-          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-          gap: 12,
-        }}>
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-            <path d="M8 8h32v20c0 8-7.2 14-16 14S8 36 8 28V8z" fill="#FFD700" />
-            <rect x="4" y="4" width="8" height="12" rx="2" fill="#FFD700" opacity="0.7" />
-            <rect x="36" y="4" width="8" height="12" rx="2" fill="#FFD700" opacity="0.7" />
-            <rect x="18" y="36" width="12" height="6" rx="1" fill="#FFD700" opacity="0.8" />
-            <rect x="14" y="40" width="20" height="4" rx="1" fill="#FFD700" />
-          </svg>
-          <span style={{ fontSize: 20, fontWeight: 900, color: "#EAF0FF" }}>
-            You're in the top 10!
-          </span>
-          <span style={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }}>
-            #{rankUpInfo.rank} on {rankUpInfo.label} today
-          </span>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

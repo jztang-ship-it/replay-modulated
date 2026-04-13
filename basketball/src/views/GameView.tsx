@@ -703,6 +703,16 @@ export default function GameView() {
     parseInt(localStorage.getItem("replaymod_hand_count") ?? "1", 10)
   );
 
+  // 3rd hand nudge: show leaderboard intro after hand 3 (when returning to IDLE)
+  useEffect(() => {
+    if (isFTUE || gameState !== "IDLE") return;
+    const count = parseInt(localStorage.getItem("replaymod_hand_count") ?? "0", 10);
+    if (count === 3 && localStorage.getItem("replaymod_lb_nudge_shown") !== "1") {
+      localStorage.setItem("replaymod_lb_nudge_shown", "1");
+      setPreGameMsg("LEADERBOARD_INTRO");
+    }
+  }, [gameState, isFTUE]); // eslint-disable-line
+
   // Zone 1: Hooks
 
   // ── Audio phase sync — maps GameState to AudioPhase ──────────────────
@@ -856,6 +866,7 @@ export default function GameView() {
             if (payout > 0) {
               setBalance(prev => { const next = prev + payout; saveBalance(next); return next; });
             }
+            const proof = buildScoreProof(rosterRef.current as any[], totalFp);
             if (!bust) {
               setStreak(prev => {
                 const next = prev + 1;
@@ -868,25 +879,11 @@ export default function GameView() {
               submitToLeaderboard("fp", totalFp);
               submitToLeaderboard("hand_avg", totalFp, { handCount });
               submitToLeaderboard("money_won", payout);
-              // Top 3 combined: track best 3 hands today, submit sum
-              const top3Key = "rm_top3_today";
-              const top3DateKey = "rm_top3_date";
-              const today = new Date().toISOString().slice(0, 10);
-              let top3: number[] = [];
-              try {
-                if (localStorage.getItem(top3DateKey) === today) {
-                  top3 = JSON.parse(localStorage.getItem(top3Key) ?? "[]");
-                }
-              } catch {}
-              top3.push(totalFp);
-              top3.sort((a, b) => b - a);
-              top3 = top3.slice(0, 3);
-              localStorage.setItem(top3Key, JSON.stringify(top3));
-              localStorage.setItem(top3DateKey, today);
-              if (top3.length >= 1) {
-                const combined = top3.reduce((s, v) => s + v, 0);
-                submitToLeaderboard("top3_combined", parseFloat(combined.toFixed(1)));
-              }
+              // hand_best: per-hand entry (allows multiple per user on the board)
+              const handId = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+              submitToLeaderboard("hand_best", totalFp, { proof, handId });
+              // Session score: cumulative non-bust FP today (additive)
+              submitToLeaderboard("session_score", parseFloat(totalFp.toFixed(1)));
             } else {
               setStreak(0);
               localStorage.setItem("replaymod_streak", "0");
@@ -895,10 +892,6 @@ export default function GameView() {
             if (checkMysteryScore(totalFp)) {
               setBalance(prev => { const next = prev + MYSTERY_SCORE_BONUS; saveBalance(next); return next; });
             }
-
-            // hand_best fires on every hand (wins AND busts).
-            const proof = buildScoreProof(rosterRef.current as any[], totalFp);
-            submitToLeaderboard("hand_best", totalFp, { proof });
 
             // Update personal bests on every hand
             const prevBest = parseFloat(localStorage.getItem("rm_best_hand") ?? "0");
@@ -2057,48 +2050,27 @@ export default function GameView() {
               {preGameMsg && isPreRevealFooter && (
                 <div
                   onClick={() => {
-                    localStorage.setItem("replaymod_pregame_intro_basketball", "1");
+                    if (preGameMsg === "PREGAME_DAILY_BONUS") localStorage.setItem("replaymod_pregame_intro_basketball", "1");
                     setPreGameMsg(null);
                   }}
                   style={{
-                    position: "absolute",
-                    inset: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: "4px 14px",
-                    cursor: "pointer",
-                    zIndex: 10,
-                    pointerEvents: "auto",
+                    position: "absolute", inset: 0,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    padding: "4px 14px", cursor: "pointer", zIndex: 10, pointerEvents: "auto",
                   }}
                 >
-                  <span style={{
-                    fontSize: 11,
-                    fontWeight: 600,
-                    color: "rgba(255,255,255,0.85)",
-                    textAlign: "center",
-                    lineHeight: 1.4,
-                    letterSpacing: 0.1,
-                  }}>
-                    Every 24hrs, 3 random players get bonuses — hold or draw them for a boost. Tap the{" "}
-                    <span style={{
-                      display: "inline-flex", alignItems: "center", justifyContent: "center",
-                      width: 18, height: 18, borderRadius: "50%",
-                      background: "rgba(255,215,0,0.9)",
-                      border: "2px solid rgba(255,215,0,0.9)",
-                      color: "#070A12", fontSize: 10, fontWeight: 900,
-                      verticalAlign: "middle", lineHeight: 1,
-                    }}>i</span>
-                    {" "}to see all scoring rules.
-                    <span style={{
-                      display: "block",
-                      fontSize: 9,
-                      fontWeight: 700,
-                      color: "rgba(255,255,255,0.4)",
-                      marginTop: 4,
-                      textTransform: "uppercase",
-                      letterSpacing: 1,
-                    }}>tap to dismiss</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.85)", textAlign: "center", lineHeight: 1.4, letterSpacing: 0.1 }}>
+                    {preGameMsg === "PREGAME_DAILY_BONUS" && (<>
+                      Every 24hrs, 3 random players get bonuses — hold or draw them for a boost. Tap the{" "}
+                      <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 18, height: 18, borderRadius: "50%", background: "rgba(255,215,0,0.9)", border: "2px solid rgba(255,215,0,0.9)", color: "#070A12", fontSize: 10, fontWeight: 900, verticalAlign: "middle", lineHeight: 1 }}>i</span>
+                      {" "}to see all scoring rules.
+                    </>)}
+                    {preGameMsg === "LEADERBOARD_INTRO" && (<>
+                      You're competing against other players for a daily bonus pool. Best single hand and total session score — top 10 split the pot. Tap{" "}
+                      <span style={{ fontSize: 13, verticalAlign: "middle" }}>🏆</span>
+                      {" "}to check the board.
+                    </>)}
+                    <span style={{ display: "block", fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.4)", marginTop: 4, textTransform: "uppercase", letterSpacing: 1 }}>tap to dismiss</span>
                   </span>
                 </div>
               )}

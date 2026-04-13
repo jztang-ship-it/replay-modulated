@@ -102,6 +102,12 @@ const DETAIL_SNIPPETS: Record<string, (data: TemplateData) => string> = {
   near_miss_win: (d) => d.gap > 0 ? `${Math.round(d.gap * 10) / 10} away from the next level.` : "",
   near_miss_loss: (d) => d.gap > 0 ? `${Math.round(d.gap * 10) / 10} short. Almost survived it.` : "",
   streak_event: (d) => d.streak > 0 ? `That's ${d.streak} in a row.` : "",
+  streak_proximity: (d) => {
+    if (d.streak === 2) return "One more win unlocks the 1.2x streak bonus.";
+    if (d.streak === 4) return "One more win and you hit 1.5x streak.";
+    if (d.streak >= 8 && d.streak < 10) return `${10 - d.streak} more win${10 - d.streak > 1 ? "s" : ""} to 2.0x streak.`;
+    return "";
+  },
   streak_broken: () => "The streak is done.",
   zero_card: () => "Someone on the roster gave you nothing.",
   turnover_problem: () => "The turnovers didn't help.",

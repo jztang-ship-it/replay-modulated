@@ -95,6 +95,11 @@ function assembleWinDetails(
   const isMilestone = input.streak === 5 || input.streak === 10 || input.streak === 15;
   if (isFirstStreak || isMilestone) candidates.push({ id: "streak_event", probability: 0.12 });
 
+  // Streak proximity nudges — "one more win" moments
+  if (input.streak === 2) candidates.push({ id: "streak_proximity", probability: 0.30 });
+  if (input.streak === 4) candidates.push({ id: "streak_proximity", probability: 0.80 });
+  if (input.streak >= 8 && input.streak < 10) candidates.push({ id: "streak_proximity", probability: 0.90 });
+
   candidates.push({ id: "culture_hit", probability: 0.40 });
 
   // Shuffle then pick up to 2 details

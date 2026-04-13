@@ -20,7 +20,7 @@ function todayUTC(): string {
   return new Date().toISOString().split("T")[0];
 }
 
-const VALID_METRICS = ["streak", "wins", "fp", "hand_best", "hand_avg", "money_won", "top3_combined"];
+const VALID_METRICS = ["streak", "wins", "fp", "hand_best", "hand_avg", "money_won", "session_score"];
 const TTL_48H = 172800;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -55,7 +55,7 @@ async function handleSubmit(req: VercelRequest, res: VercelResponse) {
   if ((metric === "fp" || metric === "hand_best" || metric === "hand_avg") && value > FP_CEILING) {
     return json(res, 400, { error: "Invalid score" });
   }
-  if (metric === "top3_combined" && value > FP_CEILING * 3) {
+  if (metric === "session_score" && value > FP_CEILING * 50) {
     return json(res, 400, { error: "Invalid score" });
   }
   if (metric === "streak" && value > 100) {
@@ -84,21 +84,29 @@ async function handleSubmit(req: VercelRequest, res: VercelResponse) {
   const dailyKey = `lb:${metric}:daily:${today}`;
   const alltimeKey = `lb:${metric}:alltime`;
 
-  if (metric === "wins" || metric === "money_won") {
-    // Wins and money_won are additive — increment
-    // Vercel KV (Upstash) supports zincrby
+  if (metric === "hand_best") {
+    // hand_best allows multiple entries per user — each hand gets its own member key
+    const handId = req.body?.handId ?? Date.now().toString(36);
+    const handMember = `${uid}:${nickname ?? "Player"}:${handId}`;
+    await kv.zadd(dailyKey, { score: value, member: handMember });
+    await kv.zadd(alltimeKey, { score: value, member: handMember });
+    try { await kv.expire(dailyKey, TTL_48H); } catch {}
+    return json(res, 200, { ok: true });
+  }
+
+  if (metric === "wins" || metric === "money_won" || metric === "session_score") {
+    // Additive metrics — increment
     try {
       await kv.zincrby(dailyKey, value, member);
       await kv.zincrby(alltimeKey, value, member);
     } catch {
-      // Fallback: read + write if zincrby not available
       const currentDaily = (await kv.zscore(dailyKey, member)) ?? 0;
       await kv.zadd(dailyKey, { score: Number(currentDaily) + value, member });
       const currentAll = (await kv.zscore(alltimeKey, member)) ?? 0;
       await kv.zadd(alltimeKey, { score: Number(currentAll) + value, member });
     }
   } else {
-    // streak, fp, hand_best, hand_avg, top3_combined — only update if personal best
+    // streak, fp, hand_avg — only update if personal best
     const currentAll = (await kv.zscore(alltimeKey, member)) ?? 0;
     if (value > Number(currentAll)) {
       await kv.zadd(alltimeKey, { score: value, member });
