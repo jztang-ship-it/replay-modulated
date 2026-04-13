@@ -21,6 +21,7 @@ import { useCardFlipState } from "../hooks/useCardFlipState";
 import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
 import { calculateWinTier, calculatePayout, calculatePayoutWithStreak, getStreakMultiplier, BASKETBALL_WIN_TIERS, STREAK_TIERS, type WinTier } from "../utils/payoutLogic";
 import { checkMysteryScore, getDailyMysteryScore, MYSTERY_SCORE_BONUS } from "@shared/utils/mysteryScore";
+import { detectExtremes } from "@shared/utils/extremeGames";
 import { buildPostRevealCopy } from "../utils/buildPostRevealCopy";
 import { composeCommentary } from "../../../shared/commentary/composeCommentary";
 import { useGameAnalytics } from "../../../shared/analytics/useGameAnalytics";
@@ -1259,6 +1260,7 @@ export default function GameView() {
       opponent: String(c.gameInfo?.opponent ?? ""),
       homeAway: String(c.gameInfo?.homeAway ?? "") as "H" | "A" | "",
       statLine: c.statLine ?? {},
+      extremeFlags: detectExtremes(c.statLine ?? {}, Number(c.salary ?? 0)),
     }));
 
     const culture = buildBasketballContext(rosterShape);

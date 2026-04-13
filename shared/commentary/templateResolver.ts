@@ -5,6 +5,7 @@
 
 import type { TemplateData, DetailId, RecordEvent } from "./types";
 import type { CommentaryInput, CommentaryRosterCard } from "./types";
+import { describeExtremes } from "@shared/utils/extremeGames";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -51,6 +52,14 @@ export function buildTemplateData(
   const opp = star ? oppPhrase(star) : "";
   const rec = recordEvents[0];
 
+  // Find the most extreme game in the hand for commentary focus
+  const extremeCard = input.roster
+    .filter(c => (c.extremeFlags?.length ?? 0) > 0)
+    .sort((a, b) => (b.extremeFlags![0]?.priority ?? 0) - (a.extremeFlags![0]?.priority ?? 0))[0];
+  const extremeDescription = extremeCard
+    ? describeExtremes(extremeCard.extremeFlags!, extremeCard.name)
+    : "";
+
   return {
     name,
     last,
@@ -60,6 +69,9 @@ export function buildTemplateData(
     pts: star ? Math.round(statN(star, "pts")) : 0,
     reb: star ? Math.round(statN(star, "reb")) : 0,
     ast: star ? Math.round(statN(star, "ast")) : 0,
+    stl: star ? Math.round(statN(star, "stl")) : 0,
+    blk: star ? Math.round(statN(star, "blk")) : 0,
+    to: star ? Math.round(statN(star, "turnovers") || statN(star, "to")) : 0,
     opp,
     badge: "",
     streak: input.streak,
@@ -67,6 +79,7 @@ export function buildTemplateData(
     record: rec ? `The NBA record is ${rec.record}.` : "",
     recordHolder: rec?.holder ?? "",
     recordValue: rec?.record ?? 0,
+    extremeDescription,
   };
 }
 
@@ -109,6 +122,7 @@ const DETAIL_SNIPPETS: Record<string, (data: TemplateData) => string> = {
     return "";
   },
   streak_broken: () => "The streak is done.",
+  extreme_game: (d) => d.extremeDescription || "",
   zero_card: () => "Someone on the roster gave you nothing.",
   turnover_problem: () => "The turnovers didn't help.",
   injury_cost: () => "Limited minutes from a key card hurt.",

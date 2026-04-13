@@ -19,6 +19,8 @@ export interface CommentaryRosterCard {
   statLine?: Record<string, any>;
   opponent?: string;
   homeAway?: "H" | "A" | "";
+  /** Extreme game flags — outlier stat lines that deserve spotlight commentary */
+  extremeFlags?: import("@shared/utils/extremeGames").ExtremeFlag[];
 }
 
 export interface CommentaryLeaderboard {
@@ -128,7 +130,8 @@ export type DetailId =
   | "turnover_problem"
   | "injury_cost"
   | "streak_proximity"
-  | "streak_broken";
+  | "streak_broken"
+  | "extreme_game";
 
 export interface RecordEvent {
   type: "record_broken" | "near_record" | "career_milestone";
@@ -169,6 +172,9 @@ export interface TemplateData {
   pts: number;
   reb: number;
   ast: number;
+  stl: number;
+  blk: number;
+  to: number;
   opp: string;
   badge: string;
   streak: number;
@@ -176,4 +182,6 @@ export interface TemplateData {
   record: string;
   recordHolder: string;
   recordValue: number;
+  /** Pre-built description of the most extreme game in the hand */
+  extremeDescription: string;
 }

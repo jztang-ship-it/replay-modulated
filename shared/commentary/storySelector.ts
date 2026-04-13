@@ -18,7 +18,12 @@ function isNameable(c: CommentaryRosterCard): boolean {
 }
 
 function headlineScore(c: CommentaryRosterCard): number {
-  return (c.salary * 2.5) + (c.actualFp * 1.5);
+  const base = (c.salary * 2.5) + (c.actualFp * 1.5);
+  // Extreme games get massive priority boost — they ARE the story
+  const extremeBoost = (c.extremeFlags?.length ?? 0) > 0
+    ? (c.extremeFlags![0].priority * 5)
+    : 0;
+  return base + extremeBoost;
 }
 
 function ratio(c: CommentaryRosterCard): number {
@@ -81,6 +86,10 @@ function assembleWinDetails(
 
   if (recordEvents.length > 0) candidates.push({ id: "record_event", probability: 0.95 });
 
+  // Extreme game detection — highest priority, always mentioned when present
+  const extremeCard = input.roster.find(c => (c.extremeFlags?.length ?? 0) > 0);
+  if (extremeCard) candidates.push({ id: "extreme_game", probability: 0.98 });
+
   const gap = (input.nextTierMin ?? 0) > 0 ? (input.nextTierMin! - input.totalFp) : 999;
   if (gap > 0 && gap <= 3 && input.nextTier) candidates.push({ id: "near_miss_win", probability: 0.70 });
 
@@ -136,7 +145,9 @@ function assembleLossDetails(
 
   if (recordEvents.length > 0) candidates.push({ id: "record_event", probability: 0.95 });
 
-  // near_miss_loss removed — do not console losses, busts get no sympathy text
+  // Extreme game in a losing hand — still worth calling out
+  const extremeCard = input.roster.find(c => (c.extremeFlags?.length ?? 0) > 0);
+  if (extremeCard) candidates.push({ id: "extreme_game", probability: 0.95 });
 
   const zeroCard = input.roster.find(c => c.actualFp <= 1.0);
   if (zeroCard) candidates.push({ id: "zero_card", probability: 0.60 });
