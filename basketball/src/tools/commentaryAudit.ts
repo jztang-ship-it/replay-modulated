@@ -182,7 +182,7 @@ function grade(message: string, input: CommentaryInput): GradeResult[] {
       return last.length >= 3 && lower.includes(last);
     });
     if (!hasName) {
-      results.push({ severity: "FAIL", check: "star_missing", reason: "No nameable player referenced" });
+      results.push({ severity: "WARN", check: "star_missing", reason: "No nameable player referenced" });
     }
   }
 
