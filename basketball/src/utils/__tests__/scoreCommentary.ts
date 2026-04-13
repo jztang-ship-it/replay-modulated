@@ -26,8 +26,8 @@ function tierFromSalary(s: number): string {
   if (s >= 30) return "BLUE"; if (s >= 23) return "GREEN"; return "WHITE";
 }
 const TIERS = [
-  { tier: "LEGEND", minFP: 240 }, { tier: "MVP", minFP: 225 },
-  { tier: "ALL_STAR", minFP: 210 }, { tier: "STARTER", minFP: 195 }, { tier: "ROOKIE", minFP: 180 },
+  { tier: "LEGEND", minFP: 250 }, { tier: "MVP", minFP: 235 },
+  { tier: "ALL_STAR", minFP: 225 }, { tier: "STARTER", minFP: 205 }, { tier: "ROOKIE", minFP: 190 },
 ];
 function calcWinTier(fp: number): string {
   for (const t of TIERS) if (fp >= t.minFP) return t.tier;
@@ -35,7 +35,7 @@ function calcWinTier(fp: number): string {
 }
 function nextTierInfo(winTier: string) {
   const idx = TIERS.findIndex(t => t.tier === winTier);
-  if (winTier === "BUST") return { nextTier: "ROOKIE", tierFloor: 0, nextTierMin: 180 };
+  if (winTier === "BUST") return { nextTier: "ROOKIE", tierFloor: 0, nextTierMin: 190 };
   if (idx < 0) return { nextTier: null, tierFloor: 0, nextTierMin: 0 };
   return {
     tierFloor: TIERS[idx].minFP,

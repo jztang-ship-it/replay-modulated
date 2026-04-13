@@ -42,11 +42,11 @@ const NBA_TEAMS = [
 // Basketball win-tier thresholds (must mirror basketballConfig.ts).
 const TIER_THRESHOLDS = [
   { tier: "BUST",     min: 0,    payout: "0x" },
-  { tier: "ROOKIE",   min: 180,  payout: "0.5x" },
-  { tier: "STARTER",  min: 195,  payout: "2.5x" },
-  { tier: "ALL_STAR", min: 210,  payout: "7x" },
-  { tier: "MVP",      min: 225,  payout: "15x" },
-  { tier: "LEGEND",     min: 240,  payout: "50x" },
+  { tier: "ROOKIE",   min: 190,  payout: "0.5x" },
+  { tier: "STARTER",  min: 205,  payout: "1.5x" },
+  { tier: "ALL_STAR", min: 225,  payout: "3x" },
+  { tier: "MVP",      min: 235,  payout: "8x" },
+  { tier: "LEGEND",   min: 250,  payout: "30x" },
 ] as const;
 
 type RawPlayer = {

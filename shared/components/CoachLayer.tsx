@@ -520,7 +520,7 @@ export function CoachLayer({
     // Fire immediately — no artificial delay between tier panel landing and commentary.
     {
       // Show "So close" commentary — spotlight entire lineup + tier gauge
-      onCommentaryText?.([cfg?.nearMissText ?? "So close it hurts, 0.9 FP away from the MVP level 15x win. Dray was the weaklink tonight, a rb, an ast or even a point would have pushed us over."]);
+      onCommentaryText?.([cfg?.nearMissText ?? "So close it hurts, 0.9 FP away from the ALL-STAR level 3x win. Dray was the weaklink tonight, one more rebound or assist would have pushed us over."]);
       enqueue({
         key: "darnit",
         node: null as any,

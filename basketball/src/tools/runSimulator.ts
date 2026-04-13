@@ -380,11 +380,11 @@ function main() {
 
   // ── Current threshold check ──────────────────────────────────────────
   const CURRENT = [
-    { name: "ROOKIE",   minFp: 189, payout: "0.2x" },
-    { name: "STARTER",  minFp: 203, payout: "1x"   },
-    { name: "ALL_STAR", minFp: 217, payout: "3x"   },
-    { name: "MVP",      minFp: 230, payout: "8x"   },
-    { name: "LEGEND",   minFp: 250, payout: "50x"  },
+    { name: "ROOKIE",   minFp: 190, payout: "0.5x" },
+    { name: "STARTER",  minFp: 205, payout: "1.5x" },
+    { name: "ALL_STAR", minFp: 225, payout: "3x"   },
+    { name: "MVP",      minFp: 235, payout: "8x"   },
+    { name: "LEGEND",   minFp: 250, payout: "30x"  },
   ];
   console.log("\n=== CURRENT THRESHOLDS — HIT RATES ===");
   const bustRate = allFps.filter(f => f < CURRENT[0].minFp).length / handsBuilt * 100;
@@ -402,13 +402,13 @@ function main() {
   }
 
   // ── Suggested thresholds for target distribution ──────────────────────
-  // Target: BUST ~45%, ROOKIE ~25%, STARTER ~17%, ALL_STAR ~9%, MVP ~3.5%, LEGEND ~0.5%
+  // Target: BUST ~48%, ROOKIE ~25%, STARTER ~21%, ALL_STAR ~4%, MVP ~2%, LEGEND ~0.5%
   const targets = [
-    { name: "ROOKIE",   cumPct: 55,  payout: "0.5x" },
-    { name: "STARTER",  cumPct: 30,  payout: "2.5x" },
-    { name: "ALL_STAR", cumPct: 13,  payout: "7x"   },
-    { name: "MVP",      cumPct: 4,   payout: "15x"  },
-    { name: "LEGEND",     cumPct: 0.5, payout: "50x"  },
+    { name: "ROOKIE",   cumPct: 52,  payout: "0.5x" },
+    { name: "STARTER",  cumPct: 27,  payout: "1.5x" },
+    { name: "ALL_STAR", cumPct: 6,   payout: "3x"   },
+    { name: "MVP",      cumPct: 2.5, payout: "8x"   },
+    { name: "LEGEND",   cumPct: 0.5, payout: "30x"  },
   ];
 
   console.log("\n=== SUGGESTED THRESHOLDS (target: BUST~45%, WIN~55%) ===");
@@ -434,6 +434,37 @@ function main() {
   console.log(`  ALL_STAR: minFp: ${suggested["ALL_STAR"]}`);
   console.log(`  MVP:      minFp: ${suggested["MVP"]}`);
   console.log(`  LEGEND:     minFp: ${suggested["LEGEND"]}`);
+
+  // ── EV comparison across threshold options ───────────────────────────
+  const OPTIONS = [
+    { label: "CURRENT (190/205/225/235/250) 30x", offsets: [190, 205, 225, 235, 250], mults: [0.5, 1.5, 3, 8, 30] },
+  ];
+  const MULTS_DEFAULT = [0.5, 1.5, 3, 8, 30];
+  const TIER_NAMES = ["ROOKIE", "STARTER", "ALL_STAR", "MVP", "LEGEND"];
+
+  console.log("\n=== EV COMPARISON ===");
+  for (const opt of OPTIONS) {
+    const thresholds = opt.offsets;
+    const mults = opt.mults ?? MULTS_DEFAULT;
+    const bustPct = allFps.filter(f => f < thresholds[0]).length / handsBuilt;
+    let ev = 0;
+    const tierPcts: number[] = [];
+    for (let i = 0; i < thresholds.length; i++) {
+      const lo = thresholds[i];
+      const hi = i + 1 < thresholds.length ? thresholds[i + 1] : Infinity;
+      const rate = allFps.filter(f => f >= lo && f < hi).length / handsBuilt;
+      tierPcts.push(rate);
+      ev += rate * mults[i];
+    }
+    const houseEdge = (1 - ev) * 100;
+    console.log(`\n  ${opt.label}`);
+    console.log(`    BUST       <${thresholds[0]}  →  ${(bustPct * 100).toFixed(1)}%`);
+    for (let i = 0; i < TIER_NAMES.length; i++) {
+      const gap = i + 1 < TIER_NAMES.length ? `  gap:${thresholds[i+1] - thresholds[i]}` : "";
+      console.log(`    ${TIER_NAMES[i].padEnd(10)} ≥${String(thresholds[i]).padStart(3)}  →  ${(tierPcts[i] * 100).toFixed(1).padStart(5)}%  (${mults[i]}x)${gap}`);
+    }
+    console.log(`    EV: $${(ev * 100).toFixed(1)} per $100  |  House edge: ${houseEdge.toFixed(1)}%${houseEdge < 0 ? " ⚠️  PLAYER FAVORED" : ""}`);
+  }
 
   if (verbose) {
     console.log("\n=== SAMPLE TOP 10 HANDS ===");

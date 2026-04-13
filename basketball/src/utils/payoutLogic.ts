@@ -1,8 +1,8 @@
 /**
  * basketball/src/utils/payoutLogic.ts
  *
- * Option C "Slot-like" economy — calibrated via 10k-hand simulator with
- * salary-derived tiers. Targets ~45% bust, ~17% house edge with streaks.
+ * "Slot-like" economy — calibrated via 10k-hand simulator with
+ * salary-derived tiers. Targets ~48% bust, ~13% house edge pre-streak (~8-10% with streaks).
  *
  * MUST stay in sync with WIN_TIERS in GameBar.tsx and legend modal.
  */
@@ -23,12 +23,12 @@ export type { WinTierKey };
 export type WinTier = WinTierKey;
 
 export const BASKETBALL_WIN_TIERS: WinTierMap = {
-  LEGEND:   { minFp: 250, multiplier: 50  },  // ~0.2% — jackpot
-  MVP:      { minFp: 230, multiplier: 8   },  // ~3%
-  ALL_STAR: { minFp: 217, multiplier: 3   },  // ~8%
-  STARTER:  { minFp: 203, multiplier: 1   },  // ~18% — break even
-  ROOKIE:   { minFp: 189, multiplier: 0.2 },  // ~25% — small cushion
-  BUST:     { minFp: 0,   multiplier: 0   },  // ~45%
+  LEGEND:   { minFp: 250, multiplier: 30  },  // ~0.5% — jackpot
+  MVP:      { minFp: 235, multiplier: 8   },  // ~2%
+  ALL_STAR: { minFp: 225, multiplier: 3   },  // ~4%
+  STARTER:  { minFp: 205, multiplier: 1.5 },  // ~21%
+  ROOKIE:   { minFp: 190, multiplier: 0.5 },  // ~25% — small return
+  BUST:     { minFp: 0,   multiplier: 0   },  // ~48%
 };
 
 export function calculateWinTier(totalFp: number): WinTierKey {

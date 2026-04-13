@@ -39,7 +39,7 @@ const BENCH = [
 const OPPONENTS = ["BOS", "LAL", "GSW", "MIA", "PHX", "CHI", "NYK", "DEN", "DAL", "MIL"];
 
 const TIER_FLOORS: Record<string, number> = {
-  BUST: 0, ROOKIE: 180, STARTER: 195, ALL_STAR: 210, MVP: 225, LEGEND: 240,
+  BUST: 0, ROOKIE: 190, STARTER: 205, ALL_STAR: 225, MVP: 235, LEGEND: 250,
 };
 
 // ─── Scenario builder ───────────────────────────────────────────────────────

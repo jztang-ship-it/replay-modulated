@@ -16,9 +16,9 @@
  *   Draymond $43 BLUE PF (COLD 9.5), Lowry $20 WHITE PG (normal 18.9),
  *   Reddish $16 WHITE SF (COLD 12.1)  ← drawn
  *
- * TOTAL FP: 224.1 — near-miss of MVP tier (225). Gap: 0.9 FP.
- * Draymond (9.5) and Reddish (12.1) went cold — one more play and it's MVP.
- * "If Dray or Cam made one more play — that's the difference."
+ * TOTAL FP: 224.1 — STARTER tier (205+). ALL-STAR requires 225. Gap: 0.9 FP.
+ * Draymond (9.5) and Reddish (12.1) went cold — one more rebound and it's ALL-STAR.
+ * "If Dray or Cam had a better night — that's the difference."
  *
  * Zero player overlap between swap slots and drawn slots. Tatum is the only constant.
  * All game logs are real 2024-25 season entries from game-logs.json.
@@ -165,7 +165,7 @@ export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
 //   Lowry    $20 WHITE : 18.9 FP  (normal — PURE badge, 0pt/5ast/2stl/1blk/0 TOs at UTA)
 //   Reddish  $16 WHITE : 12.1 FP  ← COLD (5pts/3reb/1ast/2stl at MIN — quiet)
 // ─────────────────────────────────────────────────────────────────────────────
-//   TOTAL: 224.1 FP → ALL-STAR tier (210+). MVP requires 225. Gap: 0.9 FP.
+//   TOTAL: 224.1 FP → STARTER tier (205+). ALL-STAR requires 225. Gap: 0.9 FP.
 
 const DRAWN: Record<number, () => GeneratedCard> = {
 
@@ -229,7 +229,7 @@ const DRAWN: Record<number, () => GeneratedCard> = {
 
   // Slot 5 → Cam Reddish | WHITE $16 | SF | drawn | COLD
   // 2024-12-13 at MIN — 5pts / 3reb / 1ast / 2stl / 2to → 12.1 FP (no badges)
-  // Quiet night for Cam — one more play from him or Dray and it's MVP.
+  // Quiet night for Cam — a better night from him or Dray and it's MVP.
   5: () => makeCard({
     cardId: "ftue-reddish", basePlayerId: "1629629",
     name: "Cam Reddish", team: "LAL", position: "SF",

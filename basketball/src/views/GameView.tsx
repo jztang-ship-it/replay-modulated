@@ -192,10 +192,10 @@ function createPlaceholders(): PlayerCard[] {
 }
 
 const GAUGE_THRESHOLDS = [
-  { tier: "ROOKIE", minFP: 189 },
-  { tier: "STARTER", minFP: 203 },
-  { tier: "ALL_STAR", minFP: 217 },
-  { tier: "MVP", minFP: 230 },
+  { tier: "ROOKIE", minFP: 190 },
+  { tier: "STARTER", minFP: 205 },
+  { tier: "ALL_STAR", minFP: 225 },
+  { tier: "MVP", minFP: 235 },
   { tier: "LEGEND", minFP: 250 },
 ];
 const NEAR_MISS_FP = 5;
@@ -251,20 +251,20 @@ function RollingNumber({ value, decimals = 0, duration = 400 }: { value: number;
 // ── Tier flip display helpers ──────────────────────────────────────
 function deriveTierFromFp(fp: number): string {
   if (fp >= 250) return "LEGEND";
-  if (fp >= 230) return "MVP";
-  if (fp >= 217) return "ALL_STAR";
-  if (fp >= 203) return "STARTER";
-  if (fp >= 189) return "ROOKIE";
+  if (fp >= 235) return "MVP";
+  if (fp >= 225) return "ALL_STAR";
+  if (fp >= 205) return "STARTER";
+  if (fp >= 190) return "ROOKIE";
   return "BUST";
 }
 
 // ── Spring oscillation waypoints ────────────────────────────────────────────
 const SPRING_TIERS = [
-  { name: "BUST", lo: 0, hi: 189 },
-  { name: "ROOKIE", lo: 189, hi: 203 },
-  { name: "STARTER", lo: 203, hi: 217 },
-  { name: "ALL_STAR", lo: 217, hi: 230 },
-  { name: "MVP", lo: 230, hi: 250 },
+  { name: "BUST", lo: 0, hi: 190 },
+  { name: "ROOKIE", lo: 190, hi: 205 },
+  { name: "STARTER", lo: 205, hi: 225 },
+  { name: "ALL_STAR", lo: 225, hi: 235 },
+  { name: "MVP", lo: 235, hi: 250 },
   { name: "LEGEND", lo: 250, hi: 9999 },
 ];
 const SPRING_TIER_SPAN = 20.0;
@@ -275,7 +275,7 @@ function computeSpringAmplitude(finalFp: number): number {
     ?? SPRING_TIERS[SPRING_TIERS.length - 1];
   const margin = finalFp - tier.lo;
   const marginNorm = Math.min(1, margin / SPRING_TIER_SPAN);
-  const fpNorm = Math.min(1, Math.max(0, (finalFp - 195) / 45));  // 195=STARTER floor, 45=LEGEND(240)-STARTER(195)
+  const fpNorm = Math.min(1, Math.max(0, (finalFp - 205) / 45));  // 205=STARTER floor, 45=LEGEND(250)-STARTER(205)
   const baseAmp = 4.0 + fpNorm * 6.0;
   const marginFactor = 1.0 - marginNorm * 0.75;
   const rawAmplitude = baseAmp * marginFactor;
