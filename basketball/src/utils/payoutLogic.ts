@@ -2,7 +2,7 @@
  * basketball/src/utils/payoutLogic.ts
  *
  * "Slot-like" economy — calibrated via 10k-hand simulator with
- * salary-derived tiers. Targets ~48% bust, ~13% house edge pre-streak (~8-10% with streaks).
+ * salary-derived tiers. Targets ~48% bust, ~10% house edge pre-streak (~7-8% with streaks).
  *
  * MUST stay in sync with WIN_TIERS in GameBar.tsx and legend modal.
  */
@@ -23,7 +23,7 @@ export type { WinTierKey };
 export type WinTier = WinTierKey;
 
 export const BASKETBALL_WIN_TIERS: WinTierMap = {
-  LEGEND:   { minFp: 250, multiplier: 30  },  // ~0.5% — jackpot
+  LEGEND:   { minFp: 255, multiplier: 50  },  // ~0.3% — jackpot
   MVP:      { minFp: 235, multiplier: 8   },  // ~2%
   ALL_STAR: { minFp: 225, multiplier: 3   },  // ~4%
   STARTER:  { minFp: 205, multiplier: 1.5 },  // ~21%

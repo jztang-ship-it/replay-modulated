@@ -113,7 +113,7 @@ export const BasketballSportConfig = {
       { tier: 'STARTER',  minFP: 205, multiplier: 1.5  },
       { tier: 'ALL_STAR', minFP: 225, multiplier: 3.0  },
       { tier: 'MVP',      minFP: 235, multiplier: 8.0  },
-      { tier: 'LEGEND',   minFP: 250, multiplier: 30   },
+      { tier: 'LEGEND',   minFP: 255, multiplier: 50   },
     ],
   },
 

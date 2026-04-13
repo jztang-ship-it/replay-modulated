@@ -384,7 +384,7 @@ function main() {
     { name: "STARTER",  minFp: 205, payout: "1.5x" },
     { name: "ALL_STAR", minFp: 225, payout: "3x"   },
     { name: "MVP",      minFp: 235, payout: "8x"   },
-    { name: "LEGEND",   minFp: 250, payout: "30x"  },
+    { name: "LEGEND",   minFp: 255, payout: "50x"  },
   ];
   console.log("\n=== CURRENT THRESHOLDS — HIT RATES ===");
   const bustRate = allFps.filter(f => f < CURRENT[0].minFp).length / handsBuilt * 100;
@@ -408,7 +408,7 @@ function main() {
     { name: "STARTER",  cumPct: 27,  payout: "1.5x" },
     { name: "ALL_STAR", cumPct: 6,   payout: "3x"   },
     { name: "MVP",      cumPct: 2.5, payout: "8x"   },
-    { name: "LEGEND",   cumPct: 0.5, payout: "30x"  },
+    { name: "LEGEND",   cumPct: 0.5, payout: "50x"  },
   ];
 
   console.log("\n=== SUGGESTED THRESHOLDS (target: BUST~45%, WIN~55%) ===");
@@ -437,9 +437,9 @@ function main() {
 
   // ── EV comparison across threshold options ───────────────────────────
   const OPTIONS = [
-    { label: "CURRENT (190/205/225/235/250) 30x", offsets: [190, 205, 225, 235, 250], mults: [0.5, 1.5, 3, 8, 30] },
+    { label: "CURRENT (190/205/225/235/255) 50x", offsets: [190, 205, 225, 235, 255], mults: [0.5, 1.5, 3, 8, 50] },
   ];
-  const MULTS_DEFAULT = [0.5, 1.5, 3, 8, 30];
+  const MULTS_DEFAULT = [0.5, 1.5, 3, 8, 50];
   const TIER_NAMES = ["ROOKIE", "STARTER", "ALL_STAR", "MVP", "LEGEND"];
 
   console.log("\n=== EV COMPARISON ===");

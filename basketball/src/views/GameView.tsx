@@ -196,7 +196,7 @@ const GAUGE_THRESHOLDS = [
   { tier: "STARTER", minFP: 205 },
   { tier: "ALL_STAR", minFP: 225 },
   { tier: "MVP", minFP: 235 },
-  { tier: "LEGEND", minFP: 250 },
+  { tier: "LEGEND", minFP: 255 },
 ];
 const NEAR_MISS_FP = 5;
 
@@ -250,7 +250,7 @@ function RollingNumber({ value, decimals = 0, duration = 400 }: { value: number;
 
 // ── Tier flip display helpers ──────────────────────────────────────
 function deriveTierFromFp(fp: number): string {
-  if (fp >= 250) return "LEGEND";
+  if (fp >= 255) return "LEGEND";
   if (fp >= 235) return "MVP";
   if (fp >= 225) return "ALL_STAR";
   if (fp >= 205) return "STARTER";
@@ -264,8 +264,8 @@ const SPRING_TIERS = [
   { name: "ROOKIE", lo: 190, hi: 205 },
   { name: "STARTER", lo: 205, hi: 225 },
   { name: "ALL_STAR", lo: 225, hi: 235 },
-  { name: "MVP", lo: 235, hi: 250 },
-  { name: "LEGEND", lo: 250, hi: 9999 },
+  { name: "MVP", lo: 235, hi: 255 },
+  { name: "LEGEND", lo: 255, hi: 9999 },
 ];
 const SPRING_TIER_SPAN = 20.0;
 
@@ -275,7 +275,7 @@ function computeSpringAmplitude(finalFp: number): number {
     ?? SPRING_TIERS[SPRING_TIERS.length - 1];
   const margin = finalFp - tier.lo;
   const marginNorm = Math.min(1, margin / SPRING_TIER_SPAN);
-  const fpNorm = Math.min(1, Math.max(0, (finalFp - 205) / 45));  // 205=STARTER floor, 45=LEGEND(250)-STARTER(205)
+  const fpNorm = Math.min(1, Math.max(0, (finalFp - 205) / 50));  // 205=STARTER floor, 50=LEGEND(255)-STARTER(205)
   const baseAmp = 4.0 + fpNorm * 6.0;
   const marginFactor = 1.0 - marginNorm * 0.75;
   const rawAmplitude = baseAmp * marginFactor;

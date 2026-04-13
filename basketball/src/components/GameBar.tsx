@@ -16,12 +16,12 @@ const WIN_TIERS: WinTierDisplay[] = [
   { label: "STARTER",  minFp: 205, color: "#00FFD8", glow: "rgba(0,255,216,0.6)"   },
   { label: "ALL-STAR", minFp: 225, color: "#C084FC", glow: "rgba(192,132,252,0.7)"  },
   { label: "MVP",      minFp: 235, color: "#FB923C", glow: "rgba(251,146,60,0.7)"   },
-  { label: "LEGEND",   minFp: 250, color: "#EF4444", glow: "rgba(239,68,68,0.9)"   },
+  { label: "LEGEND",   minFp: 255, color: "#EF4444", glow: "rgba(239,68,68,0.9)"   },
 ];
 
 const LEGEND_DATA: LegendData = {
   payoutRows: [
-    { label: "LEGEND",   score: "250+", payout: "30x",  color: "#EF4444", bg: "rgba(239,68,68,0.12)",    border: "rgba(239,68,68,0.35)"    },
+    { label: "LEGEND",   score: "255+", payout: "50x",  color: "#EF4444", bg: "rgba(239,68,68,0.12)",    border: "rgba(239,68,68,0.35)"    },
     { label: "MVP",      score: "235+", payout: "8x",   color: "#FB923C", bg: "rgba(251,146,60,0.10)",   border: "rgba(251,146,60,0.3)"    },
     { label: "ALL-STAR", score: "225+", payout: "3x",   color: "#C084FC", bg: "rgba(192,132,252,0.10)",  border: "rgba(192,132,252,0.25)"  },
     { label: "STARTER",  score: "205+", payout: "1.5x", color: "#00FFD8", bg: "rgba(0,255,216,0.08)",    border: "rgba(0,255,216,0.25)"    },

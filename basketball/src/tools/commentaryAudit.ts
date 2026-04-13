@@ -17,13 +17,13 @@ const BADGES = ["none", "FIRE", "GOD_MODE", "TURNOVER_MACHINE"];
 const ROSTER_SHAPES = ["1star", "2star"] as const;
 
 const TIER_FLOORS: Record<string, number> = {
-  BUST: 0, ROOKIE: 190, STARTER: 205, ALL_STAR: 225, MVP: 235, LEGEND: 250,
+  BUST: 0, ROOKIE: 190, STARTER: 205, ALL_STAR: 225, MVP: 235, LEGEND: 255,
 };
 const TIER_NEXT: Record<string, string | null> = {
   BUST: "ROOKIE", ROOKIE: "STARTER", STARTER: "ALL_STAR", ALL_STAR: "MVP", MVP: "LEGEND", LEGEND: null,
 };
 const NEXT_MINS: Record<string, number> = {
-  ROOKIE: 190, STARTER: 205, ALL_STAR: 225, MVP: 235, LEGEND: 250,
+  ROOKIE: 190, STARTER: 205, ALL_STAR: 225, MVP: 235, LEGEND: 255,
 };
 
 function buildRoster(shape: "1star" | "2star", starRatio: number, badge: string, held: boolean): CommentaryRosterCard[] {
