@@ -1,7 +1,7 @@
 import { createContext, useEffect, useState, useRef, type ReactNode } from "react";
 import { supabase } from "@shared/lib/supabase";
 import type { User, AuthError } from "@supabase/supabase-js";
-import { setAuthUid } from "@shared/utils/playerIdentity";
+import { setAuthUid, getNickname } from "@shared/utils/playerIdentity";
 
 export interface AuthContextValue {
   user: User | null;
@@ -54,6 +54,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         if (mounted) setUser(session.user);
+        supabase.from("player_profiles").upsert({
+          id: session.user.id,
+          nickname: getNickname(),
+          is_anonymous: session.user.is_anonymous ?? true,
+        }, { onConflict: "id" }).then(({ error }) => {
+          if (error) console.warn("[auth] Failed to upsert profile:", error.message);
+        });
         return;
       }
       const { data, error } = await supabase.auth.signInAnonymously();
@@ -61,7 +68,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.warn("[auth] Anonymous sign-in failed, using localStorage UID:", error.message);
         return;
       }
-      if (mounted && data.user) setUser(data.user);
+      if (mounted && data.user) {
+        setUser(data.user);
+        // Upsert player profile (idempotent)
+        supabase.from("player_profiles").upsert({
+          id: data.user.id,
+          nickname: getNickname(),
+          is_anonymous: data.user.is_anonymous ?? true,
+        }, { onConflict: "id" }).then(({ error }) => {
+          if (error) console.warn("[auth] Failed to upsert profile:", error.message);
+        });
+      }
     })();
 
     return () => {

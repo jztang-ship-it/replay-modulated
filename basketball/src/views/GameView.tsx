@@ -158,6 +158,33 @@ async function submitToLeaderboard(metric: string, value: number, extra?: Record
   } catch { }
 }
 
+async function logHandToDb(
+  roster: any[],
+  totalFp: number,
+  tier: string,
+  payout: number,
+  streak: number,
+) {
+  try {
+    const uid = getPlayerUid();
+    if (!uid || uid.startsWith("u_")) return; // Only log with real Supabase UID
+    const rosterIds = roster
+      .map((c: any) => String(c.basePlayerId ?? ""))
+      .filter(Boolean);
+    const { data: { session } } = await supabase.auth.getSession();
+    const verified = !!session?.access_token;
+    await supabase.from("hand_log").insert({
+      player_id: uid,
+      roster_ids: rosterIds,
+      total_fp: totalFp,
+      tier,
+      payout,
+      streak_at_play: streak,
+      verified,
+    });
+  } catch { /* silent — audit trail is best-effort */ }
+}
+
 /** Check if player is in top 10 of either daily leaderboard → set rm_on_board_today for trophy glow */
 async function checkLeaderboardRank() {
   const uid = getPlayerUid();
@@ -893,6 +920,7 @@ export default function GameView() {
         }
         const badges = rosterRef.current.reduce((s, c) => s + (c.achievements?.length ?? 0), 0);
         gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
+        logHandToDb(rosterRef.current, totalFp, String(tier), payout, streak);
         recordHandPlayed();
         if (!bust) recordHandWon(); else recordHandLost();
         if (isFTUE) {
