@@ -63,6 +63,20 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
       0%, 100% { opacity: 0.15; }
       50% { opacity: 1; }
     }
+    @keyframes cfSmokingA {
+      0%   { opacity: 1;    transform: scaleY(1.00); }
+      25%  { opacity: 0.70; transform: scaleY(1.03); }
+      50%  { opacity: 0.20; transform: scaleY(0.97); }
+      75%  { opacity: 0.85; transform: scaleY(1.02); }
+      100% { opacity: 1;    transform: scaleY(1.00); }
+    }
+    @keyframes cfSmokingB {
+      0%   { opacity: 0.20; transform: scaleY(1.02); }
+      25%  { opacity: 0.90; transform: scaleY(0.98); }
+      50%  { opacity: 1;    transform: scaleY(1.01); }
+      75%  { opacity: 0.30; transform: scaleY(1.03); }
+      100% { opacity: 0.20; transform: scaleY(1.02); }
+    }
     @keyframes cfIceA {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.1; }
@@ -70,6 +84,14 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
     @keyframes cfIceB {
       0%, 100% { opacity: 0.1; }
       50% { opacity: 1; }
+    }
+    @keyframes cfFreezeSheetA {
+      0%, 100% { opacity: 0.85; }
+      50% { opacity: 0.65; }
+    }
+    @keyframes cfFreezeSheetB {
+      0%, 100% { opacity: 0.55; }
+      50% { opacity: 0.80; }
     }
   `;
   document.head.appendChild(st);
@@ -545,33 +567,85 @@ export function CardFront(props: CardFrontProps) {
           {/* PERF PERCENTILE text removed — ratio expressed via fire/ice overlay instead */}
         </div>
 
-        {/* FIRE/ICE EFFECT — two overlay images flickering out of phase, clipped above badges */}
+        {/* FIRE/ICE EFFECT — distinct visual per stamp level */}
         {(stamp === "SMOKING HOT" || stamp === "ON FIRE" || stamp === "ICE COLD" || stamp === "FREEZING") && (() => {
           const isFire = stamp === "SMOKING HOT" || stamp === "ON FIRE";
           const src = isFire ? `${import.meta.env.BASE_URL}火焰.png` : `${import.meta.env.BASE_URL}冰雪.png`;
-          const animA = isFire ? "cfFireA" : "cfIceA";
-          const animB = isFire ? "cfFireB" : "cfIceB";
-          const intensity = (stamp === "SMOKING HOT" || stamp === "FREEZING") ? 1.0 : 0.4;
-          const opacity = isFire ? 0.28 + intensity * 0.32 : 0.22 + intensity * 0.30;
-          const animSpeed = isFire ? `${2.2 - intensity * 0.9}s` : `${3.0 - intensity * 1.2}s`;
-          const spreadH = intensity * 18;
-          const spreadTop = intensity * 24;
-          const tintFilter = isFire
-            ? `hue-rotate(${intensity * 15}deg) saturate(${1 + intensity * 0.6}) brightness(${1 - intensity * 0.15})`
-            : `hue-rotate(${intensity * -20}deg) saturate(${1 - intensity * 0.4}) brightness(${1 + intensity * 0.5})`;
-          const twinOpacity = 0.15 + intensity * 0.40;
+
+          if (stamp === "SMOKING HOT") {
+            // ── SMOKING HOT: Red flames, fast aggressive animation ──
+            const clipStyle: React.CSSProperties = {
+              position: "absolute", top: -24, left: -18, right: -18, bottom: "28%",
+              borderRadius: "20px 20px 0 0", overflow: "hidden", pointerEvents: "none", zIndex: 39,
+            };
+            const tintFilter = "hue-rotate(-15deg) saturate(2.0) brightness(0.82)";
+            const imgBase: React.CSSProperties = {
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover", mixBlendMode: "screen", filter: tintFilter,
+            };
+            return (
+              <div style={clipStyle}>
+                <img src={src} style={{ ...imgBase, opacity: 0.65, animation: "cfSmokingA 0.9s ease-in-out infinite" }} />
+                <img src={src} style={{ ...imgBase, opacity: 0.55, transform: "scaleX(-1)", animation: "cfSmokingB 0.9s ease-in-out infinite" }} />
+                <img src={src} style={{ ...imgBase, opacity: 0.30, transform: "scaleY(-1)", animation: "cfSmokingA 1.1s ease-in-out infinite 0.3s" }} />
+              </div>
+            );
+          }
+
+          if (stamp === "ON FIRE") {
+            // ── ON FIRE: Yellow/orange flames, slower gentle flicker ──
+            const clipStyle: React.CSSProperties = {
+              position: "absolute", top: -10, left: -7, right: -7, bottom: "28%",
+              borderRadius: "20px 20px 0 0", overflow: "hidden", pointerEvents: "none", zIndex: 39,
+            };
+            const tintFilter = "hue-rotate(25deg) saturate(1.3) brightness(1.1)";
+            const imgBase: React.CSSProperties = {
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover", mixBlendMode: "screen", filter: tintFilter,
+            };
+            return (
+              <div style={clipStyle}>
+                <img src={src} style={{ ...imgBase, opacity: 0.40, animation: "cfFireA 2.4s ease-in-out infinite" }} />
+                <img src={src} style={{ ...imgBase, opacity: 0.28, transform: "scaleX(-1)", animation: "cfFireB 2.4s ease-in-out infinite" }} />
+              </div>
+            );
+          }
+
+          if (stamp === "FREEZING") {
+            // ── FREEZING: Full ice sheet covering entire card, matching card shape ──
+            const clipStyle: React.CSSProperties = {
+              position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+              overflow: "hidden", pointerEvents: "none", zIndex: 39,
+            };
+            const tintFilter = "hue-rotate(-25deg) saturate(0.5) brightness(1.6)";
+            const imgBase: React.CSSProperties = {
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover", mixBlendMode: "screen", filter: tintFilter,
+            };
+            return (
+              <div style={clipStyle}>
+                <img src={src} style={{ ...imgBase, opacity: 0.60, animation: "cfFreezeSheetA 3.5s ease-in-out infinite" }} />
+                <img src={src} style={{ ...imgBase, opacity: 0.45, transform: "scaleX(-1) scaleY(-1)", animation: "cfFreezeSheetB 3.5s ease-in-out infinite" }} />
+                {/* Third layer for solid sheet effect at bottom half */}
+                <img src={src} style={{ ...imgBase, opacity: 0.35, transform: "scaleY(-1)", animation: "cfFreezeSheetA 4.2s ease-in-out infinite 1s" }} />
+              </div>
+            );
+          }
+
+          // ── ICE COLD: Lighter frost, partial coverage ──
           const clipStyle: React.CSSProperties = {
-            position: "absolute", top: -spreadTop, left: -spreadH, right: -spreadH, bottom: "28%",
+            position: "absolute", top: 0, left: 0, right: 0, bottom: "35%",
             borderRadius: "20px 20px 0 0", overflow: "hidden", pointerEvents: "none", zIndex: 39,
           };
+          const tintFilter = "hue-rotate(-12deg) saturate(0.75) brightness(1.3)";
           const imgBase: React.CSSProperties = {
             position: "absolute", inset: 0, width: "100%", height: "100%",
             objectFit: "cover", mixBlendMode: "screen", filter: tintFilter,
           };
           return (
             <div style={clipStyle}>
-              <img src={src} style={{ ...imgBase, opacity, animation: `${animA} ${animSpeed} ease-in-out infinite` }} />
-              <img src={src} style={{ ...imgBase, opacity: twinOpacity, transform: "scaleX(-1)", animation: `${animB} ${animSpeed} ease-in-out infinite` }} />
+              <img src={src} style={{ ...imgBase, opacity: 0.30, animation: "cfIceA 3.0s ease-in-out infinite" }} />
+              <img src={src} style={{ ...imgBase, opacity: 0.18, transform: "scaleX(-1)", animation: "cfIceB 3.0s ease-in-out infinite" }} />
             </div>
           );
         })()}
