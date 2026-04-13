@@ -58,6 +58,11 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
       content: ""; position: absolute; inset: 0; z-index: 90;
       opacity: 0; pointer-events: none; border-radius: 18px;
     }
+    @keyframes pcsBlastRed {
+      0%   { opacity: 1;    background: radial-gradient(ellipse at center, rgba(255,180,190,1) 0%, rgba(239,68,68,0.96) 50%, rgba(153,27,27,0.88) 100%); }
+      40%  { opacity: 0.9;  background: radial-gradient(ellipse at center, rgba(255,150,160,0.95) 0%, rgba(220,38,38,0.88) 60%, rgba(127,20,20,0.72) 100%); }
+      100% { opacity: 0; }
+    }
     @keyframes pcsBlastOrange {
       0%   { opacity: 1;    background: radial-gradient(ellipse at center, rgba(255,220,140,1) 0%, rgba(255,140,0,0.95) 50%, rgba(200,80,0,0.85) 100%); }
       40%  { opacity: 0.9;  background: radial-gradient(ellipse at center, rgba(255,200,100,0.95) 0%, rgba(255,120,0,0.85) 60%, rgba(180,60,0,0.7) 100%); }
@@ -83,6 +88,7 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
       40%  { opacity: 0.9;  background: radial-gradient(ellipse at center, rgba(240,245,255,0.95) 0%, rgba(190,210,230,0.85) 60%, rgba(130,160,190,0.7) 100%); }
       100% { opacity: 0; }
     }
+    .pcs-glow-red    .pcs-face::before { animation: pcsBlastRed    var(--glow-ms, 700ms) ease-out forwards; }
     .pcs-glow-orange .pcs-face::before { animation: pcsBlastOrange var(--glow-ms, 700ms) ease-out forwards; }
     .pcs-glow-purple .pcs-face::before { animation: pcsBlastPurple var(--glow-ms, 700ms) ease-out forwards; }
     .pcs-glow-blue   .pcs-face::before { animation: pcsBlastBlue   var(--glow-ms, 700ms) ease-out forwards; }
@@ -158,6 +164,12 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
     }
     .pcs-tap-bounce { animation: pcsTapBounce 1.4s ease-in-out infinite; }
     @keyframes pcsTapHintPulse { 0%,100%{opacity:.4} 50%{opacity:.9} }
+    @keyframes pcsGlowRed {
+      0%   { box-shadow: 0 0 0px   0px rgba(239,68,68,0); }
+      12%  { box-shadow: 0 0 100px 76px rgba(239,68,68,0.92), 0 0 174px 114px rgba(185,28,28,0.52); }
+      45%  { box-shadow: 0 0  88px 68px rgba(239,68,68,0.82), 0 0 148px 100px rgba(185,28,28,0.40); }
+      100% { box-shadow: 0 0 0px   0px rgba(239,68,68,0); }
+    }
     @keyframes pcsGlowOrange {
       0%   { box-shadow: 0 0 0px   0px rgba(255,140,0,0); }
       12%  { box-shadow: 0 0 90px 68px rgba(255,140,0,0.85), 0 0 158px 102px rgba(255,100,0,0.45); }
@@ -188,6 +200,7 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
       45%  { box-shadow: 0 0 79px 62px rgba(226,232,240,0.65), 0 0 135px 90px rgba(200,210,220,0.25); }
       100% { box-shadow: 0 0 0px   0px rgba(226,232,240,0); }
     }
+    .pcs-glow-red    { animation: pcsGlowRed    var(--glow-ms, 700ms) ease-out forwards; }
     .pcs-glow-orange { animation: pcsGlowOrange var(--glow-ms, 700ms) ease-out forwards; }
     .pcs-glow-purple { animation: pcsGlowPurple var(--glow-ms, 700ms) ease-out forwards; }
     .pcs-glow-blue   { animation: pcsGlowBlue   var(--glow-ms, 700ms) ease-out forwards; }
@@ -285,6 +298,7 @@ export function resetAllOverlays() { overlayMap.clear(); }
 
 function tierToGlowFile(tier: string): string {
   const t = tier?.toUpperCase();
+  if (t === "RED") return "red";
   if (t === "ORANGE") return "orange";
   if (t === "PURPLE") return "purple";
   if (t === "BLUE") return "blue";
@@ -295,7 +309,7 @@ function tierToGlowFile(tier: string): string {
 /** Same breakpoints as CardFront salary tier (fallback when glowTier prop missing). */
 function tierFromSalaryForGlow(salary: number): string {
   const s = Number(salary ?? 0);
-  return s >= 52 ? "ORANGE" : s >= 40 ? "PURPLE" : s >= 28 ? "BLUE" : s >= 16 ? "GREEN" : "WHITE";
+  return s >= 73 ? "RED" : s >= 58 ? "ORANGE" : s >= 44 ? "PURPLE" : s >= 30 ? "BLUE" : s >= 23 ? "GREEN" : "WHITE";
 }
 
 // ── PlayerCardShell ────────────────────────────────────────────────────────
@@ -427,6 +441,7 @@ export function PlayerCardShell(props: CardShellProps) {
 
   const glowClass = glowActive ? (() => {
     const t = (glowTier ?? "").toUpperCase();
+    if (t === "RED") return "pcs-glow-red";
     if (t === "ORANGE") return "pcs-glow-orange";
     if (t === "PURPLE") return "pcs-glow-purple";
     if (t === "BLUE") return "pcs-glow-blue";
@@ -496,13 +511,13 @@ export function PlayerCardShell(props: CardShellProps) {
     glowSrc: glowActive
       ? `${import.meta.env.BASE_URL}glow-${tierToGlowFile(
         glowTier
-        ?? tierFromSalaryForGlow(Number((stableCard as any).salary ?? (card as any).salary ?? 0)),
+        ?? String((stableCard as any).tier ?? (card as any).tier ?? "WHITE").toUpperCase(),
       )}.png`
       : undefined,
     glowDurationMs,
     glowTier:
       glowTier
-      ?? tierFromSalaryForGlow(Number((stableCard as any).salary ?? (card as any).salary ?? 0)),
+      ?? String((stableCard as any).tier ?? (card as any).tier ?? "WHITE").toUpperCase(),
   };
 
   return (

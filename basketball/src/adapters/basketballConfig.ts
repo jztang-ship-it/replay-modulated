@@ -1,11 +1,12 @@
 /**
  * basketballConfig.ts — Layer 2 (NBA-specific)
  *
- * TWO threshold sets — switched by handCount in economyEngine:
- *   PROTECTED : hands 2-30  (EV ~0.72, win rate ~46%)
- *   LIVE      : hands 31+   (EV ~0.72, same ROOKIE floor, less floor guarantee)
+ * Single consistent set of thresholds — no protection period.
+ * Calibrated for $250 cap (raised from $200 to enable 2-star rosters), engine-accurate sim:
+ *   BUST ~44%, ROOKIE ~26%, STARTER ~17%, ALL_STAR ~9%, MVP ~3.5%, GOAT ~0.5%
  *
- * Hand 1 is always FTUE (hardcoded Devin Booker roster).
+ * Hand 1 is always FTUE (hardcoded Devin Booker roster, ~$200 total — leaves $50 of cap
+ * unused by design since FTUE is a fixed narrative sequence, not a full cap-optimized roster).
  */
 
 export const BasketballSportConfig = {
@@ -23,7 +24,7 @@ export const BasketballSportConfig = {
     'SG': 'SG', 'PG': 'PG', 'SF': 'SF', 'PF': 'PF', 'C': 'C',
   } as Record<string, string>,
 
-  salaryCap:    200,
+  salaryCap:    250,
   minPlayers:   6,
   maxPlayers:   6,
   positionLimits: {} as Record<string, { min: number; max: number }>,
@@ -108,11 +109,11 @@ export const BasketballSportConfig = {
   winCondition: {
     type: 'FIXED_THRESHOLD',
     thresholds: [
-      { tier: 'ROOKIE',   minFP: 130, multiplier: 0.5  },
-      { tier: 'STARTER',  minFP: 155, multiplier: 2.5  },
-      { tier: 'ALL_STAR', minFP: 180, multiplier: 7.0  },
-      { tier: 'MVP',      minFP: 205, multiplier: 15.0 },
-      { tier: 'GOAT',  minFP: 235, multiplier: 50 },
+      { tier: 'ROOKIE',   minFP: 180, multiplier: 0.5  },
+      { tier: 'STARTER',  minFP: 195, multiplier: 2.5  },
+      { tier: 'ALL_STAR', minFP: 210, multiplier: 7.0  },
+      { tier: 'MVP',      minFP: 225, multiplier: 15.0 },
+      { tier: 'GOAT',     minFP: 240, multiplier: 50   },
     ],
   },
 

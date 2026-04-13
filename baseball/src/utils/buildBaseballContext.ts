@@ -53,6 +53,13 @@ function pickRelevantTones(
     out.push(...(culture.tier3 ?? []).slice(0, 2));
   }
 
+  // Sprinkle in enriched angles when available
+  if (culture.streakLines?.length)   out.push(culture.streakLines[Math.floor(Math.random() * culture.streakLines.length)]);
+  if (culture.milestones?.length)    out.push(culture.milestones[Math.floor(Math.random() * culture.milestones.length)]);
+  if (culture.controversy?.length)   out.push(culture.controversy[Math.floor(Math.random() * culture.controversy.length)]);
+  if (culture.defensive?.length)     out.push(culture.defensive[Math.floor(Math.random() * culture.defensive.length)]);
+  if (culture.salaryNarrative?.length) out.push(culture.salaryNarrative[Math.floor(Math.random() * culture.salaryNarrative.length)]);
+
   // Filter out empty strings from generated data
   return out.filter(s => s && s.trim().length > 0).slice(0, MAX_TONES_PER_CARD);
 }

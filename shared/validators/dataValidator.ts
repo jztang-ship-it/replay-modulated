@@ -10,7 +10,7 @@
 import type { ValidationResult, NormalizedPlayer, NormalizedLog } from "../types";
 export type { ValidationResult };
 
-const VALID_TIERS = ["ORANGE", "PURPLE", "BLUE", "GREEN", "WHITE"] as const;
+const VALID_TIERS = ["RED", "ORANGE", "PURPLE", "BLUE", "GREEN", "WHITE"] as const;
 
 export function validateDataset(players: NormalizedPlayer[], logs: NormalizedLog[], options: { validPositions?: string[]; minPlayers?: number; minLogsPerPlayer?: number; sport?: string } = {}): ValidationResult {
   const errors: string[] = [];

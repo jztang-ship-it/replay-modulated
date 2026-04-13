@@ -28,20 +28,21 @@ function computeFp(stats: Record<string, any>): number {
 }
 
 function tierFromSalary(salary: number): string {
-  if (salary >= 52) return "ORANGE";
-  if (salary >= 40) return "PURPLE";
-  if (salary >= 28) return "BLUE";
-  if (salary >= 16) return "GREEN";
+  if (salary >= 73) return "RED";
+  if (salary >= 58) return "ORANGE";
+  if (salary >= 44) return "PURPLE";
+  if (salary >= 30) return "BLUE";
+  if (salary >= 23) return "GREEN";
   return "WHITE";
 }
 
 // ── Tier thresholds ───────────────────────────────────────────────────────────
 const TIERS = [
-  { tier: "GOAT", minFP: 235 },
-  { tier: "MVP", minFP: 215 },
-  { tier: "ALL_STAR", minFP: 195 },
-  { tier: "STARTER", minFP: 175 },
-  { tier: "ROOKIE", minFP: 155 },
+  { tier: "GOAT", minFP: 240 },
+  { tier: "MVP", minFP: 225 },
+  { tier: "ALL_STAR", minFP: 210 },
+  { tier: "STARTER", minFP: 195 },
+  { tier: "ROOKIE", minFP: 180 },
 ];
 
 function calcWinTier(fp: number): string {
@@ -51,7 +52,7 @@ function calcWinTier(fp: number): string {
 
 function nextTierInfo(winTier: string): { nextTier: string | null; tierFloor: number; nextTierMin: number } {
   const idx = TIERS.findIndex(t => t.tier === winTier);
-  if (winTier === "BUST") return { nextTier: "ROOKIE", tierFloor: 0, nextTierMin: 155 };
+  if (winTier === "BUST") return { nextTier: "ROOKIE", tierFloor: 0, nextTierMin: 180 };
   if (idx < 0) return { nextTier: null, tierFloor: 0, nextTierMin: 0 };
   const tierFloor = TIERS[idx].minFP;
   const nextTier = idx > 0 ? TIERS[idx - 1].tier : null;
@@ -59,7 +60,7 @@ function nextTierInfo(winTier: string): { nextTier: string | null; tierFloor: nu
   return { nextTier, tierFloor, nextTierMin };
 }
 
-// ── Random roster builder (respects $200 cap) ─────────────────────────────────
+// ── Random roster builder (respects $250 cap) ─────────────────────────────────
 function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
 
 function buildRandomRoster(): { cards: PostRevealRosterCard[]; totalFp: number } | null {
@@ -70,10 +71,10 @@ function buildRandomRoster(): { cards: PostRevealRosterCard[]; totalFp: number }
   for (const p of shuffled) {
     if (selected.length >= 6) break;
     const sal = Number(p.salary);
-    if (capUsed + sal > 200) continue;
+    if (capUsed + sal > 250) continue;
     // Ensure we can still fill remaining slots with min salary ($5)
     const slotsLeft = 5 - selected.length;
-    if (capUsed + sal + slotsLeft * 5 > 200) continue;
+    if (capUsed + sal + slotsLeft * 5 > 250) continue;
     selected.push(p);
     capUsed += sal;
   }

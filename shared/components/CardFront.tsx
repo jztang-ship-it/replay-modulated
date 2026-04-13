@@ -247,6 +247,10 @@ export function CardFront(props: CardFrontProps) {
   const pos = posRaw ? (posMap[posRaw.toUpperCase()] ?? posRaw) : "";
   const salary = Number((card as any)?.salary ?? 0);
   const proj = Number((card as any)?.projectedFp ?? 0);
+  // Daily bonus (+5/+10/+20) — 0 if this player isn't in today's hot list.
+  // Star count next to name: 1/2/3 for +5/+10/+20.
+  const dailyBonus = Number((card as any)?.dailyBonus ?? (stableCard as any)?.dailyBonus ?? 0);
+  const bonusStarCount = dailyBonus === 20 ? 3 : dailyBonus === 10 ? 2 : dailyBonus === 5 ? 1 : 0;
   const isHeldCard = !!(card as any).wasHeld;
   const isDrawing = phase === ("DRAWING" as any);
   const isPreReveal = !!(isRevealing && !isHeldCard && visibleFp === undefined);
@@ -346,7 +350,7 @@ export function CardFront(props: CardFrontProps) {
   const showPulse = !!pulse && pulse !== "NEUTRAL" && hasRevealed;
 
   const cardSalary = Number((stableCard as any)?.salary ?? (card as any)?.salary ?? 0);
-  const derivedTier = cardSalary >= 52 ? "ORANGE" : cardSalary >= 40 ? "PURPLE" : cardSalary >= 28 ? "BLUE" : cardSalary >= 16 ? "GREEN" : "WHITE";
+  const derivedTier = cardSalary >= 73 ? "RED" : cardSalary >= 58 ? "ORANGE" : cardSalary >= 44 ? "PURPLE" : cardSalary >= 30 ? "BLUE" : cardSalary >= 23 ? "GREEN" : "WHITE";
   const tier = getTier(derivedTier);
   const isWhiteTier = derivedTier === "WHITE";
   const onCardText = isWhiteTier ? "#FFFFFF" : "#000000";
@@ -417,11 +421,21 @@ export function CardFront(props: CardFrontProps) {
             {nameLine1 && (
               <span style={{ fontSize: 7, fontWeight: 900, letterSpacing: 0.4, textTransform: "uppercase", color: "#FFFFFF", lineHeight: 1, whiteSpace: "nowrap", display: "block", maxWidth: "100%" }}>
                 {nameLine1}
+                {bonusStarCount > 0 && !nameLine2 && (
+                  <span style={{ marginLeft: 3, color: "#FFD700", fontSize: 7, letterSpacing: 0 }}>
+                    {"★".repeat(bonusStarCount)}
+                  </span>
+                )}
               </span>
             )}
             {nameLine2 && (
               <span style={{ fontSize: 7, fontWeight: 900, letterSpacing: 0.4, textTransform: "uppercase", color: "#FFFFFF", lineHeight: 1, whiteSpace: "nowrap", display: "block", maxWidth: "100%" }}>
                 {nameLine2}
+                {bonusStarCount > 0 && (
+                  <span style={{ marginLeft: 3, color: "#FFD700", fontSize: 7, letterSpacing: 0 }}>
+                    {"★".repeat(bonusStarCount)}
+                  </span>
+                )}
               </span>
             )}
           </div>
@@ -467,6 +481,16 @@ export function CardFront(props: CardFrontProps) {
                     : fpText}
                 </span>
               </div>
+              {/* Daily bonus suffix — shown only after reveal, in gold to match the stars */}
+              {isShowingActualFp && dailyBonus > 0 && (
+                <span style={{
+                  fontSize: 9, fontWeight: 900, color: "#FFD700",
+                  lineHeight: 1, marginTop: 2, letterSpacing: -0.2,
+                  fontVariantNumeric: "tabular-nums",
+                }}>
+                  +{dailyBonus}
+                </span>
+              )}
             </div>
 
           </div>

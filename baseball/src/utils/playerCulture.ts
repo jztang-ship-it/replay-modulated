@@ -25,6 +25,14 @@ export interface PlayerCulture {
   parkBoost?: string[];
   parkSuppressed?: string[];
   opponentFlavor?: Record<string, string>;
+  controversy?: string[];
+  milestones?: string[];
+  streakLines?: string[];
+  signatureGames?: { date: string; opponent: string; fp: number; line: string }[];
+  salaryNarrative?: string[];
+  teamContext?: string[];
+  draftAndPath?: string[];
+  defensive?: string[];
 }
 
 export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
@@ -1820,6 +1828,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["The jersey incident is still legendary.", "Cut up the throwbacks. Got suspended. No regrets."],
+    milestones: ["Eight All-Star selections. Hall of Fame resume.", "Cy Young winner in both the AL and NL."],
+    streakLines: ["Sale's been dominant three straight starts.", "The strikeout numbers are piling up again.", "He's locked in. This is peak Sale."],
+    signatureGames: [
+      { date: "2025-06-09", opponent: "Brewers", fp: 76, line: "7IP/11K/1ER. Slider was filthy." },
+      { date: "2025-09-16", opponent: "Nationals", fp: 68, line: "Quality outing down the stretch." },
+      { date: "2025-05-06", opponent: "Reds", fp: 66.6, line: "Carved up Cincinnati." },
+      { date: "2025-06-18", opponent: "Mets", fp: 66.6, line: "Made the Mets look silly." },
+      { date: "2025-05-16", opponent: "Red Sox", fp: 64, line: "Revenge game against Boston." },
+    ],
+    salaryNarrative: ["$70 for a Cy Young winner feels right.", "You're paying for elite K upside every start.", "Post-surgery Sale is somehow still worth it."],
+    teamContext: ["Atlanta's rotation anchor.", "Truist Park mound suits him perfectly."],
+    draftAndPath: ["White Sox first-rounder. Chicago to Boston to Atlanta.", "Tommy John couldn't keep this man down."],
+    defensive: ["Solid fielder for a guy built like a pool noodle.", "Holds runners reasonably well for a lefty."],
+
   },
 
   stanton: {
@@ -1893,6 +1916,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["That $325M contract follows him everywhere.", "Yankees fans love him and hate him weekly."],
+    milestones: ["2017 NL MVP. 59 home runs.", "Record 122.4mph exit velocity."],
+    streakLines: ["Stanton's on a tear. Homers in three straight.", "The bat is HOT. Dongcarlo season activated.", "He's been crushing everything for two weeks."],
+    signatureGames: [
+      { date: "2025-09-26", opponent: "Orioles", fp: 127, line: "2HR/5RBI. Camden Yards destruction." },
+      { date: "2025-08-19", opponent: "Rays", fp: 124, line: "Demolished Tampa pitching." },
+      { date: "2025-08-12", opponent: "Twins", fp: 109, line: "Mashed Minnesota into submission." },
+      { date: "2025-08-26", opponent: "Nationals", fp: 103, line: "Nationals had no answer." },
+      { date: "2025-07-08", opponent: "Mariners", fp: 89, line: "Seattle's pitching couldn't stop him." },
+    ],
+    salaryNarrative: ["$68 is a bet on health. Pure and simple.", "When he plays, the ceiling is MVP-level.", "You're gambling on availability at this price."],
+    teamContext: ["Stanton is the Yankees' designated wrecking ball.", "The DH role keeps him on the field. Mostly."],
+    draftAndPath: ["Drafted by Miami. Became their franchise player.", "Traded to Yankees in the blockbuster of 2017."],
+    defensive: ["Full-time DH now. The legs said no more.", "He used to play right field. Used to."],
+
   },
 
   perez: {
@@ -2507,6 +2545,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       "Globe Life Field's hitter-friendly dimensions working against him tonight.",
       "Even power pitchers struggle when the ball carries this well.",
     ],
+    controversy: ["Got paid big after the WS. Worth every penny?", "Left Boston for Texas. Red Sox fans understood."],
+    milestones: ["2023 World Series champion.", "2018 World Series hero out of the bullpen."],
+    streakLines: ["Eovaldi's rolling. Three quality starts in a row.", "The splitter is dancing. Hitters can't touch it.", "He's found another gear this month."],
+    signatureGames: [
+      { date: "2025-04-01", opponent: "Reds", fp: 73, line: "9IP/8K/0ER. Opening Day masterpiece." },
+      { date: "2025-07-13", opponent: "Astros", fp: 64.6, line: "Classic pitchers duel vs Houston." },
+      { date: "2025-05-11", opponent: "Tigers", fp: 63, line: "Handled Detroit quietly." },
+      { date: "2025-08-05", opponent: "Yankees", fp: 62, line: "Kept Yankee bats in check." },
+      { date: "2025-08-22", opponent: "Guardians", fp: 62, line: "Late-season grind." },
+    ],
+    salaryNarrative: ["$70 for a proven postseason ace.", "You're paying for big game reliability.", "Not flashy but the resume speaks for itself."],
+    teamContext: ["Texas rotation anchor after the championship.", "Globe Life Park is his house now."],
+    draftAndPath: ["Dodgers draft pick. Bounced around early career.", "Found himself in Boston and Texas. Late bloomer."],
+    defensive: ["Solid fielder. Does the little things right.", "Holds runners well for a power arm."],
+
   },
 
   gray: {
@@ -2992,6 +3045,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["His WS MVP came during Houston's cheating scandal.", "How many dingers had a trash can assist?"],
+    milestones: ["3x All-Star. 2017 WS MVP.", "200+ career homers as a leadoff hitter."],
+    streakLines: ["Springer on a heater is a throwback to his Astros peak.", "When the dingers start flying, they come in bunches.", "Hot Springer is the best leadoff bat in baseball."],
+    signatureGames: [
+      { date: "2025-07-01", opponent: "Yankees", fp: 163, line: "3H/2HR/7RBI. Yankees catching strays." },
+      { date: "2025-07-03", opponent: "Yankees", fp: 145, line: "He just hates the Yankees." },
+      { date: "2025-08-26", opponent: "Twins", fp: 142, line: "August Springer is dangerous." },
+      { date: "2025-09-02", opponent: "Reds", fp: 136, line: "September push from the vet." },
+      { date: "2025-06-24", opponent: "Guardians", fp: 119, line: "Steady leadoff damage." },
+    ],
+    salaryNarrative: ["$70 for a leadoff masher with October DNA.", "His real deal was $150M over 6 years.", "You're paying for the ceiling. It's 163 in a game."],
+    teamContext: ["Toronto's big free agent splash from 2021.", "Veteran presence in a young Blue Jays core."],
+    draftAndPath: ["11th overall pick in 2011 by Houston.", "UConn product. Overcame a childhood stutter."],
+    defensive: ["Moved from center to a corner as legs aged.", "Still has the arm. The range is a memory though."],
+
   },
 
   vazquez: {
@@ -3566,6 +3634,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       "Cincinnati's hitter-friendly confines boosting the power numbers.",
     ],
     parkSuppressed: [],
+    controversy: ["Arizona stint was forgettable for everyone.", "Some say he sells out for power too much."],
+    milestones: ["49 home runs in 2019. Career year.", "4-HR game on April 26, 2025. Historic."],
+    streakLines: ["Geno's homered in four straight games.", "The power surge is real. He's locked in.", "Suarez is seeing beach balls right now."],
+    signatureGames: [
+      { date: "2025-04-26", opponent: "Braves", fp: 209, line: "4HR/5RBI. Legendary day." },
+      { date: "2025-06-20", opponent: "Rockies", fp: 142, line: "Coors Field slugfest." },
+      { date: "2025-03-28", opponent: "Cubs", fp: 118, line: "Opening weekend fireworks." },
+      { date: "2025-07-20", opponent: "Cardinals", fp: 118, line: "NL Central rivalry." },
+      { date: "2025-09-17", opponent: "Royals", fp: 118, line: "Late-season power surge." },
+    ],
+    salaryNarrative: ["$70 with a 209 FP ceiling. Read that again.", "Boom or bust but the booms are nuclear.", "The highest single-game score in PURPLE tier."],
+    teamContext: ["Great American Ballpark is his personal launchpad.", "Cincinnati loves Geno. He loves them back."],
+    draftAndPath: ["Signed by Detroit as an international FA.", "Traded to Cincy in 2014. Best thing that happened."],
+    defensive: ["Third base is fine. The bat is the draw.", "Adequate glove. Nobody drafts Geno for defense."],
+
   },
 
   wheeler: {
@@ -3630,6 +3713,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["Left the Mets for the rival Phillies. Still stings.", "Mets fans watched him become an ace in Philly."],
+    milestones: ["Two Cy Young runner-up finishes. Elite company.", "One of the best FA signings in Phillies history."],
+    streakLines: ["Wheeler's on a roll. Stacking quality starts.", "The sinker is alive. Wheeler's locked in.", "Ace mode activated. Carrying rotations."],
+    signatureGames: [
+      { date: "2025-07-06", opponent: "Reds", fp: 86, line: "9IP/12K/1ER. Complete game dominance." },
+      { date: "2025-04-18", opponent: "Marlins", fp: 81, line: "13 strikeouts. Miami had no chance." },
+      { date: "2025-06-30", opponent: "Padres", fp: 78, line: "Another quality start." },
+      { date: "2025-04-02", opponent: "Rockies", fp: 72, line: "Handled Colorado with ease." },
+      { date: "2025-05-11", opponent: "Guardians", fp: 67, line: "Solid interleague outing." },
+    ],
+    salaryNarrative: ["$70 for a two-time Cy Young runner-up.", "You're paying for the floor. It's very high.", "Elite arm at orange tier pricing."],
+    teamContext: ["Phillies rotation anchor alongside Nola.", "Philly's lineup gives him run support regularly."],
+    draftAndPath: ["6th overall pick by SF in 2009. Traded to NYM.", "Signed with Philly as FA after 2019. Career move."],
+    defensive: ["Good fielding pitcher. Holds runners well.", "Wheeler helps himself on the mound defensively."],
+
   },
 
   urshela: {
@@ -5557,6 +5655,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["Lost the 2017 MVP to Altuve. Who was cheating.", "History owes him that trophy. Houston stole it."],
+    milestones: ["62 HR in 2022. AL record. Clean as a whistle.", "Fastest to 300 HR in MLB history."],
+    streakLines: ["Judge on a homer streak is a force of nature.", "The ball sounds different off his bat when he's hot.", "Pitchers start aiming for the corners. Doesn't help."],
+    signatureGames: [
+      { date: "2025-03-29", opponent: "Brewers", fp: 221, line: "4H/3HR/8RBI. 221FP. Opening week carnage." },
+      { date: "2025-06-08", opponent: "Red Sox", fp: 145, line: "Rivalry game demolition." },
+      { date: "2025-09-24", opponent: "White Sox", fp: 136, line: "September Judge is scary." },
+      { date: "2025-06-29", opponent: "Athletics", fp: 133, line: "Oakland catching strays." },
+      { date: "2025-04-03", opponent: "D-backs", fp: 127, line: "Early season statement." },
+    ],
+    salaryNarrative: ["$70 for the AL HR king. Ceiling is 221 in a game.", "His real contract is $360M over 9 years.", "You're buying the highest ceiling in fantasy baseball."],
+    teamContext: ["Yankees captain. The franchise is literally his.", "Surrounded by a lineup that protects his at-bats."],
+    draftAndPath: ["Fresno State product. 32nd pick in 2013.", "Yankees developed him slowly. It paid off big."],
+    defensive: ["Wilson Defensive Player of the Year in right field.", "6'7\" with range. That's not supposed to work."],
+
   },
 
   machado: {
@@ -6142,6 +6255,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["$215M and the knees went sideways. Bad luck.", "Is this still an MVP-caliber player? Debatable."],
+    milestones: ["2018 NL MVP. Batting champion.", "Near-Triple Crown in 2018 and 2019."],
+    streakLines: ["Yelich has multi-hit games in five straight.", "The bat is alive. Yeli's on a hot streak.", "He's hitting .400 over the last two weeks."],
+    signatureGames: [
+      { date: "2025-08-15", opponent: "Reds", fp: 165, line: "4H/2HR/5RBI. Reds can't solve Yeli." },
+      { date: "2025-05-22", opponent: "Pirates", fp: 133, line: "Destroyed Pittsburgh." },
+      { date: "2025-05-30", opponent: "Phillies", fp: 130, line: "Mashed Philly pitching." },
+      { date: "2025-06-20", opponent: "Twins", fp: 130, line: "4H/8RBI. Interleague domination." },
+      { date: "2025-05-27", opponent: "Red Sox", fp: 115, line: "Boston couldn't cool the bat." },
+    ],
+    salaryNarrative: ["$65 for a former MVP with boom weeks.", "The knee risk is baked into the discount.", "Cheapest former MVP in the PURPLE tier."],
+    teamContext: ["Milwaukee's franchise player for better or worse.", "American Family Field suits his lefty swing."],
+    draftAndPath: ["Marlins first-round pick in 2010.", "Traded to Milwaukee in 2018. Instant MVP."],
+    defensive: ["Moved from CF to corner OF. Knees did that.", "Still serviceable in left. The bat's the thing."],
+
   },
 
   montas: {
@@ -6401,6 +6529,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["$470M before proving full consistency. Bold.", "Is he perennial MVP or very good? Big gap."],
+    milestones: ["100 career HR coming soon.", "First 40/40 season is the white whale."],
+    streakLines: ["J-Rod streaking is a five-tool avalanche.", "The power and speed are both cooking now.", "When Julio's right, T-Mobile Park rocks."],
+    signatureGames: [
+      { date: "2025-09-06", opponent: "Braves", fp: 139, line: "J-Rod goes nuclear vs Atlanta." },
+      { date: "2025-07-12", opponent: "Tigers", fp: 124, line: "Julio feasts on Detroit." },
+      { date: "2025-07-13", opponent: "Tigers", fp: 118, line: "Back-to-back monster games." },
+      { date: "2025-04-04", opponent: "Giants", fp: 110, line: "Early season statement." },
+      { date: "2025-08-09", opponent: "Rays", fp: 109, line: "La Makina keeps rolling." },
+    ],
+    salaryNarrative: ["$66 for a 24-year-old five-tool player.", "Buying the upside. The ceiling is MVP.", "Seattle bet $470M. You're betting $66."],
+    teamContext: ["Julio IS the Seattle Mariners.", "The franchise lives and dies with J-Rod."],
+    draftAndPath: ["Signed out of the Dominican Republic.", "Rocketed through the minors. 2022 ROY."],
+    defensive: ["CF with elite range and arm strength.", "Gold Glove caliber when locked in."],
+
   },
 
   degrom: {
@@ -6900,6 +7043,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       "Citi Field's pitcher-friendly dimensions swallowing another fly ball.",
       "Foul territory robbing Lindor of extra-base hits again.",
     ],
+    controversy: ["The early Mets struggles had fans booing.", "He silenced every doubter with that grand slam."],
+    milestones: ["$341M contract. Largest in Mets history.", "2024 NLCS walk-off grand slam. Legendary."],
+    streakLines: ["Lindor's hit safely in eight straight games.", "Switch-hitting clicking from both sides.", "Frankie's locked in. Everything he touches drops."],
+    signatureGames: [
+      { date: "2025-08-15", opponent: "Mariners", fp: 130, line: "Full stat sheet game vs Seattle." },
+      { date: "2025-04-21", opponent: "Phillies", fp: 124, line: "NL East showdown delivery." },
+      { date: "2025-05-30", opponent: "Rockies", fp: 121, line: "Feasted in Colorado." },
+      { date: "2025-07-25", opponent: "Giants", fp: 109, line: "West coast trip, stayed hot." },
+      { date: "2025-07-05", opponent: "Yankees", fp: 98, line: "Subway Series, Mr. Smile stole the show." },
+    ],
+    salaryNarrative: ["$69 for a franchise shortstop. Fair price.", "Elite floor with 130 FP ceiling.", "Five-tool production from the SS position."],
+    teamContext: ["Lindor IS the Mets. Period.", "The face of the New York Mets franchise."],
+    draftAndPath: ["Cleveland first-rounder. Debuted at 21.", "Traded to Mets in 2021. Signed the mega-deal."],
+    defensive: ["Two Gold Gloves. Elite range and arm.", "The best defensive SS in the NL East."],
+
   },
 
   slater: {
@@ -7030,6 +7188,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["$140M for a guy who missed two seasons.", "Coors Field inflated his numbers. Or so they say."],
+    milestones: ["Record most HR by a player in first week of MLB.", "Multiple 30-HR seasons from SS position."],
+    streakLines: ["Story's homered in three straight. He's back.", "The power surge is real. Healthy Story is scary.", "Multi-hit games all week. Storybook stuff."],
+    signatureGames: [
+      { date: "2025-04-18", opponent: "White Sox", fp: 157, line: "3H/2HR/6RBI. Demolished Chicago." },
+      { date: "2025-07-04", opponent: "Nationals", fp: 143, line: "Fourth of July fireworks." },
+      { date: "2025-08-23", opponent: "Yankees", fp: 106, line: "Rivalry game showed up." },
+      { date: "2025-08-16", opponent: "Marlins", fp: 101, line: "Steady production vs Miami." },
+      { date: "2025-07-08", opponent: "Rockies", fp: 98, line: "Homecoming to Colorado." },
+    ],
+    salaryNarrative: ["$68 for a power SS with comeback upside.", "Health risk priced in but ceiling is elite.", "When he's right, $68 is a discount."],
+    teamContext: ["Boston's middle infield depends on Story's health.", "Fenway's Monster gives him an extra dimension."],
+    draftAndPath: ["Rockies first-rounder. Exploded onto the scene.", "Free agent to Boston in 2022. Then surgery."],
+    defensive: ["Still has SS range when the elbow cooperates.", "Elite arm. Gold Glove caliber when healthy."],
+
   },
 
   sanchez: {
@@ -7095,6 +7268,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["Defensive liability is the polite way to put it.", "Yankees gave up on him. Twice."],
+    milestones: ["18 HR in first 45 career games. Historic.", "One of the most hyped catching prospects ever."],
+    streakLines: ["Gary's heating up. The Kraken is stirring.", "Multiple multi-hit games. Sanchez is locked in.", "Hot streak Gary is a top-5 fantasy catcher."],
+    signatureGames: [
+      { date: "2025-06-27", opponent: "Rays", fp: 142, line: "4H/1HR/4RBI. Kraken unleashed." },
+      { date: "2025-06-15", opponent: "Angels", fp: 98, line: "Vintage Gary vs LA." },
+      { date: "2025-06-24", opponent: "Rangers", fp: 74, line: "Solid multi-hit game vs Texas." },
+      { date: "2025-07-01", opponent: "Rangers", fp: 59, line: "More Rangers damage." },
+      { date: "2025-06-20", opponent: "Yankees", fp: 57, line: "Revenge game in the Bronx." },
+    ],
+    salaryNarrative: ["$70 for a catcher with 142-point upside.", "Boom or bust at the thinnest position.", "The ceiling is elite. The floor is missing."],
+    teamContext: ["Milwaukee's lineup gives him RBI chances.", "Playing time can fluctuate. Watch the lineup card."],
+    draftAndPath: ["International FA signing by NYY.", "That 2016 callup changed catching prospect hype."],
+    defensive: ["The bat plays. The glove is there. Somewhere.", "Framing grades make scouts cry."],
+
   },
 
   kepler: {
@@ -9422,6 +9610,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["Should've won an MVP by now. Voter fatigue?", "He's a top-10 player nobody talks about enough."],
+    milestones: ["Multiple 30-30 seasons. Elite power-speed.", "5x All-Star. Perennial MVP candidate."],
+    streakLines: ["J-Ram's homered in four straight games.", "Switch-hitting is clicking from both sides.", "He's on a 15-game hitting streak. Quietly."],
+    signatureGames: [
+      { date: "2025-04-04", opponent: "Angels", fp: 165, line: "3HR/4RBI. Put the Angels to sleep." },
+      { date: "2025-08-12", opponent: "Marlins", fp: 117, line: "Owned Miami's pitching." },
+      { date: "2025-07-08", opponent: "Astros", fp: 113, line: "Big stage vs Houston." },
+      { date: "2025-08-14", opponent: "Marlins", fp: 96, line: "J-Ram can't stop hitting." },
+      { date: "2025-06-07", opponent: "Astros", fp: 92, line: "Another quality Houston game." },
+    ],
+    salaryNarrative: ["$66 for a 30-30 switch-hitter is criminal.", "The cheapest elite five-tool player.", "J-Ram at $66 might be the best value in PURPLE."],
+    teamContext: ["Cleveland's entire identity runs through J-Ram.", "Progressive Field is his kingdom."],
+    draftAndPath: ["Signed as international FA for $26K. A legend.", "Never left Cleveland. Grew into a superstar."],
+    defensive: ["Elite third baseman. Gold Glove caliber.", "The arm, the range, the instincts. All elite."],
+
   },
 
   bregman: {
@@ -11152,6 +11355,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["Is he injury-prone or just unlucky? A decade says both.", "The $100M extension was the Twins' biggest gamble."],
+    milestones: ["Gold Glove winner. One of the fastest players ever.", "100+ games in a season is his personal milestone."],
+    streakLines: ["Buxton on a streak is baseball's best show.", "Ride the wave. You never know when the IL calls.", "Hot streaks with Buck feel like borrowed time."],
+    signatureGames: [
+      { date: "2025-07-12", opponent: "Pirates", fp: 140, line: "5H/1HR. Healthy Buck is elite." },
+      { date: "2025-06-22", opponent: "Brewers", fp: 130, line: "Five-tool day in June." },
+      { date: "2025-09-25", opponent: "Rangers", fp: 118, line: "September and still standing." },
+      { date: "2025-06-19", opponent: "Reds", fp: 117, line: "Making the most of health." },
+      { date: "2025-06-11", opponent: "Rangers", fp: 115, line: "Double dipping on Texas." },
+    ],
+    salaryNarrative: ["$70 for the highest-ceiling CF in the game.", "Real contract is $100M/7yr. Fantasy tax though.", "You're drafting the talent and praying for health."],
+    teamContext: ["He IS the Twins' identity. Speed, power, defense.", "Minnesota's lineup changes when he's in it."],
+    draftAndPath: ["#2 overall pick in 2012 out of Georgia.", "The tools were always there. The body had other plans."],
+    defensive: ["Gold Glove CF with generational range.", "Catches everything. Partly why he gets hurt."],
+
   },
 
   ward: {
@@ -12172,6 +12390,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["Left Queens for Baltimore. Mets fans livid.", "Turned down Mets extension. Bet on himself."],
+    milestones: ["53 HR rookie record. 2x HR Derby champ.", "Closing in on 300 career dingers."],
+    streakLines: ["Polar Bear on a hot streak is SCARY.", "Pete's been eating lately.", "When he's locked in, just walk him."],
+    signatureGames: [
+      { date: "2025-07-05", opponent: "Yankees", fp: 142, line: "Polar Bear mauls the Bronx." },
+      { date: "2025-06-08", opponent: "Rockies", fp: 139, line: "Coors hangover? Not for Pete." },
+      { date: "2025-08-12", opponent: "Braves", fp: 135, line: "Big Meat Pete feasts on Atlanta." },
+      { date: "2025-06-04", opponent: "Dodgers", fp: 127, line: "Pete doesn't care about your ace." },
+      { date: "2025-04-02", opponent: "Marlins", fp: 126, line: "Opening week mauling." },
+    ],
+    salaryNarrative: ["$66 for a guy who hit 53 as a rookie.", "Discount Polar Bear. Baltimore special.", "Power this pure doesn't grow on trees."],
+    teamContext: ["Orioles needed a middle-of-the-order thumper.", "Camden Yards plus Pete Alonso is a cheat code."],
+    draftAndPath: ["Second round pick out of Florida.", "Came up and immediately broke records."],
+    defensive: ["Serviceable at first. That's being kind.", "You don't pay Pete for the glove."],
+
   },
 
   biggio: {
@@ -12489,6 +12722,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       "",
       "",
     ],
+    controversy: ["The 2020 incident. Google it. Or don't.", "The most Googled backup catcher in history."],
+    milestones: ["Three 100+ FP games in 2025.", "The most surprising power catcher."],
+    streakLines: ["McGuire has 3 multi-hit games in a row.", "Hitting .280 this week. Enjoy it while it lasts.", "In a 2-for-25 skid. Normalcy returns."],
+    signatureGames: [
+      { date: "2025-07-25", opponent: "White Sox", fp: 101, line: "101 FP. McGuire magic." },
+      { date: "2025-08-23", opponent: "Angels", fp: 101, line: "Another 101 game. Deja vu." },
+      { date: "2025-05-25", opponent: "Reds", fp: 100, line: "Triple-digit FP vs Cincinnati." },
+      { date: "2025-09-20", opponent: "Reds", fp: 76, line: "Solid day vs the Reds again." },
+      { date: "2025-09-05", opponent: "Nationals", fp: 62, line: "Quiet day vs Washington." },
+    ],
+    salaryNarrative: ["$68 for a journeyman catcher with pop.", "Four teams. Still producing. Respect the grind.", "The most interesting $68 player on the board."],
+    teamContext: ["The White Sox are bad. McGuire doesn't care.", "Journeyman on a rebuilding team."],
+    draftAndPath: ["Former Pirates first-round pick.", "Blue Jays. Red Sox. White Sox. The tour continues."],
+    defensive: ["Solid defensive catcher. No flash.", "Handles a pitching staff well."],
+
   },
 
   nunez: {
@@ -15464,6 +15712,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["No Austin Wynns controversy. He just exists.", "10th-round pick living the dream. Quietly."],
+    milestones: ["6-hit game. Career best by a mile.", "164 FP. He'll never top this."],
+    streakLines: ["Wynns has multi-hit games in 3 of 5 starts.", "The veteran catcher is sneakily productive.", "In an 0-for-12. The ghost has vanished."],
+    signatureGames: [
+      { date: "2025-04-20", opponent: "Orioles", fp: 164, line: "6H/1HR/6RBI. Revenge game." },
+      { date: "2025-04-23", opponent: "Marlins", fp: 88, line: "Big day vs Miami." },
+      { date: "2025-07-13", opponent: "Blue Jays", fp: 65, line: "Solid game vs Toronto." },
+      { date: "2025-06-15", opponent: "Royals", fp: 59, line: "Decent day vs KC." },
+      { date: "2025-06-13", opponent: "Royals", fp: 50, line: "Quiet series opener." },
+    ],
+    salaryNarrative: ["$67 for the ultimate sleeper catcher.", "10th-round pick. Cal State Fresno. Still here.", "Nobody drafts Wynns on purpose. Maybe they should."],
+    teamContext: ["Oakland's lineup is barren. Wynns gets time.", "Low expectations. Low pressure."],
+    draftAndPath: ["10th-round pick. Cal State Fresno product.", "Former Oriole. Now an Oakland A."],
+    defensive: ["Competent backup catcher. Nothing more.", "Handles a staff. Blocks balls. Does the job."],
+
   },
 
   benintendi: {
@@ -19008,6 +19271,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       "Short porch, long bombs - made for each other.",
     ],
     parkSuppressed: [],
+    controversy: ["Is he really a leadoff hitter? Debate rages.", "The strikeout rate would get anyone else benched."],
+    milestones: ["Led MLB in HR. Chasing 300 career homers.", "Came back from torn ACL to homer in WS 2016."],
+    streakLines: ["When Schwarber's hot, he's VOLCANIC.", "Leadoff homers three games running.", "This heater is printing fantasy points."],
+    signatureGames: [
+      { date: "2025-08-28", opponent: "Braves", fp: 245, line: "4HR/9RBI. Not a typo. 245FP." },
+      { date: "2025-08-04", opponent: "Orioles", fp: 148, line: "Wrecked Baltimore's bullpen." },
+      { date: "2025-07-25", opponent: "Yankees", fp: 145, line: "Philly vs Bronx. Kyle chose violence." },
+      { date: "2025-09-24", opponent: "Marlins", fp: 129, line: "Marlins pitching is his BP." },
+      { date: "2025-08-20", opponent: "Mariners", fp: 124, line: "Interleague can't slow Schwarbs." },
+    ],
+    salaryNarrative: ["$70 for the MLB home run leader. Fair.", "You're buying 50-HR upside at $70.", "The Ks hurt but the power is elite."],
+    teamContext: ["Heart of the Phillies lineup.", "Philadelphia's identity starts with Schwarber."],
+    draftAndPath: ["Fourth overall pick by Cubs in 2014.", "Indiana Hoosier turned postseason legend."],
+    defensive: ["DH. Let's not pretend otherwise.", "His glove is decorative at this point."],
+
   },
 
   smith: {
@@ -19783,6 +20061,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [
       "Not even park factors can contain this level of talent.",
     ],
+    controversy: ["The Ippei Mizuhara gambling scandal rocked everyone.", "Ohtani was the victim but the optics were rough."],
+    milestones: ["First 50-50 season in MLB history. 2024.", "Multiple unanimous MVP awards across both leagues."],
+    streakLines: ["Ohtani on a heater is appointment television.", "When he's locked in, you can't pitch around him.", "The hot streak that makes $700M look cheap."],
+    signatureGames: [
+      { date: "2025-05-15", opponent: "Athletics", fp: 136, line: "136FP destruction vs Oakland" },
+      { date: "2025-06-22", opponent: "Nationals", fp: 132, line: "132FP. Just bullying Washington." },
+      { date: "2025-06-14", opponent: "Giants", fp: 121, line: "Bay Area gets Sho'd." },
+      { date: "2025-05-09", opponent: "D-backs", fp: 120, line: "Desert heat, hotter bat." },
+      { date: "2025-09-07", opponent: "Orioles", fp: 118, line: "September Ohtani is terrifying." },
+    ],
+    salaryNarrative: ["$70 for the only two-way player alive.", "The $700M man making it look like a bargain.", "Ceiling is literally the highest in the game."],
+    teamContext: ["The Dodgers built a superteam around him.", "He's the $700M centerpiece and it shows."],
+    draftAndPath: ["Came from Japan's Nippon-Ham Fighters in 2018.", "Every team wanted him. Chose the Angels. Then left."],
+    defensive: ["DH only post-elbow surgery.", "When he pitches again, it's a whole other weapon."],
+
   },
 
   rangel: {
@@ -19948,6 +20241,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     salaryOver: [],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["Is post-ACL Acuna still elite? Debate rages.", "The $100M extension looks dicey after two knees."],
+    milestones: ["41 HR and 73 SB in 2023. Best season in a decade.", "Two ACL tears and still only 27."],
+    streakLines: ["Acuna heating up is terrifying for the league.", "The legs look right. The bat's following.", "Ronnie on a streak is appointment television."],
+    signatureGames: [
+      { date: "2025-07-09", opponent: "Athletics", fp: 106, line: "El Abusador reminds you who he is." },
+      { date: "2025-06-14", opponent: "Rockies", fp: 95, line: "Ronnie rolling in the mountain air." },
+      { date: "2025-07-28", opponent: "Royals", fp: 92, line: "Five tools on display in KC." },
+      { date: "2025-05-31", opponent: "Red Sox", fp: 86, line: "Interleague showcase." },
+      { date: "2025-09-22", opponent: "Nationals", fp: 86, line: "Acuna bullies the Nats." },
+    ],
+    salaryNarrative: ["$68 is the ACL discount. You know that.", "Buying the name and praying for the body.", "Ceiling is MVP. Floor is concerning."],
+    teamContext: ["Atlanta's franchise cornerstone. Period.", "Braves lineup goes as Ronnie goes."],
+    draftAndPath: ["Signed out of Venezuela at 16.", "2018 NL ROY. $100M extension at 21."],
+    defensive: ["RF when healthy. The arm is elite.", "Range took a hit post-ACL. Expected."],
+
   },
 
   ruiz: {
@@ -20516,6 +20824,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["The Moreno trade is debated in two countries.", "Is he a catcher or an outfielder? Yes."],
+    milestones: ["One of few players with legit C/OF dual eligibility.", "Part of a blockbuster trade that moved two franchises."],
+    streakLines: ["Varsho's on a tear. Multi-hit games stacking up.", "Switch-hitting and destroying pitching staffs.", "The hot streak is real. Ride the versatility."],
+    signatureGames: [
+      { date: "2025-08-05", opponent: "Rockies", fp: 153, line: "3H/2HR/6RBI. Coors demolition." },
+      { date: "2025-05-13", opponent: "Rays", fp: 118, line: "Went off against Tampa." },
+      { date: "2025-08-16", opponent: "Rangers", fp: 112, line: "Another triple-digit day." },
+      { date: "2025-05-08", opponent: "Angels", fp: 97, line: "Near-century mark vs LAA." },
+      { date: "2025-08-22", opponent: "Marlins", fp: 94, line: "Steady damage against Miami." },
+    ],
+    salaryNarrative: ["$70 for C/OF eligibility with this ceiling.", "Positional scarcity plus power. That's the formula.", "Switch hitter in a great lineup."],
+    teamContext: ["Toronto's lineup has upside. Varsho fits perfectly.", "Blue Jays give him everyday AB opportunities."],
+    draftAndPath: ["Arizona drafted him. Developed C/OF versatility.", "Traded to Toronto in the Moreno blockbuster.", "Son of Gary Varsho, former MLB outfielder."],
+    defensive: ["Catches and plays outfield. Both competently.", "Not elite at either. Good enough at both.", "Versatility is the defensive story here."],
+
   },
 
   jones: {
@@ -22088,6 +22411,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       "T-Mobile Park's dimensions are working against Raleigh tonight.",
       "Even the Big Dumper can't overcome Seattle's pitcher-friendly confines.",
     ],
+    controversy: ["Best catcher in the AL? Debatable. Maybe.", "Seattle's lineup woes aren't his fault."],
+    milestones: ["Mariners all-time HR record for catchers.", "30+ HR season as a catcher. Elite company."],
+    streakLines: ["Big Dumper on a tear. Multiple HR games.", "Cal's power surge is carrying Seattle.", "The Dump Truck is fully loaded right now."],
+    signatureGames: [
+      { date: "2025-06-20", opponent: "Cubs", fp: 157, line: "3H/2HR/3RBI/1SB. Everything game." },
+      { date: "2025-06-17", opponent: "Red Sox", fp: 145, line: "Demolished Boston pitching." },
+      { date: "2025-09-16", opponent: "Royals", fp: 135, line: "Big Dumper unloaded on KC." },
+      { date: "2025-09-24", opponent: "Rockies", fp: 135, line: "Another 135-piece at Coors." },
+      { date: "2025-08-24", opponent: "Athletics", fp: 130, line: "Division rival damage." },
+    ],
+    salaryNarrative: ["$70 for the best power catcher in the game.", "Catcher scarcity plus 30+ HR power.", "Big Dumper at orange tier is a cheat code."],
+    teamContext: ["Mariners' offense is inconsistent. Cal is constant.", "Seattle's pitching keeps games close for him."],
+    draftAndPath: ["3rd round pick, 2018. Florida State product.", "Late bloomer who turned into an All-Star catcher."],
+    defensive: ["Plus defender behind the plate. Underrated framing.", "Blocks everything. Arm is solid. Complete catcher."],
+
   },
 
   kaiser: {
@@ -24958,6 +25296,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       "Even Citi Field's dimensions can't contain Soto.",
       "That ball would've been out in 29 other parks.",
     ],
+    controversy: ["Spurned the Yankees for the Mets. NYC war.", "$765M could buy a small country. Or a Met."],
+    milestones: ["250 career HR before age 27. Insane.", "On pace for a Hall of Fame OBP."],
+    streakLines: ["Soto on a heater is an OBP cheat code.", "The shuffle is back. League on notice.", "When Juan's locked in, you can't pitch to him."],
+    signatureGames: [
+      { date: "2025-08-30", opponent: "Marlins", fp: 154, line: "2HR/2SB. Full Soto experience." },
+      { date: "2025-06-21", opponent: "Phillies", fp: 142, line: "NL East statement game." },
+      { date: "2025-09-01", opponent: "Tigers", fp: 138, line: "Interleague means nothing. Soto rakes." },
+      { date: "2025-08-22", opponent: "Braves", fp: 122, line: "Soto owns the NL East." },
+      { date: "2025-09-19", opponent: "Nationals", fp: 113, line: "Returns to DC. Leaves with a W." },
+    ],
+    salaryNarrative: ["$69 for the $765M man. That's the game.", "Generational plate discipline.", "The OBP alone justifies the salary."],
+    teamContext: ["The Mets franchise revolves around Juan Soto.", "Cohen opened the vault. Soto walked in."],
+    draftAndPath: ["Signed out of the DR at 16.", "Debuted at 19. Won the WS at 20."],
+    defensive: ["RF with a solid arm. Not elite, not bad.", "You pay for the bat. The glove is fine."],
+
   },
 
   taveras: {
@@ -25141,6 +25494,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["Took forever to reach the majors.", "Cubs top prospect who almost got the bust label."],
+    milestones: ["First career 5-RBI game.", "From 2017 IFA signing to Cubs starting catcher."],
+    streakLines: ["Amaya has an RBI in 5 straight games.", "The power is showing up consistently.", "Hitless in 3 straight. Just a blip."],
+    signatureGames: [
+      { date: "2025-05-19", opponent: "Marlins", fp: 118, line: "HR/5RBI. Demolished Miami." },
+      { date: "2025-04-12", opponent: "Dodgers", fp: 98, line: "Huge game vs LA." },
+      { date: "2025-03-27", opponent: "D-backs", fp: 79, line: "Opening week statement." },
+      { date: "2025-04-22", opponent: "Dodgers", fp: 71, line: "Another strong day vs LA." },
+      { date: "2025-05-06", opponent: "Giants", fp: 59, line: "Steady day vs SF." },
+    ],
+    salaryNarrative: ["$69 for a breakout catcher. Upside is obvious.", "Signed as a 16-year-old IFA. Now he's here.", "Years in the minors built this version."],
+    teamContext: ["The Cubs needed a catcher. Amaya is the answer.", "Wrigley Field crowd loves this kid."],
+    draftAndPath: ["Signed as international free agent in 2017.", "Panamanian catcher. Cubs prospect for years."],
+    defensive: ["Solid receiver. Improving every year.", "The defensive tools are there. Still refining."],
+
   },
 
   cabrera_oswaldo: {
@@ -25456,6 +25824,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       "Even neutral parks can't contain this energy.",
       "Jazz transcends ballpark dimensions.",
     ],
+    controversy: ["Too flashy? Or exactly what baseball needs?", "Marlins gave up on him. Oops."],
+    milestones: ["Chasing his first 30/30 season.", "100 career HR within reach this year."],
+    streakLines: ["Jazz on a heater is must-see television.", "He's stealing bases AND hearts right now.", "When the bat's hot, the whole vibe shifts."],
+    signatureGames: [
+      { date: "2025-03-30", opponent: "Brewers", fp: 148, line: "Opening weekend. 2HR. Tone setter." },
+      { date: "2025-09-02", opponent: "Astros", fp: 133, line: "Jazz vs Houston. Personality wins." },
+      { date: "2025-06-06", opponent: "Red Sox", fp: 125, line: "3H/2SB. Rivalry game Jazz." },
+      { date: "2025-07-09", opponent: "Mariners", fp: 118, line: "West coast Jazz. Still electric." },
+      { date: "2025-08-24", opponent: "Red Sox", fp: 118, line: "Encore performance against Boston." },
+    ],
+    salaryNarrative: ["$69 for the most entertaining Yankee.", "You're paying for upside and vibes.", "The versatility adds sneaky value."],
+    teamContext: ["Yankees needed energy. Jazz IS energy.", "The versatility lets them play him everywhere."],
+    draftAndPath: ["Born in Nassau, Bahamas. Unique path.", "Came up through Arizona's system. Traded twice."],
+    defensive: ["2B, 3B, CF. Name the position.", "Versatility is his defensive superpower."],
+
   },
 
   assad: {
@@ -27117,6 +27500,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       "Citizens Bank Park isn't doing Luzardo any favors today.",
       "That ballpark turns mistakes into souvenirs real quick.",
     ],
+    controversy: ["Former A's prospect who escaped Oakland.", "Marlins flipped him to Philly. Classic Miami."],
+    milestones: ["Flirting with 1000 career K's.", "Electric stuff from the left side."],
+    streakLines: ["Luzardo has 3 straight quality starts.", "Hasn't allowed a homer in 4 starts.", "Back to back clunkers. Sell?"],
+    signatureGames: [
+      { date: "2025-08-20", opponent: "Mariners", fp: 77, line: "12K clinic in Seattle." },
+      { date: "2025-09-24", opponent: "Marlins", fp: 75, line: "Dominated his former club." },
+      { date: "2025-05-20", opponent: "Rockies", fp: 69, line: "Made Colorado look helpless." },
+      { date: "2025-06-11", opponent: "Cubs", fp: 69, line: "Carved up Chicago." },
+      { date: "2025-04-04", opponent: "Dodgers", fp: 67, line: "Stood tall against LA." },
+    ],
+    salaryNarrative: ["At $70, you're betting on the electric stuff.", "Lefty with 97mph heat. Upside is real.", "Third-round pick who became a frontline arm."],
+    teamContext: ["Philly's rotation is loaded. Luz fits right in.", "Citizens Bank with that lineup behind him."],
+    draftAndPath: ["3rd round pick by Washington in 2016.", "Traded to Oakland. Then Miami. Now Philly."],
+    defensive: ["Solid athlete on the mound.", "Quick to the plate. Holds runners well."],
+
   },
 
   trammell: {
@@ -29642,6 +30040,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       "",
       "",
     ],
+    controversy: ["Part of the Matt Olson trade. Both sides won?", "Stuck in Oakland during the relocation saga."],
+    milestones: ["First 3-homer game. 188 FP.", "Gold Glove finalist behind the plate."],
+    streakLines: ["Langeliers has homered in 3 straight.", "Shea is hitting .340 over the last 2 weeks.", "In a 1-for-20 slump. Catchers gonna catch."],
+    signatureGames: [
+      { date: "2025-08-05", opponent: "Nationals", fp: 188, line: "3HR/5H. Catcher of the year game." },
+      { date: "2025-05-10", opponent: "Yankees", fp: 127, line: "Demolished the Yankees." },
+      { date: "2025-08-09", opponent: "Orioles", fp: 112, line: "112 FP vs Baltimore." },
+      { date: "2025-09-24", opponent: "Astros", fp: 109, line: "Owned Houston in September." },
+      { date: "2025-07-25", opponent: "Astros", fp: 98, line: "Another big day vs Astros." },
+    ],
+    salaryNarrative: ["$70 for a catcher with 3-homer upside.", "Gold Glove defense with real power.", "Part of the Olson trade. Oakland won their piece."],
+    teamContext: ["Oakland's lineup is thin. Shea stands out.", "Baylor product anchoring a rebuilding team."],
+    draftAndPath: ["Drafted by Braves. Traded in the Olson deal.", "Baylor product with a cannon arm."],
+    defensive: ["Elite arm. Runners don't steal on Langeliers.", "Gold Glove defense. The real deal behind the plate."],
+
   },
 
   campusano: {
@@ -31263,6 +31676,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [
       "",
     ],
+    controversy: ["No real controversy. He just throws filth.", "The only drama is whether Detroit can build around him."],
+    milestones: ["2024 AL Cy Young. Pitching triple crown.", "Came back from Tommy John throwing harder."],
+    streakLines: ["Skubal on a roll means double-digit Ks every start.", "When the slider is working, lineups look lost.", "Dominant stretches that remind you of peak Verlander."],
+    signatureGames: [
+      { date: "2025-05-25", opponent: "Guardians", fp: 93, line: "9IP/13K/0ER. Complete game gem." },
+      { date: "2025-06-29", opponent: "Twins", fp: 87, line: "7IP/13K. Twins struck out 13 times." },
+      { date: "2025-05-09", opponent: "Rangers", fp: 80, line: "Lefty dominance in May." },
+      { date: "2025-04-27", opponent: "Orioles", fp: 76, line: "Quality start vs Baltimore." },
+      { date: "2025-08-25", opponent: "Athletics", fp: 71.6, line: "Even his floor is solid." },
+    ],
+    salaryNarrative: ["$70 for the reigning AL Cy Young winner.", "Still on pre-arb money in real life.", "Top-3 arm in the American League."],
+    teamContext: ["Detroit's entire pitching identity on his shoulder.", "The Tigers are rebuilding around Skubal. Smart."],
+    draftAndPath: ["9th round out of Seattle University in 2018.", "Tommy John couldn't stop him. Nothing can."],
+    defensive: ["Solid fielder for a pitcher.", "His defense is 13 strikeouts. That IS defense."],
+
   },
 
   hiura: {
@@ -36920,6 +37348,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["2B, 3B, or SS? Where does he play long-term?", "Is he the 3rd-best hitter in Baltimore's lineup?"],
+    milestones: ["1st round, 2020. Breakout 2024. Confirmed 2025.", "Part of the best young core in baseball."],
+    streakLines: ["Westburg's been raking all week.", "Multi-hit games piling up.", "The breakout continues. Westburg won't stop."],
+    signatureGames: [
+      { date: "2025-03-29", opponent: "Blue Jays", fp: 133, line: "Opening Weekend. 4H/2HR. Tone set." },
+      { date: "2025-08-17", opponent: "Astros", fp: 131, line: "August heater." },
+      { date: "2025-07-29", opponent: "Blue Jays", fp: 103, line: "He loves this matchup." },
+      { date: "2025-06-15", opponent: "Angels", fp: 95, line: "Steady production." },
+      { date: "2025-09-26", opponent: "Yankees", fp: 92, line: "AL East statement." },
+    ],
+    salaryNarrative: ["$68 for a breakout star in Baltimore's lineup.", "Purple tier for versatility and power upside."],
+    teamContext: ["Baltimore's young core is the best in baseball.", "Westburg is the glue in an elite O's lineup."],
+    draftAndPath: ["1st round, 2020. Mississippi State to Baltimore.", "SEC product who broke out in year two."],
+    defensive: ["Can play 2B, 3B, and SS. That's rare.", "Positional versatility is a manager's dream."],
+
   },
 
   amaya: {
@@ -38656,6 +39099,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["Innings limit drama in 2024 with the White Sox.", "Pitched against his old team. That's personal."],
+    milestones: ["Successful reliever-to-starter conversion.", "Traded in a blockbuster. Franchise arm status."],
+    streakLines: ["Crochet on a run means double-digit Ks.", "When the heater is popping, nobody wants to face him.", "Lefty with 100mph heat on a streak is terrifying."],
+    signatureGames: [
+      { date: "2025-06-01", opponent: "Braves", fp: 80, line: "7IP/12K. Fenway was rocking." },
+      { date: "2025-07-12", opponent: "Rays", fp: 77, line: "9IP/9K. Complete game vs Rays." },
+      { date: "2025-04-13", opponent: "White Sox", fp: 76.3, line: "Revenge game energy." },
+      { date: "2025-08-23", opponent: "Yankees", fp: 76, line: "Rivalry game dominance." },
+      { date: "2025-09-08", opponent: "Athletics", fp: 75, line: "Consistent September arm." },
+    ],
+    salaryNarrative: ["$70 for a 100mph lefty in Fenway.", "Boston traded a prospect haul for this arm.", "You're paying for the fastball and the ceiling."],
+    teamContext: ["Boston's new ace. Centerpiece of their retool.", "Fenway asks a lot of pitchers. Crochet answers."],
+    draftAndPath: ["11th overall pick in 2020 out of Tennessee.", "Went from college to majors almost immediately."],
+    defensive: ["Athletic enough on the mound.", "His defense is 100mph fastballs and swing-and-misses."],
+
   },
 
   kjerstad: {
@@ -39671,6 +40129,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     salaryOver: [],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["The Whataburger deal is more famous than some HRs.", "Wittaburger wedding went viral."],
+    milestones: ["First SS with multiple 30-30 seasons.", "100 career SB within reach."],
+    streakLines: ["Witt on a hitting streak is inevitable damage.", "Multi-hit games piling up. Classic Bobby.", "When legs and bat both work? Game over."],
+    signatureGames: [
+      { date: "2025-05-08", opponent: "White Sox", fp: 118, line: "4H/2SB. BWJ bullies Chicago." },
+      { date: "2025-06-03", opponent: "Cardinals", fp: 104, line: "I-70 bragging rights." },
+      { date: "2025-08-01", opponent: "Blue Jays", fp: 92, line: "Steady against Toronto." },
+      { date: "2025-07-07", opponent: "Pirates", fp: 89, line: "Efficient day. Nothing wasted." },
+      { date: "2025-09-25", opponent: "Angels", fp: 85, line: "Late-season grind. Bobby doesn't stop." },
+    ],
+    salaryNarrative: ["$65 for a batting champ with 30-30 upside.", "Might be the best value in PURPLE tier.", "Gold Glove SS who hits .330. At $65."],
+    teamContext: ["Bobby Witt IS the Kansas City Royals.", "The $288M extension told KC he's staying."],
+    draftAndPath: ["Son of 16-year MLB vet Bobby Witt.", "2nd overall pick in 2019. Baseball royalty."],
+    defensive: ["Gold Glove shortstop. Elite range. Elite arm.", "Plays short like it's effortless."],
+
   },
 
   ashcraft: {
@@ -42393,6 +42866,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     salaryOver: [],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["Tommy John delayed his pitching career.", "Was he a better prospect as a shortstop?"],
+    milestones: ["First 12-K game. Many more coming.", "Post-Tommy John, better than ever."],
+    streakLines: ["Quality starts in 5 of his last 6.", "The K rate is climbing every month.", "Command wavered. Two rough starts."],
+    signatureGames: [
+      { date: "2025-06-28", opponent: "Phillies", fp: 80, line: "12 K's. Statement game vs Philly." },
+      { date: "2025-04-04", opponent: "Marlins", fp: 78, line: "Early-season dominance vs Miami." },
+      { date: "2025-05-31", opponent: "Red Sox", fp: 76.3, line: "Handled Boston in interleague." },
+      { date: "2025-06-11", opponent: "Brewers", fp: 71, line: "Solid outing vs Milwaukee." },
+      { date: "2025-05-25", opponent: "Padres", fp: 67, line: "Kept San Diego in check." },
+    ],
+    salaryNarrative: ["$70 for a converted shortstop. Only in baseball.", "2nd round pick in 2021. Already in the rotation.", "Tommy John couldn't stop this guy."],
+    teamContext: ["Atlanta's rotation needed him. He answered.", "Braves development machine strikes again."],
+    draftAndPath: ["2nd round pick 2021 as a pitcher after converting.", "Played shortstop before switching to the mound."],
+    defensive: ["Former shortstop. Best fielding pitcher in baseball?", "The athleticism is obvious every time he moves."],
+
   },
 
   miller: {
@@ -43164,6 +43652,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [
       "",
     ],
+    controversy: ["The platoon debate never dies with Carpenter.", "Should you bench him vs lefties? Probably."],
+    milestones: ["From 19th round to Tigers franchise cornerstone.", "Proof the draft is a crapshoot after round 5."],
+    streakLines: ["Carp's on a tear. Hide your lefties.", "Carpenter's been mashing for two weeks.", "The hot streak is real. Ride the lumber."],
+    signatureGames: [
+      { date: "2025-06-02", opponent: "White Sox", fp: 168, line: "3HR/5RBI. Absolute carnage." },
+      { date: "2025-05-04", opponent: "Angels", fp: 127, line: "Another big day. Carp stays hot." },
+      { date: "2025-08-10", opponent: "Angels", fp: 103, line: "Angels can't figure him out." },
+      { date: "2025-04-04", opponent: "White Sox", fp: 100, line: "Chicago on the menu again." },
+      { date: "2025-07-30", opponent: "D-backs", fp: 96, line: "Solid day against Arizona." },
+    ],
+    salaryNarrative: ["$68 for Detroit's best hitter. Fair.", "Purple tier for a guy who mashes righties."],
+    teamContext: ["Detroit's rebuild runs through Carpenter's bat.", "The Tigers need him to be THE guy. He is."],
+    draftAndPath: ["19th round, 2019. Kent State. Nobody saw this coming.", "Skipped the hype train. Built his own railroad."],
+    defensive: ["Corner outfield defense. It's fine.", "The bat carries him. The glove is along for the ride."],
+
   },
 
   gasper: {
@@ -44441,6 +44944,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["Why did the Giants give up on him?", "Is he a starter or a 4th outfielder?"],
+    milestones: ["From Venezuelan signee to MLB outfielder.", "Giants-to-Brewers pipeline produced another one."],
+    streakLines: ["Matos building momentum lately.", "Three straight games with a hit.", "Speed showing up on the basepaths."],
+    signatureGames: [
+      { date: "2025-08-29", opponent: "Orioles", fp: 122, line: "Career day. 122 vs Baltimore." },
+      { date: "2025-08-22", opponent: "Brewers", fp: 94, line: "Solid outing." },
+      { date: "2025-06-01", opponent: "Marlins", fp: 92, line: "Decent day vs Marlins." },
+      { date: "2025-08-24", opponent: "Brewers", fp: 80, line: "Modest but contributing." },
+      { date: "2025-05-03", opponent: "Rockies", fp: 71, line: "Quiet for Coors." },
+    ],
+    salaryNarrative: ["$64 is the cheapest purple player. Low risk.", "Minimum purple investment for developing upside."],
+    teamContext: ["Milwaukee's outfield is crowded.", "The Brewers develop everyone."],
+    draftAndPath: ["International signee from Venezuela.", "Giants system to Brewers via trade."],
+    defensive: ["Speed plays in the outfield. Good range.", "The arm and legs are tools. Bat is the question."],
+
   },
 
   bernabel: {
@@ -45071,6 +45589,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     salaryOver: [],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["The Soto trade will be debated for a decade.", "Was he worth being the headliner?"],
+    milestones: ["6th overall pick to franchise shortstop.", "From Soto trade afterthought to the main event."],
+    streakLines: ["Abrams on a tear. Lock down first base.", "CJ's been swiping bags all week.", "The hot streak has legs. Literally."],
+    signatureGames: [
+      { date: "2025-05-18", opponent: "Orioles", fp: 126, line: "Soto trade revenge game." },
+      { date: "2025-07-27", opponent: "Twins", fp: 116, line: "3 steals. Minnesota never had a chance." },
+      { date: "2025-06-10", opponent: "Mets", fp: 102, line: "CJ feasted on Mets pitching." },
+      { date: "2025-09-19", opponent: "Mets", fp: 94, line: "Another strong outing vs NY." },
+      { date: "2025-07-29", opponent: "Astros", fp: 92, line: "3 more steals. Houston couldn't hold him." },
+    ],
+    salaryNarrative: ["$65 for elite speed and switch-hitting upside.", "Purple tier with 20/40 potential."],
+    teamContext: ["Washington's rebuild has a face. It's CJ.", "The Nationals need Abrams to become a star."],
+    draftAndPath: ["6th overall, 2019. Padres. Then the Soto deal.", "Former #1 prospect in baseball."],
+    defensive: ["Elite range at short. The arm plays too.", "Shortstop defense that makes you forget Soto. Almost."],
+
   },
 
   greene: {
@@ -45365,6 +45898,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["2024 was ugly. People wrote him off too fast.", "Sophomore slump burned fantasy managers everywhere."],
+    milestones: ["2023 unanimous NL Rookie of the Year.", "Youngest D-back to homer in the World Series."],
+    streakLines: ["Carroll's heating up. Legs and bat are alive.", "Bounce-back tour in full swing.", "When Carroll's right, he's a five-tool nightmare."],
+    signatureGames: [
+      { date: "2025-06-03", opponent: "Braves", fp: 145, line: "3H/2HR/4RBI. ROY form is back." },
+      { date: "2025-04-04", opponent: "Nationals", fp: 115, line: "Early season fireworks." },
+      { date: "2025-04-23", opponent: "Rays", fp: 115, line: "Interleague showcase." },
+      { date: "2025-09-21", opponent: "Phillies", fp: 115, line: "Big performance vs contender." },
+      { date: "2025-04-15", opponent: "Marlins", fp: 112, line: "Speed and power in Miami." },
+    ],
+    salaryNarrative: ["$70 for unanimous ROY with bounce-back upside.", "The 2024 slump lowered his price. Opportunity.", "If this is 2023 Carroll, $70 is a steal."],
+    teamContext: ["Arizona's lineup has young talent everywhere.", "Chase Field plays hitter-friendly. Helps his pop."],
+    draftAndPath: ["7th overall pick in 2019 out of Seattle.", "Rose quickly through Arizona's system."],
+    defensive: ["Plus speed in center field. Covers ground.", "5'10\" but tracks everything down."],
+
   },
 
   henderson: {
@@ -46096,6 +46644,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["Why did the Dodgers let this guy go?", "Blocked by Freddie Freeman. That's a compliment."],
+    milestones: ["From Dodger farm system to Cubs franchise bat.", "1st round talent getting 1st round results."],
+    streakLines: ["Busch has been crushing it lately.", "The power surge is real. Ride the wave.", "Four homers in his last three games."],
+    signatureGames: [
+      { date: "2025-07-04", opponent: "Cardinals", fp: 180, line: "3HR/5RBI on July 4th. Fireworks." },
+      { date: "2025-09-27", opponent: "Cardinals", fp: 163, line: "163 vs St. Louis. He hates them." },
+      { date: "2025-04-12", opponent: "Dodgers", fp: 141, line: "Revenge game vs former team." },
+      { date: "2025-06-03", opponent: "Nationals", fp: 117, line: "Another 100+ game." },
+      { date: "2025-03-31", opponent: "Athletics", fp: 110, line: "Opening Day statement." },
+    ],
+    salaryNarrative: ["$66 for a guy with 180-point upside.", "Purple tier with legit 30+ homer power."],
+    teamContext: ["The Cubs' lineup runs through Busch now.", "Wrigley has a new power threat. Finally."],
+    draftAndPath: ["1st round, 2019 by the Dodgers. Traded to Cubs.", "LA's loss is Chicago's gain."],
+    defensive: ["Can play 1B and 2B. Versatility matters.", "The glove is fine. You're paying for the bat."],
+
   },
 
   mesa: {
@@ -48418,6 +48981,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["Is he too aggressive at the plate?", "The swing-and-miss concerns linger."],
+    milestones: ["13th overall pick to Opening Day SS in one year.", "Gold Glove winner at shortstop in 2024."],
+    streakLines: ["Neto's been electric all week.", "The speed game is clicking.", "Five straight multi-hit games."],
+    signatureGames: [
+      { date: "2025-08-11", opponent: "Dodgers", fp: 133, line: "Freeway Series masterpiece." },
+      { date: "2025-04-26", opponent: "Twins", fp: 110, line: "3SB. Minnesota was helpless." },
+      { date: "2025-07-03", opponent: "Braves", fp: 109, line: "Big-game Neto." },
+      { date: "2025-06-23", opponent: "Red Sox", fp: 104, line: "Coast-to-coast damage." },
+      { date: "2025-05-21", opponent: "Athletics", fp: 92, line: "Division rival? No mercy." },
+    ],
+    salaryNarrative: ["$65 for a 5-tool shortstop. Massive upside.", "Purple tier with stolen base upside."],
+    teamContext: ["The Angels have a real shortstop. Finally.", "Neto is the heartbeat of Anaheim's lineup."],
+    draftAndPath: ["13th overall, 2022. Campbell University.", "One year from draft to MLB. Speed."],
+    defensive: ["Elite arm strength. Best in AL West at SS.", "Gold Glove caliber. Defense was MLB-ready day one."],
+
   },
 
   gillispie: {
@@ -51156,6 +51734,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["3B or SS long-term? Tampa has to decide.", "Is he ready or is the timeline too aggressive?"],
+    milestones: ["From #1 prospect to franchise cornerstone.", "Dominican pipeline to Tampa keeps delivering."],
+    streakLines: ["Caminero's on an absolute heater.", "Junior hasn't slowed down in two weeks.", "The power surge is real. Just the beginning."],
+    signatureGames: [
+      { date: "2025-05-31", opponent: "Astros", fp: 179, line: "4H/2HR/5RBI. Welcome to the show." },
+      { date: "2025-08-25", opponent: "Guardians", fp: 168, line: "Franchise player stuff." },
+      { date: "2025-05-29", opponent: "Astros", fp: 133, line: "Two days before the 179 game." },
+      { date: "2025-07-18", opponent: "Orioles", fp: 130, line: "AL East statement." },
+      { date: "2025-08-06", opponent: "Angels", fp: 109, line: "Another 100+ for Junior." },
+    ],
+    salaryNarrative: ["$68 for the former #1 prospect in baseball.", "Purple price for potential superstar production."],
+    teamContext: ["Tampa's whole future revolves around this kid.", "The Rays always develop stars. Caminero is next."],
+    draftAndPath: ["International signing from Dominican Republic.", "Went from unknown to #1 prospect in two years."],
+    defensive: ["Can play 3B and SS. Versatility is real.", "Quick hands play on both sides of the ball."],
+
   },
 
   perez: {
@@ -51325,6 +51918,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     salaryOver: [],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["Will the bat ever match the glove?", "The Mets traded him in the Baez deal. Regrets?"],
+    milestones: ["From Mets 1st rounder to Cubs franchise CF.", "Gold Glove defense with developing offense."],
+    streakLines: ["PCA's bat has woken up. League in trouble.", "Four straight multi-hit games.", "When the bat matches the glove, it's over."],
+    signatureGames: [
+      { date: "2025-05-23", opponent: "Reds", fp: 153, line: "Career day. 153 vs Cincinnati." },
+      { date: "2025-07-04", opponent: "Cardinals", fp: 142, line: "July 4th fireworks vs St. Louis." },
+      { date: "2025-07-10", opponent: "Twins", fp: 141, line: "PCA is rolling." },
+      { date: "2025-05-16", opponent: "White Sox", fp: 140, line: "Crosstown Classic dominance." },
+      { date: "2025-04-23", opponent: "Dodgers", fp: 125, line: "Bright lights, big performance." },
+    ],
+    salaryNarrative: ["$68 for elite defense and improving offense.", "Purple tier with Gold Glove upside built in."],
+    teamContext: ["PCA and Busch. Cubs have a real young core.", "Center field is locked down for a decade."],
+    draftAndPath: ["1st round by the Mets. Traded for Javy Baez.", "Son of actors. Chose baseball. Good call."],
+    defensive: ["Gold Glove caliber. Highlight reel every night.", "Best defensive CF in the NL. Not close."],
+
   },
 
   karros: {
@@ -52384,6 +52992,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["$82M before playing an MLB game. Bold move.", "Is the pressure too much for a 20-year-old?"],
+    milestones: ["MLB debut at 20. $82M already in the bank.", "Youngest Brewer to sign extension this large."],
+    streakLines: ["Chourio's been on fire. The future is now.", "Five-tool talent on a five-game hitting streak.", "Venezuelan Venom spreading across the NL."],
+    signatureGames: [
+      { date: "2025-05-31", opponent: "Phillies", fp: 157, line: "4H/1HR/5RBI. $82M well spent." },
+      { date: "2025-04-06", opponent: "Reds", fp: 127, line: "Early-season statement." },
+      { date: "2025-06-20", opponent: "Twins", fp: 127, line: "Consistency." },
+      { date: "2025-04-09", opponent: "Rockies", fp: 121, line: "Altitude-fueled damage." },
+      { date: "2025-04-26", opponent: "Cardinals", fp: 109, line: "Division rival demolished." },
+    ],
+    salaryNarrative: ["$65 for a 5-tool, 20-year-old phenom.", "Purple price for generational upside."],
+    teamContext: ["Milwaukee always develops them. Chourio is the crown jewel.", "Brewers' outfield of the future starts here."],
+    draftAndPath: ["Signed at 16 from Venezuela for $1.7M.", "$82M/8yr extension before MLB debut. Historic."],
+    defensive: ["Five-tool means the glove plays too.", "Outfield defense with speed and arm strength."],
+
   },
 
   guzman: {
@@ -54128,6 +54751,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     salaryOver: [],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["Can a 6'4\" guy really stick at shortstop?", "Is he the White Sox SS of the future or a 3B?"],
+    milestones: ["1st round pick 2021. Indiana's pride.", "The tallest impactful SS in baseball."],
+    streakLines: ["Monty's been quietly producing all week.", "Patience paying off with a hitting streak.", "Six straight games on base."],
+    signatureGames: [
+      { date: "2025-07-23", opponent: "Rays", fp: 112, line: "Season-best 112 vs Tampa." },
+      { date: "2025-09-05", opponent: "Tigers", fp: 104, line: "Division rival damage." },
+      { date: "2025-09-04", opponent: "Twins", fp: 92, line: "Steady production." },
+      { date: "2025-08-03", opponent: "Angels", fp: 89, line: "Solid outing." },
+      { date: "2025-08-23", opponent: "Twins", fp: 89, line: "Another steady day vs Minnesota." },
+    ],
+    salaryNarrative: ["$67 for a rebuilding team's franchise shortstop.", "Purple tier for patience and upside."],
+    teamContext: ["The White Sox rebuild starts with Montgomery.", "Someone has to be good on this team. It's Colson."],
+    draftAndPath: ["1st round, 2021. Indiana high school standout.", "Also a basketball player. Chose baseball."],
+    defensive: ["6'4\" at SS is unusual. He makes it work.", "The range is fine. The arm is strong."],
+
   },
 
   ford: {
@@ -54377,6 +55015,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       "The altitude is Goodman's best friend right now.",
     ],
     parkSuppressed: [],
+    controversy: ["Catcher or first baseman? Colorado has to decide.", "How much of this is Coors? The eternal question."],
+    milestones: ["4th round, 2021. Memphis to the Rockies.", "Part of Colorado's youth movement."],
+    streakLines: ["Goodman's been mashing at home all week.", "The altitude is his friend.", "Three straight games with a homer."],
+    signatureGames: [
+      { date: "2025-05-11", opponent: "Padres", fp: 143, line: "Coors Field carnage." },
+      { date: "2025-06-02", opponent: "Marlins", fp: 130, line: "The thin air did work." },
+      { date: "2025-05-17", opponent: "D-backs", fp: 115, line: "NL West power." },
+      { date: "2025-07-01", opponent: "Astros", fp: 115, line: "Not just a Coors thing." },
+      { date: "2025-06-16", opponent: "Nationals", fp: 109, line: "Consistent pop." },
+    ],
+    salaryNarrative: ["$66 for power at Coors Field. Math checks out.", "Purple tier for a catcher with 30+ HR upside."],
+    teamContext: ["Rockies' youth movement finally has a slugger.", "Colorado needs Goodman to be their guy."],
+    draftAndPath: ["4th round, 2021 out of Memphis.", "Power-hitting catcher in Coors. A fantasy dream."],
+    defensive: ["Can catch and play 1B. Bat determines position.", "Catching is secondary. The power is primary."],
+
   },
 
   black: {
@@ -55746,6 +56399,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     parkBoost: [],
     parkSuppressed: [],
+    controversy: ["Is Oakland going to pay him when it matters?", "A's rebuild means few protection in the lineup."],
+    milestones: ["4th overall pick, 2024 draft.", "283 FP single-game record contender."],
+    streakLines: ["Kurtz on a power binge. Multiple HR games.", "The rookie is carrying Oakland's entire offense.", "Every game is must-watch when Kurtz is hot."],
+    signatureGames: [
+      { date: "2025-07-25", opponent: "Astros", fp: 283, line: "6H/4HR/8RBI. Greatest game ever?" },
+      { date: "2025-09-25", opponent: "Astros", fp: 121, line: "More Astros damage. Personal." },
+      { date: "2025-08-15", opponent: "Angels", fp: 115, line: "AL West gets the Kurtz treatment." },
+      { date: "2025-07-19", opponent: "Guardians", fp: 111, line: "Power showcase vs Cleveland." },
+      { date: "2025-07-08", opponent: "Braves", fp: 109, line: "Interleague fireworks." },
+    ],
+    salaryNarrative: ["$70 for a guy who scored 283 in one game.", "Rookie pricing on a 4th overall pick. Buy now.", "The upside here is literally unprecedented."],
+    teamContext: ["Oakland is rebuilding. Kurtz is the whole show.", "No lineup protection. Pitchers can pitch around him."],
+    draftAndPath: ["4th overall pick in 2024. Power bat out of Wake Forest.", "Fast-tracked through Oakland's system."],
+    defensive: ["First base defense is fine. Hit dingers.", "Not winning Gold Gloves. Winning fantasy weeks."],
+
   },
 
   yesavage: {
@@ -57626,6 +58294,21 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       "Even neutral parks can't suppress this level of four-pitch dominance.",
       "Dodger Stadium isn't masking any flaws in his $325M arsenal.",
     ],
+    controversy: ["Can NPB dominance sustain in MLB long-term?", "$325M for a pitcher is always a gamble."],
+    milestones: ["Sub-3.00 ERA in first two MLB seasons.", "Won a World Series ring in year one."],
+    streakLines: ["Yamamoto's rolling. Splitter is disgusting.", "Quality starts piling up. Every fifth day.", "When Yoshi's command is on, good night."],
+    signatureGames: [
+      { date: "2025-04-18", opponent: "Rangers", fp: 75, line: "7IP/10K. Splitter clinic." },
+      { date: "2025-09-06", opponent: "Orioles", fp: 69.6, line: "Efficient gem vs Baltimore." },
+      { date: "2025-04-11", opponent: "Cubs", fp: 68, line: "Early-season dominance." },
+      { date: "2025-07-28", opponent: "Reds", fp: 68, line: "Shut down Cincinnati." },
+      { date: "2025-08-31", opponent: "D-backs", fp: 66, line: "NL West business." },
+    ],
+    salaryNarrative: ["$70 for a WS-proven Japanese ace.", "The splitter alone is worth $50.", "Pitchers at $70 need to be aces. He is."],
+    teamContext: ["Dodgers rotation starts with Yamamoto.", "He won a ring in year one. Culture fit."],
+    draftAndPath: ["Drafted by Orix Buffaloes in NPB.", "Triple crown winner in Japanese baseball.", "Posted and signed with LA. $325M."],
+    defensive: ["Good fielder. Quick off the mound.", "NPB fundamentals show in the field."],
+
   },
 
   kim: {
@@ -58050,6 +58733,122 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       "No park excuses when you're trying to prove you belong in America.",
       "Ogasawara has to succeed regardless of his environment.",
     ],
+  },
+
+  hgreene: {
+    nicknames: ["Flamethrower", "Triple Digits"],
+    knownFor: "Throws 100+ mph regularly. #2 overall pick 2017.",
+    salaryTier: "max",
+    tier1: ["Triple digits all night from the Reds ace.", "Nobody's catching up to that fastball."],
+    tier2: ["#2 overall pick finally realizing the hype.", "Former shortstop who chose the mound."],
+    tier3: ["First Black pitcher to start Opening Day for Cincy.", "Was a two-sport prospect. Chose pitching."],
+    overperform: ["Hunter Greene just touched 102. In the 7th.", "12 K's and the radar gun is broken.", "This is a video game. Nobody throws this hard."],
+    underperform: ["Velocity without command is just loud BP.", "You can throw 100 and still lose.", "Greene got hit around. It happens to fireballers."],
+    onPace: ["Greene doing Greene things. Triple digits, K's.", "The hardest thrower in baseball earning his salary."],
+    bigGame: ["80 FP. 12 K's. 7 innings. That's Hunter Greene.", "A complete game from the hardest thrower alive."],
+    quietGame: ["Greene got through six. The velo was there.", "Not a Greene masterclass but he'll take it."],
+    famousGameHint: ["Complete game vs the Cubs. Sept 2025.", "That 80-point explosion vs the Mets. Iconic."],
+    controversy: ["Tommy John delayed what could've been earlier greatness.", "Was he a better shortstop prospect? We'll never know."],
+    milestones: ["Another 100+ mph outing. Water is wet.", "Historic: first Black Opening Day starter for Cincy."],
+    streakLines: ["Greene has 4 straight starts with 8+ K's.", "The velo has been 100+ in every start this month."],
+    signatureGames: [
+      { date: "2025-09-07", opponent: "Mets", fp: 80, line: "7IP/12K. Pure filth." },
+      { date: "2025-05-02", opponent: "Nationals", fp: 77, line: "Dominated Washington with gas." },
+      { date: "2025-09-18", opponent: "Cubs", fp: 77, line: "Complete game. 9IP/9K." },
+      { date: "2025-04-13", opponent: "Pirates", fp: 67, line: "Handled Pittsburgh with ease." },
+      { date: "2025-04-07", opponent: "Giants", fp: 66.6, line: "Battled the Giants." },
+    ],
+    salaryNarrative: ["$70 for the hardest thrower in baseball.", "#2 overall pick finally realizing the hype.", "Post-Tommy John Greene is a different animal."],
+    teamContext: ["Cincy's ace. The rotation runs through him.", "Great American Ballpark is a nightmare for most pitchers."],
+    draftAndPath: ["#2 overall pick in 2017. Dual-sport prospect.", "Tommy John surgery delayed the debut. Worth the wait."],
+    defensive: ["Former shortstop. Elite athlete on the mound.", "Greene fields his position like an infielder."],
+  },
+
+  csanchez: {
+    nicknames: ["Groundball Chris", "The Worm Burner"],
+    knownFor: "Ground ball specialist with rising strikeout numbers.",
+    salaryTier: "max",
+    tier1: ["The sinker is absolutely disgusting tonight.", "Ground ball after ground ball. This is art."],
+    tier2: ["Phillies' breakout lefty earning his keep.", "Nothing flashy. Just outs. Lots of outs."],
+    tier3: ["International free agent who almost didn't make it.", "Dominican lefty thriving in Philadelphia."],
+    overperform: ["9 innings, 12 K's. Sanchez has ARRIVED.", "86 FP from a ground ball pitcher? Unreal."],
+    underperform: ["$70 for ground balls? Some nights it doesn't work.", "The breakout narrative takes a hit tonight."],
+    onPace: ["Sanchez doing what the breakout promised.", "$70 looks right for this version of Sanchez."],
+    bigGame: ["Complete game. 12 K's. Sanchez is elite now.", "86 fantasy points from a sinkerball lefty."],
+    quietGame: ["Not a K-heavy night but he got the job done.", "A boring Sanchez start. Boring is good."],
+    famousGameHint: ["Complete game vs Red Sox in July.", "86 FP. 9 innings. 12 K's. July 22, 2025."],
+    controversy: ["Went from afterthought to rotation staple overnight.", "International free agent who almost didn't make it."],
+    milestones: ["Career-high 12 K's.", "First complete game of his career.", "From international FA to Phillies ace."],
+    streakLines: ["Sanchez has 5 straight quality starts.", "Ground ball rate is elite again this month."],
+    signatureGames: [
+      { date: "2025-07-22", opponent: "Red Sox", fp: 86, line: "Complete game. 12 K's. Masterpiece." },
+      { date: "2025-04-17", opponent: "Giants", fp: 77, line: "Dominated SF with the sinker." },
+      { date: "2025-08-19", opponent: "Mariners", fp: 68.3, line: "Ground ball clinic in Seattle." },
+      { date: "2025-06-26", opponent: "Astros", fp: 67, line: "Kept Houston's bats quiet." },
+      { date: "2025-08-03", opponent: "Tigers", fp: 62, line: "Solid day vs Detroit." },
+    ],
+    salaryNarrative: ["$70 for a breakout lefty in Philly's rotation.", "Ground balls and strikeouts? Dream combo.", "International FA to $70 salary. What a path."],
+    teamContext: ["Phillies rotation is stacked. Sanchez fits.", "Citizens Bank Park run support helps his W's."],
+    draftAndPath: ["Signed as international free agent by Tampa Bay.", "Dominican Republic to the Phillies rotation."],
+    defensive: ["Ground ball pitcher who fields his position.", "Quick off the mound. Good fundamentals."],
+  },
+
+  trogers: {
+    nicknames: ["T-Rog", "The Tease"],
+    knownFor: "Former 2021 All-Star with maddening inconsistency.",
+    salaryTier: "max",
+    tier1: ["This is 2021 All-Star Trevor Rogers.", "When he's on? Nobody touches him."],
+    tier2: ["Solid enough. Not the ceiling, not the floor.", "The Orioles will take 6 clean innings."],
+    tier3: ["Rogers imploding. This is the other Trevor.", "The inconsistency strikes again."],
+    overperform: ["Rogers flashing 2021 form. Is it real?", "Baltimore believed in him. He rewarded them."],
+    underperform: ["$70 for the Trevor Rogers Experience.", "Inconsistent lefty does inconsistent lefty things."],
+    onPace: ["Rogers doing enough to justify $70. Barely.", "The Orioles need this version every time."],
+    bigGame: ["68 FP with 9 K's vs Houston. That's the ceiling.", "Rogers reminded everyone why he was an All-Star."],
+    quietGame: ["Rogers got through 6. Nothing exciting.", "60 FP. Fine. It's Trevor Rogers."],
+    famousGameHint: ["That 9-K gem vs the Astros in August.", "2021 All-Star campaign. Remember that?"],
+    controversy: ["Miami gave up on him. Can Baltimore fix him?", "2021 All-Star to trade fodder in 2 years."],
+    milestones: ["Rogers' 2021 All-Star nod feels like a lifetime ago.", "Can he string together 5 good starts? Historic."],
+    streakLines: ["Rogers has 3 decent starts in a row. Don't jinx it.", "Back to back 60 FP outings."],
+    signatureGames: [
+      { date: "2025-08-24", opponent: "Astros", fp: 68, line: "9 K's vs Houston. Best of 2025." },
+      { date: "2025-08-01", opponent: "Cubs", fp: 61, line: "Solid outing vs Chicago." },
+      { date: "2025-08-18", opponent: "Red Sox", fp: 60, line: "Held his own vs Boston." },
+      { date: "2025-09-19", opponent: "Yankees", fp: 60, line: "Survived the Bronx." },
+      { date: "2025-07-06", opponent: "Braves", fp: 56.6, line: "Struggled vs Atlanta." },
+    ],
+    salaryNarrative: ["$70 for the most unpredictable arm.", "You're paying for the ceiling and praying.", "Former All-Star looking to prove Miami wrong."],
+    teamContext: ["Baltimore's pitching lab might unlock him.", "Camden Yards is hitter-friendly. Rogers needs to be sharp."],
+    draftAndPath: ["Drafted by the Marlins. Made 2021 All-Star team.", "Traded to Baltimore for a fresh start."],
+    defensive: ["Rogers is fine defensively. Not a weakness.", "Decent hold on runners. Passable."],
+  },
+
+  rgreene: {
+    nicknames: ["The Greene Machine", "Soylent Greene"],
+    knownFor: "Sweet lefty swing. 5th overall pick for Detroit.",
+    salaryTier: "max",
+    tier1: ["That left-handed swing is a thing of beauty.", "Detroit's center fielder just carried your lineup."],
+    tier2: ["Riley doing what 5th-overall picks should do.", "The Greene Machine is humming along nicely."],
+    tier3: ["Greene went cold. The Machine needs oil.", "That sweet swing found nothing but air."],
+    overperform: ["Riley Greene is making $66 look embarrassing.", "All-Star caliber production at purple prices.", "Detroit's rebuild is ahead of schedule because of him."],
+    underperform: ["5th overall pick, $66 salary, no production.", "The potential is still potential. Need results."],
+    onPace: ["Greene right on track for his salary.", "Consistent production from the Tigers' center fielder."],
+    bigGame: ["145 POINTS. Riley Greene just went nuclear.", "The 5th pick just played like the 1st pick."],
+    quietGame: ["Even sweet swings whiff sometimes.", "Greene's bat took a personal day."],
+    famousGameHint: ["That 145-point game vs Tampa Bay. Legendary.", "136 points vs the Nationals. Absurd."],
+    controversy: ["Is he a true center fielder or a corner guy?", "The Tigers need him to be an All-Star. No pressure."],
+    milestones: ["5th overall pick starting to live up to billing.", "All-Star Game is calling. Greene just needs to answer."],
+    streakLines: ["Greene's been on fire for two weeks.", "The Machine is running hot. Don't shut it off.", "Riley's in one of those zones. Ride it."],
+    signatureGames: [
+      { date: "2025-06-20", opponent: "Rays", fp: 145, line: "Absolute explosion vs Tampa Bay." },
+      { date: "2025-07-02", opponent: "Nationals", fp: 136, line: "Star performance vs Washington." },
+      { date: "2025-05-02", opponent: "Angels", fp: 130, line: "130 points. Angels had no answer." },
+      { date: "2025-07-29", opponent: "D-backs", fp: 120, line: "Another 100+ game. Becoming routine." },
+      { date: "2025-04-28", opponent: "Astros", fp: 109, line: "Houston got Greene'd." },
+    ],
+    salaryNarrative: ["$66 for a potential All-Star center fielder.", "Purple price for a guy with superstar upside."],
+    teamContext: ["Greene and Carpenter. Detroit's dynamic duo.", "The Tigers' rebuild lives and dies with Riley."],
+    draftAndPath: ["5th overall, 2019. Homegrown Tiger.", "The pedigree is there. The production is arriving."],
+    defensive: ["Center field defense is legit. Covers ground.", "Athletic enough for center. The bat makes him elite."],
   },
 
 };

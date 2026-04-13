@@ -17,11 +17,11 @@ import type {
   const WIN_TIER_THRESHOLDS: Record<WinTier, number> = {
     NONE:     0,
     BUST:     0,
-    ROOKIE:   133,
-    STARTER:  160,
-    ALL_STAR: 183,
-    MVP:      207,
-    GOAT:     235,
+    ROOKIE:   180,
+    STARTER:  195,
+    ALL_STAR: 210,
+    MVP:      225,
+    GOAT:     240,
   };
   
   function getNextTier(tier: WinTier): WinTier | null {

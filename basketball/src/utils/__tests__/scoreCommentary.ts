@@ -21,12 +21,13 @@ function computeFp(stats: Record<string, any>): number {
   return Object.entries(W).reduce((s, [k, w]) => s + (Number(stats[k] ?? 0)) * w, 0);
 }
 function tierFromSalary(s: number): string {
-  if (s >= 52) return "ORANGE"; if (s >= 40) return "PURPLE";
-  if (s >= 28) return "BLUE"; if (s >= 16) return "GREEN"; return "WHITE";
+  if (s >= 73) return "RED";
+  if (s >= 58) return "ORANGE"; if (s >= 44) return "PURPLE";
+  if (s >= 30) return "BLUE"; if (s >= 23) return "GREEN"; return "WHITE";
 }
 const TIERS = [
-  { tier: "GOAT", minFP: 235 }, { tier: "MVP", minFP: 215 },
-  { tier: "ALL_STAR", minFP: 195 }, { tier: "STARTER", minFP: 175 }, { tier: "ROOKIE", minFP: 155 },
+  { tier: "GOAT", minFP: 240 }, { tier: "MVP", minFP: 225 },
+  { tier: "ALL_STAR", minFP: 210 }, { tier: "STARTER", minFP: 195 }, { tier: "ROOKIE", minFP: 180 },
 ];
 function calcWinTier(fp: number): string {
   for (const t of TIERS) if (fp >= t.minFP) return t.tier;
@@ -34,7 +35,7 @@ function calcWinTier(fp: number): string {
 }
 function nextTierInfo(winTier: string) {
   const idx = TIERS.findIndex(t => t.tier === winTier);
-  if (winTier === "BUST") return { nextTier: "ROOKIE", tierFloor: 0, nextTierMin: 155 };
+  if (winTier === "BUST") return { nextTier: "ROOKIE", tierFloor: 0, nextTierMin: 180 };
   if (idx < 0) return { nextTier: null, tierFloor: 0, nextTierMin: 0 };
   return {
     tierFloor: TIERS[idx].minFP,
@@ -51,8 +52,8 @@ function buildRandomRoster(): { cards: PostRevealRosterCard[]; totalFp: number }
   for (const p of shuffled) {
     if (selected.length >= 6) break;
     const sal = Number(p.salary);
-    if (capUsed + sal > 200) continue;
-    if (capUsed + sal + (5 - selected.length) * 5 > 200) continue;
+    if (capUsed + sal > 250) continue;
+    if (capUsed + sal + (5 - selected.length) * 5 > 250) continue;
     selected.push(p);
     capUsed += sal;
   }

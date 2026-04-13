@@ -53,10 +53,7 @@ export function getDailyOrangePool(
   date?: Date,
 ): Set<string> {
   const dateKey = getRotationDateKey(date);
-  console.log(`[rotation] input=${allOrangeIds.length} ids count=${count} date=${dateKey}`);
   if (allOrangeIds.length <= count) {
-    // If pool is <= count, all are active every day
-    console.log(`[rotation] BYPASS: pool size ${allOrangeIds.length} <= count ${count} — all active`);
     return new Set(allOrangeIds);
   }
 
@@ -70,7 +67,5 @@ export function getDailyOrangePool(
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
 
-  const chosen = new Set(shuffled.slice(0, count));
-  console.log(`[rotation] picked ${chosen.size} of ${allOrangeIds.length}: ${[...chosen].join(",")}`);
-  return chosen;
+  return new Set(shuffled.slice(0, count));
 }

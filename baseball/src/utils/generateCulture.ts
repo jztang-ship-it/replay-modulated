@@ -1,16 +1,17 @@
 /**
- * generateCulture.ts — Culture database generator (v2)
+ * generateCulture.ts — Baseball culture database generator
  *
- * Reads players.json + game-logs.json, generates COMPLETE culture entries
- * for all ORANGE and PURPLE tier players using real game data.
+ * Reads players.json + game-logs.json, fetches player bios from Wikipedia,
+ * and generates COMPLETE culture entries for all ORANGE and PURPLE tier
+ * players using real game data + web-sourced cultural context.
  *
  * Usage (run from repo root):
  *   export ANTHROPIC_API_KEY=sk-ant-...
- *   npx tsx basketball/src/utils/generateCulture.ts
+ *   npx tsx baseball/src/utils/generateCulture.ts
  *
  * Output:
- *   basketball/src/utils/culture_review.ts   ← all 38 entries
- *   basketball/src/utils/culture_failed.json ← any players that errored
+ *   baseball/src/utils/culture_review.ts   ← all entries
+ *   baseball/src/utils/culture_failed.json ← any players that errored
  */
 
 import fs from "fs";
@@ -24,9 +25,10 @@ const __dirname = path.dirname(__filename);
 const BATCH_SIZE = 2;
 const DELAY_MS = 3000;
 const MAX_TOKENS = 8000;
+const WIKI_DELAY_MS = 1200;
 
-const PLAYERS_PATH = path.join(process.cwd(), "basketball/public/data/players.json");
-const GAME_LOGS_PATH = path.join(process.cwd(), "basketball/public/data/game-logs.json");
+const PLAYERS_PATH = path.join(process.cwd(), "baseball/public/data/players.json");
+const GAME_LOGS_PATH = path.join(process.cwd(), "baseball/public/data/game-logs.json");
 const REVIEW_PATH = path.join(__dirname, "culture_review.ts");
 const FAILED_PATH = path.join(__dirname, "culture_failed.json");
 
@@ -34,7 +36,7 @@ const FAILED_PATH = path.join(__dirname, "culture_failed.json");
 interface PlayerEntry {
   id: string;
   basePlayerId: string;
-  season: string;
+  season: string | number;
   name: string;
   team: string;
   position: string;
@@ -45,19 +47,25 @@ interface PlayerEntry {
 
 interface GameLog {
   basePlayerId: string;
+  playerId: string;
   date: string;
-  matchDate: string;
-  season: string;
+  season: number;
   opponent: string;
-  homeAway: string;
   stats: {
-    pts: number;
-    reb: number;
-    ast: number;
-    stl: number;
-    blk: number;
-    turnovers: number;
-    min: number;
+    h: number;
+    doubles: number;
+    triples: number;
+    hr: number;
+    r: number;
+    rbi: number;
+    bb: number;
+    sb: number;
+    pa: number;
+    ip: number;
+    k: number;
+    er: number;
+    w: number;
+    qs: number;
   };
 }
 
@@ -75,88 +83,92 @@ function salaryTier(salary: number): string {
 }
 
 function playerKey(name: string): string {
-  const parts = name.trim().split(/\s+/);
+  const stripped = name.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+  const parts = stripped.trim().split(/\s+/);
   const suffixes = new Set(["II", "III", "IV", "V", "Jr.", "Jr", "Sr.", "Sr"]);
   while (parts.length > 1 && suffixes.has(parts[parts.length - 1])) parts.pop();
   return (parts[parts.length - 1] ?? name).toLowerCase().replace(/[^a-z]/g, "");
 }
 
-// ── Compute FP ──────────────────────────────────────────────────────────────
+// ── Compute FP (baseball) ──────────────────────────────────────────────────
 function computeFP(s: GameLog["stats"]): number {
   return (
-    s.pts * 1 +
-    s.reb * 1.2 +
-    s.ast * 1.5 +
-    s.stl * 3 +
-    s.blk * 3 -
-    s.turnovers * 1
+    s.h * 12 +
+    s.doubles * 5 +
+    s.triples * 10 +
+    s.hr * 20 +
+    s.r * 9 +
+    s.rbi * 9 +
+    s.bb * 6 +
+    s.sb * 12 +
+    s.ip * 3 +
+    s.k * 4 +
+    s.er * -3 +
+    s.w * 6 +
+    s.qs * 8
   );
 }
 
+function isPitcherLogs(logs: GameLog[]): boolean {
+  return logs.some((l) => l.stats.ip > 0 && l.stats.pa === 0);
+}
+
 // ── Build game data summary for a player ────────────────────────────────────
-function buildGameDataSummary(
-  logs: GameLog[]
-): {
+function buildGameDataSummary(logs: GameLog[]): {
   top10: GameWithFP[];
-  seasonHighPts: GameWithFP | null;
-  seasonHighReb: GameWithFP | null;
-  seasonHighAst: GameWithFP | null;
-  tripleDoubles: GameWithFP[];
-  backToBackBig: GameWithFP[][];
-  fiftyPointGames: GameWithFP[];
+  seasonHighHR: GameWithFP | null;
+  seasonHighK: GameWithFP | null;
+  multiHRGames: GameWithFP[];
+  qualityStarts: GameWithFP[];
 } {
   const withFP: GameWithFP[] = logs.map((g) => ({
     ...g,
     fp: Math.round(computeFP(g.stats) * 10) / 10,
   }));
 
-  // Sort by FP desc for top 10
   const sorted = [...withFP].sort((a, b) => b.fp - a.fp);
   const top10 = sorted.slice(0, 10);
 
-  // Season highs
-  const seasonHighPts = withFP.length
-    ? withFP.reduce((a, b) => (a.stats.pts > b.stats.pts ? a : b))
-    : null;
-  const seasonHighReb = withFP.length
-    ? withFP.reduce((a, b) => (a.stats.reb > b.stats.reb ? a : b))
-    : null;
-  const seasonHighAst = withFP.length
-    ? withFP.reduce((a, b) => (a.stats.ast > b.stats.ast ? a : b))
+  const seasonHighHR = withFP.length
+    ? withFP.reduce((a, b) => (a.stats.hr > b.stats.hr ? a : b))
     : null;
 
-  // Triple-doubles
-  const tripleDoubles = withFP.filter((g) => {
-    const cats = [g.stats.pts, g.stats.reb, g.stats.ast, g.stats.stl, g.stats.blk];
-    return cats.filter((c) => c >= 10).length >= 3;
-  });
+  const seasonHighK = withFP.length
+    ? withFP.reduce((a, b) => (a.stats.k > b.stats.k ? a : b))
+    : null;
 
-  // Back-to-back 40+ FP games
-  const chronological = [...withFP].sort(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
-  const backToBackBig: GameWithFP[][] = [];
-  for (let i = 1; i < chronological.length; i++) {
-    if (chronological[i].fp >= 40 && chronological[i - 1].fp >= 40) {
-      backToBackBig.push([chronological[i - 1], chronological[i]]);
-    }
-  }
+  const multiHRGames = withFP.filter((g) => g.stats.hr >= 2);
+  const qualityStarts = withFP.filter((g) => g.stats.qs > 0);
 
-  // 50+ real points
-  const fiftyPointGames = withFP.filter((g) => g.stats.pts >= 50);
-
-  return { top10, seasonHighPts, seasonHighReb, seasonHighAst, tripleDoubles, backToBackBig, fiftyPointGames };
+  return { top10, seasonHighHR, seasonHighK, multiHRGames, qualityStarts };
 }
 
-function formatGameLine(g: GameWithFP): string {
+function formatGameLine(g: GameWithFP, pitcher: boolean): string {
   const s = g.stats;
-  return `${g.date} vs ${g.opponent}: ${s.pts}pts/${s.reb}reb/${s.ast}ast/${s.stl}stl/${s.blk}blk/${s.turnovers}to (${s.min}min) = ${g.fp}FP`;
+  if (pitcher) {
+    return `${g.date} vs ${g.opponent}: ${s.ip}IP/${s.k}K/${s.er}ER${s.w ? " W" : ""}${s.qs ? " QS" : ""} = ${g.fp}FP`;
+  }
+  return `${g.date} vs ${g.opponent}: ${s.h}H/${s.hr}HR/${s.r}R/${s.rbi}RBI/${s.bb}BB/${s.sb}SB = ${g.fp}FP`;
+}
+
+// ── Wikipedia fetcher ──────────────────────────────────────────────────────
+async function fetchWikipediaBio(name: string): Promise<string> {
+  const wikiName = name.replace(/ /g, "_");
+  const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiName)}`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return "";
+    const data = await res.json();
+    return data.extract ?? "";
+  } catch {
+    return "";
+  }
 }
 
 // ── System prompt ────────────────────────────────────────────────────────────
-const SYSTEM = `You are a writer for ReplayMod, a fantasy basketball card game. You write player culture entries used as commentary shown after each hand.
+const SYSTEM = `You are a writer for ReplayMod, a fantasy baseball card game. You write player culture entries used as commentary shown after each hand.
 
-Voice: opinionated, specific, knowledgeable basketball fan. Short punchy sentences. Dry humor. Specific historical references when they exist. Never generic. Never corporate.
+Voice: opinionated, specific, knowledgeable baseball fan. Short punchy sentences. Dry humor. Specific historical references when they exist. Never generic. Never corporate.
 
 Rules:
 - tier1: 2 lines. Simple direct fact or defining trait. For new users.
@@ -165,8 +177,6 @@ Rules:
 - overperform: 2-3 lines. When player beats projection. Celebratory but specific.
 - underperform: 2-3 lines. When player falls short. Honest, not cruel.
 - onPace: 2 lines. Player hit their average. Acknowledges reliability.
-- turnovers: 1-2 lines. Player had turnovers. Specific to their tendencies.
-- defensive: 1-2 lines if they play defense, empty array [] if they don't.
 - bigGame: 2-3 lines. Ground these in the REAL stat lines provided. Tease that this stat line might be a famous game.
 - quietGame: 1-2 lines. Player had a quiet game.
 - famousGameHint: 2-3 lines. Ground in REAL games from the data. Encourage looking up the box score.
@@ -178,8 +188,13 @@ Rules:
 - streakLines: 2-3 lines. Hot/cold streak context. Can reference real streaks from the data.
 - signatureGames: 3-5 objects with { date, opponent, fp, line }. Use the ACTUAL dates, opponents, and FP from the top games provided. The "line" field is a short teaser about why the game matters.
 - salaryNarrative: 2-3 lines. Opinionated value takes using the actual salary. Not generic.
-- teamContext: 1-2 lines. How they landed on their current team (draft, trade, FA) and chemistry with notable teammates. Only reference ORANGE/PURPLE tier teammates if they exist on the same team.
+- salaryUnder: 2-3 lines. When the player is outperforming their salary.
+- salaryOver: 1-2 lines. When the player might be overpaid.
+- teamContext: 1-2 lines. How they landed on their current team + teammate chemistry.
 - draftAndPath: 1-2 lines. Draft story and career trajectory.
+- defensive: 1-2 lines. Defensive reputation (Gold Glove, arm strength, range, etc).
+- parkBoost: 1-2 lines. When their home park helps (Coors, Yankee Stadium short porch, etc).
+- parkSuppressed: 1-2 lines. When their home park suppresses stats.
 
 Max 90 chars per line. Never use the word "lineup". Specific to THIS player only.
 Salary tiers: max=$55+, star=$40-54, role=$25-39, value=$15-24, flier=under$15
@@ -199,6 +214,7 @@ async function generateBatch(
     tier: string;
     gameDataSummary: string;
     teammates: string[];
+    wikiBio: string;
   }>
 ): Promise<Array<{ key: string; name: string; [k: string]: any }>> {
   const playerSections = players
@@ -207,12 +223,15 @@ async function generateBatch(
       if (p.teammates.length > 0) {
         section += `\nORANGE/PURPLE teammates on ${p.team}: ${p.teammates.join(", ")}`;
       }
+      if (p.wikiBio) {
+        section += `\n\nBACKGROUND:\n${p.wikiBio}`;
+      }
       section += `\n\nGAME DATA:\n${p.gameDataSummary}`;
       return section;
     })
     .join("\n\n─────────────────────────────────────────\n\n");
 
-  const prompt = `Generate PlayerCulture entries for these ${players.length} NBA players. Use their REAL game data to ground bigGame, famousGameHint, signatureGames, and streakLines.
+  const prompt = `Generate PlayerCulture entries for these ${players.length} MLB players. Use their REAL game data to ground bigGame, famousGameHint, signatureGames, and streakLines. Use the BACKGROUND info for controversy, draftAndPath, teamContext, milestones, and defensive.
 
 ${playerSections}
 
@@ -229,8 +248,6 @@ Return a JSON array with one object per player. Each object:
   "overperform": [],
   "underperform": [],
   "onPace": [],
-  "turnovers": [],
-  "defensive": [],
   "bigGame": [],
   "quietGame": [],
   "famousGameHint": [],
@@ -242,8 +259,13 @@ Return a JSON array with one object per player. Each object:
   "streakLines": [],
   "signatureGames": [{ "date": "YYYY-MM-DD", "opponent": "XXX", "fp": 0, "line": "" }],
   "salaryNarrative": [],
+  "salaryUnder": [],
+  "salaryOver": [],
   "teamContext": [],
-  "draftAndPath": []
+  "draftAndPath": [],
+  "defensive": [],
+  "parkBoost": [],
+  "parkSuppressed": []
 }`;
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -278,10 +300,12 @@ function toTypeScript(key: string, entry: any): string {
     "nicknames", "knownFor", "salaryTier",
     "tier1", "tier2", "tier3",
     "overperform", "underperform", "onPace",
-    "turnovers", "defensive", "bigGame",
-    "quietGame", "famousGameHint", "controversy",
-    "formerTeam", "rivalry", "milestones",
-    "streakLines", "salaryNarrative", "teamContext", "draftAndPath",
+    "bigGame", "quietGame", "famousGameHint",
+    "controversy", "formerTeam", "rivalry",
+    "milestones", "streakLines",
+    "salaryNarrative", "salaryUnder", "salaryOver",
+    "teamContext", "draftAndPath", "defensive",
+    "parkBoost", "parkSuppressed",
   ];
 
   const lines: string[] = [`  ${key}: {`];
@@ -337,25 +361,22 @@ async function main() {
     process.exit(1);
   }
 
-  // Load players
   if (!fs.existsSync(PLAYERS_PATH)) {
     console.error(`ERROR: players.json not found at ${PLAYERS_PATH}`);
-    console.error("Run from the repo root: npx tsx basketball/src/utils/generateCulture.ts");
     process.exit(1);
   }
 
   const allPlayers: PlayerEntry[] = JSON.parse(fs.readFileSync(PLAYERS_PATH, "utf8"));
 
-  // Load game logs
   if (!fs.existsSync(GAME_LOGS_PATH)) {
     console.error(`ERROR: game-logs.json not found at ${GAME_LOGS_PATH}`);
     process.exit(1);
   }
   const allGameLogs: GameLog[] = JSON.parse(fs.readFileSync(GAME_LOGS_PATH, "utf8"));
 
-  // Filter to ORANGE and PURPLE tier players from 2425 season
+  // Filter to ORANGE and PURPLE tier players
   const targetPlayers = allPlayers.filter(
-    (p) => p.season === "2425" && (p.tier === "ORANGE" || p.tier === "PURPLE")
+    (p) => p.tier === "ORANGE" || p.tier === "PURPLE"
   );
 
   // Build teammate map (ORANGE/PURPLE players grouped by team)
@@ -368,61 +389,61 @@ async function main() {
   // Index game logs by basePlayerId
   const logsByPlayer = new Map<string, GameLog[]>();
   for (const log of allGameLogs) {
-    if (!logsByPlayer.has(log.basePlayerId)) logsByPlayer.set(log.basePlayerId, []);
-    logsByPlayer.get(log.basePlayerId)!.push(log);
+    const key = String(log.basePlayerId);
+    if (!logsByPlayer.has(key)) logsByPlayer.set(key, []);
+    logsByPlayer.get(key)!.push(log);
+  }
+
+  // Fetch Wikipedia bios for all players
+  console.log(`\n── Fetching Wikipedia bios ─────────────────────────`);
+  const wikiBios = new Map<string, string>();
+  for (const p of targetPlayers) {
+    process.stdout.write(`  ${p.name}... `);
+    const bio = await fetchWikipediaBio(p.name);
+    wikiBios.set(p.name, bio);
+    console.log(bio ? `✓ (${bio.length} chars)` : "✗ (not found)");
+    await new Promise((r) => setTimeout(r, WIKI_DELAY_MS));
   }
 
   // Build batch input with game data
   const batchInput = targetPlayers.map((p) => {
-    const logs = logsByPlayer.get(p.basePlayerId) ?? [];
+    const playerId = String(p.basePlayerId || p.id.split("_")[0]);
+    const logs = logsByPlayer.get(playerId) ?? [];
+    const pitcher = isPitcherLogs(logs);
     const summary = buildGameDataSummary(logs);
 
     let gameDataSummary = "";
 
-    // Top 10 games
     gameDataSummary += "TOP 10 GAMES BY FP:\n";
     if (summary.top10.length > 0) {
       summary.top10.forEach((g, i) => {
-        gameDataSummary += `  ${i + 1}. ${formatGameLine(g)}\n`;
+        gameDataSummary += `  ${i + 1}. ${formatGameLine(g, pitcher)}\n`;
       });
     } else {
       gameDataSummary += "  (no game logs available)\n";
     }
 
-    // Season highs
-    if (summary.seasonHighPts) {
-      gameDataSummary += `\nSEASON HIGH PTS: ${formatGameLine(summary.seasonHighPts)}\n`;
+    if (summary.seasonHighHR?.stats.hr) {
+      gameDataSummary += `\nSEASON HIGH HR: ${formatGameLine(summary.seasonHighHR, pitcher)}\n`;
     }
-    if (summary.seasonHighReb) {
-      gameDataSummary += `SEASON HIGH REB: ${formatGameLine(summary.seasonHighReb)}\n`;
-    }
-    if (summary.seasonHighAst) {
-      gameDataSummary += `SEASON HIGH AST: ${formatGameLine(summary.seasonHighAst)}\n`;
+    if (summary.seasonHighK?.stats.k) {
+      gameDataSummary += `SEASON HIGH K: ${formatGameLine(summary.seasonHighK, pitcher)}\n`;
     }
 
-    // Notable games
-    if (summary.tripleDoubles.length > 0) {
-      gameDataSummary += `\nTRIPLE-DOUBLES (${summary.tripleDoubles.length}):\n`;
-      summary.tripleDoubles.slice(0, 5).forEach((g) => {
-        gameDataSummary += `  ${formatGameLine(g)}\n`;
+    if (summary.multiHRGames.length > 0) {
+      gameDataSummary += `\nMULTI-HR GAMES (${summary.multiHRGames.length}):\n`;
+      summary.multiHRGames.slice(0, 5).forEach((g) => {
+        gameDataSummary += `  ${formatGameLine(g, pitcher)}\n`;
       });
     }
 
-    if (summary.backToBackBig.length > 0) {
-      gameDataSummary += `\nBACK-TO-BACK 40+ FP GAMES (${summary.backToBackBig.length} pairs):\n`;
-      summary.backToBackBig.slice(0, 3).forEach((pair) => {
-        gameDataSummary += `  ${formatGameLine(pair[0])} → ${formatGameLine(pair[1])}\n`;
+    if (summary.qualityStarts.length > 0) {
+      gameDataSummary += `\nQUALITY STARTS (${summary.qualityStarts.length}):\n`;
+      summary.qualityStarts.slice(0, 5).forEach((g) => {
+        gameDataSummary += `  ${formatGameLine(g, pitcher)}\n`;
       });
     }
 
-    if (summary.fiftyPointGames.length > 0) {
-      gameDataSummary += `\n50+ POINT GAMES:\n`;
-      summary.fiftyPointGames.forEach((g) => {
-        gameDataSummary += `  ${formatGameLine(g)}\n`;
-      });
-    }
-
-    // Teammates on same team who are also ORANGE/PURPLE
     const teammates = (teamMap.get(p.team) ?? []).filter((n) => n !== p.name);
 
     return {
@@ -432,10 +453,11 @@ async function main() {
       tier: p.tier,
       gameDataSummary,
       teammates,
+      wikiBio: wikiBios.get(p.name) ?? "",
     };
   });
 
-  console.log(`\n── ReplayMod Culture Generator v2 ──────────────────`);
+  console.log(`\n── ReplayMod Baseball Culture Generator ────────────`);
   console.log(`  Target players:         ${batchInput.length} (ORANGE + PURPLE)`);
   console.log(`  Batch size:             ${BATCH_SIZE}`);
   console.log(`  Max tokens:             ${MAX_TOKENS}`);
@@ -454,7 +476,6 @@ async function main() {
   let generated = 0;
   let batchNum = 0;
 
-  // Process in batches
   for (let i = 0; i < batchInput.length; i += BATCH_SIZE) {
     const batch = batchInput.slice(i, i + BATCH_SIZE);
     batchNum++;
@@ -487,13 +508,11 @@ async function main() {
       batch.forEach((p) => failed.push({ name: p.name, error: err.message }));
     }
 
-    // Delay between batches
     if (i + BATCH_SIZE < batchInput.length) {
       await new Promise((r) => setTimeout(r, DELAY_MS));
     }
   }
 
-  // Write failed log
   if (failed.length > 0) {
     fs.writeFileSync(FAILED_PATH, JSON.stringify(failed, null, 2), "utf8");
   }
@@ -501,9 +520,9 @@ async function main() {
   console.log(`\n── Done ────────────────────────────────────────────`);
   console.log(`  Generated:  ${generated} entries`);
   console.log(`  Failed:     ${failed.length} entries`);
-  console.log(`  Review at:  basketball/src/utils/culture_review.ts`);
+  console.log(`  Review at:  baseball/src/utils/culture_review.ts`);
   if (failed.length > 0) {
-    console.log(`  Failed log: basketball/src/utils/culture_failed.json`);
+    console.log(`  Failed log: baseball/src/utils/culture_failed.json`);
   }
   console.log(`────────────────────────────────────────────────────\n`);
 }

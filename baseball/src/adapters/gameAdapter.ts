@@ -8,7 +8,7 @@ import { sportAdapter } from "./SportAdapter";
 import { getPlayers, getLogsByKey } from "../engines/dataEngine";
 import { generateRoster, redrawRoster as engineRedraw, mulberry32, randomSeed } from "../engines/rosterEngine";
 import { resolveCards } from "../engines/resolveEngine";
-import { DEFAULT_ECONOMY_CONFIG } from "../engines/economyEngine";
+import { DEFAULT_ECONOMY_CONFIG, tierFromSalary } from "../engines/economyEngine";
 import type { PlayerCard } from "./types";
 import type { PlayerEval, GeneratedCard } from "../engines/rosterEngine";
 import type { EconomyConfig } from "../engines/economyEngine";
@@ -34,7 +34,11 @@ function toPlayerEval(p: any, projByBaseId: Map<string, number>): PlayerEval {
   const baseId = String(p.basePlayerId ?? p.id ?? "");
   const proj = projByBaseId.get(baseId) ?? Number(p.avgFP ?? p.projectedFp ?? 0);
   const eco = getEconomyConfig();
-  const salary = Math.max(eco.salaryMin, Math.min(Number(p.salary ?? 10), eco.salaryMax));
+  // Universal pattern: clamp only the LOWER bound. Top superstar salaries must
+  // flow through unclamped so they're distinguishable — no caps, ever.
+  const salary = Math.max(eco.salaryMin, Number(p.salary ?? 10));
+  // Derive tier from salary so the stale JSON tier field can't override the
+  // strategic economy thresholds. Must match basketball's pattern.
   return {
     id: String(p.id),
     basePlayerId: baseId,
@@ -47,7 +51,7 @@ function toPlayerEval(p: any, projByBaseId: Map<string, number>): PlayerEval {
     photoCode: p.photoCode ?? String(p.basePlayerId ?? p.id ?? ""),
     projectedFp: proj,
     salary,
-    tier: (p.tier as any) ?? "WHITE",
+    tier: tierFromSalary(salary, eco),
   };
 }
 
@@ -153,10 +157,8 @@ export async function redrawRoster({
 
 export async function resolveRoster({
   finalCards,
-  handCount,
 }: {
   finalCards: PlayerCard[];
-  handCount?: number;
 }): Promise<{ roster: PlayerCard[]; mvpCardId?: string }> {
   const logsByKey = getLogsByKey();
   const rnd = mulberry32(randomSeed());
@@ -167,7 +169,6 @@ export async function resolveRoster({
     {
       fpScale: 1,
       minMinutes: 0, // baseball has no minutes filter
-      handCount: handCount ?? 999,
     },
     sportAdapter,
     rnd,

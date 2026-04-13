@@ -1274,7 +1274,7 @@ export default function GameView() {
       const drawnRoster = (drawRes?.roster ?? drawRes?.cards ?? markedRoster) as PlayerCard[];
       const resolveRes: any = isFTUE
         ? await resolveFTUERoster({ finalCards: drawnRoster })
-        : await resolveRoster({ finalCards: drawnRoster, handCount });
+        : await resolveRoster({ finalCards: drawnRoster });
       const finalRoster = (resolveRes?.roster ?? resolveRes?.cards ?? drawnRoster) as PlayerCard[];
       const mvp: string | undefined = resolveRes?.mvpCardId ?? resolveRes?.mvpId;
       if (mvp) setMvpId(mvp);

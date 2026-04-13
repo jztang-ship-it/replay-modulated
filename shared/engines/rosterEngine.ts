@@ -87,7 +87,11 @@ export function generateRoster(evalPool: PlayerEval[], config: RosterConfig, eco
     if (roster[i] !== null) continue;
     const slotsStillEmpty = roster.filter((s, idx) => s === null && idx >= i).length;
     const maxForSlot = budgetRemaining - (slotsStillEmpty - 1) * minSalary;
-    const fallback = cheapestAvailable(evalPool, usedPeople, maxForSlot) ?? evalPool.find(p => !usedPeople.has(p.personKey)) ?? evalPool[0];
+    // Prefer cheapest-that-fits; if budget is squeezed, take the absolute cheapest
+    // unused player (never pick an arbitrary player that blows the cap).
+    const fallback = cheapestAvailable(evalPool, usedPeople, maxForSlot)
+      ?? [...evalPool].filter(p => !usedPeople.has(p.personKey)).sort((a, b) => a.salary - b.salary)[0]
+      ?? evalPool[0];
     usedPeople.add(fallback.personKey);
     budgetRemaining -= fallback.salary;
     roster[i] = toGeneratedCard(fallback, i);
@@ -120,7 +124,9 @@ export function redrawRoster(current: GeneratedCard[], heldSlots: Set<number>, e
       : (byPos[req.toUpperCase()] ?? evalPool).filter(p => !usedPeople.has(p.personKey) && p.salary <= maxForSlot);
     const picked = posPool.length
       ? (pickWeightedRandom(posPool, usedPeople, rnd) ?? posPool[posPool.length - 1])
-      : cheapestAvailable(evalPool, usedPeople, maxForSlot) ?? evalPool.find(p => !usedPeople.has(p.personKey)) ?? evalPool[0];
+      : (cheapestAvailable(evalPool, usedPeople, maxForSlot)
+          ?? [...evalPool].filter(p => !usedPeople.has(p.personKey)).sort((a, b) => a.salary - b.salary)[0]
+          ?? evalPool[0]);
     usedPeople.add(picked.personKey);
     budgetRemaining -= picked.salary;
     openSlotsRemaining--;
@@ -137,8 +143,13 @@ function guaranteeTierFloor(roster: GeneratedCard[], evalPool: PlayerEval[], eco
   const usedPeople = new Set(result.map(c => c.personKey));
 
   const tierOf = (c: { tier?: string }) => String(c.tier ?? "").toUpperCase();
-  const isOrange = (c: { tier?: string }) => tierOf(c) === "ORANGE";
-  const isPurpleOrBetter = (c: { tier?: string }) => tierOf(c) === "PURPLE" || tierOf(c) === "ORANGE";
+  // RED counts as a premium anchor interchangeably with ORANGE. A hand with Jokić
+  // (RED) satisfies the anchor guarantee the same way an ORANGE card does.
+  const isPremiumAnchor = (c: { tier?: string }) => tierOf(c) === "RED" || tierOf(c) === "ORANGE";
+  const isPurpleOrBetter = (c: { tier?: string }) => {
+    const t = tierOf(c);
+    return t === "PURPLE" || t === "ORANGE" || t === "RED";
+  };
 
   function getSwappable() {
     return result.map((c, i) => ({ i, c })).filter(({ i }) => !heldMask || !heldMask[i]).sort((a, b) => b.c.salary - a.c.salary);
@@ -146,17 +157,23 @@ function guaranteeTierFloor(roster: GeneratedCard[], evalPool: PlayerEval[], eco
   function getHeadroom() {
     return cap - totalSalary(result.map(c => c.salary));
   }
-  // Upgrade a slot to a player of the exact targetTier (not just salary threshold)
-  function tryUpgradeByTier(targetTier: "ORANGE" | "PURPLE") {
+  // Upgrade a slot to a player of the exact targetTier (not just salary threshold).
+  // Target "RED_OR_ORANGE" matches either — used for the anchor guarantee.
+  function tryUpgradeByTier(targetTier: "RED_OR_ORANGE" | "PURPLE") {
     for (const { i, c } of getSwappable()) {
-      if (tierOf(c) === targetTier) continue;
+      const curTier = tierOf(c);
+      // Skip if already a premium anchor (for RED_OR_ORANGE) or already the target tier.
+      if (targetTier === "RED_OR_ORANGE" && (curTier === "RED" || curTier === "ORANGE")) continue;
+      if (targetTier === "PURPLE" && curTier === "PURPLE") continue;
       const budget = c.salary + getHeadroom();
       const upgrades = evalPool
-        .filter((p: any) =>
-          (!usedPeople.has(p.personKey) || p.personKey === c.personKey) &&
-          String(p.tier ?? "").toUpperCase() === targetTier &&
-          p.salary <= budget,
-        )
+        .filter((p: any) => {
+          if (usedPeople.has(p.personKey) && p.personKey !== c.personKey) return false;
+          if (p.salary > budget) return false;
+          const pt = String(p.tier ?? "").toUpperCase();
+          if (targetTier === "RED_OR_ORANGE") return pt === "RED" || pt === "ORANGE";
+          return pt === "PURPLE";
+        })
         .sort((a: any, b: any) => b.salary - a.salary);
       if (!upgrades.length) continue;
       const excl = new Set([...usedPeople].filter(k => k !== c.personKey));
@@ -168,10 +185,10 @@ function guaranteeTierFloor(roster: GeneratedCard[], evalPool: PlayerEval[], eco
     }
     return false;
   }
-  const hasOrange = () => result.some(isOrange);
+  const hasPremiumAnchor = () => result.some(isPremiumAnchor);
   const hasTwoPurpleOrBetter = () => result.filter(isPurpleOrBetter).length >= 2;
-  if (!hasOrange()) {
-    if (!tryUpgradeByTier("ORANGE")) {
+  if (!hasPremiumAnchor()) {
+    if (!tryUpgradeByTier("RED_OR_ORANGE")) {
       while (!hasTwoPurpleOrBetter()) { if (!tryUpgradeByTier("PURPLE")) break; }
     }
   }
@@ -244,20 +261,22 @@ function enforceCapWithReplacement(roster: GeneratedCard[], evalPool: PlayerEval
   const clone = roster.map(c => ({ ...c }));
   const isHeld = (i: number) => heldMask ? !!heldMask[i] : false;
   let guard = 0;
+  // Pass 1 — preferred path: swap non-premium cards for cheaper same-position replacements.
   while (totalSalary(clone.map(c => c.salary)) > config.capMax && guard++ < 200) {
     const currentTotal = totalSalary(clone.map(c => c.salary));
-    // First try to swap non-orange/purple cards, then fall back to any non-held card
     let swappable = clone.map((c, i) => ({ i, c })).filter(({ i, c }) => {
       if (isHeld(i)) return false;
       const tier = (c.tier ?? "").toUpperCase();
-      return tier !== "ORANGE" && tier !== "PURPLE";
+      // Protect premium tiers from being swapped first. RED/ORANGE/PURPLE are
+      // the anchor and secondary tiers — only touch them if nothing else works.
+      return tier !== "RED" && tier !== "ORANGE" && tier !== "PURPLE";
     }).sort((a, b) => b.c.salary - a.c.salary);
-    // If no non-premium cards to swap, allow swapping premium non-held cards too
     if (!swappable.length) {
       swappable = clone.map((c, i) => ({ i, c }))
         .filter(({ i }) => !isHeld(i))
         .sort((a, b) => b.c.salary - a.c.salary);
     }
+    if (!swappable.length) break;
     const { i: idx, c: cur } = swappable[0];
     const req = slotRequirements[idx] ?? "FLEX";
     const maxForSlot = config.capMax - (currentTotal - cur.salary);
@@ -267,10 +286,37 @@ function enforceCapWithReplacement(roster: GeneratedCard[], evalPool: PlayerEval
     const candidates = posPool.filter(p => !usedPeople.has(p.personKey) && p.salary <= maxForSlot && p.salary < cur.salary);
     if (!candidates.length) break;
     candidates.sort((a, b) => b.salary - a.salary);
-    const replaced = toGeneratedCard(candidates[0], idx);
-    clone[idx] = replaced;
+    clone[idx] = toGeneratedCard(candidates[0], idx);
   }
-  // Tier is frozen at deal time — do NOT re-tier held or existing cards
+
+  // Pass 2 — hard safety net: if still over cap, force-downgrade most expensive
+  // non-held card (any position) to the cheapest available player. This guarantees
+  // the final roster never exceeds the cap, no matter how pass 1 fails.
+  let safetyGuard = 0;
+  while (totalSalary(clone.map(c => c.salary)) > config.capMax && safetyGuard++ < 20) {
+    const currentTotal = totalSalary(clone.map(c => c.salary));
+    const swappable = clone.map((c, i) => ({ i, c }))
+      .filter(({ i }) => !isHeld(i))
+      .sort((a, b) => b.c.salary - a.c.salary);
+    if (!swappable.length) {
+      console.warn(`[RosterEngine] CAP BREACH unresolvable: $${currentTotal} > $${config.capMax}, all cards held`);
+      break;
+    }
+    const { i: idx, c: cur } = swappable[0];
+    const usedPeople = new Set<string>(clone.map(c => c.personKey));
+    usedPeople.delete(cur.personKey);
+    // Take the cheapest available player from any position. Ignores slotRequirements
+    // because the priority is cap compliance — if we're in pass 2, we're past elegance.
+    const cheapest = evalPool
+      .filter(p => !usedPeople.has(p.personKey) && p.salary < cur.salary)
+      .sort((a, b) => a.salary - b.salary)[0];
+    if (!cheapest) {
+      console.warn(`[RosterEngine] CAP BREACH unresolvable: $${currentTotal} > $${config.capMax}, no cheaper player available`);
+      break;
+    }
+    clone[idx] = toGeneratedCard(cheapest, idx);
+  }
+
   clone.forEach((c, i) => { c.slotIndex = i; });
   return clone;
 }

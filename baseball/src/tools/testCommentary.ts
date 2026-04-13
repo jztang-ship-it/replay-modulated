@@ -1,12 +1,12 @@
 /// <reference types="node" />
 /**
- * testCommentary.ts — Batch commentary tester
+ * testCommentary.ts — Batch commentary tester (baseball)
  *
- * Generates N synthetic hands using real basketball players.json, calls the
- * deployed /api/commentary endpoint for each, and dumps results to a text
- * file you can paste into ChatGPT (or any other LLM) for grading.
+ * Generates N synthetic hands using real baseball players.json and game-logs.json,
+ * calls the deployed /api/commentary endpoint for each, and dumps results to a
+ * text file you can paste into ChatGPT (or any other LLM) for grading.
  *
- * Usage (from ~/ReplayMod/basketball/):
+ * Usage (from ~/ReplayMod/baseball/):
  *   npx ts-node --project tsconfig.sim.json src/tools/testCommentary.ts 100
  *   npx ts-node --project tsconfig.sim.json src/tools/testCommentary.ts 50 \
  *     https://your-preview-url.vercel.app
@@ -20,7 +20,7 @@ import * as path from "path";
 import { fileURLToPath } from "url";
 import { buildPrompt } from "../../../shared/commentary/promptBuilder.js";
 import type { CommentaryInput, CommentaryRosterCard } from "../../../shared/commentary/types.js";
-import { buildBasketballContext } from "../utils/buildBasketballContext.js";
+import { buildBaseballContext } from "../utils/buildBaseballContext.js";
 
 // __dirname shim for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -29,26 +29,81 @@ const __dirname = path.dirname(__filename);
 // ── Config ────────────────────────────────────────────────────────────────
 const DEFAULT_N = 100;
 const DEFAULT_URL = "https://replay-mod-git-working-john-tangs-projects-1c51aca7.vercel.app";
-const SALARY_CAP = 200;
-const ROSTER_SIZE = 6;
+const SALARY_CAP = 220;
+const ROSTER_SIZE = 5;
+const ROSTER_SLOTS: string[] = ["BAT", "BAT", "BAT", "P", "P"];
 const REQUEST_DELAY_MS = 250;       // throttle to avoid hammering the API
 const REQUEST_TIMEOUT_MS = 15_000;
-const NBA_TEAMS = [
-  "ATL","BOS","BKN","CHA","CHI","CLE","DAL","DEN","DET","GSW",
-  "HOU","IND","LAC","LAL","MEM","MIA","MIL","MIN","NOP","NYK",
-  "OKC","ORL","PHI","PHX","POR","SAC","SAS","TOR","UTA","WAS",
-];
 
-// Basketball win-tier thresholds (must mirror basketballConfig.ts).
+// Baseball win-tier thresholds (must mirror baseballConfig.ts).
 const TIER_THRESHOLDS = [
   { tier: "BUST",     min: 0,    payout: "0x" },
-  { tier: "ROOKIE",   min: 180,  payout: "0.5x" },
-  { tier: "STARTER",  min: 195,  payout: "2.5x" },
-  { tier: "ALL_STAR", min: 210,  payout: "7x" },
-  { tier: "MVP",      min: 225,  payout: "15x" },
-  { tier: "GOAT",     min: 240,  payout: "50x" },
+  { tier: "ROOKIE",   min: 148,  payout: "0.5x" },
+  { tier: "STARTER",  min: 178,  payout: "2.5x" },
+  { tier: "ALL_STAR", min: 208,  payout: "7x" },
+  { tier: "MVP",      min: 240,  payout: "15x" },
+  { tier: "GOAT",     min: 280,  payout: "50x" },
 ] as const;
 
+// FP scoring weights
+const FP_WEIGHTS: Record<string, number> = {
+  h: 12, doubles: 5, triples: 10, hr: 20, r: 9, rbi: 9, bb: 6, sb: 12,
+  ip: 3, k: 4, er: -3, w: 6, qs: 8,
+};
+
+// Position normalisation
+const PITCHER_ALIASES = new Set(["SP", "RP", "LHP", "RHP", "P"]);
+function normalizePosition(pos: string): "P" | "BAT" {
+  return PITCHER_ALIASES.has(pos.toUpperCase()) ? "P" : "BAT";
+}
+
+// ── Badge definitions ────────────────────────────────────────────────────
+type StatLine = Record<string, number>;
+
+interface Badge {
+  name: string;
+  test: (s: StatLine) => boolean;
+  bonus: number;
+}
+
+const HITTER_BADGES: Badge[] = [
+  { name: "HIT_MACHINE",  test: s => (s.h ?? 0) >= 2, bonus: 3 },
+  { name: "GOING_YARD",   test: s => (s.hr ?? 0) >= 1, bonus: 8 },
+  { name: "CLEANUP",      test: s => (s.rbi ?? 0) >= 3, bonus: 8 },
+  { name: "EYE_PLATE",    test: s => (s.bb ?? 0) >= 2, bonus: 5 },
+  { name: "SPEEDSTER",    test: s => (s.sb ?? 0) >= 1, bonus: 4 },
+  { name: "PERFECT_DAY",  test: s => (s.h ?? 0) >= 2 && (s.hr ?? 0) >= 1 && (s.rbi ?? 0) >= 2, bonus: 15 },
+  { name: "CYCLE_WATCH",  test: s => (s.h ?? 0) >= 1 && (s.doubles ?? 0) >= 1 && (s.triples ?? 0) >= 1 && (s.hr ?? 0) >= 1, bonus: 25 },
+];
+
+const PITCHER_BADGES: Badge[] = [
+  { name: "QUALITY_START", test: s => (s.ip ?? 0) >= 6 && (s.er ?? 0) <= 3, bonus: 6 },
+  { name: "ACE",           test: s => (s.k ?? 0) >= 10, bonus: 10 },
+  { name: "SHUTDOWN",      test: s => (s.ip ?? 0) >= 7 && (s.er ?? 0) === 0, bonus: 8 },
+  { name: "MELTDOWN",      test: s => (s.er ?? 0) >= 5, bonus: -5 },
+  { name: "WILD_THING",    test: s => (s.bb ?? 0) >= 3, bonus: -5 },
+  { name: "NO_NO_WATCH",   test: s => (s.ip ?? 0) >= 7 && (s.h ?? 0) === 0 && (s.er ?? 0) === 0, bonus: 30 },
+];
+
+function computeBadgeBonus(stats: StatLine, isPitcher: boolean): number {
+  const badges = isPitcher ? PITCHER_BADGES : HITTER_BADGES;
+  let bonus = 0;
+  for (const b of badges) {
+    if (b.test(stats)) bonus += b.bonus;
+  }
+  return bonus;
+}
+
+function computeFpFromStats(stats: StatLine, isPitcher: boolean): number {
+  let fp = 0;
+  for (const [key, weight] of Object.entries(FP_WEIGHTS)) {
+    fp += (stats[key] ?? 0) * weight;
+  }
+  fp += computeBadgeBonus(stats, isPitcher);
+  return Math.max(0, Math.round(fp * 10) / 10);
+}
+
+// ── Types ────────────────────────────────────────────────────────────────
 type RawPlayer = {
   id: string;
   basePlayerId?: string;
@@ -61,11 +116,36 @@ type RawPlayer = {
   projectedFp?: number;
 };
 
+type GameLog = {
+  basePlayerId: string;
+  playerId?: string;
+  season?: number;
+  date?: string;
+  opponent?: string;
+  stats: StatLine;
+};
+
 // ── Helpers ───────────────────────────────────────────────────────────────
 function loadPlayers(): RawPlayer[] {
   const p = path.join(__dirname, "../../public/data/players.json");
   const raw = fs.readFileSync(p, "utf8");
   return JSON.parse(raw) as RawPlayer[];
+}
+
+function loadGameLogs(): GameLog[] {
+  const p = path.join(__dirname, "../../public/data/game-logs.json");
+  const raw = fs.readFileSync(p, "utf8");
+  return JSON.parse(raw) as GameLog[];
+}
+
+function buildGameLogIndex(logs: GameLog[]): Map<string, GameLog[]> {
+  const idx = new Map<string, GameLog[]>();
+  for (const log of logs) {
+    const key = log.basePlayerId;
+    if (!idx.has(key)) idx.set(key, []);
+    idx.get(key)!.push(log);
+  }
+  return idx;
 }
 
 function deriveTier(totalFp: number): string {
@@ -96,90 +176,136 @@ function gaussian(mean: number, stddev: number): number {
   return mean + z * stddev;
 }
 
+/** Check if a game log qualifies for a pitcher. */
+function isPitcherLog(stats: StatLine): boolean {
+  return (stats.ip ?? 0) >= 4;
+}
+
+/** Check if a game log qualifies for a batter. */
+function isBatterLog(stats: StatLine): boolean {
+  const pa = stats.pa ?? 0;
+  const events = (stats.h ?? 0) + (stats.hr ?? 0) + (stats.r ?? 0) +
+    (stats.rbi ?? 0) + (stats.bb ?? 0) + (stats.sb ?? 0) +
+    (stats.doubles ?? 0) + (stats.triples ?? 0);
+  return pa >= 3 && events >= 1;
+}
+
 /**
- * Build a 6-player roster within the salary cap, biased toward including
- * at least one orange/purple anchor so the commentary has someone interesting
- * to talk about (mirrors how the actual game's roster builder works).
+ * Sample an "actual FP" outcome for a player. Uses real game logs when
+ * available, falling back to gaussian sampling.
+ */
+function sampleActualFp(
+  p: RawPlayer,
+  logIndex: Map<string, GameLog[]>,
+): { fp: number; stats: StatLine } {
+  const isPitcher = normalizePosition(p.position) === "P";
+  const key = p.basePlayerId ?? p.id;
+  const logs = logIndex.get(key);
+
+  if (logs && logs.length > 0) {
+    // Filter to qualifying logs
+    const qualifying = logs.filter(l =>
+      isPitcher ? isPitcherLog(l.stats) : isBatterLog(l.stats),
+    );
+    if (qualifying.length > 0) {
+      const chosen = qualifying[Math.floor(Math.random() * qualifying.length)];
+      const fp = computeFpFromStats(chosen.stats, isPitcher);
+      return { fp, stats: { ...chosen.stats } };
+    }
+  }
+
+  // Fallback: gaussian sampling (same as basketball)
+  const baseline = p.avgFP ?? p.projectedFp ?? 20;
+  const stddev = Math.max(8, baseline * 0.45);
+  const sample = gaussian(baseline, stddev);
+  const fp = Math.max(0, Math.round(sample * 10) / 10);
+  return { fp, stats: {} };
+}
+
+/**
+ * Build a 5-player roster within the salary cap, respecting position slots:
+ * slots 0-2 → BAT, slots 3-4 → P.
+ * Biased toward including at least one orange/purple anchor.
  */
 function buildRoster(allPlayers: RawPlayer[]): RawPlayer[] {
-  const oranges = allPlayers.filter(p => (p.tier ?? "").toUpperCase() === "ORANGE");
-  const purples = allPlayers.filter(p => (p.tier ?? "").toUpperCase() === "PURPLE");
-  const others  = allPlayers.filter(p => {
-    const t = (p.tier ?? "").toUpperCase();
-    return t !== "ORANGE" && t !== "PURPLE";
-  });
+  const batters = allPlayers.filter(p => normalizePosition(p.position) === "BAT");
+  const pitchers = allPlayers.filter(p => normalizePosition(p.position) === "P");
 
   const roster: RawPlayer[] = [];
   const usedIds = new Set<string>();
   let salaryUsed = 0;
 
-  // Always include 1 orange or purple anchor if budget allows.
-  const anchorPool = [...oranges, ...purples].sort(() => Math.random() - 0.5);
-  for (const p of anchorPool) {
-    if (p.salary > SALARY_CAP) continue;
-    roster.push(p);
-    usedIds.add(p.id);
-    salaryUsed += p.salary;
-    break;
-  }
+  function pickFromPool(pool: RawPlayer[], count: number, budget: number, slotsLeft: number): RawPlayer[] {
+    const picked: RawPlayer[] = [];
 
-  // Fill the rest greedily, mixing all tiers, fitting under cap.
-  const fillPool = [...allPlayers]
-    .filter(p => !usedIds.has(p.id))
-    .sort(() => Math.random() - 0.5);
-
-  for (const p of fillPool) {
-    if (roster.length >= ROSTER_SIZE) break;
-    const remainingSlots = ROSTER_SIZE - roster.length;
-    const remainingBudget = SALARY_CAP - salaryUsed;
-    // Leave room for the slots after this one (assume avg 10/slot minimum).
-    const maxThisPick = remainingBudget - (remainingSlots - 1) * 8;
-    if (p.salary > maxThisPick) continue;
-    roster.push(p);
-    usedIds.add(p.id);
-    salaryUsed += p.salary;
-  }
-
-  // If we couldn't fill, just pad with cheapest available.
-  if (roster.length < ROSTER_SIZE) {
-    const cheapest = others
-      .filter(p => !usedIds.has(p.id))
-      .sort((a, b) => a.salary - b.salary);
-    for (const p of cheapest) {
-      if (roster.length >= ROSTER_SIZE) break;
-      roster.push(p);
-      usedIds.add(p.id);
+    // Try to include an orange/purple anchor first
+    if (picked.length === 0) {
+      const anchors = pool
+        .filter(p => !usedIds.has(p.id) && ["ORANGE", "PURPLE"].includes((p.tier ?? "").toUpperCase()))
+        .sort(() => Math.random() - 0.5);
+      for (const a of anchors) {
+        if (a.salary > budget) continue;
+        picked.push(a);
+        usedIds.add(a.id);
+        budget -= a.salary;
+        break;
+      }
     }
+
+    // Fill the rest randomly
+    const shuffled = pool.filter(p => !usedIds.has(p.id)).sort(() => Math.random() - 0.5);
+    for (const p of shuffled) {
+      if (picked.length >= count) break;
+      const remainingSlots = count - picked.length;
+      const maxThisPick = budget - (remainingSlots - 1) * 8;
+      if (p.salary > maxThisPick) continue;
+      picked.push(p);
+      usedIds.add(p.id);
+      budget -= p.salary;
+    }
+
+    // If we couldn't fill, pad with cheapest
+    if (picked.length < count) {
+      const cheapest = pool
+        .filter(p => !usedIds.has(p.id))
+        .sort((a, b) => a.salary - b.salary);
+      for (const p of cheapest) {
+        if (picked.length >= count) break;
+        picked.push(p);
+        usedIds.add(p.id);
+      }
+    }
+
+    return picked.slice(0, count);
   }
+
+  // Pick 3 BAT players, reserving budget for 2 pitchers
+  const batPicks = pickFromPool(batters, 3, SALARY_CAP - 2 * 8, 5);
+  for (const p of batPicks) salaryUsed += p.salary;
+  roster.push(...batPicks);
+
+  // Pick 2 P players with remaining budget
+  const pPicks = pickFromPool(pitchers, 2, SALARY_CAP - salaryUsed, 2);
+  roster.push(...pPicks);
 
   return roster.slice(0, ROSTER_SIZE);
 }
 
-/** Sample an "actual FP" outcome for a player given their projected/avg. */
-function sampleActualFp(p: RawPlayer): number {
-  const baseline = p.avgFP ?? p.projectedFp ?? 20;
-  // Wide stddev so we get a healthy mix of busts, on-pace, and big games.
-  const stddev = Math.max(8, baseline * 0.45);
-  const sample = gaussian(baseline, stddev);
-  return Math.max(0, Math.round(sample * 10) / 10);
-}
-
-function buildCommentaryInputForRoster(rosterPlayers: RawPlayer[]): CommentaryInput {
+function buildCommentaryInputForRoster(
+  rosterPlayers: RawPlayer[],
+  logIndex: Map<string, GameLog[]>,
+): CommentaryInput {
   const roster: CommentaryRosterCard[] = rosterPlayers.map(p => {
-    // Pick a random opponent that isn't the player's own team
-    const playerTeam = (p.team ?? "").toUpperCase();
-    const opponents = NBA_TEAMS.filter(t => t !== playerTeam);
-    const opponent = opponents[Math.floor(Math.random() * opponents.length)];
-    const homeAway = Math.random() > 0.5 ? "H" : "A";
+    const { fp, stats } = sampleActualFp(p, logIndex);
     return {
       name: p.name,
       salary: p.salary,
-      actualFp: sampleActualFp(p),
+      actualFp: fp,
       projectedFp: p.projectedFp ?? p.avgFP ?? 0,
       cardTier: (p.tier ?? "WHITE").toUpperCase(),
-      statLine: {},
-      opponent,
-      homeAway,
+      statLine: stats,
+      opponent: "",
+      homeAway: "",
     };
   });
 
@@ -188,7 +314,7 @@ function buildCommentaryInputForRoster(rosterPlayers: RawPlayer[]): CommentaryIn
   const { next, min } = nextTierInfo(winTier);
 
   return {
-    sport: "basketball",
+    sport: "baseball",
     totalFp,
     winTier: winTier as any,
     nextTier: next as any,
@@ -267,6 +393,10 @@ async function main() {
   const players = loadPlayers();
   console.log(`loaded ${players.length} players from players.json`);
 
+  const gameLogs = loadGameLogs();
+  const logIndex = buildGameLogIndex(gameLogs);
+  console.log(`loaded ${gameLogs.length} game logs (${logIndex.size} unique players)`);
+
   const recentTones: string[] = [];
   const outputBlocks: string[] = [];
   const stats = {
@@ -283,8 +413,8 @@ async function main() {
       console.warn(`hand ${i + 1}: roster build failed, skipping`);
       continue;
     }
-    const input = buildCommentaryInputForRoster(rosterPlayers);
-    const culture = buildBasketballContext(input.roster);
+    const input = buildCommentaryInputForRoster(rosterPlayers, logIndex);
+    const culture = buildBaseballContext(input.roster);
     const { system, user } = buildPrompt(input, culture, recentTones);
 
     const result = await callCommentary(apiUrl, system, user);

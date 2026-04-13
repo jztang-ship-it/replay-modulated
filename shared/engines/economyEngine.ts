@@ -8,12 +8,22 @@ export type { TierColor, EconomyConfig, TierThreshold };
 export const DEFAULT_ECONOMY_CONFIG: EconomyConfig = {
   capMax: 180,
   salaryMin: 5,
-  salaryMax: 65,
+  salaryMax: 89,
+  // 6-tier system — universal across sports. Salary always derived from avgFP
+  // via `salary = round(avgFP × k_sport)` (basketball k=1.39, baseball k=1.487).
+  // No hard caps, no inversions — higher avgFP always means higher salary.
+  // RED $73+   = "bug" tier (Jokić/Giannis/Wemby/Shai/Luka/AD for basketball)
+  // ORANGE $58-72 = star anchors, 14 wide
+  // PURPLE $44-57 = solid starters, 14 wide
+  // BLUE   $30-43 = value picks, 14 wide
+  // GREEN  $23-29 = budget slots, 7 wide
+  // WHITE  <$23  = deep bench filler (77 basketball players), 9 wide
   tierThresholds: [
-    { tier: "ORANGE", minSalary: 52 },
-    { tier: "PURPLE", minSalary: 40 },
-    { tier: "BLUE",   minSalary: 28 },
-    { tier: "GREEN",  minSalary: 16 },
+    { tier: "RED",    minSalary: 73 },
+    { tier: "ORANGE", minSalary: 58 },
+    { tier: "PURPLE", minSalary: 44 },
+    { tier: "BLUE",   minSalary: 30 },
+    { tier: "GREEN",  minSalary: 23 },
     { tier: "WHITE",  minSalary: 0  },
   ],
   salaryRatioCeiling: 2.0,

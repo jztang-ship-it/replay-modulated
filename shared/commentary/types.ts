@@ -59,6 +59,22 @@ export interface CommentaryCultureNugget {
   relevantTones?: string[];
   /** Optional opponent-specific flavor (e.g. Harden vs OKC). */
   opponentFlavor?: string;
+  /** Signature real games with date, opponent, FP, and teaser line. */
+  signatureGames?: { date: string; opponent: string; fp: number; line: string }[];
+  /** Opinionated salary value takes. */
+  salaryNarrative?: string[];
+  /** Hot/cold streak context lines. */
+  streakLines?: string[];
+  /** How they landed on their team + teammate chemistry. */
+  teamContext?: string[];
+  /** Draft story and career trajectory. */
+  draftAndPath?: string[];
+  /** Former team flavor lines. */
+  formerTeam?: string[];
+  /** Rivalry flavor lines. */
+  rivalry?: string[];
+  /** Career milestone lines. */
+  milestones?: string[];
 }
 
 export interface CommentaryOutput {

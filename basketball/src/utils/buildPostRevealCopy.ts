@@ -146,14 +146,6 @@ function findNearMissCulprit(roster: PostRevealRosterCard[], gap: number) {
   return { tovCulprit, underachiever };
 }
 
-const TIER_MULTIPLIERS: Record<string, string> = {
-  ROOKIE: "0.5x", STARTER: "3x", ALL_STAR: "8x", MVP: "15x", GOAT: "50x",
-};
-
-const TIER_LABEL: Record<string, string> = {
-  BUST:"Bust", ROOKIE:"Rookie", STARTER:"Starter",
-  ALL_STAR:"All-Star", MVP:"MVP", GOAT:"G.O.A.T.",
-};
 
 // ─── Box score teasers ────────────────────────────────────────────────────────
 
@@ -200,13 +192,15 @@ function famousPhrase(input: PostRevealCopyInput, subject: PostRevealRosterCard 
   const cheapOverperformer = roster.find(c => c.salary <= 20 && ratio(c) >= 1.6);
   const hasSAS = subject != null && (subject.opponent ?? "").toUpperCase() === "SAS";
 
-  if (streak >= 7) return `${streak} in a row. I GUARANTEE IT.`;
+  if (streak >= 15) return `${streak} wins in a row. That's a historic run.`;
+  if (streak >= 10) return `${streak} straight wins. Keep going — this is something to talk about.`;
+  if (streak >= 7) return `${streak} wins in a row. That kind of consistency is hard to do.`;
   if (isBust && badges.includes("TURNOVER_MACHINE")) return `${lastName(subject.name)} turned it over too many times. That's where this one went.`;
   if (blk >= 5 && subject.homeAway === "H") return "Not in his house tonight.";
   if (blk >= 5 && subject.homeAway === "A") return `${lastName(subject.name)} had 5 blocks on the road. Took over someone else's building.`;
   if (blk >= 4 && subject.homeAway === "H") return "Lots of finger wagging tonight.";
-  if (anchor && anchor.salary >= 40 && anchorR < 0.75) {
-    const an = nameFor(anchor, seed2);
+  if (anchor && anchor.salary >= 45 && anchorR < 0.75) {
+    const an = nameFor(anchor, 0);
     return `${an} came in below the line tonight — the anchor didn't hold.`;
   }
   if (!isBust && anchorR >= 0.95 && anchorR <= 1.05) {
@@ -227,8 +221,8 @@ function gmVoice(input: PostRevealCopyInput, subject: PostRevealRosterCard, seed
 
   if (subject.wasHeld && r >= 1.25) return `${name} delivered tonight — holding that card was the right call.`;
   if (subject.wasHeld && r <= 0.75) return `${name} didn't bring it tonight despite the hold. Tough break at $${subject.salary}.`;
-  if (!subject.wasHeld && r >= 1.6 && subject.salary >= 40) return `${name} went well above the average tonight — that's the upside you pay for.`;
-  if (!subject.wasHeld && r >= 1.6 && subject.salary < 40) return null; // Don't name cheap non-star overperformers
+  if (!subject.wasHeld && r >= 1.6 && subject.salary >= 45) return `${name} went well above the average tonight — that's the upside you pay for.`;
+  if (!subject.wasHeld && r >= 1.6 && subject.salary < 45) return null; // Don't name cheap non-star overperformers
 
   // Near-miss with culprit
   const gap = input.nextTierMin > 0 ? input.nextTierMin - input.totalFp : 0;
@@ -252,58 +246,82 @@ const BUST_L1 = [
   "Rough from the first flip to the last.",
   "Flat across the board. This one didn't have it.",
   "Not enough from anyone to get this hand across the line.",
-  "Short across the board — the roster never found its rhythm.",
-  "The numbers don't lie and tonight they weren't kind.",
+  "The roster never found its rhythm. Happens.",
+  "Everyone underdelivered. That's a bad night across the board.",
+  "Nothing clicked. Dead on arrival and never got going.",
+  "Some nights the ball just doesn't bounce your way. This was one of them.",
+  "Couldn't get any traction. The hand fell apart early and stayed there.",
+  "A quiet night when you needed loud ones. Didn't get there.",
 ];
 const ROOKIE_L1 = [
   "Barely got there, but you're walking away with something.",
   "Scraped across the line — not pretty, but the payout is real.",
   "Just enough to cash — the roster held together when it counted.",
   "Won it. The roster didn't dominate, but it didn't collapse either.",
+  "Minimum to win is still a win. Take it and move on.",
+  "Not the night you drew it up, but the hand got there.",
+  "Fought for every point. The payout is small but it's real.",
+  "Ugly win is still a win. These add up over time.",
+  "Scraped through. The margin was thin but the result wasn't.",
+  "A grinder of a hand. The roster found just enough.",
 ];
 const STARTER_BARELY_L1 = [
   "Held on by the thinnest margin — one bad play away from nothing.",
   "Squeaked through, but a win is a win and the money counts.",
   "The hand held together just enough. Barely, but enough.",
+  "Lived dangerously but survived. The roster dug deep.",
+  "One card away from a very different result. Thankfully it held.",
+  "Tight margin, but margins don't matter — only the result does.",
+  "Scraped to the right side of the line. Close calls count.",
 ];
 const STARTER_L1 = [
   "Solid hand — the roster delivered a clean, professional performance.",
   "Comfortable margin, nothing flashy — this is what a good roster looks like.",
   "Everything went according to plan. That doesn't happen by accident.",
+  "Professional night. No drama, just a consistent return.",
+  "The kind of hand that doesn't make headlines but cashes every time.",
+  "Steady from start to finish. That's a well-built roster doing its job.",
+  "Clean execution. Contributions across the board, nobody embarrassed themselves.",
+  "No fireworks, no disasters. Just a roster that performed.",
 ];
 const STARTER_DOM_L1 = [
   "Dominant — this hand was knocking on the door of something bigger.",
   "Comfortable margin with room to spare — the kind of hand you feel good about.",
   "Cruised through. The roster came through and then some.",
+  "Comfortable win with something to spare. Could have been even bigger.",
+  "The roster performed and then kept performing. Hard to argue with.",
+  "Everything clicked tonight. That's a well-executed hand making it look easy.",
+  "Dominant across the board. Gave yourself a real cushion.",
 ];
 const ALLSTAR_L1 = [
   "That's a rare night. This hand earned a real return.",
   "Something special happened here — not many rosters put this together.",
   "Deep run. Hands like this don't come around every session.",
-  "Big payout. Hand earned every dollar of it.",
+  "Big payout. This hand earned every dollar of it.",
   "Someone went way above their average and the whole hand benefited.",
+  "Not a lot of rosters reach this level. This one did.",
+  "High-level output across the board. The return reflects that.",
+  "When a hand peaks like this, it's worth taking a second to appreciate it.",
+  "The kind of night that makes you want to run it back immediately.",
 ];
 const MVP_L1 = [
   "That's one of the best hands you can put together. Rare and real.",
   "Someone on this roster absolutely went off tonight — the whole hand felt it.",
   "This is what it looks like when a star card takes over a hand.",
+  "MVP-level output. Very few rosters ever get here.",
+  "When the anchor performs like this, everything else just falls into place.",
+  "A standout night that carried this hand to a completely different level.",
+  "Not many players can do what was done tonight. This hand had one of them.",
+  "An elite performance from an elite player. The hand responded accordingly.",
 ];
 const GOAT_L1 = [
   "The biggest night in the game. This hand was something you remember.",
-  "Doesn't happen by accident — this roster hit a different level.",
+  "Doesn't happen by accident — this roster hit a different level entirely.",
   "One of those hands that doesn't come around often. The payout reflects it.",
-];
-const NM_TINY = [
-  "Just {gap} points from {next} tier — one bucket changes everything.",
-  "That was right there — {gap} points is literally a free throw away from {next}.",
-];
-const NM_SMALL = [
-  "{next} slipped away by {gap} points — one good quarter from anybody closes that gap.",
-  "All the way to the edge of {next} and {gap} points short — that stings.",
-];
-const NM_MED = [
-  "{gap} points from {next} — one card having a better night and you're there.",
-  "Close enough to see {next} tier and not close enough to touch it.",
+  "You don't see many nights like this. The ceiling was hit and then some.",
+  "Peak performance. This is the kind of night the whole game is built around.",
+  "The rarest of nights. This hand earned the top of the chart.",
+  "That was something. The roster performed at a level most hands never reach.",
 ];
 
 // ─── Basketball pack ──────────────────────────────────────────────────────────
@@ -315,7 +333,6 @@ const basketballPack: SportCopyPack = {
     const subject = selectSubject(roster);
     const seed2 = subject ? Math.floor(subject.actualFp * 17) + subject.salary * 3 : seed + 1;
 
-    const tl = TIER_LABEL[winTier] ?? winTier;
     const margin = totalFp - tierFloor;
     const gap = nextTierMin > 0 ? nextTierMin - totalFp : 0;
     const isNearMiss = !isBust && nextTier != null && gap > 0 && gap <= 8;
@@ -348,17 +365,26 @@ const basketballPack: SportCopyPack = {
             "One play away. That one stings.",
             "Right there. Couldn't grab it.",
             "One possession was all it needed.",
+            "Literally one basket short. Painful.",
+            "That close. Comes back around.",
+            "Missed it by the smallest margin.",
           ], seed)
         : gap <= 5
         ? pick([
             "Came up just short. Stings.",
             "Almost got there — one card having a better night closes it.",
             "Slipped away at the end. Was right in reach.",
+            "So close it hurts. One stronger performance and this cashes bigger.",
+            "Just out of reach. The next level was right there.",
+            "Was in range and couldn't close. Agonizing.",
           ], seed)
         : pick([
             "Close, but not close enough.",
             "The next level was right there — just short.",
             "Came up short. Another night.",
+            "Was in range and couldn't close the gap.",
+            "Needed a little more from someone. Didn't get it.",
+            "Tantalizingly close. The gap was real but not huge.",
           ], seed);
     } else if (winTier === "GOAT") {
       line1 = pick(GOAT_L1, seed);
@@ -378,7 +404,7 @@ const basketballPack: SportCopyPack = {
     const toneRet = isNearMiss ? retNearMiss : isBust ? retNegative : retPositive;
 
     // ── Line 2 — priority stack ───────────────────────────────────────────
-    if (!subject) return toneRet(line1, "The lineup came up short across the board.");
+    if (!subject) return toneRet(line1, "Nobody stood out. The whole roster came up short.");
 
     const culture = lookupCulture(subject.name);
     const name = nameFor(subject, seed2);
@@ -389,6 +415,17 @@ const basketballPack: SportCopyPack = {
     // 1. Famous phrase
     const famous = famousPhrase(input, subject);
     if (famous) return toneRet(line1, famous);
+
+    // 1b. Injury heuristic — low minutes + low FP on a high-salary player
+    const subjectMins = statN(subject, "min") || statN(subject, "minutes") || statN(subject, "mp");
+    const isLikelyInjury = subjectMins > 0 && subjectMins < 15 && subject.actualFp < 8 && subject.salary >= 30;
+    if (isLikelyInjury) {
+      return toneRet(line1, pick([
+        `${name} left early — limited minutes hurt what this hand could've been.`,
+        `${name} only played ${Math.round(subjectMins)} minutes. Hard to overcome that kind of absence.`,
+        `${name} was in and out. At full strength this hand looks different.`,
+      ], seed2));
+    }
 
     // 2. TURNOVER_MACHINE / SLOPPY
     if (badges.includes("TURNOVER_MACHINE") || badges.includes("SLOPPY")) {
@@ -467,7 +504,7 @@ const basketballPack: SportCopyPack = {
 
     // 7. Anchor significantly underperformed
     const anchor = [...roster].sort((a, b) => b.salary - a.salary)[0];
-    if (anchor && ratio(anchor) < 0.75 && anchor.salary >= 40) {
+    if (anchor && ratio(anchor) < 0.75 && anchor.salary >= 45) {
       const an = nameFor(anchor, seed2);
       const underLine = culture && lookupCulture(anchor.name)?.underperform?.length
         ? pick(lookupCulture(anchor.name)!.underperform, seed2)
@@ -477,10 +514,10 @@ const basketballPack: SportCopyPack = {
 
     // Register gate — on a bust, don't lead with good news
     if (isBust && subject) {
-      // Only reference star players (ORANGE/PURPLE) even on bust — never name bench players
+      // Only reference star players (RED/ORANGE/PURPLE) even on bust — never name bench players
       const starCards = roster.filter(c => {
         const t = String(c.cardTier ?? "").toUpperCase();
-        return t === "ORANGE" || t === "PURPLE";
+        return t === "RED" || t === "ORANGE" || t === "PURPLE";
       });
       const underStar = starCards.find(c => ratio(c) <= 0.7);
       const overStar = starCards.find(c => ratio(c) >= 1.2);
@@ -496,7 +533,7 @@ const basketballPack: SportCopyPack = {
     }
 
     // 8. Anchor significantly overperformed
-    if (anchor && ratio(anchor) >= 1.35 && anchor.salary >= 40) {
+    if (anchor && ratio(anchor) >= 1.35 && anchor.salary >= 45) {
       const an = nameFor(anchor, seed2);
       const overLine = culture && lookupCulture(anchor.name)?.overperform?.length
         ? pick(lookupCulture(anchor.name)!.overperform, seed2)

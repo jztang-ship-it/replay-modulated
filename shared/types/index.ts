@@ -3,7 +3,7 @@
  * Single source of truth for all sport-agnostic types.
  */
 
-export type TierColor = "ORANGE" | "PURPLE" | "BLUE" | "GREEN" | "WHITE";
+export type TierColor = "RED" | "ORANGE" | "PURPLE" | "BLUE" | "GREEN" | "WHITE";
 export type Position = string;
 
 export type GamePhase =
@@ -48,6 +48,8 @@ export interface PlayerCard {
   slotIndex: number;
   wasHeld?: boolean;
   fpBreakdown?: Record<string, number>;
+  /** Daily bonus FP added to actualFp. 0 or undefined if not a hot player today. */
+  dailyBonus?: number;
 }
 
 export interface ResolveResult {

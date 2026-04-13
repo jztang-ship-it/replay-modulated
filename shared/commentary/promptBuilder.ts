@@ -99,7 +99,7 @@ function buildUserPrompt(
       ? ` ${c.homeAway === "A" ? "@" : "vs"}${c.opponent}`
       : "";
     const tier = (c.cardTier || "").toUpperCase() || "WHITE";
-    const allowed = (tier === "ORANGE" || tier === "PURPLE") ? "[MAIN-SUBJECT-OK]" : "[NOT-MAIN-SUBJECT]";
+    const allowed = (tier === "RED" || tier === "ORANGE" || tier === "PURPLE") ? "[MAIN-SUBJECT-OK]" : "[NOT-MAIN-SUBJECT]";
     // Include real stat line if available (pts/reb/ast) — model should prefer these over FP numbers
     const s = c.statLine as any;
     const hasPts = s && (s.pts != null || s.points != null || s.PTS != null);

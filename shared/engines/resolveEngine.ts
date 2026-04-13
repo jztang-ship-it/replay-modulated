@@ -11,20 +11,28 @@ export interface ResolvedCard extends GeneratedCard {
   gameInfo: { date: string; opponent: string; homeAway?: string };
   statLine: Record<string, any>;
   achievements: Achievement[];
+  /** Daily bonus FP added to actualFp (0 if player is not in today's hot list). */
+  dailyBonus?: number;
 }
 
-export interface ResolveConfig { fpScale: number; minMinutes?: number; handCount?: number; }
+export interface ResolveConfig {
+  fpScale: number;
+  minMinutes?: number;
+  /** Map of basePlayerId → daily bonus FP. Applied additively on top of real FP. */
+  dailyBonusMap?: Map<string, number>;
+}
 
 export interface ResolveAdapter {
   computeFantasyPoints(stats: Record<string, any>): number;
   computeBadges(stats: Record<string, any>): Achievement[];
 }
 
-export function resolveCards(cards: GeneratedCard[], logsByKey: Map<string, RawLog[]>, config: ResolveConfig, adapter: ResolveAdapter, rnd: () => number): { resolved: ResolvedCard[]; mvpCardId: string | undefined } {
+export function resolveCards(cards: GeneratedCard[], logsByKey: Map<string, RawLog[]>, config: ResolveConfig, adapter: ResolveAdapter, rnd: () => number, _handCount?: number): { resolved: ResolvedCard[]; mvpCardId: string | undefined } {
   let bestFp = -Infinity;
   let mvpCardId: string | undefined;
+  const bonusMap = config.dailyBonusMap;
   const resolved: ResolvedCard[] = cards.map(card => {
-    const log = pickBiasedLog(card.basePlayerId, parseSeasonNum(card.season), card.tier, logsByKey, rnd, config.minMinutes ?? 8, config.handCount ?? 999);
+    const log = pickBiasedLog(card.basePlayerId, parseSeasonNum(card.season), card.tier, logsByKey, rnd, config.minMinutes ?? 8);
     const stats = log?.stats ?? {};
     // Inject _position BEFORE FP calc so positionProjectionWeights are used
     const statsWithPosition = { ...stats, _position: card.position ?? "" };
@@ -33,14 +41,17 @@ export function resolveCards(cards: GeneratedCard[], logsByKey: Map<string, RawL
     const achievements = adapter.computeBadges(statsWithPosition);
 
     const badgeBonus = achievements.reduce((s, a) => s + (a.fp ?? 0), 0);
-    const totalFp = scaledFp + badgeBonus;
+    // Daily bonus: additive on top of real FP (doesn't affect bestFp comparison for MVP —
+    // MVP is "who popped off in their real game", not "who got lucky with a bonus").
+    const dailyBonus = bonusMap?.get(card.basePlayerId) ?? 0;
+    const totalFp = scaledFp + badgeBonus + dailyBonus;
     const gameInfo = {
       date: String(log?.matchDate ?? log?.date ?? ""),
       opponent: String(log?.meta?.opponent ?? log?.opponent ?? ""),
       homeAway: String(log?.meta?.homeAway ?? log?.homeAway ?? "") as "H" | "A" | "",
     };
     if (totalFp > bestFp) { bestFp = totalFp; mvpCardId = card.cardId; }
-    return { ...card, actualFp: totalFp, fpDelta: totalFp - card.projectedFp, gameInfo, statLine: statsWithPosition, achievements };
+    return { ...card, actualFp: totalFp, fpDelta: totalFp - card.projectedFp, gameInfo, statLine: statsWithPosition, achievements, dailyBonus };
   });
   return { resolved, mvpCardId };
 }
@@ -55,7 +66,7 @@ export function extractFpFromStats(stats: Record<string, any>, adapter: ResolveA
   return adapter.computeFantasyPoints(stats);
 }
 
-function pickBiasedLog(basePlayerId: string, season: number | null, tier: string, logsByKey: Map<string, RawLog[]>, rnd: () => number, minMinutes: number = 8, handCount: number = 999): RawLog | null {
+function pickBiasedLog(basePlayerId: string, season: number | null, tier: string, logsByKey: Map<string, RawLog[]>, rnd: () => number, minMinutes: number = 8): RawLog | null {
   const base = basePlayerId.trim();
   if (!base) return null;
   let candidates: RawLog[] = season !== null ? (logsByKey.get(`${base}|${season}`) ?? []) : [];
@@ -85,13 +96,11 @@ function pickBiasedLog(basePlayerId: string, season: number | null, tier: string
   const sorted = [...candidates].sort((a, b) => sumStats(b.stats) - sumStats(a.stats));
   const n = sorted.length;
   const t = (tier ?? "").toUpperCase();
-  // Protected mode: hands 2-30 sample from top 60% of logs regardless of tier
-  // This gives newbie players better game nights without changing thresholds
-  const isProtected = handCount >= 2 && handCount <= 30;
   let lo: number, hi: number;
-  if (isProtected) {
-    lo = 0; hi = Math.max(1, Math.ceil(n * 0.60));
-  } else if (t === "ORANGE")      { lo = 0;                       hi = Math.max(1, Math.ceil(n * 0.40)); }
+  // RED treated same as ORANGE for log sampling — RED is a visual/strategic tier,
+  // not a performance tier. Making RED samples tighter (top 30%) would make the
+  // "bug" players even more dominant, which is the opposite of what we want.
+  if      (t === "RED" || t === "ORANGE") { lo = 0;                       hi = Math.max(1, Math.ceil(n * 0.40)); }
   else if (t === "PURPLE") { lo = 0;                       hi = Math.max(1, Math.ceil(n * 0.55)); }
   else if (t === "BLUE")   { lo = Math.floor(n * 0.20);    hi = Math.min(n, Math.ceil(n * 0.70)); }
   else if (t === "GREEN")  { lo = Math.floor(n * 0.30);    hi = Math.min(n, Math.ceil(n * 0.80)); }

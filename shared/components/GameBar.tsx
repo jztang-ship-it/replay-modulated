@@ -15,6 +15,12 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import ReactDOM from "react-dom";
 import { THEME } from "@shared/theme";
 import type { JSX as ReactJSX } from "react";
+import { formatBonusCountdown, getMsUntilNextBonusRotation } from "@shared/utils/dailyBonus";
+
+/** Live countdown string to next UTC midnight (daily bonus rotation). */
+function formatBonusCountdownLocal(): string {
+  return formatBonusCountdown(getMsUntilNextBonusRotation());
+}
 
 declare global {
   namespace JSX {
@@ -52,8 +58,8 @@ export interface LegendData {
   scoringRules: ScoringRule[];
   stamps?: BadgeInfo[];
   badges: BadgeInfo[];
-  /** Daily ORANGE rotation — shown at top of legend modal. */
-  todaysStars?: Array<{ name: string; basePlayerId: string }>;
+  /** Today's 3 hot-bonus players — rotates every UTC midnight. */
+  todaysStars?: Array<{ name: string; basePlayerId: string; tier?: string; bonus?: 5 | 10 | 20 }>;
 }
 
 // Celebration data passed in when WIN_CELEBRATION is active
@@ -494,6 +500,12 @@ const colHdr: React.CSSProperties = {
 
 function LegendModal({ onClose, legend }: { onClose: () => void; legend: LegendData }) {
   const [tab, setTab] = useState<"payouts" | "scoring" | "badges">("payouts");
+  // Live countdown to next UTC midnight — updates every second while modal is open.
+  const [countdown, setCountdown] = useState<string>(() => formatBonusCountdownLocal());
+  useEffect(() => {
+    const interval = setInterval(() => setCountdown(formatBonusCountdownLocal()), 1000);
+    return () => clearInterval(interval);
+  }, []);
   return (
     <div onClick={onClose} style={{
       position: "fixed", inset: 0, zIndex: 300,
@@ -537,17 +549,36 @@ function LegendModal({ onClose, legend }: { onClose: () => void; legend: LegendD
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {legend.todaysStars && legend.todaysStars.length > 0 && (
                 <div style={{ marginBottom: 10, paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-                  <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1.2, color: "#FB923C", textTransform: "uppercase", marginBottom: 8 }}>
-                    ★ TODAY'S STARS
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1.2, color: "#FFD700", textTransform: "uppercase" }}>
+                      ★ TODAY'S HOT PLAYERS
+                    </div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.4)", fontVariantNumeric: "tabular-nums" }}>
+                      NEW IN {countdown}
+                    </div>
                   </div>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {legend.todaysStars.map(s => (
-                      <div key={s.basePlayerId} style={{
-                        padding: "5px 12px", borderRadius: 8,
-                        background: "rgba(251,146,60,0.12)", border: "1px solid rgba(251,146,60,0.3)",
-                        fontSize: 11, fontWeight: 800, color: "#FB923C",
-                      }}>{s.name}</div>
-                    ))}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {legend.todaysStars.map(s => {
+                      const bonus = s.bonus ?? 5;
+                      const starCount = bonus === 20 ? 3 : bonus === 10 ? 2 : 1;
+                      const stars = "★".repeat(starCount);
+                      return (
+                        <div key={s.basePlayerId} style={{
+                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                          padding: "8px 12px", borderRadius: 10,
+                          background: "rgba(255,215,0,0.08)", border: "1px solid rgba(255,215,0,0.25)",
+                        }}>
+                          <span style={{ fontSize: 13, fontWeight: 800, color: "#EAF0FF" }}>{s.name}</span>
+                          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <span style={{ fontSize: 14, color: "#FFD700", letterSpacing: 1 }}>{stars}</span>
+                            <span style={{ fontSize: 11, fontWeight: 900, color: "#FFD700", minWidth: 28, textAlign: "right" }}>+{bonus}</span>
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div style={{ marginTop: 8, fontSize: 9, color: "rgba(255,255,255,0.32)", lineHeight: 1.5 }}>
+                    Pick these players — they add bonus FP on top of their real game. Rotates at UTC midnight.
                   </div>
                 </div>
               )}

@@ -4,7 +4,7 @@ import { track, setProduct } from "./analytics";
 export type AnalyticsSport = "basketball" | "worldcup" | "football" | "nfl" | "hockey" | "baseball" | "mma";
 
 const TIER_THRESHOLDS: Record<AnalyticsSport, number[]> = {
-  basketball: [135, 160, 180, 205],
+  basketball: [180, 195, 210, 225, 240],  // ROOKIE, STARTER, ALL_STAR, MVP, GOAT — must sync with payoutLogic.ts
   worldcup:   [155, 180, 200, 230],
   football:   [135, 160, 180, 205],
   nfl:        [135, 160, 180, 205],
@@ -28,7 +28,6 @@ export function useGameAnalytics(sport: AnalyticsSport) {
 
   return {
     handDealt(roster: any[]) {
-      console.log('ANALYTICS TRACK called');
       const cost = roster.reduce((s: number, c: any) => s + Number(c?.salary ?? 0), 0);
       track("gameplay", "hand_dealt", { sport, rosterCost: cost, playerCount: roster.length });
     },
@@ -49,6 +48,12 @@ export function useGameAnalytics(sport: AnalyticsSport) {
       if (nextTierFp !== undefined && (nextTierFp - totalFp) <= SO_CLOSE_GAP) {
         track("gameplay", "so_close", { sport, currentFp: Math.round(totalFp * 10) / 10, nextTierFp, gapFp: Math.round((nextTierFp - totalFp) * 10) / 10 });
       }
+    },
+    redrawUsed() {
+      track("gameplay", "redraw_used", { sport });
+    },
+    ftueCompleted() {
+      track("gameplay", "ftue_completed", { sport });
     },
     sessionEnd() {
       const duration_ms = Date.now() - sessionStartRef.current;

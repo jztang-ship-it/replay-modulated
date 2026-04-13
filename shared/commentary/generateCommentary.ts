@@ -59,7 +59,7 @@ function qualityGate(raw: string, roster: CommentaryInput["roster"]): string | n
   // 5. Hard reject: names a non-star player
   for (const card of roster) {
     const tier = (card.cardTier ?? "").toUpperCase();
-    if (tier === "ORANGE" || tier === "PURPLE") continue;
+    if (tier === "RED" || tier === "ORANGE" || tier === "PURPLE") continue;
     const parts = card.name.trim().split(/\s+/);
     const last = parts[parts.length - 1]?.toLowerCase();
     if (last && last.length > 2 && lower.includes(last)) return null;
@@ -68,7 +68,7 @@ function qualityGate(raw: string, roster: CommentaryInput["roster"]): string | n
   // 6. Hard reject: no star player's FULL NAME (first AND last) appears
   const stars = roster.filter(c => {
     const t = (c.cardTier ?? "").toUpperCase();
-    return t === "ORANGE" || t === "PURPLE";
+    return t === "RED" || t === "ORANGE" || t === "PURPLE";
   });
   const hasFullStarName = stars.some(c => {
     const full = c.name.trim().toLowerCase();
@@ -96,7 +96,17 @@ function qualityGate(raw: string, roster: CommentaryInput["roster"]): string | n
   return text;
 }
 
+// BETA: Claude commentary disabled — phrase bank handles all output.
+// Re-enable post-beta by removing the early return below.
 export async function generateCommentary(
+  _input: CommentaryInput,
+  _culture: CommentaryCultureNugget[],
+  _recentTones: string[],
+): Promise<CommentaryOutput | null> {
+  return null;
+}
+
+export async function _generateCommentaryFull(
   input: CommentaryInput,
   culture: CommentaryCultureNugget[],
   recentTones: string[],

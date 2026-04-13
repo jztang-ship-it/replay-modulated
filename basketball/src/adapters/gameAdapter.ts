@@ -7,13 +7,11 @@ import { sportAdapter } from "./SportAdapter";
 import { getPlayers, getLogsByKey } from "../engines/dataEngine";
 import { generateRoster, redrawRoster as engineRedraw, mulberry32, randomSeed } from "../engines/rosterEngine";
 import { resolveCards } from "../engines/resolveEngine";
-import { DEFAULT_ECONOMY_CONFIG } from "../engines/economyEngine";
-import { getDailyOrangePool } from "@shared/utils/dailyRotation";
+import { DEFAULT_ECONOMY_CONFIG, tierFromSalary } from "../engines/economyEngine";
+import { buildDailyBonusMap, getDailyBonusPlayers, type DailyBonusPlayer } from "@shared/utils/dailyBonus";
 import type { PlayerCard } from "./types";
 import type { PlayerEval, GeneratedCard } from "../engines/rosterEngine";
 import type { EconomyConfig } from "../engines/economyEngine";
-
-const DAILY_ORANGE_COUNT = 4;
 
 /** Single canonical key used everywhere player identity is compared.
  *  basePlayerId is always preferred; id is the fallback (may include season suffix).
@@ -43,7 +41,13 @@ function toPlayerEval(p: any, projByBaseId: Map<string, number>): PlayerEval {
   const baseId = playerKey(p);
   const proj = projByBaseId.get(baseId) ?? Number(p.avgFP ?? p.projectedFp ?? 0);
   const eco = getEconomyConfig();
-  const salary = Math.max(eco.salaryMin, Math.min(Number(p.salary ?? 10), eco.salaryMax));
+  // Basketball uses pre-computed salaries in players.json (range $13-$89).
+  // Only clamp the LOWER bound — never cap the top, or superstars collapse
+  // to the same salary as mid-tier starters (was squashing top 9 to $65).
+  const salary = Math.max(eco.salaryMin, Number(p.salary ?? 10));
+  // Derive tier from salary rather than trusting players.json — the JSON tier
+  // field is stale and inconsistent (e.g. same-salary players tagged differently).
+  // Salary-derived tiers align with strategic economy thresholds.
   return {
     id: String(p.id),
     basePlayerId: baseId,
@@ -56,7 +60,7 @@ function toPlayerEval(p: any, projByBaseId: Map<string, number>): PlayerEval {
     photoCode: p.photoCode,
     projectedFp: proj,
     salary,
-    tier: sportAdapter.normalizeTier(p.tier),
+    tier: tierFromSalary(salary, eco),
   };
 }
 
@@ -85,42 +89,41 @@ function hasValidLogs(basePlayerId: string, logsByKey: Map<string, any[]>): bool
   });
 }
 
-/** Build the eval pool with daily ORANGE rotation applied. */
+/** Build the eval pool — all tiers eligible as long as they have valid logs. */
 function buildEvalPool(players: any[], logs: Map<string, any[]>, projByBaseId: Map<string, number>): PlayerEval[] {
-  const allOrangeIds = players
-    .filter((p: any) => String(p.tier ?? "").toUpperCase() === "ORANGE")
-    .map((p: any) => playerKey(p));
-  const activeOrange = getDailyOrangePool(allOrangeIds, DAILY_ORANGE_COUNT);
   const result = players
-    .filter((p: any) => {
-      if (!hasValidLogs(playerKey(p), logs)) return false;
-      // ORANGE players only appear if in today's rotation
-      const tier = String(p.tier ?? "").toUpperCase();
-      if (tier === "ORANGE") {
-        const key = playerKey(p);
-        const active = activeOrange.has(key);
-        console.log(`[rotation-check] ${String(p.name ?? "")} key=${key} active=${active}`);
-        return active;
-      }
-      return true;
-    })
+    .filter((p: any) => hasValidLogs(playerKey(p), logs))
     .map(p => toPlayerEval(p, projByBaseId));
 
-  const orangeInPool = result.filter(p => (p.tier ?? "").toUpperCase() === "ORANGE");
-  console.log(`[roster v4] pool=${result.length} orangeInPool=${orangeInPool.length} names=${orangeInPool.map(p => p.name).join(",")}`);
   return result;
 }
 
-/** Get today's active ORANGE star names + IDs (for legend modal). */
-export function getTodaysStars(): Array<{ name: string; basePlayerId: string; salary: number }> {
+/** Build the bonus-eligible pool once: 2024-25 players with valid logs, tier from salary. */
+function buildBonusPool(): Array<{ basePlayerId: string; name: string; tier: string }> {
   const allPlayers = getPlayers();
-  const players = allPlayers.filter((p: any) => String(p.id ?? "").includes("_2425"));
-  const orangePlayers = players.filter((p: any) => String(p.tier ?? "").toUpperCase() === "ORANGE");
-  const allOrangeIds = orangePlayers.map((p: any) => playerKey(p));
-  const activeIds = getDailyOrangePool(allOrangeIds, DAILY_ORANGE_COUNT);
-  return orangePlayers
-    .filter((p: any) => activeIds.has(playerKey(p)))
-    .map((p: any) => ({ name: String(p.name ?? ""), basePlayerId: playerKey(p), salary: Number(p.salary ?? 0) }));
+  const logs = getLogsByKey();
+  const eco = getEconomyConfig();
+  return allPlayers
+    .filter((p: any) => String(p.id ?? "").includes("_2425"))
+    .filter((p: any) => hasValidLogs(playerKey(p), logs))
+    .map((p: any) => {
+      const salary = Math.max(eco.salaryMin, Number(p.salary ?? 10));
+      return {
+        basePlayerId: playerKey(p),
+        name: String(p.name ?? ""),
+        tier: tierFromSalary(salary, eco),
+      };
+    });
+}
+
+/** Today's 3 hot players with their bonus FP values — shown in Legend modal. */
+export function getTodaysStars(): DailyBonusPlayer[] {
+  return getDailyBonusPlayers(buildBonusPool());
+}
+
+/** Internal: today's bonus map (basePlayerId → bonus FP), used at resolve time. */
+function getDailyBonusMapNow(): Map<string, number> {
+  return buildDailyBonusMap(buildBonusPool());
 }
 
 export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
@@ -184,10 +187,8 @@ export async function redrawRoster({
 
 export async function resolveRoster({
   finalCards,
-  handCount,
 }: {
   finalCards: PlayerCard[];
-  handCount?: number;
 }): Promise<{ roster: PlayerCard[]; mvpCardId?: string }> {
   const logsByKey = getLogsByKey();
   const rnd = mulberry32(randomSeed());
@@ -198,11 +199,61 @@ export async function resolveRoster({
     {
       fpScale: 1,
       minMinutes: (sportAdapter as any).config?.historicalLogFilters?.minMinutes ?? 10,
-      handCount: handCount ?? 999,
+      dailyBonusMap: getDailyBonusMapNow(),
     },
     sportAdapter,
     rnd,
   );
 
   return { roster: resolved as unknown as PlayerCard[], mvpCardId };
+}
+
+/**
+ * Compute the roster's theoretical ceiling: sum of each player's PERSONAL PEAK FP
+ * from their 2024-25 game logs. Matches the same filter used at resolve time:
+ * must have positive stats and minMinutes of playing time.
+ *
+ * Returns the sum of each card's best single-game FP (including badge bonuses).
+ */
+export function computeRosterCeiling(roster: PlayerCard[]): number {
+  const logsByKey = getLogsByKey();
+  const minMinutes = (sportAdapter as any).config?.historicalLogFilters?.minMinutes ?? 10;
+  let ceiling = 0;
+
+  for (const card of roster) {
+    const baseId = String((card as any).basePlayerId ?? (card as any).personKey ?? "").trim();
+    if (!baseId) continue;
+
+    // Match resolveEngine: prefer season-specific logs, fall back to all
+    const seasonStr = String((card as any).season ?? "");
+    const seasonNum = Number(seasonStr);
+    const seasonKey = Number.isFinite(seasonNum) && seasonNum > 0 ? `${baseId}|${Math.round(seasonNum)}` : null;
+    let candidates = seasonKey ? (logsByKey.get(seasonKey) ?? []) : [];
+    if (!candidates.length) candidates = logsByKey.get(baseId) ?? [];
+
+    let bestFp = 0;
+    for (const log of candidates) {
+      const stats = (log as any).stats ?? {};
+      // Must have at least one positive stat value
+      const hasPositive = Object.values(stats).some(v => typeof v === "number" && v > 0);
+      if (!hasPositive) continue;
+      // Must meet min minutes threshold
+      const mp = stats.mp ?? stats.minutes ?? stats.min ?? stats.MIN ?? stats.minutesPlayed;
+      if (mp !== undefined && mp !== null) {
+        const mpStr = String(mp);
+        const mins = mpStr.includes(":") ? parseFloat(mpStr.split(":")[0]) : parseFloat(mpStr);
+        if (Number.isFinite(mins) && mins < minMinutes) continue;
+      }
+      // Compute FP with position injected (matches resolveEngine)
+      const statsWithPosition = { ...stats, _position: (card as any).position ?? "" };
+      const baseFp = sportAdapter.computeFantasyPoints(statsWithPosition);
+      const badges = sportAdapter.computeBadges(statsWithPosition);
+      const badgeBonus = badges.reduce((s, b) => s + (b.fp ?? 0), 0);
+      const total = baseFp + badgeBonus;
+      if (total > bestFp) bestFp = total;
+    }
+    ceiling += bestFp;
+  }
+
+  return Math.round(ceiling * 10) / 10;
 }

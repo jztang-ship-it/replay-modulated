@@ -75,12 +75,23 @@ export function buildBasketballContext(
         ? culture.opponentFlavor[card.opponent.toUpperCase()]
         : undefined;
 
+    // Check if this is a former-team matchup
+    const isFormerTeam = opponentFlavor !== undefined;
+
     out.push({
       playerName: card.name,
       knownFor: culture.knownFor,
       nicknames: culture.nicknames,
       relevantTones: pickRelevantTones(culture, card),
       opponentFlavor,
+      signatureGames: culture.signatureGames?.slice(0, 3),
+      salaryNarrative: culture.salaryNarrative?.slice(0, 2),
+      streakLines: culture.streakLines?.slice(0, 2),
+      teamContext: culture.teamContext?.slice(0, 1),
+      draftAndPath: culture.draftAndPath?.slice(0, 1),
+      formerTeam: isFormerTeam ? culture.formerTeam?.slice(0, 1) : undefined,
+      rivalry: culture.rivalry?.slice(0, 1),
+      milestones: culture.milestones?.slice(0, 1),
     });
   }
   return out;

@@ -229,9 +229,10 @@ export function RosterGrid(props: Props) {
               isSpotlight={activeRevealCardId === id}
               spotlightLevel={
                 activeRevealCardId === id ? (
-                  (card as any).tier === "ORANGE" ? 3 :
-                    (card as any).tier === "PURPLE" ? 2 :
-                      ((visibleBadgesMap?.get(id)?.length ?? 0) >= 2) ? 1 : 0
+                  (card as any).tier === "RED" ? 4 :
+                    (card as any).tier === "ORANGE" ? 3 :
+                      (card as any).tier === "PURPLE" ? 2 :
+                        ((visibleBadgesMap?.get(id)?.length ?? 0) >= 2) ? 1 : 0
                 ) : 0
               }
               isDimmed={isDimmed}

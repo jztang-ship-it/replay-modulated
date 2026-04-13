@@ -2,8 +2,14 @@
 /**
  * runSimulator.ts — Basketball Economy Simulator
  *
+ * Two modes:
+ *   --random   Pure random selection + uniform log sampling (theoretical baseline)
+ *   --engine   Models actual rosterEngine: ORANGE anchor, salary² weighting,
+ *              biased log sampling, $194 salary floor (default)
+ *
  * Usage (from ~/ReplayMod/basketball/):
- *   npx ts-node --project tsconfig.sim.json src/tools/runSimulator.ts 1000
+ *   npx ts-node --project tsconfig.sim.json src/tools/runSimulator.ts 5000
+ *   npx ts-node --project tsconfig.sim.json src/tools/runSimulator.ts 5000 --random
  *   npx ts-node --project tsconfig.sim.json src/tools/runSimulator.ts 10000 --verbose
  */
 
@@ -19,7 +25,7 @@ function computeFp(stats: Record<string, any>): number {
     g("ast") * 1.5 +
     g("stl") * 2.0 +
     g("blk") * 2.0 +
-    g("turnovers") * -1.0 + (g("tov") + g("turnovers")) * -1.0
+    g("turnovers") * -1.0
   );
 }
 
@@ -29,28 +35,21 @@ function computeBadgeBonus(stats: Record<string, any>): number {
   const pts = g("pts"), reb = g("reb"), ast = g("ast");
   const stl = g("stl"), blk = g("blk"), to = g("turnovers");
   let bonus = 0;
-  // Scoring
   if (pts >= 50) bonus += 10;
   else if (pts >= 40) bonus += 5;
   else if (pts >= 30) bonus += 2;
-  // Rebounds
   if (reb >= 15) bonus += 5;
   else if (reb >= 10) bonus += 3;
-  // Assists
   if (ast >= 15) bonus += 5;
   else if (ast >= 10) bonus += 3;
-  // Steals
   if (stl >= 5) bonus += 4;
   else if (stl >= 3) bonus += 2;
-  // Blocks
   if (blk >= 5) bonus += 4;
   else if (blk >= 3) bonus += 2;
-  // Efficiency
   if (ast >= 10 && to === 0) bonus += 8;
   else if (ast >= 5 && to === 0) bonus += 3;
   if (to >= 6) bonus -= 6;
   else if (to >= 4) bonus -= 3;
-  // Milestones
   const cats = [pts, reb, ast, stl, blk].filter(v => v >= 10).length;
   if (cats >= 4) bonus += 30;
   else if (cats >= 3) bonus += 8;
@@ -74,12 +73,67 @@ function makeRng(seed = 12345) {
   };
 }
 
+// ── Biased log sampling — mirrors resolveEngine.pickBiasedLog ────────────
+function sumStats(stats: Record<string, any>): number {
+  return Object.values(stats).filter(v => typeof v === "number" && v > 0).reduce((s: number, v) => s + (v as number), 0);
+}
+
+function pickBiasedLog(logs: any[], tier: string, rnd: () => number, minMinutes = 10, isProtected = false, top80 = false): any {
+  // Filter out garbage: must have positive stats and meet minute threshold
+  const filtered = logs.filter(l => {
+    const stats = l.stats ?? l;
+    const hasPositive = Object.values(stats).some(v => typeof v === "number" && (v as number) > 0);
+    if (!hasPositive) return false;
+    const mp = stats.mp ?? stats.minutes ?? stats.min ?? stats.MIN;
+    if (mp !== undefined && mp !== null) {
+      const mins = String(mp).includes(":") ? parseFloat(String(mp).split(":")[0]) : parseFloat(String(mp));
+      if (Number.isFinite(mins) && mins < minMinutes) return false;
+    }
+    return true;
+  });
+  if (!filtered.length) return logs[Math.floor(rnd() * logs.length)];
+  if (filtered.length === 1) return filtered[0];
+
+  const sorted = [...filtered].sort((a, b) => sumStats(b.stats ?? b) - sumStats(a.stats ?? a));
+  const n = sorted.length;
+  const t = (tier ?? "").toUpperCase();
+  let lo: number, hi: number;
+  // isProtected mirrors resolveEngine: hands 2-30 → all tiers sample top 60%
+  if      (isProtected)    { lo = 0;                    hi = Math.max(1, Math.ceil(n * 0.60)); }
+  else if (top80)          { lo = 0;                    hi = Math.max(1, Math.ceil(n * 0.80)); }  // top 80% floor: no bottom-20% games
+  else if (t === "ORANGE") { lo = 0;                    hi = Math.max(1, Math.ceil(n * 0.40)); }
+  else if (t === "PURPLE") { lo = 0;                    hi = Math.max(1, Math.ceil(n * 0.55)); }
+  else if (t === "BLUE")   { lo = Math.floor(n * 0.20); hi = Math.min(n, Math.ceil(n * 0.70)); }
+  else if (t === "GREEN")  { lo = Math.floor(n * 0.30); hi = Math.min(n, Math.ceil(n * 0.80)); }
+  else                     { lo = Math.floor(n * 0.40); hi = n; }
+  lo = Math.max(0, lo);
+  hi = Math.min(n, Math.max(lo + 1, hi));
+  const window = sorted.slice(lo, hi);
+  return window[Math.floor(rnd() * window.length)];
+}
+
+// ── Weighted random by salary² ────────────────────────────────────────────
+function pickWeighted(pool: any[], rnd: () => number): any {
+  const weights = pool.map(p => Math.pow(Number(p.salary ?? 1), 2));
+  const total = weights.reduce((s, w) => s + w, 0);
+  let rand = rnd() * total;
+  for (let i = 0; i < pool.length; i++) {
+    rand -= weights[i];
+    if (rand <= 0) return pool[i];
+  }
+  return pool[pool.length - 1];
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────
 function main() {
-  const N       = parseInt(process.argv[2] ?? "1000", 10);
-  const verbose = process.argv.includes("--verbose");
+  const N             = parseInt(process.argv[2] ?? "1000", 10);
+  const verbose       = process.argv.includes("--verbose");
+  const randomMode    = process.argv.includes("--random");
+  const protectedMode = process.argv.includes("--protected");  // mirrors hands 2-30 (top 60% all tiers)
+  const top80Mode     = process.argv.includes("--top80");       // no protection, but nobody gets bottom 20% of logs
 
-  console.log("🏀 ReplayMod Basketball Economy Simulator");
+  const modeName = randomMode ? "RANDOM (baseline)" : protectedMode ? "ENGINE + PROTECTED (hands 2-30)" : top80Mode ? "ENGINE + TOP-80% FLOOR (no protection period)" : "ENGINE (regular play, no protection)";
+  console.log(`🏀 ReplayMod Basketball Economy Simulator — ${modeName}`);
   console.log(`Running ${N.toLocaleString()} simulated hands...\n`);
 
   // Find data directory
@@ -91,11 +145,10 @@ function main() {
 
   let playersFile = "", logsFile = "";
   for (const base of bases) {
-    // Try both naming conventions
     for (const pf of ["players.json", "players.raw.json"]) {
       if (fs.existsSync(path.join(base, pf))) { playersFile = path.join(base, pf); break; }
     }
-    for (const lf of ["game-logs.json", "game-logs.json", "game-logs.raw.json"]) {
+    for (const lf of ["game-logs.json", "game-logs.raw.json"]) {
       if (fs.existsSync(path.join(base, lf))) { logsFile = path.join(base, lf); break; }
     }
     if (playersFile && logsFile) break;
@@ -114,92 +167,171 @@ function main() {
   const rawLogs: any[] = JSON.parse(fs.readFileSync(logsFile, "utf8"));
   console.log(`Loaded ${players.length.toLocaleString()} players, ${rawLogs.length.toLocaleString()} game logs`);
 
-  // Build log map: personId → logs[]
+  // Build log map: basePlayerId → logs[] (2425 season preferred)
   const logMap = new Map<string, any[]>();
+  const logMap2425 = new Map<string, any[]>();
   for (const log of rawLogs) {
     const key = String(log.basePlayerId ?? "");
     if (!key || key === "0") continue;
     if (!logMap.has(key)) logMap.set(key, []);
     logMap.get(key)!.push(log);
+    const season = String(log.season ?? log.seasonId ?? "");
+    if (season === "2425" || season === "2024-25" || season === "2024") {
+      if (!logMap2425.has(key)) logMap2425.set(key, []);
+      logMap2425.get(key)!.push(log);
+    }
   }
-  console.log(`Built log map: ${logMap.size.toLocaleString()} unique players with logs\n`);
+  console.log(`Built log map: ${logMap.size.toLocaleString()} unique players with logs`);
 
-  // Filter players that have logs and salary
+  // ── Player pool: only 2425-season players with salary ───────────────────
   const playablePool = players.filter(p => {
     const key = String(p.basePlayerId ?? "");
     const hasSalary = (p.salary ?? 0) > 0;
-    const hasLogs   = logMap.has(key) && (logMap.get(key)?.length ?? 0) > 0;
-    return hasSalary && hasLogs;
+    const has2425 = String(p.id ?? "").includes("_2425");
+    const hasLogs = (logMap2425.get(key)?.length ?? logMap.get(key)?.length ?? 0) > 0;
+    return hasSalary && has2425 && hasLogs;
   });
-
-  console.log(`Playable pool: ${playablePool.length.toLocaleString()} players (have salary + logs)`);
+  console.log(`Playable pool: ${playablePool.length.toLocaleString()} players (2425 season, have salary + logs)`);
 
   if (playablePool.length < 6) {
     console.error("❌ Not enough playable players. Check your data.");
     process.exit(1);
   }
 
-  const rnd    = makeRng(42);
-  const CAP_MAX = 200;
+  // Premium anchor pool = RED + ORANGE (treated interchangeably — RED is a visual tier).
+  const redPool    = playablePool.filter(p => Number(p.salary) >= 73);
+  const orangePool = playablePool.filter(p => Number(p.salary) >= 58);  // includes RED
+  const purplePool = playablePool.filter(p => Number(p.salary) >= 44 && Number(p.salary) < 58);
+  const otherPool  = playablePool.filter(p => Number(p.salary) < 44);
+  console.log(`  RED ($73+): ${redPool.length}  ORANGE ($58-72): ${orangePool.length - redPool.length}  PURPLE ($44-57): ${purplePool.length}  Other: ${otherPool.length}\n`);
+
+  const rnd     = makeRng(42);
+  const CAP_MAX = 250;   // matches sportAdapter.salaryCap (basketballConfig.salaryCap)
+  const MIN_SPEND = CAP_MAX - 6;  // guaranteeTierFloor ensures salary >= cap - 6
   const ROSTER_SIZE = 6;
-  const MIN_SALARY = 5; // assume floor for skip checks
+  const MIN_SALARY = 5;
   const allFps: number[] = [];
   const allSalaries: number[] = [];
-  let   totalBadgeBonus  = 0;
-  let   skippedHands     = 0;
+  let   totalBadgeBonus = 0;
+  let   skippedHands    = 0;
 
   const start = Date.now();
 
   for (let i = 0; i < N; i++) {
     if (i > 0 && i % 2000 === 0) process.stdout.write(`  ${i.toLocaleString()}/${N.toLocaleString()}...\n`);
 
-    // Build a valid lineup respecting the $200 cap.
-    // Greedy: pick a random player; if adding them keeps the cap reachable, take them.
-    // Try up to 300 attempts; skip the hand if no valid lineup forms.
     let lineup: any[] = [];
     let lineupSalary = 0;
-    let buildAttempts = 0;
     let built = false;
 
-    while (buildAttempts < 300) {
-      buildAttempts++;
-      lineup = [];
-      lineupSalary = 0;
-      const used = new Set<string>();
-      let pickAttempts = 0;
-      while (lineup.length < ROSTER_SIZE && pickAttempts < 500) {
-        pickAttempts++;
-        const p = playablePool[Math.floor(rnd() * playablePool.length)];
-        const key = String(p.basePlayerId ?? "");
-        if (used.has(key)) continue;
-        const sal = Number(p.salary ?? 0);
-        const slotsLeft = ROSTER_SIZE - lineup.length;
-        // Reject if adding this player makes it impossible to fill remaining slots within cap
-        if (lineupSalary + sal + (slotsLeft - 1) * MIN_SALARY > CAP_MAX) continue;
-        used.add(key);
-        lineup.push(p);
-        lineupSalary += sal;
+    if (randomMode) {
+      // ── RANDOM MODE: pure random selection ────────────────────────────
+      let buildAttempts = 0;
+      while (buildAttempts < 300) {
+        buildAttempts++;
+        lineup = [];
+        lineupSalary = 0;
+        const used = new Set<string>();
+        let pickAttempts = 0;
+        while (lineup.length < ROSTER_SIZE && pickAttempts < 500) {
+          pickAttempts++;
+          const p = playablePool[Math.floor(rnd() * playablePool.length)];
+          const key = String(p.basePlayerId ?? "");
+          if (used.has(key)) continue;
+          const sal = Number(p.salary ?? 0);
+          const slotsLeft = ROSTER_SIZE - lineup.length;
+          if (lineupSalary + sal + (slotsLeft - 1) * MIN_SALARY > CAP_MAX) continue;
+          used.add(key);
+          lineup.push(p);
+          lineupSalary += sal;
+        }
+        if (lineup.length === ROSTER_SIZE && lineupSalary <= CAP_MAX) { built = true; break; }
       }
-      if (lineup.length === ROSTER_SIZE && lineupSalary <= CAP_MAX) {
+    } else {
+      // ── ENGINE MODE: models actual rosterEngine behavior ──────────────
+      const maxAnchor = CAP_MAX - (ROSTER_SIZE - 1) * MIN_SALARY;
+      const anchorCandidates = orangePool.filter(p => Number(p.salary) <= maxAnchor);
+      if (!anchorCandidates.length) { skippedHands++; continue; }
+
+      // Retry up to 100 times to build a valid roster
+      for (let retry = 0; retry < 100 && !built; retry++) {
+        lineup = [];
+        lineupSalary = 0;
+        const used = new Set<string>();
+
+        // 1. Pick ORANGE anchor (salary² weighted)
+        const anchor = pickWeighted(anchorCandidates, rnd);
+        used.add(String(anchor.basePlayerId ?? ""));
+        lineup.push(anchor);
+        lineupSalary = Number(anchor.salary);
+
+        // 2. Fill remaining slots — salary²-weighted, fall back to cheapest on budget crunch
+        let stuckCount = 0;
+        while (lineup.length < ROSTER_SIZE && stuckCount < 20) {
+          const slotsLeft = ROSTER_SIZE - lineup.length;
+          const maxForSlot = CAP_MAX - lineupSalary - (slotsLeft - 1) * MIN_SALARY;
+          const candidates = playablePool.filter(p =>
+            !used.has(String(p.basePlayerId ?? "")) && Number(p.salary) <= maxForSlot
+          );
+          if (!candidates.length) { stuckCount++; break; }
+          const picked = pickWeighted(candidates, rnd);
+          used.add(String(picked.basePlayerId ?? ""));
+          lineup.push(picked);
+          lineupSalary += Number(picked.salary);
+        }
+
+        if (lineup.length < ROSTER_SIZE) continue; // retry
+
+        // 3. Enforce $194 salary floor: upgrade cheapest swappable player
+        for (let s = 0; s < 50 && lineupSalary < MIN_SPEND; s++) {
+          const gap = CAP_MAX - lineupSalary;
+          const swappable = lineup
+            .map((p, idx) => ({ p, idx }))
+            .sort((a, b) => Number(a.p.salary) - Number(b.p.salary));
+          let upgraded = false;
+          for (const { p: cur, idx } of swappable) {
+            const upgrades = playablePool.filter(u =>
+              !used.has(String(u.basePlayerId ?? "")) &&
+              Number(u.salary) > Number(cur.salary) &&
+              Number(u.salary) <= Number(cur.salary) + gap
+            ).sort((a, b) => Number(b.salary) - Number(a.salary));
+            if (!upgrades.length) continue;
+            used.delete(String(cur.basePlayerId ?? ""));
+            const upg = pickWeighted(upgrades.slice(0, 5), rnd);
+            used.add(String(upg.basePlayerId ?? ""));
+            lineupSalary += Number(upg.salary) - Number(cur.salary);
+            lineup[idx] = upg;
+            upgraded = true;
+            break;
+          }
+          if (!upgraded) break;
+        }
+
         built = true;
-        break;
       }
     }
 
     if (!built) {
       skippedHands++;
-      if (skippedHands <= 5) {
-        console.warn(`  ⚠ Could not build valid lineup after 300 attempts (hand ${i + 1})`);
-      }
+      if (skippedHands <= 5) console.warn(`  ⚠ Could not build valid lineup (hand ${i + 1})`);
       continue;
     }
 
+    // Score the hand
     let handFp = 0;
     for (const player of lineup) {
       const key  = String(player.basePlayerId ?? "");
-      const logs = logMap.get(key) ?? [];
-      if (!logs.length) continue;
-      const log   = logs[Math.floor(rnd() * logs.length)];
+      const tier = String(player.tier ?? "WHITE").toUpperCase();
+      const allLogs = logMap2425.get(key) ?? logMap.get(key) ?? [];
+      if (!allLogs.length) continue;
+
+      let log: any;
+      if (randomMode) {
+        log = allLogs[Math.floor(rnd() * allLogs.length)];
+      } else {
+        log = pickBiasedLog(allLogs, tier, rnd, 10, protectedMode, top80Mode);
+      }
+
       const stats = log.stats ?? log;
       const fp    = computeFp(stats);
       const bonus = computeBadgeBonus(stats);
@@ -221,9 +353,7 @@ function main() {
   const avgSalary = allSalaries.reduce((s, v) => s + v, 0) / handsBuilt;
 
   console.log(`\n✅ Completed in ${elapsed}s`);
-  if (skippedHands > 0) {
-    console.log(`⚠ Skipped ${skippedHands.toLocaleString()} hands (no valid lineup within $${CAP_MAX} cap after 300 attempts)`);
-  }
+  if (skippedHands > 0) console.log(`⚠ Skipped ${skippedHands.toLocaleString()} hands`);
 
   console.log("\n=== SALARY STATS (per hand) ===");
   console.log(`  Hands built:  ${handsBuilt.toLocaleString()} / ${N.toLocaleString()}`);
@@ -247,67 +377,56 @@ function main() {
   console.log(`  Avg badge bonus/hand: ${avgBadge.toFixed(2)}`);
 
   // ── Current threshold check ──────────────────────────────────────────
-  // Tiers (BUST is implicit — anything below ROOKIE)
   const CURRENT = [
-    { name: "ROOKIE",   minFp: 133, payout: "0.5x" },
-    { name: "STARTER",  minFp: 160, payout: "3x"   },
-    { name: "ALL_STAR", minFp: 183, payout: "8x"   },
-    { name: "MVP",      minFp: 207, payout: "15x"  },
-    { name: "GOAT",     minFp: 235, payout: "50x"  },
+    { name: "ROOKIE",   minFp: 180, payout: "0.5x" },
+    { name: "STARTER",  minFp: 195, payout: "2.5x" },
+    { name: "ALL_STAR", minFp: 210, payout: "7x"   },
+    { name: "MVP",      minFp: 225, payout: "15x"  },
+    { name: "GOAT",     minFp: 240, payout: "50x"  },
   ];
   console.log("\n=== CURRENT THRESHOLDS — HIT RATES ===");
-  // BUST = anything below the lowest tier (ROOKIE)
   const bustRate = allFps.filter(f => f < CURRENT[0].minFp).length / handsBuilt * 100;
-  const bustFlag = bustRate > 70 ? "⚠️  TOO PUNISHING"
-                 : bustRate < 35 ? "⚠️  TOO GENEROUS"
+  const bustFlag = bustRate > 65 ? "⚠️  TOO PUNISHING"
+                 : bustRate < 30 ? "⚠️  TOO GENEROUS"
                  : "✅ OK";
-  console.log(`  BUST       <${String(CURRENT[0].minFp).padStart(4)} FP  ${payout("0x")}  hit: ${bustRate.toFixed(1).padStart(5)}%  ${bustFlag}`);
+  console.log(`  BUST       <${String(CURRENT[0].minFp).padStart(4)} FP  (0x)     hit: ${bustRate.toFixed(1).padStart(5)}%  ${bustFlag}`);
   for (const tier of CURRENT) {
-    // "Hit rate" for a tier = lands in this tier exactly (>= this min, < next min)
     const nextIdx = CURRENT.indexOf(tier) + 1;
     const nextMin = nextIdx < CURRENT.length ? CURRENT[nextIdx].minFp : Infinity;
     const inTier = allFps.filter(f => f >= tier.minFp && f < nextMin).length / handsBuilt * 100;
     const cumRate = allFps.filter(f => f >= tier.minFp).length / handsBuilt * 100;
-    const flag = inTier > 60 ? "⚠️  WAY TOO EASY"
-               : inTier > 35 ? "⚠️  TOO EASY"
-               : cumRate < 0.2 ? "❌ NEARLY IMPOSSIBLE"
-               : "✅ OK";
-    console.log(`  ${tier.name.padEnd(10)} ≥${String(tier.minFp).padStart(4)} FP  ${payout(tier.payout)}  in tier: ${inTier.toFixed(1).padStart(5)}%  (cum: ${cumRate.toFixed(1).padStart(5)}%)  ${flag}`);
+    const flag = cumRate > 85 ? "⚠️  WAY TOO EASY" : cumRate > 65 ? "⚠️  TOO EASY" : cumRate < 0.2 ? "❌ NEARLY IMPOSSIBLE" : "✅ OK";
+    console.log(`  ${tier.name.padEnd(10)} ≥${String(tier.minFp).padStart(4)} FP  (${tier.payout.padEnd(5)})  in tier: ${inTier.toFixed(1).padStart(5)}%  (cum: ${cumRate.toFixed(1).padStart(5)}%)  ${flag}`);
   }
 
-  // ── Slot-machine targets ─────────────────────────────────────────────
-  // Target distribution: BUST ~50%, ROOKIE ~25%, STARTER ~15%, ALL_STAR ~7%, MVP ~2.5%, GOAT ~0.5%
-  // Cumulative: ROOKIE+ 50%, STARTER+ 25%, ALL_STAR+ 10%, MVP+ 3%, GOAT+ 0.5%
+  // ── Suggested thresholds for target distribution ──────────────────────
+  // Target: BUST ~45%, ROOKIE ~25%, STARTER ~17%, ALL_STAR ~9%, MVP ~3.5%, GOAT ~0.5%
   const targets = [
-    { name: "ROOKIE",   cumPct: 50,  payout: "0.5x" },
-    { name: "STARTER",  cumPct: 25,  payout: "3x"   },
-    { name: "ALL_STAR", cumPct: 10,  payout: "8x"   },
-    { name: "MVP",      cumPct: 3,   payout: "15x"  },
+    { name: "ROOKIE",   cumPct: 55,  payout: "0.5x" },
+    { name: "STARTER",  cumPct: 30,  payout: "2.5x" },
+    { name: "ALL_STAR", cumPct: 13,  payout: "7x"   },
+    { name: "MVP",      cumPct: 4,   payout: "15x"  },
     { name: "GOAT",     cumPct: 0.5, payout: "50x"  },
   ];
 
-  console.log("\n=== SUGGESTED THRESHOLDS (slot-machine feel) ===");
-  console.log("  Target: BUST ~50%, ROOKIE ~25%, STARTER ~15%, ALL_STAR ~7%, MVP ~2.5%, GOAT ~0.5%\n");
+  console.log("\n=== SUGGESTED THRESHOLDS (target: BUST~45%, WIN~55%) ===");
   const suggested: Record<string, number> = {};
   for (const t of targets) {
-    const threshold = pct(allFps, 100 - t.cumPct);
-    const rounded   = Math.round(threshold / 1); // round to nearest int
-    suggested[t.name] = rounded;
+    suggested[t.name] = Math.round(pct(allFps, 100 - t.cumPct));
   }
-  // Compute in-tier % for the suggested thresholds
   const tierOrder = ["ROOKIE", "STARTER", "ALL_STAR", "MVP", "GOAT"];
   const suggBust = allFps.filter(f => f < suggested["ROOKIE"]).length / handsBuilt * 100;
-  console.log(`  BUST       <${String(suggested["ROOKIE"]).padStart(4)} FP  ${payout("0x")}     → ~${suggBust.toFixed(1)}% in tier`);
+  console.log(`  BUST       <${String(suggested["ROOKIE"]).padStart(4)} FP  (0x)        → ~${suggBust.toFixed(1)}% bust`);
   for (let i = 0; i < tierOrder.length; i++) {
     const name = tierOrder[i];
     const minFp = suggested[name];
     const nextMin = i + 1 < tierOrder.length ? suggested[tierOrder[i + 1]] : Infinity;
     const inTier = allFps.filter(f => f >= minFp && f < nextMin).length / handsBuilt * 100;
     const tier = targets.find(t => t.name === name)!;
-    console.log(`  ${name.padEnd(10)} ≥${String(minFp).padStart(4)} FP  ${payout(tier.payout)}  → ~${inTier.toFixed(1)}% in tier`);
+    console.log(`  ${name.padEnd(10)} ≥${String(minFp).padStart(4)} FP  (${tier.payout.padEnd(5)}) → ~${inTier.toFixed(1)}% in tier`);
   }
 
-  console.log("\n=== COPY THIS INTO payoutLogic.ts + GameBar.tsx ===");
+  console.log("\n=== COPY THIS INTO payoutLogic.ts / GameBar.tsx / basketballConfig.ts ===");
   console.log(`  ROOKIE:   minFp: ${suggested["ROOKIE"]}`);
   console.log(`  STARTER:  minFp: ${suggested["STARTER"]}`);
   console.log(`  ALL_STAR: minFp: ${suggested["ALL_STAR"]}`);
@@ -316,9 +435,7 @@ function main() {
 
   if (verbose) {
     console.log("\n=== SAMPLE TOP 10 HANDS ===");
-    allFps.slice(-10).reverse().forEach((fp, i) =>
-      console.log(`  #${i + 1}: ${fp.toFixed(1)} FP`)
-    );
+    allFps.slice(-10).reverse().forEach((fp, i) => console.log(`  #${i + 1}: ${fp.toFixed(1)} FP`));
   }
 }
 

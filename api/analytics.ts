@@ -29,18 +29,54 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!evt) continue
       const feature = String(evt.feature ?? '')
       const action  = String(evt.action ?? evt.event ?? '')
+      const props   = evt.props ?? {}
+      const sport   = String(props.sport ?? 'basketball')
 
-      // Map feature/action -> storage keys
-      if (feature === 'gameplay' || action === 'hands_dealt') {
+      // ── Global aggregations ───────────────────────────────────────────────
+      if (feature === 'gameplay' && action === 'hand_dealt') {
         await inc(`gameplay:hands_dealt:${d}`, 1, YEAR)
       }
-      if (action === 'hand_resolved' || action === 'game_won') {
-        const bust = evt.props?.bust ?? evt.bust
+      if (action === 'hand_resolved') {
+        const bust = props.bust ?? false
         if (!bust) await inc(`gameplay:wins:${d}`, 1, YEAR)
         await inc(`gameplay:hands_resolved:${d}`, 1, YEAR)
       }
       if (feature === 'session' && action === 'session_end') {
         await inc(`gameplay:sessions:${d}`, 1, YEAR)
+      }
+
+      // ── Sport-specific aggregations (used by analytics-read gameplay view) ─
+      if (action === 'hand_dealt') {
+        await inc(`gameplay:${sport}:hands_dealt:${d}`, 1, YEAR)
+      }
+      if (action === 'hand_resolved') {
+        const bust  = props.bust ?? false
+        const score = Number(props.score ?? 0)
+        const badges = Number(props.badgeCount ?? 0)
+        const dur   = Number(props.duration_ms ?? 0)
+        const tier  = String(props.tier ?? 'BUST').toUpperCase()
+
+        await inc(`gameplay:${sport}:hands_resolved:${d}`, 1, YEAR)
+        if (bust) {
+          await inc(`gameplay:${sport}:busts:${d}`, 1, YEAR)
+        } else {
+          await inc(`gameplay:${sport}:wins:${d}`, 1, YEAR)
+        }
+        if (score > 0) await inc(`gameplay:${sport}:score_sum:${d}`, score, YEAR)
+        if (badges > 0) await inc(`gameplay:${sport}:badge_sum:${d}`, badges, YEAR)
+        if (dur > 0)    await inc(`gameplay:${sport}:duration_sum:${d}`, dur, YEAR)
+        if (tier && tier !== 'BUST') {
+          await inc(`gameplay:${sport}:tier:${tier}:${d}`, 1, YEAR)
+        }
+      }
+      if (action === 'so_close') {
+        await inc(`gameplay:${sport}:so_close:${d}`, 1, YEAR)
+      }
+      if (action === 'redraw_used') {
+        await inc(`gameplay:${sport}:redraws:${d}`, 1, YEAR)
+      }
+      if (action === 'ftue_completed') {
+        await inc(`gameplay:${sport}:ftue_completed:${d}`, 1, YEAR)
       }
     }
 

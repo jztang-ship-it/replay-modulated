@@ -48,7 +48,7 @@ export class SportAdapter {
 
   normalizeTier(raw: unknown): TierColor {
     const s = String(raw ?? "WHITE").trim().toUpperCase();
-    const valid: TierColor[] = ["ORANGE", "PURPLE", "BLUE", "GREEN", "WHITE"];
+    const valid: TierColor[] = ["RED", "ORANGE", "PURPLE", "BLUE", "GREEN", "WHITE"];
     return valid.includes(s as TierColor) ? (s as TierColor) : "WHITE";
   }
 

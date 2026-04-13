@@ -82,7 +82,8 @@ const SKIP_INTER_CARD_PAUSE_MS = 100;    // vs 300ms normal
 function glowMsForReveal(tier: string, st: ShakeType, isSkip: boolean): number {
   const t = tier.toUpperCase();
   // Base duration by tier
-  const base = t === "ORANGE" ? 900
+  const base = t === "RED"    ? 1000  // "bug" tier — maximum suspense
+             : t === "ORANGE" ? 900
              : t === "PURPLE" ? 700
              : t === "BLUE"   ? 400
              : t === "GREEN"  ? 350
@@ -96,7 +97,8 @@ function glowMsForReveal(tier: string, st: ShakeType, isSkip: boolean): number {
   const normal = Math.max(150, base + modifier);
   if (!isSkip) return normal;
   // Skip: compress but preserve relative feel — high tiers still noticeably longer
-  return t === "ORANGE" ? (st === "legendary" ? 500 : 400)
+  return t === "RED"    ? (st === "legendary" ? 550 : 450)
+       : t === "ORANGE" ? (st === "legendary" ? 500 : 400)
        : t === "PURPLE" ? (st === "legendary" || st === "big" ? 350 : 300)
        : t === "BLUE"   ? 200
        : t === "GREEN"  ? 175
@@ -112,6 +114,7 @@ function clamp(v: number, lo: number, hi: number) {
 function flipMsForTier(tier: string, isBig = false): number {
   const base = (() => {
     switch (tier.toUpperCase()) {
+      case "RED":    return 420;
       case "ORANGE": return 380;
       case "PURPLE": return 340;
       case "BLUE":   return 300;
@@ -124,6 +127,7 @@ function flipMsForTier(tier: string, isBig = false): number {
 function countMsForTier(tier: string, isAnchor = false): number {
   const base = (() => {
     switch (tier.toUpperCase()) {
+      case "RED":    return 650;
       case "ORANGE": return 600;
       case "PURPLE": return 550;
       case "BLUE":   return 500;
