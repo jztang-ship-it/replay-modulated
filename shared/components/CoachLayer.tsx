@@ -100,11 +100,11 @@ const DEFAULT_CARD_POSITION: Record<string, BubblePosition> = {
 };
 
 const DEFAULT_CARD_TEXTS: Record<string, string> = {
-  "ftue-curry": "Steph went off — 26 points and 10 assists for 52 FP. Dime badge for the double-digit dimes. That's a hot card. 🔥",
+  "ftue-curry": "Chef Curry was cooking something hot, 26 pts, 10 asts and a dime badge bonus translates into 52 FP. 🔥",
   "ftue-og": "OG earned his Pickpocket badge — 3 steals plus 2 blocks. Elite two-way wing doing it on both ends. 39.6 FP on a $46 card. 👀",
-  "ftue-draymond": "See the ice on Draymond? Only 9.5 FP on a $43 card. 2 points and 3 turnovers at Miami. Cold games like this are what cost you MVP. 🧊",
+  "ftue-draymond": "Yikes! Single digits from a $43 blue card. Draymond is one of the loudest voices in the game, but his stats sure were quiet tonight. 🧊",
   "ftue-lowry": "Kyle Lowry with the Pure badge — 5 assists, zero turnovers. 18.9 FP from a $20 card. Clean and efficient. 🎯",
-  "ftue-reddish": "Cam went cold too — 12.1 FP on 5 points at Minnesota. If Cam or Dray had one more play, we'd be celebrating MVP right now. 😤",
+  "ftue-reddish": "Only 5 pts against Minnesota which translated to 12.1 FP. That's what the frost means, he definitely didn't help your team. 🧊",
 };
 
 type OnDismiss = () => void;
@@ -520,14 +520,14 @@ export function CoachLayer({
     // Fire immediately — no artificial delay between tier panel landing and commentary.
     {
       // Show "So close" commentary — spotlight entire lineup + tier gauge
-      onCommentaryText?.([cfg?.nearMissText ?? "So close it hurts, we're only 0.9 FP away from winning that MVP 15x win."]);
+      onCommentaryText?.([cfg?.nearMissText ?? "So close it hurts, 0.9 FP away from the MVP level 15x win. Dray was the weaklink tonight, a rb, an ast or even a point would have pushed us over."]);
       enqueue({
         key: "darnit",
         node: null as any,
         anchor: "roster-and-score",
         position: "below",
         onDismiss: () => {
-          onCommentaryText?.([cfg?.anchorFlipHintText ?? "Tatum on the other hand really saved your bacon tonight. 92 FP is a great score. Flip his card to see what happened."], true);
+          onCommentaryText?.([cfg?.anchorFlipHintText ?? "Tatum on the other hand wore his super man cape, 92 FP(!) is nothing short of extraordinary. Flip his card to see what happened."], true);
           enqueue({
             key: "results_anchor",
             node: null as any,
@@ -553,7 +553,7 @@ export function CoachLayer({
     setTimeout(() => {
       // Part 1: Spotlight anchor — explain the stat line + badges
       onCommentaryText?.([
-        cfg?.anchorStatText ?? "43 points, 15 rebounds and 10 assists against Chicago. A triple-double! He also got rewarded 20 extra bonus points for special achievement badges. Getting badges are key to winning.",
+        cfg?.anchorStatText ?? "A 43pt, 15 rb, triple double against Chicago on the 21st of Dec in 2024, what's most important is he unlocked 6 badges for an extra 20 FP bonus. Bonuses = winning.",
       ]);
       enqueue({
         key: "anchor_gamelogs",

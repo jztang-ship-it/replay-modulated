@@ -176,7 +176,7 @@ const DRAWN: Record<number, () => GeneratedCard> = {
     cardId: "ftue-curry", basePlayerId: "201939",
     name: "Steph Curry", team: "GSW", position: "PG",
     tier: "PURPLE", salary: 57, slotIndex: 0,
-    projectedFp: 40, actualFp: 52.0,
+    projectedFp: 36, actualFp: 52.0,
     date: "2024-12-15", opponent: "DAL", homeAway: "H",
     statLine: { pts: 26, reb: 5, ast: 10, stl: 1, blk: 0, turnovers: 2, min: 35 },
     achievements: [
