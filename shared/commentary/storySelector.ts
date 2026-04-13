@@ -19,10 +19,10 @@ function isNameable(c: CommentaryRosterCard): boolean {
 
 function headlineScore(c: CommentaryRosterCard): number {
   const base = (c.salary * 2.5) + (c.actualFp * 1.5);
-  // Extreme games get massive priority boost — they ARE the story
-  const extremeBoost = (c.extremeFlags?.length ?? 0) > 0
-    ? (c.extremeFlags![0].priority * 5)
-    : 0;
+  // Tier 1 extremes get massive boost — they ARE the story
+  // Tier 2 gets moderate boost — supplements but doesn't override
+  const t1 = c.extremeFlags?.find(f => f.tier === 1);
+  const extremeBoost = t1 ? (t1.priority * 5) : (c.extremeFlags?.length ?? 0) > 0 ? 50 : 0;
   return base + extremeBoost;
 }
 
@@ -86,9 +86,11 @@ function assembleWinDetails(
 
   if (recordEvents.length > 0) candidates.push({ id: "record_event", probability: 0.95 });
 
-  // Extreme game detection — highest priority, always mentioned when present
-  const extremeCard = input.roster.find(c => (c.extremeFlags?.length ?? 0) > 0);
-  if (extremeCard) candidates.push({ id: "extreme_game", probability: 0.98 });
+  // Extreme game detection — tier 1 always mentioned, tier 2 supplements
+  const tier1Card = input.roster.find(c => c.extremeFlags?.some(f => f.tier === 1));
+  const tier2Card = input.roster.find(c => c.extremeFlags?.some(f => f.tier === 2));
+  if (tier1Card) candidates.push({ id: "extreme_game", probability: 1.0 }); // always
+  else if (tier2Card) candidates.push({ id: "extreme_game", probability: 0.50 }); // sometimes
 
   const gap = (input.nextTierMin ?? 0) > 0 ? (input.nextTierMin! - input.totalFp) : 999;
   if (gap > 0 && gap <= 3 && input.nextTier) candidates.push({ id: "near_miss_win", probability: 0.70 });
@@ -145,9 +147,11 @@ function assembleLossDetails(
 
   if (recordEvents.length > 0) candidates.push({ id: "record_event", probability: 0.95 });
 
-  // Extreme game in a losing hand — still worth calling out
-  const extremeCard = input.roster.find(c => (c.extremeFlags?.length ?? 0) > 0);
-  if (extremeCard) candidates.push({ id: "extreme_game", probability: 0.95 });
+  // Extreme game in a losing hand — tier 1 always, tier 2 sometimes
+  const tier1Card = input.roster.find(c => c.extremeFlags?.some(f => f.tier === 1));
+  const tier2Card = input.roster.find(c => c.extremeFlags?.some(f => f.tier === 2));
+  if (tier1Card) candidates.push({ id: "extreme_game", probability: 1.0 });
+  else if (tier2Card) candidates.push({ id: "extreme_game", probability: 0.40 });
 
   const zeroCard = input.roster.find(c => c.actualFp <= 1.0);
   if (zeroCard) candidates.push({ id: "zero_card", probability: 0.60 });
