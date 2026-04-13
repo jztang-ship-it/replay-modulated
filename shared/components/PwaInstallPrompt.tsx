@@ -1,0 +1,64 @@
+// shared/components/PwaInstallPrompt.tsx
+import { useState, useEffect, useRef } from "react";
+
+interface PwaInstallPromptProps {
+  active: boolean;
+}
+
+function wasShown(): boolean { return localStorage.getItem("rm_nudge_pwa_shown") === "1"; }
+function markShown(): void { localStorage.setItem("rm_nudge_pwa_shown", "1"); }
+function isIos(): boolean { return /iphone|ipad|ipod/i.test(navigator.userAgent); }
+function isStandalone(): boolean {
+  return window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone === true;
+}
+
+export function PwaInstallPrompt({ active }: PwaInstallPromptProps) {
+  const [visible, setVisible] = useState(false);
+  const [showIosInstructions, setShowIosInstructions] = useState(false);
+  const deferredPromptRef = useRef<any>(null);
+
+  useEffect(() => {
+    const handler = (e: Event) => { e.preventDefault(); deferredPromptRef.current = e; };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  useEffect(() => {
+    if (!active) return;
+    if (wasShown()) return;
+    if (isStandalone()) return;
+    markShown();
+    const t = setTimeout(() => setVisible(true), 1000);
+    return () => clearTimeout(t);
+  }, [active]);
+
+  if (!visible) return null;
+
+  const handleInstall = async () => {
+    if (deferredPromptRef.current) { deferredPromptRef.current.prompt(); deferredPromptRef.current = null; }
+    else if (isIos()) { setShowIosInstructions(true); return; }
+    setVisible(false);
+  };
+
+  const dismiss = () => setVisible(false);
+
+  return (
+    <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9000, padding: "16px 16px 24px", background: "linear-gradient(180deg, transparent, rgba(0,0,0,0.9) 30%)" }}>
+      <div style={{ background: "#1e293b", borderRadius: 12, padding: "14px 16px", maxWidth: 420, margin: "0 auto" }}>
+        {showIosInstructions ? (
+          <div style={{ color: "#e2e8f0", fontSize: 13, lineHeight: 1.5 }}>
+            <div style={{ fontWeight: 700, marginBottom: 6 }}>Add to Home Screen</div>
+            <div>Tap the <strong>Share</strong> button, then <strong>"Add to Home Screen"</strong></div>
+            <button onClick={dismiss} style={{ marginTop: 12, background: "none", border: "1px solid #334155", borderRadius: 8, color: "#94a3b8", padding: "8px 14px", fontSize: 13, cursor: "pointer", width: "100%" }}>Got it</button>
+          </div>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ flex: 1, color: "#e2e8f0", fontSize: 13, lineHeight: 1.4 }}>Add ReplayMod to your home screen for instant access.</div>
+            <button onClick={handleInstall} style={{ background: "#3b82f6", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Install</button>
+            <button onClick={dismiss} style={{ background: "none", border: "none", color: "#64748b", fontSize: 18, cursor: "pointer", padding: "4px 8px", lineHeight: 1 }}>×</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
