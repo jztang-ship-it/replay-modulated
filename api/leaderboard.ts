@@ -20,7 +20,7 @@ function todayUTC(): string {
   return new Date().toISOString().split("T")[0];
 }
 
-const VALID_METRICS = ["streak", "wins", "fp", "hand_best", "hand_avg", "money_won"];
+const VALID_METRICS = ["streak", "wins", "fp", "hand_best", "hand_avg", "money_won", "top3_combined"];
 const TTL_48H = 172800;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -55,6 +55,9 @@ async function handleSubmit(req: VercelRequest, res: VercelResponse) {
   if ((metric === "fp" || metric === "hand_best" || metric === "hand_avg") && value > FP_CEILING) {
     return json(res, 400, { error: "Invalid score" });
   }
+  if (metric === "top3_combined" && value > FP_CEILING * 3) {
+    return json(res, 400, { error: "Invalid score" });
+  }
   if (metric === "streak" && value > 100) {
     return json(res, 400, { error: "Invalid score" });
   }
@@ -70,8 +73,8 @@ async function handleSubmit(req: VercelRequest, res: VercelResponse) {
   }
   if (metric === "hand_avg") {
     const { handCount } = req.body ?? {};
-    if (typeof handCount !== "number" || handCount < 5) {
-      return json(res, 400, { error: "hand_avg requires handCount >= 5" });
+    if (typeof handCount !== "number" || handCount < 8) {
+      return json(res, 400, { error: "hand_avg requires handCount >= 8" });
     }
   }
   if (!uid || typeof uid !== "string") return json(res, 400, { error: "Missing uid" });
@@ -95,7 +98,7 @@ async function handleSubmit(req: VercelRequest, res: VercelResponse) {
       await kv.zadd(alltimeKey, { score: Number(currentAll) + value, member });
     }
   } else {
-    // streak, fp, hand_best, hand_avg — only update if personal best
+    // streak, fp, hand_best, hand_avg, top3_combined — only update if personal best
     const currentAll = (await kv.zscore(alltimeKey, member)) ?? 0;
     if (value > Number(currentAll)) {
       await kv.zadd(alltimeKey, { score: value, member });

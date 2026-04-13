@@ -41,3 +41,46 @@ export function calculateWinTier(totalFp: number, tiers: WinTierMap): WinTierKey
 export function calculatePayout(tier: WinTierKey, betAmount: number, tiers: WinTierMap): number {
   return betAmount * (tiers[tier]?.multiplier ?? 0);
 }
+
+// ── Streak multiplier system ────────────────────────────────────────────────
+// Consecutive non-bust wins boost payouts. Losing resets streak to 0.
+//   3 wins → 1.2x | 5 wins → 1.5x | 10 wins → 2.0x
+
+export interface StreakTier {
+  wins: number;
+  multiplier: number;
+}
+
+export const STREAK_TIERS: StreakTier[] = [
+  { wins: 10, multiplier: 2.0 },
+  { wins: 5,  multiplier: 1.5 },
+  { wins: 3,  multiplier: 1.2 },
+];
+
+/** Get the active streak multiplier for a given win count. */
+export function getStreakMultiplier(streak: number): number {
+  for (const tier of STREAK_TIERS) {
+    if (streak >= tier.wins) return tier.multiplier;
+  }
+  return 1.0;
+}
+
+/** Get the next streak tier the player is working toward (null if at max). */
+export function getNextStreakTier(streak: number): StreakTier | null {
+  // STREAK_TIERS is sorted descending; find the lowest tier not yet reached
+  for (let i = STREAK_TIERS.length - 1; i >= 0; i--) {
+    if (streak < STREAK_TIERS[i].wins) return STREAK_TIERS[i];
+  }
+  return null; // at max
+}
+
+/** Calculate payout with streak multiplier applied. */
+export function calculatePayoutWithStreak(
+  tier: WinTierKey,
+  betAmount: number,
+  tiers: WinTierMap,
+  streak: number,
+): number {
+  const basePayout = calculatePayout(tier, betAmount, tiers);
+  return Math.round(basePayout * getStreakMultiplier(streak));
+}
