@@ -1,35 +1,31 @@
-/**
- * shared/utils/playerIdentity.ts — Auto-generated nicknames for leaderboard.
- * Uses rm_uid from analytics as the canonical player identity.
- */
+// shared/utils/playerIdentity.ts
 
-const ADJECTIVES = ["Cobra","Stealth","Phantom","Iron","Thunder","Neon","Shadow","Golden","Rapid","Clutch"];
-const NOUNS = ["Hoops","Draft","Moves","Court","Bench","Swish","Paint","Press","Post","Drive"];
+/** Auth UID set by AuthProvider when Supabase resolves */
+let _authUid: string | null = null;
 
-export function getOrCreateNickname(): string {
-  const key = "replaymod_nickname";
-  const existing = localStorage.getItem(key);
-  if (existing) return existing;
-  const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
-  const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
-  const num = Math.floor(1000 + Math.random() * 9000);
-  const name = `${adj}${noun}_${num}`;
-  localStorage.setItem(key, name);
-  return name;
+/** Called by AuthProvider when Supabase user resolves. Do not call from elsewhere. */
+export function setAuthUid(uid: string | null): void {
+  _authUid = uid;
 }
 
-export function setNickname(name: string): void {
-  const trimmed = name.trim().slice(0, 20);
-  if (trimmed.length < 2) return;
-  localStorage.setItem("replaymod_nickname", trimmed);
+/** UID priority: Supabase user.id → localStorage rm_uid → generate new */
+export function getPlayerUid(): string {
+  if (_authUid) return _authUid;
+  const key = "rm_uid";
+  let uid = localStorage.getItem(key);
+  if (!uid) {
+    uid = "u_" + Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
+    localStorage.setItem(key, uid);
+  }
+  return uid;
 }
 
 export function getNickname(): string {
   return localStorage.getItem("replaymod_nickname") ?? getOrCreateNickname();
 }
 
-export function getPlayerUid(): string {
-  return localStorage.getItem("rm_uid") ?? "";
+export function setNickname(name: string): void {
+  localStorage.setItem("replaymod_nickname", name);
 }
 
 export function getSessionId(): string {
@@ -39,4 +35,24 @@ export function getSessionId(): string {
     localStorage.setItem("rm_session_id", id);
   }
   return id;
+}
+
+// ── Random nickname generator ──────────────────────────────────────────────
+const ADJECTIVES = [
+  "Shadow","Phantom","Iron","Golden","Silent","Swift","Cosmic","Neon",
+  "Thunder","Crimson","Blazing","Stealth","Frost","Rogue","Electric",
+  "Turbo","Viper","Storm","Cyber","Titan","Lunar","Onyx","Delta",
+];
+const NOUNS = [
+  "Hoops","Dunk","Clutch","Swish","Rebound","Fadeaway","Crossover",
+  "Alley","Buzzer","Layup","Jumper","Slam","Court","Triple","Press",
+];
+
+function getOrCreateNickname(): string {
+  const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+  const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
+  const num = Math.floor(1000 + Math.random() * 9000);
+  const nick = `${adj}${noun}_${num}`;
+  localStorage.setItem("replaymod_nickname", nick);
+  return nick;
 }

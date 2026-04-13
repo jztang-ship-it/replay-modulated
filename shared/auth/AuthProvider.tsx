@@ -1,6 +1,7 @@
 import { createContext, useEffect, useState, useRef, type ReactNode } from "react";
 import { supabase } from "@shared/lib/supabase";
 import type { User, AuthError } from "@supabase/supabase-js";
+import { setAuthUid } from "@shared/utils/playerIdentity";
 
 export interface AuthContextValue {
   user: User | null;
@@ -68,6 +69,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    setAuthUid(user?.id ?? null);
+  }, [user]);
 
   const signUp = async (email: string, password: string) => {
     const { error } = await supabase.auth.updateUser({ email, password });

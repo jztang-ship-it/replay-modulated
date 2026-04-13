@@ -77,18 +77,14 @@ const DEFAULT_CONFIG: AnalyticsConfig = {
 
 // ── PostHog config ────────────────────────────────────────────────────────────
 // Set VITE_POSTHOG_KEY in Vercel env vars. If not set, PostHog is silently skipped.
+import { getPlayerUid } from "@shared/utils/playerIdentity";
+
 const POSTHOG_KEY  = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
 const POSTHOG_HOST = (import.meta.env.VITE_POSTHOG_HOST as string | undefined) || 'https://us.i.posthog.com';
 
 function getOrCreateUserId(): string {
   try {
-    const key = 'rm_uid';
-    let uid = localStorage.getItem(key);
-    if (!uid) {
-      uid = 'u_' + Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
-      localStorage.setItem(key, uid);
-    }
-    return uid;
+    return getPlayerUid();
   } catch { return 'u_anonymous'; }
 }
 
