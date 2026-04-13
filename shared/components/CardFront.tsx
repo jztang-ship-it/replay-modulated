@@ -646,8 +646,9 @@ export function CardFront(props: CardFrontProps) {
           const sat = 0.80 - t * 0.30;         // 0.80 → 0.50
           const bright = 1.1 + t * 0.5;        // 1.1 → 1.6
           const speed = 4.5 - t * 1.5;         // 4.5s → 3.0s
-          const op1 = 0.06 + t * 0.54;         // 0.06 → 0.60
-          const op2 = 0.03 + t * 0.42;         // 0.03 → 0.45
+          const tCurve = t * t;                  // quadratic — mild end much fainter, extreme ramps up fast
+          const op1 = 0.08 + tCurve * 0.52;    // 0.08 → 0.60
+          const op2 = 0.04 + tCurve * 0.41;    // 0.04 → 0.45
           const useThirdLayer = t > 0.6;
           const tintFilter = `hue-rotate(${hue}deg) saturate(${sat}) brightness(${bright})`;
           const clipStyle: React.CSSProperties = {
