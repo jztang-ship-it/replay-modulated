@@ -143,23 +143,28 @@ function BackBStats({ card }: { card: PlayerCard }) {
           <span style={{ fontSize: 10, fontWeight: 700, color: badgeFpBonus > 0 ? "#FFD700" : "#FF6B6B", alignSelf: "flex-end", marginBottom: 2 }}>({badgeFpBonus > 0 ? "+" : ""}{badgeFpBonus})</span>
         )}
       </div>
-      {/* Earned badges — 3 per row */}
-      {badgesData.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 3 }}>
-          {badgesData.slice(0, 9).map((b: any, i: number) => (
-            <div key={b.id ?? b.label ?? i} style={{
-              display: "flex", alignItems: "center", gap: 3,
-              padding: "2px 4px", borderRadius: 6,
-              background: "rgba(255,255,255,0.08)",
-            }}>
-              <span style={{ fontSize: 10, lineHeight: 1, flexShrink: 0 }}>{b.icon}</span>
-              <span style={{ fontSize: 7, fontWeight: 700, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {b.label}{b.fp ? ` ${b.fp > 0 ? "+" : ""}${b.fp}` : ""}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Earned badges — 3 per row, fixed-height area so stats stay in place */}
+      <div style={{ minHeight: 20 }}>
+        {badgesData.length > 0 && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 3 }}>
+            {badgesData.slice(0, 9).map((b: any, i: number) => (
+              <div key={b.id ?? b.label ?? i} style={{
+                display: "flex", alignItems: "center", gap: 3,
+                padding: "2px 4px", borderRadius: 6,
+                background: "rgba(255,255,255,0.08)",
+              }}>
+                <span style={{ fontSize: 10, lineHeight: 1, flexShrink: 0 }}>{b.icon}</span>
+                <span style={{ fontSize: 7, fontWeight: 700, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {b.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+        {badgesData.length === 0 && (
+          <div style={{ fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.25)", textAlign: "center", paddingTop: 4 }}>No badges earned</div>
+        )}
+      </div>
       <div style={S.divider} />
       {!hasStats || allZero ? (
         <div style={S.noStatsWrap}><div style={S.noStatsText}>No game log</div></div>

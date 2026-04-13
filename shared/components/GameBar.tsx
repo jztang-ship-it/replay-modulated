@@ -134,6 +134,10 @@ type Props = {
    * (gated on ftueHideSkip).
    */
   onViewLeaderboard?: () => void;
+  /** Pulse the legend (ⓘ) icon to draw attention — e.g. daily bonus refresh */
+  legendPulsing?: boolean;
+  /** Called when user opens the legend modal — parent can clear pulse state */
+  onLegendOpened?: () => void;
 };
 
 const MULTIPLIERS = [1, 3, 5, 10];
@@ -470,6 +474,7 @@ function TierBar({
         <style>{`
           @keyframes tipPulse { 0%,100%{opacity:1;transform:translateY(-50%) scale(1)} 50%{opacity:.4;transform:translateY(-50%) scale(2)} }
           @keyframes nearMissPulse { 0%,100%{opacity:0.15} 50%{opacity:0.55} }
+          @keyframes legendIconPulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,215,0,0)} 50%{box-shadow:0 0 8px 4px rgba(255,215,0,0.5)} }
         `}</style>
         {/* FTUE near-miss pulsing segment — shows gap from current fill to next tier */}
         {ftuePulseNearMiss && fptNeeded > 0 && displayPct < 99 && (() => {
@@ -1288,6 +1293,8 @@ export function GameBar({
   splitFooter,
   splitMultiplierRowVisible = true,
   onViewLeaderboard,
+  legendPulsing = false,
+  onLegendOpened,
 }: Props) {
   // Trophy button: 36×36 circular, sits absolutely positioned right of the
   // action button row's container. Border + icon flip to gold once the user
@@ -1490,12 +1497,14 @@ export function GameBar({
             </div>
 
             {/* Legend — right */}
-            <button onClick={() => setShowLegend(true)} style={{
+            <button onClick={() => { setShowLegend(true); onLegendOpened?.(); }} style={{
               width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
               background: "transparent",
-              border: `2px solid ${THEME.colors.surfaceStroke}`,
-              color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: 900,
+              border: `2px solid ${legendPulsing ? "rgba(255,215,0,0.8)" : THEME.colors.surfaceStroke}`,
+              color: legendPulsing ? "rgba(255,215,0,0.9)" : "rgba(255,255,255,0.6)",
+              fontSize: 12, fontWeight: 900,
               cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+              animation: legendPulsing ? "legendIconPulse 1.5s ease-in-out infinite" : "none",
             }}>i</button>
           </div>
 
