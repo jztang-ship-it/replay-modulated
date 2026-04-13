@@ -340,16 +340,69 @@ function BetMultSuffix({ m }: { m: number }) {
 }
 
 // ── StreakDisplay — fire emojis showing current streak progress ───────────────
+// Always visible. Spark animation on light-up or reset.
 // 0 wins:  🔥🔥🔥 x1.2  (all dim)
 // 3 wins:  🔥🔥🔥 x1.2 ✓ → 🔥🔥 x1.5 appears
 // 5 wins:  ✓ ✓ → 🔥🔥🔥🔥🔥 x2.0 appears
 // 10 wins: all lit, 2.0x active
 
-function StreakFires({ count, lit, label }: { count: number; lit: number; label: string }) {
+const STREAK_STYLE_ID = "streak-spark-styles";
+if (typeof document !== "undefined" && !document.getElementById(STREAK_STYLE_ID)) {
+  const st = document.createElement("style");
+  st.id = STREAK_STYLE_ID;
+  st.textContent = `
+    @keyframes streakSpark {
+      0%   { transform: scale(0.5); opacity: 0; filter: brightness(3); }
+      40%  { transform: scale(1.5); opacity: 1; filter: brightness(2); }
+      100% { transform: scale(1);   opacity: 1; filter: brightness(1); }
+    }
+    @keyframes streakDim {
+      0%   { transform: scale(1.3); opacity: 1; filter: brightness(2); }
+      100% { transform: scale(1);   opacity: 0.2; filter: grayscale(1) brightness(1); }
+    }
+  `;
+  document.head.appendChild(st);
+}
+
+function StreakFire({ lit, spark }: { lit: boolean; spark: "light" | "dim" | "none" }) {
+  const anim = spark === "light" ? "streakSpark 0.4s ease-out forwards"
+    : spark === "dim" ? "streakDim 0.4s ease-out forwards"
+    : "none";
+  return (
+    <span style={{
+      fontSize: 13, lineHeight: 1, display: "inline-block",
+      opacity: lit ? 1 : 0.2,
+      filter: lit ? "none" : "grayscale(1)",
+      animation: anim,
+    }}>🔥</span>
+  );
+}
+
+function StreakFires({ count, lit, label, sparkKey }: { count: number; lit: number; label: string; sparkKey: number }) {
+  const prevLitRef = useRef(lit);
+  const [sparks, setSparks] = useState<Array<"light" | "dim" | "none">>(Array(count).fill("none"));
+
+  useEffect(() => {
+    const prev = prevLitRef.current;
+    prevLitRef.current = lit;
+    if (prev === lit) return;
+    const newSparks: Array<"light" | "dim" | "none"> = Array(count).fill("none");
+    if (lit > prev) {
+      // Lighting up
+      for (let i = prev; i < lit && i < count; i++) newSparks[i] = "light";
+    } else {
+      // Dimming (streak reset)
+      for (let i = lit; i < prev && i < count; i++) newSparks[i] = "dim";
+    }
+    setSparks(newSparks);
+    const t = setTimeout(() => setSparks(Array(count).fill("none")), 500);
+    return () => clearTimeout(t);
+  }, [lit, count]); // eslint-disable-line
+
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
       {Array.from({ length: count }, (_, i) => (
-        <span key={i} style={{ fontSize: 12, opacity: i < lit ? 1 : 0.2, filter: i < lit ? "none" : "grayscale(1)" }}>🔥</span>
+        <StreakFire key={`${sparkKey}-${i}`} lit={i < lit} spark={sparks[i]} />
       ))}
       <span style={{ fontSize: 9, fontWeight: 800, color: lit >= count ? "#FFD700" : "rgba(255,255,255,0.35)", marginLeft: 2 }}>{label}</span>
     </div>
@@ -359,9 +412,9 @@ function StreakFires({ count, lit, label }: { count: number; lit: number; label:
 function StreakDisplay({ streak }: { streak: number }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-start" }}>
-      <StreakFires count={3} lit={Math.min(streak, 3)} label="x1.2" />
-      {streak >= 3 && <StreakFires count={2} lit={Math.min(streak - 3, 2)} label="x1.5" />}
-      {streak >= 5 && <StreakFires count={5} lit={Math.min(streak - 5, 5)} label="x2.0" />}
+      <StreakFires count={3} lit={Math.min(streak, 3)} label="x1.2" sparkKey={streak} />
+      {streak >= 3 && <StreakFires count={2} lit={Math.min(streak - 3, 2)} label="x1.5" sparkKey={streak} />}
+      {streak >= 5 && <StreakFires count={5} lit={Math.min(streak - 5, 5)} label="x2.0" sparkKey={streak} />}
     </div>
   );
 }
@@ -2121,8 +2174,8 @@ export default function GameView() {
             boxSizing: "border-box",
           }}
         >
-          {/* Streak fire display — visible during pre-reveal phases, above wallet */}
-          {isPreRevealFooter && !isFTUE && (
+          {/* Streak fire display — always visible, above wallet */}
+          {!isFTUE && (
             <div style={{ padding: "0 14px 4px", flexShrink: 0 }}>
               <StreakDisplay streak={streak} />
             </div>

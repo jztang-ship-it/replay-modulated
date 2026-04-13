@@ -131,8 +131,7 @@ function assembleLossDetails(
 
   if (recordEvents.length > 0) candidates.push({ id: "record_event", probability: 0.95 });
 
-  const gap = (input.nextTierMin ?? 0) > 0 ? (input.nextTierMin! - input.totalFp) : 999;
-  if (gap > 0 && gap <= 3) candidates.push({ id: "near_miss_loss", probability: 0.80 });
+  // near_miss_loss removed — do not console losses, busts get no sympathy text
 
   const zeroCard = input.roster.find(c => c.actualFp <= 1.0);
   if (zeroCard) candidates.push({ id: "zero_card", probability: 0.60 });
