@@ -489,6 +489,13 @@ export default function GameView() {
   const [ftueBookerPulse, setFtueBookerPulse] = useState(false);
   const [ftueHoldSpotlight, setFtueHoldSpotlight] = useState(false);
   const [ftueCoachBubbleKey, setFtueCoachBubbleKey] = useState<string | null>(null);
+  /** Pre-game message shown in bet multiplier area — dismissed on tap, then multipliers appear */
+  const [preGameMsg, setPreGameMsg] = useState<string | null>(() => {
+    if (localStorage.getItem("replaymod_ftue_basketball") !== "1") return null; // still in FTUE
+    const seen = localStorage.getItem("replaymod_pregame_intro_basketball");
+    if (seen === "1") return null;
+    return "Every 24hrs three random players will have special bonuses. Holding or drawing them will give your team an extra boost. Click the ⓘ to see all scoring.";
+  });
   const pendingCelebration = useRef<{ totalFp: number } | null>(null);
   /** FTUE: roster sum can read 0 briefly in RESULTS — keep last resolved hand FP for TierGauge */
   const ftueLastHandFpRef = useRef(0);
@@ -1941,13 +1948,53 @@ export default function GameView() {
                 style={{
                   position: "absolute",
                   inset: 0,
-                  display: isPreRevealFooter ? "flex" : "none",
+                  display: (isPreRevealFooter && !preGameMsg) ? "flex" : "none",
                   alignItems: "center",
                   justifyContent: "center",
                   boxSizing: "border-box",
                   pointerEvents: "auto",
                 }}
               />
+              {/* Pre-game message — temporarily replaces multipliers, tap to dismiss */}
+              {preGameMsg && isPreRevealFooter && (
+                <div
+                  onClick={() => {
+                    localStorage.setItem("replaymod_pregame_intro_basketball", "1");
+                    setPreGameMsg(null);
+                  }}
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "4px 14px",
+                    cursor: "pointer",
+                    zIndex: 10,
+                    pointerEvents: "auto",
+                  }}
+                >
+                  <span style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.85)",
+                    textAlign: "center",
+                    lineHeight: 1.4,
+                    letterSpacing: 0.1,
+                  }}>
+                    {preGameMsg}
+                    <span style={{
+                      display: "block",
+                      fontSize: 9,
+                      fontWeight: 700,
+                      color: "rgba(255,255,255,0.4)",
+                      marginTop: 4,
+                      textTransform: "uppercase",
+                      letterSpacing: 1,
+                    }}>tap to dismiss</span>
+                  </span>
+                </div>
+              )}
               {showGaugeInZone3 ? (
                 <div
                   data-ftue-anchor="tier-gauge"
