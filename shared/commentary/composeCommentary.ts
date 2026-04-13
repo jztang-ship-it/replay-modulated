@@ -92,7 +92,7 @@ export interface PostRevealCopy {
 }
 
 export function composeCommentary(input: CommentaryInput & { sport?: string }): PostRevealCopy {
-  const seed = Math.floor(input.totalFp * 13) + input.streak * 7 + (input.isBust ? 3 : 0);
+  const seed = Math.abs(Math.floor(input.totalFp * 13) + input.streak * 7 + (input.isBust ? 3 : 0));
   const sport = input.sport ?? "basketball";
 
   // Step 1: Register

@@ -82,7 +82,8 @@ function applyPenalties(base: WeightRow, recent: ToneId[]): WeightRow {
 
 function weightedRandom(weights: WeightRow, seed: number): ToneId {
   const tones = Object.keys(weights) as ToneId[];
-  const roll = ((seed * 9301 + 49297) % 233280) / 233280 * 100;
+  const raw = (seed * 9301 + 49297) % 233280;
+  const roll = (raw < 0 ? raw + 233280 : raw) / 233280 * 100;
   let cumulative = 0;
   for (const tone of tones) {
     cumulative += weights[tone];

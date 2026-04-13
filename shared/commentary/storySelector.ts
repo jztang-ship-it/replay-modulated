@@ -67,7 +67,8 @@ interface DetailCandidate {
 }
 
 function roll(seed: number, index: number): number {
-  return ((seed * 9301 + 49297 + index * 7919) % 233280) / 233280;
+  const raw = (seed * 9301 + 49297 + index * 7919) % 233280;
+  return (raw < 0 ? raw + 233280 : raw) / 233280;
 }
 
 function assembleWinDetails(
