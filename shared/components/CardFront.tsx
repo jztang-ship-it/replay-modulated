@@ -514,16 +514,7 @@ export function CardFront(props: CardFrontProps) {
                     : fpText}
                 </span>
               </div>
-              {/* Daily bonus suffix — shown only after reveal, in gold to match the stars */}
-              {isShowingActualFp && dailyBonus > 0 && (
-                <span style={{
-                  fontSize: 9, fontWeight: 900, color: "#FFD700",
-                  lineHeight: 1, marginTop: 2, letterSpacing: -0.2,
-                  fontVariantNumeric: "tabular-nums",
-                }}>
-                  +{dailyBonus}
-                </span>
-              )}
+              {/* Daily bonus moved to accent strip below */}
             </div>
 
           </div>
@@ -538,12 +529,14 @@ export function CardFront(props: CardFrontProps) {
           zIndex: 4, overflow: "hidden",
           gap: 3,
         }}>
-          {hasBadges ? (() => {
+          {(() => {
             const isLightAccent = derivedTier === "GREEN" || derivedTier === "BLUE" || derivedTier === "WHITE";
             const textColor = isLightAccent ? "#1A1A1A" : "#FFEA86";
             const MAX_VISIBLE = 4;
-            const visibleBadges = badges!.slice(0, MAX_VISIBLE);
-            const overflowCount = (badges?.length ?? 0) - MAX_VISIBLE;
+            const visibleBadges = hasBadges ? badges!.slice(0, MAX_VISIBLE) : [];
+            const overflowCount = hasBadges ? Math.max(0, (badges?.length ?? 0) - MAX_VISIBLE) : 0;
+            const totalBonus = badgeBonusFp + dailyBonus;
+            const showBonus = isShowingActualFp && totalBonus !== 0;
             return (
               <>
                 {visibleBadges.map((badge, i) => (
@@ -562,20 +555,26 @@ export function CardFront(props: CardFrontProps) {
                     letterSpacing: 0.2, flexShrink: 0, opacity: 0.8,
                   }}>+{overflowCount}</span>
                 )}
-                {badgeBonusFp !== 0 && (
+                {/* Daily bonus stars */}
+                {isShowingActualFp && dailyBonus > 0 && (
                   <span style={{
-                    animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${Math.min(badges!.length, MAX_VISIBLE) * 70 + (overflowCount > 0 ? 70 : 0)}ms both`,
-                    fontSize: 11, fontWeight: 900, color: badgeBonusFp < 0 ? "#FF6B6B" : textColor,
+                    animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${(visibleBadges.length + (overflowCount > 0 ? 1 : 0)) * 70}ms both`,
+                    fontSize: 11, color: "#FFD700", letterSpacing: 1, flexShrink: 0,
+                  }}>{"★".repeat(dailyBonus === 20 ? 3 : dailyBonus === 10 ? 2 : 1)}</span>
+                )}
+                {/* Total bonus pill (badges + daily) */}
+                {showBonus && (
+                  <span style={{
+                    animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${(visibleBadges.length + (overflowCount > 0 ? 1 : 0) + (dailyBonus > 0 ? 1 : 0)) * 70}ms both`,
+                    fontSize: 11, fontWeight: 900, color: totalBonus < 0 ? "#FF6B6B" : textColor,
                     letterSpacing: 0.3, flexShrink: 0,
                     background: isLightAccent ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.15)",
                     borderRadius: 4, padding: "1px 4px",
-                  }}>{badgeBonusFp > 0 ? "+" : ""}{badgeBonusFp}</span>
+                  }}>{totalBonus > 0 ? "+" : ""}{totalBonus}</span>
                 )}
               </>
             );
-          })() : null}
-
-          {/* PERF PERCENTILE text removed — ratio expressed via fire/ice overlay instead */}
+          })()}
         </div>
 
         {/* FIRE/ICE EFFECT — continuous sliding scale based on actualFp/projectedFp ratio.

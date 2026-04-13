@@ -963,12 +963,20 @@ export default function GameView() {
     return Math.min(100, Math.round((totalFp / maxPossible) * 100));
   }, [gameState, roster, totalFp]);
 
-  /** Sum of daily bonus FP across the current roster. 0 if no hot players.
-   *  Max possible: 5+10+20 = 35 FP. */
-  const rosterDailyBonus = useMemo(() => {
+  /** Running total of ALL bonuses (daily + badges) — only counts revealed cards.
+   *  Accumulates per card reveal, starts at 0, reaches full total after all cards shown. */
+  const rosterTotalBonus = useMemo(() => {
     if (gameState === "IDLE" || gameState === "DEALING") return 0;
-    return roster.reduce((sum, c: any) => sum + (Number(c?.dailyBonus ?? 0) || 0), 0);
-  }, [gameState, roster]);
+    const isPostReveal = gameState === "RESULTS" || gameState === "WIN_CELEBRATION";
+    return roster.reduce((sum, c: any) => {
+      const cId = String(c?.cardId ?? c?.basePlayerId ?? "");
+      const isRevealed = isPostReveal || getVisibleFp(cId) != null;
+      if (!isRevealed) return sum;
+      const daily = Number(c?.dailyBonus ?? 0) || 0;
+      const badges = Array.isArray(c?.achievements) ? c.achievements.reduce((s: number, b: any) => s + (Number(b?.fp) || 0), 0) : 0;
+      return sum + daily + badges;
+    }, 0);
+  }, [gameState, roster, getVisibleFp]);
 
 
   // During anchor count-up: bar frozen at 5-card total (frozenBarFpRef)
@@ -1809,9 +1817,9 @@ export default function GameView() {
                   fontVariantNumeric: "tabular-nums", fontStyle: "italic",
                 }}>
                   {displayFp.toFixed(1)} FP
-                  {rosterDailyBonus > 0 && (
+                  {rosterTotalBonus > 0 && (
                     <span style={{ color: "#FFD700", fontSize: 18, fontWeight: 900, marginLeft: 4 }}>
-                      (+{rosterDailyBonus})
+                      (+{rosterTotalBonus})
                     </span>
                   )}
                 </span>
@@ -1859,9 +1867,9 @@ export default function GameView() {
                     animation: "tierInfoFadeIn 400ms ease-out",
                   }}>
                     {displayFp.toFixed(1)} FP
-                    {rosterDailyBonus > 0 && (
+                    {rosterTotalBonus > 0 && (
                       <span style={{ color: "#FFD700", fontWeight: 900, marginLeft: 3 }}>
-                        (+{rosterDailyBonus})
+                        (+{rosterTotalBonus})
                       </span>
                     )}
                     {ceilingPct != null && (
