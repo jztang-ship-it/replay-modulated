@@ -145,6 +145,22 @@ async function submitToLeaderboard(metric: string, value: number, extra?: Record
   } catch { } // Non-critical — never block game flow
 }
 
+/** Check if player is in top 10 of either daily leaderboard → set rm_on_board_today for trophy glow */
+async function checkLeaderboardRank() {
+  const uid = getPlayerUid();
+  const sessId = getSessionId();
+  if (!uid) return;
+  try {
+    const [best, session] = await Promise.all([
+      fetch("/api/leaderboard?metric=hand_best&scope=daily&limit=10").then(r => r.json()),
+      fetch("/api/leaderboard?metric=session_score&scope=daily&limit=10").then(r => r.json()),
+    ]);
+    const entries = [...(best.entries ?? []), ...(session.entries ?? [])];
+    const onBoard = entries.some((e: any) => e.uid === uid || (sessId && e.session_id === sessId));
+    localStorage.setItem("rm_on_board_today", onBoard ? "1" : "0");
+  } catch {} // Non-critical
+}
+
 function cardId(card: any): string {
   return String(card?.cardId ?? card?.basePlayerId ?? "");
 }
@@ -884,6 +900,8 @@ export default function GameView() {
               submitToLeaderboard("hand_best", totalFp, { proof, handId });
               // Session score: cumulative non-bust FP today (additive)
               submitToLeaderboard("session_score", parseFloat(totalFp.toFixed(1)));
+              // Check if player is now on either daily leaderboard top 10 → light up trophy
+              checkLeaderboardRank();
             } else {
               setStreak(0);
               localStorage.setItem("replaymod_streak", "0");
