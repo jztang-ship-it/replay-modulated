@@ -321,7 +321,9 @@ function main() {
     let handFp = 0;
     for (const player of lineup) {
       const key  = String(player.basePlayerId ?? "");
-      const tier = String(player.tier ?? "WHITE").toUpperCase();
+      // Derive tier from salary — must match gameAdapter.toPlayerEval (not stale JSON tier field)
+      const sal = Number(player.salary ?? 0);
+      const tier = sal >= 73 ? "RED" : sal >= 58 ? "ORANGE" : sal >= 44 ? "PURPLE" : sal >= 30 ? "BLUE" : sal >= 23 ? "GREEN" : "WHITE";
       const allLogs = logMap2425.get(key) ?? logMap.get(key) ?? [];
       if (!allLogs.length) continue;
 
