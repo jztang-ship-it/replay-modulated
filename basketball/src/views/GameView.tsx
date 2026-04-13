@@ -501,7 +501,7 @@ export default function GameView() {
     if (localStorage.getItem("replaymod_ftue_basketball") !== "1") return null; // still in FTUE
     const seen = localStorage.getItem("replaymod_pregame_intro_basketball");
     if (seen === "1") return null;
-    return "Every 24hrs, 3 random players get bonuses — hold or draw them for a boost. Tap the ⓘ to see all scoring rules.";
+    return "PREGAME_DAILY_BONUS";
   });
   const pendingCelebration = useRef<{ totalFp: number } | null>(null);
   /** FTUE: roster sum can read 0 briefly in RESULTS — keep last resolved hand FP for TierGauge */
@@ -1996,7 +1996,15 @@ export default function GameView() {
                     lineHeight: 1.4,
                     letterSpacing: 0.1,
                   }}>
-                    {preGameMsg}
+                    Every 24hrs, 3 random players get bonuses — hold or draw them for a boost. Tap the{" "}
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      width: 18, height: 18, borderRadius: "50%",
+                      border: "2px solid rgba(255,255,255,0.6)",
+                      color: "rgba(255,255,255,0.8)", fontSize: 10, fontWeight: 900,
+                      verticalAlign: "middle", lineHeight: 1,
+                    }}>i</span>
+                    {" "}to see all scoring rules.
                     <span style={{
                       display: "block",
                       fontSize: 9,
