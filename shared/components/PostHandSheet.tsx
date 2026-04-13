@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 const FF = "'Rajdhani', 'Arial Narrow', sans-serif";
 
 const TIER_COLORS: Record<string, string> = {
-  GOAT: "#FFD700",
+  LEGEND: "#FFD700",
   MVP: "#FB923C",
   ALL_STAR: "#C084FC",
   STARTER: "#22C55E",

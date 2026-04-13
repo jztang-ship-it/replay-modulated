@@ -26,7 +26,7 @@ function tierFromSalary(s: number): string {
   if (s >= 30) return "BLUE"; if (s >= 23) return "GREEN"; return "WHITE";
 }
 const TIERS = [
-  { tier: "GOAT", minFP: 240 }, { tier: "MVP", minFP: 225 },
+  { tier: "LEGEND", minFP: 240 }, { tier: "MVP", minFP: 225 },
   { tier: "ALL_STAR", minFP: 210 }, { tier: "STARTER", minFP: 195 }, { tier: "ROOKIE", minFP: 180 },
 ];
 function calcWinTier(fp: number): string {

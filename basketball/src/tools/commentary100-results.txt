@@ -1,0 +1,311 @@
+
+═══════════════════════════════════════════════════════════════
+  COMMENTARY SYSTEM — 100 TEST RUNS
+═══════════════════════════════════════════════════════════════
+
+  1. ❌ BUST     | -5 FP   | Edwards              | ratio 0.4
+     💬 Way below the line from Edwards against Boston. The deficit at the anchor position sank the entire hand tonight.
+
+  2. ❌ BUST     | -6 FP   | Jokic                | ratio 0.6
+     💬 Jokic picked tonight to take a personal day and the roster noticed the absence immediately.
+
+  3. 🟡 ROOKIE   | 184 FP  | Antetokounmpo        | ratio 0.8
+     💬 The hand won despite the star running cold. Depth across the lineup made the difference tonight.
+
+  4. 🟢 STARTER  | 200 FP  | Tatum                | ratio 0.9 | streak 1 | FIRE
+     💬 Not the Jayson Tatum show tonight, but the hand still cashed. Depth matters and it showed up here.
+
+  5. 🟢 STARTER  | 201 FP  | Doncic               | ratio 1.0 | streak 2 | GOD_MODE
+     💬 Another one in the win column. Not much to talk about. Not much needs to be said either.
+
+  6. ⭐ ALL_STAR | 217 FP  | Young                | ratio 1.1 | streak 3 | TRIPLE_DBL
+     💬 Solid night from Trae Young in Chicago. Did the job, the roster held up around the star. Take the win.
+
+  7. 🏆 MVP      | 233 FP  | Booker               | ratio 1.3 | streak 5 | TURNOVER_MACHINE
+     💬 The kind of hand you want every time. Steady across the board, no surprises, money in the account.
+
+  8. 👑 GOAT     | 249 FP  | James                | ratio 1.5 | streak 7
+     💬 33 points from James against Denver. Statement game and the hand is in the green. Take the money.
+
+  9. ❌ BUST     | -13 FP  | Durant               | ratio 1.8 | streak 10
+     💬 If this hand was a group project, nobody did their part. A true collective effort in the wrong direction.
+
+ 10. ❌ BUST     | -14 FP  | Gilgeous-Alexander   | ratio 2.0 | streak 12
+     💬 Nobody had it tonight. Sometimes the cards just do not come in your favor. On to the next one.
+
+ 11. 🟡 ROOKIE   | 192 FP  | Edwards              | ratio 0.4 | FIRE
+     💬 Half your money back. Below-average output from Edwards in Boston. The supporting cast compensated and the hand stayed green. 3 away from the next level.
+
+ 12. 🟢 STARTER  | 208 FP  | Jokic                | ratio 0.6 | GOD_MODE
+     💬 The bench showed out tonight. Quiet hand from the top but the depth came through in a big way. 2 away from the next level.
+
+ 13. 🟢 STARTER  | 209 FP  | Antetokounmpo        | ratio 0.8 | TRIPLE_DBL
+     💬 Won it without the star going off. The supporting cast has been waiting for this moment all season.
+
+ 14. ⭐ ALL_STAR | 225 FP  | Tatum                | ratio 0.9 | streak 1 | TURNOVER_MACHINE
+     💬 The bench showed out tonight. Quiet hand from the top but the depth came through in a big way.
+
+ 15. 🏆 MVP      | 241 FP  | Doncic               | ratio 1.0 | streak 2
+     💬 Luka Doncic made it look boring and honestly that is a compliment in this game. Efficient and done.
+
+ 16. 👑 GOAT     | 257 FP  | Young                | ratio 1.1 | streak 3
+     💬 Young delivered and the roster followed right behind. Good hand all around for the lineup.
+
+ 17. ❌ BUST     | -21 FP  | Booker               | ratio 1.3 | streak 5
+     💬 Every card tracked below the expected line. No individual cause — this was a systemic collective miss.
+
+ 18. ❌ BUST     | -22 FP  | James                | ratio 1.5 | streak 7 | FIRE
+     💬 James and the rest of the lineup all underdelivered. The math was not there from any single position.
+
+ 19. 🟡 ROOKIE   | 182 FP  | Durant               | ratio 1.8 | streak 10 | GOD_MODE
+     💬 Durant decided to remind everyone tonight. 40 points. Message received loud and clear.
+
+ 20. 🟢 STARTER  | 198 FP  | Gilgeous-Alexander   | ratio 2.0 | streak 12 | TRIPLE_DBL
+     💬 Shai Gilgeous-Alexander came through big. 44 points and the whole roster benefited from that kind of night. 44 points.
+
+ 21. 🟢 STARTER  | 199 FP  | Edwards              | ratio 0.4 | TURNOVER_MACHINE
+     💬 Even on a quiet night, Edwards's floor is someone else's ceiling. The hand survived just fine.
+
+ 22. ⭐ ALL_STAR | 215 FP  | Jokic                | ratio 0.6
+     💬 Won it without the star going off. The supporting cast has been waiting for this moment all season.
+
+ 23. 🏆 MVP      | 231 FP  | Antetokounmpo        | ratio 0.8
+     💬 The star underproduced and the hand still won. That speaks to roster construction around Antetokounmpo.
+
+ 24. 👑 GOAT     | 247 FP  | Tatum                | ratio 0.9 | streak 1
+     💬 Tatum was not the story tonight but the roster rallied and brought home a win anyway. Respect.
+
+ 25. ❌ BUST     | -9 FP   | Doncic               | ratio 1.0 | streak 2 | FIRE
+     💬 No single culprit tonight. Every card came in below the line across the board. Collective miss.
+
+ 26. ❌ BUST     | -10 FP  | Young                | ratio 1.1 | streak 3 | GOD_MODE
+     💬 The roster all came in under their expected outputs tonight. The broad miss sank the hand completely.
+
+ 27. 🟡 ROOKIE   | 190 FP  | Booker               | ratio 1.3 | streak 5 | TRIPLE_DBL
+     💬 Clean win tonight. Everyone contributed, nobody had to carry anyone else. That is the blueprint.
+
+ 28. 🟢 STARTER  | 206 FP  | James                | ratio 1.5 | streak 7 | TURNOVER_MACHINE
+     💬 Big night from James. 33 points. Hand won. On to the next opportunity ahead.
+
+ 29. 🟢 STARTER  | 207 FP  | Durant               | ratio 1.8 | streak 10
+     💬 Durant decided to remind everyone tonight. 40 points. Message received loud and clear. 3 away from the next level.
+
+ 30. ⭐ ALL_STAR | 223 FP  | Gilgeous-Alexander   | ratio 2.0 | streak 12
+     💬 Gilgeous-Alexander went off against Milwaukee. 44 points of pure dominance. The supporting cast just watched and collected. 2 away from the next level.
+
+ 31. 🏆 MVP      | 239 FP  | Edwards              | ratio 0.4
+     💬 Won it on depth alone. Sometimes the supporting cast writes the story and tonight was that night. 1 away from the next level.
+
+ 32. 👑 GOAT     | 255 FP  | Jokic                | ratio 0.6 | FIRE
+     💬 Even without a big game from Jokic, the roster had enough. Sometimes depth wins the day for you.
+
+ 33. ❌ BUST     | -17 FP  | Antetokounmpo        | ratio 0.8 | GOD_MODE
+     💬 The entire lineup missed tonight. Take the loss and move forward from here. Next hand matters more.
+
+ 34. ❌ BUST     | -18 FP  | Tatum                | ratio 0.9 | streak 1 | TRIPLE_DBL
+     💬 Tatum and the supporting cast all phoned it in together. Team chemistry in the worst possible way.
+
+ 35. 🟡 ROOKIE   | 198 FP  | Doncic               | ratio 1.0 | streak 2 | TURNOVER_MACHINE
+     💬 Boring win. Best kind of win. The lineup handled business without anyone needing to be a hero tonight.
+
+ 36. 🟢 STARTER  | 214 FP  | Young                | ratio 1.1 | streak 3
+     💬 Young was fine. The hand was fine. Next one is what matters now. Take the win and keep going.
+
+ 37. 🟢 STARTER  | 197 FP  | Booker               | ratio 1.3 | streak 5
+     💬 Balanced contributions across the roster tonight. Nobody carried, nobody dropped. Solid result. That's 5 in a row.
+
+ 38. ⭐ ALL_STAR | 213 FP  | James                | ratio 1.5 | streak 7
+     💬 LeBron James came through big. 33 points and the whole roster benefited from that kind of night.
+
+ 39. 🏆 MVP      | 229 FP  | Durant               | ratio 1.8 | streak 10 | FIRE
+     💬 Someone had to go for 40. Durant decided tonight was the night and nobody argued. 40 points.
+
+ 40. 👑 GOAT     | 245 FP  | Gilgeous-Alexander   | ratio 2.0 | streak 12 | GOD_MODE
+     💬 That is Gilgeous-Alexander at full power. 44 points in Milwaukee. Cash the hand and enjoy the night.
+
+ 41. ❌ BUST     | -5 FP   | Edwards              | ratio 0.4 | TRIPLE_DBL
+     💬 Way below the line from Edwards in Boston. The deficit at the anchor position sank the entire hand tonight.
+
+ 42. ❌ BUST     | -6 FP   | Jokic                | ratio 0.6 | TURNOVER_MACHINE
+     💬 Jokic picked tonight to take a personal day and the roster noticed the absence immediately.
+
+ 43. 🟡 ROOKIE   | 188 FP  | Antetokounmpo        | ratio 0.8
+     💬 Half your money back. Below the typical line from Antetokounmpo tonight but the depth of the roster absorbed the dip cleanly.
+
+ 44. 🟢 STARTER  | 204 FP  | Tatum                | ratio 0.9 | streak 1
+     💬 Not Tatum's best night, but the hand survived and cashed. Take the money and keep it moving.
+
+ 45. 🟢 STARTER  | 205 FP  | Doncic               | ratio 1.0 | streak 2
+     💬 Good hand across the board. Everyone did their part and the result speaks for itself tonight.
+
+ 46. ⭐ ALL_STAR | 221 FP  | Young                | ratio 1.1 | streak 3 | FIRE
+     💬 Just another day at the office for Young in Chicago. Punched in, produced, collected the win quietly.
+
+ 47. 🏆 MVP      | 237 FP  | Booker               | ratio 1.3 | streak 5 | GOD_MODE
+     💬 Booker was steady all night against New York. No fireworks needed, just a good result for the hand.
+
+ 48. 👑 GOAT     | 253 FP  | James                | ratio 1.5 | streak 7 | TRIPLE_DBL
+     💬 James went off in Denver. 33 points of pure dominance. The supporting cast just watched and collected.
+
+ 49. ❌ BUST     | -13 FP  | Durant               | ratio 1.8 | streak 10 | TURNOVER_MACHINE
+     💬 If this hand was a group project, nobody did their part. A true collective effort in the wrong direction.
+
+ 50. ❌ BUST     | -14 FP  | Gilgeous-Alexander   | ratio 2.0 | streak 12
+     💬 Nobody had it tonight. Sometimes the cards just do not come in your favor. On to the next one.
+
+ 51. 🟡 ROOKIE   | 196 FP  | Edwards              | ratio 0.4
+     💬 Half your money back. Edwards came in under the line but the hand absorbed the variance. Roster depth proved its value.
+
+ 52. 🟢 STARTER  | 212 FP  | Jokic                | ratio 0.6
+     💬 Jokic was not the story tonight but the roster rallied and brought home a win anyway. Respect.
+
+ 53. 🟢 STARTER  | 213 FP  | Antetokounmpo        | ratio 0.8 | FIRE
+     💬 The supporting cast carried Antetokounmpo tonight and you know they will never let that story go either.
+
+ 54. ⭐ ALL_STAR | 229 FP  | Tatum                | ratio 0.9 | streak 1 | GOD_MODE
+     💬 Tatum was not the story tonight but the roster rallied and brought home a win anyway. Respect.
+
+ 55. 🏆 MVP      | 227 FP  | Doncic               | ratio 1.0 | streak 2 | TRIPLE_DBL
+     💬 Doncic kept the ship steady tonight in Phoenix. The supporting cast filled in the rest. Clean hand.
+
+ 56. 👑 GOAT     | 243 FP  | Young                | ratio 1.1 | streak 3 | TURNOVER_MACHINE
+     💬 Trae Young tracked close to average tonight against Chicago. Consistent anchor play from the star got the win.
+
+ 57. ❌ BUST     | -21 FP  | Booker               | ratio 1.3 | streak 5
+     💬 Every card tracked below the expected line. No individual cause — this was a systemic collective miss.
+
+ 58. ❌ BUST     | -22 FP  | James                | ratio 1.5 | streak 7
+     💬 James and the full roster all fell short tonight. No individual cause — the whole hand was flat.
+
+ 59. 🟡 ROOKIE   | 186 FP  | Durant               | ratio 1.8 | streak 10
+     💬 40 from Durant against Dallas. At this point the stat line is just showing off for the audience.
+
+ 60. 🟢 STARTER  | 202 FP  | Gilgeous-Alexander   | ratio 2.0 | streak 12 | FIRE
+     💬 Shai Gilgeous-Alexander dropped 44 in Milwaukee and this hand absolutely cashed. That is a night you remember.
+
+ 61. 🟢 STARTER  | 203 FP  | Edwards              | ratio 0.4 | GOD_MODE
+     💬 The supporting cast picked up the slack tonight. Not every win comes from the star and that is okay.
+
+ 62. ⭐ ALL_STAR | 219 FP  | Jokic                | ratio 0.6 | TRIPLE_DBL
+     💬 The supporting cast carried Jokic tonight and you know they will never let that story go either.
+
+ 63. 🏆 MVP      | 235 FP  | Antetokounmpo        | ratio 0.8 | TURNOVER_MACHINE
+     💬 Quiet night from Antetokounmpo but the hand still cashed. The supporting cast stepped up and delivered.
+
+ 64. 👑 GOAT     | 251 FP  | Tatum                | ratio 0.9 | streak 1
+     💬 Tatum took the night off and the roster covered for it beautifully. Teamwork makes the dream work.
+
+ 65. ❌ BUST     | -9 FP   | Doncic               | ratio 1.0 | streak 2
+     💬 No single culprit tonight. Every card came in below the line across the board. Collective miss.
+
+ 66. ❌ BUST     | -10 FP  | Young                | ratio 1.1 | streak 3
+     💬 The roster all came in under their expected outputs tonight. The broad miss sank the hand completely.
+
+ 67. 🟡 ROOKIE   | 194 FP  | Booker               | ratio 1.3 | streak 5 | FIRE
+     💬 Just a solid, professional night from Devin Booker. The kind of hand that quietly adds up over time in your favor. 1 away from the next level.
+
+ 68. 🟢 STARTER  | 210 FP  | James                | ratio 1.5 | streak 7 | GOD_MODE
+     💬 That is James at full power. 33 points against Denver. Cash the hand and enjoy the night. 33 points.
+
+ 69. 🟢 STARTER  | 211 FP  | Durant               | ratio 1.8 | streak 10 | TRIPLE_DBL
+     💬 40 from Durant in Dallas. At this point the stat line is just showing off for the audience.
+
+ 70. ⭐ ALL_STAR | 227 FP  | Gilgeous-Alexander   | ratio 2.0 | streak 12 | TURNOVER_MACHINE
+     💬 Shai Gilgeous-Alexander dropped 44 in Milwaukee and this hand absolutely cashed. That is a night you remember.
+
+ 71. 🏆 MVP      | 243 FP  | Edwards              | ratio 0.4
+     💬 Not the Anthony Edwards show tonight, but the hand still cashed. Depth matters and it showed up here.
+
+ 72. 👑 GOAT     | 259 FP  | Jokic                | ratio 0.6
+     💬 Even on a quiet night, Jokic's floor is someone else's ceiling. The hand survived just fine.
+
+ 73. ❌ BUST     | -17 FP  | Antetokounmpo        | ratio 0.8
+     💬 The entire lineup missed tonight. Take the loss and move forward from here. Next hand matters more.
+
+ 74. ❌ BUST     | -18 FP  | Tatum                | ratio 0.9 | streak 1 | FIRE
+     💬 Tatum and the supporting cast all phoned it in together. Team chemistry in the worst possible way.
+
+ 75. 🟡 ROOKIE   | 184 FP  | Doncic               | ratio 1.0 | streak 2 | GOD_MODE
+     💬 Half your money back. The kind of hand you want every time. Steady across the board, no surprises, money in the account.
+
+ 76. 🟢 STARTER  | 200 FP  | Young                | ratio 1.1 | streak 3 | TRIPLE_DBL
+     💬 The roster did what it was built to do tonight. No single card had to do too much to get the win. That's 3 in a row.
+
+ 77. 🟢 STARTER  | 201 FP  | Booker               | ratio 1.3 | streak 5 | TURNOVER_MACHINE
+     💬 Expected output from Booker tonight. Combined with roster support, the math worked for a win.
+
+ 78. ⭐ ALL_STAR | 217 FP  | James                | ratio 1.5 | streak 7
+     💬 James put up 33 in Denver and honestly, someone should check on the opposing defense after that one. 33 points.
+
+ 79. 🏆 MVP      | 233 FP  | Durant               | ratio 1.8 | streak 10
+     💬 Kevin Durant treated this one like a personal vendetta. 40 points of evidence submitted to the court. 40 points.
+
+ 80. 👑 GOAT     | 249 FP  | Gilgeous-Alexander   | ratio 2.0 | streak 12
+     💬 44 points from Gilgeous-Alexander against Milwaukee. Statement game and the hand is in the green. Take the money. 44 points.
+
+ 81. ❌ BUST     | -5 FP   | Edwards              | ratio 0.4 | FIRE
+     💬 Anthony Edwards was a no-show in Boston. That is the whole story of the hand in one sentence right there.
+
+ 82. ❌ BUST     | -6 FP   | Jokic                | ratio 0.6 | GOD_MODE
+     💬 Jokic picked tonight to take a personal day and the roster noticed the absence immediately.
+
+ 83. 🟡 ROOKIE   | 192 FP  | Antetokounmpo        | ratio 0.8 | TRIPLE_DBL
+     💬 Half your money back. Below-average output from Antetokounmpo against Golden State. The supporting cast compensated and the hand stayed green. 3 away from the next level.
+
+ 84. 🟢 STARTER  | 208 FP  | Tatum                | ratio 0.9 | streak 1 | TURNOVER_MACHINE
+     💬 The supporting cast picked up the slack tonight. Not every win comes from the star and that is okay. 2 away from the next level.
+
+ 85. 🟢 STARTER  | 209 FP  | Doncic               | ratio 1.0 | streak 2
+     💬 Doncic brought it tonight. Not the biggest night ever, but more than enough to cash the hand. 1 away from the next level.
+
+ 86. ⭐ ALL_STAR | 225 FP  | Young                | ratio 1.1 | streak 3
+     💬 The handbook says this is how you are supposed to win. Nobody told the roster it would be this easy. That's 3 in a row.
+
+ 87. 🏆 MVP      | 241 FP  | Booker               | ratio 1.3 | streak 5
+     💬 Booker kept the ship steady tonight in New York. The supporting cast filled in the rest. Clean hand.
+
+ 88. 👑 GOAT     | 257 FP  | James                | ratio 1.5 | streak 7 | FIRE
+     💬 LeBron James dropped 33 against Denver and this hand absolutely cashed. That is a night you remember.
+
+ 89. ❌ BUST     | -13 FP  | Durant               | ratio 1.8 | streak 10 | GOD_MODE
+     💬 If this hand was a group project, nobody did their part. A true collective effort in the wrong direction.
+
+ 90. ❌ BUST     | -14 FP  | Gilgeous-Alexander   | ratio 2.0 | streak 12 | TRIPLE_DBL
+     💬 Nobody had it tonight. Sometimes the cards just do not come in your favor. On to the next one.
+
+ 91. 🟡 ROOKIE   | 182 FP  | Edwards              | ratio 0.4 | TURNOVER_MACHINE
+     💬 Below the typical line from Edwards tonight but the depth of the roster absorbed the dip cleanly.
+
+ 92. 🟢 STARTER  | 198 FP  | Jokic                | ratio 0.6
+     💬 Star output was down but the supporting cards compensated. The math still worked for a win tonight.
+
+ 93. 🟢 STARTER  | 199 FP  | Antetokounmpo        | ratio 0.8
+     💬 Not Antetokounmpo's best night, but the hand survived and cashed. Take the money and keep it moving.
+
+ 94. ⭐ ALL_STAR | 215 FP  | Tatum                | ratio 0.9 | streak 1
+     💬 Jayson Tatum came in below average but the roster compensated for the shortfall. Balanced hand overall.
+
+ 95. 🏆 MVP      | 231 FP  | Doncic               | ratio 1.0 | streak 2 | FIRE
+     💬 Solid night from Luka Doncic in Phoenix. Did the job, the roster held up around the star. Take the win.
+
+ 96. 👑 GOAT     | 247 FP  | Young                | ratio 1.1 | streak 3 | GOD_MODE
+     💬 Good hand across the board. Everyone did their part and the result speaks for itself tonight.
+
+ 97. ❌ BUST     | -21 FP  | Booker               | ratio 1.3 | streak 5 | TRIPLE_DBL
+     💬 Every card tracked below the expected line. No individual cause — this was a systemic collective miss.
+
+ 98. ❌ BUST     | -22 FP  | James                | ratio 1.5 | streak 7 | TURNOVER_MACHINE
+     💬 James and the full roster all fell short tonight. No individual cause — the whole hand was flat.
+
+ 99. 🟡 ROOKIE   | 190 FP  | Durant               | ratio 1.8 | streak 10
+     💬 Durant put up 40 in Dallas and honestly, someone should check on the opposing defense after that one.
+
+100. 🟢 STARTER  | 206 FP  | Gilgeous-Alexander   | ratio 2.0 | streak 12
+     💬 Someone had to go for 44. Gilgeous-Alexander decided tonight was the night and nobody argued.
+
+═══════════════════════════════════════════════════════════════
+  SUMMARY
+  Total runs: 100
+  Unique messages: 83/100
+═══════════════════════════════════════════════════════════════
+

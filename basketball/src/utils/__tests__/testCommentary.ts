@@ -38,7 +38,7 @@ function tierFromSalary(salary: number): string {
 
 // ── Tier thresholds ───────────────────────────────────────────────────────────
 const TIERS = [
-  { tier: "GOAT", minFP: 240 },
+  { tier: "LEGEND", minFP: 240 },
   { tier: "MVP", minFP: 225 },
   { tier: "ALL_STAR", minFP: 210 },
   { tier: "STARTER", minFP: 195 },

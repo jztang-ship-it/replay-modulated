@@ -5,7 +5,7 @@ export type RouterModel =
   | 'deepseek-chat'              // DeepSeek
 
 /** Payout tier — mirrors basketball tier thresholds */
-export type PayoutTier = 'BUST' | 'ROOKIE' | 'STARTER' | 'ALL_STAR' | 'MVP' | 'GOAT'
+export type PayoutTier = 'BUST' | 'ROOKIE' | 'STARTER' | 'ALL_STAR' | 'MVP' | 'LEGEND'
 
 /** Per-criterion score (1-10) plus weighted composite */
 export interface GradeScore {

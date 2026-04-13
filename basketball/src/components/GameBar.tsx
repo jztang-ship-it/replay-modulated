@@ -10,22 +10,23 @@ export type { CelebrationData };
 export type { GameStateLabel };
 
 // Thresholds calibrated for $250 cap + 6-tier salary system (Option B boundaries) — must stay in sync with BASKETBALL_WIN_TIERS in payoutLogic.ts
+// Option C slot-like economy — must stay in sync with BASKETBALL_WIN_TIERS in payoutLogic.ts
 const WIN_TIERS: WinTierDisplay[] = [
-  { label: "ROOKIE",   minFp: 180, color: "#22C55E", glow: "rgba(34,197,94,0.6)"    },
-  { label: "STARTER",  minFp: 195, color: "#00FFD8", glow: "rgba(0,255,216,0.6)"   },
-  { label: "ALL-STAR", minFp: 210, color: "#C084FC", glow: "rgba(192,132,252,0.7)"  },
-  { label: "MVP",      minFp: 225, color: "#FB923C", glow: "rgba(251,146,60,0.7)"   },
-  { label: "G.O.A.T.", minFp: 240, color: "#EF4444", glow: "rgba(239,68,68,0.9)"   },
+  { label: "ROOKIE",   minFp: 189, color: "#22C55E", glow: "rgba(34,197,94,0.6)"    },
+  { label: "STARTER",  minFp: 203, color: "#00FFD8", glow: "rgba(0,255,216,0.6)"   },
+  { label: "ALL-STAR", minFp: 217, color: "#C084FC", glow: "rgba(192,132,252,0.7)"  },
+  { label: "MVP",      minFp: 230, color: "#FB923C", glow: "rgba(251,146,60,0.7)"   },
+  { label: "LEGEND",   minFp: 250, color: "#EF4444", glow: "rgba(239,68,68,0.9)"   },
 ];
 
-const LEGEND: LegendData = {
+const LEGEND_DATA: LegendData = {
   payoutRows: [
-    { label: "G.O.A.T.", score: "240+", payout: "BONUS", color: "#EF4444", bg: "rgba(239,68,68,0.12)",    border: "rgba(239,68,68,0.35)"    },
-    { label: "MVP",      score: "225+", payout: "15x",   color: "#FB923C", bg: "rgba(251,146,60,0.10)",   border: "rgba(251,146,60,0.3)"    },
-    { label: "ALL-STAR", score: "210+", payout: "7x",    color: "#C084FC", bg: "rgba(192,132,252,0.10)",  border: "rgba(192,132,252,0.25)"  },
-    { label: "STARTER",  score: "195+", payout: "2.5x",  color: "#00FFD8", bg: "rgba(0,255,216,0.08)",    border: "rgba(0,255,216,0.25)"    },
-    { label: "ROOKIE",   score: "180+", payout: "0.5x",  color: "#22C55E", bg: "rgba(34,197,94,0.10)",    border: "rgba(34,197,94,0.25)"    },
-    { label: "BUST",     score: "<180", payout: "—",     color: "#6B7280", bg: "rgba(107,114,128,0.08)",  border: "rgba(107,114,128,0.2)"   },
+    { label: "LEGEND",   score: "250+", payout: "50x",  color: "#EF4444", bg: "rgba(239,68,68,0.12)",    border: "rgba(239,68,68,0.35)"    },
+    { label: "MVP",      score: "230+", payout: "8x",   color: "#FB923C", bg: "rgba(251,146,60,0.10)",   border: "rgba(251,146,60,0.3)"    },
+    { label: "ALL-STAR", score: "217+", payout: "3x",   color: "#C084FC", bg: "rgba(192,132,252,0.10)",  border: "rgba(192,132,252,0.25)"  },
+    { label: "STARTER",  score: "203+", payout: "1x",   color: "#00FFD8", bg: "rgba(0,255,216,0.08)",    border: "rgba(0,255,216,0.25)"    },
+    { label: "ROOKIE",   score: "189+", payout: "0.2x", color: "#22C55E", bg: "rgba(34,197,94,0.10)",    border: "rgba(34,197,94,0.25)"    },
+    { label: "BUST",     score: "<189", payout: "—",    color: "#6B7280", bg: "rgba(107,114,128,0.08)",  border: "rgba(107,114,128,0.2)"   },
   ],
   bonusRows: [
     { label: "3-WIN STREAK", condition: "3 wins in a row", reward: "1.2x payout"  },
@@ -116,7 +117,7 @@ export function GameBar(props: Props) {
     } catch { /* data not loaded yet */ }
     extra.mysteryScore = getDailyMysteryScore();
     extra.mysteryBonus = MYSTERY_SCORE_BONUS;
-    return { ...LEGEND, ...extra };
+    return { ...LEGEND_DATA, ...extra };
   }, []);
 
   return (

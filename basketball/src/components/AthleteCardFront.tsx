@@ -43,7 +43,7 @@ function BasketballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) 
 
 export type { CardFrontProps as AthleteCardFrontProps };
 export type PerformanceTag = "ICE_COLD" | "COLD" | "OK" | "HOT" | "ON_FIRE" | "CAREER_NIGHT";
-export type PulseStyle = "NEG" | "NEUTRAL" | "POS" | "GOAT";
+export type PulseStyle = "NEG" | "NEUTRAL" | "POS" | "LEGEND";
 
 export function AthleteCardFront(props: CardFrontProps) {
   return (

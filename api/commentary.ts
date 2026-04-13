@@ -13,7 +13,7 @@ import { routeCommentary } from "./_lib/router/llmRouter.js";
 import type { RouterConfig, PayoutTier } from "./_lib/router/types.js";
 import { makeKV, getRecentPhrases } from "./_lib/router/kvStore.js";
 
-const VALID_TIERS = new Set(['BUST','ROOKIE','STARTER','ALL_STAR','MVP','GOAT'])
+const VALID_TIERS = new Set(['BUST','ROOKIE','STARTER','ALL_STAR','MVP','LEGEND'])
 
 function json(res: VercelResponse, status: number, body: Record<string, unknown>) {
   res.setHeader("Access-Control-Allow-Origin", "*");

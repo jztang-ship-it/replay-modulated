@@ -380,11 +380,11 @@ function main() {
 
   // ── Current threshold check ──────────────────────────────────────────
   const CURRENT = [
-    { name: "ROOKIE",   minFp: 180, payout: "0.5x" },
-    { name: "STARTER",  minFp: 195, payout: "2.5x" },
-    { name: "ALL_STAR", minFp: 210, payout: "7x"   },
-    { name: "MVP",      minFp: 225, payout: "15x"  },
-    { name: "GOAT",     minFp: 240, payout: "50x"  },
+    { name: "ROOKIE",   minFp: 189, payout: "0.2x" },
+    { name: "STARTER",  minFp: 203, payout: "1x"   },
+    { name: "ALL_STAR", minFp: 217, payout: "3x"   },
+    { name: "MVP",      minFp: 230, payout: "8x"   },
+    { name: "LEGEND",   minFp: 250, payout: "50x"  },
   ];
   console.log("\n=== CURRENT THRESHOLDS — HIT RATES ===");
   const bustRate = allFps.filter(f => f < CURRENT[0].minFp).length / handsBuilt * 100;
@@ -402,13 +402,13 @@ function main() {
   }
 
   // ── Suggested thresholds for target distribution ──────────────────────
-  // Target: BUST ~45%, ROOKIE ~25%, STARTER ~17%, ALL_STAR ~9%, MVP ~3.5%, GOAT ~0.5%
+  // Target: BUST ~45%, ROOKIE ~25%, STARTER ~17%, ALL_STAR ~9%, MVP ~3.5%, LEGEND ~0.5%
   const targets = [
     { name: "ROOKIE",   cumPct: 55,  payout: "0.5x" },
     { name: "STARTER",  cumPct: 30,  payout: "2.5x" },
     { name: "ALL_STAR", cumPct: 13,  payout: "7x"   },
     { name: "MVP",      cumPct: 4,   payout: "15x"  },
-    { name: "GOAT",     cumPct: 0.5, payout: "50x"  },
+    { name: "LEGEND",     cumPct: 0.5, payout: "50x"  },
   ];
 
   console.log("\n=== SUGGESTED THRESHOLDS (target: BUST~45%, WIN~55%) ===");
@@ -416,7 +416,7 @@ function main() {
   for (const t of targets) {
     suggested[t.name] = Math.round(pct(allFps, 100 - t.cumPct));
   }
-  const tierOrder = ["ROOKIE", "STARTER", "ALL_STAR", "MVP", "GOAT"];
+  const tierOrder = ["ROOKIE", "STARTER", "ALL_STAR", "MVP", "LEGEND"];
   const suggBust = allFps.filter(f => f < suggested["ROOKIE"]).length / handsBuilt * 100;
   console.log(`  BUST       <${String(suggested["ROOKIE"]).padStart(4)} FP  (0x)        → ~${suggBust.toFixed(1)}% bust`);
   for (let i = 0; i < tierOrder.length; i++) {
@@ -433,7 +433,7 @@ function main() {
   console.log(`  STARTER:  minFp: ${suggested["STARTER"]}`);
   console.log(`  ALL_STAR: minFp: ${suggested["ALL_STAR"]}`);
   console.log(`  MVP:      minFp: ${suggested["MVP"]}`);
-  console.log(`  GOAT:     minFp: ${suggested["GOAT"]}`);
+  console.log(`  LEGEND:     minFp: ${suggested["LEGEND"]}`);
 
   if (verbose) {
     console.log("\n=== SAMPLE TOP 10 HANDS ===");

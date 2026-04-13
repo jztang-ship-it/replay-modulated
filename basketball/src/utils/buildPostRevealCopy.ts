@@ -229,7 +229,7 @@ function famousPhrase(input: PostRevealCopyInput, subject: PostRevealRosterCard 
   if (blk >= 5 && subject.homeAway === "H") return "Not in his house tonight.";
   if (blk >= 5 && subject.homeAway === "A") return `${lastName(subject.name)} had 5 blocks on the road. Took over someone else's building.`;
   if (blk >= 4 && subject.homeAway === "H") return "Lots of finger wagging tonight.";
-  const isBigWinFP = input.winTier === "ALL_STAR" || input.winTier === "MVP" || input.winTier === "GOAT";
+  const isBigWinFP = input.winTier === "ALL_STAR" || input.winTier === "MVP" || input.winTier === "LEGEND";
   if (!isBigWinFP && anchor && isNameable(anchor) && anchor.salary >= 45 && anchorR < 0.75) {
     const an = nameFor(anchor, 0);
     return `${an} came in below the line tonight — the anchor didn't hold.`;
@@ -349,7 +349,7 @@ const MVP_L1 = [
   "Not many players can do what was done tonight. This hand had one of them.",
   "An elite performance from an elite player. The hand responded accordingly.",
 ];
-const GOAT_L1 = [
+const LEGEND_L1 = [
   "The biggest night in the game. This hand was something you remember.",
   "Doesn't happen by accident — this roster hit a different level entirely.",
   "One of those hands that doesn't come around often. The payout reflects it.",
@@ -394,7 +394,7 @@ const basketballPack: SportCopyPack = {
 
     // ALL_STAR and above = "big win" tier. Near-misses at these levels should
     // still feel positive ("oh shucks, almost had the next level") not painful.
-    const isBigWin = winTier === "ALL_STAR" || winTier === "MVP" || winTier === "GOAT";
+    const isBigWin = winTier === "ALL_STAR" || winTier === "MVP" || winTier === "LEGEND";
 
     // ── Line 1 ────────────────────────────────────────────────────────────
     let line1: string;
@@ -426,8 +426,8 @@ const basketballPack: SportCopyPack = {
             "Needed a little more from someone. Didn't get it.",
             "Tantalizingly close. The gap was real but not huge.",
           ], seed);
-    } else if (winTier === "GOAT") {
-      line1 = pick(GOAT_L1, seed);
+    } else if (winTier === "LEGEND") {
+      line1 = pick(LEGEND_L1, seed);
     } else if (winTier === "MVP") {
       line1 = pick(MVP_L1, seed);
     } else if (winTier === "ALL_STAR") {

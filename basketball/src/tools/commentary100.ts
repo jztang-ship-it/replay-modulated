@@ -39,7 +39,7 @@ const BENCH = [
 const OPPONENTS = ["BOS", "LAL", "GSW", "MIA", "PHX", "CHI", "NYK", "DEN", "DAL", "MIL"];
 
 const TIER_FLOORS: Record<string, number> = {
-  BUST: 0, ROOKIE: 180, STARTER: 195, ALL_STAR: 210, MVP: 225, GOAT: 240,
+  BUST: 0, ROOKIE: 180, STARTER: 195, ALL_STAR: 210, MVP: 225, LEGEND: 240,
 };
 
 // ─── Scenario builder ───────────────────────────────────────────────────────
@@ -92,7 +92,7 @@ function buildInput(s: Scenario): CommentaryInput {
   ];
 
   const nextTierMap: Record<string, string | null> = {
-    BUST: "ROOKIE", ROOKIE: "STARTER", STARTER: "ALL_STAR", ALL_STAR: "MVP", MVP: "GOAT", GOAT: null,
+    BUST: "ROOKIE", ROOKIE: "STARTER", STARTER: "ALL_STAR", ALL_STAR: "MVP", MVP: "LEGEND", LEGEND: null,
   };
   const nextTier = nextTierMap[s.winTier] ?? null;
   const nextMin = nextTier ? (TIER_FLOORS[nextTier] ?? 999) : 0;
@@ -116,7 +116,7 @@ function buildInput(s: Scenario): CommentaryInput {
 
 function generate100(): Scenario[] {
   const scenarios: Scenario[] = [];
-  const tiers = ["BUST", "BUST", "ROOKIE", "STARTER", "STARTER", "ALL_STAR", "MVP", "GOAT"];
+  const tiers = ["BUST", "BUST", "ROOKIE", "STARTER", "STARTER", "ALL_STAR", "MVP", "LEGEND"];
   const ratios = [0.4, 0.6, 0.75, 0.9, 1.0, 1.1, 1.3, 1.5, 1.8, 2.0];
   const streaks = [0, 0, 0, 1, 2, 3, 5, 7, 10, 12];
   const badges = ["none", "none", "none", "FIRE", "GOD_MODE", "TRIPLE_DBL", "TURNOVER_MACHINE"];
@@ -150,7 +150,7 @@ function generate100(): Scenario[] {
 
 const scenarios = generate100();
 const TIER_EMOJI: Record<string, string> = {
-  BUST: "❌", ROOKIE: "🟡", STARTER: "🟢", ALL_STAR: "⭐", MVP: "🏆", GOAT: "👑",
+  BUST: "❌", ROOKIE: "🟡", STARTER: "🟢", ALL_STAR: "⭐", MVP: "🏆", LEGEND: "👑",
 };
 
 console.log("\n═══════════════════════════════════════════════════════════════");

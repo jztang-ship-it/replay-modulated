@@ -1,10 +1,10 @@
 /**
  * basketball/src/utils/payoutLogic.ts
- * Thresholds calibrated for $250 cap + 6-tier system (RED/ORANGE/PURPLE/BLUE/GREEN/WHITE).
- * Salary = round(avgFP × 1.39), range $13-$89. Tier boundaries in economyEngine.ts.
- * Engine mode: RED+ORANGE anchor + salary² weighting + biased log sampling + $244 salary floor.
- * Win rate calibration pending after $200 → $250 cap raise.
- * MUST stay in sync with WIN_TIERS in GameBar.tsx.
+ *
+ * Option C "Slot-like" economy — calibrated via 10k-hand simulator with
+ * salary-derived tiers. Targets ~45% bust, ~17% house edge with streaks.
+ *
+ * MUST stay in sync with WIN_TIERS in GameBar.tsx and legend modal.
  */
 import {
   calculateWinTier as _calculateWinTier,
@@ -23,12 +23,12 @@ export type { WinTierKey };
 export type WinTier = WinTierKey;
 
 export const BASKETBALL_WIN_TIERS: WinTierMap = {
-  GOAT:     { minFp: 240, multiplier: 50  },  // ~0.3% sim / ~0.5% real
-  MVP:      { minFp: 225, multiplier: 15  },  // ~1.1% sim / ~2% real
-  ALL_STAR: { minFp: 210, multiplier: 7   },  // ~5.3% sim / ~8% real
-  STARTER:  { minFp: 195, multiplier: 2.5 },  // ~15.7% sim / ~18% real
-  ROOKIE:   { minFp: 180, multiplier: 0.5 },  // ~28.2% sim / ~27% real
-  BUST:     { minFp: 0,   multiplier: 0   },  // ~49.5% sim / ~35% real (hold/redraw lifts)
+  LEGEND:   { minFp: 250, multiplier: 50  },  // ~0.2% — jackpot
+  MVP:      { minFp: 230, multiplier: 8   },  // ~3%
+  ALL_STAR: { minFp: 217, multiplier: 3   },  // ~8%
+  STARTER:  { minFp: 203, multiplier: 1   },  // ~18% — break even
+  ROOKIE:   { minFp: 189, multiplier: 0.2 },  // ~25% — small cushion
+  BUST:     { minFp: 0,   multiplier: 0   },  // ~45%
 };
 
 export function calculateWinTier(totalFp: number): WinTierKey {

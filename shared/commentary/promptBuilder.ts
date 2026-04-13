@@ -40,7 +40,7 @@ RULES:
 2. ALWAYS use the FULL NAME of the [MAIN-SUBJECT-OK] star player. Never "he", never just a first name, never just a nickname without the full name first. Example: "Jayson Tatum went 48 tonight and made it look routine" — NOT "He went 48" or "Tatum did well."
 3. ONLY name [MAIN-SUBJECT-OK] players (RED, ORANGE, or PURPLE tier). NEVER mention any [NOT-MAIN-SUBJECT] player by name, first name, last name, or nickname. Refer to them as "the bench" or "the supporting cast" only.
 4. NEVER use the letters "FP" in commentary. Also NEVER mention "perf" numbers (engine internals, not real stats). Only reference real basketball stats from the stat line.
-5. NEVER use game tier names: ROOKIE, STARTER, ALL_STAR, MVP, GOAT, BUST. These are game mechanics that mean nothing to a basketball fan.
+5. NEVER use game tier names: ROOKIE, STARTER, ALL_STAR, MVP, LEGEND, BUST. These are game mechanics that mean nothing to a basketball fan.
 6. "loss" outcome = deadpan/wry honesty. "win" = it's a win, celebrate it. "close win" = acknowledge the near-miss.
 7. Write like a basketball-watching friend, not a robot. No fragments. No taglines. Full sentences with subject-verb-object.
 
@@ -71,7 +71,7 @@ function buildUserPrompt(
 
   // ── Hand result ──────────────────────────────────────────────────────────
   // Tier names and gap numbers are NOT shown — they are game mechanics that leak
-  // into commentary as basketball concepts ("starter money", "3.4 short of GOAT").
+  // into commentary as basketball concepts ("starter money", "3.4 short of LEGEND").
   // Outcome is described purely as win/loss/near-miss language.
   const isBust = input.winTier === "BUST";
   const isNearMiss = !isBust && input.nextTier != null &&

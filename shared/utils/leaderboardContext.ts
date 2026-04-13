@@ -53,14 +53,14 @@ function smartThreshold(entries: LbEntry[]): number {
  * Tier helper — Trigger 2 fires for tiers that qualify for "on the board."
  * Default: MVP+ (basketball). Override via args.onBoardTiers for other sports.
  */
-const DEFAULT_ON_BOARD_TIERS = new Set(["MVP", "GOAT"]);
+const DEFAULT_ON_BOARD_TIERS = new Set(["MVP", "LEGEND"]);
 
 export interface LeaderboardContextArgs {
   myFp: number;
-  winTier: string;        // BUST | ROOKIE | STARTER | ALL_STAR | MVP | GOAT
+  winTier: string;        // BUST | ROOKIE | STARTER | ALL_STAR | MVP | LEGEND
   isBust: boolean;
   myUid: string;          // from getPlayerUid()
-  /** Tiers that qualify for "on the board" (default: MVP, GOAT). */
+  /** Tiers that qualify for "on the board" (default: MVP, LEGEND). */
   onBoardTiers?: string[];
   /** MVP threshold FP for intro message (default: 215). */
   mvpThresholdFp?: number;

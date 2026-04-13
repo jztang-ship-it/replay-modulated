@@ -46,7 +46,7 @@ const TIER_THRESHOLDS = [
   { tier: "STARTER",  min: 195,  payout: "2.5x" },
   { tier: "ALL_STAR", min: 210,  payout: "7x" },
   { tier: "MVP",      min: 225,  payout: "15x" },
-  { tier: "GOAT",     min: 240,  payout: "50x" },
+  { tier: "LEGEND",     min: 240,  payout: "50x" },
 ] as const;
 
 type RawPlayer = {

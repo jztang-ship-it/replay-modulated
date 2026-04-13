@@ -44,7 +44,7 @@ export type SoundPackManifest = {
    * in memory. Not looped; plays once then fades.
    */
   music: {
-    bigWin: string[];   // MVP / GOAT celebration track (~35s)
+    bigWin: string[];   // MVP / LEGEND celebration track (~35s)
   };
 };
 

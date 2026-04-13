@@ -192,11 +192,11 @@ function createPlaceholders(): PlayerCard[] {
 }
 
 const GAUGE_THRESHOLDS = [
-  { tier: "ROOKIE", minFP: 180 },
-  { tier: "STARTER", minFP: 195 },
-  { tier: "ALL_STAR", minFP: 210 },
-  { tier: "MVP", minFP: 225 },
-  { tier: "GOAT", minFP: 240 },
+  { tier: "ROOKIE", minFP: 189 },
+  { tier: "STARTER", minFP: 203 },
+  { tier: "ALL_STAR", minFP: 217 },
+  { tier: "MVP", minFP: 230 },
+  { tier: "LEGEND", minFP: 250 },
 ];
 const NEAR_MISS_FP = 5;
 
@@ -250,22 +250,22 @@ function RollingNumber({ value, decimals = 0, duration = 400 }: { value: number;
 
 // ── Tier flip display helpers ──────────────────────────────────────
 function deriveTierFromFp(fp: number): string {
-  if (fp >= 240) return "GOAT";
-  if (fp >= 225) return "MVP";
-  if (fp >= 210) return "ALL_STAR";
-  if (fp >= 195) return "STARTER";
-  if (fp >= 180) return "ROOKIE";
+  if (fp >= 250) return "LEGEND";
+  if (fp >= 230) return "MVP";
+  if (fp >= 217) return "ALL_STAR";
+  if (fp >= 203) return "STARTER";
+  if (fp >= 189) return "ROOKIE";
   return "BUST";
 }
 
 // ── Spring oscillation waypoints ────────────────────────────────────────────
 const SPRING_TIERS = [
-  { name: "BUST", lo: 0, hi: 180 },
-  { name: "ROOKIE", lo: 180, hi: 195 },
-  { name: "STARTER", lo: 195, hi: 210 },
-  { name: "ALL_STAR", lo: 210, hi: 225 },
-  { name: "MVP", lo: 225, hi: 240 },
-  { name: "GOAT", lo: 240, hi: 9999 },
+  { name: "BUST", lo: 0, hi: 189 },
+  { name: "ROOKIE", lo: 189, hi: 203 },
+  { name: "STARTER", lo: 203, hi: 217 },
+  { name: "ALL_STAR", lo: 217, hi: 230 },
+  { name: "MVP", lo: 230, hi: 250 },
+  { name: "LEGEND", lo: 250, hi: 9999 },
 ];
 const SPRING_TIER_SPAN = 20.0;
 
@@ -275,14 +275,14 @@ function computeSpringAmplitude(finalFp: number): number {
     ?? SPRING_TIERS[SPRING_TIERS.length - 1];
   const margin = finalFp - tier.lo;
   const marginNorm = Math.min(1, margin / SPRING_TIER_SPAN);
-  const fpNorm = Math.min(1, Math.max(0, (finalFp - 195) / 45));  // 195=STARTER floor, 45=GOAT(240)-STARTER(195)
+  const fpNorm = Math.min(1, Math.max(0, (finalFp - 195) / 45));  // 195=STARTER floor, 45=LEGEND(240)-STARTER(195)
   const baseAmp = 4.0 + fpNorm * 6.0;
   const marginFactor = 1.0 - marginNorm * 0.75;
   const rawAmplitude = baseAmp * marginFactor;
   // Hard cap: never let the spring push past the current tier ceiling.
   // Without this, a score near the top of a tier (e.g. 167 in ROOKIE 155-175)
   // makes the bar visually shoot to near-100% fill then snap back.
-  // Leave 0.5 FP of clearance. GOAT tier has no ceiling so skip cap there.
+  // Leave 0.5 FP of clearance. LEGEND tier has no ceiling so skip cap there.
   const headroom = tier.hi === 9999 ? rawAmplitude : Math.max(0, tier.hi - finalFp - 0.5);
   return Math.min(rawAmplitude, headroom);
 }
@@ -293,7 +293,7 @@ const TIER_IMAGE_MAP: Record<string, string> = {
   STARTER: "Starter3.png",
   ALL_STAR: "All_Star_4.png",
   MVP: "MVP5.png",
-  GOAT: "GOAT6.png",
+  LEGEND: "LEGEND6.png",
 };
 
 const GV_STYLE_ID = "gv-tier-flip";
@@ -923,7 +923,7 @@ export default function GameView() {
             if (totalFp > prevBest) {
               localStorage.setItem("rm_best_hand", totalFp.toFixed(1));
             }
-            const tierRanks = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "GOAT"];
+            const tierRanks = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "LEGEND"];
             const prevTierRank = tierRanks.indexOf(localStorage.getItem("rm_best_tier") ?? "BUST");
             const newTierRank = tierRanks.indexOf(tier ?? "BUST");
             if (newTierRank > prevTierRank) {
@@ -967,7 +967,7 @@ export default function GameView() {
 
   // Tier color map — mirrors WIN_TIERS in basketball/GameBar.tsx
   const CELEBRATION_TIER_COLORS: Record<string, { color: string; glow: string }> = {
-    GOAT: { color: "#EF4444", glow: "#EF444499" },
+    LEGEND: { color: "#EF4444", glow: "#EF444499" },
     MVP: { color: "#FB923C", glow: "#FB923C55" },
     ALL_STAR: { color: "#C084FC", glow: "#C084FC55" },
     STARTER: { color: "#00FFD8", glow: "#00FFD855" },
@@ -977,7 +977,7 @@ export default function GameView() {
 
   const formatTierLabel = (tier: string) => {
     if (tier === "BUST") return "BUST";
-    if (tier === "GOAT") return "G.O.A.T.";
+    if (tier === "LEGEND") return "LEGEND";
     return tier.replace("_", "-");
   };
 
@@ -1139,7 +1139,7 @@ export default function GameView() {
         STARTER: `${fpStr} — that's a real hand.`,
         ALL_STAR: `${fpStr}. Now we're talking.`,
         MVP: `${fpStr}. That's a number.`,
-        GOAT: `${fpStr}. Insane.`,
+        LEGEND: `${fpStr}. Insane.`,
       };
       const staticCopy = { primary: staticMap[winTier] ?? staticMap.STARTER, secondary: "" };
       postRevealCopyRef.current = staticCopy;
@@ -1185,7 +1185,7 @@ export default function GameView() {
   // Track tier boundary crossings — paced flip with minimum display time per tier
   // Tier flip — shows EVERY intermediate tier for 600ms each.
   // When gauge crosses multiple tiers, schedules each one on a 600ms chain.
-  const TIER_ORDER_LIST = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "GOAT"];
+  const TIER_ORDER_LIST = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "LEGEND"];
   const tierFlipTimersRef = useRef<number[]>([]);
 
   const handleTierCross = useCallback((tier: string) => {
@@ -1602,7 +1602,7 @@ export default function GameView() {
       skipReveal();
     }
     else {
-      // Fade out big win music if it's still playing (MVP/GOAT celebration)
+      // Fade out big win music if it's still playing (MVP/LEGEND celebration)
       if (gameState === "WIN_CELEBRATION") {
         soundManager.stopBigWin();
       }

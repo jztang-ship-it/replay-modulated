@@ -60,7 +60,7 @@ const V = {
   SLAM_TEXTURE: 0.55,   // was 0.50
   SLAM_CROWD: 0.50,   // was 0.45
 
-  // Big win (MVP / GOAT) — procedural fallback only; real track used when loaded
+  // Big win (MVP / LEGEND) — procedural fallback only; real track used when loaded
   BIG_BREATH: 0.0,    // silence IS the breath — no sound for 40ms
   BIG_IMPACT: 0.85,   // was 0.80
   BIG_SWISH: 0.65,   // was 0.60
@@ -288,14 +288,14 @@ class SoundManager {
   // ─── TIER CROSSING ────────────────────────────────────────────────────────
   // Emotional job: BREAKTHROUGH. "I just leveled up!"
   // Three layers: thump (impact), chime (musical reward), swish (identity).
-  // Intensity scales with tier — GOAT crossing should feel massive.
+  // Intensity scales with tier — LEGEND crossing should feel massive.
   playTierCross(tier: string) {
     const ctx = this.ensureCtx();
     if (!ctx) return;
     const now = ctx.currentTime;
 
     const intensityMap: Record<string, number> = {
-      ROOKIE: 0.4, STARTER: 0.6, ALL_STAR: 0.8, MVP: 0.9, GOAT: 1.0,
+      ROOKIE: 0.4, STARTER: 0.6, ALL_STAR: 0.8, MVP: 0.9, LEGEND: 1.0,
     };
     const intensity = intensityMap[tier] ?? 0.4;
 
@@ -317,7 +317,7 @@ class SoundManager {
 
     // Layer 2: Musical chime — ascending pitch per tier = progress
     const chimeFreq: Record<string, number> = {
-      ROOKIE: 523, STARTER: 587, ALL_STAR: 698, MVP: 880, GOAT: 1047,
+      ROOKIE: 523, STARTER: 587, ALL_STAR: 698, MVP: 880, LEGEND: 1047,
     };
     const freq = chimeFreq[tier] ?? 523;
     const chime = ctx.createOscillator();
@@ -479,7 +479,7 @@ class SoundManager {
     }
   }
 
-  // ─── BIG WIN (MVP / GOAT) ────────────────────────────────────────────────
+  // ─── BIG WIN (MVP / LEGEND) ────────────────────────────────────────────────
   // Emotional job: STAGED ERUPTION. The biggest dopamine hit in the game.
   //
   // PRIMARY PATH (music track loaded from Supabase):
@@ -739,7 +739,7 @@ class SoundManager {
   // ─── UNIFIED TIER RESULT SOUND ─────────────────────────────────────────────
   playTierResult(tier: string) {
     switch (tier) {
-      case "GOAT":
+      case "LEGEND":
       case "MVP":
         this.playBigWin();
         break;

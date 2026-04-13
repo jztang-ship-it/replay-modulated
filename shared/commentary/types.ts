@@ -7,7 +7,7 @@
  * builder are then 100% sport-agnostic.
  */
 
-export type WinTier = "BUST" | "ROOKIE" | "STARTER" | "ALL_STAR" | "MVP" | "GOAT";
+export type WinTier = "BUST" | "ROOKIE" | "STARTER" | "ALL_STAR" | "MVP" | "LEGEND";
 
 export interface CommentaryRosterCard {
   name: string;

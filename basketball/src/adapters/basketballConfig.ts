@@ -3,7 +3,7 @@
  *
  * Single consistent set of thresholds — no protection period.
  * Calibrated for $250 cap (raised from $200 to enable 2-star rosters), engine-accurate sim:
- *   BUST ~44%, ROOKIE ~26%, STARTER ~17%, ALL_STAR ~9%, MVP ~3.5%, GOAT ~0.5%
+ *   BUST ~44%, ROOKIE ~26%, STARTER ~17%, ALL_STAR ~9%, MVP ~3.5%, LEGEND ~0.5%
  *
  * Hand 1 is always FTUE (hardcoded Devin Booker roster, ~$200 total — leaves $50 of cap
  * unused by design since FTUE is a fixed narrative sequence, not a full cap-optimized roster).
@@ -109,11 +109,11 @@ export const BasketballSportConfig = {
   winCondition: {
     type: 'FIXED_THRESHOLD',
     thresholds: [
-      { tier: 'ROOKIE',   minFP: 180, multiplier: 0.5  },
-      { tier: 'STARTER',  minFP: 195, multiplier: 2.5  },
-      { tier: 'ALL_STAR', minFP: 210, multiplier: 7.0  },
-      { tier: 'MVP',      minFP: 225, multiplier: 15.0 },
-      { tier: 'GOAT',     minFP: 240, multiplier: 50   },
+      { tier: 'ROOKIE',   minFP: 189, multiplier: 0.2  },
+      { tier: 'STARTER',  minFP: 203, multiplier: 1.0  },
+      { tier: 'ALL_STAR', minFP: 217, multiplier: 3.0  },
+      { tier: 'MVP',      minFP: 230, multiplier: 8.0  },
+      { tier: 'LEGEND',   minFP: 250, multiplier: 50   },
     ],
   },
 

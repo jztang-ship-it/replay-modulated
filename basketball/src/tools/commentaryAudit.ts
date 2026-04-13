@@ -8,7 +8,7 @@ import type { CommentaryInput, CommentaryRosterCard } from "../../../shared/comm
 
 // ─── Scenario generator ─────────────────────────────────────────────────────
 
-const WIN_TIERS = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "GOAT"];
+const WIN_TIERS = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "LEGEND"];
 const MARGINS = [2, 8, 20];
 const NEAR_MISS_GAPS = [0, 2, 6];
 const STAR_RATIOS = [0.5, 0.7, 1.0, 1.2, 1.6];
@@ -17,13 +17,13 @@ const BADGES = ["none", "FIRE", "GOD_MODE", "TURNOVER_MACHINE"];
 const ROSTER_SHAPES = ["1star", "2star"] as const;
 
 const TIER_FLOORS: Record<string, number> = {
-  BUST: 0, ROOKIE: 180, STARTER: 195, ALL_STAR: 210, MVP: 225, GOAT: 240,
+  BUST: 0, ROOKIE: 180, STARTER: 195, ALL_STAR: 210, MVP: 225, LEGEND: 240,
 };
 const TIER_NEXT: Record<string, string | null> = {
-  BUST: "ROOKIE", ROOKIE: "STARTER", STARTER: "ALL_STAR", ALL_STAR: "MVP", MVP: "GOAT", GOAT: null,
+  BUST: "ROOKIE", ROOKIE: "STARTER", STARTER: "ALL_STAR", ALL_STAR: "MVP", MVP: "LEGEND", LEGEND: null,
 };
 const NEXT_MINS: Record<string, number> = {
-  ROOKIE: 180, STARTER: 195, ALL_STAR: 210, MVP: 225, GOAT: 240,
+  ROOKIE: 180, STARTER: 195, ALL_STAR: 210, MVP: 225, LEGEND: 240,
 };
 
 function buildRoster(shape: "1star" | "2star", starRatio: number, badge: string, held: boolean): CommentaryRosterCard[] {

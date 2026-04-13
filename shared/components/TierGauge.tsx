@@ -11,7 +11,7 @@
  *      Duration ∝ totalFp. Ease-out to final, then:
  *      - Near-miss (≤8 FP): spring overshoots into next-tier color, snaps back.
  *      - High tier (MVP): mild spring to emphasise achievement.
- *      - GOAT: smooth fill + ding pulse.
+ *      - LEGEND: smooth fill + ding pulse.
  *
  *   2. TIER CROSSING (this card moved into a new tier):
  *      Brief spring to show the crossing — bar dips back then settles.
@@ -74,7 +74,7 @@ interface TierGaugeProps {
 }
 
 const TIER_CFG: Record<string, { label: string; color: string; glow: string }> = {
-  GOAT: { label: "G.O.A.T.", color: "#EF4444", glow: "#EF444455" },
+  LEGEND: { label: "LEGEND", color: "#EF4444", glow: "#EF444455" },
   MVP: { label: "MVP", color: "#FB923C", glow: "#FB923C55" },
   ALL_STAR: { label: "ALL-STAR", color: "#C084FC", glow: "#C084FC55" },
   STARTER: { label: "STARTER", color: "#00FFD8", glow: "#00FFD855" },
@@ -84,7 +84,7 @@ const TIER_CFG: Record<string, { label: string; color: string; glow: string }> =
 
 const FF = "'Rajdhani', 'Oswald', 'Arial Narrow', sans-serif";
 const NEAR_MISS_PTS = 8;
-const MAX_FP = 235;   // GOAT threshold, used for duration scaling
+const MAX_FP = 235;   // LEGEND threshold, used for duration scaling
 const BIG_CARD_FP = 35;    // single card FP above this = "big card"
 
 /** FTUE Booker hand: five drawn cards only (see ftueRoster.ts) — bar starts here before scripted gauge */
@@ -106,10 +106,10 @@ function easeOut(t: number): number {
   return 1 - Math.pow(1 - Math.min(1, t), 3);
 }
 
-/** Sorted gauge stops (excludes GOAT as a bar segment — it's the overflow tier). */
+/** Sorted gauge stops (excludes LEGEND as a bar segment — it's the overflow tier). */
 function sortedGaugeThresholds(thresholds: TierThreshold[]) {
   return [...thresholds]
-    .filter(t => (t.tier as string) !== "GOAT")
+    .filter(t => (t.tier as string) !== "LEGEND")
     .sort((a, b) => a.minFP - b.minFP);
 }
 
@@ -134,19 +134,19 @@ export function computeGaugeState(
     }
   }
 
-  const goatMin = thresholds.find(t => (t.tier as string) === "GOAT")?.minFP ?? 235;
+  const goatMin = thresholds.find(t => (t.tier as string) === "LEGEND")?.minFP ?? 235;
   const isGoat = fp >= goatMin;
 
   if (derivedTier === "MVP" && nextTier === null) {
-    nextTier = "GOAT";
+    nextTier = "LEGEND";
     nextMin = goatMin;
   }
 
-  const actualTier = winTierProp ?? (isGoat ? "GOAT" : derivedTier);
-  const isMaxLevel = isGoat || actualTier === "GOAT";
+  const actualTier = winTierProp ?? (isGoat ? "LEGEND" : derivedTier);
+  const isMaxLevel = isGoat || actualTier === "LEGEND";
 
   const tierCfg = TIER_CFG[actualTier] ?? TIER_CFG.BUST;
-  const targetCfg = isMaxLevel ? TIER_CFG.GOAT : (TIER_CFG[nextTier ?? ""] ?? tierCfg);
+  const targetCfg = isMaxLevel ? TIER_CFG.LEGEND : (TIER_CFG[nextTier ?? ""] ?? tierCfg);
 
   const gap = isMaxLevel ? 0 : Math.max(0, nextMin - fp);
   const isNearMiss = !isMaxLevel && winTierProp != null && gap > 0 && gap <= nearMissPts;
@@ -155,7 +155,7 @@ export function computeGaugeState(
   const finalFill = isMaxLevel ? 1.0 : Math.min(1, Math.max(0, (fp - curMin) / tierSpan));
 
   const normalColor = isGoat
-    ? TIER_CFG.GOAT.color
+    ? TIER_CFG.LEGEND.color
     : `linear-gradient(90deg, ${tierCfg.color}88, ${targetCfg.color})`;
   const overshootColor = `linear-gradient(90deg, ${tierCfg.color}88 0%, ${targetCfg.color} 50%, ${targetCfg.color} 100%)`;
 
@@ -188,7 +188,7 @@ function countTierBoundaryCrossings(fromFp: number, toFp: number, thresholds: Ti
   for (const m of mins) {
     if (fromFp < m && m <= toFp + 0.001) n++;
   }
-  const goatMin = thresholds.find(t => (t.tier as string) === "GOAT")?.minFP;
+  const goatMin = thresholds.find(t => (t.tier as string) === "LEGEND")?.minFP;
   if (goatMin && fromFp < goatMin && toFp >= goatMin) n++;
   return n;
 }
@@ -207,7 +207,7 @@ function dramaticEase(t: number): number {
   return 0.7 + 0.3 * (s * s);               // slow ease-in — crawls through last 30%
 }
 
-/** FP waypoints for roll-up: start, each tier min strictly between from→to, end (GOAT line included). */
+/** FP waypoints for roll-up: start, each tier min strictly between from→to, end (LEGEND line included). */
 function buildFpWaypoints(fromFp: number, toFp: number, thresholds: TierThreshold[]): number[] {
   if (toFp <= fromFp + 0.001) return [fromFp, toFp];
   const w: number[] = [fromFp];
@@ -216,7 +216,7 @@ function buildFpWaypoints(fromFp: number, toFp: number, thresholds: TierThreshol
     const m = t.minFP;
     if (m > fromFp + 0.001 && m < toFp - 0.001) w.push(m);
   }
-  const goatMin = thresholds.find(tt => (tt.tier as string) === "GOAT")?.minFP;
+  const goatMin = thresholds.find(tt => (tt.tier as string) === "LEGEND")?.minFP;
   if (goatMin != null && goatMin > fromFp + 0.001 && goatMin < toFp - 0.001) {
     if (!w.some(x => Math.abs(x - goatMin) < 0.01)) w.push(goatMin);
   }
@@ -793,7 +793,7 @@ export function TierGauge({
             </div>
           )
         ) : isMaxLevel ? (
-          <span style={{ fontSize: 13, fontWeight: 800, color: TIER_CFG.GOAT.color, fontFamily: FF, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+          <span style={{ fontSize: 13, fontWeight: 800, color: TIER_CFG.LEGEND.color, fontFamily: FF, letterSpacing: "0.06em", textTransform: "uppercase" }}>
             You've reached the maximum level
           </span>
         ) : commentaryOverride === null && ftueTypewriter ? (

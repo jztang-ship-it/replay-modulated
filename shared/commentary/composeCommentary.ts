@@ -64,7 +64,7 @@ function determineIntensity(input: CommentaryInput): Intensity {
   }
 
   switch (winTier) {
-    case "GOAT": return "goat";
+    case "LEGEND": return "goat";
     case "MVP": return "mvp";
     case "ALL_STAR": return "all_star";
     case "STARTER":

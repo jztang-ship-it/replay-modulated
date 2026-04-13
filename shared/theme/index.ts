@@ -21,7 +21,7 @@ export const TIER_POSITION_TEXT: Record<TierKey, string> = {
 
 export const TIER_TOKENS: Record<TierKey, TierTokens> = {
   // RED = $73+ "bug" tier (Jokić, Giannis, Wemby, Shai, Luka, AD). Deep crimson to
-  // distinguish from GOAT tier red (#EF4444) and ORANGE (#FC7100).
+  // distinguish from LEGEND tier red (#EF4444) and ORANGE (#FC7100).
   RED:    { bg: "#B91C1C", bgEnd: "#F43F5E", accent: "#F43F5E", isLight: false, frame: "rgba(244,63,94,0.92)",   glow: "rgba(220,38,38,0.32)"   },
   ORANGE: { bg: "#FC7100", bgEnd: "#FFA200", accent: "#FFA200", isLight: false, frame: "rgba(255,160,50,0.90)",  glow: "rgba(255,140,30,0.28)"  },
   PURPLE: { bg: "#7E00FF", bgEnd: "#1A0033", accent: "#BB5BFF", isLight: false, frame: "rgba(175,100,255,0.88)", glow: "rgba(160,90,255,0.26)"  },
