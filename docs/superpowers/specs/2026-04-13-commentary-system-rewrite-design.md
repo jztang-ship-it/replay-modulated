@@ -156,6 +156,86 @@ Player references must rotate between available name forms to sound human. A rea
 
 ---
 
+## 6b. NBA Records & Historic Achievements Detection
+
+### The idea
+
+When a player's game log contains a stat line that approaches, ties, or breaks an NBA record — or when a significant career milestone is reached on that night — the commentary should recognize it. This is treated at the SAME priority level as rare badges (GOD_MODE, 5X5, QUAD_DBL). It's proof of something extraordinary, attached to the star.
+
+### Data source: `shared/data/nbaRecords.ts`
+
+A static lookup table of NBA single-game records and notable thresholds, web-crawled and maintained. Sport-agnostic structure so baseball records follow the same pattern.
+
+```typescript
+interface StatRecord {
+  stat: string;          // "pts", "ast", "reb", "stl", "blk", "turnovers", "threes"
+  record: number;        // NBA single-game record value
+  holder: string;        // "Wilt Chamberlain"
+  date: string;          // "1962-03-02"
+  nearRecordPct: number; // 0.75 = flag at 75% of record
+}
+
+interface MilestoneThreshold {
+  stat: string;          // "career_pts", "career_ast", etc.
+  thresholds: number[];  // [10000, 15000, 20000, 25000, 30000]
+  label: string;         // "20,000 career points"
+}
+```
+
+**Example records:**
+
+| Stat | Record | Holder | Near-record threshold (75%) |
+|------|--------|--------|-----------------------------|
+| Points | 100 | Wilt Chamberlain | 75 pts |
+| Assists | 30 | Scott Skiles | 23 ast |
+| Rebounds | 55 | Wilt Chamberlain | 41 reb |
+| Steals | 11 | Multiple | 8 stl |
+| Blocks | 17 | Elmore Smith | 13 blk |
+| 3PM | 16 | Klay Thompson | 12 threes |
+
+### Detection logic
+
+At composition time, the story selector checks the star's stat line against the records table:
+
+```
+for each stat in star's statLine:
+  if stat >= record        → RECORD_BROKEN (highest priority in the game)
+  if stat >= nearRecordPct → NEAR_RECORD (same tier as rare badges)
+```
+
+For career milestones — these require an optional `careerStats` field on `PostRevealRosterCard` (future enhancement, when available from data source). When a player's career total + tonight's stats crosses a milestone threshold, flag it.
+
+### Priority
+
+| Event | Priority | How it's used |
+|-------|----------|--------------|
+| `record_broken` | **ABOVE rare badges** — this IS the message | "Trae Young just broke Scott Skiles' assist record. 31 assists. History." |
+| `near_record` | **Same as rare badges** | Attached to star as proof. "{nick} had 24 assists tonight. The NBA record is 30. Think about that." |
+| `career_milestone` | **Same as rare badges** | "{name} crossed 20,000 career points tonight. That's a different kind of night." |
+
+### Template examples
+
+**Record broken + hype:**
+```
+"{last} just broke the record. {pts} points in a single game. That's history and you had a front row seat."
+```
+
+**Near record + culture_wry:**
+```
+"{nick} had {ast} assists tonight. The NBA record is 30. Someone should let Scott Skiles know."
+```
+
+**Career milestone + warm:**
+```
+"{name} crossed 20,000 career points tonight. On a night like this, the payout is almost secondary."
+```
+
+### Data maintenance
+
+The records table is small (~20-30 entries for basketball) and rarely changes. Web-crawl once, update manually when records are broken. Each sport gets its own records file (`nbaRecords.ts`, `mlbRecords.ts`).
+
+---
+
 ## 7. Story Assembly (Step 4) — Star-First Causal Logic
 
 **One main story (required) + probabilistic supporting details.**
@@ -168,6 +248,7 @@ Supporting details (shuffled, each has an inclusion probability):
 
 | Detail | Trigger | Inclusion % | Rule |
 |--------|---------|-------------|------|
+| `record_event` | stat ≥ record OR ≥ nearRecordPct OR career milestone | 95% | **Highest priority detail.** If a record was broken, this BECOMES the message — everything else is secondary. Near-record and milestones treated same as rare badges. |
 | `rare_badge` | GOD_MODE, 5X5, QUAD_DBL, MAESTRO | 80% | Must attach to the star. "Booker went nuclear — 61 and GOD MODE." Never standalone. |
 | `common_badge` | FIRE, BEAST, TRIPLE_DBL, etc. | 60% | Same — proof of the star's performance, not its own story. |
 | `held_card_paid` | wasHeld + ratio ≥ 1.25 | 80% | Validates user decision. "Holding that card was the right call." |
@@ -195,6 +276,7 @@ Supporting details (shuffled, each has an inclusion probability):
 
 | Detail | Trigger | Inclusion % | Rule |
 |--------|---------|-------------|------|
+| `record_event` | stat ≥ record OR ≥ nearRecordPct | 95% | Even on a loss, a record/near-record is worth mentioning. "Edwards had 25 assists and still lost. That's a different kind of pain." |
 | `near_miss_loss` | gap ≤ 3 FP to ROOKIE | 80% | More frequent than win near-miss. "Almost survived it." |
 | `zero_card` | any card ≤ 1.0 FP | 60% | Reinforces failure. Name if nameable, else generic. |
 | `turnover_problem` | TURNOVER_MACHINE badge | 40% | NEVER primary. Just another stat shortfall. "The 6 turnovers didn't help." |
@@ -389,6 +471,7 @@ When `culture_wry` tone is rolled, the template should pull from culture lines A
 
 | Source | Used for |
 |--------|----------|
+| `nbaRecords` (static) | Record broken, near-record, career milestone detection |
 | `playerCulture.overperform` | Win + star went off |
 | `playerCulture.underperform` | Loss + star no-showed |
 | `playerCulture.turnovers` | Supporting detail on loss |
@@ -438,6 +521,10 @@ shared/commentary/
   types.ts                       — EXISTING: add CommentaryTemplate type
   promptBuilder.ts               — EXISTING: unchanged (for future LLM re-enable)
   generateCommentary.ts          — EXISTING: unchanged (for future LLM re-enable)
+
+shared/data/
+  nbaRecords.ts                  — NEW: NBA single-game records + career milestone thresholds
+  recordDetector.ts              — NEW: compares stat line against records, returns record events
 
 basketball/src/utils/
   buildPostRevealCopy.ts     — EXISTING: kept as fallback, feature flag switches
