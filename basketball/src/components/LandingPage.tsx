@@ -10,6 +10,8 @@ import { CardBackGeneric } from "./CardBackGeneric";
 import { headshotUrl } from "@shared/utils/headshotUrl";
 import { soundManager } from "@shared/utils/soundManager";
 import { tierFromSalary, DEFAULT_ECONOMY_CONFIG } from "@shared/engines/economyEngine";
+import { useAuth } from "@shared/auth/useAuth";
+import { RegisterModal } from "@shared/components/RegisterModal";
 
 // ─── Card definitions ────────────────────────────────────────────────────────
 
@@ -81,6 +83,8 @@ const CARDS: LandingCardDef[] = [
 interface Props { onPlay: () => void; }
 
 export function LandingPage({ onPlay }: Props) {
+  const { isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
+  const [showSignIn, setShowSignIn] = useState(false);
   const [flipped, setFlipped] = useState<Set<string>>(new Set());
   const phase: GamePhase = "RESULTS";
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -285,6 +289,28 @@ export function LandingPage({ onPlay }: Props) {
           }}>
             Beta · Free to Play · No Sign-Up
           </p>
+          {isAnonymous && (
+            <button
+              onClick={() => setShowSignIn(true)}
+              style={{
+                background: "none", border: "none", color: "#64748b", fontSize: 12,
+                cursor: "pointer", padding: "12px 0", width: "100%", textAlign: "center",
+              }}
+            >
+              Already have an account? Sign in
+            </button>
+          )}
+          {showSignIn && (
+            <RegisterModal
+              signInMode
+              onClose={() => setShowSignIn(false)}
+              onSuccess={() => setShowSignIn(false)}
+              signUp={signUp}
+              linkGoogle={linkGoogle}
+              signIn={signIn}
+              signInGoogle={signInGoogle}
+            />
+          )}
           <h1 style={{
             fontFamily: "'Impact','Arial Narrow',Arial,sans-serif", fontWeight: 900,
             fontSize: "clamp(24px, 5vw, 40px)", textTransform: "uppercase", lineHeight: 0.95, margin: 0,
