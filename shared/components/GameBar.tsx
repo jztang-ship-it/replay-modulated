@@ -474,7 +474,7 @@ function TierBar({
         <style>{`
           @keyframes tipPulse { 0%,100%{opacity:1;transform:translateY(-50%) scale(1)} 50%{opacity:.4;transform:translateY(-50%) scale(2)} }
           @keyframes nearMissPulse { 0%,100%{opacity:0.15} 50%{opacity:0.55} }
-          @keyframes legendIconPulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,215,0,0)} 50%{box-shadow:0 0 8px 4px rgba(255,215,0,0.5)} }
+          @keyframes legendIconPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.2)} }
         `}</style>
         {/* FTUE near-miss pulsing segment — shows gap from current fill to next tier */}
         {ftuePulseNearMiss && fptNeeded > 0 && displayPct < 99 && (() => {
@@ -1436,6 +1436,7 @@ export function GameBar({
 
   const controlsFooter = (
     <>
+      {legendPulsing && <style>{`@keyframes legendIconPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.25)} }`}</style>}
       <div ref={walletTargetRef} style={{ pointerEvents: "none", zIndex: 9998 }} />
       {celebFlying && tapOrigin && walletTargetRef.current && (
         <CoinFlyFromPoint
