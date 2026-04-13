@@ -641,13 +641,13 @@ export function CardFront(props: CardFrontProps) {
           // Coverage lerps within that zone: mild=top 40%, max=top 72% (bottom always 28%).
           const t = Math.min(1, Math.max(0, (0.80 - ratio) / (0.80 - 0.30))); // 0=mild, 1=max
           const src = `${import.meta.env.BASE_URL}冰雪.png`;
-          const bottomPct = 28 + (1 - t) * 47; // 75% (mild=top 25%) → 28% (max=top 72%)
+          const bottomPct = 28;                 // always 28% — ice covers top 72% at all levels
           const hue = -8 - t * 17;             // -8° → -25°
           const sat = 0.80 - t * 0.30;         // 0.80 → 0.50
           const bright = 1.1 + t * 0.5;        // 1.1 → 1.6
           const speed = 4.5 - t * 1.5;         // 4.5s → 3.0s
-          const op1 = 0.08 + t * 0.52;         // 0.08 → 0.60
-          const op2 = 0.04 + t * 0.41;         // 0.04 → 0.45
+          const op1 = 0.06 + t * 0.54;         // 0.06 → 0.60
+          const op2 = 0.03 + t * 0.42;         // 0.03 → 0.45
           const useThirdLayer = t > 0.6;
           const tintFilter = `hue-rotate(${hue}deg) saturate(${sat}) brightness(${bright})`;
           const clipStyle: React.CSSProperties = {
