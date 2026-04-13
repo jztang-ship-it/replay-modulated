@@ -8,6 +8,7 @@ import type { GamePhase, PlayerCard, Achievement } from "../adapters/types";
 import { AthleteCard } from "./AthleteCard";
 import { CardBackGeneric } from "./CardBackGeneric";
 import { headshotUrl } from "@shared/utils/headshotUrl";
+import { soundManager } from "@shared/utils/soundManager";
 import { tierFromSalary, DEFAULT_ECONOMY_CONFIG } from "@shared/engines/economyEngine";
 
 // ─── Card definitions ────────────────────────────────────────────────────────
@@ -86,6 +87,7 @@ export function LandingPage({ onPlay }: Props) {
 
   const startAudio = useCallback(() => {
     if (audioRef.current) return;
+    if (soundManager.isMuted()) return; // respect global mute
     const a = new Audio("/audio/basketball/crowd/bed-murmur.mp3");
     a.loop = true;
     a.volume = 0.15;
@@ -93,7 +95,7 @@ export function LandingPage({ onPlay }: Props) {
     a.play().catch(() => {
       // Autoplay blocked — start on first user interaction
       const resume = () => {
-        a.play().catch(() => {});
+        if (!soundManager.isMuted()) a.play().catch(() => {});
         window.removeEventListener("pointerdown", resume);
       };
       window.addEventListener("pointerdown", resume, { once: true });

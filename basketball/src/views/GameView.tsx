@@ -1916,7 +1916,7 @@ export default function GameView() {
               flexDirection: "column",
               justifyContent: "flex-start",
               alignItems: "stretch",
-              padding: "2px 10px 2px",
+              padding: "8px 10px 2px",
               boxSizing: "border-box",
               overflow: "visible",
             }}
