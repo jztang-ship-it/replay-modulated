@@ -35,6 +35,7 @@ import { XPBar } from '@shared/engagement/XPBar';
 import { soundManager } from '@shared/utils/soundManager';
 import { audioDirector } from '@shared/utils/audioDirector';
 import { getPlayerUid, getNickname, setNickname, getSessionId } from '@shared/utils/playerIdentity';
+import { supabase } from "@shared/lib/supabase";
 import { buildScoreProof } from '@shared/utils/scoreProof';
 import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
 import { generateCommentary } from "@shared/commentary/generateCommentary";
@@ -137,13 +138,20 @@ async function submitToLeaderboard(metric: string, value: number, extra?: Record
   const uid = getPlayerUid();
   const nickname = getNickname();
   if (!uid || value <= 0) return;
+  let authHeader: Record<string, string> = {};
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      authHeader = { Authorization: `Bearer ${session.access_token}` };
+    }
+  } catch { /* auth not available, submit unverified */ }
   try {
     await fetch("/api/leaderboard", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeader },
       body: JSON.stringify({ action: "submit", metric, value, uid, nickname, session_id: getSessionId(), ...extra }),
     });
-  } catch { } // Non-critical — never block game flow
+  } catch { }
 }
 
 /** Check if player is in top 10 of either daily leaderboard → set rm_on_board_today for trophy glow */

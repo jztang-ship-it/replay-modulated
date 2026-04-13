@@ -9,6 +9,22 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { kv } from "@vercel/kv";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+const supabaseServer = supabaseUrl && supabaseServiceKey
+  ? createClient(supabaseUrl, supabaseServiceKey)
+  : null;
+
+async function verifyToken(authHeader: string | undefined): Promise<{ uid: string | null; verified: boolean }> {
+  if (!authHeader || !supabaseServer) return { uid: null, verified: false };
+  const token = authHeader.replace(/^Bearer\s+/i, "");
+  if (!token) return { uid: null, verified: false };
+  const { data: { user }, error } = await supabaseServer.auth.getUser(token);
+  if (error || !user) return { uid: null, verified: false };
+  return { uid: user.id, verified: true };
+}
 
 function json(res: VercelResponse, status: number, body: Record<string, unknown>) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -28,7 +44,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === "OPTIONS") {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
     return res.status(204).end();
   }
 
@@ -78,6 +94,13 @@ async function handleSubmit(req: VercelRequest, res: VercelResponse) {
     }
   }
   if (!uid || typeof uid !== "string") return json(res, 400, { error: "Missing uid" });
+
+  const authHeader = req.headers.authorization as string | undefined;
+  const tokenResult = await verifyToken(authHeader);
+
+  if (tokenResult.verified && tokenResult.uid !== uid) {
+    return json(res, 403, { error: "UID mismatch" });
+  }
 
   const member = `${uid}:${nickname ?? "Player"}:${sessionId ?? ''}`;
   const today = todayUTC();
