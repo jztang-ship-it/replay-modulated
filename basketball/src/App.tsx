@@ -3,6 +3,7 @@ import { LandingPage } from "./components/LandingPage";
 import GameView from "./views/GameView";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useFTUE } from "@shared/hooks/useFTUE";
+import { AuthProvider } from "@shared/auth/AuthProvider";
 
 export default function App() {
   const { isFTUE } = useFTUE("basketball");
@@ -13,12 +14,14 @@ export default function App() {
   );
 
   return (
-    <ErrorBoundary>
-      {view === "landing" ? (
-        <LandingPage onPlay={() => setView("game")} />
-      ) : (
-        <GameView />
-      )}
-    </ErrorBoundary>
+    <AuthProvider>
+      <ErrorBoundary>
+        {view === "landing" ? (
+          <LandingPage onPlay={() => setView("game")} />
+        ) : (
+          <GameView />
+        )}
+      </ErrorBoundary>
+    </AuthProvider>
   );
 }
