@@ -2043,7 +2043,7 @@ export default function GameView() {
               ftueBookerFlipped={ftueBookerFlipped}
               onCoachBubbleKey={(key) => {
                 setFtueCoachBubbleKey(key);
-                if (key === "hold_booker") setFtueHoldSpotlight(true);
+                if (key === "hold_tatum") setFtueHoldSpotlight(true);
               }}
               onResumeHeldReveal={() => {
                 const resume = heldRevealResumeRef.current;
