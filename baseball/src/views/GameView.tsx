@@ -120,9 +120,9 @@ function RosterGridScaleFit({ children }: { children: ReactNode }) {
 }
 const BASE_BET = 10;
 
-// ── Jackpot constants ──────────────────────────────────────────────────────
-const JACKPOT_SEED = 12_451.29;
-const JACKPOT_BET_RAKE = 0.05;   // 5% of each bet added to pot
+// ── Bonus pool constants ──────────────────────────────────────────────────
+const BONUS_POOL_SEED = 1_000;
+const BONUS_POOL_BET_RAKE = 0.05;   // 5% of each bet added to pool
 const TICK_INTERVAL_MS = 3000;
 const TICK_AMOUNT = 0.01;
 
@@ -360,7 +360,7 @@ function BonusRow({ betAdded, streak = 0, milestoneHit = false, onAmountChange }
   betAdded: number; streak?: number; milestoneHit?: boolean;
   onAmountChange?: (v: number) => void;
 }) {
-  const [amount, setAmount] = useState(JACKPOT_SEED);
+  const [amount, setAmount] = useState(BONUS_POOL_SEED);
   const prevBetRef = useRef(0);
   const streakGlow = streak >= 5 ? 0.22 : streak >= 3 ? 0.14 : streak >= 1 ? 0.08 : 0.06;
   const streakBorder = streak >= 5 ? "rgba(255,215,0,0.55)" : streak >= 3 ? "rgba(255,215,0,0.38)" : streak >= 1 ? "rgba(255,215,0,0.25)" : "rgba(255,215,0,0.18)";
@@ -380,7 +380,7 @@ function BonusRow({ betAdded, streak = 0, milestoneHit = false, onAmountChange }
   useEffect(() => {
     if (betAdded > 0 && betAdded !== prevBetRef.current) {
       prevBetRef.current = betAdded;
-      const contribution = parseFloat((betAdded * JACKPOT_BET_RAKE).toFixed(2));
+      const contribution = parseFloat((betAdded * BONUS_POOL_BET_RAKE).toFixed(2));
       if (contribution > 0) setAmount(p => {
         const next = parseFloat((p + contribution).toFixed(2));
         onAmountChange?.(next);
@@ -545,7 +545,7 @@ export default function GameView() {
   const springRafRef = useRef<number>(0);
   const springTimersRef = useRef<number[]>([]);
   const pendingBalanceUpdateRef = useRef<(() => void) | null>(null);
-  const jackpotAmountRef = useRef<number>(JACKPOT_SEED);
+  const bonusPoolRef = useRef<number>(BONUS_POOL_SEED);
   const lockedGaugeFpRef = useRef<number | null>(null);
   const springHasFiredRef = useRef(false);
   const frozenBarFpRef = useRef<number | null>(null); // freezes bar at 5-card total during anchor count-up
@@ -897,7 +897,7 @@ export default function GameView() {
     const milestoneTier = BONUS_TIERS.find(t => streak === t.wins);
     const streakMilestonePct = milestoneTier?.pct;
     const bonusPoolWin = streakMilestonePct
-      ? Math.floor(jackpotAmountRef.current * (streakMilestonePct / 100))
+      ? Math.floor(bonusPoolRef.current * (streakMilestonePct / 100))
       : undefined;
     return {
       tierLabel: formatTierLabel(winTier),
@@ -1497,7 +1497,7 @@ export default function GameView() {
               betAdded={currentBet}
               streak={streak}
               milestoneHit={streak === 3 || streak === 5}
-              onAmountChange={(v) => { jackpotAmountRef.current = v; }}
+              onAmountChange={(v) => { bonusPoolRef.current = v; }}
             />
           </div>
         </div>

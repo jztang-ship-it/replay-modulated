@@ -5,15 +5,15 @@
  * POST { action: "contribute", amount: number } → { pool: number }
  * POST { action: "claim" }      → { won: number, pool: number }
  *
- * KV key: "jackpot:pool" (must match basketball/api KV handler; legacy key name).
- * If KV fails, responses use SEED 12451.29 — handlers never throw to the client.
+ * KV key: "jackpot:pool" (legacy key name — kept for backward compat with existing KV data).
+ * If KV fails, responses use SEED 1000 — handlers never throw to the client.
  */
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { kv } from "@vercel/kv";
 
 const KV_KEY = "jackpot:pool";
-const SEED = 12451.29;
+const SEED = 1000;
 
 function json(res: VercelResponse, status: number, body: Record<string, unknown>) {
   res.setHeader("Access-Control-Allow-Origin", "*");

@@ -366,7 +366,7 @@ function StreakDisplay({ streak }: { streak: number }) {
   );
 }
 
-// ── BonusPoolPill — jackpot-style pool meter with drip + blink ───────────────
+// ── BonusPoolPill — pool meter with drip + gold blink on bet ─────────────────
 
 function BonusPoolPill({ betAdded, onAmountChange }: {
   betAdded: number;
@@ -544,7 +544,7 @@ export default function GameView() {
   const springRafRef = useRef<number>(0);
   const springTimersRef = useRef<number[]>([]);
   const pendingBalanceUpdateRef = useRef<(() => void) | null>(null);
-  const jackpotAmountRef = useRef<number>(1000);
+  const bonusPoolRef = useRef<number>(1000);
   const lockedGaugeFpRef = useRef<number | null>(null);
   const springHasFiredRef = useRef(false);
   const frozenBarFpRef = useRef<number | null>(null); // freezes bar at 5-card total during anchor count-up
@@ -1659,7 +1659,7 @@ export default function GameView() {
           <div data-ftue-chrome="true" style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "0 12px" }}>
             <BonusPoolPill
               betAdded={currentBet}
-              onAmountChange={(v) => { jackpotAmountRef.current = v; }}
+              onAmountChange={(v) => { bonusPoolRef.current = v; }}
             />
           </div>
         </div>
