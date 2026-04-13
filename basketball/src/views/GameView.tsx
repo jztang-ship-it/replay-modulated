@@ -544,7 +544,7 @@ export default function GameView() {
   const springRafRef = useRef<number>(0);
   const springTimersRef = useRef<number[]>([]);
   const pendingBalanceUpdateRef = useRef<(() => void) | null>(null);
-  const jackpotAmountRef = useRef<number>(JACKPOT_SEED);
+  const jackpotAmountRef = useRef<number>(1000);
   const lockedGaugeFpRef = useRef<number | null>(null);
   const springHasFiredRef = useRef(false);
   const frozenBarFpRef = useRef<number | null>(null); // freezes bar at 5-card total during anchor count-up
