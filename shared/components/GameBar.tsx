@@ -1436,7 +1436,6 @@ export function GameBar({
 
   const controlsFooter = (
     <>
-      {legendPulsing && <style>{`@keyframes legendIconPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.25)} }`}</style>}
       <div ref={walletTargetRef} style={{ pointerEvents: "none", zIndex: 9998 }} />
       {celebFlying && tapOrigin && walletTargetRef.current && (
         <CoinFlyFromPoint
@@ -1500,12 +1499,11 @@ export function GameBar({
             {/* Legend — right */}
             <button onClick={() => { setShowLegend(true); onLegendOpened?.(); }} style={{
               width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-              background: "transparent",
-              border: `2px solid ${legendPulsing ? "rgba(255,215,0,0.8)" : THEME.colors.surfaceStroke}`,
-              color: legendPulsing ? "rgba(255,215,0,0.9)" : "rgba(255,255,255,0.6)",
+              background: legendPulsing ? "rgba(255,215,0,0.9)" : "transparent",
+              border: `2px solid ${legendPulsing ? "rgba(255,215,0,0.9)" : THEME.colors.surfaceStroke}`,
+              color: legendPulsing ? "#070A12" : "rgba(255,255,255,0.6)",
               fontSize: 12, fontWeight: 900,
               cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-              animation: legendPulsing ? "legendIconPulse 1.5s ease-in-out infinite" : "none",
             }}>i</button>
           </div>
 
