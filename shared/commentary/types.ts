@@ -85,3 +85,94 @@ export interface CommentaryOutput {
   /** Provenance — for debugging and metrics. */
   source: "claude" | "template" | "static";
 }
+
+// ─── New commentary system types ─────────────────────────────────────────────
+
+export type ToneId = "hype" | "warm" | "culture_wry" | "observational" | "analytical" | "deadpan";
+
+export type StoryId =
+  | "star_went_off"
+  | "star_delivered"
+  | "star_quiet_win"
+  | "clean_win"
+  | "star_no_showed"
+  | "star_cold"
+  | "everyone_flat";
+
+export type Register = "win" | "loss";
+
+export type Intensity =
+  | "rookie"
+  | "starter_barely"
+  | "starter_normal"
+  | "starter_dominant"
+  | "all_star"
+  | "mvp"
+  | "goat"
+  | "bust_close"
+  | "bust_mid"
+  | "bust_bad";
+
+export type DetailId =
+  | "record_event"
+  | "rare_badge"
+  | "common_badge"
+  | "held_card_paid"
+  | "high_stats"
+  | "near_miss_win"
+  | "near_miss_loss"
+  | "streak_event"
+  | "culture_hit"
+  | "culture_loss"
+  | "zero_card"
+  | "turnover_problem"
+  | "injury_cost"
+  | "streak_broken";
+
+export interface RecordEvent {
+  type: "record_broken" | "near_record" | "career_milestone";
+  stat: string;
+  value: number;
+  record: number;
+  holder: string;
+  label: string;
+}
+
+export interface StoryResult {
+  storyId: StoryId;
+  details: DetailId[];
+  recordEvents: RecordEvent[];
+}
+
+export interface CommentaryTemplate {
+  register: Register;
+  story: StoryId;
+  tone: ToneId;
+  templates: string[];
+}
+
+export interface ComposedCommentary {
+  message: string;
+  tone: ToneId;
+  storyId: StoryId;
+  register: Register;
+  intensity: Intensity;
+}
+
+export interface TemplateData {
+  name: string;
+  last: string;
+  first: string;
+  nick: string;
+  nick2: string;
+  pts: number;
+  reb: number;
+  ast: number;
+  opp: string;
+  badge: string;
+  streak: number;
+  gap: number;
+  record: string;
+  recordHolder: string;
+  recordValue: number;
+}

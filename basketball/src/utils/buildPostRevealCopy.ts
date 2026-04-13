@@ -43,6 +43,7 @@ export interface PostRevealCopyInput {
    * score/tier voice stays untouched.
    */
   leaderboardLine?: string | null;
+  sport?: string;
 }
 
 export interface PostRevealCopy { primary: string; secondary?: string; }
