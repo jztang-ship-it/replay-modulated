@@ -125,6 +125,22 @@ function nameFor(c: PostRevealRosterCard, _seed: number): string {
   return c.name;
 }
 
+/**
+ * Ensure a culture line mentions the player by name. If the line already contains
+ * the player's full name, last name, or a known nickname, return it as-is.
+ * Otherwise prepend "PlayerName — " so the reader always knows who it's about.
+ */
+function attributeCultureLine(line: string, card: PostRevealRosterCard): string {
+  const lower = line.toLowerCase();
+  const full = card.name.trim().toLowerCase();
+  if (lower.includes(full)) return line;
+  const last = lastName(card.name).toLowerCase();
+  if (last.length >= 4 && lower.includes(last)) return line;
+  const culture = lookupCulture(card.name);
+  if (culture?.nicknames?.some(n => n.length >= 3 && lower.includes(n.toLowerCase()))) return line;
+  return `${card.name} — ${line.charAt(0).toLowerCase()}${line.slice(1)}`;
+}
+
 // ─── Headline selection ───────────────────────────────────────────────────────
 
 function headlineScore(c: PostRevealRosterCard): number {
@@ -132,7 +148,18 @@ function headlineScore(c: PostRevealRosterCard): number {
   return (c.salary * 2.5) + (c.actualFp * 1.5) + (badgeFp * 4);
 }
 
+/** Only RED/ORANGE/PURPLE tier players can be named as the subject. */
+function isNameable(c: PostRevealRosterCard): boolean {
+  const t = (c.cardTier ?? "").toUpperCase();
+  return t === "RED" || t === "ORANGE" || t === "PURPLE";
+}
+
 function selectSubject(roster: PostRevealRosterCard[]): PostRevealRosterCard | null {
+  const nameable = roster.filter(isNameable);
+  if (nameable.length > 0) {
+    return [...nameable].sort((a, b) => headlineScore(b) - headlineScore(a))[0] ?? null;
+  }
+  // No RED/ORANGE player — return top performer but callers must not name them
   return [...roster].sort((a, b) => headlineScore(b) - headlineScore(a))[0] ?? null;
 }
 
@@ -192,14 +219,17 @@ function famousPhrase(input: PostRevealCopyInput, subject: PostRevealRosterCard 
   const cheapOverperformer = roster.find(c => c.salary <= 20 && ratio(c) >= 1.6);
   const hasSAS = subject != null && (subject.opponent ?? "").toUpperCase() === "SAS";
 
-  if (streak >= 15) return `${streak} wins in a row. That's a historic run.`;
-  if (streak >= 10) return `${streak} straight wins. Keep going — this is something to talk about.`;
-  if (streak >= 7) return `${streak} wins in a row. That kind of consistency is hard to do.`;
+  // Streak lines — only on wins. On bust, mention the streak ending if it was notable.
+  if (!isBust && streak >= 15) return `${streak} wins in a row. That's a historic run.`;
+  if (!isBust && streak >= 10) return `${streak} straight wins. Keep going — this is something to talk about.`;
+  if (!isBust && streak >= 7) return `${streak} wins in a row. That kind of consistency is hard to do.`;
+  if (isBust && input.prevStreak >= 7) return `The ${input.prevStreak}-win streak is done. It was a good run.`;
   if (isBust && badges.includes("TURNOVER_MACHINE")) return `${lastName(subject.name)} turned it over too many times. That's where this one went.`;
   if (blk >= 5 && subject.homeAway === "H") return "Not in his house tonight.";
   if (blk >= 5 && subject.homeAway === "A") return `${lastName(subject.name)} had 5 blocks on the road. Took over someone else's building.`;
   if (blk >= 4 && subject.homeAway === "H") return "Lots of finger wagging tonight.";
-  if (anchor && anchor.salary >= 45 && anchorR < 0.75) {
+  const isBigWinFP = input.winTier === "ALL_STAR" || input.winTier === "MVP" || input.winTier === "GOAT";
+  if (!isBigWinFP && anchor && isNameable(anchor) && anchor.salary >= 45 && anchorR < 0.75) {
     const an = nameFor(anchor, 0);
     return `${an} came in below the line tonight — the anchor didn't hold.`;
   }
@@ -228,10 +258,14 @@ function gmVoice(input: PostRevealCopyInput, subject: PostRevealRosterCard, seed
   const gap = input.nextTierMin > 0 ? input.nextTierMin - input.totalFp : 0;
   if (gap > 0 && gap <= 8 && input.nextTier) {
     const { tovCulprit } = findNearMissCulprit(input.roster, gap);
-    if (tovCulprit) {
+    if (tovCulprit && isNameable(tovCulprit)) {
       const culpritName = nameFor(tovCulprit, seed + 3);
       const tov = statN(tovCulprit, "turnovers");
       return `${culpritName} had ${tov} turnovers. That's the gap.`;
+    }
+    if (tovCulprit && !isNameable(tovCulprit)) {
+      const tov = statN(tovCulprit, "turnovers");
+      return `${tov} turnovers from the supporting cast. That's the gap.`;
     }
   }
   return null;
@@ -357,9 +391,14 @@ const basketballPack: SportCopyPack = {
       return { primary: cap(p), secondary: s ? cap(s) : undefined };
     }
 
+    // ALL_STAR and above = "big win" tier. Near-misses at these levels should
+    // still feel positive ("oh shucks, almost had the next level") not painful.
+    const isBigWin = winTier === "ALL_STAR" || winTier === "MVP" || winTier === "GOAT";
+
     // ── Line 1 ────────────────────────────────────────────────────────────
     let line1: string;
-    if (isNearMiss) {
+    if (isNearMiss && !isBigWin) {
+      // ROOKIE/STARTER near-miss — negative framing is appropriate
       line1 = gap <= 2
         ? pick([
             "One play away. That one stings.",
@@ -401,10 +440,29 @@ const basketballPack: SportCopyPack = {
     }
 
     // Tone routing — select the right ret variant based on line 1's register
-    const toneRet = isNearMiss ? retNearMiss : isBust ? retNegative : retPositive;
+    // ALL_STAR+ near-misses stay positive (oh shucks), not near-miss register
+    const toneRet = (isNearMiss && !isBigWin) ? retNearMiss : isBust ? retNegative : retPositive;
 
     // ── Line 2 — priority stack ───────────────────────────────────────────
     if (!subject) return toneRet(line1, "Nobody stood out. The whole roster came up short.");
+
+    // ALL_STAR+ near-miss: line 2 = "oh shucks" positive acknowledgement
+    if (isNearMiss && isBigWin) {
+      const ohShucks = pick([
+        "Almost had the next level too. So close.",
+        "One more big play and this hand goes even higher. Can't be mad.",
+        "Just missed the next tier — but what a night.",
+        "A little more and this one goes to another level. Still a great hand.",
+        "Inches from something even bigger. Take the win.",
+        "The next level was right there. Still, this is a hand to feel good about.",
+      ], seed);
+      return retPositive(line1, ohShucks);
+    }
+
+    // If subject isn't nameable (not RED/ORANGE), skip name-based commentary
+    if (!isNameable(subject)) {
+      return toneRet(line1);
+    }
 
     const culture = lookupCulture(subject.name);
     const name = nameFor(subject, seed2);
@@ -416,28 +474,30 @@ const basketballPack: SportCopyPack = {
     const famous = famousPhrase(input, subject);
     if (famous) return toneRet(line1, famous);
 
-    // 1b. Injury heuristic — low minutes + low FP on a high-salary player
-    const subjectMins = statN(subject, "min") || statN(subject, "minutes") || statN(subject, "mp");
-    const isLikelyInjury = subjectMins > 0 && subjectMins < 15 && subject.actualFp < 8 && subject.salary >= 30;
-    if (isLikelyInjury) {
-      return toneRet(line1, pick([
-        `${name} left early — limited minutes hurt what this hand could've been.`,
-        `${name} only played ${Math.round(subjectMins)} minutes. Hard to overcome that kind of absence.`,
-        `${name} was in and out. At full strength this hand looks different.`,
-      ], seed2));
+    // 1b. Injury heuristic — low minutes + low FP on a high-salary player (suppress on big wins — keep it positive)
+    if (!isBigWin) {
+      const subjectMins = statN(subject, "min") || statN(subject, "minutes") || statN(subject, "mp");
+      const isLikelyInjury = subjectMins > 0 && subjectMins < 15 && subject.actualFp < 8 && subject.salary >= 30;
+      if (isLikelyInjury) {
+        return toneRet(line1, pick([
+          `${name} left early — limited minutes hurt what this hand could've been.`,
+          `${name} only played ${Math.round(subjectMins)} minutes. Hard to overcome that kind of absence.`,
+          `${name} was in and out. At full strength this hand looks different.`,
+        ], seed2));
+      }
     }
 
-    // 2. TURNOVER_MACHINE / SLOPPY
-    if (badges.includes("TURNOVER_MACHINE") || badges.includes("SLOPPY")) {
+    // 2. TURNOVER_MACHINE / SLOPPY (suppress on big wins — don't blame on a celebration)
+    if (!isBigWin && (badges.includes("TURNOVER_MACHINE") || badges.includes("SLOPPY"))) {
       const tov = statN(subject, "turnovers");
-      const tovLine = culture?.turnovers?.length ? pick(culture.turnovers, seed2) : `${name} had ${tov} turnovers${opp}. Couldn't overcome it.`;
+      const tovLine = culture?.turnovers?.length ? attributeCultureLine(pick(culture.turnovers, seed2), subject) : `${name} had ${tov} turnovers${opp}. Couldn't overcome it.`;
       return toneRet(line1, tovLine);
     }
 
-    // 3. Near-miss with culprit — line 2 must connect to the gap
+    // 3. Near-miss with culprit — line 2 must connect to the gap (only name RED/ORANGE players)
     if (isNearMiss) {
       const { tovCulprit, underachiever } = findNearMissCulprit(roster, gap);
-      if (tovCulprit) {
+      if (tovCulprit && isNameable(tovCulprit)) {
         const cn = nameFor(tovCulprit, seed2 + 5);
         const tov = statN(tovCulprit, "turnovers");
         return toneRet(line1, pick([
@@ -446,7 +506,11 @@ const basketballPack: SportCopyPack = {
           `One fewer giveaway from ${cn} and this is a different result.`,
         ], seed2));
       }
-      if (underachiever) {
+      if (tovCulprit && !isNameable(tovCulprit)) {
+        const tov = statN(tovCulprit, "turnovers");
+        return toneRet(line1, `Too many turnovers from the supporting cast. ${tov} giveaways hurt.`);
+      }
+      if (underachiever && isNameable(underachiever)) {
         const un = nameFor(underachiever, seed2 + 7);
         const proj = Math.round(underachiever.projectedFp ?? 0);
         const actual = Math.round(underachiever.actualFp);
@@ -455,6 +519,9 @@ const basketballPack: SportCopyPack = {
           `${un} came in ${proj - actual} below his average. That's the difference.`,
           `If ${un} hits his average, this hand pays out more. He didn't.`,
         ], seed2));
+      }
+      if (underachiever && !isNameable(underachiever)) {
+        return toneRet(line1, "The supporting cast came in under their averages. That's the gap.");
       }
       const gm = gmVoice(input, subject, seed2);
       if (gm) return toneRet(line1, gm);
@@ -476,7 +543,7 @@ const basketballPack: SportCopyPack = {
     const rareBadges = ["QUAD_DBL", "5X5", "GOD_MODE", "MAESTRO"];
     if (!isBust && badges.some(b => rareBadges.includes(b))) {
       const badgeLabel = subject.achievements.find(a => rareBadges.includes(a.id))?.label ?? "";
-      let hypeLine = culture?.overperform?.length ? pick(culture.overperform, seed2) : `${name} hit ${badgeLabel}${opp}. That's elite.`;
+      let hypeLine = culture?.overperform?.length ? attributeCultureLine(pick(culture.overperform, seed2), subject) : `${name} hit ${badgeLabel}${opp}. That's elite.`;
       if (meetsBoxScoreThreshold(subject) && shouldShowTeaser(totalFp, subject)) {
         hypeLine = pick(culture?.famousGameHint ?? BOX_SCORE_TEASERS, seed2);
       }
@@ -488,37 +555,38 @@ const basketballPack: SportCopyPack = {
       const anchor = [...roster].sort((a, b) => b.salary - a.salary)[0];
       const anchorRatio = anchor ? ratio(anchor) : 1;
       const zeroCard = roster.find(c => c.actualFp <= 1.0);
-      if (zeroCard) {
+      if (zeroCard && isNameable(zeroCard)) {
         const zn = nameFor(zeroCard, seed2);
         return toneRet(line1, `${zn} put up nothing. That's the problem.`);
       }
-      if (anchor && anchorRatio < 0.65) {
+      if (zeroCard && !isNameable(zeroCard)) {
+        return toneRet(line1, "Someone on the bench put up nothing. That's the problem.");
+      }
+      if (anchor && isNameable(anchor) && anchorRatio < 0.65) {
         const an = nameFor(anchor, seed2);
-        const culture = lookupCulture(anchor.name);
-        const underLine = culture?.underperform?.length
-          ? pick(culture.underperform, seed2)
+        const anchorCulture = lookupCulture(anchor.name);
+        const underLine = anchorCulture?.underperform?.length
+          ? attributeCultureLine(pick(anchorCulture.underperform, seed2), anchor)
           : `${an} went quiet at $${anchor.salary}. That's a problem.`;
         return toneRet(line1, underLine);
       }
     }
 
-    // 7. Anchor significantly underperformed
+    // 7. Anchor significantly underperformed (suppress on big wins — don't blame anyone)
     const anchor = [...roster].sort((a, b) => b.salary - a.salary)[0];
-    if (anchor && ratio(anchor) < 0.75 && anchor.salary >= 45) {
+    if (!isBigWin && anchor && isNameable(anchor) && ratio(anchor) < 0.75 && anchor.salary >= 45) {
       const an = nameFor(anchor, seed2);
-      const underLine = culture && lookupCulture(anchor.name)?.underperform?.length
-        ? pick(lookupCulture(anchor.name)!.underperform, seed2)
+      const anchorCulture2 = lookupCulture(anchor.name);
+      const underLine = anchorCulture2?.underperform?.length
+        ? attributeCultureLine(pick(anchorCulture2.underperform, seed2), anchor)
         : `${an} had an off night.`;
       return toneRet(line1, underLine);
     }
 
     // Register gate — on a bust, don't lead with good news
     if (isBust && subject) {
-      // Only reference star players (RED/ORANGE/PURPLE) even on bust — never name bench players
-      const starCards = roster.filter(c => {
-        const t = String(c.cardTier ?? "").toUpperCase();
-        return t === "RED" || t === "ORANGE" || t === "PURPLE";
-      });
+      // Only reference nameable players (RED/ORANGE) — never name lower tiers
+      const starCards = roster.filter(isNameable);
       const underStar = starCards.find(c => ratio(c) <= 0.7);
       const overStar = starCards.find(c => ratio(c) >= 1.2);
       if (underStar) {
@@ -533,10 +601,11 @@ const basketballPack: SportCopyPack = {
     }
 
     // 8. Anchor significantly overperformed
-    if (anchor && ratio(anchor) >= 1.35 && anchor.salary >= 45) {
+    if (anchor && isNameable(anchor) && ratio(anchor) >= 1.35 && anchor.salary >= 45) {
       const an = nameFor(anchor, seed2);
-      const overLine = culture && lookupCulture(anchor.name)?.overperform?.length
-        ? pick(lookupCulture(anchor.name)!.overperform, seed2)
+      const anchorCulture3 = lookupCulture(anchor.name);
+      const overLine = anchorCulture3?.overperform?.length
+        ? attributeCultureLine(pick(anchorCulture3.overperform, seed2), anchor)
         : `${an} went above the line.`;
       return toneRet(line1, overLine);
     }
@@ -551,8 +620,8 @@ const basketballPack: SportCopyPack = {
     const commonHit = badges.find(b => commonBadges.includes(b));
     if (commonHit) {
       const badgeLabel = subject.achievements.find(a => a.id === commonHit)?.label ?? "";
-      if (r >= 1.2 && culture?.overperform?.length) return toneRet(line1, pick(culture.overperform, seed2));
-      if (r <= 0.8 && culture?.underperform?.length) return toneRet(line1, pick(culture.underperform, seed2));
+      if (r >= 1.2 && culture?.overperform?.length) return toneRet(line1, attributeCultureLine(pick(culture.overperform, seed2), subject));
+      if (r <= 0.8 && culture?.underperform?.length) return toneRet(line1, attributeCultureLine(pick(culture.underperform, seed2), subject));
       return toneRet(line1, `${name} hit ${badgeLabel}${opp}.`);
     }
 
@@ -561,7 +630,7 @@ const basketballPack: SportCopyPack = {
     const reb = statN(subject, "reb");
     const ast = statN(subject, "ast");
     if (pts >= 30) {
-      if (culture?.overperform?.length) return toneRet(line1, pick(culture.overperform, seed2));
+      if (culture?.overperform?.length) return toneRet(line1, attributeCultureLine(pick(culture.overperform, seed2), subject));
       return toneRet(line1, `${name} dropped ${pts}.`);
     }
     if (reb >= 12) return toneRet(line1, `${name} grabbed ${reb} boards.`);
@@ -569,10 +638,10 @@ const basketballPack: SportCopyPack = {
 
     // 13. Player culture tier lines (gated by handCount)
     if (culture) {
-      if (handCount >= 10 && culture.tier3.length) return toneRet(line1, pick(culture.tier3, seed2));
-      if (handCount >= 3 && culture.tier2.length) return toneRet(line1, pick(culture.tier2, seed2));
-      if (culture.tier1.length) return toneRet(line1, pick(culture.tier1, seed2));
-      if (r >= 1.15 && culture.onPace.length) return toneRet(line1, pick(culture.onPace, seed2));
+      if (handCount >= 10 && culture.tier3.length) return toneRet(line1, attributeCultureLine(pick(culture.tier3, seed2), subject));
+      if (handCount >= 3 && culture.tier2.length) return toneRet(line1, attributeCultureLine(pick(culture.tier2, seed2), subject));
+      if (culture.tier1.length) return toneRet(line1, attributeCultureLine(pick(culture.tier1, seed2), subject));
+      if (r >= 1.15 && culture.onPace.length) return toneRet(line1, attributeCultureLine(pick(culture.onPace, seed2), subject));
     }
 
     // 14. Fallback — honest stat observation

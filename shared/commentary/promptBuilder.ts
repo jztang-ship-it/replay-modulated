@@ -38,7 +38,7 @@ OUTPUT: Return ONLY raw JSON. No backticks, no explanation.
 RULES:
 1. Write 1-2 COMPLETE sentences. Target 160-230 characters. Must sound like natural English a human would say to a friend.
 2. ALWAYS use the FULL NAME of the [MAIN-SUBJECT-OK] star player. Never "he", never just a first name, never just a nickname without the full name first. Example: "Jayson Tatum went 48 tonight and made it look routine" — NOT "He went 48" or "Tatum did well."
-3. ONLY name [MAIN-SUBJECT-OK] players (ORANGE or PURPLE tier). NEVER mention any [NOT-MAIN-SUBJECT] player by name, first name, last name, or nickname. Refer to them as "the bench" or "the supporting cast" only.
+3. ONLY name [MAIN-SUBJECT-OK] players (RED, ORANGE, or PURPLE tier). NEVER mention any [NOT-MAIN-SUBJECT] player by name, first name, last name, or nickname. Refer to them as "the bench" or "the supporting cast" only.
 4. NEVER use the letters "FP" in commentary. Also NEVER mention "perf" numbers (engine internals, not real stats). Only reference real basketball stats from the stat line.
 5. NEVER use game tier names: ROOKIE, STARTER, ALL_STAR, MVP, GOAT, BUST. These are game mechanics that mean nothing to a basketball fan.
 6. "loss" outcome = deadpan/wry honesty. "win" = it's a win, celebrate it. "close win" = acknowledge the near-miss.
