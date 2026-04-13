@@ -57,13 +57,13 @@ export function buildTemplateData(
     first,
     nick,
     nick2,
-    pts: star ? statN(star, "pts") : 0,
-    reb: star ? statN(star, "reb") : 0,
-    ast: star ? statN(star, "ast") : 0,
+    pts: star ? Math.round(statN(star, "pts")) : 0,
+    reb: star ? Math.round(statN(star, "reb")) : 0,
+    ast: star ? Math.round(statN(star, "ast")) : 0,
     opp,
     badge: "",
     streak: input.streak,
-    gap: (input.nextTierMin ?? 0) > 0 ? (input.nextTierMin! - input.totalFp) : 0,
+    gap: (input.nextTierMin ?? 0) > 0 ? Math.round((input.nextTierMin! - input.totalFp) * 10) / 10 : 0,
     record: rec ? `The NBA record is ${rec.record}.` : "",
     recordHolder: rec?.holder ?? "",
     recordValue: rec?.record ?? 0,
@@ -98,14 +98,9 @@ const DETAIL_SNIPPETS: Record<string, (data: TemplateData) => string> = {
   rare_badge: (d) => d.badge ? `${d.badge} on the stat sheet.` : "",
   common_badge: (d) => d.badge ? `${d.badge}.` : "",
   held_card_paid: () => "Holding that card was the right call.",
-  high_stats: (d) => {
-    if (d.pts >= 30) return `${d.pts} points.`;
-    if (d.reb >= 12) return `${d.reb} boards.`;
-    if (d.ast >= 10) return `${d.ast} assists.`;
-    return "";
-  },
-  near_miss_win: (d) => d.gap > 0 ? `${d.gap} away from the next level.` : "",
-  near_miss_loss: (d) => d.gap > 0 ? `${d.gap} short. Almost survived it.` : "",
+  high_stats: () => "",  // Stats are embedded in the main template via {pts}/{reb}/{ast} — no separate injection
+  near_miss_win: (d) => d.gap > 0 ? `${Math.round(d.gap * 10) / 10} away from the next level.` : "",
+  near_miss_loss: (d) => d.gap > 0 ? `${Math.round(d.gap * 10) / 10} short. Almost survived it.` : "",
   streak_event: (d) => d.streak > 0 ? `That's ${d.streak} in a row.` : "",
   streak_broken: () => "The streak is done.",
   zero_card: () => "Someone on the roster gave you nothing.",
