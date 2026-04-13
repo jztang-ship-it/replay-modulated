@@ -2105,12 +2105,7 @@ export default function GameView() {
                 </div>
               ) : null}
             </div>
-            {/* Streak fire display — visible during pre-reveal phases */}
-            {isPreRevealFooter && !isFTUE && (
-              <div style={{ position: "absolute", bottom: 4, left: 10, zIndex: 5, pointerEvents: "none" }}>
-                <StreakDisplay streak={streak} />
-              </div>
-            )}
+            {/* Streak fire display removed — rendered in Zone 4 instead */}
           </div>
         </div>
 
@@ -2126,6 +2121,12 @@ export default function GameView() {
             boxSizing: "border-box",
           }}
         >
+          {/* Streak fire display — visible during pre-reveal phases, above wallet */}
+          {isPreRevealFooter && !isFTUE && (
+            <div style={{ padding: "0 14px 4px", flexShrink: 0 }}>
+              <StreakDisplay streak={streak} />
+            </div>
+          )}
           <div
             ref={(el) => setControlsHost(el)}
             style={{
