@@ -861,6 +861,9 @@ export default function GameView() {
         setWinTier(tier);
         setWinPayout(payout);
         const bust = !tier || tier === "BUST";
+        // ROOKIE = neutral for streak (doesn't advance or break). BUST = streak reset.
+        const isStreakWin = !bust && tier !== "ROOKIE";  // STARTER+ advances streak
+        const isStreakLoss = bust;                        // only BUST resets streak
         soundManager.playTierResult(tier);
         const badges = rosterRef.current.reduce((s, c) => s + (c.achievements?.length ?? 0), 0);
         gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
@@ -884,7 +887,8 @@ export default function GameView() {
               setBalance(prev => { const next = prev + payout; saveBalance(next); return next; });
             }
             const proof = buildScoreProof(rosterRef.current as any[], totalFp);
-            if (!bust) {
+            if (isStreakWin) {
+              // STARTER+ = streak advances
               setStreak(prev => {
                 const next = prev + 1;
                 localStorage.setItem("replaymod_streak", String(next));
@@ -893,20 +897,21 @@ export default function GameView() {
                 return next;
               });
               submitToLeaderboard("wins", 1);
-              submitToLeaderboard("fp", totalFp);
-              submitToLeaderboard("hand_avg", totalFp, { handCount });
               submitToLeaderboard("money_won", payout);
-              // hand_best: per-hand entry (allows multiple per user on the board)
-              const handId = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-              submitToLeaderboard("hand_best", totalFp, { proof, handId });
-              // Session score: cumulative non-bust FP today (additive)
-              submitToLeaderboard("session_score", parseFloat(totalFp.toFixed(1)));
-              // Check if player is now on either daily leaderboard top 10 → light up trophy
-              // Delay 2s to let KV writes propagate before reading
-              setTimeout(() => checkLeaderboardRank(), 2000);
-            } else {
+            } else if (isStreakLoss) {
+              // BUST = streak resets
               setStreak(0);
               localStorage.setItem("replaymod_streak", "0");
+            }
+            // ROOKIE: streak unchanged (neutral) — no increment, no reset
+            // These fire for all non-bust hands (ROOKIE still counts for leaderboard/session)
+            if (!bust) {
+              submitToLeaderboard("fp", totalFp);
+              submitToLeaderboard("hand_avg", totalFp, { handCount });
+              const handId = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+              submitToLeaderboard("hand_best", totalFp, { proof, handId });
+              submitToLeaderboard("session_score", parseFloat(totalFp.toFixed(1)));
+              setTimeout(() => checkLeaderboardRank(), 2000);
             }
             // Mystery score check — exact hit = instant bonus
             if (checkMysteryScore(totalFp)) {
