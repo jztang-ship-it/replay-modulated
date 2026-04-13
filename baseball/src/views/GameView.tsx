@@ -38,6 +38,7 @@ import { PostHandSheet } from '@shared/components/PostHandSheet';
 import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
 import { ProfileScreen } from '@shared/components/ProfileScreen';
 import { generateCommentary } from "@shared/commentary/generateCommentary";
+import { composeCommentary } from "@shared/commentary/composeCommentary";
 import type { CommentaryInput, CommentaryRosterCard, CommentaryOutput } from "@shared/commentary/types";
 import { buildBaseballContext } from "../utils/buildBaseballContext";
 
@@ -977,18 +978,31 @@ export default function GameView() {
       postRevealCopyRef.current = copy;
       return copy;
     }
-    // Fallback: simple template
+    // Fallback: new commentary composer
     const fp = lockedGaugeFpRef.current ?? displayFp;
     const gaugeSnap = computeGaugeState(fp, GAUGE_THRESHOLDS as any, winTier, 8);
-    const nearMiss = gaugeSnap.nextMin > 0 && gaugeSnap.nextMin < 9999
-      ? +(gaugeSnap.nextMin - fp).toFixed(1)
-      : 0;
-    const copy = {
-      primary: winTier === "BUST"
-        ? `${fp.toFixed(1)} FP — just below the line. ${nearMiss > 0 ? `${nearMiss} FP short.` : ""}`
-        : `${winTier} — ${fp.toFixed(1)} FP${nearMiss > 0 && nearMiss <= 15 ? `. ${nearMiss} FP from the next tier.` : "."}`,
-      secondary: undefined as string | undefined,
-    };
+    const copy = composeCommentary({
+      sport: "baseball",
+      totalFp: fp,
+      winTier: winTier as any,
+      nextTier: gaugeSnap.nextTier as any,
+      tierFloor: gaugeSnap.curMin,
+      nextTierMin: gaugeSnap.nextMin > 0 && gaugeSnap.nextMin < 9999 ? gaugeSnap.nextMin : 0,
+      roster: (rosterRef.current ?? []).map((c: any) => ({
+        name: String(c.name ?? ""),
+        salary: Number(c.salary ?? 0),
+        actualFp: Number(c.actualFp ?? 0),
+        projectedFp: Number(c.projectedFp ?? 0),
+        cardTier: String(c.tier ?? ""),
+        opponent: String(c.gameInfo?.opponent ?? ""),
+        homeAway: String(c.gameInfo?.homeAway ?? "") as "H" | "A" | "",
+        statLine: c.statLine ?? {},
+      })),
+      streak,
+      prevStreak: winTier === "BUST" ? streak : Math.max(0, streak - 1),
+      isBust: winTier === "BUST",
+      handCount,
+    } as any);
     postRevealCopyRef.current = copy;
     return copy;
   }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct, lbContextNonce]); // eslint-disable-line
