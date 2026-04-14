@@ -933,7 +933,8 @@ export default function GameView() {
           setBigWinFired(true);
         }
         const badges = rosterRef.current.reduce((s, c) => s + (c.achievements?.length ?? 0), 0);
-        gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
+        const holdCount = rosterRef.current.filter((c: any) => c.wasHeld).length;
+        gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now(), { holdCount, isFTUE });
         logHandToDb(rosterRef.current, totalFp, String(tier), payout, streak);
         recordHandPlayed();
         if (!bust) recordHandWon(); else recordHandLost();
@@ -1431,7 +1432,7 @@ export default function GameView() {
       }
       setGameError(null);
       rosterRef.current = nextRoster;
-      gameAnalytics.handDealt(nextRoster);
+      gameAnalytics.handDealt(nextRoster, { isFTUE: ftueStillActive });
       setNoTransition(true);
       flipState.initCards(nextRoster.map(cardId));
       setRoster(nextRoster);
