@@ -5,7 +5,7 @@ import {
   isWin,
   getStreakMultiplier,
   calculatePayout,
-} from '../lib/scoring.ts'
+} from '../_lib-hand/scoring.ts'
 
 // ---------------------------------------------------------------------------
 // Helpers
