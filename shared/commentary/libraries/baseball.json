@@ -246,7 +246,7 @@
       "archetype": "star_carry",
       "register": "win",
       "tone": "deadpan",
-      "template": "{last} went off{opp}. Won the hand. On to the next one in the schedule.",
+      "template": "{last} went off{opp}. Won the hand.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -524,7 +524,7 @@
       "archetype": "star_carry_big",
       "register": "win",
       "tone": "deadpan",
-      "template": "{last} went off{opp}. Won the hand. On to the next one in the schedule.",
+      "template": "{last} went off{opp}. Won the hand.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -562,7 +562,7 @@
       "archetype": "star_delivered",
       "register": "win",
       "tone": "hype",
-      "template": "{name} showed up today{opp}. Did the job and the lineup followed. Good hand all around.",
+      "template": "{name} showed up today{opp}. Did the job and the lineup followed.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -602,7 +602,7 @@
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "bb_0051",
@@ -610,11 +610,11 @@
       "archetype": "star_delivered",
       "register": "win",
       "tone": "hype",
-      "template": "Lineup clicked today. No drama, no heroics needed. Just a clean hand that cashed.",
+      "template": "Lineup clicked today. No drama, no heroics needed.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "bb_0052",
@@ -622,7 +622,7 @@
       "archetype": "star_delivered",
       "register": "win",
       "tone": "warm",
-      "template": "Solid day from {name}{opp}. Did the job, the lineup held up. Take the win and keep going.",
+      "template": "Solid day from {name}{opp}. Did the job, the lineup held up.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -662,7 +662,7 @@
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "bb_0056",
@@ -670,11 +670,11 @@
       "archetype": "star_delivered",
       "register": "win",
       "tone": "warm",
-      "template": "Clean win today. Everyone contributed, nobody had to carry. That is the blueprint.",
+      "template": "Clean win today. Everyone contributed, nobody had to carry.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "bb_0057",
@@ -722,7 +722,7 @@
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "bb_0061",
@@ -734,7 +734,7 @@
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "bb_0062",
@@ -766,11 +766,11 @@
       "archetype": "star_delivered",
       "register": "win",
       "tone": "observational",
-      "template": "Balanced contributions across the lineup today. Nobody carried, nobody dropped. Solid result.",
+      "template": "Balanced contributions across the lineup today. Nobody carried, nobody dropped.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "bb_0065",
@@ -782,7 +782,7 @@
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "bb_0066",
@@ -802,11 +802,11 @@
       "archetype": "star_delivered",
       "register": "win",
       "tone": "analytical",
-      "template": "The star hit the expected line. The supporting cast stayed in range. Clean hand overall.",
+      "template": "The star hit the expected line. The supporting cast stayed in range.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "bb_0068",
@@ -818,7 +818,7 @@
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "bb_0069",
@@ -826,7 +826,7 @@
       "archetype": "star_delivered",
       "register": "win",
       "tone": "deadpan",
-      "template": "{last} did the job today{opp}. Won the hand. Moving on to the next one.",
+      "template": "{last} did the job today{opp}. Won the hand.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -838,7 +838,7 @@
       "archetype": "star_delivered",
       "register": "win",
       "tone": "deadpan",
-      "template": "Standard day from {last}. Standard result. Nothing to overthink here.",
+      "template": "Standard day from {last}. Standard result.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -854,7 +854,7 @@
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "bb_0072",
@@ -862,11 +862,11 @@
       "archetype": "star_delivered",
       "register": "win",
       "tone": "deadpan",
-      "template": "Another one in the win column. Not much to talk about. Not much needs to be said.",
+      "template": "Another one in the win column. Not much to talk about.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
-      "enabled": true
+      "enabled": false
     }
   ],
   "balanced_win": [
@@ -892,7 +892,7 @@
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "bb_0075",
@@ -900,7 +900,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "hype",
-      "template": "The bench showed out today. Quiet hand from the top but the depth came through.",
+      "template": "{nick} was quiet but the bench showed out today.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -912,7 +912,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "hype",
-      "template": "Won it on depth alone. Sometimes the supporting cast writes the story.",
+      "template": "{last} was quiet but the hand won it on depth alone.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -948,7 +948,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "warm",
-      "template": "Quiet day from the top of the lineup but the depth held. Sometimes that is all you need.",
+      "template": "{nick} had a quiet day but the depth held.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -960,7 +960,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "warm",
-      "template": "The supporting cast picked up the slack today. Not every win comes from the star.",
+      "template": "The supporting cast picked up the slack for {last} today.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -996,7 +996,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "culture_wry",
-      "template": "Won it without the star going off. The bench has been waiting for this moment all season.",
+      "template": "{nick} did not go off but the bench was waiting for this moment.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1008,7 +1008,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "culture_wry",
-      "template": "The bench said we got this today. And honestly, they were not wrong about it.",
+      "template": "{last} was quiet and the bench said we got this today.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1032,7 +1032,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "observational",
-      "template": "The hand won despite the star running cold. Depth across the lineup made the difference.",
+      "template": "{nick} ran cold but depth across the lineup made the difference.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1044,7 +1044,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "observational",
-      "template": "Not a star-driven win. The supporting bats filled in across the board and the hand survived.",
+      "template": "Not a {nick}-driven win. The supporting bats filled in across the board.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1068,7 +1068,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "analytical",
-      "template": "Star output was down but the supporting cards compensated. The math still worked for a win.",
+      "template": "{last}'s output was down but the supporting cards compensated.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1092,7 +1092,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "deadpan",
-      "template": "Won. The star was quiet. The bench was not. Sometimes that is the formula.",
+      "template": "{last} won. The star was quiet.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1104,7 +1104,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "deadpan",
-      "template": "Not the prettiest win. Still a win. Take it and move on.",
+      "template": "Not the prettiest win around {last}. Still a win.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1116,7 +1116,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "hype",
-      "template": "The whole lineup came together today. Cash the hand and feel good about the roster build.",
+      "template": "{last} and the whole lineup came together today. Cash the hand and feel good about the roster build.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1128,7 +1128,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "hype",
-      "template": "Everybody contributed. That is how you win a hand without needing a hero to carry it.",
+      "template": "{last} and everybody contributed. That is how you win a hand without needing a hero to carry it.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1140,7 +1140,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "hype",
-      "template": "Full lineup effort across the board. Collective energy and a collective win.",
+      "template": "{last} led a full lineup effort across the board. Collective energy and a collective win.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1152,7 +1152,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "warm",
-      "template": "Good hand. The lineup did the job across the board without any drama today.",
+      "template": "Good hand from {last}. The lineup did the job across the board without any drama today.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1164,7 +1164,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "warm",
-      "template": "No hero ball needed. The group effort got it done. Comfortable day.",
+      "template": "No hero ball from {nick} ball needed. The group effort got it done.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1176,7 +1176,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "warm",
-      "template": "The whole lineup contributed. Balanced production and a comfortable win.",
+      "template": "{last} and the whole lineup contributed. Balanced production and a comfortable win.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1188,7 +1188,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "culture_wry",
-      "template": "Nobody went yard but everybody got on base. The committee approach actually worked today.",
+      "template": "{nick} and nobody went yard but everybody got on base. The committee approach actually worked today.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1200,7 +1200,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "culture_wry",
-      "template": "Win by committee. Not flashy, but the money spends the same in the end.",
+      "template": "{nick} and the team won by committee. Not flashy, but the money spends the same in the end.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1212,7 +1212,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "culture_wry",
-      "template": "The lineup just quietly handled business today. No drama, no problems, just a clean win.",
+      "template": "{nick} and the lineup just quietly handled business today. No drama, no problems, just a clean win.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1224,7 +1224,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "observational",
-      "template": "Balanced output across the lineup. No standout, just consistent production top to bottom.",
+      "template": "{nick} and the balanced output across the lineup. No standout, just consistent production top to bottom.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1236,7 +1236,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "observational",
-      "template": "No single card drove the result. The lineup each did their part for a collective win.",
+      "template": "No single card including {last} card drove the result. The lineup each did their part for a collective win.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1248,7 +1248,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "analytical",
-      "template": "Contributions were spread evenly across the lineup. Depth and balance won this hand today.",
+      "template": "Contributions around {last} were spread evenly across the lineup. Depth and balance won this hand today.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1260,7 +1260,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "analytical",
-      "template": "When everyone hits their marks, the hand takes care of itself. That is what happened here.",
+      "template": "When {nick} and everyone hits their marks, the hand takes care of itself. That is what happened here.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1272,7 +1272,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "deadpan",
-      "template": "Won the hand. Nobody stood out. Nobody needed to. On to the next one.",
+      "template": "{nick} won the hand. Nobody stood out.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1284,7 +1284,7 @@
       "archetype": "balanced_win",
       "register": "win",
       "tone": "deadpan",
-      "template": "Committee win. Not exciting but it counts the same on the ledger.",
+      "template": "Committee win around {nick} win. Not exciting but it counts the same on the ledger.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1322,7 +1322,7 @@
       "archetype": "star_carried_loss",
       "register": "loss",
       "tone": "warm",
-      "template": "Heartbreaker. {nick} went off and the hand still busted. The lineup could not keep up with the star.",
+      "template": "Heartbreaker. {nick} went off and the hand still busted.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1406,7 +1406,7 @@
       "archetype": "star_carried_loss",
       "register": "loss",
       "tone": "observational",
-      "template": "The star carried. The supporting bats did not follow. {last} deserved a better outcome today.",
+      "template": "{last} carried. The supporting bats did not follow.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1466,7 +1466,7 @@
       "archetype": "star_carried_loss",
       "register": "loss",
       "tone": "deadpan",
-      "template": "{nick} did the job and then some. Everybody else did not. That is the whole story of this hand.",
+      "template": "{nick} did the job and then some. Everybody else did not.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1603,7 +1603,7 @@
       "archetype": "star_failed",
       "register": "loss",
       "tone": "warm",
-      "template": "{last} did not have it today. Happens to everyone. Shake it off and play the next hand.",
+      "template": "{last} did not have it today. Happens to everyone.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1824,7 +1824,7 @@
       "archetype": "star_cold",
       "register": "loss",
       "tone": "deadpan",
-      "template": "{last} was cold today{opp}. The hand followed that direction. That is how it goes sometimes.",
+      "template": "{last} was cold today{opp}. The hand followed that direction.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -1836,7 +1836,7 @@
       "archetype": "star_cold",
       "register": "loss",
       "tone": "deadpan",
-      "template": "Not {nick}'s day. It happens to everyone. Shake it off and come back for the next one.",
+      "template": "Not {nick}'s day. It happens to everyone.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -2057,7 +2057,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "deadpan",
-      "template": "Nobody had it today. Sometimes the lineup just does not come through. On to the next one.",
+      "template": "{nick} and nobody had it today. Sometimes the lineup just does not come through.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -2069,7 +2069,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "deadpan",
-      "template": "Flat across the board. Not one card in the lineup pulled its weight today.",
+      "template": "{nick} was flat across the board. Not one card in the lineup pulled its weight today.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -2081,7 +2081,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "deadpan",
-      "template": "The whole lineup came in below the line. Nothing worked. On to the next hand.",
+      "template": "{last} and the whole lineup came in below the line. Nothing worked.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -2105,7 +2105,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "warm",
-      "template": "Tough day all around. Nobody could get anything going at the plate or on the mound.",
+      "template": "Tough day for {last} all around. Nobody could get anything going at the plate or on the mound.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -2117,7 +2117,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "warm",
-      "template": "The whole lineup had an off day. Take the loss and move on. Fresh start next hand.",
+      "template": "{last} and the whole lineup had an off day. Take the loss and move on.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -2129,7 +2129,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "warm",
-      "template": "One of those collective off days that just happen. Nobody is to blame. Reset and come back.",
+      "template": "One of those days for {last} those collective off days that just happen. Nobody is to blame.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -2141,7 +2141,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "warm",
-      "template": "Not the day anyone wanted. The whole lineup was cold. Next hand is a clean slate.",
+      "template": "Not the day {nick} wanted anyone wanted. The whole lineup was cold.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -2153,7 +2153,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "culture_wry",
-      "template": "The entire lineup collectively decided to take the day off. At least they committed to it.",
+      "template": "{last} and the entire lineup collectively decided to take the day off. At least they committed to it.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -2165,7 +2165,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "culture_wry",
-      "template": "If this hand was a group project, nobody did their part. Unified in their mediocrity today.",
+      "template": "If {nick} and this hand was a group project, nobody did their part. Unified in their mediocrity today.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -2177,7 +2177,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "culture_wry",
-      "template": "Everyone forgot to show up today. At least they were all consistent about that one thing.",
+      "template": "{last} and everyone forgot to show up today. At least they were all consistent about that one thing.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -2189,7 +2189,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "culture_wry",
-      "template": "The lineup phoned it in today. A team effort in the wrong direction. Very on brand.",
+      "template": "{nick} and the lineup phoned it in today. A team effort in the wrong direction.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -2201,7 +2201,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "observational",
-      "template": "No single culprit today. Every card came in below the line across the board. Collective miss.",
+      "template": "No single card including {last} culprit today. Every card came in below the line across the board.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -2213,7 +2213,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "observational",
-      "template": "The lineup fell short across the board. A collective miss from top to bottom.",
+      "template": "{nick} and the lineup fell short across the board. A collective miss from top to bottom.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -2225,11 +2225,11 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "observational",
-      "template": "Broad struggles left no margin for the hand at all. Nobody stepped up when needed.",
+      "template": "Broad struggles from {last} struggles left no margin for the hand at all. Nobody stepped up when needed.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "bb_0167",
@@ -2237,7 +2237,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "analytical",
-      "template": "Every card tracked below the expected line. No individual cause — systemic collective miss.",
+      "template": "{nick} and every card tracked below the expected line. No individual cause — systemic collective miss.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -2249,7 +2249,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "analytical",
-      "template": "The lineup all came in under their expected outputs today. The broad miss sank the hand.",
+      "template": "{nick} and the lineup all came in under their expected outputs today. The broad miss sank the hand.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -2261,7 +2261,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "analytical",
-      "template": "Below the line across the board. When everyone misses, the hand has no chance.",
+      "template": "{last} and everyone below the line across the board. When everyone misses, the hand has no chance.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -2273,7 +2273,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "hype",
-      "template": "Nobody showed up at the park today. The whole lineup flatlined.",
+      "template": "{nick} and nobody showed up at the park today. The whole lineup flatlined.",
       "tags": [
         "everyone_flat",
         "phase2"
@@ -2288,7 +2288,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "hype",
-      "template": "Top to bottom, every spot in the order missed. Zero pulse from this lineup.",
+      "template": "{nick} and the lineup top to bottom, every spot in the order missed. Zero pulse from this lineup.",
       "tags": [
         "everyone_flat",
         "phase2"
@@ -2303,7 +2303,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "hype",
-      "template": "You cannot win when the entire batting order forgets how to hit.",
+      "template": "{nick} and the lineup cannot win when the entire batting order forgets how to hit.",
       "tags": [
         "everyone_flat",
         "phase2"
@@ -2318,7 +2318,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "hype",
-      "template": "Not one bat in this lineup gave you a pulse. Total wipeout at the dish.",
+      "template": "Not one bat including {last} bat in this lineup gave you a pulse. Total wipeout at the dish.",
       "tags": [
         "everyone_flat",
         "phase2"
@@ -2333,7 +2333,7 @@
       "archetype": "everyone_flat",
       "register": "loss",
       "tone": "hype",
-      "template": "Whole hand went cold. Pitching, hitting, everything. Nothing to salvage.",
+      "template": "{last} and the whole hand went cold. Pitching, hitting, everything.",
       "tags": [
         "everyone_flat",
         "phase2"
@@ -2710,7 +2710,7 @@
       "archetype": "near_miss",
       "register": "loss",
       "tone": "analytical",
-      "template": "The gap was {gap}. {last}'s approach was there. The results were not.",
+      "template": "The gap was {gap}. {last}'s approach was there.",
       "tags": [
         "near_miss",
         "phase2"
@@ -2974,7 +2974,7 @@
       ],
       "humorStyle": [],
       "qualityScore": 8,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "bb_p2_0463",
@@ -3147,7 +3147,7 @@
       "archetype": "ugly_win",
       "register": "win",
       "tone": "analytical",
-      "template": "{last}'s approach was fine. The results were just misses. Variance win.",
+      "template": "{last}'s approach was fine. The results were just misses.",
       "tags": [
         "ugly_win",
         "phase2"
@@ -3299,7 +3299,7 @@
       "archetype": "collapse",
       "register": "loss",
       "tone": "hype",
-      "template": "Streak over. Momentum over. {last} down {gap} like the floor gave out.",
+      "template": "Streak over. Momentum over.",
       "tags": [
         "collapse",
         "phase2"
@@ -3644,7 +3644,7 @@
       "archetype": "collapse",
       "register": "loss",
       "tone": "deadpan",
-      "template": "{streak} wins. Then down {gap}. {last} has no comment and neither do I.",
+      "template": "{streak} wins. Then down {gap}.",
       "tags": [
         "collapse",
         "phase2"
@@ -3674,7 +3674,7 @@
       "archetype": "collapse",
       "register": "loss",
       "tone": "deadpan",
-      "template": "The streak was {streak}. The gap was {gap}. {last} can do that math alone.",
+      "template": "The streak was {streak}. The gap was {gap}.",
       "tags": [
         "collapse",
         "phase2"
@@ -4111,7 +4111,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "deadpan",
-      "template": "{extremeDescription} for {name}{opp}. Nature is healing. Or breaking.",
+      "template": "{extremeDescription} for {name}{opp}. Nature is healing.",
       "tags": [
         "career_night",
         "phase2"
@@ -4231,7 +4231,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "warm",
-      "template": "{last} did everything right. {extremeDescription}{opp}. And it still was not enough.",
+      "template": "{last} did everything right. {extremeDescription}{opp}.",
       "tags": [
         "career_night",
         "phase2"
@@ -4396,7 +4396,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "deadpan",
-      "template": "{last}: {extremeDescription}. Final result: L. Baseball is a team sport, unfortunately.",
+      "template": "{last}: {extremeDescription}. Final result: L.",
       "tags": [
         "career_night",
         "phase2"
@@ -4411,7 +4411,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "deadpan",
-      "template": "{name} did {extremeDescription}. They won anyway. Sometimes the universe does not care.",
+      "template": "{name} did {extremeDescription}. They won anyway.",
       "tags": [
         "career_night",
         "phase2"
@@ -4473,7 +4473,7 @@
       "archetype": "badge_explosion",
       "register": "win",
       "tone": "warm",
-      "template": "That is a {badge} from {last}{opp}. {topStat} leading the stat line. Take the win.",
+      "template": "That is a {badge} from {last}{opp}. {topStat} leading the stat line.",
       "tags": [
         "badge_explosion",
         "phase2"
@@ -4578,7 +4578,7 @@
       "archetype": "badge_explosion",
       "register": "win",
       "tone": "deadpan",
-      "template": "{last} had a {badge}{opp}. {topStat} on top. Won the hand. Not much else to say.",
+      "template": "{last} had a {badge}{opp}. {topStat} on top.",
       "tags": [
         "badge_explosion",
         "phase2"
@@ -4593,7 +4593,7 @@
       "archetype": "badge_explosion",
       "register": "win",
       "tone": "deadpan",
-      "template": "A {topStat} {badge} from {nick}{opp}. Cash the hand. That line speaks for itself.",
+      "template": "A {topStat} {badge} from {nick}{opp}. Cash the hand.",
       "tags": [
         "badge_explosion",
         "phase2"
@@ -4653,7 +4653,7 @@
       "archetype": "badge_explosion",
       "register": "loss",
       "tone": "deadpan",
-      "template": "{last} had a {badge}{opp}. {topStat} on top. Still lost. The lineup was not there.",
+      "template": "{last} had a {badge}{opp}. {topStat} on top.",
       "tags": [
         "badge_explosion",
         "phase2"
