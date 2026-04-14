@@ -8,7 +8,7 @@
 import { useState } from "react";
 import type { TaskState } from "@shared/engagement/useEngagement";
 import { Leaderboard } from "@shared/components/Leaderboard";
-import { PWAInstallPrompt } from "@shared/components/PWAInstallPrompt";
+import { PWAInstallPrompt } from "@shared/components/PwaInstallPrompt";
 import { getPlayerUid } from "@shared/utils/playerIdentity";
 
 const FF = "'Rajdhani', 'Arial Narrow', sans-serif";
