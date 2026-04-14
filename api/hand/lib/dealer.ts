@@ -74,7 +74,7 @@ function isPremium(tier) {
 export async function fetchPlayablePool() {
   const { data, error } = await supabaseAdmin
     .from('players')
-    .select('id, name, team, position, cost')
+    .select('id, name, team, pos, cost')
     .eq('active', true);
 
   if (error) throw new Error(`fetchPlayablePool: ${error.message}`);
@@ -83,7 +83,7 @@ export async function fetchPlayablePool() {
     id: p.id,
     name: p.name,
     team: p.team,
-    position: p.position,
+    position: p.pos || '',
     cost: Number(p.cost),
     tier: tierFromCost(Number(p.cost)),
   }));
