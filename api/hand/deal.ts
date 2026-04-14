@@ -98,10 +98,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const existing = await findPendingHand(userId);
     if (existing) {
-      return res.status(409).json({
-        error: 'HAND_EXISTS',
-        message: 'You already have a pending hand',
+      // Return the existing pending hand instead of rejecting
+      return res.status(200).json({
         handId: existing.handId,
+        cards: (existing.roster || []).map((c: any, i: number) => ({
+          slot: i,
+          playerId: c.playerId,
+          name: c.name,
+          team: c.team,
+          position: c.position,
+          salary: c.salary,
+          tier: c.tier,
+        })),
+        balance: existing.betAmount ? balance : balance,
+        betAmount: existing.betAmount,
       });
     }
   } catch (kvErr) {
