@@ -39,6 +39,7 @@ import { checkMysteryScore, getDailyMysteryScore, MYSTERY_SCORE_BONUS } from "@s
 import { detectExtremes } from "@shared/utils/extremeGames";
 import { buildPostRevealCopy } from "../utils/buildPostRevealCopy";
 import { composeCommentary } from "../../../shared/commentary/composeCommentary";
+import { selectCommentary } from "../../../shared/commentary/selectCommentary";
 import { useGameAnalytics } from "../../../shared/analytics/useGameAnalytics";
 import { HotStreakOverlay } from '@shared/engagement/HotStreakOverlay';
 import { CollectScreen } from '@shared/engagement/CollectScreen';
@@ -1204,9 +1205,13 @@ export default function GameView() {
       sport: "basketball",
     };
 
-    const copy = USE_NEW_COMMENTARY
-      ? composeCommentary(copyInput as any)
-      : buildPostRevealCopy(copyInput as any);
+    // Primary: unified selector. Fallback: legacy compose/postReveal.
+    const selected = selectCommentary(copyInput as any);
+    const copy = (selected?.primary && selected.primary !== "Good hand." && selected.primary !== "Tough night.")
+      ? selected
+      : (USE_NEW_COMMENTARY
+        ? composeCommentary(copyInput as any)
+        : buildPostRevealCopy(copyInput as any));
     // Tier 3: static fallback if template returned an unusable result.
     if (!copy?.primary) {
       const fpStr = fp.toFixed(1);

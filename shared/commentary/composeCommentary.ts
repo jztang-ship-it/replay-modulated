@@ -1,5 +1,7 @@
 /**
- * composeCommentary.ts — The unified composer. Orchestrates Steps 1-6.
+ * @deprecated Use selectCommentary.ts instead. Kept as fallback during migration.
+ *
+ * composeCommentary.ts — The legacy unified composer. Orchestrates Steps 1-6.
  * Sport-agnostic: uses CommentaryInput and delegates to sport-specific template banks.
  */
 
