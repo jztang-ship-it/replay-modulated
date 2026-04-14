@@ -191,3 +191,112 @@ export interface TemplateData {
   /** Pre-built description of the most extreme game in the hand */
   extremeDescription: string;
 }
+
+// ─── Unified commentary engine types ────────────────────────────────────────
+
+/** Master archetype system — exactly one per hand. Schema supports 32, ~13 active. */
+export type CommentaryArchetype =
+  // ── Active (populated with lines) ──
+  | "star_carry"
+  | "star_carry_big"
+  | "star_delivered"
+  | "balanced_win"
+  | "badge_explosion"
+  | "near_miss"
+  | "star_failed"
+  | "star_cold"
+  | "star_carried_loss"
+  | "everyone_flat"
+  | "ugly_win"
+  | "collapse"
+  | "career_night"
+  // ── Reserved (schema only, no lines yet) ──
+  | "streak_first"
+  | "streak_milestone"
+  | "streak_broken"
+  | "hold_rewarded"
+  | "draw_rewarded"
+  | "smart_hold_star"
+  | "smart_hold_role_player"
+  | "painful_near_miss"
+  | "anchor_underperformed"
+  | "one_player_threw"
+  | "outlier_bench_hero"
+  | "ice_cold"
+  | "lucky_escape"
+  | "comfortable_win"
+  | "dominant_win"
+  | "goat_clinch"
+  | "mvp_clinch"
+  | "bust_result"
+  | "high_score_low_reward"
+  | "wrong_star_wrong_night"
+  | "clutch_finish"
+  | "overperformance_shock"
+  | "underperformance_shock";
+
+/** Canonical input to the runtime commentary selector. Built once per hand. */
+export interface CommentaryContext {
+  sport: string;
+  register: Register;
+  archetype: CommentaryArchetype;
+  intensity: Intensity;
+  tone: ToneId;
+
+  totalFp: number;
+  tierReached: WinTier;
+  deltaToNextTier: number;
+  nearMiss: boolean;
+
+  star: CommentaryRosterCard | null;
+  starRatio: number;
+  culprit: CommentaryRosterCard | null;
+
+  highestBadge: { tier: number; commentaryLabel: string; multiStat?: boolean; id: string } | null;
+  hasTier1Extreme: boolean;
+
+  streak: number;
+  prevStreak: number;
+
+  seed: number;
+
+  /** Pre-built template data for token resolution */
+  templateData: TemplateData;
+  /** Detail IDs from story assembly */
+  details: DetailId[];
+  recordEvents: RecordEvent[];
+}
+
+/** Single line in the commentary library. Grouped by archetype in the library file. */
+export interface CommentaryLine {
+  id: string;
+  sport: "any" | "basketball" | "baseball";
+  archetype: CommentaryArchetype;
+  register: Register;
+  tone: ToneId;
+  intensity?: Intensity[];
+  template: string;
+  /** Tokens this template requires to be non-empty */
+  requires?: string[];
+  /** Context flags that must NOT be present */
+  forbids?: string[];
+  tags?: string[];
+  humorStyle?: string[];
+  qualityScore?: number;
+  enabled: boolean;
+}
+
+/** Grouped library format — archetypes are top-level keys */
+export interface CommentaryLibrary {
+  [archetype: string]: CommentaryLine[];
+}
+
+/** Output of the runtime selector */
+export interface CommentaryResult {
+  mainLine: string;
+  subLine?: string | null;
+  stamp?: string | null;
+  archetype: CommentaryArchetype;
+  tone: ToneId;
+  lineId: string;
+}
