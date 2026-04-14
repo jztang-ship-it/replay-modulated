@@ -54,8 +54,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const rlKey = `rl:deal:${userId}`;
     const count = await kv.incr(rlKey);
-    if (count === 1) await kv.expire(rlKey, 10);
-    if (count > 5) {
+    if (count === 1) await kv.expire(rlKey, 60);
+    if (count > 30) {
       return sendError(res, 429, 'RATE_LIMITED', 'Too many requests. Try again in a few seconds.');
     }
   } catch { /* KV rate limit failure should not block gameplay */ }
