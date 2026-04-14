@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getProtectionConfig, selectBestCandidate } from '../lib/protection.ts'
+import { getProtectionConfig, selectBestCandidate } from '../_lib-hand/protection.ts'
 
 // ---------------------------------------------------------------------------
 // getProtectionConfig
