@@ -153,7 +153,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   for (let i = 0; i < 6; i++) {
     const card = finalRoster[i];
-    const stats = card.logData || {};
+    const stats = card.logData || card.statLine || {};
     const { score, badges } = calculateScore(stats);
 
     totalFp += score;
