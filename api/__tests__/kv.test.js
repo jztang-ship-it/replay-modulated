@@ -27,7 +27,7 @@ import {
   findPendingHand,
   cacheResult,
   getCachedResult,
-} from '../lib/kv.js';
+} from '../lib/kv.ts';
 
 beforeEach(() => {
   vi.clearAllMocks();

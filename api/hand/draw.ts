@@ -1,10 +1,11 @@
-import { verifyAuth } from '../lib/auth.js';
-import { supabaseAdmin } from '../lib/supabaseServer.js';
-import { consumeHand, getCachedResult, cacheResult } from '../lib/kv.js';
-import { fetchPlayablePool, redrawRoster, pickBiasedLog, fetchGameLogById } from '../lib/dealer.js';
-import { calculateScore, resolveTier, calculatePayout, isWin } from '../lib/scoring.js';
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { verifyAuth } from '../lib/auth';
+import { supabaseAdmin } from '../lib/supabaseServer';
+import { consumeHand, getCachedResult, cacheResult } from '../lib/kv';
+import { fetchPlayablePool, redrawRoster, pickBiasedLog, fetchGameLogById } from '../lib/dealer';
+import { calculateScore, resolveTier, calculatePayout, isWin } from '../lib/scoring';
 
-const sendError = (res, status, code, message) =>
+const sendError = (res: VercelResponse, status: number, code: string, message: string) =>
   res.status(status).json({ error: code, message });
 
 const TIER_ORDER = ['BUST', 'ROOKIE', 'STARTER', 'ALL_STAR', 'MVP', 'LEGEND'];
@@ -27,7 +28,7 @@ function mulberry32(seed) {
 // Handler
 // ---------------------------------------------------------------------------
 
-export default async function handler(req, res) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // 1. POST only
   if (req.method !== 'POST') {
     return sendError(res, 405, 'METHOD_NOT_ALLOWED', 'POST required');

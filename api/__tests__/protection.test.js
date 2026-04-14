@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getProtectionConfig, selectBestCandidate } from '../lib/protection.js'
+import { getProtectionConfig, selectBestCandidate } from '../lib/protection.ts'
 
 // ---------------------------------------------------------------------------
 // getProtectionConfig

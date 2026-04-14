@@ -1,11 +1,12 @@
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from 'crypto';
-import { verifyAuth } from '../lib/auth.js';
-import { supabaseAdmin } from '../lib/supabaseServer.js';
-import { fetchPlayablePool, generateRoster, pickBiasedLog } from '../lib/dealer.js';
-import { findPendingHand, storePendingHand } from '../lib/kv.js';
-import { isFtueEligible, FTUE_DEAL_ROSTER, FTUE_DRAW_CARDS } from '../lib/ftue.js';
-import { getProtectionConfig, selectBestCandidate } from '../lib/protection.js';
-import { calculateScore } from '../lib/scoring.js';
+import { verifyAuth } from '../lib/auth';
+import { supabaseAdmin } from '../lib/supabaseServer';
+import { fetchPlayablePool, generateRoster, pickBiasedLog } from '../lib/dealer';
+import { findPendingHand, storePendingHand } from '../lib/kv';
+import { isFtueEligible, FTUE_DEAL_ROSTER, FTUE_DRAW_CARDS } from '../lib/ftue';
+import { getProtectionConfig, selectBestCandidate } from '../lib/protection';
+import { calculateScore } from '../lib/scoring';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -35,7 +36,11 @@ function mulberry32(seed) {
 // Handler
 // ---------------------------------------------------------------------------
 
-export default async function handler(req, res) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  console.log("=== ENV CHECK ===")
+  console.log("SUPABASE KEY EXISTS:", !!process.env.SUPABASE_SERVICE_ROLE_KEY)
+  console.log("KV URL EXISTS:", !!process.env.KV_REST_API_URL)
+  console.log("KV TOKEN EXISTS:", !!process.env.KV_REST_API_TOKEN)
   // 1. POST only
   if (req.method !== 'POST') {
     return sendError(res, 405, 'METHOD_NOT_ALLOWED', 'POST required');

@@ -5,7 +5,7 @@ import {
   isWin,
   getStreakMultiplier,
   calculatePayout,
-} from '../lib/scoring.js'
+} from '../lib/scoring.ts'
 
 // ---------------------------------------------------------------------------
 // Helpers
