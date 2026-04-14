@@ -3,7 +3,7 @@
  * Run: npx tsx basketball/src/tools/commentary100.ts
  */
 
-import { composeCommentary } from "../../../shared/commentary/composeCommentary";
+import { selectCommentary } from "../../../shared/commentary/selectCommentary";
 import type { CommentaryInput, CommentaryRosterCard } from "../../../shared/commentary/types";
 
 // Mock localStorage
@@ -163,7 +163,7 @@ const uniqueMessages = new Set<string>();
 for (let i = 0; i < scenarios.length; i++) {
   const s = scenarios[i];
   const input = buildInput(s);
-  const result = composeCommentary(input as any);
+  const result = selectCommentary(input as any);
   const emoji = TIER_EMOJI[s.winTier] ?? "?";
   const isBust = s.winTier === "BUST";
 

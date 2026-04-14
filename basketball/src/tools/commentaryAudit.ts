@@ -3,7 +3,7 @@
  * Run: npx tsx basketball/src/tools/commentaryAudit.ts
  */
 
-import { composeCommentary } from "../../../shared/commentary/composeCommentary";
+import { selectCommentary } from "../../../shared/commentary/selectCommentary";
 import type { CommentaryInput, CommentaryRosterCard } from "../../../shared/commentary/types";
 
 // ─── Scenario generator ─────────────────────────────────────────────────────
@@ -235,7 +235,7 @@ function main() {
   const failedExamples: { label: string; message: string; reason: string }[] = [];
 
   for (const { input, label } of scenarios) {
-    const result = composeCommentary(input as any);
+    const result = selectCommentary(input as any);
     const message = result.primary;
     const grades = grade(message, input);
     const worst = grades.reduce((w, g) =>

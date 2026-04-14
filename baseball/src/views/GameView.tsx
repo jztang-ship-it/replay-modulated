@@ -1005,10 +1005,8 @@ export default function GameView() {
       isBust: winTier === "BUST",
       handCount,
     } as any;
-    const selected = selectCommentary(copyInput);
-    const copy = (selected?.primary && selected.primary !== "Good hand." && selected.primary !== "Tough night.")
-      ? selected
-      : composeCommentary(copyInput);
+    // Canonical commentary engine — selectCommentary is the sole source.
+    const copy = selectCommentary(copyInput);
     postRevealCopyRef.current = copy;
     return copy;
   }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct, lbContextNonce]); // eslint-disable-line

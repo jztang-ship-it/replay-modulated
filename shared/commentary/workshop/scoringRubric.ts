@@ -49,11 +49,18 @@ export function autoReject(template: string): string[] {
   const sentences = template.split(/[.!?]+/).filter(s => s.trim().length > 10);
   if (sentences.length > 2) reasons.push("multi_idea");
 
+  // Merged from the original quality gate (generateCommentary.ts) + workshop rules.
+  // These phrases leak game mechanics, sound robotic, or are generic sports filler.
   const genericPhrases = [
     "strong performance", "stepped up", "came to play",
     "big night", "huge game", "great effort", "really delivered",
     "got the job done", "solid effort", "nice work", "great job",
     "clutch performance",
+    // From original quality gate — game-mechanic language
+    "every card", "full bust", "avoided zero", "the minimum",
+    "came up short", "couldn't overcome", "went nuclear",
+    "carry the load", "carried the load", "pick up the slack",
+    "fantasy points", "reflected it",
   ];
   for (const phrase of genericPhrases) {
     if (lower.includes(phrase)) {
@@ -64,8 +71,13 @@ export function autoReject(template: string): string[] {
 
   if (template.length > 180) reasons.push("too_long");
 
-  const mechanics = ["fp", "fantasy points", "projection", "projected",
-    "rookie tier", "starter tier", "all-star tier", "mvp tier"];
+  // Game-mechanic terms that should never appear in commentary
+  const mechanics = [
+    "fp", "fantasy points", "projection", "projected",
+    "rookie tier", "starter tier", "all-star tier", "mvp tier", "goat tier",
+    "rookie money", "starter money", "all-star money",
+    "bust tier", "payout tier", "payout threshold",
+  ];
   for (const term of mechanics) {
     if (lower.includes(term)) {
       reasons.push(`mechanic_leak: "${term}"`);

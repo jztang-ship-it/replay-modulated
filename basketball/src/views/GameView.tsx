@@ -1175,7 +1175,7 @@ export default function GameView() {
     }
     const fp = lockedGaugeFpRef.current ?? displayFp;
     const gaugeSnap = computeGaugeState(fp, GAUGE_THRESHOLDS as any, winTier, 8);
-    const USE_NEW_COMMENTARY = true; // Feature flag — flip to false to revert
+    // Legacy feature flag removed — selectCommentary is now canonical
 
     const copyInput = {
       totalFp: fp,
@@ -1205,13 +1205,8 @@ export default function GameView() {
       sport: "basketball",
     };
 
-    // Primary: unified selector. Fallback: legacy compose/postReveal.
-    const selected = selectCommentary(copyInput as any);
-    const copy = (selected?.primary && selected.primary !== "Good hand." && selected.primary !== "Tough night.")
-      ? selected
-      : (USE_NEW_COMMENTARY
-        ? composeCommentary(copyInput as any)
-        : buildPostRevealCopy(copyInput as any));
+    // Canonical commentary engine — selectCommentary is the sole source.
+    const copy = selectCommentary(copyInput as any);
     // Tier 3: static fallback if template returned an unusable result.
     if (!copy?.primary) {
       const fpStr = fp.toFixed(1);
