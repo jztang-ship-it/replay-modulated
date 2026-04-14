@@ -1,12 +1,12 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from 'crypto';
-import { verifyAuth } from './lib/auth';
-import { supabaseAdmin } from './lib/supabaseServer';
-import { fetchPlayablePool, generateRoster, pickBiasedLog } from './lib/dealer';
-import { findPendingHand, storePendingHand } from './lib/kv';
-import { isFtueEligible, FTUE_DEAL_ROSTER, FTUE_DRAW_CARDS } from './lib/ftue';
-import { getProtectionConfig, selectBestCandidate } from './lib/protection';
-import { calculateScore } from './lib/scoring';
+import { verifyAuth } from './lib/auth.js';
+import { supabaseAdmin } from './lib/supabaseServer.js';
+import { fetchPlayablePool, generateRoster, pickBiasedLog } from './lib/dealer.js';
+import { findPendingHand, storePendingHand } from './lib/kv.js';
+import { isFtueEligible, FTUE_DEAL_ROSTER, FTUE_DRAW_CARDS } from './lib/ftue.js';
+import { getProtectionConfig, selectBestCandidate } from './lib/protection.js';
+import { calculateScore } from './lib/scoring.js';
 
 // ---------------------------------------------------------------------------
 // Constants

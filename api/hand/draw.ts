@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { verifyAuth } from './lib/auth';
-import { supabaseAdmin } from './lib/supabaseServer';
-import { consumeHand, getCachedResult, cacheResult } from './lib/kv';
-import { fetchPlayablePool, redrawRoster, pickBiasedLog, fetchGameLogById } from './lib/dealer';
-import { calculateScore, resolveTier, calculatePayout, isWin } from './lib/scoring';
+import { verifyAuth } from './lib/auth.js';
+import { supabaseAdmin } from './lib/supabaseServer.js';
+import { consumeHand, getCachedResult, cacheResult } from './lib/kv.js';
+import { fetchPlayablePool, redrawRoster, pickBiasedLog, fetchGameLogById } from './lib/dealer.js';
+import { calculateScore, resolveTier, calculatePayout, isWin } from './lib/scoring.js';
 
 const sendError = (res: VercelResponse, status: number, code: string, message: string) =>
   res.status(status).json({ error: code, message });
