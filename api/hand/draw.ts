@@ -67,10 +67,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // 4. Idempotency — check cached result
-  let cached;
+  let cached: any;
   try {
     cached = await getCachedResult(handId);
-  } catch (kvErr) {
+  } catch (kvErr: unknown) {
     console.error('[draw] KV getCachedResult failed:', kvErr);
     return sendError(res, 500, 'KV_UNAVAILABLE', 'Could not check cached results');
   }
@@ -79,10 +79,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // 5. Atomic consume
-  let hand;
+  let hand: any;
   try {
     hand = await consumeHand(userId, handId);
-  } catch (kvErr) {
+  } catch (kvErr: unknown) {
     console.error('[draw] KV consumeHand failed:', kvErr);
     return sendError(res, 500, 'KV_UNAVAILABLE', 'Could not consume hand from KV');
   }
