@@ -192,9 +192,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
     }
-  } catch (dealErr) {
+  } catch (dealErr: unknown) {
     console.error('[deal] Generation failed:', dealErr);
-    return sendError(res, 500, 'DEAL_FAILED', 'Hand generation failed');
+    const msg = dealErr instanceof Error ? dealErr.message : String(dealErr);
+    return sendError(res, 500, 'DEAL_FAILED', 'Hand generation failed: ' + msg);
   }
 
   // 11. Generate handId
