@@ -154,23 +154,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   for (let i = 0; i < 6; i++) {
     const card = finalRoster[i] as any;
     const stats = card.logData || card.statLine || {};
-
-    // FTUE cards have pre-scripted actualFp and achievements — use them directly
-    // instead of re-calculating (avoids badge dedup differences with client).
-    const isFtueCard = hand.isFtue && card.actualFp !== undefined;
-    let score: number;
-    let badges: Array<{ id: string; icon: string; label: string; fp: number }>;
-
-    if (isFtueCard) {
-      score = card.actualFp;
-      badges = (card.achievements || []).map((a: any) => ({
-        id: a.id, icon: a.icon || '', label: a.label || '', fp: a.fp || 0,
-      }));
-    } else {
-      const result = calculateScore(stats);
-      score = result.score;
-      badges = result.badges;
-    }
+    const { score, badges } = calculateScore(stats);
 
     totalFp += score;
     badgeCount += badges.length;
