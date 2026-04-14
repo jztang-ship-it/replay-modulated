@@ -182,7 +182,7 @@ const GAUGE_THRESHOLDS = [
   { tier: "STARTER",  minFP: 178 },
   { tier: "ALL_STAR", minFP: 208 },
   { tier: "MVP",      minFP: 240 },
-  { tier: "GOAT",     minFP: 280 },
+  { tier: "LEGEND",     minFP: 280 },
 ];
 const NEAR_MISS_FP = 5;
 
@@ -236,7 +236,7 @@ function RollingNumber({ value, decimals = 0, duration = 400 }: { value: number;
 
 // ── Tier flip display helpers ──────────────────────────────────────
 function deriveTierFromFp(fp: number): string {
-  if (fp >= 280) return "GOAT";
+  if (fp >= 280) return "LEGEND";
   if (fp >= 240) return "MVP";
   if (fp >= 208) return "ALL_STAR";
   if (fp >= 178) return "STARTER";
@@ -251,7 +251,7 @@ const SPRING_TIERS = [
   { name: "STARTER",  lo: 178, hi: 208 },
   { name: "ALL_STAR", lo: 208, hi: 240 },
   { name: "MVP",      lo: 240, hi: 280 },
-  { name: "GOAT",     lo: 280, hi: 9999 },
+  { name: "LEGEND",     lo: 280, hi: 9999 },
 ];
 const SPRING_TIER_SPAN = 20.0;
 
@@ -279,7 +279,7 @@ const TIER_IMAGE_MAP: Record<string, string> = {
   STARTER: "Starter3.png",
   ALL_STAR: "All_Star_4.png",
   MVP: "MVP5.png",
-  GOAT: "GOAT6.png",
+  LEGEND: "LEGEND6.png",
 };
 
 const GV_STYLE_ID = "gv-tier-flip";
@@ -823,7 +823,7 @@ export default function GameView() {
               if (totalFp > prevBest) {
                 localStorage.setItem("rm_best_hand", totalFp.toFixed(1));
               }
-              const tierRanks = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "GOAT"];
+              const tierRanks = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "LEGEND"];
               const prevTierRank = tierRanks.indexOf(localStorage.getItem("rm_best_tier") ?? "BUST");
               const newTierRank = tierRanks.indexOf(tier ?? "BUST");
               if (newTierRank > prevTierRank) {
@@ -874,7 +874,7 @@ export default function GameView() {
 
   // Tier color map — mirrors WIN_TIERS in basketball/GameBar.tsx
   const CELEBRATION_TIER_COLORS: Record<string, { color: string; glow: string }> = {
-    GOAT: { color: "#EF4444", glow: "#EF444499" },
+    LEGEND: { color: "#EF4444", glow: "#EF444499" },
     MVP: { color: "#FB923C", glow: "#FB923C55" },
     ALL_STAR: { color: "#C084FC", glow: "#C084FC55" },
     STARTER: { color: "#00FFD8", glow: "#00FFD855" },
@@ -884,7 +884,7 @@ export default function GameView() {
 
   const formatTierLabel = (tier: string) => {
     if (tier === "BUST") return "BUST";
-    if (tier === "GOAT") return "G.O.A.T.";
+    if (tier === "LEGEND") return "G.O.A.T.";
     return tier.replace("_", "-");
   };
 
@@ -1049,7 +1049,7 @@ export default function GameView() {
   // Track tier boundary crossings — paced flip with minimum display time per tier
   // Tier flip — shows EVERY intermediate tier for 600ms each.
   // When gauge crosses multiple tiers, schedules each one on a 600ms chain.
-  const TIER_ORDER_LIST = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "GOAT"];
+  const TIER_ORDER_LIST = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "LEGEND"];
   const tierFlipTimersRef = useRef<number[]>([]);
 
   const handleTierCross = useCallback((tier: string) => {
@@ -1849,7 +1849,7 @@ export default function GameView() {
                       { tier: "STARTER",  minFP: 178 },
                       { tier: "ALL_STAR", minFP: 208 },
                       { tier: "MVP",      minFP: 240 },
-                      { tier: "GOAT" as any, minFP: 280 },
+                      { tier: "LEGEND" as any, minFP: 280 },
                     ]}
                     winTier={springSettled ? (winTier ?? undefined) : undefined}
                     lastCardFp={lastCardFp}

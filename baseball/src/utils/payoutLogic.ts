@@ -17,7 +17,7 @@ export type { WinTierKey };
 export type WinTier = WinTierKey;
 
 export const BASEBALL_WIN_TIERS: WinTierMap = {
-  GOAT:     { minFp: 280, multiplier: 50  },  // ~0.9%
+  LEGEND:   { minFp: 280, multiplier: 50  },  // ~0.9%
   MVP:      { minFp: 240, multiplier: 15  },  // ~3.7%
   ALL_STAR: { minFp: 208, multiplier: 7   },  // ~8.9%
   STARTER:  { minFp: 178, multiplier: 2.5 },  // ~16.1%

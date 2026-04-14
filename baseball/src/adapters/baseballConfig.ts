@@ -15,7 +15,7 @@
 
 export type BaseballSportKey = "baseball";
 export type BaseballSlot = "P" | "BAT";
-export type BaseballTier = "ROOKIE" | "STARTER" | "ALL_STAR" | "MVP" | "GOAT";
+export type BaseballTier = "ROOKIE" | "STARTER" | "ALL_STAR" | "MVP" | "LEGEND";
 
 export type BaseballStatCategory =
   | "h" | "doubles" | "triples" | "hr" | "r" | "rbi" | "bb" | "sb"
@@ -130,7 +130,7 @@ export const BaseballSportConfig = {
       { tier: "STARTER",  minFP: 178, multiplier: 2.5 },
       { tier: "ALL_STAR", minFP: 208, multiplier: 7 },
       { tier: "MVP",      minFP: 240, multiplier: 15 },
-      { tier: "GOAT",     minFP: 280, multiplier: 50, progressive: true },
+      { tier: "LEGEND",     minFP: 280, multiplier: 50, progressive: true },
     ] as BaseballWinThreshold[],
   },
 };

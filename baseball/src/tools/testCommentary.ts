@@ -42,7 +42,7 @@ const TIER_THRESHOLDS = [
   { tier: "STARTER",  min: 178,  payout: "2.5x" },
   { tier: "ALL_STAR", min: 208,  payout: "7x" },
   { tier: "MVP",      min: 240,  payout: "15x" },
-  { tier: "GOAT",     min: 280,  payout: "50x" },
+  { tier: "LEGEND",     min: 280,  payout: "50x" },
 ] as const;
 
 // FP scoring weights
