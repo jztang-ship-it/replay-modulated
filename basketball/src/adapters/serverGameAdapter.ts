@@ -16,8 +16,20 @@ const API_BASE = "/api/hand";
 // ── Auth helpers ────────────────────────────────────────────────────────────
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
-  const { data } = await supabase.auth.getSession();
-  const token = data?.session?.access_token;
+  // Try to get existing session first
+  let { data } = await supabase.auth.getSession();
+  let token = data?.session?.access_token;
+
+  // If no session, try anonymous sign-in (auto-creates user)
+  if (!token) {
+    const { data: anonData, error } = await supabase.auth.signInAnonymously();
+    if (error) {
+      console.error("[serverGameAdapter] Anonymous sign-in failed:", error.message);
+      throw new Error("Not authenticated");
+    }
+    token = anonData?.session?.access_token;
+  }
+
   if (!token) throw new Error("Not authenticated");
   return {
     "Content-Type": "application/json",
