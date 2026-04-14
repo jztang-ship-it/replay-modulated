@@ -23,6 +23,8 @@
     "node_modules",
     "dist",
     "frontend",
-    "apps"
+    "apps",
+    "basketball/src/utils/playerCulture.ts",
+    "baseball/src/utils/playerCulture.ts"
   ]
 }
