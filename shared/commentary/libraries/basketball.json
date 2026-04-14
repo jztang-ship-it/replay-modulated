@@ -2047,6 +2047,81 @@
       "humorStyle": [],
       "qualityScore": 7,
       "enabled": true
+    },
+    {
+      "id": "bk_p2_0401",
+      "sport": "basketball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} dropped {pts} and it STILL wasn't enough — that's brutal.",
+      "tags": [
+        "star_carried_loss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0402",
+      "sport": "basketball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{nick} went nuclear with {pts} and the roster just watched.",
+      "tags": [
+        "star_carried_loss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0403",
+      "sport": "basketball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{last} put up {pts} to carry and nobody grabbed the rope.",
+      "tags": [
+        "star_carried_loss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0404",
+      "sport": "basketball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{nick} poured in {pts} for nothing — the supporting cast ghosted.",
+      "tags": [
+        "star_carried_loss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0405",
+      "sport": "basketball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} gave you {pts} and the rest of the lineup said nah.",
+      "tags": [
+        "star_carried_loss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
     }
   ],
   "star_failed": [
@@ -2313,6 +2388,81 @@
       "humorStyle": [],
       "qualityScore": 7,
       "enabled": true
+    },
+    {
+      "id": "bk_p2_0406",
+      "sport": "basketball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} went invisible{opp} — that loss is on the star.",
+      "tags": [
+        "star_failed",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0407",
+      "sport": "basketball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{nick} completely no-showed{opp} and it sunk the whole hand.",
+      "tags": [
+        "star_failed",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0408",
+      "sport": "basketball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{last} picked the worst night to vanish{opp}.",
+      "tags": [
+        "star_failed",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0409",
+      "sport": "basketball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "hype",
+      "template": "You needed {nick}{opp} and got nothing. Nobody even had to fight for it.",
+      "tags": [
+        "star_failed",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0410",
+      "sport": "basketball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} folded{opp} when it mattered most. Painful.",
+      "tags": [
+        "star_failed",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
     }
   ],
   "star_cold": [
@@ -2554,6 +2704,81 @@
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0411",
+      "sport": "basketball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{nick} ran cold{opp} — needed more and didn't find it.",
+      "tags": [
+        "star_cold",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0412",
+      "sport": "basketball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{last} was a step slow{opp} and that margin was everything.",
+      "tags": [
+        "star_cold",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0413",
+      "sport": "basketball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} couldn't get it going{opp} — just enough to lose.",
+      "tags": [
+        "star_cold",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0414",
+      "sport": "basketball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{nick} went lukewarm{opp} when you needed a heater.",
+      "tags": [
+        "star_cold",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0415",
+      "sport": "basketball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "hype",
+      "template": "Not a disaster from {last} but not enough{opp}. They made you pay.",
+      "tags": [
+        "star_cold",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
       "enabled": true
     }
   ],
@@ -2856,6 +3081,81 @@
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0416",
+      "sport": "basketball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "hype",
+      "template": "Nobody showed up. The whole roster flatlined tonight.",
+      "tags": [
+        "everyone_flat",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0417",
+      "sport": "basketball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "hype",
+      "template": "Top to bottom, every slot missed. Absolute zero from this lineup.",
+      "tags": [
+        "everyone_flat",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0418",
+      "sport": "basketball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "hype",
+      "template": "You cannot win when the entire roster forgets to play.",
+      "tags": [
+        "everyone_flat",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0419",
+      "sport": "basketball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "hype",
+      "template": "Not one card in this lineup gave you a pulse. Total wipeout.",
+      "tags": [
+        "everyone_flat",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0420",
+      "sport": "basketball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "hype",
+      "template": "Whole hand went cold. Not a single player worth defending tonight.",
+      "tags": [
+        "everyone_flat",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
       "enabled": true
     }
   ],
@@ -3497,6 +3797,456 @@
       "humorStyle": [],
       "qualityScore": 7,
       "enabled": true
+    },
+    {
+      "id": "bk_p2_0421",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} was right there and the ledge just crumbled.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0422",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "hype",
+      "template": "That close to surviving and {last} still catches the L.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0423",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} lost by a breath — {gap} is basically a rounding error.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0424",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "hype",
+      "template": "The margin said no. {last} was {gap} from living.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0425",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} clawing at the edge and sliding right back down.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0426",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "warm",
+      "template": "{first} deserved better than losing by {gap}, honestly.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0427",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "warm",
+      "template": "You do almost everything right and still lose — that is {last}'s night.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0428",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "warm",
+      "template": "{name} was so close you could taste the win. Then nothing.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0429",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "warm",
+      "template": "Tough one for {first}. {gap} short is a cruel way to go.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0430",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "warm",
+      "template": "Sometimes the math just does not love you back. Sorry, {last}.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0431",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{name} lost by {gap} — the fantasy version of a bank shot rimming out.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0432",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{last} catching strays from the decimal points tonight.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0433",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{name} brought a knife to a knife fight and still lost by the handle.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0434",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "The fantasy gods owed {last} a favor and sent a voicemail instead.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0435",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{gap} short. {name} got pickpocketed at the finish line.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0436",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "observational",
+      "template": "{name} finished {gap} short — close enough to see the win, not grab it.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0437",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "observational",
+      "template": "One extra bucket from {last} flips this. That is the torture of it.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0438",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "observational",
+      "template": "{name} posted {pts} and it still was not enough by {gap}.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0439",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "observational",
+      "template": "The margin was {gap}. {last} will replay that one tonight.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0440",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "observational",
+      "template": "Everything broke right for {name} except the final arithmetic.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0441",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{name} missed by {gap} — one assist or a single board changes the outcome.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0442",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{last}'s line was borderline viable, just not quite enough.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0443",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "At {gap} short, {name}'s loss traces to one cold stretch, not the whole night.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0444",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{name} needed roughly one more possession worth of production to survive.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0445",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "The gap was {gap}. {last}'s usage was there. The conversions were not.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0446",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{name} lost by {gap}. So, almost.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0447",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{last} was this close. Which counts for exactly nothing.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0448",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "If {gap} had feelings, it would apologize to {name}.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0449",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{name} with {pts} and a loss by {gap}. Math remains undefeated.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0450",
+      "sport": "basketball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "Close only counts in horseshoes. {last} does not play horseshoes.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
     }
   ],
   "ugly_win": [
@@ -3583,6 +4333,456 @@
       "humorStyle": [],
       "qualityScore": 7,
       "enabled": true
+    },
+    {
+      "id": "bk_p2_0481",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "hype",
+      "template": "W is a W — {nick} can sleepwalk through the next one too.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0482",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "hype",
+      "template": "Doesn't matter how {last} looked, the scoreboard does not stutter.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0483",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "hype",
+      "template": "{nick} was a ghost out there and they still got the bag.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0484",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "hype",
+      "template": "Ugly? Sure. But {name} cashes the win and keeps moving.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0485",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "hype",
+      "template": "That is a win held together with duct tape and {last}'s reputation.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0486",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "warm",
+      "template": "Not {nick}'s sharpest night, but the squad carried the weight.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0487",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "warm",
+      "template": "{name} will take this one quietly and come back sharper.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0488",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "warm",
+      "template": "Sometimes {last} just needs to be on the floor — the rest figures itself out.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0489",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "warm",
+      "template": "The supporting cast covered for {nick} tonight, and that matters.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0490",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "warm",
+      "template": "{first} did not have it, but nobody panicked. That is a real team.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0491",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{nick} put up a stat line you would hide in your pocket.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0492",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "That is the kind of win you screenshot but never post.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0493",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{last} played like the WiFi was lagging.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0494",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "Somewhere {nick}'s shooting coach just poured a stiff drink.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0495",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{name} won a game the way you pass a class with a D-minus.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0496",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "observational",
+      "template": "{last} was off rhythm all night but the margin never got scary.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0497",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "observational",
+      "template": "{nick} touched the ball plenty — just could not convert at the usual rate.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0498",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "observational",
+      "template": "The defense held enough rope for {name} to coast on a quiet night.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0499",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "observational",
+      "template": "You could tell early {last} did not have the touch. Team adjusted.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0500",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "observational",
+      "template": "{nick} was a passenger tonight, but the bus still arrived on time.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0501",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{last}'s usage was there but efficiency cratered — supporting cast bridged the gap.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0502",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{name} posted a ratio well under baseline. The win came from the margins.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0503",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "analytical",
+      "template": "Low conversion night for {nick}. Second unit outperformed projections.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0504",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{last}'s shot selection was fine. The misses were just misses. Variance win.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0505",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "analytical",
+      "template": "Pull {nick}'s shot chart tonight and it is mostly long twos and regret.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0506",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{nick} contributed by being tall and present.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0507",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "They won. {last} was technically on the court for some of it.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0508",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{name} put up numbers you would round down to zero at a dinner party.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0509",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "Final score says win. {nick}'s box score says no comment.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0510",
+      "sport": "basketball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{last} played a full game of basketball. Allegedly.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
     }
   ],
   "collapse": [
@@ -3668,6 +4868,456 @@
       ],
       "humorStyle": [],
       "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0451",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} rode a {streak}-game streak straight off a cliff.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0452",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "hype",
+      "template": "That {streak}-win run just detonated. {last} down {gap} in the wreckage.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0453",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} was untouchable for {streak} straight and then ate a loss out of nowhere.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0454",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "hype",
+      "template": "Streak over. Empire over. {last} down {gap} like the floor gave out.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0455",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} went from {streak}-game heater to a crater in one night.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0456",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "warm",
+      "template": "{streak} wins felt so steady — rough to watch {name} drop like that.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0457",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "warm",
+      "template": "That {streak}-game run meant something. Losing by {gap} does not erase it.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0458",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "warm",
+      "template": "{name} had real momentum for {streak} games. Tonight was a bad door to walk through.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0459",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "warm",
+      "template": "You build for {streak} games and one loss makes it feel fragile. Unfair to {last}.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0460",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "warm",
+      "template": "Hate to see {first} go from {streak} straight to down {gap} in a blink.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0461",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{name} stacked {streak} wins then lost by {gap} — Icarus with a box score.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0462",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{last} went full Wile E. Coyote — ran {streak} past the cliff before looking down.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0463",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{streak} wins and then a {gap} loss. {name} just got snapped.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0464",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{name} built a {streak}-game tower and {gap} kicked the bottom block out.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0465",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "That {streak}-game streak aged like milk tonight. {last} down {gap}.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0466",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "observational",
+      "template": "{name} won {streak} straight, then dropped {gap} in one night. Momentum is fiction.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0467",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "observational",
+      "template": "The {streak}-game streak masked something — {last}'s loss exposed it fast.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0468",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "observational",
+      "template": "{name} went from untouchable to down {gap}. {streak} wins bought zero protection.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0469",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "observational",
+      "template": "Streaks do not carry over. {last} found that out tonight.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0470",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "observational",
+      "template": "After {streak} wins, {name} hit a wall at full speed.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0471",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{name}'s {streak}-game streak averaged tight margins — a {gap} loss was regression arriving.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0472",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "Losing by {gap} after {streak} wins suggests the streak was thinner than the record showed.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0473",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{last}'s {streak}-win run likely included variance. Tonight's loss is the correction.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0474",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{name} sustained {streak} wins, but {gap} of collapse signals a usage or matchup shift.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0475",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "A {gap} loss after {streak} games — {last}'s production cliff was abrupt, not gradual.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0476",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{name} won {streak} straight and then lost by {gap}. So that is over.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0477",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{streak} wins. Then down {gap}. {last} has no comment and neither do I.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0478",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{name}'s {streak}-game streak has been moved to the obituary section.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0479",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "The streak was {streak}. The gap was {gap}. {last} can do that math alone.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0480",
+      "sport": "basketball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{name} went {streak} and done. That is a very specific kind of quiet.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
       "enabled": true
     }
   ],
@@ -3796,6 +5446,726 @@
       ],
       "humorStyle": [],
       "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0511",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "hype",
+      "template": "{nick} just went for {extremeDescription}{opp} — save the screenshot forever.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0512",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "hype",
+      "template": "That is not a stat line, that is a {name} documentary{opp}.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0513",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "hype",
+      "template": "{last} went full supernova — {extremeDescription} and {opp} had no answers.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0514",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "hype",
+      "template": "{nick} woke up and chose absolute violence — {extremeDescription}{opp}.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0515",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "hype",
+      "template": "Rename the arena after {name}. {extremeDescription}{opp}. Unreal.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0516",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "warm",
+      "template": "You wait your whole life to see a night like this from {name}. {extremeDescription}.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0517",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "warm",
+      "template": "{nick} put together something special{opp}. Remember this one.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0518",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "warm",
+      "template": "Games like this are why {last} keeps grinding. {extremeDescription} speaks for itself.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0519",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "warm",
+      "template": "{first} left everything on the floor tonight. {extremeDescription}{opp}. Beautiful.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0520",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "warm",
+      "template": "Soak it in — {nick} going for {extremeDescription}{opp} is the kind of thing you tell people about.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0521",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{nick} went for {extremeDescription}{opp} like it was a pickup game at the Y.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0522",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{last} treated {opp} like a scrimmage. {extremeDescription} is just disrespectful.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0523",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "Someone check on the opposing defensive coordinator after {nick}'s night.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0524",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{name} going for {extremeDescription}? They should have stayed on the bus.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0525",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{nick} chose chaos. {extremeDescription}{opp} like rent was due tonight.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0526",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "observational",
+      "template": "{name} found every crease in the defense. {extremeDescription} was the result.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0527",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "observational",
+      "template": "{last} got to the spots early and nobody adjusted. Hence {extremeDescription}.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0528",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "observational",
+      "template": "When {nick} gets that first-quarter rhythm, {extremeDescription} becomes possible.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0529",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "observational",
+      "template": "They switched coverages three times and {name} still finished with {extremeDescription}.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0530",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "observational",
+      "template": "{last} was operating at a different speed all night. {extremeDescription} was inevitable.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0531",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{name} posted {extremeDescription}{opp} on elite efficiency. Every bucket counted.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0532",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{last}'s shot distribution was textbook. {extremeDescription} was the payoff.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0533",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{extremeDescription} for {nick} with clean looks all night. Zero answers from the defense.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0534",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{name} hit from every zone. {extremeDescription}{opp} with no volume discount.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0535",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "analytical",
+      "template": "The {extremeDescription} line from {last} was surgical. Clean looks all night.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0536",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{nick} went for {extremeDescription}{opp}. Normal Tuesday, apparently.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0537",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{last} posted {extremeDescription}. The defense is filing a missing persons report.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0538",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{extremeDescription} for {name}{opp}. Nature is healing. Or breaking.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0539",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{nick}{opp}: {extremeDescription}. Not much else needs to be said about it.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0540",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{name} did {extremeDescription} and then sat down like nothing happened.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0541",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{nick} went for {extremeDescription}{opp} and still lost — that is a tragedy, not a game.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0542",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{extremeDescription} from {name}{opp} and the opposition still walked away with it. Criminal.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0543",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{last} gave them {extremeDescription} and the roster gave away the win.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0544",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "warm",
+      "template": "{name} poured in {extremeDescription}{opp}. Should not have to hurt this much.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0545",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "warm",
+      "template": "You feel for {nick}. {extremeDescription} deserved a W, not this.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0546",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "warm",
+      "template": "{last} did everything right. {extremeDescription}{opp}. And it still was not enough.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0547",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{nick} dropped {extremeDescription} and lost. Somebody owes that man an apology.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0548",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{last} went for {extremeDescription} just for the team to fumble the bag.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0549",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{extremeDescription}{opp} and an L? {nick}'s teammates owe dinner for a month.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0550",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "observational",
+      "template": "{name} carried the full offensive load with {extremeDescription} but the other four got exposed.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0551",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "observational",
+      "template": "{last}'s {extremeDescription} masked a defensive collapse that the opponent rode to the finish.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0552",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "observational",
+      "template": "{nick} peaked at {extremeDescription} while the other team quietly built leads on the other end.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0553",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{name} posted {extremeDescription} but the supporting cast gave back every margin.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0554",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{last}'s {extremeDescription} came in high volume. Team needed stops, not just scoring.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0555",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{extremeDescription} from {nick} skewed the box score. The opponent won the possessions that mattered.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0556",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{nick} went for {extremeDescription}{opp} and lost. Math is broken.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0557",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{last}: {extremeDescription}. Final result: L. Basketball is a team sport, unfortunately.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_p2_0558",
+      "sport": "basketball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{name} did {extremeDescription}. They won anyway. Sometimes the universe just does not care.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
       "enabled": true
     }
   ]
