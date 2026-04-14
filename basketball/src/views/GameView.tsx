@@ -8,8 +8,23 @@
 import { useMemo, useState, useCallback, useRef, useEffect, useLayoutEffect, type ReactNode } from "react";
 import type { GamePhase, PlayerCard } from "../adapters/types";
 import { sportAdapter } from "../adapters/SportAdapter";
-import { dealInitialRoster, redrawRoster, resolveRoster, computeRosterCeiling } from "../adapters/gameAdapter";
+import { dealInitialRoster as localDeal, redrawRoster as localRedraw, resolveRoster as localResolve, computeRosterCeiling } from "../adapters/gameAdapter";
 import { dealFTUERoster, redrawFTUERoster, resolveFTUERoster } from "../adapters/ftueRoster";
+import {
+  dealInitialRoster as serverDeal,
+  redrawRoster as serverRedraw,
+  resolveRoster as serverResolve,
+  getServerBalance,
+} from "../adapters/serverGameAdapter";
+
+// Feature flag: when true, deal/draw/resolve go through the server API.
+// FTUE always uses the local ftueRoster (hardcoded, no server call needed for FTUE).
+// Set to false to keep current client-side behavior.
+const USE_SERVER = import.meta.env.VITE_USE_SERVER === "true";
+
+const dealInitialRoster = USE_SERVER ? serverDeal : localDeal;
+const redrawRoster = USE_SERVER ? serverRedraw : localRedraw;
+const resolveRoster = USE_SERVER ? serverResolve : localResolve;
 import { CoachLayer } from "@shared/components/CoachLayer";
 import { useFTUE } from "@shared/hooks/useFTUE";
 import { ensureLoaded } from "../engines/dataEngine";
@@ -927,7 +942,10 @@ export default function GameView() {
           // FTUE: same flow as real game — WIN_CELEBRATION triggers wage animation
           ftueLastHandFpRef.current = totalFp;
           pendingBalanceUpdateRef.current = () => {
-            if (payout > 0) {
+            if (USE_SERVER) {
+              const sb = getServerBalance();
+              if (sb !== null) { setBalance(sb); saveBalance(sb); }
+            } else if (payout > 0) {
               setBalance(prev => { const next = prev + payout; saveBalance(next); return next; });
             }
           };
@@ -937,7 +955,12 @@ export default function GameView() {
           springTimersRef.current.push(t);
         } else {
           pendingBalanceUpdateRef.current = () => {
-            if (payout > 0) {
+            if (USE_SERVER) {
+              // Server already updated balance, streak, and hand_log atomically.
+              // Sync local display from server's authoritative state.
+              const sb = getServerBalance();
+              if (sb !== null) { setBalance(sb); saveBalance(sb); }
+            } else if (payout > 0) {
               setBalance(prev => { const next = prev + payout; saveBalance(next); return next; });
             }
             const proof = buildScoreProof(rosterRef.current as any[], totalFp);
@@ -1512,6 +1535,8 @@ export default function GameView() {
     }
 
     if (gameState === "HOLD") {
+      // In server mode, bet is deducted atomically at draw time via RPC.
+      // Show optimistic deduction locally for UI responsiveness.
       setBalance(prev => { const next = prev - currentBet; saveBalance(next); return next; });
       const markedRoster = roster.map(c => ({ ...c, wasHeld: lockedCardIds.has(cardId(c)) }));
       flipState.beginDraw(markedRoster.filter(c => !(c as any).wasHeld).map(cardId));
