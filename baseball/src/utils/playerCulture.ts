@@ -2073,7 +2073,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  perez: {
+  perez_2: {
     nicknames: [],
     knownFor: "Venezuelan lefty who throws strikes and eats innings without much fanfare",
     salaryTier: "MIN",
@@ -5522,7 +5522,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  gray: {
+  gray_2: {
     nicknames: [],
     knownFor: "Rockies homegrown arm who escaped Coors Field",
     salaryTier: "MIN",
@@ -6073,7 +6073,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  walker: {
+  walker_2: {
     nicknames: [],
     knownFor: "Mariners prospect turned journeyman with occasional flashes of dominance",
     salaryTier: "MIN",
@@ -8264,7 +8264,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  nola: {
+  nola_2: {
     nicknames: [],
     knownFor: "Phillies ace with a devastating curveball and Cy Young upside",
     salaryTier: "MIN",
@@ -8563,7 +8563,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  hernandez: {
+  hernandez_2: {
     nicknames: [],
     knownFor: "Dominican slugger who can launch 450-foot bombs",
     salaryTier: "MIN",
@@ -8625,7 +8625,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  marte: {
+  marte_2: {
     nicknames: [],
     knownFor: "Switch-hitting second baseman who transformed into an All-Star in the desert",
     salaryTier: "MIN",
@@ -9168,7 +9168,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  turner: {
+  turner_2: {
     nicknames: [],
     knownFor: "Speed-power combination who signed the biggest shortstop deal ever",
     salaryTier: "MIN",
@@ -9872,7 +9872,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  kelly: {
+  kelly_2: {
     nicknames: [],
     knownFor: "Defensively solid catcher who can't hit enough to start regularly",
     salaryTier: "MIN",
@@ -10777,7 +10777,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  taylor: {
+  taylor_2: {
     nicknames: [
       "CT3",
     ],
@@ -11237,7 +11237,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  taylor: {
+  taylor_3: {
     nicknames: [],
     knownFor: "Journeyman outfielder who maximizes limited tools with smart plate approach",
     salaryTier: "MIN",
@@ -12268,7 +12268,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  suarez: {
+  suarez_2: {
     nicknames: [],
     knownFor: "Venezuelan lefty who found his groove as a starter after reliever stint",
     salaryTier: "MIN",
@@ -13356,7 +13356,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  lopez: {
+  lopez_2: {
     nicknames: [],
     knownFor: "Crafty right-hander who became a Twins rotation stalwart",
     salaryTier: "MIN",
@@ -13484,7 +13484,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  anderson: {
+  anderson_2: {
     nicknames: [
       "TA",
     ],
@@ -16362,7 +16362,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  sanchez: {
+  sanchez_2: {
     nicknames: [],
     knownFor: "Journeyman catcher who's bounced between organizations",
     salaryTier: "MIN",
@@ -16790,7 +16790,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  urias: {
+  urias_2: {
     nicknames: [],
     knownFor: "Utility infielder who bounced between Milwaukee and San Diego",
     salaryTier: "MIN",
@@ -17061,7 +17061,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  diaz: {
+  diaz_2: {
     nicknames: [],
     knownFor: "Patient Cuban first baseman who led AL in batting average in 2023",
     salaryTier: "MIN",
@@ -17394,7 +17394,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  sanchez: {
+  sanchez_3: {
     nicknames: [],
     knownFor: "Venezuelan lefty who found his groove in Philadelphia's rotation",
     salaryTier: "MIN",
@@ -18076,7 +18076,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  gray: {
+  gray_3: {
     nicknames: [],
     knownFor: "Twins prospect grinding through the system",
     salaryTier: "MIN",
@@ -18145,7 +18145,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  hill: {
+  hill_2: {
     nicknames: [],
     knownFor: "Speedy outfielder with elite defense but no bat",
     salaryTier: "MIN",
@@ -18282,7 +18282,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  holmes: {
+  holmes_2: {
     nicknames: [],
     knownFor: "Dodgers prospect turned Braves reliever with decent stuff",
     salaryTier: "MIN",
@@ -19288,7 +19288,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
 
   },
 
-  smith: {
+  smith_2: {
     nicknames: [],
     knownFor: "Former first-round pick who never quite figured out the power stroke",
     salaryTier: "MIN",
@@ -20327,7 +20327,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  rodriguez: {
+  rodriguez_2: {
     nicknames: [],
     knownFor: "Dominican reliever bouncing between Triple-A and the Show",
     salaryTier: "MIN",
@@ -20466,7 +20466,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  suarez: {
+  suarez_3: {
     nicknames: [],
     knownFor: "Angels lefty who throws harder than his results suggest he should",
     salaryTier: "MIN",
@@ -20526,7 +20526,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  sanchez: {
+  sanchez_4: {
     nicknames: [],
     knownFor: "Power hitter who struck out 180 times in his breakout season",
     salaryTier: "MIN",
@@ -20639,7 +20639,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  contreras: {
+  contreras_2: {
     nicknames: [],
     knownFor: "Switch-hitting catcher who emerged from his brother's shadow in Milwaukee",
     salaryTier: "MIN",
@@ -22855,7 +22855,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  gonzalez: {
+  gonzalez_2: {
     nicknames: [],
     knownFor: "Red Sox middle infielder fighting for consistent playing time",
     salaryTier: "MIN",
@@ -23034,7 +23034,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  williams: {
+  williams_2: {
     nicknames: [],
     knownFor: "Utility infielder bouncing between majors and Triple-A",
     salaryTier: "MIN",
@@ -23674,7 +23674,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  lowe: {
+  lowe_2: {
     nicknames: [],
     knownFor: "Power-hitting second baseman who can take you deep or strike out swinging",
     salaryTier: "MIN",
@@ -24541,7 +24541,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  wade: {
+  wade_2: {
     nicknames: [],
     knownFor: "Late-bloomer first baseman who found his swing in San Francisco",
     salaryTier: "MIN",
@@ -25627,7 +25627,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  valdez: {
+  valdez_2: {
     nicknames: [],
     knownFor: "Venezuelan utility infielder grinding through the minors",
     salaryTier: "MIN",
@@ -25989,7 +25989,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  ruiz: {
+  ruiz_2: {
     nicknames: [],
     knownFor: "Speed demon outfielder who stole 67 bases in his breakout 2023 season",
     salaryTier: "MIN",
@@ -26182,7 +26182,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  narvaez: {
+  narvaez_2: {
     nicknames: [],
     knownFor: "Venezuelan catcher grinding through the minors to reach Boston",
     salaryTier: "MIN",
@@ -26312,7 +26312,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  fermin: {
+  fermin_2: {
     nicknames: [],
     knownFor: "Dominican catcher who worked his way from KC to San Diego's depth chart",
     salaryTier: "MIN",
@@ -26380,7 +26380,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  cortes: {
+  cortes_2: {
     nicknames: [],
     knownFor: "Utility depth piece trying to stick in Oakland's rebuilding project",
     salaryTier: "MIN",
@@ -26445,7 +26445,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  jones: {
+  jones_2: {
     nicknames: [],
     knownFor: "Former Cleveland prospect trying to revive his career in Triple-A",
     salaryTier: "MIN",
@@ -26511,7 +26511,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  lowe: {
+  lowe_3: {
     nicknames: [],
     knownFor: "Speedy outfielder who found his power stroke after leaving Tampa Bay",
     salaryTier: "MIN",
@@ -27634,7 +27634,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  naylor: {
+  naylor_2: {
     nicknames: [],
     knownFor: "Power-hitting catcher trying to establish himself in Cleveland",
     salaryTier: "MIN",
@@ -28027,7 +28027,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  gurriel: {
+  gurriel_2: {
     nicknames: [
       "La Piña",
     ],
@@ -28957,7 +28957,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  martin: {
+  martin_2: {
     nicknames: [],
     knownFor: "Former Vanderbilt star still searching for his MLB position and swing",
     salaryTier: "MIN",
@@ -29157,7 +29157,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  williams: {
+  williams_3: {
     nicknames: [],
     knownFor: "Hard-throwing righty with swing-and-miss stuff when healthy",
     salaryTier: "MIN",
@@ -29310,7 +29310,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  rojas: {
+  rojas_2: {
     nicknames: [],
     knownFor: "Versatile infielder who can play anywhere but third base exceptionally well.",
     salaryTier: "MIN",
@@ -29428,7 +29428,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  myers: {
+  myers_2: {
     nicknames: [],
     knownFor: "Journeyman reliever with a decent slider but limited command.",
     salaryTier: "MIN",
@@ -29773,7 +29773,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  wilson: {
+  wilson_2: {
     nicknames: [],
     knownFor: "Journeyman right-hander grinding through Triple-A rotations.",
     salaryTier: "MIN",
@@ -30620,7 +30620,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  jackson: {
+  jackson_2: {
     nicknames: [],
     knownFor: "Angels farmhand with 70-grade speed trying to stick in Baltimore",
     salaryTier: "MIN",
@@ -30793,7 +30793,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  smith: {
+  smith_3: {
     nicknames: [
       "Fresh Prince",
     ],
@@ -31233,7 +31233,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  wells: {
+  wells_2: {
     nicknames: [],
     knownFor: "Orioles starter who converted from reliever to rotation regular",
     salaryTier: "MIN",
@@ -31490,7 +31490,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  johnson: {
+  johnson_2: {
     nicknames: [],
     knownFor: "Speed-first outfielder trying to stick in the majors",
     salaryTier: "MIN",
@@ -31833,7 +31833,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  white: {
+  white_2: {
     nicknames: [],
     knownFor: "Rangers prospect with mid-90s heat and big league dreams",
     salaryTier: "MIN",
@@ -31903,7 +31903,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  taylor: {
+  taylor_4: {
     nicknames: [],
     knownFor: "Speed-first prospect trying to find his swing in the minors",
     salaryTier: "MIN",
@@ -32190,7 +32190,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  rogers: {
+  rogers_2: {
     nicknames: [],
     knownFor: "Former Marlins All-Star trying to rediscover his 2021 form",
     salaryTier: "MIN",
@@ -32605,7 +32605,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  smith: {
+  smith_4: {
     nicknames: [],
     knownFor: "Rangers utility player who can handle multiple infield spots",
     salaryTier: "MIN",
@@ -32778,7 +32778,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  wilson: {
+  wilson_3: {
     nicknames: [],
     knownFor: "Former Giants prospect working his way back to the majors",
     salaryTier: "MIN",
@@ -33225,7 +33225,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  alexander: {
+  alexander_2: {
     nicknames: [],
     knownFor: "Journeyman reliever who's bounced between organizations and levels",
     salaryTier: "MIN",
@@ -33401,7 +33401,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  lopez: {
+  lopez_3: {
     nicknames: [],
     knownFor: "Slick-fielding infielder who can't hit but somehow keeps getting jobs",
     salaryTier: "MIN",
@@ -34355,7 +34355,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  herrera: {
+  herrera_2: {
     nicknames: [],
     knownFor: "Venezuelan catcher trying to stick behind Contreras in St. Louis",
     salaryTier: "MIN",
@@ -34532,7 +34532,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  allen: {
+  allen_2: {
     nicknames: [],
     knownFor: "Former Padres prospect who found his footing in Cleveland's system",
     salaryTier: "MIN",
@@ -34930,7 +34930,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  garcia: {
+  garcia_2: {
     nicknames: [],
     knownFor: "Switch-hitting middle infielder trying to stick in the majors",
     salaryTier: "MIN",
@@ -35030,7 +35030,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  rodriguez: {
+  rodriguez_3: {
     nicknames: [],
     knownFor: "Minor league journeyman grinding through Triple-A Norfolk",
     salaryTier: "MIN",
@@ -35081,7 +35081,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  freeman: {
+  freeman_2: {
     nicknames: [],
     knownFor: "Guardians prospect trying to stick in Colorado's thin air",
     salaryTier: "MIN",
@@ -35970,7 +35970,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  garcia: {
+  garcia_3: {
     nicknames: [],
     knownFor: "Venezuelan utility infielder with speed and surprising pop",
     salaryTier: "MIN",
@@ -36024,7 +36024,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  lopez: {
+  lopez_4: {
     nicknames: [],
     knownFor: "Utility infielder bouncing between Triple-A and the bigs with the Marlins",
     salaryTier: "MIN",
@@ -36197,7 +36197,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  contreras: {
+  contreras_3: {
     nicknames: [],
     knownFor: "Hard-throwing Pirates prospect trying to harness his stuff at altitude",
     salaryTier: "MIN",
@@ -36395,7 +36395,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  perez: {
+  perez_3: {
     nicknames: [],
     knownFor: "Venezuelan utility infielder grinding through the Tigers system",
     salaryTier: "MIN",
@@ -36491,7 +36491,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  sosa: {
+  sosa_2: {
     nicknames: [],
     knownFor: "Slick-fielding infielder caught in Chicago's rebuild purgatory",
     salaryTier: "MIN",
@@ -36539,7 +36539,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  diaz: {
+  diaz_3: {
     nicknames: [],
     knownFor: "Venezuelan catcher who emerged as Houston's surprise backstop",
     salaryTier: "MIN",
@@ -37091,7 +37091,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  alvarez: {
+  alvarez_2: {
     nicknames: [],
     knownFor: "Minor league arm grinding through the Rochester system",
     salaryTier: "MIN",
@@ -37365,7 +37365,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
 
   },
 
-  amaya: {
+  amaya_2: {
     nicknames: [],
     knownFor: "Smooth-fielding infielder still searching for his major league bat",
     salaryTier: "MIN",
@@ -38356,7 +38356,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  vazquez: {
+  vazquez_2: {
     nicknames: [],
     knownFor: "Baltimore farmhand trying to hit his way to Camden Yards",
     salaryTier: "MIN",
@@ -38914,7 +38914,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  brown: {
+  brown_2: {
     nicknames: [],
     knownFor: "Australian import trying to stick in Cubs rotation",
     salaryTier: "MIN",
@@ -39225,7 +39225,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  kelly: {
+  kelly_3: {
     nicknames: [],
     knownFor: "Hard-throwing reliever trying to stick in Boston's bullpen.",
     salaryTier: "MIN",
@@ -39510,7 +39510,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  rodriguez: {
+  rodriguez_4: {
     nicknames: [
       "J-Rod",
     ],
@@ -39685,7 +39685,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  garcia: {
+  garcia_4: {
     nicknames: [],
     knownFor: "Triple-A arm trying to stick in the Yankees system",
     salaryTier: "MIN",
@@ -39856,7 +39856,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  alexander: {
+  alexander_3: {
     nicknames: [],
     knownFor: "Utility infielder grinding through the minors with the Tigers organization",
     salaryTier: "MIN",
@@ -40004,7 +40004,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  thomas: {
+  thomas_2: {
     nicknames: [],
     knownFor: "Fleet-footed center fielder who burst onto the scene in Arizona's 2022 playoff run",
     salaryTier: "MIN",
@@ -40580,7 +40580,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  perkins: {
+  perkins_2: {
     nicknames: [],
     knownFor: "Minor league arm grinding through the Oakland organization",
     salaryTier: "MIN",
@@ -40762,7 +40762,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  vargas: {
+  vargas_2: {
     nicknames: [],
     knownFor: "Former Dodgers prospect trying to find his footing with Chicago",
     salaryTier: "MIN",
@@ -41395,7 +41395,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  rojas: {
+  rojas_3: {
     nicknames: [],
     knownFor: "Speed-first center fielder still figuring out MLB hitting",
     salaryTier: "MIN",
@@ -41875,7 +41875,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  palacios: {
+  palacios_2: {
     nicknames: [],
     knownFor: "Utility player bouncing between Triple-A and Tampa Bay",
     salaryTier: "MIN",
@@ -41935,7 +41935,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  ornelas: {
+  ornelas_2: {
     nicknames: [],
     knownFor: "Yankees prospect grinding through the upper minors",
     salaryTier: "MIN",
@@ -42383,7 +42383,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  alexander: {
+  alexander_4: {
     nicknames: [],
     knownFor: "Triple-A veteran trying to make his MLB mark with the Astros system",
     salaryTier: "MIN",
@@ -42439,7 +42439,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  duran: {
+  duran_2: {
     nicknames: [],
     knownFor: "Speedy center fielder who finally put it together in his third MLB season",
     salaryTier: "MIN",
@@ -42640,7 +42640,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  fitzgerald: {
+  fitzgerald_2: {
     nicknames: [],
     knownFor: "Journeyman infielder grinding through the minors and independent ball",
     salaryTier: "MIN",
@@ -43268,7 +43268,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  smith: {
+  smith_5: {
     nicknames: [],
     knownFor: "Journeyman reliever bouncing between Triple-A and the majors.",
     salaryTier: "MIN",
@@ -43927,7 +43927,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  hernandez: {
+  hernandez_3: {
     nicknames: [],
     knownFor: "Marlins utility player trying to stick in the big leagues",
     salaryTier: "MIN",
@@ -43980,7 +43980,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  estrada: {
+  estrada_2: {
     nicknames: [],
     knownFor: "Minor league pitcher working his way through the system",
     salaryTier: "MIN",
@@ -44153,7 +44153,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  olson: {
+  olson_2: {
     nicknames: [],
     knownFor: "Tigers prospect with promising stuff but inconsistent command",
     salaryTier: "MIN",
@@ -44409,7 +44409,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  lopez: {
+  lopez_5: {
     nicknames: [],
     knownFor: "Fringe reliever trying to stick in the A's bullpen rotation",
     salaryTier: "MIN",
@@ -44598,7 +44598,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  miller: {
+  miller_2: {
     nicknames: [],
     knownFor: "Tall right-hander with a four-seam fastball that plays up in Seattle",
     salaryTier: "MIN",
@@ -44710,7 +44710,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  marte: {
+  marte_3: {
     nicknames: [],
     knownFor: "Dominican infielder with a rocket arm and developing power stroke",
     salaryTier: "MIN",
@@ -44773,7 +44773,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  alvarez: {
+  alvarez_3: {
     nicknames: [
       "El Jefe",
     ],
@@ -44838,7 +44838,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  alcantara: {
+  alcantara_2: {
     nicknames: [],
     knownFor: "Former Yankees prospect grinding through the Cubs system",
     salaryTier: "MIN",
@@ -45012,7 +45012,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  martinez: {
+  martinez_2: {
     nicknames: [],
     knownFor: "Switch-hitting infielder trying to stick in Cleveland's utility mix",
     salaryTier: "MIN",
@@ -45063,7 +45063,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  ramirez: {
+  ramirez_2: {
     nicknames: [],
     knownFor: "Cuban catcher working his way through Miami's system",
     salaryTier: "MIN",
@@ -45114,7 +45114,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  acuna: {
+  acuna_2: {
     nicknames: [
       "Little Acuña",
     ],
@@ -45235,7 +45235,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  delacruz: {
+  delacruz_2: {
     nicknames: [
       "The Dominican Unicorn",
     ],
@@ -45364,7 +45364,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  rodriguez: {
+  rodriguez_5: {
     nicknames: [],
     knownFor: "Switch-hitting catcher prospect grinding through Triple-A Indianapolis",
     salaryTier: "MIN",
@@ -45424,7 +45424,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  ramos: {
+  ramos_2: {
     nicknames: [],
     knownFor: "Third base prospect working his way through Norfolk's infield rotation",
     salaryTier: "MIN",
@@ -45606,7 +45606,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
 
   },
 
-  greene: {
+  greene_2: {
     nicknames: [],
     knownFor: "Detroit's smooth-swinging outfielder with all-around potential",
     salaryTier: "MIN",
@@ -46132,7 +46132,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  nunez: {
+  nunez_2: {
     nicknames: [],
     knownFor: "Young infielder working through the Nationals system",
     salaryTier: "MIN",
@@ -46181,7 +46181,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  lugo: {
+  lugo_2: {
     nicknames: [],
     knownFor: "Red Sox prospect trying to find his swing in the Pacific Coast League",
     salaryTier: "MIN",
@@ -46342,7 +46342,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  freeman: {
+  freeman_3: {
     nicknames: [],
     knownFor: "Rangers prospect trying to crack the big league roster",
     salaryTier: "MIN",
@@ -46900,7 +46900,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  gordon: {
+  gordon_2: {
     nicknames: [],
     knownFor: "Minor league journeyman trying to catch lightning in a bottle",
     salaryTier: "MIN",
@@ -46999,7 +46999,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  brown: {
+  brown_3: {
     nicknames: [],
     knownFor: "Rockies farmhand fighting Coors Field physics one pitch at a time",
     salaryTier: "MIN",
@@ -47669,7 +47669,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  brown: {
+  brown_4: {
     nicknames: [],
     knownFor: "Astros right-hander with a wicked slider who's learning to command",
     salaryTier: "MIN",
@@ -48094,7 +48094,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  pages: {
+  pages_2: {
     nicknames: [],
     knownFor: "Cardinals backup catcher trying to establish himself in the majors",
     salaryTier: "MIN",
@@ -48217,7 +48217,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  lee: {
+  lee_2: {
     nicknames: [],
     knownFor: "Top prospect infielder trying to stick in Minnesota's crowded middle infield.",
     salaryTier: "MIN",
@@ -48530,7 +48530,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  baldwin: {
+  baldwin_2: {
     nicknames: [],
     knownFor: "Braves catching prospect with solid defensive tools and gap power",
     salaryTier: "MIN",
@@ -48584,7 +48584,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  young: {
+  young_2: {
     nicknames: [],
     knownFor: "Orioles farmhand working through the Triple-A grind",
     salaryTier: "MIN",
@@ -49108,7 +49108,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  ortiz: {
+  ortiz_2: {
     nicknames: [],
     knownFor: "Versatile infielder acquired from Orioles with sneaky pop and solid glove",
     salaryTier: "MIN",
@@ -49318,7 +49318,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  thomas: {
+  thomas_3: {
     nicknames: [],
     knownFor: "Athletics prospect working his way up through Triple-A",
     salaryTier: "MIN",
@@ -49418,7 +49418,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  gilbert: {
+  gilbert_2: {
     nicknames: [],
     knownFor: "Former Tennessee star trying to translate college success to pro ball",
     salaryTier: "MIN",
@@ -49469,7 +49469,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  beck: {
+  beck_2: {
     nicknames: [],
     knownFor: "Rockies prospect trying to maximize Coors Field's thin air advantage",
     salaryTier: "MIN",
@@ -49988,7 +49988,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  harris: {
+  harris_2: {
     nicknames: [],
     knownFor: "Triple-A grinder trying to catch lightning in a bottle",
     salaryTier: "MIN",
@@ -50263,7 +50263,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  thomas: {
+  thomas_4: {
     nicknames: [],
     knownFor: "Pacific Northwest minor leaguer grinding through the system",
     salaryTier: "MIN",
@@ -50382,7 +50382,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  melton: {
+  melton_2: {
     nicknames: [],
     knownFor: "Toolsy outfield prospect trying to put it all together in Durham",
     salaryTier: "MIN",
@@ -50450,7 +50450,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  hicks: {
+  hicks_2: {
     nicknames: [],
     knownFor: "Young catcher grinding through Miami's rebuilding organization",
     salaryTier: "MIN",
@@ -50567,7 +50567,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  jung: {
+  jung_2: {
     nicknames: [],
     knownFor: "Tigers third base prospect working his way to Detroit",
     salaryTier: "MIN",
@@ -50824,7 +50824,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  freeland: {
+  freeland_2: {
     nicknames: [],
     knownFor: "Dodgers minor league depth piece trying to crack the big league roster",
     salaryTier: "MIN",
@@ -51341,7 +51341,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  walker: {
+  walker_3: {
     nicknames: [],
     knownFor: "Cardinals' toolsy outfield prospect who debuted at 20 in 2023",
     salaryTier: "MIN",
@@ -51629,7 +51629,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  garcia: {
+  garcia_5: {
     nicknames: [],
     knownFor: "Pirates prospect with the most creative spelling in baseball",
     salaryTier: "MIN",
@@ -51751,7 +51751,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
 
   },
 
-  perez: {
+  perez_4: {
     nicknames: [],
     knownFor: "Marlins' towering young ace with electric stuff when healthy",
     salaryTier: "MIN",
@@ -52087,7 +52087,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  muncy: {
+  muncy_2: {
     nicknames: [
       "Funky Muncy",
     ],
@@ -52607,7 +52607,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  seymour: {
+  seymour_2: {
     nicknames: [],
     knownFor: "Giants farmhand working his way through the Sacramento rotation",
     salaryTier: "MIN",
@@ -52881,7 +52881,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  seymour: {
+  seymour_3: {
     nicknames: [],
     knownFor: "Rays organizational depth pitcher trying to stick in the majors",
     salaryTier: "MIN",
@@ -53265,7 +53265,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  dunn: {
+  dunn_2: {
     nicknames: [],
     knownFor: "Utility prospect working his way through Cincinnati's farm system",
     salaryTier: "MIN",
@@ -54325,7 +54325,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  harris: {
+  harris_3: {
     nicknames: [],
     knownFor: "Minor league journeyman trying to crack the majors in Vegas",
     salaryTier: "MIN",
@@ -54819,7 +54819,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  moore: {
+  moore_2: {
     nicknames: [],
     knownFor: "Angels prospect working his way up through the system",
     salaryTier: "MIN",
@@ -55032,7 +55032,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
 
   },
 
-  black: {
+  black_2: {
     nicknames: [],
     knownFor: "Royals pitching prospect grinding through the minors in Omaha",
     salaryTier: "MIN",
@@ -55140,7 +55140,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  young: {
+  young_3: {
     nicknames: [],
     knownFor: "Speedy outfielder trying to stick in the majors",
     salaryTier: "MIN",
@@ -55349,7 +55349,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  williams: {
+  williams_4: {
     nicknames: [],
     knownFor: "Rays' 2023 first-round pick climbing the system quickly",
     salaryTier: "MIN",
@@ -55820,7 +55820,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  smith: {
+  smith_6: {
     nicknames: [],
     knownFor: "Astros infield prospect with advanced defensive instincts",
     salaryTier: "MIN",
@@ -55990,7 +55990,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  adams: {
+  adams_2: {
     nicknames: [],
     knownFor: "Organizational arm trying to crack Minnesota's rotation",
     salaryTier: "MIN",
@@ -56113,7 +56113,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  warren: {
+  warren_2: {
     nicknames: [],
     knownFor: "Yankees prospect trying to stick in the Bronx rotation",
     salaryTier: "MIN",
@@ -56228,7 +56228,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  henderson: {
+  henderson_2: {
     nicknames: [],
     knownFor: "Triple-A arm grinding through the Nashville system",
     salaryTier: "MIN",
@@ -56469,7 +56469,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  cameron: {
+  cameron_2: {
     nicknames: [],
     knownFor: "Reliever grinding through the minors chasing his first MLB break",
     salaryTier: "MIN",
@@ -56569,7 +56569,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  young: {
+  young_4: {
     nicknames: [],
     knownFor: "Mariners prospect learning to hit in pitcher-friendly T-Mobile Park",
     salaryTier: "MIN",
@@ -57262,7 +57262,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  flores: {
+  flores_2: {
     nicknames: [],
     knownFor: "Minor league journeyman trying to crack the show with the Pirates' Triple-A club.",
     salaryTier: "MIN",
@@ -57571,7 +57571,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  alvarez: {
+  alvarez_4: {
     nicknames: [],
     knownFor: "Braves farmhand grinding through Triple-A with his father's name",
     salaryTier: "MIN",
@@ -57647,7 +57647,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  matthews: {
+  matthews_2: {
     nicknames: [],
     knownFor: "Twins prospect with plus fastball working through the minor league system",
     salaryTier: "MIN",
@@ -57698,7 +57698,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     parkSuppressed: [],
   },
 
-  wilson: {
+  wilson_4: {
     nicknames: [],
     knownFor: "Athletics infielder trying to establish himself in the big leagues",
     salaryTier: "MIN",
@@ -58311,7 +58311,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
 
   },
 
-  kim: {
+  kim_2: {
     nicknames: [],
     knownFor: "Gold Glove infielder who left the KBO as their premier defensive wizard",
     salaryTier: "MIN",
@@ -58386,7 +58386,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
   },
 
-  lee: {
+  lee_3: {
     nicknames: [
       "The Grandson of the Wind",
     ],
