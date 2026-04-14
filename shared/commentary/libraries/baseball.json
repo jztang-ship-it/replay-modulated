@@ -1,0 +1,4666 @@
+{
+  "star_carry": [
+    {
+      "id": "bb_0001",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "hype",
+      "template": "{name} had a monster day at the plate{opp}. The kind of game that carries an entire lineup to a win.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0002",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "hype",
+      "template": "{last} crushed it today. Multi-hit game with power and the hand cashed because of it.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0003",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "hype",
+      "template": "Nobody was getting {nick} out today{opp}. Absolute clinic at the plate and the hand rode the wave.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0004",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "hype",
+      "template": "{nick} owned the yard today{opp}. When the bat is that hot, the hand takes care of itself.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0005",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "hype",
+      "template": "That is {name} at full power. Raked all day{opp} and the lineup followed right behind the star.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0011",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "warm",
+      "template": "Great day to have {name} in the lineup{opp}. Came through in every at-bat that mattered today.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0012",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "warm",
+      "template": "{last} set the tone early and never let up. Clean swings, big results, comfortable win for the hand.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0013",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "warm",
+      "template": "The lineup had a guy today. {name} put the team on the back{opp} and carried it all the way home.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0014",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "warm",
+      "template": "{first} came through big today. Every at-bat felt dangerous and the final line proved it.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0019",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{last} treated the opposing pitching staff like batting practice today{opp}. Someone file a complaint.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0020",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{nick} decided to remind everyone what the scouting report warned about. Message delivered today.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0021",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "Someone had to go off today. {first} decided it was going to be that kind of afternoon{opp}.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0022",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{name} had the kind of day that makes opposing managers start making phone calls to the bullpen early.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0023",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "The pitcher had a family, {nick}. No mercy at the plate today and the box score is evidence.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0029",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "observational",
+      "template": "{name} came through big{opp}. The kind of day from the top of the lineup that makes everything work.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0030",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "observational",
+      "template": "{last} was locked in from the first pitch today. When the star produces like that, the hand follows.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0031",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "observational",
+      "template": "The numbers tell the story: {name} dominated{opp} and the hand cashed because of that showing.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0035",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{name} came in well above the expected line{opp}. That kind of output is why you pay the salary.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0036",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{last} exceeded average output by a wide margin today. The winning hand is the direct result of it.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0037",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "analytical",
+      "template": "Above-average production from {nick} today{opp}. The math worked and the hand cashed.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0041",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{last} went off{opp}. Won the hand. On to the next one in the schedule.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0042",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{nick} handled business today{opp}. Cash it and move on.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0043",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "Big day from {last}. Hand won. Not complicated.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    }
+  ],
+  "star_carry_big": [
+    {
+      "id": "bb_0006",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "hype",
+      "template": "{name} had a monster day at the plate{opp}. The kind of game that carries an entire lineup to a win.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0007",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "hype",
+      "template": "{last} crushed it today. Multi-hit game with power and the hand cashed because of it.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0008",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "hype",
+      "template": "Nobody was getting {nick} out today{opp}. Absolute clinic at the plate and the hand rode the wave.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0009",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "hype",
+      "template": "{nick} owned the yard today{opp}. When the bat is that hot, the hand takes care of itself.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0010",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "hype",
+      "template": "That is {name} at full power. Raked all day{opp} and the lineup followed right behind the star.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0015",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "warm",
+      "template": "Great day to have {name} in the lineup{opp}. Came through in every at-bat that mattered today.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0016",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "warm",
+      "template": "{last} set the tone early and never let up. Clean swings, big results, comfortable win for the hand.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0017",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "warm",
+      "template": "The lineup had a guy today. {name} put the team on the back{opp} and carried it all the way home.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0018",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "warm",
+      "template": "{first} came through big today. Every at-bat felt dangerous and the final line proved it.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0024",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{last} treated the opposing pitching staff like batting practice today{opp}. Someone file a complaint.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0025",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{nick} decided to remind everyone what the scouting report warned about. Message delivered today.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0026",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "Someone had to go off today. {first} decided it was going to be that kind of afternoon{opp}.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0027",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{name} had the kind of day that makes opposing managers start making phone calls to the bullpen early.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0028",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "The pitcher had a family, {nick}. No mercy at the plate today and the box score is evidence.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0032",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "observational",
+      "template": "{name} came through big{opp}. The kind of day from the top of the lineup that makes everything work.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0033",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "observational",
+      "template": "{last} was locked in from the first pitch today. When the star produces like that, the hand follows.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0034",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "observational",
+      "template": "The numbers tell the story: {name} dominated{opp} and the hand cashed because of that showing.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0038",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{name} came in well above the expected line{opp}. That kind of output is why you pay the salary.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0039",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{last} exceeded average output by a wide margin today. The winning hand is the direct result of it.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0040",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "analytical",
+      "template": "Above-average production from {nick} today{opp}. The math worked and the hand cashed.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0044",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{last} went off{opp}. Won the hand. On to the next one in the schedule.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0045",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{nick} handled business today{opp}. Cash it and move on.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0046",
+      "sport": "baseball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "Big day from {last}. Hand won. Not complicated.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    }
+  ],
+  "star_delivered": [
+    {
+      "id": "bb_0047",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "hype",
+      "template": "{name} showed up today{opp}. Did the job and the lineup followed. Good hand all around.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0048",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "hype",
+      "template": "{last} brought it today. Professional at-bats and the hand cashed because of it.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0049",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "hype",
+      "template": "Solid day from {nick}. The lineup clicked{opp} and the result is in the books.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0050",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "hype",
+      "template": "Good hand across the board. Everyone did their part and the result speaks for itself today.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0051",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "hype",
+      "template": "Lineup clicked today. No drama, no heroics needed. Just a clean hand that cashed.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0052",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "warm",
+      "template": "Solid day from {name}{opp}. Did the job, the lineup held up. Take the win and keep going.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0053",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "warm",
+      "template": "{last} was steady all game{opp}. No fireworks needed, just a good result for the hand.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0054",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "warm",
+      "template": "Professional outing from {first}. The kind of hand that quietly adds up over time.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0055",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "warm",
+      "template": "The kind of hand you want every time. Steady across the board, money in the account.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0056",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "warm",
+      "template": "Clean win today. Everyone contributed, nobody had to carry. That is the blueprint.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0057",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{nick} did not break a sweat and still cashed the hand. Must be nice to have that consistency.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0058",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{last} on autopilot is still better than most hitters going full effort at the dish.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0059",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "Just another day at the park for {last}{opp}. Showed up, produced, collected the win quietly.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0060",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "Boring win. Best kind of win. The lineup handled business without anyone needing to be a hero.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0061",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "The handbook says this is how you are supposed to win. Nobody told the lineup it would be this easy.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0062",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "observational",
+      "template": "{name} came in around the expected line{opp}. Consistent output and the hand benefited.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0063",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "observational",
+      "template": "{last} did what was expected today. The rest of the lineup handled the margins.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0064",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "observational",
+      "template": "Balanced contributions across the lineup today. Nobody carried, nobody dropped. Solid result.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0065",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "observational",
+      "template": "The lineup did what it was built to do today. No single card had to do too much.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0066",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{name} tracked close to average today{opp}. Consistent anchor play got the win.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0067",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "analytical",
+      "template": "The star hit the expected line. The supporting cast stayed in range. Clean hand overall.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0068",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "analytical",
+      "template": "The lineup tracked within expected ranges across the board. Consistent inputs, consistent output.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0069",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{last} did the job today{opp}. Won the hand. Moving on to the next one.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0070",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "Standard day from {last}. Standard result. Nothing to overthink here.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0071",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "Won. Nothing interesting happened. Cash it and move on.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0072",
+      "sport": "baseball",
+      "archetype": "star_delivered",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "Another one in the win column. Not much to talk about. Not much needs to be said.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    }
+  ],
+  "balanced_win": [
+    {
+      "id": "bb_0073",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "hype",
+      "template": "The lineup found a way without {name} going off. Team effort and it paid off today.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0074",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "hype",
+      "template": "Quiet day from {nick} but the hand still cashed. The supporting bats stepped up big.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0075",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "hype",
+      "template": "The bench showed out today. Quiet hand from the top but the depth came through.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0076",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "hype",
+      "template": "Won it on depth alone. Sometimes the supporting cast writes the story.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0077",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "warm",
+      "template": "{name} had a quiet one, but the lineup held it together. A win is a win in this game.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0078",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "warm",
+      "template": "Not {last}'s best day, but the hand survived and cashed. Take the money and keep going.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0079",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "warm",
+      "template": "Quiet day from the top of the lineup but the depth held. Sometimes that is all you need.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0080",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "warm",
+      "template": "The supporting cast picked up the slack today. Not every win comes from the star.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0081",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{nick} took the day off and the lineup covered for it. Teamwork makes the dream work.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0082",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "Even on a quiet day, {last}'s floor is someone else's ceiling. The hand survived fine.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0083",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "Won it without the star going off. The bench has been waiting for this moment all season.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0084",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "The bench said we got this today. And honestly, they were not wrong about it.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0085",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "observational",
+      "template": "{name} came in below average but the lineup compensated. Balanced hand overall.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0086",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "observational",
+      "template": "The hand won despite the star running cold. Depth across the lineup made the difference.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0087",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "observational",
+      "template": "Not a star-driven win. The supporting bats filled in across the board and the hand survived.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0088",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{name} fell short of the expected line today but lineup depth covered the gap. Solid build.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0089",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "analytical",
+      "template": "Star output was down but the supporting cards compensated. The math still worked for a win.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0090",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{last} was quiet today{opp}. Still won. Does not matter how you get there.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0091",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "Won. The star was quiet. The bench was not. Sometimes that is the formula.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0092",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "Not the prettiest win. Still a win. Take it and move on.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0093",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "hype",
+      "template": "The whole lineup came together today. Cash the hand and feel good about the roster build.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0094",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "hype",
+      "template": "Everybody contributed. That is how you win a hand without needing a hero to carry it.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0095",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "hype",
+      "template": "Full lineup effort across the board. Collective energy and a collective win.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0096",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "warm",
+      "template": "Good hand. The lineup did the job across the board without any drama today.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0097",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "warm",
+      "template": "No hero ball needed. The group effort got it done. Comfortable day.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0098",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "warm",
+      "template": "The whole lineup contributed. Balanced production and a comfortable win.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0099",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "Nobody went yard but everybody got on base. The committee approach actually worked today.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0100",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "Win by committee. Not flashy, but the money spends the same in the end.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0101",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "The lineup just quietly handled business today. No drama, no problems, just a clean win.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0102",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "observational",
+      "template": "Balanced output across the lineup. No standout, just consistent production top to bottom.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0103",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "observational",
+      "template": "No single card drove the result. The lineup each did their part for a collective win.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0104",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "analytical",
+      "template": "Contributions were spread evenly across the lineup. Depth and balance won this hand today.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0105",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "analytical",
+      "template": "When everyone hits their marks, the hand takes care of itself. That is what happened here.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0106",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "Won the hand. Nobody stood out. Nobody needed to. On to the next one.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0107",
+      "sport": "baseball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "Committee win. Not exciting but it counts the same on the ledger.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    }
+  ],
+  "star_carried_loss": [
+    {
+      "id": "bb_0108",
+      "sport": "baseball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "warm",
+      "template": "{name} did everything possible{opp}. The rest of the lineup let that night go to waste.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0109",
+      "sport": "baseball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "warm",
+      "template": "{last} showed up in a major way but the supporting bats did not hold up their end of the deal.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0110",
+      "sport": "baseball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "warm",
+      "template": "Heartbreaker. {nick} went off and the hand still busted. The lineup could not keep up with the star.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0111",
+      "sport": "baseball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "warm",
+      "template": "You can not ask more from {name} than what was delivered today. The loss falls on everyone else.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0112",
+      "sport": "baseball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{nick} went nuclear and it still was not enough. The supporting bats owe a formal apology today.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0113",
+      "sport": "baseball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{last} put on a show{opp} and nobody else bought a ticket. Tough way to lose a hand.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0114",
+      "sport": "baseball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "Imagine going off like {nick} did today and still losing. The bench should be embarrassed by this.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0115",
+      "sport": "baseball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{name} carried the whole lineup and the lineup said thanks but no thanks. Brutal day at the park.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0116",
+      "sport": "baseball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "observational",
+      "template": "{name} vastly exceeded the expected line{opp} but the rest of the lineup fell short across the board.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0117",
+      "sport": "baseball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "observational",
+      "template": "The star carried. The supporting bats did not follow. {last} deserved a better outcome today.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0118",
+      "sport": "baseball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "observational",
+      "template": "When the star delivers like {last} did and the hand still busts, the problem is everywhere else.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0119",
+      "sport": "baseball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{name} came in far above the expected line{opp}. The loss is entirely on the supporting cards today.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0120",
+      "sport": "baseball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "Elite output from {last} was offset by the rest of the lineup falling short across the board.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0121",
+      "sport": "baseball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{last} went off{opp}. Still lost. The rest of the lineup was not there today. It happens.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0122",
+      "sport": "baseball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{nick} did the job and then some. Everybody else did not. That is the whole story of this hand.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0401",
+      "sport": "baseball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} mashed all day and it STILL was not enough. The lineup hung that performance out to dry.",
+      "tags": [
+        "star_carried_loss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0402",
+      "sport": "baseball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{nick} went yard multiple times and the rest of the lineup just stood there with bats on their shoulders.",
+      "tags": [
+        "star_carried_loss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0403",
+      "sport": "baseball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{last} raked{opp} for nothing. The supporting bats ghosted when it mattered.",
+      "tags": [
+        "star_carried_loss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0404",
+      "sport": "baseball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} did everything short of pitching and the hand still busted. Brutal.",
+      "tags": [
+        "star_carried_loss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0405",
+      "sport": "baseball",
+      "archetype": "star_carried_loss",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{nick} carried the whole lineup on one back and nobody said thanks.",
+      "tags": [
+        "star_carried_loss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    }
+  ],
+  "star_failed": [
+    {
+      "id": "bb_0123",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{last} came in way below the line today{opp}. Not much else to say about this one.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0124",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "Needed {nick} to produce today and it did not happen. The hand paid the price.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0125",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{name} was a no-show{opp}. That is the whole story of this hand right there.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0126",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "warm",
+      "template": "Tough one. {name} had an off day{opp} and the lineup could not make up for it.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0127",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "warm",
+      "template": "{last} did not have it today. Happens to everyone. Shake it off and play the next hand.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0128",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "warm",
+      "template": "Off day from {last}{opp}. The supporting bats tried but it was not enough to survive.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0129",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{nick} picked today to take a personal day and the lineup noticed the absence immediately.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0130",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "Way below the usual day from {name}. The supporting cast deserves an apology after this one.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0131",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{last} went cold at the plate{opp}. The box score does not paint a pretty picture today.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0132",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "Someone should check on {nick} after that one. The stat line suggests a case of mistaken identity.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0133",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "observational",
+      "template": "{name} came in well below average{opp}. Hard to overcome that kind of deficit from the top card.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0134",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "observational",
+      "template": "{last} was the difference today — and not the good kind of difference you want from your star.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0135",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "observational",
+      "template": "The anchor fell way short today. {name}{opp} was the gap the lineup could not close.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0136",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{name} came in far below the expected line{opp}. At that salary, the hand needed more output.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0137",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{last}'s output was insufficient to sustain the hand today. The math was not there for a win.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0138",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "Way below the line from {nick}{opp}. The deficit at the anchor spot sank the entire hand.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0406",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} went invisible at the plate{opp}. That loss is squarely on the star.",
+      "tags": [
+        "star_failed",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0407",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{nick} completely no-showed{opp} and it sunk the whole hand.",
+      "tags": [
+        "star_failed",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0408",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{last} picked the worst day to go 0-fer. Painful one.",
+      "tags": [
+        "star_failed",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0409",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "hype",
+      "template": "You needed {nick} and got warning track fly balls all day.",
+      "tags": [
+        "star_failed",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0410",
+      "sport": "baseball",
+      "archetype": "star_failed",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} folded{opp} when the lineup needed a big at-bat.",
+      "tags": [
+        "star_failed",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    }
+  ],
+  "star_cold": [
+    {
+      "id": "bb_0139",
+      "sport": "baseball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{last} was cold today{opp}. The hand followed that direction. That is how it goes sometimes.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0140",
+      "sport": "baseball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "Not {nick}'s day. It happens to everyone. Shake it off and come back for the next one.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0141",
+      "sport": "baseball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "Below the line from {last}. Not enough from the lineup to cover the shortfall.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0142",
+      "sport": "baseball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "warm",
+      "template": "{name} had a rough one today{opp}. One of those days you just want to forget.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0143",
+      "sport": "baseball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "warm",
+      "template": "Cold day from {last}{opp}. The supporting bats fought but the gap was too wide.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0144",
+      "sport": "baseball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "warm",
+      "template": "{nick} was not at the usual level today{opp}. It happens. Move on and reset.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0145",
+      "sport": "baseball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{nick} swung at everything and hit nothing today. Not the approach the scouting report recommended.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0146",
+      "sport": "baseball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{last} was off and everybody else was just okay. Recipe for a bust every single time.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0147",
+      "sport": "baseball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "Somewhere out there is the version of {nick} who rakes. Today was not that version.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0148",
+      "sport": "baseball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "observational",
+      "template": "{name} came in below average{opp}. The margin for error was thin and it showed in the result.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0149",
+      "sport": "baseball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "observational",
+      "template": "Below the expected line from {last}{opp}. When the star is cold, the hand rarely survives.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0150",
+      "sport": "baseball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{name} tracked below the expected line today{opp}. The margin from the supporting lineup was not enough.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0151",
+      "sport": "baseball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "Below-average output from {last} today. The hand needed more from the anchor spot to stay alive.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0411",
+      "sport": "baseball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{nick} ran cold at the plate{opp}. Needed more and did not find it.",
+      "tags": [
+        "star_cold",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0412",
+      "sport": "baseball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{last} was a step behind the fastball all day{opp}. That margin was everything.",
+      "tags": [
+        "star_cold",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0413",
+      "sport": "baseball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} could not get the bat going{opp}. Just enough pop to lose.",
+      "tags": [
+        "star_cold",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0414",
+      "sport": "baseball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{nick} went lukewarm at the dish when you needed a heater.",
+      "tags": [
+        "star_cold",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0415",
+      "sport": "baseball",
+      "archetype": "star_cold",
+      "register": "loss",
+      "tone": "hype",
+      "template": "Not a disaster from {last} but not nearly enough{opp}. The opponent made you pay.",
+      "tags": [
+        "star_cold",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    }
+  ],
+  "everyone_flat": [
+    {
+      "id": "bb_0152",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "Nobody had it today. Sometimes the lineup just does not come through. On to the next one.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0153",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "Flat across the board. Not one card in the lineup pulled its weight today.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0154",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "The whole lineup came in below the line. Nothing worked. On to the next hand.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0155",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{last} and the rest of the lineup all came in cold. Nothing worked today.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0156",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "warm",
+      "template": "Tough day all around. Nobody could get anything going at the plate or on the mound.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0157",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "warm",
+      "template": "The whole lineup had an off day. Take the loss and move on. Fresh start next hand.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0158",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "warm",
+      "template": "One of those collective off days that just happen. Nobody is to blame. Reset and come back.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0159",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "warm",
+      "template": "Not the day anyone wanted. The whole lineup was cold. Next hand is a clean slate.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0160",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "The entire lineup collectively decided to take the day off. At least they committed to it.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0161",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "If this hand was a group project, nobody did their part. Unified in their mediocrity today.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0162",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "Everyone forgot to show up today. At least they were all consistent about that one thing.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0163",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "The lineup phoned it in today. A team effort in the wrong direction. Very on brand.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0164",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "observational",
+      "template": "No single culprit today. Every card came in below the line across the board. Collective miss.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0165",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "observational",
+      "template": "The lineup fell short across the board. A collective miss from top to bottom.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0166",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "observational",
+      "template": "Broad struggles left no margin for the hand at all. Nobody stepped up when needed.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0167",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "Every card tracked below the expected line. No individual cause — systemic collective miss.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0168",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "The lineup all came in under their expected outputs today. The broad miss sank the hand.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_0169",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "Below the line across the board. When everyone misses, the hand has no chance.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0416",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "hype",
+      "template": "Nobody showed up at the park today. The whole lineup flatlined.",
+      "tags": [
+        "everyone_flat",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0417",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "hype",
+      "template": "Top to bottom, every spot in the order missed. Zero pulse from this lineup.",
+      "tags": [
+        "everyone_flat",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0418",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "hype",
+      "template": "You cannot win when the entire batting order forgets how to hit.",
+      "tags": [
+        "everyone_flat",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0419",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "hype",
+      "template": "Not one bat in this lineup gave you a pulse. Total wipeout at the dish.",
+      "tags": [
+        "everyone_flat",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0420",
+      "sport": "baseball",
+      "archetype": "everyone_flat",
+      "register": "loss",
+      "tone": "hype",
+      "template": "Whole hand went cold. Pitching, hitting, everything. Nothing to salvage.",
+      "tags": [
+        "everyone_flat",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    }
+  ],
+  "near_miss": [
+    {
+      "id": "bb_p2_0421",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} was right there and the final box score said no.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0422",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "hype",
+      "template": "That close to surviving and {last} still catches the L.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0423",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} lost by a sliver. {gap} is basically a rounding error.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0424",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "hype",
+      "template": "The margin said no. {last} was {gap} from living.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0425",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} clawing at the edge and sliding right back down.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0426",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "warm",
+      "template": "{first} deserved better than losing by {gap}, honestly.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0427",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "warm",
+      "template": "You do almost everything right and still lose. That is {last}'s day.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0428",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "warm",
+      "template": "{name} was so close to cashing this hand. Then nothing.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0429",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "warm",
+      "template": "Tough one for {first}. {gap} short is a cruel way to go.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0430",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "warm",
+      "template": "Sometimes the baseball gods just do not love you back. Sorry, {last}.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0431",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{name} lost by {gap}. The fantasy version of a foul ball on a 3-2 count.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0432",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{last} catching strays from the decimal points today.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0433",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{name} brought the bat to a bat fight and still lost by the handle.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0434",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "The baseball gods owed {last} a favor and sent a rain delay instead.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0435",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{gap} short. {name} got picked off at the finish line.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0436",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "observational",
+      "template": "{name} finished {gap} short. Close enough to see the win, not grab it.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0437",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "observational",
+      "template": "One extra hit from {last} flips this. That is the torture of it.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0438",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "observational",
+      "template": "{name} posted a decent line and it still was not enough by {gap}.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0439",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "observational",
+      "template": "The margin was {gap}. {last} will replay that one tonight.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0440",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "observational",
+      "template": "Everything broke right for {name} except the final arithmetic.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0441",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{name} missed by {gap}. One base hit or a single walk changes the outcome.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0442",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{last}'s line was borderline viable, just not quite enough today.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0443",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "At {gap} short, {name}'s loss traces to one cold at-bat, not the whole game.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0444",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{name} needed roughly one more quality plate appearance to survive.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0445",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "The gap was {gap}. {last}'s approach was there. The results were not.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0446",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{name} lost by {gap}. So, almost.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0447",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{last} was this close. Which counts for exactly nothing in the standings.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0448",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "If {gap} had feelings, it would apologize to {name}.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0449",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{name} with a decent day and a loss by {gap}. Math remains undefeated.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0450",
+      "sport": "baseball",
+      "archetype": "near_miss",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "Close only counts in horseshoes. {last} plays baseball.",
+      "tags": [
+        "near_miss",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    }
+  ],
+  "ugly_win": [
+    {
+      "id": "bb_p2_0451",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "hype",
+      "template": "W is a W. {nick} can sleepwalk through the next one too.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0452",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "hype",
+      "template": "Does not matter how {last} looked at the plate. The scoreboard says win.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0453",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "hype",
+      "template": "{nick} was a ghost in the batter's box and they still got the bag.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0454",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "hype",
+      "template": "Ugly? Sure. But {name} cashes the win and keeps it moving.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0455",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "hype",
+      "template": "That is a win held together with duct tape and {last}'s name recognition.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0456",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "warm",
+      "template": "Not {nick}'s sharpest day, but the lineup carried the weight.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0457",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "warm",
+      "template": "{name} will take this one quietly and come back sharper next time.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0458",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "warm",
+      "template": "Sometimes {last} just needs to be in the lineup. The rest figures itself out.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0459",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "warm",
+      "template": "The role players covered for {nick} today, and that matters.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0460",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "warm",
+      "template": "{first} did not have it, but nobody panicked. That is a real lineup.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0461",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{nick} put up a box score you would hide in your locker.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0462",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "That is the kind of win you screenshot but never post on social.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0463",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{last} swung like the scouting report was written in another language.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0464",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "Somewhere {nick}'s hitting coach just poured a stiff drink.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0465",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{name} won a game the way you pass a class with a D-minus.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0466",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "observational",
+      "template": "{last} was off rhythm all day but the margin never got scary.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0467",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "observational",
+      "template": "{nick} had plenty of at-bats. Just could not convert at the usual rate.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0468",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "observational",
+      "template": "The pitching held enough rope for {name} to coast on a quiet day.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0469",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "observational",
+      "template": "You could tell early {last} did not have the timing. Lineup adjusted around it.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0470",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "observational",
+      "template": "{nick} was a passenger today, but the bus still arrived on time.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0471",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{last}'s plate appearances were there but efficiency cratered. Role players bridged the gap.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0472",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{name} posted a ratio well under baseline. The win came from the margins.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0473",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "analytical",
+      "template": "Low production day for {nick}. The bottom of the order outperformed projections.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0474",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{last}'s approach was fine. The results were just misses. Variance win.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0475",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "analytical",
+      "template": "Pull {nick}'s spray chart today and it is mostly weak grounders.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0476",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{nick} contributed by being listed on the lineup card.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0477",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "They won. {last} was technically at the plate for some of it.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0478",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{name} put up numbers you would round down to zero at a dinner party.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0479",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "Final score says win. {nick}'s box score says no comment.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0480",
+      "sport": "baseball",
+      "archetype": "ugly_win",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{last} played a full game of baseball. Allegedly.",
+      "tags": [
+        "ugly_win",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    }
+  ],
+  "collapse": [
+    {
+      "id": "bb_p2_0481",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} rode a {streak}-game streak straight off a cliff today.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0482",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "hype",
+      "template": "That {streak}-win run just detonated. {last} down {gap} in the wreckage.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0483",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} was untouchable for {streak} straight and then got shelled.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0484",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "hype",
+      "template": "Streak over. Momentum over. {last} down {gap} like the floor gave out.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0485",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{name} went from {streak}-game heater to a crater in one afternoon.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0486",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "warm",
+      "template": "{streak} wins felt so steady. Rough to watch {name} drop like that.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0487",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "warm",
+      "template": "That {streak}-game run meant something. Losing by {gap} does not erase it.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0488",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "warm",
+      "template": "{name} had real momentum for {streak} games. Today was a bad game to show up for.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0489",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "warm",
+      "template": "You build for {streak} games and one loss makes it feel fragile. Unfair to {last}.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0490",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "warm",
+      "template": "Hate to see {first} go from {streak} straight to down {gap} in a blink.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0491",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{name} stacked {streak} wins then lost by {gap}. Icarus with a batting average.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0492",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{last} ran {streak} games past the cliff before looking down.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0493",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{streak} wins and then a {gap} loss. {name} just got walked off by karma.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0494",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{name} built a {streak}-game tower and {gap} kicked the foundation out.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0495",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "That {streak}-game streak aged like milk left in the dugout.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0496",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "observational",
+      "template": "{name} won {streak} straight, then dropped {gap} in one day. Momentum is fiction.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0497",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "observational",
+      "template": "The {streak}-game streak masked something. {last}'s loss exposed it fast.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0498",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "observational",
+      "template": "{name} went from untouchable to down {gap}. {streak} wins bought zero protection.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0499",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "observational",
+      "template": "Streaks do not carry over. {last} found that out at the park today.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0500",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "observational",
+      "template": "After {streak} wins, {name} hit a wall at full speed.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0501",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{name}'s {streak}-game streak averaged tight margins. A {gap} loss was regression arriving.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0502",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "Losing by {gap} after {streak} wins suggests the streak was thinner than the record showed.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0503",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{last}'s {streak}-win run likely included variance. Today's loss is the correction.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0504",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{name} sustained {streak} wins, but {gap} of collapse signals a matchup or usage shift.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0505",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "A {gap} loss after {streak} games. {last}'s production cliff was abrupt.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0506",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{name} won {streak} straight and then lost by {gap}. So that is over.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0507",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{streak} wins. Then down {gap}. {last} has no comment and neither do I.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0508",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{name}'s {streak}-game streak has been moved to the obituary section.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0509",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "The streak was {streak}. The gap was {gap}. {last} can do that math alone.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0510",
+      "sport": "baseball",
+      "archetype": "collapse",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{name} went {streak} and done. That is a very specific kind of quiet.",
+      "tags": [
+        "collapse",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    }
+  ],
+  "career_night": [
+    {
+      "id": "bb_p2_0511",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "hype",
+      "template": "{nick} just had a career day{opp}. {extremeDescription} That line is going in the record books.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0512",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "hype",
+      "template": "That is not a box score, that is a {name} highlight reel{opp}.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0513",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "hype",
+      "template": "{last} went full supernova. {extremeDescription} and nobody had any answers.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0514",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "hype",
+      "template": "{nick} woke up and chose absolute violence at the plate{opp}.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0515",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "hype",
+      "template": "Rename the ballpark after {name}. {extremeDescription}{opp}. Unreal.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0516",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "warm",
+      "template": "You wait your whole life to see a day like this from {name}. {extremeDescription}.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0517",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "warm",
+      "template": "{nick} put together something special{opp}. Remember this one.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0518",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "warm",
+      "template": "Games like this are why {last} keeps grinding. {extremeDescription} speaks for itself.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0519",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "warm",
+      "template": "{first} left everything on the diamond today. {extremeDescription}{opp}. Beautiful.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0520",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "warm",
+      "template": "Soak it in. {nick} going for {extremeDescription}{opp} is the kind of thing you tell people about.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0521",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{nick} went for {extremeDescription}{opp} like it was a beer league softball game.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0522",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{last} treated the opposing staff like a scrimmage. {extremeDescription} is just disrespectful.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0523",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "Someone check on the opposing pitching coach after {nick}'s day at the plate.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0524",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{name} going for {extremeDescription}? The opponent should have forfeited before first pitch.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0525",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{nick} chose chaos. {extremeDescription}{opp} like the mortgage was due today.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0526",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "observational",
+      "template": "{name} found every gap in the defense. {extremeDescription} was the result.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0527",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "observational",
+      "template": "{last} was locked in from the first at-bat. Hence {extremeDescription}.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0528",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "observational",
+      "template": "When {nick} gets into that rhythm at the plate, {extremeDescription} becomes possible.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0529",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "observational",
+      "template": "They changed pitchers three times and {name} still finished with {extremeDescription}.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0530",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "observational",
+      "template": "{last} was on a different level today. {extremeDescription} was inevitable.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0531",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{name} posted {extremeDescription}{opp} on elite contact quality. Every swing counted.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0532",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{last}'s approach today was textbook. {extremeDescription} was the payoff.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0533",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{extremeDescription} for {nick} with hard contact all day. Zero answers from the staff.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0534",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{name} barreled everything. {extremeDescription}{opp} with no cheap hits either.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0535",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "analytical",
+      "template": "The {extremeDescription} line from {last} was surgical. Clean at-bats all day.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0536",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{nick} went for {extremeDescription}{opp}. Normal Tuesday, apparently.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0537",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{last} posted {extremeDescription}. The opposing staff is filing incident reports.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0538",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{extremeDescription} for {name}{opp}. Nature is healing. Or breaking.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0539",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{nick}{opp}: {extremeDescription}. Not much else needs to be said.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0540",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{name} did {extremeDescription} and then sat in the dugout like nothing happened.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0541",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{nick} went for {extremeDescription}{opp} and still lost. That is a tragedy, not a game.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0542",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{extremeDescription} from {name}{opp} and the opposition still walked away with it. Criminal.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0543",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "hype",
+      "template": "{last} gave them {extremeDescription} and the lineup gave away the win.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0544",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "warm",
+      "template": "{name} put up {extremeDescription}{opp}. Should not have to hurt this much.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0545",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "warm",
+      "template": "You feel for {nick}. {extremeDescription} deserved a W, not this.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0546",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "warm",
+      "template": "{last} did everything right. {extremeDescription}{opp}. And it still was not enough.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0547",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{nick} dropped {extremeDescription} and lost. Somebody owes that man an apology.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0548",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{last} went for {extremeDescription} just for the lineup to fumble the bag.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0549",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{extremeDescription}{opp} and an L? {nick}'s teammates owe dinner for a month.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0550",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "observational",
+      "template": "{name} carried the full offensive load with {extremeDescription} but the other bats got exposed.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0551",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "observational",
+      "template": "{last}'s {extremeDescription} masked a pitching collapse the opponent rode to the finish.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0552",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "observational",
+      "template": "{nick} peaked at {extremeDescription} while the other team quietly built leads.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0553",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{name} posted {extremeDescription} but the supporting bats gave back every margin.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0554",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{last}'s {extremeDescription} came in high volume. Team needed pitching, not just hitting.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0555",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "analytical",
+      "template": "{extremeDescription} from {nick} skewed the box score. The opponent won the innings that mattered.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0556",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{nick} went for {extremeDescription}{opp} and lost. Math is broken.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0557",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{last}: {extremeDescription}. Final result: L. Baseball is a team sport, unfortunately.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0558",
+      "sport": "baseball",
+      "archetype": "career_night",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{name} did {extremeDescription}. They won anyway. Sometimes the universe does not care.",
+      "tags": [
+        "career_night",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    }
+  ],
+  "badge_explosion": [
+    {
+      "id": "bb_p2_0559",
+      "sport": "baseball",
+      "archetype": "badge_explosion",
+      "register": "win",
+      "tone": "hype",
+      "template": "{name} put together a {badge}{opp}. That is how you announce yourself at the plate.",
+      "tags": [
+        "badge_explosion",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0560",
+      "sport": "baseball",
+      "archetype": "badge_explosion",
+      "register": "win",
+      "tone": "hype",
+      "template": "{last} posted a {badge}. A {topStat} {badge} is a statement and the lineup rode the wave.",
+      "tags": [
+        "badge_explosion",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0561",
+      "sport": "baseball",
+      "archetype": "badge_explosion",
+      "register": "win",
+      "tone": "warm",
+      "template": "{name} came through with a {badge}{opp}. The kind of day you build a hand around.",
+      "tags": [
+        "badge_explosion",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0562",
+      "sport": "baseball",
+      "archetype": "badge_explosion",
+      "register": "win",
+      "tone": "warm",
+      "template": "That is a {badge} from {last}{opp}. {topStat} leading the stat line. Take the win.",
+      "tags": [
+        "badge_explosion",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0563",
+      "sport": "baseball",
+      "archetype": "badge_explosion",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{nick} casually posted a {badge}{opp}. Like it was just another Tuesday at the ballpark.",
+      "tags": [
+        "badge_explosion",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0564",
+      "sport": "baseball",
+      "archetype": "badge_explosion",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{last} put up a {badge} and made it look like it required zero effort.",
+      "tags": [
+        "badge_explosion",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0565",
+      "sport": "baseball",
+      "archetype": "badge_explosion",
+      "register": "win",
+      "tone": "observational",
+      "template": "{name} recorded a {badge}{opp}. That kind of stat line defines a hand entirely.",
+      "tags": [
+        "badge_explosion",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0566",
+      "sport": "baseball",
+      "archetype": "badge_explosion",
+      "register": "win",
+      "tone": "observational",
+      "template": "The story today is the {badge} from {last}{opp}. {topStat} headlining everything.",
+      "tags": [
+        "badge_explosion",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0567",
+      "sport": "baseball",
+      "archetype": "badge_explosion",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{name} filled the stat sheet across the board{opp}. A {topStat} {badge} is how you win.",
+      "tags": [
+        "badge_explosion",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0568",
+      "sport": "baseball",
+      "archetype": "badge_explosion",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{last} posted a {topStat} {badge} today. That output anchored the entire hand.",
+      "tags": [
+        "badge_explosion",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0569",
+      "sport": "baseball",
+      "archetype": "badge_explosion",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{last} had a {badge}{opp}. {topStat} on top. Won the hand. Not much else to say.",
+      "tags": [
+        "badge_explosion",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0570",
+      "sport": "baseball",
+      "archetype": "badge_explosion",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "A {topStat} {badge} from {nick}{opp}. Cash the hand. That line speaks for itself.",
+      "tags": [
+        "badge_explosion",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0571",
+      "sport": "baseball",
+      "archetype": "badge_explosion",
+      "register": "loss",
+      "tone": "warm",
+      "template": "{name} put up a {badge}{opp} and the hand still busted. A {topStat} {badge} deserved better.",
+      "tags": [
+        "badge_explosion",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0572",
+      "sport": "baseball",
+      "archetype": "badge_explosion",
+      "register": "loss",
+      "tone": "culture_wry",
+      "template": "{nick} posted a {badge}{opp} and the hand still busted. Someone owes an apology.",
+      "tags": [
+        "badge_explosion",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0573",
+      "sport": "baseball",
+      "archetype": "badge_explosion",
+      "register": "loss",
+      "tone": "observational",
+      "template": "{name} recorded a {badge}{opp} but the hand fell short. {topStat} was not enough.",
+      "tags": [
+        "badge_explosion",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_p2_0574",
+      "sport": "baseball",
+      "archetype": "badge_explosion",
+      "register": "loss",
+      "tone": "deadpan",
+      "template": "{last} had a {badge}{opp}. {topStat} on top. Still lost. The lineup was not there.",
+      "tags": [
+        "badge_explosion",
+        "phase2"
+      ],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    }
+  ]
+}

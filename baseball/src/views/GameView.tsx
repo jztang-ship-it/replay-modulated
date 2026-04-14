@@ -39,6 +39,7 @@ import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
 import { ProfileScreen } from '@shared/components/ProfileScreen';
 import { generateCommentary } from "@shared/commentary/generateCommentary";
 import { composeCommentary } from "@shared/commentary/composeCommentary";
+import { selectCommentary } from "@shared/commentary/selectCommentary";
 import type { CommentaryInput, CommentaryRosterCard, CommentaryOutput } from "@shared/commentary/types";
 import { buildBaseballContext } from "../utils/buildBaseballContext";
 
@@ -981,7 +982,8 @@ export default function GameView() {
     // Fallback: new commentary composer
     const fp = lockedGaugeFpRef.current ?? displayFp;
     const gaugeSnap = computeGaugeState(fp, GAUGE_THRESHOLDS as any, winTier, 8);
-    const copy = composeCommentary({
+    // Primary: unified selector. Fallback: legacy compose.
+    const copyInput = {
       sport: "baseball",
       totalFp: fp,
       winTier: winTier as any,
@@ -1002,7 +1004,11 @@ export default function GameView() {
       prevStreak: winTier === "BUST" ? streak : Math.max(0, streak - 1),
       isBust: winTier === "BUST",
       handCount,
-    } as any);
+    } as any;
+    const selected = selectCommentary(copyInput);
+    const copy = (selected?.primary && selected.primary !== "Good hand." && selected.primary !== "Tough night.")
+      ? selected
+      : composeCommentary(copyInput);
     postRevealCopyRef.current = copy;
     return copy;
   }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct, lbContextNonce]); // eslint-disable-line
