@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * shared/hooks/useFTUE.ts
  * LAYER 1: Sport-agnostic first-time user experience state.

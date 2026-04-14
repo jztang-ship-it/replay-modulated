@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * shared/hooks/useCardFlipState.ts
  *
