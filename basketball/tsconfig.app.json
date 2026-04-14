@@ -23,5 +23,6 @@
       "@shared/*": ["../shared/*"]
     }
   },
-  "include": ["src", "../shared"]
+  "include": ["src", "../shared"],
+  "exclude": ["src/utils/culture_update.ts", "src/utils/culture_review.ts"]
 }
