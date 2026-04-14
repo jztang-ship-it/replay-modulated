@@ -152,14 +152,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const resolvedCards = [];
 
   for (let i = 0; i < 6; i++) {
-    const card = finalRoster[i];
+    const card = finalRoster[i] as any;
     const stats = card.logData || card.statLine || {};
-    const { score, badges } = calculateScore(stats);
+
+    // FTUE cards have pre-scripted actualFp and achievements — use them directly
+    // instead of re-calculating (avoids badge dedup differences with client).
+    const isFtueCard = hand.isFtue && card.actualFp !== undefined;
+    let score: number;
+    let badges: Array<{ id: string; icon: string; label: string; fp: number }>;
+
+    if (isFtueCard) {
+      score = card.actualFp;
+      badges = (card.achievements || []).map((a: any) => ({
+        id: a.id, icon: a.icon || '', label: a.label || '', fp: a.fp || 0,
+      }));
+    } else {
+      const result = calculateScore(stats);
+      score = result.score;
+      badges = result.badges;
+    }
 
     totalFp += score;
     badgeCount += badges.length;
 
-    // Track top scorer (excluding daily bonus for MVP — dailyBonus is always 0 here)
     if (score > topScorer.fp) {
       topScorer = { name: card.name, fp: score };
     }
@@ -169,7 +184,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       position: card.position,
       wasHeld: heldIndices.includes(i),
       player: {
-        playerId: card.playerId,
+        playerId: card.playerId || card.basePlayerId,
         name: card.name,
         team: card.team,
         salary: card.salary,
@@ -188,7 +203,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
       fp: score,
       dailyBonus: 0,
-      badges: badges.map((b) => ({ id: b.id, icon: b.icon, label: b.label, fp: b.fp })),
+      badges: badges.map((b: any) => ({ id: b.id, icon: b.icon, label: b.label, fp: b.fp })),
     });
   }
 
