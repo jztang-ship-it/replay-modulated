@@ -37,11 +37,9 @@ import { buildScoreProof } from '@shared/utils/scoreProof';
 import { PostHandSheet } from '@shared/components/PostHandSheet';
 import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
 import { ProfileScreen } from '@shared/components/ProfileScreen';
-import { generateCommentary } from "@shared/commentary/generateCommentary";
-import { composeCommentary } from "@shared/commentary/composeCommentary";
 import { selectCommentary } from "@shared/commentary/selectCommentary";
-import type { CommentaryInput, CommentaryRosterCard, CommentaryOutput } from "@shared/commentary/types";
-import { buildBaseballContext } from "../utils/buildBaseballContext";
+import type { CommentaryOutput } from "@shared/commentary/types";
+// buildBaseballContext — culture injection now handled inside selectCommentary
 
 // Test-wire only: allow passing glow props even if wrapper prop types lag behind.
 const RosterGridAny = RosterGrid as any;
@@ -1087,71 +1085,16 @@ export default function GameView() {
     }
   }, [gameState]);
 
-  // ── Claude commentary pre-fetch ─────────────────────────────────────────
-  // Fire as soon as REVEALING starts. By then rosterRef holds finalized cards.
-  // Result lands in commentaryRef and the postRevealCopy memo prefers it.
+  // Commentary is now handled by selectCommentary in the postRevealCopy memo.
+  // This effect just ensures the status ref transitions so the memo runs.
   useEffect(() => {
     if (gameState !== "REVEALING") return;
     if (isFTUE) return;
     if (commentaryFiredHandRef.current === handCount) return;
     commentaryFiredHandRef.current = handCount;
-    commentaryStatusRef.current = 'pending';
-
-    const finalRoster = rosterRef.current;
-    if (!finalRoster.length) {
-      commentaryStatusRef.current = 'failed';
-      return;
-    }
-
-    const finalFp = finalRoster.reduce(
-      (s, c: any) => s + Number(c.actualFp ?? 0), 0,
-    );
-    const finalTier = (deriveTierFromFp(finalFp) ?? "BUST") as any;
-    const gauge = computeGaugeState(finalFp, GAUGE_THRESHOLDS as any, finalTier, 8);
-
-    const rosterShape: CommentaryRosterCard[] = finalRoster.map((c: any) => ({
-      name: String(c.name ?? ""),
-      salary: Number(c.salary ?? 0),
-      actualFp: Number(c.actualFp ?? 0),
-      projectedFp: Number(c.projectedFp ?? 0),
-      cardTier: String(c.tier ?? ""),
-      opponent: String(c.gameInfo?.opponent ?? ""),
-      homeAway: String(c.gameInfo?.homeAway ?? "") as "H" | "A" | "",
-      statLine: c.statLine ?? {},
-    }));
-
-    const input: CommentaryInput = {
-      sport: "baseball",
-      totalFp: finalFp,
-      winTier: finalTier,
-      nextTier: gauge.nextTier as any,
-      tierFloor: gauge.curMin,
-      nextTierMin: gauge.nextMin > 0 && gauge.nextMin < 9999 ? gauge.nextMin : undefined,
-      streak,
-      prevStreak: finalTier === "BUST" ? streak : Math.max(0, streak - 1),
-      isBust: finalTier === "BUST",
-      handCount,
-      roster: rosterShape,
-    };
-
-    const culture = buildBaseballContext(rosterShape);
-
-    generateCommentary(input, culture, recentTonesRef.current).then(result => {
-      if (result) {
-        commentaryRef.current = result;
-        if (result.tone) {
-          const next = [result.tone, ...recentTonesRef.current.filter(t => t !== result.tone)].slice(0, 6);
-          recentTonesRef.current = next;
-        }
-      }
-      commentaryStatusRef.current = result ? 'succeeded' : 'failed';
-      postRevealCopyRef.current = null;
-      setLbContextNonce(n => n + 1);
-    }).catch(() => {
-      commentaryStatusRef.current = 'failed';
-      postRevealCopyRef.current = null;
-      setLbContextNonce(n => n + 1);
-    });
+    commentaryStatusRef.current = 'failed';
+    postRevealCopyRef.current = null;
+    setLbContextNonce(n => n + 1);
   }, [gameState, isFTUE, handCount, streak]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const flippedIds = useMemo(() => {
