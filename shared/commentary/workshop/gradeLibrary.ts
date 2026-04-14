@@ -8,10 +8,13 @@
 
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import { autoReject } from "./scoringRubric";
 import type { CommentaryLine, CommentaryLibrary } from "../types";
 import { getActiveArchetypes } from "../archetypes";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const LIBRARY_DIR = path.join(__dirname, "../libraries");
 
 function gradeLibrary(sport: string): void {
