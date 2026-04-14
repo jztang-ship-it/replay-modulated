@@ -62,6 +62,18 @@ async function handleSubmit(req: VercelRequest, res: VercelResponse) {
   const { action, metric, value, uid, nickname, proof } = req.body ?? {};
   const sessionId = ((req.body?.session_id ?? '') as string).toString().slice(0, 32) || null;
 
+  // Rate limit — max 20 submissions per 10 seconds per uid
+  if (uid) {
+    try {
+      const rlKey = `rl:lb:${uid}`;
+      const count = await kv.incr(rlKey);
+      if (count === 1) await kv.expire(rlKey, 10);
+      if (count > 20) {
+        return json(res, 429, { error: "Too many submissions. Try again shortly." });
+      }
+    } catch { /* don't block on rate limit failure */ }
+  }
+
   if (action !== "submit") return json(res, 400, { error: "Invalid action" });
   if (!VALID_METRICS.includes(metric)) return json(res, 400, { error: "Invalid metric" });
   if (typeof value !== "number" || value <= 0) return json(res, 400, { error: "Invalid value" });

@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { kv } from '@vercel/kv';
 import { verifyAuth } from './lib/auth.js';
 import { supabaseAdmin } from './lib/supabaseServer.js';
 import { consumeHand, getCachedResult, cacheResult } from './lib/kv.js';
@@ -42,6 +43,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return sendError(res, status, code, authErr.message);
   }
   const userId = user.id;
+
+  // 2b. Rate limit — max 5 draws per 10 seconds per user
+  try {
+    const rlKey = `rl:draw:${userId}`;
+    const count = await kv.incr(rlKey);
+    if (count === 1) await kv.expire(rlKey, 10);
+    if (count > 5) {
+      return sendError(res, 429, 'RATE_LIMITED', 'Too many requests. Try again in a few seconds.');
+    }
+  } catch { /* KV rate limit failure should not block gameplay */ }
 
   // 3. Parse request
   const { handId, heldIndices } = req.body || {};

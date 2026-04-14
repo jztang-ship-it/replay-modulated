@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from 'crypto';
+import { kv } from '@vercel/kv';
 import { verifyAuth } from './lib/auth.js';
 import { supabaseAdmin } from './lib/supabaseServer.js';
 import { fetchPlayablePool, generateRoster, pickBiasedLog } from './lib/dealer.js';
@@ -37,10 +38,6 @@ function mulberry32(seed) {
 // ---------------------------------------------------------------------------
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  console.log("=== ENV CHECK ===")
-  console.log("SUPABASE KEY EXISTS:", !!process.env.SUPABASE_SERVICE_ROLE_KEY)
-  console.log("KV URL EXISTS:", !!process.env.KV_REST_API_URL)
-  console.log("KV TOKEN EXISTS:", !!process.env.KV_REST_API_TOKEN)
   // 1. POST only
   if (req.method !== 'POST') {
     return sendError(res, 405, 'METHOD_NOT_ALLOWED', 'POST required');
@@ -52,6 +49,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return sendError(res, authErr.status, 'UNAUTHORIZED', authErr.message);
   }
   const userId = user.id;
+
+  // 2b. Rate limit — max 5 deals per 10 seconds per user
+  try {
+    const rlKey = `rl:deal:${userId}`;
+    const count = await kv.incr(rlKey);
+    if (count === 1) await kv.expire(rlKey, 10);
+    if (count > 5) {
+      return sendError(res, 429, 'RATE_LIMITED', 'Too many requests. Try again in a few seconds.');
+    }
+  } catch { /* KV rate limit failure should not block gameplay */ }
 
   // 3. Validate betMultiplier
   const betMultiplier = Number(req.body?.betMultiplier ?? 1);
