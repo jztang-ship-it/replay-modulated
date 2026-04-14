@@ -5,7 +5,8 @@
 
 import type { TemplateData, DetailId, RecordEvent } from "./types";
 import type { CommentaryInput, CommentaryRosterCard } from "./types";
-import { describeExtremes } from "@shared/utils/extremeGames";
+import { describeExtremes } from "../utils/extremeGames";
+import { getHighestBadge } from "./badgeTiers";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -60,20 +61,38 @@ export function buildTemplateData(
     ? describeExtremes(extremeCard.extremeFlags!, extremeCard.name)
     : "";
 
+  // Resolve the star's highest badge for commentary focus
+  const starBadgeIds = (star?.achievements ?? []).map(a => a.id);
+  const highestBadge = getHighestBadge(starBadgeIds);
+  const badgeLabel = highestBadge?.commentaryLabel ?? "";
+
+  // Compute topStat: the star's highest stat value + unit (e.g. "22 pt")
+  const ptsVal = star ? Math.round(statN(star, "pts")) : 0;
+  const rebVal = star ? Math.round(statN(star, "reb")) : 0;
+  const astVal = star ? Math.round(statN(star, "ast")) : 0;
+  const stlVal = star ? Math.round(statN(star, "stl")) : 0;
+  const blkVal = star ? Math.round(statN(star, "blk")) : 0;
+  const statEntries: [number, string][] = [
+    [ptsVal, "pt"], [rebVal, "reb"], [astVal, "ast"], [stlVal, "stl"], [blkVal, "blk"],
+  ];
+  const [topVal, topUnit] = statEntries.reduce((best, cur) => cur[0] > best[0] ? cur : best, [0, "pt"]);
+  const topStat = topVal > 0 ? `${topVal} ${topUnit}` : "";
+
   return {
     name,
     last,
     first,
     nick,
     nick2,
-    pts: star ? Math.round(statN(star, "pts")) : 0,
-    reb: star ? Math.round(statN(star, "reb")) : 0,
-    ast: star ? Math.round(statN(star, "ast")) : 0,
-    stl: star ? Math.round(statN(star, "stl")) : 0,
-    blk: star ? Math.round(statN(star, "blk")) : 0,
+    pts: ptsVal,
+    reb: rebVal,
+    ast: astVal,
+    stl: stlVal,
+    blk: blkVal,
     to: star ? Math.round(statN(star, "turnovers") || statN(star, "to")) : 0,
     opp,
-    badge: "",
+    badge: badgeLabel,
+    topStat,
     streak: input.streak,
     gap: (input.nextTierMin ?? 0) > 0 ? Math.round((input.nextTierMin! - input.totalFp) * 10) / 10 : 0,
     record: rec ? `The NBA record is ${rec.record}.` : "",
@@ -92,11 +111,15 @@ export function resolveTemplate(template: string, data: TemplateData): string {
     .replace(/\{first\}/g, data.first)
     .replace(/\{nick\}/g, data.nick)
     .replace(/\{nick2\}/g, data.nick2)
-    .replace(/\{pts\}/g, String(data.pts))
-    .replace(/\{reb\}/g, String(data.reb))
-    .replace(/\{ast\}/g, String(data.ast))
+    // Stats always include units — "22 pts" never bare "22"
+    .replace(/\{pts\}/g, `${data.pts} pts`)
+    .replace(/\{reb\}/g, `${data.reb} reb`)
+    .replace(/\{ast\}/g, `${data.ast} ast`)
+    .replace(/\{stl\}/g, `${data.stl} stl`)
+    .replace(/\{blk\}/g, `${data.blk} blk`)
     .replace(/\{opp\}/g, data.opp)
     .replace(/\{badge\}/g, data.badge)
+    .replace(/\{topStat\}/g, data.topStat)
     .replace(/\{streak\}/g, String(data.streak))
     .replace(/\{gap\}/g, String(data.gap))
     .replace(/\{record\}/g, data.record)
@@ -108,8 +131,8 @@ export function resolveTemplate(template: string, data: TemplateData): string {
 
 const DETAIL_SNIPPETS: Record<string, (data: TemplateData) => string> = {
   record_event: (d) => d.record ? `${d.record}` : "",
-  rare_badge: (d) => d.badge ? `${d.badge} on the stat sheet.` : "",
-  common_badge: (d) => d.badge ? `${d.badge}.` : "",
+  rare_badge: () => "",  // Rare badges are now the template story, not a detail snippet
+  common_badge: (d) => d.badge ? `${d.badge[0].toUpperCase() + d.badge.slice(1)} on the stat sheet.` : "",
   held_card_paid: () => "Holding that card was the right call.",
   high_stats: () => "",  // Stats are embedded in the main template via {pts}/{reb}/{ast} — no separate injection
   near_miss_win: (d) => d.gap > 0 ? `${Math.round(d.gap * 10) / 10} away from the next level.` : "",

@@ -19,6 +19,8 @@ export interface CommentaryRosterCard {
   statLine?: Record<string, any>;
   opponent?: string;
   homeAway?: "H" | "A" | "";
+  /** Earned badges/achievements (e.g. TRIPLE_DBL, FIRE, DOUBLE_DBL) */
+  achievements?: Array<{ id: string; label: string; icon?: string; fp?: number }>;
   /** Extreme game flags — outlier stat lines that deserve spotlight commentary */
   extremeFlags?: import("@shared/utils/extremeGames").ExtremeFlag[];
 }
@@ -99,7 +101,9 @@ export type StoryId =
   | "clean_win"
   | "star_no_showed"
   | "star_cold"
-  | "everyone_flat";
+  | "star_carried_loss"
+  | "everyone_flat"
+  | "star_rare_badge";
 
 export type Register = "win" | "loss";
 
@@ -177,6 +181,8 @@ export interface TemplateData {
   to: number;
   opp: string;
   badge: string;
+  /** Highest stat with unit, e.g. "22 pt" — used in badge-focused templates */
+  topStat: string;
   streak: number;
   gap: number;
   record: string;

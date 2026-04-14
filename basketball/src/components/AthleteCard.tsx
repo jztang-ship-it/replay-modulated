@@ -150,11 +150,6 @@ function BackBStats({ card }: { card: PlayerCard }) {
             {badgesData.slice(0, 8).map((b: any, i: number) => (
               <span key={b.id ?? b.label ?? i} title={`${b.label} (${b.fp > 0 ? "+" : ""}${b.fp})`} style={{ fontSize: 14, lineHeight: 1 }}>{b.icon}</span>
             ))}
-            {badgeFpBonus !== 0 && (
-              <span style={{ fontSize: 10, fontWeight: 800, color: badgeFpBonus > 0 ? "#FFD700" : "#FF6B6B", padding: "1px 5px", borderRadius: 4, background: "rgba(255,255,255,0.08)" }}>
-                {badgeFpBonus > 0 ? "+" : ""}{badgeFpBonus}
-              </span>
-            )}
           </>
         ) : (
           <span style={{ fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.25)" }}>No badges</span>

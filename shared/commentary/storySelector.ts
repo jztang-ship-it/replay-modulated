@@ -9,6 +9,7 @@ import type {
 } from "./types";
 import type { CommentaryInput } from "./types";
 import { detectRecords } from "../data/recordDetector";
+import { getHighestBadge, isRareBadge } from "./badgeTiers";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -58,6 +59,8 @@ function pickStoryId(register: Register, star: CommentaryRosterCard | null): Sto
     if (r >= 1.0) return "star_delivered";
     return "star_quiet_win";
   } else {
+    // Star went off but the team still lost — the rest of the roster failed them
+    if (r >= 1.35) return "star_carried_loss";
     if (r < 0.65) return "star_no_showed";
     if (r < 0.75) return "star_cold";
     return "everyone_flat";
@@ -85,6 +88,17 @@ function assembleWinDetails(
   const candidates: DetailCandidate[] = [];
 
   if (recordEvents.length > 0) candidates.push({ id: "record_event", probability: 0.95 });
+
+  // Rare badge detection — tier 1-2 badges (triple double, 5x5, etc.) ALWAYS mentioned
+  const starBadgeIds = (star?.achievements ?? []).map(a => a.id);
+  const highestBadge = getHighestBadge(starBadgeIds);
+  if (highestBadge && highestBadge.tier <= 1) {
+    candidates.push({ id: "rare_badge", probability: 1.0 }); // legendary — always
+  } else if (highestBadge && isRareBadge(highestBadge.tier)) {
+    candidates.push({ id: "rare_badge", probability: 0.95 }); // rare — almost always
+  } else if (highestBadge && highestBadge.tier === 3) {
+    candidates.push({ id: "common_badge", probability: 0.30 }); // solid — sometimes
+  }
 
   // Extreme game detection — tier 1 always mentioned, tier 2 supplements
   const tier1Card = input.roster.find(c => c.extremeFlags?.some(f => f.tier === 1));
@@ -126,6 +140,15 @@ function assembleWinDetails(
     }
   }
 
+  // Exception: rare badges (tier 1-2) always go first — they ARE the headline
+  if (highestBadge && isRareBadge(highestBadge.tier)) {
+    const badgeIdx = shuffled.findIndex(c => c.id === "rare_badge");
+    if (badgeIdx > 0) {
+      const [badge] = shuffled.splice(badgeIdx, 1);
+      shuffled.unshift(badge);
+    }
+  }
+
   const selected: DetailId[] = [];
   for (let i = 0; i < shuffled.length && selected.length < 2; i++) {
     const chance = selected.length === 0 ? shuffled[i].probability : shuffled[i].probability * 0.3;
@@ -147,6 +170,15 @@ function assembleLossDetails(
 
   if (recordEvents.length > 0) candidates.push({ id: "record_event", probability: 0.95 });
 
+  // Rare badge in a loss — still worth mentioning ("triple double and still lost")
+  const starBadgeIds = (star?.achievements ?? []).map(a => a.id);
+  const highestBadge = getHighestBadge(starBadgeIds);
+  if (highestBadge && highestBadge.tier <= 1) {
+    candidates.push({ id: "rare_badge", probability: 1.0 });
+  } else if (highestBadge && isRareBadge(highestBadge.tier)) {
+    candidates.push({ id: "rare_badge", probability: 0.85 });
+  }
+
   // Extreme game in a losing hand — tier 1 always, tier 2 sometimes
   const tier1Card = input.roster.find(c => c.extremeFlags?.some(f => f.tier === 1));
   const tier2Card = input.roster.find(c => c.extremeFlags?.some(f => f.tier === 2));
@@ -160,6 +192,15 @@ function assembleLossDetails(
   candidates.push({ id: "culture_loss", probability: 0.40 });
 
   const shuffled = candidates.sort((a, b) => roll(seed, candidates.indexOf(a)) - roll(seed, candidates.indexOf(b)));
+
+  // Exception: rare badges always go first in loss context too
+  if (highestBadge && isRareBadge(highestBadge.tier)) {
+    const badgeIdx = shuffled.findIndex(c => c.id === "rare_badge");
+    if (badgeIdx > 0) {
+      const [badge] = shuffled.splice(badgeIdx, 1);
+      shuffled.unshift(badge);
+    }
+  }
 
   const selected: DetailId[] = [];
   for (let i = 0; i < shuffled.length && selected.length < 2; i++) {

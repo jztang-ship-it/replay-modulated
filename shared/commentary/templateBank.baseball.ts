@@ -32,7 +32,7 @@ export const BASEBALL_TEMPLATES: CommentaryTemplate[] = [
   { register: "win", story: "star_went_off", tone: "observational", templates: [
     "{name} came through big{opp}. The kind of day from the top of the lineup that makes everything work.",
     "{last} was locked in from the first pitch today. When the star produces like that, the hand follows.",
-    "The numbers tell the story: {name} dominated{opp} and the hand cashed because of that performance.",
+    "The numbers tell the story: {name} dominated{opp} and the hand cashed because of that showing.",
   ]},
   { register: "win", story: "star_went_off", tone: "analytical", templates: [
     "{name} came in well above the expected line{opp}. That kind of output is why you pay the salary.",
@@ -57,7 +57,7 @@ export const BASEBALL_TEMPLATES: CommentaryTemplate[] = [
   { register: "win", story: "star_delivered", tone: "warm", templates: [
     "Solid day from {name}{opp}. Did the job, the lineup held up. Take the win and keep going.",
     "{last} was steady all game{opp}. No fireworks needed, just a good result for the hand.",
-    "Professional performance from {first}. The kind of hand that quietly adds up over time.",
+    "Professional outing from {first}. The kind of hand that quietly adds up over time.",
     "The kind of hand you want every time. Steady across the board, money in the account.",
     "Clean win today. Everyone contributed, nobody had to carry. That is the blueprint.",
   ]},
@@ -149,6 +149,34 @@ export const BASEBALL_TEMPLATES: CommentaryTemplate[] = [
   { register: "win", story: "clean_win", tone: "deadpan", templates: [
     "Won the hand. Nobody stood out. Nobody needed to. On to the next one.",
     "Committee win. Not exciting but it counts the same on the ledger.",
+  ]},
+
+  // ═══ LOSS — star_carried_loss (star went off but team still busted) ═══════
+
+  { register: "loss", story: "star_carried_loss", tone: "warm", templates: [
+    "{name} did everything possible{opp}. The rest of the lineup let that night go to waste.",
+    "{last} showed up in a major way but the supporting bats did not hold up their end of the deal.",
+    "Heartbreaker. {nick} went off and the hand still busted. The lineup could not keep up with the star.",
+    "You can not ask more from {name} than what was delivered today. The loss falls on everyone else.",
+  ]},
+  { register: "loss", story: "star_carried_loss", tone: "culture_wry", templates: [
+    "{nick} went nuclear and it still was not enough. The supporting bats owe a formal apology today.",
+    "{last} put on a show{opp} and nobody else bought a ticket. Tough way to lose a hand.",
+    "Imagine going off like {nick} did today and still losing. The bench should be embarrassed by this.",
+    "{name} carried the whole lineup and the lineup said thanks but no thanks. Brutal day at the park.",
+  ]},
+  { register: "loss", story: "star_carried_loss", tone: "observational", templates: [
+    "{name} vastly exceeded the expected line{opp} but the rest of the lineup fell short across the board.",
+    "The star carried. The supporting bats did not follow. {last} deserved a better outcome today.",
+    "When the star delivers like {last} did and the hand still busts, the problem is everywhere else.",
+  ]},
+  { register: "loss", story: "star_carried_loss", tone: "analytical", templates: [
+    "{name} came in far above the expected line{opp}. The loss is entirely on the supporting cards today.",
+    "Elite output from {last} was offset by the rest of the lineup falling short across the board.",
+  ]},
+  { register: "loss", story: "star_carried_loss", tone: "deadpan", templates: [
+    "{last} went off{opp}. Still lost. The rest of the lineup was not there today. It happens.",
+    "{nick} did the job and then some. Everybody else did not. That is the whole story of this hand.",
   ]},
 
   // ═══ LOSS — star_no_showed ════════════════════════════════════════════════

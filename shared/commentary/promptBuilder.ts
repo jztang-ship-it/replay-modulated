@@ -8,6 +8,7 @@
  */
 
 import type { CommentaryInput, CommentaryCultureNugget } from "./types";
+import { getHighestBadge, isRareBadge } from "./badgeTiers";
 
 export interface BuiltPrompt {
   system: string;
@@ -43,6 +44,8 @@ RULES:
 5. NEVER use game tier names: ROOKIE, STARTER, ALL_STAR, MVP, LEGEND, BUST. These are game mechanics that mean nothing to a basketball fan.
 6. "loss" outcome = deadpan/wry honesty. "win" = it's a win, celebrate it. "close win" = acknowledge the near-miss.
 7. Write like a basketball-watching friend, not a robot. No fragments. No taglines. Full sentences with subject-verb-object.
+8. STATS MUST ALWAYS INCLUDE UNITS: "22 pts" not "22". Never reference a bare number without its stat abbreviation (pts, reb, ast, stl, blk).
+9. BADGE PRIORITY: If a player has a badge marked "FOCUS ON THIS", that badge IS the story. A triple double always outranks the points total. A 5x5 outranks a double double. Commentary must lead with the rarest badge, not the lower-tier achievement.
 
 BAD (reject these patterns):
 - "Cold from the first tip." ← fragment, no player name
@@ -107,8 +110,12 @@ function buildUserPrompt(
     const reb = hasPts ? (s.reb ?? s.rebounds ?? s.REB ?? s.trb ?? 0) : null;
     const ast = hasPts ? (s.ast ?? s.assists ?? s.AST ?? 0) : null;
     const statStr = (pts != null && pts > 0) ? ` [${pts}pts ${reb}reb ${ast}ast]` : "";
+    // Include badge info — rare badges should be the focus of commentary
+    const badgeIds = (c.achievements ?? []).map(a => a.id);
+    const topBadge = getHighestBadge(badgeIds);
+    const badgeStr = topBadge ? ` {BADGE: ${topBadge.commentaryLabel}${isRareBadge(topBadge.tier) ? " — FOCUS ON THIS" : ""}}` : "";
     lines.push(
-      `${i + 1}. ${c.name} [${tier} ${allowed}] — perf:${perfTag}${statStr}${oppStr}`,
+      `${i + 1}. ${c.name} [${tier} ${allowed}] — perf:${perfTag}${statStr}${badgeStr}${oppStr}`,
     );
   });
 

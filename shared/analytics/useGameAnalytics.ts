@@ -4,7 +4,7 @@ import { track, setProduct } from "./analytics";
 export type AnalyticsSport = "basketball" | "worldcup" | "football" | "nfl" | "hockey" | "baseball" | "mma";
 
 const TIER_THRESHOLDS: Record<AnalyticsSport, number[]> = {
-  basketball: [180, 195, 210, 225, 240],  // ROOKIE, STARTER, ALL_STAR, MVP, LEGEND — must sync with payoutLogic.ts
+  basketball: [190, 205, 225, 235, 255],  // ROOKIE, STARTER, ALL_STAR, MVP, LEGEND — must sync with payoutLogic.ts
   worldcup:   [155, 180, 200, 230],
   football:   [135, 160, 180, 205],
   nfl:        [135, 160, 180, 205],

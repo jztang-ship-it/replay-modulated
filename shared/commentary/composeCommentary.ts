@@ -11,6 +11,7 @@ import { selectTone } from "./toneEngine";
 import { selectStory, selectStar } from "./storySelector";
 import { lookupTemplates, lookupFallbackTemplates } from "./templateBank";
 import { buildTemplateData, composeMessage } from "./templateResolver";
+import { getHighestBadge, isRareBadge } from "./badgeTiers";
 
 // ─── Culture lookup ──────────────────────────────────────────────────────────
 // Lazy-loaded to avoid circular deps and to keep composer sport-agnostic.
@@ -112,13 +113,25 @@ export function composeCommentary(input: CommentaryInput & { sport?: string }): 
   const culture = star ? lookupCulture(star.name, sport) : null;
 
   // Step 4: Story + details
-  const { storyId, details, recordEvents } = selectStory(input, seed, sport);
+  const { storyId: baseStoryId, details, recordEvents } = selectStory(input, seed, sport);
+
+  // Step 4b: Rare multi-stat badge override — when the star earned a multi-stat
+  // milestone (triple double, 5x5, quad double), that badge IS the story.
+  // Single-stat badges (GOD_MODE, FIRE) are already handled by star_went_off.
+  const starBadgeIds = (star?.achievements ?? []).map(a => a.id);
+  const highestBadge = getHighestBadge(starBadgeIds);
+  const hasBadgeStory = highestBadge && isRareBadge(highestBadge.tier) && highestBadge.multiStat === true;
+  const storyId = hasBadgeStory ? "star_rare_badge" as const : baseStoryId;
 
   // Step 5: Tone
   const tone = selectTone(intensity, seed);
 
   // Step 6: Compose
   let templates = lookupTemplates(sport, register, storyId, tone);
+  // Fall back to the original story if no badge templates exist for this tone
+  if (templates.length === 0 && hasBadgeStory) {
+    templates = lookupTemplates(sport, register, baseStoryId, tone);
+  }
   if (templates.length === 0) {
     templates = lookupFallbackTemplates(sport, register, tone);
   }

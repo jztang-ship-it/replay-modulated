@@ -12,42 +12,42 @@ export const BASKETBALL_TEMPLATES: CommentaryTemplate[] = [
 
   { register: "win", story: "star_went_off", tone: "hype", templates: [
     "{name} dropped {pts}{opp} and this hand absolutely cashed. That is a night you remember.",
-    "{pts} points from {last}{opp}. Statement game and the hand is in the green. Take the money.",
-    "Nobody was stopping {nick} tonight — {pts} points{opp} and the roster rode the wave to a win.",
-    "{last} went off{opp}. {pts} points of pure dominance. The supporting cast just watched and collected.",
-    "That is {nick} at full power. {pts} points{opp}. Cash the hand and enjoy the night.",
+    "{pts} from {last}{opp}. Statement game and the hand is in the green. Take the money.",
+    "Nobody was stopping {nick} tonight — {pts}{opp} and the roster rode the wave to a win.",
+    "{last} went off{opp}. {pts} of pure dominance. The supporting cast just watched and collected.",
+    "That is {nick} at full power. {pts}{opp}. Cash the hand and enjoy the night.",
   ]},
   { register: "win", story: "star_went_off", tone: "warm", templates: [
-    "Good night to have {name} on your roster. {pts} points{opp}, clean and efficient from start to finish.",
-    "{pts} points{opp}. That is {last} doing exactly what you need from your top card every time out.",
+    "Good night to have {name} on your roster. {pts}{opp}, clean and efficient from start to finish.",
+    "{pts}{opp}. That is {last} doing exactly what you need from your top card every time out.",
     "The roster had a guy tonight. {name} set the tone{opp} and never let up. Comfortable win.",
-    "{first} {last} came through big. {pts} points and the whole roster benefited from that kind of night.",
-    "When {nick} is locked in like that, the hand takes care of itself. {pts} points{opp}. Easy money.",
+    "{first} {last} came through big. {pts} and the whole roster benefited from that kind of night.",
+    "When {nick} is locked in like that, the hand takes care of itself. {pts}{opp}. Easy money.",
   ]},
   { register: "win", story: "star_went_off", tone: "culture_wry", templates: [
     "{last} put up {pts}{opp} and honestly, someone should check on the opposing defense after that one.",
-    "{nick} decided to remind everyone tonight. {pts} points. Message received loud and clear.",
+    "{nick} decided to remind everyone tonight. {pts}. Message received loud and clear.",
     "Someone had to go for {pts}. {last} decided tonight was the night and nobody argued.",
     "{pts} from {nick}{opp}. At this point the stat line is just showing off for the audience.",
-    "{name} treated this one like a personal vendetta. {pts} points of evidence submitted to the court.",
+    "{name} treated this one like a personal vendetta. {pts} of evidence submitted to the court.",
   ]},
   { register: "win", story: "star_went_off", tone: "observational", templates: [
     "{name} went for {pts}{opp}. The kind of night that single-handedly carries a winning hand from start to finish.",
     "{pts} from {last} tonight. When the star delivers at that level, everything else falls into place.",
-    "{nick} was the entire story tonight. {pts} points{opp} and the hand followed right behind the star.",
+    "{nick} was the entire story tonight. {pts}{opp} and the hand followed right behind the star.",
     "The numbers tell it all: {pts} from {name}{opp}. That output made every other card look better.",
   ]},
   { register: "win", story: "star_went_off", tone: "analytical", templates: [
-    "{name} came in well above the expected line{opp}. {pts} points — that is the upside you pay for.",
+    "{name} came in well above the expected line{opp}. {pts} — that is the upside you pay for.",
     "{last} exceeded average output by a wide margin tonight. The winning hand is the direct result.",
     "The anchor exceeded expectations across the board. {pts} from {name}{opp}. That is how you build a winner.",
-    "Above-average output from {nick} tonight at {pts} points. The math worked and the hand cashed.",
+    "Above-average output from {nick} tonight at {pts}. The math worked and the hand cashed.",
   ]},
   { register: "win", story: "star_went_off", tone: "deadpan", templates: [
     "{last} went for {pts}{opp}. Won the hand. Nothing complicated about that outcome tonight.",
     "{pts} from {nick}{opp}. That will do. Cash the hand and move on to the next one.",
-    "{name} handled business tonight. {pts} points{opp}. Not much else needs to be said about it.",
-    "Big night from {last}. {pts} points. Hand won. On to the next opportunity ahead.",
+    "{name} handled business tonight. {pts}{opp}. Not much else needs to be said about it.",
+    "Big night from {last}. {pts}. Hand won. On to the next opportunity ahead.",
   ]},
 
   // ═══ WIN — star_delivered ══════════════════════════════════════════════════
@@ -174,7 +174,7 @@ export const BASKETBALL_TEMPLATES: CommentaryTemplate[] = [
     "The whole squad just quietly handled business tonight. No drama, no problems, just a clean win.",
   ]},
   { register: "win", story: "clean_win", tone: "observational", templates: [
-    "Balanced output across the roster. No standout performer, just consistent play from top to bottom.",
+    "Balanced output across the roster. No standout card, just consistent play from top to bottom.",
     "No single card drove the result. The roster each did their part for a collective win tonight.",
     "Even distribution tonight. The lineup blended together and the hand benefited from that balance.",
     "The roster functioned as a unit. Balanced and effective. That is what roster depth looks like.",
@@ -190,6 +190,38 @@ export const BASKETBALL_TEMPLATES: CommentaryTemplate[] = [
     "Group effort. Nothing special from any individual card. Got the win regardless. Moving on now.",
     "Committee win. Not exciting but it counts the same on the ledger. Next hand is what matters.",
     "The roster did just enough across the board. Hand cashed. Nothing more to say about this one.",
+  ]},
+
+  // ═══ LOSS — star_carried_loss (star went off but team still busted) ═══════
+
+  { register: "loss", story: "star_carried_loss", tone: "warm", templates: [
+    "{name} did everything possible{opp}. The rest of the roster let that night go to waste.",
+    "{last} showed up in a major way but it was not enough. The supporting cast did not hold up their end.",
+    "Heartbreaker. {nick} went off and the hand still busted. The lineup around the star could not keep up.",
+    "You can not ask more from {name} than what was delivered tonight. The loss falls on everyone else.",
+  ]},
+  { register: "loss", story: "star_carried_loss", tone: "culture_wry", templates: [
+    "{nick} went nuclear and it still was not enough. The supporting cast owes a formal apology tonight.",
+    "{last} put on a show{opp} and nobody else bought a ticket. Tough way to lose a hand.",
+    "Imagine going off like {nick} did tonight and still losing. The bench should be embarrassed.",
+    "{name} carried the whole roster on one back and the roster said thanks but no thanks. Brutal.",
+    "{last} did the job of three players tonight. The other cards did the job of zero.",
+  ]},
+  { register: "loss", story: "star_carried_loss", tone: "observational", templates: [
+    "{name} vastly exceeded the expected line{opp} but the rest of the roster underdelivered across the board.",
+    "The star carried. The supporting cast did not follow. {last} deserved a better outcome than this tonight.",
+    "{nick} had an elite night but the deficit from the rest of the lineup was too deep to overcome.",
+    "When the star delivers like {last} did and the hand still busts, the problem is everywhere else.",
+  ]},
+  { register: "loss", story: "star_carried_loss", tone: "analytical", templates: [
+    "{name} came in far above the expected line{opp}. The loss is entirely attributable to the supporting cards.",
+    "Elite output from {last} was offset by the rest of the lineup falling short across the board tonight.",
+    "The anchor overdelivered significantly. The math still did not work because every other card missed.",
+  ]},
+  { register: "loss", story: "star_carried_loss", tone: "deadpan", templates: [
+    "{last} went off{opp}. Still lost. The rest of the roster was not there tonight. It happens.",
+    "{nick} did the job and then some. Everybody else did not. That is the whole story of this hand.",
+    "Big night from {last}. Did not matter. The lineup around the star was not close to enough.",
   ]},
 
   // ═══ LOSS — star_no_showed ════════════════════════════════════════════════
@@ -296,5 +328,79 @@ export const BASKETBALL_TEMPLATES: CommentaryTemplate[] = [
     "Below the line across the board. When everyone misses, the hand has no chance no matter the build.",
     "Systematic shortfall from the full roster tonight. The cumulative deficit was just too large to survive.",
     "{last} and the rest of the lineup all underdelivered. The math was not there from any single position.",
+  ]},
+
+  // ═══ WIN — star_rare_badge (badge IS the story) ══════════════════════════
+
+  { register: "win", story: "star_rare_badge", tone: "hype", templates: [
+    "A {topStat} {badge} from {name}{opp}. That is how you announce yourself. The hand cashed hard.",
+    "{name} posted a {badge}{opp}. A {topStat} {badge} is a statement and the whole roster rode that wave.",
+    "Someone had to step up. {last} decided tonight was the night. A {topStat} {badge} is how you do it.",
+    "{nick} just dropped a {badge}{opp}. {topStat} leading the way and the hand was never in doubt.",
+    "{last} with the {badge}{opp}. When you put up a {topStat} {badge} the rest of the roster just watches.",
+  ]},
+  { register: "win", story: "star_rare_badge", tone: "warm", templates: [
+    "{name} put together a {badge}{opp}. A {topStat} {badge} is exactly what this hand needed tonight.",
+    "That is a {badge} from {last}{opp}. {topStat} leading the stat line and the hand came together nicely.",
+    "Good night to have {name} on the roster. A {topStat} {badge} is the kind of line you build a hand around.",
+    "{last} came through with a {badge}{opp}. {topStat} on top and the supporting cast held up their end.",
+    "A clean {badge} from {nick}{opp}. {topStat} headlining the stat sheet and the hand cashed comfortably.",
+  ]},
+  { register: "win", story: "star_rare_badge", tone: "culture_wry", templates: [
+    "{nick} casually posted a {badge}{opp}. A {topStat} {badge} like it was just another Tuesday for the star.",
+    "Someone had to step up. {last} decided tonight was the night and nobody argued. A {topStat} {badge} is a great way to do it.",
+    "{last} put up a {badge}{opp} and honestly the rest of the league should be taking notes right now.",
+    "A {topStat} {badge} from {name}. That is not normal. That is generational and the hand reflects it.",
+    "{nick} dropped a {badge}{opp} and made it look like it required zero effort. The hand printed money.",
+  ]},
+  { register: "win", story: "star_rare_badge", tone: "observational", templates: [
+    "{name} recorded a {badge}{opp}. A {topStat} {badge} is the kind of stat line that defines a hand entirely.",
+    "The story tonight is the {badge} from {last}{opp}. {topStat} headlining a stat line that carried the hand.",
+    "{last} put together a {badge} tonight. When someone posts a {topStat} {badge} nothing else matters.",
+    "A {topStat} {badge} from {nick}{opp}. That kind of all-around production is the difference maker in any hand.",
+    "The numbers from {name} tonight tell the whole story. A {badge}{opp} with {topStat} leading the way.",
+  ]},
+  { register: "win", story: "star_rare_badge", tone: "analytical", templates: [
+    "{name} filled the stat sheet across the board{opp}. A {topStat} {badge} is the kind of output that wins hands.",
+    "A {badge} from {last}{opp}. Multi-category production with {topStat} at the top. The hand benefited directly.",
+    "{last} posted a {topStat} {badge} tonight. That level of all-around output anchored the entire hand.",
+    "The anchor hit on every category tonight. A {badge} from {nick}{opp} with {topStat} leading the line.",
+  ]},
+  { register: "win", story: "star_rare_badge", tone: "deadpan", templates: [
+    "{last} had a {badge}{opp}. {topStat} on top. Won the hand. Not much else needs to be said about it.",
+    "A {topStat} {badge} from {nick}{opp}. Cash the hand and move on. That stat line speaks for itself.",
+    "{name} posted a {badge} tonight. {topStat} leading the way. Hand won. On to the next one.",
+    "{last} quietly put together a {badge}{opp}. {topStat} headlining it. The result was never in doubt.",
+  ]},
+
+  // ═══ LOSS — star_rare_badge (badge spotlight but hand still busted) ═══════
+
+  { register: "loss", story: "star_rare_badge", tone: "warm", templates: [
+    "{name} put up a {badge}{opp} and the hand still busted. A {topStat} {badge} deserved a better outcome.",
+    "Tough one. {last} posted a {badge}{opp} with {topStat} leading the stat line but it was not enough tonight.",
+    "A {topStat} {badge} from {nick}{opp} and still a loss. The supporting cast let that performance go to waste.",
+    "{last} did everything right tonight. A {badge} with {topStat} up top and the roster could not keep up.",
+  ]},
+  { register: "loss", story: "star_rare_badge", tone: "culture_wry", templates: [
+    "{nick} posted a {badge}{opp} and the hand still busted. A {topStat} {badge} wasted. Someone owes an apology.",
+    "A {topStat} {badge} from {last} and somehow the hand lost. The supporting cast should be embarrassed.",
+    "{name} had a {badge}{opp}. {topStat} on top of everything else. The fact this hand lost is genuinely criminal.",
+    "Imagine dropping a {topStat} {badge} like {nick} did tonight and still losing. That is a roster problem.",
+  ]},
+  { register: "loss", story: "star_rare_badge", tone: "observational", templates: [
+    "{name} recorded a {badge}{opp} but the hand still fell short. A {topStat} {badge} was not enough to save it.",
+    "The star posted a {topStat} {badge}{opp}. The rest of the roster created a deficit too deep to overcome.",
+    "{last} filled the entire stat sheet tonight. A {badge} with {topStat} leading and the hand still busted.",
+    "A {topStat} {badge} from {nick}{opp} and a loss. The gap between the star and the roster was too wide.",
+  ]},
+  { register: "loss", story: "star_rare_badge", tone: "analytical", templates: [
+    "{name} posted a {badge}{opp} with {topStat} leading the line. The supporting cards fell far short of covering.",
+    "A {topStat} {badge} from {last}{opp} was not sufficient. The deficit from the rest of the roster was too large.",
+    "{last} filled every category tonight with a {badge}. The hand lost despite elite output from the anchor.",
+  ]},
+  { register: "loss", story: "star_rare_badge", tone: "deadpan", templates: [
+    "{last} had a {badge}{opp}. {topStat} on top. Still lost. The roster around the star was not there tonight.",
+    "A {topStat} {badge} from {nick}{opp}. Not enough. The supporting cast did not hold up. It happens.",
+    "{name} posted a {badge} tonight and it did not matter. The hand needed more from everyone else.",
   ]},
 ];

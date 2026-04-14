@@ -13,7 +13,7 @@ const MARGINS = [2, 8, 20];
 const NEAR_MISS_GAPS = [0, 2, 6];
 const STAR_RATIOS = [0.5, 0.7, 1.0, 1.2, 1.6];
 const STREAKS = [0, 3, 5, 10];
-const BADGES = ["none", "FIRE", "GOD_MODE", "TURNOVER_MACHINE"];
+const BADGES = ["none", "FIRE", "GOD_MODE", "TRIPLE_DBL", "DOUBLE_DBL", "TURNOVER_MACHINE"];
 const ROSTER_SHAPES = ["1star", "2star"] as const;
 
 const TIER_FLOORS: Record<string, number> = {
@@ -26,6 +26,17 @@ const NEXT_MINS: Record<string, number> = {
   ROOKIE: 190, STARTER: 205, ALL_STAR: 225, MVP: 235, LEGEND: 255,
 };
 
+function badgeToAchievements(badge: string): Array<{ id: string; label: string; icon: string; fp: number }> {
+  const map: Record<string, { id: string; label: string; icon: string; fp: number }> = {
+    FIRE: { id: "FIRE", label: "Fire", icon: "🔥", fp: 5 },
+    GOD_MODE: { id: "GOD_MODE", label: "God Mode", icon: "⚡", fp: 10 },
+    TURNOVER_MACHINE: { id: "TURNOVER_MACHINE", label: "Turnover Machine", icon: "🤦", fp: -6 },
+    TRIPLE_DBL: { id: "TRIPLE_DBL", label: "Triple Double", icon: "👑", fp: 8 },
+    DOUBLE_DBL: { id: "DOUBLE_DBL", label: "Double Double", icon: "✌️", fp: 2 },
+  };
+  return badge !== "none" && map[badge] ? [map[badge]] : [];
+}
+
 function buildRoster(shape: "1star" | "2star", starRatio: number, badge: string, held: boolean): CommentaryRosterCard[] {
   const starCard = (name: string, salary: number, tier: string): CommentaryRosterCard => ({
     name,
@@ -36,6 +47,7 @@ function buildRoster(shape: "1star" | "2star", starRatio: number, badge: string,
     statLine: { pts: Math.round(25 * starRatio), reb: 6, ast: 5, stl: 1, blk: 0, turnovers: badge === "TURNOVER_MACHINE" ? 7 : 2 },
     opponent: "IND",
     homeAway: "H" as const,
+    achievements: badgeToAchievements(badge),
   });
 
   const benchCard = (name: string): CommentaryRosterCard => ({
@@ -168,6 +180,14 @@ function grade(message: string, input: CommentaryInput): GradeResult[] {
     if (posCount >= 2) {
       results.push({ severity: "FAIL", check: "register_inconsistency", reason: `Loss message has ${posCount} positive markers` });
     }
+  }
+
+  // Bare stat check — stats must always include units (e.g. "22 pts" not "22")
+  // Only flags player stat references, not streak counts ("10 in a row") or FP gaps ("2 away")
+  const bareStatPattern = /\b(\d{2,3})\s+(from|against|tonight)/;
+  const bareStatMatch = message.match(bareStatPattern);
+  if (bareStatMatch) {
+    results.push({ severity: "FAIL", check: "bare_stat", reason: `Bare number without unit: "${bareStatMatch[0]}"` });
   }
 
   // Star-first check
