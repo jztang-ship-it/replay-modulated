@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from 'vitest'
 
 // Mock supabaseServer so the Supabase client is never instantiated in tests
-vi.mock('../_lib-hand/supabaseServer.ts', () => ({
+vi.mock('../hand/lib/supabaseServer.ts', () => ({
   supabaseAdmin: {},
 }))
 
-import { generateRoster, redrawRoster } from '../_lib-hand/dealer.ts'
+import { generateRoster, redrawRoster } from '../hand/lib/dealer.ts'
 
 // ---------------------------------------------------------------------------
 // Seeded RNG (LCG — deterministic)
