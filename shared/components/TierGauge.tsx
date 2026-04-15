@@ -678,7 +678,7 @@ export function TierGauge({
       </div>
 
       {/* Commentary area — override (FTUE bubble texts) > postRevealCopy > gap callout */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, flexDirection: "column", minHeight: 48, textAlign: "center", position: "relative", zIndex: commentaryOverride ? 1100 : undefined }}>
+      <div style={{ display: "flex", alignItems: "stretch", justifyContent: "center", gap: 4, flexDirection: "column", minHeight: 40, textAlign: "left", position: "relative", zIndex: commentaryOverride ? 1100 : undefined }}>
         {commentaryOverride && commentaryOverride.parts.length > 0 ? (() => {
           const part = commentaryOverride.parts[overridePart];
           const isString = typeof part === "string";
@@ -747,13 +747,13 @@ export function TierGauge({
           );
         })() : postRevealCopy ? (
           ftueTypewriter ? (
-            <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, maxWidth: "100%" }}>
+            <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "stretch", gap: 2, maxWidth: "100%" }}>
               <Typewriter
                 text={postRevealCopy.primary}
                 style={{
                   fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.92)",
                   fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
-                  textAlign: "center", maxWidth: "100%",
+                  textAlign: "left", maxWidth: "100%",
                 }}
                 msPerChar={18}
               />
@@ -763,7 +763,7 @@ export function TierGauge({
                   style={{
                     fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.80)",
                     fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
-                    textAlign: "center", maxWidth: "100%",
+                    textAlign: "left", maxWidth: "100%",
                   }}
                   msPerChar={18}
                   onDone={onCommentaryDone}
@@ -771,12 +771,12 @@ export function TierGauge({
               )}
             </div>
           ) : (
-            <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, maxWidth: "100%" }}>
+            <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "stretch", gap: 2, maxWidth: "100%" }}>
               <span style={{
                 fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.92)",
                 fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
-                textAlign: "center", maxWidth: "100%",
-                display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical" as any,
+                textAlign: "left", maxWidth: "100%",
+                display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as any,
                 overflow: "hidden",
                 animation: "tgTextReveal 0.55s cubic-bezier(0.22,1,0.36,1) both",
               }}>
@@ -786,8 +786,8 @@ export function TierGauge({
                 <span style={{
                   fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.80)",
                   fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
-                  textAlign: "center", maxWidth: "100%",
-                  display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical" as any,
+                  textAlign: "left", maxWidth: "100%",
+                  display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as any,
                   overflow: "hidden",
                   animation: "tgTextReveal 0.55s cubic-bezier(0.22,1,0.36,1) 0.2s both",
                 }}>

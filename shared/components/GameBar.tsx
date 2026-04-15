@@ -1492,7 +1492,7 @@ export function GameBar({
           transition: "filter 0.35s ease, opacity 0.35s ease",
           pointerEvents: showCelebContent ? "none" : "auto",
         }}>
-          <div data-ftue-anchor="balance-row" style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+          <div data-ftue-anchor="balance-row" style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4, paddingTop: 6, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
             {/* Balance — left */}
             <div ref={walletRef} style={{ flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
@@ -1535,34 +1535,35 @@ export function GameBar({
             }}>i</button>
           </div>
 
-          {/* Streak fire emojis — only show current tier being chased */}
-          {streak != null && !ftueHideSkip && (
-            <div style={{ display: "flex", alignItems: "center", gap: 3, padding: "2px 0 3px", maxHeight: 22, overflow: "hidden" }}>
-              {streak < 3 && (<>
-                {Array.from({ length: 3 }, (_, i) => (
-                  <span key={`s1-${i}`} style={{ fontSize: 13, opacity: i < streak ? 1 : 0.2, filter: i < streak ? "none" : "grayscale(1)" }}>🔥</span>
-                ))}
-                <span style={{ fontSize: 8, fontWeight: 800, color: "rgba(255,255,255,0.3)" }}>1.2x</span>
-              </>)}
-              {streak >= 3 && streak < 5 && (<>
-                {Array.from({ length: 2 }, (_, i) => (
-                  <span key={`s2-${i}`} style={{ fontSize: 13, opacity: i < streak - 3 ? 1 : 0.2, filter: i < streak - 3 ? "none" : "grayscale(1)" }}>🔥</span>
-                ))}
-                <span style={{ fontSize: 8, fontWeight: 800, color: "rgba(255,255,255,0.3)" }}>1.5x</span>
-              </>)}
-              {streak >= 5 && streak < 10 && (<>
-                {Array.from({ length: 5 }, (_, i) => (
-                  <span key={`s3-${i}`} style={{ fontSize: 13, opacity: i < streak - 5 ? 1 : 0.2, filter: i < streak - 5 ? "none" : "grayscale(1)" }}>🔥</span>
-                ))}
-                <span style={{ fontSize: 8, fontWeight: 800, color: "rgba(255,255,255,0.3)" }}>2.0x</span>
-              </>)}
-              {streak >= 10 && (
-                <span style={{ fontSize: 10, fontWeight: 900, color: "#FFD700" }}>🔥 2.0x active</span>
-              )}
-            </div>
-          )}
+          {/* Action row — streak left, button center, trophy right */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "relative", paddingTop: 2 }}>
+            {/* Streak fire emojis — left-aligned */}
+            {streak != null && !ftueHideSkip && (
+              <div style={{ position: "absolute", left: 0, display: "flex", alignItems: "center", gap: 3, maxHeight: 22, overflow: "hidden" }}>
+                {streak < 3 && (<>
+                  {Array.from({ length: 3 }, (_, i) => (
+                    <span key={`s1-${i}`} style={{ fontSize: 13, opacity: i < streak ? 1 : 0.2, filter: i < streak ? "none" : "grayscale(1)" }}>🔥</span>
+                  ))}
+                  <span style={{ fontSize: 8, fontWeight: 800, color: "rgba(255,255,255,0.3)" }}>1.2x</span>
+                </>)}
+                {streak >= 3 && streak < 5 && (<>
+                  {Array.from({ length: 2 }, (_, i) => (
+                    <span key={`s2-${i}`} style={{ fontSize: 13, opacity: i < streak - 3 ? 1 : 0.2, filter: i < streak - 3 ? "none" : "grayscale(1)" }}>🔥</span>
+                  ))}
+                  <span style={{ fontSize: 8, fontWeight: 800, color: "rgba(255,255,255,0.3)" }}>1.5x</span>
+                </>)}
+                {streak >= 5 && streak < 10 && (<>
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <span key={`s3-${i}`} style={{ fontSize: 13, opacity: i < streak - 5 ? 1 : 0.2, filter: i < streak - 5 ? "none" : "grayscale(1)" }}>🔥</span>
+                  ))}
+                  <span style={{ fontSize: 8, fontWeight: 800, color: "rgba(255,255,255,0.3)" }}>2.0x</span>
+                </>)}
+                {streak >= 10 && (
+                  <span style={{ fontSize: 10, fontWeight: 900, color: "#FFD700" }}>🔥 2.0x active</span>
+                )}
+              </div>
+            )}
 
-          <div style={{ display: "flex", justifyContent: "center", paddingTop: 0, position: "relative" }}>
             <button
               onClick={onAction}
               disabled={isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked}
@@ -1692,7 +1693,7 @@ export function GameBar({
         )}
 
         {/* ── ZONE C: Multipliers/Wallet/Action ↔ Streak hook ─────── */}
-        <div style={{ position: "relative", overflow: "hidden", paddingBottom: "max(28px, env(safe-area-inset-bottom, 16px))" }}>
+        <div style={{ position: "relative", overflow: "hidden", paddingBottom: "max(32px, env(safe-area-inset-bottom, 20px))" }}>
 
           {/* Normal content */}
           <div style={{

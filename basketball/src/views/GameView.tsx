@@ -25,7 +25,6 @@ import { detectExtremes } from "@shared/utils/extremeGames";
 import { buildPostRevealCopy } from "../utils/buildPostRevealCopy";
 import { composeCommentary } from "../../../shared/commentary/composeCommentary";
 import { useGameAnalytics } from "../../../shared/analytics/useGameAnalytics";
-import { HotStreakOverlay } from '@shared/engagement/HotStreakOverlay';
 import { CollectScreen } from '@shared/engagement/CollectScreen';
 import { TierGauge, computeGaugeState } from '@shared/components/TierGauge';
 import { useEngagement } from '@shared/engagement/useEngagement';
@@ -539,8 +538,6 @@ export default function GameView() {
   // Zone 1: State
   const [gameState, setGameState] = useState<GameState>("IDLE");
   const {
-    hotStreak,
-    sessionWins,
     taskStates,
     loginStreak,
     coins,
@@ -1799,11 +1796,11 @@ export default function GameView() {
 
         {/* 2 — Card stage */}
         <div style={{
-          flex: "0 0 48dvh",
+          flex: "0 0 50dvh",
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "center",
-          padding: "8px 4px 6px 4px",
+          padding: "4px 2px 2px 2px",
           boxSizing: "border-box",
           overflow: "hidden",
         }}>
@@ -1891,7 +1888,7 @@ export default function GameView() {
             ? { "data-ftue-anchor": "ftue-darnit-focus" }
             : {})}
           style={{
-            flex: "0 0 23dvh",
+            flex: "0 0 21dvh",
             display: "flex",
             flexDirection: "column",
             minHeight: 0,
@@ -1914,10 +1911,10 @@ export default function GameView() {
               if (gameState === "RESULTS" && winTier && !showRawScore) setShowRawScore(true);
             }}
             style={{
-              flex: "0 0 64px",
-              height: 64,
-              minHeight: 64,
-              maxHeight: 64,
+              flex: "0 0 52px",
+              height: 52,
+              minHeight: 52,
+              maxHeight: 52,
               flexShrink: 0,
               display: "flex",
               justifyContent: "center",
@@ -2094,7 +2091,7 @@ export default function GameView() {
               flexDirection: "column",
               justifyContent: "flex-start",
               alignItems: "stretch",
-              padding: "8px 10px 2px",
+              padding: "2px 10px 2px",
               boxSizing: "border-box",
               overflow: "hidden",
             }}
@@ -2165,7 +2162,7 @@ export default function GameView() {
                     width: "100%",
                     overflow: "visible",
                     boxSizing: "border-box",
-                    padding: "4px 2px 0",
+                    padding: "2px 2px 0",
                     zIndex: (isFTUE && ftueCommentaryOverride) ? 1100 : undefined,
                   }}
                 >
@@ -2297,7 +2294,6 @@ export default function GameView() {
                 setTimeout(() => handleButtonClick(), 0);
               }}
             />
-            <HotStreakOverlay active={hotStreak} winCount={sessionWins} />
             {showCollect && !isFTUE && (
               <CollectScreen
                 taskStates={taskStates}
