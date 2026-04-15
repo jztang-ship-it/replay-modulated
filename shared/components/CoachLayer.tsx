@@ -115,7 +115,7 @@ const DEFAULT_CARD_TEXTS: Record<string, string> = {
   "ftue-og": "OG earned his Pickpocket badge — 3 steals plus 2 blocks. Elite two-way wing doing it on both ends. 39.6 FP on a $46 card. 👀",
   "ftue-draymond": "Yikes! Single digits from a $43 blue card. Draymond is one of the loudest voices in the game, but his stats sure were quiet tonight. 🧊",
   "ftue-lowry": "Kyle Lowry with the Pure badge — 5 assists, zero turnovers. 18.9 FP from a $20 card. Clean and efficient. 🎯",
-  "ftue-reddish": "Dwight Howard with only 4 pts and 5 boards against Atlanta — 12 FP. That's what the frost means, he definitely didn't help your team. 🧊",
+  "ftue-reddish": "Kevin Love with only 4 pts and 5 boards against Minnesota — 12 FP. That's what the frost means, he definitely didn't help your team. 🧊",
 };
 
 type OnDismiss = () => void;
