@@ -961,7 +961,7 @@ export default function GameView() {
             // These fire for all non-bust hands (ROOKIE still counts for leaderboard/session)
             if (!bust) {
               submitToLeaderboard("fp", totalFp);
-              submitToLeaderboard("hand_avg", totalFp, { handCount });
+              if (handCount >= 8) submitToLeaderboard("hand_avg", totalFp, { handCount });
               const handId = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
               submitToLeaderboard("hand_best", totalFp, { proof, handId });
               submitToLeaderboard("session_score", parseFloat(totalFp.toFixed(1)));
