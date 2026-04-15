@@ -784,14 +784,14 @@ export function TierGauge({
             </div>
           )
         ) : isMaxLevel ? (
-          <span style={{ fontSize: 13, fontWeight: 800, color: TIER_CFG.LEGEND.color, fontFamily: FF, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+          <span style={{ fontSize: 13, fontWeight: 800, color: TIER_CFG.LEGEND.color, fontFamily: FF, letterSpacing: "0.06em", textTransform: "uppercase", textAlign: "center", display: "block" }}>
             You've reached the maximum level
           </span>
         ) : commentaryOverride === null && ftueTypewriter ? (
           // FTUE: hide gap callout when between commentary instructions
           null
         ) : (
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
             <span style={{ fontSize: 18, fontWeight: 800, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px" }}>
               {gap.toFixed(1)}
             </span>
