@@ -231,15 +231,15 @@ export function LandingPage({ onPlay }: Props) {
       <main style={{
         flex: 1, minHeight: 0,
         display: "flex", flexDirection: "column", alignItems: "center",
-        justifyContent: "flex-start",
-        padding: "6px 16px 0", gap: 0, textAlign: "center",
+        justifyContent: "center",
+        padding: "0 16px env(safe-area-inset-bottom, 12px)", gap: 16, textAlign: "center",
       }}>
 
         {/* 3x2 CARD GRID */}
         <div style={{
           display: "grid",
           gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-          gap: 6, width: "100%", maxWidth: 340, marginBottom: 12,
+          gap: 6, width: "100%", maxWidth: 340,
         }}>
           {CARDS.map((c, i) => {
             const isFlipped = flipped.has(c.id);
@@ -292,7 +292,7 @@ export function LandingPage({ onPlay }: Props) {
         </div>
 
         {/* HEADLINE + CTA */}
-        <div style={{ maxWidth: 360, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+        <div style={{ maxWidth: 360, display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
           <p style={{
             fontSize: 10, fontWeight: 700, letterSpacing: ".3em", textTransform: "uppercase",
             color: "#C9A84C", margin: 0,
@@ -312,15 +312,15 @@ export function LandingPage({ onPlay }: Props) {
           )}
           <h1 style={{
             fontFamily: "'Impact','Arial Narrow',Arial,sans-serif", fontWeight: 900,
-            fontSize: "clamp(22px, 4.5vw, 36px)", textTransform: "uppercase", lineHeight: 0.95, margin: 0,
+            fontSize: "clamp(24px, 5vw, 40px)", textTransform: "uppercase", lineHeight: 0.95, margin: 0,
           }}>
             You already know who balled out.<br />
             <em style={{ color: "#C9A84C", fontStyle: "normal" }}>Prove it.</em>
           </h1>
-          <p style={{ fontSize: 11, color: "rgba(240,242,245,0.38)", lineHeight: 1.5, margin: 0 }}>
+          <p style={{ fontSize: 12, color: "rgba(240,242,245,0.38)", lineHeight: 1.6, margin: 0 }}>
             Real stats. Real history. Your fantasy result instantly.
           </p>
-          <button className="lp-cta" onClick={handlePlay} style={{ padding: "12px 48px", fontSize: 15 }}>
+          <button className="lp-cta" onClick={handlePlay} style={{ padding: "14px 52px", fontSize: 16 }}>
             Play IFS
           </button>
           <span style={{ fontSize: 10, color: "rgba(240,242,245,0.38)" }}>
