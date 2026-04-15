@@ -136,23 +136,23 @@ function BackBStats({ card }: { card: PlayerCard }) {
         <div style={S.backDate}>{dateStr || "—"}</div>
         <div style={S.backOpp}>{oppStr || "—"}</div>
       </div>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 4, minWidth: 0 }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 3, minWidth: 0 }}>
         <span style={S.fpLabel}>FP</span>
-        <span style={{ ...S.fpValue, fontSize: 18 }}>{round1(actual)}</span>
+        <span style={{ ...S.fpValue }}>{round1(actual)}</span>
         {badgeFpBonus !== 0 && (
-          <span style={{ fontSize: 10, fontWeight: 700, color: badgeFpBonus > 0 ? "#FFD700" : "#FF6B6B", alignSelf: "flex-end", marginBottom: 2 }}>({badgeFpBonus > 0 ? "+" : ""}{badgeFpBonus})</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: badgeFpBonus > 0 ? "#FFD700" : "#FF6B6B", alignSelf: "flex-end", marginBottom: 1 }}>({badgeFpBonus > 0 ? "+" : ""}{badgeFpBonus})</span>
         )}
       </div>
-      {/* Earned badges — emoji-only inline row, fixed height */}
-      <div style={{ minHeight: 20, display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+      {/* Earned badges — emoji-only inline row, aggressively compact */}
+      <div style={{ minHeight: 10, display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
         {badgesData.length > 0 ? (
           <>
             {badgesData.slice(0, 8).map((b: any, i: number) => (
-              <span key={b.id ?? b.label ?? i} title={`${b.label} (${b.fp > 0 ? "+" : ""}${b.fp})`} style={{ fontSize: 14, lineHeight: 1 }}>{b.icon}</span>
+              <span key={b.id ?? b.label ?? i} title={`${b.label} (${b.fp > 0 ? "+" : ""}${b.fp})`} style={{ fontSize: 7, lineHeight: 1 }}>{b.icon}</span>
             ))}
           </>
         ) : (
-          <span style={{ fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.25)" }}>No badges</span>
+          <span style={{ fontSize: 7, fontWeight: 600, color: "rgba(255,255,255,0.25)" }}>No badges</span>
         )}
       </div>
       <div style={S.divider} />
@@ -176,18 +176,18 @@ function BackBStats({ card }: { card: PlayerCard }) {
 }
 
 const S: Record<string, React.CSSProperties> = {
-  backWrap: { height: "100%", padding: "10px 10px 8px", display: "flex", flexDirection: "column", gap: 8, background: "linear-gradient(180deg,rgba(11,15,20,0.97),rgba(11,15,20,1.0))", borderRadius: 18, overflow: "hidden", boxSizing: "border-box" },
-  backTopRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 },
-  backDate: { fontSize: 12, fontWeight: 900, color: "rgba(255,255,255,0.90)" },
-  backOpp: { fontSize: 12, fontWeight: 800, color: "rgba(255,255,255,0.65)", textAlign: "right" },
-  fpLabel: { fontSize: 11, fontWeight: 900, color: "rgba(255,255,255,0.65)" },
-  fpValue: { fontSize: 22, fontWeight: 900, color: "rgba(255,255,255,0.95)" },
+  backWrap: { height: "100%", padding: "8px 8px 6px", display: "flex", flexDirection: "column", gap: 4, background: "linear-gradient(180deg,rgba(11,15,20,0.97),rgba(11,15,20,1.0))", borderRadius: 18, overflow: "hidden", boxSizing: "border-box" },
+  backTopRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 },
+  backDate: { fontSize: 11, fontWeight: 900, color: "rgba(255,255,255,0.90)" },
+  backOpp: { fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.65)", textAlign: "right" },
+  fpLabel: { fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.65)" },
+  fpValue: { fontSize: 18, fontWeight: 900, color: "rgba(255,255,255,0.95)" },
   divider: { height: 1, background: "rgba(255,255,255,0.08)" },
-  tilesGrid: { flex: 1, display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 4, alignContent: "start", minWidth: 0 },
-  tile: { borderRadius: 8, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", padding: "3px 6px", display: "flex", flexDirection: "column", gap: 1, minWidth: 0 },
-  tileLabel: { fontSize: 8, fontWeight: 900, color: "rgba(255,255,255,0.55)", lineHeight: "10px" },
-  tileValue: { fontSize: 13, fontWeight: 900, color: "rgba(255,255,255,0.92)" },
-  tapHint: { fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.30)", letterSpacing: 0.4, textAlign: "center" },
+  tilesGrid: { flex: 1, display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 3, alignContent: "start", minWidth: 0 },
+  tile: { borderRadius: 6, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", padding: "2px 5px", display: "flex", flexDirection: "column", gap: 1, minWidth: 0 },
+  tileLabel: { fontSize: 7, fontWeight: 900, color: "rgba(255,255,255,0.55)", lineHeight: "9px" },
+  tileValue: { fontSize: 12, fontWeight: 900, color: "rgba(255,255,255,0.92)" },
+  tapHint: { fontSize: 8, fontWeight: 900, color: "rgba(255,255,255,0.30)", letterSpacing: 0.4, textAlign: "center" },
   noStatsWrap: { flex: 1, display: "flex", flexDirection: "column", gap: 10 },
   noStatsText: { fontSize: 12, fontWeight: 900, color: "rgba(255,255,255,0.70)" },
 };
