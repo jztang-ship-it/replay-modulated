@@ -1,4 +1,3 @@
-// @ts-nocheck
 // src/shared/engagement/useEngagement.ts
 // Central engagement hook — sport-agnostic.
 // Tracks login streak, daily task progress, XP, and coins.

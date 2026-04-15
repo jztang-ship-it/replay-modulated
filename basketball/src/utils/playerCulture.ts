@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * playerCulture.ts — Basketball player culture database.
  * Keyed by normalized last name (lowercase).

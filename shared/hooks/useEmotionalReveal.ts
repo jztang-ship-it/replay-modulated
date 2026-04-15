@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * shared/hooks/useEmotionalReveal.ts
  *
