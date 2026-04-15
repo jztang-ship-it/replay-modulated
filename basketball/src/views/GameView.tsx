@@ -1950,7 +1950,7 @@ export default function GameView() {
               /* Tier result — single continuous animation: slam in big, shrink to settled */
               <div style={{
                 display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center",
-                width: "100%", height: "100%", gap: tierResultPhase === 2 ? 4 : 0,
+                width: "100%", height: "100%", gap: tierResultPhase === 2 ? 2 : 0,
               }}>
                 {/* Glow flash */}
                 {tierResultPhase === 1 && (
@@ -1970,7 +1970,7 @@ export default function GameView() {
                   src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
                   alt={formatTierLabel(winTier)}
                   style={{
-                    maxHeight: tierResultPhase === 1 ? 70 : (isPostReveal ? 28 : 36),
+                    maxHeight: tierResultPhase === 1 ? 70 : (isPostReveal ? 24 : 32),
                     maxWidth: tierResultPhase === 1 ? "95%" : "70%",
                     objectFit: "contain",
                     filter: tierResultPhase === 1
@@ -1980,27 +1980,26 @@ export default function GameView() {
                     transition: "max-height 500ms ease, max-width 500ms ease, filter 500ms ease",
                   }}
                 />
-                {/* FP number — fades in for Phase 2 */}
+                {/* FP number + ceiling — single line, fades in for Phase 2 */}
                 {tierResultPhase === 2 && (
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, animation: "tierInfoFadeIn 400ms ease-out" }}>
-                    <span style={{
-                      fontSize: 15, fontWeight: 800, color: "rgba(255,255,255,0.55)",
-                      letterSpacing: "0.02em", lineHeight: 1, textAlign: "center",
-                      fontVariantNumeric: "tabular-nums",
-                    }}>
-                      {displayFp.toFixed(1)} FP
-                      {rosterTotalBonus > 0 && (
-                        <span style={{ color: "#FFD700", fontWeight: 900, marginLeft: 3 }}>
-                          (+{rosterTotalBonus})
-                        </span>
-                      )}
-                    </span>
-                    {ceilingPct != null && (
-                      <span style={{ fontWeight: 600, color: "rgba(255,255,255,0.35)", fontSize: 11, lineHeight: 1, textAlign: "center" }}>
-                        {ceilingPct}% of this roster's ceiling
+                  <span style={{
+                    fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.55)",
+                    letterSpacing: "0.02em", lineHeight: 1, textAlign: "center",
+                    fontVariantNumeric: "tabular-nums",
+                    animation: "tierInfoFadeIn 400ms ease-out",
+                  }}>
+                    {displayFp.toFixed(1)} FP
+                    {rosterTotalBonus > 0 && (
+                      <span style={{ color: "#FFD700", fontWeight: 900, marginLeft: 3 }}>
+                        (+{rosterTotalBonus})
                       </span>
                     )}
-                  </div>
+                    {ceilingPct != null && (
+                      <span style={{ fontWeight: 600, color: "rgba(255,255,255,0.35)", fontSize: 10, marginLeft: 4 }}>
+                        · {ceilingPct}% of this roster's ceiling
+                      </span>
+                    )}
+                  </span>
                 )}
               </div>
             ) : gameState === "WIN_CELEBRATION" && winTier && celebrationData && !showRawScore ? (
