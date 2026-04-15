@@ -2412,8 +2412,8 @@ export default function GameView() {
         />
       )}
 
-      {/* Registration nudges — only for anonymous users during IDLE/RESULTS, never FTUE */}
-      {!isFTUE && isAnonymous && (gameState === "IDLE" || gameState === "RESULTS") && (
+      {/* Registration nudges — only for anonymous users, never FTUE */}
+      {!isFTUE && isAnonymous && (gameState === "IDLE" || gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && (
         <>
           <RegisterNudge
             nudgeId="nudge_big_win"
