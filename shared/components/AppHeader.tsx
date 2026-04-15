@@ -12,10 +12,11 @@
 import { useState } from "react";
 import { soundManager } from "@shared/utils/soundManager";
 
-type TabId = "home" | "pulse" | "collect" | "profile";
+type TabId = "home" | "pulse" | "tourney" | "collect" | "profile";
 const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: "home",    label: "Play",    icon: "⚡" },
   { id: "pulse",   label: "Pulse",   icon: "📈" },
+  { id: "tourney", label: "Tourney", icon: "🏆" },
   { id: "collect", label: "Collect", icon: "🃏" },
   { id: "profile", label: "Profile", icon: "👤" },
 ];
@@ -59,7 +60,7 @@ export function AppHeader({ sportLabel, onCollect, onProfile, hasUncollected }: 
       <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
         {TABS.map(({ id, label, icon }) => {
           const active   = activeTab === id;
-          const disabled = id === "pulse";
+          const disabled = id === "pulse" || id === "tourney";
           const isCollect = id === "collect";
           function handleClick() {
             if (disabled) return;
