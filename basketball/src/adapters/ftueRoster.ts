@@ -14,11 +14,11 @@
  *   Tatum $66 ORANGE SF  ← was held
  *   Curry $57 PURPLE PG (HOT 52 FP), OG $46 PURPLE SF (normal 39.6),
  *   Draymond $43 BLUE PF (COLD 9.5), Lowry $20 WHITE PG (normal 18.9),
- *   Reddish $16 WHITE SF (COLD 12.1)  ← drawn
+ *   D. Howard $16 WHITE C (COLD 12.0)  ← drawn
  *
- * TOTAL FP: 224.1 — STARTER tier (205+). ALL-STAR requires 225. Gap: 0.9 FP.
- * Draymond (9.5) and Reddish (12.1) went cold — one more rebound and it's ALL-STAR.
- * "If Dray or Cam had a better night — that's the difference."
+ * TOTAL FP: 224.0 — STARTER tier (205+). ALL-STAR requires 225. Gap: 1.0 FP.
+ * Draymond (9.5) and D. Howard (12.0) went cold — one more rebound and it's ALL-STAR.
+ * "If Dray or Dwight had a better night — that's the difference."
  *
  * Zero player overlap between swap slots and drawn slots. Tatum is the only constant.
  * All game logs are real 2024-25 season entries from game-logs.json.
@@ -163,9 +163,9 @@ export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
 //   OG       $46 PURPLE: 39.6 FP  (normal — 22pts/3stl/2blk vs UTA, PICKPOCKET)
 //   Draymond $43 BLUE  :  9.5 FP  ← COLD (2pts/5reb/3ast/3to at MIA — rough night)
 //   Lowry    $20 WHITE : 18.9 FP  (normal — PURE badge, 0pt/5ast/2stl/1blk/0 TOs at UTA)
-//   Reddish  $16 WHITE : 12.1 FP  ← COLD (5pts/3reb/1ast/2stl at MIN — quiet)
+//   D.Howard $16 WHITE : 12.0 FP  ← COLD (4pts/5reb/0ast/2blk at ATL — quiet)
 // ─────────────────────────────────────────────────────────────────────────────
-//   TOTAL: 224.1 FP → STARTER tier (205+). ALL-STAR requires 225. Gap: 0.9 FP.
+//   TOTAL: 224.0 FP → STARTER tier (205+). ALL-STAR requires 225. Gap: 1.0 FP.
 
 const DRAWN: Record<number, () => GeneratedCard> = {
 
@@ -227,16 +227,16 @@ const DRAWN: Record<number, () => GeneratedCard> = {
     ],
   }),
 
-  // Slot 5 → Cam Reddish | WHITE $16 | SF | drawn | COLD
-  // 2024-12-13 at MIN — 5pts / 3reb / 1ast / 2stl / 2to → 12.1 FP (no badges)
-  // Quiet night for Cam — a better night from him or Dray and it's MVP.
+  // Slot 5 → Dwight Howard | WHITE $16 | C | drawn | COLD
+  // 2024-11-08 at ATL — 4pts / 5reb / 0ast / 0stl / 2blk / 2to → 12.0 FP (no badges)
+  // Quiet night for Dwight — a better night from him or Dray and it's ALL-STAR.
   5: () => makeCard({
-    cardId: "ftue-reddish", basePlayerId: "1629629",
-    name: "Cam Reddish", team: "LAL", position: "SF",
+    cardId: "ftue-reddish", basePlayerId: "203095",
+    name: "Dwight Howard", team: "LAL", position: "C",
     tier: "WHITE", salary: 16, slotIndex: 5,
-    projectedFp: 20, actualFp: 12.1,
-    date: "2024-12-13", opponent: "MIN", homeAway: "A",
-    statLine: { pts: 5, reb: 3, ast: 1, stl: 2, blk: 0, turnovers: 2, min: 23 },
+    projectedFp: 20, actualFp: 12.0,
+    date: "2024-11-08", opponent: "ATL", homeAway: "A",
+    statLine: { pts: 4, reb: 5, ast: 0, stl: 0, blk: 2, turnovers: 2, min: 18 },
   }),
 
 };

@@ -2381,6 +2381,7 @@ export default function GameView() {
         }}
         ftueDrawBlocked={isFTUE && gameState === "HOLD" && !heldCardIds.has("ftue-tatum")}
         ftueHideSkip={isFTUE}
+        ftueHideBalance={isFTUE && (gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD")}
         ftuePulseNearMiss={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && !ftueGaugeOscDone}
         ftueReplayBlocked={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && !ftueReplayReady}
         ftueReplayPulse={isFTUE && ftueReplayReady}
@@ -2411,8 +2412,8 @@ export default function GameView() {
         />
       )}
 
-      {/* Registration nudges — only for anonymous users during IDLE/RESULTS */}
-      {isAnonymous && (gameState === "IDLE" || gameState === "RESULTS") && (
+      {/* Registration nudges — only for anonymous users during IDLE/RESULTS, never FTUE */}
+      {!isFTUE && isAnonymous && (gameState === "IDLE" || gameState === "RESULTS") && (
         <>
           <RegisterNudge
             nudgeId="nudge_big_win"
@@ -2435,8 +2436,8 @@ export default function GameView() {
         </>
       )}
 
-      {/* PWA install prompt — fires on session 2+ */}
-      {(gameState === "IDLE" || gameState === "RESULTS") && (
+      {/* PWA install prompt — fires on session 2+, never during FTUE */}
+      {!isFTUE && (gameState === "IDLE" || gameState === "RESULTS") && (
         <PwaInstallPrompt active={sessionCount.current >= 2} />
       )}
 

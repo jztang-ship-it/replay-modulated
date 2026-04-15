@@ -595,7 +595,7 @@ export function useEmotionalReveal(params: Params) {
     setTappedCardIds(prev => new Set(prev).add(cardId));
     isTapRevealingRef.current = true;
 
-    runCardReveal(c, c.cardId === anchorId, myRunId, () => {
+    runCardReveal(c, isLast, myRunId, () => {
       isTapRevealingRef.current = false;
       if (isLast) {
         setActiveRevealCardId(null);

@@ -89,25 +89,18 @@ export function LandingPage({ onPlay }: Props) {
   const phase: GamePhase = "RESULTS";
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Start audio only after first card flip — not on page load
   const startAudio = useCallback(() => {
     if (audioRef.current) return;
-    if (soundManager.isMuted()) return; // respect global mute
+    if (soundManager.isMuted()) return;
     const a = new Audio("/audio/basketball/crowd/bed-murmur.mp3");
     a.loop = true;
     a.volume = 0.15;
     audioRef.current = a;
-    a.play().catch(() => {
-      // Autoplay blocked — start on first user interaction
-      const resume = () => {
-        if (!soundManager.isMuted()) a.play().catch(() => {});
-        window.removeEventListener("pointerdown", resume);
-      };
-      window.addEventListener("pointerdown", resume, { once: true });
-    });
+    a.play().catch(() => {});
   }, []);
 
   useEffect(() => {
-    startAudio();
     // Poll mute state so toggling mute while on landing page pauses/resumes audio
     const poll = setInterval(() => {
       const a = audioRef.current;
@@ -122,7 +115,7 @@ export function LandingPage({ onPlay }: Props) {
         audioRef.current = null;
       }
     };
-  }, [startAudio]);
+  }, []);
 
   const handlePlay = useCallback(() => {
     if (audioRef.current) {
@@ -135,7 +128,10 @@ export function LandingPage({ onPlay }: Props) {
   function toggleCard(id: string) {
     setFlipped(prev => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id); else {
+        next.add(id);
+        startAudio(); // sound starts on first flip
+      }
       return next;
     });
   }
@@ -209,12 +205,26 @@ export function LandingPage({ onPlay }: Props) {
 
       {/* NAV */}
       <nav style={{
-        flexShrink: 0, display: "flex", justifyContent: "center", alignItems: "center",
-        padding: "10px 24px",
+        flexShrink: 0, display: "flex", justifyContent: "space-between", alignItems: "center",
+        padding: "10px 20px",
       }}>
         <div style={{ fontWeight: 950, fontSize: 22, letterSpacing: -0.5 }}>
           REPLAY <span style={{ color: "#FFB14A" }}>IFS</span>
         </div>
+        {isAnonymous && (
+          <button
+            onClick={() => setShowSignIn(true)}
+            aria-label="Sign in"
+            style={{
+              background: "none", border: "1px solid rgba(255,255,255,0.15)",
+              borderRadius: "50%", width: 32, height: 32,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", color: "rgba(255,255,255,0.5)", fontSize: 15, padding: 0,
+            }}
+          >
+            👤
+          </button>
+        )}
       </nav>
 
       {/* MAIN */}
@@ -222,14 +232,14 @@ export function LandingPage({ onPlay }: Props) {
         flex: 1, minHeight: 0,
         display: "flex", flexDirection: "column", alignItems: "center",
         justifyContent: "flex-start",
-        padding: "12px 16px 0", gap: 0, textAlign: "center",
+        padding: "6px 16px 0", gap: 0, textAlign: "center",
       }}>
 
         {/* 3x2 CARD GRID */}
         <div style={{
           display: "grid",
           gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-          gap: 8, width: "100%", maxWidth: 340, marginBottom: 20,
+          gap: 6, width: "100%", maxWidth: 340, marginBottom: 12,
         }}>
           {CARDS.map((c, i) => {
             const isFlipped = flipped.has(c.id);
@@ -282,24 +292,13 @@ export function LandingPage({ onPlay }: Props) {
         </div>
 
         {/* HEADLINE + CTA */}
-        <div style={{ maxWidth: 360, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+        <div style={{ maxWidth: 360, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
           <p style={{
             fontSize: 10, fontWeight: 700, letterSpacing: ".3em", textTransform: "uppercase",
             color: "#C9A84C", margin: 0,
           }}>
             Beta · Free to Play · No Sign-Up
           </p>
-          {isAnonymous && (
-            <button
-              onClick={() => setShowSignIn(true)}
-              style={{
-                background: "none", border: "none", color: "#64748b", fontSize: 12,
-                cursor: "pointer", padding: "12px 0", width: "100%", textAlign: "center",
-              }}
-            >
-              Already have an account? Sign in
-            </button>
-          )}
           {showSignIn && (
             <RegisterModal
               signInMode
@@ -313,15 +312,15 @@ export function LandingPage({ onPlay }: Props) {
           )}
           <h1 style={{
             fontFamily: "'Impact','Arial Narrow',Arial,sans-serif", fontWeight: 900,
-            fontSize: "clamp(24px, 5vw, 40px)", textTransform: "uppercase", lineHeight: 0.95, margin: 0,
+            fontSize: "clamp(22px, 4.5vw, 36px)", textTransform: "uppercase", lineHeight: 0.95, margin: 0,
           }}>
             You already know who balled out.<br />
             <em style={{ color: "#C9A84C", fontStyle: "normal" }}>Prove it.</em>
           </h1>
-          <p style={{ fontSize: 12, color: "rgba(240,242,245,0.38)", lineHeight: 1.6, margin: 0 }}>
+          <p style={{ fontSize: 11, color: "rgba(240,242,245,0.38)", lineHeight: 1.5, margin: 0 }}>
             Real stats. Real history. Your fantasy result instantly.
           </p>
-          <button className="lp-cta" onClick={handlePlay} style={{ padding: "14px 52px", fontSize: 16 }}>
+          <button className="lp-cta" onClick={handlePlay} style={{ padding: "12px 48px", fontSize: 15 }}>
             Play IFS
           </button>
           <span style={{ fontSize: 10, color: "rgba(240,242,245,0.38)" }}>

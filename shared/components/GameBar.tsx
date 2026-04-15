@@ -119,6 +119,8 @@ type Props = {
   ftueReplayBlocked?: boolean;
   /** FTUE: pulse the replay button to draw attention */
   ftueReplayPulse?: boolean;
+  /** FTUE: hide balance+wage+legend row until after DRAW */
+  ftueHideBalance?: boolean;
   /** FTUE: CoachLayer spotlight target for primary action (Deal / Draw / replay) */
   dataFtuePrimaryAnchor?: "deal" | "draw";
   /** Hide the built-in TierBar — use when an external TierGauge is shown */
@@ -1314,6 +1316,7 @@ export function GameBar({
   ftuePulseNearMiss = false,
   ftueReplayBlocked = false,
   ftueReplayPulse = false,
+  ftueHideBalance = false,
   dataFtuePrimaryAnchor,
   hideTierBar = false,
   tierGaugeSlot,
@@ -1492,7 +1495,7 @@ export function GameBar({
           transition: "filter 0.35s ease, opacity 0.35s ease",
           pointerEvents: showCelebContent ? "none" : "auto",
         }}>
-          <div data-ftue-anchor="balance-row" style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4, paddingTop: 6, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div data-ftue-anchor="balance-row" style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4, paddingTop: 6, borderTop: "1px solid rgba(255,255,255,0.06)", opacity: ftueHideBalance ? 0 : 1, pointerEvents: ftueHideBalance ? "none" as const : "auto" as const, transition: "opacity 0.3s ease" }}>
             {/* Balance — left */}
             <div ref={walletRef} style={{ flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
@@ -1577,10 +1580,10 @@ export function GameBar({
                 cursor: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "default" : "pointer",
                 background: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "rgba(255,255,255,0.10)" : actionBackground(gameState),
                 color: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "rgba(255,255,255,0.35)" : actionTextColor(gameState),
-                opacity: (ftueHideSkip && gameState === "REVEALING") ? 0 : (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? 0.3 : 1,
+                opacity: (ftueHideSkip && gameState === "REVEALING") ? 0 : ftueReplayBlocked ? 0 : (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD")) ? 0.3 : 1,
                 pointerEvents: (ftueHideSkip && gameState === "REVEALING" || ftueReplayBlocked) ? "none" as const : "auto" as const,
                 boxShadow: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
-                transition: "opacity 150ms ease", lineHeight: 1,
+                transition: "opacity 300ms ease", lineHeight: 1,
                 animation: ftueReplayPulse ? "ftueReplayPulse 1.2s ease-in-out infinite" : "none",
               }}>
               {ftueReplayPulse && <style>{`@keyframes ftueReplayPulse { 0%,100% { box-shadow: 0 4px 14px rgba(0,0,0,0.3); } 50% { box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 6px rgba(58,160,255,0.5), 0 0 20px rgba(58,160,255,0.3); } }`}</style>}
@@ -1704,7 +1707,7 @@ export function GameBar({
           }}>
             {multiplierRow}
 
-            <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 6, marginBottom: 6 }}>
+            <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 6, marginBottom: 6, opacity: ftueHideBalance ? 0 : 1, pointerEvents: ftueHideBalance ? "none" as const : "auto" as const, transition: "opacity 0.3s ease" }}>
               {/* Balance — left */}
               <div ref={walletRef} style={{ flexShrink: 0 }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>

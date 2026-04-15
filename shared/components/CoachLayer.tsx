@@ -88,6 +88,17 @@ function DealChip() {
     }}>DEAL</span>
   );
 }
+function ReplayChip() {
+  return (
+    <span style={{
+      display: "inline-block", padding: "3px 14px",
+      background: "#3AA0FF",
+      color: "#000000", borderRadius: 16, fontWeight: 900, fontSize: 14,
+      letterSpacing: ".12em", textTransform: "uppercase",
+      verticalAlign: "middle", lineHeight: 1.6,
+    }}>REPLAY</span>
+  );
+}
 
 // Row 1 (slots 0-2): message below card. Row 2 (slots 3-5): message above card.
 const DEFAULT_CARD_POSITION: Record<string, BubblePosition> = {
@@ -100,11 +111,11 @@ const DEFAULT_CARD_POSITION: Record<string, BubblePosition> = {
 };
 
 const DEFAULT_CARD_TEXTS: Record<string, string> = {
-  "ftue-curry": "Chef Curry was cooking something hot, 26 pts, 10 asts and a dime badge bonus translates into 52 FP. 🔥",
+  "ftue-curry": "Chef Curry was cooking something hot. 26 pts, 10 asts and two badges got you 52 FP. 🔥",
   "ftue-og": "OG earned his Pickpocket badge — 3 steals plus 2 blocks. Elite two-way wing doing it on both ends. 39.6 FP on a $46 card. 👀",
   "ftue-draymond": "Yikes! Single digits from a $43 blue card. Draymond is one of the loudest voices in the game, but his stats sure were quiet tonight. 🧊",
   "ftue-lowry": "Kyle Lowry with the Pure badge — 5 assists, zero turnovers. 18.9 FP from a $20 card. Clean and efficient. 🎯",
-  "ftue-reddish": "Only 5 pts against Minnesota which translated to 12.1 FP. That's what the frost means, he definitely didn't help your team. 🧊",
+  "ftue-reddish": "Dwight Howard with only 4 pts and 5 boards against Atlanta — 12 FP. That's what the frost means, he definitely didn't help your team. 🧊",
 };
 
 type OnDismiss = () => void;
@@ -435,7 +446,7 @@ export function CoachLayer({
     setTimeout(() => {
       onCommentaryText?.([
         cfg?.idleText ?? <span>Real stats. Real history. Your fantasy result instantly. Hit <DealChip /> to get started.</span>
-      ]);
+      ], true);
       setPulsing("deal");
     }, 500);
   }, [gameState, isFTUE]); // eslint-disable-line
@@ -447,7 +458,7 @@ export function CoachLayer({
     prevState.current = "HOLD";
 
     // Step 1: roster overview — no spotlight, full screen visible
-    onCommentaryText?.([cfg?.holdIntroText ?? "Six players, $250 cap. Fantasy Points come from real stats — points, assists, rebounds. Who do we keep?"]);
+    onCommentaryText?.([cfg?.holdIntroText ?? "Six players. $250 cap. Fantasy points come from real stats — pts, rbs, asts. Who do we keep?"], true);
 
     enqueue({
       key: "hold_roster_intro",
@@ -458,7 +469,7 @@ export function CoachLayer({
       onDismiss: () => {
         // Step 2: After tap — spotlight anchor card, anchor text appears.
         onCommentaryText?.([
-          cfg?.holdAnchorText ?? <span>Tatum is your $66 anchor - most dependable player. Tap him to hold him then hit <DrawChip /> to see your replacements.</span>
+          cfg?.holdAnchorText ?? <span>Tatum is your $66 anchor and your most dependable player. Tap him to hold, then hit <DrawChip /> and tap each card to see your replacements.</span>
         ], true);
         const holdKey = `hold_${anchorCardId.replace("ftue-", "")}`;
         enqueue({
@@ -520,7 +531,7 @@ export function CoachLayer({
     // Fire immediately — no artificial delay between tier panel landing and commentary.
     {
       // Show "So close" commentary — spotlight entire lineup + tier gauge
-      onCommentaryText?.([cfg?.nearMissText ?? "So close it hurts, 0.9 FP away from the ALL-STAR level 3x win. Dray was the weaklink tonight, one more rebound or assist would have pushed us over."]);
+      onCommentaryText?.([cfg?.nearMissText ?? "So close it hurts, 1 FP away from the ALL-STAR level 3x win. Dray was the weaklink tonight, one more rebound or assist would have pushed us over."], true);
       enqueue({
         key: "darnit",
         node: null as any,
@@ -567,7 +578,7 @@ export function CoachLayer({
           onFtueAllDone?.();
           onReplayReady?.();
           onCommentaryText?.([
-            cfg?.finalText ?? "Every game log comes from true historical games. Replay lets you relive basketball history at your fingertips. Hit Replay to start playing for real. 🏀",
+            cfg?.finalText ?? <span>Every game log is drawn from real moments in history—relive the journey of basketball at your fingertips. Hit <ReplayChip /> to begin.</span>,
           ]);
         },
       });
@@ -609,8 +620,8 @@ export function CoachLayer({
     <>
       <style>{`
         @keyframes coachBtnPulse {
-          0%,100% { box-shadow: 0 0 0 0 rgba(127,255,0,0) }
-          50%      { box-shadow: 0 0 0 10px rgba(127,255,0,0.4) }
+          0%,100% { box-shadow: 0 0 0 0 rgba(58,160,255,0) }
+          50%      { box-shadow: 0 0 0 10px rgba(58,160,255,0.4) }
         }
         @keyframes spotlightPulse {
           0%,100% { box-shadow: 0 0 0 9999px rgba(0,0,0,1), 0 0 0 0 rgba(255,255,255,0) }

@@ -734,7 +734,7 @@ export function TierGauge({
                   {part}
                 </div>
               )}
-              {!overrideTyping && !(isLast && stickyLastOverride) && (
+              {!overrideTyping && !(isLast && stickyLastOverride) && !commentaryOverride?.sticky && (
                 <div style={{
                   marginTop: 6, fontSize: 10, color: "rgba(255,177,74,0.7)",
                   letterSpacing: "0.12em", textTransform: "uppercase",
