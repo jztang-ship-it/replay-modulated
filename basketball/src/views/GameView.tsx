@@ -476,13 +476,16 @@ function StreakDisplay({ streak }: { streak: number }) {
 
 // ── BonusPoolPill — pool meter with drip + gold blink on bet ─────────────────
 
-function BonusPoolPill({ betAdded, onAmountChange }: {
-  betAdded: number;
+function BonusPoolPill({ betAmount, betNonce, onAmountChange }: {
+  betAmount: number;
+  betNonce: number;
   onAmountChange?: (v: number) => void;
 }) {
   const [amount, setAmount] = useState(1000);
-  const [blink, setBlink] = useState(false);
-  const prevBetRef = useRef(0);
+  const [displayAmount, setDisplayAmount] = useState(1000);
+  const [pulse, setPulse] = useState(false);
+  const prevNonceRef = useRef(betNonce);
+  const rafRef = useRef(0);
 
   // Passive drip
   useEffect(() => {
@@ -496,36 +499,60 @@ function BonusPoolPill({ betAdded, onAmountChange }: {
     return () => clearInterval(id);
   }, []); // eslint-disable-line
 
-  // Gold blink on bet
+  // Sync display with amount for drip (no animation needed for tiny drip increments)
   useEffect(() => {
-    if (betAdded > 0 && betAdded !== prevBetRef.current) {
-      prevBetRef.current = betAdded;
-      const rake = parseFloat((betAdded * 0.05).toFixed(2));
-      if (rake > 0) {
-        setAmount(p => {
-          const next = parseFloat((p + rake).toFixed(2));
-          onAmountChange?.(next);
-          return next;
-        });
-        setBlink(true);
-        setTimeout(() => setBlink(false), 600);
+    if (!pulse) setDisplayAmount(amount);
+  }, [amount, pulse]);
+
+  // 5% rake on every bet — pulse + animated roll-up
+  useEffect(() => {
+    if (betNonce === prevNonceRef.current) return;
+    prevNonceRef.current = betNonce;
+    const rake = parseFloat((betAmount * 0.05).toFixed(2));
+    if (rake <= 0) return;
+
+    const startVal = amount;
+    const endVal = parseFloat((amount + rake).toFixed(2));
+    setAmount(endVal);
+    onAmountChange?.(endVal);
+
+    // Pulse glow
+    setPulse(true);
+
+    // Animated roll-up over 800ms
+    const startTime = performance.now();
+    const duration = 800;
+    const tick = () => {
+      const elapsed = performance.now() - startTime;
+      const t = Math.min(1, elapsed / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplayAmount(Math.round(startVal + (endVal - startVal) * eased));
+      if (t < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        setDisplayAmount(endVal);
+        setTimeout(() => setPulse(false), 400);
       }
-    }
-  }, [betAdded]); // eslint-disable-line
+    };
+    rafRef.current = requestAnimationFrame(tick);
+
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [betNonce]); // eslint-disable-line
 
   return (
     <div style={{
       display: "inline-flex", alignItems: "center", gap: 6,
       padding: "4px 14px", borderRadius: 20,
-      background: blink ? "rgba(255,215,0,0.25)" : "rgba(255,215,0,0.06)",
-      border: `1px solid rgba(255,215,0,${blink ? 0.7 : 0.18})`,
-      transition: "background 300ms ease, border-color 300ms ease",
+      background: pulse ? "rgba(255,215,0,0.25)" : "rgba(255,215,0,0.06)",
+      border: `1px solid rgba(255,215,0,${pulse ? 0.7 : 0.18})`,
+      boxShadow: pulse ? "0 0 12px 3px rgba(255,215,0,0.35)" : "none",
+      transition: "background 400ms ease, border-color 400ms ease, box-shadow 400ms ease",
     }}>
       <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.2, color: "rgba(255,215,0,0.6)", textTransform: "uppercase" }}>
         Bonus Pool
       </span>
-      <span style={{ fontSize: 12, fontWeight: 950, color: "#FFD700", fontVariantNumeric: "tabular-nums", textShadow: "0 0 8px rgba(255,215,0,0.5)" }}>
-        ${amount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+      <span style={{ fontSize: 12, fontWeight: 950, color: "#FFD700", fontVariantNumeric: "tabular-nums", textShadow: pulse ? "0 0 12px rgba(255,215,0,0.8)" : "0 0 8px rgba(255,215,0,0.5)" }}>
+        ${Math.round(displayAmount).toLocaleString("en-US")}
       </span>
     </div>
   );
@@ -558,6 +585,7 @@ export default function GameView() {
   const [statsFlippedIds, setStatsFlippedIds] = useState<Set<string>>(new Set());
   const [mvpId, setMvpId] = useState<string | undefined>();
   const [betMultiplier, setBetMultiplier] = useState(1);
+  const [betNonce, setBetNonce] = useState(0);
   const [balance, setBalance] = useState(() => loadBalance());
   const [isBalanceAnimating, setIsBalanceAnimating] = useState(false);
   const [winTier, setWinTier] = useState<WinTier | null>(null);
@@ -1519,6 +1547,7 @@ export default function GameView() {
 
     if (gameState === "HOLD") {
       setBalance(prev => { const next = prev - currentBet; saveBalance(next); return next; });
+      setBetNonce(n => n + 1);
       const markedRoster = roster.map(c => ({ ...c, wasHeld: lockedCardIds.has(cardId(c)) }));
       flipState.beginDraw(markedRoster.filter(c => !(c as any).wasHeld).map(cardId));
       setRoster(markedRoster);
@@ -1797,7 +1826,8 @@ export default function GameView() {
           </div>
           <div data-ftue-chrome="true" style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "0 12px" }}>
             <BonusPoolPill
-              betAdded={currentBet}
+              betAmount={currentBet}
+              betNonce={betNonce}
               onAmountChange={(v) => { bonusPoolRef.current = v; }}
             />
           </div>
