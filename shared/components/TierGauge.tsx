@@ -658,16 +658,13 @@ export function TierGauge({
 
   return (
     <div style={{
-      padding: "2px 0 2px",
-      display: "flex",
-      flexDirection: "column",
-      gap: 4,
-      overflow: "visible",
+      position: "relative",
+      padding: "2px 0 0",
       boxSizing: "border-box",
     }}>
 
-      {/* Bar — min 14px track */}
-      <div style={{ position: "relative", height: 14, minHeight: 14, background: "#ffffff0d", borderRadius: 999, overflow: "hidden" }}>
+      {/* Bar — pinned at top, never moves */}
+      <div style={{ position: "relative", height: 14, minHeight: 14, background: "#ffffff0d", borderRadius: 999, overflow: "hidden", zIndex: 2 }}>
         <div style={{
           position: "absolute", left: 0, top: 0, height: "100%", borderRadius: 999,
           width: `${barFill * 100}%`,
@@ -677,8 +674,8 @@ export function TierGauge({
         }} />
       </div>
 
-      {/* Commentary area — override (FTUE bubble texts) > postRevealCopy > gap callout */}
-      <div style={{ display: "flex", alignItems: "stretch", justifyContent: "center", gap: 4, flexDirection: "column", minHeight: 40, textAlign: "left", position: "relative", zIndex: commentaryOverride ? 1100 : undefined }}>
+      {/* Commentary area — flows below bar, cannot push bar upward */}
+      <div style={{ display: "flex", alignItems: "stretch", justifyContent: "center", gap: 4, flexDirection: "column", marginTop: 4, textAlign: "left", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
         {commentaryOverride && commentaryOverride.parts.length > 0 ? (() => {
           const part = commentaryOverride.parts[overridePart];
           const isString = typeof part === "string";
@@ -709,7 +706,7 @@ export function TierGauge({
                   key={`override-${overridePart}`}
                   text={part as string}
                   style={{
-                    fontSize: 13, fontWeight: 700, color: "#FFFFFF",
+                    fontSize: 12, fontWeight: 700, color: "#FFFFFF",
                     fontFamily: FF, letterSpacing: "0.01em", lineHeight: 1.45,
                     textAlign: "center", maxWidth: "100%",
                     display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as any,
@@ -722,7 +719,7 @@ export function TierGauge({
                 <div
                   key={`override-${overridePart}`}
                   style={{
-                    fontSize: 13, fontWeight: 700, color: "#FFFFFF",
+                    fontSize: 12, fontWeight: 700, color: "#FFFFFF",
                     fontFamily: FF, letterSpacing: "0.01em", lineHeight: 1.45,
                     textAlign: "center", maxWidth: "100%",
                     display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as any,
@@ -751,7 +748,7 @@ export function TierGauge({
               <Typewriter
                 text={postRevealCopy.primary}
                 style={{
-                  fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.92)",
+                  fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.92)",
                   fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
                   textAlign: "left", maxWidth: "100%",
                 }}
@@ -761,7 +758,7 @@ export function TierGauge({
                 <Typewriter
                   text={postRevealCopy.secondary}
                   style={{
-                    fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.80)",
+                    fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.80)",
                     fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
                     textAlign: "left", maxWidth: "100%",
                   }}
@@ -773,7 +770,7 @@ export function TierGauge({
           ) : (
             <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "stretch", gap: 2, maxWidth: "100%" }}>
               <span style={{
-                fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.92)",
+                fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.92)",
                 fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
                 textAlign: "left", maxWidth: "100%",
                 display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as any,
@@ -784,7 +781,7 @@ export function TierGauge({
               </span>
               {postRevealCopy.secondary && (
                 <span style={{
-                  fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.80)",
+                  fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.80)",
                   fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
                   textAlign: "left", maxWidth: "100%",
                   display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as any,
