@@ -325,6 +325,7 @@ export function TierGauge({
   // Commentary override state — multi-part tap-to-advance
   const [overridePart, setOverridePart] = useState(0);
   const [overrideTyping, setOverrideTyping] = useState(false);
+  const [tapDismissed, setTapDismissed] = useState(false);
   const rafRef = useRef<number>(0);
   const delayRef = useRef<number>(0);
   const animatedFpRef = useRef<number>(0);
@@ -652,6 +653,7 @@ export function TierGauge({
   useEffect(() => {
     setOverridePart(0);
     setOverrideTyping(!!commentaryOverride);
+    setTapDismissed(false);
   }, [commentaryOverride]);
 
   if (!visible || ftueSuppressNormal) return null;
@@ -684,16 +686,14 @@ export function TierGauge({
             <div
               onClick={() => {
                 if (overrideTyping) { setOverrideTyping(false); return; }
+                if (!tapDismissed) { setTapDismissed(true); return; }
                 if (!isLast) {
                   setOverridePart(overridePart + 1);
                   setOverrideTyping(true);
+                  setTapDismissed(false);
                 } else if (stickyLastOverride) {
-                  // Final FTUE message — stays visible until Replay
                   return;
                 } else if (commentaryOverride?.sticky) {
-                  // Per-bubble sticky commentary — text stays until something
-                  // explicitly replaces it via a new onCommentaryText call.
-                  // Tap on the commentary area is a no-op for this bubble.
                   return;
                 } else {
                   onCommentaryOverrideDone?.();
@@ -731,13 +731,14 @@ export function TierGauge({
                   {part}
                 </div>
               )}
-              {!overrideTyping && !(isLast && stickyLastOverride) && !commentaryOverride?.sticky && (
+              {!overrideTyping && !(isLast && stickyLastOverride) && !tapDismissed && (
                 <div style={{
                   marginTop: 6, fontSize: 10, color: "rgba(255,177,74,0.7)",
                   letterSpacing: "0.12em", textTransform: "uppercase",
+                  textAlign: "center",
                   animation: "tgTextReveal 0.4s ease both",
                 }}>
-                  {isLast ? "TAP TO CONTINUE" : "TAP FOR MORE"}
+                  TAP TO CONTINUE
                 </div>
               )}
             </div>
