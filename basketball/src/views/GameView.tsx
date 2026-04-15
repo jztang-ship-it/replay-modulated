@@ -2163,6 +2163,7 @@ export default function GameView() {
                     overflow: "visible",
                     boxSizing: "border-box",
                     padding: "2px 2px 0",
+                    zIndex: (isFTUE && ftueCommentaryOverride) ? 1100 : undefined,
                   }}
                 >
                   <TierGauge
