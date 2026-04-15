@@ -1958,7 +1958,7 @@ export default function GameView() {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              padding: "4px 10px 2px",
+              padding: "8px 10px 8px",
               boxSizing: "border-box",
               overflow: "hidden",
               cursor:
