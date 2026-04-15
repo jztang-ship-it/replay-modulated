@@ -200,6 +200,67 @@ function isDisabled(state: GameStateLabel): boolean {
   return state === "DEALING" || state === "DRAWING";
 }
 
+// ── Streak fire row with flash (light-up) and extinguish (streak-break) effects ──
+
+function StreakFireEmoji({ lit, justLit, justExtinguished }: { lit: boolean; justLit: boolean; justExtinguished: boolean }) {
+  return (
+    <span style={{
+      fontSize: 13,
+      opacity: lit ? 1 : 0.2,
+      filter: lit ? "none" : "grayscale(1)",
+      display: "inline-block",
+      animation: justLit ? "streakFlash 0.5s ease-out" : justExtinguished ? "streakExtinguish 0.6s ease-out forwards" : "none",
+    }}>🔥</span>
+  );
+}
+
+function StreakFireRow({ streak, prevStreak }: { streak: number; prevStreak: number }) {
+  const gained = streak > prevStreak;
+  const lost = streak === 0 && prevStreak > 0;
+
+  // Which tier are we in?
+  const tierEmojis = streak < 3
+    ? { count: 3, lit: streak, offset: 0, label: "1.2x" }
+    : streak < 5
+      ? { count: 2, lit: streak - 3, offset: 3, label: "1.5x" }
+      : streak < 10
+        ? { count: 5, lit: streak - 5, offset: 5, label: "2.0x" }
+        : null;
+
+  if (!tierEmojis && streak >= 10) {
+    return (
+      <div style={{ position: "absolute", left: 0, display: "flex", alignItems: "center", gap: 3, maxHeight: 22, overflow: "visible" }}>
+        <span style={{ fontSize: 10, fontWeight: 900, color: "#FFD700" }}>🔥 2.0x active</span>
+      </div>
+    );
+  }
+  if (!tierEmojis) return null;
+
+  // On streak break, briefly show the old tier extinguishing
+  const showExtinguish = lost && prevStreak > 0;
+  const extinguishTier = prevStreak < 3
+    ? { count: 3, lit: prevStreak, label: "1.2x" }
+    : prevStreak < 5
+      ? { count: 2, lit: prevStreak - 3, label: "1.5x" }
+      : prevStreak < 10
+        ? { count: 5, lit: prevStreak - 5, label: "2.0x" }
+        : { count: 0, lit: 0, label: "2.0x" };
+
+  const display = showExtinguish ? extinguishTier : tierEmojis;
+
+  return (
+    <div style={{ position: "absolute", left: 0, display: "flex", alignItems: "center", gap: 3, maxHeight: 22, overflow: "visible" }}>
+      {Array.from({ length: display.count }, (_, i) => {
+        const isLit = i < display.lit;
+        const justLit = gained && isLit && i === display.lit - 1;
+        const justExtinguished = showExtinguish && i < display.lit;
+        return <StreakFireEmoji key={`sf-${i}`} lit={showExtinguish ? true : isLit} justLit={justLit} justExtinguished={justExtinguished} />;
+      })}
+      <span style={{ fontSize: 8, fontWeight: 800, color: "rgba(255,255,255,0.3)" }}>{display.label}</span>
+    </div>
+  );
+}
+
 function salarySpent(state: GameStateLabel, capUsed: number, lockedSalary: number, revealedSalary: number): number {
   if (state === "IDLE") return 0;
   if (state === "HOLD") return lockedSalary;
@@ -1381,6 +1442,10 @@ export function GameBar({
     if (!isCelebration) { setOvershootSettled(false); setBalanceColor("default"); }
   }, [isCelebration]);
 
+  const prevStreakRef = useRef(streak);
+  // Update prev streak after render so flash/extinguish can compare
+  useEffect(() => { prevStreakRef.current = streak; }, [streak]);
+
   const walletRef = useRef<HTMLDivElement>(null);
   // walletTargetRef: invisible anchor outside the blur zone — coins fly to this
   const walletTargetRef = useRef<HTMLDivElement>(null);
@@ -1538,33 +1603,26 @@ export function GameBar({
             }}>i</button>
           </div>
 
+          {/* Streak flash + extinguish keyframes */}
+          <style>{`
+            @keyframes streakFlash {
+              0% { transform: scale(1); filter: brightness(1); }
+              30% { transform: scale(1.8); filter: brightness(2.5) drop-shadow(0 0 6px rgba(255,160,0,0.9)); }
+              100% { transform: scale(1); filter: brightness(1); }
+            }
+            @keyframes streakExtinguish {
+              0% { opacity: 1; filter: none; }
+              30% { transform: scale(1.3); filter: brightness(1.5); }
+              60% { opacity: 0.6; filter: grayscale(0.5); }
+              100% { opacity: 0.2; filter: grayscale(1); }
+            }
+          `}</style>
+
           {/* Action row — streak left, button center, trophy right */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "relative", paddingTop: 2 }}>
             {/* Streak fire emojis — left-aligned */}
             {streak != null && !ftueHideSkip && (
-              <div style={{ position: "absolute", left: 0, display: "flex", alignItems: "center", gap: 3, maxHeight: 22, overflow: "hidden" }}>
-                {streak < 3 && (<>
-                  {Array.from({ length: 3 }, (_, i) => (
-                    <span key={`s1-${i}`} style={{ fontSize: 13, opacity: i < streak ? 1 : 0.2, filter: i < streak ? "none" : "grayscale(1)" }}>🔥</span>
-                  ))}
-                  <span style={{ fontSize: 8, fontWeight: 800, color: "rgba(255,255,255,0.3)" }}>1.2x</span>
-                </>)}
-                {streak >= 3 && streak < 5 && (<>
-                  {Array.from({ length: 2 }, (_, i) => (
-                    <span key={`s2-${i}`} style={{ fontSize: 13, opacity: i < streak - 3 ? 1 : 0.2, filter: i < streak - 3 ? "none" : "grayscale(1)" }}>🔥</span>
-                  ))}
-                  <span style={{ fontSize: 8, fontWeight: 800, color: "rgba(255,255,255,0.3)" }}>1.5x</span>
-                </>)}
-                {streak >= 5 && streak < 10 && (<>
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <span key={`s3-${i}`} style={{ fontSize: 13, opacity: i < streak - 5 ? 1 : 0.2, filter: i < streak - 5 ? "none" : "grayscale(1)" }}>🔥</span>
-                  ))}
-                  <span style={{ fontSize: 8, fontWeight: 800, color: "rgba(255,255,255,0.3)" }}>2.0x</span>
-                </>)}
-                {streak >= 10 && (
-                  <span style={{ fontSize: 10, fontWeight: 900, color: "#FFD700" }}>🔥 2.0x active</span>
-                )}
-              </div>
+              <StreakFireRow streak={streak} prevStreak={prevStreakRef.current} />
             )}
 
             <button
