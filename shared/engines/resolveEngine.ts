@@ -37,7 +37,7 @@ export function resolveCards(cards: GeneratedCard[], logsByKey: Map<string, RawL
     // Inject _position BEFORE FP calc so positionProjectionWeights are used
     const statsWithPosition = { ...stats, _position: card.position ?? "" };
     const rawFp = extractFpFromStats(statsWithPosition, adapter);
-    const scaledFp = Math.max(0, rawFp * config.fpScale);
+    const scaledFp = rawFp * config.fpScale;
     const achievements = adapter.computeBadges(statsWithPosition);
 
     const badgeBonus = achievements.reduce((s, a) => s + (a.fp ?? 0), 0);

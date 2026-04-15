@@ -56,7 +56,7 @@ export class SportAdapter {
       const contrib = value * weight;
       if (Number.isFinite(contrib) && contrib !== 0) { breakdown[key] = contrib; fp += contrib; }
     }
-    return { total: Math.max(0, Number.isFinite(fp) ? fp : 0), breakdown };
+    return { total: Number.isFinite(fp) ? fp : 0, breakdown };
   }
 
   private getStatValue(stats: Record<string, any>, key: string): number {
