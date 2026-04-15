@@ -13,18 +13,16 @@ import { getHighestBadge, isRareBadge } from "./badgeTiers";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function isNameable(c: CommentaryRosterCard): boolean {
-  const t = (c.cardTier ?? "").toUpperCase();
-  return t === "RED" || t === "ORANGE" || t === "PURPLE";
+function isNameable(_c: CommentaryRosterCard): boolean {
+  // Any player who scored the most FP deserves to be named
+  return true;
 }
 
 function headlineScore(c: CommentaryRosterCard): number {
-  const base = (c.salary * 2.5) + (c.actualFp * 1.5);
-  // Tier 1 extremes get massive boost — they ARE the story
-  // Tier 2 gets moderate boost — supplements but doesn't override
+  // Highest FP is the star — salary is a tiebreaker, not the driver
   const t1 = c.extremeFlags?.find(f => f.tier === 1);
   const extremeBoost = t1 ? (t1.priority * 5) : (c.extremeFlags?.length ?? 0) > 0 ? 50 : 0;
-  return base + extremeBoost;
+  return (c.actualFp * 10) + (c.salary * 0.5) + extremeBoost;
 }
 
 function ratio(c: CommentaryRosterCard): number {

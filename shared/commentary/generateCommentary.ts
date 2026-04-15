@@ -56,31 +56,19 @@ function qualityGate(raw: string, roster: CommentaryInput["roster"]): string | n
   // Also reject phrasing that uses STARTER as a payout tier (never a real basketball concept)
   if (/\bstarter (money|tier|level|payout|threshold|floor|ceiling)\b/i.test(text)) return null;
 
-  // 5. Hard reject: names a non-star player
-  for (const card of roster) {
-    const tier = (card.cardTier ?? "").toUpperCase();
-    if (tier === "RED" || tier === "ORANGE" || tier === "PURPLE") continue;
-    const parts = card.name.trim().split(/\s+/);
-    const last = parts[parts.length - 1]?.toLowerCase();
-    if (last && last.length > 2 && lower.includes(last)) return null;
-  }
+  // 5. Star = highest FP player. Commentary should mention them.
+  const sorted = [...roster].sort((a, b) => b.actualFp - a.actualFp);
+  const topPlayer = sorted[0];
 
-  // 6. Hard reject: no star player's FULL NAME (first AND last) appears
-  const stars = roster.filter(c => {
-    const t = (c.cardTier ?? "").toUpperCase();
-    return t === "RED" || t === "ORANGE" || t === "PURPLE";
-  });
-  const hasFullStarName = stars.some(c => {
-    const full = c.name.trim().toLowerCase();
-    return full.length > 4 && lower.includes(full);
-  });
-  // Also accept last name if it's distinctive (>= 5 chars)
-  const hasDistinctiveLastName = stars.some(c => {
-    const parts = c.name.trim().split(/\s+/);
+  // 6. Hard reject: no top player's name appears
+  if (topPlayer) {
+    const full = topPlayer.name.trim().toLowerCase();
+    const parts = topPlayer.name.trim().split(/\s+/);
     const last = parts[parts.length - 1]?.toLowerCase() ?? "";
-    return last.length >= 5 && lower.includes(last);
-  });
-  if (!hasFullStarName && !hasDistinctiveLastName) return null;
+    const hasFullName = full.length > 4 && lower.includes(full);
+    const hasLastName = last.length >= 4 && lower.includes(last);
+    if (!hasFullName && !hasLastName) return null;
+  }
 
   // 7. Hard reject: mentions a player NOT in the roster at all
   //    (catches hallucinated players like "CP3" when CP3 isn't in the hand)
