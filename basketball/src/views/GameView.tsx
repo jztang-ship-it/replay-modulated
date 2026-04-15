@@ -629,6 +629,15 @@ export default function GameView() {
     const introSeen = localStorage.getItem("replaymod_pregame_intro_basketball") === "1";
     return !seenToday || !introSeen;
   });
+
+  // When FTUE completes (isFTUE flips false), trigger the daily bonus intro message
+  useEffect(() => {
+    if (isFTUE) return; // still in FTUE
+    if (localStorage.getItem("replaymod_pregame_intro_basketball") === "1") return; // already seen
+    setPreGameMsg("PREGAME_DAILY_BONUS");
+    setLegendGold(true);
+  }, [isFTUE]);
+
   const pendingCelebration = useRef<{ totalFp: number } | null>(null);
   /** FTUE: roster sum can read 0 briefly in RESULTS — keep last resolved hand FP for TierGauge */
   const ftueLastHandFpRef = useRef(0);
