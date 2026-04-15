@@ -2437,9 +2437,9 @@ export default function GameView() {
         </>
       )}
 
-      {/* PWA install prompt — fires on session 2+, never during FTUE */}
+      {/* PWA install prompt — fires after 3rd real hand, never during FTUE */}
       {!isFTUE && (gameState === "IDLE" || gameState === "RESULTS") && (
-        <PwaInstallPrompt active={sessionCount.current >= 2} />
+        <PwaInstallPrompt active={handCount >= 3} />
       )}
 
       {/* Registration modal */}
