@@ -71,6 +71,8 @@ interface TierGaugeProps {
   commentaryOverride?: { parts: ReactNode[]; sticky?: boolean } | null;
   /** Called when user taps through all parts of commentaryOverride */
   onCommentaryOverrideDone?: () => void;
+  /** When true, hide the gauge bar (but keep commentary visible) */
+  hideBar?: boolean;
 }
 
 const TIER_CFG: Record<string, { label: string; color: string; glow: string }> = {
@@ -317,6 +319,7 @@ export function TierGauge({
   onCommentaryDone,
   commentaryOverride = null,
   onCommentaryOverrideDone,
+  hideBar = false,
 }: TierGaugeProps) {
   const [barFill, setBarFill] = useState(0);
   const [barColor, setBarColor] = useState("transparent");
@@ -664,7 +667,7 @@ export function TierGauge({
     }}>
 
       {/* Bar — pinned at top, never moves */}
-      <div style={{ position: "relative", height: 14, minHeight: 14, background: "#ffffff0d", borderRadius: 999, overflow: "hidden", zIndex: 2 }}>
+      <div style={{ position: "relative", height: 14, minHeight: 14, background: "#ffffff0d", borderRadius: 999, overflow: "hidden", zIndex: 2, opacity: hideBar ? 0 : 1, transition: "opacity 0.2s ease" }}>
         <div style={{
           position: "absolute", left: 0, top: 0, height: "100%", borderRadius: 999,
           width: `${barFill * 100}%`,
@@ -675,7 +678,7 @@ export function TierGauge({
       </div>
 
       {/* Commentary area — fixed height box, text fills top→bottom, never pushes bar */}
-      <div style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: 62, marginTop: 4, textAlign: "left", overflow: "hidden", position: "relative" }}>
+      <div style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: 62, marginTop: 4, textAlign: "left", overflow: "hidden", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
         {commentaryOverride && commentaryOverride.parts.length > 0 ? (() => {
           const part = commentaryOverride.parts[overridePart];
           const isString = typeof part === "string";

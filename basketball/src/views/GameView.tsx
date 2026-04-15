@@ -2163,8 +2163,6 @@ export default function GameView() {
                     overflow: "visible",
                     boxSizing: "border-box",
                     padding: "2px 2px 0",
-                    opacity: (isFTUE && gameState === "REVEALING" && ftueCardsBlocked) ? 0 : 1,
-                    transition: "opacity 0.2s ease",
                   }}
                 >
                   <TierGauge
@@ -2183,6 +2181,7 @@ export default function GameView() {
                     ftueTypewriter={isFTUE}
                     stickyLastOverride={isFTUE && ftueReplayReady}
                     commentaryOverride={ftueCommentaryOverride}
+                    hideBar={isFTUE && gameState === "REVEALING" && ftueCardsBlocked}
                     onCommentaryOverrideDone={() => {
                       setFtueCommentaryOverride(null);
                       // Auto-dismiss CoachLayer spotlight so user doesn't need extra tap
