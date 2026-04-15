@@ -695,7 +695,7 @@ export function TierGauge({
                   onCommentaryOverrideDone?.();
                 }
               }}
-              style={{ padding: "6px 4px 2px", width: "100%", cursor: "pointer" }}
+              style={{ padding: "2px 4px 0", width: "100%", cursor: "pointer" }}
             >
               {isString ? (
                 <Typewriter

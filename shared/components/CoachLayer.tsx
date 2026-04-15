@@ -69,33 +69,33 @@ interface Props {
 function DrawChip() {
   return (
     <span style={{
-      display: "inline-block", padding: "2px 10px",
+      display: "inline-block", padding: "1px 6px",
       background: "linear-gradient(135deg,#7FFF00,#5BBE00)",
-      color: "#070A12", borderRadius: 4, fontWeight: 900, fontSize: 14,
-      letterSpacing: ".12em", textTransform: "uppercase",
-      verticalAlign: "middle", lineHeight: 1.5,
+      color: "#070A12", borderRadius: 4, fontWeight: 900, fontSize: 11,
+      letterSpacing: ".10em", textTransform: "uppercase",
+      verticalAlign: "middle", lineHeight: 1.2,
     }}>DRAW</span>
   );
 }
 function DealChip() {
   return (
     <span style={{
-      display: "inline-block", padding: "3px 14px",
+      display: "inline-block", padding: "1px 8px",
       background: "#3AA0FF",
-      color: "#000000", borderRadius: 16, fontWeight: 900, fontSize: 14,
-      letterSpacing: ".12em", textTransform: "uppercase",
-      verticalAlign: "middle", lineHeight: 1.6,
+      color: "#000000", borderRadius: 10, fontWeight: 900, fontSize: 11,
+      letterSpacing: ".10em", textTransform: "uppercase",
+      verticalAlign: "middle", lineHeight: 1.2,
     }}>DEAL</span>
   );
 }
 function ReplayChip() {
   return (
     <span style={{
-      display: "inline-block", padding: "3px 14px",
+      display: "inline-block", padding: "1px 8px",
       background: "#3AA0FF",
-      color: "#000000", borderRadius: 16, fontWeight: 900, fontSize: 14,
-      letterSpacing: ".12em", textTransform: "uppercase",
-      verticalAlign: "middle", lineHeight: 1.6,
+      color: "#000000", borderRadius: 10, fontWeight: 900, fontSize: 11,
+      letterSpacing: ".10em", textTransform: "uppercase",
+      verticalAlign: "middle", lineHeight: 1.2,
     }}>REPLAY</span>
   );
 }
