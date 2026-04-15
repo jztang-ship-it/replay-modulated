@@ -658,10 +658,10 @@ export function TierGauge({
 
   return (
     <div style={{
-      padding: "3px 0 4px",
+      padding: "2px 0 2px",
       display: "flex",
       flexDirection: "column",
-      gap: 6,
+      gap: 4,
       overflow: "visible",
       boxSizing: "border-box",
     }}>
@@ -678,7 +678,7 @@ export function TierGauge({
       </div>
 
       {/* Commentary area — override (FTUE bubble texts) > postRevealCopy > gap callout */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, flexDirection: "column", minHeight: 80, textAlign: "center", position: "relative", zIndex: commentaryOverride ? 1100 : undefined }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, flexDirection: "column", minHeight: 48, textAlign: "center", position: "relative", zIndex: commentaryOverride ? 1100 : undefined }}>
         {commentaryOverride && commentaryOverride.parts.length > 0 ? (() => {
           const part = commentaryOverride.parts[overridePart];
           const isString = typeof part === "string";
@@ -776,6 +776,8 @@ export function TierGauge({
                 fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.92)",
                 fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
                 textAlign: "center", maxWidth: "100%",
+                display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical" as any,
+                overflow: "hidden",
                 animation: "tgTextReveal 0.55s cubic-bezier(0.22,1,0.36,1) both",
               }}>
                 {postRevealCopy.primary}
@@ -785,6 +787,8 @@ export function TierGauge({
                   fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.80)",
                   fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
                   textAlign: "center", maxWidth: "100%",
+                  display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical" as any,
+                  overflow: "hidden",
                   animation: "tgTextReveal 0.55s cubic-bezier(0.22,1,0.36,1) 0.2s both",
                 }}>
                   {postRevealCopy.secondary}

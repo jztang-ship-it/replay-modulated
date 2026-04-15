@@ -1480,10 +1480,10 @@ export function GameBar({
         height: "100%",
         minHeight: 0,
         flex: 1,
-        overflow: "hidden",
+        overflow: "visible",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "flex-end",
+        justifyContent: "flex-start",
         boxSizing: "border-box",
       }}>
         <div style={{
@@ -1537,7 +1537,7 @@ export function GameBar({
 
           {/* Streak fire emojis — only show current tier being chased */}
           {streak != null && !ftueHideSkip && (
-            <div style={{ display: "flex", alignItems: "center", gap: 3, padding: "2px 0 3px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 3, padding: "2px 0 3px", maxHeight: 22, overflow: "hidden" }}>
               {streak < 3 && (<>
                 {Array.from({ length: 3 }, (_, i) => (
                   <span key={`s1-${i}`} style={{ fontSize: 13, opacity: i < streak ? 1 : 0.2, filter: i < streak ? "none" : "grayscale(1)" }}>🔥</span>
@@ -1692,7 +1692,7 @@ export function GameBar({
         )}
 
         {/* ── ZONE C: Multipliers/Wallet/Action ↔ Streak hook ─────── */}
-        <div style={{ position: "relative", minHeight: 86, overflow: "hidden", paddingBottom: "max(20px, env(safe-area-inset-bottom, 16px))" }}>
+        <div style={{ position: "relative", overflow: "hidden", paddingBottom: "max(28px, env(safe-area-inset-bottom, 16px))" }}>
 
           {/* Normal content */}
           <div style={{

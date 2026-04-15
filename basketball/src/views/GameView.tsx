@@ -1766,13 +1766,12 @@ export default function GameView() {
 
         {/* 1 — Header */}
         <div style={{
-          flex: "0 0 12dvh",
+          flex: "0 0 11dvh",
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",
           gap: 4,
           padding: "0 10px 0",
-          marginBottom: 8,
           boxSizing: "border-box",
           overflow: "hidden",
         }}>
@@ -1800,7 +1799,7 @@ export default function GameView() {
 
         {/* 2 — Card stage */}
         <div style={{
-          flex: "0 0 52dvh",
+          flex: "0 0 48dvh",
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "center",
@@ -1892,7 +1891,7 @@ export default function GameView() {
             ? { "data-ftue-anchor": "ftue-darnit-focus" }
             : {})}
           style={{
-            flex: "0 0 22dvh",
+            flex: "0 0 23dvh",
             display: "flex",
             flexDirection: "column",
             minHeight: 0,
@@ -1986,24 +1985,25 @@ export default function GameView() {
                 />
                 {/* FP number — fades in for Phase 2 */}
                 {tierResultPhase === 2 && (
-                  <span style={{
-                    fontSize: 15, fontWeight: 800, color: "rgba(255,255,255,0.55)",
-                    letterSpacing: "0.02em", lineHeight: 1, textAlign: "center",
-                    fontVariantNumeric: "tabular-nums",
-                    animation: "tierInfoFadeIn 400ms ease-out",
-                  }}>
-                    {displayFp.toFixed(1)} FP
-                    {rosterTotalBonus > 0 && (
-                      <span style={{ color: "#FFD700", fontWeight: 900, marginLeft: 3 }}>
-                        (+{rosterTotalBonus})
-                      </span>
-                    )}
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, animation: "tierInfoFadeIn 400ms ease-out" }}>
+                    <span style={{
+                      fontSize: 15, fontWeight: 800, color: "rgba(255,255,255,0.55)",
+                      letterSpacing: "0.02em", lineHeight: 1, textAlign: "center",
+                      fontVariantNumeric: "tabular-nums",
+                    }}>
+                      {displayFp.toFixed(1)} FP
+                      {rosterTotalBonus > 0 && (
+                        <span style={{ color: "#FFD700", fontWeight: 900, marginLeft: 3 }}>
+                          (+{rosterTotalBonus})
+                        </span>
+                      )}
+                    </span>
                     {ceilingPct != null && (
-                      <span style={{ fontWeight: 600, color: "rgba(255,255,255,0.35)", fontSize: 12 }}>
-                        {" · "}{ceilingPct}% of this roster's ceiling
+                      <span style={{ fontWeight: 600, color: "rgba(255,255,255,0.35)", fontSize: 11, lineHeight: 1, textAlign: "center" }}>
+                        {ceilingPct}% of this roster's ceiling
                       </span>
                     )}
-                  </span>
+                  </div>
                 )}
               </div>
             ) : gameState === "WIN_CELEBRATION" && winTier && celebrationData && !showRawScore ? (
@@ -2096,15 +2096,13 @@ export default function GameView() {
               alignItems: "stretch",
               padding: "8px 10px 2px",
               boxSizing: "border-box",
-              overflow: "visible",
+              overflow: "hidden",
             }}
           >
             <div
               style={{
                 width: "100%",
-                height: 72,
                 minHeight: 72,
-                maxHeight: 72,
                 flexShrink: 0,
                 position: "relative",
                 display: "flex",
@@ -2217,7 +2215,7 @@ export default function GameView() {
         {/* 4 — Wallet + action only (14dvh) */}
         <div
           style={{
-            flex: "0 0 14dvh",
+            flex: "0 0 18dvh",
             display: "flex",
             flexDirection: "column",
             justifyContent: "flex-end",
