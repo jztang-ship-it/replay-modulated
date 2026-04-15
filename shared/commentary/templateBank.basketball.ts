@@ -38,10 +38,10 @@ export const BASKETBALL_TEMPLATES: CommentaryTemplate[] = [
     "The numbers tell it all: {pts} from {name}{opp}. That output made every other card look better.",
   ]},
   { register: "win", story: "star_went_off", tone: "analytical", templates: [
-    "{name} came in well above the expected line{opp}. {pts} — that is the upside you pay for.",
-    "{last} exceeded average output by a wide margin tonight. The winning hand is the direct result.",
-    "The anchor exceeded expectations across the board. {pts} from {name}{opp}. That is how you build a winner.",
-    "Above-average output from {nick} tonight at {pts}. The math worked and the hand cashed.",
+    "{name} was on fire tonight{opp}. {pts} — that is the upside you pay for at this salary.",
+    "{last} was smoking hot and it showed in every stat category. The winning hand is the direct result.",
+    "{name} was scorching{opp}. {pts} of elite production. That is how you build a winner.",
+    "Red-hot output from {nick} tonight at {pts}. The math worked and the hand cashed.",
   ]},
   { register: "win", story: "star_went_off", tone: "deadpan", templates: [
     "{last} went for {pts}{opp}. Won the hand. Nothing complicated about that outcome tonight.",
@@ -80,7 +80,7 @@ export const BASKETBALL_TEMPLATES: CommentaryTemplate[] = [
     "The handbook says this is how you are supposed to win. Nobody told the roster it would be this easy.",
   ]},
   { register: "win", story: "star_delivered", tone: "observational", templates: [
-    "{name} came in around the expected line{opp}. Consistent output and the hand benefited directly.",
+    "{name} was right on the money tonight{opp}. Consistent output and the hand benefited directly.",
     "{last} did what was expected tonight. The rest of the roster handled the margins around the star.",
     "Steady production from {nick}{opp}. Not spectacular, not disappointing. The hand reflects that balance.",
     "The star hit the mark and the supporting cast held their ground. {last} keeps it steady every night.",
@@ -88,11 +88,11 @@ export const BASKETBALL_TEMPLATES: CommentaryTemplate[] = [
     "The roster did what it was built to do tonight. No single card had to do too much to get the win.",
   ]},
   { register: "win", story: "star_delivered", tone: "analytical", templates: [
-    "{name} tracked close to average tonight{opp}. Consistent anchor play from the star got the win.",
-    "The star hit the expected line. The supporting cast stayed in range. {last} anchored a clean hand.",
-    "{last} delivered within the normal range{opp}. When the anchor is steady, the hand usually cashes.",
-    "Expected output from {nick} tonight. Combined with roster support, the math worked for a win.",
-    "The roster tracked within expected ranges across the board. Consistent inputs, consistent output.",
+    "{name} was dialed in tonight{opp}. Consistent play from the star got the win.",
+    "The star delivered. The supporting cast stayed in range. {last} led a clean hand from the front.",
+    "{last} was steady and reliable{opp}. When the top card produces like that, the hand usually cashes.",
+    "Solid output from {nick} tonight. Combined with roster support, the math worked for a win.",
+    "The roster tracked well across the board. Consistent inputs, consistent output.",
   ]},
   { register: "win", story: "star_delivered", tone: "deadpan", templates: [
     "{last} did the job tonight{opp}. Won the hand. Moving on to whatever comes next in the schedule.",
@@ -130,18 +130,18 @@ export const BASKETBALL_TEMPLATES: CommentaryTemplate[] = [
     "Won it without the star going off. The supporting cast has been waiting for this moment all season.",
   ]},
   { register: "win", story: "star_quiet_win", tone: "observational", templates: [
-    "{name} came in below average but the roster compensated for the shortfall. Balanced hand overall.",
+    "{name} ran cold but the roster compensated for the shortfall. Balanced hand overall.",
     "Quiet from {last}{opp}. The supporting cards made up the difference and the hand still cashed.",
-    "Below the typical line from {nick} tonight but the depth of the roster absorbed the dip cleanly.",
-    "The star underproduced and the hand still won. That speaks to roster construction around {last}.",
+    "Cool night from {nick} but the depth of the roster absorbed the dip cleanly.",
+    "The star had an off night and the hand still won. That speaks to roster construction around {last}.",
     "The hand won despite the star running cold. Depth across the lineup made the difference tonight.",
     "Not a star-driven win. The supporting cast filled in across the board and the hand survived.",
   ]},
   { register: "win", story: "star_quiet_win", tone: "analytical", templates: [
-    "{name} fell short of the expected line tonight but roster depth covered the gap. Solid roster build.",
-    "Below-average output from {last}{opp}. The supporting cast compensated and the hand stayed green.",
-    "The anchor was down but the supporting cards delivered enough. {nick} had a rare quiet night.",
-    "{last} came in under the line but the hand absorbed the variance. Roster depth proved its value.",
+    "{name} ran cold tonight but roster depth covered the gap. Solid roster build.",
+    "Cooler output from {last}{opp}. The supporting cast compensated and the hand stayed green.",
+    "The star was off but the supporting cards delivered enough. {nick} had a rare quiet night.",
+    "{last} came in cold but the hand absorbed the variance. Roster depth proved its value.",
     "Star output was down but the supporting cards compensated. The math still worked for a win tonight.",
   ]},
   { register: "win", story: "star_quiet_win", tone: "deadpan", templates: [
@@ -183,7 +183,7 @@ export const BASKETBALL_TEMPLATES: CommentaryTemplate[] = [
     "Contributions were spread evenly across the roster. Depth and balance won this hand tonight.",
     "No single driver in the lineup. The roster all stayed within range. Even distribution of output.",
     "When everyone hits their marks, the hand takes care of itself. That is what happened here tonight.",
-    "Balanced stat lines across the board. Mathematical consistency from all cards delivered the win.",
+    "Balanced stat lines across the board. Consistency from all cards delivered the win.",
   ]},
   { register: "win", story: "clean_win", tone: "deadpan", templates: [
     "Won the hand. Nobody stood out. Nobody needed to. On to the next one ahead in the schedule.",
@@ -208,15 +208,15 @@ export const BASKETBALL_TEMPLATES: CommentaryTemplate[] = [
     "{last} did the job of three players tonight. The other cards did the job of zero.",
   ]},
   { register: "loss", story: "star_carried_loss", tone: "observational", templates: [
-    "{name} vastly exceeded the expected line{opp} but the rest of the roster underdelivered across the board.",
+    "{name} was on fire{opp} but the rest of the roster went ice cold across the board.",
     "The star carried. The supporting cast did not follow. {last} deserved a better outcome than this tonight.",
     "{nick} had an elite night but the deficit from the rest of the lineup was too deep to overcome.",
     "When the star delivers like {last} did and the hand still busts, the problem is everywhere else.",
   ]},
   { register: "loss", story: "star_carried_loss", tone: "analytical", templates: [
-    "{name} came in far above the expected line{opp}. The loss is entirely attributable to the supporting cards.",
-    "Elite output from {last} was offset by the rest of the lineup falling short across the board tonight.",
-    "The anchor overdelivered significantly. The math still did not work because every other card missed.",
+    "{name} was smoking hot{opp}. The loss is entirely on the supporting cards going cold around the star.",
+    "Elite output from {last} was offset by the rest of the lineup going cold across the board tonight.",
+    "The star was scorching. The math still did not work because every other card was ice cold.",
   ]},
   { register: "loss", story: "star_carried_loss", tone: "deadpan", templates: [
     "{last} went off{opp}. Still lost. The rest of the roster was not there tonight. It happens.",
@@ -227,13 +227,13 @@ export const BASKETBALL_TEMPLATES: CommentaryTemplate[] = [
   // ═══ LOSS — star_no_showed ════════════════════════════════════════════════
 
   { register: "loss", story: "star_no_showed", tone: "deadpan", templates: [
-    "{last} came in way below the line tonight{opp}. Not much else to say about this particular hand.",
+    "{last} was freezing tonight{opp}. Not much else to say about this particular hand.",
     "Needed {nick} to show up tonight and it did not happen. The hand paid the price for that absence.",
     "{name} was a no-show{opp}. That is the whole story of the hand in one sentence right there.",
     "The star went missing tonight. {last} did not deliver and the hand had no chance without that output.",
   ]},
   { register: "loss", story: "star_no_showed", tone: "warm", templates: [
-    "Tough one tonight. {name} had an off night{opp} and the roster could not make up for it.",
+    "Tough one tonight. {name} had an ice cold night{opp} and the roster could not make up for it.",
     "{last} did not have it tonight. Happens to everyone eventually. Shake it off and play the next hand.",
     "Off night from {last}{opp}. The supporting cast tried their best but it was not enough to survive.",
     "Not the night {name} or the roster wanted{opp}. Sometimes the star goes cold and the hand follows.",
@@ -247,16 +247,16 @@ export const BASKETBALL_TEMPLATES: CommentaryTemplate[] = [
     "Someone should check on {nick} after that one. The stat line suggests a case of mistaken identity.",
   ]},
   { register: "loss", story: "star_no_showed", tone: "observational", templates: [
-    "{name} came in well below average{opp}. Hard to overcome that kind of deficit from your top card.",
+    "{name} was ice cold tonight{opp}. Hard to overcome that kind of deficit from your top card.",
     "{last} was the difference tonight — and not the good kind of difference you want from your star.",
-    "The anchor fell way short of the mark tonight. {name}{opp} was the gap the roster could not close.",
+    "The star fell way short of the mark tonight. {name}{opp} left a gap the roster could not close.",
     "When the top card produces like {last} did tonight, the supporting cast cannot cover that gap alone.",
   ]},
   { register: "loss", story: "star_no_showed", tone: "analytical", templates: [
-    "{name} came in far below the expected line{opp}. At that salary, the hand needed a lot more output.",
-    "{last}'s output was insufficient to sustain the hand tonight. The math simply was not there for a win.",
-    "Way below the line from {nick}{opp}. The deficit at the anchor position sank the entire hand tonight.",
-    "The numbers from {last} tonight were not close to adequate. That output gap cascaded through the hand.",
+    "{name} was freezing cold{opp}. At that salary, the hand needed a lot more from the star tonight.",
+    "{last}'s output was nowhere near enough to sustain the hand tonight. The math simply was not there.",
+    "{nick} was ice cold{opp}. The deficit at the top sank the entire hand tonight.",
+    "The numbers from {last} tonight were brutal. That output gap cascaded through the hand.",
   ]},
 
   // ═══ LOSS — star_cold ═════════════════════════════════════════════════════
@@ -265,11 +265,11 @@ export const BASKETBALL_TEMPLATES: CommentaryTemplate[] = [
     "{last} was cold tonight{opp}. The hand followed that same direction downward. That is how it goes.",
     "Not {nick}'s night. It happens to everyone eventually. Shake it off and come back for the next one.",
     "{name} did not get it going tonight{opp}. The hand reflected that reality from start to finish.",
-    "Below the line from {last}. Not disastrous but not nearly enough to get the hand into winning range.",
+    "Cool night from {last}. Not disastrous but not nearly enough to get the hand into winning range.",
   ]},
   { register: "loss", story: "star_cold", tone: "warm", templates: [
     "{name} had a rough one tonight{opp}. One of those nights that you just want to forget happened.",
-    "Below the line from {last}. The roster did not have enough firepower to cover the shortfall tonight.",
+    "{last} ran cold tonight. The roster did not have enough firepower to cover the shortfall.",
     "{nick} was not at the usual level tonight{opp}. It happens. Move on to the next hand and reset.",
     "Cold night from {name}{opp}. The supporting cast fought but the gap at the top was just too wide.",
   ]},
@@ -280,16 +280,16 @@ export const BASKETBALL_TEMPLATES: CommentaryTemplate[] = [
     "{last} did not get the memo tonight{opp}. The roster tried to cover but there is only so much to give.",
   ]},
   { register: "loss", story: "star_cold", tone: "observational", templates: [
-    "{name} came in below average{opp}. The margin for error was thin tonight and it showed in the result.",
-    "Below the expected line from {last}{opp}. When the star is cold, the hand rarely survives the drop.",
+    "{name} ran cold{opp}. The margin for error was thin tonight and it showed in the result.",
+    "{last} was cold tonight{opp}. When the star is cold, the hand rarely survives the drop.",
     "{nick} was not sharp tonight. The output gap at the top was the story of this particular hand.",
     "A colder-than-usual night from {last}{opp}. The supporting cast stayed in range but needed more help.",
   ]},
   { register: "loss", story: "star_cold", tone: "analytical", templates: [
-    "{name} tracked below the expected line tonight{opp}. The margin from the supporting cast was not enough.",
-    "Below-average output from {last} tonight. The hand needed more from the anchor spot to stay competitive.",
-    "The numbers from {nick} fell short of the expected range{opp}. Insufficient cushion from the roster depth.",
-    "{last} came in under the line and the rest of the roster did not compensate enough. Tight margins lost.",
+    "{name} ran cold tonight{opp}. The margin from the supporting cast was not enough to save it.",
+    "Cold output from {last} tonight. The hand needed more from the star to stay competitive.",
+    "The numbers from {nick} were chilly{opp}. Insufficient cushion from the roster depth.",
+    "{last} came in cold and the rest of the roster did not compensate enough. Tight margins lost.",
   ]},
 
   // ═══ LOSS — everyone_flat ═════════════════════════════════════════════════
@@ -297,9 +297,9 @@ export const BASKETBALL_TEMPLATES: CommentaryTemplate[] = [
   { register: "loss", story: "everyone_flat", tone: "deadpan", templates: [
     "Nobody had it tonight. Sometimes the cards just do not come in your favor. On to the next one.",
     "Flat across the board. Not one card on the roster pulled its weight tonight. It happens.",
-    "The whole roster came in below the line. Nothing worked. Nothing to say. On to the next hand.",
+    "The whole roster was cold tonight. Nothing worked. Nothing to say. On to the next hand.",
     "The entire lineup missed tonight. Take the loss and move forward from here. Next hand matters more.",
-    "{last} and the rest of the roster all came in below the line. Nothing worked. On to the next one.",
+    "{last} and the rest of the roster all ran cold tonight. Nothing worked. On to the next one.",
   ]},
   { register: "loss", story: "everyone_flat", tone: "warm", templates: [
     "Tough night all around. Nobody could get anything going out there tonight. It happens sometimes.",
@@ -316,18 +316,18 @@ export const BASKETBALL_TEMPLATES: CommentaryTemplate[] = [
     "{last} and the supporting cast all phoned it in together. Team chemistry in the worst possible way.",
   ]},
   { register: "loss", story: "everyone_flat", tone: "observational", templates: [
-    "No single culprit tonight. Every card came in below the line across the board. Collective miss.",
+    "No single culprit tonight. Every card ran cold across the board. Collective miss.",
     "The roster fell short across the board. A collective miss from top to bottom of the lineup tonight.",
     "Broad struggles left no margin for the hand at all. Nobody stepped up when the lineup needed it most.",
     "A collective off night. The roster missed the mark from every position. Nothing you could have done.",
-    "{nick} and the full roster all fell short tonight. No individual cause — the whole hand was flat.",
+    "{nick} and the full roster all ran cold tonight. No individual cause — the whole hand was flat.",
   ]},
   { register: "loss", story: "everyone_flat", tone: "analytical", templates: [
-    "Every card tracked below the expected line. No individual cause — this was a systemic collective miss.",
-    "The roster all came in under their expected outputs tonight. The broad miss sank the hand completely.",
-    "Below the line across the board. When everyone misses, the hand has no chance no matter the build.",
+    "Every card ran cold tonight. No individual cause — this was a systemic collective miss.",
+    "The roster all came in under tonight. The broad miss sank the hand completely.",
+    "Cold across the board. When everyone misses, the hand has no chance no matter the build.",
     "Systematic shortfall from the full roster tonight. The cumulative deficit was just too large to survive.",
-    "{last} and the rest of the lineup all underdelivered. The math was not there from any single position.",
+    "{last} and the rest of the lineup all came up short. The math was not there from any position.",
   ]},
 
   // ═══ WIN — star_rare_badge (badge IS the story) ══════════════════════════
@@ -363,8 +363,8 @@ export const BASKETBALL_TEMPLATES: CommentaryTemplate[] = [
   { register: "win", story: "star_rare_badge", tone: "analytical", templates: [
     "{name} filled the stat sheet across the board{opp}. A {topStat} {badge} is the kind of output that wins hands.",
     "A {badge} from {last}{opp}. Multi-category production with {topStat} at the top. The hand benefited directly.",
-    "{last} posted a {topStat} {badge} tonight. That level of all-around output anchored the entire hand.",
-    "The anchor hit on every category tonight. A {badge} from {nick}{opp} with {topStat} leading the line.",
+    "{last} posted a {topStat} {badge} tonight. That level of all-around output carried the entire hand.",
+    "The star hit on every category tonight. A {badge} from {nick}{opp} with {topStat} leading the line.",
   ]},
   { register: "win", story: "star_rare_badge", tone: "deadpan", templates: [
     "{last} had a {badge}{opp}. {topStat} on top. Won the hand. Not much else needs to be said about it.",
@@ -396,7 +396,7 @@ export const BASKETBALL_TEMPLATES: CommentaryTemplate[] = [
   { register: "loss", story: "star_rare_badge", tone: "analytical", templates: [
     "{name} posted a {badge}{opp} with {topStat} leading the line. The supporting cards fell far short of covering.",
     "A {topStat} {badge} from {last}{opp} was not sufficient. The deficit from the rest of the roster was too large.",
-    "{last} filled every category tonight with a {badge}. The hand lost despite elite output from the anchor.",
+    "{last} filled every category tonight with a {badge}. The hand lost despite elite output from the star.",
   ]},
   { register: "loss", story: "star_rare_badge", tone: "deadpan", templates: [
     "{last} had a {badge}{opp}. {topStat} on top. Still lost. The roster around the star was not there tonight.",

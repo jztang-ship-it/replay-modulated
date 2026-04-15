@@ -35,7 +35,7 @@ export const BASEBALL_TEMPLATES: CommentaryTemplate[] = [
     "The numbers tell the story: {name} dominated{opp} and the hand cashed because of that showing.",
   ]},
   { register: "win", story: "star_went_off", tone: "analytical", templates: [
-    "{name} came in well above the expected line{opp}. That kind of output is why you pay the salary.",
+    "{name} was on fire{opp}. That kind of output is why you pay the salary.",
     "{last} exceeded average output by a wide margin today. The winning hand is the direct result of it.",
     "Above-average production from {nick} today{opp}. The math worked and the hand cashed.",
   ]},
@@ -69,15 +69,15 @@ export const BASEBALL_TEMPLATES: CommentaryTemplate[] = [
     "The handbook says this is how you are supposed to win. Nobody told the lineup it would be this easy.",
   ]},
   { register: "win", story: "star_delivered", tone: "observational", templates: [
-    "{name} came in around the expected line{opp}. Consistent output and the hand benefited.",
+    "{name} was right on the money{opp}. Consistent output and the hand benefited.",
     "{last} did what was expected today. The rest of the lineup handled the margins.",
     "Balanced contributions across the lineup today. Nobody carried, nobody dropped. Solid result.",
     "The lineup did what it was built to do today. No single card had to do too much.",
   ]},
   { register: "win", story: "star_delivered", tone: "analytical", templates: [
-    "{name} tracked close to average today{opp}. Consistent anchor play got the win.",
-    "The star hit the expected line. The supporting cast stayed in range. Clean hand overall.",
-    "The lineup tracked within expected ranges across the board. Consistent inputs, consistent output.",
+    "{name} tracked close to average today{opp}. Consistent star play got the win.",
+    "The star delivered. The supporting cast stayed in range. Clean hand overall.",
+    "The lineup tracked within normal ranges across the board. Consistent inputs, consistent output.",
   ]},
   { register: "win", story: "star_delivered", tone: "deadpan", templates: [
     "{last} did the job today{opp}. Won the hand. Moving on to the next one.",
@@ -107,12 +107,12 @@ export const BASEBALL_TEMPLATES: CommentaryTemplate[] = [
     "The bench said we got this today. And honestly, they were not wrong about it.",
   ]},
   { register: "win", story: "star_quiet_win", tone: "observational", templates: [
-    "{name} came in below average but the lineup compensated. Balanced hand overall.",
+    "{name} ran cold but the lineup compensated. Balanced hand overall.",
     "The hand won despite the star running cold. Depth across the lineup made the difference.",
     "Not a star-driven win. The supporting bats filled in across the board and the hand survived.",
   ]},
   { register: "win", story: "star_quiet_win", tone: "analytical", templates: [
-    "{name} fell short of the expected line today but lineup depth covered the gap. Solid build.",
+    "{name} ran cold today but lineup depth covered the gap. Solid build.",
     "Star output was down but the supporting cards compensated. The math still worked for a win.",
   ]},
   { register: "win", story: "star_quiet_win", tone: "deadpan", templates: [
@@ -166,12 +166,12 @@ export const BASEBALL_TEMPLATES: CommentaryTemplate[] = [
     "{name} carried the whole lineup and the lineup said thanks but no thanks. Brutal day at the park.",
   ]},
   { register: "loss", story: "star_carried_loss", tone: "observational", templates: [
-    "{name} vastly exceeded the expected line{opp} but the rest of the lineup fell short across the board.",
+    "{name} was on fire{opp} but the rest of the lineup fell short across the board.",
     "The star carried. The supporting bats did not follow. {last} deserved a better outcome today.",
     "When the star delivers like {last} did and the hand still busts, the problem is everywhere else.",
   ]},
   { register: "loss", story: "star_carried_loss", tone: "analytical", templates: [
-    "{name} came in far above the expected line{opp}. The loss is entirely on the supporting cards today.",
+    "{name} was smoking hot{opp}. The loss is entirely on the supporting cards today.",
     "Elite output from {last} was offset by the rest of the lineup falling short across the board.",
   ]},
   { register: "loss", story: "star_carried_loss", tone: "deadpan", templates: [
@@ -182,7 +182,7 @@ export const BASEBALL_TEMPLATES: CommentaryTemplate[] = [
   // ═══ LOSS — star_no_showed ════════════════════════════════════════════════
 
   { register: "loss", story: "star_no_showed", tone: "deadpan", templates: [
-    "{last} came in way below the line today{opp}. Not much else to say about this one.",
+    "{last} came in way cold today{opp}. Not much else to say about this one.",
     "Needed {nick} to produce today and it did not happen. The hand paid the price.",
     "{name} was a no-show{opp}. That is the whole story of this hand right there.",
   ]},
@@ -198,14 +198,14 @@ export const BASEBALL_TEMPLATES: CommentaryTemplate[] = [
     "Someone should check on {nick} after that one. The stat line suggests a case of mistaken identity.",
   ]},
   { register: "loss", story: "star_no_showed", tone: "observational", templates: [
-    "{name} came in well below average{opp}. Hard to overcome that kind of deficit from the top card.",
+    "{name} was ice cold tonight{opp}. Hard to overcome that kind of deficit from the top card.",
     "{last} was the difference today — and not the good kind of difference you want from your star.",
-    "The anchor fell way short today. {name}{opp} was the gap the lineup could not close.",
+    "The star fell way short today. {name}{opp} was the gap the lineup could not close.",
   ]},
   { register: "loss", story: "star_no_showed", tone: "analytical", templates: [
-    "{name} came in far below the expected line{opp}. At that salary, the hand needed more output.",
+    "{name} was freezing cold{opp}. At that salary, the hand needed more output.",
     "{last}'s output was insufficient to sustain the hand today. The math was not there for a win.",
-    "Way below the line from {nick}{opp}. The deficit at the anchor spot sank the entire hand.",
+    "Way cold from {nick}{opp}. The deficit at the star spot sank the entire hand.",
   ]},
 
   // ═══ LOSS — star_cold ═════════════════════════════════════════════════════
@@ -213,7 +213,7 @@ export const BASEBALL_TEMPLATES: CommentaryTemplate[] = [
   { register: "loss", story: "star_cold", tone: "deadpan", templates: [
     "{last} was cold today{opp}. The hand followed that direction. That is how it goes sometimes.",
     "Not {nick}'s day. It happens to everyone. Shake it off and come back for the next one.",
-    "Below the line from {last}. Not enough from the lineup to cover the shortfall.",
+    "Cold from {last}. Not enough from the lineup to cover the shortfall.",
   ]},
   { register: "loss", story: "star_cold", tone: "warm", templates: [
     "{name} had a rough one today{opp}. One of those days you just want to forget.",
@@ -226,12 +226,12 @@ export const BASEBALL_TEMPLATES: CommentaryTemplate[] = [
     "Somewhere out there is the version of {nick} who rakes. Today was not that version.",
   ]},
   { register: "loss", story: "star_cold", tone: "observational", templates: [
-    "{name} came in below average{opp}. The margin for error was thin and it showed in the result.",
-    "Below the expected line from {last}{opp}. When the star is cold, the hand rarely survives.",
+    "{name} ran cold{opp}. The margin for error was thin and it showed in the result.",
+    "Cold night from {last}{opp}. When the star is cold, the hand rarely survives.",
   ]},
   { register: "loss", story: "star_cold", tone: "analytical", templates: [
-    "{name} tracked below the expected line today{opp}. The margin from the supporting lineup was not enough.",
-    "Below-average output from {last} today. The hand needed more from the anchor spot to stay alive.",
+    "{name} ran cold today{opp}. The margin from the supporting lineup was not enough.",
+    "Cold output from {last} today. The hand needed more from the star spot to stay alive.",
   ]},
 
   // ═══ LOSS — everyone_flat ═════════════════════════════════════════════════
@@ -239,7 +239,7 @@ export const BASEBALL_TEMPLATES: CommentaryTemplate[] = [
   { register: "loss", story: "everyone_flat", tone: "deadpan", templates: [
     "Nobody had it today. Sometimes the lineup just does not come through. On to the next one.",
     "Flat across the board. Not one card in the lineup pulled its weight today.",
-    "The whole lineup came in below the line. Nothing worked. On to the next hand.",
+    "The whole lineup came in cold. Nothing worked. On to the next hand.",
     "{last} and the rest of the lineup all came in cold. Nothing worked today.",
   ]},
   { register: "loss", story: "everyone_flat", tone: "warm", templates: [
@@ -255,13 +255,13 @@ export const BASEBALL_TEMPLATES: CommentaryTemplate[] = [
     "The lineup phoned it in today. A team effort in the wrong direction. Very on brand.",
   ]},
   { register: "loss", story: "everyone_flat", tone: "observational", templates: [
-    "No single culprit today. Every card came in below the line across the board. Collective miss.",
+    "No single culprit today. Every card came in cold across the board. Collective miss.",
     "The lineup fell short across the board. A collective miss from top to bottom.",
     "Broad struggles left no margin for the hand at all. Nobody stepped up when needed.",
   ]},
   { register: "loss", story: "everyone_flat", tone: "analytical", templates: [
-    "Every card tracked below the expected line. No individual cause — systemic collective miss.",
-    "The lineup all came in under their expected outputs today. The broad miss sank the hand.",
-    "Below the line across the board. When everyone misses, the hand has no chance.",
+    "Every card ran cold. No individual cause — systemic collective miss.",
+    "The lineup all came in under their Solid outputs today. The broad miss sank the hand.",
+    "Cold across the board. When everyone misses, the hand has no chance.",
   ]},
 ];
