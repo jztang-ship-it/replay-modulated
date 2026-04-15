@@ -2144,7 +2144,6 @@ export default function GameView() {
                       <span style={{ fontSize: 13, verticalAlign: "middle" }}>🏆</span>
                       {" "}to check the board.
                     </>)}
-                    <span style={{ display: "block", fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.4)", marginTop: 4, textTransform: "uppercase", letterSpacing: 1 }}>tap to dismiss</span>
                   </span>
                 </div>
               )}
