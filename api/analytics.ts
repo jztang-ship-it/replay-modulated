@@ -89,9 +89,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         } else {
           await inc(`gameplay:${sport}:wins:${d}`, 1, YEAR)
         }
-        if (score > 0)  await inc(`gameplay:${sport}:score_sum:${d}`, score, YEAR)
+        if (score > 0)  await inc(`gameplay:${sport}:score_sum:${d}`, Math.round(score), YEAR)
         if (badges > 0) await inc(`gameplay:${sport}:badge_sum:${d}`, badges, YEAR)
-        if (dur > 0)    await inc(`gameplay:${sport}:duration_sum:${d}`, dur, YEAR)
+        if (dur > 0)    await inc(`gameplay:${sport}:duration_sum:${d}`, Math.round(dur), YEAR)
         if (tier && tier !== 'BUST') {
           await inc(`gameplay:${sport}:tier:${tier}:${d}`, 1, YEAR)
         }
@@ -108,7 +108,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     return res.status(200).json({ success: true })
-  } catch {
-    return res.status(400).json({ error: 'Invalid payload' })
+  } catch (err: unknown) {
+    console.error('[analytics] Error:', err);
+    return res.status(500).json({ error: 'Analytics processing failed' })
   }
 }
