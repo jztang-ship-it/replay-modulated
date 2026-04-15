@@ -1983,20 +1983,21 @@ export default function GameView() {
                 {/* FP number + ceiling — single line, fades in for Phase 2 */}
                 {tierResultPhase === 2 && (
                   <span style={{
-                    fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.55)",
-                    letterSpacing: "0.02em", lineHeight: 1, textAlign: "center",
+                    fontSize: 12, fontWeight: 800, color: "rgba(255,255,255,0.55)",
+                    letterSpacing: "0.01em", lineHeight: 1, textAlign: "center",
                     fontVariantNumeric: "tabular-nums",
+                    whiteSpace: "nowrap",
                     animation: "tierInfoFadeIn 400ms ease-out",
                   }}>
                     {displayFp.toFixed(1)} FP
                     {rosterTotalBonus > 0 && (
-                      <span style={{ color: "#FFD700", fontWeight: 900, marginLeft: 3 }}>
+                      <span style={{ color: "#FFD700", fontWeight: 900, marginLeft: 2 }}>
                         (+{rosterTotalBonus})
                       </span>
                     )}
                     {ceilingPct != null && (
-                      <span style={{ fontWeight: 600, color: "rgba(255,255,255,0.35)", fontSize: 10, marginLeft: 4 }}>
-                        · {ceilingPct}% of this roster's ceiling
+                      <span style={{ fontWeight: 600, color: "rgba(255,255,255,0.35)", fontSize: 10, marginLeft: 3 }}>
+                        · {ceilingPct}%
                       </span>
                     )}
                   </span>
