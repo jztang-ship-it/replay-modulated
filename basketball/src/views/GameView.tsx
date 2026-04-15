@@ -2163,7 +2163,8 @@ export default function GameView() {
                     overflow: "visible",
                     boxSizing: "border-box",
                     padding: "2px 2px 0",
-                    zIndex: undefined,
+                    opacity: (isFTUE && gameState === "REVEALING" && ftueCardsBlocked) ? 0 : 1,
+                    transition: "opacity 0.2s ease",
                   }}
                 >
                   <TierGauge
