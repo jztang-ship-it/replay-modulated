@@ -1560,47 +1560,21 @@ export function GameBar({
           transition: "filter 0.35s ease, opacity 0.35s ease",
           pointerEvents: showCelebContent ? "none" : "auto",
         }}>
-          <div data-ftue-anchor="balance-row" style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4, paddingTop: 6, borderTop: "1px solid rgba(255,255,255,0.06)", opacity: (ftueHideBalance || gameState === "RESULTS" || gameState === "WIN_CELEBRATION") ? 0 : 1, maxHeight: (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") ? 0 : undefined, overflow: "hidden", pointerEvents: (ftueHideBalance || gameState === "RESULTS" || gameState === "WIN_CELEBRATION") ? "none" as const : "auto" as const, transition: "opacity 0.3s ease, max-height 0.3s ease" }}>
-            {/* Balance — left */}
-            <div ref={walletRef} style={{ flexShrink: 0 }}>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>Balance</span>
-                <span style={{
-                  fontSize: 17, fontWeight: 900, lineHeight: 1,
-                  color: balanceColor === "win" ? "#22C55E" : balanceColor === "loss" ? "#FF3B30" : "#FFFFFF",
-                  filter: balanceColor !== "default" ? `drop-shadow(0 0 5px ${balanceColor === "win" ? "#22C55E88" : "#FF3B3088"})` : "none",
-                  transition: "color 300ms ease, filter 300ms ease",
-                }}>
-                  $<RollingNumber value={displayBalance} decimals={0} duration={1200} />
-                </span>
-              </div>
-            </div>
-
-            {/* Wage — true center */}
-            <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", pointerEvents: "none" }}>
-              <WageDisplay
-                baseBet={baseBet}
-                betMultiplier={betMultiplier}
-                celebration={isCelebration ? celebration : undefined}
-                onFlyComplete={(isLoss) => {
-                  setBalanceColor(isLoss ? "loss" : "win");
-                  if (celebration && (celebration.payout > 0 || celebration.isLoss)) {
-                    setCelebFlying(true);
-                  }
-                  onWageAnimationComplete?.();
-                }}
-              />
-            </div>
-
-            {/* Legend — right */}
-            <button onClick={() => { setShowLegend(true); onLegendOpened?.(); }} style={{
-              width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-              background: legendPulsing ? "rgba(255,215,0,0.9)" : "transparent",
-              border: `2px solid ${legendPulsing ? "rgba(255,215,0,0.9)" : THEME.colors.surfaceStroke}`,
-              color: legendPulsing ? "#070A12" : "rgba(255,255,255,0.6)",
-              fontSize: 12, fontWeight: 900,
-              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-            }}>i</button>
+          {/* Wage display — invisible, drives the payout animation callback */}
+          <div style={{ position: "absolute", opacity: 0, pointerEvents: "none" }}>
+            <div ref={walletRef} />
+            <WageDisplay
+              baseBet={baseBet}
+              betMultiplier={betMultiplier}
+              celebration={isCelebration ? celebration : undefined}
+              onFlyComplete={(isLoss) => {
+                setBalanceColor(isLoss ? "loss" : "win");
+                if (celebration && (celebration.payout > 0 || celebration.isLoss)) {
+                  setCelebFlying(true);
+                }
+                onWageAnimationComplete?.();
+              }}
+            />
           </div>
 
           {/* Streak flash + extinguish keyframes */}
@@ -1618,11 +1592,10 @@ export function GameBar({
             }
           `}</style>
 
-          {/* ROW 4 — Streak row (post-reveal: own row; pre-reveal: inside action row) */}
-          {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && streak != null && !ftueHideSkip && (
+          {/* Streak row — always visible, compact */}
+          {streak != null && !ftueHideSkip && (
             <div style={{ display: "flex", alignItems: "center", gap: 6, paddingBottom: 4 }}>
               <StreakFireRow streak={streak} prevStreak={prevStreakRef.current} />
-              {/* Next threshold pill */}
               {(() => {
                 const thresholds = [{ wins: 3, mult: "1.2x" }, { wins: 5, mult: "1.5x" }, { wins: 10, mult: "2.0x" }];
                 const next = thresholds.find(t => streak < t.wins);
@@ -1640,25 +1613,20 @@ export function GameBar({
             </div>
           )}
 
-          {/* ROW 5 — Action row */}
+          {/* Action row — 👛 wallet left, button center, legend+trophy right */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "relative", paddingTop: 2, minHeight: 44 }}>
-            {/* Pre-reveal: streak fires left-aligned */}
-            {gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION" && streak != null && !ftueHideSkip && (
-              <StreakFireRow streak={streak} prevStreak={prevStreakRef.current} />
-            )}
-
-            {/* Post-reveal: wallet chip left-aligned */}
-            {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && (
-              <div style={{ position: "absolute", left: 0, display: "flex", alignItems: "center", gap: 4 }}>
-                <span style={{ fontSize: 14 }}>👛</span>
-                <span style={{
-                  fontSize: 14, fontWeight: 900, color: "#FFFFFF", lineHeight: 1,
-                  fontVariantNumeric: "tabular-nums",
-                }}>
-                  $<RollingNumber value={displayBalance} decimals={0} duration={1200} />
-                </span>
-              </div>
-            )}
+            {/* Wallet chip — left */}
+            <div style={{ position: "absolute", left: 0, display: "flex", alignItems: "center", gap: 4, opacity: ftueHideBalance ? 0 : 1, transition: "opacity 0.3s ease" }}>
+              <span style={{ fontSize: 14 }}>👛</span>
+              <span style={{
+                fontSize: 14, fontWeight: 900, lineHeight: 1, fontVariantNumeric: "tabular-nums",
+                color: balanceColor === "win" ? "#22C55E" : balanceColor === "loss" ? "#FF3B30" : "#FFFFFF",
+                filter: balanceColor !== "default" ? `drop-shadow(0 0 5px ${balanceColor === "win" ? "#22C55E88" : "#FF3B3088"})` : "none",
+                transition: "color 300ms ease, filter 300ms ease",
+              }}>
+                $<RollingNumber value={displayBalance} decimals={0} duration={1200} />
+              </span>
+            </div>
 
             <button
               onClick={onAction}
@@ -1683,34 +1651,32 @@ export function GameBar({
               {actionLabel(gameState)}
             </button>
 
-            {/* Post-reveal: legend + leaderboard right-aligned */}
-            {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") ? (
-              <div style={{ position: "absolute", right: 0, display: "flex", alignItems: "center", gap: 6 }}>
-                <button onClick={() => { setShowLegend(true); onLegendOpened?.(); }} style={{
-                  width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
-                  background: legendPulsing ? "rgba(255,215,0,0.9)" : "transparent",
-                  border: `2px solid ${legendPulsing ? "rgba(255,215,0,0.9)" : THEME.colors.surfaceStroke}`,
-                  color: legendPulsing ? "#070A12" : "rgba(255,255,255,0.5)",
-                  fontSize: 12, fontWeight: 900, cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", padding: 0,
-                }}>i</button>
-                {onViewLeaderboard && !ftueHideSkip && (
-                  <button
-                    type="button"
-                    aria-label="View leaderboard"
-                    onClick={onViewLeaderboard}
-                    style={{
-                      width: 32, height: 32, borderRadius: "50%",
-                      background: "transparent",
-                      border: `1px solid ${trophyOnBoard ? "rgba(255,215,0,0.3)" : "rgba(255,255,255,0.1)"}`,
-                      color: trophyOnBoard ? "#FFD700" : "rgba(255,255,255,0.3)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      cursor: "pointer", fontSize: 14, padding: 0,
-                    }}
-                  >🏆</button>
-                )}
-              </div>
-            ) : TrophyButton}
+            {/* Legend + trophy — right */}
+            <div style={{ position: "absolute", right: 0, display: "flex", alignItems: "center", gap: 6 }}>
+              <button onClick={() => { setShowLegend(true); onLegendOpened?.(); }} style={{
+                width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
+                background: legendPulsing ? "rgba(255,215,0,0.9)" : "transparent",
+                border: `2px solid ${legendPulsing ? "rgba(255,215,0,0.9)" : THEME.colors.surfaceStroke}`,
+                color: legendPulsing ? "#070A12" : "rgba(255,255,255,0.5)",
+                fontSize: 12, fontWeight: 900, cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center", padding: 0,
+              }}>i</button>
+              {onViewLeaderboard && !ftueHideSkip && (
+                <button
+                  type="button"
+                  aria-label="View leaderboard"
+                  onClick={onViewLeaderboard}
+                  style={{
+                    width: 32, height: 32, borderRadius: "50%",
+                    background: "transparent",
+                    border: `1px solid ${trophyOnBoard ? "rgba(255,215,0,0.3)" : "rgba(255,255,255,0.1)"}`,
+                    color: trophyOnBoard ? "#FFD700" : "rgba(255,255,255,0.3)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", fontSize: 14, padding: 0,
+                  }}
+                >🏆</button>
+              )}
+            </div>
           </div>
         </div>
 
