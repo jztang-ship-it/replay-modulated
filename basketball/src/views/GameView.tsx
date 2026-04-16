@@ -649,6 +649,12 @@ export default function GameView() {
     return !seenToday || !introSeen;
   });
 
+  // Hand count — used for commentary, leaderboard, and Chad. Must be declared
+  // before any useEffect that references it to avoid TDZ in production builds.
+  const [handCount, setHandCount] = useState<number>(() =>
+    parseInt(localStorage.getItem("replaymod_hand_count") ?? "1", 10)
+  );
+
   // ── Chad usher — single priority queue, max one message per IDLE return ──
 
   const chadFiredThisIdleRef = useRef(false);
@@ -838,10 +844,7 @@ export default function GameView() {
     return opts[Math.floor(Math.random() * opts.length)];
   }, [winTier]); // eslint-disable-line
 
-  // Hand count — used for commentary and leaderboard. Hand 1 is always FTUE. Persisted across sessions.
-  const [handCount, setHandCount] = useState<number>(() =>
-    parseInt(localStorage.getItem("replaymod_hand_count") ?? "1", 10)
-  );
+  // handCount declared above Chad effects (line ~652) to avoid TDZ in production builds.
 
   // 3rd hand nudge: show leaderboard intro after hand 3 (when returning to IDLE)
   useEffect(() => {
