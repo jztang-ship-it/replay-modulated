@@ -20,7 +20,6 @@ import { GameBar, type CelebrationData } from "../components/GameBar";
 import { useCardFlipState } from "../hooks/useCardFlipState";
 import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
 import { calculateWinTier, calculatePayout, calculatePayoutWithStreak, getStreakMultiplier, BASKETBALL_WIN_TIERS, STREAK_TIERS, type WinTier } from "../utils/payoutLogic";
-import { checkMysteryScore, getDailyMysteryScore, MYSTERY_SCORE_BONUS } from "@shared/utils/mysteryScore";
 import { detectExtremes } from "@shared/utils/extremeGames";
 import { buildPostRevealCopy } from "../utils/buildPostRevealCopy";
 import { composeCommentary } from "../../../shared/commentary/composeCommentary";
@@ -42,7 +41,6 @@ import type { CommentaryInput, CommentaryOutput, CommentaryRosterCard } from "@s
 import { buildBasketballContext } from "../utils/buildBasketballContext";
 import { ProfileScreen } from '@shared/components/ProfileScreen';
 import { useAuth } from "@shared/auth/useAuth";
-import { RegisterNudge } from "@shared/components/RegisterNudge";
 import { RegisterModal } from "@shared/components/RegisterModal";
 import { PwaInstallPrompt } from "@shared/components/PwaInstallPrompt";
 
@@ -640,14 +638,6 @@ export default function GameView() {
   const [ftueBookerPulse, setFtueBookerPulse] = useState(false);
   const [ftueHoldSpotlight, setFtueHoldSpotlight] = useState(false);
   const [ftueCoachBubbleKey, setFtueCoachBubbleKey] = useState<string | null>(null);
-  /** Pre-game message shown in bet multiplier area — dismissed on tap, then multipliers appear */
-  const [preGameMsg, setPreGameMsg] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
-    if (localStorage.getItem("replaymod_ftue_basketball") !== "1") return null; // still in FTUE
-    const seen = localStorage.getItem("replaymod_pregame_intro_basketball");
-    if (seen === "1") return null;
-    return "PREGAME_DAILY_BONUS";
-  });
   /** Legend icon gold-filled when pre-game msg is active OR daily bonus unseen */
   const [legendGold, setLegendGold] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -658,13 +648,61 @@ export default function GameView() {
     return !seenToday || !introSeen;
   });
 
-  // When FTUE completes (isFTUE flips false), trigger the daily bonus intro message
+  // ── Usher messages — all routed through commentary box as typewriter ──
+
+  // Welcome message: first time post-FTUE
   useEffect(() => {
-    if (isFTUE) return; // still in FTUE
-    if (localStorage.getItem("replaymod_pregame_intro_basketball") === "1") return; // already seen
-    setPreGameMsg("PREGAME_DAILY_BONUS");
+    if (isFTUE) return;
+    if (localStorage.getItem("replaymod_pregame_intro_basketball") === "1") return;
+    localStorage.setItem("replaymod_pregame_intro_basketball", "1");
     setLegendGold(true);
+    setFtueCommentaryOverride({
+      parts: ["Look who decided to play for real. Three bonus players rotate in every 24hrs — tap the gold icon to see who's paying extra today."],
+      sticky: true,
+    });
   }, [isFTUE]);
+
+  // Big win nudge: anonymous user hits ALL_STAR+
+  const bigWinNudgedRef = useRef(false);
+  useEffect(() => {
+    if (isFTUE || !isAnonymous || !bigWinFired || bigWinNudgedRef.current) return;
+    if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
+    bigWinNudgedRef.current = true;
+    setFtueCommentaryOverride({
+      parts: ["That's a real score right there. Might want to save your account before luck runs out."],
+      sticky: true,
+    });
+  }, [bigWinFired, gameState, isFTUE, isAnonymous]);
+
+  // Leaderboard qualification nudge
+  const lbNudgedRef = useRef(false);
+  useEffect(() => {
+    if (isFTUE || !isAnonymous || lbNudgedRef.current) return;
+    if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
+    if (localStorage.getItem("rm_on_board_today") !== "1") return;
+    if (localStorage.getItem("rm_usher_lb_shown") === "1") return;
+    lbNudgedRef.current = true;
+    localStorage.setItem("rm_usher_lb_shown", "1");
+    setFtueCommentaryOverride({
+      parts: ["Well well, you made the board. Top 10 split the bonus pool — might want to drop an email so nobody steals your spot."],
+      sticky: true,
+    });
+  }, [gameState, isFTUE, isAnonymous]);
+
+  // Retention nudge: 12+ hands, still anonymous
+  const retentionNudgedRef = useRef(false);
+  useEffect(() => {
+    if (isFTUE || !isAnonymous || retentionNudgedRef.current) return;
+    if (gameState !== "IDLE") return;
+    if (handCount < 12) return;
+    if (localStorage.getItem("rm_usher_retention_shown") === "1") return;
+    retentionNudgedRef.current = true;
+    localStorage.setItem("rm_usher_retention_shown", "1");
+    setFtueCommentaryOverride({
+      parts: ["You've been at this a while. Save your account — play on any device, keep your coins."],
+      sticky: true,
+    });
+  }, [gameState, handCount, isFTUE, isAnonymous]);
 
   const pendingCelebration = useRef<{ totalFp: number } | null>(null);
   /** FTUE: roster sum can read 0 briefly in RESULTS — keep last resolved hand FP for TierGauge */
@@ -1001,11 +1039,6 @@ export default function GameView() {
               submitToLeaderboard("session_score", parseFloat(totalFp.toFixed(1)));
               setTimeout(() => checkLeaderboardRank(), 2000);
             }
-            // Mystery score check — exact hit = instant bonus
-            if (checkMysteryScore(totalFp)) {
-              setBalance(prev => { const next = prev + MYSTERY_SCORE_BONUS; saveBalance(next); return next; });
-            }
-
             // Update personal bests on every hand
             const prevBest = parseFloat(localStorage.getItem("rm_best_hand") ?? "0");
             if (totalFp > prevBest) {
@@ -2153,40 +2186,13 @@ export default function GameView() {
                 style={{
                   position: "absolute",
                   inset: 0,
-                  display: (isPreRevealFooter && !preGameMsg) ? "flex" : "none",
+                  display: isPreRevealFooter ? "flex" : "none",
                   alignItems: "center",
                   justifyContent: "center",
                   boxSizing: "border-box",
                   pointerEvents: "auto",
                 }}
               />
-              {/* Pre-game message — temporarily replaces multipliers, tap to dismiss */}
-              {preGameMsg && isPreRevealFooter && (
-                <div
-                  onClick={() => {
-                    if (preGameMsg === "PREGAME_DAILY_BONUS") localStorage.setItem("replaymod_pregame_intro_basketball", "1");
-                    setPreGameMsg(null);
-                  }}
-                  style={{
-                    position: "absolute", inset: 0,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    padding: "4px 14px", cursor: "pointer", zIndex: 10, pointerEvents: "auto",
-                  }}
-                >
-                  <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.85)", textAlign: "center", lineHeight: 1.4, letterSpacing: 0.1 }}>
-                    {preGameMsg === "PREGAME_DAILY_BONUS" && (<>
-                      Every 24hrs, 3 random players get bonuses — hold or draw them for a boost. Tap the{" "}
-                      <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 18, height: 18, borderRadius: "50%", background: "rgba(255,215,0,0.9)", border: "2px solid rgba(255,215,0,0.9)", color: "#070A12", fontSize: 10, fontWeight: 900, verticalAlign: "middle", lineHeight: 1 }}>i</span>
-                      {" "}to see all scoring rules.
-                    </>)}
-                    {preGameMsg === "LEADERBOARD_INTRO" && (<>
-                      You're competing against other players for a daily bonus pool. Best single hand and total session score — top 10 split the pot. Tap{" "}
-                      <span style={{ fontSize: 13, verticalAlign: "middle" }}>🏆</span>
-                      {" "}to check the board.
-                    </>)}
-                  </span>
-                </div>
-              )}
               {showGaugeInZone3 ? (
                 <div
                   data-ftue-anchor="tier-gauge"
@@ -2451,29 +2457,6 @@ export default function GameView() {
         />
       )}
 
-      {/* Registration nudges — only for anonymous users, never FTUE */}
-      {!isFTUE && isAnonymous && (gameState === "IDLE" || gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && (
-        <>
-          <RegisterNudge
-            nudgeId="nudge_big_win"
-            message="Nice hit! Save your progress so you don't lose it."
-            active={bigWinFired}
-            onRegister={() => setShowRegisterModal(true)}
-          />
-          <RegisterNudge
-            nudgeId="nudge_leaderboard"
-            message="You're on the board! Claim your spot — add an email."
-            active={localStorage.getItem("rm_on_board_today") === "1"}
-            onRegister={() => setShowRegisterModal(true)}
-          />
-          <RegisterNudge
-            nudgeId="nudge_retention"
-            message="Having fun? Save your account to play on any device."
-            active={handCount >= 12}
-            onRegister={() => setShowRegisterModal(true)}
-          />
-        </>
-      )}
 
       {/* PWA install prompt — fires after 3rd real hand, never during FTUE */}
       {!isFTUE && (gameState === "IDLE" || gameState === "RESULTS") && (

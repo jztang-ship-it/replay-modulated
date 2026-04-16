@@ -106,8 +106,6 @@ type Props = {
 
 import React, { useMemo } from 'react';
 import { getTodaysStars } from "../adapters/gameAdapter";
-import { getDailyMysteryScore, MYSTERY_SCORE_BONUS } from "@shared/utils/mysteryScore";
-
 export function GameBar(props: Props) {
   const legendWithStars = useMemo(() => {
     const extra: Partial<LegendData> = {};
@@ -115,8 +113,6 @@ export function GameBar(props: Props) {
       const stars = getTodaysStars();
       if (stars.length > 0) extra.todaysStars = stars;
     } catch { /* data not loaded yet */ }
-    extra.mysteryScore = getDailyMysteryScore();
-    extra.mysteryBonus = MYSTERY_SCORE_BONUS;
     return { ...LEGEND_DATA, ...extra };
   }, []);
 
