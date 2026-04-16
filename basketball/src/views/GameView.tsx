@@ -2165,7 +2165,7 @@ export default function GameView() {
                   <TierGauge
                     totalFp={gaugeTotalFp}
                     thresholds={GAUGE_THRESHOLDS}
-                    winTier={springSettled ? (winTier ?? undefined) : undefined}
+                    winTier={undefined}
                     lastCardFp={lastCardFp}
                     isSkip={false}
                     visible
