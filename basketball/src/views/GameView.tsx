@@ -1988,11 +1988,12 @@ export default function GameView() {
               if (gameState === "RESULTS" && winTier && !showRawScore) setShowRawScore(true);
             }}
             style={{
-              flexShrink: 0,
+              flex: "0 0 48px",
+              height: 48,
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              padding: "4px 10px",
+              padding: "0 10px",
               boxSizing: "border-box",
               overflow: "hidden",
               cursor:
@@ -2003,7 +2004,7 @@ export default function GameView() {
             }}
           >
             {!isFTUE && gameState === "REVEALING" ? (
-              <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%", gap: 3, padding: "8px 0" }}>
+              <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%" }}>
                 <span style={{
                   fontSize: 30, fontWeight: 900, color: "#FFFFFF",
                   letterSpacing: "-0.5px", lineHeight: 1,
