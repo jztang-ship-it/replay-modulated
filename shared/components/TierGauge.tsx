@@ -707,7 +707,7 @@ export function TierGauge({
                   style={{
                     fontSize: 12, fontWeight: 700, color: "#FFFFFF",
                     fontFamily: FF, letterSpacing: "0.01em", lineHeight: 1.45,
-                    textAlign: "center", maxWidth: "100%",
+                    textAlign: "left", maxWidth: "100%",
                     display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as any,
                     overflow: "hidden",
                   }}
@@ -720,7 +720,7 @@ export function TierGauge({
                   style={{
                     fontSize: 12, fontWeight: 700, color: "#FFFFFF",
                     fontFamily: FF, letterSpacing: "0.01em", lineHeight: 1.45,
-                    textAlign: "center", maxWidth: "100%",
+                    textAlign: "left", maxWidth: "100%",
                     display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as any,
                     overflow: "hidden",
                     animation: "tgTextReveal 0.5s ease both",

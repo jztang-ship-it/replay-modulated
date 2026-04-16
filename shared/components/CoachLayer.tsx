@@ -93,7 +93,7 @@ function ReplayChip() {
     <span style={{
       display: "inline-block", padding: "1px 8px",
       background: "#3AA0FF",
-      color: "#000000", borderRadius: 10, fontWeight: 900, fontSize: 11,
+      color: "#FFFFFF", borderRadius: 10, fontWeight: 900, fontSize: 11,
       letterSpacing: ".10em", textTransform: "uppercase",
       verticalAlign: "middle", lineHeight: 1.2,
     }}>REPLAY</span>
