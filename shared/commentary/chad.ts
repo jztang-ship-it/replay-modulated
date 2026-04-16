@@ -57,6 +57,13 @@ const LEADERBOARD_INTRO: string[] = [
   "Look at that, you're on the board. Top 10 get coins — add an email to lock in your claim.",
 ];
 
+/** How the leaderboard + bonus pool works — shown after 3rd hand */
+const LEADERBOARD_EXPLAINER: string[] = [
+  "See that bonus pool up top? Every bet feeds it. End of the day, top 10 hands and session scores split the pot. Play more, pool grows, everybody eats.",
+  "Here's the deal — 5% of every bet goes into the bonus pool. Best single hand and best total session score make the leaderboard. Top 10 get paid.",
+  "That bonus pool isn't decoration. It's real coins. Best hands of the day split it — so every hand you play is a shot at the board.",
+];
+
 /** Big win nudge (anonymous, hit ALL_STAR+) */
 const BIG_WIN: string[] = [
   "That's a real score right there. Might want to save your account before luck runs out.",
@@ -79,6 +86,7 @@ export type ChadTopic =
   | "win_back"
   | "streak_intro"
   | "leaderboard_intro"
+  | "leaderboard_explainer"
   | "big_win"
   | "retention";
 
@@ -88,6 +96,7 @@ const BANKS: Record<ChadTopic, string[]> = {
   win_back: WIN_BACK,
   streak_intro: STREAK_INTRO,
   leaderboard_intro: LEADERBOARD_INTRO,
+  leaderboard_explainer: LEADERBOARD_EXPLAINER,
   big_win: BIG_WIN,
   retention: RETENTION,
 };

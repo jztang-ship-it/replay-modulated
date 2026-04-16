@@ -705,6 +705,21 @@ export default function GameView() {
     });
   }, [gameState, handCount, isFTUE, isAnonymous]);
 
+  // Leaderboard explainer: after 3rd hand, one time
+  const lbExplainerRef = useRef(false);
+  useEffect(() => {
+    if (isFTUE || lbExplainerRef.current) return;
+    if (gameState !== "IDLE") return;
+    if (handCount < 3) return;
+    if (localStorage.getItem("rm_usher_lb_explainer") === "1") return;
+    lbExplainerRef.current = true;
+    localStorage.setItem("rm_usher_lb_explainer", "1");
+    setFtueCommentaryOverride({
+      parts: [chadMessage("leaderboard_explainer")],
+      sticky: true,
+    });
+  }, [gameState, handCount, isFTUE]);
+
   const pendingCelebration = useRef<{ totalFp: number } | null>(null);
   /** FTUE: roster sum can read 0 briefly in RESULTS — keep last resolved hand FP for TierGauge */
   const ftueLastHandFpRef = useRef(0);
