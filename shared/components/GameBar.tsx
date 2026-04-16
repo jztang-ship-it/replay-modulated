@@ -1680,7 +1680,7 @@ export function GameBar({
           </div>
         </div>
 
-        {isCelebration && celebration && (
+        {isCelebration && celebration && !ftueHideSkip && (
           <div style={{
             position: "absolute", inset: 0,
             display: "flex", flexDirection: "column",
@@ -1693,7 +1693,7 @@ export function GameBar({
             <CelebrationBottom
               celebration={celebration}
               onDismiss={onWinCelebrationComplete ?? (() => { })}
-              isFTUE={ftueHideSkip}
+              isFTUE={false}
             />
           </div>
         )}

@@ -2019,7 +2019,7 @@ export default function GameView() {
               </div>
             ) : (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (() => {
               const tc = CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST;
-              const settled = tierResultPhase === 2;
+              const settled = isFTUE || tierResultPhase === 2;
               const netProfit = winPayout - currentBet;
               const fp = displayFp;
               const nextThreshold = GAUGE_THRESHOLDS.find(t => t.minFP > fp);
