@@ -1956,7 +1956,7 @@ export default function GameView() {
           </div>
         </div>
 
-        {/* 3 — Zone 3: Row A score + Row B (multipliers pre-reveal / gauge post-reveal) = 22dvh */}
+        {/* 3 — Zone 3: post-reveal results OR pre-reveal score/multipliers */}
         <div
           {...(isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")
             ? { "data-ftue-anchor": "ftue-darnit-focus" }
@@ -1970,7 +1970,124 @@ export default function GameView() {
             boxSizing: "border-box",
           }}
         >
-          {/* ROW A — score / tier result */}
+          {/* ── SETTLED POST-REVEAL LAYOUT (Rows 1-3) ── */}
+          {isPostReveal && tierResultPhase === 2 && winTier ? (() => {
+            const tc = CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST;
+            const netProfit = winPayout - currentBet;
+            const fp = displayFp;
+            // "Oh so close" — within 10% of next tier threshold
+            const nextThreshold = GAUGE_THRESHOLDS.find(t => t.minFP > fp);
+            const gapToNext = nextThreshold ? nextThreshold.minFP - fp : 999;
+            const ohSoClose = nextThreshold != null && gapToNext <= (nextThreshold.minFP * 0.10);
+            const amberColor = "#F59E0B";
+
+            return (
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "6px 10px 0", gap: 6, boxSizing: "border-box", animation: "tierInfoFadeIn 400ms ease-out" }}>
+
+                {/* ROW 1 — Tier name + gauge bar */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <span style={{
+                    fontSize: 20, fontWeight: 900, letterSpacing: 1, fontStyle: "italic",
+                    color: tc.color, textShadow: `0 0 16px ${tc.glow}`,
+                    lineHeight: 1, textTransform: "uppercase",
+                  }}>
+                    {formatTierLabel(winTier)}
+                  </span>
+                  {/* Gauge bar — inline, not inside TierGauge */}
+                  <div style={{ position: "relative", height: 10, background: "#ffffff0d", borderRadius: 999, overflow: "hidden" }}>
+                    <div style={{
+                      position: "absolute", left: 0, top: 0, height: "100%", borderRadius: 999,
+                      width: `${Math.min(100, (fp / (GAUGE_THRESHOLDS[GAUGE_THRESHOLDS.length - 1]?.minFP ?? 255)) * 100)}%`,
+                      background: ohSoClose ? amberColor : tc.color,
+                      boxShadow: `0 0 8px ${ohSoClose ? amberColor + "88" : tc.glow}`,
+                      transition: "width 0.5s ease",
+                    }} />
+                  </div>
+                </div>
+
+                {/* ROW 2 — Two-column: FP + ceiling | Net profit + wagered */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  {/* LEFT — FP + ceiling */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <span style={{
+                      fontSize: 18, fontWeight: 900, color: "#FFFFFF", lineHeight: 1,
+                      fontVariantNumeric: "tabular-nums",
+                    }}>
+                      {fp.toFixed(1)} FP
+                      {rosterTotalBonus > 0 && (
+                        <span style={{ color: "#FFD700", fontSize: 12, fontWeight: 900, marginLeft: 3 }}>
+                          (+{rosterTotalBonus})
+                        </span>
+                      )}
+                    </span>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: ohSoClose ? amberColor : "rgba(255,255,255,0.35)", lineHeight: 1 }}>
+                      {ohSoClose && nextThreshold
+                        ? `${gapToNext.toFixed(1)} FP short of ${nextThreshold.tier.replace("_", "-")}`
+                        : ceilingPct != null ? `${ceilingPct}% of ceiling` : ""
+                      }
+                    </span>
+                  </div>
+                  {/* RIGHT — Net profit + wagered */}
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+                    <span style={{
+                      fontSize: 18, fontWeight: 900, lineHeight: 1,
+                      fontVariantNumeric: "tabular-nums",
+                      color: netProfit >= 0 ? "#22C55E" : "#EF4444",
+                    }}>
+                      {netProfit >= 0 ? "+" : ""}{netProfit}
+                    </span>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.35)", lineHeight: 1 }}>
+                      {currentBet} wagered
+                    </span>
+                  </div>
+                </div>
+
+                {/* ROW 3 — Commentary (TierGauge renders commentary here) */}
+                <div style={{
+                  flex: 1, minHeight: 0, overflow: "hidden",
+                  borderLeft: ohSoClose ? `2px solid ${amberColor}` : "2px solid transparent",
+                  paddingLeft: 8,
+                  display: "flex", alignItems: "flex-start",
+                }}>
+                  <div style={{ width: "100%", overflow: "hidden" }}>
+                    <TierGauge
+                      totalFp={gaugeTotalFp}
+                      thresholds={GAUGE_THRESHOLDS}
+                      winTier={winTier ?? undefined}
+                      lastCardFp={lastCardFp}
+                      isSkip={false}
+                      visible
+                      ftueSuppressNormal={false}
+                      ftueOscillate={false}
+                      ftueLockStaticBar={false}
+                      regularFinalCardKick={false}
+                      onTierCross={undefined}
+                      postRevealCopy={postRevealCopy}
+                      ftueTypewriter={isFTUE}
+                      stickyLastOverride={isFTUE && ftueReplayReady}
+                      commentaryOverride={ftueCommentaryOverride}
+                      hideBar
+                      onCommentaryOverrideDone={() => {
+                        setFtueCommentaryOverride(null);
+                        coachDismissRef.current?.();
+                      }}
+                      onCommentaryDone={() => { if (isFTUE) setFtueCommentaryDone(true); }}
+                      onFtueOscillateComplete={() => {
+                        setFtueGaugeOscDone(true);
+                        setFtueOscillating(false);
+                        setCelebrationHeld(false);
+                        pendingCelebration.current = null;
+                        setGameState("RESULTS");
+                        setTimeout(() => setFtueWinCelebrationActive(true), 300);
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })() : (
+          <>
+          {/* ── EXISTING LAYOUT for non-settled states (IDLE, HOLD, DEALING, DRAWING, REVEALING, tier slam phase 1) ── */}
           <div
             data-ftue-anchor="score-row"
             onClick={() => {
@@ -2004,8 +2121,6 @@ export default function GameView() {
             }}
           >
             {!isFTUE && gameState === "REVEALING" ? (
-              /* During spring: only FP number — no tier PNG, no flips.
-                 The tier sign appears once as the final slam after spring settles. */
               <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%", height: "100%", gap: 3 }}>
                 <span style={{
                   fontSize: 30, fontWeight: 900, color: "#FFFFFF",
@@ -2021,12 +2136,11 @@ export default function GameView() {
                 </span>
               </div>
             ) : (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (
-              /* Tier result — single continuous animation: slam in big, shrink to settled */
               <div style={{
                 display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center",
-                width: "100%", height: "100%", gap: tierResultPhase === 2 ? 2 : 0,
+                width: "100%", height: "100%",
               }}>
-                {/* Glow flash */}
+                {/* Glow flash — tier slam phase 1 only */}
                 {tierResultPhase === 1 && (
                   <div
                     key={`flash-${winTier}`}
@@ -2038,44 +2152,18 @@ export default function GameView() {
                     }}
                   />
                 )}
-                {/* Tier PNG — one element, animates from big slam to small settled */}
                 <img
                   key={`tier-${winTier}`}
                   src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
                   alt={formatTierLabel(winTier)}
                   style={{
-                    maxHeight: tierResultPhase === 1 ? 70 : (isPostReveal ? 24 : 32),
-                    maxWidth: tierResultPhase === 1 ? "95%" : "70%",
+                    maxHeight: 70,
+                    maxWidth: "95%",
                     objectFit: "contain",
-                    filter: tierResultPhase === 1
-                      ? `drop-shadow(0 0 24px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`
-                      : "none",
-                    animation: tierResultPhase === 1 ? "tierSlam 900ms cubic-bezier(0.22, 1, 0.36, 1)" : "none",
-                    transition: "max-height 500ms ease, max-width 500ms ease, filter 500ms ease",
+                    filter: `drop-shadow(0 0 24px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`,
+                    animation: "tierSlam 900ms cubic-bezier(0.22, 1, 0.36, 1)",
                   }}
                 />
-                {/* FP number + ceiling — single line, fades in for Phase 2 */}
-                {tierResultPhase === 2 && (
-                  <span style={{
-                    fontSize: 12, fontWeight: 800, color: "rgba(255,255,255,0.55)",
-                    letterSpacing: "0.01em", lineHeight: 1, textAlign: "center",
-                    fontVariantNumeric: "tabular-nums",
-                    whiteSpace: "nowrap",
-                    animation: "tierInfoFadeIn 400ms ease-out",
-                  }}>
-                    {displayFp.toFixed(1)} FP
-                    {rosterTotalBonus > 0 && (
-                      <span style={{ color: "#FFD700", fontWeight: 900, marginLeft: 2 }}>
-                        (+{rosterTotalBonus})
-                      </span>
-                    )}
-                    {ceilingPct != null && (
-                      <span style={{ fontWeight: 600, color: "rgba(255,255,255,0.35)", fontSize: 10, marginLeft: 3 }}>
-                        · {ceilingPct}%
-                      </span>
-                    )}
-                  </span>
-                )}
               </div>
             ) : gameState === "WIN_CELEBRATION" && winTier && celebrationData && !showRawScore ? (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, width: "100%" }}>
@@ -2254,6 +2342,8 @@ export default function GameView() {
             </div>
             {/* Streak fire display removed — rendered in Zone 4 instead */}
           </div>
+          </>
+          )}
         </div>
 
         {/* 4 — Wallet + action only (14dvh) */}

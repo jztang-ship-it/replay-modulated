@@ -1560,7 +1560,7 @@ export function GameBar({
           transition: "filter 0.35s ease, opacity 0.35s ease",
           pointerEvents: showCelebContent ? "none" : "auto",
         }}>
-          <div data-ftue-anchor="balance-row" style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4, paddingTop: 6, borderTop: "1px solid rgba(255,255,255,0.06)", opacity: ftueHideBalance ? 0 : 1, pointerEvents: ftueHideBalance ? "none" as const : "auto" as const, transition: "opacity 0.3s ease" }}>
+          <div data-ftue-anchor="balance-row" style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4, paddingTop: 6, borderTop: "1px solid rgba(255,255,255,0.06)", opacity: (ftueHideBalance || gameState === "RESULTS" || gameState === "WIN_CELEBRATION") ? 0 : 1, maxHeight: (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") ? 0 : undefined, overflow: "hidden", pointerEvents: (ftueHideBalance || gameState === "RESULTS" || gameState === "WIN_CELEBRATION") ? "none" as const : "auto" as const, transition: "opacity 0.3s ease, max-height 0.3s ease" }}>
             {/* Balance — left */}
             <div ref={walletRef} style={{ flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
@@ -1618,11 +1618,46 @@ export function GameBar({
             }
           `}</style>
 
-          {/* Action row — streak left, button center, trophy right */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "relative", paddingTop: 2 }}>
-            {/* Streak fire emojis — left-aligned */}
-            {streak != null && !ftueHideSkip && (
+          {/* ROW 4 — Streak row (post-reveal: own row; pre-reveal: inside action row) */}
+          {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && streak != null && !ftueHideSkip && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, paddingBottom: 4 }}>
               <StreakFireRow streak={streak} prevStreak={prevStreakRef.current} />
+              {/* Next threshold pill */}
+              {(() => {
+                const thresholds = [{ wins: 3, mult: "1.2x" }, { wins: 5, mult: "1.5x" }, { wins: 10, mult: "2.0x" }];
+                const next = thresholds.find(t => streak < t.wins);
+                if (!next) return <span style={{ fontSize: 9, fontWeight: 800, color: "#FFD700" }}>🔥 2.0x active</span>;
+                const remaining = next.wins - streak;
+                return (
+                  <span style={{
+                    fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.4)",
+                    background: "rgba(255,255,255,0.06)", borderRadius: 8, padding: "2px 8px",
+                  }}>
+                    {remaining} more → {next.mult}
+                  </span>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* ROW 5 — Action row */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "relative", paddingTop: 2, minHeight: 44 }}>
+            {/* Pre-reveal: streak fires left-aligned */}
+            {gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION" && streak != null && !ftueHideSkip && (
+              <StreakFireRow streak={streak} prevStreak={prevStreakRef.current} />
+            )}
+
+            {/* Post-reveal: wallet chip left-aligned */}
+            {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && (
+              <div style={{ position: "absolute", left: 0, display: "flex", alignItems: "center", gap: 4 }}>
+                <span style={{ fontSize: 14 }}>👛</span>
+                <span style={{
+                  fontSize: 14, fontWeight: 900, color: "#FFFFFF", lineHeight: 1,
+                  fontVariantNumeric: "tabular-nums",
+                }}>
+                  $<RollingNumber value={displayBalance} decimals={0} duration={1200} />
+                </span>
+              </div>
             )}
 
             <button
@@ -1647,7 +1682,35 @@ export function GameBar({
               {ftueReplayPulse && <style>{`@keyframes ftueReplayPulse { 0%,100% { box-shadow: 0 4px 14px rgba(0,0,0,0.3); } 50% { box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 6px rgba(58,160,255,0.5), 0 0 20px rgba(58,160,255,0.3); } }`}</style>}
               {actionLabel(gameState)}
             </button>
-            {TrophyButton}
+
+            {/* Post-reveal: legend + leaderboard right-aligned */}
+            {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") ? (
+              <div style={{ position: "absolute", right: 0, display: "flex", alignItems: "center", gap: 6 }}>
+                <button onClick={() => { setShowLegend(true); onLegendOpened?.(); }} style={{
+                  width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
+                  background: legendPulsing ? "rgba(255,215,0,0.9)" : "transparent",
+                  border: `2px solid ${legendPulsing ? "rgba(255,215,0,0.9)" : THEME.colors.surfaceStroke}`,
+                  color: legendPulsing ? "#070A12" : "rgba(255,255,255,0.5)",
+                  fontSize: 12, fontWeight: 900, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", padding: 0,
+                }}>i</button>
+                {onViewLeaderboard && !ftueHideSkip && (
+                  <button
+                    type="button"
+                    aria-label="View leaderboard"
+                    onClick={onViewLeaderboard}
+                    style={{
+                      width: 32, height: 32, borderRadius: "50%",
+                      background: "transparent",
+                      border: `1px solid ${trophyOnBoard ? "rgba(255,215,0,0.3)" : "rgba(255,255,255,0.1)"}`,
+                      color: trophyOnBoard ? "#FFD700" : "rgba(255,255,255,0.3)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer", fontSize: 14, padding: 0,
+                    }}
+                  >🏆</button>
+                )}
+              </div>
+            ) : TrophyButton}
           </div>
         </div>
 
