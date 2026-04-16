@@ -649,76 +649,62 @@ export default function GameView() {
     return !seenToday || !introSeen;
   });
 
-  // ── Usher messages — all routed through commentary box as typewriter ──
+  // ── Chad usher — single priority queue, max one message per IDLE return ──
 
-  // Welcome message: first time post-FTUE
+  const chadFiredThisIdleRef = useRef(false);
+  const chadLastHandRef = useRef(-1);
+
+  // Reset gate when leaving IDLE (new hand started)
+  useEffect(() => {
+    if (gameState !== "IDLE") chadFiredThisIdleRef.current = false;
+  }, [gameState]);
+
+  // Welcome message: first time post-FTUE (highest priority, fires immediately)
   useEffect(() => {
     if (isFTUE) return;
     if (localStorage.getItem("replaymod_pregame_intro_basketball") === "1") return;
     localStorage.setItem("replaymod_pregame_intro_basketball", "1");
+    chadFiredThisIdleRef.current = true;
     setLegendGold(true);
-    setFtueCommentaryOverride({
-      parts: [chadMessage("welcome")],
-      sticky: true,
-    });
+    setFtueCommentaryOverride({ parts: [chadMessage("welcome")], sticky: true });
   }, [isFTUE]);
 
-  // Big win nudge: anonymous user hits ALL_STAR+
-  const bigWinNudgedRef = useRef(false);
+  // All other Chad messages — evaluated once per IDLE, pick highest priority eligible
   useEffect(() => {
-    if (isFTUE || !isAnonymous || !bigWinFired || bigWinNudgedRef.current) return;
-    if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
-    bigWinNudgedRef.current = true;
-    setFtueCommentaryOverride({
-      parts: [chadMessage("big_win")],
-      sticky: true,
-    });
-  }, [bigWinFired, gameState, isFTUE, isAnonymous]);
+    if (isFTUE || gameState !== "IDLE") return;
+    if (chadFiredThisIdleRef.current) return;
+    // Don't fire on the same hand twice
+    if (chadLastHandRef.current === handCount) return;
 
-  // Leaderboard qualification nudge
-  const lbNudgedRef = useRef(false);
-  useEffect(() => {
-    if (isFTUE || !isAnonymous || lbNudgedRef.current) return;
-    if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
-    if (localStorage.getItem("rm_on_board_today") !== "1") return;
-    if (localStorage.getItem("rm_usher_lb_shown") === "1") return;
-    lbNudgedRef.current = true;
-    localStorage.setItem("rm_usher_lb_shown", "1");
-    setFtueCommentaryOverride({
-      parts: [chadMessage("leaderboard_intro")],
-      sticky: true,
-    });
-  }, [gameState, isFTUE, isAnonymous]);
+    // Minimum 2 hands between Chad messages
+    const lastChadHand = parseInt(localStorage.getItem("rm_chad_last_hand") ?? "0", 10);
+    if (handCount - lastChadHand < 2 && handCount > 1) return;
 
-  // Retention nudge: 12+ hands, still anonymous
-  const retentionNudgedRef = useRef(false);
-  useEffect(() => {
-    if (isFTUE || !isAnonymous || retentionNudgedRef.current) return;
-    if (gameState !== "IDLE") return;
-    if (handCount < 12) return;
-    if (localStorage.getItem("rm_usher_retention_shown") === "1") return;
-    retentionNudgedRef.current = true;
-    localStorage.setItem("rm_usher_retention_shown", "1");
-    setFtueCommentaryOverride({
-      parts: [chadMessage("retention")],
-      sticky: true,
-    });
-  }, [gameState, handCount, isFTUE, isAnonymous]);
+    // Priority-ordered checks — first match wins
+    type ChadCheck = { key: string; topic: Parameters<typeof chadMessage>[0]; condition: boolean; resultsOnly?: boolean };
+    const checks: ChadCheck[] = [
+      // Leaderboard explainer — after 3rd hand
+      { key: "rm_usher_lb_explainer", topic: "leaderboard_explainer", condition: handCount >= 3 },
+      // Leaderboard qualification — anonymous, on the board
+      { key: "rm_usher_lb_shown", topic: "leaderboard_intro", condition: isAnonymous && localStorage.getItem("rm_on_board_today") === "1" },
+      // Big win — anonymous, ALL_STAR+ hit
+      { key: "rm_usher_big_win", topic: "big_win", condition: isAnonymous && bigWinFired },
+      // Retention — 12+ hands, anonymous
+      { key: "rm_usher_retention_shown", topic: "retention", condition: isAnonymous && handCount >= 12 },
+    ];
 
-  // Leaderboard explainer: after 3rd hand, one time
-  const lbExplainerRef = useRef(false);
-  useEffect(() => {
-    if (isFTUE || lbExplainerRef.current) return;
-    if (gameState !== "IDLE") return;
-    if (handCount < 3) return;
-    if (localStorage.getItem("rm_usher_lb_explainer") === "1") return;
-    lbExplainerRef.current = true;
-    localStorage.setItem("rm_usher_lb_explainer", "1");
-    setFtueCommentaryOverride({
-      parts: [chadMessage("leaderboard_explainer")],
-      sticky: true,
-    });
-  }, [gameState, handCount, isFTUE]);
+    for (const { key, topic, condition } of checks) {
+      if (!condition) continue;
+      if (localStorage.getItem(key) === "1") continue;
+      // Fire this one
+      localStorage.setItem(key, "1");
+      localStorage.setItem("rm_chad_last_hand", String(handCount));
+      chadFiredThisIdleRef.current = true;
+      chadLastHandRef.current = handCount;
+      setFtueCommentaryOverride({ parts: [chadMessage(topic)], sticky: true });
+      return;
+    }
+  }, [gameState, handCount, isFTUE, isAnonymous, bigWinFired]);
 
   const pendingCelebration = useRef<{ totalFp: number } | null>(null);
   /** FTUE: roster sum can read 0 briefly in RESULTS — keep last resolved hand FP for TierGauge */
