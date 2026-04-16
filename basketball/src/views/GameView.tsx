@@ -37,6 +37,7 @@ import { supabase } from "@shared/lib/supabase";
 import { buildScoreProof } from '@shared/utils/scoreProof';
 import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
 import { generateCommentary } from "@shared/commentary/generateCommentary";
+import { chadMessage } from "@shared/commentary/chad";
 import type { CommentaryInput, CommentaryOutput, CommentaryRosterCard } from "@shared/commentary/types";
 import { buildBasketballContext } from "../utils/buildBasketballContext";
 import { ProfileScreen } from '@shared/components/ProfileScreen';
@@ -657,7 +658,7 @@ export default function GameView() {
     localStorage.setItem("replaymod_pregame_intro_basketball", "1");
     setLegendGold(true);
     setFtueCommentaryOverride({
-      parts: ["Look who decided to play for real. Three bonus players rotate in every 24hrs — tap the gold icon to see who's paying extra today."],
+      parts: [chadMessage("welcome")],
       sticky: true,
     });
   }, [isFTUE]);
@@ -669,7 +670,7 @@ export default function GameView() {
     if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
     bigWinNudgedRef.current = true;
     setFtueCommentaryOverride({
-      parts: ["That's a real score right there. Might want to save your account before luck runs out."],
+      parts: [chadMessage("big_win")],
       sticky: true,
     });
   }, [bigWinFired, gameState, isFTUE, isAnonymous]);
@@ -684,7 +685,7 @@ export default function GameView() {
     lbNudgedRef.current = true;
     localStorage.setItem("rm_usher_lb_shown", "1");
     setFtueCommentaryOverride({
-      parts: ["Well well, you made the board. Top 10 split the bonus pool — might want to drop an email so nobody steals your spot."],
+      parts: [chadMessage("leaderboard_intro")],
       sticky: true,
     });
   }, [gameState, isFTUE, isAnonymous]);
@@ -699,7 +700,7 @@ export default function GameView() {
     retentionNudgedRef.current = true;
     localStorage.setItem("rm_usher_retention_shown", "1");
     setFtueCommentaryOverride({
-      parts: ["You've been at this a while. Save your account — play on any device, keep your coins."],
+      parts: [chadMessage("retention")],
       sticky: true,
     });
   }, [gameState, handCount, isFTUE, isAnonymous]);
