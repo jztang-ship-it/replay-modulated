@@ -733,7 +733,6 @@ export function TierGauge({
             </div>
           );
         })() : postRevealCopy ? (
-          ftueTypewriter ? (
             <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "stretch", gap: 2, maxWidth: "100%" }}>
               <Typewriter
                 text={postRevealCopy.primary}
@@ -757,32 +756,6 @@ export function TierGauge({
                 />
               )}
             </div>
-          ) : (
-            <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "stretch", gap: 2, maxWidth: "100%" }}>
-              <span style={{
-                fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.92)",
-                fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
-                textAlign: "left", maxWidth: "100%",
-                display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as any,
-                overflow: "hidden",
-                animation: "tgTextReveal 0.55s cubic-bezier(0.22,1,0.36,1) both",
-              }}>
-                {postRevealCopy.primary}
-              </span>
-              {postRevealCopy.secondary && (
-                <span style={{
-                  fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.80)",
-                  fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
-                  textAlign: "left", maxWidth: "100%",
-                  display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as any,
-                  overflow: "hidden",
-                  animation: "tgTextReveal 0.55s cubic-bezier(0.22,1,0.36,1) 0.2s both",
-                }}>
-                  {postRevealCopy.secondary}
-                </span>
-              )}
-            </div>
-          )
         ) : isMaxLevel ? (
           <span style={{ fontSize: 13, fontWeight: 800, color: TIER_CFG.LEGEND.color, fontFamily: FF, letterSpacing: "0.06em", textTransform: "uppercase", textAlign: "center", display: "block" }}>
             You've reached the maximum level
