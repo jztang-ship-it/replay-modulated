@@ -1973,7 +1973,7 @@ export default function GameView() {
             boxSizing: "border-box",
           }}
         >
-          {/* ROW A — score / tier result */}
+          {/* ROW A — score / tier result — vertically centered in its space */}
           <div
             data-ftue-anchor="score-row"
             onClick={() => {
@@ -1988,14 +1988,14 @@ export default function GameView() {
               if (gameState === "RESULTS" && winTier && !showRawScore) setShowRawScore(true);
             }}
             style={{
-              flex: "0 0 48px",
-              height: 48,
+              flex: 1,
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
               padding: "0 10px",
               boxSizing: "border-box",
               overflow: "hidden",
+              position: "relative",
               cursor:
                 (gameState === "WIN_CELEBRATION" ||
                   (gameState === "RESULTS" && winTier && !showRawScore))
@@ -2003,22 +2003,7 @@ export default function GameView() {
                   : "default",
             }}
           >
-            {!isFTUE && gameState === "REVEALING" ? (
-              <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%" }}>
-                <span style={{
-                  fontSize: 30, fontWeight: 900, color: "#FFFFFF",
-                  letterSpacing: "-0.5px", lineHeight: 1,
-                  fontVariantNumeric: "tabular-nums", fontStyle: "italic",
-                }}>
-                  {displayFp.toFixed(1)} FP
-                  {rosterTotalBonus > 0 && (
-                    <span style={{ color: "#FFD700", fontSize: 18, fontWeight: 900, marginLeft: 4 }}>
-                      (+{rosterTotalBonus})
-                    </span>
-                  )}
-                </span>
-              </div>
-            ) : (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (
+            {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (
               <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%" }}>
                 {!isFTUE && tierResultPhase === 1 && (
                   <>
@@ -2057,6 +2042,7 @@ export default function GameView() {
                 )}
               </div>
             ) : (
+              /* Team FP + Budget — shown during IDLE, HOLD, DEALING, DRAWING, and REVEALING */
               <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 48, width: "100%" }}>
                 {(() => {
                   const spent =
@@ -2098,16 +2084,15 @@ export default function GameView() {
             )}
           </div>
 
-          {/* ROW B — fixed-height gauge slot so TierGauge Y position never shifts vs Team FP row */}
+          {/* ROW B — tier gauge + commentary — pushed to bottom of Zone 3 */}
           <div
             style={{
-              flex: 1,
-              minHeight: 0,
+              flex: "0 0 auto",
               display: "flex",
               flexDirection: "column",
-              justifyContent: "flex-start",
+              justifyContent: "flex-end",
               alignItems: "stretch",
-              padding: "2px 10px 2px",
+              padding: "0 10px 2px",
               boxSizing: "border-box",
               overflow: "hidden",
             }}
