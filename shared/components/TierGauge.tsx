@@ -160,8 +160,8 @@ export function computeGaugeState(
 
   const normalColor = isGoat
     ? TIER_CFG.LEGEND.color
-    : `linear-gradient(90deg, ${tierCfg.color}88, ${targetCfg.color})`;
-  const overshootColor = `linear-gradient(90deg, ${tierCfg.color}88 0%, ${targetCfg.color} 50%, ${targetCfg.color} 100%)`;
+    : tierCfg.color;
+  const overshootColor = targetCfg.color;
 
   return {
     derivedTier,
