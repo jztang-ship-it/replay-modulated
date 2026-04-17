@@ -2044,24 +2044,16 @@ export default function GameView() {
                   </>
                 )}
                 {(isFTUE || tierResultPhase === 2) && (
-                  <span style={{
-                    fontSize: 15, fontWeight: 800, color: "rgba(255,255,255,0.55)",
-                    letterSpacing: "0.02em", lineHeight: 1, textAlign: "center",
-                    fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap",
-                    animation: "tierInfoFadeIn 400ms ease-out",
-                  }}>
-                    {displayFp.toFixed(1)} FP
-                    {rosterTotalBonus > 0 && (
-                      <span style={{ color: "#FFD700", fontWeight: 900, marginLeft: 3 }}>
-                        (+{rosterTotalBonus})
-                      </span>
-                    )}
-                    {ceilingPct != null && (
-                      <span style={{ fontWeight: 600, color: "rgba(255,255,255,0.35)", fontSize: 10, marginLeft: 4 }}>
-                        · {ceilingPct}%
-                      </span>
-                    )}
-                  </span>
+                  <img
+                    key={`tier-stay-${winTier}`}
+                    src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
+                    alt={formatTierLabel(winTier)}
+                    style={{
+                      maxHeight: 50, maxWidth: "85%", objectFit: "contain",
+                      filter: `drop-shadow(0 0 16px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`,
+                      animation: "tierInfoFadeIn 400ms ease-out",
+                    }}
+                  />
                 )}
               </div>
             ) : (
@@ -2202,7 +2194,47 @@ export default function GameView() {
                 </div>
               ) : null}
             </div>
-            {/* Streak fire display removed — rendered in Zone 4 instead */}
+            {/* Post-result info row: net wage (left) + Team FP & % (right) */}
+            {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && (
+              <div style={{
+                display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+                padding: "6px 4px 2px", animation: "tierInfoFadeIn 400ms ease-out",
+              }}>
+                {/* Left — net wage won */}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+                  <span style={{
+                    fontSize: 18, fontWeight: 900, lineHeight: 1,
+                    color: winTier === "BUST" ? "#FF3B30" : "#22C55E",
+                    fontVariantNumeric: "tabular-nums",
+                  }}>
+                    {winTier === "BUST" ? `−${BASE_BET * betMultiplier}` : `+${winPayout}`}
+                  </span>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)",
+                    marginTop: 2, whiteSpace: "nowrap",
+                  }}>
+                    {BASE_BET} × {betMultiplier}x wager
+                  </span>
+                </div>
+                {/* Right — Team FP + ceiling % */}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                  <span style={{
+                    fontSize: 18, fontWeight: 900, lineHeight: 1, color: "#FFFFFF",
+                    fontVariantNumeric: "tabular-nums", fontStyle: "italic",
+                  }}>
+                    {displayFp.toFixed(1)} FP
+                  </span>
+                  {ceilingPct != null && (
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)",
+                      marginTop: 2,
+                    }}>
+                      {ceilingPct}% of ceiling
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

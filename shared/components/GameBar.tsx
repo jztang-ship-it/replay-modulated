@@ -81,6 +81,7 @@ export interface CelebrationData {
   lossAmount: number;      // amount lost (0 for wins, baseBet*betMultiplier for bust, half for rookie)
   streakMilestonePct?: number;  // 5 or 15 if streak milestone hit this hand
   bonusPoolWin?: number;        // coins won from bonus pool (0 or undefined if no milestone)
+  streakMultiplier?: number;    // streak-based multiplier (1.0 / 1.2 / 1.5 / 5.0)
 }
 
 type Props = {
@@ -201,6 +202,8 @@ function isDisabled(state: GameStateLabel): boolean {
 }
 
 // ── Streak fire row with flash (light-up) and extinguish (streak-break) effects ──
+// All 10 emojis on one line: [🔥🔥🔥 1.2x] [🔥🔥 1.5x] [🔥🔥🔥🔥🔥 5x]
+// Tiers unlock progressively: tier 2 appears at 3 wins, tier 3 at 5 wins.
 
 function StreakFireEmoji({ lit, justLit, justExtinguished }: { lit: boolean; justLit: boolean; justExtinguished: boolean }) {
   return (
@@ -217,46 +220,46 @@ function StreakFireEmoji({ lit, justLit, justExtinguished }: { lit: boolean; jus
 function StreakFireRow({ streak, prevStreak }: { streak: number; prevStreak: number }) {
   const gained = streak > prevStreak;
   const lost = streak === 0 && prevStreak > 0;
+  const displayStreak = lost ? prevStreak : streak;
 
-  // Which tier are we in?
-  const tierEmojis = streak < 3
-    ? { count: 3, lit: streak, offset: 0, label: "1.2x" }
-    : streak < 5
-      ? { count: 2, lit: streak - 3, offset: 3, label: "1.5x" }
-      : streak < 10
-        ? { count: 5, lit: streak - 5, offset: 5, label: "2.0x" }
-        : null;
+  // Tiers: 0-2 = tier1 (3 emojis, 1.2x), 3-4 = tier2 (2 emojis, 1.5x), 5-9 = tier3 (5 emojis, 5x)
+  const tiers = [
+    { count: 3, label: "1.2x", threshold: 0 },
+    { count: 2, label: "1.5x", threshold: 3 },
+    { count: 5, label: "5x",   threshold: 5 },
+  ];
 
-  if (!tierEmojis && streak >= 10) {
-    return (
-      <div style={{ position: "absolute", left: 0, display: "flex", alignItems: "center", gap: 3, maxHeight: 22, overflow: "visible" }}>
-        <span style={{ fontSize: 10, fontWeight: 900, color: "#FFD700" }}>🔥 2.0x active</span>
-      </div>
-    );
-  }
-  if (!tierEmojis) return null;
-
-  // On streak break, briefly show the old tier extinguishing
-  const showExtinguish = lost && prevStreak > 0;
-  const extinguishTier = prevStreak < 3
-    ? { count: 3, lit: prevStreak, label: "1.2x" }
-    : prevStreak < 5
-      ? { count: 2, lit: prevStreak - 3, label: "1.5x" }
-      : prevStreak < 10
-        ? { count: 5, lit: prevStreak - 5, label: "2.0x" }
-        : { count: 0, lit: 0, label: "2.0x" };
-
-  const display = showExtinguish ? extinguishTier : tierEmojis;
+  // How many tiers are visible? Tier 1 always, tier 2 at 3+ wins, tier 3 at 5+ wins
+  const visibleTiers = displayStreak >= 5 ? 3 : displayStreak >= 3 ? 2 : 1;
 
   return (
-    <div style={{ position: "absolute", left: 0, display: "flex", alignItems: "center", gap: 3, maxHeight: 22, overflow: "visible" }}>
-      {Array.from({ length: display.count }, (_, i) => {
-        const isLit = i < display.lit;
-        const justLit = gained && isLit && i === display.lit - 1;
-        const justExtinguished = showExtinguish && i < display.lit;
-        return <StreakFireEmoji key={`sf-${i}`} lit={showExtinguish ? true : isLit} justLit={justLit} justExtinguished={justExtinguished} />;
+    <div style={{ display: "flex", alignItems: "center", gap: 2, maxHeight: 22, overflow: "visible" }}>
+      {tiers.slice(0, visibleTiers).map((tier, ti) => {
+        const tierStart = tier.threshold;
+        return (
+          <div key={`tier-${ti}`} style={{ display: "flex", alignItems: "center", gap: 1 }}>
+            {Array.from({ length: tier.count }, (_, i) => {
+              const globalIdx = tierStart + i;
+              const isLit = !lost && globalIdx < streak;
+              const justLit = gained && globalIdx === streak - 1;
+              const justExtinguished = lost && globalIdx < prevStreak;
+              return (
+                <StreakFireEmoji
+                  key={`sf-${globalIdx}`}
+                  lit={lost ? true : isLit}
+                  justLit={justLit}
+                  justExtinguished={justExtinguished}
+                />
+              );
+            })}
+            <span style={{
+              fontSize: 8, fontWeight: 800,
+              color: streak >= tierStart + tier.count ? "#FFD700" : "rgba(255,255,255,0.3)",
+              marginRight: ti < visibleTiers - 1 ? 4 : 0,
+            }}>{tier.label}</span>
+          </div>
+        );
       })}
-      <span style={{ fontSize: 8, fontWeight: 800, color: "rgba(255,255,255,0.3)" }}>{display.label}</span>
     </div>
   );
 }
@@ -1592,24 +1595,10 @@ export function GameBar({
             }
           `}</style>
 
-          {/* Streak row — always visible, compact */}
+          {/* Streak row — stretched across line, tiers unlock progressively */}
           {streak != null && !ftueHideSkip && (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, paddingBottom: 4 }}>
+            <div style={{ display: "flex", alignItems: "center", paddingBottom: 4 }}>
               <StreakFireRow streak={streak} prevStreak={prevStreakRef.current} />
-              {(() => {
-                const thresholds = [{ wins: 3, mult: "1.2x" }, { wins: 5, mult: "1.5x" }, { wins: 10, mult: "2.0x" }];
-                const next = thresholds.find(t => streak < t.wins);
-                if (!next) return <span style={{ fontSize: 9, fontWeight: 800, color: "#FFD700" }}>🔥 2.0x active</span>;
-                const remaining = next.wins - streak;
-                return (
-                  <span style={{
-                    fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.4)",
-                    background: "rgba(255,255,255,0.06)", borderRadius: 8, padding: "2px 8px",
-                  }}>
-                    {remaining} more → {next.mult}
-                  </span>
-                );
-              })()}
             </div>
           )}
 
