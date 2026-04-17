@@ -1554,7 +1554,7 @@ export function GameBar({
         overflow: "visible",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "flex-start",
+        justifyContent: "flex-end",
         boxSizing: "border-box",
       }}>
         <div style={{
@@ -1640,8 +1640,8 @@ export function GameBar({
               {actionLabel(gameState)}
             </button>
 
-            {/* Legend + trophy — right */}
-            <div style={{ position: "absolute", right: 0, display: "flex", alignItems: "center", gap: 6 }}>
+            {/* Legend + trophy — right (both hidden during FTUE) */}
+            <div style={{ position: "absolute", right: 0, display: ftueHideSkip ? "none" : "flex", alignItems: "center", gap: 6 }}>
               <button onClick={() => { setShowLegend(true); onLegendOpened?.(); }} style={{
                 width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
                 background: legendPulsing ? "rgba(255,215,0,0.9)" : "transparent",
