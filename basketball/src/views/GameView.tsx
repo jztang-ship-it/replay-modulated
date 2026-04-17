@@ -2216,7 +2216,7 @@ export default function GameView() {
               flex: 1,
               display: "flex",
               flexDirection: "column",
-              justifyContent: "center",
+              justifyContent: "flex-end",
               minHeight: 0,
               padding: "0 10px max(env(safe-area-inset-bottom, 0px) + 8px, 16px)",
               boxSizing: "border-box",

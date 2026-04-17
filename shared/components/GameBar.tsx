@@ -1815,14 +1815,16 @@ export function GameBar({
                 />
               </div>
 
-              {/* Legend — right */}
-              <button onClick={() => setShowLegend(true)} style={{
-                width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-                background: "transparent",
-                border: `2px solid ${THEME.colors.surfaceStroke}`,
-                color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: 900,
-                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-              }}>i</button>
+              {/* Legend — right (hidden during FTUE) */}
+              {!ftueHideSkip && (
+                <button onClick={() => setShowLegend(true)} style={{
+                  width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+                  background: "transparent",
+                  border: `2px solid ${THEME.colors.surfaceStroke}`,
+                  color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: 900,
+                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                }}>i</button>
+              )}
             </div>
 
             <div style={{ display: "flex", justifyContent: "center", paddingTop: 0, position: "relative" }}>
