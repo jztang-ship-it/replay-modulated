@@ -2374,6 +2374,7 @@ export default function GameView() {
         ftueReplayBlocked={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && !ftueReplayReady}
         ftueReplayPulse={isFTUE && ftueReplayReady}
         dataFtuePrimaryAnchor={isFTUE ? (gameState === "HOLD" ? "draw" : "deal") : undefined}
+        hideTierBar
         splitFooter={{ multipliersHost, controlsHost }}
         splitMultiplierRowVisible={isPreRevealFooter && !isFTUE}
         onViewLeaderboard={() => setShowLeaderboard(true)}
