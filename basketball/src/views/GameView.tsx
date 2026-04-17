@@ -1996,7 +1996,7 @@ export default function GameView() {
           >
             {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (
               <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%" }}>
-                {!isFTUE && tierResultPhase === 1 && (
+                {tierResultPhase === 1 && (
                   <>
                     <div
                       key={`flash-${winTier}`}
@@ -2019,7 +2019,7 @@ export default function GameView() {
                     />
                   </>
                 )}
-                {(isFTUE || tierResultPhase === 2) && (
+                {tierResultPhase === 2 && (
                   <img
                     key={`tier-stay-${winTier}`}
                     src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
