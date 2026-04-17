@@ -347,12 +347,18 @@ if (typeof document !== "undefined" && !document.getElementById(GV_STYLE_ID)) {
     }
     @keyframes tierSlam {
       0% { transform: scale(0.1) translateY(-10px); opacity: 0; }
-      22% { transform: scale(1.45) translateY(2px); opacity: 1; }
-      38% { transform: scale(0.85) translateY(-1px); opacity: 1; }
-      52% { transform: scale(1.15) translateY(1px); opacity: 1; }
-      66% { transform: scale(0.95) translateY(0); opacity: 1; }
-      80% { transform: scale(1.03) translateY(0); opacity: 1; }
+      22% { transform: scale(1.5) translateY(2px); opacity: 1; }
+      38% { transform: scale(0.9) translateY(-1px); opacity: 1; }
+      52% { transform: scale(1.2) translateY(1px); opacity: 1; }
+      66% { transform: scale(0.97) translateY(0); opacity: 1; }
+      80% { transform: scale(1.05) translateY(0); opacity: 1; }
       100% { transform: scale(1.0) translateY(0); opacity: 1; }
+    }
+    @keyframes tierShrinkDown {
+      0% { transform: scale(1.0); opacity: 1; }
+      40% { transform: scale(0.6); opacity: 0.9; }
+      70% { transform: scale(0.72); opacity: 1; }
+      100% { transform: scale(0.65); opacity: 1; }
     }
     @keyframes tierSlamFlash {
       0% { opacity: 0; }
@@ -2012,7 +2018,7 @@ export default function GameView() {
                       src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
                       alt={formatTierLabel(winTier)}
                       style={{
-                        maxHeight: 70, maxWidth: "95%", objectFit: "contain",
+                        maxHeight: 100, maxWidth: "100%", objectFit: "contain",
                         filter: `drop-shadow(0 0 24px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`,
                         animation: "tierSlam 900ms cubic-bezier(0.22, 1, 0.36, 1)",
                       }}
@@ -2025,9 +2031,9 @@ export default function GameView() {
                     src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
                     alt={formatTierLabel(winTier)}
                     style={{
-                      maxHeight: 50, maxWidth: "85%", objectFit: "contain",
-                      filter: `drop-shadow(0 0 16px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`,
-                      animation: "tierInfoFadeIn 400ms ease-out",
+                      maxHeight: 100, maxWidth: "100%", objectFit: "contain",
+                      filter: `drop-shadow(0 0 12px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`,
+                      animation: "tierShrinkDown 500ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
                     }}
                   />
                 )}
