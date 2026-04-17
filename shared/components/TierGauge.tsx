@@ -687,11 +687,29 @@ export function TierGauge({
         }} />
       </div>
 
-      {/* Slot between bar and commentary — e.g. wage/FP info row */}
-      {belowBarSlot}
+      {/* Info row — fixed height, swaps between gap callout and belowBarSlot content */}
+      <div style={{ height: 28, display: "flex", alignItems: "center", marginTop: 4, overflow: "hidden" }}>
+        {belowBarSlot ? belowBarSlot : isMaxLevel ? (
+          <span style={{ fontSize: 13, fontWeight: 800, color: TIER_CFG.LEGEND.color, fontFamily: FF, letterSpacing: "0.06em", textTransform: "uppercase", textAlign: "center", display: "block", width: "100%" }}>
+            ✓ {TIER_CFG.LEGEND.label}
+          </span>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%" }}>
+            <span style={{ fontSize: 18, fontWeight: 800, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px" }}>
+              {gap.toFixed(1)}
+            </span>
+            <span style={{ fontSize: 12, color: "#888", fontFamily: FF, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              {" "}FP TO{" "}
+            </span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: targetCfg.color, fontFamily: FF, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              {targetCfg.label}
+            </span>
+          </div>
+        )}
+      </div>
 
-      {/* Commentary area — fixed height box, text fills top→bottom, never pushes bar */}
-      <div style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: 62, marginTop: 4, textAlign: "left", overflow: "hidden", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
+      {/* Commentary area — fixed height, pinned, never pushes anything */}
+      <div style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: 62, marginTop: 2, textAlign: "left", overflow: "hidden", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
         {commentaryOverride && commentaryOverride.parts.length > 0 ? (() => {
           const part = commentaryOverride.parts[overridePart];
           const isString = typeof part === "string";
@@ -776,26 +794,9 @@ export function TierGauge({
                 />
               )}
             </div>
-        ) : isMaxLevel ? (
-          <span style={{ fontSize: 13, fontWeight: 800, color: TIER_CFG.LEGEND.color, fontFamily: FF, letterSpacing: "0.06em", textTransform: "uppercase", textAlign: "center", display: "block" }}>
-            You've reached the maximum level
-          </span>
         ) : commentaryOverride === null && ftueTypewriter ? (
-          // FTUE: hide gap callout when between commentary instructions
           null
-        ) : (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-            <span style={{ fontSize: 18, fontWeight: 800, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px" }}>
-              {gap.toFixed(1)}
-            </span>
-            <span style={{ fontSize: 12, color: "#888", fontFamily: FF, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-              {" "}FP TO{" "}
-            </span>
-            <span style={{ fontSize: 12, fontWeight: 800, color: targetCfg.color, fontFamily: FF, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-              {targetCfg.label}
-            </span>
-          </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
