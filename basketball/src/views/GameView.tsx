@@ -1076,19 +1076,10 @@ export default function GameView() {
     return "HOLD";
   }, [gameState]);
 
-  const isPreRevealFooter =
-    (gameState === "IDLE" && !isFTUE) ||
-    (gameState === "HOLD" && !isFTUE) ||
-    (gameState === "DEALING" && !isFTUE) ||
-    (gameState === "DRAWING" && !isFTUE);
-  const showGaugeInZone3 =
-    gameState === "REVEALING" ||
-    gameState === "RESULTS" ||
-    gameState === "WIN_CELEBRATION" ||
-    (gameState === "IDLE" && isFTUE) ||
-    (gameState === "DRAWING" && isFTUE) ||
-    (gameState === "HOLD" && isFTUE) ||
-    (gameState === "DEALING" && isFTUE);
+  // Multiplier row only visible during HOLD (user choosing bet before draw)
+  const isPreRevealFooter = gameState === "HOLD" && !isFTUE;
+  // Tier gauge is ALWAYS visible — fixed in place throughout the game
+  const showGaugeInZone3 = true;
   const isPostReveal = (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier != null;
 
   // Tier color map — mirrors WIN_TIERS in basketball/GameBar.tsx
@@ -2097,88 +2088,71 @@ export default function GameView() {
               overflow: "hidden",
             }}
           >
+            {/* Tier gauge — ALWAYS visible, fixed position */}
             <div
+              data-ftue-anchor="tier-gauge"
               style={{
                 width: "100%",
-                minHeight: 72,
                 flexShrink: 0,
                 position: "relative",
                 display: "flex",
-                alignItems: "center",
+                flexDirection: "column",
+                alignItems: "stretch",
                 justifyContent: "center",
                 overflow: "visible",
                 boxSizing: "border-box",
+                padding: "2px 2px 0",
+                zIndex: (isFTUE && ftueCommentaryOverride) ? 1100 : undefined,
               }}
             >
-              <div
-                ref={(el) => setMultipliersHost(el)}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  display: isPreRevealFooter ? "flex" : "none",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxSizing: "border-box",
-                  pointerEvents: "auto",
+              <TierGauge
+                totalFp={gaugeTotalFp}
+                thresholds={GAUGE_THRESHOLDS}
+                winTier={undefined}
+                lastCardFp={lastCardFp}
+                isSkip={false}
+                visible
+                ftueSuppressNormal={false}
+                ftueOscillate={false}
+                ftueLockStaticBar={false}
+                regularFinalCardKick={regularFinalGaugeKick}
+                onTierCross={undefined}
+                postRevealCopy={postRevealCopy}
+                ftueTypewriter={isFTUE}
+                stickyLastOverride={isFTUE && ftueReplayReady}
+                commentaryOverride={ftueCommentaryOverride}
+                hideBar={isFTUE && gameState === "REVEALING" && ftueCardsBlocked}
+                onCommentaryOverrideDone={() => {
+                  setFtueCommentaryOverride(null);
+                  coachDismissRef.current?.();
+                }}
+                onCommentaryDone={() => {
+                  if (isFTUE) {
+                    setFtueCommentaryDone(true);
+                  }
+                }}
+                onFtueOscillateComplete={() => {
+                  setFtueGaugeOscDone(true);
+                  setFtueOscillating(false);
+                  setCelebrationHeld(false);
+                  pendingCelebration.current = null;
+                  setGameState("RESULTS");
+                  setTimeout(() => setFtueWinCelebrationActive(true), 300);
                 }}
               />
-              {showGaugeInZone3 ? (
-                <div
-                  data-ftue-anchor="tier-gauge"
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    display: isPreRevealFooter ? "none" : "flex",
-                    flexDirection: "column",
-                    alignItems: "stretch",
-                    justifyContent: "center",
-                    width: "100%",
-                    overflow: "visible",
-                    boxSizing: "border-box",
-                    padding: "2px 2px 0",
-                    zIndex: (isFTUE && ftueCommentaryOverride) ? 1100 : undefined,
-                  }}
-                >
-                  <TierGauge
-                    totalFp={gaugeTotalFp}
-                    thresholds={GAUGE_THRESHOLDS}
-                    winTier={undefined}
-                    lastCardFp={lastCardFp}
-                    isSkip={false}
-                    visible
-                    ftueSuppressNormal={false}
-                    ftueOscillate={false}
-                    ftueLockStaticBar={false}
-                    regularFinalCardKick={regularFinalGaugeKick}
-                    onTierCross={undefined}
-                    postRevealCopy={postRevealCopy}
-                    ftueTypewriter={isFTUE}
-                    stickyLastOverride={isFTUE && ftueReplayReady}
-                    commentaryOverride={ftueCommentaryOverride}
-                    hideBar={isFTUE && gameState === "REVEALING" && ftueCardsBlocked}
-                    onCommentaryOverrideDone={() => {
-                      setFtueCommentaryOverride(null);
-                      // Auto-dismiss CoachLayer spotlight so user doesn't need extra tap
-                      coachDismissRef.current?.();
-                    }}
-                    onCommentaryDone={() => {
-                      // Fire immediately when typewriter completes — no artificial pacing delay.
-                      if (isFTUE) {
-                        setFtueCommentaryDone(true);
-                      }
-                    }}
-                    onFtueOscillateComplete={() => {
-                      setFtueGaugeOscDone(true);
-                      setFtueOscillating(false);
-                      setCelebrationHeld(false);
-                      pendingCelebration.current = null;
-                      setGameState("RESULTS");
-                      setTimeout(() => setFtueWinCelebrationActive(true), 300);
-                    }}
-                  />
-                </div>
-              ) : null}
             </div>
+            {/* Multiplier host — only rendered during HOLD for bet selection */}
+            <div
+              ref={(el) => setMultipliersHost(el)}
+              style={{
+                display: isPreRevealFooter ? "flex" : "none",
+                alignItems: "center",
+                justifyContent: "center",
+                boxSizing: "border-box",
+                pointerEvents: "auto",
+                padding: "4px 0",
+              }}
+            />
             {/* Post-result info row: net wage (left) + Team FP & % (right) */}
             {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && (
               <div style={{
