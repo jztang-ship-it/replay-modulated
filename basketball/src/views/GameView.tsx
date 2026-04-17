@@ -2140,6 +2140,46 @@ export default function GameView() {
                   setGameState("RESULTS");
                   setTimeout(() => setFtueWinCelebrationActive(true), 300);
                 }}
+                belowBarSlot={
+                  (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier ? (
+                    <div style={{
+                      display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+                      padding: "4px 0 2px", animation: "tierInfoFadeIn 400ms ease-out",
+                    }}>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+                        <span style={{
+                          fontSize: 16, fontWeight: 900, lineHeight: 1,
+                          color: winTier === "BUST" ? "#FF3B30" : "#22C55E",
+                          fontVariantNumeric: "tabular-nums",
+                        }}>
+                          {winTier === "BUST" ? `−${BASE_BET * betMultiplier}` : `+${winPayout}`}
+                        </span>
+                        <span style={{
+                          fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)",
+                          marginTop: 2, whiteSpace: "nowrap",
+                        }}>
+                          {betMultiplier === 1 ? `${BASE_BET} wager` : `${BASE_BET} × ${betMultiplier}x wager`}
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                        <span style={{
+                          fontSize: 16, fontWeight: 900, lineHeight: 1, color: "#FFFFFF",
+                          fontVariantNumeric: "tabular-nums", fontStyle: "italic",
+                        }}>
+                          {displayFp.toFixed(1)} FP
+                        </span>
+                        {ceilingPct != null && (
+                          <span style={{
+                            fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)",
+                            marginTop: 2,
+                          }}>
+                            {ceilingPct}% of ceiling
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ) : undefined
+                }
               />
             </div>
             {/* Multiplier host — overlays below gauge during HOLD only */}
@@ -2157,7 +2197,7 @@ export default function GameView() {
           </div>
         </div>
 
-        {/* 4 — Wage info + Wallet + action (18dvh) */}
+        {/* 4 — Wallet + action (18dvh) */}
         <div
           style={{
             flex: "0 0 18dvh",
@@ -2169,48 +2209,6 @@ export default function GameView() {
             boxSizing: "border-box",
           }}
         >
-          {/* Post-result info row: net wage (left) + Team FP & % (right) — lives in Zone 4 so gauge never shifts */}
-          {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && (
-            <div style={{
-              display: "flex", justifyContent: "space-between", alignItems: "flex-start",
-              padding: "2px 14px 4px", animation: "tierInfoFadeIn 400ms ease-out",
-              flexShrink: 0,
-            }}>
-              {/* Left — net wage won */}
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-                <span style={{
-                  fontSize: 18, fontWeight: 900, lineHeight: 1,
-                  color: winTier === "BUST" ? "#FF3B30" : "#22C55E",
-                  fontVariantNumeric: "tabular-nums",
-                }}>
-                  {winTier === "BUST" ? `−${BASE_BET * betMultiplier}` : `+${winPayout}`}
-                </span>
-                <span style={{
-                  fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)",
-                  marginTop: 2, whiteSpace: "nowrap",
-                }}>
-                  {BASE_BET} × {betMultiplier}x wager
-                </span>
-              </div>
-              {/* Right — Team FP + ceiling % */}
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                <span style={{
-                  fontSize: 18, fontWeight: 900, lineHeight: 1, color: "#FFFFFF",
-                  fontVariantNumeric: "tabular-nums", fontStyle: "italic",
-                }}>
-                  {displayFp.toFixed(1)} FP
-                </span>
-                {ceilingPct != null && (
-                  <span style={{
-                    fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)",
-                    marginTop: 2,
-                  }}>
-                    {ceilingPct}% of ceiling
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
           <div
             ref={(el) => setControlsHost(el)}
             style={{

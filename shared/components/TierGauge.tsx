@@ -73,6 +73,8 @@ interface TierGaugeProps {
   onCommentaryOverrideDone?: () => void;
   /** When true, hide the gauge bar (but keep commentary visible) */
   hideBar?: boolean;
+  /** Slot rendered between the gauge bar and commentary area */
+  belowBarSlot?: ReactNode;
 }
 
 const TIER_CFG: Record<string, { label: string; color: string; glow: string }> = {
@@ -323,6 +325,7 @@ export function TierGauge({
   commentaryOverride = null,
   onCommentaryOverrideDone,
   hideBar = false,
+  belowBarSlot,
 }: TierGaugeProps) {
   const [barFill, setBarFill] = useState(0);
   const [barColor, setBarColor] = useState("transparent");
@@ -683,6 +686,9 @@ export function TierGauge({
           animation: isDinging ? "tgDing 0.30s ease-in-out 5, tgGlow 0.60s ease-in-out 3" : "none",
         }} />
       </div>
+
+      {/* Slot between bar and commentary — e.g. wage/FP info row */}
+      {belowBarSlot}
 
       {/* Commentary area — fixed height box, text fills top→bottom, never pushes bar */}
       <div style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: 62, marginTop: 4, textAlign: "left", overflow: "hidden", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
