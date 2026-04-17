@@ -284,8 +284,8 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
   document.head.appendChild(st);
 }
 
-function Typewriter({ text, style, onDone, msPerChar = 25 }: {
-  text: string; style: React.CSSProperties; onDone?: () => void; msPerChar?: number;
+function Typewriter({ text, style, onDone, msPerChar = 25, rush = false }: {
+  text: string; style: React.CSSProperties; onDone?: () => void; msPerChar?: number; rush?: boolean;
 }) {
   const [charCount, setCharCount] = useState(0);
   const doneRef = useRef(false);
@@ -294,9 +294,12 @@ function Typewriter({ text, style, onDone, msPerChar = 25 }: {
       if (!doneRef.current) { doneRef.current = true; onDone?.(); }
       return;
     }
-    const t = setTimeout(() => setCharCount(c => c + 1), msPerChar);
+    // Rush: reveal 4 chars per tick at 1ms intervals
+    const delay = rush ? 1 : msPerChar;
+    const step = rush ? 4 : 1;
+    const t = setTimeout(() => setCharCount(c => Math.min(c + step, text.length)), delay);
     return () => clearTimeout(t);
-  }, [charCount, text.length, msPerChar, onDone]);
+  }, [charCount, text.length, msPerChar, rush, onDone]);
   useEffect(() => { setCharCount(0); doneRef.current = false; }, [text]);
   return <span style={style}>{text.slice(0, charCount)}</span>;
 }
@@ -328,6 +331,8 @@ export function TierGauge({
   // Commentary override state — multi-part tap-to-advance
   const [overridePart, setOverridePart] = useState(0);
   const [overrideTyping, setOverrideTyping] = useState(false);
+  // Tap-to-rush: speeds up typewriter reveal on any commentary
+  const [commentaryRushed, setCommentaryRushed] = useState(false);
   const rafRef = useRef<number>(0);
   const delayRef = useRef<number>(0);
   const animatedFpRef = useRef<number>(0);
@@ -651,9 +656,11 @@ export function TierGauge({
     }
   }, [visible]);
 
-  // Reset override part index when a new override arrives
+  // Reset rush + override part index when new commentary arrives
+  useEffect(() => { setCommentaryRushed(false); }, [postRevealCopy]);
   useEffect(() => {
     setOverridePart(0);
+    setCommentaryRushed(false);
     setOverrideTyping(!!commentaryOverride);
   }, [commentaryOverride]);
 
@@ -686,10 +693,11 @@ export function TierGauge({
           return (
             <div
               onClick={() => {
-                if (overrideTyping) { setOverrideTyping(false); return; }
+                if (overrideTyping) { setCommentaryRushed(true); return; }
                 if (!isLast) {
                   setOverridePart(overridePart + 1);
                   setOverrideTyping(true);
+                  setCommentaryRushed(false);
                 } else if (stickyLastOverride) {
                   return;
                 } else if (commentaryOverride?.sticky) {
@@ -704,6 +712,7 @@ export function TierGauge({
                 <Typewriter
                   key={`override-${overridePart}`}
                   text={part as string}
+                  rush={commentaryRushed}
                   style={{
                     fontSize: 12, fontWeight: 700, color: "#FFFFFF",
                     fontFamily: FF, letterSpacing: "0.01em", lineHeight: 1.45,
@@ -733,9 +742,13 @@ export function TierGauge({
             </div>
           );
         })() : postRevealCopy ? (
-            <div style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "stretch", gap: 2, maxWidth: "100%" }}>
+            <div
+              onClick={() => { if (!commentaryRushed) setCommentaryRushed(true); }}
+              style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "stretch", gap: 2, maxWidth: "100%", cursor: "pointer" }}
+            >
               <Typewriter
                 text={postRevealCopy.primary}
+                rush={commentaryRushed}
                 style={{
                   fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.92)",
                   fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
@@ -746,6 +759,7 @@ export function TierGauge({
               {postRevealCopy.secondary && (
                 <Typewriter
                   text={postRevealCopy.secondary}
+                  rush={commentaryRushed}
                   style={{
                     fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.80)",
                     fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
