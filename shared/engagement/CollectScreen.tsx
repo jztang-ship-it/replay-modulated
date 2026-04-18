@@ -11,6 +11,7 @@ import { Leaderboard } from "@shared/components/Leaderboard";
 import { PWAInstallPrompt } from "@shared/components/PwaInstallPrompt";
 import { getPlayerUid } from "@shared/utils/playerIdentity";
 import { getMsUntilNextBonusRotation, formatBonusCountdown } from "@shared/utils/dailyBonus";
+import { track } from "@shared/analytics/analytics";
 
 const FF = "'Rajdhani', 'Arial Narrow', sans-serif";
 
@@ -185,6 +186,7 @@ function TaskRow({
 
   function handleRowClick() {
     if (!isLeaderboard || !onViewLeaderboard) return;
+    track("leaderboard", "leaderboard_task_tapped", { task_id: task.id, collected: task.collected });
     onViewLeaderboard();
     recordLeaderboardViewed?.();
     if (!collected) onCollect(task.id);
@@ -311,6 +313,27 @@ export function CollectScreen({
     }, 1000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    const coinsAvailable = [...taskStates, ...weeklyTaskStates, ...perpetualTaskStates]
+      .filter(t => t.progress >= t.target && !t.collected)
+      .reduce((sum, t) => sum + (t.rewardCoins ?? 0), 0);
+    track("engagement", "collect_screen_opened", {
+      uncollected_daily:      taskStates.filter(t => t.progress >= t.target && !t.collected).length,
+      uncollected_weekly:     weeklyTaskStates.filter(t => t.progress >= t.target && !t.collected).length,
+      uncollected_milestones: perpetualTaskStates.filter(t => t.progress >= t.target && !t.collected).length,
+      coins_available:        coinsAvailable,
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function handleCollect(taskId: string) {
+    const task = [...taskStates, ...weeklyTaskStates, ...perpetualTaskStates].find(t => t.id === taskId);
+    if (task) {
+      track("engagement", "task_collected", { task_id: task.id, cadence: task.cadence, reward_coins: task.rewardCoins });
+    }
+    onCollect(taskId);
+  }
 
   const sharedRowProps = { streakCount, bonusPlayers, onViewLeaderboard, recordLeaderboardViewed };
 
@@ -440,7 +463,7 @@ export function CollectScreen({
         )}
 
         {taskStates.map(task => (
-          <TaskRow key={task.id} task={task} onCollect={onCollect} {...sharedRowProps} />
+          <TaskRow key={task.id} task={task} onCollect={handleCollect} {...sharedRowProps} />
         ))}
 
         {/* ── WEEKLY TASKS ── */}
@@ -463,7 +486,7 @@ export function CollectScreen({
         )}
 
         {weeklyTaskStates.map(task => (
-          <TaskRow key={task.id} task={task} onCollect={onCollect} {...sharedRowProps} />
+          <TaskRow key={task.id} task={task} onCollect={handleCollect} {...sharedRowProps} />
         ))}
 
         {/* ── MILESTONES ── */}
@@ -486,7 +509,7 @@ export function CollectScreen({
         )}
 
         {perpetualTaskStates.map(task => (
-          <TaskRow key={task.id} task={task} onCollect={onCollect} {...sharedRowProps} isPerpetual />
+          <TaskRow key={task.id} task={task} onCollect={handleCollect} {...sharedRowProps} isPerpetual />
         ))}
 
         {/* PWA Install Prompt */}

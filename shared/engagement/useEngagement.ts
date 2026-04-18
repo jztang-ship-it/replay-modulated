@@ -5,8 +5,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { DAILY_TASKS, WEEKLY_TASKS, PERPETUAL_TASKS, TASKS } from './tasks.config';
-import type { TaskId } from './tasks.config';
+import type { TaskId, TaskCadence } from './tasks.config';
 import type { WinTierKey } from '@shared/utils/payoutLogic';
+import { track } from '@shared/analytics/analytics';
 
 // ── Tier ranking (for "highest tier" comparisons) ────────────────────────────
 const TIER_RANK: Record<WinTierKey, number> = {
@@ -59,6 +60,7 @@ export interface TaskProgress {
 
 export interface TaskState {
   id:          TaskId;
+  cadence:     TaskCadence;
   label:       string;
   icon:        string;
   progress:    number;
@@ -331,6 +333,7 @@ export function useEngagement(): EngagementState & EngagementActions {
         coinsEarned += task.rewardCoins;
         xpEarned    += task.rewardCoins;
         changed      = true;
+        track("engagement", "task_completed", { task_id: task.id, cadence: task.cadence, reward_coins: task.rewardCoins });
       }
     }
 
@@ -341,6 +344,7 @@ export function useEngagement(): EngagementState & EngagementActions {
         newlyDone.add(task.id);
         changed = true;
         // No coinsEarned — perpetual rewards are collected manually
+        track("engagement", "task_completed", { task_id: task.id, cadence: task.cadence, reward_coins: task.rewardCoins });
       }
     }
 
@@ -537,6 +541,7 @@ export function useEngagement(): EngagementState & EngagementActions {
   const mapTasks = (list: typeof TASKS): TaskState[] =>
     list.map(task => ({
       id:          task.id,
+      cadence:     task.cadence,
       label:       task.label,
       icon:        task.icon,
       progress:    getTaskProgress(task.id),
