@@ -1958,11 +1958,11 @@ export default function GameView() {
         </div>
 
         {/* ── Bottom landscape: CSS Grid, all rows fixed pixel, nothing moves ── */}
-        {/* Rows: stats(40) gap(8) bar(14) gap(6) info(24) gap(6) commentary(48) gap(6) multipliers(36) gap(6) action(80) = 274px total */}
+        {/* Rows: stats(40) gap(6) bar(14) gap(4) info(28) gap(4) commentary(62) gap(4) action(50) = 212px total */}
         <div style={{
           flex: "0 0 auto",
           display: "grid",
-          gridTemplateRows: "40px 8px 14px 6px 24px 6px 48px 6px 36px 6px 80px",
+          gridTemplateRows: "40px 6px 14px 4px 28px 4px 62px 4px 50px",
           padding: "0 12px",
           boxSizing: "border-box",
           overflow: "hidden",
@@ -2169,28 +2169,26 @@ export default function GameView() {
             />
           </div>
 
-          {/* GAP */}<div style={{ gridRow: "8" }} />
-
-          {/* ROW 9 — Multiplier host (36px, visibility toggled) */}
+          {/* Multiplier host — overlays commentary row 7 during HOLD */}
           <div
             ref={(el) => setMultipliersHost(el)}
             style={{
-              gridRow: "9",
-              display: "flex",
+              gridRow: "7",
+              display: isPreRevealFooter ? "flex" : "none",
               alignItems: "center",
               justifyContent: "center",
               boxSizing: "border-box",
               pointerEvents: "auto",
-              visibility: isPreRevealFooter ? "visible" : "hidden",
+              zIndex: 10,
             }}
           />
 
-          {/* GAP */}<div style={{ gridRow: "10" }} />
+          {/* GAP */}<div style={{ gridRow: "8" }} />
 
-          {/* ROW 11 — Action row (1fr, takes remaining space) */}
+          {/* ROW 9 — Action row (50px fixed) */}
           <div
             style={{
-              gridRow: "11",
+              gridRow: "9",
               display: "flex",
               flexDirection: "column",
               justifyContent: "flex-end",

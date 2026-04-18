@@ -672,8 +672,8 @@ export function TierGauge({
   return (
     <div style={{
       display: "grid",
-      gridTemplateRows: "14px 24px 48px",
-      gap: 6,
+      gridTemplateRows: "14px 28px 62px",
+      gap: 4,
       boxSizing: "border-box",
       width: "100%",
     }}>
@@ -690,7 +690,7 @@ export function TierGauge({
       </div>
 
       {/* Row 2: Info row — swaps between gap callout and belowBarSlot */}
-      <div style={{ height: 24, display: "flex", alignItems: "center", overflow: "hidden" }}>
+      <div style={{ height: 28, display: "flex", alignItems: "center", overflow: "hidden" }}>
         {belowBarSlot ? belowBarSlot : isMaxLevel ? (
           <span style={{ fontSize: 13, fontWeight: 800, color: TIER_CFG.LEGEND.color, fontFamily: FF, letterSpacing: "0.06em", textTransform: "uppercase", textAlign: "center", display: "block", width: "100%" }}>
             ✓ {TIER_CFG.LEGEND.label}
@@ -710,8 +710,8 @@ export function TierGauge({
         )}
       </div>
 
-      {/* Row 3: Commentary — locked height */}
-      <div style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: 48, textAlign: "left", overflow: "hidden", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
+      {/* Row 3: Commentary — locked height, maximized */}
+      <div style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: 62, textAlign: "left", overflow: "hidden", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
         {commentaryOverride && commentaryOverride.parts.length > 0 ? (() => {
           const part = commentaryOverride.parts[overridePart];
           const isString = typeof part === "string";
