@@ -522,6 +522,14 @@ export function TierGauge({
       return;
     }
     if (totalFp <= 0) {
+      prevFillRef.current = 0;
+      prevTierRef.current = "BUST";
+      lastAnimatedTotalFpRef.current = null;
+      hasLockedRef.current = false;
+      animRunningRef.current = false;
+      nearMissSpringFiredRef.current = false;
+      setBarFill(0);
+      setBarColor("transparent");
       return;
     }
 
