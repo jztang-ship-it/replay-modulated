@@ -4,7 +4,7 @@
 // Persists to localStorage. Auto-resets daily counters at midnight, weekly on Monday.
 
 import { useState, useEffect, useCallback } from 'react';
-import { DAILY_TASKS } from './tasks.config';
+import { DAILY_TASKS, WEEKLY_TASKS, PERPETUAL_TASKS, TASKS } from './tasks.config';
 import type { TaskId } from './tasks.config';
 import type { WinTierKey } from '@shared/utils/payoutLogic';
 
@@ -27,6 +27,7 @@ const KEYS = {
   coins:         'rp_coins',
   xp:            'rp_xp',
   streakCount:   'rp_streak_count',
+  streakMax:     'rp_streak_max',
   lastWeek:      'rp_last_week',
   weekProgress:  'rp_week_progress',
   lifeProgress:  'rp_life_progress',
@@ -265,24 +266,79 @@ export function useEngagement(): EngagementState & EngagementActions {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Task evaluation (daily only — weekly/perpetual in Prompt 3) ───────────
+  // ── Task evaluation — all three cadences ───────────────────────────────────
+
+  // Helper: is tier at or above a threshold?
+  const tierAtOrAbove = (tier: WinTierKey | null, threshold: WinTierKey): boolean => {
+    if (tier === null) return false;
+    return TIER_RANK[tier] >= TIER_RANK[threshold];
+  };
+
+  // Evaluate a single task against current progress
+  const isTaskMet = (id: TaskId): boolean => {
+    switch (id) {
+      // ── Daily ──
+      case 'daily_login':        return dailyProgress.loggedIn;
+      case 'daily_play_3':       return dailyProgress.handsPlayed >= 3;
+      case 'daily_play_7':       return dailyProgress.handsPlayed >= 7;
+      case 'daily_play_15':      return dailyProgress.handsPlayed >= 15;
+      case 'daily_win_1':        return dailyProgress.handsWon >= 1;
+      case 'daily_win_3':        return dailyProgress.handsWon >= 3;
+      case 'daily_hit_starter':  return tierAtOrAbove(dailyProgress.topTierToday, 'STARTER');
+      case 'daily_bonus_1':      return dailyProgress.bonusPlayersUsedToday >= 1;
+      case 'daily_bonus_2':      return dailyProgress.bonusPlayersUsedToday >= 2;
+      case 'daily_streak_any':   return streakCount >= 1;
+      case 'daily_streak_3':     return streakCount >= 3;
+      case 'daily_leaderboard':  return dailyProgress.leaderboardViewedToday;
+      case 'daily_big_bet':      return dailyProgress.multipliersUsedToday.includes(5) || dailyProgress.multipliersUsedToday.includes(10);
+
+      // ── Weekly ──
+      case 'weekly_play_30':     return weeklyProgress.handsPlayedWeek >= 30;
+      case 'weekly_win_10':      return weeklyProgress.handsWonWeek >= 10;
+      case 'weekly_streak_5':    return streakCount >= 5;
+      case 'weekly_allstar':     return tierAtOrAbove(weeklyProgress.topTierWeek, 'ALL_STAR');
+      case 'weekly_multipliers': return new Set(weeklyProgress.multipliersUsedWeek).size >= 3;
+      case 'weekly_bonus_sweep': return weeklyProgress.bonusPlayersUsedWeek >= 3;
+
+      // ── Perpetual ──
+      case 'perpetual_first_win':      return lifetimeProgress.handsWonLifetime >= 1;
+      case 'perpetual_first_starter':  return tierAtOrAbove(lifetimeProgress.topTierLifetime, 'STARTER');
+      case 'perpetual_first_allstar':  return tierAtOrAbove(lifetimeProgress.topTierLifetime, 'ALL_STAR');
+      case 'perpetual_first_mvp':      return tierAtOrAbove(lifetimeProgress.topTierLifetime, 'MVP');
+      case 'perpetual_play_50':        return lifetimeProgress.handsPlayedLifetime >= 50;
+      case 'perpetual_play_200':       return lifetimeProgress.handsPlayedLifetime >= 200;
+      case 'perpetual_streak_5':       return loadJSON<number>(KEYS.streakMax, 0) >= 5;
+      case 'perpetual_streak_10':      return loadJSON<number>(KEYS.streakMax, 0) >= 10;
+      case 'perpetual_leaderboard':    return localStorage.getItem('rp_leaderboard_ever') === '1';
+
+      default: return false;
+    }
+  };
+
   useEffect(() => {
     let coinsEarned = 0;
     let xpEarned    = 0;
     const newlyDone = new Set(tasksDone);
     let changed     = false;
 
-    for (const task of DAILY_TASKS) {
+    // Daily + weekly: auto-award coins when condition met
+    for (const task of [...DAILY_TASKS, ...WEEKLY_TASKS]) {
       if (newlyDone.has(task.id)) continue;
-      let met = false;
-      if (task.id === 'daily_login')        met = dailyProgress.loggedIn;
-      if (task.id === 'daily_play_5_hands') met = dailyProgress.handsPlayed >= task.target;
-      if (task.id === 'daily_win_2_hands')  met = dailyProgress.handsWon    >= task.target;
-      if (met) {
+      if (isTaskMet(task.id)) {
         newlyDone.add(task.id);
         coinsEarned += task.rewardCoins;
         xpEarned    += task.rewardCoins;
         changed      = true;
+      }
+    }
+
+    // Perpetual: mark completed but do NOT auto-award — require collect tap
+    for (const task of PERPETUAL_TASKS) {
+      if (newlyDone.has(task.id)) continue;
+      if (isTaskMet(task.id)) {
+        newlyDone.add(task.id);
+        changed = true;
+        // No coinsEarned — perpetual rewards are collected manually
       }
     }
 
@@ -294,7 +350,8 @@ export function useEngagement(): EngagementState & EngagementActions {
         setXP(prev    => { const n = prev + xpEarned;    save(KEYS.xp, n);    return n; });
       }
     }
-  }, [dailyProgress, tasksDone]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dailyProgress, weeklyProgress, lifetimeProgress, streakCount, tasksDone]);
 
   // ── Existing actions (signatures unchanged) ───────────────────────────────
   const recordHandPlayed = useCallback(() => {
@@ -348,7 +405,7 @@ export function useEngagement(): EngagementState & EngagementActions {
 
   const collectTask = useCallback((taskId: string) => {
     if (tasksCollected.has(taskId)) return;
-    const task = DAILY_TASKS.find(t => t.id === taskId);
+    const task = TASKS.find(t => t.id === taskId);
     if (!task) return;
     const next = new Set(tasksCollected).add(taskId);
     setTasksCollected(next);
@@ -366,6 +423,9 @@ export function useEngagement(): EngagementState & EngagementActions {
     setStreakCount(prev => {
       const n = prev + 1;
       save(KEYS.streakCount, n);
+      // Update lifetime max streak
+      const currentMax = loadJSON<number>(KEYS.streakMax, 0);
+      if (n > currentMax) save(KEYS.streakMax, n);
       return n;
     });
   }, []);
@@ -434,26 +494,56 @@ export function useEngagement(): EngagementState & EngagementActions {
     localStorage.setItem('rp_leaderboard_ever', '1');
   }, []);
 
-  // ── Derived ───────────────────────────────────────────────────────────────
-  const taskStates: TaskState[] = DAILY_TASKS.map(task => {
-    let progress = 0;
-    if (task.id === 'daily_login')        progress = dailyProgress.loggedIn ? 1 : 0;
-    if (task.id === 'daily_play_5_hands') progress = dailyProgress.handsPlayed;
-    if (task.id === 'daily_win_2_hands')  progress = dailyProgress.handsWon;
+  // ── Derived — progress value for each task ──────────────────────────────
+  const getTaskProgress = (id: TaskId): number => {
+    switch (id) {
+      // daily
+      case 'daily_login':        return dailyProgress.loggedIn ? 1 : 0;
+      case 'daily_play_3':
+      case 'daily_play_7':
+      case 'daily_play_15':      return dailyProgress.handsPlayed;
+      case 'daily_win_1':
+      case 'daily_win_3':        return dailyProgress.handsWon;
+      case 'daily_hit_starter':  return tierAtOrAbove(dailyProgress.topTierToday, 'STARTER') ? 1 : 0;
+      case 'daily_bonus_1':
+      case 'daily_bonus_2':      return dailyProgress.bonusPlayersUsedToday;
+      case 'daily_streak_any':   return Math.min(streakCount, 1);
+      case 'daily_streak_3':     return Math.min(streakCount, 3);
+      case 'daily_leaderboard':  return dailyProgress.leaderboardViewedToday ? 1 : 0;
+      case 'daily_big_bet':      return (dailyProgress.multipliersUsedToday.includes(5) || dailyProgress.multipliersUsedToday.includes(10)) ? 1 : 0;
+      // weekly
+      case 'weekly_play_30':     return weeklyProgress.handsPlayedWeek;
+      case 'weekly_win_10':      return weeklyProgress.handsWonWeek;
+      case 'weekly_streak_5':    return Math.min(streakCount, 5);
+      case 'weekly_allstar':     return tierAtOrAbove(weeklyProgress.topTierWeek, 'ALL_STAR') ? 1 : 0;
+      case 'weekly_multipliers': return new Set(weeklyProgress.multipliersUsedWeek).size;
+      case 'weekly_bonus_sweep': return weeklyProgress.bonusPlayersUsedWeek;
+      // perpetual
+      case 'perpetual_first_win':      return lifetimeProgress.handsWonLifetime >= 1 ? 1 : 0;
+      case 'perpetual_first_starter':  return tierAtOrAbove(lifetimeProgress.topTierLifetime, 'STARTER') ? 1 : 0;
+      case 'perpetual_first_allstar':  return tierAtOrAbove(lifetimeProgress.topTierLifetime, 'ALL_STAR') ? 1 : 0;
+      case 'perpetual_first_mvp':      return tierAtOrAbove(lifetimeProgress.topTierLifetime, 'MVP') ? 1 : 0;
+      case 'perpetual_play_50':
+      case 'perpetual_play_200':       return lifetimeProgress.handsPlayedLifetime;
+      case 'perpetual_streak_5':       return Math.min(loadJSON<number>(KEYS.streakMax, 0), 5);
+      case 'perpetual_streak_10':      return Math.min(loadJSON<number>(KEYS.streakMax, 0), 10);
+      case 'perpetual_leaderboard':    return localStorage.getItem('rp_leaderboard_ever') === '1' ? 1 : 0;
+      default: return 0;
+    }
+  };
 
-    return {
-      id:          task.id,
-      label:       task.label,
-      icon:        task.icon,
-      progress,
-      target:      task.target,
-      completed:   tasksDone.has(task.id),
-      collected:   tasksCollected.has(task.id),
-      reward:      task.rewardCoins,
-      rewardCoins: task.rewardCoins,
-      rewardXP:    (task as any).rewardXP ?? 0,
-    };
-  });
+  const taskStates: TaskState[] = TASKS.map(task => ({
+    id:          task.id,
+    label:       task.label,
+    icon:        task.icon,
+    progress:    getTaskProgress(task.id),
+    target:      task.target,
+    completed:   tasksDone.has(task.id),
+    collected:   tasksCollected.has(task.id),
+    reward:      task.rewardCoins,
+    rewardCoins: task.rewardCoins,
+    rewardXP:    0,
+  }));
 
   return {
     loginStreak,
