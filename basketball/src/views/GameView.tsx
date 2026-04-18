@@ -1992,6 +1992,7 @@ export default function GameView() {
               alignItems: "center",
               overflow: "visible",
               position: "relative",
+              zIndex: isFTUE ? 1100 : undefined,
               cursor:
                 (gameState === "WIN_CELEBRATION" ||
                   (gameState === "RESULTS" && winTier && !showRawScore))
@@ -2091,7 +2092,7 @@ export default function GameView() {
               flexDirection: "column",
               justifyContent: "flex-start",
               overflow: "visible",
-              zIndex: (isFTUE && ftueCommentaryOverride) ? 1100 : undefined,
+              /* z-index handled by commentary div inside TierGauge, not the wrapper */
             }}
           >
             <TierGauge
