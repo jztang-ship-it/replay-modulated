@@ -333,6 +333,12 @@ const TIER_IMAGE_MAP: Record<string, string> = {
   LEGEND: "LEGEND6.png",
 };
 
+// Hue correction for tier images whose baked-in color doesn't match TIER_CFG
+// Starter3.png is green — rotate +120° to blue
+const TIER_IMAGE_HUE: Record<string, string> = {
+  STARTER: "hue-rotate(120deg) saturate(1.3)",
+};
+
 const GV_STYLE_ID = "gv-tier-flip";
 if (typeof document !== "undefined" && !document.getElementById(GV_STYLE_ID)) {
   const st = document.createElement("style");
@@ -2020,7 +2026,7 @@ export default function GameView() {
                       alt={formatTierLabel(winTier)}
                       style={{
                         maxHeight: 80, maxWidth: "100%", objectFit: "contain",
-                        filter: `drop-shadow(0 0 24px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`,
+                        filter: `${TIER_IMAGE_HUE[winTier] ?? ""} drop-shadow(0 0 24px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`.trim(),
                         animation: "tierSlam 900ms cubic-bezier(0.22, 1, 0.36, 1)",
                       }}
                     />
@@ -2033,7 +2039,7 @@ export default function GameView() {
                     alt={formatTierLabel(winTier)}
                     style={{
                       maxHeight: 80, maxWidth: "100%", objectFit: "contain",
-                      filter: `drop-shadow(0 0 12px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`,
+                      filter: `${TIER_IMAGE_HUE[winTier] ?? ""} drop-shadow(0 0 12px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`.trim(),
                       animation: "tierShrinkDown 500ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
                     }}
                   />
