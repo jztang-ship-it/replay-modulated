@@ -681,7 +681,7 @@ export function TierGauge({
   return (
     <div style={{
       display: "grid",
-      gridTemplateRows: "14px 28px 62px",
+      gridTemplateRows: "14px 50px",
       gap: 4,
       boxSizing: "border-box",
       width: "100%",
@@ -698,29 +698,8 @@ export function TierGauge({
         }} />
       </div>
 
-      {/* Row 2: Info row — swaps between gap callout and belowBarSlot */}
-      <div style={{ height: 28, display: "flex", alignItems: "center", overflow: "hidden" }}>
-        {belowBarSlot ? belowBarSlot : isMaxLevel ? (
-          <span style={{ fontSize: 13, fontWeight: 800, color: TIER_CFG.LEGEND.color, fontFamily: FF, letterSpacing: "0.06em", textTransform: "uppercase", textAlign: "center", display: "block", width: "100%" }}>
-            ✓ {TIER_CFG.LEGEND.label}
-          </span>
-        ) : (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%" }}>
-            <span style={{ fontSize: 16, fontWeight: 800, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px" }}>
-              {gap.toFixed(1)}
-            </span>
-            <span style={{ fontSize: 11, color: "#888", fontFamily: FF, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-              {" "}FP TO{" "}
-            </span>
-            <span style={{ fontSize: 11, fontWeight: 800, color: targetCfg.color, fontFamily: FF, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-              {targetCfg.label}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Row 3: Commentary — locked height, maximized */}
-      <div data-ftue-anchor="commentary" style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: 62, textAlign: "left", overflow: "hidden", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
+      {/* Row 2: Commentary — locked height, maximized */}
+      <div data-ftue-anchor="commentary" style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: 50, textAlign: "left", overflow: "hidden", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
         {commentaryOverride && commentaryOverride.parts.length > 0 ? (() => {
           const part = commentaryOverride.parts[overridePart];
           const isString = typeof part === "string";

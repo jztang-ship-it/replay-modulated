@@ -2001,11 +2001,11 @@ export default function GameView() {
         </div>
 
         {/* ── Bottom landscape: CSS Grid, all rows fixed pixel, nothing moves ── */}
-        {/* Rows: stats(40) gap(6) bar(14) gap(4) info(28) gap(4) commentary(62) gap(4) action(50) = 212px total */}
+        {/* stats(84) gap(4) bar(14) gap(4) info(0) gap(4) commentary(50) gap(2) action(50) = 212px total */}
         <div style={{
           flex: "0 0 auto",
           display: "grid",
-          gridTemplateRows: "40px 6px 14px 4px 28px 4px 62px 4px 50px",
+          gridTemplateRows: "84px 4px 14px 4px 0px 4px 50px 2px 50px",
           gridTemplateColumns: "1fr",
           padding: "0 12px",
           boxSizing: "border-box",
@@ -2045,7 +2045,7 @@ export default function GameView() {
             }}
           >
             {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (
-              <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%", height: "100%" }}>
+              <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "center", width: "100%", height: "100%" }}>
                 {tierResultPhase === 1 && (
                   <>
                     <div
@@ -2069,57 +2069,94 @@ export default function GameView() {
                     />
                   </>
                 )}
-                {tierResultPhase === 2 && (
-                  <img
-                    key={`tier-stay-${winTier}`}
-                    src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
-                    alt={formatTierLabel(winTier)}
-                    style={{
-                      maxHeight: 80, maxWidth: "100%", objectFit: "contain",
-                      filter: `${TIER_IMAGE_HUE[winTier] ?? ""} drop-shadow(0 0 12px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`.trim(),
-                      animation: "tierShrinkDown 500ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
-                    }}
-                  />
-                )}
-              </div>
-            ) : (
-              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 48, width: "100%" }}>
-                {(() => {
-                  const spent =
-                    gameState === "IDLE" ? 0 :
-                      gameState === "DEALING" ? 0 :
-                        gameState === "HOLD" ? lockedSalary :
-                          gameState === "DRAWING" ? lockedSalary :
-                            gameState === "REVEALING" ? revealedSalary :
-                              capUsed;
-                  const remaining = CAP_MAX - spent;
-                  const overBudget = remaining < 0;
+                {tierResultPhase === 2 && (() => {
+                  const amountWagered = BASE_BET * betMultiplier;
+                  const net = winPayout - amountWagered;
+                  const netPositive = net > 0;
+                  const netColor = netPositive ? "#7FFF00" : "#FF3B30";
+                  const netLabel = netPositive ? `+$${net}` : `-$${Math.abs(net)}`;
+                  const FF = "'Rajdhani','Oswald','Arial Narrow',sans-serif";
                   return (
                     <>
-                      <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: 26, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic" }}>
-                          <RollingNumber value={totalFp} decimals={1} duration={300} />
-                        </div>
-                        <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
-                          Team FP
-                        </div>
-                      </div>
-                      <div style={{ textAlign: "center" }}>
-                        <div style={{ display: "flex", alignItems: "baseline", gap: 2, justifyContent: "center" }}>
-                          <span style={{ fontSize: 26, fontWeight: 900, color: overBudget ? "#ef4444" : "#FFFFFF", lineHeight: 1, fontStyle: "italic" }}>
-                            <RollingNumber value={remaining} decimals={0} duration={300} />
+                      <img
+                        key={`tier-stay-${winTier}`}
+                        src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
+                        alt={formatTierLabel(winTier)}
+                        style={{
+                          maxHeight: 28, maxWidth: "100%", objectFit: "contain",
+                          filter: `${TIER_IMAGE_HUE[winTier] ?? ""} drop-shadow(0 0 12px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`.trim(),
+                          animation: "tierShrinkDown 500ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
+                        }}
+                      />
+                      <div style={{ animation: "tierInfoFadeIn 300ms ease 500ms both", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, marginTop: 4, width: "100%" }}>
+                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 20 }}>
+                          <span style={{ fontSize: 22, fontWeight: 700, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                            {displayFp.toFixed(1)} FP
                           </span>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.35)", lineHeight: 1, fontStyle: "italic" }}>
-                            /{CAP_MAX}
-                          </span>
+                          {ceilingPct != null && (
+                            <span style={{ fontSize: 22, fontWeight: 400, color: "rgba(255,255,255,0.45)", fontFamily: FF, lineHeight: 1 }}>
+                              {ceilingPct}% ceiling
+                            </span>
+                          )}
                         </div>
-                        <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
-                          Budget
+                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 20 }}>
+                          <span style={{ fontSize: 22, fontWeight: 700, color: netColor, fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                            {netLabel}
+                          </span>
+                          <span style={{ fontSize: 22, fontWeight: 400, color: "rgba(255,255,255,0.45)", fontFamily: FF, lineHeight: 1 }}>
+                            {BASE_BET} × {betMultiplier}x
+                          </span>
                         </div>
                       </div>
                     </>
                   );
                 })()}
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 8, width: "100%", height: "100%" }}>
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 48, width: "100%" }}>
+                  {(() => {
+                    const spent =
+                      gameState === "IDLE" ? 0 :
+                        gameState === "DEALING" ? 0 :
+                          gameState === "HOLD" ? lockedSalary :
+                            gameState === "DRAWING" ? lockedSalary :
+                              gameState === "REVEALING" ? revealedSalary :
+                                capUsed;
+                    const remaining = CAP_MAX - spent;
+                    const overBudget = remaining < 0;
+                    return (
+                      <>
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ fontSize: 26, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic" }}>
+                            <RollingNumber value={totalFp} decimals={1} duration={300} />
+                          </div>
+                          <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
+                            Team FP
+                          </div>
+                        </div>
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ display: "flex", alignItems: "baseline", gap: 2, justifyContent: "center" }}>
+                            <span style={{ fontSize: 26, fontWeight: 900, color: overBudget ? "#ef4444" : "#FFFFFF", lineHeight: 1, fontStyle: "italic" }}>
+                              <RollingNumber value={remaining} decimals={0} duration={300} />
+                            </span>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.35)", lineHeight: 1, fontStyle: "italic" }}>
+                              /{CAP_MAX}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
+                            Budget
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+                {gameState === "HOLD" && !isFTUE && (
+                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", fontFamily: "'Rajdhani','Oswald','Arial Narrow',sans-serif", lineHeight: 1 }}>
+                    {BASE_BET} × {betMultiplier}x
+                  </span>
+                )}
               </div>
             )}
           </div>
@@ -2174,46 +2211,6 @@ export default function GameView() {
                 setGameState("RESULTS");
                 setTimeout(() => setFtueWinCelebrationActive(true), 300);
               }}
-              belowBarSlot={
-                (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier ? (
-                  <div style={{
-                    display: "flex", justifyContent: "space-between", alignItems: "flex-start",
-                    width: "100%",
-                  }}>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-                      <span style={{
-                        fontSize: 14, fontWeight: 900, lineHeight: 1,
-                        color: winTier === "BUST" ? "#FF3B30" : "#22C55E",
-                        fontVariantNumeric: "tabular-nums",
-                      }}>
-                        {winTier === "BUST" ? `−${BASE_BET * betMultiplier}` : `+${winPayout}`}
-                      </span>
-                      <span style={{
-                        fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.35)",
-                        marginTop: 1, whiteSpace: "nowrap",
-                      }}>
-                        {betMultiplier === 1 ? `${BASE_BET} wager` : `${BASE_BET} × ${betMultiplier}x wager`}
-                      </span>
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                      <span style={{
-                        fontSize: 14, fontWeight: 900, lineHeight: 1, color: "#FFFFFF",
-                        fontVariantNumeric: "tabular-nums", fontStyle: "italic",
-                      }}>
-                        {displayFp.toFixed(1)} FP
-                      </span>
-                      {ceilingPct != null && (
-                        <span style={{
-                          fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.35)",
-                          marginTop: 1,
-                        }}>
-                          {ceilingPct}% of ceiling
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ) : undefined
-              }
             />
           </div>
 
