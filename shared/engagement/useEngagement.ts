@@ -192,17 +192,21 @@ export function useEngagement(): EngagementState & EngagementActions {
   );
 
   // Load daily, weekly, lifetime progress from separate storage keys
-  const [dailyProgress, setDailyProgress] = useState<typeof FRESH_DAILY>(() =>
-    loadJSON(KEYS.taskProgress, { ...FRESH_DAILY, loggedIn: false })
-  );
+  const [dailyProgress, setDailyProgress] = useState<typeof FRESH_DAILY>(() => ({
+    ...FRESH_DAILY,
+    loggedIn: false,
+    ...loadJSON<Partial<typeof FRESH_DAILY>>(KEYS.taskProgress, {}),
+  }));
 
-  const [weeklyProgress, setWeeklyProgress] = useState<typeof FRESH_WEEKLY>(() =>
-    loadJSON(KEYS.weekProgress, { ...FRESH_WEEKLY })
-  );
+  const [weeklyProgress, setWeeklyProgress] = useState<typeof FRESH_WEEKLY>(() => ({
+    ...FRESH_WEEKLY,
+    ...loadJSON<Partial<typeof FRESH_WEEKLY>>(KEYS.weekProgress, {}),
+  }));
 
-  const [lifetimeProgress, setLifetimeProgress] = useState<typeof FRESH_LIFETIME>(() =>
-    loadJSON(KEYS.lifeProgress, { ...FRESH_LIFETIME })
-  );
+  const [lifetimeProgress, setLifetimeProgress] = useState<typeof FRESH_LIFETIME>(() => ({
+    ...FRESH_LIFETIME,
+    ...loadJSON<Partial<typeof FRESH_LIFETIME>>(KEYS.lifeProgress, {}),
+  }));
 
   // Composite TaskProgress for task evaluation
   const taskProgress: TaskProgress = buildFullProgress(dailyProgress, weeklyProgress, lifetimeProgress);
