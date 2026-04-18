@@ -1868,12 +1868,13 @@ export default function GameView() {
           </div>
         </div>
 
-        {/* 2 — Card stage */}
+        {/* 2 — Card stage — flex:1 takes all remaining space after header + bottom grid */}
         <div style={{
-          flex: "0 0 46dvh",
+          flex: 1,
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "center",
+          minHeight: 0,
           padding: "4px 2px 2px 2px",
           boxSizing: "border-box",
           overflow: "hidden",
@@ -1956,16 +1957,15 @@ export default function GameView() {
           </div>
         </div>
 
-        {/* ── Bottom landscape: CSS Grid, fixed row heights, nothing moves ── */}
-        {/* Rows: stats(30) + gap(6) + bar(14) + gap(6) + info(24) + gap(4) + commentary(40) + gap(4) + multipliers(36) + gap(4) + action(auto) */}
+        {/* ── Bottom landscape: CSS Grid, all rows fixed pixel, nothing moves ── */}
+        {/* Rows: stats(40) gap(8) bar(14) gap(6) info(24) gap(6) commentary(48) gap(6) multipliers(36) gap(6) action(80) = 274px total */}
         <div style={{
-          flex: 1,
+          flex: "0 0 auto",
           display: "grid",
-          gridTemplateRows: "30px 6px 14px 6px 24px 4px 40px 4px 36px 4px 1fr",
+          gridTemplateRows: "40px 8px 14px 6px 24px 6px 48px 6px 36px 6px 80px",
           padding: "0 12px",
           boxSizing: "border-box",
           overflow: "hidden",
-          minHeight: 0,
         }}>
 
           {/* ROW 1 — Stats row: Team FP+Budget OR tier label (30px) */}
@@ -2051,23 +2051,23 @@ export default function GameView() {
                   return (
                     <>
                       <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: 20, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic" }}>
+                        <div style={{ fontSize: 26, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic" }}>
                           <RollingNumber value={totalFp} decimals={1} duration={300} />
                         </div>
-                        <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 1 }}>
+                        <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
                           Team FP
                         </div>
                       </div>
                       <div style={{ textAlign: "center" }}>
                         <div style={{ display: "flex", alignItems: "baseline", gap: 2, justifyContent: "center" }}>
-                          <span style={{ fontSize: 20, fontWeight: 900, color: overBudget ? "#ef4444" : "#FFFFFF", lineHeight: 1, fontStyle: "italic" }}>
+                          <span style={{ fontSize: 26, fontWeight: 900, color: overBudget ? "#ef4444" : "#FFFFFF", lineHeight: 1, fontStyle: "italic" }}>
                             <RollingNumber value={remaining} decimals={0} duration={300} />
                           </span>
-                          <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)", lineHeight: 1, fontStyle: "italic" }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.35)", lineHeight: 1, fontStyle: "italic" }}>
                             /{CAP_MAX}
                           </span>
                         </div>
-                        <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 1 }}>
+                        <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
                           Budget
                         </div>
                       </div>
