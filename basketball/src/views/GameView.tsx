@@ -1093,7 +1093,7 @@ export default function GameView() {
     LEGEND: { color: "#EF4444", glow: "#EF444499" },
     MVP: { color: "#FB923C", glow: "#FB923C55" },
     ALL_STAR: { color: "#C084FC", glow: "#C084FC55" },
-    STARTER: { color: "#00FFD8", glow: "#00FFD855" },
+    STARTER: { color: "#3B82F6", glow: "#3B82F655" },
     ROOKIE: { color: "#22C55E", glow: "#22C55E55" },
     BUST: { color: "#6B7280", glow: "#6B728033" },
   };

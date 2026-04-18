@@ -81,7 +81,7 @@ const TIER_CFG: Record<string, { label: string; color: string; glow: string }> =
   LEGEND: { label: "LEGEND", color: "#EF4444", glow: "#EF444455" },
   MVP: { label: "MVP", color: "#FB923C", glow: "#FB923C55" },
   ALL_STAR: { label: "ALL-STAR", color: "#C084FC", glow: "#C084FC55" },
-  STARTER: { label: "STARTER", color: "#00FFD8", glow: "#00FFD855" },
+  STARTER: { label: "STARTER", color: "#3B82F6", glow: "#3B82F655" },
   ROOKIE: { label: "ROOKIE", color: "#22C55E", glow: "#22C55E55" },
   BUST: { label: "BUST", color: "#6B7280", glow: "#6B728033" },
 };
@@ -158,10 +158,11 @@ export function computeGaugeState(
   const tierSpan = Math.max(1, nextMin - curMin);
   const finalFill = isMaxLevel ? 1.0 : Math.min(1, Math.max(0, (fp - curMin) / tierSpan));
 
+  // Gradient: even fade from current tier color → next tier color across the bar
   const normalColor = isGoat
     ? TIER_CFG.LEGEND.color
-    : tierCfg.color;
-  const overshootColor = targetCfg.color;
+    : `linear-gradient(90deg, ${tierCfg.color} 0%, ${tierCfg.color} 30%, ${targetCfg.color} 100%)`;
+  const overshootColor = `linear-gradient(90deg, ${tierCfg.color} 0%, ${targetCfg.color} 60%, ${targetCfg.color} 100%)`;
 
   return {
     derivedTier,

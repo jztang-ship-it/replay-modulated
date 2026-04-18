@@ -13,7 +13,7 @@ export type { GameStateLabel };
 // Option C slot-like economy — must stay in sync with BASKETBALL_WIN_TIERS in payoutLogic.ts
 const WIN_TIERS: WinTierDisplay[] = [
   { label: "ROOKIE",   minFp: 190, color: "#22C55E", glow: "rgba(34,197,94,0.6)"    },
-  { label: "STARTER",  minFp: 205, color: "#00FFD8", glow: "rgba(0,255,216,0.6)"   },
+  { label: "STARTER",  minFp: 205, color: "#3B82F6", glow: "rgba(59,130,246,0.6)"   },
   { label: "ALL-STAR", minFp: 225, color: "#C084FC", glow: "rgba(192,132,252,0.7)"  },
   { label: "MVP",      minFp: 235, color: "#FB923C", glow: "rgba(251,146,60,0.7)"   },
   { label: "LEGEND",   minFp: 255, color: "#EF4444", glow: "rgba(239,68,68,0.9)"   },
@@ -24,7 +24,7 @@ const LEGEND_DATA: LegendData = {
     { label: "LEGEND",   score: "255+", payout: "50x",  color: "#EF4444", bg: "rgba(239,68,68,0.12)",    border: "rgba(239,68,68,0.35)"    },
     { label: "MVP",      score: "235+", payout: "8x",   color: "#FB923C", bg: "rgba(251,146,60,0.10)",   border: "rgba(251,146,60,0.3)"    },
     { label: "ALL-STAR", score: "225+", payout: "3x",   color: "#C084FC", bg: "rgba(192,132,252,0.10)",  border: "rgba(192,132,252,0.25)"  },
-    { label: "STARTER",  score: "205+", payout: "1.5x", color: "#00FFD8", bg: "rgba(0,255,216,0.08)",    border: "rgba(0,255,216,0.25)"    },
+    { label: "STARTER",  score: "205+", payout: "1.5x", color: "#3B82F6", bg: "rgba(59,130,246,0.08)",    border: "rgba(59,130,246,0.25)"    },
     { label: "ROOKIE",   score: "190+", payout: "0.5x", color: "#22C55E", bg: "rgba(34,197,94,0.10)",    border: "rgba(34,197,94,0.25)"    },
     { label: "BUST",     score: "<190", payout: "—",    color: "#6B7280", bg: "rgba(107,114,128,0.08)",  border: "rgba(107,114,128,0.2)"   },
   ],
