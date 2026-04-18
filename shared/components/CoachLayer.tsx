@@ -8,6 +8,7 @@ export type BubbleAnchor =
   | "draw"
   | "roster"
   | "roster-and-score"
+  | "roster-and-commentary"
   | "score-row"
   | "anchor-and-gauge"
   | "anchor-gauge-balance"
@@ -157,6 +158,19 @@ function unionRosterAndScoreRect(): DOMRect | null {
     y: top,
     toJSON: () => ({}),
   } as DOMRect;
+}
+
+/** Roster grid + commentary area — cards and commentary only, no gauge/score */
+function unionRosterAndCommentaryRect(): DOMRect | null {
+  const rosterEl = document.querySelector('[data-ftue-anchor="roster-inner"]') ?? document.querySelector('[data-ftue-anchor="roster"]');
+  const commentaryEl = document.querySelector('[data-ftue-anchor="commentary"]');
+  if (!rosterEl) return null;
+  const rects = [rosterEl, commentaryEl].filter(Boolean).map(el => el!.getBoundingClientRect());
+  const top = Math.min(...rects.map(r => r.top));
+  const bottom = Math.max(...rects.map(r => r.bottom));
+  const left = Math.min(...rects.map(r => r.left));
+  const right = Math.max(...rects.map(r => r.right));
+  return { top, bottom, left, right, width: right - left, height: bottom - top, x: left, y: top, toJSON: () => ({}) } as DOMRect;
 }
 
 /** Anchor card + TierGauge + score row — for the FTUE RESULTS dual spotlight */
@@ -364,6 +378,11 @@ export function CoachLayer({
         applyRect(rect);
         return;
       }
+      if (snapshot.anchor === "roster-and-commentary") {
+        const rect = unionRosterAndCommentaryRect();
+        applyRect(rect);
+        return;
+      }
       if (snapshot.anchor === "booker-and-gauge" || snapshot.anchor === "anchor-and-gauge") {
         const rect = unionAnchorAndGaugeRect(anchorCardId);
         applyRect(rect);
@@ -482,7 +501,7 @@ export function CoachLayer({
     enqueue({
       key: "hold_roster_intro",
       node: null as any,
-      anchor: "roster-and-score",
+      anchor: "roster-and-commentary",
       position: "below",
       pulseCardLabels: true,
       onDismiss: () => {
@@ -549,12 +568,12 @@ export function CoachLayer({
     if (!ftueCommentaryDone) return;
     // Fire immediately — no artificial delay between tier panel landing and commentary.
     {
-      // Show "So close" commentary — spotlight entire lineup + tier gauge
+      // Show "So close" commentary — spotlight roster + commentary only
       onCommentaryText?.([cfg?.nearMissText ?? "So close it hurts, 1 FP away from the ALL-STAR level 3x win. Dray was the weaklink tonight, one more rebound or assist would have pushed us over."], true);
       enqueue({
         key: "darnit",
         node: null as any,
-        anchor: "roster-and-score",
+        anchor: "roster-and-commentary",
         position: "below",
         onDismiss: () => {
           onCommentaryText?.([cfg?.anchorFlipHintText ?? "Tatum on the other hand wore his super man cape, 92 FP(!) is nothing short of extraordinary. Flip his card to see what happened."], true);
