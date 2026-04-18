@@ -1963,6 +1963,7 @@ export default function GameView() {
           flex: "0 0 auto",
           display: "grid",
           gridTemplateRows: "40px 6px 14px 4px 28px 4px 62px 4px 50px",
+          gridTemplateColumns: "1fr",
           padding: "0 12px",
           boxSizing: "border-box",
           overflow: "hidden",
@@ -2085,6 +2086,7 @@ export default function GameView() {
             data-ftue-anchor="tier-gauge"
             style={{
               gridRow: "3 / 8",
+              gridColumn: "1",
               display: "flex",
               flexDirection: "column",
               justifyContent: "flex-start",
@@ -2169,11 +2171,12 @@ export default function GameView() {
             />
           </div>
 
-          {/* Multiplier host — overlays commentary row 7 during HOLD */}
+          {/* Multiplier host — overlays commentary row 7, column 1 during HOLD */}
           <div
             ref={(el) => setMultipliersHost(el)}
             style={{
               gridRow: "7",
+              gridColumn: "1",
               display: isPreRevealFooter ? "flex" : "none",
               alignItems: "center",
               justifyContent: "center",
