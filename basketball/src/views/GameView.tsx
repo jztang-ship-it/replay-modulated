@@ -1956,140 +1956,142 @@ export default function GameView() {
           </div>
         </div>
 
-        {/* 3 — Above tier bar: Team FP+Budget OR tier panel (10dvh) */}
-        <div
-          {...(isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")
-            ? { "data-ftue-anchor": "ftue-darnit-focus" }
-            : {})}
-          data-ftue-anchor="score-row"
-          onClick={() => {
-            if (gameState === "WIN_CELEBRATION" && showRawScore) {
-              onWinCelebrationComplete();
-              return;
-            }
-            if (gameState === "WIN_CELEBRATION" && !showRawScore) {
-              setShowRawScore(true);
-              return;
-            }
-            if (gameState === "RESULTS" && winTier && !showRawScore) setShowRawScore(true);
-          }}
-          style={{
-            flex: "0 0 10dvh",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "0 10px",
-            boxSizing: "border-box",
-            overflow: "visible",
-            position: "relative",
-            cursor:
-              (gameState === "WIN_CELEBRATION" ||
-                (gameState === "RESULTS" && winTier && !showRawScore))
-                ? "pointer"
-                : "default",
-          }}
-        >
-          {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (
-            <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%" }}>
-              {tierResultPhase === 1 && (
-                <>
-                  <div
-                    key={`flash-${winTier}`}
-                    style={{
-                      position: "absolute", inset: -40, borderRadius: 30,
-                      background: `radial-gradient(ellipse at center, ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).color}44 0%, transparent 70%)`,
-                      animation: "tierSlamFlash 600ms ease-out forwards",
-                      pointerEvents: "none",
-                    }}
-                  />
+        {/* ── Bottom landscape: 4 mini-zones, flex proportional, never overflow ── */}
+        <div style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
+          overflow: "hidden",
+          boxSizing: "border-box",
+        }}>
+
+          {/* MINI-ZONE 1 — Team FP+Budget OR tier panel (flex 3) */}
+          <div
+            {...(isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")
+              ? { "data-ftue-anchor": "ftue-darnit-focus" }
+              : {})}
+            data-ftue-anchor="score-row"
+            onClick={() => {
+              if (gameState === "WIN_CELEBRATION" && showRawScore) {
+                onWinCelebrationComplete();
+                return;
+              }
+              if (gameState === "WIN_CELEBRATION" && !showRawScore) {
+                setShowRawScore(true);
+                return;
+              }
+              if (gameState === "RESULTS" && winTier && !showRawScore) setShowRawScore(true);
+            }}
+            style={{
+              flex: 3,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: "0 10px",
+              boxSizing: "border-box",
+              overflow: "visible",
+              position: "relative",
+              minHeight: 0,
+              cursor:
+                (gameState === "WIN_CELEBRATION" ||
+                  (gameState === "RESULTS" && winTier && !showRawScore))
+                  ? "pointer"
+                  : "default",
+            }}
+          >
+            {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (
+              <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%" }}>
+                {tierResultPhase === 1 && (
+                  <>
+                    <div
+                      key={`flash-${winTier}`}
+                      style={{
+                        position: "absolute", inset: -40, borderRadius: 30,
+                        background: `radial-gradient(ellipse at center, ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).color}44 0%, transparent 70%)`,
+                        animation: "tierSlamFlash 600ms ease-out forwards",
+                        pointerEvents: "none",
+                      }}
+                    />
+                    <img
+                      key={`tier-${winTier}`}
+                      src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
+                      alt={formatTierLabel(winTier)}
+                      style={{
+                        maxHeight: "100%", maxWidth: "100%", objectFit: "contain",
+                        filter: `drop-shadow(0 0 24px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`,
+                        animation: "tierSlam 900ms cubic-bezier(0.22, 1, 0.36, 1)",
+                      }}
+                    />
+                  </>
+                )}
+                {tierResultPhase === 2 && (
                   <img
-                    key={`tier-${winTier}`}
+                    key={`tier-stay-${winTier}`}
                     src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
                     alt={formatTierLabel(winTier)}
                     style={{
-                      maxHeight: 100, maxWidth: "100%", objectFit: "contain",
-                      filter: `drop-shadow(0 0 24px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`,
-                      animation: "tierSlam 900ms cubic-bezier(0.22, 1, 0.36, 1)",
+                      maxHeight: "100%", maxWidth: "100%", objectFit: "contain",
+                      filter: `drop-shadow(0 0 12px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`,
+                      animation: "tierShrinkDown 500ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
                     }}
                   />
-                </>
-              )}
-              {tierResultPhase === 2 && (
-                <img
-                  key={`tier-stay-${winTier}`}
-                  src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
-                  alt={formatTierLabel(winTier)}
-                  style={{
-                    maxHeight: 100, maxWidth: "100%", objectFit: "contain",
-                    filter: `drop-shadow(0 0 12px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`,
-                    animation: "tierShrinkDown 500ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
-                  }}
-                />
-              )}
-            </div>
-          ) : (
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 48, width: "100%" }}>
-              {(() => {
-                const spent =
-                  gameState === "IDLE" ? 0 :
-                    gameState === "DEALING" ? 0 :
-                      gameState === "HOLD" ? lockedSalary :
-                        gameState === "DRAWING" ? lockedSalary :
-                          gameState === "REVEALING" ? revealedSalary :
-                            capUsed;
-                const remaining = CAP_MAX - spent;
-                const overBudget = remaining < 0;
-                return (
-                  <>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: 24, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic" }}>
-                        <RollingNumber value={totalFp} decimals={1} duration={300} />
+                )}
+              </div>
+            ) : (
+              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 48, width: "100%" }}>
+                {(() => {
+                  const spent =
+                    gameState === "IDLE" ? 0 :
+                      gameState === "DEALING" ? 0 :
+                        gameState === "HOLD" ? lockedSalary :
+                          gameState === "DRAWING" ? lockedSalary :
+                            gameState === "REVEALING" ? revealedSalary :
+                              capUsed;
+                  const remaining = CAP_MAX - spent;
+                  const overBudget = remaining < 0;
+                  return (
+                    <>
+                      <div style={{ textAlign: "center" }}>
+                        <div style={{ fontSize: 24, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic" }}>
+                          <RollingNumber value={totalFp} decimals={1} duration={300} />
+                        </div>
+                        <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
+                          Team FP
+                        </div>
                       </div>
-                      <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
-                        Team FP
+                      <div style={{ textAlign: "center" }}>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: 2, justifyContent: "center" }}>
+                          <span style={{ fontSize: 24, fontWeight: 900, color: overBudget ? "#ef4444" : "#FFFFFF", lineHeight: 1, fontStyle: "italic" }}>
+                            <RollingNumber value={remaining} decimals={0} duration={300} />
+                          </span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.35)", lineHeight: 1, fontStyle: "italic" }}>
+                            /{CAP_MAX}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
+                          Budget
+                        </div>
                       </div>
-                    </div>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ display: "flex", alignItems: "baseline", gap: 2, justifyContent: "center" }}>
-                        <span style={{ fontSize: 24, fontWeight: 900, color: overBudget ? "#ef4444" : "#FFFFFF", lineHeight: 1, fontStyle: "italic" }}>
-                          <RollingNumber value={remaining} decimals={0} duration={300} />
-                        </span>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.35)", lineHeight: 1, fontStyle: "italic" }}>
-                          /{CAP_MAX}
-                        </span>
-                      </div>
-                      <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
-                        Budget
-                      </div>
-                    </div>
-                  </>
-                );
-              })()}
-            </div>
-          )}
-        </div>
+                    </>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
 
-        {/* 3.5 — Tier gauge + info row + commentary (fixed 13dvh) */}
-        <div
-          style={{
-            flex: "0 0 13dvh",
-            padding: "0 10px",
-            boxSizing: "border-box",
-            overflow: "visible",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
+          {/* MINI-ZONE 2+3 — Tier bar + info row + commentary (flex 4) */}
           <div
             data-ftue-anchor="tier-gauge"
             style={{
-              width: "100%",
+              flex: 4,
               display: "flex",
               flexDirection: "column",
-              alignItems: "stretch",
-              overflow: "visible",
+              justifyContent: "center",
+              padding: "0 12px",
               boxSizing: "border-box",
-              padding: "2px 2px 0",
+              overflow: "hidden",
+              minHeight: 0,
               zIndex: (isFTUE && ftueCommentaryOverride) ? 1100 : undefined,
             }}
           >
@@ -2131,34 +2133,34 @@ export default function GameView() {
                 (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier ? (
                   <div style={{
                     display: "flex", justifyContent: "space-between", alignItems: "flex-start",
-                    padding: "4px 0 2px", animation: "tierInfoFadeIn 400ms ease-out",
+                    width: "100%",
                   }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
                       <span style={{
-                        fontSize: 16, fontWeight: 900, lineHeight: 1,
+                        fontSize: 15, fontWeight: 900, lineHeight: 1,
                         color: winTier === "BUST" ? "#FF3B30" : "#22C55E",
                         fontVariantNumeric: "tabular-nums",
                       }}>
                         {winTier === "BUST" ? `−${BASE_BET * betMultiplier}` : `+${winPayout}`}
                       </span>
                       <span style={{
-                        fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)",
-                        marginTop: 2, whiteSpace: "nowrap",
+                        fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.35)",
+                        marginTop: 1, whiteSpace: "nowrap",
                       }}>
                         {betMultiplier === 1 ? `${BASE_BET} wager` : `${BASE_BET} × ${betMultiplier}x wager`}
                       </span>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
                       <span style={{
-                        fontSize: 16, fontWeight: 900, lineHeight: 1, color: "#FFFFFF",
+                        fontSize: 15, fontWeight: 900, lineHeight: 1, color: "#FFFFFF",
                         fontVariantNumeric: "tabular-nums", fontStyle: "italic",
                       }}>
                         {displayFp.toFixed(1)} FP
                       </span>
                       {ceilingPct != null && (
                         <span style={{
-                          fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)",
-                          marginTop: 2,
+                          fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.35)",
+                          marginTop: 1,
                         }}>
                           {ceilingPct}% of ceiling
                         </span>
@@ -2168,46 +2170,45 @@ export default function GameView() {
                 ) : undefined
               }
             />
+            {/* Multiplier host — only during HOLD */}
+            <div
+              ref={(el) => setMultipliersHost(el)}
+              style={{
+                display: isPreRevealFooter ? "flex" : "none",
+                alignItems: "center",
+                justifyContent: "center",
+                boxSizing: "border-box",
+                pointerEvents: "auto",
+                padding: "2px 0",
+              }}
+            />
           </div>
-          {/* Multiplier host — only during HOLD */}
-          <div
-            ref={(el) => setMultipliersHost(el)}
-            style={{
-              display: isPreRevealFooter ? "flex" : "none",
-              alignItems: "center",
-              justifyContent: "center",
-              boxSizing: "border-box",
-              pointerEvents: "auto",
-              padding: "4px 0",
-            }}
-          />
-        </div>
 
-        {/* 4 — Streak + action row (21dvh) */}
-        <div
-          style={{
-            flex: "0 0 21dvh",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "flex-end",
-            minHeight: 0,
-            overflow: "visible",
-            boxSizing: "border-box",
-          }}
-        >
+          {/* MINI-ZONE 4 — Streak + wallet + action button (flex 3) */}
           <div
-            ref={(el) => setControlsHost(el)}
             style={{
-              flex: 1,
+              flex: 3,
               display: "flex",
               flexDirection: "column",
               justifyContent: "flex-end",
               minHeight: 0,
-              padding: "0 10px max(env(safe-area-inset-bottom, 0px) + 8px, 16px)",
+              overflow: "visible",
               boxSizing: "border-box",
-              overflow: "hidden",
             }}
           >
+            <div
+              ref={(el) => setControlsHost(el)}
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "flex-end",
+                minHeight: 0,
+                padding: "0 10px max(env(safe-area-inset-bottom, 0px) + 8px, 16px)",
+                boxSizing: "border-box",
+                overflow: "hidden",
+              }}
+            >
             <CoachLayer
               isFTUE={isFTUE}
               gameState={gameState}
@@ -2320,6 +2321,8 @@ export default function GameView() {
             )}
           </div>
         </div>
+
+        </div>{/* close bottom landscape wrapper */}
 
       </div>
 
