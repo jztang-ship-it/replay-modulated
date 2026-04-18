@@ -688,7 +688,7 @@ export function TierGauge({
       </div>
 
       {/* Info row — fixed height, swaps between gap callout and belowBarSlot content */}
-      <div style={{ height: 28, display: "flex", alignItems: "center", marginTop: 4, overflow: "hidden" }}>
+      <div style={{ height: 22, display: "flex", alignItems: "center", marginTop: 3, overflow: "hidden" }}>
         {belowBarSlot ? belowBarSlot : isMaxLevel ? (
           <span style={{ fontSize: 13, fontWeight: 800, color: TIER_CFG.LEGEND.color, fontFamily: FF, letterSpacing: "0.06em", textTransform: "uppercase", textAlign: "center", display: "block", width: "100%" }}>
             ✓ {TIER_CFG.LEGEND.label}
@@ -709,7 +709,7 @@ export function TierGauge({
       </div>
 
       {/* Commentary area — fixed height, pinned, never pushes anything */}
-      <div style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: 62, marginTop: 2, textAlign: "left", overflow: "hidden", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
+      <div style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: 46, marginTop: 2, textAlign: "left", overflow: "hidden", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
         {commentaryOverride && commentaryOverride.parts.length > 0 ? (() => {
           const part = commentaryOverride.parts[overridePart];
           const isString = typeof part === "string";

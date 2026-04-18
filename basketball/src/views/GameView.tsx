@@ -1836,7 +1836,7 @@ export default function GameView() {
 
         {/* 1 — Header */}
         <div style={{
-          flex: "0 0 11dvh",
+          flex: "0 0 10dvh",
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",
@@ -1870,7 +1870,7 @@ export default function GameView() {
 
         {/* 2 — Card stage */}
         <div style={{
-          flex: "0 0 48dvh",
+          flex: "0 0 46dvh",
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "center",
@@ -1956,7 +1956,7 @@ export default function GameView() {
           </div>
         </div>
 
-        {/* 3 — Above tier bar: Team FP+Budget OR tier panel (11dvh) */}
+        {/* 3 — Above tier bar: Team FP+Budget OR tier panel (10dvh) */}
         <div
           {...(isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")
             ? { "data-ftue-anchor": "ftue-darnit-focus" }
@@ -1974,7 +1974,7 @@ export default function GameView() {
             if (gameState === "RESULTS" && winTier && !showRawScore) setShowRawScore(true);
           }}
           style={{
-            flex: "0 0 11dvh",
+            flex: "0 0 10dvh",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -2183,10 +2183,10 @@ export default function GameView() {
           />
         </div>
 
-        {/* 4 — Streak + action row (17dvh) */}
+        {/* 4 — Streak + action row (21dvh) */}
         <div
           style={{
-            flex: "0 0 17dvh",
+            flex: "0 0 21dvh",
             display: "flex",
             flexDirection: "column",
             justifyContent: "flex-end",
