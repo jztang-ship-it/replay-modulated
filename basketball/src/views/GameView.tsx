@@ -660,6 +660,7 @@ export default function GameView() {
     const introSeen = localStorage.getItem("replaymod_pregame_intro_basketball") === "1";
     return !seenToday || !introSeen;
   });
+  const [trophyPulsing, setTrophyPulsing] = useState(false);
 
   // Hand count — used for commentary, leaderboard, and Chad. Must be declared
   // before any useEffect that references it to avoid TDZ in production builds.
@@ -720,6 +721,12 @@ export default function GameView() {
       chadFiredThisIdleRef.current = true;
       chadLastHandRef.current = handCount;
       setFtueCommentaryOverride({ parts: [chadMessage(topic)], sticky: true });
+      // Blink the relevant icon until tapped
+      if (topic === "leaderboard_intro" || topic === "leaderboard_explainer") {
+        setTrophyPulsing(true);
+      } else {
+        setLegendGold(true);
+      }
       return;
     }
   }, [gameState, handCount, isFTUE, isAnonymous, bigWinFired]);
@@ -2378,13 +2385,17 @@ export default function GameView() {
         hideTierBar
         splitFooter={{ multipliersHost, controlsHost }}
         splitMultiplierRowVisible={isPreRevealFooter && !isFTUE}
-        onViewLeaderboard={() => setShowLeaderboard(true)}
+        onViewLeaderboard={() => { setShowLeaderboard(true); setTrophyPulsing(false); }}
         legendPulsing={legendGold && !isFTUE}
+        trophyPulsing={trophyPulsing && !isFTUE}
         streak={streak}
         onLegendOpened={() => {
           const today = new Date().toISOString().slice(0, 10);
           localStorage.setItem("replaymod_legend_seen_date", today);
           setLegendGold(false);
+        }}
+        onTrophyOpened={() => {
+          setTrophyPulsing(false);
         }}
       />
 

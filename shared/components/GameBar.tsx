@@ -143,10 +143,14 @@ type Props = {
   onViewLeaderboard?: () => void;
   /** Pulse the legend (ⓘ) icon to draw attention — e.g. daily bonus refresh */
   legendPulsing?: boolean;
+  /** Pulse the trophy (🏆) icon to draw attention — e.g. leaderboard qualification */
+  trophyPulsing?: boolean;
   /** Current win streak for fire emoji display under balance */
   streak?: number;
   /** Called when user opens the legend modal — parent can clear pulse state */
   onLegendOpened?: () => void;
+  /** Called when user taps the trophy/leaderboard icon — parent can clear pulse state */
+  onTrophyOpened?: () => void;
 };
 
 const MULTIPLIERS = [1, 3, 5, 10];
@@ -1388,8 +1392,10 @@ export function GameBar({
   splitMultiplierRowVisible = true,
   onViewLeaderboard,
   legendPulsing = false,
+  trophyPulsing = false,
   streak = 0,
   onLegendOpened,
+  onTrophyOpened,
 }: Props) {
   // Trophy button: 36×36 circular, sits absolutely positioned right of the
   // action button row's container. Border + icon flip to gold once the user
@@ -1580,8 +1586,12 @@ export function GameBar({
             />
           </div>
 
-          {/* Streak flash + extinguish keyframes */}
+          {/* Icon blink + Streak flash + extinguish keyframes */}
           <style>{`
+            @keyframes iconBlink {
+              0%, 100% { opacity: 1; transform: scale(1); }
+              50% { opacity: 0.3; transform: scale(0.92); }
+            }
             @keyframes streakFlash {
               0% { transform: scale(1); filter: brightness(1); }
               30% { transform: scale(1.8); filter: brightness(2.5) drop-shadow(0 0 6px rgba(255,160,0,0.9)); }
@@ -1649,19 +1659,21 @@ export function GameBar({
                 color: legendPulsing ? "#070A12" : "rgba(255,255,255,0.5)",
                 fontSize: 12, fontWeight: 900, cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center", padding: 0,
+                animation: legendPulsing ? "iconBlink 1.2s ease-in-out infinite" : "none",
               }}>i</button>
               {onViewLeaderboard && !ftueHideSkip && (
                 <button
                   type="button"
                   aria-label="View leaderboard"
-                  onClick={onViewLeaderboard}
+                  onClick={() => { onViewLeaderboard(); onTrophyOpened?.(); }}
                   style={{
                     width: 32, height: 32, borderRadius: "50%",
-                    background: "transparent",
-                    border: `1px solid ${trophyOnBoard ? "rgba(255,215,0,0.3)" : "rgba(255,255,255,0.1)"}`,
-                    color: trophyOnBoard ? "#FFD700" : "rgba(255,255,255,0.3)",
+                    background: trophyPulsing ? "rgba(255,215,0,0.15)" : "transparent",
+                    border: `1px solid ${trophyPulsing ? "rgba(255,215,0,0.7)" : trophyOnBoard ? "rgba(255,215,0,0.3)" : "rgba(255,255,255,0.1)"}`,
+                    color: trophyPulsing ? "#FFD700" : trophyOnBoard ? "#FFD700" : "rgba(255,255,255,0.3)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     cursor: "pointer", fontSize: 14, padding: 0,
+                    animation: trophyPulsing ? "iconBlink 1.2s ease-in-out infinite" : "none",
                   }}
                 >🏆</button>
               )}
