@@ -1993,6 +1993,7 @@ export default function GameView() {
               overflow: "visible",
               position: "relative",
               zIndex: isFTUE ? 1100 : undefined,
+              pointerEvents: isFTUE ? "none" as const : "auto" as const,
               cursor:
                 (gameState === "WIN_CELEBRATION" ||
                   (gameState === "RESULTS" && winTier && !showRawScore))
