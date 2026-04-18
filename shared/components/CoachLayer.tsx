@@ -501,7 +501,7 @@ export function CoachLayer({
     enqueue({
       key: "hold_roster_intro",
       node: null as any,
-      anchor: "roster-and-commentary",
+      anchor: "roster",
       position: "below",
       pulseCardLabels: true,
       onDismiss: () => {
@@ -568,19 +568,19 @@ export function CoachLayer({
     if (!ftueCommentaryDone) return;
     // Fire immediately — no artificial delay between tier panel landing and commentary.
     {
-      // Show "So close" commentary — spotlight roster + commentary only
+      // Show "So close" commentary — spotlight roster only, commentary visible via z-index
       onCommentaryText?.([cfg?.nearMissText ?? "So close it hurts, 1 FP away from the ALL-STAR level 3x win. Dray was the weaklink tonight, one more rebound or assist would have pushed us over."], true);
       enqueue({
         key: "darnit",
         node: null as any,
-        anchor: "roster-and-commentary",
+        anchor: "roster",
         position: "below",
         onDismiss: () => {
           onCommentaryText?.([cfg?.anchorFlipHintText ?? "Tatum on the other hand wore his super man cape, 92 FP(!) is nothing short of extraordinary. Flip his card to see what happened."], true);
           enqueue({
             key: "results_anchor",
             node: null as any,
-            anchor: "anchor-and-commentary",
+            anchor: { cardId: anchorCardId },
             position: "below",
             onDismiss: () => {
               // Don't clear commentary — let the booker_gamelogs effect replace it
