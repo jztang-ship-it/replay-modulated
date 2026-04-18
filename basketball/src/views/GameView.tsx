@@ -8,7 +8,7 @@
 import { useMemo, useState, useCallback, useRef, useEffect, useLayoutEffect, type ReactNode } from "react";
 import type { GamePhase, PlayerCard } from "../adapters/types";
 import { sportAdapter } from "../adapters/SportAdapter";
-import { dealInitialRoster, redrawRoster, resolveRoster, computeRosterCeiling } from "../adapters/gameAdapter";
+import { dealInitialRoster, redrawRoster, resolveRoster, computeRosterCeiling, getTodaysStars } from "../adapters/gameAdapter";
 import { dealFTUERoster, redrawFTUERoster, resolveFTUERoster } from "../adapters/ftueRoster";
 import { CoachLayer } from "@shared/components/CoachLayer";
 import { useFTUE } from "@shared/hooks/useFTUE";
@@ -584,6 +584,15 @@ export default function GameView() {
     recordHandWon,
     recordHandLost,
     collectTask,
+    recordStreakWin,
+    recordStreakBust,
+    recordBonusPlayerUsed,
+    recordTierReached,
+    recordMultiplierUsed,
+    streakCount,
+    weeklyTaskStates,
+    perpetualTaskStates,
+    recordLeaderboardViewed,
   } = useEngagement();
   const [showCollect, setShowCollect] = useState(false);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
@@ -1019,6 +1028,27 @@ export default function GameView() {
         logHandToDb(rosterRef.current, totalFp, String(tier), payout, streak);
         recordHandPlayed();
         if (!bust) recordHandWon(); else recordHandLost();
+
+        // Tier reached
+        recordTierReached(tier);
+
+        // Streak
+        if (!bust) {
+          recordStreakWin();
+        } else {
+          recordStreakBust();
+        }
+
+        // Bonus players used this hand
+        const bonusCount = rosterRef.current.filter(
+          c => Number((c as any).dailyBonus ?? 0) > 0
+        ).length;
+        if (bonusCount > 0) {
+          recordBonusPlayerUsed(bonusCount);
+        }
+
+        // Multiplier used this hand
+        recordMultiplierUsed(betMultiplier);
         if (isFTUE) {
           // FTUE: same flow as real game — WIN_CELEBRATION triggers wage animation
           ftueLastHandFpRef.current = totalFp;
@@ -2289,14 +2319,28 @@ export default function GameView() {
               }}
             />
             {showCollect && !isFTUE && (
-              <CollectScreen
-                taskStates={taskStates}
-                loginStreak={loginStreak}
-                coins={coins}
-                xp={xp}
-                onClose={() => setShowCollect(false)}
-                onCollect={(id) => { collectTask?.(id); }}
-              />
+              (() => {
+                const bonusPlayers = getTodaysStars();
+                return (
+                  <CollectScreen
+                    taskStates={taskStates}
+                    weeklyTaskStates={weeklyTaskStates}
+                    perpetualTaskStates={perpetualTaskStates}
+                    loginStreak={loginStreak}
+                    coins={coins}
+                    xp={xp}
+                    streakCount={streakCount}
+                    bonusPlayers={bonusPlayers}
+                    onViewLeaderboard={() => {
+                      setShowCollect(false);
+                      setShowLeaderboard(true);
+                    }}
+                    recordLeaderboardViewed={recordLeaderboardViewed}
+                    onClose={() => setShowCollect(false)}
+                    onCollect={(id) => { collectTask?.(id); }}
+                  />
+                );
+              })()
             )}
             {/* Name change prompt — after hand 3 */}
             {showNamePrompt && (
