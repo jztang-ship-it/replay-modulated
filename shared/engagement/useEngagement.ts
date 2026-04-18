@@ -1,27 +1,59 @@
 // src/shared/engagement/useEngagement.ts
 // Central engagement hook — sport-agnostic.
-// Tracks login streak, daily task progress, XP, and coins.
-// Persists to localStorage. Auto-resets daily counters at midnight.
+// Tracks login streak, daily/weekly/lifetime task progress, XP, coins, and win streak.
+// Persists to localStorage. Auto-resets daily counters at midnight, weekly on Monday.
 
 import { useState, useEffect, useCallback } from 'react';
 import { DAILY_TASKS } from './tasks.config';
 import type { TaskId } from './tasks.config';
+import type { WinTierKey } from '@shared/utils/payoutLogic';
 
-// ── Storage keys ──────────────────────────────────────────────────────────────
+// ── Tier ranking (for "highest tier" comparisons) ────────────────────────────
+const TIER_RANK: Record<WinTierKey, number> = {
+  BUST: 0, ROOKIE: 1, STARTER: 2, ALL_STAR: 3, MVP: 4, LEGEND: 5,
+};
+
+function isHigherTier(a: WinTierKey, b: WinTierKey | null): boolean {
+  if (b === null) return true;
+  return TIER_RANK[a] > TIER_RANK[b];
+}
+
+// ── Storage keys ─────────────────────────────────────────────────────────────
 const KEYS = {
-  streak:       'rp_login_streak',
-  lastLogin:    'rp_last_login_date',
-  taskProgress: 'rp_task_progress',
-  tasksDone:    'rp_tasks_done',
-  coins:        'rp_coins',
-  xp:           'rp_xp',
+  streak:        'rp_login_streak',
+  lastLogin:     'rp_last_login_date',
+  taskProgress:  'rp_task_progress',
+  tasksDone:     'rp_tasks_done',
+  coins:         'rp_coins',
+  xp:            'rp_xp',
+  streakCount:   'rp_streak_count',
+  lastWeek:      'rp_last_week',
+  weekProgress:  'rp_week_progress',
+  lifeProgress:  'rp_life_progress',
 } as const;
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Types ────────────────────────────────────────────────────────────────────
 export interface TaskProgress {
-  handsPlayed: number;
-  handsWon:    number;
-  loggedIn:    boolean;
+  // daily (reset at midnight)
+  handsPlayed:            number;
+  handsWon:               number;
+  loggedIn:               boolean;
+  bonusPlayersUsedToday:  number;
+  topTierToday:           WinTierKey | null;
+  multipliersUsedToday:   number[];
+  leaderboardViewedToday: boolean;
+
+  // weekly (reset Monday midnight) — stored separately but part of the model
+  handsPlayedWeek:        number;
+  handsWonWeek:           number;
+  multipliersUsedWeek:    number[];
+  bonusPlayersUsedWeek:   number;
+  topTierWeek:            WinTierKey | null;
+
+  // lifetime (never resets) — stored separately but part of the model
+  handsPlayedLifetime:    number;
+  handsWonLifetime:       number;
+  topTierLifetime:        WinTierKey | null;
 }
 
 export interface TaskState {
@@ -45,19 +77,48 @@ export interface EngagementState {
   hotStreak:      boolean;
   sessionWins:    number;
   dailyTasksDone: number;
+  streakCount:    number;
+  taskProgressWeek: {
+    handsPlayedWeek:      number;
+    handsWonWeek:         number;
+    multipliersUsedWeek:  number[];
+    bonusPlayersUsedWeek: number;
+    topTierWeek:          WinTierKey | null;
+  };
+  taskProgressLifetime: {
+    handsPlayedLifetime:  number;
+    handsWonLifetime:     number;
+    topTierLifetime:      WinTierKey | null;
+  };
 }
 
 export interface EngagementActions {
-  recordHandPlayed: () => void;
-  recordHandWon:    () => void;
-  recordHandLost:   () => void;
-  awardCoins:       (amount: number) => void;
-  awardXP:          (amount: number) => void;
-  collectTask:      (taskId: string) => void;
+  recordHandPlayed:        () => void;
+  recordHandWon:           () => void;
+  recordHandLost:          () => void;
+  awardCoins:              (amount: number) => void;
+  awardXP:                 (amount: number) => void;
+  collectTask:             (taskId: string) => void;
+  recordStreakWin:          () => void;
+  recordStreakBust:         () => void;
+  recordBonusPlayerUsed:   (count: number) => void;
+  recordTierReached:       (tier: WinTierKey) => void;
+  recordMultiplierUsed:    (mult: number) => void;
+  recordLeaderboardViewed: () => void;
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────────────
 const todayStr = () => new Date().toISOString().slice(0, 10);
+
+/** ISO week key like "2026-W16" (Monday start). */
+function currentWeekKey(): string {
+  const d = new Date();
+  const jan4 = new Date(d.getFullYear(), 0, 4);
+  const dayOfYear = Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 1).getTime()) / 86400000) + 1;
+  const dayOfWeek = d.getDay() || 7; // Mon=1 .. Sun=7
+  const weekNum = Math.ceil((dayOfYear - dayOfWeek + 10) / 7);
+  return `${d.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+}
 
 function loadJSON<T>(key: string, fallback: T): T {
   try {
@@ -72,7 +133,47 @@ function save(key: string, value: unknown) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-// ── Hook ──────────────────────────────────────────────────────────────────────
+// ── Default progress values ──────────────────────────────────────────────────
+const FRESH_DAILY: Pick<TaskProgress,
+  'handsPlayed' | 'handsWon' | 'loggedIn' |
+  'bonusPlayersUsedToday' | 'topTierToday' | 'multipliersUsedToday' | 'leaderboardViewedToday'
+> = {
+  handsPlayed: 0,
+  handsWon: 0,
+  loggedIn: true,
+  bonusPlayersUsedToday: 0,
+  topTierToday: null,
+  multipliersUsedToday: [],
+  leaderboardViewedToday: false,
+};
+
+const FRESH_WEEKLY: Pick<TaskProgress,
+  'handsPlayedWeek' | 'handsWonWeek' | 'multipliersUsedWeek' | 'bonusPlayersUsedWeek' | 'topTierWeek'
+> = {
+  handsPlayedWeek: 0,
+  handsWonWeek: 0,
+  multipliersUsedWeek: [],
+  bonusPlayersUsedWeek: 0,
+  topTierWeek: null,
+};
+
+const FRESH_LIFETIME: Pick<TaskProgress,
+  'handsPlayedLifetime' | 'handsWonLifetime' | 'topTierLifetime'
+> = {
+  handsPlayedLifetime: 0,
+  handsWonLifetime: 0,
+  topTierLifetime: null,
+};
+
+function buildFullProgress(
+  daily: typeof FRESH_DAILY,
+  weekly: typeof FRESH_WEEKLY,
+  lifetime: typeof FRESH_LIFETIME,
+): TaskProgress {
+  return { ...daily, ...weekly, ...lifetime };
+}
+
+// ── Hook ─────────────────────────────────────────────────────────────────────
 export function useEngagement(): EngagementState & EngagementActions {
   const todayKey = todayStr();
 
@@ -80,9 +181,26 @@ export function useEngagement(): EngagementState & EngagementActions {
     loadJSON(KEYS.streak, 0)
   );
 
-  const [taskProgress, setTaskProgress] = useState<TaskProgress>(() =>
-    loadJSON(KEYS.taskProgress, { handsPlayed: 0, handsWon: 0, loggedIn: false })
+  // streakCount — persisted, never resets at midnight. Only resets on bust.
+  const [streakCount, setStreakCount] = useState<number>(() =>
+    loadJSON(KEYS.streakCount, 0)
   );
+
+  // Load daily, weekly, lifetime progress from separate storage keys
+  const [dailyProgress, setDailyProgress] = useState<typeof FRESH_DAILY>(() =>
+    loadJSON(KEYS.taskProgress, { ...FRESH_DAILY, loggedIn: false })
+  );
+
+  const [weeklyProgress, setWeeklyProgress] = useState<typeof FRESH_WEEKLY>(() =>
+    loadJSON(KEYS.weekProgress, { ...FRESH_WEEKLY })
+  );
+
+  const [lifetimeProgress, setLifetimeProgress] = useState<typeof FRESH_LIFETIME>(() =>
+    loadJSON(KEYS.lifeProgress, { ...FRESH_LIFETIME })
+  );
+
+  // Composite TaskProgress for task evaluation
+  const taskProgress: TaskProgress = buildFullProgress(dailyProgress, weeklyProgress, lifetimeProgress);
 
   const [tasksDone, setTasksDone] = useState<Set<TaskId>>(() => {
     const arr = loadJSON<TaskId[]>(KEYS.tasksDone, []);
@@ -101,8 +219,7 @@ export function useEngagement(): EngagementState & EngagementActions {
   });
 
   // Session-only
-  const [sessionWins, setSessionWins]        = useState(0);
-  const [sessionConsecutive, setConsecutive] = useState(0);
+  const [sessionWins, setSessionWins] = useState(0);
 
   // ── Daily reset ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -110,9 +227,9 @@ export function useEngagement(): EngagementState & EngagementActions {
     const today     = todayStr();
 
     if (lastLogin !== today) {
-      const freshProgress: TaskProgress = { handsPlayed: 0, handsWon: 0, loggedIn: true };
-      setTaskProgress(freshProgress);
-      save(KEYS.taskProgress, freshProgress);
+      const fresh = { ...FRESH_DAILY };
+      setDailyProgress(fresh);
+      save(KEYS.taskProgress, fresh);
       setTasksDone(new Set());
       save(KEYS.tasksDone, []);
       setTasksCollected(new Set());
@@ -126,16 +243,29 @@ export function useEngagement(): EngagementState & EngagementActions {
       save(KEYS.streak, newStreak);
       localStorage.setItem(KEYS.lastLogin, today);
     } else {
-      if (!taskProgress.loggedIn) {
-        const updated = { ...taskProgress, loggedIn: true };
-        setTaskProgress(updated);
+      if (!dailyProgress.loggedIn) {
+        const updated = { ...dailyProgress, loggedIn: true };
+        setDailyProgress(updated);
         save(KEYS.taskProgress, updated);
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Task evaluation ───────────────────────────────────────────────────────
+  // ── Weekly reset ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    const storedWeek = localStorage.getItem(KEYS.lastWeek) ?? '';
+    const thisWeek = currentWeekKey();
+    if (storedWeek !== thisWeek) {
+      const fresh = { ...FRESH_WEEKLY };
+      setWeeklyProgress(fresh);
+      save(KEYS.weekProgress, fresh);
+      localStorage.setItem(KEYS.lastWeek, thisWeek);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Task evaluation (daily only — weekly/perpetual in Prompt 3) ───────────
   useEffect(() => {
     let coinsEarned = 0;
     let xpEarned    = 0;
@@ -145,9 +275,9 @@ export function useEngagement(): EngagementState & EngagementActions {
     for (const task of DAILY_TASKS) {
       if (newlyDone.has(task.id)) continue;
       let met = false;
-      if (task.id === 'daily_login')        met = taskProgress.loggedIn;
-      if (task.id === 'daily_play_5_hands') met = taskProgress.handsPlayed >= task.target;
-      if (task.id === 'daily_win_2_hands')  met = taskProgress.handsWon    >= task.target;
+      if (task.id === 'daily_login')        met = dailyProgress.loggedIn;
+      if (task.id === 'daily_play_5_hands') met = dailyProgress.handsPlayed >= task.target;
+      if (task.id === 'daily_win_2_hands')  met = dailyProgress.handsWon    >= task.target;
       if (met) {
         newlyDone.add(task.id);
         coinsEarned += task.rewardCoins;
@@ -164,29 +294,48 @@ export function useEngagement(): EngagementState & EngagementActions {
         setXP(prev    => { const n = prev + xpEarned;    save(KEYS.xp, n);    return n; });
       }
     }
-  }, [taskProgress, tasksDone]);
+  }, [dailyProgress, tasksDone]);
 
-  // ── Actions ───────────────────────────────────────────────────────────────
+  // ── Existing actions (signatures unchanged) ───────────────────────────────
   const recordHandPlayed = useCallback(() => {
-    setTaskProgress(prev => {
+    setDailyProgress(prev => {
       const updated = { ...prev, handsPlayed: prev.handsPlayed + 1 };
       save(KEYS.taskProgress, updated);
+      return updated;
+    });
+    setWeeklyProgress(prev => {
+      const updated = { ...prev, handsPlayedWeek: prev.handsPlayedWeek + 1 };
+      save(KEYS.weekProgress, updated);
+      return updated;
+    });
+    setLifetimeProgress(prev => {
+      const updated = { ...prev, handsPlayedLifetime: prev.handsPlayedLifetime + 1 };
+      save(KEYS.lifeProgress, updated);
       return updated;
     });
   }, []);
 
   const recordHandWon = useCallback(() => {
     setSessionWins(w => w + 1);
-    setConsecutive(c => c + 1);
-    setTaskProgress(prev => {
+    setDailyProgress(prev => {
       const updated = { ...prev, handsWon: prev.handsWon + 1 };
       save(KEYS.taskProgress, updated);
+      return updated;
+    });
+    setWeeklyProgress(prev => {
+      const updated = { ...prev, handsWonWeek: prev.handsWonWeek + 1 };
+      save(KEYS.weekProgress, updated);
+      return updated;
+    });
+    setLifetimeProgress(prev => {
+      const updated = { ...prev, handsWonLifetime: prev.handsWonLifetime + 1 };
+      save(KEYS.lifeProgress, updated);
       return updated;
     });
   }, []);
 
   const recordHandLost = useCallback(() => {
-    setConsecutive(0);
+    // no-op for engagement — streak bust handled by recordStreakBust
   }, []);
 
   const awardCoins = useCallback((amount: number) => {
@@ -211,12 +360,86 @@ export function useEngagement(): EngagementState & EngagementActions {
     }
   }, [tasksCollected, todayKey]);
 
+  // ── New actions ───────────────────────────────────────────────────────────
+
+  const recordStreakWin = useCallback(() => {
+    setStreakCount(prev => {
+      const n = prev + 1;
+      save(KEYS.streakCount, n);
+      return n;
+    });
+  }, []);
+
+  const recordStreakBust = useCallback(() => {
+    setStreakCount(0);
+    save(KEYS.streakCount, 0);
+  }, []);
+
+  const recordBonusPlayerUsed = useCallback((count: number) => {
+    setDailyProgress(prev => {
+      const updated = { ...prev, bonusPlayersUsedToday: prev.bonusPlayersUsedToday + count };
+      save(KEYS.taskProgress, updated);
+      return updated;
+    });
+    setWeeklyProgress(prev => {
+      const updated = { ...prev, bonusPlayersUsedWeek: prev.bonusPlayersUsedWeek + count };
+      save(KEYS.weekProgress, updated);
+      return updated;
+    });
+  }, []);
+
+  const recordTierReached = useCallback((tier: WinTierKey) => {
+    setDailyProgress(prev => {
+      if (!isHigherTier(tier, prev.topTierToday)) return prev;
+      const updated = { ...prev, topTierToday: tier };
+      save(KEYS.taskProgress, updated);
+      return updated;
+    });
+    setWeeklyProgress(prev => {
+      if (!isHigherTier(tier, prev.topTierWeek)) return prev;
+      const updated = { ...prev, topTierWeek: tier };
+      save(KEYS.weekProgress, updated);
+      return updated;
+    });
+    setLifetimeProgress(prev => {
+      if (!isHigherTier(tier, prev.topTierLifetime)) return prev;
+      const updated = { ...prev, topTierLifetime: tier };
+      save(KEYS.lifeProgress, updated);
+      return updated;
+    });
+  }, []);
+
+  const recordMultiplierUsed = useCallback((mult: number) => {
+    setDailyProgress(prev => {
+      if (prev.multipliersUsedToday.includes(mult)) return prev;
+      const updated = { ...prev, multipliersUsedToday: [...prev.multipliersUsedToday, mult] };
+      save(KEYS.taskProgress, updated);
+      return updated;
+    });
+    setWeeklyProgress(prev => {
+      if (prev.multipliersUsedWeek.includes(mult)) return prev;
+      const updated = { ...prev, multipliersUsedWeek: [...prev.multipliersUsedWeek, mult] };
+      save(KEYS.weekProgress, updated);
+      return updated;
+    });
+  }, []);
+
+  const recordLeaderboardViewed = useCallback(() => {
+    setDailyProgress(prev => {
+      if (prev.leaderboardViewedToday) return prev;
+      const updated = { ...prev, leaderboardViewedToday: true };
+      save(KEYS.taskProgress, updated);
+      return updated;
+    });
+    localStorage.setItem('rp_leaderboard_ever', '1');
+  }, []);
+
   // ── Derived ───────────────────────────────────────────────────────────────
   const taskStates: TaskState[] = DAILY_TASKS.map(task => {
     let progress = 0;
-    if (task.id === 'daily_login')        progress = taskProgress.loggedIn ? 1 : 0;
-    if (task.id === 'daily_play_5_hands') progress = taskProgress.handsPlayed;
-    if (task.id === 'daily_win_2_hands')  progress = taskProgress.handsWon;
+    if (task.id === 'daily_login')        progress = dailyProgress.loggedIn ? 1 : 0;
+    if (task.id === 'daily_play_5_hands') progress = dailyProgress.handsPlayed;
+    if (task.id === 'daily_win_2_hands')  progress = dailyProgress.handsWon;
 
     return {
       id:          task.id,
@@ -237,14 +460,33 @@ export function useEngagement(): EngagementState & EngagementActions {
     taskStates,
     coins,
     xp,
-    hotStreak:      sessionConsecutive >= 3,
+    hotStreak:      streakCount >= 3,
     sessionWins,
     dailyTasksDone: tasksDone.size,
+    streakCount,
+    taskProgressWeek: {
+      handsPlayedWeek:      weeklyProgress.handsPlayedWeek,
+      handsWonWeek:         weeklyProgress.handsWonWeek,
+      multipliersUsedWeek:  weeklyProgress.multipliersUsedWeek,
+      bonusPlayersUsedWeek: weeklyProgress.bonusPlayersUsedWeek,
+      topTierWeek:          weeklyProgress.topTierWeek,
+    },
+    taskProgressLifetime: {
+      handsPlayedLifetime:  lifetimeProgress.handsPlayedLifetime,
+      handsWonLifetime:     lifetimeProgress.handsWonLifetime,
+      topTierLifetime:      lifetimeProgress.topTierLifetime,
+    },
     recordHandPlayed,
     recordHandWon,
     recordHandLost,
     awardCoins,
     awardXP,
     collectTask,
+    recordStreakWin,
+    recordStreakBust,
+    recordBonusPlayerUsed,
+    recordTierReached,
+    recordMultiplierUsed,
+    recordLeaderboardViewed,
   };
 }
