@@ -711,7 +711,7 @@ export function TierGauge({
       </div>
 
       {/* Row 3: Commentary — locked height, maximized */}
-      <div style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: 62, textAlign: "left", overflow: "hidden", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
+      <div data-ftue-anchor="commentary" style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: 62, textAlign: "left", overflow: "hidden", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
         {commentaryOverride && commentaryOverride.parts.length > 0 ? (() => {
           const part = commentaryOverride.parts[overridePart];
           const isString = typeof part === "string";

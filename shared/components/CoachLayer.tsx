@@ -11,6 +11,7 @@ export type BubbleAnchor =
   | "score-row"
   | "anchor-and-gauge"
   | "anchor-gauge-balance"
+  | "anchor-and-commentary"
   | "booker-and-gauge"       // legacy alias
   | "booker-gauge-balance"   // legacy alias
   | "ftue-darnit-focus"
@@ -196,6 +197,19 @@ function unionAnchorGaugeBalanceRect(anchorId: string): DOMRect | null {
   return { top, bottom, left, right, width: right - left, height: bottom - top, x: left, y: top, toJSON: () => ({}) } as DOMRect;
 }
 
+/** Anchor card + commentary area only — no info row, no gauge bar */
+function unionAnchorAndCommentaryRect(anchorId: string): DOMRect | null {
+  const cardEl = document.querySelector(`[data-ftue-card="${anchorId}"]`);
+  const commentaryEl = document.querySelector('[data-ftue-anchor="commentary"]');
+  if (!cardEl) return null;
+  const rects = [cardEl, commentaryEl].filter(Boolean).map(el => el!.getBoundingClientRect());
+  const top = Math.min(...rects.map(r => r.top));
+  const bottom = Math.max(...rects.map(r => r.bottom));
+  const left = Math.min(...rects.map(r => r.left));
+  const right = Math.max(...rects.map(r => r.right));
+  return { top, bottom, left, right, width: right - left, height: bottom - top, x: left, y: top, toJSON: () => ({}) } as DOMRect;
+}
+
 function resolveAnchorElement(anchor: BubbleAnchor | undefined, anchorCardId: string): HTMLElement | null {
   if (!anchor || anchor === "center") return null;
   if (typeof anchor === "object") {
@@ -357,6 +371,11 @@ export function CoachLayer({
       }
       if (snapshot.anchor === "booker-gauge-balance" || snapshot.anchor === "anchor-gauge-balance") {
         const rect = unionAnchorGaugeBalanceRect(anchorCardId);
+        applyRect(rect);
+        return;
+      }
+      if (snapshot.anchor === "anchor-and-commentary") {
+        const rect = unionAnchorAndCommentaryRect(anchorCardId);
         applyRect(rect);
         return;
       }
@@ -542,7 +561,7 @@ export function CoachLayer({
           enqueue({
             key: "results_anchor",
             node: null as any,
-            anchor: "anchor-gauge-balance",
+            anchor: "anchor-and-commentary",
             position: "below",
             onDismiss: () => {
               // Don't clear commentary — let the booker_gamelogs effect replace it
@@ -569,7 +588,7 @@ export function CoachLayer({
       enqueue({
         key: "anchor_gamelogs",
         node: null as any,
-        anchor: "anchor-gauge-balance",
+        anchor: "anchor-and-commentary",
         position: "below",
         onDismiss: () => {
           // Part 2: Screen lights up — no spotlight, final text in commentary
