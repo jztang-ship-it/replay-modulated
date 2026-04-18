@@ -71,14 +71,16 @@ export interface TaskState {
 }
 
 export interface EngagementState {
-  loginStreak:    number;
-  taskStates:     TaskState[];
-  coins:          number;
-  xp:             number;
-  hotStreak:      boolean;
-  sessionWins:    number;
-  dailyTasksDone: number;
-  streakCount:    number;
+  loginStreak:         number;
+  taskStates:          TaskState[];
+  weeklyTaskStates:    TaskState[];
+  perpetualTaskStates: TaskState[];
+  coins:               number;
+  xp:                  number;
+  hotStreak:           boolean;
+  sessionWins:         number;
+  dailyTasksDone:      number;
+  streakCount:         number;
   taskProgressWeek: {
     handsPlayedWeek:      number;
     handsWonWeek:         number;
@@ -532,22 +534,29 @@ export function useEngagement(): EngagementState & EngagementActions {
     }
   };
 
-  const taskStates: TaskState[] = TASKS.map(task => ({
-    id:          task.id,
-    label:       task.label,
-    icon:        task.icon,
-    progress:    getTaskProgress(task.id),
-    target:      task.target,
-    completed:   tasksDone.has(task.id),
-    collected:   tasksCollected.has(task.id),
-    reward:      task.rewardCoins,
-    rewardCoins: task.rewardCoins,
-    rewardXP:    0,
-  }));
+  const mapTasks = (list: typeof TASKS): TaskState[] =>
+    list.map(task => ({
+      id:          task.id,
+      label:       task.label,
+      icon:        task.icon,
+      progress:    getTaskProgress(task.id),
+      target:      task.target,
+      completed:   tasksDone.has(task.id),
+      collected:   tasksCollected.has(task.id),
+      reward:      task.rewardCoins,
+      rewardCoins: task.rewardCoins,
+      rewardXP:    0,
+    }));
+
+  const taskStates:          TaskState[] = mapTasks(DAILY_TASKS);
+  const weeklyTaskStates:    TaskState[] = mapTasks(WEEKLY_TASKS);
+  const perpetualTaskStates: TaskState[] = mapTasks(PERPETUAL_TASKS);
 
   return {
     loginStreak,
     taskStates,
+    weeklyTaskStates,
+    perpetualTaskStates,
     coins,
     xp,
     hotStreak:      streakCount >= 3,
