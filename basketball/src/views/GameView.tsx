@@ -2093,7 +2093,8 @@ export default function GameView() {
               flexDirection: "column",
               justifyContent: "flex-start",
               overflow: "visible",
-              /* z-index handled by commentary div inside TierGauge, not the wrapper */
+              zIndex: isFTUE ? 1100 : undefined,
+              pointerEvents: isFTUE ? "none" as const : "auto" as const,
             }}
           >
             <TierGauge
