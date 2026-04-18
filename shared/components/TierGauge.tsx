@@ -671,13 +671,15 @@ export function TierGauge({
 
   return (
     <div style={{
-      position: "relative",
-      padding: "2px 0 0",
+      display: "grid",
+      gridTemplateRows: "14px 24px 40px",
+      gap: 4,
       boxSizing: "border-box",
+      width: "100%",
     }}>
 
-      {/* Bar — pinned at top, never moves */}
-      <div style={{ position: "relative", height: 14, minHeight: 14, background: "#ffffff0d", borderRadius: 999, overflow: "hidden", zIndex: 2, opacity: hideBar ? 0 : 1, transition: "opacity 0.2s ease" }}>
+      {/* Row 1: Bar — locked height */}
+      <div style={{ position: "relative", height: 14, background: "#ffffff0d", borderRadius: 999, overflow: "hidden", zIndex: 2, opacity: hideBar ? 0 : 1, transition: "opacity 0.2s ease" }}>
         <div style={{
           position: "absolute", left: 0, top: 0, height: "100%", borderRadius: 999,
           width: `${barFill * 100}%`,
@@ -687,29 +689,29 @@ export function TierGauge({
         }} />
       </div>
 
-      {/* Info row — fixed height, swaps between gap callout and belowBarSlot content */}
-      <div style={{ height: 22, display: "flex", alignItems: "center", marginTop: 3, overflow: "hidden" }}>
+      {/* Row 2: Info row — swaps between gap callout and belowBarSlot */}
+      <div style={{ height: 24, display: "flex", alignItems: "center", overflow: "hidden" }}>
         {belowBarSlot ? belowBarSlot : isMaxLevel ? (
           <span style={{ fontSize: 13, fontWeight: 800, color: TIER_CFG.LEGEND.color, fontFamily: FF, letterSpacing: "0.06em", textTransform: "uppercase", textAlign: "center", display: "block", width: "100%" }}>
             ✓ {TIER_CFG.LEGEND.label}
           </span>
         ) : (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%" }}>
-            <span style={{ fontSize: 18, fontWeight: 800, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px" }}>
+            <span style={{ fontSize: 16, fontWeight: 800, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px" }}>
               {gap.toFixed(1)}
             </span>
-            <span style={{ fontSize: 12, color: "#888", fontFamily: FF, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+            <span style={{ fontSize: 11, color: "#888", fontFamily: FF, letterSpacing: "0.08em", textTransform: "uppercase" }}>
               {" "}FP TO{" "}
             </span>
-            <span style={{ fontSize: 12, fontWeight: 800, color: targetCfg.color, fontFamily: FF, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+            <span style={{ fontSize: 11, fontWeight: 800, color: targetCfg.color, fontFamily: FF, letterSpacing: "0.08em", textTransform: "uppercase" }}>
               {targetCfg.label}
             </span>
           </div>
         )}
       </div>
 
-      {/* Commentary area — fixed height, pinned, never pushes anything */}
-      <div style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: 46, marginTop: 2, textAlign: "left", overflow: "hidden", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
+      {/* Row 3: Commentary — locked height */}
+      <div style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: 40, textAlign: "left", overflow: "hidden", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
         {commentaryOverride && commentaryOverride.parts.length > 0 ? (() => {
           const part = commentaryOverride.parts[overridePart];
           const isString = typeof part === "string";

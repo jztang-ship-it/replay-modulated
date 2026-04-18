@@ -1956,17 +1956,19 @@ export default function GameView() {
           </div>
         </div>
 
-        {/* ── Bottom landscape: 4 mini-zones, flex proportional, never overflow ── */}
+        {/* ── Bottom landscape: CSS Grid, fixed row heights, nothing moves ── */}
+        {/* Rows: stats(30) + gap(6) + bar(14) + gap(6) + info(24) + gap(4) + commentary(40) + gap(4) + multipliers(36) + gap(4) + action(auto) */}
         <div style={{
           flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          minHeight: 0,
-          overflow: "hidden",
+          display: "grid",
+          gridTemplateRows: "30px 6px 14px 6px 24px 4px 40px 4px 36px 4px 1fr",
+          padding: "0 12px",
           boxSizing: "border-box",
+          overflow: "hidden",
+          minHeight: 0,
         }}>
 
-          {/* MINI-ZONE 1 — Team FP+Budget OR tier panel (flex 3) */}
+          {/* ROW 1 — Stats row: Team FP+Budget OR tier label (30px) */}
           <div
             {...(isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")
               ? { "data-ftue-anchor": "ftue-darnit-focus" }
@@ -1984,15 +1986,11 @@ export default function GameView() {
               if (gameState === "RESULTS" && winTier && !showRawScore) setShowRawScore(true);
             }}
             style={{
-              flex: 3,
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              padding: "0 10px",
-              boxSizing: "border-box",
               overflow: "visible",
               position: "relative",
-              minHeight: 0,
               cursor:
                 (gameState === "WIN_CELEBRATION" ||
                   (gameState === "RESULTS" && winTier && !showRawScore))
@@ -2001,7 +1999,7 @@ export default function GameView() {
             }}
           >
             {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (
-              <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%" }}>
+              <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%", height: "100%" }}>
                 {tierResultPhase === 1 && (
                   <>
                     <div
@@ -2018,7 +2016,7 @@ export default function GameView() {
                       src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
                       alt={formatTierLabel(winTier)}
                       style={{
-                        maxHeight: "100%", maxWidth: "100%", objectFit: "contain",
+                        maxHeight: 80, maxWidth: "100%", objectFit: "contain",
                         filter: `drop-shadow(0 0 24px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`,
                         animation: "tierSlam 900ms cubic-bezier(0.22, 1, 0.36, 1)",
                       }}
@@ -2031,7 +2029,7 @@ export default function GameView() {
                     src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
                     alt={formatTierLabel(winTier)}
                     style={{
-                      maxHeight: "100%", maxWidth: "100%", objectFit: "contain",
+                      maxHeight: 80, maxWidth: "100%", objectFit: "contain",
                       filter: `drop-shadow(0 0 12px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`,
                       animation: "tierShrinkDown 500ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
                     }}
@@ -2053,23 +2051,23 @@ export default function GameView() {
                   return (
                     <>
                       <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: 24, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic" }}>
+                        <div style={{ fontSize: 20, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic" }}>
                           <RollingNumber value={totalFp} decimals={1} duration={300} />
                         </div>
-                        <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
+                        <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 1 }}>
                           Team FP
                         </div>
                       </div>
                       <div style={{ textAlign: "center" }}>
                         <div style={{ display: "flex", alignItems: "baseline", gap: 2, justifyContent: "center" }}>
-                          <span style={{ fontSize: 24, fontWeight: 900, color: overBudget ? "#ef4444" : "#FFFFFF", lineHeight: 1, fontStyle: "italic" }}>
+                          <span style={{ fontSize: 20, fontWeight: 900, color: overBudget ? "#ef4444" : "#FFFFFF", lineHeight: 1, fontStyle: "italic" }}>
                             <RollingNumber value={remaining} decimals={0} duration={300} />
                           </span>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.35)", lineHeight: 1, fontStyle: "italic" }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)", lineHeight: 1, fontStyle: "italic" }}>
                             /{CAP_MAX}
                           </span>
                         </div>
-                        <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
+                        <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 1 }}>
                           Budget
                         </div>
                       </div>
@@ -2080,18 +2078,17 @@ export default function GameView() {
             )}
           </div>
 
-          {/* MINI-ZONE 2+3 — Tier bar + info row + commentary (flex 4) */}
+          {/* GAP */}<div />
+
+          {/* ROW 3 — Tier bar + ROW 5 info + ROW 7 commentary (spans rows 3-7 via TierGauge) */}
           <div
             data-ftue-anchor="tier-gauge"
             style={{
-              flex: 4,
+              gridRow: "3 / 8",
               display: "flex",
               flexDirection: "column",
-              justifyContent: "center",
-              padding: "0 12px",
-              boxSizing: "border-box",
-              overflow: "hidden",
-              minHeight: 0,
+              justifyContent: "flex-start",
+              overflow: "visible",
               zIndex: (isFTUE && ftueCommentaryOverride) ? 1100 : undefined,
             }}
           >
@@ -2137,7 +2134,7 @@ export default function GameView() {
                   }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
                       <span style={{
-                        fontSize: 15, fontWeight: 900, lineHeight: 1,
+                        fontSize: 14, fontWeight: 900, lineHeight: 1,
                         color: winTier === "BUST" ? "#FF3B30" : "#22C55E",
                         fontVariantNumeric: "tabular-nums",
                       }}>
@@ -2152,7 +2149,7 @@ export default function GameView() {
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
                       <span style={{
-                        fontSize: 15, fontWeight: 900, lineHeight: 1, color: "#FFFFFF",
+                        fontSize: 14, fontWeight: 900, lineHeight: 1, color: "#FFFFFF",
                         fontVariantNumeric: "tabular-nums", fontStyle: "italic",
                       }}>
                         {displayFp.toFixed(1)} FP
@@ -2170,24 +2167,30 @@ export default function GameView() {
                 ) : undefined
               }
             />
-            {/* Multiplier host — only during HOLD */}
-            <div
-              ref={(el) => setMultipliersHost(el)}
-              style={{
-                display: isPreRevealFooter ? "flex" : "none",
-                alignItems: "center",
-                justifyContent: "center",
-                boxSizing: "border-box",
-                pointerEvents: "auto",
-                padding: "2px 0",
-              }}
-            />
           </div>
 
-          {/* MINI-ZONE 4 — Streak + wallet + action button (flex 3) */}
+          {/* GAP */}<div style={{ gridRow: "8" }} />
+
+          {/* ROW 9 — Multiplier host (36px, visibility toggled) */}
+          <div
+            ref={(el) => setMultipliersHost(el)}
+            style={{
+              gridRow: "9",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxSizing: "border-box",
+              pointerEvents: "auto",
+              visibility: isPreRevealFooter ? "visible" : "hidden",
+            }}
+          />
+
+          {/* GAP */}<div style={{ gridRow: "10" }} />
+
+          {/* ROW 11 — Action row (1fr, takes remaining space) */}
           <div
             style={{
-              flex: 3,
+              gridRow: "11",
               display: "flex",
               flexDirection: "column",
               justifyContent: "flex-end",
@@ -2204,7 +2207,7 @@ export default function GameView() {
                 flexDirection: "column",
                 justifyContent: "flex-end",
                 minHeight: 0,
-                padding: "0 10px max(env(safe-area-inset-bottom, 0px) + 8px, 16px)",
+                paddingBottom: "max(env(safe-area-inset-bottom, 0px), 8px)",
                 boxSizing: "border-box",
                 overflow: "hidden",
               }}
