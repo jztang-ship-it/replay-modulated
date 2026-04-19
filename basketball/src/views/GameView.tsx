@@ -2001,11 +2001,11 @@ export default function GameView() {
         </div>
 
         {/* ── Bottom landscape: CSS Grid, all rows fixed pixel, nothing moves ── */}
-        {/* stats(84) gap(4) bar(14) gap(4) info(0) gap(4) commentary(50) gap(2) action(50) = 212px total */}
+        {/* stats(56) gap(4) bar(14) gap(4) info(0) gap(4) commentary(78) gap(2) action(50) = 212px total */}
         <div style={{
           flex: "0 0 auto",
           display: "grid",
-          gridTemplateRows: "84px 4px 14px 4px 0px 4px 50px 2px 50px",
+          gridTemplateRows: "56px 4px 14px 4px 0px 4px 78px 2px 50px",
           gridTemplateColumns: "1fr",
           padding: "0 12px",
           boxSizing: "border-box",
@@ -2083,27 +2083,27 @@ export default function GameView() {
                         src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
                         alt={formatTierLabel(winTier)}
                         style={{
-                          maxHeight: 28, maxWidth: "100%", objectFit: "contain",
+                          maxHeight: 52, maxWidth: "100%", objectFit: "contain",
                           filter: `${TIER_IMAGE_HUE[winTier] ?? ""} drop-shadow(0 0 12px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`.trim(),
                           animation: "tierShrinkDown 500ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
                         }}
                       />
                       <div style={{ animation: "tierInfoFadeIn 300ms ease 500ms both", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, marginTop: 4, width: "100%" }}>
                         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 20 }}>
-                          <span style={{ fontSize: 22, fontWeight: 700, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                          <span style={{ fontSize: 15, fontWeight: 700, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
                             {displayFp.toFixed(1)} FP
                           </span>
                           {ceilingPct != null && (
-                            <span style={{ fontSize: 22, fontWeight: 400, color: "rgba(255,255,255,0.45)", fontFamily: FF, lineHeight: 1 }}>
+                            <span style={{ fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.45)", fontFamily: FF, lineHeight: 1 }}>
                               {ceilingPct}% ceiling
                             </span>
                           )}
                         </div>
                         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 20 }}>
-                          <span style={{ fontSize: 22, fontWeight: 700, color: netColor, fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                          <span style={{ fontSize: 15, fontWeight: 700, color: netColor, fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
                             {netLabel}
                           </span>
-                          <span style={{ fontSize: 22, fontWeight: 400, color: "rgba(255,255,255,0.45)", fontFamily: FF, lineHeight: 1 }}>
+                          <span style={{ fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.45)", fontFamily: FF, lineHeight: 1 }}>
                             {BASE_BET} × {betMultiplier}x
                           </span>
                         </div>
@@ -2193,7 +2193,7 @@ export default function GameView() {
               ftueTypewriter={isFTUE}
               stickyLastOverride={isFTUE && ftueReplayReady}
               commentaryOverride={(showCollect || showLeaderboard) ? null : ftueCommentaryOverride}
-              hideBar={isFTUE && gameState === "REVEALING" && ftueCardsBlocked}
+              hideBar={!(gameState === "RESULTS" || gameState === "WIN_CELEBRATION")}
               onCommentaryOverrideDone={() => {
                 setFtueCommentaryOverride(null);
                 coachDismissRef.current?.();

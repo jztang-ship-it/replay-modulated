@@ -681,14 +681,14 @@ export function TierGauge({
   return (
     <div style={{
       display: "grid",
-      gridTemplateRows: "14px 50px",
+      gridTemplateRows: "14px 78px",
       gap: 4,
       boxSizing: "border-box",
       width: "100%",
     }}>
 
       {/* Row 1: Bar — locked height */}
-      <div style={{ position: "relative", height: 14, background: "#ffffff0d", borderRadius: 999, overflow: "hidden", zIndex: 2, opacity: hideBar ? 0 : 1, transition: "opacity 0.2s ease" }}>
+      <div style={{ position: "relative", height: 14, background: "#ffffff0d", borderRadius: 999, overflow: "hidden", zIndex: 2, visibility: hideBar ? "hidden" : "visible" }}>
         <div style={{
           position: "absolute", left: 0, top: 0, height: "100%", borderRadius: 999,
           width: `${barFill * 100}%`,
@@ -699,7 +699,7 @@ export function TierGauge({
       </div>
 
       {/* Row 2: Commentary — locked height, maximized */}
-      <div data-ftue-anchor="commentary" style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: 50, textAlign: "left", overflow: "hidden", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
+      <div data-ftue-anchor="commentary" style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: 78, textAlign: "left", overflow: "hidden", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
         {commentaryOverride && commentaryOverride.parts.length > 0 ? (() => {
           const part = commentaryOverride.parts[overridePart];
           const isString = typeof part === "string";
