@@ -78,7 +78,7 @@ function lastName(n: string): string {
   return parts[parts.length - 1] ?? n;
 }
 
-function cap(s: string, max = 95): string {
+function cap(s: string, max = 140): string {
   if (s.length <= max) return s;
   const cut = s.lastIndexOf(" ", max);
   return cut > 20 ? s.slice(0, cut) + "…" : s.slice(0, max - 1) + "…";
@@ -175,21 +175,78 @@ function findNearMissCulprit(roster: PostRevealRosterCard[], gap: number) {
 }
 
 
+// ─── Dormant-culture wiring (Phase 1) ────────────────────────────────────────
+
+/** Exact date + opponent match against culture.signatureGames — highest priority. */
+function signatureGameLine(subject: PostRevealRosterCard, culture: PlayerCulture | null): string | null {
+  if (!culture?.signatureGames?.length) return null;
+  if (!subject.gameDate || !subject.opponent) return null;
+  const date = subject.gameDate.slice(0, 10); // "YYYY-MM-DD"
+  const opp = subject.opponent.toUpperCase();
+  const match = culture.signatureGames.find(g => g.date === date && g.opponent.toUpperCase() === opp);
+  return match ? match.line : null;
+}
+
+/** Big-game threshold — 40+ pts, QUAD_DBL, 60+ pt scoring, or actualFp >= 65. */
+function bigGameLine(subject: PostRevealRosterCard, culture: PlayerCulture | null, seed: number): string | null {
+  if (!culture?.bigGame?.length) return null;
+  const pts = statN(subject, "pts");
+  const badges = subject.achievements.map(a => a.id);
+  const isBig = pts >= 40 || subject.actualFp >= 65 || badges.includes("QUAD_DBL") || badges.includes("GOD_MODE");
+  return isBig ? attributeCultureLine(pick(culture.bigGame, seed), subject) : null;
+}
+
+/** Quiet game on a star — low pts + low FP on a high-salary nameable player (non-injury). */
+function quietGameLine(subject: PostRevealRosterCard, culture: PlayerCulture | null, seed: number): string | null {
+  if (!culture?.quietGame?.length) return null;
+  if (subject.salary < 30) return null;
+  const pts = statN(subject, "pts");
+  const mins = statN(subject, "min") || statN(subject, "minutes") || statN(subject, "mp");
+  if (mins > 0 && mins < 20) return null; // let injury heuristic own short-minutes case
+  const isQuiet = pts <= 10 && subject.actualFp < 18;
+  return isQuiet ? attributeCultureLine(pick(culture.quietGame, seed), subject) : null;
+}
+
+/** Defensive standout — 4+ blk or 5+ stl. */
+function defensiveLine(subject: PostRevealRosterCard, culture: PlayerCulture | null, seed: number): string | null {
+  if (!culture?.defensive?.length) return null;
+  const blk = statN(subject, "blk");
+  const stl = statN(subject, "stl");
+  const isDefensive = blk >= 4 || stl >= 5;
+  return isDefensive ? attributeCultureLine(pick(culture.defensive, seed), subject) : null;
+}
+
+/** Opponent-specific flavor — fires when subject's opponent has a keyed reaction. */
+function opponentFlavorLine(subject: PostRevealRosterCard, culture: PlayerCulture | null): string | null {
+  if (!culture?.opponentFlavor) return null;
+  if (!subject.opponent) return null;
+  const opp = subject.opponent.toUpperCase();
+  const line = culture.opponentFlavor[opp];
+  return line ? attributeCultureLine(line, subject) : null;
+}
+
+/** Player-specific streak line — fires on wins with streak ≥ 3. */
+function streakCultureLine(subject: PostRevealRosterCard, culture: PlayerCulture | null, streak: number, seed: number): string | null {
+  if (!culture?.streakLines?.length) return null;
+  if (streak < 3) return null;
+  return attributeCultureLine(pick(culture.streakLines, seed), subject);
+}
+
 // ─── Box score teasers ────────────────────────────────────────────────────────
 
 const BOX_SCORE_TEASERS = [
-  "That game is worth looking up.",
-  "Tap the stats — this one has a story.",
-  "The box score on this game is something.",
-  "Check what happened in that game.",
-  "Numbers like that don't happen randomly. Go see.",
-  "That stat line has a different energy to it.",
-  "Worth knowing which game this was.",
-  "The game behind those numbers is worth five minutes.",
-  "Tap in. That performance deserves documentation.",
-  "The story behind those numbers is the real prize.",
-  "That's a game that people who watched it remember.",
-  "Check the box score. This one might ring a bell.",
+  "That game is worth looking up — the box score on this one has a real story in it, and the story is better than the number.",
+  "Tap the stats. This isn't one of those nights a player stumbles into — somebody decided tonight was the night.",
+  "The box score on this game is something. Numbers like that don't happen randomly, and whoever was in the building knew it.",
+  "Check what happened here. Everyone who watched this in real time has a specific memory of when they realized it was happening.",
+  "Numbers like that don't happen randomly. Go look — the rest of that line tells you what kind of night the other ten guys had.",
+  "That stat line has a different energy. Some box scores are just numbers; this one is a small piece of history sitting in a database.",
+  "Worth knowing which game this was. These performances don't get pulled at random — somebody was on a mission that night.",
+  "The game behind those numbers is worth five minutes. Open it up, read the line, picture the building. It's better than most.",
+  "Tap in. That performance deserves documentation — and somewhere out there, somebody is still telling a story about being there.",
+  "The story behind those numbers is the real prize. Scores are temporary; games like this get remembered by everyone who saw them.",
+  "That's a game people who watched it remember. The scoreboard told you the result; the box score tells you how it actually felt.",
+  "Check the box score. This one might ring a bell — or if it doesn't, it should, and you have thirty seconds to fix that.",
 ];
 
 function shouldShowTeaser(totalFp: number, c: PostRevealRosterCard): boolean {
@@ -275,30 +332,30 @@ function gmVoice(input: PostRevealCopyInput, subject: PostRevealRosterCard, seed
 // ─── Line 1 pools ─────────────────────────────────────────────────────────────
 
 const BUST_L1 = [
-  "Nobody had a good night. Not one card pulled its weight.",
-  "Cold from the jump. Never recovered.",
-  "Too many quiet cards — the whole roster came up short.",
-  "Rough from the first flip to the last.",
-  "Flat across the board. This one didn't have it.",
-  "Not enough from anyone to get this hand across the line.",
-  "The roster never found its rhythm. Happens.",
-  "Everyone underdelivered. That's a bad night across the board.",
-  "Nothing clicked. Dead on arrival and never got going.",
-  "Some nights the ball just doesn't bounce your way. This was one of them.",
-  "Couldn't get any traction. The hand fell apart early and stayed there.",
-  "A quiet night when you needed loud ones. Didn't get there.",
+  "Nobody had a night. Not one card pulled its weight — whole roster checked out at the same time and the hand never had a pulse.",
+  "Cold from the tip. Every card underwhelmed, nobody found a rhythm, and by the time anyone got going it was already written.",
+  "Too many quiet cards. When five guys have five bad nights on the same slate, there's no spreadsheet fix for that.",
+  "Rough from the first flip to the last. Not one performance gave you a moment to believe — the math was ugly before it was over.",
+  "Flat across the board. No spark, no anchor, no unexpected hero — just five quiet lines adding up to a number you don't want to see.",
+  "Not enough from anyone. One guy going off can save most hands; when nobody goes off, you get this exactly.",
+  "The roster never found its rhythm. Happens — some nights there's no story, just five guys who couldn't get anything going together.",
+  "Everyone underdelivered. Anchor, role players, the cheap upside guy — the whole slate came in below the line, simultaneously.",
+  "Nothing clicked. DOA at the tip, stayed that way, nothing even flirted with being interesting.",
+  "Some nights the ball doesn't bounce your way. This was one of those — quiet boxes up and down the roster, nothing to grab onto.",
+  "Couldn't get traction. The hand was falling apart by the second card and never found a reason to pull itself back together.",
+  "A quiet night when you needed loud ones. Cold streaks happen across the league; this one was synchronized across your roster.",
 ];
 const ROOKIE_L1 = [
-  "Barely got there, but you're walking away with something.",
-  "Scraped across the line — not pretty, but the payout is real.",
-  "Just enough to cash — the roster held together when it counted.",
-  "Won it. The roster didn't dominate, but it didn't collapse either.",
-  "Minimum to win is still a win. Take it and move on.",
-  "Not the night you drew it up, but the hand got there.",
-  "Fought for every point. The payout is small but it's real.",
-  "Ugly win is still a win. These add up over time.",
-  "Scraped through. The margin was thin but the result wasn't.",
-  "A grinder of a hand. The roster found just enough.",
+  "Barely got there — but you're walking away with something. Ugly wins spend the same as pretty ones. Don't overthink it.",
+  "Scraped across the line. Not pretty, not memorable, but the payout is real and that's the entire point of showing up.",
+  "Just enough to cash. The roster held together when it counted — even if 'counted' means barely held at all.",
+  "Won it. The roster didn't dominate, but it didn't collapse either — the kind of night you forget by morning and that's fine.",
+  "Minimum to win is still a win. Take it, reset, and try to build something more interesting next hand.",
+  "Not the night you drew it up. The hand got there anyway — the ledger doesn't care how it happened.",
+  "Fought for every point. The payout is small but it's real, and real beats pretty seven days a week in this game.",
+  "Ugly wins count. They stack up over time and matter more than people who only remember the LEGEND hands think they do.",
+  "Scraped through. The margin was thin but the result wasn't — green ink is green ink, regardless of how it got there.",
+  "A grinder of a hand. The roster found just enough and called it a night. Not every win needs a highlight reel.",
 ];
 const STARTER_BARELY_L1 = [
   "Held on by the thinnest margin — one bad play away from nothing.",
@@ -310,14 +367,14 @@ const STARTER_BARELY_L1 = [
   "Scraped to the right side of the line. Close calls count.",
 ];
 const STARTER_L1 = [
-  "Solid hand — the roster delivered a clean, professional performance.",
-  "Comfortable margin, nothing flashy — this is what a good roster looks like.",
-  "Everything went according to plan. That doesn't happen by accident.",
-  "Professional night. No drama, just a consistent return.",
-  "The kind of hand that doesn't make headlines but cashes every time.",
-  "Steady from start to finish. That's a well-built roster doing its job.",
-  "Clean execution. Contributions across the board, nobody embarrassed themselves.",
-  "No fireworks, no disasters. Just a roster that performed.",
+  "Solid hand. Nobody stole the show, nobody blew it, and the line looks exactly the way it's supposed to — that's a well-assembled roster.",
+  "Comfortable margin, nothing flashy. This is what a roster looks like when nobody's trying to be a hero — it just works.",
+  "Everything went according to plan. Boring is a real skill; a hand that does exactly what it was drafted to do is a small kind of art.",
+  "Professional night from top to bottom. No drama, no theatrics, no surprises — just a roster doing its job and a payout to match.",
+  "The kind of hand that doesn't make headlines but cashes every time. Spread the contributions out, let everyone do their part, pocket it.",
+  "Steady from start to finish. When every role player hits their number, you don't need a star — you just need the math to work.",
+  "Clean execution through the slate. Contributions across the board, nobody embarrassed themselves, and the ledger gets a new green line.",
+  "No fireworks, no disasters. Just a roster that performed the way rosters are supposed to perform when they're built correctly.",
 ];
 const STARTER_DOM_L1 = [
   "Dominant — this hand was knocking on the door of something bigger.",
@@ -329,34 +386,34 @@ const STARTER_DOM_L1 = [
   "Dominant across the board. Gave yourself a real cushion.",
 ];
 const ALLSTAR_L1 = [
-  "That's a rare night. This hand earned a real return.",
-  "Something special happened here — not many rosters put this together.",
-  "Deep run. Hands like this don't come around every session.",
-  "Big payout. This hand earned every dollar of it.",
-  "Someone went way above their average and the whole hand benefited.",
-  "Not a lot of rosters reach this level. This one did.",
-  "High-level output across the board. The return reflects that.",
-  "When a hand peaks like this, it's worth taking a second to appreciate it.",
-  "The kind of night that makes you want to run it back immediately.",
+  "That's a rare night. Somebody on this roster hit a different gear and dragged the whole hand along with them.",
+  "Something special happened here. Most hands never find this level — this one did, and the payout is the reward for whatever just clicked.",
+  "Deep run. Not every session delivers a night like this; when it does, you remember it for a minute before you reset and go again.",
+  "Big payout earned, not given. This hand required somebody to go off and the supporting cast to show up — both happened.",
+  "Someone went way above their average and the whole roster rode the wave. Stack salary, wait for variance to break right, cash.",
+  "Not a lot of rosters reach this level. This one did, and the margin says it wasn't an accident either.",
+  "High-level output across the board. Return reflects that — this is exactly what the game is designed to reward.",
+  "When a hand peaks like this, it's worth a second to appreciate it before you press the button and see if you can do it twice.",
+  "The kind of night that makes you want to run it back immediately. Careful — nights like this are not on a schedule.",
 ];
 const MVP_L1 = [
-  "That's one of the best hands you can put together. Rare and real.",
-  "Someone on this roster absolutely went off tonight — the whole hand felt it.",
-  "This is what it looks like when a star card takes over a hand.",
-  "MVP-level output. Very few rosters ever get here.",
-  "When the anchor performs like this, everything else just falls into place.",
-  "A standout night that carried this hand to a completely different level.",
-  "Not many players can do what was done tonight. This hand had one of them.",
-  "An elite performance from an elite player. The hand responded accordingly.",
+  "That's one of the best hands you can put together. Rare, real, and the kind of line that looks different from every other win you've stacked.",
+  "Someone on this roster absolutely went off, and the whole hand felt it. When a star does the job at this level, miracles elsewhere are optional.",
+  "This is what it looks like when a star card takes over a hand. The anchor earned the salary tonight — that's what you pay for.",
+  "MVP-level output. Very few rosters ever reach this floor; when one does, the ledger gets a green line with some real meat on it.",
+  "When the anchor performs like this, everything else just falls into place. The math works, the payout is fat, nobody has questions.",
+  "A standout night that carried this hand to a level most never see. Enjoy it — this is a very small window that closes on its own.",
+  "Not many players can do what was done tonight. This hand had one of them, and the roster stayed out of his way while he worked.",
+  "An elite performance from an elite player, and the supporting cast delivered enough to let it count. That's the formula when it works.",
 ];
 const LEGEND_L1 = [
-  "The biggest night in the game. This hand was something you remember.",
-  "Doesn't happen by accident — this roster hit a different level entirely.",
-  "One of those hands that doesn't come around often. The payout reflects it.",
-  "You don't see many nights like this. The ceiling was hit and then some.",
-  "Peak performance. This is the kind of night the whole game is built around.",
-  "The rarest of nights. This hand earned the top of the chart.",
-  "That was something. The roster performed at a level most hands never reach.",
+  "The biggest night in the game. This is the kind of result you remember, replay in your head, and tell someone about whether they asked or not.",
+  "Doesn't happen by accident. Someone built this roster knowing what it could do, and tonight it did exactly that — at the ceiling.",
+  "One of those hands that doesn't come around often. The payout reflects it; the story reflects it a little more.",
+  "You don't see many nights like this. The ceiling was hit and then some — pure output, nothing left on the board.",
+  "Peak performance. This is the kind of night the whole game is built around — rare, loud, and the reason people keep showing up.",
+  "The rarest of nights. This hand earned the top of the chart and every dollar that comes with it. Bottle it.",
+  "That was something. The roster performed at a level most hands never reach — take the number and remember what it felt like.",
 ];
 
 // ─── Basketball pack ──────────────────────────────────────────────────────────
@@ -402,29 +459,29 @@ const basketballPack: SportCopyPack = {
       // ROOKIE/STARTER near-miss — negative framing is appropriate
       line1 = gap <= 2
         ? pick([
-            "One play away. That one stings.",
-            "Right there. Couldn't grab it.",
-            "One possession was all it needed.",
-            "Literally one basket short. Painful.",
-            "That close. Comes back around.",
-            "Missed it by the smallest margin.",
+            "One play away. A single possession in a real game somewhere closes this gap — that's the margin, exactly.",
+            "Right there. Couldn't grab it — one fewer turnover, one extra rebound, one different call, and this is a different result.",
+            "One possession was all it needed. The next level was a rebound away and you can pick which play you want to blame.",
+            "Literally one basket short. That's the kind of result that doesn't sting less because you understand the math.",
+            "That close. Comes back around — probability doesn't care which specific hand pays out, just that one of them will.",
+            "Missed it by the smallest possible margin. These are the hands you remember when you're counting what you left on the table.",
           ], seed)
         : gap <= 5
         ? pick([
-            "Came up just short. Stings.",
-            "Almost got there — one card having a better night closes it.",
-            "Slipped away at the end. Was right in reach.",
-            "So close it hurts. One stronger performance and this cashes bigger.",
-            "Just out of reach. The next level was right there.",
-            "Was in range and couldn't close. Agonizing.",
+            "Came up just short. Stings the way a two-point loss stings — mathematically the same as any other loss, emotionally not.",
+            "Almost got there. One card having a slightly better night and this hand clicks up a whole tier.",
+            "Slipped away at the end. Was right in reach and then wasn't — nobody fumbled it, it just didn't quite get there.",
+            "So close it hurts. One stronger performance from any of five guys and this one cashes bigger instead of cashing like this.",
+            "Just out of reach. The next level was right there on the board and the hand made a real run at it before coming up short.",
+            "Was in range and couldn't close. Agonizing in the way only margin losses are — the result is fine, the feeling isn't.",
           ], seed)
         : pick([
-            "Close, but not close enough.",
-            "The next level was right there — just short.",
-            "Came up short. Another night.",
-            "Was in range and couldn't close the gap.",
-            "Needed a little more from someone. Didn't get it.",
-            "Tantalizingly close. The gap was real but not huge.",
+            "Close, but not close enough — the next level was in view but the roster couldn't find the last piece to push it over.",
+            "The next level was right there and you could see it. Just couldn't quite get the number to show up.",
+            "Came up short. Another night — the game is long, and tier jumps are usually one card away, not two.",
+            "Was in range and couldn't close the gap. Happens — you were one decent performance from a real bump.",
+            "Needed a little more from someone specific. Didn't get it. That's the whole story of this hand in one sentence.",
+            "Tantalizingly close. The gap was real but not huge — the kind of result you look at twice trying to find the one card that cost you.",
           ], seed);
     } else if (winTier === "LEGEND") {
       line1 = pick(LEGEND_L1, seed);
@@ -475,6 +532,11 @@ const basketballPack: SportCopyPack = {
     const famous = famousPhrase(input, subject);
     if (famous) return toneRet(line1, famous);
 
+    // 1a. Signature game match — if the subject's gameDate+opponent matches a known
+    // curated signature, use the pre-written line. Rare, but highest-delight hit.
+    const sig = signatureGameLine(subject, culture);
+    if (sig) return toneRet(line1, sig);
+
     // 1b. Injury heuristic — low minutes + low FP on a high-salary player (suppress on big wins — keep it positive)
     if (!isBigWin) {
       const subjectMins = statN(subject, "min") || statN(subject, "minutes") || statN(subject, "mp");
@@ -493,6 +555,12 @@ const basketballPack: SportCopyPack = {
       const tov = statN(subject, "turnovers");
       const tovLine = culture?.turnovers?.length ? attributeCultureLine(pick(culture.turnovers, seed2), subject) : `${name} had ${tov} turnovers${opp}. Couldn't overcome it.`;
       return toneRet(line1, tovLine);
+    }
+
+    // 2b. Defensive standout — 4+ blk or 5+ stl. Suppress on bust (don't celebrate while losing).
+    if (!isBust) {
+      const def = defensiveLine(subject, culture, seed2);
+      if (def) return toneRet(line1, def);
     }
 
     // 3. Near-miss with culprit — line 2 must connect to the gap (only name RED/ORANGE players)
@@ -540,6 +608,12 @@ const basketballPack: SportCopyPack = {
       if (gm) return toneRet(line1, gm);
     }
 
+    // 5b. Big game — 40+ pts, 65+ FP, or elite badge. Culture-specific big-game voice.
+    if (!isBust) {
+      const big = bigGameLine(subject, culture, seed2);
+      if (big) return toneRet(line1, big);
+    }
+
     // 6. Rare badge + box score teaser (suppress on bust — don't celebrate while losing)
     const rareBadges = ["QUAD_DBL", "5X5", "GOD_MODE", "MAESTRO"];
     if (!isBust && badges.some(b => rareBadges.includes(b))) {
@@ -571,6 +645,12 @@ const basketballPack: SportCopyPack = {
           : `${an} went quiet at $${anchor.salary}. That's a problem.`;
         return toneRet(line1, underLine);
       }
+    }
+
+    // 6c. Quiet game on a star — low pts on a high-salary nameable player (non-injury)
+    if (!isBigWin) {
+      const quiet = quietGameLine(subject, culture, seed2);
+      if (quiet) return toneRet(line1, quiet);
     }
 
     // 7. Anchor significantly underperformed (suppress on big wins — don't blame anyone)
@@ -611,6 +691,10 @@ const basketballPack: SportCopyPack = {
       return toneRet(line1, overLine);
     }
 
+    // 8b. Opponent-specific flavor — keyed on subject.opponent (rivalry / matchup beef)
+    const oppFlavor = opponentFlavorLine(subject, culture);
+    if (oppFlavor) return toneRet(line1, oppFlavor);
+
     // 9. Near-miss generic
     if (isNearMiss) {
       return toneRet(line1, "One card away from a different night.");
@@ -636,6 +720,13 @@ const basketballPack: SportCopyPack = {
     }
     if (reb >= 12) return toneRet(line1, `${name} grabbed ${reb} boards.`);
     if (ast >= 10) return toneRet(line1, `${name} dished ${ast} assists.`);
+
+    // 12b. Streak culture — player-specific streak commentary on wins with streak ≥ 3
+    // (famousPhrase already handles streak ≥ 7 generically; this fills 3-6 with player voice)
+    if (!isBust && streak >= 3 && streak < 7) {
+      const streakLine = streakCultureLine(subject, culture, streak, seed2);
+      if (streakLine) return toneRet(line1, streakLine);
+    }
 
     // 13. Player culture tier lines (gated by handCount)
     if (culture) {

@@ -22,7 +22,7 @@ import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalRe
 import { calculateWinTier, calculatePayout, calculatePayoutWithStreak, getStreakMultiplier, BASKETBALL_WIN_TIERS, STREAK_TIERS, type WinTier } from "../utils/payoutLogic";
 import { detectExtremes } from "@shared/utils/extremeGames";
 import { buildPostRevealCopy } from "../utils/buildPostRevealCopy";
-import { composeCommentary } from "../../../shared/commentary/composeCommentary";
+import { selectCommentary } from "../../../shared/commentary/selectCommentary";
 import { useGameAnalytics } from "../../../shared/analytics/useGameAnalytics";
 import { CollectScreen } from '@shared/engagement/CollectScreen';
 import { TierGauge, computeGaugeState } from '@shared/components/TierGauge';
@@ -633,6 +633,7 @@ export default function GameView() {
   }, []);
   const [noTransition, setNoTransition] = useState(false);
   const [revealedSalary, setRevealedSalary] = useState(0);
+  const deductedSalaryCardsRef = useRef<Set<string>>(new Set());
   const [gameError, setGameError] = useState<string | null>(null);
   const rosterRef = useRef<PlayerCard[]>([]);
   const { isFTUE, completeFTUE } = useFTUE("basketball");
@@ -981,6 +982,19 @@ export default function GameView() {
       heldRevealResumeRef.current = resume;
     } : undefined,
     onCardRevealStart: handleCardRevealStart,
+    onCardFpStart: useCallback((cId: string) => {
+      // Budget rolls down in sync with FP roll-up. Deduct at FP animation start.
+      // Ref prevents double-count across tap + skip flows.
+      if (deductedSalaryCardsRef.current.has(cId)) return;
+      const card = rosterRef.current.find(c => {
+        const id = String(c?.cardId ?? c?.basePlayerId ?? "");
+        return id === cId;
+      });
+      if (card && !(card as any).wasHeld) {
+        setRevealedSalary(prev => prev + Number((card as any).salary ?? 0));
+        deductedSalaryCardsRef.current.add(cId);
+      }
+    }, []),
     onCardComplete: useCallback((cId: string) => {
       setRevealIndex(prev => {
         const next = prev + 1;
@@ -1294,7 +1308,7 @@ export default function GameView() {
     };
 
     const copy = USE_NEW_COMMENTARY
-      ? composeCommentary(copyInput as any)
+      ? selectCommentary(copyInput as any)
       : buildPostRevealCopy(copyInput as any);
     // Tier 3: static fallback if template returned an unusable result.
     if (!copy?.primary) {
@@ -1567,6 +1581,7 @@ export default function GameView() {
       setStatsFlippedIds(new Set());
       setMvpId(undefined);
       setRevealedSalary(0);
+      deductedSalaryCardsRef.current = new Set();
       setLastRevealedCardId(null);
       setCelebrationHeld(false);
       setFtueOscillating(false);
@@ -1655,6 +1670,7 @@ export default function GameView() {
         (s, c: any) => c.wasHeld ? s + Number(c.salary ?? 0) : s, 0
       );
       setRevealedSalary(heldSalaryAtDraw);
+      deductedSalaryCardsRef.current = new Set();
 
       rosterRef.current = finalRoster;
       completedCardsRef.current = new Set();
@@ -1707,6 +1723,7 @@ export default function GameView() {
       setFtueGaugeOscDone(false);
       completedCardsRef.current = new Set();
       setRevealedSalary(0);
+      deductedSalaryCardsRef.current = new Set();
       setNoTransition(true);
       const placeholders = createPlaceholders();
       flipState.initCards(placeholders.map(cardId));
@@ -1764,7 +1781,6 @@ export default function GameView() {
 
   function handleButtonClick() {
     if (gameState === "REVEALING") {
-      setRevealedSalary(capUsed);
       setWasSkipped(true);
       skipReveal();
     }
@@ -1918,6 +1934,7 @@ export default function GameView() {
           alignItems: "flex-start",
           justifyContent: "center",
           minHeight: 0,
+          maxHeight: 373,
           padding: "4px 2px 2px 2px",
           boxSizing: "border-box",
           overflow: "hidden",
@@ -1960,27 +1977,7 @@ export default function GameView() {
                 onToggleLock={toggleLock}
                 onToggleFlip={toggleStatsFlip}
                 revealMode={REVEAL_MODE}
-                onTapReveal={isFTUE && ftueCardsBlocked ? undefined : (isFTUE ? (cardId: string) => {
-                  // FTUE: also tick budget down per card flip
-                  const card = rosterRef.current.find(c => {
-                    const id = String(c?.cardId ?? c?.basePlayerId ?? "");
-                    return id === cardId;
-                  });
-                  if (card && !(card as any).wasHeld) {
-                    setRevealedSalary(prev => prev + Number((card as any).salary ?? 0));
-                  }
-                  tapRevealCard(cardId);
-                } : (cardId: string) => {
-                  // Immediately add this card's salary so budget rolls down in sync with FP roll up
-                  const card = rosterRef.current.find(c => {
-                    const id = String(c?.cardId ?? c?.basePlayerId ?? "");
-                    return id === cardId;
-                  });
-                  if (card && !(card as any).wasHeld) {
-                    setRevealedSalary(prev => prev + Number((card as any).salary ?? 0));
-                  }
-                  tapRevealCard(cardId);
-                })}
+                onTapReveal={isFTUE && ftueCardsBlocked ? undefined : tapRevealCard}
                 heldFpVisible={heldFpVisible}
                 heldRevealedIds={heldRevealedIds}
                 tappedCardIds={tappedCardIds}
@@ -2001,11 +1998,11 @@ export default function GameView() {
         </div>
 
         {/* ── Bottom landscape: CSS Grid, all rows fixed pixel, nothing moves ── */}
-        {/* stats(56) gap(4) bar(14) gap(4) info(0) gap(4) commentary(78) gap(2) action(50) = 212px total */}
+        {/* stats(94) gap(4) bar(14) gap(8) info(0) gap(4) commentary(96) gap(2) action(74) = 296px total */}
         <div style={{
           flex: "0 0 auto",
           display: "grid",
-          gridTemplateRows: "56px 4px 14px 4px 0px 4px 78px 2px 50px",
+          gridTemplateRows: "94px 4px 14px 8px 0px 4px 96px 2px 74px",
           gridTemplateColumns: "1fr",
           padding: "0 12px",
           boxSizing: "border-box",
@@ -2045,7 +2042,7 @@ export default function GameView() {
             }}
           >
             {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (
-              <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "center", width: "100%", height: "100%" }}>
+              <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%", height: "100%" }}>
                 {tierResultPhase === 1 && (
                   <>
                     <div
@@ -2088,32 +2085,25 @@ export default function GameView() {
                           animation: "tierShrinkDown 500ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
                         }}
                       />
-                      <div style={{ animation: "tierInfoFadeIn 300ms ease 500ms both", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, marginTop: 4, width: "100%" }}>
-                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 20 }}>
-                          <span style={{ fontSize: 15, fontWeight: 700, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
-                            {displayFp.toFixed(1)} FP
+                      <div style={{ animation: "tierInfoFadeIn 300ms ease 500ms both", display: "flex", justifyContent: "center", alignItems: "center", gap: 20, marginTop: 4, width: "100%" }}>
+                        <span style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                          {displayFp.toFixed(1)} FP
+                        </span>
+                        {ceilingPct != null && (
+                          <span style={{ fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.45)", fontFamily: FF, lineHeight: 1, alignSelf: "center" }}>
+                            {ceilingPct}% ceiling
                           </span>
-                          {ceilingPct != null && (
-                            <span style={{ fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.45)", fontFamily: FF, lineHeight: 1 }}>
-                              {ceilingPct}% ceiling
-                            </span>
-                          )}
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 20 }}>
-                          <span style={{ fontSize: 15, fontWeight: 700, color: netColor, fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
-                            {netLabel}
-                          </span>
-                          <span style={{ fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.45)", fontFamily: FF, lineHeight: 1 }}>
-                            {BASE_BET} × {betMultiplier}x
-                          </span>
-                        </div>
+                        )}
+                        <span style={{ fontSize: 20, fontWeight: 700, color: netColor, fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                          {netLabel}
+                        </span>
                       </div>
                     </>
                   );
                 })()}
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 8, width: "100%", height: "100%" }}>
+              <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "center", gap: 8, paddingTop: 16, width: "100%", height: "100%" }}>
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 48, width: "100%" }}>
                   {(() => {
                     const spent =
@@ -2153,9 +2143,14 @@ export default function GameView() {
                   })()}
                 </div>
                 {gameState === "HOLD" && !isFTUE && (
-                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", fontFamily: "'Rajdhani','Oswald','Arial Narrow',sans-serif", lineHeight: 1 }}>
-                    {BASE_BET} × {betMultiplier}x
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
+                    <span style={{ fontSize: 16, fontWeight: 400, color: "rgba(255,255,255,0.5)", lineHeight: 1 }}>
+                      {BASE_BET} × {betMultiplier}x =
+                    </span>
+                    <span style={{ fontSize: 16, fontWeight: 700, lineHeight: 1, color: betMultiplier === 1 ? "#22C55E" : betMultiplier === 3 ? "#3B82F6" : betMultiplier === 5 ? "#C084FC" : betMultiplier === 10 ? "#FB923C" : "rgba(255,255,255,0.35)" }}>
+                      ${BASE_BET * betMultiplier}
+                    </span>
+                  </div>
                 )}
               </div>
             )}
@@ -2193,7 +2188,7 @@ export default function GameView() {
               ftueTypewriter={isFTUE}
               stickyLastOverride={isFTUE && ftueReplayReady}
               commentaryOverride={(showCollect || showLeaderboard) ? null : ftueCommentaryOverride}
-              hideBar={!(gameState === "RESULTS" || gameState === "WIN_CELEBRATION")}
+              hideBar={gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD" || gameState === "DRAWING"}
               onCommentaryOverrideDone={() => {
                 setFtueCommentaryOverride(null);
                 coachDismissRef.current?.();

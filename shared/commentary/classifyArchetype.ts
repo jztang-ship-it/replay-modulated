@@ -96,13 +96,25 @@ export function classifyArchetype(input: CommentaryInput): ClassificationResult 
     return { ...base, archetype: "star_carry_big" };
   }
 
+  // ── Priority 5b: High-score, low-reward (star went off but hand only cashed ROOKIE) ──
+  // Prevents ROOKIE wins from getting celebratory star_carry hype-tone templates
+  // ("easy money") when the actual result was a barely-cashed rookie hand.
+  // Falls back through ugly_win → balanced_win per archetype registry.
+  if (register === "win" && r >= 1.35 && input.winTier === "ROOKIE") {
+    return { ...base, archetype: "high_score_low_reward" };
+  }
+
   // ── Priority 6: Star carry (win, high ratio) ──
   if (register === "win" && r >= 1.35) {
     return { ...base, archetype: "star_carry" };
   }
 
   // ── Priority 7: Star carried loss ──
-  if (register === "loss" && r >= 1.35) {
+  // Lowered threshold 1.35 → 1.0 so that losses where the star was at or above
+  // projection route to "star did their job, team failed" voice — not the
+  // generic everyone_flat blame. Captures the nuance the user flagged:
+  // objective reporting when the star performed and the rest didn't deliver.
+  if (register === "loss" && r >= 1.0) {
     return { ...base, archetype: "star_carried_loss" };
   }
 

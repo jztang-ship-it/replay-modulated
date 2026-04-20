@@ -50,7 +50,7 @@ export const ARCHETYPE_REGISTRY: Record<CommentaryArchetype, ArchetypeMeta> = {
   goat_clinch:            { register: "win",  active: false, fallback: "star_carry_big",   legacyStoryIds: [] },
   mvp_clinch:             { register: "win",  active: false, fallback: "star_carry_big",   legacyStoryIds: [] },
   bust_result:            { register: "loss", active: false, fallback: "everyone_flat",    legacyStoryIds: [] },
-  high_score_low_reward:  { register: "win",  active: false, fallback: "ugly_win",         legacyStoryIds: [] },
+  high_score_low_reward:  { register: "win",  active: false, fallback: "star_delivered",   legacyStoryIds: [] },
   wrong_star_wrong_night: { register: "loss", active: false, fallback: "star_cold",        legacyStoryIds: [] },
   clutch_finish:          { register: "win",  active: false, fallback: "star_carry",       legacyStoryIds: [] },
   overperformance_shock:  { register: "win",  active: false, fallback: "star_carry_big",   legacyStoryIds: [] },

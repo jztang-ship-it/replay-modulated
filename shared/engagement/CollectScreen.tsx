@@ -7,13 +7,50 @@
 
 import { useState, useEffect } from "react";
 import type { TaskState } from "@shared/engagement/useEngagement";
-import { Leaderboard } from "@shared/components/Leaderboard";
 import { PWAInstallPrompt } from "@shared/components/PwaInstallPrompt";
-import { getPlayerUid } from "@shared/utils/playerIdentity";
 import { getMsUntilNextBonusRotation, formatBonusCountdown } from "@shared/utils/dailyBonus";
 import { track } from "@shared/analytics/analytics";
 
 const FF = "'Rajdhani', 'Arial Narrow', sans-serif";
+
+// ── Ladder filtering ──────────────────────────────────────────────────────
+// Tasks with matching prefix form a ladder — only the first uncollected step
+// is shown at a time. When the active step is collected, the next step takes
+// its place. Singleton tasks (no ladder prefix) always appear.
+const LADDER_PREFIXES = [
+  "daily_play_",
+  "daily_win_",
+  "daily_bonus_",
+  "daily_streak_",
+  "perpetual_first_",
+  "perpetual_play_",
+  "perpetual_streak_",
+] as const;
+
+function ladderKey(taskId: string): string | null {
+  for (const prefix of LADDER_PREFIXES) {
+    if (taskId.startsWith(prefix)) return prefix;
+  }
+  return null;
+}
+
+function activeLadderOnly(tasks: TaskState[]): TaskState[] {
+  // Group tasks by ladder, preserving config order
+  const ladders = new Map<string, TaskState[]>();
+  for (const task of tasks) {
+    const key = ladderKey(task.id);
+    if (key === null) continue;
+    if (!ladders.has(key)) ladders.set(key, []);
+    ladders.get(key)!.push(task);
+  }
+  // Return only tasks that are either singletons OR the first uncollected in their ladder
+  return tasks.filter(task => {
+    const key = ladderKey(task.id);
+    if (key === null) return true;
+    const firstUncollected = ladders.get(key)!.find(t => !t.collected);
+    return !!firstUncollected && firstUncollected.id === task.id;
+  });
+}
 
 interface CollectScreenProps {
   taskStates:           TaskState[];
@@ -462,7 +499,7 @@ export function CollectScreen({
           </div>
         )}
 
-        {taskStates.map(task => (
+        {activeLadderOnly(taskStates).map(task => (
           <TaskRow key={task.id} task={task} onCollect={handleCollect} {...sharedRowProps} />
         ))}
 
@@ -485,7 +522,7 @@ export function CollectScreen({
           </div>
         )}
 
-        {weeklyTaskStates.map(task => (
+        {activeLadderOnly(weeklyTaskStates).map(task => (
           <TaskRow key={task.id} task={task} onCollect={handleCollect} {...sharedRowProps} />
         ))}
 
@@ -508,17 +545,12 @@ export function CollectScreen({
           </div>
         )}
 
-        {perpetualTaskStates.map(task => (
+        {activeLadderOnly(perpetualTaskStates).map(task => (
           <TaskRow key={task.id} task={task} onCollect={handleCollect} {...sharedRowProps} isPerpetual />
         ))}
 
         {/* PWA Install Prompt */}
         <PWAInstallPrompt rewardCoins={50} onInstalled={() => {}} />
-
-        {/* Leaderboard */}
-        <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-          <Leaderboard currentUid={getPlayerUid()} />
-        </div>
 
         {/* Future sections placeholder */}
         <div style={{

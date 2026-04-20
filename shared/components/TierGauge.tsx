@@ -681,7 +681,7 @@ export function TierGauge({
   return (
     <div style={{
       display: "grid",
-      gridTemplateRows: "14px 78px",
+      gridTemplateRows: "14px 96px",
       gap: 4,
       boxSizing: "border-box",
       width: "100%",
@@ -699,7 +699,7 @@ export function TierGauge({
       </div>
 
       {/* Row 2: Commentary — locked height, maximized */}
-      <div data-ftue-anchor="commentary" style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: 78, textAlign: "left", overflow: "hidden", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
+      <div data-ftue-anchor="commentary" style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: 96, textAlign: "left", overflow: "hidden", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
         {commentaryOverride && commentaryOverride.parts.length > 0 ? (() => {
           const part = commentaryOverride.parts[overridePart];
           const isString = typeof part === "string";

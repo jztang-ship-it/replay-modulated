@@ -35,29 +35,22 @@ import { selectStamp } from "./priorities";
 import { getFallbackChain } from "./archetypes";
 import { selectStory } from "./storySelector";
 
+// Static imports — work in ESM/Node/Vite without require/createRequire shims.
+import basketballLibrary from "./libraries/basketball.json" with { type: "json" };
+import baseballLibrary from "./libraries/baseball.json" with { type: "json" };
+import { PLAYER_CULTURE as BASKETBALL_CULTURE } from "../../basketball/src/utils/playerCulture";
+import { PLAYER_CULTURE as BASEBALL_CULTURE } from "../../baseball/src/utils/playerCulture";
+import { TEAM_FLAVOR as BASKETBALL_TEAM_FLAVOR } from "../../basketball/src/utils/teamFlavor";
+
 // ── Library loader ─────────────────────────────────────────────────────────
 
-let _libraries: Record<string, CommentaryLibrary> = {};
+const _libraries: Record<string, CommentaryLibrary> = {
+  basketball: basketballLibrary as CommentaryLibrary,
+  baseball: baseballLibrary as CommentaryLibrary,
+};
 
 function loadLibrary(sport: string): CommentaryLibrary {
-  if (!_libraries[sport]) {
-    try {
-      if (sport === "basketball") {
-        _libraries[sport] = require("./libraries/basketball.json");
-      } else if (sport === "baseball") {
-        try {
-          _libraries[sport] = require("./libraries/baseball.json");
-        } catch {
-          _libraries[sport] = {};
-        }
-      } else {
-        _libraries[sport] = {};
-      }
-    } catch {
-      _libraries[sport] = {};
-    }
-  }
-  return _libraries[sport]!;
+  return _libraries[sport] ?? {};
 }
 
 // ── Intensity (same logic as composeCommentary) ────────────────────────────
@@ -84,27 +77,598 @@ function determineIntensity(input: CommentaryInput): Intensity {
   }
 }
 
+// ── Result framing ─────────────────────────────────────────────────────────
+// Short prefix/suffix phrases that lead the commentary with the RESULT (win/loss
+// size) before star-specific content. Ensures the message reflects on the hand
+// first, then gets into the star's performance.
+
+const RESULT_FRAMING: Record<Intensity, string[]> = {
+  goat:             ["Legend-tier night.", "Historic cash.", "Top-of-the-chart hand.", "Ceiling-kissing hand.", "Years from now, still telling this story.", "Bottle that night.", "That one goes in the book.", "Top of the mountain."],
+  mvp:              ["MVP-level hand.", "Huge night.", "Real money on this one.", "Serious cash.", "That's a number to remember.", "Money — actual money.", "Put that one in the highlight reel.", "Stack that in the trophy case."],
+  all_star:         ["Big one.", "All-Star cash.", "Real payout tonight.", "That's a hand that counts.", "Deep run.", "That's a hand that pays the rent.", "Real money, real satisfying.", "Pay day."],
+  starter_dominant: ["Cruised through.", "Comfortable win.", "Handled it.", "Had room to spare.", "Clean win with cushion.", "Felt like a choice, not a chase.", "Coasted into the payout.", "Easy money night."],
+  starter_normal:   ["Clean hand.", "Solid cash.", "Got the job done.", "Pro night.", "Money on the board.", "Punched in, punched out.", "Business as usual — boring is a skill.", "Pro night, pro paycheck."],
+  starter_barely:   ["Squeaked through.", "Held on by a thread.", "Barely held it together.", "Tight win.", "One play from a different result.", "Threaded the needle.", "Bend but not break.", "Photo finish."],
+  rookie:           ["Scraped a win.", "Barely cashed.", "Minimum on the board.", "Ugly win is still a win.", "Not pretty, but it cashed.", "Grinder of a hand.", "Green ink is green ink.", "Take the cash, forget the mechanics.", "These add up over time."],
+  bust_close:       ["One card short.", "Missed it by inches.", "Right there, not quite.", "Inches from the line.", "So close you could taste it.", "One possession away.", "That one stings.", "Tantalizingly close — still zero."],
+  bust_mid:         ["Bust night.", "Came up short.", "Off night across the board.", "Didn't get there.", "Hand never cashed.", "Chalk it up.", "Next hand.", "Not every hand cashes."],
+  bust_bad:         ["Never had it.", "Rough all around.", "A night to forget.", "Flat from the tip.", "Nothing worked tonight.", "Film room won't be kind.", "Write this one off.", "Nothing clicked, nothing close."],
+};
+
+// Archetype-specific framing — overrides intensity framing when the ARCHETYPE
+// carries a specific narrative shape the generic pool can't capture.
+const ARCHETYPE_FRAMING: Partial<Record<CommentaryArchetype, string[]>> = {
+  // Star delivered, team collapsed around him. Objective voice, not blanket blame.
+  star_carried_loss: [
+    "The star did their job. The rest didn't.",
+    "One-man-band tonight — everyone else no-showed.",
+    "The anchor held. The rest of the boat sank.",
+    "The star brought it. The supporting cast brought nothing.",
+    "The roster leaned on one guy, and the lean was the whole thing.",
+    "Star delivered, team failed to hold up their end.",
+    "The money card cashed in. Nobody else did.",
+  ],
+  // Scraped a rookie win on a low-ratio star — team made it work despite the star.
+  ugly_win: [
+    "Got there on a prayer and roster depth.",
+    "Scraped into green without the star carrying it.",
+    "The star didn't have it, and the roster made it work anyway.",
+    "Not the script, but the payout is real.",
+    "The team covered for the star tonight. That goes both ways.",
+  ],
+};
+
+// Anchor-specific framing — for when the star IS the highest-salary roster card
+// (the "waiting on the big one" reveal narrative). Fires when star.salary is
+// the roster maximum. Different vocabulary for delivered vs. failed.
+const ANCHOR_DELIVERED_FRAMING = [
+  "The whole roster was waiting on the anchor, and they came through.",
+  "Anchor delivered. That's why you pay for the big card.",
+  "The money card paid its salary tonight.",
+  "Everyone was leaning on the anchor to show up. They showed up.",
+  "You pay that salary for nights exactly like this.",
+];
+const ANCHOR_FAILED_FRAMING = [
+  "The roster was waiting on the anchor, and the anchor didn't come.",
+  "When the money card goes quiet, the whole hand feels it.",
+  "Anchor didn't cover the salary tonight.",
+  "The big card went small. Hard to recover from that.",
+  "The roster was built around one card. That card didn't show up.",
+];
+
+// Gap-specific near-miss framing — replaces generic bust_close framing when the
+// gap is tight enough to name a specific number. Makes the "oh so close" hit.
+function nearMissFraming(gap: number, seed: number): string {
+  if (gap <= 1) {
+    return pickSeeded([
+      "One FP. ONE.",
+      "Missed by less than a single point.",
+      "A single FP from the next tier. Single.",
+      "One point — count it on one finger.",
+      "That gap was a single foul shot away from falling.",
+    ], seed, 60) ?? "";
+  }
+  if (gap <= 3) {
+    return pickSeeded([
+      `${Math.ceil(gap)} FP from the line.`,
+      "A made basket away. Literally one bucket.",
+      "Three FP or fewer. Three.",
+      "The next tier was a single possession away.",
+      "That HURTS — one fewer turnover and this cashes bigger.",
+    ], seed, 60) ?? "";
+  }
+  if (gap <= 5) {
+    return pickSeeded([
+      `${Math.ceil(gap)} FP from the next tier. Painfully close.`,
+      "Under five FP away. One stronger line from anyone closes this.",
+      "Five FP or fewer to the next level. Tight margin, sharp pain.",
+      "Five points. Five. That's all this hand needed.",
+    ], seed, 60) ?? "";
+  }
+  return "";
+}
+
+// Chad-style analogy pool — everyday-life comparisons, dry understatement, the
+// occasional absurd aside. Fires as a closing beat on ~25% of short hands.
+// SPORT-AGNOSTIC by design — references are domestic / pop-culture / food /
+// work / commerce, NOT insider NBA/MLB/etc lore. Same pool works for basketball,
+// baseball, and any future sport added to the commentary system.
+const CHAD_ANALOGIES: Record<Intensity, string[]> = {
+  goat: [
+    "Nights like this happen about as often as your local weatherman being right.",
+    "Put this one in a box in the garage. Look at it in ten years.",
+    "That's the fantasy equivalent of Thanksgiving leftovers — kept giving.",
+    "A hand to tell your barber about. And the barber's apprentice.",
+    "This is the one you frame and hang next to the diploma you never actually use.",
+    "Ceiling hands like this deserve a plaque. Or at least a fridge magnet.",
+    "This hand is what other hands measure themselves against at weddings.",
+    "The kind of result that makes you silent for two minutes, then obnoxious for two hours.",
+    "Historic like your grandmother's casserole recipe — and nobody else can pull it off.",
+    "Generations from now, archaeologists will find this ledger and nod solemnly.",
+    "The hand equivalent of finding a Stradivarius at a garage sale.",
+    "Performance like this gets you a parade, if your neighborhood had parades.",
+    "Put this one in the shoebox under the bed next to the savings bond from 1997.",
+    "This is the night they name a local sandwich after you.",
+    "Rare like a functioning self-checkout lane. Take a moment.",
+  ],
+  mvp: [
+    "Felt like ordering takeout and getting a bonus side.",
+    "That's the fantasy equivalent of finding the last parking spot near the door.",
+    "Paid the bills and then some. Leftover money is the best money.",
+    "Star delivered like a pizza in a rainstorm — miraculous, slightly soggy, worth every dollar.",
+    "A hand this clean deserves a compliment from someone it doesn't know.",
+    "The kind of night where even your cynical friend has to admit it was something.",
+    "Real money — the kind that doesn't quietly leave your bank account by Wednesday.",
+    "The hand equivalent of the upgraded hotel room you didn't book.",
+    "Earned the paycheck. Earned a second paycheck we don't talk about.",
+    "The night you get to be insufferable about it. Don't waste the window.",
+    "Result you text your cousin about. Twice.",
+    "The kind of hand that fills the birthday envelope AND the birthday card.",
+    "Fantasy money that feels earned, which is rare these days.",
+    "Like your order arriving exactly on time AND hot. Take a moment.",
+    "That hand had more protein than a steakhouse sampler.",
+  ],
+  all_star: [
+    "Real money, and the kind that makes you briefly consider believing in things.",
+    "Paperwork cashed, memory filed, evening made.",
+    "The fantasy equivalent of the waiter bringing a free appetizer you didn't order.",
+    "This is what the hype is for. Not the hype itself — the hype EARNS this.",
+    "Green ink with texture. The kind you can feel through the page.",
+    "The hand equivalent of nailing the parallel park on the first try, with witnesses.",
+    "Paid rent and then some. The and-then-some is what you remember.",
+    "Like a surprise upgrade at the airport — somehow both deserved and undeserved.",
+    "The hand you mention at Thanksgiving in place of being interesting.",
+    "Real money, real night, real reason to feel okay about Wednesday.",
+    "Cashed the way a well-written letter reads — clean, intentional, nothing extra.",
+    "Your roster just earned a cheat day. Use it wisely.",
+    "The kind of hand that makes the scorekeeper circle the total.",
+    "Hand delivered with a bow. Somebody put effort in tonight.",
+    "Big one. The good kind of 'big one' — not the one you avoid mentioning.",
+  ],
+  starter_dominant: [
+    "Cruise control, not luck. Different zip code entirely.",
+    "Professional result, professionally obtained. No drama, no complaints, no overtime.",
+    "This is what happens when you read the projections and decide to believe them.",
+    "The hand equivalent of signing a contract in triplicate and everyone showing up on time.",
+    "Boring excellence. The most underrated flavor in the game.",
+    "Like watching a TV remote work on the first press. Rare. Deserved.",
+    "Cruised through like a Tuesday. Quiet and efficient.",
+    "The hand equivalent of hitting every green light on the commute.",
+    "Comfortable like the couch you've owned for twelve years.",
+    "Not flashy. Not confused. Just got it done — the middle child of good hands.",
+    "This was the IKEA assembly where you actually followed the instructions.",
+    "Paid like a Wednesday. No surprise, no complaints.",
+    "Result delivered with the same energy as your hairdresser saying 'looking good.'",
+    "Solid the way your car is solid — does the thing, doesn't ask questions.",
+    "The hand equivalent of getting exactly the change you expected.",
+  ],
+  starter_normal: [
+    "Not memorable. That's the point.",
+    "Solid like a desk — not exciting, but you need one.",
+    "Paycheck hand. No style points in the ledger.",
+    "The hand your accountant would give a tasteful thumbs-up.",
+    "Business casual. Got the job done in khakis.",
+    "Not the story you tell. Still the hand that paid the tab.",
+    "Result like a successful trip to Costco — you got what you came for and left.",
+    "Middle-of-the-road hand. The road gets you there fine; nobody's writing songs about it.",
+    "Got it done with the same energy as paying bills on time.",
+    "The hand equivalent of the standard car wash. Clean, quiet, done.",
+    "No fireworks, no dumpster fires. Just a night that passed through efficiently.",
+    "Cashed like a tax refund you forgot you were getting.",
+    "The kind of night where the scoreboard ticked forward and nobody raised their voice.",
+    "Result with the drama of folded laundry.",
+    "Not going in the highlight reel. Going in the ledger. That's the trade.",
+  ],
+  starter_barely: [
+    "Squeaked through like a kid in algebra with a tutor's help.",
+    "Photo finish. The scoreboard operator did a double-take.",
+    "Close enough that you felt it in your chest. Cash is still cash.",
+    "The fantasy equivalent of catching the door before it closes on the elevator. Made it.",
+    "Threaded the needle with the thread already fraying.",
+    "The kind of night your cardiologist would raise an eyebrow at.",
+    "Made the cut like the last seat on Southwest. Uncomfortable but seated.",
+    "Threaded a needle in the dark. Nobody's asking how — just that it happened.",
+    "Tighter than airport security on Christmas Eve.",
+    "Close calls in fantasy earn you frequent-flyer anxiety. This was one of those.",
+    "Held on the way you hold a sandwich while walking — delicately, intently.",
+    "One play from heartbreak, one play into cash. That's the margin.",
+    "Made it by the skin of whatever the teeth's skin is called.",
+    "Bend-don't-break hand. Bent like yoga, didn't snap.",
+    "The elevator doors closed on the bag but the bag made it through. So did this hand.",
+  ],
+  rookie: [
+    "Won ugly, like parallel parking in Brooklyn.",
+    "Ugly like a 1990s minivan. Got you home anyway.",
+    "Parallel-parked a U-Haul tonight. It worked. Don't look too close.",
+    "Grinded out like rent money.",
+    "That hand had the structural integrity of a cardboard box. Still held the cash.",
+    "Green ink. That's the only grade this game awards.",
+    "Like a yard-sale purchase that turned out okay after you cleaned it up.",
+    "The hand equivalent of finishing a group project at 3 AM Sunday. Done is done.",
+    "Won on fumes. Fumes pay the same as premium.",
+    "That hand crossed the finish line on a shopping cart with one bad wheel.",
+    "Scraped by like a student who studies the night before. Still passed.",
+    "Ugly like a DMV photo. Officially yours, technically usable.",
+    "A hand that survived by luck, stubbornness, and low expectations.",
+    "Result with the elegance of a fridge-leftover reheat. Still nourishing.",
+    "Made it through like an unreturned library book that quietly got away with it.",
+  ],
+  bust_close: [
+    "Closer than a drive-thru line at noon, and equally frustrating.",
+    "The slow-motion walk into a glass door.",
+    "The next tier sat right there like your phone on the nightstand, unreachable.",
+    "The fantasy gods had the envelope ready and changed their minds at the podium.",
+    "That was the heart-attack in the waiting room. Dressed up. Went nowhere.",
+    "Tonight had a coupon that expired at the register.",
+    "So close it made the hand shake a little. Then it didn't cash.",
+    "That one ended like an autoplay episode getting cut off by buffering.",
+    "Hit the door with a cart full of groceries and the door didn't open.",
+    "Inches from the line and not a step further. The kind of inches that keep you up.",
+    "You saw the finish and the finish saw you and nothing happened.",
+    "Lost it at the register like someone asked for ID on your birthday.",
+    "The gap was laughable, which made it worse.",
+    "One point short. The saddest number in sports.",
+    "Felt like texting the right person the wrong message. Recoverable. Still a sting.",
+  ],
+  bust_mid: [
+    "Read the room, took a loss.",
+    "Nothing showed up to work tonight. Send the timecards back.",
+    "Chalk it. Chalk is honest.",
+    "Your roster did less than a Netflix recommendation algorithm tonight.",
+    "The hand equivalent of a Monday meeting that got rescheduled to Friday at 5.",
+    "Everybody turned in their assignment three weeks late. Unacceptable.",
+    "A night that belongs in the folder labeled 'do not revisit.'",
+    "Result with the warmth of a leftover pizza from last Tuesday.",
+    "The ledger took a nap and nobody woke it up.",
+    "That was the group text everyone muted. Eventually they muted the group itself.",
+    "This hand had the energy of a line at the post office. And similar outcomes.",
+    "Like an unreplied-to email with 'urgent' in the subject.",
+    "Chalk this one up and take the night off of thinking.",
+    "Tonight's cash receipt was unfortunately in red ink.",
+    "Not great, not catastrophic. Just a loss that rhymes with 'again.'",
+  ],
+  bust_bad: [
+    "Tonight got marked 'return to sender.'",
+    "Burn the film. Skip the postmortem.",
+    "Tonight was a group project where everyone ghosted.",
+    "The supporting cast brought less than a potluck where everyone brought chips.",
+    "Your roster did less than a corporate HR email about the ping-pong tournament.",
+    "This is what happens when you bring a salad to a barbecue.",
+    "Your lineup showed up like airport security on a holiday weekend — late, unhelpful, unpleasant.",
+    "A hand so flat you could serve dinner on it.",
+    "The kind of night where even the loser's bracket isn't interested.",
+    "Roster performance was the algorithm showing you ads for things you already bought.",
+    "Tonight was a customer service hold song on loop.",
+    "Sound of silence from the entire lineup. Not artistic. Just silent.",
+    "The ledger asked for its money back and the lineup pretended not to hear.",
+    "Tonight was the IKEA assembly with three missing screws and a spite-filled allen wrench.",
+    "This hand had the energy of an email sent Friday at 4:59 PM that nobody reads until Monday.",
+  ],
+};
+
+// Ring buffer of recently-used Chad analogies to prevent back-to-back repeats.
+// Module-level state (per-session); resets on page reload. Window size covers
+// the most-common intensity pool size so we won't repeat within a single run.
+const RECENT_ANALOGIES = new Set<string>();
+const RECENT_ANALOGIES_WINDOW = 15;
+
+function pickChadAnalogy(intensity: Intensity, seed: number): string {
+  const pool = CHAD_ANALOGIES[intensity];
+  if (!pool || pool.length === 0) return "";
+  const start = Math.abs(seed) % pool.length;
+  // Walk the pool starting at seed-derived offset, return first entry not in
+  // the recent-use set. Guarantees no repeat within the window.
+  for (let i = 0; i < pool.length; i++) {
+    const candidate = pool[(start + i) % pool.length];
+    if (!RECENT_ANALOGIES.has(candidate)) {
+      RECENT_ANALOGIES.add(candidate);
+      if (RECENT_ANALOGIES.size > RECENT_ANALOGIES_WINDOW) {
+        // Set iteration preserves insertion order — first() is oldest
+        const first = RECENT_ANALOGIES.values().next().value;
+        if (first) RECENT_ANALOGIES.delete(first);
+      }
+      return candidate;
+    }
+  }
+  // All pool entries seen recently — return seed-default anyway (rare)
+  return pool[start];
+}
+
+// ── Beat connectives ───────────────────────────────────────────────────────
+// Joins two sentence-beats using one of several natural connectives.
+// Rotates by seed+nonce so each joint in the same output can pick differently,
+// producing flowing variety instead of rigid period-delimited fragments.
+//
+//   period   (. )         — default, distinct beats
+//   emdash   ( — )        — flowing, invites continuation
+//   comma    (, )         — tightest flow; requires lowercasable continuation
+
+/** First word is a common sentence starter we can safely lowercase after a comma. */
+const SAFE_LOWERCASE_STARTERS = /^(the|a|an|this|that|these|those|it|its|we|he|she|they|you|your|when|if|because|after|before|even|still|but|and|but|while|though|so|cash|green|money|real|not|no|nothing|solid|clean|barely|scraped|minimum|pay|pro|photo|threaded|held|tight|one|huge|big|historic|top|money|serious|deep|all|legend|mvp|starter|rookie|bust|quiet|tonight|tomorrow|paid|closed|paperwork)\b/i;
+
+/** Lowercase first letter only when safe (common starter words, not proper nouns). */
+function maybeLowerFirst(s: string): string {
+  const trimmed = s.trim();
+  if (SAFE_LOWERCASE_STARTERS.test(trimmed)) {
+    return trimmed.charAt(0).toLowerCase() + trimmed.slice(1);
+  }
+  return trimmed;
+}
+
+/** Returns true if lowercasing the first word of `s` would be grammatical. */
+function canLowercaseFirst(s: string): boolean {
+  return SAFE_LOWERCASE_STARTERS.test(s.trim());
+}
+
+/** Join two beats with a seed-rotating connective. Position-aware so the second
+ *  beat's capitalization is preserved when the connective demands it.
+ *  Avoids em-dash stacking — if either side already contains " — ", fall back
+ *  to period or comma so we don't produce fragmented "A — B — C — D" patterns. */
+function joinBeats(a: string, b: string, seed: number, nonce: number, allowComma: boolean): string {
+  const cleanA = a.replace(/[\s.!?;:,—-]+$/, "");
+  const bTrim = b.trim();
+  const alreadyHasEmDash = cleanA.includes(" — ") || bTrim.includes(" — ");
+  const commaHeavy = (cleanA.match(/,/g)?.length ?? 0) >= 2;
+  const canComma = allowComma && !commaHeavy && canLowercaseFirst(bTrim);
+  const mode = Math.abs(Math.floor((seed + nonce * 13) / 3)) % 5;
+
+  // Em-dash already present on either side — em-dash stacking looks fragmented.
+  // Prefer comma-join when safe; otherwise fall back to period.
+  if (alreadyHasEmDash) {
+    if (canComma) return `${cleanA}, ${maybeLowerFirst(bTrim)}`;
+    return `${cleanA}. ${bTrim}`;
+  }
+  // Comma-join — only when second beat lowercases cleanly AND first beat
+  // isn't already comma-heavy (avoids run-on feel).
+  if (mode === 0 && canComma) return `${cleanA}, ${maybeLowerFirst(bTrim)}`;
+  // Em-dash — 60% of rolls, natural flow
+  if (mode === 0 || mode === 1 || mode === 2) return `${cleanA} — ${bTrim}`;
+  // Period fallback — always safe.
+  return `${cleanA}. ${bTrim}`;
+}
+
+// Nickname-based framing — uses a cultured player's nickname for a personal touch.
+// Templates work with or without "The" prefix ("The Joker delivered.", "Greek Freak delivered.")
+const NICKNAME_WIN_FRAMING = [
+  "{nick} delivered.",
+  "{nick} was cooking.",
+  "{nick} showed up.",
+  "{nick} in his bag tonight.",
+  "That's {nick} for you.",
+  "{nick} did what {nick} does.",
+  "Vintage {nick}.",
+  "{nick} on his stuff.",
+];
+const NICKNAME_BUST_FRAMING = [
+  "Not {nick}'s night.",
+  "{nick} couldn't save it.",
+  "{nick} had nothing tonight.",
+  "Quiet one from {nick}.",
+  "Even {nick} went dark.",
+  "{nick} took the night off, apparently.",
+];
+
+/** Generic framing from RESULT_FRAMING pool keyed by intensity. */
+function genericFraming(intensity: Intensity, seed: number): string {
+  const pool = RESULT_FRAMING[intensity];
+  return pool ? (pickSeeded(pool, seed, 50) ?? "") : "";
+}
+
+/** Nickname-templated framing — personal touch using culture.nicknames. */
+function nicknameFraming(culture: CultureShape | null, isBust: boolean, seed: number): string {
+  if (!culture?.nicknames?.length) return "";
+  const nick = pickSeeded(culture.nicknames, seed, 80);
+  if (!nick) return "";
+  const pool = isBust ? NICKNAME_BUST_FRAMING : NICKNAME_WIN_FRAMING;
+  const tmpl = pickSeeded(pool, seed, 85);
+  return tmpl ? tmpl.replace(/\{nick\}/g, nick) : "";
+}
+
+/** Culture-line framing — pulls a full line from overperform/onPace/underperform
+ *  when tonally appropriate. These are the witty player-voice lines already
+ *  written in PLAYER_CULTURE (e.g. "Jokić doing Jokić things - efficient, dominant, boring to haters.") */
+function cultureFraming(
+  culture: CultureShape | null,
+  intensity: Intensity,
+  starRatio: number,
+  isBust: boolean,
+  seed: number,
+): string {
+  if (!culture) return "";
+  // Busts → underperform pool
+  if (isBust && (culture as any).underperform?.length) {
+    return pickSeeded((culture as any).underperform, seed, 90) ?? "";
+  }
+  // High-ratio wins (big games) → overperform pool
+  const isBigWin = intensity === "all_star" || intensity === "mvp" || intensity === "goat";
+  if (!isBust && starRatio >= 1.2 && isBigWin && (culture as any).overperform?.length) {
+    return pickSeeded((culture as any).overperform, seed, 90) ?? "";
+  }
+  // Normal wins → onPace pool
+  if (!isBust && (culture as any).onPace?.length) {
+    return pickSeeded((culture as any).onPace, seed, 90) ?? "";
+  }
+  return "";
+}
+
+/** Blended framing: rotates between archetype-specific, anchor-aware, generic,
+ *  nickname, and full culture line sources based on seed + context. Higher-signal
+ *  sources (archetype, anchor, near-miss gap) fire first when applicable;
+ *  remaining hands rotate through the variety layers. */
+function pickFraming(
+  intensity: Intensity,
+  archetype: CommentaryArchetype,
+  seed: number,
+  culture: CultureShape | null,
+  starRatio: number,
+  isBust: boolean,
+  isAnchor: boolean,
+  gapToNextTier: number,
+): string {
+  const r = Math.abs(seed) % 10;
+
+  // Priority 1: gap-specific near-miss framing (bust within 5 FP of next tier)
+  if (isBust && gapToNextTier > 0 && gapToNextTier <= 5 && r < 4) {
+    const nm = nearMissFraming(gapToNextTier, seed);
+    if (nm) return nm;
+  }
+
+  // Priority 2: archetype-specific framing (star_carried_loss, ugly_win) — 40% when available
+  const archPool = ARCHETYPE_FRAMING[archetype];
+  if (archPool && r < 4) {
+    const af = pickSeeded(archPool, seed, 55);
+    if (af) return af;
+  }
+
+  // Priority 3: anchor-aware framing — only when result and anchor perf match
+  //   delivered = WIN + anchor at/above projection
+  //   failed    = LOSS + anchor below projection
+  // Prevents "money card went quiet" framing from firing on winning hands.
+  if (isAnchor && r < 3) {
+    if (!isBust && starRatio >= 1.0) {
+      const af = pickSeeded(ANCHOR_DELIVERED_FRAMING, seed, 70);
+      if (af) return af;
+    } else if (isBust && starRatio < 1.0) {
+      const af = pickSeeded(ANCHOR_FAILED_FRAMING, seed, 70);
+      if (af) return af;
+    }
+  }
+
+  // Priority 4: nickname framing (short player flavor) — 20%
+  if (r < 2) {
+    const nf = nicknameFraming(culture, isBust, seed);
+    if (nf) return nf;
+  }
+
+  // Priority 5: full culture line (witty player voice) — 20%
+  if (r >= 2 && r < 4) {
+    const cf = cultureFraming(culture, intensity, starRatio, isBust, seed);
+    if (cf) return cf;
+  }
+
+  // Default: generic framing
+  return genericFraming(intensity, seed);
+}
+
+/** Apply framing to a main line with variety.
+ *  Three modes cycled by seed:
+ *    - lead: "{framing} {main}" — result first, star follows
+ *    - close: "{main} {framing}" — star first, result reflection at end
+ *    - none: "{main}" — template/override stands alone
+ *  `forceFraming=true` (for short override-path lines) skips the "none" mode. */
+function applyFraming(
+  main: string,
+  intensity: Intensity,
+  archetype: CommentaryArchetype,
+  seed: number,
+  culture: CultureShape | null,
+  starRatio: number,
+  isBust: boolean,
+  isAnchor: boolean,
+  gapToNextTier: number,
+  forceFraming = false,
+): string {
+  // Optional Chad-style closing analogy. Three triggers:
+  //   1. High-signal moment — narratively big archetype/intensity always earns
+  //      color (LEGEND, career_night, star_carried_loss, near-miss, etc).
+  //   2. Length floor — primaries < 100 chars waste 3+ UI rows; always extend.
+  //   3. Seed-gated default — ~25% of remaining short-ish primaries (< 150 chars).
+  // Applied AFTER framing so the flow reads as: [framing?] [main template] [analogy?]
+  const isHighSignal = (
+    archetype === "career_night" ||
+    archetype === "star_carried_loss" ||
+    archetype === "collapse" ||
+    archetype === "badge_explosion" ||
+    intensity === "goat" ||
+    intensity === "bust_close"
+  );
+  const isVeryShort = main.length < 100;
+  const chadGate = Math.abs(Math.floor(seed / 11)) % 4;
+  const wantsChad = (
+    (isHighSignal && main.length < 220) ||
+    isVeryShort ||
+    (chadGate === 0 && main.length < 150)
+  );
+  const analogy = wantsChad ? pickChadAnalogy(intensity, seed) : "";
+
+  const framing = pickFraming(intensity, archetype, seed, culture, starRatio, isBust, isAnchor, gapToNextTier);
+
+  const withAnalogy = (s: string) => {
+    if (!analogy) return s;
+    const core = analogy.toLowerCase().replace(/[^a-z\s]/g, "").trim().slice(0, 30);
+    if (core && s.toLowerCase().includes(core)) return s;
+    // Analogies are descriptor-style — comma-join is natural when safe
+    return joinBeats(s, analogy, seed, 23, true);
+  };
+
+  if (!framing) return withAnalogy(main);
+  // Skip framing if its words already appear in the main line — avoids
+  // "Clean hand. ...Clean hand." style robotic repetition.
+  const core = framing.toLowerCase().replace(/[^a-z\s]/g, "").trim();
+  if (core.length > 3 && main.toLowerCase().includes(core)) return main;
+  // Seeded mode pick: 0=lead, 1=close, 2=none (unless forced)
+  const modes = forceFraming ? 2 : 3;
+  const mode = Math.abs(Math.floor(seed / 7)) % modes;
+  // Lead mode: framing first, then main. Main typically starts with proper noun
+  // (player name), so comma-join is usually not valid — joinBeats will fall
+  // back to em-dash/period when canLowercaseFirst() returns false.
+  if (mode === 0) return withAnalogy(joinBeats(framing, main, seed, 11, false));
+  // Close mode: main first, framing at end. Framing phrases are short declaratives
+  // that lowercase cleanly — comma-join works.
+  if (mode === 1) return withAnalogy(joinBeats(main, framing, seed, 17, true));
+  return withAnalogy(main);
+}
+
 // ── Culture lookup ─────────────────────────────────────────────────────────
 
-let _cultureDb: Record<string, Record<string, { nicknames?: string[] }>> = {};
+/** Structural subset of PlayerCulture used by the override/enrichment layer.
+ *  Intentionally loose — sport-specific culture shapes may include more fields. */
+export interface CultureShape {
+  nicknames?: string[];
+  // Phase 1 — situational/specific
+  bigGame?: string[];
+  quietGame?: string[];
+  defensive?: string[];
+  streakLines?: string[];
+  opponentFlavor?: Record<string, string>;
+  signatureGames?: Array<{ date: string; opponent: string; line: string; fp?: number }>;
+  // Phase 2 — flavor pool (weighted-random selection)
+  milestones?: string[];
+  rivalry?: string[];
+  controversy?: string[];
+  salaryNarrative?: string[];
+  teamContext?: string[];
+  draftAndPath?: string[];
+  formerTeam?: string[];
+}
 
-function lookupCulture(name: string, sport: string): { nicknames?: string[] } | null {
-  if (!_cultureDb[sport]) {
-    try {
-      if (sport === "baseball") {
-        const mod = require("../../baseball/src/utils/playerCulture");
-        _cultureDb[sport] = mod.PLAYER_CULTURE ?? {};
-      } else {
-        const mod = require("../../basketball/src/utils/playerCulture");
-        _cultureDb[sport] = mod.PLAYER_CULTURE ?? {};
-      }
-    } catch { _cultureDb[sport] = {}; }
-  }
+const _cultureDb: Record<string, Record<string, CultureShape>> = {
+  basketball: BASKETBALL_CULTURE as unknown as Record<string, CultureShape>,
+  baseball: BASEBALL_CULTURE as unknown as Record<string, CultureShape>,
+};
+
+function lookupCulture(name: string, sport: string): CultureShape | null {
+  const db = _cultureDb[sport];
+  if (!db) return null;
   const parts = name.trim().split(/\s+/);
   const suffixes = new Set(["II", "III", "IV", "V", "Jr.", "Jr", "Sr.", "Sr"]);
   while (parts.length > 1 && suffixes.has(parts[parts.length - 1])) parts.pop();
   const last = (parts[parts.length - 1] ?? "").toLowerCase();
-  return _cultureDb[sport]![last] ?? null;
+  return db[last] ?? null;
+}
+
+// ── Team flavor lookup (basketball only) ───────────────────────────────────
+
+interface TeamFlavorEntry { identity: string; hype: string; cold: string; humor: string; }
+const _teamFlavorDb: Record<string, Record<string, TeamFlavorEntry>> = {
+  basketball: BASKETBALL_TEAM_FLAVOR as Record<string, TeamFlavorEntry>,
+};
+
+function lookupTeamFlavor(opp: string | undefined, sport: string): TeamFlavorEntry | null {
+  if (!opp) return null;
+  const db = _teamFlavorDb[sport];
+  if (!db) return null;
+  return db[opp.toUpperCase()] ?? null;
 }
 
 // ── Seed-based random ──────────────────────────────────────────────────────
@@ -112,6 +676,194 @@ function lookupCulture(name: string, sport: string): { nicknames?: string[] } | 
 function seededRandom(seed: number, index: number): number {
   const raw = (seed * 9301 + 49297 + index * 7919) % 233280;
   return (raw < 0 ? raw + 233280 : raw) / 233280;
+}
+
+function pickSeeded<T>(arr: T[], seed: number, index = 0): T | null {
+  if (!arr.length) return null;
+  return arr[Math.abs(Math.floor(seed + index * 7919)) % arr.length];
+}
+
+function statN(c: any, key: string): number {
+  const s = c?.statLine ?? {};
+  return Number(s[key] ?? s[key.toUpperCase()] ?? s[key.toLowerCase()] ?? 0);
+}
+
+function lastName(n: string): string {
+  const parts = n.trim().split(/\s+/);
+  const suffixes = new Set(["II", "III", "IV", "V", "Jr.", "Jr", "Sr.", "Sr"]);
+  while (parts.length > 1 && suffixes.has(parts[parts.length - 1])) parts.pop();
+  return parts[parts.length - 1] ?? n;
+}
+
+/** Prepend the player's name if the line doesn't already reference them. */
+function attributeCultureLine(line: string, name: string, nicknames?: string[]): string {
+  const lower = line.toLowerCase();
+  const full = name.trim().toLowerCase();
+  if (lower.includes(full)) return line;
+  const last = lastName(name).toLowerCase();
+  if (last.length >= 4 && lower.includes(last)) return line;
+  if (nicknames?.some(n => n.length >= 3 && lower.includes(n.toLowerCase()))) return line;
+  return `${name} — ${line.charAt(0).toLowerCase()}${line.slice(1)}`;
+}
+
+// ── Culture override + secondary enrichment ────────────────────────────────
+
+/** Pre-template override. Returns a replacement primary line (early-exit) or null.
+ *  Fires on signatureGames exact date+opponent match, or opponentFlavor keyed match. */
+function cultureOverride(star: any, culture: CultureShape | null): string | null {
+  if (!star || !culture) return null;
+  // Signature games — exact date + opponent
+  if (culture.signatureGames?.length && star.gameDate && star.opponent) {
+    const date = String(star.gameDate).slice(0, 10);
+    const opp = String(star.opponent).toUpperCase();
+    const sig = culture.signatureGames.find(g => g.date === date && g.opponent.toUpperCase() === opp);
+    if (sig?.line) return attributeCultureLine(sig.line, star.name, culture.nicknames);
+  }
+  // Opponent flavor — keyed by opponent code
+  if (culture.opponentFlavor && star.opponent) {
+    const flavor = culture.opponentFlavor[String(star.opponent).toUpperCase()];
+    if (flavor) return attributeCultureLine(flavor, star.name, culture.nicknames);
+  }
+  return null;
+}
+
+/** Post-template secondary selector.
+ *  Two-layer design:
+ *    - Situational (strict priority, fires when condition met):
+ *        bigGame → defensive → quietGame → streakLines
+ *    - Flavor (weighted seeded-random pool over eligible options):
+ *        salaryNarrative, milestones, rivalry, formerTeam, controversy,
+ *        teamContext, draftAndPath, teamFlavor (hype/cold/humor/identity)
+ *  Flavor pool ensures all dormant culture fields get exposure over many hands
+ *  instead of only the top-priority branch ever firing. */
+/** Returns true when `line` already references `star` by full name, last name,
+ *  first name (word-bounded), or a nickname. */
+function lineNamesStar(line: string, star: any, nicknames?: string[]): boolean {
+  if (!star?.name) return false;
+  const lower = line.toLowerCase();
+  if (lower.includes(star.name.toLowerCase())) return true;
+  const parts = star.name.trim().split(/\s+/);
+  const last = lastName(star.name).toLowerCase();
+  if (last.length >= 4 && lower.includes(last)) return true;
+  const first = (parts[0] ?? "").toLowerCase();
+  // Word-bounded first-name match — avoids matching "Luka" inside "lukewarm", etc.
+  if (first.length >= 3 && new RegExp(`\\b${first.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(lower)) return true;
+  if (nicknames?.some(n => n.length >= 3 && lower.includes(n.toLowerCase()))) return true;
+  return false;
+}
+
+function cultureSecondary(
+  star: any,
+  culture: CultureShape | null,
+  teamFlavor: TeamFlavorEntry | null,
+  input: CommentaryInput,
+  seed: number,
+  /** When true, primary line already names the star — secondary should avoid
+   *  restating the player and pivot to team/opponent-focused flavor. */
+  primaryNamesStar: boolean = false,
+): string | null {
+  if (!star) return null;
+
+  const pts = statN(star, "pts");
+  const blk = statN(star, "blk");
+  const stl = statN(star, "stl");
+  const mins = statN(star, "min") || statN(star, "minutes") || statN(star, "mp");
+  const badges = (star.achievements ?? []).map((a: any) => a.id);
+  const actualFp = Number(star.actualFp ?? 0);
+  const salary = Number(star.salary ?? 0);
+  const projectedFp = Number(star.projectedFp ?? 0);
+  const ratio = projectedFp > 0 ? actualFp / projectedFp : 1;
+  const isBigWin = !input.isBust && (input.winTier === "ALL_STAR" || input.winTier === "MVP" || input.winTier === "LEGEND");
+  const attribute = (line: string) => attributeCultureLine(line, star.name, culture?.nicknames);
+
+  // ── Situational layer (strict priority) ──────────────────────────────────
+  // Skipped entirely when primary already names the star — these are all
+  // player-focused and would create parallel two-line commentary about the
+  // same subject. When skipped, the flow falls through to the team-centric
+  // flavor pool below so the secondary pivots to opponent/franchise voice.
+
+  if (!primaryNamesStar) {
+    // 1. Big game — non-bust, elite output
+    if (!input.isBust && culture?.bigGame?.length) {
+      const isBig = pts >= 40 || actualFp >= 65 || badges.includes("QUAD_DBL") || badges.includes("GOD_MODE");
+      if (isBig) {
+        const line = pickSeeded(culture.bigGame, seed, 1);
+        if (line) return attribute(line);
+      }
+    }
+
+    // 2. Defensive standout — non-bust
+    if (!input.isBust && culture?.defensive?.length) {
+      if (blk >= 4 || stl >= 5) {
+        const line = pickSeeded(culture.defensive, seed, 2);
+        if (line) return attribute(line);
+      }
+    }
+
+    // 3. Quiet game — non-big-win, star had off night (non-injury)
+    if (!isBigWin && culture?.quietGame?.length && salary >= 30) {
+      const nonInjury = !mins || mins >= 20;
+      if (nonInjury && pts <= 10 && actualFp < 18) {
+        const line = pickSeeded(culture.quietGame, seed, 3);
+        if (line) return attribute(line);
+      }
+    }
+
+    // 4. Streak lines — wins with streak 3–6
+    if (!input.isBust && input.streak >= 3 && input.streak < 7 && culture?.streakLines?.length) {
+      const line = pickSeeded(culture.streakLines, seed, 4);
+      if (line) return attribute(line);
+    }
+  }
+
+  // ── Flavor layer (weighted seeded-random pool) ───────────────────────────
+  // When the primary already names the star, the flavor pool is restricted to
+  // team/opponent-centric lines so the two-line commentary reads as one message
+  // instead of two parallel statements about the same player.
+
+  interface FlavorOption { weight: number; line: string; }
+  const pool: FlavorOption[] = [];
+
+  // Narrowed pool — only high-signal culture fields that relate to tonight's
+  // hand, not off-topic franchise/origin/controversy trivia. The removed fields
+  // (controversy, draftAndPath, formerTeam, teamContext, teamFlavor.identity)
+  // were surfacing random trivia disconnected from the played hand.
+
+  if (!primaryNamesStar) {
+    // salaryNarrative — comments on card value, relevant to the decision to play this card
+    if (culture?.salaryNarrative?.length && salary >= 45) {
+      const l = pickSeeded(culture.salaryNarrative, seed, 10);
+      if (l) pool.push({ weight: 18, line: attribute(l) });
+    }
+
+    // milestones — player trajectory on wins where star performed at/above projection
+    if (!input.isBust && ratio >= 1.0 && culture?.milestones?.length) {
+      const l = pickSeeded(culture.milestones, seed, 11);
+      if (l) pool.push({ weight: 12, line: attribute(l) });
+    }
+  }
+
+  // teamFlavor — the venue/opponent voice for tonight's matchup.
+  // hype on big wins, cold on busts, humor as a neutral splash.
+  // identity removed: too generic/franchise-narrative, not about tonight.
+  if (teamFlavor) {
+    const boost = primaryNamesStar ? 2 : 1;
+    if (input.isBust) pool.push({ weight: 18 * boost, line: teamFlavor.cold });
+    else if (isBigWin) pool.push({ weight: 18 * boost, line: teamFlavor.hype });
+    else pool.push({ weight: 10 * boost, line: teamFlavor.humor });
+  }
+
+  if (pool.length === 0) return null;
+
+  // Seeded weighted pick
+  const totalWeight = pool.reduce((s, o) => s + o.weight, 0);
+  const roll = seededRandom(seed, 99) * totalWeight;
+  let cum = 0;
+  for (const o of pool) {
+    cum += o.weight;
+    if (roll < cum) return o.line;
+  }
+  return pool[pool.length - 1].line;
 }
 
 // ── Core selector ──────────────────────────────────────────────────────────
@@ -143,7 +895,21 @@ export function selectCommentary(
 
   // Step 5: Build template data
   const culture = star ? lookupCulture(star.name, sport) : null;
+  const teamFlavor = star ? lookupTeamFlavor(star.opponent, sport) : null;
   const templateData = buildTemplateData(star, input, recordEvents, culture);
+
+  // Step 5a: Culture override — signature game / opponent flavor can replace primary.
+  // Highest priority player-specific voice; skip template flow entirely when matched.
+  const override = cultureOverride(star, culture);
+  if (override) {
+    // Override primaries are short single-sentence culture fragments. Always
+    // pair with result framing (forceFraming=true) but alternate lead/close
+    // position so it doesn't read the same way every time.
+    const starRatioFromStar = star && star.projectedFp ? star.actualFp / star.projectedFp : 1;
+    const maxSalary = input.roster.reduce((m, c) => Math.max(m, c.salary), 0);
+    const isAnchor = !!star && star.salary === maxSalary;
+    return { primary: applyFraming(override, intensity, archetype, seed, culture, starRatioFromStar, input.isBust, isAnchor, deltaToNextTier, true) };
+  }
 
   // Step 6: Load library and filter candidates
   const library = loadLibrary(sport);
@@ -209,15 +975,15 @@ export function selectCommentary(
   // Step 8: Compose message with detail sub-lines
   const mainLine = composeMessage(best.line.template, templateData, details);
 
-  // Step 9: Stamp
-  const stamp = selectStamp(matchedArchetype, deltaToNextTier, input.prevStreak);
-
-  // Step 10: Record usage in anti-repeat
+  // Step 9: Record usage in anti-repeat
   recordUsage(best.line.id, matchedArchetype, tone, mainLine);
 
-  // Step 11: Return as PostRevealCopy (compatible with existing UI)
-  return {
-    primary: mainLine,
-    secondary: stamp ?? undefined,
-  };
+  // Step 10: Return single-line commentary with varied framing.
+  // Template path mixes framing sources (archetype / anchor / nickname / culture
+  // / generic) based on seed + context, plus three position modes. Keeps the
+  // result reflection from appearing in the same shape every hand.
+  const templateStarRatio = star && star.projectedFp ? star.actualFp / star.projectedFp : 1;
+  const maxSalary = input.roster.reduce((m, c) => Math.max(m, c.salary), 0);
+  const isAnchor = !!star && star.salary === maxSalary;
+  return { primary: applyFraming(mainLine, intensity, matchedArchetype, seed, culture, templateStarRatio, input.isBust, isAnchor, deltaToNextTier) };
 }

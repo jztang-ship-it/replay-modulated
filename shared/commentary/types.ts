@@ -18,7 +18,11 @@ export interface CommentaryRosterCard {
   cardTier?: string;
   statLine?: Record<string, any>;
   opponent?: string;
+  /** ISO date of the source game — used for signature-game matching in culture commentary. */
+  gameDate?: string;
   homeAway?: "H" | "A" | "";
+  /** True if the card was held from a previous hand. */
+  wasHeld?: boolean;
   /** Earned badges/achievements (e.g. TRIPLE_DBL, FIRE, DOUBLE_DBL) */
   achievements?: Array<{ id: string; label: string; icon?: string; fp?: number }>;
   /** Extreme game flags — outlier stat lines that deserve spotlight commentary */
