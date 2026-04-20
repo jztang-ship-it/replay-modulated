@@ -209,61 +209,45 @@ function isDisabled(state: GameStateLabel): boolean {
 // All 10 emojis on one line: [🔥🔥🔥 1.2x] [🔥🔥 1.5x] [🔥🔥🔥🔥🔥 5x]
 // Tiers unlock progressively: tier 2 appears at 3 wins, tier 3 at 5 wins.
 
-function StreakFireEmoji({ lit, justLit, justExtinguished }: { lit: boolean; justLit: boolean; justExtinguished: boolean }) {
-  return (
-    <span style={{
-      fontSize: 13,
-      opacity: lit ? 1 : 0.2,
-      filter: lit ? "none" : "grayscale(1)",
-      display: "inline-block",
-      animation: justLit ? "streakFlash 0.5s ease-out" : justExtinguished ? "streakExtinguish 0.6s ease-out forwards" : "none",
-    }}>🔥</span>
-  );
-}
+const STREAK_LABELS: Record<number, string> = { 3: "1.2x", 5: "1.5x", 10: "2.0x" };
 
 function StreakFireRow({ streak, prevStreak }: { streak: number; prevStreak: number }) {
-  const gained = streak > prevStreak;
-  const lost = streak === 0 && prevStreak > 0;
-  const displayStreak = lost ? prevStreak : streak;
-
-  // Tiers: 0-2 = tier1 (3 emojis, 1.2x), 3-4 = tier2 (2 emojis, 1.5x), 5-9 = tier3 (5 emojis, 5x)
-  const tiers = [
-    { count: 3, label: "1.2x", threshold: 0 },
-    { count: 2, label: "1.5x", threshold: 3 },
-    { count: 5, label: "5x",   threshold: 5 },
-  ];
-
-  // How many tiers are visible? Tier 1 always, tier 2 at 3+ wins, tier 3 at 5+ wins
-  const visibleTiers = displayStreak >= 5 ? 3 : displayStreak >= 3 ? 2 : 1;
-
+  const totalFlames = streak >= 5 ? 10 : streak >= 3 ? 5 : 3;
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 2, maxHeight: 22, overflow: "visible" }}>
-      {tiers.slice(0, visibleTiers).map((tier, ti) => {
-        const tierStart = tier.threshold;
-        return (
-          <div key={`tier-${ti}`} style={{ display: "flex", alignItems: "center", gap: 1 }}>
-            {Array.from({ length: tier.count }, (_, i) => {
-              const globalIdx = tierStart + i;
-              const isLit = !lost && globalIdx < streak;
-              const justLit = gained && globalIdx === streak - 1;
-              const justExtinguished = lost && globalIdx < prevStreak;
-              return (
-                <StreakFireEmoji
-                  key={`sf-${globalIdx}`}
-                  lit={lost ? true : isLit}
-                  justLit={justLit}
-                  justExtinguished={justExtinguished}
-                />
-              );
-            })}
-            <span style={{
-              fontSize: 8, fontWeight: 800,
-              color: streak >= tierStart + tier.count ? "#FFD700" : "rgba(255,255,255,0.3)",
-              marginRight: ti < visibleTiers - 1 ? 4 : 0,
-            }}>{tier.label}</span>
-          </div>
-        );
-      })}
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2 }}>
+      {/* Label row — multiplier above its threshold flame, invisible placeholder otherwise */}
+      <div style={{ display: "flex", gap: 2 }}>
+        {Array.from({ length: totalFlames }, (_, i) => {
+          const n = i + 1;
+          const label = STREAK_LABELS[n];
+          const isThresholdSlot = label != null;
+          const tierLit = isThresholdSlot && streak >= n;
+          return (
+            <span key={`lbl-${n}`} style={{
+              fontSize: 8, fontWeight: 800, lineHeight: 1,
+              display: "inline-block", width: "1em", textAlign: "center",
+              color: tierLit ? "#FFD700" : "rgba(255,255,255,0.2)",
+              visibility: isThresholdSlot ? "visible" : "hidden",
+            }}>{label ?? ""}</span>
+          );
+        })}
+      </div>
+      {/* Flame row — totalFlames flames, flame N lit when streak >= N */}
+      <div style={{ display: "flex", gap: 2 }}>
+        {Array.from({ length: totalFlames }, (_, i) => {
+          const n = i + 1;
+          const isLit = streak >= n;
+          const justLit = streak > prevStreak && n === streak;
+          return (
+            <span key={`flame-${n}`} style={{
+              fontSize: 11, opacity: isLit ? 1 : 0.2,
+              filter: isLit ? "none" : "grayscale(1)",
+              display: "inline-block",
+              animation: justLit ? "streakFlash 0.5s ease-out" : "none",
+            }}>🔥</span>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -1218,8 +1202,8 @@ function WageDisplay({
 
   const multColor = betMultiplier === 10 ? "#FB923C"
     : betMultiplier === 5  ? "#C084FC"
-    : betMultiplier === 3  ? "#22C55E"
-    : "#3B82F6";
+    : betMultiplier === 3  ? "#3B82F6"
+    : "#22C55E";
 
   const wageLabel = (
     <span style={{
@@ -1507,10 +1491,11 @@ export function GameBar({
   const remaining = capMax - spent;
   const overBudget = remaining < 0;
 
-  /** Active (selected) multiplier: text + border + bg tint per tier */
+  /** Active (selected) multiplier: text + border + bg tint per tier.
+   *  Matches tier palette: 1x=green (ROOKIE), 3x=blue (STARTER), 5x=purple (ALL_STAR), 10x=orange (MVP). */
   const MULTIPLIER_ACTIVE: Record<number, { text: string; border: string; bg: string }> = {
-    1: { text: "#3B82F6", border: "#3B82F6", bg: "rgba(59,130,246,0.18)" },
-    3: { text: "#22C55E", border: "#22C55E", bg: "rgba(34,197,94,0.18)" },
+    1: { text: "#22C55E", border: "#22C55E", bg: "rgba(34,197,94,0.18)" },
+    3: { text: "#3B82F6", border: "#3B82F6", bg: "rgba(59,130,246,0.18)" },
     5: { text: "#C084FC", border: "#C084FC", bg: "rgba(192,132,252,0.18)" },
     10: { text: "#FB923C", border: "#FB923C", bg: "rgba(251,146,60,0.18)" },
   };
@@ -1616,7 +1601,7 @@ export function GameBar({
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "relative", paddingTop: 2, minHeight: 44 }}>
             {/* Wallet chip — left */}
             <div style={{ position: "absolute", left: 0, display: "flex", alignItems: "center", gap: 4, opacity: ftueHideBalance ? 0 : 1, transition: "opacity 0.3s ease" }}>
-              <span style={{ fontSize: 14 }}>👛</span>
+
               <span style={{
                 fontSize: 14, fontWeight: 900, lineHeight: 1, fontVariantNumeric: "tabular-nums",
                 color: balanceColor === "win" ? "#22C55E" : balanceColor === "loss" ? "#FF3B30" : "#FFFFFF",

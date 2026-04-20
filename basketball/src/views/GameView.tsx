@@ -8,7 +8,7 @@
 import { useMemo, useState, useCallback, useRef, useEffect, useLayoutEffect, type ReactNode } from "react";
 import type { GamePhase, PlayerCard } from "../adapters/types";
 import { sportAdapter } from "../adapters/SportAdapter";
-import { dealInitialRoster, redrawRoster, resolveRoster, computeRosterCeiling } from "../adapters/gameAdapter";
+import { dealInitialRoster, redrawRoster, resolveRoster, computeRosterCeiling, getTodaysStars } from "../adapters/gameAdapter";
 import { dealFTUERoster, redrawFTUERoster, resolveFTUERoster } from "../adapters/ftueRoster";
 import { CoachLayer } from "@shared/components/CoachLayer";
 import { useFTUE } from "@shared/hooks/useFTUE";
@@ -22,7 +22,7 @@ import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalRe
 import { calculateWinTier, calculatePayout, calculatePayoutWithStreak, getStreakMultiplier, BASKETBALL_WIN_TIERS, STREAK_TIERS, type WinTier } from "../utils/payoutLogic";
 import { detectExtremes } from "@shared/utils/extremeGames";
 import { buildPostRevealCopy } from "../utils/buildPostRevealCopy";
-import { composeCommentary } from "../../../shared/commentary/composeCommentary";
+import { selectCommentary } from "../../../shared/commentary/selectCommentary";
 import { useGameAnalytics } from "../../../shared/analytics/useGameAnalytics";
 import { CollectScreen } from '@shared/engagement/CollectScreen';
 import { TierGauge, computeGaugeState } from '@shared/components/TierGauge';
@@ -33,6 +33,7 @@ import { XPBar } from '@shared/engagement/XPBar';
 import { soundManager } from '@shared/utils/soundManager';
 import { audioDirector } from '@shared/utils/audioDirector';
 import { getPlayerUid, getNickname, setNickname, getSessionId } from '@shared/utils/playerIdentity';
+import { captureReferrerFromUrl, applyReferral, claimReferral } from '@shared/utils/referral';
 import { supabase } from "@shared/lib/supabase";
 import { buildScoreProof } from '@shared/utils/scoreProof';
 import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
@@ -584,6 +585,15 @@ export default function GameView() {
     recordHandWon,
     recordHandLost,
     collectTask,
+    recordStreakWin,
+    recordStreakBust,
+    recordBonusPlayerUsed,
+    recordTierReached,
+    recordMultiplierUsed,
+    streakCount,
+    weeklyTaskStates,
+    perpetualTaskStates,
+    recordLeaderboardViewed,
   } = useEngagement();
   const [showCollect, setShowCollect] = useState(false);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
@@ -624,6 +634,7 @@ export default function GameView() {
   }, []);
   const [noTransition, setNoTransition] = useState(false);
   const [revealedSalary, setRevealedSalary] = useState(0);
+  const deductedSalaryCardsRef = useRef<Set<string>>(new Set());
   const [gameError, setGameError] = useState<string | null>(null);
   const rosterRef = useRef<PlayerCard[]>([]);
   const { isFTUE, completeFTUE } = useFTUE("basketball");
@@ -667,6 +678,21 @@ export default function GameView() {
   const [handCount, setHandCount] = useState<number>(() =>
     parseInt(localStorage.getItem("replaymod_hand_count") ?? "1", 10)
   );
+
+  // ── Referral capture + claim ────────────────────────────────────────────
+  // Capture ?ref= on mount (once per session). When handCount crosses the
+  // legit threshold with an active referrer, fire the claim so the server
+  // can validate and reward — idempotent, local flags prevent replay.
+  useEffect(() => {
+    captureReferrerFromUrl();
+    // Apply referrer code to server on first hand played (if not already applied)
+    if (handCount >= 1) applyReferral();
+  }, []); // eslint-disable-line
+
+  useEffect(() => {
+    // Fire claim when both thresholds cleared. No-op if no referrer / already claimed.
+    claimReferral(handCount, loginStreak);
+  }, [handCount, loginStreak]);
 
   // ── Chad usher — single priority queue, max one message per IDLE return ──
 
@@ -972,6 +998,19 @@ export default function GameView() {
       heldRevealResumeRef.current = resume;
     } : undefined,
     onCardRevealStart: handleCardRevealStart,
+    onCardFpStart: useCallback((cId: string) => {
+      // Budget rolls down in sync with FP roll-up. Deduct at FP animation start.
+      // Ref prevents double-count across tap + skip flows.
+      if (deductedSalaryCardsRef.current.has(cId)) return;
+      const card = rosterRef.current.find(c => {
+        const id = String(c?.cardId ?? c?.basePlayerId ?? "");
+        return id === cId;
+      });
+      if (card && !(card as any).wasHeld) {
+        setRevealedSalary(prev => prev + Number((card as any).salary ?? 0));
+        deductedSalaryCardsRef.current.add(cId);
+      }
+    }, []),
     onCardComplete: useCallback((cId: string) => {
       setRevealIndex(prev => {
         const next = prev + 1;
@@ -1019,6 +1058,27 @@ export default function GameView() {
         logHandToDb(rosterRef.current, totalFp, String(tier), payout, streak);
         recordHandPlayed();
         if (!bust) recordHandWon(); else recordHandLost();
+
+        // Tier reached
+        recordTierReached(tier);
+
+        // Streak
+        if (!bust) {
+          recordStreakWin();
+        } else {
+          recordStreakBust();
+        }
+
+        // Bonus players used this hand
+        const bonusCount = rosterRef.current.filter(
+          c => Number((c as any).dailyBonus ?? 0) > 0
+        ).length;
+        if (bonusCount > 0) {
+          recordBonusPlayerUsed(bonusCount);
+        }
+
+        // Multiplier used this hand
+        recordMultiplierUsed(betMultiplier);
         if (isFTUE) {
           // FTUE: same flow as real game — WIN_CELEBRATION triggers wage animation
           ftueLastHandFpRef.current = totalFp;
@@ -1264,7 +1324,7 @@ export default function GameView() {
     };
 
     const copy = USE_NEW_COMMENTARY
-      ? composeCommentary(copyInput as any)
+      ? selectCommentary(copyInput as any)
       : buildPostRevealCopy(copyInput as any);
     // Tier 3: static fallback if template returned an unusable result.
     if (!copy?.primary) {
@@ -1537,6 +1597,7 @@ export default function GameView() {
       setStatsFlippedIds(new Set());
       setMvpId(undefined);
       setRevealedSalary(0);
+      deductedSalaryCardsRef.current = new Set();
       setLastRevealedCardId(null);
       setCelebrationHeld(false);
       setFtueOscillating(false);
@@ -1625,6 +1686,7 @@ export default function GameView() {
         (s, c: any) => c.wasHeld ? s + Number(c.salary ?? 0) : s, 0
       );
       setRevealedSalary(heldSalaryAtDraw);
+      deductedSalaryCardsRef.current = new Set();
 
       rosterRef.current = finalRoster;
       completedCardsRef.current = new Set();
@@ -1677,6 +1739,7 @@ export default function GameView() {
       setFtueGaugeOscDone(false);
       completedCardsRef.current = new Set();
       setRevealedSalary(0);
+      deductedSalaryCardsRef.current = new Set();
       setNoTransition(true);
       const placeholders = createPlaceholders();
       flipState.initCards(placeholders.map(cardId));
@@ -1734,7 +1797,6 @@ export default function GameView() {
 
   function handleButtonClick() {
     if (gameState === "REVEALING") {
-      setRevealedSalary(capUsed);
       setWasSkipped(true);
       skipReveal();
     }
@@ -1888,6 +1950,7 @@ export default function GameView() {
           alignItems: "flex-start",
           justifyContent: "center",
           minHeight: 0,
+          maxHeight: 373,
           padding: "4px 2px 2px 2px",
           boxSizing: "border-box",
           overflow: "hidden",
@@ -1930,27 +1993,7 @@ export default function GameView() {
                 onToggleLock={toggleLock}
                 onToggleFlip={toggleStatsFlip}
                 revealMode={REVEAL_MODE}
-                onTapReveal={isFTUE && ftueCardsBlocked ? undefined : (isFTUE ? (cardId: string) => {
-                  // FTUE: also tick budget down per card flip
-                  const card = rosterRef.current.find(c => {
-                    const id = String(c?.cardId ?? c?.basePlayerId ?? "");
-                    return id === cardId;
-                  });
-                  if (card && !(card as any).wasHeld) {
-                    setRevealedSalary(prev => prev + Number((card as any).salary ?? 0));
-                  }
-                  tapRevealCard(cardId);
-                } : (cardId: string) => {
-                  // Immediately add this card's salary so budget rolls down in sync with FP roll up
-                  const card = rosterRef.current.find(c => {
-                    const id = String(c?.cardId ?? c?.basePlayerId ?? "");
-                    return id === cardId;
-                  });
-                  if (card && !(card as any).wasHeld) {
-                    setRevealedSalary(prev => prev + Number((card as any).salary ?? 0));
-                  }
-                  tapRevealCard(cardId);
-                })}
+                onTapReveal={isFTUE && ftueCardsBlocked ? undefined : tapRevealCard}
                 heldFpVisible={heldFpVisible}
                 heldRevealedIds={heldRevealedIds}
                 tappedCardIds={tappedCardIds}
@@ -1971,11 +2014,11 @@ export default function GameView() {
         </div>
 
         {/* ── Bottom landscape: CSS Grid, all rows fixed pixel, nothing moves ── */}
-        {/* Rows: stats(40) gap(6) bar(14) gap(4) info(28) gap(4) commentary(62) gap(4) action(50) = 212px total */}
+        {/* stats(94) gap(4) bar(14) gap(8) info(0) gap(4) commentary(96) gap(2) action(74) = 296px total */}
         <div style={{
           flex: "0 0 auto",
           display: "grid",
-          gridTemplateRows: "40px 6px 14px 4px 28px 4px 62px 4px 50px",
+          gridTemplateRows: "94px 4px 14px 8px 0px 4px 96px 2px 74px",
           gridTemplateColumns: "1fr",
           padding: "0 12px",
           boxSizing: "border-box",
@@ -2039,57 +2082,92 @@ export default function GameView() {
                     />
                   </>
                 )}
-                {tierResultPhase === 2 && (
-                  <img
-                    key={`tier-stay-${winTier}`}
-                    src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
-                    alt={formatTierLabel(winTier)}
-                    style={{
-                      maxHeight: 80, maxWidth: "100%", objectFit: "contain",
-                      filter: `${TIER_IMAGE_HUE[winTier] ?? ""} drop-shadow(0 0 12px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`.trim(),
-                      animation: "tierShrinkDown 500ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
-                    }}
-                  />
-                )}
-              </div>
-            ) : (
-              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 48, width: "100%" }}>
-                {(() => {
-                  const spent =
-                    gameState === "IDLE" ? 0 :
-                      gameState === "DEALING" ? 0 :
-                        gameState === "HOLD" ? lockedSalary :
-                          gameState === "DRAWING" ? lockedSalary :
-                            gameState === "REVEALING" ? revealedSalary :
-                              capUsed;
-                  const remaining = CAP_MAX - spent;
-                  const overBudget = remaining < 0;
+                {tierResultPhase === 2 && (() => {
+                  const amountWagered = BASE_BET * betMultiplier;
+                  const net = winPayout - amountWagered;
+                  const netPositive = net > 0;
+                  const netColor = netPositive ? "#7FFF00" : "#FF3B30";
+                  const netLabel = netPositive ? `+$${net}` : `-$${Math.abs(net)}`;
+                  const FF = "'Rajdhani','Oswald','Arial Narrow',sans-serif";
                   return (
                     <>
-                      <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: 26, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic" }}>
-                          <RollingNumber value={totalFp} decimals={1} duration={300} />
-                        </div>
-                        <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
-                          Team FP
-                        </div>
-                      </div>
-                      <div style={{ textAlign: "center" }}>
-                        <div style={{ display: "flex", alignItems: "baseline", gap: 2, justifyContent: "center" }}>
-                          <span style={{ fontSize: 26, fontWeight: 900, color: overBudget ? "#ef4444" : "#FFFFFF", lineHeight: 1, fontStyle: "italic" }}>
-                            <RollingNumber value={remaining} decimals={0} duration={300} />
+                      <img
+                        key={`tier-stay-${winTier}`}
+                        src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
+                        alt={formatTierLabel(winTier)}
+                        style={{
+                          maxHeight: 52, maxWidth: "100%", objectFit: "contain",
+                          filter: `${TIER_IMAGE_HUE[winTier] ?? ""} drop-shadow(0 0 12px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`.trim(),
+                          animation: "tierShrinkDown 500ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
+                        }}
+                      />
+                      <div style={{ animation: "tierInfoFadeIn 300ms ease 500ms both", display: "flex", justifyContent: "center", alignItems: "center", gap: 20, marginTop: 4, width: "100%" }}>
+                        <span style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                          {displayFp.toFixed(1)} FP
+                        </span>
+                        {ceilingPct != null && (
+                          <span style={{ fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.45)", fontFamily: FF, lineHeight: 1, alignSelf: "center" }}>
+                            {ceilingPct}% ceiling
                           </span>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.35)", lineHeight: 1, fontStyle: "italic" }}>
-                            /{CAP_MAX}
-                          </span>
-                        </div>
-                        <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
-                          Budget
-                        </div>
+                        )}
+                        <span style={{ fontSize: 20, fontWeight: 700, color: netColor, fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                          {netLabel}
+                        </span>
                       </div>
                     </>
                   );
                 })()}
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "center", gap: 8, paddingTop: 16, width: "100%", height: "100%" }}>
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 48, width: "100%" }}>
+                  {(() => {
+                    const spent =
+                      gameState === "IDLE" ? 0 :
+                        gameState === "DEALING" ? 0 :
+                          gameState === "HOLD" ? lockedSalary :
+                            gameState === "DRAWING" ? lockedSalary :
+                              gameState === "REVEALING" ? revealedSalary :
+                                capUsed;
+                    const remaining = CAP_MAX - spent;
+                    const overBudget = remaining < 0;
+                    return (
+                      <>
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ fontSize: 26, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic" }}>
+                            <RollingNumber value={totalFp} decimals={1} duration={300} />
+                          </div>
+                          <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
+                            Team FP
+                          </div>
+                        </div>
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ display: "flex", alignItems: "baseline", gap: 2, justifyContent: "center" }}>
+                            <span style={{ fontSize: 26, fontWeight: 900, color: overBudget ? "#ef4444" : "#FFFFFF", lineHeight: 1, fontStyle: "italic" }}>
+                              <RollingNumber value={remaining} decimals={0} duration={300} />
+                            </span>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.35)", lineHeight: 1, fontStyle: "italic" }}>
+                              /{CAP_MAX}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
+                            Budget
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+                {gameState === "HOLD" && !isFTUE && (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
+                    <span style={{ fontSize: 16, fontWeight: 400, color: "rgba(255,255,255,0.5)", lineHeight: 1 }}>
+                      {BASE_BET} × {betMultiplier}x =
+                    </span>
+                    <span style={{ fontSize: 16, fontWeight: 700, lineHeight: 1, color: betMultiplier === 1 ? "#22C55E" : betMultiplier === 3 ? "#3B82F6" : betMultiplier === 5 ? "#C084FC" : betMultiplier === 10 ? "#FB923C" : "rgba(255,255,255,0.35)" }}>
+                      ${BASE_BET * betMultiplier}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -2125,8 +2203,8 @@ export default function GameView() {
               postRevealCopy={postRevealCopy}
               ftueTypewriter={isFTUE}
               stickyLastOverride={isFTUE && ftueReplayReady}
-              commentaryOverride={ftueCommentaryOverride}
-              hideBar={isFTUE && gameState === "REVEALING" && ftueCardsBlocked}
+              commentaryOverride={(showCollect || showLeaderboard) ? null : ftueCommentaryOverride}
+              hideBar={gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD" || gameState === "DRAWING"}
               onCommentaryOverrideDone={() => {
                 setFtueCommentaryOverride(null);
                 coachDismissRef.current?.();
@@ -2144,46 +2222,6 @@ export default function GameView() {
                 setGameState("RESULTS");
                 setTimeout(() => setFtueWinCelebrationActive(true), 300);
               }}
-              belowBarSlot={
-                (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier ? (
-                  <div style={{
-                    display: "flex", justifyContent: "space-between", alignItems: "flex-start",
-                    width: "100%",
-                  }}>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-                      <span style={{
-                        fontSize: 14, fontWeight: 900, lineHeight: 1,
-                        color: winTier === "BUST" ? "#FF3B30" : "#22C55E",
-                        fontVariantNumeric: "tabular-nums",
-                      }}>
-                        {winTier === "BUST" ? `−${BASE_BET * betMultiplier}` : `+${winPayout}`}
-                      </span>
-                      <span style={{
-                        fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.35)",
-                        marginTop: 1, whiteSpace: "nowrap",
-                      }}>
-                        {betMultiplier === 1 ? `${BASE_BET} wager` : `${BASE_BET} × ${betMultiplier}x wager`}
-                      </span>
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                      <span style={{
-                        fontSize: 14, fontWeight: 900, lineHeight: 1, color: "#FFFFFF",
-                        fontVariantNumeric: "tabular-nums", fontStyle: "italic",
-                      }}>
-                        {displayFp.toFixed(1)} FP
-                      </span>
-                      {ceilingPct != null && (
-                        <span style={{
-                          fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.35)",
-                          marginTop: 1,
-                        }}>
-                          {ceilingPct}% of ceiling
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ) : undefined
-              }
             />
           </div>
 
@@ -2289,14 +2327,28 @@ export default function GameView() {
               }}
             />
             {showCollect && !isFTUE && (
-              <CollectScreen
-                taskStates={taskStates}
-                loginStreak={loginStreak}
-                coins={coins}
-                xp={xp}
-                onClose={() => setShowCollect(false)}
-                onCollect={(id) => { collectTask?.(id); }}
-              />
+              (() => {
+                const bonusPlayers = getTodaysStars();
+                return (
+                  <CollectScreen
+                    taskStates={taskStates}
+                    weeklyTaskStates={weeklyTaskStates}
+                    perpetualTaskStates={perpetualTaskStates}
+                    loginStreak={loginStreak}
+                    coins={coins}
+                    xp={xp}
+                    streakCount={streakCount}
+                    bonusPlayers={bonusPlayers}
+                    onViewLeaderboard={() => {
+                      setShowCollect(false);
+                      setShowLeaderboard(true);
+                    }}
+                    recordLeaderboardViewed={recordLeaderboardViewed}
+                    onClose={() => setShowCollect(false)}
+                    onCollect={(id) => { collectTask?.(id); }}
+                  />
+                );
+              })()
             )}
             {/* Name change prompt — after hand 3 */}
             {showNamePrompt && (

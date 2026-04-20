@@ -52,6 +52,8 @@ type Params = {
   revealConfig?: RevealConfig;
   onCardComplete?: (cardId: string) => void;
   onCardRevealStart?: (cardId: string, tier: string, shakeType: ShakeType) => void;
+  /** Fires the instant a card's FP rollup RAF starts — use to drive side animations (e.g. budget counter) synced with FP roll-up. */
+  onCardFpStart?: (cardId: string) => void;
   onAllComplete?: (totalFp: number) => void;
   /** Fires the instant the anchor card's FP count-up RAF finishes — before badge/stamp delay.
    *  Use this to start spring oscillation seamlessly as a continuation of the roll-up. */
@@ -159,7 +161,7 @@ export function useEmotionalReveal(params: Params) {
   const {
     cards, isActive, flipState,
     revealConfig = DEFAULT_REVEAL_CONFIG,
-    onCardComplete, onCardRevealStart, onAllComplete, onAnchorFpComplete,
+    onCardComplete, onCardRevealStart, onAllComplete, onAnchorFpComplete, onCardFpStart,
     revealMode = "auto",
   } = params;
 
@@ -415,6 +417,7 @@ export function useEmotionalReveal(params: Params) {
           // CardFront's own RAF loop handles all visual interpolation from 0 → target.
           // The hook only needs to signal start, drive the gauge progress, then fire onDone.
           setVisibleFpMap(prev => new Map(prev).set(c.cardId, 0.001));
+          onCardFpStart?.(c.cardId);
 
           const start = nowMs();
           const gaugeTickInterval = 16;

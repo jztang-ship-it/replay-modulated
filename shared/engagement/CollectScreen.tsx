@@ -5,21 +5,66 @@
  * Expandable later for: season packs, achievement history, loyalty tier.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { TaskState } from "@shared/engagement/useEngagement";
-import { Leaderboard } from "@shared/components/Leaderboard";
 import { PWAInstallPrompt } from "@shared/components/PwaInstallPrompt";
-import { getPlayerUid } from "@shared/utils/playerIdentity";
+import { getMsUntilNextBonusRotation, formatBonusCountdown } from "@shared/utils/dailyBonus";
+import { track } from "@shared/analytics/analytics";
 
 const FF = "'Rajdhani', 'Arial Narrow', sans-serif";
 
+// ── Ladder filtering ──────────────────────────────────────────────────────
+// Tasks with matching prefix form a ladder — only the first uncollected step
+// is shown at a time. When the active step is collected, the next step takes
+// its place. Singleton tasks (no ladder prefix) always appear.
+const LADDER_PREFIXES = [
+  "daily_play_",
+  "daily_win_",
+  "daily_bonus_",
+  "daily_streak_",
+  "perpetual_first_",
+  "perpetual_play_",
+  "perpetual_streak_",
+] as const;
+
+function ladderKey(taskId: string): string | null {
+  for (const prefix of LADDER_PREFIXES) {
+    if (taskId.startsWith(prefix)) return prefix;
+  }
+  return null;
+}
+
+function activeLadderOnly(tasks: TaskState[]): TaskState[] {
+  // Group tasks by ladder, preserving config order
+  const ladders = new Map<string, TaskState[]>();
+  for (const task of tasks) {
+    const key = ladderKey(task.id);
+    if (key === null) continue;
+    if (!ladders.has(key)) ladders.set(key, []);
+    ladders.get(key)!.push(task);
+  }
+  // Return only tasks that are either singletons OR the first uncollected in their ladder
+  return tasks.filter(task => {
+    const key = ladderKey(task.id);
+    if (key === null) return true;
+    const firstUncollected = ladders.get(key)!.find(t => !t.collected);
+    return !!firstUncollected && firstUncollected.id === task.id;
+  });
+}
+
 interface CollectScreenProps {
-  taskStates: TaskState[];
-  loginStreak: number;
-  coins: number;
-  xp: number;
-  onClose: () => void;
-  onCollect: (taskId: string) => void;
+  taskStates:           TaskState[];
+  weeklyTaskStates:     TaskState[];
+  perpetualTaskStates:  TaskState[];
+  loginStreak:          number;
+  streakCount:          number;
+  coins:                number;
+  xp:                   number;
+  onClose:              () => void;
+  onCollect:            (taskId: string) => void;
+  bonusPlayers?:        Array<{ name: string; bonus: number }>;
+  onViewLeaderboard?:   () => void;
+  recordLeaderboardViewed?: () => void;
 }
 
 // XP tier config — matches XPBar
@@ -81,40 +126,122 @@ function XPSection({ xp }: { xp: number }) {
   );
 }
 
+function sectionCoins(tasks: TaskState[]): number {
+  return tasks
+    .filter(t => t.progress >= t.target && !t.collected)
+    .reduce((sum, t) => sum + (t.rewardCoins ?? 0), 0);
+}
+
+function SectionHeader({
+  label,
+  coinsAvailable,
+  subtitle,
+}: {
+  label: string;
+  coinsAvailable: number;
+  subtitle?: string;
+}) {
+  return (
+    <div style={{ paddingLeft: 2, display: "flex", flexDirection: "column", gap: 2 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{
+          fontSize: 10,
+          fontWeight: 700,
+          fontFamily: FF,
+          letterSpacing: "0.12em",
+          color: "rgba(255,255,255,0.35)",
+        }}>
+          {label}
+        </span>
+        {coinsAvailable > 0 && (
+          <span style={{ fontSize: 11, fontWeight: 700, fontFamily: FF, color: "#FFD700" }}>
+            +{coinsAvailable} available
+          </span>
+        )}
+      </div>
+      {subtitle && (
+        <span style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", fontFamily: FF }}>
+          {subtitle}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function TaskRow({
   task,
   onCollect,
+  streakCount,
+  bonusPlayers,
+  onViewLeaderboard,
+  recordLeaderboardViewed,
+  isPerpetual,
 }: {
   task: TaskState;
   onCollect: (id: string) => void;
+  streakCount: number;
+  bonusPlayers?: Array<{ name: string; bonus: number }>;
+  onViewLeaderboard?: () => void;
+  recordLeaderboardViewed?: () => void;
+  isPerpetual?: boolean;
 }) {
   const pct = Math.min(1, task.progress / task.target);
   const complete = pct >= 1;
   const collected = task.collected;
 
-  return (
-    <div style={{
-      background: collected
-        ? "rgba(255,255,255,0.02)"
+  const isBonus = task.id.includes("bonus");
+  const isStreak = task.id.includes("streak");
+  const isLeaderboard = task.id === "daily_leaderboard" || task.id === "perpetual_leaderboard";
+  const isMilestoneCollected = isPerpetual && collected;
+
+  const rowStyle: React.CSSProperties = {
+    background: isMilestoneCollected
+      ? "rgba(255,215,0,0.06)"
+      : collected
+      ? "rgba(255,255,255,0.02)"
+      : complete
+      ? "rgba(127,255,0,0.04)"
+      : "rgba(255,255,255,0.04)",
+    border: `1px solid ${
+      isMilestoneCollected
+        ? "rgba(255,215,0,0.2)"
+        : collected
+        ? "rgba(255,255,255,0.05)"
         : complete
-        ? "rgba(127,255,0,0.04)"
-        : "rgba(255,255,255,0.04)",
-      border: `1px solid ${collected ? "rgba(255,255,255,0.05)" : complete ? "rgba(127,255,0,0.2)" : "rgba(255,255,255,0.08)"}`,
-      borderRadius: 12,
-      padding: "12px 14px",
-      display: "flex",
-      flexDirection: "column",
-      gap: 8,
-      opacity: collected ? 0.45 : 1,
-      transition: "opacity 0.3s ease",
-    }}>
+        ? "rgba(127,255,0,0.2)"
+        : "rgba(255,255,255,0.08)"
+    }`,
+    borderRadius: 12,
+    padding: "12px 14px",
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+    opacity: (collected && !isMilestoneCollected) ? 0.45 : 1,
+    transition: "opacity 0.3s ease",
+    cursor: isLeaderboard && onViewLeaderboard ? "pointer" : undefined,
+  };
+
+  function handleRowClick() {
+    if (!isLeaderboard || !onViewLeaderboard) return;
+    track("leaderboard", "leaderboard_task_tapped", { task_id: task.id, collected: task.collected });
+    onViewLeaderboard();
+    recordLeaderboardViewed?.();
+    if (!collected) onCollect(task.id);
+  }
+
+  return (
+    <div style={rowStyle} onClick={isLeaderboard ? handleRowClick : undefined}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <span style={{
             fontSize: 13,
             fontWeight: 600,
             fontFamily: FF,
-            color: collected ? "rgba(255,255,255,0.4)" : "#EAF0FF",
+            color: isMilestoneCollected
+              ? "#FFD700"
+              : collected
+              ? "rgba(255,255,255,0.4)"
+              : "#EAF0FF",
             letterSpacing: "0.02em",
           }}>
             {task.label}
@@ -124,11 +251,32 @@ function TaskRow({
             {task.rewardCoins ? `  •  +${task.rewardCoins} coins` : ""}
             {task.rewardXP ? `  •  +${task.rewardXP} XP` : ""}
           </span>
+
+          {/* Bonus player names inline */}
+          {isBonus && bonusPlayers && bonusPlayers.length > 0 && (
+            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", fontFamily: FF, marginTop: 1 }}>
+              Today: {bonusPlayers.map(p => `${p.name} +${p.bonus}`).join(", ")}
+            </span>
+          )}
+
+          {/* Streak count inline */}
+          {isStreak && (
+            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", fontFamily: FF, marginTop: 1 }}>
+              Current streak: {streakCount} win{streakCount !== 1 ? "s" : ""}
+            </span>
+          )}
+
+          {/* Milestone unlocked subtitle */}
+          {isMilestoneCollected && (
+            <span style={{ fontSize: 10, color: "rgba(255,215,0,0.5)", fontFamily: FF, marginTop: 1 }}>
+              {task.label} — unlocked
+            </span>
+          )}
         </div>
 
         {complete && !collected && (
           <button
-            onClick={() => onCollect(task.id)}
+            onClick={e => { e.stopPropagation(); onCollect(task.id); }}
             style={{
               background: "linear-gradient(135deg, #4aff00, #7FFF00)",
               border: "none",
@@ -147,7 +295,11 @@ function TaskRow({
           </button>
         )}
 
-        {collected && (
+        {isMilestoneCollected && (
+          <span style={{ fontSize: 18, opacity: 1 }}>🏆</span>
+        )}
+
+        {collected && !isMilestoneCollected && (
           <span style={{ fontSize: 18, opacity: 0.4 }}>✓</span>
         )}
       </div>
@@ -170,13 +322,57 @@ function TaskRow({
 
 export function CollectScreen({
   taskStates,
+  weeklyTaskStates,
+  perpetualTaskStates,
   loginStreak,
+  streakCount,
   coins,
   xp,
   onClose,
   onCollect,
+  bonusPlayers,
+  onViewLeaderboard,
+  recordLeaderboardViewed,
 }: CollectScreenProps) {
-  const uncollected = taskStates.filter(t => t.progress >= t.target && !t.collected).length;
+  const uncollected = [
+    ...taskStates,
+    ...weeklyTaskStates,
+    ...perpetualTaskStates,
+  ].filter(t => t.progress >= t.target && !t.collected).length;
+
+  const [countdown, setCountdown] = useState(() =>
+    formatBonusCountdown(getMsUntilNextBonusRotation())
+  );
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCountdown(formatBonusCountdown(getMsUntilNextBonusRotation()));
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const coinsAvailable = [...taskStates, ...weeklyTaskStates, ...perpetualTaskStates]
+      .filter(t => t.progress >= t.target && !t.collected)
+      .reduce((sum, t) => sum + (t.rewardCoins ?? 0), 0);
+    track("engagement", "collect_screen_opened", {
+      uncollected_daily:      taskStates.filter(t => t.progress >= t.target && !t.collected).length,
+      uncollected_weekly:     weeklyTaskStates.filter(t => t.progress >= t.target && !t.collected).length,
+      uncollected_milestones: perpetualTaskStates.filter(t => t.progress >= t.target && !t.collected).length,
+      coins_available:        coinsAvailable,
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function handleCollect(taskId: string) {
+    const task = [...taskStates, ...weeklyTaskStates, ...perpetualTaskStates].find(t => t.id === taskId);
+    if (task) {
+      track("engagement", "task_collected", { task_id: task.id, cadence: task.cadence, reward_coins: task.rewardCoins });
+    }
+    onCollect(taskId);
+  }
+
+  const sharedRowProps = { streakCount, bonusPlayers, onViewLeaderboard, recordLeaderboardViewed };
 
   return (
     <div style={{
@@ -284,17 +480,12 @@ export function CollectScreen({
           </div>
         </div>
 
-        {/* Daily tasks */}
-        <div style={{
-          fontSize: 10,
-          fontWeight: 700,
-          fontFamily: FF,
-          letterSpacing: "0.12em",
-          color: "rgba(255,255,255,0.35)",
-          paddingLeft: 2,
-        }}>
-          DAILY TASKS
-        </div>
+        {/* ── DAILY TASKS ── */}
+        <SectionHeader
+          label="DAILY TASKS"
+          coinsAvailable={sectionCoins(taskStates)}
+          subtitle={`Resets in ${countdown}`}
+        />
 
         {taskStates.length === 0 && (
           <div style={{
@@ -308,17 +499,58 @@ export function CollectScreen({
           </div>
         )}
 
-        {taskStates.map(task => (
-          <TaskRow key={task.id} task={task} onCollect={onCollect} />
+        {activeLadderOnly(taskStates).map(task => (
+          <TaskRow key={task.id} task={task} onCollect={handleCollect} {...sharedRowProps} />
+        ))}
+
+        {/* ── WEEKLY TASKS ── */}
+        <SectionHeader
+          label="WEEKLY TASKS"
+          coinsAvailable={sectionCoins(weeklyTaskStates)}
+          subtitle="Resets Monday midnight"
+        />
+
+        {weeklyTaskStates.length === 0 && (
+          <div style={{
+            textAlign: "center",
+            color: "rgba(255,255,255,0.25)",
+            fontSize: 13,
+            fontFamily: FF,
+            padding: "12px 0",
+          }}>
+            No weekly tasks available
+          </div>
+        )}
+
+        {activeLadderOnly(weeklyTaskStates).map(task => (
+          <TaskRow key={task.id} task={task} onCollect={handleCollect} {...sharedRowProps} />
+        ))}
+
+        {/* ── MILESTONES ── */}
+        <SectionHeader
+          label="MILESTONES"
+          coinsAvailable={sectionCoins(perpetualTaskStates)}
+          subtitle="One-time rewards"
+        />
+
+        {perpetualTaskStates.length === 0 && (
+          <div style={{
+            textAlign: "center",
+            color: "rgba(255,255,255,0.25)",
+            fontSize: 13,
+            fontFamily: FF,
+            padding: "12px 0",
+          }}>
+            No milestones available
+          </div>
+        )}
+
+        {activeLadderOnly(perpetualTaskStates).map(task => (
+          <TaskRow key={task.id} task={task} onCollect={handleCollect} {...sharedRowProps} isPerpetual />
         ))}
 
         {/* PWA Install Prompt */}
         <PWAInstallPrompt rewardCoins={50} onInstalled={() => {}} />
-
-        {/* Leaderboard */}
-        <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-          <Leaderboard currentUid={getPlayerUid()} />
-        </div>
 
         {/* Future sections placeholder */}
         <div style={{

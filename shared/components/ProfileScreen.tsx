@@ -5,6 +5,8 @@
 
 import { useEffect, useState } from "react";
 import { getNickname, setNickname } from "@shared/utils/playerIdentity";
+import { getMyReferralCode, buildShareUrl, shareReferralLink, getReferrerCode } from "@shared/utils/referral";
+import { track } from "@shared/analytics/analytics";
 
 const FF = "'Rajdhani', 'Arial Narrow', sans-serif";
 
@@ -247,6 +249,9 @@ export function ProfileScreen({ currentUid, onClose }: Props) {
           </div>
         </div>
 
+        {/* Section — Invite Friends */}
+        <InviteFriendsSection />
+
         {/* Section 3 — Personal bests */}
         <div>
           <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>
@@ -272,6 +277,129 @@ export function ProfileScreen({ currentUid, onClose }: Props) {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Invite Friends ────────────────────────────────────────────────────────
+// Shows the user's referral code, a share button (native share with clipboard
+// fallback), and the referrer they were invited by (if any). Reward copy is
+// intentionally "when they become a legit player" so users understand bot
+// activity won't pay out. Actual legit-validation lives server-side.
+
+const REFERRAL_REWARD_COINS = 300;
+const REFERRAL_WELCOME_COINS = 100;
+
+function InviteFriendsSection() {
+  const [code] = useState(() => getMyReferralCode());
+  const [referrer] = useState(() => getReferrerCode());
+  const [shared, setShared] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  async function handleShare() {
+    track("referral", "share_tapped", { code });
+    const ok = await shareReferralLink();
+    if (ok) {
+      setShared(true);
+      setCopied(!navigator.share); // if native share unavailable, we used clipboard
+      setTimeout(() => { setShared(false); setCopied(false); }, 2500);
+    }
+  }
+
+  async function handleCopyCode() {
+    try {
+      await navigator.clipboard?.writeText(code);
+      setCopied(true);
+      track("referral", "code_copied", { code });
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* no clipboard */ }
+  }
+
+  return (
+    <div>
+      <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>
+        INVITE FRIENDS
+      </div>
+      <div style={{
+        background: "linear-gradient(135deg, rgba(255,215,0,0.08), rgba(192,132,252,0.06))",
+        border: "1px solid rgba(255,215,0,0.2)",
+        borderRadius: 14,
+        padding: 14,
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+      }}>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.4 }}>
+          Share your code. When a friend joins and becomes a legit player, you both get coins —
+          <span style={{ color: "#FFD700", fontWeight: 700 }}> {REFERRAL_REWARD_COINS} </span>
+          for you,
+          <span style={{ color: "#FFD700", fontWeight: 700 }}> {REFERRAL_WELCOME_COINS} </span>
+          welcome for them.
+        </div>
+
+        <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
+          {/* Code chip (tap to copy) */}
+          <button
+            onClick={handleCopyCode}
+            style={{
+              flex: 1,
+              background: "rgba(255,215,0,0.12)",
+              border: "1px solid rgba(255,215,0,0.3)",
+              borderRadius: 10,
+              padding: "10px 14px",
+              color: "#FFD700",
+              fontFamily: FF,
+              fontSize: 18,
+              fontWeight: 900,
+              letterSpacing: 3,
+              cursor: "pointer",
+              textAlign: "center",
+            }}
+          >
+            {copied ? "COPIED ✓" : code}
+          </button>
+          {/* Share button */}
+          <button
+            onClick={handleShare}
+            style={{
+              background: "#FFD700",
+              border: "none",
+              borderRadius: 10,
+              padding: "10px 18px",
+              color: "#070A12",
+              fontFamily: FF,
+              fontSize: 13,
+              fontWeight: 900,
+              letterSpacing: "0.1em",
+              cursor: "pointer",
+            }}
+          >
+            {shared ? "SHARED" : "SHARE"}
+          </button>
+        </div>
+
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>
+          Legit means: played at least 10 hands across 2 distinct days. Bots don't qualify.
+        </div>
+
+        {referrer && (
+          <div style={{
+            marginTop: 4,
+            paddingTop: 10,
+            borderTop: "1px solid rgba(255,255,255,0.06)",
+            fontSize: 11,
+            color: "rgba(255,255,255,0.5)",
+          }}>
+            You were invited by <span style={{ color: "#FFD700", fontWeight: 700 }}>{referrer}</span>.
+            Welcome bonus pending until you hit the legit threshold.
+          </div>
+        )}
+
+        {/* Share URL hint (for debug/visibility) */}
+        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", wordBreak: "break-all" }}>
+          {buildShareUrl()}
         </div>
       </div>
     </div>
