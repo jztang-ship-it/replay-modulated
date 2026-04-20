@@ -318,6 +318,10 @@ export function useEngagement(): EngagementState & EngagementActions {
       case 'perpetual_streak_5':       return loadJSON<number>(KEYS.streakMax, 0) >= 5;
       case 'perpetual_streak_10':      return loadJSON<number>(KEYS.streakMax, 0) >= 10;
       case 'perpetual_leaderboard':    return localStorage.getItem('rp_leaderboard_ever') === '1';
+      // Flag is set by server-side referral/claim response when a referred user
+      // crosses the legit threshold. Kept in localStorage so the task becomes
+      // collectable the next time the user opens the Collect screen.
+      case 'perpetual_first_referral': return localStorage.getItem('rp_referral_earned') === '1';
 
       default: return false;
     }

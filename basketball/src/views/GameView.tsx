@@ -33,6 +33,7 @@ import { XPBar } from '@shared/engagement/XPBar';
 import { soundManager } from '@shared/utils/soundManager';
 import { audioDirector } from '@shared/utils/audioDirector';
 import { getPlayerUid, getNickname, setNickname, getSessionId } from '@shared/utils/playerIdentity';
+import { captureReferrerFromUrl, applyReferral, claimReferral } from '@shared/utils/referral';
 import { supabase } from "@shared/lib/supabase";
 import { buildScoreProof } from '@shared/utils/scoreProof';
 import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
@@ -677,6 +678,21 @@ export default function GameView() {
   const [handCount, setHandCount] = useState<number>(() =>
     parseInt(localStorage.getItem("replaymod_hand_count") ?? "1", 10)
   );
+
+  // ── Referral capture + claim ────────────────────────────────────────────
+  // Capture ?ref= on mount (once per session). When handCount crosses the
+  // legit threshold with an active referrer, fire the claim so the server
+  // can validate and reward — idempotent, local flags prevent replay.
+  useEffect(() => {
+    captureReferrerFromUrl();
+    // Apply referrer code to server on first hand played (if not already applied)
+    if (handCount >= 1) applyReferral();
+  }, []); // eslint-disable-line
+
+  useEffect(() => {
+    // Fire claim when both thresholds cleared. No-op if no referrer / already claimed.
+    claimReferral(handCount, loginStreak);
+  }, [handCount, loginStreak]);
 
   // ── Chad usher — single priority queue, max one message per IDLE return ──
 

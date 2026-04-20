@@ -31,7 +31,8 @@ export type TaskId =
   | 'perpetual_play_200'
   | 'perpetual_streak_5'
   | 'perpetual_streak_10'
-  | 'perpetual_leaderboard';
+  | 'perpetual_leaderboard'
+  | 'perpetual_first_referral';
 
 export interface TaskConfig {
   id: TaskId;
@@ -88,6 +89,7 @@ const PERPETUAL: TaskConfig[] = [
   { id: 'perpetual_streak_5',       cadence: 'perpetual', label: 'Win 5 in a row',                       description: 'Highest streak ever: 5+',       target: 5,   icon: '🔥', rewardCoins: 800  },
   { id: 'perpetual_streak_10',      cadence: 'perpetual', label: 'Win 10 in a row',                      description: 'Highest streak ever: 10+',      target: 10,  icon: '🔥', rewardCoins: 5000 },
   { id: 'perpetual_leaderboard',    cadence: 'perpetual', label: 'Check the leaderboard for the first time', description: 'Discover the competition', target: 1,   icon: '🏅', rewardCoins: 100  },
+  { id: 'perpetual_first_referral', cadence: 'perpetual', label: 'Refer your first friend',               description: 'Invite a friend who becomes a legit player', target: 1, icon: '🎁', rewardCoins: 300 },
 ];
 
 export const TASKS: TaskConfig[] = [...DAILY, ...WEEKLY, ...PERPETUAL];
