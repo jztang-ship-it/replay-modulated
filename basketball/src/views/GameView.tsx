@@ -21,7 +21,6 @@ import { useCardFlipState } from "../hooks/useCardFlipState";
 import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
 import { calculateWinTier, calculatePayout, calculatePayoutWithStreak, getStreakMultiplier, BASKETBALL_WIN_TIERS, STREAK_TIERS, type WinTier } from "../utils/payoutLogic";
 import { detectExtremes } from "@shared/utils/extremeGames";
-import { buildPostRevealCopy } from "../utils/buildPostRevealCopy";
 import { selectCommentary } from "../../../shared/commentary/selectCommentary";
 import { useGameAnalytics } from "../../../shared/analytics/useGameAnalytics";
 import { CollectScreen } from '@shared/engagement/CollectScreen';
@@ -1255,7 +1254,7 @@ export default function GameView() {
 
   // Smart post-reveal copy — computed once when spring settles, then locked for the hand.
   // Uses a ref so the copy never changes mid-display from dependency churn.
-  const postRevealCopyRef = useRef<ReturnType<typeof buildPostRevealCopy> | null>(null);
+  const postRevealCopyRef = useRef<ReturnType<typeof selectCommentary> | null>(null);
   // Claude-generated commentary, populated by the REVEALING-phase pre-fetch effect.
   // postRevealCopy memo prefers this over the template fallback. Reset per hand.
   const commentaryRef = useRef<CommentaryOutput | null>(null);
@@ -1293,7 +1292,6 @@ export default function GameView() {
     }
     const fp = lockedGaugeFpRef.current ?? displayFp;
     const gaugeSnap = computeGaugeState(fp, GAUGE_THRESHOLDS as any, winTier, 8);
-    const USE_NEW_COMMENTARY = true; // Feature flag — flip to false to revert
 
     const copyInput = {
       totalFp: fp,
@@ -1323,9 +1321,7 @@ export default function GameView() {
       sport: "basketball",
     };
 
-    const copy = USE_NEW_COMMENTARY
-      ? selectCommentary(copyInput as any)
-      : buildPostRevealCopy(copyInput as any);
+    const copy = selectCommentary(copyInput as any);
     // Tier 3: static fallback if template returned an unusable result.
     if (!copy?.primary) {
       const fpStr = fp.toFixed(1);

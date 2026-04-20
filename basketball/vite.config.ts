@@ -30,10 +30,13 @@ export default defineConfig({
         path.resolve(__dirname),
       ],
     },
-    // Proxy /api calls to the deployed Vercel backend so dev mode works without vercel dev
+    // Proxy /api calls to the deployed Vercel backend so dev mode works without vercel dev.
+    // Points at the MAIN-branch preview — always reflects the latest deployed API.
+    // (Previously pointed at working-branch preview but that build got stuck and served
+    // stale code, causing spurious 400s on newer metrics like session_score.)
     proxy: {
       '/api': {
-        target: 'https://replay-mod-git-working-john-tangs-projects-1c51aca7.vercel.app',
+        target: 'https://replay-mod-git-main-john-tangs-projects-1c51aca7.vercel.app',
         changeOrigin: true,
         secure: true,
       },
