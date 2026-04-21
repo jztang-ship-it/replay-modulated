@@ -457,6 +457,9 @@ export default function GameView() {
     hotStreak,
     sessionWins,
     taskStates,
+    weeklyTaskStates,
+    perpetualTaskStates,
+    streakCount,
     loginStreak,
     coins,
     xp,
@@ -1910,6 +1913,9 @@ export default function GameView() {
             {showCollect && !isFTUE && (
               <CollectScreen
                 taskStates={taskStates}
+                weeklyTaskStates={weeklyTaskStates}
+                perpetualTaskStates={perpetualTaskStates}
+                streakCount={streakCount}
                 loginStreak={loginStreak}
                 coins={coins}
                 xp={xp}
