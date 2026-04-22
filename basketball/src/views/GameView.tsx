@@ -2435,7 +2435,13 @@ export default function GameView() {
         hideTierBar
         splitFooter={{ multipliersHost, controlsHost }}
         splitMultiplierRowVisible={isPreRevealFooter && !isFTUE}
-        onViewLeaderboard={() => { setShowLeaderboard(true); setTrophyPulsing(false); }}
+        onViewLeaderboard={() => {
+          setShowLeaderboard(true);
+          setTrophyPulsing(false);
+          // Dismiss the Chad leaderboard nudge — user acted on it. Without this
+          // the sticky override re-types every time the leaderboard closes.
+          setFtueCommentaryOverride(null);
+        }}
         legendPulsing={legendGold && !isFTUE}
         trophyPulsing={trophyPulsing && !isFTUE}
         streak={streak}

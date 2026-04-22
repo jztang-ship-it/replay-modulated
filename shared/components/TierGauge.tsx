@@ -758,7 +758,7 @@ export function TierGauge({
         })() : postRevealCopy ? (
             <div
               onClick={() => { if (!commentaryRushed) setCommentaryRushed(true); }}
-              style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "stretch", gap: 2, maxWidth: "100%", cursor: "pointer" }}
+              style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "stretch", gap: 2, maxWidth: "100%", height: "100%", cursor: "pointer" }}
             >
               <Typewriter
                 text={postRevealCopy.primary}
