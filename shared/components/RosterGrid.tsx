@@ -122,7 +122,8 @@ export function RosterGrid(props: Props) {
       width: "100%",
       display: "grid",
       gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
-      gap: 8,
+      columnGap: 4,
+      rowGap: 6,
       boxSizing: "border-box",
     }}>
       {cards.map((card) => {

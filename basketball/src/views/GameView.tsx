@@ -86,7 +86,9 @@ function RosterGridScaleFit({ children }: { children: ReactNode }) {
       const mw = meas.scrollWidth;
       const mh = meas.scrollHeight;
       if (!pw || !ph || !mw || !mh) return;
-      setScale(Math.min(1, pw / mw, ph / mh));
+      // Cap at 1.15 to allow cards to scale UP and fill ghost space on tall
+       // phones, not just scale down when parent is smaller than natural.
+       setScale(Math.min(1.15, pw / mw, ph / mh));
     };
     run();
     const ro = new ResizeObserver(run);
@@ -1946,8 +1948,8 @@ export default function GameView() {
           alignItems: "flex-start",
           justifyContent: "center",
           minHeight: 0,
-          maxHeight: 373,
-          padding: "4px 2px 2px 2px",
+          maxHeight: 460,
+          padding: "4px 1px 2px 1px",
           boxSizing: "border-box",
           overflow: "hidden",
         }}>
@@ -2010,11 +2012,11 @@ export default function GameView() {
         </div>
 
         {/* ── Bottom landscape: CSS Grid, all rows fixed pixel, nothing moves ── */}
-        {/* stats(94) gap(4) bar(14) gap(8) info(0) gap(4) commentary(96) gap(2) action(74) = 296px total */}
+        {/* stats(72) gap(4) bar(14) gap(8) info(0) gap(4) commentary(96) gap(2) action(74) = 274px total */}
         <div style={{
           flex: "0 0 auto",
           display: "grid",
-          gridTemplateRows: "94px 4px 14px 8px 0px 4px 96px 2px 74px",
+          gridTemplateRows: "72px 4px 14px 8px 0px 4px 96px 2px 74px",
           gridTemplateColumns: "1fr",
           padding: "0 12px",
           boxSizing: "border-box",
