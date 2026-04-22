@@ -16,6 +16,7 @@ import ReactDOM from "react-dom";
 import { THEME } from "@shared/theme";
 import type { JSX as ReactJSX } from "react";
 import { formatBonusCountdown, getMsUntilNextBonusRotation } from "@shared/utils/dailyBonus";
+import { track } from "@shared/analytics/analytics";
 
 /** Live countdown string to next UTC midnight (daily bonus rotation). */
 function formatBonusCountdownLocal(): string {
@@ -1506,7 +1507,10 @@ export function GameBar({
         const active = betMultiplier === m;
         const ma = MULTIPLIER_ACTIVE[m] ?? MULTIPLIER_ACTIVE[1];
         return (
-          <button key={m} onClick={() => onBetMultiplier(m)} disabled={betLocked} style={{
+          <button key={m} onClick={() => {
+            track("gameplay", "multiplier_selected", { multiplier: m, previous: betMultiplier });
+            onBetMultiplier(m);
+          }} disabled={betLocked} style={{
             background: active ? ma.bg : THEME.button.multiplier.inactive.bg,
             border: active ? `1px solid ${ma.border}` : THEME.button.multiplier.inactive.border,
             borderRadius: 14,
