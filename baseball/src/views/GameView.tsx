@@ -39,6 +39,8 @@ import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
 import { ProfileScreen } from '@shared/components/ProfileScreen';
 import { selectCommentary } from "@shared/commentary/selectCommentary";
 import type { CommentaryOutput } from "@shared/commentary/types";
+import { chadMessage } from "@shared/commentary/chad";
+import { captureReferrerFromUrl, applyReferral, claimReferral } from "@shared/utils/referral";
 // buildBaseballContext — culture injection now handled inside selectCommentary
 
 // Test-wire only: allow passing glow props even if wrapper prop types lag behind.
@@ -82,7 +84,9 @@ function RosterGridScaleFit({ children }: { children: ReactNode }) {
       const mw = meas.scrollWidth;
       const mh = meas.scrollHeight;
       if (!pw || !ph || !mw || !mh) return;
-      setScale(Math.min(1, pw / mw, ph / mh));
+      // Cap at 1.15 — allows cards to scale UP and fill ghost space on tall
+      // phones, matching basketball's behaviour. See basketball/GameView.tsx.
+      setScale(Math.min(1.15, pw / mw, ph / mh));
     };
     run();
     const ro = new ResizeObserver(run);
@@ -505,7 +509,7 @@ export default function GameView() {
   const [ftueOhtaniFlipped, setFtueOhtaniFlipped] = useState(false);
   const [ftueOscillating, setFtueOscillating] = useState(false);
   const [ftueCommentaryDone, setFtueCommentaryDone] = useState(false);
-  const [ftueCommentaryOverride, setFtueCommentaryOverride] = useState<{ parts: React.ReactNode[] } | null>(null);
+  const [ftueCommentaryOverride, setFtueCommentaryOverride] = useState<{ parts: React.ReactNode[]; sticky?: boolean } | null>(null);
   const [glowState, setGlowState] = useState<{ cardId: string | null; tier: string; durationMs: number }>({
     cardId: null, tier: "WHITE", durationMs: 300
   });
@@ -653,6 +657,62 @@ export default function GameView() {
   const [handCount, setHandCount] = useState<number>(() =>
     parseInt(localStorage.getItem("replaymod_hand_count") ?? "1", 10)
   );
+
+  // ── Referral capture + claim (shared with basketball, sport-agnostic) ───
+  // Capture ?ref= on mount. Fire claim once user crosses the legit threshold
+  // (≥10 hands AND loginStreak ≥2). Server validates anti-bot before rewarding.
+  useEffect(() => {
+    captureReferrerFromUrl();
+    if (handCount >= 1) applyReferral();
+  }, []); // eslint-disable-line
+
+  useEffect(() => {
+    claimReferral(handCount, loginStreak);
+  }, [handCount, loginStreak]);
+
+  // ── Chad usher — sport-neutral subset (no auth-gated or icon-blinking msgs) ──
+  // Baseball skips leaderboard_intro / big_win / retention because those require
+  // auth state (isAnonymous) which baseball doesn't wire, and trophy/legend
+  // icon blinking which baseball's GameBar doesn't accept. Welcome + educational
+  // + MVP-test messages fire the same as basketball.
+  const chadFiredThisIdleRef = useRef(false);
+  useEffect(() => {
+    if (gameState !== "IDLE") chadFiredThisIdleRef.current = false;
+  }, [gameState]);
+
+  // Welcome — first time post-FTUE
+  useEffect(() => {
+    if (isFTUE) return;
+    if (localStorage.getItem("replaymod_pregame_intro_baseball") === "1") return;
+    localStorage.setItem("replaymod_pregame_intro_baseball", "1");
+    chadFiredThisIdleRef.current = true;
+    setFtueCommentaryOverride({ parts: [chadMessage("welcome")], sticky: true });
+  }, [isFTUE]);
+
+  // Priority-ordered checks — first match wins
+  useEffect(() => {
+    if (isFTUE || gameState !== "IDLE") return;
+    if (chadFiredThisIdleRef.current) return;
+
+    const lastChadHand = parseInt(localStorage.getItem("rm_chad_last_hand_bb") ?? "0", 10);
+    if (handCount - lastChadHand < 2 && handCount > 1) return;
+
+    const checks = [
+      { key: "rm_usher_lb_explainer_bb", topic: "leaderboard_explainer" as const, condition: handCount >= 3 },
+      { key: "rm_usher_mvp_thanks_bb",   topic: "mvp_thanks" as const,   condition: handCount >= 5 },
+      { key: "rm_usher_dev_4thwall_bb",  topic: "dev_4thwall" as const,  condition: handCount >= 15 },
+    ];
+
+    for (const { key, topic, condition } of checks) {
+      if (!condition) continue;
+      if (localStorage.getItem(key) === "1") continue;
+      localStorage.setItem(key, "1");
+      localStorage.setItem("rm_chad_last_hand_bb", String(handCount));
+      chadFiredThisIdleRef.current = true;
+      setFtueCommentaryOverride({ parts: [chadMessage(topic)], sticky: true });
+      return;
+    }
+  }, [gameState, handCount, isFTUE]);
 
   // Zone 1: Hooks
 

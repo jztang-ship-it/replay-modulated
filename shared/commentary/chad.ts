@@ -93,7 +93,7 @@ const MVP_THANKS: string[] = [
  *  Remove or gate post-MVP. */
 const DEV_4THWALL: string[] = [
   "Quick break — Chad steps aside. Real voice now. We're a small team behind ReplayMod. You're in the early version. Every hand you play is calibrating what we build next. If something feels weird, say so. If the commentary lands, also say so. Back to the game.",
-  "Honest moment. The people making this are small — a couple of us, some savings, a lot of belief that fantasy basketball can still surprise people. If a hand feels rigged, tell us. If a line made you laugh, we probably celebrated on our end. Thanks for being here.",
+  "Honest moment. The people making this are small — a couple of us, some savings, a lot of belief that fantasy sports can still surprise people. If a hand feels rigged, tell us. If a line made you laugh, we probably celebrated on our end. Thanks for being here.",
   "Real talk for a second. This is the team, not Chad. You're one of the first hundred-ish people playing the full loop. We're grateful, nervous, and fixing things as we watch. Stay if the game's good, leave if it isn't. Either way — thanks for the data and the time.",
 ];
 
