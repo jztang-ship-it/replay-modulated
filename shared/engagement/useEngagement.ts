@@ -439,13 +439,25 @@ export function useEngagement(): EngagementState & EngagementActions {
       save(KEYS.streakCount, n);
       // Update lifetime max streak
       const currentMax = loadJSON<number>(KEYS.streakMax, 0);
-      if (n > currentMax) save(KEYS.streakMax, n);
+      const isNewMax = n > currentMax;
+      if (isNewMax) save(KEYS.streakMax, n);
+      // Analytics — distinguish streak start (first win after bust) vs extend
+      if (prev === 0) {
+        track("engagement", "streak_started", { streak: n });
+      } else {
+        track("engagement", "streak_extended", { streak: n, new_max: isNewMax });
+      }
       return n;
     });
   }, []);
 
   const recordStreakBust = useCallback(() => {
-    setStreakCount(0);
+    setStreakCount(prev => {
+      if (prev > 0) {
+        track("engagement", "streak_busted", { prior_streak: prev });
+      }
+      return 0;
+    });
     save(KEYS.streakCount, 0);
   }, []);
 

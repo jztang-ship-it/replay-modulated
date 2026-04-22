@@ -42,11 +42,19 @@ export function useGameAnalytics(sport: AnalyticsSport) {
     handResolved(totalFp: number, tier: string, bust: boolean, badgeCount: number, duration_ms: number) {
       handsPlayedRef.current += 1;
       sessionScoreRef.current += totalFp;
-      track("gameplay", "hand_resolved", { sport, score: Math.round(totalFp * 10) / 10, tier, bust, badgeCount, duration_ms });
+      const score = Math.round(totalFp * 10) / 10;
+      track("gameplay", "hand_resolved", { sport, score, tier, bust, badgeCount, duration_ms });
+      // Explicit win/loss event — easier to query than digging into hand_resolved props.
+      // Enables clean cohort builds (win-rate trajectories, tier progression funnels).
+      if (bust) {
+        track("gameplay", "hand_lost", { sport, score, tier, badgeCount, duration_ms });
+      } else {
+        track("gameplay", "hand_won", { sport, score, tier, badgeCount, duration_ms });
+      }
       const thresholds = TIER_THRESHOLDS[sport] ?? [];
       const nextTierFp = thresholds.find(t => t > totalFp);
       if (nextTierFp !== undefined && (nextTierFp - totalFp) <= SO_CLOSE_GAP) {
-        track("gameplay", "so_close", { sport, currentFp: Math.round(totalFp * 10) / 10, nextTierFp, gapFp: Math.round((nextTierFp - totalFp) * 10) / 10 });
+        track("gameplay", "so_close", { sport, currentFp: score, nextTierFp, gapFp: Math.round((nextTierFp - totalFp) * 10) / 10 });
       }
     },
     redrawUsed() {

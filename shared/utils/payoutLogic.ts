@@ -51,10 +51,14 @@ export interface StreakTier {
   multiplier: number;
 }
 
+// Streak multipliers — rewarding win runs without over-subsidizing.
+// Bumped from 1.2/1.5/2.0 → 1.3/1.7/2.5 to make streaks feel substantial
+// for MVP-test retention. Aggregate edge impact ~1-2pt; perceived
+// big-moment reward is much larger.
 export const STREAK_TIERS: StreakTier[] = [
-  { wins: 10, multiplier: 2.0 },
-  { wins: 5,  multiplier: 1.5 },
-  { wins: 3,  multiplier: 1.2 },
+  { wins: 10, multiplier: 2.5 },
+  { wins: 5,  multiplier: 1.7 },
+  { wins: 3,  multiplier: 1.3 },
 ];
 
 /** Get the active streak multiplier for a given win count. */
