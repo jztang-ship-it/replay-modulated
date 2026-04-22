@@ -437,7 +437,8 @@ function main() {
 
   // ── EV comparison across threshold options ───────────────────────────
   const OPTIONS = [
-    { label: "CURRENT (190/205/225/235/255) 50x", offsets: [190, 205, 225, 235, 255], mults: [0.5, 1.5, 3, 8, 50] },
+    { label: "CURRENT (185/205/225/235/255) 50x", offsets: [185, 205, 225, 235, 255], mults: [0.5, 1.5, 3, 8, 50] },
+    { label: "OLD     (190/205/225/235/255) 50x", offsets: [190, 205, 225, 235, 255], mults: [0.5, 1.5, 3, 8, 50] },
   ];
   const MULTS_DEFAULT = [0.5, 1.5, 3, 8, 50];
   const TIER_NAMES = ["ROOKIE", "STARTER", "ALL_STAR", "MVP", "LEGEND"];

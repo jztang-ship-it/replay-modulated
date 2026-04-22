@@ -27,7 +27,7 @@ export const BASKETBALL_WIN_TIERS: WinTierMap = {
   MVP:      { minFp: 235, multiplier: 8   },  // ~2%
   ALL_STAR: { minFp: 225, multiplier: 3   },  // ~4%
   STARTER:  { minFp: 205, multiplier: 1.5 },  // ~21%
-  ROOKIE:   { minFp: 190, multiplier: 0.5 },  // ~25% — small return
+  ROOKIE:   { minFp: 185, multiplier: 0.5 },  // ~28% — small return (MVP-test favorable; revert to 190 post-launch)
   BUST:     { minFp: 0,   multiplier: 0   },  // ~48%
 };
 
