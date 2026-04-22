@@ -12,7 +12,7 @@ import { calculateScore } from './lib/scoring.js';
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-const VALID_MULTIPLIERS = [1, 2, 5, 10];
+const VALID_MULTIPLIERS = [1, 3, 5, 10];
 const BASE_BET = 10;
 const MIN_BALANCE_FLOOR = 10;
 const HAND_TTL_MS = 5 * 60 * 1000; // 5 minutes

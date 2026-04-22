@@ -60,7 +60,7 @@ export function PWAInstallPrompt({ rewardCoins, onInstalled }: PWAInstallPromptP
           Add to Home Screen
         </div>
         <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginTop: 2 }}>
-          Get +{rewardCoins} bonus coins
+          Quick access, full screen.
         </div>
       </div>
       <button onClick={handleInstall} style={{
