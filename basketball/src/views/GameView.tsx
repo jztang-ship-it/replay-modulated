@@ -731,10 +731,17 @@ export default function GameView() {
     const checks: ChadCheck[] = [
       // Leaderboard explainer — after 3rd hand
       { key: "rm_usher_lb_explainer", topic: "leaderboard_explainer", condition: handCount >= 3 },
+      // MVP-test personal thanks — after 5+ hands. Fires before retention so
+      // testers get a warm beat before the "save your account" nudge.
+      // Remove/gate post-MVP.
+      { key: "rm_usher_mvp_thanks", topic: "mvp_thanks", condition: handCount >= 5 },
       // Leaderboard qualification — anonymous, on the board
       { key: "rm_usher_lb_shown", topic: "leaderboard_intro", condition: isAnonymous && localStorage.getItem("rm_on_board_today") === "1" },
       // Big win — anonymous, ALL_STAR+ hit
       { key: "rm_usher_big_win", topic: "big_win", condition: isAnonymous && bigWinFired },
+      // 4th-wall break — team speaks directly to the user. Fires once at
+      // hand 15, when commitment is clearest. Remove/gate post-MVP.
+      { key: "rm_usher_dev_4thwall", topic: "dev_4thwall", condition: handCount >= 15 },
       // Retention — 12+ hands, anonymous
       { key: "rm_usher_retention_shown", topic: "retention", condition: isAnonymous && handCount >= 12 },
     ];

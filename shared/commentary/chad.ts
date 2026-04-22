@@ -78,6 +78,25 @@ const RETENTION: string[] = [
   "At this point you're a regular. Save your progress — it takes 10 seconds.",
 ];
 
+/** MVP-test personal thanks — fires once after 5+ hands.
+ *  Warmer than normal Chad, acknowledges the tester specifically.
+ *  Remove or gate behind a flag once we're post-MVP. */
+const MVP_THANKS: string[] = [
+  "You're in the early rooms of this thing. Every hand you play goes into a shared doc on our end — not creepy, just grateful. Thanks for sticking with it.",
+  "Most testers bounce by now. You didn't. That actually matters to us — we're calibrating from sessions like yours. Keep going.",
+  "Honest aside from us: the commentary, the payouts, the streaks — we wrote every line and tuned every number. You playing means we learn. Thanks for being here.",
+];
+
+/** 4th-wall break — team speaks directly to the user.
+ *  One-time, fires around hand 15 when commitment is clearest.
+ *  Distinct register from Chad: reflective, small-team vulnerability.
+ *  Remove or gate post-MVP. */
+const DEV_4THWALL: string[] = [
+  "Quick break — Chad steps aside. Real voice now. We're a small team behind ReplayMod. You're in the early version. Every hand you play is calibrating what we build next. If something feels weird, say so. If the commentary lands, also say so. Back to the game.",
+  "Honest moment. The people making this are small — a couple of us, some savings, a lot of belief that fantasy basketball can still surprise people. If a hand feels rigged, tell us. If a line made you laugh, we probably celebrated on our end. Thanks for being here.",
+  "Real talk for a second. This is the team, not Chad. You're one of the first hundred-ish people playing the full loop. We're grateful, nervous, and fixing things as we watch. Stay if the game's good, leave if it isn't. Either way — thanks for the data and the time.",
+];
+
 // ── Public API ─────────────────────────────────────────────────────────────
 
 export type ChadTopic =
@@ -88,7 +107,9 @@ export type ChadTopic =
   | "leaderboard_intro"
   | "leaderboard_explainer"
   | "big_win"
-  | "retention";
+  | "retention"
+  | "mvp_thanks"
+  | "dev_4thwall";
 
 const BANKS: Record<ChadTopic, string[]> = {
   welcome: WELCOME,
@@ -99,6 +120,8 @@ const BANKS: Record<ChadTopic, string[]> = {
   leaderboard_explainer: LEADERBOARD_EXPLAINER,
   big_win: BIG_WIN,
   retention: RETENTION,
+  mvp_thanks: MVP_THANKS,
+  dev_4thwall: DEV_4THWALL,
 };
 
 /** Get a random Chad message for the given topic. */
