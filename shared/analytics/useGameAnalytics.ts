@@ -15,6 +15,15 @@ const TIER_THRESHOLDS: Record<AnalyticsSport, number[]> = {
 
 const SO_CLOSE_GAP = 5;
 
+// Lifetime hand ordinal from localStorage. The GameView increments
+// `replaymod_hand_count` only after a hand resolves, so the "currently-playing"
+// hand's number is stored+1. Returns 1 for the very first hand ever.
+function currentHandNumber(): number {
+  try {
+    return parseInt(localStorage.getItem("replaymod_hand_count") ?? "0", 10) + 1;
+  } catch { return 1; }
+}
+
 export function useGameAnalytics(sport: AnalyticsSport) {
   const sessionStartRef = useRef<number>(Date.now());
   const handsPlayedRef  = useRef<number>(0);
@@ -29,7 +38,7 @@ export function useGameAnalytics(sport: AnalyticsSport) {
   return {
     handDealt(roster: any[]) {
       const cost = roster.reduce((s: number, c: any) => s + Number(c?.salary ?? 0), 0);
-      track("gameplay", "hand_dealt", { sport, rosterCost: cost, playerCount: roster.length });
+      track("gameplay", "hand_dealt", { sport, rosterCost: cost, playerCount: roster.length, hand_number: currentHandNumber() });
     },
     cardHeld(card: any) {
       track("gameplay", "card_held", {
@@ -37,24 +46,26 @@ export function useGameAnalytics(sport: AnalyticsSport) {
         position: String(card?.position ?? ""),
         tier:     String(card?.tier ?? ""),
         salary:   Number(card?.salary ?? 0),
+        hand_number: currentHandNumber(),
       });
     },
     handResolved(totalFp: number, tier: string, bust: boolean, badgeCount: number, duration_ms: number) {
       handsPlayedRef.current += 1;
       sessionScoreRef.current += totalFp;
       const score = Math.round(totalFp * 10) / 10;
-      track("gameplay", "hand_resolved", { sport, score, tier, bust, badgeCount, duration_ms });
+      const hand_number = currentHandNumber();
+      track("gameplay", "hand_resolved", { sport, score, tier, bust, badgeCount, duration_ms, hand_number });
       // Explicit win/loss event — easier to query than digging into hand_resolved props.
       // Enables clean cohort builds (win-rate trajectories, tier progression funnels).
       if (bust) {
-        track("gameplay", "hand_lost", { sport, score, tier, badgeCount, duration_ms });
+        track("gameplay", "hand_lost", { sport, score, tier, badgeCount, duration_ms, hand_number });
       } else {
-        track("gameplay", "hand_won", { sport, score, tier, badgeCount, duration_ms });
+        track("gameplay", "hand_won", { sport, score, tier, badgeCount, duration_ms, hand_number });
       }
       const thresholds = TIER_THRESHOLDS[sport] ?? [];
       const nextTierFp = thresholds.find(t => t > totalFp);
       if (nextTierFp !== undefined && (nextTierFp - totalFp) <= SO_CLOSE_GAP) {
-        track("gameplay", "so_close", { sport, currentFp: score, nextTierFp, gapFp: Math.round((nextTierFp - totalFp) * 10) / 10 });
+        track("gameplay", "so_close", { sport, currentFp: score, nextTierFp, gapFp: Math.round((nextTierFp - totalFp) * 10) / 10, hand_number });
       }
     },
     redrawUsed() {
