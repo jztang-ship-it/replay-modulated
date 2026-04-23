@@ -716,6 +716,18 @@ export default function GameView() {
     setFtueCommentaryOverride({ parts: [chadMessage("welcome")], sticky: true });
   }, [isFTUE]);
 
+  // Unified auth-modal gate — fires at most once ever, across all trigger sources.
+  // The trigger label goes to PostHog for per-source conversion analysis.
+  const tryOpenAuthModal = useCallback((trigger: string, delayMs: number, extraProps: Record<string, string | number> = {}) => {
+    if (localStorage.getItem("rm_auth_modal_shown") === "1") return;
+    localStorage.setItem("rm_auth_modal_shown", "1");
+    const t = setTimeout(() => {
+      track("auth", "signup_modal_shown", { trigger, hand_number: handCount, ...extraProps });
+      setShowRegisterModal(true);
+    }, delayMs);
+    return () => clearTimeout(t);
+  }, [handCount]);
+
   // All other Chad messages — evaluated once per IDLE, pick highest priority eligible
   useEffect(() => {
     if (isFTUE || gameState !== "IDLE") return;
@@ -762,39 +774,30 @@ export default function GameView() {
       } else {
         setLegendGold(true);
       }
+      // Chad topics that mention saving an account must also surface the modal,
+      // otherwise the message is a dead-end suggestion. Delay lets the user read
+      // the Chad line first (it stays sticky until tapped).
+      if (topic === "leaderboard_intro" || topic === "big_win" || topic === "retention") {
+        tryOpenAuthModal(`chad_${topic}`, 4500);
+      }
       return;
     }
-  }, [gameState, handCount, isFTUE, isAnonymous, bigWinFired]);
+  }, [gameState, handCount, isFTUE, isAnonymous, bigWinFired, tryOpenAuthModal]);
 
-  // Auth nudge — fires the RegisterModal once on an MVP+ hand while anonymous.
-  // This is the emotional-peak moment: convert when the user is riding a big win.
+  // Auth nudge — MVP+ hand while anonymous. Emotional-peak conversion moment.
   useEffect(() => {
     if (!isAnonymous || isFTUE) return;
     if (winTier !== "MVP" && winTier !== "LEGEND") return;
-    if (localStorage.getItem("rm_auth_bigwin_shown") === "1") return;
-    localStorage.setItem("rm_auth_bigwin_shown", "1");
-    const t = setTimeout(() => {
-      track("auth", "signup_modal_shown", { trigger: "big_win", tier: winTier ?? "", hand_number: handCount });
-      setShowRegisterModal(true);
-    }, 2500);
-    return () => clearTimeout(t);
-  }, [winTier, isAnonymous, isFTUE, handCount]);
+    return tryOpenAuthModal("big_win", 2500, { tier: winTier ?? "" });
+  }, [winTier, isAnonymous, isFTUE, tryOpenAuthModal]);
 
-  // Auth nudge — fallback trigger at hand 5 for users who haven't hit a big win yet.
-  // Suppressed if the big-win trigger already fired.
+  // Auth nudge — fallback at hand 5 if no big win has converted.
   useEffect(() => {
     if (!isAnonymous || isFTUE) return;
     if (gameState !== "IDLE" && gameState !== "RESULTS") return;
     if (handCount < 5) return;
-    if (localStorage.getItem("rm_auth_hand5_shown") === "1") return;
-    if (localStorage.getItem("rm_auth_bigwin_shown") === "1") return;
-    localStorage.setItem("rm_auth_hand5_shown", "1");
-    const t = setTimeout(() => {
-      track("auth", "signup_modal_shown", { trigger: "hand_5", hand_number: handCount });
-      setShowRegisterModal(true);
-    }, 3500);
-    return () => clearTimeout(t);
-  }, [handCount, isAnonymous, isFTUE, gameState]);
+    return tryOpenAuthModal("hand_5", 3500);
+  }, [handCount, isAnonymous, isFTUE, gameState, tryOpenAuthModal]);
 
   const pendingCelebration = useRef<{ totalFp: number } | null>(null);
   /** FTUE: roster sum can read 0 briefly in RESULTS — keep last resolved hand FP for TierGauge */
