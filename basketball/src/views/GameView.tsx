@@ -23,6 +23,7 @@ import { calculateWinTier, calculatePayout, calculatePayoutWithStreak, getStreak
 import { detectExtremes } from "@shared/utils/extremeGames";
 import { selectCommentary } from "../../../shared/commentary/selectCommentary";
 import { useGameAnalytics } from "../../../shared/analytics/useGameAnalytics";
+import { track } from "@shared/analytics/analytics";
 import { CollectScreen } from '@shared/engagement/CollectScreen';
 import { TierGauge, computeGaugeState } from '@shared/components/TierGauge';
 import { useEngagement } from '@shared/engagement/useEngagement';
@@ -764,6 +765,36 @@ export default function GameView() {
       return;
     }
   }, [gameState, handCount, isFTUE, isAnonymous, bigWinFired]);
+
+  // Auth nudge — fires the RegisterModal once on an MVP+ hand while anonymous.
+  // This is the emotional-peak moment: convert when the user is riding a big win.
+  useEffect(() => {
+    if (!isAnonymous || isFTUE) return;
+    if (winTier !== "MVP" && winTier !== "LEGEND") return;
+    if (localStorage.getItem("rm_auth_bigwin_shown") === "1") return;
+    localStorage.setItem("rm_auth_bigwin_shown", "1");
+    const t = setTimeout(() => {
+      track("auth", "signup_modal_shown", { trigger: "big_win", tier: winTier ?? "", hand_number: handCount });
+      setShowRegisterModal(true);
+    }, 2500);
+    return () => clearTimeout(t);
+  }, [winTier, isAnonymous, isFTUE, handCount]);
+
+  // Auth nudge — fallback trigger at hand 5 for users who haven't hit a big win yet.
+  // Suppressed if the big-win trigger already fired.
+  useEffect(() => {
+    if (!isAnonymous || isFTUE) return;
+    if (gameState !== "IDLE" && gameState !== "RESULTS") return;
+    if (handCount < 5) return;
+    if (localStorage.getItem("rm_auth_hand5_shown") === "1") return;
+    if (localStorage.getItem("rm_auth_bigwin_shown") === "1") return;
+    localStorage.setItem("rm_auth_hand5_shown", "1");
+    const t = setTimeout(() => {
+      track("auth", "signup_modal_shown", { trigger: "hand_5", hand_number: handCount });
+      setShowRegisterModal(true);
+    }, 3500);
+    return () => clearTimeout(t);
+  }, [handCount, isAnonymous, isFTUE, gameState]);
 
   const pendingCelebration = useRef<{ totalFp: number } | null>(null);
   /** FTUE: roster sum can read 0 briefly in RESULTS — keep last resolved hand FP for TierGauge */
@@ -2473,6 +2504,12 @@ export default function GameView() {
         <ProfileScreen
           currentUid={getPlayerUid()}
           onClose={() => setShowProfile(false)}
+          isAnonymous={isAnonymous}
+          onSaveAccount={() => {
+            track("auth", "signup_modal_shown", { trigger: "profile_button", hand_number: handCount });
+            setShowProfile(false);
+            setShowRegisterModal(true);
+          }}
         />
       )}
 

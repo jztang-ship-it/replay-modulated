@@ -21,9 +21,11 @@ const RANK_METRICS: { id: string; label: string }[] = [
 interface Props {
   currentUid: string;
   onClose: () => void;
+  isAnonymous?: boolean;
+  onSaveAccount?: () => void;
 }
 
-export function ProfileScreen({ currentUid, onClose }: Props) {
+export function ProfileScreen({ currentUid, onClose, isAnonymous, onSaveAccount }: Props) {
   const [nickname, setNick] = useState(() => getNickname());
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(nickname);
@@ -196,6 +198,30 @@ export function ProfileScreen({ currentUid, onClose }: Props) {
             </>
           )}
         </div>
+
+        {/* Save Account — anonymous users only */}
+        {isAnonymous && onSaveAccount && (
+          <div
+            onClick={onSaveAccount}
+            style={{
+              background: "linear-gradient(135deg, rgba(255,215,0,0.18), rgba(255,165,0,0.12))",
+              border: "1px solid rgba(255,215,0,0.4)",
+              borderRadius: 12,
+              padding: "14px 16px",
+              display: "flex", alignItems: "center", gap: 12,
+              cursor: "pointer",
+            }}
+          >
+            <div style={{ fontSize: 24 }}>🔒</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: "#FFD700" }}>Save Your Account</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>
+                Keep your coins, streak, and leaderboard spot on any device
+              </div>
+            </div>
+            <div style={{ fontSize: 18, color: "#FFD700" }}>›</div>
+          </div>
+        )}
 
         {/* Name banner */}
         {showNameBanner && (
