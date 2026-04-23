@@ -28,7 +28,12 @@ export function RegisterModal({ onClose, onSuccess, signUp, linkGoogle, signInMo
       ? await signIn?.(email, password) ?? { error: { message: "Sign in not available" } as any }
       : await signUp(email, password);
     setLoading(false);
-    if (result.error) { setError(result.error.message); return; }
+    if (result.error) {
+      console.error("[auth] email path failed:", result.error);
+      const status = (result.error as any).status ? ` (status ${(result.error as any).status})` : "";
+      setError(`${result.error.message}${status}`);
+      return;
+    }
     setShowSuccess(true);
     setTimeout(() => { onSuccess(); onClose(); }, 1500);
   };
@@ -36,11 +41,16 @@ export function RegisterModal({ onClose, onSuccess, signUp, linkGoogle, signInMo
   const handleGoogle = async () => {
     setLoading(true);
     setError(null);
+    console.log("[auth] google path — isSignIn:", isSignIn);
     const result = isSignIn
       ? await signInGoogle?.() ?? { error: { message: "Google sign in not available" } as any }
       : await linkGoogle();
     setLoading(false);
-    if (result.error) setError(result.error.message);
+    console.log("[auth] google result:", result);
+    if (result.error) {
+      console.error("[auth] google path failed:", result.error);
+      setError(`Google: ${result.error.message}`);
+    }
   };
 
   if (showSuccess) {
