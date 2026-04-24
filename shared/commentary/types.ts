@@ -215,7 +215,11 @@ export interface TemplateData {
   extremeDescription: string;
   /** Top Games — tier code; null when no Top Games trigger. */
   topTier: 'all_time' | 'season' | 'career' | null;
-  /** Top Games — formatted headline stat ("22 ast", "30/21/22"). */
+  /**
+   * Headline stat for display. When a Top Games tier fires, the Top Games
+   * headline ("22 ast", "30/21/22"). Otherwise the badge-focused highest
+   * stat for the hand ("22 pt"). Task 12's token populator picks accordingly.
+   */
   topStat: string;
   /** Top Games — human label from the primary reason. */
   topLabel: string;
