@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { detectTopGame } from "../recordDetector";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { detectTopGame, __setTopGameLookups } from "../recordDetector";
 
 describe("detectTopGame — T1 all-time", () => {
   it("detects composite td_30_20_20 (Jokic 31/21/22)", () => {
@@ -65,5 +65,56 @@ describe("detectTopGame — T1 all-time", () => {
     expect(() => detectTopGame({} as any, "x", "2025-01-01", "ORANGE", "basketball")).not.toThrow();
     const r = detectTopGame({} as any, "x", "2025-01-01", "ORANGE", "basketball");
     expect(r.tier).toBe(null);
+  });
+});
+
+describe("detectTopGame — T2 season", () => {
+  beforeEach(() => {
+    __setTopGameLookups({
+      basketball: {
+        topGames: {
+          "1629029|2025-01-05": {
+            reasons: [{ category: "pts", label: "Top-10 scoring game of the season", value: 58 }],
+          },
+        },
+        careerHighs: {},
+      },
+    });
+  });
+
+  afterEach(() => {
+    __setTopGameLookups(null);
+  });
+
+  it("returns 'season' when {playerId}|{date} is present in lookup", () => {
+    // pts=42 misses all T1 thresholds (below 50-pt composite + 70-pt single), so T2 lookup is consulted.
+    const r = detectTopGame(
+      { pts: 42, reb: 7, ast: 9 },
+      "1629029", "2025-01-05", "PURPLE", "basketball"
+    );
+    expect(r.tier).toBe("season");
+    expect(r.primaryReason?.category).toBe("pts");
+  });
+
+  it("returns null when player played that date but no lookup entry", () => {
+    const r = detectTopGame(
+      { pts: 22, reb: 7, ast: 9 },
+      "1629029", "2025-02-02", "PURPLE", "basketball"
+    );
+    expect(r.tier).toBe(null);
+  });
+
+  it("T1 still wins over T2 when both would match", () => {
+    __setTopGameLookups({
+      basketball: {
+        topGames: { "x|2025-01-01": { reasons: [{ category: "pts", label: "top-10", value: 55 }] } },
+        careerHighs: {},
+      },
+    });
+    const r = detectTopGame(
+      { pts: 73, reb: 8, ast: 5 },
+      "x", "2025-01-01", "PURPLE", "basketball"
+    );
+    expect(r.tier).toBe("all_time");
   });
 });

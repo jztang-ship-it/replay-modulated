@@ -10,6 +10,8 @@ import { COMPOSITE_RULES, isCompositeCategory, type StatLine } from "./composite
 import { NBA_ALL_TIME_THRESHOLDS, type AllTimeThreshold } from "./nbaAllTimeThresholds";
 import { MLB_ALL_TIME_THRESHOLDS } from "./mlbAllTimeThresholds";
 import { WORLDCUP_ALL_TIME_THRESHOLDS } from "./worldcupAllTimeThresholds";
+import topGamesBasketball from "../../basketball/public/data/topGames_2425.json";
+import careerHighsBasketball from "../../basketball/public/data/careerHighs_2season.json";
 
 function getStatValue(statLine: Record<string, any>, stat: string, aliases: Record<string, string[]>): number {
   const aliasList = aliases[stat] ?? [stat];
@@ -56,6 +58,36 @@ export function detectRecords(statLine: Record<string, any>, sport: string = "ba
 }
 
 // ─── Top Games detection ─────────────────────────────────────────────────────
+
+// ─── Lookup caching (per-sport) ─────────────────────────────────────────────
+
+interface SportLookups {
+  topGames: Record<string, { reasons: TopGameReason[] }>;
+  careerHighs: Record<string, { pts?: number; reb?: number; ast?: number; threes?: number }>;
+}
+
+const DEFAULT_LOOKUPS: Record<string, SportLookups> = {};
+
+let lookupsOverride: Record<string, SportLookups> | null = null;
+
+/** Test hook — inject fake lookup maps. Production code should never call this. */
+export function __setTopGameLookups(map: Record<string, SportLookups> | null): void {
+  lookupsOverride = map;
+}
+
+function lookupsFor(sport: string): SportLookups {
+  if (lookupsOverride?.[sport]) return lookupsOverride[sport];
+  if (DEFAULT_LOOKUPS[sport]) return DEFAULT_LOOKUPS[sport];
+  if (sport === "basketball") {
+    DEFAULT_LOOKUPS[sport] = {
+      topGames: topGamesBasketball as Record<string, { reasons: TopGameReason[] }>,
+      careerHighs: careerHighsBasketball as Record<string, { pts?: number; reb?: number; ast?: number; threes?: number }>,
+    };
+  } else {
+    DEFAULT_LOOKUPS[sport] = { topGames: {}, careerHighs: {} };
+  }
+  return DEFAULT_LOOKUPS[sport];
+}
 
 function thresholdsForSport(sport: string): AllTimeThreshold[] {
   switch (sport) {
@@ -133,6 +165,14 @@ export function detectTopGame(
     return { tier: "all_time", primaryReason: t1[0], allReasons: t1 };
   }
 
-  // T2 and T3 added in later tasks.
+  // T2 — season top-10 lookup
+  const { topGames } = lookupsFor(sport);
+  const key = `${playerId}|${date}`;
+  const entry = topGames[key];
+  if (entry?.reasons?.length) {
+    return { tier: "season", primaryReason: entry.reasons[0], allReasons: entry.reasons };
+  }
+
+  // T3 added in Task 6.
   return empty;
 }
