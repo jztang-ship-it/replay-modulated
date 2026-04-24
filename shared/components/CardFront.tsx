@@ -22,6 +22,8 @@ import { getTier, type TierKey, TIER_POSITION_TEXT } from "@shared/theme";
 import { soundManager } from "@shared/utils/soundManager";
 import type { OverlayStamp } from "@shared/components/PlayerCardShell";
 import { CARD_CLIP_PATH_OBJECT_BOX } from "@shared/components/cardClipShape";
+import { TopGameOverlay } from "./TopGameOverlay";
+import type { TopGameTier } from "../commentary/types";
 
 // ── CSS injected once ──────────────────────────────────────────────────────
 
@@ -233,6 +235,8 @@ export interface CardFrontProps {
   visibleBadgeCount?: number;
   isRevealing?: boolean;
   revealActive?: boolean;
+  /** Top Games tier for the star card. null or 'career' → no visual. */
+  topGameTier?: TopGameTier | null;
   pulse?: PulseStyle;
   fpCountUpMs?: number;
   stamp: OverlayStamp;
@@ -419,6 +423,9 @@ export function CardFront(props: CardFrontProps) {
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: "27.8%" }}>
           {renderHero({ card, initials, isActiveReveal })}
         </div>
+
+        {/* TOP GAMES OVERLAY — above photo, below stat strip. Renders null for career/null tier. */}
+        <TopGameOverlay tier={props.topGameTier ?? null} revealActive={props.revealActive} />
 
         {/* SALARY — top-left */}
         <div style={{ position: "absolute", top: "6.5%", left: "6%", zIndex: 8, pointerEvents: "none", lineHeight: 1 }}>
