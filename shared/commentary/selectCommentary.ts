@@ -41,6 +41,7 @@ import baseballLibrary from "./libraries/baseball.json" with { type: "json" };
 import { PLAYER_CULTURE as BASKETBALL_CULTURE } from "../../basketball/src/utils/playerCulture";
 import { PLAYER_CULTURE as BASEBALL_CULTURE } from "../../baseball/src/utils/playerCulture";
 import { TEAM_FLAVOR as BASKETBALL_TEAM_FLAVOR } from "../../basketball/src/utils/teamFlavor";
+import { TEAM_FLAVOR as BASEBALL_TEAM_FLAVOR } from "../../baseball/src/utils/teamFlavor";
 
 // ── Library loader ─────────────────────────────────────────────────────────
 
@@ -662,6 +663,7 @@ function lookupCulture(name: string, sport: string): CultureShape | null {
 interface TeamFlavorEntry { identity: string; hype: string; cold: string; humor: string; }
 const _teamFlavorDb: Record<string, Record<string, TeamFlavorEntry>> = {
   basketball: BASKETBALL_TEAM_FLAVOR as Record<string, TeamFlavorEntry>,
+  baseball: BASEBALL_TEAM_FLAVOR as Record<string, TeamFlavorEntry>,
 };
 
 function lookupTeamFlavor(opp: string | undefined, sport: string): TeamFlavorEntry | null {
@@ -703,7 +705,7 @@ function attributeCultureLine(line: string, name: string, nicknames?: string[]):
   const last = lastName(name).toLowerCase();
   if (last.length >= 4 && lower.includes(last)) return line;
   if (nicknames?.some(n => n.length >= 3 && lower.includes(n.toLowerCase()))) return line;
-  return `${name} — ${line.charAt(0).toLowerCase()}${line.slice(1)}`;
+  return `${name} — ${maybeLowerFirst(line)}`;
 }
 
 // ── Culture override + secondary enrichment ────────────────────────────────
