@@ -1099,6 +1099,14 @@ export default function GameView() {
         }
         const badges = rosterRef.current.reduce((s, c) => s + (c.achievements?.length ?? 0), 0);
         gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
+        if (topGameInfo.topGame.tier && topGameInfo.star) {
+          track("gameplay", "top_game_revealed", {
+            tier: topGameInfo.topGame.tier,
+            category: topGameInfo.topGame.primaryReason?.category ?? "unknown",
+            playerId: topGameInfo.star.basePlayerId ?? "",
+            isStarCard: true,
+          });
+        }
         logHandToDb(rosterRef.current, totalFp, String(tier), payout, streak);
         recordHandPlayed();
         if (!bust) recordHandWon(); else recordHandLost();
