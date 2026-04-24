@@ -21,6 +21,7 @@ import { useCardFlipState } from "../hooks/useCardFlipState";
 import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
 import { calculateWinTier, calculatePayout, calculatePayoutWithStreak, getStreakMultiplier, BASKETBALL_WIN_TIERS, STREAK_TIERS, type WinTier } from "../utils/payoutLogic";
 import { detectExtremes } from "@shared/utils/extremeGames";
+import { featureFlags } from "@shared/featureFlags";
 import { selectCommentary } from "../../../shared/commentary/selectCommentary";
 import { detectTopGame } from "../../../shared/data/recordDetector";
 import { selectStar } from "../../../shared/commentary/storySelector";
@@ -1313,7 +1314,7 @@ export default function GameView() {
       gameDate: String(c?.gameInfo?.date ?? ""),
     }));
     const star = selectStar(commentaryRoster as any);
-    const topGame = star?.statLine
+    const topGame = (featureFlags.topGames && star?.statLine)
       ? detectTopGame(
           star.statLine as any,
           star.basePlayerId ?? "",
