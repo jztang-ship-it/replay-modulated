@@ -1,4 +1,32 @@
 {
+  "historic_all_time": [
+    { "id": "bb_mlb_hist_all_0001", "sport": "baseball", "archetype": "historic_all_time", "register": "win",
+      "tone": "observational",
+      "template": "{topStat}. {topLabel}. Read the line.",
+      "tags": ["stat_first"], "humorStyle": [], "qualityScore": 8, "enabled": true },
+    { "id": "bb_mlb_hist_all_0002", "sport": "baseball", "archetype": "historic_all_time", "register": "loss",
+      "tone": "observational",
+      "template": "Hand busted. {name} still put up {topStat}. {topLabel}. Flip the card.",
+      "tags": ["stat_first"], "humorStyle": [], "qualityScore": 8, "enabled": true },
+    { "id": "bb_mlb_hist_all_0003", "sport": "baseball", "archetype": "historic_all_time", "register": "win",
+      "tone": "analytical",
+      "template": "{name}: {topStat}. That's in the box score for a reason. Read it.",
+      "tags": ["stat_first"], "humorStyle": [], "qualityScore": 8, "enabled": true }
+  ],
+  "historic_season": [
+    { "id": "bb_mlb_hist_szn_0001", "sport": "baseball", "archetype": "historic_season", "register": "win",
+      "tone": "observational",
+      "template": "{topStat}. Top-ten {topCategory} day of the year. Read the line.",
+      "tags": ["stat_first"], "humorStyle": [], "qualityScore": 7, "enabled": true },
+    { "id": "bb_mlb_hist_szn_0002", "sport": "baseball", "archetype": "historic_season", "register": "loss",
+      "tone": "observational",
+      "template": "Loss. {name} still delivered a top-ten line. {topStat}. Check the box.",
+      "tags": ["stat_first"], "humorStyle": [], "qualityScore": 7, "enabled": true },
+    { "id": "bb_mlb_hist_szn_0003", "sport": "baseball", "archetype": "historic_season", "register": "win",
+      "tone": "analytical",
+      "template": "{name} put up {topStat}. That's a top-ten {topCategory} game of the season. Read it.",
+      "tags": ["stat_first"], "humorStyle": [], "qualityScore": 7, "enabled": true }
+  ],
   "star_carry": [
     {
       "id": "bb_0001",
