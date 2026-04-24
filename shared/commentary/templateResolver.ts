@@ -37,6 +37,18 @@ function oppPhrase(c: CommentaryRosterCard): string {
   return c.homeAway === "A" ? ` in ${city}` : ` against ${city}`;
 }
 
+function formatTopStat(topGame: NonNullable<CommentaryInput["topGame"]>, star: CommentaryRosterCard | null): string {
+  if (!topGame.primaryReason || !star?.statLine) return "";
+  const { category, value } = topGame.primaryReason;
+  if (category.startsWith("td_") || category === "quad_double" || category === "five_by_five") {
+    const s = star.statLine;
+    return `${s.pts ?? 0}/${s.reb ?? 0}/${s.ast ?? 0}`;
+  }
+  if (category === "fifty_plus_game") return `${star.statLine.pts ?? value} pts`;
+  const units: Record<string, string> = { pts: "pts", reb: "reb", ast: "ast", threes: "threes", stl: "stl", blk: "blk" };
+  return `${value} ${units[category] ?? category}`;
+}
+
 // ─── Build template data ────────────────────────────────────────────────────
 
 export function buildTemplateData(
@@ -92,11 +104,11 @@ export function buildTemplateData(
     to: star ? Math.round(statN(star, "turnovers") || statN(star, "to")) : 0,
     opp,
     badge: badgeLabel,
-    topStat,
+    topStat: input.topGame?.primaryReason ? formatTopStat(input.topGame, star) : topStat,
     topTier: input.topGame?.tier ?? null,
-    topLabel: input.topGame?.primaryReason?.label,
-    topCategory: input.topGame?.primaryReason?.category,
-    seasonBestStat: undefined,
+    topLabel: input.topGame?.primaryReason?.label ?? "",
+    topCategory: input.topGame?.primaryReason?.category ?? "",
+    seasonBestStat: input.topGame?.tier === "career" ? (input.topGame.primaryReason?.label ?? "") : "",
     streak: input.streak,
     gap: (input.nextTierMin ?? 0) > 0 ? Math.round((input.nextTierMin! - input.totalFp) * 10) / 10 : 0,
     record: rec ? `The NBA record is ${rec.record}.` : "",
@@ -124,6 +136,9 @@ export function resolveTemplate(template: string, data: TemplateData): string {
     .replace(/\{opp\}/g, data.opp)
     .replace(/\{badge\}/g, data.badge)
     .replace(/\{topStat\}/g, data.topStat)
+    .replace(/\{topLabel\}/g, data.topLabel ?? "")
+    .replace(/\{topCategory\}/g, data.topCategory ?? "")
+    .replace(/\{seasonBestStat\}/g, data.seasonBestStat ?? "")
     .replace(/\{streak\}/g, String(data.streak))
     .replace(/\{gap\}/g, String(data.gap))
     .replace(/\{record\}/g, data.record)
