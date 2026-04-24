@@ -157,6 +157,8 @@ export interface RecordEvent {
 
 // ─── Top Games ────────────────────────────────────────────────────────────
 
+export type TopGameTier = "all_time" | "season" | "career";
+
 export interface TopGameReason {
   category: string;  // 'pts' | 'td_30_20_20' | ...
   label: string;     // human-readable, flows into {topLabel} token
@@ -164,7 +166,7 @@ export interface TopGameReason {
 }
 
 export interface TopGameResult {
-  tier: 'all_time' | 'season' | 'career' | null;
+  tier: TopGameTier | null;
   /** The single reason commentary uses. null when tier is null. */
   primaryReason: TopGameReason | null;
   /** Every reason that matched inside the winning tier (for future Collection UI). */
@@ -214,19 +216,20 @@ export interface TemplateData {
   /** Pre-built description of the most extreme game in the hand */
   extremeDescription: string;
   /** Top Games — tier code; null when no Top Games trigger. */
-  topTier: 'all_time' | 'season' | 'career' | null;
+  topTier?: TopGameTier | null;
   /**
    * Headline stat for display. When a Top Games tier fires, the Top Games
-   * headline ("22 ast", "30/21/22"). Otherwise the badge-focused highest
-   * stat for the hand ("22 pt"). Task 12's token populator picks accordingly.
+   * headline ("22 ast", "30/21/22"). Otherwise the star card's highest
+   * single-stat headline for badge-focused templates ("22 pt"). Task 12's
+   * token populator picks accordingly.
    */
   topStat: string;
   /** Top Games — human label from the primary reason. */
-  topLabel: string;
+  topLabel?: string;
   /** Top Games — raw category code from the primary reason ("pts", "td_30_20_20"). */
-  category: string;
+  topCategory?: string;
   /** T3 only — honest season-best phrasing ("best scoring night of the season so far"). */
-  seasonBestStat: string;
+  seasonBestStat?: string;
 }
 
 // ─── Unified commentary engine types ────────────────────────────────────────
