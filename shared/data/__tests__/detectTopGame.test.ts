@@ -118,3 +118,72 @@ describe("detectTopGame — T2 season", () => {
     expect(r.tier).toBe("all_time");
   });
 });
+
+describe("detectTopGame — T3 career", () => {
+  // NOTE: fixture values kept below T1 thresholds (pts<50, ast<20, reb<30, threes<12)
+  // so T3 logic can be exercised in isolation. The plan's original values
+  // (pts:61, ast:22) unintentionally triggered T1's fifty_plus_game composite.
+  beforeEach(() => {
+    __setTopGameLookups({
+      basketball: {
+        topGames: {},
+        careerHighs: {
+          "203999": { pts: 48, reb: 19, ast: 15, threes: 6 },
+          "1629029": { pts: 73, reb: 15, ast: 17, threes: 9 },
+        },
+      },
+    });
+  });
+  afterEach(() => __setTopGameLookups(null));
+
+  it("returns 'career' when stat equals player's dataset max", () => {
+    const r = detectTopGame(
+      { pts: 48, reb: 12, ast: 8 },
+      "203999", "2025-03-01", "ORANGE", "basketball"
+    );
+    expect(r.tier).toBe("career");
+    expect(r.primaryReason?.category).toBe("pts");
+  });
+
+  it("returns 'career' with multiple matches — highest priority stat wins primary", () => {
+    const r = detectTopGame(
+      { pts: 48, reb: 12, ast: 15 },
+      "203999", "2025-03-01", "ORANGE", "basketball"
+    );
+    expect(r.tier).toBe("career");
+    expect(r.primaryReason?.category).toBe("pts");
+    expect(r.allReasons.map(r => r.category)).toContain("ast");
+  });
+
+  it("does not fire for non-star players (e.g., BLUE)", () => {
+    const r = detectTopGame(
+      { pts: 48, reb: 12, ast: 8 },
+      "203999", "2025-03-01", "BLUE", "basketball"
+    );
+    expect(r.tier).toBe(null);
+  });
+
+  it("does not fire when player not in careerHighs map", () => {
+    const r = detectTopGame(
+      { pts: 48, reb: 12, ast: 8 },
+      "unknown", "2025-03-01", "ORANGE", "basketball"
+    );
+    expect(r.tier).toBe(null);
+  });
+
+  it("does not fire when stat below stored max", () => {
+    const r = detectTopGame(
+      { pts: 47, reb: 12, ast: 8 }, // pts stored max is 48
+      "203999", "2025-03-01", "ORANGE", "basketball"
+    );
+    expect(r.tier).toBe(null);
+  });
+
+  it("T1 beats T3", () => {
+    const r = detectTopGame(
+      { pts: 73, reb: 8, ast: 5 },
+      "1629029", "2025-01-26", "ORANGE", "basketball"
+    );
+    expect(r.tier).toBe("all_time");
+  });
+});

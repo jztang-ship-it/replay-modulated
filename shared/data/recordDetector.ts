@@ -173,6 +173,33 @@ export function detectTopGame(
     return { tier: "season", primaryReason: entry.reasons[0], allReasons: entry.reasons };
   }
 
-  // T3 added in Task 6.
+  // T3 — star career high (dataset-recent)
+  const STAR_TIERS = new Set(["PURPLE", "ORANGE", "RED"]);
+  if (!STAR_TIERS.has(playerTier)) return empty;
+
+  const { careerHighs } = lookupsFor(sport);
+  const highs = careerHighs[playerId];
+  if (!highs) return empty;
+
+  const CAREER_PRIORITY: Array<{ key: keyof typeof highs; label: (v: number) => string }> = [
+    { key: "pts",    label: v => `best scoring night of the season so far (${v} pts)` },
+    { key: "reb",    label: v => `biggest rebound night of the season so far (${v} reb)` },
+    { key: "ast",    label: v => `best playmaking night of the season so far (${v} ast)` },
+    { key: "threes", label: v => `best three-point night of the season so far (${v} threes)` },
+  ];
+
+  const t3Matches: TopGameReason[] = [];
+  for (const { key, label } of CAREER_PRIORITY) {
+    const max = highs[key as "pts" | "reb" | "ast" | "threes"];
+    const val = statValue(statLine, key as string, sport);
+    if (max != null && val > 0 && val === max) {
+      t3Matches.push({ category: key as string, label: label(val), value: val });
+    }
+  }
+
+  if (t3Matches.length > 0) {
+    return { tier: "career", primaryReason: t3Matches[0], allReasons: t3Matches };
+  }
+
   return empty;
 }
