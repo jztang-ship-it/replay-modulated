@@ -16,13 +16,19 @@ export interface AuthContextValue {
 }
 
 function getLocalUid(): string {
+  // localStorage throws in iOS Safari Private Mode — never let it blank-screen
+  // the app. Fall back to an ephemeral in-session UID if storage is dead.
   const key = "rm_uid";
-  let uid = localStorage.getItem(key);
-  if (!uid) {
-    uid = "u_" + Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
-    localStorage.setItem(key, uid);
+  try {
+    let uid = localStorage.getItem(key);
+    if (!uid) {
+      uid = "u_" + Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
+      try { localStorage.setItem(key, uid); } catch { /* private mode */ }
+    }
+    return uid;
+  } catch {
+    return "u_ephemeral_" + Math.random().toString(36).slice(2, 11);
   }
-  return uid;
 }
 
 export const AuthContext = createContext<AuthContextValue>({
@@ -46,51 +52,69 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let subscription: { unsubscribe: () => void } | null = null;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (mounted) setUser(session?.user ?? null);
-      // Fires after OAuth redirect returns with a session — the only reliable
-      // point to confirm Google sign-in succeeded on the web.
-      if (event === "SIGNED_IN" && session?.user && !session.user.is_anonymous) {
-        const provider = session.user.app_metadata?.provider ?? "unknown";
-        track("auth", "signin_success", { provider });
-      }
-    });
+    // Every Supabase-touching path is wrapped. Auth is never allowed to blank
+    // the screen: the app must render with the localStorage fallback UID if
+    // anything here fails.
+    try {
+      const sub = supabase.auth.onAuthStateChange((event, session) => {
+        try {
+          if (mounted) setUser(session?.user ?? null);
+          if (event === "SIGNED_IN" && session?.user && !session.user.is_anonymous) {
+            const provider = session.user.app_metadata?.provider ?? "unknown";
+            track("auth", "signin_success", { provider });
+          }
+        } catch (e) {
+          console.warn("[auth] onAuthStateChange handler failed:", e);
+        }
+      });
+      subscription = sub?.data?.subscription ?? null;
+    } catch (e) {
+      console.warn("[auth] onAuthStateChange subscribe failed:", e);
+    }
 
     (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        if (mounted) setUser(session.user);
-        supabase.from("player_profiles").upsert({
-          id: session.user.id,
-          nickname: getNickname(),
-          is_anonymous: session.user.is_anonymous ?? true,
-        }, { onConflict: "id" }).then(({ error }) => {
-          if (error) console.warn("[auth] Failed to upsert profile:", error.message);
-        });
-        return;
-      }
-      const { data, error } = await supabase.auth.signInAnonymously();
-      if (error) {
-        console.warn("[auth] Anonymous sign-in failed, using localStorage UID:", error.message);
-        return;
-      }
-      if (mounted && data.user) {
-        setUser(data.user);
-        // Upsert player profile (idempotent)
-        supabase.from("player_profiles").upsert({
-          id: data.user.id,
-          nickname: getNickname(),
-          is_anonymous: data.user.is_anonymous ?? true,
-        }, { onConflict: "id" }).then(({ error }) => {
-          if (error) console.warn("[auth] Failed to upsert profile:", error.message);
-        });
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          if (mounted) setUser(session.user);
+          try {
+            supabase.from("player_profiles").upsert({
+              id: session.user.id,
+              nickname: getNickname(),
+              is_anonymous: session.user.is_anonymous ?? true,
+            }, { onConflict: "id" }).then(({ error }) => {
+              if (error) console.warn("[auth] Failed to upsert profile:", error.message);
+            });
+          } catch (e) { console.warn("[auth] profile upsert threw:", e); }
+          return;
+        }
+        const { data, error } = await supabase.auth.signInAnonymously();
+        if (error) {
+          console.warn("[auth] Anonymous sign-in failed, using localStorage UID:", error.message);
+          return;
+        }
+        if (mounted && data.user) {
+          setUser(data.user);
+          try {
+            supabase.from("player_profiles").upsert({
+              id: data.user.id,
+              nickname: getNickname(),
+              is_anonymous: data.user.is_anonymous ?? true,
+            }, { onConflict: "id" }).then(({ error }) => {
+              if (error) console.warn("[auth] Failed to upsert profile:", error.message);
+            });
+          } catch (e) { console.warn("[auth] profile upsert threw:", e); }
+        }
+      } catch (e) {
+        console.warn("[auth] session bootstrap failed, continuing with local UID:", e);
       }
     })();
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      try { subscription?.unsubscribe(); } catch { /* ignore */ }
     };
   }, []);
 

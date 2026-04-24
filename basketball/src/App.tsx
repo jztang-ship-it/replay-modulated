@@ -14,14 +14,14 @@ export default function App() {
   );
 
   return (
-    <AuthProvider>
-      <ErrorBoundary>
+    <ErrorBoundary>
+      <AuthProvider>
         {view === "landing" ? (
           <LandingPage onPlay={() => setView("game")} />
         ) : (
           <GameView />
         )}
-      </ErrorBoundary>
-    </AuthProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
