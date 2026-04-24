@@ -14,6 +14,7 @@ import { CardFront, type CardFrontHeroProps } from "@shared/components/CardFront
 import type { ShakeType } from "../hooks/useEmotionalReveal";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { headshotUrl } from "@shared/utils/headshotUrl";
+import type { TopGameTier } from "@shared/commentary/types";
 
 
 export { resetAllOverlays };
@@ -226,6 +227,8 @@ type Props = {
   glowActive?: boolean;
   glowTier?: string;
   glowDurationMs?: number;
+  /** Top Games tier — forwarded to CardFront for the shimmer/stamp overlay. */
+  topGameTier?: TopGameTier | null;
 };
 
 export function AthleteCard(props: Props) {
@@ -233,6 +236,7 @@ export function AthleteCard(props: Props) {
     glowActive,
     glowTier,
     glowDurationMs,
+    topGameTier,
     ...rest
   } = props;
   return (
@@ -244,6 +248,7 @@ export function AthleteCard(props: Props) {
       renderFront={(p: ShellFrontProps) => (
         <CardFront
           {...p}
+          topGameTier={topGameTier ?? null}
           renderHero={(heroProps: CardFrontHeroProps) => (
             <BasketballHero {...heroProps} />
           )}

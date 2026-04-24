@@ -13,6 +13,7 @@
 import React, { useMemo } from "react";
 import type { GamePhase, PlayerCard } from "../types/index";
 import type { ShakeType } from "./types";
+import type { TopGameTier } from "../commentary/types";
 
 function keyOf(card: any): string {
   return String(
@@ -50,6 +51,8 @@ export type RosterGridCardProps = {
   glowTier?: string;
   glowDurationMs?: number;
   isFTUE?: boolean;
+  /** Top Games tier for this card. null = no Top Games visual. */
+  topGameTier?: TopGameTier | null;
 };
 
 type Props = {
@@ -97,6 +100,10 @@ type Props = {
   ftueLockedSlot?: number | null;  // FTUE: slot index that stays lit; all others dim
   ftueFlipTargetId?: string | null; // FTUE: show TAP hint on this card in RESULTS
   isFTUE?: boolean; // FTUE: gold pulse on card backs
+  /** basePlayerId of the star card (if any). Used to pick which card receives topGameTier. */
+  topGameStarBasePlayerId?: string | null;
+  /** Top Games tier for the star card. Non-star cards always receive null. */
+  topGameTier?: TopGameTier | null;
 };
 
 export function RosterGrid(props: Props) {
@@ -111,6 +118,8 @@ export function RosterGrid(props: Props) {
     glowCardId, glowTier, glowDurationMs,
     isSkipping = false,
     isFTUE = false,
+    topGameStarBasePlayerId = null,
+    topGameTier = null,
   } = props;
 
   const cards = useMemo(() => {
@@ -142,6 +151,9 @@ export function RosterGrid(props: Props) {
         const isFaceDown = flippedIds.has(id);
         const isDimmed = !isSkipping && activeRevealCardId !== null && activeRevealCardId !== id && !isFaceDown;
         const cardShakeType = cardShakeTypeMap?.get(id) ?? null;
+        const cardBasePlayerId = String((card as any)?.basePlayerId ?? "");
+        const isTopGameStar = !!topGameStarBasePlayerId && cardBasePlayerId === topGameStarBasePlayerId;
+        const cardTopGameTier: TopGameTier | null = isTopGameStar ? (topGameTier ?? null) : null;
 
         // tap mode: a card is "held" if it has wasHeld flag
         const wasHeld = (card as any).wasHeld === true;
@@ -238,6 +250,7 @@ export function RosterGrid(props: Props) {
               }
               isDimmed={isDimmed}
               isFTUE={isFTUE && !isFlipped && !isRevealing}
+              topGameTier={cardTopGameTier}
             />
           </div>
         );
