@@ -391,6 +391,32 @@
       "humorStyle": [],
       "qualityScore": 7,
       "enabled": false
+    },
+    {
+      "id": "bb_sc_seasonbest_0001",
+      "sport": "basketball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "observational",
+      "template": "{name} carried it{opp}. Quietly buried in the line: {seasonBestStat}.",
+      "requires": ["season_best_stat"],
+      "tags": ["season_best"],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_sc_seasonbest_0002",
+      "sport": "basketball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{name} on top. Also worth noting: {seasonBestStat}.",
+      "requires": ["season_best_stat"],
+      "tags": ["season_best"],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
     }
   ],
   "star_carry_big": [
@@ -717,6 +743,19 @@
       "humorStyle": [],
       "qualityScore": 7,
       "enabled": false
+    },
+    {
+      "id": "bb_scb_seasonbest_0001",
+      "sport": "basketball",
+      "archetype": "star_carry_big",
+      "register": "win",
+      "tone": "observational",
+      "template": "{name} put the hand on his back. Line of note: {seasonBestStat}.",
+      "requires": ["season_best_stat"],
+      "tags": ["season_best"],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
     }
   ],
   "star_delivered": [

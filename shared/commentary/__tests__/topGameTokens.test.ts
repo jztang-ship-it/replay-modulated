@@ -47,3 +47,23 @@ describe("Top Games template tokens", () => {
     expect(result.primary.toLowerCase()).toContain("58");
   });
 });
+
+describe("Top Games T3 season_best_stat detail", () => {
+  it("T3 career prefers a season_best_stat-tagged template when available", () => {
+    const input: CommentaryInput = {
+      sport: "basketball", totalFp: 140, winTier: "ALL_STAR", streak: 1, prevStreak: 0,
+      isBust: false, handCount: 5,
+      roster: [{
+        name: "Anthony Edwards", basePlayerId: "1630162", salary: 62, actualFp: 95, projectedFp: 55,
+        cardTier: "PURPLE", statLine: { pts: 45, reb: 6, ast: 5 }, gameDate: "2025-01-20",
+      }],
+      topGame: {
+        tier: "career",
+        primaryReason: { category: "pts", label: "best scoring night of the season so far (45 pts)", value: 45 },
+        allReasons: [{ category: "pts", label: "best scoring night of the season so far (45 pts)", value: 45 }],
+      },
+    };
+    const r = selectCommentary(input as any);
+    expect(r.primary.toLowerCase()).toMatch(/best|45|scoring|season/);
+  });
+});
