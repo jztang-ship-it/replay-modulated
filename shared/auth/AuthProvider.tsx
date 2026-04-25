@@ -77,6 +77,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        console.info("[auth] getSession →", session?.user
+          ? { id: session.user.id, is_anonymous: session.user.is_anonymous, email: session.user.email || null }
+          : "no session");
         if (session?.user) {
           if (mounted) setUser(session.user);
           try {
@@ -92,9 +95,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         const { data, error } = await supabase.auth.signInAnonymously();
         if (error) {
-          console.warn("[auth] Anonymous sign-in failed, using localStorage UID:", error.message);
+          console.error("[auth] signInAnonymously FAILED — user will run on localStorage UID only (no Supabase row):", error);
           return;
         }
+        console.info("[auth] signInAnonymously OK →", data.user ? { id: data.user.id, is_anonymous: data.user.is_anonymous } : "no user returned");
         if (mounted && data.user) {
           setUser(data.user);
           try {
@@ -108,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           } catch (e) { console.warn("[auth] profile upsert threw:", e); }
         }
       } catch (e) {
-        console.warn("[auth] session bootstrap failed, continuing with local UID:", e);
+        console.error("[auth] session bootstrap threw — falling back to local UID:", e);
       }
     })();
 
@@ -120,7 +124,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setAuthUid(user?.id ?? null);
-  }, [user]);
+    if (typeof window !== "undefined") {
+      (window as any).__rm_auth = {
+        uid,
+        user,
+        isAuthenticated,
+        isAnonymous,
+        isFromSupabase: user !== null,
+        localFallbackUid: user ? null : localUid.current,
+      };
+    }
+  }, [user, uid, isAuthenticated, isAnonymous]);
 
   const handCountForAuthEvent = () => {
     try { return parseInt(localStorage.getItem("replaymod_hand_count") ?? "0", 10); }
@@ -128,8 +142,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string) => {
-    const wasAnonymous = user?.is_anonymous ?? true;
-    const { error } = await supabase.auth.updateUser({ email, password });
+    // Re-read the session so this is correct even if `user` state hasn't caught up
+    // (e.g. RegisterModal opened before signInAnonymously resolved).
+    const { data: { session } } = await supabase.auth.getSession().catch(() => ({ data: { session: null } } as any));
+    const currentUser = session?.user ?? null;
+    const wasAnonymous = currentUser?.is_anonymous ?? false;
+
+    let error: AuthError | null;
+    if (currentUser && wasAnonymous) {
+      // Upgrade the existing anonymous user → permanent email user.
+      const res = await supabase.auth.updateUser({ email, password });
+      error = res.error;
+      console.info("[auth] signUp via updateUser (upgrade anon) →", error ? `ERR ${error.message}` : "OK");
+    } else {
+      // No session, or session is already a permanent user → create a fresh user.
+      const res = await supabase.auth.signUp({ email, password });
+      error = res.error;
+      console.info("[auth] signUp via signUp (new user) →", error
+        ? `ERR ${error.message}`
+        : { id: res.data.user?.id, email: res.data.user?.email, confirmed: !!res.data.user?.email_confirmed_at });
+      if (!error && res.data.user && !currentUser) {
+        // If no prior session existed, surface the new user into context immediately.
+        setUser(res.data.user);
+      }
+    }
+
     if (!error) {
       track("auth", "signup_email", { from_anonymous: wasAnonymous, hand_number: handCountForAuthEvent() });
       if (wasAnonymous) track("auth", "account_linked_from_anon", { method: "email", hand_number: handCountForAuthEvent() });
