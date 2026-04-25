@@ -703,7 +703,7 @@ function attributeCultureLine(line: string, name: string, nicknames?: string[]):
   const last = lastName(name).toLowerCase();
   if (last.length >= 4 && lower.includes(last)) return line;
   if (nicknames?.some(n => n.length >= 3 && lower.includes(n.toLowerCase()))) return line;
-  return `${name} — ${line.charAt(0).toLowerCase()}${line.slice(1)}`;
+  return `${name} — ${maybeLowerFirst(line)}`;
 }
 
 // ── Culture override + secondary enrichment ────────────────────────────────
