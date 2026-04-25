@@ -121,6 +121,16 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
       0%   { -webkit-mask-position: -60% 0; mask-position: -60% 0; }
       100% { -webkit-mask-position: 160% 0; mask-position: 160% 0; }
     }
+    /* TOP-GAME impact flash — full-card tier-color burst at the exact frame
+       the stamp peaks. Punches in over the first 10% (28ms) for the BANG,
+       then decays over the remaining 90% (252ms). Radial gradient centered
+       at the stamp anchor so the light reads as emitted FROM the impact
+       point, not as a generic full-card overlay. */
+    @keyframes cfTopGameFlash {
+      0%   { opacity: 0;    }
+      10%  { opacity: 0.65; }
+      100% { opacity: 0;    }
+    }
     /* Card-shake on Top-Games stamp landing — IMPACT RECOIL, not jitter.
        Fires at the exact frame the stamp peaks at scale 1.35, so the card
        reads as recoiling under the weight of the stamp. Downward push +
@@ -804,6 +814,29 @@ export function CardFront(props: CardFrontProps) {
 
         {/* Glow burst is now rendered in PlayerCardShell as a sibling of pcs-inner,
             outside pcs-face overflow:hidden, so it can bloom beyond card boundaries. */}
+
+        {/* TOP-GAME impact flash — full-card tier-color burst at the exact
+            frame the stamp peaks (gated on topGameShake, which fires at the
+            scale-1.35 overshoot). Adds light over fire/photo/effects then
+            decays in 280ms. Centered at the stamp anchor (top:66%) so the
+            light radiates from the impact point. z-index 44 = above fire (39)
+            and core glow, below the stamp wrap (45) so the stamp stays the
+            focal point as the flash decays around it. */}
+        {topGameShake && (props.topGameTier === "all_time" || props.topGameTier === "season") && (
+          <div style={{
+            position: "absolute",
+            inset: 0,
+            background: `radial-gradient(circle at 50% 66%, ${
+              props.topGameTier === "all_time"
+                ? "rgba(220, 230, 255, 0.95)"
+                : "rgba(255, 220, 130, 0.95)"
+            } 0%, transparent 65%)`,
+            mixBlendMode: "screen",
+            zIndex: 44,
+            pointerEvents: "none",
+            animation: "cfTopGameFlash 280ms ease-out 1 both",
+          }} />
+        )}
 
         {/* TOP GAMES STAMP — sits at the BOTTOM of the photo zone, just above
             the black name strip. Doesn't overlap FP, name, salary, or position.
