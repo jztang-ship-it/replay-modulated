@@ -1,16 +1,8 @@
 /**
  * TopGameStamp — compact ALL-TIME / HISTORY! chip for Top Games tier 1 and 2.
- * Tier 3 (career) and null render nothing.
- *
- * TopGameSparkle — twinkling 4-point stars sprinkled over the fire layer for
- * T1/T2 cards. Tier-colored (platinum for all_time, gold for season). Lives
- * just above the fire (z 40) so the sparkles read as embers in the flames.
- *
- * The full-card shimmer overlay was retired in favor of two non-conflicting
- * signals: (1) the stamp's slow tier-colored halo pulse for the "this card is
- * permanently special" cue, and (2) sparkle particles on the fire to amplify
- * the reveal moment. Fire intensity is also boosted in CardFront when topGame
- * is set so the flames themselves clearly distinguish a top game.
+ * Tier 3 (career) and null render nothing. The "next-tier fire" treatment
+ * (specular sweep + inner core glow) lives in CardFront alongside the natural
+ * fire so it reads as one extravagant flame rather than fire + extras.
  */
 
 import React from "react";
@@ -20,7 +12,7 @@ interface Props {
   tier: TopGameTier | null;
 }
 
-const STYLE_ID = "top-game-overlay-styles-v4";
+const STYLE_ID = "top-game-overlay-styles-v5";
 if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
   const st = document.createElement("style");
   st.id = STYLE_ID;
@@ -76,26 +68,6 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
     .tg-stamp-wrap-thud .tg-stamp-season {
       animation: tgPulseSeason 2.4s ease-in-out 420ms infinite;
     }
-
-    /* SPARKLE — twinkling 4-point stars layered over the fire. Each sparkle is
-       an SVG with a star path; CSS animates opacity + scale + rotation in a
-       staggered cycle. Position-randomized via the position list in TS. */
-    @keyframes tgSparkleTwinkle {
-      0%, 100% { opacity: 0;   transform: scale(0.2) rotate(0deg); }
-      40%      { opacity: 1;   transform: scale(1.15) rotate(35deg); }
-      55%      { opacity: 0.9; transform: scale(0.95) rotate(50deg); }
-    }
-    .tg-sparkle-host {
-      position: absolute; inset: 0; bottom: 28%;
-      pointer-events: none; z-index: 40;
-      overflow: visible;
-    }
-    .tg-sparkle {
-      position: absolute;
-      animation: tgSparkleTwinkle 1.8s ease-in-out infinite;
-      transform-origin: center;
-      filter: drop-shadow(0 0 2px var(--sp-color));
-    }
   `;
   document.head.appendChild(st);
 }
@@ -111,44 +83,3 @@ export function TopGameStamp({ tier }: Props) {
   return <span className={`tg-stamp ${stampClass}`}>{stampText}</span>;
 }
 
-/** Twinkling sparkles over the fire layer. T1 = platinum, T2 = gold. */
-const SPARKLE_POSITIONS: Array<{ left: string; top: string; delay: string; size: number }> = [
-  { left: "12%", top: "12%", delay: "0s",    size: 10 },
-  { left: "82%", top: "20%", delay: "0.35s", size: 12 },
-  { left: "30%", top: "8%",  delay: "0.7s",  size: 8  },
-  { left: "65%", top: "42%", delay: "0.95s", size: 11 },
-  { left: "18%", top: "55%", delay: "0.2s",  size: 12 },
-  { left: "78%", top: "62%", delay: "0.8s",  size: 9  },
-  { left: "45%", top: "30%", delay: "0.5s",  size: 10 },
-  { left: "55%", top: "10%", delay: "1.15s", size: 11 },
-  { left: "8%",  top: "38%", delay: "0.6s",  size: 8  },
-  { left: "92%", top: "48%", delay: "1.05s", size: 10 },
-];
-
-export function TopGameSparkle({ tier }: Props) {
-  if (tier !== "all_time" && tier !== "season") return null;
-  const color = tier === "all_time"
-    ? "rgba(225, 235, 255, 1)"  // cool platinum-white
-    : "rgba(255, 240, 170, 1)"; // warm gold-white
-  return (
-    <div className="tg-sparkle-host">
-      {SPARKLE_POSITIONS.map((s, i) => (
-        <svg
-          key={i}
-          className="tg-sparkle"
-          width={s.size}
-          height={s.size}
-          viewBox="0 0 12 12"
-          style={{
-            left: s.left,
-            top: s.top,
-            animationDelay: s.delay,
-            ["--sp-color" as any]: color,
-          }}
-        >
-          <path d="M6,0 L7,5 L12,6 L7,7 L6,12 L5,7 L0,6 L5,5 Z" fill={color} />
-        </svg>
-      ))}
-    </div>
-  );
-}

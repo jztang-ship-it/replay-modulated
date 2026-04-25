@@ -22,7 +22,7 @@ import { getTier, type TierKey, TIER_POSITION_TEXT } from "@shared/theme";
 import { soundManager } from "@shared/utils/soundManager";
 import type { OverlayStamp } from "@shared/components/PlayerCardShell";
 import { CARD_CLIP_PATH_OBJECT_BOX } from "@shared/components/cardClipShape";
-import { TopGameStamp, TopGameSparkle } from "./TopGameOverlay";
+import { TopGameStamp } from "./TopGameOverlay";
 import type { TopGameTier } from "../commentary/types";
 
 // ── CSS injected once ──────────────────────────────────────────────────────
@@ -106,19 +106,35 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
       0%, 100% { opacity: 0.55; }
       50% { opacity: 0.80; }
     }
-    /* Micro card-shake on Top Games thud — 200ms, 2-3px jitter + ≤0.4deg tilt.
-       Applied to CardFront root so it wobbles the whole front face (photo +
-       strips). Fires once; React removes the class after 220ms. */
+    /* TOP-GAME inner core glow — radial bright spot inside the flame envelope
+       that pulses to read as a "hot core". Sits behind the flame layers so the
+       moving flames mask it intermittently — exactly how a real hot core looks
+       through fire. */
+    @keyframes cfTopGameCore {
+      0%, 100% { opacity: 0.32; transform: translateX(-50%) scale(0.92); }
+      50%      { opacity: 0.72; transform: translateX(-50%) scale(1.06); }
+    }
+    /* TOP-GAME specular sheen — a brighter copy of the flame masked by a
+       diagonal gradient that sweeps across. Reads as a metallic shine catching
+       the surface of the flame, not as a separate floating element. */
+    @keyframes cfTopGameSheen {
+      0%   { -webkit-mask-position: -60% 0; mask-position: -60% 0; }
+      100% { -webkit-mask-position: 160% 0; mask-position: 160% 0; }
+    }
+    /* Card-shake on Top-Games stamp landing — IMPACT RECOIL, not jitter.
+       Fires at the exact frame the stamp peaks at scale 1.35, so the card
+       reads as recoiling under the weight of the stamp. Downward push +
+       brief vertical compression spring back. No left/right flailing. */
     @keyframes cfTopGameShake {
-      0%   { transform: translate(0, 0) rotate(0); }
-      20%  { transform: translate(-1.8px, 1px) rotate(-0.4deg); }
-      40%  { transform: translate(1.8px, -1px) rotate(0.4deg); }
-      60%  { transform: translate(-1.2px, 0.8px) rotate(-0.3deg); }
-      80%  { transform: translate(1px, -0.5px) rotate(0.2deg); }
-      100% { transform: translate(0, 0) rotate(0); }
+      0%   { transform: translate(0, 0)    scaleY(1);     }
+      12%  { transform: translate(0, 5px)  scaleY(0.985); }
+      32%  { transform: translate(0, -2px) scaleY(1.005); }
+      58%  { transform: translate(0, 1px)  scaleY(0.998); }
+      100% { transform: translate(0, 0)    scaleY(1);     }
     }
     .cf-top-game-shake {
-      animation: cfTopGameShake 220ms ease-out 1 both;
+      animation: cfTopGameShake 280ms ease-out 1 both;
+      transform-origin: center top;
     }
   `;
   document.head.appendChild(st);
@@ -376,19 +392,26 @@ export function CardFront(props: CardFrontProps) {
     setTopGameThudFired(false); setTopGameShake(false);
   }, [cardKey]);
 
-  // Top Games thud — fires 200ms after FP roll-up completes for T1/T2 cards.
-  // Sequence: rollComplete → 200ms delay → mount stamp (with thud keyframe),
-  // play thud sound, apply micro shake to root for 220ms.
+  // Top Games thud — IMPACT-SYNCED sequence for T1/T2 cards.
+  //   +200ms after rollComplete: stamp mounts and begins its 420ms entrance
+  //                              (scale 0.3 → 1.35 overshoot → 0.95 → 1.0).
+  //   +200ms after mount (= +400ms after rollComplete): the stamp's scale peaks
+  //     at 1.35 — this is the visual moment the eye registers as "landing".
+  //     Fire shake + thud sound at this exact frame so the card recoils as a
+  //     CONSEQUENCE of the stamp landing, not coincident with its mount.
   useEffect(() => {
     const isT12 = props.topGameTier === "all_time" || props.topGameTier === "season";
     if (!rollComplete || !isT12 || topGameThudFired) return;
-    const thudTimer = setTimeout(() => {
+    const mountTimer = setTimeout(() => {
       setTopGameThudFired(true);
-      setTopGameShake(true);
-      soundManager.playTopGameThud?.();
-      setTimeout(() => setTopGameShake(false), 240);
+      // Nested: fire impact effects at the stamp's overshoot peak.
+      setTimeout(() => {
+        setTopGameShake(true);
+        soundManager.playTopGameThud?.();
+        setTimeout(() => setTopGameShake(false), 300);
+      }, 200);
     }, 200);
-    return () => clearTimeout(thudTimer);
+    return () => clearTimeout(mountTimer);
   }, [rollComplete, props.topGameTier, topGameThudFired]);
 
   // Sound 5 — fire/ice reveal sound, fires once when stamp first appears
@@ -634,10 +657,12 @@ export function CardFront(props: CardFrontProps) {
           const isTopGame = props.topGameTier === "all_time" || props.topGameTier === "season";
           // For top games, force fire even if the natural ratio threshold isn't crossed.
           // Top games are by definition standout performances — fire should always be on.
+          // Gated on rollComplete so the fire mounts at the same moment the natural
+          // stamp-driven fire does (post-roll), never before the card has revealed.
           const showHeatLayer =
             stamp === "SMOKING HOT" || stamp === "ON FIRE" ||
             stamp === "ICE COLD" || stamp === "FREEZING" ||
-            isTopGame;
+            (isTopGame && rollComplete);
           if (!showHeatLayer) return null;
           const actual = Number((card as any)?.actualFp ?? 0);
           const projected = proj > 0 ? proj : 1;
@@ -679,8 +704,31 @@ export function CardFront(props: CardFrontProps) {
               position: "absolute", inset: 0, width: "100%", height: "100%",
               objectFit: "cover", mixBlendMode: "screen", filter: tintFilter,
             };
+            // Top-game tier-tinted glow color for the inner core.
+            // T1: cool platinum-white. T2: warm gold-white. Matches stamp gradients.
+            const tierGlowColor = props.topGameTier === "all_time"
+              ? "rgba(220, 230, 255, 0.95)"
+              : "rgba(255, 220, 130, 0.95)";
+            const sheenMask = "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.95) 50%, transparent 65%)";
             return (
               <div style={clipStyle}>
+                {/* TOP-GAME inner core glow — radial bright spot anchored at the
+                    bottom-center of the flame zone. Renders FIRST so the flame
+                    layers below mask it as they move, producing the read of
+                    "this fire has a hot core glowing through the flames". */}
+                {isTopGame && (
+                  <div style={{
+                    position: "absolute",
+                    left: "50%", bottom: 0,
+                    width: "75%", height: "75%",
+                    transform: "translateX(-50%) scale(1)",
+                    transformOrigin: "center bottom",
+                    background: `radial-gradient(ellipse at 50% 100%, ${tierGlowColor} 0%, transparent 62%)`,
+                    mixBlendMode: "screen",
+                    animation: "cfTopGameCore 1.6s ease-in-out infinite",
+                    pointerEvents: "none",
+                  }} />
+                )}
                 <img src={src} style={{ ...imgBase, opacity: op1, animation: `${animA} ${speed}s ease-in-out infinite` }} />
                 <div style={{ position: "absolute", inset: 0, transform: "scaleX(-1)" }}>
                   <img src={src} style={{ ...imgBase, opacity: op2, animation: `${animB} ${speed}s ease-in-out infinite` }} />
@@ -689,6 +737,25 @@ export function CardFront(props: CardFrontProps) {
                   <div style={{ position: "absolute", inset: 0, transform: "scaleY(-1)" }}>
                     <img src={src} style={{ ...imgBase, opacity: op2 * 0.55, animation: `cfSmokingC ${speed * 1.2}s ease-in-out infinite 0.3s` }} />
                   </div>
+                )}
+                {/* TOP-GAME specular sheen — same flame texture, brighter filter,
+                    masked by a diagonal gradient that sweeps across every 3.2s.
+                    Reads as a metallic shine catching the flame surface, not as
+                    a separate floating element. Uses mask-position keyframes so
+                    the highlight band slides without moving any DOM. */}
+                {isTopGame && (
+                  <img src={src} style={{
+                    ...imgBase,
+                    opacity: 0.55,
+                    filter: `${tintFilter} brightness(1.7) saturate(1.4)`,
+                    WebkitMaskImage: sheenMask,
+                    maskImage: sheenMask,
+                    WebkitMaskRepeat: "no-repeat",
+                    maskRepeat: "no-repeat",
+                    WebkitMaskSize: "220% 100%",
+                    maskSize: "220% 100%",
+                    animation: `${animA} ${speed}s ease-in-out infinite, cfTopGameSheen 3.2s linear infinite`,
+                  }} />
                 )}
               </div>
             );
@@ -737,10 +804,6 @@ export function CardFront(props: CardFrontProps) {
 
         {/* Glow burst is now rendered in PlayerCardShell as a sibling of pcs-inner,
             outside pcs-face overflow:hidden, so it can bloom beyond card boundaries. */}
-
-        {/* TOP GAMES SPARKLES — twinkling stars over the fire zone. Mounts with
-            the fire (post-reveal). Tier-colored particles read as embers. */}
-        {rollComplete && <TopGameSparkle tier={props.topGameTier ?? null} />}
 
         {/* TOP GAMES STAMP — sits at the BOTTOM of the photo zone, just above
             the black name strip. Doesn't overlap FP, name, salary, or position.
