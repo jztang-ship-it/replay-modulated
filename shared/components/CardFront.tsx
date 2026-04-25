@@ -131,6 +131,16 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
       10%  { opacity: 0.65; }
       100% { opacity: 0;    }
     }
+    /* TOP-GAME glitter drift — particles spawn at the stamp band, fade in
+       quickly, drift downward with slight horizontal jitter, fade out over
+       ~3s. Per-particle horizontal drift comes from a CSS variable --gx so
+       each particle moves a different direction without separate keyframes. */
+    @keyframes cfTopGameGlitter {
+      0%   { opacity: 0; transform: translateY(0)      translateX(0)             scale(0.5); }
+      12%  { opacity: 1; transform: translateY(8px)    translateX(calc(var(--gx, 0px) * 0.1)) scale(1);   }
+      80%  { opacity: 0.65; transform: translateY(95px) translateX(calc(var(--gx, 0px) * 0.85)) scale(0.85); }
+      100% { opacity: 0; transform: translateY(125px)  translateX(var(--gx, 0px)) scale(0.7); }
+    }
     /* Card-shake on Top-Games stamp landing — IMPACT RECOIL, not jitter.
        Fires at the exact frame the stamp peaks at scale 1.35, so the card
        reads as recoiling under the weight of the stamp. Downward push +
@@ -261,6 +271,28 @@ export interface CardFrontHeroProps {
   initials: string;
   isActiveReveal: boolean;
 }
+
+// Top-game glitter particle layout — 12 particles spawn near the stamp band,
+// drift downward through the bottom of the photo zone with slight horizontal
+// jitter (drift = px horizontal at end-of-fall). Hand-tuned positions for
+// visual coverage without clustering. Per-particle delay staggers spawns
+// across ~200ms so they don't all pop in lockstep.
+const TG_GLITTER_PARTICLES: ReadonlyArray<{
+  left: string; top: string; delay: string; dur: string; drift: number; size: number;
+}> = [
+  { left:  "8%", top: "20%", delay:   "0ms", dur: "2700ms", drift: -10, size: 3 },
+  { left: "22%", top: "60%", delay:  "60ms", dur: "3100ms", drift:   6, size: 4 },
+  { left: "38%", top: "10%", delay:  "40ms", dur: "2900ms", drift:  -4, size: 3 },
+  { left: "52%", top: "80%", delay: "120ms", dur: "3000ms", drift:   8, size: 4 },
+  { left: "68%", top: "30%", delay:  "80ms", dur: "2800ms", drift:  -7, size: 3 },
+  { left: "82%", top: "50%", delay: "160ms", dur: "3200ms", drift:  12, size: 4 },
+  { left: "15%", top: "70%", delay: "180ms", dur: "2700ms", drift:  -5, size: 3 },
+  { left: "30%", top: "20%", delay: "100ms", dur: "3000ms", drift:   9, size: 4 },
+  { left: "45%", top: "50%", delay: "140ms", dur: "2900ms", drift:  -8, size: 3 },
+  { left: "60%", top: "15%", delay: "200ms", dur: "3100ms", drift:   5, size: 4 },
+  { left: "75%", top: "70%", delay:  "60ms", dur: "2800ms", drift: -11, size: 3 },
+  { left: "92%", top: "40%", delay: "160ms", dur: "3000ms", drift:   7, size: 3 },
+];
 
 export interface CardFrontProps {
   card: PlayerCard;
@@ -856,6 +888,45 @@ export function CardFront(props: CardFrontProps) {
             <TopGameStamp tier={props.topGameTier} />
           </div>
         )}
+
+        {/* TOP-GAME glitter drift — particles spawn near the stamp band when
+            the stamp mounts (topGameThudFired) and drift downward over ~3s.
+            12 hand-tuned particles, tier-tinted. Renders ABOVE the stamp
+            (z 46) so falling particles pass in front of the stamp's halo
+            for a "the stamp is shedding light" read. Persistent mount after
+            thud — animation runs once with forwards, particles end at
+            opacity 0 so they don't visually clutter the rest of the hand. */}
+        {topGameThudFired && (props.topGameTier === "all_time" || props.topGameTier === "season") && (() => {
+          const fill = props.topGameTier === "all_time"
+            ? "rgba(225, 235, 255, 1)"   // platinum-white T1
+            : "rgba(255, 230, 130, 1)";  // gold-warm T2
+          const glow = props.topGameTier === "all_time"
+            ? "rgba(180, 200, 255, 0.6)"
+            : "rgba(255, 200, 80, 0.6)";
+          return (
+            <div style={{
+              position: "absolute",
+              left: "16%", right: "16%",
+              top: "60%", height: "8%",
+              pointerEvents: "none",
+              zIndex: 46,
+            }}>
+              {TG_GLITTER_PARTICLES.map((p, i) => (
+                <div key={i} style={{
+                  position: "absolute",
+                  left: p.left, top: p.top,
+                  width: p.size, height: p.size,
+                  borderRadius: "50%",
+                  background: fill,
+                  boxShadow: `0 0 4px 1px ${glow}`,
+                  opacity: 0,
+                  ["--gx" as any]: `${p.drift}px`,
+                  animation: `cfTopGameGlitter ${p.dur} ease-in ${p.delay} 1 forwards`,
+                }} />
+              ))}
+            </div>
+          );
+        })()}
 
       </div>{/* end clipped content */}
 
