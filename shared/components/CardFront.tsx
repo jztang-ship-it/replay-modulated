@@ -22,7 +22,7 @@ import { getTier, type TierKey, TIER_POSITION_TEXT } from "@shared/theme";
 import { soundManager } from "@shared/utils/soundManager";
 import type { OverlayStamp } from "@shared/components/PlayerCardShell";
 import { CARD_CLIP_PATH_OBJECT_BOX } from "@shared/components/cardClipShape";
-import { TopGameOverlay } from "./TopGameOverlay";
+import { TopGameStamp, TopGameSparkle } from "./TopGameOverlay";
 import type { TopGameTier } from "../commentary/types";
 
 // ── CSS injected once ──────────────────────────────────────────────────────
@@ -105,6 +105,20 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
     @keyframes cfFreezeSheetB {
       0%, 100% { opacity: 0.55; }
       50% { opacity: 0.80; }
+    }
+    /* Micro card-shake on Top Games thud — 200ms, 2-3px jitter + ≤0.4deg tilt.
+       Applied to CardFront root so it wobbles the whole front face (photo +
+       strips). Fires once; React removes the class after 220ms. */
+    @keyframes cfTopGameShake {
+      0%   { transform: translate(0, 0) rotate(0); }
+      20%  { transform: translate(-1.8px, 1px) rotate(-0.4deg); }
+      40%  { transform: translate(1.8px, -1px) rotate(0.4deg); }
+      60%  { transform: translate(-1.2px, 0.8px) rotate(-0.3deg); }
+      80%  { transform: translate(1px, -0.5px) rotate(0.2deg); }
+      100% { transform: translate(0, 0) rotate(0); }
+    }
+    .cf-top-game-shake {
+      animation: cfTopGameShake 220ms ease-out 1 both;
     }
   `;
   document.head.appendChild(st);
@@ -298,6 +312,8 @@ export function CardFront(props: CardFrontProps) {
   const [isRolling, setIsRolling] = useState(false);
   const [rollComplete, setRollComplete] = useState(false);
   const [fpRevealed, setFpRevealed] = useState(false);
+  const [topGameThudFired, setTopGameThudFired] = useState(false);
+  const [topGameShake, setTopGameShake] = useState(false);
   const cardKey = useMemo(() => safeKeyFor(card), [card]);
   const animRafRef = useRef<number>(0);
   const animStartRef = useRef<number | null>(null);
@@ -357,7 +373,23 @@ export function CardFront(props: CardFrontProps) {
     animatingRef.current = false;
     animStartRef.current = null;
     setRollComplete(false); setDisplayedFp(0); setIsRolling(false); setFpRevealed(false);
+    setTopGameThudFired(false); setTopGameShake(false);
   }, [cardKey]);
+
+  // Top Games thud — fires 200ms after FP roll-up completes for T1/T2 cards.
+  // Sequence: rollComplete → 200ms delay → mount stamp (with thud keyframe),
+  // play thud sound, apply micro shake to root for 220ms.
+  useEffect(() => {
+    const isT12 = props.topGameTier === "all_time" || props.topGameTier === "season";
+    if (!rollComplete || !isT12 || topGameThudFired) return;
+    const thudTimer = setTimeout(() => {
+      setTopGameThudFired(true);
+      setTopGameShake(true);
+      soundManager.playTopGameThud?.();
+      setTimeout(() => setTopGameShake(false), 240);
+    }, 200);
+    return () => clearTimeout(thudTimer);
+  }, [rollComplete, props.topGameTier, topGameThudFired]);
 
   // Sound 5 — fire/ice reveal sound, fires once when stamp first appears
   const heatSoundFiredRef = useRef<string | null>(null);
@@ -400,7 +432,10 @@ export function CardFront(props: CardFrontProps) {
 
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%", background: "transparent" }}>
+    <div
+      className={topGameShake ? "cf-top-game-shake" : undefined}
+      style={{ position: "relative", width: "100%", height: "100%", background: "transparent" }}
+    >
       {/* Clip-path definition */}
       <svg width="0" height="0" style={{ position: "absolute", top: 0, left: 0 }}>
         <defs>
@@ -424,8 +459,6 @@ export function CardFront(props: CardFrontProps) {
           {renderHero({ card, initials, isActiveReveal })}
         </div>
 
-        {/* TOP GAMES OVERLAY — above photo, below stat strip. Renders null for career/null tier. */}
-        <TopGameOverlay tier={props.topGameTier ?? null} revealActive={props.revealActive} />
 
         {/* SALARY — top-left */}
         <div style={{ position: "absolute", top: "6.5%", left: "6%", zIndex: 8, pointerEvents: "none", lineHeight: 1 }}>
@@ -597,27 +630,46 @@ export function CardFront(props: CardFrontProps) {
          *   ICE:  coverage 50%→72%, opacity 0.18→0.60, speed 4.0s→3.0s, brightness 1.2→1.6
          *   FIRE: hue +25°→-15°, speed 2.4s→0.9s, opacity 0.35→0.65, spread 7→24px
          */}
-        {(stamp === "SMOKING HOT" || stamp === "ON FIRE" || stamp === "ICE COLD" || stamp === "FREEZING") && (() => {
+        {(() => {
+          const isTopGame = props.topGameTier === "all_time" || props.topGameTier === "season";
+          // For top games, force fire even if the natural ratio threshold isn't crossed.
+          // Top games are by definition standout performances — fire should always be on.
+          const showHeatLayer =
+            stamp === "SMOKING HOT" || stamp === "ON FIRE" ||
+            stamp === "ICE COLD" || stamp === "FREEZING" ||
+            isTopGame;
+          if (!showHeatLayer) return null;
           const actual = Number((card as any)?.actualFp ?? 0);
           const projected = proj > 0 ? proj : 1;
           const ratio = actual / projected;
-          const isFire = stamp === "SMOKING HOT" || stamp === "ON FIRE";
+          const isIceLayer = stamp === "ICE COLD" || stamp === "FREEZING";
+          // Top games always render fire (suppress ice for top games — top games are
+          // by definition hot, so even if ice would normally trigger, fire wins).
+          const isFire = !isIceLayer || isTopGame;
 
           if (isFire) {
-            // ── FIRE ZONE: continuous from ratio 1.40 (mild yellow) to 2.00+ (max red) ──
-            const t = Math.min(1, Math.max(0, (ratio - 1.40) / (2.00 - 1.40))); // 0=mild, 1=max
+            // ── FIRE ZONE: continuous from ratio 1.40 (mild yellow) to 2.00+ (max red).
+            // Top games (T1/T2) push BEYOND the natural max with extra spread, opacity,
+            // and a guaranteed third layer — bigger, brighter, more deliberate flames
+            // so the visual spike clearly distinguishes a top game from a normal fire. ──
+            const ratioBased = Math.min(1, Math.max(0, (ratio - 1.40) / (2.00 - 1.40)));
+            const t = isTopGame ? 1.0 : ratioBased; // top games always max out
+            const boost = isTopGame ? 1 : 0;
             const src = `${import.meta.env.BASE_URL}火焰.png`;
-            const hue = 25 - t * 40;           // +25° yellow → -15° red
-            const sat = 1.3 + t * 0.7;         // 1.3 → 2.0
-            const bright = 1.1 - t * 0.28;     // 1.1 → 0.82
-            const speed = 3.2 - t * 0.6;       // 3.2s gentle → 2.6s fast
-            const spread = 7 + t * 17;         // 7px → 24px overhang
-            const spreadTop = 10 + t * 14;     // 10px → 24px top
-            const op1 = 0.35 + t * 0.30;       // 0.35 → 0.65
-            const op2 = 0.22 + t * 0.33;       // 0.22 → 0.55
-            const useThirdLayer = t > 0.5;
-            const animA = t > 0.5 ? "cfSmokingA" : "cfFireA";
-            const animB = t > 0.5 ? "cfSmokingB" : "cfFireB";
+            // T1: lean platinum/cool — shift hue further blue-ward for an "icy fire" sheen.
+            // T2: lean gold/warm — keep classic max-fire but slightly warmer.
+            const tierHueShift = props.topGameTier === "all_time" ? -45 : props.topGameTier === "season" ? -5 : 0;
+            const hue = 25 - t * 40 + tierHueShift;
+            const sat = 1.3 + t * 0.7 + boost * 0.4;            // normal max 2.0 → top 2.4
+            const bright = 1.1 - t * 0.28 + boost * 0.10;       // normal max 0.82 → top 0.92
+            const speed = 3.2 - t * 0.6 - boost * 0.4;          // normal max 2.6s → top 2.2s (faster)
+            const spread = 7 + t * 17 + boost * 12;             // normal max 24 → top 36
+            const spreadTop = 10 + t * 14 + boost * 14;         // normal max 24 → top 38
+            const op1 = 0.35 + t * 0.30 + boost * 0.18;         // normal max 0.65 → top 0.83
+            const op2 = 0.22 + t * 0.33 + boost * 0.18;         // normal max 0.55 → top 0.73
+            const useThirdLayer = t > 0.5 || isTopGame;
+            const animA = (t > 0.5 || isTopGame) ? "cfSmokingA" : "cfFireA";
+            const animB = (t > 0.5 || isTopGame) ? "cfSmokingB" : "cfFireB";
             const tintFilter = `hue-rotate(${hue}deg) saturate(${sat}) brightness(${bright})`;
             const clipStyle: React.CSSProperties = {
               position: "absolute", top: -spreadTop, left: -spread, right: -spread, bottom: "28%",
@@ -685,6 +737,29 @@ export function CardFront(props: CardFrontProps) {
 
         {/* Glow burst is now rendered in PlayerCardShell as a sibling of pcs-inner,
             outside pcs-face overflow:hidden, so it can bloom beyond card boundaries. */}
+
+        {/* TOP GAMES SPARKLES — twinkling stars over the fire zone. Mounts with
+            the fire (post-reveal). Tier-colored particles read as embers. */}
+        {rollComplete && <TopGameSparkle tier={props.topGameTier ?? null} />}
+
+        {/* TOP GAMES STAMP — sits at the BOTTOM of the photo zone, just above
+            the black name strip. Doesn't overlap FP, name, salary, or position.
+            Mounts 200ms after FP roll-up completes; tgThud keyframe scales it
+            in with a bounce, then persists. Only renders for T1/T2 tiers. */}
+        {topGameThudFired && (props.topGameTier === "all_time" || props.topGameTier === "season") && (
+          <div
+            className="tg-stamp-wrap-thud"
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: "66%", /* just above the black strip (which starts at 72%) */
+              zIndex: 45,
+              pointerEvents: "none",
+            }}
+          >
+            <TopGameStamp tier={props.topGameTier} />
+          </div>
+        )}
 
       </div>{/* end clipped content */}
 

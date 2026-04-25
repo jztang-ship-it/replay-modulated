@@ -1,27 +1,21 @@
 import { describe, it, expect } from "vitest";
-import { TopGameOverlay } from "../TopGameOverlay";
+import { TopGameStamp } from "../TopGameOverlay";
 
-describe("TopGameOverlay", () => {
-  it("renders null for career tier (invisible)", () => {
-    const result = TopGameOverlay({ tier: "career" });
-    expect(result).toBe(null);
+describe("TopGameStamp", () => {
+  it("renders null for career and null tier", () => {
+    expect(TopGameStamp({ tier: "career" })).toBe(null);
+    expect(TopGameStamp({ tier: null })).toBe(null);
   });
 
-  it("renders null for null tier", () => {
-    const result = TopGameOverlay({ tier: null });
-    expect(result).toBe(null);
+  it("renders ALL-TIME for all_time", () => {
+    const result = TopGameStamp({ tier: "all_time" }) as any;
+    expect(result.props.children).toBe("ALL-TIME");
+    expect(result.props.className).toContain("tg-stamp-allTime");
   });
 
-  it("renders a React element for all_time", () => {
-    const result = TopGameOverlay({ tier: "all_time", revealActive: true }) as any;
-    expect(result).not.toBe(null);
-    expect(result.type).toBe("div");
-    expect(result.props.className).toContain("tg-overlay");
-  });
-
-  it("renders a React element for season", () => {
-    const result = TopGameOverlay({ tier: "season", revealActive: false }) as any;
-    expect(result).not.toBe(null);
-    expect(result.type).toBe("div");
+  it("renders HISTORY! for season", () => {
+    const result = TopGameStamp({ tier: "season" }) as any;
+    expect(result.props.children).toBe("HISTORY!");
+    expect(result.props.className).toContain("tg-stamp-season");
   });
 });

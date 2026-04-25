@@ -11,6 +11,7 @@ import type { GamePhase, PlayerCard, Position } from "../adapters/types";
 import { PlayerCardShell, resetAllOverlays } from "@shared/components/PlayerCardShell";
 import type { CardFrontProps as ShellFrontProps, CardBackProps } from "@shared/components/PlayerCardShell";
 import { CardFront, type CardFrontHeroProps } from "@shared/components/CardFront";
+import { TopGameStamp } from "@shared/components/TopGameOverlay";
 import type { ShakeType } from "../hooks/useEmotionalReveal";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { headshotUrl } from "@shared/utils/headshotUrl";
@@ -104,7 +105,7 @@ function BasketballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) 
 
 // ── BackBStats ─────────────────────────────────────────────────────────────
 
-function BackBStats({ card }: { card: PlayerCard }) {
+function BackBStats({ card, topGameTier }: { card: PlayerCard; topGameTier?: TopGameTier | null }) {
   const gi = (card as any).gameInfo || {};
   const sl = (card as any).statLine || {};
   const posStats = useMemo(() => getPositionStats(card.position as Position, sl), [card.position, sl]);
@@ -131,17 +132,29 @@ function BackBStats({ card }: { card: PlayerCard }) {
   const hasStats = Object.keys(sl).length > 0;
   const allZero = tiles.every(t => Number(t.value) === 0);
 
+  const hasTopGameStamp = topGameTier === "all_time" || topGameTier === "season";
+
   return (
-    <div style={S.backWrap}>
+    <div style={{ ...S.backWrap, position: "relative" }}>
+      {/* Static Top Games stamp — slots between the FP value and the badges row,
+          on the right side. Doesn't cover the date/opponent header or the FP
+          number; reads as a marker on the most prominent stat row. */}
       <div style={S.backTopRow}>
         <div style={S.backDate}>{dateStr || "—"}</div>
         <div style={S.backOpp}>{oppStr || "—"}</div>
       </div>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 3, minWidth: 0 }}>
-        <span style={S.fpLabel}>FP</span>
-        <span style={{ ...S.fpValue }}>{round1(actual)}</span>
-        {badgeFpBonus !== 0 && (
-          <span style={{ fontSize: 9, fontWeight: 700, color: badgeFpBonus > 0 ? "#FFD700" : "#FF6B6B", alignSelf: "flex-end", marginBottom: 1 }}>({badgeFpBonus > 0 ? "+" : ""}{badgeFpBonus})</span>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 3, minWidth: 0 }}>
+          <span style={S.fpLabel}>FP</span>
+          <span style={{ ...S.fpValue }}>{round1(actual)}</span>
+          {badgeFpBonus !== 0 && (
+            <span style={{ fontSize: 9, fontWeight: 700, color: badgeFpBonus > 0 ? "#FFD700" : "#FF6B6B", alignSelf: "flex-end", marginBottom: 1 }}>({badgeFpBonus > 0 ? "+" : ""}{badgeFpBonus})</span>
+          )}
+        </div>
+        {hasTopGameStamp && (
+          <div style={{ flexShrink: 0, transform: "rotate(-4deg) scale(0.7)", transformOrigin: "right center" }}>
+            <TopGameStamp tier={topGameTier!} />
+          </div>
         )}
       </div>
       {/* Earned badges — emoji-only inline row, aggressively compact */}
@@ -254,7 +267,7 @@ export function AthleteCard(props: Props) {
           )}
         />
       )}
-      renderBack={(p: CardBackProps) => <BackBStats card={p.card} />}
+      renderBack={(p: CardBackProps) => <BackBStats card={p.card} topGameTier={topGameTier ?? null} />}
     />
   );
 }

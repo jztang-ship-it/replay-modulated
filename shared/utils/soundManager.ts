@@ -437,6 +437,44 @@ class SoundManager {
     }
   }
 
+  // ─── TOP GAMES THUD ───────────────────────────────────────────────────────
+  // Fires when an ALL-TIME or HISTORY! stamp lands on the name strip (200ms
+  // after FP roll-up completes). Heavy, deliberate — "something landed."
+  // TODO: replace synthesized thud with a sourced asset once available.
+  playTopGameThud() {
+    const ctx = this.ensureCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    audioDirector.duckForEvent(0.25, false);
+
+    // Body: low-freq sine with fast pitch drop (60Hz → 40Hz) — the "weight".
+    const body = ctx.createOscillator();
+    body.type = "sine";
+    body.frequency.setValueAtTime(60, now);
+    body.frequency.exponentialRampToValueAtTime(40, now + 0.09);
+    const bG = ctx.createGain();
+    bG.gain.setValueAtTime(0, now);
+    bG.gain.linearRampToValueAtTime(0.55, now + 0.008);
+    bG.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+    body.connect(bG).connect(this.out);
+    body.start(now);
+    body.stop(now + 0.24);
+
+    // Click: filtered noise burst for the impact transient.
+    const click = ctx.createBufferSource();
+    click.buffer = this.noiseBuffer(0.06, ctx);
+    const cBp = ctx.createBiquadFilter();
+    cBp.type = "lowpass";
+    cBp.frequency.setValueAtTime(220, now);
+    const cG = ctx.createGain();
+    cG.gain.setValueAtTime(0, now);
+    cG.gain.linearRampToValueAtTime(0.28, now + 0.004);
+    cG.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    click.connect(cBp).connect(cG).connect(this.out);
+    click.start(now);
+    click.stop(now + 0.09);
+  }
+
   // ─── TIER SLAM (medium win: STARTER / ALL_STAR) ───────────────────────────
   // Emotional job: "Solid! Good hit."
   playTierSlam() {
