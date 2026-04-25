@@ -616,6 +616,10 @@ export default function GameView() {
   const [isBalanceAnimating, setIsBalanceAnimating] = useState(false);
   const [winTier, setWinTier] = useState<WinTier | null>(null);
   const [winPayout, setWinPayout] = useState(0);
+  // Top-game spotlight: dim sibling cards for ~1.4s after the star card's roll
+  // completes. Covers the full celebration arc (fire mount → stamp thud → recoil
+  // → flash). Set in handleCardRollComplete, auto-cleared via setTimeout.
+  const [topGameSpotlightActive, setTopGameSpotlightActive] = useState(false);
   const [showRawScore, setShowRawScore] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -1325,6 +1329,32 @@ export default function GameView() {
         : { tier: null as null, primaryReason: null, allReasons: [] as any[] };
     return { star, topGame };
   }, [roster]);
+
+  // Top-game spotlight trigger — fires when the star card's roll completes,
+  // for tiers that have a visual celebration (T1/T2). Holds the spotlight for
+  // 1.4s, covering the full celebration arc (fire mount → stamp thud at +200ms
+  // → recoil/flash at +400ms → settle by ~+700ms → ease-back at the tail).
+  const handleCardRollComplete = useCallback((cardId: string) => {
+    const tier = topGameInfo.topGame.tier;
+    if (tier !== "all_time" && tier !== "season") return;
+    const starBpid = topGameInfo.star?.basePlayerId ?? null;
+    if (!starBpid) return;
+    // Match cardId against the star card's basePlayerId. Card key in RosterGrid
+    // is keyOf(card) which prefers cardId/id/playerId then falls back to basePlayerId,
+    // so check the star card directly via roster lookup rather than string-comparing.
+    const starCard = roster.find((c: any) => String(c?.basePlayerId ?? "") === starBpid);
+    const starCardKey = String(
+      (starCard as any)?.cardId
+        ?? (starCard as any)?.id
+        ?? (starCard as any)?.playerId
+        ?? (starCard as any)?.basePlayerId
+        ?? ""
+    );
+    if (cardId !== starCardKey) return;
+    setTopGameSpotlightActive(true);
+    const t = window.setTimeout(() => setTopGameSpotlightActive(false), 1400);
+    return () => window.clearTimeout(t);
+  }, [roster, topGameInfo]);
 
   // During anchor count-up: bar frozen at 5-card total (frozenBarFpRef)
   // During spring: springFp drives the bar
@@ -2088,6 +2118,8 @@ export default function GameView() {
                 }
                 topGameStarBasePlayerId={topGameInfo.star?.basePlayerId ?? null}
                 topGameTier={topGameInfo.topGame.tier}
+                topGameSpotlightActive={topGameSpotlightActive}
+                onCardRollComplete={handleCardRollComplete}
               />
             </RosterGridScaleFit>
           </div>

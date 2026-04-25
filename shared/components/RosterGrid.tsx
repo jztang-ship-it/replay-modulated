@@ -104,6 +104,10 @@ type Props = {
   topGameStarBasePlayerId?: string | null;
   /** Top Games tier for the star card. Non-star cards always receive null. */
   topGameTier?: TopGameTier | null;
+  /** True during the top-game celebration window (~1.4s after the star card's
+   *  roll completes). Triggers sibling dim. Parent (GameView) sets it on the
+   *  star card's rollComplete and clears it after the window. */
+  topGameSpotlightActive?: boolean;
 };
 
 export function RosterGrid(props: Props) {
@@ -120,6 +124,7 @@ export function RosterGrid(props: Props) {
     isFTUE = false,
     topGameStarBasePlayerId = null,
     topGameTier = null,
+    topGameSpotlightActive = false,
   } = props;
 
   const cards = useMemo(() => {
@@ -154,6 +159,12 @@ export function RosterGrid(props: Props) {
         const cardBasePlayerId = String((card as any)?.basePlayerId ?? "");
         const isTopGameStar = !!topGameStarBasePlayerId && cardBasePlayerId === topGameStarBasePlayerId;
         const cardTopGameTier: TopGameTier | null = isTopGameStar ? (topGameTier ?? null) : null;
+        // Top-game sibling dim: this card dims when the celebration window is active
+        // AND this card is NOT the star (and not face-down — face-down cards are
+        // already not the focus visually).
+        const isTopGameSpotlightSibling = topGameSpotlightActive
+          && !isTopGameStar
+          && !isFaceDown;
 
         // tap mode: a card is "held" if it has wasHeld flag
         const wasHeld = (card as any).wasHeld === true;
@@ -199,7 +210,11 @@ export function RosterGrid(props: Props) {
               background: "transparent",
               cursor: isTapTarget ? "pointer" : "default",
               boxShadow: "none",
-              transition: "box-shadow 300ms ease",
+              // Top-game sibling dim — focus pull during the celebration window. Filter
+              // (not opacity) so the dim plays alongside box-shadow without compositing
+              // weirdness. transition runs both directions so the ease-back is smooth.
+              filter: isTopGameSpotlightSibling ? "opacity(0.55) blur(0.6px)" : undefined,
+              transition: "box-shadow 300ms ease, filter 250ms ease",
               ...(ftueLockedSlot !== null && (card.slotIndex ?? 0) !== ftueLockedSlot
                 ? { opacity: 0.18, pointerEvents: "none" as const }
                 : {}),
