@@ -25,6 +25,7 @@ import { featureFlags } from "@shared/featureFlags";
 import { selectCommentary } from "../../../shared/commentary/selectCommentary";
 import { detectTopGame } from "../../../shared/data/recordDetector";
 import { selectStar } from "../../../shared/commentary/storySelector";
+import { __devForceTopGame } from "../../../shared/data/__devForceTopGame"; // DEV-ONLY: remove after QA
 import { useGameAnalytics } from "../../../shared/analytics/useGameAnalytics";
 import { track } from "@shared/analytics/analytics";
 import { CollectScreen } from '@shared/engagement/CollectScreen';
@@ -1314,15 +1315,18 @@ export default function GameView() {
       gameDate: String(c?.gameInfo?.date ?? ""),
     }));
     const star = selectStar(commentaryRoster as any);
-    const topGame = (featureFlags.topGames && star?.statLine)
-      ? detectTopGame(
-          star.statLine as any,
-          star.basePlayerId ?? "",
-          star.gameDate ?? "",
-          star.cardTier ?? "",
-          "basketball",
-        )
-      : { tier: null as null, primaryReason: null, allReasons: [] as any[] };
+    // DEV-ONLY: ?forceTopGame=all_time|season|career short-circuits detection. Remove after QA.
+    const forced = __devForceTopGame();
+    const topGame = forced
+      ?? ((featureFlags.topGames && star?.statLine)
+        ? detectTopGame(
+            star.statLine as any,
+            star.basePlayerId ?? "",
+            star.gameDate ?? "",
+            star.cardTier ?? "",
+            "basketball",
+          )
+        : { tier: null as null, primaryReason: null, allReasons: [] as any[] });
     return { star, topGame };
   }, [roster]);
 
