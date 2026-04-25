@@ -16,6 +16,8 @@ export interface CommentaryRosterCard {
   projectedFp: number;
   /** Salary tier color: ORANGE / PURPLE / BLUE / GREEN / WHITE */
   cardTier?: string;
+  /** Stable base player id (e.g., "203999"). Required for Top Games detection on star card. */
+  basePlayerId?: string;
   statLine?: Record<string, any>;
   opponent?: string;
   /** ISO date of the source game — used for signature-game matching in culture commentary. */
@@ -52,6 +54,8 @@ export interface CommentaryInput {
   handCount: number;
   roster: CommentaryRosterCard[];
   leaderboard?: CommentaryLeaderboard;
+  /** Pre-computed Top Games tier for the star card. Optional for backward compat. */
+  topGame?: TopGameResult;
 }
 
 /**
@@ -139,7 +143,8 @@ export type DetailId =
   | "injury_cost"
   | "streak_proximity"
   | "streak_broken"
-  | "extreme_game";
+  | "extreme_game"
+  | "season_best_stat";
 
 export interface RecordEvent {
   type: "record_broken" | "near_record" | "career_milestone";
@@ -148,6 +153,24 @@ export interface RecordEvent {
   record: number;
   holder: string;
   label: string;
+}
+
+// ─── Top Games ────────────────────────────────────────────────────────────
+
+export type TopGameTier = "all_time" | "season" | "career";
+
+export interface TopGameReason {
+  category: string;  // 'pts' | 'td_30_20_20' | ...
+  label: string;     // human-readable, flows into {topLabel} token
+  value: number;     // the stat value (composites use 1)
+}
+
+export interface TopGameResult {
+  tier: TopGameTier | null;
+  /** The single reason commentary uses. null when tier is null. */
+  primaryReason: TopGameReason | null;
+  /** Every reason that matched inside the winning tier (for future Collection UI). */
+  allReasons: TopGameReason[];
 }
 
 export interface StoryResult {
@@ -185,8 +208,6 @@ export interface TemplateData {
   to: number;
   opp: string;
   badge: string;
-  /** Highest stat with unit, e.g. "22 pt" — used in badge-focused templates */
-  topStat: string;
   streak: number;
   gap: number;
   record: string;
@@ -194,6 +215,21 @@ export interface TemplateData {
   recordValue: number;
   /** Pre-built description of the most extreme game in the hand */
   extremeDescription: string;
+  /** Top Games — tier code; null when no Top Games trigger. */
+  topTier?: TopGameTier | null;
+  /**
+   * Headline stat for display. When a Top Games tier fires, the Top Games
+   * headline ("22 ast", "30/21/22"). Otherwise the star card's highest
+   * single-stat headline for badge-focused templates ("22 pt"). Task 12's
+   * token populator picks accordingly.
+   */
+  topStat: string;
+  /** Top Games — human label from the primary reason. */
+  topLabel?: string;
+  /** Top Games — raw category code from the primary reason ("pts", "td_30_20_20"). */
+  topCategory?: string;
+  /** T3 only — honest season-best phrasing ("best scoring night of the season so far"). */
+  seasonBestStat?: string;
 }
 
 // ─── Unified commentary engine types ────────────────────────────────────────
@@ -201,6 +237,8 @@ export interface TemplateData {
 /** Master archetype system — exactly one per hand. Schema supports 32, ~13 active. */
 export type CommentaryArchetype =
   // ── Active (populated with lines) ──
+  | "historic_all_time"          // T1 override — stat-first, rare-air
+  | "historic_season"            // T2 override — stat-first, season top-10
   | "star_carry"
   | "star_carry_big"
   | "star_delivered"
@@ -269,6 +307,8 @@ export interface CommentaryContext {
   /** Detail IDs from story assembly */
   details: DetailId[];
   recordEvents: RecordEvent[];
+  /** Top Games tier result for the star card. */
+  topGame?: TopGameResult;
 }
 
 /** Single line in the commentary library. Grouped by archetype in the library file. */

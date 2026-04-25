@@ -21,7 +21,10 @@ import { useCardFlipState } from "../hooks/useCardFlipState";
 import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
 import { calculateWinTier, calculatePayout, calculatePayoutWithStreak, getStreakMultiplier, BASKETBALL_WIN_TIERS, STREAK_TIERS, type WinTier } from "../utils/payoutLogic";
 import { detectExtremes } from "@shared/utils/extremeGames";
+import { featureFlags } from "@shared/featureFlags";
 import { selectCommentary } from "../../../shared/commentary/selectCommentary";
+import { detectTopGame } from "../../../shared/data/recordDetector";
+import { selectStar } from "../../../shared/commentary/storySelector";
 import { useGameAnalytics } from "../../../shared/analytics/useGameAnalytics";
 import { track } from "@shared/analytics/analytics";
 import { CollectScreen } from '@shared/engagement/CollectScreen';
@@ -1097,6 +1100,14 @@ export default function GameView() {
         }
         const badges = rosterRef.current.reduce((s, c) => s + (c.achievements?.length ?? 0), 0);
         gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
+        if (topGameInfo.topGame.tier && topGameInfo.star) {
+          track("gameplay", "top_game_revealed", {
+            tier: topGameInfo.topGame.tier,
+            category: topGameInfo.topGame.primaryReason?.category ?? "unknown",
+            playerId: topGameInfo.star.basePlayerId ?? "",
+            isStarCard: true,
+          });
+        }
         logHandToDb(rosterRef.current, totalFp, String(tier), payout, streak);
         recordHandPlayed();
         if (!bust) recordHandWon(); else recordHandLost();
@@ -1288,6 +1299,33 @@ export default function GameView() {
   }, [gameState, roster, getVisibleFp]);
 
 
+  // Top Games: detect on the star card's real-life line.
+  // Shared between commentary (as copyInput.topGame) and card render (topGameTier prop).
+  // Uses the same roster state that RosterGrid renders so detection and display stay consistent.
+  const topGameInfo = useMemo(() => {
+    const commentaryRoster = roster.map((c: any) => ({
+      name: String(c?.name ?? ""),
+      salary: Number(c?.salary ?? 0),
+      actualFp: Number(c?.actualFp ?? 0),
+      projectedFp: Number(c?.projectedFp ?? 0) || 0,
+      cardTier: String(c?.tier ?? ""),
+      basePlayerId: String(c?.basePlayerId ?? ""),
+      statLine: (c?.statLine ?? {}) as Record<string, any>,
+      gameDate: String(c?.gameInfo?.date ?? ""),
+    }));
+    const star = selectStar(commentaryRoster as any);
+    const topGame = (featureFlags.topGames && star?.statLine)
+      ? detectTopGame(
+          star.statLine as any,
+          star.basePlayerId ?? "",
+          star.gameDate ?? "",
+          star.cardTier ?? "",
+          "basketball",
+          )
+        : { tier: null as null, primaryReason: null, allReasons: [] as any[] };
+    return { star, topGame };
+  }, [roster]);
+
   // During anchor count-up: bar frozen at 5-card total (frozenBarFpRef)
   // During spring: springFp drives the bar
   // After spring: lockedGaugeFpRef holds the final value
@@ -1362,6 +1400,7 @@ export default function GameView() {
       isFTUE,
       handCount,
       sport: "basketball",
+      topGame: topGameInfo.topGame,
     };
 
     const copy = selectCommentary(copyInput as any);
@@ -2047,6 +2086,8 @@ export default function GameView() {
                       ? 2
                       : null
                 }
+                topGameStarBasePlayerId={topGameInfo.star?.basePlayerId ?? null}
+                topGameTier={topGameInfo.topGame.tier}
               />
             </RosterGridScaleFit>
           </div>

@@ -917,18 +917,31 @@ export function selectCommentary(
   const library = loadLibrary(sport);
   const fallbackChain = getFallbackChain(archetype);
 
+  // Build available-details set for `requires` filtering. Seed with detail IDs
+  // returned by story assembly, then add Top-Games-specific detail flags.
+  const availableDetails = new Set<string>(details.map(d => String(d)));
+  if (input.topGame?.tier === "career") availableDetails.add("season_best_stat");
+
+  // A template is eligible when every entry in its `requires` array is present
+  // in the available-details set. Templates with no `requires` are always OK.
+  const requiresMatch = (line: CommentaryLine): boolean => {
+    if (!line.requires || line.requires.length === 0) return true;
+    return line.requires.every(r => availableDetails.has(r));
+  };
+
   let candidates: CommentaryLine[] = [];
   let matchedArchetype: CommentaryArchetype = archetype;
 
   for (const arch of fallbackChain) {
     const pool = library[arch] ?? [];
 
-    // Filter: register match, tone match, enabled, sport match
+    // Filter: register match, tone match, enabled, sport match, requires met
     const toneMatch = pool.filter(line =>
       line.enabled &&
       line.register === register &&
       line.tone === tone &&
-      (line.sport === "any" || line.sport === sport)
+      (line.sport === "any" || line.sport === sport) &&
+      requiresMatch(line)
     );
 
     if (toneMatch.length > 0) {
@@ -941,7 +954,8 @@ export function selectCommentary(
     const anyTone = pool.filter(line =>
       line.enabled &&
       line.register === register &&
-      (line.sport === "any" || line.sport === sport)
+      (line.sport === "any" || line.sport === sport) &&
+      requiresMatch(line)
     );
 
     if (anyTone.length > 0) {
