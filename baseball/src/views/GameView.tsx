@@ -992,7 +992,7 @@ export default function GameView() {
 
   const formatTierLabel = (tier: string) => {
     if (tier === "BUST") return "BUST";
-    if (tier === "LEGEND") return "G.O.A.T.";
+    if (tier === "LEGEND") return "LEGEND";
     return tier.replace("_", "-");
   };
 
@@ -1048,8 +1048,11 @@ export default function GameView() {
 
   const ceilingPct = useMemo(() => {
     if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return null;
-    // Max possible = projectedFp × 2.0 (salaryRatioCeiling) per card
-    const maxPossible = roster.reduce((s, c: any) => s + Number(c.projectedFp ?? 0) * 2.0, 0);
+    // Realistic ceiling = projectedFp × 3.0 per card. Tuned against the
+    // observed variance tail (top batter peak/avg ratio ~6×, top pitcher
+    // ~1.7×, mixed roster ~3×). With the old 2.0 multiplier any LEGEND
+    // hand pinned at 100% — misleading, since you can always do better.
+    const maxPossible = roster.reduce((s, c: any) => s + Number(c.projectedFp ?? 0) * 3.0, 0);
     if (maxPossible <= 0 || totalFp <= 0) return null;
     return Math.min(100, Math.round((totalFp / maxPossible) * 100));
   }, [gameState, roster, totalFp]);
