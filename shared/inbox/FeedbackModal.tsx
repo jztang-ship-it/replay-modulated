@@ -1,7 +1,7 @@
 // shared/inbox/FeedbackModal.tsx
-// Multi-question feedback modal. Questions live in a config array — content is
-// intentionally placeholder for v1; finalize before flipping the feature flag.
+// Multi-question feedback modal. Questions live in a config array.
 // 100-coin reward on first submission; re-submissions get a "thanks for the update".
+// Direct contact email surfaces in the intro and the post-submit screen.
 
 import { useState } from "react";
 import {
@@ -17,17 +17,59 @@ type Question =
   | { id: string; type: 'freetext'; label: string; placeholder?: string; required?: boolean };
 
 const FEEDBACK_QUESTIONS: Question[] = [
-  // PLACEHOLDER — replace before flipping the feature flag.
-  // See spec "Rollout & feature flag" section.
-  { id: 'general',   type: 'single',   label: 'How are you finding ReplayMod so far?',
-    options: ['Loving it', 'Pretty good', 'Mixed', 'Not great', 'Confused'] },
-  { id: 'pain',      type: 'multi',    label: 'Anything bugging you? (pick any)',
-    options: ['Rules unclear', 'Too slow', 'UI clunky', 'Not enough sports', 'Nothing major'] },
-  { id: 'wishlist',  type: 'freetext', label: 'One feature you wish existed (optional)',
-    placeholder: "e.g., 'multiplayer', 'NFL', 'rematch button'..." },
+  {
+    id: 'discovery',
+    type: 'single',
+    label: 'How did you find ReplayMod?',
+    options: ['Reddit', 'A friend', 'Twitter / X', 'Discord', 'Search', 'Somewhere else'],
+  },
+  {
+    id: 'best_part',
+    type: 'single',
+    label: "What's the best part for you?",
+    options: [
+      'The drama of watching the hand play out',
+      'Building the roster',
+      'The commentary',
+      'The daily competition',
+      'The vibe / theme',
+      'Something else',
+    ],
+  },
+  {
+    id: 'cash_prizes',
+    type: 'single',
+    label: 'If real cash prizes were on the line — how would your play change?',
+    options: [
+      "I'd play way more — that's the point",
+      'Somewhat more',
+      'About the same',
+      "A bit less — I'd worry about losing",
+      "I'd stop — not a betting-game person",
+    ],
+  },
+  {
+    id: 'next_sport',
+    type: 'single',
+    label: 'Which sport should we add next?',
+    options: ['NFL (football)', 'Soccer (full league)', 'NHL (hockey)', 'WNBA', 'Tennis', 'Olympics-style', 'Something else'],
+  },
+  {
+    id: 'discord',
+    type: 'single',
+    label: 'Would you join a private Discord for ReplayMod early players?',
+    options: ['Yes — count me in', 'Maybe, send me details', 'Not for me'],
+  },
+  {
+    id: 'wishlist',
+    type: 'freetext',
+    label: "One feature you wish ReplayMod had",
+    placeholder: 'e.g., "rematch button", "head-to-head with friends", "stat trends"...',
+  },
 ];
 
 const COIN_REWARD = 100;
+const CONTACT_EMAIL = 'wayzztoai@gmail.com';
 
 type Props = {
   userId: string;
@@ -116,7 +158,8 @@ function FormScreen({
         <div>
           <div style={{ fontSize: 14, fontWeight: 700, color: "#EAF0FF" }}>💬 Help shape ReplayMod</div>
           <div style={{ fontSize: 11, color: "#cbd5e1", marginTop: 4, lineHeight: 1.45 }}>
-            You're one of our first players. We read every answer.
+            You're one of our first players. Your answers shape what we build next — or email us anytime at{' '}
+            <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: "#FFB14A", textDecoration: "none" }}>{CONTACT_EMAIL}</a>.
           </div>
         </div>
         <span onClick={onCancel} style={{ fontSize: 14, color: "#7c8aa3", cursor: "pointer", marginLeft: 8 }}>×</span>
@@ -241,10 +284,14 @@ function DoneScreen({ coinsGranted, onClose }: { coinsGranted: number; onClose: 
       ) : (
         <div style={{ fontSize: 16, fontWeight: 600, color: "#EAF0FF", marginBottom: 6 }}>Thanks for the update</div>
       )}
-      <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.5, marginBottom: 14 }}>
+      <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.5, marginBottom: 10 }}>
         {isFirst
           ? "Got it — we read every one. Watch your inbox 📬 — that's where we'll respond."
           : "Your earlier reward stands. We'll factor in your latest answers."}
+      </div>
+      <div style={{ fontSize: 11, color: "#7c8aa3", lineHeight: 1.5, marginBottom: 14 }}>
+        Want to keep talking? Email us at{' '}
+        <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: "#FFB14A", textDecoration: "none" }}>{CONTACT_EMAIL}</a>.
       </div>
       <button onClick={onClose} style={{
         fontSize: 12, padding: "8px 16px",
