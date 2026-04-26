@@ -1881,13 +1881,7 @@ export default function GameView() {
             {showGaugeInZone3 ? (
               <TierGauge
                 totalFp={gaugeTotalFp}
-                thresholds={[
-                  { tier: "ROOKIE",   minFP: 165 },
-                  { tier: "STARTER",  minFP: 200 },
-                  { tier: "ALL_STAR", minFP: 230 },
-                  { tier: "MVP",      minFP: 265 },
-                  { tier: "LEGEND" as any, minFP: 305 },
-                ]}
+                thresholds={GAUGE_THRESHOLDS as any}
                 winTier={springSettled ? (winTier ?? undefined) : undefined}
                 lastCardFp={lastCardFp}
                 isSkip={false}
