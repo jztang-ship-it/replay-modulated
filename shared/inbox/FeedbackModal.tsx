@@ -63,6 +63,7 @@ export function FeedbackModal({ userId, onClose, metadata = {} }: Props) {
   }
 
   function handleDismiss() {
+    if (submitting) return; // don't close mid-submit — user would miss the coin celebration
     if (!done) {
       track('inbox', 'feedback_dismissed', { questions_filled: Object.keys(answers).length }, 'system');
     }
