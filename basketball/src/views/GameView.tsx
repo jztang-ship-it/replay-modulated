@@ -2304,7 +2304,7 @@ export default function GameView() {
               postRevealCopy={postRevealCopy}
               ftueTypewriter={isFTUE}
               stickyLastOverride={isFTUE && ftueReplayReady}
-              commentaryOverride={(showCollect || showLeaderboard) ? null : ftueCommentaryOverride}
+              commentaryOverride={(showCollect || showLeaderboard || showProfile) ? null : ftueCommentaryOverride}
               hideBar={gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD" || gameState === "DRAWING"}
               onCommentaryOverrideDone={() => {
                 setFtueCommentaryOverride(null);
