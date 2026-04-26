@@ -12,6 +12,7 @@
 import { useEffect, useRef, useState } from "react";
 import { soundManager } from "@shared/utils/soundManager";
 import { useAuth } from "@shared/auth/useAuth";
+import { track } from "@shared/analytics/analytics";
 
 type TabId = "home" | "pulse" | "tourney" | "collect" | "profile";
 
@@ -57,8 +58,15 @@ export function AppHeader({
         setOverflowOpen(false);
       }
     }
+    function onDocKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOverflowOpen(false);
+    }
     document.addEventListener("mousedown", onDocClick);
-    return () => document.removeEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onDocKey);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onDocKey);
+    };
   }, [overflowOpen]);
 
   return (
@@ -89,9 +97,9 @@ export function AppHeader({
           const active   = activeTab === id;
           const isCollect = id === "collect";
           function handleClick() {
+            setActiveTab(id);
             if (isCollect) { onCollect?.(); return; }
             if (id === "profile") { onProfile?.(); return; }
-            setActiveTab(id);
           }
           return (
             <div key={id} style={{ position: "relative" }}>
@@ -126,7 +134,10 @@ export function AppHeader({
         {/* Overflow ⋮ */}
         <div ref={overflowRef} style={{ position: "relative" }}>
           <button
-            onClick={() => setOverflowOpen((v) => !v)}
+            onClick={() => setOverflowOpen((v) => {
+              if (!v) track('nav', 'overflow_opened', {}, 'system');
+              return !v;
+            })}
             style={{
               display: "flex", alignItems: "center", justifyContent: "center",
               padding: "3px 8px", minWidth: 32,
@@ -136,6 +147,8 @@ export function AppHeader({
               fontSize: 16, color: overflowOpen ? "#FFB14A" : "#7c8aa3",
             }}
             aria-label="More"
+            aria-expanded={overflowOpen}
+            aria-haspopup="menu"
           >⋮</button>
           {overflowOpen && (
             <div style={{
