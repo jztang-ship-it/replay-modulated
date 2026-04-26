@@ -4,23 +4,30 @@ import GameView from "./views/GameView";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useFTUE } from "@shared/hooks/useFTUE";
 import { AuthProvider } from "@shared/auth/AuthProvider";
+import { useAuth } from "@shared/auth/useAuth";
 
-export default function App() {
+function AppInner() {
   const { isFTUE } = useFTUE("basketball");
+  const { isAuthenticated, isAnonymous } = useAuth();
+  const skipFTUE = isAuthenticated && !isAnonymous;
 
   // First-timers see the landing page. Veterans skip straight to game.
   const [view, setView] = useState<"landing" | "game">(
-    isFTUE ? "landing" : "game"
+    (isFTUE && !skipFTUE) ? "landing" : "game"
   );
 
+  return view === "landing" ? (
+    <LandingPage onPlay={() => setView("game")} />
+  ) : (
+    <GameView />
+  );
+}
+
+export default function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        {view === "landing" ? (
-          <LandingPage onPlay={() => setView("game")} />
-        ) : (
-          <GameView />
-        )}
+        <AppInner />
       </AuthProvider>
     </ErrorBoundary>
   );

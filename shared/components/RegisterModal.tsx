@@ -1,6 +1,8 @@
 // shared/components/RegisterModal.tsx
 import { useState } from "react";
 import type { AuthError } from "@supabase/supabase-js";
+import { addWelcomeMessage } from "@shared/inbox/inbox";
+import { supabase } from "@shared/lib/supabase";
 
 interface RegisterModalProps {
   onClose: () => void;
@@ -34,6 +36,11 @@ export function RegisterModal({ onClose, onSuccess, signUp, linkGoogle, signInMo
       setError(`${result.error.message}${status}`);
       return;
     }
+    // Fire-and-forget: insert welcome message for the new/upgraded user
+    if (!isSignIn) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) await addWelcomeMessage(user.id);
+    }
     setShowSuccess(true);
     setTimeout(() => { onSuccess(); onClose(); }, 1500);
   };
@@ -50,6 +57,12 @@ export function RegisterModal({ onClose, onSuccess, signUp, linkGoogle, signInMo
     if (result.error) {
       console.error("[auth] google path failed:", result.error);
       setError(`Google: ${result.error.message}`);
+    } else {
+      // Fire-and-forget: insert welcome message for the new/upgraded user
+      if (!isSignIn) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) await addWelcomeMessage(user.id);
+      }
     }
   };
 
@@ -57,7 +70,7 @@ export function RegisterModal({ onClose, onSuccess, signUp, linkGoogle, signInMo
     return (
       <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}>
         <div style={{ background: "#1a1a2e", borderRadius: 16, padding: "32px 24px", textAlign: "center", color: "#22C55E", fontSize: 20, fontWeight: 700 }}>
-          Saved!
+          {isSignIn ? "Welcome back" : "Saved!"}
         </div>
       </div>
     );
