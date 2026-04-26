@@ -2185,7 +2185,7 @@ export default function GameView() {
                     />
                     <img
                       key={`tier-${winTier}`}
-                      src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
+                      src={`${import.meta.env.BASE_URL}${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
                       alt={formatTierLabel(winTier)}
                       style={{
                         maxHeight: 80, maxWidth: "100%", objectFit: "contain",
@@ -2206,7 +2206,7 @@ export default function GameView() {
                     <>
                       <img
                         key={`tier-stay-${winTier}`}
-                        src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
+                        src={`${import.meta.env.BASE_URL}${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
                         alt={formatTierLabel(winTier)}
                         style={{
                           maxHeight: 52, maxWidth: "100%", objectFit: "contain",

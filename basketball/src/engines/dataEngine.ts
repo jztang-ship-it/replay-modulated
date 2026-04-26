@@ -1,7 +1,13 @@
 /**
  * basketball/src/engines/dataEngine.ts
- * Thin re-export stub — delegates to the sport-agnostic shared engine.
- * Basketball uses the default URLs (/data/players.json, /data/game-logs.json)
- * so no configure() call is needed.
+ * Points the shared engine at basketball data files.
  */
+import { configure } from "@shared/engines/dataEngine";
+
+// Vite base is "/basketball/" so public/ files are served at /basketball/data/.
+configure({
+  players: "/basketball/data/players.json",
+  logsFallback: "/basketball/data/game-logs.json",
+});
+
 export * from "@shared/engines/dataEngine";

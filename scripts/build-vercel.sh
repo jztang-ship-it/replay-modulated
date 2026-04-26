@@ -4,7 +4,8 @@
 #
 # Builds basketball + baseball as two static sites and assembles them
 # into a single dist/ at the repo root:
-#   dist/                  ← basketball SPA at site root
+#   dist/index.html        ← chooser landing page at site root
+#   dist/basketball/       ← basketball SPA at /basketball
 #   dist/baseball/         ← baseball SPA at /baseball
 #
 # Used by vercel.json (modern config — no `builds` array). Vercel
@@ -28,8 +29,11 @@ echo "── baseball install + build ──"
 echo "── assembling unified dist/ ──"
 rm -rf dist
 mkdir -p dist
-# Basketball at the root.
-cp -R basketball/dist/. dist/
+# Chooser landing page at root — sport selector + localStorage redirect.
+cp chooser/index.html dist/index.html
+# Basketball under /basketball.
+mkdir -p dist/basketball
+cp -R basketball/dist/. dist/basketball/
 # Baseball under /baseball.
 mkdir -p dist/baseball
 cp -R baseball/dist/. dist/baseball/
@@ -37,5 +41,7 @@ cp -R baseball/dist/. dist/baseball/
 echo "── done ──"
 echo "dist/ contents (top level):"
 ls -la dist/ | head -20
+echo "dist/basketball/ contents:"
+ls -la dist/basketball/ | head -10
 echo "dist/baseball/ contents:"
 ls -la dist/baseball/ | head -10

@@ -4,6 +4,7 @@ import path from "node:path";
 
 export default defineConfig({
   plugins: [react()],
+  base: "/basketball/",
   resolve: {
     alias: {
       "@shared": path.resolve(__dirname, "../shared"),
