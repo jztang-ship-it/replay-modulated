@@ -89,7 +89,7 @@ export async function addBigWinMessage(
 ): Promise<void> {
   const payload: Payload = {
     title: `${args.tier} hand`,
-    body: `${args.fp.toFixed(1)} fp — top of the day. The bench paid off.`,
+    body: `${args.fp.toFixed(1)} fp — ${args.tier === 'LEGEND' ? 'legendary hand' : 'strong performance'}. The bench paid off.`,
     tier: args.tier,
     fp: args.fp,
     hand_id: args.hand_id,
@@ -132,7 +132,7 @@ export async function submitSurveyResponse(
   if (readErr || !data) { console.warn('[inbox] submitSurveyResponse read failed', readErr); return; }
   const payload = data.payload as Payload;
   const survey = payload.survey;
-  if (!survey) return;
+  if (!survey) { console.warn('[inbox] submitSurveyResponse: message has no survey field', messageId); return; }
 
   const updatedPayload: Payload = {
     ...payload,
@@ -161,7 +161,7 @@ export async function submitFeedback(
   answers: FeedbackAnswers,
   submissionNumber: number,
   metadata: FeedbackMetadata = {}
-): Promise<void> {
+): Promise<boolean> {
   const { error } = await supabase
     .from('feedback_submissions')
     .insert({
@@ -170,7 +170,8 @@ export async function submitFeedback(
       submission_number: submissionNumber,
       metadata,
     });
-  if (error) console.warn('[inbox] submitFeedback failed', error);
+  if (error) { console.warn('[inbox] submitFeedback failed', error); return false; }
+  return true;
 }
 
 export async function grantFeedbackCoins(amount: number): Promise<void> {
