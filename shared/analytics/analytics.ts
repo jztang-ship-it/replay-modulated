@@ -39,6 +39,7 @@ export type Product =
 export type Feature =
   | 'gameplay' | 'news_feed' | 'comments' | 'challenges' | 'profile'
   | 'onboarding' | 'leaderboard' | 'notifications' | 'settings' | 'auth' | 'system'
+  | 'inbox' | 'nav'
   | string;
 
 export type Platform = 'web' | 'ios' | 'android';

@@ -48,6 +48,9 @@ import { ProfileScreen } from '@shared/components/ProfileScreen';
 import { useAuth } from "@shared/auth/useAuth";
 import { RegisterModal } from "@shared/components/RegisterModal";
 import { PwaInstallPrompt } from "@shared/components/PwaInstallPrompt";
+import { BellSheet } from "@shared/inbox/BellSheet";
+import { FeedbackModal } from "@shared/inbox/FeedbackModal";
+import { listMessages, addBigWinMessage } from "@shared/inbox/inbox";
 
 // Test-wire only: allow passing glow props even if wrapper prop types lag behind.
 const RosterGridAny = RosterGrid as any;
@@ -186,6 +189,11 @@ async function logHandToDb(
       streak_at_play: streak,
       verified,
     });
+    // Trigger inbox big-win recap for elite tiers
+    if (tier === 'MVP+' || tier === 'LEGEND') {
+      const hand_id = `hand-${Date.now()}`;
+      await addBigWinMessage(uid, { tier, fp: totalFp, hand_id });
+    }
   } catch { /* silent — audit trail is best-effort */ }
 }
 
@@ -619,7 +627,10 @@ export default function GameView() {
   const [showRawScore, setShowRawScore] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const { isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
+  const { user, isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
+  const [bellOpen, setBellOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [bigWinFired, setBigWinFired] = useState(false);
   const sessionCount = useRef(parseInt(localStorage.getItem("rm_session_count") ?? "0", 10));
@@ -637,6 +648,14 @@ export default function GameView() {
     sessionCount.current = next;
     localStorage.setItem("rm_session_count", String(next));
   }, []);
+
+  useEffect(() => {
+    if (!user || isAnonymous) { setUnreadCount(0); return; }
+    listMessages(user.id).then((all) => {
+      setUnreadCount(all.filter((m) => m.read_at == null).length);
+    });
+  }, [user, isAnonymous, bellOpen]);
+
   const [noTransition, setNoTransition] = useState(false);
   const [revealedSalary, setRevealedSalary] = useState(0);
   const deductedSalaryCardsRef = useRef<Set<string>>(new Set());
@@ -2010,6 +2029,8 @@ export default function GameView() {
               onCollect={() => setShowCollect(true)}
               onProfile={() => setShowProfile(true)}
               hasUncollected={taskStates.some(t => t.progress >= t.target && !t.collected)}
+              unreadInboxCount={unreadCount}
+              onBell={() => { setBellOpen(true); track('nav', 'bell_clicked', { unread_count: unreadCount }, 'system'); }}
             />
           </div>
           <div data-ftue-chrome="true" style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "0 12px" }}>
@@ -2544,6 +2565,14 @@ export default function GameView() {
         />
       )}
 
+      {bellOpen && user && (
+        <BellSheet
+          userId={user.id}
+          onClose={() => setBellOpen(false)}
+          onViewAll={() => setShowProfile(true)}
+        />
+      )}
+
       {showProfile && (
         <ProfileScreen
           currentUid={getPlayerUid()}
@@ -2554,6 +2583,15 @@ export default function GameView() {
             setShowProfile(false);
             setShowRegisterModal(true);
           }}
+          onOpenFeedback={() => setFeedbackOpen(true)}
+        />
+      )}
+
+      {feedbackOpen && user && (
+        <FeedbackModal
+          userId={user.id}
+          onClose={() => setFeedbackOpen(false)}
+          metadata={{ sport: 'basketball' }}
         />
       )}
 
