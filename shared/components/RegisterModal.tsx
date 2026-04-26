@@ -37,8 +37,10 @@ export function RegisterModal({ onClose, onSuccess, signUp, linkGoogle, signInMo
       return;
     }
     // Fire-and-forget: insert welcome message for the new/upgraded user
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) await addWelcomeMessage(user.id);
+    if (!isSignIn) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) await addWelcomeMessage(user.id);
+    }
     setShowSuccess(true);
     setTimeout(() => { onSuccess(); onClose(); }, 1500);
   };
@@ -57,8 +59,10 @@ export function RegisterModal({ onClose, onSuccess, signUp, linkGoogle, signInMo
       setError(`Google: ${result.error.message}`);
     } else {
       // Fire-and-forget: insert welcome message for the new/upgraded user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) await addWelcomeMessage(user.id);
+      if (!isSignIn) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) await addWelcomeMessage(user.id);
+      }
     }
   };
 
