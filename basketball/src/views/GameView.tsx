@@ -46,7 +46,7 @@ import { useAuth } from "@shared/auth/useAuth";
 import { RegisterModal } from "@shared/components/RegisterModal";
 import { PwaInstallPrompt } from "@shared/components/PwaInstallPrompt";
 import { BellSheet } from "@shared/inbox/BellSheet";
-import { listMessages } from "@shared/inbox/inbox";
+import { listMessages, addBigWinMessage } from "@shared/inbox/inbox";
 
 // Test-wire only: allow passing glow props even if wrapper prop types lag behind.
 const RosterGridAny = RosterGrid as any;
@@ -185,6 +185,11 @@ async function logHandToDb(
       streak_at_play: streak,
       verified,
     });
+    // Trigger inbox big-win recap for elite tiers
+    if (tier === 'MVP+' || tier === 'LEGEND') {
+      const hand_id = `hand-${Date.now()}`;
+      await addBigWinMessage(uid, { tier, fp: totalFp, hand_id });
+    }
   } catch { /* silent — audit trail is best-effort */ }
 }
 
