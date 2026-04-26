@@ -27,6 +27,7 @@ export function BellSheet({ userId, onClose, onViewAll }: Props) {
       track('inbox', 'opened', { source: 'bell', unread_count: unread }, 'system');
       // Auto-mark visible-in-popover as read after 1.5s
       timer = setTimeout(() => {
+        if (cancelled) return;
         all.slice(0, 3).filter((m) => m.read_at == null).forEach((m) => {
           markRead(m.id);
           track('inbox', 'message_read', { message_type: m.message_type }, 'system');

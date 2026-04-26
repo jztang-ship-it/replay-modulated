@@ -61,6 +61,7 @@ function InboxCardSignedIn({ userId, onOpenFeedback }: { userId: string; onOpenF
       const unread = all.filter((m) => m.read_at == null).length;
       track('inbox', 'opened', { source: 'profile', unread_count: unread }, 'system');
       timer = setTimeout(() => {
+        if (cancelled) return;
         all.filter((m) => m.read_at == null).forEach((m) => {
           markRead(m.id);
           track('inbox', 'message_read', { message_type: m.message_type }, 'system');
