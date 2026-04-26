@@ -164,6 +164,26 @@ export async function getSubmissionNumber(userId: string): Promise<number> {
   return (count ?? 0) + 1;
 }
 
+export async function getSurveySubmissionNumber(userId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('feedback_submissions')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .filter('answers->>kind', 'eq', 'survey');
+  if (error) { console.warn('[inbox] getSurveySubmissionNumber failed', error); return 1; }
+  return (count ?? 0) + 1;
+}
+
+export async function getMessageSubmissionNumber(userId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('feedback_submissions')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .filter('answers->>kind', 'eq', 'message');
+  if (error) { console.warn('[inbox] getMessageSubmissionNumber failed', error); return 1; }
+  return (count ?? 0) + 1;
+}
+
 export async function submitFeedback(
   userId: string,
   answers: FeedbackAnswers,

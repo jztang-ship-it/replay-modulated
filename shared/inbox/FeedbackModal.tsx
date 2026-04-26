@@ -1,11 +1,15 @@
 // shared/inbox/FeedbackModal.tsx
-// Multi-question feedback modal. Questions live in a config array.
-// 100-coin reward on first submission; re-submissions get a "thanks for the update".
+// Multi-question feedback modal. Two paths:
+//   - Survey: 6 multi-choice questions + optional free text. 100-coin reward
+//     on first survey submission.
+//   - Message: free-text only. No reward.
 // Direct contact email surfaces in the intro and the post-submit screen.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  getSubmissionNumber, submitFeedback, grantFeedbackCoins,
+  getSurveySubmissionNumber,
+  getMessageSubmissionNumber,
+  submitFeedback, grantFeedbackCoins,
   type FeedbackAnswers, type FeedbackMetadata,
 } from "./inbox";
 import { track } from "@shared/analytics/analytics";
@@ -71,6 +75,13 @@ const FEEDBACK_QUESTIONS: Question[] = [
 const COIN_REWARD = 100;
 const CONTACT_EMAIL = 'wayzztoai@gmail.com';
 
+type Mode = 'choice' | 'survey' | 'message' | 'done';
+
+type DoneState = {
+  source: 'survey' | 'message';
+  coinsGranted: number;
+};
+
 type Props = {
   userId: string;
   onClose: () => void;
@@ -78,38 +89,64 @@ type Props = {
 };
 
 export function FeedbackModal({ userId, onClose, metadata = {} }: Props) {
-  const [answers, setAnswers] = useState<FeedbackAnswers>({});
+  const [mode, setMode] = useState<Mode>('choice');
+  const [surveyAnswers, setSurveyAnswers] = useState<FeedbackAnswers>({});
+  const [messageText, setMessageText] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState<{ coinsGranted: number } | null>(null);
+  const [done, setDone] = useState<DoneState | null>(null);
 
-  function setAnswer(id: string, value: FeedbackAnswers[string]) {
-    setAnswers((prev) => ({ ...prev, [id]: value }));
+  function setSurveyAnswer(id: string, value: FeedbackAnswers[string]) {
+    setSurveyAnswers((prev) => ({ ...prev, [id]: value }));
   }
 
-  async function handleSubmit() {
+  async function handleSubmitSurvey() {
     setSubmitting(true);
-    const submissionNumber = await getSubmissionNumber(userId);
-    const ok = await submitFeedback(userId, answers, submissionNumber, metadata);
+    const submissionNumber = await getSurveySubmissionNumber(userId);
+    const ok = await submitFeedback(userId, { kind: 'survey', ...surveyAnswers }, submissionNumber, metadata);
     let coinsGranted = 0;
     if (ok && submissionNumber === 1) {
       await grantFeedbackCoins(COIN_REWARD);
       coinsGranted = COIN_REWARD;
     }
     track('inbox', 'feedback_submitted', {
+      kind: 'survey',
       submission_number: submissionNumber,
-      has_freetext: typeof answers['wishlist'] === 'string' && (answers['wishlist'] as string).trim().length > 0,
-      completed_questions: Object.keys(answers).length,
+      has_freetext: typeof surveyAnswers['wishlist'] === 'string' && (surveyAnswers['wishlist'] as string).trim().length > 0,
+      completed_questions: Object.keys(surveyAnswers).length,
     }, 'system');
-    setDone({ coinsGranted });
+    setDone({ source: 'survey', coinsGranted });
+    setMode('done');
+    setSubmitting(false);
+  }
+
+  async function handleSubmitMessage() {
+    if (!messageText.trim()) return;
+    setSubmitting(true);
+    const submissionNumber = await getMessageSubmissionNumber(userId);
+    const ok = await submitFeedback(userId, { kind: 'message', text: messageText.trim() }, submissionNumber, metadata);
+    track('inbox', 'feedback_submitted', {
+      kind: 'message',
+      submission_number: submissionNumber,
+      message_length: messageText.trim().length,
+    }, 'system');
+    if (ok) {
+      setDone({ source: 'message', coinsGranted: 0 });
+      setMode('done');
+    }
     setSubmitting(false);
   }
 
   function handleDismiss() {
-    if (submitting) return; // don't close mid-submit — user would miss the coin celebration
-    if (!done) {
-      track('inbox', 'feedback_dismissed', { questions_filled: Object.keys(answers).length }, 'system');
+    if (submitting) return;
+    if (mode !== 'done') {
+      track('inbox', 'feedback_dismissed', { mode }, 'system');
     }
     onClose();
+  }
+
+  function backToChoice() {
+    if (submitting) return;
+    setMode('choice');
   }
 
   return (
@@ -123,46 +160,132 @@ export function FeedbackModal({ userId, onClose, metadata = {} }: Props) {
         background: "#11192b", border: "1px solid #2a3550", borderRadius: 10,
         padding: 16, zIndex: 120,
       }}>
-        {done ? (
-          <DoneScreen coinsGranted={done.coinsGranted} onClose={onClose} />
-        ) : (
+        {mode === 'choice' && (
+          <ChoiceScreen
+            userId={userId}
+            onPickSurvey={() => setMode('survey')}
+            onPickMessage={() => setMode('message')}
+            onClose={handleDismiss}
+          />
+        )}
+        {mode === 'survey' && (
           <FormScreen
             questions={FEEDBACK_QUESTIONS}
-            answers={answers}
-            onAnswer={setAnswer}
-            onSubmit={handleSubmit}
-            onCancel={handleDismiss}
+            answers={surveyAnswers}
+            onAnswer={setSurveyAnswer}
+            onSubmit={handleSubmitSurvey}
+            onBack={backToChoice}
             submitting={submitting}
           />
+        )}
+        {mode === 'message' && (
+          <MessageScreen
+            text={messageText}
+            onChange={setMessageText}
+            onSubmit={handleSubmitMessage}
+            onBack={backToChoice}
+            submitting={submitting}
+          />
+        )}
+        {mode === 'done' && done && (
+          <DoneScreen source={done.source} coinsGranted={done.coinsGranted} onClose={onClose} />
         )}
       </div>
     </>
   );
 }
 
-// ---------- Form ----------
+// ---------- Choice screen ----------
+
+function ChoiceScreen({
+  userId, onPickSurvey, onPickMessage, onClose,
+}: {
+  userId: string;
+  onPickSurvey: () => void;
+  onPickMessage: () => void;
+  onClose: () => void;
+}) {
+  const [coinEligible, setCoinEligible] = useState<boolean>(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    getSurveySubmissionNumber(userId).then((n) => {
+      if (!cancelled) setCoinEligible(n === 1);
+    });
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  return (
+    <>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 12 }}>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#EAF0FF" }}>💬 Talk to the team</div>
+          <div style={{ fontSize: 11, color: "#cbd5e1", marginTop: 4, lineHeight: 1.45 }}>
+            Pick a path. Or email us anytime at{' '}
+            <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: "#FFB14A", textDecoration: "none" }}>{CONTACT_EMAIL}</a>.
+          </div>
+        </div>
+        <span onClick={onClose} style={{ fontSize: 14, color: "#7c8aa3", cursor: "pointer", marginLeft: 8 }}>×</span>
+      </div>
+
+      <button onClick={onPickSurvey} style={{
+        display: "block", width: "100%", textAlign: "left", padding: "12px 14px", marginBottom: 8,
+        background: "#0d1320", border: "1px solid #2a3550", borderRadius: 8, cursor: "pointer",
+        color: "#EAF0FF",
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+          <span style={{ fontSize: 13, fontWeight: 700 }}>📋 Take the quick survey</span>
+          {coinEligible && (
+            <span style={{
+              fontSize: 10, fontWeight: 700, color: "#FFB14A", letterSpacing: 0.4,
+              border: "1px solid rgba(255,177,74,0.4)", background: "rgba(255,177,74,0.08)",
+              borderRadius: 4, padding: "2px 6px",
+            }}>🪙 +{COIN_REWARD}</span>
+          )}
+        </div>
+        <div style={{ fontSize: 11, color: "#7c8aa3", lineHeight: 1.4 }}>
+          6 multi-choice questions. ~30 seconds. Helps us decide what to build next.
+        </div>
+      </button>
+
+      <button onClick={onPickMessage} style={{
+        display: "block", width: "100%", textAlign: "left", padding: "12px 14px",
+        background: "#0d1320", border: "1px solid #2a3550", borderRadius: 8, cursor: "pointer",
+        color: "#EAF0FF",
+      }}>
+        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>✏️ Write us a message</div>
+        <div style={{ fontSize: 11, color: "#7c8aa3", lineHeight: 1.4 }}>
+          Anything on your mind. We read every one.
+        </div>
+      </button>
+    </>
+  );
+}
+
+// ---------- Form (survey) ----------
 
 function FormScreen({
-  questions, answers, onAnswer, onSubmit, onCancel, submitting,
+  questions, answers, onAnswer, onSubmit, onBack, submitting,
 }: {
   questions: Question[];
   answers: FeedbackAnswers;
   onAnswer: (id: string, v: FeedbackAnswers[string]) => void;
   onSubmit: () => void;
-  onCancel: () => void;
+  onBack: () => void;
   submitting: boolean;
 }) {
   return (
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 10 }}>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "#EAF0FF" }}>💬 Help shape ReplayMod</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span onClick={onBack} style={{ fontSize: 13, color: "#7c8aa3", cursor: "pointer" }}>‹</span>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#EAF0FF" }}>📋 Help shape ReplayMod</div>
+          </div>
           <div style={{ fontSize: 11, color: "#cbd5e1", marginTop: 4, lineHeight: 1.45 }}>
-            You're one of our first players. Your answers shape what we build next — or email us anytime at{' '}
-            <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: "#FFB14A", textDecoration: "none" }}>{CONTACT_EMAIL}</a>.
+            You're one of our first players. Your answers shape what we build next.
           </div>
         </div>
-        <span onClick={onCancel} style={{ fontSize: 14, color: "#7c8aa3", cursor: "pointer", marginLeft: 8 }}>×</span>
       </div>
 
       <div style={{
@@ -247,11 +370,11 @@ function FormScreen({
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ fontSize: 11, color: "#7c8aa3" }}>🪙 +{COIN_REWARD} on submit</div>
         <div style={{ display: "flex", gap: 6 }}>
-          <button onClick={onCancel} disabled={submitting} style={{
+          <button onClick={onBack} disabled={submitting} style={{
             fontSize: 11, padding: "6px 12px",
             background: "transparent", border: "1px solid #2a3550",
-            color: "#7c8aa3", borderRadius: 4, cursor: "pointer",
-          }}>Cancel</button>
+            color: "#7c8aa3", borderRadius: 4, cursor: submitting ? "wait" : "pointer",
+          }}>Back</button>
           <button onClick={onSubmit} disabled={submitting} style={{
             fontSize: 12, fontWeight: 600, padding: "6px 14px",
             background: "#FFB14A", color: "#0d1320", border: "none",
@@ -263,31 +386,86 @@ function FormScreen({
   );
 }
 
-function chipStyle(selected: boolean): React.CSSProperties {
-  return {
-    fontSize: 11, padding: "4px 9px", borderRadius: 4, cursor: "pointer",
-    background: selected ? "rgba(255,177,74,0.18)" : "transparent",
-    border: selected ? "1px solid #FFB14A" : "1px solid #2a3550",
-    color: "#EAF0FF",
-  };
+// ---------- Message screen ----------
+
+function MessageScreen({
+  text, onChange, onSubmit, onBack, submitting,
+}: {
+  text: string;
+  onChange: (s: string) => void;
+  onSubmit: () => void;
+  onBack: () => void;
+  submitting: boolean;
+}) {
+  const canSubmit = text.trim().length > 0 && !submitting;
+  return (
+    <>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 12 }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span onClick={onBack} style={{ fontSize: 13, color: "#7c8aa3", cursor: submitting ? "wait" : "pointer" }}>‹</span>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#EAF0FF" }}>✏️ Send us a message</div>
+          </div>
+          <div style={{ fontSize: 11, color: "#cbd5e1", marginTop: 4, lineHeight: 1.45 }}>
+            Anything on your mind. We read every one.
+          </div>
+        </div>
+      </div>
+
+      <textarea
+        value={text}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Type away..."
+        rows={6}
+        style={{
+          width: "100%", minHeight: 120, fontSize: 12, padding: 10,
+          background: "#0d1320", color: "#EAF0FF",
+          border: "1px solid #2a3550", borderRadius: 6, resize: "vertical",
+          marginBottom: 12,
+          fontFamily: "inherit",
+          boxSizing: "border-box",
+        }}
+      />
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ fontSize: 11, color: "#7c8aa3" }}>{text.trim().length} characters</div>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button onClick={onBack} disabled={submitting} style={{
+            fontSize: 11, padding: "6px 12px",
+            background: "transparent", border: "1px solid #2a3550",
+            color: "#7c8aa3", borderRadius: 4, cursor: submitting ? "wait" : "pointer",
+          }}>Back</button>
+          <button onClick={onSubmit} disabled={!canSubmit} style={{
+            fontSize: 12, fontWeight: 600, padding: "6px 14px",
+            background: canSubmit ? "#FFB14A" : "#2a3550", color: canSubmit ? "#0d1320" : "#7c8aa3", border: "none",
+            borderRadius: 4, cursor: canSubmit ? "pointer" : "not-allowed",
+          }}>{submitting ? "Sending..." : "Send"}</button>
+        </div>
+      </div>
+    </>
+  );
 }
 
 // ---------- Done screen ----------
 
-function DoneScreen({ coinsGranted, onClose }: { coinsGranted: number; onClose: () => void }) {
-  const isFirst = coinsGranted > 0;
+function DoneScreen({ source, coinsGranted, onClose }: { source: 'survey' | 'message'; coinsGranted: number; onClose: () => void }) {
+  const isFirstSurvey = source === 'survey' && coinsGranted > 0;
   return (
     <div style={{ textAlign: "center", padding: "20px 8px" }}>
-      <div style={{ fontSize: 48, marginBottom: 8 }}>{isFirst ? "🪙" : "📬"}</div>
-      {isFirst ? (
+      <div style={{ fontSize: 48, marginBottom: 8 }}>{isFirstSurvey ? "🪙" : "📬"}</div>
+      {isFirstSurvey ? (
         <div style={{ fontSize: 18, fontWeight: 700, color: "#FFB14A", marginBottom: 6 }}>+{coinsGranted} coins added</div>
       ) : (
-        <div style={{ fontSize: 16, fontWeight: 600, color: "#EAF0FF", marginBottom: 6 }}>Thanks for the update</div>
+        <div style={{ fontSize: 16, fontWeight: 600, color: "#EAF0FF", marginBottom: 6 }}>
+          {source === 'message' ? "Message sent" : "Thanks for the update"}
+        </div>
       )}
       <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.5, marginBottom: 10 }}>
-        {isFirst
+        {isFirstSurvey
           ? "Got it — we read every one. Watch your inbox 📬 — that's where we'll respond."
-          : "Your earlier reward stands. We'll factor in your latest answers."}
+          : source === 'message'
+            ? "We read every one. Expect a reply in your inbox 📬 if it warrants one."
+            : "Your earlier reward stands. We'll factor in your latest answers."}
       </div>
       <div style={{ fontSize: 11, color: "#7c8aa3", lineHeight: 1.5, marginBottom: 14 }}>
         Want to keep talking? Email us at{' '}
@@ -300,4 +478,13 @@ function DoneScreen({ coinsGranted, onClose }: { coinsGranted: number; onClose: 
       }}>Back to game</button>
     </div>
   );
+}
+
+function chipStyle(selected: boolean): React.CSSProperties {
+  return {
+    fontSize: 11, padding: "4px 9px", borderRadius: 4, cursor: "pointer",
+    background: selected ? "rgba(255,177,74,0.18)" : "transparent",
+    border: selected ? "1px solid #FFB14A" : "1px solid #2a3550",
+    color: "#EAF0FF",
+  };
 }
