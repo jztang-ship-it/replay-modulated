@@ -1,36 +1,65 @@
 /**
  * shared/components/AppHeader.tsx
- * LAYER 1: Sport-agnostic top header — wordmark + nav tabs.
+ * LAYER 1: Sport-agnostic top header — wordmark + nav tabs + overflow + bell.
  *
  * Props:
- *   sportLabel?: string  — optional sport badge shown next to wordmark
- *                          e.g. "World Cup", "NBA". Omit for generic.
- *
- * All sports import from "@shared/components/AppHeader".
+ *   sportLabel?: string  — optional sport badge ("World Cup", "NBA")
+ *   onCollect?, onProfile?, onBell?  — tab/icon handlers
+ *   hasUncollected? — collect-tab red dot
+ *   unreadInboxCount? — bell red dot trigger (>0 shows dot)
  */
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { soundManager } from "@shared/utils/soundManager";
+import { useAuth } from "@shared/auth/useAuth";
 
 type TabId = "home" | "pulse" | "tourney" | "collect" | "profile";
-const TABS: { id: TabId; label: string; icon: string }[] = [
+
+const PRIMARY_TABS: { id: TabId; label: string; icon: string }[] = [
   { id: "home",    label: "Play",    icon: "⚡" },
-  { id: "pulse",   label: "Pulse",   icon: "📈" },
-  { id: "tourney", label: "Tourney", icon: "🏆" },
   { id: "collect", label: "Collect", icon: "🃏" },
   { id: "profile", label: "Profile", icon: "👤" },
+];
+
+const OVERFLOW_TABS: { id: TabId; label: string; icon: string; soon: boolean }[] = [
+  { id: "pulse",   label: "Pulse",   icon: "📈", soon: true },
+  { id: "tourney", label: "Tourney", icon: "🏆", soon: true },
 ];
 
 type Props = {
   sportLabel?: string;
   onCollect?: () => void;
   onProfile?: () => void;
+  onBell?: () => void;
   hasUncollected?: boolean;
+  unreadInboxCount?: number;
 };
 
-export function AppHeader({ sportLabel, onCollect, onProfile, hasUncollected }: Props) {
+export function AppHeader({
+  sportLabel,
+  onCollect,
+  onProfile,
+  onBell,
+  hasUncollected,
+  unreadInboxCount = 0,
+}: Props) {
   const [activeTab, setActiveTab] = useState<TabId>("home");
   const [muted, setMuted] = useState(soundManager.isMuted());
+  const [overflowOpen, setOverflowOpen] = useState(false);
+  const overflowRef = useRef<HTMLDivElement>(null);
+  const { isAnonymous } = useAuth();
+
+  // Click-outside to close overflow dropdown
+  useEffect(() => {
+    if (!overflowOpen) return;
+    function onDocClick(e: MouseEvent) {
+      if (overflowRef.current && !overflowRef.current.contains(e.target as Node)) {
+        setOverflowOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [overflowOpen]);
 
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -50,20 +79,16 @@ export function AppHeader({ sportLabel, onCollect, onProfile, hasUncollected }: 
             fontSize: 9, fontWeight: 700, letterSpacing: 1.5,
             color: "rgba(255,255,255,0.4)", textTransform: "uppercase",
             border: "1px solid rgba(255,255,255,0.15)", borderRadius: 4, padding: "1px 5px",
-          }}>
-            {sportLabel}
-          </span>
+          }}>{sportLabel}</span>
         )}
       </div>
 
-      {/* Nav tabs */}
+      {/* Right cluster: primary tabs · overflow · bell */}
       <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-        {TABS.map(({ id, label, icon }) => {
+        {PRIMARY_TABS.map(({ id, label, icon }) => {
           const active   = activeTab === id;
-          const disabled = id === "pulse" || id === "tourney";
           const isCollect = id === "collect";
           function handleClick() {
-            if (disabled) return;
             if (isCollect) { onCollect?.(); return; }
             if (id === "profile") { onProfile?.(); return; }
             setActiveTab(id);
@@ -72,17 +97,13 @@ export function AppHeader({ sportLabel, onCollect, onProfile, hasUncollected }: 
             <div key={id} style={{ position: "relative" }}>
               <button
                 onClick={handleClick}
-                disabled={disabled}
                 style={{
                   display: "flex", flexDirection: "column", alignItems: "center", gap: 1,
                   padding: "3px 8px",
                   background: active ? "rgba(255,177,74,0.12)" : "transparent",
                   border: active ? "1px solid rgba(255,177,74,0.3)" : "1px solid transparent",
-                  borderRadius: 8,
-                  cursor: disabled ? "default" : "pointer",
-                  opacity: disabled ? 0.35 : 1,
-                  transition: "all 150ms ease",
-                  minWidth: 40,
+                  borderRadius: 8, cursor: "pointer",
+                  transition: "all 150ms ease", minWidth: 40,
                 }}
               >
                 <span style={{ fontSize: 14, lineHeight: 1 }}>{icon}</span>
@@ -90,19 +111,84 @@ export function AppHeader({ sportLabel, onCollect, onProfile, hasUncollected }: 
                   {label}
                 </span>
               </button>
-              {/* Red dot for Collect tab */}
               {isCollect && hasUncollected && (
                 <div style={{
                   position: "absolute", top: 0, right: 2,
                   width: 7, height: 7, borderRadius: "50%",
-                  background: "#EF4444",
-                  border: "1.5px solid #070A12",
+                  background: "#EF4444", border: "1.5px solid #070A12",
                   pointerEvents: "none",
                 }} />
               )}
             </div>
           );
         })}
+
+        {/* Overflow ⋮ */}
+        <div ref={overflowRef} style={{ position: "relative" }}>
+          <button
+            onClick={() => setOverflowOpen((v) => !v)}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              padding: "3px 8px", minWidth: 32,
+              background: overflowOpen ? "rgba(255,177,74,0.12)" : "transparent",
+              border: overflowOpen ? "1px solid rgba(255,177,74,0.3)" : "1px solid transparent",
+              borderRadius: 8, cursor: "pointer",
+              fontSize: 16, color: overflowOpen ? "#FFB14A" : "#7c8aa3",
+            }}
+            aria-label="More"
+          >⋮</button>
+          {overflowOpen && (
+            <div style={{
+              position: "absolute", top: "calc(100% + 4px)", right: 0,
+              minWidth: 148, background: "#11192b",
+              border: "1px solid #2a3550", borderRadius: 8,
+              boxShadow: "0 8px 18px rgba(0,0,0,0.5)",
+              overflow: "hidden", zIndex: 100,
+            }}>
+              {OVERFLOW_TABS.map(({ id, label, icon, soon }, i) => (
+                <div key={id} style={{
+                  padding: "8px 10px",
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  borderBottom: i < OVERFLOW_TABS.length - 1 ? "1px solid #1c2540" : "none",
+                  cursor: soon ? "default" : "pointer", opacity: soon ? 0.55 : 1,
+                }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11 }}>{icon} {label}</span>
+                  {soon && (
+                    <span style={{
+                      fontSize: 8, color: "#FFB14A",
+                      border: "1px solid rgba(255,177,74,0.3)", borderRadius: 3,
+                      padding: "1px 4px",
+                    }}>SOON</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Bell — hidden when anonymous */}
+        {!isAnonymous && (
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => onBell?.()}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                padding: "3px 8px", minWidth: 32, background: "transparent",
+                border: "1px solid transparent", borderRadius: 8, cursor: "pointer",
+                fontSize: 14,
+              }}
+              aria-label="Inbox"
+            >🔔</button>
+            {unreadInboxCount > 0 && (
+              <div style={{
+                position: "absolute", top: 0, right: 2,
+                width: 7, height: 7, borderRadius: "50%",
+                background: "#EF4444", border: "1.5px solid #070A12",
+                pointerEvents: "none",
+              }} />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
