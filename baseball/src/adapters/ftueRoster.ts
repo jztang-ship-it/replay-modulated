@@ -17,16 +17,17 @@
  * already over cap before adding RED). The FTUE narrative trades tier
  * variety for narrative clarity (HOT anchor + spread of cheap pieces).
  *
- * LINEUP 2 (drawn hand after Ohtani held) --- $148 total, 4 distinct tiers:
+ * LINEUP 2 (drawn hand after Ohtani held) --- $150 total (at cap), 3 distinct tiers:
  *   slot 0  Ohtani     $54 RED    BAT  (HELD --- 79 FP, 2H 1HR 1R 2RBI + GOING_YARD)
- *   slot 1  Perez      $43 PURPLE BAT  (HOT  --- 36 FP, multi-hit day + HIT_MACHINE)
- *   slot 2  Edman      $37 BLUE   BAT  (cold --- 12 FP, 1 hit only)
- *   slot 3  T.Williams $22 WHITE  P    (held, replayed --- 55 FP solid Q-start)
- *   slot 4  Senzatela  $17 WHITE  P    (held, replayed --- 17 FP partial)
+ *   slot 1  Edman      $37 BLUE   BAT  (HOT  --- 36 FP, multi-hit + HIT_MACHINE)
+ *   slot 2  J. Turner  $20 WHITE  BAT  (cold --- 12 FP, 1 hit only)
+ *   slot 3  T.Williams $22 WHITE  P    (drawn --- 55 FP solid Q-start, different game)
+ *   slot 4  Senzatela  $17 WHITE  P    (drawn --- 17 FP partial, different game)
  *
+ * TOTAL $: 54+37+20+22+17 = $150 (exactly cap, no headroom)
  * TOTAL FP: 79 + 36 + 12 + 55 + 17 = 199 --- STARTER tier (170+).
  * ALL_STAR requires 200. Gap: 1.0 FP. Near-miss teaching moment:
- *   Edman went cold (12 FP); one more hit and it's ALL_STAR.
+ *   Justin Turner went cold (12 FP); one more hit and it's ALL_STAR.
  */
 
 import type { GeneratedCard } from "@shared/types";
@@ -143,30 +144,30 @@ export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
 
 const DRAWN: Record<number, () => GeneratedCard> = {
 
-  // Slot 1 -> Salvador Perez | PURPLE $43 BAT | drawn --- multi-hit (2H 1R)
-  // 2025-07-08 vs Cleveland Guardians (H)
+  // Slot 1 -> Tommy Edman | BLUE $37 BAT | drawn --- multi-hit HOT (2H 1R)
+  // 2025-06-15 vs Miami Marlins (H)
   // FP: 24+9 = 33 base + 3 HIT_MACHINE badge = 36
   1: () => makeCard({
-    cardId: "ftue-perez", basePlayerId: "521692",
-    name: "Salvador Perez", team: "KC", position: "C",
-    tier: "PURPLE", salary: 43, slotIndex: 1,
-    projectedFp: 43, actualFp: 36,
-    date: "2025-07-08", opponent: "Cleveland Guardians", homeAway: "H",
+    cardId: "ftue-edman", basePlayerId: "669242",
+    name: "Tommy Edman", team: "LAD", position: "SS",
+    tier: "BLUE", salary: 37, slotIndex: 1,
+    projectedFp: 37, actualFp: 36,
+    date: "2025-06-15", opponent: "Miami Marlins", homeAway: "H",
     statLine: { h: 2, doubles: 0, triples: 0, hr: 0, r: 1, rbi: 0, bb: 0, sb: 0, pa: 4 },
     achievements: [
       { id: "HIT_MACHINE", icon: "🎯", label: "Hit Machine", fp: 3 },
     ],
   }),
 
-  // Slot 2 -> Tommy Edman | BLUE $37 BAT | drawn --- cold (1H, no extras)
-  // 2025-04-12 vs San Diego Padres (H)
+  // Slot 2 -> Justin Turner | WHITE $20 BAT | drawn --- cold (1H, no extras)
+  // 2025-04-12 vs San Francisco Giants (A)
   // FP: 12 (1H, no R/RBI/BB)
   2: () => makeCard({
-    cardId: "ftue-edman", basePlayerId: "669242",
-    name: "Tommy Edman", team: "LAD", position: "SS",
-    tier: "BLUE", salary: 37, slotIndex: 2,
-    projectedFp: 37, actualFp: 12,
-    date: "2025-04-12", opponent: "San Diego Padres", homeAway: "H",
+    cardId: "ftue-jturner", basePlayerId: "457759",
+    name: "Justin Turner", team: "CHC", position: "DH",
+    tier: "WHITE", salary: 20, slotIndex: 2,
+    projectedFp: 20, actualFp: 12,
+    date: "2025-04-12", opponent: "San Francisco Giants", homeAway: "A",
     statLine: { h: 1, doubles: 0, triples: 0, hr: 0, r: 0, rbi: 0, bb: 0, sb: 0, pa: 3 },
   }),
 
