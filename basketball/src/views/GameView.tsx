@@ -46,6 +46,7 @@ import { useAuth } from "@shared/auth/useAuth";
 import { RegisterModal } from "@shared/components/RegisterModal";
 import { PwaInstallPrompt } from "@shared/components/PwaInstallPrompt";
 import { BellSheet } from "@shared/inbox/BellSheet";
+import { FeedbackModal } from "@shared/inbox/FeedbackModal";
 import { listMessages, addBigWinMessage } from "@shared/inbox/inbox";
 
 // Test-wire only: allow passing glow props even if wrapper prop types lag behind.
@@ -2546,8 +2547,11 @@ export default function GameView() {
       )}
 
       {feedbackOpen && user && (
-        // FeedbackModal will be wired in Task 9 — leave this empty for now
-        null
+        <FeedbackModal
+          userId={user.id}
+          onClose={() => setFeedbackOpen(false)}
+          metadata={{ sport: 'basketball' }}
+        />
       )}
 
 

@@ -39,6 +39,7 @@ import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
 import { ProfileScreen } from '@shared/components/ProfileScreen';
 import { useAuth } from "@shared/auth/useAuth";
 import { BellSheet } from "@shared/inbox/BellSheet";
+import { FeedbackModal } from "@shared/inbox/FeedbackModal";
 import { listMessages } from "@shared/inbox/inbox";
 import { track } from "@shared/analytics/analytics";
 import { selectCommentary } from "@shared/commentary/selectCommentary";
@@ -2127,8 +2128,11 @@ export default function GameView() {
       )}
 
       {feedbackOpen && user && (
-        // FeedbackModal will be wired in Task 9 — leave this empty for now
-        null
+        <FeedbackModal
+          userId={user.id}
+          onClose={() => setFeedbackOpen(false)}
+          metadata={{ sport: 'baseball' }}
+        />
       )}
 
     </div>
