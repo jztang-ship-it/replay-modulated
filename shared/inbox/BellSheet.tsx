@@ -3,7 +3,7 @@
 // Same fetch on open; no realtime subscription.
 
 import { useEffect, useState } from "react";
-import { listMessages, markRead, type InboxMessage } from "./inbox";
+import { listMessages, markRead, MESSAGE_ICONS, type InboxMessage } from "./inbox";
 import { track } from "@shared/analytics/analytics";
 
 type Props = {
@@ -69,7 +69,7 @@ export function BellSheet({ userId, onClose, onViewAll }: Props) {
           }}>
             {m.payload.title && (
               <div style={{ fontSize: 11, fontWeight: 700, color: "#EAF0FF", marginBottom: 2 }}>
-                {iconFor(m.message_type)} {m.payload.title}
+                {MESSAGE_ICONS[m.message_type]} {m.payload.title}
               </div>
             )}
             <div style={{ fontSize: 11, color: "#cbd5e1", lineHeight: 1.4 }}>{m.payload.body}</div>
@@ -85,14 +85,4 @@ export function BellSheet({ userId, onClose, onViewAll }: Props) {
       </div>
     </>
   );
-}
-
-function iconFor(type: InboxMessage["message_type"]): string {
-  switch (type) {
-    case 'welcome':     return '👋';
-    case 'big_win':     return '🎉';
-    case 'bonus_pool':  return '💰';
-    case 'promo':       return '📢';
-    case 'survey':      return '📋';
-  }
 }

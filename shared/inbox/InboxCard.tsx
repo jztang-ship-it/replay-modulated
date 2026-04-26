@@ -6,6 +6,7 @@
 import { useEffect, useState } from "react";
 import {
   listMessages, markRead, submitSurveyResponse,
+  MESSAGE_ICONS,
   type InboxMessage, type SurveyPayload,
 } from "./inbox";
 import { track } from "@shared/analytics/analytics";
@@ -128,7 +129,7 @@ function MessageItem({ message }: { message: InboxMessage }) {
     }}>
       {message.payload.title && (
         <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, color: "#EAF0FF", marginBottom: 4 }}>
-          <span>{iconFor(message.message_type)}</span>
+          <span>{MESSAGE_ICONS[message.message_type]}</span>
           <span>{message.payload.title}</span>
           {isUnread && <span style={{ marginLeft: "auto", width: 6, height: 6, background: "#EF4444", borderRadius: "50%" }} />}
         </div>
@@ -195,14 +196,4 @@ function SurveyAnswerBlock({ messageId, survey }: { messageId: string; survey: S
       )}
     </div>
   );
-}
-
-function iconFor(type: InboxMessage["message_type"]): string {
-  switch (type) {
-    case 'welcome':     return '👋';
-    case 'big_win':     return '🎉';
-    case 'bonus_pool':  return '💰';
-    case 'promo':       return '📢';
-    case 'survey':      return '📋';
-  }
 }

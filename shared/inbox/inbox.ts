@@ -8,6 +8,14 @@ import { supabase } from "@shared/lib/supabase";
 
 export type MessageType = 'welcome' | 'big_win' | 'bonus_pool' | 'promo' | 'survey';
 
+export const MESSAGE_ICONS: Record<MessageType, string> = {
+  welcome: '👋',
+  big_win: '🎉',
+  bonus_pool: '💰',
+  promo: '📢',
+  survey: '📋',
+};
+
 export type CTA = { label: string; url: string };
 
 export type SurveyPayload = {
