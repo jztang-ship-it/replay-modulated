@@ -29,7 +29,8 @@ create policy "inbox: users select own"
 
 create policy "inbox: users update own"
   on public.inbox_messages for update
-  using (user_id = auth.uid());
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
 
 -- Client may only insert event-driven types. Promos/surveys come from service role.
 create policy "inbox: users insert own client-allowed types"
@@ -50,7 +51,8 @@ create table if not exists public.feedback_submissions (
   answers            jsonb       not null,
   submission_number  int         not null,
   metadata           jsonb       not null default '{}'::jsonb,
-  created_at         timestamptz not null default now()
+  created_at         timestamptz not null default now(),
+  unique (user_id, submission_number)
 );
 
 create index if not exists idx_feedback_submissions_user_created
@@ -76,6 +78,9 @@ security definer
 set search_path = public
 as $$
 begin
+  if auth.uid() is null then
+    raise exception 'not authenticated';
+  end if;
   if p_reason not in ('feedback_v1') then
     raise exception 'invalid reason: %', p_reason;
   end if;
@@ -87,6 +92,10 @@ begin
     set balance = balance + p_amount,
         updated_at = now()
     where id = auth.uid();
+
+  if not found then
+    raise exception 'player_state row not found for user %', auth.uid();
+  end if;
 end;
 $$;
 
