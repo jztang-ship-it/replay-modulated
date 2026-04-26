@@ -70,7 +70,7 @@ export function RegisterModal({ onClose, onSuccess, signUp, linkGoogle, signInMo
     return (
       <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}>
         <div style={{ background: "#1a1a2e", borderRadius: 16, padding: "32px 24px", textAlign: "center", color: "#22C55E", fontSize: 20, fontWeight: 700 }}>
-          Saved!
+          {isSignIn ? "Welcome back" : "Saved!"}
         </div>
       </div>
     );
