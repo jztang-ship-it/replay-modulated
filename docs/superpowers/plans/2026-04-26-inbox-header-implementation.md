@@ -696,6 +696,7 @@ export function BellSheet({ userId, onClose, onViewAll }: Props) {
 
   useEffect(() => {
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     listMessages(userId).then((all) => {
       if (cancelled) return;
       setMessages(all.slice(0, 3));
@@ -703,15 +704,15 @@ export function BellSheet({ userId, onClose, onViewAll }: Props) {
       const unread = all.filter((m) => m.read_at == null).length;
       track('inbox', 'opened', { source: 'bell', unread_count: unread }, 'system');
       // Auto-mark visible-in-popover as read after 1.5s
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
+        if (cancelled) return;
         all.slice(0, 3).filter((m) => m.read_at == null).forEach((m) => {
           markRead(m.id);
           track('inbox', 'message_read', { message_type: m.message_type }, 'system');
         });
       }, 1500);
-      return () => clearTimeout(timer);
     });
-    return () => { cancelled = true; };
+    return () => { cancelled = true; if (timer) clearTimeout(timer); };
   }, [userId]);
 
   return (
@@ -847,6 +848,7 @@ function InboxCardSignedIn({ userId, onOpenFeedback }: { userId: string; onOpenF
 
   useEffect(() => {
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     listMessages(userId).then((all) => {
       if (cancelled) return;
       setMessages(all);
@@ -854,15 +856,15 @@ function InboxCardSignedIn({ userId, onOpenFeedback }: { userId: string; onOpenF
       const unread = all.filter((m) => m.read_at == null).length;
       track('inbox', 'opened', { source: 'profile', unread_count: unread }, 'system');
       // Auto-mark all-visible as read after 1.5s
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
+        if (cancelled) return;
         all.filter((m) => m.read_at == null).forEach((m) => {
           markRead(m.id);
           track('inbox', 'message_read', { message_type: m.message_type }, 'system');
         });
       }, 1500);
-      return () => clearTimeout(timer);
     });
-    return () => { cancelled = true; };
+    return () => { cancelled = true; if (timer) clearTimeout(timer); };
   }, [userId]);
 
   const unreadCount = messages.filter((m) => m.read_at == null).length;
@@ -1290,9 +1292,9 @@ export function FeedbackModal({ userId, onClose, metadata = {} }: Props) {
   async function handleSubmit() {
     setSubmitting(true);
     const submissionNumber = await getSubmissionNumber(userId);
-    await submitFeedback(userId, answers, submissionNumber, metadata);
+    const ok = await submitFeedback(userId, answers, submissionNumber, metadata);
     let coinsGranted = 0;
-    if (submissionNumber === 1) {
+    if (ok && submissionNumber === 1) {
       await grantFeedbackCoins(COIN_REWARD);
       coinsGranted = COIN_REWARD;
     }
@@ -1306,6 +1308,7 @@ export function FeedbackModal({ userId, onClose, metadata = {} }: Props) {
   }
 
   function handleDismiss() {
+    if (submitting) return; // don't close mid-submit — user would miss the coin celebration
     if (!done) {
       track('inbox', 'feedback_dismissed', { questions_filled: Object.keys(answers).length }, 'system');
     }
