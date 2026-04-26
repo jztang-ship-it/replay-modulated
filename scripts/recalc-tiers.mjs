@@ -2,24 +2,35 @@
 /**
  * scripts/recalc-tiers.mjs
  *
- * Re-grade baseball player tiers by raw avgFP (salary-agnostic), ranked
- * separately within the P pool and the BAT pool. Percentile buckets:
- *   top 20%   → ORANGE
- *   20-40%    → PURPLE
- *   40-60%    → BLUE
- *   60-80%    → GREEN
- *   bottom 20%→ WHITE
+ * Recompute baseball player salaries and tiers from raw game logs.
  *
- * Writes updated baseball/public/data/players.json with new `tier` and
- * `avgFP` values. Nothing else is touched.
+ *   salary = round(avgFP)         where avgFP = mean per-game FP (incl. badges)
+ *   tier   = per-pool avgFP rank  (top 1.5% RED, 5% ORANGE, 12% PURPLE,
+ *                                  25% BLUE, 35% GREEN, rest WHITE)
  *
- * FP weights are the "locked" spec:
- *   Batters : h×12 + doubles×5 + triples×10 + hr×20 + r×9 + rbi×9 + bb×6 + sb×12
- *   Pitchers: ip×3 + k×4 + er×-3 + w×6 + qs×8
+ * Pool inclusion floor: MIN_QUAL_LOGS = 10 qualifying games. Anyone below
+ * that is dropped from the pool entirely.
+ *
+ * Two-way handling: a player with ≥10 P-qual logs AND ≥10 BAT-qual logs
+ * gets two entries (id `{pid}-B` and `{pid}-P`) sharing the same
+ * `personKey` so the draw layer can enforce mutex. Right now only Ohtani
+ * has ≥10 BAT logs; his 6 pitching starts fall under the floor and the
+ * P-variant is correctly suppressed. The splitter is intentionally
+ * general so future seasons re-include him without code changes.
+ *
+ * FP weights (locked spec):
+ *   Batters : h×12 + 2B×5 + 3B×10 + HR×20 + R×9 + RBI×9 + BB×6 + SB×12
+ *   Pitchers: IP×3 + K×4 + ER×-3 + W×6 + QS×8
+ *
+ * Badges (locked spec, included in avgFP since they're part of realized FP):
+ *   Hitters : HIT_MACHINE +3, GOING_YARD +8, CLEANUP +8, EYE_PLATE +5,
+ *             SPEEDSTER +4, PERFECT_DAY +15, CYCLE_WATCH +25
+ *   Pitchers: QUALITY_START +6, ACE +10, SHUTDOWN +8, MELTDOWN -5,
+ *             WILD_THING -5, NO_NO_WATCH +30
  *
  * Qualifying log filter (EHLP):
- *   Pitchers : ip >= 4
- *   Batters  : pa >= 3 AND (h+hr+r+rbi+bb+sb+doubles+triples) >= 1
+ *   Pitchers : ip ≥ 4
+ *   Batters  : pa ≥ 3 AND (h+hr+r+rbi+bb+sb+2b+3b) ≥ 1
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
@@ -31,66 +42,68 @@ const REPO_ROOT = resolve(__dirname, "..");
 const PLAYERS_PATH = join(REPO_ROOT, "baseball/public/data/players.json");
 const LOGS_PATH    = join(REPO_ROOT, "baseball/public/data/game-logs.json");
 
-// ── Scoring ────────────────────────────────────────────────────────────────
-const BAT_WEIGHTS = { h: 12, doubles: 5, triples: 10, hr: 20, r: 9, rbi: 9, bb: 6, sb: 12 };
-const PIT_WEIGHTS = { ip: 3, k: 4, er: -3, w: 6, qs: 8 };
+const MIN_QUAL_LOGS = 10;
 
-function num(v) { return Number(v ?? 0) || 0; }
+// ── Scoring (must match baseballConfig.ts + scripts/simulate.mjs) ──────────
+const BAT_W = { h: 12, doubles: 5, triples: 10, hr: 20, r: 9, rbi: 9, bb: 6, sb: 12 };
+const PIT_W = { ip: 3, k: 4, er: -3, w: 6, qs: 8 };
+
+const HITTER_BADGES = [
+  { fp:  3, test: s => (s.h   |0) >= 2 },                                                                   // HIT_MACHINE
+  { fp:  8, test: s => (s.hr  |0) >= 1 },                                                                   // GOING_YARD
+  { fp:  8, test: s => (s.rbi |0) >= 3 },                                                                   // CLEANUP
+  { fp:  5, test: s => (s.bb  |0) >= 2 },                                                                   // EYE_PLATE
+  { fp:  4, test: s => (s.sb  |0) >= 1 },                                                                   // SPEEDSTER
+  { fp: 15, test: s => (s.h   |0) >= 2 && (s.hr |0) >= 1 && (s.rbi |0) >= 2 },                              // PERFECT_DAY
+  { fp: 25, test: s => (s.h   |0) >= 1 && (s.doubles |0) >= 1 && (s.triples |0) >= 1 && (s.hr |0) >= 1 },   // CYCLE_WATCH
+];
+
+const PITCHER_BADGES = [
+  { fp:  6, test: s => (s.ip |0) >= 6 && (s.er |0) <= 3 },                          // QUALITY_START
+  { fp: 10, test: s => (s.k  |0) >= 10 },                                           // ACE
+  { fp:  8, test: s => (s.ip |0) >= 7 && (s.er |0) === 0 },                         // SHUTDOWN
+  { fp: -5, test: s => (s.er |0) >= 5 },                                            // MELTDOWN
+  { fp: -5, test: s => (s.bb |0) >= 3 },                                            // WILD_THING
+  { fp: 30, test: s => (s.ip |0) >= 7 && (s.h |0) === 0 && (s.er |0) === 0 },       // NO_NO_WATCH
+];
+
+const num = v => Number(v ?? 0) || 0;
 
 function batterFp(s) {
   let fp = 0;
-  for (const [k, w] of Object.entries(BAT_WEIGHTS)) fp += num(s[k]) * w;
+  for (const [k, w] of Object.entries(BAT_W)) fp += num(s[k]) * w;
+  for (const b of HITTER_BADGES) if (b.test(s)) fp += b.fp;
   return fp;
 }
 function pitcherFp(s) {
   let fp = 0;
-  for (const [k, w] of Object.entries(PIT_WEIGHTS)) fp += num(s[k]) * w;
+  for (const [k, w] of Object.entries(PIT_W)) fp += num(s[k]) * w;
+  for (const b of PITCHER_BADGES) if (b.test(s)) fp += b.fp;
   return fp;
 }
 
 // ── EHLP filters ───────────────────────────────────────────────────────────
-function isQualifyingPitcherLog(s) {
-  return num(s.ip) >= 4;
-}
+function isQualifyingPitcherLog(s) { return num(s.ip) >= 4; }
 function isQualifyingBatterLog(s) {
   const pa = num(s.pa);
-  const events = num(s.h) + num(s.hr) + num(s.r) + num(s.rbi) +
-                 num(s.bb) + num(s.sb) + num(s.doubles) + num(s.triples);
-  return pa >= 3 && events >= 1;
+  const ev = num(s.h) + num(s.hr) + num(s.r) + num(s.rbi) + num(s.bb) + num(s.sb) + num(s.doubles) + num(s.triples);
+  return pa >= 3 && ev >= 1;
 }
 
-// ── Tier helpers ───────────────────────────────────────────────────────────
-const TIER_ORDER = ["ORANGE", "PURPLE", "BLUE", "GREEN", "WHITE"];
+// ── Per-pool tier rank (top X% of pool by avgFP) ───────────────────────────
+const TIERS = ["RED", "ORANGE", "PURPLE", "BLUE", "GREEN", "WHITE"];
+const TIER_PCTS = [1.5, 5, 12, 25, 35]; // cumulative slot widths; remainder → WHITE
 
-/**
- * Assign tiers by percentile within a ranked (descending) player array.
- * Pyramid distribution matching basketball's rarity curve:
- *   ORANGE ~2%  (elite)
- *   PURPLE ~6%  (star)
- *   BLUE   ~17% (solid)
- *   GREEN  ~35% (average)
- *   WHITE  ~40% (deep bench)
- */
-function assignTiers(sortedDesc) {
-  const n = sortedDesc.length;
-  if (n === 0) return;
-  for (let i = 0; i < n; i++) {
-    const pct = (i + 0.5) / n; // center of bucket
-    let tier;
-    if      (pct < 0.02) tier = "ORANGE";
-    else if (pct < 0.08) tier = "PURPLE";
-    else if (pct < 0.25) tier = "BLUE";
-    else if (pct < 0.60) tier = "GREEN";
-    else                 tier = "WHITE";
-    sortedDesc[i]._newTier = tier;
+function assignPoolTiers(pool) {
+  const sorted = [...pool].sort((a, b) => b._avgFp - a._avgFp);
+  const n = sorted.length;
+  const widths = TIER_PCTS.map(p => Math.round(n * p / 100));
+  let cursor = 0;
+  for (let t = 0; t < TIERS.length; t++) {
+    const end = t < widths.length ? Math.min(cursor + widths[t], n) : n;
+    for (let i = cursor; i < end; i++) sorted[i]._newTier = TIERS[t];
+    cursor = end;
   }
-}
-
-function tierAvgFpRange(players, tier) {
-  const hits = players.filter(p => p._newTier === tier);
-  if (!hits.length) return { count: 0, fpMin: 0, fpMax: 0 };
-  const vs = hits.map(p => p._avgFp).sort((a, b) => a - b);
-  return { count: hits.length, fpMin: vs[0], fpMax: vs[vs.length - 1] };
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────
@@ -98,110 +111,145 @@ function main() {
   const players = JSON.parse(readFileSync(PLAYERS_PATH, "utf8"));
   const logs    = JSON.parse(readFileSync(LOGS_PATH, "utf8"));
 
-  // Index logs by basePlayerId for O(1) lookup.
+  // Index logs by basePlayerId.
   const logsByPid = new Map();
-  for (const log of logs) {
-    const key = String(log.basePlayerId ?? log.playerId ?? "").trim();
+  for (const l of logs) {
+    const key = String(l.basePlayerId ?? l.playerId ?? "").trim();
     if (!key) continue;
     if (!logsByPid.has(key)) logsByPid.set(key, []);
-    logsByPid.get(key).push(log);
+    logsByPid.get(key).push(l);
   }
 
-  // Score every player.
-  let skippedZeroSalary = 0;
-  const enriched = [];
-  for (const p of players) {
-    const pid = String(p.basePlayerId ?? p.id ?? "").trim();
-    const salary = Number(p.salary ?? 0);
-    if (!pid || salary <= 0) { skippedZeroSalary++; continue; }
-    const isPitcher = String(p.position ?? "").toUpperCase() === "P";
-    const plogs = logsByPid.get(pid) ?? [];
-    const qualifying = plogs.filter(l => {
-      const s = l.stats ?? {};
-      return isPitcher ? isQualifyingPitcherLog(s) : isQualifyingBatterLog(s);
-    });
-    let avgFp = 0;
-    if (qualifying.length > 0) {
-      const total = qualifying.reduce((sum, l) => {
-        const s = l.stats ?? {};
-        return sum + (isPitcher ? pitcherFp(s) : batterFp(s));
-      }, 0);
-      avgFp = total / qualifying.length;
+  // Build new pool. For each source player, emit zero, one, or two entries
+  // depending on which qualifying-log floors they pass.
+  const newPool = [];
+  let dropped = 0;
+  let twoWayCount = 0;
+
+  for (const src of players) {
+    const pid = String(src.basePlayerId ?? src.id ?? "").trim();
+    if (!pid) continue;
+    const all = logsByPid.get(pid) ?? [];
+    const pLogs = all.filter(l => isQualifyingPitcherLog(l.stats ?? {}));
+    const bLogs = all.filter(l => isQualifyingBatterLog(l.stats ?? {}));
+    const declaredP = String(src.position ?? "").toUpperCase() === "P";
+
+    // Possible variants: "P" if pLogs ≥ floor, "B" if bLogs ≥ floor.
+    const variants = [];
+    if (pLogs.length >= MIN_QUAL_LOGS) variants.push("P");
+    if (bLogs.length >= MIN_QUAL_LOGS) variants.push("B");
+
+    if (variants.length === 0) { dropped++; continue; }
+
+    // Single-variant players keep their original id.
+    // Two-way (both ≥ floor) get suffixed ids; share personKey.
+    const isTwoWay = variants.length === 2;
+    if (isTwoWay) twoWayCount++;
+
+    for (const v of variants) {
+      const isP = v === "P";
+      const variantLogs = isP ? pLogs : bLogs;
+      const fps = variantLogs.map(l => isP ? pitcherFp(l.stats ?? {}) : batterFp(l.stats ?? {}));
+      const avgFp = fps.reduce((a, b) => a + b, 0) / fps.length;
+
+      // Preserve declared position for the dominant variant; flip for the other.
+      // For Ohtani (declared BAT) two-way: B keeps "BAT", P becomes "P".
+      // For a hypothetical declared-P two-way: P keeps "P", B becomes "BAT".
+      let position;
+      if (isTwoWay) {
+        position = isP ? "P" : "BAT";
+      } else {
+        // Single variant: use the variant's natural position regardless of declaration.
+        position = isP ? "P" : "BAT";
+      }
+
+      const entryId = isTwoWay ? `${pid}-${v}` : pid;
+      newPool.push({
+        _src: src,
+        _pid: pid,
+        _entryId: entryId,
+        _isP: isP,
+        _isTwoWay: isTwoWay,
+        _qualLogs: variantLogs.length,
+        _avgFp: avgFp,
+        _prevTier: src.tier ?? null,
+        _prevSalary: Number(src.salary ?? 0),
+        _position: position,
+        _personKey: pid,
+      });
     }
-    const value = avgFp / salary;
-    enriched.push({
-      _ref: p,
-      _pid: pid,
-      _salary: salary,
-      _isPitcher: isPitcher,
-      _avgFp: avgFp,
-      _value: value,
-      _qualLogs: qualifying.length,
-      _prevTier: p.tier ?? null,
-    });
   }
 
-  // Rank separately within each pool (desc by raw avgFP).
-  const pPool   = enriched.filter(e =>  e._isPitcher).sort((a, b) => b._avgFp - a._avgFp);
-  const batPool = enriched.filter(e => !e._isPitcher).sort((a, b) => b._avgFp - a._avgFp);
+  // Per-pool tier ranks.
+  const pPool   = newPool.filter(e =>  e._isP);
+  const batPool = newPool.filter(e => !e._isP);
+  assignPoolTiers(pPool);
+  assignPoolTiers(batPool);
 
-  assignTiers(pPool);
-  assignTiers(batPool);
+  // Build the new players.json shape.
+  const out = newPool.map(e => {
+    const src = e._src;
+    return {
+      id: e._entryId,
+      basePlayerId: e._pid,
+      personKey: e._personKey,
+      season: src.season ?? "2425",
+      name: src.name,
+      team: src.team,
+      position: e._position,
+      salary: Math.max(1, Math.round(e._avgFp)),
+      tier: e._newTier,
+      avgFP: Math.round(e._avgFp * 10) / 10,
+      photoCode: src.photoCode ?? e._pid,
+    };
+  });
 
-  // Write back: update tier and avgFP on the original player objects.
-  let changedCount = 0;
-  for (const e of [...pPool, ...batPool]) {
-    if (e._prevTier !== e._newTier) changedCount++;
-    e._ref.tier = e._newTier;
-    e._ref.avgFP = Math.round(e._avgFp * 10) / 10;
-  }
-
-  // Preserve original file ordering.
-  writeFileSync(PLAYERS_PATH, JSON.stringify(players, null, 2) + "\n", "utf8");
+  writeFileSync(PLAYERS_PATH, JSON.stringify(out, null, 2) + "\n", "utf8");
 
   // ── Summary ──────────────────────────────────────────────────────────────
-  console.log("\n════════════════════════════════════════════════════════════════");
-  console.log("  Baseball tier re-grade — raw avgFP (salary-agnostic)");
-  console.log("════════════════════════════════════════════════════════════════\n");
-  console.log("  Input:    " + players.length + " players, " + logs.length + " game logs");
-  console.log("  Skipped:  " + skippedZeroSalary + " (zero/missing salary)");
-  console.log("  Graded:   " + (pPool.length + batPool.length) + "  (P " + pPool.length + ", BAT " + batPool.length + ")\n");
+  console.log("\n" + "═".repeat(72));
+  console.log("  Baseball recalc — salary = round(avgFP), per-pool tier rank");
+  console.log("═".repeat(72));
+  console.log("  Source players: " + players.length);
+  console.log("  Pool floor:     " + MIN_QUAL_LOGS + " qualifying logs");
+  console.log("  Dropped:        " + dropped + " (below floor)");
+  console.log("  Two-way splits: " + twoWayCount + " players → " + (twoWayCount * 2) + " entries");
+  console.log("  Final pool:     " + out.length + "  (P " + pPool.length + ", BAT " + batPool.length + ")");
+  console.log("");
 
-  function printPool(name, pool) {
-    console.log("─── " + name + " pool (" + pool.length + " players) ────────────────────────────");
-    const zeroLog = pool.filter(p => p._qualLogs === 0).length;
-    console.log("  Players with zero qualifying logs: " + zeroLog);
-    const totalAvg = pool.reduce((s, p) => s + p._avgFp, 0) / Math.max(pool.length, 1);
-    console.log("  Mean avgFP: " + totalAvg.toFixed(2) + "\n");
-    for (const tier of TIER_ORDER) {
-      const { count, fpMin, fpMax } = tierAvgFpRange(pool, tier);
-      const bar = "#".repeat(Math.round(count / Math.max(pool.length, 1) * 40));
-      console.log("    " + tier.padEnd(7) + " " + String(count).padStart(4) + "  " +
-                  "avgFP " + fpMin.toFixed(1).padStart(6) + " – " + fpMax.toFixed(1).padStart(6) + "   " + bar);
+  function printPool(label, pool) {
+    console.log("  ─── " + label + " (" + pool.length + ") " + "─".repeat(50 - label.length));
+    for (const t of TIERS) {
+      const hits = pool.filter(p => p._newTier === t);
+      if (!hits.length) { console.log("    " + t.padEnd(7) + " 0"); continue; }
+      const fps = hits.map(p => p._avgFp).sort((a, b) => a - b);
+      const sals = hits.map(p => Math.round(p._avgFp));
+      const bar = "#".repeat(Math.round(hits.length / pool.length * 30));
+      console.log("    " + t.padEnd(7) + String(hits.length).padStart(4) +
+        "  avgFP " + fps[0].toFixed(1).padStart(5) + "–" + fps[fps.length-1].toFixed(1).padStart(5) +
+        "  $" + Math.min(...sals) + "–$" + Math.max(...sals) + "   " + bar);
+    }
+    console.log("");
+  }
+  printPool("PITCHERS", pPool);
+  printPool("BATTERS",  batPool);
+
+  // Two-way report.
+  const twoWay = newPool.filter(e => e._isTwoWay);
+  if (twoWay.length) {
+    console.log("  Two-way entries:");
+    for (const e of twoWay) {
+      console.log("    " + e._entryId.padEnd(14) + " " + e._position.padEnd(4) + " $" + Math.round(e._avgFp) + " " + e._newTier + "  avgFP=" + e._avgFp.toFixed(1) + "  (" + e._qualLogs + " logs)");
     }
     console.log("");
   }
 
-  printPool("P",   pPool);
-  printPool("BAT", batPool);
-
-  console.log("─── Tier change vs previous ───────────────────────────────────");
-  console.log("  " + changedCount + " of " + (pPool.length + batPool.length) +
-              " players changed tier  (" +
-              (changedCount / Math.max(pPool.length + batPool.length, 1) * 100).toFixed(1) + "%)\n");
-
-  // Transition matrix
-  const matrix = {};
-  for (const e of [...pPool, ...batPool]) {
-    const key = (e._prevTier ?? "(none)") + " → " + e._newTier;
-    matrix[key] = (matrix[key] ?? 0) + 1;
+  // Tier change vs previous.
+  let changed = 0;
+  for (const e of newPool) {
+    if (!e._isTwoWay && e._prevTier && e._prevTier !== e._newTier) changed++;
   }
-  console.log("  Transition counts (prev → new):");
-  for (const k of Object.keys(matrix).sort()) {
-    const marker = k.split(" → ")[0] === k.split(" → ")[1] ? "  " : "→ ";
-    console.log("    " + marker + k.padEnd(24) + " " + matrix[k]);
-  }
-  console.log("\n  Wrote: " + PLAYERS_PATH);
+  console.log("  Wrote: " + PLAYERS_PATH);
   console.log("");
 }
 

@@ -2,15 +2,18 @@
  * baseballConfig.ts — Layer 2 (MLB-specific)
  *
  * Roster: 2 P + 3 BAT.
- * Salary cap: $220.
+ * Salary cap: $150 (= 5 slots × $30 mean avgFP).
+ *
+ * Salary == round(avgFP). Cap-binding: any 2-RED stack is unaffordable
+ * (Skubal $73 + Crochet $66 leaves $11 for 3 BAT, below floor), so the
+ * cap forces a tier mix.
  *
  * FP weights (per stat unit):
  *   Hitters: H=12, 2B=5, 3B=10, HR=20, R=9, RBI=9, BB=6, SB=12
  *   Pitchers: IP=3, K=4, ER=-3, W=6, QS=8
  *
- * Tier thresholds tuned for baseball FP distribution.
- * Typical hitter hand: 40-80 FP. Typical pitcher: 20-60 FP.
- * Mixed roster: 200-350 FP range for a 6-card hand.
+ * Win-tier thresholds calibrated against 20k-hand sim (random play):
+ *   BUST 44% / ROOKIE 26% / STARTER 14% / ALL_STAR 10% / MVP 5% / LEGEND 2%.
  */
 
 export type BaseballSportKey = "baseball";
@@ -48,7 +51,7 @@ export const BaseballSportConfig = {
   rosterSize: 5,
   // Layout order: row 1 = slots 0-2 (3 BAT), row 2 = slots 3-4 (2 P centered).
   rosterSlots: ["BAT", "BAT", "BAT", "P", "P"] as const satisfies Readonly<BaseballSlot[]>,
-  salaryCap: 220,
+  salaryCap: 150,
 
   // ── Positions ───────────────────────────────────────────────────────────
   positions: ["P", "BAT"] as string[],
@@ -121,16 +124,18 @@ export const BaseballSportConfig = {
   },
 
   // ── Win tiers ───────────────────────────────────────────────────────────
-  // Tuned for 2P+3BAT, 617-player pool, pyramid tiers (cap $220).
-  // Bust 46.6%, ROOKIE 23.7%, STARTER 16.1%, ALL_STAR 8.9%, MVP 3.7%, GOAT 0.9%.
+  // Tuned via 20k-hand sim. Even +30 FP spacing across all tiers.
+  //   BUST 43% · ROOKIE 25% · STARTER 17% · ALL_STAR 9% · MVP 4% · LEGEND 2%.
+  // Skilled human play (smart holds) shifts the curve upward — these
+  // thresholds set the lower bound for random play hitting target frequencies.
   winCondition: {
     type: "FIXED_THRESHOLD" as const,
     thresholds: [
-      { tier: "ROOKIE",   minFP: 148, multiplier: 0.5 },
-      { tier: "STARTER",  minFP: 178, multiplier: 2.5 },
-      { tier: "ALL_STAR", minFP: 208, multiplier: 7 },
-      { tier: "MVP",      minFP: 240, multiplier: 15 },
-      { tier: "LEGEND",     minFP: 280, multiplier: 50, progressive: true },
+      { tier: "ROOKIE",   minFP: 140, multiplier: 0.5 },
+      { tier: "STARTER",  minFP: 170, multiplier: 2.5 },
+      { tier: "ALL_STAR", minFP: 200, multiplier: 7 },
+      { tier: "MVP",      minFP: 230, multiplier: 15 },
+      { tier: "LEGEND",   minFP: 260, multiplier: 50, progressive: true },
     ] as BaseballWinThreshold[],
   },
 };

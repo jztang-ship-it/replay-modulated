@@ -41,6 +41,12 @@ import { selectCommentary } from "@shared/commentary/selectCommentary";
 import type { CommentaryOutput } from "@shared/commentary/types";
 import { chadMessage } from "@shared/commentary/chad";
 import { captureReferrerFromUrl, applyReferral, claimReferral } from "@shared/utils/referral";
+import { featureFlags } from "@shared/featureFlags";
+import { detectTopGame } from "@shared/data/recordDetector";
+import { selectStar } from "@shared/commentary/storySelector";
+import { useAuth } from "@shared/auth/useAuth";
+import { RegisterModal } from "@shared/components/RegisterModal";
+import { track } from "@shared/analytics/analytics";
 // buildBaseballContext — culture injection now handled inside selectCommentary
 
 // Test-wire only: allow passing glow props even if wrapper prop types lag behind.
@@ -180,30 +186,32 @@ function createPlaceholders(): PlayerCard[] {
 }
 
 const GAUGE_THRESHOLDS = [
-  { tier: "ROOKIE",   minFP: 148 },
-  { tier: "STARTER",  minFP: 178 },
-  { tier: "ALL_STAR", minFP: 208 },
-  { tier: "MVP",      minFP: 240 },
-  { tier: "LEGEND",     minFP: 280 },
+  { tier: "ROOKIE",   minFP: 140 },
+  { tier: "STARTER",  minFP: 170 },
+  { tier: "ALL_STAR", minFP: 200 },
+  { tier: "MVP",      minFP: 230 },
+  { tier: "LEGEND",   minFP: 260 },
 ];
 const NEAR_MISS_FP = 5;
 
-/** Must match salary → tier thresholds in shared/components/CardFront.tsx (derivedTier). */
+/** Cross-pool salary fallback when a card lacks a tier field (rare; players.json always sets one). */
 function tierFromSalary(salary: number): string {
   const s = Number(salary ?? 0);
-  return s >= 52 ? "ORANGE" : s >= 40 ? "PURPLE" : s >= 28 ? "BLUE" : s >= 16 ? "GREEN" : "WHITE";
+  return s >= 58 ? "ORANGE" : s >= 44 ? "PURPLE" : s >= 30 ? "BLUE" : s >= 23 ? "GREEN" : "WHITE";
 }
 
 function toRevealableCards(cards: PlayerCard[]): RevealableCard[] {
   return cards.map(c => {
     const salary = Number((c as any).salary ?? 0);
+    const dataTier = String((c as any).tier ?? "").toUpperCase();
+    const validTier = ["RED","ORANGE","PURPLE","BLUE","GREEN","WHITE"].includes(dataTier);
     return {
       cardId: cardId(c),
       slotIndex: c.slotIndex ?? 0,
       actualFp: Number(c.actualFp ?? 0),
       projectedFp: Number(c.projectedFp ?? 0),
       salary,
-      tier: tierFromSalary(salary),
+      tier: validTier ? dataTier : tierFromSalary(salary),
       wasHeld: (c as any).wasHeld ?? false,
       badges: (c.achievements ?? []).map((a: any) => ({
         id: a.id, icon: a.icon || "⭐", label: a.label, fp: a.fp || 0,
@@ -426,28 +434,28 @@ function BonusRow({ betAdded, streak = 0, milestoneHit = false, onAmountChange }
 const BASEBALL_FTUE_CONFIG: FTUETextConfig = {
   anchorCardId: "ftue-ohtani",
   rosterCount: 5,
-  salaryCap: 220,
+  salaryCap: 150,
   sportLabel: "baseball",
   cardPositions: {
-    "ftue-ohtani": "above",
-    "ftue-soto": "below",
-    "ftue-betts": "below",
-    "ftue-freeman": "below",
-    "ftue-burnes": "above",
+    "ftue-ohtani": "below",
+    "ftue-perez": "below",
+    "ftue-edman": "below",
+    "ftue-twilliams-2": "above",
+    "ftue-senzatela-2": "above",
   },
   cardTexts: {
-    "ftue-soto": "Soto walked 3 times and drove in a run — 41 FP. Eye at the Plate badge earned. Patient approach pays off. 👁️",
-    "ftue-betts": "Betts went 0-for with a walk — 6 FP on a $40 card. Even MVPs have off nights. That's variance. 🧊",
-    "ftue-freeman": "Freeman went 2-for-4 with a double — 32 FP with a Hit Machine badge. Solid veteran floor. ⚾",
-    "ftue-burnes": "Burnes got the win with 6 innings and a Quality Start badge. 47 FP from a $22 card. Pitchers carry weight here. ✅",
+    "ftue-perez": "Perez had a multi-hit night — 2H, 1R for 36 FP. Hit Machine badge 🎯. Solid mid-tier production.",
+    "ftue-edman": "Edman went cold — 1H, no extras for 12 FP on a $37 card. Even good hitters have quiet nights. 🧊",
+    "ftue-twilliams-2": "T. Williams threw 6 strong innings, 5 Ks, 1 W — 55 FP from a $22 starter. Quality Start badge ✅. Cheap pitchers can carry hands.",
+    "ftue-senzatela-2": "Senzatela gave you 5 IP, 2 K, 2 ER — 17 FP. Short outing from a $17 arm.",
   },
-  anchorRevealText: "Ohtani was lights-out tonight. 🔥 6 shutout innings, 8 Ks, Quality Start badge ✅. 64 FP — that's why you held him.",
+  anchorRevealText: "Ohtani was electric tonight. 🔥 2 hits, 1 HR, 2 RBI, scored a run. 79 FP — Going Yard badge ⚾ stacks on top. That's why you held him.",
   idleText: "Real stats. Real history. Your fantasy result instantly. Hit DEAL to get started." as any,
-  holdIntroText: "Five players, $220 cap. Fantasy Points come from real stats — hits, home runs, strikeouts. Who do we keep?",
-  holdAnchorText: "Ohtani is your $70 ace — most dominant pitcher in baseball. Tap him to hold, hit DRAW to replace the rest, then tap every card to see your replacements." as any,
-  nearMissText: "So close — only 5 FP from the All-Star win. One hit from Betts and we'd be celebrating a 7x score. ⚾",
-  anchorFlipHintText: "Ohtani carried this whole hand — 64 FP is elite. Flip his card to see the full stat line. 🔥",
-  anchorStatText: "6 IP, 8 K, 0 ER against Arizona. 58 base FP + 6 from Quality Start badge = 64. Badges are real. ✅",
+  holdIntroText: "Five players, $150 cap. Fantasy Points come from real stats — hits, home runs, strikeouts. Who do we keep?",
+  holdAnchorText: "Ohtani is your $54 anchor — top RED batter in MLB. Tap him to hold, hit DRAW to replace the rest, then tap every card to see your replacements." as any,
+  nearMissText: "So close — only 1 FP from the All-Star win. One more hit from Edman and we'd be celebrating a 7x score. ⚾",
+  anchorFlipHintText: "Ohtani carried this hand — 79 FP is monster. Flip his card to see the full stat line. 🔥",
+  anchorStatText: "2 H, 1 HR, 1 R, 2 RBI vs San Francisco. 71 base FP + 8 Going Yard badge ⚾ = 79. Badges are real. ✅",
   finalText: "Every game log comes from true historical games. Replay lets you relive baseball history at your fingertips. Hit Replay to start playing for real. ⚾",
 };
 
@@ -491,6 +499,9 @@ export default function GameView() {
   const [showPostHandSheet, setShowPostHandSheet] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const { isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [bigWinFired, setBigWinFired] = useState(false);
 
   useEffect(() => {
     if (gameState === "IDLE" || gameState === "HOLD") setShowRawScore(false);
@@ -670,15 +681,24 @@ export default function GameView() {
     claimReferral(handCount, loginStreak);
   }, [handCount, loginStreak]);
 
-  // ── Chad usher — sport-neutral subset (no auth-gated or icon-blinking msgs) ──
-  // Baseball skips leaderboard_intro / big_win / retention because those require
-  // auth state (isAnonymous) which baseball doesn't wire, and trophy/legend
-  // icon blinking which baseball's GameBar doesn't accept. Welcome + educational
-  // + MVP-test messages fire the same as basketball.
+  // ── Chad usher — full parity with basketball (welcome + educational + MVP-test
+  // + auth-gated nudges). Trophy/legend icon blinking is skipped because baseball's
+  // GameBar doesn't expose those props, but the modal trigger still fires.
   const chadFiredThisIdleRef = useRef(false);
   useEffect(() => {
     if (gameState !== "IDLE") chadFiredThisIdleRef.current = false;
   }, [gameState]);
+
+  // Unified auth-modal gate — fires at most once ever, across all trigger sources.
+  const tryOpenAuthModal = useCallback((trigger: string, delayMs: number, extraProps: Record<string, string | number> = {}) => {
+    if (localStorage.getItem("rm_auth_modal_shown") === "1") return;
+    localStorage.setItem("rm_auth_modal_shown", "1");
+    const t = setTimeout(() => {
+      track("auth", "signup_modal_shown", { trigger, hand_number: handCount, ...extraProps });
+      setShowRegisterModal(true);
+    }, delayMs);
+    return () => clearTimeout(t);
+  }, [handCount]);
 
   // Welcome — first time post-FTUE
   useEffect(() => {
@@ -697,10 +717,14 @@ export default function GameView() {
     const lastChadHand = parseInt(localStorage.getItem("rm_chad_last_hand_bb") ?? "0", 10);
     if (handCount - lastChadHand < 2 && handCount > 1) return;
 
-    const checks = [
-      { key: "rm_usher_lb_explainer_bb", topic: "leaderboard_explainer" as const, condition: handCount >= 3 },
-      { key: "rm_usher_mvp_thanks_bb",   topic: "mvp_thanks" as const,   condition: handCount >= 5 },
-      { key: "rm_usher_dev_4thwall_bb",  topic: "dev_4thwall" as const,  condition: handCount >= 15 },
+    type ChadCheck = { key: string; topic: Parameters<typeof chadMessage>[0]; condition: boolean };
+    const checks: ChadCheck[] = [
+      { key: "rm_usher_lb_explainer_bb", topic: "leaderboard_explainer", condition: handCount >= 3 },
+      { key: "rm_usher_mvp_thanks_bb",   topic: "mvp_thanks",            condition: handCount >= 5 },
+      { key: "rm_usher_lb_shown_bb",     topic: "leaderboard_intro",     condition: isAnonymous && localStorage.getItem("rm_on_board_today") === "1" },
+      { key: "rm_usher_big_win_bb",      topic: "big_win",               condition: isAnonymous && bigWinFired },
+      { key: "rm_usher_dev_4thwall_bb",  topic: "dev_4thwall",           condition: handCount >= 15 },
+      { key: "rm_usher_retention_bb",    topic: "retention",             condition: isAnonymous && handCount >= 12 },
     ];
 
     for (const { key, topic, condition } of checks) {
@@ -710,9 +734,28 @@ export default function GameView() {
       localStorage.setItem("rm_chad_last_hand_bb", String(handCount));
       chadFiredThisIdleRef.current = true;
       setFtueCommentaryOverride({ parts: [chadMessage(topic)], sticky: true });
+      // Auth-gated topics also surface the modal a few seconds after the line
+      if (topic === "leaderboard_intro" || topic === "big_win" || topic === "retention") {
+        tryOpenAuthModal(`chad_${topic}`, 4500);
+      }
       return;
     }
-  }, [gameState, handCount, isFTUE]);
+  }, [gameState, handCount, isFTUE, isAnonymous, bigWinFired, tryOpenAuthModal]);
+
+  // Auth nudge — MVP+ hand while anonymous. Emotional-peak conversion moment.
+  useEffect(() => {
+    if (!isAnonymous || isFTUE) return;
+    if (winTier !== "MVP" && winTier !== "LEGEND") return;
+    return tryOpenAuthModal("big_win", 2500, { tier: winTier ?? "" });
+  }, [winTier, isAnonymous, isFTUE, tryOpenAuthModal]);
+
+  // Auth nudge — fallback at hand 5 if no big win has converted.
+  useEffect(() => {
+    if (!isAnonymous || isFTUE) return;
+    if (gameState !== "IDLE" && gameState !== "RESULTS") return;
+    if (handCount < 5) return;
+    return tryOpenAuthModal("hand_5", 3500);
+  }, [handCount, isAnonymous, isFTUE, gameState, tryOpenAuthModal]);
 
   // Zone 1: Hooks
 
@@ -846,6 +889,10 @@ export default function GameView() {
         setWinPayout(payout);
         const bust = !tier || tier === "BUST";
         soundManager.playTierResult(tier);
+        // Nudge trigger: first ALL_STAR+ hit for anonymous users
+        if (["ALL_STAR", "MVP", "LEGEND"].includes(tier as string) && isAnonymous) {
+          setBigWinFired(true);
+        }
         const badges = rosterRef.current.reduce((s, c) => s + (c.achievements?.length ?? 0), 0);
         gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
         recordHandPlayed();
@@ -993,9 +1040,9 @@ export default function GameView() {
       if (isFTUE && ftueLastHandFpRef.current > 0) return ftueLastHandFpRef.current;
       return 0;
     }
-    if (gameState === "DEALING" || gameState === "HOLD" || gameState === "DRAWING") {
-      return roster.reduce((sum, c) => sum + ((c as any).actualFp ?? 0), 0);
-    }
+    // Pre-reveal phases (DEALING/HOLD/DRAWING) must NOT leak the hidden actualFp.
+    // Basketball relies on the (always-undefined) c.fp field to return 0 here;
+    // baseball returns 0 explicitly to match.
     return 0;
   }, [gameState, runningTotalFp, roster, isFTUE]);
 
@@ -1020,6 +1067,32 @@ export default function GameView() {
   const commentaryStatusRef = useRef<'idle' | 'pending' | 'succeeded' | 'failed'>('idle');
   const recentTonesRef = useRef<string[]>([]);
   const commentaryFiredHandRef = useRef(-1);
+
+  // Top Games: detect on the star card's real-life line.
+  // Shared between commentary (as copyInput.topGame) and card render (topGameTier prop).
+  const topGameInfo = useMemo(() => {
+    const commentaryRoster = roster.map((c: any) => ({
+      name: String(c?.name ?? ""),
+      salary: Number(c?.salary ?? 0),
+      actualFp: Number(c?.actualFp ?? 0),
+      projectedFp: Number(c?.projectedFp ?? 0) || 0,
+      cardTier: String(c?.tier ?? ""),
+      basePlayerId: String(c?.basePlayerId ?? ""),
+      statLine: (c?.statLine ?? {}) as Record<string, any>,
+      gameDate: String(c?.gameInfo?.date ?? ""),
+    }));
+    const star = selectStar(commentaryRoster as any);
+    const topGame = (featureFlags.topGames && star?.statLine)
+      ? detectTopGame(
+          star.statLine as any,
+          star.basePlayerId ?? "",
+          star.gameDate ?? "",
+          star.cardTier ?? "",
+          "baseball",
+        )
+      : { tier: null as null, primaryReason: null, allReasons: [] as any[] };
+    return { star, topGame };
+  }, [roster]);
 
   // Smart post-reveal copy — computed once when spring settles, then locked for the hand.
   const postRevealCopyRef = useRef<{ primary: string; secondary?: string } | null>(null);
@@ -1065,6 +1138,7 @@ export default function GameView() {
       prevStreak: winTier === "BUST" ? streak : Math.max(0, streak - 1),
       isBust: winTier === "BUST",
       handCount,
+      topGame: topGameInfo.topGame,
     } as any;
     // Canonical commentary engine — selectCommentary is the sole source.
     const copy = selectCommentary(copyInput);
@@ -1478,13 +1552,12 @@ export default function GameView() {
 
         {/* 1 — Header */}
         <div style={{
-          flex: "0 0 12dvh",
+          flex: "0 0 10dvh",
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",
           gap: 4,
           padding: "0 10px 0",
-          marginBottom: 8,
           boxSizing: "border-box",
           overflow: "hidden",
         }}>
@@ -1512,13 +1585,15 @@ export default function GameView() {
           </div>
         </div>
 
-        {/* 2 — Card stage */}
+        {/* 2 — Card stage — flex:1 takes all remaining space after header + bottom grid */}
         <div style={{
-          flex: "0 0 52dvh",
+          flex: 1,
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "center",
-          padding: "8px 4px 6px 4px",
+          minHeight: 0,
+          maxHeight: 460,
+          padding: "4px 1px 2px 1px",
           boxSizing: "border-box",
           overflow: "hidden",
         }}>
@@ -1595,27 +1670,30 @@ export default function GameView() {
                       ? 0
                       : null
                 }
+                topGameStarBasePlayerId={topGameInfo.star?.basePlayerId ?? null}
+                topGameTier={topGameInfo.topGame.tier}
               />
             </RosterGridScaleFit>
           </div>
         </div>
 
-        {/* 3 — Zone 3: Row A score + Row B (multipliers pre-reveal / gauge post-reveal) = 22dvh */}
-        <div
-          {...(isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")
-            ? { "data-ftue-anchor": "ftue-darnit-focus" }
-            : {})}
-          style={{
-            flex: "0 0 22dvh",
-            display: "flex",
-            flexDirection: "column",
-            minHeight: 0,
-            overflow: "visible",
-            boxSizing: "border-box",
-          }}
-        >
-          {/* ROW A — score / tier result */}
+        {/* 3 — Bottom landscape: CSS Grid, all rows fixed pixel — matches basketball */}
+        {/* stats(72) gap(4) bar(14) gap(8) info(0) gap(4) commentary(96) gap(2) action(74) = 274px */}
+        <div style={{
+          flex: "0 0 auto",
+          display: "grid",
+          gridTemplateRows: "72px 4px 14px 8px 0px 4px 96px 2px 74px",
+          gridTemplateColumns: "1fr",
+          padding: "0 12px",
+          boxSizing: "border-box",
+          overflow: "hidden",
+        }}>
+
+          {/* ROW 1 — Stats: Team FP+Budget OR tier label */}
           <div
+            {...(isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")
+              ? { "data-ftue-anchor": "ftue-darnit-focus" }
+              : {})}
             data-ftue-anchor="score-row"
             onClick={() => {
               if (gameState === "WIN_CELEBRATION" && showRawScore) {
@@ -1629,17 +1707,13 @@ export default function GameView() {
               if (gameState === "RESULTS" && winTier && !showRawScore) setShowRawScore(true);
             }}
             style={{
-              flex: "0 0 52px",
-              height: 52,
-              minHeight: 52,
-              maxHeight: 52,
-              flexShrink: 0,
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              padding: "4px 10px 2px",
-              boxSizing: "border-box",
-              overflow: "hidden",
+              overflow: "visible",
+              position: "relative",
+              zIndex: isFTUE ? 1100 : undefined,
+              pointerEvents: isFTUE ? "none" as const : "auto" as const,
               cursor:
                 (gameState === "WIN_CELEBRATION" ||
                   (gameState === "RESULTS" && winTier && !showRawScore))
@@ -1788,120 +1862,91 @@ export default function GameView() {
             )}
           </div>
 
-          {/* ROW B — fixed-height gauge slot so TierGauge Y position never shifts vs Team FP row */}
+          {/* GAP */}<div />
+
+          {/* ROW 3 — Tier bar + ROW 5 info + ROW 7 commentary (spans rows 3-7 via TierGauge) */}
           <div
+            data-ftue-anchor="tier-gauge"
             style={{
-              flex: 1,
-              minHeight: 0,
+              gridRow: "3 / 8",
+              gridColumn: "1",
               display: "flex",
               flexDirection: "column",
               justifyContent: "flex-start",
-              alignItems: "stretch",
-              padding: "2px 10px 2px",
-              boxSizing: "border-box",
               overflow: "visible",
+              zIndex: (isFTUE && ftueCommentaryOverride) ? 1100 : (isFTUE ? 1100 : undefined),
+              pointerEvents: isFTUE ? "none" as const : "auto" as const,
             }}
           >
-            <div
-              style={{
-                width: "100%",
-                height: 84,
-                minHeight: 84,
-                maxHeight: 84,
-                flexShrink: 0,
-                position: "relative",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                overflow: "visible",
-                boxSizing: "border-box",
-              }}
-            >
-              <div
-                ref={(el) => setMultipliersHost(el)}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  display: isPreRevealFooter ? "flex" : "none",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxSizing: "border-box",
-                  pointerEvents: "auto",
+            {showGaugeInZone3 ? (
+              <TierGauge
+                totalFp={gaugeTotalFp}
+                thresholds={[
+                  { tier: "ROOKIE",   minFP: 165 },
+                  { tier: "STARTER",  minFP: 200 },
+                  { tier: "ALL_STAR", minFP: 230 },
+                  { tier: "MVP",      minFP: 265 },
+                  { tier: "LEGEND" as any, minFP: 305 },
+                ]}
+                winTier={springSettled ? (winTier ?? undefined) : undefined}
+                lastCardFp={lastCardFp}
+                isSkip={false}
+                visible
+                ftueSuppressNormal={false}
+                ftueOscillate={false}
+                ftueLockStaticBar={false}
+                regularFinalCardKick={regularFinalGaugeKick}
+                onTierCross={undefined}
+                postRevealCopy={postRevealCopy}
+                ftueTypewriter={isFTUE}
+                commentaryOverride={ftueCommentaryOverride}
+                onCommentaryOverrideDone={() => setFtueCommentaryOverride(null)}
+                onCommentaryDone={() => {
+                  if (isFTUE) {
+                    setTimeout(() => setFtueCommentaryDone(true), 800);
+                  }
+                }}
+                onFtueOscillateComplete={() => {
+                  setFtueGaugeOscDone(true);
+                  setFtueOscillating(false);
+                  setCelebrationHeld(false);
+                  pendingCelebration.current = null;
+                  setGameState("RESULTS");
+                  setTimeout(() => setFtueWinCelebrationActive(true), 300);
                 }}
               />
-              {showGaugeInZone3 ? (
-                <div
-                  data-ftue-anchor="tier-gauge"
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    display: isPreRevealFooter ? "none" : "flex",
-                    flexDirection: "column",
-                    alignItems: "stretch",
-                    justifyContent: "center",
-                    width: "100%",
-                    overflow: "visible",
-                    boxSizing: "border-box",
-                    padding: "4px 2px 0",
-                    zIndex: (isFTUE && ftueCommentaryOverride) ? 1100 : undefined,
-                  }}
-                >
-                  <TierGauge
-                    totalFp={gaugeTotalFp}
-                    thresholds={[
-                      { tier: "ROOKIE",   minFP: 148 },
-                      { tier: "STARTER",  minFP: 178 },
-                      { tier: "ALL_STAR", minFP: 208 },
-                      { tier: "MVP",      minFP: 240 },
-                      { tier: "LEGEND" as any, minFP: 280 },
-                    ]}
-                    winTier={springSettled ? (winTier ?? undefined) : undefined}
-                    lastCardFp={lastCardFp}
-                    isSkip={false}
-                    visible
-                    ftueSuppressNormal={false}
-                    ftueOscillate={false}
-                    ftueLockStaticBar={false}
-                    regularFinalCardKick={regularFinalGaugeKick}
-                    onTierCross={undefined}
-                    postRevealCopy={postRevealCopy}
-                    ftueTypewriter={isFTUE}
-                    commentaryOverride={ftueCommentaryOverride}
-                    onCommentaryOverrideDone={() => setFtueCommentaryOverride(null)}
-                    onCommentaryDone={() => {
-                      // After typewriter finishes, trigger "so close" bubble with slight delay
-                      if (isFTUE) {
-                        setTimeout(() => setFtueCommentaryDone(true), 800);
-                      }
-                    }}
-                    onFtueOscillateComplete={() => {
-                      setFtueGaugeOscDone(true);
-                      setFtueOscillating(false);
-                      setCelebrationHeld(false);
-                      pendingCelebration.current = null;
-                      setGameState("RESULTS");
-                      setTimeout(() => setFtueWinCelebrationActive(true), 300);
-                    }}
-                  />
-                </div>
-              ) : null}
-            </div>
-            {/* Streak progression UI removed for beta */}
+            ) : null}
           </div>
-        </div>
 
-        {/* 4 — Wallet + action only (14dvh) */}
-        <div
-          style={{
-            flex: "0 0 14dvh",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "flex-end",
-            minHeight: 0,
-            overflow: "visible",
-            boxSizing: "border-box",
-          }}
-        >
+          {/* Multiplier host — overlays commentary row 7, column 1 during HOLD */}
+          <div
+            ref={(el) => setMultipliersHost(el)}
+            style={{
+              gridRow: "7",
+              gridColumn: "1",
+              display: isPreRevealFooter ? "flex" : "none",
+              alignItems: "center",
+              justifyContent: "center",
+              boxSizing: "border-box",
+              pointerEvents: "auto",
+              zIndex: 10,
+            }}
+          />
+
+          {/* GAP */}<div style={{ gridRow: "8" }} />
+
+          {/* ROW 9 — Action row (74px fixed) */}
+          <div
+            style={{
+              gridRow: "9",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+              minHeight: 0,
+              overflow: "visible",
+              boxSizing: "border-box",
+            }}
+          >
           <div
             ref={(el) => setControlsHost(el)}
             style={{
@@ -1910,7 +1955,7 @@ export default function GameView() {
               flexDirection: "column",
               justifyContent: "center",
               minHeight: 0,
-              padding: "0 10px max(env(safe-area-inset-bottom, 0px) + 8px, 16px)",
+              paddingBottom: "max(env(safe-area-inset-bottom, 0px), 8px)",
               boxSizing: "border-box",
               overflow: "hidden",
             }}
@@ -2027,6 +2072,8 @@ export default function GameView() {
           </div>
         </div>
 
+        </div>{/* end CSS grid container */}
+
       </div>
 
       {/* Portals only — sibling of inner column */}
@@ -2096,6 +2143,24 @@ export default function GameView() {
         <ProfileScreen
           currentUid={getPlayerUid()}
           onClose={() => setShowProfile(false)}
+          isAnonymous={isAnonymous}
+          onSaveAccount={() => {
+            track("auth", "signup_modal_shown", { trigger: "profile_button", hand_number: handCount });
+            setShowProfile(false);
+            setShowRegisterModal(true);
+          }}
+        />
+      )}
+
+      {/* Registration modal */}
+      {showRegisterModal && (
+        <RegisterModal
+          onClose={() => setShowRegisterModal(false)}
+          onSuccess={() => setShowRegisterModal(false)}
+          signUp={signUp}
+          linkGoogle={linkGoogle}
+          signIn={signIn}
+          signInGoogle={signInGoogle}
         />
       )}
 
