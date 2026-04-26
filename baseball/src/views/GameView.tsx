@@ -700,14 +700,18 @@ export default function GameView() {
     return () => clearTimeout(t);
   }, [handCount]);
 
-  // Welcome — first time post-FTUE
+  // Welcome — first time post-FTUE. Gated on IDLE so it doesn't fire the
+  // moment isFTUE flips false (which is mid-FTUE-results, before the user
+  // sees the FTUE finalText). Waits until they click Replay → state goes
+  // IDLE → welcome fires as the first commentary line of normal game.
   useEffect(() => {
     if (isFTUE) return;
+    if (gameState !== "IDLE") return;
     if (localStorage.getItem("replaymod_pregame_intro_baseball") === "1") return;
     localStorage.setItem("replaymod_pregame_intro_baseball", "1");
     chadFiredThisIdleRef.current = true;
     setFtueCommentaryOverride({ parts: [chadMessage("welcome")], sticky: true });
-  }, [isFTUE]);
+  }, [isFTUE, gameState]);
 
   // Priority-ordered checks — first match wins
   useEffect(() => {
@@ -742,17 +746,22 @@ export default function GameView() {
     }
   }, [gameState, handCount, isFTUE, isAnonymous, bigWinFired, tryOpenAuthModal]);
 
-  // Auth nudge — MVP+ hand while anonymous. Emotional-peak conversion moment.
+  // Auth nudge — MVP+ hand while anonymous. Wait until the user has cleared
+  // celebration and returned to IDLE so the modal doesn't pop over the
+  // celebration animation. The "save your progress" prompt should only
+  // surface at hand-conclusion, never mid-reveal.
   useEffect(() => {
     if (!isAnonymous || isFTUE) return;
+    if (gameState !== "IDLE") return;
     if (winTier !== "MVP" && winTier !== "LEGEND") return;
     return tryOpenAuthModal("big_win", 2500, { tier: winTier ?? "" });
-  }, [winTier, isAnonymous, isFTUE, tryOpenAuthModal]);
+  }, [winTier, isAnonymous, isFTUE, gameState, tryOpenAuthModal]);
 
   // Auth nudge — fallback at hand 5 if no big win has converted.
+  // IDLE only — never RESULTS, which would interrupt the score reveal.
   useEffect(() => {
     if (!isAnonymous || isFTUE) return;
-    if (gameState !== "IDLE" && gameState !== "RESULTS") return;
+    if (gameState !== "IDLE") return;
     if (handCount < 5) return;
     return tryOpenAuthModal("hand_5", 3500);
   }, [handCount, isAnonymous, isFTUE, gameState, tryOpenAuthModal]);

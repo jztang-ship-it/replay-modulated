@@ -243,22 +243,25 @@ const GAUGE_THRESHOLDS = [
 ];
 const NEAR_MISS_FP = 5;
 
-/** Must match salary → tier thresholds in shared/engines/economyEngine.ts (DEFAULT_ECONOMY_CONFIG.tierThresholds). */
+/** Salary-cutoff tier — fallback only. Player data should carry an authoritative `tier`. */
 function tierFromSalary(salary: number): string {
   const s = Number(salary ?? 0);
   return s >= 73 ? "RED" : s >= 58 ? "ORANGE" : s >= 44 ? "PURPLE" : s >= 30 ? "BLUE" : s >= 23 ? "GREEN" : "WHITE";
 }
 
+const VALID_TIERS = new Set(["RED", "ORANGE", "PURPLE", "BLUE", "GREEN", "WHITE"]);
+
 function toRevealableCards(cards: PlayerCard[]): RevealableCard[] {
   return cards.map(c => {
     const salary = Number((c as any).salary ?? 0);
+    const dataTier = String((c as any).tier ?? "").toUpperCase();
     return {
       cardId: cardId(c),
       slotIndex: c.slotIndex ?? 0,
       actualFp: Number(c.actualFp ?? 0),
       projectedFp: Number(c.projectedFp ?? 0),
       salary,
-      tier: tierFromSalary(salary),
+      tier: VALID_TIERS.has(dataTier) ? dataTier : tierFromSalary(salary),
       wasHeld: (c as any).wasHeld ?? false,
       badges: (c.achievements ?? []).map((a: any) => ({
         id: a.id, icon: a.icon || "⭐", label: a.label, fp: a.fp || 0,
@@ -709,15 +712,19 @@ export default function GameView() {
     if (gameState !== "IDLE") chadFiredThisIdleRef.current = false;
   }, [gameState]);
 
-  // Welcome message: first time post-FTUE (highest priority, fires immediately)
+  // Welcome message: first time post-FTUE. Gated on IDLE so it doesn't fire
+  // the moment isFTUE flips false (which is mid-FTUE-results, before the user
+  // sees the FTUE finalText). Waits until they click Replay → state goes
+  // IDLE → welcome fires as the first commentary line of normal game.
   useEffect(() => {
     if (isFTUE) return;
+    if (gameState !== "IDLE") return;
     if (localStorage.getItem("replaymod_pregame_intro_basketball") === "1") return;
     localStorage.setItem("replaymod_pregame_intro_basketball", "1");
     chadFiredThisIdleRef.current = true;
     setLegendGold(true);
     setFtueCommentaryOverride({ parts: [chadMessage("welcome")], sticky: true });
-  }, [isFTUE]);
+  }, [isFTUE, gameState]);
 
   // Unified auth-modal gate — fires at most once ever, across all trigger sources.
   // The trigger label goes to PostHog for per-source conversion analysis.
@@ -787,17 +794,22 @@ export default function GameView() {
     }
   }, [gameState, handCount, isFTUE, isAnonymous, bigWinFired, tryOpenAuthModal]);
 
-  // Auth nudge — MVP+ hand while anonymous. Emotional-peak conversion moment.
+  // Auth nudge — MVP+ hand while anonymous. Wait until the user has cleared
+  // celebration and returned to IDLE so the modal doesn't pop over the
+  // celebration animation. The "save your progress" prompt should only
+  // surface at hand-conclusion, never mid-reveal.
   useEffect(() => {
     if (!isAnonymous || isFTUE) return;
+    if (gameState !== "IDLE") return;
     if (winTier !== "MVP" && winTier !== "LEGEND") return;
     return tryOpenAuthModal("big_win", 2500, { tier: winTier ?? "" });
-  }, [winTier, isAnonymous, isFTUE, tryOpenAuthModal]);
+  }, [winTier, isAnonymous, isFTUE, gameState, tryOpenAuthModal]);
 
   // Auth nudge — fallback at hand 5 if no big win has converted.
+  // IDLE only — never RESULTS, which would interrupt the score reveal.
   useEffect(() => {
     if (!isAnonymous || isFTUE) return;
-    if (gameState !== "IDLE" && gameState !== "RESULTS") return;
+    if (gameState !== "IDLE") return;
     if (handCount < 5) return;
     return tryOpenAuthModal("hand_5", 3500);
   }, [handCount, isAnonymous, isFTUE, gameState, tryOpenAuthModal]);
