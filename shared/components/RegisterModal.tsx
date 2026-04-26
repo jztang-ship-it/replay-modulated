@@ -1,6 +1,8 @@
 // shared/components/RegisterModal.tsx
 import { useState } from "react";
 import type { AuthError } from "@supabase/supabase-js";
+import { addWelcomeMessage } from "@shared/inbox/inbox";
+import { supabase } from "@shared/lib/supabase";
 
 interface RegisterModalProps {
   onClose: () => void;
@@ -34,6 +36,9 @@ export function RegisterModal({ onClose, onSuccess, signUp, linkGoogle, signInMo
       setError(`${result.error.message}${status}`);
       return;
     }
+    // Fire-and-forget: insert welcome message for the new/upgraded user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) await addWelcomeMessage(user.id);
     setShowSuccess(true);
     setTimeout(() => { onSuccess(); onClose(); }, 1500);
   };
@@ -50,6 +55,10 @@ export function RegisterModal({ onClose, onSuccess, signUp, linkGoogle, signInMo
     if (result.error) {
       console.error("[auth] google path failed:", result.error);
       setError(`Google: ${result.error.message}`);
+    } else {
+      // Fire-and-forget: insert welcome message for the new/upgraded user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) await addWelcomeMessage(user.id);
     }
   };
 
