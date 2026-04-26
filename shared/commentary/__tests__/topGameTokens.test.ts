@@ -20,19 +20,21 @@ function baseInput(overrides: Partial<CommentaryInput> = {}): CommentaryInput {
 }
 
 describe("Top Games template tokens", () => {
-  it("T1 composite renders {topStat} as '31/21/22'", () => {
+  it("T0 record renders {topStat} with the record value", () => {
     const input = baseInput({
+      roster: [{ name: "Wilt", basePlayerId: "x", salary: 80, actualFp: 100, projectedFp: 60,
+                 cardTier: "ORANGE", statLine: { pts: 100, reb: 25, ast: 2 }, gameDate: "2025-02-10" }],
       topGame: {
-        tier: "all_time",
-        primaryReason: { category: "td_30_20_20", label: "30/20/20 — top-five ever", value: 1 },
+        tier: "record",
+        primaryReason: { category: "pts", label: "tied the all-time pts record of 100", value: 100 },
         allReasons: [],
       },
     });
     const result = selectCommentary(input as any);
-    expect(result.primary).toMatch(/31\/21\/22|30\/20\/20 — top-five ever/);
+    expect(result.primary).toMatch(/100/);
   });
 
-  it("T2 single renders {topStat} as '58 pts'", () => {
+  it("T2 season renders {topStat} with the stat headline", () => {
     const input = baseInput({
       totalFp: 80, winTier: "STARTER",
       roster: [{ name: "Luka", basePlayerId: "x", salary: 80, actualFp: 58, projectedFp: 55,
@@ -48,8 +50,8 @@ describe("Top Games template tokens", () => {
   });
 });
 
-describe("Top Games T3 season_best_stat detail", () => {
-  it("T3 career prefers a season_best_stat-tagged template when available", () => {
+describe("Top Games T1 career detail", () => {
+  it("T1 career exposes a season_best_stat detail token (legacy name) for templates that opt in", () => {
     const input: CommentaryInput = {
       sport: "basketball", totalFp: 140, winTier: "ALL_STAR", streak: 1, prevStreak: 0,
       isBust: false, handCount: 5,
@@ -59,11 +61,11 @@ describe("Top Games T3 season_best_stat detail", () => {
       }],
       topGame: {
         tier: "career",
-        primaryReason: { category: "pts", label: "best scoring night of the season so far (45 pts)", value: 45 },
-        allReasons: [{ category: "pts", label: "best scoring night of the season so far (45 pts)", value: 45 }],
+        primaryReason: { category: "pts", label: "personal best — 45 pts", value: 45 },
+        allReasons: [{ category: "pts", label: "personal best — 45 pts", value: 45 }],
       },
     };
     const r = selectCommentary(input as any);
-    expect(r.primary.toLowerCase()).toMatch(/best|45|scoring|season/);
+    expect(r.primary.toLowerCase()).toMatch(/best|45|personal|night/);
   });
 });

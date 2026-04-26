@@ -10,6 +10,8 @@ import type { GamePhase, PlayerCard } from "../adapters/types";
 import { PlayerCardShell, resetAllOverlays } from "@shared/components/PlayerCardShell";
 import type { CardFrontProps as ShellFrontProps, CardBackProps } from "@shared/components/PlayerCardShell";
 import { CardFront, type CardFrontHeroProps } from "@shared/components/CardFront";
+import { TopGameStamp } from "@shared/components/TopGameOverlay";
+import type { TopGameTier } from "@shared/commentary/types";
 import type { ShakeType } from "../hooks/useEmotionalReveal";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { headshotUrl } from "@shared/utils/headshotUrl";
@@ -86,7 +88,7 @@ function MLBHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
 
 // ── BackBaseballStats ────────────────────────────────────────────────────────
 
-function BackBaseballStats({ card }: { card: PlayerCard }) {
+function BackBaseballStats({ card, topGameTier }: { card: PlayerCard; topGameTier?: TopGameTier | null }) {
   const gi = (card as any).gameInfo || {};
   const sl = (card as any).statLine || {};
   const pos = String(card.position ?? "");
@@ -150,6 +152,11 @@ function BackBaseballStats({ card }: { card: PlayerCard }) {
             <span key={b.id ?? b.label ?? i} style={{ fontSize: 11, lineHeight: 1, flexShrink: 0 }}>{b.icon}</span>
           ))}
         </div>
+        {topGameTier && (
+          <div style={{ flexShrink: 0, transform: "rotate(-4deg) scale(0.7)", transformOrigin: "right center" }}>
+            <TopGameStamp tier={topGameTier} />
+          </div>
+        )}
       </div>
       <div style={S.divider} />
       {!hasStats || allZero ? (
@@ -217,10 +224,12 @@ type Props = {
   glowActive?: boolean;
   glowTier?: string;
   glowDurationMs?: number;
+  /** Top Games tier — forwarded to CardFront for fire/sheen/recoil + stamp. */
+  topGameTier?: TopGameTier | null;
 };
 
 export function BaseballCard(props: Props) {
-  const { glowActive, glowTier, glowDurationMs, ...rest } = props;
+  const { glowActive, glowTier, glowDurationMs, topGameTier, ...rest } = props;
   return (
     <PlayerCardShell
       {...rest}
@@ -230,12 +239,13 @@ export function BaseballCard(props: Props) {
       renderFront={(p: ShellFrontProps) => (
         <CardFront
           {...p}
+          topGameTier={topGameTier ?? null}
           renderHero={(heroProps: CardFrontHeroProps) => (
             <MLBHero {...heroProps} />
           )}
         />
       )}
-      renderBack={(p: CardBackProps) => <BackBaseballStats card={p.card} />}
+      renderBack={(p: CardBackProps) => <BackBaseballStats card={p.card} topGameTier={topGameTier ?? null} />}
     />
   );
 }

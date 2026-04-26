@@ -157,7 +157,14 @@ export interface RecordEvent {
 
 // ─── Top Games ────────────────────────────────────────────────────────────
 
-export type TopGameTier = "all_time" | "season" | "career";
+/**
+ * Top Game tier hierarchy (highest first):
+ *   T0 "record"  — broke or tied an all-time single-game record
+ *   T1 "career"  — player's personal best (career-high) in a tracked stat
+ *   T2 "season"  — top-10 of the current season in a tracked stat
+ * A game that hits multiple tiers is reported only at the highest one.
+ */
+export type TopGameTier = "record" | "career" | "season";
 
 export interface TopGameReason {
   category: string;  // 'pts' | 'td_30_20_20' | ...
@@ -237,7 +244,7 @@ export interface TemplateData {
 /** Master archetype system — exactly one per hand. Schema supports 32, ~13 active. */
 export type CommentaryArchetype =
   // ── Active (populated with lines) ──
-  | "historic_all_time"          // T1 override — stat-first, rare-air
+  | "historic_record"            // T0 override — stat-first, all-time record
   | "historic_season"            // T2 override — stat-first, season top-10
   | "star_carry"
   | "star_carry_big"

@@ -23,15 +23,15 @@ function baseInput(overrides: Partial<CommentaryInput> = {}): CommentaryInput {
 }
 
 describe("classifyArchetype — Top Games override", () => {
-  it("T1 topGame.tier='all_time' → historic_all_time (overrides all other priorities)", () => {
+  it("T0 topGame.tier='record' → historic_record (overrides all other priorities)", () => {
     const input = baseInput({
       topGame: {
-        tier: "all_time",
-        primaryReason: { category: "td_30_20_20", label: "30/20/20 — top-five ever", value: 1 },
+        tier: "record",
+        primaryReason: { category: "pts", label: "broke the all-time pts record", value: 101 },
         allReasons: [],
       },
     });
-    expect(classifyArchetype(input).archetype).toBe("historic_all_time");
+    expect(classifyArchetype(input).archetype).toBe("historic_record");
   });
 
   it("T2 topGame.tier='season' → historic_season", () => {
@@ -45,18 +45,18 @@ describe("classifyArchetype — Top Games override", () => {
     expect(classifyArchetype(input).archetype).toBe("historic_season");
   });
 
-  it("T3 topGame.tier='career' falls through to the same archetype as topGame-absent", () => {
+  it("T1 topGame.tier='career' falls through to the same archetype as topGame-absent", () => {
     const withoutTopGame = classifyArchetype(baseInput()).archetype;
-    const withT3 = classifyArchetype(baseInput({
+    const withT1 = classifyArchetype(baseInput({
       topGame: {
         tier: "career",
-        primaryReason: { category: "pts", label: "season best", value: 40 },
+        primaryReason: { category: "pts", label: "personal best — 40 pts", value: 40 },
         allReasons: [],
       },
     })).archetype;
-    expect(withT3).toBe(withoutTopGame);
-    expect(withT3).not.toBe("historic_all_time");
-    expect(withT3).not.toBe("historic_season");
+    expect(withT1).toBe(withoutTopGame);
+    expect(withT1).not.toBe("historic_record");
+    expect(withT1).not.toBe("historic_season");
   });
 
   it("topGame absent → existing behavior unchanged", () => {
@@ -73,22 +73,22 @@ describe("classifyArchetype — Top Games override", () => {
 });
 
 describe("Top Games — end-to-end selectCommentary", () => {
-  it("T1 produces a historic_all_time line with topStat token interpolated", () => {
+  it("T0 produces a historic_record line with topStat token interpolated", () => {
     const input: CommentaryInput = {
       sport: "basketball", totalFp: 150, winTier: "MVP", streak: 1, prevStreak: 0,
       isBust: false, handCount: 5,
       roster: [{
-        name: "Nikola Jokic", basePlayerId: "203999", salary: 89, actualFp: 120, projectedFp: 60,
-        cardTier: "ORANGE", statLine: { pts: 31, reb: 21, ast: 22 }, gameDate: "2025-02-10",
+        name: "Wilt Chamberlain", basePlayerId: "x", salary: 89, actualFp: 120, projectedFp: 60,
+        cardTier: "ORANGE", statLine: { pts: 100, reb: 25, ast: 2 }, gameDate: "2025-02-10",
       }],
       topGame: {
-        tier: "all_time",
-        primaryReason: { category: "td_30_20_20", label: "30/20/20 triple-double — top-five ever", value: 1 },
-        allReasons: [{ category: "td_30_20_20", label: "30/20/20 triple-double — top-five ever", value: 1 }],
+        tier: "record",
+        primaryReason: { category: "pts", label: "tied the all-time pts record of 100", value: 100 },
+        allReasons: [{ category: "pts", label: "tied the all-time pts record of 100", value: 100 }],
       },
     };
     const r = selectCommentary(input as any);
-    const matchesSome = /31\/21\/22|top-five ever|flip|read|check|box/i.test(r.primary);
+    const matchesSome = /100|record|flip|read|check|box/i.test(r.primary);
     expect(matchesSome).toBe(true);
   });
 });

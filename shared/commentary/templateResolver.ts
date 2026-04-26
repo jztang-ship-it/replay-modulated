@@ -37,15 +37,15 @@ function oppPhrase(c: CommentaryRosterCard): string {
   return c.homeAway === "A" ? ` in ${city}` : ` against ${city}`;
 }
 
-function formatTopStat(topGame: NonNullable<CommentaryInput["topGame"]>, star: CommentaryRosterCard | null): string {
-  if (!topGame.primaryReason || !star?.statLine) return "";
+function formatTopStat(topGame: NonNullable<CommentaryInput["topGame"]>, _star: CommentaryRosterCard | null): string {
+  if (!topGame.primaryReason) return "";
   const { category, value } = topGame.primaryReason;
-  if (category.startsWith("td_") || category === "quad_double" || category === "five_by_five") {
-    const s = star.statLine;
-    return `${s.pts ?? 0}/${s.reb ?? 0}/${s.ast ?? 0}`;
-  }
-  if (category === "fifty_plus_game") return `${star.statLine.pts ?? value} pts`;
-  const units: Record<string, string> = { pts: "pts", reb: "reb", ast: "ast", threes: "threes", stl: "stl", blk: "blk" };
+  const units: Record<string, string> = {
+    // basketball
+    pts: "pts", reb: "reb", ast: "ast", threes: "threes", stl: "stl", blk: "blk",
+    // baseball
+    hr: "HR", h: "hits", rbi: "RBI", k: "K", sb: "SB", ip: "IP", bb: "BB", r: "R",
+  };
   return `${value} ${units[category] ?? category}`;
 }
 
@@ -108,6 +108,8 @@ export function buildTemplateData(
     topTier: input.topGame?.tier ?? null,
     topLabel: input.topGame?.primaryReason?.label ?? "",
     topCategory: input.topGame?.primaryReason?.category ?? "",
+    // T1 career — provides personal-best phrasing for templates that opt in via requires:['season_best_stat'].
+    // The detail-token name predates the tier rename; kept for stable template references.
     seasonBestStat: input.topGame?.tier === "career" ? (input.topGame.primaryReason?.label ?? "") : "",
     streak: input.streak,
     gap: (input.nextTierMin ?? 0) > 0 ? Math.round((input.nextTierMin! - input.totalFp) * 10) / 10 : 0,

@@ -1,14 +1,14 @@
 {
-  "historic_all_time": [
-    { "id": "bb_mlb_hist_all_0001", "sport": "baseball", "archetype": "historic_all_time", "register": "win",
+  "historic_record": [
+    { "id": "bb_mlb_hist_all_0001", "sport": "baseball", "archetype": "historic_record", "register": "win",
       "tone": "observational",
       "template": "{topStat}. {topLabel}. Read the line.",
       "tags": ["stat_first"], "humorStyle": [], "qualityScore": 8, "enabled": true },
-    { "id": "bb_mlb_hist_all_0002", "sport": "baseball", "archetype": "historic_all_time", "register": "loss",
+    { "id": "bb_mlb_hist_all_0002", "sport": "baseball", "archetype": "historic_record", "register": "loss",
       "tone": "observational",
       "template": "Hand busted. {name} still put up {topStat}. {topLabel}. Flip the card.",
       "tags": ["stat_first"], "humorStyle": [], "qualityScore": 8, "enabled": true },
-    { "id": "bb_mlb_hist_all_0003", "sport": "baseball", "archetype": "historic_all_time", "register": "win",
+    { "id": "bb_mlb_hist_all_0003", "sport": "baseball", "archetype": "historic_record", "register": "win",
       "tone": "analytical",
       "template": "{name}: {topStat}. That's in the box score for a reason. Read it.",
       "tags": ["stat_first"], "humorStyle": [], "qualityScore": 8, "enabled": true }

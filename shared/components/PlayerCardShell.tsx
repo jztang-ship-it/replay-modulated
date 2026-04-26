@@ -306,8 +306,10 @@ function tierToGlowFile(tier: string): string {
   return "white";
 }
 
-/** Same breakpoints as CardFront salary tier (fallback when glowTier prop missing). */
-function tierFromSalaryForGlow(salary: number): string {
+/** Resolve tier for the glow image. Prefers card.tier; salary cutoffs are a fallback. */
+function tierFromSalaryForGlow(salary: number, dataTier?: string): string {
+  const t = String(dataTier ?? "").toUpperCase();
+  if (t === "RED" || t === "ORANGE" || t === "PURPLE" || t === "BLUE" || t === "GREEN" || t === "WHITE") return t;
   const s = Number(salary ?? 0);
   return s >= 73 ? "RED" : s >= 58 ? "ORANGE" : s >= 44 ? "PURPLE" : s >= 30 ? "BLUE" : s >= 23 ? "GREEN" : "WHITE";
 }

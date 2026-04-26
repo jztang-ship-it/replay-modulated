@@ -1,19 +1,25 @@
 /**
- * recordDetector.ts — Compare a stat line against records.
- * Returns RecordEvent[] for any broken or near records.
+ * recordDetector.ts — Compare a stat line against records, season top-10s,
+ * and player career highs. Used for narrative commentary and Top Game tiers.
+ *
+ * Top Game tier hierarchy (highest first):
+ *   T0 "record"  — broke or tied an all-time single-game record
+ *   T1 "career"  — player's personal best in a tracked stat
+ *   T2 "season"  — top-10 of the current season in a tracked stat
+ * A game is reported only at the highest tier it qualifies for.
  */
 
 import type { RecordEvent, TopGameResult, TopGameReason } from "../commentary/types";
 import { NBA_SINGLE_GAME_RECORDS, STAT_ALIASES } from "./nbaRecords";
 import { MLB_SINGLE_GAME_RECORDS, MLB_STAT_ALIASES } from "./mlbRecords";
-import { COMPOSITE_RULES, isCompositeCategory, type StatLine } from "./compositeCategories";
-import { NBA_ALL_TIME_THRESHOLDS, type AllTimeThreshold } from "./nbaAllTimeThresholds";
-import { MLB_ALL_TIME_THRESHOLDS } from "./mlbAllTimeThresholds";
-import { WORLDCUP_ALL_TIME_THRESHOLDS } from "./worldcupAllTimeThresholds";
 import topGamesBasketball from "../../basketball/public/data/topGames_2425.json";
 import careerHighsBasketball from "../../basketball/public/data/careerHighs_2season.json";
+import topGamesBaseball from "../../baseball/public/data/topGames.json";
+import careerHighsBaseball from "../../baseball/public/data/careerHighs.json";
 
-function getStatValue(statLine: Record<string, any>, stat: string, aliases: Record<string, string[]>): number {
+type StatLine = Record<string, any>;
+
+function getStatValue(statLine: StatLine, stat: string, aliases: Record<string, string[]>): number {
   const aliasList = aliases[stat] ?? [stat];
   for (const alias of aliasList) {
     const val = statLine[alias];
@@ -22,9 +28,17 @@ function getStatValue(statLine: Record<string, any>, stat: string, aliases: Reco
   return 0;
 }
 
-export function detectRecords(statLine: Record<string, any>, sport: string = "basketball"): RecordEvent[] {
-  const records = sport === "baseball" ? MLB_SINGLE_GAME_RECORDS : NBA_SINGLE_GAME_RECORDS;
-  const aliases = sport === "baseball" ? MLB_STAT_ALIASES : STAT_ALIASES;
+function aliasesFor(sport: string): Record<string, string[]> {
+  return sport === "baseball" ? MLB_STAT_ALIASES : STAT_ALIASES;
+}
+
+function recordsFor(sport: string) {
+  return sport === "baseball" ? MLB_SINGLE_GAME_RECORDS : NBA_SINGLE_GAME_RECORDS;
+}
+
+export function detectRecords(statLine: StatLine, sport: string = "basketball"): RecordEvent[] {
+  const records = recordsFor(sport);
+  const aliases = aliasesFor(sport);
   const events: RecordEvent[] = [];
 
   for (const rec of records) {
@@ -52,22 +66,18 @@ export function detectRecords(statLine: Record<string, any>, sport: string = "ba
     }
   }
 
-  // Sort: record_broken first, then near_record
   events.sort((a, b) => (a.type === "record_broken" ? -1 : 1) - (b.type === "record_broken" ? -1 : 1));
   return events;
 }
 
 // ─── Top Games detection ─────────────────────────────────────────────────────
 
-// ─── Lookup caching (per-sport) ─────────────────────────────────────────────
-
 interface SportLookups {
   topGames: Record<string, { reasons: TopGameReason[] }>;
-  careerHighs: Record<string, { pts?: number; reb?: number; ast?: number; threes?: number }>;
+  careerHighs: Record<string, Record<string, number>>;
 }
 
 const DEFAULT_LOOKUPS: Record<string, SportLookups> = {};
-
 let lookupsOverride: Record<string, SportLookups> | null = null;
 
 /** Test hook — inject fake lookup maps. Production code should never call this. */
@@ -81,7 +91,12 @@ function lookupsFor(sport: string): SportLookups {
   if (sport === "basketball") {
     DEFAULT_LOOKUPS[sport] = {
       topGames: topGamesBasketball as Record<string, { reasons: TopGameReason[] }>,
-      careerHighs: careerHighsBasketball as Record<string, { pts?: number; reb?: number; ast?: number; threes?: number }>,
+      careerHighs: careerHighsBasketball as Record<string, Record<string, number>>,
+    };
+  } else if (sport === "baseball") {
+    DEFAULT_LOOKUPS[sport] = {
+      topGames: topGamesBaseball as Record<string, { reasons: TopGameReason[] }>,
+      careerHighs: careerHighsBaseball as Record<string, Record<string, number>>,
     };
   } else {
     DEFAULT_LOOKUPS[sport] = { topGames: {}, careerHighs: {} };
@@ -89,64 +104,76 @@ function lookupsFor(sport: string): SportLookups {
   return DEFAULT_LOOKUPS[sport];
 }
 
-function thresholdsForSport(sport: string): AllTimeThreshold[] {
-  switch (sport) {
-    case "baseball": return MLB_ALL_TIME_THRESHOLDS;
-    case "worldcup": return WORLDCUP_ALL_TIME_THRESHOLDS;
-    default: return NBA_ALL_TIME_THRESHOLDS;
-  }
-}
-
-function statValue(statLine: StatLine, category: string, sport: string): number {
-  // Composites don't pull a single stat value — always 1 when rule matches.
-  if (isCompositeCategory(category)) return 1;
-  // Singles: use the existing alias-aware getter from the file above.
-  const aliases = sport === "baseball" ? MLB_STAT_ALIASES : STAT_ALIASES;
-  return getStatValue(statLine, category, aliases);
-}
-
 /**
- * Sort reasons within a tier:
- *  1. Higher `priority` wins.
- *  2. Tiebreaker: larger proportional delta above `min` wins.
- *     delta = (value - min) / min; composites get delta = Infinity (always win tiebreak).
+ * T0 — all-time single-game record (broken or tied).
+ * Returns one TopGameReason per record-tier hit, highest stat-value first.
  */
-function sortReasons(
-  reasons: Array<{ category: string; priority: number; min: number; value: number; label: string }>
-): TopGameReason[] {
-  return [...reasons]
-    .sort((a, b) => {
-      if (b.priority !== a.priority) return b.priority - a.priority;
-      const deltaA = isCompositeCategory(a.category) ? Infinity : (a.value - a.min) / (a.min || 1);
-      const deltaB = isCompositeCategory(b.category) ? Infinity : (b.value - b.min) / (b.min || 1);
-      return deltaB - deltaA;
-    })
-    .map(({ category, label, value }) => ({ category, label, value }));
-}
+function detectRecordTier(statLine: StatLine, sport: string): TopGameReason[] {
+  const records = recordsFor(sport);
+  const aliases = aliasesFor(sport);
+  const matches: Array<{ stat: string; value: number; record: number; holder: string }> = [];
 
-function detectT1(statLine: StatLine, sport: string): TopGameReason[] {
-  const thresholds = thresholdsForSport(sport);
-  const matches: Array<{ category: string; priority: number; min: number; value: number; label: string }> = [];
-
-  for (const t of thresholds) {
-    try {
-      if (isCompositeCategory(t.category)) {
-        const rule = COMPOSITE_RULES[t.category];
-        if (rule(statLine)) {
-          matches.push({ category: t.category, priority: t.priority, min: t.min, value: 1, label: t.label });
-        }
-      } else {
-        const v = statValue(statLine, t.category, sport);
-        if (v >= t.min) {
-          matches.push({ category: t.category, priority: t.priority, min: t.min, value: v, label: t.label });
-        }
-      }
-    } catch {
-      // Skip this threshold on unexpected stat-line shape; never throw.
+  for (const rec of records) {
+    const value = getStatValue(statLine, rec.stat, aliases);
+    if (value > 0 && value >= rec.record) {
+      matches.push({ stat: rec.stat, value, record: rec.record, holder: rec.holder });
     }
   }
 
-  return sortReasons(matches);
+  return matches
+    .sort((a, b) => (b.value - b.record) - (a.value - a.record))
+    .map(m => ({
+      category: m.stat,
+      label: m.value > m.record
+        ? `broke the all-time ${m.stat} record (${m.value}, prev ${m.record} — ${m.holder})`
+        : `tied the all-time ${m.stat} record of ${m.record} (${m.holder})`,
+      value: m.value,
+    }));
+}
+
+/** Career-high category lists per sport. Order = priority (first match wins on ties). */
+const CAREER_CATEGORIES: Record<string, Array<{ key: string; label: (v: number) => string }>> = {
+  basketball: [
+    { key: "pts",    label: v => `personal best — ${v} pts` },
+    { key: "reb",    label: v => `personal best — ${v} reb` },
+    { key: "ast",    label: v => `personal best — ${v} ast` },
+    { key: "threes", label: v => `personal best — ${v} threes` },
+  ],
+  baseball: [
+    { key: "hr",  label: v => `personal best — ${v} HR` },
+    { key: "h",   label: v => `personal best — ${v} hits` },
+    { key: "rbi", label: v => `personal best — ${v} RBI` },
+    { key: "k",   label: v => `personal best — ${v} K` },
+    { key: "sb",  label: v => `personal best — ${v} SB` },
+    { key: "ip",  label: v => `personal best — ${v} IP` },
+  ],
+};
+
+/** T1 — player's career high (limited to star tiers). */
+function detectCareerTier(
+  statLine: StatLine,
+  playerId: string,
+  playerTier: string,
+  sport: string
+): TopGameReason[] {
+  const STAR_TIERS = new Set(["PURPLE", "ORANGE", "RED"]);
+  if (!STAR_TIERS.has(playerTier)) return [];
+
+  const { careerHighs } = lookupsFor(sport);
+  const highs = careerHighs[playerId];
+  if (!highs) return [];
+
+  const aliases = aliasesFor(sport);
+  const cats = CAREER_CATEGORIES[sport] ?? CAREER_CATEGORIES.basketball;
+  const matches: TopGameReason[] = [];
+  for (const { key, label } of cats) {
+    const max = highs[key];
+    const val = getStatValue(statLine, key, aliases);
+    if (max != null && val > 0 && val >= max) {
+      matches.push({ category: key, label: label(val), value: val });
+    }
+  }
+  return matches;
 }
 
 export function detectTopGame(
@@ -159,46 +186,23 @@ export function detectTopGame(
   const empty: TopGameResult = { tier: null, primaryReason: null, allReasons: [] };
   if (!statLine || typeof statLine !== "object") return empty;
 
-  // T1 — all-time thresholds
-  const t1 = detectT1(statLine, sport);
+  // T0 — all-time record (broken or tied)
+  const t0 = detectRecordTier(statLine, sport);
+  if (t0.length > 0) {
+    return { tier: "record", primaryReason: t0[0], allReasons: t0 };
+  }
+
+  // T1 — career high (star players only)
+  const t1 = detectCareerTier(statLine, playerId, playerTier, sport);
   if (t1.length > 0) {
-    return { tier: "all_time", primaryReason: t1[0], allReasons: t1 };
+    return { tier: "career", primaryReason: t1[0], allReasons: t1 };
   }
 
   // T2 — season top-10 lookup
   const { topGames } = lookupsFor(sport);
-  const key = `${playerId}|${date}`;
-  const entry = topGames[key];
+  const entry = topGames[`${playerId}|${date}`];
   if (entry?.reasons?.length) {
     return { tier: "season", primaryReason: entry.reasons[0], allReasons: entry.reasons };
-  }
-
-  // T3 — star career high (dataset-recent)
-  const STAR_TIERS = new Set(["PURPLE", "ORANGE", "RED"]);
-  if (!STAR_TIERS.has(playerTier)) return empty;
-
-  const { careerHighs } = lookupsFor(sport);
-  const highs = careerHighs[playerId];
-  if (!highs) return empty;
-
-  const CAREER_PRIORITY: Array<{ key: keyof typeof highs; label: (v: number) => string }> = [
-    { key: "pts",    label: v => `best scoring night of the season so far (${v} pts)` },
-    { key: "reb",    label: v => `biggest rebound night of the season so far (${v} reb)` },
-    { key: "ast",    label: v => `best playmaking night of the season so far (${v} ast)` },
-    { key: "threes", label: v => `best three-point night of the season so far (${v} threes)` },
-  ];
-
-  const t3Matches: TopGameReason[] = [];
-  for (const { key, label } of CAREER_PRIORITY) {
-    const max = highs[key as "pts" | "reb" | "ast" | "threes"];
-    const val = statValue(statLine, key as string, sport);
-    if (max != null && val > 0 && val === max) {
-      t3Matches.push({ category: key as string, label: label(val), value: val });
-    }
-  }
-
-  if (t3Matches.length > 0) {
-    return { tier: "career", primaryReason: t3Matches[0], allReasons: t3Matches };
   }
 
   return empty;

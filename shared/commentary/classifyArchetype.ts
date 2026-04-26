@@ -72,11 +72,11 @@ export function classifyArchetype(input: CommentaryInput): ClassificationResult 
   };
 
   // ── Priority 0: Top Games override ─────────────────────────────────────
-  // T1 (all_time) and T2 (season) hijack archetype selection entirely.
-  // T3 (career) does NOT override — it flows through as a flavor detail
+  // T0 (record) and T2 (season) hijack archetype selection entirely.
+  // T1 (career) does NOT override — it flows through as a flavor detail
   // and templates pick it up via `requires: ['season_best_stat']`.
-  if (input.topGame?.tier === "all_time") {
-    return { ...base, archetype: "historic_all_time" };
+  if (input.topGame?.tier === "record") {
+    return { ...base, archetype: "historic_record" };
   }
   if (input.topGame?.tier === "season") {
     return { ...base, archetype: "historic_season" };
