@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { getNickname, setNickname } from "@shared/utils/playerIdentity";
 import { getMyReferralCode, buildShareUrl, shareReferralLink, getReferrerCode } from "@shared/utils/referral";
 import { track } from "@shared/analytics/analytics";
+import { InboxCard } from "@shared/inbox/InboxCard";
 
 const FF = "'Rajdhani', 'Arial Narrow', sans-serif";
 
@@ -23,9 +24,10 @@ interface Props {
   onClose: () => void;
   isAnonymous?: boolean;
   onSaveAccount?: () => void;
+  onOpenFeedback: () => void;
 }
 
-export function ProfileScreen({ currentUid, onClose, isAnonymous, onSaveAccount }: Props) {
+export function ProfileScreen({ currentUid, onClose, isAnonymous, onSaveAccount, onOpenFeedback }: Props) {
   const [nickname, setNick] = useState(() => getNickname());
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(nickname);
@@ -198,6 +200,14 @@ export function ProfileScreen({ currentUid, onClose, isAnonymous, onSaveAccount 
             </>
           )}
         </div>
+
+        {/* Inbox card */}
+        <InboxCard
+          userId={currentUid}
+          isAnonymous={isAnonymous ?? true}
+          onSaveAccount={onSaveAccount ?? (() => {})}
+          onOpenFeedback={onOpenFeedback}
+        />
 
         {/* Save Account — anonymous users only */}
         {isAnonymous && onSaveAccount && (

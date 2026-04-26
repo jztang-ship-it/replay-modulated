@@ -37,6 +37,10 @@ import { buildScoreProof } from '@shared/utils/scoreProof';
 import { PostHandSheet } from '@shared/components/PostHandSheet';
 import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
 import { ProfileScreen } from '@shared/components/ProfileScreen';
+import { useAuth } from "@shared/auth/useAuth";
+import { BellSheet } from "@shared/inbox/BellSheet";
+import { listMessages } from "@shared/inbox/inbox";
+import { track } from "@shared/analytics/analytics";
 import { selectCommentary } from "@shared/commentary/selectCommentary";
 import type { CommentaryOutput } from "@shared/commentary/types";
 import { chadMessage } from "@shared/commentary/chad";
@@ -491,6 +495,17 @@ export default function GameView() {
   const [showPostHandSheet, setShowPostHandSheet] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const { user, isAnonymous } = useAuth();
+  const [bellOpen, setBellOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+
+  useEffect(() => {
+    if (!user || isAnonymous) { setUnreadCount(0); return; }
+    listMessages(user.id).then((all) => {
+      setUnreadCount(all.filter((m) => m.read_at == null).length);
+    });
+  }, [user, isAnonymous, bellOpen]);
 
   useEffect(() => {
     if (gameState === "IDLE" || gameState === "HOLD") setShowRawScore(false);
@@ -1500,6 +1515,8 @@ export default function GameView() {
               onCollect={() => setShowCollect(true)}
               onProfile={() => setShowProfile(true)}
               hasUncollected={taskStates.some(t => t.progress >= t.target && !t.collected)}
+              unreadInboxCount={unreadCount}
+              onBell={() => { setBellOpen(true); track('nav', 'bell_clicked', { unread_count: unreadCount }, 'system'); }}
             />
           </div>
           <div data-ftue-chrome="true">
@@ -2092,11 +2109,26 @@ export default function GameView() {
         />
       )}
 
+      {bellOpen && user && (
+        <BellSheet
+          userId={user.id}
+          onClose={() => setBellOpen(false)}
+          onViewAll={() => setShowProfile(true)}
+        />
+      )}
+
       {showProfile && (
         <ProfileScreen
           currentUid={getPlayerUid()}
           onClose={() => setShowProfile(false)}
+          isAnonymous={isAnonymous}
+          onOpenFeedback={() => setFeedbackOpen(true)}
         />
+      )}
+
+      {feedbackOpen && user && (
+        // FeedbackModal will be wired in Task 9 — leave this empty for now
+        null
       )}
 
     </div>

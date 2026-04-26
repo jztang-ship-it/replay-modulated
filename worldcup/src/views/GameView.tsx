@@ -19,6 +19,10 @@ import { useCardFlipState } from "../hooks/useCardFlipState";
 import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
 import { calculateWinTier, calculatePayout, type WinTier } from "../utils/payoutLogic";
 import { useGameAnalytics } from "../../../shared/analytics/useGameAnalytics";
+import { useAuth } from "@shared/auth/useAuth";
+import { BellSheet } from "@shared/inbox/BellSheet";
+import { listMessages } from "@shared/inbox/inbox";
+import { track } from "@shared/analytics/analytics";
 
 const CAP_MAX         = sportAdapter.salaryCap;
 const ROSTER_SIZE     = sportAdapter.rosterSize;
@@ -133,10 +137,20 @@ export default function GameView() {
   const [revealedSalary, setRevealedSalary]   = useState(0);
   const rosterRef = useRef<PlayerCard[]>([]);
   const completedCardsRef = useRef<Set<string>>(new Set());
+  const { user, isAnonymous } = useAuth();
+  const [bellOpen, setBellOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     ensureLoaded().then(() => setDataReady(true)).catch(console.error);
   }, []);
+
+  useEffect(() => {
+    if (!user || isAnonymous) { setUnreadCount(0); return; }
+    listMessages(user.id).then((all) => {
+      setUnreadCount(all.filter((m) => m.read_at == null).length);
+    });
+  }, [user, isAnonymous, bellOpen]);
 
   const flipState       = useCardFlipState();
   const revealableCards = useMemo(() => toRevealableCards(roster), [roster]);
@@ -385,7 +399,10 @@ export default function GameView() {
       <div style={{ width: "100%", maxWidth: 460, height: "100%", display: "flex", flexDirection: "column", gap: 2, padding: "env(safe-area-inset-top, 4px) 12px calc(env(safe-area-inset-bottom, 0px) + 2px)", boxSizing: "border-box" }}>
 
         <div style={{ flex: "0 0 auto", borderRadius: 16, border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.05)", boxShadow: "0 8px 24px rgba(0,0,0,0.28)", padding: "5px 12px", backdropFilter: "blur(10px)" }}>
-          <AppHeader />
+          <AppHeader
+            unreadInboxCount={unreadCount}
+            onBell={() => { setBellOpen(true); track('nav', 'bell_clicked', { unread_count: unreadCount }, 'system'); }}
+          />
         </div>
 
         <BonusPoolRow betAdded={currentBet} />
@@ -436,6 +453,14 @@ export default function GameView() {
           />
         </div>
       </div>
+
+      {bellOpen && user && (
+        <BellSheet
+          userId={user.id}
+          onClose={() => setBellOpen(false)}
+          onViewAll={() => setBellOpen(false)}
+        />
+      )}
     </div>
   );
 }
