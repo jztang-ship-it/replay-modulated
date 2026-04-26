@@ -7,6 +7,7 @@
  */
 
 import { Component, type ReactNode } from "react";
+import { captureError } from "@shared/lib/sentry";
 
 interface Props { children: ReactNode; }
 interface State { hasError: boolean; error: Error | null; }
@@ -23,6 +24,7 @@ export class ErrorBoundary extends Component<Props, State, any> {
 
   componentDidCatch(error: Error, info: any) {
     console.error("[ReplayMod] Uncaught error:", error, info);
+    captureError(error, { reactInfo: info });
   }
 
   render() {

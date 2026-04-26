@@ -13,6 +13,7 @@
     "simulate:protected": "npx ts-node --project tsconfig.sim.json src/tools/runSimulator.ts 5000 --protected"
   },
   "dependencies": {
+    "@sentry/react": "^10.50.0",
     "@supabase/supabase-js": "^2.97.0",
     "pg": "^8.19.0",
     "react": "^19.2.0",
