@@ -22,9 +22,9 @@ const PRIMARY_TABS: { id: TabId; label: string; icon: string }[] = [
   { id: "profile", label: "Profile", icon: "👤" },
 ];
 
-const OVERFLOW_TABS: { id: TabId; label: string; icon: string; soon: boolean }[] = [
-  { id: "pulse",   label: "Pulse",   icon: "📈", soon: true },
-  { id: "tourney", label: "Tourney", icon: "🏆", soon: true },
+const OVERFLOW_TABS: { id: TabId; label: string; icon: string; soon: boolean; desc: string }[] = [
+  { id: "pulse",   label: "Pulse",   icon: "📈", soon: true, desc: "Daily sports news" },
+  { id: "tourney", label: "Tourney", icon: "🏆", soon: true, desc: "Compete with other players for big prizes" },
 ];
 
 type Props = {
@@ -153,26 +153,29 @@ export function AppHeader({
           {overflowOpen && (
             <div style={{
               position: "absolute", top: "calc(100% + 4px)", right: 0,
-              minWidth: 148, background: "#11192b",
+              minWidth: 220, background: "#11192b",
               border: "1px solid #2a3550", borderRadius: 8,
               boxShadow: "0 8px 18px rgba(0,0,0,0.5)",
               overflow: "hidden", zIndex: 100,
             }}>
-              {OVERFLOW_TABS.map(({ id, label, icon, soon }, i) => (
+              {OVERFLOW_TABS.map(({ id, label, icon, soon, desc }, i) => (
                 <div key={id} style={{
-                  padding: "8px 10px",
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  padding: "10px 12px",
+                  display: "flex", flexDirection: "column", gap: 4,
                   borderBottom: i < OVERFLOW_TABS.length - 1 ? "1px solid #1c2540" : "none",
-                  cursor: soon ? "default" : "pointer", opacity: soon ? 0.55 : 1,
+                  cursor: soon ? "default" : "pointer", opacity: soon ? 0.7 : 1,
                 }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11 }}>{icon} {label}</span>
-                  {soon && (
-                    <span style={{
-                      fontSize: 8, color: "#FFB14A",
-                      border: "1px solid rgba(255,177,74,0.3)", borderRadius: 3,
-                      padding: "1px 4px",
-                    }}>SOON</span>
-                  )}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "#EAF0FF" }}>{icon} {label}</span>
+                    {soon && (
+                      <span style={{
+                        fontSize: 8, fontWeight: 700, letterSpacing: 0.6, color: "#FFB14A",
+                        border: "1px solid rgba(255,177,74,0.3)", borderRadius: 3,
+                        padding: "2px 5px",
+                      }}>COMING SOON</span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 11, color: "#7c8aa3", lineHeight: 1.4 }}>{desc}</div>
                 </div>
               ))}
             </div>
