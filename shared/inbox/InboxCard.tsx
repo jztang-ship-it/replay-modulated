@@ -16,7 +16,7 @@ const FEEDBACK_FLAG = (import.meta.env.VITE_FEATURE_FEEDBACK_FORM ?? "0") === "1
 type Props = {
   userId: string;
   isAnonymous: boolean;
-  onSaveAccount: () => void;
+  onSaveAccount?: () => void;
   onOpenFeedback: () => void;
 };
 
@@ -29,19 +29,21 @@ export function InboxCard({ userId, isAnonymous, onSaveAccount, onOpenFeedback }
 
 // ---------- Anonymous placeholder ----------
 
-function InboxAnonPlaceholder({ onSaveAccount }: { onSaveAccount: () => void }) {
+function InboxAnonPlaceholder({ onSaveAccount }: { onSaveAccount?: () => void }) {
   return (
     <div style={{
       border: "1px solid #2a3550", borderRadius: 10, padding: 14, background: "#11192b",
     }}>
       <div style={{ fontSize: 12, fontWeight: 700, color: "#EAF0FF", marginBottom: 6 }}>📬 INBOX</div>
-      <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.45, marginBottom: 10 }}>
+      <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: onSaveAccount ? 1.45 : 1.55, marginBottom: onSaveAccount ? 10 : 0 }}>
         Save your account to start receiving messages from the team — recaps, news, and the occasional question.
       </div>
-      <button onClick={onSaveAccount} style={{
-        background: "#FFB14A", color: "#0d1320", border: "none", borderRadius: 6,
-        padding: "6px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer",
-      }}>Save account</button>
+      {onSaveAccount && (
+        <button onClick={onSaveAccount} style={{
+          background: "#FFB14A", color: "#0d1320", border: "none", borderRadius: 6,
+          padding: "6px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer",
+        }}>Save account</button>
+      )}
     </div>
   );
 }

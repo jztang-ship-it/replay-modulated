@@ -205,7 +205,7 @@ export function ProfileScreen({ currentUid, onClose, isAnonymous, onSaveAccount,
         <InboxCard
           userId={currentUid}
           isAnonymous={isAnonymous ?? true}
-          onSaveAccount={onSaveAccount ?? (() => {})}
+          onSaveAccount={onSaveAccount}
           onOpenFeedback={onOpenFeedback}
         />
 
