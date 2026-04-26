@@ -1,0 +1,601 @@
+{
+  "203999|2025-04-01": {
+    "reasons": [
+      {
+        "category": "td_60_10_10",
+        "label": "Top-rarity: 60-point triple-double",
+        "value": 1
+      },
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      },
+      {
+        "category": "pts",
+        "label": "Top-10 scoring game of the season (61 pts)",
+        "value": 61
+      }
+    ]
+  },
+  "1628368|2024-11-15": {
+    "reasons": [
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      },
+      {
+        "category": "pts",
+        "label": "Top-10 scoring game of the season (60 pts)",
+        "value": 60
+      }
+    ]
+  },
+  "203507|2024-11-13": {
+    "reasons": [
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      },
+      {
+        "category": "pts",
+        "label": "Top-10 scoring game of the season (59 pts)",
+        "value": 59
+      }
+    ]
+  },
+  "203999|2024-12-07": {
+    "reasons": [
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      },
+      {
+        "category": "pts",
+        "label": "Top-10 scoring game of the season (56 pts)",
+        "value": 56
+      }
+    ]
+  },
+  "201939|2025-02-27": {
+    "reasons": [
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      },
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      },
+      {
+        "category": "pts",
+        "label": "Top-10 scoring game of the season (56 pts)",
+        "value": 56
+      },
+      {
+        "category": "pts",
+        "label": "Top-10 scoring game of the season (56 pts)",
+        "value": 56
+      }
+    ]
+  },
+  "1628973|2024-12-28": {
+    "reasons": [
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      },
+      {
+        "category": "pts",
+        "label": "Top-10 scoring game of the season (55 pts)",
+        "value": 55
+      }
+    ]
+  },
+  "1627750|2025-02-12": {
+    "reasons": [
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      },
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      },
+      {
+        "category": "pts",
+        "label": "Top-10 scoring game of the season (55 pts)",
+        "value": 55
+      },
+      {
+        "category": "pts",
+        "label": "Top-10 scoring game of the season (55 pts)",
+        "value": 55
+      }
+    ]
+  },
+  "1628983|2025-01-22": {
+    "reasons": [
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      },
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      },
+      {
+        "category": "pts",
+        "label": "Top-10 scoring game of the season (54 pts)",
+        "value": 54
+      }
+    ]
+  },
+  "1627734|2025-01-10": {
+    "reasons": [
+      {
+        "category": "reb",
+        "label": "Top-10 rebound game of the season (28 reb)",
+        "value": 28
+      }
+    ]
+  },
+  "1627734|2025-02-13": {
+    "reasons": [
+      {
+        "category": "reb",
+        "label": "Top-10 rebound game of the season (28 reb)",
+        "value": 28
+      },
+      {
+        "category": "reb",
+        "label": "Top-10 rebound game of the season (28 reb)",
+        "value": 28
+      }
+    ]
+  },
+  "1631117|2025-03-07": {
+    "reasons": [
+      {
+        "category": "reb",
+        "label": "Top-10 rebound game of the season (25 reb)",
+        "value": 25
+      },
+      {
+        "category": "reb",
+        "label": "Top-10 rebound game of the season (25 reb)",
+        "value": 25
+      },
+      {
+        "category": "blk",
+        "label": "Top-10 block game of the season (8 blk)",
+        "value": 8
+      },
+      {
+        "category": "blk",
+        "label": "Top-10 block game of the season (8 blk)",
+        "value": 8
+      }
+    ]
+  },
+  "203497|2025-03-30": {
+    "reasons": [
+      {
+        "category": "reb",
+        "label": "Top-10 rebound game of the season (25 reb)",
+        "value": 25
+      }
+    ]
+  },
+  "1641705|2025-01-04": {
+    "reasons": [
+      {
+        "category": "reb",
+        "label": "Top-10 rebound game of the season (23 reb)",
+        "value": 23
+      }
+    ]
+  },
+  "203076|2025-01-27": {
+    "reasons": [
+      {
+        "category": "reb",
+        "label": "Top-10 rebound game of the season (23 reb)",
+        "value": 23
+      },
+      {
+        "category": "reb",
+        "label": "Top-10 rebound game of the season (23 reb)",
+        "value": 23
+      }
+    ]
+  },
+  "1631105|2024-11-18": {
+    "reasons": [
+      {
+        "category": "reb",
+        "label": "Top-10 rebound game of the season (22 reb)",
+        "value": 22
+      }
+    ]
+  },
+  "1629027|2024-11-27": {
+    "reasons": [
+      {
+        "category": "ast",
+        "label": "Top-10 assist game of the season (22 ast)",
+        "value": 22
+      }
+    ]
+  },
+  "203999|2025-03-07": {
+    "reasons": [
+      {
+        "category": "td_30_20_20",
+        "label": "Top-rarity: 30/20/20 triple-double",
+        "value": 1
+      },
+      {
+        "category": "td_30_20_20",
+        "label": "Top-rarity: 30/20/20 triple-double",
+        "value": 1
+      },
+      {
+        "category": "ast",
+        "label": "Top-10 assist game of the season (22 ast)",
+        "value": 22
+      },
+      {
+        "category": "ast",
+        "label": "Top-10 assist game of the season (22 ast)",
+        "value": 22
+      }
+    ]
+  },
+  "203901|2024-11-25": {
+    "reasons": [
+      {
+        "category": "ast",
+        "label": "Top-10 assist game of the season (21 ast)",
+        "value": 21
+      }
+    ]
+  },
+  "1629027|2024-12-06": {
+    "reasons": [
+      {
+        "category": "ast",
+        "label": "Top-10 assist game of the season (20 ast)",
+        "value": 20
+      }
+    ]
+  },
+  "1629027|2025-01-07": {
+    "reasons": [
+      {
+        "category": "ast",
+        "label": "Top-10 assist game of the season (20 ast)",
+        "value": 20
+      }
+    ]
+  },
+  "203507|2025-04-03": {
+    "reasons": [
+      {
+        "category": "ast",
+        "label": "Top-10 assist game of the season (20 ast)",
+        "value": 20
+      }
+    ]
+  },
+  "1629027|2024-11-18": {
+    "reasons": [
+      {
+        "category": "ast",
+        "label": "Top-10 assist game of the season (19 ast)",
+        "value": 19
+      }
+    ]
+  },
+  "1629027|2025-02-12": {
+    "reasons": [
+      {
+        "category": "ast",
+        "label": "Top-10 assist game of the season (19 ast)",
+        "value": 19
+      },
+      {
+        "category": "ast",
+        "label": "Top-10 assist game of the season (19 ast)",
+        "value": 19
+      }
+    ]
+  },
+  "1630700|2024-12-23": {
+    "reasons": [
+      {
+        "category": "stl",
+        "label": "Top-10 steal game of the season (8 stl)",
+        "value": 8
+      }
+    ]
+  },
+  "1626162|2024-12-30": {
+    "reasons": [
+      {
+        "category": "stl",
+        "label": "Top-10 steal game of the season (8 stl)",
+        "value": 8
+      }
+    ]
+  },
+  "1630581|2025-03-22": {
+    "reasons": [
+      {
+        "category": "stl",
+        "label": "Top-10 steal game of the season (8 stl)",
+        "value": 8
+      }
+    ]
+  },
+  "1630700|2024-11-08": {
+    "reasons": [
+      {
+        "category": "stl",
+        "label": "Top-10 steal game of the season (7 stl)",
+        "value": 7
+      }
+    ]
+  },
+  "1630700|2025-02-24": {
+    "reasons": [
+      {
+        "category": "stl",
+        "label": "Top-10 steal game of the season (7 stl)",
+        "value": 7
+      },
+      {
+        "category": "stl",
+        "label": "Top-10 steal game of the season (7 stl)",
+        "value": 7
+      }
+    ]
+  },
+  "1641708|2025-03-21": {
+    "reasons": [
+      {
+        "category": "stl",
+        "label": "Top-10 steal game of the season (7 stl)",
+        "value": 7
+      }
+    ]
+  },
+  "201935|2025-03-31": {
+    "reasons": [
+      {
+        "category": "stl",
+        "label": "Top-10 steal game of the season (7 stl)",
+        "value": 7
+      }
+    ]
+  },
+  "1630700|2024-11-09": {
+    "reasons": [
+      {
+        "category": "stl",
+        "label": "Top-10 steal game of the season (6 stl)",
+        "value": 6
+      }
+    ]
+  },
+  "1630700|2024-11-12": {
+    "reasons": [
+      {
+        "category": "stl",
+        "label": "Top-10 steal game of the season (6 stl)",
+        "value": 6
+      }
+    ]
+  },
+  "1641705|2024-12-21": {
+    "reasons": [
+      {
+        "category": "blk",
+        "label": "Top-10 block game of the season (10 blk)",
+        "value": 10
+      }
+    ]
+  },
+  "1641705|2024-11-04": {
+    "reasons": [
+      {
+        "category": "blk",
+        "label": "Top-10 block game of the season (9 blk)",
+        "value": 9
+      }
+    ]
+  },
+  "1642270|2024-11-13": {
+    "reasons": [
+      {
+        "category": "blk",
+        "label": "Top-10 block game of the season (8 blk)",
+        "value": 8
+      }
+    ]
+  },
+  "1641705|2024-12-23": {
+    "reasons": [
+      {
+        "category": "blk",
+        "label": "Top-10 block game of the season (8 blk)",
+        "value": 8
+      }
+    ]
+  },
+  "1641705|2025-01-06": {
+    "reasons": [
+      {
+        "category": "blk",
+        "label": "Top-10 block game of the season (8 blk)",
+        "value": 8
+      }
+    ]
+  },
+  "1641705|2025-01-15": {
+    "reasons": [
+      {
+        "category": "blk",
+        "label": "Top-10 block game of the season (8 blk)",
+        "value": 8
+      }
+    ]
+  },
+  "1641705|2024-11-09": {
+    "reasons": [
+      {
+        "category": "blk",
+        "label": "Top-10 block game of the season (7 blk)",
+        "value": 7
+      }
+    ]
+  },
+  "1641705|2024-12-15": {
+    "reasons": [
+      {
+        "category": "blk",
+        "label": "Top-10 block game of the season (7 blk)",
+        "value": 7
+      }
+    ]
+  },
+  "1641705|2024-10-31": {
+    "reasons": [
+      {
+        "category": "five_by_five",
+        "label": "Top-rarity: 5x5 (5+ in five categories)",
+        "value": 1
+      }
+    ]
+  },
+  "1631094|2024-10-28": {
+    "reasons": [
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      }
+    ]
+  },
+  "1641705|2024-11-13": {
+    "reasons": [
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      }
+    ]
+  },
+  "1630163|2024-11-23": {
+    "reasons": [
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      }
+    ]
+  },
+  "203468|2025-01-03": {
+    "reasons": [
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      }
+    ]
+  },
+  "1630162|2025-01-04": {
+    "reasons": [
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      }
+    ]
+  },
+  "1628983|2025-01-29": {
+    "reasons": [
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      },
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      }
+    ]
+  },
+  "1628983|2025-02-05": {
+    "reasons": [
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      },
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      }
+    ]
+  },
+  "1628983|2025-03-03": {
+    "reasons": [
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      },
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      }
+    ]
+  },
+  "201935|2025-03-05": {
+    "reasons": [
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      },
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      }
+    ]
+  },
+  "201939|2025-04-01": {
+    "reasons": [
+      {
+        "category": "fifty_plus_game",
+        "label": "Top-rarity: 50-point game",
+        "value": 1
+      }
+    ]
+  }
+}

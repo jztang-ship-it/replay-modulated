@@ -71,6 +71,17 @@ export function classifyArchetype(input: CommentaryInput): ClassificationResult 
     deltaToNextTier: gap,
   };
 
+  // ── Priority 0: Top Games override ─────────────────────────────────────
+  // T1 (all_time) and T2 (season) hijack archetype selection entirely.
+  // T3 (career) does NOT override — it flows through as a flavor detail
+  // and templates pick it up via `requires: ['season_best_stat']`.
+  if (input.topGame?.tier === "all_time") {
+    return { ...base, archetype: "historic_all_time" };
+  }
+  if (input.topGame?.tier === "season") {
+    return { ...base, archetype: "historic_season" };
+  }
+
   // ── Priority 1: Career night (tier 1 extreme on star) ──
   if (hasExtreme) {
     return { ...base, archetype: "career_night" };
