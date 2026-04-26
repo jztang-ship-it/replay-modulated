@@ -109,8 +109,8 @@ const SPORT_CONFIGS = {
     label: "Baseball (MLB)",
     dataDir: join(REPO_ROOT, "baseball", "public", "data"),
 
-    cap: 150,
-    minSpend: 150 - 6,
+    cap: 180,
+    minSpend: 180 - 6,
     // 2P + 3BAT — no FLEX.
     rosterSlots: ["P", "P", "BAT", "BAT", "BAT"],
     positions: ["P", "BAT"],
@@ -172,15 +172,16 @@ const SPORT_CONFIGS = {
       return isHit || isPit; // FLEX — either side
     },
 
-    // Tuned via scripts/baseball-sweep.mjs (cap 150, salary=avgFP).
-    // 20k-hand random play: 44.0/25.7/14.5/9.7/4.6/1.6 vs target 45/25/15/8/5/2.
+    // Tuned at cap $180, salary=avgFP. Even +30 spacing for ROOKIE→MVP,
+    // LEGEND ceiling raised +50 from MVP to suppress LEGEND rate to ~2%.
+    // 20k-hand random play: 47/21/15/9/6/2 vs target 45/25/15/8/5/2.
     payoutTiers: [
       { tier: "BUST",     minFp:   0, mult: 0,    source: "tuned" },
-      { tier: "ROOKIE",   minFp: 140, mult: 0.5,  source: "tuned" },
-      { tier: "STARTER",  minFp: 170, mult: 2.5,  source: "tuned" },
-      { tier: "ALL_STAR", minFp: 200, mult: 7.0,  source: "tuned" },
-      { tier: "MVP",      minFp: 230, mult: 15.0, source: "tuned" },
-      { tier: "LEGEND",   minFp: 260, mult: 50.0, source: "tuned" },
+      { tier: "ROOKIE",   minFp: 170, mult: 0.5,  source: "tuned" },
+      { tier: "STARTER",  minFp: 200, mult: 2.5,  source: "tuned" },
+      { tier: "ALL_STAR", minFp: 230, mult: 7.0,  source: "tuned" },
+      { tier: "MVP",      minFp: 260, mult: 15.0, source: "tuned" },
+      { tier: "LEGEND",   minFp: 310, mult: 50.0, source: "tuned" },
     ],
   },
 };

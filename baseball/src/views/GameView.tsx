@@ -186,11 +186,11 @@ function createPlaceholders(): PlayerCard[] {
 }
 
 const GAUGE_THRESHOLDS = [
-  { tier: "ROOKIE",   minFP: 140 },
-  { tier: "STARTER",  minFP: 170 },
-  { tier: "ALL_STAR", minFP: 200 },
-  { tier: "MVP",      minFP: 230 },
-  { tier: "LEGEND",   minFP: 260 },
+  { tier: "ROOKIE",   minFP: 170 },
+  { tier: "STARTER",  minFP: 200 },
+  { tier: "ALL_STAR", minFP: 230 },
+  { tier: "MVP",      minFP: 260 },
+  { tier: "LEGEND",   minFP: 310 },
 ];
 const NEAR_MISS_FP = 5;
 
@@ -434,24 +434,24 @@ function BonusRow({ betAdded, streak = 0, milestoneHit = false, onAmountChange }
 const BASEBALL_FTUE_CONFIG: FTUETextConfig = {
   anchorCardId: "ftue-ohtani",
   rosterCount: 5,
-  salaryCap: 150,
+  salaryCap: 180,
   sportLabel: "baseball",
   cardPositions: {
     "ftue-ohtani": "below",
-    "ftue-edman": "below",
+    "ftue-freeman": "below",
     "ftue-jturner": "below",
-    "ftue-twilliams-2": "above",
-    "ftue-senzatela-2": "above",
+    "ftue-scherzer": "above",
+    "ftue-twilliams": "above",
   },
   cardTexts: {
-    "ftue-edman": "Edman had a multi-hit night — 2H, 1R for 36 FP. Hit Machine badge 🎯. Solid mid-tier production.",
+    "ftue-freeman": "Freeman went deep — 1H, 1HR, 1R, 1RBI for 58 FP. Going Yard badge ⚾. Star bats deliver.",
     "ftue-jturner": "J. Turner went cold — 1H, no extras for 12 FP on a $20 card. Even veteran hitters have quiet nights. 🧊",
-    "ftue-twilliams-2": "T. Williams threw 6 strong innings, 5 Ks, 1 W — 55 FP from a $22 starter. Quality Start badge ✅. Cheap pitchers can carry hands.",
-    "ftue-senzatela-2": "Senzatela gave you 5 IP, 2 K, 2 ER — 17 FP. Short outing from a $17 arm.",
+    "ftue-scherzer": "Scherzer was vintage — 6IP, 5K, 1ER, win, Quality Start ✅. 55 FP from a $38 arm. Stars can come cheap when timing's right.",
+    "ftue-twilliams": "T. Williams gave you 5 IP, 4 K, 2 ER — 25 FP. Decent partial start from a $22 arm.",
   },
   anchorRevealText: "Ohtani was electric tonight. 🔥 2 hits, 1 HR, 2 RBI, scored a run. 79 FP — Going Yard badge ⚾ stacks on top. That's why you held him.",
   idleText: "Real stats. Real history. Your fantasy result instantly. Hit DEAL to get started." as any,
-  holdIntroText: "Five players, $150 cap. Fantasy Points come from real stats — hits, home runs, strikeouts. Who do we keep?",
+  holdIntroText: "Five players, $180 cap. Fantasy Points come from real stats — hits, home runs, strikeouts. Who do we keep?",
   holdAnchorText: "Ohtani is your $54 anchor — top RED batter in MLB. Tap him to hold, hit DRAW to replace the rest, then tap every card to see your replacements." as any,
   nearMissText: "So close — only 1 FP from the All-Star win. One more hit from J. Turner and we'd be celebrating a 7x score. ⚾",
   anchorFlipHintText: "Ohtani carried this hand — 79 FP is monster. Flip his card to see the full stat line. 🔥",

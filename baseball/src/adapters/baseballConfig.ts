@@ -2,18 +2,18 @@
  * baseballConfig.ts — Layer 2 (MLB-specific)
  *
  * Roster: 2 P + 3 BAT.
- * Salary cap: $150 (= 5 slots × $30 mean avgFP).
+ * Salary cap: $180 — chosen so 3-star hands are routine
+ *   (Ohtani RED + Freeman PURPLE + Mookie BLUE + 2 cheap = $175)
+ * but 2-RED-pitcher stack stays infeasible ($139 leaves $41 for 3 BAT,
+ * below floor of 3×$18=$54). Top-end scarcity preserved.
  *
- * Salary == round(avgFP). Cap-binding: any 2-RED stack is unaffordable
- * (Skubal $73 + Crochet $66 leaves $11 for 3 BAT, below floor), so the
- * cap forces a tier mix.
- *
- * FP weights (per stat unit):
+ * Salary == round(avgFP). FP weights (per stat unit):
  *   Hitters: H=12, 2B=5, 3B=10, HR=20, R=9, RBI=9, BB=6, SB=12
  *   Pitchers: IP=3, K=4, ER=-3, W=6, QS=8
  *
- * Win-tier thresholds calibrated against 20k-hand sim (random play):
- *   BUST 44% / ROOKIE 26% / STARTER 14% / ALL_STAR 10% / MVP 5% / LEGEND 2%.
+ * Win-tier thresholds (even +30 spacing, LEGEND ceiling raised to suppress
+ * to ~2%). 20k-hand random sim:
+ *   BUST 47% / ROOKIE 21% / STARTER 15% / ALL_STAR 9% / MVP 6% / LEGEND 2%.
  */
 
 export type BaseballSportKey = "baseball";
@@ -51,7 +51,7 @@ export const BaseballSportConfig = {
   rosterSize: 5,
   // Layout order: row 1 = slots 0-2 (3 BAT), row 2 = slots 3-4 (2 P centered).
   rosterSlots: ["BAT", "BAT", "BAT", "P", "P"] as const satisfies Readonly<BaseballSlot[]>,
-  salaryCap: 150,
+  salaryCap: 180,
 
   // ── Positions ───────────────────────────────────────────────────────────
   positions: ["P", "BAT"] as string[],
@@ -124,18 +124,19 @@ export const BaseballSportConfig = {
   },
 
   // ── Win tiers ───────────────────────────────────────────────────────────
-  // Tuned via 20k-hand sim. Even +30 FP spacing across all tiers.
-  //   BUST 43% · ROOKIE 25% · STARTER 17% · ALL_STAR 9% · MVP 4% · LEGEND 2%.
+  // Tuned via 20k-hand sim at cap $180. Even +30 spacing for ROOKIE→MVP;
+  // LEGEND ceiling raised +50 from MVP to suppress LEGEND rate to target ~2%.
+  //   BUST 47% · ROOKIE 21% · STARTER 15% · ALL_STAR 9% · MVP 6% · LEGEND 2%.
   // Skilled human play (smart holds) shifts the curve upward — these
   // thresholds set the lower bound for random play hitting target frequencies.
   winCondition: {
     type: "FIXED_THRESHOLD" as const,
     thresholds: [
-      { tier: "ROOKIE",   minFP: 140, multiplier: 0.5 },
-      { tier: "STARTER",  minFP: 170, multiplier: 2.5 },
-      { tier: "ALL_STAR", minFP: 200, multiplier: 7 },
-      { tier: "MVP",      minFP: 230, multiplier: 15 },
-      { tier: "LEGEND",   minFP: 260, multiplier: 50, progressive: true },
+      { tier: "ROOKIE",   minFP: 170, multiplier: 0.5 },
+      { tier: "STARTER",  minFP: 200, multiplier: 2.5 },
+      { tier: "ALL_STAR", minFP: 230, multiplier: 7 },
+      { tier: "MVP",      minFP: 260, multiplier: 15 },
+      { tier: "LEGEND",   minFP: 310, multiplier: 50, progressive: true },
     ] as BaseballWinThreshold[],
   },
 };

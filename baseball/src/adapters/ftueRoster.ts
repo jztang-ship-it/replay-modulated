@@ -2,32 +2,26 @@
  * ftueRoster.ts --- Deterministic FTUE using real 2025 MLB data.
  *
  * Slots match baseballConfig.ts: ["BAT","BAT","BAT","P","P"].
- * Salary cap: $150 (= round(avgFP) world).
+ * Salary cap: $180.
  * Anchor: Ohtani-B at slot 0 (top RED batter — coach guides HOLD).
  *
- * LINEUP 1 (deal hand) — $148 total, 3 distinct tiers (RED / BLUE / WHITE):
- *   slot 0  Ohtani     $54 RED    BAT  (HOLD --- monster bat, anchor)
- *   slot 1  Benintendi $37 BLUE   BAT  (swap)
- *   slot 2  Biggio     $18 WHITE  BAT  (swap)
- *   slot 3  T.Williams $22 WHITE  P    (swap)
- *   slot 4  Senzatela  $17 WHITE  P    (swap)
+ * LINEUP 1 (deal hand) — $168 total, 3 distinct tiers, 3 STARS:
+ *   slot 0  Ohtani     $54 RED   BAT  ⭐ (HOLD — anchor)
+ *   slot 1  Mookie     $39 BLUE  BAT  ⭐
+ *   slot 2  Biggio     $18 WHITE BAT     (filler)
+ *   slot 3  Verlander  $40 BLUE  P    ⭐
+ *   slot 4  Senzatela  $17 WHITE P       (filler)
  *
- * Cap-bound at $150 means 4-5 distinct tiers with a RED anchor is
- * mathematically impossible (min ORANGE+PURPLE+BLUE+GREEN+WHITE = $173,
- * already over cap before adding RED). The FTUE narrative trades tier
- * variety for narrative clarity (HOT anchor + spread of cheap pieces).
+ * LINEUP 2 (drawn hand after Ohtani held) — $177 total, 4 distinct tiers, 3 STARS:
+ *   slot 0  Ohtani     $54 RED    BAT  ⭐ (HELD — 79 FP HOT, 2H 1HR 1R 2RBI + GY)
+ *   slot 1  Freeman    $43 PURPLE BAT  ⭐ (drawn HOT — 58 FP, 1H 1HR 1R 1RBI + GY)
+ *   slot 2  J. Turner  $20 WHITE  BAT     (drawn cold — 12 FP, 1H only)
+ *   slot 3  Scherzer   $38 GREEN  P    ⭐ (drawn Q-start — 55 FP, 6IP 5K 1ER 1W 1QS)
+ *   slot 4  T.Williams $22 WHITE  P       (drawn modest — 25 FP, 5IP 4K 2ER)
  *
- * LINEUP 2 (drawn hand after Ohtani held) --- $150 total (at cap), 3 distinct tiers:
- *   slot 0  Ohtani     $54 RED    BAT  (HELD --- 79 FP, 2H 1HR 1R 2RBI + GOING_YARD)
- *   slot 1  Edman      $37 BLUE   BAT  (HOT  --- 36 FP, multi-hit + HIT_MACHINE)
- *   slot 2  J. Turner  $20 WHITE  BAT  (cold --- 12 FP, 1 hit only)
- *   slot 3  T.Williams $22 WHITE  P    (drawn --- 55 FP solid Q-start, different game)
- *   slot 4  Senzatela  $17 WHITE  P    (drawn --- 17 FP partial, different game)
- *
- * TOTAL $: 54+37+20+22+17 = $150 (exactly cap, no headroom)
- * TOTAL FP: 79 + 36 + 12 + 55 + 17 = 199 --- STARTER tier (170+).
- * ALL_STAR requires 200. Gap: 1.0 FP. Near-miss teaching moment:
- *   Justin Turner went cold (12 FP); one more hit and it's ALL_STAR.
+ * TOTAL FP: 79 + 58 + 12 + 55 + 25 = 229 — STARTER tier (200+).
+ * ALL_STAR requires 230. Gap: 1.0 FP. Near-miss teaching moment:
+ *   J. Turner went cold (12 FP); one more hit and it's ALL_STAR.
  */
 
 import type { GeneratedCard } from "@shared/types";
@@ -66,15 +60,15 @@ function makeCard(o: {
 }
 
 // --- LINEUP 1 (Deal hand) -------------------------------------------------------
-// $148 total. Coach guides user to hold Ohtani (slot 0). All others are swap candidates.
+// $168 total. 3 mega-stars (Ohtani, Mookie, Verlander) + 2 fillers.
 
 export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
   return {
     roster: [
 
       // Slot 0 --- Shohei Ohtani | RED $54 BAT | HOLD (anchor)
-      // 2025-08-22 vs San Francisco Giants (H) --- 2H 1HR 1R 2RBI, GOING_YARD
-      // FP: 24+20+9+18 = 71 base + 8 GOING_YARD badge = 79
+      // 2025-08-22 vs San Francisco Giants (H) — 2H 1HR 1R 2RBI + GOING_YARD
+      // FP: 24+20+9+18 = 71 base + 8 GY = 79
       makeCard({
         cardId: "ftue-ohtani", basePlayerId: "660271",
         name: "Shohei Ohtani", team: "LAD", position: "DH",
@@ -87,19 +81,19 @@ export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
         ],
       }),
 
-      // Slot 1 --- Andrew Benintendi | BLUE $37 BAT | swap
-      // 2025-06-12 vs Detroit Tigers (A) --- quiet 0-for-3 with a walk
+      // Slot 1 --- Mookie Betts | BLUE $39 BAT | swap candidate
+      // 2025-06-12 vs Detroit Tigers (A) — quiet 0-for-3 with a walk
       makeCard({
-        cardId: "ftue-benintendi", basePlayerId: "643217",
-        name: "Andrew Benintendi", team: "CWS", position: "OF",
-        tier: "BLUE", salary: 37, slotIndex: 1,
-        projectedFp: 37, actualFp: 6,
+        cardId: "ftue-mookie", basePlayerId: "605141",
+        name: "Mookie Betts", team: "LAD", position: "OF",
+        tier: "BLUE", salary: 39, slotIndex: 1,
+        projectedFp: 39, actualFp: 6,
         date: "2025-06-12", opponent: "Detroit Tigers", homeAway: "A",
         statLine: { h: 0, doubles: 0, triples: 0, hr: 0, r: 0, rbi: 0, bb: 1, sb: 0, pa: 4 },
       }),
 
-      // Slot 2 --- Cavan Biggio | WHITE $18 BAT | swap
-      // 2025-05-04 vs Toronto Blue Jays (H) --- 1 hit, no extras
+      // Slot 2 --- Cavan Biggio | WHITE $18 BAT | swap candidate
+      // 2025-05-04 vs Toronto Blue Jays (H) — 1 hit, no extras
       makeCard({
         cardId: "ftue-biggio", basePlayerId: "624415",
         name: "Cavan Biggio", team: "TOR", position: "2B",
@@ -109,25 +103,25 @@ export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
         statLine: { h: 1, doubles: 0, triples: 0, hr: 0, r: 0, rbi: 0, bb: 0, sb: 0, pa: 3 },
       }),
 
-      // Slot 3 --- Trevor Williams | WHITE $22 P | swap
-      // 2025-07-14 vs Colorado Rockies (A) --- rough 4IP outing, 4ER
+      // Slot 3 --- Justin Verlander | BLUE $40 P | swap candidate
+      // 2025-07-14 vs Arizona Diamondbacks (A) — 4IP 3K 4ER, rough outing
       makeCard({
-        cardId: "ftue-twilliams", basePlayerId: "592866",
-        name: "Trevor Williams", team: "WSH", position: "P",
-        tier: "WHITE", salary: 22, slotIndex: 3,
-        projectedFp: 22, actualFp: 8,
-        date: "2025-07-14", opponent: "Colorado Rockies", homeAway: "A",
-        statLine: { ip: 4, k: 2, er: 4, h: 0, bb: 0, pa: 0, w: 0, qs: 0 },
+        cardId: "ftue-verlander", basePlayerId: "434378",
+        name: "Justin Verlander", team: "DET", position: "P",
+        tier: "BLUE", salary: 40, slotIndex: 3,
+        projectedFp: 40, actualFp: 12,
+        date: "2025-07-14", opponent: "Arizona Diamondbacks", homeAway: "A",
+        statLine: { ip: 4, k: 3, er: 4, h: 0, bb: 0, pa: 0, w: 0, qs: 0 },
       }),
 
-      // Slot 4 --- Antonio Senzatela | WHITE $17 P | swap
-      // 2025-04-30 vs Arizona Diamondbacks (A) --- 4IP 1K 3ER, rough start
+      // Slot 4 --- Antonio Senzatela | WHITE $17 P | swap candidate
+      // 2025-04-30 vs San Diego Padres (A) — 4IP 1K 3ER, rough start
       makeCard({
         cardId: "ftue-senzatela", basePlayerId: "622608",
         name: "Antonio Senzatela", team: "COL", position: "P",
         tier: "WHITE", salary: 17, slotIndex: 4,
         projectedFp: 17, actualFp: 4,
-        date: "2025-04-30", opponent: "Arizona Diamondbacks", homeAway: "A",
+        date: "2025-04-30", opponent: "San Diego Padres", homeAway: "A",
         statLine: { ip: 4, k: 1, er: 3, h: 0, bb: 0, pa: 0, w: 0, qs: 0 },
       }),
 
@@ -136,30 +130,30 @@ export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
 }
 
 // --- LINEUP 2 (Drawn hand) -------------------------------------------------------
-// Ohtani held ($54) + 4 fresh drawn cards = $148 total under cap.
-// 4 distinct tiers (RED / PURPLE / BLUE / WHITE).
-// FP totals: 80 (Ohtani held) + 27 (Perez HOT) + 18 (Edman cold) +
-//            50 (T.Williams Q-start) + 19 (Senzatela partial)
-//          = 194 FP --- STARTER tier, 1 FP shy of ALL_STAR (195). Near-miss moment.
+// Ohtani held ($54) + 4 fresh drawn cards = $177 total under cap.
+// 4 distinct tiers (RED + PURPLE + GREEN + WHITE).
+// FP totals: 79 (Ohtani held) + 58 (Freeman HOT) + 12 (J. Turner cold) +
+//            55 (Scherzer Q-start) + 25 (T. Williams modest)
+//          = 229 FP — STARTER tier, 1 FP shy of ALL_STAR (230). Near-miss moment.
 
 const DRAWN: Record<number, () => GeneratedCard> = {
 
-  // Slot 1 -> Tommy Edman | BLUE $37 BAT | drawn --- multi-hit HOT (2H 1R)
-  // 2025-06-15 vs Miami Marlins (H)
-  // FP: 24+9 = 33 base + 3 HIT_MACHINE badge = 36
+  // Slot 1 -> Freddie Freeman | PURPLE $43 BAT | drawn — HOT (1H 1HR 1R 1RBI)
+  // 2025-07-08 vs San Diego Padres (H)
+  // FP: 12+20+9+9 = 50 base + 8 GOING_YARD badge = 58
   1: () => makeCard({
-    cardId: "ftue-edman", basePlayerId: "669242",
-    name: "Tommy Edman", team: "LAD", position: "SS",
-    tier: "BLUE", salary: 37, slotIndex: 1,
-    projectedFp: 37, actualFp: 36,
-    date: "2025-06-15", opponent: "Miami Marlins", homeAway: "H",
-    statLine: { h: 2, doubles: 0, triples: 0, hr: 0, r: 1, rbi: 0, bb: 0, sb: 0, pa: 4 },
+    cardId: "ftue-freeman", basePlayerId: "518692",
+    name: "Freddie Freeman", team: "LAD", position: "1B",
+    tier: "PURPLE", salary: 43, slotIndex: 1,
+    projectedFp: 43, actualFp: 58,
+    date: "2025-07-08", opponent: "San Diego Padres", homeAway: "H",
+    statLine: { h: 1, doubles: 0, triples: 0, hr: 1, r: 1, rbi: 1, bb: 0, sb: 0, pa: 4 },
     achievements: [
-      { id: "HIT_MACHINE", icon: "🎯", label: "Hit Machine", fp: 3 },
+      { id: "GOING_YARD", icon: "⚾", label: "Going Yard", fp: 8 },
     ],
   }),
 
-  // Slot 2 -> Justin Turner | WHITE $20 BAT | drawn --- cold (1H, no extras)
+  // Slot 2 -> Justin Turner | WHITE $20 BAT | drawn — cold (1H, no extras)
   // 2025-04-12 vs San Francisco Giants (A)
   // FP: 12 (1H, no R/RBI/BB)
   2: () => makeCard({
@@ -171,14 +165,14 @@ const DRAWN: Record<number, () => GeneratedCard> = {
     statLine: { h: 1, doubles: 0, triples: 0, hr: 0, r: 0, rbi: 0, bb: 0, sb: 0, pa: 3 },
   }),
 
-  // Slot 3 -> Trevor Williams | WHITE $22 P | drawn --- solid Q-start (6IP 5K 1ER 1W 1QS)
-  // 2025-05-22 vs Philadelphia Phillies (H) --- quality outing
+  // Slot 3 -> Max Scherzer | GREEN $38 P | drawn — solid Q-start (6IP 5K 1ER 1W 1QS)
+  // 2025-05-22 vs Philadelphia Phillies (H) — quality outing
   // FP: 18+20-3+6+8 = 49 base + 6 QUALITY_START badge = 55
   3: () => makeCard({
-    cardId: "ftue-twilliams-2", basePlayerId: "592866",
-    name: "Trevor Williams", team: "WSH", position: "P",
-    tier: "WHITE", salary: 22, slotIndex: 3,
-    projectedFp: 22, actualFp: 55,
+    cardId: "ftue-scherzer", basePlayerId: "453286",
+    name: "Max Scherzer", team: "TOR", position: "P",
+    tier: "GREEN", salary: 38, slotIndex: 3,
+    projectedFp: 38, actualFp: 55,
     date: "2025-05-22", opponent: "Philadelphia Phillies", homeAway: "H",
     statLine: { ip: 6, k: 5, er: 1, w: 1, qs: 1, h: 4, bb: 1, pa: 0 },
     achievements: [
@@ -186,16 +180,16 @@ const DRAWN: Record<number, () => GeneratedCard> = {
     ],
   }),
 
-  // Slot 4 -> Antonio Senzatela | WHITE $17 P | drawn --- partial start (5IP 2K 2ER)
-  // 2025-09-01 vs Los Angeles Dodgers (H) --- short outing, no badges
-  // FP: 15+8-6 = 17
+  // Slot 4 -> Trevor Williams | WHITE $22 P | drawn — partial start (5IP 4K 2ER)
+  // 2025-09-01 vs Los Angeles Dodgers (H) — short outing, no badges
+  // FP: 15+16-6 = 25
   4: () => makeCard({
-    cardId: "ftue-senzatela-2", basePlayerId: "622608",
-    name: "Antonio Senzatela", team: "COL", position: "P",
-    tier: "WHITE", salary: 17, slotIndex: 4,
-    projectedFp: 17, actualFp: 17,
+    cardId: "ftue-twilliams", basePlayerId: "592866",
+    name: "Trevor Williams", team: "WSH", position: "P",
+    tier: "WHITE", salary: 22, slotIndex: 4,
+    projectedFp: 22, actualFp: 25,
     date: "2025-09-01", opponent: "Los Angeles Dodgers", homeAway: "H",
-    statLine: { ip: 5, k: 2, er: 2, w: 0, qs: 0, h: 5, bb: 1, pa: 0 },
+    statLine: { ip: 5, k: 4, er: 2, w: 0, qs: 0, h: 5, bb: 1, pa: 0 },
   }),
 
 };
