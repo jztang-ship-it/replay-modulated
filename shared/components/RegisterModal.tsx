@@ -14,9 +14,35 @@ interface RegisterModalProps {
   signInGoogle?: () => Promise<{ error: AuthError | null }>;
 }
 
+/** Translate raw Supabase auth errors into friendly user-facing copy. */
+function friendlyAuthError(err: AuthError | { message?: string }, isSignIn: boolean): string {
+  const msg = String((err as any)?.message ?? "").toLowerCase();
+  if (msg.includes("invalid login credentials")) {
+    return "Email or password is incorrect. Try again or create a new account.";
+  }
+  if (msg.includes("email not confirmed")) {
+    return "Confirm your email to sign in (check your inbox for the link).";
+  }
+  if (msg.includes("user already registered") || msg.includes("already registered")) {
+    return "This email is already registered — try signing in instead.";
+  }
+  if (msg.includes("password") && (msg.includes("short") || msg.includes("characters"))) {
+    return "Password is too short — use at least 6 characters.";
+  }
+  if (msg.includes("rate") || msg.includes("too many")) {
+    return "Too many attempts — wait a moment and try again.";
+  }
+  if (msg.includes("network") || msg.includes("fetch")) {
+    return "Connection issue — check your internet and try again.";
+  }
+  // Fallback: original message without the noisy "(status XXX)" suffix
+  return (err as any)?.message ?? (isSignIn ? "Sign in failed" : "Sign up failed");
+}
+
 export function RegisterModal({ onClose, onSuccess, signUp, linkGoogle, signInMode, signIn, signInGoogle }: RegisterModalProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -32,8 +58,7 @@ export function RegisterModal({ onClose, onSuccess, signUp, linkGoogle, signInMo
     setLoading(false);
     if (result.error) {
       console.error("[auth] email path failed:", result.error);
-      const status = (result.error as any).status ? ` (status ${(result.error as any).status})` : "";
-      setError(`${result.error.message}${status}`);
+      setError(friendlyAuthError(result.error, isSignIn));
       return;
     }
     // Fire-and-forget: insert welcome message for the new/upgraded user
@@ -93,7 +118,28 @@ export function RegisterModal({ onClose, onSuccess, signUp, linkGoogle, signInMo
         </button>
         <div style={{ textAlign: "center", color: "#64748b", fontSize: 12, marginBottom: 16 }}>or</div>
         <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 14, marginBottom: 8, boxSizing: "border-box" }} />
-        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => { if (e.key === "Enter") handleSubmit(); }} style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 14, marginBottom: 12, boxSizing: "border-box" }} />
+        <div style={{ position: "relative", marginBottom: 12 }}>
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") handleSubmit(); }}
+            style={{ width: "100%", padding: "10px 40px 10px 12px", borderRadius: 8, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 14, boxSizing: "border-box" }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(v => !v)}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            style={{
+              position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)",
+              background: "none", border: "none", cursor: "pointer",
+              color: "#94a3b8", fontSize: 16, padding: "6px 8px", lineHeight: 1,
+            }}
+          >
+            {showPassword ? "🙈" : "👁"}
+          </button>
+        </div>
         {error && <div style={{ color: "#EF4444", fontSize: 13, marginBottom: 8 }}>{error}</div>}
         <button onClick={handleSubmit} disabled={loading} style={{ width: "100%", padding: "12px", borderRadius: 8, border: "none", background: "#3b82f6", color: "#fff", fontSize: 15, fontWeight: 700, cursor: loading ? "wait" : "pointer" }}>
           {loading ? "..." : isSignIn ? "Sign in" : "Save my account"}
