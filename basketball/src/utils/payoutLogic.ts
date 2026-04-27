@@ -23,7 +23,7 @@ export type { WinTierKey };
 export type WinTier = WinTierKey;
 
 export const BASKETBALL_WIN_TIERS: WinTierMap = {
-  LEGEND:   { minFp: 255, multiplier: 50  },  // ~0.3% — jackpot
+  LEGEND:   { minFp: 255, multiplier: 50  },  // ~0.3% — top tier
   MVP:      { minFp: 235, multiplier: 8   },  // ~2%
   ALL_STAR: { minFp: 225, multiplier: 3   },  // ~4%
   STARTER:  { minFp: 205, multiplier: 1.5 },  // ~21%

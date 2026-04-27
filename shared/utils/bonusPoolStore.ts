@@ -21,7 +21,6 @@
 export const BONUS_POOL_RAKE_RATE = 0.05;       // 5% of each bet
 export const BONUS_POOL_DAILY_BASE = 1000;       // Injected daily
 export const BONUS_POOL_SEED = 1_000;            // Starting/reset value
-export const BONUS_POOL_DRIP_PER_MIN = 1.39;    // ~2000 coins/day passive
 
 /** Leaderboard lanes for pool distribution. */
 export const POOL_LANES = ["hand_best", "session_score"] as const;

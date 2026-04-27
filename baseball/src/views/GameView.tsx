@@ -283,7 +283,7 @@ function computeSpringAmplitude(finalFp: number): number {
   // Hard cap: never let the spring push past the current tier ceiling.
   // Without this, a score near the top of a tier (e.g. 167 in ROOKIE 155-175)
   // makes the bar visually shoot to near-100% fill then snap back.
-  // Leave 0.5 FP of clearance. GOAT tier has no ceiling so skip cap there.
+  // Leave 0.5 FP of clearance. LEGEND tier has no ceiling so skip cap there.
   const headroom = tier.hi === 9999 ? rawAmplitude : Math.max(0, tier.hi - finalFp - 0.5);
   return Math.min(rawAmplitude, headroom);
 }
@@ -357,23 +357,10 @@ function BetMultSuffix({ m }: { m: number }) {
   );
 }
 
-// ── BonusRow — community bonus pool pill (streak UI lives in Zone 3) ─────────
+// ── BonusRow — community bonus pool pill ─────────────────────────────────────
 
-const BONUS_TIERS = [
-  { wins: 3, pct: 5, color: "#FFD700", glow: "#FFD70099" },
-  { wins: 5, pct: 15, color: "#FFD700", glow: "#FFD70099" },
-];
-
-const BONUS_DOTS = [
-  { threshold: 1, tierIdx: 0 },
-  { threshold: 2, tierIdx: 0 },
-  { threshold: 3, tierIdx: 0 },
-  { threshold: 4, tierIdx: 1 },
-  { threshold: 5, tierIdx: 1 },
-];
-
-function BonusRow({ betAdded, streak = 0, milestoneHit = false, onAmountChange }: {
-  betAdded: number; streak?: number; milestoneHit?: boolean;
+function BonusRow({ betAdded, streak = 0, onAmountChange }: {
+  betAdded: number; streak?: number;
   onAmountChange?: (v: number) => void;
 }) {
   const [amount, setAmount] = useState(BONUS_POOL_SEED);
@@ -424,10 +411,7 @@ function BonusRow({ betAdded, streak = 0, milestoneHit = false, onAmountChange }
         padding: "4px 14px", borderRadius: 20,
         background: `rgba(255,215,0,${streakGlow})`,
         border: `1px solid ${streakBorder}`,
-        boxShadow: milestoneHit
-          ? `0 0 0 2px #FFD700, 0 0 32px rgba(255,215,0,0.9), 0 0 64px rgba(255,215,0,0.5)`
-          : streakShadow,
-        animation: milestoneHit ? "bonusPoolPulse 1.4s ease-out forwards" : "none",
+        boxShadow: streakShadow,
         transition: "box-shadow 300ms ease",
       }}>
         <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.2, color: "rgba(255,215,0,0.6)", textTransform: "uppercase" }}>
@@ -562,8 +546,6 @@ export default function GameView() {
   const [streak, setStreak] = useState<number>(() =>
     parseInt(localStorage.getItem("replaymod_streak") ?? "0", 10)
   );
-  const [streakMilestone, setStreakMilestone] = useState<{ wins: number; pct: number } | null>(null);
-
   // Tier flip display state
   const [tierFlipKey, setTierFlipKey] = useState(0);
   const [displayTier, setDisplayTier] = useState("BUST");
@@ -946,8 +928,6 @@ export default function GameView() {
                 const next = prev + 1;
                 localStorage.setItem("replaymod_streak", String(next));
                 if (next === 3 || next === 5 || next === 10) soundManager.playStreakMilestone(next);
-                if (next === 3) setStreakMilestone({ wins: 3, pct: 5 });
-                else if (next === 5) setStreakMilestone({ wins: 5, pct: 15 });
                 submitToLeaderboard("streak", next);
                 return next;
               });
@@ -1033,12 +1013,6 @@ export default function GameView() {
     const tierMult = BASEBALL_WIN_TIERS[winTier]?.multiplier ?? 0;
     const isLoss = winTier === "BUST"; // ROOKIE is a partial win, not a loss
     const lossAmount = winTier === "BUST" ? BASE_BET * betMultiplier : 0;
-    // Streak milestone bonus pool win
-    const milestoneTier = BONUS_TIERS.find(t => streak === t.wins);
-    const streakMilestonePct = milestoneTier?.pct;
-    const bonusPoolWin = streakMilestonePct
-      ? Math.floor(bonusPoolRef.current * (streakMilestonePct / 100))
-      : undefined;
     return {
       tierLabel: formatTierLabel(winTier),
       tierColor: tc.color,
@@ -1051,8 +1025,6 @@ export default function GameView() {
       baseBet: BASE_BET,
       isLoss,
       lossAmount,
-      streakMilestonePct,
-      bonusPoolWin,
     };
   }, [gameState, winTier, winPayout, streak, betMultiplier]); // eslint-disable-line
 
@@ -1252,7 +1224,6 @@ export default function GameView() {
       postRevealCopyRef.current = null;
       commentaryRef.current = null;
       commentaryStatusRef.current = 'idle';
-      setStreakMilestone(null);
     }
   }, [gameState]);
 
@@ -1511,7 +1482,7 @@ export default function GameView() {
       skipReveal();
     }
     else {
-      // Fade out big win music if it's still playing (MVP/GOAT celebration)
+      // Fade out big win music if it's still playing (MVP/LEGEND celebration)
       if (gameState === "WIN_CELEBRATION") {
         soundManager.stopBigWin();
       }
@@ -1615,7 +1586,6 @@ export default function GameView() {
             <BonusRow
               betAdded={currentBet}
               streak={streak}
-              milestoneHit={streak === 3 || streak === 5}
               onAmountChange={(v) => { bonusPoolRef.current = v; }}
             />
           </div>

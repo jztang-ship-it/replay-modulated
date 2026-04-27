@@ -3,7 +3,11 @@
  *
  * GET  ?action=get     → { pool: number }
  * POST { action: "contribute", amount: number } → { pool: number }
- * POST { action: "claim" }      → { won: number, pool: number }
+ *
+ * Distribution is via leaderboard top-10 (handled by a separate cron /
+ * admin path), not per-hand claim. The old "claim" action that drained
+ * the pool to SEED was removed when streak-induced bonus payouts went
+ * away.
  *
  * KV key: "bonus_pool:pool". Bonus-pool terminology only — never "jackpot"
  * in copy/code/schema. If KV fails, responses use SEED 1000 — handlers
@@ -69,12 +73,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await writePool(next);
         const pool = await readPool();
         return json(res, 200, { pool: Number.isFinite(pool) ? pool : SEED });
-      }
-
-      if (action === "claim") {
-        const won = await readPool();
-        await writePool(SEED);
-        return json(res, 200, { won: Number.isFinite(won) ? won : SEED, pool: SEED });
       }
 
       return json(res, 200, { pool: SEED });

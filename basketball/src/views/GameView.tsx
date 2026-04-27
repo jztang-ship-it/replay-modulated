@@ -133,9 +133,8 @@ function RosterGridScaleFit({ children }: { children: ReactNode }) {
 }
 const BASE_BET = 10;
 
-// ── Jackpot constants ──────────────────────────────────────────────────────
-// ── Economy constants (new system) ────────────────────────────────────────
-// Bonus pool drip is server-side now (api/bonus-pool.ts); no local timer needed.
+// ── Bonus pool constants ───────────────────────────────────────────────────
+// Drip is server-side now (api/bonus-pool.ts); no local timer needed.
 
 type GameState =
   | "IDLE" | "DEALING" | "HOLD" | "DRAWING"
@@ -857,7 +856,6 @@ export default function GameView() {
   const [streak, setStreak] = useState<number>(() =>
     parseInt(localStorage.getItem("replaymod_streak") ?? "0", 10)
   );
-  // streakMilestone removed — streak now directly multiplies payout
 
   // Tier flip display state
   const [tierFlipKey, setTierFlipKey] = useState(0);
@@ -1541,7 +1539,6 @@ export default function GameView() {
       commentaryRef.current = null;
       commentaryStatusRef.current = 'idle';
       commentaryFiredHandRef.current = -1;
-      // streakMilestone removed
     }
   }, [gameState]);
 
