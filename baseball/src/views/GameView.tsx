@@ -19,7 +19,7 @@ import { AppHeader } from "../components/AppHeader";
 import { resetAllOverlays } from "../components/BaseballCard";
 import { GameBar, type CelebrationData } from "../components/GameBar";
 import { useCardFlipState } from "../hooks/useCardFlipState";
-import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
+import { useEmotionalReveal, DRAWING_DWELL_MS, type RevealableCard } from "../hooks/useEmotionalReveal";
 import { calculateWinTier, calculatePayout, BASEBALL_WIN_TIERS, type WinTier } from "../utils/payoutLogic";
 
 import { useGameAnalytics } from "@shared/analytics/useGameAnalytics";
@@ -31,6 +31,7 @@ import { CoinDisplay } from '@shared/engagement/CoinDisplay';
 import { DailyTasksPanel } from '@shared/engagement/DailyTasksPanel';
 import { XPBar } from '@shared/engagement/XPBar';
 import { soundManager } from '@shared/utils/soundManager';
+import { getBonusPool, contributeBet } from '@shared/utils/bonusPoolStore';
 import { audioDirector } from '@shared/utils/audioDirector';
 import { getPlayerUid, getNickname, setNickname, getSessionId } from '@shared/utils/playerIdentity';
 import { buildScoreProof } from '@shared/utils/scoreProof';
@@ -135,10 +136,11 @@ function RosterGridScaleFit({ children }: { children: ReactNode }) {
 const BASE_BET = 10;
 
 // ── Bonus pool constants ──────────────────────────────────────────────────
+// Authoritative source is KV via /api/bonus-pool. SEED is the local
+// fallback when the server / KV is unavailable (and matches the server's
+// own SEED constant). BET_RAKE / drip are now server-controlled — kept
+// here only as documentation / for analytics math.
 const BONUS_POOL_SEED = 1_000;
-const BONUS_POOL_BET_RAKE = 0.05;   // 5% of each bet added to pool
-const TICK_INTERVAL_MS = 3000;
-const TICK_AMOUNT = 0.01;
 
 type GameState =
   | "IDLE" | "DEALING" | "HOLD" | "DRAWING"
@@ -382,26 +384,33 @@ function BonusRow({ betAdded, streak = 0, milestoneHit = false, onAmountChange }
   const streakBorder = streak >= 5 ? "rgba(255,215,0,0.55)" : streak >= 3 ? "rgba(255,215,0,0.38)" : streak >= 1 ? "rgba(255,215,0,0.25)" : "rgba(255,215,0,0.18)";
   const streakShadow = streak > 0 ? `0 0 ${6 + streak * 3}px rgba(255,215,0,${streakGlow})` : "none";
 
+  // Mount: fetch real KV-backed pool value. Periodic poll keeps display fresh.
   useEffect(() => {
-    const id = setInterval(() => {
-      setAmount(p => {
-        const next = parseFloat((p + TICK_AMOUNT).toFixed(2));
-        onAmountChange?.(next);
-        return next;
-      });
-    }, TICK_INTERVAL_MS);
-    return () => clearInterval(id);
+    let cancelled = false;
+    const sync = async () => {
+      try {
+        const pool = await getBonusPool();
+        if (cancelled) return;
+        setAmount(pool);
+        onAmountChange?.(pool);
+      } catch { /* swallow — keep last known value */ }
+    };
+    sync();
+    const pollId = setInterval(sync, 30_000);
+    return () => { cancelled = true; clearInterval(pollId); };
   }, []); // eslint-disable-line
 
+  // Per-bet rake: push to server, update local from authoritative response.
   useEffect(() => {
     if (betAdded > 0 && betAdded !== prevBetRef.current) {
       prevBetRef.current = betAdded;
-      const contribution = parseFloat((betAdded * BONUS_POOL_BET_RAKE).toFixed(2));
-      if (contribution > 0) setAmount(p => {
-        const next = parseFloat((p + contribution).toFixed(2));
-        onAmountChange?.(next);
-        return next;
-      });
+      (async () => {
+        try {
+          const next = await contributeBet(betAdded);
+          setAmount(next);
+          onAmountChange?.(next);
+        } catch { /* swallow — KV unavailable */ }
+      })();
     }
   }, [betAdded]); // eslint-disable-line
 
@@ -1392,7 +1401,7 @@ export default function GameView() {
       flipState.beginDraw(markedRoster.filter(c => !(c as any).wasHeld).map(cardId));
       setRoster(markedRoster);
       setGameState("DRAWING");
-      await sleep(700);
+      await sleep(DRAWING_DWELL_MS);
       const drawRes: any = isFTUE
         ? await redrawFTUERoster({ currentCards: markedRoster, lockedCardIds })
         : await redrawRoster({ currentCards: markedRoster, lockedCardIds });

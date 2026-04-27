@@ -18,7 +18,7 @@ import { AppHeader } from "../components/AppHeader";
 import { resetAllOverlays } from "../components/AthleteCard";
 import { GameBar, type CelebrationData } from "../components/GameBar";
 import { useCardFlipState } from "../hooks/useCardFlipState";
-import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
+import { useEmotionalReveal, DRAWING_DWELL_MS, type RevealableCard } from "../hooks/useEmotionalReveal";
 import { calculateWinTier, calculatePayout, calculatePayoutWithStreak, getStreakMultiplier, BASKETBALL_WIN_TIERS, STREAK_TIERS, type WinTier } from "../utils/payoutLogic";
 import { detectExtremes } from "@shared/utils/extremeGames";
 import { featureFlags } from "@shared/featureFlags";
@@ -34,6 +34,7 @@ import { CoinDisplay } from '@shared/engagement/CoinDisplay';
 import { DailyTasksPanel } from '@shared/engagement/DailyTasksPanel';
 import { XPBar } from '@shared/engagement/XPBar';
 import { soundManager } from '@shared/utils/soundManager';
+import { getBonusPool, contributeBet } from '@shared/utils/bonusPoolStore';
 import { audioDirector } from '@shared/utils/audioDirector';
 import { getPlayerUid, getNickname, setNickname, getSessionId } from '@shared/utils/playerIdentity';
 import { captureReferrerFromUrl, applyReferral, claimReferral } from '@shared/utils/referral';
@@ -134,8 +135,7 @@ const BASE_BET = 10;
 
 // ── Jackpot constants ──────────────────────────────────────────────────────
 // ── Economy constants (new system) ────────────────────────────────────────
-const POOL_DRIP_INTERVAL_MS = 3000;
-const POOL_DRIP_AMOUNT = 0.07; // ~1.4 coins/min at 3s interval
+// Bonus pool drip is server-side now (api/bonus-pool.ts); no local timer needed.
 
 type GameState =
   | "IDLE" | "DEALING" | "HOLD" | "DRAWING"
@@ -515,24 +515,29 @@ function BonusPoolPill({ betAmount, betNonce, onAmountChange }: {
   const prevNonceRef = useRef(betNonce);
   const rafRef = useRef(0);
 
-  // Passive drip
+  // Mount: fetch real KV-backed pool value. Periodic poll keeps display fresh.
+  // (Replaces the old client-only passive drip — drip is server-side now.)
   useEffect(() => {
-    const id = setInterval(() => {
-      setAmount(p => {
-        const next = parseFloat((p + POOL_DRIP_AMOUNT).toFixed(2));
-        onAmountChange?.(next);
-        return next;
-      });
-    }, POOL_DRIP_INTERVAL_MS);
-    return () => clearInterval(id);
+    let cancelled = false;
+    const sync = async () => {
+      try {
+        const pool = await getBonusPool();
+        if (cancelled) return;
+        setAmount(pool);
+        onAmountChange?.(pool);
+      } catch { /* swallow — keep last known value */ }
+    };
+    sync();
+    const pollId = setInterval(sync, 30_000);
+    return () => { cancelled = true; clearInterval(pollId); };
   }, []); // eslint-disable-line
 
-  // Sync display with amount for drip (no animation needed for tiny drip increments)
+  // Sync display with amount when not animating
   useEffect(() => {
     if (!pulse) setDisplayAmount(amount);
   }, [amount, pulse]);
 
-  // 5% rake on every bet — pulse + animated roll-up
+  // 5% rake on every bet — push to server, animate locally for feedback
   useEffect(() => {
     if (betNonce === prevNonceRef.current) return;
     prevNonceRef.current = betNonce;
@@ -541,13 +546,9 @@ function BonusPoolPill({ betAmount, betNonce, onAmountChange }: {
 
     const startVal = amount;
     const endVal = parseFloat((amount + rake).toFixed(2));
-    setAmount(endVal);
-    onAmountChange?.(endVal);
 
-    // Pulse glow
+    // Optimistically animate the pulse + roll-up
     setPulse(true);
-
-    // Animated roll-up over 800ms
     const startTime = performance.now();
     const duration = 800;
     const tick = () => {
@@ -563,6 +564,19 @@ function BonusPoolPill({ betAmount, betNonce, onAmountChange }: {
       }
     };
     rafRef.current = requestAnimationFrame(tick);
+
+    // Push contribution to KV; replace local with authoritative server value.
+    (async () => {
+      try {
+        const next = await contributeBet(betAmount);
+        setAmount(next);
+        onAmountChange?.(next);
+      } catch {
+        // KV unavailable — fall back to optimistic local update
+        setAmount(endVal);
+        onAmountChange?.(endVal);
+      }
+    })();
 
     return () => cancelAnimationFrame(rafRef.current);
   }, [betNonce]); // eslint-disable-line
@@ -1771,7 +1785,7 @@ export default function GameView() {
       setRoster(markedRoster);
       setGameState("DRAWING");
       gameAnalytics.redrawUsed();
-      await sleep(700);
+      await sleep(DRAWING_DWELL_MS);
       let drawRes: any, resolveRes: any;
       try {
         drawRes = isFTUE
