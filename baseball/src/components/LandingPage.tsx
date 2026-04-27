@@ -192,31 +192,20 @@ export function LandingPage({ onPlay }: Props) {
           </button>
         )}
       </nav>
-      {showSignIn && (
-        <RegisterModal
-          signInMode
-          onClose={() => setShowSignIn(false)}
-          onSuccess={() => setShowSignIn(false)}
-          signUp={signUp}
-          linkGoogle={linkGoogle}
-          signIn={signIn}
-          signInGoogle={signInGoogle}
-        />
-      )}
 
       {/* MAIN */}
       <main style={{
         flex: 1, minHeight: 0,
         display: "flex", flexDirection: "column", alignItems: "center",
-        justifyContent: "flex-start",
-        padding: "12px 16px 0", gap: 0, textAlign: "center",
+        justifyContent: "center",
+        padding: "0 16px env(safe-area-inset-bottom, 12px)", gap: 16, textAlign: "center",
       }}>
 
         {/* 3+2 CARD GRID — 6-column, row 1: slots 0-2, row 2: slots 3-4 centered */}
         <div style={{
           display: "grid",
           gridTemplateColumns: "repeat(6, 1fr)",
-          gap: 8, width: "100%", maxWidth: 340, marginBottom: 20,
+          gap: 6, width: "100%", maxWidth: 340,
         }}>
           {CARDS.map((c, i) => {
             const isFlipped = flipped.has(c.id);
@@ -270,13 +259,24 @@ export function LandingPage({ onPlay }: Props) {
         </div>
 
         {/* HEADLINE + CTA */}
-        <div style={{ maxWidth: 360, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+        <div style={{ maxWidth: 360, display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
           <p style={{
             fontSize: 10, fontWeight: 700, letterSpacing: ".3em", textTransform: "uppercase",
             color: "#C9A84C", margin: 0,
           }}>
             Beta · Free to Play · No Sign-Up
           </p>
+          {showSignIn && (
+            <RegisterModal
+              signInMode
+              onClose={() => setShowSignIn(false)}
+              onSuccess={() => setShowSignIn(false)}
+              signUp={signUp}
+              linkGoogle={linkGoogle}
+              signIn={signIn}
+              signInGoogle={signInGoogle}
+            />
+          )}
           <h1 style={{
             fontFamily: "'Impact','Arial Narrow',Arial,sans-serif", fontWeight: 900,
             fontSize: "clamp(24px, 5vw, 40px)", textTransform: "uppercase", lineHeight: 0.95, margin: 0,
