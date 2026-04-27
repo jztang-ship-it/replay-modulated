@@ -50,9 +50,7 @@ import { captureReferrerFromUrl, applyReferral, claimReferral } from "@shared/ut
 import { featureFlags } from "@shared/featureFlags";
 import { detectTopGame } from "@shared/data/recordDetector";
 import { selectStar } from "@shared/commentary/storySelector";
-import { useAuth } from "@shared/auth/useAuth";
 import { RegisterModal } from "@shared/components/RegisterModal";
-import { track } from "@shared/analytics/analytics";
 // buildBaseballContext — culture injection now handled inside selectCommentary
 
 // Test-wire only: allow passing glow props even if wrapper prop types lag behind.

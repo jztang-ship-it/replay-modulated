@@ -577,7 +577,7 @@ export function CardFront(props: CardFrontProps) {
                   transform: isRolling ? "scale(1.06)" : "scale(1)",
                   transition: isRolling ? "none" : "transform 100ms ease",
                 }}>
-                  {isShowingActualFp
+                  {isShowingActualFp && fpRevealed
                     ? (displayedFp > 0 ? displayedFp.toFixed(1) : (Number((card as any)?.actualFp ?? 0) > 0 ? Number((card as any).actualFp).toFixed(1) : fpText))
                     : fpText}
                 </span>
