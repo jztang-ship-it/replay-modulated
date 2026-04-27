@@ -1,10 +1,10 @@
 /**
- * remixEngine.ts — Curated micro-remix for MVP/GOAT hands.
+ * remixEngine.ts — Curated micro-remix for MVP/LEGEND hands.
  *
  * STRICTLY LIMITED:
  * - Allowed: verb swap, comparison swap, punctuation tweak
  * - Forbidden: adding new ideas, new clauses, changing narrative meaning
- * - Only applied to MVP/GOAT and selected high-impact archetypes
+ * - Only applied to MVP/LEGEND and selected high-impact archetypes
  */
 
 import type { CommentaryArchetype, Intensity } from "./types";
@@ -17,7 +17,7 @@ const REMIX_ARCHETYPES: Set<CommentaryArchetype> = new Set([
 ]);
 
 /** Intensities eligible for remix */
-const REMIX_INTENSITIES: Set<Intensity> = new Set(["mvp", "goat"]);
+const REMIX_INTENSITIES: Set<Intensity> = new Set(["mvp", "legend"]);
 
 /** Verb swap table — source → alternatives */
 const VERB_SWAPS: Record<string, string[]> = {

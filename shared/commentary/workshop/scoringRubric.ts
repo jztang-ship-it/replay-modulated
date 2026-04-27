@@ -74,7 +74,7 @@ export function autoReject(template: string): string[] {
   // Game-mechanic terms that should never appear in commentary
   const mechanics = [
     "fp", "fantasy points", "projection", "projected",
-    "rookie tier", "starter tier", "all-star tier", "mvp tier", "goat tier",
+    "rookie tier", "starter tier", "all-star tier", "mvp tier", "legend tier",
     "rookie money", "starter money", "all-star money",
     "bust tier", "payout tier", "payout threshold",
   ];

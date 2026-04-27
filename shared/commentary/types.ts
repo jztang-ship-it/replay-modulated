@@ -122,7 +122,7 @@ export type Intensity =
   | "starter_dominant"
   | "all_star"
   | "mvp"
-  | "goat"
+  | "legend"
   | "bust_close"
   | "bust_mid"
   | "bust_bad";
@@ -237,6 +237,12 @@ export interface TemplateData {
   topCategory?: string;
   /** T3 only — honest season-best phrasing ("best scoring night of the season so far"). */
   seasonBestStat?: string;
+  /** Co-star full name when multi_star_carry fires; "" otherwise. */
+  costar?: string;
+  /** Co-star last name when multi_star_carry fires; "" otherwise. */
+  costarLast?: string;
+  /** Co-star headline stat (e.g. "32 pts") when multi_star_carry fires; "" otherwise. */
+  costarStat?: string;
 }
 
 // ─── Unified commentary engine types ────────────────────────────────────────
@@ -259,6 +265,7 @@ export type CommentaryArchetype =
   | "ugly_win"
   | "collapse"
   | "career_night"
+  | "multi_star_carry"
   // ── Reserved (schema only, no lines yet) ──
   | "streak_first"
   | "streak_milestone"
@@ -275,7 +282,7 @@ export type CommentaryArchetype =
   | "lucky_escape"
   | "comfortable_win"
   | "dominant_win"
-  | "goat_clinch"
+  | "legend_clinch"
   | "mvp_clinch"
   | "bust_result"
   | "high_score_low_reward"

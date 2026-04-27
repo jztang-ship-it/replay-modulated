@@ -49,7 +49,7 @@ function qualityGate(raw: string, roster: CommentaryInput["roster"]): string | n
     "the rest of the roster", "fantasy points", "projection",
     "the lineup", "the draw", "the hand", "reflected it",
     // Game tier names — these are mechanics, not basketball concepts
-    "rookie tier", "starter tier", "all-star tier", "mvp tier", "goat tier",
+    "rookie tier", "starter tier", "all-star tier", "mvp tier", "legend tier",
     "rookie money", "starter money", "all-star money",
   ];
   if (banned.some(b => lower.includes(b))) return null;

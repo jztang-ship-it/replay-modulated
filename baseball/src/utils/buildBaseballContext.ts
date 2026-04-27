@@ -10,6 +10,7 @@ import type {
   CommentaryRosterCard,
   CommentaryCultureNugget,
 } from "@shared/commentary/types";
+import { lineCitesMismatchedStat } from "../../../shared/commentary/selectCommentary";
 
 const PERF_BAND = 5;          // FP delta below which we consider a card "on pace"
 const BIG_GAME_DELTA = 15;    // additional band for outlier overperformance
@@ -60,8 +61,13 @@ function pickRelevantTones(
   if (culture.defensive?.length)     out.push(culture.defensive[Math.floor(Math.random() * culture.defensive.length)]);
   if (culture.salaryNarrative?.length) out.push(culture.salaryNarrative[Math.floor(Math.random() * culture.salaryNarrative.length)]);
 
-  // Filter out empty strings from generated data
-  return out.filter(s => s && s.trim().length > 0).slice(0, MAX_TONES_PER_CARD);
+  // Filter out empty strings from generated data AND lines that cite stats
+  // mismatched against the current game (Bug 4 mitigation — historical
+  // citations would otherwise feed the LLM and surface in commentary).
+  const sl = (card.statLine ?? {}) as Record<string, number | undefined>;
+  return out
+    .filter(s => s && s.trim().length > 0 && !lineCitesMismatchedStat(s, sl))
+    .slice(0, MAX_TONES_PER_CARD);
 }
 
 export function buildBaseballContext(
@@ -73,10 +79,13 @@ export function buildBaseballContext(
     const culture = PLAYER_CULTURE[key];
     if (!culture) continue;
 
-    const opponentFlavor =
+    const sl = (card.statLine ?? {}) as Record<string, number | undefined>;
+    const rawOppFlavor =
       culture.opponentFlavor && card.opponent
         ? culture.opponentFlavor[card.opponent.toUpperCase()]
         : undefined;
+    const opponentFlavor =
+      rawOppFlavor && !lineCitesMismatchedStat(rawOppFlavor, sl) ? rawOppFlavor : undefined;
 
     out.push({
       playerName: card.name,

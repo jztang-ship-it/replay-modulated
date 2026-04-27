@@ -417,6 +417,58 @@
       "humorStyle": [],
       "qualityScore": 8,
       "enabled": true
+    },
+    {
+      "id": "bb_sc_seasonbest_0003",
+      "sport": "basketball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "hype",
+      "template": "{name} cashed it{opp} — and rewrote his own line: {seasonBestStat}.",
+      "requires": ["season_best_stat"],
+      "tags": ["season_best"],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_sc_seasonbest_0004",
+      "sport": "basketball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "warm",
+      "template": "Big night from {name}{opp}. Tucked under it: {seasonBestStat}. That one stays with him.",
+      "requires": ["season_best_stat"],
+      "tags": ["season_best"],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_sc_seasonbest_0005",
+      "sport": "basketball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{name} did his job{opp}. Receipts: {seasonBestStat}.",
+      "requires": ["season_best_stat"],
+      "tags": ["season_best"],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_sc_seasonbest_0006",
+      "sport": "basketball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{name} brought the hand home{opp}. Quietly, in the margin: {seasonBestStat}.",
+      "requires": ["season_best_stat"],
+      "tags": ["season_best"],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
     }
   ],
   "star_carry_big": [
@@ -3263,6 +3315,92 @@
       ],
       "humorStyle": [],
       "qualityScore": 8,
+      "enabled": true
+    }
+  ],
+  "multi_star_carry": [
+    {
+      "id": "bk_msc_0001",
+      "sport": "basketball",
+      "archetype": "multi_star_carry",
+      "register": "win",
+      "tone": "hype",
+      "template": "{name} and {costar} both went off tonight. {pts} from one, {costarStat} from the other. The hand never had a chance of losing.",
+      "tags": ["multi_star"],
+      "humorStyle": [],
+      "qualityScore": 9,
+      "enabled": true
+    },
+    {
+      "id": "bk_msc_0002",
+      "sport": "basketball",
+      "archetype": "multi_star_carry",
+      "register": "win",
+      "tone": "observational",
+      "template": "Two stars, one paycheck. {name} put up {pts}; {costar} added {costarStat}. Roster cashed.",
+      "tags": ["multi_star"],
+      "humorStyle": [],
+      "qualityScore": 9,
+      "enabled": true
+    },
+    {
+      "id": "bk_msc_0003",
+      "sport": "basketball",
+      "archetype": "multi_star_carry",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{last} and {costarLast} both took the night personally. When two cards go nuclear, the math gets simple.",
+      "tags": ["multi_star"],
+      "humorStyle": [],
+      "qualityScore": 9,
+      "enabled": true
+    },
+    {
+      "id": "bk_msc_0004",
+      "sport": "basketball",
+      "archetype": "multi_star_carry",
+      "register": "win",
+      "tone": "warm",
+      "template": "Massive line from {name}{opp}. Massive line from {costar} too. Both delivered, both got paid.",
+      "tags": ["multi_star"],
+      "humorStyle": [],
+      "qualityScore": 9,
+      "enabled": true
+    },
+    {
+      "id": "bk_msc_0005",
+      "sport": "basketball",
+      "archetype": "multi_star_carry",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{name}: {pts}. {costar}: {costarStat}. You don't lose hands like that.",
+      "tags": ["multi_star"],
+      "humorStyle": [],
+      "qualityScore": 9,
+      "enabled": true
+    },
+    {
+      "id": "bk_msc_0006",
+      "sport": "basketball",
+      "archetype": "multi_star_carry",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "Co-stars tonight: {name} and {costar}. Both went All-Star+. The roster watched and cashed.",
+      "tags": ["multi_star"],
+      "humorStyle": [],
+      "qualityScore": 9,
+      "enabled": true
+    },
+    {
+      "id": "bk_msc_0007",
+      "sport": "basketball",
+      "archetype": "multi_star_carry",
+      "register": "win",
+      "tone": "hype",
+      "template": "{name} AND {costar} both decided tonight was theirs. {pts} and {costarStat} on the same ledger. Forget the rest of the line.",
+      "tags": ["multi_star"],
+      "humorStyle": [],
+      "qualityScore": 9,
       "enabled": true
     }
   ],

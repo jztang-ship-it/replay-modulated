@@ -56,6 +56,7 @@ export function buildTemplateData(
   input: CommentaryInput,
   recordEvents: RecordEvent[],
   culture: { nicknames?: string[] } | null,
+  costar: CommentaryRosterCard | null = null,
 ): TemplateData {
   const name = star?.name ?? "The roster";
   const last = star ? lastName(star.name) : "the roster";
@@ -90,12 +91,30 @@ export function buildTemplateData(
   const [topVal, topUnit] = statEntries.reduce((best, cur) => cur[0] > best[0] ? cur : best, [0, "pt"]);
   const topStat = topVal > 0 ? `${topVal} ${topUnit}` : "";
 
+  // Costar tokens — populated only when classifyArchetype's multi-star rule
+  // fired. Otherwise empty strings (templates that reference {costar} simply
+  // won't surface because they belong to the multi_star_carry archetype).
+  const costarName = costar?.name ?? "";
+  const costarLast = costar ? lastName(costar.name) : "";
+  let costarStat = "";
+  if (costar) {
+    const cPts = Math.round(statN(costar, "pts"));
+    const cReb = Math.round(statN(costar, "reb"));
+    const cAst = Math.round(statN(costar, "ast"));
+    const entries: [number, string][] = [[cPts, "pts"], [cReb, "reb"], [cAst, "ast"]];
+    const [v, u] = entries.reduce((best, cur) => cur[0] > best[0] ? cur : best, [0, "pts"]);
+    costarStat = v > 0 ? `${v} ${u}` : "";
+  }
+
   return {
     name,
     last,
     first,
     nick,
     nick2,
+    costar: costarName,
+    costarLast,
+    costarStat,
     pts: ptsVal,
     reb: rebVal,
     ast: astVal,
@@ -122,13 +141,50 @@ export function buildTemplateData(
 
 // ─── Resolve tokens ─────────────────────────────────────────────────────────
 
+/** Remove the topStat-equivalent phrase from topLabel so a template that uses
+ *  both tokens doesn't restate the same milestone twice ("52 pts. 50+ point
+ *  game."). Only invoked when the template references {topStat} AND {topLabel}. */
+function dedupeTopLabel(rawLabel: string, topStat: string): string {
+  if (!rawLabel || !topStat) return rawLabel;
+  const m = topStat.match(/^(\d+)\s+(\S+)$/);
+  if (!m) return rawLabel;
+  const value = m[1];
+  const unit = m[2];
+  const unitSingular = unit.replace(/s$/, "");
+  const patterns: RegExp[] = [
+    new RegExp(`${value}\\s+${unit}\\b`, "gi"),
+    new RegExp(`${value}\\s+${unitSingular}\\b`, "gi"),
+    new RegExp(`${value}[\\s+-]+point[s]?(\\s+game|\\s+night)?\\b`, "gi"),
+    new RegExp(`${value}\\+\\s*${unit}\\b`, "gi"),
+    new RegExp(`\\bof\\s+${value}\\b`, "gi"),
+  ];
+  let cleaned = rawLabel;
+  for (const re of patterns) cleaned = cleaned.replace(re, "");
+  cleaned = cleaned
+    .replace(/\(\s*([,;]\s*)+/g, "(")
+    .replace(/\s*[,;]\s*\)/g, ")")
+    .replace(/\(\s*\)/g, "")
+    .replace(/\s*[—–-]\s*$/, "")
+    .replace(/\s*[—–-]\s*([.,;:]|$)/g, "$1")
+    .replace(/^\s*[—–:-]\s*/, "")
+    .replace(/\s*:\s*$/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return cleaned.length >= 3 ? cleaned : rawLabel;
+}
+
 export function resolveTemplate(template: string, data: TemplateData): string {
+  const usesBoth = template.includes("{topStat}") && template.includes("{topLabel}");
+  const topLabel = usesBoth ? dedupeTopLabel(data.topLabel ?? "", data.topStat) : (data.topLabel ?? "");
   return template
     .replace(/\{name\}/g, data.name)
     .replace(/\{last\}/g, data.last)
     .replace(/\{first\}/g, data.first)
     .replace(/\{nick\}/g, data.nick)
     .replace(/\{nick2\}/g, data.nick2)
+    .replace(/\{costar\}/g, data.costar ?? "")
+    .replace(/\{costarLast\}/g, data.costarLast ?? "")
+    .replace(/\{costarStat\}/g, data.costarStat ?? "")
     // Stats always include units — "22 pts" never bare "22"
     .replace(/\{pts\}/g, `${data.pts} pts`)
     .replace(/\{reb\}/g, `${data.reb} reb`)
@@ -138,7 +194,7 @@ export function resolveTemplate(template: string, data: TemplateData): string {
     .replace(/\{opp\}/g, data.opp)
     .replace(/\{badge\}/g, data.badge)
     .replace(/\{topStat\}/g, data.topStat)
-    .replace(/\{topLabel\}/g, data.topLabel ?? "")
+    .replace(/\{topLabel\}/g, topLabel)
     .replace(/\{topCategory\}/g, data.topCategory ?? "")
     .replace(/\{seasonBestStat\}/g, data.seasonBestStat ?? "")
     .replace(/\{streak\}/g, String(data.streak))

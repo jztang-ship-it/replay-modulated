@@ -23,7 +23,7 @@ describe("remixEngine", () => {
   test("never adds new clauses or ideas", () => {
     const line = "Booker went off against Toronto.";
     for (let s = 0; s < 50; s++) {
-      const result = applyRemix(line, "career_night", "goat", s);
+      const result = applyRemix(line, "career_night", "legend", s);
       expect(result.length).toBeLessThan(line.length + 15);
       const origPeriods = (line.match(/\./g) ?? []).length;
       const remixPeriods = (result.match(/\./g) ?? []).length;

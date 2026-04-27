@@ -14,6 +14,7 @@ import type {
   CommentaryRosterCard,
   CommentaryCultureNugget,
 } from "@shared/commentary/types";
+import { lineCitesMismatchedStat } from "../../../shared/commentary/selectCommentary";
 
 const PERF_BAND = 5;          // FP delta below which we consider a card "on pace"
 const BIG_GAME_DELTA = 15;    // additional band for outlier overperformance
@@ -58,7 +59,13 @@ function pickRelevantTones(
     out.push(...(culture.tier3 ?? []).slice(0, 2));
   }
 
-  return out.slice(0, MAX_TONES_PER_CARD);
+  // Filter out lines that cite stat values which don't match this card's
+  // current game. Source pools (overperform / bigGame / tier1 / etc.) include
+  // historical references — the LLM was free to echo them and produce
+  // "Pacers have nightmares about his 64-point game" on a 37-pt night.
+  // Cap is applied AFTER filtering so we keep the requested count.
+  const sl = (card.statLine ?? {}) as Record<string, number | undefined>;
+  return out.filter(line => !lineCitesMismatchedStat(line, sl)).slice(0, MAX_TONES_PER_CARD);
 }
 
 export function buildBasketballContext(
@@ -70,13 +77,23 @@ export function buildBasketballContext(
     const culture = PLAYER_CULTURE[key];
     if (!culture) continue;
 
-    const opponentFlavor =
+    // Same stat-citation guard applied to every nugget field that ends up in
+    // the LLM prompt. Without this, opponentFlavor / salaryNarrative /
+    // milestones / streakLines / etc. could feed historical numbers into the
+    // model that don't match tonight's box score.
+    const sl = (card.statLine ?? {}) as Record<string, number | undefined>;
+    const safe = (lines?: string[]): string[] | undefined =>
+      lines?.filter(l => !lineCitesMismatchedStat(l, sl));
+
+    const rawOppFlavor =
       culture.opponentFlavor && card.opponent
         ? culture.opponentFlavor[card.opponent.toUpperCase()]
         : undefined;
+    const opponentFlavor =
+      rawOppFlavor && !lineCitesMismatchedStat(rawOppFlavor, sl) ? rawOppFlavor : undefined;
 
-    // Check if this is a former-team matchup
-    const isFormerTeam = opponentFlavor !== undefined;
+    // Check if this is a former-team matchup (team-keyed, not stat-cited)
+    const isFormerTeam = rawOppFlavor !== undefined;
 
     out.push({
       playerName: card.name,
@@ -85,13 +102,13 @@ export function buildBasketballContext(
       relevantTones: pickRelevantTones(culture, card),
       opponentFlavor,
       signatureGames: culture.signatureGames?.slice(0, 3),
-      salaryNarrative: culture.salaryNarrative?.slice(0, 2),
-      streakLines: culture.streakLines?.slice(0, 2),
-      teamContext: culture.teamContext?.slice(0, 1),
-      draftAndPath: culture.draftAndPath?.slice(0, 1),
-      formerTeam: isFormerTeam ? culture.formerTeam?.slice(0, 1) : undefined,
-      rivalry: culture.rivalry?.slice(0, 1),
-      milestones: culture.milestones?.slice(0, 1),
+      salaryNarrative: safe(culture.salaryNarrative)?.slice(0, 2),
+      streakLines: safe(culture.streakLines)?.slice(0, 2),
+      teamContext: safe(culture.teamContext)?.slice(0, 1),
+      draftAndPath: safe(culture.draftAndPath)?.slice(0, 1),
+      formerTeam: isFormerTeam ? safe(culture.formerTeam)?.slice(0, 1) : undefined,
+      rivalry: safe(culture.rivalry)?.slice(0, 1),
+      milestones: safe(culture.milestones)?.slice(0, 1),
     });
   }
   return out;

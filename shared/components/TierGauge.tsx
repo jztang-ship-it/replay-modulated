@@ -138,16 +138,16 @@ export function computeGaugeState(
     }
   }
 
-  const goatMin = thresholds.find(t => (t.tier as string) === "LEGEND")?.minFP ?? 235;
-  const isGoat = fp >= goatMin;
+  const legendMin = thresholds.find(t => (t.tier as string) === "LEGEND")?.minFP ?? 235;
+  const isLegend = fp >= legendMin;
 
   if (derivedTier === "MVP" && nextTier === null) {
     nextTier = "LEGEND";
-    nextMin = goatMin;
+    nextMin = legendMin;
   }
 
-  const actualTier = winTierProp ?? (isGoat ? "LEGEND" : derivedTier);
-  const isMaxLevel = isGoat || actualTier === "LEGEND";
+  const actualTier = winTierProp ?? (isLegend ? "LEGEND" : derivedTier);
+  const isMaxLevel = isLegend || actualTier === "LEGEND";
 
   const tierCfg = TIER_CFG[actualTier] ?? TIER_CFG.BUST;
   const targetCfg = isMaxLevel ? TIER_CFG.LEGEND : (TIER_CFG[nextTier ?? ""] ?? tierCfg);
@@ -159,7 +159,7 @@ export function computeGaugeState(
   const finalFill = isMaxLevel ? 1.0 : Math.min(1, Math.max(0, (fp - curMin) / tierSpan));
 
   // Gradient: even fade from current tier color → next tier color across the bar
-  const normalColor = isGoat
+  const normalColor = isLegend
     ? TIER_CFG.LEGEND.color
     : `linear-gradient(90deg, ${tierCfg.color} 0%, ${tierCfg.color} 30%, ${targetCfg.color} 100%)`;
   const overshootColor = `linear-gradient(90deg, ${tierCfg.color} 0%, ${targetCfg.color} 60%, ${targetCfg.color} 100%)`;
@@ -169,8 +169,8 @@ export function computeGaugeState(
     nextTier,
     curMin,
     nextMin,
-    goatMin,
-    isGoat,
+    legendMin,
+    isLegend,
     actualTier,
     isMaxLevel,
     tierCfg,
@@ -193,8 +193,8 @@ function countTierBoundaryCrossings(fromFp: number, toFp: number, thresholds: Ti
   for (const m of mins) {
     if (fromFp < m && m <= toFp + 0.001) n++;
   }
-  const goatMin = thresholds.find(t => (t.tier as string) === "LEGEND")?.minFP;
-  if (goatMin && fromFp < goatMin && toFp >= goatMin) n++;
+  const legendMin = thresholds.find(t => (t.tier as string) === "LEGEND")?.minFP;
+  if (legendMin && fromFp < legendMin && toFp >= legendMin) n++;
   return n;
 }
 
@@ -221,9 +221,9 @@ function buildFpWaypoints(fromFp: number, toFp: number, thresholds: TierThreshol
     const m = t.minFP;
     if (m > fromFp + 0.001 && m < toFp - 0.001) w.push(m);
   }
-  const goatMin = thresholds.find(tt => (tt.tier as string) === "LEGEND")?.minFP;
-  if (goatMin != null && goatMin > fromFp + 0.001 && goatMin < toFp - 0.001) {
-    if (!w.some(x => Math.abs(x - goatMin) < 0.01)) w.push(goatMin);
+  const legendMin = thresholds.find(tt => (tt.tier as string) === "LEGEND")?.minFP;
+  if (legendMin != null && legendMin > fromFp + 0.001 && legendMin < toFp - 0.001) {
+    if (!w.some(x => Math.abs(x - legendMin) < 0.01)) w.push(legendMin);
   }
   w.sort((a, b) => a - b);
   if (Math.abs(w[w.length - 1] - toFp) > 0.01) w.push(toFp);
@@ -360,7 +360,7 @@ export function TierGauge({
     nextTier,
     curMin,
     nextMin,
-    isGoat,
+    isLegend,
     actualTier,
     isMaxLevel,
     tierCfg,
@@ -548,9 +548,9 @@ export function TierGauge({
     // ── Direct-set: TierGauge is a passive follower ──────────────────────
     // GameView's springFp drives gaugeTotalFp frame-by-frame.
     // TierGauge just maps FP→fill and sets the bar immediately.
-    // Only isSkip gets its own animation. isGoat ding only fires when winTierProp is set
+    // Only isSkip gets its own animation. isLegend ding only fires when winTierProp is set
     // (post-spring). During reveal/spring, always direct-set — the spring drives totalFp.
-    const hasActiveAnimation = (isGoat && winTierProp != null) || isSkip;
+    const hasActiveAnimation = (isLegend && winTierProp != null) || isSkip;
     if (!hasActiveAnimation) {
       const snap = computeGaugeState(totalFp, thresholds, winTierProp ?? null, NEAR_MISS_PTS);
       prevFillRef.current = snap.finalFill;
@@ -570,13 +570,13 @@ export function TierGauge({
     const startFill = prevFillRef.current;
     const delta = finalFill - startFill;
 
-    // ── Determine animation mode (only goat/skip reach here) ───────────────
-    type AnimMode = "goat" | "skip_spring" | "ease";
+    // ── Determine animation mode (only legend/skip reach here) ────────────
+    type AnimMode = "legend" | "skip_spring" | "ease";
     let mode: AnimMode = "ease";
     let duration = 300;
 
-    if (isGoat) {
-      mode = "goat";
+    if (isLegend) {
+      mode = "legend";
       duration = 900;
     } else if (isSkip) {
       duration = Math.max(500, Math.round(totalFp / MAX_FP * 1400));
@@ -589,7 +589,7 @@ export function TierGauge({
     // ── Spring params by mode ─────────────────────────────────────────────
     const springCfg: Record<string, { zeta: number; wn: number }> = {
       skip_spring: { zeta: 0.45, wn: 8 },
-      goat: { zeta: 1.00, wn: 5 },
+      legend: { zeta: 1.00, wn: 5 },
       ease: { zeta: 1.00, wn: 5 },
     };
     const { zeta, wn } = springCfg[mode] ?? springCfg.ease;
@@ -609,7 +609,7 @@ export function TierGauge({
         let pos: number;
 
         switch (mode) {
-          case "goat":
+          case "legend":
             pos = easeOut(t);
             break;
 
@@ -638,7 +638,7 @@ export function TierGauge({
           setBarFill(finalFill);
           setBarColor(normalColor);
           if (winTierProp) hasLockedRef.current = true;
-          if (isGoat) {
+          if (isLegend) {
             setIsDinging(true);
             setTimeout(() => setIsDinging(false), 1500);
           }
@@ -655,7 +655,7 @@ export function TierGauge({
       // re-renders triggered by setBarFill(). It is cleared only when the animation
       // completes (t>=1) or when a legitimate new animation mode takes over below.
     };
-  }, [totalFp, winTierProp, visible, ftueSuppressNormal, ftueOscillate, ftueLockStaticBar, regularFinalCardKick, isSkip, isNearMiss, isGoat, thresholds]); // eslint-disable-line
+  }, [totalFp, winTierProp, visible, ftueSuppressNormal, ftueOscillate, ftueLockStaticBar, regularFinalCardKick, isSkip, isNearMiss, isLegend, thresholds]); // eslint-disable-line
 
   useEffect(() => {
     if (!visible) {
