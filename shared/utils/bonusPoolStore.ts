@@ -1,7 +1,7 @@
 /**
  * shared/utils/bonusPoolStore.ts
  *
- * Progressive bonus pool — Vercel KV backed.
+ * Per-sport progressive bonus pool — Vercel KV backed.
  *
  * SOURCES:
  *   - 1000 coins daily base inject
@@ -9,13 +9,16 @@
  *   - Passive time drip (~2000 coins/day, ~1.39 coins/min)
  *
  * DISTRIBUTION: Daily via leaderboard — NOT per-hand.
- *   Pool split 3 ways across lanes (Best Hand, Top 3, Avg Score).
+ *   Each sport's pool splits 60/40 across lanes (Session Score / Best Hand).
  *   Top 10 per lane: 35/20/12/8/6/5/4/4/3/3%
  *
- * Three functions used by GameView:
- *   contributeBet(amount)     — call after each hand (5% rake)
- *   getBonusPool()            — call on mount + poll for live display
- *   invalidateBonusPoolCache() — force refresh
+ * Each sport has its own pool ledger. Win conditions and lane splits are
+ * universal; the bucket of money is sport-local.
+ *
+ * Two functions used by each sport's bonus-pool widget:
+ *   getBonusPool(sport)              — call on mount + poll for live display
+ *   contributeBet(sport, betAmount)  — call after each hand (5% rake)
+ *   invalidateBonusPoolCache(sport?) — force refresh (specific sport or all)
  */
 
 export const BONUS_POOL_RAKE_RATE = 0.05;       // 5% of each bet
@@ -47,59 +50,62 @@ export function poolForLane(totalPool: number, lane: PoolLane): number {
 }
 
 const API_BASE = "/api/bonus-pool";
-
-// ── Local cache ─────────────────────────────────────────────────────────────
-let _cachedPool: number | null = null;
-let _cacheExpiry = 0;
 const CACHE_MS = 30_000; // 30s poll interval
 
+// ── Per-sport local cache ───────────────────────────────────────────────────
+type CacheEntry = { value: number; expiry: number };
+const _cache = new Map<string, CacheEntry>();
+
 /**
- * Get current bonus pool from KV (cached 30s).
+ * Get current bonus pool for a sport from KV (cached 30s).
  * Falls back to BONUS_POOL_SEED if KV unavailable.
  */
-export async function getBonusPool(): Promise<number> {
+export async function getBonusPool(sport: string): Promise<number> {
   const now = Date.now();
-  if (_cachedPool !== null && now < _cacheExpiry) return _cachedPool;
+  const cached = _cache.get(sport);
+  if (cached && now < cached.expiry) return cached.value;
   try {
-    const res = await fetch(`${API_BASE}?action=get`);
+    const res = await fetch(`${API_BASE}?sport=${encodeURIComponent(sport)}`);
     if (!res.ok) throw new Error(`${res.status}`);
     const { pool } = await res.json() as { pool: number };
-    _cachedPool = pool;
-    _cacheExpiry = now + CACHE_MS;
+    _cache.set(sport, { value: pool, expiry: now + CACHE_MS });
     return pool;
   } catch {
-    return _cachedPool ?? BONUS_POOL_SEED;
+    return cached?.value ?? BONUS_POOL_SEED;
   }
 }
 
 /**
- * Contribute 5% rake from a completed hand's bet to the pool.
+ * Contribute 5% rake from a completed hand's bet to the sport's pool.
  * Returns updated pool total.
  */
-export async function contributeBet(betAmount: number): Promise<number> {
+export async function contributeBet(sport: string, betAmount: number): Promise<number> {
   const rake = parseFloat((betAmount * BONUS_POOL_RAKE_RATE).toFixed(2));
-  if (rake <= 0) return _cachedPool ?? BONUS_POOL_SEED;
-  // Optimistic update
-  if (_cachedPool !== null) {
-    _cachedPool = parseFloat((_cachedPool + rake).toFixed(2));
-    _cacheExpiry = Date.now() + CACHE_MS;
+  const cached = _cache.get(sport);
+  if (rake <= 0) return cached?.value ?? BONUS_POOL_SEED;
+  // Optimistic local update
+  if (cached) {
+    _cache.set(sport, {
+      value: parseFloat((cached.value + rake).toFixed(2)),
+      expiry: Date.now() + CACHE_MS,
+    });
   }
   try {
     const res = await fetch(API_BASE, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "contribute", amount: rake }),
+      body: JSON.stringify({ sport, action: "contribute", amount: rake }),
     });
     const { pool } = await res.json() as { pool: number };
-    _cachedPool = pool;
+    _cache.set(sport, { value: pool, expiry: Date.now() + CACHE_MS });
     return pool;
   } catch {
-    return _cachedPool ?? BONUS_POOL_SEED;
+    return _cache.get(sport)?.value ?? BONUS_POOL_SEED;
   }
 }
 
-/** Force-refresh the cache on next getBonusPool() call */
-export function invalidateBonusPoolCache() {
-  _cachedPool = null;
-  _cacheExpiry = 0;
+/** Force-refresh the cache on next getBonusPool() call (specific sport or all). */
+export function invalidateBonusPoolCache(sport?: string) {
+  if (sport) _cache.delete(sport);
+  else _cache.clear();
 }

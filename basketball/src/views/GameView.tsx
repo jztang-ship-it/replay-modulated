@@ -520,7 +520,7 @@ function BonusPoolPill({ betAmount, betNonce, onAmountChange }: {
     let cancelled = false;
     const sync = async () => {
       try {
-        const pool = await getBonusPool();
+        const pool = await getBonusPool("basketball");
         if (cancelled) return;
         setAmount(pool);
         onAmountChange?.(pool);
@@ -567,7 +567,7 @@ function BonusPoolPill({ betAmount, betNonce, onAmountChange }: {
     // Push contribution to KV; replace local with authoritative server value.
     (async () => {
       try {
-        const next = await contributeBet(betAmount);
+        const next = await contributeBet("basketball", betAmount);
         setAmount(next);
         onAmountChange?.(next);
       } catch {

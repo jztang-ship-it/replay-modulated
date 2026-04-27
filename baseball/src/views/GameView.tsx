@@ -374,7 +374,7 @@ function BonusRow({ betAdded, streak = 0, onAmountChange }: {
     let cancelled = false;
     const sync = async () => {
       try {
-        const pool = await getBonusPool();
+        const pool = await getBonusPool("baseball");
         if (cancelled) return;
         setAmount(pool);
         onAmountChange?.(pool);
@@ -391,7 +391,7 @@ function BonusRow({ betAdded, streak = 0, onAmountChange }: {
       prevBetRef.current = betAdded;
       (async () => {
         try {
-          const next = await contributeBet(betAdded);
+          const next = await contributeBet("baseball", betAdded);
           setAmount(next);
           onAmountChange?.(next);
         } catch { /* swallow — KV unavailable */ }
