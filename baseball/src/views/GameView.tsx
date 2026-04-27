@@ -1613,7 +1613,7 @@ export default function GameView() {
               onBell={() => { setBellOpen(true); track('nav', 'bell_clicked', { unread_count: unreadCount }, 'system'); }}
             />
           </div>
-          <div data-ftue-chrome="true">
+          <div data-ftue-chrome="true" style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "0 12px" }}>
             <BonusRow
               betAdded={currentBet}
               streak={streak}
@@ -1859,43 +1859,45 @@ export default function GameView() {
                 })()}
               </div>
             ) : (
-              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 48, width: "100%" }}>
-                {(() => {
-                  const spent =
-                    gameState === "IDLE" ? 0 :
-                      gameState === "DEALING" ? 0 :
-                        gameState === "HOLD" ? lockedSalary :
-                          gameState === "DRAWING" ? lockedSalary :
-                            gameState === "REVEALING" ? revealedSalary :
-                              capUsed;
-                  const remaining = CAP_MAX - spent;
-                  const overBudget = remaining < 0;
-                  return (
-                    <>
-                      <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: 30, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic" }}>
-                          <RollingNumber value={totalFp} decimals={1} duration={300} />
+              <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "center", gap: 8, paddingTop: 16, width: "100%", height: "100%" }}>
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 48, width: "100%" }}>
+                  {(() => {
+                    const spent =
+                      gameState === "IDLE" ? 0 :
+                        gameState === "DEALING" ? 0 :
+                          gameState === "HOLD" ? lockedSalary :
+                            gameState === "DRAWING" ? lockedSalary :
+                              gameState === "REVEALING" ? revealedSalary :
+                                capUsed;
+                    const remaining = CAP_MAX - spent;
+                    const overBudget = remaining < 0;
+                    return (
+                      <>
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ fontSize: 26, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic" }}>
+                            <RollingNumber value={totalFp} decimals={1} duration={300} />
+                          </div>
+                          <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
+                            Team FP
+                          </div>
                         </div>
-                        <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 3 }}>
-                          Team FP
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ display: "flex", alignItems: "baseline", gap: 2, justifyContent: "center" }}>
+                            <span style={{ fontSize: 26, fontWeight: 900, color: overBudget ? "#ef4444" : "#FFFFFF", lineHeight: 1, fontStyle: "italic" }}>
+                              <RollingNumber value={remaining} decimals={0} duration={300} />
+                            </span>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.35)", lineHeight: 1, fontStyle: "italic" }}>
+                              /{CAP_MAX}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
+                            Budget
+                          </div>
                         </div>
-                      </div>
-                      <div style={{ textAlign: "center" }}>
-                        <div style={{ display: "flex", alignItems: "baseline", gap: 2, justifyContent: "center" }}>
-                          <span style={{ fontSize: 30, fontWeight: 900, color: overBudget ? "#ef4444" : "#FFFFFF", lineHeight: 1, fontStyle: "italic" }}>
-                            <RollingNumber value={remaining} decimals={0} duration={300} />
-                          </span>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.35)", lineHeight: 1, fontStyle: "italic" }}>
-                            /{CAP_MAX}
-                          </span>
-                        </div>
-                        <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 3 }}>
-                          Budget
-                        </div>
-                      </div>
-                    </>
-                  );
-                })()}
+                      </>
+                    );
+                  })()}
+                </div>
               </div>
             )}
           </div>
