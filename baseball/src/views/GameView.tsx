@@ -541,6 +541,15 @@ export default function GameView() {
   const [streak, setStreak] = useState<number>(() =>
     parseInt(localStorage.getItem("replaymod_streak") ?? "0", 10)
   );
+  /** Legend icon gold-filled when pre-game msg is active OR daily bonus unseen */
+  const [legendGold, setLegendGold] = useState(() => {
+    if (typeof window === "undefined") return false;
+    if (localStorage.getItem("replaymod_ftue_baseball") !== "1") return false;
+    const today = new Date().toISOString().slice(0, 10);
+    const seenToday = localStorage.getItem("replaymod_legend_seen_date") === today;
+    const introSeen = localStorage.getItem("replaymod_pregame_intro_baseball") === "1";
+    return !seenToday || !introSeen;
+  });
   // Tier flip display state
   const [tierFlipKey, setTierFlipKey] = useState(0);
   const [displayTier, setDisplayTier] = useState("BUST");
@@ -1650,6 +1659,7 @@ export default function GameView() {
         }}>
 
           {/* ROW 1 — Stats: Team FP+Budget OR tier label */}
+          {/* Mirrors basketball/src/views/GameView.tsx score-row — keep both in sync until shared/views/GameView lands. Sport-specific bits (BASE_BET, CAP_MAX) come from each sport's config; layout/structure must match. */}
           <div
             {...(isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")
               ? { "data-ftue-anchor": "ftue-darnit-focus" }
@@ -1681,101 +1691,63 @@ export default function GameView() {
                   : "default",
             }}
           >
-            {!isFTUE && gameState === "REVEALING" ? (
-              /* During spring: only FP number — no tier PNG, no flips.
-                 The tier sign appears once as the final slam after spring settles. */
-              <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%", height: "100%", gap: 3 }}>
-                <span style={{
-                  fontSize: 30, fontWeight: 900, color: "#FFFFFF",
-                  letterSpacing: "-0.5px", lineHeight: 1,
-                  fontVariantNumeric: "tabular-nums", fontStyle: "italic",
-                }}>
-                  {displayFp.toFixed(1)} FP
-                </span>
-              </div>
-            ) : (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (
-              /* Tier result — single continuous animation: slam in big, shrink to settled */
-              <div style={{
-                display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center",
-                width: "100%", height: "100%", gap: tierResultPhase === 2 ? 4 : 0,
-              }}>
-                {/* Glow flash */}
+            {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (
+              <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%", height: "100%" }}>
                 {tierResultPhase === 1 && (
-                  <div
-                    key={`flash-${winTier}`}
-                    style={{
-                      position: "absolute", inset: -40, borderRadius: 30,
-                      background: `radial-gradient(ellipse at center, ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).color}44 0%, transparent 70%)`,
-                      animation: "tierSlamFlash 600ms ease-out forwards",
-                      pointerEvents: "none",
-                    }}
-                  />
+                  <>
+                    <div
+                      key={`flash-${winTier}`}
+                      style={{
+                        position: "absolute", inset: -40, borderRadius: 30,
+                        background: `radial-gradient(ellipse at center, ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).color}44 0%, transparent 70%)`,
+                        animation: "tierSlamFlash 600ms ease-out forwards",
+                        pointerEvents: "none",
+                      }}
+                    />
+                    <img
+                      key={`tier-${winTier}`}
+                      src={`${import.meta.env.BASE_URL}${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
+                      alt={formatTierLabel(winTier)}
+                      style={{
+                        maxHeight: 80, maxWidth: "100%", objectFit: "contain",
+                        filter: `drop-shadow(0 0 24px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`,
+                        animation: "tierSlam 900ms cubic-bezier(0.22, 1, 0.36, 1)",
+                      }}
+                    />
+                  </>
                 )}
-                {/* Tier PNG — one element, animates from big slam to small settled */}
-                <img
-                  key={`tier-${winTier}`}
-                  src={`${import.meta.env.BASE_URL}${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
-                  alt={formatTierLabel(winTier)}
-                  style={{
-                    maxHeight: tierResultPhase === 1 ? 70 : (isPostReveal ? 28 : 36),
-                    maxWidth: tierResultPhase === 1 ? "95%" : "70%",
-                    objectFit: "contain",
-                    filter: tierResultPhase === 1
-                      ? `drop-shadow(0 0 24px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`
-                      : "none",
-                    animation: tierResultPhase === 1 ? "tierSlam 900ms cubic-bezier(0.22, 1, 0.36, 1)" : "none",
-                    transition: "max-height 500ms ease, max-width 500ms ease, filter 500ms ease",
-                  }}
-                />
-                {/* FP number — fades in for Phase 2 */}
-                {tierResultPhase === 2 && (
-                  <span style={{
-                    fontSize: 15, fontWeight: 800, color: "rgba(255,255,255,0.55)",
-                    letterSpacing: "0.02em", lineHeight: 1, textAlign: "center",
-                    fontVariantNumeric: "tabular-nums",
-                    animation: "tierInfoFadeIn 400ms ease-out",
-                  }}>
-                    {displayFp.toFixed(1)} FP{ceilingPct != null && (
-                      <span style={{ fontWeight: 600, color: "rgba(255,255,255,0.35)", fontSize: 12 }}>
-                        {" · "}{ceilingPct}% of possible score
-                      </span>
-                    )}
-                  </span>
-                )}
-              </div>
-            ) : gameState === "WIN_CELEBRATION" && winTier && celebrationData && !showRawScore ? (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, width: "100%" }}>
-                {(() => {
-                  const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
+                {tierResultPhase === 2 && (() => {
+                  const amountWagered = BASE_BET * betMultiplier;
+                  const net = winPayout - amountWagered;
+                  const netPositive = net > 0;
+                  const netColor = netPositive ? "#7FFF00" : "#FF3B30";
+                  const netLabel = netPositive ? `+$${net}` : `-$${Math.abs(net)}`;
+                  const FF = "'Rajdhani','Oswald','Arial Narrow',sans-serif";
                   return (
                     <>
-                      <div style={{
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "baseline",
-                        justifyContent: "center",
-                        gap: 8,
-                        flexWrap: "wrap",
-                      }}>
-                        <span style={{
-                          fontSize: 24, fontWeight: 900, letterSpacing: 1, fontStyle: "italic",
-                          color: tc.color, textShadow: `0 0 20px ${tc.glow}`,
-                          lineHeight: 1,
-                        }}>
-                          {formatTierLabel(winTier)}
+                      <img
+                        key={`tier-stay-${winTier}`}
+                        src={`${import.meta.env.BASE_URL}${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
+                        alt={formatTierLabel(winTier)}
+                        style={{
+                          maxHeight: 52, maxWidth: "100%", objectFit: "contain",
+                          filter: `drop-shadow(0 0 12px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`,
+                          animation: "tierShrinkDown 500ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
+                        }}
+                      />
+                      <div style={{ animation: "tierInfoFadeIn 300ms ease 500ms both", display: "flex", justifyContent: "center", alignItems: "center", gap: 20, marginTop: 4, width: "100%" }}>
+                        <span style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                          {displayFp.toFixed(1)} FP
                         </span>
-                        {winPayout > 0 && (
-                          <span style={{
-                            fontSize: 15, fontWeight: 800,
-                            color: "rgba(255,255,255,0.6)",
-                            letterSpacing: "0.04em",
-                            lineHeight: 1,
-                          }}>
-                            +{winPayout}
+                        {ceilingPct != null && (
+                          <span style={{ fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.45)", fontFamily: FF, lineHeight: 1, alignSelf: "center" }}>
+                            {ceilingPct}% ceiling
                           </span>
                         )}
+                        <span style={{ fontSize: 20, fontWeight: 700, color: netColor, fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                          {netLabel}
+                        </span>
                       </div>
-                      {/* Explanation text lives in TierGauge only */}
                     </>
                   );
                 })()}
@@ -1820,6 +1792,16 @@ export default function GameView() {
                     );
                   })()}
                 </div>
+                {gameState === "HOLD" && !isFTUE && (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
+                    <span style={{ fontSize: 16, fontWeight: 400, color: "rgba(255,255,255,0.5)", lineHeight: 1 }}>
+                      {BASE_BET} × {betMultiplier}x =
+                    </span>
+                    <span style={{ fontSize: 16, fontWeight: 700, lineHeight: 1, color: betMultiplier === 1 ? "#22C55E" : betMultiplier === 3 ? "#3B82F6" : betMultiplier === 5 ? "#C084FC" : betMultiplier === 10 ? "#FB923C" : "rgba(255,255,255,0.35)" }}>
+                      ${BASE_BET * betMultiplier}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -2061,6 +2043,13 @@ export default function GameView() {
         splitFooter={{ multipliersHost, controlsHost }}
         splitMultiplierRowVisible={isPreRevealFooter && !isFTUE}
         onViewLeaderboard={() => setShowLeaderboard(true)}
+        streak={streak}
+        legendPulsing={legendGold}
+        onLegendOpened={() => {
+          const today = new Date().toISOString().slice(0, 10);
+          localStorage.setItem("replaymod_legend_seen_date", today);
+          setLegendGold(false);
+        }}
       />
 
       {showPostHandSheet && !isFTUE && (() => {

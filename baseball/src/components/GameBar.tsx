@@ -27,6 +27,12 @@ const LEGEND: LegendData = {
     { label: "ROOKIE",   score: "170+ FP", payout: "0.5x", color: "#22C55E", bg: "rgba(34,197,94,0.08)",    border: "rgba(34,197,94,0.22)"   },
     { label: "BUST",     score: "< 170 FP",payout: "—",    color: "#6B7280", bg: "rgba(107,114,128,0.06)",  border: "rgba(107,114,128,0.18)" },
   ],
+  bonusRows: [
+    { label: "3-WIN STREAK", condition: "3 wins in a row", reward: "1.3x payout"  },
+    { label: "5-WIN STREAK", condition: "5 wins in a row", reward: "1.7x payout"  },
+    { label: "10-WIN STREAK", condition: "10 wins in a row", reward: "2.5x payout" },
+  ],
+  stamps: [],
   scoringRules: [
     // Hitter stat weights (match baseballConfig.ts projectionWeights)
     { stat: "Hit",       pts: "+12" },
@@ -90,6 +96,11 @@ type Props = {
   splitMultiplierRowVisible?: boolean;
   /** Tap target for the leaderboard trophy button on GameBar. */
   onViewLeaderboard?: () => void;
+  /** Current win streak for fire emoji display in shared GameBar. */
+  streak?: number;
+  legendPulsing?: boolean;
+  ftueReplayPulse?: boolean;
+  onLegendOpened?: () => void;
 };
 
 export function GameBar(props: Props) {
