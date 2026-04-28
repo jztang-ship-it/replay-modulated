@@ -285,6 +285,10 @@ export interface CardFrontProps {
   glowSrc?: string;
   glowDurationMs?: number;
   glowTier?: string;
+  /** Pre-mapped display string for the card's position (e.g. "PG", "B"). When
+   *  provided, overrides the raw `card.position`. Sport wrappers compute this
+   *  from their own SportAdapter.displayPosition() so CardFront stays sport-agnostic. */
+  displayPosition?: string;
 }
 
 // ── CardFront ──────────────────────────────────────────────────────────────
@@ -294,24 +298,19 @@ export function CardFront(props: CardFrontProps) {
     card, stableCard, phase, isLocked, visibleFp, isRevealing, revealActive,
     isFlipped, heldFpVisible, isTapTarget,
     pulse, fpCountUpMs, stamp, onRollComplete, badges, renderHero,
-    glowActive, glowSrc, glowDurationMs, glowTier, perfPct,
+    glowActive, glowSrc, glowDurationMs, glowTier, perfPct, displayPosition,
   } = props;
 
   const name = clampText((card as any)?.name);
   const team = teamAbbrev(clampText((card as any)?.team));
   const season = (card as any)?.season ?? (card as any)?.year ?? (card as any)?.seasonLabel;
   const seasonFmt = formatSeasonRange(season);
+  // Position display is sport-specific. Sport wrappers (AthleteCard, BaseballCard,
+  // worldcup PlayerCard) compute the display string via their SportAdapter and
+  // pass it as `displayPosition`. Fallback to raw card.position when the prop
+  // is missing — keeps CardFront usable in isolation.
   const posRaw = clampText((card as any)?.position);
-  const posMap: Record<string, string> = {
-    // Basketball
-    "PG": "PG", "SG": "SG", "G": "PG", "SF": "SF", "PF": "PF", "F": "SF",
-    "G/F": "SG", "F/G": "SG", "F/C": "PF", "C": "C",
-    // Baseball — BAT displays as "B"; real baseball positions pass through
-    "BAT": "B", "P": "P", "SP": "P", "RP": "P",
-    "1B": "1B", "2B": "2B", "3B": "3B", "SS": "SS",
-    "OF": "OF", "LF": "LF", "CF": "CF", "RF": "RF", "DH": "DH",
-  };
-  const pos = posRaw ? (posMap[posRaw.toUpperCase()] ?? posRaw) : "";
+  const pos = displayPosition ?? (posRaw ? posRaw.toUpperCase() : "");
   const salary = Number((card as any)?.salary ?? 0);
   const proj = Number((card as any)?.projectedFp ?? 0);
   // Daily bonus (+5/+10/+20) — 0 if this player isn't in today's hot list.

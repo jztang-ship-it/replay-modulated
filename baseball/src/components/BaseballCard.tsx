@@ -241,6 +241,7 @@ export function BaseballCard(props: Props) {
         <CardFront
           {...p}
           topGameTier={topGameTier ?? null}
+          displayPosition={sportAdapter.displayPosition((p.card as any)?.position)}
           renderHero={(heroProps: CardFrontHeroProps) => (
             <MLBHero {...heroProps} />
           )}

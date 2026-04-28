@@ -84,6 +84,16 @@ export class SportAdapter {
    * few common pitcher strings; if your baseball data uses a different
    * convention, integrate the mapping via `gameAdapter` (TODO).
    */
+  /** Map a raw position code (from data) to its on-card display string.
+   *  Baseball collapses BAT to "B"; pitcher variants normalize to "P". */
+  displayPosition(raw: unknown): string {
+    const s = String(raw ?? "").trim().toUpperCase();
+    if (!s) return "";
+    if (s === "BAT") return "B";
+    if (this.isPitcherPosition(s)) return "P";
+    return s; // 1B/2B/3B/SS/LF/CF/RF/OF/DH pass through
+  }
+
   isPitcherPosition(rawPosition: unknown): boolean {
     const s = String(rawPosition ?? "").trim().toUpperCase();
     if (!s) return false;

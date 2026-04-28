@@ -35,6 +35,20 @@ export class SportAdapter {
 
   isValidPosition(pos: string): boolean { return this.config.positions.includes(pos); }
 
+  /** Map a raw position code (from data) to its on-card display string.
+   *  Sport-specific — basketball collapses combo positions to their primary. */
+  displayPosition(raw: unknown): string {
+    const s = String(raw ?? "").trim().toUpperCase();
+    if (!s) return "";
+    const map: Record<string, string> = {
+      "PG": "PG", "SG": "SG", "G": "PG",
+      "SF": "SF", "PF": "PF", "F": "SF",
+      "G/F": "SG", "F/G": "SG", "F/C": "PF",
+      "C": "C",
+    };
+    return map[s] ?? s;
+  }
+
   normalizeTier(raw: unknown): TierColor {
     const s = String(raw ?? "WHITE").trim().toUpperCase();
     const valid: TierColor[] = ["RED", "ORANGE", "PURPLE", "BLUE", "GREEN", "WHITE"];
