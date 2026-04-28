@@ -23,11 +23,9 @@
 
 type LbEntry = { uid: string; nickname: string; score: number };
 
-const API_URL = "/api/leaderboard?metric=hand_best&scope=daily&limit=25";
-
-async function fetchBoard(): Promise<LbEntry[] | null> {
+async function fetchBoard(sport: string): Promise<LbEntry[] | null> {
   try {
-    const res = await fetch(API_URL);
+    const res = await fetch(`/api/leaderboard?sport=${sport}&metric=hand_best&scope=daily&limit=25`);
     if (!res.ok) return null;
     const data = await res.json();
     return Array.isArray(data?.entries) ? (data.entries as LbEntry[]) : null;
@@ -60,6 +58,7 @@ export interface LeaderboardContextArgs {
   winTier: string;        // BUST | ROOKIE | STARTER | ALL_STAR | MVP | LEGEND
   isBust: boolean;
   myUid: string;          // from getPlayerUid()
+  sport: "basketball" | "baseball" | "worldcup";
   /** Tiers that qualify for "on the board" (default: MVP, LEGEND). */
   onBoardTiers?: string[];
   /** MVP threshold FP for intro message (default: 215). */
@@ -81,7 +80,7 @@ export interface LeaderboardContextArgs {
 export async function fetchLeaderboardContext(
   args: LeaderboardContextArgs
 ): Promise<string | null> {
-  const { myFp, winTier, isBust, myUid, onBoardTiers, mvpThresholdFp } = args;
+  const { myFp, winTier, isBust, myUid, sport, onBoardTiers, mvpThresholdFp } = args;
   const boardTiers = onBoardTiers ? new Set(onBoardTiers) : DEFAULT_ON_BOARD_TIERS;
   const mvpFp = mvpThresholdFp ?? 215;
 
@@ -97,7 +96,7 @@ export async function fetchLeaderboardContext(
       : `${mvpFp} FP gets you on the board — you're learning the range`;
   };
 
-  const entries = await fetchBoard();
+  const entries = await fetchBoard(sport);
 
   // Network failed → only T1 (intro) is still possible since it doesn't need the board.
   if (!entries) {

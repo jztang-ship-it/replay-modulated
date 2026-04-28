@@ -1,10 +1,13 @@
 /**
  * api/leaderboard.ts — Vercel serverless function.
  *
- * POST { action: "submit", metric: "streak"|"wins"|"fp"|"hand_best"|"hand_avg"|"money_won", value: number, uid: string, nickname: string }
- * GET  ?metric=streak|wins|fp|hand_best|hand_avg|money_won&scope=daily|alltime&limit=20
+ * POST { action: "submit", sport: "basketball"|"baseball"|"worldcup", metric, value, uid, nickname }
+ * GET  ?sport=basketball&metric=streak|wins|fp|hand_best|hand_avg|money_won|session_score&scope=daily|alltime&limit=20
  *
- * KV keys: lb:{metric}:daily:{YYYY-MM-DD} and lb:{metric}:alltime
+ * KV keys: lb:{sport}:{metric}:daily:{YYYY-MM-DD} and lb:{sport}:{metric}:alltime.
+ * Sport scoping is mandatory — basketball and baseball have different scoring rules,
+ * so their boards are separate sorted sets. Old commingled `lb:{metric}:...` keys
+ * from before this change are orphaned (daily TTL out in 48h, alltime stays until wiped).
  */
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
@@ -37,6 +40,18 @@ function todayUTC(): string {
 }
 
 const VALID_METRICS = ["streak", "wins", "fp", "hand_best", "hand_avg", "money_won", "session_score"];
+const VALID_SPORTS = ["basketball", "baseball", "worldcup"] as const;
+type Sport = typeof VALID_SPORTS[number];
+
+// Per-sport realistic ceilings for FP-shaped metrics. Above these = data corruption / cheating.
+//   basketball: 6 cards × ~60 max FP + badges ≈ 300
+//   baseball:   5 cards × ~160 max FP (4-for-4, 2 HR) ≈ 800
+//   worldcup:   conservative placeholder until real scoring lands
+const FP_CEILING_BY_SPORT: Record<Sport, number> = {
+  basketball: 300,
+  baseball: 800,
+  worldcup: 200,
+};
 const TTL_48H = 172800;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -59,7 +74,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 }
 
 async function handleSubmit(req: VercelRequest, res: VercelResponse) {
-  const { action, metric, value, uid, nickname, proof } = req.body ?? {};
+  const { action, sport, metric, value, uid, nickname, proof } = req.body ?? {};
   const sessionId = ((req.body?.session_id ?? '') as string).toString().slice(0, 32) || null;
 
   // Rate limit — max 20 submissions per 10 seconds per uid
@@ -75,15 +90,15 @@ async function handleSubmit(req: VercelRequest, res: VercelResponse) {
   }
 
   if (action !== "submit") return json(res, 400, { error: "Invalid action" });
+  if (!VALID_SPORTS.includes(sport)) return json(res, 400, { error: "Invalid sport" });
   if (!VALID_METRICS.includes(metric)) return json(res, 400, { error: "Invalid metric" });
   if (typeof value !== "number" || value <= 0) return json(res, 400, { error: "Invalid value" });
-  // Sanity ceilings — physically impossible scores get rejected.
-  // 6 cards × ~60 max FP + badges ≈ 300 realistic ceiling.
-  const FP_CEILING = 300;
-  if ((metric === "fp" || metric === "hand_best" || metric === "hand_avg") && value > FP_CEILING) {
+  // Sport-specific FP ceiling — basketball and baseball have very different realistic maxes.
+  const fpCeiling = FP_CEILING_BY_SPORT[sport as Sport];
+  if ((metric === "fp" || metric === "hand_best" || metric === "hand_avg") && value > fpCeiling) {
     return json(res, 400, { error: "Invalid score" });
   }
-  if (metric === "session_score" && value > FP_CEILING * 50) {
+  if (metric === "session_score" && value > fpCeiling * 50) {
     return json(res, 400, { error: "Invalid score" });
   }
   if (metric === "streak" && value > 100) {
@@ -116,8 +131,8 @@ async function handleSubmit(req: VercelRequest, res: VercelResponse) {
 
   const member = `${uid}:${nickname ?? "Player"}:${sessionId ?? ''}`;
   const today = todayUTC();
-  const dailyKey = `lb:${metric}:daily:${today}`;
-  const alltimeKey = `lb:${metric}:alltime`;
+  const dailyKey = `lb:${sport}:${metric}:daily:${today}`;
+  const alltimeKey = `lb:${sport}:${metric}:alltime`;
 
   if (metric === "hand_best") {
     // hand_best allows multiple entries per user — each hand gets its own member key
@@ -159,14 +174,16 @@ async function handleSubmit(req: VercelRequest, res: VercelResponse) {
 }
 
 async function handleGet(req: VercelRequest, res: VercelResponse) {
+  const sport = String(req.query.sport ?? "");
   const metric = String(req.query.metric ?? "streak");
   const scope = String(req.query.scope ?? "daily");
   const limit = Math.min(50, Math.max(1, Number(req.query.limit ?? 20)));
 
+  if (!VALID_SPORTS.includes(sport as Sport)) return json(res, 400, { error: "Invalid sport" });
   if (!VALID_METRICS.includes(metric)) return json(res, 400, { error: "Invalid metric" });
 
   const today = todayUTC();
-  const key = scope === "daily" ? `lb:${metric}:daily:${today}` : `lb:${metric}:alltime`;
+  const key = scope === "daily" ? `lb:${sport}:${metric}:daily:${today}` : `lb:${sport}:${metric}:alltime`;
 
   const raw: any[] = await kv.zrange(key, 0, limit - 1, { rev: true, withScores: true });
 

@@ -15,6 +15,7 @@ const POOL_PCT = [35, 20, 12, 8, 6, 5, 4, 4, 3, 3];
 
 interface Props {
   currentUid: string;
+  sport: "basketball" | "baseball" | "worldcup";
   onClose: () => void;
 }
 
@@ -54,7 +55,7 @@ function EntryRow({ e, rank, me, poolPct }: { e: Entry; rank: number; me: boolea
   );
 }
 
-export function LeaderboardScreen({ currentUid, onClose }: Props) {
+export function LeaderboardScreen({ currentUid, sport, onClose }: Props) {
   const [bestEntries, setBestEntries] = useState<Entry[]>([]);
   const [sessionEntries, setSessionEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,15 +67,15 @@ export function LeaderboardScreen({ currentUid, onClose }: Props) {
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      fetch("/api/leaderboard?metric=hand_best&scope=daily&limit=10").then(r => r.json()).catch(() => ({ entries: [] })),
-      fetch("/api/leaderboard?metric=session_score&scope=daily&limit=10").then(r => r.json()).catch(() => ({ entries: [] })),
+      fetch(`/api/leaderboard?sport=${sport}&metric=hand_best&scope=daily&limit=10`).then(r => r.json()).catch(() => ({ entries: [] })),
+      fetch(`/api/leaderboard?sport=${sport}&metric=session_score&scope=daily&limit=10`).then(r => r.json()).catch(() => ({ entries: [] })),
       fetch("/api/bonus-pool?action=get").then(r => r.json()).catch(() => ({ pool: 1000 })),
     ]).then(([best, session, pool]) => {
       setBestEntries(best.entries ?? []);
       setSessionEntries(session.entries ?? []);
       setPoolValue(pool.pool ?? 1000);
     }).finally(() => setLoading(false));
-  }, []);
+  }, [sport]);
 
   // Pool drip
   useEffect(() => {

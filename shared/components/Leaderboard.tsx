@@ -17,9 +17,10 @@ const METRICS: { id: Metric; label: string }[] = [
 
 interface Props {
   currentUid: string;
+  sport: "basketball" | "baseball" | "worldcup";
 }
 
-export function Leaderboard({ currentUid }: Props) {
+export function Leaderboard({ currentUid, sport }: Props) {
   const [metric, setMetric] = useState<Metric>("streak");
   const [scope, setScope]   = useState<Scope>("daily");
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -29,12 +30,12 @@ export function Leaderboard({ currentUid }: Props) {
   useEffect(() => {
     setLoading(true);
     setError(false);
-    fetch(`/api/leaderboard?metric=${metric}&scope=${scope}&limit=20`)
+    fetch(`/api/leaderboard?sport=${sport}&metric=${metric}&scope=${scope}&limit=20`)
       .then(r => r.json())
       .then(data => setEntries(data.entries ?? []))
       .catch(() => { setEntries([]); setError(true); })
       .finally(() => setLoading(false));
-  }, [metric, scope]);
+  }, [metric, scope, sport]);
 
   const tabStyle = (active: boolean): React.CSSProperties => ({
     padding: "5px 12px",
