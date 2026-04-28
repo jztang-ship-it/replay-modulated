@@ -2083,6 +2083,7 @@ export default function GameView() {
         ftueHideSkip={isFTUE}
         ftuePulseNearMiss={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && !ftueGaugeOscDone}
         ftueReplayBlocked={isFTUE && gameState === "RESULTS" && !ftueReplayReady}
+        ftueReplayPulse={(isFTUE && ftueReplayReady) || (!isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && springSettled)}
         dataFtuePrimaryAnchor={isFTUE ? (gameState === "HOLD" ? "draw" : "deal") : undefined}
         splitFooter={{ multipliersHost, controlsHost }}
         splitMultiplierRowVisible={isPreRevealFooter && !isFTUE}

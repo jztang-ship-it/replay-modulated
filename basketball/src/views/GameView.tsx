@@ -2358,7 +2358,7 @@ export default function GameView() {
         ftueHideBalance={isFTUE && (gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD")}
         ftuePulseNearMiss={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && !ftueGaugeOscDone}
         ftueReplayBlocked={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && !ftueReplayReady}
-        ftueReplayPulse={isFTUE && ftueReplayReady}
+        ftueReplayPulse={(isFTUE && ftueReplayReady) || (!isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && springSettled)}
         dataFtuePrimaryAnchor={isFTUE ? (gameState === "HOLD" ? "draw" : "deal") : undefined}
         hideTierBar
         splitFooter={{ multipliersHost, controlsHost }}
