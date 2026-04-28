@@ -1,5 +1,22 @@
 import type { Position, TierColor, PlayerCard } from "./types";
 import { BasketballSportConfig } from "./basketballConfig";
+import { registerRecordSources } from "@shared/data/recordDetector";
+import { NBA_SINGLE_GAME_RECORDS, STAT_ALIASES } from "@shared/data/nbaRecords";
+import topGames from "../../public/data/topGames_2425.json";
+import careerHighs from "../../public/data/careerHighs_2season.json";
+
+registerRecordSources("basketball", {
+  topGames: topGames as any,
+  careerHighs: careerHighs as any,
+  singleGameRecords: NBA_SINGLE_GAME_RECORDS,
+  statAliases: STAT_ALIASES,
+  careerCategories: [
+    { key: "pts",    label: v => `personal best — ${v} pts` },
+    { key: "reb",    label: v => `personal best — ${v} reb` },
+    { key: "ast",    label: v => `personal best — ${v} ast` },
+    { key: "threes", label: v => `personal best — ${v} threes` },
+  ],
+});
 
 export type SportConfig = typeof BasketballSportConfig;
 

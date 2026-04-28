@@ -4,6 +4,25 @@ import BaseballSportConfig, {
   type BaseballStatCategory,
   type BaseballWinThreshold,
 } from "./baseballConfig";
+import { registerRecordSources } from "@shared/data/recordDetector";
+import { MLB_SINGLE_GAME_RECORDS, MLB_STAT_ALIASES } from "@shared/data/mlbRecords";
+import topGames from "../../public/data/topGames.json";
+import careerHighs from "../../public/data/careerHighs.json";
+
+registerRecordSources("baseball", {
+  topGames: topGames as any,
+  careerHighs: careerHighs as any,
+  singleGameRecords: MLB_SINGLE_GAME_RECORDS,
+  statAliases: MLB_STAT_ALIASES,
+  careerCategories: [
+    { key: "hr",  label: v => `personal best — ${v} HR` },
+    { key: "h",   label: v => `personal best — ${v} hits` },
+    { key: "rbi", label: v => `personal best — ${v} RBI` },
+    { key: "k",   label: v => `personal best — ${v} K` },
+    { key: "sb",  label: v => `personal best — ${v} SB` },
+    { key: "ip",  label: v => `personal best — ${v} IP` },
+  ],
+});
 
 export type BaseballSportConfigType = typeof BaseballSportConfig;
 export type PlayerRole = "P" | "BAT";

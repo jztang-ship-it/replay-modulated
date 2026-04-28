@@ -10,14 +10,48 @@
  */
 
 import type { RecordEvent, TopGameResult, TopGameReason } from "../commentary/types";
-import { NBA_SINGLE_GAME_RECORDS, STAT_ALIASES } from "./nbaRecords";
-import { MLB_SINGLE_GAME_RECORDS, MLB_STAT_ALIASES } from "./mlbRecords";
-import topGamesBasketball from "../../basketball/public/data/topGames_2425.json";
-import careerHighsBasketball from "../../basketball/public/data/careerHighs_2season.json";
-import topGamesBaseball from "../../baseball/public/data/topGames.json";
-import careerHighsBaseball from "../../baseball/public/data/careerHighs.json";
 
 type StatLine = Record<string, any>;
+
+/**
+ * Sport-record sources supplied by each sport's SportAdapter at load time.
+ * recordDetector itself is now data-free — no sport-name branching, no JSON
+ * imports for any specific sport. Adding a 4th sport means: define the
+ * sources, call registerRecordSources(sport, sources) from that sport's
+ * adapter, done.
+ */
+export interface SingleGameRecord {
+  stat: string;
+  record: number;
+  holder: string;
+  nearRecordPct: number;
+}
+export interface CareerCategory {
+  key: string;
+  label: (v: number) => string;
+}
+export interface SportRecordSources {
+  topGames: Record<string, { reasons: TopGameReason[] }>;
+  careerHighs: Record<string, Record<string, number>>;
+  singleGameRecords: SingleGameRecord[];
+  statAliases: Record<string, string[]>;
+  careerCategories: CareerCategory[];
+}
+
+const REGISTERED: Record<string, SportRecordSources> = {};
+
+/** Each sport's adapter calls this once at module-load time. */
+export function registerRecordSources(sport: string, sources: SportRecordSources): void {
+  REGISTERED[sport] = sources;
+}
+
+const EMPTY_SOURCES: SportRecordSources = {
+  topGames: {}, careerHighs: {}, singleGameRecords: [], statAliases: {}, careerCategories: [],
+};
+
+function sourcesFor(sport: string): SportRecordSources {
+  return REGISTERED[sport] ?? EMPTY_SOURCES;
+}
 
 function getStatValue(statLine: StatLine, stat: string, aliases: Record<string, string[]>): number {
   const aliasList = aliases[stat] ?? [stat];
@@ -28,17 +62,8 @@ function getStatValue(statLine: StatLine, stat: string, aliases: Record<string, 
   return 0;
 }
 
-function aliasesFor(sport: string): Record<string, string[]> {
-  return sport === "baseball" ? MLB_STAT_ALIASES : STAT_ALIASES;
-}
-
-function recordsFor(sport: string) {
-  return sport === "baseball" ? MLB_SINGLE_GAME_RECORDS : NBA_SINGLE_GAME_RECORDS;
-}
-
 export function detectRecords(statLine: StatLine, sport: string = "basketball"): RecordEvent[] {
-  const records = recordsFor(sport);
-  const aliases = aliasesFor(sport);
+  const { singleGameRecords: records, statAliases: aliases } = sourcesFor(sport);
   const events: RecordEvent[] = [];
 
   for (const rec of records) {
@@ -72,36 +97,19 @@ export function detectRecords(statLine: StatLine, sport: string = "basketball"):
 
 // ─── Top Games detection ─────────────────────────────────────────────────────
 
-interface SportLookups {
-  topGames: Record<string, { reasons: TopGameReason[] }>;
-  careerHighs: Record<string, Record<string, number>>;
-}
+type SportLookups = Pick<SportRecordSources, "topGames" | "careerHighs">;
 
-const DEFAULT_LOOKUPS: Record<string, SportLookups> = {};
 let lookupsOverride: Record<string, SportLookups> | null = null;
 
-/** Test hook — inject fake lookup maps. Production code should never call this. */
+/** Test hook — inject fake top-game/careerHigh maps. Production code should never call this. */
 export function __setTopGameLookups(map: Record<string, SportLookups> | null): void {
   lookupsOverride = map;
 }
 
 function lookupsFor(sport: string): SportLookups {
   if (lookupsOverride?.[sport]) return lookupsOverride[sport];
-  if (DEFAULT_LOOKUPS[sport]) return DEFAULT_LOOKUPS[sport];
-  if (sport === "basketball") {
-    DEFAULT_LOOKUPS[sport] = {
-      topGames: topGamesBasketball as Record<string, { reasons: TopGameReason[] }>,
-      careerHighs: careerHighsBasketball as Record<string, Record<string, number>>,
-    };
-  } else if (sport === "baseball") {
-    DEFAULT_LOOKUPS[sport] = {
-      topGames: topGamesBaseball as Record<string, { reasons: TopGameReason[] }>,
-      careerHighs: careerHighsBaseball as Record<string, Record<string, number>>,
-    };
-  } else {
-    DEFAULT_LOOKUPS[sport] = { topGames: {}, careerHighs: {} };
-  }
-  return DEFAULT_LOOKUPS[sport];
+  const { topGames, careerHighs } = sourcesFor(sport);
+  return { topGames, careerHighs };
 }
 
 /**
@@ -131,24 +139,6 @@ function detectRecordTier(statLine: StatLine, sport: string): TopGameReason[] {
     }));
 }
 
-/** Career-high category lists per sport. Order = priority (first match wins on ties). */
-const CAREER_CATEGORIES: Record<string, Array<{ key: string; label: (v: number) => string }>> = {
-  basketball: [
-    { key: "pts",    label: v => `personal best — ${v} pts` },
-    { key: "reb",    label: v => `personal best — ${v} reb` },
-    { key: "ast",    label: v => `personal best — ${v} ast` },
-    { key: "threes", label: v => `personal best — ${v} threes` },
-  ],
-  baseball: [
-    { key: "hr",  label: v => `personal best — ${v} HR` },
-    { key: "h",   label: v => `personal best — ${v} hits` },
-    { key: "rbi", label: v => `personal best — ${v} RBI` },
-    { key: "k",   label: v => `personal best — ${v} K` },
-    { key: "sb",  label: v => `personal best — ${v} SB` },
-    { key: "ip",  label: v => `personal best — ${v} IP` },
-  ],
-};
-
 /** T1 — player's career high (limited to star tiers). */
 function detectCareerTier(
   statLine: StatLine,
@@ -159,12 +149,12 @@ function detectCareerTier(
   const STAR_TIERS = new Set(["PURPLE", "ORANGE", "RED"]);
   if (!STAR_TIERS.has(playerTier)) return [];
 
-  const { careerHighs } = lookupsFor(sport);
-  const highs = careerHighs[playerId];
+  const sources = sourcesFor(sport);
+  const highs = sources.careerHighs[playerId];
   if (!highs) return [];
 
-  const aliases = aliasesFor(sport);
-  const cats = CAREER_CATEGORIES[sport] ?? CAREER_CATEGORIES.basketball;
+  const aliases = sources.statAliases;
+  const cats = sources.careerCategories;
   const matches: TopGameReason[] = [];
   for (const { key, label } of cats) {
     const max = highs[key];
