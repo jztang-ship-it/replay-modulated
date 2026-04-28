@@ -748,6 +748,19 @@ export default function GameView() {
   }, [isFTUE, gameState]);
 
   // Priority-ordered checks — first match wins
+  // First rookie win — fires at RESULTS (winTier is set there; IDLE clears it).
+  // Deterministic, one-time per device. Lights the legend pulse so the user
+  // can read the scoring rules.
+  useEffect(() => {
+    if (isFTUE) return;
+    if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
+    if (winTier !== "ROOKIE") return;
+    if (localStorage.getItem("rm_usher_rookie_first_win_bb") === "1") return;
+    localStorage.setItem("rm_usher_rookie_first_win_bb", "1");
+    setLegendGold(true);
+    setFtueCommentaryOverride({ parts: [chadMessage("rookie_first_win")], sticky: true });
+  }, [gameState, winTier, isFTUE]);
+
   useEffect(() => {
     if (isFTUE || gameState !== "IDLE") return;
     if (chadFiredThisIdleRef.current) return;
