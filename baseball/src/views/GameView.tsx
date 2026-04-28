@@ -315,6 +315,12 @@ if (typeof document !== "undefined" && !document.getElementById(GV_STYLE_ID)) {
       80% { transform: scale(1.03) translateY(0); opacity: 1; }
       100% { transform: scale(1.0) translateY(0); opacity: 1; }
     }
+    @keyframes tierShrinkDown {
+      0% { transform: scale(1.0); opacity: 1; }
+      40% { transform: scale(0.6); opacity: 0.9; }
+      70% { transform: scale(0.72); opacity: 1; }
+      100% { transform: scale(0.65); opacity: 1; }
+    }
     @keyframes tierSlamFlash {
       0% { opacity: 0; }
       15% { opacity: 0.35; }
