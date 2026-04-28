@@ -9,6 +9,7 @@ import { generateRoster, redrawRoster as engineRedraw, mulberry32, randomSeed } 
 import { resolveCards } from "../engines/resolveEngine";
 import { DEFAULT_ECONOMY_CONFIG, tierFromSalary } from "../engines/economyEngine";
 import { buildDailyBonusMap, getDailyBonusPlayers, type DailyBonusPlayer } from "@shared/utils/dailyBonus";
+import { buildBonusPoolFromPlayers } from "@shared/utils/dailyBonusPool";
 import type { PlayerCard } from "./types";
 import type { PlayerEval, GeneratedCard } from "../engines/rosterEngine";
 import type { EconomyConfig } from "../engines/economyEngine";
@@ -100,20 +101,15 @@ function buildEvalPool(players: any[], logs: Map<string, any[]>, projByBaseId: M
 
 /** Build the bonus-eligible pool once: 2024-25 players with valid logs, tier from salary. */
 function buildBonusPool(): Array<{ basePlayerId: string; name: string; tier: string }> {
-  const allPlayers = getPlayers();
   const logs = getLogsByKey();
   const eco = getEconomyConfig();
-  return allPlayers
-    .filter((p: any) => String(p.id ?? "").includes("_2425"))
-    .filter((p: any) => hasValidLogs(playerKey(p), logs))
-    .map((p: any) => {
-      const salary = Math.max(eco.salaryMin, Number(p.salary ?? 10));
-      return {
-        basePlayerId: playerKey(p),
-        name: String(p.name ?? ""),
-        tier: tierFromSalary(salary, eco),
-      };
-    });
+  return buildBonusPoolFromPlayers(
+    getPlayers(),
+    (p: any) => hasValidLogs(playerKey(p), logs),
+    (salary) => tierFromSalary(salary, eco),
+    eco.salaryMin,
+    "_2425",
+  );
 }
 
 /** Today's 3 hot players with their bonus FP values — shown in Legend modal. */

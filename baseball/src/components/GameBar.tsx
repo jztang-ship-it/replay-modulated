@@ -3,8 +3,9 @@
  * Thin wrapper — injects baseball win tiers into shared GameBar.
  */
 
-import React from "react";
+import React, { useMemo } from "react";
 import { GameBar as SharedGameBar, type GameStateLabel, type WinTierDisplay, type LegendData, type CelebrationData } from "@shared/components/GameBar";
+import { getTodaysStars } from "../adapters/gameAdapter";
 
 export type { CelebrationData };
 export type { GameStateLabel };
@@ -92,11 +93,20 @@ type Props = {
 };
 
 export function GameBar(props: Props) {
+  const legendWithStars = useMemo(() => {
+    const extra: Partial<LegendData> = {};
+    try {
+      const stars = getTodaysStars();
+      if (stars.length > 0) extra.todaysStars = stars;
+    } catch { /* data not loaded yet */ }
+    return { ...LEGEND, ...extra };
+  }, []);
+
   return (
     <SharedGameBar
       {...props}
       winTiers={WIN_TIERS}
-      legend={LEGEND}
+      legend={legendWithStars}
       hideTierBar={true}
     />
   );
