@@ -50,6 +50,14 @@ const STREAK_INTRO: string[] = [
   "Two straight. Streak multiplier is warming up — one more and the bonus kicks in.",
 ];
 
+/** First time landing a ROOKIE win — explain the half-money-back rule and
+ *  point at the legend modal so the user can see the full payout table. */
+const ROOKIE_FIRST_WIN: string[] = [
+  "You didn't win, but you didn't lose all of it either — half your money's back. Tap the gold icon for the full scoring rules.",
+  "Rookie tier. Not a payout, not a bust — half of your bet comes back. Tap the gold icon to see how the tiers stack.",
+  "Half-back. Rookie tier means you didn't get there but you didn't get cooked either. Tap the legend icon — the rules are worth knowing.",
+];
+
 /** First time qualifying for leaderboard (anonymous user) */
 const LEADERBOARD_INTRO: string[] = [
   "Well well, you made the board. Top 10 split the bonus pool — might want to drop an email so nobody steals your spot.",
@@ -104,6 +112,7 @@ export type ChadTopic =
   | "daily_return"
   | "win_back"
   | "streak_intro"
+  | "rookie_first_win"
   | "leaderboard_intro"
   | "leaderboard_explainer"
   | "big_win"
@@ -116,6 +125,7 @@ const BANKS: Record<ChadTopic, string[]> = {
   daily_return: DAILY_RETURN,
   win_back: WIN_BACK,
   streak_intro: STREAK_INTRO,
+  rookie_first_win: ROOKIE_FIRST_WIN,
   leaderboard_intro: LEADERBOARD_INTRO,
   leaderboard_explainer: LEADERBOARD_EXPLAINER,
   big_win: BIG_WIN,

@@ -8,7 +8,7 @@ A multi-app monorepo deployed as a single Vercel project:
 
 - `basketball/`, `baseball/`, `worldcup/` — independent Vite + React SPAs, each with its own `package.json` and `node_modules`. Each has a different `vite.config.ts` `base` (`/basketball/`, `/baseball/`) that controls the prod URL.
 - `chooser/index.html` — static sport-selector landing page; copied to `dist/index.html` at the site root by the build script.
-- `api/` — Vercel serverless functions (Node, `@vercel/node`). Auto-detected by Vercel because `vercel.json` has no `builds` array. `api/_lib/` and `api/_disabled/` are skipped by Vercel's auto-routing (underscore prefix).
+- `api/` — Vercel serverless functions (Node, `@vercel/node`). Auto-detected by Vercel because `vercel.json` has no `builds` array. `api/_lib/` is skipped by Vercel's auto-routing (underscore prefix).
 - `shared/` — sport-agnostic infrastructure layer. Imported by every sport SPA via the `@shared` Vite alias (`@shared` → `../shared`). Has its own `node_modules`.
 - `supabase/migrations/` — numbered SQL migrations (`001_*.sql` …).
 - `docs/superpowers/{plans,specs}/` — dated design docs (`YYYY-MM-DD-<slug>.md`). Specs come before plans; new design work follows the same dating convention.
@@ -48,7 +48,6 @@ npx ts-node shared/tools/runSimulator.ts worldcup 10000
 - **Sport `node_modules` are independent.** Installing at the root does not install for `basketball/` or `baseball/`. The Vercel build script does each install separately; locally you have to do the same. React versions have drifted (basketball on 19, baseball on 18) — verify before assuming.
 - **`vite.config.ts` dedupes `react`/`react-dom`** so imports from `../shared` resolve to the sport's own copy. Don't remove the `dedupe` block — Vercel monorepo builds break without it.
 - **Vite dev proxies `/api` to a deployed Vercel preview**, not a local backend (see `basketball/vite.config.ts`). Editing `api/*.ts` and running `npm run dev` will hit the *deployed* code, not your changes. Use `vercel dev` or push to a preview to exercise api edits.
-- **`api/_disabled/`** holds retired endpoints (e.g. `jackpot.ts`, `bonus-pool.ts`). Underscore prefix keeps them out of Vercel's auto-routing. Don't reactivate without checking — some are deprecated by terminology choice, not bugs.
 - **Server-side commentary** lives in `shared/commentary/` but is invoked from `api/hand/`. Tests for both go under `shared/commentary/__tests__/` and `api/__tests__/`.
 - **Multi-LLM router** (`api/_lib/router/`) is shared infra also used by an external project. Treat it as a stable interface.
 
@@ -59,3 +58,123 @@ npx ts-node shared/tools/runSimulator.ts worldcup 10000
 ## Feature flags
 
 Runtime flags live in `shared/featureFlags.ts`, gated by `VITE_FEATURE_*` env vars (default off). Pattern: ship behind a flag, flip in Vercel when ready. Current flags include `topGames` and `VITE_FEATURE_FEEDBACK_FORM`.
+
+## Sport-agnostic architecture (read this before adding code)
+
+**Basketball is the canonical reference.** Every other sport must follow basketball's structure. When basketball and baseball look different at the user-facing layer for any reason other than the sport itself (different stats, different roster shape, different rules), that's a bug — not a feature.
+
+### The principle
+
+> Sport-agnostic by default. Anything without a sport-specific *reason* to differ lives in `shared/`. Sport-specific code only exists in `{sport}/src/` when the substance — formulas, layout, components — actually differs.
+
+### Decision tree (use this every PR)
+
+```
+1. Is the BEHAVIOR identical across sports?
+   YES → shared/. Done.
+   NO  → step 2.
+
+2. Is the only difference DATA (numbers, weights, lists, colors)?
+   YES → behavior in shared/, data on SportAdapter. Done.
+   NO  → step 3.
+
+3. Is the only difference a VISUAL bit (a stat tile, a position pill, a badge icon)?
+   YES → component in shared/, sport bit comes via render-prop / SportAdapter slot. Done.
+   NO  → step 4.
+
+4. Behavior genuinely differs by sport.
+   → Lives in {sport}/. Exposed via SportAdapter so shared code can call it.
+```
+
+If you find yourself copying a file from `basketball/` to `baseball/` and changing it slightly, **stop**. That's the warning sign. Promote to `shared/`, expose the differing bit through `SportAdapter`.
+
+### The SportAdapter contract
+
+`shared/adapters/SportAdapter.ts` defines the abstract base. Every sport extends it (`basketball/src/adapters/SportAdapter.ts`, `baseball/src/adapters/SportAdapter.ts`, etc.). TypeScript catches missing members at compile time. Adding a new sport means writing one adapter file — that's the whole cost.
+
+The adapter exposes everything sport-specific:
+
+- **Identity:** `sportKey`, `displayName`, `salaryCap`, `rosterSize`, `positions`, `rosterSlots`
+- **Economy:** `economyConfig`, `tierFromSalary`, `winTiers`, `getWinThresholds`
+- **Math:** `computeFantasyPoints`, `computeFantasyPointsDetailed`, `computeBadges`
+- **Display:** `displayPosition`, `normalizePosition`, `normalizeTier`, `isPitcherPosition` (or sport-equivalent), `formatStatLine`
+- **Validation:** `isValidPosition`, `isValidStatCategory`, `isValidRoster`, `getPositionLimits`
+- **Components:** `CardComponent` (one card renderer), `LandingHero` (landing page card slot)
+- **Data:** `getPlayers()`, `getLogsByKey()`, `getTodaysStars()`, `buildBonusPool()`, `getDailyBonusMapNow()`
+- **FTUE:** `ftueRoster`, `ftueDrawnRoster`, `ftueTextConfig`
+- **Branding:** `headshotUrl(id)`, `sportLabel`, `teamFlavor`, `playerCulture`
+- **Audio:** `soundPack` — registered at module-load via `setSoundPack()`
+- **Records:** `recordSources` — registered at module-load via `registerRecordSources()`
+
+If you need to add something sport-specific, **add it to the adapter, not to the sport's view files**.
+
+### Canonical (shared-only) files
+
+These files exist exactly once, under `shared/`. If you find a copy in `{sport}/src/`, that's drift — promote.
+
+- `shared/views/GameView.tsx` *(target — see migration status below)*
+- `shared/components/LandingPage.tsx` ✓ (sport wrappers pass a `LandingAdapter`)
+- `shared/components/GameBar.tsx` ✓
+- `shared/components/CoachLayer.tsx` ✓ (FTUE state machine)
+- `shared/components/CardFront.tsx`, `PlayerCardShell.tsx` ✓
+- `shared/utils/payoutLogic.ts` ✓ (streak math, win-tier math)
+- `shared/utils/dailyBonus.ts`, `dailyBonusPool.ts` ✓
+- `shared/utils/audioDirector.ts`, `soundPack.ts` ✓
+- `shared/engines/dataEngine.ts`, `resolveEngine.ts`, `rosterEngine.ts`, `economyEngine.ts` ✓
+- `shared/commentary/*` ✓ (templated commentary system)
+- `shared/hooks/useFTUE.ts`, `useEmotionalReveal.ts` ✓
+- `shared/data/recordDetector.ts` ✓
+
+The `{sport}/src/{file}.ts` files for these names should be either thin wrappers (re-exports + sport config wiring) or not exist at all.
+
+### Legitimate sport-specific files
+
+These have a real reason to differ — keep per-sport:
+
+- `{sport}/src/components/AthleteCard.tsx` / `BaseballCard.tsx` — different stat tiles, different hero. Both call `<CardFront>` from shared.
+- `{sport}/src/components/LandingPage.tsx` — thin shim that builds a `LandingAdapter` (demo card list, headshot URL, card component, grid layout, optional audio bed and game-log resolver) and passes it to `@shared/components/LandingPage`.
+- `{sport}/src/adapters/SportAdapter.ts` — implements the contract.
+- `{sport}/src/adapters/{sport}Config.ts` — the data the adapter wraps.
+- `{sport}/src/adapters/ftueRoster.ts` — sport-specific FTUE roster (different players).
+- `{sport}/src/utils/playerCulture.ts`, `teamFlavor.ts` — sport-specific data.
+- `{sport}/src/utils/soundPack.ts` — sport-specific audio assets list.
+- `{sport}/src/main.tsx`, `App.tsx`, `vite.config.ts` — entry points.
+
+### Migration status (where we are)
+
+**Already shared correctly:** GameBar logic, CoachLayer (FTUE state machine), CardFront, PlayerCardShell, all engines, all utils for streak/bonus/audio/records, the commentary system.
+
+**Drifted, awaiting promotion:**
+
+- `{sport}/src/views/GameView.tsx` — basketball is 2458 lines, baseball is 2129 lines. ~80% should be shared. Phase 2 of the architecture lift.
+
+**Recently lifted:**
+
+- `LandingPage.tsx` ✓ Phase 1 — shared component takes a `LandingAdapter`. Per-sport files are now ~80–140 line shims (basketball 79, baseball 137 vs. 335/374 before).
+
+**Until those two are lifted,** any change to one MUST be applied to the other in the same PR. Add a header comment on each linking the two — that's a temporary sync requirement, not a permanent pattern.
+
+### Drift prevention (not all in place yet)
+
+Eventually we want all of these. Today only the first one is enforced by tooling:
+
+1. **TypeScript compile check on `SportAdapter`** — if a sport doesn't implement a required member, the build fails. ✓ (today)
+2. **ESLint `no-cross-sport-imports`** — `basketball/` cannot import `baseball/`, etc.
+3. **ESLint `no-duplicate-canonical-files`** — files like `GameView.tsx`, `LandingPage.tsx` cannot exist outside `shared/views/` (with a temporary exemption during the migration).
+4. **CI parity snapshot test** — render `<GameView adapter={basketball}>` and `<GameView adapter={baseball}>` in the same state, assert structural HTML matches modulo sport-specific text.
+5. **PR template item** — *"If this change adds code to a `{sport}/` directory, justify why it can't live in `shared/`. Link the SportAdapter member it surfaces through."*
+
+### Quick examples
+
+| Concern | Where it goes | Why |
+|---|---|---|
+| Streak bonus math (3-win = 1.3x) | `shared/utils/payoutLogic.ts` | Identical logic and numbers across sports |
+| Salary cap value ($250 vs $180) | `adapter.salaryCap` | Different number, identical use |
+| Card front layout | `shared/components/CardFront.tsx` + sport-specific `<Hero>` slot | Most of the layout is shared |
+| Stat tiles on card back | sport-specific component | Real layout difference per sport |
+| FTUE step sequence (deal → hold → draw → reveal → flip → final) | `shared/components/CoachLayer.tsx` | Same flow |
+| FTUE coach text content | `adapter.ftueTextConfig` | Sport-specific copy |
+| Daily-bonus picker logic | `shared/utils/dailyBonus.ts` | Identical algorithm |
+| Daily-bonus eligible player list | `adapter.buildBonusPool()` | Different player set |
+| Audio bed sound | `adapter.soundPack` (registered) | Different audio asset; no asset → silence |
+| Win tier slam animation | `shared/views/GameView.tsx` (target) | Identical animation, different threshold values

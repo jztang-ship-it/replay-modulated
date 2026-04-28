@@ -117,8 +117,7 @@ function lookupsFor(sport: string): SportLookups {
  * Returns one TopGameReason per record-tier hit, highest stat-value first.
  */
 function detectRecordTier(statLine: StatLine, sport: string): TopGameReason[] {
-  const records = recordsFor(sport);
-  const aliases = aliasesFor(sport);
+  const { singleGameRecords: records, statAliases: aliases } = sourcesFor(sport);
   const matches: Array<{ stat: string; value: number; record: number; holder: string }> = [];
 
   for (const rec of records) {

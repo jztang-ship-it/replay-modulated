@@ -187,7 +187,7 @@ const MLB_TEAM_ABBREV: Record<string, string> = {
   "WASHINGTON NATIONALS": "WSH",
 };
 
-function teamAbbrev(raw: string): string {
+export function teamAbbrev(raw: string): string {
   const up = clampText(raw).toUpperCase();
   if (!up) return "";
   // Already short (≤ 4 chars) — assume it's an abbrev (basketball MEM/GSW etc.)
@@ -285,10 +285,12 @@ export interface CardFrontProps {
   glowSrc?: string;
   glowDurationMs?: number;
   glowTier?: string;
-  /** Pre-mapped display string for the card's position (e.g. "PG", "B"). When
-   *  provided, overrides the raw `card.position`. Sport wrappers compute this
-   *  from their own SportAdapter.displayPosition() so CardFront stays sport-agnostic. */
-  displayPosition?: string;
+  /** Pre-mapped display content for the card's position (e.g. "PG", "⚾", or
+   *  a custom SVG glyph). When provided, overrides the raw `card.position`.
+   *  Sport wrappers compute this — basketball passes a string from
+   *  SportAdapter.displayPosition(); baseball wraps the adapter's sentinel
+   *  string in a custom SVG node. CardFront stays sport-agnostic either way. */
+  displayPosition?: React.ReactNode;
 }
 
 // ── CardFront ──────────────────────────────────────────────────────────────
@@ -432,7 +434,13 @@ export function CardFront(props: CardFrontProps) {
   const fpValue = isShowingActualFp
     ? (visibleFp !== undefined ? displayedFp : Number((card as any)?.actualFp ?? 0))
     : 0;
-  const fpText = Number.isFinite(fpValue) && fpValue > 0 ? fpValue.toFixed(1) : "0.0";
+  // If the count-up animation hasn't run (e.g. card mounted directly into RESULTS
+  // phase from the landing page — no REVEALING transition fires the visibleFp
+  // effect), fall back to actualFp so the slot doesn't render "0.0" indefinitely.
+  const cardActualFp = Number((card as any)?.actualFp ?? 0);
+  const fpText = Number.isFinite(fpValue) && fpValue > 0
+    ? fpValue.toFixed(1)
+    : (isShowingActualFp && cardActualFp > 0 ? cardActualFp.toFixed(1) : "0.0");
 
   const badgeBonusFp = useMemo(() => badges?.reduce((s, b) => s + (b.fp ?? 0), 0) ?? 0, [badges]);
   const hasBadges = (badges?.length ?? 0) > 0;
@@ -496,7 +504,7 @@ export function CardFront(props: CardFrontProps) {
 
         {/* POSITION — top-right; tier-colored per designer (salary left still uses onCardText) */}
         <div style={{ position: "absolute", top: "6%", right: "6%", zIndex: 8, pointerEvents: "none" }}>
-          <span style={{ fontSize: 16, fontWeight: 900, fontStyle: "italic", color: positionTextColor, letterSpacing: -0.5, lineHeight: 1, textTransform: "uppercase" }}>
+          <span style={{ fontSize: 13, fontWeight: 900, fontStyle: "italic", color: positionTextColor, letterSpacing: -0.5, lineHeight: 1, textTransform: "uppercase" }}>
             {pos}
           </span>
         </div>

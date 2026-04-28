@@ -9,7 +9,7 @@ import React, { useMemo } from "react";
 import type { GamePhase, PlayerCard } from "../adapters/types";
 import { PlayerCardShell, resetAllOverlays } from "@shared/components/PlayerCardShell";
 import type { CardFrontProps as ShellFrontProps, CardBackProps } from "@shared/components/PlayerCardShell";
-import { CardFront, type CardFrontHeroProps } from "@shared/components/CardFront";
+import { CardFront, teamAbbrev, type CardFrontHeroProps } from "@shared/components/CardFront";
 import { TopGameStamp } from "@shared/components/TopGameOverlay";
 import type { TopGameTier } from "@shared/commentary/types";
 import type { ShakeType } from "../hooks/useEmotionalReveal";
@@ -43,6 +43,34 @@ function round1(n: number) { return Math.round(n * 10) / 10; }
 
 function isPitcher(position: string): boolean {
   return sportAdapter.isPitcherPosition(position);
+}
+
+// Custom baseball-bat glyph. Unicode has no "baseball bat alone" emoji
+// (🏏 is a cricket bat with ball), so the position pill renders this SVG
+// instead. fill/stroke use currentColor so the glyph inherits the tier color
+// from CardFront's positionTextColor — no separate color prop needed.
+function BatGlyph({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      style={{ display: "inline-block", verticalAlign: "middle" }}
+      aria-hidden="true"
+    >
+      <circle cx="4" cy="4" r="2" fill="currentColor" />
+      <line x1="4" y1="4" x2="12" y2="12" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      <line x1="12" y1="12" x2="20" y2="20" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Adapter returns "BAT" as a sentinel for the batter pill — substitute the
+ *  custom SVG glyph here so CardFront stays sport-agnostic. Pitcher just
+ *  passes the ⚾ string through unchanged. */
+function positionDisplayFor(rawPosition: unknown): React.ReactNode {
+  const s = sportAdapter.displayPosition(rawPosition);
+  return s === "BAT" ? <BatGlyph /> : s;
 }
 
 // ── MLBHero ─────────────────────────────────────────────────────────────────
@@ -123,7 +151,7 @@ function BackBaseballStats({ card, topGameTier }: { card: PlayerCard; topGameTie
   const rawDate = gi.date || sl.date || "";
   const dateStr = fmtDate(String(rawDate));
   const rawOpp = gi.opponent || sl.opponent || "";
-  const opponent = String(rawOpp).trim();
+  const opponent = teamAbbrev(String(rawOpp).trim());
   const ha = gi.homeAway || "";
   const oppStr = opponent ? `${ha === "A" ? "@" : "vs"} ${opponent}` : "";
   const badgesData: Array<{ icon: string; label: string; fp: number }> =
@@ -138,25 +166,32 @@ function BackBaseballStats({ card, topGameTier }: { card: PlayerCard; topGameTie
         <div style={S.backDate}>{dateStr || "—"}</div>
         <div style={S.backOpp}>{oppStr || "—"}</div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap", minWidth: 0, minHeight: 24 }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 4, flexShrink: 0 }}>
+      {/* Mirrors basketball/src/components/AthleteCard.tsx back layout — keep both
+          in sync until the card-back component is shared. Row 1: FP + bonus | stamp.
+          Row 2: badges. Splitting prevents 3-digit FP from wrapping the whole strip. */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 3, minWidth: 0 }}>
           <span style={S.fpLabel}>FP</span>
-          <span style={{ ...S.fpValue, fontSize: 18 }}>{round1(actual)}</span>
-          {badgeFpBonus > 0 && (
-            <span style={{ fontSize: 10, fontWeight: 700, color: "#FFD700", alignSelf: "flex-end", marginBottom: 2 }}>
-              (+{badgeFpBonus})
+          <span style={{ ...S.fpValue }}>{round1(actual)}</span>
+          {badgeFpBonus !== 0 && (
+            <span style={{ fontSize: 9, fontWeight: 700, color: badgeFpBonus > 0 ? "#FFD700" : "#FF6B6B", alignSelf: "flex-end", marginBottom: 1 }}>
+              ({badgeFpBonus > 0 ? "+" : ""}{badgeFpBonus})
             </span>
           )}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 2, flex: 1, flexWrap: "wrap" }}>
-          {badgesData.slice(0, 6).map((b: any, i: number) => (
-            <span key={b.id ?? b.label ?? i} style={{ fontSize: 11, lineHeight: 1, flexShrink: 0 }}>{b.icon}</span>
-          ))}
         </div>
         {topGameTier && (
           <div style={{ flexShrink: 0, transform: "rotate(-4deg) scale(0.7)", transformOrigin: "right center" }}>
             <TopGameStamp tier={topGameTier} />
           </div>
+        )}
+      </div>
+      <div style={{ minHeight: 10, display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
+        {badgesData.length > 0 ? (
+          badgesData.slice(0, 8).map((b: any, i: number) => (
+            <span key={b.id ?? b.label ?? i} title={`${b.label} (${b.fp > 0 ? "+" : ""}${b.fp})`} style={{ fontSize: 7, lineHeight: 1 }}>{b.icon}</span>
+          ))
+        ) : (
+          <span style={{ fontSize: 7, fontWeight: 600, color: "rgba(255,255,255,0.25)" }}>No badges</span>
         )}
       </div>
       <div style={S.divider} />
@@ -241,7 +276,7 @@ export function BaseballCard(props: Props) {
         <CardFront
           {...p}
           topGameTier={topGameTier ?? null}
-          displayPosition={sportAdapter.displayPosition((p.card as any)?.position)}
+          displayPosition={positionDisplayFor((p.card as any)?.position)}
           renderHero={(heroProps: CardFrontHeroProps) => (
             <MLBHero {...heroProps} />
           )}

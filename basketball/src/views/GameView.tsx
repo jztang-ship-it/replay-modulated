@@ -373,12 +373,6 @@ if (typeof document !== "undefined" && !document.getElementById(GV_STYLE_ID)) {
       80% { transform: scale(1.05) translateY(0); opacity: 1; }
       100% { transform: scale(1.0) translateY(0); opacity: 1; }
     }
-    @keyframes tierShrinkDown {
-      0% { transform: scale(1.0); opacity: 1; }
-      40% { transform: scale(0.6); opacity: 0.9; }
-      70% { transform: scale(0.72); opacity: 1; }
-      100% { transform: scale(0.65); opacity: 1; }
-    }
     @keyframes tierSlamFlash {
       0% { opacity: 0; }
       15% { opacity: 0.35; }
@@ -415,86 +409,6 @@ function BetMultSuffix({ m }: { m: number }) {
   if (m <= 1) return null;
   return (
     <span style={{ fontSize: 11, color: "#F59E0B", fontWeight: 900, marginLeft: 4 }}>×{m}</span>
-  );
-}
-
-// ── StreakDisplay — fire emojis showing current streak progress ───────────────
-// Always visible. Spark animation on light-up or reset.
-// 0 wins:  🔥🔥🔥 x1.3  (all dim)
-// 3 wins:  🔥🔥🔥 x1.3 ✓ → 🔥🔥 x1.7 appears
-// 5 wins:  ✓ ✓ → 🔥🔥🔥🔥🔥 x2.5 appears
-// 10 wins: all lit, 2.5x active
-
-const STREAK_STYLE_ID = "streak-spark-styles";
-if (typeof document !== "undefined" && !document.getElementById(STREAK_STYLE_ID)) {
-  const st = document.createElement("style");
-  st.id = STREAK_STYLE_ID;
-  st.textContent = `
-    @keyframes streakSpark {
-      0%   { transform: scale(0.5); opacity: 0; filter: brightness(3); }
-      40%  { transform: scale(1.5); opacity: 1; filter: brightness(2); }
-      100% { transform: scale(1);   opacity: 1; filter: brightness(1); }
-    }
-    @keyframes streakDim {
-      0%   { transform: scale(1.3); opacity: 1; filter: brightness(2); }
-      100% { transform: scale(1);   opacity: 0.2; filter: grayscale(1) brightness(1); }
-    }
-  `;
-  document.head.appendChild(st);
-}
-
-function StreakFire({ lit, spark }: { lit: boolean; spark: "light" | "dim" | "none" }) {
-  const anim = spark === "light" ? "streakSpark 0.4s ease-out forwards"
-    : spark === "dim" ? "streakDim 0.4s ease-out forwards"
-    : "none";
-  return (
-    <span style={{
-      fontSize: 13, lineHeight: 1, display: "inline-block",
-      opacity: lit ? 1 : 0.2,
-      filter: lit ? "none" : "grayscale(1)",
-      animation: anim,
-    }}>🔥</span>
-  );
-}
-
-function StreakFires({ count, lit, label, sparkKey }: { count: number; lit: number; label: string; sparkKey: number }) {
-  const prevLitRef = useRef(lit);
-  const [sparks, setSparks] = useState<Array<"light" | "dim" | "none">>(Array(count).fill("none"));
-
-  useEffect(() => {
-    const prev = prevLitRef.current;
-    prevLitRef.current = lit;
-    if (prev === lit) return;
-    const newSparks: Array<"light" | "dim" | "none"> = Array(count).fill("none");
-    if (lit > prev) {
-      // Lighting up
-      for (let i = prev; i < lit && i < count; i++) newSparks[i] = "light";
-    } else {
-      // Dimming (streak reset)
-      for (let i = lit; i < prev && i < count; i++) newSparks[i] = "dim";
-    }
-    setSparks(newSparks);
-    const t = setTimeout(() => setSparks(Array(count).fill("none")), 500);
-    return () => clearTimeout(t);
-  }, [lit, count]); // eslint-disable-line
-
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-      {Array.from({ length: count }, (_, i) => (
-        <StreakFire key={`${sparkKey}-${i}`} lit={i < lit} spark={sparks[i]} />
-      ))}
-      <span style={{ fontSize: 9, fontWeight: 800, color: lit >= count ? "#FFD700" : "rgba(255,255,255,0.35)", marginLeft: 2 }}>{label}</span>
-    </div>
-  );
-}
-
-function StreakDisplay({ streak }: { streak: number }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-start" }}>
-      <StreakFires count={3} lit={Math.min(streak, 3)} label="x1.2" sparkKey={streak} />
-      {streak >= 3 && <StreakFires count={2} lit={Math.min(streak - 3, 2)} label="x1.5" sparkKey={streak} />}
-      {streak >= 5 && <StreakFires count={5} lit={Math.min(streak - 5, 5)} label="x2.0" sparkKey={streak} />}
-    </div>
   );
 }
 
@@ -762,6 +676,19 @@ export default function GameView() {
     }, delayMs);
     return () => clearTimeout(t);
   }, [handCount]);
+
+  // First rookie win — fires at RESULTS (winTier is set there; IDLE clears it).
+  // Deterministic, one-time per device. Lights the legend pulse so the user
+  // can read the scoring rules.
+  useEffect(() => {
+    if (isFTUE) return;
+    if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
+    if (winTier !== "ROOKIE") return;
+    if (localStorage.getItem("rm_usher_rookie_first_win") === "1") return;
+    localStorage.setItem("rm_usher_rookie_first_win", "1");
+    setLegendGold(true);
+    setFtueCommentaryOverride({ parts: [chadMessage("rookie_first_win")], sticky: true });
+  }, [gameState, winTier, isFTUE]);
 
   // All other Chad messages — evaluated once per IDLE, pick highest priority eligible
   useEffect(() => {
@@ -2097,6 +2024,10 @@ export default function GameView() {
                   const FF = "'Rajdhani','Oswald','Arial Narrow',sans-serif";
                   return (
                     <>
+                      {/* FTUE feedback: tier panel "happens twice" was the bouncy
+                          tierShrinkDown animation following the slam. Phase 2 now
+                          mounts the image at its resting scale instead of animating
+                          there — slam lands, locks, info fades in. */}
                       <img
                         key={`tier-stay-${winTier}`}
                         src={`${import.meta.env.BASE_URL}${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
@@ -2104,10 +2035,10 @@ export default function GameView() {
                         style={{
                           maxHeight: 52, maxWidth: "100%", objectFit: "contain",
                           filter: `${TIER_IMAGE_HUE[winTier] ?? ""} drop-shadow(0 0 12px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`.trim(),
-                          animation: "tierShrinkDown 500ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
+                          transform: "scale(0.65)",
                         }}
                       />
-                      <div style={{ animation: "tierInfoFadeIn 300ms ease 500ms both", display: "flex", justifyContent: "center", alignItems: "center", gap: 20, marginTop: 4, width: "100%" }}>
+                      <div style={{ animation: "tierInfoFadeIn 300ms ease both", display: "flex", justifyContent: "center", alignItems: "center", gap: 20, marginTop: 4, width: "100%" }}>
                         <span style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
                           {displayFp.toFixed(1)} FP
                         </span>
@@ -2125,7 +2056,7 @@ export default function GameView() {
                 })()}
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "center", gap: 8, paddingTop: 16, width: "100%", height: "100%" }}>
+              <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "center", gap: 4, paddingTop: 10, width: "100%", height: "100%", overflow: "hidden" }}>
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 48, width: "100%" }}>
                   {(() => {
                     const spent =
@@ -2438,7 +2369,7 @@ export default function GameView() {
         ftueHideBalance={isFTUE && (gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD")}
         ftuePulseNearMiss={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && !ftueGaugeOscDone}
         ftueReplayBlocked={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && !ftueReplayReady}
-        ftueReplayPulse={isFTUE && ftueReplayReady}
+        ftueReplayPulse={(isFTUE && ftueReplayReady) || (!isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && springSettled)}
         dataFtuePrimaryAnchor={isFTUE ? (gameState === "HOLD" ? "draw" : "deal") : undefined}
         hideTierBar
         splitFooter={{ multipliersHost, controlsHost }}

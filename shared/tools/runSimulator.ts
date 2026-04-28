@@ -312,81 +312,108 @@ async function main() {
   // === MULTI-SCENARIO THRESHOLD COMPARISON ===
   type TierDef = { tier: string; minFP: number; multiplier: number };
 
+  // Win-tier multipliers MUST stay in sync with basketball/src/utils/payoutLogic.ts
+  // (BASKETBALL_WIN_TIERS) and shared/components/GameBar.tsx STREAK_LABELS.
+  // Order: highest tier first inside each scenario for legibility; calcEV sorts.
   const SCENARIOS: { label: string; desc: string; tiers: TierDef[] }[] = [
     {
       label: "CURRENT (baseline)",
       desc:  "Existing thresholds — for reference only",
       tiers: [
-        { tier: "ROOKIE",   minFP: 133, multiplier: 0.5  },
-        { tier: "STARTER",  minFP: 160, multiplier: 2.5  },
-        { tier: "ALL_STAR", minFP: 183, multiplier: 7.0  },
-        { tier: "MVP",      minFP: 207, multiplier: 15.0 },
-        { tier: "BONUS_POOL",  minFP: 225, multiplier: 0    },
+        { tier: "ROOKIE",   minFP: 185, multiplier: 0.5 },
+        { tier: "STARTER",  minFP: 205, multiplier: 1.5 },
+        { tier: "ALL_STAR", minFP: 225, multiplier: 3   },
+        { tier: "MVP",      minFP: 235, multiplier: 8   },
+        { tier: "LEGEND",   minFP: 255, multiplier: 50  },
       ],
     },
     {
       label: "PROTECTED (hands 2-30)",
       desc:  "Newbie phase — tighter gap vs Live, floor guarantee does the heavy lifting",
       tiers: [
-        { tier: "ROOKIE",   minFP: 118, multiplier: 0.5  },
-        { tier: "STARTER",  minFP: 150, multiplier: 2.5  },
-        { tier: "ALL_STAR", minFP: 178, multiplier: 7.0  },
-        { tier: "MVP",      minFP: 205, multiplier: 15.0 },
-        { tier: "BONUS_POOL",  minFP: 225, multiplier: 0    },
+        { tier: "ROOKIE",   minFP: 175, multiplier: 0.5 },
+        { tier: "STARTER",  minFP: 200, multiplier: 1.5 },
+        { tier: "ALL_STAR", minFP: 220, multiplier: 3   },
+        { tier: "MVP",      minFP: 230, multiplier: 8   },
+        { tier: "LEGEND",   minFP: 255, multiplier: 50  },
       ],
     },
     {
       label: "LIVE (hand 31+)",
-      desc:  "Standard play — same ROOKIE threshold, no floor boost",
+      desc:  "Standard play — current basketball tiers (BASKETBALL_WIN_TIERS)",
       tiers: [
-        { tier: "ROOKIE",   minFP: 118, multiplier: 0.5  },
-        { tier: "STARTER",  minFP: 155, multiplier: 2.5  },
-        { tier: "ALL_STAR", minFP: 180, multiplier: 7.0  },
-        { tier: "MVP",      minFP: 205, multiplier: 15.0 },
-        { tier: "BONUS_POOL",  minFP: 225, multiplier: 0    },
+        { tier: "ROOKIE",   minFP: 185, multiplier: 0.5 },
+        { tier: "STARTER",  minFP: 205, multiplier: 1.5 },
+        { tier: "ALL_STAR", minFP: 225, multiplier: 3   },
+        { tier: "MVP",      minFP: 235, multiplier: 8   },
+        { tier: "LEGEND",   minFP: 255, multiplier: 50  },
       ],
     },
     {
       label: "LIVE ALT (slightly easier)",
-      desc:  "If Live EV still too punishing — nudge ROOKIE down to 113",
+      desc:  "If Live EV too punishing — nudge ROOKIE down to 180",
       tiers: [
-        { tier: "ROOKIE",   minFP: 113, multiplier: 0.5  },
-        { tier: "STARTER",  minFP: 155, multiplier: 2.5  },
-        { tier: "ALL_STAR", minFP: 180, multiplier: 7.0  },
-        { tier: "MVP",      minFP: 205, multiplier: 15.0 },
-        { tier: "BONUS_POOL",  minFP: 225, multiplier: 0    },
+        { tier: "ROOKIE",   minFP: 180, multiplier: 0.5 },
+        { tier: "STARTER",  minFP: 205, multiplier: 1.5 },
+        { tier: "ALL_STAR", minFP: 225, multiplier: 3   },
+        { tier: "MVP",      minFP: 235, multiplier: 8   },
+        { tier: "LEGEND",   minFP: 255, multiplier: 50  },
       ],
     },
   ];
 
-  const STREAK_TARGETS = [2, 3, 4, 5, 7];
-  const BONUS_LABELS: Record<number,string> = { 3: "+5% bonus", 5: "+15% bonus", 7: "bonus pool" };
+  // Streak multipliers from shared/utils/payoutLogic.ts STREAK_TIERS.
+  // 3 wins → 1.3x | 5 wins → 1.7x | 10 wins → 2.5x. The tuple is (target, mult).
+  const STREAK_RULES: Array<[number, number]> = [[10, 2.5], [5, 1.7], [3, 1.3]];
+  const STREAK_TARGETS = STREAK_RULES.map(([t]) => t);
+  const STREAK_LABELS: Record<number, string> = Object.fromEntries(
+    STREAK_RULES.map(([t, m]) => [t, `${m}x payout`])
+  );
+  function streakMultiplierFor(streakLen: number): number {
+    for (const [t, m] of STREAK_RULES) if (streakLen >= t) return m;
+    return 1.0;
+  }
   const SESSION_HANDS = 10;
   const NUM_SESSIONS = Math.max(N, 10000);
 
-  function calcEV(tiers: TierDef[], fps: number[]): number {
-    const sorted = [...tiers].filter(t => t.multiplier > 0).sort((a,b) => b.minFP - a.minFP);
-    let ev = 0;
-    for (let i = 0; i < sorted.length; i++) {
-      const lo = sorted[i].minFP;
-      const hi = i === 0 ? Infinity : sorted[i-1].minFP;
-      ev += fps.filter(f => f >= lo && f < hi).length / fps.length * sorted[i].multiplier;
-    }
-    return ev;
+  function payoutForFp(tiers: TierDef[], fp: number): number {
+    const sorted = [...tiers].sort((a, b) => b.minFP - a.minFP);
+    for (const t of sorted) if (fp >= t.minFP) return t.multiplier;
+    return 0;
   }
 
-  function runStreaks(rookieFP: number, fps: number[]): Record<number,number> {
-    const counts: Record<number,number> = {};
-    STREAK_TARGETS.forEach(t => counts[t] = 0);
+  /** Per-hand EV — ignores streak multipliers. */
+  function calcEV(tiers: TierDef[], fps: number[]): number {
+    let sum = 0;
+    for (const f of fps) sum += payoutForFp(tiers, f);
+    return sum / fps.length;
+  }
+
+  /** Session-level simulation: applies the active streak multiplier to each
+   *  hand's payout and reports both streak hit rates and the streak-aware EV.
+   *  rookieFP defines the "win" threshold that grows the streak counter. */
+  function runStreaks(
+    rookieFP: number, fps: number[], tiers: TierDef[]
+  ): { hits: Record<number, number>; evWithStreak: number } {
+    const hits: Record<number, number> = {};
+    STREAK_TARGETS.forEach(t => { hits[t] = 0; });
+    let totalPayout = 0;
+    let totalHands = 0;
     for (let s = 0; s < NUM_SESSIONS; s++) {
-      let cur = 0, max = 0;
+      let streak = 0, maxStreak = 0;
       for (let h = 0; h < SESSION_HANDS; h++) {
         const fp = fps[Math.floor(Math.random() * fps.length)];
-        if (fp >= rookieFP) { cur++; if (cur > max) max = cur; } else cur = 0;
+        const isWin = fp >= rookieFP;
+        // Streak multiplier applies to non-bust wins only; bust resets streak.
+        const mult = isWin ? streakMultiplierFor(streak) : 1.0;
+        totalPayout += payoutForFp(tiers, fp) * mult;
+        totalHands += 1;
+        if (isWin) { streak++; if (streak > maxStreak) maxStreak = streak; }
+        else streak = 0;
       }
-      STREAK_TARGETS.forEach(t => { if (max >= t) counts[t]++; });
+      STREAK_TARGETS.forEach(t => { if (maxStreak >= t) hits[t]++; });
     }
-    return counts;
+    return { hits, evWithStreak: totalPayout / totalHands };
   }
 
   console.log("\n" + "=".repeat(65));
@@ -397,8 +424,9 @@ async function main() {
     const rookieTier = scenario.tiers.find(t => t.tier === "ROOKIE")!;
     const winRate = allFps.filter(f => f >= rookieTier.minFP).length / N * 100;
     const ev = calcEV(scenario.tiers, allFps);
-    const evFlag = ev > 1 ? "HOUSE LOSES" : ev > 0.85 ? "TOO GENEROUS" : ev >= 0.70 ? "TARGET ZONE" : ev >= 0.55 ? "SLIGHTLY PUNISHING" : "TOO PUNISHING";
-    const streaks = runStreaks(rookieTier.minFP, allFps);
+    const { hits: streaks, evWithStreak } = runStreaks(rookieTier.minFP, allFps, scenario.tiers);
+    const flagFor = (e: number) =>
+      e > 1 ? "HOUSE LOSES" : e > 0.92 ? "TOO GENEROUS" : e >= 0.78 ? "TARGET ZONE" : e >= 0.62 ? "SLIGHTLY PUNISHING" : "TOO PUNISHING";
 
     console.log("\n--- " + scenario.label + " ---");
     console.log("    " + scenario.desc);
@@ -413,15 +441,16 @@ async function main() {
     }
 
     console.log("");
-    console.log("    Win rate (ROOKIE+): " + winRate.toFixed(1) + "%");
-    console.log("    EV:                 " + ev.toFixed(3) + "  " + evFlag);
+    console.log("    Win rate (ROOKIE+):       " + winRate.toFixed(1) + "%");
+    console.log("    EV (no streak):           " + ev.toFixed(3) + "  " + flagFor(ev));
+    console.log("    EV (with streak bumps):   " + evWithStreak.toFixed(3) + "  " + flagFor(evWithStreak));
 
     // Streak rates
     console.log("    Streaks (per " + SESSION_HANDS + "-hand session):");
     for (const t of STREAK_TARGETS) {
       const rate = streaks[t] / NUM_SESSIONS * 100;
       const feel = rate > 40 ? "very common" : rate > 20 ? "common" : rate > 8 ? "occasional" : rate > 2 ? "rare" : "very rare";
-      const bonus = BONUS_LABELS[t] ? " <- " + BONUS_LABELS[t] : "";
+      const bonus = STREAK_LABELS[t] ? " <- " + STREAK_LABELS[t] : "";
       console.log("      " + String(t + "-win:").padEnd(8) + String(rate.toFixed(1) + "%").padStart(6) + "  " + feel + bonus);
     }
   }
@@ -429,10 +458,10 @@ async function main() {
   console.log("\n" + "=".repeat(65));
   console.log("  RECOMMENDATION SUMMARY");
   console.log("=".repeat(65));
-  console.log("  Hand 1:      FTUE (Devin Booker, hardcoded, guaranteed good)");
+  console.log("  Hand 1:      FTUE (hardcoded star, guaranteed good)");
   console.log("  Hands 2-30:  PROTECTED thresholds (invisible to user)");
   console.log("  Hand 31+:    LIVE thresholds");
-  console.log("  Bonus tiers: 3-win=+5%  5-win=+15%  (7-win bonus pool: post-beta)");
+  console.log("  Streak multipliers: " + STREAK_RULES.map(([t, m]) => `${t}-win=${m}x`).join("  "));
   console.log("");
 
   if (verbose) {

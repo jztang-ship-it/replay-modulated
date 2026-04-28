@@ -9,6 +9,8 @@ import { getPlayers, getLogsByKey } from "../engines/dataEngine";
 import { generateRoster, redrawRoster as engineRedraw, mulberry32, randomSeed } from "../engines/rosterEngine";
 import { resolveCards } from "../engines/resolveEngine";
 import { DEFAULT_ECONOMY_CONFIG, tierFromSalary } from "../engines/economyEngine";
+import { buildDailyBonusMap, getDailyBonusPlayers, type DailyBonusPlayer } from "@shared/utils/dailyBonus";
+import { buildBonusPoolFromPlayers } from "@shared/utils/dailyBonusPool";
 import type { PlayerCard } from "./types";
 import type { PlayerEval, GeneratedCard } from "../engines/rosterEngine";
 import type { EconomyConfig } from "../engines/economyEngine";
@@ -88,6 +90,32 @@ function hasValidLogs(basePlayerId: string, position: string, logsByKey: Map<str
       return pa >= 3 && events >= 1;
     }
   });
+}
+
+/** Build the bonus-eligible pool: players with valid logs, tier from salary. */
+function buildBonusPool(): Array<{ basePlayerId: string; name: string; tier: string }> {
+  const logs = getLogsByKey();
+  const eco = getEconomyConfig();
+  return buildBonusPoolFromPlayers(
+    getPlayers(),
+    (p: any) => hasValidLogs(
+      String(p.basePlayerId ?? p.id ?? ""),
+      String(p.position ?? ""),
+      logs,
+    ),
+    (salary) => tierFromSalary(salary, eco),
+    eco.salaryMin,
+  );
+}
+
+/** Today's 3 hot players with their bonus FP values — shown in Legend modal. */
+export function getTodaysStars(): DailyBonusPlayer[] {
+  return getDailyBonusPlayers(buildBonusPool());
+}
+
+/** Internal: today's bonus map (basePlayerId → bonus FP), used at resolve time. */
+function getDailyBonusMapNow(): Map<string, number> {
+  return buildDailyBonusMap(buildBonusPool());
 }
 
 export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
@@ -176,6 +204,7 @@ export async function resolveRoster({
     {
       fpScale: 1,
       minMinutes: 0, // baseball has no minutes filter
+      dailyBonusMap: getDailyBonusMapNow(),
     },
     sportAdapter,
     rnd,
