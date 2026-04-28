@@ -373,12 +373,6 @@ if (typeof document !== "undefined" && !document.getElementById(GV_STYLE_ID)) {
       80% { transform: scale(1.05) translateY(0); opacity: 1; }
       100% { transform: scale(1.0) translateY(0); opacity: 1; }
     }
-    @keyframes tierShrinkDown {
-      0% { transform: scale(1.0); opacity: 1; }
-      40% { transform: scale(0.6); opacity: 0.9; }
-      70% { transform: scale(0.72); opacity: 1; }
-      100% { transform: scale(0.65); opacity: 1; }
-    }
     @keyframes tierSlamFlash {
       0% { opacity: 0; }
       15% { opacity: 0.35; }
@@ -2030,6 +2024,10 @@ export default function GameView() {
                   const FF = "'Rajdhani','Oswald','Arial Narrow',sans-serif";
                   return (
                     <>
+                      {/* FTUE feedback: tier panel "happens twice" was the bouncy
+                          tierShrinkDown animation following the slam. Phase 2 now
+                          mounts the image at its resting scale instead of animating
+                          there — slam lands, locks, info fades in. */}
                       <img
                         key={`tier-stay-${winTier}`}
                         src={`${import.meta.env.BASE_URL}${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
@@ -2037,10 +2035,10 @@ export default function GameView() {
                         style={{
                           maxHeight: 52, maxWidth: "100%", objectFit: "contain",
                           filter: `${TIER_IMAGE_HUE[winTier] ?? ""} drop-shadow(0 0 12px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`.trim(),
-                          animation: "tierShrinkDown 500ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
+                          transform: "scale(0.65)",
                         }}
                       />
-                      <div style={{ animation: "tierInfoFadeIn 300ms ease 500ms both", display: "flex", justifyContent: "center", alignItems: "center", gap: 20, marginTop: 4, width: "100%" }}>
+                      <div style={{ animation: "tierInfoFadeIn 300ms ease both", display: "flex", justifyContent: "center", alignItems: "center", gap: 20, marginTop: 4, width: "100%" }}>
                         <span style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
                           {displayFp.toFixed(1)} FP
                         </span>
