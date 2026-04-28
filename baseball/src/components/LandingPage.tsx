@@ -78,17 +78,25 @@ const CARDS: LandingCardDef[] = [
 // gridColumn for each card index in the 6-column 3+2 layout
 const GRID_COLUMNS = ["1 / span 2", "3 / span 2", "5 / span 2", "2 / span 2", "4 / span 2"];
 
-function pickRandomPositiveLog(logs: any[] | undefined): any | null {
+function pickRandomPositiveLog(logs: any[] | undefined, pos: string): any | null {
   if (!logs || logs.length === 0) return null;
-  // Prefer logs with non-trivial FP-relevant stats so the landing card looks
-  // alive (not a 0-0-0 night). Fall back to any log if filter is empty.
-  const positive = logs.filter(l => {
+  const isPitcher = sportAdapter.isPitcherPosition(pos);
+  // Role-aware filter: BAT cards must pull a log with batter events; P cards
+  // must pull a log where the player actually pitched. Two-way players (Ohtani
+  // et al.) have separate batter + pitcher entries on the same date — without
+  // this filter a BAT card can grab the pitcher line and render a 0/0/0
+  // batter stat-back ("no game log"). Landing tightens further to require
+  // marquee stats (h/hr/rbi/sb/2B/3B for BAT, ip+k for P) so the showcase
+  // always looks alive — no walk-and-scored-only nights.
+  const role = logs.filter(l => {
     const s = l?.stats ?? {};
+    if (isPitcher) {
+      return Number(s.ip ?? 0) > 0 && Number(s.k ?? 0) > 0;
+    }
     return Number(s.h ?? 0) > 0 || Number(s.hr ?? 0) > 0 || Number(s.rbi ?? 0) > 0
-      || Number(s.bb ?? 0) > 0 || Number(s.sb ?? 0) > 0
-      || Number(s.ip ?? 0) > 0 || Number(s.k ?? 0) > 0;
+      || Number(s.sb ?? 0) > 0 || Number(s.doubles ?? 0) > 0 || Number(s.triples ?? 0) > 0;
   });
-  const pool = positive.length ? positive : logs;
+  const pool = role.length ? role : logs;
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -98,7 +106,7 @@ function resolveLandingActuals(d: LandingCardDef): LandingResolved | null {
   const candidates =
     logsByKey.get(`${d.basePlayerId}|2425`) ??
     logsByKey.get(d.basePlayerId) ?? [];
-  const log = pickRandomPositiveLog(candidates);
+  const log = pickRandomPositiveLog(candidates, d.pos);
   if (!log) return null;
   const stats = { ...(log.stats ?? {}), _position: d.pos };
   const baseFp = sportAdapter.computeFantasyPoints(stats);
