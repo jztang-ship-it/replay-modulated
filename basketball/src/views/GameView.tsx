@@ -423,10 +423,10 @@ function BetMultSuffix({ m }: { m: number }) {
 
 // ── StreakDisplay — fire emojis showing current streak progress ───────────────
 // Always visible. Spark animation on light-up or reset.
-// 0 wins:  🔥🔥🔥 x1.2  (all dim)
-// 3 wins:  🔥🔥🔥 x1.2 ✓ → 🔥🔥 x1.5 appears
-// 5 wins:  ✓ ✓ → 🔥🔥🔥🔥🔥 x2.0 appears
-// 10 wins: all lit, 2.0x active
+// 0 wins:  🔥🔥🔥 x1.3  (all dim)
+// 3 wins:  🔥🔥🔥 x1.3 ✓ → 🔥🔥 x1.7 appears
+// 5 wins:  ✓ ✓ → 🔥🔥🔥🔥🔥 x2.5 appears
+// 10 wins: all lit, 2.5x active
 
 const STREAK_STYLE_ID = "streak-spark-styles";
 if (typeof document !== "undefined" && !document.getElementById(STREAK_STYLE_ID)) {

@@ -80,7 +80,7 @@ export interface CelebrationData {
   baseBet: number;         // base wager amount (10)
   isLoss: boolean;         // true for ROOKIE (partial loss) and BUST (full loss)
   lossAmount: number;      // amount lost (0 for wins, baseBet*betMultiplier for bust, half for rookie)
-  streakMultiplier?: number;    // streak-based multiplier (1.0 / 1.2 / 1.5 / 5.0)
+  streakMultiplier?: number;    // streak-based multiplier (1.0 / 1.3 / 1.7 / 2.5)
 }
 
 type Props = {
@@ -109,7 +109,7 @@ type Props = {
   /** Called when user taps blurred zone to exit celebration */
   onWinCelebrationComplete?: () => void;
   onWageAnimationComplete?: () => void;
-  /** FTUE: block the Draw button until Booker is held */
+  /** FTUE: block the Draw button until the anchor is held */
   ftueDrawBlocked?: boolean;
   /** FTUE: hide the AUTO button during reveal */
   ftueHideSkip?: boolean;
@@ -205,10 +205,11 @@ function isDisabled(state: GameStateLabel): boolean {
 }
 
 // ── Streak fire row with flash (light-up) and extinguish (streak-break) effects ──
-// All 10 emojis on one line: [🔥🔥🔥 1.2x] [🔥🔥 1.5x] [🔥🔥🔥🔥🔥 5x]
+// All 10 emojis on one line: [🔥🔥🔥 1.3x] [🔥🔥 1.7x] [🔥🔥🔥🔥🔥 2.5x]
 // Tiers unlock progressively: tier 2 appears at 3 wins, tier 3 at 5 wins.
+// Numbers must match STREAK_TIERS in shared/utils/payoutLogic.ts.
 
-const STREAK_LABELS: Record<number, string> = { 3: "1.2x", 5: "1.5x", 10: "2.0x" };
+const STREAK_LABELS: Record<number, string> = { 3: "1.3x", 5: "1.7x", 10: "2.5x" };
 
 function StreakFireRow({ streak, prevStreak }: { streak: number; prevStreak: number }) {
   const totalFlames = streak >= 5 ? 10 : streak >= 3 ? 5 : 3;

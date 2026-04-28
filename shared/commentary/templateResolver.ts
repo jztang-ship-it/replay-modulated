@@ -216,9 +216,24 @@ const DETAIL_SNIPPETS: Record<string, (data: TemplateData) => string> = {
   near_miss_loss: (d) => d.gap > 0 ? `${Math.round(d.gap * 10) / 10} short. Almost survived it.` : "",
   streak_event: (d) => d.streak > 0 ? `That's ${d.streak} in a row.` : "",
   streak_proximity: (d) => {
-    if (d.streak === 2) return "One more win unlocks the 1.2x streak bonus.";
-    if (d.streak === 4) return "One more win and you hit 1.5x streak.";
-    if (d.streak >= 8 && d.streak < 10) return `${10 - d.streak} more win${10 - d.streak > 1 ? "s" : ""} to 2.0x streak.`;
+    // Sport-agnostic FTUE-then-1/3 cooldown: first time the player is at the
+    // +1 boundary for a tier, the nudge fires deterministically (teaches the
+    // mechanic). Subsequent times at the same boundary, fires 1 in 3 hands so
+    // it stays "in passing" instead of nagging.
+    // Multipliers must match STREAK_TIERS in shared/utils/payoutLogic.ts.
+    const seenKey = (tier: number) => `replaymod_streak_nudge_seen_${tier}`;
+    const shouldFire = (tier: number): boolean => {
+      try {
+        if (!localStorage.getItem(seenKey(tier))) {
+          localStorage.setItem(seenKey(tier), "1");
+          return true; // first encounter — teach
+        }
+      } catch { /* private mode → behave as first-encounter every time */ return true; }
+      return Math.random() < 1 / 3;
+    };
+    if (d.streak === 2 && shouldFire(3))  return "One more win unlocks the 1.3x streak bonus.";
+    if (d.streak === 4 && shouldFire(5))  return "One more win and you hit 1.7x streak.";
+    if (d.streak === 9 && shouldFire(10)) return "One more win to 2.5x streak.";
     return "";
   },
   streak_broken: () => "The streak is done.",

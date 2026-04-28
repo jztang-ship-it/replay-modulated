@@ -46,7 +46,7 @@ const WIN_BACK: string[] = [
 /** First time hitting a 2-win streak */
 const STREAK_INTRO: string[] = [
   "Two in a row — now we're cooking. Keep it going and the multiplier kicks in. Don't get cocky.",
-  "Back to back wins. See those fire emojis? Three in a row hits 1.2x. No pressure.",
+  "Back to back wins. See those fire emojis? Three in a row hits 1.3x. No pressure.",
   "Two straight. Streak multiplier is warming up — one more and the bonus kicks in.",
 ];
 
