@@ -12,6 +12,7 @@
 export const BasketballSportConfig = {
   name: 'Basketball (NBA)',
   sportLabel: 'Basketball (NBA)',
+  sportKey: "basketball" as const,
 
   positions:    ['PG', 'SG', 'SF', 'PF', 'C'] as string[],
   rosterSlots:  ['PG', 'SG', 'SF', 'PF', 'C', 'FLEX'] as string[],
