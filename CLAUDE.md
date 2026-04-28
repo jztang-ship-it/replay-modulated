@@ -113,7 +113,7 @@ If you need to add something sport-specific, **add it to the adapter, not to the
 These files exist exactly once, under `shared/`. If you find a copy in `{sport}/src/`, that's drift — promote.
 
 - `shared/views/GameView.tsx` *(target — see migration status below)*
-- `shared/components/LandingPage.tsx` *(target — see migration status below)*
+- `shared/components/LandingPage.tsx` ✓ (sport wrappers pass a `LandingAdapter`)
 - `shared/components/GameBar.tsx` ✓
 - `shared/components/CoachLayer.tsx` ✓ (FTUE state machine)
 - `shared/components/CardFront.tsx`, `PlayerCardShell.tsx` ✓
@@ -132,6 +132,7 @@ The `{sport}/src/{file}.ts` files for these names should be either thin wrappers
 These have a real reason to differ — keep per-sport:
 
 - `{sport}/src/components/AthleteCard.tsx` / `BaseballCard.tsx` — different stat tiles, different hero. Both call `<CardFront>` from shared.
+- `{sport}/src/components/LandingPage.tsx` — thin shim that builds a `LandingAdapter` (demo card list, headshot URL, card component, grid layout, optional audio bed and game-log resolver) and passes it to `@shared/components/LandingPage`.
 - `{sport}/src/adapters/SportAdapter.ts` — implements the contract.
 - `{sport}/src/adapters/{sport}Config.ts` — the data the adapter wraps.
 - `{sport}/src/adapters/ftueRoster.ts` — sport-specific FTUE roster (different players).
@@ -146,7 +147,10 @@ These have a real reason to differ — keep per-sport:
 **Drifted, awaiting promotion:**
 
 - `{sport}/src/views/GameView.tsx` — basketball is 2458 lines, baseball is 2129 lines. ~80% should be shared. Phase 2 of the architecture lift.
-- `{sport}/src/components/LandingPage.tsx` — basketball 335, baseball 374. Phase 1 of the architecture lift.
+
+**Recently lifted:**
+
+- `LandingPage.tsx` ✓ Phase 1 — shared component takes a `LandingAdapter`. Per-sport files are now ~80–140 line shims (basketball 79, baseball 137 vs. 335/374 before).
 
 **Until those two are lifted,** any change to one MUST be applied to the other in the same PR. Add a header comment on each linking the two — that's a temporary sync requirement, not a permanent pattern.
 
