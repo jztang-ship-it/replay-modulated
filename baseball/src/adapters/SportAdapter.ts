@@ -104,13 +104,15 @@ export class SportAdapter {
    * convention, integrate the mapping via `gameAdapter` (TODO).
    */
   /** Map a raw position code (from data) to its on-card display glyph.
-   *  Baseball uses emoji: 🏏 for batter, ⚾ for pitcher — clearer than "B" / "P". */
+   *  No Unicode emoji exists for "baseball bat alone" (🏏 is cricket bat + ball),
+   *  so baseball uses short text labels instead. CardFront renders these smaller
+   *  than the basketball "PG/SG" pills because three-letter labels need it. */
   displayPosition(raw: unknown): string {
     const s = String(raw ?? "").trim().toUpperCase();
     if (!s) return "";
-    if (this.isPitcherPosition(s)) return "⚾";
+    if (this.isPitcherPosition(s)) return "PIT";
     // Everything else on a baseball roster is a batter (BAT, DH, 1B/2B/3B/SS/OF/etc.)
-    return "🏏";
+    return "BAT";
   }
 
   isPitcherPosition(rawPosition: unknown): boolean {

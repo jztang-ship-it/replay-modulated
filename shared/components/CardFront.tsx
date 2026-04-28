@@ -502,7 +502,7 @@ export function CardFront(props: CardFrontProps) {
 
         {/* POSITION — top-right; tier-colored per designer (salary left still uses onCardText) */}
         <div style={{ position: "absolute", top: "6%", right: "6%", zIndex: 8, pointerEvents: "none" }}>
-          <span style={{ fontSize: 16, fontWeight: 900, fontStyle: "italic", color: positionTextColor, letterSpacing: -0.5, lineHeight: 1, textTransform: "uppercase" }}>
+          <span style={{ fontSize: 13, fontWeight: 900, fontStyle: "italic", color: positionTextColor, letterSpacing: -0.5, lineHeight: 1, textTransform: "uppercase" }}>
             {pos}
           </span>
         </div>
