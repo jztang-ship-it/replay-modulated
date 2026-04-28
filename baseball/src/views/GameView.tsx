@@ -509,6 +509,9 @@ export default function GameView() {
   }, [gameState]);
   const [noTransition, setNoTransition] = useState(false);
   const [revealedSalary, setRevealedSalary] = useState(0);
+  // Tracks which cards have already had their salary deducted from the rolling
+  // Budget so onCardFpStart and onTapReveal don't double-count.
+  const deductedSalaryCardsRef = useRef<Set<string>>(new Set());
   const rosterRef = useRef<PlayerCard[]>([]);
   const { isFTUE, completeFTUE } = useFTUE("baseball");
   const [legendaryCardName, setLegendaryCardName] = useState<string | undefined>();
@@ -870,6 +873,19 @@ export default function GameView() {
       heldRevealResumeRef.current = resume;
     } : undefined,
     onCardRevealStart: handleCardRevealStart,
+    onCardFpStart: useCallback((cId: string) => {
+      // Budget rolls down in sync with FP roll-up. Deduct at FP animation start.
+      // Ref prevents double-count across tap + skip flows.
+      if (deductedSalaryCardsRef.current.has(cId)) return;
+      const card = rosterRef.current.find(c => {
+        const id = String(c?.cardId ?? c?.basePlayerId ?? "");
+        return id === cId;
+      });
+      if (card && !(card as any).wasHeld) {
+        setRevealedSalary(prev => prev + Number((card as any).salary ?? 0));
+        deductedSalaryCardsRef.current.add(cId);
+      }
+    }, []),
     onCardComplete: useCallback((cId: string) => {
       setRevealIndex(prev => {
         const next = prev + 1;
@@ -1296,6 +1312,7 @@ export default function GameView() {
       setStatsFlippedIds(new Set());
       setMvpId(undefined);
       setRevealedSalary(0);
+      deductedSalaryCardsRef.current = new Set();
       setLastRevealedCardId(null);
       setCelebrationHeld(false);
       setFtueOscillating(false);
@@ -1349,6 +1366,9 @@ export default function GameView() {
         (s, c: any) => c.wasHeld ? s + Number(c.salary ?? 0) : s, 0
       );
       setRevealedSalary(heldSalaryAtDraw);
+      deductedSalaryCardsRef.current = new Set(
+        finalRoster.filter((c: any) => c.wasHeld).map((c: any) => String(c.cardId ?? c.basePlayerId ?? "")),
+      );
 
       rosterRef.current = finalRoster;
       completedCardsRef.current = new Set();
@@ -1383,6 +1403,7 @@ export default function GameView() {
       setFtueGaugeOscDone(false);
       completedCardsRef.current = new Set();
       setRevealedSalary(0);
+      deductedSalaryCardsRef.current = new Set();
       setNoTransition(true);
       const placeholders = createPlaceholders();
       flipState.initCards(placeholders.map(cardId));
@@ -1610,21 +1631,12 @@ export default function GameView() {
                     const id = String(c?.cardId ?? c?.basePlayerId ?? "");
                     return id === cardId;
                   });
-                  if (card && !(card as any).wasHeld) {
+                  if (card && !(card as any).wasHeld && !deductedSalaryCardsRef.current.has(cardId)) {
                     setRevealedSalary(prev => prev + Number((card as any).salary ?? 0));
+                    deductedSalaryCardsRef.current.add(cardId);
                   }
                   tapRevealCard(cardId);
-                } : (cardId: string) => {
-                  // Immediately add this card's salary so budget rolls down in sync with FP roll up
-                  const card = rosterRef.current.find(c => {
-                    const id = String(c?.cardId ?? c?.basePlayerId ?? "");
-                    return id === cardId;
-                  });
-                  if (card && !(card as any).wasHeld) {
-                    setRevealedSalary(prev => prev + Number((card as any).salary ?? 0));
-                  }
-                  tapRevealCard(cardId);
-                })}
+                } : tapRevealCard)}
                 heldFpVisible={heldFpVisible}
                 heldRevealedIds={heldRevealedIds}
                 tappedCardIds={tappedCardIds}
