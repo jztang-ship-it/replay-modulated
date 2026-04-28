@@ -1506,7 +1506,6 @@ export default function GameView() {
 
   function handleButtonClick() {
     if (gameState === "REVEALING") {
-      setRevealedSalary(capUsed);
       setWasSkipped(true);
       skipReveal();
     }
