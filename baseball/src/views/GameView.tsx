@@ -532,7 +532,7 @@ export default function GameView() {
   const [noTransition, setNoTransition] = useState(false);
   const [revealedSalary, setRevealedSalary] = useState(0);
   // Tracks which cards have already had their salary deducted from the rolling
-  // Budget so onCardFpStart and onTapReveal don't double-count.
+  // Budget so onCardFpStart can't double-count across tap + skip flows.
   const deductedSalaryCardsRef = useRef<Set<string>>(new Set());
   const rosterRef = useRef<PlayerCard[]>([]);
   const { isFTUE, completeFTUE } = useFTUE("baseball");
@@ -1411,9 +1411,7 @@ export default function GameView() {
         (s, c: any) => c.wasHeld ? s + Number(c.salary ?? 0) : s, 0
       );
       setRevealedSalary(heldSalaryAtDraw);
-      deductedSalaryCardsRef.current = new Set(
-        finalRoster.filter((c: any) => c.wasHeld).map((c: any) => String(c.cardId ?? c.basePlayerId ?? "")),
-      );
+      deductedSalaryCardsRef.current = new Set();
 
       rosterRef.current = finalRoster;
       completedCardsRef.current = new Set();
@@ -1669,18 +1667,7 @@ export default function GameView() {
                 onToggleLock={toggleLock}
                 onToggleFlip={toggleStatsFlip}
                 revealMode={REVEAL_MODE}
-                onTapReveal={isFTUE && ftueCardsBlocked ? undefined : (isFTUE ? (cardId: string) => {
-                  // FTUE: also tick budget down per card flip
-                  const card = rosterRef.current.find(c => {
-                    const id = String(c?.cardId ?? c?.basePlayerId ?? "");
-                    return id === cardId;
-                  });
-                  if (card && !(card as any).wasHeld && !deductedSalaryCardsRef.current.has(cardId)) {
-                    setRevealedSalary(prev => prev + Number((card as any).salary ?? 0));
-                    deductedSalaryCardsRef.current.add(cardId);
-                  }
-                  tapRevealCard(cardId);
-                } : tapRevealCard)}
+                onTapReveal={isFTUE && ftueCardsBlocked ? undefined : tapRevealCard}
                 heldFpVisible={heldFpVisible}
                 heldRevealedIds={heldRevealedIds}
                 tappedCardIds={tappedCardIds}
