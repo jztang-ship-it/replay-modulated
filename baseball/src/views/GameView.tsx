@@ -153,7 +153,7 @@ async function submitToLeaderboard(metric: string, value: number, extra?: Record
     await fetch("/api/leaderboard", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "submit", metric, value, uid, nickname, session_id: getSessionId(), ...extra }),
+      body: JSON.stringify({ action: "submit", sport: "baseball", metric, value, uid, nickname, session_id: getSessionId(), ...extra }),
     });
   } catch { } // Non-critical — never block game flow
 }
@@ -165,8 +165,8 @@ async function checkLeaderboardRank() {
   if (!uid) return;
   try {
     const [best, session] = await Promise.all([
-      fetch("/api/leaderboard?metric=hand_best&scope=daily&limit=10").then(r => r.json()),
-      fetch("/api/leaderboard?metric=session_score&scope=daily&limit=10").then(r => r.json()),
+      fetch("/api/leaderboard?sport=baseball&metric=hand_best&scope=daily&limit=10").then(r => r.json()),
+      fetch("/api/leaderboard?sport=baseball&metric=session_score&scope=daily&limit=10").then(r => r.json()),
     ]);
     const entries = [...(best.entries ?? []), ...(session.entries ?? [])];
     const onBoard = entries.some((e: any) => e.uid === uid || (sessId && e.session_id === sessId));
@@ -2126,6 +2126,7 @@ export default function GameView() {
       {showLeaderboard && !isFTUE && (
         <LeaderboardScreen
           currentUid={getPlayerUid()}
+          sport="baseball"
           onClose={() => setShowLeaderboard(false)}
         />
       )}
@@ -2141,6 +2142,7 @@ export default function GameView() {
       {showProfile && (
         <ProfileScreen
           currentUid={getPlayerUid()}
+          sport="baseball"
           onClose={() => setShowProfile(false)}
           isAnonymous={isAnonymous}
           onSaveAccount={() => {

@@ -22,13 +22,14 @@ const RANK_METRICS: { id: string; label: string }[] = [
 
 interface Props {
   currentUid: string;
+  sport: "basketball" | "baseball" | "worldcup";
   onClose: () => void;
   isAnonymous?: boolean;
   onSaveAccount?: () => void;
   onOpenFeedback: () => void;
 }
 
-export function ProfileScreen({ currentUid, onClose, isAnonymous, onSaveAccount, onOpenFeedback }: Props) {
+export function ProfileScreen({ currentUid, sport, onClose, isAnonymous, onSaveAccount, onOpenFeedback }: Props) {
   const { user, signOut } = useAuth();
   const [nickname, setNick] = useState(() => getNickname());
   const [editing, setEditing] = useState(false);
@@ -49,7 +50,7 @@ export function ProfileScreen({ currentUid, onClose, isAnonymous, onSaveAccount,
   // Fetch ranks for all three metrics
   useEffect(() => {
     for (const m of RANK_METRICS) {
-      fetch(`/api/leaderboard?metric=${m.id}&scope=daily&limit=50`)
+      fetch(`/api/leaderboard?sport=${sport}&metric=${m.id}&scope=daily&limit=50`)
         .then(r => r.json())
         .then(data => {
           const entries: Entry[] = data.entries ?? [];
@@ -63,7 +64,7 @@ export function ProfileScreen({ currentUid, onClose, isAnonymous, onSaveAccount,
           setRanks(prev => ({ ...prev, [m.id]: { rank: null, score: null } }));
         });
     }
-  }, [currentUid]);
+  }, [currentUid, sport]);
 
   function handleSave() {
     const trimmed = editValue.trim();
