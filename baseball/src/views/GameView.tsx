@@ -20,7 +20,7 @@ import { resetAllOverlays } from "../components/BaseballCard";
 import { GameBar, type CelebrationData } from "../components/GameBar";
 import { useCardFlipState } from "../hooks/useCardFlipState";
 import { useEmotionalReveal, DRAWING_DWELL_MS, type RevealableCard } from "../hooks/useEmotionalReveal";
-import { calculateWinTier, calculatePayout, BASEBALL_WIN_TIERS, type WinTier } from "../utils/payoutLogic";
+import { calculateWinTier, calculatePayoutWithStreak, BASEBALL_WIN_TIERS, type WinTier } from "../utils/payoutLogic";
 
 import { useGameAnalytics } from "@shared/analytics/useGameAnalytics";
 import { CollectScreen } from '@shared/engagement/CollectScreen';
@@ -891,7 +891,7 @@ export default function GameView() {
       runSpring(totalFp, () => {
         lockedGaugeFpRef.current = totalFp;
         const tier = calculateWinTier(totalFp);
-        const payout = calculatePayout(tier, currentBet);
+        const payout = calculatePayoutWithStreak(tier, currentBet, streak);
         setWinTier(tier);
         setWinPayout(payout);
         const bust = !tier || tier === "BUST";

@@ -12,8 +12,15 @@
 import {
   calculateWinTier as _calculateWinTier,
   calculatePayout  as _calculatePayout,
+  calculatePayoutWithStreak as _calculatePayoutWithStreak,
+  getStreakMultiplier,
+  getNextStreakTier,
+  STREAK_TIERS,
 } from "@shared/utils/payoutLogic";
-import type { WinTierKey, WinTierMap } from "@shared/utils/payoutLogic";
+import type { WinTierKey, WinTierMap, StreakTier } from "@shared/utils/payoutLogic";
+
+export { getStreakMultiplier, getNextStreakTier, STREAK_TIERS };
+export type { StreakTier };
 
 export type { WinTierKey };
 export type WinTier = WinTierKey;
@@ -33,4 +40,8 @@ export function calculateWinTier(totalFp: number): WinTierKey {
 
 export function calculatePayout(tier: WinTierKey, betAmount: number): number {
   return _calculatePayout(tier, betAmount, BASEBALL_WIN_TIERS);
+}
+
+export function calculatePayoutWithStreak(tier: WinTierKey, betAmount: number, streak: number): number {
+  return _calculatePayoutWithStreak(tier, betAmount, BASEBALL_WIN_TIERS, streak);
 }
