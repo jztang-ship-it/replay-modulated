@@ -8,6 +8,7 @@ import { getNickname, setNickname } from "@shared/utils/playerIdentity";
 import { getMyReferralCode, buildShareUrl, shareReferralLink, getReferrerCode } from "@shared/utils/referral";
 import { track } from "@shared/analytics/analytics";
 import { InboxCard } from "@shared/inbox/InboxCard";
+import { useAuth } from "@shared/auth/useAuth";
 
 const FF = "'Rajdhani', 'Arial Narrow', sans-serif";
 
@@ -28,10 +29,22 @@ interface Props {
 }
 
 export function ProfileScreen({ currentUid, onClose, isAnonymous, onSaveAccount, onOpenFeedback }: Props) {
+  const { user, signOut } = useAuth();
   const [nickname, setNick] = useState(() => getNickname());
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(nickname);
   const [ranks, setRanks] = useState<Record<string, { rank: number | null; score: number | null }>>({});
+  const [signingOut, setSigningOut] = useState(false);
+
+  const handleSignOut = async () => {
+    if (signingOut) return;
+    if (!confirm("Sign out? You'll keep playing as a guest until you sign in again.")) return;
+    setSigningOut(true);
+    const { error } = await signOut();
+    setSigningOut(false);
+    if (error) { alert("Sign out failed: " + error.message); return; }
+    onClose();
+  };
 
   // Fetch ranks for all three metrics
   useEffect(() => {
@@ -437,6 +450,39 @@ function InviteFriendsSection() {
         <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", wordBreak: "break-all" }}>
           {buildShareUrl()}
         </div>
+
+        {/* Sign out — only for signed-in (non-anonymous) users */}
+        {!isAnonymous && user && (
+          <div style={{
+            marginTop: 8, paddingTop: 16,
+            borderTop: "1px solid rgba(255,255,255,0.06)",
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+          }}>
+            {user.email && (
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
+                Signed in as {user.email}
+              </div>
+            )}
+            <button
+              onClick={handleSignOut}
+              disabled={signingOut}
+              style={{
+                background: "transparent",
+                border: "1px solid rgba(255,255,255,0.15)",
+                borderRadius: 8,
+                padding: "8px 18px",
+                color: "rgba(255,255,255,0.55)",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: signingOut ? "wait" : "pointer",
+                fontFamily: FF,
+                letterSpacing: 0.5,
+              }}
+            >
+              {signingOut ? "Signing out..." : "Sign out"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

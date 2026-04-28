@@ -385,7 +385,9 @@ function pickChadAnalogy(intensity: Intensity, seed: number): string {
 //   comma    (, )         — tightest flow; requires lowercasable continuation
 
 /** First word is a common sentence starter we can safely lowercase after a comma. */
-const SAFE_LOWERCASE_STARTERS = /^(the|a|an|this|that|these|those|it|its|we|he|she|they|you|your|when|if|because|after|before|even|still|but|and|but|while|though|so|cash|green|money|real|not|no|nothing|solid|clean|barely|scraped|minimum|pay|pro|photo|threaded|held|tight|one|huge|big|historic|top|money|serious|deep|all|legend|mvp|starter|rookie|bust|quiet|tonight|tomorrow|paid|closed|paperwork)\b/i;
+// NEVER add acronyms or game-tier names here. `maybeLowerFirst` only lowercases
+// char 0, so MVP → mVP. Tier-name words also drift "All-Star" → "all-Star".
+const SAFE_LOWERCASE_STARTERS = /^(the|a|an|this|that|these|those|it|its|we|he|she|they|you|your|when|if|because|after|before|even|still|but|and|while|though|so|cash|green|money|real|not|no|nothing|solid|clean|barely|scraped|minimum|pay|pro|photo|threaded|held|tight|one|huge|big|historic|top|serious|deep|quiet|tonight|tomorrow|paid|closed|paperwork)\b/i;
 
 /** Lowercase first letter only when safe (common starter words, not proper nouns). */
 function maybeLowerFirst(s: string): string {

@@ -113,10 +113,11 @@ export function RegisterModal({ onClose, onSuccess, signUp, linkGoogle, signInMo
         <div style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>
           {isSignIn ? "Sign in to restore your account" : "Play on any device. Never lose your wins."}
         </div>
-        <button onClick={handleGoogle} disabled={loading} style={{ width: "100%", padding: "12px", borderRadius: 8, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 15, fontWeight: 600, cursor: loading ? "wait" : "pointer", marginBottom: 16 }}>
-          {isSignIn ? "Sign in with Google" : "Sign up with Google"}
+        <button onClick={handleGoogle} disabled={loading} style={{ width: "100%", padding: "13px", borderRadius: 8, border: "none", background: "#fff", color: "#1f2937", fontSize: 15, fontWeight: 700, cursor: loading ? "wait" : "pointer", marginBottom: 18, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+          <span style={{ fontSize: 16, fontWeight: 900, color: "#4285F4" }}>G</span>
+          {isSignIn ? "Sign in with Google" : "Continue with Google"}
         </button>
-        <div style={{ textAlign: "center", color: "#64748b", fontSize: 12, marginBottom: 16 }}>or</div>
+        <div style={{ textAlign: "center", color: "#64748b", fontSize: 11, marginBottom: 14, letterSpacing: 1 }}>or use email</div>
         <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 14, marginBottom: 8, boxSizing: "border-box" }} />
         <div style={{ position: "relative", marginBottom: 12 }}>
           <input
@@ -141,8 +142,8 @@ export function RegisterModal({ onClose, onSuccess, signUp, linkGoogle, signInMo
           </button>
         </div>
         {error && <div style={{ color: "#EF4444", fontSize: 13, marginBottom: 8 }}>{error}</div>}
-        <button onClick={handleSubmit} disabled={loading} style={{ width: "100%", padding: "12px", borderRadius: 8, border: "none", background: "#3b82f6", color: "#fff", fontSize: 15, fontWeight: 700, cursor: loading ? "wait" : "pointer" }}>
-          {loading ? "..." : isSignIn ? "Sign in" : "Save my account"}
+        <button onClick={handleSubmit} disabled={loading} style={{ width: "100%", padding: "11px", borderRadius: 8, border: "1px solid #334155", background: "transparent", color: "#cbd5e1", fontSize: 14, fontWeight: 600, cursor: loading ? "wait" : "pointer" }}>
+          {loading ? "..." : isSignIn ? "Sign in with email" : "Save with email"}
         </button>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16 }}>
           <button onClick={() => setIsSignIn(!isSignIn)} style={{ background: "none", border: "none", color: "#64748b", fontSize: 12, cursor: "pointer", padding: 0 }}>
