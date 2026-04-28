@@ -101,6 +101,8 @@ type Props = {
   legendPulsing?: boolean;
   ftueReplayPulse?: boolean;
   onLegendOpened?: () => void;
+  trophyPulsing?: boolean;
+  onLeaderboardOpened?: () => void;
 };
 
 export function GameBar(props: Props) {

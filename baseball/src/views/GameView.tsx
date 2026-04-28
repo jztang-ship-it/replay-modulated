@@ -158,6 +158,22 @@ async function submitToLeaderboard(metric: string, value: number, extra?: Record
   } catch { } // Non-critical — never block game flow
 }
 
+/** Check if player is in top 10 of either daily leaderboard → set rm_on_board_today for trophy glow */
+async function checkLeaderboardRank() {
+  const uid = getPlayerUid();
+  const sessId = getSessionId();
+  if (!uid) return;
+  try {
+    const [best, session] = await Promise.all([
+      fetch("/api/leaderboard?metric=hand_best&scope=daily&limit=10").then(r => r.json()),
+      fetch("/api/leaderboard?metric=session_score&scope=daily&limit=10").then(r => r.json()),
+    ]);
+    const entries = [...(best.entries ?? []), ...(session.entries ?? [])];
+    const onBoard = entries.some((e: any) => e.uid === uid || (sessId && e.session_id === sessId));
+    localStorage.setItem("rm_on_board_today", onBoard ? "1" : "0");
+  } catch {} // Non-critical
+}
+
 function cardId(card: any): string {
   return String(card?.cardId ?? card?.basePlayerId ?? "");
 }
@@ -559,6 +575,7 @@ export default function GameView() {
     const introSeen = localStorage.getItem("replaymod_pregame_intro_baseball") === "1";
     return !seenToday || !introSeen;
   });
+  const [trophyPulsing, setTrophyPulsing] = useState(false);
   // Tier flip display state
   const [tierFlipKey, setTierFlipKey] = useState(0);
   const [displayTier, setDisplayTier] = useState("BUST");
@@ -754,6 +771,12 @@ export default function GameView() {
       localStorage.setItem("rm_chad_last_hand_bb", String(handCount));
       chadFiredThisIdleRef.current = true;
       setFtueCommentaryOverride({ parts: [chadMessage(topic)], sticky: true });
+      // Blink the relevant icon until tapped
+      if (topic === "leaderboard_intro" || topic === "leaderboard_explainer") {
+        setTrophyPulsing(true);
+      } else {
+        setLegendGold(true);
+      }
       // Auth-gated topics also surface the modal a few seconds after the line
       if (topic === "leaderboard_intro" || topic === "big_win" || topic === "retention") {
         tryOpenAuthModal(`chad_${topic}`, 4500);
@@ -961,6 +984,8 @@ export default function GameView() {
               submitToLeaderboard("hand_best", totalFp, { proof: buildScoreProof(rosterRef.current as any[], totalFp) });
               submitToLeaderboard("hand_avg", totalFp, { handCount });
               submitToLeaderboard("money_won", payout);
+              // Refresh on-board flag (drives trophy pulse via Chad leaderboard_intro topic)
+              setTimeout(() => checkLeaderboardRank(), 2000);
 
               // Update personal bests
               const prevBest = parseFloat(localStorage.getItem("rm_best_hand") ?? "0");
@@ -2060,9 +2085,14 @@ export default function GameView() {
         dataFtuePrimaryAnchor={isFTUE ? (gameState === "HOLD" ? "draw" : "deal") : undefined}
         splitFooter={{ multipliersHost, controlsHost }}
         splitMultiplierRowVisible={isPreRevealFooter && !isFTUE}
-        onViewLeaderboard={() => setShowLeaderboard(true)}
+        onViewLeaderboard={() => {
+          setShowLeaderboard(true);
+          setTrophyPulsing(false);
+        }}
+        trophyPulsing={trophyPulsing && !isFTUE}
+        onLeaderboardOpened={() => setTrophyPulsing(false)}
         streak={streak}
-        legendPulsing={legendGold}
+        legendPulsing={legendGold && !isFTUE}
         onLegendOpened={() => {
           const today = new Date().toISOString().slice(0, 10);
           localStorage.setItem("replaymod_legend_seen_date", today);
