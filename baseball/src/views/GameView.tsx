@@ -1771,7 +1771,7 @@ export default function GameView() {
                 })()}
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "center", gap: 8, paddingTop: 16, width: "100%", height: "100%" }}>
+              <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "center", gap: 4, paddingTop: 10, width: "100%", height: "100%", overflow: "hidden" }}>
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 48, width: "100%" }}>
                   {(() => {
                     const spent =
