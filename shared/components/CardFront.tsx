@@ -432,7 +432,13 @@ export function CardFront(props: CardFrontProps) {
   const fpValue = isShowingActualFp
     ? (visibleFp !== undefined ? displayedFp : Number((card as any)?.actualFp ?? 0))
     : 0;
-  const fpText = Number.isFinite(fpValue) && fpValue > 0 ? fpValue.toFixed(1) : "0.0";
+  // If the count-up animation hasn't run (e.g. card mounted directly into RESULTS
+  // phase from the landing page — no REVEALING transition fires the visibleFp
+  // effect), fall back to actualFp so the slot doesn't render "0.0" indefinitely.
+  const cardActualFp = Number((card as any)?.actualFp ?? 0);
+  const fpText = Number.isFinite(fpValue) && fpValue > 0
+    ? fpValue.toFixed(1)
+    : (isShowingActualFp && cardActualFp > 0 ? cardActualFp.toFixed(1) : "0.0");
 
   const badgeBonusFp = useMemo(() => badges?.reduce((s, b) => s + (b.fp ?? 0), 0) ?? 0, [badges]);
   const hasBadges = (badges?.length ?? 0) > 0;
