@@ -7,7 +7,13 @@ import { useState, useMemo, useCallback } from "react";
 import type { GamePhase, PlayerCard, Achievement } from "../adapters/types";
 import { BaseballCard } from "./BaseballCard";
 import { CardBackGeneric } from "./CardBackGeneric";
-import { headshotUrl } from "@shared/utils/headshotUrl";
+// Baseball ships local headshots at /baseball/headshots/{id}.png. Vite serves
+// the public/ folder at the SPA's base path (`/baseball/`), so an absolute
+// URL is what the browser needs. The shared headshotUrl helper is NBA-default
+// and would return `/headshots/{id}.png`, which wouldn't resolve here.
+function baseballHeadshotUrl(id: string): string {
+  return id ? `/baseball/headshots/${id}.png` : "";
+}
 import { useAuth } from "@shared/auth/useAuth";
 import { RegisterModal } from "@shared/components/RegisterModal";
 
@@ -32,7 +38,7 @@ type LandingCardDef = {
 const CARDS: LandingCardDef[] = [
   // Row 1 — three batters
   {
-    id: "c1", name: "Shohei Ohtani", pos: "DH", salary: 54, fp: 53.6,
+    id: "c1", name: "Shohei Ohtani", pos: "BAT", salary: 54, fp: 53.6,
     team: "Los Angeles Dodgers", season: "2425", basePlayerId: "660271",
     tier: "RED",
     achievements: [
@@ -41,7 +47,7 @@ const CARDS: LandingCardDef[] = [
     ],
   },
   {
-    id: "c2", name: "Fernando Tatis Jr.", pos: "SS", salary: 44, fp: 43.5,
+    id: "c2", name: "Fernando Tatis Jr.", pos: "BAT", salary: 44, fp: 43.5,
     team: "San Diego Padres", season: "2425", basePlayerId: "665487",
     tier: "PURPLE",
     achievements: [
@@ -50,7 +56,7 @@ const CARDS: LandingCardDef[] = [
     ],
   },
   {
-    id: "c3", name: "Freddie Freeman", pos: "1B", salary: 43, fp: 42.7,
+    id: "c3", name: "Freddie Freeman", pos: "BAT", salary: 43, fp: 42.7,
     team: "Los Angeles Dodgers", season: "2425", basePlayerId: "518692",
     tier: "PURPLE",
     achievements: [
@@ -109,7 +115,7 @@ export function LandingPage({ onPlay }: Props) {
         cardId,
         basePlayerId: d.basePlayerId,
         photoCode: d.basePlayerId,
-        headshotUrl: headshotUrl(d.basePlayerId),
+        headshotUrl: baseballHeadshotUrl(d.basePlayerId),
         name: d.name,
         team: d.team,
         season: d.season,

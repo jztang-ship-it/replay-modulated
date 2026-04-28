@@ -23,7 +23,6 @@ import { useEmotionalReveal, DRAWING_DWELL_MS, type RevealableCard } from "../ho
 import { calculateWinTier, calculatePayout, BASEBALL_WIN_TIERS, type WinTier } from "../utils/payoutLogic";
 
 import { useGameAnalytics } from "@shared/analytics/useGameAnalytics";
-import { HotStreakOverlay } from '@shared/engagement/HotStreakOverlay';
 import { CollectScreen } from '@shared/engagement/CollectScreen';
 import { TierGauge, computeGaugeState } from '@shared/components/TierGauge';
 import { useEngagement } from '@shared/engagement/useEngagement';
@@ -462,8 +461,6 @@ export default function GameView() {
   // Zone 1: State
   const [gameState, setGameState] = useState<GameState>("IDLE");
   const {
-    hotStreak,
-    sessionWins,
     taskStates,
     weeklyTaskStates,
     perpetualTaskStates,
@@ -976,19 +973,8 @@ export default function GameView() {
     return "HOLD";
   }, [gameState]);
 
-  const isPreRevealFooter =
-    (gameState === "IDLE" && !isFTUE) ||
-    (gameState === "HOLD" && !isFTUE) ||
-    (gameState === "DEALING" && !isFTUE) ||
-    (gameState === "DRAWING" && !isFTUE);
-  const showGaugeInZone3 =
-    gameState === "REVEALING" ||
-    gameState === "RESULTS" ||
-    gameState === "WIN_CELEBRATION" ||
-    (gameState === "IDLE" && isFTUE) ||
-    (gameState === "DRAWING" && isFTUE) ||
-    (gameState === "HOLD" && isFTUE) ||
-    (gameState === "DEALING" && isFTUE);
+  const isPreRevealFooter = gameState === "HOLD" && !isFTUE;
+  const showGaugeInZone3 = true;
   const isPostReveal = (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier != null;
 
   // Tier color map — mirrors WIN_TIERS in basketball/GameBar.tsx
@@ -2016,7 +2002,6 @@ export default function GameView() {
                 handleButtonClick();
               }}
             />
-            <HotStreakOverlay active={hotStreak} winCount={sessionWins} />
             {showCollect && !isFTUE && (
               <CollectScreen
                 taskStates={taskStates}

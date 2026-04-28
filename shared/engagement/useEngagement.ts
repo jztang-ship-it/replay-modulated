@@ -79,7 +79,6 @@ export interface EngagementState {
   perpetualTaskStates: TaskState[];
   coins:               number;
   xp:                  number;
-  hotStreak:           boolean;
   sessionWins:         number;
   dailyTasksDone:      number;
   streakCount:         number;
@@ -584,7 +583,6 @@ export function useEngagement(): EngagementState & EngagementActions {
     perpetualTaskStates,
     coins,
     xp,
-    hotStreak:      streakCount >= 3,
     sessionWins,
     dailyTasksDone: tasksDone.size,
     streakCount,
