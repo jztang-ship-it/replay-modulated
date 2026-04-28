@@ -4,6 +4,9 @@ import { registerRecordSources } from "@shared/data/recordDetector";
 import { NBA_SINGLE_GAME_RECORDS, STAT_ALIASES } from "@shared/data/nbaRecords";
 import topGames from "../../public/data/topGames_2425.json";
 import careerHighs from "../../public/data/careerHighs_2season.json";
+// Side-effect import: registers the basketball sound pack with the shared
+// soundPackLoader at module-load time. Without this, basketball plays silently.
+import "../utils/soundPack";
 
 registerRecordSources("basketball", {
   topGames: topGames as any,
