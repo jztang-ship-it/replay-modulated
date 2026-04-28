@@ -743,6 +743,7 @@ export default function GameView() {
     if (localStorage.getItem("replaymod_pregame_intro_baseball") === "1") return;
     localStorage.setItem("replaymod_pregame_intro_baseball", "1");
     chadFiredThisIdleRef.current = true;
+    setLegendGold(true);
     setFtueCommentaryOverride({ parts: [chadMessage("welcome")], sticky: true });
   }, [isFTUE, gameState]);
 
