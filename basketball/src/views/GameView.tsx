@@ -688,7 +688,7 @@ export default function GameView() {
   const [ftueCardsBlocked, setFtueCardsBlocked] = useState(false);
   const [ftueReplayReady, setFtueReplayReady] = useState(false);
   const [ftueResultsDim, setFtueResultsDim] = useState(false);
-  const [ftueBookerFlipped, setFtueBookerFlipped] = useState(false);
+  const [ftueAnchorFlipped, setFtueAnchorFlipped] = useState(false);
   const [ftueOscillating, setFtueOscillating] = useState(false);
   const [ftueCommentaryDone, setFtueCommentaryDone] = useState(false);
   const [ftueCommentaryOverride, setFtueCommentaryOverride] = useState<{ parts: React.ReactNode[]; sticky?: boolean } | null>(null);
@@ -699,7 +699,7 @@ export default function GameView() {
   /** After FTUE scripted gauge animation completes — bar stays frozen until next hand */
   const [ftueGaugeOscDone, setFtueGaugeOscDone] = useState(false);
   const [ftueWinCelebrationActive, setFtueWinCelebrationActive] = useState(false);
-  const [ftueBookerPulse, setFtueBookerPulse] = useState(false);
+  const [ftueAnchorPulse, setFtueAnchorPulse] = useState(false);
   const [ftueHoldSpotlight, setFtueHoldSpotlight] = useState(false);
   const [ftueCoachBubbleKey, setFtueCoachBubbleKey] = useState<string | null>(null);
   /** Legend icon gold-filled when pre-game msg is active OR daily bonus unseen */
@@ -1698,8 +1698,8 @@ export default function GameView() {
     });
     // Track when Tatum is flipped in FTUE to trigger the final bubble
     if (isFTUE && cardKey === "ftue-tatum") {
-      setFtueBookerFlipped(true);
-      setFtueBookerPulse(false);
+      setFtueAnchorFlipped(true);
+      setFtueAnchorPulse(false);
       // Dim stays active — lifted only after final_replay bubble is dismissed
     }
   }
@@ -1725,7 +1725,7 @@ export default function GameView() {
       setFtueCommentaryDone(false);
       setFtueCommentaryOverride(null);
       setFtueWinCelebrationActive(false);
-      setFtueBookerPulse(false);
+      setFtueAnchorPulse(false);
       setFtueHoldSpotlight(false);
       pendingCelebration.current = null;
       ftueLastHandFpRef.current = 0;
@@ -1846,8 +1846,8 @@ export default function GameView() {
         setFtueCommentaryDone(false);
         setFtueWinCelebrationActive(false);
         setFtueReplayReady(false);
-        setFtueBookerFlipped(false);
-        setFtueBookerPulse(false);
+        setFtueAnchorFlipped(false);
+        setFtueAnchorPulse(false);
         setFtueHoldSpotlight(false);
         setFtueResultsDim(false);
         ftueTierSlamPlayedRef.current = false;
@@ -1876,7 +1876,7 @@ export default function GameView() {
     }
   }
 
-  // FTUE: when RESULTS starts, dim non-Booker, fire bubble
+  // FTUE: when RESULTS starts, dim non-anchor, fire bubble
   useEffect(() => {
     if (!isFTUE || gameState !== "RESULTS") return;
     setFtueResultsDim(true);
@@ -2098,7 +2098,7 @@ export default function GameView() {
                 noTransition={noTransition}
                 visibleFpMap={visibleFpMap}
                 canFlip={gameState === "RESULTS" || gameState === "WIN_CELEBRATION"}
-                ftueFlipTargetId={isFTUE && (ftueBookerPulse || ftueHoldSpotlight) ? "ftue-tatum" : null}
+                ftueFlipTargetId={isFTUE && (ftueAnchorPulse || ftueHoldSpotlight) ? "ftue-tatum" : null}
                 flipMsMap={flipMsMap}
                 fpCountUpMsMap={fpCountUpMsMap}
                 performanceTagMap={performanceTagMap}
@@ -2398,7 +2398,7 @@ export default function GameView() {
               revealIndex={revealIndex}
               legendaryCardName={legendaryCardName}
               lastRevealedCardId={lastRevealedCardId}
-              ftueBookerFlipped={ftueBookerFlipped}
+              ftueAnchorFlipped={ftueAnchorFlipped}
               onCoachBubbleKey={(key) => {
                 setFtueCoachBubbleKey(key);
                 if (key === "hold_tatum") setFtueHoldSpotlight(true);
@@ -2409,7 +2409,7 @@ export default function GameView() {
                 resume?.();
               }}
               onCelebrationReady={() => {
-                // Non-FTUE: CoachLayer calls this after Booker bubble dismiss
+                // Non-FTUE: CoachLayer calls this after anchor bubble dismiss
                 if (!isFTUE) {
                   setCelebrationHeld(false);
                   if (pendingCelebration.current) {
@@ -2424,8 +2424,8 @@ export default function GameView() {
               onCommentaryText={(parts, sticky) => setFtueCommentaryOverride(parts ? { parts, sticky } : null)}
               dismissRef={coachDismissRef}
               onReplayReady={() => setFtueReplayReady(true)}
-              onFtueReadyToFlip={() => setFtueBookerPulse(true)}
-              onFtueBookerHeld={() => { /* draw pulse handled inside CoachLayer */ }}
+              onFtueReadyToFlip={() => setFtueAnchorPulse(true)}
+              onFtueAnchorHeld={() => { /* draw pulse handled inside CoachLayer */ }}
               onFtueAllDone={() => {
                 // Don't completeFTUE here — isFTUE must stay true for stickyLastOverride
                 setFtueResultsDim(false);
@@ -2439,8 +2439,8 @@ export default function GameView() {
                 setCelebrationHeld(false);
                 setFtueCardsBlocked(false);
                 setFtueReplayReady(false);
-                setFtueBookerFlipped(false);
-                setFtueBookerPulse(false);
+                setFtueAnchorFlipped(false);
+                setFtueAnchorPulse(false);
                 setFtueHoldSpotlight(false);
                 setFtueGaugeOscDone(false);
                 ftueTierSlamPlayedRef.current = false;

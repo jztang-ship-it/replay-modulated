@@ -523,7 +523,7 @@ export default function GameView() {
   const [ftueCardsBlocked, setFtueCardsBlocked] = useState(false);
   const [ftueReplayReady, setFtueReplayReady] = useState(false);
   const [ftueResultsDim, setFtueResultsDim] = useState(false);
-  const [ftueOhtaniFlipped, setFtueOhtaniFlipped] = useState(false);
+  const [ftueAnchorFlipped, setFtueAnchorFlipped] = useState(false);
   const [ftueOscillating, setFtueOscillating] = useState(false);
   const [ftueCommentaryDone, setFtueCommentaryDone] = useState(false);
   const [ftueCommentaryOverride, setFtueCommentaryOverride] = useState<{ parts: React.ReactNode[]; sticky?: boolean } | null>(null);
@@ -533,7 +533,7 @@ export default function GameView() {
   /** After FTUE scripted gauge animation completes — bar stays frozen until next hand */
   const [ftueGaugeOscDone, setFtueGaugeOscDone] = useState(false);
   const [ftueWinCelebrationActive, setFtueWinCelebrationActive] = useState(false);
-  const [ftueOhtaniPulse, setFtueOhtaniPulse] = useState(false);
+  const [ftueAnchorPulse, setFtueAnchorPulse] = useState(false);
   const [ftueHoldSpotlight, setFtueHoldSpotlight] = useState(false);
   const [ftueCoachBubbleKey, setFtueCoachBubbleKey] = useState<string | null>(null);
   const pendingCelebration = useRef<{ totalFp: number } | null>(null);
@@ -875,7 +875,7 @@ export default function GameView() {
       });
       setLastRevealedCardId(cId);
 
-      // FTUE: start gauge oscillation shortly after Booker's stamp lands
+      // FTUE: start gauge oscillation shortly after the anchor's stamp lands
       if (isFTUE && cId === "ftue-ohtani") {
         setTimeout(() => setFtueOscillating(true), 100);
       }
@@ -1283,7 +1283,7 @@ export default function GameView() {
   // Zone 2: Handlers
   function toggleLock(cardKey: string) {
     if (gameState !== "HOLD") return;
-    // FTUE: only Booker can be toggled, and once held cannot unhold
+    // FTUE: only the anchor can be toggled, and once held cannot unhold
     if (isFTUE && cardKey !== "ftue-ohtani") return;
     if (isFTUE && cardKey === "ftue-ohtani" && lockedCardIds.has(cardKey)) return;
     setLockedCardIds(prev => {
@@ -1305,17 +1305,17 @@ export default function GameView() {
     if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
     // FTUE: block ALL flips when a bubble is active
     if (isFTUE && ftueCardsBlocked) return;
-    // FTUE RESULTS: only Booker is flippable while dim is active
+    // FTUE RESULTS: only the anchor is flippable while dim is active
     if (isFTUE && ftueResultsDim && cardKey !== "ftue-ohtani") return;
     setStatsFlippedIds(prev => {
       const next = new Set(prev);
       next.has(cardKey) ? next.delete(cardKey) : next.add(cardKey);
       return next;
     });
-    // Track when Booker is flipped in FTUE to trigger the final bubble
+    // Track when the anchor is flipped in FTUE to trigger the final bubble
     if (isFTUE && cardKey === "ftue-ohtani") {
-      setFtueOhtaniFlipped(true);
-      setFtueOhtaniPulse(false);
+      setFtueAnchorFlipped(true);
+      setFtueAnchorPulse(false);
       // Dim stays active — lifted only after final_replay bubble is dismissed
     }
   }
@@ -1340,7 +1340,7 @@ export default function GameView() {
       setFtueCommentaryDone(false);
       setFtueCommentaryOverride(null);
       setFtueWinCelebrationActive(false);
-      setFtueOhtaniPulse(false);
+      setFtueAnchorPulse(false);
       setFtueHoldSpotlight(false);
       pendingCelebration.current = null;
       ftueLastHandFpRef.current = 0;
@@ -1436,7 +1436,7 @@ export default function GameView() {
     }
   }
 
-  // FTUE: when RESULTS starts, dim non-Booker, fire bubble
+  // FTUE: when RESULTS starts, dim non-anchor, fire bubble
   useEffect(() => {
     if (!isFTUE || gameState !== "RESULTS") return;
     setFtueResultsDim(true);
@@ -1624,7 +1624,7 @@ export default function GameView() {
                 noTransition={noTransition}
                 visibleFpMap={visibleFpMap}
                 canFlip={gameState === "RESULTS" || gameState === "WIN_CELEBRATION"}
-                ftueFlipTargetId={isFTUE && (ftueOhtaniPulse || ftueHoldSpotlight) ? "ftue-ohtani" : null}
+                ftueFlipTargetId={isFTUE && (ftueAnchorPulse || ftueHoldSpotlight) ? "ftue-ohtani" : null}
                 flipMsMap={flipMsMap}
                 fpCountUpMsMap={fpCountUpMsMap}
                 performanceTagMap={performanceTagMap}
@@ -1970,7 +1970,7 @@ export default function GameView() {
               revealIndex={revealIndex}
               legendaryCardName={legendaryCardName}
               lastRevealedCardId={lastRevealedCardId}
-              ftueBookerFlipped={ftueOhtaniFlipped}
+              ftueAnchorFlipped={ftueAnchorFlipped}
               onCoachBubbleKey={(key) => {
                 setFtueCoachBubbleKey(key);
                 if (key === "hold_ohtani") setFtueHoldSpotlight(true);
@@ -1981,7 +1981,7 @@ export default function GameView() {
                 resume?.();
               }}
               onCelebrationReady={() => {
-                // Non-FTUE: CoachLayer calls this after Booker bubble dismiss
+                // Non-FTUE: CoachLayer calls this after anchor bubble dismiss
                 if (!isFTUE) {
                   setCelebrationHeld(false);
                   if (pendingCelebration.current) {
@@ -1995,8 +1995,8 @@ export default function GameView() {
               ftueCommentaryDone={ftueCommentaryDone}
               onCommentaryText={(parts) => setFtueCommentaryOverride(parts ? { parts } : null)}
               onReplayReady={() => setFtueReplayReady(true)}
-              onFtueReadyToFlip={() => setFtueOhtaniPulse(true)}
-              onFtueBookerHeld={() => { /* draw pulse handled inside CoachLayer */ }}
+              onFtueReadyToFlip={() => setFtueAnchorPulse(true)}
+              onFtueAnchorHeld={() => { /* draw pulse handled inside CoachLayer */ }}
               onFtueAllDone={() => {
                 completeFTUE();
                 setFtueResultsDim(false);
@@ -2007,8 +2007,8 @@ export default function GameView() {
                 setCelebrationHeld(false);
                 setFtueCardsBlocked(false);
                 setFtueReplayReady(false);
-                setFtueOhtaniFlipped(false);
-                setFtueOhtaniPulse(false);
+                setFtueAnchorFlipped(false);
+                setFtueAnchorPulse(false);
                 setFtueHoldSpotlight(false);
                 setFtueGaugeOscDone(false);
                 pendingCelebration.current = null;

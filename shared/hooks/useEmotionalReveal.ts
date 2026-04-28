@@ -62,7 +62,7 @@ type Params = {
   revealMode?: "auto" | "tap";
   /**
    * FTUE gate: called after last unheld card completes. Call the provided
-   * resume() callback when ready to start the held-card (Booker) reveal.
+   * resume() callback when ready to start the held-card (anchor) reveal.
    * If not provided, held reveal starts immediately.
    */
   onBeforeHeldReveal?: (resume: () => void) => void;

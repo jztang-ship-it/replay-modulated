@@ -13,8 +13,6 @@ export type BubbleAnchor =
   | "anchor-and-gauge"
   | "anchor-gauge-balance"
   | "anchor-and-commentary"
-  | "booker-and-gauge"       // legacy alias
-  | "booker-gauge-balance"   // legacy alias
   | "ftue-darnit-focus"
   | "gauge"
   | "center"
@@ -44,15 +42,15 @@ interface Props {
   isFTUE: boolean;
   gameState: GameState;
   lastRevealedCardId?: string | null;
-  ftueBookerFlipped?: boolean;
+  ftueAnchorFlipped?: boolean;
   ftueWinCelebrationActive?: boolean;
   ftueCommentaryDone?: boolean;
-  /** Active coach queue key (e.g. hold_roster_intro, hold_booker, card_ftue-westbrook) — for GameView roster highlight */
+  /** Active coach queue key (e.g. hold_roster_intro, hold_<anchor>, card_<id>) — for GameView roster highlight */
   onCoachBubbleKey?: (key: string | null) => void;
   onResumeHeldReveal?: () => void;
   onCelebrationReady?: () => void;
   onFtueReadyToFlip?: () => void;
-  onFtueBookerHeld?: () => void;
+  onFtueAnchorHeld?: () => void;
   onFtueAllDone?: () => void;
   onBubbleActive?: (active: boolean) => void;
   onReplay?: () => void;
@@ -175,11 +173,11 @@ function unionRosterAndCommentaryRect(): DOMRect | null {
 
 /** Anchor card + TierGauge + score row — for the FTUE RESULTS dual spotlight */
 function unionAnchorAndGaugeRect(anchorId: string): DOMRect | null {
-  const bookerEl = document.querySelector(`[data-ftue-card="${anchorId}"]`);
+  const anchorEl = document.querySelector(`[data-ftue-card="${anchorId}"]`);
   const gaugeEl = document.querySelector('[data-ftue-anchor="tier-gauge"]');
   const scoreEl = document.querySelector('[data-ftue-anchor="score-row"]');
-  if (!bookerEl || !gaugeEl) return null;
-  const r1 = bookerEl.getBoundingClientRect();
+  if (!anchorEl || !gaugeEl) return null;
+  const r1 = anchorEl.getBoundingClientRect();
   const r2 = gaugeEl.getBoundingClientRect();
   const r3 = scoreEl ? scoreEl.getBoundingClientRect() : r2;
   const top = Math.min(r1.top, r2.top, r3.top);
@@ -198,12 +196,12 @@ function unionAnchorAndGaugeRect(anchorId: string): DOMRect | null {
 
 /** Anchor + score row + gauge + balance/wage row — full FTUE results spotlight */
 function unionAnchorGaugeBalanceRect(anchorId: string): DOMRect | null {
-  const bookerEl = document.querySelector(`[data-ftue-card="${anchorId}"]`);
+  const anchorEl = document.querySelector(`[data-ftue-card="${anchorId}"]`);
   const gaugeEl = document.querySelector('[data-ftue-anchor="tier-gauge"]');
   const scoreEl = document.querySelector('[data-ftue-anchor="score-row"]');
   const balanceEl = document.querySelector('[data-ftue-anchor="balance-row"]');
-  if (!bookerEl || !gaugeEl) return null;
-  const rects = [bookerEl, gaugeEl, scoreEl, balanceEl].filter(Boolean).map(el => el!.getBoundingClientRect());
+  if (!anchorEl || !gaugeEl) return null;
+  const rects = [anchorEl, gaugeEl, scoreEl, balanceEl].filter(Boolean).map(el => el!.getBoundingClientRect());
   const top = Math.min(...rects.map(r => r.top));
   const bottom = Math.max(...rects.map(r => r.bottom));
   const left = Math.min(...rects.map(r => r.left));
@@ -242,12 +240,12 @@ function resolveAnchorElement(anchor: BubbleAnchor | undefined, anchorCardId: st
     if (!rect) return null;
     return { getBoundingClientRect: () => rect } as unknown as HTMLElement;
   }
-  if (anchor === "booker-and-gauge" || anchor === "anchor-and-gauge") {
+  if (anchor === "anchor-and-gauge") {
     const rect = unionAnchorAndGaugeRect(anchorCardId);
     if (!rect) return null;
     return { getBoundingClientRect: () => rect } as unknown as HTMLElement;
   }
-  if (anchor === "booker-gauge-balance" || anchor === "anchor-gauge-balance") {
+  if (anchor === "anchor-gauge-balance") {
     const rect = unionAnchorGaugeBalanceRect(anchorCardId);
     if (!rect) return null;
     return { getBoundingClientRect: () => rect } as unknown as HTMLElement;
@@ -257,10 +255,10 @@ function resolveAnchorElement(anchor: BubbleAnchor | undefined, anchorCardId: st
 
 export function CoachLayer({
   isFTUE, gameState,
-  lastRevealedCardId, ftueBookerFlipped, ftueWinCelebrationActive, ftueCommentaryDone,
+  lastRevealedCardId, ftueAnchorFlipped, ftueWinCelebrationActive, ftueCommentaryDone,
   lockedCount,
   onCoachBubbleKey,
-  onResumeHeldReveal, onCelebrationReady, onFtueReadyToFlip, onFtueBookerHeld, onFtueAllDone, onBubbleActive, onReplayReady,
+  onResumeHeldReveal, onCelebrationReady, onFtueReadyToFlip, onFtueAnchorHeld, onFtueAllDone, onBubbleActive, onReplayReady,
   onCommentaryText,
   dismissRef,
   ftueTextConfig: cfg,
@@ -279,7 +277,7 @@ export function CoachLayer({
   const pulseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevState = useRef<GameState | null>(null);
   const revealIntroShown = useRef(false);
-  const bookerFlipBubbleShown = useRef(false);
+  const anchorFlipBubbleShown = useRef(false);
 
   // ── Drain / enqueue ────────────────────────────────────────────────────
   function enqueue(entry: QueueEntry, delayMs = 0) {
@@ -324,7 +322,7 @@ export function CoachLayer({
     });
   }, [onBubbleActive]);
 
-  // Parent can align roster “lit” slot (e.g. Booker) with coach bubbles
+  // Parent can align roster “lit” slot (the anchor card) with coach bubbles
   useEffect(() => {
     onCoachBubbleKey?.(current?.key ?? null);
   }, [current, onCoachBubbleKey]);
@@ -383,12 +381,12 @@ export function CoachLayer({
         applyRect(rect);
         return;
       }
-      if (snapshot.anchor === "booker-and-gauge" || snapshot.anchor === "anchor-and-gauge") {
+      if (snapshot.anchor === "anchor-and-gauge") {
         const rect = unionAnchorAndGaugeRect(anchorCardId);
         applyRect(rect);
         return;
       }
-      if (snapshot.anchor === "booker-gauge-balance" || snapshot.anchor === "anchor-gauge-balance") {
+      if (snapshot.anchor === "anchor-gauge-balance") {
         const rect = unionAnchorGaugeBalanceRect(anchorCardId);
         applyRect(rect);
         return;
@@ -463,10 +461,10 @@ export function CoachLayer({
     }
   }, [gameState, pulsing]);
 
-  // ── Draw pulse fires once Booker is held (lockedCount > 0 in HOLD) ───
+  // ── Draw pulse fires once the anchor is held (lockedCount > 0 in HOLD) ───
   useEffect(() => {
     if (!isFTUE || gameState !== "HOLD" || (lockedCount ?? 0) === 0) return;
-    onFtueBookerHeld?.();
+    onFtueAnchorHeld?.();
     setPulsing("draw");
   }, [lockedCount, gameState, isFTUE]); // eslint-disable-line
 
@@ -478,7 +476,7 @@ export function CoachLayer({
     queue.current = [];
     shown.current.clear();
     revealIntroShown.current = false;
-    bookerFlipBubbleShown.current = false;
+    anchorFlipBubbleShown.current = false;
     setCurrent(null);
     onBubbleActive?.(false);
     setTimeout(() => {
@@ -489,7 +487,7 @@ export function CoachLayer({
     }, 500);
   }, [gameState, isFTUE]); // eslint-disable-line
 
-  // ── HOLD — roster+score overview first, then Booker spotlight ────────
+  // ── HOLD — roster+score overview first, then anchor spotlight ────────
   useEffect(() => {
     if (!isFTUE || gameState !== "HOLD") return;
     if (prevState.current === "HOLD") return; // already ran this hand
@@ -562,7 +560,7 @@ export function CoachLayer({
     }, 0);
   }, [lastRevealedCardId, isFTUE]); // eslint-disable-line
 
-  // After tier slam settles → "So close" → tap → Booker flip hint (spotlight booker+gauge)
+  // After tier slam settles → "So close" → tap → anchor flip hint (spotlight anchor+gauge)
   useEffect(() => {
     if (!ftueWinCelebrationActive) return;
     if (!ftueCommentaryDone) return;
@@ -583,7 +581,7 @@ export function CoachLayer({
             anchor: { cardId: anchorCardId },
             position: "below",
             onDismiss: () => {
-              // Don't clear commentary — let the booker_gamelogs effect replace it
+              // Don't clear commentary — let the anchor_gamelogs effect replace it
               // when the user actually flips the card.
               onFtueReadyToFlip?.();
             },
@@ -593,11 +591,11 @@ export function CoachLayer({
     }
   }, [ftueWinCelebrationActive, ftueCommentaryDone]); // eslint-disable-line
 
-  // ── After Booker flipped — spotlight Booker for stat explanation, then light up screen for final text ──
+  // ── After anchor flipped — spotlight anchor for stat explanation, then light up screen for final text ──
   useEffect(() => {
-    if (!isFTUE || !ftueBookerFlipped) return;
-    if (bookerFlipBubbleShown.current) return;
-    bookerFlipBubbleShown.current = true;
+    if (!isFTUE || !ftueAnchorFlipped) return;
+    if (anchorFlipBubbleShown.current) return;
+    anchorFlipBubbleShown.current = true;
     onBubbleActive?.(true);
     setTimeout(() => {
       // Part 1: Spotlight anchor — explain the stat line + badges
@@ -621,7 +619,7 @@ export function CoachLayer({
         },
       });
     }, 800);
-  }, [ftueBookerFlipped, isFTUE, onBubbleActive]); // eslint-disable-line
+  }, [ftueAnchorFlipped, isFTUE, onBubbleActive]); // eslint-disable-line
 
   useEffect(() => {
     if (replayReady) onReplayReady?.();

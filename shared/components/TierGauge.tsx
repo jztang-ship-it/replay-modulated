@@ -91,7 +91,7 @@ const NEAR_MISS_PTS = 8;
 const MAX_FP = 235;   // LEGEND threshold, used for duration scaling
 const BIG_CARD_FP = 35;    // single card FP above this = "big card"
 
-/** FTUE Booker hand: five drawn cards only (see ftueRoster.ts) — bar starts here before scripted gauge */
+/** FTUE anchor hand: drawn cards only (see ftueRoster.ts) — bar starts here before scripted gauge */
 const FTUE_FIVE_CARDS_FP = 105;
 const FTUE_FINAL_FP = 189.4;
 /** Imagined peak FP for the “past Starter into All-Star” hero beat (All-Star line = 195) */
