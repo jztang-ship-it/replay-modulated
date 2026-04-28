@@ -25,6 +25,10 @@ export interface ResolveConfig {
 export interface ResolveAdapter {
   computeFantasyPoints(stats: Record<string, any>): number;
   computeBadges(stats: Record<string, any>): Achievement[];
+  /** Optional per-card log filter — used by sports with role-mixed players
+   *  (e.g. baseball two-way: a BAT card must not pull a pitcher's log line).
+   *  Sports without role distinctions can omit; default is "all logs valid". */
+  isLogValidForCard?(position: unknown, log: RawLog): boolean;
 }
 
 export function resolveCards(cards: GeneratedCard[], logsByKey: Map<string, RawLog[]>, config: ResolveConfig, adapter: ResolveAdapter, rnd: () => number, _handCount?: number): { resolved: ResolvedCard[]; mvpCardId: string | undefined } {
@@ -32,7 +36,7 @@ export function resolveCards(cards: GeneratedCard[], logsByKey: Map<string, RawL
   let mvpCardId: string | undefined;
   const bonusMap = config.dailyBonusMap;
   const resolved: ResolvedCard[] = cards.map(card => {
-    const log = pickBiasedLog(card.basePlayerId, parseSeasonNum(card.season), card.tier, logsByKey, rnd, config.minMinutes ?? 8);
+    const log = pickBiasedLog(card, logsByKey, adapter, rnd, config.minMinutes ?? 8);
     const stats = log?.stats ?? {};
     // Inject _position BEFORE FP calc so positionProjectionWeights are used
     const statsWithPosition = { ...stats, _position: card.position ?? "" };
@@ -66,9 +70,11 @@ export function extractFpFromStats(stats: Record<string, any>, adapter: ResolveA
   return adapter.computeFantasyPoints(stats);
 }
 
-function pickBiasedLog(basePlayerId: string, season: number | null, tier: string, logsByKey: Map<string, RawLog[]>, rnd: () => number, minMinutes: number = 8): RawLog | null {
-  const base = basePlayerId.trim();
+function pickBiasedLog(card: GeneratedCard, logsByKey: Map<string, RawLog[]>, adapter: ResolveAdapter, rnd: () => number, minMinutes: number = 8): RawLog | null {
+  const base = String(card.basePlayerId ?? "").trim();
   if (!base) return null;
+  const season = parseSeasonNum(card.season);
+  const tier = card.tier;
   let candidates: RawLog[] = season !== null ? (logsByKey.get(`${base}|${season}`) ?? []) : [];
   if (!candidates.length) candidates = logsByKey.get(base) ?? [];
   // Filter out garbage logs:
@@ -76,6 +82,9 @@ function pickBiasedLog(basePlayerId: string, season: number | null, tier: string
   // 2. If minutes field exists, must meet minMinutes threshold from config
   //    (defaults to 8 if not set; basketballConfig sets 10)
   // 3. If no minutes field, trust the stats — valid game, just missing metadata
+  // 4. Role-aware: adapter.isLogValidForCard rejects wrong-role lines (e.g. a
+  //    baseball BAT card pulling a pitcher's stat line for a two-way player).
+  //    Sports without roles (basketball) leave this hook unset → all logs pass.
   const minMins = minMinutes;
   candidates = candidates.filter(l => {
     const stats = l.stats ?? {};
@@ -89,6 +98,7 @@ function pickBiasedLog(basePlayerId: string, season: number | null, tier: string
       const mins = mpStr.includes(":") ? parseFloat(mpStr.split(":")[0]) : parseFloat(mpStr);
       if (Number.isFinite(mins) && mins < minMins) return false;
     }
+    if (adapter.isLogValidForCard && !adapter.isLogValidForCard(card.position, l)) return false;
     return true;
   });
   if (!candidates.length) return null;

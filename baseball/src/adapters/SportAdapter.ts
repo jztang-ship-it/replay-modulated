@@ -115,6 +115,24 @@ export class SportAdapter {
     return "BAT";
   }
 
+  /**
+   * Role-aware log filter consumed by shared resolveEngine.pickBiasedLog.
+   * Two-way players (Ohtani, etc.) have separate batter + pitcher entries on
+   * the same date in game-logs.json. Without this filter a BAT card can pull
+   * the pitcher line and render a 0/0/0 batter stat-back ("no game log"),
+   * and vice versa. BAT requires a meaningful batting event; P requires the
+   * player actually pitched.
+   */
+  isLogValidForCard(position: unknown, log: { stats?: Record<string, any> }): boolean {
+    const s = log?.stats ?? {};
+    if (this.isPitcherPosition(position)) {
+      return Number(s.ip ?? 0) > 0;
+    }
+    return Number(s.h ?? 0) > 0 || Number(s.hr ?? 0) > 0 || Number(s.rbi ?? 0) > 0
+      || Number(s.r ?? 0) > 0 || Number(s.bb ?? 0) > 0 || Number(s.sb ?? 0) > 0
+      || Number(s.doubles ?? 0) > 0 || Number(s.triples ?? 0) > 0;
+  }
+
   isPitcherPosition(rawPosition: unknown): boolean {
     const s = String(rawPosition ?? "").trim().toUpperCase();
     if (!s) return false;
