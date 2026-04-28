@@ -190,7 +190,7 @@
       "archetype": "star_carry",
       "register": "win",
       "tone": "culture_wry",
-      "template": "The pitcher had a family, {nick}. No mercy at the plate today and the box score is evidence.",
+      "template": "The pitcher should've been thinking about his family, {nick}. No mercy at the plate today — the box score is evidence.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -546,7 +546,7 @@
       "archetype": "star_carry_big",
       "register": "win",
       "tone": "culture_wry",
-      "template": "The pitcher had a family, {nick}. No mercy at the plate today and the box score is evidence.",
+      "template": "The pitcher should've been thinking about his family, {nick}. No mercy at the plate today — the box score is evidence.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
@@ -2486,7 +2486,7 @@
       "archetype": "near_miss",
       "register": "loss",
       "tone": "hype",
-      "template": "{name} lost by a sliver. {gap} is basically a rounding error.",
+      "template": "Lost by a sliver. {gap} is basically a rounding error.",
       "tags": [
         "near_miss",
         "phase2"
@@ -2606,7 +2606,7 @@
       "archetype": "near_miss",
       "register": "loss",
       "tone": "culture_wry",
-      "template": "{name} lost by {gap}. The fantasy version of a foul ball on a 3-2 count.",
+      "template": "Lost by {gap}. The fantasy version of a foul ball on a 3-2 count.",
       "tags": [
         "near_miss",
         "phase2"
@@ -2636,7 +2636,7 @@
       "archetype": "near_miss",
       "register": "loss",
       "tone": "culture_wry",
-      "template": "{name} brought the bat to a bat fight and still lost by the handle.",
+      "template": "Brought the bat to a bat fight and still lost by the handle.",
       "tags": [
         "near_miss",
         "phase2"
@@ -2831,7 +2831,7 @@
       "archetype": "near_miss",
       "register": "loss",
       "tone": "deadpan",
-      "template": "{name} lost by {gap}. So, almost.",
+      "template": "Lost by {gap}. So, almost.",
       "tags": [
         "near_miss",
         "phase2"
@@ -3510,7 +3510,7 @@
       "archetype": "collapse",
       "register": "loss",
       "tone": "culture_wry",
-      "template": "{name} stacked {streak} wins then lost by {gap}. Icarus with a batting average.",
+      "template": "Stacked {streak} wins, then lost by {gap}. Icarus with a batting average.",
       "tags": [
         "collapse",
         "phase2"
@@ -3735,7 +3735,7 @@
       "archetype": "collapse",
       "register": "loss",
       "tone": "deadpan",
-      "template": "{name} won {streak} straight and then lost by {gap}. So that is over.",
+      "template": "Won {streak} straight, then lost by {gap}. So that's over.",
       "tags": [
         "collapse",
         "phase2"

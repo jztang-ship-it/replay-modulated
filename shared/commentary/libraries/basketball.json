@@ -4079,7 +4079,7 @@
       "archetype": "near_miss",
       "register": "loss",
       "tone": "hype",
-      "template": "{name} lost by a breath — {gap} is basically a rounding error.",
+      "template": "Lost by a breath — {gap} is basically a rounding error.",
       "tags": [
         "near_miss",
         "phase2"
@@ -4199,7 +4199,7 @@
       "archetype": "near_miss",
       "register": "loss",
       "tone": "culture_wry",
-      "template": "{name} lost by {gap} — the fantasy version of a bank shot rimming out.",
+      "template": "Lost by {gap} — the fantasy version of a bank shot rimming out.",
       "tags": [
         "near_miss",
         "phase2"
@@ -4229,7 +4229,7 @@
       "archetype": "near_miss",
       "register": "loss",
       "tone": "culture_wry",
-      "template": "{name} brought a knife to a knife fight and still lost by the handle.",
+      "template": "Brought a knife to a knife fight and still lost by the handle.",
       "tags": [
         "near_miss",
         "phase2"
@@ -4424,7 +4424,7 @@
       "archetype": "near_miss",
       "register": "loss",
       "tone": "deadpan",
-      "template": "{name} lost by {gap}. So, almost.",
+      "template": "Lost by {gap}. So, almost.",
       "tags": [
         "near_miss",
         "phase2"
@@ -5271,7 +5271,7 @@
       "archetype": "collapse",
       "register": "loss",
       "tone": "culture_wry",
-      "template": "{name} stacked {streak} wins then lost by {gap} — Icarus with a box score.",
+      "template": "Stacked {streak} wins, then lost by {gap} — Icarus with a box score.",
       "tags": [
         "collapse",
         "phase2"
@@ -5496,7 +5496,7 @@
       "archetype": "collapse",
       "register": "loss",
       "tone": "deadpan",
-      "template": "{name} won {streak} straight and then lost by {gap}. So that is over.",
+      "template": "Won {streak} straight, then lost by {gap}. So that's over.",
       "tags": [
         "collapse",
         "phase2"
