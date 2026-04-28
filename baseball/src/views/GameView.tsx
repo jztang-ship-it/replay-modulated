@@ -43,14 +43,12 @@ import { FeedbackModal } from "@shared/inbox/FeedbackModal";
 import { listMessages } from "@shared/inbox/inbox";
 import { track } from "@shared/analytics/analytics";
 import { selectCommentary } from "@shared/commentary/selectCommentary";
-import type { CommentaryOutput } from "@shared/commentary/types";
 import { chadMessage } from "@shared/commentary/chad";
 import { captureReferrerFromUrl, applyReferral, claimReferral } from "@shared/utils/referral";
 import { featureFlags } from "@shared/featureFlags";
 import { detectTopGame } from "@shared/data/recordDetector";
 import { selectStar } from "@shared/commentary/storySelector";
 import { RegisterModal } from "@shared/components/RegisterModal";
-// buildBaseballContext — culture injection now handled inside selectCommentary
 
 // Test-wire only: allow passing glow props even if wrapper prop types lag behind.
 const RosterGridAny = RosterGrid as any;
@@ -559,7 +557,6 @@ export default function GameView() {
   // Spring oscillation phase — fires after all cards settle, before results lock in
   const [springFp, setSpringFp] = useState<number | null>(null);
   const [springSettled, setSpringSettled] = useState(false);
-  const [lbContextNonce, setLbContextNonce] = useState(0);
   const springRafRef = useRef<number>(0);
   const springTimersRef = useRef<number[]>([]);
   const pendingBalanceUpdateRef = useRef<(() => void) | null>(null);
@@ -1054,12 +1051,6 @@ export default function GameView() {
   const gaugeTotalFp = displayFp;
   latestGaugeFpRef.current = gaugeTotalFp;
 
-  // ── Claude commentary ────────────────────────────────────────────────────
-  const commentaryRef = useRef<CommentaryOutput | null>(null);
-  const commentaryStatusRef = useRef<'idle' | 'pending' | 'succeeded' | 'failed'>('idle');
-  const recentTonesRef = useRef<string[]>([]);
-  const commentaryFiredHandRef = useRef(-1);
-
   // Top Games: detect on the star card's real-life line.
   // Shared between commentary (as copyInput.topGame) and card render (topGameTier prop).
   const topGameInfo = useMemo(() => {
@@ -1097,15 +1088,6 @@ export default function GameView() {
       }
       return null;
     }
-    // Wait for Claude while pending — never show template then swap
-    if (commentaryStatusRef.current === 'pending') return null;
-    // Prefer Claude commentary if it landed
-    if (commentaryStatusRef.current === 'succeeded' && commentaryRef.current?.commentary) {
-      const copy = { primary: commentaryRef.current.commentary, secondary: "" };
-      postRevealCopyRef.current = copy;
-      return copy;
-    }
-    // Fallback: new commentary composer
     const fp = lockedGaugeFpRef.current ?? displayFp;
     const gaugeSnap = computeGaugeState(fp, GAUGE_THRESHOLDS as any, winTier, 8);
     // Primary: unified selector. Fallback: legacy compose.
@@ -1136,7 +1118,7 @@ export default function GameView() {
     const copy = selectCommentary(copyInput);
     postRevealCopyRef.current = copy;
     return copy;
-  }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct, lbContextNonce]); // eslint-disable-line
+  }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct]); // eslint-disable-line
 
   // Never show intermediate tiers during spring — only show final tier after spring settles
   const activeTierForDisplay = winTier ?? deriveTierFromFp(totalFp);
@@ -1208,22 +1190,8 @@ export default function GameView() {
       frozenBarFpRef.current = null;
       anchorFpCallCountRef.current = 0;
       postRevealCopyRef.current = null;
-      commentaryRef.current = null;
-      commentaryStatusRef.current = 'idle';
     }
   }, [gameState]);
-
-  // Commentary is now handled by selectCommentary in the postRevealCopy memo.
-  // This effect just ensures the status ref transitions so the memo runs.
-  useEffect(() => {
-    if (gameState !== "REVEALING") return;
-    if (isFTUE) return;
-    if (commentaryFiredHandRef.current === handCount) return;
-    commentaryFiredHandRef.current = handCount;
-    commentaryStatusRef.current = 'failed';
-    postRevealCopyRef.current = null;
-    setLbContextNonce(n => n + 1);
-  }, [gameState, isFTUE, handCount, streak]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const flippedIds = useMemo(() => {
     if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") return statsFlippedIds;

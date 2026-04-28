@@ -41,10 +41,7 @@ import { captureReferrerFromUrl, applyReferral, claimReferral } from '@shared/ut
 import { supabase } from "@shared/lib/supabase";
 import { buildScoreProof } from '@shared/utils/scoreProof';
 import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
-import { generateCommentary } from "@shared/commentary/generateCommentary";
 import { chadMessage } from "@shared/commentary/chad";
-import type { CommentaryInput, CommentaryOutput, CommentaryRosterCard } from "@shared/commentary/types";
-import { buildBasketballContext } from "../utils/buildBasketballContext";
 import { ProfileScreen } from '@shared/components/ProfileScreen';
 import { useAuth } from "@shared/auth/useAuth";
 import { RegisterModal } from "@shared/components/RegisterModal";
@@ -650,10 +647,6 @@ export default function GameView() {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [bigWinFired, setBigWinFired] = useState(false);
   const sessionCount = useRef(parseInt(localStorage.getItem("rm_session_count") ?? "0", 10));
-  // Bumped when fetchLeaderboardContext patches postRevealCopyRef.current.secondary,
-  // forcing the postRevealCopy useMemo to re-read the ref. Each new hand resets the
-  // ref to null and we kick off a fresh fetch.
-  const [lbContextNonce, setLbContextNonce] = useState(0);
 
   useEffect(() => {
     if (gameState === "IDLE" || gameState === "HOLD") setShowRawScore(false);
@@ -1379,19 +1372,6 @@ export default function GameView() {
   // Smart post-reveal copy — computed once when spring settles, then locked for the hand.
   // Uses a ref so the copy never changes mid-display from dependency churn.
   const postRevealCopyRef = useRef<ReturnType<typeof selectCommentary> | null>(null);
-  // Claude-generated commentary, populated by the REVEALING-phase pre-fetch effect.
-  // postRevealCopy memo prefers this over the template fallback. Reset per hand.
-  const commentaryRef = useRef<CommentaryOutput | null>(null);
-  // Status of the Claude pre-fetch for the CURRENT hand. The memo blocks rendering
-  // (returns null → empty commentary box) while 'pending', so the template never
-  // shows-then-swaps. Only after 'succeeded' or 'failed' does the memo populate.
-  // 'idle' = no fetch yet; 'pending' = fetch in flight; 'succeeded' = use Claude;
-  // 'failed' = use template fallback (or static).
-  const commentaryStatusRef = useRef<'idle' | 'pending' | 'succeeded' | 'failed'>('idle');
-  // Per-hand dedup so the pre-fetch effect fires exactly once per hand.
-  const commentaryFiredHandRef = useRef<number>(-1);
-  // Last 3 tones used by Claude — passed back into the prompt to enforce variation.
-  const recentTonesRef = useRef<string[]>([]);
   const postRevealCopy = useMemo(() => {
     // Once computed, lock it — never recompute until next hand
     if (postRevealCopyRef.current) return postRevealCopyRef.current;
@@ -1399,20 +1379,6 @@ export default function GameView() {
     // FTUE: no postRevealCopy — commentary handled by CoachLayer
     if (isFTUE) {
       return null;
-    }
-    // While Claude is in flight, render NOTHING. We deliberately wait so the
-    // template never shows-then-swaps. The pre-fetch effect transitions status
-    // to 'succeeded' or 'failed' on resolve and bumps lbContextNonce to re-run
-    // this memo. The 3s timeout in generateCommentary guarantees we never wait
-    // forever.
-    if (commentaryStatusRef.current === 'pending') {
-      return null;
-    }
-    // Tier 1: Claude commentary if it landed.
-    if (commentaryStatusRef.current === 'succeeded' && commentaryRef.current?.commentary) {
-      const copy = { primary: commentaryRef.current.commentary, secondary: "" };
-      postRevealCopyRef.current = copy;
-      return copy;
     }
     const fp = lockedGaugeFpRef.current ?? displayFp;
     const gaugeSnap = computeGaugeState(fp, GAUGE_THRESHOLDS as any, winTier, 8);
@@ -1464,7 +1430,7 @@ export default function GameView() {
     }
     postRevealCopyRef.current = copy;
     return copy;
-  }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct, lbContextNonce]); // eslint-disable-line
+  }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct]); // eslint-disable-line
 
   // Never show intermediate tiers during spring — only show final tier after spring settles
   const activeTierForDisplay = winTier ?? deriveTierFromFp(totalFp);
@@ -1536,92 +1502,8 @@ export default function GameView() {
       frozenBarFpRef.current = null;
       anchorFpCallCountRef.current = 0;
       postRevealCopyRef.current = null;
-      commentaryRef.current = null;
-      commentaryStatusRef.current = 'idle';
-      commentaryFiredHandRef.current = -1;
     }
   }, [gameState]);
-
-  // ── Claude commentary pre-fetch ─────────────────────────────────────────
-  // Fire as soon as REVEALING starts. By then rosterRef holds finalized cards
-  // (actualFp is already resolved server-side; the reveal phase is animation).
-  // Result lands in commentaryRef and the postRevealCopy memo prefers it.
-  // Per-hand dedup via commentaryFiredHandRef.
-  useEffect(() => {
-    if (gameState !== "REVEALING") return;
-    if (isFTUE) return;
-    if (commentaryFiredHandRef.current === handCount) return;
-    commentaryFiredHandRef.current = handCount;
-    commentaryStatusRef.current = 'pending';
-
-    const finalRoster = rosterRef.current;
-    if (!finalRoster.length) {
-      commentaryStatusRef.current = 'failed';
-      return;
-    }
-
-    const finalFp = finalRoster.reduce(
-      (s, c: any) => s + Number(c.actualFp ?? 0),
-      0,
-    );
-    const finalTier = (deriveTierFromFp(finalFp) ?? "BUST") as any;
-    const gauge = computeGaugeState(
-      finalFp,
-      GAUGE_THRESHOLDS as any,
-      finalTier,
-      8,
-    );
-
-    const rosterShape: CommentaryRosterCard[] = finalRoster.map((c: any) => ({
-      name: String(c.name ?? ""),
-      salary: Number(c.salary ?? 0),
-      actualFp: Number(c.actualFp ?? 0),
-      projectedFp: Number(c.projectedFp ?? 0),
-      cardTier: String(c.tier ?? ""),
-      opponent: String(c.gameInfo?.opponent ?? ""),
-      homeAway: String(c.gameInfo?.homeAway ?? "") as "H" | "A" | "",
-      statLine: c.statLine ?? {},
-      extremeFlags: detectExtremes(c.statLine ?? {}, Number(c.salary ?? 0)),
-    }));
-
-    const culture = buildBasketballContext(rosterShape);
-
-    const input: CommentaryInput = {
-      sport: "basketball",
-      totalFp: finalFp,
-      winTier: finalTier,
-      nextTier: gauge.nextTier as any,
-      tierFloor: gauge.curMin,
-      nextTierMin: gauge.nextMin > 0 && gauge.nextMin < 9999 ? gauge.nextMin : undefined,
-      streak,
-      prevStreak: finalTier === "BUST" ? streak : Math.max(0, streak - 1),
-      isBust: finalTier === "BUST",
-      handCount,
-      roster: rosterShape,
-      // TODO: leaderboard rank/gap input — requires exposing raw rank from
-      // leaderboardContext alongside its current string output. Until then,
-      // Claude generates without leaderboard awareness; the legacy patch
-      // path still adds a nudge line when Claude is unavailable.
-    };
-
-    generateCommentary(input, culture, recentTonesRef.current).then(result => {
-      if (result) {
-        commentaryRef.current = result;
-        if (result.tone) {
-          const next = [result.tone, ...recentTonesRef.current.filter(t => t !== result.tone)].slice(0, 6);
-          recentTonesRef.current = next;
-        }
-      }
-      commentaryStatusRef.current = result ? 'succeeded' : 'failed';
-      // Clear the locked ref so the memo recomputes and picks the new tier.
-      postRevealCopyRef.current = null;
-      setLbContextNonce(n => n + 1);
-    }).catch(() => {
-      commentaryStatusRef.current = 'failed';
-      postRevealCopyRef.current = null;
-      setLbContextNonce(n => n + 1);
-    });
-  }, [gameState, isFTUE, handCount, streak]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const flippedIds = useMemo(() => {
     if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") return statsFlippedIds;
