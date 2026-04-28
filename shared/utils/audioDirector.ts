@@ -275,12 +275,12 @@ class AudioDirector {
 
       // Optional: keep a quiet procedural low-end underneath for sub-bass fill
       this.addProceduralBand(ctx, now, 200, 0.25, GAINS.BED_LOW * 0.4, 8);
-    } else {
-      // ── Procedural fallback ───────────────────────────────────────────
-      this.addProceduralBand(ctx, now, 350, 0.3, GAINS.BED_LOW, 8);
-      this.addProceduralBand(ctx, now, 1400, 0.45, GAINS.BED_MID, 5);
-      this.addProceduralBand(ctx, now, 3000, 0.5, GAINS.BED_HIGH, 4);
     }
+    // No procedural fallback: sports that haven't shipped a real crowd-bed
+    // asset (i.e. baseball today) stay silent rather than playing generic
+    // filtered-noise "crowd" that doesn't fit the sport. Per-sport game
+    // sounds (FP tick, hold, tier-result, etc.) are oscillator-based and
+    // play independent of bed presence.
 
     // LFO: slow crowd wave (always procedural — it's gain control, not content)
     const mainGain = this.bedGains[0];
