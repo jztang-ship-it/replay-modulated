@@ -3,10 +3,12 @@
  * 5 cards in a 2P+3BAT grid (3 top row, 2 bottom row centered).
  * Start face-down with TAP prompt. Tap to flip and reveal real in-game card fronts.
  */
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import type { GamePhase, PlayerCard, Achievement } from "../adapters/types";
 import { BaseballCard } from "./BaseballCard";
 import { CardBackGeneric } from "./CardBackGeneric";
+import { ensureLoaded, getLogsByKey } from "../engines/dataEngine";
+import { sportAdapter } from "../adapters/SportAdapter";
 // Baseball ships local headshots at /baseball/headshots/{id}.png. Vite serves
 // the public/ folder at the SPA's base path (`/baseball/`), so an absolute
 // URL is what the browser needs. The shared headshotUrl helper is NBA-default
@@ -92,11 +94,72 @@ const GRID_COLUMNS = ["1 / span 2", "3 / span 2", "5 / span 2", "2 / span 2", "4
 
 interface Props { onPlay: () => void; }
 
+// Pick one game log per landing card from /baseball/data/game-logs.json,
+// then compute its FP + earned badges via sportAdapter. Run once on mount;
+// before logs load, the cards still render with avg FP from CARDS so the
+// page never flashes "0.0".
+type ResolvedLanding = { actualFp: number; statLine: Record<string, number>;
+  achievements: Achievement[]; gameInfo: { date: string; opponent: string; homeAway?: "H" | "A" } };
+
+function pickRandomPositiveLog(logs: any[] | undefined): any | null {
+  if (!logs || logs.length === 0) return null;
+  // Prefer logs with non-trivial FP-relevant stats so the landing card looks
+  // alive (not a 0-0-0 night). Fall back to any log if filter is empty.
+  const positive = logs.filter(l => {
+    const s = l?.stats ?? {};
+    return Number(s.h ?? 0) > 0 || Number(s.hr ?? 0) > 0 || Number(s.rbi ?? 0) > 0
+      || Number(s.bb ?? 0) > 0 || Number(s.sb ?? 0) > 0
+      || Number(s.ip ?? 0) > 0 || Number(s.k ?? 0) > 0;
+  });
+  const pool = positive.length ? positive : logs;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function resolveLandingCard(d: LandingCardDef): ResolvedLanding | null {
+  let logsByKey: Map<string, any[]>;
+  try { logsByKey = getLogsByKey(); } catch { return null; }
+  const candidates =
+    logsByKey.get(`${d.basePlayerId}|2425`) ??
+    logsByKey.get(d.basePlayerId) ?? [];
+  const log = pickRandomPositiveLog(candidates);
+  if (!log) return null;
+  const stats = { ...(log.stats ?? {}), _position: d.pos };
+  const baseFp = sportAdapter.computeFantasyPoints(stats);
+  const earned = sportAdapter.computeBadges(stats) as Achievement[];
+  const badgeBonus = earned.reduce((s, b: any) => s + (b?.fp ?? 0), 0);
+  return {
+    actualFp: Math.round((baseFp + badgeBonus) * 10) / 10,
+    statLine: stats,
+    achievements: earned,
+    gameInfo: {
+      date: String(log.date ?? ""),
+      opponent: String(log.opponent ?? ""),
+    },
+  };
+}
+
 export function LandingPage({ onPlay }: Props) {
   const { isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
   const [showSignIn, setShowSignIn] = useState(false);
   const [flipped, setFlipped] = useState<Set<string>>(new Set());
   const phase: GamePhase = "RESULTS";
+
+  // Per-card resolved game-log state. Empty until dataEngine finishes loading.
+  const [resolved, setResolved] = useState<Record<string, ResolvedLanding>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    ensureLoaded().then(() => {
+      if (cancelled) return;
+      const next: Record<string, ResolvedLanding> = {};
+      for (const d of CARDS) {
+        const r = resolveLandingCard(d);
+        if (r) next[d.id] = r;
+      }
+      setResolved(next);
+    }).catch(() => { /* fall through to avg-FP fallback */ });
+    return () => { cancelled = true; };
+  }, []);
 
   const handlePlay = useCallback(() => { onPlay(); }, [onPlay]);
 
@@ -111,6 +174,7 @@ export function LandingPage({ onPlay }: Props) {
   const playerCards = useMemo(() => {
     return CARDS.map((d, slotIndex) => {
       const cardId = `landing-${d.id}`;
+      const r = resolved[d.id];
       return {
         cardId,
         basePlayerId: d.basePlayerId,
@@ -123,16 +187,18 @@ export function LandingPage({ onPlay }: Props) {
         tier: d.tier,
         salary: d.salary,
         projectedFp: d.fp,
-        actualFp: d.fp,
+        // Pre-load: show the avg as a placeholder so the FP slot never reads 0.
+        // Post-load: real game-log FP including badge bonuses.
+        actualFp: r ? r.actualFp : d.fp,
         fpDelta: 0,
-        gameInfo: { date: "", opponent: "", homeAway: "" as any },
-        statLine: {},
-        achievements: d.achievements,
+        gameInfo: r?.gameInfo ?? { date: "", opponent: "", homeAway: "" as any },
+        statLine: r?.statLine ?? {},
+        achievements: r?.achievements ?? d.achievements,
         slotIndex,
         wasHeld: false,
       } satisfies PlayerCard;
     });
-  }, []);
+  }, [resolved]);
 
   return (
     <div style={{
