@@ -187,7 +187,7 @@ const MLB_TEAM_ABBREV: Record<string, string> = {
   "WASHINGTON NATIONALS": "WSH",
 };
 
-function teamAbbrev(raw: string): string {
+export function teamAbbrev(raw: string): string {
   const up = clampText(raw).toUpperCase();
   if (!up) return "";
   // Already short (≤ 4 chars) — assume it's an abbrev (basketball MEM/GSW etc.)
