@@ -957,6 +957,9 @@ export default function GameView() {
         setWinTier(tier);
         setWinPayout(payout);
         const bust = !tier || tier === "BUST";
+        // ROOKIE = neutral for streak (doesn't advance or break). BUST = streak reset.
+        const isStreakWin = !bust && tier !== "ROOKIE";  // STARTER+ advances streak
+        const isStreakLoss = bust;                        // only BUST resets streak
         soundManager.playTierResult(tier);
         // Nudge trigger: first ALL_STAR+ hit for anonymous users
         if (["ALL_STAR", "MVP", "LEGEND"].includes(tier as string) && isAnonymous) {
@@ -979,7 +982,8 @@ export default function GameView() {
             if (payout > 0) {
               setBalance(prev => { const next = prev + payout; saveBalance(next); return next; });
             }
-            if (!bust) {
+            if (isStreakWin) {
+              // STARTER+ = streak advances
               setStreak(prev => {
                 const next = prev + 1;
                 localStorage.setItem("replaymod_streak", String(next));
@@ -988,14 +992,20 @@ export default function GameView() {
                 return next;
               });
               submitToLeaderboard("wins", 1);
+              submitToLeaderboard("money_won", payout);
+            } else if (isStreakLoss) {
+              // BUST = streak resets
+              setStreak(0);
+              localStorage.setItem("replaymod_streak", "0");
+            }
+            // ROOKIE: streak unchanged (neutral) — no increment, no reset
+            // These fire for all non-bust hands (ROOKIE still counts for leaderboard/personal bests)
+            if (!bust) {
               submitToLeaderboard("fp", totalFp);
               submitToLeaderboard("hand_best", totalFp, { proof: buildScoreProof(rosterRef.current as any[], totalFp) });
               submitToLeaderboard("hand_avg", totalFp, { handCount });
-              submitToLeaderboard("money_won", payout);
-              // Refresh on-board flag (drives trophy pulse via Chad leaderboard_intro topic)
               setTimeout(() => checkLeaderboardRank(), 2000);
 
-              // Update personal bests
               const prevBest = parseFloat(localStorage.getItem("rm_best_hand") ?? "0");
               if (totalFp > prevBest) {
                 localStorage.setItem("rm_best_hand", totalFp.toFixed(1));
@@ -1006,9 +1016,6 @@ export default function GameView() {
               if (newTierRank > prevTierRank) {
                 localStorage.setItem("rm_best_tier", tier ?? "BUST");
               }
-            } else {
-              setStreak(0);
-              localStorage.setItem("replaymod_streak", "0");
             }
           };
           const t = window.setTimeout(() => {
