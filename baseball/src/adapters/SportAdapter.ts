@@ -104,13 +104,13 @@ export class SportAdapter {
    * convention, integrate the mapping via `gameAdapter` (TODO).
    */
   /** Map a raw position code (from data) to its on-card display glyph.
-   *  No Unicode emoji exists for "baseball bat alone" (🏏 is cricket bat + ball),
-   *  so baseball uses short text labels instead. CardFront renders these smaller
-   *  than the basketball "PG/SG" pills because three-letter labels need it. */
+   *  Pitcher gets the ⚾ baseball emoji; batter gets the sentinel string "BAT"
+   *  which BaseballCard.tsx replaces with a custom SVG bat (no Unicode emoji
+   *  exists for a baseball bat without a ball — 🏏 is the cricket variant). */
   displayPosition(raw: unknown): string {
     const s = String(raw ?? "").trim().toUpperCase();
     if (!s) return "";
-    if (this.isPitcherPosition(s)) return "PIT";
+    if (this.isPitcherPosition(s)) return "⚾";
     // Everything else on a baseball roster is a batter (BAT, DH, 1B/2B/3B/SS/OF/etc.)
     return "BAT";
   }

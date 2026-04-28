@@ -45,6 +45,34 @@ function isPitcher(position: string): boolean {
   return sportAdapter.isPitcherPosition(position);
 }
 
+// Custom baseball-bat glyph. Unicode has no "baseball bat alone" emoji
+// (🏏 is a cricket bat with ball), so the position pill renders this SVG
+// instead. fill/stroke use currentColor so the glyph inherits the tier color
+// from CardFront's positionTextColor — no separate color prop needed.
+function BatGlyph({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      style={{ display: "inline-block", verticalAlign: "middle" }}
+      aria-hidden="true"
+    >
+      <circle cx="4" cy="4" r="2" fill="currentColor" />
+      <line x1="4" y1="4" x2="12" y2="12" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      <line x1="12" y1="12" x2="20" y2="20" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Adapter returns "BAT" as a sentinel for the batter pill — substitute the
+ *  custom SVG glyph here so CardFront stays sport-agnostic. Pitcher just
+ *  passes the ⚾ string through unchanged. */
+function positionDisplayFor(rawPosition: unknown): React.ReactNode {
+  const s = sportAdapter.displayPosition(rawPosition);
+  return s === "BAT" ? <BatGlyph /> : s;
+}
+
 // ── MLBHero ─────────────────────────────────────────────────────────────────
 
 function MLBHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
@@ -248,7 +276,7 @@ export function BaseballCard(props: Props) {
         <CardFront
           {...p}
           topGameTier={topGameTier ?? null}
-          displayPosition={sportAdapter.displayPosition((p.card as any)?.position)}
+          displayPosition={positionDisplayFor((p.card as any)?.position)}
           renderHero={(heroProps: CardFrontHeroProps) => (
             <MLBHero {...heroProps} />
           )}

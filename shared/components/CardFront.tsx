@@ -285,10 +285,12 @@ export interface CardFrontProps {
   glowSrc?: string;
   glowDurationMs?: number;
   glowTier?: string;
-  /** Pre-mapped display string for the card's position (e.g. "PG", "B"). When
-   *  provided, overrides the raw `card.position`. Sport wrappers compute this
-   *  from their own SportAdapter.displayPosition() so CardFront stays sport-agnostic. */
-  displayPosition?: string;
+  /** Pre-mapped display content for the card's position (e.g. "PG", "⚾", or
+   *  a custom SVG glyph). When provided, overrides the raw `card.position`.
+   *  Sport wrappers compute this — basketball passes a string from
+   *  SportAdapter.displayPosition(); baseball wraps the adapter's sentinel
+   *  string in a custom SVG node. CardFront stays sport-agnostic either way. */
+  displayPosition?: React.ReactNode;
 }
 
 // ── CardFront ──────────────────────────────────────────────────────────────
