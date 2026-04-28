@@ -37,15 +37,15 @@ function oppPhrase(c: CommentaryRosterCard): string {
   return c.homeAway === "A" ? ` in ${city}` : ` against ${city}`;
 }
 
-function formatTopStat(topGame: NonNullable<CommentaryInput["topGame"]>, star: CommentaryRosterCard | null): string {
-  if (!topGame.primaryReason || !star?.statLine) return "";
+function formatTopStat(topGame: NonNullable<CommentaryInput["topGame"]>, _star: CommentaryRosterCard | null): string {
+  if (!topGame.primaryReason) return "";
   const { category, value } = topGame.primaryReason;
-  if (category.startsWith("td_") || category === "quad_double" || category === "five_by_five") {
-    const s = star.statLine;
-    return `${s.pts ?? 0}/${s.reb ?? 0}/${s.ast ?? 0}`;
-  }
-  if (category === "fifty_plus_game") return `${star.statLine.pts ?? value} pts`;
-  const units: Record<string, string> = { pts: "pts", reb: "reb", ast: "ast", threes: "threes", stl: "stl", blk: "blk" };
+  const units: Record<string, string> = {
+    // basketball
+    pts: "pts", reb: "reb", ast: "ast", threes: "threes", stl: "stl", blk: "blk",
+    // baseball
+    hr: "HR", h: "hits", rbi: "RBI", k: "K", sb: "SB", ip: "IP", bb: "BB", r: "R",
+  };
   return `${value} ${units[category] ?? category}`;
 }
 
@@ -56,6 +56,7 @@ export function buildTemplateData(
   input: CommentaryInput,
   recordEvents: RecordEvent[],
   culture: { nicknames?: string[] } | null,
+  costar: CommentaryRosterCard | null = null,
 ): TemplateData {
   const name = star?.name ?? "The roster";
   const last = star ? lastName(star.name) : "the roster";
@@ -90,12 +91,30 @@ export function buildTemplateData(
   const [topVal, topUnit] = statEntries.reduce((best, cur) => cur[0] > best[0] ? cur : best, [0, "pt"]);
   const topStat = topVal > 0 ? `${topVal} ${topUnit}` : "";
 
+  // Costar tokens — populated only when classifyArchetype's multi-star rule
+  // fired. Otherwise empty strings (templates that reference {costar} simply
+  // won't surface because they belong to the multi_star_carry archetype).
+  const costarName = costar?.name ?? "";
+  const costarLast = costar ? lastName(costar.name) : "";
+  let costarStat = "";
+  if (costar) {
+    const cPts = Math.round(statN(costar, "pts"));
+    const cReb = Math.round(statN(costar, "reb"));
+    const cAst = Math.round(statN(costar, "ast"));
+    const entries: [number, string][] = [[cPts, "pts"], [cReb, "reb"], [cAst, "ast"]];
+    const [v, u] = entries.reduce((best, cur) => cur[0] > best[0] ? cur : best, [0, "pts"]);
+    costarStat = v > 0 ? `${v} ${u}` : "";
+  }
+
   return {
     name,
     last,
     first,
     nick,
     nick2,
+    costar: costarName,
+    costarLast,
+    costarStat,
     pts: ptsVal,
     reb: rebVal,
     ast: astVal,
@@ -108,6 +127,8 @@ export function buildTemplateData(
     topTier: input.topGame?.tier ?? null,
     topLabel: input.topGame?.primaryReason?.label ?? "",
     topCategory: input.topGame?.primaryReason?.category ?? "",
+    // T1 career — provides personal-best phrasing for templates that opt in via requires:['season_best_stat'].
+    // The detail-token name predates the tier rename; kept for stable template references.
     seasonBestStat: input.topGame?.tier === "career" ? (input.topGame.primaryReason?.label ?? "") : "",
     streak: input.streak,
     gap: (input.nextTierMin ?? 0) > 0 ? Math.round((input.nextTierMin! - input.totalFp) * 10) / 10 : 0,
@@ -120,13 +141,50 @@ export function buildTemplateData(
 
 // ─── Resolve tokens ─────────────────────────────────────────────────────────
 
+/** Remove the topStat-equivalent phrase from topLabel so a template that uses
+ *  both tokens doesn't restate the same milestone twice ("52 pts. 50+ point
+ *  game."). Only invoked when the template references {topStat} AND {topLabel}. */
+function dedupeTopLabel(rawLabel: string, topStat: string): string {
+  if (!rawLabel || !topStat) return rawLabel;
+  const m = topStat.match(/^(\d+)\s+(\S+)$/);
+  if (!m) return rawLabel;
+  const value = m[1];
+  const unit = m[2];
+  const unitSingular = unit.replace(/s$/, "");
+  const patterns: RegExp[] = [
+    new RegExp(`${value}\\s+${unit}\\b`, "gi"),
+    new RegExp(`${value}\\s+${unitSingular}\\b`, "gi"),
+    new RegExp(`${value}[\\s+-]+point[s]?(\\s+game|\\s+night)?\\b`, "gi"),
+    new RegExp(`${value}\\+\\s*${unit}\\b`, "gi"),
+    new RegExp(`\\bof\\s+${value}\\b`, "gi"),
+  ];
+  let cleaned = rawLabel;
+  for (const re of patterns) cleaned = cleaned.replace(re, "");
+  cleaned = cleaned
+    .replace(/\(\s*([,;]\s*)+/g, "(")
+    .replace(/\s*[,;]\s*\)/g, ")")
+    .replace(/\(\s*\)/g, "")
+    .replace(/\s*[—–-]\s*$/, "")
+    .replace(/\s*[—–-]\s*([.,;:]|$)/g, "$1")
+    .replace(/^\s*[—–:-]\s*/, "")
+    .replace(/\s*:\s*$/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return cleaned.length >= 3 ? cleaned : rawLabel;
+}
+
 export function resolveTemplate(template: string, data: TemplateData): string {
+  const usesBoth = template.includes("{topStat}") && template.includes("{topLabel}");
+  const topLabel = usesBoth ? dedupeTopLabel(data.topLabel ?? "", data.topStat) : (data.topLabel ?? "");
   return template
     .replace(/\{name\}/g, data.name)
     .replace(/\{last\}/g, data.last)
     .replace(/\{first\}/g, data.first)
     .replace(/\{nick\}/g, data.nick)
     .replace(/\{nick2\}/g, data.nick2)
+    .replace(/\{costar\}/g, data.costar ?? "")
+    .replace(/\{costarLast\}/g, data.costarLast ?? "")
+    .replace(/\{costarStat\}/g, data.costarStat ?? "")
     // Stats always include units — "22 pts" never bare "22"
     .replace(/\{pts\}/g, `${data.pts} pts`)
     .replace(/\{reb\}/g, `${data.reb} reb`)
@@ -136,7 +194,7 @@ export function resolveTemplate(template: string, data: TemplateData): string {
     .replace(/\{opp\}/g, data.opp)
     .replace(/\{badge\}/g, data.badge)
     .replace(/\{topStat\}/g, data.topStat)
-    .replace(/\{topLabel\}/g, data.topLabel ?? "")
+    .replace(/\{topLabel\}/g, topLabel)
     .replace(/\{topCategory\}/g, data.topCategory ?? "")
     .replace(/\{seasonBestStat\}/g, data.seasonBestStat ?? "")
     .replace(/\{streak\}/g, String(data.streak))
@@ -158,9 +216,24 @@ const DETAIL_SNIPPETS: Record<string, (data: TemplateData) => string> = {
   near_miss_loss: (d) => d.gap > 0 ? `${Math.round(d.gap * 10) / 10} short. Almost survived it.` : "",
   streak_event: (d) => d.streak > 0 ? `That's ${d.streak} in a row.` : "",
   streak_proximity: (d) => {
-    if (d.streak === 2) return "One more win unlocks the 1.2x streak bonus.";
-    if (d.streak === 4) return "One more win and you hit 1.5x streak.";
-    if (d.streak >= 8 && d.streak < 10) return `${10 - d.streak} more win${10 - d.streak > 1 ? "s" : ""} to 2.0x streak.`;
+    // Sport-agnostic FTUE-then-1/3 cooldown: first time the player is at the
+    // +1 boundary for a tier, the nudge fires deterministically (teaches the
+    // mechanic). Subsequent times at the same boundary, fires 1 in 3 hands so
+    // it stays "in passing" instead of nagging.
+    // Multipliers must match STREAK_TIERS in shared/utils/payoutLogic.ts.
+    const seenKey = (tier: number) => `replaymod_streak_nudge_seen_${tier}`;
+    const shouldFire = (tier: number): boolean => {
+      try {
+        if (!localStorage.getItem(seenKey(tier))) {
+          localStorage.setItem(seenKey(tier), "1");
+          return true; // first encounter — teach
+        }
+      } catch { /* private mode → behave as first-encounter every time */ return true; }
+      return Math.random() < 1 / 3;
+    };
+    if (d.streak === 2 && shouldFire(3))  return "One more win unlocks the 1.3x streak bonus.";
+    if (d.streak === 4 && shouldFire(5))  return "One more win and you hit 1.7x streak.";
+    if (d.streak === 9 && shouldFire(10)) return "One more win to 2.5x streak.";
     return "";
   },
   streak_broken: () => "The streak is done.",

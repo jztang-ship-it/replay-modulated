@@ -2,9 +2,8 @@
  * shared/commentary/types.ts
  * Sport-agnostic commentary system types.
  *
- * Every sport produces a CommentaryInput in the same shape and a sport-specific
- * culture injector returns CommentaryCultureNugget[]. The generator and prompt
- * builder are then 100% sport-agnostic.
+ * Every sport produces a CommentaryInput in the same shape and the runtime
+ * selector (selectCommentary) renders templated copy from libraries/*.json.
  */
 
 export type WinTier = "BUST" | "ROOKIE" | "STARTER" | "ALL_STAR" | "MVP" | "LEGEND";
@@ -58,45 +57,6 @@ export interface CommentaryInput {
   topGame?: TopGameResult;
 }
 
-/**
- * Per-card culture context. Sport-specific injectors return a list of these.
- * The injector pre-filters tone arrays so only relevant phrasing reaches the model.
- */
-export interface CommentaryCultureNugget {
-  /** Must match input.roster[i].name exactly so the model can correlate. */
-  playerName: string;
-  knownFor?: string;
-  nicknames?: string[];
-  /** Tone-relevant lines pre-filtered for this card's actual performance. */
-  relevantTones?: string[];
-  /** Optional opponent-specific flavor (e.g. Harden vs OKC). */
-  opponentFlavor?: string;
-  /** Signature real games with date, opponent, FP, and teaser line. */
-  signatureGames?: { date: string; opponent: string; fp: number; line: string }[];
-  /** Opinionated salary value takes. */
-  salaryNarrative?: string[];
-  /** Hot/cold streak context lines. */
-  streakLines?: string[];
-  /** How they landed on their team + teammate chemistry. */
-  teamContext?: string[];
-  /** Draft story and career trajectory. */
-  draftAndPath?: string[];
-  /** Former team flavor lines. */
-  formerTeam?: string[];
-  /** Rivalry flavor lines. */
-  rivalry?: string[];
-  /** Career milestone lines. */
-  milestones?: string[];
-}
-
-export interface CommentaryOutput {
-  /** 1-2 sentences, max ~150 chars, single integrated thought. */
-  commentary: string;
-  /** Self-reported tone register. Used for client-side tone-history avoidance. */
-  tone: string;
-  /** Provenance — for debugging and metrics. */
-  source: "claude" | "template" | "static";
-}
 
 // ─── New commentary system types ─────────────────────────────────────────────
 
@@ -122,7 +82,7 @@ export type Intensity =
   | "starter_dominant"
   | "all_star"
   | "mvp"
-  | "goat"
+  | "legend"
   | "bust_close"
   | "bust_mid"
   | "bust_bad";
@@ -157,7 +117,14 @@ export interface RecordEvent {
 
 // ─── Top Games ────────────────────────────────────────────────────────────
 
-export type TopGameTier = "all_time" | "season" | "career";
+/**
+ * Top Game tier hierarchy (highest first):
+ *   T0 "record"  — broke or tied an all-time single-game record
+ *   T1 "career"  — player's personal best (career-high) in a tracked stat
+ *   T2 "season"  — top-10 of the current season in a tracked stat
+ * A game that hits multiple tiers is reported only at the highest one.
+ */
+export type TopGameTier = "record" | "career" | "season";
 
 export interface TopGameReason {
   category: string;  // 'pts' | 'td_30_20_20' | ...
@@ -230,6 +197,12 @@ export interface TemplateData {
   topCategory?: string;
   /** T3 only — honest season-best phrasing ("best scoring night of the season so far"). */
   seasonBestStat?: string;
+  /** Co-star full name when multi_star_carry fires; "" otherwise. */
+  costar?: string;
+  /** Co-star last name when multi_star_carry fires; "" otherwise. */
+  costarLast?: string;
+  /** Co-star headline stat (e.g. "32 pts") when multi_star_carry fires; "" otherwise. */
+  costarStat?: string;
 }
 
 // ─── Unified commentary engine types ────────────────────────────────────────
@@ -237,7 +210,7 @@ export interface TemplateData {
 /** Master archetype system — exactly one per hand. Schema supports 32, ~13 active. */
 export type CommentaryArchetype =
   // ── Active (populated with lines) ──
-  | "historic_all_time"          // T1 override — stat-first, rare-air
+  | "historic_record"            // T0 override — stat-first, all-time record
   | "historic_season"            // T2 override — stat-first, season top-10
   | "star_carry"
   | "star_carry_big"
@@ -252,6 +225,7 @@ export type CommentaryArchetype =
   | "ugly_win"
   | "collapse"
   | "career_night"
+  | "multi_star_carry"
   // ── Reserved (schema only, no lines yet) ──
   | "streak_first"
   | "streak_milestone"
@@ -268,7 +242,7 @@ export type CommentaryArchetype =
   | "lucky_escape"
   | "comfortable_win"
   | "dominant_win"
-  | "goat_clinch"
+  | "legend_clinch"
   | "mvp_clinch"
   | "bust_result"
   | "high_score_low_reward"

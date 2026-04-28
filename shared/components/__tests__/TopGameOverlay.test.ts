@@ -2,20 +2,25 @@ import { describe, it, expect } from "vitest";
 import { TopGameStamp } from "../TopGameOverlay";
 
 describe("TopGameStamp", () => {
-  it("renders null for career and null tier", () => {
-    expect(TopGameStamp({ tier: "career" })).toBe(null);
+  it("renders null when tier is null", () => {
     expect(TopGameStamp({ tier: null })).toBe(null);
   });
 
-  it("renders ALL-TIME for all_time", () => {
-    const result = TopGameStamp({ tier: "all_time" }) as any;
-    expect(result.props.children).toBe("ALL-TIME");
-    expect(result.props.className).toContain("tg-stamp-allTime");
+  it("renders RECORD for tier=record", () => {
+    const result = TopGameStamp({ tier: "record" }) as any;
+    expect(result.props.children).toBe("RECORD");
+    expect(result.props.className).toContain("tg-stamp-record");
   });
 
-  it("renders HISTORY! for season", () => {
+  it("renders CAREER for tier=career", () => {
+    const result = TopGameStamp({ tier: "career" }) as any;
+    expect(result.props.children).toBe("CAREER");
+    expect(result.props.className).toContain("tg-stamp-career");
+  });
+
+  it("renders SEASON for tier=season", () => {
     const result = TopGameStamp({ tier: "season" }) as any;
-    expect(result.props.children).toBe("HISTORY!");
+    expect(result.props.children).toBe("SEASON");
     expect(result.props.className).toContain("tg-stamp-season");
   });
 });

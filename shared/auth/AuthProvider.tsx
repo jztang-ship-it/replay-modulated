@@ -13,6 +13,7 @@ export interface AuthContextValue {
   linkGoogle: () => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signInGoogle: () => Promise<{ error: AuthError | null }>;
+  signOut: () => Promise<{ error: AuthError | null }>;
 }
 
 function getLocalUid(): string {
@@ -40,6 +41,7 @@ export const AuthContext = createContext<AuthContextValue>({
   linkGoogle: async () => ({ error: null }),
   signIn: async () => ({ error: null }),
   signInGoogle: async () => ({ error: null }),
+  signOut: async () => ({ error: null }),
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -202,8 +204,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error as AuthError | null };
   };
 
+  // Sign out then immediately re-anon so the app never lands without a session.
+  // Local UID stays as the playerIdentity fallback if the re-anon call fails.
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      track("auth", "signout_failed", { reason: error.message });
+      return { error };
+    }
+    track("auth", "signout", {});
+    setUser(null);
+    try {
+      const { data, error: anonErr } = await supabase.auth.signInAnonymously();
+      if (anonErr) {
+        console.warn("[auth] re-anon after signOut failed:", anonErr);
+      } else if (data.user) {
+        setUser(data.user);
+      }
+    } catch (e) {
+      console.warn("[auth] re-anon after signOut threw:", e);
+    }
+    return { error: null };
+  };
+
   return (
-    <AuthContext.Provider value={{ user, uid, isAuthenticated, isAnonymous, signUp, linkGoogle, signIn, signInGoogle }}>
+    <AuthContext.Provider value={{ user, uid, isAuthenticated, isAnonymous, signUp, linkGoogle, signIn, signInGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   );

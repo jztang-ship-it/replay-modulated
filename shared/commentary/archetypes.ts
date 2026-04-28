@@ -15,7 +15,7 @@ export interface ArchetypeMeta {
 
 export const ARCHETYPE_REGISTRY: Record<CommentaryArchetype, ArchetypeMeta> = {
   // ── Active — Top Games overrides ──────────────────────────────────────────
-  historic_all_time: { register: "win",  active: true,  fallback: "star_carry",      legacyStoryIds: [] },
+  historic_record:   { register: "win",  active: true,  fallback: "star_carry",      legacyStoryIds: [] },
   historic_season:   { register: "win",  active: true,  fallback: "star_carry",      legacyStoryIds: [] },
 
   // ── Active — Win ──────────────────────────────────────────────────────────
@@ -26,6 +26,7 @@ export const ARCHETYPE_REGISTRY: Record<CommentaryArchetype, ArchetypeMeta> = {
   badge_explosion:  { register: "any",  active: true,  fallback: "star_carry",       legacyStoryIds: ["star_rare_badge"] },
   ugly_win:         { register: "win",  active: true,  fallback: "balanced_win",     legacyStoryIds: [] },
   career_night:     { register: "any",  active: true,  fallback: "star_carry",       legacyStoryIds: [] },
+  multi_star_carry: { register: "win",  active: true,  fallback: "star_carry_big",   legacyStoryIds: [] },
 
   // ── Active — Loss ─────────────────────────────────────────────────────────
   near_miss:        { register: "loss", active: true,  fallback: "everyone_flat",    legacyStoryIds: [] },
@@ -51,7 +52,7 @@ export const ARCHETYPE_REGISTRY: Record<CommentaryArchetype, ArchetypeMeta> = {
   lucky_escape:           { register: "win",  active: false, fallback: "ugly_win",         legacyStoryIds: [] },
   comfortable_win:        { register: "win",  active: false, fallback: "star_delivered",   legacyStoryIds: [] },
   dominant_win:           { register: "win",  active: false, fallback: "star_carry_big",   legacyStoryIds: [] },
-  goat_clinch:            { register: "win",  active: false, fallback: "star_carry_big",   legacyStoryIds: [] },
+  legend_clinch:          { register: "win",  active: false, fallback: "star_carry_big",   legacyStoryIds: [] },
   mvp_clinch:             { register: "win",  active: false, fallback: "star_carry_big",   legacyStoryIds: [] },
   bust_result:            { register: "loss", active: false, fallback: "everyone_flat",    legacyStoryIds: [] },
   high_score_low_reward:  { register: "win",  active: false, fallback: "star_delivered",   legacyStoryIds: [] },

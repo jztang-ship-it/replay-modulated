@@ -47,6 +47,40 @@ export interface ClassificationResult {
   hasTier1Extreme: boolean;
   nearMiss: boolean;
   deltaToNextTier: number;
+  /** Costar — second roster card that also had a massive game.
+   *  Populated only when the multi_star_carry rule fires. */
+  costar: CommentaryRosterCard | null;
+}
+
+/** Multi-star detection. Rule fires only when the hand has TWO genuinely
+ *  massive nights, not "star did fine + role player slightly overperformed":
+ *    - Star    actualFp >= 90 AND ratio >= 1.3
+ *    - Costar  actualFp >= 65 AND ratio >= 1.3
+ *    - Win register, win tier ≥ ALL_STAR
+ *  When multiple costar candidates qualify, picks the highest actualFp. */
+const STAR_FP_FLOOR = 90;
+const STAR_RATIO_FLOOR = 1.3;
+const COSTAR_FP_FLOOR = 65;
+const COSTAR_RATIO_FLOOR = 1.3;
+const MULTI_STAR_TIERS: Set<WinTier> = new Set(["ALL_STAR", "MVP", "LEGEND"]);
+
+function detectCostar(
+  star: CommentaryRosterCard | null,
+  roster: CommentaryRosterCard[],
+  winTier: WinTier,
+  isBust: boolean,
+): CommentaryRosterCard | null {
+  if (!star || isBust || !MULTI_STAR_TIERS.has(winTier)) return null;
+  if (star.actualFp < STAR_FP_FLOOR || ratio(star) < STAR_RATIO_FLOOR) return null;
+  const candidates = roster.filter(c =>
+    c !== star &&
+    c.name &&
+    c.name !== star.name &&
+    c.actualFp >= COSTAR_FP_FLOOR &&
+    ratio(c) >= COSTAR_RATIO_FLOOR
+  );
+  if (candidates.length === 0) return null;
+  return candidates.sort((a, b) => b.actualFp - a.actualFp)[0];
 }
 
 /**
@@ -62,6 +96,7 @@ export function classifyArchetype(input: CommentaryInput): ClassificationResult 
   const gap = (input.nextTierMin ?? 0) > 0 ? (input.nextTierMin! - input.totalFp) : 999;
   const nearMiss = input.isBust && gap > 0 && gap <= 5;
 
+  const costar = detectCostar(star, input.roster, input.winTier, input.isBust);
   const base = {
     star,
     starRatio: r,
@@ -69,14 +104,15 @@ export function classifyArchetype(input: CommentaryInput): ClassificationResult 
     hasTier1Extreme: hasExtreme,
     nearMiss,
     deltaToNextTier: gap,
+    costar,
   };
 
   // ── Priority 0: Top Games override ─────────────────────────────────────
-  // T1 (all_time) and T2 (season) hijack archetype selection entirely.
-  // T3 (career) does NOT override — it flows through as a flavor detail
+  // T0 (record) and T2 (season) hijack archetype selection entirely.
+  // T1 (career) does NOT override — it flows through as a flavor detail
   // and templates pick it up via `requires: ['season_best_stat']`.
-  if (input.topGame?.tier === "all_time") {
-    return { ...base, archetype: "historic_all_time" };
+  if (input.topGame?.tier === "record") {
+    return { ...base, archetype: "historic_record" };
   }
   if (input.topGame?.tier === "season") {
     return { ...base, archetype: "historic_season" };
@@ -100,6 +136,14 @@ export function classifyArchetype(input: CommentaryInput): ClassificationResult 
   // ── Priority 4: Collapse (loss, streak broken, blown out) ──
   if (register === "loss" && input.prevStreak >= 3 && gap > 15) {
     return { ...base, archetype: "collapse" };
+  }
+
+  // ── Priority 4.5: Multi-star carry — two genuinely massive nights ──
+  // Fires before star_carry_big so the costar gets named instead of being
+  // collapsed into the single-star narrative. detectCostar() enforces the
+  // raw-FP and ratio floors that keep this rule rare.
+  if (costar) {
+    return { ...base, archetype: "multi_star_carry" };
   }
 
   // ── Priority 5: Star carry big (win, high ratio, high tier) ──

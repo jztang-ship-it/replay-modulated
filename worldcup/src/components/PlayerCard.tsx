@@ -11,6 +11,7 @@ import type { GamePhase, PlayerCard as PlayerCardType } from "../adapters/types"
 import { PlayerCardShell, resetAllOverlays } from "@shared/components/PlayerCardShell";
 import type { CardFrontProps as ShellFrontProps, CardBackProps } from "@shared/components/PlayerCardShell";
 import { CardFront, type CardFrontHeroProps } from "@shared/components/CardFront";
+import { sportAdapter } from "../adapters/SportAdapter";
 import type { ShakeType } from "../hooks/useEmotionalReveal";
 
 export { resetAllOverlays };
@@ -188,6 +189,7 @@ export function PlayerCard(props: Props) {
       renderFront={(p: ShellFrontProps) => (
         <CardFront
           {...p}
+          displayPosition={sportAdapter.displayPosition((p.card as any)?.position)}
           renderHero={(heroProps: CardFrontHeroProps) => <WorldcupHero {...heroProps} />}
         />
       )}

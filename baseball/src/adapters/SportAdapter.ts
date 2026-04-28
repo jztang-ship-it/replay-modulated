@@ -4,6 +4,25 @@ import BaseballSportConfig, {
   type BaseballStatCategory,
   type BaseballWinThreshold,
 } from "./baseballConfig";
+import { registerRecordSources } from "@shared/data/recordDetector";
+import { MLB_SINGLE_GAME_RECORDS, MLB_STAT_ALIASES } from "@shared/data/mlbRecords";
+import topGames from "../../public/data/topGames.json";
+import careerHighs from "../../public/data/careerHighs.json";
+
+registerRecordSources("baseball", {
+  topGames: topGames as any,
+  careerHighs: careerHighs as any,
+  singleGameRecords: MLB_SINGLE_GAME_RECORDS,
+  statAliases: MLB_STAT_ALIASES,
+  careerCategories: [
+    { key: "hr",  label: v => `personal best — ${v} HR` },
+    { key: "h",   label: v => `personal best — ${v} hits` },
+    { key: "rbi", label: v => `personal best — ${v} RBI` },
+    { key: "k",   label: v => `personal best — ${v} K` },
+    { key: "sb",  label: v => `personal best — ${v} SB` },
+    { key: "ip",  label: v => `personal best — ${v} IP` },
+  ],
+});
 
 export type BaseballSportConfigType = typeof BaseballSportConfig;
 export type PlayerRole = "P" | "BAT";
@@ -84,6 +103,16 @@ export class SportAdapter {
    * few common pitcher strings; if your baseball data uses a different
    * convention, integrate the mapping via `gameAdapter` (TODO).
    */
+  /** Map a raw position code (from data) to its on-card display string.
+   *  Baseball collapses BAT to "B"; pitcher variants normalize to "P". */
+  displayPosition(raw: unknown): string {
+    const s = String(raw ?? "").trim().toUpperCase();
+    if (!s) return "";
+    if (s === "BAT") return "B";
+    if (this.isPitcherPosition(s)) return "P";
+    return s; // 1B/2B/3B/SS/LF/CF/RF/OF/DH pass through
+  }
+
   isPitcherPosition(rawPosition: unknown): boolean {
     const s = String(rawPosition ?? "").trim().toUpperCase();
     if (!s) return false;

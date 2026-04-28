@@ -21,7 +21,7 @@ const WIN_WEIGHTS: Record<string, WeightRow> = {
   starter_dominant: { hype: 15, warm: 20, culture_wry: 35, observational: 15, analytical: 10, deadpan: 5 },
   all_star:         { hype: 25, warm: 20, culture_wry: 35, observational: 15, analytical: 5,  deadpan: 0 },
   mvp:              { hype: 35, warm: 15, culture_wry: 35, observational: 10, analytical: 5,  deadpan: 0 },
-  goat:             { hype: 45, warm: 15, culture_wry: 30, observational: 5,  analytical: 5,  deadpan: 0 },
+  legend:           { hype: 45, warm: 15, culture_wry: 30, observational: 5,  analytical: 5,  deadpan: 0 },
 };
 
 const LOSS_WEIGHTS: Record<string, WeightRow> = {

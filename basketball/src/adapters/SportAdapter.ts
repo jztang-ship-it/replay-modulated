@@ -1,5 +1,25 @@
 import type { Position, TierColor, PlayerCard } from "./types";
 import { BasketballSportConfig } from "./basketballConfig";
+import { registerRecordSources } from "@shared/data/recordDetector";
+import { NBA_SINGLE_GAME_RECORDS, STAT_ALIASES } from "@shared/data/nbaRecords";
+import topGames from "../../public/data/topGames_2425.json";
+import careerHighs from "../../public/data/careerHighs_2season.json";
+// Side-effect import: registers the basketball sound pack with the shared
+// soundPackLoader at module-load time. Without this, basketball plays silently.
+import "../utils/soundPack";
+
+registerRecordSources("basketball", {
+  topGames: topGames as any,
+  careerHighs: careerHighs as any,
+  singleGameRecords: NBA_SINGLE_GAME_RECORDS,
+  statAliases: STAT_ALIASES,
+  careerCategories: [
+    { key: "pts",    label: v => `personal best — ${v} pts` },
+    { key: "reb",    label: v => `personal best — ${v} reb` },
+    { key: "ast",    label: v => `personal best — ${v} ast` },
+    { key: "threes", label: v => `personal best — ${v} threes` },
+  ],
+});
 
 export type SportConfig = typeof BasketballSportConfig;
 
@@ -34,6 +54,20 @@ export class SportAdapter {
   }
 
   isValidPosition(pos: string): boolean { return this.config.positions.includes(pos); }
+
+  /** Map a raw position code (from data) to its on-card display string.
+   *  Sport-specific — basketball collapses combo positions to their primary. */
+  displayPosition(raw: unknown): string {
+    const s = String(raw ?? "").trim().toUpperCase();
+    if (!s) return "";
+    const map: Record<string, string> = {
+      "PG": "PG", "SG": "SG", "G": "PG",
+      "SF": "SF", "PF": "PF", "F": "SF",
+      "G/F": "SG", "F/G": "SG", "F/C": "PF",
+      "C": "C",
+    };
+    return map[s] ?? s;
+  }
 
   normalizeTier(raw: unknown): TierColor {
     const s = String(raw ?? "WHITE").trim().toUpperCase();

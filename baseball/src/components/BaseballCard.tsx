@@ -10,9 +10,17 @@ import type { GamePhase, PlayerCard } from "../adapters/types";
 import { PlayerCardShell, resetAllOverlays } from "@shared/components/PlayerCardShell";
 import type { CardFrontProps as ShellFrontProps, CardBackProps } from "@shared/components/PlayerCardShell";
 import { CardFront, type CardFrontHeroProps } from "@shared/components/CardFront";
+import { TopGameStamp } from "@shared/components/TopGameOverlay";
+import type { TopGameTier } from "@shared/commentary/types";
 import type { ShakeType } from "../hooks/useEmotionalReveal";
 import { sportAdapter } from "../adapters/SportAdapter";
-import { headshotUrl } from "@shared/utils/headshotUrl";
+// Baseball ships local headshots at /baseball/headshots/{id}.png. The shared
+// headshotUrl helper is NBA-default; using it here would land on /headshots
+// (no /baseball/ prefix) or on the NBA CDN namespace via VITE_HEADSHOT_BASE_URL.
+// Both fail. Always use the local sport-prefixed path.
+function baseballHeadshotUrl(id: string): string {
+  return id ? `/baseball/headshots/${id}.png` : "";
+}
 
 export { resetAllOverlays };
 
@@ -42,12 +50,7 @@ function isPitcher(position: string): boolean {
 function MLBHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
   const [imgReady, setImgReady] = React.useState(false);
   const photoCode = String((card as any)?.photoCode ?? (card as any)?.basePlayerId ?? "").trim();
-  // Use local path — MLB headshots live at /baseball/headshots/{id}.png
-  const headshotSrc = photoCode
-    ? (import.meta.env.VITE_HEADSHOT_BASE_URL
-      ? `${import.meta.env.VITE_HEADSHOT_BASE_URL}/${photoCode}.png`
-      : `/baseball/headshots/${photoCode}.png`)
-    : "";
+  const headshotSrc = baseballHeadshotUrl(photoCode);
 
   return (
     <>
@@ -86,7 +89,7 @@ function MLBHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
 
 // ── BackBaseballStats ────────────────────────────────────────────────────────
 
-function BackBaseballStats({ card }: { card: PlayerCard }) {
+function BackBaseballStats({ card, topGameTier }: { card: PlayerCard; topGameTier?: TopGameTier | null }) {
   const gi = (card as any).gameInfo || {};
   const sl = (card as any).statLine || {};
   const pos = String(card.position ?? "");
@@ -150,6 +153,11 @@ function BackBaseballStats({ card }: { card: PlayerCard }) {
             <span key={b.id ?? b.label ?? i} style={{ fontSize: 11, lineHeight: 1, flexShrink: 0 }}>{b.icon}</span>
           ))}
         </div>
+        {topGameTier && (
+          <div style={{ flexShrink: 0, transform: "rotate(-4deg) scale(0.7)", transformOrigin: "right center" }}>
+            <TopGameStamp tier={topGameTier} />
+          </div>
+        )}
       </div>
       <div style={S.divider} />
       {!hasStats || allZero ? (
@@ -217,10 +225,12 @@ type Props = {
   glowActive?: boolean;
   glowTier?: string;
   glowDurationMs?: number;
+  /** Top Games tier — forwarded to CardFront for fire/sheen/recoil + stamp. */
+  topGameTier?: TopGameTier | null;
 };
 
 export function BaseballCard(props: Props) {
-  const { glowActive, glowTier, glowDurationMs, ...rest } = props;
+  const { glowActive, glowTier, glowDurationMs, topGameTier, ...rest } = props;
   return (
     <PlayerCardShell
       {...rest}
@@ -230,12 +240,14 @@ export function BaseballCard(props: Props) {
       renderFront={(p: ShellFrontProps) => (
         <CardFront
           {...p}
+          topGameTier={topGameTier ?? null}
+          displayPosition={sportAdapter.displayPosition((p.card as any)?.position)}
           renderHero={(heroProps: CardFrontHeroProps) => (
             <MLBHero {...heroProps} />
           )}
         />
       )}
-      renderBack={(p: CardBackProps) => <BackBaseballStats card={p.card} />}
+      renderBack={(p: CardBackProps) => <BackBaseballStats card={p.card} topGameTier={topGameTier ?? null} />}
     />
   );
 }

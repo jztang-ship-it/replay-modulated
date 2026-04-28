@@ -285,6 +285,10 @@ export interface CardFrontProps {
   glowSrc?: string;
   glowDurationMs?: number;
   glowTier?: string;
+  /** Pre-mapped display string for the card's position (e.g. "PG", "B"). When
+   *  provided, overrides the raw `card.position`. Sport wrappers compute this
+   *  from their own SportAdapter.displayPosition() so CardFront stays sport-agnostic. */
+  displayPosition?: string;
 }
 
 // ── CardFront ──────────────────────────────────────────────────────────────
@@ -294,24 +298,19 @@ export function CardFront(props: CardFrontProps) {
     card, stableCard, phase, isLocked, visibleFp, isRevealing, revealActive,
     isFlipped, heldFpVisible, isTapTarget,
     pulse, fpCountUpMs, stamp, onRollComplete, badges, renderHero,
-    glowActive, glowSrc, glowDurationMs, glowTier, perfPct,
+    glowActive, glowSrc, glowDurationMs, glowTier, perfPct, displayPosition,
   } = props;
 
   const name = clampText((card as any)?.name);
   const team = teamAbbrev(clampText((card as any)?.team));
   const season = (card as any)?.season ?? (card as any)?.year ?? (card as any)?.seasonLabel;
   const seasonFmt = formatSeasonRange(season);
+  // Position display is sport-specific. Sport wrappers (AthleteCard, BaseballCard,
+  // worldcup PlayerCard) compute the display string via their SportAdapter and
+  // pass it as `displayPosition`. Fallback to raw card.position when the prop
+  // is missing — keeps CardFront usable in isolation.
   const posRaw = clampText((card as any)?.position);
-  const posMap: Record<string, string> = {
-    // Basketball
-    "PG": "PG", "SG": "SG", "G": "PG", "SF": "SF", "PF": "PF", "F": "SF",
-    "G/F": "SG", "F/G": "SG", "F/C": "PF", "C": "C",
-    // Baseball — BAT displays as "B"; real baseball positions pass through
-    "BAT": "B", "P": "P", "SP": "P", "RP": "P",
-    "1B": "1B", "2B": "2B", "3B": "3B", "SS": "SS",
-    "OF": "OF", "LF": "LF", "CF": "CF", "RF": "RF", "DH": "DH",
-  };
-  const pos = posRaw ? (posMap[posRaw.toUpperCase()] ?? posRaw) : "";
+  const pos = displayPosition ?? (posRaw ? posRaw.toUpperCase() : "");
   const salary = Number((card as any)?.salary ?? 0);
   const proj = Number((card as any)?.projectedFp ?? 0);
   // Daily bonus (+5/+10/+20) — 0 if this player isn't in today's hot list.
@@ -392,7 +391,7 @@ export function CardFront(props: CardFrontProps) {
     setTopGameThudFired(false); setTopGameShake(false);
   }, [cardKey]);
 
-  // Top Games thud — IMPACT-SYNCED sequence for T1/T2 cards.
+  // Top Games thud — IMPACT-SYNCED sequence; fires for every tier (record/career/season).
   //   +200ms after rollComplete: stamp mounts and begins its 420ms entrance
   //                              (scale 0.3 → 1.35 overshoot → 0.95 → 1.0).
   //   +200ms after mount (= +400ms after rollComplete): the stamp's scale peaks
@@ -400,8 +399,8 @@ export function CardFront(props: CardFrontProps) {
   //     Fire shake + thud sound at this exact frame so the card recoils as a
   //     CONSEQUENCE of the stamp landing, not coincident with its mount.
   useEffect(() => {
-    const isT12 = props.topGameTier === "all_time" || props.topGameTier === "season";
-    if (!rollComplete || !isT12 || topGameThudFired) return;
+    const isTopGame = !!props.topGameTier;
+    if (!rollComplete || !isTopGame || topGameThudFired) return;
     const mountTimer = setTimeout(() => {
       setTopGameThudFired(true);
       // Nested: fire impact effects at the stamp's overshoot peak.
@@ -442,7 +441,12 @@ export function CardFront(props: CardFrontProps) {
   const showPulse = !!pulse && pulse !== "NEUTRAL" && hasRevealed;
 
   const cardSalary = Number((stableCard as any)?.salary ?? (card as any)?.salary ?? 0);
-  const derivedTier = cardSalary >= 73 ? "RED" : cardSalary >= 58 ? "ORANGE" : cardSalary >= 44 ? "PURPLE" : cardSalary >= 30 ? "BLUE" : cardSalary >= 23 ? "GREEN" : "WHITE";
+  // Prefer the data tier when present; salary cutoffs are a fallback for missing data.
+  const dataTier = String((stableCard as any)?.tier ?? (card as any)?.tier ?? "").toUpperCase();
+  const VALID_TIERS = new Set(["RED", "ORANGE", "PURPLE", "BLUE", "GREEN", "WHITE"]);
+  const derivedTier = VALID_TIERS.has(dataTier)
+    ? dataTier
+    : cardSalary >= 73 ? "RED" : cardSalary >= 58 ? "ORANGE" : cardSalary >= 44 ? "PURPLE" : cardSalary >= 30 ? "BLUE" : cardSalary >= 23 ? "GREEN" : "WHITE";
   const tier = getTier(derivedTier);
   const isWhiteTier = derivedTier === "WHITE";
   const onCardText = isWhiteTier ? "#FFFFFF" : "#000000";
@@ -572,7 +576,7 @@ export function CardFront(props: CardFrontProps) {
                   transform: isRolling ? "scale(1.06)" : "scale(1)",
                   transition: isRolling ? "none" : "transform 100ms ease",
                 }}>
-                  {isShowingActualFp
+                  {isShowingActualFp && fpRevealed
                     ? (displayedFp > 0 ? displayedFp.toFixed(1) : (Number((card as any)?.actualFp ?? 0) > 0 ? Number((card as any).actualFp).toFixed(1) : fpText))
                     : fpText}
                 </span>
@@ -654,7 +658,7 @@ export function CardFront(props: CardFrontProps) {
          *   FIRE: hue +25°→-15°, speed 2.4s→0.9s, opacity 0.35→0.65, spread 7→24px
          */}
         {(() => {
-          const isTopGame = props.topGameTier === "all_time" || props.topGameTier === "season";
+          const isTopGame = !!props.topGameTier;
           // For top games, force fire even if the natural ratio threshold isn't crossed.
           // Top games are by definition standout performances — fire should always be on.
           // Gated on rollComplete so the fire mounts at the same moment the natural
@@ -681,9 +685,8 @@ export function CardFront(props: CardFrontProps) {
             const t = isTopGame ? 1.0 : ratioBased; // top games always max out
             const boost = isTopGame ? 1 : 0;
             const src = `${import.meta.env.BASE_URL}火焰.png`;
-            // T1: lean platinum/cool — shift hue further blue-ward for an "icy fire" sheen.
-            // T2: lean gold/warm — keep classic max-fire but slightly warmer.
-            const tierHueShift = props.topGameTier === "all_time" ? -45 : props.topGameTier === "season" ? -5 : 0;
+            // Single visual treatment for all top-game tiers — stamps differ, fire does not.
+            const tierHueShift = isTopGame ? -25 : 0;
             const hue = 25 - t * 40 + tierHueShift;
             const sat = 1.3 + t * 0.7 + boost * 0.4;            // normal max 2.0 → top 2.4
             const bright = 1.1 - t * 0.28 + boost * 0.10;       // normal max 0.82 → top 0.92
@@ -704,11 +707,8 @@ export function CardFront(props: CardFrontProps) {
               position: "absolute", inset: 0, width: "100%", height: "100%",
               objectFit: "cover", mixBlendMode: "screen", filter: tintFilter,
             };
-            // Top-game tier-tinted glow color for the inner core.
-            // T1: cool platinum-white. T2: warm gold-white. Matches stamp gradients.
-            const tierGlowColor = props.topGameTier === "all_time"
-              ? "rgba(220, 230, 255, 0.95)"
-              : "rgba(255, 220, 130, 0.95)";
+            // Single warm-white glow for all tiers — differentiation lives in the stamp.
+            const tierGlowColor = "rgba(240, 225, 180, 0.95)";
             const sheenMask = "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.95) 50%, transparent 65%)";
             return (
               <div style={clipStyle}>
@@ -809,7 +809,7 @@ export function CardFront(props: CardFrontProps) {
             the black name strip. Doesn't overlap FP, name, salary, or position.
             Mounts 200ms after FP roll-up completes; tgThud keyframe scales it
             in with a bounce, then persists. Only renders for T1/T2 tiers. */}
-        {topGameThudFired && (props.topGameTier === "all_time" || props.topGameTier === "season") && (
+        {topGameThudFired && props.topGameTier && (
           <div
             className="tg-stamp-wrap-thud"
             style={{

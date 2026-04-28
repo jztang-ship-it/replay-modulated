@@ -29,9 +29,9 @@ const LEGEND_DATA: LegendData = {
     { label: "BUST",     score: "<190", payout: "—",    color: "#6B7280", bg: "rgba(107,114,128,0.08)",  border: "rgba(107,114,128,0.2)"   },
   ],
   bonusRows: [
-    { label: "3-WIN STREAK", condition: "3 wins in a row", reward: "1.2x payout"  },
-    { label: "5-WIN STREAK", condition: "5 wins in a row", reward: "1.5x payout"  },
-    { label: "10-WIN STREAK", condition: "10 wins in a row", reward: "2.0x payout" },
+    { label: "3-WIN STREAK", condition: "3 wins in a row", reward: "1.3x payout"  },
+    { label: "5-WIN STREAK", condition: "5 wins in a row", reward: "1.7x payout"  },
+    { label: "10-WIN STREAK", condition: "10 wins in a row", reward: "2.5x payout" },
   ],
   scoringRules: [
     { stat: "Point",    pts: "+1.0" },

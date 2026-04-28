@@ -132,7 +132,7 @@ function BackBStats({ card, topGameTier }: { card: PlayerCard; topGameTier?: Top
   const hasStats = Object.keys(sl).length > 0;
   const allZero = tiles.every(t => Number(t.value) === 0);
 
-  const hasTopGameStamp = topGameTier === "all_time" || topGameTier === "season";
+  const hasTopGameStamp = !!topGameTier;
 
   return (
     <div style={{ ...S.backWrap, position: "relative" }}>
@@ -262,6 +262,7 @@ export function AthleteCard(props: Props) {
         <CardFront
           {...p}
           topGameTier={topGameTier ?? null}
+          displayPosition={sportAdapter.displayPosition((p.card as any)?.position)}
           renderHero={(heroProps: CardFrontHeroProps) => (
             <BasketballHero {...heroProps} />
           )}

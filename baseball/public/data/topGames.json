@@ -1,0 +1,518 @@
+{
+  "701762|2025-07-25": {
+    "reasons": [
+      {
+        "category": "hr",
+        "label": "Top-10 HR game of the season (4 HR)",
+        "value": 4
+      },
+      {
+        "category": "h",
+        "label": "Top-10 hit game of the season (6 hits)",
+        "value": 6
+      },
+      {
+        "category": "rbi",
+        "label": "Top-10 RBI game of the season (8 RBI)",
+        "value": 8
+      }
+    ]
+  },
+  "553993|2025-04-26": {
+    "reasons": [
+      {
+        "category": "hr",
+        "label": "Top-10 HR game of the season (4 HR)",
+        "value": 4
+      }
+    ]
+  },
+  "656941|2025-08-28": {
+    "reasons": [
+      {
+        "category": "hr",
+        "label": "Top-10 HR game of the season (4 HR)",
+        "value": 4
+      },
+      {
+        "category": "rbi",
+        "label": "Top-10 RBI game of the season (9 RBI)",
+        "value": 9
+      }
+    ]
+  },
+  "669127|2025-08-05": {
+    "reasons": [
+      {
+        "category": "hr",
+        "label": "Top-10 HR game of the season (3 HR)",
+        "value": 3
+      },
+      {
+        "category": "h",
+        "label": "Top-10 hit game of the season (5 hits)",
+        "value": 5
+      }
+    ]
+  },
+  "678894|2025-08-02": {
+    "reasons": [
+      {
+        "category": "hr",
+        "label": "Top-10 HR game of the season (3 HR)",
+        "value": 3
+      }
+    ]
+  },
+  "686527|2025-09-16": {
+    "reasons": [
+      {
+        "category": "hr",
+        "label": "Top-10 HR game of the season (3 HR)",
+        "value": 3
+      },
+      {
+        "category": "h",
+        "label": "Top-10 hit game of the season (5 hits)",
+        "value": 5
+      }
+    ]
+  },
+  "527038|2025-05-16": {
+    "reasons": [
+      {
+        "category": "hr",
+        "label": "Top-10 HR game of the season (3 HR)",
+        "value": 3
+      },
+      {
+        "category": "rbi",
+        "label": "Top-10 RBI game of the season (8 RBI)",
+        "value": 8
+      }
+    ]
+  },
+  "671056|2025-04-02": {
+    "reasons": [
+      {
+        "category": "hr",
+        "label": "Top-10 HR game of the season (3 HR)",
+        "value": 3
+      }
+    ]
+  },
+  "665019|2025-09-12": {
+    "reasons": [
+      {
+        "category": "hr",
+        "label": "Top-10 HR game of the season (3 HR)",
+        "value": 3
+      }
+    ]
+  },
+  "624641|2025-09-24": {
+    "reasons": [
+      {
+        "category": "hr",
+        "label": "Top-10 HR game of the season (3 HR)",
+        "value": 3
+      }
+    ]
+  },
+  "642851|2025-04-20": {
+    "reasons": [
+      {
+        "category": "h",
+        "label": "Top-10 hit game of the season (6 hits)",
+        "value": 6
+      }
+    ]
+  },
+  "693304|2025-06-23": {
+    "reasons": [
+      {
+        "category": "h",
+        "label": "Top-10 hit game of the season (5 hits)",
+        "value": 5
+      }
+    ]
+  },
+  "650490|2025-09-03": {
+    "reasons": [
+      {
+        "category": "h",
+        "label": "Top-10 hit game of the season (5 hits)",
+        "value": 5
+      }
+    ]
+  },
+  "666182|2025-07-27": {
+    "reasons": [
+      {
+        "category": "h",
+        "label": "Top-10 hit game of the season (5 hits)",
+        "value": 5
+      }
+    ]
+  },
+  "676391|2025-08-04": {
+    "reasons": [
+      {
+        "category": "h",
+        "label": "Top-10 hit game of the season (5 hits)",
+        "value": 5
+      }
+    ]
+  },
+  "621439|2025-07-12": {
+    "reasons": [
+      {
+        "category": "h",
+        "label": "Top-10 hit game of the season (5 hits)",
+        "value": 5
+      }
+    ]
+  },
+  "607208|2025-08-20": {
+    "reasons": [
+      {
+        "category": "h",
+        "label": "Top-10 hit game of the season (5 hits)",
+        "value": 5
+      }
+    ]
+  },
+  "607043|2025-04-28": {
+    "reasons": [
+      {
+        "category": "rbi",
+        "label": "Top-10 RBI game of the season (9 RBI)",
+        "value": 9
+      }
+    ]
+  },
+  "646240|2025-05-23": {
+    "reasons": [
+      {
+        "category": "rbi",
+        "label": "Top-10 RBI game of the season (8 RBI)",
+        "value": 8
+      }
+    ]
+  },
+  "592450|2025-03-29": {
+    "reasons": [
+      {
+        "category": "rbi",
+        "label": "Top-10 RBI game of the season (8 RBI)",
+        "value": 8
+      }
+    ]
+  },
+  "592885|2025-06-20": {
+    "reasons": [
+      {
+        "category": "rbi",
+        "label": "Top-10 RBI game of the season (8 RBI)",
+        "value": 8
+      }
+    ]
+  },
+  "543807|2025-07-01": {
+    "reasons": [
+      {
+        "category": "rbi",
+        "label": "Top-10 RBI game of the season (7 RBI)",
+        "value": 7
+      }
+    ]
+  },
+  "805300|2025-08-13": {
+    "reasons": [
+      {
+        "category": "rbi",
+        "label": "Top-10 RBI game of the season (7 RBI)",
+        "value": 7
+      }
+    ]
+  },
+  "691176|2025-05-09": {
+    "reasons": [
+      {
+        "category": "rbi",
+        "label": "Top-10 RBI game of the season (7 RBI)",
+        "value": 7
+      }
+    ]
+  },
+  "656550|2025-06-15": {
+    "reasons": [
+      {
+        "category": "k",
+        "label": "Top-10 strikeout game of the season (15 K)",
+        "value": 15
+      }
+    ]
+  },
+  "669923|2025-06-08": {
+    "reasons": [
+      {
+        "category": "k",
+        "label": "Top-10 strikeout game of the season (14 K)",
+        "value": 14
+      }
+    ]
+  },
+  "669923|2025-09-14": {
+    "reasons": [
+      {
+        "category": "k",
+        "label": "Top-10 strikeout game of the season (14 K)",
+        "value": 14
+      }
+    ]
+  },
+  "676974|2025-04-21": {
+    "reasons": [
+      {
+        "category": "k",
+        "label": "Top-10 strikeout game of the season (14 K)",
+        "value": 14
+      }
+    ]
+  },
+  "669302|2025-08-24": {
+    "reasons": [
+      {
+        "category": "k",
+        "label": "Top-10 strikeout game of the season (13 K)",
+        "value": 13
+      }
+    ]
+  },
+  "693433|2025-09-13": {
+    "reasons": [
+      {
+        "category": "k",
+        "label": "Top-10 strikeout game of the season (13 K)",
+        "value": 13
+      }
+    ]
+  },
+  "554430|2025-04-18": {
+    "reasons": [
+      {
+        "category": "k",
+        "label": "Top-10 strikeout game of the season (13 K)",
+        "value": 13
+      }
+    ]
+  },
+  "675911|2025-06-14": {
+    "reasons": [
+      {
+        "category": "k",
+        "label": "Top-10 strikeout game of the season (13 K)",
+        "value": 13
+      }
+    ]
+  },
+  "608331|2025-09-18": {
+    "reasons": [
+      {
+        "category": "k",
+        "label": "Top-10 strikeout game of the season (13 K)",
+        "value": 13
+      }
+    ]
+  },
+  "668678|2025-04-02": {
+    "reasons": [
+      {
+        "category": "k",
+        "label": "Top-10 strikeout game of the season (13 K)",
+        "value": 13
+      }
+    ]
+  },
+  "671732|2025-09-13": {
+    "reasons": [
+      {
+        "category": "sb",
+        "label": "Top-10 stolen-base game of the season (3 SB)",
+        "value": 3
+      }
+    ]
+  },
+  "802415|2025-05-29": {
+    "reasons": [
+      {
+        "category": "sb",
+        "label": "Top-10 stolen-base game of the season (3 SB)",
+        "value": 3
+      }
+    ]
+  },
+  "802415|2025-07-22": {
+    "reasons": [
+      {
+        "category": "sb",
+        "label": "Top-10 stolen-base game of the season (3 SB)",
+        "value": 3
+      }
+    ]
+  },
+  "671739|2025-09-22": {
+    "reasons": [
+      {
+        "category": "sb",
+        "label": "Top-10 stolen-base game of the season (3 SB)",
+        "value": 3
+      }
+    ]
+  },
+  "668930|2025-04-20": {
+    "reasons": [
+      {
+        "category": "sb",
+        "label": "Top-10 stolen-base game of the season (3 SB)",
+        "value": 3
+      }
+    ]
+  },
+  "687263|2025-04-26": {
+    "reasons": [
+      {
+        "category": "sb",
+        "label": "Top-10 stolen-base game of the season (3 SB)",
+        "value": 3
+      }
+    ]
+  },
+  "682998|2025-04-17": {
+    "reasons": [
+      {
+        "category": "sb",
+        "label": "Top-10 stolen-base game of the season (3 SB)",
+        "value": 3
+      }
+    ]
+  },
+  "683002|2025-09-17": {
+    "reasons": [
+      {
+        "category": "sb",
+        "label": "Top-10 stolen-base game of the season (3 SB)",
+        "value": 3
+      }
+    ]
+  },
+  "608070|2025-05-12": {
+    "reasons": [
+      {
+        "category": "sb",
+        "label": "Top-10 stolen-base game of the season (3 SB)",
+        "value": 3
+      }
+    ]
+  },
+  "608070|2025-07-12": {
+    "reasons": [
+      {
+        "category": "sb",
+        "label": "Top-10 stolen-base game of the season (3 SB)",
+        "value": 3
+      }
+    ]
+  },
+  "650633|2025-04-13": {
+    "reasons": [
+      {
+        "category": "ip",
+        "label": "Top-10 innings-pitched game of the season (9 IP)",
+        "value": 9
+      }
+    ]
+  },
+  "663568|2025-05-10": {
+    "reasons": [
+      {
+        "category": "ip",
+        "label": "Top-10 innings-pitched game of the season (9 IP)",
+        "value": 9
+      }
+    ]
+  },
+  "592662|2025-07-03": {
+    "reasons": [
+      {
+        "category": "ip",
+        "label": "Top-10 innings-pitched game of the season (9 IP)",
+        "value": 9
+      }
+    ]
+  },
+  "607200|2025-05-09": {
+    "reasons": [
+      {
+        "category": "ip",
+        "label": "Top-10 innings-pitched game of the season (9 IP)",
+        "value": 9
+      }
+    ]
+  },
+  "543243|2025-06-27": {
+    "reasons": [
+      {
+        "category": "ip",
+        "label": "Top-10 innings-pitched game of the season (9 IP)",
+        "value": 9
+      }
+    ]
+  },
+  "641793|2025-05-31": {
+    "reasons": [
+      {
+        "category": "ip",
+        "label": "Top-10 innings-pitched game of the season (9 IP)",
+        "value": 9
+      }
+    ]
+  },
+  "543135|2025-04-01": {
+    "reasons": [
+      {
+        "category": "ip",
+        "label": "Top-10 innings-pitched game of the season (9 IP)",
+        "value": 9
+      }
+    ]
+  },
+  "592332|2025-09-11": {
+    "reasons": [
+      {
+        "category": "ip",
+        "label": "Top-10 innings-pitched game of the season (9 IP)",
+        "value": 9
+      }
+    ]
+  },
+  "650911|2025-07-22": {
+    "reasons": [
+      {
+        "category": "ip",
+        "label": "Top-10 innings-pitched game of the season (9 IP)",
+        "value": 9
+      }
+    ]
+  },
+  "554430|2025-07-06": {
+    "reasons": [
+      {
+        "category": "ip",
+        "label": "Top-10 innings-pitched game of the season (9 IP)",
+        "value": 9
+      }
+    ]
+  }
+}

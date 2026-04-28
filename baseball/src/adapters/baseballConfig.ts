@@ -2,15 +2,18 @@
  * baseballConfig.ts — Layer 2 (MLB-specific)
  *
  * Roster: 2 P + 3 BAT.
- * Salary cap: $220.
+ * Salary cap: $180 — chosen so 3-star hands are routine
+ *   (Ohtani RED + Freeman PURPLE + Mookie BLUE + 2 cheap = $175)
+ * but 2-RED-pitcher stack stays infeasible ($139 leaves $41 for 3 BAT,
+ * below floor of 3×$18=$54). Top-end scarcity preserved.
  *
- * FP weights (per stat unit):
+ * Salary == round(avgFP). FP weights (per stat unit):
  *   Hitters: H=12, 2B=5, 3B=10, HR=20, R=9, RBI=9, BB=6, SB=12
  *   Pitchers: IP=3, K=4, ER=-3, W=6, QS=8
  *
- * Tier thresholds tuned for baseball FP distribution.
- * Typical hitter hand: 40-80 FP. Typical pitcher: 20-60 FP.
- * Mixed roster: 200-350 FP range for a 6-card hand.
+ * Win-tier thresholds (even +30 spacing, LEGEND ceiling raised to suppress
+ * to ~2%). 20k-hand random sim:
+ *   BUST 47% / ROOKIE 21% / STARTER 15% / ALL_STAR 9% / MVP 6% / LEGEND 2%.
  */
 
 export type BaseballSportKey = "baseball";
@@ -48,7 +51,7 @@ export const BaseballSportConfig = {
   rosterSize: 5,
   // Layout order: row 1 = slots 0-2 (3 BAT), row 2 = slots 3-4 (2 P centered).
   rosterSlots: ["BAT", "BAT", "BAT", "P", "P"] as const satisfies Readonly<BaseballSlot[]>,
-  salaryCap: 220,
+  salaryCap: 180,
 
   // ── Positions ───────────────────────────────────────────────────────────
   positions: ["P", "BAT"] as string[],
@@ -121,16 +124,19 @@ export const BaseballSportConfig = {
   },
 
   // ── Win tiers ───────────────────────────────────────────────────────────
-  // Tuned for 2P+3BAT, 617-player pool, pyramid tiers (cap $220).
-  // Bust 46.6%, ROOKIE 23.7%, STARTER 16.1%, ALL_STAR 8.9%, MVP 3.7%, GOAT 0.9%.
+  // Tuned via 20k-hand sim at cap $180. Even +30 spacing for ROOKIE→MVP;
+  // LEGEND ceiling raised +50 from MVP to suppress LEGEND rate to target ~2%.
+  //   BUST 47% · ROOKIE 21% · STARTER 15% · ALL_STAR 9% · MVP 6% · LEGEND 2%.
+  // Skilled human play (smart holds) shifts the curve upward — these
+  // thresholds set the lower bound for random play hitting target frequencies.
   winCondition: {
     type: "FIXED_THRESHOLD" as const,
     thresholds: [
-      { tier: "ROOKIE",   minFP: 148, multiplier: 0.5 },
-      { tier: "STARTER",  minFP: 178, multiplier: 2.5 },
-      { tier: "ALL_STAR", minFP: 208, multiplier: 7 },
-      { tier: "MVP",      minFP: 240, multiplier: 15 },
-      { tier: "LEGEND",     minFP: 280, multiplier: 50, progressive: true },
+      { tier: "ROOKIE",   minFP: 170, multiplier: 0.5 },
+      { tier: "STARTER",  minFP: 200, multiplier: 2.5 },
+      { tier: "ALL_STAR", minFP: 230, multiplier: 7 },
+      { tier: "MVP",      minFP: 260, multiplier: 15 },
+      { tier: "LEGEND",   minFP: 310, multiplier: 50, progressive: true },
     ] as BaseballWinThreshold[],
   },
 };

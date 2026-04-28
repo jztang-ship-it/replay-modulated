@@ -1,7 +1,9 @@
 /**
  * baseball/src/utils/payoutLogic.ts
- * Thresholds tuned via scripts/simulate.mjs for the 5-card baseball roster
- * (2P + 3BAT, 617 players, pyramid tiers). Blended bust rate 46.6%.
+ * Thresholds for the 5-card baseball roster (2P + 3BAT, 617-player pool,
+ * $180 cap, salary = round(avgFP)). Even +30 spacing ROOKIE→MVP, LEGEND
+ * ceiling raised +50 from MVP to keep LEGEND rate near target 2%.
+ * 20k-hand random-play sim: 46.6/20.9/15.0/9.3/6.3/2.0.
  * MUST stay in sync with:
  *   - baseball/src/adapters/baseballConfig.ts winCondition.thresholds
  *   - baseball/src/views/GameView.tsx GAUGE_THRESHOLDS
@@ -17,12 +19,12 @@ export type { WinTierKey };
 export type WinTier = WinTierKey;
 
 export const BASEBALL_WIN_TIERS: WinTierMap = {
-  LEGEND:   { minFp: 280, multiplier: 50  },  // ~0.9%
-  MVP:      { minFp: 240, multiplier: 15  },  // ~3.7%
-  ALL_STAR: { minFp: 208, multiplier: 7   },  // ~8.9%
-  STARTER:  { minFp: 178, multiplier: 2.5 },  // ~16.1%
-  ROOKIE:   { minFp: 148, multiplier: 0.5 },  // ~23.7%
-  BUST:     { minFp: 0,   multiplier: 0   },  // ~46.6%
+  LEGEND:   { minFp: 310, multiplier: 50  },  // ~2%
+  MVP:      { minFp: 260, multiplier: 15  },  // ~6%
+  ALL_STAR: { minFp: 230, multiplier: 7   },  // ~9%
+  STARTER:  { minFp: 200, multiplier: 2.5 },  // ~15%
+  ROOKIE:   { minFp: 170, multiplier: 0.5 },  // ~21%
+  BUST:     { minFp: 0,   multiplier: 0   },  // ~47%
 };
 
 export function calculateWinTier(totalFp: number): WinTierKey {

@@ -62,13 +62,16 @@ type Params = {
   revealMode?: "auto" | "tap";
   /**
    * FTUE gate: called after last unheld card completes. Call the provided
-   * resume() callback when ready to start the held-card (Booker) reveal.
+   * resume() callback when ready to start the held-card (anchor) reveal.
    * If not provided, held reveal starts immediately.
    */
   onBeforeHeldReveal?: (resume: () => void) => void;
 };
 
 const ANCHOR_PRE_FLIP_PAUSE_MS = 200;
+/** Dwell after HOLD→DRAWING before kicking off the redraw network call.
+ *  Long enough to register as a deliberate shuffle beat, short enough not to lull. */
+export const DRAWING_DWELL_MS = 450;
 // Shake pre-duration varies by result intensity
 const SHAKE_DURATION_MS_DEFAULT   = 400;
 const SHAKE_DURATION_MS_BIG       = 550;  // ON FIRE
@@ -212,6 +215,12 @@ export function useEmotionalReveal(params: Params) {
     setLastCardFp(0);
     setVisibleBadgesMap(new Map());
     setShakeInfo(null);
+    // Held-card reveal state must reset between hands. Without this, heldFpVisible
+    // stays true from the previous hand and leaks the next hand's held actualFp
+    // through RosterGrid → CardFront during the DRAWING shuffle beat.
+    setHeldFpVisible(false);
+    setHeldRevealedIds(new Set());
+    setTappedCardIds(new Set());
   }, [clearTimers]);
 
   const revealOrder = useMemo(() => {
@@ -469,9 +478,6 @@ export function useEmotionalReveal(params: Params) {
   useEffect(() => {
     if (!isActive || revealMode !== "auto") return;
     reset();
-    setTappedCardIds(new Set());
-    setHeldFpVisible(false);
-    setHeldRevealedIds(new Set());
     const myRunId  = runIdRef.current;
     const anchorId = revealOrder[revealOrder.length - 1]?.cardId;
     flipState.beginReveal();
@@ -500,9 +506,6 @@ export function useEmotionalReveal(params: Params) {
   useEffect(() => {
     if (!isActive || revealMode !== "tap") return;
     reset();
-    setTappedCardIds(new Set());
-    setHeldFpVisible(false);
-    setHeldRevealedIds(new Set());
     flipState.beginReveal();
 
     // All-held edge case: no unheld cards to tap, reveal immediately

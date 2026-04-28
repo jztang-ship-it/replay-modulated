@@ -5,8 +5,8 @@
  * Calibrated for $250 cap (raised from $200 to enable 2-star rosters), engine-accurate sim:
  *   BUST ~44%, ROOKIE ~26%, STARTER ~17%, ALL_STAR ~9%, MVP ~3.5%, LEGEND ~0.5%
  *
- * Hand 1 is always FTUE (hardcoded Devin Booker roster, ~$200 total — leaves $50 of cap
- * unused by design since FTUE is a fixed narrative sequence, not a full cap-optimized roster).
+ * Hand 1 is always FTUE (hardcoded Tatum-anchored roster, ~$245 total — leaves a few dollars
+ * of cap unused by design since FTUE is a fixed narrative sequence, not a full cap-optimized roster).
  */
 
 export const BasketballSportConfig = {

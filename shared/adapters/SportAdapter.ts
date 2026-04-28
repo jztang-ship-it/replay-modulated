@@ -46,6 +46,13 @@ export class SportAdapter {
 
   isValidPosition(pos: string): boolean { return this.config.positions.includes(pos); }
 
+  /** Map a raw position code to its on-card display string.
+   *  Default = identity (uppercased). Sports override for sport-specific mappings
+   *  (basketball collapses combo positions, baseball maps BAT→B etc). */
+  displayPosition(raw: unknown): string {
+    return String(raw ?? "").trim().toUpperCase();
+  }
+
   normalizeTier(raw: unknown): TierColor {
     const s = String(raw ?? "WHITE").trim().toUpperCase();
     const valid: TierColor[] = ["RED", "ORANGE", "PURPLE", "BLUE", "GREEN", "WHITE"];

@@ -15,7 +15,7 @@
  *   4. Four player archetypes        — star chaser / middle safe / contrarian / pure random
  *
  * Target economy (global for all sports):
- *   BUST 45%  ROOKIE 25%  STARTER 15%  ALL-STAR 8%  MVP 5%  GOAT 2%
+ *   BUST 45%  ROOKIE 25%  STARTER 15%  ALL-STAR 8%  MVP 5%  GOAT/LEGEND 2%
  *
  * Adding a new sport:
  *   - Add a block to SPORT_CONFIGS below.
@@ -109,22 +109,22 @@ const SPORT_CONFIGS = {
     label: "Baseball (MLB)",
     dataDir: join(REPO_ROOT, "baseball", "public", "data"),
 
-    cap: 220,
-    minSpend: 220 - 6,
+    cap: 180,
+    minSpend: 180 - 6,
     // 2P + 3BAT — no FLEX.
     rosterSlots: ["P", "P", "BAT", "BAT", "BAT"],
     positions: ["P", "BAT"],
 
-    // Tier thresholds now reflect avgFP (not salary) — matches the re-graded
-    // tiers in baseball/public/data/players.json (see scripts/recalc-tiers.mjs).
-    // Note: the simulator's archetype selection + anchor logic compares these
-    // against player.salary, so interpret them with that in mind — see blended
-    // result for economy impact.
+    // Fallback tier thresholds (only used when player.tier is missing).
+    // Player tiers are authoritative — per-pool avgFP rank from
+    // scripts/recalc-tiers.mjs: top 1.5% RED / 5% ORANGE / 12% PURPLE
+    // / 25% BLUE / 35% GREEN / rest WHITE.
     tierThresholds: {
-      ORANGE: 40,
-      PURPLE: 32,
-      BLUE:   29,
-      GREEN:  24,
+      RED:    58,
+      ORANGE: 46,
+      PURPLE: 39,
+      BLUE:   32,
+      GREEN:  23,
       WHITE:   0,
     },
     positionAliases: {
@@ -172,14 +172,16 @@ const SPORT_CONFIGS = {
       return isHit || isPit; // FLEX — either side
     },
 
-    // Tuned via scripts/simulate.mjs to hit target economy.
+    // Tuned at cap $180, salary=avgFP. Even +30 spacing for ROOKIE→MVP,
+    // LEGEND ceiling raised +50 from MVP to suppress LEGEND rate to ~2%.
+    // 20k-hand random play: 47/21/15/9/6/2 vs target 45/25/15/8/5/2.
     payoutTiers: [
       { tier: "BUST",     minFp:   0, mult: 0,    source: "tuned" },
-      { tier: "ROOKIE",   minFp: 148, mult: 0.5,  source: "tuned" },
-      { tier: "STARTER",  minFp: 178, mult: 2.5,  source: "tuned" },
-      { tier: "ALL_STAR", minFp: 208, mult: 7.0,  source: "tuned" },
-      { tier: "MVP",      minFp: 240, mult: 15.0, source: "tuned" },
-      { tier: "GOAT",     minFp: 280, mult: 50.0, source: "tuned" },
+      { tier: "ROOKIE",   minFp: 170, mult: 0.5,  source: "tuned" },
+      { tier: "STARTER",  minFp: 200, mult: 2.5,  source: "tuned" },
+      { tier: "ALL_STAR", minFp: 230, mult: 7.0,  source: "tuned" },
+      { tier: "MVP",      minFp: 260, mult: 15.0, source: "tuned" },
+      { tier: "LEGEND",   minFp: 310, mult: 50.0, source: "tuned" },
     ],
   },
 };
@@ -770,7 +772,7 @@ function runArchetype(archName, pool, cfg, hands, rng) {
 // ─── Reporting ───────────────────────────────────────────────────────────────
 
 const TARGET_ECONOMY = {
-  BUST: 0.45, ROOKIE: 0.25, STARTER: 0.15, ALL_STAR: 0.08, MVP: 0.05, GOAT: 0.02,
+  BUST: 0.45, ROOKIE: 0.25, STARTER: 0.15, ALL_STAR: 0.08, MVP: 0.05, GOAT: 0.02, LEGEND: 0.02,
 };
 const BUST_TARGET_LOW = 0.40;
 const BUST_TARGET_HIGH = 0.50;
@@ -824,7 +826,7 @@ function formatBlendedReport(blendedRates, cfg) {
     lines.push(`    ${t.tier.padEnd(10)}  ${fmtPct(rate)}  ${fmtPct(target)}  ${sign}${(delta*100).toFixed(1)}%  ${bar}`);
   }
   const anyWin = 1 - (blendedRates.BUST ?? 0);
-  const starterPlus = ["STARTER","ALL_STAR","MVP","GOAT"].reduce((s,k)=>s+(blendedRates[k]??0),0);
+  const starterPlus = ["STARTER","ALL_STAR","MVP","GOAT","LEGEND"].reduce((s,k)=>s+(blendedRates[k]??0),0);
   lines.push("");
   lines.push(`    Total bust:     ${fmtPct(blendedRates.BUST ?? 0)}`);
   lines.push(`    Total any-win:  ${fmtPct(anyWin)}`);

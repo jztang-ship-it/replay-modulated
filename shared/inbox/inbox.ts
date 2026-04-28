@@ -78,6 +78,29 @@ export async function markRead(messageId: string): Promise<void> {
   if (error) console.warn('[inbox] markRead failed', error);
 }
 
+// ---------- Cap ----------
+// MVP cap: keep only the 20 newest messages per user. Older ones are deleted
+// after each insert so the inbox sheet never grows unbounded.
+export const INBOX_MAX_MESSAGES = 20;
+
+async function pruneInboxToCap(userId: string): Promise<void> {
+  // Fetch ids of messages older than the most-recent INBOX_MAX_MESSAGES.
+  const { data, error: readErr } = await supabase
+    .from('inbox_messages')
+    .select('id')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .range(INBOX_MAX_MESSAGES, INBOX_MAX_MESSAGES + 999);
+  if (readErr) { console.warn('[inbox] pruneInboxToCap read failed', readErr); return; }
+  const stale = (data ?? []) as Array<{ id: string }>;
+  if (stale.length === 0) return;
+  const { error: delErr } = await supabase
+    .from('inbox_messages')
+    .delete()
+    .in('id', stale.map(r => r.id));
+  if (delErr) console.warn('[inbox] pruneInboxToCap delete failed', delErr);
+}
+
 // ---------- Inserts (event-driven, RLS-allowed types only) ----------
 
 export async function addWelcomeMessage(userId: string): Promise<void> {
@@ -88,7 +111,8 @@ export async function addWelcomeMessage(userId: string): Promise<void> {
   const { error } = await supabase
     .from('inbox_messages')
     .insert({ user_id: userId, message_type: 'welcome', payload });
-  if (error) console.warn('[inbox] addWelcomeMessage failed', error);
+  if (error) { console.warn('[inbox] addWelcomeMessage failed', error); return; }
+  await pruneInboxToCap(userId);
 }
 
 export async function addBigWinMessage(
@@ -105,7 +129,8 @@ export async function addBigWinMessage(
   const { error } = await supabase
     .from('inbox_messages')
     .insert({ user_id: userId, message_type: 'big_win', payload });
-  if (error) console.warn('[inbox] addBigWinMessage failed', error);
+  if (error) { console.warn('[inbox] addBigWinMessage failed', error); return; }
+  await pruneInboxToCap(userId);
 }
 
 export async function addBonusPoolMessage(
@@ -122,7 +147,8 @@ export async function addBonusPoolMessage(
   const { error } = await supabase
     .from('inbox_messages')
     .insert({ user_id: userId, message_type: 'bonus_pool', payload });
-  if (error) console.warn('[inbox] addBonusPoolMessage failed', error);
+  if (error) { console.warn('[inbox] addBonusPoolMessage failed', error); return; }
+  await pruneInboxToCap(userId);
 }
 
 // ---------- Survey response ----------

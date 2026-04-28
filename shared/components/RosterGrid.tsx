@@ -75,7 +75,7 @@ type Props = {
   shakingCardId?: string | null;
   shakeType?: ShakeType | null;
   cardShakeTypeMap?: Map<string, ShakeType | null>;
-  /** FTUE: slot indices to dim (all except Booker at slot 0) */
+  /** FTUE: slot indices to dim (all except the anchor) */
   ftueDimmedSlots?: Set<number>;
   visibleBadgesMap?: Map<string, Array<{ id: string; icon: string; label: string; fp: number }>>;
   activeRevealCardId?: string | null;

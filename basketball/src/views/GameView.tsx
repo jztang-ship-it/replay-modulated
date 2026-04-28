@@ -18,7 +18,7 @@ import { AppHeader } from "../components/AppHeader";
 import { resetAllOverlays } from "../components/AthleteCard";
 import { GameBar, type CelebrationData } from "../components/GameBar";
 import { useCardFlipState } from "../hooks/useCardFlipState";
-import { useEmotionalReveal, type RevealableCard } from "../hooks/useEmotionalReveal";
+import { useEmotionalReveal, DRAWING_DWELL_MS, type RevealableCard } from "../hooks/useEmotionalReveal";
 import { calculateWinTier, calculatePayout, calculatePayoutWithStreak, getStreakMultiplier, BASKETBALL_WIN_TIERS, STREAK_TIERS, type WinTier } from "../utils/payoutLogic";
 import { detectExtremes } from "@shared/utils/extremeGames";
 import { featureFlags } from "@shared/featureFlags";
@@ -34,16 +34,14 @@ import { CoinDisplay } from '@shared/engagement/CoinDisplay';
 import { DailyTasksPanel } from '@shared/engagement/DailyTasksPanel';
 import { XPBar } from '@shared/engagement/XPBar';
 import { soundManager } from '@shared/utils/soundManager';
+import { getBonusPool, contributeBet } from '@shared/utils/bonusPoolStore';
 import { audioDirector } from '@shared/utils/audioDirector';
 import { getPlayerUid, getNickname, setNickname, getSessionId } from '@shared/utils/playerIdentity';
 import { captureReferrerFromUrl, applyReferral, claimReferral } from '@shared/utils/referral';
 import { supabase } from "@shared/lib/supabase";
 import { buildScoreProof } from '@shared/utils/scoreProof';
 import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
-import { generateCommentary } from "@shared/commentary/generateCommentary";
 import { chadMessage } from "@shared/commentary/chad";
-import type { CommentaryInput, CommentaryOutput, CommentaryRosterCard } from "@shared/commentary/types";
-import { buildBasketballContext } from "../utils/buildBasketballContext";
 import { ProfileScreen } from '@shared/components/ProfileScreen';
 import { useAuth } from "@shared/auth/useAuth";
 import { RegisterModal } from "@shared/components/RegisterModal";
@@ -132,10 +130,8 @@ function RosterGridScaleFit({ children }: { children: ReactNode }) {
 }
 const BASE_BET = 10;
 
-// ── Jackpot constants ──────────────────────────────────────────────────────
-// ── Economy constants (new system) ────────────────────────────────────────
-const POOL_DRIP_INTERVAL_MS = 3000;
-const POOL_DRIP_AMOUNT = 0.07; // ~1.4 coins/min at 3s interval
+// ── Bonus pool constants ───────────────────────────────────────────────────
+// Drip is server-side now (api/bonus-pool.ts); no local timer needed.
 
 type GameState =
   | "IDLE" | "DEALING" | "HOLD" | "DRAWING"
@@ -251,22 +247,25 @@ const GAUGE_THRESHOLDS = [
 ];
 const NEAR_MISS_FP = 5;
 
-/** Must match salary → tier thresholds in shared/engines/economyEngine.ts (DEFAULT_ECONOMY_CONFIG.tierThresholds). */
+/** Salary-cutoff tier — fallback only. Player data should carry an authoritative `tier`. */
 function tierFromSalary(salary: number): string {
   const s = Number(salary ?? 0);
   return s >= 73 ? "RED" : s >= 58 ? "ORANGE" : s >= 44 ? "PURPLE" : s >= 30 ? "BLUE" : s >= 23 ? "GREEN" : "WHITE";
 }
 
+const VALID_TIERS = new Set(["RED", "ORANGE", "PURPLE", "BLUE", "GREEN", "WHITE"]);
+
 function toRevealableCards(cards: PlayerCard[]): RevealableCard[] {
   return cards.map(c => {
     const salary = Number((c as any).salary ?? 0);
+    const dataTier = String((c as any).tier ?? "").toUpperCase();
     return {
       cardId: cardId(c),
       slotIndex: c.slotIndex ?? 0,
       actualFp: Number(c.actualFp ?? 0),
       projectedFp: Number(c.projectedFp ?? 0),
       salary,
-      tier: tierFromSalary(salary),
+      tier: VALID_TIERS.has(dataTier) ? dataTier : tierFromSalary(salary),
       wasHeld: (c as any).wasHeld ?? false,
       badges: (c.achievements ?? []).map((a: any) => ({
         id: a.id, icon: a.icon || "⭐", label: a.label, fp: a.fp || 0,
@@ -421,10 +420,10 @@ function BetMultSuffix({ m }: { m: number }) {
 
 // ── StreakDisplay — fire emojis showing current streak progress ───────────────
 // Always visible. Spark animation on light-up or reset.
-// 0 wins:  🔥🔥🔥 x1.2  (all dim)
-// 3 wins:  🔥🔥🔥 x1.2 ✓ → 🔥🔥 x1.5 appears
-// 5 wins:  ✓ ✓ → 🔥🔥🔥🔥🔥 x2.0 appears
-// 10 wins: all lit, 2.0x active
+// 0 wins:  🔥🔥🔥 x1.3  (all dim)
+// 3 wins:  🔥🔥🔥 x1.3 ✓ → 🔥🔥 x1.7 appears
+// 5 wins:  ✓ ✓ → 🔥🔥🔥🔥🔥 x2.5 appears
+// 10 wins: all lit, 2.5x active
 
 const STREAK_STYLE_ID = "streak-spark-styles";
 if (typeof document !== "undefined" && !document.getElementById(STREAK_STYLE_ID)) {
@@ -512,24 +511,29 @@ function BonusPoolPill({ betAmount, betNonce, onAmountChange }: {
   const prevNonceRef = useRef(betNonce);
   const rafRef = useRef(0);
 
-  // Passive drip
+  // Mount: fetch real KV-backed pool value. Periodic poll keeps display fresh.
+  // (Replaces the old client-only passive drip — drip is server-side now.)
   useEffect(() => {
-    const id = setInterval(() => {
-      setAmount(p => {
-        const next = parseFloat((p + POOL_DRIP_AMOUNT).toFixed(2));
-        onAmountChange?.(next);
-        return next;
-      });
-    }, POOL_DRIP_INTERVAL_MS);
-    return () => clearInterval(id);
+    let cancelled = false;
+    const sync = async () => {
+      try {
+        const pool = await getBonusPool("basketball");
+        if (cancelled) return;
+        setAmount(pool);
+        onAmountChange?.(pool);
+      } catch { /* swallow — keep last known value */ }
+    };
+    sync();
+    const pollId = setInterval(sync, 30_000);
+    return () => { cancelled = true; clearInterval(pollId); };
   }, []); // eslint-disable-line
 
-  // Sync display with amount for drip (no animation needed for tiny drip increments)
+  // Sync display with amount when not animating
   useEffect(() => {
     if (!pulse) setDisplayAmount(amount);
   }, [amount, pulse]);
 
-  // 5% rake on every bet — pulse + animated roll-up
+  // 5% rake on every bet — push to server, animate locally for feedback
   useEffect(() => {
     if (betNonce === prevNonceRef.current) return;
     prevNonceRef.current = betNonce;
@@ -538,13 +542,9 @@ function BonusPoolPill({ betAmount, betNonce, onAmountChange }: {
 
     const startVal = amount;
     const endVal = parseFloat((amount + rake).toFixed(2));
-    setAmount(endVal);
-    onAmountChange?.(endVal);
 
-    // Pulse glow
+    // Optimistically animate the pulse + roll-up
     setPulse(true);
-
-    // Animated roll-up over 800ms
     const startTime = performance.now();
     const duration = 800;
     const tick = () => {
@@ -560,6 +560,19 @@ function BonusPoolPill({ betAmount, betNonce, onAmountChange }: {
       }
     };
     rafRef.current = requestAnimationFrame(tick);
+
+    // Push contribution to KV; replace local with authoritative server value.
+    (async () => {
+      try {
+        const next = await contributeBet("basketball", betAmount);
+        setAmount(next);
+        onAmountChange?.(next);
+      } catch {
+        // KV unavailable — fall back to optimistic local update
+        setAmount(endVal);
+        onAmountChange?.(endVal);
+      }
+    })();
 
     return () => cancelAnimationFrame(rafRef.current);
   }, [betNonce]); // eslint-disable-line
@@ -634,10 +647,6 @@ export default function GameView() {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [bigWinFired, setBigWinFired] = useState(false);
   const sessionCount = useRef(parseInt(localStorage.getItem("rm_session_count") ?? "0", 10));
-  // Bumped when fetchLeaderboardContext patches postRevealCopyRef.current.secondary,
-  // forcing the postRevealCopy useMemo to re-read the ref. Each new hand resets the
-  // ref to null and we kick off a fresh fetch.
-  const [lbContextNonce, setLbContextNonce] = useState(0);
 
   useEffect(() => {
     if (gameState === "IDLE" || gameState === "HOLD") setShowRawScore(false);
@@ -672,7 +681,7 @@ export default function GameView() {
   const [ftueCardsBlocked, setFtueCardsBlocked] = useState(false);
   const [ftueReplayReady, setFtueReplayReady] = useState(false);
   const [ftueResultsDim, setFtueResultsDim] = useState(false);
-  const [ftueBookerFlipped, setFtueBookerFlipped] = useState(false);
+  const [ftueAnchorFlipped, setFtueAnchorFlipped] = useState(false);
   const [ftueOscillating, setFtueOscillating] = useState(false);
   const [ftueCommentaryDone, setFtueCommentaryDone] = useState(false);
   const [ftueCommentaryOverride, setFtueCommentaryOverride] = useState<{ parts: React.ReactNode[]; sticky?: boolean } | null>(null);
@@ -683,7 +692,7 @@ export default function GameView() {
   /** After FTUE scripted gauge animation completes — bar stays frozen until next hand */
   const [ftueGaugeOscDone, setFtueGaugeOscDone] = useState(false);
   const [ftueWinCelebrationActive, setFtueWinCelebrationActive] = useState(false);
-  const [ftueBookerPulse, setFtueBookerPulse] = useState(false);
+  const [ftueAnchorPulse, setFtueAnchorPulse] = useState(false);
   const [ftueHoldSpotlight, setFtueHoldSpotlight] = useState(false);
   const [ftueCoachBubbleKey, setFtueCoachBubbleKey] = useState<string | null>(null);
   /** Legend icon gold-filled when pre-game msg is active OR daily bonus unseen */
@@ -728,15 +737,19 @@ export default function GameView() {
     if (gameState !== "IDLE") chadFiredThisIdleRef.current = false;
   }, [gameState]);
 
-  // Welcome message: first time post-FTUE (highest priority, fires immediately)
+  // Welcome message: first time post-FTUE. Gated on IDLE so it doesn't fire
+  // the moment isFTUE flips false (which is mid-FTUE-results, before the user
+  // sees the FTUE finalText). Waits until they click Replay → state goes
+  // IDLE → welcome fires as the first commentary line of normal game.
   useEffect(() => {
     if (isFTUE) return;
+    if (gameState !== "IDLE") return;
     if (localStorage.getItem("replaymod_pregame_intro_basketball") === "1") return;
     localStorage.setItem("replaymod_pregame_intro_basketball", "1");
     chadFiredThisIdleRef.current = true;
     setLegendGold(true);
     setFtueCommentaryOverride({ parts: [chadMessage("welcome")], sticky: true });
-  }, [isFTUE]);
+  }, [isFTUE, gameState]);
 
   // Unified auth-modal gate — fires at most once ever, across all trigger sources.
   // The trigger label goes to PostHog for per-source conversion analysis.
@@ -806,17 +819,22 @@ export default function GameView() {
     }
   }, [gameState, handCount, isFTUE, isAnonymous, bigWinFired, tryOpenAuthModal]);
 
-  // Auth nudge — MVP+ hand while anonymous. Emotional-peak conversion moment.
+  // Auth nudge — MVP+ hand while anonymous. Wait until the user has cleared
+  // celebration and returned to IDLE so the modal doesn't pop over the
+  // celebration animation. The "save your progress" prompt should only
+  // surface at hand-conclusion, never mid-reveal.
   useEffect(() => {
     if (!isAnonymous || isFTUE) return;
+    if (gameState !== "IDLE") return;
     if (winTier !== "MVP" && winTier !== "LEGEND") return;
     return tryOpenAuthModal("big_win", 2500, { tier: winTier ?? "" });
-  }, [winTier, isAnonymous, isFTUE, tryOpenAuthModal]);
+  }, [winTier, isAnonymous, isFTUE, gameState, tryOpenAuthModal]);
 
   // Auth nudge — fallback at hand 5 if no big win has converted.
+  // IDLE only — never RESULTS, which would interrupt the score reveal.
   useEffect(() => {
     if (!isAnonymous || isFTUE) return;
-    if (gameState !== "IDLE" && gameState !== "RESULTS") return;
+    if (gameState !== "IDLE") return;
     if (handCount < 5) return;
     return tryOpenAuthModal("hand_5", 3500);
   }, [handCount, isAnonymous, isFTUE, gameState, tryOpenAuthModal]);
@@ -831,7 +849,6 @@ export default function GameView() {
   const [streak, setStreak] = useState<number>(() =>
     parseInt(localStorage.getItem("replaymod_streak") ?? "0", 10)
   );
-  // streakMilestone removed — streak now directly multiplies payout
 
   // Tier flip display state
   const [tierFlipKey, setTierFlipKey] = useState(0);
@@ -1355,19 +1372,6 @@ export default function GameView() {
   // Smart post-reveal copy — computed once when spring settles, then locked for the hand.
   // Uses a ref so the copy never changes mid-display from dependency churn.
   const postRevealCopyRef = useRef<ReturnType<typeof selectCommentary> | null>(null);
-  // Claude-generated commentary, populated by the REVEALING-phase pre-fetch effect.
-  // postRevealCopy memo prefers this over the template fallback. Reset per hand.
-  const commentaryRef = useRef<CommentaryOutput | null>(null);
-  // Status of the Claude pre-fetch for the CURRENT hand. The memo blocks rendering
-  // (returns null → empty commentary box) while 'pending', so the template never
-  // shows-then-swaps. Only after 'succeeded' or 'failed' does the memo populate.
-  // 'idle' = no fetch yet; 'pending' = fetch in flight; 'succeeded' = use Claude;
-  // 'failed' = use template fallback (or static).
-  const commentaryStatusRef = useRef<'idle' | 'pending' | 'succeeded' | 'failed'>('idle');
-  // Per-hand dedup so the pre-fetch effect fires exactly once per hand.
-  const commentaryFiredHandRef = useRef<number>(-1);
-  // Last 3 tones used by Claude — passed back into the prompt to enforce variation.
-  const recentTonesRef = useRef<string[]>([]);
   const postRevealCopy = useMemo(() => {
     // Once computed, lock it — never recompute until next hand
     if (postRevealCopyRef.current) return postRevealCopyRef.current;
@@ -1375,20 +1379,6 @@ export default function GameView() {
     // FTUE: no postRevealCopy — commentary handled by CoachLayer
     if (isFTUE) {
       return null;
-    }
-    // While Claude is in flight, render NOTHING. We deliberately wait so the
-    // template never shows-then-swaps. The pre-fetch effect transitions status
-    // to 'succeeded' or 'failed' on resolve and bumps lbContextNonce to re-run
-    // this memo. The 3s timeout in generateCommentary guarantees we never wait
-    // forever.
-    if (commentaryStatusRef.current === 'pending') {
-      return null;
-    }
-    // Tier 1: Claude commentary if it landed.
-    if (commentaryStatusRef.current === 'succeeded' && commentaryRef.current?.commentary) {
-      const copy = { primary: commentaryRef.current.commentary, secondary: "" };
-      postRevealCopyRef.current = copy;
-      return copy;
     }
     const fp = lockedGaugeFpRef.current ?? displayFp;
     const gaugeSnap = computeGaugeState(fp, GAUGE_THRESHOLDS as any, winTier, 8);
@@ -1440,7 +1430,7 @@ export default function GameView() {
     }
     postRevealCopyRef.current = copy;
     return copy;
-  }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct, lbContextNonce]); // eslint-disable-line
+  }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct]); // eslint-disable-line
 
   // Never show intermediate tiers during spring — only show final tier after spring settles
   const activeTierForDisplay = winTier ?? deriveTierFromFp(totalFp);
@@ -1512,93 +1502,8 @@ export default function GameView() {
       frozenBarFpRef.current = null;
       anchorFpCallCountRef.current = 0;
       postRevealCopyRef.current = null;
-      commentaryRef.current = null;
-      commentaryStatusRef.current = 'idle';
-      commentaryFiredHandRef.current = -1;
-      // streakMilestone removed
     }
   }, [gameState]);
-
-  // ── Claude commentary pre-fetch ─────────────────────────────────────────
-  // Fire as soon as REVEALING starts. By then rosterRef holds finalized cards
-  // (actualFp is already resolved server-side; the reveal phase is animation).
-  // Result lands in commentaryRef and the postRevealCopy memo prefers it.
-  // Per-hand dedup via commentaryFiredHandRef.
-  useEffect(() => {
-    if (gameState !== "REVEALING") return;
-    if (isFTUE) return;
-    if (commentaryFiredHandRef.current === handCount) return;
-    commentaryFiredHandRef.current = handCount;
-    commentaryStatusRef.current = 'pending';
-
-    const finalRoster = rosterRef.current;
-    if (!finalRoster.length) {
-      commentaryStatusRef.current = 'failed';
-      return;
-    }
-
-    const finalFp = finalRoster.reduce(
-      (s, c: any) => s + Number(c.actualFp ?? 0),
-      0,
-    );
-    const finalTier = (deriveTierFromFp(finalFp) ?? "BUST") as any;
-    const gauge = computeGaugeState(
-      finalFp,
-      GAUGE_THRESHOLDS as any,
-      finalTier,
-      8,
-    );
-
-    const rosterShape: CommentaryRosterCard[] = finalRoster.map((c: any) => ({
-      name: String(c.name ?? ""),
-      salary: Number(c.salary ?? 0),
-      actualFp: Number(c.actualFp ?? 0),
-      projectedFp: Number(c.projectedFp ?? 0),
-      cardTier: String(c.tier ?? ""),
-      opponent: String(c.gameInfo?.opponent ?? ""),
-      homeAway: String(c.gameInfo?.homeAway ?? "") as "H" | "A" | "",
-      statLine: c.statLine ?? {},
-      extremeFlags: detectExtremes(c.statLine ?? {}, Number(c.salary ?? 0)),
-    }));
-
-    const culture = buildBasketballContext(rosterShape);
-
-    const input: CommentaryInput = {
-      sport: "basketball",
-      totalFp: finalFp,
-      winTier: finalTier,
-      nextTier: gauge.nextTier as any,
-      tierFloor: gauge.curMin,
-      nextTierMin: gauge.nextMin > 0 && gauge.nextMin < 9999 ? gauge.nextMin : undefined,
-      streak,
-      prevStreak: finalTier === "BUST" ? streak : Math.max(0, streak - 1),
-      isBust: finalTier === "BUST",
-      handCount,
-      roster: rosterShape,
-      // TODO: leaderboard rank/gap input — requires exposing raw rank from
-      // leaderboardContext alongside its current string output. Until then,
-      // Claude generates without leaderboard awareness; the legacy patch
-      // path still adds a nudge line when Claude is unavailable.
-    };
-
-    generateCommentary(input, culture, recentTonesRef.current).then(result => {
-      if (result) {
-        commentaryRef.current = result;
-        if (result.tone) {
-          const next = [result.tone, ...recentTonesRef.current.filter(t => t !== result.tone)].slice(0, 6);
-          recentTonesRef.current = next;
-        }
-      }
-      commentaryStatusRef.current = result ? 'succeeded' : 'failed';
-      // Clear the locked ref so the memo recomputes and picks the new tier.
-      postRevealCopyRef.current = null;
-      setLbContextNonce(n => n + 1);
-    }).catch(() => {
-      commentaryStatusRef.current = 'failed';
-      postRevealCopyRef.current = null;
-      setLbContextNonce(n => n + 1);
-    });
-  }, [gameState, isFTUE, handCount, streak]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const flippedIds = useMemo(() => {
     if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") return statsFlippedIds;
@@ -1675,8 +1580,8 @@ export default function GameView() {
     });
     // Track when Tatum is flipped in FTUE to trigger the final bubble
     if (isFTUE && cardKey === "ftue-tatum") {
-      setFtueBookerFlipped(true);
-      setFtueBookerPulse(false);
+      setFtueAnchorFlipped(true);
+      setFtueAnchorPulse(false);
       // Dim stays active — lifted only after final_replay bubble is dismissed
     }
   }
@@ -1702,7 +1607,7 @@ export default function GameView() {
       setFtueCommentaryDone(false);
       setFtueCommentaryOverride(null);
       setFtueWinCelebrationActive(false);
-      setFtueBookerPulse(false);
+      setFtueAnchorPulse(false);
       setFtueHoldSpotlight(false);
       pendingCelebration.current = null;
       ftueLastHandFpRef.current = 0;
@@ -1759,7 +1664,7 @@ export default function GameView() {
       setRoster(markedRoster);
       setGameState("DRAWING");
       gameAnalytics.redrawUsed();
-      await sleep(700);
+      await sleep(DRAWING_DWELL_MS);
       let drawRes: any, resolveRes: any;
       try {
         drawRes = isFTUE
@@ -1823,8 +1728,8 @@ export default function GameView() {
         setFtueCommentaryDone(false);
         setFtueWinCelebrationActive(false);
         setFtueReplayReady(false);
-        setFtueBookerFlipped(false);
-        setFtueBookerPulse(false);
+        setFtueAnchorFlipped(false);
+        setFtueAnchorPulse(false);
         setFtueHoldSpotlight(false);
         setFtueResultsDim(false);
         ftueTierSlamPlayedRef.current = false;
@@ -1853,7 +1758,7 @@ export default function GameView() {
     }
   }
 
-  // FTUE: when RESULTS starts, dim non-Booker, fire bubble
+  // FTUE: when RESULTS starts, dim non-anchor, fire bubble
   useEffect(() => {
     if (!isFTUE || gameState !== "RESULTS") return;
     setFtueResultsDim(true);
@@ -2075,7 +1980,7 @@ export default function GameView() {
                 noTransition={noTransition}
                 visibleFpMap={visibleFpMap}
                 canFlip={gameState === "RESULTS" || gameState === "WIN_CELEBRATION"}
-                ftueFlipTargetId={isFTUE && (ftueBookerPulse || ftueHoldSpotlight) ? "ftue-tatum" : null}
+                ftueFlipTargetId={isFTUE && (ftueAnchorPulse || ftueHoldSpotlight) ? "ftue-tatum" : null}
                 flipMsMap={flipMsMap}
                 fpCountUpMsMap={fpCountUpMsMap}
                 performanceTagMap={performanceTagMap}
@@ -2173,7 +2078,7 @@ export default function GameView() {
                     />
                     <img
                       key={`tier-${winTier}`}
-                      src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
+                      src={`${import.meta.env.BASE_URL}${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
                       alt={formatTierLabel(winTier)}
                       style={{
                         maxHeight: 80, maxWidth: "100%", objectFit: "contain",
@@ -2194,7 +2099,7 @@ export default function GameView() {
                     <>
                       <img
                         key={`tier-stay-${winTier}`}
-                        src={`/${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
+                        src={`${import.meta.env.BASE_URL}${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
                         alt={formatTierLabel(winTier)}
                         style={{
                           maxHeight: 52, maxWidth: "100%", objectFit: "contain",
@@ -2375,7 +2280,7 @@ export default function GameView() {
               revealIndex={revealIndex}
               legendaryCardName={legendaryCardName}
               lastRevealedCardId={lastRevealedCardId}
-              ftueBookerFlipped={ftueBookerFlipped}
+              ftueAnchorFlipped={ftueAnchorFlipped}
               onCoachBubbleKey={(key) => {
                 setFtueCoachBubbleKey(key);
                 if (key === "hold_tatum") setFtueHoldSpotlight(true);
@@ -2386,7 +2291,7 @@ export default function GameView() {
                 resume?.();
               }}
               onCelebrationReady={() => {
-                // Non-FTUE: CoachLayer calls this after Booker bubble dismiss
+                // Non-FTUE: CoachLayer calls this after anchor bubble dismiss
                 if (!isFTUE) {
                   setCelebrationHeld(false);
                   if (pendingCelebration.current) {
@@ -2401,8 +2306,8 @@ export default function GameView() {
               onCommentaryText={(parts, sticky) => setFtueCommentaryOverride(parts ? { parts, sticky } : null)}
               dismissRef={coachDismissRef}
               onReplayReady={() => setFtueReplayReady(true)}
-              onFtueReadyToFlip={() => setFtueBookerPulse(true)}
-              onFtueBookerHeld={() => { /* draw pulse handled inside CoachLayer */ }}
+              onFtueReadyToFlip={() => setFtueAnchorPulse(true)}
+              onFtueAnchorHeld={() => { /* draw pulse handled inside CoachLayer */ }}
               onFtueAllDone={() => {
                 // Don't completeFTUE here — isFTUE must stay true for stickyLastOverride
                 setFtueResultsDim(false);
@@ -2416,8 +2321,8 @@ export default function GameView() {
                 setCelebrationHeld(false);
                 setFtueCardsBlocked(false);
                 setFtueReplayReady(false);
-                setFtueBookerFlipped(false);
-                setFtueBookerPulse(false);
+                setFtueAnchorFlipped(false);
+                setFtueAnchorPulse(false);
                 setFtueHoldSpotlight(false);
                 setFtueGaugeOscDone(false);
                 ftueTierSlamPlayedRef.current = false;

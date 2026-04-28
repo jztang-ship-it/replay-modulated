@@ -44,7 +44,7 @@ export function calculatePayout(tier: WinTierKey, betAmount: number, tiers: WinT
 
 // ── Streak multiplier system ────────────────────────────────────────────────
 // Consecutive non-bust wins boost payouts. Losing resets streak to 0.
-//   3 wins → 1.2x | 5 wins → 1.5x | 10 wins → 2.0x
+//   3 wins → 1.3x | 5 wins → 1.7x | 10 wins → 2.5x
 
 export interface StreakTier {
   wins: number;

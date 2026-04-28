@@ -1,14 +1,14 @@
 {
-  "historic_all_time": [
-    { "id": "bb_mlb_hist_all_0001", "sport": "baseball", "archetype": "historic_all_time", "register": "win",
+  "historic_record": [
+    { "id": "bb_mlb_hist_all_0001", "sport": "baseball", "archetype": "historic_record", "register": "win",
       "tone": "observational",
       "template": "{topStat}. {topLabel}. Read the line.",
       "tags": ["stat_first"], "humorStyle": [], "qualityScore": 8, "enabled": true },
-    { "id": "bb_mlb_hist_all_0002", "sport": "baseball", "archetype": "historic_all_time", "register": "loss",
+    { "id": "bb_mlb_hist_all_0002", "sport": "baseball", "archetype": "historic_record", "register": "loss",
       "tone": "observational",
       "template": "Hand busted. {name} still put up {topStat}. {topLabel}. Flip the card.",
       "tags": ["stat_first"], "humorStyle": [], "qualityScore": 8, "enabled": true },
-    { "id": "bb_mlb_hist_all_0003", "sport": "baseball", "archetype": "historic_all_time", "register": "win",
+    { "id": "bb_mlb_hist_all_0003", "sport": "baseball", "archetype": "historic_record", "register": "win",
       "tone": "analytical",
       "template": "{name}: {topStat}. That's in the box score for a reason. Read it.",
       "tags": ["stat_first"], "humorStyle": [], "qualityScore": 8, "enabled": true }
@@ -302,6 +302,84 @@
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bb_mlb_seasonbest_0001",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "observational",
+      "template": "{name} carried it{opp}. Quietly buried in the line: {seasonBestStat}.",
+      "requires": ["season_best_stat"],
+      "tags": ["season_best"],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_mlb_seasonbest_0002",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{name} on top. Worth the receipt: {seasonBestStat}.",
+      "requires": ["season_best_stat"],
+      "tags": ["season_best"],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_mlb_seasonbest_0003",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "hype",
+      "template": "{name} cashed it{opp} — and rewrote his own line: {seasonBestStat}.",
+      "requires": ["season_best_stat"],
+      "tags": ["season_best"],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_mlb_seasonbest_0004",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "warm",
+      "template": "Big day from {name}{opp}. Tucked under the box: {seasonBestStat}. That stays with him.",
+      "requires": ["season_best_stat"],
+      "tags": ["season_best"],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_mlb_seasonbest_0005",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{last} did his job{opp}. Receipts: {seasonBestStat}.",
+      "requires": ["season_best_stat"],
+      "tags": ["season_best"],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bb_mlb_seasonbest_0006",
+      "sport": "baseball",
+      "archetype": "star_carry",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{name} brought the hand home{opp}. Quietly, in the margin: {seasonBestStat}.",
+      "requires": ["season_best_stat"],
+      "tags": ["season_best"],
+      "humorStyle": [],
+      "qualityScore": 8,
       "enabled": true
     }
   ],
@@ -4446,6 +4524,80 @@
       ],
       "humorStyle": [],
       "qualityScore": 8,
+      "enabled": true
+    }
+  ],
+  "multi_star_carry": [
+    {
+      "id": "bb_msc_0001",
+      "sport": "baseball",
+      "archetype": "multi_star_carry",
+      "register": "win",
+      "tone": "hype",
+      "template": "{name} and {costar} both showed up at the plate tonight. The hand never had a chance of losing.",
+      "tags": ["multi_star"],
+      "humorStyle": [],
+      "qualityScore": 9,
+      "enabled": true
+    },
+    {
+      "id": "bb_msc_0002",
+      "sport": "baseball",
+      "archetype": "multi_star_carry",
+      "register": "win",
+      "tone": "observational",
+      "template": "Two stars, one paycheck. {name} delivered. {costar} delivered. Roster cashed.",
+      "tags": ["multi_star"],
+      "humorStyle": [],
+      "qualityScore": 9,
+      "enabled": true
+    },
+    {
+      "id": "bb_msc_0003",
+      "sport": "baseball",
+      "archetype": "multi_star_carry",
+      "register": "win",
+      "tone": "analytical",
+      "template": "{last} and {costarLast} both took the night personally. When two cards go off in the same lineup, the math gets simple.",
+      "tags": ["multi_star"],
+      "humorStyle": [],
+      "qualityScore": 9,
+      "enabled": true
+    },
+    {
+      "id": "bb_msc_0004",
+      "sport": "baseball",
+      "archetype": "multi_star_carry",
+      "register": "win",
+      "tone": "warm",
+      "template": "Big day from {name}{opp}. Big day from {costar} too. Both showed up, both got paid.",
+      "tags": ["multi_star"],
+      "humorStyle": [],
+      "qualityScore": 9,
+      "enabled": true
+    },
+    {
+      "id": "bb_msc_0005",
+      "sport": "baseball",
+      "archetype": "multi_star_carry",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "{name} did damage. {costar} did damage. You don't lose hands like that.",
+      "tags": ["multi_star"],
+      "humorStyle": [],
+      "qualityScore": 9,
+      "enabled": true
+    },
+    {
+      "id": "bb_msc_0006",
+      "sport": "baseball",
+      "archetype": "multi_star_carry",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "Co-stars tonight: {name} and {costar}. Both produced. The rest of the lineup watched and cashed.",
+      "tags": ["multi_star"],
+      "humorStyle": [],
+      "qualityScore": 9,
       "enabled": true
     }
   ],

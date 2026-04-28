@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Replay IFS — Pick a sport</title>
+    <meta name="description" content="Real stats. Real history. Your fantasy result instantly." />
+    <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; height: 100%; }
+      body {
+        background: linear-gradient(180deg, #070A12 0%, #0A1020 38%, #070A12 100%);
+        color: #F0F2F5;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .nav {
+        flex-shrink: 0;
+        padding: 18px 24px;
+        font-weight: 950;
+        font-size: 22px;
+        letter-spacing: -0.5px;
+      }
+      .nav .accent { color: #FFB14A; }
+      main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 16px 40px;
+        gap: 28px;
+        text-align: center;
+      }
+      h1 {
+        font-family: 'Impact','Arial Narrow',Arial,sans-serif;
+        font-weight: 900;
+        font-size: clamp(28px, 6vw, 48px);
+        text-transform: uppercase;
+        line-height: 0.95;
+        margin: 0;
+      }
+      h1 em { color: #C9A84C; font-style: normal; }
+      .tagline {
+        font-size: 13px;
+        color: rgba(240,242,245,0.55);
+        line-height: 1.6;
+        margin: 0;
+        max-width: 360px;
+      }
+      .label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: #C9A84C;
+        margin: 0;
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        width: 100%;
+        max-width: 380px;
+      }
+      .card {
+        appearance: none;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 16px;
+        padding: 28px 14px;
+        cursor: pointer;
+        color: #F0F2F5;
+        font-family: inherit;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+      }
+      .card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(255,255,255,0.25);
+        background: rgba(255,255,255,0.07);
+      }
+      .card:active { transform: translateY(0); }
+      .card .emoji { font-size: 38px; line-height: 1; }
+      .card .name {
+        font-family: 'Impact','Arial Narrow',Arial,sans-serif;
+        font-weight: 900;
+        font-size: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .card .league {
+        font-size: 10px;
+        color: rgba(240,242,245,0.45);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+      .card.basketball:hover { border-color: rgba(255,160,50,0.55); background: rgba(255,140,30,0.10); }
+      .card.baseball:hover   { border-color: rgba(127,255,0,0.45); background: rgba(127,255,0,0.08); }
+      .footer-note {
+        font-size: 10px;
+        color: rgba(240,242,245,0.32);
+        letter-spacing: 0.05em;
+      }
+      .footer-note .check { color: #7FFF00; }
+    </style>
+  </head>
+  <body>
+    <div class="nav">REPLAY <span class="accent">IFS</span></div>
+    <main>
+      <p class="label">Beta · Free to Play · No Sign-Up</p>
+      <h1>Pick your sport.<br/><em>Prove it.</em></h1>
+      <p class="tagline">Real stats. Real history. Your fantasy result instantly.</p>
+      <div class="cards">
+        <button class="card basketball" type="button" data-sport="basketball" aria-label="Play basketball">
+          <span class="emoji">🏀</span>
+          <span class="name">Basketball</span>
+          <span class="league">NBA</span>
+        </button>
+        <button class="card baseball" type="button" data-sport="baseball" aria-label="Play baseball">
+          <span class="emoji">⚾</span>
+          <span class="name">Baseball</span>
+          <span class="league">MLB</span>
+        </button>
+      </div>
+      <p class="footer-note">
+        <span class="check">✓</span> Skill based &nbsp;·&nbsp;
+        <span class="check">✓</span> Fantasy &nbsp;·&nbsp;
+        <span class="check">✓</span> Instant results
+      </p>
+    </main>
+    <script>
+      (function () {
+        var KEY = 'replay_last_sport';
+        var qs = new URLSearchParams(window.location.search);
+
+        // Returning users skip the chooser unless ?pick=1 is in the URL.
+        if (qs.get('pick') !== '1') {
+          var last = localStorage.getItem(KEY);
+          if (last === 'basketball' || last === 'baseball') {
+            window.location.replace('/' + last + '/');
+            return;
+          }
+        }
+
+        document.querySelectorAll('.card[data-sport]').forEach(function (el) {
+          el.addEventListener('click', function () {
+            var sport = el.getAttribute('data-sport');
+            try { localStorage.setItem(KEY, sport); } catch (_) {}
+            window.location.href = '/' + sport + '/';
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>

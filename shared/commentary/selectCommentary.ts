@@ -66,7 +66,7 @@ function determineIntensity(input: CommentaryInput): Intensity {
     return "bust_bad";
   }
   switch (winTier) {
-    case "LEGEND": return "goat";
+    case "LEGEND": return "legend";
     case "MVP": return "mvp";
     case "ALL_STAR": return "all_star";
     case "STARTER":
@@ -84,7 +84,7 @@ function determineIntensity(input: CommentaryInput): Intensity {
 // first, then gets into the star's performance.
 
 const RESULT_FRAMING: Record<Intensity, string[]> = {
-  goat:             ["Legend-tier night.", "Historic cash.", "Top-of-the-chart hand.", "Ceiling-kissing hand.", "Years from now, still telling this story.", "Bottle that night.", "That one goes in the book.", "Top of the mountain."],
+  legend:           ["Legend-tier night.", "Historic cash.", "Top-of-the-chart hand.", "Ceiling-kissing hand.", "Years from now, still telling this story.", "Bottle that night.", "That one goes in the book.", "Top of the mountain."],
   mvp:              ["MVP-level hand.", "Huge night.", "Real money on this one.", "Serious cash.", "That's a number to remember.", "Money — actual money.", "Put that one in the highlight reel.", "Stack that in the trophy case."],
   all_star:         ["Big one.", "All-Star cash.", "Real payout tonight.", "That's a hand that counts.", "Deep run.", "That's a hand that pays the rent.", "Real money, real satisfying.", "Pay day."],
   starter_dominant: ["Cruised through.", "Comfortable win.", "Handled it.", "Had room to spare.", "Clean win with cushion.", "Felt like a choice, not a chase.", "Coasted into the payout.", "Easy money night."],
@@ -175,7 +175,7 @@ function nearMissFraming(gap: number, seed: number): string {
 // work / commerce, NOT insider NBA/MLB/etc lore. Same pool works for basketball,
 // baseball, and any future sport added to the commentary system.
 const CHAD_ANALOGIES: Record<Intensity, string[]> = {
-  goat: [
+  legend: [
     "Nights like this happen about as often as your local weatherman being right.",
     "Put this one in a box in the garage. Look at it in ten years.",
     "That's the fantasy equivalent of Thanksgiving leftovers — kept giving.",
@@ -385,7 +385,9 @@ function pickChadAnalogy(intensity: Intensity, seed: number): string {
 //   comma    (, )         — tightest flow; requires lowercasable continuation
 
 /** First word is a common sentence starter we can safely lowercase after a comma. */
-const SAFE_LOWERCASE_STARTERS = /^(the|a|an|this|that|these|those|it|its|we|he|she|they|you|your|when|if|because|after|before|even|still|but|and|but|while|though|so|cash|green|money|real|not|no|nothing|solid|clean|barely|scraped|minimum|pay|pro|photo|threaded|held|tight|one|huge|big|historic|top|money|serious|deep|all|legend|mvp|starter|rookie|bust|quiet|tonight|tomorrow|paid|closed|paperwork)\b/i;
+// NEVER add acronyms or game-tier names here. `maybeLowerFirst` only lowercases
+// char 0, so MVP → mVP. Tier-name words also drift "All-Star" → "all-Star".
+const SAFE_LOWERCASE_STARTERS = /^(the|a|an|this|that|these|those|it|its|we|he|she|they|you|your|when|if|because|after|before|even|still|but|and|while|though|so|cash|green|money|real|not|no|nothing|solid|clean|barely|scraped|minimum|pay|pro|photo|threaded|held|tight|one|huge|big|historic|top|serious|deep|quiet|tonight|tomorrow|paid|closed|paperwork)\b/i;
 
 /** Lowercase first letter only when safe (common starter words, not proper nouns). */
 function maybeLowerFirst(s: string): string {
@@ -467,27 +469,37 @@ function nicknameFraming(culture: CultureShape | null, isBust: boolean, seed: nu
 
 /** Culture-line framing — pulls a full line from overperform/onPace/underperform
  *  when tonally appropriate. These are the witty player-voice lines already
- *  written in PLAYER_CULTURE (e.g. "Jokić doing Jokić things - efficient, dominant, boring to haters.") */
+ *  written in PLAYER_CULTURE (e.g. "Jokić doing Jokić things - efficient, dominant, boring to haters.")
+ *  Lines that mention non-star roster members are filtered out so a teammate
+ *  doesn't get credited for the star's individual performance. */
 function cultureFraming(
   culture: CultureShape | null,
   intensity: Intensity,
   starRatio: number,
   isBust: boolean,
   seed: number,
+  star: { name?: string } | null = null,
+  roster: Array<{ name?: string }> = [],
 ): string {
   if (!culture) return "";
+  const sl = ((star as any)?.statLine ?? {}) as Record<string, number | undefined>;
+  const safe = (lines: string[]): string[] =>
+    lines.filter(l =>
+      !lineNamesNonStarRosterMember(l, star, roster) &&
+      !lineCitesMismatchedStat(l, sl)
+    );
   // Busts → underperform pool
   if (isBust && (culture as any).underperform?.length) {
-    return pickSeeded((culture as any).underperform, seed, 90) ?? "";
+    return pickSeeded(safe((culture as any).underperform), seed, 90) ?? "";
   }
   // High-ratio wins (big games) → overperform pool
-  const isBigWin = intensity === "all_star" || intensity === "mvp" || intensity === "goat";
+  const isBigWin = intensity === "all_star" || intensity === "mvp" || intensity === "legend";
   if (!isBust && starRatio >= 1.2 && isBigWin && (culture as any).overperform?.length) {
-    return pickSeeded((culture as any).overperform, seed, 90) ?? "";
+    return pickSeeded(safe((culture as any).overperform), seed, 90) ?? "";
   }
   // Normal wins → onPace pool
   if (!isBust && (culture as any).onPace?.length) {
-    return pickSeeded((culture as any).onPace, seed, 90) ?? "";
+    return pickSeeded(safe((culture as any).onPace), seed, 90) ?? "";
   }
   return "";
 }
@@ -505,6 +517,8 @@ function pickFraming(
   isBust: boolean,
   isAnchor: boolean,
   gapToNextTier: number,
+  star: { name?: string } | null = null,
+  roster: Array<{ name?: string }> = [],
 ): string {
   const r = Math.abs(seed) % 10;
 
@@ -543,7 +557,7 @@ function pickFraming(
 
   // Priority 5: full culture line (witty player voice) — 20%
   if (r >= 2 && r < 4) {
-    const cf = cultureFraming(culture, intensity, starRatio, isBust, seed);
+    const cf = cultureFraming(culture, intensity, starRatio, isBust, seed, star, roster);
     if (cf) return cf;
   }
 
@@ -568,6 +582,8 @@ function applyFraming(
   isAnchor: boolean,
   gapToNextTier: number,
   forceFraming = false,
+  star: { name?: string } | null = null,
+  roster: Array<{ name?: string }> = [],
 ): string {
   // Optional Chad-style closing analogy. Three triggers:
   //   1. High-signal moment — narratively big archetype/intensity always earns
@@ -580,7 +596,7 @@ function applyFraming(
     archetype === "star_carried_loss" ||
     archetype === "collapse" ||
     archetype === "badge_explosion" ||
-    intensity === "goat" ||
+    intensity === "legend" ||
     intensity === "bust_close"
   );
   const isVeryShort = main.length < 100;
@@ -592,7 +608,7 @@ function applyFraming(
   );
   const analogy = wantsChad ? pickChadAnalogy(intensity, seed) : "";
 
-  const framing = pickFraming(intensity, archetype, seed, culture, starRatio, isBust, isAnchor, gapToNextTier);
+  const framing = pickFraming(intensity, archetype, seed, culture, starRatio, isBust, isAnchor, gapToNextTier, star, roster);
 
   const withAnalogy = (s: string) => {
     if (!analogy) return s;
@@ -602,22 +618,60 @@ function applyFraming(
     return joinBeats(s, analogy, seed, 23, true);
   };
 
-  if (!framing) return withAnalogy(main);
   // Skip framing if its words already appear in the main line — avoids
   // "Clean hand. ...Clean hand." style robotic repetition.
-  const core = framing.toLowerCase().replace(/[^a-z\s]/g, "").trim();
-  if (core.length > 3 && main.toLowerCase().includes(core)) return main;
-  // Seeded mode pick: 0=lead, 1=close, 2=none (unless forced)
-  const modes = forceFraming ? 2 : 3;
-  const mode = Math.abs(Math.floor(seed / 7)) % modes;
-  // Lead mode: framing first, then main. Main typically starts with proper noun
-  // (player name), so comma-join is usually not valid — joinBeats will fall
-  // back to em-dash/period when canLowercaseFirst() returns false.
-  if (mode === 0) return withAnalogy(joinBeats(framing, main, seed, 11, false));
-  // Close mode: main first, framing at end. Framing phrases are short declaratives
-  // that lowercase cleanly — comma-join works.
-  if (mode === 1) return withAnalogy(joinBeats(main, framing, seed, 17, true));
-  return withAnalogy(main);
+  const fcore = framing ? framing.toLowerCase().replace(/[^a-z\s]/g, "").trim() : "";
+  const framingDup = fcore.length > 3 && main.toLowerCase().includes(fcore);
+  const usableFraming = framing && !framingDup ? framing : "";
+
+  // Six output shapes. Picked by seed so the structure varies across hands
+  // instead of always reading "framing → main → analogy". Modes that need a
+  // missing piece fall back to the next compatible mode, so this never errors.
+  //
+  //   0  framing → main → trailing analogy   (lead-framing, classic)
+  //   1  main → framing → trailing analogy   (close-framing)
+  //   2  main → trailing analogy             (no framing)
+  //   3  main alone                          (compact — no framing, no analogy)
+  //   4  analogy → main                      (analogy-led — verdict opens)
+  //   5  framing → main                      (no analogy — clean two-beat)
+  //
+  // forceFraming (cultureOverride callers) restricts to framing-included
+  // shapes — short override fragments need a result-aware lead/close. To
+  // preserve variance on those paths, modes 0, 1, and 5 are reachable
+  // (lead+analogy, close+analogy, lead-only). Modes that drop framing (2,3,4)
+  // are excluded.
+  const rawMode = Math.abs(Math.floor(seed / 7)) % (forceFraming ? 3 : 6);
+  const mode = forceFraming && rawMode === 2 ? 5 : rawMode;
+
+  const lead = () => usableFraming
+    ? joinBeats(usableFraming, main, seed, 11, false)
+    : main;
+  const close = () => usableFraming
+    ? joinBeats(main, usableFraming, seed, 17, true)
+    : main;
+
+  switch (mode) {
+    case 5:
+      // framing → main, no analogy
+      return usableFraming ? lead() : main;
+    case 4:
+      // analogy → main, no framing
+      if (analogy) return joinBeats(analogy, main, seed, 23, false);
+      return withAnalogy(lead());
+    case 3:
+      // bare main, no framing, no analogy (compact)
+      return main;
+    case 2:
+      // no framing, trailing analogy
+      return withAnalogy(main);
+    case 1:
+      // main → framing → trailing analogy
+      return withAnalogy(close());
+    case 0:
+    default:
+      // framing → main → trailing analogy
+      return withAnalogy(lead());
+  }
 }
 
 // ── Culture lookup ─────────────────────────────────────────────────────────
@@ -697,6 +751,87 @@ function lastName(n: string): string {
   return parts[parts.length - 1] ?? n;
 }
 
+/** True when a culture line cites a specific stat value (e.g. "64-point game",
+ *  "20 assists") that doesn't match the star's stats in the CURRENT game. These
+ *  lines come from culture pools (opponentFlavor, bigGame, overperform) and
+ *  reference HISTORICAL games — not the played game. When the cited number
+ *  doesn't match what the star actually did tonight, the line reads as if the
+ *  engine is making up stats (Giannis 37 pts vs IND tonight, but commentary
+ *  says "his 64-point game" — the 64 is from a different night).
+ *
+ *  Lines with no stat citations are always allowed. Citations within ±1 of the
+ *  current value pass (rounding tolerance). Bare numbers without a stat-word
+ *  context (years, jersey numbers) are ignored. */
+export function lineCitesMismatchedStat(
+  line: string,
+  statLine: Record<string, number | undefined> = {},
+): boolean {
+  if (!line) return false;
+  // Build the set of "current" values the star actually has.
+  const get = (k: string): number => Number(statLine[k] ?? statLine[k.toUpperCase()] ?? 0);
+  const currentByCategory: Record<string, number> = {
+    pts: get("pts"),
+    reb: get("reb"),
+    ast: get("ast"),
+    stl: get("stl"),
+    blk: get("blk"),
+  };
+  // Pattern: a number (10-200, two-or-three digits) followed by a stat word
+  // (with optional hyphen / space, optional plural-s). Anchored on stat words
+  // to avoid matching years (2024), jersey numbers ("#34"), draft picks, etc.
+  // Lookbehind also rejects digits AND commas — the latter prevents matching
+  // the trailing "000 points" inside thousands-suffixed career totals like
+  // "15,000 points" / "30,000-point club", which are season/career milestones
+  // and not single-game stat citations.
+  const STAT_WORD = "(point|points|pts|pt|assist|assists|ast|rebound|rebounds|reb|board|boards|steal|steals|stl|block|blocks|blk)";
+  const PATTERN = new RegExp(`(?<![\\d,])(\\d{2,3})[\\s-]+${STAT_WORD}\\b`, "gi");
+  // Map the matched stat word back to a canonical category key.
+  const wordToCategory = (w: string): string => {
+    const lw = w.toLowerCase();
+    if (lw.startsWith("pt") || lw.startsWith("point")) return "pts";
+    if (lw.startsWith("ast") || lw.startsWith("assist")) return "ast";
+    if (lw.startsWith("reb") || lw.startsWith("rebound") || lw.startsWith("board")) return "reb";
+    if (lw.startsWith("stl") || lw.startsWith("steal")) return "stl";
+    if (lw.startsWith("blk") || lw.startsWith("block")) return "blk";
+    return "";
+  };
+  for (const m of line.matchAll(PATTERN)) {
+    const cited = Number(m[1]);
+    const cat = wordToCategory(m[2]);
+    const current = currentByCategory[cat] ?? 0;
+    // ±1 tolerance for rounding/display. If cited is meaningfully different
+    // from what the star actually did, reject.
+    if (Math.abs(cited - current) > 1) return true;
+  }
+  return false;
+}
+
+/** True when a culture line text references any roster member OTHER than the
+ *  star. Teammate-mentions are off-limits when framing the star's individual
+ *  performance — "Jimmy Butler brings out his best in Giannis" should not
+ *  surface as commentary on Giannis's hand if Butler is also on the roster. */
+export function lineNamesNonStarRosterMember(
+  line: string,
+  star: { name?: string } | null,
+  roster: Array<{ name?: string }>,
+): boolean {
+  if (!line) return false;
+  const lower = line.toLowerCase();
+  const starName = (star?.name ?? "").toLowerCase();
+  const starLast = star?.name ? lastName(star.name).toLowerCase() : "";
+  for (const c of roster) {
+    if (!c?.name) continue;
+    const fullLower = c.name.toLowerCase();
+    if (fullLower === starName) continue;
+    if (lower.includes(fullLower)) return true;
+    const last = lastName(c.name).toLowerCase();
+    // Only block on last-name match if the last name is reasonably distinctive
+    // (>=4 chars) AND not equal to the star's last name (e.g., father/son).
+    if (last.length >= 4 && last !== starLast && lower.includes(last)) return true;
+  }
+  return false;
+}
+
 /** Prepend the player's name if the line doesn't already reference them. */
 function attributeCultureLine(line: string, name: string, nicknames?: string[]): string {
   const lower = line.toLowerCase();
@@ -711,20 +846,36 @@ function attributeCultureLine(line: string, name: string, nicknames?: string[]):
 // ── Culture override + secondary enrichment ────────────────────────────────
 
 /** Pre-template override. Returns a replacement primary line (early-exit) or null.
- *  Fires on signatureGames exact date+opponent match, or opponentFlavor keyed match. */
-function cultureOverride(star: any, culture: CultureShape | null): string | null {
+ *  Fires on signatureGames exact date+opponent match, or opponentFlavor keyed match.
+ *  Lines that mention non-star roster members are rejected — we don't want a
+ *  teammate to be the explanation for the star's individual performance. */
+function cultureOverride(
+  star: any,
+  culture: CultureShape | null,
+  roster: Array<{ name?: string }> = [],
+): string | null {
   if (!star || !culture) return null;
-  // Signature games — exact date + opponent
+  const sl = (star.statLine ?? {}) as Record<string, number | undefined>;
+  const ok = (line: string) =>
+    !lineNamesNonStarRosterMember(line, star, roster) &&
+    !lineCitesMismatchedStat(line, sl);
+  // Signature games — exact date + opponent. These are date-keyed so they're
+  // fine to leave unguarded against stat citations (the line was authored for
+  // exactly that game), but we still apply the roster-member guard.
   if (culture.signatureGames?.length && star.gameDate && star.opponent) {
     const date = String(star.gameDate).slice(0, 10);
     const opp = String(star.opponent).toUpperCase();
     const sig = culture.signatureGames.find(g => g.date === date && g.opponent.toUpperCase() === opp);
-    if (sig?.line) return attributeCultureLine(sig.line, star.name, culture.nicknames);
+    if (sig?.line && !lineNamesNonStarRosterMember(sig.line, star, roster)) {
+      return attributeCultureLine(sig.line, star.name, culture.nicknames);
+    }
   }
-  // Opponent flavor — keyed by opponent code
+  // Opponent flavor — keyed by opponent code only, so any matching opponent
+  // surfaces this line. When the line cites a historical stat that doesn't
+  // match tonight's game, reject — otherwise reads as fabricated stats.
   if (culture.opponentFlavor && star.opponent) {
     const flavor = culture.opponentFlavor[String(star.opponent).toUpperCase()];
-    if (flavor) return attributeCultureLine(flavor, star.name, culture.nicknames);
+    if (flavor && ok(flavor)) return attributeCultureLine(flavor, star.name, culture.nicknames);
   }
   return null;
 }
@@ -883,7 +1034,7 @@ export function selectCommentary(
 
   // Step 1: Classify archetype (FIRST — archetype is king)
   const classification = classifyArchetype(input);
-  const { archetype, star, nearMiss, deltaToNextTier } = classification;
+  const { archetype, star, nearMiss, deltaToNextTier, costar } = classification;
 
   // Step 2: Determine intensity
   const intensity = determineIntensity(input);
@@ -898,11 +1049,11 @@ export function selectCommentary(
   // Step 5: Build template data
   const culture = star ? lookupCulture(star.name, sport) : null;
   const teamFlavor = star ? lookupTeamFlavor(star.opponent, sport) : null;
-  const templateData = buildTemplateData(star, input, recordEvents, culture);
+  const templateData = buildTemplateData(star, input, recordEvents, culture, costar);
 
   // Step 5a: Culture override — signature game / opponent flavor can replace primary.
   // Highest priority player-specific voice; skip template flow entirely when matched.
-  const override = cultureOverride(star, culture);
+  const override = cultureOverride(star, culture, input.roster);
   if (override) {
     // Override primaries are short single-sentence culture fragments. Always
     // pair with result framing (forceFraming=true) but alternate lead/close
@@ -910,7 +1061,7 @@ export function selectCommentary(
     const starRatioFromStar = star && star.projectedFp ? star.actualFp / star.projectedFp : 1;
     const maxSalary = input.roster.reduce((m, c) => Math.max(m, c.salary), 0);
     const isAnchor = !!star && star.salary === maxSalary;
-    return { primary: applyFraming(override, intensity, archetype, seed, culture, starRatioFromStar, input.isBust, isAnchor, deltaToNextTier, true) };
+    return { primary: applyFraming(override, intensity, archetype, seed, culture, starRatioFromStar, input.isBust, isAnchor, deltaToNextTier, true, star, input.roster) };
   }
 
   // Step 6: Load library and filter candidates
@@ -932,7 +1083,32 @@ export function selectCommentary(
   let candidates: CommentaryLine[] = [];
   let matchedArchetype: CommentaryArchetype = archetype;
 
+  // T1 (career) hard preference. T0 and T2 hijack the archetype itself; T1 is
+  // designed to flow through to a normal archetype but tag a personal-best
+  // detail. Without preference, the season_best_stat template competes
+  // unweighted with the rest of the pool and almost never wins, so the
+  // milestone goes unmentioned. Narrow to season_best_stat templates first;
+  // fall through to the normal candidate flow if none exist for any archetype
+  // in the chain.
+  if (input.topGame?.tier === "career") {
+    for (const arch of fallbackChain) {
+      const pool = library[arch] ?? [];
+      const t1Match = pool.filter(line =>
+        line.enabled &&
+        line.register === register &&
+        (line.sport === "any" || line.sport === sport) &&
+        line.requires?.includes("season_best_stat")
+      );
+      if (t1Match.length > 0) {
+        candidates = t1Match;
+        matchedArchetype = arch;
+        break;
+      }
+    }
+  }
+
   for (const arch of fallbackChain) {
+    if (candidates.length > 0) break;
     const pool = library[arch] ?? [];
 
     // Filter: register match, tone match, enabled, sport match, requires met
@@ -1001,5 +1177,5 @@ export function selectCommentary(
   const templateStarRatio = star && star.projectedFp ? star.actualFp / star.projectedFp : 1;
   const maxSalary = input.roster.reduce((m, c) => Math.max(m, c.salary), 0);
   const isAnchor = !!star && star.salary === maxSalary;
-  return { primary: applyFraming(mainLine, intensity, matchedArchetype, seed, culture, templateStarRatio, input.isBust, isAnchor, deltaToNextTier) };
+  return { primary: applyFraming(mainLine, intensity, matchedArchetype, seed, culture, templateStarRatio, input.isBust, isAnchor, deltaToNextTier, false, star, input.roster) };
 }

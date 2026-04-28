@@ -46,7 +46,7 @@ const WIN_BACK: string[] = [
 /** First time hitting a 2-win streak */
 const STREAK_INTRO: string[] = [
   "Two in a row — now we're cooking. Keep it going and the multiplier kicks in. Don't get cocky.",
-  "Back to back wins. See those fire emojis? Three in a row hits 1.2x. No pressure.",
+  "Back to back wins. See those fire emojis? Three in a row hits 1.3x. No pressure.",
   "Two straight. Streak multiplier is warming up — one more and the bonus kicks in.",
 ];
 
@@ -54,7 +54,7 @@ const STREAK_INTRO: string[] = [
 const LEADERBOARD_INTRO: string[] = [
   "Well well, you made the board. Top 10 split the bonus pool — might want to drop an email so nobody steals your spot.",
   "You qualified for the leaderboard. Don't celebrate yet — check where you actually landed.",
-  "Look at that, you're on the board. Top 10 get coins — add an email to lock in your claim.",
+  "Look at that, you're on the board. Tap to get coins — add an email to lock in your claim.",
 ];
 
 /** How the leaderboard + bonus pool works — shown after 3rd hand */

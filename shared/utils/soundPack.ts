@@ -55,45 +55,21 @@ export type SoundPackManifest = {
 // Set VITE_SUPABASE_AUDIO_URL in your env (e.g. https://<project>.supabase.co/storage/v1/object/public/audio)
 // ═══════════════════════════════════════════════════════════════════════════
 
-const SUPABASE_AUDIO_URL = import.meta.env.VITE_SUPABASE_AUDIO_URL ?? "";
+export const SUPABASE_AUDIO_URL = import.meta.env.VITE_SUPABASE_AUDIO_URL ?? "";
 
 // ═══════════════════════════════════════════════════════════════════════════
-// BASKETBALL MANIFEST — paths relative to public/ OR full Supabase URLs
+// EMPTY PACK — silent default. Each sport replaces this via setSoundPack()
+// from its own adapter at module-load time. Sports that don't register stay
+// silent rather than playing another sport's audio.
 // ═══════════════════════════════════════════════════════════════════════════
 
-export const BASKETBALL_PACK: SoundPackManifest = {
-  crowd: {
-    bed: [
-      "/audio/basketball/crowd/bed-murmur-alt.mp3",  // 51s basketball crowd (CC BY 4.0)
-      "/audio/basketball/crowd/bed-murmur.mp3",       // 40s sports crowd (Attribution 3.0)
-    ],
-    anticipation: ["/audio/basketball/crowd/anticipation.mp3"],
-    reactionSmall: ["/audio/basketball/crowd/reaction-small.mp3"],
-    eruption: ["/audio/basketball/crowd/eruption.mp3"],
-    groan: ["/audio/basketball/crowd/groan.mp3"],
-  },
-  events: {
-    swish: ["/audio/basketball/events/swish.mp3"],
-    rimOut: ["/audio/basketball/events/rim-out.mp3"],
-    rimRattle: [],  // not yet sourced
-    squeak: ["/audio/basketball/events/squeak.mp3"],
-    bounce: ["/audio/basketball/events/bounce.mp3"],
-    buzzer: ["/audio/basketball/events/buzzer.mp3"],
-    horn: ["/audio/basketball/events/horn.mp3"],
-  },
-  vocals: {
-    oh: ["/audio/basketball/vocals/oh.mp3"],
-    letsGo: [],  // not yet sourced
-  },
-  music: {
-    // Hosted on Supabase — fetched lazily, cached in AudioBuffer memory.
-    // Upload the file to your Supabase `audio` bucket at:
-    //   audio/basketball/music/big-win.mp3
-    bigWin: SUPABASE_AUDIO_URL
-      ? [`${SUPABASE_AUDIO_URL}/basketball/music/big-win.mp3`]
-      : [],
-  },
+export const EMPTY_PACK: SoundPackManifest = {
+  crowd:  { bed: [], anticipation: [], reactionSmall: [], eruption: [], groan: [] },
+  events: { swish: [], rimOut: [], rimRattle: [], squeak: [], bounce: [], buzzer: [], horn: [] },
+  vocals: { oh: [], letsGo: [] },
+  music:  { bigWin: [] },
 };
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // LOADER — decodes audio files into AudioBuffers, caches results
@@ -211,4 +187,13 @@ export class SoundPackLoader {
 }
 
 // ── Singleton for the active sport ──────────────────────────────────────────
-export const soundPackLoader = new SoundPackLoader(BASKETBALL_PACK);
+// Boots silent (EMPTY_PACK). Each sport's adapter calls setSoundPack(pack)
+// at module-load time. Sports that don't register stay silent rather than
+// playing another sport's audio.
+
+export const soundPackLoader = new SoundPackLoader(EMPTY_PACK);
+
+/** Replace the singleton's manifest. Called by each sport's adapter at load. */
+export function setSoundPack(manifest: SoundPackManifest): void {
+  (soundPackLoader as any).manifest = manifest;
+}

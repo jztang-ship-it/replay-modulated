@@ -41,10 +41,16 @@ export function generateRoster(evalPool: PlayerEval[], config: RosterConfig, eco
   let budgetRemaining = cap;
 
   if (anchorSlotIdx >= 0 && anchorSlotPos) {
-    // Anchor MUST match the slot's required position (e.g. DEF for slot 1)
+    // Anchor MUST match the slot's required position (e.g. DEF for slot 1).
+    // Tier check first (per-pool truth from players.json); salary threshold
+    // is a fallback for sports whose JSON lacks tier info.
     const posPool = byPos[anchorSlotPos] ?? evalPool;
-    const anchorPool = posPool
-      .filter(p => p.salary >= anchorThreshold && p.salary <= maxAnchorSalary)
+    const isAnchorTier = (p: PlayerEval) => {
+      const t = String(p.tier ?? "").toUpperCase();
+      return t === "RED" || t === "ORANGE";
+    };
+    const tierPool = posPool.filter(p => isAnchorTier(p) && p.salary <= maxAnchorSalary);
+    const anchorPool = (tierPool.length > 0 ? tierPool : posPool.filter(p => p.salary >= anchorThreshold && p.salary <= maxAnchorSalary))
       .sort((a, b) => b.salary - a.salary);
     const anchor = anchorPool.length > 0
       ? (pickWeightedRandom(anchorPool, usedPeople, rnd) ?? anchorPool[0])
