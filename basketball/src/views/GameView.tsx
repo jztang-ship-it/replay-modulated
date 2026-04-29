@@ -8,6 +8,7 @@
 import { useMemo, useState, useCallback, useRef, useEffect, useLayoutEffect } from "react";
 import { sleep, RosterGridScaleFit, RollingNumber, toRevealableCards, cardId, sumSalary } from "@shared/views/_gameViewHelpers.tsx";
 import { useSharedGameState } from "@shared/views/_useSharedGameState";
+import { useReveal } from "@shared/views/_useReveal";
 import type { GamePhase, PlayerCard } from "../adapters/types";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { dealInitialRoster, redrawRoster, resolveRoster, computeRosterCeiling, getTodaysStars } from "../adapters/gameAdapter";
@@ -40,7 +41,6 @@ import { getBonusPool, contributeBet } from '@shared/utils/bonusPoolStore';
 import { audioDirector } from '@shared/utils/audioDirector';
 import { getPlayerUid, getNickname, setNickname } from '@shared/utils/playerIdentity';
 import { captureReferrerFromUrl, applyReferral, claimReferral } from '@shared/utils/referral';
-import { buildScoreProof } from '@shared/utils/scoreProof';
 import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
 import { chadMessage } from "@shared/commentary/chad";
 import { ProfileScreen } from '@shared/components/ProfileScreen';
@@ -379,6 +379,7 @@ export default function GameView() {
     submitToLeaderboard,
     checkLeaderboardRank,
     logHandToDb,
+    incrementHandCount,
   } = shared;
 
   const {
@@ -434,7 +435,7 @@ export default function GameView() {
     });
   }, [user, isAnonymous, bellOpen]);
 
-  const deductedSalaryCardsRef = useRef<Set<string>>(new Set());
+  // deductedSalaryCardsRef — moved to useReveal (Phase 2 sub-PR 04).
   const [gameError, setGameError] = useState<string | null>(null);
   const { isFTUE, completeFTUE } = useFTUE("basketball");
   // Ref mirror so async closures always read the latest isFTUE without stale capture
@@ -602,105 +603,15 @@ export default function GameView() {
   const regularFinalGaugeKickFiredRef = useRef(false);
   // streak — lifted to useSharedGameState (Phase 2 sub-PR 03).
 
-  // Tier flip display state — tierFlipKey, displayTier, tierResultPhase,
-  // nearMissTeasing lifted to useSharedGameState (Phase 2 sub-PR 03).
-  const prevRevealTierRef = useRef("BUST");
+  // Tier flip / FTUE refs — display state (tierFlipKey, displayTier,
+  // tierResultPhase, nearMissTeasing) lifted to useSharedGameState in
+  // Phase 2 sub-PR 03. Reveal-orchestration refs (prevRevealTierRef,
+  // latestGaugeFpRef, nearMissChoreTimersRef, spring/anchor refs,
+  // pendingBalanceUpdateRef, deductedSalaryCardsRef) moved into useReveal
+  // in Phase 2 sub-PR 04 — see below useEmotionalReveal.
   const lastTierFlipTimeRef = useRef(0);
-  const tierFlipTimerRef = useRef<number | null>(null);
-  const latestGaugeFpRef = useRef(0);
   const ftueTierSlamPlayedRef = useRef(false);
-  const nearMissChoreTimersRef = useRef<number[]>([]);
-
-  // Spring oscillation phase — springFp, springSettled lifted to
-  // useSharedGameState (Phase 2 sub-PR 03); orchestrator stays here for now.
-  const springRafRef = useRef<number>(0);
-  const springTimersRef = useRef<number[]>([]);
-  const pendingBalanceUpdateRef = useRef<(() => void) | null>(null);
   const bonusPoolRef = useRef<number>(1000);
-  const lockedGaugeFpRef = useRef<number | null>(null);
-  const springHasFiredRef = useRef(false);
-  const frozenBarFpRef = useRef<number | null>(null); // freezes bar at 5-card total during anchor count-up
-  const anchorFpCallCountRef = useRef(0); // FTUE: tracks onAnchorFpComplete calls to skip non-held anchor
-
-  const runSpring = useCallback((finalFp: number, onSettled: () => void) => {
-    cancelAnimationFrame(springRafRef.current);
-    springTimersRef.current.forEach(clearTimeout);
-    springTimersRef.current = [];
-
-    // Bar is currently at the 5-card total (frozen during anchor count-up).
-    // The anchor card's number has already settled on the card face.
-    // Now the tier bar does one smooth spring motion adding card 6's FP.
-    const startFp = frozenBarFpRef.current ?? latestGaugeFpRef.current;
-    const anchorFp = finalFp - startFp; // card 6's contribution
-
-    // Overshoot = 10% of the anchor card's FP (proportional, not fixed)
-    const overshoot = anchorFp * 0.10;
-    const tier = SPRING_TIERS.find(t => finalFp >= t.lo && finalFp < t.hi)
-      ?? SPRING_TIERS[SPRING_TIERS.length - 1];
-    const headroom = tier.hi - finalFp - 0.5;
-    const clampedOvershoot = Math.min(overshoot, Math.max(0.5, headroom));
-
-    // Waypoints — each is a direction change, fully extended before reversing:
-    // A: startFp → finalFp + overshoot  (shoot up past target)
-    // B: peak → finalFp - undershoot     (back down below target)
-    // C: bottom → finalFp + tiny         (small rise above)
-    // D: settle at finalFp
-    const damping = 0.4;
-    const peak = finalFp + clampedOvershoot;
-    const bottom = finalFp - clampedOvershoot * damping;
-    const smallUp = finalFp + clampedOvershoot * damping * damping;
-
-    // Timing: each segment decelerates (longer duration for smaller moves)
-    // Total ~2000ms, considerably slower than the card-by-card gauge roll
-    const segA = 700;   // longest — the main sweep
-    const segB = 500;   // recoil
-    const segC = 400;   // small bounce
-    const segD = 300;   // settle
-    const TOTAL_MS = segA + segB + segC + segD;
-    const segments = [
-      { from: startFp, to: peak, dur: segA },
-      { from: peak, to: bottom, dur: segB },
-      { from: bottom, to: smallUp, dur: segC },
-      { from: smallUp, to: finalFp, dur: segD },
-    ];
-
-    let startTime: number | null = null;
-    setSpringFp(startFp);
-    setSpringSettled(false);
-
-    function tick(now: number) {
-      if (startTime === null) startTime = now;
-      const elapsed = now - startTime;
-
-      if (elapsed >= TOTAL_MS) {
-        lockedGaugeFpRef.current = finalFp;
-        frozenBarFpRef.current = null;
-        setSpringFp(null);
-        setSpringSettled(true);
-        onSettled();
-        return;
-      }
-
-      // Find which segment we're in
-      let cumulative = 0;
-      let fp = finalFp;
-      for (const seg of segments) {
-        if (elapsed < cumulative + seg.dur) {
-          const segElapsed = elapsed - cumulative;
-          const t = segElapsed / seg.dur;
-          // Deceleration easing — each move slows as it reaches its peak
-          const eased = 1 - Math.pow(1 - t, 3); // cubic ease-out
-          fp = seg.from + (seg.to - seg.from) * eased;
-          break;
-        }
-        cumulative += seg.dur;
-      }
-
-      setSpringFp(fp);
-      springRafRef.current = requestAnimationFrame(tick);
-    }
-    springRafRef.current = requestAnimationFrame(tick);
-  }, []); // eslint-disable-line
 
   // Near-miss copy — motivating one-liner shown in Phase 2 for BUST/ROOKIE.
   // Picked once when winTier is set; stable for the lifetime of the result screen.
@@ -720,14 +631,15 @@ export default function GameView() {
   // handCount declared above Chad effects (line ~652) to avoid TDZ in production builds.
 
   // 3rd hand nudge: show leaderboard intro after hand 3 (when returning to IDLE)
+  // Uses handCount React state (mirrors localStorage) so we don't bypass
+  // nsKey; the state hook owns the persisted value.
   useEffect(() => {
     if (isFTUE || gameState !== "IDLE") return;
-    const count = parseInt(localStorage.getItem("replaymod_hand_count") ?? "0", 10);
-    if (count === 3 && localStorage.getItem("replaymod_lb_nudge_shown") !== "1") {
+    if (handCount === 3 && localStorage.getItem("replaymod_lb_nudge_shown") !== "1") {
       localStorage.setItem("replaymod_lb_nudge_shown", "1");
       setPreGameMsg("LEADERBOARD_INTRO");
     }
-  }, [gameState, isFTUE]); // eslint-disable-line
+  }, [gameState, isFTUE, handCount]); // eslint-disable-line
 
   // Zone 1: Hooks
 
@@ -753,6 +665,64 @@ export default function GameView() {
   const revealableCards = useMemo(() => toRevealableCards(roster), [roster]);
   const currentBet = BASE_BET * betMultiplier;
   const gameAnalytics = useGameAnalytics("basketball");
+
+  // ── Reveal + spring orchestration (Phase 2 sub-PR 04) ──────────────
+  // useReveal owns runSpring + the onAnchorFpComplete / onCardFpStart /
+  // onCardComplete callbacks plus all spring/anchor refs. Initialized
+  // here so its callbacks can be passed into useEmotionalReveal below;
+  // bindIsSkippingRef wires useEmotionalReveal's isSkippingRef back into
+  // the hook for the held-anchor skip branch. topGameInfo is passed via
+  // a stable holder ref because it's computed later in the file.
+  const topGameInfoHolder = useRef<{
+    star: any;
+    topGame: { tier: string | null; primaryReason?: any };
+  }>({ star: null, topGame: { tier: null } });
+  const reveal = useReveal({
+    adapter: sharedAdapter,
+    state: shared,
+    calculateWinTier,
+    calculatePayoutWithStreak,
+    currentBet,
+    betMultiplier,
+    rosterRef,
+    isFTUE,
+    ftueLastHandFpRef,
+    isAnonymous,
+    setBigWinFired,
+    recordHandPlayed,
+    recordHandWon,
+    recordHandLost,
+    recordTierReached,
+    recordStreakWin,
+    recordStreakBust,
+    recordBonusPlayerUsed,
+    recordMultiplierUsed,
+    gameAnalytics,
+    // Lazy getter — onAnchorFpComplete reads at firing time so the
+    // holder ref always returns the latest topGameInfo without forcing
+    // useReveal to rebuild the callback on every roster change.
+    getTopGameInfo: () => topGameInfoHolder.current,
+  });
+  const {
+    onCardFpStart,
+    onCardComplete,
+    onAnchorFpComplete,
+    runSpring,
+    springTimersRef,
+    springRafRef,
+    frozenBarFpRef,
+    lockedGaugeFpRef,
+    springHasFiredRef,
+    anchorFpCallCountRef,
+    latestGaugeFpRef,
+    prevRevealTierRef,
+    nearMissChoreTimersRef,
+    deductedSalaryCardsRef,
+    pendingBalanceUpdateRef,
+    computeDisplayFp,
+    computeLockedSalary,
+    bindIsSkippingRef,
+  } = reveal;
 
   function handleCardRevealStart(cardId: string, tierArg: string, shakeType?: string | null) {
     // Freeze bar when the TRUE anchor starts — the last card whose spring drives the final total.
@@ -826,163 +796,22 @@ export default function GameView() {
       heldRevealResumeRef.current = resume;
     } : undefined,
     onCardRevealStart: handleCardRevealStart,
-    onCardFpStart: useCallback((cId: string) => {
-      // Budget rolls down in sync with FP roll-up. Deduct at FP animation start.
-      // Ref prevents double-count across tap + skip flows.
-      if (deductedSalaryCardsRef.current.has(cId)) return;
-      const card = rosterRef.current.find(c => {
-        const id = String(c?.cardId ?? c?.basePlayerId ?? "");
-        return id === cId;
-      });
-      if (card && !(card as any).wasHeld) {
-        setRevealedSalary(prev => prev + Number((card as any).salary ?? 0));
-        deductedSalaryCardsRef.current.add(cId);
-      }
-    }, []),
-    onCardComplete: useCallback((cId: string) => {
-      setRevealIndex(prev => {
-        const next = prev + 1;
-        audioDirector.setRevealProgress(next, rosterRef.current.length);
-        return next;
-      });
-      setLastRevealedCardId(cId);
-
-      // FTUE: start gauge oscillation shortly after Tatum's stamp lands
-      if (isFTUE && cId === "ftue-tatum") {
-        setTimeout(() => setFtueOscillating(true), 100);
-      }
-    }, [isFTUE]),
-    onAnchorFpComplete: useCallback((_hookTotal: number) => {
-      if (springHasFiredRef.current) return;
-      // In tap mode with held cards, onAnchorFpComplete fires twice: once for the
-      // non-held anchor and once for the held anchor. Skip the first call so held
-      // cards' FP rolls up independently. In skipToEnd mode, all cards are in one
-      // sequence with one anchor — never skip.
-      const hasHeldCards = rosterRef.current.some((c: any) => c.wasHeld);
-      if (hasHeldCards && anchorFpCallCountRef.current === 0 && !isSkippingRef.current) {
-        anchorFpCallCountRef.current = 1;
-        return; // Non-held anchor's call in tap mode — skip, wait for held anchor
-      }
-      springHasFiredRef.current = true;
-      // Always compute from rosterRef — guaranteed to have all 6 resolved cards
-      const totalFp = rosterRef.current.reduce((s, c) => s + Number((c as any).actualFp ?? 0), 0);
-      runSpring(totalFp, () => {
-        lockedGaugeFpRef.current = totalFp;
-        const tier = calculateWinTier(totalFp);
-        const payout = calculatePayoutWithStreak(tier, currentBet, streak);
-        setWinTier(tier);
-        setWinPayout(payout);
-        const bust = !tier || tier === "BUST";
-        // ROOKIE = neutral for streak (doesn't advance or break). BUST = streak reset.
-        const isStreakWin = !bust && tier !== "ROOKIE";  // STARTER+ advances streak
-        const isStreakLoss = bust;                        // only BUST resets streak
-        soundManager.playTierResult(tier);
-        // Nudge trigger: first ALL_STAR+ hit for anonymous users
-        if (["ALL_STAR", "MVP", "LEGEND"].includes(tier) && isAnonymous) {
-          setBigWinFired(true);
-        }
-        const badges = rosterRef.current.reduce((s, c) => s + (c.achievements?.length ?? 0), 0);
-        gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
-        if (topGameInfo.topGame.tier && topGameInfo.star) {
-          track("gameplay", "top_game_revealed", {
-            tier: topGameInfo.topGame.tier,
-            category: topGameInfo.topGame.primaryReason?.category ?? "unknown",
-            playerId: topGameInfo.star.basePlayerId ?? "",
-            isStarCard: true,
-          });
-        }
-        logHandToDb(rosterRef.current, totalFp, String(tier), payout, streak);
-        recordHandPlayed();
-        if (!bust) recordHandWon(); else recordHandLost();
-
-        // Tier reached
-        recordTierReached(tier);
-
-        // Streak
-        if (!bust) {
-          recordStreakWin();
-        } else {
-          recordStreakBust();
-        }
-
-        // Bonus players used this hand
-        const bonusCount = rosterRef.current.filter(
-          c => Number((c as any).dailyBonus ?? 0) > 0
-        ).length;
-        if (bonusCount > 0) {
-          recordBonusPlayerUsed(bonusCount);
-        }
-
-        // Multiplier used this hand
-        recordMultiplierUsed(betMultiplier);
-        if (isFTUE) {
-          // FTUE: same flow as real game — WIN_CELEBRATION triggers wage animation
-          ftueLastHandFpRef.current = totalFp;
-          pendingBalanceUpdateRef.current = () => {
-            if (payout > 0) {
-              setBalance(prev => { const next = prev + payout; saveBalance(next); return next; });
-            }
-          };
-          const t = window.setTimeout(() => {
-            setGameState("WIN_CELEBRATION");
-          }, 1200);
-          springTimersRef.current.push(t);
-        } else {
-          pendingBalanceUpdateRef.current = () => {
-            if (payout > 0) {
-              setBalance(prev => { const next = prev + payout; saveBalance(next); return next; });
-            }
-            const proof = buildScoreProof(rosterRef.current as any[], totalFp);
-            if (isStreakWin) {
-              // STARTER+ = streak advances
-              setStreak(prev => {
-                const next = prev + 1;
-                localStorage.setItem("replaymod_streak", String(next));
-                if (next === 3 || next === 5 || next === 10) soundManager.playStreakMilestone(next);
-                submitToLeaderboard("streak", next);
-                return next;
-              });
-              submitToLeaderboard("wins", 1);
-              submitToLeaderboard("money_won", payout);
-            } else if (isStreakLoss) {
-              // BUST = streak resets
-              setStreak(0);
-              localStorage.setItem("replaymod_streak", "0");
-            }
-            // ROOKIE: streak unchanged (neutral) — no increment, no reset
-            // These fire for all non-bust hands (ROOKIE still counts for leaderboard/session)
-            if (!bust) {
-              submitToLeaderboard("fp", totalFp);
-              if (handCount >= 8) submitToLeaderboard("hand_avg", totalFp, { handCount });
-              const handId = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-              submitToLeaderboard("hand_best", totalFp, { proof, handId });
-              submitToLeaderboard("session_score", parseFloat(totalFp.toFixed(1)));
-              setTimeout(() => checkLeaderboardRank(), 2000);
-            }
-            // Update personal bests on every hand
-            const prevBest = parseFloat(localStorage.getItem("rm_best_hand") ?? "0");
-            if (totalFp > prevBest) {
-              localStorage.setItem("rm_best_hand", totalFp.toFixed(1));
-            }
-            const tierRanks = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "LEGEND"];
-            const prevTierRank = tierRanks.indexOf(localStorage.getItem("rm_best_tier") ?? "BUST");
-            const newTierRank = tierRanks.indexOf(tier ?? "BUST");
-            if (newTierRank > prevTierRank) {
-              localStorage.setItem("rm_best_tier", tier ?? "BUST");
-            }
-          };
-          const t = window.setTimeout(() => {
-            setGameState("WIN_CELEBRATION");
-          }, 1200);
-          springTimersRef.current.push(t);
-        }
-      });
-    }, [isFTUE, currentBet, gameAnalytics, recordHandPlayed, recordHandWon, recordHandLost, runSpring]),
+    // Reveal callbacks are produced by useReveal (Phase 2 sub-PR 04).
+    // Sport-agnostic orchestration lives in shared/views/_useReveal.ts;
+    // basketball wires sport-specific math (calculateWinTier,
+    // calculatePayoutWithStreak) into the hook above.
+    onCardFpStart,
+    onCardComplete,
+    onAnchorFpComplete,
     onAllComplete: useCallback((_totalFp: number) => {
       clearActiveCard();
       soundManager.stopRevealAmbience();
     }, []), // eslint-disable-line
   });
+  // Bind the skip ref every render — the source ref is stable (useRef
+  // owned by useEmotionalReveal) so this is a no-op after the first call,
+  // but doing it inside the render path keeps timing deterministic.
+  bindIsSkippingRef(isSkippingRef);
 
   // Zone 2: Derived values
   const phase: GamePhase = useMemo(() => {
@@ -1038,9 +867,12 @@ export default function GameView() {
 
   const capUsed = useMemo(() => sumSalary(roster), [roster]);
 
-  const lockedSalary = useMemo(() =>
-    roster.reduce((s, c: any) => lockedCardIds.has(cardId(c)) ? s + Number(c?.salary ?? 0) : s, 0),
-    [roster, lockedCardIds]
+  // lockedSalary derivation moved to useReveal (Phase 2 sub-PR 04).
+  // computeLockedSalary is a pure function, so wrap in useMemo here to
+  // preserve referential stability for downstream consumers.
+  const lockedSalary = useMemo(
+    () => computeLockedSalary(roster, lockedCardIds),
+    [roster, lockedCardIds, computeLockedSalary],
   );
 
   const totalFp = useMemo(() => {
@@ -1108,11 +940,16 @@ export default function GameView() {
         : { tier: null as null, primaryReason: null, allReasons: [] as any[] };
     return { star, topGame };
   }, [roster]);
+  // Keep the holder ref in sync so useReveal's onAnchorFpComplete reads
+  // the latest topGameInfo when it fires (the hook closes over the
+  // initial render value via args; the holder is the late-binding path).
+  topGameInfoHolder.current = topGameInfo;
 
-  // During anchor count-up: bar frozen at 5-card total (frozenBarFpRef)
-  // During spring: springFp drives the bar
-  // After spring: lockedGaugeFpRef holds the final value
-  const displayFp = springFp ?? (frozenBarFpRef.current ?? (lockedGaugeFpRef.current ?? totalFp));
+  // displayFp derivation moved to useReveal.computeDisplayFp (Phase 2
+  // sub-PR 04) — it folds the spring/frozen/locked refs the hook owns.
+  // The 3-line legend on the gauge fp refs lives next to the ref
+  // declarations in shared/views/_useReveal.ts.
+  const displayFp = computeDisplayFp(totalFp);
   const gaugeTotalFp = displayFp;
   latestGaugeFpRef.current = gaugeTotalFp;
 
@@ -1524,13 +1361,16 @@ export default function GameView() {
   }, [ftueReplayReady]); // eslint-disable-line
 
   function onWinCelebrationComplete() {
-    // Increment hand count
+    // Increment hand count — incrementHandCount writes through nsKey so
+    // the namespace flip later doesn't desync hand count from the
+    // sport-private state. Reads + writes the persisted value, returns
+    // the new count, and updates the React state.
     if (!isFTUE) {
-      const next = parseInt(localStorage.getItem("replaymod_hand_count") ?? "0", 10) + 1;
-      localStorage.setItem("replaymod_hand_count", String(next));
-      setHandCount(next);
+      const next = incrementHandCount();
 
-      // Name prompt trigger — fires once after hand 3
+      // Name prompt trigger — fires once after hand 3.
+      // replaymod_name_prompted is intentionally a raw key (device-global
+      // — the prompt should fire at most once per device, not per sport).
       if (next >= 3 && !localStorage.getItem("replaymod_name_prompted")) {
         localStorage.setItem("replaymod_name_prompted", "true");
         setTimeout(() => setShowNamePrompt(true), 3500);
