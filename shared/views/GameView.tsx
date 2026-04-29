@@ -566,35 +566,13 @@ export function GameView({ adapter }: Props) {
   const ftueLastHandFpRef = useRef(0);
   const heldRevealResumeRef = useRef<(() => void) | null>(null);
   const completedCardsRef = useRef<Set<string>>(new Set());
-  const lastTierFlipTimeRef = useRef(0);
-  void lastTierFlipTimeRef; // pre-existing dead ref carried over from legacy file
   const ftueTierSlamPlayedRef = useRef(false);
   const bonusPoolRef = useRef<number>(1000);
 
-  // Near-miss copy
-  const nearMissCopy = useMemo(() => {
-    const copies: Partial<Record<string, string[]>> = {
-      BUST: ["So close.", "Right there.", "Next hand."],
-      ROOKIE: ["Just a few more FP.", "Run it back.", "So close."],
-      STARTER: ["Right on the edge.", "Almost there.", "Run it back."],
-      ALL_STAR: ["One strong hand away.", "So close.", "Push harder."],
-    };
-    if (!winTier) return null;
-    const opts = copies[winTier];
-    if (!opts) return null;
-    return opts[Math.floor(Math.random() * opts.length)];
-  }, [winTier]); // eslint-disable-line
-  void nearMissCopy;
-
-  // 3rd hand nudge: show leaderboard intro after hand 3 (when returning to IDLE)
-  useEffect(() => {
-    if (isFTUE || gameState !== "IDLE") return;
-    if (handCount === 3 && localStorage.getItem("replaymod_lb_nudge_shown") !== "1") {
-      localStorage.setItem("replaymod_lb_nudge_shown", "1");
-      // Note: setPreGameMsg was a dead reference in basketball legacy file.
-      // No-op here — leaderboard intro is delivered via chadMessage path.
-    }
-  }, [gameState, isFTUE, handCount]); // eslint-disable-line
+  // (dead effect removed in Task 7: it wrote `replaymod_lb_nudge_shown`
+  // but no consumer ever read that key — leaderboard intro is delivered
+  // via the chadMessage path above. Original setPreGameMsg call site
+  // had been removed in the lift.)
 
   // ── Audio phase sync ──────────────────────────────────────────────
   useEffect(() => {
@@ -680,8 +658,6 @@ export function GameView({ adapter }: Props) {
 
   function handleCardRevealStart(cId: string, tierArg: string, shakeType?: string | null) {
     const card = rosterRef.current.find(c => cId === ((c as any).cardId ?? (c as any).basePlayerId));
-    const isHeldCard = !!(card as any)?.wasHeld;
-    void isHeldCard;
     const heldCards = rosterRef.current.filter((c: any) => c.wasHeld).sort((a: any, b: any) => (a.salary ?? 0) - (b.salary ?? 0));
     const trueAnchorId = heldCards.length > 0
       ? ((heldCards[heldCards.length - 1] as any).cardId ?? (heldCards[heldCards.length - 1] as any).basePlayerId)
@@ -762,10 +738,6 @@ export function GameView({ adapter }: Props) {
   }, [gameState]);
 
   const isPreRevealFooter = gameState === "HOLD" && !isFTUE;
-  const showGaugeInZone3 = true;
-  void showGaugeInZone3;
-  const isPostReveal = (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier != null;
-  void isPostReveal;
 
   const CELEBRATION_TIER_COLORS: Record<string, { color: string; glow: string }> = {
     LEGEND: { color: "#EF4444", glow: "#EF444499" },
@@ -834,20 +806,6 @@ export function GameView({ adapter }: Props) {
     return Math.min(100, Math.round((totalFp / maxPossible) * 100));
   }, [gameState, roster, totalFp, computeRosterCeiling]);
 
-  const rosterTotalBonus = useMemo(() => {
-    if (gameState === "IDLE" || gameState === "DEALING") return 0;
-    const isPostRev = gameState === "RESULTS" || gameState === "WIN_CELEBRATION";
-    return roster.reduce((sum, c: any) => {
-      const cId = String(c?.cardId ?? c?.basePlayerId ?? "");
-      const isRevealed = isPostRev || getVisibleFp(cId) != null;
-      if (!isRevealed) return sum;
-      const daily = Number(c?.dailyBonus ?? 0) || 0;
-      const badges = Array.isArray(c?.achievements) ? c.achievements.reduce((s: number, b: any) => s + (Number(b?.fp) || 0), 0) : 0;
-      return sum + daily + badges;
-    }, 0);
-  }, [gameState, roster, getVisibleFp]);
-  void rosterTotalBonus;
-
   // Top Games
   const topGameInfo = useMemo(() => {
     const commentaryRoster = roster.map((c: any) => ({
@@ -878,6 +836,14 @@ export function GameView({ adapter }: Props) {
   const gaugeTotalFp = displayFp;
   latestGaugeFpRef.current = gaugeTotalFp;
 
+  // postRevealCopy: cache-and-reset pattern.
+  // The useMemo computes once when conditions first allow it (RESULTS/
+  // WIN_CELEBRATION + winTier + springSettled), then stashes the result
+  // in postRevealCopyRef so subsequent renders return the SAME copy
+  // (preventing mid-results re-rolls of the random commentary lines).
+  // The ref is reset to null on phase changes back to IDLE so the next
+  // hand picks fresh copy. If you change the deps array below or the
+  // ref-reset point, double-check both: stale-copy bugs are subtle.
   const postRevealCopyRef = useRef<ReturnType<typeof selectCommentary> | null>(null);
   const postRevealCopy = useMemo(() => {
     if (postRevealCopyRef.current) return postRevealCopyRef.current;
@@ -962,17 +928,6 @@ export function GameView({ adapter }: Props) {
   }, [gameState, winTier, isFTUE]); // eslint-disable-line
 
   const tierFlipTimersRef = useRef<number[]>([]);
-
-  const handleTierCross = useCallback((tier: string) => {
-    if (isFTUE) return;
-    if (springHasFiredRef.current) return;
-    if (tier === prevRevealTierRef.current) return;
-    soundManager.playTierCross(tier);
-    prevRevealTierRef.current = tier;
-    setDisplayTier(tier);
-    setTierFlipKey(k => k + 1);
-  }, [isFTUE]); // eslint-disable-line
-  void handleTierCross;
 
   // Reset on state change
   useEffect(() => {
@@ -1265,8 +1220,11 @@ export function GameView({ adapter }: Props) {
     setGameState("RESULTS");
   }
 
-  const [wasSkipped, setWasSkipped] = useState(false);
-  void wasSkipped;
+  // wasSkipped state — set on REVEALING skip, read by no consumer today
+  // (kept because the setter is invoked in handleButtonClick and removing
+  // the state would orphan that side effect; a future PR could replace
+  // with a ref if we want to drop the render trigger).
+  const [, setWasSkipped] = useState(false);
 
   function handleButtonClick() {
     if (gameState === "REVEALING") {

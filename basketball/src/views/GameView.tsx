@@ -139,9 +139,11 @@ export default function GameView() {
     ftueResolveRoster: resolveFTUERoster,
     getTodaysStars,
     computeRosterCeiling,
-    // AthleteCard's prop type is a structural superset of RosterGridCardProps
-    // (extra optional fields like topGameTier, glow*) so the cast lets us pass
-    // it where the adapter expects exactly the shared shape.
+    // AthleteCard's Props type marks several fields optional (locked,
+    // isMvp, flipped, etc.) that RosterGridCardProps requires. Functionally
+    // the wider/looser AthleteCard shape can absorb any RosterGridCardProps
+    // call site, but TypeScript treats the optional/required asymmetry as
+    // an incompatible signature. Cast pins it to the contract.
     CardComponent: AthleteCard as GameAdapter["CardComponent"],
     rosterGridColumns: 3,
     resetAllOverlays,
