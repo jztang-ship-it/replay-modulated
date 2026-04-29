@@ -147,13 +147,14 @@ const BASEBALL_FTUE_CONFIG: FTUETextConfig = {
 export default function GameView() {
   const adapter: GameAdapter = useMemo(() => ({
     sportKey: "baseball",
-    // Baseball's SportAdapter is structurally a superset (P/BAT slot logic,
-    // role-aware log filter) but doesn't extend the shared base class, so
-    // some methods (displayName, positions, economyConfig, isValidPosition,
-    // getHeadshotUrl, getPositionLimits, isValidRoster) are absent. Shared
-    // GameView only reads sportKey + salaryCap + rosterSize on this object,
-    // so the cast is safe in practice. Tightening (Task 7 cleanup candidate)
-    // would mean baseball's SportAdapter extending shared.SportAdapter.
+    // Baseball's SportAdapter is structurally a near-superset of shared
+    // SportAdapter (same getters, role-aware methods, etc.) but its
+    // BaseballSportConfigType literal diverges from shared SportConfigShape
+    // in ways that require config-shape rework (e.g. badges split into
+    // { hitters, pitchers } rather than a flat array). Shared GameView only
+    // reads sportKey + salaryCap + rosterSize from this object, so the
+    // cast is safe in practice. Aligning the config types is a multi-file
+    // change deferred to a follow-up cleanup PR.
     sportAdapter: sportAdapter as unknown as SharedSportAdapter,
     localStorageNamespace: "",
     leaderboardScope: sportAdapter.sportKey as "baseball",
