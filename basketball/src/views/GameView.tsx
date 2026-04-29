@@ -7,6 +7,7 @@
 
 import { useMemo, useState, useCallback, useRef, useEffect, useLayoutEffect } from "react";
 import { sleep, RosterGridScaleFit, RollingNumber, toRevealableCards, cardId, sumSalary } from "@shared/views/_gameViewHelpers.tsx";
+import { useSharedGameState } from "@shared/views/_useSharedGameState";
 import type { GamePhase, PlayerCard } from "../adapters/types";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { dealInitialRoster, redrawRoster, resolveRoster, computeRosterCeiling, getTodaysStars } from "../adapters/gameAdapter";
@@ -20,7 +21,7 @@ import { resetAllOverlays } from "../components/AthleteCard";
 import { GameBar, type CelebrationData } from "../components/GameBar";
 import { useCardFlipState } from "../hooks/useCardFlipState";
 import { useEmotionalReveal, DRAWING_DWELL_MS, type RevealableCard } from "../hooks/useEmotionalReveal";
-import { calculateWinTier, calculatePayout, calculatePayoutWithStreak, getStreakMultiplier, BASKETBALL_WIN_TIERS, STREAK_TIERS, type WinTier } from "../utils/payoutLogic";
+import { calculateWinTier, calculatePayout, calculatePayoutWithStreak, getStreakMultiplier, BASKETBALL_WIN_TIERS, STREAK_TIERS } from "../utils/payoutLogic";
 import { detectExtremes } from "@shared/utils/extremeGames";
 import { featureFlags } from "@shared/featureFlags";
 import { selectCommentary } from "../../../shared/commentary/selectCommentary";
@@ -37,9 +38,8 @@ import { XPBar } from '@shared/engagement/XPBar';
 import { soundManager } from '@shared/utils/soundManager';
 import { getBonusPool, contributeBet } from '@shared/utils/bonusPoolStore';
 import { audioDirector } from '@shared/utils/audioDirector';
-import { getPlayerUid, getNickname, setNickname, getSessionId } from '@shared/utils/playerIdentity';
+import { getPlayerUid, getNickname, setNickname } from '@shared/utils/playerIdentity';
 import { captureReferrerFromUrl, applyReferral, claimReferral } from '@shared/utils/referral';
-import { supabase } from "@shared/lib/supabase";
 import { buildScoreProof } from '@shared/utils/scoreProof';
 import { LeaderboardScreen } from '@shared/components/LeaderboardScreen';
 import { chadMessage } from "@shared/commentary/chad";
@@ -49,7 +49,7 @@ import { RegisterModal } from "@shared/components/RegisterModal";
 import { PwaInstallPrompt } from "@shared/components/PwaInstallPrompt";
 import { BellSheet } from "@shared/inbox/BellSheet";
 import { FeedbackModal } from "@shared/inbox/FeedbackModal";
-import { listMessages, addBigWinMessage } from "@shared/inbox/inbox";
+import { listMessages } from "@shared/inbox/inbox";
 
 // Test-wire only: allow passing glow props even if wrapper prop types lag behind.
 const RosterGridAny = RosterGrid as any;
@@ -64,17 +64,12 @@ const MIN_BALANCE_FLOOR = 500; // auto-refill for testing if balance runs too lo
 // "tap"  = user taps each unheld card to reveal it; held FP fades in at end
 const REVEAL_MODE: "auto" | "tap" = "tap";
 
-function loadBalance(): number {
-  try {
-    const v = localStorage.getItem("replaymod_balance");
-    const n = v ? Number(v) : NaN;
-    if (Number.isFinite(n) && n >= MIN_BALANCE_FLOOR) return n;
-    return STARTING_BALANCE; // reset if missing, NaN, or below floor
-  } catch { return STARTING_BALANCE; }
-}
-function saveBalance(v: number) {
-  try { localStorage.setItem("replaymod_balance", String(v)); } catch { }
-}
+// loadBalance / saveBalance / submitToLeaderboard / checkLeaderboardRank /
+// logHandToDb were lifted to shared/views/_useSharedGameState.ts as part of
+// the Phase 2 GameView shared lift. The hook returns bound versions wired
+// to the GameAdapter (leaderboardScope replaces hardcoded sportAdapter
+// references; localStorage namespacing is currently a no-op since the
+// adapter ships with localStorageNamespace="").
 
 const BASE_BET = 10;
 
@@ -84,74 +79,6 @@ const BASE_BET = 10;
 type GameState =
   | "IDLE" | "DEALING" | "HOLD" | "DRAWING"
   | "REVEALING" | "RESULTS" | "WIN_CELEBRATION";
-
-async function submitToLeaderboard(metric: string, value: number, extra?: Record<string, unknown>) {
-  const uid = getPlayerUid();
-  const nickname = getNickname();
-  if (!uid || value <= 0) return;
-  let authHeader: Record<string, string> = {};
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.access_token) {
-      authHeader = { Authorization: `Bearer ${session.access_token}` };
-    }
-  } catch { /* auth not available, submit unverified */ }
-  try {
-    await fetch("/api/leaderboard", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeader },
-      body: JSON.stringify({ action: "submit", sport: sportAdapter.sportKey, metric, value, uid, nickname, session_id: getSessionId(), ...extra }),
-    });
-  } catch { }
-}
-
-async function logHandToDb(
-  roster: any[],
-  totalFp: number,
-  tier: string,
-  payout: number,
-  streak: number,
-) {
-  try {
-    const uid = getPlayerUid();
-    if (!uid || uid.startsWith("u_")) return; // Only log with real Supabase UID
-    const rosterIds = roster
-      .map((c: any) => String(c.basePlayerId ?? ""))
-      .filter(Boolean);
-    const { data: { session } } = await supabase.auth.getSession();
-    const verified = !!session?.access_token;
-    await supabase.from("hand_log").insert({
-      player_id: uid,
-      roster_ids: rosterIds,
-      total_fp: totalFp,
-      tier,
-      payout,
-      streak_at_play: streak,
-      verified,
-    });
-    // Trigger inbox big-win recap for elite tiers
-    if (tier === 'MVP+' || tier === 'LEGEND') {
-      const hand_id = `hand-${Date.now()}`;
-      await addBigWinMessage(uid, { tier, fp: totalFp, hand_id });
-    }
-  } catch { /* silent — audit trail is best-effort */ }
-}
-
-/** Check if player is in top 10 of either daily leaderboard → set rm_on_board_today for trophy glow */
-async function checkLeaderboardRank() {
-  const uid = getPlayerUid();
-  const sessId = getSessionId();
-  if (!uid) return;
-  try {
-    const [best, session] = await Promise.all([
-      fetch(`/api/leaderboard?sport=${sportAdapter.sportKey}&metric=hand_best&scope=daily&limit=10`).then(r => r.json()),
-      fetch(`/api/leaderboard?sport=${sportAdapter.sportKey}&metric=session_score&scope=daily&limit=10`).then(r => r.json()),
-    ]);
-    const entries = [...(best.entries ?? []), ...(session.entries ?? [])];
-    const onBoard = entries.some((e: any) => e.uid === uid || (sessId && e.session_id === sessId));
-    localStorage.setItem("rm_on_board_today", onBoard ? "1" : "0");
-  } catch {} // Non-critical
-}
 
 function createPlaceholders(): PlayerCard[] {
   return Array.from({ length: ROSTER_SIZE }, (_, i) => ({
@@ -399,8 +326,61 @@ function BonusPoolPill({ betAmount, betNonce, onAmountChange }: {
 
 export default function GameView() {
 
-  // Zone 1: State
-  const [gameState, setGameState] = useState<GameState>("IDLE");
+  // ── Shared game state lift (Phase 2 sub-PR 03) ─────────────────────
+  // Build a partial GameAdapter literal — Pick<> in the hook keeps this
+  // narrow until Task 5 tightens the full adapter shape.
+  const sharedAdapter = useMemo(() => ({
+    sportKey: "basketball" as const,
+    localStorageNamespace: "",
+    leaderboardScope: sportAdapter.sportKey, // "basketball" — tightened in Task 6 to literal
+  }), []);
+  const shared = useSharedGameState(sharedAdapter, { rosterSize: ROSTER_SIZE });
+  const {
+    gameState, setGameState,
+    dataReady, setDataReady,
+    noTransition, setNoTransition,
+    roster, setRoster,
+    lockedCardIds, setLockedCardIds,
+    statsFlippedIds, setStatsFlippedIds,
+    mvpId, setMvpId,
+    rosterRef,
+    betMultiplier, setBetMultiplier,
+    balance, setBalance,
+    isBalanceAnimating, setIsBalanceAnimating,
+    persistBalance: saveBalance,
+    winTier, setWinTier,
+    winPayout, setWinPayout,
+    streak, setStreak,
+    handCount, setHandCount,
+    revealIndex, setRevealIndex,
+    revealedSalary, setRevealedSalary,
+    lastRevealedCardId, setLastRevealedCardId,
+    legendaryCardName, setLegendaryCardName,
+    celebrationHeld, setCelebrationHeld,
+    glowState, setGlowState,
+    tierFlipKey, setTierFlipKey,
+    displayTier, setDisplayTier,
+    tierResultPhase, setTierResultPhase,
+    nearMissTeasing, setNearMissTeasing,
+    springFp, setSpringFp,
+    springSettled, setSpringSettled,
+    ftueCardsBlocked, setFtueCardsBlocked,
+    ftueReplayReady, setFtueReplayReady,
+    ftueResultsDim, setFtueResultsDim,
+    ftueAnchorFlipped, setFtueAnchorFlipped,
+    ftueOscillating, setFtueOscillating,
+    ftueCommentaryDone, setFtueCommentaryDone,
+    ftueCommentaryOverride, setFtueCommentaryOverride,
+    ftueGaugeOscDone, setFtueGaugeOscDone,
+    ftueWinCelebrationActive, setFtueWinCelebrationActive,
+    ftueAnchorPulse, setFtueAnchorPulse,
+    ftueHoldSpotlight, setFtueHoldSpotlight,
+    ftueCoachBubbleKey, setFtueCoachBubbleKey,
+    submitToLeaderboard,
+    checkLeaderboardRank,
+    logHandToDb,
+  } = shared;
+
   const {
     taskStates,
     loginStreak,
@@ -425,17 +405,7 @@ export default function GameView() {
   const [nameInput, setNameInput] = useState(() => getNickname());
   const [multipliersHost, setMultipliersHost] = useState<HTMLDivElement | null>(null);
   const [controlsHost, setControlsHost] = useState<HTMLDivElement | null>(null);
-  const [dataReady, setDataReady] = useState(false);
-  const [roster, setRoster] = useState<PlayerCard[]>(createPlaceholders());
-  const [lockedCardIds, setLockedCardIds] = useState<Set<string>>(new Set());
-  const [statsFlippedIds, setStatsFlippedIds] = useState<Set<string>>(new Set());
-  const [mvpId, setMvpId] = useState<string | undefined>();
-  const [betMultiplier, setBetMultiplier] = useState(1);
   const [betNonce, setBetNonce] = useState(0);
-  const [balance, setBalance] = useState(() => loadBalance());
-  const [isBalanceAnimating, setIsBalanceAnimating] = useState(false);
-  const [winTier, setWinTier] = useState<WinTier | null>(null);
-  const [winPayout, setWinPayout] = useState(0);
   const [showRawScore, setShowRawScore] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -464,36 +434,13 @@ export default function GameView() {
     });
   }, [user, isAnonymous, bellOpen]);
 
-  const [noTransition, setNoTransition] = useState(false);
-  const [revealedSalary, setRevealedSalary] = useState(0);
   const deductedSalaryCardsRef = useRef<Set<string>>(new Set());
   const [gameError, setGameError] = useState<string | null>(null);
-  const rosterRef = useRef<PlayerCard[]>([]);
   const { isFTUE, completeFTUE } = useFTUE("basketball");
   // Ref mirror so async closures always read the latest isFTUE without stale capture
   const isFTUERef = useRef(isFTUE);
   useEffect(() => { isFTUERef.current = isFTUE; }, [isFTUE]);
-  const [legendaryCardName, setLegendaryCardName] = useState<string | undefined>();
-  const [revealIndex, setRevealIndex] = useState(0);
-  const [lastRevealedCardId, setLastRevealedCardId] = useState<string | null>(null);
-  const [celebrationHeld, setCelebrationHeld] = useState(false);
-  const [ftueCardsBlocked, setFtueCardsBlocked] = useState(false);
-  const [ftueReplayReady, setFtueReplayReady] = useState(false);
-  const [ftueResultsDim, setFtueResultsDim] = useState(false);
-  const [ftueAnchorFlipped, setFtueAnchorFlipped] = useState(false);
-  const [ftueOscillating, setFtueOscillating] = useState(false);
-  const [ftueCommentaryDone, setFtueCommentaryDone] = useState(false);
-  const [ftueCommentaryOverride, setFtueCommentaryOverride] = useState<{ parts: React.ReactNode[]; sticky?: boolean } | null>(null);
   const coachDismissRef = useRef<(() => void) | null>(null);
-  const [glowState, setGlowState] = useState<{ cardId: string | null; tier: string; durationMs: number }>({
-    cardId: null, tier: "WHITE", durationMs: 300
-  });
-  /** After FTUE scripted gauge animation completes — bar stays frozen until next hand */
-  const [ftueGaugeOscDone, setFtueGaugeOscDone] = useState(false);
-  const [ftueWinCelebrationActive, setFtueWinCelebrationActive] = useState(false);
-  const [ftueAnchorPulse, setFtueAnchorPulse] = useState(false);
-  const [ftueHoldSpotlight, setFtueHoldSpotlight] = useState(false);
-  const [ftueCoachBubbleKey, setFtueCoachBubbleKey] = useState<string | null>(null);
   /** Legend icon gold-filled when pre-game msg is active OR daily bonus unseen */
   const [legendGold, setLegendGold] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -505,11 +452,7 @@ export default function GameView() {
   });
   const [trophyPulsing, setTrophyPulsing] = useState(false);
 
-  // Hand count — used for commentary, leaderboard, and Chad. Must be declared
-  // before any useEffect that references it to avoid TDZ in production builds.
-  const [handCount, setHandCount] = useState<number>(() =>
-    parseInt(localStorage.getItem("replaymod_hand_count") ?? "1", 10)
-  );
+  // handCount, streak — lifted to useSharedGameState (Phase 2 sub-PR 03).
 
   // ── Referral capture + claim ────────────────────────────────────────────
   // Capture ?ref= on mount (once per session). When handCount crosses the
@@ -657,27 +600,19 @@ export default function GameView() {
   const heldRevealResumeRef = useRef<(() => void) | null>(null);
   const completedCardsRef = useRef<Set<string>>(new Set());
   const regularFinalGaugeKickFiredRef = useRef(false);
-  // Near your other useState declarations in GameView.tsx
-  const [streak, setStreak] = useState<number>(() =>
-    parseInt(localStorage.getItem("replaymod_streak") ?? "0", 10)
-  );
+  // streak — lifted to useSharedGameState (Phase 2 sub-PR 03).
 
-  // Tier flip display state
-  const [tierFlipKey, setTierFlipKey] = useState(0);
-  const [displayTier, setDisplayTier] = useState("BUST");
+  // Tier flip display state — tierFlipKey, displayTier, tierResultPhase,
+  // nearMissTeasing lifted to useSharedGameState (Phase 2 sub-PR 03).
   const prevRevealTierRef = useRef("BUST");
   const lastTierFlipTimeRef = useRef(0);
   const tierFlipTimerRef = useRef<number | null>(null);
   const latestGaugeFpRef = useRef(0);
-  // Phase 1 = big PNG slam, Phase 2 = settled info view
-  const [tierResultPhase, setTierResultPhase] = useState<1 | 2>(1);
   const ftueTierSlamPlayedRef = useRef(false);
-  const [nearMissTeasing, setNearMissTeasing] = useState(false);
   const nearMissChoreTimersRef = useRef<number[]>([]);
 
-  // Spring oscillation phase — fires after all cards settle, before results lock in
-  const [springFp, setSpringFp] = useState<number | null>(null);
-  const [springSettled, setSpringSettled] = useState(false);
+  // Spring oscillation phase — springFp, springSettled lifted to
+  // useSharedGameState (Phase 2 sub-PR 03); orchestrator stays here for now.
   const springRafRef = useRef<number>(0);
   const springTimersRef = useRef<number[]>([]);
   const pendingBalanceUpdateRef = useRef<(() => void) | null>(null);
