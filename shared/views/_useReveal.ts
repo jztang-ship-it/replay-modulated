@@ -90,6 +90,10 @@ export interface UseRevealArgs {
     streak: number,
   ) => number;
 
+  /** FTUE anchor card ID (basketball: "ftue-tatum"; baseball: "ftue-ohtani").
+   *  Used by onCardComplete to start gauge oscillation when the anchor's
+   *  stamp lands. */
+  ftueAnchorId?: string;
   /** Current bet (BASE_BET * betMultiplier in basketball). */
   currentBet: number;
   /** Bet multiplier (passed separately for engagement.recordMultiplierUsed). */
@@ -176,6 +180,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     adapter, state,
     springTiers = DEFAULT_SPRING_TIERS,
     calculateWinTier, calculatePayoutWithStreak,
+    ftueAnchorId = "ftue-tatum",
     currentBet, betMultiplier,
     rosterRef,
     isFTUE, ftueLastHandFpRef,
@@ -348,11 +353,12 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     });
     setLastRevealedCardId(cId);
 
-    // FTUE: start gauge oscillation shortly after Tatum's stamp lands
-    if (isFTUE && cId === "ftue-tatum") {
+    // FTUE: start gauge oscillation shortly after the sport's anchor card
+    // lands its stamp (Tatum for basketball, Ohtani for baseball).
+    if (isFTUE && cId === ftueAnchorId) {
       setTimeout(() => setFtueOscillating(true), 100);
     }
-  }, [isFTUE, rosterRef, setRevealIndex, setLastRevealedCardId, setFtueOscillating]);
+  }, [isFTUE, ftueAnchorId, rosterRef, setRevealIndex, setLastRevealedCardId, setFtueOscillating]);
 
   // ── onAnchorFpComplete ─────────────────────────────────────────────
   const onAnchorFpComplete = useCallback((_hookTotal: number) => {
