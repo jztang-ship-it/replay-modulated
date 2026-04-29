@@ -233,20 +233,27 @@ export function useSharedGameState(
   // These are exposed so reveal/celebration callbacks (Task 4 and beyond)
   // don't have to duplicate the nsKey wrapping. They keep state + storage
   // in lockstep so the namespace flip later doesn't desync them.
-  const incrementStreak = useCallback(() => {
-    let nextValue = 0;
-    setStreak(prev => {
-      const next = prev + 1;
-      try { localStorage.setItem(nsKey(adapter, "replaymod_streak"), String(next)); } catch { }
-      nextValue = next;
-      return next;
-    });
-    return nextValue;
+  /** Reads the persisted streak fresh from localStorage (avoids stale
+   *  closure on the React state) and writes back the incremented value.
+   *  Side effects stay outside the setStreak updater so React 18
+   *  StrictMode dev double-invocation can't double-write or return an
+   *  uncommitted value. Returns the new streak. */
+  const incrementStreak = useCallback((): number => {
+    let next = 1;
+    try {
+      next = parseInt(
+        localStorage.getItem(nsKey(adapter, "replaymod_streak")) ?? "0",
+        10,
+      ) + 1;
+      localStorage.setItem(nsKey(adapter, "replaymod_streak"), String(next));
+    } catch { }
+    setStreak(next);
+    return next;
   }, [adapter]);
 
   const resetStreak = useCallback(() => {
-    setStreak(0);
     try { localStorage.setItem(nsKey(adapter, "replaymod_streak"), "0"); } catch { }
+    setStreak(0);
   }, [adapter]);
 
   /** Reads the persisted hand count fresh from localStorage (avoids stale
