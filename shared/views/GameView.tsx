@@ -965,12 +965,12 @@ export function GameView({ adapter }: Props) {
       setTierResultPhase(1);
       const gaugeSnap = computeGaugeState(totalFp, gaugeThresholds as any, winTier, NEAR_MISS_FP);
       if (gaugeSnap.isNearMiss && gaugeSnap.nextTier != null) {
-        const t1 = setTimeout(() => setNearMissTeasing(true), 400) as unknown as number;
-        const t2 = setTimeout(() => setNearMissTeasing(false), 1200) as unknown as number;
-        const t3 = setTimeout(() => setTierResultPhase(2), 1800) as unknown as number;
+        const t1 = setTimeout(() => setNearMissTeasing(true), 400);
+        const t2 = setTimeout(() => setNearMissTeasing(false), 1200);
+        const t3 = setTimeout(() => setTierResultPhase(2), 1800);
         nearMissChoreTimersRef.current = [t1, t2, t3];
       } else {
-        const t = setTimeout(() => setTierResultPhase(2), 1800) as unknown as number;
+        const t = setTimeout(() => setTierResultPhase(2), 1800);
         nearMissChoreTimersRef.current = [t];
       }
       return () => { nearMissChoreTimersRef.current.forEach(clearTimeout); };
