@@ -187,8 +187,8 @@ export default function GameView() {
     CardComponent: BaseballCard as GameAdapter["CardComponent"],
     rosterGridColumns: 6,
     // Baseball's "dice 5" layout: row 1 = 3 cards (slots 0-2), row 2 = 2
-    // cards centered (slots 3-4). Pre-cutover this lived in
-    // baseball/src/components/RosterGrid.tsx as a per-sport wrapper.
+    // cards centered (slots 3-4). Lifted from the per-sport RosterGrid
+    // wrapper in Task 6; the original wrapper file has been deleted.
     rosterGridLayout: {
       className: "bb-dice5",
       css: `
