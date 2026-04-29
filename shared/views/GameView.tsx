@@ -1255,6 +1255,22 @@ export function GameView({ adapter }: Props) {
   }, [performanceTagMap, gameState, isFTUE]); // eslint-disable-line
 
   // ── JSX ───────────────────────────────────────────────────────────
+  // NOTE: this useMemo MUST stay above the early returns below. React's
+  // rules-of-hooks require the same hook-call sequence on every render —
+  // if `!dataReady` short-circuits before this useMemo runs, the next
+  // render (when dataReady flips true) will call one extra hook and
+  // trigger React error #310 ("Rendered more hooks than during the
+  // previous render"). Keep all hooks above the conditional returns.
+  // Inject getTodaysStars into the GameBar legend (keeps the bonus-pool
+  // "Today's Stars" row in sync with the live daily rotation).
+  const legendWithStars = useMemo(() => {
+    try {
+      const stars = getTodaysStars();
+      if (stars.length > 0) return { ...gameBarLegend, todaysStars: stars };
+    } catch { /* data not loaded yet */ }
+    return gameBarLegend;
+  }, [gameBarLegend, getTodaysStars]);
+
   const fullscreenErrorStyle: React.CSSProperties = {
     width: "100vw", height: "100vh", maxHeight: "-webkit-fill-available",
     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
@@ -1292,16 +1308,6 @@ export function GameView({ adapter }: Props) {
       </div>
     );
   }
-
-  // Inject getTodaysStars into the GameBar legend (keeps the bonus-pool
-  // "Today's Stars" row in sync with the live daily rotation).
-  const legendWithStars = useMemo(() => {
-    try {
-      const stars = getTodaysStars();
-      if (stars.length > 0) return { ...gameBarLegend, todaysStars: stars };
-    } catch { /* data not loaded yet */ }
-    return gameBarLegend;
-  }, [gameBarLegend, getTodaysStars]);
 
   return (
     <div style={{
