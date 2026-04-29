@@ -18,7 +18,7 @@
  *     branches FTUE-vs-non-FTUE for pendingBalanceUpdateRef wiring
  *   - All paired refs: springTimersRef, springRafRef, frozenBarFpRef,
  *     lockedGaugeFpRef, springHasFiredRef, anchorFpCallCountRef,
- *     prevRevealTierRef, tierFlipTimerRef, nearMissChoreTimersRef,
+ *     prevRevealTierRef, nearMissChoreTimersRef,
  *     deductedSalaryCardsRef, latestGaugeFpRef, pendingBalanceUpdateRef
  *   - Derived `displayFp` and `lockedSalary` (deferred from Task 3 because
  *     they fold reveal-state refs)
@@ -78,11 +78,14 @@ export interface UseRevealArgs {
   springTiers?: SpringTier[];
 
   // ── Per-sport hooks ─────────────────────────────────────────────────
-  /** Maps a final FP total to a tier key (BUST | ROOKIE | STARTER+). */
-  calculateWinTier: (totalFp: number) => string;
-  /** Calculates the payout, with streak bonus. */
+  /** Maps a final FP total to a tier key (BUST | ROOKIE | STARTER+).
+   *  May return null if the sport's win-tier function can't classify the
+   *  total (baseball's wrapper, wired in Task 6, is the motivating case). */
+  calculateWinTier: (totalFp: number) => WinTierKey | null;
+  /** Calculates the payout, with streak bonus. Accepts null tier to
+   *  match calculateWinTier's return — null collapses to no-payout. */
   calculatePayoutWithStreak: (
-    tier: string | null,
+    tier: WinTierKey | null,
     bet: number,
     streak: number,
   ) => number;
@@ -147,7 +150,6 @@ export interface UseRevealReturn {
   anchorFpCallCountRef: React.MutableRefObject<number>;
   latestGaugeFpRef: React.MutableRefObject<number>;
   prevRevealTierRef: React.MutableRefObject<string>;
-  tierFlipTimerRef: React.MutableRefObject<number | null>;
   nearMissChoreTimersRef: React.MutableRefObject<number[]>;
   deductedSalaryCardsRef: React.MutableRefObject<Set<string>>;
   pendingBalanceUpdateRef: React.MutableRefObject<(() => void) | null>;
@@ -203,20 +205,28 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
   // ── Tier flip / near-miss timers (state stays in useSharedGameState;
   //    the timer refs live with the orchestrator) ─────────────────────
   const prevRevealTierRef = useRef("BUST");
-  const tierFlipTimerRef = useRef<number | null>(null);
-  const latestGaugeFpRef = useRef(0);
   const nearMissChoreTimersRef = useRef<number[]>([]);
 
   // ── Spring oscillation refs ─────────────────────────────────────────
   const springRafRef = useRef<number>(0);
   const springTimersRef = useRef<number[]>([]);
   const pendingBalanceUpdateRef = useRef<(() => void) | null>(null);
-  const lockedGaugeFpRef = useRef<number | null>(null);
   const springHasFiredRef = useRef(false);
-  // freezes bar at 5-card total during anchor count-up
-  const frozenBarFpRef = useRef<number | null>(null);
   // FTUE: tracks onAnchorFpComplete calls to skip non-held anchor
   const anchorFpCallCountRef = useRef(0);
+
+  // ── Gauge fp refs ───────────────────────────────────────────────────
+  // Three fp refs that drive the gauge bar through the reveal:
+  //   latestGaugeFpRef — the bar's *current* displayed value (running total
+  //     during card-by-card, or the spring's current frame).
+  //   frozenBarFpRef   — the 5-card total, snapshotted when the true anchor
+  //     starts its count-up. Bar is *pinned* here while the anchor card's
+  //     number rolls up on the card face. null when no anchor in flight.
+  //   lockedGaugeFpRef — the final post-spring value. null until the spring
+  //     onSettled callback fires.
+  const latestGaugeFpRef = useRef(0);
+  const frozenBarFpRef = useRef<number | null>(null);
+  const lockedGaugeFpRef = useRef<number | null>(null);
 
   // ── Card-level reveal refs ──────────────────────────────────────────
   const deductedSalaryCardsRef = useRef<Set<string>>(new Set());
@@ -364,19 +374,19 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
       lockedGaugeFpRef.current = totalFp;
       const tier = calculateWinTier(totalFp);
       const payout = calculatePayoutWithStreak(tier, currentBet, streak);
-      setWinTier(tier as WinTierKey);
+      setWinTier(tier);
       setWinPayout(payout);
       const bust = !tier || tier === "BUST";
       // ROOKIE = neutral for streak (doesn't advance or break). BUST = streak reset.
       const isStreakWin = !bust && tier !== "ROOKIE";  // STARTER+ advances streak
       const isStreakLoss = bust;                        // only BUST resets streak
-      soundManager.playTierResult(tier);
+      soundManager.playTierResult(tier ?? "BUST");
       // Nudge trigger: first ALL_STAR+ hit for anonymous users
-      if (["ALL_STAR", "MVP", "LEGEND"].includes(tier) && isAnonymous) {
+      if (tier && ["ALL_STAR", "MVP", "LEGEND"].includes(tier) && isAnonymous) {
         setBigWinFired(true);
       }
       const badges = rosterRef.current.reduce((s, c) => s + (c.achievements?.length ?? 0), 0);
-      gameAnalytics.handResolved(totalFp, String(tier), bust, badges, Date.now());
+      gameAnalytics.handResolved(totalFp, String(tier ?? "BUST"), bust, badges, Date.now());
       const tg = getTopGameInfo?.();
       if (tg?.topGame.tier && tg.star) {
         track("gameplay", "top_game_revealed", {
@@ -386,7 +396,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
           isStarCard: true,
         });
       }
-      logHandToDb(rosterRef.current, totalFp, String(tier), payout, streak);
+      logHandToDb(rosterRef.current, totalFp, tier ?? "BUST", payout, streak);
       recordHandPlayed();
       if (!bust) recordHandWon(); else recordHandLost();
 
@@ -511,7 +521,6 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     anchorFpCallCountRef,
     latestGaugeFpRef,
     prevRevealTierRef,
-    tierFlipTimerRef,
     nearMissChoreTimersRef,
     deductedSalaryCardsRef,
     pendingBalanceUpdateRef,

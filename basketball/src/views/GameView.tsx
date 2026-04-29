@@ -606,9 +606,9 @@ export default function GameView() {
   // Tier flip / FTUE refs — display state (tierFlipKey, displayTier,
   // tierResultPhase, nearMissTeasing) lifted to useSharedGameState in
   // Phase 2 sub-PR 03. Reveal-orchestration refs (prevRevealTierRef,
-  // tierFlipTimerRef, latestGaugeFpRef, nearMissChoreTimersRef,
-  // spring/anchor refs, pendingBalanceUpdateRef, deductedSalaryCardsRef)
-  // moved into useReveal in Phase 2 sub-PR 04 — see below useEmotionalReveal.
+  // latestGaugeFpRef, nearMissChoreTimersRef, spring/anchor refs,
+  // pendingBalanceUpdateRef, deductedSalaryCardsRef) moved into useReveal
+  // in Phase 2 sub-PR 04 — see below useEmotionalReveal.
   const lastTierFlipTimeRef = useRef(0);
   const ftueTierSlamPlayedRef = useRef(false);
   const bonusPoolRef = useRef<number>(1000);
@@ -680,7 +680,7 @@ export default function GameView() {
   const reveal = useReveal({
     adapter: sharedAdapter,
     state: shared,
-    calculateWinTier: calculateWinTier as (fp: number) => string,
+    calculateWinTier,
     calculatePayoutWithStreak,
     currentBet,
     betMultiplier,
@@ -945,11 +945,10 @@ export default function GameView() {
   // initial render value via args; the holder is the late-binding path).
   topGameInfoHolder.current = topGameInfo;
 
-  // During anchor count-up: bar frozen at 5-card total (frozenBarFpRef)
-  // During spring: springFp drives the bar
-  // After spring: lockedGaugeFpRef holds the final value
   // displayFp derivation moved to useReveal.computeDisplayFp (Phase 2
   // sub-PR 04) — it folds the spring/frozen/locked refs the hook owns.
+  // The 3-line legend on the gauge fp refs lives next to the ref
+  // declarations in shared/views/_useReveal.ts.
   const displayFp = computeDisplayFp(totalFp);
   const gaugeTotalFp = displayFp;
   latestGaugeFpRef.current = gaugeTotalFp;
