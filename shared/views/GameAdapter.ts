@@ -27,7 +27,7 @@ export interface GameAdapter {
   localStorageNamespace: string;
   /** Routed to /api/leaderboard sport param. Already implemented at the
    *  API layer in PR #11; this adapter removes hardcoded sport literals. */
-  leaderboardScope: string;
+  leaderboardScope: "basketball" | "baseball" | "worldcup";
   /** Optional Vite base path ("/basketball/", "/baseball/") for any
    *  sport-specific internal navigation. */
   routeBasePath?: string;
