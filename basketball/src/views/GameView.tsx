@@ -24,6 +24,7 @@ import { GameView as SharedGameView } from "@shared/views/GameView";
 import type { GameAdapter } from "@shared/views/GameAdapter";
 import type { WinTierDisplay, LegendData } from "@shared/components/GameBar";
 import type { TierThreshold as GaugeTierThreshold } from "@shared/components/TierGauge";
+import { BASKETBALL_FTUE_CONFIG } from "@shared/components/CoachLayer";
 import { sportAdapter } from "../adapters/SportAdapter";
 import {
   dealInitialRoster,
@@ -144,7 +145,7 @@ export default function GameView() {
     CardComponent: AthleteCard as GameAdapter["CardComponent"],
     rosterGridColumns: 3,
     resetAllOverlays,
-    // ftueTextConfig — basketball uses CoachLayer's built-in defaults.
+    ftueTextConfig: BASKETBALL_FTUE_CONFIG,
     // PostHandSheet — basketball does not surface this overlay.
     audioBedSrc: "/audio/basketball/crowd/bed-murmur.mp3",
   }), []);

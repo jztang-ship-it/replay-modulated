@@ -105,9 +105,11 @@ export interface GameAdapter {
   resetAllOverlays: () => void;
 
   // ── FTUE ───────────────────────────────────────────────────────────
-  /** Sport-specific coach text + bubble config. Optional — when omitted,
-   *  CoachLayer falls back to its built-in defaults (basketball today). */
-  ftueTextConfig?: FTUETextConfig;
+  /** Sport-specific coach text + bubble config. REQUIRED — every sport
+   *  must be explicit about its FTUE copy (no silent fallback to
+   *  basketball). Basketball imports BASKETBALL_FTUE_CONFIG from
+   *  @shared/components/CoachLayer; baseball builds its own literal. */
+  ftueTextConfig: FTUETextConfig;
 
   // ── Optional sport-specific overlays ───────────────────────────────
   /** Post-hand recap sheet — baseball-only today; basketball passes

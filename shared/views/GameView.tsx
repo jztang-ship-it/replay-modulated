@@ -338,11 +338,11 @@ export function GameView({ adapter }: Props) {
 
   const CAP_MAX = sportAdapter.salaryCap;
   const ROSTER_SIZE = sportAdapter.rosterSize;
-  // Derive the FTUE anchor card ID from the sport's text config; basketball's
-  // CoachLayer defaults to "ftue-tatum" if not provided. Baseball passes
-  // "ftue-ohtani". All other places that reference the anchor flow through
+  // Derive the FTUE anchor card ID from the sport's text config (basketball
+  // passes "ftue-tatum" via BASKETBALL_FTUE_CONFIG; baseball passes
+  // "ftue-ohtani"). All other places that reference the anchor flow through
   // this constant so the FTUE flow stays sport-agnostic.
-  const FTUE_ANCHOR_ID = ftueTextConfig?.anchorCardId ?? "ftue-tatum";
+  const FTUE_ANCHOR_ID = ftueTextConfig.anchorCardId;
 
   // ── Shared game state ─────────────────────────────────────────────
   const sharedAdapter = useMemo(() => ({
