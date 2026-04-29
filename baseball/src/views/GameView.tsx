@@ -28,6 +28,7 @@ import { GameView as SharedGameView } from "@shared/views/GameView";
 import type { GameAdapter } from "@shared/views/GameAdapter";
 import type { SportAdapter as SharedSportAdapter } from "@shared/adapters/SportAdapter";
 import type { WinTierDisplay, LegendData } from "@shared/components/GameBar";
+import type { TierThreshold as GaugeTierThreshold } from "@shared/components/TierGauge";
 import type { FTUETextConfig } from "@shared/components/CoachLayer";
 import { tierFromSalary } from "@shared/views/_gameViewHelpers";
 import { sportAdapter } from "../adapters/SportAdapter";
@@ -51,7 +52,7 @@ import {
 } from "../utils/payoutLogic";
 
 // Tier gauge thresholds — baseball-specific FP cutoffs.
-const GAUGE_THRESHOLDS = [
+const GAUGE_THRESHOLDS: GaugeTierThreshold[] = [
   { tier: "ROOKIE",   minFP: 170 },
   { tier: "STARTER",  minFP: 200 },
   { tier: "ALL_STAR", minFP: 230 },
@@ -135,9 +136,9 @@ const BASEBALL_FTUE_CONFIG: FTUETextConfig = {
     "ftue-twilliams": "T. Williams gave you 5 IP, 4 K, 2 ER — 25 FP. Decent partial start from a $22 arm.",
   },
   anchorRevealText: "Ohtani was electric tonight. 🔥 2 hits, 1 HR, 2 RBI, scored a run. 79 FP — Going Yard badge ⚾ stacks on top. That's why you held him.",
-  idleText: "Real stats. Real history. Your fantasy result instantly. Hit DEAL to get started." as any,
+  idleText: "Real stats. Real history. Your fantasy result instantly. Hit DEAL to get started.",
   holdIntroText: "5 players — 3 batters and 2 pitchers, $180 cap. Fantasy Points come from real stats — hits, home runs, strikeouts. Who do we keep?",
-  holdAnchorText: "Ohtani is your $54 RED anchor — top batter in baseball. Tap his card to hold, then hit DRAW and tap each replacement to see your hand." as any,
+  holdAnchorText: "Ohtani is your $54 RED anchor — top batter in baseball. Tap his card to hold, then hit DRAW and tap each replacement to see your hand.",
   nearMissText: "So close — only 1 FP from the All-Star win. One more hit from J. Turner and we'd be celebrating a 7x score. ⚾",
   anchorFlipHintText: "Ohtani carried this hand — 79 FP is monster. Flip his card to see the full stat line. 🔥",
   anchorStatText: "2 H, 1 HR, 1 R, 2 RBI vs San Francisco. 71 base FP + 8 Going Yard badge ⚾ = 79. Badges are real. ✅",
@@ -147,13 +148,14 @@ const BASEBALL_FTUE_CONFIG: FTUETextConfig = {
 export default function GameView() {
   const adapter: GameAdapter = useMemo(() => ({
     sportKey: "baseball",
-    // Baseball's SportAdapter is structurally a superset (P/BAT slot logic,
-    // role-aware log filter) but doesn't extend the shared base class, so
-    // some methods (displayName, positions, economyConfig, isValidPosition,
-    // getHeadshotUrl, getPositionLimits, isValidRoster) are absent. Shared
-    // GameView only reads sportKey + salaryCap + rosterSize on this object,
-    // so the cast is safe in practice. Tightening (Task 7 cleanup candidate)
-    // would mean baseball's SportAdapter extending shared.SportAdapter.
+    // Baseball's SportAdapter is structurally a near-superset of shared
+    // SportAdapter (same getters, role-aware methods, etc.) but its
+    // BaseballSportConfigType literal diverges from shared SportConfigShape
+    // in ways that require config-shape rework (e.g. badges split into
+    // { hitters, pitchers } rather than a flat array). Shared GameView only
+    // reads sportKey + salaryCap + rosterSize from this object, so the
+    // cast is safe in practice. Aligning the config types is a multi-file
+    // change deferred to a follow-up cleanup PR.
     sportAdapter: sportAdapter as unknown as SharedSportAdapter,
     localStorageNamespace: "",
     leaderboardScope: sportAdapter.sportKey as "baseball",
@@ -169,10 +171,11 @@ export default function GameView() {
     dealInitialRoster,
     redrawRoster,
     resolveRoster,
-    // ftueRoster fns return GeneratedCard (engine output, photoCode: string|number)
-    // — adapter contract is PlayerCard (photoCode: string). Cast is structural;
-    // shared GameView treats the result as PlayerCard. Task 7 cleanup
-    // candidate: align baseball's GeneratedCard.photoCode to string.
+    // ftueRoster fns return GeneratedCard (engine output, gameInfo.homeAway: string)
+    // — adapter contract is PlayerCard (gameInfo.homeAway: "H" | "A"). Cast is
+    // structural; shared GameView treats the result as PlayerCard. Narrowing
+    // GeneratedCard.gameInfo.homeAway to "H" | "A" breaks resolveEngine which
+    // assigns the empty string when log meta is missing. Deferred.
     ftueDealRoster: dealFTUERoster as GameAdapter["ftueDealRoster"],
     ftueRedrawRoster: redrawFTUERoster as GameAdapter["ftueRedrawRoster"],
     ftueResolveRoster: resolveFTUERoster as GameAdapter["ftueResolveRoster"],
@@ -184,8 +187,8 @@ export default function GameView() {
     CardComponent: BaseballCard as GameAdapter["CardComponent"],
     rosterGridColumns: 6,
     // Baseball's "dice 5" layout: row 1 = 3 cards (slots 0-2), row 2 = 2
-    // cards centered (slots 3-4). Pre-cutover this lived in
-    // baseball/src/components/RosterGrid.tsx as a per-sport wrapper.
+    // cards centered (slots 3-4). Lifted from the per-sport RosterGrid
+    // wrapper in Task 6; the original wrapper file has been deleted.
     rosterGridLayout: {
       className: "bb-dice5",
       css: `
@@ -204,8 +207,6 @@ export default function GameView() {
       `,
     },
     resetAllOverlays,
-    ftueRoster: [],
-    ftueDrawnRoster: [],
     ftueTextConfig: BASEBALL_FTUE_CONFIG,
     // PostHandSheet — baseball does not surface this overlay (legacy disabled).
     audioBedSrc: null,

@@ -20,6 +20,7 @@ import type {
   WinTierMap,
 } from "@shared/utils/payoutLogic";
 import type { WinTierDisplay, LegendData } from "@shared/components/GameBar";
+import type { TierThreshold as GaugeTierThreshold } from "@shared/components/TierGauge";
 import type { DailyBonusPlayer } from "@shared/utils/dailyBonus";
 
 export interface GameAdapter {
@@ -41,7 +42,7 @@ export interface GameAdapter {
   routeBasePath?: string;
 
   // ── Tier system (real data divergence) ─────────────────────────────
-  gaugeThresholds: { tier: string; minFP: number }[];
+  gaugeThresholds: GaugeTierThreshold[];
   tierFromSalary: (salary: number) => string;
 
   // ── Win-tier math (per-sport, passed in via adapter so shared reveal
@@ -104,14 +105,11 @@ export interface GameAdapter {
   resetAllOverlays: () => void;
 
   // ── FTUE ───────────────────────────────────────────────────────────
-  /** Static FTUE roster snapshot (legacy field — currently unused by
-   *  shared GameView, kept for adapter compatibility). */
-  ftueRoster: PlayerCard[];
-  /** Static FTUE drawn-roster snapshot (ditto). */
-  ftueDrawnRoster: PlayerCard[];
-  /** Sport-specific coach text + bubble config. Optional — when omitted,
-   *  CoachLayer falls back to its built-in defaults (basketball today). */
-  ftueTextConfig?: FTUETextConfig;
+  /** Sport-specific coach text + bubble config. REQUIRED — every sport
+   *  must be explicit about its FTUE copy (no silent fallback to
+   *  basketball). Basketball imports BASKETBALL_FTUE_CONFIG from
+   *  @shared/components/CoachLayer; baseball builds its own literal. */
+  ftueTextConfig: FTUETextConfig;
 
   // ── Optional sport-specific overlays ───────────────────────────────
   /** Post-hand recap sheet — baseball-only today; basketball passes

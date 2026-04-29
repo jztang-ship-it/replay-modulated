@@ -127,7 +127,7 @@ export interface PlayerEval {
   team: string;
   season: string;
   position: string;
-  photoCode?: string | number;
+  photoCode?: string;
   projectedFp: number;
   salary: number;
   tier: TierColor;
@@ -164,7 +164,7 @@ export interface SportConfigShape {
   displayName?: string;
   positions: string[];
   positionAliases?: Record<string, string>;
-  rosterSlots?: string[];
+  rosterSlots?: readonly string[];
   rosterSize?: number;
   maxPlayers?: number;
   excludeFromFlex?: string[];
@@ -179,7 +179,7 @@ export interface SportConfigShape {
   projectionWeights: Record<string, number>;
   positionProjectionWeights?: Record<string, Record<string, number>>;
   tierThresholds?: Array<{ tier: string; minSalary: number }>;
-  statCategories?: string[];
+  statCategories?: readonly string[];
   statDisplay?: Record<string, Array<{ key: string; label: string }>>;
   badges?: Array<{
     id: string;

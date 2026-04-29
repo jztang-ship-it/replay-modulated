@@ -33,7 +33,7 @@ export interface FTUETextConfig {
   nearMissText: string;
   anchorFlipHintText: string;
   anchorStatText: string;
-  finalText: string;
+  finalText: ReactNode;
 }
 
 type BubblePosition = "above" | "below" | "auto";
@@ -101,7 +101,7 @@ function ReplayChip() {
 }
 
 // Row 1 (slots 0-2): message below card. Row 2 (slots 3-5): message above card.
-const DEFAULT_CARD_POSITION: Record<string, BubblePosition> = {
+const DEFAULT_CARD_POSITION: Record<string, "above" | "below"> = {
   "ftue-tatum": "below",
   "ftue-curry": "below",
   "ftue-og": "below",
@@ -116,6 +116,26 @@ const DEFAULT_CARD_TEXTS: Record<string, string> = {
   "ftue-draymond": "Yikes! Single digits from a $43 blue card. Draymond is one of the loudest voices in the game, but his stats sure were quiet tonight. 🧊",
   "ftue-lowry": "Kyle Lowry with the Pure badge — 5 assists, zero turnovers. 18.9 FP from a $20 card. Clean and efficient. 🎯",
   "ftue-reddish": "Kevin Love with only 4 pts and 5 boards against Minnesota — 12 FP. That's what the frost means, he definitely didn't help your team. 🧊",
+};
+
+/** Basketball default FTUE copy. Exported so the basketball wrapper can pass
+ *  it explicitly (sport adapter contract requires every sport to be explicit
+ *  about FTUE config — no silent fallback to basketball). */
+export const BASKETBALL_FTUE_CONFIG: FTUETextConfig = {
+  anchorCardId: "ftue-tatum",
+  rosterCount: 6,
+  salaryCap: 250,
+  sportLabel: "basketball",
+  cardPositions: DEFAULT_CARD_POSITION,
+  cardTexts: DEFAULT_CARD_TEXTS,
+  anchorRevealText: "Tatum was the man tonight.",
+  idleText: <span>Real stats. Real history. Your fantasy result instantly. Hit <DealChip /> to get started.</span>,
+  holdIntroText: "Six players. $250 cap. Fantasy points come from real stats — pts, rbs, asts. Who do we keep?",
+  holdAnchorText: <span>Tatum is your $66 anchor and your most dependable player. Tap him to hold, then hit <DrawChip /> and tap each card to see your replacements.</span>,
+  nearMissText: "So close it hurts, 1 FP away from the ALL-STAR level 3x win. Dray was the weaklink tonight, one more rebound or assist would have pushed us over.",
+  anchorFlipHintText: "Tatum on the other hand wore his super man cape, 92 FP(!) is nothing short of extraordinary. Flip his card to see what happened.",
+  anchorStatText: "A 43pt, 15 rb, triple double against Chicago on the 21st of Dec in 2024, what's most important is he unlocked 6 badges for an extra 20 FP bonus. Bonuses = winning.",
+  finalText: <span>Every game log is drawn from real moments in history—relive the journey of basketball at your fingertips. Hit <ReplayChip /> to begin.</span>,
 };
 
 type OnDismiss = () => void;

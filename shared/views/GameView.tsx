@@ -111,16 +111,6 @@ const BASE_BET = 10;
 
 const NEAR_MISS_FP = 5;
 
-// ── Tier flip display helpers ──────────────────────────────────────
-function deriveTierFromFp(fp: number): string {
-  if (fp >= 255) return "LEGEND";
-  if (fp >= 235) return "MVP";
-  if (fp >= 225) return "ALL_STAR";
-  if (fp >= 205) return "STARTER";
-  if (fp >= 190) return "ROOKIE";
-  return "BUST";
-}
-
 const TIER_IMAGE_MAP: Record<string, string> = {
   BUST: "bust1.png",
   ROOKIE: "Rookie2.png",
@@ -338,11 +328,11 @@ export function GameView({ adapter }: Props) {
 
   const CAP_MAX = sportAdapter.salaryCap;
   const ROSTER_SIZE = sportAdapter.rosterSize;
-  // Derive the FTUE anchor card ID from the sport's text config; basketball's
-  // CoachLayer defaults to "ftue-tatum" if not provided. Baseball passes
-  // "ftue-ohtani". All other places that reference the anchor flow through
+  // Derive the FTUE anchor card ID from the sport's text config (basketball
+  // passes "ftue-tatum" via BASKETBALL_FTUE_CONFIG; baseball passes
+  // "ftue-ohtani"). All other places that reference the anchor flow through
   // this constant so the FTUE flow stays sport-agnostic.
-  const FTUE_ANCHOR_ID = ftueTextConfig?.anchorCardId ?? "ftue-tatum";
+  const FTUE_ANCHOR_ID = ftueTextConfig.anchorCardId;
 
   // ── Shared game state ─────────────────────────────────────────────
   const sharedAdapter = useMemo(() => ({
@@ -525,7 +515,7 @@ export function GameView({ adapter }: Props) {
     const lastChadHand = parseInt(localStorage.getItem("rm_chad_last_hand") ?? "0", 10);
     if (handCount - lastChadHand < 2 && handCount > 1) return;
 
-    type ChadCheck = { key: string; topic: Parameters<typeof chadMessage>[0]; condition: boolean; resultsOnly?: boolean };
+    type ChadCheck = { key: string; topic: Parameters<typeof chadMessage>[0]; condition: boolean };
     const checks: ChadCheck[] = [
       { key: "rm_usher_lb_explainer", topic: "leaderboard_explainer", condition: handCount >= 3 },
       { key: "rm_usher_mvp_thanks", topic: "mvp_thanks", condition: handCount >= 5 },
@@ -576,35 +566,13 @@ export function GameView({ adapter }: Props) {
   const ftueLastHandFpRef = useRef(0);
   const heldRevealResumeRef = useRef<(() => void) | null>(null);
   const completedCardsRef = useRef<Set<string>>(new Set());
-  const lastTierFlipTimeRef = useRef(0);
-  void lastTierFlipTimeRef; // pre-existing dead ref carried over from legacy file
   const ftueTierSlamPlayedRef = useRef(false);
   const bonusPoolRef = useRef<number>(1000);
 
-  // Near-miss copy
-  const nearMissCopy = useMemo(() => {
-    const copies: Partial<Record<string, string[]>> = {
-      BUST: ["So close.", "Right there.", "Next hand."],
-      ROOKIE: ["Just a few more FP.", "Run it back.", "So close."],
-      STARTER: ["Right on the edge.", "Almost there.", "Run it back."],
-      ALL_STAR: ["One strong hand away.", "So close.", "Push harder."],
-    };
-    if (!winTier) return null;
-    const opts = copies[winTier];
-    if (!opts) return null;
-    return opts[Math.floor(Math.random() * opts.length)];
-  }, [winTier]); // eslint-disable-line
-  void nearMissCopy;
-
-  // 3rd hand nudge: show leaderboard intro after hand 3 (when returning to IDLE)
-  useEffect(() => {
-    if (isFTUE || gameState !== "IDLE") return;
-    if (handCount === 3 && localStorage.getItem("replaymod_lb_nudge_shown") !== "1") {
-      localStorage.setItem("replaymod_lb_nudge_shown", "1");
-      // Note: setPreGameMsg was a dead reference in basketball legacy file.
-      // No-op here — leaderboard intro is delivered via chadMessage path.
-    }
-  }, [gameState, isFTUE, handCount]); // eslint-disable-line
+  // (dead effect removed in Task 7: it wrote `replaymod_lb_nudge_shown`
+  // but no consumer ever read that key — leaderboard intro is delivered
+  // via the chadMessage path above. Original setPreGameMsg call site
+  // had been removed in the lift.)
 
   // ── Audio phase sync ──────────────────────────────────────────────
   useEffect(() => {
@@ -660,10 +628,7 @@ export function GameView({ adapter }: Props) {
     recordHandPlayed,
     recordHandWon,
     recordHandLost,
-    // useReveal types tier as string | null; useEngagement narrows to
-    // WinTierKey. The widening cast is harmless since useReveal's call
-    // path only ever produces real tier strings (BUST included).
-    recordTierReached: recordTierReached as (tier: string | null) => void,
+    recordTierReached,
     recordStreakWin,
     recordStreakBust,
     recordBonusPlayerUsed,
@@ -693,8 +658,6 @@ export function GameView({ adapter }: Props) {
 
   function handleCardRevealStart(cId: string, tierArg: string, shakeType?: string | null) {
     const card = rosterRef.current.find(c => cId === ((c as any).cardId ?? (c as any).basePlayerId));
-    const isHeldCard = !!(card as any)?.wasHeld;
-    void isHeldCard;
     const heldCards = rosterRef.current.filter((c: any) => c.wasHeld).sort((a: any, b: any) => (a.salary ?? 0) - (b.salary ?? 0));
     const trueAnchorId = heldCards.length > 0
       ? ((heldCards[heldCards.length - 1] as any).cardId ?? (heldCards[heldCards.length - 1] as any).basePlayerId)
@@ -775,10 +738,6 @@ export function GameView({ adapter }: Props) {
   }, [gameState]);
 
   const isPreRevealFooter = gameState === "HOLD" && !isFTUE;
-  const showGaugeInZone3 = true;
-  void showGaugeInZone3;
-  const isPostReveal = (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier != null;
-  void isPostReveal;
 
   const CELEBRATION_TIER_COLORS: Record<string, { color: string; glow: string }> = {
     LEGEND: { color: "#EF4444", glow: "#EF444499" },
@@ -847,20 +806,6 @@ export function GameView({ adapter }: Props) {
     return Math.min(100, Math.round((totalFp / maxPossible) * 100));
   }, [gameState, roster, totalFp, computeRosterCeiling]);
 
-  const rosterTotalBonus = useMemo(() => {
-    if (gameState === "IDLE" || gameState === "DEALING") return 0;
-    const isPostRev = gameState === "RESULTS" || gameState === "WIN_CELEBRATION";
-    return roster.reduce((sum, c: any) => {
-      const cId = String(c?.cardId ?? c?.basePlayerId ?? "");
-      const isRevealed = isPostRev || getVisibleFp(cId) != null;
-      if (!isRevealed) return sum;
-      const daily = Number(c?.dailyBonus ?? 0) || 0;
-      const badges = Array.isArray(c?.achievements) ? c.achievements.reduce((s: number, b: any) => s + (Number(b?.fp) || 0), 0) : 0;
-      return sum + daily + badges;
-    }, 0);
-  }, [gameState, roster, getVisibleFp]);
-  void rosterTotalBonus;
-
   // Top Games
   const topGameInfo = useMemo(() => {
     const commentaryRoster = roster.map((c: any) => ({
@@ -891,6 +836,14 @@ export function GameView({ adapter }: Props) {
   const gaugeTotalFp = displayFp;
   latestGaugeFpRef.current = gaugeTotalFp;
 
+  // postRevealCopy: cache-and-reset pattern.
+  // The useMemo computes once when conditions first allow it (RESULTS/
+  // WIN_CELEBRATION + winTier + springSettled), then stashes the result
+  // in postRevealCopyRef so subsequent renders return the SAME copy
+  // (preventing mid-results re-rolls of the random commentary lines).
+  // The ref is reset to null on phase changes back to IDLE so the next
+  // hand picks fresh copy. If you change the deps array below or the
+  // ref-reset point, double-check both: stale-copy bugs are subtle.
   const postRevealCopyRef = useRef<ReturnType<typeof selectCommentary> | null>(null);
   const postRevealCopy = useMemo(() => {
     if (postRevealCopyRef.current) return postRevealCopyRef.current;
@@ -899,7 +852,7 @@ export function GameView({ adapter }: Props) {
       return null;
     }
     const fp = lockedGaugeFpRef.current ?? displayFp;
-    const gaugeSnap = computeGaugeState(fp, gaugeThresholds as any, winTier, 8);
+    const gaugeSnap = computeGaugeState(fp, gaugeThresholds, winTier, 8);
 
     const copyInput = {
       totalFp: fp,
@@ -949,9 +902,6 @@ export function GameView({ adapter }: Props) {
     return copy;
   }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct]); // eslint-disable-line
 
-  const activeTierForDisplay = winTier ?? deriveTierFromFp(totalFp);
-  void activeTierForDisplay;
-
   const regularFinalGaugeKick = false;
 
   // Tier result phase
@@ -963,14 +913,14 @@ export function GameView({ adapter }: Props) {
       nearMissChoreTimersRef.current = [];
       setNearMissTeasing(false);
       setTierResultPhase(1);
-      const gaugeSnap = computeGaugeState(totalFp, gaugeThresholds as any, winTier, NEAR_MISS_FP);
+      const gaugeSnap = computeGaugeState(totalFp, gaugeThresholds, winTier, NEAR_MISS_FP);
       if (gaugeSnap.isNearMiss && gaugeSnap.nextTier != null) {
-        const t1 = setTimeout(() => setNearMissTeasing(true), 400) as unknown as number;
-        const t2 = setTimeout(() => setNearMissTeasing(false), 1200) as unknown as number;
-        const t3 = setTimeout(() => setTierResultPhase(2), 1800) as unknown as number;
+        const t1 = setTimeout(() => setNearMissTeasing(true), 400);
+        const t2 = setTimeout(() => setNearMissTeasing(false), 1200);
+        const t3 = setTimeout(() => setTierResultPhase(2), 1800);
         nearMissChoreTimersRef.current = [t1, t2, t3];
       } else {
-        const t = setTimeout(() => setTierResultPhase(2), 1800) as unknown as number;
+        const t = setTimeout(() => setTierResultPhase(2), 1800);
         nearMissChoreTimersRef.current = [t];
       }
       return () => { nearMissChoreTimersRef.current.forEach(clearTimeout); };
@@ -978,17 +928,6 @@ export function GameView({ adapter }: Props) {
   }, [gameState, winTier, isFTUE]); // eslint-disable-line
 
   const tierFlipTimersRef = useRef<number[]>([]);
-
-  const handleTierCross = useCallback((tier: string) => {
-    if (isFTUE) return;
-    if (springHasFiredRef.current) return;
-    if (tier === prevRevealTierRef.current) return;
-    soundManager.playTierCross(tier);
-    prevRevealTierRef.current = tier;
-    setDisplayTier(tier);
-    setTierFlipKey(k => k + 1);
-  }, [isFTUE]); // eslint-disable-line
-  void handleTierCross;
 
   // Reset on state change
   useEffect(() => {
@@ -1281,8 +1220,11 @@ export function GameView({ adapter }: Props) {
     setGameState("RESULTS");
   }
 
-  const [wasSkipped, setWasSkipped] = useState(false);
-  void wasSkipped;
+  // wasSkipped state — set on REVEALING skip, read by no consumer today
+  // (kept because the setter is invoked in handleButtonClick and removing
+  // the state would orphan that side effect; a future PR could replace
+  // with a ref if we want to drop the render trigger).
+  const [, setWasSkipped] = useState(false);
 
   function handleButtonClick() {
     if (gameState === "REVEALING") {
@@ -1702,11 +1644,7 @@ export function GameView({ adapter }: Props) {
           >
             <TierGauge
               totalFp={gaugeTotalFp}
-              // gaugeThresholds is typed { tier: string; minFP: number }[] in
-              // GameAdapter to allow LEGEND (and other tiers TierGauge's
-              // narrower GaugeTier union doesn't include yet). Cast is
-              // structural — TierGauge only reads .tier and .minFP.
-              thresholds={gaugeThresholds as any}
+              thresholds={gaugeThresholds}
               winTier={undefined}
               lastCardFp={lastCardFp}
               isSkip={false}
@@ -2033,7 +1971,7 @@ export function GameView({ adapter }: Props) {
 
       {/* PostHandSheet — optional, sport-specific overlay */}
       {PostHandSheet && !isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && springSettled && (() => {
-        const gaugeSnap = computeGaugeState(displayFp, gaugeThresholds as any, winTier, NEAR_MISS_FP);
+        const gaugeSnap = computeGaugeState(displayFp, gaugeThresholds, winTier, NEAR_MISS_FP);
         return (
           <PostHandSheet
             totalFp={displayFp}

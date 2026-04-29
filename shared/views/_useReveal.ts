@@ -93,7 +93,7 @@ export interface UseRevealArgs {
   /** FTUE anchor card ID (basketball: "ftue-tatum"; baseball: "ftue-ohtani").
    *  Used by onCardComplete to start gauge oscillation when the anchor's
    *  stamp lands. */
-  ftueAnchorId?: string;
+  ftueAnchorId: string;
   /** Current bet (BASE_BET * betMultiplier in basketball). */
   currentBet: number;
   /** Bet multiplier (passed separately for engagement.recordMultiplierUsed). */
@@ -180,7 +180,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     adapter, state,
     springTiers = DEFAULT_SPRING_TIERS,
     calculateWinTier, calculatePayoutWithStreak,
-    ftueAnchorId = "ftue-tatum",
+    ftueAnchorId,
     currentBet, betMultiplier,
     rosterRef,
     isFTUE, ftueLastHandFpRef,

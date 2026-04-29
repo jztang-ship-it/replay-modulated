@@ -4,7 +4,8 @@
  * "Slot-like" economy — calibrated via 10k-hand simulator with
  * salary-derived tiers. Targets ~48% bust, ~10% house edge pre-streak (~7-8% with streaks).
  *
- * MUST stay in sync with WIN_TIERS in GameBar.tsx and legend modal.
+ * MUST stay in sync with WIN_TIERS in basketball/src/views/GameView.tsx
+ * (lifted from per-sport GameBar.tsx in Task 6).
  */
 import {
   calculateWinTier as _calculateWinTier,

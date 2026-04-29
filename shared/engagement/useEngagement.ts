@@ -106,7 +106,7 @@ export interface EngagementActions {
   recordStreakWin:          () => void;
   recordStreakBust:         () => void;
   recordBonusPlayerUsed:   (count: number) => void;
-  recordTierReached:       (tier: WinTierKey) => void;
+  recordTierReached:       (tier: string | null) => void;
   recordMultiplierUsed:    (mult: number) => void;
   recordLeaderboardViewed: () => void;
 }
@@ -473,22 +473,27 @@ export function useEngagement(): EngagementState & EngagementActions {
     });
   }, []);
 
-  const recordTierReached = useCallback((tier: WinTierKey) => {
+  const recordTierReached = useCallback((tier: string | null) => {
+    // Accept the wider `string | null` shape to match useReveal's signature
+    // (baseball can return null for non-resolved hands). Bail on anything
+    // that isn't a known WinTierKey; null/unknown values are no-ops.
+    if (tier == null || !(tier in TIER_RANK)) return;
+    const winTier = tier as WinTierKey;
     setDailyProgress(prev => {
-      if (!isHigherTier(tier, prev.topTierToday)) return prev;
-      const updated = { ...prev, topTierToday: tier };
+      if (!isHigherTier(winTier, prev.topTierToday)) return prev;
+      const updated = { ...prev, topTierToday: winTier };
       save(KEYS.taskProgress, updated);
       return updated;
     });
     setWeeklyProgress(prev => {
-      if (!isHigherTier(tier, prev.topTierWeek)) return prev;
-      const updated = { ...prev, topTierWeek: tier };
+      if (!isHigherTier(winTier, prev.topTierWeek)) return prev;
+      const updated = { ...prev, topTierWeek: winTier };
       save(KEYS.weekProgress, updated);
       return updated;
     });
     setLifetimeProgress(prev => {
-      if (!isHigherTier(tier, prev.topTierLifetime)) return prev;
-      const updated = { ...prev, topTierLifetime: tier };
+      if (!isHigherTier(winTier, prev.topTierLifetime)) return prev;
+      const updated = { ...prev, topTierLifetime: winTier };
       save(KEYS.lifeProgress, updated);
       return updated;
     });

@@ -6,8 +6,7 @@
  * 20k-hand random-play sim: 46.6/20.9/15.0/9.3/6.3/2.0.
  * MUST stay in sync with:
  *   - baseball/src/adapters/baseballConfig.ts winCondition.thresholds
- *   - baseball/src/views/GameView.tsx GAUGE_THRESHOLDS
- *   - baseball/src/components/GameBar.tsx WIN_TIERS / LEGEND.payoutRows
+ *   - baseball/src/views/GameView.tsx GAUGE_THRESHOLDS + WIN_TIERS + LEGEND_DATA
  */
 import {
   calculateWinTier as _calculateWinTier,

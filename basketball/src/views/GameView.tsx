@@ -23,6 +23,8 @@ import { useMemo } from "react";
 import { GameView as SharedGameView } from "@shared/views/GameView";
 import type { GameAdapter } from "@shared/views/GameAdapter";
 import type { WinTierDisplay, LegendData } from "@shared/components/GameBar";
+import type { TierThreshold as GaugeTierThreshold } from "@shared/components/TierGauge";
+import { BASKETBALL_FTUE_CONFIG } from "@shared/components/CoachLayer";
 import { sportAdapter } from "../adapters/SportAdapter";
 import {
   dealInitialRoster,
@@ -45,7 +47,7 @@ import {
 } from "../utils/payoutLogic";
 
 // Tier gauge thresholds — basketball-specific FP cutoffs.
-const GAUGE_THRESHOLDS = [
+const GAUGE_THRESHOLDS: GaugeTierThreshold[] = [
   { tier: "ROOKIE", minFP: 190 },
   { tier: "STARTER", minFP: 205 },
   { tier: "ALL_STAR", minFP: 225 },
@@ -137,15 +139,15 @@ export default function GameView() {
     ftueResolveRoster: resolveFTUERoster,
     getTodaysStars,
     computeRosterCeiling,
-    // AthleteCard's prop type is a structural superset of RosterGridCardProps
-    // (extra optional fields like topGameTier, glow*) so the cast lets us pass
-    // it where the adapter expects exactly the shared shape.
+    // AthleteCard's Props type marks several fields optional (locked,
+    // isMvp, flipped, etc.) that RosterGridCardProps requires. Functionally
+    // the wider/looser AthleteCard shape can absorb any RosterGridCardProps
+    // call site, but TypeScript treats the optional/required asymmetry as
+    // an incompatible signature. Cast pins it to the contract.
     CardComponent: AthleteCard as GameAdapter["CardComponent"],
     rosterGridColumns: 3,
     resetAllOverlays,
-    ftueRoster: [],
-    ftueDrawnRoster: [],
-    // ftueTextConfig — basketball uses CoachLayer's built-in defaults.
+    ftueTextConfig: BASKETBALL_FTUE_CONFIG,
     // PostHandSheet — basketball does not surface this overlay.
     audioBedSrc: "/audio/basketball/crowd/bed-murmur.mp3",
   }), []);

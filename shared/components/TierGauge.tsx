@@ -33,7 +33,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
-export type GaugeTier = "MVP" | "ALL_STAR" | "STARTER" | "ROOKIE" | "BUST" | "NONE";
+export type GaugeTier = "LEGEND" | "MVP" | "ALL_STAR" | "STARTER" | "ROOKIE" | "BUST" | "NONE";
 export interface TierThreshold { tier: GaugeTier; minFP: number; }
 
 interface TierGaugeProps {
