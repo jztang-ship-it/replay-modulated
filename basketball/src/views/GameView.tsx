@@ -144,8 +144,6 @@ export default function GameView() {
     CardComponent: AthleteCard as GameAdapter["CardComponent"],
     rosterGridColumns: 3,
     resetAllOverlays,
-    ftueRoster: [],
-    ftueDrawnRoster: [],
     // ftueTextConfig — basketball uses CoachLayer's built-in defaults.
     // PostHandSheet — basketball does not surface this overlay.
     audioBedSrc: "/audio/basketball/crowd/bed-murmur.mp3",

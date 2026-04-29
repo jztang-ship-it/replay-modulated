@@ -105,11 +105,6 @@ export interface GameAdapter {
   resetAllOverlays: () => void;
 
   // ── FTUE ───────────────────────────────────────────────────────────
-  /** Static FTUE roster snapshot (legacy field — currently unused by
-   *  shared GameView, kept for adapter compatibility). */
-  ftueRoster: PlayerCard[];
-  /** Static FTUE drawn-roster snapshot (ditto). */
-  ftueDrawnRoster: PlayerCard[];
   /** Sport-specific coach text + bubble config. Optional — when omitted,
    *  CoachLayer falls back to its built-in defaults (basketball today). */
   ftueTextConfig?: FTUETextConfig;
