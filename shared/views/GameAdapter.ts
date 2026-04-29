@@ -91,8 +91,14 @@ export interface GameAdapter {
   /** The roster card component (basketball: AthleteCard, baseball: BaseballCard).
    *  Receives the shared RosterGridCardProps shape. */
   CardComponent: ComponentType<RosterGridCardProps>;
-  /** Number of grid columns for RosterGrid (basketball=3, worldcup=2). */
+  /** Number of grid columns for RosterGrid (basketball=3, worldcup=2,
+   *  baseball=6 with custom .bb-dice5 layout — see rosterGridLayoutCss). */
   rosterGridColumns: number;
+  /** Optional sport-specific CSS rules + class wrapping the RosterGrid.
+   *  Baseball uses this to render its 2-row 5-card "dice 5" layout.
+   *  Basketball/worldcup omit. Shape:
+   *    { className: "bb-dice5", css: "..."}                        */
+  rosterGridLayout?: { className: string; css: string };
   /** Resets all card overlay state (per-sport AthleteCard module-local
    *  state). Called when starting a new hand. */
   resetAllOverlays: () => void;

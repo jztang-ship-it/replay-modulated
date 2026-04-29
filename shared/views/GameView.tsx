@@ -55,6 +55,7 @@ import { useSharedGameState } from "./_useSharedGameState";
 import { useReveal } from "./_useReveal";
 import type { GameAdapter } from "./GameAdapter";
 import type { GamePhase, PlayerCard } from "@shared/types";
+import type { WinTierKey } from "@shared/utils/payoutLogic";
 import {
   RosterGrid as SharedRosterGrid,
   type RosterGridCardProps,
@@ -329,6 +330,7 @@ export function GameView({ adapter }: Props) {
     computeRosterCeiling,
     CardComponent,
     rosterGridColumns,
+    rosterGridLayout,
     resetAllOverlays,
     ftueTextConfig,
     PostHandSheet,
@@ -336,6 +338,11 @@ export function GameView({ adapter }: Props) {
 
   const CAP_MAX = sportAdapter.salaryCap;
   const ROSTER_SIZE = sportAdapter.rosterSize;
+  // Derive the FTUE anchor card ID from the sport's text config; basketball's
+  // CoachLayer defaults to "ftue-tatum" if not provided. Baseball passes
+  // "ftue-ohtani". All other places that reference the anchor flow through
+  // this constant so the FTUE flow stays sport-agnostic.
+  const FTUE_ANCHOR_ID = ftueTextConfig?.anchorCardId ?? "ftue-tatum";
 
   // ── Shared game state ─────────────────────────────────────────────
   const sharedAdapter = useMemo(() => ({
@@ -632,8 +639,17 @@ export function GameView({ adapter }: Props) {
   const reveal = useReveal({
     adapter: sharedAdapter,
     state: shared,
-    calculateWinTier,
-    calculatePayoutWithStreak,
+    // Adapter's calculateWinTier/calculatePayoutWithStreak are typed
+    // (totalFp) => WinTierKey (non-null); useReveal's contract widens to
+    // WinTierKey | null for forward compatibility. The cast is safe — both
+    // sport implementations always return a concrete tier.
+    calculateWinTier: calculateWinTier as (totalFp: number) => WinTierKey | null,
+    calculatePayoutWithStreak: calculatePayoutWithStreak as (
+      tier: WinTierKey | null,
+      bet: number,
+      streak: number,
+    ) => number,
+    ftueAnchorId: FTUE_ANCHOR_ID,
     currentBet,
     betMultiplier,
     rosterRef,
@@ -644,7 +660,10 @@ export function GameView({ adapter }: Props) {
     recordHandPlayed,
     recordHandWon,
     recordHandLost,
-    recordTierReached,
+    // useReveal types tier as string | null; useEngagement narrows to
+    // WinTierKey. The widening cast is harmless since useReveal's call
+    // path only ever produces real tier strings (BUST included).
+    recordTierReached: recordTierReached as (tier: string | null) => void,
     recordStreakWin,
     recordStreakBust,
     recordBonusPlayerUsed,
@@ -946,12 +965,12 @@ export function GameView({ adapter }: Props) {
       setTierResultPhase(1);
       const gaugeSnap = computeGaugeState(totalFp, gaugeThresholds as any, winTier, NEAR_MISS_FP);
       if (gaugeSnap.isNearMiss && gaugeSnap.nextTier != null) {
-        const t1 = setTimeout(() => setNearMissTeasing(true), 400);
-        const t2 = setTimeout(() => setNearMissTeasing(false), 1200);
-        const t3 = setTimeout(() => setTierResultPhase(2), 1800);
+        const t1 = setTimeout(() => setNearMissTeasing(true), 400) as unknown as number;
+        const t2 = setTimeout(() => setNearMissTeasing(false), 1200) as unknown as number;
+        const t3 = setTimeout(() => setTierResultPhase(2), 1800) as unknown as number;
         nearMissChoreTimersRef.current = [t1, t2, t3];
       } else {
-        const t = setTimeout(() => setTierResultPhase(2), 1800);
+        const t = setTimeout(() => setTierResultPhase(2), 1800) as unknown as number;
         nearMissChoreTimersRef.current = [t];
       }
       return () => { nearMissChoreTimersRef.current.forEach(clearTimeout); };
@@ -1036,8 +1055,8 @@ export function GameView({ adapter }: Props) {
   // ── Handlers ──────────────────────────────────────────────────────
   function toggleLock(cardKey: string) {
     if (gameState !== "HOLD") return;
-    if (isFTUE && cardKey !== "ftue-tatum") return;
-    if (isFTUE && cardKey === "ftue-tatum" && lockedCardIds.has(cardKey)) return;
+    if (isFTUE && cardKey !== FTUE_ANCHOR_ID) return;
+    if (isFTUE && cardKey === FTUE_ANCHOR_ID && lockedCardIds.has(cardKey)) return;
     setLockedCardIds(prev => {
       const next = new Set(prev);
       if (next.has(cardKey)) {
@@ -1056,13 +1075,13 @@ export function GameView({ adapter }: Props) {
   function toggleStatsFlip(cardKey: string) {
     if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
     if (isFTUE && ftueCardsBlocked) return;
-    if (isFTUE && ftueResultsDim && cardKey !== "ftue-tatum") return;
+    if (isFTUE && ftueResultsDim && cardKey !== FTUE_ANCHOR_ID) return;
     setStatsFlippedIds(prev => {
       const next = new Set(prev);
       next.has(cardKey) ? next.delete(cardKey) : next.add(cardKey);
       return next;
     });
-    if (isFTUE && cardKey === "ftue-tatum") {
+    if (isFTUE && cardKey === FTUE_ANCHOR_ID) {
       setFtueAnchorFlipped(true);
       setFtueAnchorPulse(false);
     }
@@ -1448,53 +1467,61 @@ export function GameView({ adapter }: Props) {
             }}
           >
             <RosterGridScaleFit>
-              <SharedRosterGrid
-                roster={displayRoster}
-                phase={phase}
-                lockedIds={heldCardIds}
-                mvpId={mvpId}
-                flippedIds={flippedIds}
-                revealingIds={revealingIds}
-                noTransition={noTransition}
-                visibleFpMap={visibleFpMap}
-                canFlip={gameState === "RESULTS" || gameState === "WIN_CELEBRATION"}
-                ftueFlipTargetId={isFTUE && (ftueAnchorPulse || ftueHoldSpotlight) ? "ftue-tatum" : null}
-                flipMsMap={flipMsMap}
-                fpCountUpMsMap={fpCountUpMsMap}
-                performanceTagMap={performanceTagMap}
-                pulseMap={pulseMap}
-                shakingCardId={shakeInfo?.cardId ?? null}
-                shakeType={shakeInfo?.type ?? null}
-                cardShakeTypeMap={cardShakeTypeMap}
-                visibleBadgesMap={visibleBadgesMap}
-                glowCardId={glowState.cardId}
-                glowTier={glowState.tier}
-                glowDurationMs={glowState.durationMs}
-                isSkipping={isSkipping}
-                activeRevealCardId={activeRevealCardId}
-                onToggleLock={toggleLock}
-                onToggleFlip={toggleStatsFlip}
-                revealMode={REVEAL_MODE}
-                onTapReveal={isFTUE && ftueCardsBlocked ? undefined : tapRevealCard}
-                heldFpVisible={heldFpVisible}
-                heldRevealedIds={heldRevealedIds}
-                tappedCardIds={tappedCardIds}
-                isRevealingPhase={gameState === "REVEALING"}
-                isFTUEHoldPhase={isFTUE && gameState === "HOLD"}
-                isFTUEDrawingPhase={isFTUE && gameState === "DRAWING"}
-                isFTUE={isFTUE && (gameState === "HOLD" || gameState === "DRAWING")}
-                ftueLockedSlot={
-                  (isFTUE && ftueResultsDim)
-                    ? 2
-                    : (isFTUE && (ftueHoldSpotlight || heldCardIds.has("ftue-tatum")) && gameState === "HOLD")
-                      ? 2
-                      : null
-                }
-                topGameStarBasePlayerId={topGameInfo.star?.basePlayerId ?? null}
-                topGameTier={topGameInfo.topGame.tier as any}
-                columns={rosterGridColumns}
-                CardComponent={CardComponent as React.ComponentType<RosterGridCardProps>}
-              />
+              {rosterGridLayout && <style>{rosterGridLayout.css}</style>}
+              {(() => {
+                const grid = (
+                  <SharedRosterGrid
+                    roster={displayRoster}
+                    phase={phase}
+                    lockedIds={heldCardIds}
+                    mvpId={mvpId}
+                    flippedIds={flippedIds}
+                    revealingIds={revealingIds}
+                    noTransition={noTransition}
+                    visibleFpMap={visibleFpMap}
+                    canFlip={gameState === "RESULTS" || gameState === "WIN_CELEBRATION"}
+                    ftueFlipTargetId={isFTUE && (ftueAnchorPulse || ftueHoldSpotlight) ? FTUE_ANCHOR_ID : null}
+                    flipMsMap={flipMsMap}
+                    fpCountUpMsMap={fpCountUpMsMap}
+                    performanceTagMap={performanceTagMap}
+                    pulseMap={pulseMap}
+                    shakingCardId={shakeInfo?.cardId ?? null}
+                    shakeType={shakeInfo?.type ?? null}
+                    cardShakeTypeMap={cardShakeTypeMap}
+                    visibleBadgesMap={visibleBadgesMap}
+                    glowCardId={glowState.cardId}
+                    glowTier={glowState.tier}
+                    glowDurationMs={glowState.durationMs}
+                    isSkipping={isSkipping}
+                    activeRevealCardId={activeRevealCardId}
+                    onToggleLock={toggleLock}
+                    onToggleFlip={toggleStatsFlip}
+                    revealMode={REVEAL_MODE}
+                    onTapReveal={isFTUE && ftueCardsBlocked ? undefined : tapRevealCard}
+                    heldFpVisible={heldFpVisible}
+                    heldRevealedIds={heldRevealedIds}
+                    tappedCardIds={tappedCardIds}
+                    isRevealingPhase={gameState === "REVEALING"}
+                    isFTUEHoldPhase={isFTUE && gameState === "HOLD"}
+                    isFTUEDrawingPhase={isFTUE && gameState === "DRAWING"}
+                    isFTUE={isFTUE && (gameState === "HOLD" || gameState === "DRAWING")}
+                    ftueLockedSlot={
+                      (isFTUE && ftueResultsDim)
+                        ? 2
+                        : (isFTUE && (ftueHoldSpotlight || heldCardIds.has(FTUE_ANCHOR_ID)) && gameState === "HOLD")
+                          ? 2
+                          : null
+                    }
+                    topGameStarBasePlayerId={topGameInfo.star?.basePlayerId ?? null}
+                    topGameTier={topGameInfo.topGame.tier as any}
+                    columns={rosterGridColumns}
+                    CardComponent={CardComponent as React.ComponentType<RosterGridCardProps>}
+                  />
+                );
+                return rosterGridLayout
+                  ? <div className={rosterGridLayout.className}>{grid}</div>
+                  : grid;
+              })()}
             </RosterGridScaleFit>
           </div>
         </div>
@@ -1675,7 +1702,11 @@ export function GameView({ adapter }: Props) {
           >
             <TierGauge
               totalFp={gaugeTotalFp}
-              thresholds={gaugeThresholds}
+              // gaugeThresholds is typed { tier: string; minFP: number }[] in
+              // GameAdapter to allow LEGEND (and other tiers TierGauge's
+              // narrower GaugeTier union doesn't include yet). Cast is
+              // structural — TierGauge only reads .tier and .minFP.
+              thresholds={gaugeThresholds as any}
               winTier={undefined}
               lastCardFp={lastCardFp}
               isSkip={false}
@@ -1763,7 +1794,12 @@ export function GameView({ adapter }: Props) {
                 ftueTextConfig={ftueTextConfig}
                 onCoachBubbleKey={(key) => {
                   setFtueCoachBubbleKey(key);
-                  if (key === "hold_tatum") setFtueHoldSpotlight(true);
+                  // CoachLayer emits "hold_<anchorSuffix>" — basketball anchor
+                  // "ftue-tatum" → "hold_tatum"; baseball "ftue-ohtani" →
+                  // "hold_ohtani". Use the derived anchor key so the side
+                  // effect fires for both sports.
+                  const holdKey = `hold_${FTUE_ANCHOR_ID.replace(/^ftue-/, "")}`;
+                  if (key === holdKey) setFtueHoldSpotlight(true);
                 }}
                 onResumeHeldReveal={() => {
                   const resume = heldRevealResumeRef.current;
@@ -1912,7 +1948,7 @@ export function GameView({ adapter }: Props) {
             }, 800);
           }
         }}
-        ftueDrawBlocked={isFTUE && gameState === "HOLD" && !heldCardIds.has("ftue-tatum")}
+        ftueDrawBlocked={isFTUE && gameState === "HOLD" && !heldCardIds.has(FTUE_ANCHOR_ID)}
         ftueHideSkip={isFTUE}
         ftueHideBalance={isFTUE && (gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD")}
         ftuePulseNearMiss={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && !ftueGaugeOscDone}
