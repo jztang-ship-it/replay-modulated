@@ -21,8 +21,13 @@
  *   - Reveal orchestration callbacks + spring runner                    Task 4
  *   - Sport-specific imports (sportAdapter, calculateWinTier, …)
  *
- * localStorage key policy: every read/write goes through nsKey(adapter, ...)
- * which prepends adapter.localStorageNamespace + "_" if it is non-empty.
+ * localStorage key policy: sport-private state goes through
+ * nsKey(adapter, ...) which prepends adapter.localStorageNamespace + "_"
+ * if it is non-empty. Cross-sport / device-global flags use raw keys and
+ * are documented inline at each call site (e.g. rm_on_board_today, which
+ * intentionally lives outside the per-sport namespace because the
+ * leaderboard board state is global to the device, not per-sport).
+ *
  * Phase 2 ships with localStorageNamespace = "" so behavior is byte-
  * identical to today; a follow-up PR will set per-sport values + add a
  * migration pass.
@@ -216,8 +221,48 @@ export function useSharedGameState(
       ]);
       const entries = [...(best.entries ?? []), ...(session.entries ?? [])];
       const onBoard = entries.some((e: any) => e.uid === uid || (sessId && e.session_id === sessId));
+      // Raw key (no nsKey): rm_on_board_today is a *device-global* flag —
+      // it tracks whether the player is currently on any leaderboard, not a
+      // sport-specific score. Using nsKey here would create stale per-sport
+      // copies that contradict each other.
       localStorage.setItem("rm_on_board_today", onBoard ? "1" : "0");
     } catch { } // Non-critical
+  }, [adapter]);
+
+  // ── Streak / hand-count persistence helpers ────────────────────────
+  // These are exposed so reveal/celebration callbacks (Task 4 and beyond)
+  // don't have to duplicate the nsKey wrapping. They keep state + storage
+  // in lockstep so the namespace flip later doesn't desync them.
+  const incrementStreak = useCallback(() => {
+    let nextValue = 0;
+    setStreak(prev => {
+      const next = prev + 1;
+      try { localStorage.setItem(nsKey(adapter, "replaymod_streak"), String(next)); } catch { }
+      nextValue = next;
+      return next;
+    });
+    return nextValue;
+  }, [adapter]);
+
+  const resetStreak = useCallback(() => {
+    setStreak(0);
+    try { localStorage.setItem(nsKey(adapter, "replaymod_streak"), "0"); } catch { }
+  }, [adapter]);
+
+  /** Reads the persisted hand count fresh from localStorage (avoids stale
+   *  closure on the React state) and writes back the incremented value.
+   *  Returns the new count. */
+  const incrementHandCount = useCallback((): number => {
+    let next = 1;
+    try {
+      next = parseInt(
+        localStorage.getItem(nsKey(adapter, "replaymod_hand_count")) ?? "0",
+        10,
+      ) + 1;
+      localStorage.setItem(nsKey(adapter, "replaymod_hand_count"), String(next));
+    } catch { }
+    setHandCount(next);
+    return next;
   }, [adapter]);
 
   const logHandToDb = useCallback(async (
@@ -311,6 +356,11 @@ export function useSharedGameState(
     submitToLeaderboard,
     checkLeaderboardRank,
     logHandToDb,
+
+    // Streak / hand-count helpers (writes go through nsKey)
+    incrementStreak,
+    resetStreak,
+    incrementHandCount,
   };
 }
 
