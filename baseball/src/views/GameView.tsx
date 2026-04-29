@@ -28,6 +28,7 @@ import { GameView as SharedGameView } from "@shared/views/GameView";
 import type { GameAdapter } from "@shared/views/GameAdapter";
 import type { SportAdapter as SharedSportAdapter } from "@shared/adapters/SportAdapter";
 import type { WinTierDisplay, LegendData } from "@shared/components/GameBar";
+import type { TierThreshold as GaugeTierThreshold } from "@shared/components/TierGauge";
 import type { FTUETextConfig } from "@shared/components/CoachLayer";
 import { tierFromSalary } from "@shared/views/_gameViewHelpers";
 import { sportAdapter } from "../adapters/SportAdapter";
@@ -51,7 +52,7 @@ import {
 } from "../utils/payoutLogic";
 
 // Tier gauge thresholds — baseball-specific FP cutoffs.
-const GAUGE_THRESHOLDS = [
+const GAUGE_THRESHOLDS: GaugeTierThreshold[] = [
   { tier: "ROOKIE",   minFP: 170 },
   { tier: "STARTER",  minFP: 200 },
   { tier: "ALL_STAR", minFP: 230 },
@@ -170,10 +171,11 @@ export default function GameView() {
     dealInitialRoster,
     redrawRoster,
     resolveRoster,
-    // ftueRoster fns return GeneratedCard (engine output, photoCode: string|number)
-    // — adapter contract is PlayerCard (photoCode: string). Cast is structural;
-    // shared GameView treats the result as PlayerCard. Task 7 cleanup
-    // candidate: align baseball's GeneratedCard.photoCode to string.
+    // ftueRoster fns return GeneratedCard (engine output, gameInfo.homeAway: string)
+    // — adapter contract is PlayerCard (gameInfo.homeAway: "H" | "A"). Cast is
+    // structural; shared GameView treats the result as PlayerCard. Narrowing
+    // GeneratedCard.gameInfo.homeAway to "H" | "A" breaks resolveEngine which
+    // assigns the empty string when log meta is missing. Deferred.
     ftueDealRoster: dealFTUERoster as GameAdapter["ftueDealRoster"],
     ftueRedrawRoster: redrawFTUERoster as GameAdapter["ftueRedrawRoster"],
     ftueResolveRoster: resolveFTUERoster as GameAdapter["ftueResolveRoster"],

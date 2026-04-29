@@ -660,10 +660,7 @@ export function GameView({ adapter }: Props) {
     recordHandPlayed,
     recordHandWon,
     recordHandLost,
-    // useReveal types tier as string | null; useEngagement narrows to
-    // WinTierKey. The widening cast is harmless since useReveal's call
-    // path only ever produces real tier strings (BUST included).
-    recordTierReached: recordTierReached as (tier: string | null) => void,
+    recordTierReached,
     recordStreakWin,
     recordStreakBust,
     recordBonusPlayerUsed,
@@ -899,7 +896,7 @@ export function GameView({ adapter }: Props) {
       return null;
     }
     const fp = lockedGaugeFpRef.current ?? displayFp;
-    const gaugeSnap = computeGaugeState(fp, gaugeThresholds as any, winTier, 8);
+    const gaugeSnap = computeGaugeState(fp, gaugeThresholds, winTier, 8);
 
     const copyInput = {
       totalFp: fp,
@@ -963,7 +960,7 @@ export function GameView({ adapter }: Props) {
       nearMissChoreTimersRef.current = [];
       setNearMissTeasing(false);
       setTierResultPhase(1);
-      const gaugeSnap = computeGaugeState(totalFp, gaugeThresholds as any, winTier, NEAR_MISS_FP);
+      const gaugeSnap = computeGaugeState(totalFp, gaugeThresholds, winTier, NEAR_MISS_FP);
       if (gaugeSnap.isNearMiss && gaugeSnap.nextTier != null) {
         const t1 = setTimeout(() => setNearMissTeasing(true), 400);
         const t2 = setTimeout(() => setNearMissTeasing(false), 1200);
@@ -1702,11 +1699,7 @@ export function GameView({ adapter }: Props) {
           >
             <TierGauge
               totalFp={gaugeTotalFp}
-              // gaugeThresholds is typed { tier: string; minFP: number }[] in
-              // GameAdapter to allow LEGEND (and other tiers TierGauge's
-              // narrower GaugeTier union doesn't include yet). Cast is
-              // structural — TierGauge only reads .tier and .minFP.
-              thresholds={gaugeThresholds as any}
+              thresholds={gaugeThresholds}
               winTier={undefined}
               lastCardFp={lastCardFp}
               isSkip={false}
@@ -2033,7 +2026,7 @@ export function GameView({ adapter }: Props) {
 
       {/* PostHandSheet — optional, sport-specific overlay */}
       {PostHandSheet && !isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && springSettled && (() => {
-        const gaugeSnap = computeGaugeState(displayFp, gaugeThresholds as any, winTier, NEAR_MISS_FP);
+        const gaugeSnap = computeGaugeState(displayFp, gaugeThresholds, winTier, NEAR_MISS_FP);
         return (
           <PostHandSheet
             totalFp={displayFp}

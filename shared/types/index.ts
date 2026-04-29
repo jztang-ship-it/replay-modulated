@@ -127,7 +127,7 @@ export interface PlayerEval {
   team: string;
   season: string;
   position: string;
-  photoCode?: string | number;
+  photoCode?: string;
   projectedFp: number;
   salary: number;
   tier: TierColor;

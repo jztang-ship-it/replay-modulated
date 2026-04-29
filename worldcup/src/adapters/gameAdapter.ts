@@ -119,7 +119,7 @@ function buildEvalPool(
         team:         String(p.team ?? ""),
         season:       String(p.season ?? ""),
         position:     pos,
-        photoCode:    p.photoCode,
+        photoCode:    p.photoCode != null ? String(p.photoCode) : undefined,
         projectedFp:  proj,
         salary,
         tier:         sportAdapter.normalizeTier(p.tier), // tier re-assigned by rosterEngine from salary

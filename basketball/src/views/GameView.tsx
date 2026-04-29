@@ -23,6 +23,7 @@ import { useMemo } from "react";
 import { GameView as SharedGameView } from "@shared/views/GameView";
 import type { GameAdapter } from "@shared/views/GameAdapter";
 import type { WinTierDisplay, LegendData } from "@shared/components/GameBar";
+import type { TierThreshold as GaugeTierThreshold } from "@shared/components/TierGauge";
 import { sportAdapter } from "../adapters/SportAdapter";
 import {
   dealInitialRoster,
@@ -45,7 +46,7 @@ import {
 } from "../utils/payoutLogic";
 
 // Tier gauge thresholds — basketball-specific FP cutoffs.
-const GAUGE_THRESHOLDS = [
+const GAUGE_THRESHOLDS: GaugeTierThreshold[] = [
   { tier: "ROOKIE", minFP: 190 },
   { tier: "STARTER", minFP: 205 },
   { tier: "ALL_STAR", minFP: 225 },
