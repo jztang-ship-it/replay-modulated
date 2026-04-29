@@ -111,16 +111,6 @@ const BASE_BET = 10;
 
 const NEAR_MISS_FP = 5;
 
-// ── Tier flip display helpers ──────────────────────────────────────
-function deriveTierFromFp(fp: number): string {
-  if (fp >= 255) return "LEGEND";
-  if (fp >= 235) return "MVP";
-  if (fp >= 225) return "ALL_STAR";
-  if (fp >= 205) return "STARTER";
-  if (fp >= 190) return "ROOKIE";
-  return "BUST";
-}
-
 const TIER_IMAGE_MAP: Record<string, string> = {
   BUST: "bust1.png",
   ROOKIE: "Rookie2.png",
@@ -525,7 +515,7 @@ export function GameView({ adapter }: Props) {
     const lastChadHand = parseInt(localStorage.getItem("rm_chad_last_hand") ?? "0", 10);
     if (handCount - lastChadHand < 2 && handCount > 1) return;
 
-    type ChadCheck = { key: string; topic: Parameters<typeof chadMessage>[0]; condition: boolean; resultsOnly?: boolean };
+    type ChadCheck = { key: string; topic: Parameters<typeof chadMessage>[0]; condition: boolean };
     const checks: ChadCheck[] = [
       { key: "rm_usher_lb_explainer", topic: "leaderboard_explainer", condition: handCount >= 3 },
       { key: "rm_usher_mvp_thanks", topic: "mvp_thanks", condition: handCount >= 5 },
@@ -945,9 +935,6 @@ export function GameView({ adapter }: Props) {
     postRevealCopyRef.current = copy;
     return copy;
   }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct]); // eslint-disable-line
-
-  const activeTierForDisplay = winTier ?? deriveTierFromFp(totalFp);
-  void activeTierForDisplay;
 
   const regularFinalGaugeKick = false;
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { track, setProduct } from "./analytics";
 
 export type AnalyticsSport = "basketball" | "worldcup" | "football" | "nfl" | "hockey" | "baseball" | "mma";
@@ -35,7 +35,10 @@ export function useGameAnalytics(sport: AnalyticsSport) {
     sessionStartRef.current = Date.now();
   }, [sport]);
 
-  return {
+  // Memoize the returned object so consumers' useCallback / useMemo deps
+  // that include this object don't invalidate every render. The handler
+  // identities are stable too — they close over refs and `sport` only.
+  return useMemo(() => ({
     handDealt(roster: any[]) {
       const cost = roster.reduce((s: number, c: any) => s + Number(c?.salary ?? 0), 0);
       track("gameplay", "hand_dealt", { sport, rosterCost: cost, playerCount: roster.length, hand_number: currentHandNumber() });
@@ -81,5 +84,5 @@ export function useGameAnalytics(sport: AnalyticsSport) {
       handsPlayedRef.current  = 0;
       sessionScoreRef.current = 0;
     },
-  };
+  }), [sport]);
 }
