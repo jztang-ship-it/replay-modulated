@@ -321,26 +321,53 @@ export function useEmotionalReveal(params: Params) {
     setActiveRevealCardId(null);
     const alreadyTappedIds = new Set(tappedCardIds);
     setTappedCardIds(new Set(cards.map(c => c.cardId)));
-    setVisibleFpMap(new Map());   // clear stale mid-values so every card animates from 0
+    // Preserve already-tapped cards' visibleFp at actualFp so runningTotalFp
+    // stays at its tapped baseline. Without this, the gauge drops to seedFp
+    // (0 with no held cards) at skip start and tapped cards re-animate from
+    // 0 → actualFp when the sequence revisits them. Untapped entries are
+    // dropped so runCardReveal can re-set them from 0.001 normally.
+    const preservedVisibleFp = new Map<string, number>();
+    for (const c of cards) {
+      if (alreadyTappedIds.has(c.cardId)) {
+        preservedVisibleFp.set(c.cardId, Number(c.actualFp ?? 0));
+      }
+    }
+    setVisibleFpMap(preservedVisibleFp);
     isTapRevealingRef.current = false;
     pendingTapQueue.current = [];
     tappedCountRef.current = 0;
 
-    // DO NOT bulk-flip all cards. Each card flips individually in sequence
-    // so blast fires during the flip before anything is revealed.
-    // Order: non-held lowest→highest salary, then held lowest→highest salary.
-    // Anchor (highest salary overall) always goes last at full speed.
-    const nonHeld = [...cards.filter(c => !(c as any).wasHeld)]
-      .sort((a, b) => (a.salary ?? 0) - (b.salary ?? 0));
-    const held = [...cards.filter(c => (c as any).wasHeld)]
-      .sort((a, b) => (a.salary ?? 0) - (b.salary ?? 0));
+    // Skip sequence reveals only cards the user hasn't already tapped.
+    // Order: non-held lowest→highest salary, then held lowest→highest salary,
+    // with the highest-salary remaining card pushed last as the anchor
+    // (its runCardReveal call fires onAnchorFpComplete → spring).
+    const remaining = cards.filter(c => !alreadyTappedIds.has(c.cardId));
 
-    const allSorted = [...cards].sort((a, b) => (a.salary ?? 0) - (b.salary ?? 0));
-    const anchorId = allSorted[allSorted.length - 1]?.cardId;
+    if (remaining.length === 0) {
+      // Edge: every card was tapped before the skip click. Nothing left
+      // to animate; fire the spring + completion synchronously.
+      setActiveRevealCardId(null);
+      setShakeInfo(null);
+      isSkippingRef.current = false;
+      setIsSkipping(false);
+      setHeldFpVisible(true);
+      const total = cards.reduce((s, x) => s + Number(x.actualFp ?? 0), 0);
+      onAnchorFpComplete?.(total);
+      onAllComplete?.(total);
+      return;
+    }
 
-    const sequence = [...nonHeld, ...held].filter(c => c.cardId !== anchorId);
-    const anchor = cards.find(c => c.cardId === anchorId);
-    if (anchor) sequence.push(anchor);
+    const remainingSortedAsc = [...remaining].sort(
+      (a, b) => (a.salary ?? 0) - (b.salary ?? 0),
+    );
+    const skipAnchorId = remainingSortedAsc[remainingSortedAsc.length - 1].cardId;
+
+    const nonHeld = remainingSortedAsc.filter(c => !(c as any).wasHeld);
+    const held    = remainingSortedAsc.filter(c =>  (c as any).wasHeld);
+
+    const sequence = [...nonHeld, ...held].filter(c => c.cardId !== skipAnchorId);
+    const skipAnchor = remaining.find(c => c.cardId === skipAnchorId);
+    if (skipAnchor) sequence.push(skipAnchor);
 
     const revealOne = (idx: number) => {
       if (runIdRef.current !== myRunId) return;
@@ -355,22 +382,24 @@ export function useEmotionalReveal(params: Params) {
         onAllComplete?.(total);
         return;
       }
-      const isAnchor = c.cardId === anchorId;
+      const isAnchor = c.cardId === skipAnchorId;
       const wasHeld  = !!(c as any).wasHeld;
       // For held cards: mark as revealed NOW so RosterGrid passes visibleFp through
       // to CardFront. Without this, effectiveFp stays undefined and FP never animates.
       if (wasHeld) setHeldRevealedIds(prev => new Set(prev).add(c.cardId));
       // skipFlip=wasHeld: held cards already face-up, skip the 3D flip
       // isSkip=true for ALL cards during skipToEnd so each FP rolls up at the same pace
+      // skipBlast=false: already-tapped cards are filtered out of `sequence` above,
+      // so every card here genuinely needs its blast animation.
       runCardReveal(c, isAnchor, myRunId, () => {
         const pause = isAnchor ? 300 : Math.max(SKIP_INTER_CARD_PAUSE_MS, 50);
         const t = window.setTimeout(() => revealOne(idx + 1), pause);
         timersRef.current.push(t);
-      }, wasHeld, true /* isSkip */, alreadyTappedIds.has(c.cardId) /* skipBlast */);
+      }, wasHeld, true /* isSkip */, false /* skipBlast */);
     };
 
     revealOne(0);
-  }, [cards, flipState, clearTimers, onAllComplete]);
+  }, [cards, flipState, clearTimers, onAllComplete, onAnchorFpComplete, tappedCardIds]);
 
   // ── Core reveal function — runs one card through flip + FP rollup ──────────
   // Shared by both auto and tap modes.
