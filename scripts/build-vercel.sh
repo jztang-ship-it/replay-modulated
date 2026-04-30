@@ -31,6 +31,13 @@ rm -rf dist
 mkdir -p dist
 # Chooser landing page at root — sport selector + localStorage redirect.
 cp chooser/index.html dist/index.html
+# Chooser static assets at root (OG share images, favicons, etc.). Optional —
+# present only when chooser/public/ exists. Drop og-home.png, og-basketball.png,
+# og-baseball.png in there to populate the Open Graph + Twitter unfurl tiles
+# referenced by chooser/index.html, basketball/index.html, baseball/index.html.
+if [ -d chooser/public ]; then
+  cp -R chooser/public/. dist/
+fi
 # Basketball under /basketball.
 mkdir -p dist/basketball
 cp -R basketball/dist/. dist/basketball/
