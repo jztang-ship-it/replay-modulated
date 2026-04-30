@@ -89,7 +89,9 @@ export function LeaderboardScreen({ currentUid, sport, onClose }: Props) {
   // Find user's best rank across both lanes
   const myBestIdx = bestEntries.findIndex(e => isMe(e, currentUid, sessId));
   const mySessionIdx = sessionEntries.findIndex(e => isMe(e, currentUid, sessId));
-  const myBestScore = myBestIdx >= 0 ? bestEntries[myBestIdx].score : parseFloat(localStorage.getItem("rm_best_hand") ?? "0");
+  // rm_best_hand is sport-scoped (basketball: raw, baseball: baseball_rm_best_hand).
+  const bestHandKey = sport === "basketball" ? "rm_best_hand" : `${sport}_rm_best_hand`;
+  const myBestScore = myBestIdx >= 0 ? bestEntries[myBestIdx].score : parseFloat(localStorage.getItem(bestHandKey) ?? "0");
   const gapToBest10 = bestEntries.length >= 10 && myBestIdx < 0
     ? (bestEntries[9].score - myBestScore).toFixed(1)
     : null;

@@ -11,21 +11,40 @@ Scope: every `localStorage.getItem` / `localStorage.setItem` call in
 
 These keys appear in **both** sports with the **same string literal**.
 
-> Migration note (future, not this PR): After Phase 2 consolidation these
-> will wrap as `${ns}_<key>` where `ns` defaults to `""` for back-compat.
-> Migration is a separate post-Phase-2 PR.
+> **Status update (fix/baseball-stale-win):** the namespace mechanism on
+> `GameAdapter.localStorageNamespace` is now live and split:
+> baseball uses `"baseball"`, basketball stays at `""` (back-compat —
+> existing basketball users keep all their localStorage state). The
+> sport-private keys below now route through `nsKey()` and so live in
+> a per-sport namespace on baseball, while a deliberate subset stays
+> raw (cross-sport) — see Section 1a.
 
-| Key | Purpose | Basketball lines | Baseball lines |
-|-----|---------|-----------------|----------------|
-| `replaymod_balance` | Persistent coin balance (read on mount, written after every payout) | 68, 75 | 68, 75 |
-| `rm_on_board_today` | `"1"` if player is in top-10 of either daily LB → trophy glow | 208 | 117 |
-| `replaymod_streak` | Current win streak (incremented on win, reset on loss) | 777, 1120, 1130 | 561, 989, 999 |
-| `rm_best_hand` | All-time best single hand FP (float stored as string) | 1143, 1145 | 1009, 1011 |
-| `rm_best_tier` | Best win tier ever achieved | 1148, 1151 | 1014, 1017 |
-| `replaymod_hand_count` | Total hands played (increments each play) | 905, 1709, 1710 | 696, 1488, 1489 |
-| `replaymod_name_prompted` | One-shot gate — shown nickname prompt once after 3 hands | 1714, 1715 | 1493, 1494 |
-| `replaymod_legend_seen_date` | Date string — prevents repeat legend-tier FTUE overlay same day | 617, 2389 | 568, 2104 |
-| `rm_auth_modal_shown` | One-shot gate — register modal shown once | 671, 672 | 721, 722 |
+### 1a. Sport-scoped after fix/baseball-stale-win
+
+These previously cross-sport keys are now sport-scoped. Basketball reads
+the unprefixed key (namespace = `""`); baseball reads `baseball_<key>`.
+
+| Key | Purpose | Why scoped |
+|-----|---------|-----------|
+| `replaymod_streak` | Current win streak | A streak in basketball must NOT light up baseball's streak hook on a fresh baseball play |
+| `rm_best_hand` | All-time best single hand FP | "Best hand ever" is a per-sport stat — basketball's 250 FP isn't a baseball stat |
+| `rm_best_tier` | Best win tier achieved | Same as above |
+
+### 1b. Intentionally cross-sport (raw keys)
+
+These stay unprefixed — they represent the player, not a sport-specific
+score. Wallet stays cross-sport (one wallet, one player); device-global
+flags don't fork per sport.
+
+| Key | Purpose |
+|-----|---------|
+| `replaymod_balance` | Persistent coin wallet — single wallet, both sports |
+| `replaymod_hand_count` | Total hands played across all sports — analytics-grade, also read by AuthProvider / useGameAnalytics where there's no sport adapter |
+| `rm_on_board_today` | "1" if player is in top-10 of any daily LB → trophy glow |
+| `replaymod_name_prompted` | One-shot gate — shown nickname prompt once |
+| `replaymod_legend_seen_date` | Date string — prevents repeat legend overlay same day |
+| `rm_auth_modal_shown` | One-shot gate — register modal shown once |
+| `replaymod_streak_nudge_seen_${tier}` | "Have we taught this streak mechanic" one-shot — sport-agnostic concept |
 
 ---
 
