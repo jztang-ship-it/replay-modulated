@@ -3,8 +3,6 @@
   "outputDirectory": "dist",
   "installCommand": "echo 'install handled by build-vercel.sh'",
   "rewrites": [
-    { "source": "/basketball/:path*", "destination": "/basketball/index.html" },
-    { "source": "/baseball/:path*", "destination": "/baseball/index.html" },
-    { "source": "/((?!api/|basketball/|baseball/).*)", "destination": "/index.html" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
