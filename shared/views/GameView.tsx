@@ -1729,7 +1729,13 @@ export function GameView({ adapter }: Props) {
                       <>
                         <div style={{ textAlign: "center" }}>
                           <div style={{ fontSize: 26, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic" }}>
-                            <RollingNumber value={totalFp} decimals={1} duration={300} />
+                            {/* displayFp (frozen-aware) tracks the gauge bar: pinned during
+                                anchor count-up, springs to total via the held-anchor spring,
+                                then locks at lockedGaugeFpRef. Without this, the held anchor's
+                                FP stays missing from the label until gameState flips to
+                                WIN_CELEBRATION 1200ms after spring settle, even though the
+                                gauge bar visually reaches the full total. */}
+                            <RollingNumber value={displayFp} decimals={1} duration={300} />
                           </div>
                           <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
                             Team FP

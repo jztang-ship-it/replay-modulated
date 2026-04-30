@@ -336,8 +336,10 @@ export function CardFront(props: CardFrontProps) {
   const animStartRef = useRef<number | null>(null);
   const animatingRef = useRef(false);
 
-  // Triggered once when visibleFp first goes above 0 — runs its own RAF loop
-  // to completion. Never cancelled by other cards tapping (no revealActive in deps).
+  // Triggered once when visibleFp first becomes a defined non-zero value — runs
+  // its own RAF loop to completion. Never cancelled by other cards tapping (no
+  // revealActive in deps). Negative actualFp (bad pitching outing) animates as
+  // a roll-down from 0 to a negative target.
   useEffect(() => {
     if (visibleFp === undefined) {
       // visibleFpMap was cleared (skip triggered) — reset so animation can restart
@@ -346,14 +348,14 @@ export function CardFront(props: CardFrontProps) {
       animStartRef.current = null;
       return;
     }
-    if (visibleFp <= 0) return;
+    if (visibleFp === 0) return;
     if (animatingRef.current) return;
     if (rollComplete) return; // already done — ignore any late visibleFp updates
 
-    const actual = Math.max(0, Number((card as any)?.actualFp ?? 0));
+    const actual = Number((card as any)?.actualFp ?? 0);
     setFpRevealed(true);
 
-    if (actual <= 0) {
+    if (actual === 0) {
       setDisplayedFp(0); setIsRolling(false); setRollComplete(true); onRollComplete?.(); return;
     }
 
@@ -438,13 +440,16 @@ export function CardFront(props: CardFrontProps) {
   // phase from the landing page — no REVEALING transition fires the visibleFp
   // effect), fall back to actualFp so the slot doesn't render "0.0" indefinitely.
   const cardActualFp = Number((card as any)?.actualFp ?? 0);
-  const fpText = Number.isFinite(fpValue) && fpValue > 0
+  const fpText = Number.isFinite(fpValue) && fpValue !== 0
     ? fpValue.toFixed(1)
-    : (isShowingActualFp && cardActualFp > 0 ? cardActualFp.toFixed(1) : "0.0");
+    : (isShowingActualFp && cardActualFp !== 0 ? cardActualFp.toFixed(1) : "0.0");
 
   const badgeBonusFp = useMemo(() => badges?.reduce((s, b) => s + (b.fp ?? 0), 0) ?? 0, [badges]);
   const hasBadges = (badges?.length ?? 0) > 0;
-  const hasRevealed = rollComplete || (!!isRevealing && !!revealActive && visibleFp !== undefined && visibleFp > 0);
+  // visibleFp !== 0 (in either direction) means the rollup has progressed past
+  // the start sentinel. Originally `> 0`; widened so negative-FP rollups also
+  // mark the card as revealed.
+  const hasRevealed = rollComplete || (!!isRevealing && !!revealActive && visibleFp !== undefined && visibleFp !== 0);
   const pulsePal = pulsePalette(pulse);
   const showPulse = !!pulse && pulse !== "NEUTRAL" && hasRevealed;
 
@@ -461,7 +466,7 @@ export function CardFront(props: CardFrontProps) {
   const positionTextColor = TIER_POSITION_TEXT[(derivedTier as TierKey)] ?? TIER_POSITION_TEXT.WHITE;
   const initials = initialsFromName(name || `${team} ${pos}`);
   const [nameLine1, nameLine2] = splitNameLines(name);
-  const isActiveReveal = !!(isRevealing && revealActive && visibleFp !== undefined && visibleFp > 0);
+  const isActiveReveal = !!(isRevealing && revealActive && visibleFp !== undefined && visibleFp !== 0);
   const clipId = useMemo(() => `card-clip-${cardKey.replace(/[^a-z0-9]/gi, "_")}`, [cardKey]);
 
 
@@ -585,7 +590,7 @@ export function CardFront(props: CardFrontProps) {
                   transition: isRolling ? "none" : "transform 100ms ease",
                 }}>
                   {isShowingActualFp && fpRevealed
-                    ? (displayedFp > 0 ? displayedFp.toFixed(1) : (Number((card as any)?.actualFp ?? 0) > 0 ? Number((card as any).actualFp).toFixed(1) : fpText))
+                    ? (displayedFp !== 0 ? displayedFp.toFixed(1) : (Number((card as any)?.actualFp ?? 0) !== 0 ? Number((card as any).actualFp).toFixed(1) : fpText))
                     : fpText}
                 </span>
               </div>
