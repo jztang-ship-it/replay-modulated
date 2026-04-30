@@ -991,6 +991,15 @@ export function GameView({ adapter }: Props) {
     return held;
   }, [gameState, roster, lockedCardIds]);
 
+  // FTUE anchor's slot index in the current roster. Used for the spotlight /
+  // dim-others effect during HOLD and post-results. Derived per sport: basketball
+  // Tatum lives at slotIndex 2, baseball Ohtani at slotIndex 0. Falls back to
+  // `null` (no spotlight) if the anchor isn't found in the current hand.
+  const ftueAnchorSlot = useMemo(() => {
+    const anchor = roster.find(c => cardId(c) === FTUE_ANCHOR_ID);
+    return anchor ? ((anchor as any).slotIndex ?? null) : null;
+  }, [roster, FTUE_ANCHOR_ID]);
+
   // ── Handlers ──────────────────────────────────────────────────────
   function toggleLock(cardKey: string) {
     if (gameState !== "HOLD") return;
@@ -1263,13 +1272,22 @@ export function GameView({ adapter }: Props) {
   // previous render"). Keep all hooks above the conditional returns.
   // Inject getTodaysStars into the GameBar legend (keeps the bonus-pool
   // "Today's Stars" row in sync with the live daily rotation).
+  // `dataReady` is in the deps array even though the memo body doesn't
+  // reference it directly: this memo lives above the `!dataReady` early
+  // return (required for React #310 — see PR #21), so on the first render
+  // `getTodaysStars()` throws (data not loaded yet) and the memo caches the
+  // plain `gameBarLegend` fallback. Both `gameBarLegend` and `getTodaysStars`
+  // are module-stable references, so without `dataReady` the memo would
+  // never recompute and `todaysStars` would stay empty forever. Adding
+  // `dataReady` forces a recompute when data loads (false→true), at which
+  // point `getTodaysStars()` returns the real bonus-pool stars.
   const legendWithStars = useMemo(() => {
     try {
       const stars = getTodaysStars();
       if (stars.length > 0) return { ...gameBarLegend, todaysStars: stars };
     } catch { /* data not loaded yet */ }
     return gameBarLegend;
-  }, [gameBarLegend, getTodaysStars]);
+  }, [gameBarLegend, getTodaysStars, dataReady]);
 
   const fullscreenErrorStyle: React.CSSProperties = {
     width: "100vw", height: "100vh", maxHeight: "-webkit-fill-available",
@@ -1455,9 +1473,9 @@ export function GameView({ adapter }: Props) {
                     isFTUE={isFTUE && (gameState === "HOLD" || gameState === "DRAWING")}
                     ftueLockedSlot={
                       (isFTUE && ftueResultsDim)
-                        ? 2
+                        ? ftueAnchorSlot
                         : (isFTUE && (ftueHoldSpotlight || heldCardIds.has(FTUE_ANCHOR_ID)) && gameState === "HOLD")
-                          ? 2
+                          ? ftueAnchorSlot
                           : null
                     }
                     topGameStarBasePlayerId={topGameInfo.star?.basePlayerId ?? null}
