@@ -91,6 +91,11 @@ export function PWAInstallPrompt({ rewardCoins, onInstalled }: PWAInstallPromptP
 
 interface PwaInstallPromptProps {
   active: boolean;
+  /** Optional attention-mutex hooks — if provided, the prompt claims the
+   * lock before showing and releases on dismiss. Lets GameView serialize
+   * this against chad commentary, register modal, name prompt, etc. */
+  tryClaimAttention?: (surface: string) => boolean;
+  releaseAttention?: (surface: string) => void;
 }
 
 function wasShown(): boolean { return localStorage.getItem("rm_nudge_pwa_shown") === "1"; }
@@ -100,7 +105,7 @@ function isStandalone(): boolean {
   return window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone === true;
 }
 
-export function PwaInstallPrompt({ active }: PwaInstallPromptProps) {
+export function PwaInstallPrompt({ active, tryClaimAttention, releaseAttention }: PwaInstallPromptProps) {
   const [visible, setVisible] = useState(false);
   const [showIosInstructions, setShowIosInstructions] = useState(false);
   const deferredPromptRef = useRef<any>(null);
@@ -115,10 +120,17 @@ export function PwaInstallPrompt({ active }: PwaInstallPromptProps) {
     if (!active) return;
     if (wasShown()) return;
     if (isStandalone()) return;
-    markShown();
-    const t = setTimeout(() => setVisible(true), 1000);
+    // Defer the markShown + visible flip until the 1000ms delay fires AND
+    // we can claim the attention lock. If we can't claim, leave both
+    // unburned so the next IDLE re-evaluates (and the prompt still has its
+    // one-shot life remaining).
+    const t = setTimeout(() => {
+      if (tryClaimAttention && !tryClaimAttention("pwa_install")) return;
+      markShown();
+      setVisible(true);
+    }, 1000);
     return () => clearTimeout(t);
-  }, [active]);
+  }, [active, tryClaimAttention]);
 
   if (!visible) return null;
 
@@ -126,9 +138,10 @@ export function PwaInstallPrompt({ active }: PwaInstallPromptProps) {
     if (deferredPromptRef.current) { deferredPromptRef.current.prompt(); deferredPromptRef.current = null; }
     else if (isIos()) { setShowIosInstructions(true); return; }
     setVisible(false);
+    releaseAttention?.("pwa_install");
   };
 
-  const dismiss = () => setVisible(false);
+  const dismiss = () => { setVisible(false); releaseAttention?.("pwa_install"); };
 
   return (
     <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9000, padding: "16px 16px 24px", background: "linear-gradient(180deg, transparent, rgba(0,0,0,0.9) 30%)" }}>

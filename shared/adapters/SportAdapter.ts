@@ -17,7 +17,7 @@ export class SportAdapter {
   get rosterSize(): number { return this.config.maxPlayers ?? this.config.positions.length; }
   get positions(): string[] { return this.config.positions; }
 
-  get rosterSlots(): string[] {
+  get rosterSlots(): readonly string[] {
     const explicit = this.config.rosterSlots;
     if (explicit && explicit.length) return explicit;
     const slots: string[] = [];
@@ -109,7 +109,7 @@ export class SportAdapter {
   getHeadshotUrl(playerId: string): string | null { const fn = (this.config as any).headshotUrl; return typeof fn === "function" ? fn(playerId) : null; }
   getPositionLimits(position: string): { min: number; max: number } { return this.config.positionLimits?.[position] ?? { min: 0, max: 999 }; }
   isValidRoster(roster: PlayerCard[]): boolean { if (roster.length !== this.rosterSize) return false; const total = roster.reduce((s, c) => s + (c.salary || 0), 0); return total >= this.salaryCapMin && total <= this.salaryCap; }
-  get statCategories(): string[] { return this.config.statCategories ?? []; }
+  get statCategories(): readonly string[] { return this.config.statCategories ?? []; }
   isValidStatCategory(stat: string): boolean { return this.statCategories.includes(stat); }
 
   private getStatValue(stats: Record<string, any>, key: string): number {

@@ -112,7 +112,7 @@ If you need to add something sport-specific, **add it to the adapter, not to the
 
 These files exist exactly once, under `shared/`. If you find a copy in `{sport}/src/`, that's drift — promote.
 
-- `shared/views/GameView.tsx` *(target — see migration status below)*
+- `shared/views/GameView.tsx` ✓ (sport wrappers pass a `GameAdapter`)
 - `shared/components/LandingPage.tsx` ✓ (sport wrappers pass a `LandingAdapter`)
 - `shared/components/GameBar.tsx` ✓
 - `shared/components/CoachLayer.tsx` ✓ (FTUE state machine)
@@ -142,17 +142,16 @@ These have a real reason to differ — keep per-sport:
 
 ### Migration status (where we are)
 
-**Already shared correctly:** GameBar logic, CoachLayer (FTUE state machine), CardFront, PlayerCardShell, all engines, all utils for streak/bonus/audio/records, the commentary system.
+**Already shared correctly:** GameView (canonical), LandingPage, GameBar, CoachLayer (FTUE state machine), CardFront, PlayerCardShell, all engines, all utils for streak/bonus/audio/records, the commentary system.
 
-**Drifted, awaiting promotion:**
-
-- `{sport}/src/views/GameView.tsx` — basketball is 2458 lines, baseball is 2129 lines. ~80% should be shared. Phase 2 of the architecture lift.
+**Drifted, awaiting promotion:** None as of Phase 2 cutover.
 
 **Recently lifted:**
 
-- `LandingPage.tsx` ✓ Phase 1 — shared component takes a `LandingAdapter`. Per-sport files are now ~80–140 line shims (basketball 79, baseball 137 vs. 335/374 before).
+- `GameView.tsx` ✓ Phase 2 (shipped 2026-04-29) — shared component takes a `GameAdapter`. Per-sport wrappers are now ~80–215 line shims (basketball 156, baseball 216 vs. 2458/2185 before). Supporting hooks: `_useSharedGameState.ts`, `_useReveal.ts`, `_gameViewHelpers.tsx`. Adapter contract in `shared/views/GameAdapter.ts`. Plan: `docs/superpowers/plans/2026-04-29-gameview-shared-phase-2-implementation.md`.
+- `LandingPage.tsx` ✓ Phase 1 (shipped earlier) — shared component takes a `LandingAdapter`. Per-sport files are now ~80–140 line shims (basketball 79, baseball 137 vs. 335/374 before).
 
-**Until those two are lifted,** any change to one MUST be applied to the other in the same PR. Add a header comment on each linking the two — that's a temporary sync requirement, not a permanent pattern.
+**Phase-2 follow-ups (open, non-blocking):** baseball `SportConfig` structural alignment with shared, `GeneratedCard.gameInfo.homeAway` narrowing, `AthleteCard` Props tightening, `RegisterNudge` dead-code deletion, `PostHandSheet` adapter slot decision. Tracked in PR review notes; can be picked up in a regular cleanup pass.
 
 ### Drift prevention (not all in place yet)
 

@@ -58,7 +58,7 @@ function toPlayerEval(p: any, projByBaseId: Map<string, number>): PlayerEval {
     team: String(p.team ?? ""),
     season: String(p.season ?? ""),
     position: sportAdapter.normalizePosition(p.position),
-    photoCode: p.photoCode,
+    photoCode: p.photoCode != null ? String(p.photoCode) : undefined,
     projectedFp: proj,
     salary,
     tier: tierFromSalary(salary, eco),
