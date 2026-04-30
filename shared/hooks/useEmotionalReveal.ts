@@ -465,12 +465,15 @@ export function useEmotionalReveal(params: Params) {
             }, SHAKE_DURATION_MS_DEFAULT);
           }
 
-          const target = Math.max(0, Number(c.actualFp ?? 0));
+          const target = Number(c.actualFp ?? 0);
           if (isAnchor) setLastCardFp(target);
 
           // Signal CardFront to START its animation by setting a small non-zero value.
           // CardFront's own RAF loop handles all visual interpolation from 0 → target.
           // The hook only needs to signal start, drive the gauge progress, then fire onDone.
+          // (Sentinel is positive so CardFront's `visibleFp !== 0` gate trips even if
+          // target is negative — the per-tick eased*target updates that follow can
+          // render the running total in either direction.)
           setVisibleFpMap(prev => new Map(prev).set(c.cardId, 0.001));
           onCardFpStart?.(c.cardId);
 
@@ -483,7 +486,9 @@ export function useEmotionalReveal(params: Params) {
             if (isAnchor) setLastCardProgress(eased);
             // For anchor card: only animate the CARD face number, NOT the tier bar.
             // The tier bar stays frozen at the 5-card total until onAnchorFpComplete fires.
-            setVisibleFpMap(prev => new Map(prev).set(c.cardId, Math.max(0.001, eased * target)));
+            // No floor — eased*target rolls 0 → target in either direction so a
+            // pitcher's bad outing can show as a negative roll-down.
+            setVisibleFpMap(prev => new Map(prev).set(c.cardId, eased * target));
             if (elapsed < 1) {
               const tt = window.setTimeout(driveTick, gaugeTickInterval);
               timersRef.current.push(tt);
@@ -511,7 +516,14 @@ export function useEmotionalReveal(params: Params) {
               timersRef.current.push(doneT);
             }
           };
-          driveTick();
+          // Defer the first tick by gaugeTickInterval so the 0.001 sentinel
+          // renders alone before eased*target overwrites it. Without this,
+          // React batches the two setVisibleFpMap calls and the very first
+          // observed value would be eased*target = 0 (eased=0 at t=0) —
+          // which trips CardFront's "no animation yet" gate and the rollup
+          // never starts.
+          const tt0 = window.setTimeout(driveTick, gaugeTickInterval);
+          timersRef.current.push(tt0);
         }, postBlastDelay);
         timersRef.current.push(t2);
       }, flipMs);

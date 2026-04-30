@@ -394,8 +394,13 @@ export function PlayerCardShell(props: CardShellProps) {
     if (stampFiredRef.current) return;
     if (!cardShakeType) return;
     if (visibleFp === undefined) return;
-    // visibleFp >= actualFp means roll-up is complete (or skipped)
-    if (visibleFp < actualFp) return;
+    // Roll-up direction depends on actualFp's sign. Positive rolls 0 → actualFp
+    // (done when visibleFp >= actualFp); negative rolls 0 → actualFp going down
+    // (done when visibleFp <= actualFp). actualFp === 0 needs no rollup.
+    const rollupComplete = actualFp === 0
+      ? true
+      : actualFp > 0 ? visibleFp >= actualFp : visibleFp <= actualFp;
+    if (!rollupComplete) return;
     stampFiredRef.current = true;
     const stamp: OverlayStamp =
       cardShakeType === "legendary" ? "SMOKING HOT" :
