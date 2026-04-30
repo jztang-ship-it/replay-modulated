@@ -484,58 +484,70 @@ export function GameView({ adapter }: Props) {
     setFtueCommentaryOverride({ parts: [chadMessage("welcome")], sticky: true });
   }, [isFTUE, gameState]); // eslint-disable-line
 
-  // ── Mutex between chad post-resolve commentary and the auth/register modal.
+  // ── Attention-surface mutex (single lock, all auto-fired surfaces) ──
   //
-  // Both can fire on the IDLE transition after a hand resolves. Without a
-  // gate they overlap: chad message renders sticky, then a sibling effect
-  // (MVP/LEGEND big_win, hand_5) schedules setShowRegisterModal a couple
-  // seconds later and pops the modal on top of the message. The user
-  // experience is "two notifications competing for the same moment".
+  // The post-resolve / IDLE moment can trigger several "demand attention"
+  // surfaces from independent effects on the same render flush:
+  //   - chad sticky commentary (ftueCommentaryOverride)
+  //   - RegisterModal (Google auth + email save)
+  //   - showNamePrompt (save-nickname overlay, hand >= 3)
+  //   - PwaInstallPrompt (handCount >= 3 idle bottom-sheet)
+  // Without serialization they stack on the same emotional beat ("two
+  // notifications competing for the same moment").
   //
-  // Refs (vs state) so both ends of the mutex can be read SYNCHRONOUSLY
-  // within a single effect flush. A useEffect-synced ref would be one tick
-  // stale — it'd update on the next render, after the sibling effects on
-  // the same flush have already raced through.
+  // Single attention lock — generalises the per-pair mutex shipped in PR #23.
+  // Any auto-fired surface MUST tryClaimAttention(name) before opening; if
+  // the lock is held by another surface, the trigger early-returns WITHOUT
+  // burning its one-shot localStorage flag, so it re-evaluates on the next
+  // IDLE once the active surface has dismissed.
   //
-  //  - chadCommentaryActiveRef: set true the instant the chad effect calls
-  //    setFtueCommentaryOverride, cleared when commentary is dismissed.
-  //    Read by tryOpenAuthModal to defer.
-  //  - authModalPendingRef: set true the instant tryOpenAuthModal schedules
-  //    a modal. Read by the chad effect to defer the next message.
+  // A ref (vs state) so claims/releases are visible SYNCHRONOUSLY within a
+  // single effect flush; useEffect-synced state would be one tick stale and
+  // sibling effects on the same render would race past the gate.
   //
-  // Deferred = next IDLE re-evaluates conditions; we explicitly do NOT
-  // burn the one-shot localStorage flag (rm_auth_modal_shown / rm_usher_*)
-  // for the deferred branch.
-  const chadCommentaryActiveRef = useRef(false);
-  const authModalPendingRef = useRef(false);
-  // Clear the chad-commentary mutex once the override is dismissed by ANY
-  // path (user tap, deal-next-hand reset, post-celebrate teardown, etc.).
-  // The chad effect raises the flag synchronously when posting a message;
-  // this effect lowers it on the next render after dismissal so the next
-  // IDLE's auth-modal triggers can proceed.
+  // User-initiated surfaces (bell tap, profile tap, leaderboard button,
+  // collect tap, feedback) DO NOT go through this gate — they're explicit
+  // intent, not background nudges.
+  const attentionLockRef = useRef<{ surface: string; openedAt: number } | null>(null);
+  const tryClaimAttention = useCallback((surface: string): boolean => {
+    if (attentionLockRef.current) return false;
+    attentionLockRef.current = { surface, openedAt: Date.now() };
+    return true;
+  }, []);
+  const releaseAttention = useCallback((surface: string) => {
+    if (attentionLockRef.current?.surface === surface) {
+      attentionLockRef.current = null;
+    }
+  }, []);
+
+  // Auto-release the lock when the surface that owns it dismisses. Each
+  // effect watches the dismissal signal of its own surface — chad watches
+  // ftueCommentaryOverride going null, RegisterModal watches showRegisterModal
+  // going false, etc. Releases via the surface key so a stale claim from a
+  // previous owner can't accidentally clear an active one.
   useEffect(() => {
-    if (ftueCommentaryOverride == null) chadCommentaryActiveRef.current = false;
-  }, [ftueCommentaryOverride]);
-  // Clear the auth-modal-pending mutex when the modal is dismissed.
-  // (rm_auth_modal_shown stays "1" forever — modal is one-shot — so chad
-  // commentary on subsequent IDLEs is not blocked by this flag, only by
-  // the synchronous in-flight signal.)
+    if (ftueCommentaryOverride == null) releaseAttention("chad_commentary");
+  }, [ftueCommentaryOverride, releaseAttention]);
   useEffect(() => {
-    if (!showRegisterModal) authModalPendingRef.current = false;
-  }, [showRegisterModal]);
+    if (!showRegisterModal) releaseAttention("auth_modal");
+  }, [showRegisterModal, releaseAttention]);
+  useEffect(() => {
+    if (!showNamePrompt) releaseAttention("name_prompt");
+  }, [showNamePrompt, releaseAttention]);
 
   // Unified auth-modal gate — fires at most once ever, across all trigger sources.
+  // Goes through tryClaimAttention("auth_modal"); if another surface owns the
+  // lock, defer to the next IDLE without burning rm_auth_modal_shown.
   const tryOpenAuthModal = useCallback((trigger: string, delayMs: number, extraProps: Record<string, string | number> = {}) => {
     if (localStorage.getItem("rm_auth_modal_shown") === "1") return;
-    if (chadCommentaryActiveRef.current) return; // mutex: commentary in-flight → defer to next IDLE
+    if (!tryClaimAttention("auth_modal")) return; // another surface in-flight → defer to next IDLE
     localStorage.setItem("rm_auth_modal_shown", "1");
-    authModalPendingRef.current = true;
     const t = setTimeout(() => {
       track("auth", "signup_modal_shown", { trigger, hand_number: handCount, ...extraProps });
       setShowRegisterModal(true);
     }, delayMs);
     return () => clearTimeout(t);
-  }, [handCount]);
+  }, [handCount, tryClaimAttention]);
 
   // First rookie win — fires at RESULTS
   useEffect(() => {
@@ -553,12 +565,6 @@ export function GameView({ adapter }: Props) {
     if (isFTUE || gameState !== "IDLE") return;
     if (chadFiredThisIdleRef.current) return;
     if (chadLastHandRef.current === handCount) return;
-    // Mutex: if the auth/register modal is open or about to open from a
-    // sibling trigger (e.g. MVP/LEGEND big_win at 2500ms, hand_5 at 3500ms),
-    // defer this turn's chad message — re-evaluates on the next IDLE once
-    // the modal has cleared. We deliberately do NOT set the rm_usher_*
-    // flag for the deferred topic so it can fire later.
-    if (authModalPendingRef.current) return;
 
     const lastChadHand = parseInt(localStorage.getItem("rm_chad_last_hand") ?? "0", 10);
     if (handCount - lastChadHand < 2 && handCount > 1) return;
@@ -576,6 +582,11 @@ export function GameView({ adapter }: Props) {
     for (const { key, topic, condition } of checks) {
       if (!condition) continue;
       if (localStorage.getItem(key) === "1") continue;
+      // Attention mutex: if any other surface (auth modal, name prompt) is
+      // already in-flight on this IDLE, defer this turn's chad message —
+      // re-evaluates next IDLE. Do NOT mark rm_usher_<topic>=1 yet so the
+      // topic can still fire later.
+      if (!tryClaimAttention("chad_commentary")) return;
       localStorage.setItem(key, "1");
       localStorage.setItem("rm_chad_last_hand", String(handCount));
       chadFiredThisIdleRef.current = true;
@@ -586,19 +597,27 @@ export function GameView({ adapter }: Props) {
       } else {
         setLegendGold(true);
       }
-      // Chad's intentional chained auth-modal call (e.g. "you're on the
-      // leaderboard" → 4500ms read pause → sign-up modal). This call is by
-      // design and goes through BEFORE we raise the commentary mutex flag.
+      // INTENTIONAL HANDOFF: chad's chained auth-modal call (e.g. "you're
+      // on the leaderboard" → 4500ms read pause → sign-up modal). Chad
+      // currently holds the attention lock; we hand it off to the auth
+      // modal by releasing chad's claim, then letting tryOpenAuthModal
+      // re-claim under "auth_modal". Sibling tryOpenAuthModal calls in the
+      // same flush (MVP/LEGEND big_win at 2500ms, hand_5 at 3500ms) will
+      // see the lock held and defer to the next IDLE.
       if (topic === "leaderboard_intro" || topic === "big_win" || topic === "retention") {
+        releaseAttention("chad_commentary");
         tryOpenAuthModal(`chad_${topic}`, 4500);
+        // Re-claim chad's lock so the sticky bubble's dismissal still
+        // releases correctly via the ftueCommentaryOverride watcher.
+        // (If tryOpenAuthModal claimed "auth_modal", the lock is now held
+        // by auth_modal — re-claiming chad would fail and that's fine: the
+        // auth modal owns the moment, chad's bubble visually rides on top
+        // until it's tapped, after which the lock transfers cleanly.)
+        attentionLockRef.current ??= { surface: "chad_commentary", openedAt: Date.now() };
       }
-      // Now raise the mutex so any SIBLING tryOpenAuthModal call later in
-      // this same effect flush (from the MVP/LEGEND or hand_5 effects)
-      // sees commentary as in-flight and defers to the next IDLE.
-      chadCommentaryActiveRef.current = true;
       return;
     }
-  }, [gameState, handCount, isFTUE, isAnonymous, bigWinFired, tryOpenAuthModal]); // eslint-disable-line
+  }, [gameState, handCount, isFTUE, isAnonymous, bigWinFired, tryOpenAuthModal, tryClaimAttention, releaseAttention]); // eslint-disable-line
 
   // Auth nudge — MVP+ hand while anonymous
   useEffect(() => {
@@ -1275,8 +1294,14 @@ export function GameView({ adapter }: Props) {
     if (!isFTUE) {
       const next = incrementHandCount();
       if (next >= 3 && !localStorage.getItem("replaymod_name_prompted")) {
-        localStorage.setItem("replaymod_name_prompted", "true");
-        setTimeout(() => setShowNamePrompt(true), 3500);
+        // Attention mutex: defer to a later IDLE if another surface is
+        // already in-flight. Do NOT set replaymod_name_prompted yet so this
+        // can fire on a subsequent celebration when the moment is clear.
+        setTimeout(() => {
+          if (!tryClaimAttention("name_prompt")) return;
+          localStorage.setItem("replaymod_name_prompted", "true");
+          setShowNamePrompt(true);
+        }, 3500);
       }
     }
     setWinTier(null);
@@ -2031,9 +2056,14 @@ export function GameView({ adapter }: Props) {
         />
       )}
 
-      {/* PWA install prompt */}
+      {/* PWA install prompt — gated by attention mutex so it doesn't stack
+          on top of chad commentary / register modal / name prompt. */}
       {!isFTUE && (gameState === "IDLE" || gameState === "RESULTS") && (
-        <PwaInstallPrompt active={handCount >= 3} />
+        <PwaInstallPrompt
+          active={handCount >= 3}
+          tryClaimAttention={tryClaimAttention}
+          releaseAttention={releaseAttention}
+        />
       )}
 
       {/* Registration modal */}
