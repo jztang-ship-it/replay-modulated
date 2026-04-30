@@ -34,7 +34,9 @@
         min-height: 100dvh;
         display: flex;
         flex-direction: column;
-        overflow: hidden;
+        /* Default scroll allowed — short phones can scroll if the page +
+           footer don't fit. Modal-open toggles overflow: hidden via JS to
+           lock the background while the modal is up. */
       }
       .nav {
         flex-shrink: 0;
@@ -128,24 +130,165 @@
         letter-spacing: 0.05em;
       }
       .footer-note .check { color: #7FFF00; }
+
+      /* "TO BEAT" leaderboard preview inside each sport card */
+      .card .sep {
+        width: 56px;
+        height: 1px;
+        background: rgba(255,255,255,0.10);
+        margin: 4px 0 2px;
+      }
+      .card .to-beat-label {
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        color: rgba(240,242,245,0.42);
+        text-transform: uppercase;
+      }
+      .card .to-beat-score {
+        font-family: 'Impact','Arial Narrow',Arial,sans-serif;
+        font-weight: 900;
+        font-size: 20px;
+        color: #C9A84C;
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+        min-height: 20px;
+      }
+
+      /* Page footer (How it works · feedback) */
+      .page-footer {
+        flex-shrink: 0;
+        padding: 14px 16px 18px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-size: 11px;
+        color: rgba(240,242,245,0.45);
+      }
+      .page-footer .footer-link {
+        appearance: none;
+        background: none;
+        border: none;
+        padding: 0;
+        margin: 0;
+        font: inherit;
+        color: rgba(240,242,245,0.65);
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      .page-footer .footer-link:hover { color: #F0F2F5; }
+      .page-footer a {
+        color: rgba(240,242,245,0.65);
+        text-decoration: underline;
+      }
+      .page-footer a:hover { color: #F0F2F5; }
+      .page-footer .sep { color: rgba(240,242,245,0.25); }
+
+      /* "How it works" modal */
+      .modal[hidden] { display: none; }
+      .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(7,10,18,0.78);
+        backdrop-filter: blur(4px);
+      }
+      .modal-card {
+        position: relative;
+        background: linear-gradient(180deg, #0F1729 0%, #0A1020 100%);
+        border: 1px solid rgba(201,168,76,0.30);
+        border-radius: 18px;
+        padding: 28px 24px 24px;
+        width: 100%;
+        max-width: 360px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      }
+      .modal-close {
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        appearance: none;
+        background: none;
+        border: none;
+        color: rgba(240,242,245,0.55);
+        font-size: 24px;
+        line-height: 1;
+        padding: 6px 10px;
+        cursor: pointer;
+      }
+      .modal-close:hover { color: #F0F2F5; }
+      .modal-card h2 {
+        font-family: 'Impact','Arial Narrow',Arial,sans-serif;
+        font-weight: 900;
+        font-size: 26px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin: 0 0 18px;
+      }
+      .how-steps {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 14px;
+      }
+      .how-steps li {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-size: 16px;
+        color: #F0F2F5;
+        line-height: 1.3;
+      }
+      .step-num {
+        flex-shrink: 0;
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        background: rgba(201,168,76,0.14);
+        color: #C9A84C;
+        font-family: 'Impact','Arial Narrow',Arial,sans-serif;
+        font-size: 14px;
+        font-weight: 900;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        letter-spacing: 0;
+      }
     </style>
   </head>
   <body>
     <div class="nav">REPLAY <span class="accent">IFS</span></div>
     <main>
       <p class="label">Beta · Free to Play · No Sign-Up</p>
-      <h1>Pick your sport.<br/><em>Prove it.</em></h1>
-      <p class="tagline">Real stats. Real history. Your fantasy result instantly.</p>
+      <h1>All fantasy.<br/><em>No waiting.</em></h1>
+      <p class="tagline">Real players. Real games. Instant.</p>
       <div class="cards">
         <button class="card basketball" type="button" data-sport="basketball" aria-label="Play basketball">
           <span class="emoji">🏀</span>
           <span class="name">Basketball</span>
           <span class="league">NBA</span>
+          <span class="sep" aria-hidden="true"></span>
+          <span class="to-beat-label">To Beat</span>
+          <span class="to-beat-score" id="basketball-top">—</span>
         </button>
         <button class="card baseball" type="button" data-sport="baseball" aria-label="Play baseball">
           <span class="emoji">⚾</span>
           <span class="name">Baseball</span>
           <span class="league">MLB</span>
+          <span class="sep" aria-hidden="true"></span>
+          <span class="to-beat-label">To Beat</span>
+          <span class="to-beat-score" id="baseball-top">—</span>
         </button>
       </div>
       <p class="footer-note">
@@ -154,6 +297,23 @@
         <span class="check">✓</span> Instant results
       </p>
     </main>
+    <footer class="page-footer">
+      <button class="footer-link" id="how-link" type="button">How it works</button>
+      <span class="sep">·</span>
+      <span>Got feedback? <a href="mailto:wayzztoai@gmail.com">wayzztoai@gmail.com</a></span>
+    </footer>
+    <div class="modal" id="how-modal" role="dialog" aria-modal="true" aria-labelledby="how-title" hidden>
+      <div class="modal-backdrop" data-modal-close="1"></div>
+      <div class="modal-card">
+        <button class="modal-close" id="how-close" type="button" aria-label="Close">×</button>
+        <h2 id="how-title">How it works</h2>
+        <ol class="how-steps">
+          <li><span class="step-num">1</span> Real players</li>
+          <li><span class="step-num">2</span> What they actually did</li>
+          <li><span class="step-num">3</span> That's your result</li>
+        </ol>
+      </div>
+    </div>
     <script>
       (function () {
         var KEY = 'replay_last_sport';
@@ -168,12 +328,53 @@
           }
         }
 
+        // Sport card click → set last-sport + navigate.
         document.querySelectorAll('.card[data-sport]').forEach(function (el) {
           el.addEventListener('click', function () {
             var sport = el.getAttribute('data-sport');
             try { localStorage.setItem(KEY, sport); } catch (_) {}
             window.location.href = '/' + sport + '/';
           });
+        });
+
+        // "TO BEAT" leaderboard preview: fetch top hand_best for today
+        // for each sport. Best-effort — leaves the "—" placeholder on
+        // any failure or empty response so layout doesn't shift.
+        function loadTop(sport) {
+          var url = '/api/leaderboard?sport=' + sport + '&metric=hand_best&scope=daily&limit=1';
+          fetch(url, { credentials: 'omit' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (data) {
+              if (!data || !data.entries || !data.entries.length) return;
+              var score = Number(data.entries[0].score);
+              if (!isFinite(score) || score <= 0) return;
+              var el = document.getElementById(sport + '-top');
+              if (el) el.textContent = score.toFixed(1);
+            })
+            .catch(function () { /* keep placeholder */ });
+        }
+        loadTop('basketball');
+        loadTop('baseball');
+
+        // "How it works" modal — open on link click, close on × / backdrop / Esc.
+        var modal = document.getElementById('how-modal');
+        var howLink = document.getElementById('how-link');
+        var howClose = document.getElementById('how-close');
+        function openModal() {
+          modal.removeAttribute('hidden');
+          document.body.style.overflow = 'hidden';
+        }
+        function closeModal() {
+          modal.setAttribute('hidden', '');
+          document.body.style.overflow = '';
+        }
+        howLink.addEventListener('click', openModal);
+        howClose.addEventListener('click', closeModal);
+        modal.addEventListener('click', function (e) {
+          if (e.target && e.target.getAttribute('data-modal-close') === '1') closeModal();
+        });
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && !modal.hasAttribute('hidden')) closeModal();
         });
       })();
     </script>
