@@ -484,10 +484,52 @@ export function GameView({ adapter }: Props) {
     setFtueCommentaryOverride({ parts: [chadMessage("welcome")], sticky: true });
   }, [isFTUE, gameState]); // eslint-disable-line
 
+  // ── Mutex between chad post-resolve commentary and the auth/register modal.
+  //
+  // Both can fire on the IDLE transition after a hand resolves. Without a
+  // gate they overlap: chad message renders sticky, then a sibling effect
+  // (MVP/LEGEND big_win, hand_5) schedules setShowRegisterModal a couple
+  // seconds later and pops the modal on top of the message. The user
+  // experience is "two notifications competing for the same moment".
+  //
+  // Refs (vs state) so both ends of the mutex can be read SYNCHRONOUSLY
+  // within a single effect flush. A useEffect-synced ref would be one tick
+  // stale — it'd update on the next render, after the sibling effects on
+  // the same flush have already raced through.
+  //
+  //  - chadCommentaryActiveRef: set true the instant the chad effect calls
+  //    setFtueCommentaryOverride, cleared when commentary is dismissed.
+  //    Read by tryOpenAuthModal to defer.
+  //  - authModalPendingRef: set true the instant tryOpenAuthModal schedules
+  //    a modal. Read by the chad effect to defer the next message.
+  //
+  // Deferred = next IDLE re-evaluates conditions; we explicitly do NOT
+  // burn the one-shot localStorage flag (rm_auth_modal_shown / rm_usher_*)
+  // for the deferred branch.
+  const chadCommentaryActiveRef = useRef(false);
+  const authModalPendingRef = useRef(false);
+  // Clear the chad-commentary mutex once the override is dismissed by ANY
+  // path (user tap, deal-next-hand reset, post-celebrate teardown, etc.).
+  // The chad effect raises the flag synchronously when posting a message;
+  // this effect lowers it on the next render after dismissal so the next
+  // IDLE's auth-modal triggers can proceed.
+  useEffect(() => {
+    if (ftueCommentaryOverride == null) chadCommentaryActiveRef.current = false;
+  }, [ftueCommentaryOverride]);
+  // Clear the auth-modal-pending mutex when the modal is dismissed.
+  // (rm_auth_modal_shown stays "1" forever — modal is one-shot — so chad
+  // commentary on subsequent IDLEs is not blocked by this flag, only by
+  // the synchronous in-flight signal.)
+  useEffect(() => {
+    if (!showRegisterModal) authModalPendingRef.current = false;
+  }, [showRegisterModal]);
+
   // Unified auth-modal gate — fires at most once ever, across all trigger sources.
   const tryOpenAuthModal = useCallback((trigger: string, delayMs: number, extraProps: Record<string, string | number> = {}) => {
     if (localStorage.getItem("rm_auth_modal_shown") === "1") return;
+    if (chadCommentaryActiveRef.current) return; // mutex: commentary in-flight → defer to next IDLE
     localStorage.setItem("rm_auth_modal_shown", "1");
+    authModalPendingRef.current = true;
     const t = setTimeout(() => {
       track("auth", "signup_modal_shown", { trigger, hand_number: handCount, ...extraProps });
       setShowRegisterModal(true);
@@ -511,6 +553,12 @@ export function GameView({ adapter }: Props) {
     if (isFTUE || gameState !== "IDLE") return;
     if (chadFiredThisIdleRef.current) return;
     if (chadLastHandRef.current === handCount) return;
+    // Mutex: if the auth/register modal is open or about to open from a
+    // sibling trigger (e.g. MVP/LEGEND big_win at 2500ms, hand_5 at 3500ms),
+    // defer this turn's chad message — re-evaluates on the next IDLE once
+    // the modal has cleared. We deliberately do NOT set the rm_usher_*
+    // flag for the deferred topic so it can fire later.
+    if (authModalPendingRef.current) return;
 
     const lastChadHand = parseInt(localStorage.getItem("rm_chad_last_hand") ?? "0", 10);
     if (handCount - lastChadHand < 2 && handCount > 1) return;
@@ -538,9 +586,16 @@ export function GameView({ adapter }: Props) {
       } else {
         setLegendGold(true);
       }
+      // Chad's intentional chained auth-modal call (e.g. "you're on the
+      // leaderboard" → 4500ms read pause → sign-up modal). This call is by
+      // design and goes through BEFORE we raise the commentary mutex flag.
       if (topic === "leaderboard_intro" || topic === "big_win" || topic === "retention") {
         tryOpenAuthModal(`chad_${topic}`, 4500);
       }
+      // Now raise the mutex so any SIBLING tryOpenAuthModal call later in
+      // this same effect flush (from the MVP/LEGEND or hand_5 effects)
+      // sees commentary as in-flight and defers to the next IDLE.
+      chadCommentaryActiveRef.current = true;
       return;
     }
   }, [gameState, handCount, isFTUE, isAnonymous, bigWinFired, tryOpenAuthModal]); // eslint-disable-line
