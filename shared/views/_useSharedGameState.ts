@@ -28,9 +28,19 @@
  * intentionally lives outside the per-sport namespace because the
  * leaderboard board state is global to the device, not per-sport).
  *
- * Phase 2 ships with localStorageNamespace = "" so behavior is byte-
- * identical to today; a follow-up PR will set per-sport values + add a
- * migration pass.
+ * Phase 2 originally shipped with localStorageNamespace = "" for both
+ * sports, which leaked basketball's streak / personal-bests into a
+ * fresh baseball play (the user's "extra win already existing" bug).
+ * fix/baseball-stale-win flipped baseball to "baseball" and kept
+ * basketball at "" so existing basketball users keep all their state.
+ * Per-key policy:
+ *   - replaymod_streak  → nsKey (sport-scoped)
+ *   - rm_best_hand      → nsKey (sport-scoped, applied at call site in _useReveal.ts + ProfileScreen.tsx + LeaderboardScreen.tsx)
+ *   - rm_best_tier      → nsKey (sport-scoped, applied at call site)
+ *   - replaymod_balance → raw  (one wallet across sports)
+ *   - replaymod_hand_count → raw  (analytics-grade total; read by AuthProvider too)
+ *   - rm_on_board_today → raw  (device-global trophy flag)
+ * See docs/storage-keys-audit.md for the full enumeration.
  */
 
 import { useState, useRef, useCallback } from "react";
@@ -63,17 +73,20 @@ function nsKey(adapter: SharedGameStateAdapter, key: string): string {
     : key;
 }
 
-function loadBalance(adapter: SharedGameStateAdapter): number {
+// Balance is intentionally cross-sport — it represents the player's wallet,
+// not a per-sport stat. Using nsKey here would orphan basketball balances
+// when baseball flips its namespace. Raw key keeps the wallet shared.
+function loadBalance(_adapter: SharedGameStateAdapter): number {
   try {
-    const v = localStorage.getItem(nsKey(adapter, "replaymod_balance"));
+    const v = localStorage.getItem("replaymod_balance");
     const n = v ? Number(v) : NaN;
     if (Number.isFinite(n) && n >= MIN_BALANCE_FLOOR) return n;
     return STARTING_BALANCE;
   } catch { return STARTING_BALANCE; }
 }
 
-function saveBalance(adapter: SharedGameStateAdapter, v: number) {
-  try { localStorage.setItem(nsKey(adapter, "replaymod_balance"), String(v)); } catch { }
+function saveBalance(_adapter: SharedGameStateAdapter, v: number) {
+  try { localStorage.setItem("replaymod_balance", String(v)); } catch { }
 }
 
 function createPlaceholders(rosterSize: number): PlayerCard[] {
@@ -132,8 +145,13 @@ export function useSharedGameState(
   const [streak, setStreak] = useState<number>(() =>
     parseInt(localStorage.getItem(nsKey(adapter, "replaymod_streak")) ?? "0", 10),
   );
+  // Hand count is intentionally cross-sport (raw key, no nsKey). It's
+  // analytics-grade — total hands ever played on this device — and is read
+  // from non-GameView call sites that don't carry a sport adapter
+  // (AuthProvider, useGameAnalytics, ProfileScreen). Sport-scoping it would
+  // desync those reads.
   const [handCount, setHandCount] = useState<number>(() =>
-    parseInt(localStorage.getItem(nsKey(adapter, "replaymod_hand_count")) ?? "1", 10),
+    parseInt(localStorage.getItem("replaymod_hand_count") ?? "1", 10),
   );
 
   // ── Reveal + tier flip (state only — orchestrator stays per-sport) ──
@@ -262,15 +280,16 @@ export function useSharedGameState(
   const incrementHandCount = useCallback((): number => {
     let next = 1;
     try {
+      // Raw key — see init comment above. Cross-sport hand-count is intentional.
       next = parseInt(
-        localStorage.getItem(nsKey(adapter, "replaymod_hand_count")) ?? "0",
+        localStorage.getItem("replaymod_hand_count") ?? "0",
         10,
       ) + 1;
-      localStorage.setItem(nsKey(adapter, "replaymod_hand_count"), String(next));
+      localStorage.setItem("replaymod_hand_count", String(next));
     } catch { }
     setHandCount(next);
     return next;
-  }, [adapter]);
+  }, []);
 
   const logHandToDb = useCallback(async (
     rosterArg: any[],

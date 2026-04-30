@@ -157,7 +157,14 @@ export default function GameView() {
     // cast is safe in practice. Aligning the config types is a multi-file
     // change deferred to a follow-up cleanup PR.
     sportAdapter: sportAdapter as unknown as SharedSportAdapter,
-    localStorageNamespace: "",
+    // Sport-scoped to "baseball" so streak / personal-best reads don't
+    // inherit basketball's state on a fresh baseball play. Cross-sport
+    // keys (replaymod_balance, replaymod_hand_count, rm_on_board_today,
+    // rm_session_id) bypass nsKey at the call site so the namespace
+    // doesn't fork them. Basketball stays at "" for back-compat — its
+    // existing users keep the keys they've been writing all along.
+    // See _useSharedGameState.ts and _useReveal.ts for the per-key policy.
+    localStorageNamespace: "baseball",
     leaderboardScope: sportAdapter.sportKey as "baseball",
     routeBasePath: "/baseball/",
     gaugeThresholds: GAUGE_THRESHOLDS,

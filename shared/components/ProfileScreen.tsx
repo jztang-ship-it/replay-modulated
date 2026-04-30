@@ -81,10 +81,17 @@ export function ProfileScreen({ currentUid, sport, onClose, isAnonymous, onSaveA
     return `${score.toLocaleString()} coins`;
   }
 
-  // Personal bests from localStorage
-  const bestHand = localStorage.getItem("rm_best_hand");
+  // Personal bests from localStorage. rm_best_hand / rm_best_tier are
+  // sport-scoped: basketball reads the unprefixed key (back-compat),
+  // baseball reads `baseball_rm_best_hand` / `baseball_rm_best_tier`.
+  // This keeps a fresh baseball player from inheriting basketball's all-
+  // time bests as a phantom "extra win" before their first hand.
+  // Hand count is intentionally cross-sport (analytics-grade total).
+  const bestHandKey = sport === "basketball" ? "rm_best_hand" : `${sport}_rm_best_hand`;
+  const bestTierKey = sport === "basketball" ? "rm_best_tier" : `${sport}_rm_best_tier`;
+  const bestHand = localStorage.getItem(bestHandKey);
   const totalHands = localStorage.getItem("replaymod_hand_count");
-  const bestTier = localStorage.getItem("rm_best_tier");
+  const bestTier = localStorage.getItem(bestTierKey);
 
   // Check if nickname looks auto-generated
   const namePrompted = !!localStorage.getItem("replaymod_name_prompted");
