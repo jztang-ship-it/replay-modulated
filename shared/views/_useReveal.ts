@@ -46,10 +46,11 @@ import { audioDirector } from "@shared/utils/audioDirector";
 import { buildScoreProof } from "@shared/utils/scoreProof";
 import { track } from "@shared/analytics/analytics";
 import type { GameAdapter } from "./GameAdapter";
+import { nsKey } from "./_useSharedGameState";
 import type { useSharedGameState } from "./_useSharedGameState";
 import { cardId } from "./_gameViewHelpers";
 
-type RevealAdapter = Pick<GameAdapter, "sportKey" | "leaderboardScope">;
+type RevealAdapter = Pick<GameAdapter, "sportKey" | "leaderboardScope" | "localStorageNamespace">;
 
 type SharedState = ReturnType<typeof useSharedGameState>;
 
@@ -190,10 +191,8 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     gameAnalytics, getTopGameInfo,
   } = args;
 
-  // Resolve `adapter` warning — kept in args for future use (e.g. pulling
-  // sport label into analytics). Touch the field so eslint-no-unused-args
-  // can't trip.
-  void adapter;
+  // adapter is used inside onAnchorFpComplete via nsKey() for personal-
+  // bests scoping (rm_best_hand / rm_best_tier).
 
   const {
     streak, handCount,
@@ -466,18 +465,24 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
             submitToLeaderboard("session_score", parseFloat(totalFp.toFixed(1)));
             setTimeout(() => checkLeaderboardRank(), 2000);
           }
-          // Update personal bests on every hand. These are device-global
-          // (used to colour the trophy / persona across sports), so they
-          // intentionally use raw keys — not nsKey.
-          const prevBest = parseFloat(localStorage.getItem("rm_best_hand") ?? "0");
+          // Personal bests are sport-scoped via nsKey — basketball reads
+          // the raw key (back-compat: namespace = ""), baseball reads
+          // baseball_rm_best_hand. Without this scoping, baseball's first
+          // hand would inherit basketball's all-time best, surfacing the
+          // user's "extra win already existing" perception on a fresh
+          // baseball play. (Trophy colouring is driven by rm_on_board_today,
+          // not rm_best_tier — that flag stays raw on purpose.)
+          const bestHandKey = nsKey(adapter, "rm_best_hand");
+          const bestTierKey = nsKey(adapter, "rm_best_tier");
+          const prevBest = parseFloat(localStorage.getItem(bestHandKey) ?? "0");
           if (totalFp > prevBest) {
-            localStorage.setItem("rm_best_hand", totalFp.toFixed(1));
+            localStorage.setItem(bestHandKey, totalFp.toFixed(1));
           }
           const tierRanks = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "LEGEND"];
-          const prevTierRank = tierRanks.indexOf(localStorage.getItem("rm_best_tier") ?? "BUST");
+          const prevTierRank = tierRanks.indexOf(localStorage.getItem(bestTierKey) ?? "BUST");
           const newTierRank = tierRanks.indexOf(tier ?? "BUST");
           if (newTierRank > prevTierRank) {
-            localStorage.setItem("rm_best_tier", tier ?? "BUST");
+            localStorage.setItem(bestTierKey, tier ?? "BUST");
           }
         };
         const t = window.setTimeout(() => {
@@ -487,6 +492,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
       }
     });
   }, [
+    adapter,
     isFTUE, currentBet, betMultiplier, streak, handCount, isAnonymous,
     rosterRef, ftueLastHandFpRef,
     runSpring, calculateWinTier, calculatePayoutWithStreak,

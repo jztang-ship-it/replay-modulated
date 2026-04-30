@@ -670,6 +670,24 @@ export function GameView({ adapter }: Props) {
 
   const flipState = useCardFlipState();
   const revealableCards = useMemo(() => toRevealableCards(roster), [roster]);
+  // FP "already locked in" at REVEAL start — sum of held cards' actualFp
+  // EXCLUDING the held anchor (highest-salary held card). The held anchor's
+  // FP is the spring's payload (added to the bar via runSpring after its
+  // count-up), matching the existing non-held-anchor flow. This stops the
+  // gauge bar from rebounding to 0 at REVEAL start when the user held one
+  // or more cards. seedFp = 0 when no cards are held → identical legacy
+  // behavior.
+  const heldFpAtDraw = useMemo(() => {
+    const held = revealableCards.filter(c => (c as any).wasHeld);
+    if (held.length === 0) return 0;
+    const sortedBySalaryDesc = [...held].sort(
+      (a, b) => (b.salary ?? 0) - (a.salary ?? 0),
+    );
+    // Exclude the held anchor (index 0 of desc sort = highest salary)
+    return sortedBySalaryDesc
+      .slice(1)
+      .reduce((s, c) => s + Number(c.actualFp ?? 0), 0);
+  }, [revealableCards]);
   const currentBet = BASE_BET * betMultiplier;
   const gameAnalytics = useGameAnalytics(sportKey);
 
@@ -789,6 +807,7 @@ export function GameView({ adapter }: Props) {
     cards: revealableCards,
     isActive: gameState === "REVEALING",
     revealMode: REVEAL_MODE,
+    seedFp: heldFpAtDraw,
     flipState,
     onBeforeHeldReveal: isFTUE ? (resume) => {
       heldRevealResumeRef.current = resume;
@@ -1226,6 +1245,23 @@ export function GameView({ adapter }: Props) {
       setRoster(finalRoster);
       (window as any).debugRoster = finalRoster;
       setStatsFlippedIds(new Set());
+      // Seed the gauge baseline so the bar doesn't rebound to 0 at REVEAL
+      // entry. Held cards' FP (minus the held anchor — that's the spring's
+      // payload) is "already locked in" and the bar should start there
+      // rather than at 0. Mirrors the seedFp wired into useEmotionalReveal.
+      // No-op when no cards are held (heldSeed = 0).
+      const heldList = finalRoster.filter((c: any) => c.wasHeld);
+      const heldSeed = heldList.length === 0
+        ? 0
+        : (() => {
+            const sortedDesc = [...heldList].sort(
+              (a: any, b: any) => (Number(b.salary ?? 0)) - (Number(a.salary ?? 0)),
+            );
+            return sortedDesc
+              .slice(1)
+              .reduce((s, c: any) => s + Number(c.actualFp ?? 0), 0);
+          })();
+      latestGaugeFpRef.current = heldSeed;
       await sleep(50);
       setNoTransition(false);
       await sleep(50);

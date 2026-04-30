@@ -66,6 +66,16 @@ type Params = {
    * If not provided, held reveal starts immediately.
    */
   onBeforeHeldReveal?: (resume: () => void) => void;
+  /**
+   * FP that's "already locked in" at REVEAL start (held cards' actualFp,
+   * minus the held anchor — its FP is the spring's payload). The gauge
+   * baseline starts here instead of 0 so the bar doesn't rebound to 0
+   * when the user has held cards. Default 0 = legacy behavior.
+   * Held cards' visibleFp still animates on the card face for the
+   * roll-up effect, but those entries are excluded from runningTotalFp
+   * (the bar) since they're already accounted for in seedFp.
+   */
+  seedFp?: number;
 };
 
 const ANCHOR_PRE_FLIP_PAUSE_MS = 200;
@@ -166,6 +176,7 @@ export function useEmotionalReveal(params: Params) {
     revealConfig = DEFAULT_REVEAL_CONFIG,
     onCardComplete, onCardRevealStart, onAllComplete, onAnchorFpComplete, onCardFpStart,
     revealMode = "auto",
+    seedFp = 0,
   } = params;
 
   const [visibleFpMap,     setVisibleFpMap]     = useState<Map<string, number>>(new Map());
@@ -255,13 +266,19 @@ export function useEmotionalReveal(params: Params) {
   }, [visibleFpMap]);
 
   const runningTotalFp = useMemo(() => {
-    let sum = 0;
+    // seedFp = held cards' FP (minus the held anchor) — already counted at
+    // REVEAL start, so the bar baseline doesn't rebound to 0. Held cards'
+    // visibleFp entries are excluded from the running sum to avoid
+    // double-counting; their card-face roll-up still animates from
+    // visibleFpMap directly via getVisibleFp.
+    let sum = seedFp;
     for (const c of cards) {
+      if ((c as any).wasHeld) continue;
       const v = getVisibleFp(c.cardId);
       if (typeof v === "number" && Number.isFinite(v)) sum += v;
     }
     return sum;
-  }, [cards, getVisibleFp]);
+  }, [cards, getVisibleFp, seedFp]);
 
   const pulseMap = useMemo(() => {
     const m = new Map<string, number>();
