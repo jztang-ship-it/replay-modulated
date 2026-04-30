@@ -401,7 +401,14 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
           isStarCard: true,
         });
       }
-      logHandToDb(rosterRef.current, totalFp, tier ?? "BUST", payout, streak);
+      // Generate the hand id once and reuse it for hand_log and leaderboard
+      // hand_best so api/leaderboard can verify the submitted score against
+      // a real audit-trail row (Option C — existence check, see
+      // docs/superpowers/specs/2026-04-30-prelaunch-section-2.md drafted notes).
+      const handIdForAudit = (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function")
+        ? crypto.randomUUID()
+        : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+      logHandToDb(rosterRef.current, totalFp, tier ?? "BUST", payout, streak, handIdForAudit);
       recordHandPlayed();
       if (!bust) recordHandWon(); else recordHandLost();
 
@@ -460,8 +467,10 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
           if (!bust) {
             submitToLeaderboard("fp", totalFp);
             if (handCount >= 8) submitToLeaderboard("hand_avg", totalFp, { handCount });
-            const handId = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-            submitToLeaderboard("hand_best", totalFp, { proof, handId });
+            // Reuse the same handId logHandToDb just persisted — api/leaderboard
+            // will look it up in hand_log to confirm the submission corresponds
+            // to a real audit-trail row.
+            submitToLeaderboard("hand_best", totalFp, { proof, handId: handIdForAudit });
             submitToLeaderboard("session_score", parseFloat(totalFp.toFixed(1)));
             setTimeout(() => checkLeaderboardRank(), 2000);
           }

@@ -74,10 +74,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 }
 
 async function handleSubmit(req: VercelRequest, res: VercelResponse) {
-  const { action, sport, metric, value, uid, nickname, proof } = req.body ?? {};
+  const { action, sport, metric, value, uid, nickname: rawNickname, proof } = req.body ?? {};
   const sessionId = ((req.body?.session_id ?? '') as string).toString().slice(0, 32) || null;
+  // Cap nickname server-side. player_profiles.nickname has a 32-char CHECK in
+  // migration 004, but submissions can come from clients that read a stale
+  // localStorage nickname or a hand-crafted curl. Truncate rather than reject
+  // so cosmetic over-runs don't drop legitimate scores.
+  const nickname = typeof rawNickname === "string" ? rawNickname.slice(0, 32) : "Player";
 
-  // Rate limit — max 20 submissions per 10 seconds per uid
+  // Rate limit — burst window: max 20 submissions per 10 seconds per uid
+  // (keeps existing tap-spam protection across all metrics).
   if (uid) {
     try {
       const rlKey = `rl:lb:${uid}`;
@@ -93,6 +99,19 @@ async function handleSubmit(req: VercelRequest, res: VercelResponse) {
   if (!VALID_SPORTS.includes(sport)) return json(res, 400, { error: "Invalid sport" });
   if (!VALID_METRICS.includes(metric)) return json(res, 400, { error: "Invalid metric" });
   if (typeof value !== "number" || value <= 0) return json(res, 400, { error: "Invalid value" });
+
+  // Tighter per-hand rate limit — at most 1 hand_best submission per 5s per
+  // uid. Real hands take 15-30s end-to-end; anything faster is fake.
+  if (metric === "hand_best" && uid) {
+    try {
+      const rlKey = `rl:lb:hb:${uid}`;
+      const count = await kv.incr(rlKey);
+      if (count === 1) await kv.expire(rlKey, 5);
+      if (count > 1) {
+        return json(res, 429, { error: "Slow down — at most one hand_best per 5s." });
+      }
+    } catch { /* don't block on rate limit failure */ }
+  }
   // Sport-specific FP ceiling — basketball and baseball have very different realistic maxes.
   const fpCeiling = FP_CEILING_BY_SPORT[sport as Sport];
   if ((metric === "fp" || metric === "hand_best" || metric === "hand_avg") && value > fpCeiling) {
@@ -129,15 +148,41 @@ async function handleSubmit(req: VercelRequest, res: VercelResponse) {
     return json(res, 403, { error: "UID mismatch" });
   }
 
-  const member = `${uid}:${nickname ?? "Player"}:${sessionId ?? ''}`;
+  const member = `${uid}:${nickname}:${sessionId ?? ''}`;
   const today = todayUTC();
   const dailyKey = `lb:${sport}:${metric}:daily:${today}`;
   const alltimeKey = `lb:${sport}:${metric}:alltime`;
 
   if (metric === "hand_best") {
     // hand_best allows multiple entries per user — each hand gets its own member key
-    const handId = req.body?.handId ?? Date.now().toString(36);
-    const handMember = `${uid}:${nickname ?? "Player"}:${handId}`;
+    const handIdRaw = req.body?.handId;
+    if (!handIdRaw || typeof handIdRaw !== "string" || handIdRaw.length > 64) {
+      return json(res, 400, { error: "Invalid handId" });
+    }
+    // Defense-in-depth: confirm a hand_log row exists for (uid, handId).
+    // Skip when uid is a local-fallback id (prefix "u_" — see logHandToDb in
+    // _useSharedGameState.ts:303 — those clients can't write to Supabase) or
+    // when supabaseServer isn't configured. Retry once with a 400ms delay to
+    // ride out commit lag between the client's hand_log insert and this
+    // Vercel function's read.
+    const isSupabaseUid = !uid.startsWith("u_");
+    if (supabaseServer && isSupabaseUid) {
+      let found = false;
+      for (let attempt = 0; attempt < 2 && !found; attempt++) {
+        if (attempt > 0) await new Promise(r => setTimeout(r, 400));
+        const { data } = await supabaseServer
+          .from("hand_log")
+          .select("id")
+          .eq("hand_id", handIdRaw)
+          .eq("player_id", uid)
+          .maybeSingle();
+        if (data) found = true;
+      }
+      if (!found) {
+        return json(res, 400, { error: "Hand not found in audit log" });
+      }
+    }
+    const handMember = `${uid}:${nickname}:${handIdRaw}`;
     await kv.zadd(dailyKey, { score: value, member: handMember });
     await kv.zadd(alltimeKey, { score: value, member: handMember });
     try { await kv.expire(dailyKey, TTL_48H); } catch {}

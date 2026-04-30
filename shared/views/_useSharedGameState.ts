@@ -297,6 +297,7 @@ export function useSharedGameState(
     tier: string,
     payout: number,
     streakAtPlay: number,
+    handId?: string,
   ) => {
     try {
       const uid = getPlayerUid();
@@ -308,6 +309,7 @@ export function useSharedGameState(
       const verified = !!session?.access_token;
       await supabase.from("hand_log").insert({
         player_id: uid,
+        hand_id: handId ?? null,
         roster_ids: rosterIds,
         total_fp: totalFp,
         tier,
