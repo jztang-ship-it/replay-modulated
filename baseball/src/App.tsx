@@ -26,9 +26,17 @@ function AppInner() {
   })();
 
   // First-timers see the landing page. Veterans skip straight to game.
+  // The useState initializer fires once, before AuthProvider has rehydrated
+  // the session — so on a fresh load `skipFTUE` may be false even for a
+  // signed-in user. The useEffect below promotes landing→game once auth
+  // resolves, so OAuth redirects don't dump returning users back to the
+  // marketing landing.
   const [view, setView] = useState<"landing" | "game">(
     (isFTUE && !skipFTUE && !skipLanding) ? "landing" : "game"
   );
+  useEffect(() => {
+    if (skipFTUE && view === "landing") setView("game");
+  }, [skipFTUE, view]);
 
   // ?signin=1 (from chooser sign-in icon) → open the existing sign-in modal
   // overlaying whichever view is active. Strip the query so refresh doesn't

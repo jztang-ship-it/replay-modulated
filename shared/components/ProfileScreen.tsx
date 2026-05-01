@@ -110,7 +110,7 @@ export function ProfileScreen({ currentUid, sport, onClose, isAnonymous, onSaveA
 
   return (
     <div style={{
-      position: "fixed", inset: 0, zIndex: 90,
+      position: "fixed", inset: 0, zIndex: 9999,
       background: "linear-gradient(180deg, #070A12 0%, #0A1020 60%, #070A12 100%)",
       color: "#EAF0FF",
       fontFamily: "'Inter', system-ui, sans-serif",
