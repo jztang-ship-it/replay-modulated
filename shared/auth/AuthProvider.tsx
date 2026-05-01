@@ -32,6 +32,26 @@ function getLocalUid(): string {
   }
 }
 
+/**
+ * Where to send the user back after Google OAuth.
+ *
+ * Without an explicit `redirectTo`, Supabase falls back to its project-level
+ * "Site URL" setting — which on a fresh project defaults to localhost and will
+ * redirect every prod user back to localhost. Explicitly pinning the return
+ * URL to the current origin + path avoids that whole class of bug, including
+ * coming back to the same sport (`/basketball/` vs `/baseball/`).
+ *
+ * The URL still has to be on Supabase's "Redirect URLs" allowlist or the
+ * provider rejects the redirect. Allowlist needs at minimum:
+ *   - https://replayifs.com/**
+ *   - https://*.vercel.app/**   (preview deploys)
+ *   - http://localhost:5173/**  (local dev)
+ */
+function oauthRedirectUrl(): string {
+  if (typeof window === "undefined") return "";
+  return window.location.origin + window.location.pathname;
+}
+
 export const AuthContext = createContext<AuthContextValue>({
   user: null,
   uid: "",
@@ -180,7 +200,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const linkGoogle = async () => {
     const wasAnonymous = user?.is_anonymous ?? true;
-    const { error } = await supabase.auth.linkIdentity({ provider: "google" });
+    const { error } = await supabase.auth.linkIdentity({
+      provider: "google",
+      options: { redirectTo: oauthRedirectUrl() },
+    });
     if (!error) {
       track("auth", "link_google", { from_anonymous: wasAnonymous, hand_number: handCountForAuthEvent() });
       if (wasAnonymous) track("auth", "account_linked_from_anon", { method: "google", hand_number: handCountForAuthEvent() });
@@ -198,7 +221,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({ provider: "google" });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: oauthRedirectUrl() },
+    });
     // OAuth redirects the page — success event fires from session rehydration below.
     if (error) track("auth", "signin_google_failed", { reason: (error as AuthError).message });
     return { error: error as AuthError | null };
