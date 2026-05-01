@@ -74,7 +74,17 @@ export function AppHeader({
 
       {/* Wordmark + mute + optional sport badge */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, paddingLeft: 2 }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
+        <div
+          role="button"
+          tabIndex={0}
+          aria-label="Switch sport"
+          onClick={() => {
+            track("nav", "wordmark_clicked", { from: window.location.pathname });
+            window.location.href = "/?pick=1";
+          }}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); window.location.href = "/?pick=1"; } }}
+          style={{ display: "flex", alignItems: "baseline", gap: 2, cursor: "pointer" }}
+        >
           <span style={{ fontSize: 16, fontWeight: 950, letterSpacing: -0.5, color: "#EAF0FF" }}>REPLAY</span>
           <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 2, color: "#FFB14A", marginLeft: 2 }}>IFS</span>
         </div>
