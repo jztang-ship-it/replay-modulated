@@ -335,6 +335,39 @@ export function ProfileScreen({ currentUid, sport, onClose, isAnonymous, onSaveA
             </div>
           </div>
         </div>
+
+        {/* Sign out \u2014 only for signed-in (non-anonymous) users */}
+        {!isAnonymous && user && (
+          <div style={{
+            marginTop: 8, paddingTop: 16,
+            borderTop: "1px solid rgba(255,255,255,0.06)",
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+          }}>
+            {user.email && (
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
+                Signed in as {user.email}
+              </div>
+            )}
+            <button
+              onClick={handleSignOut}
+              disabled={signingOut}
+              style={{
+                background: "transparent",
+                border: "1px solid rgba(255,255,255,0.15)",
+                borderRadius: 8,
+                padding: "8px 18px",
+                color: "rgba(255,255,255,0.55)",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: signingOut ? "wait" : "pointer",
+                fontFamily: FF,
+                letterSpacing: 0.5,
+              }}
+            >
+              {signingOut ? "Signing out..." : "Sign out"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -458,39 +491,6 @@ function InviteFriendsSection() {
         <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", wordBreak: "break-all" }}>
           {buildShareUrl()}
         </div>
-
-        {/* Sign out — only for signed-in (non-anonymous) users */}
-        {!isAnonymous && user && (
-          <div style={{
-            marginTop: 8, paddingTop: 16,
-            borderTop: "1px solid rgba(255,255,255,0.06)",
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-          }}>
-            {user.email && (
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
-                Signed in as {user.email}
-              </div>
-            )}
-            <button
-              onClick={handleSignOut}
-              disabled={signingOut}
-              style={{
-                background: "transparent",
-                border: "1px solid rgba(255,255,255,0.15)",
-                borderRadius: 8,
-                padding: "8px 18px",
-                color: "rgba(255,255,255,0.55)",
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: signingOut ? "wait" : "pointer",
-                fontFamily: FF,
-                letterSpacing: 0.5,
-              }}
-            >
-              {signingOut ? "Signing out..." : "Sign out"}
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
