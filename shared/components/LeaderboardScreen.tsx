@@ -58,14 +58,14 @@ function EntryRow({ e, rank, me, poolPct }: { e: Entry; rank: number; me: boolea
 export function LeaderboardScreen({ currentUid, sport, onClose }: Props) {
   const [bestEntries, setBestEntries] = useState<Entry[]>([]);
   const [sessionEntries, setSessionEntries] = useState<Entry[]>([]);
-  const [loading, setLoading] = useState(true);
   const [poolValue, setPoolValue] = useState(1000);
 
   const sessId = typeof localStorage !== "undefined" ? localStorage.getItem("rm_session_id") : null;
 
-  // Fetch both lanes + pool in parallel
+  // Fetch both lanes + pool in parallel. Empty results render the same
+  // 3-row skeleton as the loading state, so there's no flicker between
+  // "loading" and "no entries yet" pre-launch.
   useEffect(() => {
-    setLoading(true);
     Promise.all([
       fetch(`/api/leaderboard?sport=${sport}&metric=hand_best&scope=daily&limit=10`).then(r => r.json()).catch(() => ({ entries: [] })),
       fetch(`/api/leaderboard?sport=${sport}&metric=session_score&scope=daily&limit=10`).then(r => r.json()).catch(() => ({ entries: [] })),
@@ -74,7 +74,7 @@ export function LeaderboardScreen({ currentUid, sport, onClose }: Props) {
       setBestEntries(best.entries ?? []);
       setSessionEntries(session.entries ?? []);
       setPoolValue(pool.pool ?? 1000);
-    }).finally(() => setLoading(false));
+    });
   }, [sport]);
 
   // Pool drip
@@ -150,10 +150,8 @@ export function LeaderboardScreen({ currentUid, sport, onClose }: Props) {
             </div>
           </div>
           <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
-            {loading ? (
+            {bestEntries.length === 0 ? (
               [1,2,3].map(i => <div key={i} style={{ height: 28, borderRadius: 5, background: "rgba(255,255,255,0.03)" }} />)
-            ) : bestEntries.length === 0 ? (
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", textAlign: "center", padding: 16 }}>No entries yet</div>
             ) : (
               bestEntries.slice(0, 10).map((e, i) => (
                 <EntryRow key={`b-${i}`} e={e} rank={i + 1} me={isMe(e, currentUid, sessId)} poolPct={POOL_PCT[i]} />
@@ -176,10 +174,8 @@ export function LeaderboardScreen({ currentUid, sport, onClose }: Props) {
             </div>
           </div>
           <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
-            {loading ? (
+            {sessionEntries.length === 0 ? (
               [1,2,3].map(i => <div key={i} style={{ height: 28, borderRadius: 5, background: "rgba(255,255,255,0.03)" }} />)
-            ) : sessionEntries.length === 0 ? (
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", textAlign: "center", padding: 16 }}>No entries yet</div>
             ) : (
               sessionEntries.slice(0, 10).map((e, i) => (
                 <EntryRow key={`s-${i}`} e={e} rank={i + 1} me={isMe(e, currentUid, sessId)} poolPct={POOL_PCT[i]} />
