@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- Preconnect to Supabase: saves DNS + TLS round-trip on the first
+         auth/REST/storage call. One project URL serves auth, REST, and
+         storage (headshots, audio); a single preconnect covers all. -->
+    <link rel="preconnect" href="https://hnhrpwwznzokkfagfumb.supabase.co" crossorigin>
     <title>Replay IFS — instant MLB fantasy</title>
     <meta name="description" content="MLB fantasy without the 6-hour wait. Pull a roster, see what actually happened, climb the leaderboard. Real games, instant results." />
 

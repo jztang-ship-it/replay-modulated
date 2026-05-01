@@ -3,10 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <!-- Drop user-scalable=no per a11y guideline (Lighthouse meta-viewport
+         audit). Native double-tap-to-zoom remains useful for users with
+         low vision; the in-game UI doesn't depend on the zoom lock. -->
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
+    <!-- Preconnect to Supabase: saves DNS + TLS round-trip on the first
+         auth/REST/storage call. One project URL serves auth, REST, and
+         storage (headshots, audio); a single preconnect covers all. -->
+    <link rel="preconnect" href="https://hnhrpwwznzokkfagfumb.supabase.co" crossorigin>
     <title>Replay IFS — instant NBA fantasy</title>
     <meta name="description" content="Pull an NBA roster, see how the game actually went, beat the leaderboard. No waiting, no salary research. Just play." />
 

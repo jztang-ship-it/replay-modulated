@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!-- Drop user-scalable=no per a11y guideline (Lighthouse meta-viewport
+         audit). Double-tap zoom is useful for users with low vision; this
+         page has no scroll-snap or pinch-conflict UI to protect. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Replay IFS — instant fantasy, no waiting</title>
     <meta name="description" content="Pull a roster, see what actually happened, climb the leaderboard. No 6-hour wait. NBA and MLB, both ready to play right now." />
 
