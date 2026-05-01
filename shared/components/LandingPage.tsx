@@ -260,7 +260,14 @@ export function LandingPage({ adapter, onPlay }: Props) {
         flexShrink: 0, display: "flex", justifyContent: "space-between", alignItems: "center",
         padding: "10px 20px",
       }}>
-        <div style={{ fontWeight: 950, fontSize: 22, letterSpacing: -0.5 }}>
+        <div
+          role="button"
+          tabIndex={0}
+          aria-label="Switch sport"
+          onClick={() => { window.location.href = "/?pick=1"; }}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); window.location.href = "/?pick=1"; } }}
+          style={{ fontWeight: 950, fontSize: 22, letterSpacing: -0.5, cursor: "pointer" }}
+        >
           REPLAY <span style={{ color: "#FFB14A" }}>IFS</span>
         </div>
         {isAnonymous && (

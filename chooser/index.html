@@ -41,11 +41,51 @@
       .nav {
         flex-shrink: 0;
         padding: 18px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .nav .wordmark {
         font-weight: 950;
         font-size: 22px;
         letter-spacing: -0.5px;
+        color: #F0F2F5;
       }
       .nav .accent { color: #FFB14A; }
+      .nav-signin {
+        appearance: none;
+        background: none;
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255,255,255,0.5);
+        font-size: 15px;
+        padding: 0;
+        cursor: pointer;
+        transition: border-color 0.15s ease, color 0.15s ease;
+      }
+      .nav-signin:hover, .nav-signin:focus-visible {
+        border-color: rgba(255,255,255,0.35);
+        color: #F0F2F5;
+        outline: none;
+      }
+      .nav-nickname {
+        font-size: 12px;
+        color: rgba(240,242,245,0.85);
+        cursor: pointer;
+        background: none;
+        border: 1px solid transparent;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-family: inherit;
+        appearance: none;
+      }
+      .nav-nickname:hover { border-color: rgba(255,255,255,0.15); }
       main {
         flex: 1;
         display: flex;
@@ -53,21 +93,21 @@
         align-items: center;
         justify-content: center;
         padding: 24px 16px 40px;
-        gap: 28px;
+        gap: 16px;
         text-align: center;
       }
       h1 {
         font-family: 'Impact','Arial Narrow',Arial,sans-serif;
         font-weight: 900;
-        font-size: clamp(28px, 6vw, 48px);
+        font-size: clamp(24px, 5vw, 40px);
         text-transform: uppercase;
         line-height: 0.95;
         margin: 0;
       }
       h1 em { color: #C9A84C; font-style: normal; }
-      .tagline {
-        font-size: 13px;
-        color: rgba(240,242,245,0.55);
+      .subtag {
+        font-size: 12px;
+        color: rgba(240,242,245,0.38);
         line-height: 1.6;
         margin: 0;
         max-width: 360px;
@@ -126,10 +166,22 @@
       .card.baseball:hover   { border-color: rgba(127,255,0,0.45); background: rgba(127,255,0,0.08); }
       .footer-note {
         font-size: 10px;
-        color: rgba(240,242,245,0.32);
+        color: rgba(240,242,245,0.38);
         letter-spacing: 0.05em;
       }
       .footer-note .check { color: #7FFF00; }
+      .pill-new {
+        margin-top: 4px;
+        background: rgba(127,255,0,0.12);
+        color: #7FFF00;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(127,255,0,0.25);
+      }
 
       /* "TO BEAT" leaderboard preview inside each sport card */
       .card .sep {
@@ -268,11 +320,18 @@
     </style>
   </head>
   <body>
-    <div class="nav">REPLAY <span class="accent">IFS</span></div>
+    <!--
+      Headline tagline reserved for future repurposing (footer / og image / etc.):
+      "All fantasy. No waiting." — short, snappy alternative to the current H1.
+    -->
+    <nav class="nav">
+      <span class="wordmark">REPLAY <span class="accent">IFS</span></span>
+      <button class="nav-signin" id="nav-signin" type="button" aria-label="Sign in">👤</button>
+    </nav>
     <main>
       <p class="label">Beta · Free to Play · No Sign-Up</p>
-      <h1>All fantasy.<br/><em>No waiting.</em></h1>
-      <p class="tagline">Real players. Real games. Instant.</p>
+      <h1>You already know who balled out.<br/><em>Prove it.</em></h1>
+      <p class="subtag">Real stats. Real history. Your fantasy result instantly.</p>
       <div class="cards">
         <button class="card basketball" type="button" data-sport="basketball" aria-label="Play basketball">
           <span class="emoji">🏀</span>
@@ -328,19 +387,108 @@
           }
         }
 
-        // Sport card click → set last-sport + navigate.
+        // ── Tiny analytics — mirrors @shared/analytics shape, fire-and-forget ─
+        function rmId(key, prefix) {
+          try {
+            var existing = localStorage.getItem(key);
+            if (existing) return existing;
+            var fresh = prefix + '_' + Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
+            localStorage.setItem(key, fresh);
+            return fresh;
+          } catch (_) { return prefix + '_anonymous'; }
+        }
+        function trackChoose(action, props) {
+          try {
+            fetch('/api/analytics', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify([{
+                userId: rmId('rm_uid', 'u'),
+                sessionId: rmId('rm_sid', 's'),
+                product: 'chooser', feature: 'nav', action: action,
+                props: props || {}, timestamp: Date.now(),
+                platform: 'web', appVersion: '1.0.0',
+              }]),
+              keepalive: true,
+            });
+          } catch (_) {}
+        }
+
+        // ── User-state buckets ────────────────────────────────────────────
+        // A: brand new (no FTUE done)
+        // B: played one sport, not the other
+        // C: played both
+        // D: signed in (overlays A/B/C — set async via /api/me)
+        var ftueB  = localStorage.getItem('replaymod_ftue_basketball') === '1';
+        var ftueBB = localStorage.getItem('replaymod_ftue_baseball')   === '1';
+        var bestB  = parseFloat(localStorage.getItem('rm_best_hand') || '0');
+        var bestBB = parseFloat(localStorage.getItem('baseball_rm_best_hand') || '0');
+        var bucket = (!ftueB && !ftueBB) ? 'A' : (ftueB && ftueBB) ? 'C' : 'B';
+
+        function applyBucket() {
+          if (bucket === 'B') {
+            // Pill on the sport the user hasn't tried yet.
+            var unplayed = ftueB ? 'baseball' : 'basketball';
+            var card = document.querySelector('.card[data-sport="' + unplayed + '"]');
+            if (card) {
+              var pill = document.createElement('span');
+              pill.className = 'pill-new';
+              pill.textContent = 'New for you';
+              card.appendChild(pill);
+            }
+          }
+          if (bucket === 'C') {
+            // Replace TO BEAT with YOUR BEST per-sport. If no best exists for
+            // a sport (shouldn't happen in C, but guard anyway), keep TO BEAT.
+            if (isFinite(bestB) && bestB > 0) {
+              var lblB = document.querySelector('.card[data-sport="basketball"] .to-beat-label');
+              var scoreB = document.getElementById('basketball-top');
+              if (lblB) lblB.textContent = 'Your best';
+              if (scoreB) { scoreB.textContent = bestB.toFixed(1); scoreB.dataset.frozen = '1'; }
+            }
+            if (isFinite(bestBB) && bestBB > 0) {
+              var lblBB = document.querySelector('.card[data-sport="baseball"] .to-beat-label');
+              var scoreBB = document.getElementById('baseball-top');
+              if (lblBB) lblBB.textContent = 'Your best';
+              if (scoreBB) { scoreBB.textContent = bestBB.toFixed(1); scoreBB.dataset.frozen = '1'; }
+            }
+          }
+        }
+        applyBucket();
+        trackChoose('page_view', { url: location.pathname, bucket: bucket });
+
+        // ── Sport card click → set last-sport, track, navigate ────────────
+        // ?play=1 tells the sport app to skip its flippable-card marketing
+        // landing (which is now a marketing-direct-link surface only) and
+        // jump straight into FTUE / game.
         document.querySelectorAll('.card[data-sport]').forEach(function (el) {
           el.addEventListener('click', function () {
             var sport = el.getAttribute('data-sport');
             try { localStorage.setItem(KEY, sport); } catch (_) {}
-            window.location.href = '/' + sport + '/';
+            trackChoose('sport_selected', { sport: sport, bucket: bucket });
+            window.location.href = '/' + sport + '/?play=1';
           });
         });
 
-        // "TO BEAT" leaderboard preview: fetch top hand_best for today
-        // for each sport. Best-effort — leaves the "—" placeholder on
-        // any failure or empty response so layout doesn't shift.
+        // ── Sign-in icon → bounce to last-played sport (or basketball)
+        //    with ?signin=1, which the sport app reads on mount to pop the
+        //    existing RegisterModal in sign-in mode. ─────────────────────────
+        var signinBtn = document.getElementById('nav-signin');
+        if (signinBtn) {
+          signinBtn.addEventListener('click', function () {
+            var lastSport = localStorage.getItem(KEY) || 'basketball';
+            trackChoose('signin_from_chooser', { sport: lastSport });
+            window.location.href = '/' + lastSport + '/?signin=1';
+          });
+        }
+
+        // ── TO BEAT leaderboard preview ─────────────────────────────────
+        // Skip a sport if its score has already been frozen as a personal
+        // best (Bucket C). Best-effort — leaves the "—" placeholder on any
+        // failure so layout doesn't shift.
         function loadTop(sport) {
+          var el = document.getElementById(sport + '-top');
+          if (!el || el.dataset.frozen === '1') return;
           var url = '/api/leaderboard?sport=' + sport + '&metric=hand_best&scope=daily&limit=1';
           fetch(url, { credentials: 'omit' })
             .then(function (r) { return r.ok ? r.json() : null; })
@@ -348,15 +496,55 @@
               if (!data || !data.entries || !data.entries.length) return;
               var score = Number(data.entries[0].score);
               if (!isFinite(score) || score <= 0) return;
-              var el = document.getElementById(sport + '-top');
-              if (el) el.textContent = score.toFixed(1);
+              if (el.dataset.frozen === '1') return; // late guard
+              el.textContent = score.toFixed(1);
             })
             .catch(function () { /* keep placeholder */ });
         }
         loadTop('basketball');
         loadTop('baseball');
 
-        // "How it works" modal — open on link click, close on × / backdrop / Esc.
+        // ── Bucket D detection (async) ─────────────────────────────────
+        // Read the Supabase access token from localStorage and validate
+        // it server-side via /api/me. If the user is signed in (non-anon),
+        // hide the sign-in icon and show their nickname in the nav corner.
+        function getAuthToken() {
+          try {
+            for (var i = 0; i < localStorage.length; i++) {
+              var k = localStorage.key(i);
+              if (k && k.indexOf('sb-') === 0 && k.indexOf('-auth-token') > 0) {
+                var raw = JSON.parse(localStorage.getItem(k));
+                if (raw && typeof raw.access_token === 'string') return raw.access_token;
+              }
+            }
+          } catch (_) {}
+          return null;
+        }
+        var token = getAuthToken();
+        if (token) {
+          fetch('/api/me', { headers: { 'Authorization': 'Bearer ' + token } })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (me) {
+              if (!me || me.isAnonymous) return;
+              var nav = document.querySelector('.nav');
+              var signin = document.getElementById('nav-signin');
+              if (signin) signin.style.display = 'none';
+              if (!nav) return;
+              var btn = document.createElement('button');
+              btn.type = 'button';
+              btn.className = 'nav-nickname';
+              btn.setAttribute('aria-label', 'View profile');
+              btn.textContent = 'Hi, ' + (me.nickname || 'you');
+              btn.addEventListener('click', function () {
+                var lastSport = localStorage.getItem(KEY) || 'basketball';
+                window.location.href = '/' + lastSport + '/?profile=1';
+              });
+              nav.appendChild(btn);
+            })
+            .catch(function () { /* stay anonymous */ });
+        }
+
+        // ── "How it works" modal — open on link click, close on × / backdrop / Esc ─
         var modal = document.getElementById('how-modal');
         var howLink = document.getElementById('how-link');
         var howClose = document.getElementById('how-close');
