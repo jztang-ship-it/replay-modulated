@@ -14,8 +14,10 @@ const SKIP_LANDING_KEY = "replay_skip_landing_baseball";
 
 function AppInner() {
   const { isFTUE } = useFTUE(SPORT);
-  const { uid, isAuthenticated, isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
+  const { user, uid, isAuthenticated, isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
   const skipFTUE = isAuthenticated && !isAnonymous;
+  const showDebug = typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("debug") === "1";
 
   // The flippable-card landing is a marketing-direct-link surface only.
   // The chooser appends ?play=1 to bypass it, and we set a sticky flag so
@@ -64,6 +66,17 @@ function AppInner() {
 
   return (
     <>
+      {showDebug && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 100000,
+          background: "rgba(0,0,0,0.85)", color: "#7FFF00", fontFamily: "monospace",
+          fontSize: 10, padding: "6px 8px", lineHeight: 1.4, wordBreak: "break-all",
+        }}>
+          isAnon={String(isAnonymous)} | view={view} | skipFTUE={String(skipFTUE)} | skipLanding={String(skipLanding)} | isFTUE={String(isFTUE)}<br/>
+          uid={uid?.slice(0, 16) || "none"} | email={user?.email || "none"} | confirmed={user?.email_confirmed_at ? "Y" : "N"} | provider={(user?.app_metadata as any)?.provider || "none"}<br/>
+          stickyFlag={typeof window !== "undefined" ? localStorage.getItem(SKIP_LANDING_KEY) || "unset" : "ssr"} | ftueDone={typeof window !== "undefined" ? localStorage.getItem("replaymod_ftue_baseball") || "unset" : "ssr"}
+        </div>
+      )}
       {view === "landing" ? (
         <LandingPage
           onPlay={handlePlay}
