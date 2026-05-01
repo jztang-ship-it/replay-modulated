@@ -472,6 +472,13 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
             // to a real audit-trail row.
             submitToLeaderboard("hand_best", totalFp, { proof, handId: handIdForAudit });
             submitToLeaderboard("session_score", parseFloat(totalFp.toFixed(1)));
+            track("gameplay", "score_submitted", {
+              sport: adapter.sportKey,
+              score: parseFloat(totalFp.toFixed(1)),
+              tier: tier ?? "BUST",
+              hand_id: handIdForAudit,
+              hand_number: handCount,
+            });
             setTimeout(() => checkLeaderboardRank(), 2000);
           }
           // Personal bests are sport-scoped via nsKey — basketball reads
