@@ -458,12 +458,15 @@
         trackChoose('page_view', { url: location.pathname, bucket: bucket });
 
         // ── Sport card click → set last-sport, track, navigate ────────────
+        // ?play=1 tells the sport app to skip its flippable-card marketing
+        // landing (which is now a marketing-direct-link surface only) and
+        // jump straight into FTUE / game.
         document.querySelectorAll('.card[data-sport]').forEach(function (el) {
           el.addEventListener('click', function () {
             var sport = el.getAttribute('data-sport');
             try { localStorage.setItem(KEY, sport); } catch (_) {}
             trackChoose('sport_selected', { sport: sport, bucket: bucket });
-            window.location.href = '/' + sport + '/';
+            window.location.href = '/' + sport + '/?play=1';
           });
         });
 

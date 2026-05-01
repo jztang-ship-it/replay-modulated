@@ -12,9 +12,22 @@ function AppInner() {
   const { isAuthenticated, isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
   const skipFTUE = isAuthenticated && !isAnonymous;
 
+  // The flippable-card landing is a marketing-direct-link surface only.
+  // The chooser appends ?play=1 to bypass it, and we set a sticky flag so
+  // the user never sees that page again on direct visits either.
+  const skipLanding = (() => {
+    if (typeof window === "undefined") return false;
+    const fromChooser = new URLSearchParams(window.location.search).get("play") === "1";
+    if (fromChooser) {
+      try { localStorage.setItem("replay_skip_landing_basketball", "1"); } catch { /* ignore */ }
+      return true;
+    }
+    try { return localStorage.getItem("replay_skip_landing_basketball") === "1"; } catch { return false; }
+  })();
+
   // First-timers see the landing page. Veterans skip straight to game.
   const [view, setView] = useState<"landing" | "game">(
-    (isFTUE && !skipFTUE) ? "landing" : "game"
+    (isFTUE && !skipFTUE && !skipLanding) ? "landing" : "game"
   );
 
   // ?signin=1 (from chooser sign-in icon) → open the existing sign-in modal
@@ -25,10 +38,13 @@ function AppInner() {
     new URLSearchParams(window.location.search).get("signin") === "1"
   );
   useEffect(() => {
-    if (showSignIn && typeof window !== "undefined") {
-      window.history.replaceState({}, "", window.location.pathname);
+    if (typeof window !== "undefined") {
+      const search = window.location.search;
+      if (search.includes("signin=1") || search.includes("play=1")) {
+        window.history.replaceState({}, "", window.location.pathname);
+      }
     }
-  }, [showSignIn]);
+  }, []);
 
   return (
     <>
