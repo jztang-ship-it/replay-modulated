@@ -504,44 +504,71 @@
         loadTop('basketball');
         loadTop('baseball');
 
-        // ── Bucket D detection (async) ─────────────────────────────────
-        // Read the Supabase access token from localStorage and validate
-        // it server-side via /api/me. If the user is signed in (non-anon),
-        // hide the sign-in icon and show their nickname in the nav corner.
-        function getAuthToken() {
+        // ── Bucket D detection ─────────────────────────────────────────
+        // The Supabase auth-token JSON is documented stable, so we read
+        // both the token AND user.is_anonymous SYNCHRONOUSLY on first
+        // render. That way a signed-in user never sees the 👤 icon
+        // flicker before it gets replaced — which previously caused an
+        // impatient-user "false loop": tap icon → /sport/?signin=1 →
+        // modal opens → tap Google → already signed in but flow re-runs.
+        // /api/me then runs as a server-side validation pass and pulls
+        // the nickname (which the local token may not include).
+        function readSupabaseLocal() {
           try {
             for (var i = 0; i < localStorage.length; i++) {
               var k = localStorage.key(i);
               if (k && k.indexOf('sb-') === 0 && k.indexOf('-auth-token') > 0) {
                 var raw = JSON.parse(localStorage.getItem(k));
-                if (raw && typeof raw.access_token === 'string') return raw.access_token;
+                if (raw && typeof raw.access_token === 'string') {
+                  return {
+                    token: raw.access_token,
+                    isAnonymous: !raw.user || raw.user.is_anonymous !== false,
+                    nickname: (raw.user && raw.user.user_metadata && raw.user.user_metadata.nickname) || null,
+                    email: (raw.user && raw.user.email) || null,
+                  };
+                }
               }
             }
           } catch (_) {}
-          return null;
+          return { token: null, isAnonymous: true, nickname: null, email: null };
         }
-        var token = getAuthToken();
-        if (token) {
-          fetch('/api/me', { headers: { 'Authorization': 'Bearer ' + token } })
+        function renderSignedIn(nickname, email) {
+          var nav = document.querySelector('.nav');
+          var signin = document.getElementById('nav-signin');
+          if (signin) signin.style.display = 'none';
+          if (!nav) return;
+          // Reuse existing button if already rendered (avoid duplicates from
+          // the sync render → /api/me re-render path).
+          var existing = nav.querySelector('.nav-nickname');
+          if (existing) existing.remove();
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'nav-nickname';
+          btn.setAttribute('aria-label', 'View profile');
+          var label = nickname || (email ? email.split('@')[0] : null) || 'you';
+          btn.textContent = 'Hi, ' + label;
+          btn.addEventListener('click', function () {
+            var lastSport = localStorage.getItem(KEY) || 'basketball';
+            window.location.href = '/' + lastSport + '/?profile=1';
+          });
+          nav.appendChild(btn);
+        }
+        var local = readSupabaseLocal();
+        if (!local.isAnonymous) {
+          renderSignedIn(local.nickname, local.email);
+        }
+        // Server-side validation + nickname refresh. If the local token
+        // turned out to be expired/invalid, /api/me returns isAnonymous:true
+        // and we leave the synchronous nav as-is (worst case: button shows
+        // "Hi, you" briefly until the user navigates).
+        if (local.token) {
+          fetch('/api/me', { headers: { 'Authorization': 'Bearer ' + local.token } })
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (me) {
               if (!me || me.isAnonymous) return;
-              var nav = document.querySelector('.nav');
-              var signin = document.getElementById('nav-signin');
-              if (signin) signin.style.display = 'none';
-              if (!nav) return;
-              var btn = document.createElement('button');
-              btn.type = 'button';
-              btn.className = 'nav-nickname';
-              btn.setAttribute('aria-label', 'View profile');
-              btn.textContent = 'Hi, ' + (me.nickname || 'you');
-              btn.addEventListener('click', function () {
-                var lastSport = localStorage.getItem(KEY) || 'basketball';
-                window.location.href = '/' + lastSport + '/?profile=1';
-              });
-              nav.appendChild(btn);
+              renderSignedIn(me.nickname, null);
             })
-            .catch(function () { /* stay anonymous */ });
+            .catch(function () { /* keep sync render */ });
         }
 
         // ── "How it works" modal — open on link click, close on × / backdrop / Esc ─

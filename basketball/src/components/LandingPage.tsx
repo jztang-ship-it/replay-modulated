@@ -64,9 +64,13 @@ const CARDS: LandingCardDef[] = [
   },
 ];
 
-interface Props { onPlay: () => void; }
+interface Props {
+  onPlay: () => void;
+  onShowProfile?: () => void;
+  onShowSignIn?: () => void;
+}
 
-export function LandingPage({ onPlay }: Props) {
+export function LandingPage({ onPlay, onShowProfile, onShowSignIn }: Props) {
   const adapter = useMemo<LandingAdapter>(() => ({
     landingCards: CARDS,
     landingHeadshotUrl: headshotUrl,
@@ -75,5 +79,5 @@ export function LandingPage({ onPlay }: Props) {
     landingAudioBedSrc: "/audio/basketball/crowd/bed-murmur.mp3",
     landingTierFor: (d) => tierFromSalary(d.salary, DEFAULT_ECONOMY_CONFIG),
   }), []);
-  return <SharedLandingPage adapter={adapter} onPlay={onPlay} />;
+  return <SharedLandingPage adapter={adapter} onPlay={onPlay} onShowProfile={onShowProfile} onShowSignIn={onShowSignIn} />;
 }
