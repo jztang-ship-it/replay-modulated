@@ -17,7 +17,7 @@ import type { Achievement, GamePhase, PlayerCard, TierColor } from "../types";
 import { CardBackGeneric } from "./CardBackGeneric";
 import { soundManager } from "../utils/soundManager";
 import { useAuth } from "../auth/useAuth";
-import { RegisterModal } from "./RegisterModal";
+import { getNickname } from "../utils/playerIdentity";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -85,16 +85,30 @@ export type LandingAdapter = {
 interface Props {
   adapter: LandingAdapter;
   onPlay: () => void;
+  /** Open the App-level Profile overlay. Used by the signed-in nickname tap. */
+  onShowProfile?: () => void;
+  /** Open the App-level RegisterModal in sign-in mode. Used by the anonymous 👤 tap. */
+  onShowSignIn?: () => void;
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export function LandingPage({ adapter, onPlay }: Props) {
-  const { isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
-  const [showSignIn, setShowSignIn] = useState(false);
+export function LandingPage({ adapter, onPlay, onShowProfile, onShowSignIn }: Props) {
+  const { user, isAnonymous } = useAuth();
   const [flipped, setFlipped] = useState<Set<string>>(new Set());
   const phase: GamePhase = "RESULTS";
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Display name: prefer Supabase metadata (set by user during sign-up), then
+  // email local-part, then the local-storage fallback nickname.
+  const displayName = (() => {
+    if (isAnonymous) return "";
+    const meta = (user?.user_metadata ?? {}) as Record<string, unknown>;
+    if (typeof meta.nickname === "string" && meta.nickname.trim()) return String(meta.nickname).trim();
+    if (typeof meta.full_name === "string" && meta.full_name.trim()) return String(meta.full_name).trim();
+    if (user?.email) return user.email.split("@")[0];
+    try { return getNickname(); } catch { return "you"; }
+  })();
 
   const {
     landingCards: CARDS,
@@ -270,9 +284,9 @@ export function LandingPage({ adapter, onPlay }: Props) {
         >
           REPLAY <span style={{ color: "#FFB14A" }}>IFS</span>
         </div>
-        {isAnonymous && (
+        {isAnonymous ? (
           <button
-            onClick={() => setShowSignIn(true)}
+            onClick={() => onShowSignIn?.()}
             aria-label="Sign in"
             style={{
               background: "none", border: "1px solid rgba(255,255,255,0.15)",
@@ -282,6 +296,22 @@ export function LandingPage({ adapter, onPlay }: Props) {
             }}
           >
             👤
+          </button>
+        ) : (
+          <button
+            onClick={() => onShowProfile?.()}
+            aria-label="View profile"
+            style={{
+              background: "none", border: "1px solid rgba(255,255,255,0.15)",
+              borderRadius: 16, height: 32, padding: "0 12px",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", color: "rgba(255,255,255,0.85)", fontSize: 12,
+              fontWeight: 700, fontFamily: "inherit", maxWidth: 140,
+            }}
+          >
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {displayName}
+            </span>
           </button>
         )}
       </nav>
@@ -360,17 +390,6 @@ export function LandingPage({ adapter, onPlay }: Props) {
           }}>
             Beta · Free to Play · No Sign-Up
           </p>
-          {showSignIn && (
-            <RegisterModal
-              signInMode
-              onClose={() => setShowSignIn(false)}
-              onSuccess={() => setShowSignIn(false)}
-              signUp={signUp}
-              linkGoogle={linkGoogle}
-              signIn={signIn}
-              signInGoogle={signInGoogle}
-            />
-          )}
           <h1 style={{
             fontFamily: "'Impact','Arial Narrow',Arial,sans-serif", fontWeight: 900,
             fontSize: "clamp(24px, 5vw, 40px)", textTransform: "uppercase", lineHeight: 0.95, margin: 0,

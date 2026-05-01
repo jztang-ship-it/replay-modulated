@@ -123,9 +123,13 @@ function resolveLandingActuals(d: LandingCardDef): LandingResolved | null {
   };
 }
 
-interface Props { onPlay: () => void; }
+interface Props {
+  onPlay: () => void;
+  onShowProfile?: () => void;
+  onShowSignIn?: () => void;
+}
 
-export function LandingPage({ onPlay }: Props) {
+export function LandingPage({ onPlay, onShowProfile, onShowSignIn }: Props) {
   const adapter = useMemo<LandingAdapter>(() => ({
     landingCards: CARDS,
     landingHeadshotUrl: baseballHeadshotUrl,
@@ -141,5 +145,5 @@ export function LandingPage({ onPlay }: Props) {
     ensureLandingDataLoaded: () => ensureLoaded(),
     resolveLandingActuals,
   }), []);
-  return <SharedLandingPage adapter={adapter} onPlay={onPlay} />;
+  return <SharedLandingPage adapter={adapter} onPlay={onPlay} onShowProfile={onShowProfile} onShowSignIn={onShowSignIn} />;
 }
