@@ -1945,6 +1945,7 @@ export function GameView({ adapter }: Props) {
                       onViewLeaderboard={() => {
                         setShowCollect(false);
                         setShowLeaderboard(true);
+                        track("leaderboard", "viewed", { source: "collect_screen" });
                       }}
                       recordLeaderboardViewed={recordLeaderboardViewed}
                       onClose={() => setShowCollect(false)}
@@ -2045,6 +2046,7 @@ export function GameView({ adapter }: Props) {
           setShowLeaderboard(true);
           setTrophyPulsing(false);
           setFtueCommentaryOverride(null);
+          track("leaderboard", "viewed", { source: "gamebar_trophy" });
         }}
         legendPulsing={legendGold && !isFTUE}
         trophyPulsing={trophyPulsing && !isFTUE}
@@ -2133,7 +2135,10 @@ export function GameView({ adapter }: Props) {
             winPayout={winPayout}
             currentUid={getPlayerUid()}
             onPlayAgain={handleButtonClick}
-            onViewLeaderboard={() => setShowLeaderboard(true)}
+            onViewLeaderboard={() => {
+              setShowLeaderboard(true);
+              track("leaderboard", "viewed", { source: "post_hand" });
+            }}
           />
         );
       })()}
