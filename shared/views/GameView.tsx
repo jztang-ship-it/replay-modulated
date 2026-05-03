@@ -42,6 +42,8 @@ import {
   useCallback,
   useRef,
   useEffect,
+  lazy,
+  Suspense,
 } from "react";
 import {
   sleep,
@@ -75,7 +77,12 @@ import { detectTopGame } from "@shared/data/recordDetector";
 import { selectStar } from "@shared/commentary/storySelector";
 import { useGameAnalytics } from "@shared/analytics/useGameAnalytics";
 import { track } from "@shared/analytics/analytics";
-import { CollectScreen } from "@shared/engagement/CollectScreen";
+// Lazy-load CollectScreen — only renders when showCollect is true (post-hand
+// rewards). Saves ~30-50 KB from the initial bundle for the most common
+// path (no rewards yet).
+const CollectScreen = lazy(() =>
+  import("@shared/engagement/CollectScreen").then(m => ({ default: m.CollectScreen }))
+);
 import { TierGauge, computeGaugeState } from "@shared/components/TierGauge";
 import { useEngagement } from "@shared/engagement/useEngagement";
 import { soundManager } from "@shared/utils/soundManager";
@@ -91,14 +98,31 @@ import {
   applyReferral,
   claimReferral,
 } from "@shared/utils/referral";
-import { LeaderboardScreen } from "@shared/components/LeaderboardScreen";
+// Lazy-load all the conditional overlays — they only mount when their
+// respective open flags fire, which is rare on first paint. Code-splitting
+// these is the biggest single Lighthouse perf win available without
+// touching the game core. Each named-export wrapper below converts the
+// dynamic import's namespace to the { default } shape lazy() expects.
+const LeaderboardScreen = lazy(() =>
+  import("@shared/components/LeaderboardScreen").then(m => ({ default: m.LeaderboardScreen }))
+);
+const ProfileScreen = lazy(() =>
+  import("@shared/components/ProfileScreen").then(m => ({ default: m.ProfileScreen }))
+);
+const RegisterModal = lazy(() =>
+  import("@shared/components/RegisterModal").then(m => ({ default: m.RegisterModal }))
+);
+const PwaInstallPrompt = lazy(() =>
+  import("@shared/components/PwaInstallPrompt").then(m => ({ default: m.PwaInstallPrompt }))
+);
+const BellSheet = lazy(() =>
+  import("@shared/inbox/BellSheet").then(m => ({ default: m.BellSheet }))
+);
+const FeedbackModal = lazy(() =>
+  import("@shared/inbox/FeedbackModal").then(m => ({ default: m.FeedbackModal }))
+);
 import { chadMessage } from "@shared/commentary/chad";
-import { ProfileScreen } from "@shared/components/ProfileScreen";
 import { useAuth } from "@shared/auth/useAuth";
-import { RegisterModal } from "@shared/components/RegisterModal";
-import { PwaInstallPrompt } from "@shared/components/PwaInstallPrompt";
-import { BellSheet } from "@shared/inbox/BellSheet";
-import { FeedbackModal } from "@shared/inbox/FeedbackModal";
 import { listMessages } from "@shared/inbox/inbox";
 import { ensureLoaded } from "@shared/engines/dataEngine";
 
@@ -1933,24 +1957,26 @@ export function GameView({ adapter }: Props) {
                 (() => {
                   const bonusPlayers = getTodaysStars();
                   return (
-                    <CollectScreen
-                      taskStates={taskStates}
-                      weeklyTaskStates={weeklyTaskStates}
-                      perpetualTaskStates={perpetualTaskStates}
-                      loginStreak={loginStreak}
-                      coins={coins}
-                      xp={xp}
-                      streakCount={streakCount}
-                      bonusPlayers={bonusPlayers}
-                      onViewLeaderboard={() => {
-                        setShowCollect(false);
-                        setShowLeaderboard(true);
-                        track("leaderboard", "viewed", { source: "collect_screen" });
-                      }}
-                      recordLeaderboardViewed={recordLeaderboardViewed}
-                      onClose={() => setShowCollect(false)}
-                      onCollect={(id) => { collectTask?.(id); }}
-                    />
+                    <Suspense fallback={null}>
+                      <CollectScreen
+                        taskStates={taskStates}
+                        weeklyTaskStates={weeklyTaskStates}
+                        perpetualTaskStates={perpetualTaskStates}
+                        loginStreak={loginStreak}
+                        coins={coins}
+                        xp={xp}
+                        streakCount={streakCount}
+                        bonusPlayers={bonusPlayers}
+                        onViewLeaderboard={() => {
+                          setShowCollect(false);
+                          setShowLeaderboard(true);
+                          track("leaderboard", "viewed", { source: "collect_screen" });
+                        }}
+                        recordLeaderboardViewed={recordLeaderboardViewed}
+                        onClose={() => setShowCollect(false)}
+                        onCollect={(id) => { collectTask?.(id); }}
+                      />
+                    </Suspense>
                   );
                 })()
               )}
@@ -2061,66 +2087,72 @@ export function GameView({ adapter }: Props) {
         }}
       />
 
-      {showLeaderboard && !isFTUE && (
-        <LeaderboardScreen
-          currentUid={getPlayerUid()}
-          sport={leaderboardScope as "basketball" | "baseball" | "worldcup"}
-          onClose={() => setShowLeaderboard(false)}
-        />
-      )}
+      {/* Lazy-loaded overlays — single Suspense boundary; fallback is null
+          because each overlay is itself a transient modal that only mounts
+          when its flag fires. Showing nothing while a chunk loads is the
+          right behavior (chunk loads in <100ms on warm cache). */}
+      <Suspense fallback={null}>
+        {showLeaderboard && !isFTUE && (
+          <LeaderboardScreen
+            currentUid={getPlayerUid()}
+            sport={leaderboardScope as "basketball" | "baseball" | "worldcup"}
+            onClose={() => setShowLeaderboard(false)}
+          />
+        )}
 
-      {bellOpen && user && (
-        <BellSheet
-          userId={user.id}
-          onClose={() => setBellOpen(false)}
-          onViewAll={() => setShowProfile(true)}
-        />
-      )}
+        {bellOpen && user && (
+          <BellSheet
+            userId={user.id}
+            onClose={() => setBellOpen(false)}
+            onViewAll={() => setShowProfile(true)}
+          />
+        )}
 
-      {showProfile && (
-        <ProfileScreen
-          currentUid={getPlayerUid()}
-          sport={leaderboardScope}
-          onClose={() => setShowProfile(false)}
-          isAnonymous={isAnonymous}
-          onSaveAccount={() => {
-            track("auth", "signup_modal_shown", { trigger: "profile_button", hand_number: handCount });
-            setShowProfile(false);
-            setShowRegisterModal(true);
-          }}
-          onOpenFeedback={() => setFeedbackOpen(true)}
-        />
-      )}
+        {showProfile && (
+          <ProfileScreen
+            currentUid={getPlayerUid()}
+            sport={leaderboardScope}
+            onClose={() => setShowProfile(false)}
+            isAnonymous={isAnonymous}
+            onSaveAccount={() => {
+              track("auth", "signup_modal_shown", { trigger: "profile_button", hand_number: handCount });
+              setShowProfile(false);
+              setShowRegisterModal(true);
+            }}
+            onOpenFeedback={() => setFeedbackOpen(true)}
+          />
+        )}
 
-      {feedbackOpen && user && (
-        <FeedbackModal
-          userId={user.id}
-          onClose={() => setFeedbackOpen(false)}
-          metadata={{ sport: sportKey }}
-        />
-      )}
+        {feedbackOpen && user && (
+          <FeedbackModal
+            userId={user.id}
+            onClose={() => setFeedbackOpen(false)}
+            metadata={{ sport: sportKey }}
+          />
+        )}
 
-      {/* PWA install prompt — gated by attention mutex so it doesn't stack
-          on top of chad commentary / register modal / name prompt. */}
-      {!isFTUE && (gameState === "IDLE" || gameState === "RESULTS") && (
-        <PwaInstallPrompt
-          active={handCount >= 3}
-          tryClaimAttention={tryClaimAttention}
-          releaseAttention={releaseAttention}
-        />
-      )}
+        {/* PWA install prompt — gated by attention mutex so it doesn't stack
+            on top of chad commentary / register modal / name prompt. */}
+        {!isFTUE && (gameState === "IDLE" || gameState === "RESULTS") && (
+          <PwaInstallPrompt
+            active={handCount >= 3}
+            tryClaimAttention={tryClaimAttention}
+            releaseAttention={releaseAttention}
+          />
+        )}
 
-      {/* Registration modal */}
-      {showRegisterModal && (
-        <RegisterModal
-          onClose={() => setShowRegisterModal(false)}
-          onSuccess={() => setShowRegisterModal(false)}
-          signUp={signUp}
-          linkGoogle={linkGoogle}
-          signIn={signIn}
-          signInGoogle={signInGoogle}
-        />
-      )}
+        {/* Registration modal */}
+        {showRegisterModal && (
+          <RegisterModal
+            onClose={() => setShowRegisterModal(false)}
+            onSuccess={() => setShowRegisterModal(false)}
+            signUp={signUp}
+            linkGoogle={linkGoogle}
+            signIn={signIn}
+            signInGoogle={signInGoogle}
+          />
+        )}
+      </Suspense>
 
       {/* PostHandSheet — optional, sport-specific overlay */}
       {PostHandSheet && !isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && springSettled && (() => {

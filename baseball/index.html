@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- Preconnect to Supabase: saves DNS + TLS round-trip on the first
+         auth/REST/storage call. One project URL serves auth, REST, and
+         storage (headshots, audio); a single preconnect covers all. -->
+    <link rel="preconnect" href="https://hnhrpwwznzokkfagfumb.supabase.co" crossorigin>
     <title>Replay IFS — instant MLB fantasy</title>
     <meta name="description" content="MLB fantasy without the 6-hour wait. Pull a roster, see what actually happened, climb the leaderboard. Real games, instant results." />
 
@@ -26,9 +30,45 @@
     <meta name="twitter:description" content="MLB fantasy without the 6-hour wait. Pull a roster, see what actually happened, climb the leaderboard. Real games, instant results." />
     <meta name="twitter:image" content="https://replayifs.com/og-baseball.png" />
     <meta name="twitter:image:alt" content="Replay IFS — instant MLB fantasy" />
+    <!-- Inline boot skeleton inside #root — see basketball/index.html for
+         rationale. Paints the brand wordmark before the React bundle
+         downloads + executes, lifting LCP. -->
+    <style>
+      .rm-boot {
+        position: fixed; inset: 0;
+        background: linear-gradient(180deg, #070A12 0%, #0A1020 38%, #070A12 100%);
+        color: #F0F2F5;
+        font-family: 'Impact','Arial Narrow',Arial,sans-serif;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        text-align: center;
+      }
+      .rm-boot-logo {
+        font-weight: 900; font-size: 38px;
+        letter-spacing: -0.5px; text-transform: uppercase;
+      }
+      .rm-boot-logo .accent { color: #FFB14A; }
+      .rm-boot-sub {
+        margin-top: 14px;
+        font-family: 'Inter', system-ui, sans-serif;
+        font-size: 12px; letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(240,242,245,0.45);
+        animation: rm-boot-pulse 1.6s ease-in-out infinite;
+      }
+      @keyframes rm-boot-pulse {
+        0%, 100% { opacity: 0.45; }
+        50%      { opacity: 0.85; }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="rm-boot">
+        <div class="rm-boot-logo">Replay <span class="accent">IFS</span></div>
+        <div class="rm-boot-sub">Warming up</div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

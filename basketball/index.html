@@ -3,10 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <!-- Drop user-scalable=no per a11y guideline (Lighthouse meta-viewport
+         audit). Native double-tap-to-zoom remains useful for users with
+         low vision; the in-game UI doesn't depend on the zoom lock. -->
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
+    <!-- Preconnect to Supabase: saves DNS + TLS round-trip on the first
+         auth/REST/storage call. One project URL serves auth, REST, and
+         storage (headshots, audio); a single preconnect covers all. -->
+    <link rel="preconnect" href="https://hnhrpwwznzokkfagfumb.supabase.co" crossorigin>
     <title>Replay IFS — instant NBA fantasy</title>
     <meta name="description" content="Pull an NBA roster, see how the game actually went, beat the leaderboard. No waiting, no salary research. Just play." />
 
@@ -27,9 +34,48 @@
     <meta name="twitter:description" content="Pull an NBA roster, see how the game actually went, beat the leaderboard. No waiting, no salary research. Just play." />
     <meta name="twitter:image" content="https://replayifs.com/og-basketball.png" />
     <meta name="twitter:image:alt" content="Replay IFS — instant NBA fantasy" />
+    <!-- Inline boot styles for the SSR-equivalent skeleton inside #root.
+         Renders the brand wordmark + a soft pulse before the JS bundle
+         executes, so LCP is the wordmark (paints in <500ms) instead of
+         the React-rendered GameView (paints after the 2.7 MB bundle
+         downloads + evaluates). React mounts into #root and replaces
+         these children automatically. -->
+    <style>
+      .rm-boot {
+        position: fixed; inset: 0;
+        background: linear-gradient(180deg, #070A12 0%, #0A1020 38%, #070A12 100%);
+        color: #F0F2F5;
+        font-family: 'Impact','Arial Narrow',Arial,sans-serif;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        text-align: center;
+      }
+      .rm-boot-logo {
+        font-weight: 900; font-size: 38px;
+        letter-spacing: -0.5px; text-transform: uppercase;
+      }
+      .rm-boot-logo .accent { color: #FFB14A; }
+      .rm-boot-sub {
+        margin-top: 14px;
+        font-family: 'Inter', system-ui, sans-serif;
+        font-size: 12px; letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(240,242,245,0.45);
+        animation: rm-boot-pulse 1.6s ease-in-out infinite;
+      }
+      @keyframes rm-boot-pulse {
+        0%, 100% { opacity: 0.45; }
+        50%      { opacity: 0.85; }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="rm-boot">
+        <div class="rm-boot-logo">Replay <span class="accent">IFS</span></div>
+        <div class="rm-boot-sub">Warming up</div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
