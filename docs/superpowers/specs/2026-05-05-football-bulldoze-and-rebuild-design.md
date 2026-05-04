@@ -38,6 +38,31 @@ Two paths were considered:
 
 The bulldoze is the right call because the drift is structural, not stylistic. The 466-line GameView fork doesn't represent a different game — it represents the pre-Phase-2 architecture. Lifting it into shape costs more than starting from the canonical template and dropping in the football-specific bits.
 
+## Position parity — the foundation
+
+Soccer's central design problem: defenders don't post flashy numbers like forwards do, but their FP needs to feel *comparable* — otherwise the FLEX slot collapses to "always pick a forward" and the game becomes a one-position lottery. This is the same problem baseball solved between pitchers and batters, and the existing `worldcup/` work has the right answer for football.
+
+**Three parity mechanisms already engineered, all preserved unchanged:**
+
+1. **Position-specific FP weights** (`worldcupConfig.ts:54-101`).  Same raw stats are weighted differently per position so that the *typical* output ranges match. A goal is worth 22 FP for a FWD but 18 FP for a DEF (rare → heavily rewarded) and 60 FP for a GK (ultra-rare → massive). Tackles are worth 5 FP for DEF, 4 FP for MID, 2 FP for FWD. Pressures are weighted highest for MID (volume role), lowest for FWD. Calibrated so each position's typical game lands in the same 16–25 FP avg / 60–75 FP elite band.
+
+2. **Within-position salary normalization** (`worldcup/src/adapters/gameAdapter.ts:109-111`, comment: *"Salary derived FROM proj (within-position normalisation). This is the key: same proj = same salary regardless of position"*). Each position's salaries are normalized against that position's mean, not the league mean. A $34 GK and a $34 DEF and a $34 MID all project to comparable FP — different stats, same expected output. This is what stops the FLEX from defaulting to FWD.
+
+3. **Position-keyed badges** (`worldcupConfig.ts:141-352`). Each position has its own ladder of "big moments" worth meaningful FP:
+
+| Position | Tier 1 (top) | Tier 2 | Tier 3 | Independent |
+|----------|--------------|--------|--------|-------------|
+| FWD | HAT_TRICK +30 | BRACE +15 | POACHER +15 | CREATOR +18, SHARP +8 |
+| MID | MAESTRO +20 | DYNAMO +18 | PLAYMAKER +12 | BOX_TO_BOX +10, PRESS_KING +10 |
+| DEF | STOPPER +20 | GUARDIAN +15 | BULLDOZER +12 | OVERLAP +15, CLEAN_SHEET +10 |
+| GK | WALL +10 | KEEPER +5 | — | CLEAN_SHEET +10 |
+
+A DEF can hit 50+ FP through a STOPPER + OVERLAP combo without scoring a goal. A GK can hit 50+ via WALL + CLEAN_SHEET + high save count. The "big moment" is reachable from every position. This is the soccer answer to the user concern that "DF isn't going to have as flashy numbers as a FW" — they don't *need* to; they have their own moments calibrated to comparable FP.
+
+**What this means for the bulldoze:** these three mechanisms (the position-specific weights, the within-position salary normalization, the position-keyed badge ladders) are kept verbatim. They are the foundation, not a future task. The bulldoze is structural cleanup *around* this work, not a redo of it.
+
+**Validation gate before launch (added to acceptance criteria):** the 10k-hand simulator must report comparable LEGEND-rate-by-anchor-position. If FWD-anchored hands hit LEGEND 5× more often than DEF-anchored hands, the parity is broken and weights/badges need adjustment before ship.
+
 ## Naming
 
 - **Sport key:** `football` (was `worldcup`)
@@ -157,14 +182,42 @@ Fewer slots than basketball (5 vs 6) compensates for soccer's lower per-player F
 
 ## FTUE
 
-Anchor: **Messi** (FWD, salary $60).
+Anchor: **Messi** (FWD, salary $60). Drawn FTUE result uses a real Messi-MOTM game from extracted 2022 World Cup data so the win-moment is grounded in actual history (not a synthetic "designed to feel good" outcome).
 
-Other four cards: 1 GK + 1 DEF + 1 MID + 1 FLEX, mid-tier salaries to leave cap room for Messi. The drawn FTUE roster uses a real Messi-MOTM game from extracted 2022 World Cup data so the FTUE win-moment is grounded in actual history.
+**FTUE roster composition** (5 cards, $180 cap):
 
-`ftueTextConfig` carries soccer-specific coach copy in `holdIntroText`, teaching:
-- The position requirements (GK/DEF/MID/FWD locked + 1 FLEX)
-- The salary cap and how Messi anchors it
-- The captain/MOTM ladder via card-tier colors (per the prelaunch FTUE color-tier teaching landed in #45)
+| Slot | Position | Player | Salary | Why |
+|------|----------|--------|--------|-----|
+| 1 | FWD | Messi | $60 | Anchor — frames the cap; FWD slot |
+| 2 | GK | (mid-tier WC keeper) | $25 | Teaches GK position requirement; lowest salary |
+| 3 | DEF | (mid-tier WC defender) | $30 | Teaches DEF position requirement |
+| 4 | MID | (mid-tier WC midfielder) | $35 | Teaches MID position requirement |
+| 5 | FLEX | (mid-tier WC FWD or MID) | $30 | **Critical**: teaches FLEX rule |
+
+Total: $180 — exactly at cap, teaching that the cap is real and binding.
+
+**FTUE teaching beats** (each step in the existing `CoachLayer.tsx` flow gets soccer-specific copy):
+
+1. **Deal step** — Coach intro: "Five players. One Argentine ace anchoring it. Let's see what we got."
+2. **Hold step (`holdIntroText`)** — teaches three things in sequence:
+   - **Position lockouts**: "GK / DEF / MID / FWD slots are fixed — you can only swap a goalkeeper for another goalkeeper, etc."
+   - **The FLEX slot rule** (the one the review flagged): "The FLEX takes any outfield position — DEF, MID, or FWD. **Not GK** — only one keeper per side, just like a real match."
+   - **Card-tier colors** (per #45 launch teaching): how to read salary tier from card border color
+3. **Draw step** — "Hold who you trust. Redraw the rest."
+4. **Reveal step** — Real game stats roll in. Messi's actual 2022 MOTM line plays out tile-by-tile (goal → +22 FP, assist → +8 FP, HAT_TRICK badge → +30 FP, etc. — see Scoring clarity section).
+5. **Win step** — MOTM tier hits with a soccer-specific celebration line. Tier ladder is shown (SUB → STARTER → CAPTAIN → MOTM → LEGEND) so the user sees they landed on tier 4 of 5.
+
+**FTUE acceptance criteria** (validation, not just specification):
+
+- After FTUE completes, the user understands the 5-slot positional structure (verified by: most users' first non-FTUE hand respects position requirements)
+- The user has seen Messi's 2022 MOTM moment land at MOTM or LEGEND tier (verified by: drawn FTUE roster + game produces ≥190 FP total in simulator)
+- The user understands FLEX ≠ GK (verified during the bulldoze: FLEX UI in non-FTUE play also reinforces this — see UI section below)
+
+**FLEX UI affordances (review concern #4)** — beyond FTUE teaching, the live game UI surfaces the FLEX rule:
+
+- The FLEX slot card displays a small label ("ANY OUTFIELD") in the slot header
+- If the deal/redraw ever proposes a GK in the FLEX slot, the engine rejects it server-side (already enforced by `excludeFromFlex: ["GK"]` in the roster generator at `gameAdapter.ts:142`); no UI surface for the rejection because users never see it happen
+- On hover/tap of the FLEX slot, an inline tooltip: "Any outfield player (no goalkeepers)" — non-blocking, dismissable
 
 ## Headshots
 
@@ -180,17 +233,39 @@ A real headshot source (Wikimedia Commons, paid sports API, etc.) is deferred to
 - The "today's stars" / daily-bonus pool concept (`adapter.buildBonusPool()`, `adapter.getDailyBonusMapNow()`) maps onto the shared infrastructure unchanged.
 - When the rotation-50 spec lands, only `getPlayers()` and possibly `buildBonusPool()` change. No other architectural impact.
 
-## Bonus pool
+## Bonus pool — per-competition
 
-Inherits the canonical shared system automatically by virtue of using shared `GameView`:
+Inherits the canonical shared system (`shared/utils/bonusPoolStore.ts`) automatically by using shared `GameView`. **Decision locked: each competition gets its own pool and its own leaderboard.** EPL hands compete against EPL hands; World Cup hands compete against World Cup hands. Mixing competitions in a single pool would create the imbalance the review flagged (different scoring environments, different stat distributions) and dilute the "tournament moment" feel of competitions like the World Cup.
 
-- KV-backed via `shared/utils/bonusPoolStore.ts`
+**Schema (KV keys):**
+
+| Key | Use |
+|-----|-----|
+| `bonus_pool:basketball` | Basketball (NBA only — no qualifier needed) |
+| `bonus_pool:baseball` | Baseball (MLB only — no qualifier needed) |
+| `bonus_pool:football:world_cup` | Football, World Cup competition (launch) |
+| `bonus_pool:football:epl` *(future)* | Football, EPL competition |
+| `bonus_pool:football:la_liga` *(future)* | Football, La Liga competition |
+
+**Pool parameters (unchanged from canonical):**
+
 - `BONUS_POOL_SEED = 1000` (was `$12,451.29` in the dead local code)
-- `BONUS_POOL_DAILY_BASE = 1000` (daily injection)
+- `BONUS_POOL_DAILY_BASE = 1000` (daily injection per pool)
 - `RAKE_RATE = 5%` per bet
 - Distributed daily via leaderboard, 60/40 split (Session Score / Best Hand), top 10 with the standard 35/20/12/8/6/5/4/4/3/3% distribution
+- Each competition gets its own daily injection and rake bucket — pools never mix
 
-The `api/bonus-pool.ts` `SUPPORTED_SPORTS` set is updated to include `football` (and remove `worldcup`).
+**API changes (`api/bonus-pool.ts`):**
+
+- Accept optional `competition` query param: `GET ?sport=football&competition=world_cup`
+- For sports without competitions (basketball/baseball), `competition` is omitted; key remains `bonus_pool:<sport>`
+- For football, `competition` is **required**; missing param returns 400
+- `SUPPORTED_SPORTS` set: replace `worldcup` with `football`
+- A new `SUPPORTED_COMPETITIONS` map: `{ football: ["world_cup"] }` at launch; extends as competitions are added
+
+**Leaderboard scope:** `/api/leaderboard?sport=football&competition=world_cup&metric=...`. Same pattern as the bonus pool. A football-EPL hand never competes against a football-WC hand in the rankings. The chooser's TO BEAT preview for the football card pulls from `competition=world_cup` at launch.
+
+**Migration:** basketball and baseball keep their current keys (`bonus_pool:basketball`, `bonus_pool:baseball`) at launch. If/when those sports add a second competition (e.g., college basketball), their keys migrate to `bonus_pool:<sport>:<competition>` in a separate, dedicated change. Out of scope here.
 
 ## Cleanup
 
@@ -222,8 +297,88 @@ The directory and naming reflect the long-term shape, even though World Cup is t
 - `football/` (not `worldcup/`) — sport identity is the umbrella.
 - `FootballSportConfig` (not `WorldCupSportConfig`) — config is sport-level.
 - The `transformWorldCupData.mjs` script is competition-specific by design and stays named accordingly. When EPL data lands, a sibling `transformEPLData.mjs` joins it.
-- The `api/bonus-pool.ts` ledger key is `bonus_pool:football` — one bucket for the sport, regardless of competition. (Open question for a later spec: do EPL and World Cup share a leaderboard, or do competitions get their own pool/leaderboard? Out of scope here.)
-- No competition-switching UI ships. Implicit in the data file. When a second competition is added, that's its own design conversation.
+- **Bonus pool and leaderboard are per-competition**, keyed `<sport>:<competition>` for football (see Bonus pool section). Resolves the review concern that EPL + World Cup mixing would create imbalance.
+- No competition-switching UI ships at launch. Competition is implicit in the data file (`football/public/data/players.json` is World Cup data; future EPL data lands at `football/public/data/players-epl.json` or similar). The competition-switching UI is a separate spec when a second competition is added.
+
+## Game feel validation (review concern #1)
+
+Soccer's lower per-match stat variance creates a real risk that hands feel undifferentiated — too many "everyone scored 0 goals, everyone got ~15 FP" outcomes. Validation is mandatory before launch.
+
+**Quantitative gate (10k-hand simulator):**
+
+- Tier hit-rate distribution must match Tier ladder targets within ±20% (SUB ~25%, STARTER ~12%, CAPTAIN ~5%, MOTM ~1.5%, LEGEND ~0.3%, BUST ~56%). If hit rates are too compressed (most hands clustering in STARTER/CAPTAIN), thresholds get re-spaced to spread the outcomes.
+- **LEGEND-rate-by-anchor-position** must be comparable: if FWD-anchored hands hit LEGEND at 0.5% but DEF-anchored at 0.05%, parity is broken (see Position parity section).
+- **FP separation between adjacent tiers** must be ≥20 FP at the lower end and ≥30 FP at the top — this is what makes the tier transitions feel earned rather than incremental.
+
+**Qualitative gate (50 manual hands, played as a user):**
+
+- Count "boring" hands (where the user can't articulate *why* they got the result) — should be < 20%
+- Count "memorable" hands (the user can describe the standout play) — should be > 30%
+- Verify big-moment payoffs land hard: a HAT_TRICK badge animation must feel categorically different from a SHARP badge
+
+If the qualitative gate fails, the diagnosis is one of: badge FP values too small, position weights too flat, or the reveal-stage commentary not landing the moment.
+
+## Scoring clarity (review concern #2)
+
+Soccer stats are less self-evidently scoring than basketball. "Messi: 1G 1A" doesn't translate to a number the way "LeBron: 40 pts" does. The card back must show the math.
+
+**Stat → FP attribution on the card back** (extends the existing `statDisplay` config):
+
+```
+                  GOALS         1     +22 FP
+                  ASSISTS       1      +8 FP
+                  SHOTS ON TGT  3     +12 FP
+                  KEY PASSES    2      +6 FP
+                  DRIBBLES      4      +8 FP
+                  ──────────────────────────
+                  STATS                +56 FP
+                  HAT_TRICK 🎩         +30 FP
+                  ──────────────────────────
+                  TOTAL                +86 FP
+```
+
+Each stat tile shows both the count *and* its FP contribution. Badges show their bonus separately and the total ties out. This makes "why did this player score 86" answerable at a glance.
+
+**Reveal-stage emphasis:** the existing FP roll-up animation in `useEmotionalReveal.ts` plays this same math live — each stat tile pulses as it adds to the running total. For soccer this is more important than for basketball (each individual contribution is smaller, so seeing the build-up matters more).
+
+## Commentary archetypes (review concern #3)
+
+The shared archetype system (`shared/commentary/archetypes.ts`) is sport-agnostic — `star_carry`, `balanced_win`, `badge_explosion`, `everyone_flat`, `star_failed`, `collapse`, etc. The phrasing per sport lives in `shared/commentary/libraries/<sport>.json`. Football needs:
+
+**`shared/commentary/libraries/football.json`** — populated for every active archetype (currently 13: 9 win, 4 loss, plus `badge_explosion` and `career_night` shared between).
+
+Soccer-specific phrasing requirements:
+
+- **Star carry (FWD anchor lights up):** "Messi turned in a tournament moment — 2G 1A and the crowd lost it." Goal-driven, named.
+- **Balanced win:** "No single explosion — everyone did their job. The kind of result that wins tournaments." Distribution language.
+- **Star carry from MID (playmaker night):** distinct from FWD carry. "Bellingham ran the midfield — 8 key passes, 2 assists, MOTM material." Surfaces assists/KP, not just goals.
+- **Defensive masterclass (DEF anchor carries):** "Van Dijk locked the back four — 3 tackles, 5 clearances, OVERLAP for the assist." Surfaces tackles/INT/CLR + the rare DEF goal/assist as the badge moment.
+- **Goalkeeper heroics (GK carry):** "Martinez stood on his head — 6 saves, clean sheet, the WALL came in." Surfaces saves and clean sheet.
+- **Star failed (anchor was the culprit):** "Mbappé went missing. 0G, 1 SOT — sometimes the favourite no-shows." Names the culprit explicitly.
+- **Everyone flat (collective bust):** "Quiet match all around — no goals, low key passes. Nothing to write home about." Soccer-specific framing of the low-scoring outcome.
+
+**Culprit identification in losses** is already handled by the `selectCommentary.ts` archetype-selection logic (it identifies the lowest-FP-vs-projection card and routes to `star_failed` or `star_cold`). Football inherits this for free. Validation: in the manual 50-hand test, every loss should have an attributable narrative, not a generic "you lost" line.
+
+**Reserved archetypes worth activating for football** (currently `active: false` in the registry):
+
+- `anchor_underperformed` — fallback for `star_failed`, useful for soccer where the anchor often doesn't post negative FP, just zero
+- `one_player_threw` — useful for the rare red-card scenario (-15 FP from a single play)
+- `wrong_star_wrong_night` — when the user picked the wrong anchor and another sub-tier player overperformed
+
+These get activated as part of the football library landing.
+
+## Data edge cases (review concern #5)
+
+StatsBomb data has known wrinkles. The implementation must handle:
+
+- **Substitutes and minutes_played**: a player who came on at 70' has only 20 minutes of stats. The CLEAN_SHEET badge requires `minutes_played >= 60` — verified to gate correctly. Per-stat normalization (per-90, per-game) is *not* applied — we use raw match totals so the "right place at the right time" element is preserved.
+- **0-minute appearances**: players named in the squad but didn't enter. Filtered out at the `filterScoringLogs` step (`gameAdapter.ts:31-38`) — no scoring stats means they don't make the eval pool. Verify edge case: a GK who didn't make a save still has stats (clean sheet, minutes); confirm the filter handles this correctly.
+- **Position fluidity**: a player listed as "Right Wing Back" plays as a DEF in the World Cup. Handled by `positionAliases` in `worldcupConfig.ts:23-32`. Verify all StatsBomb position strings are mapped; unmapped positions default to MID which would skew DEF parity.
+- **GK anomalies**: a GK who scored a goal (rare but real — extracted data has examples). Should hit the GK badge ladder *and* the goal weight (60 FP for GK). Ensure these stack correctly rather than getting suppressed.
+- **Red-card scenarios**: -15 FP from `red_cards >= 1` plus likely low minutes. Should produce a coherent narrative, not a confusing zero (handled by reserved `one_player_threw` archetype, see Commentary section).
+- **Penalty shootouts**: World Cup data may include or exclude shootout goals. Confirm whether penalty-shootout goals count toward the `goals` stat in source data; document the choice in code comments.
+
+These cases get explicit unit tests in `shared/commentary/__tests__/` and `worldcup/scripts/__tests__/` (or wherever the data-pipeline tests live in the new `football/` tree).
 
 ## Testing & verification
 
@@ -231,12 +386,16 @@ The directory and naming reflect the long-term shape, even though World Cup is t
 - `npm --prefix football run lint` — green
 - `npx vitest run` — full suite green (catches any GOAT/old-bonus-pool references that broke)
 - `bash scripts/build-vercel.sh` locally — produces `dist/football/` alongside `dist/basketball/` and `dist/baseball/`, with the chooser at `dist/index.html` showing all three sport cards
-- `npx ts-node shared/tools/runSimulator.ts football 10000` — calibrate tier thresholds to the target hit rates in the Tier ladder section
+- `npx ts-node shared/tools/runSimulator.ts football 10000` — must satisfy quantitative game-feel gates (see Game feel validation section): tier hit-rate targets, position-anchor parity, FP separation between tiers
+- 50 manual hands played end-to-end — must satisfy qualitative gates (boring < 20%, memorable > 30%)
+- Edge-case unit tests pass (substitutes, 0-min, position fluidity, GK goals, red cards, penalty shootouts)
 - Preview deploy → manual smoke:
-  - FTUE walkthrough (5-card Messi-anchored deal, hold, draw, MOTM win moment lands)
+  - FTUE walkthrough lands all five teaching beats (Deal → Hold position-lockout → Hold FLEX rule → Hold tier-colors → Reveal stat→FP roll-up → Win MOTM tier)
   - Daily-bonus roll-in renders without errors
   - Card-tier colors visible in `holdIntroText` (the #45 teaching)
-  - Bonus pool widget shows sensible value (KV-backed, not hardcoded)
+  - Bonus pool widget shows sensible value (KV-backed at `bonus_pool:football:world_cup`, not hardcoded)
+  - FLEX tooltip surfaces on hover/tap
+  - Stat→FP attribution visible on every card back
 - Chooser smoke: clicking ⚽ Football routes to `/football/?play=1` and lands in FTUE for new users
 
 ## Acceptance criteria
@@ -251,9 +410,17 @@ A reviewer should be able to confirm, via the implementation plan's PR(s):
 6. Tier thresholds are calibrated, not seeded — backed by simulator output committed alongside the config.
 7. Type check, lint, and vitest all pass repo-wide.
 8. Preview deploy renders the football SPA cleanly with FTUE → game → results loop working end-to-end.
+9. **Position parity verified**: 10k-hand simulator reports comparable LEGEND-rate by anchor position (FWD/MID/DEF/GK within 2× of each other). DEF and GK anchors must demonstrably reach LEGEND tier in the data, not just theoretically.
+10. **Stat → FP attribution renders** on every card back; no card shows just stat counts without their FP contribution.
+11. **FLEX rule surfaced** in both FTUE and live UI (hover/tap tooltip on the FLEX slot).
+12. **Football commentary library** (`shared/commentary/libraries/football.json`) populated for all active archetypes; loss-side narratives identify a culprit player by name.
+13. **Bonus pool keyed per-competition**: `bonus_pool:football:world_cup` exists in KV; basketball/baseball keys unchanged.
+14. **Edge-case tests pass**: substitutes, 0-minute, position fluidity, GK-scored-goal, red-card, penalty-shootout cases all have tests and pass.
 
 ## Open questions / future specs (not part of this work)
 
 - **Daily-50 rotation format** — active design conversation, separate workstream. Slots in via `adapter.getPlayers()` when ready.
 - **Real headshot source** — Wikimedia Commons curation vs. paid API. Future task; flag-plus-name is the launch fallback.
-- **Multi-competition support** — adding EPL / La Liga / etc. as additional data sources under the football umbrella. Future spec; defines whether competitions share a leaderboard or get their own.
+- **Multi-competition data integrations** — adding EPL / La Liga / etc. as additional data sources under the football umbrella. The pool/leaderboard architecture is settled (per-competition); the data-pipeline work for each new competition is its own task.
+- **Competition-switching UI** — when football has 2+ competitions, users need a way to switch between them. Out of scope at launch (only World Cup).
+- **Basketball/baseball pool key migration** — if/when those sports add a second competition, migrate their KV keys from `bonus_pool:<sport>` to `bonus_pool:<sport>:<competition>`. Out of scope here.
