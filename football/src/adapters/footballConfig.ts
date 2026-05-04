@@ -1,5 +1,5 @@
 /**
- * worldcupConfig.ts — Layer 2 (World Cup specific)
+ * footballConfig.ts — Layer 2 (Football — World Cup '26 launch competition)
  * FP weights: 5x scaled, baked in.
  * Salary: position-balanced (within-position scaling).
  * Badges: position-specific, data-validated thresholds.
@@ -7,14 +7,15 @@
 
 import type { SportConfigShape } from "@shared/types";
 
-export const WorldCupSportConfig: SportConfigShape = {
-  sportKey: "worldcup",
-  sportLabel: "World Cup",
+export const FootballSportConfig: SportConfigShape = {
+  sportKey: "football",
+  sportLabel: "Football",
+  competition: "world_cup",   // launch competition
 
   // ── Roster ────────────────────────────────────────────────────────────────
-  rosterSize: 6,
-maxPlayers: 6,
-rosterSlots: ["GK", "DEF", "MID", "FWD", "FLEX", "FLEX"],
+  rosterSize: 5,
+  maxPlayers: 5,
+  rosterSlots: ["GK", "DEF", "MID", "FWD", "FLEX"],
   excludeFromFlex: ["GK"],
   salaryCap: 180,
 
@@ -117,12 +118,13 @@ rosterSlots: ["GK", "DEF", "MID", "FWD", "FLEX", "FLEX"],
     { tier: "WHITE",  minSalary: 0  },
   ],
 
-  // ── Win tiers (from tier-biased simulator) ────────────────────────────────
+  // ── Win tiers (seed values for PR 1; PR 2 calibrates via simulator) ─────
   winTiers: [
-    { name: "ROOKIE",   minFp: 155, multiplier: 1.5,  color: "#10B981" },
-    { name: "STARTER",  minFp: 180, multiplier: 2.5,  color: "#3B82F6" },
-    { name: "ALL_STAR", minFp: 200, multiplier: 5,    color: "#8B5CF6" },
-    { name: "MVP",      minFp: 230, multiplier: 15,   color: "#F59E0B" },
+    { name: "SUB",      minFp: 130, multiplier: 0.5, color: "#94A3B8" },
+    { name: "STARTER",  minFp: 150, multiplier: 1.5, color: "#10B981" },
+    { name: "CAPTAIN",  minFp: 167, multiplier: 3,   color: "#3B82F6" },
+    { name: "MOTM",     minFp: 192, multiplier: 8,   color: "#F59E0B" },
+    { name: "LEGEND",   minFp: 215, multiplier: 50,  color: "#EF4444" },
   ],
 
   // ── Badges ────────────────────────────────────────────────────────────────
