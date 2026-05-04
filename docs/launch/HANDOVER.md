@@ -1,11 +1,13 @@
 # Prelaunch handover — Replay IFS
 
 > **Read this first** at the start of a new session to pick up where we left off.
-> Last updated: 2026-05-03 (evening; supersedes earlier 2026-05-01 entries).
+> Last updated: 2026-05-04 (evening; supersedes 2026-05-03 entry).
 
 ## TL;DR
 
-You're prepping `replayifs.com` (NBA + MLB) for a Reddit launch. The 12-section prelaunch checklist is **~92% done**. Major code work is wrapped — no open code PRs. Remaining items are content/ops (OG images, Sentry DSN, soft launch with friends, content recordings, HANDOVER hygiene).
+`replayifs.com` is **technically launch-ready**. All hard-gate items closed, all code work shipped. Remaining items are content/ops in your hands: Reddit copy (ChatGPT helping), subreddit selection, soft-launch friend network, optional content recordings.
+
+**Verified working on prod end-to-end:** anonymous play, email sign-up, Google OAuth, Profile, leaderboard, chooser personalization buckets A–D, sticky skip-landing flag, FTUE tier-color teach, OG image unfurls, Sentry error capture (test event confirmed in dashboard), maintenance kill-switch (verified via Production Branch toggle 2026-05-04).
 
 What's live on prod right now:
 - Phase 2 GameView lift, all Section 1 + 2 + 3 + 4 hardening + meta tags + landing-page upgrade.
@@ -14,13 +16,17 @@ What's live on prod right now:
 - Wordmark click → chooser + leaderboard single-empty-state (#39).
 - Unified chooser landing + `/api/me` + `?signin`/`?play`/`?profile` query handoffs (#40, #42).
 - Auth flow end-to-end cleanup — sign-in keeps user on landing, name pill replaces 👤, lifted Profile to App level, sticky skip-landing flag on Play IFS (#42).
-- Google OAuth `redirectTo` cherry-picked into #42; Supabase Redirect URLs allowlist now includes apex + WWW + Vercel preview wildcards.
+- Google OAuth `redirectTo` cherry-picked into #42; Supabase Redirect URLs allowlist includes apex + WWW + Vercel preview wildcards.
 - Section 11 audit Gaps 1+2 (`score_submitted` + `leaderboard_viewed` analytics) shipped (#37). Gap 3 (chooser analytics) closed in #40.
 - Lighthouse perf wins (#36): boot skeleton ("Replay IFS / Warming up") on first paint, 7 lazy-loaded modal chunks, Supabase preconnect, robots.txt + sitemap.xml at site root. NBA ~72 / MLB ~62 (target was 80; v1.1 work for further gains).
+- **Sentry error capture (#44, #48)**: `@sentry/react` lit up via `VITE_SENTRY_DSN`. Errors auto-report through ErrorBoundary's `componentDidCatch` → `captureError` → tagged with sport. Verified via `?sentry-test=1` on both sports; events arrived in dashboard. Test handler removed in #48.
+- **FTUE tier-color teach (#45)**: holdIntroText now mentions card-tier colors so first-hand players understand higher-tier cards score more but cost more.
+- **OG images (#46, #47)**: 1200×630 PNGs at `chooser/public/og-{home,basketball,baseball}.png`. URLs use `www.replayifs.com` (not apex) to bypass the apex→www 307 that strict OG validators wouldn't follow. Tagline updated to "Instant fantasy. No waiting." / "Real games. Instant results."
+- **Maintenance kill-switch verified (2026-05-04)**: confirmed via Vercel "Production Branch" toggle (Settings → Git). Flipping `main` → `maintenance` serves the maintenance HTML; flipping back restores normal. ~2 min total. This is the actual incident-response lever.
 
 What's open and unmerged on GitHub:
-- **PR #34** (`prelaunch/launch-docs`) — docs only (this update). Safe to merge anytime.
-- **PR #35** (`maintenance` branch) — DO NOT MERGE; this is the maintenance-mode page meant for promote/demote via Vercel dashboard.
+- **PR #34** (`prelaunch/launch-docs`) — this docs update. Safe to merge anytime.
+- **PR #35** (`maintenance` branch) — DO NOT MERGE; this is the maintenance-mode page that lives separately and is promoted via the Vercel dashboard, not via merge.
 
 No code PRs outstanding.
 
@@ -32,15 +38,15 @@ No code PRs outstanding.
 |---|---|---|
 | 1 | Phase 2 merge | ✅ shipped |
 | 2 | Supabase hardening | ✅ shipped (free tier; pooler N/A for our REST-only architecture) |
-| 3 | OG / meta tags | ✅ tags shipped; PNG images deferred (drop into `chooser/public/og-*.png`) |
+| 3 | OG / meta tags + images | ✅ tags shipped + PNGs live (#46, #47) |
 | 4 | Landing page upgrade | ✅ shipped (PR #33 + unified chooser in #40); perf in #36 |
-| 5 | Maintenance mode page | ✅ branch + preview ready — promote-flow not yet tested |
-| 6 | Real-device QA | ✅ iPhone Safari pass (with + without VPN); Android Chrome from China without VPN: works for one tester, didn't work for John's specific device — known acceptable limitation |
+| 5 | Maintenance mode page | ✅ branch ready + promote-flow verified 2026-05-04 |
+| 6 | Real-device QA | ✅ iPhone Safari pass (with + without VPN); Android Chrome works for other testers in China without VPN; John's specific device didn't — known acceptable limitation |
 | 7 | Soft launch | ⏳ needs friend network |
-| 8 | Content assets | ⏳ your phone (10–15 sec screen recordings per sport) |
-| 9 | Reddit prep | 📝 drafts in `launch-assets/reddit-posts.md` |
+| 8 | Content assets | ⏳ your phone (10–15 sec screen recordings per sport, optional) |
+| 9 | Reddit prep | ⏳ ChatGPT helping with copy; subreddit selection still your call |
 | 10 | Twitter prep | 📝 drafts in `launch-assets/twitter-posts.md` (account TBC) |
-| 11 | Monitoring | ⚠️ analytics shipped (#37); Sentry not installed |
+| 11 | Monitoring | ✅ analytics (#37, #40) + Sentry verified live (#44, #48) |
 | 12 | Launch day kit | ⏳ your hands |
 
 ---
@@ -63,6 +69,11 @@ No code PRs outstanding.
 | #43 | Move debug bar to bottom of viewport | Cosmetic — was covering the nav header |
 | #37 | Section 11 — score_submitted + leaderboard_viewed analytics | Closes audit gaps 1+2 |
 | #36 | Lighthouse wins — preconnect, code-split, boot skeleton | NBA 61→72, MLB 51→62; FCP 6.4s→1.7s; robots.txt + sitemap.xml live |
+| #44 | Sentry — light up scaffold + verification handler | DSN env var + `?sentry-test=1` for end-to-end check |
+| #45 | FTUE tier-color teach in holdIntroText | One sentence per sport so first-hand players learn color → score+cost relationship |
+| #46 | OG images — three 1200×630 PNGs in chooser/public | Files for the meta-tag URLs that shipped in #32 |
+| #47 | OG image host fix (apex → www) | Apex 307s; strict validators don't follow → image URLs use www subdomain |
+| #48 | Remove ?sentry-test=1 handler | Sentry verified end-to-end; cleanup |
 
 After every merge: `phase-2/gameview-shared` was forwarded to match main. All open PRs were rebased on new main as part of each cleanup.
 
@@ -74,25 +85,23 @@ After every merge: `phase-2/gameview-shared` was forwarded to match main. All op
 
 1. **Soft launch with friends** (Section 7). 5–10 people willing to play one hand and report back. Test the actual Reddit-traffic moment in low stakes.
 
-2. **OG image PNGs.** Three files: `chooser/public/og-{home,basketball,baseball}.png`, 1200×630, <300 KB each. Drop them in; build picks them up via `scripts/build-vercel.sh`. Without them, Reddit/Twitter previews show no image.
-
-3. **Sentry install.** Needs your DSN. ~1 hour. Without it, you'll have analytics events but no error monitoring during launch.
+2. **Reddit copy + subreddit selection.** ChatGPT helping with copy. Subreddit candidates: r/fantasybball, r/nba, r/baseball, r/SideProject (indie-launch energy), r/InternetIsBeautiful (if presentation feels polished enough), r/sportsbook (non-betting fantasy angle).
 
 ### Medium-priority
 
-4. **Content recordings** (Section 8). 10–15 sec screen capture of one hand per sport, for Reddit/Twitter posts.
+3. **Content recordings** (Section 8). 10–15 sec screen capture of one hand per sport, for Reddit/Twitter posts. Optional but boosts engagement.
 
-5. **Maintenance promote-flow test.** Promote `maintenance` branch's preview to prod once in a low-stakes window, then promote main back. URL: `https://replay-n4aubf1gv-john-tangs-projects-1c51aca7.vercel.app`. Verifies the kill-switch works before you actually need it.
+4. **Pre-launch SQL dump** ✅ DONE 2026-05-03 via GitHub Codespaces (John's home network blocks postgres protocol; Codespaces bypasses it). File saved to `~/Backups/`. Re-run before launch night for a fresh snapshot if you want.
 
-6. **Pre-launch SQL dump** ✅ DONE 2026-05-03 via GitHub Codespaces (John's home network blocks postgres protocol; Codespaces bypasses it). File saved to `~/Backups/`. Re-run before launch night for a fresh snapshot if you want.
+5. **Maintenance kill-switch** ✅ verified 2026-05-04 via Vercel Settings → Git → Production Branch toggle. The lever works.
 
-7. **Twitter handle** — when you create the account, update bio + grab the handle for footer link.
+6. **Twitter handle** — when you create the account, update bio + grab the handle for footer link.
 
 ### Cleanup before launch (not blockers)
 
-8. **Remove `?debug=1` overlay** from `basketball/src/App.tsx` and `baseball/src/App.tsx`. Or leave it — gated behind a query param so invisible to normal traffic. My recommendation: leave it for the first week post-launch in case of weird user reports.
+7. **Remove `?debug=1` overlay** from `basketball/src/App.tsx` and `baseball/src/App.tsx`. Or leave it — gated behind a query param so invisible to normal traffic. My recommendation: leave it for the first week post-launch in case of weird user reports.
 
-9. **Lighthouse perf gap** — sport pages at 72/62, target was 80. v1.1 work: bundle-split engine + lazy FTUE flow + defer JSON parsing.
+8. **Lighthouse perf gap** — sport pages at 72/62, target was 80. v1.1 work: bundle-split engine + lazy FTUE flow + defer JSON parsing.
 
 ### Nice-to-have
 
@@ -172,6 +181,7 @@ The 2.7-3 MB raw bundle is the dominant launch-blocker for sport-page perf. v1.1
 
 ### Debug helpers shipped
 - **`?debug=1` query param** on `/basketball/` or `/baseball/` shows a green-on-black bar at the bottom of the viewport with live auth + view + sticky-flag state. Useful for mobile debugging without USB DevTools. Pointer-events: none — taps pass through.
+- **`?sentry-test=1` was removed** in #48 after Sentry verification — don't reintroduce.
 
 ### SQL dump procedure
 - John's home network (China + VPN) blocks postgres protocol on port 5432.
@@ -179,22 +189,31 @@ The 2.7-3 MB raw bundle is the dominant launch-blocker for sport-page perf. v1.1
 - Database password lives in Supabase dashboard → Settings → Database. Save in 1Password.
 - For repeat backups, build `/api/admin/dump` endpoint or set up a Vercel cron (v1.1).
 
+### Maintenance kill-switch procedure
+The actual incident-response lever, verified 2026-05-04:
+1. https://vercel.com/john-tangs-projects-1c51aca7/replay-mod/settings/git
+2. Find **"Production Branch"** field — currently `main`.
+3. Change to `maintenance`. Save. Vercel auto-deploys within ~30 sec.
+4. Visit `replayifs.com/` (any path) — should show maintenance page.
+5. To restore: change "Production Branch" back to `main`. Save. ~30 sec to redeploy.
+Total downtime per cycle: ~1-2 min.
+
 ---
 
 ## How to pick up next
 
 1. Start a fresh session, paste the prelaunch checklist again if needed (it lives only in our chat).
 2. Read this file (`docs/launch/HANDOVER.md`) to ground.
-3. Most likely next: knock out OG image PNGs (~10 min), then Sentry install (~1 hour, needs DSN), then start coordinating soft-launch friends.
+3. Most likely next: subreddit selection + Reddit copy finalize (ChatGPT helping) → soft-launch friend network → live launch.
 
 ---
 
 ## Branches alive on origin
 
-- `main` — production. Current HEAD: `086e549` (Lighthouse wins, #36).
+- `main` — production. Current HEAD: `171272c` (cleanup: remove Sentry test, #48).
 - `phase-2/gameview-shared` — long-lived working branch, in sync with main.
-- `prelaunch/launch-docs` (PR #34) — this docs branch.
-- `maintenance` (PR #35) — DO NOT MERGE.
+- `prelaunch/launch-docs` (PR #34) — this docs branch (final-day refresh in flight).
+- `maintenance` (PR #35) — DO NOT MERGE; promote via Vercel "Production Branch" toggle.
 
 No open code branches.
 
@@ -203,8 +222,7 @@ No open code branches.
 ## What's NOT in this codebase that you might think is
 
 - The prelaunch checklist itself (lives only in our chat).
-- OG image PNGs (`chooser/public/og-*.png` — paths reserved, files don't exist).
-- Sentry init (no DSN, no install).
 - Twitter handle (account TBC).
 - Cookie-based Supabase auth (v1.1).
 - Automated SQL backup (manual via Codespaces today; cron in v1.1).
+- A `/api/admin/dump` endpoint (deferred; manual Codespace run is fine for now).
