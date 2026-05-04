@@ -19,14 +19,6 @@ function AppInner() {
   const showDebug = typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("debug") === "1";
 
-  // ?sentry-test=1 → throws a controlled error so we can verify Sentry is
-  // capturing events end-to-end. Remove this and the symmetrical handler in
-  // basketball/src/App.tsx after launch verification.
-  if (typeof window !== "undefined" &&
-      new URLSearchParams(window.location.search).get("sentry-test") === "1") {
-    throw new Error("Sentry verification — baseball App.tsx (intentional test)");
-  }
-
   // The flippable-card landing is a marketing-direct-link surface only.
   // The chooser appends ?play=1 to bypass it, and we set a sticky flag so
   // the user never sees that page again on direct visits either.
