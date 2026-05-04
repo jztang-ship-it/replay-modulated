@@ -137,7 +137,7 @@ const BASEBALL_FTUE_CONFIG: FTUETextConfig = {
   },
   anchorRevealText: "Ohtani was electric tonight. 🔥 2 hits, 1 HR, 2 RBI, scored a run. 79 FP — Going Yard badge ⚾ stacks on top. That's why you held him.",
   idleText: "Real stats. Real history. Your fantasy result instantly. Hit DEAL to get started.",
-  holdIntroText: "5 players — 3 batters and 2 pitchers, $180 cap. Fantasy Points come from real stats — hits, home runs, strikeouts. Who do we keep?",
+  holdIntroText: "5 players — 3 batters and 2 pitchers, $180 cap. Card colors mark tier — red anchors cost more but score more. Fantasy Points come from real stats — hits, home runs, strikeouts. Who do we keep?",
   holdAnchorText: "Ohtani is your $54 RED anchor — top batter in baseball. Tap his card to hold, then hit DRAW and tap each replacement to see your hand.",
   nearMissText: "So close — only 1 FP from the All-Star win. One more hit from J. Turner and we'd be celebrating a 7x score. ⚾",
   anchorFlipHintText: "Ohtani carried this hand — 79 FP is monster. Flip his card to see the full stat line. 🔥",
