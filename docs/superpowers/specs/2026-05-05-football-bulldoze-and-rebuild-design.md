@@ -38,6 +38,48 @@ Two paths were considered:
 
 The bulldoze is the right call because the drift is structural, not stylistic. The 466-line GameView fork doesn't represent a different game — it represents the pre-Phase-2 architecture. Lifting it into shape costs more than starting from the canonical template and dropping in the football-specific bits.
 
+## Implementation phasing — two PRs
+
+The work ships in two reviewable PRs, not one giant pass. PR 1 makes football *exist*; PR 2 makes football *feel right*.
+
+### PR 1 — bulldoze + playable loop (architecture, routing, build)
+
+**In scope:**
+
+- Delete `worldcup/`, create `football/` with the full rename (sport key, class, directory, paths, localStorage prefix)
+- Rewrite the SPA shell: `App.tsx`, `GameView.tsx` (shim), `SportAdapter.ts`, `footballConfig.ts`, `SoccerCard.tsx`, `LandingPage.tsx` (shim), `ftueRoster.ts`
+- Bonus pool API extended for per-competition keying (`bonus_pool:football:world_cup`); `SUPPORTED_SPORTS` updated
+- Chooser updated with the third sport card; `scripts/build-vercel.sh` includes `football`; `vercel.json` rewrites added
+- FTUE roster wired; basic deal → hold → draw → reveal → results loop works end-to-end (with seeded tier thresholds and placeholder coach copy)
+- Cleanup audit pass (`grep -ri "GOAT"`, dead local `BonusPoolRow`/`$12,451.29` references, orphan imports)
+- Repo-wide typecheck / lint / vitest all pass
+
+**Out of PR 1:** stat→FP attribution UI, calibrated tier thresholds, football-specific commentary library, edge-case unit tests, polished FTUE coach copy, FLEX tooltip UI. Football inherits whatever the existing commentary system falls back to when no sport-library exists.
+
+**Acceptance criteria for PR 1:** items #1–8, #11, #13 from the master list below.
+
+### PR 2 — polish + validation (the layer that makes football feel right)
+
+**In scope:**
+
+- Stat → FP attribution rendering on every card back (the math layer from the Scoring clarity section)
+- Simulator runs (`npx ts-node shared/tools/runSimulator.ts football 10000`) → calibrate tier thresholds; commit calibrated values back into `footballConfig.ts`
+- Edge-case unit tests (substitutes, 0-min appearances, position fluidity, GK-scored-goal, red-card, penalty shootouts)
+- FTUE coach copy refinements (soccer-specific phrasing in each beat)
+- FLEX UI affordances (slot label + tooltip)
+- 10k-hand simulator validation gate met (tier hit-rates, **position parity rates within 2× across anchor positions**)
+- 50-hand qualitative gate met (boring < 20%, memorable > 30%)
+
+**Acceptance criteria for PR 2:** items #9, #10, #12, #14 from the master list below.
+
+### Deferred — post PR 2
+
+- **Football commentary library** (`shared/commentary/libraries/football.json`) is deferred until the active player pool is locked. Until then, phrasing can't be tuned to the actual roster (Messi vs. Mbappé as the canonical "star_carry" line, etc.). Football inherits the existing fallback library at launch and gets its own when the data layer is stable. The "Commentary archetypes" section below is design *intent*, not a PR-1 or PR-2 deliverable.
+- **Real headshot source** (Wikimedia Commons curation vs. paid API) — flag-plus-name fallback ships at both PRs.
+- **Daily-50 rotation format** — separate workstream; slots in via `adapter.getPlayers()` when ready.
+- **Multi-competition data** (EPL / La Liga / Bundesliga) — pool/leaderboard architecture is settled; data-pipeline work is per-competition and out of scope.
+- **Competition-switching UI** — only relevant when football has 2+ competitions live.
+
 ## Position parity — the foundation
 
 Soccer's central design problem: defenders don't post flashy numbers like forwards do, but their FP needs to feel *comparable* — otherwise the FLEX slot collapses to "always pick a forward" and the game becomes a one-position lottery. This is the same problem baseball solved between pitchers and batters, and the existing `worldcup/` work has the right answer for football.
@@ -341,9 +383,11 @@ Each stat tile shows both the count *and* its FP contribution. Badges show their
 
 **Reveal-stage emphasis:** the existing FP roll-up animation in `useEmotionalReveal.ts` plays this same math live — each stat tile pulses as it adds to the running total. For soccer this is more important than for basketball (each individual contribution is smaller, so seeing the build-up matters more).
 
-## Commentary archetypes (review concern #3)
+## Commentary archetypes — design intent (deferred to post-PR 2)
 
-The shared archetype system (`shared/commentary/archetypes.ts`) is sport-agnostic — `star_carry`, `balanced_win`, `badge_explosion`, `everyone_flat`, `star_failed`, `collapse`, etc. The phrasing per sport lives in `shared/commentary/libraries/<sport>.json`. Football needs:
+> **Status:** Design intent only. Not a PR-1 or PR-2 deliverable. Commentary phrasing depends on the active player pool — Messi vs. Mbappé as the canonical "star_carry" line, etc. — and we won't know how to write good lines until the pool is locked. At launch, football inherits whatever the existing commentary system falls back to (sport-agnostic templates from the registry's `legacyStoryIds`). The football library lands in a separate spec when the data layer is stable.
+
+The shared archetype system (`shared/commentary/archetypes.ts`) is sport-agnostic — `star_carry`, `balanced_win`, `badge_explosion`, `everyone_flat`, `star_failed`, `collapse`, etc. The phrasing per sport lives in `shared/commentary/libraries/<sport>.json`. When football is ready for a real library, it will need:
 
 **`shared/commentary/libraries/football.json`** — populated for every active archetype (currently 13: 9 win, 4 loss, plus `badge_explosion` and `career_night` shared between).
 
@@ -357,15 +401,15 @@ Soccer-specific phrasing requirements:
 - **Star failed (anchor was the culprit):** "Mbappé went missing. 0G, 1 SOT — sometimes the favourite no-shows." Names the culprit explicitly.
 - **Everyone flat (collective bust):** "Quiet match all around — no goals, low key passes. Nothing to write home about." Soccer-specific framing of the low-scoring outcome.
 
-**Culprit identification in losses** is already handled by the `selectCommentary.ts` archetype-selection logic (it identifies the lowest-FP-vs-projection card and routes to `star_failed` or `star_cold`). Football inherits this for free. Validation: in the manual 50-hand test, every loss should have an attributable narrative, not a generic "you lost" line.
+**Culprit identification in losses** is already handled by the `selectCommentary.ts` archetype-selection logic (it identifies the lowest-FP-vs-projection card and routes to `star_failed` or `star_cold`). Football inherits this mechanism for free at PR 1.
 
-**Reserved archetypes worth activating for football** (currently `active: false` in the registry):
+**Reserved archetypes worth activating when the football library lands** (currently `active: false` in the registry):
 
 - `anchor_underperformed` — fallback for `star_failed`, useful for soccer where the anchor often doesn't post negative FP, just zero
 - `one_player_threw` — useful for the rare red-card scenario (-15 FP from a single play)
 - `wrong_star_wrong_night` — when the user picked the wrong anchor and another sub-tier player overperformed
 
-These get activated as part of the football library landing.
+Activation happens with the library landing, not before.
 
 ## Data edge cases (review concern #5)
 
@@ -400,22 +444,22 @@ These cases get explicit unit tests in `shared/commentary/__tests__/` and `world
 
 ## Acceptance criteria
 
-A reviewer should be able to confirm, via the implementation plan's PR(s):
+A reviewer should be able to confirm, via the implementation plan's PRs. Each criterion is tagged with the PR it lands in.
 
-1. `football/src/views/GameView.tsx` is a thin shim (≤ ~200 lines) wrapping `@shared/views/GameView`, structurally parallel to `basketball/src/views/GameView.tsx`.
-2. `football/src/components/` contains only legitimately sport-specific files (`SoccerCard.tsx`, `LandingPage.tsx`); no forks of canonical shared components.
-3. `FootballSportConfig` uses the new tier ladder (SUB / STARTER / CAPTAIN / MOTM / LEGEND), references the canonical bonus-pool system, and has no hardcoded `$12,451.29` seed or other dead old-system values.
-4. `worldcup/` directory no longer exists at the repo root.
-5. The chooser landing shows three sport cards; clicking each routes to the correct SPA.
-6. Tier thresholds are calibrated, not seeded — backed by simulator output committed alongside the config.
-7. Type check, lint, and vitest all pass repo-wide.
-8. Preview deploy renders the football SPA cleanly with FTUE → game → results loop working end-to-end.
-9. **Position parity verified**: 10k-hand simulator reports comparable LEGEND-rate by anchor position (FWD/MID/DEF/GK within 2× of each other). DEF and GK anchors must demonstrably reach LEGEND tier in the data, not just theoretically.
-10. **Stat → FP attribution renders** on every card back; no card shows just stat counts without their FP contribution.
-11. **FLEX rule surfaced** in both FTUE and live UI (hover/tap tooltip on the FLEX slot).
-12. **Football commentary library** (`shared/commentary/libraries/football.json`) populated for all active archetypes; loss-side narratives identify a culprit player by name.
-13. **Bonus pool keyed per-competition**: `bonus_pool:football:world_cup` exists in KV; basketball/baseball keys unchanged.
-14. **Edge-case tests pass**: substitutes, 0-minute, position fluidity, GK-scored-goal, red-card, penalty-shootout cases all have tests and pass.
+1. **(PR 1)** `football/src/views/GameView.tsx` is a thin shim (≤ ~200 lines) wrapping `@shared/views/GameView`, structurally parallel to `basketball/src/views/GameView.tsx`.
+2. **(PR 1)** `football/src/components/` contains only legitimately sport-specific files (`SoccerCard.tsx`, `LandingPage.tsx`); no forks of canonical shared components.
+3. **(PR 1)** `FootballSportConfig` uses the new tier ladder (SUB / STARTER / CAPTAIN / MOTM / LEGEND), references the canonical bonus-pool system, and has no hardcoded `$12,451.29` seed or other dead old-system values.
+4. **(PR 1)** `worldcup/` directory no longer exists at the repo root.
+5. **(PR 1)** The chooser landing shows three sport cards; clicking each routes to the correct SPA.
+6. **(PR 2)** Tier thresholds are calibrated, not seeded — backed by simulator output committed alongside the config.
+7. **(PR 1)** Type check, lint, and vitest all pass repo-wide.
+8. **(PR 1)** Preview deploy renders the football SPA cleanly with FTUE → game → results loop working end-to-end.
+9. **(PR 2)** **Position parity verified**: 10k-hand simulator reports comparable LEGEND-rate by anchor position (FWD/MID/DEF/GK within 2× of each other). DEF and GK anchors must demonstrably reach LEGEND tier in the data, not just theoretically.
+10. **(PR 2)** **Stat → FP attribution renders** on every card back; no card shows just stat counts without their FP contribution.
+11. **(PR 1: FTUE teaching beat; PR 2: live-game tooltip)** **FLEX rule surfaced** in both FTUE and live UI.
+12. **(deferred)** Football commentary library — out of scope for both PRs; lands in a separate spec when the player pool is locked.
+13. **(PR 1)** **Bonus pool keyed per-competition**: `bonus_pool:football:world_cup` exists in KV; basketball/baseball keys unchanged.
+14. **(PR 2)** **Edge-case tests pass**: substitutes, 0-minute, position fluidity, GK-scored-goal, red-card, penalty-shootout cases all have tests and pass.
 
 ## Open questions / future specs (not part of this work)
 
