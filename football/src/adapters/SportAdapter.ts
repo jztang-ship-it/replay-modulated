@@ -12,12 +12,12 @@
  * + setSoundPack side-effect at module load).
  */
 import { SportAdapter as SharedSportAdapter } from "@shared/adapters/SportAdapter";
-import { WorldCupSportConfig } from "./worldcupConfig";
+import { FootballSportConfig } from "./footballConfig";
 
 export class SportAdapter extends SharedSportAdapter {
   // World Cup overrides go here when feature parity work begins.
   // Pattern reference: basketball/src/adapters/SportAdapter.ts.
 }
 
-export const sportAdapter = new SportAdapter(WorldCupSportConfig);
+export const sportAdapter = new SportAdapter(FootballSportConfig);
 export default sportAdapter;
