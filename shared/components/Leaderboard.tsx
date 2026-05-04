@@ -17,7 +17,7 @@ const METRICS: { id: Metric; label: string }[] = [
 
 interface Props {
   currentUid: string;
-  sport: "basketball" | "baseball" | "worldcup";
+  sport: "basketball" | "baseball" | "football";
 }
 
 export function Leaderboard({ currentUid, sport }: Props) {

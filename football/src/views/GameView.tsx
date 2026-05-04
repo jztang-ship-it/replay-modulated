@@ -35,20 +35,20 @@ import { PlayerCard as PlayerCardComponent, resetAllOverlays } from "../componen
 // scripted FTUE hand. Values here are placeholders — copy will be refined
 // when the full FTUE roster is authored.
 const FOOTBALL_FTUE_CONFIG: FTUETextConfig = {
-  anchorCardId: "ftue-mbappe",
+  anchorCardId: "ftue-messi",
   rosterCount: 5,
   salaryCap: 180,
   sportLabel: "football",
   cardPositions: {
-    "ftue-mbappe": "below",
+    "ftue-messi": "below",
   },
   cardTexts: {},
-  anchorRevealText: "Mbappe delivered. That's why you held him.",
+  anchorRevealText: "Messi delivered. That's why you held him.",
   idleText: "Real stats. Real history. Your fantasy result instantly. Hit DEAL to get started.",
   holdIntroText: "5 players — 1 GK, 1 DEF, 1 MID, 1 FWD, 1 FLEX — $180 cap. Card colors mark tier — orange/blue stars cost more but score more. Fantasy points come from real stats — goals, assists, saves, tackles. Who do we keep?",
-  holdAnchorText: "Mbappe is your top anchor. Tap his card to hold, then hit DRAW.",
+  holdAnchorText: "Messi is your top anchor. Tap his card to hold, then hit DRAW.",
   nearMissText: "So close — just a few FP from the CAPTAIN win.",
-  anchorFlipHintText: "Mbappe was electric tonight — flip his card to see the full stat line.",
+  anchorFlipHintText: "Messi was electric tonight — flip his card to see the full stat line.",
   anchorStatText: "Goals + assists driving his FP. Badges stack on top.",
   finalText: "Every game log comes from true World Cup history. Replay lets you relive it at your fingertips. Hit Replay to start playing for real.",
 };
@@ -150,17 +150,14 @@ const LEGEND_DATA: LegendData = {
 
 export default function GameView() {
   const adapter: GameAdapter = useMemo(() => ({
-    // Football is not yet in the GameAdapter sportKey union ("basketball" | "baseball").
-    // Cast is safe — shared GameView reads sportKey only for leaderboard routing,
-    // which uses leaderboardScope below. Adding "football" to the union is a
-    // follow-up cleanup once the football sport is fully integrated.
-    sportKey: "football" as GameAdapter["sportKey"],
+    sportKey: "football",
     // Football's SportAdapter extends SharedSportAdapter with no overrides today;
     // the cast bypasses a structural mismatch on internal config fields that shared
     // GameView doesn't read (same pattern as baseball).
     sportAdapter: sportAdapter as unknown as SharedSportAdapter,
     localStorageNamespace: "football",
-    leaderboardScope: "worldcup" as GameAdapter["leaderboardScope"],
+    leaderboardScope: "football",
+    bonusPoolCompetition: "world_cup",
     routeBasePath: "/football/",
     gaugeThresholds: GAUGE_THRESHOLDS,
     tierFromSalary,

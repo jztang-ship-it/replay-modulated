@@ -16,9 +16,9 @@
  * universal; the bucket of money is sport-local.
  *
  * Two functions used by each sport's bonus-pool widget:
- *   getBonusPool(sport)              — call on mount + poll for live display
- *   contributeBet(sport, betAmount)  — call after each hand (5% rake)
- *   invalidateBonusPoolCache(sport?) — force refresh (specific sport or all)
+ *   getBonusPool(sport, competition?)              — call on mount + poll for live display
+ *   contributeBet(sport, betAmount, competition?)  — call after each hand (5% rake)
+ *   invalidateBonusPoolCache(sport?)              — force refresh (specific sport or all)
  */
 
 export const BONUS_POOL_RAKE_RATE = 0.05;       // 5% of each bet
@@ -59,16 +59,21 @@ const _cache = new Map<string, CacheEntry>();
 /**
  * Get current bonus pool for a sport from KV (cached 30s).
  * Falls back to BONUS_POOL_SEED if KV unavailable.
+ * Pass competition for sports that partition their pool by competition (e.g. football → "world_cup").
  */
-export async function getBonusPool(sport: string): Promise<number> {
+export async function getBonusPool(sport: string, competition?: string): Promise<number> {
+  const cacheKey = competition ? `${sport}:${competition}` : sport;
   const now = Date.now();
-  const cached = _cache.get(sport);
+  const cached = _cache.get(cacheKey);
   if (cached && now < cached.expiry) return cached.value;
   try {
-    const res = await fetch(`${API_BASE}?sport=${encodeURIComponent(sport)}`);
+    const url = competition
+      ? `${API_BASE}?sport=${encodeURIComponent(sport)}&competition=${encodeURIComponent(competition)}`
+      : `${API_BASE}?sport=${encodeURIComponent(sport)}`;
+    const res = await fetch(url);
     if (!res.ok) throw new Error(`${res.status}`);
     const { pool } = await res.json() as { pool: number };
-    _cache.set(sport, { value: pool, expiry: now + CACHE_MS });
+    _cache.set(cacheKey, { value: pool, expiry: now + CACHE_MS });
     return pool;
   } catch {
     return cached?.value ?? BONUS_POOL_SEED;
@@ -78,14 +83,16 @@ export async function getBonusPool(sport: string): Promise<number> {
 /**
  * Contribute 5% rake from a completed hand's bet to the sport's pool.
  * Returns updated pool total.
+ * Pass competition for sports that partition their pool by competition (e.g. football → "world_cup").
  */
-export async function contributeBet(sport: string, betAmount: number): Promise<number> {
+export async function contributeBet(sport: string, betAmount: number, competition?: string): Promise<number> {
+  const cacheKey = competition ? `${sport}:${competition}` : sport;
   const rake = parseFloat((betAmount * BONUS_POOL_RAKE_RATE).toFixed(2));
-  const cached = _cache.get(sport);
+  const cached = _cache.get(cacheKey);
   if (rake <= 0) return cached?.value ?? BONUS_POOL_SEED;
   // Optimistic local update
   if (cached) {
-    _cache.set(sport, {
+    _cache.set(cacheKey, {
       value: parseFloat((cached.value + rake).toFixed(2)),
       expiry: Date.now() + CACHE_MS,
     });
@@ -94,13 +101,13 @@ export async function contributeBet(sport: string, betAmount: number): Promise<n
     const res = await fetch(API_BASE, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sport, action: "contribute", amount: rake }),
+      body: JSON.stringify({ sport, action: "contribute", amount: rake, ...(competition ? { competition } : {}) }),
     });
     const { pool } = await res.json() as { pool: number };
-    _cache.set(sport, { value: pool, expiry: Date.now() + CACHE_MS });
+    _cache.set(cacheKey, { value: pool, expiry: Date.now() + CACHE_MS });
     return pool;
   } catch {
-    return _cache.get(sport)?.value ?? BONUS_POOL_SEED;
+    return _cache.get(cacheKey)?.value ?? BONUS_POOL_SEED;
   }
 }
 
