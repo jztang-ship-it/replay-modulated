@@ -139,7 +139,7 @@ export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
   const rosterConfig = {
     rosterSize:       sportAdapter.rosterSize,
     slotRequirements: sportAdapter.rosterSlots,
-    excludeFromFlex:  ["GK"],
+    excludeFromFlex:  sportAdapter.excludeFromFlex,
   };
 
   const cards = generateRoster(evalPool, rosterConfig, sportAdapter.economyConfig, rnd);
@@ -167,7 +167,7 @@ export async function redrawRoster({
   const rosterConfig = {
     rosterSize:       sportAdapter.rosterSize,
     slotRequirements: sportAdapter.rosterSlots,
-    excludeFromFlex:  ["GK"],
+    excludeFromFlex:  sportAdapter.excludeFromFlex,
   };
 
   const cards = engineRedraw(
