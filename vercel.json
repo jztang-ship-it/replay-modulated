@@ -5,6 +5,7 @@
   "rewrites": [
     { "source": "/basketball/:path*", "destination": "/basketball/index.html" },
     { "source": "/baseball/:path*", "destination": "/baseball/index.html" },
-    { "source": "/((?!api/|basketball/|baseball/).*)", "destination": "/index.html" }
+    { "source": "/football/:path*", "destination": "/football/index.html" },
+    { "source": "/((?!api/|basketball/|baseball/|football/).*)", "destination": "/index.html" }
   ]
 }
