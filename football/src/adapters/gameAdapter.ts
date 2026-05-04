@@ -10,6 +10,7 @@ import { getPlayers, getLogsByKey } from "../engines/dataEngine";
 import { generateRoster, redrawRoster as engineRedraw, mulberry32, randomSeed } from "../engines/rosterEngine";
 import { resolveCards } from "../engines/resolveEngine";
 import { salaryFromProjection } from "@shared/engines/economyEngine";
+import { getDailyBonusPlayers, buildDailyBonusMap, type DailyBonusPlayer } from "@shared/utils/dailyBonus";
 import type { PlayerEval, GeneratedCard, RawLog } from "@shared/types";
 
 // ── Non-scoring fields — excluded from log filter ────────────────────────────
@@ -199,4 +200,36 @@ export async function resolveRoster({
   );
 
   return { roster: resolved as unknown as PlayerCard[], mvpCardId };
+}
+
+// ── Daily bonus helpers ───────────────────────────────────────────────────────
+
+/** Build the football bonus pool — players with scoring logs, shaped as the
+ *  `{ basePlayerId, name, tier }` rows consumed by getDailyBonusPlayers. */
+function buildBonusPool(): Array<{ basePlayerId: string; name: string; tier: string }> {
+  const players      = getPlayers();
+  const logsByKey    = getLogsByKey();
+  const scoring      = filterScoringLogs(logsByKey);
+  const projByBaseId = buildProjectionsFromLogs(players, scoring);
+
+  return players
+    .filter(p => {
+      const id = String(p.basePlayerId ?? p.id ?? "").trim();
+      return id && projByBaseId.has(id);
+    })
+    .map(p => ({
+      basePlayerId: String(p.basePlayerId ?? p.id ?? "").trim(),
+      name:         String(p.name ?? ""),
+      tier:         sportAdapter.normalizeTier(p.tier ?? "WHITE"),
+    }));
+}
+
+/** Today's daily bonus stars for the football GameBar legend. */
+export function getTodaysStars(): DailyBonusPlayer[] {
+  return getDailyBonusPlayers(buildBonusPool());
+}
+
+/** Daily bonus FP map (basePlayerId → bonus FP) — used by resolveEngine. */
+export function getDailyBonusMap(): Map<string, number> {
+  return buildDailyBonusMap(buildBonusPool());
 }
