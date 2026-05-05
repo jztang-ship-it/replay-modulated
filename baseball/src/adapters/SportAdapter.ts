@@ -6,6 +6,7 @@ import BaseballSportConfig, {
 } from "./baseballConfig";
 import { registerRecordSources } from "@shared/data/recordDetector";
 import { MLB_SINGLE_GAME_RECORDS, MLB_STAT_ALIASES } from "@shared/data/mlbRecords";
+import { getPlayers, getLogsByKey } from "../engines/dataEngine";
 import topGames from "../../public/data/topGames.json";
 import careerHighs from "../../public/data/careerHighs.json";
 
@@ -376,6 +377,75 @@ export class SportAdapter {
 
   getWinThresholds(): BaseballWinThreshold[] {
     return this.config.winCondition?.thresholds ?? [];
+  }
+
+  // ---------------------------------------------------------------------
+  // Slate v2 — baseball-bound slate methods (flag-gated at the call site).
+  // Match the CacheableAdapter shape consumed by shared/utils/slateSelector.ts
+  // and shared/utils/dealGate.ts. With the flag OFF (default), none of these
+  // are reached on the deal path.
+  // ---------------------------------------------------------------------
+
+  /** Career FP for a single player, summed across logs with last-2-seasons ×2 weight. */
+  getCareerFPById(playerId: string): number {
+    const logsByKey = getLogsByKey();
+    const id = String(playerId).trim();
+    if (!id) return 0;
+    // dataEngine indexes logs by basePlayerId (and basePlayerId|season). Use the
+    // basePlayerId-only key to get all seasons in one pass.
+    const logs = logsByKey.get(id) ?? [];
+    if (!logs.length) return 0;
+    const currentYear = new Date().getUTCFullYear();
+    let total = 0;
+    for (const log of logs) {
+      const stats = (log as any).stats ?? {};
+      const fp = this.computeFantasyPoints(stats);
+      const seasonRaw = (log as any).season;
+      // Baseball seasons are stored as concat 4-digit codes (e.g. 2425 → 2025).
+      // Take the trailing 2 digits as YY (2-digit year) and resolve to 20YY.
+      const seasonNum = Number(seasonRaw);
+      let yearOfLog = currentYear;
+      if (Number.isFinite(seasonNum) && seasonNum > 0) {
+        const yy = Math.round(seasonNum) % 100;
+        yearOfLog = 2000 + yy;
+      }
+      const seasonAge = currentYear - yearOfLog;
+      const weight = seasonAge <= 1 ? 2.0 : 1.0;
+      total += fp * weight;
+    }
+    return total;
+  }
+
+  /** Top-N eligible players by career FP. Default N matches slateSelector's typical caller. */
+  getEligiblePool(n: number = 200): string[] {
+    const players = getPlayers();
+    // De-dupe by basePlayerId (multiple season rows per player exist in players.json)
+    const seen = new Set<string>();
+    const ids: string[] = [];
+    for (const p of players) {
+      const bid = String((p as any).basePlayerId ?? (p as any).id ?? "").trim();
+      if (!bid || seen.has(bid)) continue;
+      seen.add(bid);
+      ids.push(bid);
+    }
+    const scored = ids.map(id => ({ id, fp: this.getCareerFPById(id) }));
+    scored.sort((a, b) => b.fp - a.fp);
+    return scored.slice(0, n).map(s => s.id);
+  }
+
+  /** Anchor players (always in today's slate). Default = top `count` by career FP. */
+  getAnchors(count: number = 10): string[] {
+    return this.getEligiblePool(count);
+  }
+
+  /** Phase-2 stubs (no themes in v1). */
+  getThemeForDate(_date: Date): string | null { return null; }
+  getThemedEligibility(_themeKey: string): string[] | null { return null; }
+  getThemeMetadata(_themeKey: string): { displayName: string; description: string; iconKey?: string } | null { return null; }
+
+  /** Manual exclusion list (populated during data audit). */
+  getExclusionList(): string[] {
+    return (this.config as any).exclusionList ?? [];
   }
 }
 
