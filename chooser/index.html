@@ -129,10 +129,13 @@
       }
       .cards {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1fr 1fr;
         gap: 14px;
         width: 100%;
-        max-width: 380px;
+        max-width: 540px;
+      }
+      @media (max-width: 480px) {
+        .cards { grid-template-columns: 1fr; max-width: 320px; }
       }
       .card {
         appearance: none;
@@ -171,6 +174,7 @@
       }
       .card.basketball:hover { border-color: rgba(255,160,50,0.55); background: rgba(255,140,30,0.10); }
       .card.baseball:hover   { border-color: rgba(127,255,0,0.45); background: rgba(127,255,0,0.08); }
+      .card.football:hover   { border-color: rgba(140,200,255,0.55); background: rgba(80,160,255,0.10); }
       .footer-note {
         font-size: 10px;
         color: rgba(240,242,245,0.38);
@@ -356,6 +360,14 @@
           <span class="to-beat-label">To Beat</span>
           <span class="to-beat-score" id="baseball-top">—</span>
         </button>
+        <button class="card football" type="button" data-sport="football" aria-label="Play football">
+          <span class="emoji">⚽</span>
+          <span class="name">Football</span>
+          <span class="league">World Cup '26</span>
+          <span class="sep" aria-hidden="true"></span>
+          <span class="to-beat-label">To Beat</span>
+          <span class="to-beat-score" id="football-top">—</span>
+        </button>
       </div>
       <p class="footer-note">
         <span class="check">✓</span> Skill based &nbsp;·&nbsp;
@@ -388,7 +400,7 @@
         // Returning users skip the chooser unless ?pick=1 is in the URL.
         if (qs.get('pick') !== '1') {
           var last = localStorage.getItem(KEY);
-          if (last === 'basketball' || last === 'baseball') {
+          if (last === 'basketball' || last === 'baseball' || last === 'football') {
             window.location.replace('/' + last + '/');
             return;
           }
@@ -422,43 +434,48 @@
         }
 
         // ── User-state buckets ────────────────────────────────────────────
-        // A: brand new (no FTUE done)
-        // B: played one sport, not the other
-        // C: played both
+        // A: brand new (no FTUE done in any sport)
+        // B: played some sports but not all (mixed state — pill on unplayed)
+        // C: played all sports (TO BEAT replaced with YOUR BEST per sport)
         // D: signed in (overlays A/B/C — set async via /api/me)
         var ftueB  = localStorage.getItem('replaymod_ftue_basketball') === '1';
         var ftueBB = localStorage.getItem('replaymod_ftue_baseball')   === '1';
+        var ftueF  = localStorage.getItem('replaymod_ftue_football')   === '1';
         var bestB  = parseFloat(localStorage.getItem('rm_best_hand') || '0');
         var bestBB = parseFloat(localStorage.getItem('baseball_rm_best_hand') || '0');
-        var bucket = (!ftueB && !ftueBB) ? 'A' : (ftueB && ftueBB) ? 'C' : 'B';
+        var bestF  = parseFloat(localStorage.getItem('football_rm_best_hand') || '0');
+        var allPlayed = ftueB && ftueBB && ftueF;
+        var nonePlayed = !ftueB && !ftueBB && !ftueF;
+        var bucket = nonePlayed ? 'A' : allPlayed ? 'C' : 'B';
 
+        function addNewPill(sport) {
+          var card = document.querySelector('.card[data-sport="' + sport + '"]');
+          if (!card) return;
+          var pill = document.createElement('span');
+          pill.className = 'pill-new';
+          pill.textContent = 'New for you';
+          card.appendChild(pill);
+        }
+        function freezeBest(sport, value, scoreId) {
+          if (!isFinite(value) || value <= 0) return;
+          var lbl = document.querySelector('.card[data-sport="' + sport + '"] .to-beat-label');
+          var score = document.getElementById(scoreId);
+          if (lbl) lbl.textContent = 'Your best';
+          if (score) { score.textContent = value.toFixed(1); score.dataset.frozen = '1'; }
+        }
         function applyBucket() {
           if (bucket === 'B') {
-            // Pill on the sport the user hasn't tried yet.
-            var unplayed = ftueB ? 'baseball' : 'basketball';
-            var card = document.querySelector('.card[data-sport="' + unplayed + '"]');
-            if (card) {
-              var pill = document.createElement('span');
-              pill.className = 'pill-new';
-              pill.textContent = 'New for you';
-              card.appendChild(pill);
-            }
+            // Pill on every sport the user hasn't tried yet.
+            if (!ftueB)  addNewPill('basketball');
+            if (!ftueBB) addNewPill('baseball');
+            if (!ftueF)  addNewPill('football');
           }
           if (bucket === 'C') {
             // Replace TO BEAT with YOUR BEST per-sport. If no best exists for
             // a sport (shouldn't happen in C, but guard anyway), keep TO BEAT.
-            if (isFinite(bestB) && bestB > 0) {
-              var lblB = document.querySelector('.card[data-sport="basketball"] .to-beat-label');
-              var scoreB = document.getElementById('basketball-top');
-              if (lblB) lblB.textContent = 'Your best';
-              if (scoreB) { scoreB.textContent = bestB.toFixed(1); scoreB.dataset.frozen = '1'; }
-            }
-            if (isFinite(bestBB) && bestBB > 0) {
-              var lblBB = document.querySelector('.card[data-sport="baseball"] .to-beat-label');
-              var scoreBB = document.getElementById('baseball-top');
-              if (lblBB) lblBB.textContent = 'Your best';
-              if (scoreBB) { scoreBB.textContent = bestBB.toFixed(1); scoreBB.dataset.frozen = '1'; }
-            }
+            freezeBest('basketball', bestB,  'basketball-top');
+            freezeBest('baseball',   bestBB, 'baseball-top');
+            freezeBest('football',   bestF,  'football-top');
           }
         }
         applyBucket();
@@ -497,6 +514,9 @@
           var el = document.getElementById(sport + '-top');
           if (!el || el.dataset.frozen === '1') return;
           var url = '/api/leaderboard?sport=' + sport + '&metric=hand_best&scope=daily&limit=1';
+          // Football is competition-scoped — leaderboard is keyed per
+          // competition so EPL hands don't collide with World Cup hands.
+          if (sport === 'football') url += '&competition=world_cup';
           fetch(url, { credentials: 'omit' })
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (data) {
@@ -510,6 +530,7 @@
         }
         loadTop('basketball');
         loadTop('baseball');
+        loadTop('football');
 
         // ── Bucket D detection ─────────────────────────────────────────
         // The Supabase auth-token JSON is documented stable, so we read
