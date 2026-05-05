@@ -30,6 +30,12 @@ export const BasketballSportConfig = {
   maxPlayers:   6,
   positionLimits: {} as Record<string, { min: number; max: number }>,
 
+  // Slate v2 (flag-gated; see shared/utils/slateSelector.ts)
+  slateSize: 60,
+  anchorCount: 10,
+  weightExponent: 1.0,
+  exclusionList: [] as string[],  // populated during data audit; safe default
+
   statCategories: [
     'pts', 'reb', 'ast', 'stl', 'blk', 'turnovers', 'min', 'fg_pct', 'fg3m',
   ],
