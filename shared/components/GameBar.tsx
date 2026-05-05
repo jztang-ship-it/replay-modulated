@@ -15,13 +15,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import ReactDOM from "react-dom";
 import { THEME } from "@shared/theme";
 import type { JSX as ReactJSX } from "react";
-import { formatBonusCountdown, getMsUntilNextBonusRotation } from "@shared/utils/dailyBonus";
 import { track } from "@shared/analytics/analytics";
-
-/** Live countdown string to next UTC midnight (daily bonus rotation). */
-function formatBonusCountdownLocal(): string {
-  return formatBonusCountdown(getMsUntilNextBonusRotation());
-}
 
 declare global {
   namespace JSX {
@@ -565,12 +559,6 @@ const colHdr: React.CSSProperties = {
 
 function LegendModal({ onClose, legend }: { onClose: () => void; legend: LegendData }) {
   const [tab, setTab] = useState<"payouts" | "scoring" | "badges">("payouts");
-  // Live countdown to next UTC midnight — updates every second while modal is open.
-  const [countdown, setCountdown] = useState<string>(() => formatBonusCountdownLocal());
-  useEffect(() => {
-    const interval = setInterval(() => setCountdown(formatBonusCountdownLocal()), 1000);
-    return () => clearInterval(interval);
-  }, []);
   return (
     <div onClick={onClose} style={{
       position: "fixed", inset: 0, zIndex: 300,
@@ -612,54 +600,23 @@ function LegendModal({ onClose, legend }: { onClose: () => void; legend: LegendD
         <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px 20px" }}>
           {tab === "payouts" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {legend.todaysStars && legend.todaysStars.length > 0 && (
+              {/* Today's hot players (bonus row) intentionally removed — */}
+              {/* now lives in the slate panel (landing drawer + in-game chip overlay). */}
+              {/* Mystery score still surfaces here when available. */}
+              {legend.mysteryScore != null && (
                 <div style={{ marginBottom: 10, paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1.2, color: "#FFD700", textTransform: "uppercase" }}>
-                      ★ TODAY'S HOT PLAYERS
-                    </div>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.4)", fontVariantNumeric: "tabular-nums" }}>
-                      NEW IN {countdown}
-                    </div>
+                  <div style={{
+                    padding: "8px 12px", borderRadius: 10,
+                    background: "rgba(138,43,226,0.12)", border: "1px solid rgba(138,43,226,0.3)",
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                  }}>
+                    <span style={{ fontSize: 10, fontWeight: 800, color: "rgba(138,43,226,0.8)", textTransform: "uppercase", letterSpacing: 0.8 }}>
+                      Mystery Score
+                    </span>
+                    <span style={{ fontSize: 14, fontWeight: 900, color: "#B366FF", fontVariantNumeric: "tabular-nums" }}>
+                      {legend.mysteryScore.toFixed(1)} FP = +{legend.mysteryBonus ?? 200}
+                    </span>
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    {legend.todaysStars.map(s => {
-                      const bonus = s.bonus ?? 5;
-                      const starCount = bonus === 20 ? 3 : bonus === 10 ? 2 : 1;
-                      const stars = "★".repeat(starCount);
-                      return (
-                        <div key={s.basePlayerId} style={{
-                          display: "flex", alignItems: "center", justifyContent: "space-between",
-                          padding: "8px 12px", borderRadius: 10,
-                          background: "rgba(255,215,0,0.08)", border: "1px solid rgba(255,215,0,0.25)",
-                        }}>
-                          <span style={{ fontSize: 13, fontWeight: 800, color: "#EAF0FF" }}>{s.name}</span>
-                          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <span style={{ fontSize: 14, color: "#FFD700", letterSpacing: 1 }}>{stars}</span>
-                            <span style={{ fontSize: 11, fontWeight: 900, color: "#FFD700", minWidth: 28, textAlign: "right" }}>+{bonus}</span>
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div style={{ marginTop: 8, fontSize: 9, color: "rgba(255,255,255,0.32)", lineHeight: 1.5 }}>
-                    Pick these players — they add bonus FP on top of their real game. Rotates at UTC midnight.
-                  </div>
-                  {/* Mystery score target */}
-                  {legend.mysteryScore != null && (
-                    <div style={{
-                      marginTop: 10, padding: "8px 12px", borderRadius: 10,
-                      background: "rgba(138,43,226,0.12)", border: "1px solid rgba(138,43,226,0.3)",
-                      display: "flex", alignItems: "center", justifyContent: "space-between",
-                    }}>
-                      <span style={{ fontSize: 10, fontWeight: 800, color: "rgba(138,43,226,0.8)", textTransform: "uppercase", letterSpacing: 0.8 }}>
-                        Mystery Score
-                      </span>
-                      <span style={{ fontSize: 14, fontWeight: 900, color: "#B366FF", fontVariantNumeric: "tabular-nums" }}>
-                        {legend.mysteryScore.toFixed(1)} FP = +{legend.mysteryBonus ?? 200}
-                      </span>
-                    </div>
-                  )}
                 </div>
               )}
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, paddingBottom: 6, borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: 2 }}>

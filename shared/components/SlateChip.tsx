@@ -99,48 +99,62 @@ export function SlateChip({ label, playerCount, children, sportKey }: SlateChipP
           aria-label="Today's slate"
           onClick={handleClose}
           style={{
+            // Mirrors the Legend modal styling in shared/components/GameBar.tsx
+            // (LegendModal): backdrop blur + slide-up sheet with drag handle.
             position: "fixed",
             inset: 0,
             zIndex: 9000,
-            background: "rgba(0,0,0,0.72)",
+            background: "rgba(0,0,0,0.80)",
+            backdropFilter: "blur(6px)",
             display: "flex",
             alignItems: "flex-end",
             justifyContent: "center",
-            backdropFilter: "blur(6px)",
+            paddingBottom: "10vh",
+            paddingLeft: 16,
+            paddingRight: 16,
+            animation: "slateChipFadeInBg 200ms ease",
           }}
         >
+          <style>{`
+            @keyframes slateChipFadeInBg { from{opacity:0} to{opacity:1} }
+            @keyframes slateChipSlideUp  { from{transform:translateY(100%)} to{transform:translateY(0)} }
+          `}</style>
           <div
             onClick={e => e.stopPropagation()}
             style={{
+              background: "linear-gradient(160deg,#0E1628 0%,#080E1C 100%)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: 18,
               width: "100%",
-              maxWidth: 480,
-              maxHeight: "85dvh",
-              overflowY: "auto",
-              background: "rgba(7,10,18,0.98)",
-              color: "#F0F2F5",
-              borderTop: "1px solid rgba(255,255,255,0.12)",
-              borderTopLeftRadius: 16,
-              borderTopRightRadius: 16,
+              maxWidth: 380,
+              maxHeight: "78vh",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.8)",
+              animation: "slateChipSlideUp 250ms cubic-bezier(.2,.9,.4,1)",
               fontFamily: "'Inter', system-ui, sans-serif",
-              padding: "12px 16px 24px",
-              boxSizing: "border-box",
+              color: "#F0F2F5",
             }}
           >
+            <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 4px" }}>
+              <div style={{ width: 36, height: 4, borderRadius: 99, background: "rgba(255,255,255,0.18)" }} />
+            </div>
             <div
               style={{
+                padding: "0 16px 0",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                marginBottom: 8,
               }}
             >
               <span
                 style={{
-                  fontSize: 11,
-                  fontWeight: 800,
-                  letterSpacing: "0.18em",
-                  textTransform: "uppercase",
+                  fontSize: 14,
+                  fontWeight: 900,
+                  letterSpacing: 1,
                   color: "#C9A84C",
+                  textTransform: "uppercase",
                 }}
               >
                 Today's Slate
@@ -153,18 +167,19 @@ export function SlateChip({ label, playerCount, children, sportKey }: SlateChipP
                 style={{
                   background: "none",
                   border: "none",
-                  color: "rgba(240,242,245,0.7)",
-                  fontSize: 18,
-                  fontWeight: 700,
+                  color: "rgba(255,255,255,0.5)",
+                  fontSize: 22,
                   cursor: "pointer",
+                  padding: "4px 8px",
                   lineHeight: 1,
-                  padding: 4,
                 }}
               >
-                ✕
+                ×
               </button>
             </div>
-            {children}
+            <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px 20px" }}>
+              {children}
+            </div>
           </div>
         </div>
       )}

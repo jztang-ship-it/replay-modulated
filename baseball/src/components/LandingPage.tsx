@@ -167,42 +167,108 @@ export function LandingPage({ onPlay, onShowProfile, onShowSignIn }: Props) {
  * Co-locating the hook calls inside this sub-component (rather than calling
  * them unconditionally in <LandingPage>) ensures useAutoExpandOncePerDay's
  * localStorage write and dynamic dailyBonus import never run with flag OFF.
+ *
+ * Styling mirrors the Legend modal in shared/components/GameBar.tsx — backdrop
+ * blur + slide-up sheet with drag handle. Auto-expand-once-per-day on first
+ * landing of the day; tap backdrop / Escape / × button to dismiss.
  */
 function SlateDrawer() {
   const autoOpen = useAutoExpandOncePerDay("baseball");
   const [open, setOpen] = useState(false);
   useEffect(() => { if (autoOpen) setOpen(true); }, [autoOpen]);
 
+  // Lock body scroll while overlay is open.
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [open]);
+
+  // Close on Escape.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  if (!open) return null;
   return (
-    <details
+    <div
       className="slate-panel-drawer"
-      open={open}
-      onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Today's slate"
+      onClick={() => setOpen(false)}
       style={{
         position: "fixed",
-        left: 0, right: 0, bottom: 0,
-        background: "rgba(7,10,18,0.96)",
-        color: "#F0F2F5",
-        borderTop: "1px solid rgba(255,255,255,0.12)",
-        zIndex: 50,
-        maxHeight: "60vh",
-        overflowY: "auto",
-        fontFamily: "'Inter', system-ui, sans-serif",
+        inset: 0,
+        zIndex: 9000,
+        background: "rgba(0,0,0,0.80)",
+        backdropFilter: "blur(6px)",
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "center",
+        paddingBottom: "10vh",
+        paddingLeft: 16,
+        paddingRight: 16,
+        animation: "slatePanelFadeInBg 200ms ease",
       }}
     >
-      <summary
+      <style>{`
+        @keyframes slatePanelFadeInBg { from{opacity:0} to{opacity:1} }
+        @keyframes slatePanelSlideUp  { from{transform:translateY(100%)} to{transform:translateY(0)} }
+      `}</style>
+      <div
+        onClick={(e) => e.stopPropagation()}
         style={{
-          cursor: "pointer", padding: "10px 16px",
-          fontSize: 12, fontWeight: 700, letterSpacing: ".15em",
-          textTransform: "uppercase", color: "#C9A84C",
-          listStyle: "none", userSelect: "none",
+          background: "linear-gradient(160deg,#0E1628 0%,#080E1C 100%)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          borderRadius: 18,
+          width: "100%",
+          maxWidth: 380,
+          maxHeight: "78vh",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          boxShadow: "0 24px 80px rgba(0,0,0,0.8)",
+          animation: "slatePanelSlideUp 250ms cubic-bezier(.2,.9,.4,1)",
+          fontFamily: "'Inter', system-ui, sans-serif",
+          color: "#F0F2F5",
         }}
       >
-        Today's Slate
-      </summary>
-      <div style={{ padding: "0 16px 16px" }}>
-        <BaseballSlatePanel />
+        <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 4px" }}>
+          <div style={{ width: 36, height: 4, borderRadius: 99, background: "rgba(255,255,255,0.18)" }} />
+        </div>
+        <div style={{
+          padding: "0 16px 0",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <span style={{
+            fontSize: 14, fontWeight: 900, letterSpacing: 1,
+            color: "#C9A84C", textTransform: "uppercase",
+          }}>
+            Today's Slate
+          </span>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label="Close slate"
+            style={{
+              background: "none", border: "none",
+              color: "rgba(255,255,255,0.5)",
+              fontSize: 22, cursor: "pointer",
+              padding: "4px 8px", lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px 20px" }}>
+          <BaseballSlatePanel />
+        </div>
       </div>
-    </details>
+    </div>
   );
 }
