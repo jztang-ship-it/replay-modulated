@@ -10,8 +10,6 @@ import type { GameAdapter } from "@shared/views/GameAdapter";
 import type { SportAdapter as SharedSportAdapter } from "@shared/adapters/SportAdapter";
 import type { WinTierDisplay, LegendData } from "@shared/components/GameBar";
 import type { TierThreshold as GaugeTierThreshold } from "@shared/components/TierGauge";
-import type { FTUETextConfig } from "@shared/components/CoachLayer";
-import type { PlayerCard } from "@shared/types";
 import { tierFromSalary } from "@shared/views/_gameViewHelpers";
 import { sportAdapter } from "../adapters/SportAdapter";
 import {
@@ -27,44 +25,12 @@ import {
   FOOTBALL_WIN_TIERS,
 } from "../utils/payoutLogic";
 import { SoccerCard, resetAllOverlays } from "../components/SoccerCard";
-
-// ── Football FTUE config ──────────────────────────────────────────────────────
-// TODO(Phase 6): move to football/src/adapters/ftueRoster.ts alongside the
-// scripted FTUE hand. Values here are placeholders — copy will be refined
-// when the full FTUE roster is authored.
-const FOOTBALL_FTUE_CONFIG: FTUETextConfig = {
-  anchorCardId: "ftue-messi",
-  rosterCount: 5,
-  salaryCap: 180,
-  sportLabel: "football",
-  cardPositions: {
-    "ftue-messi": "below",
-  },
-  cardTexts: {},
-  anchorRevealText: "Messi delivered. That's why you held him.",
-  idleText: "Real stats. Real history. Your fantasy result instantly. Hit DEAL to get started.",
-  holdIntroText: "5 players — 1 GK, 1 DEF, 1 MID, 1 FWD, 1 FLEX — $180 cap. Card colors mark tier — orange/blue stars cost more but score more. Fantasy points come from real stats — goals, assists, saves, tackles. Who do we keep?",
-  holdAnchorText: "Messi is your top anchor. Tap his card to hold, then hit DRAW.",
-  nearMissText: "So close — just a few FP from the CAPTAIN win.",
-  anchorFlipHintText: "Messi was electric tonight — flip his card to see the full stat line.",
-  anchorStatText: "Goals + assists driving his FP. Badges stack on top.",
-  finalText: "Every game log comes from true World Cup history. Replay lets you relive it at your fingertips. Hit Replay to start playing for real.",
-};
-
-// ── FTUE roster stubs ─────────────────────────────────────────────────────────
-// TODO(Phase 6): replace with real imports from football/src/adapters/ftueRoster.ts
-// gameAdapter uses the local football/src/adapters/types.ts PlayerCard which
-// has a narrower TierColor (no "RED"); cast bridges the structural gap safely —
-// football data never produces RED tier cards.
-async function dealFTUERoster(): Promise<{ roster: PlayerCard[] }> {
-  return dealInitialRoster() as Promise<{ roster: PlayerCard[] }>;
-}
-async function redrawFTUERoster(args: { currentCards: PlayerCard[]; lockedCardIds: Set<string> }): Promise<{ roster: PlayerCard[] }> {
-  return redrawRoster(args as Parameters<typeof redrawRoster>[0]) as Promise<{ roster: PlayerCard[] }>;
-}
-async function resolveFTUERoster(args: { finalCards: PlayerCard[] }): Promise<{ roster: PlayerCard[]; mvpCardId?: string }> {
-  return resolveRoster(args as Parameters<typeof resolveRoster>[0]) as Promise<{ roster: PlayerCard[]; mvpCardId?: string }>;
-}
+import {
+  FOOTBALL_FTUE_CONFIG,
+  dealFTUERoster,
+  redrawFTUERoster,
+  resolveFTUERoster,
+} from "../adapters/ftueRoster";
 
 // ── Tier gauge thresholds — football-specific FP cutoffs ──────────────────────
 // Display names: SUB / STARTER / CAPTAIN / MOTM / LEGEND
