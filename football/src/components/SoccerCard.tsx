@@ -110,6 +110,19 @@ function BackStats({ card }: CardBackProps) {
   const badgeFpBonus = badgesData.reduce((s, b) => s + (b.fp ?? 0), 0);
   const tiles       = useMemo(() => getFootballStats(card.position as string, sl), [card.position, sl]);
   const hasStats    = Object.keys(sl).length > 0;
+  // PR 2 stat → FP attribution: each tile shows the count *and* its FP
+  // contribution so users can see why they earned each point. Soccer stats
+  // are less self-evident than basketball ("Goals 1" doesn't translate to
+  // a number the way "PTS 40" does), so the math layer is mandatory.
+  const fpBreakdown = useMemo(() => {
+    if (!hasStats) return {} as Record<string, number>;
+    return sportAdapter.computeFantasyPointsDetailed({ ...sl, _position: card.position }).breakdown;
+  }, [card.position, sl, hasStats]);
+  function fmtFp(n: number): string {
+    if (!Number.isFinite(n) || n === 0) return "";
+    const r = Math.round(n * 10) / 10;
+    return (r > 0 ? "+" : "") + (Number.isInteger(r) ? r.toFixed(0) : r.toFixed(1));
+  }
 
   return (
     <div style={{ height:"100%", padding:"10px 10px 8px", display:"flex", flexDirection:"column", gap:8, background:"linear-gradient(180deg,rgba(11,15,20,0.97),rgba(11,15,20,1.0))", borderRadius:18, overflow:"hidden", boxSizing:"border-box" }}>
@@ -137,12 +150,20 @@ function BackStats({ card }: CardBackProps) {
         <div style={{ flex:1, display:"flex", alignItems:"center" }}><div style={{ fontSize:12, fontWeight:900, color:"rgba(255,255,255,0.70)" }}>No stats loaded</div></div>
       ) : tiles.length > 0 ? (
         <div style={{ flex:1, display:"grid", gridTemplateColumns:"repeat(3,minmax(0,1fr))", gap:4, alignContent:"start", minWidth:0 }}>
-          {tiles.map(s => (
-            <div key={s.key} style={{ borderRadius:8, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.08)", padding:"3px 6px", display:"flex", flexDirection:"column", gap:1, minWidth:0 }}>
-              <div style={{ fontSize:8, fontWeight:900, color:"rgba(255,255,255,0.55)", lineHeight:"10px" }}>{s.label}</div>
-              <div style={{ fontSize:13, fontWeight:900, color:"rgba(255,255,255,0.92)" }}>{String(s.value)}</div>
-            </div>
-          ))}
+          {tiles.map(s => {
+            const fpContrib = fpBreakdown[s.key] ?? 0;
+            const fpLabel = fmtFp(fpContrib);
+            const fpColor = fpContrib > 0 ? "#FFD700" : fpContrib < 0 ? "#FF6B6B" : "rgba(255,255,255,0.30)";
+            return (
+              <div key={s.key} style={{ borderRadius:8, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.08)", padding:"3px 6px", display:"flex", flexDirection:"column", gap:1, minWidth:0 }}>
+                <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", gap:4 }}>
+                  <div style={{ fontSize:8, fontWeight:900, color:"rgba(255,255,255,0.55)", lineHeight:"10px" }}>{s.label}</div>
+                  {fpLabel && <div style={{ fontSize:7, fontWeight:800, color:fpColor, lineHeight:"10px" }}>{fpLabel}</div>}
+                </div>
+                <div style={{ fontSize:13, fontWeight:900, color:"rgba(255,255,255,0.92)" }}>{String(s.value)}</div>
+              </div>
+            );
+          })}
         </div>
       ) : (
         <div style={{ flex:1, display:"flex", alignItems:"center" }}><div style={{ fontSize:12, fontWeight:900, color:"rgba(255,255,255,0.70)" }}>Stats available</div></div>
