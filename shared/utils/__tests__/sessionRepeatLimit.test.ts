@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { SessionRepeatLimit, DEFAULT_REPEAT_LIMIT } from "../sessionRepeatLimit";
 
 const POOL = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"]
@@ -53,5 +53,21 @@ describe("SessionRepeatLimit", () => {
     cap.record(["a"]); cap.record(["a"]); cap.record(["a"]);
     cap.reset();
     expect(cap.filter(POOL, DEFAULT_REPEAT_LIMIT)).toEqual(POOL);
+  });
+
+  it("invokes onRelaxed callback when pool floor relaxation triggers", () => {
+    const onRelaxed = vi.fn();
+    const cap = new SessionRepeatLimit(onRelaxed);
+    const tinyPool = [{ basePlayerId: "a" }, { basePlayerId: "b" }, { basePlayerId: "c" }];
+    cap.record(["a", "b", "c"]);
+    cap.record(["a", "b", "c"]);
+    cap.record(["a", "b", "c"]);
+    // Force relaxation: filtering would empty the pool, which is below minPoolFloor.
+    cap.filter(tinyPool, { windowSize: 10, maxAppearances: 3, minPoolFloor: 12 });
+    expect(onRelaxed).toHaveBeenCalledTimes(1);
+
+    // No relaxation when pool stays above floor — callback should not re-fire.
+    cap.filter(POOL, DEFAULT_REPEAT_LIMIT);
+    expect(onRelaxed).toHaveBeenCalledTimes(1);
   });
 });
