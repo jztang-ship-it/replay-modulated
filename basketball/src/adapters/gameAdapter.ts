@@ -12,6 +12,7 @@ import { buildDailyBonusMap, getDailyBonusPlayers, type DailyBonusPlayer } from 
 import { buildBonusPoolFromPlayers } from "@shared/utils/dailyBonusPool";
 import { getDealPool } from "@shared/utils/dealGate";
 import { SessionRepeatLimit, DEFAULT_REPEAT_LIMIT } from "@shared/utils/sessionRepeatLimit";
+import { isSlateV2Enabled } from "@shared/featureFlags";
 import type { PlayerCard } from "./types";
 import type { PlayerEval, GeneratedCard } from "../engines/rosterEngine";
 import type { EconomyConfig } from "../engines/economyEngine";
@@ -141,7 +142,9 @@ export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
     seasonFiltered.map((p: any) => ({ ...p, basePlayerId: String(p.basePlayerId ?? p.id ?? "").trim() })),
   );
   // Repeat limit — sliding window with pool-floor relaxation (no-op on first deal).
-  const players = repeatLimit.filter(slatePool, DEFAULT_REPEAT_LIMIT);
+  const players = isSlateV2Enabled("basketball")
+    ? repeatLimit.filter(slatePool, DEFAULT_REPEAT_LIMIT)
+    : slatePool;
 
   const { projByBaseId } = buildProjections(players);
   const evalPool = buildEvalPool(players, logs, projByBaseId);
@@ -160,7 +163,9 @@ export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
   }
 
   // Record drawn cards for the repeat-limit window.
-  repeatLimit.record(cards.map((c: any) => String(c.basePlayerId ?? "")).filter(Boolean));
+  if (isSlateV2Enabled("basketball")) {
+    repeatLimit.record(cards.map((c: any) => String(c.basePlayerId ?? "")).filter(Boolean));
+  }
 
   return { roster: cards as unknown as PlayerCard[] };
 }
@@ -181,7 +186,9 @@ export async function redrawRoster({
     sportAdapter as any,
     seasonFiltered.map((p: any) => ({ ...p, basePlayerId: String(p.basePlayerId ?? p.id ?? "").trim() })),
   );
-  const players = repeatLimit.filter(slatePool, DEFAULT_REPEAT_LIMIT);
+  const players = isSlateV2Enabled("basketball")
+    ? repeatLimit.filter(slatePool, DEFAULT_REPEAT_LIMIT)
+    : slatePool;
 
   const { projByBaseId } = buildProjections(players);
   const evalPool = buildEvalPool(players, logs, projByBaseId);
@@ -209,7 +216,9 @@ export async function redrawRoster({
   );
 
   // Record drawn cards for the repeat-limit window (held + redrawn cards).
-  repeatLimit.record(cards.map((c: any) => String(c.basePlayerId ?? "")).filter(Boolean));
+  if (isSlateV2Enabled("basketball")) {
+    repeatLimit.record(cards.map((c: any) => String(c.basePlayerId ?? "")).filter(Boolean));
+  }
 
   return { roster: cards as unknown as PlayerCard[] };
 }
