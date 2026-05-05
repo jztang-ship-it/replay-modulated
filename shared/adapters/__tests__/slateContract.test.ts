@@ -79,3 +79,35 @@ describe("SportAdapter.getAnchors default", () => {
     expect(out).toEqual(["b", "c"]);
   });
 });
+
+describe("SportAdapter slate-v2 phase-2 stubs", () => {
+  it("getThemeForDate returns null by default", () => {
+    const adapter = new SportAdapter(STUB_CONFIG);
+    expect(adapter.getThemeForDate(new Date("2026-05-05"))).toBeNull();
+  });
+
+  it("getThemedEligibility returns null by default", () => {
+    const adapter = new SportAdapter(STUB_CONFIG);
+    expect(adapter.getThemedEligibility("any-key")).toBeNull();
+  });
+
+  it("getThemeMetadata returns null by default", () => {
+    const adapter = new SportAdapter(STUB_CONFIG);
+    expect(adapter.getThemeMetadata("any-key")).toBeNull();
+  });
+});
+
+describe("SportAdapter.getExclusionList", () => {
+  it("returns [] when config has no exclusionList", () => {
+    const adapter = new SportAdapter(STUB_CONFIG);
+    expect(adapter.getExclusionList()).toEqual([]);
+  });
+
+  it("returns config.exclusionList when present", () => {
+    const adapter = new SportAdapter({
+      ...STUB_CONFIG,
+      exclusionList: ["banned-1", "retired-2"],
+    } as SportConfigShape);
+    expect(adapter.getExclusionList()).toEqual(["banned-1", "retired-2"]);
+  });
+});
