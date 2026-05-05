@@ -17,6 +17,9 @@ Re-run if any of these change:
 imports that require ESM-aware loading. tsx handles this; plain ts-node may
 fail on the slate-v2 branch's import.
 
+**Run from a sport workspace** (`cd basketball && npx tsx ...`) — sport
+`node_modules` are independent per CLAUDE.md.
+
 ```bash
 npx tsx shared/tools/runSimulator.ts basketball 100000 --slate-v2 \
   > docs/superpowers/calibration/$(date +%Y-%m-%d)-basketball-slate-v2.json
@@ -34,7 +37,9 @@ npx tsx shared/tools/runSimulator.ts basketball 100000 \
 Diff the two JSON outputs:
 - **Mean FP shift ≥ 10%** → recalibrate win-tier thresholds.
 - **Roster-cost shift meaningful** → recalibrate `salaryCap` / `salaryCapMin` per sport (HARD CAP behavior unchanged; only numeric values move).
-- **Bonus-player draw rate < 30%** → adjust eligibility N or `weightExponent`.
+- **`bonusFPPerHand` baseline drop ≥ 30%** → adjust eligibility N or `weightExponent`. (When the slate restricts the bonus pool, fewer bonus players become drawable; if FP/hand falls disproportionately, the slate is excluding too many bonus-eligible players.)
+
+**Green-light criteria:** If all metrics within tolerance (mean FP < 10% drift, roster cost steady, bonusFPPerHand stable) → green-light flag flip per sport; commit calibration summary.
 
 ## Known simulator quirks (from Task 22 implementation)
 
@@ -59,7 +64,7 @@ Diff the two JSON outputs:
 ## Output
 
 Save calibrated adapter config + summary as
-`docs/superpowers/calibration/<date>-<sport>-slate-v2.md`. Commit before
+`docs/superpowers/calibration/<date>-<sport>-calibration.md`. Commit before
 flipping the production flag.
 
 ## Rollout sequence per sport
