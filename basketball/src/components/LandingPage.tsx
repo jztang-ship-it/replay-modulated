@@ -6,12 +6,14 @@
  * a 3x2 grid, and the crowd-bed audio. Tier is derived from salary because
  * basketball doesn't ship per-card tier overrides on the landing page.
  */
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LandingPage as SharedLandingPage } from "@shared/components/LandingPage";
 import type { LandingAdapter, LandingCardDef } from "@shared/components/LandingPage";
 import { AthleteCard } from "./AthleteCard";
 import { headshotUrl } from "@shared/utils/headshotUrl";
 import { tierFromSalary, DEFAULT_ECONOMY_CONFIG } from "@shared/engines/economyEngine";
+import { isSlateV2Enabled } from "@shared/featureFlags";
+import { BasketballSlatePanel, useAutoExpandOncePerDay } from "./BasketballSlatePanel";
 
 const CARDS: LandingCardDef[] = [
   {
@@ -79,5 +81,49 @@ export function LandingPage({ onPlay, onShowProfile, onShowSignIn }: Props) {
     landingAudioBedSrc: "/audio/basketball/crowd/bed-murmur.mp3",
     landingTierFor: (d) => tierFromSalary(d.salary, DEFAULT_ECONOMY_CONFIG),
   }), []);
-  return <SharedLandingPage adapter={adapter} onPlay={onPlay} onShowProfile={onShowProfile} onShowSignIn={onShowSignIn} />;
+
+  // Pre-beta: only show the slate panel when the per-sport flag is ON.
+  // Auto-open once per UTC day; collapsible drawer thereafter; never modal.
+  const slateEnabled = isSlateV2Enabled("basketball");
+  const autoOpen = useAutoExpandOncePerDay("basketball");
+  const [open, setOpen] = useState(false);
+  useEffect(() => { if (autoOpen) setOpen(true); }, [autoOpen]);
+
+  return (
+    <>
+      <SharedLandingPage adapter={adapter} onPlay={onPlay} onShowProfile={onShowProfile} onShowSignIn={onShowSignIn} />
+      {slateEnabled && (
+        <details
+          className="slate-panel-drawer"
+          open={open}
+          onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)}
+          style={{
+            position: "fixed",
+            left: 0, right: 0, bottom: 0,
+            background: "rgba(7,10,18,0.96)",
+            color: "#F0F2F5",
+            borderTop: "1px solid rgba(255,255,255,0.12)",
+            zIndex: 50,
+            maxHeight: "60vh",
+            overflowY: "auto",
+            fontFamily: "'Inter', system-ui, sans-serif",
+          }}
+        >
+          <summary
+            style={{
+              cursor: "pointer", padding: "10px 16px",
+              fontSize: 12, fontWeight: 700, letterSpacing: ".15em",
+              textTransform: "uppercase", color: "#C9A84C",
+              listStyle: "none", userSelect: "none",
+            }}
+          >
+            Today's Slate
+          </summary>
+          <div style={{ padding: "0 16px 16px" }}>
+            <BasketballSlatePanel />
+          </div>
+        </details>
+      )}
+    </>
+  );
 }
