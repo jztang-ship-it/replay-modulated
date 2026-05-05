@@ -133,11 +133,11 @@ export const FootballSportConfig: SportConfigShape = {
   //   MOTM    ~1.5% (≈ P98.5)
   //   LEGEND  ~0.3% (≈ P99.7)
   winTiers: [
-    { name: "SUB",      minFp: 205, multiplier: 0.5, color: "#94A3B8" },
-    { name: "STARTER",  minFp: 230, multiplier: 1.5, color: "#10B981" },
-    { name: "CAPTAIN",  minFp: 270, multiplier: 3,   color: "#3B82F6" },
-    { name: "MOTM",     minFp: 320, multiplier: 8,   color: "#F59E0B" },
-    { name: "LEGEND",   minFp: 395, multiplier: 50,  color: "#EF4444" },
+    { name: "SUB",      minFp: 205, multiplier: 0.75, color: "#94A3B8" },
+    { name: "STARTER",  minFp: 230, multiplier: 2,    color: "#10B981" },
+    { name: "CAPTAIN",  minFp: 270, multiplier: 5,    color: "#3B82F6" },
+    { name: "MOTM",     minFp: 320, multiplier: 12,   color: "#F59E0B" },
+    { name: "LEGEND",   minFp: 395, multiplier: 75,   color: "#EF4444" },
   ],
 
   // ── Badges ────────────────────────────────────────────────────────────────
