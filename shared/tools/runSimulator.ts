@@ -250,6 +250,11 @@ async function main() {
   const posFpS: Record<string,number[]> = {}, posBdgS: Record<string,number[]> = {};
   for (const pos of config.positions) { posFpS[pos.toUpperCase()]=[]; posBdgS[pos.toUpperCase()]=[]; }
   const allFps: number[] = [];
+  // Hand FPs grouped by anchor-position. Anchor = highest-salary card in
+  // the dealt roster (within-position salary normalization means that's
+  // also the highest-projected). Used to verify position-parity gate:
+  // LEGEND-rate ratio across positions should land within 2×.
+  const fpsByAnchorPos: Record<string, number[]> = {};
   let totalBdg = 0;
   const start = Date.now();
 
@@ -288,6 +293,12 @@ async function main() {
       posBdgS[player.position]?.push(bdg);
     }
     allFps.push(hfp);
+    // Track hand-FP by anchor-position (highest-salary card in the roster)
+    if (roster.length > 0) {
+      const anchor = roster.reduce((a, b) => (a.salary >= b.salary ? a : b));
+      const pos = anchor.position.toUpperCase();
+      (fpsByAnchorPos[pos] ??= []).push(hfp);
+    }
   }
 
   allFps.sort((a,b)=>a-b);
@@ -454,6 +465,44 @@ async function main() {
     console.log("\n--- " + scenario.label + " ---");
     console.log("    " + scenario.desc);
     console.log("");
+
+    // Per-anchor-position hit rates (parity check) — only printed for the
+    // ACTIVE SPORT scenario to keep the legacy-basketball scenarios concise.
+    if (scenario.label.startsWith("ACTIVE SPORT") && Object.keys(fpsByAnchorPos).length > 0) {
+      console.log("    Tier hit rates by ANCHOR POSITION (parity check):");
+      const positions = Object.keys(fpsByAnchorPos).sort();
+      const header = "Pos".padEnd(6) + "Hands".padStart(7);
+      const tierHeader = scenario.tiers.map(t => t.tier.padStart(10)).join("");
+      console.log("    " + header + tierHeader);
+      const legendTier = scenario.tiers.reduce((a, b) => a.minFP >= b.minFP ? a : b);
+      const ratesByPos: Record<string, number> = {};
+      for (const pos of positions) {
+        const fps = fpsByAnchorPos[pos];
+        const cells = scenario.tiers.map(t => {
+          const r = fps.filter(f => f >= t.minFP).length / fps.length * 100;
+          return (r.toFixed(1) + "%").padStart(10);
+        }).join("");
+        const legendRate = fps.filter(f => f >= legendTier.minFP).length / fps.length * 100;
+        ratesByPos[pos] = legendRate;
+        console.log("    " + pos.padEnd(6) + String(fps.length).padStart(7) + cells);
+      }
+      // Parity gate: LEGEND-rate max/min ratio should be ≤ 2× per the spec.
+      // If any position has 0% LEGEND rate, parity is broken outright (one
+      // position is unreachable at the top tier).
+      const rates = Object.values(ratesByPos);
+      if (rates.length >= 2) {
+        const max = Math.max(...rates);
+        const min = Math.min(...rates);
+        if (min === 0 && max > 0) {
+          console.log(`    LEGEND-rate parity: BROKEN — ${Object.entries(ratesByPos).filter(([_,r]) => r === 0).map(([p]) => p).join("/")} unreachable at LEGEND while ${Object.entries(ratesByPos).filter(([_,r]) => r === max).map(([p]) => p).join("/")} hits ${max.toFixed(2)}%`);
+        } else if (min > 0) {
+          const ratio = max / min;
+          const flag = ratio <= 2 ? "OK" : ratio <= 4 ? "MARGINAL" : "BROKEN";
+          console.log(`    LEGEND-rate ratio (max/min across anchor positions): ${ratio.toFixed(2)}x  [${flag}]`);
+        }
+      }
+      console.log("");
+    }
 
     // Tier hit rates
     for (const t of scenario.tiers) {
