@@ -11,9 +11,16 @@ import { resolveCards } from "../engines/resolveEngine";
 import { DEFAULT_ECONOMY_CONFIG, tierFromSalary } from "../engines/economyEngine";
 import { buildDailyBonusMap, getDailyBonusPlayers, type DailyBonusPlayer } from "@shared/utils/dailyBonus";
 import { buildBonusPoolFromPlayers } from "@shared/utils/dailyBonusPool";
+import { getDealPool } from "@shared/utils/dealGate";
+import { SessionRepeatLimit, DEFAULT_REPEAT_LIMIT } from "@shared/utils/sessionRepeatLimit";
+import { isSlateV2Enabled } from "@shared/featureFlags";
 import type { PlayerCard } from "./types";
 import type { PlayerEval, GeneratedCard } from "../engines/rosterEngine";
 import type { EconomyConfig } from "../engines/economyEngine";
+
+/** Module-level session singleton — sliding window of recent draws. No-op when
+ *  no records have been pushed; `record()` populates it after each deal. */
+const repeatLimit = new SessionRepeatLimit();
 
 function buildProjections(players: any[]): { projByBaseId: Map<string, number> } {
   const projByBaseId = new Map<string, number>();
@@ -122,9 +129,22 @@ export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
   const allPlayers = getPlayers();
   const logs = getLogsByKey();
 
-  const { projByBaseId } = buildProjections(allPlayers);
+  // Slate v2 gate (no-op when feature flag is OFF — returns input unchanged).
+  // Each player needs basePlayerId for the gate; cast is safe because RawPlayer
+  // includes optional basePlayerId and we fall back to id when missing.
+  const slatePool = getDealPool(
+    sportAdapter as any,
+    allPlayers.map((p: any) => ({ ...p, basePlayerId: String(p.basePlayerId ?? p.id ?? "").trim() })),
+  );
+  // Repeat limit — sliding window with pool-floor relaxation.
+  // FLAG-GATED to preserve byte-equivalence when flag OFF.
+  const players = isSlateV2Enabled("baseball")
+    ? repeatLimit.filter(slatePool, DEFAULT_REPEAT_LIMIT)
+    : slatePool;
 
-  const evalPool = allPlayers
+  const { projByBaseId } = buildProjections(players);
+
+  const evalPool = players
     .filter((p: any) => hasValidLogs(
       String(p.basePlayerId ?? p.id ?? ""),
       String(p.position ?? ""),
@@ -144,6 +164,12 @@ export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
   };
 
   const cards = generateRoster(evalPool, rosterConfig, getEconomyConfig(), rnd);
+
+  // Record drawn cards for the repeat-limit window — FLAG-GATED.
+  if (isSlateV2Enabled("baseball")) {
+    repeatLimit.record(cards.map((c: any) => String(c.basePlayerId ?? "")).filter(Boolean));
+  }
+
   return { roster: cards as unknown as PlayerCard[] };
 }
 
@@ -156,9 +182,19 @@ export async function redrawRoster({
 }): Promise<{ roster: PlayerCard[] }> {
   const allPlayers = getPlayers();
   const logs = getLogsByKey();
-  const { projByBaseId } = buildProjections(allPlayers);
 
-  const evalPool = allPlayers
+  // Slate v2 gate + repeat-limit (no-op when feature flag is OFF).
+  const slatePool = getDealPool(
+    sportAdapter as any,
+    allPlayers.map((p: any) => ({ ...p, basePlayerId: String(p.basePlayerId ?? p.id ?? "").trim() })),
+  );
+  const players = isSlateV2Enabled("baseball")
+    ? repeatLimit.filter(slatePool, DEFAULT_REPEAT_LIMIT)
+    : slatePool;
+
+  const { projByBaseId } = buildProjections(players);
+
+  const evalPool = players
     .filter((p: any) => hasValidLogs(
       String(p.basePlayerId ?? p.id ?? ""),
       String(p.position ?? ""),
@@ -187,6 +223,12 @@ export async function redrawRoster({
     getEconomyConfig(),
     rnd,
   );
+
+  // Record drawn cards for the repeat-limit window (held + redrawn cards) — FLAG-GATED.
+  if (isSlateV2Enabled("baseball")) {
+    repeatLimit.record(cards.map((c: any) => String(c.basePlayerId ?? "")).filter(Boolean));
+  }
+
   return { roster: cards as unknown as PlayerCard[] };
 }
 

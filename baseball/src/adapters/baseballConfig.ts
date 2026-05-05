@@ -53,6 +53,12 @@ export const BaseballSportConfig = {
   rosterSlots: ["BAT", "BAT", "BAT", "P", "P"] as const satisfies Readonly<BaseballSlot[]>,
   salaryCap: 180,
 
+  // Slate v2 (flag-gated; see shared/utils/slateSelector.ts)
+  slateSize: 50,         // 5 hand slots × 10
+  anchorCount: 10,
+  weightExponent: 1.0,
+  exclusionList: [] as string[],  // populated during data audit; safe default
+
   // ── Positions ───────────────────────────────────────────────────────────
   positions: ["P", "BAT"] as string[],
   positionAliases: {
