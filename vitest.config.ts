@@ -7,6 +7,7 @@ export default defineConfig({
   // and keeps a single React copy so hooks work in tsx component tests.
   resolve: {
     alias: {
+      '@shared': path.resolve(__dirname, 'shared'),
       react: path.resolve(__dirname, 'node_modules/react'),
       'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
     },
