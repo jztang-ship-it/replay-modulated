@@ -1547,7 +1547,7 @@ export function GameView({ adapter }: Props) {
               betAmount={currentBet}
               betNonce={betNonce}
               sportKey={sportKey}
-              competition={adapter.bonusPoolCompetition}
+              competition={adapter.competition}
               onAmountChange={(v) => { bonusPoolRef.current = v; }}
             />
           </div>

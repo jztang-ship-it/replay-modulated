@@ -64,7 +64,7 @@ const MIN_BALANCE_FLOOR = 500;
  *  CardComponent / ftueRoster values. */
 type SharedGameStateAdapter = Pick<
   GameAdapter,
-  "sportKey" | "localStorageNamespace" | "leaderboardScope"
+  "sportKey" | "localStorageNamespace" | "leaderboardScope" | "competition"
 >;
 
 function nsKey(adapter: SharedGameStateAdapter, key: string): string {
@@ -214,6 +214,7 @@ export function useSharedGameState(
         body: JSON.stringify({
           action: "submit",
           sport: adapter.leaderboardScope,
+          competition: adapter.competition,  // football: "world_cup"; others: undefined
           metric,
           value,
           uid,
@@ -233,9 +234,10 @@ export function useSharedGameState(
     if (!uid) return;
     try {
       const sport = adapter.leaderboardScope;
+      const compQs = adapter.competition ? `&competition=${encodeURIComponent(adapter.competition)}` : "";
       const [best, session] = await Promise.all([
-        fetch(`/api/leaderboard?sport=${sport}&metric=hand_best&scope=daily&limit=10`).then(r => r.json()),
-        fetch(`/api/leaderboard?sport=${sport}&metric=session_score&scope=daily&limit=10`).then(r => r.json()),
+        fetch(`/api/leaderboard?sport=${sport}&metric=hand_best&scope=daily&limit=10${compQs}`).then(r => r.json()),
+        fetch(`/api/leaderboard?sport=${sport}&metric=session_score&scope=daily&limit=10${compQs}`).then(r => r.json()),
       ]);
       const entries = [...(best.entries ?? []), ...(session.entries ?? [])];
       const onBoard = entries.some((e: any) => e.uid === uid || (sessId && e.session_id === sessId));

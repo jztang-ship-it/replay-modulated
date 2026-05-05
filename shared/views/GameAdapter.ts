@@ -39,7 +39,11 @@ export interface GameAdapter {
   leaderboardScope: "basketball" | "baseball" | "football";
   /** Per-competition bonus pool key (e.g. "world_cup"). Optional — sports
    *  with one competition (basketball, baseball) omit. Football requires it. */
-  bonusPoolCompetition?: string;
+  /** Competition slug (e.g. "world_cup") for sports with multi-competition
+   *  support. Used by both /api/bonus-pool and /api/leaderboard to scope
+   *  KV keys per competition (so EPL hands don't mix with World Cup hands).
+   *  Sports with one competition (basketball/NBA, baseball/MLB) omit this. */
+  competition?: string;
   /** Optional Vite base path ("/basketball/", "/baseball/") for any
    *  sport-specific internal navigation. */
   routeBasePath?: string;

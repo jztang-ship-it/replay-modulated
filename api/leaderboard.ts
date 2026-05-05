@@ -1,13 +1,23 @@
 /**
  * api/leaderboard.ts — Vercel serverless function.
  *
- * POST { action: "submit", sport: "basketball"|"baseball"|"football", metric, value, uid, nickname }
- * GET  ?sport=basketball&metric=streak|wins|fp|hand_best|hand_avg|money_won|session_score&scope=daily|alltime&limit=20
+ * POST { action: "submit", sport, [competition], metric, value, uid, nickname }
+ * GET  ?sport=basketball&metric=streak|wins|fp|hand_best|hand_avg|money_won|session_score
+ *      &scope=daily|alltime&limit=20[&competition=...]
  *
- * KV keys: lb:{sport}:{metric}:daily:{YYYY-MM-DD} and lb:{sport}:{metric}:alltime.
+ * KV keys:
+ *   lb:{sport}:{metric}:daily:{YYYY-MM-DD}                       (basketball, baseball)
+ *   lb:{sport}:{metric}:alltime                                  (basketball, baseball)
+ *   lb:{sport}:{competition}:{metric}:daily:{YYYY-MM-DD}         (football)
+ *   lb:{sport}:{competition}:{metric}:alltime                    (football)
+ *
  * Sport scoping is mandatory — basketball and baseball have different scoring rules,
- * so their boards are separate sorted sets. Old commingled `lb:{metric}:...` keys
- * from before this change are orphaned (daily TTL out in 48h, alltime stays until wiped).
+ * so their boards are separate sorted sets. Football adds an extra competition
+ * dimension so EPL / La Liga / World Cup boards stay separate per-tournament.
+ * Sports without competition tracking (basketball/NBA, baseball/MLB) keep the
+ * original 4-segment key shape; football requires the 5-segment shape with
+ * competition. Old commingled `lb:{metric}:...` keys from before sport scoping
+ * was added are orphaned (daily TTL out in 48h, alltime stays until wiped).
  */
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
@@ -43,14 +53,44 @@ const VALID_METRICS = ["streak", "wins", "fp", "hand_best", "hand_avg", "money_w
 const VALID_SPORTS = ["basketball", "baseball", "football"] as const;
 type Sport = typeof VALID_SPORTS[number];
 
+// Sports that require a competition param (multi-tournament sports). Football
+// has World Cup at launch; EPL / La Liga / Bundesliga land later via this same
+// competition slug. Basketball/NBA and baseball/MLB don't need this dimension.
+const SUPPORTED_COMPETITIONS: Record<string, Set<string>> = {
+  football: new Set(["world_cup"]),
+};
+const COMPETITION_REQUIRED = new Set<Sport>(["football"]);
+
+function validateCompetition(sport: string, competition?: string): string | null {
+  if (COMPETITION_REQUIRED.has(sport as Sport)) {
+    if (!competition) return `Sport ${sport} requires competition param`;
+    if (!SUPPORTED_COMPETITIONS[sport]?.has(competition)) {
+      return `Unsupported competition for ${sport}: ${competition}`;
+    }
+  }
+  return null;
+}
+
+/** Build the leaderboard key prefix. Sports without competition tracking use
+ *  the 2-segment shape (lb:{sport}); football uses the 3-segment shape
+ *  (lb:{sport}:{competition}). */
+function lbKeyBase(sport: string, competition?: string): string {
+  if (competition && COMPETITION_REQUIRED.has(sport as Sport)) {
+    return `lb:${sport}:${competition}`;
+  }
+  return `lb:${sport}`;
+}
+
 // Per-sport realistic ceilings for FP-shaped metrics. Above these = data corruption / cheating.
 //   basketball: 6 cards × ~60 max FP + badges ≈ 300
 //   baseball:   5 cards × ~160 max FP (4-for-4, 2 HR) ≈ 800
 //   football:   5 cards × ~50 max FP (goal + assists + badges) ≈ 250
+//                Note: with GK 4× scaling, top-tier teams reach ~480 FP. Update if
+//                MOTM/LEGEND threshold tuning starts hitting this ceiling falsely.
 const FP_CEILING_BY_SPORT: Record<Sport, number> = {
   basketball: 300,
   baseball: 800,
-  football: 250,
+  football: 600,
 };
 const TTL_48H = 172800;
 
@@ -99,6 +139,9 @@ async function handleSubmit(req: VercelRequest, res: VercelResponse) {
   if (!VALID_SPORTS.includes(sport)) return json(res, 400, { error: "Invalid sport" });
   if (!VALID_METRICS.includes(metric)) return json(res, 400, { error: "Invalid metric" });
   if (typeof value !== "number" || value <= 0) return json(res, 400, { error: "Invalid value" });
+  const competition = (req.body?.competition ?? undefined) as string | undefined;
+  const compErr = validateCompetition(sport, competition);
+  if (compErr) return json(res, 400, { error: compErr });
 
   // Tighter per-hand rate limit — at most 1 hand_best submission per 5s per
   // uid. Real hands take 15-30s end-to-end; anything faster is fake.
@@ -150,8 +193,9 @@ async function handleSubmit(req: VercelRequest, res: VercelResponse) {
 
   const member = `${uid}:${nickname}:${sessionId ?? ''}`;
   const today = todayUTC();
-  const dailyKey = `lb:${sport}:${metric}:daily:${today}`;
-  const alltimeKey = `lb:${sport}:${metric}:alltime`;
+  const base = lbKeyBase(sport, competition);
+  const dailyKey = `${base}:${metric}:daily:${today}`;
+  const alltimeKey = `${base}:${metric}:alltime`;
 
   if (metric === "hand_best") {
     // hand_best allows multiple entries per user — each hand gets its own member key
@@ -223,12 +267,16 @@ async function handleGet(req: VercelRequest, res: VercelResponse) {
   const metric = String(req.query.metric ?? "streak");
   const scope = String(req.query.scope ?? "daily");
   const limit = Math.min(50, Math.max(1, Number(req.query.limit ?? 20)));
+  const competition = req.query.competition ? String(req.query.competition) : undefined;
 
   if (!VALID_SPORTS.includes(sport as Sport)) return json(res, 400, { error: "Invalid sport" });
   if (!VALID_METRICS.includes(metric)) return json(res, 400, { error: "Invalid metric" });
+  const compErr = validateCompetition(sport, competition);
+  if (compErr) return json(res, 400, { error: compErr });
 
   const today = todayUTC();
-  const key = scope === "daily" ? `lb:${sport}:${metric}:daily:${today}` : `lb:${sport}:${metric}:alltime`;
+  const base = lbKeyBase(sport, competition);
+  const key = scope === "daily" ? `${base}:${metric}:daily:${today}` : `${base}:${metric}:alltime`;
 
   const raw: any[] = await kv.zrange(key, 0, limit - 1, { rev: true, withScores: true });
 

@@ -121,7 +121,7 @@ export default function GameView() {
     sportAdapter: sportAdapter as unknown as SharedSportAdapter,
     localStorageNamespace: "football",
     leaderboardScope: "football",
-    bonusPoolCompetition: "world_cup",
+    competition: "world_cup",
     routeBasePath: "/football/",
     gaugeThresholds: GAUGE_THRESHOLDS,
     tierFromSalary,
