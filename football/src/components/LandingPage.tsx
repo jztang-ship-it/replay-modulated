@@ -64,7 +64,10 @@ export function LandingPage({ onPlay, onShowProfile, onShowSignIn }: Props) {
   const adapter = useMemo<LandingAdapter>(() => ({
     landingCards: CARDS,
     landingHeadshotUrl: () => "",
-    landingCardComponent: SoccerCard,
+    // Same TierColor narrowness as in GameView.tsx — football's local PlayerCard
+    // type omits "RED" while shared's includes it. Football data never produces
+    // RED tier cards. Cast bridges the structural mismatch safely.
+    landingCardComponent: SoccerCard as unknown as LandingAdapter["landingCardComponent"],
     landingGridLayout: { templateColumns: "repeat(3, minmax(0, 1fr))" },
     landingAudioBedSrc: null,
     landingTierFor: (d) => tierFromSalary(d.salary, DEFAULT_ECONOMY_CONFIG),
