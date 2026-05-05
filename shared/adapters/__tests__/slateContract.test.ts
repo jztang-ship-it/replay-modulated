@@ -37,3 +37,45 @@ describe("SportAdapter.getCareerFP default", () => {
     expect(adapter.getCareerFP("p2", () => [])).toBe(0);
   });
 });
+
+describe("SportAdapter.getEligiblePool default", () => {
+  it("returns top N player IDs by career FP", () => {
+    const adapter = new SportAdapter(STUB_CONFIG);
+    const playerData = [
+      { basePlayerId: "a", _fp: 100 },
+      { basePlayerId: "b", _fp: 50 },
+      { basePlayerId: "c", _fp: 200 },
+      { basePlayerId: "d", _fp: 25 },
+    ];
+    const out = adapter.getEligiblePool(
+      () => playerData.map(p => ({ basePlayerId: p.basePlayerId })),
+      (id) => playerData.find(p => p.basePlayerId === id)!._fp,
+      3,
+    );
+    expect(out).toEqual(["c", "a", "b"]);
+  });
+
+  it("returns all players when N exceeds player count", () => {
+    const adapter = new SportAdapter(STUB_CONFIG);
+    const players = [{ basePlayerId: "a" }, { basePlayerId: "b" }];
+    const out = adapter.getEligiblePool(() => players, () => 1, 100);
+    expect(out).toHaveLength(2);
+  });
+});
+
+describe("SportAdapter.getAnchors default", () => {
+  it("returns top `count` IDs by career FP", () => {
+    const adapter = new SportAdapter(STUB_CONFIG);
+    const players = [
+      { basePlayerId: "a", _fp: 10 },
+      { basePlayerId: "b", _fp: 30 },
+      { basePlayerId: "c", _fp: 20 },
+    ];
+    const out = adapter.getAnchors(
+      () => players.map(p => ({ basePlayerId: p.basePlayerId })),
+      (id) => players.find(p => p.basePlayerId === id)!._fp,
+      2,
+    );
+    expect(out).toEqual(["b", "c"]);
+  });
+});
