@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { SessionRepeatLimit, DEFAULT_REPEAT_LIMIT } from "../sessionRepeatLimit";
+import {
+  SessionRepeatLimit,
+  DEFAULT_REPEAT_LIMIT,
+  type RepeatLimitConfig,
+} from "../sessionRepeatLimit";
 
 const POOL = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"]
   .map(id => ({ basePlayerId: id }));
@@ -46,6 +50,29 @@ describe("SessionRepeatLimit", () => {
     // Push 10 more empty-of-"a" hands → "a" ages out
     for (let i = 0; i < 10; i++) cap.record(["b"]);
     expect(cap.filter(POOL, DEFAULT_REPEAT_LIMIT).map(p => p.basePlayerId)).toContain("a");
+  });
+
+  it("respects custom windowSize in record() (cap is config-driven, not hardcoded)", () => {
+    const cap = new SessionRepeatLimit();
+    // Tiny window of 3 — fourth record() must evict the oldest hand.
+    // maxAppearances=2 lets us *probe* via filter() whether "a" still counts.
+    const tinyConfig: RepeatLimitConfig = {
+      windowSize: 3,
+      maxAppearances: 2,
+      minPoolFloor: 1,
+    };
+    cap.record(["a"], tinyConfig);
+    cap.record(["a"], tinyConfig);
+    // Two appearances within window → "a" should now be excluded.
+    expect(cap.filter(POOL, tinyConfig).map(p => p.basePlayerId)).not.toContain("a");
+
+    cap.record(["b"], tinyConfig);
+    cap.record(["c"], tinyConfig); // window now [a, b, c] after evicting first "a"
+    // After eviction, only one "a" remains in the window → below maxAppearances.
+    expect(cap.filter(POOL, tinyConfig).map(p => p.basePlayerId)).toContain("a");
+
+    cap.record(["d"], tinyConfig); // window now [b, c, d] — both "a"s evicted
+    expect(cap.filter(POOL, tinyConfig).map(p => p.basePlayerId)).toContain("a");
   });
 
   it("reset() clears the window", () => {

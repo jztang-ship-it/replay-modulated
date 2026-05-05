@@ -43,6 +43,7 @@ describe("getDealPool", () => {
   it("returns full pool unchanged when flag is OFF", () => {
     const out = getDealPool(makeAdapter("x"), FULL_POOL);
     expect(out).toEqual(FULL_POOL);
+    expect(out).toBe(FULL_POOL); // reference identity — pre-beta invariant
   });
 
   it("returns full pool when bypassSlate=true regardless of flag", () => {
