@@ -25,6 +25,9 @@ export type SlatePanelAdapter = {
   CardThumb: React.FC<{ playerId: string; isAnchor: boolean }>;
   fullSlatePlayers: Array<{ id: string; name: string; tier: TierColor; isAnchor: boolean }>;
   onCardTap?: (playerId: string) => void;
+  /** Optional slate identity ("Slate #145"). Backward-compatible: omit
+   *  to skip the signature line. */
+  signature?: { number: number; label: string };
 };
 
 export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
@@ -54,8 +57,29 @@ export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
     });
   };
 
+  // Headliner: the top bonus player (sorted DESC by bonus by the adapter).
+  const headliner = adapter.bonusPlayers[0];
+  const otherBonus = adapter.bonusPlayers.slice(1);
+
   return (
     <section className="slate-panel" data-testid="todays-slate-panel">
+      {adapter.signature && (
+        <div
+          className="slate-panel__signature"
+          data-testid="slate-signature"
+          style={{
+            fontSize: 11,
+            fontWeight: 800,
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            color: "rgba(201,168,76,0.85)",
+            marginBottom: 6,
+          }}
+        >
+          {adapter.signature.label}
+        </div>
+      )}
+
       {adapter.themeMetadata && (
         <header className="slate-panel__theme" data-testid="slate-theme-banner">
           <h3>{adapter.themeMetadata.displayName}</h3>
@@ -66,6 +90,72 @@ export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
       <div className="slate-panel__countdown" data-testid="slate-countdown">
         Today's slate refreshes in {formatBonusCountdown(adapter.msUntilRotation)}
       </div>
+
+      {headliner && (
+        <div
+          className="slate-panel__headliner"
+          data-testid="slate-headliner"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 14,
+            padding: "12px 14px",
+            margin: "12px 0",
+            borderRadius: 14,
+            background: "linear-gradient(120deg, rgba(255,215,0,0.12), rgba(255,215,0,0.04))",
+            border: "1px solid rgba(255,215,0,0.35)",
+            boxShadow: "0 4px 18px rgba(255,215,0,0.08)",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => adapter.onCardTap?.(headliner.id)}
+            data-testid={`headliner-${headliner.id}`}
+            style={{
+              all: "unset",
+              cursor: adapter.onCardTap ? "pointer" : "default",
+              transform: "scale(1.35)",
+              transformOrigin: "center",
+              padding: "0 10px",
+              flex: "0 0 auto",
+            }}
+          >
+            <adapter.CardThumb playerId={headliner.id} isAnchor={false} />
+          </button>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                color: "rgba(255,215,0,0.9)",
+                marginBottom: 2,
+              }}
+            >
+              Today's Headliner
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#F0F2F5", lineHeight: 1.2 }}>
+              {headliner.name}
+            </div>
+            <div
+              style={{
+                marginTop: 4,
+                display: "inline-block",
+                padding: "2px 8px",
+                borderRadius: 999,
+                fontSize: 11,
+                fontWeight: 800,
+                letterSpacing: "0.04em",
+                color: "#0A0E18",
+                background: "#FFD700",
+              }}
+            >
+              +{headliner.bonus} FP bonus
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="slate-panel__anchors">
         <h4>Always in today's deck</h4>
@@ -84,11 +174,11 @@ export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
         </div>
       </div>
 
-      {adapter.bonusPlayers.length > 0 && (
+      {otherBonus.length > 0 && (
         <div className="slate-panel__bonus">
           <h4>Today's bonus players</h4>
           <div className="slate-panel__grid">
-            {adapter.bonusPlayers.map(p => (
+            {otherBonus.map(p => (
               <button
                 key={p.id}
                 type="button"

@@ -15,7 +15,8 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { TodaysSlatePanel, type SlatePanelAdapter } from "@shared/components/TodaysSlatePanel";
-import { useDailySlate } from "@shared/hooks/useDailySlate";
+import { useDailySlate, slateSignature } from "@shared/hooks/useDailySlate";
+import { SlateChip } from "@shared/components/SlateChip";
 import { ensureLoaded, getPlayers } from "../engines/dataEngine";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { getTodaysStars } from "../adapters/gameAdapter";
@@ -168,9 +169,72 @@ function BaseballSlatePanelInner({ playerIndex }: { playerIndex: Map<string, Res
       tier: p.tier as TierColor,
       isAnchor: p.isAnchor,
     })),
+    signature: slate.signature,
   };
 
   return <TodaysSlatePanel adapter={adapter} />;
+}
+
+/**
+ * BaseballSlateChip — sport-bound chip + overlay for in-game header.
+ *
+ * Mirrors the data-load gate in BaseballSlatePanel: until ensureLoaded
+ * resolves, it renders a static fallback chip with just the slate
+ * signature (counts default to 0). Once data is ready, the chip swaps
+ * to the live slate counts and the overlay tap reveals the panel.
+ *
+ * Pre-beta: callers MUST gate by isSlateV2Enabled("baseball") so the
+ * component never mounts when the flag is OFF.
+ */
+export function BaseballSlateChip() {
+  const [dataReady, setDataReady] = useState(false);
+  const [playerIndex, setPlayerIndex] = useState<Map<string, ResolvedPlayer>>(() => new Map());
+
+  useEffect(() => {
+    let cancelled = false;
+    ensureLoaded()
+      .then(() => {
+        if (cancelled) return;
+        try {
+          setPlayerIndex(buildPlayerIndex());
+          setDataReady(true);
+        } catch { /* leave chip on fallback */ }
+      })
+      .catch(() => { /* silent */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  if (!dataReady) {
+    const sig = slateSignature(new Date());
+    return (
+      <SlateChip label={sig.label} playerCount={0} sportKey="baseball">
+        <BaseballSlatePanel />
+      </SlateChip>
+    );
+  }
+  return <BaseballSlateChipInner playerIndex={playerIndex} />;
+}
+
+function BaseballSlateChipInner({ playerIndex }: { playerIndex: Map<string, ResolvedPlayer> }) {
+  const resolvePlayer = useCallback(
+    (id: string) => {
+      const meta = playerIndex.get(id);
+      if (!meta) return undefined;
+      return { name: meta.name, tier: meta.tier };
+    },
+    [playerIndex],
+  );
+  const slate = useDailySlate(sportAdapter as any, resolvePlayer);
+  const playerCount = slate.players.length;
+  return (
+    <SlateChip
+      label={slate.signature.label}
+      playerCount={playerCount}
+      sportKey="baseball"
+    >
+      <BaseballSlatePanel />
+    </SlateChip>
+  );
 }
 
 /**

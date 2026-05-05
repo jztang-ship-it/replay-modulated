@@ -53,4 +53,46 @@ describe("TodaysSlatePanel", () => {
     expect(screen.getByTestId("thumb-lebron")).toBeTruthy();
     expect(screen.getByTestId("thumb-curry")).toBeTruthy();
   });
+
+  it("renders the slate signature line when provided", () => {
+    render(<TodaysSlatePanel adapter={{
+      ...baseAdapter,
+      signature: { number: 145, label: "Slate #145" },
+    }} />);
+    const sig = screen.getByTestId("slate-signature");
+    expect(sig.textContent).toBe("Slate #145");
+  });
+
+  it("omits the signature line when none is provided", () => {
+    render(<TodaysSlatePanel adapter={baseAdapter} />);
+    expect(screen.queryByTestId("slate-signature")).toBeNull();
+  });
+
+  it("renders the headliner section featuring the top bonus player", () => {
+    render(<TodaysSlatePanel adapter={{
+      ...baseAdapter,
+      bonusPlayers: [
+        { id: "curry", name: "Curry", bonus: 20 as const },
+        { id: "tatum", name: "Tatum", bonus: 10 as const },
+        { id: "doncic", name: "Doncic", bonus: 5 as const },
+      ],
+    }} />);
+    const headliner = screen.getByTestId("slate-headliner");
+    expect(headliner.textContent).toMatch(/Today's Headliner/);
+    expect(headliner.textContent).toMatch(/Curry/);
+    expect(headliner.textContent).toMatch(/\+20 FP/);
+    // Other bonus players still appear in the regular bonus row.
+    expect(screen.getByTestId("thumb-tatum")).toBeTruthy();
+    expect(screen.getByTestId("thumb-doncic")).toBeTruthy();
+  });
+
+  it("hides the headliner when bonus pool is empty", () => {
+    render(<TodaysSlatePanel adapter={{
+      ...baseAdapter,
+      bonusPlayers: [],
+    }} />);
+    expect(screen.queryByTestId("slate-headliner")).toBeNull();
+    // Anchor row still renders.
+    expect(screen.getByTestId("thumb-lebron")).toBeTruthy();
+  });
 });
