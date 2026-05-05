@@ -136,6 +136,40 @@ export class SportAdapter {
     return this.getEligiblePool(playersAccessor, careerFpAccessor, count);
   }
 
+  /**
+   * Slate v2 phase-2: theme schedule. Returns the theme key active for `date`,
+   * or null for standard rotation. Default: null (no themes — v1 behavior).
+   * Sports override in phase 2 to declare their schedule.
+   */
+  getThemeForDate(_date: Date): string | null {
+    return null;
+  }
+
+  /**
+   * Slate v2 phase-2: themed-day eligibility pool. Returns array of player IDs
+   * for the given theme key, or null to fall back to standard eligibility.
+   * Default: null. Sports override in phase 2.
+   */
+  getThemedEligibility(_themeKey: string): string[] | null {
+    return null;
+  }
+
+  /**
+   * Slate v2 phase-2: theme display metadata. Returns null when theme not
+   * supported by this sport. Default: null. Sports override in phase 2.
+   */
+  getThemeMetadata(_themeKey: string): { displayName: string; description: string; iconKey?: string } | null {
+    return null;
+  }
+
+  /**
+   * Slate v2: manual exclusion list. Default reads from config.exclusionList
+   * if present, else returns [].
+   */
+  getExclusionList(): string[] {
+    return this.config.exclusionList ?? [];
+  }
+
   computeBadges(stats: Record<string, any>): Array<{ id: string; icon: string; label: string; fp: number }> {
     const defs = (this.config as any).badges ?? [];
     const position = (stats._position ?? "").toUpperCase();
