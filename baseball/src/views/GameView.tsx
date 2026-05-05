@@ -31,6 +31,8 @@ import type { WinTierDisplay, LegendData } from "@shared/components/GameBar";
 import type { TierThreshold as GaugeTierThreshold } from "@shared/components/TierGauge";
 import type { FTUETextConfig } from "@shared/components/CoachLayer";
 import { tierFromSalary } from "@shared/views/_gameViewHelpers";
+import { isSlateV2Enabled } from "@shared/featureFlags";
+import { BaseballSlateChip } from "../components/BaseballSlatePanel";
 import { sportAdapter } from "../adapters/SportAdapter";
 import {
   dealInitialRoster,
@@ -217,6 +219,10 @@ export default function GameView() {
     ftueTextConfig: BASEBALL_FTUE_CONFIG,
     // PostHandSheet — baseball does not surface this overlay (legacy disabled).
     audioBedSrc: null,
+    // Slate v2 chip — only when flag is ON for baseball. With flag OFF,
+    // SlateChipComponent stays undefined and the shared GameView renders
+    // nothing in the chip slot, so no slate-v2 code runs in-game.
+    SlateChipComponent: isSlateV2Enabled("baseball") ? BaseballSlateChip : undefined,
   }), []);
 
   return <SharedGameView adapter={adapter} />;

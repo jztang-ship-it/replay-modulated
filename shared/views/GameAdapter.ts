@@ -128,4 +128,11 @@ export interface GameAdapter {
 
   // ── Audio ──────────────────────────────────────────────────────────
   audioBedSrc: string | null;
+
+  // ── Slate v2 — optional in-game chip slot ──────────────────────────
+  /** Optional sport-bound slate chip + overlay component. When provided
+   *  (and only when provided), the shared GameView mounts it in the
+   *  in-game header. Sport wrappers gate this slot by isSlateV2Enabled
+   *  so flag-OFF callers pass undefined and no slate code mounts. */
+  SlateChipComponent?: ComponentType<{}>;
 }

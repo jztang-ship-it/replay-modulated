@@ -25,6 +25,8 @@ import type { GameAdapter } from "@shared/views/GameAdapter";
 import type { WinTierDisplay, LegendData } from "@shared/components/GameBar";
 import type { TierThreshold as GaugeTierThreshold } from "@shared/components/TierGauge";
 import { BASKETBALL_FTUE_CONFIG } from "@shared/components/CoachLayer";
+import { isSlateV2Enabled } from "@shared/featureFlags";
+import { BasketballSlateChip } from "../components/BasketballSlatePanel";
 import { sportAdapter } from "../adapters/SportAdapter";
 import {
   dealInitialRoster,
@@ -150,6 +152,10 @@ export default function GameView() {
     ftueTextConfig: BASKETBALL_FTUE_CONFIG,
     // PostHandSheet — basketball does not surface this overlay.
     audioBedSrc: "/audio/basketball/crowd/bed-murmur.mp3",
+    // Slate v2 chip — only when flag is ON for basketball. With flag OFF,
+    // SlateChipComponent stays undefined and the shared GameView renders
+    // nothing in the chip slot, so no slate-v2 code runs in-game.
+    SlateChipComponent: isSlateV2Enabled("basketball") ? BasketballSlateChip : undefined,
   }), []);
 
   return <SharedGameView adapter={adapter} />;
