@@ -19,12 +19,12 @@ import {
 } from "./gameAdapter";
 
 // ── FTUE coach copy ──────────────────────────────────────────────────────────
-// PR 2 will refine this against the spec's FTUE teaching beats:
-//   1. Deal step → "Five players. One Argentine ace anchoring it."
-//   2. Hold step → position lockouts + FLEX-rule + card-tier-colors teaching
-//   3. Draw step → "Hold who you trust. Redraw the rest."
-//   4. Reveal step → stat-by-stat Messi MOTM moment
-//   5. Win step → MOTM tier celebration + tier-ladder reveal
+// Soccer-coded teaching beats per the spec's FTUE section:
+//   1. Idle / Deal → set the expectation: "real stats from real World Cup matches"
+//   2. Hold (anchor) → name the anchor, frame the hold mechanic
+//   3. Hold (intro)  → teach positions, FLEX-rule, salary cap, tier ladder
+//   4. Reveal (anchor) → call back to the hold decision: "Messi delivered"
+//   5. Final → bridge to the live game
 export const FOOTBALL_FTUE_CONFIG: FTUETextConfig = {
   anchorCardId: "ftue-messi",
   rosterCount: 5,
@@ -35,13 +35,13 @@ export const FOOTBALL_FTUE_CONFIG: FTUETextConfig = {
   },
   cardTexts: {},
   anchorRevealText: "Messi delivered. That's why you held him.",
-  idleText: "Real stats. Real history. Your fantasy result instantly. Hit DEAL to get started.",
-  holdIntroText: "5 players — 1 GK, 1 DEF, 1 MID, 1 FWD, 1 FLEX — $180 cap. Card colors mark tier — orange/blue stars cost more but score more. Fantasy points come from real stats — goals, assists, saves, tackles. Who do we keep?",
-  holdAnchorText: "Messi is your top anchor. Tap his card to hold, then hit DRAW.",
-  nearMissText: "So close — just a few FP from the CAPTAIN win.",
+  idleText: "Real World Cup matches. Real stats. Your fantasy result, instant. Tap DEAL to start.",
+  holdIntroText: "5 players — 1 GK, 1 DEF, 1 MID, 1 FWD, 1 FLEX (any outfield, no keepers) — $180 cap. Card colors mark tier: orange/blue stars cost more but score more. FP from real stats — goals, assists, saves, tackles. Hit SUB → STARTER → CAPTAIN → MOTM → LEGEND. Who do we keep?",
+  holdAnchorText: "Messi is your anchor. Tap his card to hold, then hit DRAW for the rest.",
+  nearMissText: "So close — just a few FP shy of the next tier.",
   anchorFlipHintText: "Messi was electric tonight — flip his card to see the full stat line.",
   anchorStatText: "Goals + assists driving his FP. Badges stack on top.",
-  finalText: "Every game log comes from true World Cup history. Replay lets you relive it at your fingertips. Hit Replay to start playing for real.",
+  finalText: "Every game log is true World Cup history. Replay lets you relive it. Hit Replay to start playing for real.",
 };
 
 // ── FTUE roster stubs ────────────────────────────────────────────────────────
