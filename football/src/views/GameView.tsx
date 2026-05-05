@@ -144,32 +144,40 @@ export default function GameView() {
     getTodaysStars,
     // computeRosterCeiling — football has no peak corpus yet; field is optional.
     CardComponent: SoccerCard as unknown as GameAdapter["CardComponent"],
-    rosterGridColumns: 4,
-    // Football "dice 5" layout — 2 cards top, 1 GK centered middle, 2 cards
-    // bottom. GK is unique (only 1 keeper, can't FLEX), so it anchors the
-    // middle row. The 4 outfield slots (DEF / MID / FWD / FLEX) sit on the
-    // corners. Slot indices map per the rosterSlots order
-    // ["GK", "DEF", "MID", "FWD", "FLEX"]:
+    rosterGridColumns: 3,
+    // Football "5-on-a-die" layout — 4 corners + 1 center, all same card
+    // size, fits in basketball's 3-col 2-row card area (no extra height).
     //
-    //   [DEF]    [FLEX]      ← top row: slots 1, 4
-    //      [GK]              ← middle row: slot 0
-    //   [MID]    [FWD]       ← bottom row: slots 2, 3
+    //   [DEF]    .    [FLEX]       row 1 — corners in cols 1 & 3
+    //      .   [GK]    .           GK spans rows 1-2, vertically centered
+    //   [MID]    .    [FWD]        row 2 — corners in cols 1 & 3
+    //
+    // The 4 outfield cards live in grid cells (cols 1 and 3 of a 3-col
+    // grid; col 2 is empty for the corner cards). The GK card spans both
+    // rows in col 2 with `align-self: center`, which positions it at the
+    // dead-middle of the row gap region. Total layout height = 2 card
+    // heights + 1 gap, identical to basketball's 6-card layout.
     rosterGridLayout: {
       className: "fb-dice5",
       css: `
         .fb-dice5 > .roster-grid {
-          grid-template-columns: repeat(4, 1fr);
-          grid-template-rows: 1fr 1fr 1fr;
-          row-gap: 6px;
+          grid-template-columns: repeat(3, 1fr);
+          grid-template-rows: 1fr 1fr;
         }
-        /* Top row — DEF (left), FLEX (right) */
-        .fb-dice5 > .roster-grid > .card-slot[data-slot="1"] { grid-column: 1 / span 2; grid-row: 1; }
-        .fb-dice5 > .roster-grid > .card-slot[data-slot="4"] { grid-column: 3 / span 2; grid-row: 1; }
-        /* Middle row — GK centered */
-        .fb-dice5 > .roster-grid > .card-slot[data-slot="0"] { grid-column: 2 / span 2; grid-row: 2; }
-        /* Bottom row — MID (left), FWD (right) */
-        .fb-dice5 > .roster-grid > .card-slot[data-slot="2"] { grid-column: 1 / span 2; grid-row: 3; }
-        .fb-dice5 > .roster-grid > .card-slot[data-slot="3"] { grid-column: 3 / span 2; grid-row: 3; }
+        /* Top row — DEF (left), FLEX (right). Col 2 left empty for GK. */
+        .fb-dice5 > .roster-grid > .card-slot[data-slot="1"] { grid-column: 1; grid-row: 1; }
+        .fb-dice5 > .roster-grid > .card-slot[data-slot="4"] { grid-column: 3; grid-row: 1; }
+        /* Bottom row — MID (left), FWD (right). Col 2 left empty for GK. */
+        .fb-dice5 > .roster-grid > .card-slot[data-slot="2"] { grid-column: 1; grid-row: 2; }
+        .fb-dice5 > .roster-grid > .card-slot[data-slot="3"] { grid-column: 3; grid-row: 2; }
+        /* GK in middle col, spanning both rows, vertically centered.
+           align-self: center floats it into the row gap region — the
+           "5 dot" of the die. Width matches corner cards (1/3 of grid). */
+        .fb-dice5 > .roster-grid > .card-slot[data-slot="0"] {
+          grid-column: 2;
+          grid-row: 1 / span 2;
+          align-self: center;
+        }
       `,
     },
     // FLEX rule UI affordance: slot 4 (FLEX) gets a label badge + tooltip
