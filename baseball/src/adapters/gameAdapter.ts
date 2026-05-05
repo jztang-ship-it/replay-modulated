@@ -13,6 +13,7 @@ import { buildDailyBonusMap, getDailyBonusPlayers, type DailyBonusPlayer } from 
 import { buildBonusPoolFromPlayers } from "@shared/utils/dailyBonusPool";
 import { getDealPool } from "@shared/utils/dealGate";
 import { SessionRepeatLimit, DEFAULT_REPEAT_LIMIT } from "@shared/utils/sessionRepeatLimit";
+import { getCachedSlate } from "@shared/utils/slateSelector";
 import { isSlateV2Enabled } from "@shared/featureFlags";
 import type { PlayerCard } from "./types";
 import type { PlayerEval, GeneratedCard } from "../engines/rosterEngine";
@@ -103,7 +104,7 @@ function hasValidLogs(basePlayerId: string, position: string, logsByKey: Map<str
 function buildBonusPool(): Array<{ basePlayerId: string; name: string; tier: string }> {
   const logs = getLogsByKey();
   const eco = getEconomyConfig();
-  return buildBonusPoolFromPlayers(
+  const allBonusEligible = buildBonusPoolFromPlayers(
     getPlayers(),
     (p: any) => hasValidLogs(
       String(p.basePlayerId ?? p.id ?? ""),
@@ -113,6 +114,14 @@ function buildBonusPool(): Array<{ basePlayerId: string; name: string; tier: str
     (salary) => tierFromSalary(salary, eco),
     eco.salaryMin,
   );
+
+  // When slate v2 is ON for baseball, restrict bonus picks to today's slate
+  // so bonus players are guaranteed drawable.
+  if (isSlateV2Enabled("baseball")) {
+    const slateIds = new Set(getCachedSlate(sportAdapter as any, new Date()));
+    return allBonusEligible.filter(p => slateIds.has(p.basePlayerId));
+  }
+  return allBonusEligible;
 }
 
 /** Today's 3 hot players with their bonus FP values — shown in Legend modal. */
