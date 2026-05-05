@@ -78,3 +78,67 @@ flipping the production flag.
 7. Beta concludes, data analyzed.
 8. Production rollout per sport (one sport at a time, ~1-2 weeks apart).
 9. Cleanup commit (~2 weeks after both sports stable on flag-ON).
+
+## v1 manual verification checklist
+
+Per the spec, before flipping flags ON in production, run a manual end-to-end
+check locally with the flag ON. Two sports, two checks each (flag ON, then OFF
+to verify byte-equivalence).
+
+### Setup
+
+Add to `basketball/.env.local`:
+```
+VITE_FEATURE_SLATE_V2_BASKETBALL=true
+```
+
+(Or `baseball/.env.local` for baseball.)
+
+### Basketball flag-ON verification
+
+```bash
+npm run dev:basketball
+```
+
+Open http://localhost:5173/basketball/ and verify:
+
+- [ ] `TodaysSlatePanel` renders on landing
+- [ ] Panel auto-expanded on first visit; collapsed on second visit (same UTC day)
+- [ ] Anchors section shows ~10 players with anchor badge
+- [ ] Bonus section shows 3 players (matches `getTodaysStars()`)
+- [ ] Countdown shows hours/minutes
+- [ ] "See full slate" toggle reveals full ~60 players
+- [ ] Click play → first hand draws cards only from today's slate (verify by comparing dealt names against the slate panel)
+- [ ] Top Games surface (if accessible) still shows extreme historical hands from full pool
+- [ ] No console errors
+
+### Basketball flag-OFF verification
+
+In `basketball/.env.local`, set `VITE_FEATURE_SLATE_V2_BASKETBALL=false` (or
+delete the line). Restart dev server. Verify:
+
+- [ ] No `TodaysSlatePanel` rendered
+- [ ] Deal pulls from full pool — i.e., players outside today's slate appear
+- [ ] No console errors
+
+### Baseball verification
+
+Same checklist with `VITE_FEATURE_SLATE_V2_BASEBALL` toggle and
+`npm run dev:baseball`.
+
+### Sport-isolation manual check
+
+With basketball flag ON and baseball flag OFF, switch between the two sports
+in the same browser session. Confirm:
+
+- [ ] Basketball deals from slate
+- [ ] Baseball deals from full pool
+- [ ] Switching sports doesn't pollute the other's repeat-limit window or
+      slate cache
+
+### Verification result
+
+Date: ____
+Verified by: ____
+Result: ____
+Notes: ____
