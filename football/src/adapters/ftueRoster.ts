@@ -45,7 +45,7 @@ export const FOOTBALL_FTUE_CONFIG: FTUETextConfig = {
   anchorRevealText: "Hat-trick. Messi delivered. That's why you held him.",
   idleText: "Real World Cup matches. Real stats. Your fantasy result, instant. Tap DEAL to start.",
   holdIntroText: "5 players — 1 GK, 1 DEF, 1 MID, 1 FWD, 1 FLEX (any outfield, no keepers) — $180 cap. Card colors mark tier: orange/blue stars cost more but score more. FP from real stats — goals, assists, saves, tackles. Hit SUB → STARTER → CAPTAIN → MOTM → LEGEND. Who do we keep?",
-  holdAnchorText: "Messi just hit a hat-trick — 118 FP. Hold his card and draw the rest.",
+  holdAnchorText: "Messi just dropped 118 FP — hat-trick. Hold his card and draw the rest.",
   nearMissText: "So close — just a few FP shy of the next tier.",
   anchorFlipHintText: "Messi was electric — flip his card to see the full stat line.",
   anchorStatText: "3 goals + 4 shots on target. HAT-TRICK badge stacks on top.",
@@ -129,15 +129,22 @@ export async function dealFTUERoster(): Promise<{ roster: GeneratedCard[] }> {
         statLine: { goals: 0, assists: 0, key_passes: 1, tackles: 1, interceptions: 0, minutes_played: 78 },
       }),
       // Slot 3 — Messi | ORANGE $60 | FWD | HOLD ← ANCHOR
-      // 2022 World Cup Round of 16 vs Australia: 1 goal, 4 SOT, 2 KP, 5 dribbles.
-      // Score is initial deal projection; the actual hat-trick game lands in the drawn lineup.
+      // 2022 World Cup hat-trick game (real stats from game-logs.json,
+      // basePlayerId 5503): 3 goals, 4 SOT, 2 KP. After FWD weights:
+      // 88 FP from stats + 30 FP HAT_TRICK badge = 118 FP. The deal hand
+      // shows the hat-trick already so the user has clear info to hold.
+      // (Mirrors basketball's pattern where Tatum's 92 FP is visible at
+      // hold time — no surprise upgrade at resolve.)
       makeCard({
         cardId: "ftue-messi", basePlayerId: "5503",
         name: "Lionel Messi", team: "Argentina", position: "FWD",
         tier: "ORANGE", salary: 60, slotIndex: 3,
-        projectedFp: 75, actualFp: 75,
-        date: "2022-12-03", opponent: "AUS", homeAway: "H",
-        statLine: { goals: 1, assists: 0, shots_on_target: 4, key_passes: 2, dribbles_completed: 5, minutes_played: 90 },
+        projectedFp: 75, actualFp: 118,
+        date: "2022-12-13", opponent: "CRO", homeAway: "H",
+        statLine: { goals: 3, assists: 0, shots_on_target: 4, key_passes: 2, dribbles_completed: 0, minutes_played: 90 },
+        achievements: [
+          { id: "HAT_TRICK", icon: "🎩", label: "Hat-Trick", fp: 30 },
+        ],
       }),
       // Slot 4 — Lucas Vázquez | BLUE $30 | FLEX (FWD) | obvious swap (cold)
       // Spain bench FWD. 16 minutes off the bench vs Japan, 0 contributions.
@@ -217,39 +224,17 @@ export async function redrawFTUERoster(params: {
   return { roster };
 }
 
-// ── RESOLVE: upgrade Messi from initial-deal score to the hat-trick game ─────
-// If Messi was held (he should be — coach guides toward it), his score upgrades
-// to the real 2022 hat-trick game (3 goals, 4 SOT, 2 KP) → 88 stat FP + 30
-// HAT_TRICK badge = 118 FP. The team total then lands at MOTM (≥320 FP).
+// ── RESOLVE: pass cards through unchanged (basketball's pattern) ────────────
+// Cards are pre-resolved at deal time — no surprise upgrade needed. Messi's
+// 118 FP hat-trick is visible from the start so the user has clear info to
+// hold; the drawn lineup just adds the supporting cards. This keeps the
+// FTUE flow predictable and matches basketball's scripted-FTUE pattern.
 
 export async function resolveFTUERoster(params: {
   finalCards: PlayerCard[];
 }): Promise<{ roster: GeneratedCard[]; mvpCardId: string }> {
-  const roster = params.finalCards.map((c) => {
-    const cId = String((c as any).cardId ?? (c as any).basePlayerId ?? "");
-    if (cId === "ftue-messi") {
-      // Real Messi 2022 hat-trick game stats (from football/public/data/game-logs.json
-      // for basePlayerId 5503 — game with goals=3, sot=4, kp=2).
-      return {
-        ...(c as any),
-        actualFp: 118,
-        statLine: {
-          goals: 3,
-          assists: 0,
-          shots_on_target: 4,
-          key_passes: 2,
-          dribbles_completed: 0,
-          minutes_played: 90,
-        },
-        achievements: [
-          { id: "HAT_TRICK", icon: "🎩", label: "Hat-Trick", fp: 30 },
-        ],
-        gameInfo: { date: "2022-12-13", opponent: "CRO", homeAway: "H" },
-        fpDelta: 118 - (c as any).projectedFp,
-        wasHeld: true,
-      } as unknown as GeneratedCard;
-    }
-    return c as unknown as GeneratedCard;
-  });
-  return { roster, mvpCardId: "ftue-messi" };
+  return {
+    roster: params.finalCards as unknown as GeneratedCard[],
+    mvpCardId: "ftue-messi",
+  };
 }

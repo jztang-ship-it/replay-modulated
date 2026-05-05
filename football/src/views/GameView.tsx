@@ -144,9 +144,34 @@ export default function GameView() {
     getTodaysStars,
     // computeRosterCeiling — football has no peak corpus yet; field is optional.
     CardComponent: SoccerCard as unknown as GameAdapter["CardComponent"],
-    rosterGridColumns: 3,
-    // rosterGridLayout — 5-slot football uses a 3+2 layout similar to baseball dice-5.
-    // TODO: wire up football-specific grid layout (post-launch polish).
+    rosterGridColumns: 4,
+    // Football "dice 5" layout — 2 cards top, 1 GK centered middle, 2 cards
+    // bottom. GK is unique (only 1 keeper, can't FLEX), so it anchors the
+    // middle row. The 4 outfield slots (DEF / MID / FWD / FLEX) sit on the
+    // corners. Slot indices map per the rosterSlots order
+    // ["GK", "DEF", "MID", "FWD", "FLEX"]:
+    //
+    //   [DEF]    [FLEX]      ← top row: slots 1, 4
+    //      [GK]              ← middle row: slot 0
+    //   [MID]    [FWD]       ← bottom row: slots 2, 3
+    rosterGridLayout: {
+      className: "fb-dice5",
+      css: `
+        .fb-dice5 > .roster-grid {
+          grid-template-columns: repeat(4, 1fr);
+          grid-template-rows: 1fr 1fr 1fr;
+          row-gap: 6px;
+        }
+        /* Top row — DEF (left), FLEX (right) */
+        .fb-dice5 > .roster-grid > .card-slot[data-slot="1"] { grid-column: 1 / span 2; grid-row: 1; }
+        .fb-dice5 > .roster-grid > .card-slot[data-slot="4"] { grid-column: 3 / span 2; grid-row: 1; }
+        /* Middle row — GK centered */
+        .fb-dice5 > .roster-grid > .card-slot[data-slot="0"] { grid-column: 2 / span 2; grid-row: 2; }
+        /* Bottom row — MID (left), FWD (right) */
+        .fb-dice5 > .roster-grid > .card-slot[data-slot="2"] { grid-column: 1 / span 2; grid-row: 3; }
+        .fb-dice5 > .roster-grid > .card-slot[data-slot="3"] { grid-column: 3 / span 2; grid-row: 3; }
+      `,
+    },
     // FLEX rule UI affordance: slot 4 (FLEX) gets a label badge + tooltip
     // explaining "Any outfield player (no goalkeepers)" — addresses spec
     // review concern #4. FTUE teaches the rule via holdIntroText too.
