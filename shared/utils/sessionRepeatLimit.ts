@@ -57,9 +57,12 @@ export class SessionRepeatLimit {
     return filtered;
   }
 
-  record(playerIds: string[]): void {
+  record(
+    playerIds: string[],
+    config: RepeatLimitConfig = DEFAULT_REPEAT_LIMIT,
+  ): void {
     this.recentHands.push([...playerIds]);
-    while (this.recentHands.length > 10) this.recentHands.shift();
+    while (this.recentHands.length > config.windowSize) this.recentHands.shift();
   }
 
   reset(): void {

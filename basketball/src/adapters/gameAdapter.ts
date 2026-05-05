@@ -178,7 +178,10 @@ export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
 
   // Record drawn cards for the repeat-limit window.
   if (isSlateV2Enabled("basketball")) {
-    repeatLimit.record(cards.map((c: any) => String(c.basePlayerId ?? "")).filter(Boolean));
+    repeatLimit.record(
+      cards.map((c: any) => String(c.basePlayerId ?? "")).filter(Boolean),
+      DEFAULT_REPEAT_LIMIT,
+    );
   }
 
   return { roster: cards as unknown as PlayerCard[] };
@@ -231,7 +234,10 @@ export async function redrawRoster({
 
   // Record drawn cards for the repeat-limit window (held + redrawn cards).
   if (isSlateV2Enabled("basketball")) {
-    repeatLimit.record(cards.map((c: any) => String(c.basePlayerId ?? "")).filter(Boolean));
+    repeatLimit.record(
+      cards.map((c: any) => String(c.basePlayerId ?? "")).filter(Boolean),
+      DEFAULT_REPEAT_LIMIT,
+    );
   }
 
   return { roster: cards as unknown as PlayerCard[] };
