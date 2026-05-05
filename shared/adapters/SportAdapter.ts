@@ -110,6 +110,34 @@ export class SportAdapter {
     return total;
   }
 
+  /**
+   * Slate v2: top-N eligible players by career FP.
+   * Caller injects:
+   *   - playersAccessor → list of { basePlayerId } for the sport
+   *   - careerFpAccessor(id) → number (typically (id) => this.getCareerFP(id, ...))
+   */
+  getEligiblePool(
+    playersAccessor: () => Array<{ basePlayerId: string }>,
+    careerFpAccessor: (basePlayerId: string) => number,
+    n: number = 200,
+  ): string[] {
+    const players = playersAccessor();
+    const scored = players.map(p => ({ id: p.basePlayerId, fp: careerFpAccessor(p.basePlayerId) }));
+    scored.sort((a, b) => b.fp - a.fp);
+    return scored.slice(0, n).map(s => s.id);
+  }
+
+  /**
+   * Slate v2: anchor players (always in today's slate). Default = top `count` by career FP.
+   */
+  getAnchors(
+    playersAccessor: () => Array<{ basePlayerId: string }>,
+    careerFpAccessor: (basePlayerId: string) => number,
+    count: number = 10,
+  ): string[] {
+    return this.getEligiblePool(playersAccessor, careerFpAccessor, count);
+  }
+
   computeBadges(stats: Record<string, any>): Array<{ id: string; icon: string; label: string; fp: number }> {
     const defs = (this.config as any).badges ?? [];
     const position = (stats._position ?? "").toUpperCase();
