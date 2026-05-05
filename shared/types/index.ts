@@ -181,6 +181,13 @@ export interface SportConfigShape {
   positionLimits?: Record<string, { min: number; max: number }>;
   projectionWeights: Record<string, number>;
   positionProjectionWeights?: Record<string, Record<string, number>>;
+  /** Optional per-position FP multiplier applied AFTER weighted-stat sum,
+   *  BEFORE badges. Used by sports where a single position's stat profile
+   *  produces systemically lower raw FP than other positions and needs
+   *  scaling to comparable ranges. Football: GK = 4.0 (saves are
+   *  weighted realistically but cumulative FP underperforms outfield
+   *  totals without scaling). Basketball/baseball omit. */
+  positionMultipliers?: Record<string, number>;
   tierThresholds?: Array<{ tier: string; minSalary: number }>;
   statCategories?: readonly string[];
   statDisplay?: Record<string, Array<{ key: string; label: string }>>;

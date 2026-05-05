@@ -51,6 +51,11 @@ const FOOTBALL_TEST_CONFIG: SportConfigShape = {
     MID: { goals: 12, assists: 8, key_passes: 5, tackles: 4, interceptions: 5, yellow_cards: -5, red_cards: -15 },
     FWD: { goals: 22, assists: 8, shots_on_target: 4, key_passes: 3, dribbles_completed: 2, yellow_cards: -5, red_cards: -15 },
   },
+  // GK 4× scaling matches real football config — keeper raw FP underperforms
+  // outfield totals without scaling. Badges are NOT scaled (applied separately).
+  positionMultipliers: {
+    GK: 4.0,
+  },
   tierThresholds: [
     { tier: "ORANGE", minSalary: 52 },
     { tier: "PURPLE", minSalary: 40 },
@@ -113,20 +118,39 @@ describe("football edge cases — substitute (low minutes)", () => {
   });
 });
 
-describe("football edge cases — GK scored a goal", () => {
-  it("stacks GK goal weight (60 FP) with save weight", () => {
+describe("football edge cases — GK scored a goal (with 4× position scaling)", () => {
+  it("stacks GK goal + saves + GA, then applies 4× position multiplier", () => {
     // Rare event: a GK who scored a goal AND made saves. Weights stack — the
-    // goal isn't suppressed by the keeper context.
+    // goal isn't suppressed by the keeper context. Then GK 4× multiplier
+    // brings the total into outfield-comparable range.
     const stats = { _position: "GK", goals: 1, saves: 5, goals_conceded: 1, minutes_played: 90 };
     const fp = adapter.computeFantasyPoints(stats);
-    // 1×60 (goal) + 5×20 (saves) + 1×-6 (GA) = 154 FP
-    expect(fp).toBe(154);
+    // Base: 1×60 (goal) + 5×20 (saves) + 1×-6 (GA) = 154 FP
+    // After GK 4× multiplier: 154 × 4 = 616 FP
+    expect(fp).toBe(616);
   });
 
   it("WALL badge still fires for the GK with 5 saves (goal doesn't suppress saves badge)", () => {
     const stats = { _position: "GK", goals: 1, saves: 5, goals_conceded: 1, minutes_played: 90 };
     const badges = adapter.computeBadges(stats);
     expect(badges.find(b => b.id === "WALL")).toBeDefined();
+  });
+
+  it("Outfield positions are NOT scaled (multiplier applies to GK only)", () => {
+    // Same goal weight check on FWD: 1 goal × 22 = 22 FP. No multiplier.
+    const stats = { _position: "FWD", goals: 1, minutes_played: 90 };
+    const fp = adapter.computeFantasyPoints(stats);
+    expect(fp).toBe(22);
+  });
+
+  it("Stat → FP breakdown is also scaled for GK (so card-back attribution matches total)", () => {
+    const stats = { _position: "GK", saves: 3, goals_conceded: 0, minutes_played: 90 };
+    const result = adapter.computeFantasyPointsDetailed(stats);
+    // Base: 3 saves × 20 = 60 FP. After 4× = 240.
+    expect(result.total).toBe(240);
+    // Breakdown should reflect the SCALED contributions so the card-back
+    // tile attribution lines up with the total displayed above it.
+    expect(result.breakdown.saves).toBe(240);
   });
 });
 

@@ -103,11 +103,16 @@ export const FootballSportConfig: SportConfigShape = {
 
 
   // ── Position FP multipliers ───────────────────────────────────────────────
-  // Normalizes raw FP output so top-tier players at every position
-  // produce a comparable FP range (~100 FP at top tier).
-  // Only GK needs scaling — DEF/MID/FWD already produce ~88-102 FP at top tier.
-  // GK top10 avg = 23.4 FP vs target ~90 FP → multiplier of 4.0.
-  // Badge bonuses are excluded from scaling (applied after).
+  // Normalizes raw FP output so top-tier players at every position produce
+  // a comparable FP range. DEF/MID/FWD top games already land ~88–102 FP;
+  // GK top games land ~22–24 FP because save weight (20) and conceded
+  // penalty (-6) net out lower than outfield goal+assist+contribution
+  // accumulation. Multiplier of 4.0 takes a 23 FP top-GK game to ~92 FP,
+  // matching outfield top games. Badge bonuses are NOT scaled (applied
+  // after in the resolve pipeline).
+  positionMultipliers: {
+    GK: 4.0,
+  },
 
   // ── Tier thresholds (salary-based) ────────────────────────────────────────
   tierThresholds: [
@@ -118,13 +123,21 @@ export const FootballSportConfig: SportConfigShape = {
     { tier: "WHITE",  minSalary: 0  },
   ],
 
-  // ── Win tiers (seed values for PR 1; PR 2 calibrates via simulator) ─────
+  // ── Win tiers — calibrated against 5k-hand simulator on full WC corpus ──
+  // With Fix #4 (broader log filter) + Fix #1 (GK 4× scaling) applied,
+  // team FP distribution is: P25=141, Median=171, P75=204, P90=236, P99=370.
+  // Thresholds chosen to land at spec hit-rate targets:
+  //   SUB     ~25% (≈ P75)
+  //   STARTER ~12% (≈ P88)
+  //   CAPTAIN ~5%  (≈ P95)
+  //   MOTM    ~1.5% (≈ P98.5)
+  //   LEGEND  ~0.3% (≈ P99.7)
   winTiers: [
-    { name: "SUB",      minFp: 130, multiplier: 0.5, color: "#94A3B8" },
-    { name: "STARTER",  minFp: 150, multiplier: 1.5, color: "#10B981" },
-    { name: "CAPTAIN",  minFp: 167, multiplier: 3,   color: "#3B82F6" },
-    { name: "MOTM",     minFp: 192, multiplier: 8,   color: "#F59E0B" },
-    { name: "LEGEND",   minFp: 215, multiplier: 50,  color: "#EF4444" },
+    { name: "SUB",      minFp: 205, multiplier: 0.5, color: "#94A3B8" },
+    { name: "STARTER",  minFp: 230, multiplier: 1.5, color: "#10B981" },
+    { name: "CAPTAIN",  minFp: 270, multiplier: 3,   color: "#3B82F6" },
+    { name: "MOTM",     minFp: 320, multiplier: 8,   color: "#F59E0B" },
+    { name: "LEGEND",   minFp: 395, multiplier: 50,  color: "#EF4444" },
   ],
 
   // ── Badges ────────────────────────────────────────────────────────────────

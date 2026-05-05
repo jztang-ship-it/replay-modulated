@@ -77,6 +77,18 @@ export class SportAdapter {
       const contrib = value * weight;
       if (Number.isFinite(contrib) && contrib !== 0) { breakdown[key] = contrib; fp += contrib; }
     }
+    // Apply optional per-position scaling. Used by football (GK = 4.0) to
+    // bring keeper FP totals into comparable range with outfield positions.
+    // Scales both the total AND the per-stat breakdown so the card-back
+    // stat→FP attribution displays the same scaled numbers users see in
+    // the running total. Badges are NOT included here — they're applied
+    // separately via computeBadges in the resolve pipeline.
+    const posMul = (this.config as any).positionMultipliers as Record<string, number> | undefined;
+    const m = posMul?.[position];
+    if (m !== undefined && m !== 1 && Number.isFinite(m)) {
+      for (const k of Object.keys(breakdown)) breakdown[k] *= m;
+      fp *= m;
+    }
     return { total: Number.isFinite(fp) ? fp : 0, breakdown };
   }
 

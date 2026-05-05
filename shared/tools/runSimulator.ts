@@ -55,6 +55,12 @@ function computeFp(stats: Record<string, any>, position: string, config: SportCo
   const weights: Record<string, number> = (config.positionProjectionWeights?.[posUp]) ? config.positionProjectionWeights[posUp] : (config.projectionWeights ?? {});
   let fp = 0;
   for (const [key, w] of Object.entries(weights)) fp += Number(stats[key] ?? 0) * Number(w);
+  // Apply optional per-position FP multiplier (matches the runtime's
+  // shared/adapters/SportAdapter.computeFantasyPointsDetailed scaling).
+  // Football uses GK = 4.0 to bring keeper FP into outfield-comparable
+  // range. Sports without positionMultipliers see the raw FP unchanged.
+  const m = (config as any).positionMultipliers?.[posUp];
+  if (m !== undefined && Number.isFinite(m) && m !== 1) fp *= m;
   return Math.max(0, fp);
 }
 
@@ -315,10 +321,26 @@ async function main() {
   // Win-tier multipliers MUST stay in sync with basketball/src/utils/payoutLogic.ts
   // (BASKETBALL_WIN_TIERS) and shared/components/GameBar.tsx STREAK_LABELS.
   // Order: highest tier first inside each scenario for legibility; calcEV sorts.
+  // Active-sport scenario — reads winTiers from the loaded config.
+  // For non-basketball sports (football/baseball/etc) this is the
+  // canonical scenario; the legacy basketball-hardcoded scenarios below
+  // remain for sport=basketball comparison and are non-authoritative
+  // when running other sports.
+  const activeSportTiers: TierDef[] = winTiers.map(t => ({
+    tier: t.name,
+    minFP: t.minFp,
+    multiplier: t.multiplier,
+  }));
+
   const SCENARIOS: { label: string; desc: string; tiers: TierDef[] }[] = [
     {
+      label: "ACTIVE SPORT (config-driven)",
+      desc:  `Tiers from ${config.sportLabel ?? config.sportKey ?? "sport"} config — authoritative for the loaded sport`,
+      tiers: activeSportTiers,
+    },
+    {
       label: "CURRENT (baseline)",
-      desc:  "Existing thresholds — for reference only",
+      desc:  "Existing thresholds — for reference only (basketball-tuned)",
       tiers: [
         { tier: "ROOKIE",   minFP: 185, multiplier: 0.5 },
         { tier: "STARTER",  minFP: 205, multiplier: 1.5 },
@@ -421,10 +443,11 @@ async function main() {
   console.log("=".repeat(65));
 
   for (const scenario of SCENARIOS) {
-    const rookieTier = scenario.tiers.find(t => t.tier === "ROOKIE")!;
-    const winRate = allFps.filter(f => f >= rookieTier.minFP).length / N * 100;
+    // Lowest-threshold tier (formerly hardcoded as "ROOKIE" — sport-agnostic now).
+    const lowestTier = scenario.tiers.reduce((a, b) => a.minFP <= b.minFP ? a : b);
+    const winRate = allFps.filter(f => f >= lowestTier.minFP).length / N * 100;
     const ev = calcEV(scenario.tiers, allFps);
-    const { hits: streaks, evWithStreak } = runStreaks(rookieTier.minFP, allFps, scenario.tiers);
+    const { hits: streaks, evWithStreak } = runStreaks(lowestTier.minFP, allFps, scenario.tiers);
     const flagFor = (e: number) =>
       e > 1 ? "HOUSE LOSES" : e > 0.92 ? "TOO GENEROUS" : e >= 0.78 ? "TARGET ZONE" : e >= 0.62 ? "SLIGHTLY PUNISHING" : "TOO PUNISHING";
 

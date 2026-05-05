@@ -13,27 +13,24 @@ import { salaryFromProjection } from "@shared/engines/economyEngine";
 import { getDailyBonusPlayers, buildDailyBonusMap, type DailyBonusPlayer } from "@shared/utils/dailyBonus";
 import type { PlayerEval, GeneratedCard, RawLog } from "@shared/types";
 
-// ── Non-scoring fields — excluded from log filter ────────────────────────────
+// ── Validity filter — keep any log where the player actually played ──────────
+// Previously this filtered to "scoring-only logs" (any non-zero scoring stat),
+// which dropped legitimate quiet games. That biased projections upward and
+// skewed within-position salary normalization. The fix: keep every log with
+// minutes_played > 0, drop only truly empty / DNP / invalid logs. Quiet games
+// (0 goals, 0 assists, full 90 min) now contribute their realistic 0–low FP
+// to the average, producing accurate salary tiers.
 
-const NON_SCORING = new Set([
-  "passes_attempted",
-  "passes_completed", 
-  "minutes_played",
-]);
-
-function hasScoringStats(stats: Record<string, any>): boolean {
-  return Object.entries(stats ?? {}).some(
-    ([k, v]) => !NON_SCORING.has(k) && typeof v === "number" && v > 0
-  );
+function hasValidLog(stats: Record<string, any>): boolean {
+  const mins = Number(stats?.minutes_played ?? 0);
+  return Number.isFinite(mins) && mins > 0;
 }
 
-// ── Filter to scoring-only logs ───────────────────────────────────────────────
-
-function filterScoringLogs(logsByKey: Map<string, RawLog[]>): Map<string, RawLog[]> {
+function filterValidLogs(logsByKey: Map<string, RawLog[]>): Map<string, RawLog[]> {
   const filtered = new Map<string, RawLog[]>();
   for (const [key, logs] of logsByKey.entries()) {
-    const scoring = logs.filter(l => hasScoringStats(l.stats ?? {}));
-    if (scoring.length > 0) filtered.set(key, scoring);
+    const valid = logs.filter(l => hasValidLog(l.stats ?? {}));
+    if (valid.length > 0) filtered.set(key, valid);
   }
   return filtered;
 }
@@ -57,10 +54,14 @@ function buildProjectionsFromLogs(
     const logs = scoringLogs.get(id) ?? [];
     if (!logs.length) continue;
 
-    // Inject _position so position-specific weights are used
-    const fps = logs
-      .map(l => sportAdapter.computeFantasyPoints({ ...(l.stats ?? {}), _position: pos }))
-      .filter(fp => fp > 0);
+    // Inject _position so position-specific weights are used.
+    // Include ALL valid-log FPs in the average — quiet games (0 FP) and
+    // disciplinary games (negative FP from yellow/red cards) contribute
+    // their honest weight to the projection. The previous `.filter(fp > 0)`
+    // step biased projections upward by silently dropping these.
+    const fps = logs.map(l =>
+      sportAdapter.computeFantasyPoints({ ...(l.stats ?? {}), _position: pos })
+    );
 
     if (!fps.length) continue;
 
@@ -133,7 +134,7 @@ function buildEvalPool(
 export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
   const players     = getPlayers();
   const logsByKey   = getLogsByKey();
-  const scoringLogs = filterScoringLogs(logsByKey);
+  const scoringLogs = filterValidLogs(logsByKey);
   const evalPool    = buildEvalPool(players, scoringLogs);
 
   const rnd = mulberry32(randomSeed());
@@ -156,7 +157,7 @@ export async function redrawRoster({
 }): Promise<{ roster: PlayerCard[] }> {
   const players     = getPlayers();
   const logsByKey   = getLogsByKey();
-  const scoringLogs = filterScoringLogs(logsByKey);
+  const scoringLogs = filterValidLogs(logsByKey);
   const evalPool    = buildEvalPool(players, scoringLogs);
 
   const heldSlots = new Set<number>();
@@ -188,7 +189,7 @@ export async function resolveRoster({
   finalCards: PlayerCard[];
 }): Promise<{ roster: PlayerCard[]; mvpCardId?: string }> {
   const logsByKey   = getLogsByKey();
-  const scoringLogs = filterScoringLogs(logsByKey);
+  const scoringLogs = filterValidLogs(logsByKey);
   const rnd         = mulberry32(randomSeed());
 
   const { resolved, mvpCardId } = resolveCards(
@@ -209,7 +210,7 @@ export async function resolveRoster({
 function buildBonusPool(): Array<{ basePlayerId: string; name: string; tier: string }> {
   const players      = getPlayers();
   const logsByKey    = getLogsByKey();
-  const scoring      = filterScoringLogs(logsByKey);
+  const scoring      = filterValidLogs(logsByKey);
   const projByBaseId = buildProjectionsFromLogs(players, scoring);
 
   return players
