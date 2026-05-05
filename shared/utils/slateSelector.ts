@@ -9,6 +9,7 @@
 import { hashStr, mulberry32 } from "./seededRng";
 import { weightedSampleWithoutReplacement } from "./weightedSample";
 import { getDailyBonusDateKey } from "./dailyBonus";
+import { resolveEligibility } from "./slateEligibility";
 
 export type SlateConfig = {
   slateSize: number;
@@ -59,4 +60,41 @@ export function selectDailySlate(
   const drawn = weightedSampleWithoutReplacement(remaining, weights, rotatingCount, rng);
 
   return [...anchorTake, ...drawn];
+}
+
+type CacheableAdapter = SlateAdapter & {
+  rosterSize: number;
+  config: { slateSize?: number; anchorCount?: number; weightExponent?: number };
+  getEligiblePool(): string[];
+  getThemedEligibility(themeKey: string): string[] | null;
+  getExclusionList(): string[];
+};
+
+export function defaultSlateConfig(adapter: CacheableAdapter): SlateConfig {
+  return {
+    slateSize: adapter.config.slateSize ?? adapter.rosterSize * 10,
+    anchorCount: adapter.config.anchorCount ?? 10,
+    weightExponent: adapter.config.weightExponent ?? 1.0,
+  };
+}
+
+const slateCache = new Map<string, string[]>();
+
+export function getCachedSlate(
+  adapter: CacheableAdapter,
+  date: Date,
+  themeKey?: string,
+): string[] {
+  const key = `${adapter.sportKey}|${getDailyBonusDateKey(date)}|${themeKey ?? "std"}`;
+  const cached = slateCache.get(key);
+  if (cached) return cached;
+  const eligible = resolveEligibility(adapter, date, themeKey);
+  const slate = selectDailySlate(adapter, eligible, date, themeKey, defaultSlateConfig(adapter));
+  slateCache.set(key, slate);
+  return slate;
+}
+
+/** Test-only: clear the in-memory cache. Do not call from production code. */
+export function _resetSlateCache(): void {
+  slateCache.clear();
 }

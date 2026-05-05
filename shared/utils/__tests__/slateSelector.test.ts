@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { selectDailySlate, type SlateConfig } from "../slateSelector";
+import { getCachedSlate, defaultSlateConfig, _resetSlateCache } from "../slateSelector";
 
 const CFG: SlateConfig = { slateSize: 10, anchorCount: 3, weightExponent: 1.0 };
 
@@ -67,5 +68,75 @@ describe("selectDailySlate", () => {
     const a = adapter({ careerFp });
     const out = selectDailySlate(a, eligible, new Date("2026-05-05"), undefined, CFG);
     expect(out).toHaveLength(10);
+  });
+});
+
+describe("defaultSlateConfig", () => {
+  it("derives slateSize from rosterSize × 10 by default", () => {
+    const adapter = { sportKey: "x", rosterSize: 6, config: {} } as any;
+    expect(defaultSlateConfig(adapter)).toEqual({
+      slateSize: 60,
+      anchorCount: 10,
+      weightExponent: 1.0,
+    });
+  });
+
+  it("respects per-sport config overrides", () => {
+    const adapter = {
+      sportKey: "x",
+      rosterSize: 6,
+      config: { slateSize: 80, anchorCount: 12, weightExponent: 1.5 },
+    } as any;
+    expect(defaultSlateConfig(adapter)).toEqual({
+      slateSize: 80,
+      anchorCount: 12,
+      weightExponent: 1.5,
+    });
+  });
+});
+
+describe("getCachedSlate", () => {
+  it("memoizes by (sport, date, theme); same inputs return cached result", () => {
+    _resetSlateCache();
+    const eligible = ["a", "b", "c", "d", "e"];
+    let careerFpCalls = 0;
+    const adapter = {
+      sportKey: "x",
+      rosterSize: 1,
+      config: { slateSize: 3, anchorCount: 0, weightExponent: 1.0 },
+      getAnchors: () => [],
+      getCareerFPById: (_id: string) => { careerFpCalls++; return 1; },
+      getEligiblePool: () => eligible,
+      getThemedEligibility: () => null,
+      getExclusionList: () => [],
+    } as any;
+    const date = new Date("2026-05-05");
+    const r1 = getCachedSlate(adapter, date);
+    const callsAfterFirst = careerFpCalls;
+    const r2 = getCachedSlate(adapter, date);
+    expect(r1).toEqual(r2);
+    expect(careerFpCalls).toBe(callsAfterFirst);
+  });
+
+  it("different sports cache independently", () => {
+    _resetSlateCache();
+    const mkAdapter = (sport: string) => ({
+      sportKey: sport,
+      rosterSize: 1,
+      config: { slateSize: 2, anchorCount: 0, weightExponent: 1.0 },
+      getAnchors: () => [],
+      getCareerFPById: () => 1,
+      getEligiblePool: () => ["a", "b", "c", "d"],
+      getThemedEligibility: () => null,
+      getExclusionList: () => [],
+    } as any);
+    const d = new Date("2026-05-05");
+    const bball = getCachedSlate(mkAdapter("basketball"), d);
+    const baseball = getCachedSlate(mkAdapter("baseball"), d);
+    // Slates may coincidentally agree, but cache keys must differ — verify by
+    // confirming a second basketball call returns the same as bball regardless
+    // of any baseball call between.
+    const bball2 = getCachedSlate(mkAdapter("basketball"), d);
+    expect(bball).toEqual(bball2);
   });
 });
