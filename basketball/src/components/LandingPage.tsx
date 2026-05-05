@@ -83,47 +83,60 @@ export function LandingPage({ onPlay, onShowProfile, onShowSignIn }: Props) {
   }), []);
 
   // Pre-beta: only show the slate panel when the per-sport flag is ON.
-  // Auto-open once per UTC day; collapsible drawer thereafter; never modal.
+  // The drawer (and all slate-related hooks/effects) live inside <SlateDrawer />
+  // so they only execute when the component is mounted — i.e. when the flag is
+  // ON. With the flag OFF, no slate code runs from the landing path.
   const slateEnabled = isSlateV2Enabled("basketball");
+
+  return (
+    <>
+      <SharedLandingPage adapter={adapter} onPlay={onPlay} onShowProfile={onShowProfile} onShowSignIn={onShowSignIn} />
+      {slateEnabled && <SlateDrawer />}
+    </>
+  );
+}
+
+/**
+ * Slate drawer — only mounted when the slate-v2 flag is ON for basketball.
+ * Co-locating the hook calls inside this sub-component (rather than calling
+ * them unconditionally in <LandingPage>) ensures useAutoExpandOncePerDay's
+ * localStorage write and dynamic dailyBonus import never run with flag OFF.
+ */
+function SlateDrawer() {
   const autoOpen = useAutoExpandOncePerDay("basketball");
   const [open, setOpen] = useState(false);
   useEffect(() => { if (autoOpen) setOpen(true); }, [autoOpen]);
 
   return (
-    <>
-      <SharedLandingPage adapter={adapter} onPlay={onPlay} onShowProfile={onShowProfile} onShowSignIn={onShowSignIn} />
-      {slateEnabled && (
-        <details
-          className="slate-panel-drawer"
-          open={open}
-          onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)}
-          style={{
-            position: "fixed",
-            left: 0, right: 0, bottom: 0,
-            background: "rgba(7,10,18,0.96)",
-            color: "#F0F2F5",
-            borderTop: "1px solid rgba(255,255,255,0.12)",
-            zIndex: 50,
-            maxHeight: "60vh",
-            overflowY: "auto",
-            fontFamily: "'Inter', system-ui, sans-serif",
-          }}
-        >
-          <summary
-            style={{
-              cursor: "pointer", padding: "10px 16px",
-              fontSize: 12, fontWeight: 700, letterSpacing: ".15em",
-              textTransform: "uppercase", color: "#C9A84C",
-              listStyle: "none", userSelect: "none",
-            }}
-          >
-            Today's Slate
-          </summary>
-          <div style={{ padding: "0 16px 16px" }}>
-            <BasketballSlatePanel />
-          </div>
-        </details>
-      )}
-    </>
+    <details
+      className="slate-panel-drawer"
+      open={open}
+      onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)}
+      style={{
+        position: "fixed",
+        left: 0, right: 0, bottom: 0,
+        background: "rgba(7,10,18,0.96)",
+        color: "#F0F2F5",
+        borderTop: "1px solid rgba(255,255,255,0.12)",
+        zIndex: 50,
+        maxHeight: "60vh",
+        overflowY: "auto",
+        fontFamily: "'Inter', system-ui, sans-serif",
+      }}
+    >
+      <summary
+        style={{
+          cursor: "pointer", padding: "10px 16px",
+          fontSize: 12, fontWeight: 700, letterSpacing: ".15em",
+          textTransform: "uppercase", color: "#C9A84C",
+          listStyle: "none", userSelect: "none",
+        }}
+      >
+        Today's Slate
+      </summary>
+      <div style={{ padding: "0 16px 16px" }}>
+        <BasketballSlatePanel />
+      </div>
+    </details>
   );
 }
