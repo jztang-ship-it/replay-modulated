@@ -1,5 +1,5 @@
 import GameView from "./views/GameView";
-import { ErrorBoundary } from "./components/ErrorBoundary";
+import { ErrorBoundary } from "@shared/components/ErrorBoundary";
 
 export default function App() {
   return (

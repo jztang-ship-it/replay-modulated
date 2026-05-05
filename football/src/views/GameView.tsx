@@ -1,7 +1,7 @@
 /**
- * football/src/views/GameView.tsx — Phase 4 shim.
+ * football/src/views/GameView.tsx — shim.
  * Builds a GameAdapter and renders shared/views/GameView.
- * Deferred: SoccerCard (Phase 5), ftueRoster.ts (Phase 6).
+ * Deferred to Phase 6: ftueRoster.ts (real Messi-anchored FTUE roster).
  */
 
 import { useMemo } from "react";
@@ -26,9 +26,7 @@ import {
   getStreakMultiplier,
   FOOTBALL_WIN_TIERS,
 } from "../utils/payoutLogic";
-// Phase 5: replace with SoccerCard when created.
-// import { SoccerCard, resetAllOverlays } from "../components/SoccerCard";
-import { PlayerCard as PlayerCardComponent, resetAllOverlays } from "../components/PlayerCard";
+import { SoccerCard, resetAllOverlays } from "../components/SoccerCard";
 
 // ── Football FTUE config ──────────────────────────────────────────────────────
 // TODO(Phase 6): move to football/src/adapters/ftueRoster.ts alongside the
@@ -179,8 +177,7 @@ export default function GameView() {
     ftueResolveRoster: resolveFTUERoster as GameAdapter["ftueResolveRoster"],
     getTodaysStars,
     // computeRosterCeiling — football has no peak corpus yet; field is optional.
-    // TODO(Phase 5): replace with SoccerCard once created
-    CardComponent: PlayerCardComponent as unknown as GameAdapter["CardComponent"],
+    CardComponent: SoccerCard as unknown as GameAdapter["CardComponent"],
     rosterGridColumns: 3,
     // rosterGridLayout — 5-slot football uses a 3+2 layout similar to baseball dice-5.
     // TODO(Phase 5): wire up football-specific grid layout once SoccerCard + layout CSS exists.

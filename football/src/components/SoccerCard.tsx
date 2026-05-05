@@ -1,8 +1,8 @@
 /**
- * worldcup/src/components/PlayerCard.tsx
+ * football/src/components/SoccerCard.tsx
  * Thin wrapper around PlayerCardShell + shared CardFront.
  *
- * renderFront → shared CardFront with WorldcupHero (flag emoji + initials)
+ * renderFront → shared CardFront with FootballHero (flag emoji + initials)
  * renderBack  → BackStats (football position stats)
  */
 
@@ -29,9 +29,9 @@ const TEAM_FLAGS: Record<string, string> = {
 };
 function getFlag(team: string): string { return TEAM_FLAGS[team] ?? "🏳️"; }
 
-// ── Worldcup hero: flag + initials ─────────────────────────────────────────
+// ── Football hero: flag + initials ─────────────────────────────────────────
 
-function WorldcupHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
+function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
   const team = String((card as any).team ?? "");
   const flag = getFlag(team);
   const opacity = isActiveReveal ? 0.15 : 1;
@@ -182,7 +182,7 @@ export type Props = {
   onRollComplete?: () => void;
 };
 
-export function PlayerCard(props: Props) {
+export function SoccerCard(props: Props) {
   return (
     <PlayerCardShell
       {...props}
@@ -190,7 +190,7 @@ export function PlayerCard(props: Props) {
         <CardFront
           {...p}
           displayPosition={sportAdapter.displayPosition((p.card as any)?.position)}
-          renderHero={(heroProps: CardFrontHeroProps) => <WorldcupHero {...heroProps} />}
+          renderHero={(heroProps: CardFrontHeroProps) => <FootballHero {...heroProps} />}
         />
       )}
       renderBack={(p: CardBackProps) => <BackStats {...p} />}
