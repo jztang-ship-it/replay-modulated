@@ -80,6 +80,36 @@ export class SportAdapter {
     return { total: Number.isFinite(fp) ? fp : 0, breakdown };
   }
 
+  /**
+   * Slate v2: Career fantasy points for a player.
+   *
+   * Default implementation: sum of computed FP across all logs returned by
+   * `logsAccessor`, with last-2-seasons weighted ×2 (recent bias).
+   *
+   * Sports may override to apply additional weighting (e.g. baseball
+   * weighting playoff games higher).
+   *
+   * @param playerId       — base player id
+   * @param logsAccessor   — function returning the player's season logs
+   *                         shape: Array<{ season: number; stats: Record<string, any> }>
+   */
+  getCareerFP(
+    playerId: string,
+    logsAccessor: (playerId: string) => Array<{ season: number; stats: Record<string, any> }>,
+  ): number {
+    const logs = logsAccessor(playerId);
+    if (!logs || logs.length === 0) return 0;
+    const currentYear = new Date().getUTCFullYear();
+    let total = 0;
+    for (const log of logs) {
+      const fp = this.computeFantasyPoints(log.stats);
+      const seasonAge = currentYear - log.season;
+      const weight = seasonAge <= 1 ? 2.0 : 1.0;
+      total += fp * weight;
+    }
+    return total;
+  }
+
   computeBadges(stats: Record<string, any>): Array<{ id: string; icon: string; label: string; fp: number }> {
     const defs = (this.config as any).badges ?? [];
     const position = (stats._position ?? "").toUpperCase();
