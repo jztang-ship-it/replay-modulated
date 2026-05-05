@@ -116,6 +116,8 @@ function BasketballSlatePanelInner({ playerIndex }: { playerIndex: Map<string, R
 
   // Today's bonus stars (built off the slate when flag is ON; off the full
   // pool when OFF — gameAdapter.buildBonusPool() handles that switch).
+  // Depend on slate.players so this re-runs when useDailySlate ticks at UTC
+  // midnight — otherwise bonus stars would go stale across the rotation.
   const bonusPlayers = useMemo(() => {
     try {
       return getTodaysStars().map(b => ({
@@ -123,10 +125,11 @@ function BasketballSlatePanelInner({ playerIndex }: { playerIndex: Map<string, R
         name: b.name,
         bonus: b.bonus,
       }));
-    } catch {
+    } catch (e) {
+      console.warn("getTodaysStars failed:", e);
       return [];
     }
-  }, []);
+  }, [slate.players]);
 
   const anchors = slate.players.filter(p => p.isAnchor);
   const bonusIds = new Set(bonusPlayers.map(b => b.id));
