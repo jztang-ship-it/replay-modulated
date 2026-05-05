@@ -159,12 +159,10 @@ async function main() {
       const local = buildFromLocalRaw();
       posMap = { ...local, ...posMap }; // API takes precedence
     }
-  } else if (sport === "worldcup") {
-    posMap = await fetchWorldcupPositions();
   } else if (sport === "football") {
     posMap = await fetchFootballPositions();
   } else {
-    console.error(`Unknown sport: ${sport}. Available: basketball, worldcup, football`);
+    console.error(`Unknown sport: ${sport}. Available: basketball, football`);
     process.exit(1);
   }
 

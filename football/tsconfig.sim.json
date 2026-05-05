@@ -12,7 +12,7 @@
   },
   "include": [
     "../shared/tools/runSimulator.ts",
-    "src/adapters/worldcupConfig.ts"
+    "src/adapters/footballConfig.ts"
   ],
   "ts-node": {
     "transpileOnly": true,

@@ -27,8 +27,8 @@ interface SportConfig {
 
 async function loadSportConfig(cwd: string): Promise<SportConfig> {
   const candidates = [
-    path.join(cwd, "src", "adapters", "worldcupConfig.ts"),
     path.join(cwd, "src", "adapters", "basketballConfig.ts"),
+    path.join(cwd, "src", "adapters", "baseballConfig.ts"),
     path.join(cwd, "src", "adapters", "footballConfig.ts"),
     path.join(cwd, "src", "adapters", "sportConfig.ts"),
   ];
