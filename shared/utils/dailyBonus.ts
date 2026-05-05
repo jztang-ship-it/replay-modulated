@@ -19,25 +19,7 @@
  * ("did you see Jrue is +20 today?").
  */
 
-/** Deterministic string hash → 32-bit unsigned int (FNV-1a). */
-function hashStr(s: string): number {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 0x01000193);
-  }
-  return h >>> 0;
-}
-
-/** Mulberry32 seeded PRNG. */
-function seededRng(seed: number): () => number {
-  return () => {
-    let t = (seed += 0x6d2b79f5);
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
+import { hashStr, mulberry32 as seededRng } from "./seededRng";
 
 /** Today's date key in UTC (YYYY-MM-DD) — global rotation, not local. */
 export function getDailyBonusDateKey(date?: Date): string {
