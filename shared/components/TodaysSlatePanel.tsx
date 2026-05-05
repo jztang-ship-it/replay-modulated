@@ -11,8 +11,9 @@
  * outside today's slate.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatBonusCountdown } from "../utils/dailyBonus";
+import { track } from "@shared/analytics/analytics";
 import type { TierColor } from "../types";
 
 export type SlatePanelAdapter = {
@@ -28,6 +29,30 @@ export type SlatePanelAdapter = {
 
 export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
   const [expanded, setExpanded] = useState(false);
+
+  // Fire once on mount — panel impressions for funnel analysis.
+  useEffect(() => {
+    track("slate", "slate_panel_opened", {
+      theme_key: adapter.themeMetadata?.iconKey ?? null,
+      anchor_count: adapter.anchors.length,
+      bonus_count: adapter.bonusPlayers.length,
+      rotating_count: adapter.rotatingCount,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleExpandToggle = () => {
+    setExpanded(prev => {
+      const next = !prev;
+      // Only fire when expanding open — not on collapse.
+      if (next) {
+        track("slate", "slate_full_view_expanded", {
+          full_slate_count: adapter.fullSlatePlayers.length,
+        });
+      }
+      return next;
+    });
+  };
 
   return (
     <section className="slate-panel" data-testid="todays-slate-panel">
@@ -87,7 +112,7 @@ export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
       <button
         type="button"
         className="slate-panel__expand"
-        onClick={() => setExpanded(v => !v)}
+        onClick={handleExpandToggle}
         data-testid="slate-expand-toggle"
         aria-expanded={expanded}
       >

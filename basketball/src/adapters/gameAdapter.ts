@@ -14,13 +14,18 @@ import { getDealPool } from "@shared/utils/dealGate";
 import { SessionRepeatLimit, DEFAULT_REPEAT_LIMIT } from "@shared/utils/sessionRepeatLimit";
 import { getCachedSlate } from "@shared/utils/slateSelector";
 import { isSlateV2Enabled } from "@shared/featureFlags";
+import { track } from "@shared/analytics/analytics";
 import type { PlayerCard } from "./types";
 import type { PlayerEval, GeneratedCard } from "../engines/rosterEngine";
 import type { EconomyConfig } from "../engines/economyEngine";
 
 /** Module-level session singleton — sliding window of recent draws. No-op when
- *  no records have been pushed; `record()` populates it after each deal. */
-const repeatLimit = new SessionRepeatLimit();
+ *  no records have been pushed; `record()` populates it after each deal.
+ *  onRelaxed → fires the internal-only `repeat_limit_relaxed` event so we can
+ *  see when the soft cap is being undermined by a too-small pool floor. */
+const repeatLimit = new SessionRepeatLimit(() => {
+  track("slate", "repeat_limit_relaxed", {}, "basketball");
+});
 
 /** Single canonical key used everywhere player identity is compared.
  *  basePlayerId is always preferred; id is the fallback (may include season suffix).

@@ -26,6 +26,16 @@ export const DEFAULT_REPEAT_LIMIT: RepeatLimitConfig = {
 export class SessionRepeatLimit {
   private recentHands: string[][] = [];
 
+  /**
+   * @param onRelaxed Optional callback invoked whenever filtering would shrink
+   * the pool below `minPoolFloor` and we fall back to the pre-filter pool.
+   * Wired by sport gameAdapters to fire the internal-only
+   * `repeat_limit_relaxed` analytics event (signals tuning need).
+   * Kept as a callback to keep this class sport-agnostic and decoupled from
+   * the analytics module.
+   */
+  constructor(private onRelaxed?: () => void) {}
+
   filter<T extends { basePlayerId: string }>(
     pool: T[],
     config: RepeatLimitConfig,
@@ -40,7 +50,10 @@ export class SessionRepeatLimit {
       if (n >= config.maxAppearances) saturated.add(id);
     }
     const filtered = pool.filter(p => !saturated.has(p.basePlayerId));
-    if (filtered.length < config.minPoolFloor) return pool;
+    if (filtered.length < config.minPoolFloor) {
+      this.onRelaxed?.();
+      return pool;
+    }
     return filtered;
   }
 
