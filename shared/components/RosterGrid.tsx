@@ -104,6 +104,10 @@ type Props = {
   topGameStarBasePlayerId?: string | null;
   /** Top Games tier for the star card. Non-star cards always receive null. */
   topGameTier?: TopGameTier | null;
+  /** Optional per-slot label badge (e.g. football's FLEX rule "ANY OUTFIELD"
+   *  with explainer tooltip). Keyed by slot index. Sport-agnostic — sports
+   *  that don't set this see no change. */
+  slotLabels?: Record<number, { label: string; tooltip?: string }>;
 };
 
 export function RosterGrid(props: Props) {
@@ -120,6 +124,7 @@ export function RosterGrid(props: Props) {
     isFTUE = false,
     topGameStarBasePlayerId = null,
     topGameTier = null,
+    slotLabels,
   } = props;
 
   const cards = useMemo(() => {
@@ -213,6 +218,25 @@ export function RosterGrid(props: Props) {
                 pointerEvents: "none", zIndex: 120,
                 transition: "opacity 0.3s ease",
               }} />
+            )}
+            {/* Optional slot-label badge (e.g. football's FLEX rule). Only
+                rendered when the adapter set slotLabels[slotIndex]. Native
+                title=tooltip — PR 3 polish can replace with a custom UI. */}
+            {slotLabels?.[card.slotIndex ?? 0] && (
+              <div
+                title={slotLabels[card.slotIndex ?? 0].tooltip ?? ""}
+                style={{
+                  position: "absolute", top: 4, left: "50%", transform: "translateX(-50%)",
+                  zIndex: 130, pointerEvents: "auto",
+                  padding: "2px 6px", borderRadius: 999,
+                  background: "rgba(7,10,18,0.85)", border: "1px solid rgba(255,255,255,0.18)",
+                  fontSize: 7, fontWeight: 900, letterSpacing: 0.6, color: "rgba(255,255,255,0.75)",
+                  textTransform: "uppercase", whiteSpace: "nowrap",
+                  cursor: "help",
+                }}
+              >
+                {slotLabels[card.slotIndex ?? 0].label}
+              </div>
             )}
             <CardComponent
               card={card}

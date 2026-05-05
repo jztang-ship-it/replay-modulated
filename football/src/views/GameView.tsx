@@ -146,7 +146,13 @@ export default function GameView() {
     CardComponent: SoccerCard as unknown as GameAdapter["CardComponent"],
     rosterGridColumns: 3,
     // rosterGridLayout — 5-slot football uses a 3+2 layout similar to baseball dice-5.
-    // TODO(Phase 5): wire up football-specific grid layout once SoccerCard + layout CSS exists.
+    // TODO: wire up football-specific grid layout (post-launch polish).
+    // FLEX rule UI affordance: slot 4 (FLEX) gets a label badge + tooltip
+    // explaining "Any outfield player (no goalkeepers)" — addresses spec
+    // review concern #4. FTUE teaches the rule via holdIntroText too.
+    slotLabels: {
+      4: { label: "ANY OUTFIELD", tooltip: "Any outfield player — no goalkeepers" },
+    },
     resetAllOverlays,
     // TODO(Phase 6): replace with proper FOOTBALL_FTUE_CONFIG from ftueRoster.ts
     ftueTextConfig: FOOTBALL_FTUE_CONFIG,

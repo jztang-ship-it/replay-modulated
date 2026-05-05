@@ -346,6 +346,7 @@ export function GameView({ adapter }: Props) {
     CardComponent,
     rosterGridColumns,
     rosterGridLayout,
+    slotLabels,
     resetAllOverlays,
     ftueTextConfig,
     PostHandSheet,
@@ -1624,6 +1625,7 @@ export function GameView({ adapter }: Props) {
                     topGameTier={topGameInfo.topGame.tier as any}
                     columns={rosterGridColumns}
                     CardComponent={CardComponent as React.ComponentType<RosterGridCardProps>}
+                    slotLabels={slotLabels}
                   />
                 );
                 return rosterGridLayout

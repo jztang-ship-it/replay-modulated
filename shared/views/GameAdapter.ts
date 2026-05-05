@@ -103,6 +103,10 @@ export interface GameAdapter {
    *  Basketball/worldcup omit. Shape:
    *    { className: "bb-dice5", css: "..."}                        */
   rosterGridLayout?: { className: string; css: string };
+  /** Optional per-slot label badge (e.g. football's FLEX slot showing
+   *  "ANY OUTFIELD" with a tooltip explaining the rule). Keyed by slot
+   *  index. Basketball/baseball omit. */
+  slotLabels?: Record<number, { label: string; tooltip?: string }>;
   /** Resets all card overlay state (per-sport AthleteCard module-local
    *  state). Called when starting a new hand. */
   resetAllOverlays: () => void;
