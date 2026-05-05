@@ -34,6 +34,13 @@ export interface FTUETextConfig {
   anchorFlipHintText: string;
   anchorStatText: string;
   finalText: ReactNode;
+  /** Optional FTUE-only text shown after the LAST non-anchor card's per-card
+   *  commentary, right before the anchor reveals. Persists through the anchor
+   *  flip, tier-bar fill, and win-animation entry. Sport-agnostic by default;
+   *  per-sport overrides supported. Falls back to a sensible generic line if
+   *  unset. Added 2026-05-05 to fix the "previous card's comment lingers
+   *  through anchor reveal" perception in playtests. */
+  anchorIntroText?: ReactNode;
 }
 
 type BubblePosition = "above" | "below" | "auto";
@@ -298,6 +305,12 @@ export function CoachLayer({
   const prevState = useRef<GameState | null>(null);
   const revealIntroShown = useRef(false);
   const anchorFlipBubbleShown = useRef(false);
+  // Count of non-anchor cards revealed during the current REVEALING phase.
+  // When this hits (rosterCount - 1) we know the LAST non-anchor card just
+  // finished — schedule the anchor-intro line to swap in before the anchor
+  // reveals. Reset to 0 when entering REVEALING fresh.
+  const nonAnchorRevealCount = useRef(0);
+  const anchorIntroTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Drain / enqueue ────────────────────────────────────────────────────
   function enqueue(entry: QueueEntry, delayMs = 0) {
@@ -544,6 +557,13 @@ export function CoachLayer({
     if (!isFTUE || gameState !== "REVEALING") return;
     if (prevState.current === "REVEALING") return;
     prevState.current = "REVEALING";
+    // Fresh reveal phase — reset the non-anchor counter so the anchor-intro
+    // line fires correctly each game.
+    nonAnchorRevealCount.current = 0;
+    if (anchorIntroTimer.current) {
+      clearTimeout(anchorIntroTimer.current);
+      anchorIntroTimer.current = null;
+    }
   }, [gameState, isFTUE]); // eslint-disable-line
 
   // ── Per-card reveal bubbles → commentary area ────────────────────────
@@ -555,11 +575,25 @@ export function CoachLayer({
     const cardAnchor: BubbleAnchor = { cardId: lastRevealedCardId };
     const cardPos: BubblePosition = CARD_POS[lastRevealedCardId] ?? "below";
 
+    // Track that another non-anchor card just revealed. After all non-anchor
+    // cards have shown their per-card commentary, the LAST one is the
+    // 2nd-to-last reveal in the deck (the anchor reveals last). Right then
+    // we want the "now for your anchor" line to swap in — both so the user
+    // mentally prepares for the anchor reveal AND so the prior card's
+    // commentary doesn't linger through the anchor flip + tier slam +
+    // win-animation entry. (User feedback 2026-05-05.)
+    nonAnchorRevealCount.current += 1;
+    const rosterCount = cfg?.rosterCount ?? 6;
+    const isLastNonAnchor = nonAnchorRevealCount.current >= rosterCount - 1;
+
     if (!text) {
       setTimeout(() => {
         onBubbleActive?.(false);
         onResumeHeldReveal?.();
       }, 600);
+      // Even if there's no per-card text, still fire the anchor intro for the
+      // last non-anchor reveal so the transition to anchor isn't silent.
+      if (isLastNonAnchor) scheduleAnchorIntro();
       return;
     }
 
@@ -578,6 +612,19 @@ export function CoachLayer({
         onResumeHeldReveal?.();
       },
     }, 0);
+
+    // After the user has had ~2s to read the per-card line, swap in the
+    // anchor-intro text. It then persists through the anchor reveal +
+    // tier slam + win-animation entry until nearMissText replaces it.
+    if (isLastNonAnchor) scheduleAnchorIntro();
+
+    function scheduleAnchorIntro() {
+      if (anchorIntroTimer.current) clearTimeout(anchorIntroTimer.current);
+      anchorIntroTimer.current = setTimeout(() => {
+        const intro = cfg?.anchorIntroText ?? "Now for your anchor card — he's the star, and what you're depending on to really push you over the top.";
+        onCommentaryText?.([intro], true);
+      }, 2000);
+    }
   }, [lastRevealedCardId, isFTUE]); // eslint-disable-line
 
   // After tier slam settles → "So close" → tap → anchor flip hint (spotlight anchor+gauge)
