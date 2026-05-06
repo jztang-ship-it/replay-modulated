@@ -1,6 +1,13 @@
 /// <reference types="node" />
 import * as path from "path";
 import * as fs from "fs";
+// NB: getCachedSlate is loaded dynamically inside the --slate-v2 branch so
+// that the default (no-flag) path stays identical to the legacy simulator
+// and doesn't pull in shared/utils at module-init time. This matters under
+// ts-node, where the basketball workspace's `type: "module"` triggers ESM
+// resolution that doesn't follow extensionless ts imports the same way
+// vitest/tsx do.
+import type { getCachedSlate as GetCachedSlate } from "../utils/slateSelector";
 
 interface BadgeDef {
   id: string; icon: string; label: string; fp: number;
@@ -134,6 +141,7 @@ function bar(r: number, w = 25) { const f = Math.round(Math.min(r,50)/50*w); ret
 async function main() {
   const N = parseInt(process.argv[2] ?? "1000", 10);
   const verbose = process.argv.includes("--verbose");
+  const slateV2 = process.argv.includes("--slate-v2");
   const cwd = process.cwd();
 
   const config = await loadSportConfig(cwd);
@@ -210,14 +218,66 @@ async function main() {
   console.log("");
 
   type PP = { id:string; name:string; position:string; projFp:number; salary:number; tier:string; };
-  const pool: PP[] = [];
+  const fullPool: PP[] = [];
   for (const p of players) {
     const id = String(p.basePlayerId ?? p.id ?? "").trim();
     const pos = normalizePos(p.position ?? "");
     const proj = projById.get(id);
     if (proj === undefined) continue;
     const salary = useLogProj ? salaryFromProjection(proj, posMeans[pos]??overallMean, econ) : (Number(p.salary??0)||salaryFromProjection(proj,posMeans[pos]??overallMean,econ));
-    pool.push({id, name:p.name??id, position:pos, projFp:proj, salary, tier:tierFromSalary(salary, econ.tierThresholds)});
+    fullPool.push({id, name:p.name??id, position:pos, projFp:proj, salary, tier:tierFromSalary(salary, econ.tierThresholds)});
+  }
+
+  // Slate v2: restrict deal pool to today's slate (calibration runs only).
+  // The simulator has no real SportAdapter; we synthesize a minimal
+  // CacheableAdapter shape from the simulator's already-computed pool,
+  // using projFp as a stand-in for career FP (the sim has no multi-season
+  // career totals; projFp is the per-game projection averaged from logs).
+  // Slate sizing follows defaultSlateConfig: rosterSize * 10 by default.
+  let pool: PP[] = fullPool;
+  let slateIds: Set<string> | null = null;
+  if (slateV2) {
+    const sportKey = config.sportKey ?? config.name ?? "sport";
+    const fpById = new Map(fullPool.map(p => [p.id, p.projFp]));
+    const ids = fullPool.map(p => p.id);
+    const simAdapter = {
+      sportKey,
+      rosterSize,
+      config: {
+        slateSize: rosterSize * 10,
+        anchorCount: Math.min(10, Math.max(0, Math.floor(rosterSize * 10 * 0.2))),
+        weightExponent: 1.0,
+      },
+      getAnchors: () => {
+        // Top-N by projFp as anchors (mirrors SportAdapter default behavior).
+        return [...fullPool].sort((a, b) => b.projFp - a.projFp)
+          .slice(0, simAdapter.config.anchorCount).map(p => p.id);
+      },
+      getCareerFPById: (id: string) => fpById.get(id) ?? 0,
+      getEligiblePool: () => ids,
+      getThemedEligibility: (_themeKey: string) => null,
+      getExclusionList: () => [],
+    };
+    // Dynamic import: keeps the default (no-flag) path zero-impact under
+    // ts-node, which doesn't always resolve extensionless ESM imports of
+    // shared/* from the basketball workspace. `npx tsx ...` resolves both
+    // forms cleanly; the calibration runbook recommends tsx for --slate-v2
+    // runs. We try the explicit `.js` first (tsx ESM remap), then fall
+    // back to extensionless (ts-node CJS) to support both runners.
+    let slateMod: { getCachedSlate: typeof GetCachedSlate };
+    try {
+      slateMod = await import("../utils/slateSelector.js" as string);
+    } catch {
+      slateMod = await import("../utils/slateSelector" as string);
+    }
+    const slate = slateMod.getCachedSlate(simAdapter as any, new Date());
+    slateIds = new Set(slate);
+    pool = fullPool.filter(p => slateIds!.has(p.id));
+    console.log("=== SLATE V2 (calibration) ===");
+    console.log("  Sport:       " + sportKey);
+    console.log("  Full pool:   " + fullPool.length);
+    console.log("  Slate size:  " + slateIds.size + " (config slateSize=" + simAdapter.config.slateSize + ", anchors=" + simAdapter.config.anchorCount + ")");
+    console.log("  Restricted:  " + pool.length + " players survive slate intersection\n");
   }
 
   const byPos: Record<string,PP[]> = {};
@@ -255,6 +315,10 @@ async function main() {
   // also the highest-projected). Used to verify position-parity gate:
   // LEGEND-rate ratio across positions should land within 2×.
   const fpsByAnchorPos: Record<string, number[]> = {};
+  const rosterCosts: number[] = [];
+  const tierCounts: Record<string, number> = {};
+  let slatePlayerDraws = 0; // rosters built fully from slate (always true when slateV2 ON)
+  let totalRosterSlots = 0;
   let totalBdg = 0;
   const start = Date.now();
 
@@ -291,7 +355,11 @@ async function main() {
       hfp += fp + bdg; totalBdg += bdg;
       posFpS[player.position]?.push(fp);
       posBdgS[player.position]?.push(bdg);
+      tierCounts[player.tier] = (tierCounts[player.tier] ?? 0) + 1;
+      totalRosterSlots++;
+      if (slateIds && slateIds.has(player.id)) slatePlayerDraws++;
     }
+    rosterCosts.push(totalSal);
     allFps.push(hfp);
     // Track hand-FP by anchor-position (highest-salary card in the roster)
     if (roster.length > 0) {
@@ -540,6 +608,37 @@ async function main() {
     console.log("\n=== TOP 20 HANDS ===");
     allFps.slice(-20).reverse().forEach((fp,i) => console.log("  #"+(i+1)+": "+fp.toFixed(1)+" FP"));
   }
+
+  // === Slate v2 calibration metrics (machine-readable) ===
+  // Always emitted at the end so calibration jobs can `tail | grep` for it.
+  // When --slate-v2 is OFF this just confirms baseline metrics; when ON it
+  // is the canonical output the calibration runbook parses.
+  const sortedCosts = [...rosterCosts].sort((a, b) => a - b);
+  const tierFreq: Record<string, number> = {};
+  if (totalRosterSlots > 0) {
+    for (const [tier, n] of Object.entries(tierCounts)) {
+      tierFreq[tier] = +(n / totalRosterSlots).toFixed(4);
+    }
+  }
+  const slateMetrics = {
+    sport: config.sportKey ?? config.name ?? "sport",
+    hands: N,
+    slateV2: slateV2,
+    slateSize: slateIds ? slateIds.size : null,
+    fullPoolSize: fullPool.length,
+    dealPoolSize: pool.length,
+    meanFP: +avg(allFps).toFixed(2),
+    p90FP: +pct(allFps, 90).toFixed(2),
+    p95FP: +pct(allFps, 95).toFixed(2),
+    p99FP: +pct(allFps, 99).toFixed(2),
+    meanRosterCost: +avg(rosterCosts).toFixed(2),
+    p90RosterCost: +pct(sortedCosts, 90).toFixed(2),
+    bonusFPPerHand: +(totalBdg / N).toFixed(2),
+    slatePlayerDrawRate: totalRosterSlots > 0 ? +(slatePlayerDraws / totalRosterSlots).toFixed(4) : 0,
+    tierFrequency: tierFreq,
+  };
+  console.log("\n=== SLATE_V2_METRICS_JSON ===");
+  console.log(JSON.stringify(slateMetrics, null, 2));
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

@@ -92,6 +92,98 @@ export class SportAdapter {
     return { total: Number.isFinite(fp) ? fp : 0, breakdown };
   }
 
+  /**
+   * Slate v2: Career fantasy points for a player.
+   *
+   * Default implementation: sum of computed FP across all logs returned by
+   * `logsAccessor`, with last-2-seasons weighted ×2 (recent bias).
+   *
+   * Sports may override to apply additional weighting (e.g. baseball
+   * weighting playoff games higher).
+   *
+   * @param playerId       — base player id
+   * @param logsAccessor   — function returning the player's season logs
+   *                         shape: Array<{ season: number; stats: Record<string, any> }>
+   */
+  getCareerFP(
+    playerId: string,
+    logsAccessor: (playerId: string) => Array<{ season: number; stats: Record<string, any> }>,
+  ): number {
+    const logs = logsAccessor(playerId);
+    if (!logs || logs.length === 0) return 0;
+    const currentYear = new Date().getUTCFullYear();
+    let total = 0;
+    for (const log of logs) {
+      const fp = this.computeFantasyPoints(log.stats);
+      const seasonAge = currentYear - log.season;
+      const weight = seasonAge <= 1 ? 2.0 : 1.0;
+      total += fp * weight;
+    }
+    return total;
+  }
+
+  /**
+   * Slate v2: top-N eligible players by career FP.
+   * Caller injects:
+   *   - playersAccessor → list of { basePlayerId } for the sport
+   *   - careerFpAccessor(id) → number (typically (id) => this.getCareerFP(id, ...))
+   */
+  getEligiblePool(
+    playersAccessor: () => Array<{ basePlayerId: string }>,
+    careerFpAccessor: (basePlayerId: string) => number,
+    n: number = 200,
+  ): string[] {
+    const players = playersAccessor();
+    const scored = players.map(p => ({ id: p.basePlayerId, fp: careerFpAccessor(p.basePlayerId) }));
+    scored.sort((a, b) => b.fp - a.fp);
+    return scored.slice(0, n).map(s => s.id);
+  }
+
+  /**
+   * Slate v2: anchor players (always in today's slate). Default = top `count` by career FP.
+   */
+  getAnchors(
+    playersAccessor: () => Array<{ basePlayerId: string }>,
+    careerFpAccessor: (basePlayerId: string) => number,
+    count: number = 10,
+  ): string[] {
+    return this.getEligiblePool(playersAccessor, careerFpAccessor, count);
+  }
+
+  /**
+   * Slate v2 phase-2: theme schedule. Returns the theme key active for `date`,
+   * or null for standard rotation. Default: null (no themes — v1 behavior).
+   * Sports override in phase 2 to declare their schedule.
+   */
+  getThemeForDate(_date: Date): string | null {
+    return null;
+  }
+
+  /**
+   * Slate v2 phase-2: themed-day eligibility pool. Returns array of player IDs
+   * for the given theme key, or null to fall back to standard eligibility.
+   * Default: null. Sports override in phase 2.
+   */
+  getThemedEligibility(_themeKey: string): string[] | null {
+    return null;
+  }
+
+  /**
+   * Slate v2 phase-2: theme display metadata. Returns null when theme not
+   * supported by this sport. Default: null. Sports override in phase 2.
+   */
+  getThemeMetadata(_themeKey: string): { displayName: string; description: string; iconKey?: string } | null {
+    return null;
+  }
+
+  /**
+   * Slate v2: manual exclusion list. Default reads from config.exclusionList
+   * if present, else returns [].
+   */
+  getExclusionList(): string[] {
+    return this.config.exclusionList ?? [];
+  }
+
   computeBadges(stats: Record<string, any>): Array<{ id: string; icon: string; label: string; fp: number }> {
     const defs = (this.config as any).badges ?? [];
     const position = (stats._position ?? "").toUpperCase();

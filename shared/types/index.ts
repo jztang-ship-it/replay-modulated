@@ -204,6 +204,21 @@ export interface SportConfigShape {
   }>;
   winTiers?: WinTier[];
   headshotUrl?: (playerId: string) => string | null;
+
+  /** Slate v2: total players in today's slate. Default = rosterSize × 10. */
+  slateSize?: number;
+
+  /** Slate v2: anchor players always present. Default = 10. */
+  anchorCount?: number;
+
+  /** Slate v2: career FP weighting exponent for rotating slots. Default = 1.0 (linear). */
+  weightExponent?: number;
+
+  /** Slate v2: manual exclusion list (player IDs to skip). Default = []. */
+  exclusionList?: string[];
+
+  /** Slate v2 phase 2: themed-day display metadata, keyed by theme key. */
+  themes?: Record<string, { displayName: string; description: string; iconKey?: string }>;
 }
 
 export interface NormalizedPlayer {

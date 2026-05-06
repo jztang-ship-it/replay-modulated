@@ -15,8 +15,9 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import ReactDOM from "react-dom";
 import { THEME } from "@shared/theme";
 import type { JSX as ReactJSX } from "react";
-import { formatBonusCountdown, getMsUntilNextBonusRotation } from "@shared/utils/dailyBonus";
 import { track } from "@shared/analytics/analytics";
+import { formatBonusCountdown, getMsUntilNextBonusRotation } from "@shared/utils/dailyBonus";
+import { isSlateV2Enabled } from "@shared/featureFlags";
 
 /** Live countdown string to next UTC midnight (daily bonus rotation). */
 function formatBonusCountdownLocal(): string {
@@ -62,9 +63,6 @@ export interface LegendData {
   badges: BadgeInfo[];
   /** Today's 3 hot-bonus players — rotates every UTC midnight. */
   todaysStars?: Array<{ name: string; basePlayerId: string; tier?: string; bonus?: 5 | 10 | 20 }>;
-  /** Daily mystery score target — exact hit wins instant bonus. */
-  mysteryScore?: number;
-  mysteryBonus?: number;
 }
 
 // Celebration data passed in when WIN_CELEBRATION is active
@@ -150,6 +148,14 @@ type Props = {
   onLegendOpened?: () => void;
   /** Called when user taps the trophy/leaderboard icon — parent can clear pulse state */
   onTrophyOpened?: () => void;
+  /**
+   * Sport key — used to gate the Legend modal's "Today's Hot Players"
+   * bonus row. When slate v2 is enabled for this sport, the row is
+   * hidden because the slate panel takes over surface area.
+   * Optional for back-compat: if omitted, falls back to slate-v2-OFF
+   * behavior (bonus row shown when todaysStars is non-empty).
+   */
+  sportKey?: string;
 };
 
 const MULTIPLIERS = [1, 3, 5, 10];
@@ -563,14 +569,30 @@ const colHdr: React.CSSProperties = {
   textTransform: "uppercase", color: "rgba(255,255,255,0.35)",
 };
 
-function LegendModal({ onClose, legend }: { onClose: () => void; legend: LegendData }) {
+function LegendModal({
+  onClose,
+  legend,
+  sportKey,
+}: {
+  onClose: () => void;
+  legend: LegendData;
+  sportKey?: string;
+}) {
   const [tab, setTab] = useState<"payouts" | "scoring" | "badges">("payouts");
-  // Live countdown to next UTC midnight — updates every second while modal is open.
+  // Bonus row is shown only when slate v2 is OFF for this sport. When ON,
+  // the slate panel (landing drawer + in-game chip overlay) is the single
+  // surface for daily-bonus players. Default-OFF when sportKey is missing
+  // preserves the pre-0530a59 production behavior.
+  const showBonusRow = !sportKey || !isSlateV2Enabled(sportKey);
+  // Live countdown to next UTC midnight — updates every second while modal
+  // is open. Only mounted when bonus row is shown to avoid churning a
+  // useless interval when slate v2 is on.
   const [countdown, setCountdown] = useState<string>(() => formatBonusCountdownLocal());
   useEffect(() => {
+    if (!showBonusRow) return;
     const interval = setInterval(() => setCountdown(formatBonusCountdownLocal()), 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [showBonusRow]);
   return (
     <div onClick={onClose} style={{
       position: "fixed", inset: 0, zIndex: 300,
@@ -612,7 +634,10 @@ function LegendModal({ onClose, legend }: { onClose: () => void; legend: LegendD
         <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px 20px" }}>
           {tab === "payouts" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {legend.todaysStars && legend.todaysStars.length > 0 && (
+              {/* Today's hot players (bonus row) — pre-slate-v2 surface. */}
+              {/* When slate v2 is ON for this sport, the row is hidden because */}
+              {/* the slate panel takes over (landing drawer + in-game chip overlay). */}
+              {showBonusRow && legend.todaysStars && legend.todaysStars.length > 0 && (
                 <div style={{ marginBottom: 10, paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                     <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1.2, color: "#FFD700", textTransform: "uppercase" }}>
@@ -645,21 +670,6 @@ function LegendModal({ onClose, legend }: { onClose: () => void; legend: LegendD
                   <div style={{ marginTop: 8, fontSize: 9, color: "rgba(255,255,255,0.32)", lineHeight: 1.5 }}>
                     Pick these players — they add bonus FP on top of their real game. Rotates at UTC midnight.
                   </div>
-                  {/* Mystery score target */}
-                  {legend.mysteryScore != null && (
-                    <div style={{
-                      marginTop: 10, padding: "8px 12px", borderRadius: 10,
-                      background: "rgba(138,43,226,0.12)", border: "1px solid rgba(138,43,226,0.3)",
-                      display: "flex", alignItems: "center", justifyContent: "space-between",
-                    }}>
-                      <span style={{ fontSize: 10, fontWeight: 800, color: "rgba(138,43,226,0.8)", textTransform: "uppercase", letterSpacing: 0.8 }}>
-                        Mystery Score
-                      </span>
-                      <span style={{ fontSize: 14, fontWeight: 900, color: "#B366FF", fontVariantNumeric: "tabular-nums" }}>
-                        {legend.mysteryScore.toFixed(1)} FP = +{legend.mysteryBonus ?? 200}
-                      </span>
-                    </div>
-                  )}
                 </div>
               )}
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, paddingBottom: 6, borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: 2 }}>
@@ -1334,6 +1344,7 @@ export function GameBar({
   streak = 0,
   onLegendOpened,
   onTrophyOpened,
+  sportKey,
 }: Props) {
   // Trophy button: 36×36 circular, sits absolutely positioned right of the
   // action button row's container. Border + icon flip to gold once the user
@@ -1648,7 +1659,7 @@ export function GameBar({
     return (
       <>
         {showLegend && ReactDOM.createPortal(
-          <LegendModal onClose={() => setShowLegend(false)} legend={legend} />,
+          <LegendModal onClose={() => setShowLegend(false)} legend={legend} sportKey={sportKey} />,
           document.body
         )}
       </>
@@ -1659,7 +1670,7 @@ export function GameBar({
     return (
       <>
         {showLegend && ReactDOM.createPortal(
-          <LegendModal onClose={() => setShowLegend(false)} legend={legend} />,
+          <LegendModal onClose={() => setShowLegend(false)} legend={legend} sportKey={sportKey} />,
           document.body
         )}
         {ReactDOM.createPortal(
@@ -1674,7 +1685,7 @@ export function GameBar({
   return (
     <>
       {showLegend && ReactDOM.createPortal(
-        <LegendModal onClose={() => setShowLegend(false)} legend={legend} />,
+        <LegendModal onClose={() => setShowLegend(false)} legend={legend} sportKey={sportKey} />,
         document.body
       )}
 

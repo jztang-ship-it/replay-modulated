@@ -123,15 +123,17 @@ export const FootballSportConfig: SportConfigShape = {
     { tier: "WHITE",  minSalary: 0  },
   ],
 
-  // ── Win tiers — calibrated against 5k-hand simulator on full WC corpus ──
-  // With Fix #4 (broader log filter) + Fix #1 (GK 4× scaling) applied,
-  // team FP distribution is: P25=141, Median=171, P75=204, P90=236, P99=370.
-  // Thresholds chosen to land at spec hit-rate targets:
+  // ── Win tiers — calibrated against 10k-hand simulator on full WC corpus ──
+  // With broader log filter + GK 4× scaling applied, team FP distribution is:
+  // P25=141, Median=171, P75=204, P90=236, P99=370. Thresholds chosen to land
+  // at spec hit-rate targets:
   //   SUB     ~25% (≈ P75)
   //   STARTER ~12% (≈ P88)
   //   CAPTAIN ~5%  (≈ P95)
   //   MOTM    ~1.5% (≈ P98.5)
   //   LEGEND  ~0.3% (≈ P99.7)
+  // Multipliers calibrated to land EV in TARGET ZONE (0.78–0.92): 0.875 / 0.898
+  // with streak bumps. Re-run simulator after the player-pool lockdown.
   winTiers: [
     { name: "SUB",      minFp: 205, multiplier: 0.75, color: "#94A3B8" },
     { name: "STARTER",  minFp: 230, multiplier: 2,    color: "#10B981" },

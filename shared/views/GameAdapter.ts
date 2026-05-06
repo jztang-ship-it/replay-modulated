@@ -37,8 +37,6 @@ export interface GameAdapter {
   /** Routed to /api/leaderboard sport param. Already implemented at the
    *  API layer in PR #11; this adapter removes hardcoded sport literals. */
   leaderboardScope: "basketball" | "baseball" | "football";
-  /** Per-competition bonus pool key (e.g. "world_cup"). Optional — sports
-   *  with one competition (basketball, baseball) omit. Football requires it. */
   /** Competition slug (e.g. "world_cup") for sports with multi-competition
    *  support. Used by both /api/bonus-pool and /api/leaderboard to scope
    *  KV keys per competition (so EPL hands don't mix with World Cup hands).
@@ -139,4 +137,11 @@ export interface GameAdapter {
 
   // ── Audio ──────────────────────────────────────────────────────────
   audioBedSrc: string | null;
+
+  // ── Slate v2 — optional in-game chip slot ──────────────────────────
+  /** Optional sport-bound slate chip + overlay component. When provided
+   *  (and only when provided), the shared GameView mounts it in the
+   *  in-game header. Sport wrappers gate this slot by isSlateV2Enabled
+   *  so flag-OFF callers pass undefined and no slate code mounts. */
+  SlateChipComponent?: ComponentType<{}>;
 }

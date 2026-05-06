@@ -7,14 +7,9 @@ import { totalSalary } from "./economyEngine";
 
 export type { SlotRequirement, RosterConfig, PlayerEval, GeneratedCard };
 
-export function mulberry32(seed: number): () => number {
-  return function () {
-    let t = (seed += 0x6d2b79f5);
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
+// Re-export to preserve `import { mulberry32 } from "../engines/rosterEngine"`
+// in sport adapters (basketball/baseball/football).
+export { mulberry32 } from "../utils/seededRng";
 
 export function randomSeed(): number {
   return Date.now() ^ Math.floor(Math.random() * 1e9);

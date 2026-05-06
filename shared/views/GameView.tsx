@@ -350,6 +350,7 @@ export function GameView({ adapter }: Props) {
     resetAllOverlays,
     ftueTextConfig,
     PostHandSheet,
+    SlateChipComponent,
   } = adapter;
 
   const CAP_MAX = sportAdapter.salaryCap;
@@ -1542,7 +1543,7 @@ export function GameView({ adapter }: Props) {
               onBell={() => { setBellOpen(true); track('nav', 'bell_clicked', { unread_count: unreadCount }, 'system'); }}
             />
           </div>
-          <div data-ftue-chrome="true" style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "0 12px" }}>
+          <div data-ftue-chrome="true" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "0 12px" }}>
             <BonusPoolPill
               betAmount={currentBet}
               betNonce={betNonce}
@@ -1550,6 +1551,11 @@ export function GameView({ adapter }: Props) {
               competition={adapter.competition}
               onAmountChange={(v) => { bonusPoolRef.current = v; }}
             />
+            {/* Slate v2 chip — only mounts when the sport wrapper passes a
+                SlateChipComponent (which it only does when the slate-v2
+                flag is ON for this sport). Flag-OFF: this branch is
+                undefined and zero slate code runs from the in-game path. */}
+            {SlateChipComponent && <SlateChipComponent />}
           </div>
         </div>
 
@@ -2048,6 +2054,7 @@ export function GameView({ adapter }: Props) {
         baseBet={BASE_BET}
         winTiers={gameBarWinTiers}
         legend={legendWithStars}
+        sportKey={sportKey}
         hideTierBar
         onBetMultiplier={setBetMultiplier}
         onAction={handleButtonClick}
