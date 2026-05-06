@@ -1,8 +1,8 @@
 /**
- * worldcup/src/hooks/useEmotionalReveal.ts
- * Re-exports shared hook with worldcup-tuned RevealConfig.
+ * football/src/hooks/useEmotionalReveal.ts
+ * Re-exports shared hook with football-tuned RevealConfig.
  *
- * Worldcup thresholds:
+ * Football thresholds:
  *   Career Night: actual >= 1.4x projected  (closer range — football scoring tighter)
  *   Hot:          no separate hot bucket     (same as career night threshold)
  *   Cold:         actual <= 0.60x projected  (stricter cold threshold)

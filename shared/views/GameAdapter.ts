@@ -25,7 +25,7 @@ import type { DailyBonusPlayer } from "@shared/utils/dailyBonus";
 
 export interface GameAdapter {
   // ── Identity ───────────────────────────────────────────────────────
-  sportKey: "basketball" | "baseball";
+  sportKey: "basketball" | "baseball" | "football";
   sportAdapter: SharedSportAdapter;
 
   // ── Persistence + scope (explicit seams to prevent cross-sport state bleed) ──
@@ -36,7 +36,10 @@ export interface GameAdapter {
   localStorageNamespace: string;
   /** Routed to /api/leaderboard sport param. Already implemented at the
    *  API layer in PR #11; this adapter removes hardcoded sport literals. */
-  leaderboardScope: "basketball" | "baseball" | "worldcup";
+  leaderboardScope: "basketball" | "baseball" | "football";
+  /** Per-competition bonus pool key (e.g. "world_cup"). Optional — sports
+   *  with one competition (basketball, baseball) omit. Football requires it. */
+  bonusPoolCompetition?: string;
   /** Optional Vite base path ("/basketball/", "/baseball/") for any
    *  sport-specific internal navigation. */
   routeBasePath?: string;

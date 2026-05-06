@@ -15,7 +15,7 @@ const POOL_PCT = [35, 20, 12, 8, 6, 5, 4, 4, 3, 3];
 
 interface Props {
   currentUid: string;
-  sport: "basketball" | "baseball" | "worldcup";
+  sport: "basketball" | "baseball" | "football";
   onClose: () => void;
 }
 

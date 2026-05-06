@@ -1,0 +1,158 @@
+/**
+ * football/src/views/GameView.tsx — shim.
+ * Builds a GameAdapter and renders shared/views/GameView.
+ * Deferred to Phase 6: ftueRoster.ts (real Messi-anchored FTUE roster).
+ */
+
+import { useMemo } from "react";
+import { GameView as SharedGameView } from "@shared/views/GameView";
+import type { GameAdapter } from "@shared/views/GameAdapter";
+import type { SportAdapter as SharedSportAdapter } from "@shared/adapters/SportAdapter";
+import type { WinTierDisplay, LegendData } from "@shared/components/GameBar";
+import type { TierThreshold as GaugeTierThreshold } from "@shared/components/TierGauge";
+import { tierFromSalary } from "@shared/views/_gameViewHelpers";
+import { sportAdapter } from "../adapters/SportAdapter";
+import {
+  dealInitialRoster,
+  redrawRoster,
+  resolveRoster,
+  getTodaysStars,
+} from "../adapters/gameAdapter";
+import {
+  calculateWinTier,
+  calculatePayoutWithStreak,
+  getStreakMultiplier,
+  FOOTBALL_WIN_TIERS,
+} from "../utils/payoutLogic";
+import { SoccerCard, resetAllOverlays } from "../components/SoccerCard";
+import {
+  FOOTBALL_FTUE_CONFIG,
+  dealFTUERoster,
+  redrawFTUERoster,
+  resolveFTUERoster,
+} from "../adapters/ftueRoster";
+
+// ── Tier gauge thresholds — football-specific FP cutoffs ──────────────────────
+// Display names: SUB / STARTER / CAPTAIN / MOTM / LEGEND
+// WinTierKey mapping: ROOKIE / STARTER / ALL_STAR / MVP / LEGEND
+const GAUGE_THRESHOLDS: GaugeTierThreshold[] = [
+  { tier: "ROOKIE",   minFP: 130 },  // SUB
+  { tier: "STARTER",  minFP: 150 },  // STARTER
+  { tier: "ALL_STAR", minFP: 167 },  // CAPTAIN
+  { tier: "MVP",      minFP: 192 },  // MOTM
+  { tier: "LEGEND",   minFP: 215 },  // LEGEND
+];
+
+// ── GameBar tier rows — must stay in sync with FOOTBALL_WIN_TIERS ─────────────
+const WIN_TIERS: WinTierDisplay[] = [
+  { label: "SUB",     minFp: 130, color: "#94A3B8", glow: "rgba(148,163,184,0.5)"  },
+  { label: "STARTER", minFp: 150, color: "#10B981", glow: "rgba(16,185,129,0.6)"   },
+  { label: "CAPTAIN", minFp: 167, color: "#3B82F6", glow: "rgba(59,130,246,0.6)"   },
+  { label: "MOTM",    minFp: 192, color: "#F59E0B", glow: "rgba(245,158,11,0.7)"   },
+  { label: "LEGEND",  minFp: 215, color: "#EF4444", glow: "rgba(239,68,68,0.9)"    },
+];
+
+const LEGEND_DATA: LegendData = {
+  payoutRows: [
+    { label: "LEGEND",  score: "215+", payout: "50x",  color: "#EF4444", bg: "rgba(239,68,68,0.12)",   border: "rgba(239,68,68,0.35)"   },
+    { label: "MOTM",    score: "192+", payout: "8x",   color: "#F59E0B", bg: "rgba(245,158,11,0.10)",  border: "rgba(245,158,11,0.3)"   },
+    { label: "CAPTAIN", score: "167+", payout: "3x",   color: "#3B82F6", bg: "rgba(59,130,246,0.10)",  border: "rgba(59,130,246,0.28)"  },
+    { label: "STARTER", score: "150+", payout: "1.5x", color: "#10B981", bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.25)"  },
+    { label: "SUB",     score: "130+", payout: "0.5x", color: "#94A3B8", bg: "rgba(148,163,184,0.08)", border: "rgba(148,163,184,0.22)" },
+    { label: "BUST",    score: "<130", payout: "—",    color: "#6B7280", bg: "rgba(107,114,128,0.06)", border: "rgba(107,114,128,0.18)" },
+  ],
+  bonusRows: [
+    { label: "3-WIN STREAK",  condition: "3 wins in a row",  reward: "1.3x payout" },
+    { label: "5-WIN STREAK",  condition: "5 wins in a row",  reward: "1.7x payout" },
+    { label: "10-WIN STREAK", condition: "10 wins in a row", reward: "2.5x payout" },
+  ],
+  stamps: [],
+  scoringRules: [
+    // Outfield stat weights
+    { stat: "Goal",     pts: "+12–22" },
+    { stat: "Assist",   pts: "+7–8"   },
+    { stat: "Key Pass", pts: "+3–5"   },
+    { stat: "Tackle",   pts: "+2–5"   },
+    { stat: "Shot SOT", pts: "+2–4"   },
+    { stat: "Dribble",  pts: "+2"     },
+    { stat: "Clearance",pts: "+1–4"   },
+    { stat: "Pressure", pts: "+0.2–0.6" },
+    { stat: "Yellow",   pts: "-5"     },
+    { stat: "Red Card", pts: "-15"    },
+    // GK-specific
+    { stat: "Save",     pts: "+20"    },
+    { stat: "GA",       pts: "-6"     },
+  ],
+  badges: [
+    // FWD
+    { icon: "🎩", label: "HAT-TRICK",   condition: "3+ goals",                      fp: 30 },
+    { icon: "⚡", label: "BRACE",       condition: "2 goals",                       fp: 15 },
+    { icon: "🎯", label: "POACHER",     condition: "1 goal + 1 assist",             fp: 15 },
+    { icon: "🪄", label: "CREATOR",     condition: "2+ assists",                    fp: 18 },
+    { icon: "🔫", label: "SHARP",       condition: "2+ SOT, 0 goals",              fp: 8  },
+    // MID
+    { icon: "🎼", label: "MAESTRO",     condition: "1 goal + 2 key passes",         fp: 20 },
+    { icon: "⚡", label: "DYNAMO",      condition: "2+ assists",                    fp: 18 },
+    { icon: "🧠", label: "PLAYMAKER",   condition: "2+ key passes",                 fp: 12 },
+    { icon: "💪", label: "BOX-TO-BOX",  condition: "1 tackle + 1 key pass",         fp: 10 },
+    { icon: "🔥", label: "PRESS KING",  condition: "20+ pressures",                fp: 10 },
+    // DEF
+    { icon: "🔒", label: "STOPPER",     condition: "2 tkl + 1 int + 2 clr",        fp: 20 },
+    { icon: "🛡️", label: "GUARDIAN",   condition: "2 tackles + 2 interceptions",   fp: 15 },
+    { icon: "🏗️", label: "BULLDOZER",  condition: "6+ clearances",                fp: 12 },
+    { icon: "🚀", label: "OVERLAP",     condition: "1 goal or 1 assist",            fp: 15 },
+    { icon: "🧱", label: "CLEAN SHEET", condition: "0 goals conceded, 60+ min",    fp: 10 },
+    // GK
+    { icon: "🧱", label: "THE WALL",    condition: "3+ saves",                      fp: 10 },
+    { icon: "🧤", label: "KEEPER",      condition: "1–2 saves",                     fp: 5  },
+    { icon: "✨", label: "CLEAN SHEET", condition: "0 goals conceded, 60+ min",    fp: 10 },
+    // Discipline
+    { icon: "🟨", label: "BOOKED",      condition: "1 yellow card",                 fp: 0  },
+    { icon: "🟥", label: "SENT OFF",    condition: "1 red card",                    fp: 0  },
+  ],
+};
+
+export default function GameView() {
+  const adapter: GameAdapter = useMemo(() => ({
+    sportKey: "football",
+    // Football's SportAdapter extends SharedSportAdapter with no overrides today;
+    // the cast bypasses a structural mismatch on internal config fields that shared
+    // GameView doesn't read (same pattern as baseball).
+    sportAdapter: sportAdapter as unknown as SharedSportAdapter,
+    localStorageNamespace: "football",
+    leaderboardScope: "football",
+    bonusPoolCompetition: "world_cup",
+    routeBasePath: "/football/",
+    gaugeThresholds: GAUGE_THRESHOLDS,
+    tierFromSalary,
+    calculateWinTier,
+    calculatePayoutWithStreak,
+    winTiersMap: FOOTBALL_WIN_TIERS,
+    getStreakMultiplier,
+    gameBarWinTiers: WIN_TIERS,
+    gameBarLegend: LEGEND_DATA,
+    // gameAdapter functions use the local football PlayerCard type (no "RED" tier);
+    // the shared GameAdapter contract uses @shared/types PlayerCard. Structurally
+    // identical in practice — football data never produces RED tier cards.
+    dealInitialRoster: dealInitialRoster as GameAdapter["dealInitialRoster"],
+    redrawRoster: redrawRoster as GameAdapter["redrawRoster"],
+    resolveRoster: resolveRoster as GameAdapter["resolveRoster"],
+    // TODO(Phase 6): replace stubs with real imports from ftueRoster.ts
+    ftueDealRoster: dealFTUERoster as GameAdapter["ftueDealRoster"],
+    ftueRedrawRoster: redrawFTUERoster as GameAdapter["ftueRedrawRoster"],
+    ftueResolveRoster: resolveFTUERoster as GameAdapter["ftueResolveRoster"],
+    getTodaysStars,
+    // computeRosterCeiling — football has no peak corpus yet; field is optional.
+    CardComponent: SoccerCard as unknown as GameAdapter["CardComponent"],
+    rosterGridColumns: 3,
+    // rosterGridLayout — 5-slot football uses a 3+2 layout similar to baseball dice-5.
+    // TODO(Phase 5): wire up football-specific grid layout once SoccerCard + layout CSS exists.
+    resetAllOverlays,
+    // TODO(Phase 6): replace with proper FOOTBALL_FTUE_CONFIG from ftueRoster.ts
+    ftueTextConfig: FOOTBALL_FTUE_CONFIG,
+    // PostHandSheet — football does not surface this overlay.
+    audioBedSrc: null,
+  }), []);
+
+  return <SharedGameView adapter={adapter} />;
+}

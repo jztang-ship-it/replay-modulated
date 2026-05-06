@@ -1,5 +1,5 @@
 /**
- * Configures the shared dataEngine to point at worldcup data files,
+ * Configures the shared dataEngine to point at football data files,
  * then re-exports everything.
  */
 import { configure } from "@shared/engines/dataEngine";

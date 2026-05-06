@@ -22,7 +22,7 @@ const RANK_METRICS: { id: string; label: string }[] = [
 
 interface Props {
   currentUid: string;
-  sport: "basketball" | "baseball" | "worldcup";
+  sport: "basketball" | "baseball" | "football";
   onClose: () => void;
   isAnonymous?: boolean;
   onSaveAccount?: () => void;

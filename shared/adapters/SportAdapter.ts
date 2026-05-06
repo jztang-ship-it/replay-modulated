@@ -17,6 +17,8 @@ export class SportAdapter {
   get rosterSize(): number { return this.config.maxPlayers ?? this.config.positions.length; }
   get positions(): string[] { return this.config.positions; }
 
+  get excludeFromFlex(): string[] { return this.config.excludeFromFlex ?? []; }
+
   get rosterSlots(): readonly string[] {
     const explicit = this.config.rosterSlots;
     if (explicit && explicit.length) return explicit;

@@ -1,11 +1,11 @@
 /**
- * worldcup/scripts/transformWorldCupData.mjs
+ * football/scripts/transformWorldCupData.mjs
  *
  * Regenerates players.json and game-logs.json from raw StatsBomb data.
- * Uses position-specific FP weights (must match worldcupConfig.ts exactly).
+ * Uses position-specific FP weights (must match footballConfig.ts exactly).
  * Derives salary from avgFP using salaryFromProjection (matches gameAdapter).
  *
- * Usage (from ~/ReplayMod/worldcup/scripts/):
+ * Usage (from ~/ReplayMod/football/scripts/):
  *   node transformWorldCupData.mjs
  *
  * Reads:  ../public/data/players.raw.json
@@ -21,7 +21,7 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const dataDir   = join(__dirname, '..', 'public', 'data');
 
-// ── Position-specific FP weights — MUST match worldcupConfig.ts exactly ──────
+// ── Position-specific FP weights — MUST match footballConfig.ts exactly ──────
 const POSITION_WEIGHTS = {
   GK: {
     saves:           20.0,
@@ -71,7 +71,7 @@ const POSITION_WEIGHTS = {
   },
 };
 
-// ── Economy config — MUST match worldcupConfig.ts economyConfig exactly ───────
+// ── Economy config — MUST match footballConfig.ts economyConfig exactly ───────
 const ECON = {
   salaryMin:          10,
   salaryMax:          60,
@@ -79,7 +79,7 @@ const ECON = {
   salaryRatioCeiling: 2.0,
 };
 
-// ── Tier thresholds — MUST match worldcupConfig.ts tierThresholds exactly ─────
+// ── Tier thresholds — MUST match footballConfig.ts tierThresholds exactly ─────
 const TIER_THRESHOLDS = [
   { tier: 'ORANGE', minSalary: 52 },
   { tier: 'PURPLE', minSalary: 40 },
@@ -88,7 +88,7 @@ const TIER_THRESHOLDS = [
   { tier: 'WHITE',  minSalary: 0  },
 ];
 
-// ── Position aliases — MUST match worldcupConfig.ts positionAliases exactly ───
+// ── Position aliases — MUST match footballConfig.ts positionAliases exactly ───
 const POSITION_ALIASES = {
   'Goalkeeper':          'GK',
   'Center Back':         'DEF', 'Left Back':  'DEF', 'Right Back': 'DEF',
@@ -356,5 +356,5 @@ writeFileSync(logsOut,    JSON.stringify(logs,    null, 2));
 console.log(`\n✅ Written:`);
 console.log(`   ${playersOut}`);
 console.log(`   ${logsOut}`);
-console.log('\n⚠️  Remember to also update worldcupConfig.ts winTiers if thresholds changed.');
+console.log('\n⚠️  Remember to also update footballConfig.ts winTiers if thresholds changed.');
 console.log('   Run the simulator to verify: npx ts-node --project tsconfig.sim.json ../shared/tools/runSimulator.ts 10000');

@@ -58,7 +58,7 @@ export interface LeaderboardContextArgs {
   winTier: string;        // BUST | ROOKIE | STARTER | ALL_STAR | MVP | LEGEND
   isBust: boolean;
   myUid: string;          // from getPlayerUid()
-  sport: "basketball" | "baseball" | "worldcup";
+  sport: "basketball" | "baseball" | "football";
   /** Tiers that qualify for "on the board" (default: MVP, LEGEND). */
   onBoardTiers?: string[];
   /** MVP threshold FP for intro message (default: 215). */

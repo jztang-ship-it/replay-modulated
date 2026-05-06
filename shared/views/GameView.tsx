@@ -204,11 +204,12 @@ if (typeof document !== "undefined" && !document.getElementById(GV_STYLE_ID)) {
 
 // ── BonusPoolPill — pool meter with drip + gold blink on bet ─────────────────
 
-function BonusPoolPill({ betAmount, betNonce, onAmountChange, sportKey }: {
+function BonusPoolPill({ betAmount, betNonce, onAmountChange, sportKey, competition }: {
   betAmount: number;
   betNonce: number;
   onAmountChange?: (v: number) => void;
-  sportKey: "basketball" | "baseball";
+  sportKey: string;
+  competition?: string;
 }) {
   const [amount, setAmount] = useState(1000);
   const [displayAmount, setDisplayAmount] = useState(1000);
@@ -221,7 +222,7 @@ function BonusPoolPill({ betAmount, betNonce, onAmountChange, sportKey }: {
     let cancelled = false;
     const sync = async () => {
       try {
-        const pool = await getBonusPool(sportKey);
+        const pool = await getBonusPool(sportKey, competition);
         if (cancelled) return;
         setAmount(pool);
         onAmountChange?.(pool);
@@ -266,7 +267,7 @@ function BonusPoolPill({ betAmount, betNonce, onAmountChange, sportKey }: {
 
     (async () => {
       try {
-        const next = await contributeBet(sportKey, betAmount);
+        const next = await contributeBet(sportKey, betAmount, competition);
         setAmount(next);
         onAmountChange?.(next);
       } catch {
@@ -1546,6 +1547,7 @@ export function GameView({ adapter }: Props) {
               betAmount={currentBet}
               betNonce={betNonce}
               sportKey={sportKey}
+              competition={adapter.bonusPoolCompetition}
               onAmountChange={(v) => { bonusPoolRef.current = v; }}
             />
             {/* Slate v2 chip — only mounts when the sport wrapper passes a
@@ -2102,7 +2104,7 @@ export function GameView({ adapter }: Props) {
         {showLeaderboard && !isFTUE && (
           <LeaderboardScreen
             currentUid={getPlayerUid()}
-            sport={leaderboardScope as "basketball" | "baseball" | "worldcup"}
+            sport={leaderboardScope}
             onClose={() => setShowLeaderboard(false)}
           />
         )}

@@ -459,7 +459,7 @@ async function main() {
   }
 
   // Write output
-  const outDir = join(process.cwd(), "worldcup", "public", "data");
+  const outDir = join(process.cwd(), "football", "public", "data");
   mkdirSync(outDir, { recursive: true });
 
   writeFileSync(join(outDir, "players.json"), JSON.stringify(allPlayers, null, 2));

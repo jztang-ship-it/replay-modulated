@@ -1,7 +1,7 @@
 /**
  * api/leaderboard.ts — Vercel serverless function.
  *
- * POST { action: "submit", sport: "basketball"|"baseball"|"worldcup", metric, value, uid, nickname }
+ * POST { action: "submit", sport: "basketball"|"baseball"|"football", metric, value, uid, nickname }
  * GET  ?sport=basketball&metric=streak|wins|fp|hand_best|hand_avg|money_won|session_score&scope=daily|alltime&limit=20
  *
  * KV keys: lb:{sport}:{metric}:daily:{YYYY-MM-DD} and lb:{sport}:{metric}:alltime.
@@ -40,17 +40,17 @@ function todayUTC(): string {
 }
 
 const VALID_METRICS = ["streak", "wins", "fp", "hand_best", "hand_avg", "money_won", "session_score"];
-const VALID_SPORTS = ["basketball", "baseball", "worldcup"] as const;
+const VALID_SPORTS = ["basketball", "baseball", "football"] as const;
 type Sport = typeof VALID_SPORTS[number];
 
 // Per-sport realistic ceilings for FP-shaped metrics. Above these = data corruption / cheating.
 //   basketball: 6 cards × ~60 max FP + badges ≈ 300
 //   baseball:   5 cards × ~160 max FP (4-for-4, 2 HR) ≈ 800
-//   worldcup:   conservative placeholder until real scoring lands
+//   football:   5 cards × ~50 max FP (goal + assists + badges) ≈ 250
 const FP_CEILING_BY_SPORT: Record<Sport, number> = {
   basketball: 300,
   baseball: 800,
-  worldcup: 200,
+  football: 250,
 };
 const TTL_48H = 172800;
 

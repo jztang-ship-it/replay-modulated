@@ -161,6 +161,9 @@ export interface WinTier {
 export interface SportConfigShape {
   sportKey: string;
   sportLabel?: string;
+  /** Active competition (e.g. "world_cup", "epl"). Optional — sports with one
+   *  competition (basketball/NBA, baseball/MLB) omit this. Football requires it. */
+  competition?: string;
   displayName?: string;
   positions: string[];
   positionAliases?: Record<string, string>;
