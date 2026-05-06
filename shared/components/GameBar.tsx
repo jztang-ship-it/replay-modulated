@@ -63,9 +63,6 @@ export interface LegendData {
   badges: BadgeInfo[];
   /** Today's 3 hot-bonus players — rotates every UTC midnight. */
   todaysStars?: Array<{ name: string; basePlayerId: string; tier?: string; bonus?: 5 | 10 | 20 }>;
-  /** Daily mystery score target — exact hit wins instant bonus. */
-  mysteryScore?: number;
-  mysteryBonus?: number;
 }
 
 // Celebration data passed in when WIN_CELEBRATION is active
@@ -675,9 +672,6 @@ function LegendModal({
                   </div>
                 </div>
               )}
-              {/* Mystery Score UI removed (pre-beta). The shared/utils/mysteryScore.ts */}
-              {/* utility and the LegendData mysteryScore/mysteryBonus fields are */}
-              {/* preserved as dormant data plumbing — no UI surface renders them. */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, paddingBottom: 6, borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: 2 }}>
                 <span style={colHdr}>Tier</span>
                 <span style={{ ...colHdr, textAlign: "right" }}>Team FP</span>
