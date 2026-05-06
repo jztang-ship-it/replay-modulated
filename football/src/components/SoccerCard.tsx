@@ -91,73 +91,50 @@ function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
   const [imgFailed, setImgFailed] = React.useState(false);
   const showImage = imgSrc != null && !imgFailed;
 
-  return (
-    <>
-      {/* Layer 1: very-faded flag silhouette behind everything. Acts as a
-          subtle visual context (you can see which country the card is
-          for) and as the deepest fallback if absolutely nothing else
-          renders. Doesn't interfere with the headshot above. */}
-      <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", pointerEvents: "none" }}>
-        <div style={{ fontSize: 72, lineHeight: 1, opacity: 0.16, transform: "scale(1.4) translateY(-8px)", userSelect: "none" }}>
-          {flag}
-        </div>
-      </div>
-
-      {/* Layer 2: flag + initials — fallback for unmanifested players or
-          when the image fails to load. NOT rendered when an image is
-          present (no z-index fights, no peeking text strokes). Stays
-          fully clean on flag-only cards. */}
-      {!showImage && (
-        <div
-          style={{
-            position: "absolute", top: "28%", left: 0, right: 0,
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-            opacity, transition: "opacity 0.3s ease",
-            pointerEvents: "none",
-          }}
-        >
-          <span style={{ fontSize: 38, lineHeight: 1, filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.6))" }}>{flag}</span>
-          <span style={{ fontSize: 28, fontWeight: 950, letterSpacing: 2, color: "rgba(255,255,255,0.80)", textShadow: "0 4px 16px rgba(0,0,0,0.8)", userSelect: "none" }}>{initials}</span>
-        </div>
-      )}
-
-      {/* Layer 3: headshot. Bare-minimum styling — same shape basketball
-          uses. No mask, no blend mode, no filter, no contrast/saturation
-          adjustments. The processed PNG has the right alpha channel so
-          the card's tier-color gradient shows through behind the player
-          naturally. */}
-      {showImage && (
-        <img
-          key={imgSrc}
-          src={imgSrc!}
-          alt={String((card as any).name ?? "")}
-          onError={() => setImgFailed(true)}
-          draggable={false}
-          style={{
-            position: "absolute",
-            top: `${HEADSHOT_TOP_PCT}%`,
-            left: `${HEADSHOT_LEFT_PCT}%`,
-            width: `${HEADSHOT_WIDTH_PCT}%`,
-            height: `${HEADSHOT_HEIGHT_PCT}%`,
-            objectFit: "cover",
-            objectPosition: `50% ${HEADSHOT_OBJECT_Y}%`,
-            opacity, transition: "opacity 0.3s ease",
-            pointerEvents: "none",
-          }}
-        />
-      )}
-
-      {/* Layer 4: subtle bottom fade — only enough to soften the
-          transition from photo into the salary/name strip below. NOT
-          full-card-height, NOT layered over the face. */}
-      <div
+  // Bare-minimum render — exactly the shape basketball uses on its
+  // NBA headshots. The processed PNG has a real alpha channel; the
+  // card's tier-color gradient (rendered by CardFront below us) shows
+  // through behind the player naturally. No extra layers, no fades,
+  // no silhouettes — every additional element introduced visible
+  // banding/lines through the alpha edges.
+  if (showImage) {
+    return (
+      <img
+        key={imgSrc}
+        src={imgSrc!}
+        alt={String((card as any).name ?? "")}
+        onError={() => setImgFailed(true)}
+        draggable={false}
         style={{
-          position: "absolute", left: 0, right: 0, bottom: 0, height: "32%",
+          position: "absolute",
+          top: `${HEADSHOT_TOP_PCT}%`,
+          left: `${HEADSHOT_LEFT_PCT}%`,
+          width: `${HEADSHOT_WIDTH_PCT}%`,
+          height: `${HEADSHOT_HEIGHT_PCT}%`,
+          objectFit: "cover",
+          objectPosition: `50% ${HEADSHOT_OBJECT_Y}%`,
+          opacity, transition: "opacity 0.3s ease",
           pointerEvents: "none",
-          background: "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.40) 100%)",
         }}
       />
-    </>
+    );
+  }
+
+  // Fallback only — when no image resolves (unmanifested players,
+  // network failures). Self-contained: a flag emoji + initials,
+  // centered. No interaction with the image path.
+  return (
+    <div
+      style={{
+        position: "absolute", top: "28%", left: 0, right: 0,
+        display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+        opacity, transition: "opacity 0.3s ease",
+        pointerEvents: "none",
+      }}
+    >
+      <span style={{ fontSize: 38, lineHeight: 1, filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.6))" }}>{flag}</span>
+      <span style={{ fontSize: 28, fontWeight: 950, letterSpacing: 2, color: "rgba(255,255,255,0.80)", textShadow: "0 4px 16px rgba(0,0,0,0.8)", userSelect: "none" }}>{initials}</span>
+    </div>
   );
 }
 
