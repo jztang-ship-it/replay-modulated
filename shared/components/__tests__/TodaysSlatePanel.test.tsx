@@ -68,7 +68,7 @@ describe("TodaysSlatePanel", () => {
     expect(screen.queryByTestId("slate-signature")).toBeNull();
   });
 
-  it("renders the headliner section featuring the top bonus player", () => {
+  it("renders all bonus players in a single 'Today's Bonus' grid with FP badges", () => {
     render(<TodaysSlatePanel adapter={{
       ...baseAdapter,
       bonusPlayers: [
@@ -77,20 +77,30 @@ describe("TodaysSlatePanel", () => {
         { id: "doncic", name: "Doncic", bonus: 5 as const },
       ],
     }} />);
-    const headliner = screen.getByTestId("slate-headliner");
-    expect(headliner.textContent).toMatch(/Today's Headliner/);
-    expect(headliner.textContent).toMatch(/Curry/);
-    expect(headliner.textContent).toMatch(/\+20 FP/);
-    // Other bonus players still appear in the regular bonus row.
+    const bonusSection = screen.getByTestId("slate-bonus");
+    expect(bonusSection.textContent).toMatch(/Today's Bonus/);
+    // All three players visible — not just the top bonus.
+    expect(screen.getByTestId("thumb-curry")).toBeTruthy();
     expect(screen.getByTestId("thumb-tatum")).toBeTruthy();
     expect(screen.getByTestId("thumb-doncic")).toBeTruthy();
+    // FP badges are rendered for each bonus tier.
+    expect(bonusSection.textContent).toMatch(/\+20 FP/);
+    expect(bonusSection.textContent).toMatch(/\+10 FP/);
+    expect(bonusSection.textContent).toMatch(/\+5 FP/);
+    // Cells are addressable by id for click handling.
+    expect(screen.getByTestId("slate-bonus-curry")).toBeTruthy();
+    expect(screen.getByTestId("slate-bonus-tatum")).toBeTruthy();
+    expect(screen.getByTestId("slate-bonus-doncic")).toBeTruthy();
+    // Headliner callout is gone — the bonus row is the single surface.
+    expect(screen.queryByTestId("slate-headliner")).toBeNull();
   });
 
-  it("hides the headliner when bonus pool is empty", () => {
+  it("hides the bonus section when bonus pool is empty", () => {
     render(<TodaysSlatePanel adapter={{
       ...baseAdapter,
       bonusPlayers: [],
     }} />);
+    expect(screen.queryByTestId("slate-bonus")).toBeNull();
     expect(screen.queryByTestId("slate-headliner")).toBeNull();
     // Anchor row still renders.
     expect(screen.getByTestId("thumb-lebron")).toBeTruthy();

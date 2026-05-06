@@ -57,9 +57,9 @@ export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
     });
   };
 
-  // Headliner: the top bonus player (sorted DESC by bonus by the adapter).
-  const headliner = adapter.bonusPlayers[0];
-  const otherBonus = adapter.bonusPlayers.slice(1);
+  // All 3 bonus players (sorted DESC by bonus by the adapter: 20, 10, 5).
+  // Rendered together in a uniform 3-column grid below.
+  const bonusPlayers = adapter.bonusPlayers;
 
   return (
     <section className="slate-panel" data-testid="todays-slate-panel">
@@ -91,75 +91,16 @@ export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
         Today's slate refreshes in {formatBonusCountdown(adapter.msUntilRotation)}
       </div>
 
-      {headliner && (
-        <div
-          className="slate-panel__headliner"
-          data-testid="slate-headliner"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 14,
-            padding: "12px 14px",
-            margin: "12px 0",
-            borderRadius: 14,
-            background: "linear-gradient(120deg, rgba(255,215,0,0.12), rgba(255,215,0,0.04))",
-            border: "1px solid rgba(255,215,0,0.35)",
-            boxShadow: "0 4px 18px rgba(255,215,0,0.08)",
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => adapter.onCardTap?.(headliner.id)}
-            data-testid={`headliner-${headliner.id}`}
-            style={{
-              all: "unset",
-              cursor: adapter.onCardTap ? "pointer" : "default",
-              transform: "scale(1.35)",
-              transformOrigin: "center",
-              padding: "0 10px",
-              flex: "0 0 auto",
-            }}
-          >
-            <adapter.CardThumb playerId={headliner.id} isAnchor={false} />
-          </button>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 800,
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
-                color: "rgba(255,215,0,0.9)",
-                marginBottom: 2,
-              }}
-            >
-              Today's Headliner
-            </div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#F0F2F5", lineHeight: 1.2 }}>
-              {headliner.name}
-            </div>
-            <div
-              style={{
-                marginTop: 4,
-                display: "inline-block",
-                padding: "2px 8px",
-                borderRadius: 999,
-                fontSize: 11,
-                fontWeight: 800,
-                letterSpacing: "0.04em",
-                color: "#0A0E18",
-                background: "#FFD700",
-              }}
-            >
-              +{headliner.bonus} FP bonus
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="slate-panel__anchors">
         <h4>Always in today's deck</h4>
-        <div className="slate-panel__grid">
+        <div
+          className="slate-panel__grid"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: 8,
+          }}
+        >
           {adapter.anchors.map(p => (
             <button
               key={p.id}
@@ -167,6 +108,16 @@ export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
               className="slate-panel__card"
               onClick={() => adapter.onCardTap?.(p.id)}
               data-anchor="true"
+              style={{
+                all: "unset",
+                cursor: adapter.onCardTap ? "pointer" : "default",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                padding: 6,
+                borderRadius: 10,
+                minWidth: 0,
+              }}
             >
               <adapter.CardThumb playerId={p.id} isAnchor={true} />
             </button>
@@ -174,19 +125,62 @@ export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
         </div>
       </div>
 
-      {otherBonus.length > 0 && (
-        <div className="slate-panel__bonus">
-          <h4>Today's bonus players</h4>
-          <div className="slate-panel__grid">
-            {otherBonus.map(p => (
+      {bonusPlayers.length > 0 && (
+        <div
+          className="slate-panel__bonus"
+          data-testid="slate-bonus"
+          style={{ marginTop: 14 }}
+        >
+          <h4>Today's Bonus</h4>
+          <div
+            className="slate-panel__grid"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: 8,
+              alignItems: "stretch",
+            }}
+          >
+            {bonusPlayers.map(p => (
               <button
                 key={p.id}
                 type="button"
                 className="slate-panel__card"
                 onClick={() => adapter.onCardTap?.(p.id)}
+                data-testid={`slate-bonus-${p.id}`}
+                style={{
+                  all: "unset",
+                  cursor: adapter.onCardTap ? "pointer" : "default",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 4,
+                  padding: "8px 6px 10px",
+                  borderRadius: 12,
+                  background: "rgba(255,215,0,0.07)",
+                  border: "1px solid rgba(255,215,0,0.28)",
+                  minWidth: 0,
+                  textAlign: "center",
+                }}
               >
                 <adapter.CardThumb playerId={p.id} isAnchor={false} />
-                <span className="slate-panel__bonus-badge">+{p.bonus} FP</span>
+                <span
+                  className="slate-panel__bonus-badge"
+                  style={{
+                    marginTop: 2,
+                    display: "inline-block",
+                    padding: "2px 8px",
+                    borderRadius: 999,
+                    fontSize: 10,
+                    fontWeight: 900,
+                    letterSpacing: "0.04em",
+                    color: "#0A0E18",
+                    background: "#FFD700",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  +{p.bonus} FP
+                </span>
               </button>
             ))}
           </div>

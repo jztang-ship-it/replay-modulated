@@ -2050,6 +2050,7 @@ export function GameView({ adapter }: Props) {
         baseBet={BASE_BET}
         winTiers={gameBarWinTiers}
         legend={legendWithStars}
+        sportKey={sportKey}
         hideTierBar
         onBetMultiplier={setBetMultiplier}
         onAction={handleButtonClick}
