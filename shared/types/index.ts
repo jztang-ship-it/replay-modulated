@@ -33,6 +33,13 @@ export interface PlayerCard {
   basePlayerId: string;
   photoCode?: string;
   headshotUrl?: string;
+  /** Optional external player IDs for image resolution. Football uses
+   *  apiFootballId to construct API-Football CDN URLs. Other sports
+   *  may add their own IDs here without breaking existing data. */
+  externalIds?: {
+    apiFootballId?: string | number;
+    theSportsDbId?: string | number;
+  };
   name: string;
   team: string;
   season: string;
@@ -73,6 +80,12 @@ export type RawPlayer = {
   avgFP?: number;
   projectedFp?: number;
   active?: boolean;
+  /** Optional external player IDs for image resolution. See
+   *  shared/media/playerImages.ts for resolution strategy. */
+  externalIds?: {
+    apiFootballId?: string | number;
+    theSportsDbId?: string | number;
+  };
 };
 
 export type RawLog = {
@@ -181,6 +194,20 @@ export interface SportConfigShape {
   positionLimits?: Record<string, { min: number; max: number }>;
   projectionWeights: Record<string, number>;
   positionProjectionWeights?: Record<string, Record<string, number>>;
+  /** Optional per-position FP multiplier applied AFTER weighted-stat sum,
+   *  BEFORE badges. Used by sports where a single position's stat profile
+   *  produces systemically lower raw FP than other positions and needs
+   *  scaling to comparable ranges. Football: GK = 4.0 (saves are
+   *  weighted realistically but cumulative FP underperforms outfield
+   *  totals without scaling). Basketball/baseball omit. */
+  positionMultipliers?: Record<string, number>;
+  /** Optional list of seasons currently in the active player pool. When
+   *  set, the runtime adapter AND the simulator filter players + logs to
+   *  these seasons only. Football ships with ["2022"] at launch (WC '22
+   *  squads, ~622 players, ~1648 logs); 2018 data stays in source files
+   *  but is dormant. Sports with one active season (basketball, baseball)
+   *  omit and see no filter. */
+  activeSeasons?: string[];
   tierThresholds?: Array<{ tier: string; minSalary: number }>;
   statCategories?: readonly string[];
   statDisplay?: Record<string, Array<{ key: string; label: string }>>;

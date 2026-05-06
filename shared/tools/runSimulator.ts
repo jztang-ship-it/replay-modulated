@@ -62,6 +62,12 @@ function computeFp(stats: Record<string, any>, position: string, config: SportCo
   const weights: Record<string, number> = (config.positionProjectionWeights?.[posUp]) ? config.positionProjectionWeights[posUp] : (config.projectionWeights ?? {});
   let fp = 0;
   for (const [key, w] of Object.entries(weights)) fp += Number(stats[key] ?? 0) * Number(w);
+  // Apply optional per-position FP multiplier (matches the runtime's
+  // shared/adapters/SportAdapter.computeFantasyPointsDetailed scaling).
+  // Football uses GK = 4.0 to bring keeper FP into outfield-comparable
+  // range. Sports without positionMultipliers see the raw FP unchanged.
+  const m = (config as any).positionMultipliers?.[posUp];
+  if (m !== undefined && Number.isFinite(m) && m !== 1) fp *= m;
   return Math.max(0, fp);
 }
 
@@ -160,9 +166,24 @@ async function main() {
   if (!playersFile || !logsFile) { console.error("Could not find data files"); process.exit(1); }
   console.log("Players: " + playersFile + "\nLogs: " + logsFile + "\n");
 
-  const players: any[] = JSON.parse(fs.readFileSync(playersFile, "utf8"));
-  const rawLogs: any[] = JSON.parse(fs.readFileSync(logsFile, "utf8"));
-  console.log("Loaded " + players.length + " players, " + rawLogs.length + " logs");
+  const allPlayers: any[] = JSON.parse(fs.readFileSync(playersFile, "utf8"));
+  const allRawLogs: any[] = JSON.parse(fs.readFileSync(logsFile, "utf8"));
+
+  // Apply active-seasons filter from config so the simulator sees the same
+  // pool the runtime does. Sports without activeSeasons configured see no
+  // filter (full pool). Football: ["2022"] — drops 2018 squads + their logs.
+  const activeSeasons = (config as any).activeSeasons as string[] | undefined;
+  const players: any[] = activeSeasons?.length
+    ? allPlayers.filter(p => activeSeasons.includes(String(p?.season ?? "")))
+    : allPlayers;
+  const rawLogs: any[] = activeSeasons?.length
+    ? allRawLogs.filter(l => activeSeasons.includes(String(l?.season ?? "")))
+    : allRawLogs;
+  if (activeSeasons?.length) {
+    console.log(`Active seasons: ${activeSeasons.join(", ")} → ${players.length}/${allPlayers.length} players, ${rawLogs.length}/${allRawLogs.length} logs`);
+  } else {
+    console.log("Loaded " + players.length + " players, " + rawLogs.length + " logs");
+  }
 
   const logMap = new Map<string, any[]>();
   for (const log of rawLogs) {
@@ -304,6 +325,11 @@ async function main() {
   const posFpS: Record<string,number[]> = {}, posBdgS: Record<string,number[]> = {};
   for (const pos of config.positions) { posFpS[pos.toUpperCase()]=[]; posBdgS[pos.toUpperCase()]=[]; }
   const allFps: number[] = [];
+  // Hand FPs grouped by anchor-position. Anchor = highest-salary card in
+  // the dealt roster (within-position salary normalization means that's
+  // also the highest-projected). Used to verify position-parity gate:
+  // LEGEND-rate ratio across positions should land within 2×.
+  const fpsByAnchorPos: Record<string, number[]> = {};
   const rosterCosts: number[] = [];
   const tierCounts: Record<string, number> = {};
   let slatePlayerDraws = 0; // rosters built fully from slate (always true when slateV2 ON)
@@ -350,6 +376,12 @@ async function main() {
     }
     rosterCosts.push(totalSal);
     allFps.push(hfp);
+    // Track hand-FP by anchor-position (highest-salary card in the roster)
+    if (roster.length > 0) {
+      const anchor = roster.reduce((a, b) => (a.salary >= b.salary ? a : b));
+      const pos = anchor.position.toUpperCase();
+      (fpsByAnchorPos[pos] ??= []).push(hfp);
+    }
   }
 
   allFps.sort((a,b)=>a-b);
@@ -383,10 +415,26 @@ async function main() {
   // Win-tier multipliers MUST stay in sync with basketball/src/utils/payoutLogic.ts
   // (BASKETBALL_WIN_TIERS) and shared/components/GameBar.tsx STREAK_LABELS.
   // Order: highest tier first inside each scenario for legibility; calcEV sorts.
+  // Active-sport scenario — reads winTiers from the loaded config.
+  // For non-basketball sports (football/baseball/etc) this is the
+  // canonical scenario; the legacy basketball-hardcoded scenarios below
+  // remain for sport=basketball comparison and are non-authoritative
+  // when running other sports.
+  const activeSportTiers: TierDef[] = winTiers.map(t => ({
+    tier: t.name,
+    minFP: t.minFp,
+    multiplier: t.multiplier,
+  }));
+
   const SCENARIOS: { label: string; desc: string; tiers: TierDef[] }[] = [
     {
+      label: "ACTIVE SPORT (config-driven)",
+      desc:  `Tiers from ${config.sportLabel ?? config.sportKey ?? "sport"} config — authoritative for the loaded sport`,
+      tiers: activeSportTiers,
+    },
+    {
       label: "CURRENT (baseline)",
-      desc:  "Existing thresholds — for reference only",
+      desc:  "Existing thresholds — for reference only (basketball-tuned)",
       tiers: [
         { tier: "ROOKIE",   minFP: 185, multiplier: 0.5 },
         { tier: "STARTER",  minFP: 205, multiplier: 1.5 },
@@ -489,16 +537,55 @@ async function main() {
   console.log("=".repeat(65));
 
   for (const scenario of SCENARIOS) {
-    const rookieTier = scenario.tiers.find(t => t.tier === "ROOKIE")!;
-    const winRate = allFps.filter(f => f >= rookieTier.minFP).length / N * 100;
+    // Lowest-threshold tier (formerly hardcoded as "ROOKIE" — sport-agnostic now).
+    const lowestTier = scenario.tiers.reduce((a, b) => a.minFP <= b.minFP ? a : b);
+    const winRate = allFps.filter(f => f >= lowestTier.minFP).length / N * 100;
     const ev = calcEV(scenario.tiers, allFps);
-    const { hits: streaks, evWithStreak } = runStreaks(rookieTier.minFP, allFps, scenario.tiers);
+    const { hits: streaks, evWithStreak } = runStreaks(lowestTier.minFP, allFps, scenario.tiers);
     const flagFor = (e: number) =>
       e > 1 ? "HOUSE LOSES" : e > 0.92 ? "TOO GENEROUS" : e >= 0.78 ? "TARGET ZONE" : e >= 0.62 ? "SLIGHTLY PUNISHING" : "TOO PUNISHING";
 
     console.log("\n--- " + scenario.label + " ---");
     console.log("    " + scenario.desc);
     console.log("");
+
+    // Per-anchor-position hit rates (parity check) — only printed for the
+    // ACTIVE SPORT scenario to keep the legacy-basketball scenarios concise.
+    if (scenario.label.startsWith("ACTIVE SPORT") && Object.keys(fpsByAnchorPos).length > 0) {
+      console.log("    Tier hit rates by ANCHOR POSITION (parity check):");
+      const positions = Object.keys(fpsByAnchorPos).sort();
+      const header = "Pos".padEnd(6) + "Hands".padStart(7);
+      const tierHeader = scenario.tiers.map(t => t.tier.padStart(10)).join("");
+      console.log("    " + header + tierHeader);
+      const legendTier = scenario.tiers.reduce((a, b) => a.minFP >= b.minFP ? a : b);
+      const ratesByPos: Record<string, number> = {};
+      for (const pos of positions) {
+        const fps = fpsByAnchorPos[pos];
+        const cells = scenario.tiers.map(t => {
+          const r = fps.filter(f => f >= t.minFP).length / fps.length * 100;
+          return (r.toFixed(1) + "%").padStart(10);
+        }).join("");
+        const legendRate = fps.filter(f => f >= legendTier.minFP).length / fps.length * 100;
+        ratesByPos[pos] = legendRate;
+        console.log("    " + pos.padEnd(6) + String(fps.length).padStart(7) + cells);
+      }
+      // Parity gate: LEGEND-rate max/min ratio should be ≤ 2× per the spec.
+      // If any position has 0% LEGEND rate, parity is broken outright (one
+      // position is unreachable at the top tier).
+      const rates = Object.values(ratesByPos);
+      if (rates.length >= 2) {
+        const max = Math.max(...rates);
+        const min = Math.min(...rates);
+        if (min === 0 && max > 0) {
+          console.log(`    LEGEND-rate parity: BROKEN — ${Object.entries(ratesByPos).filter(([_,r]) => r === 0).map(([p]) => p).join("/")} unreachable at LEGEND while ${Object.entries(ratesByPos).filter(([_,r]) => r === max).map(([p]) => p).join("/")} hits ${max.toFixed(2)}%`);
+        } else if (min > 0) {
+          const ratio = max / min;
+          const flag = ratio <= 2 ? "OK" : ratio <= 4 ? "MARGINAL" : "BROKEN";
+          console.log(`    LEGEND-rate ratio (max/min across anchor positions): ${ratio.toFixed(2)}x  [${flag}]`);
+        }
+      }
+      console.log("");
+    }
 
     // Tier hit rates
     for (const t of scenario.tiers) {

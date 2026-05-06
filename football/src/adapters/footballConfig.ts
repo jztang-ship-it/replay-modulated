@@ -103,11 +103,48 @@ export const FootballSportConfig: SportConfigShape = {
 
 
   // ── Position FP multipliers ───────────────────────────────────────────────
-  // Normalizes raw FP output so top-tier players at every position
-  // produce a comparable FP range (~100 FP at top tier).
-  // Only GK needs scaling — DEF/MID/FWD already produce ~88-102 FP at top tier.
-  // GK top10 avg = 23.4 FP vs target ~90 FP → multiplier of 4.0.
-  // Badge bonuses are excluded from scaling (applied after).
+  // Normalizes raw FP output so top-tier players at every position produce
+  // a comparable FP range. DEF/MID/FWD top games already land ~88–102 FP;
+  // GK top games land ~22–24 FP because save weight (20) and conceded
+  // penalty (-6) net out lower than outfield goal+assist+contribution
+  // accumulation. Multiplier of 4.0 takes a 23 FP top-GK game to ~92 FP,
+  // matching outfield top games. Badge bonuses are NOT scaled (applied
+  // after in the resolve pipeline).
+  positionMultipliers: {
+    // GK 2.5× — calibrated against 2022-only pool simulation. Earlier
+    // 4.0 over-corrected: GK p99 reached 280 FP vs outfield p99 ~65,
+    // breaking per-anchor LEGEND-rate parity (only GK-anchored hands
+    // could hit LEGEND). 2.5× brings GK averages comparable to outfield
+    // (raw GK avg ~19 FP × 2.5 = 48; outfield avg ~17–21 FP) while
+    // preserving the "GK has a path to LEGEND too" property.
+    GK: 2.5,
+  },
+
+  // ── Active player pool ────────────────────────────────────────────────────
+  // Source data ships 2018 + 2022 World Cup squads (1191 players, 3096
+  // logs). At launch we ship 2022 only — most recent, brand-aligned with
+  // WC '26, ~622 players, ~1648 logs. To add 2026 (when it ships): append
+  // "2026". To add a "Vintage" 2018 event: ["2018"]. To open everything
+  // (testing): ["2018", "2022"]. The 2018 data stays in the JSON files;
+  // this list is the single switch that scopes which seasons are live.
+  activeSeasons: ["2022"],
+
+  // ── Slate v2 — daily rotating slate (flag-gated, OFF by default) ────────
+  // When VITE_FEATURE_SLATE_V2_FOOTBALL=1, the eligible pool collapses
+  // from the full 2022 squads (~622 players) to a curated daily slate
+  // (~50 players: 10 anchors always present + 40 weighted rotators).
+  // Until the flag flips, these fields are inert — the runtime falls
+  // through to the full activeSeasons pool.
+  //
+  // CALIBRATION CAVEAT: today's win-tier thresholds + multipliers are
+  // tuned for the full 622-player pool. Enabling the slate flag for
+  // football REQUIRES a re-calibration pass via:
+  //   cd football && npx ts-node ../shared/tools/runSimulator.ts 10000 --slate-v2
+  // …and updating winTiers above with the resulting hit-rate distribution.
+  slateSize: 50,         // 5 hand slots × 10 (matches baseball's ratio)
+  anchorCount: 10,       // top-10 always present
+  weightExponent: 1.0,   // linear career-FP weighting; raise for star bias
+  exclusionList: [] as string[],  // populated during data audit; safe default
 
   // ── Tier thresholds (salary-based) ────────────────────────────────────────
   tierThresholds: [
@@ -118,13 +155,23 @@ export const FootballSportConfig: SportConfigShape = {
     { tier: "WHITE",  minSalary: 0  },
   ],
 
-  // ── Win tiers (seed values for PR 1; PR 2 calibrates via simulator) ─────
+  // ── Win tiers — calibrated against 10k-hand simulator on 2022 pool ──────
+  // Pool: 622 players, 1623 logs (2022 WC squads only). GK 2.5× scaling.
+  // Team FP distribution: P25=114, Median=140, P75=168, P90=199, P99=282.
+  // Thresholds chosen to land at spec hit-rate targets:
+  //   SUB     ~25% (≈ P75)
+  //   STARTER ~12% (≈ P88)
+  //   CAPTAIN ~5%  (≈ P95)
+  //   MOTM    ~1.5% (≈ P98.5)
+  //   LEGEND  ~0.3% (≈ P99.7)
+  // Multipliers carry over from prior calibration round; re-tuned if EV
+  // drifts outside TARGET ZONE (0.78–0.92).
   winTiers: [
-    { name: "SUB",      minFp: 130, multiplier: 0.5, color: "#94A3B8" },
-    { name: "STARTER",  minFp: 150, multiplier: 1.5, color: "#10B981" },
-    { name: "CAPTAIN",  minFp: 167, multiplier: 3,   color: "#3B82F6" },
-    { name: "MOTM",     minFp: 192, multiplier: 8,   color: "#F59E0B" },
-    { name: "LEGEND",   minFp: 215, multiplier: 50,  color: "#EF4444" },
+    { name: "SUB",      minFp: 168, multiplier: 0.75, color: "#94A3B8" },
+    { name: "STARTER",  minFp: 190, multiplier: 2,    color: "#10B981" },
+    { name: "CAPTAIN",  minFp: 225, multiplier: 5,    color: "#3B82F6" },
+    { name: "MOTM",     minFp: 265, multiplier: 12,   color: "#F59E0B" },
+    { name: "LEGEND",   minFp: 310, multiplier: 75,   color: "#EF4444" },
   ],
 
   // ── Badges ────────────────────────────────────────────────────────────────
@@ -390,7 +437,30 @@ export const FootballSportConfig: SportConfigShape = {
   },
 
   // ── Headshots ─────────────────────────────────────────────────────────────
-  // StatsBomb player IDs don't map to a public CDN.
-  // UI renders national flag + last name instead.
-  headshotUrl: (_playerId: string) => null,
+  // Resolves to the API-Football CDN when the player has an apiFootballId
+  // in football/src/data/playerImageManifest.ts. Unmanifested players
+  // return null → SoccerCard's FootballHero renders flag + last-name
+  // initials as the fallback.
+  //
+  // The full resolver (with confidence/source metadata) is called directly
+  // by SoccerCard for richer rendering decisions; this slot is the minimal
+  // string-or-null contract preserved for legacy consumers.
+  headshotUrl: (playerId: string) => {
+    // Inline import-style call — `import` is a top-level keyword so we use
+    // require-style dynamic resolution. Football's bundler handles both.
+    // (Use lazy resolution to avoid a top-level import cycle with the
+    // adapter; manifest only ever has plain data, no circular refs.)
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { getExternalIds } = require("../data/playerImageManifest");
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { resolvePlayerImage } = require("@shared/media/playerImages");
+      const externalIds = getExternalIds(playerId);
+      if (!externalIds) return null;
+      const result = resolvePlayerImage({ sport: "football", playerId, externalIds });
+      return result.confidence === "fallback" ? null : result.src;
+    } catch {
+      return null;
+    }
+  },
 };

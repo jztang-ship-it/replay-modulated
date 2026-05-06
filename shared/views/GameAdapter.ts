@@ -37,9 +37,11 @@ export interface GameAdapter {
   /** Routed to /api/leaderboard sport param. Already implemented at the
    *  API layer in PR #11; this adapter removes hardcoded sport literals. */
   leaderboardScope: "basketball" | "baseball" | "football";
-  /** Per-competition bonus pool key (e.g. "world_cup"). Optional — sports
-   *  with one competition (basketball, baseball) omit. Football requires it. */
-  bonusPoolCompetition?: string;
+  /** Competition slug (e.g. "world_cup") for sports with multi-competition
+   *  support. Used by both /api/bonus-pool and /api/leaderboard to scope
+   *  KV keys per competition (so EPL hands don't mix with World Cup hands).
+   *  Sports with one competition (basketball/NBA, baseball/MLB) omit this. */
+  competition?: string;
   /** Optional Vite base path ("/basketball/", "/baseball/") for any
    *  sport-specific internal navigation. */
   routeBasePath?: string;
@@ -103,6 +105,10 @@ export interface GameAdapter {
    *  Basketball/worldcup omit. Shape:
    *    { className: "bb-dice5", css: "..."}                        */
   rosterGridLayout?: { className: string; css: string };
+  /** Optional per-slot label badge (e.g. football's FLEX slot showing
+   *  "ANY OUTFIELD" with a tooltip explaining the rule). Keyed by slot
+   *  index. Basketball/baseball omit. */
+  slotLabels?: Record<number, { label: string; tooltip?: string }>;
   /** Resets all card overlay state (per-sport AthleteCard module-local
    *  state). Called when starting a new hand. */
   resetAllOverlays: () => void;

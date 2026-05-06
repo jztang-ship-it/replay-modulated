@@ -31,6 +31,8 @@ import {
   redrawFTUERoster,
   resolveFTUERoster,
 } from "../adapters/ftueRoster";
+import { isSlateV2Enabled } from "@shared/featureFlags";
+import { FootballSlateChip } from "../components/FootballSlatePanel";
 
 // ── Tier gauge thresholds — football-specific FP cutoffs ──────────────────────
 // Display names: SUB / STARTER / CAPTAIN / MOTM / LEGEND
@@ -121,7 +123,7 @@ export default function GameView() {
     sportAdapter: sportAdapter as unknown as SharedSportAdapter,
     localStorageNamespace: "football",
     leaderboardScope: "football",
-    bonusPoolCompetition: "world_cup",
+    competition: "world_cup",
     routeBasePath: "/football/",
     gaugeThresholds: GAUGE_THRESHOLDS,
     tierFromSalary,
@@ -145,13 +147,56 @@ export default function GameView() {
     // computeRosterCeiling — football has no peak corpus yet; field is optional.
     CardComponent: SoccerCard as unknown as GameAdapter["CardComponent"],
     rosterGridColumns: 3,
-    // rosterGridLayout — 5-slot football uses a 3+2 layout similar to baseball dice-5.
-    // TODO(Phase 5): wire up football-specific grid layout once SoccerCard + layout CSS exists.
+    // Football "5-on-a-die" layout — 4 corners + 1 center, all same card
+    // size, fits in basketball's 3-col 2-row card area (no extra height).
+    //
+    //   [DEF]    .    [FLEX]       row 1 — corners in cols 1 & 3
+    //      .   [GK]    .           GK spans rows 1-2, vertically centered
+    //   [MID]    .    [FWD]        row 2 — corners in cols 1 & 3
+    //
+    // The 4 outfield cards live in grid cells (cols 1 and 3 of a 3-col
+    // grid; col 2 is empty for the corner cards). The GK card spans both
+    // rows in col 2 with `align-self: center`, which positions it at the
+    // dead-middle of the row gap region. Total layout height = 2 card
+    // heights + 1 gap, identical to basketball's 6-card layout.
+    rosterGridLayout: {
+      className: "fb-dice5",
+      css: `
+        .fb-dice5 > .roster-grid {
+          grid-template-columns: repeat(3, 1fr);
+          grid-template-rows: 1fr 1fr;
+        }
+        /* Top row — DEF (left), FLEX (right). Col 2 left empty for GK. */
+        .fb-dice5 > .roster-grid > .card-slot[data-slot="1"] { grid-column: 1; grid-row: 1; }
+        .fb-dice5 > .roster-grid > .card-slot[data-slot="4"] { grid-column: 3; grid-row: 1; }
+        /* Bottom row — MID (left), FWD (right). Col 2 left empty for GK. */
+        .fb-dice5 > .roster-grid > .card-slot[data-slot="2"] { grid-column: 1; grid-row: 2; }
+        .fb-dice5 > .roster-grid > .card-slot[data-slot="3"] { grid-column: 3; grid-row: 2; }
+        /* GK in middle col, spanning both rows, vertically centered.
+           align-self: center floats it into the row gap region — the
+           "5 dot" of the die. Width matches corner cards (1/3 of grid). */
+        .fb-dice5 > .roster-grid > .card-slot[data-slot="0"] {
+          grid-column: 2;
+          grid-row: 1 / span 2;
+          align-self: center;
+        }
+      `,
+    },
+    // FLEX rule UI affordance: slot 4 (FLEX) gets a label badge + tooltip
+    // explaining "Any outfield player (no goalkeepers)" — addresses spec
+    // review concern #4. FTUE teaches the rule via holdIntroText too.
+    slotLabels: {
+      4: { label: "ANY OUTFIELD", tooltip: "Any outfield player — no goalkeepers" },
+    },
     resetAllOverlays,
     // TODO(Phase 6): replace with proper FOOTBALL_FTUE_CONFIG from ftueRoster.ts
     ftueTextConfig: FOOTBALL_FTUE_CONFIG,
     // PostHandSheet — football does not surface this overlay.
     audioBedSrc: null,
+    // Slate v2 in-game chip — only mounts when the football flag is ON.
+    // SlateChipComponent stays undefined when the flag is OFF, and the
+    // shared GameView's conditional render skips the chip entirely.
+    SlateChipComponent: isSlateV2Enabled("football") ? FootballSlateChip : undefined,
   }), []);
 
   return <SharedGameView adapter={adapter} />;
