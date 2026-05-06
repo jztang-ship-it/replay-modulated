@@ -86,6 +86,9 @@ jobs:
             git checkout -B chore/football-data-refresh
           fi
 
+      - name: Install football deps (sharp for image processing)
+        run: cd football && npm ci
+
       - name: Run lookup script
         env:
           API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
@@ -100,21 +103,27 @@ jobs:
             node football/scripts/buildPlayerImageManifest.mjs --max="$MAX"
           fi
 
+      - name: Process images (alpha-cut white backgrounds)
+        run: |
+          # Runs idempotently — only processes PNGs that don't already
+          # have a counterpart in players-processed/. Cheap on no-op runs.
+          node football/scripts/processPlayerImages.mjs
+
       - name: Detect changes
         id: changes
         run: |
-          if git diff --quiet football/src/data/playerImageManifest.ts football/public/players/; then
+          if git diff --quiet football/src/data/playerImageManifest.ts football/public/players/ football/public/players-processed/; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No changes — exiting cleanly."
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
-            git status --short football/src/data/ football/public/players/
+            git status --short football/src/data/ football/public/players/ football/public/players-processed/
           fi
 
       - name: Commit + push
         if: steps.changes.outputs.changed == 'true'
         run: |
-          git add football/src/data/playerImageManifest.ts football/public/players/
+          git add football/src/data/playerImageManifest.ts football/public/players/ football/public/players-processed/
           # Count how many new images and manifest entries were added.
           NEW_PNGS=$(git diff --cached --diff-filter=A --name-only football/public/players/ | wc -l | tr -d ' ')
           MANIFEST_DIFF=$(git diff --cached --stat football/src/data/playerImageManifest.ts | tail -1 || echo "")

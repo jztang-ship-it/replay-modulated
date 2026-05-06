@@ -43,39 +43,58 @@ import { resolvePlayerImage } from "@shared/media/playerImages";
 import { getExternalIds } from "../data/playerImageManifest";
 
 // ── Football headshot tuning ───────────────────────────────────────────────
-// API-Football headshots are studio shots on a white background. Basketball's
-// NBA images are transparent-bg, so simple positioning works there but here
-// we'd get a "white rectangle pasted on the card" look if we copied that.
+// API-Football headshots are studio shots on a white background. Two
+// presentations live here based on whether the image has been alpha-cut
+// by football/scripts/processPlayerImages.mjs:
 //
-// The treatment: aggressive scale-up to crop white-bg sides off-frame, plus
-// a radial mask that fades the corners (where white still leaks) into the
-// tier color underneath, plus top + bottom gradient overlays for clean
-// transitions into the card top edge and the nameplate.
+//   PROCESSED (preferred, default for cached players):
+//     The image is already transparent where the white bg used to be —
+//     the tier color shows through naturally. Simple positioning, no mask
+//     gymnastics, looks closest to basketball.
 //
-// All knobs are in one place so we can iterate visually without hunting:
-//   Face too SMALL?     → increase HEADSHOT_WIDTH_PCT (e.g. 130 → 140)
-//   Face too ZOOMED?    → decrease HEADSHOT_WIDTH_PCT (e.g. 130 → 118)
-//   Face too LOW?       → decrease HEADSHOT_OBJECT_Y (e.g. 22 → 14)
-//   Face too HIGH?      → increase HEADSHOT_OBJECT_Y (e.g. 22 → 30)
-//   White edges still   → shrink the mask: RADIAL_INNER smaller (50 → 40)
-//                          OR shrink ellipse: RADIAL_ELLIPSE_W (78 → 70)
-//   Too feathered/soft  → loosen mask: RADIAL_INNER larger (50 → 65)
-//   Bottom too dark     → reduce BOTTOM_FADE_END (0.78 → 0.55)
-//   Top edge harsh      → strengthen TOP_FADE_START (0.30 → 0.45)
-const HEADSHOT_WIDTH_PCT = 130;       // image width as % of container
-const HEADSHOT_HEIGHT_PCT = 115;      // image height as % of container
-const HEADSHOT_LEFT_PCT = -15;        // re-center after scale-up
-const HEADSHOT_TOP_PCT = -5;          // small upward nudge
-const HEADSHOT_OBJECT_Y = 22;         // object-position Y — face vertical placement within frame
-const RADIAL_ELLIPSE_W = 78;          // mask ellipse width %
-const RADIAL_ELLIPSE_H = 92;          // mask ellipse height %
-const RADIAL_CENTER_Y = 38;           // mask center Y % from top (face area)
-const RADIAL_INNER = 52;              // % — fully opaque radius
-const TOP_FADE_START = 0.30;          // top overlay alpha at top edge
-const BOTTOM_FADE_START = 50;         // % from top — where bottom fade begins
-const BOTTOM_FADE_END = 0.78;         // bottom overlay alpha at very bottom
+//   RAW (fallback for un-processed local images or uncached CDN fetches):
+//     The white bg is still there. We use aggressive scale-up + radial
+//     mask + edge gradients to push it out of sight. Less clean than
+//     processed but acceptable as a transitional state.
+//
+// All knobs are named constants so visual iteration is one-edit-and-reload.
+//
+// Tweak guide:
+//   Face too SMALL?           → bump WIDTH_PCT (e.g. 110 → 120 processed,
+//                                                  130 → 140 raw)
+//   Face too ZOOMED?          → drop WIDTH_PCT
+//   Face too LOW in card?     → drop OBJECT_Y (e.g. 14 → 10)
+//   Face too HIGH (forehead   → bump OBJECT_Y (e.g. 14 → 24)
+//     getting cropped)
+//   RAW: white edges leaking? → shrink radial mask (RAW_RADIAL_INNER 52 → 40
+//                                or RAW_RADIAL_ELLIPSE_W 78 → 70)
+//   Bottom feels too dark     → drop BOTTOM_FADE_END (0.78 → 0.55)
 
-const HEADSHOT_MASK = `radial-gradient(ellipse ${RADIAL_ELLIPSE_W}% ${RADIAL_ELLIPSE_H}% at 50% ${RADIAL_CENTER_Y}%, rgba(0,0,0,1) ${RADIAL_INNER}%, rgba(0,0,0,0) 100%)`;
+// PROCESSED (alpha-cut) — clean, basketball-style positioning.
+const PROC_WIDTH_PCT = 112;
+const PROC_HEIGHT_PCT = 108;
+const PROC_LEFT_PCT = -6;
+const PROC_TOP_PCT = -4;
+const PROC_OBJECT_Y = 14;
+
+// RAW (white-bg) — aggressive scale + radial mask to push white off-frame.
+const RAW_WIDTH_PCT = 130;
+const RAW_HEIGHT_PCT = 115;
+const RAW_LEFT_PCT = -15;
+const RAW_TOP_PCT = -5;
+const RAW_OBJECT_Y = 22;
+const RAW_RADIAL_ELLIPSE_W = 78;
+const RAW_RADIAL_ELLIPSE_H = 92;
+const RAW_RADIAL_CENTER_Y = 38;
+const RAW_RADIAL_INNER = 52;
+const RAW_TOP_FADE_START = 0.30;
+
+// Bottom nameplate fade — applied to BOTH variants so the photo blends
+// into the salary/name strip below.
+const BOTTOM_FADE_START = 50;
+const BOTTOM_FADE_END = 0.78;
+
+const RAW_HEADSHOT_MASK = `radial-gradient(ellipse ${RAW_RADIAL_ELLIPSE_W}% ${RAW_RADIAL_ELLIPSE_H}% at 50% ${RAW_RADIAL_CENTER_Y}%, rgba(0,0,0,1) ${RAW_RADIAL_INNER}%, rgba(0,0,0,0) 100%)`;
 
 function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
   const team = String((card as any).team ?? "");
@@ -92,6 +111,7 @@ function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
   const externalIds = cardExternalIds ?? getExternalIds(basePlayerId);
   const resolved = resolvePlayerImage({ sport: "football", playerId: basePlayerId, externalIds });
   const imgSrc = resolved.confidence !== "fallback" ? resolved.src : null;
+  const isProcessed = resolved.source === "local-cache-processed";
 
   // Local state: when an <img> errors, hide it so the flag+initials
   // fallback (rendered conditionally below) becomes visible.
@@ -127,11 +147,12 @@ function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
         </div>
       )}
 
-      {/* Layer 3: API-Football headshot — scaled, masked, color-tuned.
-          objectPosition keeps the face in the upper-mid of the frame
-          regardless of how the original photo was framed. The radial
-          mask softens the corners where the studio white-bg leaks in. */}
-      {showImage && (
+      {/* Layer 3: Headshot. Two presentations:
+          - PROCESSED (alpha-cut): no mask, modest scale — tier color shows
+            through the now-transparent background naturally.
+          - RAW (still has white-bg): aggressive scale + radial mask to
+            push white off-frame and feather what's left. */}
+      {showImage && (isProcessed ? (
         <img
           key={imgSrc}
           src={imgSrc!}
@@ -140,29 +161,51 @@ function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
           draggable={false}
           style={{
             position: "absolute",
-            top: `${HEADSHOT_TOP_PCT}%`,
-            left: `${HEADSHOT_LEFT_PCT}%`,
-            width: `${HEADSHOT_WIDTH_PCT}%`,
-            height: `${HEADSHOT_HEIGHT_PCT}%`,
+            top: `${PROC_TOP_PCT}%`,
+            left: `${PROC_LEFT_PCT}%`,
+            width: `${PROC_WIDTH_PCT}%`,
+            height: `${PROC_HEIGHT_PCT}%`,
             objectFit: "cover",
-            objectPosition: `50% ${HEADSHOT_OBJECT_Y}%`,
-            maskImage: HEADSHOT_MASK,
-            WebkitMaskImage: HEADSHOT_MASK,
+            objectPosition: `50% ${PROC_OBJECT_Y}%`,
+            filter: "contrast(1.04) saturate(1.05)",
+            opacity, transition: "opacity 0.3s ease",
+            pointerEvents: "none",
+          }}
+        />
+      ) : (
+        <img
+          key={imgSrc}
+          src={imgSrc!}
+          alt={String((card as any).name ?? "")}
+          onError={() => setImgFailed(true)}
+          draggable={false}
+          style={{
+            position: "absolute",
+            top: `${RAW_TOP_PCT}%`,
+            left: `${RAW_LEFT_PCT}%`,
+            width: `${RAW_WIDTH_PCT}%`,
+            height: `${RAW_HEIGHT_PCT}%`,
+            objectFit: "cover",
+            objectPosition: `50% ${RAW_OBJECT_Y}%`,
+            maskImage: RAW_HEADSHOT_MASK,
+            WebkitMaskImage: RAW_HEADSHOT_MASK,
             filter: "contrast(1.06) saturate(1.06)",
             opacity, transition: "opacity 0.3s ease",
             pointerEvents: "none",
           }}
         />
-      )}
+      ))}
 
-      {/* Layer 4: Top fade — only present when an image is shown. Smooths
-          the photo into the tier-color background at the top edge. */}
-      {showImage && (
+      {/* Layer 4: Top fade — only when raw (un-processed) image is shown.
+          Smooths the photo into the tier-color background at the top edge.
+          Processed images don't need this since their alpha already
+          handles the transition. */}
+      {showImage && !isProcessed && (
         <div
           style={{
             position: "absolute", top: 0, left: 0, right: 0, height: "30%",
             pointerEvents: "none",
-            background: `linear-gradient(to bottom, rgba(0,0,0,${TOP_FADE_START}) 0%, rgba(0,0,0,0) 100%)`,
+            background: `linear-gradient(to bottom, rgba(0,0,0,${RAW_TOP_FADE_START}) 0%, rgba(0,0,0,0) 100%)`,
           }}
         />
       )}

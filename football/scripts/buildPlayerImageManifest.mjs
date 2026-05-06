@@ -93,8 +93,8 @@ const players = allPlayers.filter(p => SEASONS.includes(String(p.season)));
 
 const manifestSrc = readFileSync(manifestPath, "utf8");
 const existing = new Map();
-// Parse each entry's apiFootballId AND optional `local: true` so re-runs
-// preserve the local-mirror flag. Tolerant to field order.
+// Parse each entry's apiFootballId AND optional `local: true` /
+// `processed: true` flags so re-runs preserve them. Tolerant to field order.
 const entryRe = /"(\d+)":\s*\{([^}]*)\}/g;
 let m;
 while ((m = entryRe.exec(manifestSrc)) !== null) {
@@ -102,9 +102,11 @@ while ((m = entryRe.exec(manifestSrc)) !== null) {
   const idMatch = inside.match(/apiFootballId:\s*(\d+)/);
   if (!idMatch) continue;
   const localFlag = /local:\s*true/.test(inside);
+  const processedFlag = /processed:\s*true/.test(inside);
   existing.set(m[1], {
     apiFootballId: parseInt(idMatch[1], 10),
     ...(localFlag ? { local: true } : {}),
+    ...(processedFlag ? { processed: true } : {}),
   });
 }
 
@@ -403,7 +405,9 @@ if (DRY_RUN) {
 const changed = updated.size !== existing.size || [...updated.entries()].some(([k, v]) => {
   const prev = existing.get(k);
   if (!prev) return true;
-  return prev.apiFootballId !== v.apiFootballId || !!prev.local !== !!v.local;
+  return prev.apiFootballId !== v.apiFootballId
+      || !!prev.local !== !!v.local
+      || !!prev.processed !== !!v.processed;
 });
 if (!changed) {
   console.log("No changes to write.");
@@ -434,6 +438,7 @@ const manifestBody = [
     const team = teamById.get(k) ?? "?";
     const fields = [`apiFootballId: ${v.apiFootballId}`];
     if (v.local) fields.push(`local: true`);
+    if (v.processed) fields.push(`processed: true`);
     return `  // ${name} (${team})\n  "${k}": { ${fields.join(", ")} },`;
   }),
   "};",
