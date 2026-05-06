@@ -62,9 +62,12 @@
  *     If a faint halo remains → drop --bright (210 → 200) or raise --sat
  *     (45 → 60).
  *     If face starts looking patchy on dark cards → raise --bright a bit.
- *   --feather (default 2)
- *     Gaussian blur on the alpha mask. 0 = hard edges (may alias).
- *     1.5-2 = clean. 3+ = visibly soft halo.
+ *   --feather (default 0)
+ *     Gaussian blur on the alpha mask. DEFAULT IS 0 because sharp's
+ *     blur on a single-channel raw buffer produces horizontal-stripe
+ *     artifacts. The source PNG's natural anti-aliasing makes blur
+ *     unnecessary in practice. Override only if you specifically want
+ *     extra-soft edges and accept the artifact risk.
  *
  * Updates the manifest's `processed: true` flag for each image
  * successfully processed. Preserves apiFootballId + local fields untouched.
@@ -88,7 +91,24 @@ const opt = (k, fallback) => argMap.get(k) ?? fallback;
 const RGB_THRESHOLD = parseInt(opt("--rgb", opt("--threshold", "215")), 10);
 const BRIGHT_THRESHOLD = parseInt(opt("--bright", "210"), 10);
 const SAT_THRESHOLD = parseInt(opt("--sat", "45"), 10);
-const FEATHER = parseFloat(opt("--feather", "2"));
+// Feather DEFAULT IS 0 — see large note below.
+//
+// Originally we gaussian-blurred the binary alpha mask (0/255) so the
+// silhouette would have soft anti-aliased edges. In practice, sharp's
+// blur applied to a single-channel raw buffer produced visible
+// horizontal-stripe artifacts in the output alpha — confirmed by the
+// audit script (auditProcessedHeadshots.mjs).
+//
+// Why no blur is fine: the source API-Football PNGs already have
+// anti-aliased edges (photo-grade alpha boundaries). The pixels at
+// the boundary between subject and background sit at intermediate
+// RGB values that don't pass the bg-color threshold but are close
+// enough to look smooth. The cutout boundary inherits the source
+// photo's natural anti-aliasing — no additional blur needed.
+//
+// Override with --feather=N if you specifically need soft edges (and
+// accept the stripe risk for your use case).
+const FEATHER = parseFloat(opt("--feather", "0"));
 const FORCE = argMap.has("--force");
 const DRY_RUN = argMap.has("--dry-run");
 const SKIP_MANIFEST = argMap.has("--skip-manifest");
@@ -104,7 +124,7 @@ console.log("─".repeat(60));
 console.log(`Algorithm:        flood-fill from edges through bg-color pixels`);
 console.log(`RGB threshold:    R/G/B all > ${RGB_THRESHOLD} marks pixel as bg-color`);
 console.log(`Bright+Sat:       brightness > ${BRIGHT_THRESHOLD} AND saturation < ${SAT_THRESHOLD} marks pixel as bg-color`);
-console.log(`Feather:          ${FEATHER}px gaussian blur on alpha mask`);
+console.log(`Feather:          ${FEATHER}px gaussian blur on alpha mask${FEATHER === 0 ? " (DISABLED — uses source PNG's natural anti-aliasing)" : ""}`);
 console.log(`Low-coverage warn: < ${LOW_COVERAGE_PCT}% transparent → ⚠ flagged`);
 console.log(`Mode:             ${DRY_RUN ? "DRY RUN" : "WRITE"}${FORCE ? " (force re-process)" : ""}`);
 console.log(`Input:            ${inputDir}`);
