@@ -33,6 +33,13 @@ export interface PlayerCard {
   basePlayerId: string;
   photoCode?: string;
   headshotUrl?: string;
+  /** Optional external player IDs for image resolution. Football uses
+   *  apiFootballId to construct API-Football CDN URLs. Other sports
+   *  may add their own IDs here without breaking existing data. */
+  externalIds?: {
+    apiFootballId?: string | number;
+    theSportsDbId?: string | number;
+  };
   name: string;
   team: string;
   season: string;
@@ -73,6 +80,12 @@ export type RawPlayer = {
   avgFP?: number;
   projectedFp?: number;
   active?: boolean;
+  /** Optional external player IDs for image resolution. See
+   *  shared/media/playerImages.ts for resolution strategy. */
+  externalIds?: {
+    apiFootballId?: string | number;
+    theSportsDbId?: string | number;
+  };
 };
 
 export type RawLog = {

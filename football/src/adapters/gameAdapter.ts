@@ -11,6 +11,8 @@ import { generateRoster, redrawRoster as engineRedraw, mulberry32, randomSeed } 
 import { resolveCards } from "../engines/resolveEngine";
 import { salaryFromProjection } from "@shared/engines/economyEngine";
 import { getDailyBonusPlayers, buildDailyBonusMap, type DailyBonusPlayer } from "@shared/utils/dailyBonus";
+import { preloadPlayerImages } from "@shared/media/playerImages";
+import { getExternalIds } from "../data/playerImageManifest";
 import type { PlayerEval, GeneratedCard, RawLog } from "@shared/types";
 
 // ── Active seasons (player pool lockdown) ────────────────────────────────────
@@ -167,6 +169,16 @@ function buildEvalPool(
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
+/** Attach manifest-based externalIds to each card. Pure passthrough when
+ *  no manifest entry exists. Called at deal/redraw time so the cards
+ *  carry image-resolution metadata into the reveal stage. */
+function attachExternalIds(cards: any[]): any[] {
+  return cards.map(c => {
+    const ids = getExternalIds(String(c?.basePlayerId ?? ""));
+    return ids ? { ...c, externalIds: ids } : c;
+  });
+}
+
 export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
   const players     = getActivePlayers();
   const logsByKey   = getActiveLogsByKey();
@@ -181,7 +193,11 @@ export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
   };
 
   const cards = generateRoster(evalPool, rosterConfig, sportAdapter.economyConfig, rnd);
-  return { roster: cards as unknown as PlayerCard[] };
+  const enriched = attachExternalIds(cards);
+  // Fire-and-forget: warm browser cache for any cards with API-Football IDs.
+  // No-op on server. Errors swallowed inside preloadPlayerImages.
+  preloadPlayerImages(enriched, "football");
+  return { roster: enriched as unknown as PlayerCard[] };
 }
 
 export async function redrawRoster({
@@ -216,7 +232,9 @@ export async function redrawRoster({
     sportAdapter.economyConfig,
     rnd,
   );
-  return { roster: cards as unknown as PlayerCard[] };
+  const enriched = attachExternalIds(cards);
+  preloadPlayerImages(enriched, "football");
+  return { roster: enriched as unknown as PlayerCard[] };
 }
 
 export async function resolveRoster({

@@ -420,7 +420,30 @@ export const FootballSportConfig: SportConfigShape = {
   },
 
   // ── Headshots ─────────────────────────────────────────────────────────────
-  // StatsBomb player IDs don't map to a public CDN.
-  // UI renders national flag + last name instead.
-  headshotUrl: (_playerId: string) => null,
+  // Resolves to the API-Football CDN when the player has an apiFootballId
+  // in football/src/data/playerImageManifest.ts. Unmanifested players
+  // return null → SoccerCard's FootballHero renders flag + last-name
+  // initials as the fallback.
+  //
+  // The full resolver (with confidence/source metadata) is called directly
+  // by SoccerCard for richer rendering decisions; this slot is the minimal
+  // string-or-null contract preserved for legacy consumers.
+  headshotUrl: (playerId: string) => {
+    // Inline import-style call — `import` is a top-level keyword so we use
+    // require-style dynamic resolution. Football's bundler handles both.
+    // (Use lazy resolution to avoid a top-level import cycle with the
+    // adapter; manifest only ever has plain data, no circular refs.)
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { getExternalIds } = require("../data/playerImageManifest");
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { resolvePlayerImage } = require("@shared/media/playerImages");
+      const externalIds = getExternalIds(playerId);
+      if (!externalIds) return null;
+      const result = resolvePlayerImage({ sport: "football", playerId, externalIds });
+      return result.confidence === "fallback" ? null : result.src;
+    } catch {
+      return null;
+    }
+  },
 };

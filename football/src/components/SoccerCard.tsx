@@ -29,27 +29,79 @@ const TEAM_FLAGS: Record<string, string> = {
 };
 function getFlag(team: string): string { return TEAM_FLAGS[team] ?? "🏳️"; }
 
-// ── Football hero: flag + initials ─────────────────────────────────────────
+// ── Football hero: API-Football image (when available) → flag + initials ──
+// Resolution flow:
+//   1. Look up player's externalIds in the manifest
+//   2. If apiFootballId is known: resolve to API-Football CDN URL
+//   3. Render <img>; on load failure, swap to flag+initials fallback
+//   4. If no externalIds: render flag+initials directly (no failed network)
+//
+// The flag+initials fallback is always rendered behind the image as a
+// safety net, so a slow or failed image load never leaves the card empty.
+
+import { resolvePlayerImage } from "@shared/media/playerImages";
+import { getExternalIds } from "../data/playerImageManifest";
 
 function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
   const team = String((card as any).team ?? "");
   const flag = getFlag(team);
   const opacity = isActiveReveal ? 0.15 : 1;
+  const basePlayerId = String((card as any).basePlayerId ?? "");
+
+  // Resolve image URL (no API call — manifest lookup + URL construction).
+  // Prefer card.externalIds if the data layer attached them; else fall
+  // back to the static manifest. The merge order means a roster card
+  // built with externalIds populated wins over the manifest, which is
+  // what we want for future per-card overrides.
+  const cardExternalIds = (card as any).externalIds;
+  const externalIds = cardExternalIds ?? getExternalIds(basePlayerId);
+  const resolved = resolvePlayerImage({ sport: "football", playerId: basePlayerId, externalIds });
+  const imgSrc = resolved.confidence !== "fallback" ? resolved.src : null;
+
+  // Local state: when an <img> errors, hide it so the flag+initials
+  // fallback (always rendered behind) becomes visible.
+  const [imgFailed, setImgFailed] = React.useState(false);
+  const showImage = imgSrc != null && !imgFailed;
 
   return (
     <>
-      {/* Faded flag background */}
+      {/* Faded flag background — always rendered, serves as image-load fallback */}
       <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
         <div style={{ fontSize: 72, lineHeight: 1, opacity: 0.22, transform: "scale(1.4) translateY(-8px)", filter: "blur(1px)", userSelect: "none" }}>
           {flag}
         </div>
       </div>
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.65) 100%)" }} />
-      {/* Flag + initials centered */}
+
+      {/* Flag + initials — always rendered below the image so it shows
+          through during image load and after onError. Hidden behind the
+          image when the image is loaded successfully. */}
       <div style={{ position: "absolute", top: "28%", left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, opacity, transition: "opacity 0.3s ease" }}>
         <span style={{ fontSize: 38, lineHeight: 1, filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.6))" }}>{flag}</span>
         <span style={{ fontSize: 28, fontWeight: 950, letterSpacing: 2, color: "rgba(255,255,255,0.80)", textShadow: "0 4px 16px rgba(0,0,0,0.8)", userSelect: "none" }}>{initials}</span>
       </div>
+
+      {/* API-Football headshot — only mounted when a URL resolved.
+          onError flips imgFailed which removes the image and exposes
+          the flag+initials fallback already rendered above. */}
+      {showImage && (
+        <img
+          key={imgSrc}
+          src={imgSrc!}
+          alt={String((card as any).name ?? "")}
+          onError={() => setImgFailed(true)}
+          draggable={false}
+          style={{
+            position: "absolute",
+            top: "12%", left: "-5%",
+            width: "110%", height: "100%",
+            objectFit: "cover",
+            objectPosition: "50% 10%",
+            opacity, transition: "opacity 0.3s ease",
+            pointerEvents: "none",
+          }}
+        />
+      )}
     </>
   );
 }
