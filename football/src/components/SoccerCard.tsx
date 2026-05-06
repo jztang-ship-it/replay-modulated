@@ -41,6 +41,7 @@ function getFlag(team: string): string { return TEAM_FLAGS[team] ?? "🏳️"; }
 
 import { resolvePlayerImage } from "@shared/media/playerImages";
 import { getExternalIds } from "../data/playerImageManifest";
+import { getPortraitAdjustment } from "../data/playerPortraitAdjustments";
 
 // ── Football headshot tuning ───────────────────────────────────────────────
 // API-Football headshots are studio shots on a white background. The
@@ -48,35 +49,62 @@ import { getExternalIds } from "../data/playerImageManifest";
 // alpha-cuts that white background into transparency so the card's tier
 // color shows through behind the player. With a real alpha channel in the
 // PNG, we don't need any CSS tricks — no mask, no blend mode, no filter.
-// Same simple positioning that basketball uses on its NBA headshots, which
-// also have transparent backgrounds.
+//
+// Defaults are deliberately lined up with the basketball card composition
+// (basketball/src/components/AthleteCardFront.tsx): top:12%, left:-5%,
+// width:110%, height:100%, object-position 50% 10%. The football photo
+// stock is more variable than the NBA headshot stock (different aspect
+// ratios, different framing per league), so a small per-player override
+// table — football/src/data/playerPortraitAdjustments.ts — handles the
+// outliers without changing the default for the majority that look right.
 //
 // CSS values that control face crop:
+//   HEADSHOT_TOP_PCT        top offset of the <img> within the hero
+//   HEADSHOT_LEFT_PCT       left offset of the <img>
 //   HEADSHOT_WIDTH_PCT      width as % of hero container (face zoom)
 //   HEADSHOT_HEIGHT_PCT     height as % of hero container
-//   HEADSHOT_LEFT_PCT       left offset (re-center after width scale)
-//   HEADSHOT_TOP_PCT        top offset (re-center after height scale)
-//   HEADSHOT_OBJECT_Y       object-position Y (face vertical placement
-//                           within the cropped frame; smaller = higher)
+//   HEADSHOT_OBJECT_X       object-position X within the cropped image
+//   HEADSHOT_OBJECT_Y       object-position Y (face vertical placement;
+//                           smaller = higher)
 //
-// Tweak quick-reference:
-//   Face too SMALL  → bump HEADSHOT_WIDTH_PCT (e.g. 112 → 122)
-//   Face too BIG    → drop HEADSHOT_WIDTH_PCT (e.g. 112 → 100)
-//   Face too LOW    → drop HEADSHOT_OBJECT_Y (e.g. 14 → 8)
-//   Face too HIGH   → bump HEADSHOT_OBJECT_Y (e.g. 14 → 22)
-//   Forehead crop?  → drop HEADSHOT_OBJECT_Y, or pad HEADSHOT_TOP_PCT (-4 → 0)
+// Tweak quick-reference (defaults below — applied to ALL football cards):
+//   Heads too SMALL across the board  → bump HEADSHOT_WIDTH_PCT (110 → 118)
+//   Heads too BIG across the board    → drop HEADSHOT_WIDTH_PCT (110 → 102)
+//   Faces sit too LOW everywhere      → drop HEADSHOT_OBJECT_Y (10 → 6)
+//   Faces sit too HIGH everywhere     → bump HEADSHOT_OBJECT_Y (10 → 16)
+//
+// For ONE-OFF fixes on a specific player, use playerPortraitAdjustments.ts
+// rather than retuning the global defaults.
 
-const HEADSHOT_WIDTH_PCT = 112;
-const HEADSHOT_HEIGHT_PCT = 108;
-const HEADSHOT_LEFT_PCT = -6;
-const HEADSHOT_TOP_PCT = -4;
-const HEADSHOT_OBJECT_Y = 14;
+const HEADSHOT_TOP_PCT = 12;       // matches basketball (12)
+const HEADSHOT_LEFT_PCT = -5;      // matches basketball (-5)
+const HEADSHOT_WIDTH_PCT = 110;    // matches basketball (110)
+const HEADSHOT_HEIGHT_PCT = 100;   // matches basketball (100)
+const HEADSHOT_OBJECT_X = 50;      // 50 = horizontal center (matches basketball)
+const HEADSHOT_OBJECT_Y = 10;      // matches basketball (10)
+
+// Debug overlay: enabled at runtime via either
+//   ?debugFootballImages=1   (URL query param)
+//   import.meta.env.VITE_DEBUG_FOOTBALL_IMAGES=true
+// When on, each card overlays its resolved image source/scale so the
+// values can be tuned without console-logging.
+function isDebugFootballImagesEnabled(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("debugFootballImages") === "1") return true;
+  } catch { /* no-op */ }
+  // @ts-ignore — Vite env access is fine at runtime.
+  const envFlag = (import.meta as any)?.env?.VITE_DEBUG_FOOTBALL_IMAGES;
+  return envFlag === "true" || envFlag === true;
+}
 
 function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
   const team = String((card as any).team ?? "");
   const flag = getFlag(team);
   const opacity = isActiveReveal ? 0.15 : 1;
   const basePlayerId = String((card as any).basePlayerId ?? "");
+  const playerName = String((card as any).name ?? "");
 
   // Resolve image URL (no API call — manifest lookup + URL construction).
   // Resolution order: processed (alpha-cut) → raw local mirror → API CDN
@@ -86,10 +114,25 @@ function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
   const resolved = resolvePlayerImage({ sport: "football", playerId: basePlayerId, externalIds });
   const imgSrc = resolved.confidence !== "fallback" ? resolved.src : null;
 
+  // Per-player overrides (if any). Most players hit the default branch.
+  const adj = getPortraitAdjustment(basePlayerId);
+  const scale = adj.scale ?? 1;
+  const widthPct = HEADSHOT_WIDTH_PCT * scale;
+  const heightPct = HEADSHOT_HEIGHT_PCT * scale;
+  // Re-center after scaling so a wider/taller image stays anchored at
+  // the same nominal top-center spot the default would have used.
+  const widthDelta = widthPct - HEADSHOT_WIDTH_PCT;
+  const heightDelta = heightPct - HEADSHOT_HEIGHT_PCT;
+  const leftPct = HEADSHOT_LEFT_PCT - widthDelta / 2 + (adj.translateXPct ?? 0);
+  const topPct = HEADSHOT_TOP_PCT - heightDelta / 2 + (adj.translateYPct ?? 0);
+  const objectX = adj.objectPositionX ?? HEADSHOT_OBJECT_X;
+  const objectY = adj.objectPositionY ?? HEADSHOT_OBJECT_Y;
+
   // Local state: when an <img> errors (network failure, 404), hide it so
   // the flag + initials fallback below becomes visible.
   const [imgFailed, setImgFailed] = React.useState(false);
   const showImage = imgSrc != null && !imgFailed;
+  const debug = isDebugFootballImagesEnabled();
 
   // Bare-minimum render — exactly the shape basketball uses on its
   // NBA headshots. The processed PNG has a real alpha channel; the
@@ -99,24 +142,44 @@ function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
   // banding/lines through the alpha edges.
   if (showImage) {
     return (
-      <img
-        key={imgSrc}
-        src={imgSrc!}
-        alt={String((card as any).name ?? "")}
-        onError={() => setImgFailed(true)}
-        draggable={false}
-        style={{
-          position: "absolute",
-          top: `${HEADSHOT_TOP_PCT}%`,
-          left: `${HEADSHOT_LEFT_PCT}%`,
-          width: `${HEADSHOT_WIDTH_PCT}%`,
-          height: `${HEADSHOT_HEIGHT_PCT}%`,
-          objectFit: "cover",
-          objectPosition: `50% ${HEADSHOT_OBJECT_Y}%`,
-          opacity, transition: "opacity 0.3s ease",
-          pointerEvents: "none",
-        }}
-      />
+      <>
+        <img
+          key={imgSrc}
+          src={imgSrc!}
+          alt={playerName}
+          onError={() => setImgFailed(true)}
+          draggable={false}
+          style={{
+            position: "absolute",
+            top: `${topPct}%`,
+            left: `${leftPct}%`,
+            width: `${widthPct}%`,
+            height: `${heightPct}%`,
+            objectFit: "cover",
+            objectPosition: `${objectX}% ${objectY}%`,
+            // transform-origin keeps the head anchored near the top of the
+            // hero box when scale != 1 — the head doesn't drift down as the
+            // image grows. Combined with the topPct re-center math above,
+            // this matches basketball's stable head anchor across all cards.
+            transformOrigin: "top center",
+            // Explicit image-rendering to ensure browsers use the default
+            // (high-quality) sampler. Defending against any inherited
+            // pixelated/crisp-edges rule that might creep in via global CSS.
+            imageRendering: "auto",
+            opacity, transition: "opacity 0.3s ease",
+            pointerEvents: "none",
+          }}
+        />
+        {debug && (
+          <DebugBadge
+            name={playerName}
+            sourceLabel={debugSourceLabel(resolved.source)}
+            scale={scale}
+            objectX={objectX}
+            objectY={objectY}
+          />
+        )}
+      </>
     );
   }
 
@@ -124,18 +187,82 @@ function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
   // network failures). Self-contained: a flag emoji + initials,
   // centered. No interaction with the image path.
   return (
+    <>
+      <div
+        style={{
+          position: "absolute", top: "28%", left: 0, right: 0,
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+          opacity, transition: "opacity 0.3s ease",
+          pointerEvents: "none",
+        }}
+      >
+        <span style={{ fontSize: 38, lineHeight: 1, filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.6))" }}>{flag}</span>
+        <span style={{ fontSize: 28, fontWeight: 950, letterSpacing: 2, color: "rgba(255,255,255,0.80)", textShadow: "0 4px 16px rgba(0,0,0,0.8)", userSelect: "none" }}>{initials}</span>
+      </div>
+      {debug && (
+        <DebugBadge
+          name={playerName}
+          sourceLabel={imgFailed ? "fallback (img-err)" : debugSourceLabel(resolved.source)}
+          scale={scale}
+          objectX={objectX}
+          objectY={objectY}
+        />
+      )}
+    </>
+  );
+}
+
+// ── Debug overlay ──────────────────────────────────────────────────────────
+// Tiny corner ribbon shown when ?debugFootballImages=1 is set or the
+// VITE_DEBUG_FOOTBALL_IMAGES env var is true. Surfaces the four tuning
+// knobs (image source, scale, objectPosition X/Y) directly on the card
+// so the user can see at a glance which override was applied. Sits under
+// the salary/position labels (z-index 7) so it never covers card chrome.
+function DebugBadge(props: {
+  name: string;
+  sourceLabel: string;
+  scale: number;
+  objectX: number;
+  objectY: number;
+}) {
+  const { name, sourceLabel, scale, objectX, objectY } = props;
+  return (
     <div
       style={{
-        position: "absolute", top: "28%", left: 0, right: 0,
-        display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-        opacity, transition: "opacity 0.3s ease",
+        position: "absolute",
+        bottom: "30%",
+        left: 4,
+        right: 4,
+        zIndex: 7,
         pointerEvents: "none",
+        background: "rgba(0,0,0,0.78)",
+        color: "#FFEA86",
+        fontSize: 7,
+        lineHeight: 1.25,
+        fontWeight: 700,
+        fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
+        padding: "2px 4px",
+        borderRadius: 3,
+        letterSpacing: 0.2,
+        textAlign: "left",
+        wordBreak: "break-all",
       }}
     >
-      <span style={{ fontSize: 38, lineHeight: 1, filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.6))" }}>{flag}</span>
-      <span style={{ fontSize: 28, fontWeight: 950, letterSpacing: 2, color: "rgba(255,255,255,0.80)", textShadow: "0 4px 16px rgba(0,0,0,0.8)", userSelect: "none" }}>{initials}</span>
+      <div style={{ color: "#FFFFFF" }}>{name}</div>
+      <div>src: {sourceLabel}</div>
+      <div>scale: {scale.toFixed(2)} · obj: {objectX}%/{objectY}%</div>
     </div>
   );
+}
+
+function debugSourceLabel(source: string): string {
+  switch (source) {
+    case "local-cache-processed": return "processed";
+    case "local-cache":            return "local";
+    case "api-football":           return "api-cdn";
+    case "thesportsdb":            return "thesportsdb";
+    default:                       return "fallback";
+  }
 }
 
 // ── BackStats ──────────────────────────────────────────────────────────────
