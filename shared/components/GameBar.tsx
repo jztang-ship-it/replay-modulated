@@ -640,7 +640,6 @@ function LegendModal({
               {/* Today's hot players (bonus row) — pre-slate-v2 surface. */}
               {/* When slate v2 is ON for this sport, the row is hidden because */}
               {/* the slate panel takes over (landing drawer + in-game chip overlay). */}
-              {/* Mystery score still surfaces here when available. */}
               {showBonusRow && legend.todaysStars && legend.todaysStars.length > 0 && (
                 <div style={{ marginBottom: 10, paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
@@ -674,42 +673,11 @@ function LegendModal({
                   <div style={{ marginTop: 8, fontSize: 9, color: "rgba(255,255,255,0.32)", lineHeight: 1.5 }}>
                     Pick these players — they add bonus FP on top of their real game. Rotates at UTC midnight.
                   </div>
-                  {/* Mystery score target — nested inside the bonus block to */}
-                  {/* match pre-0530a59 byte-equivalent layout when flag is OFF. */}
-                  {legend.mysteryScore != null && (
-                    <div style={{
-                      marginTop: 10, padding: "8px 12px", borderRadius: 10,
-                      background: "rgba(138,43,226,0.12)", border: "1px solid rgba(138,43,226,0.3)",
-                      display: "flex", alignItems: "center", justifyContent: "space-between",
-                    }}>
-                      <span style={{ fontSize: 10, fontWeight: 800, color: "rgba(138,43,226,0.8)", textTransform: "uppercase", letterSpacing: 0.8 }}>
-                        Mystery Score
-                      </span>
-                      <span style={{ fontSize: 14, fontWeight: 900, color: "#B366FF", fontVariantNumeric: "tabular-nums" }}>
-                        {legend.mysteryScore.toFixed(1)} FP = +{legend.mysteryBonus ?? 200}
-                      </span>
-                    </div>
-                  )}
                 </div>
               )}
-              {/* Slate v2 ON: bonus row is hidden, but Mystery Score still */}
-              {/* surfaces here as a standalone block (matches post-0530a59 OFF-of-bonus behavior). */}
-              {!showBonusRow && legend.mysteryScore != null && (
-                <div style={{ marginBottom: 10, paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-                  <div style={{
-                    padding: "8px 12px", borderRadius: 10,
-                    background: "rgba(138,43,226,0.12)", border: "1px solid rgba(138,43,226,0.3)",
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                  }}>
-                    <span style={{ fontSize: 10, fontWeight: 800, color: "rgba(138,43,226,0.8)", textTransform: "uppercase", letterSpacing: 0.8 }}>
-                      Mystery Score
-                    </span>
-                    <span style={{ fontSize: 14, fontWeight: 900, color: "#B366FF", fontVariantNumeric: "tabular-nums" }}>
-                      {legend.mysteryScore.toFixed(1)} FP = +{legend.mysteryBonus ?? 200}
-                    </span>
-                  </div>
-                </div>
-              )}
+              {/* Mystery Score UI removed (pre-beta). The shared/utils/mysteryScore.ts */}
+              {/* utility and the LegendData mysteryScore/mysteryBonus fields are */}
+              {/* preserved as dormant data plumbing — no UI surface renders them. */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, paddingBottom: 6, borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: 2 }}>
                 <span style={colHdr}>Tier</span>
                 <span style={{ ...colHdr, textAlign: "right" }}>Team FP</span>
