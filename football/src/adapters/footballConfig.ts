@@ -111,8 +111,23 @@ export const FootballSportConfig: SportConfigShape = {
   // matching outfield top games. Badge bonuses are NOT scaled (applied
   // after in the resolve pipeline).
   positionMultipliers: {
-    GK: 4.0,
+    // GK 2.5× — calibrated against 2022-only pool simulation. Earlier
+    // 4.0 over-corrected: GK p99 reached 280 FP vs outfield p99 ~65,
+    // breaking per-anchor LEGEND-rate parity (only GK-anchored hands
+    // could hit LEGEND). 2.5× brings GK averages comparable to outfield
+    // (raw GK avg ~19 FP × 2.5 = 48; outfield avg ~17–21 FP) while
+    // preserving the "GK has a path to LEGEND too" property.
+    GK: 2.5,
   },
+
+  // ── Active player pool ────────────────────────────────────────────────────
+  // Source data ships 2018 + 2022 World Cup squads (1191 players, 3096
+  // logs). At launch we ship 2022 only — most recent, brand-aligned with
+  // WC '26, ~622 players, ~1648 logs. To add 2026 (when it ships): append
+  // "2026". To add a "Vintage" 2018 event: ["2018"]. To open everything
+  // (testing): ["2018", "2022"]. The 2018 data stays in the JSON files;
+  // this list is the single switch that scopes which seasons are live.
+  activeSeasons: ["2022"],
 
   // ── Tier thresholds (salary-based) ────────────────────────────────────────
   tierThresholds: [
@@ -123,23 +138,23 @@ export const FootballSportConfig: SportConfigShape = {
     { tier: "WHITE",  minSalary: 0  },
   ],
 
-  // ── Win tiers — calibrated against 10k-hand simulator on full WC corpus ──
-  // With broader log filter + GK 4× scaling applied, team FP distribution is:
-  // P25=141, Median=171, P75=204, P90=236, P99=370. Thresholds chosen to land
-  // at spec hit-rate targets:
+  // ── Win tiers — calibrated against 10k-hand simulator on 2022 pool ──────
+  // Pool: 622 players, 1623 logs (2022 WC squads only). GK 2.5× scaling.
+  // Team FP distribution: P25=114, Median=140, P75=168, P90=199, P99=282.
+  // Thresholds chosen to land at spec hit-rate targets:
   //   SUB     ~25% (≈ P75)
   //   STARTER ~12% (≈ P88)
   //   CAPTAIN ~5%  (≈ P95)
   //   MOTM    ~1.5% (≈ P98.5)
   //   LEGEND  ~0.3% (≈ P99.7)
-  // Multipliers calibrated to land EV in TARGET ZONE (0.78–0.92): 0.875 / 0.898
-  // with streak bumps. Re-run simulator after the player-pool lockdown.
+  // Multipliers carry over from prior calibration round; re-tuned if EV
+  // drifts outside TARGET ZONE (0.78–0.92).
   winTiers: [
-    { name: "SUB",      minFp: 205, multiplier: 0.75, color: "#94A3B8" },
-    { name: "STARTER",  minFp: 230, multiplier: 2,    color: "#10B981" },
-    { name: "CAPTAIN",  minFp: 270, multiplier: 5,    color: "#3B82F6" },
-    { name: "MOTM",     minFp: 320, multiplier: 12,   color: "#F59E0B" },
-    { name: "LEGEND",   minFp: 395, multiplier: 75,   color: "#EF4444" },
+    { name: "SUB",      minFp: 168, multiplier: 0.75, color: "#94A3B8" },
+    { name: "STARTER",  minFp: 190, multiplier: 2,    color: "#10B981" },
+    { name: "CAPTAIN",  minFp: 225, multiplier: 5,    color: "#3B82F6" },
+    { name: "MOTM",     minFp: 265, multiplier: 12,   color: "#F59E0B" },
+    { name: "LEGEND",   minFp: 310, multiplier: 75,   color: "#EF4444" },
   ],
 
   // ── Badges ────────────────────────────────────────────────────────────────

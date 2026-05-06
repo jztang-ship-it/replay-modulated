@@ -188,6 +188,13 @@ export interface SportConfigShape {
    *  weighted realistically but cumulative FP underperforms outfield
    *  totals without scaling). Basketball/baseball omit. */
   positionMultipliers?: Record<string, number>;
+  /** Optional list of seasons currently in the active player pool. When
+   *  set, the runtime adapter AND the simulator filter players + logs to
+   *  these seasons only. Football ships with ["2022"] at launch (WC '22
+   *  squads, ~622 players, ~1648 logs); 2018 data stays in source files
+   *  but is dormant. Sports with one active season (basketball, baseball)
+   *  omit and see no filter. */
+  activeSeasons?: string[];
   tierThresholds?: Array<{ tier: string; minSalary: number }>;
   statCategories?: readonly string[];
   statDisplay?: Record<string, Array<{ key: string; label: string }>>;

@@ -1,5 +1,5 @@
 /**
- * worldcup/src/adapters/gameAdapter.ts
+ * football/src/adapters/gameAdapter.ts
  * Builds projections from actual scoring logs with _position injected.
  * No multipliers. No shared projectionEngine.
  */
@@ -12,6 +12,42 @@ import { resolveCards } from "../engines/resolveEngine";
 import { salaryFromProjection } from "@shared/engines/economyEngine";
 import { getDailyBonusPlayers, buildDailyBonusMap, type DailyBonusPlayer } from "@shared/utils/dailyBonus";
 import type { PlayerEval, GeneratedCard, RawLog } from "@shared/types";
+
+// ── Active seasons (player pool lockdown) ────────────────────────────────────
+// Filter is sourced from sportAdapter.config.activeSeasons so the simulator
+// (which loads the same config) sees the same pool the runtime does.
+// Filter applies to BOTH players and logs — a held player can only resolve
+// to one of their active-season games.
+
+function getActiveSeasons(): Set<string> {
+  const list = (sportAdapter.config as any).activeSeasons as string[] | undefined;
+  return new Set<string>((list ?? []).map(s => String(s)));
+}
+
+function isActivePlayer(p: any, active: Set<string>): boolean {
+  // No filter set → all seasons pass (legacy behavior for sports that don't
+  // configure activeSeasons).
+  if (active.size === 0) return true;
+  return active.has(String(p?.season ?? ""));
+}
+
+function getActivePlayers(): any[] {
+  const active = getActiveSeasons();
+  if (active.size === 0) return getPlayers();
+  return getPlayers().filter(p => isActivePlayer(p, active));
+}
+
+function getActiveLogsByKey(): Map<string, RawLog[]> {
+  const all = getLogsByKey();
+  const active = getActiveSeasons();
+  if (active.size === 0) return all;
+  const filtered = new Map<string, RawLog[]>();
+  for (const [key, logs] of all.entries()) {
+    const inSeason = logs.filter(l => active.has(String((l as any)?.season ?? "")));
+    if (inSeason.length > 0) filtered.set(key, inSeason);
+  }
+  return filtered;
+}
 
 // ── Validity filter — keep any log where the player actually played ──────────
 // Previously this filtered to "scoring-only logs" (any non-zero scoring stat),
@@ -132,8 +168,8 @@ function buildEvalPool(
 // ── Public API ────────────────────────────────────────────────────────────────
 
 export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
-  const players     = getPlayers();
-  const logsByKey   = getLogsByKey();
+  const players     = getActivePlayers();
+  const logsByKey   = getActiveLogsByKey();
   const scoringLogs = filterValidLogs(logsByKey);
   const evalPool    = buildEvalPool(players, scoringLogs);
 
@@ -155,8 +191,8 @@ export async function redrawRoster({
   currentCards:  PlayerCard[];
   lockedCardIds: Set<string>;
 }): Promise<{ roster: PlayerCard[] }> {
-  const players     = getPlayers();
-  const logsByKey   = getLogsByKey();
+  const players     = getActivePlayers();
+  const logsByKey   = getActiveLogsByKey();
   const scoringLogs = filterValidLogs(logsByKey);
   const evalPool    = buildEvalPool(players, scoringLogs);
 
@@ -188,7 +224,7 @@ export async function resolveRoster({
 }: {
   finalCards: PlayerCard[];
 }): Promise<{ roster: PlayerCard[]; mvpCardId?: string }> {
-  const logsByKey   = getLogsByKey();
+  const logsByKey   = getActiveLogsByKey();
   const scoringLogs = filterValidLogs(logsByKey);
   const rnd         = mulberry32(randomSeed());
 
@@ -208,8 +244,8 @@ export async function resolveRoster({
 /** Build the football bonus pool — players with scoring logs, shaped as the
  *  `{ basePlayerId, name, tier }` rows consumed by getDailyBonusPlayers. */
 function buildBonusPool(): Array<{ basePlayerId: string; name: string; tier: string }> {
-  const players      = getPlayers();
-  const logsByKey    = getLogsByKey();
+  const players      = getActivePlayers();
+  const logsByKey    = getActiveLogsByKey();
   const scoring      = filterValidLogs(logsByKey);
   const projByBaseId = buildProjectionsFromLogs(players, scoring);
 

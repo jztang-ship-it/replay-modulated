@@ -166,9 +166,24 @@ async function main() {
   if (!playersFile || !logsFile) { console.error("Could not find data files"); process.exit(1); }
   console.log("Players: " + playersFile + "\nLogs: " + logsFile + "\n");
 
-  const players: any[] = JSON.parse(fs.readFileSync(playersFile, "utf8"));
-  const rawLogs: any[] = JSON.parse(fs.readFileSync(logsFile, "utf8"));
-  console.log("Loaded " + players.length + " players, " + rawLogs.length + " logs");
+  const allPlayers: any[] = JSON.parse(fs.readFileSync(playersFile, "utf8"));
+  const allRawLogs: any[] = JSON.parse(fs.readFileSync(logsFile, "utf8"));
+
+  // Apply active-seasons filter from config so the simulator sees the same
+  // pool the runtime does. Sports without activeSeasons configured see no
+  // filter (full pool). Football: ["2022"] — drops 2018 squads + their logs.
+  const activeSeasons = (config as any).activeSeasons as string[] | undefined;
+  const players: any[] = activeSeasons?.length
+    ? allPlayers.filter(p => activeSeasons.includes(String(p?.season ?? "")))
+    : allPlayers;
+  const rawLogs: any[] = activeSeasons?.length
+    ? allRawLogs.filter(l => activeSeasons.includes(String(l?.season ?? "")))
+    : allRawLogs;
+  if (activeSeasons?.length) {
+    console.log(`Active seasons: ${activeSeasons.join(", ")} → ${players.length}/${allPlayers.length} players, ${rawLogs.length}/${allRawLogs.length} logs`);
+  } else {
+    console.log("Loaded " + players.length + " players, " + rawLogs.length + " logs");
+  }
 
   const logMap = new Map<string, any[]>();
   for (const log of rawLogs) {
