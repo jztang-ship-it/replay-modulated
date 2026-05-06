@@ -43,58 +43,34 @@ import { resolvePlayerImage } from "@shared/media/playerImages";
 import { getExternalIds } from "../data/playerImageManifest";
 
 // ── Football headshot tuning ───────────────────────────────────────────────
-// API-Football headshots are studio shots on a white background. Two
-// presentations live here based on whether the image has been alpha-cut
-// by football/scripts/processPlayerImages.mjs:
+// API-Football headshots are studio shots on a white background. The
+// preprocessing script (football/scripts/processPlayerHeadshots.mjs)
+// alpha-cuts that white background into transparency so the card's tier
+// color shows through behind the player. With a real alpha channel in the
+// PNG, we don't need any CSS tricks — no mask, no blend mode, no filter.
+// Same simple positioning that basketball uses on its NBA headshots, which
+// also have transparent backgrounds.
 //
-//   PROCESSED (preferred, default for cached players):
-//     The image is already transparent where the white bg used to be —
-//     the tier color shows through naturally. Simple positioning, no mask
-//     gymnastics, looks closest to basketball.
+// CSS values that control face crop:
+//   HEADSHOT_WIDTH_PCT      width as % of hero container (face zoom)
+//   HEADSHOT_HEIGHT_PCT     height as % of hero container
+//   HEADSHOT_LEFT_PCT       left offset (re-center after width scale)
+//   HEADSHOT_TOP_PCT        top offset (re-center after height scale)
+//   HEADSHOT_OBJECT_Y       object-position Y (face vertical placement
+//                           within the cropped frame; smaller = higher)
 //
-//   RAW (fallback for un-processed local images or uncached CDN fetches):
-//     The white bg is still there. We use aggressive scale-up + radial
-//     mask + edge gradients to push it out of sight. Less clean than
-//     processed but acceptable as a transitional state.
-//
-// All knobs are named constants so visual iteration is one-edit-and-reload.
-//
-// Tweak guide:
-//   Face too SMALL?           → bump WIDTH_PCT (e.g. 110 → 120 processed,
-//                                                  130 → 140 raw)
-//   Face too ZOOMED?          → drop WIDTH_PCT
-//   Face too LOW in card?     → drop OBJECT_Y (e.g. 14 → 10)
-//   Face too HIGH (forehead   → bump OBJECT_Y (e.g. 14 → 24)
-//     getting cropped)
-//   RAW: white edges leaking? → shrink radial mask (RAW_RADIAL_INNER 52 → 40
-//                                or RAW_RADIAL_ELLIPSE_W 78 → 70)
-//   Bottom feels too dark     → drop BOTTOM_FADE_END (0.78 → 0.55)
+// Tweak quick-reference:
+//   Face too SMALL  → bump HEADSHOT_WIDTH_PCT (e.g. 112 → 122)
+//   Face too BIG    → drop HEADSHOT_WIDTH_PCT (e.g. 112 → 100)
+//   Face too LOW    → drop HEADSHOT_OBJECT_Y (e.g. 14 → 8)
+//   Face too HIGH   → bump HEADSHOT_OBJECT_Y (e.g. 14 → 22)
+//   Forehead crop?  → drop HEADSHOT_OBJECT_Y, or pad HEADSHOT_TOP_PCT (-4 → 0)
 
-// PROCESSED (alpha-cut) — clean, basketball-style positioning.
-const PROC_WIDTH_PCT = 112;
-const PROC_HEIGHT_PCT = 108;
-const PROC_LEFT_PCT = -6;
-const PROC_TOP_PCT = -4;
-const PROC_OBJECT_Y = 14;
-
-// RAW (white-bg) — aggressive scale + radial mask to push white off-frame.
-const RAW_WIDTH_PCT = 130;
-const RAW_HEIGHT_PCT = 115;
-const RAW_LEFT_PCT = -15;
-const RAW_TOP_PCT = -5;
-const RAW_OBJECT_Y = 22;
-const RAW_RADIAL_ELLIPSE_W = 78;
-const RAW_RADIAL_ELLIPSE_H = 92;
-const RAW_RADIAL_CENTER_Y = 38;
-const RAW_RADIAL_INNER = 52;
-const RAW_TOP_FADE_START = 0.30;
-
-// Bottom nameplate fade — applied to BOTH variants so the photo blends
-// into the salary/name strip below.
-const BOTTOM_FADE_START = 50;
-const BOTTOM_FADE_END = 0.78;
-
-const RAW_HEADSHOT_MASK = `radial-gradient(ellipse ${RAW_RADIAL_ELLIPSE_W}% ${RAW_RADIAL_ELLIPSE_H}% at 50% ${RAW_RADIAL_CENTER_Y}%, rgba(0,0,0,1) ${RAW_RADIAL_INNER}%, rgba(0,0,0,0) 100%)`;
+const HEADSHOT_WIDTH_PCT = 112;
+const HEADSHOT_HEIGHT_PCT = 108;
+const HEADSHOT_LEFT_PCT = -6;
+const HEADSHOT_TOP_PCT = -4;
+const HEADSHOT_OBJECT_Y = 14;
 
 function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
   const team = String((card as any).team ?? "");
@@ -103,36 +79,34 @@ function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
   const basePlayerId = String((card as any).basePlayerId ?? "");
 
   // Resolve image URL (no API call — manifest lookup + URL construction).
-  // Prefer card.externalIds if the data layer attached them; else fall
-  // back to the static manifest. The merge order means a roster card
-  // built with externalIds populated wins over the manifest, which is
-  // what we want for future per-card overrides.
+  // Resolution order: processed (alpha-cut) → raw local mirror → API CDN
+  // → null (no image, render flag + initials fallback).
   const cardExternalIds = (card as any).externalIds;
   const externalIds = cardExternalIds ?? getExternalIds(basePlayerId);
   const resolved = resolvePlayerImage({ sport: "football", playerId: basePlayerId, externalIds });
   const imgSrc = resolved.confidence !== "fallback" ? resolved.src : null;
-  const isProcessed = resolved.source === "local-cache-processed";
 
-  // Local state: when an <img> errors, hide it so the flag+initials
-  // fallback (rendered conditionally below) becomes visible.
+  // Local state: when an <img> errors (network failure, 404), hide it so
+  // the flag + initials fallback below becomes visible.
   const [imgFailed, setImgFailed] = React.useState(false);
   const showImage = imgSrc != null && !imgFailed;
 
   return (
     <>
-      {/* Layer 1: Faded flag silhouette — always rendered as the deepest
-          fallback so the card never appears empty during slow loads. */}
+      {/* Layer 1: very-faded flag silhouette behind everything. Acts as a
+          subtle visual context (you can see which country the card is
+          for) and as the deepest fallback if absolutely nothing else
+          renders. Doesn't interfere with the headshot above. */}
       <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", pointerEvents: "none" }}>
-        <div style={{ fontSize: 72, lineHeight: 1, opacity: 0.18, transform: "scale(1.4) translateY(-8px)", filter: "blur(2px)", userSelect: "none" }}>
+        <div style={{ fontSize: 72, lineHeight: 1, opacity: 0.16, transform: "scale(1.4) translateY(-8px)", userSelect: "none" }}>
           {flag}
         </div>
       </div>
 
-      {/* Layer 2: Flag + initials — only when no headshot is shown. We
-          render this conditionally (not always-on underneath) so it
-          doesn't fight the headshot's mask edges with text strokes that
-          would peek through. Unmanifested players see this directly;
-          manifested players see only the headshot. */}
+      {/* Layer 2: flag + initials — fallback for unmanifested players or
+          when the image fails to load. NOT rendered when an image is
+          present (no z-index fights, no peeking text strokes). Stays
+          fully clean on flag-only cards. */}
       {!showImage && (
         <div
           style={{
@@ -147,12 +121,12 @@ function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
         </div>
       )}
 
-      {/* Layer 3: Headshot. Two presentations:
-          - PROCESSED (alpha-cut): no mask, modest scale — tier color shows
-            through the now-transparent background naturally.
-          - RAW (still has white-bg): aggressive scale + radial mask to
-            push white off-frame and feather what's left. */}
-      {showImage && (isProcessed ? (
+      {/* Layer 3: headshot. Bare-minimum styling — same shape basketball
+          uses. No mask, no blend mode, no filter, no contrast/saturation
+          adjustments. The processed PNG has the right alpha channel so
+          the card's tier-color gradient shows through behind the player
+          naturally. */}
+      {showImage && (
         <img
           key={imgSrc}
           src={imgSrc!}
@@ -161,61 +135,26 @@ function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
           draggable={false}
           style={{
             position: "absolute",
-            top: `${PROC_TOP_PCT}%`,
-            left: `${PROC_LEFT_PCT}%`,
-            width: `${PROC_WIDTH_PCT}%`,
-            height: `${PROC_HEIGHT_PCT}%`,
+            top: `${HEADSHOT_TOP_PCT}%`,
+            left: `${HEADSHOT_LEFT_PCT}%`,
+            width: `${HEADSHOT_WIDTH_PCT}%`,
+            height: `${HEADSHOT_HEIGHT_PCT}%`,
             objectFit: "cover",
-            objectPosition: `50% ${PROC_OBJECT_Y}%`,
-            filter: "contrast(1.04) saturate(1.05)",
+            objectPosition: `50% ${HEADSHOT_OBJECT_Y}%`,
             opacity, transition: "opacity 0.3s ease",
             pointerEvents: "none",
-          }}
-        />
-      ) : (
-        <img
-          key={imgSrc}
-          src={imgSrc!}
-          alt={String((card as any).name ?? "")}
-          onError={() => setImgFailed(true)}
-          draggable={false}
-          style={{
-            position: "absolute",
-            top: `${RAW_TOP_PCT}%`,
-            left: `${RAW_LEFT_PCT}%`,
-            width: `${RAW_WIDTH_PCT}%`,
-            height: `${RAW_HEIGHT_PCT}%`,
-            objectFit: "cover",
-            objectPosition: `50% ${RAW_OBJECT_Y}%`,
-            maskImage: RAW_HEADSHOT_MASK,
-            WebkitMaskImage: RAW_HEADSHOT_MASK,
-            filter: "contrast(1.06) saturate(1.06)",
-            opacity, transition: "opacity 0.3s ease",
-            pointerEvents: "none",
-          }}
-        />
-      ))}
-
-      {/* Layer 4: Top fade — only when raw (un-processed) image is shown.
-          Smooths the photo into the tier-color background at the top edge.
-          Processed images don't need this since their alpha already
-          handles the transition. */}
-      {showImage && !isProcessed && (
-        <div
-          style={{
-            position: "absolute", top: 0, left: 0, right: 0, height: "30%",
-            pointerEvents: "none",
-            background: `linear-gradient(to bottom, rgba(0,0,0,${RAW_TOP_FADE_START}) 0%, rgba(0,0,0,0) 100%)`,
           }}
         />
       )}
 
-      {/* Layer 5: Bottom fade — always rendered, regardless of whether
-          the image is showing. Smooths into the nameplate area below. */}
+      {/* Layer 4: subtle bottom fade — only enough to soften the
+          transition from photo into the salary/name strip below. NOT
+          full-card-height, NOT layered over the face. */}
       <div
         style={{
-          position: "absolute", inset: 0, pointerEvents: "none",
-          background: `linear-gradient(to bottom, rgba(0,0,0,0) ${BOTTOM_FADE_START}%, rgba(0,0,0,${BOTTOM_FADE_END}) 100%)`,
+          position: "absolute", left: 0, right: 0, bottom: 0, height: "32%",
+          pointerEvents: "none",
+          background: "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.40) 100%)",
         }}
       />
     </>

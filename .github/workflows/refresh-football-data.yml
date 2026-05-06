@@ -107,7 +107,7 @@ jobs:
         run: |
           # Runs idempotently — only processes PNGs that don't already
           # have a counterpart in players-processed/. Cheap on no-op runs.
-          node football/scripts/processPlayerImages.mjs
+          node football/scripts/processPlayerHeadshots.mjs
 
       - name: Detect changes
         id: changes
