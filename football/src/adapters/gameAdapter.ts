@@ -13,7 +13,15 @@ import { salaryFromProjection } from "@shared/engines/economyEngine";
 import { getDailyBonusPlayers, buildDailyBonusMap, type DailyBonusPlayer } from "@shared/utils/dailyBonus";
 import { preloadPlayerImages } from "@shared/media/playerImages";
 import { getExternalIds } from "../data/playerImageManifest";
+import { isSlateV2Enabled } from "@shared/featureFlags";
+import { getDealPool } from "@shared/utils/dealGate";
+import { SessionRepeatLimit, DEFAULT_REPEAT_LIMIT } from "@shared/utils/sessionRepeatLimit";
+import { getCachedSlate } from "@shared/utils/slateSelector";
 import type { PlayerEval, GeneratedCard, RawLog } from "@shared/types";
+
+// Module-level repeat-limit window. Resets implicitly on full-page reload
+// (no persistence). Off-by-default — only applies when slate v2 flag is ON.
+const repeatLimit = new SessionRepeatLimit();
 
 // ── Active seasons (player pool lockdown) ────────────────────────────────────
 // Filter is sourced from sportAdapter.config.activeSeasons so the simulator
@@ -180,9 +188,21 @@ function attachExternalIds(cards: any[]): any[] {
 }
 
 export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
-  const players     = getActivePlayers();
+  const seasonFiltered = getActivePlayers();
   const logsByKey   = getActiveLogsByKey();
   const scoringLogs = filterValidLogs(logsByKey);
+
+  // Slate v2 gate (no-op when feature flag is OFF — returns input unchanged).
+  // Each player needs basePlayerId for the gate; ensure normalized.
+  const slatePool = getDealPool(
+    sportAdapter as any,
+    seasonFiltered.map((p: any) => ({ ...p, basePlayerId: String(p.basePlayerId ?? p.id ?? "").trim() })),
+  );
+  // Repeat limit — sliding window with pool-floor relaxation (no-op on first deal).
+  const players = isSlateV2Enabled("football")
+    ? repeatLimit.filter(slatePool, DEFAULT_REPEAT_LIMIT)
+    : slatePool;
+
   const evalPool    = buildEvalPool(players, scoringLogs);
 
   const rnd = mulberry32(randomSeed());
@@ -194,6 +214,15 @@ export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
 
   const cards = generateRoster(evalPool, rosterConfig, sportAdapter.economyConfig, rnd);
   const enriched = attachExternalIds(cards);
+
+  // Record drawn cards for the repeat-limit window (slate ON only).
+  if (isSlateV2Enabled("football")) {
+    repeatLimit.record(
+      enriched.map((c: any) => String(c.basePlayerId ?? "")).filter(Boolean),
+      DEFAULT_REPEAT_LIMIT,
+    );
+  }
+
   // Fire-and-forget: warm browser cache for any cards with API-Football IDs.
   // No-op on server. Errors swallowed inside preloadPlayerImages.
   preloadPlayerImages(enriched, "football");
@@ -207,9 +236,19 @@ export async function redrawRoster({
   currentCards:  PlayerCard[];
   lockedCardIds: Set<string>;
 }): Promise<{ roster: PlayerCard[] }> {
-  const players     = getActivePlayers();
+  const seasonFiltered = getActivePlayers();
   const logsByKey   = getActiveLogsByKey();
   const scoringLogs = filterValidLogs(logsByKey);
+
+  // Slate v2 gate + repeat-limit (no-op when feature flag is OFF).
+  const slatePool = getDealPool(
+    sportAdapter as any,
+    seasonFiltered.map((p: any) => ({ ...p, basePlayerId: String(p.basePlayerId ?? p.id ?? "").trim() })),
+  );
+  const players = isSlateV2Enabled("football")
+    ? repeatLimit.filter(slatePool, DEFAULT_REPEAT_LIMIT)
+    : slatePool;
+
   const evalPool    = buildEvalPool(players, scoringLogs);
 
   const heldSlots = new Set<number>();
@@ -233,6 +272,15 @@ export async function redrawRoster({
     rnd,
   );
   const enriched = attachExternalIds(cards);
+
+  // Record drawn cards for the repeat-limit window (slate ON only).
+  if (isSlateV2Enabled("football")) {
+    repeatLimit.record(
+      enriched.map((c: any) => String(c.basePlayerId ?? "")).filter(Boolean),
+      DEFAULT_REPEAT_LIMIT,
+    );
+  }
+
   preloadPlayerImages(enriched, "football");
   return { roster: enriched as unknown as PlayerCard[] };
 }
@@ -267,7 +315,7 @@ function buildBonusPool(): Array<{ basePlayerId: string; name: string; tier: str
   const scoring      = filterValidLogs(logsByKey);
   const projByBaseId = buildProjectionsFromLogs(players, scoring);
 
-  return players
+  const allBonusEligible = players
     .filter(p => {
       const id = String(p.basePlayerId ?? p.id ?? "").trim();
       return id && projByBaseId.has(id);
@@ -277,6 +325,14 @@ function buildBonusPool(): Array<{ basePlayerId: string; name: string; tier: str
       name:         String(p.name ?? ""),
       tier:         sportAdapter.normalizeTier(p.tier ?? "WHITE"),
     }));
+
+  // When slate v2 is ON for football, restrict bonus picks to today's slate
+  // so bonus players are guaranteed drawable.
+  if (isSlateV2Enabled("football")) {
+    const slateIds = new Set(getCachedSlate(sportAdapter as any, new Date()));
+    return allBonusEligible.filter(p => slateIds.has(p.basePlayerId));
+  }
+  return allBonusEligible;
 }
 
 /** Today's daily bonus stars for the football GameBar legend. */

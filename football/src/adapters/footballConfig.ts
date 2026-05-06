@@ -129,6 +129,23 @@ export const FootballSportConfig: SportConfigShape = {
   // this list is the single switch that scopes which seasons are live.
   activeSeasons: ["2022"],
 
+  // ── Slate v2 — daily rotating slate (flag-gated, OFF by default) ────────
+  // When VITE_FEATURE_SLATE_V2_FOOTBALL=1, the eligible pool collapses
+  // from the full 2022 squads (~622 players) to a curated daily slate
+  // (~50 players: 10 anchors always present + 40 weighted rotators).
+  // Until the flag flips, these fields are inert — the runtime falls
+  // through to the full activeSeasons pool.
+  //
+  // CALIBRATION CAVEAT: today's win-tier thresholds + multipliers are
+  // tuned for the full 622-player pool. Enabling the slate flag for
+  // football REQUIRES a re-calibration pass via:
+  //   cd football && npx ts-node ../shared/tools/runSimulator.ts 10000 --slate-v2
+  // …and updating winTiers above with the resulting hit-rate distribution.
+  slateSize: 50,         // 5 hand slots × 10 (matches baseball's ratio)
+  anchorCount: 10,       // top-10 always present
+  weightExponent: 1.0,   // linear career-FP weighting; raise for star bias
+  exclusionList: [] as string[],  // populated during data audit; safe default
+
   // ── Tier thresholds (salary-based) ────────────────────────────────────────
   tierThresholds: [
     { tier: "ORANGE", minSalary: 52 },

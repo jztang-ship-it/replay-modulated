@@ -31,6 +31,8 @@ import {
   redrawFTUERoster,
   resolveFTUERoster,
 } from "../adapters/ftueRoster";
+import { isSlateV2Enabled } from "@shared/featureFlags";
+import { FootballSlateChip } from "../components/FootballSlatePanel";
 
 // ── Tier gauge thresholds — football-specific FP cutoffs ──────────────────────
 // Display names: SUB / STARTER / CAPTAIN / MOTM / LEGEND
@@ -191,6 +193,10 @@ export default function GameView() {
     ftueTextConfig: FOOTBALL_FTUE_CONFIG,
     // PostHandSheet — football does not surface this overlay.
     audioBedSrc: null,
+    // Slate v2 in-game chip — only mounts when the football flag is ON.
+    // SlateChipComponent stays undefined when the flag is OFF, and the
+    // shared GameView's conditional render skips the chip entirely.
+    SlateChipComponent: isSlateV2Enabled("football") ? FootballSlateChip : undefined,
   }), []);
 
   return <SharedGameView adapter={adapter} />;
