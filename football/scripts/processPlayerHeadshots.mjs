@@ -1,5 +1,5 @@
 /**
- * football/scripts/processPlayerImages.mjs
+ * football/scripts/processPlayerHeadshots.mjs
  *
  * Removes white/near-white backgrounds from API-Football headshots so the
  * card's tier color shows through instead of a hard white rectangle.
@@ -7,43 +7,59 @@
  * Reads:  football/public/players/<basePlayerId>.png       (originals)
  * Writes: football/public/players-processed/<basePlayerId>.png  (alpha-cut)
  *
- * For each PNG:
- *   1. Loaded as RGBA via sharp.
- *   2. Each pixel where R > THRESHOLD AND G > THRESHOLD AND B > THRESHOLD is
- *      flagged "background" (white/off-white).
- *   3. A binary mask is built (0 = bg, 255 = subject).
- *   4. The mask is feathered with a small gaussian blur for soft edges so the
- *      cutout doesn't look jagged at the silhouette.
- *   5. The blurred mask is written back as the image's alpha channel.
- *   6. PNG is saved into the players-processed directory.
+ * Background detection (per pixel):
+ *   A pixel is treated as background if EITHER:
+ *     1. R > RGB_THRESHOLD AND G > RGB_THRESHOLD AND B > RGB_THRESHOLD
+ *        (catches pure white and very near-white)
+ *     2. brightness > BRIGHT_THRESHOLD AND saturation < SAT_THRESHOLD
+ *        (catches off-white / light-grey studio backgrounds that the
+ *        first check misses, while preserving colorful skin/fabric pixels)
+ *   Brightness here is max(R,G,B), saturation is HSV-style:
+ *     sat = (max - min) / max * 100   (0–100 scale)
  *
- * Originals are NEVER overwritten — players/ is the source-of-truth backup,
- * players-processed/ is the alpha-cut output.
+ *   Why both checks: high-RGB alone misses light-grey backgrounds (e.g.
+ *   180/180/180 — clearly background but R/G/B not > 225). The brightness
+ *   + saturation check covers those without affecting saturated colors
+ *   like skin tones (which sit around saturation 30-50) or jersey colors
+ *   (saturation 60+).
+ *
+ * Pipeline per PNG:
+ *   1. Load as RGBA via sharp.
+ *   2. Build a binary mask: 0 for background pixels, 255 for subject.
+ *   3. Light gaussian-blur the mask for soft anti-aliased edges.
+ *   4. Write the blurred mask back as the image's alpha channel.
+ *   5. Save into football/public/players-processed/.
+ *
+ * Originals are NEVER overwritten — players/ is the source-of-truth
+ * backup, players-processed/ is the alpha-cut output.
  *
  * Usage:
- *   node football/scripts/processPlayerImages.mjs                 # process new only
- *   node football/scripts/processPlayerImages.mjs --force         # re-process all
- *   node football/scripts/processPlayerImages.mjs --dry-run       # preview only
- *   node football/scripts/processPlayerImages.mjs --threshold=230 # tune cutoff
- *   node football/scripts/processPlayerImages.mjs --feather=3     # softer edges
+ *   node football/scripts/processPlayerHeadshots.mjs                 # new only
+ *   node football/scripts/processPlayerHeadshots.mjs --force         # re-process all
+ *   node football/scripts/processPlayerHeadshots.mjs --dry-run       # preview
+ *   node football/scripts/processPlayerHeadshots.mjs --rgb=220       # tune RGB cutoff
+ *   node football/scripts/processPlayerHeadshots.mjs --bright=220    # tune brightness cutoff
+ *   node football/scripts/processPlayerHeadshots.mjs --sat=25        # tune saturation cutoff
+ *   node football/scripts/processPlayerHeadshots.mjs --feather=2     # tune edge softness
  *
- * Threshold tuning:
- *   - 235 (default): conservative — only true white pixels go transparent.
- *     Safe but might leave a faint grey halo around heads.
- *   - 220: medium — catches off-white and very-light-grey studio backgrounds.
- *     Best for most API-Football images.
- *   - 200: aggressive — also catches light shadows. Risk: skin highlights
- *     (foreheads, cheeks under bright light) start fading.
+ * Tuning:
+ *   --rgb (default 225)
+ *     Pure-white catch. Higher = stricter (only true white). Lower = also
+ *     catches light off-whites at the cost of possibly fading bright skin
+ *     highlights (foreheads, cheeks under direct light).
+ *   --bright (default 220) + --sat (default 25)
+ *     Off-white / grey-bg catch. Pixels brighter than --bright AND less
+ *     saturated than --sat become transparent. Skin tones sit around
+ *     sat 30-50 so are safe. Jersey colors sit higher.
+ *     If grey halos remain → drop --bright a bit.
+ *     If skin highlights fade → raise --bright.
+ *   --feather (default 2)
+ *     Gaussian blur radius on the alpha mask. 0 = hard edge (possibly
+ *     jagged). 2 = clean anti-aliased edge. 4+ = visibly soft halo.
  *
- * Feather tuning:
- *   - 0: hard edge, possibly jagged/aliased.
- *   - 2 (default): subtle anti-alias, looks smooth at card scale.
- *   - 4-6: visibly soft halo around the player.
- *
- * Updates the manifest's `processed: true` flag for each image successfully
- * processed, so the runtime resolver can pick the alpha-cut version. Reads
- * existing manifest, preserves apiFootballId + local fields untouched, only
- * adds/maintains the processed flag.
+ * Updates the manifest's `processed: true` flag for each image
+ * successfully processed, so the runtime resolver can pick the alpha-cut
+ * version. Preserves apiFootballId + local fields untouched.
  */
 
 import sharp from "sharp";
@@ -61,7 +77,9 @@ const argMap = new Map(
 );
 const opt = (k, fallback) => argMap.get(k) ?? fallback;
 
-const THRESHOLD = parseInt(opt("--threshold", "235"), 10);
+const RGB_THRESHOLD = parseInt(opt("--rgb", opt("--threshold", "225")), 10);
+const BRIGHT_THRESHOLD = parseInt(opt("--bright", "220"), 10);
+const SAT_THRESHOLD = parseInt(opt("--sat", "25"), 10);
 const FEATHER = parseFloat(opt("--feather", "2"));
 const FORCE = argMap.has("--force");
 const DRY_RUN = argMap.has("--dry-run");
@@ -72,11 +90,12 @@ const outputDir = resolvePath(__dirname, "../public/players-processed");
 const manifestPath = resolvePath(__dirname, "../src/data/playerImageManifest.ts");
 
 console.log("─".repeat(60));
-console.log(`Threshold:  R/G/B all > ${THRESHOLD} → transparent`);
-console.log(`Feather:    ${FEATHER}px gaussian blur on alpha mask`);
-console.log(`Mode:       ${DRY_RUN ? "DRY RUN" : "WRITE"}${FORCE ? " (force re-process)" : ""}`);
-console.log(`Input:      ${inputDir}`);
-console.log(`Output:     ${outputDir}`);
+console.log(`RGB threshold:    R/G/B all > ${RGB_THRESHOLD} → transparent`);
+console.log(`Bright+Sat:       brightness > ${BRIGHT_THRESHOLD} AND saturation < ${SAT_THRESHOLD} → transparent`);
+console.log(`Feather:          ${FEATHER}px gaussian blur on alpha mask`);
+console.log(`Mode:             ${DRY_RUN ? "DRY RUN" : "WRITE"}${FORCE ? " (force re-process)" : ""}`);
+console.log(`Input:            ${inputDir}`);
+console.log(`Output:           ${outputDir}`);
 console.log("─".repeat(60));
 
 if (!existsSync(inputDir)) {
@@ -121,8 +140,10 @@ for (const file of files) {
 
     const totalPixels = info.width * info.height;
 
-    // Step 2: build a binary alpha mask. 0 = white-background pixel
-    // (becomes transparent), 255 = subject pixel (stays opaque).
+    // Step 2: build a binary alpha mask. 0 = background pixel (becomes
+    // transparent), 255 = subject pixel (stays opaque).
+    //
+    // Two-rule background detection — see file header for the rationale.
     const mask = Buffer.alloc(totalPixels);
     let bgPixels = 0;
     for (let i = 0; i < totalPixels; i++) {
@@ -130,11 +151,25 @@ for (const file of files) {
       const r = data[offset];
       const g = data[offset + 1];
       const b = data[offset + 2];
-      // Also respect any pre-existing alpha — don't accidentally make a
-      // transparent pixel opaque. (Won't happen on API-Football PNGs, but
-      // safer to gate on the original alpha.)
+      // Respect any pre-existing alpha — don't make transparent pixels opaque.
       const a = data[offset + 3];
-      const isBackground = (r >= THRESHOLD && g >= THRESHOLD && b >= THRESHOLD) || a === 0;
+
+      // Rule 1: high R/G/B (pure-white catch).
+      const ruleRgb = r >= RGB_THRESHOLD && g >= RGB_THRESHOLD && b >= RGB_THRESHOLD;
+
+      // Rule 2: bright AND low-saturation (off-white / light-grey catch).
+      // brightness = max channel; saturation = (max - min) / max * 100.
+      let ruleBrightSat = false;
+      if (!ruleRgb) {
+        const max = r > g ? (r > b ? r : b) : (g > b ? g : b);
+        if (max >= BRIGHT_THRESHOLD) {
+          const min = r < g ? (r < b ? r : b) : (g < b ? g : b);
+          const sat = max === 0 ? 0 : ((max - min) / max) * 100;
+          ruleBrightSat = sat < SAT_THRESHOLD;
+        }
+      }
+
+      const isBackground = ruleRgb || ruleBrightSat || a === 0;
       mask[i] = isBackground ? 0 : 255;
       if (isBackground) bgPixels += 1;
     }
