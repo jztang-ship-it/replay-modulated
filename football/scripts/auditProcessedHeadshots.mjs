@@ -83,7 +83,34 @@ console.log(`Debug output:  ${debugDir}`);
 console.log(`Inspecting:    ${ids.length} players`);
 console.log("─".repeat(72));
 
-const TIER_COLOR_HEX = "#0C6F86"; // BLUE tier — representative dark-saturated card
+// Tier colors lifted from shared/theme/index.ts so the on-cardcolor.png
+// previews match what the actual SPA renders. The runtime `getTier(...)`
+// in shared/theme returns the same hex strings.
+const TIER_COLORS = {
+  RED:    { bg: "#B91C1C", bgEnd: "#F43F5E" },
+  ORANGE: { bg: "#FC7100", bgEnd: "#FFA200" },
+  PURPLE: { bg: "#7E00FF", bgEnd: "#1A0033" },
+  BLUE:   { bg: "#0C6F86", bgEnd: "#00FFD8" },
+  GREEN:  { bg: "#467C00", bgEnd: "#AFFE1E" },
+  WHITE:  { bg: "#1D212D", bgEnd: "#1E222E" },
+};
+
+// Per-player tier overrides, lifted from football's LandingPage demo
+// salaries via the same DEFAULT_ECONOMY_CONFIG cutoffs (RED 73+ / ORANGE
+// 58-72 / PURPLE 44-57 / BLUE 30-43 / GREEN 23-29 / WHITE <23). For any
+// player not in this map the audit falls back to BLUE — explicitly noting
+// "no salary data" — so a maintainer reading the debug image knows the
+// teal they see is the audit default, not the in-game render.
+const PLAYER_TIER = {
+  "5503":  "ORANGE", // Messi salary 60
+  "3009":  "ORANGE", // Mbappé salary 60
+  "5200":  "PURPLE", // Lucas Vázquez salary ~50 (roster)
+  "3245":  "PURPLE", // Lemar
+  "22084": "PURPLE", // Saka salary 53
+  "30714": "BLUE",   // Bellingham salary 37
+  "18395": "PURPLE", // Vinícius salary 47
+  "6909":  "BLUE",   // Emi Martínez (action shot anyway)
+};
 
 for (const id of ids) {
   const inputPath = resolvePath(processedDir, `${id}.png`);
@@ -172,14 +199,32 @@ for (const id of ids) {
     .png()
     .toFile(resolvePath(debugDir, `${id}-checker.png`));
 
-  // ── Visualization 3: composited over the BLUE tier color ──────────────
-  // Approximates what users see in-game.
-  await sharp({
-    create: { width: W, height: H, channels: 3, background: TIER_COLOR_HEX },
-  })
+  // ── Visualization 3: composited over the player's ACTUAL tier color ──
+  // Approximates what users see in-game. Uses a vertical gradient between
+  // the tier's bg and bgEnd hex values, matching CardFront's gradient
+  // exactly (linear-gradient to bottom, bg 0% → bgEnd 70% → bgEnd 100%).
+  const tierKey = PLAYER_TIER[id] ?? "BLUE";
+  const tierColors = TIER_COLORS[tierKey];
+  // Build the gradient as raw RGB.
+  const gradientBuf = Buffer.alloc(W * H * 3);
+  const parseHex = (hex) => [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
+  const [bgR, bgG, bgB] = parseHex(tierColors.bg);
+  const [endR, endG, endB] = parseHex(tierColors.bgEnd);
+  for (let y = 0; y < H; y++) {
+    const t = Math.min(1, y / (H * 0.7));   // bg → bgEnd over top 70%
+    const r = Math.round(bgR + (endR - bgR) * t);
+    const g = Math.round(bgG + (endG - bgG) * t);
+    const b = Math.round(bgB + (endB - bgB) * t);
+    for (let x = 0; x < W; x++) {
+      const off = (y * W + x) * 3;
+      gradientBuf[off] = r; gradientBuf[off + 1] = g; gradientBuf[off + 2] = b;
+    }
+  }
+  await sharp(gradientBuf, { raw: { width: W, height: H, channels: 3 } })
     .composite([{ input: inputPath }])
     .png()
     .toFile(resolvePath(debugDir, `${id}-on-cardcolor.png`));
+  console.log(`  rendered with tier:             ${tierKey}  (${tierColors.bg} → ${tierColors.bgEnd})`);
 }
 
 console.log("\n" + "─".repeat(72));

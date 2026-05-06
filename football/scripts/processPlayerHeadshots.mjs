@@ -54,14 +54,17 @@
  *   --rgb (default 215)
  *     Catches pure white and slight off-white via R/G/B all-above check.
  *     Lower = catches more light tones. Higher = stricter.
- *   --bright (default 210) + --sat (default 45)
- *     Catches light-grey / off-white studio backdrops via brightness +
- *     low-saturation. Together these flag the typical
- *     180-220 light-grey range without flagging skin tones (sat 30-50)
- *     or jersey colors (sat 60+).
- *     If a faint halo remains → drop --bright (210 → 200) or raise --sat
- *     (45 → 60).
- *     If face starts looking patchy on dark cards → raise --bright a bit.
+ *   --bright (default 225) + --sat (default 20)
+ *     Catches off-white / light-grey studio backdrops via brightness +
+ *     low-saturation. STRICT defaults: anything brighter than 225 AND
+ *     less saturated than 20% — only true studio greys. Catches all
+ *     studio-shot backgrounds without flagging colored jerseys (sat
+ *     usually 25+) or skin tones (sat 30-50).
+ *     If a colored studio backdrop is leaving a halo → override per-run
+ *     with --bright=210 --sat=45, but ONLY if the player has no
+ *     edge-touching colored content (e.g. a teal/light-blue jersey that
+ *     reaches the photo edge will get cut into).
+ *     If face looks patchy → raise --bright (225 → 235).
  *   --feather (default 0)
  *     Gaussian blur on the alpha mask. DEFAULT IS 0 because sharp's
  *     blur on a single-channel raw buffer produces horizontal-stripe
@@ -89,8 +92,23 @@ const argMap = new Map(
 const opt = (k, fallback) => argMap.get(k) ?? fallback;
 
 const RGB_THRESHOLD = parseInt(opt("--rgb", opt("--threshold", "215")), 10);
-const BRIGHT_THRESHOLD = parseInt(opt("--bright", "210"), 10);
-const SAT_THRESHOLD = parseInt(opt("--sat", "45"), 10);
+// Default --bright=225 / --sat=20 is INTENTIONALLY STRICT.
+//
+// Earlier defaults (--bright=210 --sat=45) were too loose: light-blue
+// jerseys (e.g. Bellingham's England kit at ~140/200/230 → brightness
+// 230, saturation 39%) qualified as background candidates. When such a
+// jersey extended to the photo's bottom edge, the edge-seeded flood-fill
+// would flood through the jersey, cutting holes into the player.
+//
+// Saturation 20 cleanly separates studio backdrops (sat ~5-10) from
+// jersey/skin (sat 25+). Brightness 225 keeps us catching off-white
+// studio greys but not the brighter saturated jersey tones.
+//
+// If a player's photo has a colored studio backdrop AND no edge-touching
+// colored content elsewhere, override per-run with looser values:
+//   --bright=210 --sat=45
+const BRIGHT_THRESHOLD = parseInt(opt("--bright", "225"), 10);
+const SAT_THRESHOLD = parseInt(opt("--sat", "20"), 10);
 // Feather DEFAULT IS 0 — see large note below.
 //
 // Originally we gaussian-blurred the binary alpha mask (0/255) so the
