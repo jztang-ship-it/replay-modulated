@@ -42,6 +42,41 @@ function getFlag(team: string): string { return TEAM_FLAGS[team] ?? "🏳️"; }
 import { resolvePlayerImage } from "@shared/media/playerImages";
 import { getExternalIds } from "../data/playerImageManifest";
 
+// ── Football headshot tuning ───────────────────────────────────────────────
+// API-Football headshots are studio shots on a white background. Basketball's
+// NBA images are transparent-bg, so simple positioning works there but here
+// we'd get a "white rectangle pasted on the card" look if we copied that.
+//
+// The treatment: aggressive scale-up to crop white-bg sides off-frame, plus
+// a radial mask that fades the corners (where white still leaks) into the
+// tier color underneath, plus top + bottom gradient overlays for clean
+// transitions into the card top edge and the nameplate.
+//
+// All knobs are in one place so we can iterate visually without hunting:
+//   Face too SMALL?     → increase HEADSHOT_WIDTH_PCT (e.g. 130 → 140)
+//   Face too ZOOMED?    → decrease HEADSHOT_WIDTH_PCT (e.g. 130 → 118)
+//   Face too LOW?       → decrease HEADSHOT_OBJECT_Y (e.g. 22 → 14)
+//   Face too HIGH?      → increase HEADSHOT_OBJECT_Y (e.g. 22 → 30)
+//   White edges still   → shrink the mask: RADIAL_INNER smaller (50 → 40)
+//                          OR shrink ellipse: RADIAL_ELLIPSE_W (78 → 70)
+//   Too feathered/soft  → loosen mask: RADIAL_INNER larger (50 → 65)
+//   Bottom too dark     → reduce BOTTOM_FADE_END (0.78 → 0.55)
+//   Top edge harsh      → strengthen TOP_FADE_START (0.30 → 0.45)
+const HEADSHOT_WIDTH_PCT = 130;       // image width as % of container
+const HEADSHOT_HEIGHT_PCT = 115;      // image height as % of container
+const HEADSHOT_LEFT_PCT = -15;        // re-center after scale-up
+const HEADSHOT_TOP_PCT = -5;          // small upward nudge
+const HEADSHOT_OBJECT_Y = 22;         // object-position Y — face vertical placement within frame
+const RADIAL_ELLIPSE_W = 78;          // mask ellipse width %
+const RADIAL_ELLIPSE_H = 92;          // mask ellipse height %
+const RADIAL_CENTER_Y = 38;           // mask center Y % from top (face area)
+const RADIAL_INNER = 52;              // % — fully opaque radius
+const TOP_FADE_START = 0.30;          // top overlay alpha at top edge
+const BOTTOM_FADE_START = 50;         // % from top — where bottom fade begins
+const BOTTOM_FADE_END = 0.78;         // bottom overlay alpha at very bottom
+
+const HEADSHOT_MASK = `radial-gradient(ellipse ${RADIAL_ELLIPSE_W}% ${RADIAL_ELLIPSE_H}% at 50% ${RADIAL_CENTER_Y}%, rgba(0,0,0,1) ${RADIAL_INNER}%, rgba(0,0,0,0) 100%)`;
+
 function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
   const team = String((card as any).team ?? "");
   const flag = getFlag(team);
@@ -59,31 +94,43 @@ function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
   const imgSrc = resolved.confidence !== "fallback" ? resolved.src : null;
 
   // Local state: when an <img> errors, hide it so the flag+initials
-  // fallback (always rendered behind) becomes visible.
+  // fallback (rendered conditionally below) becomes visible.
   const [imgFailed, setImgFailed] = React.useState(false);
   const showImage = imgSrc != null && !imgFailed;
 
   return (
     <>
-      {/* Faded flag background — always rendered, serves as image-load fallback */}
-      <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
-        <div style={{ fontSize: 72, lineHeight: 1, opacity: 0.22, transform: "scale(1.4) translateY(-8px)", filter: "blur(1px)", userSelect: "none" }}>
+      {/* Layer 1: Faded flag silhouette — always rendered as the deepest
+          fallback so the card never appears empty during slow loads. */}
+      <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", pointerEvents: "none" }}>
+        <div style={{ fontSize: 72, lineHeight: 1, opacity: 0.18, transform: "scale(1.4) translateY(-8px)", filter: "blur(2px)", userSelect: "none" }}>
           {flag}
         </div>
       </div>
-      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.65) 100%)" }} />
 
-      {/* Flag + initials — always rendered below the image so it shows
-          through during image load and after onError. Hidden behind the
-          image when the image is loaded successfully. */}
-      <div style={{ position: "absolute", top: "28%", left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, opacity, transition: "opacity 0.3s ease" }}>
-        <span style={{ fontSize: 38, lineHeight: 1, filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.6))" }}>{flag}</span>
-        <span style={{ fontSize: 28, fontWeight: 950, letterSpacing: 2, color: "rgba(255,255,255,0.80)", textShadow: "0 4px 16px rgba(0,0,0,0.8)", userSelect: "none" }}>{initials}</span>
-      </div>
+      {/* Layer 2: Flag + initials — only when no headshot is shown. We
+          render this conditionally (not always-on underneath) so it
+          doesn't fight the headshot's mask edges with text strokes that
+          would peek through. Unmanifested players see this directly;
+          manifested players see only the headshot. */}
+      {!showImage && (
+        <div
+          style={{
+            position: "absolute", top: "28%", left: 0, right: 0,
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+            opacity, transition: "opacity 0.3s ease",
+            pointerEvents: "none",
+          }}
+        >
+          <span style={{ fontSize: 38, lineHeight: 1, filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.6))" }}>{flag}</span>
+          <span style={{ fontSize: 28, fontWeight: 950, letterSpacing: 2, color: "rgba(255,255,255,0.80)", textShadow: "0 4px 16px rgba(0,0,0,0.8)", userSelect: "none" }}>{initials}</span>
+        </div>
+      )}
 
-      {/* API-Football headshot — only mounted when a URL resolved.
-          onError flips imgFailed which removes the image and exposes
-          the flag+initials fallback already rendered above. */}
+      {/* Layer 3: API-Football headshot — scaled, masked, color-tuned.
+          objectPosition keeps the face in the upper-mid of the frame
+          regardless of how the original photo was framed. The radial
+          mask softens the corners where the studio white-bg leaks in. */}
       {showImage && (
         <img
           key={imgSrc}
@@ -93,15 +140,41 @@ function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
           draggable={false}
           style={{
             position: "absolute",
-            top: "12%", left: "-5%",
-            width: "110%", height: "100%",
+            top: `${HEADSHOT_TOP_PCT}%`,
+            left: `${HEADSHOT_LEFT_PCT}%`,
+            width: `${HEADSHOT_WIDTH_PCT}%`,
+            height: `${HEADSHOT_HEIGHT_PCT}%`,
             objectFit: "cover",
-            objectPosition: "50% 10%",
+            objectPosition: `50% ${HEADSHOT_OBJECT_Y}%`,
+            maskImage: HEADSHOT_MASK,
+            WebkitMaskImage: HEADSHOT_MASK,
+            filter: "contrast(1.06) saturate(1.06)",
             opacity, transition: "opacity 0.3s ease",
             pointerEvents: "none",
           }}
         />
       )}
+
+      {/* Layer 4: Top fade — only present when an image is shown. Smooths
+          the photo into the tier-color background at the top edge. */}
+      {showImage && (
+        <div
+          style={{
+            position: "absolute", top: 0, left: 0, right: 0, height: "30%",
+            pointerEvents: "none",
+            background: `linear-gradient(to bottom, rgba(0,0,0,${TOP_FADE_START}) 0%, rgba(0,0,0,0) 100%)`,
+          }}
+        />
+      )}
+
+      {/* Layer 5: Bottom fade — always rendered, regardless of whether
+          the image is showing. Smooths into the nameplate area below. */}
+      <div
+        style={{
+          position: "absolute", inset: 0, pointerEvents: "none",
+          background: `linear-gradient(to bottom, rgba(0,0,0,0) ${BOTTOM_FADE_START}%, rgba(0,0,0,${BOTTOM_FADE_END}) 100%)`,
+        }}
+      />
     </>
   );
 }
