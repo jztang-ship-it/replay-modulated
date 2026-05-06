@@ -29,12 +29,21 @@ export interface ExternalIds {
   apiFootballId?: string | number;
   /** TheSportsDB player ID (future fallback for football). */
   theSportsDbId?: string | number;
+  /**
+   * True when the image has been mirrored locally to
+   * football/public/players/{basePlayerId}.png. Set by the nightly
+   * manifest-refresh job. When true the resolver serves the local copy
+   * (immune to API-Football CDN outages) and falls back to the CDN URL
+   * only if the local file 404s.
+   */
+  local?: boolean;
 }
 
 export type ImageSource =
+  | "local-cache"     // shipped with the deploy at /<sport>/players/<id>.png
   | "api-football"
   | "thesportsdb"
-  | "local-fallback";
+  | "local-fallback"; // no image — caller renders sport-specific visual fallback
 
 export type ImageConfidence =
   | "high"      // exact ID match → CDN image expected to load
@@ -69,8 +78,18 @@ export interface ResolveArgs {
 export function resolvePlayerImage(args: ResolveArgs): ResolvedImage {
   const { sport, externalIds } = args;
 
-  // Football: API-Football is the primary CDN. ID-only URL construction.
+  // Football: prefer the locally-mirrored image first (shipped with the
+  // deploy, immune to API-Football CDN outages). Fall through to the
+  // API-Football CDN for entries we haven't downloaded yet, and finally
+  // to the visual fallback when no externalId is known.
   if (sport === "football") {
+    if (externalIds?.local) {
+      return {
+        src: `/football/players/${encodeURIComponent(args.playerId)}.png`,
+        source: "local-cache",
+        confidence: "high",
+      };
+    }
     const id = externalIds?.apiFootballId;
     if (id !== undefined && id !== null && String(id).trim() !== "") {
       return {
@@ -80,7 +99,6 @@ export function resolvePlayerImage(args: ResolveArgs): ResolvedImage {
       };
     }
     // TheSportsDB future-fallback — schema reserved, not yet wired.
-    // When TheSportsDB lookup lands, check externalIds.theSportsDbId here.
 
     return { src: null, source: "local-fallback", confidence: "fallback" };
   }

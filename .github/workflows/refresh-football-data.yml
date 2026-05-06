@@ -1,0 +1,165 @@
+name: Refresh football data
+
+# Nightly manifest + image refresh for the football SPA.
+#
+# What this does (and what it doesn't):
+#   - Runs football/scripts/buildPlayerImageManifest.mjs --max=80 each night
+#   - Resolves up to 80 unmanifested 2022-pool players via API-Football's
+#     /v3/players/profiles search (using the API_FOOTBALL_KEY secret)
+#   - Downloads each matched player's headshot from the API-Football CDN
+#     to football/public/players/<basePlayerId>.png (CDN GETs are free —
+#     they don't count against the 100/day API quota)
+#   - Commits any changes to a long-lived chore/football-data-refresh
+#     branch and opens (or updates) a rolling PR against main
+#
+# Why a rolling PR (not direct-to-main):
+#   A bad regex change in the matcher could otherwise poison main with
+#   wrong-player images. The PR gives you a review surface before merge.
+#   Merge whenever you've got time — there's no urgency. The branch picks
+#   up where it left off the next night.
+#
+# Quota math:
+#   Free tier API-Football: 100 /v3/ requests/day. The script averages
+#   ~1.5 requests per player (initial surname search + occasional first+last
+#   retry). --max=80 caps the worst case at 160 calls; in practice runs
+#   land at 50-100 calls. Image CDN downloads are uncounted.
+#
+# Coverage timeline:
+#   Pool size 622 players, ~70% match rate observed → ~435 expected
+#   confident matches. At 80 lookups/day that's 7-8 days to first full
+#   pass. Repeat runs flush nothing for already-matched entries (FORCE is
+#   off by default), so the script naturally tails off.
+
+on:
+  schedule:
+    # 03:00 UTC daily — well after the API-Football quota reset window.
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      max:
+        description: "Max players to look up this run"
+        required: false
+        default: "80"
+      backfill_images:
+        description: "Backfill images for already-manifested entries (no API calls)"
+        required: false
+        default: "false"
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Configure git identity
+        run: |
+          git config user.name "replaymod-bot"
+          git config user.email "actions@users.noreply.github.com"
+
+      - name: Switch to refresh branch (or create from main)
+        run: |
+          if git ls-remote --exit-code --heads origin chore/football-data-refresh >/dev/null 2>&1; then
+            echo "Branch exists, basing on it"
+            git fetch origin chore/football-data-refresh
+            git checkout -B chore/football-data-refresh origin/chore/football-data-refresh
+            # Pull main into the branch so we never drift behind
+            git merge origin/main --no-edit -m "Merge main into chore/football-data-refresh" || {
+              echo "::error::Merge conflict between chore branch and main. Manual resolution needed."
+              exit 1
+            }
+          else
+            echo "Branch missing, creating from main"
+            git checkout -B chore/football-data-refresh
+          fi
+
+      - name: Run lookup script
+        env:
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+        run: |
+          MAX="${{ github.event.inputs.max || '80' }}"
+          BACKFILL="${{ github.event.inputs.backfill_images || 'false' }}"
+          if [ "$BACKFILL" = "true" ]; then
+            echo "Mode: backfill-images"
+            node football/scripts/buildPlayerImageManifest.mjs --backfill-images
+          else
+            echo "Mode: nightly lookup (max=$MAX)"
+            node football/scripts/buildPlayerImageManifest.mjs --max="$MAX"
+          fi
+
+      - name: Detect changes
+        id: changes
+        run: |
+          if git diff --quiet football/src/data/playerImageManifest.ts football/public/players/; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes — exiting cleanly."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git status --short football/src/data/ football/public/players/
+          fi
+
+      - name: Commit + push
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git add football/src/data/playerImageManifest.ts football/public/players/
+          # Count how many new images and manifest entries were added.
+          NEW_PNGS=$(git diff --cached --diff-filter=A --name-only football/public/players/ | wc -l | tr -d ' ')
+          MANIFEST_DIFF=$(git diff --cached --stat football/src/data/playerImageManifest.ts | tail -1 || echo "")
+          git commit -m "chore(football): nightly data refresh ($(date -u +%Y-%m-%d))
+
+          + $NEW_PNGS new player images
+          $MANIFEST_DIFF
+
+          Auto-generated by .github/workflows/refresh-football-data.yml"
+          git push -u origin chore/football-data-refresh
+
+      - name: Open or update rolling PR
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Open a PR if there isn't one already; otherwise leave the existing
+          # one alone (the new commit was pushed to the same branch above and
+          # will appear in the PR automatically).
+          if gh pr view chore/football-data-refresh --json state --jq '.state' 2>/dev/null | grep -q "OPEN"; then
+            echo "Rolling PR already open — new commit appended."
+          else
+            gh pr create \
+              --title "chore(football): rolling data refresh (nightly bot)" \
+              --body "$(cat <<'EOF'
+          Rolling PR maintained by the nightly **Refresh football data** workflow.
+
+          Each run adds:
+          - up to 80 newly-resolved API-Football player IDs (manifest entries)
+          - the corresponding mirrored images under \`football/public/players/\`
+
+          ## Review tips
+          - Spot-check a few new entries — does the player name in the manifest comment match the API-Football ID's actual player on https://www.api-football.com ?
+          - Image dimensions/quality look fine in \`football/public/players/\`?
+          - Manifest size + repo PNG count growing as expected?
+
+          Merge whenever — there's no urgency. The chore branch picks up where it left off the following night.
+
+          ## Quota
+          - Free-tier API-Football limits: 100 /v3/ calls/day, ~10/min
+          - Script paces at 7s between calls + auto-backoff on 429
+          - Image CDN GETs (media.api-sports.io) are free + uncounted
+          EOF
+          )" \
+              --base main \
+              --head chore/football-data-refresh \
+              --label "chore,automated"
+          fi

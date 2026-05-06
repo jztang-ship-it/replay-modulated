@@ -47,9 +47,10 @@
  *   - Suggest: run nightly with cron until manifest is full, then occasionally
  */
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { resolve as resolvePath, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { Buffer } from "node:buffer";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -76,11 +77,14 @@ const FORCE = argMap.has("--force");
 const DRY_RUN = argMap.has("--dry-run");
 const THRESHOLD = parseInt(opt("--threshold", "8"), 10);
 const SEASONS = String(opt("--seasons", "2022")).split(",").map(s => s.trim());
+const BACKFILL_IMAGES = argMap.has("--backfill-images");
+const SKIP_DOWNLOAD = argMap.has("--skip-download");
 
 // ── Paths ───────────────────────────────────────────────────────────────────
 
 const playersPath = resolvePath(__dirname, "../public/data/players.json");
 const manifestPath = resolvePath(__dirname, "../src/data/playerImageManifest.ts");
+const imagesDir = resolvePath(__dirname, "../public/players");
 
 // ── Load players + existing manifest ────────────────────────────────────────
 
@@ -89,10 +93,19 @@ const players = allPlayers.filter(p => SEASONS.includes(String(p.season)));
 
 const manifestSrc = readFileSync(manifestPath, "utf8");
 const existing = new Map();
-const entryRe = /"(\d+)":\s*\{\s*apiFootballId:\s*(\d+)\s*\}/g;
+// Parse each entry's apiFootballId AND optional `local: true` so re-runs
+// preserve the local-mirror flag. Tolerant to field order.
+const entryRe = /"(\d+)":\s*\{([^}]*)\}/g;
 let m;
 while ((m = entryRe.exec(manifestSrc)) !== null) {
-  existing.set(m[1], { apiFootballId: parseInt(m[2], 10) });
+  const inside = m[2];
+  const idMatch = inside.match(/apiFootballId:\s*(\d+)/);
+  if (!idMatch) continue;
+  const localFlag = /local:\s*true/.test(inside);
+  existing.set(m[1], {
+    apiFootballId: parseInt(idMatch[1], 10),
+    ...(localFlag ? { local: true } : {}),
+  });
 }
 
 console.log("─".repeat(60));
@@ -105,15 +118,54 @@ console.log("─".repeat(60));
 
 // ── Lookup ──────────────────────────────────────────────────────────────────
 
-const todo = players.filter(p => {
+const todo = BACKFILL_IMAGES ? [] : players.filter(p => {
   const id = String(p.basePlayerId ?? p.id);
   return FORCE || !existing.has(id);
 });
-console.log(`Players to lookup this run: ${Math.min(todo.length, MAX)} of ${todo.length} unmanifested\n`);
+if (!BACKFILL_IMAGES) {
+  console.log(`Players to lookup this run: ${Math.min(todo.length, MAX)} of ${todo.length} unmanifested\n`);
+}
 
 const updated = new Map(existing);
 const found = [];
 const noMatch = [];
+
+/**
+ * Download a player headshot from API-Football's CDN to football/public/players/.
+ *
+ * The CDN (media.api-sports.io) is unauthenticated and uncounted against the
+ * /v3/ API quota — these calls are free. Returns true on success (or when
+ * the file already exists locally), false on 404/other failure.
+ *
+ * Why we mirror images: shipping them with the deploy makes the football
+ * SPA self-contained. If API-Football's CDN goes down or changes URL
+ * patterns, our cards still render.
+ */
+async function downloadImage(apiFootballId, basePlayerId) {
+  const localPath = resolvePath(imagesDir, `${basePlayerId}.png`);
+  if (existsSync(localPath)) return true;
+
+  const cdnUrl = `https://media.api-sports.io/football/players/${apiFootballId}.png`;
+  try {
+    const resp = await fetch(cdnUrl);
+    if (!resp.ok) {
+      console.warn(`    ✗ image ${apiFootballId} → HTTP ${resp.status}`);
+      return false;
+    }
+    const buf = Buffer.from(await resp.arrayBuffer());
+    if (buf.length < 200) {
+      // CDN sometimes returns a tiny "no image" placeholder rather than a 404.
+      console.warn(`    ✗ image ${apiFootballId} → too small (${buf.length} bytes), skipping`);
+      return false;
+    }
+    if (!existsSync(imagesDir)) mkdirSync(imagesDir, { recursive: true });
+    writeFileSync(localPath, buf);
+    return true;
+  } catch (err) {
+    console.warn(`    ✗ image ${apiFootballId} → ${err.message}`);
+    return false;
+  }
+}
 
 async function searchProfiles(query, attempt = 0) {
   // API-Football's search field accepts only alphanumerics + spaces.
@@ -241,6 +293,39 @@ function firstAndLastWord(s) {
   return `${parts[0]} ${parts[parts.length - 1]}`;
 }
 
+// --backfill-images: skip the lookup loop entirely; just iterate existing
+// manifest entries and download any image we don't have locally yet. No
+// API-Football /v3/ calls (free CDN GETs only). Use to backfill cached
+// images for entries that were manifested before image-mirroring landed.
+if (BACKFILL_IMAGES) {
+  console.log("\n[BACKFILL-IMAGES] Downloading images for existing manifest entries…");
+  let downloaded = 0;
+  let already = 0;
+  let failed = 0;
+  for (const [basePlayerId, entry] of existing.entries()) {
+    const localPath = resolvePath(imagesDir, `${basePlayerId}.png`);
+    if (existsSync(localPath)) {
+      already += 1;
+      updated.set(basePlayerId, { ...entry, local: true });
+      continue;
+    }
+    process.stdout.write(`  ${basePlayerId} (apiId=${entry.apiFootballId}) → `);
+    const ok = await downloadImage(entry.apiFootballId, basePlayerId);
+    if (ok) {
+      console.log("✓");
+      downloaded += 1;
+      updated.set(basePlayerId, { ...entry, local: true });
+    } else {
+      console.log("(skipped)");
+      failed += 1;
+      updated.set(basePlayerId, entry);
+    }
+    // CDN rate-limits are far looser than the API but throttle anyway.
+    await new Promise(r => setTimeout(r, 200));
+  }
+  console.log(`\n[BACKFILL-IMAGES] downloaded=${downloaded} already-local=${already} failed=${failed}`);
+}
+
 const queriedThisRun = todo.slice(0, MAX);
 let httpCalls = 0;
 
@@ -283,7 +368,12 @@ for (let i = 0; i < queriedThisRun.length; i++) {
   if (best && bestScore >= THRESHOLD) {
     const apiId = best.player.id;
     console.log(`${best.player.name} [${best.player.nationality}] id=${apiId} (score ${bestScore})`);
-    updated.set(id, { apiFootballId: apiId });
+    let local = false;
+    if (!SKIP_DOWNLOAD && !DRY_RUN) {
+      local = await downloadImage(apiId, id);
+      if (local) console.log(`    ✓ image cached → public/players/${id}.png`);
+    }
+    updated.set(id, { apiFootballId: apiId, ...(local ? { local: true } : {}) });
     found.push({ basePlayerId: id, name: ourName, apiId, apiName: best.player.name });
   } else {
     console.log(`no confident match (best score ${bestScore})`);
@@ -308,7 +398,14 @@ if (DRY_RUN) {
   process.exit(0);
 }
 
-if (updated.size === existing.size) {
+// We still need to write when only the `local` flag changed for existing
+// entries (size unchanged but flag flipped). Compare entries deeply.
+const changed = updated.size !== existing.size || [...updated.entries()].some(([k, v]) => {
+  const prev = existing.get(k);
+  if (!prev) return true;
+  return prev.apiFootballId !== v.apiFootballId || !!prev.local !== !!v.local;
+});
+if (!changed) {
   console.log("No changes to write.");
   process.exit(0);
 }
@@ -335,7 +432,9 @@ const manifestBody = [
   ...sortedEntries.map(([k, v]) => {
     const name = playerNameById.get(k) ?? "?";
     const team = teamById.get(k) ?? "?";
-    return `  // ${name} (${team})\n  "${k}": { apiFootballId: ${v.apiFootballId} },`;
+    const fields = [`apiFootballId: ${v.apiFootballId}`];
+    if (v.local) fields.push(`local: true`);
+    return `  // ${name} (${team})\n  "${k}": { ${fields.join(", ")} },`;
   }),
   "};",
   "",
