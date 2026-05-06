@@ -23,26 +23,82 @@
 import type { ExternalIds } from "@shared/media/playerImages";
 
 export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
-  // Lionel Messi (Argentina, FWD) — landing card + FTUE anchor
-  "5503": { apiFootballId: 154 },
-  // Kylian Mbappé (France, FWD) — landing card + FTUE drawn
+  // Kylian Mbappé Lottin (France)
   "3009": { apiFootballId: 278 },
-  // Jude Bellingham (England, MID) — landing card + FTUE drawn
-  "30714": { apiFootballId: 5503 },
-  // Vinícius Jr. (Brazil, FWD) — landing card
-  "18395": { apiFootballId: 19062 },
-  // Bukayo Saka (England, FWD) — landing card
-  "22084": { apiFootballId: 19220 },
-  // Emiliano Martínez (Argentina, GK) — FTUE keeper
-  "6909": { apiFootballId: 33163 },
-  // Marcos Rojo (Argentina, DEF) — FTUE drawn defender
-  "3602": { apiFootballId: 1116 },
-  // Héctor Moreno (Mexico, DEF) — FTUE cold defender
-  "5573": { apiFootballId: 5747 },
-  // Thomas Lemar (France, MID) — FTUE cold midfielder
+  // Hugo Lloris (France)
+  "3099": { apiFootballId: 159 },
+  // Thomas Lemar (France)
   "3245": { apiFootballId: 1095 },
-  // Lucas Vázquez (Spain, FWD) — FTUE cold flex
+  // Jordan Pickford (England)
+  "3468": { apiFootballId: 2932 },
+  // Wayne Hennessey (Wales)
+  "3488": { apiFootballId: 18836 },
+  // Thibaut Courtois (Belgium)
+  "3509": { apiFootballId: 730 },
+  // Faustino Marcos Alberto Rojo (Argentina)
+  "3602": { apiFootballId: 1116 },
+  // Kasper Schmeichel (Denmark)
+  "3815": { apiFootballId: 2728 },
+  // Lucas Vázquez Iglesias (Spain)
   "5200": { apiFootballId: 762 },
+  // Alireza Safar Beiranvand (Iran)
+  "5227": { apiFootballId: 2682 },
+  // Lionel Andrés Messi Cuccittini (Argentina)
+  "5503": { apiFootballId: 154 },
+  // Fabian Lukas Schär (Switzerland)
+  "5537": { apiFootballId: 2806 },
+  // Alisson Ramsés Becker (Brazil)
+  "5547": { apiFootballId: 280 },
+  // Manuel Obafemi Akanji (Switzerland)
+  "5549": { apiFootballId: 5 },
+  // Yann Sommer (Switzerland)
+  "5550": { apiFootballId: 2802 },
+  // Manuel Neuer (Germany)
+  "5570": { apiFootballId: 497 },
+  // Héctor Alfredo Moreno Herrera (Mexico)
+  "5573": { apiFootballId: 5747 },
+  // Filip Kostić (Serbia)
+  "5591": { apiFootballId: 227954 },
+  // Nikola Milenković (Serbia)
+  "5603": { apiFootballId: 2817 },
+  // Wojciech Szczęsny (Poland)
+  "5669": { apiFootballId: 851 },
+  // Mohammed Khalil Al Owais (Saudi Arabia)
+  "5714": { apiFootballId: 44411 },
+  // Nemanja Radonjić (Serbia)
+  "5833": { apiFootballId: 1920 },
+  // Andrija Živković (Serbia)
+  "6318": { apiFootballId: 579 },
+  // Milos Veljkovic (Serbia)
+  "6321": { apiFootballId: 2821 },
+  // Yassine Bounou (Morocco)
+  "6785": { apiFootballId: 2701 },
+  // Damián Emiliano Martínez (Argentina)
+  "6909": { apiFootballId: 33163 },
+  // Silvan Widmer (Switzerland)
+  "7796": { apiFootballId: 48378 },
+  // André Onana (Cameroon)
+  "8064": { apiFootballId: 526 },
+  // Andries Noppert (Netherlands)
+  "8326": { apiFootballId: 31632 },
+  // Milan Borjan (Canada)
+  "15958": { apiFootballId: 336 },
+  // Dominik Livaković (Croatia)
+  "16531": { apiFootballId: 1305 },
+  // Vinícius José Paixão de Oliveira Júnior (Brazil)
+  "18395": { apiFootballId: 19062 },
+  // Vanja Milinković Savić (Serbia)
+  "20600": { apiFootballId: 31156 },
+  // Bukayo Saka (England)
+  "22084": { apiFootballId: 19220 },
+  // Jude Bellingham (England)
+  "30714": { apiFootballId: 5503 },
+  // Diogo Meireles Costa (Portugal)
+  "32975": { apiFootballId: 142706 },
+  // Aymen Dahmen (Tunisia)
+  "105943": { apiFootballId: 49424 },
+  // Meshaal Aissa Barsham (Qatar)
+  "124510": { apiFootballId: 42021 },
 };
 
 /** Look up external IDs for a player. Returns undefined when unmanifested. */

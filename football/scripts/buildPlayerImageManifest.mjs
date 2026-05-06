@@ -115,20 +115,30 @@ const updated = new Map(existing);
 const found = [];
 const noMatch = [];
 
-async function searchProfiles(query) {
-  const url = `https://v3.football.api-sports.io/players/profiles?search=${encodeURIComponent(query)}`;
+async function searchProfiles(query, attempt = 0) {
+  // API-Football's search field accepts only alphanumerics + spaces.
+  // Strip hyphens, periods, apostrophes, etc. that survived diacritic
+  // normalization (e.g. "Seung-Gyu" → "Seung Gyu", "Diogo M. Costa" →
+  // "Diogo M Costa").
+  const cleaned = query.replace(/[^a-zA-Z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+  const url = `https://v3.football.api-sports.io/players/profiles?search=${encodeURIComponent(cleaned)}`;
   const resp = await fetch(url, {
     headers: {
       "x-rapidapi-key": API_KEY,
       "x-rapidapi-host": "v3.football.api-sports.io",
     },
   });
+  // Free-tier rate limit is ~10 req/minute. Back off and retry once on 429.
+  if (resp.status === 429 && attempt === 0) {
+    console.warn(`  HTTP 429: rate-limited, backing off 65s and retrying once…`);
+    await new Promise(r => setTimeout(r, 65_000));
+    return searchProfiles(query, 1);
+  }
   if (!resp.ok) {
     console.warn(`  HTTP ${resp.status}: ${resp.statusText}`);
     return [];
   }
   const data = await resp.json();
-  // API-Football error envelope check
   if (data.errors && Object.keys(data.errors).length > 0) {
     console.warn(`  API errors:`, data.errors);
     return [];
@@ -136,29 +146,92 @@ async function searchProfiles(query) {
   return Array.isArray(data.response) ? data.response : [];
 }
 
-function scoreCandidate(candidate, ourName, ourTeam, ourSurname) {
-  const apiName = String(candidate?.player?.name ?? "");
-  const apiNat = String(candidate?.player?.nationality ?? "");
-  const ourNameLc = ourName.toLowerCase();
-  const apiNameLc = apiName.toLowerCase();
-  const ourTeamLc = ourTeam.toLowerCase();
-  const apiNatLc = apiNat.toLowerCase();
-  const ourSurnameLc = ourSurname.toLowerCase();
+/** Strip Unicode diacritics so API-Football's alphanumeric-only search
+ *  doesn't reject queries like "Milinković" or "Höjbjerg". */
+function normalize(s) {
+  return String(s)
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")  // strip combining diacritical marks
+    .replace(/[ø]/gi, "o")
+    .replace(/[æ]/gi, "ae")
+    .replace(/[ß]/g, "ss")
+    .replace(/[ł]/gi, "l");
+}
 
-  let s = 0;
-  // Full-name substring (either direction)
-  if (apiNameLc.includes(ourNameLc) || ourNameLc.includes(apiNameLc)) s += 10;
-  // Surname-only fallback
-  else if (apiNameLc.includes(ourSurnameLc)) s += 3;
-  // Exact nationality match (case-insensitive)
-  if (apiNatLc === ourTeamLc) s += 5;
-  // Loose nationality fit (e.g. "Argentine" vs "Argentina")
-  else if (apiNatLc.startsWith(ourTeamLc.slice(0, 4)) || ourTeamLc.startsWith(apiNatLc.slice(0, 4))) s += 2;
+function scoreCandidate(candidate, ourName, ourTeam, ourSurname, ourFirstName) {
+  const apiName = normalize(String(candidate?.player?.name ?? "")).toLowerCase();
+  const apiFirst = String(candidate?.player?.firstname ?? "").toLowerCase();
+  const apiLast = String(candidate?.player?.lastname ?? "").toLowerCase();
+  const apiNat = String(candidate?.player?.nationality ?? "").toLowerCase();
+  const ourNameLc = normalize(ourName).toLowerCase();
+  const ourTeamLc = ourTeam.toLowerCase();
+  const ourSurnameLc = normalize(ourSurname).toLowerCase();
+  const ourFirstLc = normalize(ourFirstName).toLowerCase();
+
+  // Nationality fit. Three states:
+  //   - exact / loose match → bonus points
+  //   - unknown (API has no nationality) → neutral, no bonus
+  //   - clear contradiction → hard reject (return 0 below)
+  let natScore = 0;
+  let natContradicts = false;
+  if (!apiNat) {
+    natScore = 0;
+  } else if (apiNat === ourTeamLc) {
+    natScore = 5;
+  } else if (apiNat.startsWith(ourTeamLc.slice(0, 4)) || ourTeamLc.startsWith(apiNat.slice(0, 4))) {
+    natScore = 2;
+  } else {
+    natContradicts = true;
+  }
+
+  // Hard reject when API record's nationality is known and contradicts ours.
+  // Filters generic-surname mis-hits like "Seung-Gyu Kim [South Korea]" →
+  // "Kim [Brazil]". Trade-off: rejects correct matches when API has stale
+  // nationality (Edouard Mendy listed France instead of Senegal). Wrong-player
+  // images are worse than missing ones — flag fallback handles misses cleanly.
+  if (natContradicts) return 0;
+
+  // Build the most complete API-side name we can — combine firstname +
+  // lastname if both populated. API-Football often returns name="Ryan"
+  // for the famous Australia keeper while firstname="Mathew" lastname="Ryan".
+  // Using the joined form here disambiguates "Mathew Ryan" from random Ryans.
+  const fullApiName = (apiFirst && apiLast) ? `${apiFirst} ${apiLast}` : apiName;
+  // The shorter side of a substring match must be substantial: at least 6
+  // chars, or 2+ words. Blocks generic single-surname API records ("Kim",
+  // "Mendy", "Ryan") from claiming a full-name match against our long
+  // canonical names. Retains real matches like "K. Schmeichel" because
+  // they're 12+ chars even if 1-token.
+  const isSubstantial = (str) => {
+    const trimmed = String(str).trim();
+    if (!trimmed) return false;
+    if (trimmed.length >= 6) return true;
+    return trimmed.split(/\s+/).filter(Boolean).length >= 2;
+  };
+  const fullMatch = fullApiName.includes(ourNameLc) || ourNameLc.includes(fullApiName);
+  const shorter = fullApiName.length < ourNameLc.length ? fullApiName : ourNameLc;
+
+  let s = natScore;
+  // Full-name substring match — strongest signal, but only if the shorter
+  // side is substantial. Otherwise it's a generic surname collision.
+  if (fullMatch && isSubstantial(shorter)) s += 10;
+  // Surname matches AND first-name overlaps — disambiguates same-surname
+  // players (e.g. Alisson Becker vs. Henrique Becker, both "Brazil").
+  else if (apiName.includes(ourSurnameLc) && ourFirstLc &&
+           (apiName.includes(ourFirstLc) || apiFirst.startsWith(ourFirstLc.slice(0, 3)))) {
+    s += 7;
+  }
+  // Surname-only — weakest, only meaningful with the nationality bonus.
+  else if (apiName.includes(ourSurnameLc) || apiLast === ourSurnameLc) s += 2;
+
   return s;
 }
 
 function lastWord(s) {
   return String(s).trim().split(/\s+/).filter(Boolean).pop() ?? "";
+}
+
+function firstWord(s) {
+  return String(s).trim().split(/\s+/).filter(Boolean)[0] ?? "";
 }
 
 function firstAndLastWord(s) {
@@ -177,6 +250,7 @@ for (let i = 0; i < queriedThisRun.length; i++) {
   const ourName = String(p.name ?? "");
   const ourTeam = String(p.team ?? "");
   const ourSurname = lastWord(ourName);
+  const ourFirstName = firstWord(ourName);
 
   if (!ourSurname) {
     console.log(`[${i + 1}/${queriedThisRun.length}] ${ourName} → SKIP (no surname)`);
@@ -185,15 +259,15 @@ for (let i = 0; i < queriedThisRun.length; i++) {
 
   process.stdout.write(`[${i + 1}/${queriedThisRun.length}] ${ourName} (${ourTeam}) → `);
 
-  // Strategy 1: surname only
-  let candidates = await searchProfiles(ourSurname);
+  // Strategy 1: surname only (normalized for diacritics)
+  let candidates = await searchProfiles(normalize(ourSurname));
   httpCalls += 1;
 
-  // Strategy 2: if no good initial match, retry with first+last
-  if (candidates.length === 0 || candidates.every(c => scoreCandidate(c, ourName, ourTeam, ourSurname) < THRESHOLD)) {
+  // Strategy 2: if no good initial match, retry with first+last (normalized)
+  if (candidates.length === 0 || candidates.every(c => scoreCandidate(c, ourName, ourTeam, ourSurname, ourFirstName) < THRESHOLD)) {
     const flw = firstAndLastWord(ourName);
     if (flw && flw !== ourSurname) {
-      const more = await searchProfiles(flw);
+      const more = await searchProfiles(normalize(flw));
       httpCalls += 1;
       candidates = candidates.concat(more);
     }
@@ -202,7 +276,7 @@ for (let i = 0; i < queriedThisRun.length; i++) {
   let best = null;
   let bestScore = -Infinity;
   for (const c of candidates) {
-    const s = scoreCandidate(c, ourName, ourTeam, ourSurname);
+    const s = scoreCandidate(c, ourName, ourTeam, ourSurname, ourFirstName);
     if (s > bestScore) { best = c; bestScore = s; }
   }
 
@@ -216,8 +290,9 @@ for (let i = 0; i < queriedThisRun.length; i++) {
     noMatch.push({ basePlayerId: id, name: ourName, team: ourTeam });
   }
 
-  // Polite spacing — API-Football is rate-limited
-  await new Promise(r => setTimeout(r, 350));
+  // Polite spacing — API-Football free tier rate-limits at ~10 req/min.
+  // 7s spacing keeps us comfortably below that.
+  await new Promise(r => setTimeout(r, 7_000));
 }
 
 // ── Write manifest ──────────────────────────────────────────────────────────
