@@ -37,9 +37,9 @@ on:
   workflow_dispatch:
     inputs:
       max:
-        description: "Max players to look up this run"
+        description: "Max players to look up this run (script default: 50)"
         required: false
-        default: "80"
+        default: "50"
       backfill_images:
         description: "Backfill images for already-manifested entries (no API calls)"
         required: false
@@ -90,7 +90,7 @@ jobs:
         env:
           API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
         run: |
-          MAX="${{ github.event.inputs.max || '80' }}"
+          MAX="${{ github.event.inputs.max || '50' }}"
           BACKFILL="${{ github.event.inputs.backfill_images || 'false' }}"
           if [ "$BACKFILL" = "true" ]; then
             echo "Mode: backfill-images"
