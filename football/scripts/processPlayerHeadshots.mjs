@@ -7,59 +7,67 @@
  * Reads:  football/public/players/<basePlayerId>.png       (originals)
  * Writes: football/public/players-processed/<basePlayerId>.png  (alpha-cut)
  *
- * Background detection (per pixel):
- *   A pixel is treated as background if EITHER:
- *     1. R > RGB_THRESHOLD AND G > RGB_THRESHOLD AND B > RGB_THRESHOLD
- *        (catches pure white and very near-white)
- *     2. brightness > BRIGHT_THRESHOLD AND saturation < SAT_THRESHOLD
- *        (catches off-white / light-grey studio backgrounds that the
- *        first check misses, while preserving colorful skin/fabric pixels)
- *   Brightness here is max(R,G,B), saturation is HSV-style:
- *     sat = (max - min) / max * 100   (0–100 scale)
+ * Algorithm (flood-fill from edges):
  *
- *   Why both checks: high-RGB alone misses light-grey backgrounds (e.g.
- *   180/180/180 — clearly background but R/G/B not > 225). The brightness
- *   + saturation check covers those without affecting saturated colors
- *   like skin tones (which sit around saturation 30-50) or jersey colors
- *   (saturation 60+).
+ *   1. Build a per-pixel boolean "is-bg-color" map:
+ *        true if R/G/B all > --rgb (default 215) — pure & near-white
+ *        OR  brightness > --bright (default 210) AND saturation < --sat
+ *            (default 45) — off-white / light grey
+ *      Where brightness = max(R,G,B) and saturation = (max-min)/max * 100.
  *
- * Pipeline per PNG:
- *   1. Load as RGBA via sharp.
- *   2. Build a binary mask: 0 for background pixels, 255 for subject.
- *   3. Light gaussian-blur the mask for soft anti-aliased edges.
- *   4. Write the blurred mask back as the image's alpha channel.
- *   5. Save into football/public/players-processed/.
+ *   2. Flood-fill from all four image edges through bg-color pixels.
+ *      Only pixels CONNECTED through the bg-color region to the edge are
+ *      flagged as actual background. Bright pixels INSIDE the face or
+ *      jersey (forehead highlights, light jersey colors) stay opaque
+ *      because they're not connected to the edge through a continuous
+ *      bg-color path.
  *
- * Originals are NEVER overwritten — players/ is the source-of-truth
- * backup, players-processed/ is the alpha-cut output.
+ *      This is a meaningful improvement over the old per-pixel threshold:
+ *      a forehead highlight and a studio backdrop can be the same brightness,
+ *      but only one is connected to the image border. Flood-fill keeps the
+ *      face intact while still removing the entire background.
+ *
+ *   3. Light gaussian-blur the alpha mask (--feather, default 2px) for a
+ *      soft anti-aliased silhouette.
+ *
+ *   4. Write the mask as the PNG's alpha channel. Save into
+ *      football/public/players-processed/. Originals untouched.
+ *
+ * The flood-fill makes the thresholds safe to loosen — broader background
+ * detection no longer eats face pixels, since interior bright spots are
+ * never edge-connected.
+ *
+ * Per-image output:
+ *   ✓ <input> → <output>  XX.X% transparent
+ *   ⚠ <input>             low coverage (X.X%) — may still show white
  *
  * Usage:
  *   node football/scripts/processPlayerHeadshots.mjs                 # new only
  *   node football/scripts/processPlayerHeadshots.mjs --force         # re-process all
  *   node football/scripts/processPlayerHeadshots.mjs --dry-run       # preview
  *   node football/scripts/processPlayerHeadshots.mjs --rgb=220       # tune RGB cutoff
- *   node football/scripts/processPlayerHeadshots.mjs --bright=220    # tune brightness cutoff
- *   node football/scripts/processPlayerHeadshots.mjs --sat=25        # tune saturation cutoff
- *   node football/scripts/processPlayerHeadshots.mjs --feather=2     # tune edge softness
+ *   node football/scripts/processPlayerHeadshots.mjs --bright=205    # tune brightness cutoff
+ *   node football/scripts/processPlayerHeadshots.mjs --sat=50        # tune saturation cutoff
+ *   node football/scripts/processPlayerHeadshots.mjs --feather=1.5   # tune edge softness
  *
  * Tuning:
- *   --rgb (default 225)
- *     Pure-white catch. Higher = stricter (only true white). Lower = also
- *     catches light off-whites at the cost of possibly fading bright skin
- *     highlights (foreheads, cheeks under direct light).
- *   --bright (default 220) + --sat (default 25)
- *     Off-white / grey-bg catch. Pixels brighter than --bright AND less
- *     saturated than --sat become transparent. Skin tones sit around
- *     sat 30-50 so are safe. Jersey colors sit higher.
- *     If grey halos remain → drop --bright a bit.
- *     If skin highlights fade → raise --bright.
+ *   --rgb (default 215)
+ *     Catches pure white and slight off-white via R/G/B all-above check.
+ *     Lower = catches more light tones. Higher = stricter.
+ *   --bright (default 210) + --sat (default 45)
+ *     Catches light-grey / off-white studio backdrops via brightness +
+ *     low-saturation. Together these flag the typical
+ *     180-220 light-grey range without flagging skin tones (sat 30-50)
+ *     or jersey colors (sat 60+).
+ *     If a faint halo remains → drop --bright (210 → 200) or raise --sat
+ *     (45 → 60).
+ *     If face starts looking patchy on dark cards → raise --bright a bit.
  *   --feather (default 2)
- *     Gaussian blur radius on the alpha mask. 0 = hard edge (possibly
- *     jagged). 2 = clean anti-aliased edge. 4+ = visibly soft halo.
+ *     Gaussian blur on the alpha mask. 0 = hard edges (may alias).
+ *     1.5-2 = clean. 3+ = visibly soft halo.
  *
  * Updates the manifest's `processed: true` flag for each image
- * successfully processed, so the runtime resolver can pick the alpha-cut
- * version. Preserves apiFootballId + local fields untouched.
+ * successfully processed. Preserves apiFootballId + local fields untouched.
  */
 
 import sharp from "sharp";
@@ -77,22 +85,27 @@ const argMap = new Map(
 );
 const opt = (k, fallback) => argMap.get(k) ?? fallback;
 
-const RGB_THRESHOLD = parseInt(opt("--rgb", opt("--threshold", "225")), 10);
-const BRIGHT_THRESHOLD = parseInt(opt("--bright", "220"), 10);
-const SAT_THRESHOLD = parseInt(opt("--sat", "25"), 10);
+const RGB_THRESHOLD = parseInt(opt("--rgb", opt("--threshold", "215")), 10);
+const BRIGHT_THRESHOLD = parseInt(opt("--bright", "210"), 10);
+const SAT_THRESHOLD = parseInt(opt("--sat", "45"), 10);
 const FEATHER = parseFloat(opt("--feather", "2"));
 const FORCE = argMap.has("--force");
 const DRY_RUN = argMap.has("--dry-run");
 const SKIP_MANIFEST = argMap.has("--skip-manifest");
+// Warning threshold: any image below this transparency % gets a ⚠ prefix
+// in the per-image log so it can be visually inspected.
+const LOW_COVERAGE_PCT = 5;
 
 const inputDir = resolvePath(__dirname, "../public/players");
 const outputDir = resolvePath(__dirname, "../public/players-processed");
 const manifestPath = resolvePath(__dirname, "../src/data/playerImageManifest.ts");
 
 console.log("─".repeat(60));
-console.log(`RGB threshold:    R/G/B all > ${RGB_THRESHOLD} → transparent`);
-console.log(`Bright+Sat:       brightness > ${BRIGHT_THRESHOLD} AND saturation < ${SAT_THRESHOLD} → transparent`);
+console.log(`Algorithm:        flood-fill from edges through bg-color pixels`);
+console.log(`RGB threshold:    R/G/B all > ${RGB_THRESHOLD} marks pixel as bg-color`);
+console.log(`Bright+Sat:       brightness > ${BRIGHT_THRESHOLD} AND saturation < ${SAT_THRESHOLD} marks pixel as bg-color`);
 console.log(`Feather:          ${FEATHER}px gaussian blur on alpha mask`);
+console.log(`Low-coverage warn: < ${LOW_COVERAGE_PCT}% transparent → ⚠ flagged`);
 console.log(`Mode:             ${DRY_RUN ? "DRY RUN" : "WRITE"}${FORCE ? " (force re-process)" : ""}`);
 console.log(`Input:            ${inputDir}`);
 console.log(`Output:           ${outputDir}`);
@@ -123,8 +136,6 @@ for (const file of files) {
     continue;
   }
 
-  process.stdout.write(`  ${file} → `);
-
   try {
     // Step 1: load original as RGBA.
     const { data, info } = await sharp(inputPath)
@@ -133,59 +144,125 @@ for (const file of files) {
       .toBuffer({ resolveWithObject: true });
 
     if (info.channels !== 4) {
-      console.log(`✗ unexpected channel count ${info.channels}`);
+      console.log(`✗ ${file}: unexpected channel count ${info.channels}`);
       failed += 1;
       continue;
     }
 
-    const totalPixels = info.width * info.height;
+    const W = info.width;
+    const H = info.height;
+    const totalPixels = W * H;
 
-    // Step 2: build a binary alpha mask. 0 = background pixel (becomes
-    // transparent), 255 = subject pixel (stays opaque).
-    //
-    // Two-rule background detection — see file header for the rationale.
-    const mask = Buffer.alloc(totalPixels);
-    let bgPixels = 0;
+    // Step 2: build per-pixel "is bg-color" boolean map. Flood-fill in the
+    // next step will pick a subset of these — pixels actually connected to
+    // the image edge through a continuous bg-color region.
+    const isBgColor = new Uint8Array(totalPixels);
     for (let i = 0; i < totalPixels; i++) {
       const offset = i * 4;
       const r = data[offset];
       const g = data[offset + 1];
       const b = data[offset + 2];
-      // Respect any pre-existing alpha — don't make transparent pixels opaque.
       const a = data[offset + 3];
 
-      // Rule 1: high R/G/B (pure-white catch).
-      const ruleRgb = r >= RGB_THRESHOLD && g >= RGB_THRESHOLD && b >= RGB_THRESHOLD;
-
-      // Rule 2: bright AND low-saturation (off-white / light-grey catch).
-      // brightness = max channel; saturation = (max - min) / max * 100.
-      let ruleBrightSat = false;
-      if (!ruleRgb) {
-        const max = r > g ? (r > b ? r : b) : (g > b ? g : b);
-        if (max >= BRIGHT_THRESHOLD) {
-          const min = r < g ? (r < b ? r : b) : (g < b ? g : b);
-          const sat = max === 0 ? 0 : ((max - min) / max) * 100;
-          ruleBrightSat = sat < SAT_THRESHOLD;
-        }
+      // Respect pre-existing transparency — already-transparent stays bg.
+      if (a === 0) {
+        isBgColor[i] = 1;
+        continue;
       }
 
-      const isBackground = ruleRgb || ruleBrightSat || a === 0;
-      mask[i] = isBackground ? 0 : 255;
-      if (isBackground) bgPixels += 1;
+      // Rule 1: pure-white / very near-white.
+      const ruleRgb = r >= RGB_THRESHOLD && g >= RGB_THRESHOLD && b >= RGB_THRESHOLD;
+      if (ruleRgb) {
+        isBgColor[i] = 1;
+        continue;
+      }
+
+      // Rule 2: bright + low-saturation (off-white / light grey).
+      const max = r > g ? (r > b ? r : b) : (g > b ? g : b);
+      if (max >= BRIGHT_THRESHOLD) {
+        const min = r < g ? (r < b ? r : b) : (g < b ? g : b);
+        const sat = max === 0 ? 0 : ((max - min) / max) * 100;
+        if (sat < SAT_THRESHOLD) {
+          isBgColor[i] = 1;
+        }
+      }
+    }
+
+    // Step 3: flood-fill from the four image edges through bg-color pixels.
+    // Only pixels reachable from an edge through a continuous bg-color path
+    // are marked as actual background. Bright pixels INSIDE the face/jersey
+    // (forehead highlights, light jersey tones) are not edge-connected and
+    // stay opaque.
+    //
+    // Stack-based 4-connected flood fill (avoids recursion limits on large
+    // images). Uses a typed array for the visited set so the inner loop is
+    // tight.
+    const isBackground = new Uint8Array(totalPixels);
+    const stack = [];
+
+    // Seed from top + bottom edges.
+    for (let x = 0; x < W; x++) {
+      for (const y of [0, H - 1]) {
+        const idx = y * W + x;
+        if (isBgColor[idx] && !isBackground[idx]) {
+          isBackground[idx] = 1;
+          stack.push(idx);
+        }
+      }
+    }
+    // Seed from left + right edges.
+    for (let y = 0; y < H; y++) {
+      for (const x of [0, W - 1]) {
+        const idx = y * W + x;
+        if (isBgColor[idx] && !isBackground[idx]) {
+          isBackground[idx] = 1;
+          stack.push(idx);
+        }
+      }
+    }
+
+    while (stack.length > 0) {
+      const idx = stack.pop();
+      const x = idx % W;
+      const y = (idx - x) / W;
+      // 4 neighbors
+      if (x > 0)     { const n = idx - 1; if (isBgColor[n] && !isBackground[n]) { isBackground[n] = 1; stack.push(n); } }
+      if (x < W - 1) { const n = idx + 1; if (isBgColor[n] && !isBackground[n]) { isBackground[n] = 1; stack.push(n); } }
+      if (y > 0)     { const n = idx - W; if (isBgColor[n] && !isBackground[n]) { isBackground[n] = 1; stack.push(n); } }
+      if (y < H - 1) { const n = idx + W; if (isBgColor[n] && !isBackground[n]) { isBackground[n] = 1; stack.push(n); } }
+    }
+
+    // Step 4: build the alpha mask. 0 = transparent (edge-connected bg),
+    // 255 = opaque (subject + any interior bright spots).
+    const mask = Buffer.alloc(totalPixels);
+    let bgPixels = 0;
+    for (let i = 0; i < totalPixels; i++) {
+      if (isBackground[i]) {
+        mask[i] = 0;
+        bgPixels += 1;
+      } else {
+        mask[i] = 255;
+      }
     }
     const bgPct = ((bgPixels / totalPixels) * 100).toFixed(1);
+    const lowCoverage = parseFloat(bgPct) < LOW_COVERAGE_PCT;
+
+    const verbInput  = `players/${file}`;
+    const verbOutput = `players-processed/${file}`;
+    const tag = lowCoverage ? "⚠" : "✓";
+    const note = lowCoverage ? " (low coverage — may still show white)" : "";
 
     if (DRY_RUN) {
-      console.log(`would convert ${bgPct}% of pixels to transparent`);
+      console.log(`${tag} ${verbInput} → ${verbOutput}  ${bgPct}% transparent${note}`);
       continue;
     }
 
-    // Step 3: feather the mask via a gaussian blur. This smooths the
-    // silhouette so the cutout doesn't have a jaggy aliased edge.
+    // Step 5: feather the mask via a gaussian blur. Smooths the silhouette
+    // so the cutout doesn't have a jaggy aliased edge.
     let alphaBuffer;
     if (FEATHER > 0) {
       alphaBuffer = await sharp(mask, {
-        raw: { width: info.width, height: info.height, channels: 1 },
+        raw: { width: W, height: H, channels: 1 },
       })
         .blur(FEATHER)
         .raw()
@@ -194,25 +271,24 @@ for (const file of files) {
       alphaBuffer = mask;
     }
 
-    // Step 4: write the (possibly-blurred) mask back as the image's alpha
-    // channel. Walk the RGBA buffer and replace each alpha byte with the
-    // corresponding mask value.
+    // Step 6: write the (possibly-blurred) mask back as the image's alpha
+    // channel.
     for (let i = 0; i < totalPixels; i++) {
       data[i * 4 + 3] = alphaBuffer[i];
     }
 
-    // Step 5: re-encode to PNG.
+    // Step 7: re-encode to PNG.
     await sharp(data, {
-      raw: { width: info.width, height: info.height, channels: 4 },
+      raw: { width: W, height: H, channels: 4 },
     })
       .png({ compressionLevel: 9 })
       .toFile(outputPath);
 
-    console.log(`✓ ${bgPct}% transparent`);
+    console.log(`${tag} ${verbInput} → ${verbOutput}  ${bgPct}% transparent${note}`);
     processed += 1;
     processedIds.add(basePlayerId);
   } catch (err) {
-    console.log(`✗ ${err.message}`);
+    console.log(`✗ ${file}: ${err.message}`);
     failed += 1;
   }
 }
