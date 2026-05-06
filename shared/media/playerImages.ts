@@ -37,13 +37,22 @@ export interface ExternalIds {
    * only if the local file 404s.
    */
   local?: boolean;
+  /**
+   * True when the locally-mirrored image has had its white background
+   * alpha-cut by football/scripts/processPlayerImages.mjs and saved into
+   * football/public/players-processed/{basePlayerId}.png. When true the
+   * resolver serves the alpha-cut version so the card's tier color shows
+   * through where the original studio white-bg used to be.
+   */
+  processed?: boolean;
 }
 
 export type ImageSource =
-  | "local-cache"     // shipped with the deploy at /<sport>/players/<id>.png
+  | "local-cache-processed" // alpha-cut PNG at /<sport>/players-processed/<id>.png
+  | "local-cache"           // raw mirrored PNG at /<sport>/players/<id>.png
   | "api-football"
   | "thesportsdb"
-  | "local-fallback"; // no image — caller renders sport-specific visual fallback
+  | "local-fallback";       // no image — caller renders sport-specific visual fallback
 
 export type ImageConfidence =
   | "high"      // exact ID match → CDN image expected to load
@@ -78,11 +87,18 @@ export interface ResolveArgs {
 export function resolvePlayerImage(args: ResolveArgs): ResolvedImage {
   const { sport, externalIds } = args;
 
-  // Football: prefer the locally-mirrored image first (shipped with the
-  // deploy, immune to API-Football CDN outages). Fall through to the
-  // API-Football CDN for entries we haven't downloaded yet, and finally
-  // to the visual fallback when no externalId is known.
+  // Football: prefer the alpha-cut processed image first (white-bg removed
+  // so the card's tier color shows through behind the player), then fall
+  // back to the raw locally-mirrored image, then the API-Football CDN, and
+  // finally the visual flag fallback.
   if (sport === "football") {
+    if (externalIds?.processed) {
+      return {
+        src: `/football/players-processed/${encodeURIComponent(args.playerId)}.png`,
+        source: "local-cache-processed",
+        confidence: "high",
+      };
+    }
     if (externalIds?.local) {
       return {
         src: `/football/players/${encodeURIComponent(args.playerId)}.png`,

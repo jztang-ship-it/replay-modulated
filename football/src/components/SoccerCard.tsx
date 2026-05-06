@@ -42,6 +42,36 @@ function getFlag(team: string): string { return TEAM_FLAGS[team] ?? "🏳️"; }
 import { resolvePlayerImage } from "@shared/media/playerImages";
 import { getExternalIds } from "../data/playerImageManifest";
 
+// ── Football headshot tuning ───────────────────────────────────────────────
+// API-Football headshots are studio shots on a white background. The
+// preprocessing script (football/scripts/processPlayerHeadshots.mjs)
+// alpha-cuts that white background into transparency so the card's tier
+// color shows through behind the player. With a real alpha channel in the
+// PNG, we don't need any CSS tricks — no mask, no blend mode, no filter.
+// Same simple positioning that basketball uses on its NBA headshots, which
+// also have transparent backgrounds.
+//
+// CSS values that control face crop:
+//   HEADSHOT_WIDTH_PCT      width as % of hero container (face zoom)
+//   HEADSHOT_HEIGHT_PCT     height as % of hero container
+//   HEADSHOT_LEFT_PCT       left offset (re-center after width scale)
+//   HEADSHOT_TOP_PCT        top offset (re-center after height scale)
+//   HEADSHOT_OBJECT_Y       object-position Y (face vertical placement
+//                           within the cropped frame; smaller = higher)
+//
+// Tweak quick-reference:
+//   Face too SMALL  → bump HEADSHOT_WIDTH_PCT (e.g. 112 → 122)
+//   Face too BIG    → drop HEADSHOT_WIDTH_PCT (e.g. 112 → 100)
+//   Face too LOW    → drop HEADSHOT_OBJECT_Y (e.g. 14 → 8)
+//   Face too HIGH   → bump HEADSHOT_OBJECT_Y (e.g. 14 → 22)
+//   Forehead crop?  → drop HEADSHOT_OBJECT_Y, or pad HEADSHOT_TOP_PCT (-4 → 0)
+
+const HEADSHOT_WIDTH_PCT = 112;
+const HEADSHOT_HEIGHT_PCT = 108;
+const HEADSHOT_LEFT_PCT = -6;
+const HEADSHOT_TOP_PCT = -4;
+const HEADSHOT_OBJECT_Y = 14;
+
 function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
   const team = String((card as any).team ?? "");
   const flag = getFlag(team);
@@ -49,41 +79,53 @@ function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
   const basePlayerId = String((card as any).basePlayerId ?? "");
 
   // Resolve image URL (no API call — manifest lookup + URL construction).
-  // Prefer card.externalIds if the data layer attached them; else fall
-  // back to the static manifest. The merge order means a roster card
-  // built with externalIds populated wins over the manifest, which is
-  // what we want for future per-card overrides.
+  // Resolution order: processed (alpha-cut) → raw local mirror → API CDN
+  // → null (no image, render flag + initials fallback).
   const cardExternalIds = (card as any).externalIds;
   const externalIds = cardExternalIds ?? getExternalIds(basePlayerId);
   const resolved = resolvePlayerImage({ sport: "football", playerId: basePlayerId, externalIds });
   const imgSrc = resolved.confidence !== "fallback" ? resolved.src : null;
 
-  // Local state: when an <img> errors, hide it so the flag+initials
-  // fallback (always rendered behind) becomes visible.
+  // Local state: when an <img> errors (network failure, 404), hide it so
+  // the flag + initials fallback below becomes visible.
   const [imgFailed, setImgFailed] = React.useState(false);
   const showImage = imgSrc != null && !imgFailed;
 
   return (
     <>
-      {/* Faded flag background — always rendered, serves as image-load fallback */}
-      <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
-        <div style={{ fontSize: 72, lineHeight: 1, opacity: 0.22, transform: "scale(1.4) translateY(-8px)", filter: "blur(1px)", userSelect: "none" }}>
+      {/* Layer 1: very-faded flag silhouette behind everything. Acts as a
+          subtle visual context (you can see which country the card is
+          for) and as the deepest fallback if absolutely nothing else
+          renders. Doesn't interfere with the headshot above. */}
+      <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", pointerEvents: "none" }}>
+        <div style={{ fontSize: 72, lineHeight: 1, opacity: 0.16, transform: "scale(1.4) translateY(-8px)", userSelect: "none" }}>
           {flag}
         </div>
       </div>
-      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.65) 100%)" }} />
 
-      {/* Flag + initials — always rendered below the image so it shows
-          through during image load and after onError. Hidden behind the
-          image when the image is loaded successfully. */}
-      <div style={{ position: "absolute", top: "28%", left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, opacity, transition: "opacity 0.3s ease" }}>
-        <span style={{ fontSize: 38, lineHeight: 1, filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.6))" }}>{flag}</span>
-        <span style={{ fontSize: 28, fontWeight: 950, letterSpacing: 2, color: "rgba(255,255,255,0.80)", textShadow: "0 4px 16px rgba(0,0,0,0.8)", userSelect: "none" }}>{initials}</span>
-      </div>
+      {/* Layer 2: flag + initials — fallback for unmanifested players or
+          when the image fails to load. NOT rendered when an image is
+          present (no z-index fights, no peeking text strokes). Stays
+          fully clean on flag-only cards. */}
+      {!showImage && (
+        <div
+          style={{
+            position: "absolute", top: "28%", left: 0, right: 0,
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+            opacity, transition: "opacity 0.3s ease",
+            pointerEvents: "none",
+          }}
+        >
+          <span style={{ fontSize: 38, lineHeight: 1, filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.6))" }}>{flag}</span>
+          <span style={{ fontSize: 28, fontWeight: 950, letterSpacing: 2, color: "rgba(255,255,255,0.80)", textShadow: "0 4px 16px rgba(0,0,0,0.8)", userSelect: "none" }}>{initials}</span>
+        </div>
+      )}
 
-      {/* API-Football headshot — only mounted when a URL resolved.
-          onError flips imgFailed which removes the image and exposes
-          the flag+initials fallback already rendered above. */}
+      {/* Layer 3: headshot. Bare-minimum styling — same shape basketball
+          uses. No mask, no blend mode, no filter, no contrast/saturation
+          adjustments. The processed PNG has the right alpha channel so
+          the card's tier-color gradient shows through behind the player
+          naturally. */}
       {showImage && (
         <img
           key={imgSrc}
@@ -93,15 +135,28 @@ function FootballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
           draggable={false}
           style={{
             position: "absolute",
-            top: "12%", left: "-5%",
-            width: "110%", height: "100%",
+            top: `${HEADSHOT_TOP_PCT}%`,
+            left: `${HEADSHOT_LEFT_PCT}%`,
+            width: `${HEADSHOT_WIDTH_PCT}%`,
+            height: `${HEADSHOT_HEIGHT_PCT}%`,
             objectFit: "cover",
-            objectPosition: "50% 10%",
+            objectPosition: `50% ${HEADSHOT_OBJECT_Y}%`,
             opacity, transition: "opacity 0.3s ease",
             pointerEvents: "none",
           }}
         />
       )}
+
+      {/* Layer 4: subtle bottom fade — only enough to soften the
+          transition from photo into the salary/name strip below. NOT
+          full-card-height, NOT layered over the face. */}
+      <div
+        style={{
+          position: "absolute", left: 0, right: 0, bottom: 0, height: "32%",
+          pointerEvents: "none",
+          background: "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.40) 100%)",
+        }}
+      />
     </>
   );
 }
