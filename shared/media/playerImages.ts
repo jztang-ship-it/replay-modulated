@@ -43,6 +43,11 @@ export interface ExternalIds {
    * football/public/players-processed/{basePlayerId}.png. When true the
    * resolver serves the alpha-cut version so the card's tier color shows
    * through where the original studio white-bg used to be.
+   *
+   * NOTE: even when this is true, the resolver may still REFUSE to serve
+   * the processed file if the per-id quality registry (set via
+   * setProcessedQualityRegistry) marks it as "badCutout" or
+   * "manualBadCutout". See the registry section below.
    */
   processed?: boolean;
 }
@@ -53,6 +58,56 @@ export type ImageSource =
   | "api-football"
   | "thesportsdb"
   | "local-fallback";       // no image — caller renders sport-specific visual fallback
+
+/**
+ * Per-id processing-quality flag, sourced from
+ * football/public/players-processed/_quality.json (written by
+ * processPlayerHeadshots.mjs).
+ *
+ *   "cleanCutout"      processed file is good — resolver may serve it
+ *   "badCutout"        processed file produced damage; resolver MUST
+ *                      NOT use it. Falls through to raw local image
+ *                      (or further fallbacks) so a slightly-rough but
+ *                      whole subject is shown rather than an eaten one.
+ *   "manualBadCutout"  same as badCutout but explicitly marked by a
+ *                      human; resolver behaves identically.
+ *   "skipUseOriginal"  per-player override: do not attempt processed,
+ *                      use the raw local image as-is. Same as not
+ *                      having "processed: true" in the manifest, but
+ *                      explicit.
+ *   "unprocessed"      no processed pass has run for this id. Same as
+ *                      cleanCutout if a file exists, but the resolver
+ *                      treats it conservatively.
+ */
+export type ProcessedQuality =
+  | "cleanCutout"
+  | "badCutout"
+  | "manualBadCutout"
+  | "skipUseOriginal"
+  | "unprocessed";
+
+let processedQualityRegistry: Record<string, { quality: ProcessedQuality }> = {};
+
+/**
+ * Register the per-id processed-quality map (read from the quality JSON
+ * sidecar). Called once at SPA startup. Replaces the entire registry —
+ * subsequent calls are idempotent re-registrations.
+ *
+ * The football SPA imports football/public/players-processed/_quality.json
+ * statically (Vite resolves it as a JSON module). Other sports either
+ * call this with their own registry or never call it (in which case the
+ * registry stays empty and the resolver behaves as before).
+ */
+export function setProcessedQualityRegistry(
+  registry: Record<string, { quality: ProcessedQuality }>,
+): void {
+  processedQualityRegistry = registry ?? {};
+}
+
+/** Read the quality flag for a given id. Defaults to "unprocessed". */
+export function getProcessedQuality(playerId: string): ProcessedQuality {
+  return processedQualityRegistry[playerId]?.quality ?? "unprocessed";
+}
 
 export type ImageConfidence =
   | "high"      // exact ID match → CDN image expected to load
@@ -91,28 +146,58 @@ export function resolvePlayerImage(args: ResolveArgs): ResolvedImage {
   // so the card's tier color shows through behind the player), then fall
   // back to the raw locally-mirrored image, then the API-Football CDN, and
   // finally the visual flag fallback.
+  //
+  // Quality gate: the per-id processed-quality registry can disable
+  // specific resolver branches per the "safe over aggressive" rule:
+  //
+  //   "cleanCutout"     → processed served (default for processed: true)
+  //   "badCutout"       → processed REFUSED, fall through to raw local
+  //                       (auto-detected damage; subject probably whole
+  //                       under the original photo bg, just messy)
+  //   "skipUseOriginal" → processed REFUSED, fall through to raw local
+  //                       (per-player override: "the original is fine")
+  //   "manualBadCutout" → processed AND raw-local REFUSED → resolver
+  //                       returns null → caller renders the visual
+  //                       fallback (flag + initials portrait tile)
+  //
+  // Never returns the API-Football CDN URL when local is marked, since
+  // local: true means we already have the same image cached.
   if (sport === "football") {
-    if (externalIds?.processed) {
+    const quality = getProcessedQuality(args.playerId);
+    const processedAllowed =
+      externalIds?.processed === true &&
+      quality !== "badCutout" &&
+      quality !== "manualBadCutout" &&
+      quality !== "skipUseOriginal";
+    const localAllowed =
+      externalIds?.local === true &&
+      quality !== "manualBadCutout";
+
+    if (processedAllowed) {
       return {
         src: `/football/players-processed/${encodeURIComponent(args.playerId)}.png`,
         source: "local-cache-processed",
         confidence: "high",
       };
     }
-    if (externalIds?.local) {
+    if (localAllowed) {
       return {
         src: `/football/players/${encodeURIComponent(args.playerId)}.png`,
         source: "local-cache",
         confidence: "high",
       };
     }
-    const id = externalIds?.apiFootballId;
-    if (id !== undefined && id !== null && String(id).trim() !== "") {
-      return {
-        src: `https://media.api-sports.io/football/players/${encodeURIComponent(String(id))}.png`,
-        source: "api-football",
-        confidence: "high",
-      };
+    // manualBadCutout intentionally skips the API-Football CDN too —
+    // it's the same source image as the local mirror, just remote.
+    if (quality !== "manualBadCutout") {
+      const id = externalIds?.apiFootballId;
+      if (id !== undefined && id !== null && String(id).trim() !== "") {
+        return {
+          src: `https://media.api-sports.io/football/players/${encodeURIComponent(String(id))}.png`,
+          source: "api-football",
+          confidence: "high",
+        };
+      }
     }
     // TheSportsDB future-fallback — schema reserved, not yet wired.
 
