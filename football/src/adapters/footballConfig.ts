@@ -142,7 +142,7 @@ export const FootballSportConfig: SportConfigShape = {
   //   cd football && npx ts-node ../shared/tools/runSimulator.ts 10000 --slate-v2
   // …and updating winTiers above with the resulting hit-rate distribution.
   slateSize: 50,         // 5 hand slots × 10 (matches baseball's ratio)
-  anchorCount: 10,       // top-10 always present
+  anchorCount: 9,        // top-9 always present (3x3 grid in slate overlay)
   weightExponent: 1.0,   // linear career-FP weighting; raise for star bias
   exclusionList: [] as string[],  // populated during data audit; safe default
 
