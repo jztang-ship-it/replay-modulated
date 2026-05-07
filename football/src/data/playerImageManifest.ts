@@ -20,7 +20,20 @@
  * scripted hand. Verified against publicly listed API-Football player IDs.
  */
 
-import type { ExternalIds } from "@shared/media/playerImages";
+import type { ExternalIds, ProcessedQuality } from "@shared/media/playerImages";
+import { setProcessedQualityRegistry } from "@shared/media/playerImages";
+import processedQuality from "./playerProcessingQuality.json";
+
+// Register the per-id processed-quality map at module load. The shared
+// resolver uses it to refuse damaged/manual-bad processed cutouts and
+// fall back to the raw local image (or further fallbacks).
+//
+// The JSON is written by football/scripts/processPlayerHeadshots.mjs.
+// Each entry: { quality: "cleanCutout" | "badCutout" | ..., mode, pctTrans, pctFaceTrans }.
+// We pass the whole object through — the resolver only reads `.quality`.
+setProcessedQualityRegistry(
+  processedQuality as Record<string, { quality: ProcessedQuality }>,
+);
 
 export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   // Kylian Mbappé Lottin (France)

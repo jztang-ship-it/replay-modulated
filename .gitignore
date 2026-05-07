@@ -20,3 +20,4 @@ baseball/src/utils/culture_update.ts
 basketball/src/utils/culture_failed.json
 baseball/src/utils/culture_failed.json
 scripts/commentary-output-*.txt
+football/public/debug-headshots/
