@@ -8,9 +8,10 @@ import { getPlayers, getLogsByKey } from "../engines/dataEngine";
 import { generateRoster, redrawRoster as engineRedraw, mulberry32, randomSeed } from "../engines/rosterEngine";
 import { resolveCards } from "../engines/resolveEngine";
 import { DEFAULT_ECONOMY_CONFIG, tierFromSalary } from "../engines/economyEngine";
-import { buildDailyBonusMap, getDailyBonusPlayers, type DailyBonusPlayer } from "@shared/utils/dailyBonus";
+import { buildDailyBonusMap, getDailyBonusDateKey, getDailyBonusPlayers, type DailyBonusPlayer } from "@shared/utils/dailyBonus";
 import { buildBonusPoolFromPlayers } from "@shared/utils/dailyBonusPool";
 import { getDealPool } from "@shared/utils/dealGate";
+import { hashStr, mulberry32 as seededMulberry32 } from "@shared/utils/seededRng";
 import { SessionRepeatLimit, DEFAULT_REPEAT_LIMIT } from "@shared/utils/sessionRepeatLimit";
 import { getCachedSlate } from "@shared/utils/slateSelector";
 import { isSlateV2Enabled } from "@shared/featureFlags";
@@ -78,13 +79,17 @@ function toPlayerEval(p: any, projByBaseId: Map<string, number>): PlayerEval {
   };
 }
 
-/** Returns true if this player has at least one meaningful 2425 season game log.
- *  Must have 2425-specific logs with quickFP >= 8 AND minutes >= 10 (matches resolve filter). */
-function hasValidLogs(basePlayerId: string, logsByKey: Map<string, any[]>): boolean {
+/** Returns true if this player-season has at least one meaningful game log.
+ *  Looks up logs keyed by `${basePlayerId}|${season}`, where season is the
+ *  numeric form (e.g. 2425, 2324) the dataEngine indexes under. Must have
+ *  per-game quickFP >= 8 AND minutes >= 10 (matches resolve filter). */
+function hasValidLogs(basePlayerId: string, season: number | string, logsByKey: Map<string, any[]>): boolean {
   const base = basePlayerId.trim();
   if (!base) return false;
+  const seasonNum = Number(season);
+  if (!Number.isFinite(seasonNum)) return false;
   const minMins = (sportAdapter as any).config?.historicalLogFilters?.minMinutes ?? 10;
-  const candidates = logsByKey.get(`${base}|2425`) ?? [];
+  const candidates = logsByKey.get(`${base}|${seasonNum}`) ?? [];
   if (candidates.length === 0) return false;
   return candidates.some((l: any) => {
     const s = l.stats ?? {};
@@ -103,25 +108,66 @@ function hasValidLogs(basePlayerId: string, logsByKey: Map<string, any[]>): bool
   });
 }
 
+/** Daily-seeded "which season for this player today?" picker. Deterministic
+ *  per (date, basePlayerId): the same player gets the same season-of-the-day
+ *  across the entire deal flow within one UTC day, but different days roll
+ *  different seasons. Single-season players short-circuit. */
+function chooseSeasonForPlayer(basePlayerId: string, seasons: string[], dateKey: string): string {
+  if (seasons.length <= 1) return seasons[0] ?? "";
+  const seed = hashStr(`basketball|${dateKey}|${basePlayerId}`);
+  const rng = seededMulberry32(seed);
+  return seasons[Math.floor(rng() * seasons.length)];
+}
+
+/** Group players by basePlayerId and pick one season per player using the
+ *  daily-seeded RNG. Replaces the old `_2425` filter — instead of locking the
+ *  pool to a single hardcoded season, every basePlayerId is represented once
+ *  per day at one of its eligible seasons (chosen deterministically). The
+ *  slate engine downstream sees a clean basePlayerId-unique pool, no aware-
+ *  ness of seasons required. */
+function buildDedupedPool(allPlayers: any[], date: Date): any[] {
+  const dateKey = getDailyBonusDateKey(date);
+  const byBaseId = new Map<string, any[]>();
+  for (const p of allPlayers) {
+    const bid = String(p.basePlayerId ?? p.id ?? "").trim();
+    if (!bid) continue;
+    const arr = byBaseId.get(bid);
+    if (arr) arr.push(p);
+    else byBaseId.set(bid, [p]);
+  }
+  const out: any[] = [];
+  for (const [bid, entries] of byBaseId) {
+    const seasons = entries.map(e => String(e.season ?? "")).filter(Boolean);
+    const chosen = chooseSeasonForPlayer(bid, seasons, dateKey);
+    const pick = entries.find(e => String(e.season ?? "") === chosen) ?? entries[0];
+    out.push(pick);
+  }
+  return out;
+}
+
 /** Build the eval pool — all tiers eligible as long as they have valid logs. */
 function buildEvalPool(players: any[], logs: Map<string, any[]>, projByBaseId: Map<string, number>): PlayerEval[] {
   const result = players
-    .filter((p: any) => hasValidLogs(playerKey(p), logs))
+    .filter((p: any) => hasValidLogs(playerKey(p), Number(p.season ?? 2425), logs))
     .map(p => toPlayerEval(p, projByBaseId));
 
   return result;
 }
 
-/** Build the bonus-eligible pool once: 2024-25 players with valid logs, tier from salary. */
+/** Build the bonus-eligible pool once: today's deduped pool, players with
+ *  valid logs for their chosen season, tier from salary. The seasonFilter
+ *  argument to buildBonusPoolFromPlayers is dropped — the deduped pool is
+ *  already one-entry-per-basePlayerId, with the season pinned to today's
+ *  daily-seeded pick. */
 function buildBonusPool(): Array<{ basePlayerId: string; name: string; tier: string }> {
   const logs = getLogsByKey();
   const eco = getEconomyConfig();
+  const dedupedPool = buildDedupedPool(getPlayers(), new Date());
   const allBonusEligible = buildBonusPoolFromPlayers(
-    getPlayers(),
-    (p: any) => hasValidLogs(playerKey(p), logs),
+    dedupedPool,
+    (p: any) => hasValidLogs(playerKey(p), Number(p.season ?? 2425), logs),
     (salary) => tierFromSalary(salary, eco),
     eco.salaryMin,
-    "_2425",
   );
 
   // When slate v2 is ON for basketball, restrict bonus picks to today's slate
@@ -146,14 +192,17 @@ function getDailyBonusMapNow(): Map<string, number> {
 export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
   const allPlayers = getPlayers();
   const logs = getLogsByKey();
-  const seasonFiltered = allPlayers.filter((p: any) => String(p.id ?? '').includes('_2425'));
+  // Multi-season aware: dedupe by basePlayerId, daily-seeded pick of which
+  // season each player surfaces as today. Replaces the old hardcoded _2425
+  // filter so 2023-24 entries are eligible to roll into the slate.
+  const dedupedPool = buildDedupedPool(allPlayers, new Date());
 
   // Slate v2 gate (no-op when feature flag is OFF — returns input unchanged).
   // Each player needs basePlayerId for the gate; cast is safe because RawPlayer
   // includes optional basePlayerId and we fall back to id when missing.
   const slatePool = getDealPool(
     sportAdapter as any,
-    seasonFiltered.map((p: any) => ({ ...p, basePlayerId: String(p.basePlayerId ?? p.id ?? "").trim() })),
+    dedupedPool.map((p: any) => ({ ...p, basePlayerId: String(p.basePlayerId ?? p.id ?? "").trim() })),
   );
   // Repeat limit — sliding window with pool-floor relaxation (no-op on first deal).
   const players = isSlateV2Enabled("basketball")
@@ -196,12 +245,15 @@ export async function redrawRoster({
 }): Promise<{ roster: PlayerCard[] }> {
   const allPlayers = getPlayers();
   const logs = getLogsByKey();
-  const seasonFiltered = allPlayers.filter((p: any) => String(p.id ?? '').includes('_2425'));
+  // Same multi-season dedup as dealInitialRoster — keeps held cards stable
+  // (held cards already have a season pinned), and lets redrawn slots come
+  // from today's deduped pool.
+  const dedupedPool = buildDedupedPool(allPlayers, new Date());
 
   // Slate v2 gate + repeat-limit (no-op when feature flag is OFF).
   const slatePool = getDealPool(
     sportAdapter as any,
-    seasonFiltered.map((p: any) => ({ ...p, basePlayerId: String(p.basePlayerId ?? p.id ?? "").trim() })),
+    dedupedPool.map((p: any) => ({ ...p, basePlayerId: String(p.basePlayerId ?? p.id ?? "").trim() })),
   );
   const players = isSlateV2Enabled("basketball")
     ? repeatLimit.filter(slatePool, DEFAULT_REPEAT_LIMIT)
