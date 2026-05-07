@@ -146,6 +146,9 @@ jobs:
           if gh pr view chore/football-data-refresh --json state --jq '.state' 2>/dev/null | grep -q "OPEN"; then
             echo "Rolling PR already open — new commit appended."
           else
+            # NOTE: don't pass --label here. gh pr create aborts (exit 1) when a
+            # named label doesn't exist in the repo, and a label-creation failure
+            # leaves the PR uncreated. Skip labels and let humans tag if desired.
             gh pr create \
               --title "chore(football): rolling data refresh (nightly bot)" \
               --body "$(cat <<'EOF'
@@ -153,11 +156,11 @@ jobs:
 
           Each run adds:
           - up to 80 newly-resolved API-Football player IDs (manifest entries)
-          - the corresponding mirrored images under \`football/public/players/\`
+          - the corresponding mirrored images under `football/public/players/`
 
           ## Review tips
           - Spot-check a few new entries — does the player name in the manifest comment match the API-Football ID's actual player on https://www.api-football.com ?
-          - Image dimensions/quality look fine in \`football/public/players/\`?
+          - Image dimensions/quality look fine in `football/public/players/`?
           - Manifest size + repo PNG count growing as expected?
 
           Merge whenever — there's no urgency. The chore branch picks up where it left off the following night.
@@ -170,5 +173,5 @@ jobs:
           )" \
               --base main \
               --head chore/football-data-refresh \
-              --label "chore,automated"
+              || echo "::warning::gh pr create failed — see logs above. Branch is up to date; open the PR manually."
           fi
