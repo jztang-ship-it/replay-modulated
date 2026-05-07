@@ -76,7 +76,7 @@ describe("defaultSlateConfig", () => {
     const adapter = { sportKey: "x", rosterSize: 6, config: {} } as any;
     expect(defaultSlateConfig(adapter)).toEqual({
       slateSize: 60,
-      anchorCount: 10,
+      anchorCount: 9,
       weightExponent: 1.0,
     });
   });

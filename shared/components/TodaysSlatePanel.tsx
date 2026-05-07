@@ -76,22 +76,9 @@ export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
 
   return (
     <section className="slate-panel" data-testid="todays-slate-panel">
-      {adapter.signature && (
-        <div
-          className="slate-panel__signature"
-          data-testid="slate-signature"
-          style={{
-            fontSize: 11,
-            fontWeight: 800,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            color: "rgba(201,168,76,0.85)",
-            marginBottom: 6,
-          }}
-        >
-          {adapter.signature.label}
-        </div>
-      )}
+      {/* SlateChip's overlay header already shows {label} (e.g. "Slate #145"),
+          so the panel-internal signature is redundant — dropped to avoid the
+          duplicate "Slate #N" the user spotted in the overlay. */}
 
       {adapter.themeMetadata && (
         <header className="slate-panel__theme" data-testid="slate-theme-banner">

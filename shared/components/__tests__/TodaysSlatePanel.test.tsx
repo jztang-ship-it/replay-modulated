@@ -54,17 +54,14 @@ describe("TodaysSlatePanel", () => {
     expect(screen.getByTestId("thumb-curry")).toBeTruthy();
   });
 
-  it("renders the slate signature line when provided", () => {
+  it("does not render the panel-internal signature line (lives in SlateChip overlay header)", () => {
+    // The panel used to render its own "Slate #N" line, but SlateChip's
+    // overlay header now shows {label} — so the panel-internal signature
+    // was removed to avoid the duplicate.
     render(<TodaysSlatePanel adapter={{
       ...baseAdapter,
       signature: { number: 145, label: "Slate #145" },
     }} />);
-    const sig = screen.getByTestId("slate-signature");
-    expect(sig.textContent).toBe("Slate #145");
-  });
-
-  it("omits the signature line when none is provided", () => {
-    render(<TodaysSlatePanel adapter={baseAdapter} />);
     expect(screen.queryByTestId("slate-signature")).toBeNull();
   });
 
