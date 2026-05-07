@@ -21,6 +21,7 @@ import { ensureLoaded, getPlayers } from "@shared/engines/dataEngine";
 import { headshotUrl } from "@shared/utils/headshotUrl";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { getTodaysStars } from "../adapters/gameAdapter";
+import { tierFromSalary } from "../engines/economyEngine";
 import type { TierColor } from "@shared/types";
 import { getTier } from "@shared/theme";
 
@@ -35,9 +36,15 @@ function buildPlayerIndex(): Map<string, ResolvedPlayer> {
     // Don't overwrite — first row wins, since players.json contains one row
     // per (player, season) and any season's identity fields are equivalent.
     if (idx.has(baseId)) continue;
+    // Compute tier from salary at runtime — players.json has stale tier
+    // strings from old thresholds (e.g. Ja Morant @ $55 was tagged BLUE
+    // but $44+ is PURPLE in the current economy). Recomputing here keeps
+    // the slate display in sync with the live tier breakpoints.
+    const salary = Number((p as any).salary ?? 0);
+    const computedTier = tierFromSalary(salary, sportAdapter.economyConfig);
     idx.set(baseId, {
       name: String((p as any).name ?? baseId),
-      tier: sportAdapter.normalizeTier((p as any).tier),
+      tier: sportAdapter.normalizeTier(computedTier),
       photoCode: (p as any).photoCode != null ? String((p as any).photoCode) : baseId,
     });
   }

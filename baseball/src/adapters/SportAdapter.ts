@@ -7,6 +7,7 @@ import BaseballSportConfig, {
 import { registerRecordSources } from "@shared/data/recordDetector";
 import { MLB_SINGLE_GAME_RECORDS, MLB_STAT_ALIASES } from "@shared/data/mlbRecords";
 import { getPlayers, getLogsByKey } from "../engines/dataEngine";
+import { tierFromSalary } from "../engines/economyEngine";
 import { tierRank } from "@shared/theme";
 import topGames from "../../public/data/topGames.json";
 import careerHighs from "../../public/data/careerHighs.json";
@@ -445,9 +446,11 @@ export class SportAdapter {
       const bid = String((p as any).basePlayerId ?? (p as any).id ?? "").trim();
       if (!bid || seen.has(bid)) continue;
       seen.add(bid);
+      // Compute tier from salary — see basketball adapter rationale.
+      const salary = Number((p as any).salary ?? 0);
       entries.push({
         id: bid,
-        tier: String((p as any).tier ?? "WHITE").toUpperCase(),
+        tier: tierFromSalary(salary, this.economyConfig),
         fp: this.getCareerFPById(bid),
       });
     }

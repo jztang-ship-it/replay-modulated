@@ -20,6 +20,7 @@ import { ensureLoaded, getPlayers } from "@shared/engines/dataEngine";
 import { resolvePlayerImage } from "@shared/media/playerImages";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { getTodaysStars } from "../adapters/gameAdapter";
+import { tierFromSalary } from "../engines/economyEngine";
 import { getExternalIds } from "../data/playerImageManifest";
 import type { TierColor } from "@shared/types";
 import { getTier } from "@shared/theme";
@@ -51,9 +52,13 @@ function buildPlayerIndex(): Map<string, ResolvedPlayer> {
     const baseId = String((p as any).basePlayerId ?? (p as any).id ?? "").trim();
     if (!baseId) continue;
     if (idx.has(baseId)) continue;
+    // Compute tier from salary at runtime; players.json may carry stale
+    // tier strings from older thresholds. See basketball panel rationale.
+    const salary = Number((p as any).salary ?? 0);
+    const computedTier = tierFromSalary(salary, sportAdapter.economyConfig);
     idx.set(baseId, {
       name: String((p as any).name ?? baseId),
-      tier: sportAdapter.normalizeTier((p as any).tier),
+      tier: sportAdapter.normalizeTier(computedTier),
       team: String((p as any).team ?? ""),
     });
   }

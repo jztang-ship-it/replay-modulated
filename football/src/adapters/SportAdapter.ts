@@ -21,6 +21,7 @@
 import { SportAdapter as SharedSportAdapter } from "@shared/adapters/SportAdapter";
 import { FootballSportConfig } from "./footballConfig";
 import { getPlayers, getLogsByKey } from "../engines/dataEngine";
+import { tierFromSalary } from "../engines/economyEngine";
 import { tierRank } from "@shared/theme";
 
 export class SportAdapter extends SharedSportAdapter {
@@ -91,9 +92,11 @@ export class SportAdapter extends SharedSportAdapter {
       const bid = String((p as any).basePlayerId ?? (p as any).id ?? "").trim();
       if (!bid || seen.has(bid)) continue;
       seen.add(bid);
+      // Compute tier from salary — see basketball adapter rationale.
+      const salary = Number((p as any).salary ?? 0);
       entries.push({
         id: bid,
-        tier: String((p as any).tier ?? "WHITE").toUpperCase(),
+        tier: tierFromSalary(salary, this.economyConfig),
         fp: this.getCareerFPById(bid),
       });
     }
