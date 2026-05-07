@@ -54,10 +54,15 @@ export const FootballSportConfig: SportConfigShape = {
 
   positionProjectionWeights: {
     GK: {
-      saves:              20.0,  // avg 1.14 saves → 22.8 FP (primary GK stat)
-      goals_conceded:     -6.0,  // avg 1.14 GA → -6.8 FP
-      clearances:          4.0,  // bonus
-      goals:              60.0,  // extremely rare — massive reward
+      // Recalibrated 2026-05-07: dropped 2.5× multiplier; bumped per-stat
+      // weights so GK lands organically near outfield mean (~17) without
+      // the post-hoc scaler. Avg 1.14 saves → 18.2 FP from saves; avg 1.14 GA
+      // → -3.4 FP penalty (was -6.8); 0.36 clearances → 1.8 FP base. Goal
+      // weight 70 keeps the GK-scores-a-goal pop without runaway p99.
+      saves:              16.0,
+      goals_conceded:     -3.0,
+      clearances:          5.0,
+      goals:              70.0,
       yellow_cards:       -5.0,
       red_cards:         -15.0,
     },
@@ -89,11 +94,18 @@ export const FootballSportConfig: SportConfigShape = {
       red_cards:         -15.0,
     },
     FWD: {
+      // Recalibrated 2026-05-07 (Option A): bumped active-play weights
+      // SOT 4→6, KP 3→4, dribbles 2→3 to lift FWD mean ~17→~21 (matching
+      // MID/DEF EV) without padding the floor. Boom-or-bust shape is
+      // preserved — goal pops still dominate the tail. Rationale: lower
+      // FWD EV creates a strategic "always pick MID at FLEX" advantage;
+      // closing the mean gap removes the obvious choice while keeping
+      // variance flavor (high tail / lower median than MID).
       goals:              22.0,  // avg 0.24 → 5.3 FP (primary FWD stat)
       assists:             8.0,  // avg 0.10 → 0.8 FP
-      shots_on_target:     4.0,  // avg 1.14 → 4.56 FP
-      key_passes:          3.0,  // avg 0.91 → 2.73 FP
-      dribbles_completed:  2.0,  // avg 1.22 → 2.44 FP
+      shots_on_target:     6.0,  // avg 1.14 → 6.84 FP (was 4.0)
+      key_passes:          4.0,  // avg 0.91 → 3.64 FP (was 3.0)
+      dribbles_completed:  3.0,  // avg 1.22 → 3.66 FP (was 2.0)
       pressures:           0.2,  // avg 13.7 → 2.74 FP
       tackles:             2.0,  // avg 0.53 → 1.06 FP
       yellow_cards:       -5.0,
@@ -103,22 +115,11 @@ export const FootballSportConfig: SportConfigShape = {
 
 
   // ── Position FP multipliers ───────────────────────────────────────────────
-  // Normalizes raw FP output so top-tier players at every position produce
-  // a comparable FP range. DEF/MID/FWD top games already land ~88–102 FP;
-  // GK top games land ~22–24 FP because save weight (20) and conceded
-  // penalty (-6) net out lower than outfield goal+assist+contribution
-  // accumulation. Multiplier of 4.0 takes a 23 FP top-GK game to ~92 FP,
-  // matching outfield top games. Badge bonuses are NOT scaled (applied
-  // after in the resolve pipeline).
-  positionMultipliers: {
-    // GK 2.5× — calibrated against 2022-only pool simulation. Earlier
-    // 4.0 over-corrected: GK p99 reached 280 FP vs outfield p99 ~65,
-    // breaking per-anchor LEGEND-rate parity (only GK-anchored hands
-    // could hit LEGEND). 2.5× brings GK averages comparable to outfield
-    // (raw GK avg ~19 FP × 2.5 = 48; outfield avg ~17–21 FP) while
-    // preserving the "GK has a path to LEGEND too" property.
-    GK: 2.5,
-  },
+  // Removed 2026-05-07. The previous GK 2.5× scaler over-corrected (per-game
+  // GK mean 40.7 vs outfield 20.4; p99 175 vs 55), giving GK an obvious
+  // strategic advantage. GK weights are now tuned organically (saves 16,
+  // GA -3, clearances 5, goals 70) so no post-hoc scaling is needed.
+  positionMultipliers: {},
 
   // ── Active player pool ────────────────────────────────────────────────────
   // Source data ships 2018 + 2022 World Cup squads (1191 players, 3096
@@ -155,23 +156,24 @@ export const FootballSportConfig: SportConfigShape = {
     { tier: "WHITE",  minSalary: 0  },
   ],
 
-  // ── Win tiers — calibrated against 10k-hand simulator on 2022 pool ──────
-  // Pool: 622 players, 1623 logs (2022 WC squads only). GK 2.5× scaling.
-  // Team FP distribution: P25=114, Median=140, P75=168, P90=199, P99=282.
+  // ── Win tiers — recalibrated 2026-05-07 against 10k-hand simulator ──────
+  // Pool: 602 players (2022 WC squads only) post GK 2.5× removal + FWD
+  // active-play weight bumps. Team FP distribution shifted down:
+  //   Median 118  P75 142  P90 167  P95 ~181  P99 215
   // Thresholds chosen to land at spec hit-rate targets:
   //   SUB     ~25% (≈ P75)
   //   STARTER ~12% (≈ P88)
   //   CAPTAIN ~5%  (≈ P95)
   //   MOTM    ~1.5% (≈ P98.5)
   //   LEGEND  ~0.3% (≈ P99.7)
-  // Multipliers carry over from prior calibration round; re-tuned if EV
-  // drifts outside TARGET ZONE (0.78–0.92).
+  // Multipliers carry over; re-tuned if EV drifts outside TARGET ZONE
+  // (0.78–0.92).
   winTiers: [
-    { name: "SUB",      minFp: 168, multiplier: 0.75, color: "#94A3B8" },
-    { name: "STARTER",  minFp: 190, multiplier: 2,    color: "#10B981" },
-    { name: "CAPTAIN",  minFp: 225, multiplier: 5,    color: "#3B82F6" },
-    { name: "MOTM",     minFp: 265, multiplier: 12,   color: "#F59E0B" },
-    { name: "LEGEND",   minFp: 310, multiplier: 75,   color: "#EF4444" },
+    { name: "SUB",      minFp: 140, multiplier: 0.85, color: "#94A3B8" },
+    { name: "STARTER",  minFp: 160, multiplier: 2,    color: "#10B981" },
+    { name: "CAPTAIN",  minFp: 185, multiplier: 5,    color: "#3B82F6" },
+    { name: "MOTM",     minFp: 210, multiplier: 18,   color: "#F59E0B" },
+    { name: "LEGEND",   minFp: 240, multiplier: 50,   color: "#EF4444" },
   ],
 
   // ── Badges ────────────────────────────────────────────────────────────────

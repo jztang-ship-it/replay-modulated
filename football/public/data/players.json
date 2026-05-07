@@ -8,8 +8,8 @@
     "position": "GK",
     "salary": 37,
     "tier": "BLUE",
-    "avgFP": 21.1,
-    "projectedFp": 21.1,
+    "avgFP": 20,
+    "projectedFp": 20,
     "active": true
   },
   {
@@ -21,8 +21,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -32,10 +32,10 @@
     "name": "Yann Sommer",
     "team": "Switzerland",
     "position": "GK",
-    "salary": 31,
+    "salary": 30,
     "tier": "BLUE",
-    "avgFP": 17.5,
-    "projectedFp": 17.5,
+    "avgFP": 16.3,
+    "projectedFp": 16.3,
     "active": true
   },
   {
@@ -47,8 +47,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -60,8 +60,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -71,10 +71,10 @@
     "name": "Munir Mohand Mohamedi",
     "team": "Morocco",
     "position": "GK",
-    "salary": 37,
+    "salary": 36,
     "tier": "BLUE",
-    "avgFP": 21,
-    "projectedFp": 21,
+    "avgFP": 19.5,
+    "projectedFp": 19.5,
     "active": true
   },
   {
@@ -84,10 +84,10 @@
     "name": "Jaime Manuel Penedo Cano",
     "team": "Panama",
     "position": "GK",
-    "salary": 37,
+    "salary": 36,
     "tier": "BLUE",
-    "avgFP": 21,
-    "projectedFp": 21,
+    "avgFP": 19.5,
+    "projectedFp": 19.5,
     "active": true
   },
   {
@@ -97,10 +97,10 @@
     "name": "Vladimir Stojković",
     "team": "Serbia",
     "position": "GK",
-    "salary": 33,
+    "salary": 32,
     "tier": "BLUE",
-    "avgFP": 18.7,
-    "projectedFp": 18.7,
+    "avgFP": 17.3,
+    "projectedFp": 17.3,
     "active": true
   },
   {
@@ -110,10 +110,10 @@
     "name": "Alisson Ramsés Becker",
     "team": "Brazil",
     "position": "GK",
-    "salary": 33,
+    "salary": 32,
     "tier": "BLUE",
-    "avgFP": 18.7,
-    "projectedFp": 18.7,
+    "avgFP": 17.3,
+    "projectedFp": 17.3,
     "active": true
   },
   {
@@ -123,10 +123,10 @@
     "name": "Keylor Navas Gamboa",
     "team": "Costa Rica",
     "position": "GK",
-    "salary": 40,
+    "salary": 41,
     "tier": "PURPLE",
-    "avgFP": 23,
-    "projectedFp": 23,
+    "avgFP": 22,
+    "projectedFp": 22,
     "active": true
   },
   {
@@ -138,8 +138,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -151,8 +151,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -164,8 +164,8 @@
     "position": "GK",
     "salary": 40,
     "tier": "PURPLE",
-    "avgFP": 23.3,
-    "projectedFp": 23.3,
+    "avgFP": 21.7,
+    "projectedFp": 21.7,
     "active": true
   },
   {
@@ -190,8 +190,8 @@
     "position": "GK",
     "salary": 16,
     "tier": "GREEN",
-    "avgFP": 9,
-    "projectedFp": 9,
+    "avgFP": 8,
+    "projectedFp": 8,
     "active": true
   },
   {
@@ -203,8 +203,8 @@
     "position": "GK",
     "salary": 42,
     "tier": "PURPLE",
-    "avgFP": 24.5,
-    "projectedFp": 24.5,
+    "avgFP": 22.8,
+    "projectedFp": 22.8,
     "active": true
   },
   {
@@ -216,8 +216,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -227,10 +227,10 @@
     "name": "Hugo Lloris",
     "team": "France",
     "position": "GK",
-    "salary": 27,
-    "tier": "GREEN",
-    "avgFP": 15.3,
-    "projectedFp": 15.3,
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 14.7,
+    "projectedFp": 14.7,
     "active": true
   },
   {
@@ -242,8 +242,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -255,8 +255,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -266,10 +266,10 @@
     "name": "Manuel Neuer",
     "team": "Germany",
     "position": "GK",
-    "salary": 26,
+    "salary": 27,
     "tier": "GREEN",
-    "avgFP": 15,
-    "projectedFp": 15,
+    "avgFP": 14.3,
+    "projectedFp": 14.3,
     "active": true
   },
   {
@@ -281,8 +281,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -294,8 +294,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -307,8 +307,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -318,10 +318,10 @@
     "name": "Mathew Ryan",
     "team": "Australia",
     "position": "GK",
-    "salary": 28,
+    "salary": 29,
     "tier": "BLUE",
-    "avgFP": 16,
-    "projectedFp": 16,
+    "avgFP": 15.5,
+    "projectedFp": 15.5,
     "active": true
   },
   {
@@ -333,8 +333,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -344,10 +344,10 @@
     "name": "Eiji Kawashima",
     "team": "Japan",
     "position": "GK",
-    "salary": 37,
+    "salary": 36,
     "tier": "BLUE",
-    "avgFP": 21,
-    "projectedFp": 21,
+    "avgFP": 19.5,
+    "projectedFp": 19.5,
     "active": true
   },
   {
@@ -1566,7 +1566,7 @@
     "name": "Youssouf Sabaly",
     "team": "Senegal",
     "position": "DEF",
-    "salary": 36,
+    "salary": 35,
     "tier": "BLUE",
     "avgFP": 24,
     "projectedFp": 24,
@@ -2125,10 +2125,10 @@
     "name": "Hiroki Sakai",
     "team": "Japan",
     "position": "DEF",
-    "salary": 14,
-    "tier": "WHITE",
-    "avgFP": 9,
-    "projectedFp": 9,
+    "salary": 16,
+    "tier": "GREEN",
+    "avgFP": 10.6,
+    "projectedFp": 10.6,
     "active": true
   },
   {
@@ -2190,7 +2190,7 @@
     "name": "Mousa Sidi Yaya Dembélé",
     "team": "Belgium",
     "position": "MID",
-    "salary": 41,
+    "salary": 40,
     "tier": "PURPLE",
     "avgFP": 29.3,
     "projectedFp": 29.3,
@@ -2216,10 +2216,10 @@
     "name": "Kevin De Bruyne",
     "team": "Belgium",
     "position": "MID",
-    "salary": 38,
-    "tier": "BLUE",
-    "avgFP": 27.6,
-    "projectedFp": 27.6,
+    "salary": 48,
+    "tier": "PURPLE",
+    "avgFP": 35,
+    "projectedFp": 35,
     "active": true
   },
   {
@@ -2281,10 +2281,10 @@
     "name": "Thorgan Hazard",
     "team": "Belgium",
     "position": "MID",
-    "salary": 26,
-    "tier": "GREEN",
-    "avgFP": 18.3,
-    "projectedFp": 18.3,
+    "salary": 32,
+    "tier": "BLUE",
+    "avgFP": 22.7,
+    "projectedFp": 22.7,
     "active": true
   },
   {
@@ -2359,10 +2359,10 @@
     "name": "Raheem Sterling",
     "team": "England",
     "position": "MID",
-    "salary": 23,
-    "tier": "GREEN",
-    "avgFP": 16.1,
-    "projectedFp": 16.1,
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 20.6,
+    "projectedFp": 20.6,
     "active": true
   },
   {
@@ -2476,10 +2476,10 @@
     "name": "Harry Kane",
     "team": "England",
     "position": "MID",
-    "salary": 38,
-    "tier": "BLUE",
-    "avgFP": 27.5,
-    "projectedFp": 27.5,
+    "salary": 42,
+    "tier": "PURPLE",
+    "avgFP": 30.6,
+    "projectedFp": 30.6,
     "active": true
   },
   {
@@ -2515,10 +2515,10 @@
     "name": "Denis Lemi Zakaria Lako Lado",
     "team": "Switzerland",
     "position": "MID",
-    "salary": 12,
+    "salary": 13,
     "tier": "WHITE",
-    "avgFP": 7.8,
-    "projectedFp": 7.8,
+    "avgFP": 8.8,
+    "projectedFp": 8.8,
     "active": true
   },
   {
@@ -2528,7 +2528,7 @@
     "name": "Valon Behrami",
     "team": "Switzerland",
     "position": "MID",
-    "salary": 39,
+    "salary": 38,
     "tier": "BLUE",
     "avgFP": 27.8,
     "projectedFp": 27.8,
@@ -2749,10 +2749,10 @@
     "name": "Bruno Miguel Borges Fernandes",
     "team": "Portugal",
     "position": "MID",
-    "salary": 33,
+    "salary": 37,
     "tier": "BLUE",
-    "avgFP": 23.8,
-    "projectedFp": 23.8,
+    "avgFP": 26.9,
+    "projectedFp": 26.9,
     "active": true
   },
   {
@@ -2814,7 +2814,7 @@
     "name": "Ricardo Domingos Barbosa Pereira",
     "team": "Portugal",
     "position": "MID",
-    "salary": 21,
+    "salary": 20,
     "tier": "GREEN",
     "avgFP": 14.4,
     "projectedFp": 14.4,
@@ -2853,10 +2853,10 @@
     "name": "Karim Ansarifard",
     "team": "Iran",
     "position": "MID",
-    "salary": 13,
+    "salary": 14,
     "tier": "WHITE",
-    "avgFP": 8.6,
-    "projectedFp": 8.6,
+    "avgFP": 9.9,
+    "projectedFp": 9.9,
     "active": true
   },
   {
@@ -2892,10 +2892,10 @@
     "name": "Saman Ghoddos",
     "team": "Iran",
     "position": "MID",
-    "salary": 10,
+    "salary": 11,
     "tier": "WHITE",
-    "avgFP": 5.6,
-    "projectedFp": 5.6,
+    "avgFP": 7.1,
+    "projectedFp": 7.1,
     "active": true
   },
   {
@@ -3009,7 +3009,7 @@
     "name": "Amine Harit",
     "team": "Morocco",
     "position": "MID",
-    "salary": 56,
+    "salary": 55,
     "tier": "ORANGE",
     "avgFP": 40.4,
     "projectedFp": 40.4,
@@ -3035,10 +3035,10 @@
     "name": "Youssef En-Nesyri",
     "team": "Morocco",
     "position": "MID",
-    "salary": 22,
+    "salary": 25,
     "tier": "GREEN",
-    "avgFP": 15.8,
-    "projectedFp": 15.8,
+    "avgFP": 17.9,
+    "projectedFp": 17.9,
     "active": true
   },
   {
@@ -3048,10 +3048,10 @@
     "name": "Yassine Bounou",
     "team": "Morocco",
     "position": "MID",
-    "salary": 29,
-    "tier": "BLUE",
-    "avgFP": 21,
-    "projectedFp": 21,
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 19.5,
+    "projectedFp": 19.5,
     "active": true
   },
   {
@@ -3100,7 +3100,7 @@
     "name": "Marcelo Brozović",
     "team": "Croatia",
     "position": "MID",
-    "salary": 41,
+    "salary": 40,
     "tier": "PURPLE",
     "avgFP": 29.3,
     "projectedFp": 29.3,
@@ -3178,10 +3178,10 @@
     "name": "Dominik Livaković",
     "team": "Croatia",
     "position": "MID",
-    "salary": 25,
+    "salary": 23,
     "tier": "GREEN",
-    "avgFP": 17.5,
-    "projectedFp": 17.5,
+    "avgFP": 16.3,
+    "projectedFp": 16.3,
     "active": true
   },
   {
@@ -3412,10 +3412,10 @@
     "name": "Luka Jović",
     "team": "Serbia",
     "position": "MID",
-    "salary": 11,
+    "salary": 15,
     "tier": "WHITE",
-    "avgFP": 7.2,
-    "projectedFp": 7.2,
+    "avgFP": 10.2,
+    "projectedFp": 10.2,
     "active": true
   },
   {
@@ -3542,10 +3542,10 @@
     "name": "Joel Nathaniel Campbell Samuels",
     "team": "Costa Rica",
     "position": "MID",
-    "salary": 24,
-    "tier": "GREEN",
-    "avgFP": 17.2,
-    "projectedFp": 17.2,
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 22.2,
+    "projectedFp": 22.2,
     "active": true
   },
   {
@@ -3737,7 +3737,7 @@
     "name": "Rodrigo Bentancur Colmán",
     "team": "Uruguay",
     "position": "MID",
-    "salary": 49,
+    "salary": 48,
     "tier": "PURPLE",
     "avgFP": 35.3,
     "projectedFp": 35.3,
@@ -3869,8 +3869,8 @@
     "position": "MID",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 4.2,
-    "projectedFp": 4.2,
+    "avgFP": 5.2,
+    "projectedFp": 5.2,
     "active": true
   },
   {
@@ -3997,7 +3997,7 @@
     "name": "Ja-Cheol Koo",
     "team": "South Korea",
     "position": "MID",
-    "salary": 25,
+    "salary": 24,
     "tier": "GREEN",
     "avgFP": 17.4,
     "projectedFp": 17.4,
@@ -4036,10 +4036,10 @@
     "name": "Seung-Gyu Kim",
     "team": "South Korea",
     "position": "MID",
-    "salary": 22,
+    "salary": 21,
     "tier": "GREEN",
-    "avgFP": 15.3,
-    "projectedFp": 15.3,
+    "avgFP": 14.7,
+    "projectedFp": 14.7,
     "active": true
   },
   {
@@ -4504,7 +4504,7 @@
     "name": "André Martín Carrillo Díaz",
     "team": "Peru",
     "position": "MID",
-    "salary": 58,
+    "salary": 57,
     "tier": "ORANGE",
     "avgFP": 41.9,
     "projectedFp": 41.9,
@@ -4556,7 +4556,7 @@
     "name": "Pedro Jesús Aquino Sánchez",
     "team": "Peru",
     "position": "MID",
-    "salary": 41,
+    "salary": 40,
     "tier": "PURPLE",
     "avgFP": 29.3,
     "projectedFp": 29.3,
@@ -4764,10 +4764,10 @@
     "name": "Marco Asensio Willemsen",
     "team": "Spain",
     "position": "MID",
-    "salary": 21,
+    "salary": 26,
     "tier": "GREEN",
-    "avgFP": 14.6,
-    "projectedFp": 14.6,
+    "avgFP": 18.4,
+    "projectedFp": 18.4,
     "active": true
   },
   {
@@ -4842,7 +4842,7 @@
     "name": "Mats Hummels",
     "team": "Germany",
     "position": "MID",
-    "salary": 49,
+    "salary": 48,
     "tier": "PURPLE",
     "avgFP": 35.3,
     "projectedFp": 35.3,
@@ -5037,7 +5037,7 @@
     "name": "Rami Bedoui",
     "team": "Tunisia",
     "position": "MID",
-    "salary": 17,
+    "salary": 16,
     "tier": "GREEN",
     "avgFP": 11.4,
     "projectedFp": 11.4,
@@ -5063,8 +5063,8 @@
     "name": "Sergio Leonel Agüero del Castillo",
     "team": "Argentina",
     "position": "MID",
-    "salary": 40,
-    "tier": "PURPLE",
+    "salary": 39,
+    "tier": "BLUE",
     "avgFP": 28.5,
     "projectedFp": 28.5,
     "active": true
@@ -5258,10 +5258,10 @@
     "name": "Kasper Dolberg",
     "team": "Denmark",
     "position": "MID",
-    "salary": 15,
-    "tier": "WHITE",
-    "avgFP": 10.2,
-    "projectedFp": 10.2,
+    "salary": 20,
+    "tier": "GREEN",
+    "avgFP": 13.7,
+    "projectedFp": 13.7,
     "active": true
   },
   {
@@ -5271,7 +5271,7 @@
     "name": "Viktor Fischer",
     "team": "Denmark",
     "position": "MID",
-    "salary": 19,
+    "salary": 18,
     "tier": "GREEN",
     "avgFP": 12.9,
     "projectedFp": 12.9,
@@ -5284,7 +5284,7 @@
     "name": "Onyinye Wilfred Ndidi",
     "team": "Nigeria",
     "position": "MID",
-    "salary": 44,
+    "salary": 43,
     "tier": "PURPLE",
     "avgFP": 31.6,
     "projectedFp": 31.6,
@@ -5466,7 +5466,7 @@
     "name": "Aaron Mooy",
     "team": "Australia",
     "position": "MID",
-    "salary": 43,
+    "salary": 42,
     "tier": "PURPLE",
     "avgFP": 30.8,
     "projectedFp": 30.8,
@@ -5479,8 +5479,8 @@
     "name": "Mathew Leckie",
     "team": "Australia",
     "position": "MID",
-    "salary": 40,
-    "tier": "PURPLE",
+    "salary": 39,
+    "tier": "BLUE",
     "avgFP": 28.5,
     "projectedFp": 28.5,
     "active": true
@@ -5533,8 +5533,8 @@
     "position": "MID",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 5.5,
-    "projectedFp": 5.5,
+    "avgFP": 6.1,
+    "projectedFp": 6.1,
     "active": true
   },
   {
@@ -5572,8 +5572,8 @@
     "position": "MID",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 4.4,
-    "projectedFp": 4.4,
+    "avgFP": 5.4,
+    "projectedFp": 5.4,
     "active": true
   },
   {
@@ -5752,7 +5752,7 @@
     "name": "Shinji Kagawa",
     "team": "Japan",
     "position": "MID",
-    "salary": 45,
+    "salary": 44,
     "tier": "PURPLE",
     "avgFP": 32.3,
     "projectedFp": 32.3,
@@ -5869,10 +5869,10 @@
     "name": "Marouane Fellaini-Bakkioui",
     "team": "Belgium",
     "position": "FWD",
-    "salary": 30,
+    "salary": 28,
     "tier": "BLUE",
-    "avgFP": 16.9,
-    "projectedFp": 16.9,
+    "avgFP": 18.7,
+    "projectedFp": 18.7,
     "active": true
   },
   {
@@ -5882,10 +5882,10 @@
     "name": "Michy Batshuayi Tunga",
     "team": "Belgium",
     "position": "FWD",
-    "salary": 53,
+    "salary": 55,
     "tier": "ORANGE",
-    "avgFP": 29.6,
-    "projectedFp": 29.6,
+    "avgFP": 37.4,
+    "projectedFp": 37.4,
     "active": true
   },
   {
@@ -5895,8 +5895,8 @@
     "name": "Dries Mertens",
     "team": "Belgium",
     "position": "FWD",
-    "salary": 46,
-    "tier": "PURPLE",
+    "salary": 39,
+    "tier": "BLUE",
     "avgFP": 25.9,
     "projectedFp": 25.9,
     "active": true
@@ -5910,8 +5910,8 @@
     "position": "FWD",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 45.6,
-    "projectedFp": 45.6,
+    "avgFP": 52.6,
+    "projectedFp": 52.6,
     "active": true
   },
   {
@@ -5921,10 +5921,10 @@
     "name": "Marcus Rashford",
     "team": "England",
     "position": "FWD",
-    "salary": 39,
-    "tier": "BLUE",
-    "avgFP": 21.7,
-    "projectedFp": 21.7,
+    "salary": 40,
+    "tier": "PURPLE",
+    "avgFP": 26.6,
+    "projectedFp": 26.6,
     "active": true
   },
   {
@@ -5934,10 +5934,10 @@
     "name": "Jamie Vardy",
     "team": "England",
     "position": "FWD",
-    "salary": 13,
+    "salary": 11,
     "tier": "WHITE",
-    "avgFP": 6.6,
-    "projectedFp": 6.6,
+    "avgFP": 7.1,
+    "projectedFp": 7.1,
     "active": true
   },
   {
@@ -5947,10 +5947,10 @@
     "name": "Xherdan Shaqiri",
     "team": "Switzerland",
     "position": "FWD",
-    "salary": 43,
+    "salary": 44,
     "tier": "PURPLE",
-    "avgFP": 24.2,
-    "projectedFp": 24.2,
+    "avgFP": 29.6,
+    "projectedFp": 29.6,
     "active": true
   },
   {
@@ -5960,10 +5960,10 @@
     "name": "Breel-Donald Embolo",
     "team": "Switzerland",
     "position": "FWD",
-    "salary": 40,
-    "tier": "PURPLE",
-    "avgFP": 22.2,
-    "projectedFp": 22.2,
+    "salary": 39,
+    "tier": "BLUE",
+    "avgFP": 26,
+    "projectedFp": 26,
     "active": true
   },
   {
@@ -5973,10 +5973,10 @@
     "name": "Steven Zuber",
     "team": "Switzerland",
     "position": "FWD",
-    "salary": 45,
+    "salary": 46,
     "tier": "PURPLE",
-    "avgFP": 25.4,
-    "projectedFp": 25.4,
+    "avgFP": 30.7,
+    "projectedFp": 30.7,
     "active": true
   },
   {
@@ -5986,10 +5986,10 @@
     "name": "Josip Drmic",
     "team": "Switzerland",
     "position": "FWD",
-    "salary": 36,
+    "salary": 35,
     "tier": "BLUE",
-    "avgFP": 20,
-    "projectedFp": 20,
+    "avgFP": 23.5,
+    "projectedFp": 23.5,
     "active": true
   },
   {
@@ -5999,10 +5999,10 @@
     "name": "Ola Toivonen",
     "team": "Sweden",
     "position": "FWD",
-    "salary": 31,
+    "salary": 30,
     "tier": "BLUE",
-    "avgFP": 17.4,
-    "projectedFp": 17.4,
+    "avgFP": 19.6,
+    "projectedFp": 19.6,
     "active": true
   },
   {
@@ -6014,8 +6014,8 @@
     "position": "FWD",
     "salary": 33,
     "tier": "BLUE",
-    "avgFP": 18.2,
-    "projectedFp": 18.2,
+    "avgFP": 22,
+    "projectedFp": 22,
     "active": true
   },
   {
@@ -6038,10 +6038,10 @@
     "name": "Marcus Berg",
     "team": "Sweden",
     "position": "FWD",
-    "salary": 39,
-    "tier": "BLUE",
-    "avgFP": 22,
-    "projectedFp": 22,
+    "salary": 42,
+    "tier": "PURPLE",
+    "avgFP": 28.4,
+    "projectedFp": 28.4,
     "active": true
   },
   {
@@ -6051,10 +6051,10 @@
     "name": "Gonçalo Manuel Ganchinho Guedes",
     "team": "Portugal",
     "position": "FWD",
-    "salary": 21,
+    "salary": 23,
     "tier": "GREEN",
-    "avgFP": 11.2,
-    "projectedFp": 11.2,
+    "avgFP": 14.9,
+    "projectedFp": 14.9,
     "active": true
   },
   {
@@ -6064,7 +6064,7 @@
     "name": "Cristiano Ronaldo dos Santos Aveiro",
     "team": "Portugal",
     "position": "FWD",
-    "salary": 47,
+    "salary": 40,
     "tier": "PURPLE",
     "avgFP": 26.5,
     "projectedFp": 26.5,
@@ -6077,8 +6077,8 @@
     "name": "André Miguel Valente Silva",
     "team": "Portugal",
     "position": "FWD",
-    "salary": 28,
-    "tier": "BLUE",
+    "salary": 24,
+    "tier": "GREEN",
     "avgFP": 15.6,
     "projectedFp": 15.6,
     "active": true
@@ -6090,10 +6090,10 @@
     "name": "Sardar Azmoun",
     "team": "Iran",
     "position": "FWD",
-    "salary": 17,
+    "salary": 19,
     "tier": "GREEN",
-    "avgFP": 9.1,
-    "projectedFp": 9.1,
+    "avgFP": 12.5,
+    "projectedFp": 12.5,
     "active": true
   },
   {
@@ -6103,10 +6103,10 @@
     "name": "Nordin Amrabat",
     "team": "Morocco",
     "position": "FWD",
-    "salary": 28,
+    "salary": 31,
     "tier": "BLUE",
-    "avgFP": 15.5,
-    "projectedFp": 15.5,
+    "avgFP": 20.2,
+    "projectedFp": 20.2,
     "active": true
   },
   {
@@ -6129,7 +6129,7 @@
     "name": "Hakim Ziyech",
     "team": "Morocco",
     "position": "FWD",
-    "salary": 60,
+    "salary": 57,
     "tier": "ORANGE",
     "avgFP": 38.1,
     "projectedFp": 38.1,
@@ -6142,10 +6142,10 @@
     "name": "Khalid Boutaïb",
     "team": "Morocco",
     "position": "FWD",
-    "salary": 43,
+    "salary": 42,
     "tier": "PURPLE",
-    "avgFP": 24.3,
-    "projectedFp": 24.3,
+    "avgFP": 28.3,
+    "projectedFp": 28.3,
     "active": true
   },
   {
@@ -6155,8 +6155,8 @@
     "name": "Andrej Kramarić",
     "team": "Croatia",
     "position": "FWD",
-    "salary": 32,
-    "tier": "BLUE",
+    "salary": 27,
+    "tier": "GREEN",
     "avgFP": 17.6,
     "projectedFp": 17.6,
     "active": true
@@ -6168,10 +6168,10 @@
     "name": "Ante Rebić",
     "team": "Croatia",
     "position": "FWD",
-    "salary": 40,
+    "salary": 44,
     "tier": "PURPLE",
-    "avgFP": 22.2,
-    "projectedFp": 22.2,
+    "avgFP": 29.2,
+    "projectedFp": 29.2,
     "active": true
   },
   {
@@ -6181,10 +6181,10 @@
     "name": "Mario Mandžukić",
     "team": "Croatia",
     "position": "FWD",
-    "salary": 48,
+    "salary": 45,
     "tier": "PURPLE",
-    "avgFP": 26.7,
-    "projectedFp": 26.7,
+    "avgFP": 29.9,
+    "projectedFp": 29.9,
     "active": true
   },
   {
@@ -6194,8 +6194,8 @@
     "name": "Ivan Perišić",
     "team": "Croatia",
     "position": "FWD",
-    "salary": 58,
-    "tier": "ORANGE",
+    "salary": 49,
+    "tier": "PURPLE",
     "avgFP": 32.9,
     "projectedFp": 32.9,
     "active": true
@@ -6207,10 +6207,10 @@
     "name": "Vedran Ćorluka",
     "team": "Croatia",
     "position": "FWD",
-    "salary": 14,
+    "salary": 15,
     "tier": "WHITE",
-    "avgFP": 7.6,
-    "projectedFp": 7.6,
+    "avgFP": 9.6,
+    "projectedFp": 9.6,
     "active": true
   },
   {
@@ -6222,8 +6222,8 @@
     "position": "FWD",
     "salary": 12,
     "tier": "WHITE",
-    "avgFP": 6.2,
-    "projectedFp": 6.2,
+    "avgFP": 7.5,
+    "projectedFp": 7.5,
     "active": true
   },
   {
@@ -6233,10 +6233,10 @@
     "name": "Blas Antonio Miguel Pérez Ortega",
     "team": "Panama",
     "position": "FWD",
-    "salary": 21,
+    "salary": 22,
     "tier": "GREEN",
-    "avgFP": 11.6,
-    "projectedFp": 11.6,
+    "avgFP": 14.1,
+    "projectedFp": 14.1,
     "active": true
   },
   {
@@ -6246,10 +6246,10 @@
     "name": "Edgar Yoel Bárcenas Herrera",
     "team": "Panama",
     "position": "FWD",
-    "salary": 27,
-    "tier": "GREEN",
-    "avgFP": 15.1,
-    "projectedFp": 15.1,
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 19.1,
+    "projectedFp": 19.1,
     "active": true
   },
   {
@@ -6261,8 +6261,8 @@
     "position": "FWD",
     "salary": 12,
     "tier": "WHITE",
-    "avgFP": 6.4,
-    "projectedFp": 6.4,
+    "avgFP": 7.4,
+    "projectedFp": 7.4,
     "active": true
   },
   {
@@ -6285,10 +6285,10 @@
     "name": "Aleksandar Mitrović",
     "team": "Serbia",
     "position": "FWD",
-    "salary": 47,
+    "salary": 48,
     "tier": "PURPLE",
-    "avgFP": 26.2,
-    "projectedFp": 26.2,
+    "avgFP": 32,
+    "projectedFp": 32,
     "active": true
   },
   {
@@ -6298,10 +6298,10 @@
     "name": "Adem Ljajić",
     "team": "Serbia",
     "position": "FWD",
-    "salary": 25,
+    "salary": 27,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 17.7,
+    "projectedFp": 17.7,
     "active": true
   },
   {
@@ -6311,8 +6311,8 @@
     "name": "Filip Kostić",
     "team": "Serbia",
     "position": "FWD",
-    "salary": 32,
-    "tier": "BLUE",
+    "salary": 27,
+    "tier": "GREEN",
     "avgFP": 18,
     "projectedFp": 18,
     "active": true
@@ -6324,10 +6324,10 @@
     "name": "Fernando Luiz Rosa",
     "team": "Brazil",
     "position": "FWD",
-    "salary": 18,
+    "salary": 19,
     "tier": "GREEN",
-    "avgFP": 9.4,
-    "projectedFp": 9.4,
+    "avgFP": 12.1,
+    "projectedFp": 12.1,
     "active": true
   },
   {
@@ -6337,10 +6337,10 @@
     "name": "Gabriel Fernando de Jesus",
     "team": "Brazil",
     "position": "FWD",
-    "salary": 36,
+    "salary": 39,
     "tier": "BLUE",
-    "avgFP": 20.2,
-    "projectedFp": 20.2,
+    "avgFP": 26.2,
+    "projectedFp": 26.2,
     "active": true
   },
   {
@@ -6350,10 +6350,10 @@
     "name": "Willian Borges da Silva",
     "team": "Brazil",
     "position": "FWD",
-    "salary": 29,
+    "salary": 31,
     "tier": "BLUE",
-    "avgFP": 15.8,
-    "projectedFp": 15.8,
+    "avgFP": 20.2,
+    "projectedFp": 20.2,
     "active": true
   },
   {
@@ -6376,10 +6376,10 @@
     "name": "Douglas Costa de Souza",
     "team": "Brazil",
     "position": "FWD",
-    "salary": 45,
+    "salary": 51,
     "tier": "PURPLE",
-    "avgFP": 25,
-    "projectedFp": 25,
+    "avgFP": 34,
+    "projectedFp": 34,
     "active": true
   },
   {
@@ -6391,8 +6391,8 @@
     "position": "FWD",
     "salary": 18,
     "tier": "GREEN",
-    "avgFP": 9.4,
-    "projectedFp": 9.4,
+    "avgFP": 11.9,
+    "projectedFp": 11.9,
     "active": true
   },
   {
@@ -6402,8 +6402,8 @@
     "name": "Bryan Ruiz González",
     "team": "Costa Rica",
     "position": "FWD",
-    "salary": 42,
-    "tier": "PURPLE",
+    "salary": 36,
+    "tier": "BLUE",
     "avgFP": 23.6,
     "projectedFp": 23.6,
     "active": true
@@ -6417,8 +6417,8 @@
     "position": "FWD",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 3.9,
-    "projectedFp": 3.9,
+    "avgFP": 4.9,
+    "projectedFp": 4.9,
     "active": true
   },
   {
@@ -6428,8 +6428,8 @@
     "name": "Johan Alberto Venegas Ulloa",
     "team": "Costa Rica",
     "position": "FWD",
-    "salary": 29,
-    "tier": "BLUE",
+    "salary": 24,
+    "tier": "GREEN",
     "avgFP": 15.9,
     "projectedFp": 15.9,
     "active": true
@@ -6441,10 +6441,10 @@
     "name": "Marwan Mohsen",
     "team": "Egypt",
     "position": "FWD",
-    "salary": 21,
+    "salary": 23,
     "tier": "GREEN",
-    "avgFP": 11.7,
-    "projectedFp": 11.7,
+    "avgFP": 15.3,
+    "projectedFp": 15.3,
     "active": true
   },
   {
@@ -6467,10 +6467,10 @@
     "name": "Edinson Roberto Cavani Gómez",
     "team": "Uruguay",
     "position": "FWD",
-    "salary": 43,
+    "salary": 44,
     "tier": "PURPLE",
-    "avgFP": 24.1,
-    "projectedFp": 24.1,
+    "avgFP": 29.4,
+    "projectedFp": 29.4,
     "active": true
   },
   {
@@ -6480,10 +6480,10 @@
     "name": "Luis Alberto Suárez Díaz",
     "team": "Uruguay",
     "position": "FWD",
-    "salary": 38,
+    "salary": 39,
     "tier": "BLUE",
-    "avgFP": 21.1,
-    "projectedFp": 21.1,
+    "avgFP": 26.3,
+    "projectedFp": 26.3,
     "active": true
   },
   {
@@ -6493,10 +6493,10 @@
     "name": "Nahitan Michel Nández Acosta",
     "team": "Uruguay",
     "position": "FWD",
-    "salary": 17,
+    "salary": 16,
     "tier": "GREEN",
-    "avgFP": 9.1,
-    "projectedFp": 9.1,
+    "avgFP": 10.4,
+    "projectedFp": 10.4,
     "active": true
   },
   {
@@ -6508,8 +6508,8 @@
     "position": "FWD",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 2.7,
-    "projectedFp": 2.7,
+    "avgFP": 3.7,
+    "projectedFp": 3.7,
     "active": true
   },
   {
@@ -6519,7 +6519,7 @@
     "name": "Giorgian Daniel De Arrascaeta Benedetti",
     "team": "Uruguay",
     "position": "FWD",
-    "salary": 50,
+    "salary": 42,
     "tier": "PURPLE",
     "avgFP": 27.9,
     "projectedFp": 27.9,
@@ -6534,8 +6534,8 @@
     "position": "FWD",
     "salary": 37,
     "tier": "BLUE",
-    "avgFP": 20.9,
-    "projectedFp": 20.9,
+    "avgFP": 24.4,
+    "projectedFp": 24.4,
     "active": true
   },
   {
@@ -6547,8 +6547,8 @@
     "position": "FWD",
     "salary": 31,
     "tier": "BLUE",
-    "avgFP": 17.3,
-    "projectedFp": 17.3,
+    "avgFP": 20.8,
+    "projectedFp": 20.8,
     "active": true
   },
   {
@@ -6558,10 +6558,10 @@
     "name": "Miguel Arturo Layún Prado",
     "team": "Mexico",
     "position": "FWD",
-    "salary": 31,
+    "salary": 35,
     "tier": "BLUE",
-    "avgFP": 17.2,
-    "projectedFp": 17.2,
+    "avgFP": 23,
+    "projectedFp": 23,
     "active": true
   },
   {
@@ -6571,10 +6571,10 @@
     "name": "Hirving Rodrigo Lozano Bahena",
     "team": "Mexico",
     "position": "FWD",
-    "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 28.3,
-    "projectedFp": 28.3,
+    "salary": 55,
+    "tier": "ORANGE",
+    "avgFP": 36.9,
+    "projectedFp": 36.9,
     "active": true
   },
   {
@@ -6586,8 +6586,8 @@
     "position": "FWD",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 2.2,
-    "projectedFp": 2.2,
+    "avgFP": 3.2,
+    "projectedFp": 3.2,
     "active": true
   },
   {
@@ -6597,10 +6597,10 @@
     "name": "Heung-Min Son",
     "team": "South Korea",
     "position": "FWD",
-    "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.7,
-    "projectedFp": 28.7,
+    "salary": 54,
+    "tier": "ORANGE",
+    "avgFP": 36.7,
+    "projectedFp": 36.7,
     "active": true
   },
   {
@@ -6610,7 +6610,7 @@
     "name": "Hee-Chan Hwang",
     "team": "South Korea",
     "position": "FWD",
-    "salary": 50,
+    "salary": 42,
     "tier": "PURPLE",
     "avgFP": 28.1,
     "projectedFp": 28.1,
@@ -6625,8 +6625,8 @@
     "position": "FWD",
     "salary": 26,
     "tier": "GREEN",
-    "avgFP": 14.4,
-    "projectedFp": 14.4,
+    "avgFP": 17.4,
+    "projectedFp": 17.4,
     "active": true
   },
   {
@@ -6649,8 +6649,8 @@
     "name": "Hattan Babhir",
     "team": "Saudi Arabia",
     "position": "FWD",
-    "salary": 29,
-    "tier": "BLUE",
+    "salary": 25,
+    "tier": "GREEN",
     "avgFP": 16.2,
     "projectedFp": 16.2,
     "active": true
@@ -6662,10 +6662,10 @@
     "name": "Fahad Mosaed Al Muwallad Al Harbi",
     "team": "Saudi Arabia",
     "position": "FWD",
-    "salary": 12,
+    "salary": 13,
     "tier": "WHITE",
-    "avgFP": 6.3,
-    "projectedFp": 6.3,
+    "avgFP": 7.9,
+    "projectedFp": 7.9,
     "active": true
   },
   {
@@ -6675,10 +6675,10 @@
     "name": "Mohammad Ibrahim Al Sahlawi",
     "team": "Saudi Arabia",
     "position": "FWD",
-    "salary": 14,
+    "salary": 15,
     "tier": "WHITE",
-    "avgFP": 7.6,
-    "projectedFp": 7.6,
+    "avgFP": 9.6,
+    "projectedFp": 9.6,
     "active": true
   },
   {
@@ -6688,10 +6688,10 @@
     "name": "Mohammed Kanoo",
     "team": "Saudi Arabia",
     "position": "FWD",
-    "salary": 18,
+    "salary": 20,
     "tier": "GREEN",
-    "avgFP": 9.7,
-    "projectedFp": 9.7,
+    "avgFP": 12.7,
+    "projectedFp": 12.7,
     "active": true
   },
   {
@@ -6701,7 +6701,7 @@
     "name": "Piotr Zieliński",
     "team": "Poland",
     "position": "FWD",
-    "salary": 49,
+    "salary": 41,
     "tier": "PURPLE",
     "avgFP": 27.5,
     "projectedFp": 27.5,
@@ -6714,10 +6714,10 @@
     "name": "Dawid Kownacki",
     "team": "Poland",
     "position": "FWD",
-    "salary": 17,
+    "salary": 19,
     "tier": "GREEN",
-    "avgFP": 9.2,
-    "projectedFp": 9.2,
+    "avgFP": 12.2,
+    "projectedFp": 12.2,
     "active": true
   },
   {
@@ -6727,8 +6727,8 @@
     "name": "Kamil Grosicki",
     "team": "Poland",
     "position": "FWD",
-    "salary": 44,
-    "tier": "PURPLE",
+    "salary": 37,
+    "tier": "BLUE",
     "avgFP": 24.6,
     "projectedFp": 24.6,
     "active": true
@@ -6740,10 +6740,10 @@
     "name": "Robert Lewandowski",
     "team": "Poland",
     "position": "FWD",
-    "salary": 46,
+    "salary": 49,
     "tier": "PURPLE",
-    "avgFP": 25.7,
-    "projectedFp": 25.7,
+    "avgFP": 32.6,
+    "projectedFp": 32.6,
     "active": true
   },
   {
@@ -6753,10 +6753,10 @@
     "name": "Radamel Falcao García Zárate",
     "team": "Colombia",
     "position": "FWD",
-    "salary": 34,
+    "salary": 32,
     "tier": "BLUE",
-    "avgFP": 18.9,
-    "projectedFp": 18.9,
+    "avgFP": 20.9,
+    "projectedFp": 20.9,
     "active": true
   },
   {
@@ -6766,10 +6766,10 @@
     "name": "Carlos Arturo Bacca Ahumada",
     "team": "Colombia",
     "position": "FWD",
-    "salary": 10,
+    "salary": 11,
     "tier": "WHITE",
-    "avgFP": 4.6,
-    "projectedFp": 4.6,
+    "avgFP": 6.6,
+    "projectedFp": 6.6,
     "active": true
   },
   {
@@ -6779,10 +6779,10 @@
     "name": "Juan Guillermo Cuadrado Bello",
     "team": "Colombia",
     "position": "FWD",
-    "salary": 35,
+    "salary": 36,
     "tier": "BLUE",
-    "avgFP": 19.4,
-    "projectedFp": 19.4,
+    "avgFP": 23.7,
+    "projectedFp": 23.7,
     "active": true
   },
   {
@@ -6792,10 +6792,10 @@
     "name": "James David Rodríguez Rubio",
     "team": "Colombia",
     "position": "FWD",
-    "salary": 38,
+    "salary": 39,
     "tier": "BLUE",
-    "avgFP": 21.1,
-    "projectedFp": 21.1,
+    "avgFP": 25.7,
+    "projectedFp": 25.7,
     "active": true
   },
   {
@@ -6807,8 +6807,8 @@
     "position": "FWD",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 45.9,
-    "projectedFp": 45.9,
+    "avgFP": 55.6,
+    "projectedFp": 55.6,
     "active": true
   },
   {
@@ -6818,10 +6818,10 @@
     "name": "Olivier Giroud",
     "team": "France",
     "position": "FWD",
-    "salary": 31,
+    "salary": 30,
     "tier": "BLUE",
-    "avgFP": 17.4,
-    "projectedFp": 17.4,
+    "avgFP": 20.1,
+    "projectedFp": 20.1,
     "active": true
   },
   {
@@ -6831,10 +6831,10 @@
     "name": "Blaise Matuidi",
     "team": "France",
     "position": "FWD",
-    "salary": 29,
+    "salary": 28,
     "tier": "BLUE",
-    "avgFP": 16,
-    "projectedFp": 16,
+    "avgFP": 18.7,
+    "projectedFp": 18.7,
     "active": true
   },
   {
@@ -6844,10 +6844,10 @@
     "name": "Ousmane Dembélé",
     "team": "France",
     "position": "FWD",
-    "salary": 30,
+    "salary": 32,
     "tier": "BLUE",
-    "avgFP": 16.6,
-    "projectedFp": 16.6,
+    "avgFP": 21.1,
+    "projectedFp": 21.1,
     "active": true
   },
   {
@@ -6857,10 +6857,10 @@
     "name": "José Paolo Guerrero Gonzáles",
     "team": "Peru",
     "position": "FWD",
-    "salary": 38,
-    "tier": "BLUE",
-    "avgFP": 21.4,
-    "projectedFp": 21.4,
+    "salary": 41,
+    "tier": "PURPLE",
+    "avgFP": 27.1,
+    "projectedFp": 27.1,
     "active": true
   },
   {
@@ -6870,10 +6870,10 @@
     "name": "Ismaïla Sarr",
     "team": "Senegal",
     "position": "FWD",
-    "salary": 33,
+    "salary": 35,
     "tier": "BLUE",
-    "avgFP": 18.5,
-    "projectedFp": 18.5,
+    "avgFP": 23.2,
+    "projectedFp": 23.2,
     "active": true
   },
   {
@@ -6883,8 +6883,8 @@
     "name": "Mame Biram Diouf",
     "team": "Senegal",
     "position": "FWD",
-    "salary": 16,
-    "tier": "GREEN",
+    "salary": 14,
+    "tier": "WHITE",
     "avgFP": 8.6,
     "projectedFp": 8.6,
     "active": true
@@ -6898,8 +6898,8 @@
     "position": "FWD",
     "salary": 38,
     "tier": "BLUE",
-    "avgFP": 21.1,
-    "projectedFp": 21.1,
+    "avgFP": 25.1,
+    "projectedFp": 25.1,
     "active": true
   },
   {
@@ -6909,10 +6909,10 @@
     "name": "M''Baye Babacar Niang",
     "team": "Senegal",
     "position": "FWD",
-    "salary": 46,
+    "salary": 49,
     "tier": "PURPLE",
-    "avgFP": 26,
-    "projectedFp": 26,
+    "avgFP": 33,
+    "projectedFp": 33,
     "active": true
   },
   {
@@ -6935,10 +6935,10 @@
     "name": "David Josué Jiménez Silva",
     "team": "Spain",
     "position": "FWD",
-    "salary": 35,
+    "salary": 39,
     "tier": "BLUE",
-    "avgFP": 19.6,
-    "projectedFp": 19.6,
+    "avgFP": 26.1,
+    "projectedFp": 26.1,
     "active": true
   },
   {
@@ -6950,8 +6950,8 @@
     "position": "FWD",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 38.9,
-    "projectedFp": 38.9,
+    "avgFP": 52,
+    "projectedFp": 52,
     "active": true
   },
   {
@@ -6961,10 +6961,10 @@
     "name": "Diego da Silva Costa",
     "team": "Spain",
     "position": "FWD",
-    "salary": 50,
+    "salary": 47,
     "tier": "PURPLE",
-    "avgFP": 28.3,
-    "projectedFp": 28.3,
+    "avgFP": 31.6,
+    "projectedFp": 31.6,
     "active": true
   },
   {
@@ -6976,8 +6976,8 @@
     "position": "FWD",
     "salary": 19,
     "tier": "GREEN",
-    "avgFP": 10,
-    "projectedFp": 10,
+    "avgFP": 12,
+    "projectedFp": 12,
     "active": true
   },
   {
@@ -6987,10 +6987,10 @@
     "name": "Julian Draxler",
     "team": "Germany",
     "position": "FWD",
-    "salary": 46,
-    "tier": "PURPLE",
-    "avgFP": 25.8,
-    "projectedFp": 25.8,
+    "salary": 54,
+    "tier": "ORANGE",
+    "avgFP": 36.3,
+    "projectedFp": 36.3,
     "active": true
   },
   {
@@ -7000,10 +7000,10 @@
     "name": "Timo Werner",
     "team": "Germany",
     "position": "FWD",
-    "salary": 27,
-    "tier": "GREEN",
-    "avgFP": 14.6,
-    "projectedFp": 14.6,
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 19.3,
+    "projectedFp": 19.3,
     "active": true
   },
   {
@@ -7013,10 +7013,10 @@
     "name": "Thomas Müller",
     "team": "Germany",
     "position": "FWD",
-    "salary": 24,
+    "salary": 25,
     "tier": "GREEN",
-    "avgFP": 13.3,
-    "projectedFp": 13.3,
+    "avgFP": 16.3,
+    "projectedFp": 16.3,
     "active": true
   },
   {
@@ -7026,10 +7026,10 @@
     "name": "Mario Gómez García",
     "team": "Germany",
     "position": "FWD",
-    "salary": 18,
+    "salary": 21,
     "tier": "GREEN",
-    "avgFP": 9.6,
-    "projectedFp": 9.6,
+    "avgFP": 13.6,
+    "projectedFp": 13.6,
     "active": true
   },
   {
@@ -7039,7 +7039,7 @@
     "name": "Wahbi Khazri",
     "team": "Tunisia",
     "position": "FWD",
-    "salary": 60,
+    "salary": 53,
     "tier": "ORANGE",
     "avgFP": 35.8,
     "projectedFp": 35.8,
@@ -7052,8 +7052,8 @@
     "name": "Ángel Fabián Di María Hernández",
     "team": "Argentina",
     "position": "FWD",
-    "salary": 53,
-    "tier": "ORANGE",
+    "salary": 45,
+    "tier": "PURPLE",
     "avgFP": 29.9,
     "projectedFp": 29.9,
     "active": true
@@ -7067,8 +7067,8 @@
     "position": "FWD",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 4.2,
-    "projectedFp": 4.2,
+    "avgFP": 5.2,
+    "projectedFp": 5.2,
     "active": true
   },
   {
@@ -7078,10 +7078,10 @@
     "name": "Maximiliano Eduardo Meza",
     "team": "Argentina",
     "position": "FWD",
-    "salary": 45,
+    "salary": 49,
     "tier": "PURPLE",
-    "avgFP": 25.2,
-    "projectedFp": 25.2,
+    "avgFP": 32.7,
+    "projectedFp": 32.7,
     "active": true
   },
   {
@@ -7093,8 +7093,8 @@
     "position": "FWD",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 55.5,
-    "projectedFp": 55.5,
+    "avgFP": 69.3,
+    "projectedFp": 69.3,
     "active": true
   },
   {
@@ -7104,7 +7104,7 @@
     "name": "Christian Dannemann Eriksen",
     "team": "Denmark",
     "position": "FWD",
-    "salary": 60,
+    "salary": 53,
     "tier": "ORANGE",
     "avgFP": 35.5,
     "projectedFp": 35.5,
@@ -7117,10 +7117,10 @@
     "name": "Martin Braithwaite Christensen",
     "team": "Denmark",
     "position": "FWD",
-    "salary": 14,
+    "salary": 15,
     "tier": "WHITE",
-    "avgFP": 7.5,
-    "projectedFp": 7.5,
+    "avgFP": 9.8,
+    "projectedFp": 9.8,
     "active": true
   },
   {
@@ -7130,10 +7130,10 @@
     "name": "Pione Sisto Ifolo Emirmija",
     "team": "Denmark",
     "position": "FWD",
-    "salary": 31,
+    "salary": 36,
     "tier": "BLUE",
-    "avgFP": 17.2,
-    "projectedFp": 17.2,
+    "avgFP": 23.9,
+    "projectedFp": 23.9,
     "active": true
   },
   {
@@ -7143,10 +7143,10 @@
     "name": "Nicolai Jørgensen",
     "team": "Denmark",
     "position": "FWD",
-    "salary": 27,
-    "tier": "GREEN",
-    "avgFP": 14.9,
-    "projectedFp": 14.9,
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 18.9,
+    "projectedFp": 18.9,
     "active": true
   },
   {
@@ -7156,7 +7156,7 @@
     "name": "Yussuf Yurary Poulsen",
     "team": "Denmark",
     "position": "FWD",
-    "salary": 60,
+    "salary": 58,
     "tier": "ORANGE",
     "avgFP": 39,
     "projectedFp": 39,
@@ -7169,10 +7169,10 @@
     "name": "Andreas Evald Cornelius",
     "team": "Denmark",
     "position": "FWD",
-    "salary": 15,
-    "tier": "WHITE",
-    "avgFP": 8.1,
-    "projectedFp": 8.1,
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 11,
+    "projectedFp": 11,
     "active": true
   },
   {
@@ -7182,10 +7182,10 @@
     "name": "Kelechi Promise Iheanacho",
     "team": "Nigeria",
     "position": "FWD",
-    "salary": 21,
+    "salary": 23,
     "tier": "GREEN",
-    "avgFP": 11.4,
-    "projectedFp": 11.4,
+    "avgFP": 14.9,
+    "projectedFp": 14.9,
     "active": true
   },
   {
@@ -7195,10 +7195,10 @@
     "name": "Odion Jude Ighalo",
     "team": "Nigeria",
     "position": "FWD",
-    "salary": 28,
+    "salary": 33,
     "tier": "BLUE",
-    "avgFP": 15.4,
-    "projectedFp": 15.4,
+    "avgFP": 21.9,
+    "projectedFp": 21.9,
     "active": true
   },
   {
@@ -7208,10 +7208,10 @@
     "name": "Ahmed Musa",
     "team": "Nigeria",
     "position": "FWD",
-    "salary": 53,
-    "tier": "ORANGE",
-    "avgFP": 29.6,
-    "projectedFp": 29.6,
+    "salary": 51,
+    "tier": "PURPLE",
+    "avgFP": 33.9,
+    "projectedFp": 33.9,
     "active": true
   },
   {
@@ -7223,8 +7223,8 @@
     "position": "FWD",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 2.5,
-    "projectedFp": 2.5,
+    "avgFP": 3,
+    "projectedFp": 3,
     "active": true
   },
   {
@@ -7234,10 +7234,10 @@
     "name": "Alfreð Finnbogason",
     "team": "Iceland",
     "position": "FWD",
-    "salary": 35,
+    "salary": 33,
     "tier": "BLUE",
-    "avgFP": 19.3,
-    "projectedFp": 19.3,
+    "avgFP": 21.6,
+    "projectedFp": 21.6,
     "active": true
   },
   {
@@ -7247,10 +7247,10 @@
     "name": "Jón Daði Böðvarsson",
     "team": "Iceland",
     "position": "FWD",
-    "salary": 17,
+    "salary": 16,
     "tier": "GREEN",
-    "avgFP": 9.2,
-    "projectedFp": 9.2,
+    "avgFP": 10.2,
+    "projectedFp": 10.2,
     "active": true
   },
   {
@@ -7273,10 +7273,10 @@
     "name": "Tim Cahill",
     "team": "Australia",
     "position": "FWD",
-    "salary": 12,
+    "salary": 13,
     "tier": "WHITE",
-    "avgFP": 6,
-    "projectedFp": 6,
+    "avgFP": 8,
+    "projectedFp": 8,
     "active": true
   },
   {
@@ -7286,10 +7286,10 @@
     "name": "Mário Figueira Fernandes",
     "team": "Russia",
     "position": "FWD",
-    "salary": 27,
+    "salary": 24,
     "tier": "GREEN",
-    "avgFP": 14.8,
-    "projectedFp": 14.8,
+    "avgFP": 15.8,
+    "projectedFp": 15.8,
     "active": true
   },
   {
@@ -7301,8 +7301,8 @@
     "position": "FWD",
     "salary": 21,
     "tier": "GREEN",
-    "avgFP": 11.4,
-    "projectedFp": 11.4,
+    "avgFP": 13.8,
+    "projectedFp": 13.8,
     "active": true
   },
   {
@@ -7312,10 +7312,10 @@
     "name": "Denis Cheryshev",
     "team": "Russia",
     "position": "FWD",
-    "salary": 60,
+    "salary": 56,
     "tier": "ORANGE",
-    "avgFP": 34.1,
-    "projectedFp": 34.1,
+    "avgFP": 37.7,
+    "projectedFp": 37.7,
     "active": true
   },
   {
@@ -7325,10 +7325,10 @@
     "name": "Fyodor Smolov",
     "team": "Russia",
     "position": "FWD",
-    "salary": 29,
+    "salary": 30,
     "tier": "BLUE",
-    "avgFP": 16.3,
-    "projectedFp": 16.3,
+    "avgFP": 19.8,
+    "projectedFp": 19.8,
     "active": true
   },
   {
@@ -7338,10 +7338,10 @@
     "name": "Artem Dzyuba",
     "team": "Russia",
     "position": "FWD",
-    "salary": 46,
+    "salary": 42,
     "tier": "PURPLE",
-    "avgFP": 25.7,
-    "projectedFp": 25.7,
+    "avgFP": 28.3,
+    "projectedFp": 28.3,
     "active": true
   },
   {
@@ -7351,10 +7351,10 @@
     "name": "Yūya Ōsako",
     "team": "Japan",
     "position": "FWD",
-    "salary": 40,
+    "salary": 42,
     "tier": "PURPLE",
-    "avgFP": 22.6,
-    "projectedFp": 22.6,
+    "avgFP": 28.1,
+    "projectedFp": 28.1,
     "active": true
   },
   {
@@ -7366,8 +7366,8 @@
     "position": "FWD",
     "salary": 27,
     "tier": "GREEN",
-    "avgFP": 14.6,
-    "projectedFp": 14.6,
+    "avgFP": 17.6,
+    "projectedFp": 17.6,
     "active": true
   },
   {
@@ -7377,10 +7377,10 @@
     "name": "Takashi Inui",
     "team": "Japan",
     "position": "FWD",
-    "salary": 46,
+    "salary": 45,
     "tier": "PURPLE",
-    "avgFP": 25.6,
-    "projectedFp": 25.6,
+    "avgFP": 30.4,
+    "projectedFp": 30.4,
     "active": true
   },
   {
@@ -7390,10 +7390,10 @@
     "name": "Genki Haraguchi",
     "team": "Japan",
     "position": "FWD",
-    "salary": 32,
+    "salary": 29,
     "tier": "BLUE",
-    "avgFP": 17.5,
-    "projectedFp": 17.5,
+    "avgFP": 18.8,
+    "projectedFp": 18.8,
     "active": true
   },
   {
@@ -7403,10 +7403,10 @@
     "name": "Vanja Milinković Savić",
     "team": "Serbia",
     "position": "GK",
-    "salary": 37,
+    "salary": 36,
     "tier": "BLUE",
-    "avgFP": 21,
-    "projectedFp": 21,
+    "avgFP": 19.5,
+    "projectedFp": 19.5,
     "active": true
   },
   {
@@ -7418,8 +7418,8 @@
     "position": "GK",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 4,
-    "projectedFp": 4,
+    "avgFP": 5,
+    "projectedFp": 5,
     "active": true
   },
   {
@@ -7429,10 +7429,10 @@
     "name": "Mathew Ryan",
     "team": "Australia",
     "position": "GK",
-    "salary": 28,
+    "salary": 29,
     "tier": "BLUE",
-    "avgFP": 16,
-    "projectedFp": 16,
+    "avgFP": 15.5,
+    "projectedFp": 15.5,
     "active": true
   },
   {
@@ -7444,8 +7444,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -7455,10 +7455,10 @@
     "name": "Alisson Ramsés Becker",
     "team": "Brazil",
     "position": "GK",
-    "salary": 33,
+    "salary": 32,
     "tier": "BLUE",
-    "avgFP": 18.7,
-    "projectedFp": 18.7,
+    "avgFP": 17.3,
+    "projectedFp": 17.3,
     "active": true
   },
   {
@@ -7470,8 +7470,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -7483,8 +7483,8 @@
     "position": "GK",
     "salary": 48,
     "tier": "PURPLE",
-    "avgFP": 28,
-    "projectedFp": 28,
+    "avgFP": 26,
+    "projectedFp": 26,
     "active": true
   },
   {
@@ -7494,10 +7494,10 @@
     "name": "Andries Noppert",
     "team": "Netherlands",
     "position": "GK",
-    "salary": 33,
+    "salary": 32,
     "tier": "BLUE",
-    "avgFP": 18.7,
-    "projectedFp": 18.7,
+    "avgFP": 17.3,
+    "projectedFp": 17.3,
     "active": true
   },
   {
@@ -7507,10 +7507,10 @@
     "name": "Seung-Gyu Kim",
     "team": "South Korea",
     "position": "GK",
-    "salary": 27,
-    "tier": "GREEN",
-    "avgFP": 15.3,
-    "projectedFp": 15.3,
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 14.7,
+    "projectedFp": 14.7,
     "active": true
   },
   {
@@ -7522,8 +7522,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -7535,8 +7535,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -7546,10 +7546,10 @@
     "name": "Yassine Bounou",
     "team": "Morocco",
     "position": "GK",
-    "salary": 37,
+    "salary": 36,
     "tier": "BLUE",
-    "avgFP": 21,
-    "projectedFp": 21,
+    "avgFP": 19.5,
+    "projectedFp": 19.5,
     "active": true
   },
   {
@@ -7559,10 +7559,10 @@
     "name": "Hugo Lloris",
     "team": "France",
     "position": "GK",
-    "salary": 27,
-    "tier": "GREEN",
-    "avgFP": 15.3,
-    "projectedFp": 15.3,
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 14.7,
+    "projectedFp": 14.7,
     "active": true
   },
   {
@@ -7574,8 +7574,8 @@
     "position": "GK",
     "salary": 16,
     "tier": "GREEN",
-    "avgFP": 9,
-    "projectedFp": 9,
+    "avgFP": 8,
+    "projectedFp": 8,
     "active": true
   },
   {
@@ -7587,8 +7587,8 @@
     "position": "GK",
     "salary": 40,
     "tier": "PURPLE",
-    "avgFP": 23.3,
-    "projectedFp": 23.3,
+    "avgFP": 21.7,
+    "projectedFp": 21.7,
     "active": true
   },
   {
@@ -7600,8 +7600,8 @@
     "position": "GK",
     "salary": 42,
     "tier": "PURPLE",
-    "avgFP": 24.5,
-    "projectedFp": 24.5,
+    "avgFP": 22.8,
+    "projectedFp": 22.8,
     "active": true
   },
   {
@@ -7611,10 +7611,10 @@
     "name": "Yann Sommer",
     "team": "Switzerland",
     "position": "GK",
-    "salary": 31,
+    "salary": 30,
     "tier": "BLUE",
-    "avgFP": 17.5,
-    "projectedFp": 17.5,
+    "avgFP": 16.3,
+    "projectedFp": 16.3,
     "active": true
   },
   {
@@ -7626,8 +7626,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -7639,8 +7639,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -7650,10 +7650,10 @@
     "name": "Dominik Livaković",
     "team": "Croatia",
     "position": "GK",
-    "salary": 31,
+    "salary": 30,
     "tier": "BLUE",
-    "avgFP": 17.5,
-    "projectedFp": 17.5,
+    "avgFP": 16.3,
+    "projectedFp": 16.3,
     "active": true
   },
   {
@@ -7665,8 +7665,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -7678,8 +7678,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -7691,8 +7691,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -7702,10 +7702,10 @@
     "name": "Manuel Neuer",
     "team": "Germany",
     "position": "GK",
-    "salary": 26,
+    "salary": 27,
     "tier": "GREEN",
-    "avgFP": 15,
-    "projectedFp": 15,
+    "avgFP": 14.3,
+    "projectedFp": 14.3,
     "active": true
   },
   {
@@ -7717,8 +7717,8 @@
     "position": "GK",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 70,
-    "projectedFp": 70,
+    "avgFP": 65,
+    "projectedFp": 65,
     "active": true
   },
   {
@@ -7728,10 +7728,10 @@
     "name": "Keylor Navas Gamboa",
     "team": "Costa Rica",
     "position": "GK",
-    "salary": 40,
+    "salary": 41,
     "tier": "PURPLE",
-    "avgFP": 23,
-    "projectedFp": 23,
+    "avgFP": 22,
+    "projectedFp": 22,
     "active": true
   },
   {
@@ -7743,8 +7743,8 @@
     "position": "GK",
     "salary": 37,
     "tier": "BLUE",
-    "avgFP": 21.1,
-    "projectedFp": 21.1,
+    "avgFP": 20,
+    "projectedFp": 20,
     "active": true
   },
   {
@@ -7756,8 +7756,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -7767,10 +7767,10 @@
     "name": "Lawrence Ati-Zigi",
     "team": "Ghana",
     "position": "GK",
-    "salary": 37,
+    "salary": 36,
     "tier": "BLUE",
-    "avgFP": 21,
-    "projectedFp": 21,
+    "avgFP": 19.5,
+    "projectedFp": 19.5,
     "active": true
   },
   {
@@ -7782,8 +7782,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -7795,8 +7795,8 @@
     "position": "GK",
     "salary": 48,
     "tier": "PURPLE",
-    "avgFP": 28,
-    "projectedFp": 28,
+    "avgFP": 26,
+    "projectedFp": 26,
     "active": true
   },
   {
@@ -7808,8 +7808,8 @@
     "position": "GK",
     "salary": 25,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -8300,7 +8300,7 @@
     "name": "Youssouf Sabaly",
     "team": "Senegal",
     "position": "DEF",
-    "salary": 36,
+    "salary": 35,
     "tier": "BLUE",
     "avgFP": 24,
     "projectedFp": 24,
@@ -9366,7 +9366,7 @@
     "name": "Kaoru Mitoma",
     "team": "Japan",
     "position": "DEF",
-    "salary": 27,
+    "salary": 26,
     "tier": "GREEN",
     "avgFP": 17.7,
     "projectedFp": 17.7,
@@ -9860,7 +9860,7 @@
     "name": "Mohamed Salisu",
     "team": "Ghana",
     "position": "DEF",
-    "salary": 48,
+    "salary": 47,
     "tier": "PURPLE",
     "avgFP": 32.3,
     "projectedFp": 32.3,
@@ -10120,7 +10120,7 @@
     "name": "Fabian Rieder",
     "team": "Switzerland",
     "position": "MID",
-    "salary": 36,
+    "salary": 35,
     "tier": "BLUE",
     "avgFP": 25.6,
     "projectedFp": 25.6,
@@ -10328,7 +10328,7 @@
     "name": "Alexis Mac Allister",
     "team": "Argentina",
     "position": "MID",
-    "salary": 41,
+    "salary": 40,
     "tier": "PURPLE",
     "avgFP": 29.3,
     "projectedFp": 29.3,
@@ -10367,7 +10367,7 @@
     "name": "Aaron Mooy",
     "team": "Australia",
     "position": "MID",
-    "salary": 43,
+    "salary": 42,
     "tier": "PURPLE",
     "avgFP": 30.8,
     "projectedFp": 30.8,
@@ -10380,8 +10380,8 @@
     "name": "Mathew Leckie",
     "team": "Australia",
     "position": "MID",
-    "salary": 40,
-    "tier": "PURPLE",
+    "salary": 39,
+    "tier": "BLUE",
     "avgFP": 28.5,
     "projectedFp": 28.5,
     "active": true
@@ -10562,7 +10562,7 @@
     "name": "Fábio Henrique Tavares",
     "team": "Brazil",
     "position": "MID",
-    "salary": 48,
+    "salary": 47,
     "tier": "PURPLE",
     "avgFP": 34.5,
     "projectedFp": 34.5,
@@ -11147,7 +11147,7 @@
     "name": "Cody Mathès Gakpo",
     "team": "Netherlands",
     "position": "MID",
-    "salary": 51,
+    "salary": 50,
     "tier": "PURPLE",
     "avgFP": 36.7,
     "projectedFp": 36.7,
@@ -11238,7 +11238,7 @@
     "name": "Woo-Yeong Jeong",
     "team": "South Korea",
     "position": "MID",
-    "salary": 19,
+    "salary": 18,
     "tier": "GREEN",
     "avgFP": 12.9,
     "projectedFp": 12.9,
@@ -11277,7 +11277,7 @@
     "name": "Jun-Ho Son",
     "team": "South Korea",
     "position": "MID",
-    "salary": 30,
+    "salary": 29,
     "tier": "BLUE",
     "avgFP": 21.1,
     "projectedFp": 21.1,
@@ -11329,7 +11329,7 @@
     "name": "Rodrigo Bentancur Colmán",
     "team": "Uruguay",
     "position": "MID",
-    "salary": 49,
+    "salary": 48,
     "tier": "PURPLE",
     "avgFP": 35.3,
     "projectedFp": 35.3,
@@ -11368,10 +11368,10 @@
     "name": "Néstor Fernando Muslera Micol",
     "team": "Uruguay",
     "position": "MID",
-    "salary": 20,
+    "salary": 19,
     "tier": "GREEN",
-    "avgFP": 14,
-    "projectedFp": 14,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -11615,10 +11615,10 @@
     "name": "Munir Mohand Mohamedi",
     "team": "Morocco",
     "position": "MID",
-    "salary": 29,
-    "tier": "BLUE",
-    "avgFP": 21,
-    "projectedFp": 21,
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 19.5,
+    "projectedFp": 19.5,
     "active": true
   },
   {
@@ -11914,7 +11914,7 @@
     "name": "Firas Tariq Nasser Al Albirakan",
     "team": "Saudi Arabia",
     "position": "MID",
-    "salary": 20,
+    "salary": 19,
     "tier": "GREEN",
     "avgFP": 13.7,
     "projectedFp": 13.7,
@@ -12070,7 +12070,7 @@
     "name": "Luis Gerardo Chávez Magallón",
     "team": "Mexico",
     "position": "MID",
-    "salary": 53,
+    "salary": 52,
     "tier": "ORANGE",
     "avgFP": 38.2,
     "projectedFp": 38.2,
@@ -12304,7 +12304,7 @@
     "name": "Bassam Hisham Al Rawi",
     "team": "Qatar",
     "position": "MID",
-    "salary": 36,
+    "salary": 35,
     "tier": "BLUE",
     "avgFP": 25.6,
     "projectedFp": 25.6,
@@ -12434,7 +12434,7 @@
     "name": "Jude Bellingham",
     "team": "England",
     "position": "MID",
-    "salary": 37,
+    "salary": 36,
     "tier": "BLUE",
     "avgFP": 26.3,
     "projectedFp": 26.3,
@@ -12512,7 +12512,7 @@
     "name": "Marcelo Brozović",
     "team": "Croatia",
     "position": "MID",
-    "salary": 41,
+    "salary": 40,
     "tier": "PURPLE",
     "avgFP": 29.3,
     "projectedFp": 29.3,
@@ -12707,10 +12707,10 @@
     "name": "Eiji Kawashima",
     "team": "Japan",
     "position": "MID",
-    "salary": 29,
-    "tier": "BLUE",
-    "avgFP": 21,
-    "projectedFp": 21,
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 19.5,
+    "projectedFp": 19.5,
     "active": true
   },
   {
@@ -12759,7 +12759,7 @@
     "name": "Ao Tanaka",
     "team": "Japan",
     "position": "MID",
-    "salary": 41,
+    "salary": 40,
     "tier": "PURPLE",
     "avgFP": 29.3,
     "projectedFp": 29.3,
@@ -12902,7 +12902,7 @@
     "name": "Yunus Dimoara Musah",
     "team": "United States",
     "position": "MID",
-    "salary": 38,
+    "salary": 37,
     "tier": "BLUE",
     "avgFP": 27.1,
     "projectedFp": 27.1,
@@ -13162,7 +13162,7 @@
     "name": "Johan Alberto Venegas Ulloa",
     "team": "Costa Rica",
     "position": "MID",
-    "salary": 23,
+    "salary": 22,
     "tier": "GREEN",
     "avgFP": 15.9,
     "projectedFp": 15.9,
@@ -13435,7 +13435,7 @@
     "name": "Abdulelah Saad Hameed Al-Malki",
     "team": "Saudi Arabia",
     "position": "MID",
-    "salary": 25,
+    "salary": 24,
     "tier": "GREEN",
     "avgFP": 17.3,
     "projectedFp": 17.3,
@@ -13591,7 +13591,7 @@
     "name": "Atiba Hutchinson",
     "team": "Canada",
     "position": "MID",
-    "salary": 23,
+    "salary": 22,
     "tier": "GREEN",
     "avgFP": 15.9,
     "projectedFp": 15.9,
@@ -13786,10 +13786,10 @@
     "name": "Xherdan Shaqiri",
     "team": "Switzerland",
     "position": "FWD",
-    "salary": 43,
+    "salary": 44,
     "tier": "PURPLE",
-    "avgFP": 24.2,
-    "projectedFp": 24.2,
+    "avgFP": 29.6,
+    "projectedFp": 29.6,
     "active": true
   },
   {
@@ -13799,10 +13799,10 @@
     "name": "Denis Lemi Zakaria Lako Lado",
     "team": "Switzerland",
     "position": "FWD",
-    "salary": 15,
+    "salary": 14,
     "tier": "WHITE",
-    "avgFP": 7.8,
-    "projectedFp": 7.8,
+    "avgFP": 8.8,
+    "projectedFp": 8.8,
     "active": true
   },
   {
@@ -13812,10 +13812,10 @@
     "name": "Breel-Donald Embolo",
     "team": "Switzerland",
     "position": "FWD",
-    "salary": 40,
-    "tier": "PURPLE",
-    "avgFP": 22.2,
-    "projectedFp": 22.2,
+    "salary": 39,
+    "tier": "BLUE",
+    "avgFP": 26,
+    "projectedFp": 26,
     "active": true
   },
   {
@@ -13825,10 +13825,10 @@
     "name": "Noah Okafor",
     "team": "Switzerland",
     "position": "FWD",
-    "salary": 12,
+    "salary": 13,
     "tier": "WHITE",
-    "avgFP": 6.2,
-    "projectedFp": 6.2,
+    "avgFP": 8.2,
+    "projectedFp": 8.2,
     "active": true
   },
   {
@@ -13838,10 +13838,10 @@
     "name": "Ruben Vargas",
     "team": "Switzerland",
     "position": "FWD",
-    "salary": 21,
+    "salary": 22,
     "tier": "GREEN",
-    "avgFP": 11.4,
-    "projectedFp": 11.4,
+    "avgFP": 14.4,
+    "projectedFp": 14.4,
     "active": true
   },
   {
@@ -13851,10 +13851,10 @@
     "name": "Aleksandar Mitrović",
     "team": "Serbia",
     "position": "FWD",
-    "salary": 47,
+    "salary": 48,
     "tier": "PURPLE",
-    "avgFP": 26.2,
-    "projectedFp": 26.2,
+    "avgFP": 32,
+    "projectedFp": 32,
     "active": true
   },
   {
@@ -13864,10 +13864,10 @@
     "name": "Luka Jović",
     "team": "Serbia",
     "position": "FWD",
-    "salary": 14,
-    "tier": "WHITE",
-    "avgFP": 7.2,
-    "projectedFp": 7.2,
+    "salary": 16,
+    "tier": "GREEN",
+    "avgFP": 10.2,
+    "projectedFp": 10.2,
     "active": true
   },
   {
@@ -13877,10 +13877,10 @@
     "name": "Dušan Vlahović",
     "team": "Serbia",
     "position": "FWD",
-    "salary": 32,
+    "salary": 31,
     "tier": "BLUE",
-    "avgFP": 17.7,
-    "projectedFp": 17.7,
+    "avgFP": 20.7,
+    "projectedFp": 20.7,
     "active": true
   },
   {
@@ -13892,8 +13892,8 @@
     "position": "FWD",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 55.5,
-    "projectedFp": 55.5,
+    "avgFP": 69.3,
+    "projectedFp": 69.3,
     "active": true
   },
   {
@@ -13905,8 +13905,8 @@
     "position": "FWD",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 3.1,
-    "projectedFp": 3.1,
+    "avgFP": 4.1,
+    "projectedFp": 4.1,
     "active": true
   },
   {
@@ -13918,8 +13918,8 @@
     "position": "FWD",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 4.2,
-    "projectedFp": 4.2,
+    "avgFP": 5.7,
+    "projectedFp": 5.7,
     "active": true
   },
   {
@@ -13929,10 +13929,10 @@
     "name": "Julián Álvarez",
     "team": "Argentina",
     "position": "FWD",
-    "salary": 40,
-    "tier": "PURPLE",
-    "avgFP": 22.5,
-    "projectedFp": 22.5,
+    "salary": 38,
+    "tier": "BLUE",
+    "avgFP": 25.1,
+    "projectedFp": 25.1,
     "active": true
   },
   {
@@ -13942,10 +13942,10 @@
     "name": "Jackson Irvine",
     "team": "Australia",
     "position": "FWD",
-    "salary": 11,
+    "salary": 10,
     "tier": "WHITE",
-    "avgFP": 5.5,
-    "projectedFp": 5.5,
+    "avgFP": 6.1,
+    "projectedFp": 6.1,
     "active": true
   },
   {
@@ -13955,10 +13955,10 @@
     "name": "Craig Goodwin",
     "team": "Australia",
     "position": "FWD",
-    "salary": 24,
+    "salary": 23,
     "tier": "GREEN",
-    "avgFP": 13.4,
-    "projectedFp": 13.4,
+    "avgFP": 15.1,
+    "projectedFp": 15.1,
     "active": true
   },
   {
@@ -13970,8 +13970,8 @@
     "position": "FWD",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 4.4,
-    "projectedFp": 4.4,
+    "avgFP": 5.4,
+    "projectedFp": 5.4,
     "active": true
   },
   {
@@ -13983,8 +13983,8 @@
     "position": "FWD",
     "salary": 27,
     "tier": "GREEN",
-    "avgFP": 14.7,
-    "projectedFp": 14.7,
+    "avgFP": 17.7,
+    "projectedFp": 17.7,
     "active": true
   },
   {
@@ -13994,10 +13994,10 @@
     "name": "Martin Braithwaite Christensen",
     "team": "Denmark",
     "position": "FWD",
-    "salary": 14,
+    "salary": 15,
     "tier": "WHITE",
-    "avgFP": 7.5,
-    "projectedFp": 7.5,
+    "avgFP": 9.8,
+    "projectedFp": 9.8,
     "active": true
   },
   {
@@ -14007,10 +14007,10 @@
     "name": "Andreas Evald Cornelius",
     "team": "Denmark",
     "position": "FWD",
-    "salary": 15,
-    "tier": "WHITE",
-    "avgFP": 8.1,
-    "projectedFp": 8.1,
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 11,
+    "projectedFp": 11,
     "active": true
   },
   {
@@ -14020,10 +14020,10 @@
     "name": "Kasper Dolberg",
     "team": "Denmark",
     "position": "FWD",
-    "salary": 19,
+    "salary": 21,
     "tier": "GREEN",
-    "avgFP": 10.2,
-    "projectedFp": 10.2,
+    "avgFP": 13.7,
+    "projectedFp": 13.7,
     "active": true
   },
   {
@@ -14035,8 +14035,8 @@
     "position": "FWD",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 2.4,
-    "projectedFp": 2.4,
+    "avgFP": 3.4,
+    "projectedFp": 3.4,
     "active": true
   },
   {
@@ -14046,10 +14046,10 @@
     "name": "Andreas Skov Olsen",
     "team": "Denmark",
     "position": "FWD",
-    "salary": 23,
+    "salary": 26,
     "tier": "GREEN",
-    "avgFP": 12.3,
-    "projectedFp": 12.3,
+    "avgFP": 17.3,
+    "projectedFp": 17.3,
     "active": true
   },
   {
@@ -14059,10 +14059,10 @@
     "name": "Jesper Lindstrøm",
     "team": "Denmark",
     "position": "FWD",
-    "salary": 21,
+    "salary": 23,
     "tier": "GREEN",
-    "avgFP": 11.1,
-    "projectedFp": 11.1,
+    "avgFP": 15.1,
+    "projectedFp": 15.1,
     "active": true
   },
   {
@@ -14072,10 +14072,10 @@
     "name": "Gabriel Fernando de Jesus",
     "team": "Brazil",
     "position": "FWD",
-    "salary": 36,
+    "salary": 39,
     "tier": "BLUE",
-    "avgFP": 20.2,
-    "projectedFp": 20.2,
+    "avgFP": 26.2,
+    "projectedFp": 26.2,
     "active": true
   },
   {
@@ -14085,10 +14085,10 @@
     "name": "Richarlison de Andrade",
     "team": "Brazil",
     "position": "FWD",
-    "salary": 54,
-    "tier": "ORANGE",
-    "avgFP": 30.2,
-    "projectedFp": 30.2,
+    "salary": 51,
+    "tier": "PURPLE",
+    "avgFP": 34.5,
+    "projectedFp": 34.5,
     "active": true
   },
   {
@@ -14098,10 +14098,10 @@
     "name": "Raphael Dias Belloli",
     "team": "Brazil",
     "position": "FWD",
-    "salary": 36,
-    "tier": "BLUE",
-    "avgFP": 19.9,
-    "projectedFp": 19.9,
+    "salary": 40,
+    "tier": "PURPLE",
+    "avgFP": 26.9,
+    "projectedFp": 26.9,
     "active": true
   },
   {
@@ -14111,10 +14111,10 @@
     "name": "Vinícius José Paixão de Oliveira Júnior",
     "team": "Brazil",
     "position": "FWD",
-    "salary": 47,
+    "salary": 48,
     "tier": "PURPLE",
-    "avgFP": 26.4,
-    "projectedFp": 26.4,
+    "avgFP": 32.3,
+    "projectedFp": 32.3,
     "active": true
   },
   {
@@ -14124,10 +14124,10 @@
     "name": "Rodrygo Silva de Goes",
     "team": "Brazil",
     "position": "FWD",
-    "salary": 29,
+    "salary": 31,
     "tier": "BLUE",
-    "avgFP": 16,
-    "projectedFp": 16,
+    "avgFP": 20.7,
+    "projectedFp": 20.7,
     "active": true
   },
   {
@@ -14137,10 +14137,10 @@
     "name": "Gabriel Teodoro Martinelli Silva",
     "team": "Brazil",
     "position": "FWD",
-    "salary": 54,
+    "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 30.4,
-    "projectedFp": 30.4,
+    "avgFP": 43.4,
+    "projectedFp": 43.4,
     "active": true
   },
   {
@@ -14150,10 +14150,10 @@
     "name": "Issam Jebali",
     "team": "Tunisia",
     "position": "FWD",
-    "salary": 21,
+    "salary": 22,
     "tier": "GREEN",
-    "avgFP": 11.1,
-    "projectedFp": 11.1,
+    "avgFP": 14.5,
+    "projectedFp": 14.5,
     "active": true
   },
   {
@@ -14163,10 +14163,10 @@
     "name": "Ismaïla Sarr",
     "team": "Senegal",
     "position": "FWD",
-    "salary": 33,
+    "salary": 35,
     "tier": "BLUE",
-    "avgFP": 18.5,
-    "projectedFp": 18.5,
+    "avgFP": 23.2,
+    "projectedFp": 23.2,
     "active": true
   },
   {
@@ -14178,8 +14178,8 @@
     "position": "FWD",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 3.2,
-    "projectedFp": 3.2,
+    "avgFP": 4.2,
+    "projectedFp": 4.2,
     "active": true
   },
   {
@@ -14189,10 +14189,10 @@
     "name": "Boulaye Dia",
     "team": "Senegal",
     "position": "FWD",
-    "salary": 25,
+    "salary": 26,
     "tier": "GREEN",
-    "avgFP": 13.8,
-    "projectedFp": 13.8,
+    "avgFP": 17.1,
+    "projectedFp": 17.1,
     "active": true
   },
   {
@@ -14202,10 +14202,10 @@
     "name": "Iliman Ndiaye",
     "team": "Senegal",
     "position": "FWD",
-    "salary": 18,
+    "salary": 20,
     "tier": "GREEN",
-    "avgFP": 9.5,
-    "projectedFp": 9.5,
+    "avgFP": 13,
+    "projectedFp": 13,
     "active": true
   },
   {
@@ -14215,10 +14215,10 @@
     "name": "Cheikh Ahmadou Bamba Mbacke Dieng",
     "team": "Senegal",
     "position": "FWD",
-    "salary": 11,
+    "salary": 12,
     "tier": "WHITE",
-    "avgFP": 5.7,
-    "projectedFp": 5.7,
+    "avgFP": 7.2,
+    "projectedFp": 7.2,
     "active": true
   },
   {
@@ -14230,8 +14230,8 @@
     "position": "FWD",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 39.5,
-    "projectedFp": 39.5,
+    "avgFP": 46.1,
+    "projectedFp": 46.1,
     "active": true
   },
   {
@@ -14241,10 +14241,10 @@
     "name": "Gonzalo Jordy Plata Jiménez",
     "team": "Ecuador",
     "position": "FWD",
-    "salary": 27,
-    "tier": "GREEN",
-    "avgFP": 14.8,
-    "projectedFp": 14.8,
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 18.5,
+    "projectedFp": 18.5,
     "active": true
   },
   {
@@ -14254,10 +14254,10 @@
     "name": "Michael Steveen Estrada Martínez",
     "team": "Ecuador",
     "position": "FWD",
-    "salary": 11,
+    "salary": 10,
     "tier": "WHITE",
-    "avgFP": 5.4,
-    "projectedFp": 5.4,
+    "avgFP": 6.4,
+    "projectedFp": 6.4,
     "active": true
   },
   {
@@ -14280,10 +14280,10 @@
     "name": "Memphis Depay",
     "team": "Netherlands",
     "position": "FWD",
-    "salary": 27,
-    "tier": "GREEN",
-    "avgFP": 14.6,
-    "projectedFp": 14.6,
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 19,
+    "projectedFp": 19,
     "active": true
   },
   {
@@ -14295,8 +14295,8 @@
     "position": "FWD",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 3,
-    "projectedFp": 3,
+    "avgFP": 3.7,
+    "projectedFp": 3.7,
     "active": true
   },
   {
@@ -14306,10 +14306,10 @@
     "name": "Heung-Min Son",
     "team": "South Korea",
     "position": "FWD",
-    "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.7,
-    "projectedFp": 28.7,
+    "salary": 54,
+    "tier": "ORANGE",
+    "avgFP": 36.7,
+    "projectedFp": 36.7,
     "active": true
   },
   {
@@ -14319,10 +14319,10 @@
     "name": "Kang-In Lee",
     "team": "South Korea",
     "position": "FWD",
-    "salary": 27,
-    "tier": "GREEN",
-    "avgFP": 14.7,
-    "projectedFp": 14.7,
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 18.2,
+    "projectedFp": 18.2,
     "active": true
   },
   {
@@ -14334,8 +14334,8 @@
     "position": "FWD",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 3.8,
-    "projectedFp": 3.8,
+    "avgFP": 4.8,
+    "projectedFp": 4.8,
     "active": true
   },
   {
@@ -14345,10 +14345,10 @@
     "name": "Gue-Sung Cho",
     "team": "South Korea",
     "position": "FWD",
-    "salary": 52,
-    "tier": "ORANGE",
-    "avgFP": 29.2,
-    "projectedFp": 29.2,
+    "salary": 51,
+    "tier": "PURPLE",
+    "avgFP": 34.5,
+    "projectedFp": 34.5,
     "active": true
   },
   {
@@ -14358,10 +14358,10 @@
     "name": "Sang-Ho Na",
     "team": "South Korea",
     "position": "FWD",
-    "salary": 20,
+    "salary": 21,
     "tier": "GREEN",
-    "avgFP": 11,
-    "projectedFp": 11,
+    "avgFP": 13.5,
+    "projectedFp": 13.5,
     "active": true
   },
   {
@@ -14371,10 +14371,10 @@
     "name": "Edinson Roberto Cavani Gómez",
     "team": "Uruguay",
     "position": "FWD",
-    "salary": 43,
+    "salary": 44,
     "tier": "PURPLE",
-    "avgFP": 24.1,
-    "projectedFp": 24.1,
+    "avgFP": 29.4,
+    "projectedFp": 29.4,
     "active": true
   },
   {
@@ -14384,10 +14384,10 @@
     "name": "Luis Alberto Suárez Díaz",
     "team": "Uruguay",
     "position": "FWD",
-    "salary": 38,
+    "salary": 39,
     "tier": "BLUE",
-    "avgFP": 21.1,
-    "projectedFp": 21.1,
+    "avgFP": 26.3,
+    "projectedFp": 26.3,
     "active": true
   },
   {
@@ -14397,10 +14397,10 @@
     "name": "Darwin Gabriel Núñez Ribeiro",
     "team": "Uruguay",
     "position": "FWD",
-    "salary": 15,
-    "tier": "WHITE",
-    "avgFP": 8.1,
-    "projectedFp": 8.1,
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 10.7,
+    "projectedFp": 10.7,
     "active": true
   },
   {
@@ -14412,8 +14412,8 @@
     "position": "FWD",
     "salary": 12,
     "tier": "WHITE",
-    "avgFP": 6.3,
-    "projectedFp": 6.3,
+    "avgFP": 7.3,
+    "projectedFp": 7.3,
     "active": true
   },
   {
@@ -14423,10 +14423,10 @@
     "name": "Bruno Miguel Borges Fernandes",
     "team": "Portugal",
     "position": "FWD",
-    "salary": 42,
+    "salary": 40,
     "tier": "PURPLE",
-    "avgFP": 23.8,
-    "projectedFp": 23.8,
+    "avgFP": 26.9,
+    "projectedFp": 26.9,
     "active": true
   },
   {
@@ -14436,10 +14436,10 @@
     "name": "João Félix Sequeira",
     "team": "Portugal",
     "position": "FWD",
-    "salary": 43,
+    "salary": 44,
     "tier": "PURPLE",
-    "avgFP": 23.9,
-    "projectedFp": 23.9,
+    "avgFP": 29.4,
+    "projectedFp": 29.4,
     "active": true
   },
   {
@@ -14451,8 +14451,8 @@
     "position": "FWD",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 50.2,
-    "projectedFp": 50.2,
+    "avgFP": 54.7,
+    "projectedFp": 54.7,
     "active": true
   },
   {
@@ -14462,10 +14462,10 @@
     "name": "Youssef En-Nesyri",
     "team": "Morocco",
     "position": "FWD",
-    "salary": 29,
-    "tier": "BLUE",
-    "avgFP": 15.8,
-    "projectedFp": 15.8,
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 17.9,
+    "projectedFp": 17.9,
     "active": true
   },
   {
@@ -14501,10 +14501,10 @@
     "name": "Marcus Thuram",
     "team": "France",
     "position": "FWD",
-    "salary": 20,
+    "salary": 19,
     "tier": "GREEN",
-    "avgFP": 10.6,
-    "projectedFp": 10.6,
+    "avgFP": 12.6,
+    "projectedFp": 12.6,
     "active": true
   },
   {
@@ -14516,8 +14516,8 @@
     "position": "FWD",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 45.9,
-    "projectedFp": 45.9,
+    "avgFP": 55.6,
+    "projectedFp": 55.6,
     "active": true
   },
   {
@@ -14527,10 +14527,10 @@
     "name": "Olivier Giroud",
     "team": "France",
     "position": "FWD",
-    "salary": 31,
+    "salary": 30,
     "tier": "BLUE",
-    "avgFP": 17.4,
-    "projectedFp": 17.4,
+    "avgFP": 20.1,
+    "projectedFp": 20.1,
     "active": true
   },
   {
@@ -14540,10 +14540,10 @@
     "name": "Ousmane Dembélé",
     "team": "France",
     "position": "FWD",
-    "salary": 30,
+    "salary": 32,
     "tier": "BLUE",
-    "avgFP": 16.6,
-    "projectedFp": 16.6,
+    "avgFP": 21.1,
+    "projectedFp": 21.1,
     "active": true
   },
   {
@@ -14553,10 +14553,10 @@
     "name": "Randal Kolo Muani",
     "team": "France",
     "position": "FWD",
-    "salary": 50,
+    "salary": 49,
     "tier": "PURPLE",
-    "avgFP": 28.4,
-    "projectedFp": 28.4,
+    "avgFP": 32.9,
+    "projectedFp": 32.9,
     "active": true
   },
   {
@@ -14566,10 +14566,10 @@
     "name": "Mohammed Kanoo",
     "team": "Saudi Arabia",
     "position": "FWD",
-    "salary": 18,
+    "salary": 20,
     "tier": "GREEN",
-    "avgFP": 9.7,
-    "projectedFp": 9.7,
+    "avgFP": 12.7,
+    "projectedFp": 12.7,
     "active": true
   },
   {
@@ -14579,10 +14579,10 @@
     "name": "Saleh Khalid Al Shehri",
     "team": "Saudi Arabia",
     "position": "FWD",
-    "salary": 30,
-    "tier": "BLUE",
-    "avgFP": 16.4,
-    "projectedFp": 16.4,
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 18.1,
+    "projectedFp": 18.1,
     "active": true
   },
   {
@@ -14592,10 +14592,10 @@
     "name": "Abdulrahman Al-Obood",
     "team": "Saudi Arabia",
     "position": "FWD",
-    "salary": 17,
+    "salary": 16,
     "tier": "GREEN",
-    "avgFP": 9.2,
-    "projectedFp": 9.2,
+    "avgFP": 10.2,
+    "projectedFp": 10.2,
     "active": true
   },
   {
@@ -14607,8 +14607,8 @@
     "position": "FWD",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 4.2,
-    "projectedFp": 4.2,
+    "avgFP": 5.2,
+    "projectedFp": 5.2,
     "active": true
   },
   {
@@ -14618,10 +14618,10 @@
     "name": "Hirving Rodrigo Lozano Bahena",
     "team": "Mexico",
     "position": "FWD",
-    "salary": 50,
-    "tier": "PURPLE",
-    "avgFP": 28.3,
-    "projectedFp": 28.3,
+    "salary": 55,
+    "tier": "ORANGE",
+    "avgFP": 36.9,
+    "projectedFp": 36.9,
     "active": true
   },
   {
@@ -14631,10 +14631,10 @@
     "name": "Carlos Uriel Antuna Romero",
     "team": "Mexico",
     "position": "FWD",
-    "salary": 15,
-    "tier": "WHITE",
-    "avgFP": 8.1,
-    "projectedFp": 8.1,
+    "salary": 16,
+    "tier": "GREEN",
+    "avgFP": 10.1,
+    "projectedFp": 10.1,
     "active": true
   },
   {
@@ -14644,10 +14644,10 @@
     "name": "Ernesto Alexis Vega Rojas",
     "team": "Mexico",
     "position": "FWD",
-    "salary": 24,
+    "salary": 27,
     "tier": "GREEN",
-    "avgFP": 12.9,
-    "projectedFp": 12.9,
+    "avgFP": 17.6,
+    "projectedFp": 17.6,
     "active": true
   },
   {
@@ -14657,10 +14657,10 @@
     "name": "Henry Josué Martín Mex",
     "team": "Mexico",
     "position": "FWD",
-    "salary": 40,
-    "tier": "PURPLE",
-    "avgFP": 22.5,
-    "projectedFp": 22.5,
+    "salary": 38,
+    "tier": "BLUE",
+    "avgFP": 25.5,
+    "projectedFp": 25.5,
     "active": true
   },
   {
@@ -14670,10 +14670,10 @@
     "name": "Robert Lewandowski",
     "team": "Poland",
     "position": "FWD",
-    "salary": 46,
+    "salary": 49,
     "tier": "PURPLE",
-    "avgFP": 25.7,
-    "projectedFp": 25.7,
+    "avgFP": 32.6,
+    "projectedFp": 32.6,
     "active": true
   },
   {
@@ -14696,10 +14696,10 @@
     "name": "Akram Hassan Afif",
     "team": "Qatar",
     "position": "FWD",
-    "salary": 16,
+    "salary": 17,
     "tier": "GREEN",
-    "avgFP": 8.5,
-    "projectedFp": 8.5,
+    "avgFP": 11.2,
+    "projectedFp": 11.2,
     "active": true
   },
   {
@@ -14709,10 +14709,10 @@
     "name": "Almoez Ali Zainalabiddin Abdulla",
     "team": "Qatar",
     "position": "FWD",
-    "salary": 15,
-    "tier": "WHITE",
-    "avgFP": 8.1,
-    "projectedFp": 8.1,
+    "salary": 16,
+    "tier": "GREEN",
+    "avgFP": 10.5,
+    "projectedFp": 10.5,
     "active": true
   },
   {
@@ -14724,8 +14724,8 @@
     "position": "FWD",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 3.8,
-    "projectedFp": 3.8,
+    "avgFP": 4.8,
+    "projectedFp": 4.8,
     "active": true
   },
   {
@@ -14735,10 +14735,10 @@
     "name": "Marcus Rashford",
     "team": "England",
     "position": "FWD",
-    "salary": 39,
-    "tier": "BLUE",
-    "avgFP": 21.7,
-    "projectedFp": 21.7,
+    "salary": 40,
+    "tier": "PURPLE",
+    "avgFP": 26.6,
+    "projectedFp": 26.6,
     "active": true
   },
   {
@@ -14750,8 +14750,8 @@
     "position": "FWD",
     "salary": 31,
     "tier": "BLUE",
-    "avgFP": 17.3,
-    "projectedFp": 17.3,
+    "avgFP": 20.6,
+    "projectedFp": 20.6,
     "active": true
   },
   {
@@ -14761,10 +14761,10 @@
     "name": "Jack Grealish",
     "team": "England",
     "position": "FWD",
-    "salary": 19,
+    "salary": 16,
     "tier": "GREEN",
-    "avgFP": 10.1,
-    "projectedFp": 10.1,
+    "avgFP": 10.5,
+    "projectedFp": 10.5,
     "active": true
   },
   {
@@ -14774,10 +14774,10 @@
     "name": "Harry Kane",
     "team": "England",
     "position": "FWD",
-    "salary": 49,
+    "salary": 46,
     "tier": "PURPLE",
-    "avgFP": 27.5,
-    "projectedFp": 27.5,
+    "avgFP": 30.6,
+    "projectedFp": 30.6,
     "active": true
   },
   {
@@ -14787,10 +14787,10 @@
     "name": "Bukayo Saka",
     "team": "England",
     "position": "FWD",
-    "salary": 53,
-    "tier": "ORANGE",
-    "avgFP": 29.7,
-    "projectedFp": 29.7,
+    "salary": 49,
+    "tier": "PURPLE",
+    "avgFP": 33,
+    "projectedFp": 33,
     "active": true
   },
   {
@@ -14802,8 +14802,8 @@
     "position": "FWD",
     "salary": 12,
     "tier": "WHITE",
-    "avgFP": 6,
-    "projectedFp": 6,
+    "avgFP": 7.7,
+    "projectedFp": 7.7,
     "active": true
   },
   {
@@ -14815,8 +14815,8 @@
     "position": "FWD",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 3.8,
-    "projectedFp": 3.8,
+    "avgFP": 4.4,
+    "projectedFp": 4.4,
     "active": true
   },
   {
@@ -14826,10 +14826,10 @@
     "name": "Mislav Oršić",
     "team": "Croatia",
     "position": "FWD",
-    "salary": 46,
+    "salary": 45,
     "tier": "PURPLE",
-    "avgFP": 25.7,
-    "projectedFp": 25.7,
+    "avgFP": 30.2,
+    "projectedFp": 30.2,
     "active": true
   },
   {
@@ -14839,10 +14839,10 @@
     "name": "Marko Livaja",
     "team": "Croatia",
     "position": "FWD",
-    "salary": 27,
+    "salary": 26,
     "tier": "GREEN",
-    "avgFP": 15.1,
-    "projectedFp": 15.1,
+    "avgFP": 17.3,
+    "projectedFp": 17.3,
     "active": true
   },
   {
@@ -14854,8 +14854,8 @@
     "position": "FWD",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 2.1,
-    "projectedFp": 2.1,
+    "avgFP": 2.6,
+    "projectedFp": 2.6,
     "active": true
   },
   {
@@ -14865,10 +14865,10 @@
     "name": "Raheem Sterling",
     "team": "England",
     "position": "FWD",
-    "salary": 29,
+    "salary": 31,
     "tier": "BLUE",
-    "avgFP": 16.1,
-    "projectedFp": 16.1,
+    "avgFP": 20.6,
+    "projectedFp": 20.6,
     "active": true
   },
   {
@@ -14878,10 +14878,10 @@
     "name": "Álvaro Borja Morata Martín",
     "team": "Spain",
     "position": "FWD",
-    "salary": 42,
-    "tier": "PURPLE",
-    "avgFP": 23.3,
-    "projectedFp": 23.3,
+    "salary": 37,
+    "tier": "BLUE",
+    "avgFP": 24.8,
+    "projectedFp": 24.8,
     "active": true
   },
   {
@@ -14891,10 +14891,10 @@
     "name": "Marco Asensio Willemsen",
     "team": "Spain",
     "position": "FWD",
-    "salary": 27,
-    "tier": "GREEN",
-    "avgFP": 14.6,
-    "projectedFp": 14.6,
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 18.4,
+    "projectedFp": 18.4,
     "active": true
   },
   {
@@ -14904,10 +14904,10 @@
     "name": "Ferrán Torres García",
     "team": "Spain",
     "position": "FWD",
-    "salary": 33,
+    "salary": 31,
     "tier": "BLUE",
-    "avgFP": 18.3,
-    "projectedFp": 18.3,
+    "avgFP": 20.3,
+    "projectedFp": 20.3,
     "active": true
   },
   {
@@ -14917,10 +14917,10 @@
     "name": "Daniel Olmo Carvajal",
     "team": "Spain",
     "position": "FWD",
-    "salary": 46,
+    "salary": 49,
     "tier": "PURPLE",
-    "avgFP": 26.1,
-    "projectedFp": 26.1,
+    "avgFP": 32.8,
+    "projectedFp": 32.8,
     "active": true
   },
   {
@@ -14943,10 +14943,10 @@
     "name": "Nicholas Williams Arthuer",
     "team": "Spain",
     "position": "FWD",
-    "salary": 10,
+    "salary": 11,
     "tier": "WHITE",
-    "avgFP": 5.2,
-    "projectedFp": 5.2,
+    "avgFP": 7,
+    "projectedFp": 7,
     "active": true
   },
   {
@@ -14958,8 +14958,8 @@
     "position": "FWD",
     "salary": 17,
     "tier": "GREEN",
-    "avgFP": 9,
-    "projectedFp": 9,
+    "avgFP": 10.6,
+    "projectedFp": 10.6,
     "active": true
   },
   {
@@ -14969,10 +14969,10 @@
     "name": "Ritsu Doan",
     "team": "Japan",
     "position": "FWD",
-    "salary": 37,
+    "salary": 35,
     "tier": "BLUE",
-    "avgFP": 20.7,
-    "projectedFp": 20.7,
+    "avgFP": 23.2,
+    "projectedFp": 23.2,
     "active": true
   },
   {
@@ -14982,10 +14982,10 @@
     "name": "Takuma Asano",
     "team": "Japan",
     "position": "FWD",
-    "salary": 31,
+    "salary": 29,
     "tier": "BLUE",
-    "avgFP": 17.1,
-    "projectedFp": 17.1,
+    "avgFP": 19.4,
+    "projectedFp": 19.4,
     "active": true
   },
   {
@@ -14995,10 +14995,10 @@
     "name": "Daichi Kamada",
     "team": "Japan",
     "position": "FWD",
-    "salary": 25,
+    "salary": 26,
     "tier": "GREEN",
-    "avgFP": 13.5,
-    "projectedFp": 13.5,
+    "avgFP": 17,
+    "projectedFp": 17,
     "active": true
   },
   {
@@ -15008,7 +15008,7 @@
     "name": "Daizen Maeda",
     "team": "Japan",
     "position": "FWD",
-    "salary": 26,
+    "salary": 22,
     "tier": "GREEN",
     "avgFP": 14.1,
     "projectedFp": 14.1,
@@ -15021,10 +15021,10 @@
     "name": "Timothy Weah",
     "team": "United States",
     "position": "FWD",
-    "salary": 32,
+    "salary": 34,
     "tier": "BLUE",
-    "avgFP": 17.8,
-    "projectedFp": 17.8,
+    "avgFP": 22.3,
+    "projectedFp": 22.3,
     "active": true
   },
   {
@@ -15034,10 +15034,10 @@
     "name": "Christian Pulisic",
     "team": "United States",
     "position": "FWD",
-    "salary": 51,
-    "tier": "PURPLE",
-    "avgFP": 28.5,
-    "projectedFp": 28.5,
+    "salary": 53,
+    "tier": "ORANGE",
+    "avgFP": 35.7,
+    "projectedFp": 35.7,
     "active": true
   },
   {
@@ -15060,10 +15060,10 @@
     "name": "Brenden Aaronson",
     "team": "United States",
     "position": "FWD",
-    "salary": 14,
+    "salary": 15,
     "tier": "WHITE",
-    "avgFP": 7.5,
-    "projectedFp": 7.5,
+    "avgFP": 9.5,
+    "projectedFp": 9.5,
     "active": true
   },
   {
@@ -15073,10 +15073,10 @@
     "name": "Giovanni Reyna",
     "team": "United States",
     "position": "FWD",
-    "salary": 29,
+    "salary": 33,
     "tier": "BLUE",
-    "avgFP": 15.8,
-    "projectedFp": 15.8,
+    "avgFP": 21.8,
+    "projectedFp": 21.8,
     "active": true
   },
   {
@@ -15086,10 +15086,10 @@
     "name": "Thomas Müller",
     "team": "Germany",
     "position": "FWD",
-    "salary": 24,
+    "salary": 25,
     "tier": "GREEN",
-    "avgFP": 13.3,
-    "projectedFp": 13.3,
+    "avgFP": 16.3,
+    "projectedFp": 16.3,
     "active": true
   },
   {
@@ -15099,10 +15099,10 @@
     "name": "Serge Gnabry",
     "team": "Germany",
     "position": "FWD",
-    "salary": 59,
+    "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 33.3,
-    "projectedFp": 33.3,
+    "avgFP": 41.9,
+    "projectedFp": 41.9,
     "active": true
   },
   {
@@ -15112,10 +15112,10 @@
     "name": "Niclas Füllkrug",
     "team": "Germany",
     "position": "FWD",
-    "salary": 59,
+    "salary": 55,
     "tier": "ORANGE",
-    "avgFP": 33.4,
-    "projectedFp": 33.4,
+    "avgFP": 36.9,
+    "projectedFp": 36.9,
     "active": true
   },
   {
@@ -15125,10 +15125,10 @@
     "name": "Jonas Hofmann",
     "team": "Germany",
     "position": "FWD",
-    "salary": 18,
+    "salary": 21,
     "tier": "GREEN",
-    "avgFP": 9.4,
-    "projectedFp": 9.4,
+    "avgFP": 13.4,
+    "projectedFp": 13.4,
     "active": true
   },
   {
@@ -15140,8 +15140,8 @@
     "position": "FWD",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 35.7,
-    "projectedFp": 35.7,
+    "avgFP": 50.7,
+    "projectedFp": 50.7,
     "active": true
   },
   {
@@ -15151,10 +15151,10 @@
     "name": "Jean-Eric Maxim Choupo-Moting",
     "team": "Cameroon",
     "position": "FWD",
-    "salary": 32,
+    "salary": 31,
     "tier": "BLUE",
-    "avgFP": 17.5,
-    "projectedFp": 17.5,
+    "avgFP": 20.8,
+    "projectedFp": 20.8,
     "active": true
   },
   {
@@ -15164,10 +15164,10 @@
     "name": "Karl Brillant Toko Ekambi",
     "team": "Cameroon",
     "position": "FWD",
-    "salary": 13,
+    "salary": 14,
     "tier": "WHITE",
-    "avgFP": 7.1,
-    "projectedFp": 7.1,
+    "avgFP": 9.1,
+    "projectedFp": 9.1,
     "active": true
   },
   {
@@ -15177,10 +15177,10 @@
     "name": "Bryan Mbeumo",
     "team": "Cameroon",
     "position": "FWD",
-    "salary": 21,
+    "salary": 23,
     "tier": "GREEN",
-    "avgFP": 11.5,
-    "projectedFp": 11.5,
+    "avgFP": 15.2,
+    "projectedFp": 15.2,
     "active": true
   },
   {
@@ -15192,8 +15192,8 @@
     "position": "FWD",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 0.2,
-    "projectedFp": 0.2,
+    "avgFP": 2.2,
+    "projectedFp": 2.2,
     "active": true
   },
   {
@@ -15203,10 +15203,10 @@
     "name": "Joel Nathaniel Campbell Samuels",
     "team": "Costa Rica",
     "position": "FWD",
-    "salary": 31,
+    "salary": 33,
     "tier": "BLUE",
-    "avgFP": 17.2,
-    "projectedFp": 17.2,
+    "avgFP": 22.2,
+    "projectedFp": 22.2,
     "active": true
   },
   {
@@ -15216,10 +15216,10 @@
     "name": "Brandon Aguilera Zamora",
     "team": "Costa Rica",
     "position": "FWD",
-    "salary": 11,
+    "salary": 10,
     "tier": "WHITE",
-    "avgFP": 5.4,
-    "projectedFp": 5.4,
+    "avgFP": 6.4,
+    "projectedFp": 6.4,
     "active": true
   },
   {
@@ -15229,10 +15229,10 @@
     "name": "Anthony Daniel Contreras Enríquez",
     "team": "Costa Rica",
     "position": "FWD",
-    "salary": 14,
+    "salary": 13,
     "tier": "WHITE",
-    "avgFP": 7.3,
-    "projectedFp": 7.3,
+    "avgFP": 8.3,
+    "projectedFp": 8.3,
     "active": true
   },
   {
@@ -15242,10 +15242,10 @@
     "name": "Gerson Torres Barrantes",
     "team": "Costa Rica",
     "position": "FWD",
-    "salary": 14,
+    "salary": 15,
     "tier": "WHITE",
-    "avgFP": 7.2,
-    "projectedFp": 7.2,
+    "avgFP": 9.2,
+    "projectedFp": 9.2,
     "active": true
   },
   {
@@ -15257,8 +15257,8 @@
     "position": "FWD",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 3.8,
-    "projectedFp": 3.8,
+    "avgFP": 4.3,
+    "projectedFp": 4.3,
     "active": true
   },
   {
@@ -15268,10 +15268,10 @@
     "name": "Kevin De Bruyne",
     "team": "Belgium",
     "position": "FWD",
-    "salary": 49,
-    "tier": "PURPLE",
-    "avgFP": 27.6,
-    "projectedFp": 27.6,
+    "salary": 52,
+    "tier": "ORANGE",
+    "avgFP": 35,
+    "projectedFp": 35,
     "active": true
   },
   {
@@ -15281,10 +15281,10 @@
     "name": "Michy Batshuayi Tunga",
     "team": "Belgium",
     "position": "FWD",
-    "salary": 53,
+    "salary": 55,
     "tier": "ORANGE",
-    "avgFP": 29.6,
-    "projectedFp": 29.6,
+    "avgFP": 37.4,
+    "projectedFp": 37.4,
     "active": true
   },
   {
@@ -15294,10 +15294,10 @@
     "name": "Thorgan Hazard",
     "team": "Belgium",
     "position": "FWD",
-    "salary": 33,
+    "salary": 34,
     "tier": "BLUE",
-    "avgFP": 18.3,
-    "projectedFp": 18.3,
+    "avgFP": 22.7,
+    "projectedFp": 22.7,
     "active": true
   },
   {
@@ -15307,10 +15307,10 @@
     "name": "Leandro Trossard",
     "team": "Belgium",
     "position": "FWD",
-    "salary": 10,
+    "salary": 11,
     "tier": "WHITE",
-    "avgFP": 5.3,
-    "projectedFp": 5.3,
+    "avgFP": 6.8,
+    "projectedFp": 6.8,
     "active": true
   },
   {
@@ -15320,10 +15320,10 @@
     "name": "Kieffer Roberto Francisco Moore",
     "team": "Wales",
     "position": "FWD",
-    "salary": 27,
-    "tier": "GREEN",
-    "avgFP": 14.6,
-    "projectedFp": 14.6,
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 19.3,
+    "projectedFp": 19.3,
     "active": true
   },
   {
@@ -15333,10 +15333,10 @@
     "name": "Gareth Frank Bale",
     "team": "Wales",
     "position": "FWD",
-    "salary": 24,
+    "salary": 23,
     "tier": "GREEN",
-    "avgFP": 13.1,
-    "projectedFp": 13.1,
+    "avgFP": 14.8,
+    "projectedFp": 14.8,
     "active": true
   },
   {
@@ -15348,8 +15348,8 @@
     "position": "FWD",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 3.1,
-    "projectedFp": 3.1,
+    "avgFP": 3.5,
+    "projectedFp": 3.5,
     "active": true
   },
   {
@@ -15361,8 +15361,8 @@
     "position": "FWD",
     "salary": 10,
     "tier": "WHITE",
-    "avgFP": 5,
-    "projectedFp": 5,
+    "avgFP": 6,
+    "projectedFp": 6,
     "active": true
   },
   {
@@ -15372,10 +15372,10 @@
     "name": "Jordan Ayew",
     "team": "Ghana",
     "position": "FWD",
-    "salary": 29,
+    "salary": 28,
     "tier": "BLUE",
-    "avgFP": 15.8,
-    "projectedFp": 15.8,
+    "avgFP": 18.3,
+    "projectedFp": 18.3,
     "active": true
   },
   {
@@ -15385,10 +15385,10 @@
     "name": "Iñaki Williams Arthuer",
     "team": "Ghana",
     "position": "FWD",
-    "salary": 12,
+    "salary": 13,
     "tier": "WHITE",
-    "avgFP": 6.1,
-    "projectedFp": 6.1,
+    "avgFP": 8.5,
+    "projectedFp": 8.5,
     "active": true
   },
   {
@@ -15400,8 +15400,8 @@
     "position": "FWD",
     "salary": 60,
     "tier": "ORANGE",
-    "avgFP": 37.3,
-    "projectedFp": 37.3,
+    "avgFP": 45,
+    "projectedFp": 45,
     "active": true
   },
   {
@@ -15411,10 +15411,10 @@
     "name": "Kamaldeen Sulemana",
     "team": "Ghana",
     "position": "FWD",
-    "salary": 20,
+    "salary": 24,
     "tier": "GREEN",
-    "avgFP": 10.6,
-    "projectedFp": 10.6,
+    "avgFP": 15.6,
+    "projectedFp": 15.6,
     "active": true
   },
   {
@@ -15424,10 +15424,10 @@
     "name": "Cyle Larin",
     "team": "Canada",
     "position": "FWD",
-    "salary": 15,
-    "tier": "WHITE",
-    "avgFP": 8.1,
-    "projectedFp": 8.1,
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 11.1,
+    "projectedFp": 11.1,
     "active": true
   },
   {
@@ -15437,10 +15437,10 @@
     "name": "Jonathan David",
     "team": "Canada",
     "position": "FWD",
-    "salary": 17,
+    "salary": 20,
     "tier": "GREEN",
-    "avgFP": 9.2,
-    "projectedFp": 9.2,
+    "avgFP": 12.9,
+    "projectedFp": 12.9,
     "active": true
   },
   {
@@ -15450,10 +15450,10 @@
     "name": "Sardar Azmoun",
     "team": "Iran",
     "position": "FWD",
-    "salary": 17,
+    "salary": 19,
     "tier": "GREEN",
-    "avgFP": 9.1,
-    "projectedFp": 9.1,
+    "avgFP": 12.5,
+    "projectedFp": 12.5,
     "active": true
   },
   {
@@ -15465,8 +15465,8 @@
     "position": "FWD",
     "salary": 16,
     "tier": "GREEN",
-    "avgFP": 8.6,
-    "projectedFp": 8.6,
+    "avgFP": 9.9,
+    "projectedFp": 9.9,
     "active": true
   },
   {
@@ -15478,8 +15478,8 @@
     "position": "FWD",
     "salary": 11,
     "tier": "WHITE",
-    "avgFP": 5.6,
-    "projectedFp": 5.6,
+    "avgFP": 7.1,
+    "projectedFp": 7.1,
     "active": true
   }
 ]

@@ -24,10 +24,12 @@ const dataDir   = join(__dirname, '..', 'public', 'data');
 // ── Position-specific FP weights — MUST match footballConfig.ts exactly ──────
 const POSITION_WEIGHTS = {
   GK: {
-    saves:           20.0,
-    goals_conceded:  -6.0,
-    clearances:       4.0,
-    goals:           60.0,
+    // Recalibrated 2026-05-07: dropped 2.5× multiplier; per-stat weights
+    // bumped so GK lands organically near outfield mean. Matches footballConfig.ts.
+    saves:           16.0,
+    goals_conceded:  -3.0,
+    clearances:       5.0,
+    goals:           70.0,
     yellow_cards:    -5.0,
     red_cards:      -15.0,
   },
@@ -59,11 +61,13 @@ const POSITION_WEIGHTS = {
     red_cards:         -15.0,
   },
   FWD: {
+    // Recalibrated 2026-05-07 (Option A): SOT 4→6, KP 3→4, dribbles 2→3 to
+    // lift FWD mean to MID/DEF parity. Matches footballConfig.ts.
     goals:              22.0,
     assists:             8.0,
-    shots_on_target:     4.0,
-    key_passes:          3.0,
-    dribbles_completed:  2.0,
+    shots_on_target:     6.0,
+    key_passes:          4.0,
+    dribbles_completed:  3.0,
     pressures:           0.2,
     tackles:             2.0,
     yellow_cards:       -5.0,
