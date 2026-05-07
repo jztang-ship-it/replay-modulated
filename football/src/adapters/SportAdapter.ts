@@ -108,6 +108,22 @@ export class SportAdapter extends SharedSportAdapter {
     return entries.slice(0, count).map(e => e.id);
   }
 
+  /** Live tier lookup — used by slateSelector tier-capping. */
+  private _tierCache: Map<string, string> | null = null;
+  getTierById(playerId: string): string {
+    if (!this._tierCache) {
+      const m = new Map<string, string>();
+      for (const p of getPlayers()) {
+        const bid = String((p as any).basePlayerId ?? (p as any).id ?? "").trim();
+        if (!bid || m.has(bid)) continue;
+        const salary = Number((p as any).salary ?? 0);
+        m.set(bid, tierFromSalary(salary, this.economyConfig));
+      }
+      this._tierCache = m;
+    }
+    return this._tierCache.get(String(playerId).trim()) ?? "WHITE";
+  }
+
   /** Phase-2 stubs (no themes in v1). */
   getThemeForDate(_date: Date): string | null { return null; }
   getThemedEligibility(_themeKey: string): string[] | null { return null; }
