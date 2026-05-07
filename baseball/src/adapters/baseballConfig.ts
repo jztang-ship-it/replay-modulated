@@ -55,7 +55,7 @@ export const BaseballSportConfig = {
 
   // Slate v2 (flag-gated; see shared/utils/slateSelector.ts)
   slateSize: 50,         // 5 hand slots × 10
-  anchorCount: 10,
+  anchorCount: 9,        // 3x3 grid in slate overlay (was 10)
   weightExponent: 1.0,
   exclusionList: [] as string[],  // populated during data audit; safe default
 

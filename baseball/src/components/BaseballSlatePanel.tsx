@@ -130,6 +130,7 @@ function BaseballSlatePanelInner({ playerIndex }: { playerIndex: Map<string, Res
       return getTodaysStars().map(b => ({
         id: b.basePlayerId,
         name: b.name,
+        tier: sportAdapter.normalizeTier(b.tier) as TierColor,
         bonus: b.bonus,
       }));
     } catch (e) {
@@ -139,9 +140,10 @@ function BaseballSlatePanelInner({ playerIndex }: { playerIndex: Map<string, Res
   }, [slate.players]);
 
   const anchors = slate.players.filter(p => p.isAnchor);
-  const bonusIds = new Set(bonusPlayers.map(b => b.id));
-  // Don't double-count: bonus players that are also anchors stay in anchors.
-  const rotatingPlayers = slate.players.filter(p => !p.isAnchor && !bonusIds.has(p.id));
+  // Bonus players are drawn FROM the slate (gameAdapter.buildBonusPool
+  // filters to the cached slate when slate v2 is ON). Count them in
+  // rotating so visible totals = slateSize.
+  const rotatingPlayers = slate.players.filter(p => !p.isAnchor);
 
   const themeMetadata = slate.themeKey
     ? (sportAdapter as any).getThemeMetadata?.(slate.themeKey) ?? null
