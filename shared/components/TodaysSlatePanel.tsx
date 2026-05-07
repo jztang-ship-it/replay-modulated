@@ -11,10 +11,11 @@
  * outside today's slate.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatBonusCountdown } from "../utils/dailyBonus";
 import { track } from "@shared/analytics/analytics";
 import type { TierColor } from "../types";
+import { tierRank } from "@shared/theme";
 
 export type SlatePanelAdapter = {
   themeMetadata: { displayName: string; description: string; iconKey?: string } | null;
@@ -61,6 +62,18 @@ export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
   // Rendered together in a uniform 3-column grid below.
   const bonusPlayers = adapter.bonusPlayers;
 
+  // Anchors and the full-slate list both render top-tier first
+  // (RED → ORANGE → PURPLE → BLUE → GREEN). Sort here at render time so
+  // each sport adapter doesn't have to bake the order in.
+  const sortedAnchors = useMemo(
+    () => [...adapter.anchors].sort((a, b) => tierRank(a.tier) - tierRank(b.tier)),
+    [adapter.anchors],
+  );
+  const sortedFullSlate = useMemo(
+    () => [...adapter.fullSlatePlayers].sort((a, b) => tierRank(a.tier) - tierRank(b.tier)),
+    [adapter.fullSlatePlayers],
+  );
+
   return (
     <section className="slate-panel" data-testid="todays-slate-panel">
       {adapter.signature && (
@@ -88,7 +101,7 @@ export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
       )}
 
       <div className="slate-panel__countdown" data-testid="slate-countdown">
-        Today's slate refreshes in {formatBonusCountdown(adapter.msUntilRotation)}
+        Refreshes in {formatBonusCountdown(adapter.msUntilRotation)}
       </div>
 
       <div className="slate-panel__anchors">
@@ -101,7 +114,7 @@ export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
             gap: 8,
           }}
         >
-          {adapter.anchors.map(p => (
+          {sortedAnchors.map(p => (
             <button
               key={p.id}
               type="button"
@@ -220,7 +233,7 @@ export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
             marginTop: 10,
           }}
         >
-          {adapter.fullSlatePlayers.map(p => (
+          {sortedFullSlate.map(p => (
             <button
               key={p.id}
               type="button"

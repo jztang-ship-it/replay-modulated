@@ -21,6 +21,7 @@
 import { SportAdapter as SharedSportAdapter } from "@shared/adapters/SportAdapter";
 import { FootballSportConfig } from "./footballConfig";
 import { getPlayers, getLogsByKey } from "../engines/dataEngine";
+import { tierRank } from "@shared/theme";
 
 export class SportAdapter extends SharedSportAdapter {
   // ---------------------------------------------------------------------
@@ -78,10 +79,30 @@ export class SportAdapter extends SharedSportAdapter {
     return scored.slice(0, n).map(s => s.id);
   }
 
-  /** Anchor players (always in today's slate). Default = top `count` by career FP. */
+  /** Anchor players (always in today's slate). Sort key is tier first
+   *  (RED → ORANGE → PURPLE → BLUE → GREEN), career FP as tiebreaker
+   *  within tier. */
   // @ts-expect-error — narrowing shared base's 3-arg signature to no-arg SlateAdapter shape.
-  getAnchors(count: number = 10): string[] {
-    return this.getEligiblePool(count);
+  getAnchors(count: number = 9): string[] {
+    const players = getPlayers();
+    const seen = new Set<string>();
+    const entries: Array<{ id: string; tier: string; fp: number }> = [];
+    for (const p of players) {
+      const bid = String((p as any).basePlayerId ?? (p as any).id ?? "").trim();
+      if (!bid || seen.has(bid)) continue;
+      seen.add(bid);
+      entries.push({
+        id: bid,
+        tier: String((p as any).tier ?? "WHITE").toUpperCase(),
+        fp: this.getCareerFPById(bid),
+      });
+    }
+    entries.sort((a, b) => {
+      const t = tierRank(a.tier) - tierRank(b.tier);
+      if (t !== 0) return t;
+      return b.fp - a.fp;
+    });
+    return entries.slice(0, count).map(e => e.id);
   }
 
   /** Phase-2 stubs (no themes in v1). */
