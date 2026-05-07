@@ -2,12 +2,13 @@
  * football/src/data/playerPortraitAdjustments.ts
  *
  * Per-player overrides for football headshot framing on cards. The default
- * football portrait CSS (in SoccerCard.tsx FootballHero) is tuned to feel
- * like basketball — head/face roughly the same fraction of the card area,
- * eyes anchored near the top third. Most players look right with the
- * default. A few photos in the API-Football set are framed unusually
- * (zoomed too tight, off-center, head sitting too low because the photo
- * crops at the chin rather than the chest) — those need a small nudge.
+ * football portrait CSS (in SoccerCard.tsx FootballHero) is tuned to Mbappé
+ * as the visual reference — same head footprint and same upper-third eye
+ * anchor for every player. Most players look right with the default and
+ * need no entry here. Overrides are reserved for sources that physically
+ * can't conform to the standard (e.g. tight face-only crops where the
+ * head touches both the top and bottom of the source image, leaving no
+ * headroom for the hero box's aspect-ratio crop).
  *
  * How to use:
  *   1. Run the app with `?debugFootballImages=1` and look at the cards.
@@ -49,38 +50,35 @@ export interface PortraitAdjustment {
 /**
  * basePlayerId → portrait override.
  *
- * Conservative seed list — only includes the named players from the design
- * brief whose default crop is visibly off after the basketball-aligned
- * default tune. Add more entries as the user spots them in `?debugFootballImages=1`.
+ * Globals in SoccerCard.tsx are now locked to Mbappé's reference framing
+ * (HEADSHOT_WIDTH_PCT=108, HEADSHOT_HEIGHT_PCT=98, HEADSHOT_OBJECT_Y=14),
+ * so Messi / Mbappé / Bellingham and the rest of the squad use the bare
+ * default with no entry here. Only sources that can't render cleanly at
+ * the global appear below.
  */
 export const PLAYER_PORTRAIT_ADJUSTMENTS: Record<string, PortraitAdjustment> = {
   // 6909 — Emiliano Martínez (Argentina GK).
-  // API-Football photo crops fairly tight to the head with very little
-  // shoulder visible — default scale leaves the head feeling small relative
-  // to other cards. Slight scale-up + nudge down to keep the eyes in the
-  // upper-third sweet spot rather than touching the card top.
-  "6909": { scale: 1.04, objectPositionY: 16 },
-
-  // 5503 — Lionel Messi (Argentina FWD).
-  // Photo is a close shoulder-up shot; default crop reads fine. Add a
-  // tiny scale-down so his head doesn't look bigger than teammates'.
-  "5503": { scale: 0.96, objectPositionY: 18 },
-
-  // 3009 — Kylian Mbappé (France FWD).
-  // Photo crops slightly higher in the frame than typical (more forehead
-  // showing, less neck). Drop objectPositionY a touch so the eyes land in
-  // the same zone as Messi/Bellingham.
-  "3009": { scale: 0.98, objectPositionY: 14 },
-
-  // 30714 — Jude Bellingham (England MID).
-  // Default crop looks correct in audit. Listed here as a no-op anchor so
-  // future tuning has a documented baseline.
-  // (No fields set = defaults applied.)
-  "30714": {},
+  // Source crops fairly tight to the head; at the global Y=14 anchor his
+  // face sits noticeably lower in the card than Mbappé's because his
+  // shoulders are absent from the source. Override Y back to 8 (face
+  // higher in card) and scale 0.96 so his head footprint matches the
+  // global 108-width baseline applied to everyone else.
+  "6909": { scale: 0.96, objectPositionY: 8 },
 
   // 3602 — Marcos Rojo (Argentina DEF).
-  // Photo is well-framed; no override needed at default settings.
-  "3602": {},
+  // Worst-case source in the squad: head fills the entire 150×150 frame
+  // with hair touching the top edge and chin flush with the bottom edge,
+  // leaving no headroom for the hero box's ~9% vertical aspect-ratio crop.
+  // At the global Y=14 anchor, nearly all of that 9% crop comes off the
+  // bottom — chin is clipped AND visually pressed against the name strip.
+  // Workaround: scale aggressively below the global (0.78) so the head
+  // sits visually smaller than the rest of the squad rather than larger,
+  // bias the crop toward the top (Y=65: ~5.9% off top, ~3.1% off bottom)
+  // so the chin survives, and use translateYPct=-4 to lift the whole IMG
+  // up away from the name strip. Cost: a small hair-tip trim — acceptable
+  // on his close-cropped haircut.
+  // (Prev: scale 0.85, objectPositionY 60 — chin still touched name strip.)
+  "3602": { scale: 0.78, objectPositionY: 65, translateYPct: -4 },
 };
 
 /**

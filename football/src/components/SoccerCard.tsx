@@ -50,13 +50,17 @@ import { getPortraitAdjustment } from "../data/playerPortraitAdjustments";
 // color shows through behind the player. With a real alpha channel in the
 // PNG, we don't need any CSS tricks — no mask, no blend mode, no filter.
 //
-// Defaults are deliberately lined up with the basketball card composition
-// (basketball/src/components/AthleteCardFront.tsx): top:12%, left:-5%,
-// width:110%, height:100%, object-position 50% 10%. The football photo
-// stock is more variable than the NBA headshot stock (different aspect
-// ratios, different framing per league), so a small per-player override
-// table — football/src/data/playerPortraitAdjustments.ts — handles the
-// outliers without changing the default for the majority that look right.
+// Defaults are tuned to lock all football cards to a single visual scale
+// and vertical face position. Mbappé's framing is the reference target —
+// his source crop is roughly average for the API-Football set, so values
+// that read well on his card read well across most of the squad. Width
+// is dropped from basketball's 110 to 108 (slight head shrink) and the
+// object-position Y is bumped from 10 to 14 so eyes land in the same
+// upper-third zone for sources that include shoulders. The football photo
+// stock IS more variable than the NBA stock, so per-player overrides in
+// football/src/data/playerPortraitAdjustments.ts still exist as exceptions
+// for sources that physically can't conform to the standard (e.g. tight
+// face-only crops where the head touches both top and bottom of the source).
 //
 // CSS values that control face crop:
 //   HEADSHOT_TOP_PCT        top offset of the <img> within the hero
@@ -68,20 +72,20 @@ import { getPortraitAdjustment } from "../data/playerPortraitAdjustments";
 //                           smaller = higher)
 //
 // Tweak quick-reference (defaults below — applied to ALL football cards):
-//   Heads too SMALL across the board  → bump HEADSHOT_WIDTH_PCT (110 → 118)
-//   Heads too BIG across the board    → drop HEADSHOT_WIDTH_PCT (110 → 102)
-//   Faces sit too LOW everywhere      → drop HEADSHOT_OBJECT_Y (10 → 6)
-//   Faces sit too HIGH everywhere     → bump HEADSHOT_OBJECT_Y (10 → 16)
+//   Heads too SMALL across the board  → bump HEADSHOT_WIDTH_PCT (108 → 116)
+//   Heads too BIG across the board    → drop HEADSHOT_WIDTH_PCT (108 → 102)
+//   Faces sit too LOW everywhere      → drop HEADSHOT_OBJECT_Y (14 → 10)
+//   Faces sit too HIGH everywhere     → bump HEADSHOT_OBJECT_Y (14 → 18)
 //
 // For ONE-OFF fixes on a specific player, use playerPortraitAdjustments.ts
 // rather than retuning the global defaults.
 
 const HEADSHOT_TOP_PCT = 12;       // matches basketball (12)
 const HEADSHOT_LEFT_PCT = -5;      // matches basketball (-5)
-const HEADSHOT_WIDTH_PCT = 110;    // matches basketball (110)
-const HEADSHOT_HEIGHT_PCT = 100;   // matches basketball (100)
+const HEADSHOT_WIDTH_PCT = 108;    // Mbappé reference (was 110 / basketball)
+const HEADSHOT_HEIGHT_PCT = 98;    // Mbappé reference (was 100 / basketball)
 const HEADSHOT_OBJECT_X = 50;      // 50 = horizontal center (matches basketball)
-const HEADSHOT_OBJECT_Y = 10;      // matches basketball (10)
+const HEADSHOT_OBJECT_Y = 14;      // Mbappé reference (was 10 / basketball)
 
 // Debug overlay: enabled at runtime via either
 //   ?debugFootballImages=1   (URL query param)
