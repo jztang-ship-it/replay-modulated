@@ -590,13 +590,20 @@ export function CoachLayer({
     if (!text) {
       setTimeout(() => {
         onBubbleActive?.(false);
-        onResumeHeldReveal?.();
-        // No spotlight bubble was enqueued in this branch (no per-card text),
-        // so fire the anchor intro at the tail of the post-card grace period
-        // — same sequence as the text branch where the intro fires after
-        // the spotlight dismisses. Keeps the "after spotlight leaves" rule
-        // even when the spotlight never actually appeared.
-        if (isLastNonAnchor) scheduleAnchorIntro();
+        if (isLastNonAnchor) {
+          // No per-card text in this branch, but still sequence the anchor
+          // moment: intro text first, then ~2.2s beat, then resume reveal.
+          // Same shape as the text branch so the anchor flip never overlaps
+          // the intro line.
+          const intro = cfg?.anchorIntroText ?? "Now for your anchor card — he's the star, and what you're depending on to really push you over the top.";
+          onCommentaryText?.([intro], true);
+          if (anchorIntroTimer.current) clearTimeout(anchorIntroTimer.current);
+          anchorIntroTimer.current = setTimeout(() => {
+            onResumeHeldReveal?.();
+          }, 2200);
+        } else {
+          onResumeHeldReveal?.();
+        }
       }, 600);
       return;
     }
@@ -612,30 +619,27 @@ export function CoachLayer({
       anchor: cardAnchor,
       position: cardPos,
       onDismiss: () => {
-        // Don't clear commentary — let the next card's reveal replace it.
-        onResumeHeldReveal?.();
-        // Fire the anchor intro AFTER the spotlight on the 4th/5th card
-        // dismisses, not on a wall-clock timer. Earlier behavior fired on
-        // a fixed 2s delay parallel to the spotlight, so the intro line
-        // could swap in while the spotlight was still painted on the card —
-        // visual mismatch. Tying it to onDismiss makes the intro land in
-        // the natural beat after the user taps through the spotlight.
-        if (isLastNonAnchor) scheduleAnchorIntro();
+        if (isLastNonAnchor) {
+          // Sequence the anchor moment: show the intro text first, let it
+          // type out and breathe, THEN resume the held reveal so the anchor
+          // card flip lands AFTER the user has read the line. Earlier
+          // behavior fired both at once (resume + intro), so the anchor
+          // card was already flipping while the line was still typing —
+          // readers missed it. The 2200ms beat = ~1.8s typewriter + ~0.4s
+          // pause. The intro lands sticky in the commentary area first,
+          // then the reveal kicks off.
+          const intro = cfg?.anchorIntroText ?? "Now for your anchor card — he's the star, and what you're depending on to really push you over the top.";
+          onCommentaryText?.([intro], true);
+          if (anchorIntroTimer.current) clearTimeout(anchorIntroTimer.current);
+          anchorIntroTimer.current = setTimeout(() => {
+            onResumeHeldReveal?.();
+          }, 2200);
+        } else {
+          // Non-final card: resume reveal immediately, no intro to sequence.
+          onResumeHeldReveal?.();
+        }
       },
     }, 0);
-
-    function scheduleAnchorIntro() {
-      if (anchorIntroTimer.current) clearTimeout(anchorIntroTimer.current);
-      // Small grace period after dismissal so the commentary swap reads
-      // as a deliberate beat rather than a jarring instant replace.
-      // (Was 2000ms — back when this fired in parallel to the spotlight,
-      // the long delay was the only thing keeping it from racing the
-      // per-card line off-screen.)
-      anchorIntroTimer.current = setTimeout(() => {
-        const intro = cfg?.anchorIntroText ?? "Now for your anchor card — he's the star, and what you're depending on to really push you over the top.";
-        onCommentaryText?.([intro], true);
-      }, 300);
-    }
   }, [lastRevealedCardId, isFTUE]); // eslint-disable-line
 
   // After tier slam settles → "So close" → tap → anchor flip hint (spotlight anchor+gauge)

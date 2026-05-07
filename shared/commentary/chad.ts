@@ -23,9 +23,9 @@ function pick(arr: string[]): string {
 
 /** First time transitioning from FTUE to real game */
 const WELCOME: string[] = [
-  "Look who decided to play for real. Three bonus players rotate in every 24hrs — tap the gold icon to see who's paying extra today.",
-  "Training wheels are off. Daily bonuses just refreshed — tap the gold icon to see who's hot today.",
-  "Alright, you're in. Three players get bonus FP every day — check the gold icon before you deal.",
+  "Look who decided to play for real. Tap the gold icon to see all the scoring rules and your target to beat.",
+  "Training wheels are off. Tap the gold icon to see all the scoring rules and your target to beat.",
+  "Alright, you're in. Tap the gold icon to see all the scoring rules and your target to beat.",
 ];
 
 /** User returns within 24hrs */
