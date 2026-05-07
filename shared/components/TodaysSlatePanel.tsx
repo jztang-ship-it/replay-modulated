@@ -15,7 +15,6 @@ import { useEffect, useState } from "react";
 import { formatBonusCountdown } from "../utils/dailyBonus";
 import { track } from "@shared/analytics/analytics";
 import type { TierColor } from "../types";
-import { getTier } from "@shared/theme";
 
 export type SlatePanelAdapter = {
   themeMetadata: { displayName: string; description: string; iconKey?: string } | null;
@@ -102,34 +101,28 @@ export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
             gap: 8,
           }}
         >
-          {adapter.anchors.map(p => {
-            const t = getTier(p.tier);
-            return (
-              <button
-                key={p.id}
-                type="button"
-                className="slate-panel__card"
-                onClick={() => adapter.onCardTap?.(p.id)}
-                data-anchor="true"
-                data-tier={p.tier}
-                style={{
-                  all: "unset",
-                  cursor: adapter.onCardTap ? "pointer" : "default",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  padding: 6,
-                  borderRadius: 10,
-                  minWidth: 0,
-                  background: `linear-gradient(160deg, ${t.bg} 0%, ${t.bgEnd} 120%)`,
-                  border: `1px solid ${t.frame}`,
-                  boxShadow: `0 4px 12px ${t.glow}`,
-                }}
-              >
-                <adapter.CardThumb playerId={p.id} isAnchor={true} />
-              </button>
-            );
-          })}
+          {adapter.anchors.map(p => (
+            <button
+              key={p.id}
+              type="button"
+              className="slate-panel__card"
+              onClick={() => adapter.onCardTap?.(p.id)}
+              data-anchor="true"
+              data-tier={p.tier}
+              style={{
+                all: "unset",
+                cursor: adapter.onCardTap ? "pointer" : "default",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                padding: 6,
+                borderRadius: 10,
+                minWidth: 0,
+              }}
+            >
+              <adapter.CardThumb playerId={p.id} isAnchor={true} />
+            </button>
+          ))}
         </div>
       </div>
 
@@ -149,9 +142,7 @@ export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
               alignItems: "stretch",
             }}
           >
-            {bonusPlayers.map(p => {
-              const t = getTier(p.tier);
-              return (
+            {bonusPlayers.map(p => (
               <button
                 key={p.id}
                 type="button"
@@ -168,12 +159,12 @@ export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
                   gap: 4,
                   padding: "8px 6px 10px",
                   borderRadius: 12,
-                  // Tier-color body with a gold ring + gold glow to mark the
-                  // bonus state, so the row reads as "bonus-flagged" without
-                  // hiding the player's tier.
-                  background: `linear-gradient(160deg, ${t.bg} 0%, ${t.bgEnd} 120%)`,
-                  border: "1.5px solid rgba(255,215,0,0.85)",
-                  boxShadow: "0 0 0 1px rgba(255,215,0,0.35), 0 4px 14px rgba(255,200,0,0.22)",
+                  // Subtle gold tint on the body marks the bonus row;
+                  // tier color shows on the avatar circle inside the
+                  // CardThumb, not on the card body.
+                  background: "rgba(255,215,0,0.07)",
+                  border: "1.5px solid rgba(255,215,0,0.55)",
+                  boxShadow: "0 0 0 1px rgba(255,215,0,0.25)",
                   minWidth: 0,
                   textAlign: "center",
                 }}
@@ -197,8 +188,7 @@ export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
                   +{p.bonus} FP
                 </span>
               </button>
-              );
-            })}
+            ))}
           </div>
         </div>
       )}
@@ -230,33 +220,28 @@ export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
             marginTop: 10,
           }}
         >
-          {adapter.fullSlatePlayers.map(p => {
-            const t = getTier(p.tier);
-            return (
-              <button
-                key={p.id}
-                type="button"
-                className="slate-panel__card slate-panel__card--small"
-                onClick={() => adapter.onCardTap?.(p.id)}
-                data-anchor={p.isAnchor ? "true" : "false"}
-                data-tier={p.tier}
-                style={{
-                  all: "unset",
-                  cursor: adapter.onCardTap ? "pointer" : "default",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  padding: 4,
-                  borderRadius: 8,
-                  minWidth: 0,
-                  background: `linear-gradient(160deg, ${t.bg} 0%, ${t.bgEnd} 120%)`,
-                  border: `1px solid ${t.frame}`,
-                }}
-              >
-                <adapter.CardThumb playerId={p.id} isAnchor={p.isAnchor} />
-              </button>
-            );
-          })}
+          {adapter.fullSlatePlayers.map(p => (
+            <button
+              key={p.id}
+              type="button"
+              className="slate-panel__card slate-panel__card--small"
+              onClick={() => adapter.onCardTap?.(p.id)}
+              data-anchor={p.isAnchor ? "true" : "false"}
+              data-tier={p.tier}
+              style={{
+                all: "unset",
+                cursor: adapter.onCardTap ? "pointer" : "default",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                padding: 4,
+                borderRadius: 8,
+                minWidth: 0,
+              }}
+            >
+              <adapter.CardThumb playerId={p.id} isAnchor={p.isAnchor} />
+            </button>
+          ))}
         </div>
       )}
     </section>
