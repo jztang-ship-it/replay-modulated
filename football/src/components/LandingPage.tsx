@@ -3,10 +3,10 @@
  *
  * Renders @shared/components/LandingPage with a football-flavored adapter:
  * the demo card list, the SoccerCard renderer, no headshot URL (flag + name
- * fallback handled inside SoccerCard's FootballHero), a 3-column grid (3+2
- * layout for the 5 launch cards), and no audio bed at launch. Tier is
- * derived from salary because football doesn't ship per-card tier overrides
- * on the landing page.
+ * fallback handled inside SoccerCard's FootballHero), a 4-column grid mapped
+ * to a 2-1-2 layout (mirrors the in-game RosterGrid) for the 5 launch cards,
+ * and no audio bed at launch. Tier is derived from salary because football
+ * doesn't ship per-card tier overrides on the landing page.
  */
 import { useEffect, useMemo, useState } from "react";
 import { LandingPage as SharedLandingPage } from "@shared/components/LandingPage";
@@ -70,7 +70,20 @@ export function LandingPage({ onPlay, onShowProfile, onShowSignIn }: Props) {
     // type omits "RED" while shared's includes it. Football data never produces
     // RED tier cards. Cast bridges the structural mismatch safely.
     landingCardComponent: SoccerCard as unknown as LandingAdapter["landingCardComponent"],
-    landingGridLayout: { templateColumns: "repeat(3, minmax(0, 1fr))" },
+    // 2-1-2 layout via a 4-column grid: each card spans 2 columns. Slot 2
+    // (the middle row) sits centered across cols 2-4 so it visually aligns
+    // between the two cards above and below.
+    landingGridLayout: {
+      templateColumns: "repeat(4, 1fr)",
+      gridColumnFor: (i) => (
+        i === 0 ? "1 / 3" :
+        i === 1 ? "3 / 5" :
+        i === 2 ? "2 / 4" :
+        i === 3 ? "1 / 3" :
+        i === 4 ? "3 / 5" : undefined
+      ),
+      maxWidth: 240,
+    },
     landingAudioBedSrc: null,
     landingTierFor: (d) => tierFromSalary(d.salary, DEFAULT_ECONOMY_CONFIG),
   }), []);
