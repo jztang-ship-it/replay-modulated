@@ -577,11 +577,12 @@ export function CoachLayer({
 
     // Track that another non-anchor card just revealed. After all non-anchor
     // cards have shown their per-card commentary, the LAST one is the
-    // 2nd-to-last reveal in the deck (the anchor reveals last). Right then
-    // we want the "now for your anchor" line to swap in — both so the user
-    // mentally prepares for the anchor reveal AND so the prior card's
-    // commentary doesn't linger through the anchor flip + tier slam +
-    // win-animation entry. (User feedback 2026-05-05.)
+    // 2nd-to-last reveal in the deck (the anchor reveals last). When the
+    // user dismisses that last card's spotlight, we swap in the "now for
+    // your anchor" line — both so they mentally prepare for the anchor
+    // reveal AND so the prior card's commentary doesn't linger through
+    // the anchor flip + tier slam + win-animation entry.
+    // (User feedback 2026-05-05; spotlight-dismiss tie-in 2026-05-07.)
     nonAnchorRevealCount.current += 1;
     const rosterCount = cfg?.rosterCount ?? 6;
     const isLastNonAnchor = nonAnchorRevealCount.current >= rosterCount - 1;
@@ -590,10 +591,13 @@ export function CoachLayer({
       setTimeout(() => {
         onBubbleActive?.(false);
         onResumeHeldReveal?.();
+        // No spotlight bubble was enqueued in this branch (no per-card text),
+        // so fire the anchor intro at the tail of the post-card grace period
+        // — same sequence as the text branch where the intro fires after
+        // the spotlight dismisses. Keeps the "after spotlight leaves" rule
+        // even when the spotlight never actually appeared.
+        if (isLastNonAnchor) scheduleAnchorIntro();
       }, 600);
-      // Even if there's no per-card text, still fire the anchor intro for the
-      // last non-anchor reveal so the transition to anchor isn't silent.
-      if (isLastNonAnchor) scheduleAnchorIntro();
       return;
     }
 
@@ -610,20 +614,27 @@ export function CoachLayer({
       onDismiss: () => {
         // Don't clear commentary — let the next card's reveal replace it.
         onResumeHeldReveal?.();
+        // Fire the anchor intro AFTER the spotlight on the 4th/5th card
+        // dismisses, not on a wall-clock timer. Earlier behavior fired on
+        // a fixed 2s delay parallel to the spotlight, so the intro line
+        // could swap in while the spotlight was still painted on the card —
+        // visual mismatch. Tying it to onDismiss makes the intro land in
+        // the natural beat after the user taps through the spotlight.
+        if (isLastNonAnchor) scheduleAnchorIntro();
       },
     }, 0);
 
-    // After the user has had ~2s to read the per-card line, swap in the
-    // anchor-intro text. It then persists through the anchor reveal +
-    // tier slam + win-animation entry until nearMissText replaces it.
-    if (isLastNonAnchor) scheduleAnchorIntro();
-
     function scheduleAnchorIntro() {
       if (anchorIntroTimer.current) clearTimeout(anchorIntroTimer.current);
+      // Small grace period after dismissal so the commentary swap reads
+      // as a deliberate beat rather than a jarring instant replace.
+      // (Was 2000ms — back when this fired in parallel to the spotlight,
+      // the long delay was the only thing keeping it from racing the
+      // per-card line off-screen.)
       anchorIntroTimer.current = setTimeout(() => {
         const intro = cfg?.anchorIntroText ?? "Now for your anchor card — he's the star, and what you're depending on to really push you over the top.";
         onCommentaryText?.([intro], true);
-      }, 2000);
+      }, 300);
     }
   }, [lastRevealedCardId, isFTUE]); // eslint-disable-line
 
