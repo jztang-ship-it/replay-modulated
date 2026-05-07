@@ -403,10 +403,19 @@
         var KEY = 'replay_last_sport';
         var qs = new URLSearchParams(window.location.search);
 
-        // Returning users skip the chooser unless ?pick=1 is in the URL.
+        // Bucket-aware fast-path: only redirect users who have completed
+        // FTUE in ALL three sports (Bucket C — nothing left to discover
+        // on the chooser). Buckets A (none) and B (some) still see the
+        // chooser so the "New for you" pills, "To Beat" leaderboard
+        // preview, and other returning-user engagement features get a
+        // chance to land. ?pick=1 still forces the chooser for everyone.
         if (qs.get('pick') !== '1') {
+          var preFtueB  = localStorage.getItem('replaymod_ftue_basketball') === '1';
+          var preFtueBB = localStorage.getItem('replaymod_ftue_baseball')   === '1';
+          var preFtueF  = localStorage.getItem('replaymod_ftue_football')   === '1';
+          var allPlayed = preFtueB && preFtueBB && preFtueF;
           var last = localStorage.getItem(KEY);
-          if (last === 'basketball' || last === 'baseball' || last === 'football') {
+          if (allPlayed && (last === 'basketball' || last === 'baseball' || last === 'football')) {
             window.location.replace('/' + last + '/');
             return;
           }
