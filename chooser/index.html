@@ -33,7 +33,13 @@
 
     <style>
       * { box-sizing: border-box; }
-      html, body { margin: 0; padding: 0; height: 100%; }
+      /* iOS Safari blocks vertical scroll when html+body are pinned to
+         exactly viewport height (`height: 100%`) — the layout reports
+         "fits" and never overflows for the scroller. Use min-height so
+         content taller than the viewport extends the document and scrolls
+         naturally. Android/Chrome tolerated the previous setup; iOS
+         hard-locked. */
+      html, body { margin: 0; padding: 0; min-height: 100%; }
       body {
         background: linear-gradient(180deg, #070A12 0%, #0A1020 38%, #070A12 100%);
         color: #F0F2F5;

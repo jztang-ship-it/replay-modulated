@@ -21,6 +21,7 @@ import { ensureLoaded, getPlayers } from "../engines/dataEngine";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { getTodaysStars } from "../adapters/gameAdapter";
 import type { TierColor } from "@shared/types";
+import { getTier } from "@shared/theme";
 
 type ResolvedPlayer = { name: string; tier: TierColor; basePlayerId: string };
 
@@ -56,6 +57,10 @@ const BaseballCardThumb: React.FC<{ playerId: string; isAnchor: boolean; index: 
 }) => {
   const meta = index.get(playerId);
   const url = baseballHeadshotUrl(meta?.basePlayerId ?? playerId);
+  const tier = getTier(meta?.tier ?? "WHITE");
+  // Tier color on the avatar circle, not the card body — see basketball
+  // panel for rationale.
+  const circleBg = `linear-gradient(160deg, ${tier.bg} 0%, ${tier.bgEnd} 120%)`;
   return (
     <div
       className={`baseball-thumb ${isAnchor ? "is-anchor" : ""}`}
@@ -69,11 +74,11 @@ const BaseballCardThumb: React.FC<{ playerId: string; isAnchor: boolean; index: 
         <img
           src={url}
           alt={meta?.name ?? playerId}
-          style={{ width: 48, height: 48, borderRadius: "50%", objectFit: "cover", background: "rgba(255,255,255,0.05)" }}
+          style={{ width: 48, height: 48, borderRadius: "50%", objectFit: "cover", background: circleBg }}
           onError={(e) => { (e.target as HTMLImageElement).style.visibility = "hidden"; }}
         />
       ) : (
-        <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
+        <div style={{ width: 48, height: 48, borderRadius: "50%", background: circleBg }} />
       )}
       <span style={{ fontSize: 10, color: "rgba(240,242,245,0.85)", textAlign: "center", lineHeight: 1.2 }}>
         {meta?.name ?? playerId}

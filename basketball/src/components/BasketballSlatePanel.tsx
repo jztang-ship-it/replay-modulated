@@ -22,6 +22,7 @@ import { headshotUrl } from "@shared/utils/headshotUrl";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { getTodaysStars } from "../adapters/gameAdapter";
 import type { TierColor } from "@shared/types";
+import { getTier } from "@shared/theme";
 
 type ResolvedPlayer = { name: string; tier: TierColor; photoCode?: string };
 
@@ -50,6 +51,11 @@ const BasketballCardThumb: React.FC<{ playerId: string; isAnchor: boolean; index
 }) => {
   const meta = index.get(playerId);
   const url = headshotUrl(meta?.photoCode ?? playerId);
+  const tier = getTier(meta?.tier ?? "WHITE");
+  // Tier color lives on the avatar circle (not the card body) per design:
+  // headshots have transparent background, so the tier gradient shows through
+  // around the player and reads as the player's tier badge.
+  const circleBg = `linear-gradient(160deg, ${tier.bg} 0%, ${tier.bgEnd} 120%)`;
   return (
     <div
       className={`basketball-thumb ${isAnchor ? "is-anchor" : ""}`}
@@ -63,11 +69,11 @@ const BasketballCardThumb: React.FC<{ playerId: string; isAnchor: boolean; index
         <img
           src={url}
           alt={meta?.name ?? playerId}
-          style={{ width: 48, height: 48, borderRadius: "50%", objectFit: "cover", background: "rgba(255,255,255,0.05)" }}
+          style={{ width: 48, height: 48, borderRadius: "50%", objectFit: "cover", background: circleBg }}
           onError={(e) => { (e.target as HTMLImageElement).style.visibility = "hidden"; }}
         />
       ) : (
-        <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
+        <div style={{ width: 48, height: 48, borderRadius: "50%", background: circleBg }} />
       )}
       <span style={{ fontSize: 10, color: "rgba(240,242,245,0.85)", textAlign: "center", lineHeight: 1.2 }}>
         {meta?.name ?? playerId}

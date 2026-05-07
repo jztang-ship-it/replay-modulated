@@ -22,6 +22,7 @@ import { sportAdapter } from "../adapters/SportAdapter";
 import { getTodaysStars } from "../adapters/gameAdapter";
 import { getExternalIds } from "../data/playerImageManifest";
 import type { TierColor } from "@shared/types";
+import { getTier } from "@shared/theme";
 
 type ResolvedPlayer = { name: string; tier: TierColor; team: string };
 
@@ -71,6 +72,10 @@ const FootballCardThumb: React.FC<{ playerId: string; isAnchor: boolean; index: 
   const flag = getFlag(meta?.team ?? "");
   const [imgFailed, setImgFailed] = React.useState(false);
   const showImage = url && !imgFailed;
+  const tier = getTier(meta?.tier ?? "WHITE");
+  // Tier color on the avatar circle, not the card body — see basketball
+  // panel for rationale.
+  const circleBg = `linear-gradient(160deg, ${tier.bg} 0%, ${tier.bgEnd} 120%)`;
 
   return (
     <div
@@ -85,7 +90,7 @@ const FootballCardThumb: React.FC<{ playerId: string; isAnchor: boolean; index: 
         style={{
           position: "relative",
           width: 48, height: 48, borderRadius: "50%",
-          background: "rgba(255,255,255,0.05)",
+          background: circleBg,
           overflow: "hidden",
           display: "grid", placeItems: "center",
         }}
