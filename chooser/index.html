@@ -100,7 +100,15 @@
       }
       .nav-nickname:hover { border-color: rgba(255,255,255,0.15); }
       main {
-        flex: 1;
+        /* `flex: 1 0 auto` so main never shrinks below its content size.
+           The previous `flex: 1` (= shrink 1 + basis 0) let main collapse
+           when content was taller than the available row space; combined
+           with `justify-content: center` that put the overflow ABOVE
+           main's top, behind the nav, with no way to scroll up. iPhone
+           viewport made this hit; Android had slightly more usable space
+           and hid the bug. `flex: 1 0 auto` makes main respect intrinsic
+           size, so body grows and the document scrolls naturally. */
+        flex: 1 0 auto;
         display: flex;
         flex-direction: column;
         align-items: center;
