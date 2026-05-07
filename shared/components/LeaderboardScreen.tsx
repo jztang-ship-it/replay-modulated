@@ -66,10 +66,18 @@ export function LeaderboardScreen({ currentUid, sport, onClose }: Props) {
   // 3-row skeleton as the loading state, so there's no flicker between
   // "loading" and "no entries yet" pre-launch.
   useEffect(() => {
+    // Bonus pool API requires sport=, and football also requires competition=.
+    // Earlier this fetched "?action=get" with no sport — API returned 400,
+    // catch fell back to 1000, so the leaderboard always showed seed even
+    // though contributions were landing.
+    const poolUrl =
+      sport === "football"
+        ? `/api/bonus-pool?sport=football&competition=world_cup`
+        : `/api/bonus-pool?sport=${sport}`;
     Promise.all([
       fetch(`/api/leaderboard?sport=${sport}&metric=hand_best&scope=daily&limit=10`).then(r => r.json()).catch(() => ({ entries: [] })),
       fetch(`/api/leaderboard?sport=${sport}&metric=session_score&scope=daily&limit=10`).then(r => r.json()).catch(() => ({ entries: [] })),
-      fetch("/api/bonus-pool?action=get").then(r => r.json()).catch(() => ({ pool: 1000 })),
+      fetch(poolUrl).then(r => r.json()).catch(() => ({ pool: 1000 })),
     ]).then(([best, session, pool]) => {
       setBestEntries(best.entries ?? []);
       setSessionEntries(session.entries ?? []);
