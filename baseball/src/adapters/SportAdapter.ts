@@ -7,7 +7,7 @@ import BaseballSportConfig, {
 import { registerRecordSources } from "@shared/data/recordDetector";
 import { MLB_SINGLE_GAME_RECORDS, MLB_STAT_ALIASES } from "@shared/data/mlbRecords";
 import { getPlayers, getLogsByKey } from "../engines/dataEngine";
-import { tierFromSalary } from "../engines/economyEngine";
+import { tierFromSalary, DEFAULT_ECONOMY_CONFIG, type EconomyConfig } from "../engines/economyEngine";
 import { tierRank } from "@shared/theme";
 import topGames from "../../public/data/topGames.json";
 import careerHighs from "../../public/data/careerHighs.json";
@@ -57,6 +57,20 @@ export class SportAdapter {
 
   get salaryCap(): number {
     return Number(this.config.salaryCap);
+  }
+
+  // Required by tierFromSalary() and slateSelector. baseballConfig doesn't
+  // ship its own thresholds, so fall back to shared defaults.
+  get economyConfig(): EconomyConfig {
+    const cfg = this.config as any;
+    return {
+      capMax: this.salaryCap,
+      salaryMin: cfg.salaryMin ?? DEFAULT_ECONOMY_CONFIG.salaryMin,
+      salaryMax: cfg.salaryMax ?? DEFAULT_ECONOMY_CONFIG.salaryMax,
+      tierThresholds: cfg.tierThresholds ?? DEFAULT_ECONOMY_CONFIG.tierThresholds,
+      salaryRatioCeiling: cfg.salaryRatioCeiling ?? DEFAULT_ECONOMY_CONFIG.salaryRatioCeiling,
+      salaryRatioFloor: cfg.salaryRatioFloor ?? DEFAULT_ECONOMY_CONFIG.salaryRatioFloor,
+    };
   }
 
   get salaryCapMin(): number {

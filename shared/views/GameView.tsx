@@ -926,6 +926,39 @@ export function GameView({ adapter }: Props) {
     return Math.min(100, Math.round((totalFp / maxPossible) * 100));
   }, [gameState, roster, totalFp, computeRosterCeiling]);
 
+  // Sum of bonus FP (badges + dailyBonus) accumulated across cards that have
+  // finished revealing. Surfaces next to Team FP as "(+30)". During REVEAL
+  // each card's bonus contribution lands the moment its FP roll-up completes,
+  // so the (+N) ticks up alongside the headline number rather than appearing
+  // fully formed at the start. RollingNumber smooths the visual between steps.
+  // Dependency on runningTotalFp ensures the memo re-runs at the same cadence
+  // as the headline FP — getVisibleFp is a stable callback ref and on its own
+  // wouldn't trigger recomputation per card-completion.
+  const teamBonusFp = useMemo(() => {
+    const cardBonus = (c: any): number => {
+      const daily = Number(c?.dailyBonus ?? 0);
+      const badges = Array.isArray(c?.achievements) ? c.achievements : [];
+      const badgeBonus = badges.reduce((s: number, b: any) => s + Number(b?.fp ?? 0), 0);
+      return daily + badgeBonus;
+    };
+    if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") {
+      return roster.reduce((sum, c) => sum + cardBonus(c), 0);
+    }
+    if (gameState === "REVEALING") {
+      return roster.reduce((sum, c) => {
+        const cid = cardId(c);
+        const visFp = getVisibleFp(cid);
+        if (visFp === undefined) return sum;
+        const actualFp = Number((c as any).actualFp ?? 0);
+        // Card still rolling — wait until it lands before adding its bonus.
+        // Compare on absolute value so negative-FP results (rare) work too.
+        if (Math.abs(visFp) < Math.abs(actualFp) - 0.5) return sum;
+        return sum + cardBonus(c);
+      }, 0);
+    }
+    return 0;
+  }, [gameState, roster, runningTotalFp, getVisibleFp]);
+
   // Top Games
   const topGameInfo = useMemo(() => {
     const commentaryRoster = roster.map((c: any) => ({
@@ -1194,7 +1227,11 @@ export function GameView({ adapter }: Props) {
       let res: any;
       try {
         res = ftueStillActive ? await ftueDealRoster() : await dealInitialRoster();
-      } catch {
+      } catch (e) {
+        // Surface the real error to the console — the on-screen banner is
+        // intentionally generic, but the underlying message (server 4xx, auth
+        // failure, balance check) is the only useful debugging signal.
+        console.error("[deal] dealInitialRoster failed:", e);
         setGameError("Couldn't deal a hand. Tap to try again.");
         setGameState("IDLE");
         return;
@@ -1732,6 +1769,11 @@ export function GameView({ adapter }: Props) {
                       <div style={{ animation: "tierInfoFadeIn 300ms ease both", display: "flex", justifyContent: "center", alignItems: "center", gap: 20, marginTop: 4, width: "100%" }}>
                         <span style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
                           {displayFp.toFixed(1)} FP
+                          {teamBonusFp > 0 && (
+                            <span style={{ marginLeft: 6, fontSize: 13, fontWeight: 700, color: "#FFD700", letterSpacing: 0 }}>
+                              (+{teamBonusFp})
+                            </span>
+                          )}
                         </span>
                         {ceilingPct != null && (
                           <span style={{ fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.45)", fontFamily: FF, lineHeight: 1, alignSelf: "center" }}>
@@ -1762,7 +1804,7 @@ export function GameView({ adapter }: Props) {
                     return (
                       <>
                         <div style={{ textAlign: "center" }}>
-                          <div style={{ fontSize: 26, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic" }}>
+                          <div style={{ fontSize: 26, fontWeight: 900, color: "#FFFFFF", lineHeight: 1, letterSpacing: -1, fontStyle: "italic", display: "inline-flex", alignItems: "baseline", gap: 4 }}>
                             {/* displayFp (frozen-aware) tracks the gauge bar: pinned during
                                 anchor count-up, springs to total via the held-anchor spring,
                                 then locks at lockedGaugeFpRef. Without this, the held anchor's
@@ -1770,6 +1812,17 @@ export function GameView({ adapter }: Props) {
                                 WIN_CELEBRATION 1200ms after spring settle, even though the
                                 gauge bar visually reaches the full total. */}
                             <RollingNumber value={displayFp} decimals={1} duration={300} />
+                            {/* Mount the bonus pill from the start of the hand so RollingNumber
+                                can animate 0 → N when the first bonus card lands. Hide via opacity
+                                until there's something to show — avoids "(+0)" sitting on screen. */}
+                            <span style={{
+                              fontSize: 13, fontWeight: 800, color: "#FFD700", letterSpacing: 0, fontStyle: "normal",
+                              display: "inline-flex", alignItems: "baseline",
+                              opacity: teamBonusFp > 0 ? 1 : 0,
+                              transition: "opacity 250ms ease",
+                            }}>
+                              (+<RollingNumber value={teamBonusFp} decimals={0} duration={300} />)
+                            </span>
                           </div>
                           <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
                             Team FP

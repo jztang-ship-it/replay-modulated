@@ -137,7 +137,7 @@ export const BASKETBALL_FTUE_CONFIG: FTUETextConfig = {
   cardTexts: DEFAULT_CARD_TEXTS,
   anchorRevealText: "Tatum was the man tonight.",
   idleText: <span>Real stats. Real history. Your fantasy result instantly. Hit <DealChip /> to get started.</span>,
-  holdIntroText: "Six players. $250 cap. Card colors mark tier — gold/purple stars cost more but score more. Fantasy points come from real stats — pts, rbs, asts. Who do we keep?",
+  holdIntroText: "Six players. $250 cap. Card colors mark tier — red/orange picks cost more but score more. Fantasy points come from real stats — pts, rbs, asts. Who do we keep?",
   holdAnchorText: <span>Tatum is your $66 anchor and your most dependable player. Tap him to hold, then hit <DrawChip /> and tap each card to see your replacements.</span>,
   nearMissText: "So close it hurts, 1 FP away from the ALL-STAR level 3x win. Dray was the weaklink tonight, one more rebound or assist would have pushed us over.",
   anchorFlipHintText: "Tatum on the other hand wore his super man cape, 92 FP(!) is nothing short of extraordinary. Flip his card to see what happened.",

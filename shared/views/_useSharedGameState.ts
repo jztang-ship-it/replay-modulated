@@ -55,7 +55,7 @@ export type GameState =
   | "IDLE" | "DEALING" | "HOLD" | "DRAWING"
   | "REVEALING" | "RESULTS" | "WIN_CELEBRATION";
 
-const STARTING_BALANCE = 100000;
+const STARTING_BALANCE = 5000;
 const MIN_BALANCE_FLOOR = 500;
 
 /** The fields the hook actually reads off the adapter. Keeping the

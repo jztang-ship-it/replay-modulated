@@ -49,6 +49,10 @@ export type LandingGridLayout = {
   /** Optional explicit gridColumn per card index — used by baseball's 3+2
    *  centered layout where slots 3 and 4 sit between columns. */
   gridColumnFor?: (index: number) => string | undefined;
+  /** Optional maxWidth override (px). Default 340. Football's 2-1-2 layout
+   *  needs a smaller cap so 3 rows fit in the fixed-height landing without
+   *  overflowing on phones. */
+  maxWidth?: number;
 };
 
 export type LandingCardComponentProps = {
@@ -328,7 +332,7 @@ export function LandingPage({ adapter, onPlay, onShowProfile, onShowSignIn }: Pr
         <div style={{
           display: "grid",
           gridTemplateColumns: landingGridLayout.templateColumns,
-          gap: 6, width: "100%", maxWidth: 340,
+          gap: 6, width: "100%", maxWidth: landingGridLayout.maxWidth ?? 340,
         }}>
           {CARDS.map((c, i) => {
             const isFlipped = flipped.has(c.id);
@@ -399,6 +403,8 @@ export function LandingPage({ adapter, onPlay, onShowProfile, onShowSignIn }: Pr
           </h1>
           <p style={{ fontSize: 12, color: "rgba(240,242,245,0.38)", lineHeight: 1.6, margin: 0 }}>
             Real stats. Real history. Your fantasy result instantly.
+            <br />
+            Pick your roster, hold your locks, draw the rest.
           </p>
           <button className="lp-cta" onClick={handlePlay} style={{ padding: "14px 52px", fontSize: 16 }}>
             Play IFS
