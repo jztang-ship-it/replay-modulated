@@ -20,6 +20,7 @@ import { SlateChip } from "@shared/components/SlateChip";
 import { ensureLoaded, getPlayers } from "../engines/dataEngine";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { getTodaysStars } from "../adapters/gameAdapter";
+import { tierFromSalary } from "../engines/economyEngine";
 import type { TierColor } from "@shared/types";
 import { getTier } from "@shared/theme";
 
@@ -41,9 +42,15 @@ function buildPlayerIndex(): Map<string, ResolvedPlayer> {
     // Don't overwrite — first row wins, since players.json contains one row
     // per (player, season) and any season's identity fields are equivalent.
     if (idx.has(baseId)) continue;
+    // Compute tier from salary at runtime; players.json may carry stale
+    // tier strings from older thresholds. See basketball panel for the
+    // detailed rationale (Morant/Brown were tagged BLUE in data but
+    // their salary maps to PURPLE under current breakpoints).
+    const salary = Number((p as any).salary ?? 0);
+    const computedTier = tierFromSalary(salary, sportAdapter.economyConfig);
     idx.set(baseId, {
       name: String((p as any).name ?? baseId),
-      tier: sportAdapter.normalizeTier((p as any).tier),
+      tier: sportAdapter.normalizeTier(computedTier),
       basePlayerId: baseId,
     });
   }

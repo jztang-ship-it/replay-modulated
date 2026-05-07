@@ -3,6 +3,7 @@ import { BasketballSportConfig } from "./basketballConfig";
 import { registerRecordSources } from "@shared/data/recordDetector";
 import { NBA_SINGLE_GAME_RECORDS, STAT_ALIASES } from "@shared/data/nbaRecords";
 import { getPlayers, getLogsByKey } from "../engines/dataEngine";
+import { tierFromSalary } from "../engines/economyEngine";
 import { tierRank } from "@shared/theme";
 import topGames from "../../public/data/topGames_2425.json";
 import careerHighs from "../../public/data/careerHighs_2season.json";
@@ -212,9 +213,13 @@ export class SportAdapter {
       const bid = String((p as any).basePlayerId ?? "").trim();
       if (!bid || seen.has(bid)) continue;
       seen.add(bid);
+      // Compute tier from salary — players.json may carry stale tier
+      // strings from older thresholds (e.g. Ja Morant @ $55 was tagged
+      // BLUE in data but $44+ is PURPLE under the current breakpoints).
+      const salary = Number((p as any).salary ?? 0);
       entries.push({
         id: bid,
-        tier: String((p as any).tier ?? "WHITE").toUpperCase(),
+        tier: tierFromSalary(salary, this.economyConfig),
         fp: this.getCareerFPById(bid),
       });
     }
