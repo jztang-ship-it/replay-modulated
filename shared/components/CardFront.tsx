@@ -316,9 +316,8 @@ export function CardFront(props: CardFrontProps) {
   const salary = Number((card as any)?.salary ?? 0);
   const proj = Number((card as any)?.projectedFp ?? 0);
   // Daily bonus (+5/+10/+20) — 0 if this player isn't in today's hot list.
-  // Star count next to name: 1/2/3 for +5/+10/+20.
+  // Surfaced as a single "+N FP" pill in the accent strip (badge row).
   const dailyBonus = Number((card as any)?.dailyBonus ?? (stableCard as any)?.dailyBonus ?? 0);
-  const bonusStarCount = dailyBonus === 20 ? 3 : dailyBonus === 10 ? 2 : dailyBonus === 5 ? 1 : 0;
   const isHeldCard = !!(card as any).wasHeld;
   const isDrawing = phase === ("DRAWING" as any);
   const isPreReveal = !!(isRevealing && !isHeldCard && visibleFp === undefined);
@@ -534,21 +533,11 @@ export function CardFront(props: CardFrontProps) {
             {nameLine1 && (
               <span style={{ fontSize: 7, fontWeight: 900, letterSpacing: 0.4, textTransform: "uppercase", color: "#FFFFFF", lineHeight: 1, whiteSpace: "nowrap", display: "block", maxWidth: "100%" }}>
                 {nameLine1}
-                {bonusStarCount > 0 && !nameLine2 && (
-                  <span style={{ marginLeft: 3, color: "#FFD700", fontSize: 7, letterSpacing: 0 }}>
-                    {"★".repeat(bonusStarCount)}
-                  </span>
-                )}
               </span>
             )}
             {nameLine2 && (
               <span style={{ fontSize: 7, fontWeight: 900, letterSpacing: 0.4, textTransform: "uppercase", color: "#FFFFFF", lineHeight: 1, whiteSpace: "nowrap", display: "block", maxWidth: "100%" }}>
                 {nameLine2}
-                {bonusStarCount > 0 && (
-                  <span style={{ marginLeft: 3, color: "#FFD700", fontSize: 7, letterSpacing: 0 }}>
-                    {"★".repeat(bonusStarCount)}
-                  </span>
-                )}
               </span>
             )}
           </div>
@@ -635,22 +624,15 @@ export function CardFront(props: CardFrontProps) {
                     letterSpacing: 0.2, flexShrink: 0, opacity: 0.8,
                   }}>+{overflowCount}</span>
                 )}
-                {/* Daily bonus stars */}
-                {isShowingActualFp && dailyBonus > 0 && (
-                  <span style={{
-                    animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${(visibleBadges.length + (overflowCount > 0 ? 1 : 0)) * 70}ms both`,
-                    fontSize: 11, color: "#FFD700", letterSpacing: 1, flexShrink: 0,
-                  }}>{"★".repeat(dailyBonus === 20 ? 3 : dailyBonus === 10 ? 2 : 1)}</span>
-                )}
-                {/* Total bonus pill (badges + daily) */}
+                {/* Total bonus pill (badges + daily) — single source for "+N FP". */}
                 {showBonus && (
                   <span style={{
-                    animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${(visibleBadges.length + (overflowCount > 0 ? 1 : 0) + (dailyBonus > 0 ? 1 : 0)) * 70}ms both`,
+                    animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${(visibleBadges.length + (overflowCount > 0 ? 1 : 0)) * 70}ms both`,
                     fontSize: 11, fontWeight: 900, color: totalBonus < 0 ? "#FF6B6B" : textColor,
                     letterSpacing: 0.3, flexShrink: 0,
                     background: isLightAccent ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.15)",
                     borderRadius: 4, padding: "1px 4px",
-                  }}>{totalBonus > 0 ? "+" : ""}{totalBonus}</span>
+                  }}>{totalBonus > 0 ? "+" : ""}{totalBonus} FP</span>
                 )}
               </>
             );

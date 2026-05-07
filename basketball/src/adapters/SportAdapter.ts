@@ -3,7 +3,7 @@ import { BasketballSportConfig } from "./basketballConfig";
 import { registerRecordSources } from "@shared/data/recordDetector";
 import { NBA_SINGLE_GAME_RECORDS, STAT_ALIASES } from "@shared/data/nbaRecords";
 import { getPlayers, getLogsByKey } from "../engines/dataEngine";
-import { tierFromSalary } from "../engines/economyEngine";
+import { tierFromSalary, DEFAULT_ECONOMY_CONFIG, type EconomyConfig } from "../engines/economyEngine";
 import { tierRank } from "@shared/theme";
 import topGames from "../../public/data/topGames_2425.json";
 import careerHighs from "../../public/data/careerHighs_2season.json";
@@ -34,6 +34,21 @@ export class SportAdapter {
   get salaryCapMin(): number { return Math.floor(Number(this.config.salaryCap) * 0.956); }
   get rosterSize(): number { return this.config.maxPlayers; }
   get positions(): string[] { return this.config.positions; }
+
+  // Required by tierFromSalary() and slateSelector. basketballConfig doesn't
+  // ship its own thresholds, so fall back to the shared defaults
+  // (RED $73+ / ORANGE $58+ / PURPLE $44+ / BLUE $30+ / GREEN $23+ / WHITE $0+).
+  get economyConfig(): EconomyConfig {
+    const cfg = this.config as any;
+    return {
+      capMax: this.salaryCap,
+      salaryMin: cfg.salaryMin ?? DEFAULT_ECONOMY_CONFIG.salaryMin,
+      salaryMax: cfg.salaryMax ?? DEFAULT_ECONOMY_CONFIG.salaryMax,
+      tierThresholds: cfg.tierThresholds ?? DEFAULT_ECONOMY_CONFIG.tierThresholds,
+      salaryRatioCeiling: cfg.salaryRatioCeiling ?? DEFAULT_ECONOMY_CONFIG.salaryRatioCeiling,
+      salaryRatioFloor: cfg.salaryRatioFloor ?? DEFAULT_ECONOMY_CONFIG.salaryRatioFloor,
+    };
+  }
 
   get rosterSlots(): string[] {
     const explicit = (this.config as any).rosterSlots as string[] | undefined;

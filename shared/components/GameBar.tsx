@@ -641,7 +641,7 @@ function LegendModal({
                 <div style={{ marginBottom: 10, paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                     <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1.2, color: "#FFD700", textTransform: "uppercase" }}>
-                      ★ TODAY'S HOT PLAYERS
+                      TODAY'S HOT PLAYERS
                     </div>
                     <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.4)", fontVariantNumeric: "tabular-nums" }}>
                       NEW IN {countdown}
@@ -650,8 +650,6 @@ function LegendModal({
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {legend.todaysStars.map(s => {
                       const bonus = s.bonus ?? 5;
-                      const starCount = bonus === 20 ? 3 : bonus === 10 ? 2 : 1;
-                      const stars = "★".repeat(starCount);
                       return (
                         <div key={s.basePlayerId} style={{
                           display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -659,10 +657,7 @@ function LegendModal({
                           background: "rgba(255,215,0,0.08)", border: "1px solid rgba(255,215,0,0.25)",
                         }}>
                           <span style={{ fontSize: 13, fontWeight: 800, color: "#EAF0FF" }}>{s.name}</span>
-                          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <span style={{ fontSize: 14, color: "#FFD700", letterSpacing: 1 }}>{stars}</span>
-                            <span style={{ fontSize: 11, fontWeight: 900, color: "#FFD700", minWidth: 28, textAlign: "right" }}>+{bonus}</span>
-                          </span>
+                          <span style={{ fontSize: 12, fontWeight: 900, color: "#FFD700", minWidth: 48, textAlign: "right" }}>+{bonus} FP</span>
                         </div>
                       );
                     })}
