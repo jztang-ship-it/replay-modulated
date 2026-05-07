@@ -157,7 +157,7 @@ export function SlateChip({ label, playerCount, children, sportKey }: SlateChipP
                   textTransform: "uppercase",
                 }}
               >
-                Today's Slate
+                {label}
               </span>
               <button
                 type="button"

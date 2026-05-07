@@ -7,6 +7,7 @@ import BaseballSportConfig, {
 import { registerRecordSources } from "@shared/data/recordDetector";
 import { MLB_SINGLE_GAME_RECORDS, MLB_STAT_ALIASES } from "@shared/data/mlbRecords";
 import { getPlayers, getLogsByKey } from "../engines/dataEngine";
+import { tierRank } from "@shared/theme";
 import topGames from "../../public/data/topGames.json";
 import careerHighs from "../../public/data/careerHighs.json";
 
@@ -433,9 +434,29 @@ export class SportAdapter {
     return scored.slice(0, n).map(s => s.id);
   }
 
-  /** Anchor players (always in today's slate). Default = top `count` by career FP. */
-  getAnchors(count: number = 10): string[] {
-    return this.getEligiblePool(count);
+  /** Anchor players (always in today's slate). Sort key is tier first
+   *  (RED → ORANGE → PURPLE → BLUE → GREEN), career FP as tiebreaker
+   *  within tier. */
+  getAnchors(count: number = 9): string[] {
+    const players = getPlayers();
+    const seen = new Set<string>();
+    const entries: Array<{ id: string; tier: string; fp: number }> = [];
+    for (const p of players) {
+      const bid = String((p as any).basePlayerId ?? (p as any).id ?? "").trim();
+      if (!bid || seen.has(bid)) continue;
+      seen.add(bid);
+      entries.push({
+        id: bid,
+        tier: String((p as any).tier ?? "WHITE").toUpperCase(),
+        fp: this.getCareerFPById(bid),
+      });
+    }
+    entries.sort((a, b) => {
+      const t = tierRank(a.tier) - tierRank(b.tier);
+      if (t !== 0) return t;
+      return b.fp - a.fp;
+    });
+    return entries.slice(0, count).map(e => e.id);
   }
 
   /** Phase-2 stubs (no themes in v1). */

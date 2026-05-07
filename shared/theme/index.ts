@@ -35,6 +35,17 @@ export function getTier(tier: string | undefined): TierTokens {
   return TIER_TOKENS[key] ?? TIER_TOKENS.WHITE;
 }
 
+/** Tier sort weight, top-tier first (RED) → bottom-tier last (WHITE).
+ *  Used by slate display order + anchor selection so the most expensive
+ *  tier always reads at the top of the list. */
+export const TIER_RANK: Record<TierKey, number> = {
+  RED: 0, ORANGE: 1, PURPLE: 2, BLUE: 3, GREEN: 4, WHITE: 5,
+};
+export function tierRank(tier: string | undefined): number {
+  const key = (tier ?? "WHITE").toUpperCase() as TierKey;
+  return TIER_RANK[key] ?? TIER_RANK.WHITE;
+}
+
 export const CARD_LAYOUT = {
   nameStripTop:    73.5,
   nameStripHeight: 10.5,
