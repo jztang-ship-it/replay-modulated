@@ -74,8 +74,8 @@ const HEADERS = {
   "x-nba-stats-origin": "stats",
   Connection: "keep-alive",
 };
-const PACE_MS = 600;
-const MAX_RETRIES = 4;
+const PACE_MS = 1200;
+const MAX_RETRIES = 6;
 
 // ── CLI ─────────────────────────────────────────────────────────────────────
 const args = parseArgs(process.argv.slice(2));
@@ -181,9 +181,12 @@ async function callStatsApi(endpoint, params) {
     try {
       await sleep(PACE_MS);
       const r = await fetch(url, { headers: HEADERS });
-      if (r.status === 429) {
-        const wait = 5000 * attempt;
-        console.warn(`   429 Too Many Requests — backing off ${wait} ms (attempt ${attempt}/${MAX_RETRIES})`);
+      // stats.nba.com signals rate-limiting via 429, but ALSO via 500/502/503/504
+      // when their soft limiter trips harder. Treat the 5xx family as the same
+      // signal — back off generously, don't fail the season early.
+      if (r.status === 429 || (r.status >= 500 && r.status < 600)) {
+        const wait = 15000 * attempt; // 15s, 30s, 45s, 60s, 75s, 90s
+        console.warn(`   ${r.status} from ${endpoint} — backing off ${wait} ms (attempt ${attempt}/${MAX_RETRIES})`);
         await sleep(wait);
         continue;
       }
@@ -191,7 +194,7 @@ async function callStatsApi(endpoint, params) {
       return await r.json();
     } catch (e) {
       if (attempt === MAX_RETRIES) throw e;
-      const wait = 2000 * attempt;
+      const wait = 5000 * attempt;
       console.warn(`   transient error: ${e.message} — retrying in ${wait} ms`);
       await sleep(wait);
     }
