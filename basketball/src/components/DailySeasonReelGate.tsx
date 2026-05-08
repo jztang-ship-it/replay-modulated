@@ -94,7 +94,16 @@ export function DailySeasonReelGate({ bypass = false, children }: Props) {
         setManifest(m);
 
         const today = new Date();
-        const todaysPick = pickTodaysSeason("basketball", today, m);
+        // QA / dev escape hatch — `?season=KEY` (e.g. `?season=9899`) pins
+        // the active season to a specific manifest entry. Falls back to
+        // the daily deterministic pick if the key isn't found.
+        const seasonOverride = typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("season")
+          : null;
+        const overridePick = seasonOverride
+          ? m.seasons.find(s => s.key === seasonOverride) ?? null
+          : null;
+        const todaysPick = overridePick ?? pickTodaysSeason("basketball", today, m);
         if (!todaysPick) {
           // Manifest empty — fall back to FTUE_SEASON_KEY so something loads.
           setActiveSeason(FTUE_SEASON_KEY);
