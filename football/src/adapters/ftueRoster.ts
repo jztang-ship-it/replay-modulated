@@ -183,7 +183,7 @@ const DRAWN: Record<number, () => GeneratedCard> = {
   // when needed. 1 save, 1 GA, 0 clearances → 16 - 3 + 0 = 13 raw, no badges.
   // Quiet game by a $25 GK; one more save and the hand hits MOTM.
   0: () => makeCard({
-    cardId: "ftue-costa", basePlayerId: "16531",
+    cardId: "ftue-costa", basePlayerId: "32975",
     name: "Diogo Costa", team: "Portugal", position: "GK",
     tier: "BLUE", salary: 25, slotIndex: 0,
     projectedFp: 22, actualFp: 10,
