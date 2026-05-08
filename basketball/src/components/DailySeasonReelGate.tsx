@@ -102,13 +102,17 @@ export function DailySeasonReelGate({ bypass = false, children }: Props) {
         // Read BEFORE write so first-of-day shows the reel.
         const alreadySeenToday = stored?.dateKey === dateKey && stored?.seasonKey === todaysPick.key;
 
+        // QA / dev escape hatch — `?reel=force` always plays the reel.
+        const forceReel = typeof window !== "undefined" &&
+          new URLSearchParams(window.location.search).get("reel") === "force";
+
         // Pin the season on the dataEngine. Children (GameView) will call
         // ensureLoaded() and get this season's files. Synchronous — no
         // network — so it's set by the time we resolve shouldShowReel.
         setActiveSeason(todaysPick.key);
 
         writeStored({ dateKey, seasonKey: todaysPick.key, seasonLabel: todaysPick.label });
-        setShouldShowReel(!alreadySeenToday);
+        setShouldShowReel(forceReel || !alreadySeenToday);
       } catch (e) {
         // Manifest unavailable — fail open. Pin to FTUE_SEASON_KEY so the
         // engine has something to load; skip the reveal.
