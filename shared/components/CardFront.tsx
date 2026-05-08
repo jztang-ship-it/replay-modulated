@@ -827,10 +827,12 @@ export function CardFront(props: CardFrontProps) {
       </div>{/* end clipped content */}
 
       {/* SEASON + TEAM — small ribbon just above the BLACK STRIP (which starts
-          at 72%). Hidden when card is face-down to prevent mirror bleed. */}
+          at 72%). Solid dark pill with gold border so it reads cleanly over
+          jersey colors that match the card tier. Hidden when card is
+          face-down to prevent mirror bleed. */}
       {showTierColors && (team || seasonFmt) && (
         <div style={{ position: "absolute", top: "66.5%", height: "5%", left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 35, pointerEvents: "none", overflow: "hidden" }}>
-          <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 0.6, textTransform: "uppercase", color: "#FFFFFF", whiteSpace: "nowrap", lineHeight: 1, textShadow: "0 1px 2px rgba(0,0,0,0.85), 0 0 4px rgba(0,0,0,0.6)", padding: "2px 6px", background: "rgba(0,0,0,0.35)", borderRadius: 3 }}>
+          <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 0.6, textTransform: "uppercase", color: "#FFEA86", whiteSpace: "nowrap", lineHeight: 1, padding: "2.5px 8px", background: "rgba(8,12,20,0.92)", border: "1px solid rgba(201,168,76,0.55)", borderRadius: 4, boxShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
             {team && seasonFmt ? `${team} · ${seasonFmt}` : (team || seasonFmt)}
           </span>
         </div>

@@ -179,6 +179,11 @@ type CacheableAdapter = SlateAdapter & {
   getEligiblePool(): string[];
   getThemedEligibility(themeKey: string): string[] | null;
   getExclusionList(): string[];
+  /** Optional discriminator added to the slate cache key so per-season
+   *  pools (basketball's daily season pick) don't share a cached slate
+   *  with the previous season. Adapters return e.g. the active season
+   *  key. Empty string / undefined disables the discriminator. */
+  getCacheNamespace?(): string;
 };
 
 export function defaultSlateConfig(adapter: CacheableAdapter): SlateConfig {
@@ -196,7 +201,8 @@ export function getCachedSlate(
   date: Date,
   themeKey?: string,
 ): string[] {
-  const key = `${adapter.sportKey}|${getDailyBonusDateKey(date)}|${themeKey ?? "std"}`;
+  const ns = adapter.getCacheNamespace?.() ?? "";
+  const key = `${adapter.sportKey}|${getDailyBonusDateKey(date)}|${themeKey ?? "std"}|${ns}`;
   const cached = slateCache.get(key);
   if (cached) return cached;
   const eligible = resolveEligibility(adapter, date, themeKey);

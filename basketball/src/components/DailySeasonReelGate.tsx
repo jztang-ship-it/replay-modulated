@@ -74,9 +74,15 @@ export function DailySeasonReelGate({ bypass = false, children }: Props) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // QA / dev escape hatch — `?reel=force` always plays the reel,
+      // even during FTUE. Checked first so the bypass path doesn't
+      // short-circuit it.
+      const forceReel = typeof window !== "undefined" &&
+        new URLSearchParams(window.location.search).get("reel") === "force";
+
       // FTUE: bypass entirely — pin to the canonical season the FTUE
       // narrative expects, no manifest fetch needed.
-      if (bypass) {
+      if (bypass && !forceReel) {
         setActiveSeason(FTUE_SEASON_KEY);
         setShouldShowReel(false);
         return;
@@ -101,10 +107,6 @@ export function DailySeasonReelGate({ bypass = false, children }: Props) {
         const stored = readStored();
         // Read BEFORE write so first-of-day shows the reel.
         const alreadySeenToday = stored?.dateKey === dateKey && stored?.seasonKey === todaysPick.key;
-
-        // QA / dev escape hatch — `?reel=force` always plays the reel.
-        const forceReel = typeof window !== "undefined" &&
-          new URLSearchParams(window.location.search).get("reel") === "force";
 
         // Pin the season on the dataEngine. Children (GameView) will call
         // ensureLoaded() and get this season's files. Synchronous — no
