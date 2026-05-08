@@ -114,7 +114,15 @@ export function DailySeasonReelGate({ bypass = false, children }: Props) {
         setActiveSeason(todaysPick.key);
 
         writeStored({ dateKey, seasonKey: todaysPick.key, seasonLabel: todaysPick.label });
-        setShouldShowReel(forceReel || !alreadySeenToday);
+        const willShow = forceReel || !alreadySeenToday;
+        console.info("[DailySeasonReelGate]", {
+          forceReel,
+          alreadySeenToday,
+          willShowReel: willShow,
+          pick: todaysPick.label,
+          bypass,
+        });
+        setShouldShowReel(willShow);
       } catch (e) {
         // Manifest unavailable — fail open. Pin to FTUE_SEASON_KEY so the
         // engine has something to load; skip the reveal.

@@ -76,20 +76,15 @@ export function useDailySlate(
   );
 
   const players = useMemo<DailySlatePlayer[]>(() => {
-    // Anchors set: intersect adapter.getAnchors() with the slate that was
-    // actually built. slateSelector applies an eligibility filter before
-    // taking the top `anchorCount`, so a top-FP player can be on the
-    // exclusion list and end up missing from slate entirely. Computing
-    // the anchor set against the slate (instead of the raw getAnchors
-    // list) keeps `isAnchor` flags in sync — otherwise the panel marks
-    // fewer cards as anchors than configured and the math drifts.
+    // slateSelector returns `[...anchors, ...rotators]` — the first
+    // `anchorCount` IDs *are* the anchors by construction. The previous
+    // implementation re-derived anchors by intersecting getAnchors()
+    // (top-N by FP) with slateIds, which broke once slateSelector
+    // started daily-shuffling within tier: the random ORANGE pick rarely
+    // overlaps with the top-FP ORANGE pick, so visible anchors collapsed
+    // from 9 to ~4. Trust the slate's own ordering instead.
     const cfgAnchors = (adapter as any).config?.anchorCount ?? 9;
-    const slateIdSet = new Set(slateIds);
-    const anchorIds = new Set(
-      ((adapter as any).getAnchors?.() ?? [])
-        .filter((id: string) => slateIdSet.has(id))
-        .slice(0, cfgAnchors)
-    );
+    const anchorIds = new Set(slateIds.slice(0, cfgAnchors));
     return slateIds.map(id => {
       const meta = resolvePlayer(id);
       return {
