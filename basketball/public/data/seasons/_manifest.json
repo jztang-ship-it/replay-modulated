@@ -1,0 +1,21 @@
+{
+  "seasons": [
+    {
+      "key": "2324",
+      "label": "2023-24",
+      "playerCount": 316,
+      "logCount": 26283,
+      "playersBytes": 99447,
+      "logsBytes": 7942822
+    },
+    {
+      "key": "2425",
+      "label": "2024-25",
+      "playerCount": 362,
+      "logCount": 34206,
+      "playersBytes": 103936,
+      "logsBytes": 10339630
+    }
+  ],
+  "generatedAt": "2026-05-08T07:11:25.947Z"
+}
