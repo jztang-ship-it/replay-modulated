@@ -1,19 +1,63 @@
 /**
  * shared/engines/dataEngine.ts — Layer 1 (sport-agnostic)
- * Call configure() first to point at a sport's data files.
+ *
+ * Two operating modes:
+ *
+ * 1. **Monolithic** (legacy) — `configure({ players, logsFallback })`. Loads
+ *    one combined players.json + one combined game-logs.json. All seasons in
+ *    one file. Used today by baseball/football, and was basketball's mode
+ *    before the per-season migration.
+ *
+ * 2. **Per-season** — `configurePerSeason({ seasonsBaseUrl })` followed by
+ *    `setActiveSeason(key)`. Loads only that season's
+ *    `seasons/{key}/players.json` + `seasons/{key}/gamelogs.json`. The active
+ *    season is set once per UTC day by the slot-machine reel; the data
+ *    engine reloads when it changes. Mobile clients pull only ~10 MB per day
+ *    instead of all-seasons-merged.
  */
 
 import type { RawPlayer, RawLog } from "../types";
 
+type LoadMode = "monolithic" | "per-season";
+
+let loadMode: LoadMode = "monolithic";
+
+// Monolithic-mode URLs.
 let PLAYERS_URL = "/data/players.json";
 let LOGS_URL_PRIMARY = "/data/game-logs.json";
 let LOGS_URL_FALLBACK = "/data/game-logs.json";
 
+// Per-season-mode config.
+let SEASONS_BASE_URL = "/data/seasons";
+let activeSeasonKey: string | null = null;
+
 export function configure(urls: { players: string; logsPrimary?: string; logsFallback: string }): void {
+  loadMode = "monolithic";
   PLAYERS_URL = urls.players;
   LOGS_URL_PRIMARY = urls.logsPrimary ?? urls.logsFallback;
   LOGS_URL_FALLBACK = urls.logsFallback;
   invalidateCache();
+}
+
+export function configurePerSeason(cfg: { seasonsBaseUrl: string }): void {
+  loadMode = "per-season";
+  SEASONS_BASE_URL = cfg.seasonsBaseUrl.replace(/\/$/, "");
+  invalidateCache();
+}
+
+/**
+ * Pin the active season for per-season-mode loads. Idempotent — calling
+ * with the same key is a no-op. Calling with a different key invalidates
+ * the cache so the next ensureLoaded() pulls the new season's files.
+ */
+export function setActiveSeason(key: string): void {
+  if (key === activeSeasonKey) return;
+  activeSeasonKey = key;
+  invalidateCache();
+}
+
+export function getActiveSeason(): string | null {
+  return activeSeasonKey;
 }
 
 let _players: RawPlayer[] | null = null;
@@ -38,9 +82,23 @@ export async function ensureLoaded(): Promise<void> {
   if (isLoaded()) return;
   if (_loading) return _loading;
   _loading = (async () => {
-    const [players, logs] = await Promise.all([fetchJson<RawPlayer[]>(PLAYERS_URL), fetchLogs()]);
-    _players = players;
-    _logsByKey = buildLogIndex(logs);
+    if (loadMode === "monolithic") {
+      const [players, logs] = await Promise.all([fetchJson<RawPlayer[]>(PLAYERS_URL), fetchLogs()]);
+      _players = players;
+      _logsByKey = buildLogIndex(logs);
+    } else {
+      if (!activeSeasonKey) {
+        throw new Error("dataEngine: per-season mode requires setActiveSeason() before ensureLoaded()");
+      }
+      const playersUrl = `${SEASONS_BASE_URL}/${activeSeasonKey}/players.json`;
+      const logsUrl = `${SEASONS_BASE_URL}/${activeSeasonKey}/gamelogs.json`;
+      const [players, logs] = await Promise.all([
+        fetchJson<RawPlayer[]>(playersUrl),
+        fetchJson<RawLog[]>(logsUrl),
+      ]);
+      _players = players;
+      _logsByKey = buildLogIndex(logs);
+    }
     _loading = null;
   })();
   return _loading;

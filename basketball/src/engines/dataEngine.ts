@@ -1,13 +1,15 @@
 /**
  * basketball/src/engines/dataEngine.ts
- * Points the shared engine at basketball data files.
+ *
+ * Configures the shared engine in per-season mode. The active season is
+ * pinned at game-entry time by DailySeasonReelGate (it picks today's
+ * season and calls setActiveSeason). Vite base is "/basketball/" so
+ * public/ files are served at /basketball/data/seasons/{key}/.
  */
-import { configure } from "@shared/engines/dataEngine";
+import { configurePerSeason } from "@shared/engines/dataEngine";
 
-// Vite base is "/basketball/" so public/ files are served at /basketball/data/.
-configure({
-  players: "/basketball/data/players.json",
-  logsFallback: "/basketball/data/game-logs.json",
+configurePerSeason({
+  seasonsBaseUrl: "/basketball/data/seasons",
 });
 
 export * from "@shared/engines/dataEngine";
