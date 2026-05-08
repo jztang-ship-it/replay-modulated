@@ -33,21 +33,27 @@ const HEADSHOT_DIR = join(__dirname, "../public/headshots");
 const SLEEP_MS = 150; // be polite to the CDN
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-function espnUrl(nbaId) {
-  return `https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/${nbaId}.png&w=260&h=190&scale=crop`;
-}
-
 function nbaUrl(nbaId) {
   return `https://cdn.nba.com/headshots/nba/latest/260x190/${nbaId}.png`;
 }
+
+/** NBA CDN returns a ~5KB silhouette placeholder for any unknown ID.
+ *  Rejecting < 8KB drops the placeholder while keeping real headshots
+ *  (smallest real ones are ~12KB for older players).
+ *
+ *  We dropped ESPN entirely — ESPN's player IDs are unrelated to NBA
+ *  stats IDs, so requesting ESPN with our basePlayerId returns *another
+ *  player's photo* (Olajuwon's NBA ID 165 → ESPN player 165 → 62KB of
+ *  someone unrelated). That bug produced "wrong face" reports for
+ *  Schrempf, Popeye Jones, and Olajuwon. */
+const PLACEHOLDER_REJECT_BYTES = 8000;
 
 async function downloadImage(url, destPath) {
   try {
     const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 ReplayMod/1.0" } });
     if (!res.ok) return false;
     const buf = await res.arrayBuffer();
-    // Reject tiny images (< 2KB = probably a placeholder/error image).
-    if (buf.byteLength < 2000) return false;
+    if (buf.byteLength < PLACEHOLDER_REJECT_BYTES) return false;
     writeFileSync(destPath, Buffer.from(buf));
     return true;
   } catch {
@@ -124,11 +130,7 @@ async function main() {
 
     process.stdout.write(`  [${i + 1}/${ids.length}] ${label}... `);
 
-    let ok = await downloadImage(espnUrl(id), destPath);
-    if (!ok) {
-      await sleep(100);
-      ok = await downloadImage(nbaUrl(id), destPath);
-    }
+    const ok = await downloadImage(nbaUrl(id), destPath);
 
     if (ok) {
       downloaded++;
