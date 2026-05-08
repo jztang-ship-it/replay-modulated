@@ -51,7 +51,7 @@
  *   splitIntoPerSeasonFiles.mjs label helper handles century display.
  */
 
-import { writeFileSync, mkdirSync, existsSync, readFileSync } from "fs";
+import { writeFileSync, mkdirSync, existsSync, readFileSync, statSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -102,37 +102,39 @@ for (const seasonStr of seasons) {
   const playersPath = join(seasonDir, "players.json");
   const logsPath = join(seasonDir, "gamelogs.json");
 
+  // Skip only if BOTH files exist AND players.json has actual content.
+  // (Earlier runs of this script could silently write an empty players.json
+  // when leaguedashplayerstats was rate-limited; treat empty as "needs redo".)
   if (skipExisting && existsSync(playersPath) && existsSync(logsPath)) {
-    console.log(`⏩ ${seasonStr} — already exists, skipping`);
-    continue;
+    let playersOk = false;
+    try {
+      const arr = JSON.parse(readFileSync(playersPath, "utf8"));
+      playersOk = Array.isArray(arr) && arr.length > 0;
+    } catch { /* corrupt or empty — fall through and re-fetch */ }
+    if (playersOk) {
+      console.log(`⏩ ${seasonStr} — already exists, skipping`);
+      continue;
+    }
+    console.log(`♻ ${seasonStr} — players file empty/corrupt, refetching`);
   }
 
   console.log(`\n📥 ${seasonStr} (key=${seasonKey})`);
 
   if (dryRun) {
-    console.log(`   [dry-run] would fetch playerStats + leagueGameLog, write to ${seasonDir}/`);
+    console.log(`   [dry-run] would fetch leagueGameLog, build aggregates, write to ${seasonDir}/`);
     continue;
   }
 
   try {
-    // Player season aggregates — average stats, used to compute salary/tier.
-    const rawStats = await callStatsApi("leaguedashplayerstats", {
-      Season: seasonStr,
-      SeasonType: "Regular Season",
-      PerMode: "PerGame",
-      LeagueID: "00",
-      MeasureType: "Base",
-      LastNGames: 0,
-      Month: 0,
-      OpponentTeamID: 0,
-      PaceAdjust: "N",
-      PlusMinus: "N",
-      Rank: "N",
-    });
-    const playerRows = rowsToObjects(rawStats);
-    console.log(`   playerStats: ${playerRows.length}`);
-
-    // Per-game logs for every player in the league this season.
+    // Single endpoint: leaguegamelog. It returns all per-game rows for every
+    // player in the league for the season — and crucially includes PLAYER_NAME
+    // and TEAM_ABBREVIATION on every row, which is enough to build the season
+    // aggregate (name/team/avg stats) without a second API call.
+    //
+    // Why we don't use leaguedashplayerstats: stats.nba.com rate-limits it
+    // far more aggressively than leaguegamelog (often persistent 500s for
+    // 30+ minutes), and we don't actually need it — gamelogs carry all the
+    // info needed to derive averages locally.
     const rawLogs = await callStatsApi("leaguegamelog", {
       Season: seasonStr,
       SeasonType: "Regular Season",
@@ -145,23 +147,25 @@ for (const seasonStr of seasons) {
     const logRows = rowsToObjects(rawLogs);
     console.log(`   gameLogs: ${logRows.length}`);
 
-    // Map to our internal schema.
-    const players = playerRows
-      .filter(r => Number(r.GP ?? 0) >= 3) // >= 3 games to qualify
-      .map(r => playerRowToInternal(r, seasonKey))
-      .sort((a, b) => Number(b.salary ?? 0) - Number(a.salary ?? 0));
-
-    const logs = logRows
-      .filter(r => Number(r.MIN ?? 0) > 0) // skip DNPs
+    // Filter out DNPs and map to internal log schema.
+    const internalLogs = logRows
+      .filter(r => Number(r.MIN ?? 0) > 0)
       .map(r => logRowToInternal(r, seasonKey));
+
+    // Build per-player season aggregates from the same logs.
+    const players = buildAggregatesFromRawLogs(logRows, seasonKey);
+
+    if (!players.length) {
+      throw new Error(`Aggregation produced 0 players from ${logRows.length} log rows — schema may have changed`);
+    }
 
     mkdirSync(seasonDir, { recursive: true });
     writeFileSync(playersPath, JSON.stringify(players, null, 2));
-    writeFileSync(logsPath, JSON.stringify(logs, null, 2));
+    writeFileSync(logsPath, JSON.stringify(internalLogs, null, 2));
 
     console.log(
       `   ✅ wrote ${players.length} players (${(playersFileSize(playersPath) / 1024).toFixed(1)} KB) ` +
-        `+ ${logs.length} logs (${(playersFileSize(logsPath) / 1024 / 1024).toFixed(2)} MB)`
+        `+ ${internalLogs.length} logs (${(playersFileSize(logsPath) / 1024 / 1024).toFixed(2)} MB)`
     );
   } catch (e) {
     console.error(`   ❌ ${seasonStr} failed: ${e.message}`);
@@ -199,6 +203,9 @@ async function callStatsApi(endpoint, params) {
       await sleep(wait);
     }
   }
+  // Fell through all retries. Earlier this returned undefined, which let the
+  // caller silently proceed with empty results — bug, fixed.
+  throw new Error(`Exceeded ${MAX_RETRIES} retries on ${endpoint} (still rate-limited)`);
 }
 
 // stats.nba.com returns columnar data. Convert to row objects.
@@ -214,6 +221,69 @@ function rowsToObjects(payload) {
 }
 
 // ── Schema mappers ─────────────────────────────────────────────────────────
+//
+// Aggregate player rows directly from leaguegamelog output. Each log row
+// carries PLAYER_NAME and TEAM_ABBREVIATION so we can build (name, team,
+// avg stats) without a second API call. Matches the salary/tier curve used
+// by buildSeason2324Aggregates.mjs and the runtime engine.
+function buildAggregatesFromRawLogs(logRows, seasonKey) {
+  // Group active rows (MIN > 0) by PLAYER_ID.
+  const byPid = new Map();
+  for (const r of logRows) {
+    if (Number(r.MIN ?? 0) <= 0) continue;
+    const pid = String(r.PLAYER_ID ?? "");
+    if (!pid) continue;
+    const arr = byPid.get(pid);
+    if (arr) arr.push(r);
+    else byPid.set(pid, [r]);
+  }
+
+  const out = [];
+  for (const [pid, rows] of byPid) {
+    if (rows.length < 3) continue; // min-games threshold (matches existing 2324 builder)
+    const sum = { pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, tov: 0 };
+    for (const r of rows) {
+      sum.pts += Number(r.PTS ?? 0);
+      sum.reb += Number(r.REB ?? 0);
+      sum.ast += Number(r.AST ?? 0);
+      sum.stl += Number(r.STL ?? 0);
+      sum.blk += Number(r.BLK ?? 0);
+      sum.tov += Number(r.TOV ?? 0);
+    }
+    const n = rows.length;
+    const avgFp =
+      (sum.pts / n) * 1.0 +
+      (sum.reb / n) * 1.2 +
+      (sum.ast / n) * 1.5 +
+      (sum.stl / n) * 2.0 +
+      (sum.blk / n) * 2.0 +
+      (sum.tov / n) * -1.0;
+    const avgFpRounded = Math.round(avgFp * 10) / 10;
+    const salary = Math.round(Math.min(90, Math.max(5, avgFpRounded * 1.45)));
+    const tier = tierFromSalary(salary);
+
+    // Latest team for this player (last row by date, since logs come back ASC).
+    // Handles mid-season trades cleanly — most-recent team wins.
+    const latest = rows[rows.length - 1];
+    out.push({
+      id: `${pid}_${seasonKey}`,
+      basePlayerId: pid,
+      season: seasonKey,
+      name: String(latest.PLAYER_NAME ?? ""),
+      team: String(latest.TEAM_ABBREVIATION ?? ""),
+      position: "",     // not in leaguegamelog; merge from positions lookup later if needed
+      positionFull: "",
+      salary,
+      tier,
+      avgFP: avgFpRounded,
+      projectedFp: avgFpRounded,
+      photoCode: pid,
+      active: true,
+    });
+  }
+  return out.sort((a, b) => Number(b.salary) - Number(a.salary));
+}
+
 function playerRowToInternal(r, seasonKey) {
   // Use NBA's PerGame avgs for projection — matches existing salary curve.
   const avgFp =
