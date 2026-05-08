@@ -143720,26 +143720,6 @@
     }
   },
   {
-    "basePlayerId": "1890",
-    "date": "2007-12-19",
-    "matchDate": "2007-12-19",
-    "season": "0708",
-    "opponent": "ATL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 1,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "2548",
     "date": "2007-12-19",
     "matchDate": "2007-12-19",
