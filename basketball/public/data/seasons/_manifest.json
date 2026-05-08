@@ -1,5 +1,190 @@
 {
+  "generatedAt": "2026-05-08T07:53:32.718Z",
   "seasons": [
+    {
+      "key": "0001",
+      "label": "2000-01",
+      "playerCount": 436,
+      "logCount": 23834,
+      "playersBytes": 129709,
+      "logsBytes": 8430852
+    },
+    {
+      "key": "0102",
+      "label": "2001-02",
+      "playerCount": 434,
+      "logCount": 23764,
+      "playersBytes": 129405,
+      "logsBytes": 8409881
+    },
+    {
+      "key": "0203",
+      "label": "2002-03",
+      "playerCount": 421,
+      "logCount": 23829,
+      "playersBytes": 125625,
+      "logsBytes": 8434517
+    },
+    {
+      "key": "0304",
+      "label": "2003-04",
+      "playerCount": 431,
+      "logCount": 23855,
+      "playersBytes": 128617,
+      "logsBytes": 8445070
+    },
+    {
+      "key": "0405",
+      "label": "2004-05",
+      "playerCount": 458,
+      "logCount": 24950,
+      "playersBytes": 136772,
+      "logsBytes": 8834479
+    },
+    {
+      "key": "0506",
+      "label": "2005-06",
+      "playerCount": 448,
+      "logCount": 24879,
+      "playersBytes": 134305,
+      "logsBytes": 8816334
+    },
+    {
+      "key": "0607",
+      "label": "2006-07",
+      "playerCount": 449,
+      "logCount": 24966,
+      "playersBytes": 135024,
+      "logsBytes": 8854648
+    },
+    {
+      "key": "0708",
+      "label": "2007-08",
+      "playerCount": 447,
+      "logCount": 24755,
+      "playersBytes": 134588,
+      "logsBytes": 8787368
+    },
+    {
+      "key": "0809",
+      "label": "2008-09",
+      "playerCount": 437,
+      "logCount": 24512,
+      "playersBytes": 131792,
+      "logsBytes": 8708573
+    },
+    {
+      "key": "0910",
+      "label": "2009-10",
+      "playerCount": 435,
+      "logCount": 24657,
+      "playersBytes": 131488,
+      "logsBytes": 8764491
+    },
+    {
+      "key": "1011",
+      "label": "2010-11",
+      "playerCount": 445,
+      "logCount": 25027,
+      "playersBytes": 134699,
+      "logsBytes": 8899207
+    },
+    {
+      "key": "1112",
+      "label": "2011-12",
+      "playerCount": 471,
+      "logCount": 20668,
+      "playersBytes": 142813,
+      "logsBytes": 7350525
+    },
+    {
+      "key": "1213",
+      "label": "2012-13",
+      "playerCount": 458,
+      "logCount": 25604,
+      "playersBytes": 139108,
+      "logsBytes": 9111149
+    },
+    {
+      "key": "1314",
+      "label": "2013-14",
+      "playerCount": 467,
+      "logCount": 25456,
+      "playersBytes": 142124,
+      "logsBytes": 9063430
+    },
+    {
+      "key": "1415",
+      "label": "2014-15",
+      "playerCount": 480,
+      "logCount": 25828,
+      "playersBytes": 146223,
+      "logsBytes": 9197662
+    },
+    {
+      "key": "1516",
+      "label": "2015-16",
+      "playerCount": 466,
+      "logCount": 25975,
+      "playersBytes": 142275,
+      "logsBytes": 9254102
+    },
+    {
+      "key": "1617",
+      "label": "2016-17",
+      "playerCount": 476,
+      "logCount": 26045,
+      "playersBytes": 145768,
+      "logsBytes": 9285091
+    },
+    {
+      "key": "1718",
+      "label": "2017-18",
+      "playerCount": 516,
+      "logCount": 26000,
+      "playersBytes": 158236,
+      "logsBytes": 9275140
+    },
+    {
+      "key": "1819",
+      "label": "2018-19",
+      "playerCount": 508,
+      "logCount": 26011,
+      "playersBytes": 156058,
+      "logsBytes": 9284927
+    },
+    {
+      "key": "1920",
+      "label": "2019-20",
+      "playerCount": 515,
+      "logCount": 22312,
+      "playersBytes": 158568,
+      "logsBytes": 7967856
+    },
+    {
+      "key": "2021",
+      "label": "2020-21",
+      "playerCount": 531,
+      "logCount": 22970,
+      "playersBytes": 163533,
+      "logsBytes": 8202920
+    },
+    {
+      "key": "2122",
+      "label": "2021-22",
+      "playerCount": 565,
+      "logCount": 25955,
+      "playersBytes": 174070,
+      "logsBytes": 9270738
+    },
+    {
+      "key": "2223",
+      "label": "2022-23",
+      "playerCount": 524,
+      "logCount": 25818,
+      "playersBytes": 161565,
+      "logsBytes": 9223944
+    },
     {
       "key": "2324",
       "label": "2023-24",
@@ -15,7 +200,38 @@
       "logCount": 34206,
       "playersBytes": 103936,
       "logsBytes": 10339630
+    },
+    {
+      "key": "9697",
+      "label": "1996-97",
+      "playerCount": 432,
+      "logCount": 23587,
+      "playersBytes": 127968,
+      "logsBytes": 8334173
+    },
+    {
+      "key": "9798",
+      "label": "1997-98",
+      "playerCount": 432,
+      "logCount": 23865,
+      "playersBytes": 128078,
+      "logsBytes": 8435277
+    },
+    {
+      "key": "9899",
+      "label": "1998-99",
+      "playerCount": 414,
+      "logCount": 14839,
+      "playersBytes": 122878,
+      "logsBytes": 5244966
+    },
+    {
+      "key": "9900",
+      "label": "1999-00",
+      "playerCount": 432,
+      "logCount": 24184,
+      "playersBytes": 128342,
+      "logsBytes": 8553451
     }
-  ],
-  "generatedAt": "2026-05-08T07:11:25.947Z"
+  ]
 }
