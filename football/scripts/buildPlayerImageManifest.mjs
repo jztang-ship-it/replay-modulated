@@ -120,12 +120,34 @@ console.log("─".repeat(60));
 
 // ── Lookup ──────────────────────────────────────────────────────────────────
 
-const todo = BACKFILL_IMAGES ? [] : players.filter(p => {
+const todoUnsorted = BACKFILL_IMAGES ? [] : players.filter(p => {
   const id = String(p.basePlayerId ?? p.id);
   return FORCE || !existing.has(id);
 });
+
+// Tier-prioritized ordering. Each nightly --max=80 batch processes the most
+// recognizable players first (ORANGE/PURPLE = stars + notables in WC '22),
+// so the headshot gallery fills "top of the funnel" before bench cameos.
+// Within a tier, higher avgFP wins. Without this, the natural raw-data
+// order treats Cameroon's #4 GK the same as Messi.
+const TIER_PRIORITY = { RED: 0, ORANGE: 1, PURPLE: 2, BLUE: 3, GREEN: 4, WHITE: 5 };
+const todo = [...todoUnsorted].sort((a, b) => {
+  const ta = TIER_PRIORITY[a.tier] ?? 99;
+  const tb = TIER_PRIORITY[b.tier] ?? 99;
+  if (ta !== tb) return ta - tb;
+  return (b.avgFP ?? 0) - (a.avgFP ?? 0);
+});
+
 if (!BACKFILL_IMAGES) {
-  console.log(`Players to lookup this run: ${Math.min(todo.length, MAX)} of ${todo.length} unmanifested\n`);
+  // Per-tier breakdown of what's left to manifest — gives the morning operator
+  // a quick read on how many days of cron runs remain to hit ORANGE/PURPLE.
+  const tierCounts = {};
+  for (const p of todo) tierCounts[p.tier] = (tierCounts[p.tier] ?? 0) + 1;
+  const tierSummary = ["RED", "ORANGE", "PURPLE", "BLUE", "GREEN", "WHITE"]
+    .filter(t => tierCounts[t])
+    .map(t => `${t}=${tierCounts[t]}`)
+    .join(" ");
+  console.log(`Players to lookup this run: ${Math.min(todo.length, MAX)} of ${todo.length} unmanifested  (${tierSummary})\n`);
 }
 
 const updated = new Map(existing);
