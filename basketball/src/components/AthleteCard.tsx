@@ -184,9 +184,20 @@ function AchievementBack({
         </div>
         <div style={S.achContext}>{contextLine}</div>
       </div>
-      <div style={S.achSupportRow}>
-        {supporting.map(s => `${s.value} ${s.key}`).join("  ·  ")}
-      </div>
+      {(() => {
+        // Split the supporting line into two rows so it always fits at 9px
+        // font on a ~140-180px card width. ceil(N/2) on top, rest below.
+        const half = Math.ceil(supporting.length / 2);
+        const row1 = supporting.slice(0, half);
+        const row2 = supporting.slice(half);
+        const fmt = (s: { key: string; value: number }) => `${s.value} ${s.key}`;
+        return (
+          <div style={{ display: "flex", flexDirection: "column", gap: 1, marginTop: 4 }}>
+            <div style={S.achSupportRow}>{row1.map(fmt).join("  ·  ")}</div>
+            {row2.length > 0 && <div style={S.achSupportRow}>{row2.map(fmt).join("  ·  ")}</div>}
+          </div>
+        );
+      })()}
       <div style={S.tapHint}>TAP TO FLIP BACK</div>
     </div>
   );
@@ -307,7 +318,7 @@ const S: Record<string, React.CSSProperties> = {
   achHeadlineUnit: { fontWeight: 900, opacity: 0.78, fontSize: "0.45em", letterSpacing: 1.4, marginLeft: 1 },
   achHeadlineSep: { fontWeight: 800, opacity: 0.45, fontSize: "0.7em" },
   achContext: { fontSize: 10, fontWeight: 900, letterSpacing: 1.2, color: "#FFD27A", marginTop: 10, textAlign: "center" },
-  achSupportRow: { fontSize: 9, fontWeight: 700, letterSpacing: 0.6, color: "rgba(255,255,255,0.55)", textAlign: "center", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
+  achSupportRow: { fontSize: 9, fontWeight: 700, letterSpacing: 0.6, color: "rgba(255,255,255,0.55)", textAlign: "center", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
 };
 
 // ── Public component ───────────────────────────────────────────────────────
