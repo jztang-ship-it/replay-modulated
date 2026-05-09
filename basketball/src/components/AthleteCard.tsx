@@ -1,36 +1,35 @@
 /**
- * basketball/src/components/AthleteCard.tsx
- * Thin wrapper around PlayerCardShell + shared CardFront.
+ * basketball/src/components/AthleteCard.tsx — sport-specific shim.
  *
- * renderFront → shared CardFront with BasketballHero (headshot photo)
- * renderBack  → BackBStats (basketball stat tiles)
+ * Renders the shared <CardFace> with basketball slot functions:
+ *   - getHero            → NBA headshot URL (no flag/fallback overrides)
+ *   - getStatTiles       → statDisplay lookup → fixed BASKETBALL_ORDER layout
+ *   - getDisplayPosition → adapter.displayPosition (PG/SG/SF/PF/C)
+ *
+ * Was 277 lines of duplicated front + back markup; that all lives in
+ * shared/components/CardFace.tsx now.
  */
 
-import React, { useMemo } from "react";
-import type { GamePhase, PlayerCard, Position } from "../adapters/types";
-import { PlayerCardShell, resetAllOverlays } from "@shared/components/PlayerCardShell";
-import type { CardFrontProps as ShellFrontProps, CardBackProps } from "@shared/components/PlayerCardShell";
-import { CardFront, type CardFrontHeroProps } from "@shared/components/CardFront";
-import { TopGameStamp } from "@shared/components/TopGameOverlay";
-import type { ShakeType } from "../hooks/useEmotionalReveal";
+import { CardFace, type CardFaceSlots, type StatTile } from "@shared/components/CardFace";
+import { resetAllOverlays } from "@shared/components/PlayerCardShell";
+import type { CardFaceProps } from "@shared/components/CardFace";
 import { sportAdapter } from "../adapters/SportAdapter";
+import type { PlayerCard } from "../adapters/types";
 import { headshotUrl } from "@shared/utils/headshotUrl";
-import type { TopGameTier } from "@shared/commentary/types";
-
 
 export { resetAllOverlays };
 
-// ── Stat helpers ───────────────────────────────────────────────────────────
+// ── Stat tile order ────────────────────────────────────────────────────────
+// Basketball cards always show the same 6 stat tiles in the same slots so
+// users can scan across cards row-by-row without each row's labels jumping.
+// statDisplay drives WHICH stats are populated; this array enforces ORDER.
 
-function safeNumber(v: any): number | undefined {
-  if (v === null || v === undefined || v === "") return undefined;
-  const n = typeof v === "number" ? v : Number(v);
-  return Number.isFinite(n) ? n : undefined;
-}
-function prettifyKey(k: string) {
-  return k.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()).trim();
-}
-function getStatValue(sl: Record<string, any>, key: string, variants: string[]) {
+const BASKETBALL_ORDER = ["PTS", "REB", "AST", "BLK", "STL", "TO"];
+const KEY_ALIASES: Record<string, string> = {
+  TURNOVERS: "TO", TOV: "TO", TURNOVER: "TO",
+};
+
+function getStatValue(sl: Record<string, any>, key: string, variants: string[]): any {
   for (const k of [key, ...variants]) {
     const v = sl?.[k];
     if (v !== undefined && v !== null && v !== "") return v;
@@ -40,237 +39,42 @@ function getStatValue(sl: Record<string, any>, key: string, variants: string[]) 
   }
   return undefined;
 }
-function getPositionStats(pos: string, sl: Record<string, any>) {
+
+function buildTiles(card: PlayerCard): StatTile[] {
+  const sl = (card as any).statLine || {};
+  const pos = String(card.position ?? "");
   const display = (sportAdapter.config as any).statDisplay ?? {};
   const defs: Array<{ key: string; variants: string[]; label: string }> =
-    display[pos] ?? display["default"] ?? [];
-  const result: Array<{ key: string; label: string; value: any }> = [];
+    display[pos] ?? display.default ?? [];
+
+  const collected: StatTile[] = [];
   for (const def of defs) {
     const v = getStatValue(sl, def.key, def.variants);
-    if (v !== undefined) result.push({ key: def.key, label: def.label, value: v });
+    if (v !== undefined) {
+      const upperKey = (KEY_ALIASES[def.label.toUpperCase()] ?? def.label.toUpperCase());
+      collected.push({ key: upperKey, label: upperKey, value: v });
+    }
   }
-  return result;
-}
-function getFallbackStats(sl: Record<string, any>) {
-  const SKIP = new Set(["selected", "transfers_in", "transfers_out", "transfers_balance", "value", "id", "element", "fixture", "round", "gameweek", "gw", "season", "season_id", "team_h_score", "team_a_score", "team_h", "team_a", "was_home", "kickoff_time", "opponent_team", "total_points", "in_dreamteam"]);
-  const out: Array<{ key: string; label: string; value: any }> = [];
-  for (const [k, v] of Object.entries(sl || {})) {
-    if (SKIP.has(k)) continue;
-    const n = safeNumber(v);
-    if (n === undefined || n === 0) continue;
-    out.push({ key: k, label: prettifyKey(k), value: v });
-    if (out.length >= 9) break;
-  }
-  return out;
-}
-function fmtDate(iso: string) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
-}
-function round1(n: number) { return Math.round(n * 10) / 10; }
 
-const BASKETBALL_ORDER = ["PTS", "REB", "AST", "BLK", "STL", "TO"];
-const KEY_ALIASES: Record<string, string> = { "TURNOVERS": "TO", "TOV": "TO", "TURNOVER": "TO" };
-
-// ── BasketballHero ────────────────────────────────────────────────────────
-
-function BasketballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
-  const [imgReady, setImgReady] = React.useState(false);
-  const headshotSrc = (() => {
-    const base = String((card as any)?.basePlayerId ?? "").trim();
-    return headshotUrl(base);
-  })();
-  return (
-    <>
-      {/* Initials always rendered as fallback — visible when image hasn't loaded yet */}
-      <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", fontSize: 32, fontWeight: 950, color: "rgba(255,255,255,0.50)", userSelect: "none" }}>
-        {initials}
-      </div>
-      {headshotSrc && (
-        <img
-          key={headshotSrc}
-          src={headshotSrc}
-          alt={String((card as any)?.name ?? "")}
-          style={{ position: "absolute", top: "12%", left: "-5%", width: "110%", height: "100%", objectFit: "cover", objectPosition: "50% 10%", opacity: imgReady ? 1 : 0, transition: "opacity 0.3s ease" }}
-          draggable={false}
-          onLoad={() => setImgReady(true)}
-          onError={() => setImgReady(false)}
-        />
-      )}
-    </>
-  );
+  // Enforce BASKETBALL_ORDER positional layout — missing stats show as 0.
+  const byKey = new Map(collected.map(t => [t.key, t]));
+  return BASKETBALL_ORDER.map(k => byKey.get(k) ?? { key: k, label: k, value: 0 });
 }
 
-// ── BackBStats ─────────────────────────────────────────────────────────────
-
-function BackBStats({ card, topGameTier }: { card: PlayerCard; topGameTier?: TopGameTier | null }) {
-  const gi = (card as any).gameInfo || {};
-  const sl = (card as any).statLine || {};
-  const posStats = useMemo(() => getPositionStats(card.position as Position, sl), [card.position, sl]);
-  const fallbackStats = useMemo(() => getFallbackStats(sl), [sl]);
-
-  const raw = (posStats.length > 0 ? posStats : fallbackStats).map(t => ({
-    ...t,
-    key: KEY_ALIASES[t.key.toUpperCase()] ?? t.key.toUpperCase(),
-  }));
-  const tiles = (() => {
-    const byKey = new Map(raw.map(t => [t.key, t]));
-    return BASKETBALL_ORDER.map(k => byKey.get(k) ?? { key: k, label: k, value: 0 });
-  })();
-
-  const actual = safeNumber((card as any).actualFp) ?? 0;
-  const rawDate = gi.date || gi.kickoff_time || sl.kickoff_time || sl.date || "";
-  const dateStr = fmtDate(String(rawDate));
-  const rawOpp = gi.opponent || gi.opponent_team || sl.opponent || sl.opponent_team || "";
-  const opponent = String(rawOpp).trim();
-  const ha = gi.homeAway || (sl.was_home === true ? "H" : sl.was_home === false ? "A" : "");
-  const oppStr = opponent ? `${ha === "A" ? "@" : "vs"} ${opponent.toUpperCase()}` : "";
-  const badgesData: Array<{ icon: string; label: string; fp: number }> = Array.isArray((card as any).achievements) ? (card as any).achievements.filter(Boolean) : [];
-  const badgeFpBonus = badgesData.reduce((s, b) => s + (b.fp ?? 0), 0);
-  const hasStats = Object.keys(sl).length > 0;
-  const allZero = tiles.every(t => Number(t.value) === 0);
-
-  const hasTopGameStamp = !!topGameTier;
-
-  return (
-    <div style={{ ...S.backWrap, position: "relative" }}>
-      {/* Static Top Games stamp — slots between the FP value and the badges row,
-          on the right side. Doesn't cover the date/opponent header or the FP
-          number; reads as a marker on the most prominent stat row. */}
-      <div style={S.backTopRow}>
-        <div style={S.backDate}>{dateStr || "—"}</div>
-        <div style={S.backOpp}>{oppStr || "—"}</div>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 3, minWidth: 0 }}>
-          <span style={S.fpLabel}>FP</span>
-          <span style={{ ...S.fpValue }}>{round1(actual)}</span>
-          {badgeFpBonus !== 0 && (
-            <span style={{ fontSize: 9, fontWeight: 700, color: badgeFpBonus > 0 ? "#FFD700" : "#FF6B6B", alignSelf: "flex-end", marginBottom: 1 }}>({badgeFpBonus > 0 ? "+" : ""}{badgeFpBonus})</span>
-          )}
-        </div>
-        {hasTopGameStamp && (
-          <div style={{ flexShrink: 0, transform: "rotate(-4deg) scale(0.7)", transformOrigin: "right center" }}>
-            <TopGameStamp tier={topGameTier!} />
-          </div>
-        )}
-      </div>
-      {/* Earned badges — emoji-only inline row, aggressively compact */}
-      <div style={{ minHeight: 10, display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
-        {badgesData.length > 0 ? (
-          <>
-            {badgesData.slice(0, 8).map((b: any, i: number) => (
-              <span key={b.id ?? b.label ?? i} title={`${b.label} (${b.fp > 0 ? "+" : ""}${b.fp})`} style={{ fontSize: 7, lineHeight: 1 }}>{b.icon}</span>
-            ))}
-          </>
-        ) : (
-          <span style={{ fontSize: 7, fontWeight: 600, color: "rgba(255,255,255,0.25)" }}>No badges</span>
-        )}
-      </div>
-      <div style={S.divider} />
-      {!hasStats || allZero ? (
-        <div style={S.noStatsWrap}><div style={S.noStatsText}>No game log</div></div>
-      ) : tiles.length > 0 ? (
-        <div style={S.tilesGrid}>
-          {tiles.slice(0, 9).map(s => (
-            <div key={s.key} style={S.tile}>
-              <div style={S.tileLabel}>{s.label}</div>
-              <div style={S.tileValue}>{String(s.value)}</div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div style={S.noStatsWrap}><div style={S.noStatsText}>No game log</div></div>
-      )}
-      <div style={S.tapHint}>TAP TO FLIP BACK</div>
-    </div>
-  );
-}
-
-const S: Record<string, React.CSSProperties> = {
-  backWrap: { height: "100%", padding: "8px 8px 6px", display: "flex", flexDirection: "column", gap: 4, background: "linear-gradient(180deg,rgba(11,15,20,0.97),rgba(11,15,20,1.0))", borderRadius: 18, overflow: "hidden", boxSizing: "border-box" },
-  backTopRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 },
-  backDate: { fontSize: 11, fontWeight: 900, color: "rgba(255,255,255,0.90)" },
-  backOpp: { fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.65)", textAlign: "right" },
-  fpLabel: { fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.65)" },
-  fpValue: { fontSize: 18, fontWeight: 900, color: "rgba(255,255,255,0.95)" },
-  divider: { height: 1, background: "rgba(255,255,255,0.08)" },
-  tilesGrid: { flex: 1, display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 3, alignContent: "start", minWidth: 0 },
-  tile: { borderRadius: 6, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", padding: "2px 5px", display: "flex", flexDirection: "column", gap: 1, minWidth: 0 },
-  tileLabel: { fontSize: 7, fontWeight: 900, color: "rgba(255,255,255,0.55)", lineHeight: "9px" },
-  tileValue: { fontSize: 12, fontWeight: 900, color: "rgba(255,255,255,0.92)" },
-  tapHint: { fontSize: 8, fontWeight: 900, color: "rgba(255,255,255,0.30)", letterSpacing: 0.4, textAlign: "center" },
-  noStatsWrap: { flex: 1, display: "flex", flexDirection: "column", gap: 10 },
-  noStatsText: { fontSize: 12, fontWeight: 900, color: "rgba(255,255,255,0.70)" },
+const SLOTS: CardFaceSlots = {
+  getHero: (card) => ({
+    imageUrl: headshotUrl(String((card as any).basePlayerId ?? "")) || null,
+    alt: String((card as any).name ?? ""),
+  }),
+  getStatTiles: buildTiles,
+  getDisplayPosition: (card) => sportAdapter.displayPosition((card as any).position),
+  showStatTileFp: false,
 };
 
-// ── Public component ───────────────────────────────────────────────────────
-
-type Props = {
-  card: PlayerCard;
-  phase: GamePhase;
-  locked?: boolean;
-  isLocked?: boolean;
-  isMvp?: boolean;
-  flipped?: boolean;
-  isFlipped?: boolean;
-  canFlip?: boolean;
-  onToggleLock?: () => void;
-  onToggleFlip?: () => void;
-  isRevealing?: boolean;
-  visibleFp?: number;
-  visibleBadgeCount?: number;
-  noTransition?: boolean;
-  flipDurationMs?: number;
-  fpCountUpMs?: number;
-  performanceTag?: any;
-  pulse?: any;
-  shakeType?: ShakeType | null;
-  cardShakeType?: ShakeType | null;
-  badges?: Array<{ id: string; icon: string; label: string; fp: number }>;
-  isSpotlight?: boolean;
-  spotlightLevel?: number;
-  isDimmed?: boolean;
-  onRollComplete?: () => void;
-  heldFpVisible?: boolean;
-  isTapTarget?: boolean;
-  isFTUE?: boolean;
-  glowActive?: boolean;
-  glowTier?: string;
-  glowDurationMs?: number;
-  /** Top Games tier — forwarded to CardFront for the shimmer/stamp overlay. */
-  topGameTier?: TopGameTier | null;
-};
+type Props = Omit<CardFaceProps, keyof CardFaceSlots>;
 
 export function AthleteCard(props: Props) {
-  const {
-    glowActive,
-    glowTier,
-    glowDurationMs,
-    topGameTier,
-    ...rest
-  } = props;
-  return (
-    <PlayerCardShell
-      {...rest}
-      glowActive={glowActive}
-      glowTier={glowTier}
-      glowDurationMs={glowDurationMs}
-      renderFront={(p: ShellFrontProps) => (
-        <CardFront
-          {...p}
-          topGameTier={topGameTier ?? null}
-          displayPosition={sportAdapter.displayPosition((p.card as any)?.position)}
-          renderHero={(heroProps: CardFrontHeroProps) => (
-            <BasketballHero {...heroProps} />
-          )}
-        />
-      )}
-      renderBack={(p: CardBackProps) => <BackBStats card={p.card} topGameTier={topGameTier ?? null} />}
-    />
-  );
+  return <CardFace {...props} {...SLOTS} />;
 }
 
 export function AthleteCardLegacy(props: Props) {
