@@ -6550,20 +6550,6 @@
     "active": true
   },
   {
-    "id": "1630658_2425",
-    "basePlayerId": "1630658",
-    "season": "2425",
-    "name": "Colin Castleton",
-    "team": "LAL",
-    "position": "C",
-    "positionFull": "C",
-    "salary": 27,
-    "tier": "WHITE",
-    "avgFP": 19.2,
-    "projectedFp": 16.3,
-    "active": true
-  },
-  {
     "id": "1642366_2425",
     "basePlayerId": "1642366",
     "season": "2425",
@@ -9745,21 +9731,6 @@
     "avgFP": 6.3,
     "projectedFp": 6.3,
     "photoCode": "1630556",
-    "active": true
-  },
-  {
-    "id": "1630658_2324",
-    "basePlayerId": "1630658",
-    "season": "2324",
-    "name": "Colin Castleton",
-    "team": "LAL",
-    "position": "C",
-    "positionFull": "C",
-    "salary": 7,
-    "tier": "WHITE",
-    "avgFP": 4.5,
-    "projectedFp": 4.5,
-    "photoCode": "1630658",
     "active": true
   },
   {

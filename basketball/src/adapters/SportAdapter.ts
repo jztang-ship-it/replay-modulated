@@ -6,8 +6,8 @@ import { getPlayers, getLogsByKey } from "../engines/dataEngine";
 import { getActiveSeason } from "@shared/engines/dataEngine";
 import { tierFromSalary, DEFAULT_ECONOMY_CONFIG, type EconomyConfig } from "../engines/economyEngine";
 import { tierRank } from "@shared/theme";
-import topGames from "../../public/data/topGames_2425.json";
-import careerHighs from "../../public/data/careerHighs_2season.json";
+import topGames from "../../public/data/topGames.json";
+import careerHighs from "../../public/data/careerHighs.json";
 // Side-effect import: registers the basketball sound pack with the shared
 // soundPackLoader at module-load time. Without this, basketball plays silently.
 import "../utils/soundPack";
