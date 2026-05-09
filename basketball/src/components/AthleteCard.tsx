@@ -103,17 +103,18 @@ function BasketballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) 
   );
 }
 
-// ── AchievementBack — single-stat hero layout for Top Games ──────────────
-// Replaces the regular tile grid back when the player hit a T0/T1/T2
-// achievement. The featured stat (from primaryReason) becomes the hero;
-// other stats demote to one supporting line. No badge row in this mode —
-// the card is telling one story, not many.
+// ── AchievementBack — featured-stat hero layout for Top Games ────────────
+// Replaces the regular tile grid when the player hit a T0/T1/T2 achievement.
+// One headline (1+ featured stats), one tier-context line, then ALL the
+// remaining stats below as a comma row. No badge row in this mode — the
+// card is telling one story, not many.
 
-const TIER_CONTEXT: Record<TopGameTier, string> = {
+const TIER_CONTEXT_BASE: Record<TopGameTier, string> = {
   record: "ALL-TIME RECORD",
   career: "CAREER HIGH",
   season: "BEST OF SEASON",
 };
+const COUNT_PREFIX: Record<number, string> = { 2: "DOUBLE", 3: "TRIPLE", 4: "QUAD" };
 
 function AchievementBack({
   card,
@@ -127,13 +128,24 @@ function AchievementBack({
   oppStr: string;
 }) {
   const sl = (card as any).statLine || {};
-  const reason = result.primaryReason!;
-  const featuredKey = (KEY_ALIASES[String(reason.category).toUpperCase()] ?? String(reason.category).toUpperCase());
-  const featuredValue = reason.value;
-  const contextLine = TIER_CONTEXT[result.tier!];
+  // Combine all same-tier reasons into a single headline. allReasons is
+  // already filtered to the highest tier by detectTopGame.
+  const reasons = result.allReasons?.length ? result.allReasons : (result.primaryReason ? [result.primaryReason] : []);
+  // Cap at 3 to keep the headline readable. 4+ same-tier achievements in
+  // one game is so rare we'd rather truncate than let the layout break.
+  const featured = reasons.slice(0, 3).map(r => ({
+    key: KEY_ALIASES[String(r.category).toUpperCase()] ?? String(r.category).toUpperCase(),
+    value: r.value,
+  }));
+  const featuredKeys = new Set(featured.map(f => f.key));
 
-  // Supporting stats — top 2 non-featured tiles with a non-zero value, in
-  // BASKETBALL_ORDER. Single line, comma-separated, small font.
+  const baseContext = TIER_CONTEXT_BASE[result.tier!];
+  const contextLine = featured.length > 1
+    ? `${COUNT_PREFIX[featured.length] ?? `${featured.length}-WAY`} ${baseContext}`
+    : baseContext;
+
+  // Supporting stats — every non-featured stat in BASKETBALL_ORDER, even
+  // zeros, so the line always reads as a complete stat line.
   const posStats = getPositionStats(card.position as Position, sl);
   const fallbackStats = getFallbackStats(sl);
   const raw = (posStats.length > 0 ? posStats : fallbackStats).map(t => ({
@@ -142,16 +154,17 @@ function AchievementBack({
   }));
   const supporting = (() => {
     const byKey = new Map(raw.map(t => [t.key, t]));
-    const candidates = BASKETBALL_ORDER.filter(k => k !== featuredKey);
-    const picked: Array<{ key: string; value: number }> = [];
-    for (const k of candidates) {
-      const t = byKey.get(k);
-      const v = Number(t?.value ?? 0);
-      if (v > 0) picked.push({ key: k, value: v });
-      if (picked.length >= 2) break;
-    }
-    return picked;
+    return BASKETBALL_ORDER
+      .filter(k => !featuredKeys.has(k))
+      .map(k => ({ key: k, value: Number(byKey.get(k)?.value ?? 0) }));
   })();
+
+  // Number font scales down as more achievements stack into one headline.
+  const numFontStyle: React.CSSProperties = featured.length >= 3
+    ? { fontSize: 32, letterSpacing: -0.5 }
+    : featured.length === 2
+      ? { fontSize: 44, letterSpacing: -0.5 }
+      : { fontSize: 64, letterSpacing: -1 };
 
   return (
     <div style={{ ...S.backWrap, position: "relative" }}>
@@ -160,14 +173,19 @@ function AchievementBack({
         <div style={S.backOpp}>{oppStr || "—"}</div>
       </div>
       <div style={S.achWrap}>
-        <div style={S.achNumber}>{featuredValue}</div>
-        <div style={S.achStatLabel}>{featuredKey}</div>
+        <div style={{ ...S.achHeadline, ...numFontStyle }}>
+          {featured.map((f, i) => (
+            <span key={f.key}>
+              <span style={S.achHeadlineNum}>{f.value}</span>
+              <span style={S.achHeadlineUnit}> {f.key}</span>
+              {i < featured.length - 1 && <span style={S.achHeadlineSep}>{" · "}</span>}
+            </span>
+          ))}
+        </div>
         <div style={S.achContext}>{contextLine}</div>
       </div>
       <div style={S.achSupportRow}>
-        {supporting.length > 0
-          ? supporting.map(s => `${s.value} ${s.key}`).join("  ·  ")
-          : ""}
+        {supporting.map(s => `${s.value} ${s.key}`).join("  ·  ")}
       </div>
       <div style={S.tapHint}>TAP TO FLIP BACK</div>
     </div>
@@ -283,11 +301,13 @@ const S: Record<string, React.CSSProperties> = {
   tapHint: { fontSize: 8, fontWeight: 900, color: "rgba(255,255,255,0.30)", letterSpacing: 0.4, textAlign: "center" },
   noStatsWrap: { flex: 1, display: "flex", flexDirection: "column", gap: 10 },
   noStatsText: { fontSize: 12, fontWeight: 900, color: "rgba(255,255,255,0.70)" },
-  achWrap: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 0, minWidth: 0 },
-  achNumber: { fontSize: 64, fontWeight: 950, lineHeight: 1, color: "rgba(255,255,255,0.98)", letterSpacing: -1 },
-  achStatLabel: { fontSize: 14, fontWeight: 900, letterSpacing: 1.4, color: "rgba(255,255,255,0.75)", marginTop: 2 },
-  achContext: { fontSize: 10, fontWeight: 900, letterSpacing: 1.2, color: "#FFD27A", marginTop: 8, textAlign: "center" },
-  achSupportRow: { fontSize: 9, fontWeight: 700, letterSpacing: 0.6, color: "rgba(255,255,255,0.55)", textAlign: "center", marginTop: 4 },
+  achWrap: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 0, minWidth: 0, textAlign: "center" },
+  achHeadline: { fontWeight: 950, lineHeight: 1, color: "rgba(255,255,255,0.98)", whiteSpace: "nowrap", display: "block" },
+  achHeadlineNum: { fontWeight: 950 },
+  achHeadlineUnit: { fontWeight: 900, opacity: 0.78, fontSize: "0.45em", letterSpacing: 1.4, marginLeft: 1 },
+  achHeadlineSep: { fontWeight: 800, opacity: 0.45, fontSize: "0.7em" },
+  achContext: { fontSize: 10, fontWeight: 900, letterSpacing: 1.2, color: "#FFD27A", marginTop: 10, textAlign: "center" },
+  achSupportRow: { fontSize: 9, fontWeight: 700, letterSpacing: 0.6, color: "rgba(255,255,255,0.55)", textAlign: "center", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
 };
 
 // ── Public component ───────────────────────────────────────────────────────

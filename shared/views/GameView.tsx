@@ -983,25 +983,29 @@ export function GameView({ adapter }: Props) {
         : { tier: null as null, primaryReason: null, allReasons: [] as any[] };
 
     // DEV-ONLY force hook: ?forceAchievementBack=career|record|season
-    // Synthesizes a TopGameResult on the star card by picking its highest
-    // statLine value as the featured stat. Lets QA preview the achievement
-    // back layout without needing a real qualifying game.
+    //                      ?forceAchievementCount=1|2|3 (default 1)
+    // Synthesizes a TopGameResult on the star card by picking the top N
+    // non-zero stats as featured. Lets QA preview multi-stat achievement
+    // headlines (e.g. DOUBLE CAREER HIGH) without staging a real game.
     let topGame: any = realTopGame;
     if (typeof window !== "undefined") {
-      const forced = new URLSearchParams(window.location.search).get("forceAchievementBack");
+      const params = new URLSearchParams(window.location.search);
+      const forced = params.get("forceAchievementBack");
+      const forcedCount = Math.max(1, Math.min(3, Number(params.get("forceAchievementCount") ?? 1) || 1));
       if (forced && (forced === "career" || forced === "record" || forced === "season") && star?.statLine) {
         const sl: Record<string, any> = star.statLine as any;
         const candidates = ["pts", "reb", "ast", "blk", "stl", "threes"];
-        let topKey = "pts"; let topVal = 0;
-        for (const k of candidates) {
-          const v = Number(sl[k] ?? 0);
-          if (v > topVal) { topVal = v; topKey = k; }
-        }
-        if (topVal > 0) {
+        const ranked = candidates
+          .map(k => ({ k, v: Number(sl[k] ?? 0) }))
+          .filter(x => x.v > 0)
+          .sort((a, b) => b.v - a.v)
+          .slice(0, forcedCount);
+        if (ranked.length > 0) {
+          const allReasons = ranked.map(({ k, v }) => ({ category: k, value: v, label: `forced ${forced} (${v} ${k})` }));
           topGame = {
             tier: forced as any,
-            primaryReason: { category: topKey, value: topVal, label: `forced ${forced} (${topVal} ${topKey})` },
-            allReasons: [],
+            primaryReason: allReasons[0],
+            allReasons,
           };
         }
       }
