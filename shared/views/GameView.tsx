@@ -1666,6 +1666,7 @@ export function GameView({ adapter }: Props) {
                     }
                     topGameStarBasePlayerId={topGameInfo.star?.basePlayerId ?? null}
                     topGameTier={topGameInfo.topGame.tier as any}
+                    topGameResult={topGameInfo.topGame as any}
                     columns={rosterGridColumns}
                     CardComponent={CardComponent as React.ComponentType<RosterGridCardProps>}
                     slotLabels={slotLabels}

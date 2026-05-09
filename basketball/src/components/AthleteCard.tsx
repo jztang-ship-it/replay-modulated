@@ -15,7 +15,7 @@ import { TopGameStamp } from "@shared/components/TopGameOverlay";
 import type { ShakeType } from "../hooks/useEmotionalReveal";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { headshotUrl } from "@shared/utils/headshotUrl";
-import type { TopGameTier } from "@shared/commentary/types";
+import type { TopGameTier, TopGameResult } from "@shared/commentary/types";
 
 
 export { resetAllOverlays };
@@ -103,9 +103,80 @@ function BasketballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) 
   );
 }
 
+// ── AchievementBack — single-stat hero layout for Top Games ──────────────
+// Replaces the regular tile grid back when the player hit a T0/T1/T2
+// achievement. The featured stat (from primaryReason) becomes the hero;
+// other stats demote to one supporting line. No badge row in this mode —
+// the card is telling one story, not many.
+
+const TIER_CONTEXT: Record<TopGameTier, string> = {
+  record: "ALL-TIME RECORD",
+  career: "CAREER HIGH",
+  season: "BEST OF SEASON",
+};
+
+function AchievementBack({
+  card,
+  result,
+  dateStr,
+  oppStr,
+}: {
+  card: PlayerCard;
+  result: TopGameResult;
+  dateStr: string;
+  oppStr: string;
+}) {
+  const sl = (card as any).statLine || {};
+  const reason = result.primaryReason!;
+  const featuredKey = (KEY_ALIASES[String(reason.category).toUpperCase()] ?? String(reason.category).toUpperCase());
+  const featuredValue = reason.value;
+  const contextLine = TIER_CONTEXT[result.tier!];
+
+  // Supporting stats — top 2 non-featured tiles with a non-zero value, in
+  // BASKETBALL_ORDER. Single line, comma-separated, small font.
+  const posStats = getPositionStats(card.position as Position, sl);
+  const fallbackStats = getFallbackStats(sl);
+  const raw = (posStats.length > 0 ? posStats : fallbackStats).map(t => ({
+    ...t,
+    key: KEY_ALIASES[t.key.toUpperCase()] ?? t.key.toUpperCase(),
+  }));
+  const supporting = (() => {
+    const byKey = new Map(raw.map(t => [t.key, t]));
+    const candidates = BASKETBALL_ORDER.filter(k => k !== featuredKey);
+    const picked: Array<{ key: string; value: number }> = [];
+    for (const k of candidates) {
+      const t = byKey.get(k);
+      const v = Number(t?.value ?? 0);
+      if (v > 0) picked.push({ key: k, value: v });
+      if (picked.length >= 2) break;
+    }
+    return picked;
+  })();
+
+  return (
+    <div style={{ ...S.backWrap, position: "relative" }}>
+      <div style={S.backTopRow}>
+        <div style={S.backDate}>{dateStr || "—"}</div>
+        <div style={S.backOpp}>{oppStr || "—"}</div>
+      </div>
+      <div style={S.achWrap}>
+        <div style={S.achNumber}>{featuredValue}</div>
+        <div style={S.achStatLabel}>{featuredKey}</div>
+        <div style={S.achContext}>{contextLine}</div>
+      </div>
+      <div style={S.achSupportRow}>
+        {supporting.length > 0
+          ? supporting.map(s => `${s.value} ${s.key}`).join("  ·  ")
+          : ""}
+      </div>
+      <div style={S.tapHint}>TAP TO FLIP BACK</div>
+    </div>
+  );
+}
+
 // ── BackBStats ─────────────────────────────────────────────────────────────
 
-function BackBStats({ card, topGameTier }: { card: PlayerCard; topGameTier?: TopGameTier | null }) {
+function BackBStats({ card, topGameTier, topGameResult }: { card: PlayerCard; topGameTier?: TopGameTier | null; topGameResult?: TopGameResult | null }) {
   const gi = (card as any).gameInfo || {};
   const sl = (card as any).statLine || {};
   const posStats = useMemo(() => getPositionStats(card.position as Position, sl), [card.position, sl]);
@@ -131,6 +202,14 @@ function BackBStats({ card, topGameTier }: { card: PlayerCard; topGameTier?: Top
   const badgeFpBonus = badgesData.reduce((s, b) => s + (b.fp ?? 0), 0);
   const hasStats = Object.keys(sl).length > 0;
   const allZero = tiles.every(t => Number(t.value) === 0);
+
+  // Achievement-mode back: when this card has a Top Game result, the back
+  // becomes a single-stat hero ("53 PTS · CAREER HIGH") instead of the regular
+  // tile grid. Falls back to normal layout if there's no statLine to feature.
+  const isAchievement = !!topGameResult?.tier && !!topGameResult.primaryReason && hasStats;
+  if (isAchievement) {
+    return <AchievementBack card={card} result={topGameResult!} dateStr={dateStr} oppStr={oppStr} />;
+  }
 
   const hasTopGameStamp = !!topGameTier;
 
@@ -204,6 +283,11 @@ const S: Record<string, React.CSSProperties> = {
   tapHint: { fontSize: 8, fontWeight: 900, color: "rgba(255,255,255,0.30)", letterSpacing: 0.4, textAlign: "center" },
   noStatsWrap: { flex: 1, display: "flex", flexDirection: "column", gap: 10 },
   noStatsText: { fontSize: 12, fontWeight: 900, color: "rgba(255,255,255,0.70)" },
+  achWrap: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 0, minWidth: 0 },
+  achNumber: { fontSize: 64, fontWeight: 950, lineHeight: 1, color: "rgba(255,255,255,0.98)", letterSpacing: -1 },
+  achStatLabel: { fontSize: 14, fontWeight: 900, letterSpacing: 1.4, color: "rgba(255,255,255,0.75)", marginTop: 2 },
+  achContext: { fontSize: 10, fontWeight: 900, letterSpacing: 1.2, color: "#FFD27A", marginTop: 8, textAlign: "center" },
+  achSupportRow: { fontSize: 9, fontWeight: 700, letterSpacing: 0.6, color: "rgba(255,255,255,0.55)", textAlign: "center", marginTop: 4 },
 };
 
 // ── Public component ───────────────────────────────────────────────────────
@@ -242,6 +326,8 @@ type Props = {
   glowDurationMs?: number;
   /** Top Games tier — forwarded to CardFront for the shimmer/stamp overlay. */
   topGameTier?: TopGameTier | null;
+  /** Top Games full result — drives the achievement-mode back layout. */
+  topGameResult?: TopGameResult | null;
 };
 
 export function AthleteCard(props: Props) {
@@ -250,6 +336,7 @@ export function AthleteCard(props: Props) {
     glowTier,
     glowDurationMs,
     topGameTier,
+    topGameResult,
     ...rest
   } = props;
   return (
@@ -268,7 +355,7 @@ export function AthleteCard(props: Props) {
           )}
         />
       )}
-      renderBack={(p: CardBackProps) => <BackBStats card={p.card} topGameTier={topGameTier ?? null} />}
+      renderBack={(p: CardBackProps) => <BackBStats card={p.card} topGameTier={topGameTier ?? null} topGameResult={topGameResult ?? null} />}
     />
   );
 }
