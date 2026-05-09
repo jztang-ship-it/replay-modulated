@@ -506,9 +506,10 @@ export function CardFront(props: CardFrontProps) {
           </span>
         </div>
 
-        {/* POSITION — top-right; tier-colored per designer (salary left still uses onCardText) */}
-        <div style={{ position: "absolute", top: "6%", right: "6%", zIndex: 8, pointerEvents: "none" }}>
-          <span style={{ fontSize: 13, fontWeight: 900, fontStyle: "italic", color: positionTextColor, letterSpacing: -0.5, lineHeight: 1, textTransform: "uppercase" }}>
+        {/* POSITION — top-right; tier-colored per designer (salary left still uses onCardText).
+            Sized + positioned to match SALARY for visual symmetry. */}
+        <div style={{ position: "absolute", top: "6.5%", right: "6%", zIndex: 8, pointerEvents: "none", lineHeight: 1 }}>
+          <span style={{ fontSize: 16, fontWeight: 900, fontStyle: "italic", color: positionTextColor, letterSpacing: -0.5, lineHeight: 1, textTransform: "uppercase" }}>
             {pos}
           </span>
         </div>
@@ -826,13 +827,15 @@ export function CardFront(props: CardFrontProps) {
 
       </div>{/* end clipped content */}
 
-      {/* SEASON + TEAM — small ribbon just above the BLACK STRIP (which starts
-          at 72%). Solid dark pill with gold border so it reads cleanly over
-          jersey colors that match the card tier. Hidden when card is
-          face-down to prevent mirror bleed. */}
+      {/* SEASON + TEAM — sits INSIDE the notch cutout itself (above the
+          notch flat bottom at y=4.97%). Renders outside the card clip-path
+          so it floats in the notch area, like a trading-card year label.
+          The 63.5%–68.5% band above the name strip is reserved exclusively
+          for the achievement badge. Hidden when face-down to prevent
+          mirror bleed. */}
       {showTierColors && (team || seasonFmt) && (
-        <div style={{ position: "absolute", top: "63.5%", height: "5%", left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 35, pointerEvents: "none", overflow: "hidden" }}>
-          <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 0.6, textTransform: "uppercase", color: "#FFEA86", whiteSpace: "nowrap", lineHeight: 1, padding: "2.5px 8px", background: "rgba(8,12,20,0.92)", border: "1px solid rgba(201,168,76,0.55)", borderRadius: 4, boxShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
+        <div style={{ position: "absolute", top: "1%", height: "3.5%", left: "30%", right: "30%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 35, pointerEvents: "none", overflow: "hidden" }}>
+          <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: 0.6, textTransform: "uppercase", color: "rgba(255,255,255,0.72)", whiteSpace: "nowrap", lineHeight: 1, textShadow: "0 1px 2px rgba(0,0,0,0.6)" }}>
             {team && seasonFmt ? `${team} · ${seasonFmt}` : (team || seasonFmt)}
           </span>
         </div>

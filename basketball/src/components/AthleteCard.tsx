@@ -15,7 +15,7 @@ import { TopGameStamp } from "@shared/components/TopGameOverlay";
 import type { ShakeType } from "../hooks/useEmotionalReveal";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { headshotUrl } from "@shared/utils/headshotUrl";
-import type { TopGameTier } from "@shared/commentary/types";
+import type { TopGameTier, TopGameResult } from "@shared/commentary/types";
 
 
 export { resetAllOverlays };
@@ -103,9 +103,109 @@ function BasketballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) 
   );
 }
 
+// ── AchievementBack — featured-stat hero layout for Top Games ────────────
+// Replaces the regular tile grid when the player hit a T0/T1/T2 achievement.
+// One headline (1+ featured stats), one tier-context line, then ALL the
+// remaining stats below as a comma row. No badge row in this mode — the
+// card is telling one story, not many.
+
+const TIER_CONTEXT_BASE: Record<TopGameTier, string> = {
+  record: "ALL-TIME RECORD",
+  career: "CAREER HIGH",
+  season: "BEST OF SEASON",
+};
+const COUNT_PREFIX: Record<number, string> = { 2: "DOUBLE", 3: "TRIPLE", 4: "QUAD" };
+
+function AchievementBack({
+  card,
+  result,
+  dateStr,
+  oppStr,
+}: {
+  card: PlayerCard;
+  result: TopGameResult;
+  dateStr: string;
+  oppStr: string;
+}) {
+  const sl = (card as any).statLine || {};
+  // Combine all same-tier reasons into a single headline. allReasons is
+  // already filtered to the highest tier by detectTopGame.
+  const reasons = result.allReasons?.length ? result.allReasons : (result.primaryReason ? [result.primaryReason] : []);
+  // Cap at 3 to keep the headline readable. 4+ same-tier achievements in
+  // one game is so rare we'd rather truncate than let the layout break.
+  const featured = reasons.slice(0, 3).map(r => ({
+    key: KEY_ALIASES[String(r.category).toUpperCase()] ?? String(r.category).toUpperCase(),
+    value: r.value,
+  }));
+  const featuredKeys = new Set(featured.map(f => f.key));
+
+  const baseContext = TIER_CONTEXT_BASE[result.tier!];
+  const contextLine = featured.length > 1
+    ? `${COUNT_PREFIX[featured.length] ?? `${featured.length}-WAY`} ${baseContext}`
+    : baseContext;
+
+  // Supporting stats — every non-featured stat in BASKETBALL_ORDER, even
+  // zeros, so the line always reads as a complete stat line.
+  const posStats = getPositionStats(card.position as Position, sl);
+  const fallbackStats = getFallbackStats(sl);
+  const raw = (posStats.length > 0 ? posStats : fallbackStats).map(t => ({
+    ...t,
+    key: KEY_ALIASES[t.key.toUpperCase()] ?? t.key.toUpperCase(),
+  }));
+  const supporting = (() => {
+    const byKey = new Map(raw.map(t => [t.key, t]));
+    return BASKETBALL_ORDER
+      .filter(k => !featuredKeys.has(k))
+      .map(k => ({ key: k, value: Number(byKey.get(k)?.value ?? 0) }));
+  })();
+
+  // Number font scales down as more achievements stack into one headline.
+  const numFontStyle: React.CSSProperties = featured.length >= 3
+    ? { fontSize: 32, letterSpacing: -0.5 }
+    : featured.length === 2
+      ? { fontSize: 44, letterSpacing: -0.5 }
+      : { fontSize: 64, letterSpacing: -1 };
+
+  return (
+    <div style={{ ...S.backWrap, position: "relative" }}>
+      <div style={S.backTopRow}>
+        <div style={S.backDate}>{dateStr || "—"}</div>
+        <div style={S.backOpp}>{oppStr || "—"}</div>
+      </div>
+      <div style={S.achWrap}>
+        <div style={{ ...S.achHeadline, ...numFontStyle }}>
+          {featured.map((f, i) => (
+            <span key={f.key}>
+              <span style={S.achHeadlineNum}>{f.value}</span>
+              <span style={S.achHeadlineUnit}> {f.key}</span>
+              {i < featured.length - 1 && <span style={S.achHeadlineSep}>{" · "}</span>}
+            </span>
+          ))}
+        </div>
+        <div style={S.achContext}>{contextLine}</div>
+      </div>
+      {(() => {
+        // Split the supporting line into two rows so it always fits at 9px
+        // font on a ~140-180px card width. ceil(N/2) on top, rest below.
+        const half = Math.ceil(supporting.length / 2);
+        const row1 = supporting.slice(0, half);
+        const row2 = supporting.slice(half);
+        const fmt = (s: { key: string; value: number }) => `${s.value} ${s.key}`;
+        return (
+          <div style={{ display: "flex", flexDirection: "column", gap: 1, marginTop: 4 }}>
+            <div style={S.achSupportRow}>{row1.map(fmt).join("  ·  ")}</div>
+            {row2.length > 0 && <div style={S.achSupportRow}>{row2.map(fmt).join("  ·  ")}</div>}
+          </div>
+        );
+      })()}
+      <div style={S.tapHint}>TAP TO FLIP BACK</div>
+    </div>
+  );
+}
+
 // ── BackBStats ─────────────────────────────────────────────────────────────
 
-function BackBStats({ card, topGameTier }: { card: PlayerCard; topGameTier?: TopGameTier | null }) {
+function BackBStats({ card, topGameTier, topGameResult }: { card: PlayerCard; topGameTier?: TopGameTier | null; topGameResult?: TopGameResult | null }) {
   const gi = (card as any).gameInfo || {};
   const sl = (card as any).statLine || {};
   const posStats = useMemo(() => getPositionStats(card.position as Position, sl), [card.position, sl]);
@@ -131,6 +231,14 @@ function BackBStats({ card, topGameTier }: { card: PlayerCard; topGameTier?: Top
   const badgeFpBonus = badgesData.reduce((s, b) => s + (b.fp ?? 0), 0);
   const hasStats = Object.keys(sl).length > 0;
   const allZero = tiles.every(t => Number(t.value) === 0);
+
+  // Achievement-mode back: when this card has a Top Game result, the back
+  // becomes a single-stat hero ("53 PTS · CAREER HIGH") instead of the regular
+  // tile grid. Falls back to normal layout if there's no statLine to feature.
+  const isAchievement = !!topGameResult?.tier && !!topGameResult.primaryReason && hasStats;
+  if (isAchievement) {
+    return <AchievementBack card={card} result={topGameResult!} dateStr={dateStr} oppStr={oppStr} />;
+  }
 
   const hasTopGameStamp = !!topGameTier;
 
@@ -204,6 +312,13 @@ const S: Record<string, React.CSSProperties> = {
   tapHint: { fontSize: 8, fontWeight: 900, color: "rgba(255,255,255,0.30)", letterSpacing: 0.4, textAlign: "center" },
   noStatsWrap: { flex: 1, display: "flex", flexDirection: "column", gap: 10 },
   noStatsText: { fontSize: 12, fontWeight: 900, color: "rgba(255,255,255,0.70)" },
+  achWrap: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 0, minWidth: 0, textAlign: "center" },
+  achHeadline: { fontWeight: 950, lineHeight: 1, color: "rgba(255,255,255,0.98)", whiteSpace: "nowrap", display: "block" },
+  achHeadlineNum: { fontWeight: 950 },
+  achHeadlineUnit: { fontWeight: 900, opacity: 0.78, fontSize: "0.45em", letterSpacing: 1.4, marginLeft: 1 },
+  achHeadlineSep: { fontWeight: 800, opacity: 0.45, fontSize: "0.7em" },
+  achContext: { fontSize: 10, fontWeight: 900, letterSpacing: 1.2, color: "#FFD27A", marginTop: 10, textAlign: "center" },
+  achSupportRow: { fontSize: 9, fontWeight: 700, letterSpacing: 0.6, color: "rgba(255,255,255,0.55)", textAlign: "center", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
 };
 
 // ── Public component ───────────────────────────────────────────────────────
@@ -242,6 +357,8 @@ type Props = {
   glowDurationMs?: number;
   /** Top Games tier — forwarded to CardFront for the shimmer/stamp overlay. */
   topGameTier?: TopGameTier | null;
+  /** Top Games full result — drives the achievement-mode back layout. */
+  topGameResult?: TopGameResult | null;
 };
 
 export function AthleteCard(props: Props) {
@@ -250,6 +367,7 @@ export function AthleteCard(props: Props) {
     glowTier,
     glowDurationMs,
     topGameTier,
+    topGameResult,
     ...rest
   } = props;
   return (
@@ -268,7 +386,7 @@ export function AthleteCard(props: Props) {
           )}
         />
       )}
-      renderBack={(p: CardBackProps) => <BackBStats card={p.card} topGameTier={topGameTier ?? null} />}
+      renderBack={(p: CardBackProps) => <BackBStats card={p.card} topGameTier={topGameTier ?? null} topGameResult={topGameResult ?? null} />}
     />
   );
 }
