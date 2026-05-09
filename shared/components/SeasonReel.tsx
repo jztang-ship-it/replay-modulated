@@ -1,16 +1,13 @@
 /**
  * shared/components/SeasonReel.tsx
  *
- * Slot-machine-style year reveal. Shows 3 rows (prev / target / next) so
- * the scroll reads as a physical drum. Decelerates with a quintic ease-out
- * that stops crisply on the target — no spring oscillation.
+ * Slot-machine year reveal. One pass through all years, decelerates into
+ * the target, then a single small spring overshoot before settling.
  *
- * Animation phases (2.8 s default):
- *   0.00 – 0.50  Fast spin (slight ease-in windup), covers 68 % of distance
- *   0.50 – 1.00  Quintic ease-out deceleration, lands exactly on target
- *
- * The choice is predetermined by `pickTodaysSeason` — the reel is purely
- * the reveal animation.
+ * Animation phases (1.4 s default):
+ *   0.00 – 0.55  Fast scroll through years (cubic ease-in)
+ *   0.55 – 0.85  Gradual deceleration (cubic ease-out)
+ *   0.85 – 1.00  Single spring: slight overshoot then settle on target
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -28,9 +25,9 @@ type Props = {
 export function SeasonReel({
   labels,
   targetLabel,
-  durationMs = 2800,
+  durationMs = 1400,
   rowHeightPx = 64,
-  cycles = 8,
+  cycles = 1,
   caption = "TODAY'S SLATE",
   onComplete,
 }: Props) {
@@ -44,11 +41,10 @@ export function SeasonReel({
   useEffect(() => {
     if (!labels.length) return;
     const targetIdx = Math.max(0, labels.indexOf(targetLabel));
-
-    // Total scroll distance so the center row of the 3-row window lands on
-    // the target. The window is offset by rowHeightPx so the middle row is
-    // centered; the strip needs to travel one extra row less.
     const finalDistance = (cycles * labels.length + targetIdx) * rowHeightPx;
+
+    // Spring overshoot: ~0.35 rows past target, then pulls back to land.
+    const springAmp = (rowHeightPx * 0.35) / finalDistance;
 
     const start = performance.now();
 
@@ -56,15 +52,20 @@ export function SeasonReel({
       const t = Math.min((now - start) / durationMs, 1);
 
       let progress: number;
-      if (t < 0.5) {
-        // Phase 1: fast spin with slight ease-in windup.
-        const localT = t / 0.5;
-        progress = Math.pow(localT, 1.2) * 0.68;
+      if (t < 0.55) {
+        // Phase 1: fast scroll through years, cubic ease-in.
+        const localT = t / 0.55;
+        progress = Math.pow(localT, 3) * 0.78;
+      } else if (t < 0.85) {
+        // Phase 2: gradual deceleration, cubic ease-out.
+        const localT = (t - 0.55) / 0.30;
+        progress = 0.78 + (1 - Math.pow(1 - localT, 3)) * 0.22;
       } else {
-        // Phase 2: quintic ease-out — very sharp, crisp stop at target.
-        const localT = (t - 0.5) / 0.5;
-        const eased = 1 - Math.pow(1 - localT, 5);
-        progress = 0.68 + eased * 0.32;
+        // Phase 3: single spring — overshoot then settle on target.
+        const localT = (t - 0.85) / 0.15;
+        // sin peak at localT=0.5, decays exponentially → one clean bounce
+        const spring = springAmp * Math.sin(localT * Math.PI) * Math.exp(-localT * 3);
+        progress = 1.0 + spring;
       }
 
       setTranslatePx(progress * finalDistance);
@@ -74,8 +75,8 @@ export function SeasonReel({
       } else {
         setTranslatePx(finalDistance);
         setSettled(true);
-        setTimeout(() => setRevealed(true), 80);
-        setTimeout(() => onCompleteRef.current?.(), 500);
+        setTimeout(() => setRevealed(true), 60);
+        setTimeout(() => onCompleteRef.current?.(), 420);
       }
     };
 
