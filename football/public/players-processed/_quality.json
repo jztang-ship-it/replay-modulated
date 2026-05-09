@@ -362,10 +362,8 @@
     "pctFaceTrans": 13
   },
   "18395": {
-    "quality": "cleanCutout",
-    "mode": "whiteStudio",
-    "pctTrans": 53.28,
-    "pctFaceTrans": 9.61
+    "quality": "manualBadCutout",
+    "mode": "manualBadCutout"
   },
   "19597": {
     "quality": "cleanCutout",
@@ -392,10 +390,8 @@
     "pctFaceTrans": 5.25
   },
   "22084": {
-    "quality": "cleanCutout",
-    "mode": "whiteStudio",
-    "pctTrans": 46.75,
-    "pctFaceTrans": 3.22
+    "quality": "manualBadCutout",
+    "mode": "manualBadCutout"
   },
   "22293": {
     "quality": "cleanCutout",
@@ -440,10 +436,8 @@
     "pctFaceTrans": 3.28
   },
   "30714": {
-    "quality": "cleanCutout",
-    "mode": "whiteStudio",
-    "pctTrans": 48.35,
-    "pctFaceTrans": 0.97
+    "quality": "manualBadCutout",
+    "mode": "manualBadCutout"
   },
   "31295": {
     "quality": "cleanCutout",
@@ -464,10 +458,8 @@
     "pctFaceTrans": 5.86
   },
   "32975": {
-    "quality": "cleanCutout",
-    "mode": "whiteStudio",
-    "pctTrans": 22.28,
-    "pctFaceTrans": 0
+    "quality": "manualBadCutout",
+    "mode": "manualBadCutout"
   },
   "33495": {
     "quality": "cleanCutout",

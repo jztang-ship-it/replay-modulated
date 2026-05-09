@@ -35,33 +35,35 @@ import { isSlateV2Enabled } from "@shared/featureFlags";
 import { FootballSlateChip } from "../components/FootballSlatePanel";
 
 // ── Tier gauge thresholds — football-specific FP cutoffs ──────────────────────
+// MUST match footballConfig.ts winTiers.minFp values — recalibrated 2026-05-07
+// after the GK multiplier removal + FWD active-play bumps.
 // Display names: SUB / STARTER / CAPTAIN / MOTM / LEGEND
 // WinTierKey mapping: ROOKIE / STARTER / ALL_STAR / MVP / LEGEND
 const GAUGE_THRESHOLDS: GaugeTierThreshold[] = [
-  { tier: "ROOKIE",   minFP: 130 },  // SUB
-  { tier: "STARTER",  minFP: 150 },  // STARTER
-  { tier: "ALL_STAR", minFP: 167 },  // CAPTAIN
-  { tier: "MVP",      minFP: 192 },  // MOTM
-  { tier: "LEGEND",   minFP: 215 },  // LEGEND
+  { tier: "ROOKIE",   minFP: 140 },  // SUB
+  { tier: "STARTER",  minFP: 160 },  // STARTER
+  { tier: "ALL_STAR", minFP: 185 },  // CAPTAIN
+  { tier: "MVP",      minFP: 210 },  // MOTM
+  { tier: "LEGEND",   minFP: 240 },  // LEGEND
 ];
 
 // ── GameBar tier rows — must stay in sync with FOOTBALL_WIN_TIERS ─────────────
 const WIN_TIERS: WinTierDisplay[] = [
-  { label: "SUB",     minFp: 130, color: "#94A3B8", glow: "rgba(148,163,184,0.5)"  },
-  { label: "STARTER", minFp: 150, color: "#10B981", glow: "rgba(16,185,129,0.6)"   },
-  { label: "CAPTAIN", minFp: 167, color: "#3B82F6", glow: "rgba(59,130,246,0.6)"   },
-  { label: "MOTM",    minFp: 192, color: "#F59E0B", glow: "rgba(245,158,11,0.7)"   },
-  { label: "LEGEND",  minFp: 215, color: "#EF4444", glow: "rgba(239,68,68,0.9)"    },
+  { label: "SUB",     minFp: 140, color: "#94A3B8", glow: "rgba(148,163,184,0.5)"  },
+  { label: "STARTER", minFp: 160, color: "#10B981", glow: "rgba(16,185,129,0.6)"   },
+  { label: "CAPTAIN", minFp: 185, color: "#3B82F6", glow: "rgba(59,130,246,0.6)"   },
+  { label: "MOTM",    minFp: 210, color: "#F59E0B", glow: "rgba(245,158,11,0.7)"   },
+  { label: "LEGEND",  minFp: 240, color: "#EF4444", glow: "rgba(239,68,68,0.9)"    },
 ];
 
 const LEGEND_DATA: LegendData = {
   payoutRows: [
-    { label: "LEGEND",  score: "215+", payout: "50x",  color: "#EF4444", bg: "rgba(239,68,68,0.12)",   border: "rgba(239,68,68,0.35)"   },
-    { label: "MOTM",    score: "192+", payout: "8x",   color: "#F59E0B", bg: "rgba(245,158,11,0.10)",  border: "rgba(245,158,11,0.3)"   },
-    { label: "CAPTAIN", score: "167+", payout: "3x",   color: "#3B82F6", bg: "rgba(59,130,246,0.10)",  border: "rgba(59,130,246,0.28)"  },
-    { label: "STARTER", score: "150+", payout: "1.5x", color: "#10B981", bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.25)"  },
-    { label: "SUB",     score: "130+", payout: "0.5x", color: "#94A3B8", bg: "rgba(148,163,184,0.08)", border: "rgba(148,163,184,0.22)" },
-    { label: "BUST",    score: "<130", payout: "—",    color: "#6B7280", bg: "rgba(107,114,128,0.06)", border: "rgba(107,114,128,0.18)" },
+    { label: "LEGEND",  score: "240+", payout: "50x",   color: "#EF4444", bg: "rgba(239,68,68,0.12)",   border: "rgba(239,68,68,0.35)"   },
+    { label: "MOTM",    score: "210+", payout: "18x",   color: "#F59E0B", bg: "rgba(245,158,11,0.10)",  border: "rgba(245,158,11,0.3)"   },
+    { label: "CAPTAIN", score: "185+", payout: "5x",    color: "#3B82F6", bg: "rgba(59,130,246,0.10)",  border: "rgba(59,130,246,0.28)"  },
+    { label: "STARTER", score: "160+", payout: "2x",    color: "#10B981", bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.25)"  },
+    { label: "SUB",     score: "140+", payout: "0.85x", color: "#94A3B8", bg: "rgba(148,163,184,0.08)", border: "rgba(148,163,184,0.22)" },
+    { label: "BUST",    score: "<140", payout: "—",     color: "#6B7280", bg: "rgba(107,114,128,0.06)", border: "rgba(107,114,128,0.18)" },
   ],
   bonusRows: [
     { label: "3-WIN STREAK",  condition: "3 wins in a row",  reward: "1.3x payout" },

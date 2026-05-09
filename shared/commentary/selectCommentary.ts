@@ -40,6 +40,7 @@ import basketballLibrary from "./libraries/basketball.json" with { type: "json" 
 import baseballLibrary from "./libraries/baseball.json" with { type: "json" };
 import { PLAYER_CULTURE as BASKETBALL_CULTURE } from "../../basketball/src/utils/playerCulture";
 import { PLAYER_CULTURE as BASEBALL_CULTURE } from "../../baseball/src/utils/playerCulture";
+import { FOOTBALL_PLAYER_CULTURE as FOOTBALL_CULTURE } from "../../football/src/utils/playerCulture";
 import { TEAM_FLAVOR as BASKETBALL_TEAM_FLAVOR } from "../../basketball/src/utils/teamFlavor";
 import { TEAM_FLAVOR as BASEBALL_TEAM_FLAVOR } from "../../baseball/src/utils/teamFlavor";
 
@@ -700,16 +701,31 @@ export interface CultureShape {
 const _cultureDb: Record<string, Record<string, CultureShape>> = {
   basketball: BASKETBALL_CULTURE as unknown as Record<string, CultureShape>,
   baseball: BASEBALL_CULTURE as unknown as Record<string, CultureShape>,
+  football: FOOTBALL_CULTURE as unknown as Record<string, CultureShape>,
 };
 
 function lookupCulture(name: string, sport: string): CultureShape | null {
   const db = _cultureDb[sport];
   if (!db) return null;
   const parts = name.trim().split(/\s+/);
-  const suffixes = new Set(["II", "III", "IV", "V", "Jr.", "Jr", "Sr.", "Sr"]);
+  // Strip generational suffixes (now incl. "Junior" / "Júnior" for Latin names).
+  const suffixes = new Set(["II", "III", "IV", "V", "Jr.", "Jr", "Sr.", "Sr", "Junior", "Júnior"]);
   while (parts.length > 1 && suffixes.has(parts[parts.length - 1])) parts.pop();
-  const last = (parts[parts.length - 1] ?? "").toLowerCase();
-  return db[last] ?? null;
+  // Try last word, second-to-last, and first word — covers:
+  //   - Standard "First Last" (basketball/baseball)
+  //   - Latin multi-surname (Messi/Cuccittini, Mbappé/Lottin → 2nd-to-last)
+  //   - Brazilian/Portuguese mononyms (Neymar / Vinícius — cultural key is first word)
+  const candidates = [
+    parts[parts.length - 1],
+    parts.length >= 2 ? parts[parts.length - 2] : null,
+    parts.length >= 3 ? parts[0] : null,
+  ];
+  for (const k of candidates) {
+    if (!k) continue;
+    const key = k.toLowerCase();
+    if (db[key]) return db[key];
+  }
+  return null;
 }
 
 // ── Team flavor lookup (basketball only) ───────────────────────────────────

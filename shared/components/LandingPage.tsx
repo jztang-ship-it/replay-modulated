@@ -46,12 +46,20 @@ export type LandingResolved = {
 export type LandingGridLayout = {
   /** CSS gridTemplateColumns for the card grid container. */
   templateColumns: string;
+  /** Optional CSS gridTemplateRows. Football's dice-5 layout uses two
+   *  explicit rows so the GK can span both. */
+  templateRows?: string;
   /** Optional explicit gridColumn per card index — used by baseball's 3+2
    *  centered layout where slots 3 and 4 sit between columns. */
   gridColumnFor?: (index: number) => string | undefined;
-  /** Optional maxWidth override (px). Default 340. Football's 2-1-2 layout
-   *  needs a smaller cap so 3 rows fit in the fixed-height landing without
-   *  overflowing on phones. */
+  /** Optional explicit gridRow per card index — used by football's dice-5
+   *  layout where slot 0 (GK) spans both rows. */
+  gridRowFor?: (index: number) => string | undefined;
+  /** Optional align-self per card index — used by football to vertically
+   *  center the GK in the middle column. */
+  alignSelfFor?: (index: number) => string | undefined;
+  /** Optional maxWidth override (px). Default 340. Football's dice-5 layout
+   *  uses a smaller cap so the corner cards stay readable. */
   maxWidth?: number;
 };
 
@@ -332,18 +340,23 @@ export function LandingPage({ adapter, onPlay, onShowProfile, onShowSignIn }: Pr
         <div style={{
           display: "grid",
           gridTemplateColumns: landingGridLayout.templateColumns,
+          ...(landingGridLayout.templateRows ? { gridTemplateRows: landingGridLayout.templateRows } : {}),
           gap: 6, width: "100%", maxWidth: landingGridLayout.maxWidth ?? 340,
         }}>
           {CARDS.map((c, i) => {
             const isFlipped = flipped.has(c.id);
             const card = playerCards[i];
             const gridColumn = landingGridLayout.gridColumnFor?.(i);
+            const gridRow = landingGridLayout.gridRowFor?.(i);
+            const alignSelf = landingGridLayout.alignSelfFor?.(i);
             return (
               <div
                 key={c.id}
                 onClick={() => toggleCard(c.id)}
                 style={{
                   ...(gridColumn ? { gridColumn } : {}),
+                  ...(gridRow ? { gridRow } : {}),
+                  ...(alignSelf ? { alignSelf: alignSelf as React.CSSProperties["alignSelf"] } : {}),
                   aspectRatio: "329 / 478",
                   perspective: "800px",
                   cursor: "pointer",
