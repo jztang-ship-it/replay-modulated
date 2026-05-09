@@ -108,11 +108,16 @@ export function classifyArchetype(input: CommentaryInput): ClassificationResult 
   };
 
   // ── Priority 0: Top Games override ─────────────────────────────────────
-  // T0 (record) and T2 (season) hijack archetype selection entirely.
-  // T1 (career) does NOT override — it flows through as a flavor detail
-  // and templates pick it up via `requires: ['season_best_stat']`.
+  // T0/T1/T2 all hijack archetype selection so the line ALWAYS leads with
+  // the achievement. Without an override, T1 used to flow through as a
+  // "flavor detail" but only ~7 lines required season_best_stat — so the
+  // career-high frequently went unmentioned. Now every achievement tier
+  // routes to a dedicated stat-first archetype.
   if (input.topGame?.tier === "record") {
     return { ...base, archetype: "historic_record" };
+  }
+  if (input.topGame?.tier === "career") {
+    return { ...base, archetype: "historic_career" };
   }
   if (input.topGame?.tier === "season") {
     return { ...base, archetype: "historic_season" };

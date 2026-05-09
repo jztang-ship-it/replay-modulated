@@ -211,6 +211,7 @@ export interface TemplateData {
 export type CommentaryArchetype =
   // ── Active (populated with lines) ──
   | "historic_record"            // T0 override — stat-first, all-time record
+  | "historic_career"            // T1 override — stat-first, player career-high
   | "historic_season"            // T2 override — stat-first, season top-10
   | "star_carry"
   | "star_carry_big"
