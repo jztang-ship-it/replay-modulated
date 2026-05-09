@@ -827,14 +827,14 @@ export function CardFront(props: CardFrontProps) {
 
       </div>{/* end clipped content */}
 
-      {/* SEASON + TEAM — sits in the top notch between salary (left) and
-          position (right). Quiet metadata styling — no pill, no border —
-          since it occupies the existing top band rather than calling itself
-          out. The 63.5%–68.5% band above the name strip is now reserved
-          exclusively for the achievement badge. Hidden when face-down to
-          prevent mirror bleed. */}
+      {/* SEASON + TEAM — sits INSIDE the notch cutout itself (above the
+          notch flat bottom at y=4.97%). Renders outside the card clip-path
+          so it floats in the notch area, like a trading-card year label.
+          The 63.5%–68.5% band above the name strip is reserved exclusively
+          for the achievement badge. Hidden when face-down to prevent
+          mirror bleed. */}
       {showTierColors && (team || seasonFmt) && (
-        <div style={{ position: "absolute", top: "5%", height: "6%", left: "30%", right: "30%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 35, pointerEvents: "none", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: "1%", height: "3.5%", left: "30%", right: "30%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 35, pointerEvents: "none", overflow: "hidden" }}>
           <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: 0.6, textTransform: "uppercase", color: "rgba(255,255,255,0.72)", whiteSpace: "nowrap", lineHeight: 1, textShadow: "0 1px 2px rgba(0,0,0,0.6)" }}>
             {team && seasonFmt ? `${team} · ${seasonFmt}` : (team || seasonFmt)}
           </span>
