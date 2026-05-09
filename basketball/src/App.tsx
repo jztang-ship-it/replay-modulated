@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { LandingPage } from "./components/LandingPage";
 import GameView from "./views/GameView";
+import { DailySeasonReelGate } from "./components/DailySeasonReelGate";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useFTUE } from "@shared/hooks/useFTUE";
 import { AuthProvider } from "@shared/auth/AuthProvider";
@@ -85,7 +86,9 @@ function AppInner() {
           onShowSignIn={() => setShowSignIn(true)}
         />
       ) : (
-        <GameView />
+        <DailySeasonReelGate bypass={isFTUE}>
+          <GameView />
+        </DailySeasonReelGate>
       )}
       {showSignIn && (
         <RegisterModal

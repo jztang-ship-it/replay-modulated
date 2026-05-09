@@ -3,6 +3,7 @@ import { BasketballSportConfig } from "./basketballConfig";
 import { registerRecordSources } from "@shared/data/recordDetector";
 import { NBA_SINGLE_GAME_RECORDS, STAT_ALIASES } from "@shared/data/nbaRecords";
 import { getPlayers, getLogsByKey } from "../engines/dataEngine";
+import { getActiveSeason } from "@shared/engines/dataEngine";
 import { tierFromSalary, DEFAULT_ECONOMY_CONFIG, type EconomyConfig } from "../engines/economyEngine";
 import { tierRank } from "@shared/theme";
 import topGames from "../../public/data/topGames_2425.json";
@@ -272,6 +273,17 @@ export class SportAdapter {
   /** Manual exclusion list (populated during data audit). */
   getExclusionList(): string[] {
     return (this.config as any).exclusionList ?? [];
+  }
+
+  /** Slate-cache discriminator. Without this, the slate cache key is
+   *  (sport, date, theme) — fine for one-pool sports, but basketball's
+   *  active season changes via the daily reel, and the cache would
+   *  return a slate of IDs from the previous season (which then get
+   *  filtered out of the visible anchors because getAnchors() looks at
+   *  the current season's pool). Including the active season key here
+   *  forces a per-season cache. */
+  getCacheNamespace(): string {
+    return getActiveSeason() ?? "";
   }
 }
 

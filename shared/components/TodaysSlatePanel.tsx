@@ -205,6 +205,21 @@ export function TodaysSlatePanel({ adapter }: { adapter: SlatePanelAdapter }) {
         onClick={handleExpandToggle}
         data-testid="slate-expand-toggle"
         aria-expanded={expanded}
+        style={{
+          marginTop: 12,
+          width: "100%",
+          padding: "10px 14px",
+          borderRadius: 10,
+          border: "1px solid rgba(201,168,76,0.55)",
+          background: "rgba(201,168,76,0.12)",
+          color: "#FFEA86",
+          fontFamily: "'Inter', system-ui, sans-serif",
+          fontSize: 12,
+          fontWeight: 900,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          cursor: "pointer",
+        }}
       >
         {expanded ? "Hide full slate" : "See full slate"}
       </button>

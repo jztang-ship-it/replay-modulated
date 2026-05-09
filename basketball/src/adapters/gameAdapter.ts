@@ -78,13 +78,16 @@ function toPlayerEval(p: any, projByBaseId: Map<string, number>): PlayerEval {
   };
 }
 
-/** Returns true if this player has at least one meaningful 2425 season game log.
- *  Must have 2425-specific logs with quickFP >= 8 AND minutes >= 10 (matches resolve filter). */
+/** Returns true if this player has at least one meaningful game log in the
+ *  active season. The dataEngine is per-season now (only one season's logs
+ *  in the Map at any time), so we look up by basePlayerId — the season-
+ *  suffixed key is no longer needed for disambiguation.
+ *  Threshold: quickFP >= 8 AND minutes >= 10 (matches resolve filter). */
 function hasValidLogs(basePlayerId: string, logsByKey: Map<string, any[]>): boolean {
   const base = basePlayerId.trim();
   if (!base) return false;
   const minMins = (sportAdapter as any).config?.historicalLogFilters?.minMinutes ?? 10;
-  const candidates = logsByKey.get(`${base}|2425`) ?? [];
+  const candidates = logsByKey.get(base) ?? [];
   if (candidates.length === 0) return false;
   return candidates.some((l: any) => {
     const s = l.stats ?? {};
@@ -112,7 +115,10 @@ function buildEvalPool(players: any[], logs: Map<string, any[]>, projByBaseId: M
   return result;
 }
 
-/** Build the bonus-eligible pool once: 2024-25 players with valid logs, tier from salary. */
+/** Build the bonus-eligible pool once: today's active-season players with
+ *  valid logs, tier from salary. Per-season dataEngine means getPlayers()
+ *  already returns only the active season's pool — no season-suffix filter
+ *  needed. */
 function buildBonusPool(): Array<{ basePlayerId: string; name: string; tier: string }> {
   const logs = getLogsByKey();
   const eco = getEconomyConfig();
@@ -121,7 +127,6 @@ function buildBonusPool(): Array<{ basePlayerId: string; name: string; tier: str
     (p: any) => hasValidLogs(playerKey(p), logs),
     (salary) => tierFromSalary(salary, eco),
     eco.salaryMin,
-    "_2425",
   );
 
   // When slate v2 is ON for basketball, restrict bonus picks to today's slate
@@ -146,14 +151,15 @@ function getDailyBonusMapNow(): Map<string, number> {
 export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
   const allPlayers = getPlayers();
   const logs = getLogsByKey();
-  const seasonFiltered = allPlayers.filter((p: any) => String(p.id ?? '').includes('_2425'));
+  // Per-season dataEngine: getPlayers() is already scoped to today's active
+  // season. No season-suffix filter needed.
 
   // Slate v2 gate (no-op when feature flag is OFF — returns input unchanged).
   // Each player needs basePlayerId for the gate; cast is safe because RawPlayer
   // includes optional basePlayerId and we fall back to id when missing.
   const slatePool = getDealPool(
     sportAdapter as any,
-    seasonFiltered.map((p: any) => ({ ...p, basePlayerId: String(p.basePlayerId ?? p.id ?? "").trim() })),
+    allPlayers.map((p: any) => ({ ...p, basePlayerId: String(p.basePlayerId ?? p.id ?? "").trim() })),
   );
   // Repeat limit — sliding window with pool-floor relaxation (no-op on first deal).
   const players = isSlateV2Enabled("basketball")
@@ -196,12 +202,12 @@ export async function redrawRoster({
 }): Promise<{ roster: PlayerCard[] }> {
   const allPlayers = getPlayers();
   const logs = getLogsByKey();
-  const seasonFiltered = allPlayers.filter((p: any) => String(p.id ?? '').includes('_2425'));
+  // Per-season dataEngine: pool is already scoped to today's active season.
 
   // Slate v2 gate + repeat-limit (no-op when feature flag is OFF).
   const slatePool = getDealPool(
     sportAdapter as any,
-    seasonFiltered.map((p: any) => ({ ...p, basePlayerId: String(p.basePlayerId ?? p.id ?? "").trim() })),
+    allPlayers.map((p: any) => ({ ...p, basePlayerId: String(p.basePlayerId ?? p.id ?? "").trim() })),
   );
   const players = isSlateV2Enabled("basketball")
     ? repeatLimit.filter(slatePool, DEFAULT_REPEAT_LIMIT)
