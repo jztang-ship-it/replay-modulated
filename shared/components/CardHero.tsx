@@ -38,6 +38,10 @@ export interface HeroSlot {
    *  white at 32px (basketball/baseball default). Football overrides with
    *  flag emoji + initials. */
   fallback?: React.ReactNode;
+  /** Per-sport img style overrides — merged on top of CardHero's defaults.
+   *  Football uses this for per-player portrait adjustments (scale + translate).
+   *  Basketball and baseball leave this undefined; the defaults apply. */
+  imageStyle?: Pick<React.CSSProperties, "top" | "left" | "width" | "height" | "objectPosition">;
 }
 
 interface CardHeroProps {
@@ -85,6 +89,7 @@ export function CardHero({ hero, initials, isActiveReveal }: CardHeroProps) {
             height: `${HEADSHOT_HEIGHT_PCT}%`,
             objectFit: "cover",
             objectPosition: `${HEADSHOT_OBJECT_X}% ${HEADSHOT_OBJECT_Y}%`,
+            ...hero.imageStyle,
             transformOrigin: "top center",
             imageRendering: "auto",
             opacity, transition: "opacity 0.3s ease",

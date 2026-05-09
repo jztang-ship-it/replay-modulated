@@ -29,9 +29,13 @@ export type { HeroSlot, StatTile };
 
 export interface CardFaceSlots {
   getHero: (card: PlayerCard) => HeroSlot;
-  getStatTiles: (card: PlayerCard) => StatTile[];
+  /** Required unless renderBack is provided. */
+  getStatTiles?: (card: PlayerCard) => StatTile[];
   getDisplayPosition: (card: PlayerCard) => React.ReactNode;
   showStatTileFp?: boolean;
+  /** When provided, replaces CardBack entirely. getStatTiles/showStatTileFp
+   *  are ignored. Football uses this for its pill-badge back layout. */
+  renderBack?: (card: PlayerCard, topGameTier: TopGameTier | null) => React.ReactNode;
 }
 
 export interface CardFaceProps extends Omit<CardShellProps, "renderFront" | "renderBack">, CardFaceSlots {
@@ -41,7 +45,7 @@ export interface CardFaceProps extends Omit<CardShellProps, "renderFront" | "ren
 
 export function CardFace(props: CardFaceProps) {
   const {
-    getHero, getStatTiles, getDisplayPosition, showStatTileFp,
+    getHero, getStatTiles, getDisplayPosition, showStatTileFp, renderBack: customRenderBack,
     topGameTier,
     ...shell
   } = props;
@@ -59,14 +63,17 @@ export function CardFace(props: CardFaceProps) {
           )}
         />
       )}
-      renderBack={(p: ShellBackProps) => (
-        <CardBack
-          card={p.card}
-          tiles={getStatTiles(p.card)}
-          showStatTileFp={!!showStatTileFp}
-          topGameTier={topGameTier ?? null}
-        />
-      )}
+      renderBack={(p: ShellBackProps) => {
+        if (customRenderBack) return <>{customRenderBack(p.card, topGameTier ?? null)}</>;
+        return (
+          <CardBack
+            card={p.card}
+            tiles={(getStatTiles ?? (() => []))(p.card)}
+            showStatTileFp={!!showStatTileFp}
+            topGameTier={topGameTier ?? null}
+          />
+        );
+      }}
     />
   );
 }
