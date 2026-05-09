@@ -11,7 +11,6 @@ import type { GamePhase, PlayerCard, Position } from "../adapters/types";
 import { PlayerCardShell, resetAllOverlays } from "@shared/components/PlayerCardShell";
 import type { CardFrontProps as ShellFrontProps, CardBackProps } from "@shared/components/PlayerCardShell";
 import { CardFront, type CardFrontHeroProps } from "@shared/components/CardFront";
-import { TopGameStamp } from "@shared/components/TopGameOverlay";
 import type { ShakeType } from "../hooks/useEmotionalReveal";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { headshotUrl } from "@shared/utils/headshotUrl";
@@ -184,28 +183,34 @@ function AchievementBack({
         </div>
         <div style={S.achContext}>{contextLine}</div>
       </div>
-      {(() => {
-        // Split the supporting line into two rows so it always fits at 9px
-        // font on a ~140-180px card width. ceil(N/2) on top, rest below.
-        const half = Math.ceil(supporting.length / 2);
-        const row1 = supporting.slice(0, half);
-        const row2 = supporting.slice(half);
-        const fmt = (s: { key: string; value: number }) => `${s.value} ${s.key}`;
-        return (
-          <div style={{ display: "flex", flexDirection: "column", gap: 1, marginTop: 4 }}>
-            <div style={S.achSupportRow}>{row1.map(fmt).join("  ·  ")}</div>
-            {row2.length > 0 && <div style={S.achSupportRow}>{row2.map(fmt).join("  ·  ")}</div>}
-          </div>
-        );
-      })()}
+      <StatRows stats={supporting} />
       <div style={S.tapHint}>TAP TO FLIP BACK</div>
     </div>
   );
 }
 
-// ── BackBStats ─────────────────────────────────────────────────────────────
+// ── Two-row stat list helper — shared by AchievementBack and BackBStats.
+// Splits N stats across 2 centered comma rows (ceil(N/2) on top).
+function StatRows({ stats }: { stats: Array<{ key: string; value: number }> }) {
+  const half = Math.ceil(stats.length / 2);
+  const row1 = stats.slice(0, half);
+  const row2 = stats.slice(half);
+  const fmt = (s: { key: string; value: number }) => `${s.value} ${s.key}`;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 1, marginTop: 4 }}>
+      <div style={S.achSupportRow}>{row1.map(fmt).join("  ·  ")}</div>
+      {row2.length > 0 && <div style={S.achSupportRow}>{row2.map(fmt).join("  ·  ")}</div>}
+    </div>
+  );
+}
 
-function BackBStats({ card, topGameTier, topGameResult }: { card: PlayerCard; topGameTier?: TopGameTier | null; topGameResult?: TopGameResult | null }) {
+// ── BackBStats — regular (non-achievement) back, same hero pattern ───────
+// FP is the hero number, badges sit between hero and stat rows, all 6
+// basketball stats split across 2 comma rows below. When this card has
+// a Top Game result, defers to AchievementBack which uses the achievement
+// stat as the hero instead of FP.
+
+function BackBStats({ card, topGameResult }: { card: PlayerCard; topGameTier?: TopGameTier | null; topGameResult?: TopGameResult | null }) {
   const gi = (card as any).gameInfo || {};
   const sl = (card as any).statLine || {};
   const posStats = useMemo(() => getPositionStats(card.position as Position, sl), [card.position, sl]);
@@ -215,10 +220,10 @@ function BackBStats({ card, topGameTier, topGameResult }: { card: PlayerCard; to
     ...t,
     key: KEY_ALIASES[t.key.toUpperCase()] ?? t.key.toUpperCase(),
   }));
-  const tiles = (() => {
+  const allStats = useMemo(() => {
     const byKey = new Map(raw.map(t => [t.key, t]));
-    return BASKETBALL_ORDER.map(k => byKey.get(k) ?? { key: k, label: k, value: 0 });
-  })();
+    return BASKETBALL_ORDER.map(k => ({ key: k, value: Number(byKey.get(k)?.value ?? 0) }));
+  }, [raw]);
 
   const actual = safeNumber((card as any).actualFp) ?? 0;
   const rawDate = gi.date || gi.kickoff_time || sl.kickoff_time || sl.date || "";
@@ -230,67 +235,43 @@ function BackBStats({ card, topGameTier, topGameResult }: { card: PlayerCard; to
   const badgesData: Array<{ icon: string; label: string; fp: number }> = Array.isArray((card as any).achievements) ? (card as any).achievements.filter(Boolean) : [];
   const badgeFpBonus = badgesData.reduce((s, b) => s + (b.fp ?? 0), 0);
   const hasStats = Object.keys(sl).length > 0;
-  const allZero = tiles.every(t => Number(t.value) === 0);
+  const allZero = allStats.every(s => s.value === 0);
 
-  // Achievement-mode back: when this card has a Top Game result, the back
-  // becomes a single-stat hero ("53 PTS · CAREER HIGH") instead of the regular
-  // tile grid. Falls back to normal layout if there's no statLine to feature.
+  // Achievement-mode: defer entirely to AchievementBack.
   const isAchievement = !!topGameResult?.tier && !!topGameResult.primaryReason && hasStats;
   if (isAchievement) {
     return <AchievementBack card={card} result={topGameResult!} dateStr={dateStr} oppStr={oppStr} />;
   }
 
-  const hasTopGameStamp = !!topGameTier;
-
   return (
     <div style={{ ...S.backWrap, position: "relative" }}>
-      {/* Static Top Games stamp — slots between the FP value and the badges row,
-          on the right side. Doesn't cover the date/opponent header or the FP
-          number; reads as a marker on the most prominent stat row. */}
       <div style={S.backTopRow}>
         <div style={S.backDate}>{dateStr || "—"}</div>
         <div style={S.backOpp}>{oppStr || "—"}</div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 3, minWidth: 0 }}>
-          <span style={S.fpLabel}>FP</span>
-          <span style={{ ...S.fpValue }}>{round1(actual)}</span>
-          {badgeFpBonus !== 0 && (
-            <span style={{ fontSize: 9, fontWeight: 700, color: badgeFpBonus > 0 ? "#FFD700" : "#FF6B6B", alignSelf: "flex-end", marginBottom: 1 }}>({badgeFpBonus > 0 ? "+" : ""}{badgeFpBonus})</span>
-          )}
-        </div>
-        {hasTopGameStamp && (
-          <div style={{ flexShrink: 0, transform: "rotate(-4deg) scale(0.7)", transformOrigin: "right center" }}>
-            <TopGameStamp tier={topGameTier!} />
-          </div>
-        )}
-      </div>
-      {/* Earned badges — emoji-only inline row, aggressively compact */}
-      <div style={{ minHeight: 10, display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
-        {badgesData.length > 0 ? (
-          <>
-            {badgesData.slice(0, 8).map((b: any, i: number) => (
-              <span key={b.id ?? b.label ?? i} title={`${b.label} (${b.fp > 0 ? "+" : ""}${b.fp})`} style={{ fontSize: 7, lineHeight: 1 }}>{b.icon}</span>
-            ))}
-          </>
-        ) : (
-          <span style={{ fontSize: 7, fontWeight: 600, color: "rgba(255,255,255,0.25)" }}>No badges</span>
-        )}
-      </div>
-      <div style={S.divider} />
       {!hasStats || allZero ? (
         <div style={S.noStatsWrap}><div style={S.noStatsText}>No game log</div></div>
-      ) : tiles.length > 0 ? (
-        <div style={S.tilesGrid}>
-          {tiles.slice(0, 9).map(s => (
-            <div key={s.key} style={S.tile}>
-              <div style={S.tileLabel}>{s.label}</div>
-              <div style={S.tileValue}>{String(s.value)}</div>
-            </div>
-          ))}
-        </div>
       ) : (
-        <div style={S.noStatsWrap}><div style={S.noStatsText}>No game log</div></div>
+        <>
+          <div style={S.achWrap}>
+            <div style={{ ...S.achHeadline, fontSize: 56, letterSpacing: -1 }}>
+              <span style={S.achHeadlineNum}>{round1(actual)}</span>
+              <span style={S.achHeadlineUnit}> FP</span>
+              {badgeFpBonus !== 0 && (
+                <span style={{ ...S.achHeadlineUnit, color: badgeFpBonus > 0 ? "#FFD700" : "#FF6B6B", marginLeft: 4 }}>
+                  {badgeFpBonus > 0 ? "+" : ""}{badgeFpBonus}
+                </span>
+              )}
+            </div>
+          </div>
+          {/* Badges between hero and stat rows. Emoji-only, max 8. */}
+          <div style={{ minHeight: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 3, flexWrap: "wrap", marginTop: 4 }}>
+            {badgesData.slice(0, 8).map((b, i) => (
+              <span key={b.id ?? b.label ?? i} title={`${b.label} (${b.fp > 0 ? "+" : ""}${b.fp})`} style={{ fontSize: 11, lineHeight: 1 }}>{b.icon}</span>
+            ))}
+          </div>
+          <StatRows stats={allStats} />
+        </>
       )}
       <div style={S.tapHint}>TAP TO FLIP BACK</div>
     </div>
@@ -302,13 +283,6 @@ const S: Record<string, React.CSSProperties> = {
   backTopRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 },
   backDate: { fontSize: 11, fontWeight: 900, color: "rgba(255,255,255,0.90)" },
   backOpp: { fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.65)", textAlign: "right" },
-  fpLabel: { fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.65)" },
-  fpValue: { fontSize: 18, fontWeight: 900, color: "rgba(255,255,255,0.95)" },
-  divider: { height: 1, background: "rgba(255,255,255,0.08)" },
-  tilesGrid: { flex: 1, display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 3, alignContent: "start", minWidth: 0 },
-  tile: { borderRadius: 6, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", padding: "2px 5px", display: "flex", flexDirection: "column", gap: 1, minWidth: 0 },
-  tileLabel: { fontSize: 7, fontWeight: 900, color: "rgba(255,255,255,0.55)", lineHeight: "9px" },
-  tileValue: { fontSize: 12, fontWeight: 900, color: "rgba(255,255,255,0.92)" },
   tapHint: { fontSize: 8, fontWeight: 900, color: "rgba(255,255,255,0.30)", letterSpacing: 0.4, textAlign: "center" },
   noStatsWrap: { flex: 1, display: "flex", flexDirection: "column", gap: 10 },
   noStatsText: { fontSize: 12, fontWeight: 900, color: "rgba(255,255,255,0.70)" },
