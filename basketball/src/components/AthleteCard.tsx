@@ -143,8 +143,10 @@ function AchievementBack({
     ? `${COUNT_PREFIX[featured.length] ?? `${featured.length}-WAY`} ${baseContext}`
     : baseContext;
 
-  // Supporting stats — every non-featured stat in BASKETBALL_ORDER, even
-  // zeros, so the line always reads as a complete stat line.
+  // Supporting stats — FP first (since the achievement headline replaced it
+  // as the hero), then every non-featured stat in BASKETBALL_ORDER, including
+  // zeros, so the row always reads as a complete stat line.
+  const actual = safeNumber((card as any).actualFp) ?? 0;
   const posStats = getPositionStats(card.position as Position, sl);
   const fallbackStats = getFallbackStats(sl);
   const raw = (posStats.length > 0 ? posStats : fallbackStats).map(t => ({
@@ -153,9 +155,10 @@ function AchievementBack({
   }));
   const supporting = (() => {
     const byKey = new Map(raw.map(t => [t.key, t]));
-    return BASKETBALL_ORDER
+    const others = BASKETBALL_ORDER
       .filter(k => !featuredKeys.has(k))
       .map(k => ({ key: k, value: Number(byKey.get(k)?.value ?? 0) }));
+    return [{ key: "FP", value: round1(actual) }, ...others];
   })();
 
   // Number font scales down as more achievements stack into one headline.
