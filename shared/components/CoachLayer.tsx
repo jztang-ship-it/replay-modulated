@@ -236,17 +236,16 @@ function unionAnchorGaugeBalanceRect(anchorId: string): DOMRect | null {
   return { top, bottom, left, right, width: right - left, height: bottom - top, x: left, y: top, toJSON: () => ({}) } as DOMRect;
 }
 
-/** Anchor card + commentary area only — no info row, no gauge bar */
+/** Anchor card only — commentary is z-indexed above the dim layer (z 1100,
+ *  see TierGauge), so we don't need to union it into the spotlight rect.
+ *  Unioning produced a wide horizontal band that bled into adjacent cards
+ *  on football's dice-5 (and lit up the whole grid on basketball's 3x2);
+ *  card-only keeps the focal point on the anchor card while the commentary
+ *  text stays fully visible through its own z-index. */
 function unionAnchorAndCommentaryRect(anchorId: string): DOMRect | null {
   const cardEl = document.querySelector(`[data-ftue-card="${anchorId}"]`);
-  const commentaryEl = document.querySelector('[data-ftue-anchor="commentary"]');
   if (!cardEl) return null;
-  const rects = [cardEl, commentaryEl].filter(Boolean).map(el => el!.getBoundingClientRect());
-  const top = Math.min(...rects.map(r => r.top));
-  const bottom = Math.max(...rects.map(r => r.bottom));
-  const left = Math.min(...rects.map(r => r.left));
-  const right = Math.max(...rects.map(r => r.right));
-  return { top, bottom, left, right, width: right - left, height: bottom - top, x: left, y: top, toJSON: () => ({}) } as DOMRect;
+  return cardEl.getBoundingClientRect();
 }
 
 function resolveAnchorElement(anchor: BubbleAnchor | undefined, anchorCardId: string): HTMLElement | null {

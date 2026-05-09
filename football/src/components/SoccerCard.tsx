@@ -80,12 +80,12 @@ import { getPortraitAdjustment } from "../data/playerPortraitAdjustments";
 // For ONE-OFF fixes on a specific player, use playerPortraitAdjustments.ts
 // rather than retuning the global defaults.
 
-const HEADSHOT_TOP_PCT = 12;       // matches basketball (12)
-const HEADSHOT_LEFT_PCT = -5;      // matches basketball (-5)
-const HEADSHOT_WIDTH_PCT = 108;    // Mbappé reference (was 110 / basketball)
-const HEADSHOT_HEIGHT_PCT = 98;    // Mbappé reference (was 100 / basketball)
-const HEADSHOT_OBJECT_X = 50;      // 50 = horizontal center (matches basketball)
-const HEADSHOT_OBJECT_Y = 14;      // Mbappé reference (was 10 / basketball)
+const HEADSHOT_TOP_PCT = 12;       // matches basketball
+const HEADSHOT_LEFT_PCT = -5;      // matches basketball
+const HEADSHOT_WIDTH_PCT = 110;    // matches basketball
+const HEADSHOT_HEIGHT_PCT = 100;   // matches basketball
+const HEADSHOT_OBJECT_X = 50;      // matches basketball
+const HEADSHOT_OBJECT_Y = 10;      // matches basketball
 
 // Debug overlay: enabled at runtime via either
 //   ?debugFootballImages=1   (URL query param)

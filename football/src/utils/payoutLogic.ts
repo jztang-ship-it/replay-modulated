@@ -34,14 +34,15 @@ export type { StreakTier };
 export type { WinTierKey };
 export type WinTier = WinTierKey;
 
-/** Football win tier map. Keys are shared WinTierKey; display names live in GameView. */
+/** Football win tier map. Keys are shared WinTierKey; display names live in GameView.
+ *  Recalibrated 2026-05-07 — MUST stay in sync with footballConfig.ts winTiers. */
 export const FOOTBALL_WIN_TIERS: WinTierMap = {
-  LEGEND:   { minFp: 215, multiplier: 50  },  // LEGEND tier
-  MVP:      { minFp: 192, multiplier: 8   },  // MOTM tier
-  ALL_STAR: { minFp: 167, multiplier: 3   },  // CAPTAIN tier
-  STARTER:  { minFp: 150, multiplier: 1.5 },  // STARTER tier
-  ROOKIE:   { minFp: 130, multiplier: 0.5 },  // SUB tier
-  BUST:     { minFp: 0,   multiplier: 0   },
+  LEGEND:   { minFp: 240, multiplier: 50   },  // LEGEND tier
+  MVP:      { minFp: 210, multiplier: 18   },  // MOTM tier
+  ALL_STAR: { minFp: 185, multiplier: 5    },  // CAPTAIN tier
+  STARTER:  { minFp: 160, multiplier: 2    },  // STARTER tier
+  ROOKIE:   { minFp: 140, multiplier: 0.85 },  // SUB tier
+  BUST:     { minFp: 0,   multiplier: 0    },
 };
 
 export function calculateWinTier(totalFp: number): WinTierKey {

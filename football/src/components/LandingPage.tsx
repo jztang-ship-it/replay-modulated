@@ -3,10 +3,11 @@
  *
  * Renders @shared/components/LandingPage with a football-flavored adapter:
  * the demo card list, the SoccerCard renderer, no headshot URL (flag + name
- * fallback handled inside SoccerCard's FootballHero), a 4-column grid mapped
- * to a 2-1-2 layout (mirrors the in-game RosterGrid) for the 5 launch cards,
- * and no audio bed at launch. Tier is derived from salary because football
- * doesn't ship per-card tier overrides on the landing page.
+ * fallback handled inside SoccerCard's FootballHero), the dice-5 grid layout
+ * (4 corner cards + GK floating in the centre column) matching the in-game
+ * RosterGrid in football/src/views/GameView.tsx, and no audio bed at launch.
+ * Tier is derived from salary because football doesn't ship per-card tier
+ * overrides on the landing page.
  */
 import { useEffect, useMemo, useState } from "react";
 import { LandingPage as SharedLandingPage } from "@shared/components/LandingPage";
@@ -70,19 +71,37 @@ export function LandingPage({ onPlay, onShowProfile, onShowSignIn }: Props) {
     // type omits "RED" while shared's includes it. Football data never produces
     // RED tier cards. Cast bridges the structural mismatch safely.
     landingCardComponent: SoccerCard as unknown as LandingAdapter["landingCardComponent"],
-    // 2-1-2 layout via a 4-column grid: each card spans 2 columns. Slot 2
-    // (the middle row) sits centered across cols 2-4 so it visually aligns
-    // between the two cards above and below.
+    // Dice-5 layout — 4 cards in the corners, GK floating in the centre
+    // column spanning both rows. Mirrors the in-game RosterGrid CSS in
+    // football/src/views/GameView.tsx (.fb-dice5 block). Slot indices map
+    // to the same roster positions everywhere in the game:
+    //   0 = GK     (centre col, rows 1-2, vertically centred)
+    //   1 = DEF    (col 1 row 1)
+    //   2 = MID    (col 1 row 2)
+    //   3 = FWD    (col 3 row 2)
+    //   4 = FLEX   (col 3 row 1)
     landingGridLayout: {
-      templateColumns: "repeat(4, 1fr)",
+      // Auto rows (no explicit templateRows) — same as basketball. Forcing
+      // "1fr 1fr" combined with the GK rowSpan + each card's aspect-ratio
+      // collapses the corner cards to ~half basketball's size. Auto rows
+      // size to content so each card renders at the same width/height as
+      // basketball; only the grid positions differ.
+      templateColumns: "repeat(3, minmax(0, 1fr))",
       gridColumnFor: (i) => (
-        i === 0 ? "1 / 3" :
-        i === 1 ? "3 / 5" :
-        i === 2 ? "2 / 4" :
-        i === 3 ? "1 / 3" :
-        i === 4 ? "3 / 5" : undefined
+        i === 0 ? "2" :
+        i === 1 ? "1" :
+        i === 2 ? "1" :
+        i === 3 ? "3" :
+        i === 4 ? "3" : undefined
       ),
-      maxWidth: 240,
+      gridRowFor: (i) => (
+        i === 0 ? "1 / span 2" :
+        i === 1 ? "1" :
+        i === 2 ? "2" :
+        i === 3 ? "2" :
+        i === 4 ? "1" : undefined
+      ),
+      alignSelfFor: (i) => (i === 0 ? "center" : undefined),
     },
     landingAudioBedSrc: null,
     landingTierFor: (d) => tierFromSalary(d.salary, DEFAULT_ECONOMY_CONFIG),
