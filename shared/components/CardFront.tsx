@@ -826,13 +826,15 @@ export function CardFront(props: CardFrontProps) {
 
       </div>{/* end clipped content */}
 
-      {/* SEASON + TEAM — small ribbon just above the BLACK STRIP (which starts
-          at 72%). Solid dark pill with gold border so it reads cleanly over
-          jersey colors that match the card tier. Hidden when card is
-          face-down to prevent mirror bleed. */}
+      {/* SEASON + TEAM — sits in the top notch between salary (left) and
+          position (right). Quiet metadata styling — no pill, no border —
+          since it occupies the existing top band rather than calling itself
+          out. The 63.5%–68.5% band above the name strip is now reserved
+          exclusively for the achievement badge. Hidden when face-down to
+          prevent mirror bleed. */}
       {showTierColors && (team || seasonFmt) && (
-        <div style={{ position: "absolute", top: "63.5%", height: "5%", left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 35, pointerEvents: "none", overflow: "hidden" }}>
-          <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 0.6, textTransform: "uppercase", color: "#FFEA86", whiteSpace: "nowrap", lineHeight: 1, padding: "2.5px 8px", background: "rgba(8,12,20,0.92)", border: "1px solid rgba(201,168,76,0.55)", borderRadius: 4, boxShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
+        <div style={{ position: "absolute", top: "5%", height: "6%", left: "28%", right: "28%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 35, pointerEvents: "none", overflow: "hidden" }}>
+          <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: 0.6, textTransform: "uppercase", color: "rgba(255,255,255,0.72)", whiteSpace: "nowrap", lineHeight: 1, textShadow: "0 1px 2px rgba(0,0,0,0.6)" }}>
             {team && seasonFmt ? `${team} · ${seasonFmt}` : (team || seasonFmt)}
           </span>
         </div>
