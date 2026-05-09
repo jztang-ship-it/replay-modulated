@@ -24,9 +24,13 @@ interface SlateChipProps {
   children: React.ReactNode;
   /** Optional sport key for analytics dimension. */
   sportKey?: string;
+  /** Optional season label (e.g. "2024-25") shown alongside the chip
+   *  identity. For per-season pools (basketball's daily season pick),
+   *  this is what tells the user *which* year today's pool is from. */
+  seasonLabel?: string;
 }
 
-export function SlateChip({ label, playerCount, children, sportKey }: SlateChipProps) {
+export function SlateChip({ label, playerCount, children, sportKey, seasonLabel }: SlateChipProps) {
   const [open, setOpen] = useState(false);
 
   const handleOpen = useCallback(() => {
@@ -86,6 +90,12 @@ export function SlateChip({ label, playerCount, children, sportKey }: SlateChipP
         }}
       >
         <span style={{ color: "#C9A84C", fontWeight: 900 }}>{label}</span>
+        {seasonLabel && (
+          <>
+            <span aria-hidden="true" style={{ opacity: 0.6 }}>·</span>
+            <span style={{ color: "#FFFFFF", fontWeight: 900 }}>{seasonLabel}</span>
+          </>
+        )}
         <span aria-hidden="true" style={{ opacity: 0.6 }}>·</span>
         <span style={{ fontVariantNumeric: "tabular-nums" }}>{playerCount} players</span>
       </button>
@@ -157,7 +167,7 @@ export function SlateChip({ label, playerCount, children, sportKey }: SlateChipP
                   textTransform: "uppercase",
                 }}
               >
-                {label}
+                {label}{seasonLabel ? <span style={{ color: "#FFFFFF", marginLeft: 8 }}>· {seasonLabel}</span> : null}
               </span>
               <button
                 type="button"

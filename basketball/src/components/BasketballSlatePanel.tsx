@@ -17,7 +17,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { TodaysSlatePanel, type SlatePanelAdapter } from "@shared/components/TodaysSlatePanel";
 import { useDailySlate, slateSignature } from "@shared/hooks/useDailySlate";
 import { SlateChip } from "@shared/components/SlateChip";
-import { ensureLoaded, getPlayers } from "@shared/engines/dataEngine";
+import { ensureLoaded, getPlayers, getActiveSeason } from "@shared/engines/dataEngine";
 import { headshotUrl } from "@shared/utils/headshotUrl";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { getTodaysStars } from "../adapters/gameAdapter";
@@ -229,6 +229,16 @@ export function BasketballSlateChip() {
   return <BasketballSlateChipInner playerIndex={playerIndex} />;
 }
 
+/** "2425" → "2024-25", "9697" → "1996-97". NBA season encoding: first
+ *  two chars ≥ 73 → 19XX, else 20XX. */
+function formatSeasonKey(key: string): string {
+  if (!/^\d{4}$/.test(key)) return key;
+  const a = key.slice(0, 2);
+  const b = key.slice(2, 4);
+  const century = Number(a) >= 73 ? "19" : "20";
+  return `${century}${a}-${b}`;
+}
+
 function BasketballSlateChipInner({ playerIndex }: { playerIndex: Map<string, ResolvedPlayer> }) {
   const resolvePlayer = useCallback(
     (id: string) => {
@@ -240,11 +250,13 @@ function BasketballSlateChipInner({ playerIndex }: { playerIndex: Map<string, Re
   );
   const slate = useDailySlate(sportAdapter as any, resolvePlayer);
   const playerCount = slate.players.length;
+  const seasonLabel = formatSeasonKey(getActiveSeason() ?? "");
   return (
     <SlateChip
       label={slate.signature.label}
       playerCount={playerCount}
       sportKey="basketball"
+      seasonLabel={seasonLabel || undefined}
     >
       <BasketballSlatePanel />
     </SlateChip>

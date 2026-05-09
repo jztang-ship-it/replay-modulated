@@ -602,10 +602,15 @@ export function CardFront(props: CardFrontProps) {
             const isLightAccent = derivedTier === "GREEN" || derivedTier === "BLUE" || derivedTier === "WHITE";
             const textColor = isLightAccent ? "#1A1A1A" : "#FFEA86";
             const MAX_VISIBLE = 8;
-            const visibleBadges = hasBadges ? badges!.slice(0, MAX_VISIBLE) : [];
-            const overflowCount = hasBadges ? Math.max(0, (badges?.length ?? 0) - MAX_VISIBLE) : 0;
+            // Held cards must keep the accent strip empty until their reveal
+            // gate fires — same condition the FP value uses (heldFpVisible
+            // || fpRevealed). Without this, bonus pill + badges leak in the
+            // moment the card is held, before the user reveals the hand.
+            const accentRevealed = !isHeldCard || heldFpVisible || fpRevealed;
+            const visibleBadges = hasBadges && accentRevealed ? badges!.slice(0, MAX_VISIBLE) : [];
+            const overflowCount = hasBadges && accentRevealed ? Math.max(0, (badges?.length ?? 0) - MAX_VISIBLE) : 0;
             const totalBonus = badgeBonusFp + dailyBonus;
-            const showBonus = isShowingActualFp && totalBonus !== 0;
+            const showBonus = isShowingActualFp && totalBonus !== 0 && accentRevealed;
             return (
               <>
                 {visibleBadges.map((badge, i) => (
@@ -821,11 +826,14 @@ export function CardFront(props: CardFrontProps) {
 
       </div>{/* end clipped content */}
 
-      {/* SEASON + TEAM — hidden when card is face-down to prevent mirror bleed */}
-      {showTierColors && (
-        <div style={{ position: "absolute", top: 0, height: "5.8%", left: "34.2%", right: "36.4%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 35, pointerEvents: "none", overflow: "hidden" }}>
-          <span style={{ fontSize: 5.5, fontWeight: 900, letterSpacing: 0.5, textTransform: "uppercase", color: "rgba(255,255,255,0.92)", whiteSpace: "nowrap", lineHeight: 1 }}>
-            {team ? `${team} ${seasonFmt}` : seasonFmt}
+      {/* SEASON + TEAM — small ribbon just above the BLACK STRIP (which starts
+          at 72%). Solid dark pill with gold border so it reads cleanly over
+          jersey colors that match the card tier. Hidden when card is
+          face-down to prevent mirror bleed. */}
+      {showTierColors && (team || seasonFmt) && (
+        <div style={{ position: "absolute", top: "63.5%", height: "5%", left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 35, pointerEvents: "none", overflow: "hidden" }}>
+          <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 0.6, textTransform: "uppercase", color: "#FFEA86", whiteSpace: "nowrap", lineHeight: 1, padding: "2.5px 8px", background: "rgba(8,12,20,0.92)", border: "1px solid rgba(201,168,76,0.55)", borderRadius: 4, boxShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
+            {team && seasonFmt ? `${team} · ${seasonFmt}` : (team || seasonFmt)}
           </span>
         </div>
       )}
