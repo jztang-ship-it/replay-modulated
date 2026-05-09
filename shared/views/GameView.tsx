@@ -972,7 +972,7 @@ export function GameView({ adapter }: Props) {
       gameDate: String(c?.gameInfo?.date ?? ""),
     }));
     const star = selectStar(commentaryRoster as any);
-    const topGame = (featureFlags.topGames && star?.statLine)
+    const realTopGame = (featureFlags.topGames && star?.statLine)
       ? detectTopGame(
           star.statLine as any,
           star.basePlayerId ?? "",
@@ -981,6 +981,32 @@ export function GameView({ adapter }: Props) {
           sportKey,
           )
         : { tier: null as null, primaryReason: null, allReasons: [] as any[] };
+
+    // DEV-ONLY force hook: ?forceAchievementBack=career|record|season
+    // Synthesizes a TopGameResult on the star card by picking its highest
+    // statLine value as the featured stat. Lets QA preview the achievement
+    // back layout without needing a real qualifying game.
+    let topGame: any = realTopGame;
+    if (typeof window !== "undefined") {
+      const forced = new URLSearchParams(window.location.search).get("forceAchievementBack");
+      if (forced && (forced === "career" || forced === "record" || forced === "season") && star?.statLine) {
+        const sl: Record<string, any> = star.statLine as any;
+        const candidates = ["pts", "reb", "ast", "blk", "stl", "threes"];
+        let topKey = "pts"; let topVal = 0;
+        for (const k of candidates) {
+          const v = Number(sl[k] ?? 0);
+          if (v > topVal) { topVal = v; topKey = k; }
+        }
+        if (topVal > 0) {
+          topGame = {
+            tier: forced as any,
+            primaryReason: { category: topKey, value: topVal, label: `forced ${forced} (${topVal} ${topKey})` },
+            allReasons: [],
+          };
+        }
+      }
+    }
+
     return { star, topGame };
   }, [roster, sportKey]);
   topGameInfoHolder.current = topGameInfo;
