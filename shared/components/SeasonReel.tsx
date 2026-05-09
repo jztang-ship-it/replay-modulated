@@ -1,47 +1,34 @@
 /**
  * shared/components/SeasonReel.tsx
  *
- * Slot-machine-style year reveal. Mounts at game entry once per UTC day,
- * fast-spins through all season labels, decelerates, lands on the
- * predetermined target with a small spring oscillation, then signals
- * completion so gameplay can proceed.
+ * Slot-machine-style year reveal. Shows 3 rows (prev / target / next) so
+ * the scroll reads as a physical drum. Decelerates with a quintic ease-out
+ * that stops crisply on the target — no spring oscillation.
+ *
+ * Animation phases (2.8 s default):
+ *   0.00 – 0.50  Fast spin (slight ease-in windup), covers 68 % of distance
+ *   0.50 – 1.00  Quintic ease-out deceleration, lands exactly on target
  *
  * The choice is predetermined by `pickTodaysSeason` — the reel is purely
- * the reveal animation. Animation does not change which season is picked.
- *
- * Animation phases (4 seconds total by default):
- *   0.00 - 0.55  Fast spin (linear-ish), covers ~75% of the rolling distance
- *   0.55 - 0.92  Deceleration (ease-out cubic)
- *   0.92 - 1.00  Damped spring oscillation around the target — overshoots,
- *                pulls back, overshoots smaller, settles
- *
- * Implementation: pure RAF, no animation library. Single composed easing
- * function so phase boundaries don't visibly stutter.
+ * the reveal animation.
  */
 
 import { useEffect, useRef, useState } from "react";
 
 type Props = {
-  /** All season labels in display order (typically chronological). */
   labels: string[];
-  /** The predetermined winner — must be present in `labels`. */
   targetLabel: string;
-  /** Total animation duration in ms. */
   durationMs?: number;
-  /** Pixel height of one reel row. */
   rowHeightPx?: number;
-  /** How many full passes through the label list before landing. */
   cycles?: number;
-  /** Caption above the reel; defaults to "TODAY'S SLATE". */
   caption?: string;
-  /** Fired once after the spring settles. */
   onComplete?: () => void;
 };
 
 export function SeasonReel({
   labels,
   targetLabel,
-  durationMs = 4000,
+  durationMs = 2800,
   rowHeightPx = 64,
   cycles = 8,
   caption = "TODAY'S SLATE",
@@ -57,11 +44,10 @@ export function SeasonReel({
   useEffect(() => {
     if (!labels.length) return;
     const targetIdx = Math.max(0, labels.indexOf(targetLabel));
-    if (targetIdx < 0) return;
 
-    // We render N+1 copies of the label list stacked, so the reel can roll
-    // through several full cycles before landing on the target's last copy.
-    // Final translateY = (cycles * length + targetIdx) * rowHeight.
+    // Total scroll distance so the center row of the 3-row window lands on
+    // the target. The window is offset by rowHeightPx so the middle row is
+    // centered; the strip needs to travel one extra row less.
     const finalDistance = (cycles * labels.length + targetIdx) * rowHeightPx;
 
     const start = performance.now();
@@ -69,34 +55,16 @@ export function SeasonReel({
     const frame = (now: number) => {
       const t = Math.min((now - start) / durationMs, 1);
 
-      // Composed eased progress:
-      //   - Fast spin (eased linearly with slight ease-in for windup feel)
-      //   - Deceleration via ease-out cubic
-      //   - Spring oscillation as t → 1
       let progress: number;
-      if (t < 0.55) {
-        // Phase 1: fast spin. We use a slightly ease-in curve so the start
-        // feels like a windup, not an instant blur.
-        const localT = t / 0.55;
-        const eased = Math.pow(localT, 1.4); // gentle ease-in
-        progress = eased * 0.75;
-      } else if (t < 0.92) {
-        // Phase 2: decel. Cover the remaining 0.75 → 0.99 of distance with
-        // a cubic ease-out, leaving a tiny bit for the spring band.
-        const localT = (t - 0.55) / 0.37;
-        const eased = 1 - Math.pow(1 - localT, 3);
-        progress = 0.75 + eased * 0.24;
+      if (t < 0.5) {
+        // Phase 1: fast spin with slight ease-in windup.
+        const localT = t / 0.5;
+        progress = Math.pow(localT, 1.2) * 0.68;
       } else {
-        // Phase 3: damped spring oscillation around 1.0. Critical-damped
-        // cosine: amplitude * exp(-damping * τ) * cos(freq * τ).
-        // Total drift adds up to land cleanly at progress = 1 by t = 1.
-        const localT = (t - 0.92) / 0.08;
-        const damping = 5;
-        const freq = 16;
-        // Amplitude is small so oscillation overshoots by ~1 row max.
-        const amplitudePct = (rowHeightPx * 1.0) / finalDistance;
-        const oscillation = amplitudePct * Math.exp(-damping * localT) * Math.cos(freq * localT);
-        progress = 0.99 + 0.01 * localT + oscillation;
+        // Phase 2: quintic ease-out — very sharp, crisp stop at target.
+        const localT = (t - 0.5) / 0.5;
+        const eased = 1 - Math.pow(1 - localT, 5);
+        progress = 0.68 + eased * 0.32;
       }
 
       setTranslatePx(progress * finalDistance);
@@ -104,13 +72,10 @@ export function SeasonReel({
       if (t < 1) {
         rafRef.current = requestAnimationFrame(frame);
       } else {
-        // Snap to exact target pixel — eliminates any sub-pixel drift from
-        // the spring math.
         setTranslatePx(finalDistance);
         setSettled(true);
-        // Brief celebrate-the-landing pause before signaling complete.
-        setTimeout(() => setRevealed(true), 250);
-        setTimeout(() => onCompleteRef.current?.(), 900);
+        setTimeout(() => setRevealed(true), 80);
+        setTimeout(() => onCompleteRef.current?.(), 500);
       }
     };
 
@@ -119,18 +84,14 @@ export function SeasonReel({
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // intentionally one-shot — re-mounting the component restarts the reveal
+  }, []);
 
-  // Stack many copies of labels so the reel has length to scroll through.
-  // (cycles + 1) copies guarantees we always have a row to land on.
   const stripCopies = cycles + 2;
   const stripRows: string[] = [];
   for (let i = 0; i < stripCopies; i++) stripRows.push(...labels);
 
-  // The "winning" row sits exactly at translateY = (cycles * length + targetIdx) * rowHeight.
-  // Centering the reel window around row index = cycles*length + targetIdx means
-  // the visible row is the target. Window height = rowHeight (one row visible).
-  const reelWindowHeight = rowHeightPx;
+  // 3-row window: prev / target / next. The middle slot is the landing zone.
+  const windowHeight = rowHeightPx * 3;
 
   return (
     <div
@@ -147,7 +108,7 @@ export function SeasonReel({
         justifyContent: "center",
         gap: 28,
         backdropFilter: "blur(8px)",
-        animation: "seasonReelFadeIn 250ms ease",
+        animation: "seasonReelFadeIn 200ms ease",
         fontFamily: "'Inter', system-ui, sans-serif",
       }}
     >
@@ -156,18 +117,18 @@ export function SeasonReel({
           from { opacity: 0; }
           to   { opacity: 1; }
         }
-        @keyframes seasonReelTargetPulse {
-          0%   { transform: scale(1);   filter: drop-shadow(0 0 12px rgba(255,215,0,0.6)); }
-          50%  { transform: scale(1.05); filter: drop-shadow(0 0 24px rgba(255,215,0,0.9)); }
-          100% { transform: scale(1);   filter: drop-shadow(0 0 12px rgba(255,215,0,0.6)); }
+        @keyframes seasonReelThud {
+          0%   { transform: scale(1.06); filter: drop-shadow(0 0 20px rgba(255,215,0,0.95)); }
+          60%  { transform: scale(1.01); filter: drop-shadow(0 0 10px rgba(255,215,0,0.6)); }
+          100% { transform: scale(1);   filter: drop-shadow(0 0 8px rgba(255,215,0,0.4)); }
         }
       `}</style>
 
       <div style={{
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: 900,
-        letterSpacing: "0.4em",
-        color: "rgba(255,215,0,0.85)",
+        letterSpacing: "0.42em",
+        color: "rgba(255,215,0,0.8)",
         textTransform: "uppercase",
       }}>
         {caption}
@@ -177,25 +138,50 @@ export function SeasonReel({
         style={{
           position: "relative",
           width: 320,
-          height: reelWindowHeight,
+          height: windowHeight,
           overflow: "hidden",
-          borderTop: "2px solid rgba(255,215,0,0.55)",
-          borderBottom: "2px solid rgba(255,215,0,0.55)",
-          background: "rgba(0,0,0,0.6)",
+          borderTop: "2px solid rgba(255,215,0,0.6)",
+          borderBottom: "2px solid rgba(255,215,0,0.6)",
+          background: "rgba(0,0,0,0.55)",
           boxShadow:
-            "inset 0 30px 30px -20px rgba(0,0,0,0.9), inset 0 -30px 30px -20px rgba(0,0,0,0.9), 0 0 40px rgba(255,215,0,0.1)",
+            "inset 0 40px 40px -20px rgba(0,0,0,0.95), inset 0 -40px 40px -20px rgba(0,0,0,0.95), 0 0 40px rgba(255,215,0,0.08)",
         }}
       >
+        {/* Center-row landing zone highlight */}
+        <div style={{
+          position: "absolute",
+          top: rowHeightPx,
+          left: 0,
+          right: 0,
+          height: rowHeightPx,
+          background: settled
+            ? "rgba(255,215,0,0.06)"
+            : "rgba(255,255,255,0.02)",
+          transition: "background 150ms ease",
+          pointerEvents: "none",
+          zIndex: 1,
+        }} />
+
+        {/* Scrolling strip — translateY starts at -rowHeightPx so center row
+            of the 3-row window aligns with index 0; target lands in center. */}
         <div
           style={{
-            transform: `translateY(-${translatePx}px)`,
+            transform: `translateY(${rowHeightPx - translatePx}px)`,
             willChange: "transform",
+            backfaceVisibility: "hidden",
           }}
         >
           {stripRows.map((label, i) => {
-            // Highlight the row the reel will land on (only matters once
-            // we're close to the end; visual effect is gold tint + pulse).
-            const isTarget = settled && i === cycles * labels.length + Math.max(0, labels.indexOf(targetLabel));
+            const isTarget =
+              settled && i === cycles * labels.length + Math.max(0, labels.indexOf(targetLabel));
+            const distFromCenter = Math.abs(
+              i - (cycles * labels.length + Math.max(0, labels.indexOf(targetLabel)))
+            );
+            // Non-target rows fade out proportional to distance from landing zone.
+            const opacity = settled
+              ? isTarget ? 1 : Math.max(0.12, 0.5 - distFromCenter * 0.15)
+              : 0.85;
+
             return (
               <div
                 key={i}
@@ -205,13 +191,14 @@ export function SeasonReel({
                   alignItems: "center",
                   justifyContent: "center",
                   fontFamily: "'Impact', 'Arial Narrow', Arial, sans-serif",
-                  fontSize: 36,
+                  fontSize: 38,
                   fontWeight: 900,
                   letterSpacing: "0.04em",
-                  color: isTarget && revealed ? "#FFD700" : "rgba(240,242,245,0.92)",
-                  textShadow: isTarget && revealed ? "0 0 16px rgba(255,215,0,0.6)" : "none",
-                  animation: isTarget && revealed ? "seasonReelTargetPulse 600ms ease 2" : undefined,
-                  transition: "color 200ms ease, text-shadow 200ms ease",
+                  color: isTarget && revealed ? "#FFD700" : "rgba(235,238,245,0.92)",
+                  opacity,
+                  animation: isTarget && revealed ? "seasonReelThud 400ms ease forwards" : undefined,
+                  transition: "color 120ms ease, opacity 200ms ease",
+                  textRendering: "optimizeSpeed",
                 }}
               >
                 {label}
@@ -220,30 +207,32 @@ export function SeasonReel({
           })}
         </div>
 
-        {/* Top + bottom gradient masks for "fading off the edge" effect. */}
+        {/* Top + bottom gradient masks — heavier to sell the 3D drum feel. */}
         <div
           style={{
             position: "absolute",
             inset: 0,
             pointerEvents: "none",
             background:
-              "linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 35%, transparent 65%, rgba(0,0,0,0.7) 100%)",
+              "linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 28%, transparent 42%, transparent 58%, rgba(0,0,0,0.2) 72%, rgba(0,0,0,0.85) 100%)",
+            zIndex: 2,
           }}
         />
       </div>
 
       <div
         style={{
-          minHeight: 24,
-          fontSize: 12,
+          minHeight: 20,
+          fontSize: 11,
           fontWeight: 600,
-          color: "rgba(255,255,255,0.55)",
-          letterSpacing: "0.06em",
+          color: "rgba(255,255,255,0.5)",
+          letterSpacing: "0.07em",
+          textTransform: "uppercase",
           opacity: revealed ? 1 : 0,
-          transition: "opacity 350ms ease",
+          transition: "opacity 250ms ease",
         }}
       >
-        Your slate is set. Tap anywhere to begin.
+        Tap anywhere to begin
       </div>
     </div>
   );
