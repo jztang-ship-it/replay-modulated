@@ -45,18 +45,15 @@ describe("classifyArchetype — Top Games override", () => {
     expect(classifyArchetype(input).archetype).toBe("historic_season");
   });
 
-  it("T1 topGame.tier='career' falls through to the same archetype as topGame-absent", () => {
-    const withoutTopGame = classifyArchetype(baseInput()).archetype;
-    const withT1 = classifyArchetype(baseInput({
+  it("T1 topGame.tier='career' → historic_career (now overrides)", () => {
+    const input = baseInput({
       topGame: {
         tier: "career",
         primaryReason: { category: "pts", label: "personal best — 40 pts", value: 40 },
         allReasons: [],
       },
-    })).archetype;
-    expect(withT1).toBe(withoutTopGame);
-    expect(withT1).not.toBe("historic_record");
-    expect(withT1).not.toBe("historic_season");
+    });
+    expect(classifyArchetype(input).archetype).toBe("historic_career");
   });
 
   it("topGame absent → existing behavior unchanged", () => {
