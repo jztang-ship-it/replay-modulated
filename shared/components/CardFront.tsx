@@ -506,9 +506,10 @@ export function CardFront(props: CardFrontProps) {
           </span>
         </div>
 
-        {/* POSITION — top-right; tier-colored per designer (salary left still uses onCardText) */}
-        <div style={{ position: "absolute", top: "6%", right: "6%", zIndex: 8, pointerEvents: "none" }}>
-          <span style={{ fontSize: 13, fontWeight: 900, fontStyle: "italic", color: positionTextColor, letterSpacing: -0.5, lineHeight: 1, textTransform: "uppercase" }}>
+        {/* POSITION — top-right; tier-colored per designer (salary left still uses onCardText).
+            Sized + positioned to match SALARY for visual symmetry. */}
+        <div style={{ position: "absolute", top: "6.5%", right: "6%", zIndex: 8, pointerEvents: "none", lineHeight: 1 }}>
+          <span style={{ fontSize: 16, fontWeight: 900, fontStyle: "italic", color: positionTextColor, letterSpacing: -0.5, lineHeight: 1, textTransform: "uppercase" }}>
             {pos}
           </span>
         </div>
@@ -833,7 +834,7 @@ export function CardFront(props: CardFrontProps) {
           exclusively for the achievement badge. Hidden when face-down to
           prevent mirror bleed. */}
       {showTierColors && (team || seasonFmt) && (
-        <div style={{ position: "absolute", top: "5%", height: "6%", left: "28%", right: "28%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 35, pointerEvents: "none", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: "5%", height: "6%", left: "30%", right: "30%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 35, pointerEvents: "none", overflow: "hidden" }}>
           <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: 0.6, textTransform: "uppercase", color: "rgba(255,255,255,0.72)", whiteSpace: "nowrap", lineHeight: 1, textShadow: "0 1px 2px rgba(0,0,0,0.6)" }}>
             {team && seasonFmt ? `${team} · ${seasonFmt}` : (team || seasonFmt)}
           </span>
