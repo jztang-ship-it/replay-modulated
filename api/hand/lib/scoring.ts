@@ -181,14 +181,16 @@ export function calculateScore(stats) {
   const s = normalizeStats(stats)
   if (s === null) return empty
 
-  // Base FP — no floor, negative is possible (turnovers > production)
-  const baseFP =
+  // Base FP — floored at 0 before badges so turnovers don't compound badge penalties
+  const baseFP = Math.max(
+    0,
     s.pts * 1.0 +
     s.reb * 1.2 +
     s.ast * 1.5 +
     s.stl * 2.0 +
     s.blk * 2.0 +
-    s.turnovers * -1.0
+    s.turnovers * -1.0,
+  )
 
   // Resolve badges — one per category (highest that passes), 5x5 independent
   const firedCategories = new Set()

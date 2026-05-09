@@ -49,8 +49,18 @@ const EMPTY_SOURCES: SportRecordSources = {
   topGames: {}, careerHighs: {}, singleGameRecords: [], statAliases: {}, careerCategories: [],
 };
 
+let sourcesOverride: Record<string, SportRecordSources> | null = null;
+
+/** Test hook — inject full record sources (singleGameRecords, careerCategories, etc.). Production code should never call this. */
+export function __setRecordSources(map: Record<string, SportRecordSources> | null): void {
+  sourcesOverride = map;
+}
+
 function sourcesFor(sport: string): SportRecordSources {
-  return REGISTERED[sport] ?? EMPTY_SOURCES;
+  const base = sourcesOverride?.[sport] ?? REGISTERED[sport] ?? EMPTY_SOURCES;
+  if (!lookupsOverride?.[sport]) return base;
+  // Merge lookupsOverride (topGames, careerHighs) on top so __setTopGameLookups works for detectCareerTier
+  return { ...base, ...lookupsOverride[sport] };
 }
 
 function getStatValue(statLine: StatLine, stat: string, aliases: Record<string, string[]>): number {

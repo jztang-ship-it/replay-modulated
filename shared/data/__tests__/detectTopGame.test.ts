@@ -1,7 +1,31 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { detectTopGame, __setTopGameLookups } from "../recordDetector";
+import { detectTopGame, __setTopGameLookups, __setRecordSources } from "../recordDetector";
+
+const BASKETBALL_RECORDS = {
+  singleGameRecords: [{ stat: "pts", record: 100, holder: "Wilt Chamberlain", nearRecordPct: 0.75 }],
+  statAliases: {},
+  careerCategories: [
+    { key: "pts", label: (v: number) => `career-high ${v} pts` },
+    { key: "reb", label: (v: number) => `career-high ${v} reb` },
+    { key: "ast", label: (v: number) => `career-high ${v} ast` },
+    { key: "threes", label: (v: number) => `career-high ${v} 3PM` },
+  ],
+  topGames: {},
+  careerHighs: {},
+};
+
+const BASEBALL_RECORDS = {
+  singleGameRecords: [{ stat: "hr", record: 4, holder: "Multiple", nearRecordPct: 0.75 }],
+  statAliases: {},
+  careerCategories: [],
+  topGames: {},
+  careerHighs: {},
+};
 
 describe("detectTopGame — T0 record", () => {
+  beforeEach(() => __setRecordSources({ basketball: BASKETBALL_RECORDS, baseball: BASEBALL_RECORDS }));
+  afterEach(() => __setRecordSources(null));
+
   it("fires for a 100-point game (matches Wilt's record)", () => {
     const r = detectTopGame(
       { pts: 100, reb: 8, ast: 5 },
@@ -45,6 +69,7 @@ describe("detectTopGame — T0 record", () => {
 
 describe("detectTopGame — T1 career", () => {
   beforeEach(() => {
+    __setRecordSources({ basketball: BASKETBALL_RECORDS });
     __setTopGameLookups({
       basketball: {
         topGames: {},
@@ -55,7 +80,7 @@ describe("detectTopGame — T1 career", () => {
       },
     });
   });
-  afterEach(() => __setTopGameLookups(null));
+  afterEach(() => { __setTopGameLookups(null); __setRecordSources(null); });
 
   it("returns 'career' when stat equals player's career-high", () => {
     const r = detectTopGame(
@@ -142,6 +167,7 @@ describe("detectTopGame — T2 season", () => {
   });
 
   it("T1 career beats T2 season when both would match", () => {
+    __setRecordSources({ basketball: BASKETBALL_RECORDS });
     __setTopGameLookups({
       basketball: {
         topGames: { "203999|2025-01-01": { reasons: [{ category: "pts", label: "top-10", value: 48 }] } },
@@ -153,5 +179,6 @@ describe("detectTopGame — T2 season", () => {
       "203999", "2025-01-01", "ORANGE", "basketball"
     );
     expect(r.tier).toBe("career");
+    __setRecordSources(null);
   });
 });
