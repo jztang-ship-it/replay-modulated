@@ -585,23 +585,35 @@ function applyFraming(
   star: { name?: string } | null = null,
   roster: Array<{ name?: string }> = [],
 ): string {
+  // Achievement archetypes (priority-0 in classifyArchetype) MUST lead with the
+  // achievement itself — the templates already do this, so we suppress framing
+  // (no "Pay day —" or "Legend-tier night —" prefix) and Chad analogies (no
+  // "...the kind of result that makes you silent for two minutes" tail). The
+  // achievement IS the message.
+  const isAchievement = (
+    archetype === "historic_record" ||
+    archetype === "historic_career" ||
+    archetype === "historic_season"
+  );
+
   // Optional Chad-style closing analogy. Three triggers:
   //   1. High-signal moment — narratively big archetype/intensity always earns
   //      color (LEGEND, career_night, star_carried_loss, near-miss, etc).
   //   2. Length floor — primaries < 100 chars waste 3+ UI rows; always extend.
   //   3. Seed-gated default — ~25% of remaining short-ish primaries (< 150 chars).
   // Applied AFTER framing so the flow reads as: [framing?] [main template] [analogy?]
+  // LEGEND no longer auto-fires Chad — it was driving mean length to 173 chars.
+  // Now LEGEND uses the seed-gated default like other tiers.
   const isHighSignal = (
     archetype === "career_night" ||
     archetype === "star_carried_loss" ||
     archetype === "collapse" ||
     archetype === "badge_explosion" ||
-    intensity === "legend" ||
     intensity === "bust_close"
   );
   const isVeryShort = main.length < 100;
   const chadGate = Math.abs(Math.floor(seed / 11)) % 4;
-  const wantsChad = (
+  const wantsChad = !isAchievement && (
     (isHighSignal && main.length < 220) ||
     isVeryShort ||
     (chadGate === 0 && main.length < 150)
@@ -640,8 +652,16 @@ function applyFraming(
   // preserve variance on those paths, modes 0, 1, and 5 are reachable
   // (lead+analogy, close+analogy, lead-only). Modes that drop framing (2,3,4)
   // are excluded.
-  const rawMode = Math.abs(Math.floor(seed / 7)) % (forceFraming ? 3 : 6);
-  const mode = forceFraming && rawMode === 2 ? 5 : rawMode;
+  //
+  // Achievement archetypes (historic_*) restrict to mode 3 — the achievement
+  // template is the entire message. No framing prefix, no analogy.
+  let mode: number;
+  if (isAchievement) {
+    mode = 3;
+  } else {
+    const rawMode = Math.abs(Math.floor(seed / 7)) % (forceFraming ? 3 : 6);
+    mode = forceFraming && rawMode === 2 ? 5 : rawMode;
+  }
 
   const lead = () => usableFraming
     ? joinBeats(usableFraming, main, seed, 11, false)
@@ -1123,9 +1143,11 @@ export function selectCommentary(
   // designed to flow through to a normal archetype but tag a personal-best
   // detail. Without preference, the season_best_stat template competes
   // unweighted with the rest of the pool and almost never wins, so the
-  // milestone goes unmentioned. Narrow to season_best_stat templates first;
-  // fall through to the normal candidate flow if none exist for any archetype
-  // in the chain.
+  // milestone goes unmentioned. Prefer (a) the dedicated historic_career
+  // templates (which use {topStat} directly) when available, then fall back to
+  // (b) any template tagged requires:["season_best_stat"]. Without (a), the
+  // historic_career templates added in PR #76 stay dead because the legacy
+  // star_carry seasonBestStat templates always win the fallback race.
   if (input.topGame?.tier === "career") {
     for (const arch of fallbackChain) {
       const pool = library[arch] ?? [];
@@ -1133,7 +1155,7 @@ export function selectCommentary(
         line.enabled &&
         line.register === register &&
         (line.sport === "any" || line.sport === sport) &&
-        line.requires?.includes("season_best_stat")
+        (line.archetype === "historic_career" || line.requires?.includes("season_best_stat"))
       );
       if (t1Match.length > 0) {
         candidates = t1Match;
