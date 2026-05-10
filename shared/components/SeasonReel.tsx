@@ -2,12 +2,14 @@
  * shared/components/SeasonReel.tsx
  *
  * Slot-machine year reveal. One pass through all years, decelerates into
- * the target, then a single small spring overshoot before settling.
+ * the target, then a final jolt that swings through the two adjacent
+ * years before landing on target.
  *
  * Animation phases (1.4 s default):
- *   0.00 – 0.55  Fast scroll through years (cubic ease-in)
- *   0.55 – 0.85  Gradual deceleration (cubic ease-out)
- *   0.85 – 1.00  Single spring: slight overshoot then settle on target
+ *   0.00 – 0.45  Fast scroll through years (cubic ease-in)
+ *   0.45 – 0.70  Gradual deceleration (cubic ease-out)
+ *   0.70 – 1.00  Final jolt — overshoots to target+1, swings back
+ *                through target down toward target-1, settles on target
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -43,8 +45,9 @@ export function SeasonReel({
     const targetIdx = Math.max(0, labels.indexOf(targetLabel));
     const finalDistance = (cycles * labels.length + targetIdx) * rowHeightPx;
 
-    // Spring overshoot: ~0.35 rows past target, then pulls back to land.
-    const springAmp = (rowHeightPx * 0.35) / finalDistance;
+    // One row in normalized progress space — used by the jolt to swing a full
+    // row past target (showing the adjacent year fully centered).
+    const oneRow = rowHeightPx / finalDistance;
 
     const start = performance.now();
 
@@ -52,19 +55,22 @@ export function SeasonReel({
       const t = Math.min((now - start) / durationMs, 1);
 
       let progress: number;
-      if (t < 0.55) {
+      if (t < 0.45) {
         // Phase 1: fast scroll through years, cubic ease-in.
-        const localT = t / 0.55;
+        const localT = t / 0.45;
         progress = Math.pow(localT, 3) * 0.78;
-      } else if (t < 0.85) {
+      } else if (t < 0.70) {
         // Phase 2: gradual deceleration, cubic ease-out.
-        const localT = (t - 0.55) / 0.30;
+        const localT = (t - 0.45) / 0.25;
         progress = 0.78 + (1 - Math.pow(1 - localT, 3)) * 0.22;
       } else {
-        // Phase 3: single spring — overshoot then settle on target.
-        const localT = (t - 0.85) / 0.15;
-        // sin peak at localT=0.5, decays exponentially → one clean bounce
-        const spring = springAmp * Math.sin(localT * Math.PI) * Math.exp(-localT * 3);
+        // Phase 3: final jolt — damped sine that swings a full row past
+        // target (showing target+1 centered), back through target, down
+        // toward target-1, then settles on target.
+        // Amplitude 1.15 + light damping ensures the first peak fully
+        // reaches target+1 and the trough still partially reveals target-1.
+        const localT = (t - 0.70) / 0.30;
+        const spring = oneRow * 1.15 * Math.sin(localT * Math.PI * 2) * Math.exp(-localT * 1.0);
         progress = 1.0 + spring;
       }
 
