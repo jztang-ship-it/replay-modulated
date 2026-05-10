@@ -60,13 +60,16 @@ function detectBadges(s: Record<string, any>) {
 function makeTopGame(rng: () => number) {
   const r = rng();
   if (r < 0.15) {
-    return { tier: "record" as const, primaryReason: { category: "pts", label: "All-time top-50 scoring night", value: 64 } };
+    const reason = { category: "pts", label: "All-time top-50 scoring night", value: 64 };
+    return { tier: "record" as const, primaryReason: reason, allReasons: [reason] };
   }
   if (r < 0.40) {
-    return { tier: "career" as const, primaryReason: { category: "pts", label: "Career high in points", value: 41 } };
+    const reason = { category: "pts", label: "Career high in points", value: 41 };
+    return { tier: "career" as const, primaryReason: reason, allReasons: [reason] };
   }
   if (r < 0.70) {
-    return { tier: "season" as const, primaryReason: { category: "ast", label: "Season top-10 assist night", value: 17 } };
+    const reason = { category: "ast", label: "Season top-10 assist night", value: 17 };
+    return { tier: "season" as const, primaryReason: reason, allReasons: [reason] };
   }
   return null;
 }
