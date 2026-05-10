@@ -120,17 +120,25 @@ export function buildTemplateData(
   const highestBadge = getHighestBadge(starBadgeIds);
   const badgeLabel = highestBadge?.commentaryLabel ?? "";
 
-  // Compute topStat: the star's highest stat value + unit (e.g. "22 pt")
+  // Compute topStat: the star's stat with the highest FP contribution.
+  // Previously picked by raw value, which surfaced "12 pts" over "15 ast"
+  // even though 15 ast (22.5 FP) was the bigger driver of the night.
+  // Weights mirror computeFp in basketball's economy: pts=1, reb=1.2,
+  // ast=1.5, stl=3, blk=3.
   const ptsVal = star ? Math.round(statN(star, "pts")) : 0;
   const rebVal = star ? Math.round(statN(star, "reb")) : 0;
   const astVal = star ? Math.round(statN(star, "ast")) : 0;
   const stlVal = star ? Math.round(statN(star, "stl")) : 0;
   const blkVal = star ? Math.round(statN(star, "blk")) : 0;
-  const statEntries: [number, string][] = [
-    [ptsVal, "pt"], [rebVal, "reb"], [astVal, "ast"], [stlVal, "stl"], [blkVal, "blk"],
+  const statEntries: Array<{ value: number; unit: string; fp: number }> = [
+    { value: ptsVal, unit: "pt",  fp: ptsVal },
+    { value: rebVal, unit: "reb", fp: rebVal * 1.2 },
+    { value: astVal, unit: "ast", fp: astVal * 1.5 },
+    { value: stlVal, unit: "stl", fp: stlVal * 3 },
+    { value: blkVal, unit: "blk", fp: blkVal * 3 },
   ];
-  const [topVal, topUnit] = statEntries.reduce((best, cur) => cur[0] > best[0] ? cur : best, [0, "pt"]);
-  const topStat = topVal > 0 ? `${topVal} ${topUnit}` : "";
+  const top = statEntries.reduce((best, cur) => cur.fp > best.fp ? cur : best, { value: 0, unit: "pt", fp: 0 });
+  const topStat = top.value > 0 ? `${top.value} ${top.unit}` : "";
 
   // Costar tokens — populated only when classifyArchetype's multi-star rule
   // fired. Otherwise empty strings (templates that reference {costar} simply
@@ -360,6 +368,48 @@ function capAtSentence(text: string, max: number): string {
   return lastPunct > 50 ? truncated.slice(0, lastPunct + 1) : truncated;
 }
 
+/** Map a free-text snippet to a stat category (pts/reb/ast/stl/blk/threes)
+ *  so we can dedupe against the message it's appended to. Returns null when
+ *  the snippet doesn't reference a single stat. */
+function snippetStatCategory(snippet: string): string | null {
+  const s = snippet.toLowerCase();
+  if (s.includes("point") || s.includes("-pt") || s.match(/\b\d+\s*pts?\b/)) return "pts";
+  if (s.includes("rebound")) return "reb";
+  if (s.includes("assist") || s.includes("dime")) return "ast";
+  if (s.includes("steal")) return "stl";
+  if (s.includes("block")) return "blk";
+  if (s.includes("three") || s.includes("3-point")) return "threes";
+  return null;
+}
+
+/** True when the message already mentions a stat number with the given
+ *  category — used to suppress "X on the side" snippets that would echo a
+ *  category the message just headlined. Also returns true when the badge
+ *  is single-stat and the message has no stat number at all (so "on the
+ *  side" doesn't dangle without a primary thing to be alongside). */
+function messageBlocksBadgeSnippet(message: string, snippet: string): boolean {
+  const cat = snippetStatCategory(snippet);
+  if (!cat) return false;
+  const NUMBERS_AND_NOUNS: Record<string, RegExp> = {
+    pts:    /\d+\s*[-+]?\s*(?:point|pt)s?\b|\d+\s+pts?\b/i,
+    reb:    /\d+\s*[-+]?\s*rebound[s]?\b/i,
+    ast:    /\d+\s*[-+]?\s*assist[s]?\b|\d+\s*[-+]?\s*dime[s]?\b/i,
+    stl:    /\d+\s*[-+]?\s*steal[s]?\b/i,
+    blk:    /\d+\s*[-+]?\s*block[s]?\b/i,
+    threes: /\d+\s*[-+]?\s*three[s]?\b|\d+\s*[-+]?\s*3-point/i,
+  };
+  // Same category already in message → suppress.
+  if (NUMBERS_AND_NOUNS[cat].test(message)) return true;
+  // No stat number anywhere in the message → "on the side" has no anchor;
+  // skip rather than dangle. Catches the Gobert case (primary names no
+  // headline stat, then snippet says "15-rebound game on the side").
+  const anyStatNumber = Object.values(NUMBERS_AND_NOUNS).some(re => re.test(message));
+  if (!anyStatNumber && (snippet.toLowerCase().includes("on the side") || snippet.toLowerCase().includes("on the stat sheet"))) {
+    return true;
+  }
+  return false;
+}
+
 export function composeMessage(
   template: string,
   data: TemplateData,
@@ -373,6 +423,7 @@ export function composeMessage(
     const snippet = snippetFn(data);
     if (!snippet) continue;
     if (message.toLowerCase().includes(snippet.toLowerCase().slice(0, 15))) continue;
+    if (messageBlocksBadgeSnippet(message, snippet)) continue;
     if (message.length + snippet.length + 1 > MAX_CHARS) break;
     message += ` ${snippet}`;
   }
