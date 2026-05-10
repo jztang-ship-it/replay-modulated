@@ -72,6 +72,10 @@ function round1(n: number) { return Math.round(n * 10) / 10; }
 
 const BASKETBALL_ORDER = ["PTS", "REB", "AST", "BLK", "STL", "TO"];
 const KEY_ALIASES: Record<string, string> = { "TURNOVERS": "TO", "TOV": "TO", "TURNOVER": "TO" };
+// Top-Game reason categories that map to a measurable stat. Flag categories
+// like "fifty_plus_game" are markers (value:1) and must never render in the
+// achievement headline as "1 PLUS_GAME".
+const STAT_CATEGORIES = new Set(["pts", "reb", "ast", "stl", "blk", "threes"]);
 
 // ── BasketballHero ────────────────────────────────────────────────────────
 
@@ -166,8 +170,13 @@ function AchievementBack({
 }) {
   const sl = (card as any).statLine || {};
   // Combine all same-tier reasons into a single headline. allReasons is
-  // already filtered to the highest tier by detectTopGame.
-  const reasons = result.allReasons?.length ? result.allReasons : (result.primaryReason ? [result.primaryReason] : []);
+  // already filtered to the highest tier by detectTopGame. Drop flag-style
+  // categories (fifty_plus_game, five_by_five, td_30_20_20) — they're
+  // metadata, not displayable stats; rendering them yields "1 PLUS_GAME"
+  // and inflates the count to e.g. "DOUBLE BEST OF SEASON" when really
+  // there's just one underlying stat.
+  const allReasons = result.allReasons?.length ? result.allReasons : (result.primaryReason ? [result.primaryReason] : []);
+  const reasons = allReasons.filter(r => STAT_CATEGORIES.has(String(r.category).toLowerCase()));
   // Cap at 3 to keep the headline readable. 4+ same-tier achievements in
   // one game is so rare we'd rather truncate than let the layout break.
   const featured = reasons.slice(0, 3).map(r => ({
@@ -307,8 +316,13 @@ function BackBStats({ card, topGameResult }: { card: PlayerCard; topGameTier?: T
   const hasStats = Object.keys(sl).length > 0;
   const allZero = allStats.every(s => s.value === 0);
 
-  // Achievement-mode: defer entirely to AchievementBack.
-  const isAchievement = !!topGameResult?.tier && !!topGameResult.primaryReason && hasStats;
+  // Achievement-mode: defer entirely to AchievementBack — but only when at
+  // least one reason is a stat-typed category (PTS, REB, etc.). If every
+  // reason is a flag (fifty_plus_game et al.), AchievementBack would render
+  // an empty headline, so fall through to the regular FP-as-hero back.
+  const hasStatReason = (topGameResult?.allReasons ?? (topGameResult?.primaryReason ? [topGameResult.primaryReason] : []))
+    .some(r => STAT_CATEGORIES.has(String(r.category).toLowerCase()));
+  const isAchievement = !!topGameResult?.tier && !!topGameResult.primaryReason && hasStats && hasStatReason;
   if (isAchievement) {
     return <AchievementBack card={card} result={topGameResult!} dateStr={dateStr} oppStr={oppStr} />;
   }
