@@ -663,37 +663,44 @@ function applyFraming(
   roster: Array<{ name?: string }> = [],
 ): string {
   // Achievement archetypes (priority-0 in classifyArchetype) MUST lead with the
-  // achievement itself — the templates already do this, so we suppress framing
-  // (no "Pay day —" or "Legend-tier night —" prefix) and Chad analogies (no
-  // "...the kind of result that makes you silent for two minutes" tail). The
-  // achievement IS the message.
+  // achievement itself — but we no longer suppress framing/analogy entirely.
+  // Instead the mode selection below restricts achievement archetypes to
+  // CLOSER-only positions (modes 1/2/3) so framing and analogy add bulk as
+  // tail beats without burying the headline.
   const isAchievement = (
     archetype === "historic_record" ||
     archetype === "historic_career" ||
     archetype === "historic_season"
   );
 
-  // Optional Chad-style closing analogy. Three triggers:
-  //   1. High-signal moment — narratively big archetype/intensity always earns
-  //      color (LEGEND, career_night, star_carried_loss, near-miss, etc).
+  // LEGEND gets the analogy ~75% of the time (down from auto-fire pre-T2 fix
+  // which drove mean length to 173, but back from the 0% T2-overfit). Other
+  // high-signal triggers stay deterministic.
+  const legendHighSignal = intensity === "legend" && Math.abs(Math.floor(seed / 17)) % 4 < 3;
+
+  // Optional Chad-style closing analogy. Triggers:
+  //   1. High-signal moment — narratively big archetype/intensity earns color.
   //   2. Length floor — primaries < 100 chars waste 3+ UI rows; always extend.
   //   3. Seed-gated default — ~25% of remaining short-ish primaries (< 150 chars).
+  //   4. Achievement archetypes — 50% gate (adds bulk without burying headline).
   // Applied AFTER framing so the flow reads as: [framing?] [main template] [analogy?]
-  // LEGEND no longer auto-fires Chad — it was driving mean length to 173 chars.
-  // Now LEGEND uses the seed-gated default like other tiers.
   const isHighSignal = (
     archetype === "career_night" ||
     archetype === "star_carried_loss" ||
     archetype === "collapse" ||
     archetype === "badge_explosion" ||
+    legendHighSignal ||
     intensity === "bust_close"
   );
   const isVeryShort = main.length < 100;
   const chadGate = Math.abs(Math.floor(seed / 11)) % 4;
-  const wantsChad = !isAchievement && (
-    (isHighSignal && main.length < 220) ||
-    isVeryShort ||
-    (chadGate === 0 && main.length < 150)
+  const wantsChad = (
+    (isAchievement && chadGate < 2 && main.length < 180) ||  // 50% on historic_*
+    (!isAchievement && (
+      (isHighSignal && main.length < 220) ||
+      isVeryShort ||
+      (chadGate === 0 && main.length < 150)
+    ))
   );
   const analogy = wantsChad ? pickChadAnalogy(intensity, seed) : "";
 
@@ -730,11 +737,17 @@ function applyFraming(
   // (lead+analogy, close+analogy, lead-only). Modes that drop framing (2,3,4)
   // are excluded.
   //
-  // Achievement archetypes (historic_*) restrict to mode 3 — the achievement
-  // template is the entire message. No framing prefix, no analogy.
+  // Achievement archetypes (historic_*) restrict to modes 2 and 3:
+  //   2  main → analogy   (achievement leads, Chad analogy closes — adds bulk)
+  //   3  main alone       (bare — clean breath, secondary line still adds flavor)
+  // Mode 1 (framing closer) is excluded because RESULT_FRAMING is tier-keyed
+  // to the hand's totalFp — a career-high win that only cashed ROOKIE would
+  // close with "Take the cash, forget the mechanics", which clashes with
+  // the achievement headline. Skipping framing avoids the tier mismatch.
   let mode: number;
   if (isAchievement) {
-    mode = 3;
+    const achGate = Math.abs(Math.floor(seed / 7)) % 5;
+    mode = achGate < 3 ? 2 : 3; // 60% analogy, 40% bare
   } else {
     const rawMode = Math.abs(Math.floor(seed / 7)) % (forceFraming ? 3 : 6);
     mode = forceFraming && rawMode === 2 ? 5 : rawMode;
@@ -1315,18 +1328,14 @@ export function selectCommentary(
   const primary = applyFraming(mainLine, intensity, matchedArchetype, seed, culture, templateStarRatio, input.isBust, isAnchor, deltaToNextTier, false, star, input.roster);
 
   // Step 11: Optional culture-secondary line. Adds a flavor beat (signature
-  // game / team flavor / milestone) when culture is available. Skipped for
-  // achievement archetypes — the achievement headline shouldn't share the
-  // stage. cultureSecondary itself returns null when culture is null
-  // (BLUE/GREEN/WHITE stars or PURPLE without iconic nickname or 70% of
-  // PURPLE hands), so the gate is automatic.
-  const isAchievementArchetype = (
-    matchedArchetype === "historic_record" ||
-    matchedArchetype === "historic_career" ||
-    matchedArchetype === "historic_season"
-  );
+  // game / team flavor / milestone) when culture is available. Now fires for
+  // achievement archetypes too — the secondary is a separate UI line, so it
+  // adds bulk without burying the achievement headline. cultureSecondary
+  // itself returns null when culture is null (BLUE/GREEN/WHITE stars, or
+  // PURPLE without iconic nickname, or 70% of PURPLE hands), so the player-
+  // culture gate is automatic. Team-flavor (venue voice) fires regardless.
   let secondary: string | undefined;
-  if (!isAchievementArchetype && star) {
+  if (star) {
     const primaryLower = primary.toLowerCase();
     const starLast = lastName(star.name).toLowerCase();
     const primaryNamesStar = (
