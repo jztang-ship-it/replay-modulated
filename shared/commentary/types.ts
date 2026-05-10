@@ -193,8 +193,12 @@ export interface TemplateData {
   topStat: string;
   /** Top Games — human label from the primary reason. */
   topLabel?: string;
-  /** Top Games — raw category code from the primary reason ("pts", "td_30_20_20"). */
+  /** Top Games — readable category phrase for templates ("scoring", "rebounding"). */
   topCategory?: string;
+  /** Top Games — raw stat-typed category code ("pts", "reb"). Internal use:
+   *  detail-snippet overlap guards check this to avoid restating the headline
+   *  stat in a "X on the side" snippet. Not for template substitution. */
+  topCategoryRaw?: string;
   /** T3 only — honest season-best phrasing ("best scoring night of the season so far"). */
   seasonBestStat?: string;
   /** Co-star full name when multi_star_carry fires; "" otherwise. */
