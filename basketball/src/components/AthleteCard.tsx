@@ -105,28 +105,37 @@ function BasketballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) 
   );
 }
 
-// ── BadgeRow — shared badge display, icon + visible "+N" FP contribution.
-// Treats bonus FP as a property of each badge (per user feedback) instead of
-// crammed next to the hero FP where it clips on narrow cards.
+// ── BadgeRow — shared badge display: icons + single total-bonus pill.
+// Mirrors the front accent strip pattern: badge icons (hover tooltip shows
+// each badge's individual FP contribution) followed by ONE gold "+N FP" pill
+// summing the total. Replaces both the cramped inline "+N" suffix that used
+// to live next to the hero FP and the per-badge "+N" labels.
 
 function BadgeRow({ badges }: { badges: Array<{ icon: string; label: string; fp: number; id?: string }> }) {
   if (!badges?.length) return null;
+  const totalBonus = badges.reduce((s, b) => s + (b.fp ?? 0), 0);
   return (
     <div style={{ minHeight: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, flexWrap: "wrap", marginTop: 4 }}>
       {badges.slice(0, 8).map((b, i) => (
         <span
           key={b.id ?? b.label ?? i}
-          title={b.label}
-          style={{ display: "inline-flex", alignItems: "center", gap: 1, lineHeight: 1 }}
+          title={`${b.label} (${b.fp > 0 ? "+" : ""}${b.fp})`}
+          style={{ fontSize: 12, lineHeight: 1 }}
         >
-          <span style={{ fontSize: 11 }}>{b.icon}</span>
-          {b.fp !== 0 && (
-            <span style={{ fontSize: 9, fontWeight: 900, color: b.fp > 0 ? "#FFD700" : "#FF6B6B" }}>
-              {b.fp > 0 ? "+" : ""}{b.fp}
-            </span>
-          )}
+          {b.icon}
         </span>
       ))}
+      {totalBonus !== 0 && (
+        <span style={{
+          fontSize: 11, fontWeight: 900,
+          color: totalBonus > 0 ? "#FFD700" : "#FF6B6B",
+          background: "rgba(255,255,255,0.10)",
+          borderRadius: 4, padding: "1px 5px",
+          letterSpacing: 0.3, lineHeight: 1,
+        }}>
+          {totalBonus > 0 ? "+" : ""}{totalBonus} FP
+        </span>
+      )}
     </div>
   );
 }
