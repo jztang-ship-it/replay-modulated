@@ -304,7 +304,10 @@ function Typewriter({ text, style, onDone, msPerChar = 25, rush = false }: {
     return () => clearTimeout(t);
   }, [charCount, text.length, msPerChar, rush, onDone]);
   useEffect(() => { setCharCount(0); doneRef.current = false; }, [text]);
-  return <span style={style}>{text.slice(0, charCount)}</span>;
+  // <div> (block) so primary + secondary always stack top-to-bottom regardless
+  // of parent layout. <span> (inline) was sometimes letting a short secondary
+  // line wrap onto the primary's last row.
+  return <div style={style}>{text.slice(0, charCount)}</div>;
 }
 
 export function TierGauge({
