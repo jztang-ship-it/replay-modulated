@@ -103,18 +103,24 @@ function tierFromSalary(salary: number): string {
 }
 
 export default function GameView() {
-  // Track active season so the adapter rebuilds with the season's win-tier
-  // thresholds when the daily reel swaps seasons. setActiveSeason in
-  // dataEngine fires this event (added in PR #79).
+  // Track active season + FTUE state so the adapter rebuilds with the right
+  // win-tier thresholds when:
+  //   - the daily reel swaps seasons (setActiveSeason → active-season-change)
+  //   - the user completes the FTUE (useFTUE → ftue-change)
+  // Both events fire from the cross-instance event bus added in PRs #79/#c5a5c0e.
   const [activeSeason, setSeason] = useState<string | null>(getActiveSeason());
+  const [ftueTick, setFtueTick] = useState(0);
   useEffect(() => {
-    const handler = () => setSeason(getActiveSeason());
+    const onSeason = () => setSeason(getActiveSeason());
+    const onFtue = () => setFtueTick(t => t + 1);
     if (typeof window !== "undefined") {
-      window.addEventListener("replaymod:active-season-change", handler);
+      window.addEventListener("replaymod:active-season-change", onSeason);
+      window.addEventListener("replaymod:ftue-change", onFtue);
     }
     return () => {
       if (typeof window !== "undefined") {
-        window.removeEventListener("replaymod:active-season-change", handler);
+        window.removeEventListener("replaymod:active-season-change", onSeason);
+        window.removeEventListener("replaymod:ftue-change", onFtue);
       }
     };
   }, []);
@@ -156,7 +162,7 @@ export default function GameView() {
     // SlateChipComponent stays undefined and the shared GameView renders
     // nothing in the chip slot, so no slate-v2 code runs in-game.
     SlateChipComponent: isSlateV2Enabled("basketball") ? BasketballSlateChip : undefined,
-  }), [activeSeason]);
+  }), [activeSeason, ftueTick]);
 
   return <SharedGameView adapter={adapter} />;
 }
