@@ -130,6 +130,10 @@ export interface TopGameReason {
   category: string;  // 'pts' | 'td_30_20_20' | ...
   label: string;     // human-readable, flows into {topLabel} token
   value: number;     // the stat value (composites use 1)
+  /** 1-indexed rank within the per-stat per-season top-N list. Only present
+   *  on stat-typed reasons (single categories: pts/reb/ast/etc.). Undefined
+   *  for composite/flag reasons (fifty_plus_game, five_by_five, etc.). */
+  rank?: number;
 }
 
 export interface TopGameResult {
@@ -199,6 +203,12 @@ export interface TemplateData {
    *  detail-snippet overlap guards check this to avoid restating the headline
    *  stat in a "X on the side" snippet. Not for template substitution. */
   topCategoryRaw?: string;
+  /** Top Games — ordinal rank only ("1st", "7th"). Empty when the reason
+   *  has no rank (composite/flag reasons or no topGame). */
+  topRank?: string;
+  /** Top Games — full ranked phrase like "7th highest scoring game of the season".
+   *  Empty when no rank is available; templates can fall back to {topLabel}. */
+  topRankPhrase?: string;
   /** T3 only — honest season-best phrasing ("best scoring night of the season so far"). */
   seasonBestStat?: string;
   /** Co-star full name when multi_star_carry fires; "" otherwise. */

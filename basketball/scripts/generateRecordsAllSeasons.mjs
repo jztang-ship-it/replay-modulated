@@ -31,13 +31,23 @@ const STAR_TIERS = new Set(["PURPLE", "ORANGE", "RED"]);
 const TOP_N = 10;
 const DRY_RUN = process.argv.includes("--dry-run");
 
+// Each label takes the value AND the rank (1-indexed position in the per-stat
+// per-season top-N list). Output reads as the ranked claim
+// ("7th highest scoring game of the season (57 pts)") instead of the generic
+// "Top-10" framing.
+function ordinal(n) {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] ?? s[v] ?? s[0]);
+}
+
 const SINGLE_CATEGORIES = [
-  { code: "pts",    priority: 50, label: (v) => `Top-${TOP_N} scoring game of the season (${v} pts)` },
-  { code: "reb",    priority: 40, label: (v) => `Top-${TOP_N} rebound game of the season (${v} reb)` },
-  { code: "ast",    priority: 40, label: (v) => `Top-${TOP_N} assist game of the season (${v} ast)` },
-  { code: "threes", priority: 40, label: (v) => `Top-${TOP_N} three-point game of the season (${v} threes)` },
-  { code: "stl",    priority: 40, label: (v) => `Top-${TOP_N} steal game of the season (${v} stl)` },
-  { code: "blk",    priority: 40, label: (v) => `Top-${TOP_N} block game of the season (${v} blk)` },
+  { code: "pts",    priority: 50, label: (v, rank) => `${ordinal(rank)} highest scoring game of the season (${v} pts)` },
+  { code: "reb",    priority: 40, label: (v, rank) => `${ordinal(rank)} highest rebound game of the season (${v} reb)` },
+  { code: "ast",    priority: 40, label: (v, rank) => `${ordinal(rank)} highest assist game of the season (${v} ast)` },
+  { code: "threes", priority: 40, label: (v, rank) => `${ordinal(rank)} highest three-point game of the season (${v} threes)` },
+  { code: "stl",    priority: 40, label: (v, rank) => `${ordinal(rank)} highest steal game of the season (${v} stl)` },
+  { code: "blk",    priority: 40, label: (v, rank) => `${ordinal(rank)} highest block game of the season (${v} blk)` },
 ];
 
 const COMPOSITES = [
@@ -65,11 +75,12 @@ function buildSeasonTopGames(seasonRows) {
       .filter(x => x.v > 0)
       .sort((a, b) => b.v - a.v);
     const top = ranked.slice(0, TOP_N);
-    for (const { r, v } of top) {
+    top.forEach(({ r, v }, i) => {
+      const rank = i + 1;
       const key = `${r.basePlayerId}|${r.date}`;
       if (!topGames[key]) topGames[key] = { reasons: [] };
-      topGames[key].reasons.push({ category: code, label: label(v), value: v, _priority: priority });
-    }
+      topGames[key].reasons.push({ category: code, label: label(v, rank), value: v, rank, _priority: priority });
+    });
   }
   for (const { code, priority, label, rule } of COMPOSITES) {
     const matches = seasonRows.filter(r => {

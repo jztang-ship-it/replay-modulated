@@ -67,6 +67,12 @@ const CATEGORY_READABLE: Record<string, string> = {
   r: "runs",
 };
 
+function ordinal(n: number): string {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return `${n}${s[(v - 20) % 10] ?? s[v] ?? s[0]}`;
+}
+
 /** Pick the stat-typed reason from allReasons (fall back to primaryReason).
  *  Avoids surfacing flag categories like "fifty_plus_game" as headlines. */
 function pickStatReason(topGame: NonNullable<CommentaryInput["topGame"]>) {
@@ -176,6 +182,24 @@ export function buildTemplateData(
       const r = pickStatReason(input.topGame);
       return r && r.category in STAT_UNITS ? r.category : "";
     })(),
+    // Ranked-form tokens — replace the old hardcoded "Top-ten" framing in
+    // templates. topRank is just the ordinal ("7th"); topRankPhrase is the
+    // full ranked claim ("7th highest scoring game of the season"). Both
+    // empty when the reason lacks a rank (composite/flag reasons).
+    topRank: (() => {
+      if (!input.topGame) return "";
+      const r = pickStatReason(input.topGame);
+      return r?.rank ? ordinal(r.rank) : "";
+    })(),
+    topRankPhrase: (() => {
+      if (!input.topGame) return "";
+      const r = pickStatReason(input.topGame);
+      if (!r?.rank) return "";
+      const phrase = CATEGORY_READABLE[r.category];
+      if (!phrase) return "";
+      // "7th highest scoring game of the season"
+      return `${ordinal(r.rank)} highest ${phrase} game of the season`;
+    })(),
     // T1 career — provides personal-best phrasing for templates that opt in via requires:['season_best_stat'].
     // The detail-token name predates the tier rename; kept for stable template references.
     seasonBestStat: input.topGame?.tier === "career" ? (input.topGame.primaryReason?.label ?? "") : "",
@@ -245,6 +269,8 @@ export function resolveTemplate(template: string, data: TemplateData): string {
     .replace(/\{topStat\}/g, data.topStat)
     .replace(/\{topLabel\}/g, topLabel)
     .replace(/\{topCategory\}/g, data.topCategory ?? "")
+    .replace(/\{topRank\}/g, data.topRank ?? "")
+    .replace(/\{topRankPhrase\}/g, data.topRankPhrase ?? "")
     .replace(/\{seasonBestStat\}/g, data.seasonBestStat ?? "")
     .replace(/\{streak\}/g, String(data.streak))
     .replace(/\{gap\}/g, String(data.gap))
