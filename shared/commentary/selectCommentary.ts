@@ -1305,12 +1305,38 @@ export function selectCommentary(
   // Step 9: Record usage in anti-repeat
   recordUsage(best.line.id, matchedArchetype, tone, mainLine);
 
-  // Step 10: Return single-line commentary with varied framing.
+  // Step 10: Apply framing to compose the primary line.
   // Template path mixes framing sources (archetype / anchor / nickname / culture
   // / generic) based on seed + context, plus three position modes. Keeps the
   // result reflection from appearing in the same shape every hand.
   const templateStarRatio = star && star.projectedFp ? star.actualFp / star.projectedFp : 1;
   const maxSalary = input.roster.reduce((m, c) => Math.max(m, c.salary), 0);
   const isAnchor = !!star && star.salary === maxSalary;
-  return { primary: applyFraming(mainLine, intensity, matchedArchetype, seed, culture, templateStarRatio, input.isBust, isAnchor, deltaToNextTier, false, star, input.roster) };
+  const primary = applyFraming(mainLine, intensity, matchedArchetype, seed, culture, templateStarRatio, input.isBust, isAnchor, deltaToNextTier, false, star, input.roster);
+
+  // Step 11: Optional culture-secondary line. Adds a flavor beat (signature
+  // game / team flavor / milestone) when culture is available. Skipped for
+  // achievement archetypes — the achievement headline shouldn't share the
+  // stage. cultureSecondary itself returns null when culture is null
+  // (BLUE/GREEN/WHITE stars or PURPLE without iconic nickname or 70% of
+  // PURPLE hands), so the gate is automatic.
+  const isAchievementArchetype = (
+    matchedArchetype === "historic_record" ||
+    matchedArchetype === "historic_career" ||
+    matchedArchetype === "historic_season"
+  );
+  let secondary: string | undefined;
+  if (!isAchievementArchetype && star) {
+    const primaryLower = primary.toLowerCase();
+    const starLast = lastName(star.name).toLowerCase();
+    const primaryNamesStar = (
+      primaryLower.includes(star.name.toLowerCase()) ||
+      (starLast.length >= 3 && primaryLower.includes(starLast)) ||
+      (culture?.nicknames ?? []).some(n => n.length >= 3 && primaryLower.includes(n.toLowerCase()))
+    );
+    const sec = cultureSecondary(star, culture, teamFlavor, input, seed, primaryNamesStar);
+    if (sec) secondary = sec;
+  }
+
+  return secondary ? { primary, secondary } : { primary };
 }
