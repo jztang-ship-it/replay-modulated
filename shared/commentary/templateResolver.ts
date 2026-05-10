@@ -208,7 +208,26 @@ export function resolveTemplate(template: string, data: TemplateData): string {
 
 const DETAIL_SNIPPETS: Record<string, (data: TemplateData) => string> = {
   record_event: (d) => d.record ? `${d.record}` : "",
-  rare_badge: () => "",  // Rare badges are now the template story, not a detail snippet
+  rare_badge: (d) => {
+    // When badge_explosion fires as the archetype the template embeds {badge}
+    // and composeMessage's substring-dedup keeps the snippet from doubling.
+    // But achievement archetypes (historic_record/career/season) preempt
+    // badge_explosion at priority 0, so without this snippet a Jokic 22-reb
+    // season-top hand that is ALSO a triple double drops the badge entirely.
+    // Skip when the badge is a single-stat milestone in the same category as
+    // the topGame headline (e.g., "50-point game" badge on a points-tier-of-
+    // the-season hand) — that would just restate the headline.
+    if (!d.badge) return "";
+    const cat = (d.topCategory ?? "").toLowerCase();
+    const b = d.badge.toLowerCase();
+    const overlaps = (
+      (cat === "pts" && (b.includes("point") || b.includes("-point"))) ||
+      (cat === "reb" && b.includes("rebound")) ||
+      (cat === "ast" && (b.includes("assist") || b.includes("dime")))
+    );
+    if (overlaps) return "";
+    return `${d.badge[0].toUpperCase() + d.badge.slice(1)} on the side.`;
+  },
   common_badge: (d) => d.badge ? `${d.badge[0].toUpperCase() + d.badge.slice(1)} on the stat sheet.` : "",
   held_card_paid: () => "Holding that card was the right call.",
   high_stats: () => "",  // Stats are embedded in the main template via {pts}/{reb}/{ast} — no separate injection

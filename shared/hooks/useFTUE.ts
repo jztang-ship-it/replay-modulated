@@ -19,7 +19,9 @@
  * to replay the FTUE without clearing all storage.
  */
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+const FTUE_CHANGE_EVENT = "replaymod:ftue-change";
 
 function readFtueActive(KEY: string): boolean {
   if (typeof window === "undefined") return false;
@@ -39,6 +41,22 @@ export function useFTUE(sport: string) {
 
   const [isFTUE, setIsFTUE] = useState<boolean>(() => readFtueActive(KEY));
 
+  // Subscribe to cross-instance change events. useFTUE is called from both
+  // App.tsx (which owns DailySeasonReelGate.bypass) and GameView (which calls
+  // completeFTUE when the user finishes the flow). Without this subscription
+  // each instance has its own useState, so completing FTUE in GameView
+  // wouldn't update App.tsx's bypass — the season reel would never fire on
+  // the FTUE→normal transition.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onChange = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (!detail || detail.sport === sport) setIsFTUE(readFtueActive(KEY));
+    };
+    window.addEventListener(FTUE_CHANGE_EVENT, onChange);
+    return () => window.removeEventListener(FTUE_CHANGE_EVENT, onChange);
+  }, [sport, KEY]);
+
   /** Call once when user completes the FTUE flow. */
   const completeFTUE = useCallback(() => {
     try {
@@ -47,7 +65,10 @@ export function useFTUE(sport: string) {
       /* ignore */
     }
     setIsFTUE(false);
-  }, [KEY]);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(FTUE_CHANGE_EVENT, { detail: { sport } }));
+    }
+  }, [KEY, sport]);
 
   return { isFTUE, completeFTUE };
 }

@@ -92,6 +92,9 @@ function BasketballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) 
           key={headshotSrc}
           src={headshotSrc}
           alt={String((card as any)?.name ?? "")}
+          decoding="async"
+          loading="eager"
+          fetchPriority="high"
           style={{ position: "absolute", top: "12%", left: "-5%", width: "110%", height: "100%", objectFit: "cover", objectPosition: "50% 10%", opacity: imgReady ? 1 : 0, transition: "opacity 0.3s ease" }}
           draggable={false}
           onLoad={() => setImgReady(true)}
@@ -102,11 +105,46 @@ function BasketballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) 
   );
 }
 
+// ── BadgeRow — shared badge display: icons + single total-bonus pill.
+// Mirrors the front accent strip pattern: badge icons (hover tooltip shows
+// each badge's individual FP contribution) followed by ONE gold "+N FP" pill
+// summing the total. Replaces both the cramped inline "+N" suffix that used
+// to live next to the hero FP and the per-badge "+N" labels.
+
+function BadgeRow({ badges }: { badges: Array<{ icon: string; label: string; fp: number; id?: string }> }) {
+  if (!badges?.length) return null;
+  const totalBonus = badges.reduce((s, b) => s + (b.fp ?? 0), 0);
+  return (
+    <div style={{ minHeight: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, flexWrap: "wrap", marginTop: 4 }}>
+      {badges.slice(0, 8).map((b, i) => (
+        <span
+          key={b.id ?? b.label ?? i}
+          title={`${b.label} (${b.fp > 0 ? "+" : ""}${b.fp})`}
+          style={{ fontSize: 12, lineHeight: 1 }}
+        >
+          {b.icon}
+        </span>
+      ))}
+      {totalBonus !== 0 && (
+        <span style={{
+          fontSize: 11, fontWeight: 900,
+          color: totalBonus > 0 ? "#FFD700" : "#FF6B6B",
+          background: "rgba(255,255,255,0.10)",
+          borderRadius: 4, padding: "1px 5px",
+          letterSpacing: 0.3, lineHeight: 1,
+        }}>
+          {totalBonus > 0 ? "+" : ""}{totalBonus} FP
+        </span>
+      )}
+    </div>
+  );
+}
+
 // ── AchievementBack — featured-stat hero layout for Top Games ────────────
 // Replaces the regular tile grid when the player hit a T0/T1/T2 achievement.
-// One headline (1+ featured stats), one tier-context line, then ALL the
-// remaining stats below as a comma row. No badge row in this mode — the
-// card is telling one story, not many.
+// One headline (1+ featured stats), one tier-context line, badges (each
+// labeled with their FP contribution), then the remaining stats. FP is
+// highlighted in the supporting row since it's no longer the hero number.
 
 const TIER_CONTEXT_BASE: Record<TopGameTier, string> = {
   record: "ALL-TIME RECORD",
@@ -168,6 +206,9 @@ function AchievementBack({
       ? { fontSize: 44, letterSpacing: -0.5 }
       : { fontSize: 64, letterSpacing: -1 };
 
+  const badgesData: Array<{ icon: string; label: string; fp: number; id?: string }> =
+    Array.isArray((card as any).achievements) ? (card as any).achievements.filter(Boolean) : [];
+
   return (
     <div style={{ ...S.backWrap, position: "relative" }}>
       <div style={S.backTopRow}>
@@ -186,23 +227,49 @@ function AchievementBack({
         </div>
         <div style={S.achContext}>{contextLine}</div>
       </div>
-      <StatRows stats={supporting} />
+      <BadgeRow badges={badgesData} />
+      <StatRows stats={supporting} highlightKey="FP" />
       <div style={S.tapHint}>TAP TO FLIP BACK</div>
     </div>
   );
 }
 
 // ── Two-row stat list helper — shared by AchievementBack and BackBStats.
-// Splits N stats across 2 centered comma rows (ceil(N/2) on top).
-function StatRows({ stats }: { stats: Array<{ key: string; value: number }> }) {
+// Splits N stats across 2 centered comma rows (ceil(N/2) on top). Optional
+// highlightKey applies a gold/bold treatment to one stat (used for FP on
+// AchievementBack, where FP got demoted from the hero slot).
+function StatRows({
+  stats,
+  highlightKey,
+}: {
+  stats: Array<{ key: string; value: number }>;
+  highlightKey?: string;
+}) {
   const half = Math.ceil(stats.length / 2);
   const row1 = stats.slice(0, half);
   const row2 = stats.slice(half);
-  const fmt = (s: { key: string; value: number }) => `${s.value} ${s.key}`;
+  const renderRow = (items: Array<{ key: string; value: number }>, rowKey: string) => (
+    <div style={S.achSupportRow}>
+      {items.map((s, i) => {
+        const isHl = highlightKey && s.key === highlightKey;
+        const stat = (
+          <span style={isHl ? { color: "#FFD27A", fontWeight: 900 } : undefined}>
+            {s.value} {s.key}
+          </span>
+        );
+        return (
+          <span key={`${rowKey}-${s.key}`}>
+            {stat}
+            {i < items.length - 1 && <span style={{ opacity: 0.45 }}>{"  ·  "}</span>}
+          </span>
+        );
+      })}
+    </div>
+  );
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 1, marginTop: 4 }}>
-      <div style={S.achSupportRow}>{row1.map(fmt).join("  ·  ")}</div>
-      {row2.length > 0 && <div style={S.achSupportRow}>{row2.map(fmt).join("  ·  ")}</div>}
+      {renderRow(row1, "r1")}
+      {row2.length > 0 && renderRow(row2, "r2")}
     </div>
   );
 }
@@ -235,8 +302,8 @@ function BackBStats({ card, topGameResult }: { card: PlayerCard; topGameTier?: T
   const opponent = String(rawOpp).trim();
   const ha = gi.homeAway || (sl.was_home === true ? "H" : sl.was_home === false ? "A" : "");
   const oppStr = opponent ? `${ha === "A" ? "@" : "vs"} ${opponent.toUpperCase()}` : "";
-  const badgesData: Array<{ icon: string; label: string; fp: number }> = Array.isArray((card as any).achievements) ? (card as any).achievements.filter(Boolean) : [];
-  const badgeFpBonus = badgesData.reduce((s, b) => s + (b.fp ?? 0), 0);
+  const badgesData: Array<{ icon: string; label: string; fp: number; id?: string }> =
+    Array.isArray((card as any).achievements) ? (card as any).achievements.filter(Boolean) : [];
   const hasStats = Object.keys(sl).length > 0;
   const allZero = allStats.every(s => s.value === 0);
 
@@ -260,19 +327,12 @@ function BackBStats({ card, topGameResult }: { card: PlayerCard; topGameTier?: T
             <div style={{ ...S.achHeadline, fontSize: 56, letterSpacing: -1 }}>
               <span style={S.achHeadlineNum}>{round1(actual)}</span>
               <span style={S.achHeadlineUnit}> FP</span>
-              {badgeFpBonus !== 0 && (
-                <span style={{ ...S.achHeadlineUnit, color: badgeFpBonus > 0 ? "#FFD700" : "#FF6B6B", marginLeft: 4 }}>
-                  {badgeFpBonus > 0 ? "+" : ""}{badgeFpBonus}
-                </span>
-              )}
             </div>
           </div>
-          {/* Badges between hero and stat rows. Emoji-only, max 8. */}
-          <div style={{ minHeight: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 3, flexWrap: "wrap", marginTop: 4 }}>
-            {badgesData.slice(0, 8).map((b, i) => (
-              <span key={b.id ?? b.label ?? i} title={`${b.label} (${b.fp > 0 ? "+" : ""}${b.fp})`} style={{ fontSize: 11, lineHeight: 1 }}>{b.icon}</span>
-            ))}
-          </div>
+          {/* Badges between hero and stat rows. Each badge shows its FP
+              contribution inline (treated as a property of the badge, not a
+              separate suffix on the hero FP — fixes the right-edge clipping). */}
+          <BadgeRow badges={badgesData} />
           <StatRows stats={allStats} />
         </>
       )}
@@ -338,7 +398,7 @@ type Props = {
   topGameResult?: TopGameResult | null;
 };
 
-export function AthleteCard(props: Props) {
+function AthleteCardImpl(props: Props) {
   const {
     glowActive,
     glowTier,
@@ -367,6 +427,49 @@ export function AthleteCard(props: Props) {
     />
   );
 }
+
+// Scalar props compared by ===. Excludes function props (onToggleLock,
+// onToggleFlip, onRollComplete) — RosterGrid passes inline arrows that
+// generate new references every render but the identity change does not
+// affect the rendered output.
+const SCALAR_KEYS: Array<keyof Props> = [
+  "phase", "locked", "isLocked", "isMvp", "flipped", "isFlipped", "canFlip",
+  "isRevealing", "visibleFp", "visibleBadgeCount", "noTransition",
+  "flipDurationMs", "fpCountUpMs", "performanceTag", "pulse", "shakeType",
+  "cardShakeType", "isSpotlight", "spotlightLevel", "isDimmed",
+  "heldFpVisible", "isTapTarget", "isFTUE", "glowActive", "glowTier",
+  "glowDurationMs", "topGameTier",
+];
+
+function badgesEqual(
+  a: Props["badges"] | undefined,
+  b: Props["badges"] | undefined,
+): boolean {
+  if (a === b) return true;
+  const al = a?.length ?? 0;
+  const bl = b?.length ?? 0;
+  if (al !== bl) return false;
+  if (al === 0) return true;
+  for (let i = 0; i < al; i++) {
+    const x = a![i];
+    const y = b![i];
+    if (x.id !== y.id || x.fp !== y.fp) return false;
+  }
+  return true;
+}
+
+function arePropsEqual(prev: Props, next: Props): boolean {
+  if (prev.card !== next.card) return false;
+  for (const k of SCALAR_KEYS) {
+    if (prev[k] !== next[k]) return false;
+  }
+  if (!badgesEqual(prev.badges, next.badges)) return false;
+  // Only the tier field affects the back layout branch; ignore allReasons etc.
+  if ((prev.topGameResult?.tier ?? null) !== (next.topGameResult?.tier ?? null)) return false;
+  return true;
+}
+
+export const AthleteCard = React.memo(AthleteCardImpl, arePropsEqual);
 
 export function AthleteCardLegacy(props: Props) {
   return <AthleteCard {...props} />;

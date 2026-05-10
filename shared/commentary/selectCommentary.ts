@@ -84,16 +84,98 @@ function determineIntensity(input: CommentaryInput): Intensity {
 // first, then gets into the star's performance.
 
 const RESULT_FRAMING: Record<Intensity, string[]> = {
-  legend:           ["Legend-tier night.", "Historic cash.", "Top-of-the-chart hand.", "Ceiling-kissing hand.", "Years from now, still telling this story.", "Bottle that night.", "That one goes in the book.", "Top of the mountain."],
-  mvp:              ["MVP-level hand.", "Huge night.", "Real money on this one.", "Serious cash.", "That's a number to remember.", "Money — actual money.", "Put that one in the highlight reel.", "Stack that in the trophy case."],
-  all_star:         ["Big one.", "All-Star cash.", "Real payout tonight.", "That's a hand that counts.", "Deep run.", "That's a hand that pays the rent.", "Real money, real satisfying.", "Pay day."],
-  starter_dominant: ["Cruised through.", "Comfortable win.", "Handled it.", "Had room to spare.", "Clean win with cushion.", "Felt like a choice, not a chase.", "Coasted into the payout.", "Easy money night."],
-  starter_normal:   ["Clean hand.", "Solid cash.", "Got the job done.", "Pro night.", "Money on the board.", "Punched in, punched out.", "Business as usual — boring is a skill.", "Pro night, pro paycheck."],
-  starter_barely:   ["Squeaked through.", "Held on by a thread.", "Barely held it together.", "Tight win.", "One play from a different result.", "Threaded the needle.", "Bend but not break.", "Photo finish."],
-  rookie:           ["Scraped a win.", "Barely cashed.", "Minimum on the board.", "Ugly win is still a win.", "Not pretty, but it cashed.", "Grinder of a hand.", "Green ink is green ink.", "Take the cash, forget the mechanics.", "These add up over time."],
-  bust_close:       ["One card short.", "Missed it by inches.", "Right there, not quite.", "Inches from the line.", "So close you could taste it.", "One possession away.", "That one stings.", "Tantalizingly close — still zero."],
-  bust_mid:         ["Bust night.", "Came up short.", "Off night across the board.", "Didn't get there.", "Hand never cashed.", "Chalk it up.", "Next hand.", "Not every hand cashes."],
-  bust_bad:         ["Never had it.", "Rough all around.", "A night to forget.", "Flat from the tip.", "Nothing worked tonight.", "Film room won't be kind.", "Write this one off.", "Nothing clicked, nothing close."],
+  legend: [
+    "Legend-tier night.", "Historic cash.", "Top-of-the-chart hand.", "Ceiling-kissing hand.",
+    "Years from now, still telling this story.", "Bottle that night.", "That one goes in the book.",
+    "Top of the mountain.", "Career-defining cash.", "All-time hand.", "Goosebumps cash.",
+    "One in a thousand.", "Save the box score.", "Frame this one.", "The kind you screenshot.",
+    "Hall-of-fame hand.", "Statue-worthy night.", "Banner night.", "Chef's kiss cash.",
+    "Rare-air payout.", "Tell your kids about this one.", "Lock-it-in legend.",
+    "Once-in-a-decade hand.", "Off-the-charts cash.", "Print-it-and-pin-it night.",
+  ],
+  mvp: [
+    "MVP-level hand.", "Huge night.", "Real money on this one.", "Serious cash.",
+    "That's a number to remember.", "Money — actual money.", "Put that one in the highlight reel.",
+    "Stack that in the trophy case.", "Statement payout.", "Premium cash.", "Top-shelf hand.",
+    "Big-boy cash.", "Heavy ledger.", "Quality green ink.", "Proper payout.", "Substantial.",
+    "That's the one.", "Headliner hand.", "Marquee night.", "Big-time cash.",
+    "Gold-standard payout.", "Now we're talking.", "Notable cash.", "Properly fat ledger.",
+    "Heavyweight payout.",
+  ],
+  all_star: [
+    "Big one.", "All-Star cash.", "Real payout tonight.", "That's a hand that counts.",
+    "Deep run.", "That's a hand that pays the rent.", "Real money, real satisfying.", "Pay day.",
+    "Solid payout.", "Quality cash.", "Above-average hand.", "Tangible green.", "Worth the hype.",
+    "Properly paid.", "Healthy ledger.", "Notable green.", "Cleanly cashed.", "Pulled it off.",
+    "Lined the wallet.", "Earned it.", "Take a bow.", "Counted ledger.", "Real-deal cash.",
+    "Comfortable green.", "Above-the-fold result.",
+  ],
+  starter_dominant: [
+    "Cruised through.", "Comfortable win.", "Handled it.", "Had room to spare.",
+    "Clean win with cushion.", "Felt like a choice, not a chase.", "Coasted into the payout.",
+    "Easy money night.", "Wire to wire.", "Foot off the gas.", "Rolled it up.", "Ran the table.",
+    "Done before the buzzer.", "Never in doubt.", "Walking-pace win.", "Casual cash.",
+    "Drifted in.", "Margin to burn.", "Stress-free hand.", "Relaxed payout.",
+    "Cleared with ease.", "Slid through it.", "Set and forget.", "Nothing to chase.",
+    "Drove it home.",
+  ],
+  starter_normal: [
+    "Clean hand.", "Solid cash.", "Got the job done.", "Pro night.", "Money on the board.",
+    "Punched in, punched out.", "Business as usual — boring is a skill.", "Pro night, pro paycheck.",
+    "Day's work.", "Standard cash.", "On-time delivery.", "Wins are wins.", "Quietly profitable.",
+    "Filed and paid.", "Receipts on the table.", "Modest cash.", "Workmanlike.", "Workman's cash.",
+    "Done and done.", "Posted the W.", "Closed the loop.", "Nothing fancy, paid out.",
+    "Steady-state win.", "Held the line.", "Showed up, paid out.",
+  ],
+  starter_barely: [
+    "Squeaked through.", "Held on by a thread.", "Barely held it together.", "Tight win.",
+    "One play from a different result.", "Threaded the needle.", "Bend but not break.",
+    "Photo finish.", "Tightrope win.", "Skin-of-teeth cash.", "Fingertip finish.",
+    "Won by a hair.", "By the skin.", "Squeezed it out.", "Razor-thin margin.",
+    "Wobbled across the line.", "Barely upright.", "Stumbled into green.", "Limped to cash.",
+    "On the bubble until the buzzer.", "Inch-of-margin win.", "Got there, barely.",
+    "Hangs together.", "Closer than the box says.", "By the eyelash.",
+  ],
+  // ROOKIE is the in-between zone: technically green, but not a "win" in any
+  // satisfying sense. Framing should signal limbo / breakeven / survival —
+  // never celebratory, never resigned. No "scraped a win" or "ugly win is
+  // still a win" language.
+  rookie: [
+    "Held the line.", "Treaded water.", "Even-Steven.", "Refused to bust.",
+    "Kept your seat at the table.", "Subsistence cash.", "Hovered above zero.",
+    "Floor-level result.", "Nominal payout.", "Marginal green.", "Token return.",
+    "Held position.", "Functional not festive.", "Not bust, not braggable.",
+    "Pushed the chair back even.", "Hand of survival.", "Crawled across the line.",
+    "Quietly survived.", "Break-even kind of night.", "Just kept the lights on.",
+    "Lukewarm green.", "Stayed in the room.", "Penny-ante cash.",
+    "Neither here nor there.", "Held even, held position.",
+  ],
+  bust_close: [
+    "One card short.", "Missed it by inches.", "Right there, not quite.", "Inches from the line.",
+    "So close you could taste it.", "One possession away.", "That one stings.",
+    "Tantalizingly close — still zero.", "Heartbreak cash.", "Almost-cash.", "Painful inches.",
+    "On the wrong side of close.", "Close enough to feel it.", "Tasted it. Lost it.",
+    "Rounding-error loss.", "Missed by a possession.", "One bounce different.",
+    "One free throw away.", "Brutal margin.", "Cruel inches.", "Should've cashed.",
+    "Could've, didn't.", "One play short.", "Stings extra.", "A whisper from green.",
+  ],
+  bust_mid: [
+    "Bust night.", "Came up short.", "Off night across the board.", "Didn't get there.",
+    "Hand never cashed.", "Chalk it up.", "Next hand.", "Not every hand cashes.",
+    "Loss column.", "Red ink.", "Move along.", "Tough hand.", "Closed in the negative.",
+    "Filed under loss.", "Take the lesson.", "Never developed.", "Went sideways.",
+    "Loss of the day.", "Not tonight.", "Try again.", "Miss.", "Whiff.",
+    "Underwater hand.", "Below the line.", "Quiet bust.",
+  ],
+  bust_bad: [
+    "Never had it.", "Rough all around.", "A night to forget.", "Flat from the tip.",
+    "Nothing worked tonight.", "Film room won't be kind.", "Write this one off.",
+    "Nothing clicked, nothing close.", "Disaster hand.", "Faceplant.", "Catastrophe.",
+    "Bottom fell out.", "Roster check needed.", "Shred it.", "Sub-floor performance.",
+    "Wheel-came-off night.", "Implosion.", "Burn the tape.", "Wiped out.", "Total miss.",
+    "Couldn't get out of its own way.", "Off the rails.", "Nothing connected.",
+    "Empty cabinet.", "Hand of dust.",
+  ],
 };
 
 // Archetype-specific framing — overrides intensity framing when the ARCHETYPE
@@ -277,22 +359,24 @@ const CHAD_ANALOGIES: Record<Intensity, string[]> = {
     "Bend-don't-break hand. Bent like yoga, didn't snap.",
     "The elevator doors closed on the bag but the bag made it through. So did this hand.",
   ],
+  // ROOKIE Chad analogies — match the in-between framing of the rookie pool.
+  // Survival, equilibrium, holding pattern — never "won ugly" celebration.
   rookie: [
-    "Won ugly, like parallel parking in Brooklyn.",
-    "Ugly like a 1990s minivan. Got you home anyway.",
-    "Parallel-parked a U-Haul tonight. It worked. Don't look too close.",
-    "Grinded out like rent money.",
-    "That hand had the structural integrity of a cardboard box. Still held the cash.",
-    "Green ink. That's the only grade this game awards.",
-    "Like a yard-sale purchase that turned out okay after you cleaned it up.",
-    "The hand equivalent of finishing a group project at 3 AM Sunday. Done is done.",
-    "Won on fumes. Fumes pay the same as premium.",
-    "That hand crossed the finish line on a shopping cart with one bad wheel.",
-    "Scraped by like a student who studies the night before. Still passed.",
-    "Ugly like a DMV photo. Officially yours, technically usable.",
-    "A hand that survived by luck, stubbornness, and low expectations.",
-    "Result with the elegance of a fridge-leftover reheat. Still nourishing.",
-    "Made it through like an unreturned library book that quietly got away with it.",
+    "The hand equivalent of paying rent on the 1st. Didn't gain ground; didn't lose it.",
+    "Like clearing the inbox to zero. Nothing accomplished, nothing pending.",
+    "The fantasy equivalent of finding exact change. Useful, not memorable.",
+    "Held position like a parked car in a tight spot. There, but not going anywhere.",
+    "Stood your ground the way you stand at a slow-moving DMV line.",
+    "Treadmill cash. The ledger moved its feet, the ledger went nowhere.",
+    "Ledger held its breath. Didn't exhale until the buzzer.",
+    "Like watching paint dry — except at the end the wall is still beige.",
+    "Energy of a midweek leftover lunch. Sustenance without occasion.",
+    "Net-zero hand with a slight green tint. Officially in the room.",
+    "Result with the drama of folded laundry. Necessary, finished.",
+    "Hand of in-between. Not the loss; not the win you'd tell anyone about.",
+    "The ledger-equivalent of a truce. Both sides walked away.",
+    "Showed up, signed in, signed out. Neither here nor there.",
+    "Quiet cash, the kind that arrives in a blank envelope.",
   ],
   bust_close: [
     "Closer than a drive-thru line at noon, and equally frustrating.",
@@ -585,26 +669,45 @@ function applyFraming(
   star: { name?: string } | null = null,
   roster: Array<{ name?: string }> = [],
 ): string {
-  // Optional Chad-style closing analogy. Three triggers:
-  //   1. High-signal moment — narratively big archetype/intensity always earns
-  //      color (LEGEND, career_night, star_carried_loss, near-miss, etc).
+  // Achievement archetypes (priority-0 in classifyArchetype) MUST lead with the
+  // achievement itself — but we no longer suppress framing/analogy entirely.
+  // Instead the mode selection below restricts achievement archetypes to
+  // CLOSER-only positions (modes 1/2/3) so framing and analogy add bulk as
+  // tail beats without burying the headline.
+  const isAchievement = (
+    archetype === "historic_record" ||
+    archetype === "historic_career" ||
+    archetype === "historic_season"
+  );
+
+  // LEGEND gets the analogy ~75% of the time (down from auto-fire pre-T2 fix
+  // which drove mean length to 173, but back from the 0% T2-overfit). Other
+  // high-signal triggers stay deterministic.
+  const legendHighSignal = intensity === "legend" && Math.abs(Math.floor(seed / 17)) % 4 < 3;
+
+  // Optional Chad-style closing analogy. Triggers:
+  //   1. High-signal moment — narratively big archetype/intensity earns color.
   //   2. Length floor — primaries < 100 chars waste 3+ UI rows; always extend.
   //   3. Seed-gated default — ~25% of remaining short-ish primaries (< 150 chars).
+  //   4. Achievement archetypes — 50% gate (adds bulk without burying headline).
   // Applied AFTER framing so the flow reads as: [framing?] [main template] [analogy?]
   const isHighSignal = (
     archetype === "career_night" ||
     archetype === "star_carried_loss" ||
     archetype === "collapse" ||
     archetype === "badge_explosion" ||
-    intensity === "legend" ||
+    legendHighSignal ||
     intensity === "bust_close"
   );
   const isVeryShort = main.length < 100;
   const chadGate = Math.abs(Math.floor(seed / 11)) % 4;
   const wantsChad = (
-    (isHighSignal && main.length < 220) ||
-    isVeryShort ||
-    (chadGate === 0 && main.length < 150)
+    (isAchievement && chadGate < 2 && main.length < 180) ||  // 50% on historic_*
+    (!isAchievement && (
+      (isHighSignal && main.length < 220) ||
+      isVeryShort ||
+      (chadGate === 0 && main.length < 150)
+    ))
   );
   const analogy = wantsChad ? pickChadAnalogy(intensity, seed) : "";
 
@@ -640,8 +743,22 @@ function applyFraming(
   // preserve variance on those paths, modes 0, 1, and 5 are reachable
   // (lead+analogy, close+analogy, lead-only). Modes that drop framing (2,3,4)
   // are excluded.
-  const rawMode = Math.abs(Math.floor(seed / 7)) % (forceFraming ? 3 : 6);
-  const mode = forceFraming && rawMode === 2 ? 5 : rawMode;
+  //
+  // Achievement archetypes (historic_*) restrict to modes 2 and 3:
+  //   2  main → analogy   (achievement leads, Chad analogy closes — adds bulk)
+  //   3  main alone       (bare — clean breath, secondary line still adds flavor)
+  // Mode 1 (framing closer) is excluded because RESULT_FRAMING is tier-keyed
+  // to the hand's totalFp — a career-high win that only cashed ROOKIE would
+  // close with "Take the cash, forget the mechanics", which clashes with
+  // the achievement headline. Skipping framing avoids the tier mismatch.
+  let mode: number;
+  if (isAchievement) {
+    const achGate = Math.abs(Math.floor(seed / 7)) % 5;
+    mode = achGate < 3 ? 2 : 3; // 60% analogy, 40% bare
+  } else {
+    const rawMode = Math.abs(Math.floor(seed / 7)) % (forceFraming ? 3 : 6);
+    mode = forceFraming && rawMode === 2 ? 5 : rawMode;
+  }
 
   const lead = () => usableFraming
     ? joinBeats(usableFraming, main, seed, 11, false)
@@ -702,14 +819,50 @@ const _cultureDb: Record<string, Record<string, CultureShape>> = {
   baseball: BASEBALL_CULTURE as unknown as Record<string, CultureShape>,
 };
 
-function lookupCulture(name: string, sport: string): CultureShape | null {
+/** True when the nickname is "iconic" — distinctive enough to use vs. just a
+ *  trivial first/last-name shortening. Filters "Mike", "Tony", "Bibby" but
+ *  passes "Penny", "Big Ben", "El Contusion", "Mr. Big Shot". */
+function isIconicNickname(nick: string, fullName: string): boolean {
+  if (nick.length < 4) return false;
+  const parts = fullName.trim().split(/\s+/);
+  const first = (parts[0] ?? "").toLowerCase();
+  const last = (parts[parts.length - 1] ?? "").toLowerCase();
+  const n = nick.toLowerCase();
+  return n !== first && n !== last;
+}
+
+/** Tier-gated culture lookup.
+ *    RED, ORANGE          → always return culture if present
+ *    PURPLE               → only when ≥1 iconic nickname exists, ~30% of hands
+ *    BLUE, GREEN, WHITE   → never (prevents misattribution like
+ *                            "Anthony Carter" → Vince Carter's "Vinsanity")
+ *    undefined/missing    → permissive (legacy/test paths) */
+function lookupCulture(
+  name: string,
+  sport: string,
+  cardTier?: string,
+  seed = 0,
+): CultureShape | null {
+  const tier = (cardTier ?? "").toUpperCase();
+  if (tier === "BLUE" || tier === "GREEN" || tier === "WHITE") return null;
+
   const db = _cultureDb[sport];
   if (!db) return null;
   const parts = name.trim().split(/\s+/);
   const suffixes = new Set(["II", "III", "IV", "V", "Jr.", "Jr", "Sr.", "Sr"]);
   while (parts.length > 1 && suffixes.has(parts[parts.length - 1])) parts.pop();
   const last = (parts[parts.length - 1] ?? "").toLowerCase();
-  return db[last] ?? null;
+  const culture = db[last] ?? null;
+  if (!culture) return null;
+
+  if (tier === "PURPLE") {
+    const hasIconic = (culture.nicknames ?? []).some(n => isIconicNickname(n, name));
+    if (!hasIconic) return null;
+    // ~30% probabilistic gate — keep PURPLE culture rare and signal-y
+    const gate = Math.abs(Math.floor(seed / 13)) % 10;
+    if (gate >= 3) return null;
+  }
+  return culture;
 }
 
 // ── Team flavor lookup (basketball only) ───────────────────────────────────
@@ -1047,7 +1200,7 @@ export function selectCommentary(
   const { details, recordEvents } = selectStory(input, seed, sport);
 
   // Step 5: Build template data
-  const culture = star ? lookupCulture(star.name, sport) : null;
+  const culture = star ? lookupCulture(star.name, sport, star.cardTier, seed) : null;
   const teamFlavor = star ? lookupTeamFlavor(star.opponent, sport) : null;
   const templateData = buildTemplateData(star, input, recordEvents, culture, costar);
 
@@ -1087,9 +1240,11 @@ export function selectCommentary(
   // designed to flow through to a normal archetype but tag a personal-best
   // detail. Without preference, the season_best_stat template competes
   // unweighted with the rest of the pool and almost never wins, so the
-  // milestone goes unmentioned. Narrow to season_best_stat templates first;
-  // fall through to the normal candidate flow if none exist for any archetype
-  // in the chain.
+  // milestone goes unmentioned. Prefer (a) the dedicated historic_career
+  // templates (which use {topStat} directly) when available, then fall back to
+  // (b) any template tagged requires:["season_best_stat"]. Without (a), the
+  // historic_career templates added in PR #76 stay dead because the legacy
+  // star_carry seasonBestStat templates always win the fallback race.
   if (input.topGame?.tier === "career") {
     for (const arch of fallbackChain) {
       const pool = library[arch] ?? [];
@@ -1097,7 +1252,7 @@ export function selectCommentary(
         line.enabled &&
         line.register === register &&
         (line.sport === "any" || line.sport === sport) &&
-        line.requires?.includes("season_best_stat")
+        (line.archetype === "historic_career" || line.requires?.includes("season_best_stat"))
       );
       if (t1Match.length > 0) {
         candidates = t1Match;
@@ -1170,12 +1325,34 @@ export function selectCommentary(
   // Step 9: Record usage in anti-repeat
   recordUsage(best.line.id, matchedArchetype, tone, mainLine);
 
-  // Step 10: Return single-line commentary with varied framing.
+  // Step 10: Apply framing to compose the primary line.
   // Template path mixes framing sources (archetype / anchor / nickname / culture
   // / generic) based on seed + context, plus three position modes. Keeps the
   // result reflection from appearing in the same shape every hand.
   const templateStarRatio = star && star.projectedFp ? star.actualFp / star.projectedFp : 1;
   const maxSalary = input.roster.reduce((m, c) => Math.max(m, c.salary), 0);
   const isAnchor = !!star && star.salary === maxSalary;
-  return { primary: applyFraming(mainLine, intensity, matchedArchetype, seed, culture, templateStarRatio, input.isBust, isAnchor, deltaToNextTier, false, star, input.roster) };
+  const primary = applyFraming(mainLine, intensity, matchedArchetype, seed, culture, templateStarRatio, input.isBust, isAnchor, deltaToNextTier, false, star, input.roster);
+
+  // Step 11: Optional culture-secondary line. Adds a flavor beat (signature
+  // game / team flavor / milestone) when culture is available. Now fires for
+  // achievement archetypes too — the secondary is a separate UI line, so it
+  // adds bulk without burying the achievement headline. cultureSecondary
+  // itself returns null when culture is null (BLUE/GREEN/WHITE stars, or
+  // PURPLE without iconic nickname, or 70% of PURPLE hands), so the player-
+  // culture gate is automatic. Team-flavor (venue voice) fires regardless.
+  let secondary: string | undefined;
+  if (star) {
+    const primaryLower = primary.toLowerCase();
+    const starLast = lastName(star.name).toLowerCase();
+    const primaryNamesStar = (
+      primaryLower.includes(star.name.toLowerCase()) ||
+      (starLast.length >= 3 && primaryLower.includes(starLast)) ||
+      (culture?.nicknames ?? []).some(n => n.length >= 3 && primaryLower.includes(n.toLowerCase()))
+    );
+    const sec = cultureSecondary(star, culture, teamFlavor, input, seed, primaryNamesStar);
+    if (sec) secondary = sec;
+  }
+
+  return secondary ? { primary, secondary } : { primary };
 }

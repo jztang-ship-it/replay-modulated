@@ -91,9 +91,15 @@ describe("classifyArchetype", () => {
     })).archetype).toBe("star_cold");
   });
 
-  test("ugly_win fires for low-ratio ROOKIE win", () => {
-    const card = makeCard({ actualFp: 20, projectedFp: 30 });
-    expect(classifyArchetype(makeInput({ roster: [card], winTier: "ROOKIE" })).archetype).toBe("ugly_win");
+  test("rookie_neutral preempts ugly_win for ROOKIE-tier wins", () => {
+    // Per design: ROOKIE is the in-between tier (just above bust), not a
+    // celebrated "win". ALL ROOKIE-tier wins route to rookie_neutral after
+    // achievement / career-night / badge-explosion overrides have had their
+    // shot, regardless of star ratio.
+    const lowRatio = makeCard({ actualFp: 20, projectedFp: 30 });
+    expect(classifyArchetype(makeInput({ roster: [lowRatio], winTier: "ROOKIE" })).archetype).toBe("rookie_neutral");
+    const highRatio = makeCard({ actualFp: 50, projectedFp: 30 });
+    expect(classifyArchetype(makeInput({ roster: [highRatio], winTier: "ROOKIE" })).archetype).toBe("rookie_neutral");
   });
 
   test("star_delivered fires for solid ratio win", () => {

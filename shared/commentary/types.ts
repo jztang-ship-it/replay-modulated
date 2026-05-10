@@ -227,6 +227,7 @@ export type CommentaryArchetype =
   | "collapse"
   | "career_night"
   | "multi_star_carry"
+  | "rookie_neutral"
   // ── Reserved (schema only, no lines yet) ──
   | "streak_first"
   | "streak_milestone"

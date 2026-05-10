@@ -28,6 +28,10 @@ export const ARCHETYPE_REGISTRY: Record<CommentaryArchetype, ArchetypeMeta> = {
   ugly_win:         { register: "win",  active: true,  fallback: "balanced_win",     legacyStoryIds: [] },
   career_night:     { register: "any",  active: true,  fallback: "star_carry",       legacyStoryIds: [] },
   multi_star_carry: { register: "win",  active: true,  fallback: "star_carry_big",   legacyStoryIds: [] },
+  // ROOKIE-tier wins route here after achievement / badge_explosion checks.
+  // Templates are neutral ("held position", "floor result") rather than
+  // celebrating a cash that's barely above the bust line.
+  rookie_neutral:   { register: "win",  active: true,  fallback: "balanced_win",     legacyStoryIds: [] },
 
   // ── Active — Loss ─────────────────────────────────────────────────────────
   near_miss:        { register: "loss", active: true,  fallback: "everyone_flat",    legacyStoryIds: [] },
