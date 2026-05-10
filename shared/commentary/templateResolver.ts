@@ -169,6 +169,13 @@ export function buildTemplateData(
       const r = pickStatReason(input.topGame);
       return r ? (CATEGORY_READABLE[r.category] ?? "") : "";
     })(),
+    // Raw stat-typed category code — internal-use for detail-snippet guards
+    // (e.g. rare_badge skips "40-point game on the side" when headline is pts).
+    topCategoryRaw: (() => {
+      if (!input.topGame) return "";
+      const r = pickStatReason(input.topGame);
+      return r && r.category in STAT_UNITS ? r.category : "";
+    })(),
     // T1 career — provides personal-best phrasing for templates that opt in via requires:['season_best_stat'].
     // The detail-token name predates the tier rename; kept for stable template references.
     seasonBestStat: input.topGame?.tier === "career" ? (input.topGame.primaryReason?.label ?? "") : "",
@@ -260,12 +267,18 @@ const DETAIL_SNIPPETS: Record<string, (data: TemplateData) => string> = {
     // the topGame headline (e.g., "50-point game" badge on a points-tier-of-
     // the-season hand) — that would just restate the headline.
     if (!d.badge) return "";
-    const cat = (d.topCategory ?? "").toLowerCase();
+    // Use the RAW category code, not the readable form. {topCategory} is now
+    // "scoring"/"rebounding"/etc. so comparing it to "pts" would always miss
+    // and let "40-point game on the side" pair with a "47 pts" headline.
+    const cat = (d.topCategoryRaw ?? "").toLowerCase();
     const b = d.badge.toLowerCase();
     const overlaps = (
       (cat === "pts" && (b.includes("point") || b.includes("-point"))) ||
       (cat === "reb" && b.includes("rebound")) ||
-      (cat === "ast" && (b.includes("assist") || b.includes("dime")))
+      (cat === "ast" && (b.includes("assist") || b.includes("dime"))) ||
+      (cat === "stl" && b.includes("steal")) ||
+      (cat === "blk" && b.includes("block")) ||
+      (cat === "threes" && (b.includes("three") || b.includes("3-point")))
     );
     if (overlaps) return "";
     return `${d.badge[0].toUpperCase() + d.badge.slice(1)} on the side.`;
