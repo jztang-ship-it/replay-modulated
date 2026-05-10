@@ -116,11 +116,13 @@ function BasketballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) 
 // to live next to the hero FP and the per-badge "+N" labels.
 
 function BadgeRow({ badges }: { badges: Array<{ icon: string; label: string; fp: number; id?: string }> }) {
-  if (!badges?.length) return null;
-  const totalBonus = badges.reduce((s, b) => s + (b.fp ?? 0), 0);
+  // Always render the row (even empty) so the hero number's vertical position
+  // doesn't shift between cards-with-badges and cards-without. Reserved
+  // height matches the populated layout (icons + pill).
+  const totalBonus = badges?.reduce((s, b) => s + (b.fp ?? 0), 0) ?? 0;
   return (
-    <div style={{ minHeight: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, flexWrap: "wrap", marginTop: 4 }}>
-      {badges.slice(0, 8).map((b, i) => (
+    <div style={{ minHeight: 18, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, flexWrap: "wrap", marginTop: 4 }}>
+      {(badges ?? []).slice(0, 8).map((b, i) => (
         <span
           key={b.id ?? b.label ?? i}
           title={`${b.label} (${b.fp > 0 ? "+" : ""}${b.fp})`}
@@ -209,11 +211,13 @@ function AchievementBack({
   })();
 
   // Number font scales down as more achievements stack into one headline.
+  // Reduced from 32/44/64 → 28/40/56 — single-stat hero was getting visually
+  // close to the side gutters; the smaller scale keeps comfortable margin.
   const numFontStyle: React.CSSProperties = featured.length >= 3
-    ? { fontSize: 32, letterSpacing: -0.5 }
+    ? { fontSize: 28, letterSpacing: -0.5 }
     : featured.length === 2
-      ? { fontSize: 44, letterSpacing: -0.5 }
-      : { fontSize: 64, letterSpacing: -1 };
+      ? { fontSize: 40, letterSpacing: -0.5 }
+      : { fontSize: 56, letterSpacing: -1 };
 
   const badgesData: Array<{ icon: string; label: string; fp: number; id?: string }> =
     Array.isArray((card as any).achievements) ? (card as any).achievements.filter(Boolean) : [];
@@ -338,7 +342,7 @@ function BackBStats({ card, topGameResult }: { card: PlayerCard; topGameTier?: T
       ) : (
         <>
           <div style={S.achWrap}>
-            <div style={{ ...S.achHeadline, fontSize: 56, letterSpacing: -1 }}>
+            <div style={{ ...S.achHeadline, fontSize: 48, letterSpacing: -1 }}>
               <span style={S.achHeadlineNum}>{round1(actual)}</span>
               <span style={S.achHeadlineUnit}> FP</span>
             </div>
