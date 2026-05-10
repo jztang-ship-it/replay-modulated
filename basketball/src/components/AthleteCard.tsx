@@ -92,6 +92,9 @@ function BasketballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) 
           key={headshotSrc}
           src={headshotSrc}
           alt={String((card as any)?.name ?? "")}
+          decoding="async"
+          loading="eager"
+          fetchPriority="high"
           style={{ position: "absolute", top: "12%", left: "-5%", width: "110%", height: "100%", objectFit: "cover", objectPosition: "50% 10%", opacity: imgReady ? 1 : 0, transition: "opacity 0.3s ease" }}
           draggable={false}
           onLoad={() => setImgReady(true)}

@@ -76,6 +76,8 @@ const BasketballCardThumb: React.FC<{ playerId: string; isAnchor: boolean; index
         <img
           src={url}
           alt={meta?.name ?? playerId}
+          decoding="async"
+          loading="lazy"
           style={{ width: 48, height: 48, borderRadius: "50%", objectFit: "cover", background: circleBg }}
           onError={(e) => { (e.target as HTMLImageElement).style.visibility = "hidden"; }}
         />

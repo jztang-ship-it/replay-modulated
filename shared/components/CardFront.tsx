@@ -730,13 +730,13 @@ export function CardFront(props: CardFrontProps) {
                     pointerEvents: "none",
                   }} />
                 )}
-                <img src={src} style={{ ...imgBase, opacity: op1, animation: `${animA} ${speed}s ease-in-out infinite` }} />
+                <img src={src} decoding="async" style={{ ...imgBase, opacity: op1, animation: `${animA} ${speed}s ease-in-out infinite` }} />
                 <div style={{ position: "absolute", inset: 0, transform: "scaleX(-1)" }}>
-                  <img src={src} style={{ ...imgBase, opacity: op2, animation: `${animB} ${speed}s ease-in-out infinite` }} />
+                  <img src={src} decoding="async" style={{ ...imgBase, opacity: op2, animation: `${animB} ${speed}s ease-in-out infinite` }} />
                 </div>
                 {useThirdLayer && (
                   <div style={{ position: "absolute", inset: 0, transform: "scaleY(-1)" }}>
-                    <img src={src} style={{ ...imgBase, opacity: op2 * 0.55, animation: `cfSmokingC ${speed * 1.2}s ease-in-out infinite 0.3s` }} />
+                    <img src={src} decoding="async" style={{ ...imgBase, opacity: op2 * 0.55, animation: `cfSmokingC ${speed * 1.2}s ease-in-out infinite 0.3s` }} />
                   </div>
                 )}
                 {/* TOP-GAME specular sheen — same flame texture, brighter filter,
@@ -745,7 +745,7 @@ export function CardFront(props: CardFrontProps) {
                     a separate floating element. Uses mask-position keyframes so
                     the highlight band slides without moving any DOM. */}
                 {isTopGame && (
-                  <img src={src} style={{
+                  <img src={src} decoding="async" style={{
                     ...imgBase,
                     opacity: 0.55,
                     filter: `${tintFilter} brightness(1.7) saturate(1.4)`,
@@ -788,15 +788,15 @@ export function CardFront(props: CardFrontProps) {
           };
           return (
             <div style={clipStyle}>
-              <img src={src} style={{ ...imgBase, opacity: op1, animation: `cfFreezeSheetA ${speed}s ease-in-out infinite` }} />
+              <img src={src} decoding="async" style={{ ...imgBase, opacity: op1, animation: `cfFreezeSheetA ${speed}s ease-in-out infinite` }} />
               {layers >= 2 && (
                 <div style={{ position: "absolute", inset: 0, transform: "scaleX(-1)" }}>
-                  <img src={src} style={{ ...imgBase, opacity: op2, animation: `cfFreezeSheetB ${speed}s ease-in-out infinite` }} />
+                  <img src={src} decoding="async" style={{ ...imgBase, opacity: op2, animation: `cfFreezeSheetB ${speed}s ease-in-out infinite` }} />
                 </div>
               )}
               {layers >= 3 && (
                 <div style={{ position: "absolute", inset: 0, transform: "scaleY(-1)" }}>
-                  <img src={src} style={{ ...imgBase, opacity: op2 * 0.75, animation: `cfFreezeSheetA ${speed * 1.2}s ease-in-out infinite 1s` }} />
+                  <img src={src} decoding="async" style={{ ...imgBase, opacity: op2 * 0.75, animation: `cfFreezeSheetA ${speed * 1.2}s ease-in-out infinite 1s` }} />
                 </div>
               )}
             </div>
