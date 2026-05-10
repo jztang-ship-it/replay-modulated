@@ -1149,15 +1149,14 @@ function cultureSecondary(
     }
   }
 
-  // teamFlavor — the venue/opponent voice for tonight's matchup.
-  // hype on big wins, cold on busts, humor as a neutral splash.
-  // identity removed: too generic/franchise-narrative, not about tonight.
-  if (teamFlavor) {
-    const boost = primaryNamesStar ? 2 : 1;
-    if (input.isBust) pool.push({ weight: 18 * boost, line: teamFlavor.cold });
-    else if (isBigWin) pool.push({ weight: 18 * boost, line: teamFlavor.hype });
-    else pool.push({ weight: 10 * boost, line: teamFlavor.humor });
-  }
+  // teamFlavor (opponent voice) intentionally NOT surfaced here.
+  // Lines like "Pelicans had a long evening" reference the star's opponent
+  // without anywhere in the commentary establishing that matchup, so they
+  // read as random trivia disconnected from what the user's roster did.
+  // The secondary is only useful when it supports the star/result context;
+  // when no star-anchored flavor qualifies, returning null (no secondary)
+  // is preferable to opponent-centric filler.
+  void teamFlavor; // keep param for callers; not referenced
 
   if (pool.length === 0) return null;
 
