@@ -40,12 +40,18 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "2954": { apiFootballId: 2926, local: true, processed: true },
   // Kylian Mbappé Lottin (France)
   "3009": { apiFootballId: 278, local: true, processed: true },
+  // Adrien Rabiot (France)
+  "3026": { apiFootballId: 272, local: true, processed: true },
   // Kamil Glik (Poland)
   "3034": { apiFootballId: 97, local: true, processed: true },
   // Christian Dannemann Eriksen (Denmark)
   "3043": { apiFootballId: 174, local: true, processed: true },
+  // Leroy Sané (Germany)
+  "3053": { apiFootballId: 644, local: true, processed: true },
   // Danilo Luiz da Silva (Brazil)
   "3063": { apiFootballId: 224405, local: true, processed: true },
+  // Kevin De Bruyne (Belgium)
+  "3089": { apiFootballId: 629, local: true, processed: true },
   // Nicolás Hernán Otamendi (Argentina)
   "3090": { apiFootballId: 624, local: true, processed: true },
   // Hugo Lloris (France)
@@ -82,10 +88,14 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "3436": { apiFootballId: 2990, local: true, processed: true },
   // Jordan Pickford (England)
   "3468": { apiFootballId: 2932, local: true, processed: true },
+  // Álvaro Borja Morata Martín (Spain)
+  "3477": { apiFootballId: 183672, local: true, processed: true },
   // Wayne Hennessey (Wales)
   "3488": { apiFootballId: 18836, local: true, processed: true },
   // Thibaut Courtois (Belgium)
   "3509": { apiFootballId: 730, local: true, processed: true },
+  // Xherdan Shaqiri (Switzerland)
+  "3533": { apiFootballId: 307, local: true, processed: true },
   // Faustino Marcos Alberto Rojo (Argentina)
   "3602": { apiFootballId: 1116, local: true, processed: true },
   // Eden Hazard (Belgium)
@@ -98,6 +108,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "3815": { apiFootballId: 2728, local: true, processed: true },
   // Andreas Christensen (Denmark)
   "3959": { apiFootballId: 378712, local: true, processed: true },
+  // Aleksandar Mitrović (Serbia)
+  "4269": { apiFootballId: 271605, local: true, processed: true },
   // Neymar da Silva Santos Junior (Brazil)
   "4320": { apiFootballId: 225804, local: true, processed: true },
   // Aymeric Laporte (Spain)
@@ -118,16 +130,22 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "5187": { apiFootballId: 44340, local: true, processed: true },
   // Lucas Vázquez Iglesias (Spain)
   "5200": { apiFootballId: 762, local: true, processed: true },
+  // Bruno Miguel Borges Fernandes (Portugal)
+  "5204": { apiFootballId: 337369, local: true, processed: true },
   // Romain Saïss (Morocco)
   "5219": { apiFootballId: 2716, local: true, processed: true },
   // Mehdi Taremi (Iran)
   "5226": { apiFootballId: 42315, local: true, processed: true },
   // Alireza Safar Beiranvand (Iran)
   "5227": { apiFootballId: 2682, local: true, processed: true },
+  // Sofyan Amrabat (Morocco)
+  "5234": { apiFootballId: 74, local: true, processed: true },
   // Ramin Rezaeian (Iran)
   "5235": { apiFootballId: 2691, local: true, processed: true },
   // Hakim Ziyech (Morocco)
   "5237": { apiFootballId: 548, local: true, processed: true },
+  // Alireza Jahanbakhsh (Iran)
+  "5239": { apiFootballId: 2700, local: true, processed: true },
   // Vahid Amiri (Iran)
   "5241": { apiFootballId: 2692, local: true, processed: true },
   // Mateo Kovačić (Croatia)
@@ -140,6 +158,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "5474": { apiFootballId: 207, local: true, processed: true },
   // Aziz Eraltay Behich (Australia)
   "5479": { apiFootballId: 225, local: true, processed: true },
+  // Mathew Leckie (Australia)
+  "5481": { apiFootballId: 2751, local: true, processed: true },
   // Raphaël Varane (France)
   "5485": { apiFootballId: 742, local: true, processed: true },
   // Antoine Griezmann (France)
@@ -174,10 +194,14 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "5600": { apiFootballId: 658364, local: true, processed: true },
   // Nikola Milenković (Serbia)
   "5603": { apiFootballId: 2817, local: true, processed: true },
+  // Ali Maâloul (Tunisia)
+  "5647": { apiFootballId: 2947, local: true, processed: true },
   // Yassine Meriah (Tunisia)
   "5651": { apiFootballId: 1597, local: true, processed: true },
   // Dylan Daniel Mahmoud Bronn (Tunisia)
   "5655": { apiFootballId: 2945, local: true, processed: true },
+  // Robert Lewandowski (Poland)
+  "5668": { apiFootballId: 147229, local: true, processed: true },
   // Wojciech Szczęsny (Poland)
   "5669": { apiFootballId: 851, local: true, processed: true },
   // Bartosz Bereszyński (Poland)
@@ -194,6 +218,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "6318": { apiFootballId: 579, local: true, processed: true },
   // Milos Veljkovic (Serbia)
   "6321": { apiFootballId: 2821, local: true, processed: true },
+  // Thomas Teye Partey (Ghana)
+  "6383": { apiFootballId: 49, local: true, processed: true },
   // Yassine Bounou (Morocco)
   "6785": { apiFootballId: 2701, local: true, processed: true },
   // Damián Emiliano Martínez (Argentina)
@@ -242,12 +268,18 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "10956": { apiFootballId: 175, local: true, processed: true },
   // Ibrahima Konaté (France)
   "11135": { apiFootballId: 86964, local: true, processed: true },
+  // Vincent Paté Aboubakar (Cameroon)
+  "11174": { apiFootballId: 386, local: true, processed: true },
   // Stephen Antunes Eustáquio (Canada)
   "11187": { apiFootballId: 35570, local: true, processed: true },
   // David Raum (Germany)
   "12034": { apiFootballId: 25158, local: true, processed: true },
+  // João Félix Sequeira (Portugal)
+  "12041": { apiFootballId: 196958, local: true, processed: true },
   // Alphonso Davies (Canada)
   "12365": { apiFootballId: 509, local: true, processed: true },
+  // Famara Diedhiou (Senegal)
+  "13314": { apiFootballId: 19278, local: true, processed: true },
   // Noussair Mazraoui (Morocco)
   "15890": { apiFootballId: 545, local: true, processed: true },
   // Miloš Degenek (Australia)
@@ -262,8 +294,12 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "16190": { apiFootballId: 533, local: true, processed: true },
   // Nemanja Gudelj (Serbia)
   "16489": { apiFootballId: 1489, local: true, processed: true },
+  // Mislav Oršić (Croatia)
+  "16527": { apiFootballId: 1330, local: true, processed: true },
   // Dominik Livaković (Croatia)
   "16531": { apiFootballId: 1305, local: true, processed: true },
+  // Daniel Olmo Carvajal (Spain)
+  "16532": { apiFootballId: 189011, local: true, processed: true },
   // Mohammed Kudus (Ghana)
   "17033": { apiFootballId: 15911, local: true, processed: true },
   // Vinícius José Paixão de Oliveira Júnior (Brazil)
@@ -280,6 +316,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "21809": { apiFootballId: 38746, local: true, processed: true },
   // Bukayo Saka (England)
   "22084": { apiFootballId: 19220, local: true, processed: true },
+  // Randal Kolo Muani (France)
+  "22097": { apiFootballId: 21104, local: true, processed: true },
   // Harry Souttar (Australia)
   "22293": { apiFootballId: 20079, local: true, processed: true },
   // Lucas Tolentino Coelho de Lima (Brazil)
@@ -302,6 +340,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "28268": { apiFootballId: 6002, local: true, processed: true },
   // Fran Karačić (Australia)
   "28370": { apiFootballId: 14386, local: true, processed: true },
+  // Ko Itakura (Japan)
+  "29595": { apiFootballId: 38114, local: true, processed: true },
   // Gabriel Teodoro Martinelli Silva (Brazil)
   "29976": { apiFootballId: 253732, local: true, processed: true },
   // Felix Eduardo Torres Caicedo (Ecuador)
@@ -328,6 +368,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "37148": { apiFootballId: 14701, local: true, processed: true },
   // Ao Tanaka (Japan)
   "37208": { apiFootballId: 32966, local: true, processed: true },
+  // Moisés Isaac Caicedo Corozo (Ecuador)
+  "37726": { apiFootballId: 16414, local: true, processed: true },
   // Angelo Smit Preciado Quiñónez (Ecuador)
   "37737": { apiFootballId: 63963, local: true, processed: true },
   // Enzo Fernandez (Argentina)
@@ -340,6 +382,10 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "43565": { apiFootballId: 645996, local: true, processed: true },
   // Jakub Piotr Kiwior (Poland)
   "44166": { apiFootballId: 61431, local: true, processed: true },
+  // Alidu Seidu (Ghana)
+  "45047": { apiFootballId: 196187, local: true, processed: true },
+  // Azzedine Ounahi (Morocco)
+  "46258": { apiFootballId: 129678, local: true, processed: true },
   // Josip Stanišić (Croatia)
   "49337": { apiFootballId: 125171, local: true, processed: true },
   // Abdulelah Al Amri (Saudi Arabia)
