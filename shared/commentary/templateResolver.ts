@@ -37,16 +37,51 @@ function oppPhrase(c: CommentaryRosterCard): string {
   return c.homeAway === "A" ? ` in ${city}` : ` against ${city}`;
 }
 
+// Stat categories with measurable units. Categories NOT in this map (e.g.
+// "fifty_plus_game", "five_by_five", "td_30_20_20") are flag-style markers
+// with value:1 — never render them as "1 fifty_plus_game".
+const STAT_UNITS: Record<string, string> = {
+  // basketball
+  pts: "pts", reb: "reb", ast: "ast", threes: "threes", stl: "stl", blk: "blk",
+  // baseball
+  hr: "HR", h: "hits", rbi: "RBI", k: "K", sb: "SB", ip: "IP", bb: "BB", r: "R",
+};
+
+// Human-readable phrasing of a stat category for inline use in templates
+// (e.g. "{topCategory}" → "scoring"). Flag categories map to "" so any
+// template referencing them degrades cleanly.
+const CATEGORY_READABLE: Record<string, string> = {
+  pts: "scoring",
+  reb: "rebounding",
+  ast: "playmaking",
+  stl: "steals",
+  blk: "blocks",
+  threes: "three-point shooting",
+  hr: "home run",
+  h: "hits",
+  rbi: "RBI",
+  k: "strikeout",
+  sb: "stolen base",
+  ip: "innings pitched",
+  bb: "walks",
+  r: "runs",
+};
+
+/** Pick the stat-typed reason from allReasons (fall back to primaryReason).
+ *  Avoids surfacing flag categories like "fifty_plus_game" as headlines. */
+function pickStatReason(topGame: NonNullable<CommentaryInput["topGame"]>) {
+  const all = topGame.allReasons?.length
+    ? topGame.allReasons
+    : (topGame.primaryReason ? [topGame.primaryReason] : []);
+  return all.find(r => r.category in STAT_UNITS) ?? topGame.primaryReason ?? null;
+}
+
 function formatTopStat(topGame: NonNullable<CommentaryInput["topGame"]>, _star: CommentaryRosterCard | null): string {
-  if (!topGame.primaryReason) return "";
-  const { category, value } = topGame.primaryReason;
-  const units: Record<string, string> = {
-    // basketball
-    pts: "pts", reb: "reb", ast: "ast", threes: "threes", stl: "stl", blk: "blk",
-    // baseball
-    hr: "HR", h: "hits", rbi: "RBI", k: "K", sb: "SB", ip: "IP", bb: "BB", r: "R",
-  };
-  return `${value} ${units[category] ?? category}`;
+  const r = pickStatReason(topGame);
+  if (!r) return "";
+  const unit = STAT_UNITS[r.category];
+  if (!unit) return ""; // all reasons were flag categories — skip
+  return `${r.value} ${unit}`;
 }
 
 // ─── Build template data ────────────────────────────────────────────────────
@@ -126,7 +161,14 @@ export function buildTemplateData(
     topStat: input.topGame?.primaryReason ? formatTopStat(input.topGame, star) : topStat,
     topTier: input.topGame?.tier ?? null,
     topLabel: input.topGame?.primaryReason?.label ?? "",
-    topCategory: input.topGame?.primaryReason?.category ?? "",
+    // Readable phrasing of the stat category ("scoring", "rebounding", etc.).
+    // Falls back through to the stat-typed reason in allReasons so flag
+    // categories (fifty_plus_game) don't bleed into "{topCategory}" templates.
+    topCategory: (() => {
+      if (!input.topGame) return "";
+      const r = pickStatReason(input.topGame);
+      return r ? (CATEGORY_READABLE[r.category] ?? "") : "";
+    })(),
     // T1 career — provides personal-best phrasing for templates that opt in via requires:['season_best_stat'].
     // The detail-token name predates the tier rename; kept for stable template references.
     seasonBestStat: input.topGame?.tier === "career" ? (input.topGame.primaryReason?.label ?? "") : "",
