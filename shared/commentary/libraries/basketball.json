@@ -4451,7 +4451,7 @@
       "archetype": "near_miss",
       "register": "loss",
       "tone": "analytical",
-      "template": "The gap was {gap}. {last}'s usage was there.",
+      "template": "Missed by {gap}. {last} did his part — the rest didn't.",
       "tags": [
         "near_miss",
         "phase2"
@@ -4983,7 +4983,7 @@
       "archetype": "ugly_win",
       "register": "win",
       "tone": "analytical",
-      "template": "{last}'s usage was there but efficiency cratered — supporting cast bridged the gap.",
+      "template": "{last} forced the action but the shots didn't fall. The bench got it across.",
       "tags": [
         "ugly_win",
         "phase2"
@@ -5564,7 +5564,7 @@
       "archetype": "collapse",
       "register": "loss",
       "tone": "analytical",
-      "template": "{name} sustained {streak} wins, but {gap} of collapse signals a usage or matchup shift.",
+      "template": "{streak} straight. Then {gap} south of the bar — streak's done.",
       "tags": [
         "collapse",
         "phase2"

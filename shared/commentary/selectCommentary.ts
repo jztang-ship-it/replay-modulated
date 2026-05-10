@@ -522,7 +522,9 @@ const NICKNAME_WIN_FRAMING = [
   "{nick} showed up.",
   "{nick} in his bag tonight.",
   "That's {nick} for you.",
-  "{nick} did what {nick} does.",
+  // "{nick} did what {nick} does." removed — double-substitution made
+  // long nicknames ("Easy Money Sniper did what Easy Money Sniper does.")
+  // collide with cultureSecondary lines that also reference the player.
   "Vintage {nick}.",
   "{nick} on his stuff.",
 ];
