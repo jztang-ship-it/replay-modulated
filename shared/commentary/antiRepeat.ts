@@ -29,7 +29,11 @@ const WINDOW_SIZES = {
   lineIds: 10,
   archetypes: 5,
   tones: 5,
-  openingPhrases: 8,
+  // Opener memory was 8 — too small to dilute the per-intensity RESULT_FRAMING
+  // pools (most have 8–10 phrases). 1392-hand sample showed top-5 openers
+  // covering 30%+ of any single tier. Bumped to 24 so the rotation actually
+  // chews through a full pool before recycling.
+  openingPhrases: 24,
   comparisonPatterns: 6,
 };
 
