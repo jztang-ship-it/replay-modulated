@@ -151,9 +151,9 @@ function BadgeRow({ badges }: { badges: Array<{ icon: string; label: string; fp:
 // highlighted in the supporting row since it's no longer the hero number.
 
 const TIER_CONTEXT_BASE: Record<TopGameTier, string> = {
-  record: "ALL-TIME RECORD",
+  record: "NEW RECORD",
   career: "CAREER HIGH",
-  season: "BEST OF SEASON",
+  season: "SEASON HIGH",
 };
 const COUNT_PREFIX: Record<number, string> = { 2: "DOUBLE", 3: "TRIPLE", 4: "QUAD" };
 
