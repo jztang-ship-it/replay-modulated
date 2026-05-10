@@ -398,7 +398,7 @@ type Props = {
   topGameResult?: TopGameResult | null;
 };
 
-export function AthleteCard(props: Props) {
+function AthleteCardImpl(props: Props) {
   const {
     glowActive,
     glowTier,
@@ -427,6 +427,49 @@ export function AthleteCard(props: Props) {
     />
   );
 }
+
+// Scalar props compared by ===. Excludes function props (onToggleLock,
+// onToggleFlip, onRollComplete) — RosterGrid passes inline arrows that
+// generate new references every render but the identity change does not
+// affect the rendered output.
+const SCALAR_KEYS: Array<keyof Props> = [
+  "phase", "locked", "isLocked", "isMvp", "flipped", "isFlipped", "canFlip",
+  "isRevealing", "visibleFp", "visibleBadgeCount", "noTransition",
+  "flipDurationMs", "fpCountUpMs", "performanceTag", "pulse", "shakeType",
+  "cardShakeType", "isSpotlight", "spotlightLevel", "isDimmed",
+  "heldFpVisible", "isTapTarget", "isFTUE", "glowActive", "glowTier",
+  "glowDurationMs", "topGameTier",
+];
+
+function badgesEqual(
+  a: Props["badges"] | undefined,
+  b: Props["badges"] | undefined,
+): boolean {
+  if (a === b) return true;
+  const al = a?.length ?? 0;
+  const bl = b?.length ?? 0;
+  if (al !== bl) return false;
+  if (al === 0) return true;
+  for (let i = 0; i < al; i++) {
+    const x = a![i];
+    const y = b![i];
+    if (x.id !== y.id || x.fp !== y.fp) return false;
+  }
+  return true;
+}
+
+function arePropsEqual(prev: Props, next: Props): boolean {
+  if (prev.card !== next.card) return false;
+  for (const k of SCALAR_KEYS) {
+    if (prev[k] !== next[k]) return false;
+  }
+  if (!badgesEqual(prev.badges, next.badges)) return false;
+  // Only the tier field affects the back layout branch; ignore allReasons etc.
+  if ((prev.topGameResult?.tier ?? null) !== (next.topGameResult?.tier ?? null)) return false;
+  return true;
+}
+
+export const AthleteCard = React.memo(AthleteCardImpl, arePropsEqual);
 
 export function AthleteCardLegacy(props: Props) {
   return <AthleteCard {...props} />;
