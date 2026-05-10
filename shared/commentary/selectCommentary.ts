@@ -917,6 +917,25 @@ function lastName(n: string): string {
  *  Lines with no stat citations are always allowed. Citations within ±1 of the
  *  current value pass (rounding tolerance). Bare numbers without a stat-word
  *  context (years, jersey numbers) are ignored. */
+/** True when a culture line reads as a historical aside (year reference,
+ *  specific opponent matchup, MVP year, etc.) rather than generic flavor.
+ *  Used to keep cultureSecondary tied to the CURRENT hand — Westbrook's
+ *  "57 vs. the Magic 2015 in a single half" should not appear as a
+ *  secondary line on a 35/21/14 night vs IND. */
+export function lineLooksHistorical(line: string): boolean {
+  if (!line) return false;
+  // 4-digit year (1900-2099). These are almost always historical claims.
+  if (/\b(19|20)\d{2}\b/.test(line)) return true;
+  // "vs" / "vs." followed by a team-name token (3+ letters). Catches the
+  // "57 vs. the Magic", "vs Houston", "vs the Lakers" pattern.
+  if (/\bvs\.?\s+(the\s+)?[A-Za-z][A-Za-z'-]{2,}/i.test(line)) return true;
+  // "back in", "in 20XX", "since 19XX", "1996 draft", etc.
+  if (/\b(back in|since|year of)\s+(19|20)\d{2}/i.test(line)) return true;
+  // Specific game/playoffs references with a year.
+  if (/\b(finals|playoff|championship|all-star|all star)\s+(of\s+)?(19|20)?\d{2}/i.test(line)) return true;
+  return false;
+}
+
 export function lineCitesMismatchedStat(
   line: string,
   statLine: Record<string, number | undefined> = {},
@@ -1090,12 +1109,32 @@ function cultureSecondary(
   // same subject. When skipped, the flow falls through to the team-centric
   // flavor pool below so the secondary pivots to opponent/franchise voice.
 
+  // All culture-pool picks must pass these filters: the line must not cite
+  // a stat number that doesn't match tonight's stat line, and must not read
+  // as a historical aside (year refs, specific opponent matchups). Without
+  // these, lines like Westbrook's "57 vs. the Magic 2015 in a single half"
+  // surface on unrelated 35/21/14 hands.
+  const starSl = (star.statLine ?? {}) as Record<string, number | undefined>;
+  const validCultureLine = (l: string | null | undefined): boolean =>
+    !!l && !lineCitesMismatchedStat(l, starSl) && !lineLooksHistorical(l);
+  const pickValid = (arr: string[] | undefined, seedOffset: number): string | null => {
+    if (!arr?.length) return null;
+    // Try in order — pickSeeded returns one candidate; if it fails the filters,
+    // walk the rest of the array deterministically.
+    const first = pickSeeded(arr, seed, seedOffset);
+    if (validCultureLine(first)) return first ?? null;
+    for (const candidate of arr) {
+      if (candidate !== first && validCultureLine(candidate)) return candidate;
+    }
+    return null;
+  };
+
   if (!primaryNamesStar) {
     // 1. Big game — non-bust, elite output
     if (!input.isBust && culture?.bigGame?.length) {
       const isBig = pts >= 40 || actualFp >= 65 || badges.includes("QUAD_DBL") || badges.includes("GOD_MODE");
       if (isBig) {
-        const line = pickSeeded(culture.bigGame, seed, 1);
+        const line = pickValid(culture.bigGame, 1);
         if (line) return attribute(line);
       }
     }
@@ -1103,7 +1142,7 @@ function cultureSecondary(
     // 2. Defensive standout — non-bust
     if (!input.isBust && culture?.defensive?.length) {
       if (blk >= 4 || stl >= 5) {
-        const line = pickSeeded(culture.defensive, seed, 2);
+        const line = pickValid(culture.defensive, 2);
         if (line) return attribute(line);
       }
     }
@@ -1112,14 +1151,14 @@ function cultureSecondary(
     if (!isBigWin && culture?.quietGame?.length && salary >= 30) {
       const nonInjury = !mins || mins >= 20;
       if (nonInjury && pts <= 10 && actualFp < 18) {
-        const line = pickSeeded(culture.quietGame, seed, 3);
+        const line = pickValid(culture.quietGame, 3);
         if (line) return attribute(line);
       }
     }
 
     // 4. Streak lines — wins with streak 3–6
     if (!input.isBust && input.streak >= 3 && input.streak < 7 && culture?.streakLines?.length) {
-      const line = pickSeeded(culture.streakLines, seed, 4);
+      const line = pickValid(culture.streakLines, 4);
       if (line) return attribute(line);
     }
   }
@@ -1140,13 +1179,13 @@ function cultureSecondary(
   if (!primaryNamesStar) {
     // salaryNarrative — comments on card value, relevant to the decision to play this card
     if (culture?.salaryNarrative?.length && salary >= 45) {
-      const l = pickSeeded(culture.salaryNarrative, seed, 10);
+      const l = pickValid(culture.salaryNarrative, 10);
       if (l) pool.push({ weight: 18, line: attribute(l) });
     }
 
     // milestones — player trajectory on wins where star performed at/above projection
     if (!input.isBust && ratio >= 1.0 && culture?.milestones?.length) {
-      const l = pickSeeded(culture.milestones, seed, 11);
+      const l = pickValid(culture.milestones, 11);
       if (l) pool.push({ weight: 12, line: attribute(l) });
     }
   }
@@ -1360,17 +1399,26 @@ export function selectCommentary(
   return secondary ? { primary, secondary } : { primary };
 }
 
-/** True when the secondary line names the same stat-number the primary
- *  already mentions (e.g. primary "40 pts ..." + secondary "40-point game...").
- *  Matches values 10..199 paired with a basketball stat noun. */
+/** True when the secondary line restates content the primary already covered:
+ *  - same stat-number (e.g. primary "40 pts" + secondary "40-point game")
+ *  - same achievement name (e.g. primary "triple double" + secondary
+ *    "triple double on the side") */
 function secondaryRepeatsStat(primary: string, secondary: string): boolean {
   const STAT_WORDS = "pt|pts|point|points|reb|rebs|rebound|rebounds|ast|asts|assist|assists|stl|stls|steal|steals|blk|blks|block|blocks|three|threes";
   const re = new RegExp(`(\\d{2,3})[\\s+-]+(${STAT_WORDS})`, "gi");
   const seen = new Set<string>();
   for (const m of primary.matchAll(re)) seen.add(m[1]);
-  if (seen.size === 0) return false;
   for (const m of secondary.matchAll(re)) {
     if (seen.has(m[1])) return true;
+  }
+  // Achievement-term overlap. Matches the dedup applied within composeMessage
+  // but operates across primary→secondary so the user doesn't see "triple
+  // double" once in the headline and again as a secondary tagline.
+  const ACHIEVEMENT_TERMS = ["triple double", "triple-double", "double double", "double-double", "quadruple double", "5x5"];
+  const primaryLower = primary.toLowerCase();
+  const secondaryLower = secondary.toLowerCase();
+  for (const term of ACHIEVEMENT_TERMS) {
+    if (primaryLower.includes(term) && secondaryLower.includes(term)) return true;
   }
   return false;
 }

@@ -410,6 +410,29 @@ function messageBlocksBadgeSnippet(message: string, snippet: string): boolean {
   return false;
 }
 
+// Achievement labels that should appear at most once in a unified message.
+// Prevents "triple double in the box, plus a triple double on the side"
+// type doubling-up when the badge fires across multiple detail snippets.
+const ACHIEVEMENT_TERMS = [
+  "triple double", "triple-double",
+  "double double", "double-double",
+  "quadruple double", "quadruple-double",
+  "5x5", "five by five",
+];
+
+function countTerm(message: string, term: string): number {
+  const re = new RegExp(`\\b${term.replace(/-/g, "\\-")}\\b`, "gi");
+  return (message.match(re)?.length ?? 0);
+}
+
+function snippetIntroducesRepeatAchievement(message: string, snippet: string): boolean {
+  const merged = `${message} ${snippet}`.toLowerCase();
+  for (const term of ACHIEVEMENT_TERMS) {
+    if (countTerm(merged, term) >= 2) return true;
+  }
+  return false;
+}
+
 export function composeMessage(
   template: string,
   data: TemplateData,
@@ -424,6 +447,7 @@ export function composeMessage(
     if (!snippet) continue;
     if (message.toLowerCase().includes(snippet.toLowerCase().slice(0, 15))) continue;
     if (messageBlocksBadgeSnippet(message, snippet)) continue;
+    if (snippetIntroducesRepeatAchievement(message, snippet)) continue;
     if (message.length + snippet.length + 1 > MAX_CHARS) break;
     message += ` ${snippet}`;
   }
