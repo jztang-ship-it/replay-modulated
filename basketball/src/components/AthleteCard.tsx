@@ -152,8 +152,8 @@ function BadgeRow({ badges }: { badges: Array<{ icon: string; label: string; fp:
 
 const TIER_CONTEXT_BASE: Record<TopGameTier, string> = {
   record: "NEW RECORD",
-  career: "CAREER HI",
-  season: "SEASON HI",
+  career: "CAREER HIGH",
+  season: "SEASON HIGH",
 };
 const COUNT_PREFIX: Record<number, string> = { 2: "DOUBLE", 3: "TRIPLE", 4: "QUAD" };
 

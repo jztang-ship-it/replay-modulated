@@ -12,15 +12,15 @@ describe("TopGameStamp", () => {
     expect(result.props.className).toContain("tg-stamp-record");
   });
 
-  it("renders CAREER HI for tier=career", () => {
+  it("renders CAREER HIGH for tier=career", () => {
     const result = TopGameStamp({ tier: "career" }) as any;
-    expect(result.props.children).toBe("CAREER HI");
+    expect(result.props.children).toBe("CAREER HIGH");
     expect(result.props.className).toContain("tg-stamp-career");
   });
 
-  it("renders SEASON HI for tier=season", () => {
+  it("renders SEASON HIGH for tier=season", () => {
     const result = TopGameStamp({ tier: "season" }) as any;
-    expect(result.props.children).toBe("SEASON HI");
+    expect(result.props.children).toBe("SEASON HIGH");
     expect(result.props.className).toContain("tg-stamp-season");
   });
 });

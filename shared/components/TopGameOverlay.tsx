@@ -80,8 +80,8 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
 
 const STAMP_TEXT: Record<TopGameTier, string> = {
   record: "NEW RECORD",
-  career: "CAREER HI",
-  season: "SEASON HI",
+  career: "CAREER HIGH",
+  season: "SEASON HIGH",
 };
 
 const STAMP_CLASS: Record<TopGameTier, string> = {
