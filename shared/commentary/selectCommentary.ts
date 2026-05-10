@@ -1350,8 +1350,25 @@ export function selectCommentary(
       (culture?.nicknames ?? []).some(n => n.length >= 3 && primaryLower.includes(n.toLowerCase()))
     );
     const sec = cultureSecondary(star, culture, teamFlavor, input, seed, primaryNamesStar);
-    if (sec) secondary = sec;
+    // Drop the secondary if it restates a stat number the primary already
+    // surfaced (e.g. primary "40 pts" + culture line "Each 40-point game...").
+    if (sec && !secondaryRepeatsStat(primary, sec)) secondary = sec;
   }
 
   return secondary ? { primary, secondary } : { primary };
+}
+
+/** True when the secondary line names the same stat-number the primary
+ *  already mentions (e.g. primary "40 pts ..." + secondary "40-point game...").
+ *  Matches values 10..199 paired with a basketball stat noun. */
+function secondaryRepeatsStat(primary: string, secondary: string): boolean {
+  const STAT_WORDS = "pt|pts|point|points|reb|rebs|rebound|rebounds|ast|asts|assist|assists|stl|stls|steal|steals|blk|blks|block|blocks|three|threes";
+  const re = new RegExp(`(\\d{2,3})[\\s+-]+(${STAT_WORDS})`, "gi");
+  const seen = new Set<string>();
+  for (const m of primary.matchAll(re)) seen.add(m[1]);
+  if (seen.size === 0) return false;
+  for (const m of secondary.matchAll(re)) {
+    if (seen.has(m[1])) return true;
+  }
+  return false;
 }
