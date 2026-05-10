@@ -249,9 +249,19 @@ export class SportAdapter {
 
   /** Live tier lookup — used by slateSelector tier-capping. Walks the
    *  raw player list to find this id and computes tier from salary.
-   *  Cached on first call to avoid repeated linear scans. */
+   *  Cached on first call to avoid repeated linear scans. Cache is
+   *  invalidated when the active season changes — otherwise after the
+   *  FTUE→reel transition we'd return tiers computed from the previous
+   *  season's salary data, causing the slate selector to fill BLUE
+   *  players where it should pick RED/ORANGE. */
   private _tierCache: Map<string, string> | null = null;
+  private _tierCacheSeason: string | null = null;
   getTierById(playerId: string): string {
+    const currentSeason = getActiveSeason();
+    if (this._tierCacheSeason !== currentSeason) {
+      this._tierCache = null;
+      this._tierCacheSeason = currentSeason;
+    }
     if (!this._tierCache) {
       const m = new Map<string, string>();
       for (const p of getPlayers()) {
