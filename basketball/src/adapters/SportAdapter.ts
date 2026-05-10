@@ -247,13 +247,19 @@ export class SportAdapter {
     return entries.slice(0, count).map(e => e.id);
   }
 
-  /** Live tier lookup — used by slateSelector tier-capping. Walks the
-   *  raw player list to find this id and computes tier from salary.
-   *  Cached on first call to avoid repeated linear scans. Cache is
-   *  invalidated when the active season changes — otherwise after the
-   *  FTUE→reel transition we'd return tiers computed from the previous
-   *  season's salary data, causing the slate selector to fill BLUE
-   *  players where it should pick RED/ORANGE. */
+  /** Live tier lookup — used by slateSelector tier-capping AND by
+   *  mapPlayer for card display, so cards and slate always agree.
+   *
+   *  HYBRID FLOOR + QUOTA: tier is derived from absolute salary thresholds
+   *  (tierFromSalary), then the next-highest-salary players are promoted up
+   *  to fill per-season floors (currently ORANGE ≥ 8). Sparse eras like
+   *  2012-13 (only 2 players above $58) get their next 6 highest-salary
+   *  players bumped from PURPLE → ORANGE. Modern stat-rich eras stay
+   *  untouched. RED is never demoted; cross-season "Westbrook is RED"
+   *  intuition preserved.
+   *
+   *  Cache is per-season — rebuilt when getActiveSeason() changes, or the
+   *  FTUE→reel transition would leave stale tiers from the previous season. */
   private _tierCache: Map<string, string> | null = null;
   private _tierCacheSeason: string | null = null;
   getTierById(playerId: string): string {
@@ -262,17 +268,53 @@ export class SportAdapter {
       this._tierCache = null;
       this._tierCacheSeason = currentSeason;
     }
-    if (!this._tierCache) {
-      const m = new Map<string, string>();
-      for (const p of getPlayers()) {
-        const bid = String((p as any).basePlayerId ?? "").trim();
-        if (!bid || m.has(bid)) continue;
-        const salary = Number((p as any).salary ?? 0);
-        m.set(bid, tierFromSalary(salary, this.economyConfig));
-      }
-      this._tierCache = m;
-    }
+    if (!this._tierCache) this._tierCache = this.buildTierMap();
     return this._tierCache.get(String(playerId).trim()) ?? "WHITE";
+  }
+
+  /** Per-season floors. Promote the next-highest-salary player up to the
+   *  named tier until the floor is met. Tiers absent here (PURPLE/BLUE/
+   *  GREEN/WHITE) are uncapped and unfloored. */
+  private static readonly TIER_FLOORS: Record<string, number> = { RED: 4, ORANGE: 8 };
+
+  private buildTierMap(): Map<string, string> {
+    // Pass 1: dedupe by basePlayerId, capture salary + absolute tier.
+    const entries: Array<{ id: string; salary: number; tier: string }> = [];
+    const seen = new Set<string>();
+    for (const p of getPlayers()) {
+      const bid = String((p as any).basePlayerId ?? "").trim();
+      if (!bid || seen.has(bid)) continue;
+      seen.add(bid);
+      const salary = Number((p as any).salary ?? 0);
+      entries.push({ id: bid, salary, tier: tierFromSalary(salary, this.economyConfig) });
+    }
+    // Pass 2: count tiers, identify shortfalls.
+    const counts: Record<string, number> = {};
+    for (const e of entries) counts[e.tier] = (counts[e.tier] ?? 0) + 1;
+    // Pass 3: sort by salary descending — highest-salary candidates promote first.
+    const sorted = [...entries].sort((a, b) => b.salary - a.salary);
+    // Pass 4: walk down sorted, promote up to the strictest unmet floor.
+    // Tiers ordered top-to-bottom so we promote PURPLE→ORANGE, ORANGE→RED, etc.
+    const FLOORS = SportAdapter.TIER_FLOORS;
+    const tierOrder = ["RED", "ORANGE"] as const;
+    for (const targetTier of tierOrder) {
+      const floor = FLOORS[targetTier];
+      if (counts[targetTier] >= floor) continue;
+      for (const e of sorted) {
+        if (counts[targetTier] >= floor) break;
+        // Skip if already this tier or higher.
+        if (e.tier === "RED" || e.tier === targetTier) continue;
+        // Promote.
+        const oldTier = e.tier;
+        e.tier = targetTier;
+        counts[oldTier] = Math.max(0, (counts[oldTier] ?? 0) - 1);
+        counts[targetTier] = (counts[targetTier] ?? 0) + 1;
+      }
+    }
+    // Pass 5: build the map with the (possibly promoted) tier per id.
+    const m = new Map<string, string>();
+    for (const e of entries) m.set(e.id, e.tier);
+    return m;
   }
 
   /** Phase-2 stubs (no themes in v1). */

@@ -7,9 +7,8 @@ import { sportAdapter } from "./SportAdapter";
 import { getPlayers, getLogsByKey } from "../engines/dataEngine";
 import { generateRoster, redrawRoster as engineRedraw, mulberry32, randomSeed } from "../engines/rosterEngine";
 import { resolveCards } from "../engines/resolveEngine";
-import { DEFAULT_ECONOMY_CONFIG, tierFromSalary } from "../engines/economyEngine";
+import { DEFAULT_ECONOMY_CONFIG } from "../engines/economyEngine";
 import { buildDailyBonusMap, getDailyBonusPlayers, type DailyBonusPlayer } from "@shared/utils/dailyBonus";
-import { buildBonusPoolFromPlayers } from "@shared/utils/dailyBonusPool";
 import { getDealPool } from "@shared/utils/dealGate";
 import { SessionRepeatLimit, DEFAULT_REPEAT_LIMIT } from "@shared/utils/sessionRepeatLimit";
 import { getCachedSlate } from "@shared/utils/slateSelector";
@@ -59,9 +58,11 @@ function toPlayerEval(p: any, projByBaseId: Map<string, number>): PlayerEval {
   // Only clamp the LOWER bound — never cap the top, or superstars collapse
   // to the same salary as mid-tier starters (was squashing top 9 to $65).
   const salary = Math.max(eco.salaryMin, Number(p.salary ?? 10));
-  // Derive tier from salary rather than trusting players.json — the JSON tier
-  // field is stale and inconsistent (e.g. same-salary players tagged differently).
-  // Salary-derived tiers align with strategic economy thresholds.
+  // Tier is resolved through SportAdapter.getTierById so it includes the
+  // hybrid floor+quota promotion (sparse seasons get their next-best
+  // PURPLE players bumped to ORANGE so every season has ≥ 8 ORANGE).
+  // Card display, slate panel, and slate selector all consult the same
+  // map and therefore stay in sync.
   return {
     id: String(p.id),
     basePlayerId: baseId,
@@ -74,7 +75,7 @@ function toPlayerEval(p: any, projByBaseId: Map<string, number>): PlayerEval {
     photoCode: p.photoCode != null ? String(p.photoCode) : undefined,
     projectedFp: proj,
     salary,
-    tier: tierFromSalary(salary, eco),
+    tier: sportAdapter.getTierById(baseId),
   };
 }
 
@@ -121,13 +122,18 @@ function buildEvalPool(players: any[], logs: Map<string, any[]>, projByBaseId: M
  *  needed. */
 function buildBonusPool(): Array<{ basePlayerId: string; name: string; tier: string }> {
   const logs = getLogsByKey();
-  const eco = getEconomyConfig();
-  const allBonusEligible = buildBonusPoolFromPlayers(
-    getPlayers(),
-    (p: any) => hasValidLogs(playerKey(p), logs),
-    (salary) => tierFromSalary(salary, eco),
-    eco.salaryMin,
-  );
+  // Inline pool build so tier resolution can use SportAdapter.getTierById
+  // (which applies the hybrid floor+quota promotion). The shared helper's
+  // mapper signature is salary-only and there's no per-player hook for
+  // basketball's promotion logic — replicating the small filter/map keeps
+  // it scoped to the sport that needs the promotion.
+  const allBonusEligible = getPlayers()
+    .filter((p: any) => hasValidLogs(playerKey(p), logs))
+    .map((p: any) => ({
+      basePlayerId: playerKey(p),
+      name: String(p.name ?? ""),
+      tier: sportAdapter.getTierById(playerKey(p)),
+    }));
 
   // When slate v2 is ON for basketball, restrict bonus picks to today's slate
   // so bonus players are guaranteed drawable.
