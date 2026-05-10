@@ -13,7 +13,7 @@
 import React, { useMemo } from "react";
 import type { GamePhase, PlayerCard } from "../types/index";
 import type { ShakeType } from "./types";
-import type { TopGameTier } from "../commentary/types";
+import type { TopGameTier, TopGameResult } from "../commentary/types";
 
 function keyOf(card: any): string {
   return String(
@@ -53,6 +53,9 @@ export type RosterGridCardProps = {
   isFTUE?: boolean;
   /** Top Games tier for this card. null = no Top Games visual. */
   topGameTier?: TopGameTier | null;
+  /** Top Games full result (tier + primaryReason). Used by the back-of-card
+   *  achievement layout to render the featured stat + context line. */
+  topGameResult?: TopGameResult | null;
 };
 
 type Props = {
@@ -104,6 +107,9 @@ type Props = {
   topGameStarBasePlayerId?: string | null;
   /** Top Games tier for the star card. Non-star cards always receive null. */
   topGameTier?: TopGameTier | null;
+  /** Full Top Games result for the star card (tier + primaryReason). Drives
+   *  the achievement-mode back layout. Non-star cards always receive null. */
+  topGameResult?: TopGameResult | null;
   /** Optional per-slot label badge (e.g. football's FLEX rule "ANY OUTFIELD"
    *  with explainer tooltip). Keyed by slot index. Sport-agnostic — sports
    *  that don't set this see no change. */
@@ -124,6 +130,7 @@ export function RosterGrid(props: Props) {
     isFTUE = false,
     topGameStarBasePlayerId = null,
     topGameTier = null,
+    topGameResult = null,
     slotLabels,
   } = props;
 
@@ -159,6 +166,7 @@ export function RosterGrid(props: Props) {
         const cardBasePlayerId = String((card as any)?.basePlayerId ?? "");
         const isTopGameStar = !!topGameStarBasePlayerId && cardBasePlayerId === topGameStarBasePlayerId;
         const cardTopGameTier: TopGameTier | null = isTopGameStar ? (topGameTier ?? null) : null;
+        const cardTopGameResult: TopGameResult | null = isTopGameStar ? (topGameResult ?? null) : null;
 
         // tap mode: a card is "held" if it has wasHeld flag
         const wasHeld = (card as any).wasHeld === true;
@@ -275,6 +283,7 @@ export function RosterGrid(props: Props) {
               isDimmed={isDimmed}
               isFTUE={isFTUE && !isFlipped && !isRevealing}
               topGameTier={cardTopGameTier}
+              topGameResult={cardTopGameResult}
             />
           </div>
         );

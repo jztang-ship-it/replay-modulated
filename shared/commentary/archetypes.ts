@@ -16,6 +16,7 @@ export interface ArchetypeMeta {
 export const ARCHETYPE_REGISTRY: Record<CommentaryArchetype, ArchetypeMeta> = {
   // ── Active — Top Games overrides ──────────────────────────────────────────
   historic_record:   { register: "win",  active: true,  fallback: "star_carry",      legacyStoryIds: [] },
+  historic_career:   { register: "any",  active: true,  fallback: "star_carry",      legacyStoryIds: [] },
   historic_season:   { register: "win",  active: true,  fallback: "star_carry",      legacyStoryIds: [] },
 
   // ── Active — Win ──────────────────────────────────────────────────────────

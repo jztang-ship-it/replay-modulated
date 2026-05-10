@@ -972,7 +972,7 @@ export function GameView({ adapter }: Props) {
       gameDate: String(c?.gameInfo?.date ?? ""),
     }));
     const star = selectStar(commentaryRoster as any);
-    const topGame = (featureFlags.topGames && star?.statLine)
+    const realTopGame = (featureFlags.topGames && star?.statLine)
       ? detectTopGame(
           star.statLine as any,
           star.basePlayerId ?? "",
@@ -981,6 +981,36 @@ export function GameView({ adapter }: Props) {
           sportKey,
           )
         : { tier: null as null, primaryReason: null, allReasons: [] as any[] };
+
+    // DEV-ONLY force hook: ?forceAchievementBack=career|record|season
+    //                      ?forceAchievementCount=1|2|3 (default 1)
+    // Synthesizes a TopGameResult on the star card by picking the top N
+    // non-zero stats as featured. Lets QA preview multi-stat achievement
+    // headlines (e.g. DOUBLE CAREER HIGH) without staging a real game.
+    let topGame: any = realTopGame;
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const forced = params.get("forceAchievementBack");
+      const forcedCount = Math.max(1, Math.min(3, Number(params.get("forceAchievementCount") ?? 1) || 1));
+      if (forced && (forced === "career" || forced === "record" || forced === "season") && star?.statLine) {
+        const sl: Record<string, any> = star.statLine as any;
+        const candidates = ["pts", "reb", "ast", "blk", "stl", "threes"];
+        const ranked = candidates
+          .map(k => ({ k, v: Number(sl[k] ?? 0) }))
+          .filter(x => x.v > 0)
+          .sort((a, b) => b.v - a.v)
+          .slice(0, forcedCount);
+        if (ranked.length > 0) {
+          const allReasons = ranked.map(({ k, v }) => ({ category: k, value: v, label: `forced ${forced} (${v} ${k})` }));
+          topGame = {
+            tier: forced as any,
+            primaryReason: allReasons[0],
+            allReasons,
+          };
+        }
+      }
+    }
+
     return { star, topGame };
   }, [roster, sportKey]);
   topGameInfoHolder.current = topGameInfo;
@@ -1666,6 +1696,7 @@ export function GameView({ adapter }: Props) {
                     }
                     topGameStarBasePlayerId={topGameInfo.star?.basePlayerId ?? null}
                     topGameTier={topGameInfo.topGame.tier as any}
+                    topGameResult={topGameInfo.topGame as any}
                     columns={rosterGridColumns}
                     CardComponent={CardComponent as React.ComponentType<RosterGridCardProps>}
                     slotLabels={slotLabels}
