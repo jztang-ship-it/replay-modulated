@@ -702,14 +702,50 @@ const _cultureDb: Record<string, Record<string, CultureShape>> = {
   baseball: BASEBALL_CULTURE as unknown as Record<string, CultureShape>,
 };
 
-function lookupCulture(name: string, sport: string): CultureShape | null {
+/** True when the nickname is "iconic" — distinctive enough to use vs. just a
+ *  trivial first/last-name shortening. Filters "Mike", "Tony", "Bibby" but
+ *  passes "Penny", "Big Ben", "El Contusion", "Mr. Big Shot". */
+function isIconicNickname(nick: string, fullName: string): boolean {
+  if (nick.length < 4) return false;
+  const parts = fullName.trim().split(/\s+/);
+  const first = (parts[0] ?? "").toLowerCase();
+  const last = (parts[parts.length - 1] ?? "").toLowerCase();
+  const n = nick.toLowerCase();
+  return n !== first && n !== last;
+}
+
+/** Tier-gated culture lookup.
+ *    RED, ORANGE          → always return culture if present
+ *    PURPLE               → only when ≥1 iconic nickname exists, ~30% of hands
+ *    BLUE, GREEN, WHITE   → never (prevents misattribution like
+ *                            "Anthony Carter" → Vince Carter's "Vinsanity")
+ *    undefined/missing    → permissive (legacy/test paths) */
+function lookupCulture(
+  name: string,
+  sport: string,
+  cardTier?: string,
+  seed = 0,
+): CultureShape | null {
+  const tier = (cardTier ?? "").toUpperCase();
+  if (tier === "BLUE" || tier === "GREEN" || tier === "WHITE") return null;
+
   const db = _cultureDb[sport];
   if (!db) return null;
   const parts = name.trim().split(/\s+/);
   const suffixes = new Set(["II", "III", "IV", "V", "Jr.", "Jr", "Sr.", "Sr"]);
   while (parts.length > 1 && suffixes.has(parts[parts.length - 1])) parts.pop();
   const last = (parts[parts.length - 1] ?? "").toLowerCase();
-  return db[last] ?? null;
+  const culture = db[last] ?? null;
+  if (!culture) return null;
+
+  if (tier === "PURPLE") {
+    const hasIconic = (culture.nicknames ?? []).some(n => isIconicNickname(n, name));
+    if (!hasIconic) return null;
+    // ~30% probabilistic gate — keep PURPLE culture rare and signal-y
+    const gate = Math.abs(Math.floor(seed / 13)) % 10;
+    if (gate >= 3) return null;
+  }
+  return culture;
 }
 
 // ── Team flavor lookup (basketball only) ───────────────────────────────────
@@ -1047,7 +1083,7 @@ export function selectCommentary(
   const { details, recordEvents } = selectStory(input, seed, sport);
 
   // Step 5: Build template data
-  const culture = star ? lookupCulture(star.name, sport) : null;
+  const culture = star ? lookupCulture(star.name, sport, star.cardTier, seed) : null;
   const teamFlavor = star ? lookupTeamFlavor(star.opponent, sport) : null;
   const templateData = buildTemplateData(star, input, recordEvents, culture, costar);
 
