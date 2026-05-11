@@ -1069,6 +1069,7 @@ export function GameView({ adapter }: Props) {
         projectedFp: Number((c as any).projectedFp ?? 0) || undefined,
         achievements: ((c as any).achievements ?? []) as Array<{ id: string; label: string; icon?: string; fp?: number }>,
         opponent: String((c as any).gameInfo?.opponent ?? ""),
+        teams: Array.isArray((c as any).teams) ? (c as any).teams.map((t: any) => String(t)) : undefined,
         gameDate: String((c as any).gameInfo?.date ?? ""),
         statLine: ((c as any).statLine ?? {}) as Record<string, any>,
         wasHeld: Boolean((c as any).wasHeld ?? false),

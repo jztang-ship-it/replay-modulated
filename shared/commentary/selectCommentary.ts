@@ -1130,6 +1130,22 @@ function cultureSecondary(
   };
 
   if (!primaryNamesStar) {
+    // 0. Former-team game — when this season's opponent is a team the player
+    // was previously on (player got traded mid-season and now plays their old
+    // team), surface a culture.formerTeam line. Highest narrative weight on
+    // the secondary: it adds context the user might not have on the back of
+    // their head ("oh right, Harden was on Houston").
+    if (culture?.formerTeam?.length && Array.isArray(star.teams) && star.teams.length > 1 && star.opponent) {
+      const opp = String(star.opponent).toUpperCase();
+      const onMultiple = star.teams.map((t: string) => String(t).toUpperCase());
+      // If the opponent is one of the player's teams this season, they're
+      // facing a former (or future) team. Trigger.
+      if (onMultiple.includes(opp)) {
+        const line = pickValid(culture.formerTeam, 0);
+        if (line) return attribute(line);
+      }
+    }
+
     // 1. Big game — non-bust, elite output
     if (!input.isBust && culture?.bigGame?.length) {
       const isBig = pts >= 40 || actualFp >= 65 || badges.includes("QUAD_DBL") || badges.includes("GOD_MODE");

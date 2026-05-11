@@ -19,6 +19,10 @@ export interface CommentaryRosterCard {
   basePlayerId?: string;
   statLine?: Record<string, any>;
   opponent?: string;
+  /** Distinct teams the player was on this season (chronological). When the
+   *  game opponent appears in this list, the player is facing a former team
+   *  — surfaces a culture.formerTeam commentary line. */
+  teams?: string[];
   /** ISO date of the source game — used for signature-game matching in culture commentary. */
   gameDate?: string;
   homeAway?: "H" | "A" | "";

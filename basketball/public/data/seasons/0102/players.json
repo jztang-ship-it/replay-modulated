@@ -12,7 +12,10 @@
     "avgFP": 49.6,
     "projectedFp": 49.6,
     "photoCode": "1495",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "406_0102",
@@ -27,7 +30,10 @@
     "avgFP": 47.2,
     "projectedFp": 47.2,
     "photoCode": "406",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "947_0102",
@@ -42,7 +48,10 @@
     "avgFP": 47.1,
     "projectedFp": 47.1,
     "photoCode": "947",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "185_0102",
@@ -57,7 +66,10 @@
     "avgFP": 47,
     "projectedFp": 47,
     "photoCode": "185",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "708_0102",
@@ -72,7 +84,10 @@
     "avgFP": 46.2,
     "projectedFp": 46.2,
     "photoCode": "708",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "1503_0102",
@@ -87,7 +102,10 @@
     "avgFP": 45.5,
     "projectedFp": 45.5,
     "photoCode": "1503",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "56_0102",
@@ -102,7 +120,10 @@
     "avgFP": 42.7,
     "projectedFp": 42.7,
     "photoCode": "56",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "1718_0102",
@@ -117,7 +138,10 @@
     "avgFP": 42.1,
     "projectedFp": 42.1,
     "photoCode": "1718",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "952_0102",
@@ -132,7 +156,10 @@
     "avgFP": 41.1,
     "projectedFp": 41.1,
     "photoCode": "952",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "977_0102",
@@ -147,7 +174,10 @@
     "avgFP": 41.1,
     "projectedFp": 41.1,
     "photoCode": "977",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "1717_0102",
@@ -162,7 +192,10 @@
     "avgFP": 41.3,
     "projectedFp": 41.3,
     "photoCode": "1717",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "252_0102",
@@ -177,7 +210,10 @@
     "avgFP": 41,
     "projectedFp": 41,
     "photoCode": "252",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1882_0102",
@@ -192,7 +228,10 @@
     "avgFP": 39.5,
     "projectedFp": 39.5,
     "photoCode": "1882",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "1889_0102",
@@ -207,7 +246,10 @@
     "avgFP": 39.4,
     "projectedFp": 39.4,
     "photoCode": "1889",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "467_0102",
@@ -222,7 +264,10 @@
     "avgFP": 39.5,
     "projectedFp": 39.5,
     "photoCode": "467",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "1713_0102",
@@ -237,7 +282,10 @@
     "avgFP": 39,
     "projectedFp": 39,
     "photoCode": "1713",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "1883_0102",
@@ -252,7 +300,10 @@
     "avgFP": 39.1,
     "projectedFp": 39.1,
     "photoCode": "1883",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "893_0102",
@@ -267,7 +318,10 @@
     "avgFP": 38.4,
     "projectedFp": 38.4,
     "photoCode": "893",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "1884_0102",
@@ -282,7 +336,10 @@
     "avgFP": 38.3,
     "projectedFp": 38.3,
     "photoCode": "1884",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHH"
+    ]
   },
   {
     "id": "979_0102",
@@ -297,7 +354,10 @@
     "avgFP": 37.6,
     "projectedFp": 37.6,
     "photoCode": "979",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "949_0102",
@@ -312,7 +372,10 @@
     "avgFP": 38.2,
     "projectedFp": 38.2,
     "photoCode": "949",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1890_0102",
@@ -327,7 +390,10 @@
     "avgFP": 38,
     "projectedFp": 38,
     "photoCode": "1890",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "208_0102",
@@ -342,7 +408,10 @@
     "avgFP": 35.2,
     "projectedFp": 35.2,
     "photoCode": "208",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "950_0102",
@@ -357,7 +426,10 @@
     "avgFP": 35.2,
     "projectedFp": 35.2,
     "photoCode": "950",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "739_0102",
@@ -372,7 +444,10 @@
     "avgFP": 35.4,
     "projectedFp": 35.4,
     "photoCode": "739",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "1112_0102",
@@ -387,7 +462,10 @@
     "avgFP": 34.9,
     "projectedFp": 34.9,
     "photoCode": "1112",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "469_0102",
@@ -402,7 +480,10 @@
     "avgFP": 34.9,
     "projectedFp": 34.9,
     "photoCode": "469",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHH"
+    ]
   },
   {
     "id": "2200_0102",
@@ -417,7 +498,10 @@
     "avgFP": 34.7,
     "projectedFp": 34.7,
     "photoCode": "2200",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "1891_0102",
@@ -432,7 +516,10 @@
     "avgFP": 33.7,
     "projectedFp": 33.7,
     "photoCode": "1891",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "711_0102",
@@ -447,7 +534,10 @@
     "avgFP": 33.9,
     "projectedFp": 33.9,
     "photoCode": "711",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "951_0102",
@@ -462,7 +552,10 @@
     "avgFP": 33.9,
     "projectedFp": 33.9,
     "photoCode": "951",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "299_0102",
@@ -477,7 +570,10 @@
     "avgFP": 33.4,
     "projectedFp": 33.4,
     "photoCode": "299",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "147_0102",
@@ -492,7 +588,11 @@
     "avgFP": 32.8,
     "projectedFp": 32.8,
     "photoCode": "147",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND",
+      "CHI"
+    ]
   },
   {
     "id": "714_0102",
@@ -507,7 +607,10 @@
     "avgFP": 32.8,
     "projectedFp": 32.8,
     "photoCode": "714",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "959_0102",
@@ -522,7 +625,10 @@
     "avgFP": 31.8,
     "projectedFp": 31.8,
     "photoCode": "959",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "89_0102",
@@ -537,7 +643,11 @@
     "avgFP": 31.9,
     "projectedFp": 31.9,
     "photoCode": "89",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN",
+      "DAL"
+    ]
   },
   {
     "id": "1749_0102",
@@ -552,7 +662,10 @@
     "avgFP": 31.9,
     "projectedFp": 31.9,
     "photoCode": "1749",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "978_0102",
@@ -567,7 +680,10 @@
     "avgFP": 31.9,
     "projectedFp": 31.9,
     "photoCode": "978",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "304_0102",
@@ -582,7 +698,10 @@
     "avgFP": 31.4,
     "projectedFp": 31.4,
     "photoCode": "304",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1712_0102",
@@ -597,7 +716,10 @@
     "avgFP": 31.7,
     "projectedFp": 31.7,
     "photoCode": "1712",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "224_0102",
@@ -612,7 +734,10 @@
     "avgFP": 31.7,
     "projectedFp": 31.7,
     "photoCode": "224",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "699_0102",
@@ -627,7 +752,10 @@
     "avgFP": 31.3,
     "projectedFp": 31.3,
     "photoCode": "699",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "297_0102",
@@ -642,7 +770,10 @@
     "avgFP": 30.8,
     "projectedFp": 30.8,
     "photoCode": "297",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "1715_0102",
@@ -657,7 +788,10 @@
     "avgFP": 30.7,
     "projectedFp": 30.7,
     "photoCode": "1715",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "210_0102",
@@ -672,7 +806,10 @@
     "avgFP": 30.6,
     "projectedFp": 30.6,
     "photoCode": "210",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "213_0102",
@@ -687,7 +824,10 @@
     "avgFP": 30.5,
     "projectedFp": 30.5,
     "photoCode": "213",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "1740_0102",
@@ -702,7 +842,10 @@
     "avgFP": 30.5,
     "projectedFp": 30.5,
     "photoCode": "1740",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "948_0102",
@@ -717,7 +860,10 @@
     "avgFP": 30.5,
     "projectedFp": 30.5,
     "photoCode": "948",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "1711_0102",
@@ -732,7 +878,11 @@
     "avgFP": 29.8,
     "projectedFp": 29.8,
     "photoCode": "1711",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN",
+      "DAL"
+    ]
   },
   {
     "id": "1885_0102",
@@ -747,7 +897,10 @@
     "avgFP": 29.9,
     "projectedFp": 29.9,
     "photoCode": "1885",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "1719_0102",
@@ -762,7 +915,10 @@
     "avgFP": 29.4,
     "projectedFp": 29.4,
     "photoCode": "1719",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "84_0102",
@@ -777,7 +933,10 @@
     "avgFP": 29.6,
     "projectedFp": 29.6,
     "photoCode": "84",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "87_0102",
@@ -792,7 +951,10 @@
     "avgFP": 29.5,
     "projectedFp": 29.5,
     "photoCode": "87",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "934_0102",
@@ -807,7 +969,10 @@
     "avgFP": 29.3,
     "projectedFp": 29.3,
     "photoCode": "934",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "1887_0102",
@@ -822,7 +987,10 @@
     "avgFP": 29,
     "projectedFp": 29,
     "photoCode": "1887",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "124_0102",
@@ -837,7 +1005,10 @@
     "avgFP": 29.1,
     "projectedFp": 29.1,
     "photoCode": "124",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "764_0102",
@@ -852,7 +1023,10 @@
     "avgFP": 28.4,
     "projectedFp": 28.4,
     "photoCode": "764",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "2030_0102",
@@ -867,7 +1041,10 @@
     "avgFP": 28.6,
     "projectedFp": 28.6,
     "photoCode": "2030",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "703_0102",
@@ -882,7 +1059,10 @@
     "avgFP": 28.3,
     "projectedFp": 28.3,
     "photoCode": "703",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "757_0102",
@@ -897,7 +1077,10 @@
     "avgFP": 28,
     "projectedFp": 28,
     "photoCode": "757",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "923_0102",
@@ -912,7 +1095,10 @@
     "avgFP": 28.5,
     "projectedFp": 28.5,
     "photoCode": "923",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1802_0102",
@@ -927,7 +1113,11 @@
     "avgFP": 28,
     "projectedFp": 28,
     "photoCode": "1802",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI",
+      "IND"
+    ]
   },
   {
     "id": "2203_0102",
@@ -942,7 +1132,10 @@
     "avgFP": 28.2,
     "projectedFp": 28.2,
     "photoCode": "2203",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "937_0102",
@@ -957,7 +1150,10 @@
     "avgFP": 27.3,
     "projectedFp": 27.3,
     "photoCode": "937",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "441_0102",
@@ -972,7 +1168,10 @@
     "avgFP": 27.4,
     "projectedFp": 27.4,
     "photoCode": "441",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "1888_0102",
@@ -987,7 +1186,10 @@
     "avgFP": 27.7,
     "projectedFp": 27.7,
     "photoCode": "1888",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "1903_0102",
@@ -1002,7 +1204,10 @@
     "avgFP": 27.8,
     "projectedFp": 27.8,
     "photoCode": "1903",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "275_0102",
@@ -1017,7 +1222,10 @@
     "avgFP": 27.4,
     "projectedFp": 27.4,
     "photoCode": "275",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "353_0102",
@@ -1032,7 +1240,10 @@
     "avgFP": 27.3,
     "projectedFp": 27.3,
     "photoCode": "353",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "1496_0102",
@@ -1047,7 +1258,10 @@
     "avgFP": 27.7,
     "projectedFp": 27.7,
     "photoCode": "1496",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "922_0102",
@@ -1062,7 +1276,10 @@
     "avgFP": 27.5,
     "projectedFp": 27.5,
     "photoCode": "922",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHH"
+    ]
   },
   {
     "id": "727_0102",
@@ -1077,7 +1294,10 @@
     "avgFP": 27.3,
     "projectedFp": 27.3,
     "photoCode": "727",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "976_0102",
@@ -1092,7 +1312,10 @@
     "avgFP": 26.9,
     "projectedFp": 26.9,
     "photoCode": "976",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "436_0102",
@@ -1107,7 +1330,11 @@
     "avgFP": 27.2,
     "projectedFp": 27.2,
     "photoCode": "436",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL",
+      "DEN"
+    ]
   },
   {
     "id": "1541_0102",
@@ -1122,7 +1349,10 @@
     "avgFP": 26.6,
     "projectedFp": 26.6,
     "photoCode": "1541",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "2224_0102",
@@ -1137,7 +1367,10 @@
     "avgFP": 27.1,
     "projectedFp": 27.1,
     "photoCode": "2224",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "361_0102",
@@ -1152,7 +1385,10 @@
     "avgFP": 26.9,
     "projectedFp": 26.9,
     "photoCode": "361",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "1504_0102",
@@ -1167,7 +1403,10 @@
     "avgFP": 27.2,
     "projectedFp": 27.2,
     "photoCode": "1504",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "1897_0102",
@@ -1182,7 +1421,11 @@
     "avgFP": 27,
     "projectedFp": 27,
     "photoCode": "1897",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI",
+      "IND"
+    ]
   },
   {
     "id": "1709_0102",
@@ -1197,7 +1440,10 @@
     "avgFP": 26.2,
     "projectedFp": 26.2,
     "photoCode": "1709",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "57_0102",
@@ -1212,7 +1458,10 @@
     "avgFP": 26.4,
     "projectedFp": 26.4,
     "photoCode": "57",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "397_0102",
@@ -1227,7 +1476,10 @@
     "avgFP": 25.6,
     "projectedFp": 25.6,
     "photoCode": "397",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "1710_0102",
@@ -1242,7 +1494,10 @@
     "avgFP": 25.5,
     "projectedFp": 25.5,
     "photoCode": "1710",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "193_0102",
@@ -1257,7 +1512,10 @@
     "avgFP": 25.7,
     "projectedFp": 25.7,
     "photoCode": "193",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "2202_0102",
@@ -1272,7 +1530,10 @@
     "avgFP": 25.3,
     "projectedFp": 25.3,
     "photoCode": "2202",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "953_0102",
@@ -1287,7 +1548,10 @@
     "avgFP": 25.6,
     "projectedFp": 25.6,
     "photoCode": "953",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "2034_0102",
@@ -1302,7 +1566,10 @@
     "avgFP": 25.6,
     "projectedFp": 25.6,
     "photoCode": "2034",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "445_0102",
@@ -1317,7 +1584,10 @@
     "avgFP": 24.9,
     "projectedFp": 24.9,
     "photoCode": "445",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "905_0102",
@@ -1332,7 +1602,10 @@
     "avgFP": 24.9,
     "projectedFp": 24.9,
     "photoCode": "905",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "1721_0102",
@@ -1347,7 +1620,10 @@
     "avgFP": 24.6,
     "projectedFp": 24.6,
     "photoCode": "1721",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "358_0102",
@@ -1362,7 +1638,10 @@
     "avgFP": 24.8,
     "projectedFp": 24.8,
     "photoCode": "358",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "136_0102",
@@ -1377,7 +1656,10 @@
     "avgFP": 24.5,
     "projectedFp": 24.5,
     "photoCode": "136",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHH"
+    ]
   },
   {
     "id": "1899_0102",
@@ -1392,7 +1674,10 @@
     "avgFP": 23.9,
     "projectedFp": 23.9,
     "photoCode": "1899",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "954_0102",
@@ -1407,7 +1692,10 @@
     "avgFP": 24,
     "projectedFp": 24,
     "photoCode": "954",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "72_0102",
@@ -1422,7 +1710,10 @@
     "avgFP": 24.3,
     "projectedFp": 24.3,
     "photoCode": "72",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "1497_0102",
@@ -1437,7 +1728,10 @@
     "avgFP": 24.4,
     "projectedFp": 24.4,
     "photoCode": "1497",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "349_0102",
@@ -1452,7 +1746,10 @@
     "avgFP": 24,
     "projectedFp": 24,
     "photoCode": "349",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "1716_0102",
@@ -1467,7 +1764,10 @@
     "avgFP": 24.2,
     "projectedFp": 24.2,
     "photoCode": "1716",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "452_0102",
@@ -1482,7 +1782,10 @@
     "avgFP": 23.5,
     "projectedFp": 23.5,
     "photoCode": "452",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "1733_0102",
@@ -1497,7 +1800,10 @@
     "avgFP": 23.5,
     "projectedFp": 23.5,
     "photoCode": "1733",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "2050_0102",
@@ -1512,7 +1818,10 @@
     "avgFP": 23.2,
     "projectedFp": 23.2,
     "photoCode": "2050",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "1905_0102",
@@ -1527,7 +1836,10 @@
     "avgFP": 23.7,
     "projectedFp": 23.7,
     "photoCode": "1905",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "393_0102",
@@ -1542,7 +1854,10 @@
     "avgFP": 23.6,
     "projectedFp": 23.6,
     "photoCode": "393",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "2031_0102",
@@ -1557,7 +1872,10 @@
     "avgFP": 23.6,
     "projectedFp": 23.6,
     "photoCode": "2031",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "243_0102",
@@ -1572,7 +1890,10 @@
     "avgFP": 23.6,
     "projectedFp": 23.6,
     "photoCode": "243",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "221_0102",
@@ -1587,7 +1908,10 @@
     "avgFP": 22.5,
     "projectedFp": 22.5,
     "photoCode": "221",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "1723_0102",
@@ -1602,7 +1926,10 @@
     "avgFP": 22.6,
     "projectedFp": 22.6,
     "photoCode": "1723",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "133_0102",
@@ -1617,7 +1944,10 @@
     "avgFP": 22.9,
     "projectedFp": 22.9,
     "photoCode": "133",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHH"
+    ]
   },
   {
     "id": "238_0102",
@@ -1632,7 +1962,10 @@
     "avgFP": 22.5,
     "projectedFp": 22.5,
     "photoCode": "238",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "2032_0102",
@@ -1647,7 +1980,10 @@
     "avgFP": 21.8,
     "projectedFp": 21.8,
     "photoCode": "2032",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "2047_0102",
@@ -1662,7 +1998,10 @@
     "avgFP": 21.8,
     "projectedFp": 21.8,
     "photoCode": "2047",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "258_0102",
@@ -1677,7 +2016,10 @@
     "avgFP": 22.3,
     "projectedFp": 22.3,
     "photoCode": "258",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "1928_0102",
@@ -1692,7 +2034,10 @@
     "avgFP": 21.5,
     "projectedFp": 21.5,
     "photoCode": "1928",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "2046_0102",
@@ -1707,7 +2052,10 @@
     "avgFP": 21.2,
     "projectedFp": 21.2,
     "photoCode": "2046",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "1737_0102",
@@ -1722,7 +2070,10 @@
     "avgFP": 21.4,
     "projectedFp": 21.4,
     "photoCode": "1737",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "109_0102",
@@ -1737,7 +2088,10 @@
     "avgFP": 21.2,
     "projectedFp": 21.2,
     "photoCode": "109",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "693_0102",
@@ -1752,7 +2106,10 @@
     "avgFP": 21.4,
     "projectedFp": 21.4,
     "photoCode": "693",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "2033_0102",
@@ -1767,7 +2124,10 @@
     "avgFP": 21.7,
     "projectedFp": 21.7,
     "photoCode": "2033",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "1500_0102",
@@ -1782,7 +2142,11 @@
     "avgFP": 21.6,
     "projectedFp": 21.6,
     "photoCode": "1500",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI",
+      "IND"
+    ]
   },
   {
     "id": "2240_0102",
@@ -1797,7 +2161,10 @@
     "avgFP": 21.1,
     "projectedFp": 21.1,
     "photoCode": "2240",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "915_0102",
@@ -1812,7 +2179,11 @@
     "avgFP": 20.6,
     "projectedFp": 20.6,
     "photoCode": "915",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX",
+      "BOS"
+    ]
   },
   {
     "id": "722_0102",
@@ -1827,7 +2198,10 @@
     "avgFP": 20.5,
     "projectedFp": 20.5,
     "photoCode": "722",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "754_0102",
@@ -1842,7 +2216,10 @@
     "avgFP": 21,
     "projectedFp": 21,
     "photoCode": "754",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "980_0102",
@@ -1857,7 +2234,10 @@
     "avgFP": 21,
     "projectedFp": 21,
     "photoCode": "980",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "2204_0102",
@@ -1872,7 +2252,10 @@
     "avgFP": 20.2,
     "projectedFp": 20.2,
     "photoCode": "2204",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "1725_0102",
@@ -1887,7 +2270,10 @@
     "avgFP": 20.2,
     "projectedFp": 20.2,
     "photoCode": "1725",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "1088_0102",
@@ -1902,7 +2288,10 @@
     "avgFP": 20,
     "projectedFp": 20,
     "photoCode": "1088",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "270_0102",
@@ -1917,7 +2306,10 @@
     "avgFP": 19.8,
     "projectedFp": 19.8,
     "photoCode": "270",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "1908_0102",
@@ -1932,7 +2324,10 @@
     "avgFP": 19.7,
     "projectedFp": 19.7,
     "photoCode": "1908",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "2045_0102",
@@ -1947,7 +2342,10 @@
     "avgFP": 19.8,
     "projectedFp": 19.8,
     "photoCode": "2045",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "165_0102",
@@ -1962,7 +2360,10 @@
     "avgFP": 19.7,
     "projectedFp": 19.7,
     "photoCode": "165",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "389_0102",
@@ -1977,7 +2378,10 @@
     "avgFP": 20,
     "projectedFp": 20,
     "photoCode": "389",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "682_0102",
@@ -1992,7 +2396,10 @@
     "avgFP": 20.2,
     "projectedFp": 20.2,
     "photoCode": "682",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "1739_0102",
@@ -2007,7 +2414,10 @@
     "avgFP": 19.7,
     "projectedFp": 19.7,
     "photoCode": "1739",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "43_0102",
@@ -2022,7 +2432,10 @@
     "avgFP": 19,
     "projectedFp": 19,
     "photoCode": "43",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "955_0102",
@@ -2037,7 +2450,10 @@
     "avgFP": 19,
     "projectedFp": 19,
     "photoCode": "955",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "983_0102",
@@ -2052,7 +2468,10 @@
     "avgFP": 19.3,
     "projectedFp": 19.3,
     "photoCode": "983",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "1507_0102",
@@ -2067,7 +2486,10 @@
     "avgFP": 19.6,
     "projectedFp": 19.6,
     "photoCode": "1507",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "2225_0102",
@@ -2082,7 +2504,10 @@
     "avgFP": 19.3,
     "projectedFp": 19.3,
     "photoCode": "2225",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1727_0102",
@@ -2097,7 +2522,10 @@
     "avgFP": 19.4,
     "projectedFp": 19.4,
     "photoCode": "1727",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "296_0102",
@@ -2112,7 +2540,10 @@
     "avgFP": 19.3,
     "projectedFp": 19.3,
     "photoCode": "296",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "1501_0102",
@@ -2127,7 +2558,10 @@
     "avgFP": 19.6,
     "projectedFp": 19.6,
     "photoCode": "1501",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "1510_0102",
@@ -2142,7 +2576,10 @@
     "avgFP": 19.2,
     "projectedFp": 19.2,
     "photoCode": "1510",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "1517_0102",
@@ -2157,7 +2594,10 @@
     "avgFP": 18.7,
     "projectedFp": 18.7,
     "photoCode": "1517",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "461_0102",
@@ -2172,7 +2612,10 @@
     "avgFP": 18.8,
     "projectedFp": 18.8,
     "photoCode": "461",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "935_0102",
@@ -2187,7 +2630,10 @@
     "avgFP": 18.9,
     "projectedFp": 18.9,
     "photoCode": "935",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1509_0102",
@@ -2202,7 +2648,10 @@
     "avgFP": 18.4,
     "projectedFp": 18.4,
     "photoCode": "1509",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "1894_0102",
@@ -2217,7 +2666,10 @@
     "avgFP": 18.5,
     "projectedFp": 18.5,
     "photoCode": "1894",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "990_0102",
@@ -2232,7 +2684,10 @@
     "avgFP": 18.8,
     "projectedFp": 18.8,
     "photoCode": "990",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "468_0102",
@@ -2247,7 +2702,10 @@
     "avgFP": 18.9,
     "projectedFp": 18.9,
     "photoCode": "468",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "1729_0102",
@@ -2262,7 +2720,10 @@
     "avgFP": 18.9,
     "projectedFp": 18.9,
     "photoCode": "1729",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "1513_0102",
@@ -2277,7 +2738,10 @@
     "avgFP": 18.6,
     "projectedFp": 18.6,
     "photoCode": "1513",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "363_0102",
@@ -2292,7 +2756,10 @@
     "avgFP": 18.9,
     "projectedFp": 18.9,
     "photoCode": "363",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "21_0102",
@@ -2307,7 +2774,11 @@
     "avgFP": 18.8,
     "projectedFp": 18.8,
     "photoCode": "21",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI",
+      "MIL"
+    ]
   },
   {
     "id": "956_0102",
@@ -2322,7 +2793,10 @@
     "avgFP": 18.6,
     "projectedFp": 18.6,
     "photoCode": "956",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "702_0102",
@@ -2337,7 +2811,10 @@
     "avgFP": 18.4,
     "projectedFp": 18.4,
     "photoCode": "702",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "965_0102",
@@ -2352,7 +2829,10 @@
     "avgFP": 18.9,
     "projectedFp": 18.9,
     "photoCode": "965",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "45_0102",
@@ -2367,7 +2847,10 @@
     "avgFP": 18,
     "projectedFp": 18,
     "photoCode": "45",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "696_0102",
@@ -2382,7 +2865,11 @@
     "avgFP": 18.1,
     "projectedFp": 18.1,
     "photoCode": "696",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND",
+      "CHI"
+    ]
   },
   {
     "id": "120_0102",
@@ -2397,7 +2884,10 @@
     "avgFP": 18,
     "projectedFp": 18,
     "photoCode": "120",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "966_0102",
@@ -2412,7 +2902,10 @@
     "avgFP": 18.1,
     "projectedFp": 18.1,
     "photoCode": "966",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "2072_0102",
@@ -2427,7 +2920,10 @@
     "avgFP": 18.1,
     "projectedFp": 18.1,
     "photoCode": "2072",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "1499_0102",
@@ -2442,7 +2938,10 @@
     "avgFP": 18.1,
     "projectedFp": 18.1,
     "photoCode": "1499",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "1607_0102",
@@ -2457,7 +2956,10 @@
     "avgFP": 18.1,
     "projectedFp": 18.1,
     "photoCode": "1607",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "896_0102",
@@ -2472,7 +2974,11 @@
     "avgFP": 18.2,
     "projectedFp": 18.2,
     "photoCode": "896",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL",
+      "DEN"
+    ]
   },
   {
     "id": "2210_0102",
@@ -2487,7 +2993,10 @@
     "avgFP": 18,
     "projectedFp": 18,
     "photoCode": "2210",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "1924_0102",
@@ -2502,7 +3011,10 @@
     "avgFP": 17.7,
     "projectedFp": 17.7,
     "photoCode": "1924",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHH"
+    ]
   },
   {
     "id": "1956_0102",
@@ -2517,7 +3029,10 @@
     "avgFP": 17.6,
     "projectedFp": 17.6,
     "photoCode": "1956",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "960_0102",
@@ -2532,7 +3047,11 @@
     "avgFP": 17.5,
     "projectedFp": 17.5,
     "photoCode": "960",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX",
+      "BOS"
+    ]
   },
   {
     "id": "339_0102",
@@ -2547,7 +3066,10 @@
     "avgFP": 16.9,
     "projectedFp": 16.9,
     "photoCode": "339",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "2239_0102",
@@ -2562,7 +3084,10 @@
     "avgFP": 17.2,
     "projectedFp": 17.2,
     "photoCode": "2239",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "2048_0102",
@@ -2577,7 +3102,10 @@
     "avgFP": 17.2,
     "projectedFp": 17.2,
     "photoCode": "2048",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHH"
+    ]
   },
   {
     "id": "1559_0102",
@@ -2592,7 +3120,10 @@
     "avgFP": 16.9,
     "projectedFp": 16.9,
     "photoCode": "1559",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "1934_0102",
@@ -2607,7 +3138,10 @@
     "avgFP": 17,
     "projectedFp": 17,
     "photoCode": "1934",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "1902_0102",
@@ -2622,7 +3156,10 @@
     "avgFP": 16.8,
     "projectedFp": 16.8,
     "photoCode": "1902",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "1498_0102",
@@ -2637,7 +3174,10 @@
     "avgFP": 16.5,
     "projectedFp": 16.5,
     "photoCode": "1498",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1901_0102",
@@ -2652,7 +3192,10 @@
     "avgFP": 15.7,
     "projectedFp": 15.7,
     "photoCode": "1901",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "2207_0102",
@@ -2667,7 +3210,11 @@
     "avgFP": 16.2,
     "projectedFp": 16.2,
     "photoCode": "2207",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS",
+      "PHX"
+    ]
   },
   {
     "id": "2036_0102",
@@ -2682,7 +3229,10 @@
     "avgFP": 16.1,
     "projectedFp": 16.1,
     "photoCode": "2036",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "422_0102",
@@ -2697,7 +3247,11 @@
     "avgFP": 16.2,
     "projectedFp": 16.2,
     "photoCode": "422",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN",
+      "DAL"
+    ]
   },
   {
     "id": "446_0102",
@@ -2712,7 +3266,10 @@
     "avgFP": 15.6,
     "projectedFp": 15.6,
     "photoCode": "446",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "2049_0102",
@@ -2727,7 +3284,10 @@
     "avgFP": 16.1,
     "projectedFp": 16.1,
     "photoCode": "2049",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "1005_0102",
@@ -2742,7 +3302,10 @@
     "avgFP": 15.6,
     "projectedFp": 15.6,
     "photoCode": "1005",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "2042_0102",
@@ -2757,7 +3320,10 @@
     "avgFP": 15.7,
     "projectedFp": 15.7,
     "photoCode": "2042",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "324_0102",
@@ -2772,7 +3338,10 @@
     "avgFP": 16.1,
     "projectedFp": 16.1,
     "photoCode": "324",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "1838_0102",
@@ -2787,7 +3356,10 @@
     "avgFP": 15.6,
     "projectedFp": 15.6,
     "photoCode": "1838",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "1521_0102",
@@ -2802,7 +3374,10 @@
     "avgFP": 15.7,
     "projectedFp": 15.7,
     "photoCode": "1521",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1502_0102",
@@ -2817,7 +3392,10 @@
     "avgFP": 15.6,
     "projectedFp": 15.6,
     "photoCode": "1502",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "2054_0102",
@@ -2832,7 +3410,10 @@
     "avgFP": 16.1,
     "projectedFp": 16.1,
     "photoCode": "2054",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "2035_0102",
@@ -2847,7 +3428,10 @@
     "avgFP": 16.2,
     "projectedFp": 16.2,
     "photoCode": "2035",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "2059_0102",
@@ -2862,7 +3446,10 @@
     "avgFP": 16.1,
     "projectedFp": 16.1,
     "photoCode": "2059",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "15_0102",
@@ -2877,7 +3464,10 @@
     "avgFP": 14.9,
     "projectedFp": 14.9,
     "photoCode": "15",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "1904_0102",
@@ -2892,7 +3482,10 @@
     "avgFP": 15.5,
     "projectedFp": 15.5,
     "photoCode": "1904",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "1425_0102",
@@ -2907,7 +3500,10 @@
     "avgFP": 15.2,
     "projectedFp": 15.2,
     "photoCode": "1425",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "1751_0102",
@@ -2922,7 +3518,10 @@
     "avgFP": 15.2,
     "projectedFp": 15.2,
     "photoCode": "1751",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "2199_0102",
@@ -2937,7 +3536,10 @@
     "avgFP": 15.1,
     "projectedFp": 15.1,
     "photoCode": "2199",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "1853_0102",
@@ -2952,7 +3554,10 @@
     "avgFP": 15.1,
     "projectedFp": 15.1,
     "photoCode": "1853",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "1731_0102",
@@ -2967,7 +3572,10 @@
     "avgFP": 15.1,
     "projectedFp": 15.1,
     "photoCode": "1731",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "1944_0102",
@@ -2982,7 +3590,10 @@
     "avgFP": 15.3,
     "projectedFp": 15.3,
     "photoCode": "1944",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "788_0102",
@@ -2997,7 +3608,10 @@
     "avgFP": 14.4,
     "projectedFp": 14.4,
     "photoCode": "788",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "448_0102",
@@ -3012,7 +3626,11 @@
     "avgFP": 14.8,
     "projectedFp": 14.8,
     "photoCode": "448",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL",
+      "PHX"
+    ]
   },
   {
     "id": "2209_0102",
@@ -3027,7 +3645,10 @@
     "avgFP": 14.6,
     "projectedFp": 14.6,
     "photoCode": "2209",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "718_0102",
@@ -3042,7 +3663,10 @@
     "avgFP": 14.5,
     "projectedFp": 14.5,
     "photoCode": "718",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "1477_0102",
@@ -3057,7 +3681,10 @@
     "avgFP": 14.3,
     "projectedFp": 14.3,
     "photoCode": "1477",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "164_0102",
@@ -3072,7 +3699,10 @@
     "avgFP": 14.4,
     "projectedFp": 14.4,
     "photoCode": "164",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "970_0102",
@@ -3087,7 +3717,10 @@
     "avgFP": 14.4,
     "projectedFp": 14.4,
     "photoCode": "970",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "111_0102",
@@ -3102,7 +3735,10 @@
     "avgFP": 14.5,
     "projectedFp": 14.5,
     "photoCode": "111",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "891_0102",
@@ -3117,7 +3753,10 @@
     "avgFP": 14.6,
     "projectedFp": 14.6,
     "photoCode": "891",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "3_0102",
@@ -3132,7 +3771,10 @@
     "avgFP": 14.3,
     "projectedFp": 14.3,
     "photoCode": "3",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "1065_0102",
@@ -3147,7 +3789,10 @@
     "avgFP": 14.8,
     "projectedFp": 14.8,
     "photoCode": "1065",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "1520_0102",
@@ -3162,7 +3807,10 @@
     "avgFP": 14.2,
     "projectedFp": 14.2,
     "photoCode": "1520",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "384_0102",
@@ -3177,7 +3825,10 @@
     "avgFP": 14.5,
     "projectedFp": 14.5,
     "photoCode": "384",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "2217_0102",
@@ -3192,7 +3843,10 @@
     "avgFP": 14.8,
     "projectedFp": 14.8,
     "photoCode": "2217",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "1023_0102",
@@ -3207,7 +3861,10 @@
     "avgFP": 13.9,
     "projectedFp": 13.9,
     "photoCode": "1023",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "2051_0102",
@@ -3222,7 +3879,11 @@
     "avgFP": 13.9,
     "projectedFp": 13.9,
     "photoCode": "2051",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL",
+      "DEN"
+    ]
   },
   {
     "id": "1506_0102",
@@ -3237,7 +3898,10 @@
     "avgFP": 13.5,
     "projectedFp": 13.5,
     "photoCode": "1506",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "369_0102",
@@ -3252,7 +3916,10 @@
     "avgFP": 13.8,
     "projectedFp": 13.8,
     "photoCode": "369",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "1442_0102",
@@ -3267,7 +3934,10 @@
     "avgFP": 14,
     "projectedFp": 14,
     "photoCode": "1442",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "1761_0102",
@@ -3282,7 +3952,10 @@
     "avgFP": 13.8,
     "projectedFp": 13.8,
     "photoCode": "1761",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "1744_0102",
@@ -3297,7 +3970,10 @@
     "avgFP": 13.6,
     "projectedFp": 13.6,
     "photoCode": "1744",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "180_0102",
@@ -3312,7 +3988,10 @@
     "avgFP": 14,
     "projectedFp": 14,
     "photoCode": "180",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "42_0102",
@@ -3327,7 +4006,10 @@
     "avgFP": 14.1,
     "projectedFp": 14.1,
     "photoCode": "42",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "1563_0102",
@@ -3342,7 +4024,11 @@
     "avgFP": 14.1,
     "projectedFp": 14.1,
     "photoCode": "1563",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI",
+      "IND"
+    ]
   },
   {
     "id": "345_0102",
@@ -3357,7 +4043,10 @@
     "avgFP": 13.1,
     "projectedFp": 13.1,
     "photoCode": "345",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "344_0102",
@@ -3372,7 +4061,10 @@
     "avgFP": 13,
     "projectedFp": 13,
     "photoCode": "344",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "677_0102",
@@ -3387,7 +4079,10 @@
     "avgFP": 13.2,
     "projectedFp": 13.2,
     "photoCode": "677",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "281_0102",
@@ -3402,7 +4097,10 @@
     "avgFP": 13.1,
     "projectedFp": 13.1,
     "photoCode": "281",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "1886_0102",
@@ -3417,7 +4115,10 @@
     "avgFP": 12.9,
     "projectedFp": 12.9,
     "photoCode": "1886",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "2067_0102",
@@ -3432,7 +4133,10 @@
     "avgFP": 13.4,
     "projectedFp": 13.4,
     "photoCode": "2067",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "168_0102",
@@ -3447,7 +4151,10 @@
     "avgFP": 13,
     "projectedFp": 13,
     "photoCode": "168",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "1763_0102",
@@ -3462,7 +4169,10 @@
     "avgFP": 13.2,
     "projectedFp": 13.2,
     "photoCode": "1763",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "1909_0102",
@@ -3477,7 +4187,10 @@
     "avgFP": 13.4,
     "projectedFp": 13.4,
     "photoCode": "1909",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1542_0102",
@@ -3492,7 +4205,10 @@
     "avgFP": 12.9,
     "projectedFp": 12.9,
     "photoCode": "1542",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "2260_0102",
@@ -3507,7 +4223,10 @@
     "avgFP": 13.4,
     "projectedFp": 13.4,
     "photoCode": "2260",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "911_0102",
@@ -3522,7 +4241,10 @@
     "avgFP": 12.3,
     "projectedFp": 12.3,
     "photoCode": "911",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "431_0102",
@@ -3537,7 +4259,10 @@
     "avgFP": 12.6,
     "projectedFp": 12.6,
     "photoCode": "431",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "731_0102",
@@ -3552,7 +4277,10 @@
     "avgFP": 12.1,
     "projectedFp": 12.1,
     "photoCode": "731",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "121_0102",
@@ -3567,7 +4295,10 @@
     "avgFP": 12.7,
     "projectedFp": 12.7,
     "photoCode": "121",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "2201_0102",
@@ -3582,7 +4313,10 @@
     "avgFP": 12.7,
     "projectedFp": 12.7,
     "photoCode": "2201",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "383_0102",
@@ -3597,7 +4331,10 @@
     "avgFP": 12.2,
     "projectedFp": 12.2,
     "photoCode": "383",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "2211_0102",
@@ -3612,7 +4349,10 @@
     "avgFP": 12.2,
     "projectedFp": 12.2,
     "photoCode": "2211",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "763_0102",
@@ -3627,7 +4367,10 @@
     "avgFP": 12.2,
     "projectedFp": 12.2,
     "photoCode": "763",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "1985_0102",
@@ -3642,7 +4385,10 @@
     "avgFP": 12.3,
     "projectedFp": 12.3,
     "photoCode": "1985",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "93_0102",
@@ -3657,7 +4403,10 @@
     "avgFP": 12.7,
     "projectedFp": 12.7,
     "photoCode": "93",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "248_0102",
@@ -3672,7 +4421,10 @@
     "avgFP": 12.1,
     "projectedFp": 12.1,
     "photoCode": "248",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHH"
+    ]
   },
   {
     "id": "762_0102",
@@ -3687,7 +4439,10 @@
     "avgFP": 11.6,
     "projectedFp": 11.6,
     "photoCode": "762",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "916_0102",
@@ -3702,7 +4457,10 @@
     "avgFP": 12,
     "projectedFp": 12,
     "photoCode": "916",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "697_0102",
@@ -3717,7 +4475,10 @@
     "avgFP": 11.5,
     "projectedFp": 11.5,
     "photoCode": "697",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "2215_0102",
@@ -3732,7 +4493,10 @@
     "avgFP": 11.9,
     "projectedFp": 11.9,
     "photoCode": "2215",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "423_0102",
@@ -3747,7 +4511,10 @@
     "avgFP": 11.6,
     "projectedFp": 11.6,
     "photoCode": "423",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "2261_0102",
@@ -3762,7 +4529,10 @@
     "avgFP": 11.8,
     "projectedFp": 11.8,
     "photoCode": "2261",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "673_0102",
@@ -3777,7 +4547,10 @@
     "avgFP": 11.8,
     "projectedFp": 11.8,
     "photoCode": "673",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1730_0102",
@@ -3792,7 +4565,10 @@
     "avgFP": 11,
     "projectedFp": 11,
     "photoCode": "1730",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "2063_0102",
@@ -3807,7 +4583,10 @@
     "avgFP": 10.9,
     "projectedFp": 10.9,
     "photoCode": "2063",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "1720_0102",
@@ -3822,7 +4601,10 @@
     "avgFP": 10.7,
     "projectedFp": 10.7,
     "photoCode": "1720",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "2038_0102",
@@ -3837,7 +4619,10 @@
     "avgFP": 11.2,
     "projectedFp": 11.2,
     "photoCode": "2038",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "1609_0102",
@@ -3852,7 +4637,10 @@
     "avgFP": 10.9,
     "projectedFp": 10.9,
     "photoCode": "1609",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "958_0102",
@@ -3867,7 +4655,10 @@
     "avgFP": 11,
     "projectedFp": 11,
     "photoCode": "958",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "283_0102",
@@ -3882,7 +4673,10 @@
     "avgFP": 11.3,
     "projectedFp": 11.3,
     "photoCode": "283",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "278_0102",
@@ -3897,7 +4691,10 @@
     "avgFP": 11.2,
     "projectedFp": 11.2,
     "photoCode": "278",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHH"
+    ]
   },
   {
     "id": "2041_0102",
@@ -3912,7 +4709,10 @@
     "avgFP": 10.8,
     "projectedFp": 10.8,
     "photoCode": "2041",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "1735_0102",
@@ -3927,7 +4727,10 @@
     "avgFP": 10.7,
     "projectedFp": 10.7,
     "photoCode": "1735",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "105_0102",
@@ -3942,7 +4745,10 @@
     "avgFP": 11.3,
     "projectedFp": 11.3,
     "photoCode": "105",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "1601_0102",
@@ -3957,7 +4763,10 @@
     "avgFP": 11,
     "projectedFp": 11,
     "photoCode": "1601",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1747_0102",
@@ -3972,7 +4781,10 @@
     "avgFP": 10.5,
     "projectedFp": 10.5,
     "photoCode": "1747",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "2198_0102",
@@ -3987,7 +4799,10 @@
     "avgFP": 10.5,
     "projectedFp": 10.5,
     "photoCode": "2198",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "1000_0102",
@@ -4002,7 +4817,10 @@
     "avgFP": 10.4,
     "projectedFp": 10.4,
     "photoCode": "1000",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "302_0102",
@@ -4017,7 +4835,10 @@
     "avgFP": 10.6,
     "projectedFp": 10.6,
     "photoCode": "302",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "1444_0102",
@@ -4032,7 +4853,10 @@
     "avgFP": 10.3,
     "projectedFp": 10.3,
     "photoCode": "1444",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "2052_0102",
@@ -4047,7 +4871,10 @@
     "avgFP": 10.4,
     "projectedFp": 10.4,
     "photoCode": "2052",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "209_0102",
@@ -4062,7 +4889,10 @@
     "avgFP": 10.2,
     "projectedFp": 10.2,
     "photoCode": "209",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "2370_0102",
@@ -4077,7 +4907,10 @@
     "avgFP": 10.6,
     "projectedFp": 10.6,
     "photoCode": "2370",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "688_0102",
@@ -4092,7 +4925,10 @@
     "avgFP": 9.5,
     "projectedFp": 9.5,
     "photoCode": "688",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "2069_0102",
@@ -4107,7 +4943,10 @@
     "avgFP": 9.8,
     "projectedFp": 9.8,
     "photoCode": "2069",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "330_0102",
@@ -4122,7 +4961,10 @@
     "avgFP": 9.7,
     "projectedFp": 9.7,
     "photoCode": "330",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "2248_0102",
@@ -4137,7 +4979,10 @@
     "avgFP": 9.5,
     "projectedFp": 9.5,
     "photoCode": "2248",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "2062_0102",
@@ -4152,7 +4997,10 @@
     "avgFP": 9.7,
     "projectedFp": 9.7,
     "photoCode": "2062",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "1714_0102",
@@ -4167,7 +5015,10 @@
     "avgFP": 9.6,
     "projectedFp": 9.6,
     "photoCode": "1714",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHH"
+    ]
   },
   {
     "id": "2242_0102",
@@ -4182,7 +5033,10 @@
     "avgFP": 9.6,
     "projectedFp": 9.6,
     "photoCode": "2242",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "2226_0102",
@@ -4197,7 +5051,10 @@
     "avgFP": 9.5,
     "projectedFp": 9.5,
     "photoCode": "2226",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "2351_0102",
@@ -4212,7 +5069,10 @@
     "avgFP": 9.6,
     "projectedFp": 9.6,
     "photoCode": "2351",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "458_0102",
@@ -4227,7 +5087,10 @@
     "avgFP": 9.8,
     "projectedFp": 9.8,
     "photoCode": "458",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "1110_0102",
@@ -4242,7 +5105,10 @@
     "avgFP": 9.5,
     "projectedFp": 9.5,
     "photoCode": "1110",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1800_0102",
@@ -4257,7 +5123,10 @@
     "avgFP": 9.9,
     "projectedFp": 9.9,
     "photoCode": "1800",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "1032_0102",
@@ -4272,7 +5141,10 @@
     "avgFP": 9.9,
     "projectedFp": 9.9,
     "photoCode": "1032",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "365_0102",
@@ -4287,7 +5159,10 @@
     "avgFP": 9.9,
     "projectedFp": 9.9,
     "photoCode": "365",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "2098_0102",
@@ -4302,7 +5177,10 @@
     "avgFP": 9,
     "projectedFp": 9,
     "photoCode": "2098",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "198_0102",
@@ -4317,7 +5195,10 @@
     "avgFP": 8.7,
     "projectedFp": 8.7,
     "photoCode": "198",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1531_0102",
@@ -4332,7 +5213,11 @@
     "avgFP": 9.3,
     "projectedFp": 9.3,
     "photoCode": "1531",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW",
+      "MIN"
+    ]
   },
   {
     "id": "2053_0102",
@@ -4347,7 +5232,10 @@
     "avgFP": 9,
     "projectedFp": 9,
     "photoCode": "2053",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "1742_0102",
@@ -4362,7 +5250,10 @@
     "avgFP": 8.8,
     "projectedFp": 8.8,
     "photoCode": "1742",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "1917_0102",
@@ -4377,7 +5268,10 @@
     "avgFP": 9.2,
     "projectedFp": 9.2,
     "photoCode": "1917",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "902_0102",
@@ -4392,7 +5286,10 @@
     "avgFP": 8.1,
     "projectedFp": 8.1,
     "photoCode": "902",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "145_0102",
@@ -4407,7 +5304,10 @@
     "avgFP": 8.5,
     "projectedFp": 8.5,
     "photoCode": "145",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "962_0102",
@@ -4422,7 +5322,10 @@
     "avgFP": 8.6,
     "projectedFp": 8.6,
     "photoCode": "962",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "961_0102",
@@ -4437,7 +5340,10 @@
     "avgFP": 8.4,
     "projectedFp": 8.4,
     "photoCode": "961",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "179_0102",
@@ -4452,7 +5358,10 @@
     "avgFP": 8.3,
     "projectedFp": 8.3,
     "photoCode": "179",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "1892_0102",
@@ -4467,7 +5376,10 @@
     "avgFP": 8.2,
     "projectedFp": 8.2,
     "photoCode": "1892",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "690_0102",
@@ -4482,7 +5394,10 @@
     "avgFP": 8.1,
     "projectedFp": 8.1,
     "photoCode": "690",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "2212_0102",
@@ -4497,7 +5412,10 @@
     "avgFP": 8.3,
     "projectedFp": 8.3,
     "photoCode": "2212",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "216_0102",
@@ -4512,7 +5430,10 @@
     "avgFP": 8.1,
     "projectedFp": 8.1,
     "photoCode": "216",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "1724_0102",
@@ -4527,7 +5448,10 @@
     "avgFP": 8.2,
     "projectedFp": 8.2,
     "photoCode": "1724",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHH"
+    ]
   },
   {
     "id": "2250_0102",
@@ -4542,7 +5466,10 @@
     "avgFP": 8.5,
     "projectedFp": 8.5,
     "photoCode": "2250",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "1863_0102",
@@ -4557,7 +5484,10 @@
     "avgFP": 8.3,
     "projectedFp": 8.3,
     "photoCode": "1863",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "2238_0102",
@@ -4572,7 +5502,10 @@
     "avgFP": 8.3,
     "projectedFp": 8.3,
     "photoCode": "2238",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "2058_0102",
@@ -4587,7 +5520,10 @@
     "avgFP": 8,
     "projectedFp": 8,
     "photoCode": "2058",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "782_0102",
@@ -4602,7 +5538,10 @@
     "avgFP": 7.3,
     "projectedFp": 7.3,
     "photoCode": "782",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "692_0102",
@@ -4617,7 +5556,10 @@
     "avgFP": 7.4,
     "projectedFp": 7.4,
     "photoCode": "692",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "1760_0102",
@@ -4632,7 +5574,11 @@
     "avgFP": 7.3,
     "projectedFp": 7.3,
     "photoCode": "1760",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN",
+      "TOR"
+    ]
   },
   {
     "id": "70_0102",
@@ -4647,7 +5593,10 @@
     "avgFP": 7.4,
     "projectedFp": 7.4,
     "photoCode": "70",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "317_0102",
@@ -4662,7 +5611,10 @@
     "avgFP": 7.4,
     "projectedFp": 7.4,
     "photoCode": "317",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1900_0102",
@@ -4677,7 +5629,10 @@
     "avgFP": 7.8,
     "projectedFp": 7.8,
     "photoCode": "1900",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "376_0102",
@@ -4692,7 +5647,10 @@
     "avgFP": 7.3,
     "projectedFp": 7.3,
     "photoCode": "376",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "2357_0102",
@@ -4707,7 +5665,10 @@
     "avgFP": 7.4,
     "projectedFp": 7.4,
     "photoCode": "2357",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "1533_0102",
@@ -4722,7 +5683,10 @@
     "avgFP": 7.7,
     "projectedFp": 7.7,
     "photoCode": "1533",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "2306_0102",
@@ -4737,7 +5701,11 @@
     "avgFP": 7.2,
     "projectedFp": 7.2,
     "photoCode": "2306",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR",
+      "DEN"
+    ]
   },
   {
     "id": "1952_0102",
@@ -4752,7 +5720,10 @@
     "avgFP": 7.2,
     "projectedFp": 7.2,
     "photoCode": "1952",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "1960_0102",
@@ -4767,7 +5738,11 @@
     "avgFP": 7.1,
     "projectedFp": 7.1,
     "photoCode": "1960",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS",
+      "PHX"
+    ]
   },
   {
     "id": "1907_0102",
@@ -4782,7 +5757,10 @@
     "avgFP": 6.9,
     "projectedFp": 6.9,
     "photoCode": "1907",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "399_0102",
@@ -4797,7 +5775,10 @@
     "avgFP": 6.8,
     "projectedFp": 6.8,
     "photoCode": "399",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "2208_0102",
@@ -4812,7 +5793,10 @@
     "avgFP": 6.7,
     "projectedFp": 6.7,
     "photoCode": "2208",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "1915_0102",
@@ -4827,7 +5811,10 @@
     "avgFP": 6.9,
     "projectedFp": 6.9,
     "photoCode": "1915",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "1898_0102",
@@ -4842,7 +5829,10 @@
     "avgFP": 7,
     "projectedFp": 7,
     "photoCode": "1898",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1594_0102",
@@ -4857,7 +5847,10 @@
     "avgFP": 6.7,
     "projectedFp": 6.7,
     "photoCode": "1594",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "2061_0102",
@@ -4872,7 +5865,10 @@
     "avgFP": 6.8,
     "projectedFp": 6.8,
     "photoCode": "2061",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "271_0102",
@@ -4887,7 +5883,10 @@
     "avgFP": 7.2,
     "projectedFp": 7.2,
     "photoCode": "271",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "1548_0102",
@@ -4902,7 +5901,10 @@
     "avgFP": 5.9,
     "projectedFp": 5.9,
     "photoCode": "1548",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "680_0102",
@@ -4917,7 +5919,10 @@
     "avgFP": 6.2,
     "projectedFp": 6.2,
     "photoCode": "680",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1630_0102",
@@ -4932,7 +5937,10 @@
     "avgFP": 6.1,
     "projectedFp": 6.1,
     "photoCode": "1630",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "2222_0102",
@@ -4947,7 +5955,10 @@
     "avgFP": 6.5,
     "projectedFp": 6.5,
     "photoCode": "2222",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "2254_0102",
@@ -4962,7 +5973,10 @@
     "avgFP": 6,
     "projectedFp": 6,
     "photoCode": "2254",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "672_0102",
@@ -4977,7 +5991,10 @@
     "avgFP": 6,
     "projectedFp": 6,
     "photoCode": "672",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHH"
+    ]
   },
   {
     "id": "2228_0102",
@@ -4992,7 +6009,10 @@
     "avgFP": 5.7,
     "projectedFp": 5.7,
     "photoCode": "2228",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "998_0102",
@@ -5007,7 +6027,10 @@
     "avgFP": 5.6,
     "projectedFp": 5.6,
     "photoCode": "998",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "146_0102",
@@ -5022,7 +6045,11 @@
     "avgFP": 5.4,
     "projectedFp": 5.4,
     "photoCode": "146",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX",
+      "ORL"
+    ]
   },
   {
     "id": "2216_0102",
@@ -5037,7 +6064,10 @@
     "avgFP": 5.8,
     "projectedFp": 5.8,
     "photoCode": "2216",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "1732_0102",
@@ -5052,7 +6082,10 @@
     "avgFP": 5.2,
     "projectedFp": 5.2,
     "photoCode": "1732",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "417_0102",
@@ -5067,7 +6100,10 @@
     "avgFP": 5.8,
     "projectedFp": 5.8,
     "photoCode": "417",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "2223_0102",
@@ -5082,7 +6118,10 @@
     "avgFP": 5.3,
     "projectedFp": 5.3,
     "photoCode": "2223",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "1895_0102",
@@ -5097,7 +6136,10 @@
     "avgFP": 5.5,
     "projectedFp": 5.5,
     "photoCode": "1895",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "2243_0102",
@@ -5112,7 +6154,10 @@
     "avgFP": 5.4,
     "projectedFp": 5.4,
     "photoCode": "2243",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "1043_0102",
@@ -5127,7 +6172,10 @@
     "avgFP": 4.6,
     "projectedFp": 4.6,
     "photoCode": "1043",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "969_0102",
@@ -5142,7 +6190,10 @@
     "avgFP": 5.1,
     "projectedFp": 5.1,
     "photoCode": "969",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "1942_0102",
@@ -5157,7 +6208,10 @@
     "avgFP": 4.6,
     "projectedFp": 4.6,
     "photoCode": "1942",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "95_0102",
@@ -5172,7 +6226,10 @@
     "avgFP": 5,
     "projectedFp": 5,
     "photoCode": "95",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1051_0102",
@@ -5187,7 +6244,11 @@
     "avgFP": 4,
     "projectedFp": 4,
     "photoCode": "1051",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN",
+      "GSW"
+    ]
   },
   {
     "id": "2257_0102",
@@ -5202,7 +6263,10 @@
     "avgFP": 4.2,
     "projectedFp": 4.2,
     "photoCode": "2257",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "685_0102",
@@ -5217,7 +6281,10 @@
     "avgFP": 4.1,
     "projectedFp": 4.1,
     "photoCode": "685",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1918_0102",
@@ -5232,7 +6299,10 @@
     "avgFP": 4.2,
     "projectedFp": 4.2,
     "photoCode": "1918",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "2071_0102",
@@ -5247,7 +6317,10 @@
     "avgFP": 4.3,
     "projectedFp": 4.3,
     "photoCode": "2071",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "201_0102",
@@ -5262,7 +6335,10 @@
     "avgFP": 4.3,
     "projectedFp": 4.3,
     "photoCode": "201",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "2214_0102",
@@ -5277,7 +6353,10 @@
     "avgFP": 2.7,
     "projectedFp": 2.7,
     "photoCode": "2214",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "280_0102",
@@ -5292,7 +6371,10 @@
     "avgFP": 3.5,
     "projectedFp": 3.5,
     "photoCode": "280",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "2220_0102",
@@ -5307,7 +6389,10 @@
     "avgFP": 2.9,
     "projectedFp": 2.9,
     "photoCode": "2220",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "2043_0102",
@@ -5322,6 +6407,9 @@
     "avgFP": 3.3,
     "projectedFp": 3.3,
     "photoCode": "2043",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   }
 ]
