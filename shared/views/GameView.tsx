@@ -690,9 +690,28 @@ export function GameView({ adapter }: Props) {
   }, [gameState]);
 
   useEffect(() => {
-    ensureLoaded()
-      .then(() => setDataReady(true))
-      .catch(() => setGameError("Failed to load game data. Check your connection and try again."));
+    let cancelled = false;
+    const load = () => {
+      setDataReady(false);
+      ensureLoaded()
+        .then(() => { if (!cancelled) setDataReady(true); })
+        .catch(() => { if (!cancelled) setGameError("Failed to load game data. Check your connection and try again."); });
+    };
+    load();
+    // Re-load when the active season key changes (e.g. FTUE→real-game
+    // transition swaps from FTUE_SEASON_KEY to today's pick). setActiveSeason
+    // invalidates the cache; without re-running ensureLoaded the next deal
+    // throws "dataEngine not loaded".
+    const onSeasonChange = () => load();
+    if (typeof window !== "undefined") {
+      window.addEventListener("replaymod:active-season-change", onSeasonChange);
+    }
+    return () => {
+      cancelled = true;
+      if (typeof window !== "undefined") {
+        window.removeEventListener("replaymod:active-season-change", onSeasonChange);
+      }
+    };
   }, []); // eslint-disable-line
 
   const flipState = useCardFlipState();

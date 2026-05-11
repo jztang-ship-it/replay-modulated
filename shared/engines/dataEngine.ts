@@ -54,6 +54,12 @@ export function setActiveSeason(key: string): void {
   if (key === activeSeasonKey) return;
   activeSeasonKey = key;
   invalidateCache();
+  // Notify subscribers (GameView) so they can re-run ensureLoaded.
+  // Without this, the FTUE→reel transition swaps the season key, blanks
+  // the cache, but leaves dataReady=true — the next deal throws.
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("replaymod:active-season-change", { detail: { key } }));
+  }
 }
 
 export function getActiveSeason(): string | null {

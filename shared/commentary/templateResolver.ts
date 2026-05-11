@@ -37,16 +37,57 @@ function oppPhrase(c: CommentaryRosterCard): string {
   return c.homeAway === "A" ? ` in ${city}` : ` against ${city}`;
 }
 
+// Stat categories with measurable units. Categories NOT in this map (e.g.
+// "fifty_plus_game", "five_by_five", "td_30_20_20") are flag-style markers
+// with value:1 — never render them as "1 fifty_plus_game".
+const STAT_UNITS: Record<string, string> = {
+  // basketball
+  pts: "pts", reb: "reb", ast: "ast", threes: "threes", stl: "stl", blk: "blk",
+  // baseball
+  hr: "HR", h: "hits", rbi: "RBI", k: "K", sb: "SB", ip: "IP", bb: "BB", r: "R",
+};
+
+// Human-readable phrasing of a stat category for inline use in templates
+// (e.g. "{topCategory}" → "scoring"). Flag categories map to "" so any
+// template referencing them degrades cleanly.
+const CATEGORY_READABLE: Record<string, string> = {
+  pts: "scoring",
+  reb: "rebounding",
+  ast: "playmaking",
+  stl: "steals",
+  blk: "blocks",
+  threes: "three-point shooting",
+  hr: "home run",
+  h: "hits",
+  rbi: "RBI",
+  k: "strikeout",
+  sb: "stolen base",
+  ip: "innings pitched",
+  bb: "walks",
+  r: "runs",
+};
+
+function ordinal(n: number): string {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return `${n}${s[(v - 20) % 10] ?? s[v] ?? s[0]}`;
+}
+
+/** Pick the stat-typed reason from allReasons (fall back to primaryReason).
+ *  Avoids surfacing flag categories like "fifty_plus_game" as headlines. */
+function pickStatReason(topGame: NonNullable<CommentaryInput["topGame"]>) {
+  const all = topGame.allReasons?.length
+    ? topGame.allReasons
+    : (topGame.primaryReason ? [topGame.primaryReason] : []);
+  return all.find(r => r.category in STAT_UNITS) ?? topGame.primaryReason ?? null;
+}
+
 function formatTopStat(topGame: NonNullable<CommentaryInput["topGame"]>, _star: CommentaryRosterCard | null): string {
-  if (!topGame.primaryReason) return "";
-  const { category, value } = topGame.primaryReason;
-  const units: Record<string, string> = {
-    // basketball
-    pts: "pts", reb: "reb", ast: "ast", threes: "threes", stl: "stl", blk: "blk",
-    // baseball
-    hr: "HR", h: "hits", rbi: "RBI", k: "K", sb: "SB", ip: "IP", bb: "BB", r: "R",
-  };
-  return `${value} ${units[category] ?? category}`;
+  const r = pickStatReason(topGame);
+  if (!r) return "";
+  const unit = STAT_UNITS[r.category];
+  if (!unit) return ""; // all reasons were flag categories — skip
+  return `${r.value} ${unit}`;
 }
 
 // ─── Build template data ────────────────────────────────────────────────────
@@ -79,17 +120,25 @@ export function buildTemplateData(
   const highestBadge = getHighestBadge(starBadgeIds);
   const badgeLabel = highestBadge?.commentaryLabel ?? "";
 
-  // Compute topStat: the star's highest stat value + unit (e.g. "22 pt")
+  // Compute topStat: the star's stat with the highest FP contribution.
+  // Previously picked by raw value, which surfaced "12 pts" over "15 ast"
+  // even though 15 ast (22.5 FP) was the bigger driver of the night.
+  // Weights mirror computeFp in basketball's economy: pts=1, reb=1.2,
+  // ast=1.5, stl=3, blk=3.
   const ptsVal = star ? Math.round(statN(star, "pts")) : 0;
   const rebVal = star ? Math.round(statN(star, "reb")) : 0;
   const astVal = star ? Math.round(statN(star, "ast")) : 0;
   const stlVal = star ? Math.round(statN(star, "stl")) : 0;
   const blkVal = star ? Math.round(statN(star, "blk")) : 0;
-  const statEntries: [number, string][] = [
-    [ptsVal, "pt"], [rebVal, "reb"], [astVal, "ast"], [stlVal, "stl"], [blkVal, "blk"],
+  const statEntries: Array<{ value: number; unit: string; fp: number }> = [
+    { value: ptsVal, unit: "pt",  fp: ptsVal },
+    { value: rebVal, unit: "reb", fp: rebVal * 1.2 },
+    { value: astVal, unit: "ast", fp: astVal * 1.5 },
+    { value: stlVal, unit: "stl", fp: stlVal * 3 },
+    { value: blkVal, unit: "blk", fp: blkVal * 3 },
   ];
-  const [topVal, topUnit] = statEntries.reduce((best, cur) => cur[0] > best[0] ? cur : best, [0, "pt"]);
-  const topStat = topVal > 0 ? `${topVal} ${topUnit}` : "";
+  const top = statEntries.reduce((best, cur) => cur.fp > best.fp ? cur : best, { value: 0, unit: "pt", fp: 0 });
+  const topStat = top.value > 0 ? `${top.value} ${top.unit}` : "";
 
   // Costar tokens — populated only when classifyArchetype's multi-star rule
   // fired. Otherwise empty strings (templates that reference {costar} simply
@@ -126,7 +175,39 @@ export function buildTemplateData(
     topStat: input.topGame?.primaryReason ? formatTopStat(input.topGame, star) : topStat,
     topTier: input.topGame?.tier ?? null,
     topLabel: input.topGame?.primaryReason?.label ?? "",
-    topCategory: input.topGame?.primaryReason?.category ?? "",
+    // Readable phrasing of the stat category ("scoring", "rebounding", etc.).
+    // Falls back through to the stat-typed reason in allReasons so flag
+    // categories (fifty_plus_game) don't bleed into "{topCategory}" templates.
+    topCategory: (() => {
+      if (!input.topGame) return "";
+      const r = pickStatReason(input.topGame);
+      return r ? (CATEGORY_READABLE[r.category] ?? "") : "";
+    })(),
+    // Raw stat-typed category code — internal-use for detail-snippet guards
+    // (e.g. rare_badge skips "40-point game on the side" when headline is pts).
+    topCategoryRaw: (() => {
+      if (!input.topGame) return "";
+      const r = pickStatReason(input.topGame);
+      return r && r.category in STAT_UNITS ? r.category : "";
+    })(),
+    // Ranked-form tokens — replace the old hardcoded "Top-ten" framing in
+    // templates. topRank is just the ordinal ("7th"); topRankPhrase is the
+    // full ranked claim ("7th highest scoring game of the season"). Both
+    // empty when the reason lacks a rank (composite/flag reasons).
+    topRank: (() => {
+      if (!input.topGame) return "";
+      const r = pickStatReason(input.topGame);
+      return r?.rank ? ordinal(r.rank) : "";
+    })(),
+    topRankPhrase: (() => {
+      if (!input.topGame) return "";
+      const r = pickStatReason(input.topGame);
+      if (!r?.rank) return "";
+      const phrase = CATEGORY_READABLE[r.category];
+      if (!phrase) return "";
+      // "7th highest scoring game of the season"
+      return `${ordinal(r.rank)} highest ${phrase} game of the season`;
+    })(),
     // T1 career — provides personal-best phrasing for templates that opt in via requires:['season_best_stat'].
     // The detail-token name predates the tier rename; kept for stable template references.
     seasonBestStat: input.topGame?.tier === "career" ? (input.topGame.primaryReason?.label ?? "") : "",
@@ -196,6 +277,8 @@ export function resolveTemplate(template: string, data: TemplateData): string {
     .replace(/\{topStat\}/g, data.topStat)
     .replace(/\{topLabel\}/g, topLabel)
     .replace(/\{topCategory\}/g, data.topCategory ?? "")
+    .replace(/\{topRank\}/g, data.topRank ?? "")
+    .replace(/\{topRankPhrase\}/g, data.topRankPhrase ?? "")
     .replace(/\{seasonBestStat\}/g, data.seasonBestStat ?? "")
     .replace(/\{streak\}/g, String(data.streak))
     .replace(/\{gap\}/g, String(data.gap))
@@ -208,7 +291,32 @@ export function resolveTemplate(template: string, data: TemplateData): string {
 
 const DETAIL_SNIPPETS: Record<string, (data: TemplateData) => string> = {
   record_event: (d) => d.record ? `${d.record}` : "",
-  rare_badge: () => "",  // Rare badges are now the template story, not a detail snippet
+  rare_badge: (d) => {
+    // When badge_explosion fires as the archetype the template embeds {badge}
+    // and composeMessage's substring-dedup keeps the snippet from doubling.
+    // But achievement archetypes (historic_record/career/season) preempt
+    // badge_explosion at priority 0, so without this snippet a Jokic 22-reb
+    // season-top hand that is ALSO a triple double drops the badge entirely.
+    // Skip when the badge is a single-stat milestone in the same category as
+    // the topGame headline (e.g., "50-point game" badge on a points-tier-of-
+    // the-season hand) — that would just restate the headline.
+    if (!d.badge) return "";
+    // Use the RAW category code, not the readable form. {topCategory} is now
+    // "scoring"/"rebounding"/etc. so comparing it to "pts" would always miss
+    // and let "40-point game on the side" pair with a "47 pts" headline.
+    const cat = (d.topCategoryRaw ?? "").toLowerCase();
+    const b = d.badge.toLowerCase();
+    const overlaps = (
+      (cat === "pts" && (b.includes("point") || b.includes("-point"))) ||
+      (cat === "reb" && b.includes("rebound")) ||
+      (cat === "ast" && (b.includes("assist") || b.includes("dime"))) ||
+      (cat === "stl" && b.includes("steal")) ||
+      (cat === "blk" && b.includes("block")) ||
+      (cat === "threes" && (b.includes("three") || b.includes("3-point")))
+    );
+    if (overlaps) return "";
+    return `${d.badge[0].toUpperCase() + d.badge.slice(1)} on the side.`;
+  },
   common_badge: (d) => d.badge ? `${d.badge[0].toUpperCase() + d.badge.slice(1)} on the stat sheet.` : "",
   held_card_paid: () => "Holding that card was the right call.",
   high_stats: () => "",  // Stats are embedded in the main template via {pts}/{reb}/{ast} — no separate injection
@@ -260,6 +368,71 @@ function capAtSentence(text: string, max: number): string {
   return lastPunct > 50 ? truncated.slice(0, lastPunct + 1) : truncated;
 }
 
+/** Map a free-text snippet to a stat category (pts/reb/ast/stl/blk/threes)
+ *  so we can dedupe against the message it's appended to. Returns null when
+ *  the snippet doesn't reference a single stat. */
+function snippetStatCategory(snippet: string): string | null {
+  const s = snippet.toLowerCase();
+  if (s.includes("point") || s.includes("-pt") || s.match(/\b\d+\s*pts?\b/)) return "pts";
+  if (s.includes("rebound")) return "reb";
+  if (s.includes("assist") || s.includes("dime")) return "ast";
+  if (s.includes("steal")) return "stl";
+  if (s.includes("block")) return "blk";
+  if (s.includes("three") || s.includes("3-point")) return "threes";
+  return null;
+}
+
+/** True when the message already mentions a stat number with the given
+ *  category — used to suppress "X on the side" snippets that would echo a
+ *  category the message just headlined. Also returns true when the badge
+ *  is single-stat and the message has no stat number at all (so "on the
+ *  side" doesn't dangle without a primary thing to be alongside). */
+function messageBlocksBadgeSnippet(message: string, snippet: string): boolean {
+  const cat = snippetStatCategory(snippet);
+  if (!cat) return false;
+  const NUMBERS_AND_NOUNS: Record<string, RegExp> = {
+    pts:    /\d+\s*[-+]?\s*(?:point|pt)s?\b|\d+\s+pts?\b/i,
+    reb:    /\d+\s*[-+]?\s*rebound[s]?\b/i,
+    ast:    /\d+\s*[-+]?\s*assist[s]?\b|\d+\s*[-+]?\s*dime[s]?\b/i,
+    stl:    /\d+\s*[-+]?\s*steal[s]?\b/i,
+    blk:    /\d+\s*[-+]?\s*block[s]?\b/i,
+    threes: /\d+\s*[-+]?\s*three[s]?\b|\d+\s*[-+]?\s*3-point/i,
+  };
+  // Same category already in message → suppress.
+  if (NUMBERS_AND_NOUNS[cat].test(message)) return true;
+  // No stat number anywhere in the message → "on the side" has no anchor;
+  // skip rather than dangle. Catches the Gobert case (primary names no
+  // headline stat, then snippet says "15-rebound game on the side").
+  const anyStatNumber = Object.values(NUMBERS_AND_NOUNS).some(re => re.test(message));
+  if (!anyStatNumber && (snippet.toLowerCase().includes("on the side") || snippet.toLowerCase().includes("on the stat sheet"))) {
+    return true;
+  }
+  return false;
+}
+
+// Achievement labels that should appear at most once in a unified message.
+// Prevents "triple double in the box, plus a triple double on the side"
+// type doubling-up when the badge fires across multiple detail snippets.
+const ACHIEVEMENT_TERMS = [
+  "triple double", "triple-double",
+  "double double", "double-double",
+  "quadruple double", "quadruple-double",
+  "5x5", "five by five",
+];
+
+function countTerm(message: string, term: string): number {
+  const re = new RegExp(`\\b${term.replace(/-/g, "\\-")}\\b`, "gi");
+  return (message.match(re)?.length ?? 0);
+}
+
+function snippetIntroducesRepeatAchievement(message: string, snippet: string): boolean {
+  const merged = `${message} ${snippet}`.toLowerCase();
+  for (const term of ACHIEVEMENT_TERMS) {
+    if (countTerm(merged, term) >= 2) return true;
+  }
+  return false;
+}
+
 export function composeMessage(
   template: string,
   data: TemplateData,
@@ -273,6 +446,8 @@ export function composeMessage(
     const snippet = snippetFn(data);
     if (!snippet) continue;
     if (message.toLowerCase().includes(snippet.toLowerCase().slice(0, 15))) continue;
+    if (messageBlocksBadgeSnippet(message, snippet)) continue;
+    if (snippetIntroducesRepeatAchievement(message, snippet)) continue;
     if (message.length + snippet.length + 1 > MAX_CHARS) break;
     message += ` ${snippet}`;
   }

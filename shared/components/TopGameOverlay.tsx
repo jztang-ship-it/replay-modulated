@@ -79,9 +79,9 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
 }
 
 const STAMP_TEXT: Record<TopGameTier, string> = {
-  record: "RECORD",
-  career: "CAREER",
-  season: "SEASON",
+  record: "NEW RECORD",
+  career: "CAREER HIGH",
+  season: "SEASON HIGH",
 };
 
 const STAMP_CLASS: Record<TopGameTier, string> = {

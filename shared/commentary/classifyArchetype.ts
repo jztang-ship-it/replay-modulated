@@ -133,6 +133,16 @@ export function classifyArchetype(input: CommentaryInput): ClassificationResult 
     return { ...base, archetype: "badge_explosion" };
   }
 
+  // ── Priority 2.5: ROOKIE win — neutral framing ──
+  // ROOKIE is the in-between tier (just above bust). After achievement /
+  // career-night / badge-explosion overrides have had their shot, all other
+  // ROOKIE-tier wins route here so the templates don't celebrate a cash
+  // that's barely above the bust line. The framing reads as "held position",
+  // not "won the hand".
+  if (register === "win" && input.winTier === "ROOKIE") {
+    return { ...base, archetype: "rookie_neutral" };
+  }
+
   // ── Priority 3: Near miss (loss, ≤5 FP from ROOKIE) ──
   if (nearMiss) {
     return { ...base, archetype: "near_miss" };

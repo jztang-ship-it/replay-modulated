@@ -40,12 +40,26 @@ export type SlateAdapter = {
 const TIER_ORDER = ["RED", "ORANGE", "PURPLE", "BLUE", "GREEN", "WHITE"] as const;
 
 /** Anchor target counts per tier under the standard composition.
- *  9 total = 3 RED + 6 ORANGE. The PURPLE swap (daily-seeded) borrows
- *  one slot from ORANGE and gives it to PURPLE. */
-const ANCHOR_TARGET_STD: Record<string, number> = { RED: 3, ORANGE: 6, PURPLE: 0 };
-const ANCHOR_TARGET_PURPLE_SWAP: Record<string, number> = { RED: 3, ORANGE: 5, PURPLE: 1 };
+ *  9 total = 2 RED + 7 ORANGE. Most seasons only have 4 RED players, so
+ *  guaranteeing 3 anchored every day means the user sees 75% of REDs on
+ *  every hand — too predictable. Defaulting to 2 keeps the rotation real
+ *  (50% of REDs visible per day; the daily-seeded shuffle still varies
+ *  which 2 surface).
+ *
+ *  Two independent daily swaps tweak the mix:
+ *   - RED bonus swap (~15% of days): 3 RED + 6 ORANGE — gives a "stacked"
+ *     anchor day occasionally without making it the norm. Never all 4
+ *     since SLATE_TIER_CAPS.RED=3.
+ *   - PURPLE swap (~30% of days): borrows one ORANGE slot for a PURPLE
+ *     anchor — same as before, just rebased on the new defaults. */
+const ANCHOR_TARGET_STD: Record<string, number> = { RED: 2, ORANGE: 7, PURPLE: 0 };
+const ANCHOR_TARGET_RED_BONUS: Record<string, number> = { RED: 3, ORANGE: 6, PURPLE: 0 };
+const ANCHOR_TARGET_PURPLE_SWAP: Record<string, number> = { RED: 2, ORANGE: 6, PURPLE: 1 };
+const ANCHOR_TARGET_RED_AND_PURPLE: Record<string, number> = { RED: 3, ORANGE: 5, PURPLE: 1 };
 /** Probability of the PURPLE swap each day (0..1). */
 const PURPLE_SWAP_RATE = 0.30;
+/** Probability of the RED-bonus swap each day (0..1). Independent of PURPLE. */
+const RED_BONUS_RATE = 0.15;
 
 /** Total-slate caps. Tiers absent from this map are uncapped. */
 const SLATE_TIER_CAPS: Record<string, number> = { RED: 3, ORANGE: 6 };
@@ -111,8 +125,17 @@ export function selectDailySlate(
   }
 
   // Anchors: tier-capped with daily-seeded shuffle within each tier.
+  // Roll the two swap dice independently so a day can be e.g. red-bonus
+  // AND purple-swap, or just one, or neither.
+  const redBonus = rng() < RED_BONUS_RATE;
   const purpleSwap = rng() < PURPLE_SWAP_RATE;
-  const target = purpleSwap ? ANCHOR_TARGET_PURPLE_SWAP : ANCHOR_TARGET_STD;
+  const target = redBonus && purpleSwap
+    ? ANCHOR_TARGET_RED_AND_PURPLE
+    : redBonus
+      ? ANCHOR_TARGET_RED_BONUS
+      : purpleSwap
+        ? ANCHOR_TARGET_PURPLE_SWAP
+        : ANCHOR_TARGET_STD;
   const anchors: string[] = [];
   const anchorSet = new Set<string>();
   function takeFromTier(tier: string, count: number) {

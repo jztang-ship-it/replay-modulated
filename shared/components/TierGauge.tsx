@@ -287,12 +287,17 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
   document.head.appendChild(st);
 }
 
-function Typewriter({ text, style, onDone, msPerChar = 25, rush = false }: {
+function Typewriter({ text, style, onDone, msPerChar = 25, rush = false, start = true }: {
   text: string; style: React.CSSProperties; onDone?: () => void; msPerChar?: number; rush?: boolean;
+  /** When false, the typewriter pauses at charCount=0 until flipped true.
+   *  Used to chain a secondary line behind the primary so they don't both
+   *  type out simultaneously. */
+  start?: boolean;
 }) {
   const [charCount, setCharCount] = useState(0);
   const doneRef = useRef(false);
   useEffect(() => {
+    if (!start) return;
     if (charCount >= text.length) {
       if (!doneRef.current) { doneRef.current = true; onDone?.(); }
       return;
@@ -302,9 +307,12 @@ function Typewriter({ text, style, onDone, msPerChar = 25, rush = false }: {
     const step = rush ? 4 : 1;
     const t = setTimeout(() => setCharCount(c => Math.min(c + step, text.length)), delay);
     return () => clearTimeout(t);
-  }, [charCount, text.length, msPerChar, rush, onDone]);
+  }, [charCount, text.length, msPerChar, rush, onDone, start]);
   useEffect(() => { setCharCount(0); doneRef.current = false; }, [text]);
-  return <span style={style}>{text.slice(0, charCount)}</span>;
+  // <div> (block) so primary + secondary always stack top-to-bottom regardless
+  // of parent layout. <span> (inline) was sometimes letting a short secondary
+  // line wrap onto the primary's last row.
+  return <div style={style}>{text.slice(0, charCount)}</div>;
 }
 
 export function TierGauge({
@@ -335,6 +343,9 @@ export function TierGauge({
   // Commentary override state — multi-part tap-to-advance
   const [overridePart, setOverridePart] = useState(0);
   const [overrideTyping, setOverrideTyping] = useState(false);
+  // postRevealCopy: secondary line waits until primary finishes typing.
+  const [primaryDone, setPrimaryDone] = useState(false);
+  useEffect(() => { setPrimaryDone(false); }, [postRevealCopy?.primary]);
   // Tap-to-rush: speeds up typewriter reveal on any commentary
   const [commentaryRushed, setCommentaryRushed] = useState(false);
   const rafRef = useRef<number>(0);
@@ -769,11 +780,13 @@ export function TierGauge({
                   textAlign: "left", maxWidth: "100%",
                 }}
                 msPerChar={18}
+                onDone={() => setPrimaryDone(true)}
               />
               {postRevealCopy.secondary && (
                 <Typewriter
                   text={postRevealCopy.secondary}
                   rush={commentaryRushed}
+                  start={primaryDone}
                   style={{
                     fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.80)",
                     fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,

@@ -19,11 +19,11 @@
  * shared GameView's conditional render skips it.
  */
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { getActiveSeason } from "@shared/engines/dataEngine";
 import { GameView as SharedGameView } from "@shared/views/GameView";
 import type { GameAdapter } from "@shared/views/GameAdapter";
-import type { WinTierDisplay, LegendData } from "@shared/components/GameBar";
-import type { TierThreshold as GaugeTierThreshold } from "@shared/components/TierGauge";
+import type { LegendData } from "@shared/components/GameBar";
 import { BASKETBALL_FTUE_CONFIG } from "@shared/components/CoachLayer";
 import { isSlateV2Enabled } from "@shared/featureFlags";
 import { BasketballSlateChip } from "../components/BasketballSlatePanel";
@@ -45,26 +45,10 @@ import {
   calculateWinTier,
   calculatePayoutWithStreak,
   getStreakMultiplier,
-  BASKETBALL_WIN_TIERS,
+  getBasketballWinTiers,
+  getGaugeThresholds,
+  getGameBarWinTiers,
 } from "../utils/payoutLogic";
-
-// Tier gauge thresholds — basketball-specific FP cutoffs.
-const GAUGE_THRESHOLDS: GaugeTierThreshold[] = [
-  { tier: "ROOKIE", minFP: 190 },
-  { tier: "STARTER", minFP: 205 },
-  { tier: "ALL_STAR", minFP: 225 },
-  { tier: "MVP", minFP: 235 },
-  { tier: "LEGEND", minFP: 255 },
-];
-
-// GameBar tier rows — must stay in sync with BASKETBALL_WIN_TIERS in payoutLogic.ts.
-const WIN_TIERS: WinTierDisplay[] = [
-  { label: "ROOKIE",   minFp: 190, color: "#22C55E", glow: "rgba(34,197,94,0.6)"    },
-  { label: "STARTER",  minFp: 205, color: "#3B82F6", glow: "rgba(59,130,246,0.6)"   },
-  { label: "ALL-STAR", minFp: 225, color: "#C084FC", glow: "rgba(192,132,252,0.7)"  },
-  { label: "MVP",      minFp: 235, color: "#FB923C", glow: "rgba(251,146,60,0.7)"   },
-  { label: "LEGEND",   minFp: 255, color: "#EF4444", glow: "rgba(239,68,68,0.9)"    },
-];
 
 const LEGEND_DATA: LegendData = {
   payoutRows: [
@@ -119,19 +103,41 @@ function tierFromSalary(salary: number): string {
 }
 
 export default function GameView() {
+  // Track active season + FTUE state so the adapter rebuilds with the right
+  // win-tier thresholds when:
+  //   - the daily reel swaps seasons (setActiveSeason → active-season-change)
+  //   - the user completes the FTUE (useFTUE → ftue-change)
+  // Both events fire from the cross-instance event bus added in PRs #79/#c5a5c0e.
+  const [activeSeason, setSeason] = useState<string | null>(getActiveSeason());
+  const [ftueTick, setFtueTick] = useState(0);
+  useEffect(() => {
+    const onSeason = () => setSeason(getActiveSeason());
+    const onFtue = () => setFtueTick(t => t + 1);
+    if (typeof window !== "undefined") {
+      window.addEventListener("replaymod:active-season-change", onSeason);
+      window.addEventListener("replaymod:ftue-change", onFtue);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("replaymod:active-season-change", onSeason);
+        window.removeEventListener("replaymod:ftue-change", onFtue);
+      }
+    };
+  }, []);
+
   const adapter: GameAdapter = useMemo(() => ({
     sportKey: "basketball",
     sportAdapter,
     localStorageNamespace: "",
     leaderboardScope: sportAdapter.sportKey as "basketball",
     routeBasePath: "/basketball/",
-    gaugeThresholds: GAUGE_THRESHOLDS,
+    gaugeThresholds: getGaugeThresholds(),
     tierFromSalary,
     calculateWinTier,
     calculatePayoutWithStreak,
-    winTiersMap: BASKETBALL_WIN_TIERS,
+    winTiersMap: getBasketballWinTiers(),
     getStreakMultiplier,
-    gameBarWinTiers: WIN_TIERS,
+    gameBarWinTiers: getGameBarWinTiers(),
     gameBarLegend: LEGEND_DATA,
     dealInitialRoster,
     redrawRoster,
@@ -156,7 +162,7 @@ export default function GameView() {
     // SlateChipComponent stays undefined and the shared GameView renders
     // nothing in the chip slot, so no slate-v2 code runs in-game.
     SlateChipComponent: isSlateV2Enabled("basketball") ? BasketballSlateChip : undefined,
-  }), []);
+  }), [activeSeason, ftueTick]);
 
   return <SharedGameView adapter={adapter} />;
 }
