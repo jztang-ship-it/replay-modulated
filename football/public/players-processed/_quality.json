@@ -189,6 +189,12 @@
     "pctTrans": 58.87,
     "pctFaceTrans": 6.47
   },
+  "3637": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 55.46,
+    "pctFaceTrans": 0.33
+  },
   "3669": {
     "quality": "cleanCutout",
     "mode": "whiteStudio",
@@ -243,6 +249,12 @@
     "pctTrans": 31.88,
     "pctFaceTrans": 0
   },
+  "4614": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 22.28,
+    "pctFaceTrans": 0
+  },
   "4685": {
     "quality": "cleanCutout",
     "mode": "whiteStudio",
@@ -255,6 +267,18 @@
     "pctTrans": 55.67,
     "pctFaceTrans": 7.81
   },
+  "4767": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 52.63,
+    "pctFaceTrans": 1.72
+  },
+  "4934": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 48.73,
+    "pctFaceTrans": 0.67
+  },
   "5173": {
     "quality": "cleanCutout",
     "mode": "whiteStudio",
@@ -265,6 +289,12 @@
     "quality": "cleanCutout",
     "mode": "whiteStudio",
     "pctTrans": 54.5,
+    "pctFaceTrans": 0
+  },
+  "5183": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 33.42,
     "pctFaceTrans": 0
   },
   "5187": {
@@ -399,6 +429,12 @@
     "pctTrans": 51.94,
     "pctFaceTrans": 0
   },
+  "5527": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 51.54,
+    "pctFaceTrans": 2.86
+  },
   "5536": {
     "quality": "cleanCutout",
     "mode": "whiteStudio",
@@ -410,6 +446,12 @@
     "mode": "whiteStudio",
     "pctTrans": 51.98,
     "pctFaceTrans": 3.39
+  },
+  "5545": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 57.66,
+    "pctFaceTrans": 3
   },
   "5547": {
     "quality": "cleanCutout",
@@ -469,11 +511,23 @@
     "pctTrans": 52.28,
     "pctFaceTrans": 3.19
   },
+  "5630": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 51.36,
+    "pctFaceTrans": 6.64
+  },
   "5647": {
     "quality": "cleanCutout",
     "mode": "whiteStudio",
     "pctTrans": 46.75,
     "pctFaceTrans": 0.28
+  },
+  "5650": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 52.39,
+    "pctFaceTrans": 0
   },
   "5651": {
     "quality": "cleanCutout",
@@ -486,6 +540,18 @@
     "mode": "whiteStudio",
     "pctTrans": 48.3,
     "pctFaceTrans": 4.44
+  },
+  "5660": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 55.58,
+    "pctFaceTrans": 0
+  },
+  "5667": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 47.99,
+    "pctFaceTrans": 0
   },
   "5668": {
     "quality": "cleanCutout",
@@ -529,6 +595,12 @@
     "pctTrans": 48.91,
     "pctFaceTrans": 4.5
   },
+  "5839": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 22.28,
+    "pctFaceTrans": 0
+  },
   "6318": {
     "quality": "cleanCutout",
     "mode": "whiteStudio",
@@ -564,6 +636,12 @@
     "mode": "whiteStudio",
     "pctTrans": 22.28,
     "pctFaceTrans": 0
+  },
+  "6983": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 57.61,
+    "pctFaceTrans": 1.17
   },
   "7005": {
     "quality": "cleanCutout",
@@ -612,6 +690,12 @@
     "mode": "whiteStudio",
     "pctTrans": 51.3,
     "pctFaceTrans": 3.83
+  },
+  "8227": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 8.13,
+    "pctFaceTrans": 0
   },
   "8247": {
     "quality": "cleanCutout",
@@ -673,6 +757,12 @@
     "pctTrans": 50.53,
     "pctFaceTrans": 0.31
   },
+  "10481": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 61.15,
+    "pctFaceTrans": 4.14
+  },
   "10868": {
     "quality": "cleanCutout",
     "mode": "whiteStudio",
@@ -684,6 +774,12 @@
     "mode": "whiteStudio",
     "pctTrans": 53.14,
     "pctFaceTrans": 5.58
+  },
+  "11127": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 51.51,
+    "pctFaceTrans": 3.42
   },
   "11135": {
     "quality": "cleanCutout",
@@ -925,6 +1021,12 @@
     "pctTrans": 48.76,
     "pctFaceTrans": 0.31
   },
+  "30486": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 22.28,
+    "pctFaceTrans": 0
+  },
   "30519": {
     "quality": "cleanCutout",
     "mode": "whiteStudio",
@@ -978,6 +1080,12 @@
     "mode": "whiteStudio",
     "pctTrans": 52.95,
     "pctFaceTrans": 0.72
+  },
+  "33572": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 53.17,
+    "pctFaceTrans": 6.11
   },
   "37148": {
     "quality": "cleanCutout",
@@ -1051,6 +1159,12 @@
     "pctTrans": 56.35,
     "pctFaceTrans": 5.36
   },
+  "50436": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 51.73,
+    "pctFaceTrans": 0
+  },
   "51094": {
     "quality": "cleanCutout",
     "mode": "whiteStudio",
@@ -1062,6 +1176,12 @@
     "mode": "whiteStudio",
     "pctTrans": 0,
     "pctFaceTrans": 0
+  },
+  "51710": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 51.08,
+    "pctFaceTrans": 6.5
   },
   "57620": {
     "quality": "cleanCutout",
@@ -1091,6 +1211,12 @@
     "quality": "cleanCutout",
     "mode": "whiteStudio",
     "pctTrans": 63.11,
+    "pctFaceTrans": 0
+  },
+  "124503": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 53.3,
     "pctFaceTrans": 0
   },
   "124506": {

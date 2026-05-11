@@ -100,6 +100,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "3602": { apiFootballId: 1116, local: true, processed: true },
   // Eden Hazard (Belgium)
   "3621": { apiFootballId: 2296, local: true, processed: true },
+  // Grzegorz Krychowiak (Poland)
+  "3637": { apiFootballId: 481, local: true, processed: true },
   // Virgil van Dijk (Netherlands)
   "3669": { apiFootballId: 290, local: true, processed: true },
   // Ellyes Joris Skhiri (Tunisia)
@@ -118,14 +120,22 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "4372": { apiFootballId: 292036, local: true, processed: true },
   // Jules Koundé (France)
   "4445": { apiFootballId: 1257, local: true, processed: true },
+  // Antonee Robinson (United States)
+  "4614": { apiFootballId: 585319, local: true, processed: true },
   // Artur Jędrzejczyk (Poland)
   "4685": { apiFootballId: 3002, local: true, processed: true },
   // Matty Cash (Poland)
   "4734": { apiFootballId: 19298, local: true, processed: true },
+  // Chris Mepham (Wales)
+  "4767": { apiFootballId: 18866, local: true, processed: true },
+  // Ethan Ampadu (Wales)
+  "4934": { apiFootballId: 2279, local: true, processed: true },
   // Abdullah Ibrahim Otayf (Saudi Arabia)
   "5173": { apiFootballId: 44350, local: true, processed: true },
   // Salman Mohammed Al Faraj (Saudi Arabia)
   "5178": { apiFootballId: 44341, local: true, processed: true },
+  // Yasir Gharsan Al Shahrani (Saudi Arabia)
+  "5183": { apiFootballId: 44331, local: true, processed: true },
   // Salem Mohammed Al Dawsari (Saudi Arabia)
   "5187": { apiFootballId: 44340, local: true, processed: true },
   // Lucas Vázquez Iglesias (Spain)
@@ -170,10 +180,14 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "5507": { apiFootballId: 529, local: true, processed: true },
   // Jens Stryger Larsen (Denmark)
   "5524": { apiFootballId: 2733, local: true, processed: true },
+  // Thomas Delaney (Denmark)
+  "5527": { apiFootballId: 15, local: true, processed: true },
   // Yussuf Yurary Poulsen (Denmark)
   "5536": { apiFootballId: 1167, local: true, processed: true },
   // Fabian Lukas Schär (Switzerland)
   "5537": { apiFootballId: 2806, local: true, processed: true },
+  // Breel-Donald Embolo (Switzerland)
+  "5545": { apiFootballId: 421, local: true, processed: true },
   // Alisson Ramsés Becker (Brazil)
   "5547": { apiFootballId: 280, local: true, processed: true },
   // Manuel Obafemi Akanji (Switzerland)
@@ -194,12 +208,20 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "5600": { apiFootballId: 658364, local: true, processed: true },
   // Nikola Milenković (Serbia)
   "5603": { apiFootballId: 2817, local: true, processed: true },
+  // Dries Mertens (Belgium)
+  "5630": { apiFootballId: 332, local: true, processed: true },
   // Ali Maâloul (Tunisia)
   "5647": { apiFootballId: 2947, local: true, processed: true },
+  // Ferjani Sassi (Tunisia)
+  "5650": { apiFootballId: 2957, local: true, processed: true },
   // Yassine Meriah (Tunisia)
   "5651": { apiFootballId: 1597, local: true, processed: true },
   // Dylan Daniel Mahmoud Bronn (Tunisia)
   "5655": { apiFootballId: 2945, local: true, processed: true },
+  // Piotr Zieliński (Poland)
+  "5660": { apiFootballId: 355464, local: true, processed: true },
+  // Kamil Grosicki (Poland)
+  "5667": { apiFootballId: 3012, local: true, processed: true },
   // Robert Lewandowski (Poland)
   "5668": { apiFootballId: 147229, local: true, processed: true },
   // Wojciech Szczęsny (Poland)
@@ -214,6 +236,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "5714": { apiFootballId: 44411, local: true, processed: true },
   // Nemanja Radonjić (Serbia)
   "5833": { apiFootballId: 1920, local: true, processed: true },
+  // Yeltsin Ignacio Tejeda Valverde (Costa Rica)
+  "5839": { apiFootballId: 650160, local: true, processed: true },
   // Andrija Živković (Serbia)
   "6318": { apiFootballId: 579, local: true, processed: true },
   // Milos Veljkovic (Serbia)
@@ -226,6 +250,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "6909": { apiFootballId: 33163, local: true, processed: true },
   // Alex Sandro Lobo Silva (Brazil)
   "6945": { apiFootballId: 371716, local: true, processed: true },
+  // Remo Freuler (Switzerland)
+  "6983": { apiFootballId: 2807, local: true, processed: true },
   // João Pedro Cavaco Cancelo (Portugal)
   "7005": { apiFootballId: 855, local: true, processed: true },
   // Jean-Charles Castelletto (Cameroon)
@@ -242,6 +268,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "8118": { apiFootballId: 538, local: true, processed: true },
   // Denzel Dumfries (Netherlands)
   "8125": { apiFootballId: 226, local: true, processed: true },
+  // Mario Götze (Germany)
+  "8227": { apiFootballId: 348723, local: true, processed: true },
   // Joachim Andersen (Denmark)
   "8247": { apiFootballId: 216485, local: true, processed: true },
   // Andries Noppert (Netherlands)
@@ -262,10 +290,14 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "8966": { apiFootballId: 978, local: true, processed: true },
   // Mohamed Dräger (Tunisia)
   "9236": { apiFootballId: 2952, local: true, processed: true },
+  // Aurélien Djani Tchouaméni (France)
+  "10481": { apiFootballId: 1271, local: true, processed: true },
   // Ricardo Jorge Luz Horta (Portugal)
   "10868": { apiFootballId: 41103, local: true, processed: true },
   // Eric Dier (England)
   "10956": { apiFootballId: 175, local: true, processed: true },
+  // Borna Barišić (Croatia)
+  "11127": { apiFootballId: 1738, local: true, processed: true },
   // Ibrahima Konaté (France)
   "11135": { apiFootballId: 86964, local: true, processed: true },
   // Vincent Paté Aboubakar (Cameroon)
@@ -346,6 +378,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "29976": { apiFootballId: 253732, local: true, processed: true },
   // Felix Eduardo Torres Caicedo (Ecuador)
   "30111": { apiFootballId: 1861, local: true, processed: true },
+  // Pedro González López (Spain)
+  "30486": { apiFootballId: 185662, local: true, processed: true },
   // Mohamed Salisu (Ghana)
   "30519": { apiFootballId: 47480, local: true, processed: true },
   // Ali Abdi (Tunisia)
@@ -364,6 +398,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "32975": { apiFootballId: 142706, local: true, processed: true },
   // Kye Rowles (Australia)
   "33495": { apiFootballId: 7038, local: true, processed: true },
+  // Nathaniel Atkinson (Australia)
+  "33572": { apiFootballId: 6908, local: true, processed: true },
   // Josip Šutalo (Croatia)
   "37148": { apiFootballId: 14701, local: true, processed: true },
   // Ao Tanaka (Japan)
@@ -388,10 +424,14 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "46258": { apiFootballId: 129678, local: true, processed: true },
   // Josip Stanišić (Croatia)
   "49337": { apiFootballId: 125171, local: true, processed: true },
+  // Fabian Rieder (Switzerland)
+  "50436": { apiFootballId: 163032, local: true, processed: true },
   // Abdulelah Al Amri (Saudi Arabia)
   "51094": { apiFootballId: 44475, local: true, processed: true },
   // Riyadh Sharahili (Saudi Arabia)
   "51470": { apiFootballId: 104652, local: true, processed: true },
+  // Saud Abdullah Abdul Hamid (Saudi Arabia)
+  "51710": { apiFootballId: 44594, local: true, processed: true },
   // Sultan Abdullah Salim Al Ghannam (Saudi Arabia)
   "57620": { apiFootballId: 44309, local: true, processed: true },
   // Aymen Dahmen (Tunisia)
@@ -402,6 +442,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "124493": { apiFootballId: 2532, local: true, processed: true },
   // Assim Omer Al Haj Madibo (Qatar)
   "124500": { apiFootballId: 2535, local: true, processed: true },
+  // Bassam Hisham Al Rawi (Qatar)
+  "124503": { apiFootballId: 2536, local: true, processed: true },
   // Pedro Miguel Correia (Qatar)
   "124506": { apiFootballId: 549117, local: true, processed: true },
   // Meshaal Aissa Barsham (Qatar)
