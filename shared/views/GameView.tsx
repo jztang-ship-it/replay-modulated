@@ -1465,10 +1465,26 @@ export function GameView({ adapter }: Props) {
   // with a ref if we want to drop the render trigger).
   const [, setWasSkipped] = useState(false);
 
+  // AUTO button: queue every unrevealed unheld card into the tap-reveal
+  // pipeline. tapRevealCard's internal queue + mutex (useEmotionalReveal)
+  // serializes them, so cards flip ONE BY ONE with the normal animation —
+  // not all-at-once like the old skipReveal() shortcut, which made the
+  // full FP show before any card had flipped. Held cards continue to fire
+  // through their own revealHeldCards flow after the unheld sequence
+  // completes (handled inside the reveal hook).
+  function autoFlipAll() {
+    const unheld = (revealableCards as any[]).filter(c => !c.wasHeld);
+    for (const c of unheld) {
+      if (!tappedCardIds.has(c.cardId)) {
+        tapRevealCard(c.cardId);
+      }
+    }
+  }
+
   function handleButtonClick() {
     if (gameState === "REVEALING") {
       setWasSkipped(true);
-      skipReveal();
+      autoFlipAll();
     }
     else {
       if (gameState === "WIN_CELEBRATION") {

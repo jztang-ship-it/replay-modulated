@@ -13,8 +13,30 @@ import { getPlayerUid } from "@shared/utils/playerIdentity";
 const SPORT = "basketball";
 const SKIP_LANDING_KEY = "replay_skip_landing_basketball";
 
+const FTUE_INTRO_FOLLOWUP_KEY = "replaymod_ftue_intro_followup_seen_basketball";
+
 function AppInner() {
   const { isFTUE } = useFTUE(SPORT);
+  // Detect the FTUE → first-real-hand transition. We show the
+  // "Tap the gold icon to see the scoring rules" follow-up exactly once,
+  // on the user's first hand after completing the FTUE. The decision is
+  // made on first render (when isFTUE flips from true → false in storage):
+  // we read the FTUE-done flag and the one-shot intro-followup flag.
+  // The first render after FTUE completes has isFTUE === false AND the
+  // followup flag unset — that's our trigger. Set the flag immediately
+  // so subsequent renders / refreshes don't re-fire it.
+  const [showFtueIntroFollowup] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const ftueDone = localStorage.getItem("replaymod_ftue_basketball") === "1";
+      const followupSeen = localStorage.getItem(FTUE_INTRO_FOLLOWUP_KEY) === "1";
+      if (ftueDone && !followupSeen) {
+        localStorage.setItem(FTUE_INTRO_FOLLOWUP_KEY, "1");
+        return true;
+      }
+    } catch { /* ignore */ }
+    return false;
+  });
   const { user, uid, isAuthenticated, isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
   const skipFTUE = isAuthenticated && !isAnonymous;
   const showDebug = typeof window !== "undefined" &&
@@ -86,7 +108,7 @@ function AppInner() {
           onShowSignIn={() => setShowSignIn(true)}
         />
       ) : (
-        <DailySeasonReelGate bypass={isFTUE}>
+        <DailySeasonReelGate bypass={isFTUE} showFtueIntroFollowup={showFtueIntroFollowup}>
           <GameView />
         </DailySeasonReelGate>
       )}
