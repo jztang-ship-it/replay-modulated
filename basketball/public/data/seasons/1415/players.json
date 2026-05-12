@@ -6359,24 +6359,6 @@
     ]
   },
   {
-    "id": "201175_1415",
-    "basePlayerId": "201175",
-    "season": "1415",
-    "name": "Glen Davis",
-    "team": "LAC",
-    "position": "",
-    "positionFull": "",
-    "salary": 13,
-    "tier": "WHITE",
-    "avgFP": 8.7,
-    "projectedFp": 8.7,
-    "photoCode": "201175",
-    "active": true,
-    "teams": [
-      "LAC"
-    ]
-  },
-  {
     "id": "2732_1415",
     "basePlayerId": "2732",
     "season": "1415",

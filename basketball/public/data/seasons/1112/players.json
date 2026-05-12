@@ -3104,24 +3104,6 @@
     ]
   },
   {
-    "id": "201175_1112",
-    "basePlayerId": "201175",
-    "season": "1112",
-    "name": "Glen Davis",
-    "team": "ORL",
-    "position": "",
-    "positionFull": "",
-    "salary": 26,
-    "tier": "GREEN",
-    "avgFP": 17.7,
-    "projectedFp": 17.7,
-    "photoCode": "201175",
-    "active": true,
-    "teams": [
-      "ORL"
-    ]
-  },
-  {
     "id": "201168_1112",
     "basePlayerId": "201168",
     "season": "1112",
@@ -3736,24 +3718,6 @@
     "active": true,
     "teams": [
       "DAL"
-    ]
-  },
-  {
-    "id": "201974_1112",
-    "basePlayerId": "201974",
-    "season": "1112",
-    "name": "Derrick Brown",
-    "team": "CHA",
-    "position": "",
-    "positionFull": "",
-    "salary": 22,
-    "tier": "WHITE",
-    "avgFP": 15,
-    "projectedFp": 15,
-    "photoCode": "201974",
-    "active": true,
-    "teams": [
-      "CHA"
     ]
   },
   {
@@ -5040,24 +5004,6 @@
     ]
   },
   {
-    "id": "201611_1112",
-    "basePlayerId": "201611",
-    "season": "1112",
-    "name": "Henry Walker",
-    "team": "NYK",
-    "position": "",
-    "positionFull": "",
-    "salary": 16,
-    "tier": "WHITE",
-    "avgFP": 11.2,
-    "projectedFp": 11.2,
-    "photoCode": "201611",
-    "active": true,
-    "teams": [
-      "NYK"
-    ]
-  },
-  {
     "id": "2545_1112",
     "basePlayerId": "2545",
     "season": "1112",
@@ -5142,24 +5088,6 @@
     "avgFP": 11.1,
     "projectedFp": 11.1,
     "photoCode": "201590",
-    "active": true,
-    "teams": [
-      "SAC"
-    ]
-  },
-  {
-    "id": "101128_1112",
-    "basePlayerId": "101128",
-    "season": "1112",
-    "name": "Francisco Garcia",
-    "team": "SAC",
-    "position": "",
-    "positionFull": "",
-    "salary": 16,
-    "tier": "WHITE",
-    "avgFP": 10.7,
-    "projectedFp": 10.7,
-    "photoCode": "101128",
     "active": true,
     "teams": [
       "SAC"
@@ -5455,24 +5383,6 @@
     ]
   },
   {
-    "id": "202716_1112",
-    "basePlayerId": "202716",
-    "season": "1112",
-    "name": "Jordan Williams",
-    "team": "NJN",
-    "position": "",
-    "positionFull": "",
-    "salary": 15,
-    "tier": "WHITE",
-    "avgFP": 10.5,
-    "projectedFp": 10.5,
-    "photoCode": "202716",
-    "active": true,
-    "teams": [
-      "NJN"
-    ]
-  },
-  {
     "id": "202333_1112",
     "basePlayerId": "202333",
     "season": "1112",
@@ -5614,24 +5524,6 @@
     "active": true,
     "teams": [
       "LAL"
-    ]
-  },
-  {
-    "id": "201161_1112",
-    "basePlayerId": "201161",
-    "season": "1112",
-    "name": "Daequan Cook",
-    "team": "OKC",
-    "position": "",
-    "positionFull": "",
-    "salary": 13,
-    "tier": "WHITE",
-    "avgFP": 9.3,
-    "projectedFp": 9.3,
-    "photoCode": "201161",
-    "active": true,
-    "teams": [
-      "OKC"
     ]
   },
   {
@@ -6014,25 +5906,6 @@
     ]
   },
   {
-    "id": "200780_1112",
-    "basePlayerId": "200780",
-    "season": "1112",
-    "name": "Solomon Jones",
-    "team": "NOH",
-    "position": "",
-    "positionFull": "",
-    "salary": 12,
-    "tier": "WHITE",
-    "avgFP": 8.2,
-    "projectedFp": 8.2,
-    "photoCode": "200780",
-    "active": true,
-    "teams": [
-      "LAC",
-      "NOH"
-    ]
-  },
-  {
     "id": "2059_1112",
     "basePlayerId": "2059",
     "season": "1112",
@@ -6048,24 +5921,6 @@
     "active": true,
     "teams": [
       "CHA"
-    ]
-  },
-  {
-    "id": "202706_1112",
-    "basePlayerId": "202706",
-    "season": "1112",
-    "name": "Jordan Hamilton",
-    "team": "DEN",
-    "position": "",
-    "positionFull": "",
-    "salary": 12,
-    "tier": "WHITE",
-    "avgFP": 8.4,
-    "projectedFp": 8.4,
-    "photoCode": "202706",
-    "active": true,
-    "teams": [
-      "DEN"
     ]
   },
   {
@@ -6196,42 +6051,6 @@
     ]
   },
   {
-    "id": "2230_1112",
-    "basePlayerId": "2230",
-    "season": "1112",
-    "name": "Maurice Evans",
-    "team": "WAS",
-    "position": "",
-    "positionFull": "",
-    "salary": 11,
-    "tier": "WHITE",
-    "avgFP": 7.4,
-    "projectedFp": 7.4,
-    "photoCode": "2230",
-    "active": true,
-    "teams": [
-      "WAS"
-    ]
-  },
-  {
-    "id": "201041_1112",
-    "basePlayerId": "201041",
-    "season": "1112",
-    "name": "Walker Russell",
-    "team": "DET",
-    "position": "",
-    "positionFull": "",
-    "salary": 11,
-    "tier": "WHITE",
-    "avgFP": 7.4,
-    "projectedFp": 7.4,
-    "photoCode": "201041",
-    "active": true,
-    "teams": [
-      "DET"
-    ]
-  },
-  {
     "id": "2039_1112",
     "basePlayerId": "2039",
     "season": "1112",
@@ -6266,25 +6085,6 @@
     "teams": [
       "MIA",
       "GSW"
-    ]
-  },
-  {
-    "id": "201970_1112",
-    "basePlayerId": "201970",
-    "season": "1112",
-    "name": "Sam Young",
-    "team": "PHI",
-    "position": "",
-    "positionFull": "",
-    "salary": 10,
-    "tier": "WHITE",
-    "avgFP": 7.1,
-    "projectedFp": 7.1,
-    "photoCode": "201970",
-    "active": true,
-    "teams": [
-      "MEM",
-      "PHI"
     ]
   },
   {
@@ -6342,24 +6142,6 @@
     ]
   },
   {
-    "id": "200783_1112",
-    "basePlayerId": "200783",
-    "season": "1112",
-    "name": "Craig Smith",
-    "team": "POR",
-    "position": "",
-    "positionFull": "",
-    "salary": 10,
-    "tier": "WHITE",
-    "avgFP": 7.1,
-    "projectedFp": 7.1,
-    "photoCode": "200783",
-    "active": true,
-    "teams": [
-      "POR"
-    ]
-  },
-  {
     "id": "202379_1112",
     "basePlayerId": "202379",
     "season": "1112",
@@ -6393,24 +6175,6 @@
     "active": true,
     "teams": [
       "DET"
-    ]
-  },
-  {
-    "id": "1853_1112",
-    "basePlayerId": "1853",
-    "season": "1112",
-    "name": "Anthony Carter",
-    "team": "TOR",
-    "position": "",
-    "positionFull": "",
-    "salary": 10,
-    "tier": "WHITE",
-    "avgFP": 6.9,
-    "projectedFp": 6.9,
-    "photoCode": "1853",
-    "active": true,
-    "teams": [
-      "TOR"
     ]
   },
   {
@@ -6501,25 +6265,6 @@
     "active": true,
     "teams": [
       "MIA"
-    ]
-  },
-  {
-    "id": "2567_1112",
-    "basePlayerId": "2567",
-    "season": "1112",
-    "name": "Brian Cook",
-    "team": "WAS",
-    "position": "",
-    "positionFull": "",
-    "salary": 9,
-    "tier": "WHITE",
-    "avgFP": 5.9,
-    "projectedFp": 5.9,
-    "photoCode": "2567",
-    "active": true,
-    "teams": [
-      "LAC",
-      "WAS"
     ]
   },
   {
@@ -6740,24 +6485,6 @@
     ]
   },
   {
-    "id": "2679_1112",
-    "basePlayerId": "2679",
-    "season": "1112",
-    "name": "Matt Carroll",
-    "team": "CHA",
-    "position": "",
-    "positionFull": "",
-    "salary": 8,
-    "tier": "WHITE",
-    "avgFP": 5.5,
-    "projectedFp": 5.5,
-    "photoCode": "2679",
-    "active": true,
-    "teams": [
-      "CHA"
-    ]
-  },
-  {
     "id": "202709_1112",
     "basePlayerId": "202709",
     "season": "1112",
@@ -6974,24 +6701,6 @@
     "teams": [
       "HOU",
       "POR"
-    ]
-  },
-  {
-    "id": "201972_1112",
-    "basePlayerId": "201972",
-    "season": "1112",
-    "name": "Jon Brockman",
-    "team": "MIL",
-    "position": "",
-    "positionFull": "",
-    "salary": 6,
-    "tier": "WHITE",
-    "avgFP": 4,
-    "projectedFp": 4,
-    "photoCode": "201972",
-    "active": true,
-    "teams": [
-      "MIL"
     ]
   },
   {

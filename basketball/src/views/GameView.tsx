@@ -50,15 +50,24 @@ import {
   getGameBarWinTiers,
 } from "../utils/payoutLogic";
 
-const LEGEND_DATA: LegendData = {
-  payoutRows: [
-    { label: "LEGEND",   score: "255+", payout: "50x",  color: "#EF4444", bg: "rgba(239,68,68,0.12)",    border: "rgba(239,68,68,0.35)"    },
-    { label: "MVP",      score: "235+", payout: "8x",   color: "#FB923C", bg: "rgba(251,146,60,0.10)",   border: "rgba(251,146,60,0.3)"    },
-    { label: "ALL-STAR", score: "225+", payout: "3x",   color: "#C084FC", bg: "rgba(192,132,252,0.10)",  border: "rgba(192,132,252,0.25)"  },
-    { label: "STARTER",  score: "205+", payout: "1.5x", color: "#3B82F6", bg: "rgba(59,130,246,0.08)",   border: "rgba(59,130,246,0.25)"   },
-    { label: "ROOKIE",   score: "190+", payout: "0.5x", color: "#22C55E", bg: "rgba(34,197,94,0.10)",    border: "rgba(34,197,94,0.25)"    },
-    { label: "BUST",     score: "<190", payout: "—",    color: "#6B7280", bg: "rgba(107,114,128,0.08)",  border: "rgba(107,114,128,0.2)"   },
-  ],
+/** Build the legend modal's payout rows from the active season's win-tier
+ *  thresholds. Without this the legend modal showed a static "190+" ROOKIE
+ *  floor that no longer matched per-season-calibrated thresholds (e.g. a
+ *  161.5 FP win counted as ROOKIE while the legend modal said "needs 190").
+ *  Multipliers stay static — they control payout, not difficulty. */
+function buildPayoutRows(): LegendData["payoutRows"] {
+  const t = getBasketballWinTiers();
+  return [
+    { label: "LEGEND",   score: `${t.LEGEND.minFp}+`,             payout: "50x",  color: "#EF4444", bg: "rgba(239,68,68,0.12)",    border: "rgba(239,68,68,0.35)"    },
+    { label: "MVP",      score: `${t.MVP.minFp}+`,                payout: "8x",   color: "#FB923C", bg: "rgba(251,146,60,0.10)",   border: "rgba(251,146,60,0.3)"    },
+    { label: "ALL-STAR", score: `${t.ALL_STAR.minFp}+`,           payout: "3x",   color: "#C084FC", bg: "rgba(192,132,252,0.10)",  border: "rgba(192,132,252,0.25)"  },
+    { label: "STARTER",  score: `${t.STARTER.minFp}+`,            payout: "1.5x", color: "#3B82F6", bg: "rgba(59,130,246,0.08)",   border: "rgba(59,130,246,0.25)"   },
+    { label: "ROOKIE",   score: `${t.ROOKIE.minFp}+`,             payout: "0.5x", color: "#22C55E", bg: "rgba(34,197,94,0.10)",    border: "rgba(34,197,94,0.25)"    },
+    { label: "BUST",     score: `<${t.ROOKIE.minFp}`,             payout: "—",    color: "#6B7280", bg: "rgba(107,114,128,0.08)",  border: "rgba(107,114,128,0.2)"   },
+  ];
+}
+
+const LEGEND_DATA_STATIC: Omit<LegendData, "payoutRows"> = {
   bonusRows: [
     { label: "3-WIN STREAK", condition: "3 wins in a row", reward: "1.3x payout"  },
     { label: "5-WIN STREAK", condition: "5 wins in a row", reward: "1.7x payout"  },
@@ -138,7 +147,7 @@ export default function GameView() {
     winTiersMap: getBasketballWinTiers(),
     getStreakMultiplier,
     gameBarWinTiers: getGameBarWinTiers(),
-    gameBarLegend: LEGEND_DATA,
+    gameBarLegend: { ...LEGEND_DATA_STATIC, payoutRows: buildPayoutRows() },
     dealInitialRoster,
     redrawRoster,
     resolveRoster,

@@ -3071,25 +3071,6 @@
     ]
   },
   {
-    "id": "201175_1314",
-    "basePlayerId": "201175",
-    "season": "1314",
-    "name": "Glen Davis",
-    "team": "LAC",
-    "position": "",
-    "positionFull": "",
-    "salary": 27,
-    "tier": "GREEN",
-    "avgFP": 18.8,
-    "projectedFp": 18.8,
-    "photoCode": "201175",
-    "active": true,
-    "teams": [
-      "ORL",
-      "LAC"
-    ]
-  },
-  {
     "id": "202349_1314",
     "basePlayerId": "202349",
     "season": "1314",
@@ -4452,25 +4433,6 @@
     ]
   },
   {
-    "id": "202706_1314",
-    "basePlayerId": "202706",
-    "season": "1314",
-    "name": "Jordan Hamilton",
-    "team": "HOU",
-    "position": "",
-    "positionFull": "",
-    "salary": 19,
-    "tier": "WHITE",
-    "avgFP": 13.3,
-    "projectedFp": 13.3,
-    "photoCode": "202706",
-    "active": true,
-    "teams": [
-      "DEN",
-      "HOU"
-    ]
-  },
-  {
     "id": "201563_1314",
     "basePlayerId": "201563",
     "season": "1314",
@@ -4865,24 +4827,6 @@
     "active": true,
     "teams": [
       "GSW"
-    ]
-  },
-  {
-    "id": "101128_1314",
-    "basePlayerId": "101128",
-    "season": "1314",
-    "name": "Francisco Garcia",
-    "team": "HOU",
-    "position": "",
-    "positionFull": "",
-    "salary": 17,
-    "tier": "WHITE",
-    "avgFP": 11.7,
-    "projectedFp": 11.7,
-    "photoCode": "101128",
-    "active": true,
-    "teams": [
-      "HOU"
     ]
   },
   {
@@ -6870,24 +6814,6 @@
     "active": true,
     "teams": [
       "IND"
-    ]
-  },
-  {
-    "id": "202091_1314",
-    "basePlayerId": "202091",
-    "season": "1314",
-    "name": "Dionte Christmas",
-    "team": "PHX",
-    "position": "",
-    "positionFull": "",
-    "salary": 6,
-    "tier": "WHITE",
-    "avgFP": 4.3,
-    "projectedFp": 4.3,
-    "photoCode": "202091",
-    "active": true,
-    "teams": [
-      "PHX"
     ]
   },
   {

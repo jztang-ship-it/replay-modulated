@@ -192,7 +192,7 @@
     "ROOKIE": 192,
     "STARTER": 213,
     "ALL_STAR": 234,
-    "MVP": 255,
+    "MVP": 256,
     "LEGEND": 276
   },
   "0910": {

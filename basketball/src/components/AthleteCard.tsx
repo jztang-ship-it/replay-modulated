@@ -99,7 +99,20 @@ function BasketballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) 
           decoding="async"
           loading="eager"
           fetchPriority="high"
-          style={{ position: "absolute", top: "12%", left: "-5%", width: "110%", height: "100%", objectFit: "cover", objectPosition: "50% 10%", opacity: imgReady ? 1 : 0, transition: "opacity 0.3s ease" }}
+          style={{
+            position: "absolute", top: "12%", left: "-5%", width: "110%", height: "100%",
+            objectFit: "cover", objectPosition: "50% 10%",
+            opacity: imgReady ? 1 : 0, transition: "opacity 0.3s ease",
+            // Source headshots vary: most NBA CDN headshots have transparent
+            // backgrounds (tier color shows through), but some legacy / fallback
+            // sources (Wikipedia, SportsDB) come with baked-in white backgrounds
+            // — Shawn Marion, Gerald Wallace, etc. `mix-blend-mode: darken` keeps
+            // each pixel as the darker of (image, tier backdrop): white background
+            // pixels are replaced by the tier color, player pixels (darker than
+            // any tier red/orange/purple/etc.) stay untouched. No-op on already-
+            // transparent images.
+            mixBlendMode: "darken",
+          }}
           draggable={false}
           onLoad={() => setImgReady(true)}
           onError={() => setImgReady(false)}

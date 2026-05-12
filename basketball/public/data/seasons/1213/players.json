@@ -1135,24 +1135,6 @@
     ]
   },
   {
-    "id": "201175_1213",
-    "basePlayerId": "201175",
-    "season": "1213",
-    "name": "Glen Davis",
-    "team": "ORL",
-    "position": "",
-    "positionFull": "",
-    "salary": 41,
-    "tier": "BLUE",
-    "avgFP": 28.1,
-    "projectedFp": 28.1,
-    "photoCode": "201175",
-    "active": true,
-    "teams": [
-      "ORL"
-    ]
-  },
-  {
     "id": "201937_1213",
     "basePlayerId": "201937",
     "season": "1213",
@@ -4735,25 +4717,6 @@
     ]
   },
   {
-    "id": "101128_1213",
-    "basePlayerId": "101128",
-    "season": "1213",
-    "name": "Francisco Garcia",
-    "team": "HOU",
-    "position": "",
-    "positionFull": "",
-    "salary": 17,
-    "tier": "WHITE",
-    "avgFP": 11.4,
-    "projectedFp": 11.4,
-    "photoCode": "101128",
-    "active": true,
-    "teams": [
-      "SAC",
-      "HOU"
-    ]
-  },
-  {
     "id": "201971_1213",
     "basePlayerId": "201971",
     "season": "1213",
@@ -5441,24 +5404,6 @@
     "active": true,
     "teams": [
       "TOR"
-    ]
-  },
-  {
-    "id": "202706_1213",
-    "basePlayerId": "202706",
-    "season": "1213",
-    "name": "Jordan Hamilton",
-    "team": "DEN",
-    "position": "",
-    "positionFull": "",
-    "salary": 14,
-    "tier": "WHITE",
-    "avgFP": 9.6,
-    "projectedFp": 9.6,
-    "photoCode": "202706",
-    "active": true,
-    "teams": [
-      "DEN"
     ]
   },
   {
@@ -6370,24 +6315,6 @@
     ]
   },
   {
-    "id": "201970_1213",
-    "basePlayerId": "201970",
-    "season": "1213",
-    "name": "Sam Young",
-    "team": "IND",
-    "position": "",
-    "positionFull": "",
-    "salary": 10,
-    "tier": "WHITE",
-    "avgFP": 6.9,
-    "projectedFp": 6.9,
-    "photoCode": "201970",
-    "active": true,
-    "teams": [
-      "IND"
-    ]
-  },
-  {
     "id": "202333_1213",
     "basePlayerId": "202333",
     "season": "1213",
@@ -6514,24 +6441,6 @@
     "active": true,
     "teams": [
       "DEN"
-    ]
-  },
-  {
-    "id": "203158_1213",
-    "basePlayerId": "203158",
-    "season": "1213",
-    "name": "Kevin Jones",
-    "team": "CLE",
-    "position": "",
-    "positionFull": "",
-    "salary": 10,
-    "tier": "WHITE",
-    "avgFP": 7,
-    "projectedFp": 7,
-    "photoCode": "203158",
-    "active": true,
-    "teams": [
-      "CLE"
     ]
   },
   {
@@ -6736,43 +6645,6 @@
     ]
   },
   {
-    "id": "201161_1213",
-    "basePlayerId": "201161",
-    "season": "1213",
-    "name": "Daequan Cook",
-    "team": "CHI",
-    "position": "",
-    "positionFull": "",
-    "salary": 8,
-    "tier": "WHITE",
-    "avgFP": 5.6,
-    "projectedFp": 5.6,
-    "photoCode": "201161",
-    "active": true,
-    "teams": [
-      "HOU",
-      "CHI"
-    ]
-  },
-  {
-    "id": "203119_1213",
-    "basePlayerId": "203119",
-    "season": "1213",
-    "name": "Kim English",
-    "team": "DET",
-    "position": "",
-    "positionFull": "",
-    "salary": 8,
-    "tier": "WHITE",
-    "avgFP": 5.4,
-    "projectedFp": 5.4,
-    "photoCode": "203119",
-    "active": true,
-    "teams": [
-      "DET"
-    ]
-  },
-  {
     "id": "202379_1213",
     "basePlayerId": "202379",
     "season": "1213",
@@ -6919,24 +6791,6 @@
     ]
   },
   {
-    "id": "200778_1213",
-    "basePlayerId": "200778",
-    "season": "1213",
-    "name": "James White",
-    "team": "NYK",
-    "position": "",
-    "positionFull": "",
-    "salary": 7,
-    "tier": "WHITE",
-    "avgFP": 4.9,
-    "projectedFp": 4.9,
-    "photoCode": "200778",
-    "active": true,
-    "teams": [
-      "NYK"
-    ]
-  },
-  {
     "id": "202720_1213",
     "basePlayerId": "202720",
     "season": "1213",
@@ -6989,24 +6843,6 @@
     "active": true,
     "teams": [
       "POR"
-    ]
-  },
-  {
-    "id": "203162_1213",
-    "basePlayerId": "203162",
-    "season": "1213",
-    "name": "Ben Hansbrough",
-    "team": "IND",
-    "position": "",
-    "positionFull": "",
-    "salary": 6,
-    "tier": "WHITE",
-    "avgFP": 3.9,
-    "projectedFp": 3.9,
-    "photoCode": "203162",
-    "active": true,
-    "teams": [
-      "IND"
     ]
   },
   {
