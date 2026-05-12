@@ -723,20 +723,12 @@ export function GameView({ adapter }: Props) {
   // gauge bar from rebounding to 0 at REVEAL start when the user held one
   // or more cards. seedFp = 0 when no cards are held → identical legacy
   // behavior.
-  const heldFpAtDraw = useMemo(() => {
-    // Include ALL held cards (anchor included). At REVEAL start the team FP
-    // sits at sum(held cards) and each non-held card reveal ticks it up by
-    // that card's visibleFp. When the held anchor's flip-and-rollup runs at
-    // the end via revealHeldCards, the team FP is already at the final total
-    // — no "jump on the last card." The spring at the end still fires (for
-    // the win-tier audio/visual cue) but lands at the same number, no
-    // movement. Previously this excluded the held anchor (saved its FP for
-    // the spring to jump in), which caused the visible "team FP jumps at the
-    // end" the user reported.
-    return revealableCards
-      .filter(c => (c as any).wasHeld)
-      .reduce((s, c) => s + Number(c.actualFp ?? 0), 0);
-  }, [revealableCards]);
+  // Team FP starts at 0 every REVEAL. Held cards no longer "pre-load" the
+  // bar — they tick up via their own visibleFp animation in revealHeldCards
+  // just like non-held cards. Combined with removing frozenBarFpRef freeze
+  // (see handleCardRevealStart), this gives the per-card rollup feel the
+  // user asked for, regardless of auto / tap / mixed reveal path.
+  const heldFpAtDraw = 0;
   const currentBet = BASE_BET * betMultiplier;
   const gameAnalytics = useGameAnalytics(sportKey);
 
@@ -803,9 +795,14 @@ export function GameView({ adapter }: Props) {
     const trueAnchorId = heldCards.length > 0
       ? ((heldCards[heldCards.length - 1] as any).cardId ?? (heldCards[heldCards.length - 1] as any).basePlayerId)
       : anchorCardId;
-    if (cId === trueAnchorId) {
-      frozenBarFpRef.current = latestGaugeFpRef.current;
-    }
+    // Bar no longer freezes when the anchor starts revealing — it ticks up
+    // continuously with each card's visibleFp so the user sees per-card
+    // rollup all the way through. The end-of-reveal spring still fires (its
+    // start = end = total, so it's a no-op visually but the win-tier audio
+    // / glow / stamp still play). Setting frozenBarFpRef here would force
+    // the displayed FP to stop ticking during the anchor's flip animation,
+    // creating the "jumps in the anchor's FP at the end" feel.
+    void trueAnchorId; // referenced for future spring tuning
     const tier = tierArg?.toUpperCase() ?? "WHITE";
     const st = shakeType ?? null;
     const base = tier === "ORANGE" ? 900
