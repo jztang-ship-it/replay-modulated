@@ -266,14 +266,12 @@ export function useEmotionalReveal(params: Params) {
   }, [visibleFpMap]);
 
   const runningTotalFp = useMemo(() => {
-    // seedFp = held cards' FP (minus the held anchor) — already counted at
-    // REVEAL start, so the bar baseline doesn't rebound to 0. Held cards'
-    // visibleFp entries are excluded from the running sum to avoid
-    // double-counting; their card-face roll-up still animates from
-    // visibleFpMap directly via getVisibleFp.
+    // Include EVERY card via its visibleFp — held cards roll up just like
+    // non-held cards during revealHeldCards. Bar starts at 0 and grows one
+    // card at a time across the full sequence. seedFp is still honored for
+    // backward compat with other adapters, but basketball passes 0 now.
     let sum = seedFp;
     for (const c of cards) {
-      if ((c as any).wasHeld) continue;
       const v = getVisibleFp(c.cardId);
       if (typeof v === "number" && Number.isFinite(v)) sum += v;
     }
