@@ -598,9 +598,15 @@ export function CoachLayer({
           const intro = cfg?.anchorIntroText ?? "Now for your anchor card — he's the star, and what you're depending on to really push you over the top.";
           onCommentaryText?.([intro], true);
           if (anchorIntroTimer.current) clearTimeout(anchorIntroTimer.current);
+          // Short beat (was 2200ms) — the coach text begins typing and the
+          // anchor reveal kicks off in parallel. Long delay made the team FP
+          // sit at the partial total for ~2s before the anchor's roll-up
+          // started, which the user perceived as "rolling with previous total
+          // for a few secs before rolling up." Crisp single roll-up wins over
+          // an isolated text beat here.
           anchorIntroTimer.current = setTimeout(() => {
             onResumeHeldReveal?.();
-          }, 2200);
+          }, 600);
         } else {
           onResumeHeldReveal?.();
         }
@@ -631,9 +637,15 @@ export function CoachLayer({
           const intro = cfg?.anchorIntroText ?? "Now for your anchor card — he's the star, and what you're depending on to really push you over the top.";
           onCommentaryText?.([intro], true);
           if (anchorIntroTimer.current) clearTimeout(anchorIntroTimer.current);
+          // Short beat (was 2200ms) — the coach text begins typing and the
+          // anchor reveal kicks off in parallel. Long delay made the team FP
+          // sit at the partial total for ~2s before the anchor's roll-up
+          // started, which the user perceived as "rolling with previous total
+          // for a few secs before rolling up." Crisp single roll-up wins over
+          // an isolated text beat here.
           anchorIntroTimer.current = setTimeout(() => {
             onResumeHeldReveal?.();
-          }, 2200);
+          }, 600);
         } else {
           // Non-final card: resume reveal immediately, no intro to sequence.
           onResumeHeldReveal?.();
