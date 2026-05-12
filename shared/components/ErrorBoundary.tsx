@@ -8,6 +8,7 @@
 
 import { Component, type ReactNode } from "react";
 import { captureError } from "@shared/lib/sentry";
+import { isChunkLoadError, tryAutoReload } from "@shared/lib/chunkReload";
 
 interface Props { children: ReactNode; }
 interface State { hasError: boolean; error: Error | null; }
@@ -19,6 +20,9 @@ export class ErrorBoundary extends Component<Props, State, any> {
   }
 
   static getDerivedStateFromError(error: Error): State {
+    if (isChunkLoadError(error) && tryAutoReload()) {
+      return { hasError: false, error: null };
+    }
     return { hasError: true, error };
   }
 
