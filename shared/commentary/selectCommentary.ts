@@ -1130,6 +1130,22 @@ function cultureSecondary(
   };
 
   if (!primaryNamesStar) {
+    // 0. Former-team game — when this season's opponent is a team the player
+    // was previously on (player got traded mid-season and now plays their old
+    // team), surface a culture.formerTeam line. Highest narrative weight on
+    // the secondary: it adds context the user might not have on the back of
+    // their head ("oh right, Harden was on Houston").
+    if (culture?.formerTeam?.length && Array.isArray(star.teams) && star.teams.length > 1 && star.opponent) {
+      const opp = String(star.opponent).toUpperCase();
+      const onMultiple = star.teams.map((t: string) => String(t).toUpperCase());
+      // If the opponent is one of the player's teams this season, they're
+      // facing a former (or future) team. Trigger.
+      if (onMultiple.includes(opp)) {
+        const line = pickValid(culture.formerTeam, 0);
+        if (line) return attribute(line);
+      }
+    }
+
     // 1. Big game — non-bust, elite output
     if (!input.isBust && culture?.bigGame?.length) {
       const isBig = pts >= 40 || actualFp >= 65 || badges.includes("QUAD_DBL") || badges.includes("GOD_MODE");
@@ -1392,11 +1408,32 @@ export function selectCommentary(
     );
     const sec = cultureSecondary(star, culture, teamFlavor, input, seed, primaryNamesStar);
     // Drop the secondary if it restates a stat number the primary already
-    // surfaced (e.g. primary "40 pts" + culture line "Each 40-point game...").
-    if (sec && !secondaryRepeatsStat(primary, sec)) secondary = sec;
+    // surfaced (e.g. primary "40 pts" + culture line "Each 40-point game...")
+    // OR if it opens with the same lead word ("Cashed the hand. Cashed the
+    // way..."). The lead-word repeat reads as a jingle, not a thought.
+    if (sec && !secondaryRepeatsStat(primary, sec) && !sharesLeadWord(primary, sec)) {
+      secondary = sec;
+    }
   }
 
   return secondary ? { primary, secondary } : { primary };
+}
+
+/** True when primary and secondary lead with the same word (case-insensitive).
+ *  Catches the "Cashed the hand. Cashed the way a well-written letter reads..."
+ *  jingle effect — two consecutive sentences starting with the same word
+ *  read as one repetitive idea, not two perspectives. Skipped for very
+ *  short lead words (≤ 2 chars) so common articles like "An", "It" don't
+ *  trigger false positives. */
+function sharesLeadWord(primary: string, secondary: string): boolean {
+  const leadOf = (s: string) => {
+    const m = s.trim().match(/^([A-Za-z][A-Za-z'-]*)/);
+    return m ? m[1].toLowerCase() : "";
+  };
+  const a = leadOf(primary);
+  const b = leadOf(secondary);
+  if (a.length <= 2) return false;
+  return a === b;
 }
 
 /** True when the secondary line restates content the primary already covered:

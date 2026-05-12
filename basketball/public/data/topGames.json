@@ -1150,7 +1150,7 @@
       }
     ]
   },
-  "469|2003-02-21": {
+  "275|2003-03-16": {
     "reasons": [
       {
         "category": "fifty_plus_game",
@@ -1165,22 +1165,17 @@
       }
     ]
   },
-  "275|2003-03-16": {
+  "1503|2003-03-05": {
     "reasons": [
       {
-        "category": "fifty_plus_game",
-        "label": "Top-rarity: 50-point game",
-        "value": 1
-      },
-      {
         "category": "pts",
-        "label": "7th highest scoring game of the season (50 pts)",
-        "value": 50,
+        "label": "7th highest scoring game of the season (48 pts)",
+        "value": 48,
         "rank": 7
       }
     ]
   },
-  "1503|2003-03-05": {
+  "406|2003-03-21": {
     "reasons": [
       {
         "category": "pts",
@@ -1190,22 +1185,22 @@
       }
     ]
   },
-  "406|2003-03-21": {
-    "reasons": [
-      {
-        "category": "pts",
-        "label": "9th highest scoring game of the season (48 pts)",
-        "value": 48,
-        "rank": 9
-      }
-    ]
-  },
   "1503|2002-11-02": {
     "reasons": [
       {
         "category": "pts",
-        "label": "10th highest scoring game of the season (47 pts)",
+        "label": "9th highest scoring game of the season (47 pts)",
         "value": 47,
+        "rank": 9
+      }
+    ]
+  },
+  "1718|2002-11-02": {
+    "reasons": [
+      {
+        "category": "pts",
+        "label": "10th highest scoring game of the season (46 pts)",
+        "value": 46,
         "rank": 10
       }
     ]
@@ -1440,7 +1435,7 @@
       }
     ]
   },
-  "966|2003-02-26": {
+  "947|2003-03-29": {
     "reasons": [
       {
         "category": "stl",
@@ -1450,17 +1445,17 @@
       }
     ]
   },
-  "947|2003-03-29": {
+  "1889|2002-11-26": {
     "reasons": [
       {
         "category": "stl",
-        "label": "5th highest steal game of the season (8 stl)",
-        "value": 8,
+        "label": "5th highest steal game of the season (7 stl)",
+        "value": 7,
         "rank": 5
       }
     ]
   },
-  "1889|2002-11-26": {
+  "1863|2002-11-29": {
     "reasons": [
       {
         "category": "stl",
@@ -1470,7 +1465,7 @@
       }
     ]
   },
-  "1863|2002-11-29": {
+  "358|2002-12-08": {
     "reasons": [
       {
         "category": "stl",
@@ -1480,7 +1475,7 @@
       }
     ]
   },
-  "1763|2002-12-06": {
+  "57|2003-01-04": {
     "reasons": [
       {
         "category": "stl",
@@ -1490,7 +1485,7 @@
       }
     ]
   },
-  "358|2002-12-08": {
+  "2406|2003-01-08": {
     "reasons": [
       {
         "category": "stl",
@@ -1500,7 +1495,7 @@
       }
     ]
   },
-  "57|2003-01-04": {
+  "1890|2003-04-06": {
     "reasons": [
       {
         "category": "stl",
@@ -2000,7 +1995,7 @@
       }
     ]
   },
-  "962|2004-02-07": {
+  "2049|2004-02-11": {
     "reasons": [
       {
         "category": "stl",
@@ -2010,7 +2005,7 @@
       }
     ]
   },
-  "2049|2004-02-11": {
+  "2556|2004-04-02": {
     "reasons": [
       {
         "category": "stl",
@@ -2020,17 +2015,17 @@
       }
     ]
   },
-  "2556|2004-04-02": {
+  "1112|2003-11-14": {
     "reasons": [
       {
         "category": "stl",
-        "label": "9th highest steal game of the season (7 stl)",
-        "value": 7,
+        "label": "9th highest steal game of the season (6 stl)",
+        "value": 6,
         "rank": 9
       }
     ]
   },
-  "1112|2003-11-14": {
+  "2399|2003-12-06": {
     "reasons": [
       {
         "category": "stl",
@@ -3104,7 +3099,7 @@
       }
     ]
   },
-  "1761|2006-02-10": {
+  "977|2006-02-13": {
     "reasons": [
       {
         "category": "stl",
@@ -3114,7 +3109,7 @@
       }
     ]
   },
-  "977|2006-02-13": {
+  "101108|2006-02-22": {
     "reasons": [
       {
         "category": "stl",
@@ -3124,7 +3119,7 @@
       }
     ]
   },
-  "101108|2006-02-22": {
+  "2863|2006-03-05": {
     "reasons": [
       {
         "category": "stl",
@@ -3134,7 +3129,7 @@
       }
     ]
   },
-  "2863|2006-03-05": {
+  "2550|2006-03-28": {
     "reasons": [
       {
         "category": "stl",
@@ -4374,17 +4369,17 @@
       }
     ]
   },
-  "201157|2007-12-18": {
+  "2730|2007-10-31": {
     "reasons": [
       {
         "category": "blk",
-        "label": "7th highest block game of the season (8 blk)",
-        "value": 8,
+        "label": "7th highest block game of the season (7 blk)",
+        "value": 7,
         "rank": 7
       }
     ]
   },
-  "2730|2007-10-31": {
+  "2200|2007-11-19": {
     "reasons": [
       {
         "category": "blk",
@@ -4394,7 +4389,7 @@
       }
     ]
   },
-  "2200|2007-11-19": {
+  "406|2007-11-21": {
     "reasons": [
       {
         "category": "blk",
@@ -4404,7 +4399,7 @@
       }
     ]
   },
-  "406|2007-11-21": {
+  "101115|2007-12-02": {
     "reasons": [
       {
         "category": "blk",
@@ -14520,17 +14515,17 @@
       }
     ]
   },
-  "420|1996-11-30": {
+  "23|1996-12-14": {
     "reasons": [
       {
         "category": "reb",
-        "label": "7th highest rebound game of the season (24 reb)",
-        "value": 24,
+        "label": "7th highest rebound game of the season (23 reb)",
+        "value": 23,
         "rank": 7
       }
     ]
   },
-  "781|1996-11-30": {
+  "911|1996-12-18": {
     "reasons": [
       {
         "category": "reb",
@@ -14540,22 +14535,22 @@
       }
     ]
   },
-  "23|1996-12-14": {
+  "23|1996-11-06": {
     "reasons": [
       {
         "category": "reb",
-        "label": "9th highest rebound game of the season (23 reb)",
-        "value": 23,
+        "label": "9th highest rebound game of the season (22 reb)",
+        "value": 22,
         "rank": 9
       }
     ]
   },
-  "911|1996-12-18": {
+  "23|1996-11-11": {
     "reasons": [
       {
         "category": "reb",
-        "label": "10th highest rebound game of the season (23 reb)",
-        "value": 23,
+        "label": "10th highest rebound game of the season (22 reb)",
+        "value": 22,
         "rank": 10
       }
     ]
@@ -14570,7 +14565,7 @@
       }
     ]
   },
-  "123|1996-11-23": {
+  "349|1997-01-20": {
     "reasons": [
       {
         "category": "ast",
@@ -14580,17 +14575,17 @@
       }
     ]
   },
-  "349|1997-01-20": {
+  "349|1997-02-28": {
     "reasons": [
       {
         "category": "ast",
-        "label": "3rd highest assist game of the season (22 ast)",
-        "value": 22,
+        "label": "3rd highest assist game of the season (19 ast)",
+        "value": 19,
         "rank": 3
       }
     ]
   },
-  "349|1997-02-28": {
+  "349|1997-03-28": {
     "reasons": [
       {
         "category": "ast",
@@ -14600,17 +14595,17 @@
       }
     ]
   },
-  "349|1997-03-28": {
+  "304|1996-11-15": {
     "reasons": [
       {
         "category": "ast",
-        "label": "5th highest assist game of the season (19 ast)",
-        "value": 19,
+        "label": "5th highest assist game of the season (18 ast)",
+        "value": 18,
         "rank": 5
       }
     ]
   },
-  "304|1996-11-15": {
+  "467|1996-12-02": {
     "reasons": [
       {
         "category": "ast",
@@ -14620,7 +14615,7 @@
       }
     ]
   },
-  "467|1996-12-02": {
+  "349|1996-12-13": {
     "reasons": [
       {
         "category": "ast",
@@ -14630,7 +14625,7 @@
       }
     ]
   },
-  "349|1996-12-13": {
+  "349|1997-01-13": {
     "reasons": [
       {
         "category": "ast",
@@ -14640,22 +14635,22 @@
       }
     ]
   },
-  "349|1997-01-13": {
+  "467|1996-11-29": {
     "reasons": [
       {
         "category": "ast",
-        "label": "9th highest assist game of the season (18 ast)",
-        "value": 18,
+        "label": "9th highest assist game of the season (17 ast)",
+        "value": 17,
         "rank": 9
       }
     ]
   },
-  "123|1997-01-13": {
+  "349|1996-12-18": {
     "reasons": [
       {
         "category": "ast",
-        "label": "10th highest assist game of the season (18 ast)",
-        "value": 18,
+        "label": "10th highest assist game of the season (17 ast)",
+        "value": 17,
         "rank": 10
       }
     ]
@@ -14830,7 +14825,7 @@
       }
     ]
   },
-  "781|1996-12-04": {
+  "87|1996-12-21": {
     "reasons": [
       {
         "category": "blk",
@@ -14840,7 +14835,7 @@
       }
     ]
   },
-  "87|1996-12-21": {
+  "762|1996-12-27": {
     "reasons": [
       {
         "category": "blk",
@@ -14850,7 +14845,7 @@
       }
     ]
   },
-  "762|1996-12-27": {
+  "948|1997-02-01": {
     "reasons": [
       {
         "category": "blk",
@@ -14875,7 +14870,7 @@
       }
     ]
   },
-  "145|1998-02-10": {
+  "406|1998-04-02": {
     "reasons": [
       {
         "category": "fifty_plus_game",
@@ -14890,22 +14885,17 @@
       }
     ]
   },
-  "406|1998-04-02": {
+  "893|1997-11-21": {
     "reasons": [
       {
-        "category": "fifty_plus_game",
-        "label": "Top-rarity: 50-point game",
-        "value": 1
-      },
-      {
         "category": "pts",
-        "label": "3rd highest scoring game of the season (50 pts)",
-        "value": 50,
+        "label": "3rd highest scoring game of the season (49 pts)",
+        "value": 49,
         "rank": 3
       }
     ]
   },
-  "893|1997-11-21": {
+  "952|1998-01-07": {
     "reasons": [
       {
         "category": "pts",
@@ -14915,23 +14905,13 @@
       }
     ]
   },
-  "952|1998-01-07": {
-    "reasons": [
-      {
-        "category": "pts",
-        "label": "5th highest scoring game of the season (49 pts)",
-        "value": 49,
-        "rank": 5
-      }
-    ]
-  },
   "893|1997-12-27": {
     "reasons": [
       {
         "category": "pts",
-        "label": "6th highest scoring game of the season (47 pts)",
+        "label": "5th highest scoring game of the season (47 pts)",
         "value": 47,
-        "rank": 6
+        "rank": 5
       }
     ]
   },
@@ -14939,13 +14919,23 @@
     "reasons": [
       {
         "category": "pts",
-        "label": "7th highest scoring game of the season (45 pts)",
+        "label": "6th highest scoring game of the season (45 pts)",
         "value": 45,
-        "rank": 7
+        "rank": 6
       }
     ]
   },
   "893|1998-01-02": {
+    "reasons": [
+      {
+        "category": "pts",
+        "label": "7th highest scoring game of the season (44 pts)",
+        "value": 44,
+        "rank": 7
+      }
+    ]
+  },
+  "893|1998-01-09": {
     "reasons": [
       {
         "category": "pts",
@@ -14955,7 +14945,7 @@
       }
     ]
   },
-  "893|1998-01-09": {
+  "406|1998-02-13": {
     "reasons": [
       {
         "category": "pts",
@@ -14965,7 +14955,7 @@
       }
     ]
   },
-  "406|1998-02-13": {
+  "252|1998-04-14": {
     "reasons": [
       {
         "category": "pts",
@@ -14995,27 +14985,27 @@
       }
     ]
   },
-  "420|1997-11-13": {
-    "reasons": [
-      {
-        "category": "reb",
-        "label": "3rd highest rebound game of the season (26 reb)",
-        "value": 26,
-        "rank": 3
-      }
-    ]
-  },
   "23|1997-12-23": {
     "reasons": [
       {
         "category": "reb",
-        "label": "4th highest rebound game of the season (25 reb)",
+        "label": "3rd highest rebound game of the season (25 reb)",
         "value": 25,
+        "rank": 3
+      }
+    ]
+  },
+  "23|1997-12-20": {
+    "reasons": [
+      {
+        "category": "reb",
+        "label": "4th highest rebound game of the season (24 reb)",
+        "value": 24,
         "rank": 4
       }
     ]
   },
-  "420|1997-12-03": {
+  "87|1998-04-09": {
     "reasons": [
       {
         "category": "reb",
@@ -15025,52 +15015,52 @@
       }
     ]
   },
-  "23|1997-12-20": {
+  "1495|1997-11-03": {
     "reasons": [
       {
         "category": "reb",
-        "label": "6th highest rebound game of the season (24 reb)",
-        "value": 24,
+        "label": "6th highest rebound game of the season (22 reb)",
+        "value": 22,
         "rank": 6
       }
     ]
   },
-  "420|1998-02-14": {
+  "23|1997-11-03": {
     "reasons": [
       {
         "category": "reb",
-        "label": "7th highest rebound game of the season (24 reb)",
-        "value": 24,
+        "label": "7th highest rebound game of the season (22 reb)",
+        "value": 22,
         "rank": 7
       }
     ]
   },
-  "420|1998-02-21": {
+  "787|1997-11-14": {
     "reasons": [
       {
         "category": "reb",
-        "label": "8th highest rebound game of the season (24 reb)",
-        "value": 24,
+        "label": "8th highest rebound game of the season (22 reb)",
+        "value": 22,
         "rank": 8
       }
     ]
   },
-  "87|1998-04-09": {
+  "923|1997-11-25": {
     "reasons": [
       {
         "category": "reb",
-        "label": "9th highest rebound game of the season (24 reb)",
-        "value": 24,
+        "label": "9th highest rebound game of the season (22 reb)",
+        "value": 22,
         "rank": 9
       }
     ]
   },
-  "420|1998-01-17": {
+  "953|1997-12-20": {
     "reasons": [
       {
         "category": "reb",
-        "label": "10th highest rebound game of the season (23 reb)",
-        "value": 23,
+        "label": "10th highest rebound game of the season (22 reb)",
+        "value": 22,
         "rank": 10
       }
     ]
@@ -15315,17 +15305,17 @@
       }
     ]
   },
-  "1565|1998-01-06": {
+  "762|1997-10-31": {
     "reasons": [
       {
         "category": "blk",
-        "label": "5th highest block game of the season (9 blk)",
-        "value": 9,
+        "label": "5th highest block game of the season (8 blk)",
+        "value": 8,
         "rank": 5
       }
     ]
   },
-  "762|1997-10-31": {
+  "165|1997-11-02": {
     "reasons": [
       {
         "category": "blk",
@@ -15335,7 +15325,7 @@
       }
     ]
   },
-  "165|1997-11-02": {
+  "87|1997-11-05": {
     "reasons": [
       {
         "category": "blk",
@@ -15345,7 +15335,7 @@
       }
     ]
   },
-  "87|1997-11-05": {
+  "1509|1997-12-05": {
     "reasons": [
       {
         "category": "blk",
@@ -15355,7 +15345,7 @@
       }
     ]
   },
-  "1509|1997-12-05": {
+  "948|1997-12-09": {
     "reasons": [
       {
         "category": "blk",
@@ -15365,7 +15355,7 @@
       }
     ]
   },
-  "948|1997-12-09": {
+  "948|1997-12-19": {
     "reasons": [
       {
         "category": "blk",
@@ -15515,7 +15505,7 @@
       }
     ]
   },
-  "420|1999-02-10": {
+  "1504|1999-03-09": {
     "reasons": [
       {
         "category": "reb",
@@ -15525,7 +15515,7 @@
       }
     ]
   },
-  "1504|1999-03-09": {
+  "297|1999-03-24": {
     "reasons": [
       {
         "category": "reb",
@@ -15535,7 +15525,7 @@
       }
     ]
   },
-  "420|1999-03-17": {
+  "87|1999-04-09": {
     "reasons": [
       {
         "category": "reb",
@@ -15545,7 +15535,7 @@
       }
     ]
   },
-  "297|1999-03-24": {
+  "185|1999-04-15": {
     "reasons": [
       {
         "category": "reb",
@@ -15555,22 +15545,22 @@
       }
     ]
   },
-  "87|1999-04-09": {
+  "787|1999-02-06": {
     "reasons": [
       {
         "category": "reb",
-        "label": "9th highest rebound game of the season (21 reb)",
-        "value": 21,
+        "label": "9th highest rebound game of the season (20 reb)",
+        "value": 20,
         "rank": 9
       }
     ]
   },
-  "185|1999-04-15": {
+  "185|1999-02-09": {
     "reasons": [
       {
         "category": "reb",
-        "label": "10th highest rebound game of the season (21 reb)",
-        "value": 21,
+        "label": "10th highest rebound game of the season (20 reb)",
+        "value": 20,
         "rank": 10
       }
     ]
@@ -15715,17 +15705,17 @@
       }
     ]
   },
-  "753|1999-04-11": {
+  "358|1999-02-10": {
     "reasons": [
       {
         "category": "stl",
-        "label": "5th highest steal game of the season (8 stl)",
-        "value": 8,
+        "label": "5th highest steal game of the season (7 stl)",
+        "value": 7,
         "rank": 5
       }
     ]
   },
-  "358|1999-02-10": {
+  "1718|1999-02-17": {
     "reasons": [
       {
         "category": "stl",
@@ -15735,7 +15725,7 @@
       }
     ]
   },
-  "1718|1999-02-17": {
+  "56|1999-02-23": {
     "reasons": [
       {
         "category": "stl",
@@ -15745,7 +15735,7 @@
       }
     ]
   },
-  "56|1999-02-23": {
+  "937|1999-02-27": {
     "reasons": [
       {
         "category": "stl",
@@ -15755,7 +15745,7 @@
       }
     ]
   },
-  "937|1999-02-27": {
+  "45|1999-03-01": {
     "reasons": [
       {
         "category": "stl",
@@ -15765,7 +15755,7 @@
       }
     ]
   },
-  "45|1999-03-01": {
+  "383|1999-04-04": {
     "reasons": [
       {
         "category": "stl",
@@ -15887,6 +15877,12 @@
         "label": "1st highest scoring game of the season (61 pts)",
         "value": 61,
         "rank": 1
+      },
+      {
+        "category": "reb",
+        "label": "10th highest rebound game of the season (23 reb)",
+        "value": 23,
+        "rank": 10
       }
     ]
   },
@@ -15905,7 +15901,7 @@
       }
     ]
   },
-  "361|2000-01-16": {
+  "947|2000-02-06": {
     "reasons": [
       {
         "category": "fifty_plus_game",
@@ -15920,28 +15916,13 @@
       }
     ]
   },
-  "947|2000-02-06": {
-    "reasons": [
-      {
-        "category": "fifty_plus_game",
-        "label": "Top-rarity: 50-point game",
-        "value": 1
-      },
-      {
-        "category": "pts",
-        "label": "4th highest scoring game of the season (50 pts)",
-        "value": 50,
-        "rank": 4
-      }
-    ]
-  },
   "406|2000-04-05": {
     "reasons": [
       {
         "category": "pts",
-        "label": "5th highest scoring game of the season (49 pts)",
+        "label": "4th highest scoring game of the season (49 pts)",
         "value": 49,
-        "rank": 5
+        "rank": 4
       }
     ]
   },
@@ -15949,13 +15930,23 @@
     "reasons": [
       {
         "category": "pts",
-        "label": "6th highest scoring game of the season (47 pts)",
+        "label": "5th highest scoring game of the season (47 pts)",
         "value": 47,
-        "rank": 6
+        "rank": 5
       }
     ]
   },
   "947|1999-11-10": {
+    "reasons": [
+      {
+        "category": "pts",
+        "label": "6th highest scoring game of the season (46 pts)",
+        "value": 46,
+        "rank": 6
+      }
+    ]
+  },
+  "1495|2000-01-10": {
     "reasons": [
       {
         "category": "pts",
@@ -15965,27 +15956,27 @@
       }
     ]
   },
-  "1495|2000-01-10": {
-    "reasons": [
-      {
-        "category": "pts",
-        "label": "8th highest scoring game of the season (46 pts)",
-        "value": 46,
-        "rank": 8
-      }
-    ]
-  },
   "947|2000-01-03": {
     "reasons": [
       {
         "category": "pts",
-        "label": "9th highest scoring game of the season (45 pts)",
+        "label": "8th highest scoring game of the season (45 pts)",
         "value": 45,
-        "rank": 9
+        "rank": 8
       }
     ]
   },
   "947|2000-03-22": {
+    "reasons": [
+      {
+        "category": "pts",
+        "label": "9th highest scoring game of the season (44 pts)",
+        "value": 44,
+        "rank": 9
+      }
+    ]
+  },
+  "1716|2000-04-09": {
     "reasons": [
       {
         "category": "pts",
@@ -16005,7 +15996,7 @@
       }
     ]
   },
-  "994|2000-01-20": {
+  "87|2000-02-18": {
     "reasons": [
       {
         "category": "reb",
@@ -16015,17 +16006,17 @@
       }
     ]
   },
-  "87|2000-02-18": {
+  "406|1999-12-12": {
     "reasons": [
       {
         "category": "reb",
-        "label": "3rd highest rebound game of the season (25 reb)",
-        "value": 25,
+        "label": "3rd highest rebound game of the season (24 reb)",
+        "value": 24,
         "rank": 3
       }
     ]
   },
-  "406|1999-12-12": {
+  "87|2000-01-28": {
     "reasons": [
       {
         "category": "reb",
@@ -16035,17 +16026,17 @@
       }
     ]
   },
-  "87|2000-01-28": {
+  "406|1999-12-01": {
     "reasons": [
       {
         "category": "reb",
-        "label": "5th highest rebound game of the season (24 reb)",
-        "value": 24,
+        "label": "5th highest rebound game of the season (23 reb)",
+        "value": 23,
         "rank": 5
       }
     ]
   },
-  "406|1999-12-01": {
+  "708|1999-12-27": {
     "reasons": [
       {
         "category": "reb",
@@ -16055,7 +16046,7 @@
       }
     ]
   },
-  "994|1999-12-04": {
+  "406|2000-01-19": {
     "reasons": [
       {
         "category": "reb",
@@ -16065,7 +16056,7 @@
       }
     ]
   },
-  "708|1999-12-27": {
+  "87|2000-01-25": {
     "reasons": [
       {
         "category": "reb",
@@ -16075,23 +16066,13 @@
       }
     ]
   },
-  "406|2000-01-19": {
+  "923|2000-02-26": {
     "reasons": [
       {
         "category": "reb",
         "label": "9th highest rebound game of the season (23 reb)",
         "value": 23,
         "rank": 9
-      }
-    ]
-  },
-  "87|2000-01-25": {
-    "reasons": [
-      {
-        "category": "reb",
-        "label": "10th highest rebound game of the season (23 reb)",
-        "value": 23,
-        "rank": 10
       }
     ]
   },

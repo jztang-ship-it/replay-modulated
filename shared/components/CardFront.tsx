@@ -291,6 +291,12 @@ export interface CardFrontProps {
    *  SportAdapter.displayPosition(); baseball wraps the adapter's sentinel
    *  string in a custom SVG node. CardFront stays sport-agnostic either way. */
   displayPosition?: React.ReactNode;
+  /** When true, the notch shows team only (e.g. "LAL"), dropping the season
+   *  suffix. Basketball passes true because the active season is already
+   *  shown in the slate header / daily-reel reveal; the per-card year is
+   *  redundant and crowds the notch on narrow mobile widths. Other sports
+   *  with a single-season corpus keep the default behavior. */
+  hideNotchSeason?: boolean;
 }
 
 // ── CardFront ──────────────────────────────────────────────────────────────
@@ -301,12 +307,18 @@ export function CardFront(props: CardFrontProps) {
     isFlipped, heldFpVisible, isTapTarget,
     pulse, fpCountUpMs, stamp, onRollComplete, badges, renderHero,
     glowActive, glowSrc, glowDurationMs, glowTier, perfPct, displayPosition,
+    hideNotchSeason,
   } = props;
 
   const name = clampText((card as any)?.name);
-  const team = teamAbbrev(clampText((card as any)?.team));
+  // Render `teams[]` join when present (multi-team season — e.g. Harden 2020-21
+  // → "HOU/BKN"). Fall back to the legacy single `team` for back-compat.
+  const teamsArr: string[] = Array.isArray((card as any)?.teams) ? (card as any).teams : [];
+  const team = teamsArr.length > 1
+    ? teamsArr.map(t => teamAbbrev(clampText(t))).filter(Boolean).join("/")
+    : teamAbbrev(clampText((card as any)?.team));
   const season = (card as any)?.season ?? (card as any)?.year ?? (card as any)?.seasonLabel;
-  const seasonFmt = formatSeasonRange(season);
+  const seasonFmt = hideNotchSeason ? "" : formatSeasonRange(season);
   // Position display is sport-specific. Sport wrappers (AthleteCard, BaseballCard,
   // worldcup PlayerCard) compute the display string via their SportAdapter and
   // pass it as `displayPosition`. Fallback to raw card.position when the prop
@@ -595,9 +607,9 @@ export function CardFront(props: CardFrontProps) {
           position: "absolute", left: 0, right: 0, top: "86.2%", bottom: 0,
           background: tier.accent,
           display: "flex", alignItems: "center", justifyContent: "center",
-          paddingLeft: 4, paddingRight: 4,
+          paddingLeft: 3, paddingRight: 3,
           zIndex: 4, overflow: "hidden",
-          gap: 3,
+          gap: 2,
         }}>
           {(() => {
             const isLightAccent = derivedTier === "GREEN" || derivedTier === "BLUE" || derivedTier === "WHITE";
@@ -619,7 +631,7 @@ export function CardFront(props: CardFrontProps) {
                     key={badge.id ?? badge.label ?? i}
                     style={{
                       animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${i * 70}ms both`,
-                      fontSize: visibleBadges.length > 5 ? 10 : 12, lineHeight: 1, flexShrink: 0,
+                      fontSize: visibleBadges.length > 5 ? 9 : visibleBadges.length > 3 ? 10 : 12, lineHeight: 1, flexShrink: 0,
                     }}
                   >{badge.icon}</span>
                 ))}
@@ -634,10 +646,10 @@ export function CardFront(props: CardFrontProps) {
                 {showBonus && (
                   <span style={{
                     animation: `cfBadgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) ${(visibleBadges.length + (overflowCount > 0 ? 1 : 0)) * 70}ms both`,
-                    fontSize: 11, fontWeight: 900, color: totalBonus < 0 ? "#FF6B6B" : textColor,
+                    fontSize: 10, fontWeight: 900, color: totalBonus < 0 ? "#FF6B6B" : textColor,
                     letterSpacing: 0.3, flexShrink: 0,
                     background: isLightAccent ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.15)",
-                    borderRadius: 4, padding: "1px 4px",
+                    borderRadius: 4, padding: "1px 3px",
                   }}>{totalBonus > 0 ? "+" : ""}{totalBonus} FP</span>
                 )}
               </>

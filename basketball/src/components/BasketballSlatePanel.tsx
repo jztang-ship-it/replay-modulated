@@ -21,7 +21,6 @@ import { ensureLoaded, getPlayers, getActiveSeason } from "@shared/engines/dataE
 import { headshotUrl } from "@shared/utils/headshotUrl";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { getTodaysStars } from "../adapters/gameAdapter";
-import { tierFromSalary } from "../engines/economyEngine";
 import type { TierColor } from "@shared/types";
 import { getTier } from "@shared/theme";
 
@@ -36,15 +35,15 @@ function buildPlayerIndex(): Map<string, ResolvedPlayer> {
     // Don't overwrite — first row wins, since players.json contains one row
     // per (player, season) and any season's identity fields are equivalent.
     if (idx.has(baseId)) continue;
-    // Compute tier from salary at runtime — players.json has stale tier
-    // strings from old thresholds (e.g. Ja Morant @ $55 was tagged BLUE
-    // but $44+ is PURPLE in the current economy). Recomputing here keeps
-    // the slate display in sync with the live tier breakpoints.
-    const salary = Number((p as any).salary ?? 0);
-    const computedTier = tierFromSalary(salary, sportAdapter.economyConfig);
+    // Resolve tier via SportAdapter — applies the hybrid floor+quota
+    // promotion (sparse seasons promote next-highest salary to fill
+    // ORANGE floor=12 / RED floor=4). Using raw tierFromSalary here would
+    // show the un-promoted tier (e.g. Kobe '10-11 $56 → PURPLE) which
+    // diverges from the slate selector + card display, leading to "5
+    // ORANGE" counts in the slate panel when the actual slate has 12.
     idx.set(baseId, {
       name: String((p as any).name ?? baseId),
-      tier: sportAdapter.normalizeTier(computedTier),
+      tier: sportAdapter.normalizeTier(sportAdapter.getTierById(baseId)),
       photoCode: (p as any).photoCode != null ? String((p as any).photoCode) : baseId,
     });
   }

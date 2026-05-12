@@ -13,7 +13,7 @@
  * the slate selector is the follow-up PR.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   loadSeasonsManifest,
   manifestLabelsChronological,
@@ -23,11 +23,13 @@ import {
 } from "@shared/utils/seasonPicker";
 import { getDailyBonusDateKey } from "@shared/utils/dailyBonus";
 import { SeasonReel } from "@shared/components/SeasonReel";
+import { SeasonIntroOverlay } from "@shared/components/SeasonIntroOverlay";
 // Side-effect import — basketball's wrapper calls configurePerSeason() so
 // importing it here guarantees the engine is in per-season mode by the
 // time we call setActiveSeason.
 import "../engines/dataEngine";
 import { setActiveSeason } from "@shared/engines/dataEngine";
+import seasonIntros from "../data/seasonIntros.json";
 
 const MANIFEST_URL = "/basketball/data/seasons/_manifest.json";
 const TODAYS_PICK_KEY = "replaymod_todays_season_pick_basketball";
@@ -57,14 +59,30 @@ function writeStored(s: Stored): void {
 type Props = {
   /** When true (e.g. FTUE active), the reel is bypassed entirely. */
   bypass?: boolean;
+  /** When true, append the FTUE follow-up line to the intro overlay
+   *  ("Tap the gold icon to see the scoring rules"). Set true on the
+   *  first hand after FTUE completes so the user sees the rules pointer
+   *  exactly once. Returning users get the intro without the follow-up. */
+  showFtueIntroFollowup?: boolean;
   children: React.ReactNode;
 };
 
-export function DailySeasonReelGate({ bypass = false, children }: Props) {
+export function DailySeasonReelGate({ bypass = false, showFtueIntroFollowup = false, children }: Props) {
   const [manifest, setManifest] = useState<SeasonsManifest | null>(null);
   const [pick, setPick] = useState<SeasonManifestEntry | null>(null);
   // null = unresolved; true = show reel; false = skip reel
   const [shouldShowReel, setShouldShowReel] = useState<boolean | null>(null);
+  // Independent gate for the season-intro overlay. Shown after the reel
+  // completes OR (when reel is skipped because the user already saw it
+  // earlier today) shown directly on the first game entry of the day.
+  // Storage-keyed by date+seasonKey so it doesn't re-fire mid-day.
+  const [showIntro, setShowIntro] = useState<boolean>(false);
+
+  // Track previous bypass value. When bypass transitions true → false
+  // (user just finished the FTUE), we want the reel to take over IMMEDIATELY
+  // without a frame of game-view rendering in between. Manifest pre-fetched
+  // during the FTUE bypass branch so the reel can mount without a network gap.
+  const prevBypassRef = useRef(bypass);
 
   // Resolve season pick + reel-or-not on mount. Two responsibilities:
   //   1. Pin the active season on dataEngine BEFORE children render so the
@@ -73,6 +91,15 @@ export function DailySeasonReelGate({ bypass = false, children }: Props) {
   //      after the user has already seen today's reveal).
   useEffect(() => {
     let cancelled = false;
+    // If we're transitioning out of FTUE (bypass true → false), reset the
+    // gate to its loading state synchronously so children stop rendering
+    // until the reel mounts. Without this, the GameView with the FTUE
+    // anchor season (2024-25) flashes for ~1 frame before the reel covers.
+    const justExitedFtue = prevBypassRef.current && !bypass;
+    prevBypassRef.current = bypass;
+    if (justExitedFtue) {
+      setShouldShowReel(null);
+    }
     (async () => {
       // QA / dev escape hatch — `?reel=force` always plays the reel,
       // even during FTUE. Checked first so the bypass path doesn't
@@ -81,10 +108,12 @@ export function DailySeasonReelGate({ bypass = false, children }: Props) {
         new URLSearchParams(window.location.search).get("reel") === "force";
 
       // FTUE: bypass entirely — pin to the canonical season the FTUE
-      // narrative expects, no manifest fetch needed.
+      // narrative expects. Pre-fetch the manifest in the background so the
+      // reel can fire immediately when FTUE completes (no second wait).
       if (bypass && !forceReel) {
         setActiveSeason(FTUE_SEASON_KEY);
         setShouldShowReel(false);
+        loadSeasonsManifest(MANIFEST_URL).catch(() => { /* ignore — caught in main path */ });
         return;
       }
 
@@ -161,7 +190,31 @@ export function DailySeasonReelGate({ bypass = false, children }: Props) {
         <SeasonReel
           labels={labels}
           targetLabel={pick.label}
-          onComplete={() => setShouldShowReel(false)}
+          onComplete={() => {
+            // Reel done → hand off to intro overlay before revealing
+            // the game view. setShowIntro first so there's no frame in
+            // between the reel and the intro.
+            setShowIntro(true);
+            setShouldShowReel(false);
+          }}
+        />
+      </>
+    );
+  }
+
+  // Season intro overlay — shows once after the reel lands. FTUE users get
+  // an additional "tap the gold icon" follow-up paragraph.
+  if (showIntro && pick) {
+    const introText = (seasonIntros as Record<string, string>)[pick.key]
+      ?? `Today we're going back to ${pick.label}. Good luck.`;
+    return (
+      <>
+        {children}
+        <SeasonIntroOverlay
+          seasonLabel={pick.label}
+          introText={introText}
+          showFtueFollowup={showFtueIntroFollowup}
+          onDismiss={() => setShowIntro(false)}
         />
       </>
     );

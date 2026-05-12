@@ -70,6 +70,7 @@ function toPlayerEval(p: any, projByBaseId: Map<string, number>): PlayerEval {
     cardId: `${baseId}-${Math.random().toString(36).slice(2, 7)}`,
     name: String(p.name ?? ""),
     team: String(p.team ?? ""),
+    teams: Array.isArray((p as any).teams) ? (p as any).teams.map((t: any) => String(t)) : undefined,
     season: String(p.season ?? ""),
     position: sportAdapter.normalizePosition(p.position),
     photoCode: p.photoCode != null ? String(p.photoCode) : undefined,

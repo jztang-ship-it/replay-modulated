@@ -12,7 +12,10 @@
     "avgFP": 53.1,
     "projectedFp": 53.1,
     "photoCode": "708",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "1495_0304",
@@ -27,7 +30,10 @@
     "avgFP": 46.4,
     "projectedFp": 46.4,
     "photoCode": "1495",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1503_0304",
@@ -42,7 +48,10 @@
     "avgFP": 44.9,
     "projectedFp": 44.9,
     "photoCode": "1503",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "406_0304",
@@ -57,7 +66,10 @@
     "avgFP": 42.7,
     "projectedFp": 42.7,
     "photoCode": "406",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "947_0304",
@@ -72,7 +84,10 @@
     "avgFP": 41.6,
     "projectedFp": 41.6,
     "photoCode": "947",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "1884_0304",
@@ -87,7 +102,10 @@
     "avgFP": 41.5,
     "projectedFp": 41.5,
     "photoCode": "1884",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "1882_0304",
@@ -102,7 +120,10 @@
     "avgFP": 40.9,
     "projectedFp": 40.9,
     "photoCode": "1882",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "977_0304",
@@ -117,7 +138,10 @@
     "avgFP": 39.9,
     "projectedFp": 39.9,
     "photoCode": "977",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "1890_0304",
@@ -132,7 +156,10 @@
     "avgFP": 39.1,
     "projectedFp": 39.1,
     "photoCode": "1890",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "1717_0304",
@@ -147,7 +174,10 @@
     "avgFP": 39.6,
     "projectedFp": 39.6,
     "photoCode": "1717",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "979_0304",
@@ -162,7 +192,10 @@
     "avgFP": 39.5,
     "projectedFp": 39.5,
     "photoCode": "979",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "1718_0304",
@@ -177,7 +210,10 @@
     "avgFP": 39.3,
     "projectedFp": 39.3,
     "photoCode": "1718",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "950_0304",
@@ -192,7 +228,11 @@
     "avgFP": 37.8,
     "projectedFp": 37.8,
     "photoCode": "950",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX",
+      "NYK"
+    ]
   },
   {
     "id": "467_0304",
@@ -207,7 +247,10 @@
     "avgFP": 37.8,
     "projectedFp": 37.8,
     "photoCode": "467",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "2544_0304",
@@ -222,7 +265,10 @@
     "avgFP": 37.6,
     "projectedFp": 37.6,
     "photoCode": "2544",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "1905_0304",
@@ -237,7 +283,10 @@
     "avgFP": 37.4,
     "projectedFp": 37.4,
     "photoCode": "1905",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1713_0304",
@@ -252,7 +301,10 @@
     "avgFP": 36.6,
     "projectedFp": 36.6,
     "photoCode": "1713",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "951_0304",
@@ -267,7 +319,10 @@
     "avgFP": 36.4,
     "projectedFp": 36.4,
     "photoCode": "951",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "1885_0304",
@@ -282,7 +337,10 @@
     "avgFP": 35.9,
     "projectedFp": 35.9,
     "photoCode": "1885",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "2405_0304",
@@ -297,7 +355,10 @@
     "avgFP": 35.9,
     "projectedFp": 35.9,
     "photoCode": "2405",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "978_0304",
@@ -312,7 +373,10 @@
     "avgFP": 36.1,
     "projectedFp": 36.1,
     "photoCode": "978",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "1112_0304",
@@ -327,7 +391,10 @@
     "avgFP": 35.1,
     "projectedFp": 35.1,
     "photoCode": "1112",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "208_0304",
@@ -342,7 +409,10 @@
     "avgFP": 35,
     "projectedFp": 35,
     "photoCode": "208",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "2216_0304",
@@ -357,7 +427,10 @@
     "avgFP": 35.3,
     "projectedFp": 35.3,
     "photoCode": "2216",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "1802_0304",
@@ -372,7 +445,10 @@
     "avgFP": 35.2,
     "projectedFp": 35.2,
     "photoCode": "1802",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "2030_0304",
@@ -387,7 +463,10 @@
     "avgFP": 34.7,
     "projectedFp": 34.7,
     "photoCode": "2030",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "2430_0304",
@@ -402,7 +481,10 @@
     "avgFP": 33.8,
     "projectedFp": 33.8,
     "photoCode": "2430",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "1897_0304",
@@ -417,7 +499,10 @@
     "avgFP": 32.9,
     "projectedFp": 32.9,
     "photoCode": "1897",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "2546_0304",
@@ -432,7 +517,10 @@
     "avgFP": 32.8,
     "projectedFp": 32.8,
     "photoCode": "2546",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "1883_0304",
@@ -447,7 +535,10 @@
     "avgFP": 33.2,
     "projectedFp": 33.2,
     "photoCode": "1883",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "2200_0304",
@@ -462,7 +553,10 @@
     "avgFP": 32.9,
     "projectedFp": 32.9,
     "photoCode": "2200",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "923_0304",
@@ -477,7 +571,11 @@
     "avgFP": 32.6,
     "projectedFp": 32.6,
     "photoCode": "923",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI",
+      "TOR"
+    ]
   },
   {
     "id": "2240_0304",
@@ -492,7 +590,10 @@
     "avgFP": 32.7,
     "projectedFp": 32.7,
     "photoCode": "2240",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "2397_0304",
@@ -507,7 +608,10 @@
     "avgFP": 32.3,
     "projectedFp": 32.3,
     "photoCode": "2397",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "952_0304",
@@ -522,7 +626,10 @@
     "avgFP": 31.5,
     "projectedFp": 31.5,
     "photoCode": "952",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "2210_0304",
@@ -537,7 +644,10 @@
     "avgFP": 31.5,
     "projectedFp": 31.5,
     "photoCode": "2210",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "1710_0304",
@@ -552,7 +662,10 @@
     "avgFP": 31.6,
     "projectedFp": 31.6,
     "photoCode": "1710",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "2072_0304",
@@ -567,7 +680,10 @@
     "avgFP": 31.7,
     "projectedFp": 31.7,
     "photoCode": "2072",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "1894_0304",
@@ -582,7 +698,10 @@
     "avgFP": 31.7,
     "projectedFp": 31.7,
     "photoCode": "1894",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "2202_0304",
@@ -597,7 +716,10 @@
     "avgFP": 31.9,
     "projectedFp": 31.9,
     "photoCode": "2202",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "714_0304",
@@ -612,7 +734,10 @@
     "avgFP": 30.7,
     "projectedFp": 30.7,
     "photoCode": "714",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "739_0304",
@@ -627,7 +752,12 @@
     "avgFP": 31.2,
     "projectedFp": 31.2,
     "photoCode": "739",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR",
+      "ATL",
+      "DET"
+    ]
   },
   {
     "id": "1889_0304",
@@ -642,7 +772,10 @@
     "avgFP": 30.8,
     "projectedFp": 30.8,
     "photoCode": "1889",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "956_0304",
@@ -657,7 +790,10 @@
     "avgFP": 30.8,
     "projectedFp": 30.8,
     "photoCode": "956",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "980_0304",
@@ -672,7 +808,10 @@
     "avgFP": 30.9,
     "projectedFp": 30.9,
     "photoCode": "980",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "1740_0304",
@@ -687,7 +826,10 @@
     "avgFP": 31,
     "projectedFp": 31,
     "photoCode": "1740",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "959_0304",
@@ -702,7 +844,10 @@
     "avgFP": 30.5,
     "projectedFp": 30.5,
     "photoCode": "959",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "252_0304",
@@ -717,7 +862,10 @@
     "avgFP": 30.4,
     "projectedFp": 30.4,
     "photoCode": "252",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "2037_0304",
@@ -732,7 +880,10 @@
     "avgFP": 30.2,
     "projectedFp": 30.2,
     "photoCode": "2037",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "1891_0304",
@@ -747,7 +898,10 @@
     "avgFP": 30.5,
     "projectedFp": 30.5,
     "photoCode": "1891",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1716_0304",
@@ -762,7 +916,10 @@
     "avgFP": 30.3,
     "projectedFp": 30.3,
     "photoCode": "1716",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "2207_0304",
@@ -777,7 +934,10 @@
     "avgFP": 29.4,
     "projectedFp": 29.4,
     "photoCode": "2207",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "1536_0304",
@@ -792,7 +952,10 @@
     "avgFP": 29.5,
     "projectedFp": 29.5,
     "photoCode": "1536",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "948_0304",
@@ -807,7 +970,10 @@
     "avgFP": 29.7,
     "projectedFp": 29.7,
     "photoCode": "948",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "1497_0304",
@@ -822,7 +988,10 @@
     "avgFP": 29.7,
     "projectedFp": 29.7,
     "photoCode": "1497",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "1903_0304",
@@ -837,7 +1006,10 @@
     "avgFP": 28.8,
     "projectedFp": 28.8,
     "photoCode": "1903",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "56_0304",
@@ -852,7 +1024,10 @@
     "avgFP": 28.8,
     "projectedFp": 28.8,
     "photoCode": "56",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "2048_0304",
@@ -867,7 +1042,10 @@
     "avgFP": 28.7,
     "projectedFp": 28.7,
     "photoCode": "2048",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "949_0304",
@@ -882,7 +1060,11 @@
     "avgFP": 28.7,
     "projectedFp": 28.7,
     "photoCode": "949",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL",
+      "POR"
+    ]
   },
   {
     "id": "2548_0304",
@@ -897,7 +1079,10 @@
     "avgFP": 28.6,
     "projectedFp": 28.6,
     "photoCode": "2548",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "224_0304",
@@ -912,7 +1097,10 @@
     "avgFP": 28.2,
     "projectedFp": 28.2,
     "photoCode": "224",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "436_0304",
@@ -927,7 +1115,10 @@
     "avgFP": 28,
     "projectedFp": 28,
     "photoCode": "436",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "1723_0304",
@@ -942,7 +1133,10 @@
     "avgFP": 28.3,
     "projectedFp": 28.3,
     "photoCode": "1723",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1888_0304",
@@ -957,7 +1151,10 @@
     "avgFP": 28.3,
     "projectedFp": 28.3,
     "photoCode": "1888",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "2047_0304",
@@ -972,7 +1169,10 @@
     "avgFP": 28.6,
     "projectedFp": 28.6,
     "photoCode": "2047",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "1496_0304",
@@ -987,7 +1187,11 @@
     "avgFP": 27.4,
     "projectedFp": 27.4,
     "photoCode": "1496",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK",
+      "MIL"
+    ]
   },
   {
     "id": "84_0304",
@@ -1002,7 +1206,10 @@
     "avgFP": 27.3,
     "projectedFp": 27.3,
     "photoCode": "84",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "757_0304",
@@ -1017,7 +1224,10 @@
     "avgFP": 27.5,
     "projectedFp": 27.5,
     "photoCode": "757",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "1749_0304",
@@ -1032,7 +1242,10 @@
     "avgFP": 27.3,
     "projectedFp": 27.3,
     "photoCode": "1749",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "147_0304",
@@ -1047,7 +1260,11 @@
     "avgFP": 26.9,
     "projectedFp": 26.9,
     "photoCode": "147",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI",
+      "TOR"
+    ]
   },
   {
     "id": "2550_0304",
@@ -1062,7 +1279,10 @@
     "avgFP": 26.9,
     "projectedFp": 26.9,
     "photoCode": "2550",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "136_0304",
@@ -1077,7 +1297,10 @@
     "avgFP": 26.2,
     "projectedFp": 26.2,
     "photoCode": "136",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "124_0304",
@@ -1092,7 +1315,10 @@
     "avgFP": 25.9,
     "projectedFp": 25.9,
     "photoCode": "124",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "2225_0304",
@@ -1107,7 +1333,10 @@
     "avgFP": 26.1,
     "projectedFp": 26.1,
     "photoCode": "2225",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1938_0304",
@@ -1122,7 +1351,10 @@
     "avgFP": 25.7,
     "projectedFp": 25.7,
     "photoCode": "1938",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1712_0304",
@@ -1137,7 +1369,10 @@
     "avgFP": 25.4,
     "projectedFp": 25.4,
     "photoCode": "1712",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "1729_0304",
@@ -1152,7 +1387,11 @@
     "avgFP": 25.4,
     "projectedFp": 25.4,
     "photoCode": "1729",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE",
+      "BOS"
+    ]
   },
   {
     "id": "693_0304",
@@ -1167,7 +1406,10 @@
     "avgFP": 25.2,
     "projectedFp": 25.2,
     "photoCode": "693",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "703_0304",
@@ -1182,7 +1424,10 @@
     "avgFP": 25.6,
     "projectedFp": 25.6,
     "photoCode": "703",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "1507_0304",
@@ -1197,7 +1442,10 @@
     "avgFP": 25.5,
     "projectedFp": 25.5,
     "photoCode": "1507",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "727_0304",
@@ -1212,7 +1460,10 @@
     "avgFP": 24.9,
     "projectedFp": 24.9,
     "photoCode": "727",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "976_0304",
@@ -1227,7 +1478,11 @@
     "avgFP": 24.6,
     "projectedFp": 24.6,
     "photoCode": "976",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR",
+      "CLE"
+    ]
   },
   {
     "id": "689_0304",
@@ -1242,7 +1497,11 @@
     "avgFP": 24.9,
     "projectedFp": 24.9,
     "photoCode": "689",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL",
+      "POR"
+    ]
   },
   {
     "id": "954_0304",
@@ -1257,7 +1516,10 @@
     "avgFP": 24.5,
     "projectedFp": 24.5,
     "photoCode": "954",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "2403_0304",
@@ -1272,7 +1534,10 @@
     "avgFP": 24.6,
     "projectedFp": 24.6,
     "photoCode": "2403",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "2547_0304",
@@ -1287,7 +1552,10 @@
     "avgFP": 24.9,
     "projectedFp": 24.9,
     "photoCode": "2547",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "699_0304",
@@ -1302,7 +1570,10 @@
     "avgFP": 24.7,
     "projectedFp": 24.7,
     "photoCode": "699",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "754_0304",
@@ -1317,7 +1588,10 @@
     "avgFP": 25,
     "projectedFp": 25,
     "photoCode": "754",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "1899_0304",
@@ -1332,7 +1606,10 @@
     "avgFP": 24.8,
     "projectedFp": 24.8,
     "photoCode": "1899",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "1725_0304",
@@ -1347,7 +1624,10 @@
     "avgFP": 24,
     "projectedFp": 24,
     "photoCode": "1725",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1733_0304",
@@ -1362,7 +1642,10 @@
     "avgFP": 24,
     "projectedFp": 24,
     "photoCode": "1733",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "1501_0304",
@@ -1377,7 +1660,11 @@
     "avgFP": 24.1,
     "projectedFp": 24.1,
     "photoCode": "1501",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL",
+      "NYK"
+    ]
   },
   {
     "id": "275_0304",
@@ -1392,7 +1679,10 @@
     "avgFP": 23.9,
     "projectedFp": 23.9,
     "photoCode": "275",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "2201_0304",
@@ -1407,7 +1697,10 @@
     "avgFP": 24,
     "projectedFp": 24,
     "photoCode": "2201",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "57_0304",
@@ -1422,7 +1715,10 @@
     "avgFP": 24.1,
     "projectedFp": 24.1,
     "photoCode": "57",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "1715_0304",
@@ -1437,7 +1733,10 @@
     "avgFP": 24.4,
     "projectedFp": 24.4,
     "photoCode": "1715",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "299_0304",
@@ -1452,7 +1751,10 @@
     "avgFP": 24,
     "projectedFp": 24,
     "photoCode": "299",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "2399_0304",
@@ -1467,7 +1769,10 @@
     "avgFP": 23.4,
     "projectedFp": 23.4,
     "photoCode": "2399",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "2198_0304",
@@ -1482,7 +1787,10 @@
     "avgFP": 23.4,
     "projectedFp": 23.4,
     "photoCode": "2198",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "1548_0304",
@@ -1497,22 +1805,10 @@
     "avgFP": 23,
     "projectedFp": 23,
     "photoCode": "1548",
-    "active": true
-  },
-  {
-    "id": "361_0304",
-    "basePlayerId": "361",
-    "season": "0304",
-    "name": "Clifford Robinson",
-    "team": "GSW",
-    "position": "",
-    "positionFull": "",
-    "salary": 33,
-    "tier": "BLUE",
-    "avgFP": 22.8,
-    "projectedFp": 22.8,
-    "photoCode": "361",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "2046_0304",
@@ -1527,7 +1823,10 @@
     "avgFP": 22.7,
     "projectedFp": 22.7,
     "photoCode": "2046",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "2400_0304",
@@ -1542,7 +1841,10 @@
     "avgFP": 22.9,
     "projectedFp": 22.9,
     "photoCode": "2400",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "213_0304",
@@ -1557,7 +1859,11 @@
     "avgFP": 22.6,
     "projectedFp": 22.6,
     "photoCode": "213",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR",
+      "CHI"
+    ]
   },
   {
     "id": "2306_0304",
@@ -1572,7 +1878,10 @@
     "avgFP": 23,
     "projectedFp": 23,
     "photoCode": "2306",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1730_0304",
@@ -1587,7 +1896,10 @@
     "avgFP": 22.5,
     "projectedFp": 22.5,
     "photoCode": "1730",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "2209_0304",
@@ -1602,7 +1914,10 @@
     "avgFP": 22.9,
     "projectedFp": 22.9,
     "photoCode": "2209",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "89_0304",
@@ -1617,7 +1932,10 @@
     "avgFP": 22.8,
     "projectedFp": 22.8,
     "photoCode": "89",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "711_0304",
@@ -1632,7 +1950,10 @@
     "avgFP": 22.9,
     "projectedFp": 22.9,
     "photoCode": "711",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "2223_0304",
@@ -1647,7 +1968,10 @@
     "avgFP": 22.1,
     "projectedFp": 22.1,
     "photoCode": "2223",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "1747_0304",
@@ -1662,7 +1986,10 @@
     "avgFP": 22,
     "projectedFp": 22,
     "photoCode": "1747",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "133_0304",
@@ -1677,7 +2004,10 @@
     "avgFP": 22,
     "projectedFp": 22,
     "photoCode": "133",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "353_0304",
@@ -1692,7 +2022,10 @@
     "avgFP": 21.8,
     "projectedFp": 21.8,
     "photoCode": "353",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "2049_0304",
@@ -1707,7 +2040,10 @@
     "avgFP": 22.2,
     "projectedFp": 22.2,
     "photoCode": "2049",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "2224_0304",
@@ -1722,22 +2058,10 @@
     "avgFP": 22,
     "projectedFp": 22,
     "photoCode": "2224",
-    "active": true
-  },
-  {
-    "id": "1517_0304",
-    "basePlayerId": "1517",
-    "season": "0304",
-    "name": "Bobby Jackson",
-    "team": "SAC",
-    "position": "",
-    "positionFull": "",
-    "salary": 32,
-    "tier": "BLUE",
-    "avgFP": 22.1,
-    "projectedFp": 22.1,
-    "photoCode": "1517",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "2419_0304",
@@ -1752,7 +2076,10 @@
     "avgFP": 21.2,
     "projectedFp": 21.2,
     "photoCode": "2419",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "731_0304",
@@ -1767,7 +2094,10 @@
     "avgFP": 21.1,
     "projectedFp": 21.1,
     "photoCode": "731",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "702_0304",
@@ -1782,7 +2112,10 @@
     "avgFP": 21.2,
     "projectedFp": 21.2,
     "photoCode": "702",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "2060_0304",
@@ -1797,7 +2130,10 @@
     "avgFP": 21.3,
     "projectedFp": 21.3,
     "photoCode": "2060",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "953_0304",
@@ -1812,7 +2148,10 @@
     "avgFP": 21.2,
     "projectedFp": 21.2,
     "photoCode": "953",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "2032_0304",
@@ -1827,7 +2166,11 @@
     "avgFP": 21,
     "projectedFp": 21,
     "photoCode": "2032",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE",
+      "POR"
+    ]
   },
   {
     "id": "1719_0304",
@@ -1842,7 +2185,11 @@
     "avgFP": 20.4,
     "projectedFp": 20.4,
     "photoCode": "1719",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR",
+      "MEM"
+    ]
   },
   {
     "id": "2041_0304",
@@ -1857,7 +2204,10 @@
     "avgFP": 20.8,
     "projectedFp": 20.8,
     "photoCode": "2041",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "2551_0304",
@@ -1872,7 +2222,10 @@
     "avgFP": 20.4,
     "projectedFp": 20.4,
     "photoCode": "2551",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "2034_0304",
@@ -1887,7 +2240,10 @@
     "avgFP": 21,
     "projectedFp": 21,
     "photoCode": "2034",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "2572_0304",
@@ -1902,7 +2258,10 @@
     "avgFP": 20,
     "projectedFp": 20,
     "photoCode": "2572",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "2229_0304",
@@ -1917,7 +2276,11 @@
     "avgFP": 20,
     "projectedFp": 20,
     "photoCode": "2229",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS",
+      "DET"
+    ]
   },
   {
     "id": "1731_0304",
@@ -1932,7 +2295,10 @@
     "avgFP": 19.8,
     "projectedFp": 19.8,
     "photoCode": "1731",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "2436_0304",
@@ -1947,7 +2313,10 @@
     "avgFP": 19.9,
     "projectedFp": 19.9,
     "photoCode": "2436",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "1508_0304",
@@ -1962,7 +2331,10 @@
     "avgFP": 20.2,
     "projectedFp": 20.2,
     "photoCode": "1508",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "2045_0304",
@@ -1977,7 +2349,10 @@
     "avgFP": 19.1,
     "projectedFp": 19.1,
     "photoCode": "2045",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "258_0304",
@@ -1992,7 +2367,10 @@
     "avgFP": 19.6,
     "projectedFp": 19.6,
     "photoCode": "258",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "1541_0304",
@@ -2007,7 +2385,10 @@
     "avgFP": 19,
     "projectedFp": 19,
     "photoCode": "1541",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "2052_0304",
@@ -2022,7 +2403,11 @@
     "avgFP": 19,
     "projectedFp": 19,
     "photoCode": "2052",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA",
+      "ORL"
+    ]
   },
   {
     "id": "2246_0304",
@@ -2037,7 +2422,10 @@
     "avgFP": 19.5,
     "projectedFp": 19.5,
     "photoCode": "2246",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "2031_0304",
@@ -2052,7 +2440,10 @@
     "avgFP": 19.4,
     "projectedFp": 19.4,
     "photoCode": "2031",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "2211_0304",
@@ -2067,7 +2458,10 @@
     "avgFP": 19.3,
     "projectedFp": 19.3,
     "photoCode": "2211",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "243_0304",
@@ -2082,7 +2476,10 @@
     "avgFP": 18.6,
     "projectedFp": 18.6,
     "photoCode": "243",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "397_0304",
@@ -2097,7 +2494,10 @@
     "avgFP": 18.5,
     "projectedFp": 18.5,
     "photoCode": "397",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "452_0304",
@@ -2112,7 +2512,11 @@
     "avgFP": 18.7,
     "projectedFp": 18.7,
     "photoCode": "452",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS",
+      "NYK"
+    ]
   },
   {
     "id": "677_0304",
@@ -2127,7 +2531,11 @@
     "avgFP": 18.4,
     "projectedFp": 18.4,
     "photoCode": "677",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS",
+      "CLE"
+    ]
   },
   {
     "id": "1509_0304",
@@ -2142,7 +2550,10 @@
     "avgFP": 18.9,
     "projectedFp": 18.9,
     "photoCode": "1509",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "2203_0304",
@@ -2157,7 +2568,10 @@
     "avgFP": 18.3,
     "projectedFp": 18.3,
     "photoCode": "2203",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "2199_0304",
@@ -2172,7 +2586,10 @@
     "avgFP": 18.7,
     "projectedFp": 18.7,
     "photoCode": "2199",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "2406_0304",
@@ -2187,7 +2604,10 @@
     "avgFP": 18.9,
     "projectedFp": 18.9,
     "photoCode": "2406",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "934_0304",
@@ -2202,7 +2622,10 @@
     "avgFP": 18,
     "projectedFp": 18,
     "photoCode": "934",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "358_0304",
@@ -2217,7 +2640,11 @@
     "avgFP": 18.2,
     "projectedFp": 18.2,
     "photoCode": "358",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX",
+      "NYK"
+    ]
   },
   {
     "id": "87_0304",
@@ -2232,7 +2659,10 @@
     "avgFP": 17.7,
     "projectedFp": 17.7,
     "photoCode": "87",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "1863_0304",
@@ -2247,7 +2677,10 @@
     "avgFP": 17.8,
     "projectedFp": 17.8,
     "photoCode": "1863",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "389_0304",
@@ -2262,7 +2695,10 @@
     "avgFP": 17.7,
     "projectedFp": 17.7,
     "photoCode": "389",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "2412_0304",
@@ -2277,22 +2713,10 @@
     "avgFP": 18.1,
     "projectedFp": 18.1,
     "photoCode": "2412",
-    "active": true
-  },
-  {
-    "id": "966_0304",
-    "basePlayerId": "966",
-    "season": "0304",
-    "name": "Jerome Williams",
-    "team": "CHI",
-    "position": "",
-    "positionFull": "",
-    "salary": 26,
-    "tier": "GREEN",
-    "avgFP": 18,
-    "projectedFp": 18,
-    "photoCode": "966",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "1800_0304",
@@ -2307,22 +2731,10 @@
     "avgFP": 17.8,
     "projectedFp": 17.8,
     "photoCode": "1800",
-    "active": true
-  },
-  {
-    "id": "1902_0304",
-    "basePlayerId": "1902",
-    "season": "0304",
-    "name": "Jeff Foster",
-    "team": "IND",
-    "position": "",
-    "positionFull": "",
-    "salary": 26,
-    "tier": "GREEN",
-    "avgFP": 17.8,
-    "projectedFp": 17.8,
-    "photoCode": "1902",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "2073_0304",
@@ -2337,7 +2749,10 @@
     "avgFP": 17.8,
     "projectedFp": 17.8,
     "photoCode": "2073",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "1921_0304",
@@ -2352,7 +2767,11 @@
     "avgFP": 18.1,
     "projectedFp": 18.1,
     "photoCode": "1921",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL",
+      "UTA"
+    ]
   },
   {
     "id": "1498_0304",
@@ -2367,7 +2786,10 @@
     "avgFP": 17.8,
     "projectedFp": 17.8,
     "photoCode": "1498",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "2215_0304",
@@ -2382,7 +2804,10 @@
     "avgFP": 16.9,
     "projectedFp": 16.9,
     "photoCode": "2215",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "383_0304",
@@ -2397,7 +2822,10 @@
     "avgFP": 17.5,
     "projectedFp": 17.5,
     "photoCode": "383",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "915_0304",
@@ -2412,7 +2840,10 @@
     "avgFP": 17.2,
     "projectedFp": 17.2,
     "photoCode": "915",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "1952_0304",
@@ -2427,7 +2858,10 @@
     "avgFP": 17.1,
     "projectedFp": 17.1,
     "photoCode": "1952",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "2553_0304",
@@ -2442,22 +2876,10 @@
     "avgFP": 17.2,
     "projectedFp": 17.2,
     "photoCode": "2553",
-    "active": true
-  },
-  {
-    "id": "1901_0304",
-    "basePlayerId": "1901",
-    "season": "0304",
-    "name": "Dion Glover",
-    "team": "TOR",
-    "position": "",
-    "positionFull": "",
-    "salary": 25,
-    "tier": "GREEN",
-    "avgFP": 17,
-    "projectedFp": 17,
-    "photoCode": "1901",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "2250_0304",
@@ -2472,7 +2894,10 @@
     "avgFP": 17.1,
     "projectedFp": 17.1,
     "photoCode": "2250",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "682_0304",
@@ -2487,7 +2912,11 @@
     "avgFP": 17.3,
     "projectedFp": 17.3,
     "photoCode": "682",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET",
+      "ATL"
+    ]
   },
   {
     "id": "686_0304",
@@ -2502,7 +2931,11 @@
     "avgFP": 17.1,
     "projectedFp": 17.1,
     "photoCode": "686",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK",
+      "PHX"
+    ]
   },
   {
     "id": "2617_0304",
@@ -2517,7 +2950,10 @@
     "avgFP": 16.5,
     "projectedFp": 16.5,
     "photoCode": "2617",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "2605_0304",
@@ -2532,7 +2968,10 @@
     "avgFP": 16.3,
     "projectedFp": 16.3,
     "photoCode": "2605",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "1737_0304",
@@ -2547,7 +2986,11 @@
     "avgFP": 16.7,
     "projectedFp": 16.7,
     "photoCode": "1737",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL",
+      "NYK"
+    ]
   },
   {
     "id": "363_0304",
@@ -2562,7 +3005,10 @@
     "avgFP": 16.3,
     "projectedFp": 16.3,
     "photoCode": "363",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "1709_0304",
@@ -2577,7 +3023,10 @@
     "avgFP": 16.8,
     "projectedFp": 16.8,
     "photoCode": "1709",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "2248_0304",
@@ -2592,7 +3041,10 @@
     "avgFP": 16.7,
     "projectedFp": 16.7,
     "photoCode": "2248",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "2098_0304",
@@ -2607,7 +3059,10 @@
     "avgFP": 16.4,
     "projectedFp": 16.4,
     "photoCode": "2098",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "1904_0304",
@@ -2622,7 +3077,10 @@
     "avgFP": 16.1,
     "projectedFp": 16.1,
     "photoCode": "1904",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "458_0304",
@@ -2637,7 +3095,11 @@
     "avgFP": 15.6,
     "projectedFp": 15.6,
     "photoCode": "458",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK",
+      "PHX"
+    ]
   },
   {
     "id": "1739_0304",
@@ -2652,7 +3114,10 @@
     "avgFP": 15.6,
     "projectedFp": 15.6,
     "photoCode": "1739",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "2050_0304",
@@ -2667,7 +3132,10 @@
     "avgFP": 15.8,
     "projectedFp": 15.8,
     "photoCode": "2050",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "2217_0304",
@@ -2682,7 +3150,10 @@
     "avgFP": 16.2,
     "projectedFp": 16.2,
     "photoCode": "2217",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "2413_0304",
@@ -2697,7 +3168,10 @@
     "avgFP": 15.7,
     "projectedFp": 15.7,
     "photoCode": "2413",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "2404_0304",
@@ -2712,22 +3186,10 @@
     "avgFP": 15.7,
     "projectedFp": 15.7,
     "photoCode": "2404",
-    "active": true
-  },
-  {
-    "id": "1544_0304",
-    "basePlayerId": "1544",
-    "season": "0304",
-    "name": "Chris Crawford",
-    "team": "ATL",
-    "position": "",
-    "positionFull": "",
-    "salary": 23,
-    "tier": "GREEN",
-    "avgFP": 16.2,
-    "projectedFp": 16.2,
-    "photoCode": "1544",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "1887_0304",
@@ -2742,7 +3204,10 @@
     "avgFP": 15.6,
     "projectedFp": 15.6,
     "photoCode": "1887",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "2063_0304",
@@ -2757,7 +3222,10 @@
     "avgFP": 15,
     "projectedFp": 15,
     "photoCode": "2063",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "990_0304",
@@ -2772,22 +3240,10 @@
     "avgFP": 15.3,
     "projectedFp": 15.3,
     "photoCode": "990",
-    "active": true
-  },
-  {
-    "id": "962_0304",
-    "basePlayerId": "962",
-    "season": "0304",
-    "name": "Walter McCarty",
-    "team": "BOS",
-    "position": "",
-    "positionFull": "",
-    "salary": 22,
-    "tier": "WHITE",
-    "avgFP": 15.3,
-    "projectedFp": 15.3,
-    "photoCode": "962",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1088_0304",
@@ -2802,7 +3258,11 @@
     "avgFP": 15.4,
     "projectedFp": 15.4,
     "photoCode": "1088",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET",
+      "BOS"
+    ]
   },
   {
     "id": "2429_0304",
@@ -2817,7 +3277,10 @@
     "avgFP": 15.3,
     "projectedFp": 15.3,
     "photoCode": "2429",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "384_0304",
@@ -2832,7 +3295,10 @@
     "avgFP": 14.9,
     "projectedFp": 14.9,
     "photoCode": "384",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "2586_0304",
@@ -2847,7 +3313,10 @@
     "avgFP": 15,
     "projectedFp": 15,
     "photoCode": "2586",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "393_0304",
@@ -2862,7 +3331,11 @@
     "avgFP": 15.4,
     "projectedFp": 15.4,
     "photoCode": "393",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL",
+      "TOR"
+    ]
   },
   {
     "id": "1477_0304",
@@ -2877,7 +3350,10 @@
     "avgFP": 14.4,
     "projectedFp": 14.4,
     "photoCode": "1477",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "965_0304",
@@ -2892,7 +3368,10 @@
     "avgFP": 14.4,
     "projectedFp": 14.4,
     "photoCode": "965",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "1510_0304",
@@ -2907,7 +3386,12 @@
     "avgFP": 14.3,
     "projectedFp": 14.3,
     "photoCode": "1510",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX",
+      "WAS",
+      "MIL"
+    ]
   },
   {
     "id": "2564_0304",
@@ -2922,7 +3406,10 @@
     "avgFP": 14.4,
     "projectedFp": 14.4,
     "photoCode": "2564",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1499_0304",
@@ -2937,7 +3424,11 @@
     "avgFP": 14.4,
     "projectedFp": 14.4,
     "photoCode": "1499",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS",
+      "CLE"
+    ]
   },
   {
     "id": "2033_0304",
@@ -2952,7 +3443,10 @@
     "avgFP": 14.4,
     "projectedFp": 14.4,
     "photoCode": "2033",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "697_0304",
@@ -2967,7 +3461,10 @@
     "avgFP": 14.2,
     "projectedFp": 14.2,
     "photoCode": "697",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "722_0304",
@@ -2982,7 +3479,10 @@
     "avgFP": 14.3,
     "projectedFp": 14.3,
     "photoCode": "722",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "905_0304",
@@ -2997,22 +3497,10 @@
     "avgFP": 14.3,
     "projectedFp": 14.3,
     "photoCode": "905",
-    "active": true
-  },
-  {
-    "id": "2221_0304",
-    "basePlayerId": "2221",
-    "season": "0304",
-    "name": "Raul Lopez",
-    "team": "UTA",
-    "position": "",
-    "positionFull": "",
-    "salary": 21,
-    "tier": "WHITE",
-    "avgFP": 14.3,
-    "projectedFp": 14.3,
-    "photoCode": "2221",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "2036_0304",
@@ -3027,7 +3515,11 @@
     "avgFP": 14.7,
     "projectedFp": 14.7,
     "photoCode": "2036",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE",
+      "BOS"
+    ]
   },
   {
     "id": "1000_0304",
@@ -3042,7 +3534,10 @@
     "avgFP": 14.2,
     "projectedFp": 14.2,
     "photoCode": "1000",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "2549_0304",
@@ -3057,7 +3552,10 @@
     "avgFP": 14.8,
     "projectedFp": 14.8,
     "photoCode": "2549",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "2067_0304",
@@ -3072,7 +3570,10 @@
     "avgFP": 14.5,
     "projectedFp": 14.5,
     "photoCode": "2067",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "2571_0304",
@@ -3087,7 +3588,10 @@
     "avgFP": 14.6,
     "projectedFp": 14.6,
     "photoCode": "2571",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "468_0304",
@@ -3102,22 +3606,10 @@
     "avgFP": 14,
     "projectedFp": 14,
     "photoCode": "468",
-    "active": true
-  },
-  {
-    "id": "1425_0304",
-    "basePlayerId": "1425",
-    "season": "0304",
-    "name": "Aaron Williams",
-    "team": "NJN",
-    "position": "",
-    "positionFull": "",
-    "salary": 20,
-    "tier": "WHITE",
-    "avgFP": 13.8,
-    "projectedFp": 13.8,
-    "photoCode": "1425",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "369_0304",
@@ -3132,7 +3624,11 @@
     "avgFP": 13.7,
     "projectedFp": 13.7,
     "photoCode": "369",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK",
+      "SAS"
+    ]
   },
   {
     "id": "2407_0304",
@@ -3147,7 +3643,10 @@
     "avgFP": 14.1,
     "projectedFp": 14.1,
     "photoCode": "2407",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "958_0304",
@@ -3162,7 +3661,10 @@
     "avgFP": 14,
     "projectedFp": 14,
     "photoCode": "958",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "448_0304",
@@ -3177,7 +3679,10 @@
     "avgFP": 13.9,
     "projectedFp": 13.9,
     "photoCode": "448",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "1916_0304",
@@ -3192,7 +3697,10 @@
     "avgFP": 12.9,
     "projectedFp": 12.9,
     "photoCode": "1916",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "2239_0304",
@@ -3207,22 +3715,10 @@
     "avgFP": 12.9,
     "projectedFp": 12.9,
     "photoCode": "2239",
-    "active": true
-  },
-  {
-    "id": "1533_0304",
-    "basePlayerId": "1533",
-    "season": "0304",
-    "name": "Anthony Johnson",
-    "team": "IND",
-    "position": "",
-    "positionFull": "",
-    "salary": 19,
-    "tier": "WHITE",
-    "avgFP": 13.4,
-    "projectedFp": 13.4,
-    "photoCode": "1533",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "2669_0304",
@@ -3237,37 +3733,10 @@
     "avgFP": 13,
     "projectedFp": 13,
     "photoCode": "2669",
-    "active": true
-  },
-  {
-    "id": "446_0304",
-    "basePlayerId": "446",
-    "season": "0304",
-    "name": "Lucious Harris",
-    "team": "NJN",
-    "position": "",
-    "positionFull": "",
-    "salary": 19,
-    "tier": "WHITE",
-    "avgFP": 12.8,
-    "projectedFp": 12.8,
-    "photoCode": "446",
-    "active": true
-  },
-  {
-    "id": "2648_0304",
-    "basePlayerId": "2648",
-    "season": "0304",
-    "name": "Ronald Dupree",
-    "team": "CHI",
-    "position": "",
-    "positionFull": "",
-    "salary": 19,
-    "tier": "WHITE",
-    "avgFP": 13.3,
-    "projectedFp": 13.3,
-    "photoCode": "2648",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "270_0304",
@@ -3282,7 +3751,10 @@
     "avgFP": 12.2,
     "projectedFp": 12.2,
     "photoCode": "270",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "2422_0304",
@@ -3297,7 +3769,10 @@
     "avgFP": 12.4,
     "projectedFp": 12.4,
     "photoCode": "2422",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "109_0304",
@@ -3312,7 +3787,10 @@
     "avgFP": 12.5,
     "projectedFp": 12.5,
     "photoCode": "109",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "2365_0304",
@@ -3327,22 +3805,10 @@
     "avgFP": 12.7,
     "projectedFp": 12.7,
     "photoCode": "2365",
-    "active": true
-  },
-  {
-    "id": "916_0304",
-    "basePlayerId": "916",
-    "season": "0304",
-    "name": "Corie Blount",
-    "team": "TOR",
-    "position": "",
-    "positionFull": "",
-    "salary": 18,
-    "tier": "WHITE",
-    "avgFP": 12.3,
-    "projectedFp": 12.3,
-    "photoCode": "916",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "2260_0304",
@@ -3357,22 +3823,10 @@
     "avgFP": 12.2,
     "projectedFp": 12.2,
     "photoCode": "2260",
-    "active": true
-  },
-  {
-    "id": "72_0304",
-    "basePlayerId": "72",
-    "season": "0304",
-    "name": "Kenny Anderson",
-    "team": "IND",
-    "position": "",
-    "positionFull": "",
-    "salary": 18,
-    "tier": "WHITE",
-    "avgFP": 12.7,
-    "projectedFp": 12.7,
-    "photoCode": "72",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "2556_0304",
@@ -3387,7 +3841,10 @@
     "avgFP": 12.1,
     "projectedFp": 12.1,
     "photoCode": "2556",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "248_0304",
@@ -3402,7 +3859,10 @@
     "avgFP": 12.7,
     "projectedFp": 12.7,
     "photoCode": "248",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "296_0304",
@@ -3417,7 +3877,10 @@
     "avgFP": 12.4,
     "projectedFp": 12.4,
     "photoCode": "296",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "2457_0304",
@@ -3432,7 +3895,12 @@
     "avgFP": 11.6,
     "projectedFp": 11.6,
     "photoCode": "2457",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL",
+      "TOR",
+      "CHI"
+    ]
   },
   {
     "id": "2418_0304",
@@ -3447,7 +3915,10 @@
     "avgFP": 11.5,
     "projectedFp": 11.5,
     "photoCode": "2418",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "1563_0304",
@@ -3462,7 +3933,10 @@
     "avgFP": 11.4,
     "projectedFp": 11.4,
     "photoCode": "1563",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "922_0304",
@@ -3477,22 +3951,10 @@
     "avgFP": 11.7,
     "projectedFp": 11.7,
     "photoCode": "922",
-    "active": true
-  },
-  {
-    "id": "1944_0304",
-    "basePlayerId": "1944",
-    "season": "0304",
-    "name": "Eddie Robinson",
-    "team": "CHI",
-    "position": "",
-    "positionFull": "",
-    "salary": 17,
-    "tier": "WHITE",
-    "avgFP": 11.7,
-    "projectedFp": 11.7,
-    "photoCode": "1944",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "1960_0304",
@@ -3507,7 +3969,10 @@
     "avgFP": 11.4,
     "projectedFp": 11.4,
     "photoCode": "1960",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "2581_0304",
@@ -3522,7 +3987,10 @@
     "avgFP": 12,
     "projectedFp": 12,
     "photoCode": "2581",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "278_0304",
@@ -3537,7 +4005,10 @@
     "avgFP": 11.6,
     "projectedFp": 11.6,
     "photoCode": "278",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "1714_0304",
@@ -3552,37 +4023,10 @@
     "avgFP": 11.9,
     "projectedFp": 11.9,
     "photoCode": "1714",
-    "active": true
-  },
-  {
-    "id": "2206_0304",
-    "basePlayerId": "2206",
-    "season": "0304",
-    "name": "Rodney White",
-    "team": "DEN",
-    "position": "",
-    "positionFull": "",
-    "salary": 17,
-    "tier": "WHITE",
-    "avgFP": 12,
-    "projectedFp": 12,
-    "photoCode": "2206",
-    "active": true
-  },
-  {
-    "id": "1542_0304",
-    "basePlayerId": "1542",
-    "season": "0304",
-    "name": "Predrag Drobnjak",
-    "team": "LAC",
-    "position": "",
-    "positionFull": "",
-    "salary": 17,
-    "tier": "WHITE",
-    "avgFP": 11.8,
-    "projectedFp": 11.8,
-    "photoCode": "1542",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "2557_0304",
@@ -3597,7 +4041,10 @@
     "avgFP": 11.5,
     "projectedFp": 11.5,
     "photoCode": "2557",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "2039_0304",
@@ -3612,7 +4059,10 @@
     "avgFP": 12,
     "projectedFp": 12,
     "photoCode": "2039",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "221_0304",
@@ -3627,7 +4077,11 @@
     "avgFP": 11.6,
     "projectedFp": 11.6,
     "photoCode": "221",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK",
+      "HOU"
+    ]
   },
   {
     "id": "283_0304",
@@ -3642,7 +4096,10 @@
     "avgFP": 11.5,
     "projectedFp": 11.5,
     "photoCode": "283",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "1607_0304",
@@ -3657,7 +4114,10 @@
     "avgFP": 11.9,
     "projectedFp": 11.9,
     "photoCode": "1607",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "2440_0304",
@@ -3672,7 +4132,10 @@
     "avgFP": 11.6,
     "projectedFp": 11.6,
     "photoCode": "2440",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "960_0304",
@@ -3687,7 +4150,10 @@
     "avgFP": 10.9,
     "projectedFp": 10.9,
     "photoCode": "960",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "2208_0304",
@@ -3702,22 +4168,11 @@
     "avgFP": 11,
     "projectedFp": 11,
     "photoCode": "2208",
-    "active": true
-  },
-  {
-    "id": "1720_0304",
-    "basePlayerId": "1720",
-    "season": "0304",
-    "name": "Michael Doleac",
-    "team": "DEN",
-    "position": "",
-    "positionFull": "",
-    "salary": 16,
-    "tier": "WHITE",
-    "avgFP": 10.8,
-    "projectedFp": 10.8,
-    "photoCode": "1720",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS",
+      "CLE"
+    ]
   },
   {
     "id": "441_0304",
@@ -3732,22 +4187,10 @@
     "avgFP": 10.7,
     "projectedFp": 10.7,
     "photoCode": "441",
-    "active": true
-  },
-  {
-    "id": "692_0304",
-    "basePlayerId": "692",
-    "season": "0304",
-    "name": "Andrew DeClercq",
-    "team": "ORL",
-    "position": "",
-    "positionFull": "",
-    "salary": 16,
-    "tier": "WHITE",
-    "avgFP": 11,
-    "projectedFp": 11,
-    "photoCode": "692",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "2561_0304",
@@ -3762,7 +4205,10 @@
     "avgFP": 11,
     "projectedFp": 11,
     "photoCode": "2561",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "2410_0304",
@@ -3777,7 +4223,10 @@
     "avgFP": 11.1,
     "projectedFp": 11.1,
     "photoCode": "2410",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "2501_0304",
@@ -3792,7 +4241,10 @@
     "avgFP": 10.9,
     "projectedFp": 10.9,
     "photoCode": "2501",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "1744_0304",
@@ -3807,7 +4259,10 @@
     "avgFP": 11.2,
     "projectedFp": 11.2,
     "photoCode": "1744",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "324_0304",
@@ -3822,37 +4277,10 @@
     "avgFP": 11.3,
     "projectedFp": 11.3,
     "photoCode": "324",
-    "active": true
-  },
-  {
-    "id": "1751_0304",
-    "basePlayerId": "1751",
-    "season": "0304",
-    "name": "Jahidi White",
-    "team": "PHX",
-    "position": "",
-    "positionFull": "",
-    "salary": 16,
-    "tier": "WHITE",
-    "avgFP": 10.8,
-    "projectedFp": 10.8,
-    "photoCode": "1751",
-    "active": true
-  },
-  {
-    "id": "1913_0304",
-    "basePlayerId": "1913",
-    "season": "0304",
-    "name": "Michael Ruffin",
-    "team": "UTA",
-    "position": "",
-    "positionFull": "",
-    "salary": 16,
-    "tier": "WHITE",
-    "avgFP": 10.9,
-    "projectedFp": 10.9,
-    "photoCode": "1913",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "2416_0304",
@@ -3867,7 +4295,10 @@
     "avgFP": 10,
     "projectedFp": 10,
     "photoCode": "2416",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "762_0304",
@@ -3882,7 +4313,10 @@
     "avgFP": 10.1,
     "projectedFp": 10.1,
     "photoCode": "762",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "2554_0304",
@@ -3897,7 +4331,10 @@
     "avgFP": 10.1,
     "projectedFp": 10.1,
     "photoCode": "2554",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "1922_0304",
@@ -3912,37 +4349,10 @@
     "avgFP": 10,
     "projectedFp": 10,
     "photoCode": "1922",
-    "active": true
-  },
-  {
-    "id": "1924_0304",
-    "basePlayerId": "1924",
-    "season": "0304",
-    "name": "Lee Nailon",
-    "team": "CLE",
-    "position": "",
-    "positionFull": "",
-    "salary": 15,
-    "tier": "WHITE",
-    "avgFP": 10,
-    "projectedFp": 10,
-    "photoCode": "1924",
-    "active": true
-  },
-  {
-    "id": "718_0304",
-    "basePlayerId": "718",
-    "season": "0304",
-    "name": "Gary Trent",
-    "team": "MIN",
-    "position": "",
-    "positionFull": "",
-    "salary": 15,
-    "tier": "WHITE",
-    "avgFP": 10.5,
-    "projectedFp": 10.5,
-    "photoCode": "718",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "1506_0304",
@@ -3957,7 +4367,10 @@
     "avgFP": 10.1,
     "projectedFp": 10.1,
     "photoCode": "1506",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "1521_0304",
@@ -3972,22 +4385,10 @@
     "avgFP": 10,
     "projectedFp": 10,
     "photoCode": "1521",
-    "active": true
-  },
-  {
-    "id": "1065_0304",
-    "basePlayerId": "1065",
-    "season": "0304",
-    "name": "Erick Strickland",
-    "team": "MIL",
-    "position": "",
-    "positionFull": "",
-    "salary": 15,
-    "tier": "WHITE",
-    "avgFP": 10.5,
-    "projectedFp": 10.5,
-    "photoCode": "1065",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1742_0304",
@@ -4002,7 +4403,11 @@
     "avgFP": 10,
     "projectedFp": 10,
     "photoCode": "1742",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL",
+      "NOH"
+    ]
   },
   {
     "id": "2443_0304",
@@ -4017,7 +4422,10 @@
     "avgFP": 10.2,
     "projectedFp": 10.2,
     "photoCode": "2443",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "445_0304",
@@ -4032,7 +4440,12 @@
     "avgFP": 10.3,
     "projectedFp": 10.3,
     "photoCode": "445",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM",
+      "POR",
+      "ATL"
+    ]
   },
   {
     "id": "1502_0304",
@@ -4047,7 +4460,10 @@
     "avgFP": 10.1,
     "projectedFp": 10.1,
     "photoCode": "1502",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "281_0304",
@@ -4062,22 +4478,11 @@
     "avgFP": 10.2,
     "projectedFp": 10.2,
     "photoCode": "281",
-    "active": true
-  },
-  {
-    "id": "2567_0304",
-    "basePlayerId": "2567",
-    "season": "0304",
-    "name": "Brian Cook",
-    "team": "LAL",
-    "position": "",
-    "positionFull": "",
-    "salary": 15,
-    "tier": "WHITE",
-    "avgFP": 10.1,
-    "projectedFp": 10.1,
-    "photoCode": "2567",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX",
+      "DAL"
+    ]
   },
   {
     "id": "2402_0304",
@@ -4092,22 +4497,10 @@
     "avgFP": 10.4,
     "projectedFp": 10.4,
     "photoCode": "2402",
-    "active": true
-  },
-  {
-    "id": "2055_0304",
-    "basePlayerId": "2055",
-    "season": "0304",
-    "name": "Mamadou N'diaye",
-    "team": "ATL",
-    "position": "",
-    "positionFull": "",
-    "salary": 15,
-    "tier": "WHITE",
-    "avgFP": 10.4,
-    "projectedFp": 10.4,
-    "photoCode": "2055",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "1504_0304",
@@ -4122,7 +4515,10 @@
     "avgFP": 9.6,
     "projectedFp": 9.6,
     "photoCode": "1504",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "2584_0304",
@@ -4137,7 +4533,10 @@
     "avgFP": 9.9,
     "projectedFp": 9.9,
     "photoCode": "2584",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "339_0304",
@@ -4152,7 +4551,11 @@
     "avgFP": 9.6,
     "projectedFp": 9.6,
     "photoCode": "339",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX",
+      "UTA"
+    ]
   },
   {
     "id": "2205_0304",
@@ -4167,37 +4570,10 @@
     "avgFP": 9.7,
     "projectedFp": 9.7,
     "photoCode": "2205",
-    "active": true
-  },
-  {
-    "id": "2058_0304",
-    "basePlayerId": "2058",
-    "season": "0304",
-    "name": "Mark Madsen",
-    "team": "MIN",
-    "position": "",
-    "positionFull": "",
-    "salary": 14,
-    "tier": "WHITE",
-    "avgFP": 9.5,
-    "projectedFp": 9.5,
-    "photoCode": "2058",
-    "active": true
-  },
-  {
-    "id": "2552_0304",
-    "basePlayerId": "2552",
-    "season": "0304",
-    "name": "Michael Sweetney",
-    "team": "NYK",
-    "position": "",
-    "positionFull": "",
-    "salary": 14,
-    "tier": "WHITE",
-    "avgFP": 9.9,
-    "projectedFp": 9.9,
-    "photoCode": "2552",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "2054_0304",
@@ -4212,7 +4588,10 @@
     "avgFP": 9.7,
     "projectedFp": 9.7,
     "photoCode": "2054",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "2446_0304",
@@ -4227,22 +4606,10 @@
     "avgFP": 9.5,
     "projectedFp": 9.5,
     "photoCode": "2446",
-    "active": true
-  },
-  {
-    "id": "935_0304",
-    "basePlayerId": "935",
-    "season": "0304",
-    "name": "Bryon Russell",
-    "team": "LAL",
-    "position": "",
-    "positionFull": "",
-    "salary": 13,
-    "tier": "WHITE",
-    "avgFP": 8.8,
-    "projectedFp": 8.8,
-    "photoCode": "935",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "2254_0304",
@@ -4257,7 +4624,10 @@
     "avgFP": 8.7,
     "projectedFp": 8.7,
     "photoCode": "2254",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "2124_0304",
@@ -4272,22 +4642,10 @@
     "avgFP": 9.1,
     "projectedFp": 9.1,
     "photoCode": "2124",
-    "active": true
-  },
-  {
-    "id": "77_0304",
-    "basePlayerId": "77",
-    "season": "0304",
-    "name": "Doug Overton",
-    "team": "LAC",
-    "position": "",
-    "positionFull": "",
-    "salary": 13,
-    "tier": "WHITE",
-    "avgFP": 8.7,
-    "projectedFp": 8.7,
-    "photoCode": "77",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "422_0304",
@@ -4302,22 +4660,10 @@
     "avgFP": 9.2,
     "projectedFp": 9.2,
     "photoCode": "422",
-    "active": true
-  },
-  {
-    "id": "2051_0304",
-    "basePlayerId": "2051",
-    "season": "0304",
-    "name": "Donnell Harvey",
-    "team": "PHX",
-    "position": "",
-    "positionFull": "",
-    "salary": 13,
-    "tier": "WHITE",
-    "avgFP": 8.7,
-    "projectedFp": 8.7,
-    "photoCode": "2051",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "2562_0304",
@@ -4332,7 +4678,10 @@
     "avgFP": 9,
     "projectedFp": 9,
     "photoCode": "2562",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "2437_0304",
@@ -4347,7 +4696,12 @@
     "avgFP": 9,
     "projectedFp": 9,
     "photoCode": "2437",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI",
+      "TOR",
+      "WAS"
+    ]
   },
   {
     "id": "2212_0304",
@@ -4362,7 +4716,10 @@
     "avgFP": 9.1,
     "projectedFp": 9.1,
     "photoCode": "2212",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "763_0304",
@@ -4377,7 +4734,10 @@
     "avgFP": 9.1,
     "projectedFp": 9.1,
     "photoCode": "763",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "970_0304",
@@ -4392,7 +4752,10 @@
     "avgFP": 8.9,
     "projectedFp": 8.9,
     "photoCode": "970",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "2590_0304",
@@ -4407,7 +4770,10 @@
     "avgFP": 8.7,
     "projectedFp": 8.7,
     "photoCode": "2590",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1956_0304",
@@ -4422,7 +4788,10 @@
     "avgFP": 9.1,
     "projectedFp": 9.1,
     "photoCode": "1956",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "1630_0304",
@@ -4437,7 +4806,11 @@
     "avgFP": 8.7,
     "projectedFp": 8.7,
     "photoCode": "1630",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN",
+      "UTA"
+    ]
   },
   {
     "id": "2059_0304",
@@ -4452,7 +4825,10 @@
     "avgFP": 8.3,
     "projectedFp": 8.3,
     "photoCode": "2059",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "955_0304",
@@ -4467,7 +4843,10 @@
     "avgFP": 8.3,
     "projectedFp": 8.3,
     "photoCode": "955",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "911_0304",
@@ -4482,22 +4861,10 @@
     "avgFP": 8.4,
     "projectedFp": 8.4,
     "photoCode": "911",
-    "active": true
-  },
-  {
-    "id": "2421_0304",
-    "basePlayerId": "2421",
-    "season": "0304",
-    "name": "Frank Williams",
-    "team": "NYK",
-    "position": "",
-    "positionFull": "",
-    "salary": 12,
-    "tier": "WHITE",
-    "avgFP": 8.3,
-    "projectedFp": 8.3,
-    "photoCode": "2421",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "983_0304",
@@ -4512,22 +4879,11 @@
     "avgFP": 8,
     "projectedFp": 8,
     "photoCode": "983",
-    "active": true
-  },
-  {
-    "id": "2408_0304",
-    "basePlayerId": "2408",
-    "season": "0304",
-    "name": "Melvin Ely",
-    "team": "LAC",
-    "position": "",
-    "positionFull": "",
-    "salary": 12,
-    "tier": "WHITE",
-    "avgFP": 8.2,
-    "projectedFp": 8.2,
-    "photoCode": "2408",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU",
+      "NYK"
+    ]
   },
   {
     "id": "2243_0304",
@@ -4542,7 +4898,10 @@
     "avgFP": 8.3,
     "projectedFp": 8.3,
     "photoCode": "2243",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "2091_0304",
@@ -4557,7 +4916,10 @@
     "avgFP": 8.5,
     "projectedFp": 8.5,
     "photoCode": "2091",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "2040_0304",
@@ -4572,22 +4934,10 @@
     "avgFP": 8.6,
     "projectedFp": 8.6,
     "photoCode": "2040",
-    "active": true
-  },
-  {
-    "id": "2078_0304",
-    "basePlayerId": "2078",
-    "season": "0304",
-    "name": "Jason Hart",
-    "team": "SAS",
-    "position": "",
-    "positionFull": "",
-    "salary": 12,
-    "tier": "WHITE",
-    "avgFP": 8.1,
-    "projectedFp": 8.1,
-    "photoCode": "2078",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "1985_0304",
@@ -4602,22 +4952,10 @@
     "avgFP": 8.2,
     "projectedFp": 8.2,
     "photoCode": "1985",
-    "active": true
-  },
-  {
-    "id": "932_0304",
-    "basePlayerId": "932",
-    "season": "0304",
-    "name": "Oliver Miller",
-    "team": "MIN",
-    "position": "",
-    "positionFull": "",
-    "salary": 12,
-    "tier": "WHITE",
-    "avgFP": 8.1,
-    "projectedFp": 8.1,
-    "photoCode": "932",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "2599_0304",
@@ -4632,7 +4970,10 @@
     "avgFP": 8.4,
     "projectedFp": 8.4,
     "photoCode": "2599",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "349_0304",
@@ -4647,7 +4988,10 @@
     "avgFP": 8.3,
     "projectedFp": 8.3,
     "photoCode": "349",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "696_0304",
@@ -4662,7 +5006,10 @@
     "avgFP": 7.5,
     "projectedFp": 7.5,
     "photoCode": "696",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "2575_0304",
@@ -4677,7 +5024,10 @@
     "avgFP": 7.5,
     "projectedFp": 7.5,
     "photoCode": "2575",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "2594_0304",
@@ -4692,7 +5042,10 @@
     "avgFP": 7.6,
     "projectedFp": 7.6,
     "photoCode": "2594",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "2560_0304",
@@ -4707,7 +5060,10 @@
     "avgFP": 7.6,
     "projectedFp": 7.6,
     "photoCode": "2560",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "1500_0304",
@@ -4722,22 +5078,10 @@
     "avgFP": 7.7,
     "projectedFp": 7.7,
     "photoCode": "1500",
-    "active": true
-  },
-  {
-    "id": "1735_0304",
-    "basePlayerId": "1735",
-    "season": "0304",
-    "name": "Vladimir Stepania",
-    "team": "POR",
-    "position": "",
-    "positionFull": "",
-    "salary": 11,
-    "tier": "WHITE",
-    "avgFP": 7.8,
-    "projectedFp": 7.8,
-    "photoCode": "1735",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "120_0304",
@@ -4752,22 +5096,10 @@
     "avgFP": 7.6,
     "projectedFp": 7.6,
     "photoCode": "120",
-    "active": true
-  },
-  {
-    "id": "1909_0304",
-    "basePlayerId": "1909",
-    "season": "0304",
-    "name": "Scott Padgett",
-    "team": "HOU",
-    "position": "",
-    "positionFull": "",
-    "salary": 11,
-    "tier": "WHITE",
-    "avgFP": 7.4,
-    "projectedFp": 7.4,
-    "photoCode": "1909",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "2417_0304",
@@ -4782,7 +5114,10 @@
     "avgFP": 7.6,
     "projectedFp": 7.6,
     "photoCode": "2417",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "2585_0304",
@@ -4797,7 +5132,10 @@
     "avgFP": 7.7,
     "projectedFp": 7.7,
     "photoCode": "2585",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "2484_0304",
@@ -4812,7 +5150,10 @@
     "avgFP": 7.6,
     "projectedFp": 7.6,
     "photoCode": "2484",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1594_0304",
@@ -4827,22 +5168,11 @@
     "avgFP": 7.9,
     "projectedFp": 7.9,
     "photoCode": "1594",
-    "active": true
-  },
-  {
-    "id": "961_0304",
-    "basePlayerId": "961",
-    "season": "0304",
-    "name": "John Wallace",
-    "team": "MIA",
-    "position": "",
-    "positionFull": "",
-    "salary": 10,
-    "tier": "WHITE",
-    "avgFP": 6.8,
-    "projectedFp": 6.8,
-    "photoCode": "961",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR",
+      "CHI"
+    ]
   },
   {
     "id": "2427_0304",
@@ -4857,22 +5187,11 @@
     "avgFP": 7.2,
     "projectedFp": 7.2,
     "photoCode": "2427",
-    "active": true
-  },
-  {
-    "id": "2693_0304",
-    "basePlayerId": "2693",
-    "season": "0304",
-    "name": "Keith McLeod",
-    "team": "MIN",
-    "position": "",
-    "positionFull": "",
-    "salary": 10,
-    "tier": "WHITE",
-    "avgFP": 6.7,
-    "projectedFp": 6.7,
-    "photoCode": "2693",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI",
+      "TOR"
+    ]
   },
   {
     "id": "788_0304",
@@ -4887,22 +5206,10 @@
     "avgFP": 6.8,
     "projectedFp": 6.8,
     "photoCode": "788",
-    "active": true
-  },
-  {
-    "id": "2452_0304",
-    "basePlayerId": "2452",
-    "season": "0304",
-    "name": "J.R. Bremer",
-    "team": "GSW",
-    "position": "",
-    "positionFull": "",
-    "salary": 10,
-    "tier": "WHITE",
-    "avgFP": 7.2,
-    "projectedFp": 7.2,
-    "photoCode": "2452",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "2411_0304",
@@ -4917,7 +5224,10 @@
     "avgFP": 6.7,
     "projectedFp": 6.7,
     "photoCode": "2411",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "1738_0304",
@@ -4932,7 +5242,10 @@
     "avgFP": 7,
     "projectedFp": 7,
     "photoCode": "1738",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "15_0304",
@@ -4947,37 +5260,10 @@
     "avgFP": 7,
     "projectedFp": 7,
     "photoCode": "15",
-    "active": true
-  },
-  {
-    "id": "1761_0304",
-    "basePlayerId": "1761",
-    "season": "0304",
-    "name": "Greg Buckner",
-    "team": "PHI",
-    "position": "",
-    "positionFull": "",
-    "salary": 10,
-    "tier": "WHITE",
-    "avgFP": 7.1,
-    "projectedFp": 7.1,
-    "photoCode": "1761",
-    "active": true
-  },
-  {
-    "id": "348_0304",
-    "basePlayerId": "348",
-    "season": "0304",
-    "name": "Mitchell Butler",
-    "team": "WAS",
-    "position": "",
-    "positionFull": "",
-    "salary": 10,
-    "tier": "WHITE",
-    "avgFP": 7.2,
-    "projectedFp": 7.2,
-    "photoCode": "348",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "399_0304",
@@ -4992,7 +5278,11 @@
     "avgFP": 5.9,
     "projectedFp": 5.9,
     "photoCode": "399",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH",
+      "ORL"
+    ]
   },
   {
     "id": "1513_0304",
@@ -5007,7 +5297,10 @@
     "avgFP": 6.5,
     "projectedFp": 6.5,
     "photoCode": "1513",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "2222_0304",
@@ -5022,7 +5315,10 @@
     "avgFP": 6.5,
     "projectedFp": 6.5,
     "photoCode": "2222",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "2499_0304",
@@ -5037,7 +5333,10 @@
     "avgFP": 6.1,
     "projectedFp": 6.1,
     "photoCode": "2499",
-    "active": true
+    "active": true,
+    "teams": [
+      "SEA"
+    ]
   },
   {
     "id": "2574_0304",
@@ -5052,7 +5351,10 @@
     "avgFP": 6,
     "projectedFp": 6,
     "photoCode": "2574",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "2565_0304",
@@ -5067,7 +5369,10 @@
     "avgFP": 6.5,
     "projectedFp": 6.5,
     "photoCode": "2565",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "2409_0304",
@@ -5082,7 +5387,10 @@
     "avgFP": 6.3,
     "projectedFp": 6.3,
     "photoCode": "2409",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "2580_0304",
@@ -5097,22 +5405,10 @@
     "avgFP": 6.3,
     "projectedFp": 6.3,
     "photoCode": "2580",
-    "active": true
-  },
-  {
-    "id": "1043_0304",
-    "basePlayerId": "1043",
-    "season": "0304",
-    "name": "Amal McCaskill",
-    "team": "PHI",
-    "position": "",
-    "positionFull": "",
-    "salary": 8,
-    "tier": "WHITE",
-    "avgFP": 5.8,
-    "projectedFp": 5.8,
-    "photoCode": "1043",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "688_0304",
@@ -5127,7 +5423,10 @@
     "avgFP": 5.7,
     "projectedFp": 5.7,
     "photoCode": "688",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "2401_0304",
@@ -5142,7 +5441,10 @@
     "avgFP": 5.3,
     "projectedFp": 5.3,
     "photoCode": "2401",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "1908_0304",
@@ -5157,22 +5459,10 @@
     "avgFP": 5.2,
     "projectedFp": 5.2,
     "photoCode": "1908",
-    "active": true
-  },
-  {
-    "id": "1763_0304",
-    "basePlayerId": "1763",
-    "season": "0304",
-    "name": "Ryan Bowen",
-    "team": "DEN",
-    "position": "",
-    "positionFull": "",
-    "salary": 7,
-    "tier": "WHITE",
-    "avgFP": 4.6,
-    "projectedFp": 4.6,
-    "photoCode": "1763",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "2558_0304",
@@ -5187,22 +5477,10 @@
     "avgFP": 5,
     "projectedFp": 5,
     "photoCode": "2558",
-    "active": true
-  },
-  {
-    "id": "123_0304",
-    "basePlayerId": "123",
-    "season": "0304",
-    "name": "Robert Pack",
-    "team": "NJN",
-    "position": "",
-    "positionFull": "",
-    "salary": 7,
-    "tier": "WHITE",
-    "avgFP": 4.7,
-    "projectedFp": 4.7,
-    "photoCode": "123",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "1032_0304",
@@ -5217,22 +5495,10 @@
     "avgFP": 4.6,
     "projectedFp": 4.6,
     "photoCode": "1032",
-    "active": true
-  },
-  {
-    "id": "2220_0304",
-    "basePlayerId": "2220",
-    "season": "0304",
-    "name": "Brandon Armstrong",
-    "team": "NJN",
-    "position": "",
-    "positionFull": "",
-    "salary": 6,
-    "tier": "WHITE",
-    "avgFP": 4.1,
-    "projectedFp": 4.1,
-    "photoCode": "2220",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "2545_0304",
@@ -5247,7 +5513,10 @@
     "avgFP": 4.2,
     "projectedFp": 4.2,
     "photoCode": "2545",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "1762_0304",
@@ -5262,37 +5531,10 @@
     "avgFP": 4.2,
     "projectedFp": 4.2,
     "photoCode": "1762",
-    "active": true
-  },
-  {
-    "id": "2074_0304",
-    "basePlayerId": "2074",
-    "season": "0304",
-    "name": "Jabari Smith",
-    "team": "SAC",
-    "position": "",
-    "positionFull": "",
-    "salary": 6,
-    "tier": "WHITE",
-    "avgFP": 4.1,
-    "projectedFp": 4.1,
-    "photoCode": "2074",
-    "active": true
-  },
-  {
-    "id": "2424_0304",
-    "basePlayerId": "2424",
-    "season": "0304",
-    "name": "Dan Dickau",
-    "team": "POR",
-    "position": "",
-    "positionFull": "",
-    "salary": 6,
-    "tier": "WHITE",
-    "avgFP": 4.4,
-    "projectedFp": 4.4,
-    "photoCode": "2424",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "2425_0304",
@@ -5307,7 +5549,12 @@
     "avgFP": 4.3,
     "projectedFp": 4.3,
     "photoCode": "2425",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX",
+      "ORL",
+      "TOR"
+    ]
   },
   {
     "id": "2366_0304",
@@ -5322,6 +5569,9 @@
     "avgFP": 3.6,
     "projectedFp": 3.6,
     "photoCode": "2366",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   }
 ]
