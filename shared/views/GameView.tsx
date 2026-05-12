@@ -724,14 +724,17 @@ export function GameView({ adapter }: Props) {
   // or more cards. seedFp = 0 when no cards are held → identical legacy
   // behavior.
   const heldFpAtDraw = useMemo(() => {
-    const held = revealableCards.filter(c => (c as any).wasHeld);
-    if (held.length === 0) return 0;
-    const sortedBySalaryDesc = [...held].sort(
-      (a, b) => (b.salary ?? 0) - (a.salary ?? 0),
-    );
-    // Exclude the held anchor (index 0 of desc sort = highest salary)
-    return sortedBySalaryDesc
-      .slice(1)
+    // Include ALL held cards (anchor included). At REVEAL start the team FP
+    // sits at sum(held cards) and each non-held card reveal ticks it up by
+    // that card's visibleFp. When the held anchor's flip-and-rollup runs at
+    // the end via revealHeldCards, the team FP is already at the final total
+    // — no "jump on the last card." The spring at the end still fires (for
+    // the win-tier audio/visual cue) but lands at the same number, no
+    // movement. Previously this excluded the held anchor (saved its FP for
+    // the spring to jump in), which caused the visible "team FP jumps at the
+    // end" the user reported.
+    return revealableCards
+      .filter(c => (c as any).wasHeld)
       .reduce((s, c) => s + Number(c.actualFp ?? 0), 0);
   }, [revealableCards]);
   const currentBet = BASE_BET * betMultiplier;
