@@ -111,6 +111,12 @@
     "pctTrans": 22.28,
     "pctFaceTrans": 0
   },
+  "3300": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 70.87,
+    "pctFaceTrans": 15.17
+  },
   "3308": {
     "quality": "cleanCutout",
     "mode": "whiteStudio",
@@ -164,6 +170,12 @@
     "mode": "whiteStudio",
     "pctTrans": 54.56,
     "pctFaceTrans": 2.5
+  },
+  "3500": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 52.48,
+    "pctFaceTrans": 11.11
   },
   "3509": {
     "quality": "cleanCutout",
@@ -303,6 +315,12 @@
     "pctTrans": 54.4,
     "pctFaceTrans": 1.78
   },
+  "5191": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 57.8,
+    "pctFaceTrans": 0
+  },
   "5200": {
     "quality": "cleanCutout",
     "mode": "whiteStudio",
@@ -314,6 +332,12 @@
     "mode": "whiteStudio",
     "pctTrans": 22.28,
     "pctFaceTrans": 0
+  },
+  "5209": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 53.59,
+    "pctFaceTrans": 3
   },
   "5219": {
     "quality": "cleanCutout",
@@ -499,6 +523,12 @@
     "pctTrans": 22.28,
     "pctFaceTrans": 0
   },
+  "5592": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 22.28,
+    "pctFaceTrans": 0
+  },
   "5600": {
     "quality": "cleanCutout",
     "mode": "whiteStudio",
@@ -516,6 +546,12 @@
     "mode": "whiteStudio",
     "pctTrans": 51.36,
     "pctFaceTrans": 6.64
+  },
+  "5642": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 52.2,
+    "pctFaceTrans": 2.44
   },
   "5647": {
     "quality": "cleanCutout",
@@ -1003,6 +1039,12 @@
     "pctTrans": 54.9,
     "pctFaceTrans": 1.61
   },
+  "29163": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 62.59,
+    "pctFaceTrans": 9.56
+  },
   "29595": {
     "quality": "cleanCutout",
     "mode": "whiteStudio",
@@ -1098,6 +1140,12 @@
     "mode": "whiteStudio",
     "pctTrans": 46.61,
     "pctFaceTrans": 0
+  },
+  "37221": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 49.43,
+    "pctFaceTrans": 0.61
   },
   "37726": {
     "quality": "cleanCutout",
