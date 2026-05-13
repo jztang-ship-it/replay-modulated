@@ -37,6 +37,7 @@ function challengeStatsLine(count: number, winners: number, best: number | null,
 export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sport, onSendItBack, onPlayFresh }: Props) {
   const [attemptResult, setAttemptResult] = useState<AttemptResult | null>(null);
   const [submitting, setSubmitting] = useState(true);
+  const isNewUser = typeof window !== "undefined" && localStorage.getItem(`replaymod_ftue_${sport}`) !== "1";
 
   const isWinner = myScore > challengeCtx.targetScore;
 
@@ -140,6 +141,16 @@ export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sp
           }}
         >Play a Fresh Hand</button>
       </div>
+      {isNewUser && (
+        <button
+          onClick={onPlayFresh}
+          style={{
+            marginTop: 24, background: "none", border: "none", padding: 0,
+            color: "rgba(255,255,255,0.35)", fontSize: 13, cursor: "pointer",
+            textDecoration: "underline", textDecorationColor: "rgba(255,255,255,0.2)",
+          }}
+        >New to ReplayMod? See how it works →</button>
+      )}
     </div>
   );
 }

@@ -480,7 +480,9 @@ export function GameView({ adapter, challengeCtx }: Props) {
   }, [user, isAnonymous, bellOpen]);
 
   const [gameError, setGameError] = useState<string | null>(null);
-  const { isFTUE, completeFTUE } = useFTUE(sportKey);
+  const { isFTUE: isFTUERaw, completeFTUE } = useFTUE(sportKey);
+  // Challenge acceptors bypass FTUE entirely — drop straight into the deal.
+  const isFTUE = isFTUERaw && !challengeCtx;
   const isFTUERef = useRef(isFTUE);
   useEffect(() => { isFTUERef.current = isFTUE; }, [isFTUE]);
   const coachDismissRef = useRef<(() => void) | null>(null);
