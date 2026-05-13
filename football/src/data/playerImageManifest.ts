@@ -56,8 +56,12 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "3090": { apiFootballId: 624, local: true, processed: true },
   // Hugo Lloris (France)
   "3099": { apiFootballId: 159, local: true, processed: true },
+  // André-Frank Zambo Anguissa (Cameroon)
+  "3141": { apiFootballId: 3406, local: true, processed: true },
   // Thomas Meunier (Belgium)
   "3176": { apiFootballId: 264, local: true, processed: true },
+  // Bernardo Mota Veiga de Carvalho e Silva (Portugal)
+  "3193": { apiFootballId: 636, local: true, processed: true },
   // Wahbi Khazri (Tunisia)
   "3196": { apiFootballId: 22102, local: true, processed: true },
   // Kyle Walker (England)
@@ -220,6 +224,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "5603": { apiFootballId: 2817, local: true, processed: true },
   // Dries Mertens (Belgium)
   "5630": { apiFootballId: 332, local: true, processed: true },
+  // Yannick Ferreira Carrasco (Belgium)
+  "5633": { apiFootballId: 2923, local: true, processed: true },
   // Axel Witsel (Belgium)
   "5642": { apiFootballId: 20, local: true, processed: true },
   // Ali Maâloul (Tunisia)
@@ -274,6 +280,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "7459": { apiFootballId: 31386, local: true, processed: true },
   // Silvan Widmer (Switzerland)
   "7796": { apiFootballId: 48378, local: true, processed: true },
+  // Mason Mount (England)
+  "7843": { apiFootballId: 19220, local: true, processed: true },
   // André Onana (Cameroon)
   "8064": { apiFootballId: 526, local: true, processed: true },
   // Frenkie de Jong (Netherlands)
@@ -324,6 +332,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "12365": { apiFootballId: 509, local: true, processed: true },
   // Famara Diedhiou (Senegal)
   "13314": { apiFootballId: 19278, local: true, processed: true },
+  // Éder Gabriel Militão (Brazil)
+  "13620": { apiFootballId: 372, local: true, processed: true },
   // Noussair Mazraoui (Morocco)
   "15890": { apiFootballId: 545, local: true, processed: true },
   // Miloš Degenek (Australia)
@@ -366,6 +376,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "22293": { apiFootballId: 20079, local: true, processed: true },
   // Lucas Tolentino Coelho de Lima (Brazil)
   "22600": { apiFootballId: 303263, local: true, processed: true },
+  // Sadegh Moharrami (Iran)
+  "23538": { apiFootballId: 1311, local: true, processed: true },
   // Youssef Msakni (Tunisia)
   "23910": { apiFootballId: 2964, local: true, processed: true },
   // Tajon Buchanan (Canada)
@@ -414,6 +426,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "33495": { apiFootballId: 7038, local: true, processed: true },
   // Nathaniel Atkinson (Australia)
   "33572": { apiFootballId: 6908, local: true, processed: true },
+  // Tariq Lamptey (Ghana)
+  "33602": { apiFootballId: 138815, local: true, processed: true },
   // Josip Šutalo (Croatia)
   "37148": { apiFootballId: 14701, local: true, processed: true },
   // Ao Tanaka (Japan)
