@@ -474,6 +474,7 @@ export function GameView({ adapter }: Props) {
   const isFTUERef = useRef(isFTUE);
   useEffect(() => { isFTUERef.current = isFTUE; }, [isFTUE]);
   const coachDismissRef = useRef<(() => void) | null>(null);
+  const initialRosterRef = useRef<import("@shared/types/index").GeneratedCard[]>([]);
   /** Legend icon gold-filled when pre-game msg is active OR daily bonus unseen */
   const [legendGold, setLegendGold] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -1245,6 +1246,7 @@ export function GameView({ adapter }: Props) {
       if (balance < currentBet) { alert("Insufficient balance!"); return; }
       resetReveal();
       resetAllOverlays();
+      initialRosterRef.current = [];
       completedCardsRef.current = new Set();
       setDisplayTier("BUST");
       setTierResultPhase(1);
@@ -1289,6 +1291,7 @@ export function GameView({ adapter }: Props) {
         return;
       }
       const nextRoster = (res?.roster ?? res?.cards ?? []) as PlayerCard[];
+      initialRosterRef.current = nextRoster as import("@shared/types/index").GeneratedCard[];
       if (!nextRoster.length) {
         setGameError("Couldn't build a roster. Tap to try again.");
         setGameState("IDLE");
