@@ -233,6 +233,83 @@ export class SportAdapter {
   }
 
   clamp(value: number, min: number, max: number): number { return Math.max(min, Math.min(max, value)); }
+
+  // ── Challenge / share methods ────────────────────────────────────────────
+
+  serializeRoster(cards: import("../types/index").GeneratedCard[]): Record<string, unknown> {
+    return {
+      v: 1,
+      sport: this.sportKey,
+      cards: cards.map(c => ({
+        id: c.id,
+        basePlayerId: c.basePlayerId,
+        personKey: c.personKey,
+        cardId: c.cardId,
+        name: c.name,
+        team: c.team,
+        season: c.season,
+        position: c.position,
+        photoCode: (c as any).photoCode ?? null,
+        salary: c.salary,
+        tier: c.tier,
+        slotIndex: (c as any).slotIndex ?? 0,
+        projectedFp: c.projectedFp,
+      })),
+    };
+  }
+
+  deserializeRoster(snapshot: Record<string, unknown>): import("../types/index").GeneratedCard[] {
+    const cards = (snapshot.cards as any[]) ?? [];
+    return cards.map((c: any, i: number) => ({
+      id: c.id ?? c.basePlayerId,
+      basePlayerId: c.basePlayerId,
+      personKey: c.personKey ?? c.basePlayerId,
+      cardId: c.cardId ?? c.basePlayerId,
+      name: c.name,
+      team: c.team,
+      season: c.season,
+      position: c.position,
+      photoCode: c.photoCode ?? undefined,
+      salary: Number(c.salary),
+      tier: c.tier,
+      slotIndex: c.slotIndex ?? i,
+      projectedFp: Number(c.projectedFp ?? 0),
+      actualFp: 0,
+      fpDelta: 0,
+      statLine: {},
+      gameInfo: { date: "", opponent: "" },
+      achievements: [],
+      wasHeld: false,
+    }));
+  }
+
+  validateRosterSnapshot(snapshot: Record<string, unknown>): boolean {
+    if (!snapshot || typeof snapshot !== "object") return false;
+    if ((snapshot as any).v !== 1) return false;
+    const cards = (snapshot as any).cards;
+    if (!Array.isArray(cards) || cards.length < 1) return false;
+    return cards.every((c: any) => c.basePlayerId && c.name && c.tier && c.salary !== undefined);
+  }
+
+  getComparisonValue(result: import("./challengeTypes").HandResult): number {
+    return result.totalFp;
+  }
+
+  formatComparisonValue(value: number): string {
+    return `${value.toFixed(1)} FP`;
+  }
+
+  getShareCardConfig(): import("./challengeTypes").ShareCardConfig {
+    return {
+      sport: this.sportKey,
+      rosterSize: this.rosterSize,
+      cardLayout: "3+2",
+      statLabel: () => "",
+      tierAccentColor: () => "#7c8aa3",
+      tierLabel: (t) => t,
+      tierBgColor: () => "rgba(0,0,0,0.2)",
+    };
+  }
 }
 
 export default SportAdapter;
