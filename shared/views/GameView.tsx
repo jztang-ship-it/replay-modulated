@@ -73,6 +73,7 @@ import {
 import { GameBar as SharedGameBar, type CelebrationData } from "@shared/components/GameBar";
 import { featureFlags } from "@shared/featureFlags";
 import { selectCommentary } from "@shared/commentary/selectCommentary";
+import { evaluateTrigger } from "@shared/utils/triggerEvaluation";
 import { detectTopGame } from "@shared/data/recordDetector";
 import { selectStar } from "@shared/commentary/storySelector";
 import { useGameAnalytics } from "@shared/analytics/useGameAnalytics";
@@ -120,6 +121,9 @@ const BellSheet = lazy(() =>
 );
 const FeedbackModal = lazy(() =>
   import("@shared/inbox/FeedbackModal").then(m => ({ default: m.FeedbackModal }))
+);
+const ChallengeSharePrompt = lazy(() =>
+  import("@shared/components/ChallengeSharePrompt").then(m => ({ default: m.ChallengeSharePrompt }))
 );
 import { chadMessage } from "@shared/commentary/chad";
 import { useAuth } from "@shared/auth/useAuth";
@@ -450,6 +454,7 @@ export function GameView({ adapter }: Props) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [bigWinFired, setBigWinFired] = useState(false);
+  const [challengeTrigger, setChallengeTrigger] = useState<import("@shared/utils/triggerEvaluation").TriggerResult | null>(null);
   const sessionCount = useRef(parseInt(localStorage.getItem("rm_session_count") ?? "0", 10));
 
   useEffect(() => {
@@ -1514,6 +1519,18 @@ export function GameView({ adapter }: Props) {
     }
   }, [performanceTagMap, gameState, isFTUE]); // eslint-disable-line
 
+  // Evaluate challenge trigger on RESULTS entry (challenge mode guard added in Task 10)
+  useEffect(() => {
+    if (gameState !== "RESULTS") return;
+    const resolvedRoster = rosterRef.current as import("@shared/types/index").GeneratedCard[];
+    const badges = resolvedRoster.flatMap((c: any) => c.achievements ?? []);
+    const fp = resolvedRoster.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0);
+    const tier = winTier ?? "BUST";
+    const result = evaluateTrigger({ roster: resolvedRoster, totalFp: fp, winTier: tier, badges, winTiersMap: adapter.winTiersMap });
+    setChallengeTrigger(result);
+    return () => setChallengeTrigger(null);
+  }, [gameState]); // eslint-disable-line
+
   // ── JSX ───────────────────────────────────────────────────────────
   // NOTE: this useMemo MUST stay above the early returns below. React's
   // rules-of-hooks require the same hook-call sequence on every render —
@@ -2315,6 +2332,26 @@ export function GameView({ adapter }: Props) {
           />
         );
       })()}
+
+      {/* ChallengeSharePrompt — fires at RESULTS/WIN_CELEBRATION when a
+          trigger is evaluated and the user is not in FTUE. Challenge mode
+          guard (challengeCtx check) added in Task 10. */}
+      {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && challengeTrigger && !isFTUE && (
+        <Suspense fallback={null}>
+          <ChallengeSharePrompt
+            sport={sportKey}
+            season={(rosterRef.current[0] as any)?.season ?? ""}
+            totalFp={rosterRef.current.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0)}
+            winTier={winTier ?? "BUST"}
+            roster={rosterRef.current as import("@shared/types/index").GeneratedCard[]}
+            initialRoster={initialRosterRef.current}
+            badges={rosterRef.current.flatMap((c: any) => c.achievements ?? [])}
+            winTiersMap={adapter.winTiersMap}
+            serializeRoster={(cards) => sportAdapter.serializeRoster(cards)}
+            triggerResult={challengeTrigger}
+          />
+        </Suspense>
+      )}
 
     </div>
   );
