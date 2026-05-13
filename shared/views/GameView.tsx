@@ -1540,12 +1540,14 @@ export function GameView({ adapter, challengeCtx }: Props) {
   }, [performanceTagMap, gameState, isFTUE]); // eslint-disable-line
 
   // Evaluate challenge trigger on RESULTS entry (challenge mode guard added in Task 10)
+  // winTier is reset to null before setGameState("RESULTS") in onWinCelebrationComplete,
+  // so we compute the tier directly from roster FP rather than relying on the winTier state.
   useEffect(() => {
     if (gameState !== "RESULTS" || !!challengeCtx) return;
     const resolvedRoster = rosterRef.current as import("@shared/types/index").GeneratedCard[];
     const badges = resolvedRoster.flatMap((c: any) => c.achievements ?? []);
     const fp = resolvedRoster.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0);
-    const tier = winTier ?? "BUST";
+    const tier = calculateWinTier(fp) ?? "BUST";
     const result = evaluateTrigger({ roster: resolvedRoster, totalFp: fp, winTier: tier, badges, winTiersMap: adapter.winTiersMap });
     setChallengeTrigger(result);
     return () => setChallengeTrigger(null);
