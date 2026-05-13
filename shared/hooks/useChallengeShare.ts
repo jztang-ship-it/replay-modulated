@@ -4,6 +4,7 @@ import { evaluateTrigger, type TriggerResult } from "@shared/utils/triggerEvalua
 import { track } from "@shared/analytics/analytics";
 import type { GeneratedCard } from "@shared/types/index";
 import type { WinTierMap } from "@shared/utils/payoutLogic";
+import { supabase } from "@shared/lib/supabase";
 
 export interface ChallengeShareState {
   triggerResult: TriggerResult | null;
@@ -60,6 +61,10 @@ export function useChallengeShare(sportKey: string) {
       badges: args.badges, winTiersMap: args.winTiersMap,
     });
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const authHeader = session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : {};
       const body = {
         hand_id: args.handId,
         sport: args.sport,
@@ -72,7 +77,7 @@ export function useChallengeShare(sportKey: string) {
       };
       const resp = await fetch("/api/challenge/create", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeader },
         body: JSON.stringify(body),
       });
       if (!resp.ok) throw new Error("Create failed");

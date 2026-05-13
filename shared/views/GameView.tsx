@@ -2381,6 +2381,7 @@ export function GameView({ adapter, challengeCtx }: Props) {
             winTiersMap={adapter.winTiersMap}
             serializeRoster={(cards) => sportAdapter.serializeRoster(cards)}
             triggerResult={challengeTrigger}
+            onDismiss={() => setChallengeTrigger(null)}
           />
         </Suspense>
       )}
