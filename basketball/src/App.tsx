@@ -11,6 +11,9 @@ import { ProfileScreen } from "@shared/components/ProfileScreen";
 import { getPlayerUid } from "@shared/utils/playerIdentity";
 import { AchievementWall } from "@shared/components/AchievementWall";
 import { useAchievements } from "@shared/hooks/useAchievements";
+import { ChallengeLandingScreen } from "@shared/components/ChallengeLandingScreen";
+import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
+import { sportAdapter } from "./adapters/SportAdapter";
 
 const SPORT = "basketball";
 const SKIP_LANDING_KEY = "replay_skip_landing_basketball";
@@ -24,6 +27,12 @@ function getProfileUserId(): string | null {
 }
 
 const FTUE_INTRO_FOLLOWUP_KEY = "replaymod_ftue_intro_followup_seen_basketball";
+
+function getChallengeId(): string | null {
+  if (typeof window === "undefined") return null;
+  const match = window.location.pathname.match(/\/basketball\/challenge\/([0-9a-f-]{36})/);
+  return match ? match[1] : null;
+}
 
 function AppInner() {
   const { isFTUE } = useFTUE(SPORT);
@@ -49,6 +58,9 @@ function AppInner() {
   });
   const { user, uid, isAuthenticated, isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
   const profileUserId = getProfileUserId();
+  const challengeIdFromUrl = getChallengeId();
+  const [challengeCtx, setChallengeCtx] = useState<ChallengeCtx | null>(null);
+  const [showChallengeLanding, setShowChallengeLanding] = useState(!!challengeIdFromUrl);
   const { unlockedIds: ownUnlockedIds } = useAchievements();
   const skipFTUE = isAuthenticated && !isAnonymous;
   const showDebug = typeof window !== "undefined" &&
@@ -120,8 +132,8 @@ function AppInner() {
           onShowSignIn={() => setShowSignIn(true)}
         />
       ) : (
-        <DailySeasonReelGate bypass={isFTUE} showFtueIntroFollowup={showFtueIntroFollowup}>
-          <GameView />
+        <DailySeasonReelGate bypass={isFTUE || !!challengeCtx} showFtueIntroFollowup={showFtueIntroFollowup}>
+          <GameView challengeCtx={challengeCtx ?? undefined} />
         </DailySeasonReelGate>
       )}
       {showSignIn && (
@@ -143,6 +155,21 @@ function AppInner() {
           isAnonymous={isAnonymous}
           onSaveAccount={() => { setShowProfile(false); setShowSignIn(true); }}
           onOpenFeedback={() => { window.location.href = "mailto:wayzztoai@gmail.com"; }}
+        />
+      )}
+      {showChallengeLanding && challengeIdFromUrl && (
+        <ChallengeLandingScreen
+          challengeId={challengeIdFromUrl}
+          sport={SPORT}
+          deserializeRoster={(snap) => sportAdapter.deserializeRoster(snap)}
+          validateRosterSnapshot={(snap) => sportAdapter.validateRosterSnapshot(snap)}
+          onAccept={(ctx) => {
+            setChallengeCtx(ctx);
+            setShowChallengeLanding(false);
+            try { localStorage.setItem(SKIP_LANDING_KEY, "1"); } catch {}
+            setView("game");
+          }}
+          onClose={() => { setShowChallengeLanding(false); window.history.pushState({}, "", "/basketball/"); }}
         />
       )}
       {/* Other user's achievement wall — rendered when visiting /basketball/profile/:userId */}

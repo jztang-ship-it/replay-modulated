@@ -304,6 +304,7 @@ function BonusPoolPill({ betAmount, betNonce, onAmountChange, sportKey, competit
 
 interface Props {
   adapter: GameAdapter;
+  challengeCtx?: import("@shared/adapters/challengeTypes").ChallengeCtx;
 }
 
 function createPlaceholders(rosterSize: number): PlayerCard[] {
@@ -327,7 +328,7 @@ function createPlaceholders(rosterSize: number): PlayerCard[] {
   }));
 }
 
-export function GameView({ adapter }: Props) {
+export function GameView({ adapter, challengeCtx }: Props) {
   const {
     sportKey,
     sportAdapter,
@@ -1285,7 +1286,11 @@ export function GameView({ adapter }: Props) {
       })();
       let res: any;
       try {
-        res = ftueStillActive ? await ftueDealRoster() : await dealInitialRoster();
+        if (challengeCtx && !ftueStillActive) {
+          res = { roster: challengeCtx.initialRoster };
+        } else {
+          res = ftueStillActive ? await ftueDealRoster() : await dealInitialRoster();
+        }
       } catch (e) {
         // Surface the real error to the console — the on-screen banner is
         // intentionally generic, but the underlying message (server 4xx, auth
@@ -1521,7 +1526,7 @@ export function GameView({ adapter }: Props) {
 
   // Evaluate challenge trigger on RESULTS entry (challenge mode guard added in Task 10)
   useEffect(() => {
-    if (gameState !== "RESULTS") return;
+    if (gameState !== "RESULTS" || !!challengeCtx) return;
     const resolvedRoster = rosterRef.current as import("@shared/types/index").GeneratedCard[];
     const badges = resolvedRoster.flatMap((c: any) => c.achievements ?? []);
     const fp = resolvedRoster.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0);

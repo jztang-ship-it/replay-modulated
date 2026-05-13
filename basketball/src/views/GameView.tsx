@@ -111,7 +111,7 @@ function tierFromSalary(salary: number): string {
   return s >= 73 ? "RED" : s >= 58 ? "ORANGE" : s >= 44 ? "PURPLE" : s >= 30 ? "BLUE" : s >= 23 ? "GREEN" : "WHITE";
 }
 
-export default function GameView() {
+export default function GameView({ challengeCtx }: { challengeCtx?: import("@shared/adapters/challengeTypes").ChallengeCtx }) {
   // Track active season + FTUE state so the adapter rebuilds with the right
   // win-tier thresholds when:
   //   - the daily reel swaps seasons (setActiveSeason → active-season-change)
@@ -173,5 +173,5 @@ export default function GameView() {
     SlateChipComponent: isSlateV2Enabled("basketball") ? BasketballSlateChip : undefined,
   }), [activeSeason, ftueTick]);
 
-  return <SharedGameView adapter={adapter} />;
+  return <SharedGameView adapter={adapter} challengeCtx={challengeCtx} />;
 }
