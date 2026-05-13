@@ -9,9 +9,19 @@ import { useAuth } from "@shared/auth/useAuth";
 import { RegisterModal } from "@shared/components/RegisterModal";
 import { ProfileScreen } from "@shared/components/ProfileScreen";
 import { getPlayerUid } from "@shared/utils/playerIdentity";
+import { AchievementWall } from "@shared/components/AchievementWall";
+import { useAchievements } from "@shared/hooks/useAchievements";
 
 const SPORT = "basketball";
 const SKIP_LANDING_KEY = "replay_skip_landing_basketball";
+
+/** Extract target userId from /basketball/profile/:userId path.
+ *  Returns null for all other paths. */
+function getProfileUserId(): string | null {
+  if (typeof window === "undefined") return null;
+  const match = window.location.pathname.match(/\/basketball\/profile\/([0-9a-f-]{36})/);
+  return match ? match[1] : null;
+}
 
 const FTUE_INTRO_FOLLOWUP_KEY = "replaymod_ftue_intro_followup_seen_basketball";
 
@@ -38,6 +48,8 @@ function AppInner() {
     return false;
   });
   const { user, uid, isAuthenticated, isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
+  const profileUserId = getProfileUserId();
+  const { unlockedIds: ownUnlockedIds } = useAchievements();
   const skipFTUE = isAuthenticated && !isAnonymous;
   const showDebug = typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("debug") === "1";
@@ -132,6 +144,45 @@ function AppInner() {
           onSaveAccount={() => { setShowProfile(false); setShowSignIn(true); }}
           onOpenFeedback={() => { window.location.href = "mailto:wayzztoai@gmail.com"; }}
         />
+      )}
+      {/* Other user's achievement wall — rendered when visiting /basketball/profile/:userId */}
+      {profileUserId && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9998,
+          background: "linear-gradient(180deg, #070A12 0%, #0A1020 60%, #070A12 100%)",
+          color: "#EAF0FF",
+          fontFamily: "'Inter', system-ui, sans-serif",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}>
+          {/* Back button */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            padding: "14px 16px 10px",
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+          }}>
+            <button
+              onClick={() => window.history.back()}
+              style={{
+                background: "rgba(255,255,255,0.07)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: 8,
+                padding: "5px 10px",
+                color: "rgba(255,255,255,0.5)",
+                fontSize: 13,
+                cursor: "pointer",
+              }}
+            >← Back</button>
+          </div>
+          <AchievementWall
+            sport={SPORT}
+            isSelf={false}
+            targetUserId={profileUserId}
+            ownUnlockedIds={ownUnlockedIds}
+          />
+        </div>
       )}
     </>
   );
