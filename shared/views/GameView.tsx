@@ -125,6 +125,9 @@ const FeedbackModal = lazy(() =>
 const ChallengeSharePrompt = lazy(() =>
   import("@shared/components/ChallengeSharePrompt").then(m => ({ default: m.ChallengeSharePrompt }))
 );
+const ChallengeComparisonScreen = lazy(() =>
+  import("@shared/components/ChallengeComparisonScreen").then(m => ({ default: m.ChallengeComparisonScreen }))
+);
 import { chadMessage } from "@shared/commentary/chad";
 import { useAuth } from "@shared/auth/useAuth";
 import { listMessages } from "@shared/inbox/inbox";
@@ -456,6 +459,7 @@ export function GameView({ adapter, challengeCtx }: Props) {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [bigWinFired, setBigWinFired] = useState(false);
   const [challengeTrigger, setChallengeTrigger] = useState<import("@shared/utils/triggerEvaluation").TriggerResult | null>(null);
+  const [showChallengeComparison, setShowChallengeComparison] = useState(false);
   const sessionCount = useRef(parseInt(localStorage.getItem("rm_session_count") ?? "0", 10));
 
   useEffect(() => {
@@ -670,6 +674,17 @@ export function GameView({ adapter, challengeCtx }: Props) {
     if (handCount < 5) return;
     return tryOpenAuthModal("hand_5", 3500);
   }, [handCount, isAnonymous, isFTUE, gameState, tryOpenAuthModal]);
+
+  // Challenge send-back: hide comparison screen, re-arm challenge trigger so
+  // the ChallengeSharePrompt fires with the same hand result for sharing back.
+  const handleSendItBack = useCallback(() => {
+    setShowChallengeComparison(false);
+    const resolvedRoster = rosterRef.current as import("@shared/types/index").GeneratedCard[];
+    const fp = resolvedRoster.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0);
+    const badges = resolvedRoster.flatMap((c: any) => c.achievements ?? []);
+    const result = evaluateTrigger({ roster: resolvedRoster, totalFp: fp, winTier: winTier ?? "BUST", badges, winTiersMap: adapter.winTiersMap });
+    setChallengeTrigger(result);
+  }, [adapter.winTiersMap, winTier]); // eslint-disable-line
 
   const pendingCelebration = useRef<{ totalFp: number } | null>(null);
   /** FTUE: roster sum can read 0 briefly in RESULTS — keep last resolved hand FP for TierGauge */
@@ -1536,6 +1551,12 @@ export function GameView({ adapter, challengeCtx }: Props) {
     return () => setChallengeTrigger(null);
   }, [gameState]); // eslint-disable-line
 
+  // Show ChallengeComparisonScreen when a challenge hand reaches RESULTS
+  useEffect(() => {
+    if (gameState !== "RESULTS" || !challengeCtx) return;
+    setShowChallengeComparison(true);
+  }, [gameState]); // eslint-disable-line
+
   // ── JSX ───────────────────────────────────────────────────────────
   // NOTE: this useMemo MUST stay above the early returns below. React's
   // rules-of-hooks require the same hook-call sequence on every render —
@@ -2354,6 +2375,23 @@ export function GameView({ adapter, challengeCtx }: Props) {
             winTiersMap={adapter.winTiersMap}
             serializeRoster={(cards) => sportAdapter.serializeRoster(cards)}
             triggerResult={challengeTrigger}
+          />
+        </Suspense>
+      )}
+
+      {/* ChallengeComparisonScreen — full-screen overlay shown at RESULTS
+          when the user is playing a received challenge (challengeCtx present).
+          Submits the attempt, shows score vs. challenger, and offers
+          Send It Back or Play Fresh. */}
+      {showChallengeComparison && challengeCtx && (
+        <Suspense fallback={null}>
+          <ChallengeComparisonScreen
+            challengeCtx={challengeCtx}
+            myScore={rosterRef.current.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0)}
+            myWinTier={winTier ?? "BUST"}
+            sport={sportKey}
+            onSendItBack={handleSendItBack}
+            onPlayFresh={() => { setShowChallengeComparison(false); handleButtonClick(); }}
           />
         </Suspense>
       )}
