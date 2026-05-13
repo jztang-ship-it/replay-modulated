@@ -1503,7 +1503,9 @@ export function GameView({ adapter, challengeCtx }: Props) {
   // through their own revealHeldCards flow after the unheld sequence
   // completes (handled inside the reveal hook).
   function autoFlipAll() {
-    const unheld = (revealableCards as any[]).filter(c => !c.wasHeld);
+    const unheld = (revealableCards as any[])
+      .filter(c => !c.wasHeld)
+      .sort((a, b) => (Number(a.salary ?? 0)) - (Number(b.salary ?? 0)));
     for (const c of unheld) {
       if (!tappedCardIds.has(c.cardId)) {
         tapRevealCard(c.cardId);
