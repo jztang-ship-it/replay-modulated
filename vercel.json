@@ -3,9 +3,9 @@
   "outputDirectory": "dist",
   "installCommand": "echo 'install handled by build-vercel.sh'",
   "rewrites": [
-    { "source": "/basketball/:path*", "destination": "/basketball/index.html" },
-    { "source": "/baseball/:path*", "destination": "/baseball/index.html" },
-    { "source": "/football/:path*", "destination": "/football/index.html" },
-    { "source": "/((?!api/|basketball/|baseball/|football/).*)", "destination": "/index.html" }
+    { "source": "/basketball/((?!assets/|audio/|data/|headshots/).*)", "destination": "/basketball/index.html" },
+    { "source": "/baseball/((?!assets/|audio/|data/|headshots/).*)",   "destination": "/baseball/index.html" },
+    { "source": "/football/((?!assets/|audio/|data/|headshots/).*)",   "destination": "/football/index.html" },
+    { "source": "/((?!api/|basketball/|baseball/|football/|assets/).*)", "destination": "/index.html" }
   ]
 }

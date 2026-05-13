@@ -120,23 +120,27 @@ function BadgeRow({ badges }: { badges: Array<{ icon: string; label: string; fp:
   // doesn't shift between cards-with-badges and cards-without. Reserved
   // height matches the populated layout (icons + pill).
   const totalBonus = badges?.reduce((s, b) => s + (b.fp ?? 0), 0) ?? 0;
+  const count = badges?.length ?? 0;
+  // Shrink icons when the row is busy so 4-8 badges + total pill fit on
+  // narrow mobile widths without wrapping or clipping.
+  const iconFp = count > 5 ? 10 : count > 3 ? 11 : 12;
   return (
-    <div style={{ minHeight: 18, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, flexWrap: "wrap", marginTop: 4 }}>
+    <div style={{ minHeight: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 3, flexWrap: "wrap", marginTop: 4 }}>
       {(badges ?? []).slice(0, 8).map((b, i) => (
         <span
           key={b.id ?? b.label ?? i}
           title={`${b.label} (${b.fp > 0 ? "+" : ""}${b.fp})`}
-          style={{ fontSize: 12, lineHeight: 1 }}
+          style={{ fontSize: iconFp, lineHeight: 1 }}
         >
           {b.icon}
         </span>
       ))}
       {totalBonus !== 0 && (
         <span style={{
-          fontSize: 11, fontWeight: 900,
+          fontSize: 10, fontWeight: 900,
           color: totalBonus > 0 ? "#FFD700" : "#FF6B6B",
           background: "rgba(255,255,255,0.10)",
-          borderRadius: 4, padding: "1px 5px",
+          borderRadius: 4, padding: "1px 4px",
           letterSpacing: 0.3, lineHeight: 1,
         }}>
           {totalBonus > 0 ? "+" : ""}{totalBonus} FP
@@ -211,13 +215,13 @@ function AchievementBack({
   })();
 
   // Number font scales down as more achievements stack into one headline.
-  // Reduced from 32/44/64 → 28/40/56 — single-stat hero was getting visually
-  // close to the side gutters; the smaller scale keeps comfortable margin.
+  // Tightened 28/40/56 → 24/34/48 — gives comfortable margin even with
+  // 2-digit values and decimal-rich displays on narrow mobile widths.
   const numFontStyle: React.CSSProperties = featured.length >= 3
-    ? { fontSize: 28, letterSpacing: -0.5 }
+    ? { fontSize: 24, letterSpacing: -0.5 }
     : featured.length === 2
-      ? { fontSize: 40, letterSpacing: -0.5 }
-      : { fontSize: 56, letterSpacing: -1 };
+      ? { fontSize: 34, letterSpacing: -0.5 }
+      : { fontSize: 48, letterSpacing: -1 };
 
   const badgesData: Array<{ icon: string; label: string; fp: number; id?: string }> =
     Array.isArray((card as any).achievements) ? (card as any).achievements.filter(Boolean) : [];
@@ -342,7 +346,7 @@ function BackBStats({ card, topGameResult }: { card: PlayerCard; topGameTier?: T
       ) : (
         <>
           <div style={S.achWrap}>
-            <div style={{ ...S.achHeadline, fontSize: 48, letterSpacing: -1 }}>
+            <div style={{ ...S.achHeadline, fontSize: 40, letterSpacing: -0.8 }}>
               <span style={S.achHeadlineNum}>{round1(actual)}</span>
               <span style={S.achHeadlineUnit}> FP</span>
             </div>
@@ -373,7 +377,7 @@ const S: Record<string, React.CSSProperties> = {
   achHeadlineUnit: { fontWeight: 900, opacity: 0.78, fontSize: "0.45em", letterSpacing: 1.4, marginLeft: 1 },
   achHeadlineSep: { fontWeight: 800, opacity: 0.45, fontSize: "0.7em" },
   achContext: { fontSize: 10, fontWeight: 900, letterSpacing: 1.2, color: "#FFD27A", marginTop: 10, textAlign: "center" },
-  achSupportRow: { fontSize: 9, fontWeight: 700, letterSpacing: 0.6, color: "rgba(255,255,255,0.55)", textAlign: "center", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
+  achSupportRow: { fontSize: 8, fontWeight: 700, letterSpacing: 0.4, color: "rgba(255,255,255,0.55)", textAlign: "center", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
 };
 
 // ── Public component ───────────────────────────────────────────────────────
@@ -436,6 +440,7 @@ function AthleteCardImpl(props: Props) {
           {...p}
           topGameTier={topGameTier ?? null}
           displayPosition={sportAdapter.displayPosition((p.card as any)?.position)}
+          hideNotchSeason
           renderHero={(heroProps: CardFrontHeroProps) => (
             <BasketballHero {...heroProps} />
           )}

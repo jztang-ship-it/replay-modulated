@@ -723,17 +723,12 @@ export function GameView({ adapter }: Props) {
   // gauge bar from rebounding to 0 at REVEAL start when the user held one
   // or more cards. seedFp = 0 when no cards are held → identical legacy
   // behavior.
-  const heldFpAtDraw = useMemo(() => {
-    const held = revealableCards.filter(c => (c as any).wasHeld);
-    if (held.length === 0) return 0;
-    const sortedBySalaryDesc = [...held].sort(
-      (a, b) => (b.salary ?? 0) - (a.salary ?? 0),
-    );
-    // Exclude the held anchor (index 0 of desc sort = highest salary)
-    return sortedBySalaryDesc
-      .slice(1)
-      .reduce((s, c) => s + Number(c.actualFp ?? 0), 0);
-  }, [revealableCards]);
+  // Team FP starts at 0 every REVEAL. Held cards no longer "pre-load" the
+  // bar — they tick up via their own visibleFp animation in revealHeldCards
+  // just like non-held cards. Combined with removing frozenBarFpRef freeze
+  // (see handleCardRevealStart), this gives the per-card rollup feel the
+  // user asked for, regardless of auto / tap / mixed reveal path.
+  const heldFpAtDraw = 0;
   const currentBet = BASE_BET * betMultiplier;
   const gameAnalytics = useGameAnalytics(sportKey);
 
@@ -800,9 +795,14 @@ export function GameView({ adapter }: Props) {
     const trueAnchorId = heldCards.length > 0
       ? ((heldCards[heldCards.length - 1] as any).cardId ?? (heldCards[heldCards.length - 1] as any).basePlayerId)
       : anchorCardId;
-    if (cId === trueAnchorId) {
-      frozenBarFpRef.current = latestGaugeFpRef.current;
-    }
+    // Bar no longer freezes when the anchor starts revealing — it ticks up
+    // continuously with each card's visibleFp so the user sees per-card
+    // rollup all the way through. The end-of-reveal spring still fires (its
+    // start = end = total, so it's a no-op visually but the win-tier audio
+    // / glow / stamp still play). Setting frozenBarFpRef here would force
+    // the displayed FP to stop ticking during the anchor's flip animation,
+    // creating the "jumps in the anchor's FP at the end" feel.
+    void trueAnchorId; // referenced for future spring tuning
     const tier = tierArg?.toUpperCase() ?? "WHITE";
     const st = shakeType ?? null;
     const base = tier === "ORANGE" ? 900
@@ -1069,6 +1069,7 @@ export function GameView({ adapter }: Props) {
         projectedFp: Number((c as any).projectedFp ?? 0) || undefined,
         achievements: ((c as any).achievements ?? []) as Array<{ id: string; label: string; icon?: string; fp?: number }>,
         opponent: String((c as any).gameInfo?.opponent ?? ""),
+        teams: Array.isArray((c as any).teams) ? (c as any).teams.map((t: any) => String(t)) : undefined,
         gameDate: String((c as any).gameInfo?.date ?? ""),
         statLine: ((c as any).statLine ?? {}) as Record<string, any>,
         wasHeld: Boolean((c as any).wasHeld ?? false),
@@ -1464,10 +1465,26 @@ export function GameView({ adapter }: Props) {
   // with a ref if we want to drop the render trigger).
   const [, setWasSkipped] = useState(false);
 
+  // AUTO button: queue every unrevealed unheld card into the tap-reveal
+  // pipeline. tapRevealCard's internal queue + mutex (useEmotionalReveal)
+  // serializes them, so cards flip ONE BY ONE with the normal animation —
+  // not all-at-once like the old skipReveal() shortcut, which made the
+  // full FP show before any card had flipped. Held cards continue to fire
+  // through their own revealHeldCards flow after the unheld sequence
+  // completes (handled inside the reveal hook).
+  function autoFlipAll() {
+    const unheld = (revealableCards as any[]).filter(c => !c.wasHeld);
+    for (const c of unheld) {
+      if (!tappedCardIds.has(c.cardId)) {
+        tapRevealCard(c.cardId);
+      }
+    }
+  }
+
   function handleButtonClick() {
     if (gameState === "REVEALING") {
       setWasSkipped(true);
-      skipReveal();
+      autoFlipAll();
     }
     else {
       if (gameState === "WIN_CELEBRATION") {

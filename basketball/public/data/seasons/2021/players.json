@@ -5,14 +5,17 @@
     "season": "2021",
     "name": "Nikola Jokić",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 85,
     "tier": "RED",
     "avgFP": 52.7,
     "projectedFp": 52.7,
     "photoCode": "203999",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "201566_2021",
@@ -20,14 +23,17 @@
     "season": "2021",
     "name": "Russell Westbrook",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 80,
     "tier": "RED",
     "avgFP": 52.3,
     "projectedFp": 52.3,
     "photoCode": "201566",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "203507_2021",
@@ -35,14 +41,17 @@
     "season": "2021",
     "name": "Giannis Antetokounmpo",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 76,
     "tier": "RED",
     "avgFP": 51.5,
     "projectedFp": 51.5,
     "photoCode": "203507",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "201935_2021",
@@ -50,14 +59,18 @@
     "season": "2021",
     "name": "James Harden",
     "team": "BKN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 73,
     "tier": "RED",
     "avgFP": 50.2,
     "projectedFp": 50.2,
     "photoCode": "201935",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU",
+      "BKN"
+    ]
   },
   {
     "id": "1629029_2021",
@@ -65,14 +78,17 @@
     "season": "2021",
     "name": "Luka Dončić",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 71,
     "tier": "ORANGE",
     "avgFP": 49,
     "projectedFp": 49,
     "photoCode": "1629029",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "203954_2021",
@@ -80,14 +96,17 @@
     "season": "2021",
     "name": "Joel Embiid",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 68,
     "tier": "ORANGE",
     "avgFP": 46.9,
     "projectedFp": 46.9,
     "photoCode": "203954",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "201939_2021",
@@ -95,14 +114,17 @@
     "season": "2021",
     "name": "Stephen Curry",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 67,
     "tier": "ORANGE",
     "avgFP": 46.5,
     "projectedFp": 46.5,
     "photoCode": "201939",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "2544_2021",
@@ -110,14 +132,17 @@
     "season": "2021",
     "name": "LeBron James",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 66,
     "tier": "ORANGE",
     "avgFP": 45.4,
     "projectedFp": 45.4,
     "photoCode": "2544",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "1626157_2021",
@@ -125,14 +150,17 @@
     "season": "2021",
     "name": "Karl-Anthony Towns",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 65,
     "tier": "ORANGE",
     "avgFP": 44.9,
     "projectedFp": 44.9,
     "photoCode": "1626157",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "203081_2021",
@@ -140,14 +168,17 @@
     "season": "2021",
     "name": "Damian Lillard",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 65,
     "tier": "ORANGE",
     "avgFP": 44.5,
     "projectedFp": 44.5,
     "photoCode": "203081",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "202696_2021",
@@ -155,14 +186,18 @@
     "season": "2021",
     "name": "Nikola Vučević",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 65,
     "tier": "ORANGE",
     "avgFP": 44.6,
     "projectedFp": 44.6,
     "photoCode": "202696",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL",
+      "CHI"
+    ]
   },
   {
     "id": "1627734_2021",
@@ -170,14 +205,17 @@
     "season": "2021",
     "name": "Domantas Sabonis",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 65,
     "tier": "ORANGE",
     "avgFP": 44.8,
     "projectedFp": 44.8,
     "photoCode": "1627734",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "201142_2021",
@@ -185,14 +223,17 @@
     "season": "2021",
     "name": "Kevin Durant",
     "team": "BKN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 64,
     "tier": "ORANGE",
     "avgFP": 44.3,
     "projectedFp": 44.3,
     "photoCode": "201142",
-    "active": true
+    "active": true,
+    "teams": [
+      "BKN"
+    ]
   },
   {
     "id": "203944_2021",
@@ -200,14 +241,17 @@
     "season": "2021",
     "name": "Julius Randle",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "PF",
     "salary": 64,
     "tier": "ORANGE",
     "avgFP": 44.3,
     "projectedFp": 44.3,
     "photoCode": "203944",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "202681_2021",
@@ -215,14 +259,17 @@
     "season": "2021",
     "name": "Kyrie Irving",
     "team": "BKN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 63,
     "tier": "ORANGE",
     "avgFP": 43.4,
     "projectedFp": 43.4,
     "photoCode": "202681",
-    "active": true
+    "active": true,
+    "teams": [
+      "BKN"
+    ]
   },
   {
     "id": "203078_2021",
@@ -230,14 +277,17 @@
     "season": "2021",
     "name": "Bradley Beal",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 63,
     "tier": "ORANGE",
     "avgFP": 43.5,
     "projectedFp": 43.5,
     "photoCode": "203078",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "202710_2021",
@@ -245,14 +295,17 @@
     "season": "2021",
     "name": "Jimmy Butler III",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 62,
     "tier": "ORANGE",
     "avgFP": 43.1,
     "projectedFp": 43.1,
     "photoCode": "202710",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "202695_2021",
@@ -260,14 +313,17 @@
     "season": "2021",
     "name": "Kawhi Leonard",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 61,
     "tier": "ORANGE",
     "avgFP": 42.3,
     "projectedFp": 42.3,
     "photoCode": "202695",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "1629027_2021",
@@ -275,14 +331,17 @@
     "season": "2021",
     "name": "Trae Young",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 61,
     "tier": "ORANGE",
     "avgFP": 42,
     "projectedFp": 42,
     "photoCode": "1629027",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1628369_2021",
@@ -290,14 +349,17 @@
     "season": "2021",
     "name": "Jayson Tatum",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 61,
     "tier": "ORANGE",
     "avgFP": 42.4,
     "projectedFp": 42.4,
     "photoCode": "1628369",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "1628368_2021",
@@ -305,14 +367,17 @@
     "season": "2021",
     "name": "De'Aaron Fox",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 60,
     "tier": "ORANGE",
     "avgFP": 41.1,
     "projectedFp": 41.1,
     "photoCode": "1628368",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "1629627_2021",
@@ -320,14 +385,17 @@
     "season": "2021",
     "name": "Zion Williamson",
     "team": "NOP",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 60,
     "tier": "ORANGE",
     "avgFP": 41.6,
     "projectedFp": 41.6,
     "photoCode": "1629627",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOP"
+    ]
   },
   {
     "id": "203076_2021",
@@ -335,14 +403,17 @@
     "season": "2021",
     "name": "Anthony Davis",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 58,
     "tier": "ORANGE",
     "avgFP": 39.7,
     "projectedFp": 39.7,
     "photoCode": "203076",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "203897_2021",
@@ -350,14 +421,17 @@
     "season": "2021",
     "name": "Zach LaVine",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 58,
     "tier": "ORANGE",
     "avgFP": 39.7,
     "projectedFp": 39.7,
     "photoCode": "203897",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "1628378_2021",
@@ -365,14 +439,17 @@
     "season": "2021",
     "name": "Donovan Mitchell",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 57,
     "tier": "PURPLE",
     "avgFP": 39.3,
     "projectedFp": 39.3,
     "photoCode": "1628378",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1628389_2021",
@@ -380,14 +457,17 @@
     "season": "2021",
     "name": "Bam Adebayo",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 57,
     "tier": "PURPLE",
     "avgFP": 39.3,
     "projectedFp": 39.3,
     "photoCode": "1628389",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "202331_2021",
@@ -395,14 +475,17 @@
     "season": "2021",
     "name": "Paul George",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 56,
     "tier": "PURPLE",
     "avgFP": 38.9,
     "projectedFp": 38.9,
     "photoCode": "202331",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "1627783_2021",
@@ -410,14 +493,17 @@
     "season": "2021",
     "name": "Pascal Siakam",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 55,
     "tier": "PURPLE",
     "avgFP": 38,
     "projectedFp": 38,
     "photoCode": "1627783",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "1627759_2021",
@@ -425,14 +511,17 @@
     "season": "2021",
     "name": "Jaylen Brown",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "SG/SF",
     "salary": 55,
     "tier": "PURPLE",
     "avgFP": 37.7,
     "projectedFp": 37.7,
     "photoCode": "1627759",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "1628983_2021",
@@ -440,14 +529,17 @@
     "season": "2021",
     "name": "Shai Gilgeous-Alexander",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 55,
     "tier": "PURPLE",
     "avgFP": 38.1,
     "projectedFp": 38.1,
     "photoCode": "1628983",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "203991_2021",
@@ -455,14 +547,17 @@
     "season": "2021",
     "name": "Clint Capela",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 55,
     "tier": "PURPLE",
     "avgFP": 37.9,
     "projectedFp": 37.9,
     "photoCode": "203991",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1627832_2021",
@@ -470,14 +565,17 @@
     "season": "2021",
     "name": "Fred VanVleet",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 54,
     "tier": "PURPLE",
     "avgFP": 37.1,
     "projectedFp": 37.1,
     "photoCode": "1627832",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "201942_2021",
@@ -485,14 +583,17 @@
     "season": "2021",
     "name": "DeMar DeRozan",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 54,
     "tier": "PURPLE",
     "avgFP": 37.4,
     "projectedFp": 37.4,
     "photoCode": "201942",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1627742_2021",
@@ -500,14 +601,17 @@
     "season": "2021",
     "name": "Brandon Ingram",
     "team": "NOP",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 54,
     "tier": "PURPLE",
     "avgFP": 37,
     "projectedFp": 37,
     "photoCode": "1627742",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOP"
+    ]
   },
   {
     "id": "203497_2021",
@@ -515,14 +619,17 @@
     "season": "2021",
     "name": "Rudy Gobert",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 54,
     "tier": "PURPLE",
     "avgFP": 37.2,
     "projectedFp": 37.2,
     "photoCode": "203497",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1626174_2021",
@@ -530,14 +637,17 @@
     "season": "2021",
     "name": "Christian Wood",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 54,
     "tier": "PURPLE",
     "avgFP": 37.2,
     "projectedFp": 37.2,
     "photoCode": "1626174",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "1627763_2021",
@@ -545,14 +655,17 @@
     "season": "2021",
     "name": "Malcolm Brogdon",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 53,
     "tier": "PURPLE",
     "avgFP": 36.5,
     "projectedFp": 36.5,
     "photoCode": "1627763",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "203468_2021",
@@ -560,14 +673,17 @@
     "season": "2021",
     "name": "CJ McCollum",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 53,
     "tier": "PURPLE",
     "avgFP": 36.4,
     "projectedFp": 36.4,
     "photoCode": "203468",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "202685_2021",
@@ -575,14 +691,17 @@
     "season": "2021",
     "name": "Jonas Valančiūnas",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 52,
     "tier": "PURPLE",
     "avgFP": 36.1,
     "projectedFp": 36.1,
     "photoCode": "202685",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "1626164_2021",
@@ -590,14 +709,17 @@
     "season": "2021",
     "name": "Devin Booker",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 52,
     "tier": "PURPLE",
     "avgFP": 36,
     "projectedFp": 36,
     "photoCode": "1626164",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "101108_2021",
@@ -605,14 +727,17 @@
     "season": "2021",
     "name": "Chris Paul",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 52,
     "tier": "PURPLE",
     "avgFP": 36.2,
     "projectedFp": 36.2,
     "photoCode": "101108",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "204001_2021",
@@ -620,14 +745,17 @@
     "season": "2021",
     "name": "Kristaps Porziņģis",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 52,
     "tier": "PURPLE",
     "avgFP": 35.6,
     "projectedFp": 35.6,
     "photoCode": "204001",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "1627747_2021",
@@ -635,14 +763,18 @@
     "season": "2021",
     "name": "Caris LeVert",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 51,
     "tier": "PURPLE",
     "avgFP": 35.4,
     "projectedFp": 35.4,
     "photoCode": "1627747",
-    "active": true
+    "active": true,
+    "teams": [
+      "BKN",
+      "IND"
+    ]
   },
   {
     "id": "203114_2021",
@@ -650,14 +782,17 @@
     "season": "2021",
     "name": "Khris Middleton",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 51,
     "tier": "PURPLE",
     "avgFP": 35.5,
     "projectedFp": 35.5,
     "photoCode": "203114",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "202322_2021",
@@ -665,14 +800,17 @@
     "season": "2021",
     "name": "John Wall",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 51,
     "tier": "PURPLE",
     "avgFP": 34.9,
     "projectedFp": 34.9,
     "photoCode": "202322",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "203083_2021",
@@ -680,14 +818,18 @@
     "season": "2021",
     "name": "Andre Drummond",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 50,
     "tier": "PURPLE",
     "avgFP": 34.5,
     "projectedFp": 34.5,
     "photoCode": "203083",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE",
+      "LAL"
+    ]
   },
   {
     "id": "1629012_2021",
@@ -695,14 +837,17 @@
     "season": "2021",
     "name": "Collin Sexton",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 50,
     "tier": "PURPLE",
     "avgFP": 34.2,
     "projectedFp": 34.2,
     "photoCode": "1629012",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "201950_2021",
@@ -710,14 +855,17 @@
     "season": "2021",
     "name": "Jrue Holiday",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 50,
     "tier": "PURPLE",
     "avgFP": 34.6,
     "projectedFp": 34.6,
     "photoCode": "201950",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "1627732_2021",
@@ -725,14 +873,17 @@
     "season": "2021",
     "name": "Ben Simmons",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 50,
     "tier": "PURPLE",
     "avgFP": 34.7,
     "projectedFp": 34.7,
     "photoCode": "1627732",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "200768_2021",
@@ -740,14 +891,17 @@
     "season": "2021",
     "name": "Kyle Lowry",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 50,
     "tier": "PURPLE",
     "avgFP": 34.5,
     "projectedFp": 34.5,
     "photoCode": "200768",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "1627750_2021",
@@ -755,14 +909,17 @@
     "season": "2021",
     "name": "Jamal Murray",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 50,
     "tier": "PURPLE",
     "avgFP": 34.2,
     "projectedFp": 34.2,
     "photoCode": "1627750",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "202699_2021",
@@ -770,14 +927,17 @@
     "season": "2021",
     "name": "Tobias Harris",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 50,
     "tier": "PURPLE",
     "avgFP": 34.6,
     "projectedFp": 34.6,
     "photoCode": "202699",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "203924_2021",
@@ -785,14 +945,17 @@
     "season": "2021",
     "name": "Jerami Grant",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 49,
     "tier": "PURPLE",
     "avgFP": 33.5,
     "projectedFp": 33.5,
     "photoCode": "203924",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "1627749_2021",
@@ -800,14 +963,17 @@
     "season": "2021",
     "name": "Dejounte Murray",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 49,
     "tier": "PURPLE",
     "avgFP": 33.8,
     "projectedFp": 33.8,
     "photoCode": "1627749",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "203506_2021",
@@ -815,14 +981,19 @@
     "season": "2021",
     "name": "Victor Oladipo",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 49,
     "tier": "PURPLE",
     "avgFP": 33.6,
     "projectedFp": 33.6,
     "photoCode": "203506",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND",
+      "HOU",
+      "MIA"
+    ]
   },
   {
     "id": "1629630_2021",
@@ -830,14 +1001,17 @@
     "season": "2021",
     "name": "Ja Morant",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 49,
     "tier": "PURPLE",
     "avgFP": 34,
     "projectedFp": 34,
     "photoCode": "1629630",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "202330_2021",
@@ -845,14 +1019,17 @@
     "season": "2021",
     "name": "Gordon Hayward",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 49,
     "tier": "PURPLE",
     "avgFP": 33.8,
     "projectedFp": 33.8,
     "photoCode": "202330",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA"
+    ]
   },
   {
     "id": "1626179_2021",
@@ -860,14 +1037,17 @@
     "season": "2021",
     "name": "Terry Rozier",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 48,
     "tier": "PURPLE",
     "avgFP": 33.4,
     "projectedFp": 33.4,
     "photoCode": "1626179",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA"
+    ]
   },
   {
     "id": "1630163_2021",
@@ -875,14 +1055,17 @@
     "season": "2021",
     "name": "LaMelo Ball",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 48,
     "tier": "PURPLE",
     "avgFP": 33.1,
     "projectedFp": 33.1,
     "photoCode": "1630163",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA"
+    ]
   },
   {
     "id": "202689_2021",
@@ -890,14 +1073,17 @@
     "season": "2021",
     "name": "Kemba Walker",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 47,
     "tier": "PURPLE",
     "avgFP": 32.2,
     "projectedFp": 32.2,
     "photoCode": "202689",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "1629028_2021",
@@ -905,14 +1091,17 @@
     "season": "2021",
     "name": "Deandre Ayton",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 45,
     "tier": "PURPLE",
     "avgFP": 31.3,
     "projectedFp": 31.3,
     "photoCode": "1629028",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "1629008_2021",
@@ -920,14 +1109,17 @@
     "season": "2021",
     "name": "Michael Porter Jr.",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 45,
     "tier": "PURPLE",
     "avgFP": 31.3,
     "projectedFp": 31.3,
     "photoCode": "1629008",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "1628366_2021",
@@ -935,14 +1127,17 @@
     "season": "2021",
     "name": "Lonzo Ball",
     "team": "NOP",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 45,
     "tier": "PURPLE",
     "avgFP": 30.8,
     "projectedFp": 30.8,
     "photoCode": "1628366",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOP"
+    ]
   },
   {
     "id": "1626156_2021",
@@ -950,14 +1145,17 @@
     "season": "2021",
     "name": "D'Angelo Russell",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 45,
     "tier": "PURPLE",
     "avgFP": 31.2,
     "projectedFp": 31.2,
     "photoCode": "1626156",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "203110_2021",
@@ -965,14 +1163,17 @@
     "season": "2021",
     "name": "Draymond Green",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 45,
     "tier": "PURPLE",
     "avgFP": 30.9,
     "projectedFp": 30.9,
     "photoCode": "203110",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "203952_2021",
@@ -980,14 +1181,17 @@
     "season": "2021",
     "name": "Andrew Wiggins",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF",
     "salary": 44,
     "tier": "PURPLE",
     "avgFP": 30.1,
     "projectedFp": 30.1,
     "photoCode": "203952",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "1630162_2021",
@@ -995,14 +1199,17 @@
     "season": "2021",
     "name": "Anthony Edwards",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 44,
     "tier": "PURPLE",
     "avgFP": 30.4,
     "projectedFp": 30.4,
     "photoCode": "1630162",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "201144_2021",
@@ -1010,14 +1217,17 @@
     "season": "2021",
     "name": "Mike Conley",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 44,
     "tier": "PURPLE",
     "avgFP": 30.5,
     "projectedFp": 30.5,
     "photoCode": "201144",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1628381_2021",
@@ -1025,14 +1235,17 @@
     "season": "2021",
     "name": "John Collins",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "PF/C",
     "salary": 44,
     "tier": "PURPLE",
     "avgFP": 30.1,
     "projectedFp": 30.1,
     "photoCode": "1628381",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1628386_2021",
@@ -1040,14 +1253,18 @@
     "season": "2021",
     "name": "Jarrett Allen",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 43,
     "tier": "BLUE",
     "avgFP": 29.6,
     "projectedFp": 29.6,
     "photoCode": "1628386",
-    "active": true
+    "active": true,
+    "teams": [
+      "BKN",
+      "CLE"
+    ]
   },
   {
     "id": "203994_2021",
@@ -1055,14 +1272,17 @@
     "season": "2021",
     "name": "Jusuf Nurkić",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 43,
     "tier": "BLUE",
     "avgFP": 29.5,
     "projectedFp": 29.5,
     "photoCode": "203994",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "203084_2021",
@@ -1070,14 +1290,17 @@
     "season": "2021",
     "name": "Harrison Barnes",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 43,
     "tier": "BLUE",
     "avgFP": 29.5,
     "projectedFp": 29.5,
     "photoCode": "203084",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "1626158_2021",
@@ -1085,14 +1308,17 @@
     "season": "2021",
     "name": "Richaun Holmes",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 43,
     "tier": "BLUE",
     "avgFP": 29.8,
     "projectedFp": 29.8,
     "photoCode": "1626158",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "201143_2021",
@@ -1100,14 +1326,17 @@
     "season": "2021",
     "name": "Al Horford",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 43,
     "tier": "BLUE",
     "avgFP": 29.9,
     "projectedFp": 29.9,
     "photoCode": "201143",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "1629636_2021",
@@ -1115,14 +1344,17 @@
     "season": "2021",
     "name": "Darius Garland",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 42,
     "tier": "BLUE",
     "avgFP": 29.1,
     "projectedFp": 29.1,
     "photoCode": "1629636",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "1627736_2021",
@@ -1130,14 +1362,17 @@
     "season": "2021",
     "name": "Malik Beasley",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 42,
     "tier": "BLUE",
     "avgFP": 28.8,
     "projectedFp": 28.8,
     "photoCode": "1627736",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "1629628_2021",
@@ -1145,14 +1380,17 @@
     "season": "2021",
     "name": "RJ Barrett",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "SG/SF",
     "salary": 42,
     "tier": "BLUE",
     "avgFP": 29.1,
     "projectedFp": 29.1,
     "photoCode": "1629628",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "1626167_2021",
@@ -1160,14 +1398,17 @@
     "season": "2021",
     "name": "Myles Turner",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 42,
     "tier": "BLUE",
     "avgFP": 29,
     "projectedFp": 29,
     "photoCode": "1626167",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "1629645_2021",
@@ -1175,14 +1416,17 @@
     "season": "2021",
     "name": "Kevin Porter Jr.",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "PG/SG",
     "salary": 42,
     "tier": "BLUE",
     "avgFP": 29.2,
     "projectedFp": 29.2,
     "photoCode": "1629645",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "203471_2021",
@@ -1190,14 +1434,17 @@
     "season": "2021",
     "name": "Dennis Schröder",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 41,
     "tier": "BLUE",
     "avgFP": 28.3,
     "projectedFp": 28.3,
     "photoCode": "203471",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "1628384_2021",
@@ -1205,14 +1452,17 @@
     "season": "2021",
     "name": "OG Anunoby",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 41,
     "tier": "BLUE",
     "avgFP": 28.6,
     "projectedFp": 28.6,
     "photoCode": "1628384",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "203486_2021",
@@ -1220,14 +1470,17 @@
     "season": "2021",
     "name": "Mason Plumlee",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 41,
     "tier": "BLUE",
     "avgFP": 28.4,
     "projectedFp": 28.4,
     "photoCode": "203486",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "1627741_2021",
@@ -1235,14 +1488,17 @@
     "season": "2021",
     "name": "Buddy Hield",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 41,
     "tier": "BLUE",
     "avgFP": 28.4,
     "projectedFp": 28.4,
     "photoCode": "1627741",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "203482_2021",
@@ -1250,14 +1506,18 @@
     "season": "2021",
     "name": "Kelly Olynyk",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "PF/C",
     "salary": 40,
     "tier": "BLUE",
     "avgFP": 27.9,
     "projectedFp": 27.9,
     "photoCode": "203482",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA",
+      "HOU"
+    ]
   },
   {
     "id": "203992_2021",
@@ -1265,14 +1525,17 @@
     "season": "2021",
     "name": "Bogdan Bogdanović",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 40,
     "tier": "BLUE",
     "avgFP": 27.3,
     "projectedFp": 27.3,
     "photoCode": "203992",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1628449_2021",
@@ -1280,14 +1543,17 @@
     "season": "2021",
     "name": "Chris Boucher",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 40,
     "tier": "BLUE",
     "avgFP": 27.4,
     "projectedFp": 27.4,
     "photoCode": "1628449",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "203937_2021",
@@ -1295,14 +1561,17 @@
     "season": "2021",
     "name": "Kyle Anderson",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 40,
     "tier": "BLUE",
     "avgFP": 27.5,
     "projectedFp": 27.5,
     "photoCode": "203937",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "203935_2021",
@@ -1310,14 +1579,17 @@
     "season": "2021",
     "name": "Marcus Smart",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 40,
     "tier": "BLUE",
     "avgFP": 27.7,
     "projectedFp": 27.7,
     "photoCode": "203935",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "203095_2021",
@@ -1325,14 +1597,18 @@
     "season": "2021",
     "name": "Evan Fournier",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "SG/SF",
     "salary": 40,
     "tier": "BLUE",
     "avgFP": 27.3,
     "projectedFp": 27.3,
     "photoCode": "203095",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL",
+      "BOS"
+    ]
   },
   {
     "id": "202683_2021",
@@ -1340,14 +1616,17 @@
     "season": "2021",
     "name": "Enes Freedom",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 40,
     "tier": "BLUE",
     "avgFP": 27.4,
     "projectedFp": 27.4,
     "photoCode": "202683",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "203903_2021",
@@ -1355,14 +1634,17 @@
     "season": "2021",
     "name": "Jordan Clarkson",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 40,
     "tier": "BLUE",
     "avgFP": 27.3,
     "projectedFp": 27.3,
     "photoCode": "203903",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "201152_2021",
@@ -1370,14 +1652,17 @@
     "season": "2021",
     "name": "Thaddeus Young",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 40,
     "tier": "BLUE",
     "avgFP": 27.3,
     "projectedFp": 27.3,
     "photoCode": "201152",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "1626162_2021",
@@ -1385,14 +1670,17 @@
     "season": "2021",
     "name": "Kelly Oubre Jr.",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 39,
     "tier": "BLUE",
     "avgFP": 26.9,
     "projectedFp": 26.9,
     "photoCode": "1626162",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "1629023_2021",
@@ -1400,14 +1688,17 @@
     "season": "2021",
     "name": "P.J. Washington",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 39,
     "tier": "BLUE",
     "avgFP": 27.1,
     "projectedFp": 27.1,
     "photoCode": "1629023",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA"
+    ]
   },
   {
     "id": "1630169_2021",
@@ -1415,14 +1706,17 @@
     "season": "2021",
     "name": "Tyrese Haliburton",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 39,
     "tier": "BLUE",
     "avgFP": 26.6,
     "projectedFp": 26.6,
     "photoCode": "1630169",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "1629632_2021",
@@ -1430,14 +1724,17 @@
     "season": "2021",
     "name": "Coby White",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 38,
     "tier": "BLUE",
     "avgFP": 26.4,
     "projectedFp": 26.4,
     "photoCode": "1629632",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "1628984_2021",
@@ -1445,14 +1742,17 @@
     "season": "2021",
     "name": "Devonte' Graham",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 38,
     "tier": "BLUE",
     "avgFP": 26.5,
     "projectedFp": 26.5,
     "photoCode": "1628984",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA"
+    ]
   },
   {
     "id": "1629639_2021",
@@ -1460,14 +1760,17 @@
     "season": "2021",
     "name": "Tyler Herro",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 38,
     "tier": "BLUE",
     "avgFP": 26.2,
     "projectedFp": 26.2,
     "photoCode": "1629639",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "1626181_2021",
@@ -1475,14 +1778,18 @@
     "season": "2021",
     "name": "Norman Powell",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 38,
     "tier": "BLUE",
     "avgFP": 26.3,
     "projectedFp": 26.3,
     "photoCode": "1626181",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR",
+      "POR"
+    ]
   },
   {
     "id": "1628401_2021",
@@ -1490,14 +1797,17 @@
     "season": "2021",
     "name": "Derrick White",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 38,
     "tier": "BLUE",
     "avgFP": 26.4,
     "projectedFp": 26.4,
     "photoCode": "1628401",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "204456_2021",
@@ -1505,14 +1815,17 @@
     "season": "2021",
     "name": "T.J. McConnell",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 37,
     "tier": "BLUE",
     "avgFP": 25.4,
     "projectedFp": 25.4,
     "photoCode": "204456",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "201565_2021",
@@ -1520,14 +1833,18 @@
     "season": "2021",
     "name": "Derrick Rose",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 37,
     "tier": "BLUE",
     "avgFP": 25.2,
     "projectedFp": 25.2,
     "photoCode": "201565",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET",
+      "NYK"
+    ]
   },
   {
     "id": "1628415_2021",
@@ -1535,14 +1852,17 @@
     "season": "2021",
     "name": "Dillon Brooks",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 37,
     "tier": "BLUE",
     "avgFP": 25.5,
     "projectedFp": 25.5,
     "photoCode": "1628415",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "1628976_2021",
@@ -1550,14 +1870,18 @@
     "season": "2021",
     "name": "Wendell Carter Jr.",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 37,
     "tier": "BLUE",
     "avgFP": 25.4,
     "projectedFp": 25.4,
     "photoCode": "1628976",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI",
+      "ORL"
+    ]
   },
   {
     "id": "1629631_2021",
@@ -1565,14 +1889,17 @@
     "season": "2021",
     "name": "De'Andre Hunter",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 36,
     "tier": "BLUE",
     "avgFP": 25,
     "projectedFp": 25,
     "photoCode": "1629631",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1628963_2021",
@@ -1580,14 +1907,17 @@
     "season": "2021",
     "name": "Marvin Bagley III",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 36,
     "tier": "BLUE",
     "avgFP": 25.1,
     "projectedFp": 25.1,
     "photoCode": "1628963",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "1628970_2021",
@@ -1595,14 +1925,17 @@
     "season": "2021",
     "name": "Miles Bridges",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 36,
     "tier": "BLUE",
     "avgFP": 24.6,
     "projectedFp": 24.6,
     "photoCode": "1628970",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA"
+    ]
   },
   {
     "id": "1628969_2021",
@@ -1610,14 +1943,17 @@
     "season": "2021",
     "name": "Mikal Bridges",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 36,
     "tier": "BLUE",
     "avgFP": 24.9,
     "projectedFp": 24.9,
     "photoCode": "1628969",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "1626153_2021",
@@ -1625,14 +1961,18 @@
     "season": "2021",
     "name": "Delon Wright",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 36,
     "tier": "BLUE",
     "avgFP": 24.8,
     "projectedFp": 24.8,
     "photoCode": "1626153",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET",
+      "SAC"
+    ]
   },
   {
     "id": "1626204_2021",
@@ -1640,14 +1980,17 @@
     "season": "2021",
     "name": "Larry Nance Jr.",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "PF",
     "salary": 36,
     "tier": "BLUE",
     "avgFP": 24.9,
     "projectedFp": 24.9,
     "photoCode": "1626204",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "203932_2021",
@@ -1655,14 +1998,18 @@
     "season": "2021",
     "name": "Aaron Gordon",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 36,
     "tier": "BLUE",
     "avgFP": 24.7,
     "projectedFp": 24.7,
     "photoCode": "203932",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL",
+      "DEN"
+    ]
   },
   {
     "id": "1627751_2021",
@@ -1670,14 +2017,17 @@
     "season": "2021",
     "name": "Jakob Poeltl",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 36,
     "tier": "BLUE",
     "avgFP": 24.7,
     "projectedFp": 24.7,
     "photoCode": "1627751",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "203082_2021",
@@ -1685,14 +2035,17 @@
     "season": "2021",
     "name": "Terrence Ross",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 36,
     "tier": "BLUE",
     "avgFP": 24.6,
     "projectedFp": 24.6,
     "photoCode": "203082",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "1629647_2021",
@@ -1700,14 +2053,17 @@
     "season": "2021",
     "name": "Darius Bazley",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 36,
     "tier": "BLUE",
     "avgFP": 24.8,
     "projectedFp": 24.8,
     "photoCode": "1629647",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "201567_2021",
@@ -1715,14 +2071,17 @@
     "season": "2021",
     "name": "Kevin Love",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "PF/C",
     "salary": 36,
     "tier": "BLUE",
     "avgFP": 24.8,
     "projectedFp": 24.8,
     "photoCode": "201567",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "1626149_2021",
@@ -1730,14 +2089,17 @@
     "season": "2021",
     "name": "Montrezl Harrell",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 35,
     "tier": "BLUE",
     "avgFP": 24.2,
     "projectedFp": 24.2,
     "photoCode": "1626149",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "200746_2021",
@@ -1745,14 +2107,18 @@
     "season": "2021",
     "name": "LaMarcus Aldridge",
     "team": "BKN",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 35,
     "tier": "BLUE",
     "avgFP": 23.8,
     "projectedFp": 23.8,
     "photoCode": "200746",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS",
+      "BKN"
+    ]
   },
   {
     "id": "202711_2021",
@@ -1760,14 +2126,17 @@
     "season": "2021",
     "name": "Bojan Bogdanovic",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF",
     "salary": 35,
     "tier": "BLUE",
     "avgFP": 24.1,
     "projectedFp": 24.1,
     "photoCode": "202711",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1630175_2021",
@@ -1775,14 +2144,17 @@
     "season": "2021",
     "name": "Cole Anthony",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 35,
     "tier": "BLUE",
     "avgFP": 24.4,
     "projectedFp": 24.4,
     "photoCode": "1630175",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "201569_2021",
@@ -1790,14 +2162,17 @@
     "season": "2021",
     "name": "Eric Gordon",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 35,
     "tier": "BLUE",
     "avgFP": 24.4,
     "projectedFp": 24.4,
     "photoCode": "201569",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "1628398_2021",
@@ -1805,14 +2180,17 @@
     "season": "2021",
     "name": "Kyle Kuzma",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 34,
     "tier": "BLUE",
     "avgFP": 23.6,
     "projectedFp": 23.6,
     "photoCode": "1628398",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "201586_2021",
@@ -1820,14 +2198,17 @@
     "season": "2021",
     "name": "Serge Ibaka",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 34,
     "tier": "BLUE",
     "avgFP": 23.5,
     "projectedFp": 23.5,
     "photoCode": "201586",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "1628404_2021",
@@ -1835,14 +2216,17 @@
     "season": "2021",
     "name": "Josh Hart",
     "team": "NOP",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 34,
     "tier": "BLUE",
     "avgFP": 23.4,
     "projectedFp": 23.4,
     "photoCode": "1628404",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOP"
+    ]
   },
   {
     "id": "1629011_2021",
@@ -1850,14 +2234,17 @@
     "season": "2021",
     "name": "Mitchell Robinson",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 34,
     "tier": "BLUE",
     "avgFP": 23.2,
     "projectedFp": 23.2,
     "photoCode": "1629011",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "203496_2021",
@@ -1865,14 +2252,17 @@
     "season": "2021",
     "name": "Robert Covington",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 34,
     "tier": "BLUE",
     "avgFP": 23.3,
     "projectedFp": 23.3,
     "photoCode": "203496",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "201609_2021",
@@ -1880,14 +2270,17 @@
     "season": "2021",
     "name": "Goran Dragic",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 34,
     "tier": "BLUE",
     "avgFP": 23.3,
     "projectedFp": 23.3,
     "photoCode": "201609",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "203501_2021",
@@ -1895,14 +2288,17 @@
     "season": "2021",
     "name": "Tim Hardaway Jr.",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "SG/SF",
     "salary": 34,
     "tier": "BLUE",
     "avgFP": 23.5,
     "projectedFp": 23.5,
     "photoCode": "203501",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "1629134_2021",
@@ -1910,14 +2306,17 @@
     "season": "2021",
     "name": "Kendrick Nunn",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 34,
     "tier": "BLUE",
     "avgFP": 23.3,
     "projectedFp": 23.3,
     "photoCode": "1629134",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "1628978_2021",
@@ -1925,14 +2324,17 @@
     "season": "2021",
     "name": "Donte DiVincenzo",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 34,
     "tier": "BLUE",
     "avgFP": 23.2,
     "projectedFp": 23.2,
     "photoCode": "1628978",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "201937_2021",
@@ -1940,14 +2342,17 @@
     "season": "2021",
     "name": "Ricky Rubio",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 34,
     "tier": "BLUE",
     "avgFP": 23.4,
     "projectedFp": 23.4,
     "photoCode": "201937",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "1629640_2021",
@@ -1955,14 +2360,17 @@
     "season": "2021",
     "name": "Keldon Johnson",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 34,
     "tier": "BLUE",
     "avgFP": 23.3,
     "projectedFp": 23.3,
     "photoCode": "1629640",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "204060_2021",
@@ -1970,14 +2378,17 @@
     "season": "2021",
     "name": "Joe Ingles",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 34,
     "tier": "BLUE",
     "avgFP": 23.5,
     "projectedFp": 23.5,
     "photoCode": "204060",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "203115_2021",
@@ -1985,14 +2396,17 @@
     "season": "2021",
     "name": "Will Barton",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 34,
     "tier": "BLUE",
     "avgFP": 23.3,
     "projectedFp": 23.3,
     "photoCode": "203115",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "1630256_2021",
@@ -2000,14 +2414,17 @@
     "season": "2021",
     "name": "Jae'Sean Tate",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 34,
     "tier": "BLUE",
     "avgFP": 23.6,
     "projectedFp": 23.6,
     "photoCode": "1630256",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "1629060_2021",
@@ -2015,14 +2432,17 @@
     "season": "2021",
     "name": "Rui Hachimura",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 34,
     "tier": "BLUE",
     "avgFP": 23.2,
     "projectedFp": 23.2,
     "photoCode": "1629060",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "1628367_2021",
@@ -2030,14 +2450,17 @@
     "season": "2021",
     "name": "Josh Jackson",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 33,
     "tier": "BLUE",
     "avgFP": 22.7,
     "projectedFp": 22.7,
     "photoCode": "1628367",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "1628989_2021",
@@ -2045,14 +2468,17 @@
     "season": "2021",
     "name": "Kevin Huerter",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "SG/SF",
     "salary": 33,
     "tier": "BLUE",
     "avgFP": 22.9,
     "projectedFp": 22.9,
     "photoCode": "1628989",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "201572_2021",
@@ -2060,14 +2486,17 @@
     "season": "2021",
     "name": "Brook Lopez",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 33,
     "tier": "BLUE",
     "avgFP": 22.5,
     "projectedFp": 22.5,
     "photoCode": "201572",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "1626171_2021",
@@ -2075,14 +2504,17 @@
     "season": "2021",
     "name": "Bobby Portis",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 33,
     "tier": "BLUE",
     "avgFP": 23,
     "projectedFp": 23,
     "photoCode": "1626171",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "202339_2021",
@@ -2090,14 +2522,17 @@
     "season": "2021",
     "name": "Eric Bledsoe",
     "team": "NOP",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 33,
     "tier": "BLUE",
     "avgFP": 22.6,
     "projectedFp": 22.6,
     "photoCode": "202339",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOP"
+    ]
   },
   {
     "id": "203500_2021",
@@ -2105,14 +2540,17 @@
     "season": "2021",
     "name": "Steven Adams",
     "team": "NOP",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 33,
     "tier": "BLUE",
     "avgFP": 22.9,
     "projectedFp": 22.9,
     "photoCode": "203500",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOP"
+    ]
   },
   {
     "id": "1629057_2021",
@@ -2120,14 +2558,17 @@
     "season": "2021",
     "name": "Robert Williams III",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 33,
     "tier": "BLUE",
     "avgFP": 23.1,
     "projectedFp": 23.1,
     "photoCode": "1629057",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "1629634_2021",
@@ -2135,14 +2576,17 @@
     "season": "2021",
     "name": "Brandon Clarke",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 33,
     "tier": "BLUE",
     "avgFP": 22.6,
     "projectedFp": 22.6,
     "photoCode": "1629634",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "203925_2021",
@@ -2150,14 +2594,17 @@
     "season": "2021",
     "name": "Joe Harris",
     "team": "BKN",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 32,
     "tier": "BLUE",
     "avgFP": 22.1,
     "projectedFp": 22.1,
     "photoCode": "203925",
-    "active": true
+    "active": true,
+    "teams": [
+      "BKN"
+    ]
   },
   {
     "id": "1629018_2021",
@@ -2165,14 +2612,18 @@
     "season": "2021",
     "name": "Gary Trent Jr.",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 32,
     "tier": "BLUE",
     "avgFP": 22.1,
     "projectedFp": 22.1,
     "photoCode": "1629018",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR",
+      "TOR"
+    ]
   },
   {
     "id": "202692_2021",
@@ -2180,14 +2631,17 @@
     "season": "2021",
     "name": "Alec Burks",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 32,
     "tier": "BLUE",
     "avgFP": 22.4,
     "projectedFp": 22.4,
     "photoCode": "202692",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "1628973_2021",
@@ -2195,14 +2649,17 @@
     "season": "2021",
     "name": "Jalen Brunson",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 32,
     "tier": "BLUE",
     "avgFP": 21.8,
     "projectedFp": 21.8,
     "photoCode": "1628973",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "1628374_2021",
@@ -2210,14 +2667,17 @@
     "season": "2021",
     "name": "Lauri Markkanen",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "PF/C",
     "salary": 32,
     "tier": "BLUE",
     "avgFP": 21.8,
     "projectedFp": 21.8,
     "photoCode": "1628374",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "201933_2021",
@@ -2225,14 +2685,18 @@
     "season": "2021",
     "name": "Blake Griffin",
     "team": "BKN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 32,
     "tier": "BLUE",
     "avgFP": 22.1,
     "projectedFp": 22.1,
     "photoCode": "201933",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET",
+      "BKN"
+    ]
   },
   {
     "id": "1629652_2021",
@@ -2240,14 +2704,17 @@
     "season": "2021",
     "name": "Luguentz Dort",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 32,
     "tier": "BLUE",
     "avgFP": 21.9,
     "projectedFp": 21.9,
     "photoCode": "1629652",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "1628977_2021",
@@ -2255,14 +2722,18 @@
     "season": "2021",
     "name": "Hamidou Diallo",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 32,
     "tier": "BLUE",
     "avgFP": 21.8,
     "projectedFp": 21.8,
     "photoCode": "1628977",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC",
+      "DET"
+    ]
   },
   {
     "id": "1629650_2021",
@@ -2270,14 +2741,17 @@
     "season": "2021",
     "name": "Moses Brown",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 32,
     "tier": "BLUE",
     "avgFP": 22.3,
     "projectedFp": 22.3,
     "photoCode": "1629650",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "1627826_2021",
@@ -2285,14 +2759,17 @@
     "season": "2021",
     "name": "Ivica Zubac",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 31,
     "tier": "BLUE",
     "avgFP": 21.1,
     "projectedFp": 21.1,
     "photoCode": "1627826",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "203469_2021",
@@ -2300,14 +2777,17 @@
     "season": "2021",
     "name": "Cody Zeller",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 31,
     "tier": "BLUE",
     "avgFP": 21.1,
     "projectedFp": 21.1,
     "photoCode": "203469",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA"
+    ]
   },
   {
     "id": "201568_2021",
@@ -2315,14 +2795,17 @@
     "season": "2021",
     "name": "Danilo Gallinari",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 31,
     "tier": "BLUE",
     "avgFP": 21.2,
     "projectedFp": 21.2,
     "photoCode": "201568",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1626196_2021",
@@ -2330,14 +2813,17 @@
     "season": "2021",
     "name": "Josh Richardson",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 31,
     "tier": "BLUE",
     "avgFP": 21.5,
     "projectedFp": 21.5,
     "photoCode": "1626196",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "1629130_2021",
@@ -2345,14 +2831,17 @@
     "season": "2021",
     "name": "Duncan Robinson",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SG/SF",
     "salary": 30,
     "tier": "BLUE",
     "avgFP": 20.5,
     "projectedFp": 20.5,
     "photoCode": "1629130",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "203487_2021",
@@ -2360,14 +2849,17 @@
     "season": "2021",
     "name": "Michael Carter-Williams",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 30,
     "tier": "BLUE",
     "avgFP": 20.9,
     "projectedFp": 20.9,
     "photoCode": "203487",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "2546_2021",
@@ -2375,14 +2867,17 @@
     "season": "2021",
     "name": "Carmelo Anthony",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 30,
     "tier": "BLUE",
     "avgFP": 20.9,
     "projectedFp": 20.9,
     "photoCode": "2546",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "1628464_2021",
@@ -2390,14 +2885,18 @@
     "season": "2021",
     "name": "Daniel Theis",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 30,
     "tier": "BLUE",
     "avgFP": 20.7,
     "projectedFp": 20.7,
     "photoCode": "1628464",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS",
+      "CHI"
+    ]
   },
   {
     "id": "1627827_2021",
@@ -2405,14 +2904,17 @@
     "season": "2021",
     "name": "Dorian Finney-Smith",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 30,
     "tier": "BLUE",
     "avgFP": 20.7,
     "projectedFp": 20.7,
     "photoCode": "1627827",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "1629003_2021",
@@ -2420,14 +2922,17 @@
     "season": "2021",
     "name": "Shake Milton",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 30,
     "tier": "BLUE",
     "avgFP": 20.6,
     "projectedFp": 20.6,
     "photoCode": "1629003",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "203109_2021",
@@ -2435,14 +2940,17 @@
     "season": "2021",
     "name": "Jae Crowder",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 30,
     "tier": "BLUE",
     "avgFP": 20.4,
     "projectedFp": 20.4,
     "photoCode": "203109",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "200752_2021",
@@ -2450,14 +2958,17 @@
     "season": "2021",
     "name": "Rudy Gay",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 30,
     "tier": "BLUE",
     "avgFP": 20.9,
     "projectedFp": 20.9,
     "photoCode": "200752",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1629675_2021",
@@ -2465,14 +2976,17 @@
     "season": "2021",
     "name": "Naz Reid",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 30,
     "tier": "BLUE",
     "avgFP": 20.4,
     "projectedFp": 20.4,
     "photoCode": "1629675",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "1630180_2021",
@@ -2480,14 +2994,17 @@
     "season": "2021",
     "name": "Saddiq Bey",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 30,
     "tier": "BLUE",
     "avgFP": 20.8,
     "projectedFp": 20.8,
     "photoCode": "1630180",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "202326_2021",
@@ -2495,14 +3012,18 @@
     "season": "2021",
     "name": "DeMarcus Cousins",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 30,
     "tier": "BLUE",
     "avgFP": 20.7,
     "projectedFp": 20.7,
     "photoCode": "202326",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU",
+      "LAC"
+    ]
   },
   {
     "id": "202694_2021",
@@ -2510,14 +3031,17 @@
     "season": "2021",
     "name": "Marcus Morris Sr.",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 30,
     "tier": "BLUE",
     "avgFP": 20.6,
     "projectedFp": 20.6,
     "photoCode": "202694",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "2772_2021",
@@ -2525,14 +3049,17 @@
     "season": "2021",
     "name": "Trevor Ariza",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 30,
     "tier": "BLUE",
     "avgFP": 20.5,
     "projectedFp": 20.5,
     "photoCode": "2772",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "1630164_2021",
@@ -2540,14 +3067,17 @@
     "season": "2021",
     "name": "James Wiseman",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 29,
     "tier": "GREEN",
     "avgFP": 20.3,
     "projectedFp": 20.3,
     "photoCode": "1630164",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "201599_2021",
@@ -2555,14 +3085,17 @@
     "season": "2021",
     "name": "DeAndre Jordan",
     "team": "BKN",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 29,
     "tier": "GREEN",
     "avgFP": 20.3,
     "projectedFp": 20.3,
     "photoCode": "201599",
-    "active": true
+    "active": true,
+    "teams": [
+      "BKN"
+    ]
   },
   {
     "id": "201980_2021",
@@ -2570,14 +3103,17 @@
     "season": "2021",
     "name": "Danny Green",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 29,
     "tier": "GREEN",
     "avgFP": 19.9,
     "projectedFp": 19.9,
     "photoCode": "201980",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "203490_2021",
@@ -2585,14 +3121,18 @@
     "season": "2021",
     "name": "Otto Porter Jr.",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF",
     "salary": 29,
     "tier": "GREEN",
     "avgFP": 19.7,
     "projectedFp": 19.7,
     "photoCode": "203490",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI",
+      "ORL"
+    ]
   },
   {
     "id": "1626220_2021",
@@ -2600,14 +3140,17 @@
     "season": "2021",
     "name": "Royce O'Neale",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 29,
     "tier": "GREEN",
     "avgFP": 20.3,
     "projectedFp": 20.3,
     "photoCode": "1626220",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "203200_2021",
@@ -2615,14 +3158,17 @@
     "season": "2021",
     "name": "Justin Holiday",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "SG/SF",
     "salary": 29,
     "tier": "GREEN",
     "avgFP": 19.7,
     "projectedFp": 19.7,
     "photoCode": "203200",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "1629629_2021",
@@ -2630,14 +3176,17 @@
     "season": "2021",
     "name": "Cam Reddish",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 29,
     "tier": "GREEN",
     "avgFP": 20,
     "projectedFp": 20,
     "photoCode": "1629629",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "202684_2021",
@@ -2645,14 +3194,17 @@
     "season": "2021",
     "name": "Tristan Thompson",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 29,
     "tier": "GREEN",
     "avgFP": 20.2,
     "projectedFp": 20.2,
     "photoCode": "202684",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "203552_2021",
@@ -2660,14 +3212,17 @@
     "season": "2021",
     "name": "Seth Curry",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 29,
     "tier": "GREEN",
     "avgFP": 20.1,
     "projectedFp": 20.1,
     "photoCode": "203552",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "1630191_2021",
@@ -2675,14 +3230,17 @@
     "season": "2021",
     "name": "Isaiah Stewart",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "PF/C",
     "salary": 29,
     "tier": "GREEN",
     "avgFP": 19.9,
     "projectedFp": 19.9,
     "photoCode": "1630191",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "1630231_2021",
@@ -2690,14 +3248,17 @@
     "season": "2021",
     "name": "KJ Martin",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 29,
     "tier": "GREEN",
     "avgFP": 19.7,
     "projectedFp": 19.7,
     "photoCode": "1630231",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "201587_2021",
@@ -2705,14 +3266,17 @@
     "season": "2021",
     "name": "Nicolas Batum",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.4,
     "projectedFp": 19.4,
     "photoCode": "201587",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "1628971_2021",
@@ -2720,14 +3284,17 @@
     "season": "2021",
     "name": "Bruce Brown",
     "team": "BKN",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "SG/SF",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.5,
     "projectedFp": 19.5,
     "photoCode": "1628971",
-    "active": true
+    "active": true,
+    "teams": [
+      "BKN"
+    ]
   },
   {
     "id": "202704_2021",
@@ -2735,14 +3302,17 @@
     "season": "2021",
     "name": "Reggie Jackson",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19,
     "projectedFp": 19,
     "photoCode": "202704",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "201145_2021",
@@ -2750,14 +3320,17 @@
     "season": "2021",
     "name": "Jeff Green",
     "team": "BKN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.1,
     "projectedFp": 19.1,
     "photoCode": "201145",
-    "active": true
+    "active": true,
+    "teams": [
+      "BKN"
+    ]
   },
   {
     "id": "203457_2021",
@@ -2765,14 +3338,17 @@
     "season": "2021",
     "name": "Nerlens Noel",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.4,
     "projectedFp": 19.4,
     "photoCode": "203457",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "1626224_2021",
@@ -2780,14 +3356,17 @@
     "season": "2021",
     "name": "Cedi Osman",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.6,
     "projectedFp": 19.6,
     "photoCode": "1626224",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "1629638_2021",
@@ -2795,14 +3374,17 @@
     "season": "2021",
     "name": "Nickeil Alexander-Walker",
     "team": "NOP",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.6,
     "projectedFp": 19.6,
     "photoCode": "1629638",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOP"
+    ]
   },
   {
     "id": "200794_2021",
@@ -2810,14 +3392,17 @@
     "season": "2021",
     "name": "Paul Millsap",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.4,
     "projectedFp": 19.4,
     "photoCode": "200794",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "203901_2021",
@@ -2825,14 +3410,17 @@
     "season": "2021",
     "name": "Elfrid Payton",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.2,
     "projectedFp": 19.2,
     "photoCode": "203901",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "203926_2021",
@@ -2840,14 +3428,17 @@
     "season": "2021",
     "name": "Doug McDermott",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.6,
     "projectedFp": 19.6,
     "photoCode": "203926",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "2730_2021",
@@ -2855,14 +3446,17 @@
     "season": "2021",
     "name": "Dwight Howard",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.4,
     "projectedFp": 19.4,
     "photoCode": "2730",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "1630177_2021",
@@ -2870,14 +3464,17 @@
     "season": "2021",
     "name": "Theo Maledon",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.1,
     "projectedFp": 19.1,
     "photoCode": "1630177",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "1626195_2021",
@@ -2885,14 +3482,17 @@
     "season": "2021",
     "name": "Willy Hernangomez",
     "team": "NOP",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.1,
     "projectedFp": 19.1,
     "photoCode": "1626195",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOP"
+    ]
   },
   {
     "id": "1629676_2021",
@@ -2900,14 +3500,17 @@
     "season": "2021",
     "name": "Isaiah Roby",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.1,
     "projectedFp": 19.1,
     "photoCode": "1629676",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "203087_2021",
@@ -2915,14 +3518,17 @@
     "season": "2021",
     "name": "Jeremy Lamb",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.2,
     "projectedFp": 19.2,
     "photoCode": "203087",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "1629660_2021",
@@ -2930,14 +3536,17 @@
     "season": "2021",
     "name": "Ty Jerome",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.6,
     "projectedFp": 19.6,
     "photoCode": "1629660",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "101150_2021",
@@ -2945,14 +3554,18 @@
     "season": "2021",
     "name": "Lou Williams",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 27,
     "tier": "GREEN",
     "avgFP": 18.9,
     "projectedFp": 18.9,
     "photoCode": "101150",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC",
+      "ATL"
+    ]
   },
   {
     "id": "1628420_2021",
@@ -2960,14 +3573,17 @@
     "season": "2021",
     "name": "Monte Morris",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 27,
     "tier": "GREEN",
     "avgFP": 18.7,
     "projectedFp": 18.7,
     "photoCode": "1628420",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "203920_2021",
@@ -2975,14 +3591,18 @@
     "season": "2021",
     "name": "Khem Birch",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 27,
     "tier": "GREEN",
     "avgFP": 18.4,
     "projectedFp": 18.4,
     "photoCode": "203920",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL",
+      "TOR"
+    ]
   },
   {
     "id": "1630172_2021",
@@ -2990,14 +3610,17 @@
     "season": "2021",
     "name": "Patrick Williams",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 27,
     "tier": "GREEN",
     "avgFP": 18.6,
     "projectedFp": 18.6,
     "photoCode": "1630172",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "203493_2021",
@@ -3005,14 +3628,17 @@
     "season": "2021",
     "name": "Reggie Bullock Jr.",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 27,
     "tier": "GREEN",
     "avgFP": 18.6,
     "projectedFp": 18.6,
     "photoCode": "203493",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "1628960_2021",
@@ -3020,14 +3646,17 @@
     "season": "2021",
     "name": "Grayson Allen",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 27,
     "tier": "GREEN",
     "avgFP": 18.9,
     "projectedFp": 18.9,
     "photoCode": "1628960",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "1629001_2021",
@@ -3035,14 +3664,17 @@
     "season": "2021",
     "name": "De'Anthony Melton",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 27,
     "tier": "GREEN",
     "avgFP": 18.8,
     "projectedFp": 18.8,
     "photoCode": "1629001",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "1628021_2021",
@@ -3050,14 +3682,17 @@
     "season": "2021",
     "name": "David Nwaba",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 27,
     "tier": "GREEN",
     "avgFP": 18.3,
     "projectedFp": 18.3,
     "photoCode": "1628021",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "1628964_2021",
@@ -3065,14 +3700,17 @@
     "season": "2021",
     "name": "Mo Bamba",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 27,
     "tier": "GREEN",
     "avgFP": 18.4,
     "projectedFp": 18.4,
     "photoCode": "1628964",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "1630230_2021",
@@ -3080,14 +3718,17 @@
     "season": "2021",
     "name": "Naji Marshall",
     "team": "NOP",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 27,
     "tier": "GREEN",
     "avgFP": 18.4,
     "projectedFp": 18.4,
     "photoCode": "1630230",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOP"
+    ]
   },
   {
     "id": "1627752_2021",
@@ -3095,14 +3736,18 @@
     "season": "2021",
     "name": "Taurean Prince",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 26,
     "tier": "GREEN",
     "avgFP": 17.8,
     "projectedFp": 17.8,
     "photoCode": "1627752",
-    "active": true
+    "active": true,
+    "teams": [
+      "BKN",
+      "CLE"
+    ]
   },
   {
     "id": "202355_2021",
@@ -3110,14 +3755,17 @@
     "season": "2021",
     "name": "Hassan Whiteside",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 26,
     "tier": "GREEN",
     "avgFP": 18.1,
     "projectedFp": 18.1,
     "photoCode": "202355",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "202709_2021",
@@ -3125,14 +3773,18 @@
     "season": "2021",
     "name": "Cory Joseph",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 26,
     "tier": "GREEN",
     "avgFP": 17.6,
     "projectedFp": 17.6,
     "photoCode": "202709",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC",
+      "DET"
+    ]
   },
   {
     "id": "1630165_2021",
@@ -3140,14 +3792,17 @@
     "season": "2021",
     "name": "Killian Hayes",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 26,
     "tier": "GREEN",
     "avgFP": 17.6,
     "projectedFp": 17.6,
     "photoCode": "1630165",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "202397_2021",
@@ -3155,14 +3810,17 @@
     "season": "2021",
     "name": "Ish Smith",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 26,
     "tier": "GREEN",
     "avgFP": 17.8,
     "projectedFp": 17.8,
     "photoCode": "202397",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "1629643_2021",
@@ -3170,14 +3828,17 @@
     "season": "2021",
     "name": "Chuma Okeke",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 26,
     "tier": "GREEN",
     "avgFP": 18.2,
     "projectedFp": 18.2,
     "photoCode": "1629643",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "203107_2021",
@@ -3185,14 +3846,17 @@
     "season": "2021",
     "name": "Tomas Satoransky",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 26,
     "tier": "GREEN",
     "avgFP": 17.9,
     "projectedFp": 17.9,
     "photoCode": "203107",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "1630197_2021",
@@ -3200,14 +3864,17 @@
     "season": "2021",
     "name": "Aleksej Pokusevski",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 26,
     "tier": "GREEN",
     "avgFP": 17.6,
     "projectedFp": 17.6,
     "photoCode": "1630197",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "1629659_2021",
@@ -3215,14 +3882,17 @@
     "season": "2021",
     "name": "Talen Horton-Tucker",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 25,
     "tier": "GREEN",
     "avgFP": 17.3,
     "projectedFp": 17.3,
     "photoCode": "1629659",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "203484_2021",
@@ -3230,14 +3900,17 @@
     "season": "2021",
     "name": "Kentavious Caldwell-Pope",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 25,
     "tier": "GREEN",
     "avgFP": 17.4,
     "projectedFp": 17.4,
     "photoCode": "203484",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "1629673_2021",
@@ -3245,14 +3918,17 @@
     "season": "2021",
     "name": "Jordan Poole",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 25,
     "tier": "GREEN",
     "avgFP": 17.4,
     "projectedFp": 17.4,
     "photoCode": "1629673",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "1629308_2021",
@@ -3260,14 +3936,17 @@
     "season": "2021",
     "name": "Juan Toscano-Anderson",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 25,
     "tier": "GREEN",
     "avgFP": 16.9,
     "projectedFp": 16.9,
     "photoCode": "1629308",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "1630193_2021",
@@ -3275,14 +3954,17 @@
     "season": "2021",
     "name": "Immanuel Quickley",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 25,
     "tier": "GREEN",
     "avgFP": 17.4,
     "projectedFp": 17.4,
     "photoCode": "1630193",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "1629022_2021",
@@ -3290,14 +3972,17 @@
     "season": "2021",
     "name": "Lonnie Walker IV",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "SG/SF",
     "salary": 25,
     "tier": "GREEN",
     "avgFP": 17.2,
     "projectedFp": 17.2,
     "photoCode": "1629022",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1630171_2021",
@@ -3305,14 +3990,17 @@
     "season": "2021",
     "name": "Isaac Okoro",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 25,
     "tier": "GREEN",
     "avgFP": 17.5,
     "projectedFp": 17.5,
     "photoCode": "1630171",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "1628467_2021",
@@ -3320,14 +4008,17 @@
     "season": "2021",
     "name": "Maxi Kleber",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 25,
     "tier": "GREEN",
     "avgFP": 17.1,
     "projectedFp": 17.1,
     "photoCode": "1628467",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "1628407_2021",
@@ -3335,14 +4026,17 @@
     "season": "2021",
     "name": "Dwayne Bacon",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 25,
     "tier": "GREEN",
     "avgFP": 17.4,
     "projectedFp": 17.4,
     "photoCode": "1628407",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "1626166_2021",
@@ -3350,14 +4044,17 @@
     "season": "2021",
     "name": "Cameron Payne",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 25,
     "tier": "GREEN",
     "avgFP": 17.5,
     "projectedFp": 17.5,
     "photoCode": "1626166",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "202722_2021",
@@ -3365,14 +4062,17 @@
     "season": "2021",
     "name": "Davis Bertans",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 25,
     "tier": "GREEN",
     "avgFP": 17.4,
     "projectedFp": 17.4,
     "photoCode": "202722",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "1629026_2021",
@@ -3380,14 +4080,17 @@
     "season": "2021",
     "name": "Kenrich Williams",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 25,
     "tier": "GREEN",
     "avgFP": 17.4,
     "projectedFp": 17.4,
     "photoCode": "1629026",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "1627863_2021",
@@ -3395,14 +4098,17 @@
     "season": "2021",
     "name": "Danuel House Jr.",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 25,
     "tier": "GREEN",
     "avgFP": 17,
     "projectedFp": 17,
     "photoCode": "1627863",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "1628370_2021",
@@ -3410,14 +4116,17 @@
     "season": "2021",
     "name": "Malik Monk",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 25,
     "tier": "GREEN",
     "avgFP": 17.4,
     "projectedFp": 17.4,
     "photoCode": "1628370",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA"
+    ]
   },
   {
     "id": "1629651_2021",
@@ -3425,14 +4134,17 @@
     "season": "2021",
     "name": "Nic Claxton",
     "team": "BKN",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 25,
     "tier": "GREEN",
     "avgFP": 17.5,
     "projectedFp": 17.5,
     "photoCode": "1629651",
-    "active": true
+    "active": true,
+    "teams": [
+      "BKN"
+    ]
   },
   {
     "id": "201976_2021",
@@ -3440,14 +4152,17 @@
     "season": "2021",
     "name": "Patrick Beverley",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.6,
     "projectedFp": 16.6,
     "photoCode": "201976",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "203914_2021",
@@ -3455,14 +4170,18 @@
     "season": "2021",
     "name": "Gary Harris",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.4,
     "projectedFp": 16.4,
     "photoCode": "203914",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN",
+      "ORL"
+    ]
   },
   {
     "id": "201580_2021",
@@ -3470,14 +4189,18 @@
     "season": "2021",
     "name": "JaVale McGee",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.7,
     "projectedFp": 16.7,
     "photoCode": "201580",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE",
+      "DEN"
+    ]
   },
   {
     "id": "201949_2021",
@@ -3485,14 +4208,18 @@
     "season": "2021",
     "name": "James Johnson",
     "team": "NOP",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.5,
     "projectedFp": 16.5,
     "photoCode": "201949",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL",
+      "NOP"
+    ]
   },
   {
     "id": "201988_2021",
@@ -3500,14 +4227,17 @@
     "season": "2021",
     "name": "Patty Mills",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.8,
     "projectedFp": 16.8,
     "photoCode": "201988",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "203526_2021",
@@ -3515,14 +4245,17 @@
     "season": "2021",
     "name": "Raul Neto",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.7,
     "projectedFp": 16.7,
     "photoCode": "203526",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "1629661_2021",
@@ -3530,14 +4263,17 @@
     "season": "2021",
     "name": "Cameron Johnson",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.8,
     "projectedFp": 16.8,
     "photoCode": "1629661",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "1630217_2021",
@@ -3545,14 +4281,17 @@
     "season": "2021",
     "name": "Desmond Bane",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.3,
     "projectedFp": 16.3,
     "photoCode": "1630217",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "1628425_2021",
@@ -3560,14 +4299,17 @@
     "season": "2021",
     "name": "Sterling Brown",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.7,
     "projectedFp": 16.7,
     "photoCode": "1628425",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "1628372_2021",
@@ -3575,14 +4317,18 @@
     "season": "2021",
     "name": "Dennis Smith Jr.",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.7,
     "projectedFp": 16.7,
     "photoCode": "1628372",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK",
+      "DET"
+    ]
   },
   {
     "id": "1629020_2021",
@@ -3590,14 +4336,17 @@
     "season": "2021",
     "name": "Jarred Vanderbilt",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.7,
     "projectedFp": 16.7,
     "photoCode": "1629020",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "1628396_2021",
@@ -3605,14 +4354,18 @@
     "season": "2021",
     "name": "Tony Bradley",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.7,
     "projectedFp": 16.7,
     "photoCode": "1628396",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI",
+      "OKC"
+    ]
   },
   {
     "id": "203516_2021",
@@ -3620,14 +4373,17 @@
     "season": "2021",
     "name": "James Ennis III",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.6,
     "projectedFp": 16.6,
     "photoCode": "203516",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "201959_2021",
@@ -3635,14 +4391,17 @@
     "season": "2021",
     "name": "Taj Gibson",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.3,
     "projectedFp": 16.3,
     "photoCode": "201959",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "1630267_2021",
@@ -3650,14 +4409,17 @@
     "season": "2021",
     "name": "Facundo Campazzo",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 23,
     "tier": "GREEN",
     "avgFP": 15.7,
     "projectedFp": 15.7,
     "photoCode": "1630267",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "1629655_2021",
@@ -3665,14 +4427,18 @@
     "season": "2021",
     "name": "Daniel Gafford",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 23,
     "tier": "GREEN",
     "avgFP": 16,
     "projectedFp": 16,
     "photoCode": "1629655",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI",
+      "WAS"
+    ]
   },
   {
     "id": "1630201_2021",
@@ -3680,14 +4446,17 @@
     "season": "2021",
     "name": "Malachi Flynn",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 23,
     "tier": "GREEN",
     "avgFP": 15.8,
     "projectedFp": 15.8,
     "photoCode": "1630201",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "1628408_2021",
@@ -3695,14 +4464,17 @@
     "season": "2021",
     "name": "PJ Dozier",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 23,
     "tier": "GREEN",
     "avgFP": 16,
     "projectedFp": 16,
     "photoCode": "1628408",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "1626192_2021",
@@ -3710,14 +4482,17 @@
     "season": "2021",
     "name": "Pat Connaughton",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 23,
     "tier": "GREEN",
     "avgFP": 15.9,
     "projectedFp": 15.9,
     "photoCode": "1626192",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "1626145_2021",
@@ -3725,14 +4500,17 @@
     "season": "2021",
     "name": "Tyus Jones",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 23,
     "tier": "GREEN",
     "avgFP": 15.6,
     "projectedFp": 15.6,
     "photoCode": "1626145",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "201588_2021",
@@ -3740,14 +4518,18 @@
     "season": "2021",
     "name": "George Hill",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 23,
     "tier": "GREEN",
     "avgFP": 15.6,
     "projectedFp": 15.6,
     "photoCode": "201588",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC",
+      "PHI"
+    ]
   },
   {
     "id": "203488_2021",
@@ -3755,14 +4537,17 @@
     "season": "2021",
     "name": "Mike Muscala",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 23,
     "tier": "GREEN",
     "avgFP": 15.9,
     "projectedFp": 15.9,
     "photoCode": "203488",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "202066_2021",
@@ -3770,14 +4555,17 @@
     "season": "2021",
     "name": "Garrett Temple",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "SG/SF",
     "salary": 23,
     "tier": "GREEN",
     "avgFP": 15.9,
     "projectedFp": 15.9,
     "photoCode": "202066",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "203210_2021",
@@ -3785,14 +4573,17 @@
     "season": "2021",
     "name": "JaMychal Green",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 23,
     "tier": "GREEN",
     "avgFP": 16,
     "projectedFp": 16,
     "photoCode": "203210",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "1630214_2021",
@@ -3800,14 +4591,17 @@
     "season": "2021",
     "name": "Xavier Tillman",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 23,
     "tier": "GREEN",
     "avgFP": 15.6,
     "projectedFp": 15.6,
     "photoCode": "1630214",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "1626159_2021",
@@ -3815,14 +4609,17 @@
     "season": "2021",
     "name": "Justise Winslow",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 23,
     "tier": "GREEN",
     "avgFP": 15.8,
     "projectedFp": 15.8,
     "photoCode": "1626159",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "1629672_2021",
@@ -3830,14 +4627,17 @@
     "season": "2021",
     "name": "Eric Paschall",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 15.2,
     "projectedFp": 15.2,
     "photoCode": "1629672",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "203145_2021",
@@ -3845,14 +4645,17 @@
     "season": "2021",
     "name": "Kent Bazemore",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 15.5,
     "projectedFp": 15.5,
     "photoCode": "203145",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "201188_2021",
@@ -3860,14 +4663,17 @@
     "season": "2021",
     "name": "Marc Gasol",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 15.4,
     "projectedFp": 15.4,
     "photoCode": "201188",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "1627936_2021",
@@ -3875,14 +4681,17 @@
     "season": "2021",
     "name": "Alex Caruso",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 15.4,
     "projectedFp": 15.4,
     "photoCode": "1627936",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "1629637_2021",
@@ -3890,14 +4699,17 @@
     "season": "2021",
     "name": "Jaxson Hayes",
     "team": "NOP",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 14.9,
     "projectedFp": 14.9,
     "photoCode": "1629637",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOP"
+    ]
   },
   {
     "id": "1627788_2021",
@@ -3905,14 +4717,17 @@
     "season": "2021",
     "name": "Furkan Korkmaz",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "SG/SF",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 15.1,
     "projectedFp": 15.1,
     "photoCode": "1627788",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "202324_2021",
@@ -3920,14 +4735,17 @@
     "season": "2021",
     "name": "Derrick Favors",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 15.4,
     "projectedFp": 15.4,
     "photoCode": "202324",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "202687_2021",
@@ -3935,14 +4753,17 @@
     "season": "2021",
     "name": "Bismack Biyombo",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 15.1,
     "projectedFp": 15.1,
     "photoCode": "202687",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA"
+    ]
   },
   {
     "id": "1630166_2021",
@@ -3950,14 +4771,17 @@
     "season": "2021",
     "name": "Deni Avdija",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 15,
     "projectedFp": 15,
     "photoCode": "1630166",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "1627884_2021",
@@ -3965,14 +4789,17 @@
     "season": "2021",
     "name": "Derrick Jones Jr.",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 14.9,
     "projectedFp": 14.9,
     "photoCode": "1627884",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "201577_2021",
@@ -3980,14 +4807,17 @@
     "season": "2021",
     "name": "Robin Lopez",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 15.4,
     "projectedFp": 15.4,
     "photoCode": "201577",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "1630183_2021",
@@ -3995,14 +4825,17 @@
     "season": "2021",
     "name": "Jaden McDaniels",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 15.2,
     "projectedFp": 15.2,
     "photoCode": "1630183",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "200765_2021",
@@ -4010,14 +4843,18 @@
     "season": "2021",
     "name": "Rajon Rondo",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 15,
     "projectedFp": 15,
     "photoCode": "200765",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL",
+      "LAC"
+    ]
   },
   {
     "id": "203967_2021",
@@ -4025,14 +4862,17 @@
     "season": "2021",
     "name": "Dario Saric",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 15.5,
     "projectedFp": 15.5,
     "photoCode": "203967",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "1629669_2021",
@@ -4040,14 +4880,17 @@
     "season": "2021",
     "name": "Jaylen Nowell",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 14.9,
     "projectedFp": 14.9,
     "photoCode": "1629669",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "1626172_2021",
@@ -4055,14 +4898,17 @@
     "season": "2021",
     "name": "Kevon Looney",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.2,
     "projectedFp": 14.2,
     "photoCode": "1626172",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "202693_2021",
@@ -4070,14 +4916,17 @@
     "season": "2021",
     "name": "Markieff Morris",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.2,
     "projectedFp": 14.2,
     "photoCode": "202693",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "1629013_2021",
@@ -4085,14 +4934,17 @@
     "season": "2021",
     "name": "Landry Shamet",
     "team": "BKN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.5,
     "projectedFp": 14.5,
     "photoCode": "1629013",
-    "active": true
+    "active": true,
+    "teams": [
+      "BKN"
+    ]
   },
   {
     "id": "1629611_2021",
@@ -4100,14 +4952,17 @@
     "season": "2021",
     "name": "Terance Mann",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "SG/SF",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.8,
     "projectedFp": 14.8,
     "photoCode": "1629611",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "1629056_2021",
@@ -4115,14 +4970,18 @@
     "season": "2021",
     "name": "Terence Davis",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.7,
     "projectedFp": 14.7,
     "photoCode": "1629056",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR",
+      "SAC"
+    ]
   },
   {
     "id": "203382_2021",
@@ -4130,14 +4989,17 @@
     "season": "2021",
     "name": "Aron Baynes",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.2,
     "projectedFp": 14.2,
     "photoCode": "203382",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "1629004_2021",
@@ -4145,14 +5007,18 @@
     "season": "2021",
     "name": "Svi Mykhailiuk",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "SG/SF",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.7,
     "projectedFp": 14.7,
     "photoCode": "1629004",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET",
+      "OKC"
+    ]
   },
   {
     "id": "1629667_2021",
@@ -4160,14 +5026,17 @@
     "season": "2021",
     "name": "Jalen McDaniels",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.4,
     "projectedFp": 14.4,
     "photoCode": "1629667",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA"
+    ]
   },
   {
     "id": "203476_2021",
@@ -4175,14 +5044,18 @@
     "season": "2021",
     "name": "Gorgui Dieng",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.5,
     "projectedFp": 14.5,
     "photoCode": "203476",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM",
+      "SAS"
+    ]
   },
   {
     "id": "201571_2021",
@@ -4190,14 +5063,18 @@
     "season": "2021",
     "name": "D.J. Augustin",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.5,
     "projectedFp": 14.5,
     "photoCode": "201571",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL",
+      "HOU"
+    ]
   },
   {
     "id": "1626163_2021",
@@ -4205,14 +5082,17 @@
     "season": "2021",
     "name": "Frank Kaminsky",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.8,
     "projectedFp": 14.8,
     "photoCode": "1626163",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "1629162_2021",
@@ -4220,14 +5100,17 @@
     "season": "2021",
     "name": "Jordan McLaughlin",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.5,
     "projectedFp": 14.5,
     "photoCode": "1629162",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "201961_2021",
@@ -4235,14 +5118,17 @@
     "season": "2021",
     "name": "Wayne Ellington",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.8,
     "projectedFp": 14.8,
     "photoCode": "201961",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "1630181_2021",
@@ -4250,14 +5136,18 @@
     "season": "2021",
     "name": "R.J. Hampton",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.8,
     "projectedFp": 14.8,
     "photoCode": "1630181",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN",
+      "ORL"
+    ]
   },
   {
     "id": "203458_2021",
@@ -4265,14 +5155,18 @@
     "season": "2021",
     "name": "Alex Len",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.4,
     "projectedFp": 14.4,
     "photoCode": "203458",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR",
+      "WAS"
+    ]
   },
   {
     "id": "203085_2021",
@@ -4280,14 +5174,18 @@
     "season": "2021",
     "name": "Austin Rivers",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.8,
     "projectedFp": 14.8,
     "photoCode": "203085",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK",
+      "DEN"
+    ]
   },
   {
     "id": "1630240_2021",
@@ -4295,14 +5193,17 @@
     "season": "2021",
     "name": "Saben Lee",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.2,
     "projectedFp": 14.2,
     "photoCode": "1630240",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "1628379_2021",
@@ -4310,14 +5211,17 @@
     "season": "2021",
     "name": "Luke Kennard",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 20,
     "tier": "WHITE",
     "avgFP": 14.1,
     "projectedFp": 14.1,
     "photoCode": "1628379",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "1630202_2021",
@@ -4325,14 +5229,17 @@
     "season": "2021",
     "name": "Payton Pritchard",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 20,
     "tier": "WHITE",
     "avgFP": 13.9,
     "projectedFp": 13.9,
     "photoCode": "1630202",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "1630178_2021",
@@ -4340,14 +5247,17 @@
     "season": "2021",
     "name": "Tyrese Maxey",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 20,
     "tier": "WHITE",
     "avgFP": 13.8,
     "projectedFp": 13.8,
     "photoCode": "1630178",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "2738_2021",
@@ -4355,14 +5265,17 @@
     "season": "2021",
     "name": "Andre Iguodala",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 20,
     "tier": "WHITE",
     "avgFP": 13.8,
     "projectedFp": 13.8,
     "photoCode": "2738",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "1626161_2021",
@@ -4370,14 +5283,17 @@
     "season": "2021",
     "name": "Willie Cauley-Stein",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 20,
     "tier": "WHITE",
     "avgFP": 13.5,
     "projectedFp": 13.5,
     "photoCode": "1626161",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "202357_2021",
@@ -4385,14 +5301,18 @@
     "season": "2021",
     "name": "Nemanja Bjelica",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 20,
     "tier": "WHITE",
     "avgFP": 13.6,
     "projectedFp": 13.6,
     "photoCode": "202357",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC",
+      "MIA"
+    ]
   },
   {
     "id": "1627761_2021",
@@ -4400,14 +5320,17 @@
     "season": "2021",
     "name": "DeAndre' Bembry",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 20,
     "tier": "WHITE",
     "avgFP": 13.7,
     "projectedFp": 13.7,
     "photoCode": "1627761",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "203939_2021",
@@ -4415,14 +5338,17 @@
     "season": "2021",
     "name": "Dwight Powell",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 20,
     "tier": "WHITE",
     "avgFP": 14,
     "projectedFp": 14,
     "photoCode": "203939",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "1629234_2021",
@@ -4430,14 +5356,17 @@
     "season": "2021",
     "name": "Drew Eubanks",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 20,
     "tier": "WHITE",
     "avgFP": 13.9,
     "projectedFp": 13.9,
     "photoCode": "1629234",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1628402_2021",
@@ -4445,14 +5374,17 @@
     "season": "2021",
     "name": "Frank Jackson",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 20,
     "tier": "WHITE",
     "avgFP": 13.6,
     "projectedFp": 13.6,
     "photoCode": "1628402",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "1627814_2021",
@@ -4460,14 +5392,17 @@
     "season": "2021",
     "name": "Damion Lee",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 19,
     "tier": "WHITE",
     "avgFP": 13.3,
     "projectedFp": 13.3,
     "photoCode": "1627814",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "1629731_2021",
@@ -4475,14 +5410,17 @@
     "season": "2021",
     "name": "Dean Wade",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "SF/PF",
     "salary": 19,
     "tier": "WHITE",
     "avgFP": 13.1,
     "projectedFp": 13.1,
     "photoCode": "1629731",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "1628392_2021",
@@ -4490,14 +5428,18 @@
     "season": "2021",
     "name": "Isaiah Hartenstein",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 19,
     "tier": "WHITE",
     "avgFP": 13.2,
     "projectedFp": 13.2,
     "photoCode": "1628392",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN",
+      "CLE"
+    ]
   },
   {
     "id": "1627854_2021",
@@ -4505,14 +5447,17 @@
     "season": "2021",
     "name": "Bryn Forbes",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 19,
     "tier": "WHITE",
     "avgFP": 13,
     "projectedFp": 13,
     "photoCode": "1627854",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "1629021_2021",
@@ -4520,14 +5465,19 @@
     "season": "2021",
     "name": "Moritz Wagner",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 19,
     "tier": "WHITE",
     "avgFP": 13.4,
     "projectedFp": 13.4,
     "photoCode": "1629021",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS",
+      "BOS",
+      "ORL"
+    ]
   },
   {
     "id": "201952_2021",
@@ -4535,14 +5485,18 @@
     "season": "2021",
     "name": "Jeff Teague",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 19,
     "tier": "WHITE",
     "avgFP": 12.8,
     "projectedFp": 12.8,
     "photoCode": "201952",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS",
+      "MIL"
+    ]
   },
   {
     "id": "1627823_2021",
@@ -4550,14 +5504,17 @@
     "season": "2021",
     "name": "Juancho Hernangomez",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 19,
     "tier": "WHITE",
     "avgFP": 13.4,
     "projectedFp": 13.4,
     "photoCode": "1627823",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "1628470_2021",
@@ -4565,14 +5522,18 @@
     "season": "2021",
     "name": "Torrey Craig",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 19,
     "tier": "WHITE",
     "avgFP": 13.4,
     "projectedFp": 13.4,
     "photoCode": "1628470",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL",
+      "PHX"
+    ]
   },
   {
     "id": "1627756_2021",
@@ -4580,14 +5541,17 @@
     "season": "2021",
     "name": "Denzel Valentine",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 19,
     "tier": "WHITE",
     "avgFP": 13.4,
     "projectedFp": 13.4,
     "photoCode": "1627756",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "1629680_2021",
@@ -4595,14 +5559,17 @@
     "season": "2021",
     "name": "Matisse Thybulle",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "SG/SF",
     "salary": 19,
     "tier": "WHITE",
     "avgFP": 12.8,
     "projectedFp": 12.8,
     "photoCode": "1629680",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "1629048_2021",
@@ -4610,14 +5577,17 @@
     "season": "2021",
     "name": "Goga Bitadze",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 19,
     "tier": "WHITE",
     "avgFP": 13.4,
     "projectedFp": 13.4,
     "photoCode": "1629048",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "202329_2021",
@@ -4625,14 +5595,18 @@
     "season": "2021",
     "name": "Al-Farouq Aminu",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 19,
     "tier": "WHITE",
     "avgFP": 13.4,
     "projectedFp": 13.4,
     "photoCode": "202329",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL",
+      "CHI"
+    ]
   },
   {
     "id": "202954_2021",
@@ -4640,14 +5614,18 @@
     "season": "2021",
     "name": "Brad Wanamaker",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 18,
     "tier": "WHITE",
     "avgFP": 12.5,
     "projectedFp": 12.5,
     "photoCode": "202954",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW",
+      "CHA"
+    ]
   },
   {
     "id": "1629006_2021",
@@ -4655,14 +5633,17 @@
     "season": "2021",
     "name": "Josh Okogie",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 18,
     "tier": "WHITE",
     "avgFP": 12.2,
     "projectedFp": 12.2,
     "photoCode": "1629006",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "1628988_2021",
@@ -4670,14 +5651,17 @@
     "season": "2021",
     "name": "Aaron Holiday",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 18,
     "tier": "WHITE",
     "avgFP": 12.4,
     "projectedFp": 12.4,
     "photoCode": "1628988",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "203090_2021",
@@ -4685,14 +5669,18 @@
     "season": "2021",
     "name": "Maurice Harkless",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 18,
     "tier": "WHITE",
     "avgFP": 12.4,
     "projectedFp": 12.4,
     "photoCode": "203090",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA",
+      "SAC"
+    ]
   },
   {
     "id": "202340_2021",
@@ -4700,14 +5688,18 @@
     "season": "2021",
     "name": "Avery Bradley",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 18,
     "tier": "WHITE",
     "avgFP": 12.2,
     "projectedFp": 12.2,
     "photoCode": "202340",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA",
+      "HOU"
+    ]
   },
   {
     "id": "1629014_2021",
@@ -4715,14 +5707,17 @@
     "season": "2021",
     "name": "Anfernee Simons",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 18,
     "tier": "WHITE",
     "avgFP": 12.7,
     "projectedFp": 12.7,
     "photoCode": "1629014",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "1628382_2021",
@@ -4730,14 +5725,18 @@
     "season": "2021",
     "name": "Justin Jackson",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 18,
     "tier": "WHITE",
     "avgFP": 12.3,
     "projectedFp": 12.3,
     "photoCode": "1628382",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC",
+      "MIL"
+    ]
   },
   {
     "id": "1630184_2021",
@@ -4745,14 +5744,17 @@
     "season": "2021",
     "name": "Kira Lewis Jr.",
     "team": "NOP",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 18,
     "tier": "WHITE",
     "avgFP": 12.5,
     "projectedFp": 12.5,
     "photoCode": "1630184",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOP"
+    ]
   },
   {
     "id": "1629002_2021",
@@ -4760,14 +5762,17 @@
     "season": "2021",
     "name": "Chimezie Metu",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "PF/C",
     "salary": 18,
     "tier": "WHITE",
     "avgFP": 12.5,
     "projectedFp": 12.5,
     "photoCode": "1629002",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "1627789_2021",
@@ -4775,14 +5780,17 @@
     "season": "2021",
     "name": "Timothe Luwawu-Cabarrot",
     "team": "BKN",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 11.4,
     "projectedFp": 11.4,
     "photoCode": "1627789",
-    "active": true
+    "active": true,
+    "teams": [
+      "BKN"
+    ]
   },
   {
     "id": "1628422_2021",
@@ -4790,14 +5798,17 @@
     "season": "2021",
     "name": "Damyean Dotson",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 12,
     "projectedFp": 12,
     "photoCode": "1628422",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "1629685_2021",
@@ -4805,14 +5816,17 @@
     "season": "2021",
     "name": "Dylan Windler",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 11.9,
     "projectedFp": 11.9,
     "photoCode": "1629685",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "1630170_2021",
@@ -4820,14 +5834,17 @@
     "season": "2021",
     "name": "Devin Vassell",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "SG/SF",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 12,
     "projectedFp": 12,
     "photoCode": "1630170",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1628998_2021",
@@ -4835,14 +5852,17 @@
     "season": "2021",
     "name": "Cody Martin",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 11.5,
     "projectedFp": 11.5,
     "photoCode": "1628998",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA"
+    ]
   },
   {
     "id": "200782_2021",
@@ -4850,14 +5870,18 @@
     "season": "2021",
     "name": "P.J. Tucker",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 11.7,
     "projectedFp": 11.7,
     "photoCode": "200782",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU",
+      "MIL"
+    ]
   },
   {
     "id": "202334_2021",
@@ -4865,14 +5889,17 @@
     "season": "2021",
     "name": "Ed Davis",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 11.9,
     "projectedFp": 11.9,
     "photoCode": "202334",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "1628410_2021",
@@ -4880,14 +5907,17 @@
     "season": "2021",
     "name": "Edmond Sumner",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 11.9,
     "projectedFp": 11.9,
     "photoCode": "1628410",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "203463_2021",
@@ -4895,14 +5925,18 @@
     "season": "2021",
     "name": "Ben McLemore",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 11.4,
     "projectedFp": 11.4,
     "photoCode": "203463",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU",
+      "LAL"
+    ]
   },
   {
     "id": "1627846_2021",
@@ -4910,14 +5944,17 @@
     "season": "2021",
     "name": "Abdel Nader",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 11.7,
     "projectedFp": 11.7,
     "photoCode": "1627846",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "1626184_2021",
@@ -4925,14 +5962,17 @@
     "season": "2021",
     "name": "Chasson Randle",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 11.8,
     "projectedFp": 11.8,
     "photoCode": "1626184",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "203524_2021",
@@ -4940,14 +5980,17 @@
     "season": "2021",
     "name": "Solomon Hill",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 16,
     "tier": "WHITE",
     "avgFP": 10.8,
     "projectedFp": 10.8,
     "photoCode": "203524",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1629633_2021",
@@ -4955,14 +5998,17 @@
     "season": "2021",
     "name": "Jarrett Culver",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 16,
     "tier": "WHITE",
     "avgFP": 10.7,
     "projectedFp": 10.7,
     "photoCode": "1629633",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "1627745_2021",
@@ -4970,14 +6016,19 @@
     "season": "2021",
     "name": "Damian Jones",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 16,
     "tier": "WHITE",
     "avgFP": 10.9,
     "projectedFp": 10.9,
     "photoCode": "1627745",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX",
+      "LAL",
+      "SAC"
+    ]
   },
   {
     "id": "1626169_2021",
@@ -4985,14 +6036,17 @@
     "season": "2021",
     "name": "Stanley Johnson",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 16,
     "tier": "WHITE",
     "avgFP": 11,
     "projectedFp": 11,
     "photoCode": "1626169",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "1627777_2021",
@@ -5000,14 +6054,17 @@
     "season": "2021",
     "name": "Georges Niang",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 16,
     "tier": "WHITE",
     "avgFP": 11.3,
     "projectedFp": 11.3,
     "photoCode": "1627777",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "200755_2021",
@@ -5015,14 +6072,18 @@
     "season": "2021",
     "name": "JJ Redick",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 16,
     "tier": "WHITE",
     "avgFP": 10.7,
     "projectedFp": 10.7,
     "photoCode": "200755",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOP",
+      "DAL"
+    ]
   },
   {
     "id": "1630173_2021",
@@ -5030,14 +6091,17 @@
     "season": "2021",
     "name": "Precious Achiuwa",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 16,
     "tier": "WHITE",
     "avgFP": 10.7,
     "projectedFp": 10.7,
     "photoCode": "1630173",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "1628391_2021",
@@ -5045,14 +6109,18 @@
     "season": "2021",
     "name": "D.J. Wilson",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 16,
     "tier": "WHITE",
     "avgFP": 11,
     "projectedFp": 11,
     "photoCode": "1628391",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL",
+      "HOU"
+    ]
   },
   {
     "id": "1629723_2021",
@@ -5060,14 +6128,17 @@
     "season": "2021",
     "name": "John Konchar",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 16,
     "tier": "WHITE",
     "avgFP": 10.9,
     "projectedFp": 10.9,
     "photoCode": "1629723",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "1628997_2021",
@@ -5075,14 +6146,17 @@
     "season": "2021",
     "name": "Caleb Martin",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 16,
     "tier": "WHITE",
     "avgFP": 11.3,
     "projectedFp": 11.3,
     "photoCode": "1628997",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA"
+    ]
   },
   {
     "id": "1626168_2021",
@@ -5090,14 +6164,17 @@
     "season": "2021",
     "name": "Trey Lyles",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 16,
     "tier": "WHITE",
     "avgFP": 10.7,
     "projectedFp": 10.7,
     "photoCode": "1626168",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1629139_2021",
@@ -5105,14 +6182,17 @@
     "season": "2021",
     "name": "Yuta Watanabe",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 16,
     "tier": "WHITE",
     "avgFP": 10.8,
     "projectedFp": 10.8,
     "photoCode": "1629139",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "1630168_2021",
@@ -5120,14 +6200,17 @@
     "season": "2021",
     "name": "Onyeka Okongwu",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 16,
     "tier": "WHITE",
     "avgFP": 10.7,
     "projectedFp": 10.7,
     "photoCode": "1630168",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1630237_2021",
@@ -5135,14 +6218,17 @@
     "season": "2021",
     "name": "Anthony Lamb",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 16,
     "tier": "WHITE",
     "avgFP": 11.1,
     "projectedFp": 11.1,
     "photoCode": "1630237",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "1629684_2021",
@@ -5150,14 +6236,17 @@
     "season": "2021",
     "name": "Grant Williams",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 15,
     "tier": "WHITE",
     "avgFP": 10.5,
     "projectedFp": 10.5,
     "photoCode": "1629684",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "1628990_2021",
@@ -5165,14 +6254,18 @@
     "season": "2021",
     "name": "Chandler Hutchison",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 15,
     "tier": "WHITE",
     "avgFP": 10,
     "projectedFp": 10,
     "photoCode": "1628990",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI",
+      "WAS"
+    ]
   },
   {
     "id": "203504_2021",
@@ -5180,14 +6273,17 @@
     "season": "2021",
     "name": "Trey Burke",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 15,
     "tier": "WHITE",
     "avgFP": 10.5,
     "projectedFp": 10.5,
     "photoCode": "203504",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "1628972_2021",
@@ -5195,14 +6291,18 @@
     "season": "2021",
     "name": "Troy Brown Jr.",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 15,
     "tier": "WHITE",
     "avgFP": 10,
     "projectedFp": 10,
     "photoCode": "1628972",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS",
+      "CHI"
+    ]
   },
   {
     "id": "1626246_2021",
@@ -5210,14 +6310,17 @@
     "season": "2021",
     "name": "Boban Marjanovic",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 15,
     "tier": "WHITE",
     "avgFP": 10,
     "projectedFp": 10,
     "photoCode": "1626246",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "1629185_2021",
@@ -5225,14 +6328,17 @@
     "season": "2021",
     "name": "Chris Chiozza",
     "team": "BKN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 15,
     "tier": "WHITE",
     "avgFP": 10.2,
     "projectedFp": 10.2,
     "photoCode": "1629185",
-    "active": true
+    "active": true,
+    "teams": [
+      "BKN"
+    ]
   },
   {
     "id": "203503_2021",
@@ -5240,14 +6346,17 @@
     "season": "2021",
     "name": "Tony Snell",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 15,
     "tier": "WHITE",
     "avgFP": 10.6,
     "projectedFp": 10.6,
     "photoCode": "203503",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "202335_2021",
@@ -5255,14 +6364,17 @@
     "season": "2021",
     "name": "Patrick Patterson",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.6,
     "projectedFp": 9.6,
     "photoCode": "202335",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "204020_2021",
@@ -5270,14 +6382,17 @@
     "season": "2021",
     "name": "Tyler Johnson",
     "team": "BKN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.8,
     "projectedFp": 9.8,
     "photoCode": "204020",
-    "active": true
+    "active": true,
+    "teams": [
+      "BKN"
+    ]
   },
   {
     "id": "202083_2021",
@@ -5285,14 +6400,17 @@
     "season": "2021",
     "name": "Wesley Matthews",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.6,
     "projectedFp": 9.6,
     "photoCode": "202083",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "1629164_2021",
@@ -5300,14 +6418,17 @@
     "season": "2021",
     "name": "Brandon Goodwin",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.8,
     "projectedFp": 9.8,
     "photoCode": "1629164",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1629635_2021",
@@ -5315,14 +6436,17 @@
     "season": "2021",
     "name": "Sekou Doumbouya",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.8,
     "projectedFp": 9.8,
     "photoCode": "1629635",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "1627774_2021",
@@ -5330,14 +6454,17 @@
     "season": "2021",
     "name": "Jake Layman",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.4,
     "projectedFp": 9.4,
     "photoCode": "1627774",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "202734_2021",
@@ -5345,14 +6472,17 @@
     "season": "2021",
     "name": "E'Twaun Moore",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.8,
     "projectedFp": 9.8,
     "photoCode": "202734",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "1630185_2021",
@@ -5360,14 +6490,17 @@
     "season": "2021",
     "name": "Nico Mannion",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.9,
     "projectedFp": 9.9,
     "photoCode": "1630185",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "1629076_2021",
@@ -5375,14 +6508,18 @@
     "season": "2021",
     "name": "Tyler Cook",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.5,
     "projectedFp": 9.5,
     "photoCode": "1629076",
-    "active": true
+    "active": true,
+    "teams": [
+      "BKN",
+      "DET"
+    ]
   },
   {
     "id": "1628400_2021",
@@ -5390,14 +6527,17 @@
     "season": "2021",
     "name": "Semi Ojeleye",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 9,
     "projectedFp": 9,
     "photoCode": "1628400",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "203118_2021",
@@ -5405,14 +6545,17 @@
     "season": "2021",
     "name": "Mike Scott",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 9.3,
     "projectedFp": 9.3,
     "photoCode": "203118",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "1628385_2021",
@@ -5420,14 +6563,17 @@
     "season": "2021",
     "name": "Harry Giles III",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 8.8,
     "projectedFp": 8.8,
     "photoCode": "1628385",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "1628975_2021",
@@ -5435,14 +6581,17 @@
     "season": "2021",
     "name": "Jevon Carter",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 8.7,
     "projectedFp": 8.7,
     "photoCode": "1628975",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "203918_2021",
@@ -5450,14 +6599,18 @@
     "season": "2021",
     "name": "Rodney Hood",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 8.8,
     "projectedFp": 8.8,
     "photoCode": "203918",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR",
+      "TOR"
+    ]
   },
   {
     "id": "1626143_2021",
@@ -5465,14 +6618,17 @@
     "season": "2021",
     "name": "Jahlil Okafor",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 9.1,
     "projectedFp": 9.1,
     "photoCode": "1626143",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "1629682_2021",
@@ -5480,14 +6636,17 @@
     "season": "2021",
     "name": "Tremont Waters",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 8.9,
     "projectedFp": 8.9,
     "photoCode": "1629682",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "1629670_2021",
@@ -5495,14 +6654,17 @@
     "season": "2021",
     "name": "Jordan Nwora",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 9.3,
     "projectedFp": 9.3,
     "photoCode": "1629670",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "1630174_2021",
@@ -5510,14 +6672,17 @@
     "season": "2021",
     "name": "Aaron Nesmith",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 9.3,
     "projectedFp": 9.3,
     "photoCode": "1630174",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "203922_2021",
@@ -5525,14 +6690,17 @@
     "season": "2021",
     "name": "Glenn Robinson III",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 9,
     "projectedFp": 9,
     "photoCode": "203922",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "1629103_2021",
@@ -5540,14 +6708,17 @@
     "season": "2021",
     "name": "Kelan Martin",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 8.8,
     "projectedFp": 8.8,
     "photoCode": "1629103",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "1630205_2021",
@@ -5555,14 +6726,17 @@
     "season": "2021",
     "name": "Lamar Stevens",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 8.9,
     "projectedFp": 8.9,
     "photoCode": "1630205",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "1629622_2021",
@@ -5570,14 +6744,17 @@
     "season": "2021",
     "name": "Max Strus",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "SG/SF",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 8.7,
     "projectedFp": 8.7,
     "photoCode": "1629622",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "1628436_2021",
@@ -5585,14 +6762,18 @@
     "season": "2021",
     "name": "Luke Kornet",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 9.3,
     "projectedFp": 9.3,
     "photoCode": "1628436",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI",
+      "BOS"
+    ]
   },
   {
     "id": "1629726_2021",
@@ -5600,14 +6781,17 @@
     "season": "2021",
     "name": "Garrison Mathews",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 8.9,
     "projectedFp": 8.9,
     "photoCode": "1629726",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "1629642_2021",
@@ -5615,14 +6799,17 @@
     "season": "2021",
     "name": "Nassir Little",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 8.9,
     "projectedFp": 8.9,
     "photoCode": "1629642",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "1630222_2021",
@@ -5630,14 +6817,18 @@
     "season": "2021",
     "name": "Mason Jones",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 8.9,
     "projectedFp": 8.9,
     "photoCode": "1630222",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU",
+      "PHI"
+    ]
   },
   {
     "id": "1629610_2021",
@@ -5645,14 +6836,18 @@
     "season": "2021",
     "name": "DaQuan Jeffries",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 9.1,
     "projectedFp": 9.1,
     "photoCode": "1629610",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC",
+      "HOU"
+    ]
   },
   {
     "id": "1628539_2021",
@@ -5660,14 +6855,17 @@
     "season": "2021",
     "name": "Mychal Mulder",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8.4,
     "projectedFp": 8.4,
     "photoCode": "1628539",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "1630167_2021",
@@ -5675,14 +6873,17 @@
     "season": "2021",
     "name": "Obi Toppin",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8.1,
     "projectedFp": 8.1,
     "photoCode": "1630167",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "1629740_2021",
@@ -5690,14 +6891,18 @@
     "season": "2021",
     "name": "Nicolo Melli",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8.2,
     "projectedFp": 8.2,
     "photoCode": "1629740",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOP",
+      "DAL"
+    ]
   },
   {
     "id": "1630271_2021",
@@ -5705,14 +6910,18 @@
     "season": "2021",
     "name": "Brodric Thomas",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8.2,
     "projectedFp": 8.2,
     "photoCode": "1630271",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU",
+      "CLE"
+    ]
   },
   {
     "id": "203960_2021",
@@ -5720,14 +6929,17 @@
     "season": "2021",
     "name": "JaKarr Sampson",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8.6,
     "projectedFp": 8.6,
     "photoCode": "203960",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "1629109_2021",
@@ -5735,14 +6947,19 @@
     "season": "2021",
     "name": "Gary Clark",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8.4,
     "projectedFp": 8.4,
     "photoCode": "1629109",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL",
+      "DEN",
+      "PHI"
+    ]
   },
   {
     "id": "1629216_2021",
@@ -5750,14 +6967,17 @@
     "season": "2021",
     "name": "Gabe Vincent",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8.6,
     "projectedFp": 8.6,
     "photoCode": "1629216",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "1630194_2021",
@@ -5765,14 +6985,17 @@
     "season": "2021",
     "name": "Paul Reed",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8.2,
     "projectedFp": 8.2,
     "photoCode": "1630194",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "1629617_2021",
@@ -5780,14 +7003,17 @@
     "season": "2021",
     "name": "Reggie Perry",
     "team": "BKN",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.5,
     "projectedFp": 7.5,
     "photoCode": "1629617",
-    "active": true
+    "active": true,
+    "teams": [
+      "BKN"
+    ]
   },
   {
     "id": "1630219_2021",
@@ -5795,14 +7021,17 @@
     "season": "2021",
     "name": "Skylar Mays",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.5,
     "projectedFp": 7.5,
     "photoCode": "1630219",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1630233_2021",
@@ -5810,14 +7039,17 @@
     "season": "2021",
     "name": "Nathan Knight",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.4,
     "projectedFp": 7.4,
     "photoCode": "1630233",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1629750_2021",
@@ -5825,14 +7057,18 @@
     "season": "2021",
     "name": "Javonte Green",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.5,
     "projectedFp": 7.5,
     "photoCode": "1629750",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS",
+      "CHI"
+    ]
   },
   {
     "id": "203648_2021",
@@ -5840,14 +7076,17 @@
     "season": "2021",
     "name": "Thanasis Antetokounmpo",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.4,
     "projectedFp": 7.4,
     "photoCode": "203648",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "1628778_2021",
@@ -5855,14 +7094,17 @@
     "season": "2021",
     "name": "Paul Watson",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.7,
     "projectedFp": 7.7,
     "photoCode": "1628778",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "1630182_2021",
@@ -5870,14 +7112,17 @@
     "season": "2021",
     "name": "Josh Green",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 6.7,
     "projectedFp": 6.7,
     "photoCode": "1630182",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "1628373_2021",
@@ -5885,14 +7130,17 @@
     "season": "2021",
     "name": "Frank Ntilikina",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 6.9,
     "projectedFp": 6.9,
     "photoCode": "1628373",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "1627853_2021",
@@ -5900,14 +7148,17 @@
     "season": "2021",
     "name": "Ryan Arcidiacono",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 7,
     "projectedFp": 7,
     "photoCode": "1627853",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "1628995_2021",
@@ -5915,14 +7166,17 @@
     "season": "2021",
     "name": "Kevin Knox II",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 6.8,
     "projectedFp": 6.8,
     "photoCode": "1628995",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "204038_2021",
@@ -5930,14 +7184,17 @@
     "season": "2021",
     "name": "Langston Galloway",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 7.1,
     "projectedFp": 7.1,
     "photoCode": "204038",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "1630264_2021",
@@ -5945,14 +7202,17 @@
     "season": "2021",
     "name": "Anthony Gill",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 6.8,
     "projectedFp": 6.8,
     "photoCode": "1630264",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "1629677_2021",
@@ -5960,14 +7220,17 @@
     "season": "2021",
     "name": "Luka Samanic",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 7.2,
     "projectedFp": 7.2,
     "photoCode": "1629677",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1630235_2021",
@@ -5975,14 +7238,17 @@
     "season": "2021",
     "name": "Trent Forrest",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG/SG",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 7.1,
     "projectedFp": 7.1,
     "photoCode": "1630235",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1629599_2021",
@@ -5990,14 +7256,17 @@
     "season": "2021",
     "name": "Amir Coffey",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "SG/SF",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 6.4,
     "projectedFp": 6.4,
     "photoCode": "1629599",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "1627885_2021",
@@ -6005,14 +7274,18 @@
     "season": "2021",
     "name": "Shaquille Harrison",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 5.9,
     "projectedFp": 5.9,
     "photoCode": "1627885",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA",
+      "DEN"
+    ]
   },
   {
     "id": "1629035_2021",
@@ -6020,14 +7293,17 @@
     "season": "2021",
     "name": "Carsen Edwards",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 5.9,
     "projectedFp": 5.9,
     "photoCode": "1629035",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "1628411_2021",
@@ -6035,14 +7311,18 @@
     "season": "2021",
     "name": "Wes Iwundu",
     "team": "NOP",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 6.3,
     "projectedFp": 6.3,
     "photoCode": "1628411",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL",
+      "NOP"
+    ]
   },
   {
     "id": "1629713_2021",
@@ -6050,14 +7330,17 @@
     "season": "2021",
     "name": "Justin James",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 6,
     "projectedFp": 6,
     "photoCode": "1629713",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "1630198_2021",
@@ -6065,14 +7348,17 @@
     "season": "2021",
     "name": "Isaiah Joe",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 6.2,
     "projectedFp": 6.2,
     "photoCode": "1630198",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "1629657_2021",
@@ -6080,14 +7366,17 @@
     "season": "2021",
     "name": "Kyle Guy",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 5.9,
     "projectedFp": 5.9,
     "photoCode": "1629657",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "1630192_2021",
@@ -6095,14 +7384,17 @@
     "season": "2021",
     "name": "Zeke Nnaji",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "PF/C",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 6,
     "projectedFp": 6,
     "photoCode": "1630192",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "1629644_2021",
@@ -6110,14 +7402,17 @@
     "season": "2021",
     "name": "KZ Okpala",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 6.4,
     "projectedFp": 6.4,
     "photoCode": "1629644",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "1628966_2021",
@@ -6125,14 +7420,17 @@
     "season": "2021",
     "name": "Keita Bates-Diop",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 6,
     "projectedFp": 6,
     "photoCode": "1628966",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1626188_2021",
@@ -6140,14 +7438,18 @@
     "season": "2021",
     "name": "Quinn Cook",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 8,
     "tier": "WHITE",
     "avgFP": 5.5,
     "projectedFp": 5.5,
     "photoCode": "1626188",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL",
+      "CLE"
+    ]
   },
   {
     "id": "1629662_2021",
@@ -6155,14 +7457,18 @@
     "season": "2021",
     "name": "Mfiondu Kabengele",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 8,
     "tier": "WHITE",
     "avgFP": 5.6,
     "projectedFp": 5.6,
     "photoCode": "1629662",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC",
+      "CLE"
+    ]
   },
   {
     "id": "1629067_2021",
@@ -6170,14 +7476,17 @@
     "season": "2021",
     "name": "Isaac Bonga",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 8,
     "tier": "WHITE",
     "avgFP": 5.5,
     "projectedFp": 5.5,
     "photoCode": "1629067",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "1630241_2021",
@@ -6185,14 +7494,17 @@
     "season": "2021",
     "name": "Sam Merrill",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 8,
     "tier": "WHITE",
     "avgFP": 5.5,
     "projectedFp": 5.5,
     "photoCode": "1630241",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "1628035_2021",
@@ -6200,14 +7512,17 @@
     "season": "2021",
     "name": "Alfonzo McKinnie",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 8,
     "tier": "WHITE",
     "avgFP": 5.3,
     "projectedFp": 5.3,
     "photoCode": "1628035",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "1628981_2021",
@@ -6215,14 +7530,17 @@
     "season": "2021",
     "name": "Bruno Fernando",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 7,
     "tier": "WHITE",
     "avgFP": 4.6,
     "projectedFp": 4.6,
     "photoCode": "1628981",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1629744_2021",
@@ -6230,14 +7548,18 @@
     "season": "2021",
     "name": "Matt Thomas",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 7,
     "tier": "WHITE",
     "avgFP": 4.9,
     "projectedFp": 4.9,
     "photoCode": "1629744",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR",
+      "UTA"
+    ]
   },
   {
     "id": "1629604_2021",
@@ -6245,14 +7567,17 @@
     "season": "2021",
     "name": "CJ Elleby",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 7,
     "tier": "WHITE",
     "avgFP": 4.5,
     "projectedFp": 4.5,
     "photoCode": "1629604",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "1629671_2021",
@@ -6260,14 +7585,17 @@
     "season": "2021",
     "name": "Miye Oni",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 7,
     "tier": "WHITE",
     "avgFP": 5,
     "projectedFp": 5,
     "photoCode": "1629671",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1630187_2021",
@@ -6275,14 +7603,17 @@
     "season": "2021",
     "name": "Daniel Oturu",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 7,
     "tier": "WHITE",
     "avgFP": 5,
     "projectedFp": 5,
     "photoCode": "1630187",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "1630200_2021",
@@ -6290,14 +7621,17 @@
     "season": "2021",
     "name": "Tre Jones",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 7,
     "tier": "WHITE",
     "avgFP": 4.9,
     "projectedFp": 4.9,
     "photoCode": "1630200",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1629714_2021",
@@ -6305,14 +7639,17 @@
     "season": "2021",
     "name": "Jarrell Brantley",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 7,
     "tier": "WHITE",
     "avgFP": 4.6,
     "projectedFp": 4.6,
     "photoCode": "1629714",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1630188_2021",
@@ -6320,14 +7657,17 @@
     "season": "2021",
     "name": "Jalen Smith",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "PF/C",
     "salary": 6,
     "tier": "WHITE",
     "avgFP": 4.1,
     "projectedFp": 4.1,
     "photoCode": "1630188",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "1629626_2021",
@@ -6335,14 +7675,17 @@
     "season": "2021",
     "name": "Bol Bol",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 6,
     "tier": "WHITE",
     "avgFP": 3.8,
     "projectedFp": 3.8,
     "photoCode": "1629626",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "1628427_2021",
@@ -6350,14 +7693,17 @@
     "season": "2021",
     "name": "Vlatko Čančar",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF",
     "salary": 6,
     "tier": "WHITE",
     "avgFP": 4.3,
     "projectedFp": 4.3,
     "photoCode": "1628427",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "1630210_2021",
@@ -6365,14 +7711,17 @@
     "season": "2021",
     "name": "Markus Howard",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 6,
     "tier": "WHITE",
     "avgFP": 4.3,
     "projectedFp": 4.3,
     "photoCode": "1630210",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "1629752_2021",
@@ -6380,14 +7729,17 @@
     "season": "2021",
     "name": "Juwan Morgan",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 5,
     "tier": "WHITE",
     "avgFP": 3,
     "projectedFp": 3,
     "photoCode": "1629752",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1630199_2021",
@@ -6395,13 +7747,16 @@
     "season": "2021",
     "name": "Cassius Stanley",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 5,
     "tier": "WHITE",
     "avgFP": 2.8,
     "projectedFp": 2.8,
     "photoCode": "1630199",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   }
 ]

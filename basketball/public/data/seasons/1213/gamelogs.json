@@ -2020,26 +2020,6 @@
     }
   },
   {
-    "basePlayerId": "201161",
-    "date": "2012-10-31",
-    "matchDate": "2012-10-31",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 6,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "202718",
     "date": "2012-10-31",
     "matchDate": "2012-10-31",
@@ -2180,26 +2160,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2012-10-31",
-    "matchDate": "2012-10-31",
-    "season": "1213",
-    "opponent": "TOR",
-    "homeAway": "A",
-    "stats": {
-      "pts": 4,
-      "reb": 3,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 11,
-      "fg_pct": 1,
-      "fg3m": 0,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "979",
     "date": "2012-10-31",
     "matchDate": "2012-10-31",
@@ -2337,26 +2297,6 @@
       "fg_pct": 0.4,
       "fg3m": 0,
       "fga": 5
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2012-10-31",
-    "matchDate": "2012-10-31",
-    "season": "1213",
-    "opponent": "HOU",
-    "homeAway": "H",
-    "stats": {
-      "pts": 8,
-      "reb": 0,
-      "ast": 3,
-      "stl": 2,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 14,
-      "fg_pct": 0.5,
-      "fg3m": 2,
-      "fga": 6
     }
   },
   {
@@ -3214,26 +3154,6 @@
       "blk": 3,
       "turnovers": 3,
       "min": 18,
-      "fg_pct": 0.4,
-      "fg3m": 0,
-      "fga": 5
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2012-10-31",
-    "matchDate": "2012-10-31",
-    "season": "1213",
-    "opponent": "PHI",
-    "homeAway": "A",
-    "stats": {
-      "pts": 4,
-      "reb": 6,
-      "ast": 2,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 13,
       "fg_pct": 0.4,
       "fg3m": 0,
       "fga": 5
@@ -4297,26 +4217,6 @@
       "fg_pct": 0.412,
       "fg3m": 1,
       "fga": 17
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2012-10-31",
-    "matchDate": "2012-10-31",
-    "season": "1213",
-    "opponent": "CHI",
-    "homeAway": "A",
-    "stats": {
-      "pts": 5,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 8,
-      "fg_pct": 0.667,
-      "fg3m": 1,
-      "fga": 3
     }
   },
   {
@@ -5700,26 +5600,6 @@
     }
   },
   {
-    "basePlayerId": "203119",
-    "date": "2012-11-02",
-    "matchDate": "2012-11-02",
-    "season": "1213",
-    "opponent": "PHX",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 2,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 16,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "201945",
     "date": "2012-11-02",
     "matchDate": "2012-11-02",
@@ -6557,26 +6437,6 @@
       "fg_pct": 1,
       "fg3m": 0,
       "fga": 1
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2012-11-02",
-    "matchDate": "2012-11-02",
-    "season": "1213",
-    "opponent": "MIN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 15,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 3
     }
   },
   {
@@ -8240,46 +8100,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2012-11-02",
-    "matchDate": "2012-11-02",
-    "season": "1213",
-    "opponent": "MIA",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 2,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
-    "basePlayerId": "201175",
-    "date": "2012-11-02",
-    "matchDate": "2012-11-02",
-    "season": "1213",
-    "opponent": "DEN",
-    "homeAway": "H",
-    "stats": {
-      "pts": 29,
-      "reb": 10,
-      "ast": 0,
-      "stl": 0,
-      "blk": 2,
-      "turnovers": 1,
-      "min": 34,
-      "fg_pct": 0.52,
-      "fg3m": 0,
-      "fga": 25
-    }
-  },
-  {
     "basePlayerId": "202397",
     "date": "2012-11-02",
     "matchDate": "2012-11-02",
@@ -9057,26 +8877,6 @@
       "fg_pct": 0.5,
       "fg3m": 0,
       "fga": 6
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2012-11-02",
-    "matchDate": "2012-11-02",
-    "season": "1213",
-    "opponent": "ORL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 4,
-      "reb": 1,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 3,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -12600,26 +12400,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2012-11-03",
-    "matchDate": "2012-11-03",
-    "season": "1213",
-    "opponent": "SAC",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 1,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 4,
-      "min": 12,
-      "fg_pct": 0.2,
-      "fg3m": 0,
-      "fga": 5
-    }
-  },
-  {
     "basePlayerId": "203086",
     "date": "2012-11-03",
     "matchDate": "2012-11-03",
@@ -12637,26 +12417,6 @@
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 0
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2012-11-03",
-    "matchDate": "2012-11-03",
-    "season": "1213",
-    "opponent": "IND",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 2,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 14,
-      "fg_pct": 0.333,
-      "fg3m": 0,
-      "fga": 3
     }
   },
   {
@@ -14520,26 +14280,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2012-11-04",
-    "matchDate": "2012-11-04",
-    "season": "1213",
-    "opponent": "PHX",
-    "homeAway": "H",
-    "stats": {
-      "pts": 22,
-      "reb": 8,
-      "ast": 5,
-      "stl": 2,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 32,
-      "fg_pct": 0.409,
-      "fg3m": 0,
-      "fga": 22
-    }
-  },
-  {
     "basePlayerId": "203094",
     "date": "2012-11-04",
     "matchDate": "2012-11-04",
@@ -14880,26 +14620,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2012-11-04",
-    "matchDate": "2012-11-04",
-    "season": "1213",
-    "opponent": "PHI",
-    "homeAway": "H",
-    "stats": {
-      "pts": 1,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 2,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "2202",
     "date": "2012-11-04",
     "matchDate": "2012-11-04",
@@ -15177,26 +14897,6 @@
       "fg_pct": 0.4,
       "fg3m": 0,
       "fga": 10
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2012-11-04",
-    "matchDate": "2012-11-04",
-    "season": "1213",
-    "opponent": "LAL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 8,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 2,
-      "min": 20,
-      "fg_pct": 0.4,
-      "fg3m": 2,
-      "fga": 5
     }
   },
   {
@@ -17240,26 +16940,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2012-11-05",
-    "matchDate": "2012-11-05",
-    "season": "1213",
-    "opponent": "SAS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 3,
-      "reb": 3,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 16,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "202331",
     "date": "2012-11-05",
     "matchDate": "2012-11-05",
@@ -17797,26 +17477,6 @@
       "fg_pct": 0.625,
       "fg3m": 3,
       "fga": 8
-    }
-  },
-  {
-    "basePlayerId": "203162",
-    "date": "2012-11-05",
-    "matchDate": "2012-11-05",
-    "season": "1213",
-    "opponent": "SAS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 4,
-      "fg_pct": 1,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -18497,26 +18157,6 @@
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 2
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2012-11-05",
-    "matchDate": "2012-11-05",
-    "season": "1213",
-    "opponent": "PHI",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 3,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -20500,26 +20140,6 @@
     }
   },
   {
-    "basePlayerId": "203119",
-    "date": "2012-11-06",
-    "matchDate": "2012-11-06",
-    "season": "1213",
-    "opponent": "DEN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 6,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 1,
-      "min": 9,
-      "fg_pct": 1,
-      "fg3m": 2,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "2430",
     "date": "2012-11-06",
     "matchDate": "2012-11-06",
@@ -20697,26 +20317,6 @@
       "fg_pct": 0.538,
       "fg3m": 0,
       "fga": 13
-    }
-  },
-  {
-    "basePlayerId": "201175",
-    "date": "2012-11-06",
-    "matchDate": "2012-11-06",
-    "season": "1213",
-    "opponent": "CHI",
-    "homeAway": "A",
-    "stats": {
-      "pts": 16,
-      "reb": 10,
-      "ast": 1,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 36,
-      "fg_pct": 0.318,
-      "fg3m": 0,
-      "fga": 22
     }
   },
   {
@@ -22497,26 +22097,6 @@
       "fg_pct": 0.5,
       "fg3m": 0,
       "fga": 4
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2012-11-07",
-    "matchDate": "2012-11-07",
-    "season": "1213",
-    "opponent": "ATL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 2,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 11,
-      "fg_pct": 0.333,
-      "fg3m": 0,
-      "fga": 3
     }
   },
   {
@@ -24460,26 +24040,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2012-11-07",
-    "matchDate": "2012-11-07",
-    "season": "1213",
-    "opponent": "MIN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 4,
-      "reb": 6,
-      "ast": 3,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 4,
-      "min": 19,
-      "fg_pct": 0.222,
-      "fg3m": 0,
-      "fga": 9
-    }
-  },
-  {
     "basePlayerId": "202397",
     "date": "2012-11-07",
     "matchDate": "2012-11-07",
@@ -24877,26 +24437,6 @@
       "fg_pct": 0.5,
       "fg3m": 1,
       "fga": 6
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2012-11-07",
-    "matchDate": "2012-11-07",
-    "season": "1213",
-    "opponent": "SAC",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 3,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 10,
-      "fg_pct": 0.333,
-      "fg3m": 0,
-      "fga": 3
     }
   },
   {
@@ -27460,26 +27000,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2012-11-09",
-    "matchDate": "2012-11-09",
-    "season": "1213",
-    "opponent": "BKN",
-    "homeAway": "H",
-    "stats": {
-      "pts": 8,
-      "reb": 3,
-      "ast": 5,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 32,
-      "fg_pct": 0.308,
-      "fg3m": 0,
-      "fga": 13
-    }
-  },
-  {
     "basePlayerId": "202696",
     "date": "2012-11-09",
     "matchDate": "2012-11-09",
@@ -28097,26 +27617,6 @@
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 2
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2012-11-09",
-    "matchDate": "2012-11-09",
-    "season": "1213",
-    "opponent": "MEM",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 2,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 7,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -28817,26 +28317,6 @@
       "fg_pct": 0.4,
       "fg3m": 0,
       "fga": 15
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2012-11-09",
-    "matchDate": "2012-11-09",
-    "season": "1213",
-    "opponent": "OKC",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 9,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -29637,26 +29117,6 @@
       "fg_pct": 0.563,
       "fg3m": 0,
       "fga": 16
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2012-11-09",
-    "matchDate": "2012-11-09",
-    "season": "1213",
-    "opponent": "SAS",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 1,
-      "stl": 1,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 8,
-      "fg_pct": 0.25,
-      "fg3m": 0,
-      "fga": 4
     }
   },
   {
@@ -30537,26 +29997,6 @@
       "fg_pct": 0.5,
       "fg3m": 0,
       "fga": 16
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2012-11-09",
-    "matchDate": "2012-11-09",
-    "season": "1213",
-    "opponent": "MIN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 2,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 11,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -32117,26 +31557,6 @@
       "fg_pct": 0.5,
       "fg3m": 2,
       "fga": 16
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2012-11-09",
-    "matchDate": "2012-11-09",
-    "season": "1213",
-    "opponent": "UTA",
-    "homeAway": "H",
-    "stats": {
-      "pts": 4,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 3,
-      "fg_pct": 0.667,
-      "fg3m": 0,
-      "fga": 3
     }
   },
   {
@@ -34600,26 +34020,6 @@
     }
   },
   {
-    "basePlayerId": "201161",
-    "date": "2012-11-10",
-    "matchDate": "2012-11-10",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "H",
-    "stats": {
-      "pts": 5,
-      "reb": 1,
-      "ast": 3,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 6,
-      "fg_pct": 1,
-      "fg3m": 1,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "202391",
     "date": "2012-11-10",
     "matchDate": "2012-11-10",
@@ -36220,26 +35620,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2012-11-11",
-    "matchDate": "2012-11-11",
-    "season": "1213",
-    "opponent": "LAL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 3,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 4
-    }
-  },
-  {
     "basePlayerId": "2555",
     "date": "2012-11-11",
     "matchDate": "2012-11-11",
@@ -36957,26 +36337,6 @@
       "fg_pct": 0.412,
       "fg3m": 0,
       "fga": 17
-    }
-  },
-  {
-    "basePlayerId": "201175",
-    "date": "2012-11-11",
-    "matchDate": "2012-11-11",
-    "season": "1213",
-    "opponent": "BKN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 19,
-      "reb": 10,
-      "ast": 1,
-      "stl": 3,
-      "blk": 2,
-      "turnovers": 2,
-      "min": 38,
-      "fg_pct": 0.429,
-      "fg3m": 0,
-      "fga": 21
     }
   },
   {
@@ -41180,26 +40540,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2012-11-13",
-    "matchDate": "2012-11-13",
-    "season": "1213",
-    "opponent": "NYK",
-    "homeAway": "H",
-    "stats": {
-      "pts": 10,
-      "reb": 6,
-      "ast": 3,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 31,
-      "fg_pct": 1,
-      "fg3m": 0,
-      "fga": 5
-    }
-  },
-  {
     "basePlayerId": "202696",
     "date": "2012-11-13",
     "matchDate": "2012-11-13",
@@ -44820,26 +44160,6 @@
     }
   },
   {
-    "basePlayerId": "203119",
-    "date": "2012-11-14",
-    "matchDate": "2012-11-14",
-    "season": "1213",
-    "opponent": "PHI",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 1,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "2217",
     "date": "2012-11-14",
     "matchDate": "2012-11-14",
@@ -45476,26 +44796,6 @@
       "min": 22,
       "fg_pct": 0,
       "fg3m": 0,
-      "fga": 6
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2012-11-14",
-    "matchDate": "2012-11-14",
-    "season": "1213",
-    "opponent": "MIL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 8,
-      "reb": 5,
-      "ast": 1,
-      "stl": 1,
-      "blk": 1,
-      "turnovers": 1,
-      "min": 16,
-      "fg_pct": 0.5,
-      "fg3m": 1,
       "fga": 6
     }
   },
@@ -47380,26 +46680,6 @@
     }
   },
   {
-    "basePlayerId": "203162",
-    "date": "2012-11-14",
-    "matchDate": "2012-11-14",
-    "season": "1213",
-    "opponent": "MIL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 3,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 6,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "2748",
     "date": "2012-11-14",
     "matchDate": "2012-11-14",
@@ -48360,26 +47640,6 @@
     }
   },
   {
-    "basePlayerId": "202706",
-    "date": "2012-11-15",
-    "matchDate": "2012-11-15",
-    "season": "1213",
-    "opponent": "MIA",
-    "homeAway": "H",
-    "stats": {
-      "pts": 11,
-      "reb": 3,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 21,
-      "fg_pct": 0.364,
-      "fg3m": 3,
-      "fga": 11
-    }
-  },
-  {
     "basePlayerId": "2034",
     "date": "2012-11-15",
     "matchDate": "2012-11-15",
@@ -49060,26 +48320,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2012-11-16",
-    "matchDate": "2012-11-16",
-    "season": "1213",
-    "opponent": "DAL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 14,
-      "reb": 4,
-      "ast": 2,
-      "stl": 2,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 21,
-      "fg_pct": 0.545,
-      "fg3m": 2,
-      "fga": 11
-    }
-  },
-  {
     "basePlayerId": "2202",
     "date": "2012-11-16",
     "matchDate": "2012-11-16",
@@ -49680,26 +48920,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2012-11-16",
-    "matchDate": "2012-11-16",
-    "season": "1213",
-    "opponent": "MEM",
-    "homeAway": "A",
-    "stats": {
-      "pts": 3,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 1,
-      "fg_pct": 1,
-      "fg3m": 1,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "200755",
     "date": "2012-11-16",
     "matchDate": "2012-11-16",
@@ -49717,26 +48937,6 @@
       "fg_pct": 0.538,
       "fg3m": 3,
       "fga": 13
-    }
-  },
-  {
-    "basePlayerId": "201175",
-    "date": "2012-11-16",
-    "matchDate": "2012-11-16",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "A",
-    "stats": {
-      "pts": 17,
-      "reb": 13,
-      "ast": 2,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 36,
-      "fg_pct": 0.571,
-      "fg3m": 0,
-      "fga": 14
     }
   },
   {
@@ -54680,26 +53880,6 @@
     }
   },
   {
-    "basePlayerId": "202706",
-    "date": "2012-11-17",
-    "matchDate": "2012-11-17",
-    "season": "1213",
-    "opponent": "SAS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 4,
-      "reb": 1,
-      "ast": 2,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 15,
-      "fg_pct": 0.2,
-      "fg3m": 1,
-      "fga": 5
-    }
-  },
-  {
     "basePlayerId": "1885",
     "date": "2012-11-17",
     "matchDate": "2012-11-17",
@@ -56080,26 +55260,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2012-11-18",
-    "matchDate": "2012-11-18",
-    "season": "1213",
-    "opponent": "TOR",
-    "homeAway": "A",
-    "stats": {
-      "pts": 16,
-      "reb": 12,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 33,
-      "fg_pct": 0.471,
-      "fg3m": 0,
-      "fga": 17
-    }
-  },
-  {
     "basePlayerId": "203199",
     "date": "2012-11-18",
     "matchDate": "2012-11-18",
@@ -56557,26 +55717,6 @@
       "fg_pct": 0.5,
       "fg3m": 0,
       "fga": 4
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2012-11-18",
-    "matchDate": "2012-11-18",
-    "season": "1213",
-    "opponent": "LAL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 5,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -58440,26 +57580,6 @@
     }
   },
   {
-    "basePlayerId": "203162",
-    "date": "2012-11-18",
-    "matchDate": "2012-11-18",
-    "season": "1213",
-    "opponent": "NYK",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "201587",
     "date": "2012-11-18",
     "matchDate": "2012-11-18",
@@ -58860,26 +57980,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2012-11-18",
-    "matchDate": "2012-11-18",
-    "season": "1213",
-    "opponent": "IND",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "203142",
     "date": "2012-11-18",
     "matchDate": "2012-11-18",
@@ -58934,26 +58034,6 @@
       "blk": 1,
       "turnovers": 0,
       "min": 18,
-      "fg_pct": 1,
-      "fg3m": 1,
-      "fga": 2
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2012-11-18",
-    "matchDate": "2012-11-18",
-    "season": "1213",
-    "opponent": "NYK",
-    "homeAway": "A",
-    "stats": {
-      "pts": 6,
-      "reb": 6,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 19,
       "fg_pct": 1,
       "fg3m": 1,
       "fga": 2
@@ -59117,26 +58197,6 @@
       "fg_pct": 0.412,
       "fg3m": 0,
       "fga": 17
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2012-11-19",
-    "matchDate": "2012-11-19",
-    "season": "1213",
-    "opponent": "UTA",
-    "homeAway": "A",
-    "stats": {
-      "pts": 5,
-      "reb": 0,
-      "ast": 1,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 14,
-      "fg_pct": 0.4,
-      "fg3m": 1,
-      "fga": 5
     }
   },
   {
@@ -59617,26 +58677,6 @@
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 0
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2012-11-19",
-    "matchDate": "2012-11-19",
-    "season": "1213",
-    "opponent": "MEM",
-    "homeAway": "A",
-    "stats": {
-      "pts": 3,
-      "reb": 3,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 12,
-      "fg_pct": 0.333,
-      "fg3m": 1,
-      "fga": 3
     }
   },
   {
@@ -61560,26 +60600,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2012-11-19",
-    "matchDate": "2012-11-19",
-    "season": "1213",
-    "opponent": "ATL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 11,
-      "reb": 7,
-      "ast": 1,
-      "stl": 2,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 24,
-      "fg_pct": 0.385,
-      "fg3m": 0,
-      "fga": 13
-    }
-  },
-  {
     "basePlayerId": "203199",
     "date": "2012-11-19",
     "matchDate": "2012-11-19",
@@ -61617,26 +60637,6 @@
       "fg_pct": 1,
       "fg3m": 0,
       "fga": 1
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2012-11-19",
-    "matchDate": "2012-11-19",
-    "season": "1213",
-    "opponent": "WAS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 9,
-      "reb": 8,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 35,
-      "fg_pct": 0.4,
-      "fg3m": 1,
-      "fga": 10
     }
   },
   {
@@ -62237,26 +61237,6 @@
       "fg_pct": 0.4,
       "fg3m": 2,
       "fga": 5
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2012-11-20",
-    "matchDate": "2012-11-20",
-    "season": "1213",
-    "opponent": "NOH",
-    "homeAway": "A",
-    "stats": {
-      "pts": 7,
-      "reb": 4,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 15,
-      "fg_pct": 0.75,
-      "fg3m": 1,
-      "fga": 4
     }
   },
   {
@@ -63820,26 +62800,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2012-11-21",
-    "matchDate": "2012-11-21",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "H",
-    "stats": {
-      "pts": 11,
-      "reb": 14,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 27,
-      "fg_pct": 0.444,
-      "fg3m": 0,
-      "fga": 9
-    }
-  },
-  {
     "basePlayerId": "203090",
     "date": "2012-11-21",
     "matchDate": "2012-11-21",
@@ -63877,26 +62837,6 @@
       "fg_pct": 0.778,
       "fg3m": 0,
       "fga": 9
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2012-11-21",
-    "matchDate": "2012-11-21",
-    "season": "1213",
-    "opponent": "NOH",
-    "homeAway": "H",
-    "stats": {
-      "pts": 3,
-      "reb": 5,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 16,
-      "fg_pct": 0.143,
-      "fg3m": 0,
-      "fga": 7
     }
   },
   {
@@ -65657,26 +64597,6 @@
       "fg_pct": 0.286,
       "fg3m": 0,
       "fga": 7
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2012-11-21",
-    "matchDate": "2012-11-21",
-    "season": "1213",
-    "opponent": "MIN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 12,
-      "reb": 6,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 19,
-      "fg_pct": 0.375,
-      "fg3m": 3,
-      "fga": 8
     }
   },
   {
@@ -68340,26 +67260,6 @@
     }
   },
   {
-    "basePlayerId": "203119",
-    "date": "2012-11-21",
-    "matchDate": "2012-11-21",
-    "season": "1213",
-    "opponent": "ORL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 5,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0.667,
-      "fg3m": 1,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "2217",
     "date": "2012-11-21",
     "matchDate": "2012-11-21",
@@ -69037,26 +67937,6 @@
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 3
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2012-11-23",
-    "matchDate": "2012-11-23",
-    "season": "1213",
-    "opponent": "NYK",
-    "homeAway": "H",
-    "stats": {
-      "pts": 9,
-      "reb": 2,
-      "ast": 0,
-      "stl": 1,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 26,
-      "fg_pct": 0.333,
-      "fg3m": 3,
-      "fga": 9
     }
   },
   {
@@ -71200,26 +70080,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2012-11-23",
-    "matchDate": "2012-11-23",
-    "season": "1213",
-    "opponent": "CLE",
-    "homeAway": "H",
-    "stats": {
-      "pts": 16,
-      "reb": 8,
-      "ast": 2,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 35,
-      "fg_pct": 0.357,
-      "fg3m": 0,
-      "fga": 14
-    }
-  },
-  {
     "basePlayerId": "201177",
     "date": "2012-11-23",
     "matchDate": "2012-11-23",
@@ -71737,26 +70597,6 @@
       "fg_pct": 0.4,
       "fg3m": 1,
       "fga": 5
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2012-11-23",
-    "matchDate": "2012-11-23",
-    "season": "1213",
-    "opponent": "GSW",
-    "homeAway": "H",
-    "stats": {
-      "pts": 3,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 5,
-      "fg_pct": 1,
-      "fg3m": 1,
-      "fga": 1
     }
   },
   {
@@ -73240,26 +72080,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2012-11-23",
-    "matchDate": "2012-11-23",
-    "season": "1213",
-    "opponent": "HOU",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 9,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 4
-    }
-  },
-  {
     "basePlayerId": "200779",
     "date": "2012-11-23",
     "matchDate": "2012-11-23",
@@ -73277,26 +72097,6 @@
       "fg_pct": 0.375,
       "fg3m": 3,
       "fga": 8
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2012-11-23",
-    "matchDate": "2012-11-23",
-    "season": "1213",
-    "opponent": "SAS",
-    "homeAway": "H",
-    "stats": {
-      "pts": 6,
-      "reb": 4,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 20,
-      "fg_pct": 0.4,
-      "fg3m": 1,
-      "fga": 5
     }
   },
   {
@@ -76820,26 +75620,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2012-11-25",
-    "matchDate": "2012-11-25",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "H",
-    "stats": {
-      "pts": 3,
-      "reb": 1,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 5,
-      "fg_pct": 1,
-      "fg3m": 1,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "203142",
     "date": "2012-11-25",
     "matchDate": "2012-11-25",
@@ -77157,26 +75937,6 @@
       "fg_pct": 0.714,
       "fg3m": 2,
       "fga": 7
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2012-11-25",
-    "matchDate": "2012-11-25",
-    "season": "1213",
-    "opponent": "NYK",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -78740,26 +77500,6 @@
     }
   },
   {
-    "basePlayerId": "202706",
-    "date": "2012-11-25",
-    "matchDate": "2012-11-25",
-    "season": "1213",
-    "opponent": "NOH",
-    "homeAway": "H",
-    "stats": {
-      "pts": 7,
-      "reb": 2,
-      "ast": 1,
-      "stl": 1,
-      "blk": 1,
-      "turnovers": 1,
-      "min": 12,
-      "fg_pct": 0.5,
-      "fg3m": 1,
-      "fga": 6
-    }
-  },
-  {
     "basePlayerId": "203095",
     "date": "2012-11-25",
     "matchDate": "2012-11-25",
@@ -78817,26 +77557,6 @@
       "fg_pct": 0.5,
       "fg3m": 0,
       "fga": 2
-    }
-  },
-  {
-    "basePlayerId": "201175",
-    "date": "2012-11-25",
-    "matchDate": "2012-11-25",
-    "season": "1213",
-    "opponent": "BOS",
-    "homeAway": "H",
-    "stats": {
-      "pts": 15,
-      "reb": 7,
-      "ast": 3,
-      "stl": 3,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 40,
-      "fg_pct": 0.25,
-      "fg3m": 0,
-      "fga": 12
     }
   },
   {
@@ -81840,26 +80560,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2012-11-26",
-    "matchDate": "2012-11-26",
-    "season": "1213",
-    "opponent": "BKN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 2,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "2407",
     "date": "2012-11-26",
     "matchDate": "2012-11-26",
@@ -82717,26 +81417,6 @@
       "fg_pct": 0.333,
       "fg3m": 0,
       "fga": 3
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2012-11-27",
-    "matchDate": "2012-11-27",
-    "season": "1213",
-    "opponent": "TOR",
-    "homeAway": "H",
-    "stats": {
-      "pts": 5,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 10,
-      "fg_pct": 0.5,
-      "fg3m": 1,
-      "fga": 4
     }
   },
   {
@@ -83877,26 +82557,6 @@
       "fg_pct": 0.538,
       "fg3m": 1,
       "fga": 13
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2012-11-27",
-    "matchDate": "2012-11-27",
-    "season": "1213",
-    "opponent": "LAL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 4,
-      "ast": 1,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 18,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 4
     }
   },
   {
@@ -85260,26 +83920,6 @@
     }
   },
   {
-    "basePlayerId": "203119",
-    "date": "2012-11-28",
-    "matchDate": "2012-11-28",
-    "season": "1213",
-    "opponent": "PHX",
-    "homeAway": "H",
-    "stats": {
-      "pts": 3,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 5,
-      "fg_pct": 0.333,
-      "fg3m": 1,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "2052",
     "date": "2012-11-28",
     "matchDate": "2012-11-28",
@@ -86480,26 +85120,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2012-11-28",
-    "matchDate": "2012-11-28",
-    "season": "1213",
-    "opponent": "SAS",
-    "homeAway": "H",
-    "stats": {
-      "pts": 12,
-      "reb": 5,
-      "ast": 0,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 28,
-      "fg_pct": 0.375,
-      "fg3m": 0,
-      "fga": 16
-    }
-  },
-  {
     "basePlayerId": "203094",
     "date": "2012-11-28",
     "matchDate": "2012-11-28",
@@ -87417,26 +86037,6 @@
       "fg_pct": 0.429,
       "fg3m": 0,
       "fga": 7
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2012-11-28",
-    "matchDate": "2012-11-28",
-    "season": "1213",
-    "opponent": "MIL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -88640,26 +87240,6 @@
     }
   },
   {
-    "basePlayerId": "201161",
-    "date": "2012-11-28",
-    "matchDate": "2012-11-28",
-    "season": "1213",
-    "opponent": "OKC",
-    "homeAway": "A",
-    "stats": {
-      "pts": 18,
-      "reb": 7,
-      "ast": 4,
-      "stl": 1,
-      "blk": 1,
-      "turnovers": 3,
-      "min": 38,
-      "fg_pct": 0.412,
-      "fg3m": 3,
-      "fga": 17
-    }
-  },
-  {
     "basePlayerId": "201962",
     "date": "2012-11-28",
     "matchDate": "2012-11-28",
@@ -89237,26 +87817,6 @@
       "fg_pct": 0.333,
       "fg3m": 2,
       "fga": 12
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2012-11-29",
-    "matchDate": "2012-11-29",
-    "season": "1213",
-    "opponent": "GSW",
-    "homeAway": "A",
-    "stats": {
-      "pts": 5,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 10,
-      "fg_pct": 0.5,
-      "fg3m": 1,
-      "fga": 4
     }
   },
   {
@@ -90197,26 +88757,6 @@
       "fg_pct": 0.5,
       "fg3m": 0,
       "fga": 4
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2012-11-30",
-    "matchDate": "2012-11-30",
-    "season": "1213",
-    "opponent": "IND",
-    "homeAway": "H",
-    "stats": {
-      "pts": 12,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 15,
-      "fg_pct": 0.714,
-      "fg3m": 2,
-      "fga": 7
     }
   },
   {
@@ -91480,46 +90020,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2012-11-30",
-    "matchDate": "2012-11-30",
-    "season": "1213",
-    "opponent": "WAS",
-    "homeAway": "H",
-    "stats": {
-      "pts": 3,
-      "reb": 2,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 9,
-      "fg_pct": 0.25,
-      "fg3m": 0,
-      "fga": 4
-    }
-  },
-  {
-    "basePlayerId": "201175",
-    "date": "2012-11-30",
-    "matchDate": "2012-11-30",
-    "season": "1213",
-    "opponent": "BKN",
-    "homeAway": "H",
-    "stats": {
-      "pts": 16,
-      "reb": 3,
-      "ast": 2,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 3,
-      "min": 29,
-      "fg_pct": 0.545,
-      "fg3m": 0,
-      "fga": 11
-    }
-  },
-  {
     "basePlayerId": "203090",
     "date": "2012-11-30",
     "matchDate": "2012-11-30",
@@ -92080,26 +90580,6 @@
     }
   },
   {
-    "basePlayerId": "202706",
-    "date": "2012-11-30",
-    "matchDate": "2012-11-30",
-    "season": "1213",
-    "opponent": "LAL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 13,
-      "reb": 8,
-      "ast": 1,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 20,
-      "fg_pct": 0.429,
-      "fg3m": 0,
-      "fga": 14
-    }
-  },
-  {
     "basePlayerId": "2399",
     "date": "2012-11-30",
     "matchDate": "2012-11-30",
@@ -92337,26 +90817,6 @@
       "fg_pct": 0.5,
       "fg3m": 0,
       "fga": 2
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2012-11-30",
-    "matchDate": "2012-11-30",
-    "season": "1213",
-    "opponent": "SAC",
-    "homeAway": "A",
-    "stats": {
-      "pts": 12,
-      "reb": 5,
-      "ast": 4,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 25,
-      "fg_pct": 0.455,
-      "fg3m": 2,
-      "fga": 11
     }
   },
   {
@@ -95580,26 +94040,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2012-12-01",
-    "matchDate": "2012-12-01",
-    "season": "1213",
-    "opponent": "LAC",
-    "homeAway": "A",
-    "stats": {
-      "pts": 3,
-      "reb": 0,
-      "ast": 1,
-      "stl": 2,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 10,
-      "fg_pct": 1,
-      "fg3m": 1,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "201168",
     "date": "2012-12-01",
     "matchDate": "2012-12-01",
@@ -97300,26 +95740,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2012-12-01",
-    "matchDate": "2012-12-01",
-    "season": "1213",
-    "opponent": "GSW",
-    "homeAway": "A",
-    "stats": {
-      "pts": 5,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 23,
-      "fg_pct": 0.333,
-      "fg3m": 1,
-      "fga": 6
-    }
-  },
-  {
     "basePlayerId": "2202",
     "date": "2012-12-01",
     "matchDate": "2012-12-01",
@@ -98560,26 +96980,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2012-12-02",
-    "matchDate": "2012-12-02",
-    "season": "1213",
-    "opponent": "LAL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 23,
-      "reb": 12,
-      "ast": 2,
-      "stl": 1,
-      "blk": 2,
-      "turnovers": 3,
-      "min": 36,
-      "fg_pct": 0.533,
-      "fg3m": 0,
-      "fga": 15
-    }
-  },
-  {
     "basePlayerId": "201160",
     "date": "2012-12-03",
     "matchDate": "2012-12-03",
@@ -99237,26 +97637,6 @@
       "fg_pct": 0.455,
       "fg3m": 0,
       "fga": 11
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2012-12-03",
-    "matchDate": "2012-12-03",
-    "season": "1213",
-    "opponent": "TOR",
-    "homeAway": "H",
-    "stats": {
-      "pts": 8,
-      "reb": 5,
-      "ast": 2,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 15,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 8
     }
   },
   {
@@ -100600,26 +98980,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2012-12-03",
-    "matchDate": "2012-12-03",
-    "season": "1213",
-    "opponent": "GSW",
-    "homeAway": "A",
-    "stats": {
-      "pts": 24,
-      "reb": 6,
-      "ast": 4,
-      "stl": 1,
-      "blk": 2,
-      "turnovers": 0,
-      "min": 35,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 20
-    }
-  },
-  {
     "basePlayerId": "200745",
     "date": "2012-12-03",
     "matchDate": "2012-12-03",
@@ -101097,26 +99457,6 @@
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 2
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2012-12-04",
-    "matchDate": "2012-12-04",
-    "season": "1213",
-    "opponent": "CHI",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 2,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 11,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -104380,26 +102720,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2012-12-05",
-    "matchDate": "2012-12-05",
-    "season": "1213",
-    "opponent": "UTA",
-    "homeAway": "A",
-    "stats": {
-      "pts": 18,
-      "reb": 12,
-      "ast": 1,
-      "stl": 0,
-      "blk": 2,
-      "turnovers": 3,
-      "min": 39,
-      "fg_pct": 0.438,
-      "fg3m": 0,
-      "fga": 16
-    }
-  },
-  {
     "basePlayerId": "2561",
     "date": "2012-12-05",
     "matchDate": "2012-12-05",
@@ -106580,26 +104900,6 @@
     }
   },
   {
-    "basePlayerId": "202706",
-    "date": "2012-12-05",
-    "matchDate": "2012-12-05",
-    "season": "1213",
-    "opponent": "ATL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "101127",
     "date": "2012-12-05",
     "matchDate": "2012-12-05",
@@ -106897,26 +105197,6 @@
       "fg_pct": 0.385,
       "fg3m": 3,
       "fga": 13
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2012-12-05",
-    "matchDate": "2012-12-05",
-    "season": "1213",
-    "opponent": "POR",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 3,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 12,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -107857,26 +106137,6 @@
       "fg_pct": 0.5,
       "fg3m": 6,
       "fga": 20
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2012-12-06",
-    "matchDate": "2012-12-06",
-    "season": "1213",
-    "opponent": "MIA",
-    "homeAway": "A",
-    "stats": {
-      "pts": 7,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 17,
-      "fg_pct": 1,
-      "fg3m": 1,
-      "fga": 3
     }
   },
   {
@@ -109320,26 +107580,6 @@
     }
   },
   {
-    "basePlayerId": "203158",
-    "date": "2012-12-07",
-    "matchDate": "2012-12-07",
-    "season": "1213",
-    "opponent": "MIN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 4,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 9,
-      "fg_pct": 0.333,
-      "fg3m": 0,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "2427",
     "date": "2012-12-07",
     "matchDate": "2012-12-07",
@@ -110440,26 +108680,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2012-12-07",
-    "matchDate": "2012-12-07",
-    "season": "1213",
-    "opponent": "SAC",
-    "homeAway": "A",
-    "stats": {
-      "pts": 20,
-      "reb": 11,
-      "ast": 2,
-      "stl": 3,
-      "blk": 2,
-      "turnovers": 5,
-      "min": 40,
-      "fg_pct": 0.421,
-      "fg3m": 0,
-      "fga": 19
-    }
-  },
-  {
     "basePlayerId": "203094",
     "date": "2012-12-07",
     "matchDate": "2012-12-07",
@@ -110597,26 +108817,6 @@
       "fg_pct": 0.389,
       "fg3m": 0,
       "fga": 18
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2012-12-07",
-    "matchDate": "2012-12-07",
-    "season": "1213",
-    "opponent": "ORL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 5,
-      "reb": 2,
-      "ast": 1,
-      "stl": 2,
-      "blk": 3,
-      "turnovers": 1,
-      "min": 22,
-      "fg_pct": 0.4,
-      "fg3m": 1,
-      "fga": 5
     }
   },
   {
@@ -112000,26 +110200,6 @@
     }
   },
   {
-    "basePlayerId": "202706",
-    "date": "2012-12-07",
-    "matchDate": "2012-12-07",
-    "season": "1213",
-    "opponent": "IND",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 1,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 8,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "202724",
     "date": "2012-12-07",
     "matchDate": "2012-12-07",
@@ -112037,26 +110217,6 @@
       "fg_pct": 0.5,
       "fg3m": 0,
       "fga": 4
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2012-12-07",
-    "matchDate": "2012-12-07",
-    "season": "1213",
-    "opponent": "SAS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 8,
-      "reb": 2,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 11,
-      "fg_pct": 0.333,
-      "fg3m": 2,
-      "fga": 9
     }
   },
   {
@@ -112857,26 +111017,6 @@
       "fg_pct": 0.333,
       "fg3m": 3,
       "fga": 15
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2012-12-07",
-    "matchDate": "2012-12-07",
-    "season": "1213",
-    "opponent": "DEN",
-    "homeAway": "H",
-    "stats": {
-      "pts": 9,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 16,
-      "fg_pct": 0.429,
-      "fg3m": 2,
-      "fga": 7
     }
   },
   {
@@ -114800,26 +112940,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2012-12-08",
-    "matchDate": "2012-12-08",
-    "season": "1213",
-    "opponent": "CHI",
-    "homeAway": "A",
-    "stats": {
-      "pts": 4,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 12,
-      "fg_pct": 0.667,
-      "fg3m": 0,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "2863",
     "date": "2012-12-08",
     "matchDate": "2012-12-08",
@@ -114856,26 +112976,6 @@
       "min": 30,
       "fg_pct": 0.385,
       "fg3m": 1,
-      "fga": 13
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2012-12-08",
-    "matchDate": "2012-12-08",
-    "season": "1213",
-    "opponent": "POR",
-    "homeAway": "A",
-    "stats": {
-      "pts": 12,
-      "reb": 5,
-      "ast": 2,
-      "stl": 1,
-      "blk": 2,
-      "turnovers": 1,
-      "min": 31,
-      "fg_pct": 0.385,
-      "fg3m": 2,
       "fga": 13
     }
   },
@@ -115257,26 +113357,6 @@
       "fg_pct": 0.667,
       "fg3m": 0,
       "fga": 6
-    }
-  },
-  {
-    "basePlayerId": "203158",
-    "date": "2012-12-08",
-    "matchDate": "2012-12-08",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 7,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -117500,26 +115580,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2012-12-09",
-    "matchDate": "2012-12-09",
-    "season": "1213",
-    "opponent": "PHX",
-    "homeAway": "A",
-    "stats": {
-      "pts": 15,
-      "reb": 7,
-      "ast": 3,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 3,
-      "min": 33,
-      "fg_pct": 0.636,
-      "fg3m": 0,
-      "fga": 11
-    }
-  },
-  {
     "basePlayerId": "202734",
     "date": "2012-12-09",
     "matchDate": "2012-12-09",
@@ -118897,26 +116957,6 @@
       "fg_pct": 1,
       "fg3m": 0,
       "fga": 1
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2012-12-09",
-    "matchDate": "2012-12-09",
-    "season": "1213",
-    "opponent": "OKC",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 1,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 9,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -121200,26 +119240,6 @@
     }
   },
   {
-    "basePlayerId": "201161",
-    "date": "2012-12-10",
-    "matchDate": "2012-12-10",
-    "season": "1213",
-    "opponent": "SAS",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "1740",
     "date": "2012-12-10",
     "matchDate": "2012-12-10",
@@ -121357,26 +119377,6 @@
       "fg_pct": 0.5,
       "fg3m": 1,
       "fga": 4
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2012-12-10",
-    "matchDate": "2012-12-10",
-    "season": "1213",
-    "opponent": "DAL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 25,
-      "reb": 1,
-      "ast": 1,
-      "stl": 0,
-      "blk": 3,
-      "turnovers": 0,
-      "min": 31,
-      "fg_pct": 0.563,
-      "fg3m": 7,
-      "fga": 16
     }
   },
   {
@@ -122377,26 +120377,6 @@
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 4
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2012-12-11",
-    "matchDate": "2012-12-11",
-    "season": "1213",
-    "opponent": "BKN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 6,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -123860,26 +121840,6 @@
     }
   },
   {
-    "basePlayerId": "202706",
-    "date": "2012-12-12",
-    "matchDate": "2012-12-12",
-    "season": "1213",
-    "opponent": "MIN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 4,
-      "reb": 3,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 10,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 4
-    }
-  },
-  {
     "basePlayerId": "201939",
     "date": "2012-12-12",
     "matchDate": "2012-12-12",
@@ -124077,26 +122037,6 @@
       "fg_pct": 0.556,
       "fg3m": 2,
       "fga": 9
-    }
-  },
-  {
-    "basePlayerId": "201175",
-    "date": "2012-12-12",
-    "matchDate": "2012-12-12",
-    "season": "1213",
-    "opponent": "ATL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 10,
-      "reb": 7,
-      "ast": 0,
-      "stl": 4,
-      "blk": 1,
-      "turnovers": 2,
-      "min": 35,
-      "fg_pct": 0.182,
-      "fg3m": 0,
-      "fga": 11
     }
   },
   {
@@ -125260,26 +123200,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2012-12-12",
-    "matchDate": "2012-12-12",
-    "season": "1213",
-    "opponent": "CLE",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 17,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "202331",
     "date": "2012-12-12",
     "matchDate": "2012-12-12",
@@ -125417,26 +123337,6 @@
       "fg_pct": 0.5,
       "fg3m": 1,
       "fga": 14
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2012-12-12",
-    "matchDate": "2012-12-12",
-    "season": "1213",
-    "opponent": "MIL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 3,
-      "reb": 5,
-      "ast": 1,
-      "stl": 0,
-      "blk": 2,
-      "turnovers": 1,
-      "min": 22,
-      "fg_pct": 0.2,
-      "fg3m": 0,
-      "fga": 5
     }
   },
   {
@@ -125757,26 +123657,6 @@
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 1
-    }
-  },
-  {
-    "basePlayerId": "203158",
-    "date": "2012-12-12",
-    "matchDate": "2012-12-12",
-    "season": "1213",
-    "opponent": "IND",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 3,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -126197,26 +124077,6 @@
       "fg_pct": 0.667,
       "fg3m": 0,
       "fga": 6
-    }
-  },
-  {
-    "basePlayerId": "203162",
-    "date": "2012-12-12",
-    "matchDate": "2012-12-12",
-    "season": "1213",
-    "opponent": "CLE",
-    "homeAway": "H",
-    "stats": {
-      "pts": 6,
-      "reb": 1,
-      "ast": 1,
-      "stl": 2,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 17,
-      "fg_pct": 0.5,
-      "fg3m": 1,
-      "fga": 2
     }
   },
   {
@@ -128860,26 +126720,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2012-12-13",
-    "matchDate": "2012-12-13",
-    "season": "1213",
-    "opponent": "LAL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 4,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "200779",
     "date": "2012-12-13",
     "matchDate": "2012-12-13",
@@ -130320,26 +128160,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2012-12-14",
-    "matchDate": "2012-12-14",
-    "season": "1213",
-    "opponent": "GSW",
-    "homeAway": "H",
-    "stats": {
-      "pts": 8,
-      "reb": 2,
-      "ast": 0,
-      "stl": 1,
-      "blk": 1,
-      "turnovers": 2,
-      "min": 28,
-      "fg_pct": 0.444,
-      "fg3m": 0,
-      "fga": 9
-    }
-  },
-  {
     "basePlayerId": "202397",
     "date": "2012-12-14",
     "matchDate": "2012-12-14",
@@ -131197,26 +129017,6 @@
       "fg_pct": 0.563,
       "fg3m": 0,
       "fga": 16
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2012-12-14",
-    "matchDate": "2012-12-14",
-    "season": "1213",
-    "opponent": "PHI",
-    "homeAway": "H",
-    "stats": {
-      "pts": 5,
-      "reb": 3,
-      "ast": 1,
-      "stl": 1,
-      "blk": 1,
-      "turnovers": 1,
-      "min": 26,
-      "fg_pct": 0.667,
-      "fg3m": 0,
-      "fga": 3
     }
   },
   {
@@ -132900,26 +130700,6 @@
     }
   },
   {
-    "basePlayerId": "203162",
-    "date": "2012-12-14",
-    "matchDate": "2012-12-14",
-    "season": "1213",
-    "opponent": "PHI",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 9,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "2863",
     "date": "2012-12-14",
     "matchDate": "2012-12-14",
@@ -133657,26 +131437,6 @@
       "fg_pct": 0.417,
       "fg3m": 0,
       "fga": 12
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2012-12-14",
-    "matchDate": "2012-12-14",
-    "season": "1213",
-    "opponent": "OKC",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 1,
-      "stl": 2,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 13,
-      "fg_pct": 0.167,
-      "fg3m": 0,
-      "fga": 6
     }
   },
   {
@@ -135037,26 +132797,6 @@
       "fg_pct": 0.333,
       "fg3m": 0,
       "fga": 12
-    }
-  },
-  {
-    "basePlayerId": "203158",
-    "date": "2012-12-15",
-    "matchDate": "2012-12-15",
-    "season": "1213",
-    "opponent": "NYK",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 2,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -137040,26 +134780,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2012-12-15",
-    "matchDate": "2012-12-15",
-    "season": "1213",
-    "opponent": "CHA",
-    "homeAway": "A",
-    "stats": {
-      "pts": 20,
-      "reb": 4,
-      "ast": 2,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 34,
-      "fg_pct": 0.636,
-      "fg3m": 0,
-      "fga": 11
-    }
-  },
-  {
     "basePlayerId": "202696",
     "date": "2012-12-15",
     "matchDate": "2012-12-15",
@@ -137697,46 +135417,6 @@
       "fg_pct": 0.625,
       "fg3m": 0,
       "fga": 8
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2012-12-15",
-    "matchDate": "2012-12-15",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "A",
-    "stats": {
-      "pts": 3,
-      "reb": 4,
-      "ast": 2,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 25,
-      "fg_pct": 0.25,
-      "fg3m": 1,
-      "fga": 4
-    }
-  },
-  {
-    "basePlayerId": "203162",
-    "date": "2012-12-15",
-    "matchDate": "2012-12-15",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 10,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 3
     }
   },
   {
@@ -138940,26 +136620,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2012-12-16",
-    "matchDate": "2012-12-16",
-    "season": "1213",
-    "opponent": "DEN",
-    "homeAway": "H",
-    "stats": {
-      "pts": 7,
-      "reb": 0,
-      "ast": 1,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 19,
-      "fg_pct": 0.6,
-      "fg3m": 1,
-      "fga": 5
-    }
-  },
-  {
     "basePlayerId": "201166",
     "date": "2012-12-16",
     "matchDate": "2012-12-16",
@@ -139137,26 +136797,6 @@
       "fg_pct": 0.75,
       "fg3m": 0,
       "fga": 4
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2012-12-16",
-    "matchDate": "2012-12-16",
-    "season": "1213",
-    "opponent": "SAC",
-    "homeAway": "A",
-    "stats": {
-      "pts": 15,
-      "reb": 4,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 20,
-      "fg_pct": 0.545,
-      "fg3m": 3,
-      "fga": 11
     }
   },
   {
@@ -139980,26 +137620,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2012-12-17",
-    "matchDate": "2012-12-17",
-    "season": "1213",
-    "opponent": "HOU",
-    "homeAway": "H",
-    "stats": {
-      "pts": 4,
-      "reb": 3,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 23,
-      "fg_pct": 0.4,
-      "fg3m": 0,
-      "fga": 5
-    }
-  },
-  {
     "basePlayerId": "200779",
     "date": "2012-12-17",
     "matchDate": "2012-12-17",
@@ -140037,26 +137657,6 @@
       "fg_pct": 0.182,
       "fg3m": 0,
       "fga": 11
-    }
-  },
-  {
-    "basePlayerId": "201175",
-    "date": "2012-12-17",
-    "matchDate": "2012-12-17",
-    "season": "1213",
-    "opponent": "MIN",
-    "homeAway": "H",
-    "stats": {
-      "pts": 28,
-      "reb": 5,
-      "ast": 1,
-      "stl": 2,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 32,
-      "fg_pct": 0.765,
-      "fg3m": 0,
-      "fga": 17
     }
   },
   {
@@ -140117,26 +137717,6 @@
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 2
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2012-12-17",
-    "matchDate": "2012-12-17",
-    "season": "1213",
-    "opponent": "PHX",
-    "homeAway": "A",
-    "stats": {
-      "pts": 6,
-      "reb": 2,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 19,
-      "fg_pct": 0.333,
-      "fg3m": 0,
-      "fga": 6
     }
   },
   {
@@ -140757,26 +138337,6 @@
       "fg_pct": 0.333,
       "fg3m": 2,
       "fga": 12
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2012-12-17",
-    "matchDate": "2012-12-17",
-    "season": "1213",
-    "opponent": "NYK",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 3,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -144860,26 +142420,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2012-12-18",
-    "matchDate": "2012-12-18",
-    "season": "1213",
-    "opponent": "MIL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 4,
-      "ast": 1,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 11,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "2202",
     "date": "2012-12-18",
     "matchDate": "2012-12-18",
@@ -145960,26 +143500,6 @@
     }
   },
   {
-    "basePlayerId": "203162",
-    "date": "2012-12-18",
-    "matchDate": "2012-12-18",
-    "season": "1213",
-    "opponent": "MIL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 7,
-      "reb": 2,
-      "ast": 3,
-      "stl": 2,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 12,
-      "fg_pct": 1,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "203146",
     "date": "2012-12-18",
     "matchDate": "2012-12-18",
@@ -146480,26 +144000,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2012-12-19",
-    "matchDate": "2012-12-19",
-    "season": "1213",
-    "opponent": "WAS",
-    "homeAway": "H",
-    "stats": {
-      "pts": 12,
-      "reb": 9,
-      "ast": 1,
-      "stl": 1,
-      "blk": 2,
-      "turnovers": 4,
-      "min": 39,
-      "fg_pct": 0.333,
-      "fg3m": 0,
-      "fga": 18
-    }
-  },
-  {
     "basePlayerId": "202970",
     "date": "2012-12-19",
     "matchDate": "2012-12-19",
@@ -146577,26 +144077,6 @@
       "fg_pct": 0.429,
       "fg3m": 0,
       "fga": 7
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2012-12-19",
-    "matchDate": "2012-12-19",
-    "season": "1213",
-    "opponent": "GSW",
-    "homeAway": "H",
-    "stats": {
-      "pts": 5,
-      "reb": 1,
-      "ast": 3,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 11,
-      "fg_pct": 1,
-      "fg3m": 1,
-      "fga": 1
     }
   },
   {
@@ -146997,26 +144477,6 @@
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 3
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2012-12-19",
-    "matchDate": "2012-12-19",
-    "season": "1213",
-    "opponent": "PHI",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 3,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -147757,26 +145217,6 @@
       "fg_pct": 0.2,
       "fg3m": 0,
       "fga": 10
-    }
-  },
-  {
-    "basePlayerId": "203158",
-    "date": "2012-12-19",
-    "matchDate": "2012-12-19",
-    "season": "1213",
-    "opponent": "BOS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 11,
-      "fg_pct": 0.2,
-      "fg3m": 0,
-      "fga": 5
     }
   },
   {
@@ -149800,26 +147240,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2012-12-19",
-    "matchDate": "2012-12-19",
-    "season": "1213",
-    "opponent": "UTA",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 3,
-      "ast": 1,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 15,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "202362",
     "date": "2012-12-19",
     "matchDate": "2012-12-19",
@@ -149837,26 +147257,6 @@
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 1
-    }
-  },
-  {
-    "basePlayerId": "203162",
-    "date": "2012-12-19",
-    "matchDate": "2012-12-19",
-    "season": "1213",
-    "opponent": "UTA",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 7,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -150337,26 +147737,6 @@
       "fg_pct": 0.25,
       "fg3m": 0,
       "fga": 4
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2012-12-19",
-    "matchDate": "2012-12-19",
-    "season": "1213",
-    "opponent": "BKN",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 2,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -151657,26 +149037,6 @@
       "fg_pct": 0.214,
       "fg3m": 0,
       "fga": 14
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2012-12-20",
-    "matchDate": "2012-12-20",
-    "season": "1213",
-    "opponent": "POR",
-    "homeAway": "A",
-    "stats": {
-      "pts": 6,
-      "reb": 4,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 13,
-      "fg_pct": 0.429,
-      "fg3m": 0,
-      "fga": 7
     }
   },
   {
@@ -154040,26 +151400,6 @@
     }
   },
   {
-    "basePlayerId": "203158",
-    "date": "2012-12-21",
-    "matchDate": "2012-12-21",
-    "season": "1213",
-    "opponent": "IND",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 9,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "201583",
     "date": "2012-12-21",
     "matchDate": "2012-12-21",
@@ -154374,26 +151714,6 @@
       "blk": 0,
       "turnovers": 0,
       "min": 1,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
-    "basePlayerId": "203162",
-    "date": "2012-12-21",
-    "matchDate": "2012-12-21",
-    "season": "1213",
-    "opponent": "CLE",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 3,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 11,
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 1
@@ -155620,26 +152940,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2012-12-21",
-    "matchDate": "2012-12-21",
-    "season": "1213",
-    "opponent": "CLE",
-    "homeAway": "A",
-    "stats": {
-      "pts": 3,
-      "reb": 3,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 13,
-      "fg_pct": 0.333,
-      "fg3m": 1,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "1495",
     "date": "2012-12-21",
     "matchDate": "2012-12-21",
@@ -155797,26 +153097,6 @@
       "fg_pct": 0.714,
       "fg3m": 0,
       "fga": 7
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2012-12-21",
-    "matchDate": "2012-12-21",
-    "season": "1213",
-    "opponent": "WAS",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 6,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -156055,26 +153335,6 @@
       "turnovers": 0,
       "min": 5,
       "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2012-12-22",
-    "matchDate": "2012-12-22",
-    "season": "1213",
-    "opponent": "MEM",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 4,
-      "fg_pct": 1,
       "fg3m": 0,
       "fga": 1
     }
@@ -156717,26 +153977,6 @@
       "fg_pct": 0.4,
       "fg3m": 0,
       "fga": 5
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2012-12-22",
-    "matchDate": "2012-12-22",
-    "season": "1213",
-    "opponent": "CHA",
-    "homeAway": "H",
-    "stats": {
-      "pts": 11,
-      "reb": 5,
-      "ast": 2,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 1,
-      "min": 17,
-      "fg_pct": 0.417,
-      "fg3m": 1,
-      "fga": 12
     }
   },
   {
@@ -158420,26 +155660,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2012-12-22",
-    "matchDate": "2012-12-22",
-    "season": "1213",
-    "opponent": "NOH",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 3,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 21,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "200769",
     "date": "2012-12-22",
     "matchDate": "2012-12-22",
@@ -159077,26 +156297,6 @@
       "fg_pct": 0.5,
       "fg3m": 0,
       "fga": 10
-    }
-  },
-  {
-    "basePlayerId": "203162",
-    "date": "2012-12-22",
-    "matchDate": "2012-12-22",
-    "season": "1213",
-    "opponent": "NOH",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 3,
-      "min": 5,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -162100,46 +159300,6 @@
     }
   },
   {
-    "basePlayerId": "202706",
-    "date": "2012-12-25",
-    "matchDate": "2012-12-25",
-    "season": "1213",
-    "opponent": "LAC",
-    "homeAway": "A",
-    "stats": {
-      "pts": 16,
-      "reb": 4,
-      "ast": 1,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 17,
-      "fg_pct": 0.778,
-      "fg3m": 2,
-      "fga": 9
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2012-12-25",
-    "matchDate": "2012-12-25",
-    "season": "1213",
-    "opponent": "CHI",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "201600",
     "date": "2012-12-25",
     "matchDate": "2012-12-25",
@@ -165420,26 +162580,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2012-12-26",
-    "matchDate": "2012-12-26",
-    "season": "1213",
-    "opponent": "PHX",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 18,
-      "fg_pct": 0.333,
-      "fg3m": 0,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "200779",
     "date": "2012-12-26",
     "matchDate": "2012-12-26",
@@ -167160,26 +164300,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2012-12-26",
-    "matchDate": "2012-12-26",
-    "season": "1213",
-    "opponent": "POR",
-    "homeAway": "A",
-    "stats": {
-      "pts": 9,
-      "reb": 1,
-      "ast": 3,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 19,
-      "fg_pct": 0.571,
-      "fg3m": 1,
-      "fga": 7
-    }
-  },
-  {
     "basePlayerId": "201949",
     "date": "2012-12-26",
     "matchDate": "2012-12-26",
@@ -168537,26 +165657,6 @@
       "fg_pct": 0.4,
       "fg3m": 1,
       "fga": 15
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2012-12-26",
-    "matchDate": "2012-12-26",
-    "season": "1213",
-    "opponent": "LAL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 3,
-      "ast": 0,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 5,
-      "fg_pct": 0.167,
-      "fg3m": 0,
-      "fga": 6
     }
   },
   {
@@ -171560,26 +168660,6 @@
     }
   },
   {
-    "basePlayerId": "201161",
-    "date": "2012-12-28",
-    "matchDate": "2012-12-28",
-    "season": "1213",
-    "opponent": "SAS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 3,
-      "reb": 1,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 13,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "2037",
     "date": "2012-12-28",
     "matchDate": "2012-12-28",
@@ -171977,26 +169057,6 @@
       "fg_pct": 0.235,
       "fg3m": 1,
       "fga": 17
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2012-12-28",
-    "matchDate": "2012-12-28",
-    "season": "1213",
-    "opponent": "NYK",
-    "homeAway": "H",
-    "stats": {
-      "pts": 6,
-      "reb": 1,
-      "ast": 2,
-      "stl": 2,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 24,
-      "fg_pct": 0.5,
-      "fg3m": 2,
-      "fga": 4
     }
   },
   {
@@ -173400,26 +170460,6 @@
     }
   },
   {
-    "basePlayerId": "202706",
-    "date": "2012-12-28",
-    "matchDate": "2012-12-28",
-    "season": "1213",
-    "opponent": "DAL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 3,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 8,
-      "fg_pct": 0.333,
-      "fg3m": 0,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "2740",
     "date": "2012-12-28",
     "matchDate": "2012-12-28",
@@ -174160,26 +171200,6 @@
     }
   },
   {
-    "basePlayerId": "203158",
-    "date": "2012-12-28",
-    "matchDate": "2012-12-28",
-    "season": "1213",
-    "opponent": "ATL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 1,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "2549",
     "date": "2012-12-28",
     "matchDate": "2012-12-28",
@@ -174297,26 +171317,6 @@
       "fg_pct": 0.462,
       "fg3m": 4,
       "fga": 13
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2012-12-28",
-    "matchDate": "2012-12-28",
-    "season": "1213",
-    "opponent": "SAC",
-    "homeAway": "A",
-    "stats": {
-      "pts": 4,
-      "reb": 0,
-      "ast": 1,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 9,
-      "fg_pct": 0.667,
-      "fg3m": 0,
-      "fga": 3
     }
   },
   {
@@ -176537,26 +173537,6 @@
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 0
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2012-12-29",
-    "matchDate": "2012-12-29",
-    "season": "1213",
-    "opponent": "OKC",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 12,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 3
     }
   },
   {
@@ -179940,26 +176920,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2012-12-30",
-    "matchDate": "2012-12-30",
-    "season": "1213",
-    "opponent": "BOS",
-    "homeAway": "H",
-    "stats": {
-      "pts": 5,
-      "reb": 0,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 16,
-      "fg_pct": 0.286,
-      "fg3m": 1,
-      "fga": 7
-    }
-  },
-  {
     "basePlayerId": "203080",
     "date": "2012-12-30",
     "matchDate": "2012-12-30",
@@ -180077,26 +177037,6 @@
       "fg_pct": 0.333,
       "fg3m": 2,
       "fga": 12
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2012-12-30",
-    "matchDate": "2012-12-30",
-    "season": "1213",
-    "opponent": "MIL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 1,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 6,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -182500,26 +179440,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2012-12-31",
-    "matchDate": "2012-12-31",
-    "season": "1213",
-    "opponent": "MEM",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 7,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "202362",
     "date": "2012-12-31",
     "matchDate": "2012-12-31",
@@ -182537,26 +179457,6 @@
       "fg_pct": 0.429,
       "fg3m": 2,
       "fga": 7
-    }
-  },
-  {
-    "basePlayerId": "203162",
-    "date": "2012-12-31",
-    "matchDate": "2012-12-31",
-    "season": "1213",
-    "opponent": "MEM",
-    "homeAway": "H",
-    "stats": {
-      "pts": 6,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 14,
-      "fg_pct": 0.4,
-      "fg3m": 2,
-      "fga": 5
     }
   },
   {
@@ -183420,26 +180320,6 @@
     }
   },
   {
-    "basePlayerId": "202706",
-    "date": "2013-01-01",
-    "matchDate": "2013-01-01",
-    "season": "1213",
-    "opponent": "LAC",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 2,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 5,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "2584",
     "date": "2013-01-01",
     "matchDate": "2013-01-01",
@@ -183577,26 +180457,6 @@
       "fg_pct": 0.474,
       "fg3m": 2,
       "fga": 19
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2013-01-01",
-    "matchDate": "2013-01-01",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "A",
-    "stats": {
-      "pts": 5,
-      "reb": 1,
-      "ast": 2,
-      "stl": 3,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 24,
-      "fg_pct": 0.2,
-      "fg3m": 1,
-      "fga": 5
     }
   },
   {
@@ -185860,26 +182720,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2013-01-02",
-    "matchDate": "2013-01-02",
-    "season": "1213",
-    "opponent": "CLE",
-    "homeAway": "A",
-    "stats": {
-      "pts": 14,
-      "reb": 6,
-      "ast": 2,
-      "stl": 2,
-      "blk": 2,
-      "turnovers": 0,
-      "min": 34,
-      "fg_pct": 0.462,
-      "fg3m": 2,
-      "fga": 13
-    }
-  },
-  {
     "basePlayerId": "202738",
     "date": "2013-01-02",
     "matchDate": "2013-01-02",
@@ -187780,26 +184620,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2013-01-02",
-    "matchDate": "2013-01-02",
-    "season": "1213",
-    "opponent": "WAS",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 2,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 8,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "202693",
     "date": "2013-01-02",
     "matchDate": "2013-01-02",
@@ -188137,26 +184957,6 @@
       "fg_pct": 0.444,
       "fg3m": 1,
       "fga": 18
-    }
-  },
-  {
-    "basePlayerId": "203158",
-    "date": "2013-01-02",
-    "matchDate": "2013-01-02",
-    "season": "1213",
-    "opponent": "SAC",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 6,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -188537,26 +185337,6 @@
       "fg_pct": 0.571,
       "fg3m": 0,
       "fga": 7
-    }
-  },
-  {
-    "basePlayerId": "203162",
-    "date": "2013-01-02",
-    "matchDate": "2013-01-02",
-    "season": "1213",
-    "opponent": "WAS",
-    "homeAway": "H",
-    "stats": {
-      "pts": 1,
-      "reb": 1,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 11,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 3
     }
   },
   {
@@ -190560,26 +187340,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2013-01-03",
-    "matchDate": "2013-01-03",
-    "season": "1213",
-    "opponent": "SAS",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 2,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 5,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "200779",
     "date": "2013-01-03",
     "matchDate": "2013-01-03",
@@ -191477,26 +188237,6 @@
       "fg_pct": 0.333,
       "fg3m": 1,
       "fga": 6
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2013-01-04",
-    "matchDate": "2013-01-04",
-    "season": "1213",
-    "opponent": "TOR",
-    "homeAway": "A",
-    "stats": {
-      "pts": 3,
-      "reb": 2,
-      "ast": 2,
-      "stl": 2,
-      "blk": 3,
-      "turnovers": 0,
-      "min": 23,
-      "fg_pct": 0.143,
-      "fg3m": 1,
-      "fga": 7
     }
   },
   {
@@ -194900,26 +191640,6 @@
     }
   },
   {
-    "basePlayerId": "203162",
-    "date": "2013-01-04",
-    "matchDate": "2013-01-04",
-    "season": "1213",
-    "opponent": "BOS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 5,
-      "reb": 3,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 18,
-      "fg_pct": 0.25,
-      "fg3m": 1,
-      "fga": 4
-    }
-  },
-  {
     "basePlayerId": "2202",
     "date": "2013-01-04",
     "matchDate": "2013-01-04",
@@ -196437,26 +193157,6 @@
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 1
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2013-01-05",
-    "matchDate": "2013-01-05",
-    "season": "1213",
-    "opponent": "UTA",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 6,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 3
     }
   },
   {
@@ -198060,26 +194760,6 @@
     }
   },
   {
-    "basePlayerId": "203162",
-    "date": "2013-01-05",
-    "matchDate": "2013-01-05",
-    "season": "1213",
-    "opponent": "MIL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 2,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "2202",
     "date": "2013-01-05",
     "matchDate": "2013-01-05",
@@ -199220,26 +195900,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2013-01-05",
-    "matchDate": "2013-01-05",
-    "season": "1213",
-    "opponent": "BKN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 2,
-      "stl": 1,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 21,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 4
-    }
-  },
-  {
     "basePlayerId": "201166",
     "date": "2013-01-05",
     "matchDate": "2013-01-05",
@@ -199437,26 +196097,6 @@
       "fg_pct": 0.333,
       "fg3m": 0,
       "fga": 3
-    }
-  },
-  {
-    "basePlayerId": "203158",
-    "date": "2013-01-05",
-    "matchDate": "2013-01-05",
-    "season": "1213",
-    "opponent": "HOU",
-    "homeAway": "H",
-    "stats": {
-      "pts": 6,
-      "reb": 3,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 12,
-      "fg_pct": 1,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -199697,26 +196337,6 @@
       "fg_pct": 0.308,
       "fg3m": 0,
       "fga": 13
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2013-01-06",
-    "matchDate": "2013-01-06",
-    "season": "1213",
-    "opponent": "LAL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 2,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -203100,26 +199720,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2013-01-07",
-    "matchDate": "2013-01-07",
-    "season": "1213",
-    "opponent": "MEM",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 2,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 17,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "201574",
     "date": "2013-01-07",
     "matchDate": "2013-01-07",
@@ -203520,26 +200120,6 @@
     }
   },
   {
-    "basePlayerId": "201161",
-    "date": "2013-01-07",
-    "matchDate": "2013-01-07",
-    "season": "1213",
-    "opponent": "CLE",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 2,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "201564",
     "date": "2013-01-07",
     "matchDate": "2013-01-07",
@@ -203917,26 +200497,6 @@
       "fg_pct": 0.6,
       "fg3m": 0,
       "fga": 5
-    }
-  },
-  {
-    "basePlayerId": "203158",
-    "date": "2013-01-07",
-    "matchDate": "2013-01-07",
-    "season": "1213",
-    "opponent": "CHI",
-    "homeAway": "A",
-    "stats": {
-      "pts": 4,
-      "reb": 2,
-      "ast": 2,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 20,
-      "fg_pct": 0.667,
-      "fg3m": 0,
-      "fga": 3
     }
   },
   {
@@ -209240,26 +205800,6 @@
     }
   },
   {
-    "basePlayerId": "203158",
-    "date": "2013-01-09",
-    "matchDate": "2013-01-09",
-    "season": "1213",
-    "opponent": "ATL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 4,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 22,
-      "fg_pct": 0.25,
-      "fg3m": 0,
-      "fga": 4
-    }
-  },
-  {
     "basePlayerId": "2427",
     "date": "2013-01-09",
     "matchDate": "2013-01-09",
@@ -211780,26 +208320,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2013-01-10",
-    "matchDate": "2013-01-10",
-    "season": "1213",
-    "opponent": "DAL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 13,
-      "reb": 4,
-      "ast": 3,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 1,
-      "min": 33,
-      "fg_pct": 0.5,
-      "fg3m": 2,
-      "fga": 8
-    }
-  },
-  {
     "basePlayerId": "201166",
     "date": "2013-01-10",
     "matchDate": "2013-01-10",
@@ -212177,26 +208697,6 @@
       "fg_pct": 0.714,
       "fg3m": 2,
       "fga": 7
-    }
-  },
-  {
-    "basePlayerId": "203158",
-    "date": "2013-01-11",
-    "matchDate": "2013-01-11",
-    "season": "1213",
-    "opponent": "DEN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 3,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -214000,26 +210500,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2013-01-11",
-    "matchDate": "2013-01-11",
-    "season": "1213",
-    "opponent": "CHI",
-    "homeAway": "H",
-    "stats": {
-      "pts": 11,
-      "reb": 2,
-      "ast": 1,
-      "stl": 3,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 17,
-      "fg_pct": 0.571,
-      "fg3m": 2,
-      "fga": 7
-    }
-  },
-  {
     "basePlayerId": "2449",
     "date": "2013-01-11",
     "matchDate": "2013-01-11",
@@ -215177,26 +211657,6 @@
       "fg_pct": 0.2,
       "fg3m": 1,
       "fga": 5
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2013-01-11",
-    "matchDate": "2013-01-11",
-    "season": "1213",
-    "opponent": "MIL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 3,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -216697,26 +213157,6 @@
       "fg_pct": 0.308,
       "fg3m": 0,
       "fga": 13
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2013-01-12",
-    "matchDate": "2013-01-12",
-    "season": "1213",
-    "opponent": "PHX",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 3,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -219480,26 +215920,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2013-01-12",
-    "matchDate": "2013-01-12",
-    "season": "1213",
-    "opponent": "MIA",
-    "homeAway": "H",
-    "stats": {
-      "pts": 3,
-      "reb": 3,
-      "ast": 0,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 1,
-      "min": 14,
-      "fg_pct": 0.25,
-      "fg3m": 1,
-      "fga": 4
-    }
-  },
-  {
     "basePlayerId": "201574",
     "date": "2013-01-12",
     "matchDate": "2013-01-12",
@@ -220317,26 +216737,6 @@
       "fg_pct": 0.333,
       "fg3m": 0,
       "fga": 3
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2013-01-13",
-    "matchDate": "2013-01-13",
-    "season": "1213",
-    "opponent": "NOH",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 2,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 10,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -221193,26 +217593,6 @@
       "stl": 0,
       "blk": 0,
       "turnovers": 1,
-      "min": 1,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2013-01-13",
-    "matchDate": "2013-01-13",
-    "season": "1213",
-    "opponent": "GSW",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
       "min": 1,
       "fg_pct": 0,
       "fg3m": 0,
@@ -222220,26 +218600,6 @@
     }
   },
   {
-    "basePlayerId": "203158",
-    "date": "2013-01-13",
-    "matchDate": "2013-01-13",
-    "season": "1213",
-    "opponent": "LAL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 6,
-      "reb": 2,
-      "ast": 1,
-      "stl": 2,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 16,
-      "fg_pct": 0.6,
-      "fg3m": 0,
-      "fga": 5
-    }
-  },
-  {
     "basePlayerId": "2427",
     "date": "2013-01-13",
     "matchDate": "2013-01-13",
@@ -223180,26 +219540,6 @@
     }
   },
   {
-    "basePlayerId": "201161",
-    "date": "2013-01-14",
-    "matchDate": "2013-01-14",
-    "season": "1213",
-    "opponent": "ATL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 6,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0.667,
-      "fg3m": 2,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "202710",
     "date": "2013-01-14",
     "matchDate": "2013-01-14",
@@ -223437,26 +219777,6 @@
       "fg_pct": 0.091,
       "fg3m": 0,
       "fga": 11
-    }
-  },
-  {
-    "basePlayerId": "201175",
-    "date": "2013-01-14",
-    "matchDate": "2013-01-14",
-    "season": "1213",
-    "opponent": "WAS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 13,
-      "reb": 4,
-      "ast": 1,
-      "stl": 0,
-      "blk": 2,
-      "turnovers": 1,
-      "min": 18,
-      "fg_pct": 0.75,
-      "fg3m": 0,
-      "fga": 8
     }
   },
   {
@@ -226120,26 +222440,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2013-01-14",
-    "matchDate": "2013-01-14",
-    "season": "1213",
-    "opponent": "CLE",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 1,
-      "ast": 2,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 12,
-      "fg_pct": 1,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "2555",
     "date": "2013-01-14",
     "matchDate": "2013-01-14",
@@ -226317,26 +222617,6 @@
       "fg_pct": 0.3,
       "fg3m": 0,
       "fga": 10
-    }
-  },
-  {
-    "basePlayerId": "203158",
-    "date": "2013-01-14",
-    "matchDate": "2013-01-14",
-    "season": "1213",
-    "opponent": "SAC",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 8,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -228017,26 +224297,6 @@
       "fg_pct": 0.25,
       "fg3m": 0,
       "fga": 4
-    }
-  },
-  {
-    "basePlayerId": "203162",
-    "date": "2013-01-15",
-    "matchDate": "2013-01-15",
-    "season": "1213",
-    "opponent": "CHA",
-    "homeAway": "A",
-    "stats": {
-      "pts": 3,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0.5,
-      "fg3m": 1,
-      "fga": 2
     }
   },
   {
@@ -232520,26 +228780,6 @@
     }
   },
   {
-    "basePlayerId": "202706",
-    "date": "2013-01-16",
-    "matchDate": "2013-01-16",
-    "season": "1213",
-    "opponent": "OKC",
-    "homeAway": "A",
-    "stats": {
-      "pts": 6,
-      "reb": 0,
-      "ast": 1,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 9,
-      "fg_pct": 0.75,
-      "fg3m": 0,
-      "fga": 4
-    }
-  },
-  {
     "basePlayerId": "203110",
     "date": "2013-01-16",
     "matchDate": "2013-01-16",
@@ -232757,26 +228997,6 @@
       "fg_pct": 0.417,
       "fg3m": 4,
       "fga": 12
-    }
-  },
-  {
-    "basePlayerId": "201175",
-    "date": "2013-01-16",
-    "matchDate": "2013-01-16",
-    "season": "1213",
-    "opponent": "IND",
-    "homeAway": "H",
-    "stats": {
-      "pts": 11,
-      "reb": 4,
-      "ast": 1,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 25,
-      "fg_pct": 0.357,
-      "fg3m": 0,
-      "fga": 14
     }
   },
   {
@@ -233277,26 +229497,6 @@
       "fg_pct": 0.455,
       "fg3m": 4,
       "fga": 11
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2013-01-16",
-    "matchDate": "2013-01-16",
-    "season": "1213",
-    "opponent": "WAS",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 5,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -234614,26 +230814,6 @@
       "blk": 0,
       "turnovers": 0,
       "min": 4,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2013-01-17",
-    "matchDate": "2013-01-17",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 1,
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 1
@@ -236080,26 +232260,6 @@
     }
   },
   {
-    "basePlayerId": "203162",
-    "date": "2013-01-18",
-    "matchDate": "2013-01-18",
-    "season": "1213",
-    "opponent": "HOU",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 1,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "2748",
     "date": "2013-01-18",
     "matchDate": "2013-01-18",
@@ -236137,26 +232297,6 @@
       "fg_pct": 0.364,
       "fg3m": 1,
       "fga": 11
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2013-01-18",
-    "matchDate": "2013-01-18",
-    "season": "1213",
-    "opponent": "MEM",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 7,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -237980,26 +234120,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2013-01-18",
-    "matchDate": "2013-01-18",
-    "season": "1213",
-    "opponent": "CHA",
-    "homeAway": "H",
-    "stats": {
-      "pts": 4,
-      "reb": 8,
-      "ast": 3,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 24,
-      "fg_pct": 0.2,
-      "fg3m": 0,
-      "fga": 5
-    }
-  },
-  {
     "basePlayerId": "203199",
     "date": "2013-01-18",
     "matchDate": "2013-01-18",
@@ -238857,26 +234977,6 @@
       "fg_pct": 0.75,
       "fg3m": 0,
       "fga": 12
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2013-01-19",
-    "matchDate": "2013-01-19",
-    "season": "1213",
-    "opponent": "MEM",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 5,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -240020,26 +236120,6 @@
     }
   },
   {
-    "basePlayerId": "203158",
-    "date": "2013-01-19",
-    "matchDate": "2013-01-19",
-    "season": "1213",
-    "opponent": "UTA",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 1,
-      "fg_pct": 1,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "202498",
     "date": "2013-01-19",
     "matchDate": "2013-01-19",
@@ -240957,26 +237037,6 @@
       "fg_pct": 0.444,
       "fg3m": 1,
       "fga": 18
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2013-01-19",
-    "matchDate": "2013-01-19",
-    "season": "1213",
-    "opponent": "CHA",
-    "homeAway": "A",
-    "stats": {
-      "pts": 5,
-      "reb": 2,
-      "ast": 2,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 17,
-      "fg_pct": 0.5,
-      "fg3m": 1,
-      "fga": 4
     }
   },
   {
@@ -243000,26 +239060,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2013-01-20",
-    "matchDate": "2013-01-20",
-    "season": "1213",
-    "opponent": "DAL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 24,
-      "reb": 6,
-      "ast": 6,
-      "stl": 2,
-      "blk": 1,
-      "turnovers": 2,
-      "min": 35,
-      "fg_pct": 0.625,
-      "fg3m": 0,
-      "fga": 16
-    }
-  },
-  {
     "basePlayerId": "201177",
     "date": "2013-01-20",
     "matchDate": "2013-01-20",
@@ -244077,26 +240117,6 @@
       "fg_pct": 0.5,
       "fg3m": 1,
       "fga": 6
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2013-01-21",
-    "matchDate": "2013-01-21",
-    "season": "1213",
-    "opponent": "NOH",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 11,
-      "fg_pct": 0.333,
-      "fg3m": 0,
-      "fga": 3
     }
   },
   {
@@ -245237,26 +241257,6 @@
       "fg_pct": 0.818,
       "fg3m": 3,
       "fga": 11
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2013-01-21",
-    "matchDate": "2013-01-21",
-    "season": "1213",
-    "opponent": "LAL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 5,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 3
     }
   },
   {
@@ -247320,26 +243320,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2013-01-22",
-    "matchDate": "2013-01-22",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "A",
-    "stats": {
-      "pts": 11,
-      "reb": 3,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 23,
-      "fg_pct": 0.25,
-      "fg3m": 0,
-      "fga": 16
-    }
-  },
-  {
     "basePlayerId": "202696",
     "date": "2013-01-22",
     "matchDate": "2013-01-22",
@@ -248617,26 +244597,6 @@
       "fg_pct": 0.333,
       "fg3m": 2,
       "fga": 6
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2013-01-22",
-    "matchDate": "2013-01-22",
-    "season": "1213",
-    "opponent": "ORL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -254080,26 +250040,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2013-01-24",
-    "matchDate": "2013-01-24",
-    "season": "1213",
-    "opponent": "BOS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 4,
-      "reb": 3,
-      "ast": 2,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 13,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 4
-    }
-  },
-  {
     "basePlayerId": "101162",
     "date": "2013-01-24",
     "matchDate": "2013-01-24",
@@ -254277,26 +250217,6 @@
       "fg_pct": 0.375,
       "fg3m": 2,
       "fga": 16
-    }
-  },
-  {
-    "basePlayerId": "201175",
-    "date": "2013-01-24",
-    "matchDate": "2013-01-24",
-    "season": "1213",
-    "opponent": "TOR",
-    "homeAway": "H",
-    "stats": {
-      "pts": 15,
-      "reb": 7,
-      "ast": 2,
-      "stl": 1,
-      "blk": 1,
-      "turnovers": 1,
-      "min": 34,
-      "fg_pct": 0.583,
-      "fg3m": 0,
-      "fga": 12
     }
   },
   {
@@ -256457,26 +252377,6 @@
       "fg_pct": 0.462,
       "fg3m": 0,
       "fga": 13
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2013-01-25",
-    "matchDate": "2013-01-25",
-    "season": "1213",
-    "opponent": "GSW",
-    "homeAway": "H",
-    "stats": {
-      "pts": 3,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 3,
-      "fg_pct": 0.333,
-      "fg3m": 1,
-      "fga": 3
     }
   },
   {
@@ -259020,26 +254920,6 @@
     }
   },
   {
-    "basePlayerId": "203119",
-    "date": "2013-01-25",
-    "matchDate": "2013-01-25",
-    "season": "1213",
-    "opponent": "MIA",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "2550",
     "date": "2013-01-26",
     "matchDate": "2013-01-26",
@@ -259857,26 +255737,6 @@
       "fg_pct": 0.364,
       "fg3m": 1,
       "fga": 11
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2013-01-26",
-    "matchDate": "2013-01-26",
-    "season": "1213",
-    "opponent": "WAS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 3,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 11,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 4
     }
   },
   {
@@ -260837,26 +256697,6 @@
       "fg_pct": 0.615,
       "fg3m": 0,
       "fga": 13
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2013-01-26",
-    "matchDate": "2013-01-26",
-    "season": "1213",
-    "opponent": "PHI",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 7,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -261880,26 +257720,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2013-01-26",
-    "matchDate": "2013-01-26",
-    "season": "1213",
-    "opponent": "DEN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 3,
-      "reb": 2,
-      "ast": 0,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 1,
-      "min": 16,
-      "fg_pct": 0.25,
-      "fg3m": 0,
-      "fga": 4
-    }
-  },
-  {
     "basePlayerId": "201949",
     "date": "2013-01-26",
     "matchDate": "2013-01-26",
@@ -262257,26 +258077,6 @@
       "fg_pct": 0.5,
       "fg3m": 0,
       "fga": 4
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2013-01-26",
-    "matchDate": "2013-01-26",
-    "season": "1213",
-    "opponent": "SAC",
-    "homeAway": "H",
-    "stats": {
-      "pts": 8,
-      "reb": 5,
-      "ast": 2,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 13,
-      "fg_pct": 0.3,
-      "fg3m": 2,
-      "fga": 10
     }
   },
   {
@@ -264720,26 +260520,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2013-01-27",
-    "matchDate": "2013-01-27",
-    "season": "1213",
-    "opponent": "ATL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "202697",
     "date": "2013-01-27",
     "matchDate": "2013-01-27",
@@ -265220,26 +261000,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2013-01-27",
-    "matchDate": "2013-01-27",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "H",
-    "stats": {
-      "pts": 17,
-      "reb": 12,
-      "ast": 4,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 5,
-      "min": 38,
-      "fg_pct": 0.364,
-      "fg3m": 0,
-      "fga": 22
-    }
-  },
-  {
     "basePlayerId": "202970",
     "date": "2013-01-27",
     "matchDate": "2013-01-27",
@@ -265437,26 +261197,6 @@
       "fg_pct": 0.5,
       "fg3m": 2,
       "fga": 6
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2013-01-27",
-    "matchDate": "2013-01-27",
-    "season": "1213",
-    "opponent": "ORL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 6,
-      "reb": 2,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 19,
-      "fg_pct": 0.667,
-      "fg3m": 0,
-      "fga": 3
     }
   },
   {
@@ -267280,26 +263020,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2013-01-28",
-    "matchDate": "2013-01-28",
-    "season": "1213",
-    "opponent": "BKN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 15,
-      "reb": 5,
-      "ast": 3,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 39,
-      "fg_pct": 0.462,
-      "fg3m": 0,
-      "fga": 13
-    }
-  },
-  {
     "basePlayerId": "202696",
     "date": "2013-01-28",
     "matchDate": "2013-01-28",
@@ -268557,26 +264277,6 @@
       "fg_pct": 0.667,
       "fg3m": 0,
       "fga": 18
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2013-01-28",
-    "matchDate": "2013-01-28",
-    "season": "1213",
-    "opponent": "WAS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 17,
-      "reb": 3,
-      "ast": 1,
-      "stl": 3,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 26,
-      "fg_pct": 0.6,
-      "fg3m": 4,
-      "fga": 10
     }
   },
   {
@@ -269897,26 +265597,6 @@
       "fg_pct": 0.333,
       "fg3m": 0,
       "fga": 9
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2013-01-29",
-    "matchDate": "2013-01-29",
-    "season": "1213",
-    "opponent": "MIL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 3,
-      "reb": 0,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 9,
-      "fg_pct": 1,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -271280,26 +266960,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2013-01-30",
-    "matchDate": "2013-01-30",
-    "season": "1213",
-    "opponent": "ORL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 10,
-      "fg_pct": 0.333,
-      "fg3m": 0,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "203143",
     "date": "2013-01-30",
     "matchDate": "2013-01-30",
@@ -272220,26 +267880,6 @@
     }
   },
   {
-    "basePlayerId": "201175",
-    "date": "2013-01-30",
-    "matchDate": "2013-01-30",
-    "season": "1213",
-    "opponent": "NYK",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 3,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "101123",
     "date": "2013-01-30",
     "matchDate": "2013-01-30",
@@ -272556,26 +268196,6 @@
       "min": 30,
       "fg_pct": 0.333,
       "fg3m": 1,
-      "fga": 6
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2013-01-30",
-    "matchDate": "2013-01-30",
-    "season": "1213",
-    "opponent": "IND",
-    "homeAway": "A",
-    "stats": {
-      "pts": 6,
-      "reb": 1,
-      "ast": 2,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 14,
-      "fg_pct": 0.333,
-      "fg3m": 0,
       "fga": 6
     }
   },
@@ -274820,26 +270440,6 @@
     }
   },
   {
-    "basePlayerId": "203162",
-    "date": "2013-01-30",
-    "matchDate": "2013-01-30",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "2748",
     "date": "2013-01-30",
     "matchDate": "2013-01-30",
@@ -274997,26 +270597,6 @@
       "fg_pct": 0.333,
       "fg3m": 1,
       "fga": 3
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2013-01-30",
-    "matchDate": "2013-01-30",
-    "season": "1213",
-    "opponent": "BOS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 6,
-      "reb": 2,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 3,
-      "min": 21,
-      "fg_pct": 0.333,
-      "fg3m": 2,
-      "fga": 6
     }
   },
   {
@@ -276400,26 +271980,6 @@
     }
   },
   {
-    "basePlayerId": "203158",
-    "date": "2013-02-01",
-    "matchDate": "2013-02-01",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "A",
-    "stats": {
-      "pts": 4,
-      "reb": 9,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 21,
-      "fg_pct": 0.333,
-      "fg3m": 0,
-      "fga": 6
-    }
-  },
-  {
     "basePlayerId": "2427",
     "date": "2013-02-01",
     "matchDate": "2013-02-01",
@@ -276820,26 +272380,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2013-02-01",
-    "matchDate": "2013-02-01",
-    "season": "1213",
-    "opponent": "MIL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 1,
-      "reb": 0,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 1,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "203142",
     "date": "2013-02-01",
     "matchDate": "2013-02-01",
@@ -276957,26 +272497,6 @@
       "fg_pct": 0.444,
       "fg3m": 2,
       "fga": 9
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2013-02-01",
-    "matchDate": "2013-02-01",
-    "season": "1213",
-    "opponent": "MIA",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 2,
-      "ast": 1,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 11,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -280020,26 +275540,6 @@
     }
   },
   {
-    "basePlayerId": "203119",
-    "date": "2013-02-01",
-    "matchDate": "2013-02-01",
-    "season": "1213",
-    "opponent": "CLE",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 4,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 16,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "201578",
     "date": "2013-02-01",
     "matchDate": "2013-02-01",
@@ -281117,26 +276617,6 @@
       "fg_pct": 0.545,
       "fg3m": 1,
       "fga": 11
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2013-02-01",
-    "matchDate": "2013-02-01",
-    "season": "1213",
-    "opponent": "PHI",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 3,
-      "ast": 2,
-      "stl": 3,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 20,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 3
     }
   },
   {
@@ -284560,26 +280040,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2013-02-02",
-    "matchDate": "2013-02-02",
-    "season": "1213",
-    "opponent": "NYK",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 22,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "202326",
     "date": "2013-02-02",
     "matchDate": "2013-02-02",
@@ -284917,26 +280377,6 @@
       "fg_pct": 0.333,
       "fg3m": 0,
       "fga": 3
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2013-02-02",
-    "matchDate": "2013-02-02",
-    "season": "1213",
-    "opponent": "SAC",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 2,
-      "ast": 1,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 12,
-      "fg_pct": 1,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -286137,46 +281577,6 @@
       "fg_pct": 0.643,
       "fg3m": 0,
       "fga": 14
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2013-02-03",
-    "matchDate": "2013-02-03",
-    "season": "1213",
-    "opponent": "LAL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 8,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2013-02-04",
-    "matchDate": "2013-02-04",
-    "season": "1213",
-    "opponent": "IND",
-    "homeAway": "A",
-    "stats": {
-      "pts": 3,
-      "reb": 2,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 11,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -288120,26 +283520,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2013-02-04",
-    "matchDate": "2013-02-04",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 2,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "201177",
     "date": "2013-02-04",
     "matchDate": "2013-02-04",
@@ -288537,26 +283917,6 @@
       "fg_pct": 0.2,
       "fg3m": 1,
       "fga": 10
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2013-02-04",
-    "matchDate": "2013-02-04",
-    "season": "1213",
-    "opponent": "NYK",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 2,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -289257,26 +284617,6 @@
       "fg_pct": 0.647,
       "fg3m": 0,
       "fga": 17
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2013-02-04",
-    "matchDate": "2013-02-04",
-    "season": "1213",
-    "opponent": "CHI",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 9,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -290500,26 +285840,6 @@
     }
   },
   {
-    "basePlayerId": "203162",
-    "date": "2013-02-05",
-    "matchDate": "2013-02-05",
-    "season": "1213",
-    "opponent": "ATL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 2,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "201563",
     "date": "2013-02-05",
     "matchDate": "2013-02-05",
@@ -291194,26 +286514,6 @@
       "blk": 0,
       "turnovers": 0,
       "min": 3,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 2
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2013-02-05",
-    "matchDate": "2013-02-05",
-    "season": "1213",
-    "opponent": "ATL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 3,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 15,
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 2
@@ -292577,26 +287877,6 @@
       "fg_pct": 0.429,
       "fg3m": 1,
       "fga": 7
-    }
-  },
-  {
-    "basePlayerId": "203158",
-    "date": "2013-02-06",
-    "matchDate": "2013-02-06",
-    "season": "1213",
-    "opponent": "CHA",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 2,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 6,
-      "fg_pct": 0.25,
-      "fg3m": 0,
-      "fga": 4
     }
   },
   {
@@ -295160,26 +290440,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2013-02-06",
-    "matchDate": "2013-02-06",
-    "season": "1213",
-    "opponent": "PHI",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 2,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 8,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "201587",
     "date": "2013-02-06",
     "matchDate": "2013-02-06",
@@ -297440,26 +292700,6 @@
     }
   },
   {
-    "basePlayerId": "201161",
-    "date": "2013-02-07",
-    "matchDate": "2013-02-07",
-    "season": "1213",
-    "opponent": "DEN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 19,
-      "reb": 4,
-      "ast": 0,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 27,
-      "fg_pct": 0.375,
-      "fg3m": 4,
-      "fga": 16
-    }
-  },
-  {
     "basePlayerId": "202710",
     "date": "2013-02-07",
     "matchDate": "2013-02-07",
@@ -297636,26 +292876,6 @@
       "min": 34,
       "fg_pct": 0.333,
       "fg3m": 0,
-      "fga": 6
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2013-02-07",
-    "matchDate": "2013-02-07",
-    "season": "1213",
-    "opponent": "CHI",
-    "homeAway": "H",
-    "stats": {
-      "pts": 8,
-      "reb": 2,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 8,
-      "fg_pct": 0.5,
-      "fg3m": 2,
       "fga": 6
     }
   },
@@ -304260,26 +299480,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2013-02-09",
-    "matchDate": "2013-02-09",
-    "season": "1213",
-    "opponent": "UTA",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 2,
-      "ast": 0,
-      "stl": 0,
-      "blk": 4,
-      "turnovers": 1,
-      "min": 18,
-      "fg_pct": 0.2,
-      "fg3m": 0,
-      "fga": 5
-    }
-  },
-  {
     "basePlayerId": "101236",
     "date": "2013-02-09",
     "matchDate": "2013-02-09",
@@ -305077,26 +300277,6 @@
       "fg_pct": 0.5,
       "fg3m": 0,
       "fga": 2
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2013-02-10",
-    "matchDate": "2013-02-10",
-    "season": "1213",
-    "opponent": "HOU",
-    "homeAway": "H",
-    "stats": {
-      "pts": 11,
-      "reb": 3,
-      "ast": 1,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 18,
-      "fg_pct": 0.571,
-      "fg3m": 3,
-      "fga": 7
     }
   },
   {
@@ -309200,26 +304380,6 @@
     }
   },
   {
-    "basePlayerId": "201161",
-    "date": "2013-02-11",
-    "matchDate": "2013-02-11",
-    "season": "1213",
-    "opponent": "SAS",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 1,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "203104",
     "date": "2013-02-11",
     "matchDate": "2013-02-11",
@@ -311520,26 +306680,6 @@
     }
   },
   {
-    "basePlayerId": "203119",
-    "date": "2013-02-11",
-    "matchDate": "2013-02-11",
-    "season": "1213",
-    "opponent": "NOH",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 2,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 8,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "202399",
     "date": "2013-02-11",
     "matchDate": "2013-02-11",
@@ -311597,26 +306737,6 @@
       "fg_pct": 0.6,
       "fg3m": 1,
       "fga": 20
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2013-02-12",
-    "matchDate": "2013-02-12",
-    "season": "1213",
-    "opponent": "TOR",
-    "homeAway": "A",
-    "stats": {
-      "pts": 7,
-      "reb": 5,
-      "ast": 2,
-      "stl": 2,
-      "blk": 2,
-      "turnovers": 3,
-      "min": 28,
-      "fg_pct": 0.3,
-      "fg3m": 1,
-      "fga": 10
     }
   },
   {
@@ -313220,26 +308340,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2013-02-12",
-    "matchDate": "2013-02-12",
-    "season": "1213",
-    "opponent": "MEM",
-    "homeAway": "A",
-    "stats": {
-      "pts": 3,
-      "reb": 2,
-      "ast": 1,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 2,
-      "min": 14,
-      "fg_pct": 0.5,
-      "fg3m": 1,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "201936",
     "date": "2013-02-12",
     "matchDate": "2013-02-12",
@@ -314797,26 +309897,6 @@
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 4
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2013-02-13",
-    "matchDate": "2013-02-13",
-    "season": "1213",
-    "opponent": "DAL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 6,
-      "reb": 2,
-      "ast": 2,
-      "stl": 1,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 24,
-      "fg_pct": 0.333,
-      "fg3m": 2,
-      "fga": 6
     }
   },
   {
@@ -316380,26 +311460,6 @@
     }
   },
   {
-    "basePlayerId": "203162",
-    "date": "2013-02-13",
-    "matchDate": "2013-02-13",
-    "season": "1213",
-    "opponent": "CHA",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "201156",
     "date": "2013-02-13",
     "matchDate": "2013-02-13",
@@ -317940,26 +313000,6 @@
     }
   },
   {
-    "basePlayerId": "202706",
-    "date": "2013-02-13",
-    "matchDate": "2013-02-13",
-    "season": "1213",
-    "opponent": "BKN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 15,
-      "reb": 3,
-      "ast": 1,
-      "stl": 2,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 20,
-      "fg_pct": 0.667,
-      "fg3m": 3,
-      "fga": 9
-    }
-  },
-  {
     "basePlayerId": "203095",
     "date": "2013-02-13",
     "matchDate": "2013-02-13",
@@ -318277,26 +313317,6 @@
       "fg_pct": 0.333,
       "fg3m": 1,
       "fga": 3
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2013-02-13",
-    "matchDate": "2013-02-13",
-    "season": "1213",
-    "opponent": "CHA",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 2,
-      "ast": 0,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -321560,26 +316580,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2013-02-19",
-    "matchDate": "2013-02-19",
-    "season": "1213",
-    "opponent": "SAS",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 2,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 13,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 4
-    }
-  },
-  {
     "basePlayerId": "201574",
     "date": "2013-02-19",
     "matchDate": "2013-02-19",
@@ -322754,26 +317754,6 @@
       "blk": 0,
       "turnovers": 0,
       "min": 9,
-      "fg_pct": 0.6,
-      "fg3m": 0,
-      "fga": 5
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2013-02-19",
-    "matchDate": "2013-02-19",
-    "season": "1213",
-    "opponent": "MEM",
-    "homeAway": "H",
-    "stats": {
-      "pts": 6,
-      "reb": 4,
-      "ast": 5,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 16,
       "fg_pct": 0.6,
       "fg3m": 0,
       "fga": 5
@@ -325660,26 +320640,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2013-02-20",
-    "matchDate": "2013-02-20",
-    "season": "1213",
-    "opponent": "IND",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 2,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "202697",
     "date": "2013-02-20",
     "matchDate": "2013-02-20",
@@ -325774,26 +320734,6 @@
       "blk": 1,
       "turnovers": 1,
       "min": 19,
-      "fg_pct": 0.667,
-      "fg3m": 0,
-      "fga": 3
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2013-02-20",
-    "matchDate": "2013-02-20",
-    "season": "1213",
-    "opponent": "NYK",
-    "homeAway": "H",
-    "stats": {
-      "pts": 7,
-      "reb": 5,
-      "ast": 4,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 15,
       "fg_pct": 0.667,
       "fg3m": 0,
       "fga": 3
@@ -326517,26 +321457,6 @@
       "fg_pct": 0.625,
       "fg3m": 1,
       "fga": 8
-    }
-  },
-  {
-    "basePlayerId": "203162",
-    "date": "2013-02-20",
-    "matchDate": "2013-02-20",
-    "season": "1213",
-    "opponent": "NYK",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 5,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -328297,26 +323217,6 @@
       "fg_pct": 0.5,
       "fg3m": 0,
       "fga": 2
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2013-02-21",
-    "matchDate": "2013-02-21",
-    "season": "1213",
-    "opponent": "MIA",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -330400,26 +325300,6 @@
     }
   },
   {
-    "basePlayerId": "203162",
-    "date": "2013-02-22",
-    "matchDate": "2013-02-22",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "H",
-    "stats": {
-      "pts": 6,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 5,
-      "fg_pct": 1,
-      "fg3m": 1,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "2449",
     "date": "2013-02-22",
     "matchDate": "2013-02-22",
@@ -331000,26 +325880,6 @@
     }
   },
   {
-    "basePlayerId": "201161",
-    "date": "2013-02-22",
-    "matchDate": "2013-02-22",
-    "season": "1213",
-    "opponent": "CHA",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 3,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "1890",
     "date": "2013-02-22",
     "matchDate": "2013-02-22",
@@ -331257,26 +326117,6 @@
       "fg_pct": 1,
       "fg3m": 1,
       "fga": 2
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2013-02-22",
-    "matchDate": "2013-02-22",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "H",
-    "stats": {
-      "pts": 6,
-      "reb": 5,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 19,
-      "fg_pct": 0.4,
-      "fg3m": 0,
-      "fga": 5
     }
   },
   {
@@ -333560,26 +328400,6 @@
     }
   },
   {
-    "basePlayerId": "203119",
-    "date": "2013-02-22",
-    "matchDate": "2013-02-22",
-    "season": "1213",
-    "opponent": "IND",
-    "homeAway": "A",
-    "stats": {
-      "pts": 8,
-      "reb": 3,
-      "ast": 1,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 20,
-      "fg_pct": 0.375,
-      "fg3m": 1,
-      "fga": 8
-    }
-  },
-  {
     "basePlayerId": "2217",
     "date": "2013-02-22",
     "matchDate": "2013-02-22",
@@ -335540,26 +330360,6 @@
     }
   },
   {
-    "basePlayerId": "203119",
-    "date": "2013-02-23",
-    "matchDate": "2013-02-23",
-    "season": "1213",
-    "opponent": "IND",
-    "homeAway": "H",
-    "stats": {
-      "pts": 1,
-      "reb": 1,
-      "ast": 0,
-      "stl": 2,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 9,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "202689",
     "date": "2013-02-23",
     "matchDate": "2013-02-23",
@@ -335617,26 +330417,6 @@
       "fg_pct": 0.6,
       "fg3m": 3,
       "fga": 10
-    }
-  },
-  {
-    "basePlayerId": "203158",
-    "date": "2013-02-23",
-    "matchDate": "2013-02-23",
-    "season": "1213",
-    "opponent": "ORL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 4,
-      "reb": 0,
-      "ast": 0,
-      "stl": 1,
-      "blk": 1,
-      "turnovers": 2,
-      "min": 6,
-      "fg_pct": 0.667,
-      "fg3m": 0,
-      "fga": 3
     }
   },
   {
@@ -336217,26 +330997,6 @@
       "fg_pct": 0.4,
       "fg3m": 1,
       "fga": 15
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2013-02-23",
-    "matchDate": "2013-02-23",
-    "season": "1213",
-    "opponent": "CHA",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 2,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -337677,26 +332437,6 @@
       "fg_pct": 0.429,
       "fg3m": 1,
       "fga": 14
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2013-02-24",
-    "matchDate": "2013-02-24",
-    "season": "1213",
-    "opponent": "OKC",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 7,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -341740,26 +336480,6 @@
     }
   },
   {
-    "basePlayerId": "203119",
-    "date": "2013-02-25",
-    "matchDate": "2013-02-25",
-    "season": "1213",
-    "opponent": "ATL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 10,
-      "reb": 1,
-      "ast": 2,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 23,
-      "fg_pct": 0.4,
-      "fg3m": 0,
-      "fga": 5
-    }
-  },
-  {
     "basePlayerId": "201229",
     "date": "2013-02-25",
     "matchDate": "2013-02-25",
@@ -341897,26 +336617,6 @@
       "fg_pct": 0.75,
       "fg3m": 0,
       "fga": 4
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2013-02-25",
-    "matchDate": "2013-02-25",
-    "season": "1213",
-    "opponent": "LAL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -347800,26 +342500,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2013-02-27",
-    "matchDate": "2013-02-27",
-    "season": "1213",
-    "opponent": "GSW",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 1,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "200779",
     "date": "2013-02-27",
     "matchDate": "2013-02-27",
@@ -348997,26 +343677,6 @@
       "fg_pct": 0.5,
       "fg3m": 0,
       "fga": 2
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2013-02-27",
-    "matchDate": "2013-02-27",
-    "season": "1213",
-    "opponent": "WAS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 10,
-      "reb": 0,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 12,
-      "fg_pct": 0.667,
-      "fg3m": 2,
-      "fga": 6
     }
   },
   {
@@ -350360,26 +345020,6 @@
     }
   },
   {
-    "basePlayerId": "201161",
-    "date": "2013-02-28",
-    "matchDate": "2013-02-28",
-    "season": "1213",
-    "opponent": "PHI",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 7,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "1885",
     "date": "2013-02-28",
     "matchDate": "2013-02-28",
@@ -350537,26 +345177,6 @@
       "fg_pct": 0.545,
       "fg3m": 1,
       "fga": 11
-    }
-  },
-  {
-    "basePlayerId": "203158",
-    "date": "2013-03-01",
-    "matchDate": "2013-03-01",
-    "season": "1213",
-    "opponent": "LAC",
-    "homeAway": "H",
-    "stats": {
-      "pts": 1,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 2,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -351780,26 +346400,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2013-03-01",
-    "matchDate": "2013-03-01",
-    "season": "1213",
-    "opponent": "TOR",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 2,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "202362",
     "date": "2013-03-01",
     "matchDate": "2013-03-01",
@@ -352657,26 +347257,6 @@
       "fg_pct": 0.385,
       "fg3m": 3,
       "fga": 13
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2013-03-01",
-    "matchDate": "2013-03-01",
-    "season": "1213",
-    "opponent": "WAS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 1,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 2,
-      "min": 10,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -354960,26 +349540,6 @@
     }
   },
   {
-    "basePlayerId": "203119",
-    "date": "2013-03-01",
-    "matchDate": "2013-03-01",
-    "season": "1213",
-    "opponent": "NOH",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 6,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "203139",
     "date": "2013-03-01",
     "matchDate": "2013-03-01",
@@ -355337,26 +349897,6 @@
       "fg_pct": 0.357,
       "fg3m": 2,
       "fga": 14
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2013-03-02",
-    "matchDate": "2013-03-02",
-    "season": "1213",
-    "opponent": "BKN",
-    "homeAway": "H",
-    "stats": {
-      "pts": 3,
-      "reb": 2,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 8,
-      "fg_pct": 0.333,
-      "fg3m": 1,
-      "fga": 3
     }
   },
   {
@@ -357700,26 +352240,6 @@
     }
   },
   {
-    "basePlayerId": "201161",
-    "date": "2013-03-03",
-    "matchDate": "2013-03-03",
-    "season": "1213",
-    "opponent": "IND",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 3,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "2229",
     "date": "2013-03-03",
     "matchDate": "2013-03-03",
@@ -358700,26 +353220,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2013-03-03",
-    "matchDate": "2013-03-03",
-    "season": "1213",
-    "opponent": "CHI",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 5,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "2748",
     "date": "2013-03-03",
     "matchDate": "2013-03-03",
@@ -359197,26 +353697,6 @@
       "fg_pct": 0.474,
       "fg3m": 1,
       "fga": 19
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2013-03-03",
-    "matchDate": "2013-03-03",
-    "season": "1213",
-    "opponent": "MIA",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 2,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 8,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -360220,26 +354700,6 @@
     }
   },
   {
-    "basePlayerId": "203119",
-    "date": "2013-03-03",
-    "matchDate": "2013-03-03",
-    "season": "1213",
-    "opponent": "SAS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 11,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "202689",
     "date": "2013-03-03",
     "matchDate": "2013-03-03",
@@ -360316,26 +354776,6 @@
       "min": 17,
       "fg_pct": 0.143,
       "fg3m": 0,
-      "fga": 7
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2013-03-03",
-    "matchDate": "2013-03-03",
-    "season": "1213",
-    "opponent": "DAL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 8,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 18,
-      "fg_pct": 0.429,
-      "fg3m": 2,
       "fga": 7
     }
   },
@@ -362040,26 +356480,6 @@
     }
   },
   {
-    "basePlayerId": "202706",
-    "date": "2013-03-04",
-    "matchDate": "2013-03-04",
-    "season": "1213",
-    "opponent": "ATL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 2,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "101106",
     "date": "2013-03-04",
     "matchDate": "2013-03-04",
@@ -363237,26 +357657,6 @@
       "fg_pct": 0.333,
       "fg3m": 1,
       "fga": 9
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2013-03-04",
-    "matchDate": "2013-03-04",
-    "season": "1213",
-    "opponent": "CLE",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -365080,26 +359480,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2013-03-06",
-    "matchDate": "2013-03-06",
-    "season": "1213",
-    "opponent": "DAL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 7,
-      "reb": 2,
-      "ast": 2,
-      "stl": 1,
-      "blk": 1,
-      "turnovers": 1,
-      "min": 22,
-      "fg_pct": 0.333,
-      "fg3m": 1,
-      "fga": 6
-    }
-  },
-  {
     "basePlayerId": "201935",
     "date": "2013-03-06",
     "matchDate": "2013-03-06",
@@ -366097,26 +360477,6 @@
       "fg_pct": 0.5,
       "fg3m": 0,
       "fga": 10
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2013-03-06",
-    "matchDate": "2013-03-06",
-    "season": "1213",
-    "opponent": "SAS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 7,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 3
     }
   },
   {
@@ -368540,26 +362900,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2013-03-06",
-    "matchDate": "2013-03-06",
-    "season": "1213",
-    "opponent": "BOS",
-    "homeAway": "H",
-    "stats": {
-      "pts": 3,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 4,
-      "fg_pct": 1,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "202323",
     "date": "2013-03-06",
     "matchDate": "2013-03-06",
@@ -369497,26 +363837,6 @@
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 1
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2013-03-06",
-    "matchDate": "2013-03-06",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 3,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 8,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -370776,26 +365096,6 @@
       "min": 15,
       "fg_pct": 0.4,
       "fg3m": 0,
-      "fga": 5
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2013-03-07",
-    "matchDate": "2013-03-07",
-    "season": "1213",
-    "opponent": "OKC",
-    "homeAway": "H",
-    "stats": {
-      "pts": 6,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 12,
-      "fg_pct": 0.4,
-      "fg3m": 2,
       "fga": 5
     }
   },
@@ -375040,26 +369340,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2013-03-08",
-    "matchDate": "2013-03-08",
-    "season": "1213",
-    "opponent": "ORL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 5,
-      "reb": 2,
-      "ast": 5,
-      "stl": 1,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 15,
-      "fg_pct": 0.333,
-      "fg3m": 1,
-      "fga": 6
-    }
-  },
-  {
     "basePlayerId": "202331",
     "date": "2013-03-08",
     "matchDate": "2013-03-08",
@@ -375700,26 +369980,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2013-03-08",
-    "matchDate": "2013-03-08",
-    "season": "1213",
-    "opponent": "GSW",
-    "homeAway": "A",
-    "stats": {
-      "pts": 6,
-      "reb": 1,
-      "ast": 0,
-      "stl": 3,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 13,
-      "fg_pct": 0.4,
-      "fg3m": 2,
-      "fga": 5
-    }
-  },
-  {
     "basePlayerId": "201228",
     "date": "2013-03-08",
     "matchDate": "2013-03-08",
@@ -376337,26 +370597,6 @@
       "fg_pct": 0.556,
       "fg3m": 4,
       "fga": 18
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2013-03-09",
-    "matchDate": "2013-03-09",
-    "season": "1213",
-    "opponent": "UTA",
-    "homeAway": "H",
-    "stats": {
-      "pts": 3,
-      "reb": 1,
-      "ast": 2,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 17,
-      "fg_pct": 0.333,
-      "fg3m": 1,
-      "fga": 3
     }
   },
   {
@@ -377157,26 +371397,6 @@
       "fg_pct": 0.4,
       "fg3m": 0,
       "fga": 5
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2013-03-09",
-    "matchDate": "2013-03-09",
-    "season": "1213",
-    "opponent": "MIN",
-    "homeAway": "H",
-    "stats": {
-      "pts": 5,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0.5,
-      "fg3m": 1,
-      "fga": 4
     }
   },
   {
@@ -378420,26 +372640,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2013-03-09",
-    "matchDate": "2013-03-09",
-    "season": "1213",
-    "opponent": "PHX",
-    "homeAway": "A",
-    "stats": {
-      "pts": 5,
-      "reb": 1,
-      "ast": 2,
-      "stl": 3,
-      "blk": 1,
-      "turnovers": 1,
-      "min": 13,
-      "fg_pct": 0.286,
-      "fg3m": 1,
-      "fga": 7
-    }
-  },
-  {
     "basePlayerId": "201976",
     "date": "2013-03-09",
     "matchDate": "2013-03-09",
@@ -379500,26 +373700,6 @@
     }
   },
   {
-    "basePlayerId": "203162",
-    "date": "2013-03-10",
-    "matchDate": "2013-03-10",
-    "season": "1213",
-    "opponent": "MIA",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 3,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "202724",
     "date": "2013-03-10",
     "matchDate": "2013-03-10",
@@ -380354,26 +374534,6 @@
       "blk": 1,
       "turnovers": 0,
       "min": 3,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2013-03-10",
-    "matchDate": "2013-03-10",
-    "season": "1213",
-    "opponent": "MIA",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 3,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 7,
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 0
@@ -381880,26 +376040,6 @@
     }
   },
   {
-    "basePlayerId": "203119",
-    "date": "2013-03-10",
-    "matchDate": "2013-03-10",
-    "season": "1213",
-    "opponent": "LAC",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 6,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "708",
     "date": "2013-03-10",
     "matchDate": "2013-03-10",
@@ -383097,26 +377237,6 @@
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 3
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2013-03-11",
-    "matchDate": "2013-03-11",
-    "season": "1213",
-    "opponent": "GSW",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 2,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 5,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -388080,26 +382200,6 @@
     }
   },
   {
-    "basePlayerId": "202706",
-    "date": "2013-03-13",
-    "matchDate": "2013-03-13",
-    "season": "1213",
-    "opponent": "NYK",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 3,
-      "ast": 0,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 12,
-      "fg_pct": 0.25,
-      "fg3m": 0,
-      "fga": 4
-    }
-  },
-  {
     "basePlayerId": "203095",
     "date": "2013-03-13",
     "matchDate": "2013-03-13",
@@ -388397,26 +382497,6 @@
       "fg_pct": 1,
       "fg3m": 0,
       "fga": 2
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2013-03-13",
-    "matchDate": "2013-03-13",
-    "season": "1213",
-    "opponent": "DEN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 10,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 15,
-      "fg_pct": 0.4,
-      "fg3m": 0,
-      "fga": 10
     }
   },
   {
@@ -390700,26 +384780,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2013-03-13",
-    "matchDate": "2013-03-13",
-    "season": "1213",
-    "opponent": "PHX",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 11,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "201600",
     "date": "2013-03-13",
     "matchDate": "2013-03-13",
@@ -390996,26 +385056,6 @@
       "min": 14,
       "fg_pct": 0.333,
       "fg3m": 1,
-      "fga": 3
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2013-03-13",
-    "matchDate": "2013-03-13",
-    "season": "1213",
-    "opponent": "MIN",
-    "homeAway": "H",
-    "stats": {
-      "pts": 4,
-      "reb": 1,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 17,
-      "fg_pct": 0.333,
-      "fg3m": 0,
       "fga": 3
     }
   },
@@ -392136,26 +386176,6 @@
       "min": 33,
       "fg_pct": 0.417,
       "fg3m": 0,
-      "fga": 12
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2013-03-13",
-    "matchDate": "2013-03-13",
-    "season": "1213",
-    "opponent": "SAC",
-    "homeAway": "A",
-    "stats": {
-      "pts": 9,
-      "reb": 5,
-      "ast": 1,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 3,
-      "min": 21,
-      "fg_pct": 0.333,
-      "fg3m": 1,
       "fga": 12
     }
   },
@@ -394180,26 +388200,6 @@
     }
   },
   {
-    "basePlayerId": "201161",
-    "date": "2013-03-15",
-    "matchDate": "2013-03-15",
-    "season": "1213",
-    "opponent": "GSW",
-    "homeAway": "A",
-    "stats": {
-      "pts": 3,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 6,
-      "fg_pct": 0.333,
-      "fg3m": 1,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "1882",
     "date": "2013-03-15",
     "matchDate": "2013-03-15",
@@ -396000,26 +390000,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2013-03-15",
-    "matchDate": "2013-03-15",
-    "season": "1213",
-    "opponent": "LAL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 6,
-      "reb": 3,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 12,
-      "fg_pct": 0.667,
-      "fg3m": 1,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "965",
     "date": "2013-03-15",
     "matchDate": "2013-03-15",
@@ -396497,26 +390477,6 @@
       "fg_pct": 0.556,
       "fg3m": 0,
       "fga": 9
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2013-03-15",
-    "matchDate": "2013-03-15",
-    "season": "1213",
-    "opponent": "MIN",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 5,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -397737,26 +391697,6 @@
       "fg_pct": 0.5,
       "fg3m": 1,
       "fga": 12
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2013-03-16",
-    "matchDate": "2013-03-16",
-    "season": "1213",
-    "opponent": "PHI",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 5,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -399597,26 +393537,6 @@
       "fg_pct": 0.364,
       "fg3m": 2,
       "fga": 11
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2013-03-17",
-    "matchDate": "2013-03-17",
-    "season": "1213",
-    "opponent": "GSW",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 12,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -402700,26 +396620,6 @@
     }
   },
   {
-    "basePlayerId": "203158",
-    "date": "2013-03-18",
-    "matchDate": "2013-03-18",
-    "season": "1213",
-    "opponent": "IND",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 2,
-      "ast": 0,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 7,
-      "fg_pct": 0.333,
-      "fg3m": 0,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "202329",
     "date": "2013-03-18",
     "matchDate": "2013-03-18",
@@ -404820,26 +398720,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2013-03-18",
-    "matchDate": "2013-03-18",
-    "season": "1213",
-    "opponent": "CLE",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 5,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "202331",
     "date": "2013-03-18",
     "matchDate": "2013-03-18",
@@ -405900,26 +399780,6 @@
     }
   },
   {
-    "basePlayerId": "203119",
-    "date": "2013-03-18",
-    "matchDate": "2013-03-18",
-    "season": "1213",
-    "opponent": "BKN",
-    "homeAway": "H",
-    "stats": {
-      "pts": 10,
-      "reb": 3,
-      "ast": 3,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 18,
-      "fg_pct": 0.429,
-      "fg3m": 0,
-      "fga": 7
-    }
-  },
-  {
     "basePlayerId": "201177",
     "date": "2013-03-18",
     "matchDate": "2013-03-18",
@@ -406377,26 +400237,6 @@
       "fg_pct": 0.286,
       "fg3m": 1,
       "fga": 7
-    }
-  },
-  {
-    "basePlayerId": "203162",
-    "date": "2013-03-18",
-    "matchDate": "2013-03-18",
-    "season": "1213",
-    "opponent": "CLE",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 5,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -407120,26 +400960,6 @@
     }
   },
   {
-    "basePlayerId": "203162",
-    "date": "2013-03-19",
-    "matchDate": "2013-03-19",
-    "season": "1213",
-    "opponent": "ORL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "201587",
     "date": "2013-03-19",
     "matchDate": "2013-03-19",
@@ -407837,26 +401657,6 @@
       "fg_pct": 0.462,
       "fg3m": 3,
       "fga": 13
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2013-03-19",
-    "matchDate": "2013-03-19",
-    "season": "1213",
-    "opponent": "ORL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -412400,26 +406200,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2013-03-20",
-    "matchDate": "2013-03-20",
-    "season": "1213",
-    "opponent": "ORL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 7,
-      "reb": 0,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 6,
-      "fg_pct": 0.75,
-      "fg3m": 1,
-      "fga": 4
-    }
-  },
-  {
     "basePlayerId": "2749",
     "date": "2013-03-20",
     "matchDate": "2013-03-20",
@@ -414320,26 +408100,6 @@
     }
   },
   {
-    "basePlayerId": "203158",
-    "date": "2013-03-22",
-    "matchDate": "2013-03-22",
-    "season": "1213",
-    "opponent": "HOU",
-    "homeAway": "A",
-    "stats": {
-      "pts": 4,
-      "reb": 1,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 12,
-      "fg_pct": 0.286,
-      "fg3m": 0,
-      "fga": 7
-    }
-  },
-  {
     "basePlayerId": "202329",
     "date": "2013-03-22",
     "matchDate": "2013-03-22",
@@ -414720,26 +408480,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2013-03-22",
-    "matchDate": "2013-03-22",
-    "season": "1213",
-    "opponent": "MIL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "202331",
     "date": "2013-03-22",
     "matchDate": "2013-03-22",
@@ -414757,26 +408497,6 @@
       "fg_pct": 0.467,
       "fg3m": 1,
       "fga": 15
-    }
-  },
-  {
-    "basePlayerId": "203162",
-    "date": "2013-03-22",
-    "matchDate": "2013-03-22",
-    "season": "1213",
-    "opponent": "MIL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 1,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 1,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -415177,26 +408897,6 @@
       "fg_pct": 0.25,
       "fg3m": 1,
       "fga": 8
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2013-03-22",
-    "matchDate": "2013-03-22",
-    "season": "1213",
-    "opponent": "MIA",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 1,
-      "blk": 1,
-      "turnovers": 1,
-      "min": 12,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 3
     }
   },
   {
@@ -417640,26 +411340,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2013-03-22",
-    "matchDate": "2013-03-22",
-    "season": "1213",
-    "opponent": "CLE",
-    "homeAway": "H",
-    "stats": {
-      "pts": 7,
-      "reb": 2,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 10,
-      "fg_pct": 0.6,
-      "fg3m": 1,
-      "fga": 5
-    }
-  },
-  {
     "basePlayerId": "959",
     "date": "2013-03-22",
     "matchDate": "2013-03-22",
@@ -419060,26 +412740,6 @@
     }
   },
   {
-    "basePlayerId": "201161",
-    "date": "2013-03-23",
-    "matchDate": "2013-03-23",
-    "season": "1213",
-    "opponent": "IND",
-    "homeAway": "H",
-    "stats": {
-      "pts": 9,
-      "reb": 5,
-      "ast": 2,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 17,
-      "fg_pct": 0.333,
-      "fg3m": 1,
-      "fga": 12
-    }
-  },
-  {
     "basePlayerId": "202710",
     "date": "2013-03-23",
     "matchDate": "2013-03-23",
@@ -419217,26 +412877,6 @@
       "fg_pct": 0.474,
       "fg3m": 0,
       "fga": 19
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2013-03-23",
-    "matchDate": "2013-03-23",
-    "season": "1213",
-    "opponent": "TOR",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 2,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 5,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -420197,26 +413837,6 @@
       "fg_pct": 0.444,
       "fg3m": 1,
       "fga": 9
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2013-03-23",
-    "matchDate": "2013-03-23",
-    "season": "1213",
-    "opponent": "CHI",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -422880,26 +416500,6 @@
     }
   },
   {
-    "basePlayerId": "201161",
-    "date": "2013-03-24",
-    "matchDate": "2013-03-24",
-    "season": "1213",
-    "opponent": "MIN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 15,
-      "fg_pct": 0.2,
-      "fg3m": 0,
-      "fga": 5
-    }
-  },
-  {
     "basePlayerId": "1713",
     "date": "2013-03-24",
     "matchDate": "2013-03-24",
@@ -424740,26 +418340,6 @@
     }
   },
   {
-    "basePlayerId": "202706",
-    "date": "2013-03-25",
-    "matchDate": "2013-03-25",
-    "season": "1213",
-    "opponent": "NOH",
-    "homeAway": "A",
-    "stats": {
-      "pts": 7,
-      "reb": 5,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 11,
-      "fg_pct": 0.286,
-      "fg3m": 1,
-      "fga": 7
-    }
-  },
-  {
     "basePlayerId": "201171",
     "date": "2013-03-25",
     "matchDate": "2013-03-25",
@@ -424917,26 +418497,6 @@
       "fg_pct": 0.333,
       "fg3m": 0,
       "fga": 3
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2013-03-25",
-    "matchDate": "2013-03-25",
-    "season": "1213",
-    "opponent": "ATL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 3,
-      "reb": 2,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 6,
-      "fg_pct": 1,
-      "fg3m": 1,
-      "fga": 1
     }
   },
   {
@@ -425337,26 +418897,6 @@
       "fg_pct": 0.6,
       "fg3m": 1,
       "fga": 10
-    }
-  },
-  {
-    "basePlayerId": "203162",
-    "date": "2013-03-25",
-    "matchDate": "2013-03-25",
-    "season": "1213",
-    "opponent": "ATL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 3,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 12,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -428020,26 +421560,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2013-03-26",
-    "matchDate": "2013-03-26",
-    "season": "1213",
-    "opponent": "BOS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 3,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "203142",
     "date": "2013-03-26",
     "matchDate": "2013-03-26",
@@ -428077,26 +421597,6 @@
       "fg_pct": 0.6,
       "fg3m": 0,
       "fga": 5
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2013-03-26",
-    "matchDate": "2013-03-26",
-    "season": "1213",
-    "opponent": "MIN",
-    "homeAway": "H",
-    "stats": {
-      "pts": 7,
-      "reb": 2,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 12,
-      "fg_pct": 0.75,
-      "fg3m": 1,
-      "fga": 4
     }
   },
   {
@@ -432360,26 +425860,6 @@
     }
   },
   {
-    "basePlayerId": "201161",
-    "date": "2013-03-27",
-    "matchDate": "2013-03-27",
-    "season": "1213",
-    "opponent": "MIA",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 12,
-      "fg_pct": 0.2,
-      "fg3m": 0,
-      "fga": 5
-    }
-  },
-  {
     "basePlayerId": "201163",
     "date": "2013-03-27",
     "matchDate": "2013-03-27",
@@ -432717,26 +426197,6 @@
       "fg_pct": 0.833,
       "fg3m": 2,
       "fga": 6
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2013-03-27",
-    "matchDate": "2013-03-27",
-    "season": "1213",
-    "opponent": "HOU",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 4,
-      "fg_pct": 1,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -435860,26 +429320,6 @@
     }
   },
   {
-    "basePlayerId": "202706",
-    "date": "2013-03-29",
-    "matchDate": "2013-03-29",
-    "season": "1213",
-    "opponent": "BKN",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 3,
-      "fg_pct": 0.333,
-      "fg3m": 0,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "203095",
     "date": "2013-03-29",
     "matchDate": "2013-03-29",
@@ -438860,26 +432300,6 @@
     }
   },
   {
-    "basePlayerId": "203119",
-    "date": "2013-03-29",
-    "matchDate": "2013-03-29",
-    "season": "1213",
-    "opponent": "TOR",
-    "homeAway": "H",
-    "stats": {
-      "pts": 6,
-      "reb": 1,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 21,
-      "fg_pct": 0.286,
-      "fg3m": 2,
-      "fga": 7
-    }
-  },
-  {
     "basePlayerId": "203106",
     "date": "2013-03-29",
     "matchDate": "2013-03-29",
@@ -440820,26 +434240,6 @@
     }
   },
   {
-    "basePlayerId": "201161",
-    "date": "2013-03-30",
-    "matchDate": "2013-03-30",
-    "season": "1213",
-    "opponent": "DAL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 8,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 4
-    }
-  },
-  {
     "basePlayerId": "201959",
     "date": "2013-03-30",
     "matchDate": "2013-03-30",
@@ -442700,26 +436100,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2013-03-30",
-    "matchDate": "2013-03-30",
-    "season": "1213",
-    "opponent": "PHX",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 5,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "202325",
     "date": "2013-03-30",
     "matchDate": "2013-03-30",
@@ -442877,26 +436257,6 @@
       "fg_pct": 0.167,
       "fg3m": 1,
       "fga": 6
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2013-03-30",
-    "matchDate": "2013-03-30",
-    "season": "1213",
-    "opponent": "LAC",
-    "homeAway": "H",
-    "stats": {
-      "pts": 15,
-      "reb": 1,
-      "ast": 1,
-      "stl": 1,
-      "blk": 1,
-      "turnovers": 1,
-      "min": 27,
-      "fg_pct": 0.5,
-      "fg3m": 3,
-      "fga": 10
     }
   },
   {
@@ -443197,26 +436557,6 @@
       "fg_pct": 0.474,
       "fg3m": 2,
       "fga": 19
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2013-03-31",
-    "matchDate": "2013-03-31",
-    "season": "1213",
-    "opponent": "BOS",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 6,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -443556,26 +436896,6 @@
       "min": 25,
       "fg_pct": 0.714,
       "fg3m": 3,
-      "fga": 7
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2013-03-31",
-    "matchDate": "2013-03-31",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "H",
-    "stats": {
-      "pts": 10,
-      "reb": 6,
-      "ast": 4,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 25,
-      "fg_pct": 0.429,
-      "fg3m": 2,
       "fga": 7
     }
   },
@@ -444600,26 +437920,6 @@
     }
   },
   {
-    "basePlayerId": "203119",
-    "date": "2013-03-31",
-    "matchDate": "2013-03-31",
-    "season": "1213",
-    "opponent": "CHI",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 3,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 12,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "1718",
     "date": "2013-03-31",
     "matchDate": "2013-03-31",
@@ -444957,26 +438257,6 @@
       "fg_pct": 0.25,
       "fg3m": 1,
       "fga": 4
-    }
-  },
-  {
-    "basePlayerId": "203158",
-    "date": "2013-03-31",
-    "matchDate": "2013-03-31",
-    "season": "1213",
-    "opponent": "NOH",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 1,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -445837,26 +439117,6 @@
       "fg_pct": 0.5,
       "fg3m": 3,
       "fga": 8
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2013-04-01",
-    "matchDate": "2013-04-01",
-    "season": "1213",
-    "opponent": "LAC",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 2,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 5,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -447056,46 +440316,6 @@
       "min": 23,
       "fg_pct": 0.333,
       "fg3m": 0,
-      "fga": 6
-    }
-  },
-  {
-    "basePlayerId": "203158",
-    "date": "2013-04-01",
-    "matchDate": "2013-04-01",
-    "season": "1213",
-    "opponent": "ATL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 3,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2013-04-01",
-    "matchDate": "2013-04-01",
-    "season": "1213",
-    "opponent": "ORL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 14,
-      "reb": 2,
-      "ast": 5,
-      "stl": 0,
-      "blk": 3,
-      "turnovers": 0,
-      "min": 25,
-      "fg_pct": 0.833,
-      "fg3m": 4,
       "fga": 6
     }
   },
@@ -448640,26 +441860,6 @@
     }
   },
   {
-    "basePlayerId": "201161",
-    "date": "2013-04-02",
-    "matchDate": "2013-04-02",
-    "season": "1213",
-    "opponent": "WAS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 4,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 17,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 4
-    }
-  },
-  {
     "basePlayerId": "202710",
     "date": "2013-04-02",
     "matchDate": "2013-04-02",
@@ -450080,26 +443280,6 @@
     }
   },
   {
-    "basePlayerId": "202706",
-    "date": "2013-04-03",
-    "matchDate": "2013-04-03",
-    "season": "1213",
-    "opponent": "UTA",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 1,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "203095",
     "date": "2013-04-03",
     "matchDate": "2013-04-03",
@@ -450157,26 +443337,6 @@
       "fg_pct": 0.429,
       "fg3m": 0,
       "fga": 7
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2013-04-03",
-    "matchDate": "2013-04-03",
-    "season": "1213",
-    "opponent": "SAC",
-    "homeAway": "A",
-    "stats": {
-      "pts": 3,
-      "reb": 2,
-      "ast": 1,
-      "stl": 2,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 13,
-      "fg_pct": 0.333,
-      "fg3m": 1,
-      "fga": 3
     }
   },
   {
@@ -451620,26 +444780,6 @@
     }
   },
   {
-    "basePlayerId": "203158",
-    "date": "2013-04-03",
-    "matchDate": "2013-04-03",
-    "season": "1213",
-    "opponent": "BKN",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 1,
-      "min": 7,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "200811",
     "date": "2013-04-03",
     "matchDate": "2013-04-03",
@@ -452477,26 +445617,6 @@
       "fg_pct": 0.5,
       "fg3m": 0,
       "fga": 2
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2013-04-03",
-    "matchDate": "2013-04-03",
-    "season": "1213",
-    "opponent": "BOS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 7,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 3
     }
   },
   {
@@ -454817,26 +447937,6 @@
       "fg_pct": 0.2,
       "fg3m": 1,
       "fga": 5
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2013-04-04",
-    "matchDate": "2013-04-04",
-    "season": "1213",
-    "opponent": "BKN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 1,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 6,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -457880,26 +450980,6 @@
     }
   },
   {
-    "basePlayerId": "203158",
-    "date": "2013-04-05",
-    "matchDate": "2013-04-05",
-    "season": "1213",
-    "opponent": "BOS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 8,
-      "ast": 0,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 1,
-      "min": 22,
-      "fg_pct": 0.167,
-      "fg3m": 0,
-      "fga": 6
-    }
-  },
-  {
     "basePlayerId": "2427",
     "date": "2013-04-05",
     "matchDate": "2013-04-05",
@@ -458177,26 +451257,6 @@
       "fg_pct": 0.5,
       "fg3m": 1,
       "fga": 4
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2013-04-05",
-    "matchDate": "2013-04-05",
-    "season": "1213",
-    "opponent": "MIL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 1,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -458956,26 +452016,6 @@
       "min": 26,
       "fg_pct": 0.444,
       "fg3m": 1,
-      "fga": 9
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2013-04-05",
-    "matchDate": "2013-04-05",
-    "season": "1213",
-    "opponent": "POR",
-    "homeAway": "A",
-    "stats": {
-      "pts": 11,
-      "reb": 2,
-      "ast": 0,
-      "stl": 3,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 26,
-      "fg_pct": 0.444,
-      "fg3m": 3,
       "fga": 9
     }
   },
@@ -460840,26 +453880,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2013-04-06",
-    "matchDate": "2013-04-06",
-    "season": "1213",
-    "opponent": "DEN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 12,
-      "reb": 2,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 28,
-      "fg_pct": 0.444,
-      "fg3m": 4,
-      "fga": 9
-    }
-  },
-  {
     "basePlayerId": "201166",
     "date": "2013-04-06",
     "matchDate": "2013-04-06",
@@ -461660,26 +454680,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2013-04-06",
-    "matchDate": "2013-04-06",
-    "season": "1213",
-    "opponent": "WAS",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 5,
-      "fg_pct": 1,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "202362",
     "date": "2013-04-06",
     "matchDate": "2013-04-06",
@@ -462057,26 +455057,6 @@
       "fg_pct": 0.7,
       "fg3m": 0,
       "fga": 10
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2013-04-06",
-    "matchDate": "2013-04-06",
-    "season": "1213",
-    "opponent": "HOU",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 1,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 5,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -464020,26 +457000,6 @@
     }
   },
   {
-    "basePlayerId": "203119",
-    "date": "2013-04-07",
-    "matchDate": "2013-04-07",
-    "season": "1213",
-    "opponent": "CHI",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 1,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "202340",
     "date": "2013-04-07",
     "matchDate": "2013-04-07",
@@ -464094,26 +457054,6 @@
       "blk": 2,
       "turnovers": 0,
       "min": 17,
-      "fg_pct": 0.25,
-      "fg3m": 0,
-      "fga": 4
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2013-04-07",
-    "matchDate": "2013-04-07",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 1,
-      "min": 6,
       "fg_pct": 0.25,
       "fg3m": 0,
       "fga": 4
@@ -465300,26 +458240,6 @@
     }
   },
   {
-    "basePlayerId": "203158",
-    "date": "2013-04-07",
-    "matchDate": "2013-04-07",
-    "season": "1213",
-    "opponent": "ORL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 4,
-      "reb": 2,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 19,
-      "fg_pct": 0.222,
-      "fg3m": 0,
-      "fga": 9
-    }
-  },
-  {
     "basePlayerId": "201569",
     "date": "2013-04-07",
     "matchDate": "2013-04-07",
@@ -466220,26 +459140,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2013-04-09",
-    "matchDate": "2013-04-09",
-    "season": "1213",
-    "opponent": "PHX",
-    "homeAway": "H",
-    "stats": {
-      "pts": 15,
-      "reb": 1,
-      "ast": 2,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 36,
-      "fg_pct": 0.462,
-      "fg3m": 3,
-      "fga": 13
-    }
-  },
-  {
     "basePlayerId": "202962",
     "date": "2013-04-09",
     "matchDate": "2013-04-09",
@@ -466497,26 +459397,6 @@
       "fg_pct": 0.6,
       "fg3m": 1,
       "fga": 15
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2013-04-09",
-    "matchDate": "2013-04-09",
-    "season": "1213",
-    "opponent": "CLE",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 2,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 5,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -467840,26 +460720,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2013-04-09",
-    "matchDate": "2013-04-09",
-    "season": "1213",
-    "opponent": "WAS",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 7,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 2
-    }
-  },
-  {
     "basePlayerId": "203143",
     "date": "2013-04-09",
     "matchDate": "2013-04-09",
@@ -468137,26 +460997,6 @@
       "fg_pct": 0.529,
       "fg3m": 0,
       "fga": 17
-    }
-  },
-  {
-    "basePlayerId": "203158",
-    "date": "2013-04-09",
-    "matchDate": "2013-04-09",
-    "season": "1213",
-    "opponent": "IND",
-    "homeAway": "A",
-    "stats": {
-      "pts": 4,
-      "reb": 5,
-      "ast": 0,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 14,
-      "fg_pct": 0.4,
-      "fg3m": 0,
-      "fga": 5
     }
   },
   {
@@ -470220,26 +463060,6 @@
     }
   },
   {
-    "basePlayerId": "203158",
-    "date": "2013-04-10",
-    "matchDate": "2013-04-10",
-    "season": "1213",
-    "opponent": "DET",
-    "homeAway": "H",
-    "stats": {
-      "pts": 8,
-      "reb": 6,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 17,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 8
-    }
-  },
-  {
     "basePlayerId": "203109",
     "date": "2013-04-10",
     "matchDate": "2013-04-10",
@@ -472237,26 +465057,6 @@
       "fg_pct": 0.909,
       "fg3m": 0,
       "fga": 11
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2013-04-10",
-    "matchDate": "2013-04-10",
-    "season": "1213",
-    "opponent": "CLE",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 3,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -475720,26 +468520,6 @@
     }
   },
   {
-    "basePlayerId": "203119",
-    "date": "2013-04-12",
-    "matchDate": "2013-04-12",
-    "season": "1213",
-    "opponent": "CHA",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 0,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 10,
-      "fg_pct": 1,
-      "fg3m": 0,
-      "fga": 1
-    }
-  },
-  {
     "basePlayerId": "202687",
     "date": "2013-04-12",
     "matchDate": "2013-04-12",
@@ -475897,26 +468677,6 @@
       "fg_pct": 0.455,
       "fg3m": 1,
       "fga": 11
-    }
-  },
-  {
-    "basePlayerId": "203158",
-    "date": "2013-04-12",
-    "matchDate": "2013-04-12",
-    "season": "1213",
-    "opponent": "NYK",
-    "homeAway": "H",
-    "stats": {
-      "pts": 7,
-      "reb": 3,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 16,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 6
     }
   },
   {
@@ -478060,26 +470820,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2013-04-12",
-    "matchDate": "2013-04-12",
-    "season": "1213",
-    "opponent": "CLE",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 5,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "201588",
     "date": "2013-04-12",
     "matchDate": "2013-04-12",
@@ -478097,26 +470837,6 @@
       "fg_pct": 0.333,
       "fg3m": 3,
       "fga": 15
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2013-04-12",
-    "matchDate": "2013-04-12",
-    "season": "1213",
-    "opponent": "BKN",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 2,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 17,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {
@@ -478697,26 +471417,6 @@
       "fg_pct": 0,
       "fg3m": 0,
       "fga": 3
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2013-04-12",
-    "matchDate": "2013-04-12",
-    "season": "1213",
-    "opponent": "MEM",
-    "homeAway": "H",
-    "stats": {
-      "pts": 6,
-      "reb": 2,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 1,
-      "min": 22,
-      "fg_pct": 0.25,
-      "fg3m": 2,
-      "fga": 8
     }
   },
   {
@@ -481460,26 +474160,6 @@
     }
   },
   {
-    "basePlayerId": "203158",
-    "date": "2013-04-14",
-    "matchDate": "2013-04-14",
-    "season": "1213",
-    "opponent": "PHI",
-    "homeAway": "A",
-    "stats": {
-      "pts": 11,
-      "reb": 10,
-      "ast": 3,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 22,
-      "fg_pct": 0.455,
-      "fg3m": 0,
-      "fga": 11
-    }
-  },
-  {
     "basePlayerId": "201569",
     "date": "2013-04-14",
     "matchDate": "2013-04-14",
@@ -481817,26 +474497,6 @@
       "fg_pct": 0.556,
       "fg3m": 1,
       "fga": 9
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2013-04-14",
-    "matchDate": "2013-04-14",
-    "season": "1213",
-    "opponent": "IND",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 3,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -483020,26 +475680,6 @@
     }
   },
   {
-    "basePlayerId": "201970",
-    "date": "2013-04-14",
-    "matchDate": "2013-04-14",
-    "season": "1213",
-    "opponent": "NYK",
-    "homeAway": "A",
-    "stats": {
-      "pts": 6,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 13,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 4
-    }
-  },
-  {
     "basePlayerId": "202362",
     "date": "2013-04-14",
     "matchDate": "2013-04-14",
@@ -483340,26 +475980,6 @@
     }
   },
   {
-    "basePlayerId": "201161",
-    "date": "2013-04-14",
-    "matchDate": "2013-04-14",
-    "season": "1213",
-    "opponent": "MIA",
-    "homeAway": "A",
-    "stats": {
-      "pts": 10,
-      "reb": 5,
-      "ast": 1,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 2,
-      "min": 27,
-      "fg_pct": 0.667,
-      "fg3m": 2,
-      "fga": 6
-    }
-  },
-  {
     "basePlayerId": "1717",
     "date": "2013-04-14",
     "matchDate": "2013-04-14",
@@ -483397,26 +476017,6 @@
       "fg_pct": 0.5,
       "fg3m": 0,
       "fga": 10
-    }
-  },
-  {
-    "basePlayerId": "101128",
-    "date": "2013-04-14",
-    "matchDate": "2013-04-14",
-    "season": "1213",
-    "opponent": "SAC",
-    "homeAway": "H",
-    "stats": {
-      "pts": 2,
-      "reb": 1,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 12,
-      "fg_pct": 1,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -483497,26 +476097,6 @@
       "fg_pct": 0.375,
       "fg3m": 2,
       "fga": 8
-    }
-  },
-  {
-    "basePlayerId": "203162",
-    "date": "2013-04-14",
-    "matchDate": "2013-04-14",
-    "season": "1213",
-    "opponent": "NYK",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 1,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
     }
   },
   {
@@ -484600,26 +477180,6 @@
     }
   },
   {
-    "basePlayerId": "203158",
-    "date": "2013-04-15",
-    "matchDate": "2013-04-15",
-    "season": "1213",
-    "opponent": "MIA",
-    "homeAway": "H",
-    "stats": {
-      "pts": 10,
-      "reb": 3,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 14,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 6
-    }
-  },
-  {
     "basePlayerId": "2550",
     "date": "2013-04-15",
     "matchDate": "2013-04-15",
@@ -485557,26 +478117,6 @@
       "fg_pct": 0.667,
       "fg3m": 0,
       "fga": 6
-    }
-  },
-  {
-    "basePlayerId": "201161",
-    "date": "2013-04-15",
-    "matchDate": "2013-04-15",
-    "season": "1213",
-    "opponent": "ORL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 3,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -487260,26 +479800,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2013-04-15",
-    "matchDate": "2013-04-15",
-    "season": "1213",
-    "opponent": "PHX",
-    "homeAway": "A",
-    "stats": {
-      "pts": 0,
-      "reb": 4,
-      "ast": 3,
-      "stl": 0,
-      "blk": 1,
-      "turnovers": 1,
-      "min": 16,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 0
-    }
-  },
-  {
     "basePlayerId": "201976",
     "date": "2013-04-15",
     "matchDate": "2013-04-15",
@@ -487417,26 +479937,6 @@
       "fg_pct": 0.5,
       "fg3m": 2,
       "fga": 10
-    }
-  },
-  {
-    "basePlayerId": "200778",
-    "date": "2013-04-15",
-    "matchDate": "2013-04-15",
-    "season": "1213",
-    "opponent": "CHA",
-    "homeAway": "A",
-    "stats": {
-      "pts": 15,
-      "reb": 7,
-      "ast": 6,
-      "stl": 1,
-      "blk": 1,
-      "turnovers": 1,
-      "min": 43,
-      "fg_pct": 0.556,
-      "fg3m": 1,
-      "fga": 9
     }
   },
   {
@@ -488297,26 +480797,6 @@
       "fg_pct": 0.25,
       "fg3m": 0,
       "fga": 4
-    }
-  },
-  {
-    "basePlayerId": "203119",
-    "date": "2013-04-15",
-    "matchDate": "2013-04-15",
-    "season": "1213",
-    "opponent": "PHI",
-    "homeAway": "H",
-    "stats": {
-      "pts": 0,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 9,
-      "fg_pct": 0,
-      "fg3m": 0,
-      "fga": 1
     }
   },
   {
@@ -490700,26 +483180,6 @@
     }
   },
   {
-    "basePlayerId": "203158",
-    "date": "2013-04-17",
-    "matchDate": "2013-04-17",
-    "season": "1213",
-    "opponent": "CHA",
-    "homeAway": "A",
-    "stats": {
-      "pts": 2,
-      "reb": 3,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 11,
-      "fg_pct": 0.333,
-      "fg3m": 0,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "2427",
     "date": "2013-04-17",
     "matchDate": "2013-04-17",
@@ -490837,26 +483297,6 @@
       "fg_pct": 0.364,
       "fg3m": 0,
       "fga": 11
-    }
-  },
-  {
-    "basePlayerId": "202706",
-    "date": "2013-04-17",
-    "matchDate": "2013-04-17",
-    "season": "1213",
-    "opponent": "PHX",
-    "homeAway": "H",
-    "stats": {
-      "pts": 8,
-      "reb": 3,
-      "ast": 1,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 11,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 8
     }
   },
   {
@@ -494140,26 +486580,6 @@
     }
   },
   {
-    "basePlayerId": "200778",
-    "date": "2013-04-17",
-    "matchDate": "2013-04-17",
-    "season": "1213",
-    "opponent": "ATL",
-    "homeAway": "H",
-    "stats": {
-      "pts": 20,
-      "reb": 6,
-      "ast": 3,
-      "stl": 3,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 44,
-      "fg_pct": 0.533,
-      "fg3m": 3,
-      "fga": 15
-    }
-  },
-  {
     "basePlayerId": "203142",
     "date": "2013-04-17",
     "matchDate": "2013-04-17",
@@ -494257,26 +486677,6 @@
       "fg_pct": 0.5,
       "fg3m": 0,
       "fga": 10
-    }
-  },
-  {
-    "basePlayerId": "203162",
-    "date": "2013-04-17",
-    "matchDate": "2013-04-17",
-    "season": "1213",
-    "opponent": "PHI",
-    "homeAway": "H",
-    "stats": {
-      "pts": 11,
-      "reb": 2,
-      "ast": 3,
-      "stl": 1,
-      "blk": 1,
-      "turnovers": 0,
-      "min": 18,
-      "fg_pct": 0.375,
-      "fg3m": 0,
-      "fga": 8
     }
   },
   {
@@ -494740,26 +487140,6 @@
     }
   },
   {
-    "basePlayerId": "203119",
-    "date": "2013-04-17",
-    "matchDate": "2013-04-17",
-    "season": "1213",
-    "opponent": "BKN",
-    "homeAway": "A",
-    "stats": {
-      "pts": 7,
-      "reb": 1,
-      "ast": 1,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 2,
-      "min": 13,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 6
-    }
-  },
-  {
     "basePlayerId": "203139",
     "date": "2013-04-17",
     "matchDate": "2013-04-17",
@@ -494920,26 +487300,6 @@
     }
   },
   {
-    "basePlayerId": "101128",
-    "date": "2013-04-17",
-    "matchDate": "2013-04-17",
-    "season": "1213",
-    "opponent": "LAL",
-    "homeAway": "A",
-    "stats": {
-      "pts": 4,
-      "reb": 0,
-      "ast": 0,
-      "stl": 0,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 9,
-      "fg_pct": 0.333,
-      "fg3m": 0,
-      "fga": 3
-    }
-  },
-  {
     "basePlayerId": "201228",
     "date": "2013-04-17",
     "matchDate": "2013-04-17",
@@ -494957,26 +487317,6 @@
       "fg_pct": 0.5,
       "fg3m": 0,
       "fga": 4
-    }
-  },
-  {
-    "basePlayerId": "201970",
-    "date": "2013-04-17",
-    "matchDate": "2013-04-17",
-    "season": "1213",
-    "opponent": "PHI",
-    "homeAway": "H",
-    "stats": {
-      "pts": 4,
-      "reb": 3,
-      "ast": 0,
-      "stl": 1,
-      "blk": 0,
-      "turnovers": 0,
-      "min": 20,
-      "fg_pct": 0.5,
-      "fg3m": 0,
-      "fga": 2
     }
   },
   {

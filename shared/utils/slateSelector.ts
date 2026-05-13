@@ -34,6 +34,22 @@ export type SlateAdapter = {
    *  Optional for back-compat with adapters that predate tier-capping;
    *  missing impl falls through to the legacy "no tier caps" path. */
   getTierById?: (playerId: string) => string;
+  /** Per-tier player pool, ranked most-recognizable-first. When present
+   *  together with `slateComposition`, slateSelector switches to tier-quota
+   *  mode (daily count per tier within range, sampled from the tier's pool). */
+  getTierPool?: (tier: string) => string[];
+  /** Sport-specific composition: per-tier count ranges + which tier is
+   *  protected and which absorb slack during normalization to slateSize. */
+  slateComposition?: SlateComposition;
+};
+
+export type SlateComposition = {
+  /** Per-tier [min, max] count for the slate (inclusive). */
+  tierRanges: Record<string, [number, number]>;
+  /** Tier never trimmed or expanded when normalizing total to slateSize. */
+  protectedTier: string;
+  /** Tiers used to absorb slack, in priority order. */
+  absorbTiers: string[];
 };
 
 /** Tier order used for cap evaluation + anchor fill. */
@@ -98,6 +114,15 @@ export function selectDailySlate(
   const dateKey = getDailyBonusDateKey(date);
   const seed = hashStr(`slate-${adapter.sportKey}-${dateKey}-${themeKey ?? "std"}`);
   const rng = mulberry32(seed);
+
+  // Tier-quota mode: adapter supplies per-tier pools + composition spec.
+  // Roll a count per tier within its range, normalize to slateSize, then
+  // sample N from each tier's pool (most-recognizable first, shuffled for
+  // daily variance). Bypasses anchor/rotator distinction — the composition
+  // ranges fully describe the slate shape.
+  if (typeof adapter.getTierPool === "function" && adapter.slateComposition) {
+    return selectByTierQuota(adapter, config.slateSize, rng);
+  }
 
   // Legacy path: if adapter doesn't implement getTierById, fall back to
   // the pre-tier-cap behavior (anchors via getAnchors, weighted-random
@@ -194,6 +219,76 @@ export function selectDailySlate(
   );
   const drawn = weightedSampleWithoutReplacement(rotatorPool, weights, rotatingCount, rng);
   return [...anchors, ...drawn];
+}
+
+/**
+ * Tier-quota mode: pick a count per tier within its range, normalize to
+ * slateSize, then sample from each tier's pool. PURPLE is protected (never
+ * adjusted during normalization); BLUE/GREEN absorb the slack.
+ */
+function selectByTierQuota(
+  adapter: SlateAdapter,
+  slateSize: number,
+  rng: () => number,
+): string[] {
+  const comp = adapter.slateComposition!;
+  const tiers = Object.keys(comp.tierRanges);
+
+  // 1. Independent daily roll per tier within its [min, max] range.
+  const counts: Record<string, number> = {};
+  for (const t of tiers) {
+    const [lo, hi] = comp.tierRanges[t];
+    counts[t] = lo + Math.floor(rng() * (hi - lo + 1));
+  }
+
+  // 2. Normalize to slateSize. Adjust absorbTiers in order before touching
+  //    protectedTier. Each tier is clamped to its [min, max] range.
+  const totalOf = () => Object.values(counts).reduce((s, c) => s + c, 0);
+  const adjust = (tier: string, delta: number): number => {
+    const [lo, hi] = comp.tierRanges[tier] ?? [counts[tier], counts[tier]];
+    const before = counts[tier];
+    const next = Math.max(lo, Math.min(hi, before + delta));
+    counts[tier] = next;
+    return next - before; // actually applied
+  };
+  let delta = slateSize - totalOf();
+  for (const t of comp.absorbTiers) {
+    if (delta === 0) break;
+    delta -= adjust(t, delta);
+  }
+  // If still off (BLUE+GREEN saturated), use protectedTier as last resort.
+  if (delta !== 0) {
+    delta -= adjust(comp.protectedTier, delta);
+  }
+  // If still off (everything saturated), trim/extend the tier with most slack.
+  if (delta !== 0) {
+    const sorted = [...tiers].sort((a, b) => {
+      const [aLo, aHi] = comp.tierRanges[a];
+      const [bLo, bHi] = comp.tierRanges[b];
+      const aSlack = delta > 0 ? aHi - counts[a] : counts[a] - aLo;
+      const bSlack = delta > 0 ? bHi - counts[b] : counts[b] - bLo;
+      return bSlack - aSlack;
+    });
+    for (const t of sorted) {
+      if (delta === 0) break;
+      delta -= adjust(t, delta);
+    }
+  }
+
+  // 3. Sample from each tier's pool. Daily-shuffled with the same rng stream
+  //    so different days surface different players; cap by current count.
+  //    If the pool is smaller than the count, take what's available — the
+  //    total slate is then under-sized, which the caller can detect.
+  const result: string[] = [];
+  for (const t of tiers) {
+    const want = counts[t];
+    if (want <= 0) continue;
+    const pool = adapter.getTierPool!(t);
+    if (!pool.length) continue;
+    const shuffled = fisherYates(pool, rng);
+    result.push(...shuffled.slice(0, Math.min(want, shuffled.length)));
+  }
+  return result;
 }
 
 type CacheableAdapter = SlateAdapter & {

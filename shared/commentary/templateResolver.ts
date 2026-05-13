@@ -115,10 +115,32 @@ export function buildTemplateData(
     ? describeExtremes(extremeCard.extremeFlags!, extremeCard.name)
     : "";
 
-  // Resolve the star's highest badge for commentary focus
+  // Resolve the star's highest badge for commentary focus.
+  //
+  // Several badge labels in badgeTiers.ts hardcode the badge's THRESHOLD
+  // (e.g. BEAST = "15-rebound game") rather than the actual stat the player
+  // posted. A 16-rebound game triggers BEAST and the snippet read "15-
+  // rebound game on the side" while the card back showed "16 REB" — the
+  // user's exact mismatch report. Format these single-stat threshold badges
+  // dynamically with the player's actual stat so commentary and card back
+  // agree. Multi-stat badges (triple double, 5x5) and qualitative ones
+  // (double-digit boards, rim protection) stay as-is — their labels don't
+  // make a stat claim.
+  const STAT_BADGE_FORMAT: Record<string, { stat: string; unit: string }> = {
+    GOD_MODE: { stat: "pts", unit: "point" },
+    FIRE:     { stat: "pts", unit: "point" },
+    BUCKET:   { stat: "pts", unit: "point" },
+    BEAST:    { stat: "reb", unit: "rebound" },
+    WIZARD:   { stat: "ast", unit: "assist" },
+    THIEF:    { stat: "stl", unit: "steal" },
+    SWAT:     { stat: "blk", unit: "block" },
+  };
   const starBadgeIds = (star?.achievements ?? []).map(a => a.id);
   const highestBadge = getHighestBadge(starBadgeIds);
-  const badgeLabel = highestBadge?.commentaryLabel ?? "";
+  const badgeFormat = highestBadge?.id ? STAT_BADGE_FORMAT[highestBadge.id] : null;
+  const badgeLabel = (badgeFormat && star)
+    ? `${Math.round(statN(star, badgeFormat.stat))}-${badgeFormat.unit} game`
+    : (highestBadge?.commentaryLabel ?? "");
 
   // Compute topStat: the star's stat with the highest FP contribution.
   // Previously picked by raw value, which surfaced "12 pts" over "15 ast"

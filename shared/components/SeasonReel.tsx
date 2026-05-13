@@ -5,11 +5,12 @@
  * the target, then a final jolt that swings through the two adjacent
  * years before landing on target.
  *
- * Animation phases (1.4 s default):
- *   0.00 – 0.45  Fast scroll through years (cubic ease-in)
- *   0.45 – 0.70  Gradual deceleration (cubic ease-out)
- *   0.70 – 1.00  Final jolt — overshoots to target+1, swings back
- *                through target down toward target-1, settles on target
+ * Animation phases (1.8 s default):
+ *   0.00 – 0.40  Fast scroll through years (cubic ease-in)
+ *   0.40 – 0.55  Gradual deceleration (cubic ease-out)
+ *   0.55 – 1.00  Underdamped spring — 2-3 visible bounces past target,
+ *                exponentially decaying. Feels "springy" like a real
+ *                spring snapping into place.
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -27,7 +28,7 @@ type Props = {
 export function SeasonReel({
   labels,
   targetLabel,
-  durationMs = 1400,
+  durationMs = 1800,
   rowHeightPx = 64,
   cycles = 1,
   caption = "TODAY'S SLATE",
@@ -55,22 +56,22 @@ export function SeasonReel({
       const t = Math.min((now - start) / durationMs, 1);
 
       let progress: number;
-      if (t < 0.45) {
+      if (t < 0.40) {
         // Phase 1: fast scroll through years, cubic ease-in.
-        const localT = t / 0.45;
+        const localT = t / 0.40;
         progress = Math.pow(localT, 3) * 0.78;
-      } else if (t < 0.70) {
-        // Phase 2: gradual deceleration, cubic ease-out.
-        const localT = (t - 0.45) / 0.25;
+      } else if (t < 0.55) {
+        // Phase 2: brief deceleration, cubic ease-out, into spring zone.
+        const localT = (t - 0.40) / 0.15;
         progress = 0.78 + (1 - Math.pow(1 - localT, 3)) * 0.22;
       } else {
-        // Phase 3: final jolt — damped sine that swings a full row past
-        // target (showing target+1 centered), back through target, down
-        // toward target-1, then settles on target.
-        // Amplitude 1.15 + light damping ensures the first peak fully
-        // reaches target+1 and the trough still partially reveals target-1.
-        const localT = (t - 0.70) / 0.30;
-        const spring = oneRow * 1.15 * Math.sin(localT * Math.PI * 2) * Math.exp(-localT * 1.0);
+        // Phase 3: underdamped spring — multiple bounces around target.
+        // Amplitude 1.3 ensures first overshoot fully shows target+1.
+        // Frequency 3.5π over the 45% span = ~1.75 cycles → peak (above
+        // target), trough (below), smaller peak, settle. Damping 1.5
+        // keeps later oscillations soft, real-physics-spring feel.
+        const localT = (t - 0.55) / 0.45;
+        const spring = oneRow * 1.3 * Math.sin(localT * Math.PI * 3.5) * Math.exp(-localT * 1.5);
         progress = 1.0 + spring;
       }
 

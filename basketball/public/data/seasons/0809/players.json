@@ -5,14 +5,17 @@
     "season": "0809",
     "name": "LeBron James",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 85,
     "tier": "RED",
     "avgFP": 51.1,
     "projectedFp": 51.1,
     "photoCode": "2544",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "2548_0809",
@@ -20,14 +23,17 @@
     "season": "0809",
     "name": "Dwyane Wade",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 80,
     "tier": "RED",
     "avgFP": 51.1,
     "projectedFp": 51.1,
     "photoCode": "2548",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "101108_0809",
@@ -35,14 +41,17 @@
     "season": "0809",
     "name": "Chris Paul",
     "team": "NOH",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 76,
     "tier": "RED",
     "avgFP": 48.9,
     "projectedFp": 48.9,
     "photoCode": "101108",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "2730_0809",
@@ -50,14 +59,17 @@
     "season": "0809",
     "name": "Dwight Howard",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 73,
     "tier": "RED",
     "avgFP": 44,
     "projectedFp": 44,
     "photoCode": "2730",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "977_0809",
@@ -65,14 +77,17 @@
     "season": "0809",
     "name": "Kobe Bryant",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 60,
     "tier": "ORANGE",
     "avgFP": 41.7,
     "projectedFp": 41.7,
     "photoCode": "977",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "2744_0809",
@@ -80,14 +95,17 @@
     "season": "0809",
     "name": "Al Jefferson",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 60,
     "tier": "ORANGE",
     "avgFP": 41.7,
     "projectedFp": 41.7,
     "photoCode": "2744",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "1717_0809",
@@ -95,14 +113,17 @@
     "season": "0809",
     "name": "Dirk Nowitzki",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 59,
     "tier": "ORANGE",
     "avgFP": 40.7,
     "projectedFp": 40.7,
     "photoCode": "1717",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "2547_0809",
@@ -110,14 +131,17 @@
     "season": "0809",
     "name": "Chris Bosh",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 58,
     "tier": "ORANGE",
     "avgFP": 39.9,
     "projectedFp": 39.9,
     "photoCode": "2547",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "1495_0809",
@@ -125,14 +149,17 @@
     "season": "0809",
     "name": "Tim Duncan",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 57,
     "tier": "PURPLE",
     "avgFP": 39.6,
     "projectedFp": 39.6,
     "photoCode": "1495",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "101122_0809",
@@ -140,14 +167,17 @@
     "season": "0809",
     "name": "Danny Granger",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 56,
     "tier": "PURPLE",
     "avgFP": 38.5,
     "projectedFp": 38.5,
     "photoCode": "101122",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "101114_0809",
@@ -155,14 +185,17 @@
     "season": "0809",
     "name": "Deron Williams",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 56,
     "tier": "PURPLE",
     "avgFP": 38.3,
     "projectedFp": 38.3,
     "photoCode": "101114",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "201142_0809",
@@ -170,14 +203,17 @@
     "season": "0809",
     "name": "Kevin Durant",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 55,
     "tier": "PURPLE",
     "avgFP": 38.2,
     "projectedFp": 38.2,
     "photoCode": "201142",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "2200_0809",
@@ -185,14 +221,17 @@
     "season": "0809",
     "name": "Pau Gasol",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 54,
     "tier": "PURPLE",
     "avgFP": 37,
     "projectedFp": 37,
     "photoCode": "2200",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "200750_0809",
@@ -200,14 +239,17 @@
     "season": "0809",
     "name": "Brandon Roy",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 54,
     "tier": "PURPLE",
     "avgFP": 36.9,
     "projectedFp": 36.9,
     "photoCode": "200750",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "1712_0809",
@@ -215,14 +257,17 @@
     "season": "0809",
     "name": "Antawn Jamison",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 54,
     "tier": "PURPLE",
     "avgFP": 37.2,
     "projectedFp": 37.2,
     "photoCode": "1712",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "2734_0809",
@@ -230,14 +275,17 @@
     "season": "0809",
     "name": "Devin Harris",
     "team": "NJN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 53,
     "tier": "PURPLE",
     "avgFP": 36.3,
     "projectedFp": 36.3,
     "photoCode": "2734",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "1536_0809",
@@ -245,14 +293,17 @@
     "season": "0809",
     "name": "Stephen Jackson",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 53,
     "tier": "PURPLE",
     "avgFP": 36.7,
     "projectedFp": 36.7,
     "photoCode": "1536",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "2397_0809",
@@ -260,14 +311,17 @@
     "season": "0809",
     "name": "Yao Ming",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 52,
     "tier": "PURPLE",
     "avgFP": 35.8,
     "projectedFp": 35.8,
     "photoCode": "2397",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "2216_0809",
@@ -275,14 +329,18 @@
     "season": "0809",
     "name": "Zach Randolph",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 52,
     "tier": "PURPLE",
     "avgFP": 36.1,
     "projectedFp": 36.1,
     "photoCode": "2216",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK",
+      "LAC"
+    ]
   },
   {
     "id": "2546_0809",
@@ -290,14 +348,17 @@
     "season": "0809",
     "name": "Carmelo Anthony",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 52,
     "tier": "PURPLE",
     "avgFP": 36,
     "projectedFp": 36,
     "photoCode": "2546",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "2738_0809",
@@ -305,14 +366,17 @@
     "season": "0809",
     "name": "Andre Iguodala",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 51,
     "tier": "PURPLE",
     "avgFP": 35,
     "projectedFp": 35,
     "photoCode": "2738",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "2406_0809",
@@ -320,14 +384,17 @@
     "season": "0809",
     "name": "Caron Butler",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 51,
     "tier": "PURPLE",
     "avgFP": 35.3,
     "projectedFp": 35.3,
     "photoCode": "2406",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "2405_0809",
@@ -335,14 +402,17 @@
     "season": "0809",
     "name": "Amar'e Stoudemire",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 51,
     "tier": "PURPLE",
     "avgFP": 35.2,
     "projectedFp": 35.2,
     "photoCode": "2405",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "2225_0809",
@@ -350,14 +420,17 @@
     "season": "0809",
     "name": "Tony Parker",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 51,
     "tier": "PURPLE",
     "avgFP": 35.4,
     "projectedFp": 35.4,
     "photoCode": "2225",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "2207_0809",
@@ -365,14 +438,17 @@
     "season": "0809",
     "name": "Joe Johnson",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 51,
     "tier": "PURPLE",
     "avgFP": 35.4,
     "projectedFp": 35.4,
     "photoCode": "2207",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1713_0809",
@@ -380,14 +456,17 @@
     "season": "0809",
     "name": "Vince Carter",
     "team": "NJN",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 51,
     "tier": "PURPLE",
     "avgFP": 34.9,
     "projectedFp": 34.9,
     "photoCode": "1713",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "2561_0809",
@@ -395,14 +474,17 @@
     "season": "0809",
     "name": "David West",
     "team": "NOH",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 51,
     "tier": "PURPLE",
     "avgFP": 35.5,
     "projectedFp": 35.5,
     "photoCode": "2561",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "101135_0809",
@@ -410,14 +492,17 @@
     "season": "0809",
     "name": "David Lee",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 49,
     "tier": "PURPLE",
     "avgFP": 33.9,
     "projectedFp": 33.9,
     "photoCode": "101135",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "708_0809",
@@ -425,14 +510,17 @@
     "season": "0809",
     "name": "Kevin Garnett",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 48,
     "tier": "PURPLE",
     "avgFP": 32.8,
     "projectedFp": 32.8,
     "photoCode": "708",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "2211_0809",
@@ -440,14 +528,17 @@
     "season": "0809",
     "name": "Troy Murphy",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 48,
     "tier": "PURPLE",
     "avgFP": 32.9,
     "projectedFp": 32.9,
     "photoCode": "2211",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "2755_0809",
@@ -455,14 +546,17 @@
     "season": "0809",
     "name": "Kevin Martin",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 48,
     "tier": "PURPLE",
     "avgFP": 32.8,
     "projectedFp": 32.8,
     "photoCode": "2755",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "2222_0809",
@@ -470,14 +564,17 @@
     "season": "0809",
     "name": "Gerald Wallace",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 48,
     "tier": "PURPLE",
     "avgFP": 33.2,
     "projectedFp": 33.2,
     "photoCode": "2222",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA"
+    ]
   },
   {
     "id": "200746_0809",
@@ -485,14 +582,17 @@
     "season": "0809",
     "name": "LaMarcus Aldridge",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 47,
     "tier": "PURPLE",
     "avgFP": 32.3,
     "projectedFp": 32.3,
     "photoCode": "200746",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "1718_0809",
@@ -500,14 +600,17 @@
     "season": "0809",
     "name": "Paul Pierce",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 47,
     "tier": "PURPLE",
     "avgFP": 32.5,
     "projectedFp": 32.5,
     "photoCode": "1718",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "1884_0809",
@@ -515,14 +618,17 @@
     "season": "0809",
     "name": "Baron Davis",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 47,
     "tier": "PURPLE",
     "avgFP": 32.3,
     "projectedFp": 32.3,
     "photoCode": "1884",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "2430_0809",
@@ -530,14 +636,17 @@
     "season": "0809",
     "name": "Carlos Boozer",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 47,
     "tier": "PURPLE",
     "avgFP": 32.2,
     "projectedFp": 32.2,
     "photoCode": "2430",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "406_0809",
@@ -545,14 +654,17 @@
     "season": "0809",
     "name": "Shaquille O'Neal",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 47,
     "tier": "PURPLE",
     "avgFP": 32.4,
     "projectedFp": 32.4,
     "photoCode": "406",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "959_0809",
@@ -560,14 +672,17 @@
     "season": "0809",
     "name": "Steve Nash",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 47,
     "tier": "PURPLE",
     "avgFP": 32.2,
     "projectedFp": 32.2,
     "photoCode": "959",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "467_0809",
@@ -575,14 +690,17 @@
     "season": "0809",
     "name": "Jason Kidd",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 47,
     "tier": "PURPLE",
     "avgFP": 32.1,
     "projectedFp": 32.1,
     "photoCode": "467",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "200765_0809",
@@ -590,14 +708,17 @@
     "season": "0809",
     "name": "Rajon Rondo",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 46,
     "tier": "PURPLE",
     "avgFP": 31.9,
     "projectedFp": 31.9,
     "photoCode": "200765",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "2740_0809",
@@ -605,14 +726,17 @@
     "season": "0809",
     "name": "Andris Biedrins",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 46,
     "tier": "PURPLE",
     "avgFP": 31.6,
     "projectedFp": 31.6,
     "photoCode": "2740",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "2746_0809",
@@ -620,14 +744,17 @@
     "season": "0809",
     "name": "Josh Smith",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 46,
     "tier": "PURPLE",
     "avgFP": 31.5,
     "projectedFp": 31.5,
     "photoCode": "2746",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "1889_0809",
@@ -635,14 +762,17 @@
     "season": "0809",
     "name": "Andre Miller",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 46,
     "tier": "PURPLE",
     "avgFP": 32,
     "projectedFp": 32,
     "photoCode": "1889",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "1497_0809",
@@ -650,14 +780,18 @@
     "season": "0809",
     "name": "Chauncey Billups",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 46,
     "tier": "PURPLE",
     "avgFP": 31.5,
     "projectedFp": 31.5,
     "photoCode": "1497",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET",
+      "DEN"
+    ]
   },
   {
     "id": "948_0809",
@@ -665,14 +799,17 @@
     "season": "0809",
     "name": "Marcus Camby",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 45,
     "tier": "PURPLE",
     "avgFP": 31.2,
     "projectedFp": 31.2,
     "photoCode": "948",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "101145_0809",
@@ -680,14 +817,17 @@
     "season": "0809",
     "name": "Monta Ellis",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 45,
     "tier": "PURPLE",
     "avgFP": 30.8,
     "projectedFp": 30.8,
     "photoCode": "101145",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "201565_0809",
@@ -695,14 +835,17 @@
     "season": "0809",
     "name": "Derrick Rose",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 44,
     "tier": "PURPLE",
     "avgFP": 30.6,
     "projectedFp": 30.6,
     "photoCode": "201565",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "1897_0809",
@@ -710,14 +853,17 @@
     "season": "0809",
     "name": "Metta World Peace",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 44,
     "tier": "PURPLE",
     "avgFP": 30,
     "projectedFp": 30,
     "photoCode": "1897",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "2045_0809",
@@ -725,14 +871,17 @@
     "season": "0809",
     "name": "Hedo Turkoglu",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 44,
     "tier": "PURPLE",
     "avgFP": 30,
     "projectedFp": 30,
     "photoCode": "2045",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "1733_0809",
@@ -740,14 +889,18 @@
     "season": "0809",
     "name": "Al Harrington",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 44,
     "tier": "PURPLE",
     "avgFP": 30.5,
     "projectedFp": 30.5,
     "photoCode": "1733",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW",
+      "NYK"
+    ]
   },
   {
     "id": "2732_0809",
@@ -755,14 +908,17 @@
     "season": "0809",
     "name": "Ben Gordon",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 43,
     "tier": "BLUE",
     "avgFP": 29.8,
     "projectedFp": 29.8,
     "photoCode": "2732",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "2072_0809",
@@ -770,14 +926,17 @@
     "season": "0809",
     "name": "Michael Redd",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 43,
     "tier": "BLUE",
     "avgFP": 29.7,
     "projectedFp": 29.7,
     "photoCode": "2072",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "2037_0809",
@@ -785,14 +944,18 @@
     "season": "0809",
     "name": "Jamal Crawford",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 43,
     "tier": "BLUE",
     "avgFP": 29.8,
     "projectedFp": 29.8,
     "photoCode": "2037",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK",
+      "GSW"
+    ]
   },
   {
     "id": "200752_0809",
@@ -800,14 +963,17 @@
     "season": "0809",
     "name": "Rudy Gay",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 43,
     "tier": "BLUE",
     "avgFP": 29.5,
     "projectedFp": 29.5,
     "photoCode": "200752",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "2749_0809",
@@ -815,14 +981,17 @@
     "season": "0809",
     "name": "Jameer Nelson",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 43,
     "tier": "BLUE",
     "avgFP": 29.5,
     "projectedFp": 29.5,
     "photoCode": "2749",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "101181_0809",
@@ -830,14 +999,17 @@
     "season": "0809",
     "name": "Jose Calderon",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 43,
     "tier": "BLUE",
     "avgFP": 29.9,
     "projectedFp": 29.9,
     "photoCode": "101181",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "2246_0809",
@@ -845,14 +1017,17 @@
     "season": "0809",
     "name": "Mehmet Okur",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 43,
     "tier": "BLUE",
     "avgFP": 29.9,
     "projectedFp": 29.9,
     "photoCode": "2246",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1503_0809",
@@ -860,14 +1035,17 @@
     "season": "0809",
     "name": "Tracy McGrady",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 43,
     "tier": "BLUE",
     "avgFP": 29.6,
     "projectedFp": 29.6,
     "photoCode": "1503",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "1740_0809",
@@ -875,14 +1053,17 @@
     "season": "0809",
     "name": "Rashard Lewis",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 43,
     "tier": "BLUE",
     "avgFP": 29.8,
     "projectedFp": 29.8,
     "photoCode": "1740",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "101109_0809",
@@ -890,14 +1071,17 @@
     "season": "0809",
     "name": "Raymond Felton",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 43,
     "tier": "BLUE",
     "avgFP": 29.8,
     "projectedFp": 29.8,
     "photoCode": "101109",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA"
+    ]
   },
   {
     "id": "2210_0809",
@@ -905,14 +1089,17 @@
     "season": "0809",
     "name": "Richard Jefferson",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 42,
     "tier": "BLUE",
     "avgFP": 28.7,
     "projectedFp": 28.7,
     "photoCode": "2210",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "101126_0809",
@@ -920,14 +1107,17 @@
     "season": "0809",
     "name": "Nate Robinson",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 42,
     "tier": "BLUE",
     "avgFP": 28.8,
     "projectedFp": 28.8,
     "photoCode": "101126",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "201566_0809",
@@ -935,14 +1125,17 @@
     "season": "0809",
     "name": "Russell Westbrook",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 42,
     "tier": "BLUE",
     "avgFP": 28.8,
     "projectedFp": 28.8,
     "photoCode": "201566",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "200794_0809",
@@ -950,14 +1143,17 @@
     "season": "0809",
     "name": "Paul Millsap",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 42,
     "tier": "BLUE",
     "avgFP": 28.9,
     "projectedFp": 28.9,
     "photoCode": "200794",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "201143_0809",
@@ -965,14 +1161,17 @@
     "season": "0809",
     "name": "Al Horford",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 42,
     "tier": "BLUE",
     "avgFP": 29.2,
     "projectedFp": 29.2,
     "photoCode": "201143",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "947_0809",
@@ -980,14 +1179,18 @@
     "season": "0809",
     "name": "Allen Iverson",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 42,
     "tier": "BLUE",
     "avgFP": 29.3,
     "projectedFp": 29.3,
     "photoCode": "947",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN",
+      "DET"
+    ]
   },
   {
     "id": "1890_0809",
@@ -995,14 +1198,18 @@
     "season": "0809",
     "name": "Shawn Marion",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 42,
     "tier": "BLUE",
     "avgFP": 29.1,
     "projectedFp": 29.1,
     "photoCode": "1890",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA",
+      "TOR"
+    ]
   },
   {
     "id": "2422_0809",
@@ -1010,14 +1217,18 @@
     "season": "0809",
     "name": "John Salmons",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 42,
     "tier": "BLUE",
     "avgFP": 28.7,
     "projectedFp": 28.7,
     "photoCode": "2422",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC",
+      "CHI"
+    ]
   },
   {
     "id": "2403_0809",
@@ -1032,7 +1243,10 @@
     "avgFP": 29.2,
     "projectedFp": 29.2,
     "photoCode": "2403",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "1891_0809",
@@ -1040,14 +1254,17 @@
     "season": "0809",
     "name": "Jason Terry",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 42,
     "tier": "BLUE",
     "avgFP": 29.1,
     "projectedFp": 29.1,
     "photoCode": "1891",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "2731_0809",
@@ -1055,14 +1272,17 @@
     "season": "0809",
     "name": "Emeka Okafor",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 42,
     "tier": "BLUE",
     "avgFP": 29,
     "projectedFp": 29,
     "photoCode": "2731",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA"
+    ]
   },
   {
     "id": "101106_0809",
@@ -1070,14 +1290,17 @@
     "season": "0809",
     "name": "Andrew Bogut",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 41,
     "tier": "BLUE",
     "avgFP": 28,
     "projectedFp": 28,
     "photoCode": "101106",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "101115_0809",
@@ -1085,14 +1308,17 @@
     "season": "0809",
     "name": "Andrew Bynum",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 41,
     "tier": "BLUE",
     "avgFP": 28.6,
     "projectedFp": 28.6,
     "photoCode": "101115",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "1882_0809",
@@ -1100,14 +1326,17 @@
     "season": "0809",
     "name": "Elton Brand",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 41,
     "tier": "BLUE",
     "avgFP": 28.1,
     "projectedFp": 28.1,
     "photoCode": "1882",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "1888_0809",
@@ -1115,14 +1344,17 @@
     "season": "0809",
     "name": "Richard Hamilton",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 41,
     "tier": "BLUE",
     "avgFP": 28,
     "projectedFp": 28,
     "photoCode": "1888",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "201145_0809",
@@ -1130,14 +1362,17 @@
     "season": "0809",
     "name": "Jeff Green",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 41,
     "tier": "BLUE",
     "avgFP": 28.2,
     "projectedFp": 28.2,
     "photoCode": "201145",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "2572_0809",
@@ -1145,14 +1380,17 @@
     "season": "0809",
     "name": "Josh Howard",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 41,
     "tier": "BLUE",
     "avgFP": 28,
     "projectedFp": 28,
     "photoCode": "2572",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "101111_0809",
@@ -1160,14 +1398,17 @@
     "season": "0809",
     "name": "Charlie Villanueva",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 40,
     "tier": "BLUE",
     "avgFP": 27.8,
     "projectedFp": 27.8,
     "photoCode": "101111",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "2590_0809",
@@ -1175,14 +1416,17 @@
     "season": "0809",
     "name": "Mo Williams",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 40,
     "tier": "BLUE",
     "avgFP": 27.8,
     "projectedFp": 27.8,
     "photoCode": "2590",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "1885_0809",
@@ -1190,14 +1434,17 @@
     "season": "0809",
     "name": "Lamar Odom",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 40,
     "tier": "BLUE",
     "avgFP": 27.8,
     "projectedFp": 27.8,
     "photoCode": "1885",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "201572_0809",
@@ -1205,14 +1452,17 @@
     "season": "0809",
     "name": "Brook Lopez",
     "team": "NJN",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 40,
     "tier": "BLUE",
     "avgFP": 27.3,
     "projectedFp": 27.3,
     "photoCode": "201572",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "1894_0809",
@@ -1220,14 +1470,17 @@
     "season": "0809",
     "name": "Corey Maggette",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 40,
     "tier": "BLUE",
     "avgFP": 27.7,
     "projectedFp": 27.7,
     "photoCode": "1894",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "201564_0809",
@@ -1235,14 +1488,17 @@
     "season": "0809",
     "name": "O.J. Mayo",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 40,
     "tier": "BLUE",
     "avgFP": 27.6,
     "projectedFp": 27.6,
     "photoCode": "201564",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "1710_0809",
@@ -1250,14 +1506,17 @@
     "season": "0809",
     "name": "Mike Bibby",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 40,
     "tier": "BLUE",
     "avgFP": 27.7,
     "projectedFp": 27.7,
     "photoCode": "1710",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "2551_0809",
@@ -1265,14 +1524,17 @@
     "season": "0809",
     "name": "T.J. Ford",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 40,
     "tier": "BLUE",
     "avgFP": 27.5,
     "projectedFp": 27.5,
     "photoCode": "2551",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "1938_0809",
@@ -1280,14 +1542,17 @@
     "season": "0809",
     "name": "Manu Ginobili",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 40,
     "tier": "BLUE",
     "avgFP": 27.9,
     "projectedFp": 27.9,
     "photoCode": "1938",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "951_0809",
@@ -1295,14 +1560,17 @@
     "season": "0809",
     "name": "Ray Allen",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 39,
     "tier": "BLUE",
     "avgFP": 26.9,
     "projectedFp": 26.9,
     "photoCode": "951",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "2419_0809",
@@ -1310,14 +1578,17 @@
     "season": "0809",
     "name": "Tayshaun Prince",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 39,
     "tier": "BLUE",
     "avgFP": 26.9,
     "projectedFp": 26.9,
     "photoCode": "2419",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "201154_0809",
@@ -1325,14 +1596,17 @@
     "season": "0809",
     "name": "Al Thornton",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 39,
     "tier": "BLUE",
     "avgFP": 26.8,
     "projectedFp": 26.8,
     "photoCode": "201154",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "200751_0809",
@@ -1340,14 +1614,17 @@
     "season": "0809",
     "name": "Randy Foye",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 39,
     "tier": "BLUE",
     "avgFP": 27.1,
     "projectedFp": 27.1,
     "photoCode": "200751",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "739_0809",
@@ -1355,14 +1632,17 @@
     "season": "0809",
     "name": "Rasheed Wallace",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 39,
     "tier": "BLUE",
     "avgFP": 26.6,
     "projectedFp": 26.6,
     "photoCode": "739",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "2202_0809",
@@ -1370,14 +1650,18 @@
     "season": "0809",
     "name": "Jason Richardson",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 39,
     "tier": "BLUE",
     "avgFP": 26.8,
     "projectedFp": 26.8,
     "photoCode": "2202",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA",
+      "PHX"
+    ]
   },
   {
     "id": "1802_0809",
@@ -1385,14 +1669,18 @@
     "season": "0809",
     "name": "Brad Miller",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 39,
     "tier": "BLUE",
     "avgFP": 26.9,
     "projectedFp": 26.9,
     "photoCode": "1802",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC",
+      "CHI"
+    ]
   },
   {
     "id": "2736_0809",
@@ -1400,14 +1688,17 @@
     "season": "0809",
     "name": "Luol Deng",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 38,
     "tier": "BLUE",
     "avgFP": 26.2,
     "projectedFp": 26.2,
     "photoCode": "2736",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "2449_0809",
@@ -1415,14 +1706,17 @@
     "season": "0809",
     "name": "Luis Scola",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 38,
     "tier": "BLUE",
     "avgFP": 25.9,
     "projectedFp": 25.9,
     "photoCode": "2449",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "201163_0809",
@@ -1430,14 +1724,17 @@
     "season": "0809",
     "name": "Wilson Chandler",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 38,
     "tier": "BLUE",
     "avgFP": 25.9,
     "projectedFp": 25.9,
     "photoCode": "201163",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "2564_0809",
@@ -1445,14 +1742,18 @@
     "season": "0809",
     "name": "Boris Diaw",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 38,
     "tier": "BLUE",
     "avgFP": 26,
     "projectedFp": 26,
     "photoCode": "2564",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX",
+      "CHA"
+    ]
   },
   {
     "id": "979_0809",
@@ -1460,14 +1761,18 @@
     "season": "0809",
     "name": "Jermaine O'Neal",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 38,
     "tier": "BLUE",
     "avgFP": 26.4,
     "projectedFp": 26.4,
     "photoCode": "979",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR",
+      "MIA"
+    ]
   },
   {
     "id": "980_0809",
@@ -1475,14 +1780,17 @@
     "season": "0809",
     "name": "Zydrunas Ilgauskas",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 37,
     "tier": "BLUE",
     "avgFP": 25.5,
     "projectedFp": 25.5,
     "photoCode": "980",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "200745_0809",
@@ -1490,14 +1798,17 @@
     "season": "0809",
     "name": "Andrea Bargnani",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 37,
     "tier": "BLUE",
     "avgFP": 25.2,
     "projectedFp": 25.2,
     "photoCode": "200745",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "686_0809",
@@ -1505,14 +1816,17 @@
     "season": "0809",
     "name": "Antonio McDyess",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 37,
     "tier": "BLUE",
     "avgFP": 25.5,
     "projectedFp": 25.5,
     "photoCode": "686",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "2030_0809",
@@ -1520,14 +1834,17 @@
     "season": "0809",
     "name": "Kenyon Martin",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 37,
     "tier": "BLUE",
     "avgFP": 25.4,
     "projectedFp": 25.4,
     "photoCode": "2030",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "101107_0809",
@@ -1535,14 +1852,17 @@
     "season": "0809",
     "name": "Marvin Williams",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 37,
     "tier": "BLUE",
     "avgFP": 25.4,
     "projectedFp": 25.4,
     "photoCode": "101107",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "201196_0809",
@@ -1550,14 +1870,17 @@
     "season": "0809",
     "name": "Ramon Sessions",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 37,
     "tier": "BLUE",
     "avgFP": 25.4,
     "projectedFp": 25.4,
     "photoCode": "201196",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "200748_0809",
@@ -1565,14 +1888,17 @@
     "season": "0809",
     "name": "Tyrus Thomas",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 36,
     "tier": "BLUE",
     "avgFP": 24.5,
     "projectedFp": 24.5,
     "photoCode": "200748",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "2768_0809",
@@ -1580,14 +1906,17 @@
     "season": "0809",
     "name": "Chris Duhon",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 36,
     "tier": "BLUE",
     "avgFP": 24.8,
     "projectedFp": 24.8,
     "photoCode": "2768",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "2549_0809",
@@ -1595,14 +1924,17 @@
     "season": "0809",
     "name": "Chris Kaman",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 36,
     "tier": "BLUE",
     "avgFP": 25.1,
     "projectedFp": 25.1,
     "photoCode": "2549",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "201152_0809",
@@ -1610,14 +1942,17 @@
     "season": "0809",
     "name": "Thaddeus Young",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 36,
     "tier": "BLUE",
     "avgFP": 24.7,
     "projectedFp": 24.7,
     "photoCode": "201152",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "201155_0809",
@@ -1625,14 +1960,17 @@
     "season": "0809",
     "name": "Rodney Stuckey",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 36,
     "tier": "BLUE",
     "avgFP": 25,
     "projectedFp": 25,
     "photoCode": "201155",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "201188_0809",
@@ -1640,14 +1978,17 @@
     "season": "0809",
     "name": "Marc Gasol",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 36,
     "tier": "BLUE",
     "avgFP": 25.1,
     "projectedFp": 25.1,
     "photoCode": "201188",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "201569_0809",
@@ -1655,14 +1996,17 @@
     "season": "0809",
     "name": "Eric Gordon",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 35,
     "tier": "BLUE",
     "avgFP": 24.1,
     "projectedFp": 24.1,
     "photoCode": "201569",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "2034_0809",
@@ -1670,14 +2014,17 @@
     "season": "0809",
     "name": "Mike Miller",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 35,
     "tier": "BLUE",
     "avgFP": 24.2,
     "projectedFp": 24.2,
     "photoCode": "2034",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "201150_0809",
@@ -1685,14 +2032,17 @@
     "season": "0809",
     "name": "Spencer Hawes",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 35,
     "tier": "BLUE",
     "avgFP": 24.3,
     "projectedFp": 24.3,
     "photoCode": "201150",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "1905_0809",
@@ -1700,14 +2050,17 @@
     "season": "0809",
     "name": "Andrei Kirilenko",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 35,
     "tier": "BLUE",
     "avgFP": 24.2,
     "projectedFp": 24.2,
     "photoCode": "1905",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "2747_0809",
@@ -1715,14 +2068,17 @@
     "season": "0809",
     "name": "JR Smith",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 35,
     "tier": "BLUE",
     "avgFP": 24.2,
     "projectedFp": 24.2,
     "photoCode": "2747",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "101235_0809",
@@ -1730,14 +2086,17 @@
     "season": "0809",
     "name": "Kelenna Azubuike",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 35,
     "tier": "BLUE",
     "avgFP": 24.3,
     "projectedFp": 24.3,
     "photoCode": "101235",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "1747_0809",
@@ -1745,14 +2104,18 @@
     "season": "0809",
     "name": "Rafer Alston",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 35,
     "tier": "BLUE",
     "avgFP": 24.4,
     "projectedFp": 24.4,
     "photoCode": "1747",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU",
+      "ORL"
+    ]
   },
   {
     "id": "201567_0809",
@@ -1760,14 +2123,17 @@
     "season": "0809",
     "name": "Kevin Love",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "PF/C",
     "salary": 35,
     "tier": "BLUE",
     "avgFP": 24.2,
     "projectedFp": 24.2,
     "photoCode": "201567",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "2605_0809",
@@ -1775,14 +2141,17 @@
     "season": "0809",
     "name": "Marquis Daniels",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 35,
     "tier": "BLUE",
     "avgFP": 23.8,
     "projectedFp": 23.8,
     "photoCode": "2605",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "200758_0809",
@@ -1790,14 +2159,17 @@
     "season": "0809",
     "name": "Ronnie Brewer",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 35,
     "tier": "BLUE",
     "avgFP": 24.3,
     "projectedFp": 24.3,
     "photoCode": "200758",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "255_0809",
@@ -1805,14 +2177,17 @@
     "season": "0809",
     "name": "Grant Hill",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 34,
     "tier": "BLUE",
     "avgFP": 23.3,
     "projectedFp": 23.3,
     "photoCode": "255",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "101127_0809",
@@ -1820,14 +2195,17 @@
     "season": "0809",
     "name": "Jarrett Jack",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 34,
     "tier": "BLUE",
     "avgFP": 23.6,
     "projectedFp": 23.6,
     "photoCode": "101127",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "2753_0809",
@@ -1835,14 +2213,17 @@
     "season": "0809",
     "name": "Delonte West",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 33,
     "tier": "BLUE",
     "avgFP": 22.7,
     "projectedFp": 22.7,
     "photoCode": "2753",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "2570_0809",
@@ -1850,14 +2231,17 @@
     "season": "0809",
     "name": "Kendrick Perkins",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 33,
     "tier": "BLUE",
     "avgFP": 22.5,
     "projectedFp": 22.5,
     "photoCode": "2570",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "2617_0809",
@@ -1865,14 +2249,17 @@
     "season": "0809",
     "name": "Udonis Haslem",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 33,
     "tier": "BLUE",
     "avgFP": 22.9,
     "projectedFp": 22.9,
     "photoCode": "2617",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "201596_0809",
@@ -1880,29 +2267,17 @@
     "season": "0809",
     "name": "Mario Chalmers",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 33,
     "tier": "BLUE",
     "avgFP": 22.8,
     "projectedFp": 22.8,
     "photoCode": "201596",
-    "active": true
-  },
-  {
-    "id": "101128_0809",
-    "basePlayerId": "101128",
-    "season": "0809",
-    "name": "Francisco Garcia",
-    "team": "SAC",
-    "position": "",
-    "positionFull": "",
-    "salary": 33,
-    "tier": "BLUE",
-    "avgFP": 23,
-    "projectedFp": 23,
-    "photoCode": "101128",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "2400_0809",
@@ -1910,14 +2285,19 @@
     "season": "0809",
     "name": "Drew Gooden",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 32,
     "tier": "BLUE",
     "avgFP": 22.2,
     "projectedFp": 22.2,
     "photoCode": "2400",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI",
+      "SAC",
+      "SAS"
+    ]
   },
   {
     "id": "2557_0809",
@@ -1925,14 +2305,17 @@
     "season": "0809",
     "name": "Luke Ridnour",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 32,
     "tier": "BLUE",
     "avgFP": 22,
     "projectedFp": 22,
     "photoCode": "2557",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "2581_0809",
@@ -1940,14 +2323,17 @@
     "season": "0809",
     "name": "Steve Blake",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 32,
     "tier": "BLUE",
     "avgFP": 22.1,
     "projectedFp": 22.1,
     "photoCode": "2581",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "201574_0809",
@@ -1955,14 +2341,17 @@
     "season": "0809",
     "name": "Jason Thompson",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 32,
     "tier": "BLUE",
     "avgFP": 22.4,
     "projectedFp": 22.4,
     "photoCode": "201574",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "201144_0809",
@@ -1970,14 +2359,17 @@
     "season": "0809",
     "name": "Mike Conley",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 32,
     "tier": "BLUE",
     "avgFP": 22.1,
     "projectedFp": 22.1,
     "photoCode": "201144",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "2757_0809",
@@ -1985,14 +2377,17 @@
     "season": "0809",
     "name": "Beno Udrih",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 32,
     "tier": "BLUE",
     "avgFP": 22,
     "projectedFp": 22,
     "photoCode": "2757",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "101155_0809",
@@ -2000,14 +2395,17 @@
     "season": "0809",
     "name": "Ryan Gomes",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 32,
     "tier": "BLUE",
     "avgFP": 22,
     "projectedFp": 22,
     "photoCode": "101155",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "2571_0809",
@@ -2015,14 +2413,17 @@
     "season": "0809",
     "name": "Leandro Barbosa",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 32,
     "tier": "BLUE",
     "avgFP": 22,
     "projectedFp": 22,
     "photoCode": "2571",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "1515_0809",
@@ -2030,14 +2431,17 @@
     "season": "0809",
     "name": "Anthony Parker",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 32,
     "tier": "BLUE",
     "avgFP": 22,
     "projectedFp": 22,
     "photoCode": "1515",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "201563_0809",
@@ -2045,14 +2449,17 @@
     "season": "0809",
     "name": "Michael Beasley",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 32,
     "tier": "BLUE",
     "avgFP": 22.3,
     "projectedFp": 22.3,
     "photoCode": "201563",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "2760_0809",
@@ -2060,14 +2467,17 @@
     "season": "0809",
     "name": "Anderson Varejao",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 31,
     "tier": "BLUE",
     "avgFP": 21.2,
     "projectedFp": 21.2,
     "photoCode": "2760",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "978_0809",
@@ -2075,14 +2485,17 @@
     "season": "0809",
     "name": "Peja Stojakovic",
     "team": "NOH",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 31,
     "tier": "BLUE",
     "avgFP": 21.3,
     "projectedFp": 21.3,
     "photoCode": "978",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "2199_0809",
@@ -2090,14 +2503,17 @@
     "season": "0809",
     "name": "Tyson Chandler",
     "team": "NOH",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 31,
     "tier": "BLUE",
     "avgFP": 21.6,
     "projectedFp": 21.6,
     "photoCode": "2199",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "2440_0809",
@@ -2105,14 +2521,17 @@
     "season": "0809",
     "name": "Matt Barnes",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 31,
     "tier": "BLUE",
     "avgFP": 21.3,
     "projectedFp": 21.3,
     "photoCode": "2440",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "2566_0809",
@@ -2120,14 +2539,17 @@
     "season": "0809",
     "name": "Travis Outlaw",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 30,
     "tier": "BLUE",
     "avgFP": 20.6,
     "projectedFp": 20.6,
     "photoCode": "2566",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "201149_0809",
@@ -2135,14 +2557,17 @@
     "season": "0809",
     "name": "Joakim Noah",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 30,
     "tier": "BLUE",
     "avgFP": 20.7,
     "projectedFp": 20.7,
     "photoCode": "201149",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "101154_0809",
@@ -2150,14 +2575,17 @@
     "season": "0809",
     "name": "Andray Blatche",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 30,
     "tier": "BLUE",
     "avgFP": 20.9,
     "projectedFp": 20.9,
     "photoCode": "101154",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "2550_0809",
@@ -2165,14 +2593,17 @@
     "season": "0809",
     "name": "Kirk Hinrich",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 29,
     "tier": "GREEN",
     "avgFP": 20.2,
     "projectedFp": 20.2,
     "photoCode": "2550",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "2555_0809",
@@ -2180,14 +2611,17 @@
     "season": "0809",
     "name": "Nick Collison",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 29,
     "tier": "GREEN",
     "avgFP": 19.7,
     "projectedFp": 19.7,
     "photoCode": "2555",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "2223_0809",
@@ -2195,14 +2629,17 @@
     "season": "0809",
     "name": "Samuel Dalembert",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 29,
     "tier": "GREEN",
     "avgFP": 19.9,
     "projectedFp": 19.9,
     "photoCode": "2223",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "101150_0809",
@@ -2210,14 +2647,17 @@
     "season": "0809",
     "name": "Lou Williams",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 29,
     "tier": "GREEN",
     "avgFP": 20.3,
     "projectedFp": 20.3,
     "photoCode": "101150",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "1952_0809",
@@ -2225,14 +2665,18 @@
     "season": "0809",
     "name": "Raja Bell",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 29,
     "tier": "GREEN",
     "avgFP": 19.9,
     "projectedFp": 19.9,
     "photoCode": "1952",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX",
+      "CHA"
+    ]
   },
   {
     "id": "101124_0809",
@@ -2240,14 +2684,17 @@
     "season": "0809",
     "name": "Hakim Warrick",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 29,
     "tier": "GREEN",
     "avgFP": 19.7,
     "projectedFp": 19.7,
     "photoCode": "101124",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "1716_0809",
@@ -2255,14 +2702,18 @@
     "season": "0809",
     "name": "Larry Hughes",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 29,
     "tier": "GREEN",
     "avgFP": 20.2,
     "projectedFp": 20.2,
     "photoCode": "1716",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI",
+      "NYK"
+    ]
   },
   {
     "id": "201141_0809",
@@ -2270,14 +2721,17 @@
     "season": "0809",
     "name": "Greg Oden",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.6,
     "projectedFp": 19.6,
     "photoCode": "201141",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "965_0809",
@@ -2285,14 +2739,17 @@
     "season": "0809",
     "name": "Derek Fisher",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19,
     "projectedFp": 19,
     "photoCode": "965",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "2804_0809",
@@ -2300,14 +2757,18 @@
     "season": "0809",
     "name": "Andres Nocioni",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.5,
     "projectedFp": 19.5,
     "photoCode": "2804",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI",
+      "SAC"
+    ]
   },
   {
     "id": "2772_0809",
@@ -2315,14 +2776,17 @@
     "season": "0809",
     "name": "Trevor Ariza",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.6,
     "projectedFp": 19.6,
     "photoCode": "2772",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "2365_0809",
@@ -2330,14 +2794,17 @@
     "season": "0809",
     "name": "Chris Andersen",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.6,
     "projectedFp": 19.6,
     "photoCode": "2365",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "2742_0809",
@@ -2345,14 +2812,17 @@
     "season": "0809",
     "name": "Sebastian Telfair",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.1,
     "projectedFp": 19.1,
     "photoCode": "2742",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "2203_0809",
@@ -2360,14 +2830,17 @@
     "season": "0809",
     "name": "Shane Battier",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19,
     "projectedFp": 19,
     "photoCode": "2203",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "2420_0809",
@@ -2375,14 +2848,17 @@
     "season": "0809",
     "name": "Nenad Krstic",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 28,
     "tier": "GREEN",
     "avgFP": 19.3,
     "projectedFp": 19.3,
     "photoCode": "2420",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "2038_0809",
@@ -2390,14 +2866,17 @@
     "season": "0809",
     "name": "Joel Przybilla",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 27,
     "tier": "GREEN",
     "avgFP": 18.7,
     "projectedFp": 18.7,
     "photoCode": "2038",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "2427_0809",
@@ -2405,14 +2884,17 @@
     "season": "0809",
     "name": "Roger Mason Jr.",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 27,
     "tier": "GREEN",
     "avgFP": 18.7,
     "projectedFp": 18.7,
     "photoCode": "2427",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "2436_0809",
@@ -2420,14 +2902,17 @@
     "season": "0809",
     "name": "Flip Murray",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 27,
     "tier": "GREEN",
     "avgFP": 18.7,
     "projectedFp": 18.7,
     "photoCode": "2436",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "2446_0809",
@@ -2435,14 +2920,17 @@
     "season": "0809",
     "name": "Rasual Butler",
     "team": "NOH",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 27,
     "tier": "GREEN",
     "avgFP": 18.6,
     "projectedFp": 18.6,
     "photoCode": "2446",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "2047_0809",
@@ -2450,29 +2938,17 @@
     "season": "0809",
     "name": "Quentin Richardson",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 27,
     "tier": "GREEN",
     "avgFP": 18.4,
     "projectedFp": 18.4,
     "photoCode": "2047",
-    "active": true
-  },
-  {
-    "id": "1902_0809",
-    "basePlayerId": "1902",
-    "season": "0809",
-    "name": "Jeff Foster",
-    "team": "IND",
-    "position": "",
-    "positionFull": "",
-    "salary": 27,
-    "tier": "GREEN",
-    "avgFP": 18.5,
-    "projectedFp": 18.5,
-    "photoCode": "1902",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "101142_0809",
@@ -2480,14 +2956,17 @@
     "season": "0809",
     "name": "Ronny Turiaf",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 27,
     "tier": "GREEN",
     "avgFP": 18.8,
     "projectedFp": 18.8,
     "photoCode": "101142",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "201571_0809",
@@ -2495,14 +2974,17 @@
     "season": "0809",
     "name": "D.J. Augustin",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 27,
     "tier": "GREEN",
     "avgFP": 18.8,
     "projectedFp": 18.8,
     "photoCode": "201571",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA"
+    ]
   },
   {
     "id": "201576_0809",
@@ -2510,14 +2992,17 @@
     "season": "0809",
     "name": "Anthony Randolph",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 27,
     "tier": "GREEN",
     "avgFP": 18.4,
     "projectedFp": 18.4,
     "photoCode": "201576",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "201601_0809",
@@ -2525,14 +3010,17 @@
     "season": "0809",
     "name": "Luc Mbah a Moute",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 26,
     "tier": "GREEN",
     "avgFP": 18,
     "projectedFp": 18,
     "photoCode": "201601",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "201164_0809",
@@ -2540,14 +3028,17 @@
     "season": "0809",
     "name": "Rudy Fernandez",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 26,
     "tier": "GREEN",
     "avgFP": 17.7,
     "projectedFp": 17.7,
     "photoCode": "201164",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "200081_0809",
@@ -2555,14 +3046,18 @@
     "season": "0809",
     "name": "Jamario Moon",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 26,
     "tier": "GREEN",
     "avgFP": 17.6,
     "projectedFp": 17.6,
     "photoCode": "200081",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR",
+      "MIA"
+    ]
   },
   {
     "id": "201228_0809",
@@ -2570,14 +3065,17 @@
     "season": "0809",
     "name": "C.J. Watson",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 26,
     "tier": "GREEN",
     "avgFP": 17.9,
     "projectedFp": 17.9,
     "photoCode": "201228",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "2039_0809",
@@ -2585,14 +3083,17 @@
     "season": "0809",
     "name": "Keyon Dooling",
     "team": "NJN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 26,
     "tier": "GREEN",
     "avgFP": 18.1,
     "projectedFp": 18.1,
     "photoCode": "2039",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "2248_0809",
@@ -2600,14 +3101,17 @@
     "season": "0809",
     "name": "Earl Watson",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 26,
     "tier": "GREEN",
     "avgFP": 17.9,
     "projectedFp": 17.9,
     "photoCode": "2248",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "201166_0809",
@@ -2615,14 +3119,17 @@
     "season": "0809",
     "name": "Aaron Brooks",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 26,
     "tier": "GREEN",
     "avgFP": 17.8,
     "projectedFp": 17.8,
     "photoCode": "201166",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "956_0809",
@@ -2630,14 +3137,17 @@
     "season": "0809",
     "name": "Erick Dampier",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 26,
     "tier": "GREEN",
     "avgFP": 17.6,
     "projectedFp": 17.6,
     "photoCode": "956",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "1899_0809",
@@ -2645,14 +3155,17 @@
     "season": "0809",
     "name": "James Posey",
     "team": "NOH",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 25,
     "tier": "GREEN",
     "avgFP": 17.4,
     "projectedFp": 17.4,
     "photoCode": "1899",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "201187_0809",
@@ -2660,14 +3173,17 @@
     "season": "0809",
     "name": "Dominic McGuire",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 25,
     "tier": "GREEN",
     "avgFP": 17,
     "projectedFp": 17,
     "photoCode": "201187",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "2588_0809",
@@ -2675,14 +3191,17 @@
     "season": "0809",
     "name": "Matt Bonner",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 25,
     "tier": "GREEN",
     "avgFP": 17.2,
     "projectedFp": 17.2,
     "photoCode": "2588",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "201146_0809",
@@ -2690,14 +3209,17 @@
     "season": "0809",
     "name": "Yi Jianlian",
     "team": "NJN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 25,
     "tier": "GREEN",
     "avgFP": 17.5,
     "projectedFp": 17.5,
     "photoCode": "201146",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "200768_0809",
@@ -2705,14 +3227,18 @@
     "season": "0809",
     "name": "Kyle Lowry",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "PG",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.6,
     "projectedFp": 16.6,
     "photoCode": "200768",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM",
+      "HOU"
+    ]
   },
   {
     "id": "2594_0809",
@@ -2720,14 +3246,17 @@
     "season": "0809",
     "name": "Kyle Korver",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.5,
     "projectedFp": 16.5,
     "photoCode": "2594",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "201171_0809",
@@ -2735,14 +3264,17 @@
     "season": "0809",
     "name": "Carl Landry",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.7,
     "projectedFp": 16.7,
     "photoCode": "201171",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "714_0809",
@@ -2750,14 +3282,17 @@
     "season": "0809",
     "name": "Michael Finley",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.4,
     "projectedFp": 16.4,
     "photoCode": "714",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "2229_0809",
@@ -2765,14 +3300,18 @@
     "season": "0809",
     "name": "Mike James",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.4,
     "projectedFp": 16.4,
     "photoCode": "2229",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH",
+      "WAS"
+    ]
   },
   {
     "id": "201148_0809",
@@ -2780,14 +3319,17 @@
     "season": "0809",
     "name": "Brandan Wright",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.4,
     "projectedFp": 16.4,
     "photoCode": "201148",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "2410_0809",
@@ -2795,14 +3337,17 @@
     "season": "0809",
     "name": "Fred Jones",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 24,
     "tier": "GREEN",
     "avgFP": 16.8,
     "projectedFp": 16.8,
     "photoCode": "2410",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "1112_0809",
@@ -2810,29 +3355,17 @@
     "season": "0809",
     "name": "Ben Wallace",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 23,
     "tier": "GREEN",
     "avgFP": 15.7,
     "projectedFp": 15.7,
     "photoCode": "1112",
-    "active": true
-  },
-  {
-    "id": "1853_0809",
-    "basePlayerId": "1853",
-    "season": "0809",
-    "name": "Anthony Carter",
-    "team": "DEN",
-    "position": "",
-    "positionFull": "",
-    "salary": 23,
-    "tier": "GREEN",
-    "avgFP": 16.2,
-    "projectedFp": 16.2,
-    "photoCode": "1853",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "101132_0809",
@@ -2840,29 +3373,17 @@
     "season": "0809",
     "name": "Linas Kleiza",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 23,
     "tier": "GREEN",
     "avgFP": 16,
     "projectedFp": 16,
     "photoCode": "101132",
-    "active": true
-  },
-  {
-    "id": "200783_0809",
-    "basePlayerId": "200783",
-    "season": "0809",
-    "name": "Craig Smith",
-    "team": "MIN",
-    "position": "",
-    "positionFull": "",
-    "salary": 23,
-    "tier": "GREEN",
-    "avgFP": 16.2,
-    "projectedFp": 16.2,
-    "photoCode": "200783",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "2554_0809",
@@ -2870,14 +3391,17 @@
     "season": "0809",
     "name": "Mickael Pietrus",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 23,
     "tier": "GREEN",
     "avgFP": 16.2,
     "projectedFp": 16.2,
     "photoCode": "2554",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "101138_0809",
@@ -2885,14 +3409,17 @@
     "season": "0809",
     "name": "Brandon Bass",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 23,
     "tier": "GREEN",
     "avgFP": 15.7,
     "projectedFp": 15.7,
     "photoCode": "101138",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "201627_0809",
@@ -2900,14 +3427,17 @@
     "season": "0809",
     "name": "Anthony Morrow",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 23,
     "tier": "GREEN",
     "avgFP": 16.1,
     "projectedFp": 16.1,
     "photoCode": "201627",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "200757_0809",
@@ -2915,14 +3445,18 @@
     "season": "0809",
     "name": "Thabo Sefolosha",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 15.5,
     "projectedFp": 15.5,
     "photoCode": "200757",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI",
+      "OKC"
+    ]
   },
   {
     "id": "200796_0809",
@@ -2930,14 +3464,17 @@
     "season": "0809",
     "name": "Leon Powe",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 15.3,
     "projectedFp": 15.3,
     "photoCode": "200796",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "2046_0809",
@@ -2945,14 +3482,17 @@
     "season": "0809",
     "name": "Desmond Mason",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 15,
     "projectedFp": 15,
     "photoCode": "2046",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "201156_0809",
@@ -2960,14 +3500,17 @@
     "season": "0809",
     "name": "Nick Young",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 15.1,
     "projectedFp": 15.1,
     "photoCode": "201156",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "2250_0809",
@@ -2975,14 +3518,17 @@
     "season": "0809",
     "name": "Bobby Simmons",
     "team": "NJN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 15.3,
     "projectedFp": 15.3,
     "photoCode": "2250",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "101139_0809",
@@ -2990,14 +3536,17 @@
     "season": "0809",
     "name": "CJ Miles",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 14.9,
     "projectedFp": 14.9,
     "photoCode": "101139",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "2553_0809",
@@ -3005,14 +3554,17 @@
     "season": "0809",
     "name": "Jarvis Hayes",
     "team": "NJN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 15.1,
     "projectedFp": 15.1,
     "photoCode": "2553",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "201583_0809",
@@ -3020,14 +3572,17 @@
     "season": "0809",
     "name": "Ryan Anderson",
     "team": "NJN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 15.2,
     "projectedFp": 15.2,
     "photoCode": "201583",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "200826_0809",
@@ -3035,14 +3590,17 @@
     "season": "0809",
     "name": "J.J. Barea",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 22,
     "tier": "WHITE",
     "avgFP": 15.3,
     "projectedFp": 15.3,
     "photoCode": "200826",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "2754_0809",
@@ -3050,29 +3608,17 @@
     "season": "0809",
     "name": "Tony Allen",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.3,
     "projectedFp": 14.3,
     "photoCode": "2754",
-    "active": true
-  },
-  {
-    "id": "2294_0809",
-    "basePlayerId": "2294",
-    "season": "0809",
-    "name": "Charlie Bell",
-    "team": "MIL",
-    "position": "",
-    "positionFull": "",
-    "salary": 21,
-    "tier": "WHITE",
-    "avgFP": 14.5,
-    "projectedFp": 14.5,
-    "photoCode": "2294",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "2585_0809",
@@ -3080,44 +3626,17 @@
     "season": "0809",
     "name": "Zaza Pachulia",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.6,
     "projectedFp": 14.6,
     "photoCode": "2585",
-    "active": true
-  },
-  {
-    "id": "201161_0809",
-    "basePlayerId": "201161",
-    "season": "0809",
-    "name": "Daequan Cook",
-    "team": "MIA",
-    "position": "",
-    "positionFull": "",
-    "salary": 21,
-    "tier": "WHITE",
-    "avgFP": 14.3,
-    "projectedFp": 14.3,
-    "photoCode": "201161",
-    "active": true
-  },
-  {
-    "id": "1517_0809",
-    "basePlayerId": "1517",
-    "season": "0809",
-    "name": "Bobby Jackson",
-    "team": "SAC",
-    "position": "",
-    "positionFull": "",
-    "salary": 21,
-    "tier": "WHITE",
-    "avgFP": 14.8,
-    "projectedFp": 14.8,
-    "photoCode": "1517",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "201575_0809",
@@ -3125,14 +3644,17 @@
     "season": "0809",
     "name": "Brandon Rush",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.2,
     "projectedFp": 14.2,
     "photoCode": "201575",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "101119_0809",
@@ -3140,14 +3662,18 @@
     "season": "0809",
     "name": "Rashad McCants",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.6,
     "projectedFp": 14.6,
     "photoCode": "101119",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN",
+      "SAC"
+    ]
   },
   {
     "id": "1725_0809",
@@ -3155,14 +3681,17 @@
     "season": "0809",
     "name": "Rasho Nesterovic",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.2,
     "projectedFp": 14.2,
     "photoCode": "1725",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "201579_0809",
@@ -3170,14 +3699,17 @@
     "season": "0809",
     "name": "Roy Hibbert",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.2,
     "projectedFp": 14.2,
     "photoCode": "201579",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "693_0809",
@@ -3185,14 +3717,18 @@
     "season": "0809",
     "name": "Joe Smith",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.7,
     "projectedFp": 14.7,
     "photoCode": "693",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC",
+      "CLE"
+    ]
   },
   {
     "id": "2052_0809",
@@ -3200,14 +3736,17 @@
     "season": "0809",
     "name": "DeShawn Stevenson",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.5,
     "projectedFp": 14.5,
     "photoCode": "2052",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "201578_0809",
@@ -3215,14 +3754,17 @@
     "season": "0809",
     "name": "Marreese Speights",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.2,
     "projectedFp": 14.2,
     "photoCode": "201578",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "201584_0809",
@@ -3230,14 +3772,17 @@
     "season": "0809",
     "name": "Courtney Lee",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.4,
     "projectedFp": 14.4,
     "photoCode": "201584",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "201158_0809",
@@ -3245,14 +3790,17 @@
     "season": "0809",
     "name": "Marco Belinelli",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.4,
     "projectedFp": 14.4,
     "photoCode": "201158",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "101144_0809",
@@ -3260,14 +3808,17 @@
     "season": "0809",
     "name": "Von Wafer",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 21,
     "tier": "WHITE",
     "avgFP": 14.3,
     "projectedFp": 14.3,
     "photoCode": "101144",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "2067_0809",
@@ -3275,14 +3826,17 @@
     "season": "0809",
     "name": "Eddie House",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 20,
     "tier": "WHITE",
     "avgFP": 13.6,
     "projectedFp": 13.6,
     "photoCode": "2067",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "200789_0809",
@@ -3290,29 +3844,17 @@
     "season": "0809",
     "name": "Daniel Gibson",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 20,
     "tier": "WHITE",
     "avgFP": 13.7,
     "projectedFp": 13.7,
     "photoCode": "200789",
-    "active": true
-  },
-  {
-    "id": "201175_0809",
-    "basePlayerId": "201175",
-    "season": "0809",
-    "name": "Glen Davis",
-    "team": "BOS",
-    "position": "",
-    "positionFull": "",
-    "salary": 20,
-    "tier": "WHITE",
-    "avgFP": 14,
-    "projectedFp": 14,
-    "photoCode": "201175",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "1501_0809",
@@ -3320,14 +3862,19 @@
     "season": "0809",
     "name": "Tim Thomas",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 20,
     "tier": "WHITE",
     "avgFP": 14.1,
     "projectedFp": 14.1,
     "photoCode": "1501",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC",
+      "NYK",
+      "CHI"
+    ]
   },
   {
     "id": "2584_0809",
@@ -3335,14 +3882,17 @@
     "season": "0809",
     "name": "Willie Green",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 20,
     "tier": "WHITE",
     "avgFP": 14.1,
     "projectedFp": 14.1,
     "photoCode": "2584",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "2443_0809",
@@ -3350,14 +3900,17 @@
     "season": "0809",
     "name": "Darius Songaila",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 20,
     "tier": "WHITE",
     "avgFP": 13.9,
     "projectedFp": 13.9,
     "photoCode": "2443",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "201580_0809",
@@ -3365,14 +3918,17 @@
     "season": "0809",
     "name": "JaVale McGee",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 20,
     "tier": "WHITE",
     "avgFP": 13.8,
     "projectedFp": 13.8,
     "photoCode": "201580",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "703_0809",
@@ -3380,14 +3936,17 @@
     "season": "0809",
     "name": "Kurt Thomas",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 20,
     "tier": "WHITE",
     "avgFP": 13.5,
     "projectedFp": 13.5,
     "photoCode": "703",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "2404_0809",
@@ -3395,14 +3954,18 @@
     "season": "0809",
     "name": "Chris Wilcox",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 20,
     "tier": "WHITE",
     "avgFP": 13.9,
     "projectedFp": 13.9,
     "photoCode": "2404",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC",
+      "NYK"
+    ]
   },
   {
     "id": "201589_0809",
@@ -3410,14 +3973,17 @@
     "season": "0809",
     "name": "Darrell Arthur",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 20,
     "tier": "WHITE",
     "avgFP": 14,
     "projectedFp": 14,
     "photoCode": "201589",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "2407_0809",
@@ -3425,14 +3991,17 @@
     "season": "0809",
     "name": "Jared Jeffries",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 20,
     "tier": "WHITE",
     "avgFP": 14.1,
     "projectedFp": 14.1,
     "photoCode": "2407",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "200770_0809",
@@ -3440,29 +4009,17 @@
     "season": "0809",
     "name": "Jordan Farmar",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 19,
     "tier": "WHITE",
     "avgFP": 12.9,
     "projectedFp": 12.9,
     "photoCode": "200770",
-    "active": true
-  },
-  {
-    "id": "2230_0809",
-    "basePlayerId": "2230",
-    "season": "0809",
-    "name": "Maurice Evans",
-    "team": "ATL",
-    "position": "",
-    "positionFull": "",
-    "salary": 19,
-    "tier": "WHITE",
-    "avgFP": 12.8,
-    "projectedFp": 12.8,
-    "photoCode": "2230",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "2545_0809",
@@ -3470,14 +4027,17 @@
     "season": "0809",
     "name": "Darko Milicic",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 19,
     "tier": "WHITE",
     "avgFP": 13.1,
     "projectedFp": 13.1,
     "photoCode": "2545",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "101131_0809",
@@ -3485,14 +4045,17 @@
     "season": "0809",
     "name": "Jason Maxiell",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 19,
     "tier": "WHITE",
     "avgFP": 12.9,
     "projectedFp": 12.9,
     "photoCode": "101131",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "101121_0809",
@@ -3500,14 +4063,17 @@
     "season": "0809",
     "name": "Joey Graham",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 19,
     "tier": "WHITE",
     "avgFP": 13.3,
     "projectedFp": 13.3,
     "photoCode": "101121",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "101120_0809",
@@ -3515,14 +4081,17 @@
     "season": "0809",
     "name": "Antoine Wright",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 19,
     "tier": "WHITE",
     "avgFP": 13,
     "projectedFp": 13,
     "photoCode": "101120",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "201599_0809",
@@ -3530,14 +4099,17 @@
     "season": "0809",
     "name": "DeAndre Jordan",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 19,
     "tier": "WHITE",
     "avgFP": 12.8,
     "projectedFp": 12.8,
     "photoCode": "201599",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "101198_0809",
@@ -3545,14 +4117,17 @@
     "season": "0809",
     "name": "Will Bynum",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 19,
     "tier": "WHITE",
     "avgFP": 13.1,
     "projectedFp": 13.1,
     "photoCode": "101198",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "2209_0809",
@@ -3560,14 +4135,18 @@
     "season": "0809",
     "name": "Vladimir Radmanovic",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 18,
     "tier": "WHITE",
     "avgFP": 12.2,
     "projectedFp": 12.2,
     "photoCode": "2209",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL",
+      "CHA"
+    ]
   },
   {
     "id": "2575_0809",
@@ -3575,14 +4154,17 @@
     "season": "0809",
     "name": "Luke Walton",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 18,
     "tier": "WHITE",
     "avgFP": 12.7,
     "projectedFp": 12.7,
     "photoCode": "2575",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "1887_0809",
@@ -3590,14 +4172,17 @@
     "season": "0809",
     "name": "Wally Szczerbiak",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 18,
     "tier": "WHITE",
     "avgFP": 12.7,
     "projectedFp": 12.7,
     "photoCode": "1887",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "200776_0809",
@@ -3605,14 +4190,18 @@
     "season": "0809",
     "name": "Mardy Collins",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 18,
     "tier": "WHITE",
     "avgFP": 12.1,
     "projectedFp": 12.1,
     "photoCode": "200776",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK",
+      "LAC"
+    ]
   },
   {
     "id": "2574_0809",
@@ -3620,14 +4209,17 @@
     "season": "0809",
     "name": "Jason Kapono",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 18,
     "tier": "WHITE",
     "avgFP": 12.3,
     "projectedFp": 12.3,
     "photoCode": "2574",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "200764_0809",
@@ -3635,14 +4227,17 @@
     "season": "0809",
     "name": "Renaldo Balkman",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 18,
     "tier": "WHITE",
     "avgFP": 12.7,
     "projectedFp": 12.7,
     "photoCode": "200764",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "1729_0809",
@@ -3650,14 +4245,17 @@
     "season": "0809",
     "name": "Ricky Davis",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 18,
     "tier": "WHITE",
     "avgFP": 12.1,
     "projectedFp": 12.1,
     "photoCode": "1729",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "201602_0809",
@@ -3665,29 +4263,17 @@
     "season": "0809",
     "name": "Kyle Weaver",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 18,
     "tier": "WHITE",
     "avgFP": 12.2,
     "projectedFp": 12.2,
     "photoCode": "201602",
-    "active": true
-  },
-  {
-    "id": "101189_0809",
-    "basePlayerId": "101189",
-    "season": "0809",
-    "name": "James Singleton",
-    "team": "DAL",
-    "position": "",
-    "positionFull": "",
-    "salary": 18,
-    "tier": "WHITE",
-    "avgFP": 12.3,
-    "projectedFp": 12.3,
-    "photoCode": "101189",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "201587_0809",
@@ -3695,14 +4281,17 @@
     "season": "0809",
     "name": "Nicolas Batum",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 11.8,
     "projectedFp": 11.8,
     "photoCode": "201587",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "2756_0809",
@@ -3710,14 +4299,17 @@
     "season": "0809",
     "name": "Sasha Vujacic",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 11.6,
     "projectedFp": 11.6,
     "photoCode": "2756",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "200771_0809",
@@ -3725,14 +4317,17 @@
     "season": "0809",
     "name": "Sergio Rodriguez",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 11.7,
     "projectedFp": 11.7,
     "photoCode": "200771",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "1730_0809",
@@ -3740,29 +4335,17 @@
     "season": "0809",
     "name": "Brian Skinner",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 11.6,
     "projectedFp": 11.6,
     "photoCode": "1730",
-    "active": true
-  },
-  {
-    "id": "1533_0809",
-    "basePlayerId": "1533",
-    "season": "0809",
-    "name": "Anthony Johnson",
-    "team": "ORL",
-    "position": "",
-    "positionFull": "",
-    "salary": 17,
-    "tier": "WHITE",
-    "avgFP": 11.5,
-    "projectedFp": 11.5,
-    "photoCode": "1533",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "200760_0809",
@@ -3770,14 +4353,17 @@
     "season": "0809",
     "name": "Rodney Carney",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 11.8,
     "projectedFp": 11.8,
     "photoCode": "200760",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "2586_0809",
@@ -3785,14 +4371,18 @@
     "season": "0809",
     "name": "Keith Bogans",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 11.6,
     "projectedFp": 11.6,
     "photoCode": "2586",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL",
+      "MIL"
+    ]
   },
   {
     "id": "2198_0809",
@@ -3800,14 +4390,17 @@
     "season": "0809",
     "name": "Kwame Brown",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 11.8,
     "projectedFp": 11.8,
     "photoCode": "2198",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "101162_0809",
@@ -3815,29 +4408,17 @@
     "season": "0809",
     "name": "Marcin Gortat",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 11.4,
     "projectedFp": 11.4,
     "photoCode": "101162",
-    "active": true
-  },
-  {
-    "id": "200767_0809",
-    "basePlayerId": "200767",
-    "season": "0809",
-    "name": "Josh Boone",
-    "team": "NJN",
-    "position": "",
-    "positionFull": "",
-    "salary": 17,
-    "tier": "WHITE",
-    "avgFP": 11.7,
-    "projectedFp": 11.7,
-    "photoCode": "200767",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "201162_0809",
@@ -3845,14 +4426,18 @@
     "season": "0809",
     "name": "Jared Dudley",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 11.6,
     "projectedFp": 11.6,
     "photoCode": "201162",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA",
+      "PHX"
+    ]
   },
   {
     "id": "201588_0809",
@@ -3860,14 +4445,17 @@
     "season": "0809",
     "name": "George Hill",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 11.7,
     "projectedFp": 11.7,
     "photoCode": "201588",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "201159_0809",
@@ -3875,14 +4463,18 @@
     "season": "0809",
     "name": "Javaris Crittenton",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 17,
     "tier": "WHITE",
     "avgFP": 11.9,
     "projectedFp": 11.9,
     "photoCode": "201159",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM",
+      "WAS"
+    ]
   },
   {
     "id": "2429_0809",
@@ -3890,14 +4482,17 @@
     "season": "0809",
     "name": "Dan Gadzuric",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 16,
     "tier": "WHITE",
     "avgFP": 11.1,
     "projectedFp": 11.1,
     "photoCode": "2429",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "200779_0809",
@@ -3905,29 +4500,17 @@
     "season": "0809",
     "name": "Steve Novak",
     "team": "LAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 16,
     "tier": "WHITE",
     "avgFP": 10.7,
     "projectedFp": 10.7,
     "photoCode": "200779",
-    "active": true
-  },
-  {
-    "id": "201446_0809",
-    "basePlayerId": "201446",
-    "season": "0809",
-    "name": "Mike Taylor",
-    "team": "LAC",
-    "position": "",
-    "positionFull": "",
-    "salary": 16,
-    "tier": "WHITE",
-    "avgFP": 11.3,
-    "projectedFp": 11.3,
-    "photoCode": "201446",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAC"
+    ]
   },
   {
     "id": "2413_0809",
@@ -3935,14 +4518,17 @@
     "season": "0809",
     "name": "Juan Dixon",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 16,
     "tier": "WHITE",
     "avgFP": 10.8,
     "projectedFp": 10.8,
     "photoCode": "2413",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "200811_0809",
@@ -3950,14 +4536,17 @@
     "season": "0809",
     "name": "Lou Amundson",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 16,
     "tier": "WHITE",
     "avgFP": 11,
     "projectedFp": 11,
     "photoCode": "200811",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "201568_0809",
@@ -3965,14 +4554,17 @@
     "season": "0809",
     "name": "Danilo Gallinari",
     "team": "NYK",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "SF/PF",
     "salary": 15,
     "tier": "WHITE",
     "avgFP": 10,
     "projectedFp": 10,
     "photoCode": "201568",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK"
+    ]
   },
   {
     "id": "2563_0809",
@@ -3980,14 +4572,17 @@
     "season": "0809",
     "name": "Dahntay Jones",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 15,
     "tier": "WHITE",
     "avgFP": 10.3,
     "projectedFp": 10.3,
     "photoCode": "2563",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN"
+    ]
   },
   {
     "id": "1563_0809",
@@ -3995,14 +4590,17 @@
     "season": "0809",
     "name": "Kevin Ollie",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 15,
     "tier": "WHITE",
     "avgFP": 10,
     "projectedFp": 10,
     "photoCode": "1563",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "1499_0809",
@@ -4010,14 +4608,17 @@
     "season": "0809",
     "name": "Tony Battie",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 15,
     "tier": "WHITE",
     "avgFP": 10.5,
     "projectedFp": 10.5,
     "photoCode": "1499",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "101161_0809",
@@ -4025,14 +4626,17 @@
     "season": "0809",
     "name": "Amir Johnson",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 15,
     "tier": "WHITE",
     "avgFP": 10.5,
     "projectedFp": 10.5,
     "photoCode": "101161",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "201585_0809",
@@ -4040,14 +4644,17 @@
     "season": "0809",
     "name": "Kosta Koufos",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 15,
     "tier": "WHITE",
     "avgFP": 10.4,
     "projectedFp": 10.4,
     "photoCode": "201585",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "201153_0809",
@@ -4055,14 +4662,17 @@
     "season": "0809",
     "name": "Julian Wright",
     "team": "NOH",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 15,
     "tier": "WHITE",
     "avgFP": 10.2,
     "projectedFp": 10.2,
     "photoCode": "201153",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "1922_0809",
@@ -4070,14 +4680,17 @@
     "season": "0809",
     "name": "Francisco Elson",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 15,
     "tier": "WHITE",
     "avgFP": 10.5,
     "projectedFp": 10.5,
     "photoCode": "1922",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "2226_0809",
@@ -4085,14 +4698,18 @@
     "season": "0809",
     "name": "Will Solomon",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 15,
     "tier": "WHITE",
     "avgFP": 10.3,
     "projectedFp": 10.3,
     "photoCode": "2226",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR",
+      "SAC"
+    ]
   },
   {
     "id": "101179_0809",
@@ -4100,14 +4717,17 @@
     "season": "0809",
     "name": "Ronnie Price",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.4,
     "projectedFp": 9.4,
     "photoCode": "101179",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "200749_0809",
@@ -4115,14 +4735,18 @@
     "season": "0809",
     "name": "Shelden Williams",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.6,
     "projectedFp": 9.6,
     "photoCode": "200749",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC",
+      "MIN"
+    ]
   },
   {
     "id": "200755_0809",
@@ -4130,14 +4754,17 @@
     "season": "0809",
     "name": "JJ Redick",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.6,
     "projectedFp": 9.6,
     "photoCode": "200755",
-    "active": true
+    "active": true,
+    "teams": [
+      "ORL"
+    ]
   },
   {
     "id": "2863_0809",
@@ -4145,14 +4772,17 @@
     "season": "0809",
     "name": "Damien Wilkins",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.5,
     "projectedFp": 9.5,
     "photoCode": "2863",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "101129_0809",
@@ -4160,14 +4790,18 @@
     "season": "0809",
     "name": "Luther Head",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.7,
     "projectedFp": 9.7,
     "photoCode": "101129",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU",
+      "MIA"
+    ]
   },
   {
     "id": "200756_0809",
@@ -4175,14 +4809,17 @@
     "season": "0809",
     "name": "Hilton Armstrong",
     "team": "NOH",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.7,
     "projectedFp": 9.7,
     "photoCode": "200756",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "201609_0809",
@@ -4190,14 +4827,17 @@
     "season": "0809",
     "name": "Goran Dragic",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.6,
     "projectedFp": 9.6,
     "photoCode": "201609",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "2137_0809",
@@ -4205,14 +4845,17 @@
     "season": "0809",
     "name": "Ime Udoka",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.7,
     "projectedFp": 9.7,
     "photoCode": "2137",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "2501_0809",
@@ -4220,14 +4863,17 @@
     "season": "0809",
     "name": "Reggie Evans",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.7,
     "projectedFp": 9.7,
     "photoCode": "2501",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "1630_0809",
@@ -4235,14 +4881,18 @@
     "season": "0809",
     "name": "Mikki Moore",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.8,
     "projectedFp": 9.8,
     "photoCode": "1630",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC",
+      "BOS"
+    ]
   },
   {
     "id": "201189_0809",
@@ -4250,14 +4900,17 @@
     "season": "0809",
     "name": "Aaron Gray",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.9,
     "projectedFp": 9.9,
     "photoCode": "201189",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "201202_0809",
@@ -4265,14 +4918,17 @@
     "season": "0809",
     "name": "Joel Anthony",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.5,
     "projectedFp": 9.5,
     "photoCode": "201202",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "200809_0809",
@@ -4280,14 +4936,17 @@
     "season": "0809",
     "name": "Chris Quinn",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.8,
     "projectedFp": 9.8,
     "photoCode": "200809",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "101143_0809",
@@ -4295,14 +4954,17 @@
     "season": "0809",
     "name": "Travis Diener",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.7,
     "projectedFp": 9.7,
     "photoCode": "101143",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "2239_0809",
@@ -4310,14 +4972,17 @@
     "season": "0809",
     "name": "Trenton Hassell",
     "team": "NJN",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 14,
     "tier": "WHITE",
     "avgFP": 9.4,
     "projectedFp": 9.4,
     "photoCode": "2239",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "2562_0809",
@@ -4325,14 +4990,17 @@
     "season": "0809",
     "name": "Sasha Pavlovic",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 9,
     "projectedFp": 9,
     "photoCode": "2562",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "1498_0809",
@@ -4340,14 +5008,18 @@
     "season": "0809",
     "name": "Antonio Daniels",
     "team": "NOH",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 8.8,
     "projectedFp": 8.8,
     "photoCode": "1498",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS",
+      "NOH"
+    ]
   },
   {
     "id": "2484_0809",
@@ -4355,14 +5027,17 @@
     "season": "0809",
     "name": "Devin Brown",
     "team": "NOH",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 9.1,
     "projectedFp": 9.1,
     "photoCode": "2484",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "1510_0809",
@@ -4370,14 +5045,17 @@
     "season": "0809",
     "name": "Brevin Knight",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 8.8,
     "projectedFp": 8.8,
     "photoCode": "1510",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "101146_0809",
@@ -4385,14 +5063,17 @@
     "season": "0809",
     "name": "Roko Ukic",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 8.7,
     "projectedFp": 8.7,
     "photoCode": "101146",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "2205_0809",
@@ -4400,14 +5081,18 @@
     "season": "0809",
     "name": "DeSagana Diop",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 9,
     "projectedFp": 9,
     "photoCode": "2205",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL",
+      "CHA"
+    ]
   },
   {
     "id": "201570_0809",
@@ -4415,14 +5100,17 @@
     "season": "0809",
     "name": "Joe Alexander",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 8.7,
     "projectedFp": 8.7,
     "photoCode": "201570",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "2741_0809",
@@ -4430,14 +5118,17 @@
     "season": "0809",
     "name": "Robert Swift",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 9.3,
     "projectedFp": 9.3,
     "photoCode": "2741",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC"
+    ]
   },
   {
     "id": "2048_0809",
@@ -4445,14 +5136,17 @@
     "season": "0809",
     "name": "Jamaal Magloire",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 13,
     "tier": "WHITE",
     "avgFP": 9.1,
     "projectedFp": 9.1,
     "photoCode": "2048",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "2694_0809",
@@ -4460,14 +5154,17 @@
     "season": "0809",
     "name": "Josh Powell",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8.5,
     "projectedFp": 8.5,
     "photoCode": "2694",
-    "active": true
+    "active": true,
+    "teams": [
+      "LAL"
+    ]
   },
   {
     "id": "101112_0809",
@@ -4475,14 +5172,17 @@
     "season": "0809",
     "name": "Channing Frye",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8,
     "projectedFp": 8,
     "photoCode": "101112",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "201604_0809",
@@ -4490,14 +5190,17 @@
     "season": "0809",
     "name": "Chris Douglas-Roberts",
     "team": "NJN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8.6,
     "projectedFp": 8.6,
     "photoCode": "201604",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "201167_0809",
@@ -4505,14 +5208,17 @@
     "season": "0809",
     "name": "Arron Afflalo",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8.6,
     "projectedFp": 8.6,
     "photoCode": "201167",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "689_0809",
@@ -4520,29 +5226,17 @@
     "season": "0809",
     "name": "Theo Ratliff",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8,
     "projectedFp": 8,
     "photoCode": "689",
-    "active": true
-  },
-  {
-    "id": "200781_0809",
-    "basePlayerId": "200781",
-    "season": "0809",
-    "name": "Paul Davis",
-    "team": "LAC",
-    "position": "",
-    "positionFull": "",
-    "salary": 12,
-    "tier": "WHITE",
-    "avgFP": 8.1,
-    "projectedFp": 8.1,
-    "photoCode": "200781",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "101130_0809",
@@ -4550,14 +5244,18 @@
     "season": "0809",
     "name": "Johan Petro",
     "team": "DEN",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8.5,
     "projectedFp": 8.5,
     "photoCode": "101130",
-    "active": true
+    "active": true,
+    "teams": [
+      "OKC",
+      "DEN"
+    ]
   },
   {
     "id": "2624_0809",
@@ -4565,14 +5263,17 @@
     "season": "0809",
     "name": "Quinton Ross",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8,
     "projectedFp": 8,
     "photoCode": "2624",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "201581_0809",
@@ -4580,14 +5281,17 @@
     "season": "0809",
     "name": "JJ Hickson",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8.1,
     "projectedFp": 8.1,
     "photoCode": "201581",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "201628_0809",
@@ -4595,14 +5299,18 @@
     "season": "0809",
     "name": "Bobby Brown",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8.6,
     "projectedFp": 8.6,
     "photoCode": "201628",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC",
+      "MIN"
+    ]
   },
   {
     "id": "2743_0809",
@@ -4610,14 +5318,17 @@
     "season": "0809",
     "name": "Kris Humphries",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8,
     "projectedFp": 8,
     "photoCode": "2743",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   },
   {
     "id": "2073_0809",
@@ -4625,14 +5336,17 @@
     "season": "0809",
     "name": "Brian Cardinal",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8.2,
     "projectedFp": 8.2,
     "photoCode": "2073",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "201633_0809",
@@ -4640,14 +5354,17 @@
     "season": "0809",
     "name": "Rob Kurz",
     "team": "GSW",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8.4,
     "projectedFp": 8.4,
     "photoCode": "201633",
-    "active": true
+    "active": true,
+    "teams": [
+      "GSW"
+    ]
   },
   {
     "id": "101211_0809",
@@ -4655,14 +5372,17 @@
     "season": "0809",
     "name": "Stephen Graham",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8.3,
     "projectedFp": 8.3,
     "photoCode": "101211",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "1723_0809",
@@ -4670,14 +5390,17 @@
     "season": "0809",
     "name": "Matt Harpring",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8.2,
     "projectedFp": 8.2,
     "photoCode": "1723",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "1752_0809",
@@ -4685,14 +5408,17 @@
     "season": "0809",
     "name": "Sean Marks",
     "team": "NOH",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8,
     "projectedFp": 8,
     "photoCode": "1752",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "2592_0809",
@@ -4700,14 +5426,17 @@
     "season": "0809",
     "name": "James Jones",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 12,
     "tier": "WHITE",
     "avgFP": 8,
     "projectedFp": 8,
     "photoCode": "2592",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "1731_0809",
@@ -4715,14 +5444,18 @@
     "season": "0809",
     "name": "Tyronn Lue",
     "team": "ORL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.3,
     "projectedFp": 7.3,
     "photoCode": "1731",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL",
+      "ORL"
+    ]
   },
   {
     "id": "201573_0809",
@@ -4730,14 +5463,17 @@
     "season": "0809",
     "name": "Jerryd Bayless",
     "team": "POR",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.4,
     "projectedFp": 7.4,
     "photoCode": "201573",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR"
+    ]
   },
   {
     "id": "200763_0809",
@@ -4745,14 +5481,18 @@
     "season": "0809",
     "name": "Quincy Douby",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.3,
     "projectedFp": 7.3,
     "photoCode": "200763",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC",
+      "TOR"
+    ]
   },
   {
     "id": "101236_0809",
@@ -4760,14 +5500,17 @@
     "season": "0809",
     "name": "Chuck Hayes",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "C-F",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.5,
     "projectedFp": 7.5,
     "photoCode": "101236",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "990_0809",
@@ -4775,14 +5518,18 @@
     "season": "0809",
     "name": "Malik Rose",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.6,
     "projectedFp": 7.6,
     "photoCode": "990",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK",
+      "OKC"
+    ]
   },
   {
     "id": "2050_0809",
@@ -4790,14 +5537,17 @@
     "season": "0809",
     "name": "Morris Peterson",
     "team": "NOH",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.8,
     "projectedFp": 7.8,
     "photoCode": "2050",
-    "active": true
+    "active": true,
+    "teams": [
+      "NOH"
+    ]
   },
   {
     "id": "699_0809",
@@ -4805,14 +5555,17 @@
     "season": "0809",
     "name": "Brent Barry",
     "team": "HOU",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.9,
     "projectedFp": 7.9,
     "photoCode": "699",
-    "active": true
+    "active": true,
+    "teams": [
+      "HOU"
+    ]
   },
   {
     "id": "2041_0809",
@@ -4820,14 +5573,17 @@
     "season": "0809",
     "name": "Etan Thomas",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.4,
     "projectedFp": 7.4,
     "photoCode": "2041",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "2059_0809",
@@ -4835,14 +5591,17 @@
     "season": "0809",
     "name": "Eduardo Najera",
     "team": "NJN",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.6,
     "projectedFp": 7.6,
     "photoCode": "2059",
-    "active": true
+    "active": true,
+    "teams": [
+      "NJN"
+    ]
   },
   {
     "id": "101123_0809",
@@ -4850,14 +5609,17 @@
     "season": "0809",
     "name": "Gerald Green",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "G-F",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.8,
     "projectedFp": 7.8,
     "photoCode": "101123",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "101177_0809",
@@ -4865,29 +5627,17 @@
     "season": "0809",
     "name": "Fabricio Oberto",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.8,
     "projectedFp": 7.8,
     "photoCode": "101177",
-    "active": true
-  },
-  {
-    "id": "201157_0809",
-    "basePlayerId": "201157",
-    "season": "0809",
-    "name": "Sean Williams",
-    "team": "NJN",
-    "position": "",
-    "positionFull": "",
-    "salary": 11,
-    "tier": "WHITE",
-    "avgFP": 7.5,
-    "projectedFp": 7.5,
-    "photoCode": "201157",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "201177_0809",
@@ -4895,14 +5645,17 @@
     "season": "0809",
     "name": "Josh McRoberts",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.5,
     "projectedFp": 7.5,
     "photoCode": "201177",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "200797_0809",
@@ -4910,14 +5663,18 @@
     "season": "0809",
     "name": "Ryan Hollins",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.7,
     "projectedFp": 7.7,
     "photoCode": "200797",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA",
+      "DAL"
+    ]
   },
   {
     "id": "1904_0809",
@@ -4925,14 +5682,17 @@
     "season": "0809",
     "name": "Devean George",
     "team": "DAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.5,
     "projectedFp": 7.5,
     "photoCode": "1904",
-    "active": true
+    "active": true,
+    "teams": [
+      "DAL"
+    ]
   },
   {
     "id": "2032_0809",
@@ -4940,14 +5700,17 @@
     "season": "0809",
     "name": "Darius Miles",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 11,
     "tier": "WHITE",
     "avgFP": 7.5,
     "projectedFp": 7.5,
     "photoCode": "2032",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "101113_0809",
@@ -4955,14 +5718,18 @@
     "season": "0809",
     "name": "Ike Diogu",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 6.8,
     "projectedFp": 6.8,
     "photoCode": "101113",
-    "active": true
+    "active": true,
+    "teams": [
+      "POR",
+      "SAC"
+    ]
   },
   {
     "id": "2124_0809",
@@ -4970,14 +5737,17 @@
     "season": "0809",
     "name": "Malik Allen",
     "team": "MIL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 7.1,
     "projectedFp": 7.1,
     "photoCode": "2124",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIL"
+    ]
   },
   {
     "id": "923_0809",
@@ -4985,14 +5755,17 @@
     "season": "0809",
     "name": "Donyell Marshall",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 7.1,
     "projectedFp": 7.1,
     "photoCode": "923",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "1477_0809",
@@ -5000,14 +5773,17 @@
     "season": "0809",
     "name": "Bruce Bowen",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 6.6,
     "projectedFp": 6.6,
     "photoCode": "1477",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "436_0809",
@@ -5015,29 +5791,18 @@
     "season": "0809",
     "name": "Juwan Howard",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 7.2,
     "projectedFp": 7.2,
     "photoCode": "436",
-    "active": true
-  },
-  {
-    "id": "1761_0809",
-    "basePlayerId": "1761",
-    "season": "0809",
-    "name": "Greg Buckner",
-    "team": "MEM",
-    "position": "",
-    "positionFull": "",
-    "salary": 10,
-    "tier": "WHITE",
-    "avgFP": 6.9,
-    "projectedFp": 6.9,
-    "photoCode": "1761",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN",
+      "CHA"
+    ]
   },
   {
     "id": "200835_0809",
@@ -5045,29 +5810,17 @@
     "season": "0809",
     "name": "Walter Herrmann",
     "team": "DET",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 7,
     "projectedFp": 7,
     "photoCode": "200835",
-    "active": true
-  },
-  {
-    "id": "200780_0809",
-    "basePlayerId": "200780",
-    "season": "0809",
-    "name": "Solomon Jones",
-    "team": "ATL",
-    "position": "",
-    "positionFull": "",
-    "salary": 10,
-    "tier": "WHITE",
-    "avgFP": 7.1,
-    "projectedFp": 7.1,
-    "photoCode": "200780",
-    "active": true
+    "active": true,
+    "teams": [
+      "DET"
+    ]
   },
   {
     "id": "201577_0809",
@@ -5075,14 +5828,17 @@
     "season": "0809",
     "name": "Robin Lopez",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 7,
     "projectedFp": 7,
     "photoCode": "201577",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "201151_0809",
@@ -5090,14 +5846,17 @@
     "season": "0809",
     "name": "Acie Law",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 6.7,
     "projectedFp": 6.7,
     "photoCode": "201151",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "200747_0809",
@@ -5105,14 +5864,18 @@
     "season": "0809",
     "name": "Adam Morrison",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 6.9,
     "projectedFp": 6.9,
     "photoCode": "200747",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA",
+      "LAL"
+    ]
   },
   {
     "id": "201590_0809",
@@ -5120,14 +5883,17 @@
     "season": "0809",
     "name": "Donte Greene",
     "team": "SAC",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 6.9,
     "projectedFp": 6.9,
     "photoCode": "201590",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAC"
+    ]
   },
   {
     "id": "200769_0809",
@@ -5135,14 +5901,18 @@
     "season": "0809",
     "name": "Shannon Brown",
     "team": "LAL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 7.2,
     "projectedFp": 7.2,
     "photoCode": "200769",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA",
+      "LAL"
+    ]
   },
   {
     "id": "200762_0809",
@@ -5150,14 +5920,17 @@
     "season": "0809",
     "name": "Oleksiy Pecherov",
     "team": "WAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PF",
+    "positionFull": "F-C",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 7,
     "projectedFp": 7,
     "photoCode": "200762",
-    "active": true
+    "active": true,
+    "teams": [
+      "WAS"
+    ]
   },
   {
     "id": "2060_0809",
@@ -5165,14 +5938,17 @@
     "season": "0809",
     "name": "Marko Jaric",
     "team": "MEM",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 6.7,
     "projectedFp": 6.7,
     "photoCode": "2060",
-    "active": true
+    "active": true,
+    "teams": [
+      "MEM"
+    ]
   },
   {
     "id": "1088_0809",
@@ -5180,14 +5956,18 @@
     "season": "0809",
     "name": "Chucky Atkins",
     "team": "OKC",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 10,
     "tier": "WHITE",
     "avgFP": 6.6,
     "projectedFp": 6.6,
     "photoCode": "1088",
-    "active": true
+    "active": true,
+    "teams": [
+      "DEN",
+      "OKC"
+    ]
   },
   {
     "id": "1521_0809",
@@ -5195,14 +5975,17 @@
     "season": "0809",
     "name": "Jacque Vaughn",
     "team": "SAS",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 6.1,
     "projectedFp": 6.1,
     "photoCode": "1521",
-    "active": true
+    "active": true,
+    "teams": [
+      "SAS"
+    ]
   },
   {
     "id": "1737_0809",
@@ -5210,29 +5993,17 @@
     "season": "0809",
     "name": "Nazr Mohammed",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 5.9,
     "projectedFp": 5.9,
     "photoCode": "1737",
-    "active": true
-  },
-  {
-    "id": "2408_0809",
-    "basePlayerId": "2408",
-    "season": "0809",
-    "name": "Melvin Ely",
-    "team": "NOH",
-    "position": "",
-    "positionFull": "",
-    "salary": 9,
-    "tier": "WHITE",
-    "avgFP": 6.4,
-    "projectedFp": 6.4,
-    "photoCode": "2408",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA"
+    ]
   },
   {
     "id": "200753_0809",
@@ -5240,14 +6011,18 @@
     "season": "0809",
     "name": "Patrick O'Bryant",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 6.1,
     "projectedFp": 6.1,
     "photoCode": "200753",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS",
+      "TOR"
+    ]
   },
   {
     "id": "2243_0809",
@@ -5255,14 +6030,17 @@
     "season": "0809",
     "name": "Brian Scalabrine",
     "team": "BOS",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 6.4,
     "projectedFp": 6.4,
     "photoCode": "2243",
-    "active": true
+    "active": true,
+    "teams": [
+      "BOS"
+    ]
   },
   {
     "id": "200821_0809",
@@ -5270,14 +6048,17 @@
     "season": "0809",
     "name": "Yakhouba Diawara",
     "team": "MIA",
-    "position": "",
-    "positionFull": "",
+    "position": "SG",
+    "positionFull": "F-G",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 5.9,
     "projectedFp": 5.9,
     "photoCode": "200821",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIA"
+    ]
   },
   {
     "id": "101194_0809",
@@ -5285,14 +6066,18 @@
     "season": "0809",
     "name": "Anthony Roberson",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 6.5,
     "projectedFp": 6.5,
     "photoCode": "101194",
-    "active": true
+    "active": true,
+    "teams": [
+      "NYK",
+      "CHI"
+    ]
   },
   {
     "id": "2767_0809",
@@ -5300,14 +6085,17 @@
     "season": "0809",
     "name": "Royal Ivey",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 6.1,
     "projectedFp": 6.1,
     "photoCode": "2767",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "1766_0809",
@@ -5315,14 +6103,17 @@
     "season": "0809",
     "name": "Maceo Baston",
     "team": "IND",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 6.2,
     "projectedFp": 6.2,
     "photoCode": "1766",
-    "active": true
+    "active": true,
+    "teams": [
+      "IND"
+    ]
   },
   {
     "id": "283_0809",
@@ -5330,14 +6121,17 @@
     "season": "0809",
     "name": "Lindsey Hunter",
     "team": "CHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 5.9,
     "projectedFp": 5.9,
     "photoCode": "283",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHI"
+    ]
   },
   {
     "id": "2215_0809",
@@ -5345,14 +6139,17 @@
     "season": "0809",
     "name": "Jason Collins",
     "team": "MIN",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 6.1,
     "projectedFp": 6.1,
     "photoCode": "2215",
-    "active": true
+    "active": true,
+    "teams": [
+      "MIN"
+    ]
   },
   {
     "id": "201169_0809",
@@ -5360,89 +6157,17 @@
     "season": "0809",
     "name": "Alando Tucker",
     "team": "PHX",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 9,
     "tier": "WHITE",
     "avgFP": 6.4,
     "projectedFp": 6.4,
     "photoCode": "201169",
-    "active": true
-  },
-  {
-    "id": "2078_0809",
-    "basePlayerId": "2078",
-    "season": "0809",
-    "name": "Jason Hart",
-    "team": "DEN",
-    "position": "",
-    "positionFull": "",
-    "salary": 8,
-    "tier": "WHITE",
-    "avgFP": 5.7,
-    "projectedFp": 5.7,
-    "photoCode": "2078",
-    "active": true
-  },
-  {
-    "id": "2679_0809",
-    "basePlayerId": "2679",
-    "season": "0809",
-    "name": "Matt Carroll",
-    "team": "DAL",
-    "position": "",
-    "positionFull": "",
-    "salary": 8,
-    "tier": "WHITE",
-    "avgFP": 5.8,
-    "projectedFp": 5.8,
-    "photoCode": "2679",
-    "active": true
-  },
-  {
-    "id": "201611_0809",
-    "basePlayerId": "201611",
-    "season": "0809",
-    "name": "Henry Walker",
-    "team": "BOS",
-    "position": "",
-    "positionFull": "",
-    "salary": 8,
-    "tier": "WHITE",
-    "avgFP": 5.2,
-    "projectedFp": 5.2,
-    "photoCode": "201611",
-    "active": true
-  },
-  {
-    "id": "201172_0809",
-    "basePlayerId": "201172",
-    "season": "0809",
-    "name": "Gabe Pruitt",
-    "team": "BOS",
-    "position": "",
-    "positionFull": "",
-    "salary": 7,
-    "tier": "WHITE",
-    "avgFP": 5,
-    "projectedFp": 5,
-    "photoCode": "201172",
-    "active": true
-  },
-  {
-    "id": "201606_0809",
-    "basePlayerId": "201606",
-    "season": "0809",
-    "name": "Sean Singletary",
-    "team": "CHA",
-    "position": "",
-    "positionFull": "",
-    "salary": 7,
-    "tier": "WHITE",
-    "avgFP": 5,
-    "projectedFp": 5,
-    "photoCode": "201606",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHX"
+    ]
   },
   {
     "id": "201616_0809",
@@ -5450,14 +6175,17 @@
     "season": "0809",
     "name": "Darnell Jackson",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 7,
     "tier": "WHITE",
     "avgFP": 4.6,
     "projectedFp": 4.6,
     "photoCode": "201616",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "201858_0809",
@@ -5465,14 +6193,17 @@
     "season": "0809",
     "name": "Cartier Martin",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "SF",
+    "positionFull": "F",
     "salary": 7,
     "tier": "WHITE",
     "avgFP": 5,
     "projectedFp": 5,
     "photoCode": "201858",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA"
+    ]
   },
   {
     "id": "2416_0809",
@@ -5480,14 +6211,17 @@
     "season": "0809",
     "name": "Kareem Rush",
     "team": "PHI",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 6,
     "tier": "WHITE",
     "avgFP": 3.9,
     "projectedFp": 3.9,
     "photoCode": "2416",
-    "active": true
+    "active": true,
+    "teams": [
+      "PHI"
+    ]
   },
   {
     "id": "201582_0809",
@@ -5495,29 +6229,17 @@
     "season": "0809",
     "name": "Alexis Ajinca",
     "team": "CHA",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 6,
     "tier": "WHITE",
     "avgFP": 4,
     "projectedFp": 4,
     "photoCode": "201582",
-    "active": true
-  },
-  {
-    "id": "2567_0809",
-    "basePlayerId": "2567",
-    "season": "0809",
-    "name": "Brian Cook",
-    "team": "HOU",
-    "position": "",
-    "positionFull": "",
-    "salary": 6,
-    "tier": "WHITE",
-    "avgFP": 4,
-    "projectedFp": 4,
-    "photoCode": "2567",
-    "active": true
+    "active": true,
+    "teams": [
+      "CHA"
+    ]
   },
   {
     "id": "201238_0809",
@@ -5525,14 +6247,17 @@
     "season": "0809",
     "name": "Mario West",
     "team": "ATL",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 5,
     "tier": "WHITE",
     "avgFP": 3.7,
     "projectedFp": 3.7,
     "photoCode": "201238",
-    "active": true
+    "active": true,
+    "teams": [
+      "ATL"
+    ]
   },
   {
     "id": "200814_0809",
@@ -5540,14 +6265,17 @@
     "season": "0809",
     "name": "Tarence Kinsey",
     "team": "CLE",
-    "position": "",
-    "positionFull": "",
+    "position": "PG",
+    "positionFull": "G",
     "salary": 5,
     "tier": "WHITE",
     "avgFP": 3.6,
     "projectedFp": 3.6,
     "photoCode": "200814",
-    "active": true
+    "active": true,
+    "teams": [
+      "CLE"
+    ]
   },
   {
     "id": "2260_0809",
@@ -5555,14 +6283,17 @@
     "season": "0809",
     "name": "Jarron Collins",
     "team": "UTA",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 5,
     "tier": "WHITE",
     "avgFP": 3.5,
     "projectedFp": 3.5,
     "photoCode": "2260",
-    "active": true
+    "active": true,
+    "teams": [
+      "UTA"
+    ]
   },
   {
     "id": "2063_0809",
@@ -5570,13 +6301,16 @@
     "season": "0809",
     "name": "Jake Voskuhl",
     "team": "TOR",
-    "position": "",
-    "positionFull": "",
+    "position": "C",
+    "positionFull": "C",
     "salary": 5,
     "tier": "WHITE",
     "avgFP": 3.3,
     "projectedFp": 3.3,
     "photoCode": "2063",
-    "active": true
+    "active": true,
+    "teams": [
+      "TOR"
+    ]
   }
 ]

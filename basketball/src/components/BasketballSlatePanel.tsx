@@ -21,7 +21,6 @@ import { ensureLoaded, getPlayers, getActiveSeason } from "@shared/engines/dataE
 import { headshotUrl } from "@shared/utils/headshotUrl";
 import { sportAdapter } from "../adapters/SportAdapter";
 import { getTodaysStars } from "../adapters/gameAdapter";
-import { tierFromSalary } from "../engines/economyEngine";
 import type { TierColor } from "@shared/types";
 import { getTier } from "@shared/theme";
 
@@ -36,15 +35,15 @@ function buildPlayerIndex(): Map<string, ResolvedPlayer> {
     // Don't overwrite — first row wins, since players.json contains one row
     // per (player, season) and any season's identity fields are equivalent.
     if (idx.has(baseId)) continue;
-    // Compute tier from salary at runtime — players.json has stale tier
-    // strings from old thresholds (e.g. Ja Morant @ $55 was tagged BLUE
-    // but $44+ is PURPLE in the current economy). Recomputing here keeps
-    // the slate display in sync with the live tier breakpoints.
-    const salary = Number((p as any).salary ?? 0);
-    const computedTier = tierFromSalary(salary, sportAdapter.economyConfig);
+    // Resolve tier via SportAdapter — applies the hybrid floor+quota
+    // promotion (sparse seasons promote next-highest salary to fill
+    // ORANGE floor=12 / RED floor=4). Using raw tierFromSalary here would
+    // show the un-promoted tier (e.g. Kobe '10-11 $56 → PURPLE) which
+    // diverges from the slate selector + card display, leading to "5
+    // ORANGE" counts in the slate panel when the actual slate has 12.
     idx.set(baseId, {
       name: String((p as any).name ?? baseId),
-      tier: sportAdapter.normalizeTier(computedTier),
+      tier: sportAdapter.normalizeTier(sportAdapter.getTierById(baseId)),
       photoCode: (p as any).photoCode != null ? String((p as any).photoCode) : baseId,
     });
   }
@@ -56,6 +55,7 @@ const BasketballCardThumb: React.FC<{ playerId: string; isAnchor: boolean; index
   isAnchor,
   index,
 }) => {
+  const [imgFailed, setImgFailed] = useState(false);
   const meta = index.get(playerId);
   const url = headshotUrl(meta?.photoCode ?? playerId);
   const tier = getTier(meta?.tier ?? "WHITE");
@@ -63,6 +63,11 @@ const BasketballCardThumb: React.FC<{ playerId: string; isAnchor: boolean; index
   // headshots have transparent background, so the tier gradient shows through
   // around the player and reads as the player's tier badge.
   const circleBg = `linear-gradient(160deg, ${tier.bg} 0%, ${tier.bgEnd} 120%)`;
+  // Ring around the avatar that always conveys the player's tier — important
+  // when the headshot is missing or fails to load, so the user can still see
+  // the card's quality at a glance.
+  const ring = `2px solid ${tier.accent}`;
+  const showImage = !!url && !imgFailed;
   return (
     <div
       className={`basketball-thumb ${isAnchor ? "is-anchor" : ""}`}
@@ -72,17 +77,32 @@ const BasketballCardThumb: React.FC<{ playerId: string; isAnchor: boolean; index
         padding: 6, minWidth: 64,
       }}
     >
-      {url ? (
+      {showImage ? (
         <img
           src={url}
           alt={meta?.name ?? playerId}
           decoding="async"
           loading="lazy"
-          style={{ width: 48, height: 48, borderRadius: "50%", objectFit: "cover", background: circleBg }}
-          onError={(e) => { (e.target as HTMLImageElement).style.visibility = "hidden"; }}
+          style={{
+            width: 48, height: 48, borderRadius: "50%", objectFit: "cover",
+            background: circleBg, border: ring, boxSizing: "border-box",
+            boxShadow: `0 0 0 1px rgba(0,0,0,0.4), 0 0 6px ${tier.glow}`,
+          }}
+          onError={() => setImgFailed(true)}
         />
       ) : (
-        <div style={{ width: 48, height: 48, borderRadius: "50%", background: circleBg }} />
+        <div
+          style={{
+            width: 48, height: 48, borderRadius: "50%", background: circleBg,
+            border: ring, boxSizing: "border-box",
+            boxShadow: `0 0 0 1px rgba(0,0,0,0.4), 0 0 6px ${tier.glow}`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 14, fontWeight: 900, color: tier.isLight ? "#1a1a1a" : "#ffffff",
+            letterSpacing: -0.4, fontStyle: "italic",
+          }}
+        >
+          {initialsOf(meta?.name ?? playerId)}
+        </div>
       )}
       <span style={{ fontSize: 10, color: "rgba(240,242,245,0.85)", textAlign: "center", lineHeight: 1.2 }}>
         {meta?.name ?? playerId}
@@ -90,6 +110,13 @@ const BasketballCardThumb: React.FC<{ playerId: string; isAnchor: boolean; index
     </div>
   );
 };
+
+function initialsOf(s: string): string {
+  const parts = String(s ?? "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 
 export function BasketballSlatePanel() {
   const [dataReady, setDataReady] = useState(false);

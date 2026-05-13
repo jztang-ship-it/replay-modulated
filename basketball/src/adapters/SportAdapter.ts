@@ -200,21 +200,80 @@ export class SportAdapter {
     return total;
   }
 
-  /** Top-N eligible players by career FP. Default N matches slateSelector's typical caller. */
-  getEligiblePool(n: number = 200): string[] {
+  /** Games-played floor for slate eligibility. Removes cup-of-coffee players
+   *  (< 30 games this season) from every tier's pool — keeps the WHITE/GREEN
+   *  fillers as recognizable role players rather than 5-game cameos. */
+  private static readonly MIN_GAMES_THIS_SEASON = 30;
+
+  /** Eligible-player IDs for slate selection. Games-played floor applied
+   *  per-(player, season): a player must have ≥ MIN_GAMES_THIS_SEASON games
+   *  in the active season to qualify. Replaces the old top-200-by-career-FP
+   *  filter which excluded WHITE players entirely.
+   *
+   *  Returns dedupe'd basePlayerIds — slateSelector groups by tier from here. */
+  getEligiblePool(_n?: number): string[] {
     const players = getPlayers();
-    // De-dupe by basePlayerId (multiple season rows per player exist in players.json)
+    const logsByKey = getLogsByKey();
+    const activeSeason = getActiveSeason();
     const seen = new Set<string>();
-    const ids: string[] = [];
+    const out: string[] = [];
     for (const p of players) {
       const bid = String((p as any).basePlayerId ?? "").trim();
       if (!bid || seen.has(bid)) continue;
       seen.add(bid);
-      ids.push(bid);
+      // Games played in the active season — pull from the dataEngine's
+      // per-season log index. Key shape "{bid}|{season}" gives season-scoped
+      // logs without bringing in career-wide history.
+      const seasonKey = activeSeason ? `${bid}|${activeSeason}` : null;
+      const logs = (seasonKey ? logsByKey.get(seasonKey) : null) ?? logsByKey.get(bid) ?? [];
+      if (logs.length >= SportAdapter.MIN_GAMES_THIS_SEASON) out.push(bid);
     }
-    const scored = ids.map(id => ({ id, fp: this.getCareerFPById(id) }));
-    scored.sort((a, b) => b.fp - a.fp);
-    return scored.slice(0, n).map(s => s.id);
+    return out;
+  }
+
+  /** Per-tier pool sizes used by slate composition. Sub-pools rank by career
+   *  FP (recognizable players first) and cap at these counts to control
+   *  variance. RED / ORANGE / PURPLE are uncapped — those tiers are naturally
+   *  small and we want the full pool surfaceable. */
+  private static readonly TIER_POOL_CAPS: Record<string, number> = {
+    BLUE: 40,
+    GREEN: 25,
+    WHITE: 20,
+  };
+
+  /** Slate composition spec — daily count ranges per tier and the
+   *  protection / absorb policy. Read by shared slateSelector. */
+  readonly slateComposition = {
+    tierRanges: {
+      RED:    [2, 3]   as [number, number],
+      ORANGE: [8, 12]  as [number, number],
+      PURPLE: [12, 20] as [number, number],
+      BLUE:   [8, 18]  as [number, number],
+      GREEN:  [6, 12]  as [number, number],
+      WHITE:  [8, 12]  as [number, number],
+    },
+    /** Never trim or expand PURPLE during the 60-total normalization step. */
+    protectedTier: "PURPLE",
+    /** Priority order for absorbing slack. BLUE flexes first, then GREEN. */
+    absorbTiers: ["BLUE", "GREEN"],
+  };
+
+  /** Per-tier player pool, sorted by career FP descending (most recognizable
+   *  first). Caller is expected to shuffle + slice for daily variance.
+   *
+   *  RED/ORANGE/PURPLE: all eligible players in that tier (no cap).
+   *  BLUE/GREEN/WHITE: top-N by career FP per TIER_POOL_CAPS. The cap is what
+   *  makes filler tiers favor known role players (long careers / journeymen
+   *  who played for many teams) over single-season scrubs. */
+  getTierPool(tier: string): string[] {
+    const eligible = this.getEligiblePool();
+    const matches = eligible
+      .filter(id => this.getTierById(id) === tier)
+      .map(id => ({ id, fp: this.getCareerFPById(id) }))
+      .sort((a, b) => b.fp - a.fp);
+    const cap = SportAdapter.TIER_POOL_CAPS[tier];
+    const sliced = cap !== undefined ? matches.slice(0, cap) : matches;
+    return sliced.map(m => m.id);
   }
 
   /** Anchor players (always in today's slate). Sort key is tier first
@@ -274,8 +333,13 @@ export class SportAdapter {
 
   /** Per-season floors. Promote the next-highest-salary player up to the
    *  named tier until the floor is met. Tiers absent here (PURPLE/BLUE/
-   *  GREEN/WHITE) are uncapped and unfloored. */
-  private static readonly TIER_FLOORS: Record<string, number> = { RED: 4, ORANGE: 8 };
+   *  GREEN/WHITE) are uncapped and unfloored.
+   *
+   *  ORANGE floor raised 8 → 12 so the slate-composition target range
+   *  (8-12 ORANGE per slate) is satisfiable on every season. Sparse eras
+   *  (e.g. 2012-13 with raw ORANGE=2) get their next 10 highest-salary
+   *  PURPLE players promoted to fill the floor. */
+  private static readonly TIER_FLOORS: Record<string, number> = { RED: 4, ORANGE: 12 };
 
   private buildTierMap(): Map<string, string> {
     // Pass 1: dedupe by basePlayerId, capture salary + absolute tier.

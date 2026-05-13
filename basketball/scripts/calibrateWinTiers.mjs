@@ -39,6 +39,19 @@ const SALARY_MIN = 5;
 const HANDS = 10000;
 const PERCENTILES = { ROOKIE: 55, STARTER: 75, ALL_STAR: 88, MVP: 95, LEGEND: 98 };
 
+// Absolute floors per tier. Pre-2003 NBA had compressed stat output (slower
+// pace, fewer assists/3pt attempts) so raw percentile thresholds came in
+// far too low — e.g. 1996-97 LEGEND landed at 139 FP, meaning any single
+// 40-pt night could hit "GOAT tier." Floors ensure LEGEND means something
+// even when the era's balanced-player ceiling is naturally lower; the
+// trade is that LEGEND in old eras is rare (you must outperform the era).
+const TIER_FLOORS = { ROOKIE: 150, STARTER: 175, ALL_STAR: 205, MVP: 235, LEGEND: 260 };
+// Minimum gap between consecutive tiers. Prevents MVP and LEGEND from
+// landing within ~10 FP of each other (an issue in dense modern-era
+// percentile outputs and ALL old-era outputs).
+const MIN_TIER_GAP = 15;
+const TIER_ORDER = ["ROOKIE", "STARTER", "ALL_STAR", "MVP", "LEGEND"];
+
 // FP formula MUST match the runtime scoring engine. Updates to either should
 // be mirrored in the other; otherwise calibration drifts.
 function approxFp(s) {
@@ -113,15 +126,27 @@ function main() {
     }
     fps.sort((a, b) => a - b);
     const pct = (p) => Math.round(fps[Math.floor(fps.length * p / 100)]);
-    out[s] = {
+    const raw = {
       ROOKIE: pct(PERCENTILES.ROOKIE),
       STARTER: pct(PERCENTILES.STARTER),
       ALL_STAR: pct(PERCENTILES.ALL_STAR),
       MVP: pct(PERCENTILES.MVP),
       LEGEND: pct(PERCENTILES.LEGEND),
     };
+    // Apply tier floors + minimum-gap enforcement. Walk top-to-bottom so
+    // each tier respects both its absolute floor and a gap above the
+    // previous tier's final value.
+    let prev = 0;
+    const final = {};
+    for (const tier of TIER_ORDER) {
+      const gapFloor = prev > 0 ? prev + MIN_TIER_GAP : 0;
+      final[tier] = Math.max(raw[tier], TIER_FLOORS[tier], gapFloor);
+      prev = final[tier];
+    }
+    out[s] = final;
     const meanFp = fps.reduce((a, b) => a + b, 0) / fps.length;
-    console.log(`  ${s}: bal_mean=${meanFp.toFixed(0)}  R=${out[s].ROOKIE} S=${out[s].STARTER} A=${out[s].ALL_STAR} M=${out[s].MVP} L=${out[s].LEGEND}`);
+    const note = TIER_ORDER.some(t => final[t] !== raw[t]) ? " (floored)" : "";
+    console.log(`  ${s}: bal_mean=${meanFp.toFixed(0)}  R=${final.ROOKIE} S=${final.STARTER} A=${final.ALL_STAR} M=${final.MVP} L=${final.LEGEND}${note}`);
   }
 
   const json = JSON.stringify(out, null, 2) + "\n";

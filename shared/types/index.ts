@@ -42,6 +42,12 @@ export interface PlayerCard {
   };
   name: string;
   team: string;
+  /** Distinct teams a player was on this season, in chronological order.
+   *  Populated for sports whose data captures mid-season trades (basketball
+   *  via enrichPlayerTeams.mjs). Single-team players: same as [team]. Used
+   *  to render multi-team notch (e.g. "HOU/BKN") and to trigger former-team
+   *  commentary when opponent ∈ teams. */
+  teams?: string[];
   season: string;
   position: Position;
   tier: TierColor;
@@ -138,6 +144,9 @@ export interface PlayerEval {
   cardId: string;
   name: string;
   team: string;
+  /** Distinct teams a player was on this season (chronological). See
+   *  PlayerCard.teams. Optional — single-team players omit it. */
+  teams?: string[];
   season: string;
   position: string;
   photoCode?: string;
