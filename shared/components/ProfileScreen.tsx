@@ -10,6 +10,7 @@ import { track } from "@shared/analytics/analytics";
 import { InboxCard } from "@shared/inbox/InboxCard";
 import { useAuth } from "@shared/auth/useAuth";
 import { AchievementWall } from "./AchievementWall";
+import { YourChallengesPanel } from "./YourChallengesPanel";
 
 const FF = "'Rajdhani', 'Arial Narrow', sans-serif";
 
@@ -37,7 +38,7 @@ export function ProfileScreen({ currentUid, sport, onClose, isAnonymous, onSaveA
   const [editValue, setEditValue] = useState(nickname);
   const [ranks, setRanks] = useState<Record<string, { rank: number | null; score: number | null }>>({});
   const [signingOut, setSigningOut] = useState(false);
-  const [profileTab, setProfileTab] = useState<"stats" | "achievements">("stats");
+  const [profileTab, setProfileTab] = useState<"stats" | "achievements" | "challenges">("stats");
 
   const handleSignOut = async () => {
     if (signingOut) return;
@@ -166,6 +167,15 @@ export function ProfileScreen({ currentUid, sport, onClose, isAnonymous, onSaveA
               {tab}
             </button>
           ))}
+          <button
+            onClick={() => setProfileTab("challenges")}
+            style={{
+              flex: 1, padding: "8px 0", background: "transparent", border: "none",
+              borderBottom: profileTab === "challenges" ? "2px solid #FFB14A" : "2px solid transparent",
+              color: profileTab === "challenges" ? "#FFB14A" : "rgba(255,255,255,0.45)",
+              fontSize: 12, fontWeight: 700, cursor: "pointer", letterSpacing: 0.5,
+            }}
+          >Challenges</button>
         </div>
       </div>
 
@@ -178,6 +188,12 @@ export function ProfileScreen({ currentUid, sport, onClose, isAnonymous, onSaveA
             lifetimeBestFp={bestHand ? Number(bestHand) : undefined}
             currentStreak={parseInt(localStorage.getItem(sport === "basketball" ? "replaymod_streak" : `${sport}_replaymod_streak`) ?? "0", 10)}
           />
+        </div>
+      )}
+
+      {profileTab === "challenges" && (
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          <YourChallengesPanel sport={sport} currentUid={currentUid} />
         </div>
       )}
 
