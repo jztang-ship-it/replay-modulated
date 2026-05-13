@@ -1539,18 +1539,22 @@ export function GameView({ adapter, challengeCtx }: Props) {
     }
   }, [performanceTagMap, gameState, isFTUE]); // eslint-disable-line
 
-  // Evaluate challenge trigger on RESULTS entry (challenge mode guard added in Task 10)
-  // winTier is reset to null before setGameState("RESULTS") in onWinCelebrationComplete,
-  // so we compute the tier directly from roster FP rather than relying on the winTier state.
+  // Evaluate challenge trigger at WIN_CELEBRATION entry — winTier is valid here
+  // (setWinTier fires 1200ms before setGameState("WIN_CELEBRATION") in _useReveal.ts).
+  // At RESULTS (reached via score-row double-tap), challengeTrigger persists from
+  // WIN_CELEBRATION. At IDLE (replay button), challengeTrigger is cleared.
+  // Guard: skip when playing a received challenge (challengeCtx present).
   useEffect(() => {
-    if (gameState !== "RESULTS" || !!challengeCtx) return;
-    const resolvedRoster = rosterRef.current as import("@shared/types/index").GeneratedCard[];
-    const badges = resolvedRoster.flatMap((c: any) => c.achievements ?? []);
-    const fp = resolvedRoster.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0);
-    const tier = calculateWinTier(fp) ?? "BUST";
-    const result = evaluateTrigger({ roster: resolvedRoster, totalFp: fp, winTier: tier, badges, winTiersMap: adapter.winTiersMap });
-    setChallengeTrigger(result);
-    return () => setChallengeTrigger(null);
+    if (gameState === "WIN_CELEBRATION" && !challengeCtx) {
+      const resolvedRoster = rosterRef.current as import("@shared/types/index").GeneratedCard[];
+      const badges = resolvedRoster.flatMap((c: any) => c.achievements ?? []);
+      const fp = resolvedRoster.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0);
+      const tier = winTier ?? calculateWinTier(fp) ?? "BUST";
+      const result = evaluateTrigger({ roster: resolvedRoster, totalFp: fp, winTier: tier, badges, winTiersMap: adapter.winTiersMap });
+      setChallengeTrigger(result);
+    } else if (gameState === "IDLE") {
+      setChallengeTrigger(null);
+    }
   }, [gameState]); // eslint-disable-line
 
   // Show ChallengeComparisonScreen when a challenge hand reaches RESULTS
