@@ -410,6 +410,8 @@ export function GameView({ adapter }: Props) {
     ftueHoldSpotlight, setFtueHoldSpotlight,
     setFtueCoachBubbleKey,
     incrementHandCount,
+    newlyUnlockedAchievements,
+    clearNewlyUnlockedAchievements,
   } = shared;
 
   const {
@@ -1640,10 +1642,15 @@ export function GameView({ adapter }: Props) {
           }}>
             <AppHeader
               onCollect={() => setShowCollect(true)}
-              onProfile={() => setShowProfile(true)}
+              onProfile={() => {
+                setShowProfile(true);
+                clearNewlyUnlockedAchievements();
+                track("profile", "profile_self_view", { sport: adapter.sportKey });
+              }}
               hasUncollected={taskStates.some(t => t.progress >= t.target && !t.collected)}
               unreadInboxCount={unreadCount}
               onBell={() => { setBellOpen(true); track('nav', 'bell_clicked', { unread_count: unreadCount }, 'system'); }}
+              hasNewAchievements={newlyUnlockedAchievements.length > 0}
             />
           </div>
           <div data-ftue-chrome="true" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "0 12px" }}>
