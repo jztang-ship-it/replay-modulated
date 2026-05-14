@@ -36,17 +36,16 @@ function getChallengeId(): string | null {
 
 function AppInner() {
   const { isFTUE } = useFTUE(SPORT);
-  // Detect the FTUE → first-real-hand transition. We show the
-  // "Tap the gold icon to see the scoring rules" follow-up exactly once,
-  // on the user's first hand after completing the FTUE. The decision is
-  // made on first render (when isFTUE flips from true → false in storage):
-  // we read the FTUE-done flag and the one-shot intro-followup flag.
-  // The first render after FTUE completes has isFTUE === false AND the
-  // followup flag unset — that's our trigger. Set the flag immediately
-  // so subsequent renders / refreshes don't re-fire it.
+  const challengeIdFromUrl = getChallengeId();
   const [showFtueIntroFollowup] = useState(() => {
     if (typeof window === "undefined") return false;
     try {
+      // Challenge acceptors never see the followup — silently flip the seen
+      // flag so it stays hidden on their next non-challenge hand too.
+      if (challengeIdFromUrl) {
+        localStorage.setItem(FTUE_INTRO_FOLLOWUP_KEY, "1");
+        return false;
+      }
       const ftueDone = localStorage.getItem("replaymod_ftue_basketball") === "1";
       const followupSeen = localStorage.getItem(FTUE_INTRO_FOLLOWUP_KEY) === "1";
       if (ftueDone && !followupSeen) {
@@ -58,7 +57,6 @@ function AppInner() {
   });
   const { user, uid, isAuthenticated, isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
   const profileUserId = getProfileUserId();
-  const challengeIdFromUrl = getChallengeId();
   const [challengeCtx, setChallengeCtx] = useState<ChallengeCtx | null>(null);
   const [showChallengeLanding, setShowChallengeLanding] = useState(!!challengeIdFromUrl);
   const { unlockedIds: ownUnlockedIds } = useAchievements();

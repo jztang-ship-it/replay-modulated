@@ -156,6 +156,9 @@ type Props = {
    * behavior (bonus row shown when todaysStars is non-empty).
    */
   sportKey?: string;
+  /** Challenge mode: when present, replace the tier-countdown label with
+   *  "TARGET: {fp} — {name}" so the recipient knows the score to beat. */
+  challengeTarget?: { name: string; fp: number };
 };
 
 const MULTIPLIERS = [1, 3, 5, 10];
@@ -392,6 +395,7 @@ function CoinBurst({ active, color }: { active: boolean; color: string }) {
 function TierBar({
   totalFp, gameState, winTiers, isCelebration,
   lastCardProgress, lastCardFp, onOvershootSettled, ftuePulseNearMiss = false,
+  challengeTarget,
 }: {
   totalFp: number;
   gameState: GameStateLabel;
@@ -401,6 +405,7 @@ function TierBar({
   lastCardFp: number;
   onOvershootSettled: () => void;
   ftuePulseNearMiss?: boolean;
+  challengeTarget?: { name: string; fp: number };
 }) {
   const { label, fillPct, color, glow, fptNeeded } = getTierState(totalFp, winTiers);
   const showBar = gameState !== "IDLE";
@@ -499,11 +504,17 @@ function TierBar({
         </span>
         <span style={{
           fontSize: 11, fontWeight: 700, letterSpacing: 0.1, fontFamily: FF,
-          color: showBar ? (fptNeeded === 0 ? displayColor : "rgba(255,255,255,0.50)") : "rgba(255,255,255,0.30)",
+          color: challengeTarget
+            ? "#FFB14A"
+            : showBar
+              ? (fptNeeded === 0 ? displayColor : "rgba(255,255,255,0.50)")
+              : "rgba(255,255,255,0.30)",
         }}>
-          {showBar
-            ? fptNeeded > 0 ? `${fptNeeded.toFixed(1)} FP to ${label}` : `✓ ${label}`
-            : `${winTiers[0].minFp} FP to ${winTiers[0].label}`}
+          {challengeTarget
+            ? `TARGET: ${challengeTarget.fp.toFixed(1)} — ${challengeTarget.name}`
+            : showBar
+              ? fptNeeded > 0 ? `${fptNeeded.toFixed(1)} FP to ${label}` : `✓ ${label}`
+              : `${winTiers[0].minFp} FP to ${winTiers[0].label}`}
         </span>
       </div>
 
@@ -1340,6 +1351,7 @@ export function GameBar({
   onLegendOpened,
   onTrophyOpened,
   sportKey,
+  challengeTarget,
 }: Props) {
   // Trophy button: 36×36 circular, sits absolutely positioned right of the
   // action button row's container. Border + icon flip to gold once the user
@@ -1707,6 +1719,7 @@ export function GameBar({
             lastCardFp={lastCardFp}
             onOvershootSettled={() => setOvershootSettled(true)}
             ftuePulseNearMiss={ftuePulseNearMiss}
+            challengeTarget={challengeTarget}
           />
         </div>}
 

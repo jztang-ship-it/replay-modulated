@@ -41,6 +41,34 @@ export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sp
 
   const isWinner = myScore > challengeCtx.targetScore;
 
+  // Primary/secondary CTA labels — derived from (new vs existing) × (won vs lost)
+  const ctas = (() => {
+    if (isWinner) {
+      // Won: both new and existing → Send It Back primary, Play Fresh secondary
+      return {
+        primaryLabel: "Send It Back",
+        primaryAction: onSendItBack,
+        secondaryLabel: "Play a Fresh Hand",
+        secondaryAction: onPlayFresh,
+      };
+    }
+    // Lost
+    if (isNewUser) {
+      return {
+        primaryLabel: "Try a Fresh Hand",
+        primaryAction: onPlayFresh,
+        secondaryLabel: "Send It Back Anyway",
+        secondaryAction: onSendItBack,
+      };
+    }
+    return {
+      primaryLabel: "Make Them Prove It Again",
+      primaryAction: onSendItBack,
+      secondaryLabel: "Play a Fresh Hand",
+      secondaryAction: onPlayFresh,
+    };
+  })();
+
   useEffect(() => {
     const uid = getPlayerUid();
     const name = getNickname() || "Anonymous";
@@ -124,33 +152,31 @@ export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sp
       {/* CTAs */}
       <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%", maxWidth: 360 }}>
         <button
-          onClick={() => { track("challenges", "challenge_send_back", { challenge_id: challengeCtx.challengeId, sport }); onSendItBack(); }}
+          onClick={() => {
+            if (ctas.primaryAction === onSendItBack) {
+              track("challenges", "challenge_send_back", { challenge_id: challengeCtx.challengeId, sport });
+            }
+            ctas.primaryAction();
+          }}
           style={{
             padding: "15px", borderRadius: 12, background: "#FFB14A",
             border: "none", color: "#070A12", fontSize: 16, fontWeight: 900, cursor: "pointer",
           }}
-        >
-          {isWinner ? "Send It Back" : "Make Them Prove It Again"}
-        </button>
+        >{ctas.primaryLabel}</button>
         <button
-          onClick={onPlayFresh}
+          onClick={() => {
+            if (ctas.secondaryAction === onSendItBack) {
+              track("challenges", "challenge_send_back", { challenge_id: challengeCtx.challengeId, sport });
+            }
+            ctas.secondaryAction();
+          }}
           style={{
             padding: "13px", borderRadius: 12, background: "transparent",
             border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.7)",
             fontSize: 14, fontWeight: 700, cursor: "pointer",
           }}
-        >Play a Fresh Hand</button>
+        >{ctas.secondaryLabel}</button>
       </div>
-      {isNewUser && (
-        <button
-          onClick={onPlayFresh}
-          style={{
-            marginTop: 24, background: "none", border: "none", padding: 0,
-            color: "rgba(255,255,255,0.35)", fontSize: 13, cursor: "pointer",
-            textDecoration: "underline", textDecorationColor: "rgba(255,255,255,0.2)",
-          }}
-        >New to ReplayMod? See how it works →</button>
-      )}
     </div>
   );
 }

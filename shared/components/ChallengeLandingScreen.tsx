@@ -149,9 +149,6 @@ export function ChallengeLandingScreen({ challengeId, sport, deserializeRoster, 
               }}
             >Accept Challenge</button>
           )}
-          <div style={{ textAlign: "center", color: "rgba(255,255,255,0.35)", fontSize: 12, lineHeight: 1.6 }}>
-            Same starting cards. Your hold/draw decisions. One run.
-          </div>
         </>
       )}
     </div>

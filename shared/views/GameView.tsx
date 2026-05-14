@@ -132,6 +132,7 @@ import { chadMessage } from "@shared/commentary/chad";
 import { useAuth } from "@shared/auth/useAuth";
 import { listMessages } from "@shared/inbox/inbox";
 import { ensureLoaded } from "@shared/engines/dataEngine";
+import { supabase } from "@shared/lib/supabase";
 
 // ── Reveal mode toggle ─────────────────────────────────────────────────────
 // "auto" = cards flip automatically in sequence (original behaviour)
@@ -520,11 +521,54 @@ export function GameView({ adapter, challengeCtx }: Props) {
     if (isFTUE) return;
     if (gameState !== "IDLE") return;
     if (localStorage.getItem(`replaymod_pregame_intro_${sportKey}`) === "1") return;
+    // Challenge acceptors get their own intro chip (target FP). Skip the
+    // generic chad "welcome" and silently mark it seen so it never fires.
+    if (challengeCtx) {
+      localStorage.setItem(`replaymod_pregame_intro_${sportKey}`, "1");
+      return;
+    }
     localStorage.setItem(`replaymod_pregame_intro_${sportKey}`, "1");
     chadFiredThisIdleRef.current = true;
     setLegendGold(true);
     setFtueCommentaryOverride({ parts: [chadMessage("welcome")], sticky: true });
   }, [isFTUE, gameState]); // eslint-disable-line
+
+  // ── Challenge mode: auto-deal on accept + intro chip ──
+  // Accept Challenge → instant deal. No DEAL button tap required.
+  const challengeAutoDealtRef = useRef(false);
+  useEffect(() => {
+    if (!challengeCtx) { challengeAutoDealtRef.current = false; return; }
+    if (challengeAutoDealtRef.current) return;
+    if (gameState !== "IDLE") return;
+    challengeAutoDealtRef.current = true;
+    void onPrimaryAction();
+  }, [challengeCtx, gameState]); // eslint-disable-line
+
+  // Challenge intro chip: fires once when the deal lands in HOLD. Persists
+  // until the user touches a card (first hold). Sets sticky chad commentary
+  // with target FP + challenger name so the recipient knows the bar to beat.
+  const challengeIntroShownRef = useRef(false);
+  useEffect(() => {
+    if (!challengeCtx) { challengeIntroShownRef.current = false; return; }
+    if (challengeIntroShownRef.current) return;
+    if (gameState !== "HOLD") return;
+    challengeIntroShownRef.current = true;
+    setFtueCommentaryOverride({
+      parts: [
+        `${challengeCtx.challengerName} put up ${challengeCtx.targetScore.toFixed(1)} FP. Hold what you trust, redraw the rest.`,
+      ],
+      sticky: true,
+    });
+  }, [challengeCtx, gameState]); // eslint-disable-line
+
+  // Dismiss the challenge intro chip on first card interaction (any hold)
+  // or any state transition past HOLD.
+  useEffect(() => {
+    if (!challengeIntroShownRef.current) return;
+    if (lockedCardIds.size > 0 || (gameState !== "HOLD" && gameState !== "IDLE")) {
+      setFtueCommentaryOverride(null);
+    }
+  }, [lockedCardIds, gameState]); // eslint-disable-line
 
   // ── Attention-surface mutex (single lock, all auto-fired surfaces) ──
   //
@@ -677,16 +721,63 @@ export function GameView({ adapter, challengeCtx }: Props) {
     return tryOpenAuthModal("hand_5", 3500);
   }, [handCount, isAnonymous, isFTUE, gameState, tryOpenAuthModal]);
 
-  // Challenge send-back: hide comparison screen, re-arm challenge trigger so
-  // the ChallengeSharePrompt fires with the same hand result for sharing back.
-  const handleSendItBack = useCallback(() => {
-    setShowChallengeComparison(false);
-    const resolvedRoster = rosterRef.current as import("@shared/types/index").GeneratedCard[];
-    const fp = resolvedRoster.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0);
-    const badges = resolvedRoster.flatMap((c: any) => c.achievements ?? []);
-    const result = evaluateTrigger({ roster: resolvedRoster, totalFp: fp, winTier: winTier ?? "BUST", badges, winTiersMap: adapter.winTiersMap });
-    setChallengeTrigger(result);
-  }, [adapter.winTiersMap, winTier]); // eslint-disable-line
+  // Challenge send-back: bypass the share-prompt sheet entirely. Prompt
+  // anonymous users for a name (one-shot, stored in localStorage), then
+  // create the return challenge and open the native share sheet directly.
+  const sendItBackInFlightRef = useRef(false);
+  const handleSendItBack = useCallback(async () => {
+    if (sendItBackInFlightRef.current) return;
+    sendItBackInFlightRef.current = true;
+    try {
+      let nickname = getNickname();
+      if (!nickname) {
+        const entered = typeof window !== "undefined"
+          ? window.prompt("Your name for the return challenge?")
+          : null;
+        if (!entered || !entered.trim()) { setShowChallengeComparison(false); return; }
+        nickname = entered.trim().slice(0, 32);
+        setNickname(nickname);
+      }
+      setShowChallengeComparison(false);
+
+      const resolvedRoster = rosterRef.current as import("@shared/types/index").GeneratedCard[];
+      const fp = resolvedRoster.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0);
+      const badges = resolvedRoster.flatMap((c: any) => c.achievements ?? []);
+      const trigger = evaluateTrigger({ roster: resolvedRoster, totalFp: fp, winTier: winTier ?? "BUST", badges, winTiersMap: adapter.winTiersMap });
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const authHeader = session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {};
+      const body = {
+        hand_id: crypto.randomUUID(),
+        sport: sportKey,
+        season: challengeCtx?.season ?? "",
+        target_score: fp,
+        initial_roster: sportAdapter.serializeRoster(initialRosterRef.current as any),
+        challenger_name: nickname,
+        trigger_type: trigger.trigger,
+        share_headline: trigger.headline,
+      };
+      const resp = await fetch("/api/challenge/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeader },
+        body: JSON.stringify(body),
+      });
+      if (!resp.ok) throw new Error("Create failed");
+      const data = await resp.json();
+      const url = `${window.location.origin}/${sportKey}/challenge/${data.challenge_id}`;
+      track("challenges", "challenge_create", { challenge_id: data.challenge_id, sport: sportKey, trigger: trigger.trigger, target_score: fp });
+
+      if (navigator.share) {
+        try { await navigator.share({ title: trigger.headline, text: trigger.headline, url }); } catch { /* user cancelled */ }
+      } else {
+        try { await navigator.clipboard.writeText(url); alert("Link copied!"); } catch { /* ignore */ }
+      }
+    } catch (e) {
+      console.error("[challenge] send-it-back failed:", e);
+    } finally {
+      sendItBackInFlightRef.current = false;
+    }
+  }, [adapter.winTiersMap, winTier, challengeCtx, sportKey]); // eslint-disable-line
 
   const pendingCelebration = useRef<{ totalFp: number } | null>(null);
   /** FTUE: roster sum can read 0 briefly in RESULTS — keep last resolved hand FP for TierGauge */
@@ -1710,18 +1801,29 @@ export function GameView({ adapter, challengeCtx }: Props) {
             />
           </div>
           <div data-ftue-chrome="true" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "0 12px" }}>
-            <BonusPoolPill
-              betAmount={currentBet}
-              betNonce={betNonce}
-              sportKey={sportKey}
-              competition={adapter.competition}
-              onAmountChange={(v) => { bonusPoolRef.current = v; }}
-            />
-            {/* Slate v2 chip — only mounts when the sport wrapper passes a
-                SlateChipComponent (which it only does when the slate-v2
-                flag is ON for this sport). Flag-OFF: this branch is
-                undefined and zero slate code runs from the in-game path. */}
-            {SlateChipComponent && <SlateChipComponent />}
+            {challengeCtx ? (
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "4px 10px", borderRadius: 999,
+                background: "rgba(255,177,74,0.10)",
+                border: "1px solid rgba(255,177,74,0.35)",
+                color: "#FFB14A", fontSize: 11, fontWeight: 900, letterSpacing: 0.8,
+                fontFamily: "'Inter', system-ui, sans-serif",
+              }}>
+                TARGET: {challengeCtx.targetScore.toFixed(1)} — {challengeCtx.challengerName}
+              </div>
+            ) : (
+              <>
+                <BonusPoolPill
+                  betAmount={currentBet}
+                  betNonce={betNonce}
+                  sportKey={sportKey}
+                  competition={adapter.competition}
+                  onAmountChange={(v) => { bonusPoolRef.current = v; }}
+                />
+                {SlateChipComponent && <SlateChipComponent />}
+              </>
+            )}
           </div>
         </div>
 
