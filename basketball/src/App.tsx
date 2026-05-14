@@ -78,13 +78,12 @@ function AppInner() {
   })();
 
   // First-timers see the landing page. Veterans skip straight to game.
-  // We do NOT auto-promote landing→game when auth resolves — signing in
-  // from landing should keep the user on landing (so they can read the
-  // marketing copy and tap "Play IFS" intentionally). The sticky flag
-  // (set when they tap Play IFS) is what carries them past landing on
-  // future visits.
+  // Challenge URL visitors always skip landing — the ChallengeLandingScreen
+  // overlay is their accept surface; the marketing landing has no role.
   const [view, setView] = useState<"landing" | "game">(
-    (isFTUE && !skipFTUE && !skipLanding) ? "landing" : "game"
+    challengeIdFromUrl
+      ? "game"
+      : (isFTUE && !skipFTUE && !skipLanding) ? "landing" : "game"
   );
 
   // Modal/overlay state lifted to App level so it overlays both landing
