@@ -521,12 +521,10 @@ export function GameView({ adapter, challengeCtx }: Props) {
     if (isFTUE) return;
     if (gameState !== "IDLE") return;
     if (localStorage.getItem(`replaymod_pregame_intro_${sportKey}`) === "1") return;
-    // Challenge acceptors get their own intro chip (target FP). Skip the
-    // generic chad "welcome" and silently mark it seen so it never fires.
-    if (challengeCtx) {
-      localStorage.setItem(`replaymod_pregame_intro_${sportKey}`, "1");
-      return;
-    }
+    // Challenge acceptors get their own intro chip instead. Skip firing
+    // the welcome HERE, but leave the flag alone — when they later play
+    // a fresh non-challenge hand, the welcome should fire normally.
+    if (challengeCtx) return;
     localStorage.setItem(`replaymod_pregame_intro_${sportKey}`, "1");
     chadFiredThisIdleRef.current = true;
     setLegendGold(true);

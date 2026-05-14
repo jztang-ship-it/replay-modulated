@@ -40,12 +40,9 @@ function AppInner() {
   const [showFtueIntroFollowup] = useState(() => {
     if (typeof window === "undefined") return false;
     try {
-      // Challenge acceptors never see the followup — silently flip the seen
-      // flag so it stays hidden on their next non-challenge hand too.
-      if (challengeIdFromUrl) {
-        localStorage.setItem(FTUE_INTRO_FOLLOWUP_KEY, "1");
-        return false;
-      }
+      // Challenge acceptors don't see the followup THIS session — but leave
+      // the seen flag alone so a fresh non-challenge hand later still fires it.
+      if (challengeIdFromUrl) return false;
       const ftueDone = localStorage.getItem("replaymod_ftue_basketball") === "1";
       const followupSeen = localStorage.getItem(FTUE_INTRO_FOLLOWUP_KEY) === "1";
       if (ftueDone && !followupSeen) {
