@@ -266,17 +266,21 @@ export function useEmotionalReveal(params: Params) {
   }, [visibleFpMap]);
 
   const runningTotalFp = useMemo(() => {
-    // Include EVERY card via its visibleFp — held cards roll up just like
-    // non-held cards during revealHeldCards. Bar starts at 0 and grows one
-    // card at a time across the full sequence. seedFp is still honored for
-    // backward compat with other adapters, but basketball passes 0 now.
+    // Exclude the anchor card. The anchor's contribution is delivered by the
+    // spring (onAnchorFpComplete → runSpring sets state.springFp directly).
+    // While the anchor's number rolls up on the card face, runningTotalFp
+    // stays pinned at the 5-card total — otherwise the bar twitches up in
+    // lockstep with the per-tick visibleFp updates, and the spring has
+    // nothing left to animate by the time it fires.
+    const anchorId = revealOrder[revealOrder.length - 1]?.cardId ?? null;
     let sum = seedFp;
     for (const c of cards) {
+      if (c.cardId === anchorId) continue;
       const v = getVisibleFp(c.cardId);
       if (typeof v === "number" && Number.isFinite(v)) sum += v;
     }
     return sum;
-  }, [cards, getVisibleFp, seedFp]);
+  }, [cards, getVisibleFp, seedFp, revealOrder]);
 
   const pulseMap = useMemo(() => {
     const m = new Map<string, number>();
