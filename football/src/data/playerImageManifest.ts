@@ -254,6 +254,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "5714": { apiFootballId: 44411, local: true, processed: true },
   // Nemanja Radonjić (Serbia)
   "5833": { apiFootballId: 1920, local: true, processed: true },
+  // Bryan Oviedo (Costa Rica)
+  "5836": { apiFootballId: 19895, local: true, processed: true },
   // Yeltsin Ignacio Tejeda Valverde (Costa Rica)
   "5839": { apiFootballId: 650160, local: true, processed: true },
   // Andrija Živković (Serbia)
@@ -264,6 +266,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "6383": { apiFootballId: 49, local: true, processed: true },
   // Yassine Bounou (Morocco)
   "6785": { apiFootballId: 2701, local: true, processed: true },
+  // Marcos Llorente Moreno (Spain)
+  "6840": { apiFootballId: 183545, local: true, processed: true },
   // Damián Emiliano Martínez (Argentina)
   "6909": { apiFootballId: 33163, local: true, processed: true },
   // Alex Sandro Lobo Silva (Brazil)
@@ -282,6 +286,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "7796": { apiFootballId: 48378, local: true, processed: true },
   // Mason Mount (England)
   "7843": { apiFootballId: 19220, local: true, processed: true },
+  // Teun Koopmeiners (Netherlands)
+  "7891": { apiFootballId: 36899, local: true, processed: true },
   // André Onana (Cameroon)
   "8064": { apiFootballId: 526, local: true, processed: true },
   // Frenkie de Jong (Netherlands)
@@ -386,6 +392,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "24085": { apiFootballId: 649655, local: true, processed: true },
   // Eduardo Camavinga (France)
   "24778": { apiFootballId: 2207, local: true, processed: true },
+  // Antony Matheus dos Santos (Brazil)
+  "25363": { apiFootballId: 235667, local: true, processed: true },
   // Orbelín Pineda Alvarado (Mexico)
   "26280": { apiFootballId: 577163, local: true, processed: true },
   // Strahinja Pavlović (Serbia)
@@ -448,6 +456,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "43565": { apiFootballId: 645996, local: true, processed: true },
   // Jakub Piotr Kiwior (Poland)
   "44166": { apiFootballId: 61431, local: true, processed: true },
+  // Alistair Johnston (Canada)
+  "44703": { apiFootballId: 78547, local: true, processed: true },
   // Alidu Seidu (Ghana)
   "45047": { apiFootballId: 196187, local: true, processed: true },
   // Azzedine Ounahi (Morocco)
