@@ -44,10 +44,13 @@ export function evaluateTrigger(input: TriggerInput): TriggerResult {
     };
   }
 
-  // 3. near_miss — within NEAR_MISS_WINDOW FP of next tier
+  // 3. near_miss — within NEAR_MISS_WINDOW FP of next tier AND current tier
+  //    is STARTER+. We don't fire near_miss on BUST→ROOKIE transitions — a
+  //    BUST hand isn't share-worthy just because it almost cleared ROOKIE.
   const tierOrder: WinTierKey[] = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "LEGEND"];
+  const STARTER_IDX = tierOrder.indexOf("STARTER");
   const currentIdx = tierOrder.indexOf(winTier as WinTierKey);
-  if (currentIdx >= 0 && currentIdx < tierOrder.length - 1) {
+  if (currentIdx >= STARTER_IDX && currentIdx < tierOrder.length - 1) {
     const nextTier = tierOrder[currentIdx + 1];
     const nextMin = winTiersMap[nextTier]?.minFp;
     if (nextMin !== undefined) {
@@ -63,10 +66,15 @@ export function evaluateTrigger(input: TriggerInput): TriggerResult {
     }
   }
 
-  // 4. bad_beat — BUST or ROOKIE with a RED or ORANGE card in the lineup
+  // 4. bad_beat — BUST or ROOKIE with 2+ RED/ORANGE cards (revised from 1+).
+  //    One premium card busting isn't surprising; the share-worthy story is
+  //    "stacked lineup got cooked", which needs ≥2 high-tier cards.
   if (winTier === "BUST" || winTier === "ROOKIE") {
-    const hasHighTier = roster.some(c => c.tier === "RED" || c.tier === "ORANGE");
-    if (hasHighTier) {
+    const highTierCount = roster.reduce(
+      (n, c) => n + (c.tier === "RED" || c.tier === "ORANGE" ? 1 : 0),
+      0,
+    );
+    if (highTierCount >= 2) {
       return {
         trigger: "bad_beat",
         headline: `Brutal hand. See if they survive the same slate.`,

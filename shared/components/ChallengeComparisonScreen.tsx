@@ -187,9 +187,30 @@ export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sp
           background: "rgba(255,255,255,0.18)", marginBottom: 14,
         }} />
 
-        {/* Result headline */}
-        <div style={{ fontSize: 32, fontWeight: 950, color: isWinner ? "#22C55E" : "#EF4444", marginBottom: 6 }}>
-          {isWinner ? "You Beat It!" : "They Hold."}
+        {/* Result headline — head-to-head delta leads. Tier shown smaller
+            below as secondary context (challenge mode means the matchup is
+            the primary outcome, not the absolute tier). */}
+        {(() => {
+          const delta = myScore - challengeCtx.targetScore;
+          const absDelta = Math.abs(delta).toFixed(1);
+          const isPhotoFinish = Math.abs(delta) <= 1;
+          const headline = isPhotoFinish
+            ? "Photo finish"
+            : delta > 0
+              ? `You beat them by ${absDelta} FP`
+              : `Off by ${absDelta} FP`;
+          const color = isPhotoFinish ? "#FFB14A" : delta > 0 ? "#22C55E" : "#EF4444";
+          return (
+            <div style={{ fontSize: 26, fontWeight: 950, color, marginBottom: 4, textAlign: "center" }}>
+              {headline}
+            </div>
+          );
+        })()}
+        <div style={{
+          fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase",
+          color: "rgba(255,255,255,0.4)", marginBottom: 8,
+        }}>
+          your hand: {myWinTier.replace("_", "-")}
         </div>
         {isBest && (
           <div style={{

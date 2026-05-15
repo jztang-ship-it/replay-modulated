@@ -128,7 +128,7 @@ const ChallengeSharePrompt = lazy(() =>
 const ChallengeComparisonScreen = lazy(() =>
   import("@shared/components/ChallengeComparisonScreen").then(m => ({ default: m.ChallengeComparisonScreen }))
 );
-import { chadMessage } from "@shared/commentary/chad";
+import { chadMessage, chadTriggerFraming } from "@shared/commentary/chad";
 import { isRealName } from "@shared/utils/isRealName";
 import { useAuth } from "@shared/auth/useAuth";
 import { listMessages } from "@shared/inbox/inbox";
@@ -553,11 +553,13 @@ export function GameView({ adapter, challengeCtx }: Props) {
     if (gameState !== "HOLD") return;
     challengeIntroShownRef.current = true;
     // Real challenger name → name-prefixed line. Generic placeholder
-    // (e.g. CrimsonSwish_8753) → drop the name and lead with the FP target.
+    // → use "Someone" so the line still acknowledges the challenge
+    // context (not just a flat FP description).
     const target = challengeCtx.targetScore.toFixed(1);
-    const introLine = isRealName(challengeCtx.challengerName)
-      ? `${challengeCtx.challengerName} put up ${target} FP. Hold what you trust, redraw the rest.`
-      : `${target} FP on this hand. Hold what you trust, redraw the rest.`;
+    const subject = isRealName(challengeCtx.challengerName)
+      ? challengeCtx.challengerName
+      : "Someone";
+    const introLine = `${subject} put up ${target} FP on this hand. Hold what you trust, redraw the rest.`;
     setFtueCommentaryOverride({ parts: [introLine], sticky: true });
   }, [challengeCtx, gameState]); // eslint-disable-line
 
@@ -1218,23 +1220,47 @@ export function GameView({ adapter, challengeCtx }: Props) {
     };
 
     const copy = selectCommentary(copyInput as any);
-    if (!copy?.primary) {
-      const fpStr = fp.toFixed(1);
-      const staticMap: Record<string, string> = {
-        BUST: "Off night. The numbers don't lie.",
-        ROOKIE: `${fpStr} on the board. Take it.`,
-        STARTER: `${fpStr} — that's a real hand.`,
-        ALL_STAR: `${fpStr}. Now we're talking.`,
-        MVP: `${fpStr}. That's a number.`,
-        LEGEND: `${fpStr}. Insane.`,
-      };
-      const staticCopy = { primary: staticMap[winTier] ?? staticMap.STARTER, secondary: "" };
-      postRevealCopyRef.current = staticCopy;
-      return staticCopy;
+    const baseCopy = copy?.primary
+      ? copy
+      : (() => {
+          const fpStr = fp.toFixed(1);
+          const staticMap: Record<string, string> = {
+            BUST: "Off night. The numbers don't lie.",
+            ROOKIE: `${fpStr} on the board. Take it.`,
+            STARTER: `${fpStr} — that's a real hand.`,
+            ALL_STAR: `${fpStr}. Now we're talking.`,
+            MVP: `${fpStr}. That's a number.`,
+            LEGEND: `${fpStr}. Insane.`,
+          };
+          return { primary: staticMap[winTier] ?? staticMap.STARTER, secondary: "" };
+        })();
+
+    // Trigger-aware framing override (standalone play only — challenge
+    // recipients see ChallengeComparisonScreen with its own Chad lines).
+    // When a named trigger fires (rare_pull/big_score/near_miss/bad_beat),
+    // Chad references the share-worthy nature of the moment rather than the
+    // tier-by-numbers commentary.
+    if (!challengeCtx && challengeTrigger && challengeTrigger.trigger !== "default") {
+      const recordBadge = (rosterRef.current as any[])
+        .flatMap(c => c.achievements ?? [])
+        .find((b: any) => ["TOP_GAME", "CAREER_HIGH", "NBA_RECORD", "SEASON_RECORD", "PB"]
+          .some(rid => String(b.id ?? "").includes(rid)));
+      const framingLine = chadTriggerFraming({
+        trigger: challengeTrigger.trigger as any,
+        fp,
+        tier: winTier,
+        badgeLabel: recordBadge?.label,
+        nearMissGap: challengeTrigger.nearMissGap,
+        nearMissNextTier: challengeTrigger.nearMissNextTier,
+      });
+      const framed = { primary: framingLine, secondary: baseCopy.secondary ?? "" };
+      postRevealCopyRef.current = framed as any;
+      return framed as any;
     }
-    postRevealCopyRef.current = copy;
-    return copy;
-  }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct]); // eslint-disable-line
+
+    postRevealCopyRef.current = baseCopy as any;
+    return baseCopy;
+  }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct, challengeTrigger, challengeCtx]); // eslint-disable-line
 
   const regularFinalGaugeKick = false;
 
@@ -1408,7 +1434,12 @@ export function GameView({ adapter, challengeCtx }: Props) {
       })();
       let res: any;
       try {
-        if (challengeCtx && !ftueStillActive) {
+        // Challenge URL ALWAYS wins. The recipient must replay the
+        // challenger's exact 6-card snapshot — never a fresh deal, never
+        // the hardcoded FTUE roster. A new user who hits a challenge URL
+        // still has `replaymod_ftue_basketball` unset (so ftueStillActive
+        // returns true), but challengeCtx must override that.
+        if (challengeCtx) {
           res = { roster: challengeCtx.initialRoster };
         } else {
           res = ftueStillActive ? await ftueDealRoster() : await dealInitialRoster();
@@ -2465,8 +2496,11 @@ export function GameView({ adapter, challengeCtx }: Props) {
         )}
       </Suspense>
 
-      {/* PostHandSheet — optional, sport-specific overlay */}
-      {PostHandSheet && !isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && springSettled && (() => {
+      {/* PostHandSheet — optional, sport-specific overlay. Suppressed in
+          challenge mode so it doesn't collide with ChallengeComparisonScreen.
+          The challenge head-to-head sheet IS the post-hand surface for the
+          recipient; running both would double-up the result frame. */}
+      {PostHandSheet && !isFTUE && !challengeCtx && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && springSettled && (() => {
         const gaugeSnap = computeGaugeState(displayFp, gaugeThresholds, winTier, NEAR_MISS_FP);
         return (
           <PostHandSheet

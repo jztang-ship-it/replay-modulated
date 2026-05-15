@@ -305,6 +305,65 @@ export function chadTrashTalkBank(bucket: TrashTalkBucket, named: boolean): stri
   return [...(named ? TRASH_NAMED[bucket] : TRASH_UNNAMED[bucket])];
 }
 
+// ── Trigger-aware framing (results screen, standalone play) ───────────────
+//
+// When a named challenge trigger fires on the results screen (rare_pull /
+// big_score / near_miss / bad_beat), Chad's primary commentary should
+// reference the share-worthy nature of the moment, not just describe what
+// happened. This produces that line; the share prompt then becomes the
+// natural next action below the commentary.
+
+export type ChallengeTriggerKind =
+  | "rare_pull" | "big_score" | "near_miss" | "bad_beat";
+
+export interface ChadTriggerFramingArgs {
+  trigger: ChallengeTriggerKind;
+  fp: number;
+  tier: string;
+  /** rare_pull only — the badge that fired (e.g. "career high", "top game"). */
+  badgeLabel?: string;
+  /** near_miss only — FP gap to the next tier. */
+  nearMissGap?: number;
+  /** near_miss only — the tier that was just missed. */
+  nearMissNextTier?: string;
+}
+
+export function chadTriggerFraming(args: ChadTriggerFramingArgs): string {
+  const fp = args.fp.toFixed(1);
+  const tierName = args.tier.replace("_", "-");
+  switch (args.trigger) {
+    case "big_score":
+      return pick([
+        `Hit ${tierName} on this slate. The kind of score that needs an audience.`,
+        `${tierName} on the board with ${fp}. Don't sit on it.`,
+        `${fp} FP — ${tierName} tier. Pick someone and send the receipt.`,
+      ]);
+    case "rare_pull": {
+      const what = args.badgeLabel ?? "A record game";
+      return pick([
+        `${what} showed up in your lineup. Worth showing off.`,
+        `${what}. The kind of moment that doesn't repeat. Send it.`,
+        `${what} just landed for you. Pin it before it fades.`,
+      ]);
+    }
+    case "near_miss": {
+      const gap = (args.nearMissGap ?? 0).toFixed(1);
+      const next = (args.nearMissNextTier ?? "the next tier").replace("_", "-");
+      return pick([
+        `By ${gap} FP. Brutal. Someone else might close the gap.`,
+        `${gap} FP short of ${next}. Pass the slate — see who finishes it.`,
+        `So close. ${gap} FP. Make somebody finish what you started.`,
+      ]);
+    }
+    case "bad_beat":
+      return pick([
+        `Looked stacked on paper. Got cooked. Share the misery.`,
+        `Premium roster, premium disaster. Send it — let them try.`,
+        `Stars went cold. Make somebody else feel that one.`,
+      ]);
+  }
+}
+
 // ── Public API ─────────────────────────────────────────────────────────────
 
 export type ChadTopic =

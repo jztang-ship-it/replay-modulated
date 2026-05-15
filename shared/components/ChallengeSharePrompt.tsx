@@ -59,11 +59,40 @@ export function ChallengeSharePrompt({
     near_miss: "😤 NEAR MISS", bad_beat: "💀 BAD BEAT",
   };
 
+  // Default trigger: render a small corner icon only — discoverable for
+  // users who want to share a mid hand, but not pushed on them. Named
+  // triggers (rare_pull / big_score / near_miss / bad_beat) keep the
+  // prominent share strip.
+  if (!isSpecial) {
+    return (
+      <button
+        onClick={handleChallenge}
+        disabled={isCreating}
+        aria-label="Challenge a friend with this hand"
+        style={{
+          position: "fixed",
+          right: 14,
+          bottom: "calc(14px + env(safe-area-inset-bottom, 0px))",
+          zIndex: 9000,
+          width: 40, height: 40, borderRadius: 20,
+          background: "rgba(255,177,74,0.14)",
+          border: "1px solid rgba(255,177,74,0.4)",
+          color: "#FFB14A", fontSize: 18, fontWeight: 900,
+          cursor: isCreating ? "default" : "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          lineHeight: 1,
+        }}
+      >
+        {isCreating ? "…" : copied ? "✓" : "↗"}
+      </button>
+    );
+  }
+
   return (
     <div style={{
       position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9000,
       background: "linear-gradient(0deg, #0D1628 0%, rgba(13,22,40,0.97) 100%)",
-      borderTop: `1px solid ${isSpecial ? "rgba(255,177,74,0.3)" : "rgba(255,255,255,0.08)"}`,
+      borderTop: `1px solid rgba(255,177,74,0.3)`,
       padding: "14px 20px max(24px, env(safe-area-inset-bottom, 20px))",
     }}>
       {/* Header row: label + dismiss */}

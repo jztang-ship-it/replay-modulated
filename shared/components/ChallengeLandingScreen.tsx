@@ -31,9 +31,11 @@ interface Props {
   onClose: () => void;
 }
 
-function challengeStatsLine(data: ChallengeData): string {
+function challengeStatsLine(data: ChallengeData): string | null {
   const { attempt_count, winner_count, best_score, best_user_name } = data;
-  if (attempt_count === 0) return "Be the first to try.";
+  // Zero attempts: omit the line entirely — the invitation's job is to make
+  // the recipient tap Accept, not push generic "be the first" copy.
+  if (attempt_count === 0) return null;
   if (attempt_count === 1 && winner_count === 0) return "1 attempt · still unbeaten";
   if (attempt_count >= 2 && winner_count === 0) return `Unbeaten so far · ${attempt_count} attempts`;
   const failedCount = attempt_count - winner_count;
@@ -107,45 +109,43 @@ export function ChallengeLandingScreen({ challengeId, sport, deserializeRoster, 
 
       {data && (() => {
         const namedChallenger = isRealName(data.challenger_name);
+        const statsLine = challengeStatsLine(data);
         return (
         <>
-          {/* Challenger + score. Named: "Challenge from {name}" → score.
-              Unnamed: score-first, name-less prompt. */}
-          {namedChallenger ? (
-            <>
-              <div style={{ marginBottom: 8, fontSize: 13, color: "rgba(255,255,255,0.5)", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>
-                Challenge from
-              </div>
-              <div style={{ fontSize: 28, fontWeight: 900, color: "#EAF0FF", marginBottom: 4 }}>{data.challenger_name}</div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 6 }}>
-                <span style={{ fontSize: 56, fontWeight: 950, color: "#FFB14A", lineHeight: 1, fontStyle: "italic" }}>{data.target_score.toFixed(1)}</span>
-                <span style={{ fontSize: 20, color: "rgba(255,255,255,0.4)", fontWeight: 700 }}>FP</span>
-              </div>
-            </>
-          ) : (
-            <>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 8 }}>
-                <span style={{ fontSize: 64, fontWeight: 950, color: "#FFB14A", lineHeight: 1, fontStyle: "italic" }}>{data.target_score.toFixed(1)}</span>
-                <span style={{ fontSize: 22, color: "rgba(255,255,255,0.4)", fontWeight: 700 }}>FP</span>
-              </div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: "#EAF0FF", marginBottom: 4 }}>on this hand.</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: "rgba(255,255,255,0.7)", marginBottom: 6 }}>Think you can beat it?</div>
-            </>
-          )}
+          {/* Hierarchy (top → bottom):
+              1. Big-game / season-reel caption (em-dashed italic) — leads
+              2. Score callout: target FP "on this hand."
+              3. Sub-question: "Think you can beat it?"
+              4. Card spread
+              5. Accept Challenge
+              6. (optional) tiny stats line and "from {name}" attribution */}
+
           {data.share_headline && (
             <div style={{
-              fontSize: 14, fontStyle: "italic", color: "rgba(255,255,255,0.7)",
-              marginBottom: 10, lineHeight: 1.4,
+              fontSize: 22, fontStyle: "italic", fontWeight: 600,
+              color: "rgba(255,255,255,0.85)",
+              lineHeight: 1.35, marginBottom: 22, maxWidth: 540,
             }}>
               — {data.share_headline}
             </div>
           )}
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", marginBottom: 24 }}>
-            {challengeStatsLine(data)}
+
+          {/* Score callout */}
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+            <span style={{ fontSize: 68, fontWeight: 950, color: "#FFB14A", lineHeight: 1, fontStyle: "italic" }}>
+              {data.target_score.toFixed(1)}
+            </span>
+            <span style={{ fontSize: 22, color: "rgba(255,255,255,0.45)", fontWeight: 700 }}>FP</span>
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "rgba(255,255,255,0.75)", marginBottom: 6 }}>
+            on this hand.
+          </div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: "#EAF0FF", marginBottom: 22 }}>
+            Think you can beat it?
           </div>
 
-          {/* Card grid */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 32, justifyContent: "center" }}>
+          {/* Card spread */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 24, justifyContent: "center" }}>
             {cards.map((card: any, i: number) => (
               <div key={i} style={{
                 background: "rgba(255,255,255,0.04)", border: `1.5px solid ${TIER_ACCENT[card.tier] ?? "#9CA3AF"}`,
@@ -170,10 +170,17 @@ export function ChallengeLandingScreen({ challengeId, sport, deserializeRoster, 
                 width: "100%", padding: "16px", borderRadius: 14,
                 background: "#FFB14A", border: "none",
                 color: "#070A12", fontSize: 17, fontWeight: 900, cursor: "pointer",
-                marginBottom: 16,
+                marginBottom: 10,
               }}
             >Accept Challenge</button>
           )}
+
+          {/* Small attribution + (optional) stats — minor below the CTA. */}
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", textAlign: "center" }}>
+            {namedChallenger && <span>from {data.challenger_name}</span>}
+            {namedChallenger && statsLine && <span> · </span>}
+            {statsLine && <span>{statsLine}</span>}
+          </div>
         </>
         );
       })()}
