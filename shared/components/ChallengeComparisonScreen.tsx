@@ -12,9 +12,17 @@
 //                  CTAs: "Play your own hand" + Dismiss (both clear
 //                  challengeCtx and go to normal play).
 //
-// State source-of-truth is the attempt API response (user_has_won,
-// is_window_open, window_closes_at_ms). Until the response lands we
-// default to optimistic values derived from props.
+// Visibility: the sheet element stays mounted across re-summons so the
+// attempt POST fires only once. The `collapsed` prop toggles whether the
+// sheet is visually present or hidden (translated off-screen). When
+// collapsed, GameView renders the persistent action bar + trash-talk
+// chip on the game surface (items 7/8).
+//
+// Dismiss surfaces: × button top-right, swipe-down on the sheet body,
+// tap on the dimmed backdrop. All three call onCollapse, which toggles
+// the collapsed state in GameView. The inner "Dismiss" CTA likewise
+// collapses — the action bar's [DEAL] is the real "leave challenge"
+// path that clears challengeCtx.
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
@@ -43,55 +51,63 @@ interface AttemptResult {
   already_attempted?: boolean;
 }
 
+export type ComparisonState = "WIN" | "LOSS_OPEN" | "LOSS_CLOSED";
+
 interface Props {
   challengeCtx: ChallengeCtx;
   myScore: number;
   myWinTier: string;
   sport: string;
+  /** When true the sheet is rendered off-screen (display continues to
+   *  mount so the attempt POST fires only once). GameView controls. */
+  collapsed?: boolean;
+  /** Fired when the user dismisses the sheet (×, backdrop tap, swipe,
+   *  or inner "Dismiss" CTA). GameView keeps challengeCtx set and
+   *  surfaces the persistent action bar. */
+  onCollapse: () => void;
   /** Fired from win-state primary CTA. Caller clears challengeCtx,
-   *  sets challengeBackCtx, closes the sheet, and deals a fresh
-   *  normal hand. The share prompt auto-fires at that hand's RESULTS. */
+   *  sets challengeBackCtx, deals a fresh normal hand. */
   onSendItBack: () => void;
-  /** Fired from loss-window-open primary CTA. Caller closes the sheet
-   *  and re-deals the same challenge snapshot. challengeCtx stays set. */
+  /** Fired from loss-window-open primary CTA. Caller re-deals the
+   *  challenge snapshot (challengeCtx stays set). */
   onTryAgain: () => void;
-  /** Fired from any Dismiss CTA AND from the loss-window-closed
-   *  primary ("Play your own hand"). Caller clears challengeCtx and
-   *  closes the sheet — Push 2b adds a persistent action bar so the
-   *  user can still reach DEAL after this. */
-  onDismiss: () => void;
+  /** Emitted exactly once when the attempt POST resolves. Lets
+   *  GameView mirror state (trash-talk text for the chip, comparison
+   *  state for the action bar, etc.) onto its surface. */
+  onResolved?: (info: {
+    state: ComparisonState;
+    trashTalk: string;
+    windowClosesAtMs: number | null;
+  }) => void;
 }
 
 export function ChallengeComparisonScreen({
   challengeCtx, myScore, myWinTier, sport,
-  onSendItBack, onTryAgain, onDismiss,
+  collapsed = false,
+  onCollapse, onSendItBack, onTryAgain, onResolved,
 }: Props) {
-  void myWinTier; // tier label removed from sheet — kept for caller compat
+  void myWinTier;
 
   const [attemptResult, setAttemptResult] = useState<AttemptResult | null>(null);
   const submittedRef = useRef(false);
+  const resolvedRef = useRef(false);
 
   const delta = myScore - challengeCtx.targetScore;
   const absDelta = Math.abs(delta);
   const isPhotoFinish = absDelta <= 1;
 
   const namedChallenger = isRealName(challengeCtx.challengerName) ? challengeCtx.challengerName : null;
-  // Server truth, with optimistic fallbacks while the attempt POST is in flight:
   const userHasWon = attemptResult?.user_has_won ?? (delta > 0);
   const isWindowOpen = attemptResult?.is_window_open ?? true;
   const windowClosesAtMs = attemptResult?.window_closes_at_ms ?? null;
-  // Server's authoritative is_practice; falls back to the local hint.
   const [localIsPractice] = useState(() => hasAttemptedChallenge(challengeCtx.challengeId));
   const isPractice = attemptResult?.is_practice ?? localIsPractice;
 
-  // Three-way state derived once the server response lands.
-  const state: "WIN" | "LOSS_OPEN" | "LOSS_CLOSED" =
+  const state: ComparisonState =
     userHasWon ? "WIN"
     : isWindowOpen ? "LOSS_OPEN"
     : "LOSS_CLOSED";
 
-  // Chad's outcome-bucket trash talk. Tactical line 1 fires as a chip
-  // on the game surface ~1.5s before this sheet slides up.
   const trashTalk = useMemo(() => {
     const bucket = trashTalkBucket(delta);
     return chadTrashTalk(bucket, namedChallenger, delta);
@@ -138,8 +154,15 @@ export function ChallengeComparisonScreen({
       .catch(() => { /* silent — UI still works with optimistic defaults */ });
   }, []); // eslint-disable-line
 
-  // Live countdown — updates every 30s so the "47 minutes" label stays
-  // close to true without burning CPU.
+  // Mirror the resolved state up to GameView once.
+  useEffect(() => {
+    if (resolvedRef.current) return;
+    if (!attemptResult) return;
+    resolvedRef.current = true;
+    onResolved?.({ state, trashTalk, windowClosesAtMs });
+  }, [attemptResult, state, trashTalk, windowClosesAtMs, onResolved]);
+
+  // Live countdown — updates every 30s.
   const [nowMs, setNowMs] = useState(Date.now());
   useEffect(() => {
     if (state !== "LOSS_OPEN" || !windowClosesAtMs) return;
@@ -150,11 +173,9 @@ export function ChallengeComparisonScreen({
     ? Math.max(0, Math.round((windowClosesAtMs - nowMs) / 60_000))
     : null;
 
-  // Pronoun-free labels — the comparison frame never uses "them"/"they".
   const opponentLong = namedChallenger ?? "your friend";
   const opponentLabel = (namedChallenger ?? "FRIEND").toUpperCase();
 
-  // Headline copy + color per state.
   const headline = (() => {
     if (isPhotoFinish) return "Photo finish";
     if (state === "WIN") return `You beat ${opponentLong} by ${absDelta.toFixed(1)} FP`;
@@ -164,10 +185,8 @@ export function ChallengeComparisonScreen({
     state === "WIN" ? "#22C55E"
     : isPhotoFinish ? "#FFB14A"
     : state === "LOSS_OPEN" ? "#EF4444"
-    : "#EAF0FF"; // closed window: neutral
+    : "#EAF0FF";
 
-  // CTA matrix per state. Send-back tap → analytics → onSendItBack;
-  // try-again tap → analytics → onTryAgain; dismiss → onDismiss.
   const ctas = (() => {
     if (state === "WIN") {
       return {
@@ -176,8 +195,6 @@ export function ChallengeComparisonScreen({
           track("challenges", "challenge_send_back", { challenge_id: challengeCtx.challengeId, sport });
           onSendItBack();
         },
-        secondaryLabel: "Dismiss",
-        secondaryAction: onDismiss,
       };
     }
     if (state === "LOSS_OPEN") {
@@ -187,23 +204,42 @@ export function ChallengeComparisonScreen({
           track("challenges", "challenge_try_again", { challenge_id: challengeCtx.challengeId, sport, minutes_left: minutesLeft ?? -1 });
           onTryAgain();
         },
-        secondaryLabel: "Dismiss",
-        secondaryAction: onDismiss,
       };
     }
-    // LOSS_CLOSED — "Play your own hand" and "Dismiss" both route to
-    // onDismiss (clear challengeCtx, normal play). Keeping two CTAs for
-    // visual hierarchy per spec.
     return {
       primaryLabel: "Play your own hand",
       primaryAction: () => {
         track("challenges", "challenge_play_own", { challenge_id: challengeCtx.challengeId, sport });
-        onDismiss();
+        onCollapse();
       },
-      secondaryLabel: "Dismiss",
-      secondaryAction: onDismiss,
     };
   })();
+
+  // Swipe-down gesture on the sheet body. Minimal, no library.
+  const dragStartYRef = useRef<number | null>(null);
+  const dragDeltaRef = useRef(0);
+  const [dragDeltaPx, setDragDeltaPx] = useState(0);
+  const onTouchStart = (e: React.TouchEvent) => {
+    dragStartYRef.current = e.touches[0].clientY;
+    dragDeltaRef.current = 0;
+    setDragDeltaPx(0);
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (dragStartYRef.current == null) return;
+    const d = e.touches[0].clientY - dragStartYRef.current;
+    if (d > 0) {
+      dragDeltaRef.current = d;
+      setDragDeltaPx(d);
+    }
+  };
+  const onTouchEnd = () => {
+    if (dragStartYRef.current == null) return;
+    dragStartYRef.current = null;
+    if (dragDeltaRef.current > 90) {
+      onCollapse();
+    }
+    setDragDeltaPx(0);
+  };
 
   return (
     <>
@@ -214,36 +250,66 @@ export function ChallengeComparisonScreen({
         }
       `}</style>
 
-      {/* Backdrop — half-opacity over the game surface. */}
-      <div style={{
-        position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 9499,
-      }} />
+      {/* Backdrop — tap-to-collapse. Visibility tied to !collapsed so the
+          game surface is fully visible when the sheet is hidden. */}
+      <div
+        onClick={onCollapse}
+        style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 9499,
+          pointerEvents: collapsed ? "none" : "auto",
+          opacity: collapsed ? 0 : 1,
+          transition: "opacity 220ms ease",
+        }}
+        aria-hidden={collapsed}
+      />
 
       {/* Bottom sheet */}
-      <div style={{
-        position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 9500,
-        maxHeight: "85vh", overflowY: "auto",
-        background: "#0D1117",
-        borderTop: "1px solid rgba(255,255,255,0.1)",
-        borderRadius: "16px 16px 0 0",
-        padding: "20px 20px calc(24px + env(safe-area-inset-bottom, 0px))",
-        animation: "ccsSlideUp 350ms cubic-bezier(0.32, 0.72, 0, 1) both",
-        color: "#EAF0FF", fontFamily: "'Inter', system-ui, sans-serif",
-        display: "flex", flexDirection: "column", alignItems: "center",
-      }}>
-        {/* Sheet handle */}
+      <div
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        style={{
+          position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 9500,
+          maxHeight: "85vh", overflowY: "auto",
+          background: "#0D1117",
+          borderTop: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: "16px 16px 0 0",
+          padding: "20px 20px calc(24px + env(safe-area-inset-bottom, 0px))",
+          animation: collapsed ? "none" : "ccsSlideUp 350ms cubic-bezier(0.32, 0.72, 0, 1) both",
+          transform: collapsed ? "translateY(105%)" : `translateY(${dragDeltaPx}px)`,
+          transition: collapsed
+            ? "transform 280ms cubic-bezier(0.32, 0.72, 0, 1)"
+            : dragDeltaPx > 0 ? "none" : "transform 220ms ease",
+          color: "#EAF0FF", fontFamily: "'Inter', system-ui, sans-serif",
+          display: "flex", flexDirection: "column", alignItems: "center",
+          pointerEvents: collapsed ? "none" : "auto",
+        }}
+      >
+        {/* Close × — top-right of the sheet */}
+        <button
+          onClick={onCollapse}
+          aria-label="Close result"
+          style={{
+            position: "absolute", top: 10, right: 14,
+            width: 32, height: 32, borderRadius: 16,
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            color: "rgba(255,255,255,0.55)",
+            fontSize: 16, fontWeight: 700, lineHeight: 1, cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >×</button>
+
+        {/* Sheet handle (also a swipe-down target) */}
         <div style={{
           width: 36, height: 4, borderRadius: 2,
           background: "rgba(255,255,255,0.18)", marginBottom: 14,
         }} />
 
-        {/* Headline — head-to-head delta or "Photo finish". Pronoun-free. */}
         <div style={{ fontSize: 26, fontWeight: 950, color: headlineColor, marginBottom: 10, textAlign: "center" }}>
           {headline}
         </div>
 
-        {/* Practice indicator — only when the server says this attempt
-            doesn't count. Compact pill above the score row. */}
         {isPractice && (
           <div style={{
             fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase",
@@ -252,7 +318,6 @@ export function ChallengeComparisonScreen({
           }}>Practice hand — doesn't change the score</div>
         )}
 
-        {/* Score side-by-side */}
         <div style={{
           display: "flex", gap: 20, marginBottom: 18, marginTop: 10,
           background: "rgba(255,255,255,0.04)", borderRadius: 14, padding: "14px 24px",
@@ -270,15 +335,12 @@ export function ChallengeComparisonScreen({
           </div>
         </div>
 
-        {/* Trash-talk line — no delta number, no them/they pronouns. */}
         <div style={{ maxWidth: 420, textAlign: "center", marginBottom: 14 }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: "#FFB14A", lineHeight: 1.4 }}>
             {trashTalk}
           </div>
         </div>
 
-        {/* Urgency framing — only when state === LOSS_OPEN. Live minute
-            countdown that ticks every 30s. Red+bold under 5 minutes. */}
         {state === "LOSS_OPEN" && minutesLeft != null && (
           <div style={{
             maxWidth: 360, marginBottom: 18, padding: "10px 14px",
@@ -296,7 +358,6 @@ export function ChallengeComparisonScreen({
           </div>
         )}
 
-        {/* CTAs */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 360 }}>
           <button
             onClick={ctas.primaryAction}
@@ -306,13 +367,13 @@ export function ChallengeComparisonScreen({
             }}
           >{ctas.primaryLabel}</button>
           <button
-            onClick={ctas.secondaryAction}
+            onClick={onCollapse}
             style={{
               padding: "13px", borderRadius: 12, background: "transparent",
               border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.7)",
               fontSize: 14, fontWeight: 700, cursor: "pointer",
             }}
-          >{ctas.secondaryLabel}</button>
+          >Dismiss</button>
         </div>
       </div>
     </>

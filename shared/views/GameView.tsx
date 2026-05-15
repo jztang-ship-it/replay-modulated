@@ -128,18 +128,26 @@ const ChallengeSharePrompt = lazy(() =>
 const ChallengeComparisonScreen = lazy(() =>
   import("@shared/components/ChallengeComparisonScreen").then(m => ({ default: m.ChallengeComparisonScreen }))
 );
+const ChallengePostResultBar = lazy(() =>
+  import("@shared/components/ChallengePostResultBar").then(m => ({ default: m.ChallengePostResultBar }))
+);
 const ChallengeDebugPanel = lazy(() =>
   import("@shared/components/ChallengeDebugPanel").then(m => ({ default: m.ChallengeDebugPanel }))
+);
+const NotificationsPanel = lazy(() =>
+  import("@shared/components/NotificationsPanel").then(m => ({ default: m.NotificationsPanel }))
 );
 import {
   chadMessage,
   chadTriggerFraming,
   chadChallengeIntro,
   chadChallengeTactical,
+  chadNormalPlayWelcome,
 } from "@shared/commentary/chad";
 import { isRealName } from "@shared/utils/isRealName";
 import { useAuth } from "@shared/auth/useAuth";
 import { listMessages } from "@shared/inbox/inbox";
+import { useChallengeNotifications, type ChallengeNotification } from "@shared/hooks/useChallengeNotifications";
 import { ensureLoaded } from "@shared/engines/dataEngine";
 import { supabase } from "@shared/lib/supabase";
 
@@ -479,11 +487,32 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const { user, isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
   const [bellOpen, setBellOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  // Notification panel state + hook. Anonymous users skip the fetch
+  // entirely (the RLS policy would return nothing anyway).
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifRefreshNonce, setNotifRefreshNonce] = useState(0);
+  const {
+    notifications: challengeNotifications,
+    unreadCount: challengeUnreadCount,
+    markAllRead: markNotificationsRead,
+  } = useChallengeNotifications({
+    enabled: !!user && !isAnonymous,
+    refreshNonce: notifRefreshNonce,
+  });
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [bigWinFired, setBigWinFired] = useState(false);
   const [challengeTrigger, setChallengeTrigger] = useState<import("@shared/utils/triggerEvaluation").TriggerResult | null>(null);
   const [showChallengeComparison, setShowChallengeComparison] = useState(false);
+  // Sheet visibility split into "mounted" (showChallengeComparison) vs
+  // "rendered on-screen" (!comparisonCollapsed). Dismiss gestures toggle
+  // collapsed; the sheet stays mounted so attempt POST fires only once.
+  const [comparisonCollapsed, setComparisonCollapsed] = useState(false);
+  // Mirrored from the sheet via onResolved so the post-result action
+  // bar + trash-talk chip have the same state without rerunning the
+  // attempt POST. Cleared when the user enters a fresh hand.
+  const [postResultState, setPostResultState] = useState<"WIN" | "LOSS_OPEN" | "LOSS_CLOSED" | null>(null);
+  const [postResultTrashTalk, setPostResultTrashTalk] = useState<string | null>(null);
   const sessionCount = useRef(parseInt(localStorage.getItem("rm_session_count") ?? "0", 10));
 
   useEffect(() => {
@@ -1726,14 +1755,58 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       });
       setFtueCommentaryOverride({ parts: [tacticalLine], sticky: true });
 
+      // Reset collapse + post-result mirrors for the new attempt.
+      setComparisonCollapsed(false);
+      setPostResultState(null);
+      setPostResultTrashTalk(null);
+
       const t = setTimeout(() => setShowChallengeComparison(true), 1500);
       return () => clearTimeout(t);
     }
 
     if (gameState === "RESULTS") {
       setShowChallengeComparison(true);
+      setComparisonCollapsed(false);
     }
   }, [gameState, challengeCtx]); // eslint-disable-line
+
+  // Clear the post-result UI when the user actually starts playing again
+  // (DEAL → IDLE/DEALING/HOLD). The sheet + bar should not bleed into
+  // the next hand.
+  useEffect(() => {
+    if (gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD") {
+      if (showChallengeComparison) setShowChallengeComparison(false);
+      if (comparisonCollapsed) setComparisonCollapsed(false);
+      if (postResultState) setPostResultState(null);
+      if (postResultTrashTalk) setPostResultTrashTalk(null);
+    }
+  }, [gameState]); // eslint-disable-line
+
+  // Chad welcome on first transition from challenge play to normal play.
+  // Fires once per browser per sport when:
+  //   1. The user has been in challenge mode (challengeCtx was set this
+  //      session), AND
+  //   2. They're now in normal play (challengeCtx + challengeBackCtx
+  //      both null), AND
+  //   3. Game state is IDLE / DEALING (entering a new hand), AND
+  //   4. The local seen-flag hasn't been set yet.
+  // Plays via setFtueCommentaryOverride so it lands as a chip on the
+  // game surface alongside the daily season-reel intro.
+  const enteredChallengeModeRef = useRef(false);
+  useEffect(() => {
+    if (challengeCtx) enteredChallengeModeRef.current = true;
+  }, [challengeCtx]);
+  useEffect(() => {
+    if (challengeCtx || challengeBackCtx) return;
+    if (!enteredChallengeModeRef.current) return;
+    if (gameState !== "IDLE" && gameState !== "DEALING") return;
+    const key = `replaymod_normal_play_welcome_seen_${sportKey}`;
+    try {
+      if (localStorage.getItem(key) === "1") return;
+      localStorage.setItem(key, "1");
+    } catch { return; }
+    setFtueCommentaryOverride({ parts: [chadNormalPlayWelcome()], sticky: true });
+  }, [gameState, challengeCtx, challengeBackCtx, sportKey]); // eslint-disable-line
 
   // ── JSX ───────────────────────────────────────────────────────────
   // NOTE: this useMemo MUST stay above the early returns below. React's
@@ -1872,8 +1945,22 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                 track("profile", "profile_self_view", { sport: adapter.sportKey });
               }}
               hasUncollected={taskStates.some(t => t.progress >= t.target && !t.collected)}
-              unreadInboxCount={unreadCount}
-              onBell={() => { setBellOpen(true); track('nav', 'bell_clicked', { unread_count: unreadCount }, 'system'); }}
+              // Combined unread count: inbox messages + challenge
+              // notifications. Bell badge surfaces both signals.
+              unreadInboxCount={unreadCount + challengeUnreadCount}
+              onBell={() => {
+                // Route challenge notifications to NotificationsPanel.
+                // If there are unread challenge notifications, open
+                // that surface; otherwise fall back to the existing
+                // inbox sheet so legacy inbox messages stay reachable.
+                if (challengeUnreadCount > 0) {
+                  setShowNotifications(true);
+                  track("nav", "bell_clicked", { unread_count: challengeUnreadCount, source: "notifications" }, "system");
+                } else {
+                  setBellOpen(true);
+                  track("nav", "bell_clicked", { unread_count: unreadCount, source: "inbox" }, "system");
+                }
+              }}
               hasNewAchievements={newlyUnlockedAchievements.length > 0}
             />
           </div>
@@ -2485,6 +2572,41 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           />
         )}
 
+        {showNotifications && user && (
+          <NotificationsPanel
+            notifications={challengeNotifications}
+            onClose={() => {
+              // Mark everything read when the panel closes so the badge
+              // clears. Backend update happens via markNotificationsRead.
+              void markNotificationsRead();
+              setShowNotifications(false);
+              setNotifRefreshNonce(n => n + 1);
+            }}
+            onTapNotification={(n: ChallengeNotification) => {
+              if (n.type !== "challenge_attempted") return;
+              const p = n.payload ?? {};
+              // Set the rivalry-continuation context targeting the
+              // attempter, then deal a fresh normal hand. Share auto-
+              // fires at that hand's RESULTS framed as a back-fire.
+              if (setChallengeBackCtx) {
+                setChallengeBackCtx({
+                  challengerUserId: typeof p.attempter_user_id === "string" ? p.attempter_user_id : null,
+                  challengerName: typeof p.attempter_name === "string" ? p.attempter_name : null,
+                  originatingChallengeId: typeof p.challenge_id === "string" ? p.challenge_id : "",
+                });
+              }
+              setShowNotifications(false);
+              void markNotificationsRead();
+              setNotifRefreshNonce(x => x + 1);
+              track("challenges", "notification_tap", { type: n.type });
+              // Trigger deal via the standard action button. challengeCtx
+              // is already null (we're in normal play); the IDLE branch
+              // deals from today's slate.
+              handleButtonClick();
+            }}
+          />
+        )}
+
         {showProfile && (
           <ProfileScreen
             currentUid={getPlayerUid()}
@@ -2602,39 +2724,81 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             myScore={rosterRef.current.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0)}
             myWinTier={winTier ?? "BUST"}
             sport={sportKey}
+            collapsed={comparisonCollapsed}
+            onCollapse={() => setComparisonCollapsed(true)}
             onSendItBack={() => {
               // Win-state Send It Back: route into a fresh normal hand
-              // with challengeBackCtx set. The challenge replay state
-              // (challengeCtx) is dropped; the user is no longer in
-              // recipient mode. Share auto-fires at the fresh hand's
-              // RESULTS.
+              // with challengeBackCtx set. challengeCtx is dropped.
               if (setChallengeBackCtx && challengeCtx) {
                 setChallengeBackCtx({
-                  challengerUserId: null, // GET /:id doesn't expose this to the client yet
+                  challengerUserId: null,
                   challengerName: challengeCtx.challengerName ?? null,
                   originatingChallengeId: challengeCtx.challengeId,
                 });
               }
               clearChallengeCtx?.();
               setShowChallengeComparison(false);
+              setComparisonCollapsed(false);
               handleButtonClick();
             }}
             onTryAgain={() => {
               // Loss-window-open Try Again: re-deal the SAME challenge
               // snapshot. challengeCtx stays set so the IDLE deal branch
-              // uses challengeCtx.initialRoster (push 1 wiring).
+              // uses challengeCtx.initialRoster.
               setShowChallengeComparison(false);
+              setComparisonCollapsed(false);
               handleButtonClick();
             }}
-            onDismiss={() => {
-              // Dismiss / Play-your-own-hand: clear the challenge state
-              // and close the sheet. Push 2b adds a persistent action
-              // bar to reach DEAL after this; for now the user is left
-              // on the played-cards surface and can tap the game bar's
-              // action button (which will deal a fresh normal hand
-              // since challengeCtx is now null).
+            onResolved={({ state, trashTalk }) => {
+              setPostResultState(state);
+              setPostResultTrashTalk(trashTalk);
+            }}
+          />
+        </Suspense>
+      )}
+
+      {/* Persistent post-result action bar — visible when the comparison
+          sheet has been collapsed via gesture (×, swipe, backdrop) or
+          inner "Dismiss" CTA. challengeCtx stays set so cards remain on
+          the game surface. The bar persists until the user enters a
+          new hand. */}
+      {challengeCtx && comparisonCollapsed && postResultState && (
+        gameState === "RESULTS" || gameState === "WIN_CELEBRATION"
+      ) && (
+        <Suspense fallback={null}>
+          <ChallengePostResultBar
+            state={postResultState}
+            trashTalk={postResultTrashTalk}
+            onSeeResult={() => setComparisonCollapsed(false)}
+            onSendItBack={() => {
+              if (setChallengeBackCtx && challengeCtx) {
+                setChallengeBackCtx({
+                  challengerUserId: null,
+                  challengerName: challengeCtx.challengerName ?? null,
+                  originatingChallengeId: challengeCtx.challengeId,
+                });
+              }
               clearChallengeCtx?.();
               setShowChallengeComparison(false);
+              setComparisonCollapsed(false);
+              handleButtonClick();
+            }}
+            onTryAgain={() => {
+              setShowChallengeComparison(false);
+              setComparisonCollapsed(false);
+              handleButtonClick();
+            }}
+            onDeal={() => {
+              // DEAL on the action bar: clear challenge mode entirely
+              // and deal a fresh normal hand. The IDLE branch uses
+              // dealInitialRoster (today's slate) once challengeCtx is
+              // null.
+              clearChallengeCtx?.();
+              setShowChallengeComparison(false);
+              setComparisonCollapsed(false);
+              setPostResultState(null);
+              setPostResultTrashTalk(null);
+              handleButtonClick();
             }}
           />
         </Suspense>

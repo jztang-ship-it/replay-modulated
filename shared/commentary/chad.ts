@@ -254,6 +254,24 @@ export function chadChallengeIntro(args: {
     .replace(/{target}/g, target);
 }
 
+// ── First normal-play welcome (challenge → standard play handoff) ─────────
+//
+// One-shot Chad line for users who entered the app via a challenge URL
+// and are now transitioning into normal game flow for the first time.
+// Plays alongside the daily season-reel intro. Storage flag in
+// localStorage prevents replay across sessions.
+
+const NORMAL_PLAY_WELCOME: string[] = [
+  "That was the warm-up. This is today's real game — pick your bet, build your hand, chase the tier.",
+  "Welcome to today's slate. New season, new players, real coins on the line.",
+  "Same game, fresh slate. Cards are today's, stakes are real, tiers pay out.",
+  "Now you're playing for real. Today's slate, your moves, big payouts on the line.",
+];
+
+export function chadNormalPlayWelcome(): string {
+  return pick(NORMAL_PLAY_WELCOME);
+}
+
 // ── Challenge comparison: tactical line 1 ─────────────────────────────────
 //
 // When the recipient finishes a challenge attempt, Line 1 should observe

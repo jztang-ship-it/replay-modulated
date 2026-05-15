@@ -200,6 +200,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     attemptCountBumped = true;
   }
 
+  // In-app notification for the challenger. Fires only when this attempt
+  // counts (first non-self attempt with window-active math applied —
+  // isCountedAttempt above). Wrapped in try/catch + caught Supabase
+  // error so a missing migration 008 doesn't fail the API call.
+  if (isCountedAttempt && challenge.created_by) {
+    try {
+      const { error: notifErr } = await supabaseAdmin
+        .from("user_notifications")
+        .insert({
+          user_id: challenge.created_by,
+          type: "challenge_attempted",
+          payload: {
+            challenge_id: challengeId,
+            attempter_name: safeUserName,
+            attempter_user_id: safeUserId,
+            attempter_score: newScore,
+            target_score: targetFp,
+            is_winner: newIsWinner,
+          },
+        });
+      if (notifErr) console.error("[attempt] notification insert failed (non-fatal):", notifErr);
+    } catch (e) {
+      console.error("[attempt] notification insert threw (non-fatal):", e);
+    }
+  }
+
   // Fetch updated counters for the response so the client doesn't have
   // to do a second round-trip to learn the new totals.
   const { data: updated } = await supabaseAdmin
