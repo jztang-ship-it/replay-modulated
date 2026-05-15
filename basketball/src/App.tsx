@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { LandingPage } from "./components/LandingPage";
 import GameView from "./views/GameView";
 import { DailySeasonReelGate } from "./components/DailySeasonReelGate";
@@ -8,12 +8,20 @@ import { AuthProvider } from "@shared/auth/AuthProvider";
 import { useAuth } from "@shared/auth/useAuth";
 import { RegisterModal } from "@shared/components/RegisterModal";
 import { ProfileScreen } from "@shared/components/ProfileScreen";
-import { getPlayerUid } from "@shared/utils/playerIdentity";
+import { getPlayerUid, getNickname } from "@shared/utils/playerIdentity";
 import { AchievementWall } from "@shared/components/AchievementWall";
 import { useAchievements } from "@shared/hooks/useAchievements";
 import { ChallengeLandingScreen } from "@shared/components/ChallengeLandingScreen";
 import type { ChallengeCtx, ChallengeBackCtx } from "@shared/adapters/challengeTypes";
 import { sportAdapter } from "./adapters/SportAdapter";
+
+// Lazy-loaded ?debug=1 overlay. Mounted at the app shell level so it
+// renders on every route — chooser landing, challenge landing, FTUE,
+// game view. (Previously it lived inside GameView so it didn't surface
+// until the user actually entered a hand.)
+const ChallengeDebugPanel = lazy(() =>
+  import("@shared/components/ChallengeDebugPanel").then(m => ({ default: m.ChallengeDebugPanel }))
+);
 
 const SPORT = "basketball";
 const SKIP_LANDING_KEY = "replay_skip_landing_basketball";
@@ -123,6 +131,18 @@ function AppInner() {
           uid={uid?.slice(0, 16) || "none"} | email={user?.email || "none"} | confirmed={user?.email_confirmed_at ? "Y" : "N"} | provider={(user?.app_metadata as any)?.provider || "none"}<br/>
           stickyFlag={typeof window !== "undefined" ? localStorage.getItem(SKIP_LANDING_KEY) || "unset" : "ssr"} | ftueDone={typeof window !== "undefined" ? localStorage.getItem("replaymod_ftue_basketball") || "unset" : "ssr"}
         </div>
+      )}
+      {/* ?debug=1 challenge overlay — renders on every route, not just
+          in-game. challengeId is the active replay ctx when present;
+          when absent the panel shows identity + last API call only. */}
+      {showDebug && (
+        <Suspense fallback={null}>
+          <ChallengeDebugPanel
+            challengeId={challengeCtx?.challengeId}
+            userId={uid || undefined}
+            userName={getNickname() || "anonymous"}
+          />
+        </Suspense>
       )}
       {view === "landing" ? (
         <LandingPage

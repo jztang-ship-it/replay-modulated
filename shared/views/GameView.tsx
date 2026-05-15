@@ -131,9 +131,9 @@ const ChallengeComparisonScreen = lazy(() =>
 const ChallengePostResultBar = lazy(() =>
   import("@shared/components/ChallengePostResultBar").then(m => ({ default: m.ChallengePostResultBar }))
 );
-const ChallengeDebugPanel = lazy(() =>
-  import("@shared/components/ChallengeDebugPanel").then(m => ({ default: m.ChallengeDebugPanel }))
-);
+// (ChallengeDebugPanel is mounted at the basketball app-shell level so
+// it surfaces on every route including the chooser landing before this
+// component mounts. Imported there, not here.)
 const NotificationsPanel = lazy(() =>
   import("@shared/components/NotificationsPanel").then(m => ({ default: m.NotificationsPanel }))
 );
@@ -2804,20 +2804,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         </Suspense>
       )}
 
-      {/* ?debug=1 QA overlay — surfaces challenge stats, identity, and the
-          last API call so testers can verify replay-policy enforcement
-          without opening Supabase. Lazy-loaded so it has zero cost when
-          the URL param isn't set. */}
-      {typeof window !== "undefined" &&
-        new URLSearchParams(window.location.search).get("debug") === "1" && (
-          <Suspense fallback={null}>
-            <ChallengeDebugPanel
-              challengeId={challengeCtx?.challengeId}
-              userId={getPlayerUid() || undefined}
-              userName={getNickname() || "anonymous"}
-            />
-          </Suspense>
-        )}
+      {/* ?debug=1 overlay lives at the app shell level (basketball/src/App.tsx)
+          so it renders on every route, including the chooser landing and
+          the challenge landing screen before GameView mounts. Don't
+          re-render here — would stack two copies in-game. */}
 
     </div>
   );
