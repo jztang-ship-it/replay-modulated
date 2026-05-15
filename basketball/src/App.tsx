@@ -34,6 +34,21 @@ function getProfileUserId(): string | null {
 
 const FTUE_INTRO_FOLLOWUP_KEY = "replaymod_ftue_intro_followup_seen_basketball";
 
+/** Walk the rm_challenge_attempted_<uuid> markers in localStorage and
+ *  return one of them. Order is insertion-order on most browsers, so
+ *  this surfaces a recent attempt — good enough for the debug panel to
+ *  show stats on the home route without a challenge URL. */
+function mostRecentAttemptedChallengeId(): string | null {
+  try {
+    const PREFIX = "rm_challenge_attempted_";
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(PREFIX)) return k.slice(PREFIX.length);
+    }
+  } catch { /* localStorage may be unavailable */ }
+  return null;
+}
+
 function getChallengeId(): string | null {
   if (typeof window === "undefined") return null;
   const match = window.location.pathname.match(/\/basketball\/challenge\/([0-9a-f-]{36})/);
@@ -131,11 +146,23 @@ function AppInner() {
         </div>
       )}
       {/* ?debug=1 challenge overlay — renders on every route, not just
-          in-game. challengeId is the active replay ctx when present;
-          when absent the panel shows identity + last API call only. */}
+          in-game. challengeId resolves to:
+            1. challengeCtx after Accept (in-game)
+            2. otherwise the URL slug if the user is on a /challenge/:id
+               path (pre-accept landing screen)
+            3. otherwise the most recently attempted challenge id from
+               localStorage so the panel still surfaces "what was I
+               testing" even on the home/chooser route.
+          When all three miss, the panel hides the Current Challenge
+          section and shows identity + last API call only. */}
       {showDebug && (
         <ChallengeDebugPanel
-          challengeId={challengeCtx?.challengeId}
+          challengeId={
+            challengeCtx?.challengeId
+            ?? challengeIdFromUrl
+            ?? (typeof window !== "undefined" ? mostRecentAttemptedChallengeId() : undefined)
+            ?? undefined
+          }
           userId={uid || undefined}
           userName={getNickname() || "anonymous"}
         />
