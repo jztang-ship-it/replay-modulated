@@ -586,11 +586,25 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // ── Challenge mode: auto-deal on accept + intro chip ──
   // Accept Challenge → instant deal. No DEAL button tap required.
   const challengeAutoDealtRef = useRef(false);
+  // Explicit "the next IDLE deal should use challengeCtx.initialRoster"
+  // intent. Set true at the two points that legitimately want the
+  // challenge snapshot replayed: the Accept auto-deal (below) and the
+  // "Try Again" buttons on the comparison sheet + post-result action
+  // bar. The IDLE branch of onPrimaryAction reads this and resets it.
+  //
+  // Without an explicit intent, `if (challengeCtx)` alone misroutes
+  // any post-dismiss DEAL tap (e.g. the main GameBar's button while
+  // the post-result action bar is hidden, or the user tapping
+  // through after the API failed to produce postResultState) back
+  // into the challenge snapshot. Stale challengeCtx is cleared in
+  // the IDLE branch when this flag is false.
+  const challengeNextDealRef = useRef(false);
   useEffect(() => {
     if (!challengeCtx) { challengeAutoDealtRef.current = false; return; }
     if (challengeAutoDealtRef.current) return;
     if (gameState !== "IDLE") return;
     challengeAutoDealtRef.current = true;
+    challengeNextDealRef.current = true;
     void onPrimaryAction();
   }, [challengeCtx, gameState]); // eslint-disable-line
 
@@ -1438,14 +1452,20 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       })();
       let res: any;
       try {
-        // Challenge URL ALWAYS wins. The recipient must replay the
-        // challenger's exact 6-card snapshot — never a fresh deal, never
-        // the hardcoded FTUE roster. A new user who hits a challenge URL
-        // still has `replaymod_ftue_basketball` unset (so ftueStillActive
-        // returns true), but challengeCtx must override that.
-        if (challengeCtx) {
+        // Challenge snapshot replay requires BOTH: a present challengeCtx
+        // AND an explicit "this deal is a challenge replay" intent set by
+        // either the Accept auto-deal effect or a "Try Again" button.
+        // challengeCtx alone is not enough — it persists across the
+        // RESULTS → IDLE transition, and dismissing the comparison sheet
+        // doesn't clear it. Treating `if (challengeCtx)` alone as "replay
+        // the snapshot" misrouted any post-dismiss DEAL tap back into the
+        // same challenge. When the intent isn't set, clear the stale
+        // challengeCtx and deal a fresh hand (FTUE-aware).
+        if (challengeCtx && challengeNextDealRef.current) {
           res = { roster: challengeCtx.initialRoster };
+          challengeNextDealRef.current = false;
         } else {
+          if (challengeCtx) clearChallengeCtx?.();
           res = ftueStillActive ? await ftueDealRoster() : await dealInitialRoster();
         }
       } catch (e) {
@@ -2743,8 +2763,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             }}
             onTryAgain={() => {
               // Loss-window-open Try Again: re-deal the SAME challenge
-              // snapshot. challengeCtx stays set so the IDLE deal branch
-              // uses challengeCtx.initialRoster.
+              // snapshot. challengeCtx stays set AND we set the
+              // next-deal intent so the IDLE branch picks the snapshot.
+              challengeNextDealRef.current = true;
               setShowChallengeComparison(false);
               setComparisonCollapsed(false);
               handleButtonClick();
@@ -2784,6 +2805,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               handleButtonClick();
             }}
             onTryAgain={() => {
+              // Post-result bar Try Again: re-deal the challenge
+              // snapshot. Set the next-deal intent so the IDLE branch
+              // recognizes this as a replay (not a stale challengeCtx).
+              challengeNextDealRef.current = true;
               setShowChallengeComparison(false);
               setComparisonCollapsed(false);
               handleButtonClick();
