@@ -125,6 +125,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const isWindowOpen = nowMs <= windowClosesAtMs;
   // "Practice" = window has already closed at the time of this attempt.
   const isPractice = !isFirstAttempt && !isWindowOpen;
+  // "Counted" = touches challenge-level counters and/or the defended
+  // counter. Self-farm and post-window practice both no-op the counter
+  // block above (line 139); the notification path mirrors that gate.
+  // Without this declaration, line 207 throws ReferenceError and the
+  // whole handler 500s — leaving the client's attemptResult null and
+  // the comparison sheet's countdown stuck on the optimistic 60-min
+  // fallback regardless of the user's actual first_attempt_at.
+  const isCountedAttempt = !isSelfFarm && !isPractice;
   // Anonymous attempters don't get per-user window math. Treat each
   // attempt as a first attempt — the only safe degradation.
   const treatAsFirstAttempt = isFirstAttempt || safeUserId === null;

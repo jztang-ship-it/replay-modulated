@@ -168,7 +168,7 @@ export function ChallengeComparisonScreen({
     onResolved?.({ state, trashTalk, windowClosesAtMs });
   }, [attemptResult, state, trashTalk, windowClosesAtMs, onResolved]);
 
-  // Live countdown — updates every 30s.
+  // Live countdown — updates every second.
   //
   // The countdown must be visible as soon as the sheet appears for a
   // loss-within-window. The server's window_closes_at_ms is the truth,
@@ -179,6 +179,12 @@ export function ChallengeComparisonScreen({
   // (briefly shows a higher number until the server response lands and
   // corrects it). Either way the countdown is visible from the first
   // paint instead of popping in.
+  //
+  // Tick rate is 1s and display is mm:ss during the QA phase so the
+  // decrement is visibly happening every second. The original 30s
+  // tick + Math.round(minutes) produced a counter that looked frozen
+  // — the value stayed at "60" for the full first minute of decay
+  // because round(59.5) is 60. mm:ss eliminates that ambiguity.
   const ONE_HOUR_MS_CONST = 60 * 60 * 1000;
   const [sheetMountTimeMs] = useState(() => Date.now());
   const effectiveWindowClosesAtMs = windowClosesAtMs ?? (sheetMountTimeMs + ONE_HOUR_MS_CONST);
@@ -186,13 +192,18 @@ export function ChallengeComparisonScreen({
   const [nowMs, setNowMs] = useState(Date.now());
   useEffect(() => {
     if (state !== "LOSS_OPEN") return;
-    const id = setInterval(() => setNowMs(Date.now()), 30_000);
+    const id = setInterval(() => setNowMs(Date.now()), 1_000);
     return () => clearInterval(id);
   }, [state]);
-  const minutesLeft = Math.max(
+  const secondsLeft = Math.max(
     0,
-    Math.round((effectiveWindowClosesAtMs - nowMs) / 60_000),
+    Math.floor((effectiveWindowClosesAtMs - nowMs) / 1000),
   );
+  const mm = Math.floor(secondsLeft / 60);
+  const ss = secondsLeft % 60;
+  const countdownLabel = `${mm}:${ss.toString().padStart(2, "0")}`;
+  // Urgency threshold uses the original 5-minute boundary for color/size.
+  const isUrgent = secondsLeft < 5 * 60;
 
   const opponentLong = namedChallenger ?? "your friend";
   const opponentLabel = (namedChallenger ?? "FRIEND").toUpperCase();
@@ -222,7 +233,7 @@ export function ChallengeComparisonScreen({
       return {
         primaryLabel: "Try Again",
         primaryAction: () => {
-          track("challenges", "challenge_try_again", { challenge_id: challengeCtx.challengeId, sport, minutes_left: minutesLeft });
+          track("challenges", "challenge_try_again", { challenge_id: challengeCtx.challengeId, sport, seconds_left: secondsLeft });
           onTryAgain();
         },
       };
@@ -366,16 +377,17 @@ export function ChallengeComparisonScreen({
           <div style={{
             maxWidth: 360, marginBottom: 18, padding: "10px 14px",
             borderRadius: 10,
-            background: minutesLeft < 5 ? "rgba(239,68,68,0.12)" : "rgba(255,177,74,0.10)",
-            border: `1px solid ${minutesLeft < 5 ? "rgba(239,68,68,0.45)" : "rgba(255,177,74,0.35)"}`,
-            color: minutesLeft < 5 ? "#FCA5A5" : "#FFB14A",
-            fontSize: minutesLeft < 5 ? 16 : 14,
-            fontWeight: minutesLeft < 5 ? 900 : 800,
+            background: isUrgent ? "rgba(239,68,68,0.12)" : "rgba(255,177,74,0.10)",
+            border: `1px solid ${isUrgent ? "rgba(239,68,68,0.45)" : "rgba(255,177,74,0.35)"}`,
+            color: isUrgent ? "#FCA5A5" : "#FFB14A",
+            fontSize: isUrgent ? 16 : 14,
+            fontWeight: isUrgent ? 900 : 800,
             textAlign: "center",
+            fontVariantNumeric: "tabular-nums",
           }}>
-            {minutesLeft === 0
+            {secondsLeft === 0
               ? "Window closing — last shot."
-              : `${minutesLeft} minute${minutesLeft === 1 ? "" : "s"} to flip this.`}
+              : `${countdownLabel} to flip this.`}
           </div>
         )}
 
