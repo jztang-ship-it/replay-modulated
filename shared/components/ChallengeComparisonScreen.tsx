@@ -10,7 +10,27 @@ import { chadTrashTalk, trashTalkBucket } from "@shared/commentary/chad";
 interface AttemptResult {
   attempt_id: string;
   is_best: boolean;
+  /** Server-determined: this attempt fell outside the user's 1-hour
+   *  replay window. UI shows a "Practice — won't change your
+   *  scorecard" affordance. */
   is_practice?: boolean;
+  /** Whether this attempt set the user's new personal best for this
+   *  challenge. Drives the score-callout highlight in Push 2. */
+  is_personal_best?: boolean;
+  /** True when this attempt flipped the challenge-level winner_count
+   *  from a prior loss to a win for this user. */
+  winner_count_flipped?: boolean;
+  /** True when this attempt bumped the challenger's defended counter
+   *  (losing attempt within window, non-self). */
+  defended_bumped?: boolean;
+  /** ISO timestamp when this user's replay window closes. Drives the
+   *  "47 minutes to flip this" countdown in Push 2. */
+  window_closes_at?: string;
+  window_closes_at_ms?: number;
+  is_window_open?: boolean;
+  user_best_score?: number | null;
+  user_has_won?: boolean;
+  /** Challenge totals */
   attempt_count: number;
   winner_count: number;
   best_score: number | null;
@@ -45,9 +65,12 @@ export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sp
 
   const isWinner = myScore > challengeCtx.targetScore;
   const namedChallenger = isRealName(challengeCtx.challengerName) ? challengeCtx.challengerName : null;
-  // Practice flag — set when this user has already played this challenge.
-  // Captured at mount so the sheet never re-flags itself mid-render.
-  const [isPractice] = useState(() => hasAttemptedChallenge(challengeCtx.challengeId));
+  // Practice flag — initially seeded from the local "this user already
+  // played this challenge" marker, then overwritten by the server's
+  // authoritative `is_practice` verdict once the attempt response lands.
+  // The server knows the window state (per-user 1-hour window keyed to
+  // first_attempt_at) and is the source of truth.
+  const [isPractice, setIsPractice] = useState(() => hasAttemptedChallenge(challengeCtx.challengeId));
 
   // Chad's outcome-bucket trash talk — the sheet's only commentary line.
   // The tactical "line 1" used to live here too, but it now lands as a
@@ -202,12 +225,18 @@ export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sp
       .then((d: AttemptResult) => {
         setAttemptResult(d);
         setSubmitting(false);
+        // Overwrite the client-side hint with the server verdict — the
+        // server is the source of truth on window state.
+        if (typeof d.is_practice === "boolean") setIsPractice(d.is_practice);
         track("challenges", isWinner ? "challenge_win" : "challenge_loss", {
           challenge_id: challengeCtx.challengeId,
           sport,
           score_delta: Math.round((myScore - challengeCtx.targetScore) * 10) / 10,
           attempt_count: d.attempt_count,
           is_practice: d.is_practice ?? isPractice,
+          winner_flipped: d.winner_count_flipped ?? false,
+          is_personal_best: d.is_personal_best ?? false,
+          window_open: d.is_window_open ?? null,
         });
         track("challenges", "challenge_attempt_complete", {
           challenge_id: challengeCtx.challengeId, sport,
