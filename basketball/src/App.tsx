@@ -224,7 +224,19 @@ function AppInner() {
           onShowSignIn={() => setShowSignIn(true)}
         />
       ) : (
-        <DailySeasonReelGate bypass={isFTUE || !!challengeCtx} showFtueIntroFollowup={showFtueIntroFollowup}>
+        <DailySeasonReelGate
+          bypass={isFTUE || !!challengeCtx}
+          /* Recipients of a challenge link skip the reel for the whole
+             session — pre-Accept they're on the landing screen which has
+             its own era caption (data.share_headline above the score),
+             post-Accept challengeCtx kicks in (covered by bypass above),
+             and after dismiss skipReel keeps the bypass from flipping
+             off mid-session so the reel doesn't surprise-fire. Resolved
+             via the normal manifest path so today's daily season is
+             still pinned for any later non-challenge hands they play. */
+          skipReel={!!challengeIdFromUrl}
+          showFtueIntroFollowup={showFtueIntroFollowup}
+        >
           <GameView
             challengeCtx={challengeCtx ?? undefined}
             challengeBackCtx={challengeBackCtx ?? undefined}

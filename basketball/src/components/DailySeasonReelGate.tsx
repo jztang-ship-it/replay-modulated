@@ -57,8 +57,19 @@ function writeStored(s: Stored): void {
 }
 
 type Props = {
-  /** When true (e.g. FTUE active), the reel is bypassed entirely. */
+  /** When true (e.g. FTUE active), the reel is bypassed entirely AND
+   *  the active season is pinned to FTUE_SEASON_KEY — the hardcoded
+   *  FTUE roster expects that data. Distinct from `skipReel`: bypass
+   *  is the FTUE escape hatch; skipReel resolves today's season
+   *  normally and only hides the animation. */
   bypass?: boolean;
+  /** When true, resolve today's daily season normally (manifest +
+   *  pickTodaysSeason + setActiveSeason) but never play the reel
+   *  animation. Use this for routes that have their own era context
+   *  (e.g. /basketball/challenge/:id, where the landing screen
+   *  already shows the season-reel caption above the score). When
+   *  bypass is also true, bypass wins (FTUE behavior dominates). */
+  skipReel?: boolean;
   /** When true, append the FTUE follow-up line to the intro overlay
    *  ("Tap the gold icon to see the scoring rules"). Set true on the
    *  first hand after FTUE completes so the user sees the rules pointer
@@ -67,7 +78,7 @@ type Props = {
   children: React.ReactNode;
 };
 
-export function DailySeasonReelGate({ bypass = false, showFtueIntroFollowup = false, children }: Props) {
+export function DailySeasonReelGate({ bypass = false, skipReel = false, showFtueIntroFollowup = false, children }: Props) {
   const [manifest, setManifest] = useState<SeasonsManifest | null>(null);
   const [pick, setPick] = useState<SeasonManifestEntry | null>(null);
   // null = unresolved; true = show reel; false = skip reel
@@ -151,14 +162,22 @@ export function DailySeasonReelGate({ bypass = false, showFtueIntroFollowup = fa
         // network — so it's set by the time we resolve shouldShowReel.
         setActiveSeason(todaysPick.key);
 
-        writeStored({ dateKey, seasonKey: todaysPick.key, seasonLabel: todaysPick.label });
-        const willShow = forceReel || !alreadySeenToday;
+        // Don't mark today as seen when skipReel is on. The user is on a
+        // route with its own era context (e.g. challenge landing) and
+        // hasn't actually witnessed the reveal — leaving the marker
+        // unwritten lets a later normal-play entry today still get the
+        // daily reel.
+        if (!skipReel) {
+          writeStored({ dateKey, seasonKey: todaysPick.key, seasonLabel: todaysPick.label });
+        }
+        const willShow = forceReel || (!alreadySeenToday && !skipReel);
         console.info("[DailySeasonReelGate]", {
           forceReel,
           alreadySeenToday,
           willShowReel: willShow,
           pick: todaysPick.label,
           bypass,
+          skipReel,
         });
         setShouldShowReel(willShow);
       } catch (e) {
@@ -172,7 +191,7 @@ export function DailySeasonReelGate({ bypass = false, showFtueIntroFollowup = fa
       }
     })();
     return () => { cancelled = true; };
-  }, [bypass]);
+  }, [bypass, skipReel]);
 
   // Block rendering until we know whether to show the reel — avoids the
   // child mounting briefly, then being covered, then becoming interactive.
