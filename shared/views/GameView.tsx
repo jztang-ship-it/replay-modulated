@@ -128,6 +128,9 @@ const ChallengeSharePrompt = lazy(() =>
 const ChallengeComparisonScreen = lazy(() =>
   import("@shared/components/ChallengeComparisonScreen").then(m => ({ default: m.ChallengeComparisonScreen }))
 );
+const ChallengeDebugPanel = lazy(() =>
+  import("@shared/components/ChallengeDebugPanel").then(m => ({ default: m.ChallengeDebugPanel }))
+);
 import {
   chadMessage,
   chadTriggerFraming,
@@ -736,88 +739,60 @@ export function GameView({ adapter, challengeCtx }: Props) {
     return tryOpenAuthModal("hand_5", 3500);
   }, [handCount, isAnonymous, isFTUE, gameState, tryOpenAuthModal, challengeCtx]);
 
-  // Challenge send-back: create a return challenge from the recipient's
-  // played hand, then open the native share sheet. The comparison sheet
-  // STAYS VISIBLE throughout — share completion (success, fail, cancel)
-  // all return the user to the same sheet so they can pick another CTA.
-  //
-  // Errors are thrown (not swallowed) so the sheet's button can catch
-  // them and render an inline banner — "never silent" per the spec.
-  const sendItBackInFlightRef = useRef(false);
-  const handleSendItBack = useCallback(async () => {
-    if (sendItBackInFlightRef.current) return;
-    sendItBackInFlightRef.current = true;
-    try {
-      // Capture a real-looking name once per user. Auto-generated nickname
-      // (CrimsonSwish_8753 etc.) fails isRealName → prompt. Soft re-prompt
-      // on first fail, then accept whatever they type so friction stays at
-      // zero (per the speed-over-polish principle).
-      let nickname = getNickname();
-      if (typeof window !== "undefined" && !isRealName(nickname)) {
-        const first = window.prompt("What should we call you?");
-        if (!first || !first.trim()) return; // user cancelled prompt — leave sheet up, no error
-        let candidate = first.trim().slice(0, 32);
-        if (!isRealName(candidate)) {
-          const second = window.prompt("Try something we can actually call you.");
-          if (second && second.trim()) candidate = second.trim().slice(0, 32);
-        }
-        nickname = candidate;
-        setNickname(nickname);
-      }
+  // Send It Back uses a pre-creation pattern to keep the user-gesture
+  // context intact when navigator.share() fires. The flow:
+  //   1. Comparison sheet mounts → silently calls prepareChallenge()
+  //      which hits POST /api/challenge/create with the recipient's
+  //      played hand and returns the URL + share text.
+  //   2. User taps Send It Back → sheet calls navigator.share()
+  //      SYNCHRONOUSLY with the pre-created data (no async work in
+  //      the tap handler before the share API call).
+  // This avoids the Safari/Chrome NotAllowedError that hits when the
+  // share fires after an `await` breaks the user-gesture chain.
+  const prepareChallenge = useCallback(async (): Promise<{ url: string; text: string; title: string }> => {
+    const nickname = getNickname() || "Anonymous";
+    const resolvedRoster = rosterRef.current as import("@shared/types/index").GeneratedCard[];
+    const fp = resolvedRoster.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0);
+    const badges = resolvedRoster.flatMap((c: any) => c.achievements ?? []);
+    const trigger = evaluateTrigger({ roster: resolvedRoster, totalFp: fp, winTier: winTier ?? "BUST", badges, winTiersMap: adapter.winTiersMap });
+    const season = challengeCtx?.season ?? "";
+    const shareHeadline = typeof (sportAdapter as any).getShareHeadline === "function"
+      ? (sportAdapter as any).getShareHeadline({ roster: resolvedRoster, season })
+      : trigger.headline;
 
-      const resolvedRoster = rosterRef.current as import("@shared/types/index").GeneratedCard[];
-      const fp = resolvedRoster.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0);
-      const badges = resolvedRoster.flatMap((c: any) => c.achievements ?? []);
-      const trigger = evaluateTrigger({ roster: resolvedRoster, totalFp: fp, winTier: winTier ?? "BUST", badges, winTiersMap: adapter.winTiersMap });
-      const season = challengeCtx?.season ?? "";
-      const shareHeadline = typeof (sportAdapter as any).getShareHeadline === "function"
-        ? (sportAdapter as any).getShareHeadline({ roster: resolvedRoster, season })
-        : trigger.headline;
-
-      const { data: { session } } = await supabase.auth.getSession();
-      const authHeader = session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {};
-      const body = {
-        hand_id: crypto.randomUUID(),
-        sport: sportKey,
-        season,
-        target_score: fp,
-        initial_roster: sportAdapter.serializeRoster(initialRosterRef.current as any),
-        challenger_name: nickname,
-        trigger_type: trigger.trigger,
-        share_headline: shareHeadline,
-      };
-      const resp = await fetch("/api/challenge/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeader },
-        body: JSON.stringify(body),
-      });
-      if (!resp.ok) {
-        const text = await resp.text().catch(() => "");
-        throw new Error(`server ${resp.status}${text ? `: ${text.slice(0, 80)}` : ""}`);
-      }
-      const data = await resp.json();
-      if (!data?.challenge_id) throw new Error("no challenge_id returned");
-      const url = `${window.location.origin}/${sportKey}/challenge/${data.challenge_id}`;
-      track("challenges", "challenge_create", { challenge_id: data.challenge_id, sport: sportKey, trigger: trigger.trigger, target_score: fp });
-
-      // Share path: navigator.share when available, clipboard fallback.
-      // The OS share sheet cancel is not an error — swallow only AbortError.
-      if (navigator.share) {
-        try {
-          await navigator.share({ title: shareHeadline || trigger.headline, text: shareHeadline || trigger.headline, url });
-        } catch (shareErr: any) {
-          if (shareErr?.name !== "AbortError") {
-            throw new Error(shareErr?.message || "share failed");
-          }
-        }
-      } else if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(url);
-      } else {
-        throw new Error("Share + clipboard both unavailable");
-      }
-    } finally {
-      sendItBackInFlightRef.current = false;
+    const { data: { session } } = await supabase.auth.getSession();
+    const authHeader = session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {};
+    const body = {
+      hand_id: crypto.randomUUID(),
+      sport: sportKey,
+      season,
+      target_score: fp,
+      initial_roster: sportAdapter.serializeRoster(initialRosterRef.current as any),
+      challenger_name: nickname,
+      trigger_type: trigger.trigger,
+      share_headline: shareHeadline,
+    };
+    const resp = await fetch("/api/challenge/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeader },
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) {
+      const errText = await resp.text().catch(() => "");
+      throw new Error(`server ${resp.status}${errText ? `: ${errText.slice(0, 80)}` : ""}`);
     }
+    const data = await resp.json();
+    if (!data?.challenge_id) throw new Error("no challenge_id returned");
+    const url = `${window.location.origin}/${sportKey}/challenge/${data.challenge_id}`;
+    track("challenges", "challenge_create", {
+      challenge_id: data.challenge_id, sport: sportKey,
+      trigger: trigger.trigger, target_score: fp,
+    });
+    return {
+      url,
+      title: "ReplayIFS Challenge",
+      text: `I scored ${fp.toFixed(1)} FP. Same starting lineup. Beat me.`,
+    };
   }, [adapter.winTiersMap, winTier, challengeCtx, sportKey]); // eslint-disable-line
 
   const pendingCelebration = useRef<{ totalFp: number } | null>(null);
@@ -887,7 +862,13 @@ export function GameView({ adapter, challengeCtx }: Props) {
   // (see handleCardRevealStart), this gives the per-card rollup feel the
   // user asked for, regardless of auto / tap / mixed reveal path.
   const heldFpAtDraw = 0;
-  const currentBet = BASE_BET * betMultiplier;
+  // In challenge mode there's no wager — win/loss is the head-to-head
+  // comparison. Lock the effective multiplier to 1x so all downstream
+  // bet math (payout, animations, FTUE seeds) reads 1x even if the
+  // user's preferred multiplier from a prior session is higher. The UI
+  // hides the multiplier selector entirely so it can't drift from this.
+  const effectiveBetMultiplier = challengeCtx ? 1 : betMultiplier;
+  const currentBet = BASE_BET * effectiveBetMultiplier;
   const gameAnalytics = useGameAnalytics(sportKey);
 
   // ── Reveal + spring orchestration ──────────────────────────────────
@@ -910,7 +891,7 @@ export function GameView({ adapter, challengeCtx }: Props) {
     ) => number,
     ftueAnchorId: FTUE_ANCHOR_ID,
     currentBet,
-    betMultiplier,
+    betMultiplier: effectiveBetMultiplier,
     rosterRef,
     isFTUE,
     ftueLastHandFpRef,
@@ -1056,7 +1037,7 @@ export function GameView({ adapter, challengeCtx }: Props) {
     const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
     const tierMult = winTiersMap[winTier]?.multiplier ?? 0;
     const isLoss = winTier === "BUST";
-    const lossAmount = winTier === "BUST" ? BASE_BET * betMultiplier : 0;
+    const lossAmount = winTier === "BUST" ? BASE_BET * effectiveBetMultiplier : 0;
     const streakMult = getStreakMultiplier(streak);
     return {
       tierLabel: formatTierLabel(winTier),
@@ -1065,14 +1046,14 @@ export function GameView({ adapter, challengeCtx }: Props) {
       payout: winPayout,
       streak,
       isBust: winTier === "BUST",
-      betMultiplier,
+      betMultiplier: effectiveBetMultiplier,
       tierMultiplier: tierMult,
       streakMultiplier: streakMult,
       baseBet: BASE_BET,
       isLoss,
       lossAmount,
     };
-  }, [gameState, winTier, winPayout, streak, betMultiplier]); // eslint-disable-line
+  }, [gameState, winTier, winPayout, streak, effectiveBetMultiplier]); // eslint-disable-line
 
   const capUsed = useMemo(() => sumSalary(roster), [roster]);
 
@@ -2098,7 +2079,7 @@ export function GameView({ adapter, challengeCtx }: Props) {
                   </>
                 )}
                 {tierResultPhase === 2 && (() => {
-                  const amountWagered = BASE_BET * betMultiplier;
+                  const amountWagered = BASE_BET * effectiveBetMultiplier;
                   const net = winPayout - amountWagered;
                   const netPositive = net > 0;
                   const netColor = netPositive ? "#7FFF00" : "#FF3B30";
@@ -2130,9 +2111,11 @@ export function GameView({ adapter, challengeCtx }: Props) {
                             {ceilingPct}% ceiling
                           </span>
                         )}
-                        <span style={{ fontSize: 20, fontWeight: 700, color: netColor, fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
-                          {netLabel}
-                        </span>
+                        {!challengeCtx && (
+                          <span style={{ fontSize: 20, fontWeight: 700, color: netColor, fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                            {netLabel}
+                          </span>
+                        )}
                       </div>
                     </>
                   );
@@ -2195,7 +2178,7 @@ export function GameView({ adapter, challengeCtx }: Props) {
                     );
                   })()}
                 </div>
-                {gameState === "HOLD" && !isFTUE && (
+                {gameState === "HOLD" && !isFTUE && !challengeCtx && (
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
                     <span style={{ fontSize: 16, fontWeight: 400, color: "rgba(255,255,255,0.5)", lineHeight: 1 }}>
                       {BASE_BET} × {betMultiplier}x =
@@ -2453,8 +2436,9 @@ export function GameView({ adapter, challengeCtx }: Props) {
         capUsed={capUsed}
         lockedSalary={lockedSalary}
         revealedSalary={revealedSalary}
-        betMultiplier={betMultiplier}
+        betMultiplier={effectiveBetMultiplier}
         baseBet={BASE_BET}
+        challengeMode={!!challengeCtx}
         winTiers={gameBarWinTiers}
         legend={legendWithStars}
         sportKey={sportKey}
@@ -2631,11 +2615,26 @@ export function GameView({ adapter, challengeCtx }: Props) {
             myScore={rosterRef.current.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0)}
             myWinTier={winTier ?? "BUST"}
             sport={sportKey}
-            onSendItBack={handleSendItBack}
+            prepareChallenge={prepareChallenge}
             onPlayFresh={() => { setShowChallengeComparison(false); handleButtonClick(); }}
           />
         </Suspense>
       )}
+
+      {/* ?debug=1 QA overlay — surfaces challenge stats, identity, and the
+          last API call so testers can verify replay-policy enforcement
+          without opening Supabase. Lazy-loaded so it has zero cost when
+          the URL param isn't set. */}
+      {typeof window !== "undefined" &&
+        new URLSearchParams(window.location.search).get("debug") === "1" && (
+          <Suspense fallback={null}>
+            <ChallengeDebugPanel
+              challengeId={challengeCtx?.challengeId}
+              userId={getPlayerUid() || undefined}
+              userName={getNickname() || "anonymous"}
+            />
+          </Suspense>
+        )}
 
     </div>
   );

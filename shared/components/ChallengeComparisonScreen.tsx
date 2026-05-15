@@ -23,18 +23,24 @@ interface Props {
   myScore: number;
   myWinTier: string;
   sport: string;
-  /** Returns a promise so the sheet can show inline errors. Throws on
-   *  failure; never resolves silently. */
-  onSendItBack: () => Promise<void> | void;
+  /** Pre-creation hook: silently creates the return-challenge row on
+   *  the server when the sheet mounts and returns the share payload.
+   *  The sheet stores the result so the tap handler can call
+   *  navigator.share() synchronously, preserving the user-gesture
+   *  context (Safari/Chrome reject async-then-share). */
+  prepareChallenge: () => Promise<{ url: string; text: string; title: string }>;
   onPlayFresh: () => void;
 }
 
-export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sport, onSendItBack, onPlayFresh }: Props) {
+export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sport, prepareChallenge, onPlayFresh }: Props) {
   void myWinTier; // tier label removed from sheet — kept on props for caller compat / future use
   const [attemptResult, setAttemptResult] = useState<AttemptResult | null>(null);
   const [, setSubmitting] = useState(true);
-  const [sendBackBusy, setSendBackBusy] = useState(false);
-  const [sendBackError, setSendBackError] = useState<string | null>(null);
+  // Pre-created share payload. null = still creating; non-null = ready.
+  const [sharePayload, setSharePayload] = useState<{ url: string; text: string; title: string } | null>(null);
+  const [shareError, setShareError] = useState<string | null>(null);
+  const [shareInfo, setShareInfo] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
   const isNewUser = typeof window !== "undefined" && localStorage.getItem(`replaymod_ftue_${sport}`) !== "1";
 
   const isWinner = myScore > challengeCtx.targetScore;
@@ -54,6 +60,98 @@ export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sp
     return chadTrashTalk(bucket, namedChallenger, delta);
   }, [myScore, challengeCtx.targetScore, namedChallenger]);
 
+  // Pre-create the return challenge on mount so navigator.share() can fire
+  // synchronously from the tap handler.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const payload = await prepareChallenge();
+        if (!cancelled) setSharePayload(payload);
+      } catch (e: any) {
+        if (!cancelled) setShareError(e?.message ? String(e.message) : "Couldn't prepare the challenge.");
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []); // eslint-disable-line
+
+  // Synchronous Send-It-Back: invokes navigator.share() in the tap handler
+  // body, no async work before the call. Falls back to clipboard, then to
+  // an inline URL display if both APIs are unavailable.
+  const SEND_BACK_SENTINEL = "__send_it_back__";
+  const handleSendItBack = () => {
+    setShareError(null);
+    setShareInfo(null);
+
+    // Capture the URL once — if the share API rejects async, fallbacks can
+    // still surface the URL without re-fetching.
+    const payload = sharePayload;
+    if (!payload) {
+      // Pre-creation failed (or hasn't completed). Retry on-tap as a
+      // graceful degradation. This branch may fail on Safari due to the
+      // post-await user-gesture issue, but we still want to try.
+      setRetrying(true);
+      void (async () => {
+        try {
+          const fresh = await prepareChallenge();
+          setSharePayload(fresh);
+          // Try navigator.share — likely to fail on Safari here but worth
+          // attempting on browsers that allow post-await share.
+          if (navigator.share) {
+            try { await navigator.share({ title: fresh.title, text: fresh.text, url: fresh.url }); return; }
+            catch (err: any) { if (err?.name !== "AbortError") throw err; return; }
+          }
+          throw new Error("Share API unavailable");
+        } catch (e: any) {
+          // Clipboard fallback (also fine to be async on retry path)
+          if (navigator.clipboard?.writeText && sharePayload?.url) {
+            try {
+              await navigator.clipboard.writeText(`${sharePayload.url}\n${sharePayload.text}`);
+              setShareInfo("Link copied — paste it anywhere.");
+              return;
+            } catch { /* fall through */ }
+          }
+          setShareError(`Couldn't share. ${e?.message ?? ""}`.trim());
+        } finally {
+          setRetrying(false);
+        }
+      })();
+      return;
+    }
+
+    // Fast path — pre-creation already complete. Invoke navigator.share
+    // synchronously (no awaits before this call) to keep the user gesture.
+    if (navigator.share) {
+      navigator
+        .share({ title: payload.title, text: payload.text, url: payload.url })
+        .catch((err: any) => {
+          if (err?.name === "AbortError") return;
+          // Browser rejected the share (e.g. no app, permission). Try clipboard.
+          if (navigator.clipboard?.writeText) {
+            navigator.clipboard
+              .writeText(`${payload.url}\n${payload.text}`)
+              .then(() => setShareInfo("Link copied — paste it anywhere."))
+              .catch(() => setShareError(`Couldn't share. Copy this URL: ${payload.url}`));
+          } else {
+            setShareError(`Couldn't share. Copy this URL: ${payload.url}`);
+          }
+        });
+      return;
+    }
+
+    // No Web Share API — clipboard path.
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard
+        .writeText(`${payload.url}\n${payload.text}`)
+        .then(() => setShareInfo("Link copied — paste it anywhere."))
+        .catch(() => setShareError(`Couldn't copy. URL: ${payload.url}`));
+      return;
+    }
+
+    // Last resort — show URL inline for manual copy.
+    setShareError(`Share unavailable. Copy this URL: ${payload.url}`);
+  };
+
   // Primary/secondary CTA labels — derived from (new vs existing) × (won vs lost).
   // Pronoun-free: use the challenger's name when real, otherwise "Your Friend".
   const opponentNoun = namedChallenger ?? "Your Friend";
@@ -62,7 +160,7 @@ export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sp
       // Won: both new and existing → Send It Back primary, Play Fresh secondary
       return {
         primaryLabel: "Send It Back",
-        primaryAction: onSendItBack,
+        primaryAction: SEND_BACK_SENTINEL,
         secondaryLabel: "Play a Fresh Hand",
         secondaryAction: onPlayFresh,
       };
@@ -73,12 +171,12 @@ export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sp
         primaryLabel: "Try a Fresh Hand",
         primaryAction: onPlayFresh,
         secondaryLabel: "Send It Back Anyway",
-        secondaryAction: onSendItBack,
+        secondaryAction: SEND_BACK_SENTINEL,
       };
     }
     return {
       primaryLabel: `Make ${opponentNoun} Prove It Again`,
-      primaryAction: onSendItBack,
+      primaryAction: SEND_BACK_SENTINEL,
       secondaryLabel: "Play a Fresh Hand",
       secondaryAction: onPlayFresh,
     };
@@ -216,11 +314,26 @@ export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sp
 
         {/* (Phase 2 will add a head-to-head section here.) */}
 
-        {/* Inline error banner — surfaces Send-It-Back failures so the
-            tap never feels silent. Tapping the banner dismisses it. */}
-        {sendBackError && (
+        {/* Status banners. shareInfo is a soft positive toast (e.g. "Link
+            copied"). shareError is a hard failure. Tapping either dismisses. */}
+        {shareInfo && (
           <div
-            onClick={() => setSendBackError(null)}
+            onClick={() => setShareInfo(null)}
+            style={{
+              width: "100%", maxWidth: 360, marginBottom: 10,
+              padding: "10px 12px", borderRadius: 10,
+              background: "rgba(34,197,94,0.12)",
+              border: "1px solid rgba(34,197,94,0.45)",
+              color: "#86EFAC", fontSize: 13, fontWeight: 700,
+              cursor: "pointer", textAlign: "center",
+            }}
+          >
+            {shareInfo}
+          </div>
+        )}
+        {shareError && (
+          <div
+            onClick={() => setShareError(null)}
             style={{
               width: "100%", maxWidth: 360, marginBottom: 10,
               padding: "10px 12px", borderRadius: 10,
@@ -228,80 +341,78 @@ export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sp
               border: "1px solid rgba(239,68,68,0.45)",
               color: "#FCA5A5", fontSize: 13, fontWeight: 700,
               cursor: "pointer", textAlign: "center",
+              wordBreak: "break-all",
             }}
             role="alert"
           >
-            {sendBackError} <span style={{ opacity: 0.7, fontWeight: 500 }}>— tap to dismiss</span>
+            {shareError} <span style={{ opacity: 0.7, fontWeight: 500 }}>— tap to dismiss</span>
           </div>
         )}
 
-        {/* CTAs */}
+        {/* CTAs.
+            Send-It-Back buttons stay tappable; pre-creation runs in the
+            background. While the URL is still being prepared, the button
+            reads "Preparing…" and the tap initiates a slower retry path. */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 360 }}>
-          <button
-            onClick={async () => {
-              setSendBackError(null);
-              const isSendBack = ctas.primaryAction === onSendItBack;
-              if (isSendBack) {
-                track("challenges", "challenge_send_back", { challenge_id: challengeCtx.challengeId, sport });
-                setSendBackBusy(true);
-              }
-              try {
-                await ctas.primaryAction();
-              } catch (e) {
-                if (isSendBack) {
-                  setSendBackError(
-                    (e as any)?.message
-                      ? `Couldn't send the challenge: ${(e as any).message}`
-                      : "Couldn't send the challenge. Try again.",
-                  );
-                }
-              } finally {
-                if (isSendBack) setSendBackBusy(false);
-              }
-            }}
-            disabled={ctas.primaryAction === onSendItBack && sendBackBusy}
-            style={{
-              padding: "15px", borderRadius: 12, background: "#FFB14A",
-              border: "none", color: "#070A12", fontSize: 16, fontWeight: 900,
-              cursor: (ctas.primaryAction === onSendItBack && sendBackBusy) ? "default" : "pointer",
-              opacity: (ctas.primaryAction === onSendItBack && sendBackBusy) ? 0.7 : 1,
-            }}
-          >
-            {ctas.primaryAction === onSendItBack && sendBackBusy ? "Sending…" : ctas.primaryLabel}
-          </button>
-          <button
-            onClick={async () => {
-              setSendBackError(null);
-              const isSendBack = ctas.secondaryAction === onSendItBack;
-              if (isSendBack) {
-                track("challenges", "challenge_send_back", { challenge_id: challengeCtx.challengeId, sport });
-                setSendBackBusy(true);
-              }
-              try {
-                await ctas.secondaryAction();
-              } catch (e) {
-                if (isSendBack) {
-                  setSendBackError(
-                    (e as any)?.message
-                      ? `Couldn't send the challenge: ${(e as any).message}`
-                      : "Couldn't send the challenge. Try again.",
-                  );
-                }
-              } finally {
-                if (isSendBack) setSendBackBusy(false);
-              }
-            }}
-            disabled={ctas.secondaryAction === onSendItBack && sendBackBusy}
-            style={{
-              padding: "13px", borderRadius: 12, background: "transparent",
-              border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.7)",
-              fontSize: 14, fontWeight: 700,
-              cursor: (ctas.secondaryAction === onSendItBack && sendBackBusy) ? "default" : "pointer",
-              opacity: (ctas.secondaryAction === onSendItBack && sendBackBusy) ? 0.7 : 1,
-            }}
-          >
-            {ctas.secondaryAction === onSendItBack && sendBackBusy ? "Sending…" : ctas.secondaryLabel}
-          </button>
+          {(() => {
+            const isSendBackPrimary = ctas.primaryAction === SEND_BACK_SENTINEL;
+            const preparing = isSendBackPrimary && !sharePayload && !shareError;
+            const busy = isSendBackPrimary && retrying;
+            const label = preparing && !busy
+              ? `${ctas.primaryLabel} — preparing…`
+              : busy
+                ? "Sharing…"
+                : ctas.primaryLabel;
+            return (
+              <button
+                onClick={() => {
+                  if (isSendBackPrimary) {
+                    track("challenges", "challenge_send_back", { challenge_id: challengeCtx.challengeId, sport });
+                    handleSendItBack();
+                  } else {
+                    (ctas.primaryAction as () => void)();
+                  }
+                }}
+                disabled={isSendBackPrimary && busy}
+                style={{
+                  padding: "15px", borderRadius: 12, background: "#FFB14A",
+                  border: "none", color: "#070A12", fontSize: 16, fontWeight: 900,
+                  cursor: busy ? "default" : "pointer",
+                  opacity: preparing || busy ? 0.85 : 1,
+                }}
+              >{label}</button>
+            );
+          })()}
+          {(() => {
+            const isSendBackSecondary = ctas.secondaryAction === SEND_BACK_SENTINEL;
+            const preparing = isSendBackSecondary && !sharePayload && !shareError;
+            const busy = isSendBackSecondary && retrying;
+            const label = preparing && !busy
+              ? `${ctas.secondaryLabel} — preparing…`
+              : busy
+                ? "Sharing…"
+                : ctas.secondaryLabel;
+            return (
+              <button
+                onClick={() => {
+                  if (isSendBackSecondary) {
+                    track("challenges", "challenge_send_back", { challenge_id: challengeCtx.challengeId, sport });
+                    handleSendItBack();
+                  } else {
+                    (ctas.secondaryAction as () => void)();
+                  }
+                }}
+                disabled={isSendBackSecondary && busy}
+                style={{
+                  padding: "13px", borderRadius: 12, background: "transparent",
+                  border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.7)",
+                  fontSize: 14, fontWeight: 700,
+                  cursor: busy ? "default" : "pointer",
+                  opacity: preparing || busy ? 0.7 : 1,
+                }}
+              >{label}</button>
+            );
+          })()}
         </div>
       </div>
     </>
