@@ -121,79 +121,72 @@ const DEV_4THWALL: string[] = [
 //
 // {name} and {delta} are template tokens substituted at output time.
 
+// Win big — delta ≥ 15. Tone: ruthless, "send the receipt" energy.
 const TRASH_WIN_BIG_NAMED: string[] = [
   "You buried {name} by {delta}. Send the receipt.",
   "{name} got cooked. Don't let them forget it.",
-  "{delta} FP daylight on {name}. Run it back and twist the knife.",
-  "You beat {name} by {delta}. That's not a win, that's a statement.",
-  "Embarrassed {name} by {delta}. Send it before you change your mind.",
+  "By {delta}? Ruthless. Make them try again.",
+  "{delta} FP clear. {name}'s reaching for the rematch button.",
 ];
 const TRASH_WIN_BIG_UNNAMED: string[] = [
-  "Buried them by {delta}. Send the receipt.",
-  "They got cooked. Don't let it slide.",
-  "{delta} FP of daylight. Make them watch.",
-  "Cleared the bar by {delta}. That's a statement.",
-  "Beat them by {delta}. Run it back before they recover.",
+  "You buried your friend by {delta}. Send the receipt.",
+  "Your friend got cooked. Don't let them forget it.",
+  "By {delta}? Ruthless. Make them try again.",
+  "{delta} FP clear. Your friend's reaching for the rematch button.",
 ];
 
+// Win narrow — 1 < delta < 15. Tone: "stole it", needle the rival's worry.
 const TRASH_WIN_NARROW_NAMED: string[] = [
-  "By {delta}. {name}'s gonna want a rematch.",
-  "Stole it. Send it before {name} sees this.",
-  "{delta} FP. {name} won't sleep on that one.",
-  "Slim margin on {name}. They'll be back — get ahead of it.",
-  "Edged {name} by {delta}. Run it before they cool off.",
+  "By {delta}. Stole it. Send it before {name} sees.",
+  "{delta} FP. {name}'s not gonna sleep tonight.",
+  "Razor-thin. {name} knows they were a redraw away.",
+  "By {delta}. Send it back before they regroup.",
 ];
 const TRASH_WIN_NARROW_UNNAMED: string[] = [
-  "By {delta}. They'll want a rematch.",
-  "Stole it by {delta}. Send it before they see this.",
-  "Edged them by {delta}. Run it before they recover.",
-  "{delta} FP. They won't sleep on it.",
-  "Squeaked through. Lock it in and send it back.",
+  "By {delta}. Stole it. Send it before your friend sees.",
+  "{delta} FP. Your friend's not gonna sleep tonight.",
+  "Razor-thin. Your friend knows they were a redraw away.",
+  "By {delta}. Send it back before they regroup.",
 ];
 
+// Loss big — delta ≤ −15. Tone: honest, name the rival's gloating, push forward.
 const TRASH_LOSS_BIG_NAMED: string[] = [
   "{name} had your number. Build your own and call them out.",
-  "{name} got you by {delta}. Run a fresh hand and pick a new fight.",
-  "Rough one against {name}. Reset the board.",
-  "{name} took it by {delta}. Get cleaner cards and try again.",
-  "Off night. {name}'s gonna gloat — beat someone else.",
+  "Rough. {name}'s gonna gloat. Shut them up with a fresh slate.",
+  "Got cooked. The hand was there — your reads weren't. Run a real one.",
+  "Down {delta}. {name}'s living rent-free in your hand history. Run another.",
 ];
 const TRASH_LOSS_BIG_UNNAMED: string[] = [
-  "Got cooked by {delta}. Run a fresh one.",
-  "Rough hand. Reset the board.",
-  "Down {delta}. Try someone else's slate.",
-  "Off night. Build your own and pick a new fight.",
-  "Lost by {delta}. Walk it off — fresh hand.",
+  "Your friend had your number. Build your own and call them out.",
+  "Rough. Your friend's gonna gloat. Shut them up with a fresh slate.",
+  "Got cooked. The hand was there — your reads weren't. Run a real one.",
+  "Down {delta}. Your friend's living rent-free in your hand history. Run another.",
 ];
 
+// Loss narrow — −15 < delta < −1. Tone: "right there", name the rival's sweat, forward verb.
 const TRASH_LOSS_NARROW_NAMED: string[] = [
-  "By {delta}. Right there.",
-  "So close. {name} knows they got lucky.",
-  "{delta} FP shy of {name}. That's gonna bug you all night.",
-  "Off by {delta}. {name}'s gonna remember that — get them back later.",
-  "{name} squeaked by you. Built different next time.",
+  "By {delta}. The kind of loss that haunts you. Run it back.",
+  "Right there. {delta} FP from owning them. Try another hand.",
+  "Almost. {name}'s sweating — but they still won. Cook a real one.",
+  "{delta} FP. Brutal. Build a fresh hand and come back for them.",
 ];
 const TRASH_LOSS_NARROW_UNNAMED: string[] = [
-  "By {delta}. Right there.",
-  "{delta} FP short. That'll bug you.",
-  "So close. They got lucky.",
-  "Off by {delta}. Get clean cards and run it back.",
-  "Shy by {delta}. The slate had it — you didn't.",
+  "By {delta}. The kind of loss that haunts you. Run it back.",
+  "Right there. {delta} FP from owning them. Try another hand.",
+  "Almost. Your friend's sweating — but they still won. Cook a real one.",
+  "{delta} FP. Brutal. Build a fresh hand and come back for them.",
 ];
 
+// Photo finish — |delta| ≤ 1. Tone: drama, one more hand.
 const TRASH_PHOTO_FINISH_NAMED: string[] = [
-  "Tied with {name}. Run another to break it.",
+  "Tied. Run another to break it.",
   "Photo finish. Settle it on a fresh slate.",
-  "Coin flip. {name} won't be ready for round two.",
-  "{delta} FP. Same slate, same energy needed for the rematch.",
-  "Dead heat against {name}. The next hand decides it.",
+  "Within {delta}. Brutal. Go again.",
 ];
 const TRASH_PHOTO_FINISH_UNNAMED: string[] = [
+  "Tied. Run another to break it.",
   "Photo finish. Settle it on a fresh slate.",
-  "Coin flip. Run another to break it.",
-  "Dead heat. Next hand decides it.",
-  "Within {delta} FP. The slate had room — barely.",
-  "Razor margin. One more hand.",
+  "Within {delta}. Brutal. Go again.",
 ];
 
 export type TrashTalkBucket =
@@ -215,6 +208,46 @@ const TRASH_UNNAMED: Record<TrashTalkBucket, string[]> = {
   loss_narrow: TRASH_LOSS_NARROW_UNNAMED,
   photo_finish: TRASH_PHOTO_FINISH_UNNAMED,
 };
+
+// ── Challenge entry chip ──────────────────────────────────────────────────
+//
+// Shown the moment a challenge recipient lands in the game (first HOLD
+// state). Pattern: name the challenger's act with a verb, frame the
+// recipient as the active party, end with a forward-pointing imperative.
+// NO instructional copy — the hold/redraw mechanic teaches itself through
+// the UI.
+
+const INTRO_NAMED: string[] = [
+  "{name} put up {target}. Think you've got better in you?",
+  "{name} dropped {target} on this hand. Time to cook.",
+  "{name}'s gloating about {target}. Make them regret it.",
+  "{name} thinks {target} is untouchable. Prove them wrong.",
+  "{target}. That's the bar {name} set. Your turn at the wheel.",
+];
+
+const INTRO_UNNAMED: string[] = [
+  "Your friend put up {target}. Think you've got better in you?",
+  "{target} to beat. Your friend's already gloating. Shut them up.",
+  "Your friend cooked. {target} on this hand. Same cards. Your move.",
+  "Your friend thinks {target} is untouchable. Prove them wrong.",
+  "{target}. That's the bar. Your turn at the wheel.",
+];
+
+/**
+ * Entry chip shown when a challenge recipient lands in HOLD. Trash-talk
+ * energy, no instructional copy. `name=null` routes to the unnamed bank.
+ */
+export function chadChallengeIntro(args: {
+  challengerName: string | null;
+  targetScore: number;
+}): string {
+  const bank = args.challengerName ? INTRO_NAMED : INTRO_UNNAMED;
+  const target = args.targetScore.toFixed(1);
+  const line = pick(bank);
+  return line
+    .replace(/{name}/g, args.challengerName ?? "")
+    .replace(/{target}/g, target);
+}
 
 // ── Challenge comparison: tactical line 1 ─────────────────────────────────
 //

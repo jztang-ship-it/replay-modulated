@@ -5,7 +5,7 @@ import { getPlayerUid, getNickname } from "@shared/utils/playerIdentity";
 import { markChallengeAttempted } from "@shared/hooks/useChallengeShare";
 import { track } from "@shared/analytics/analytics";
 import { isRealName } from "@shared/utils/isRealName";
-import { chadTrashTalk, trashTalkBucket, chadChallengeTactical } from "@shared/commentary/chad";
+import { chadTrashTalk, trashTalkBucket } from "@shared/commentary/chad";
 
 interface AttemptResult {
   attempt_id: string;
@@ -22,15 +22,6 @@ interface Props {
   myScore: number;
   myWinTier: string;
   sport: string;
-  /** The recipient's played roster — used to find the held anchor and
-   *  feed the challenge-aware tactical line (Line 1 of the Chad output). */
-  playedRoster?: Array<{
-    name: string;
-    actualFp?: number;
-    projectedFp?: number;
-    wasHeld?: boolean;
-    salary?: number;
-  }>;
   onSendItBack: () => void;
   onPlayFresh: () => void;
 }
@@ -45,7 +36,7 @@ function challengeStatsLine(count: number, winners: number, best: number | null,
   return `${count} attempts · best ${best?.toFixed(1) ?? "?"} FP by ${bestName ?? "someone"}`;
 }
 
-export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sport, playedRoster, onSendItBack, onPlayFresh }: Props) {
+export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sport, onSendItBack, onPlayFresh }: Props) {
   const [attemptResult, setAttemptResult] = useState<AttemptResult | null>(null);
   const [submitting, setSubmitting] = useState(true);
   const isNewUser = typeof window !== "undefined" && localStorage.getItem(`replaymod_ftue_${sport}`) !== "1";
@@ -53,33 +44,11 @@ export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sp
   const isWinner = myScore > challengeCtx.targetScore;
   const namedChallenger = isRealName(challengeCtx.challengerName) ? challengeCtx.challengerName : null;
 
-  // Chad Line 1: challenge-aware tactical observation. Riffs on the held
-  // anchor and how the redraws played against the target.
-  const tacticalLine = useMemo(() => {
-    const delta = myScore - challengeCtx.targetScore;
-    let heldAnchor: { name: string; delivered: boolean } | null = null;
-    if (playedRoster && playedRoster.length > 0) {
-      const held = playedRoster
-        .filter(c => c.wasHeld)
-        .sort((a, b) => (a.salary ?? 0) - (b.salary ?? 0));
-      const top = held[held.length - 1];
-      if (top) {
-        const actual = Number(top.actualFp ?? 0);
-        const proj = Number(top.projectedFp ?? 0);
-        heldAnchor = { name: top.name, delivered: proj > 0 ? actual >= proj : actual > 0 };
-      }
-    }
-    return chadChallengeTactical({
-      heldAnchor,
-      delta,
-      target: challengeCtx.targetScore,
-      challengerName: namedChallenger,
-    });
-  }, [playedRoster, myScore, challengeCtx.targetScore, namedChallenger]);
-
-  // Chad Line 2: outcome-bucket trash talk. Computed once at mount so the
-  // line doesn't reshuffle on every render. Name routes to the unnamed bank
-  // when the challenger name fails isRealName (generic placeholder).
+  // Chad's outcome-bucket trash talk — the sheet's only commentary line.
+  // The tactical "line 1" used to live here too, but it now lands as a
+  // Chad chip on the game surface ~1.5s before this sheet slides up.
+  // Routes through the unnamed bank when the challenger name fails
+  // isRealName (generic placeholder).
   const trashTalk = useMemo(() => {
     const delta = myScore - challengeCtx.targetScore;
     const bucket = trashTalkBucket(delta);
@@ -238,16 +207,13 @@ export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sp
           </div>
         </div>
 
-        {/* Chad two-line: tactical (line 1) + outcome trash talk (line 2). */}
+        {/* Chad's outcome-bucket trash talk. The tactical Line 1 fires on
+            the game surface ~1.5s before this sheet slides up; it isn't
+            re-rendered here so the sheet stays focused on the rivalry
+            verdict. */}
         <div style={{
           maxWidth: 420, textAlign: "center", marginBottom: 14,
-          display: "flex", flexDirection: "column", gap: 6,
         }}>
-          {tacticalLine && (
-            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.78)", lineHeight: 1.4 }}>
-              {tacticalLine}
-            </div>
-          )}
           <div style={{ fontSize: 14, fontWeight: 700, color: "#FFB14A", lineHeight: 1.4 }}>
             {trashTalk}
           </div>

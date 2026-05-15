@@ -128,7 +128,12 @@ const ChallengeSharePrompt = lazy(() =>
 const ChallengeComparisonScreen = lazy(() =>
   import("@shared/components/ChallengeComparisonScreen").then(m => ({ default: m.ChallengeComparisonScreen }))
 );
-import { chadMessage, chadTriggerFraming } from "@shared/commentary/chad";
+import {
+  chadMessage,
+  chadTriggerFraming,
+  chadChallengeIntro,
+  chadChallengeTactical,
+} from "@shared/commentary/chad";
 import { isRealName } from "@shared/utils/isRealName";
 import { useAuth } from "@shared/auth/useAuth";
 import { listMessages } from "@shared/inbox/inbox";
@@ -552,14 +557,15 @@ export function GameView({ adapter, challengeCtx }: Props) {
     if (challengeIntroShownRef.current) return;
     if (gameState !== "HOLD") return;
     challengeIntroShownRef.current = true;
-    // Real challenger name → name-prefixed line. Generic placeholder
-    // → "Your friend" so the chip still names a sender even without a
-    // real name attached.
-    const target = challengeCtx.targetScore.toFixed(1);
-    const subject = isRealName(challengeCtx.challengerName)
+    // Trash-talk-energy chip: randomized bank, no instructional copy.
+    // Hold/redraw mechanic teaches itself via the UI affordances.
+    const namedChallenger = isRealName(challengeCtx.challengerName)
       ? challengeCtx.challengerName
-      : "Your friend";
-    const introLine = `${subject} put up ${target} FP on this hand. Hold what you trust, redraw the rest.`;
+      : null;
+    const introLine = chadChallengeIntro({
+      challengerName: namedChallenger,
+      targetScore: challengeCtx.targetScore,
+    });
     setFtueCommentaryOverride({ parts: [introLine], sticky: true });
   }, [challengeCtx, gameState]); // eslint-disable-line
 
@@ -1193,6 +1199,10 @@ export function GameView({ adapter, challengeCtx }: Props) {
     if (isFTUE) {
       return null;
     }
+    // Challenge mode: the tactical chad chip + auto-rising comparison sheet
+    // own the post-reveal moment. Skip the standard tier commentary so it
+    // doesn't speak over the challenge-aware framing.
+    if (challengeCtx) return null;
     const fp = lockedGaugeFpRef.current ?? displayFp;
     const gaugeSnap = computeGaugeState(fp, gaugeThresholds, winTier, 8);
 
@@ -1704,11 +1714,54 @@ export function GameView({ adapter, challengeCtx }: Props) {
     }
   }, [gameState]); // eslint-disable-line
 
-  // Show ChallengeComparisonScreen when a challenge hand reaches RESULTS
+  // Challenge mode post-reveal continuity:
+  //   1. WIN_CELEBRATION fires (reveal done, gauge settled, springSettled=true).
+  //   2. Tactical Chad chip lands as the commentary override — challenge-aware
+  //      framing referencing the matchup.
+  //   3. 1500ms later, the comparison sheet auto-slides up on top of the
+  //      game surface. No tap required to see the rivalry result.
+  //
+  // If the user reaches RESULTS directly (e.g. via the score-row double-tap
+  // codepath), show the sheet immediately — they're past the breath beat.
   useEffect(() => {
-    if (gameState !== "RESULTS" || !challengeCtx) return;
-    setShowChallengeComparison(true);
-  }, [gameState]); // eslint-disable-line
+    if (!challengeCtx) return;
+
+    if (gameState === "WIN_CELEBRATION") {
+      const resolvedRoster = rosterRef.current as any[];
+      const myScore = resolvedRoster.reduce(
+        (s: number, c: any) => s + Number(c.actualFp ?? 0), 0,
+      );
+      const delta = myScore - challengeCtx.targetScore;
+      const heldSorted = resolvedRoster
+        .filter((c: any) => c.wasHeld)
+        .sort((a: any, b: any) => (a.salary ?? 0) - (b.salary ?? 0));
+      const topHeld = heldSorted[heldSorted.length - 1];
+      const heldAnchor = topHeld
+        ? {
+            name: String(topHeld.name ?? ""),
+            delivered:
+              Number(topHeld.actualFp ?? 0) >= Number(topHeld.projectedFp ?? 0),
+          }
+        : null;
+      const namedChallenger = isRealName(challengeCtx.challengerName)
+        ? challengeCtx.challengerName
+        : null;
+      const tacticalLine = chadChallengeTactical({
+        heldAnchor,
+        delta,
+        target: challengeCtx.targetScore,
+        challengerName: namedChallenger,
+      });
+      setFtueCommentaryOverride({ parts: [tacticalLine], sticky: true });
+
+      const t = setTimeout(() => setShowChallengeComparison(true), 1500);
+      return () => clearTimeout(t);
+    }
+
+    if (gameState === "RESULTS") {
+      setShowChallengeComparison(true);
+    }
+  }, [gameState, challengeCtx]); // eslint-disable-line
 
   // ── JSX ───────────────────────────────────────────────────────────
   // NOTE: this useMemo MUST stay above the early returns below. React's
@@ -2566,13 +2619,6 @@ export function GameView({ adapter, challengeCtx }: Props) {
             myScore={rosterRef.current.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0)}
             myWinTier={winTier ?? "BUST"}
             sport={sportKey}
-            playedRoster={rosterRef.current.map((c: any) => ({
-              name: String(c.name ?? ""),
-              actualFp: Number(c.actualFp ?? 0),
-              projectedFp: Number(c.projectedFp ?? 0),
-              wasHeld: Boolean(c.wasHeld ?? false),
-              salary: Number(c.salary ?? 0),
-            }))}
             onSendItBack={handleSendItBack}
             onPlayFresh={() => { setShowChallengeComparison(false); handleButtonClick(); }}
           />
