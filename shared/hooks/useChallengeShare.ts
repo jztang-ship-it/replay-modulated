@@ -34,7 +34,11 @@ export interface CreateChallengeArgs {
   shareHeadline?: string;
 }
 
-const CHALLENGE_ATTEMPTED_KEY = "rm_challenge_attempted";
+// Per-challenge marker: rm_challenge_attempted_<id>. Used as a UI hint
+// that this user has *already played* this challenge (so the next
+// attempt is practice — doesn't count toward challenge stats). Does NOT
+// block replays; replays run normally.
+const CHALLENGE_ATTEMPTED_PREFIX = "rm_challenge_attempted_";
 
 export function useChallengeShare(sportKey: string) {
   const [state, setState] = useState<ChallengeShareState>({
@@ -124,23 +128,17 @@ export function useChallengeShare(sportKey: string) {
   return { ...state, evalAndArm, createChallenge, shareChallenge, reset };
 }
 
-/** Client-side attempt guard for anonymous users */
+/** Has this user already played this specific challenge? UI hint only —
+ *  never blocks replays. Used to flag practice attempts on the comparison
+ *  sheet and to send `is_practice: true` to the API as a client hint. */
 export function hasAttemptedChallenge(challengeId: string): boolean {
   try {
-    const raw = localStorage.getItem(CHALLENGE_ATTEMPTED_KEY);
-    const ids: string[] = raw ? JSON.parse(raw) : [];
-    return ids.includes(challengeId);
+    return localStorage.getItem(CHALLENGE_ATTEMPTED_PREFIX + challengeId) === "1";
   } catch { return false; }
 }
 
 export function markChallengeAttempted(challengeId: string): void {
   try {
-    const raw = localStorage.getItem(CHALLENGE_ATTEMPTED_KEY);
-    const ids: string[] = raw ? JSON.parse(raw) : [];
-    if (!ids.includes(challengeId)) {
-      ids.push(challengeId);
-      // Keep last 50
-      localStorage.setItem(CHALLENGE_ATTEMPTED_KEY, JSON.stringify(ids.slice(-50)));
-    }
+    localStorage.setItem(CHALLENGE_ATTEMPTED_PREFIX + challengeId, "1");
   } catch {}
 }

@@ -736,23 +736,26 @@ export function GameView({ adapter, challengeCtx }: Props) {
     return tryOpenAuthModal("hand_5", 3500);
   }, [handCount, isAnonymous, isFTUE, gameState, tryOpenAuthModal, challengeCtx]);
 
-  // Challenge send-back: bypass the share-prompt sheet entirely. Prompt
-  // anonymous users for a name (one-shot, stored in localStorage), then
-  // create the return challenge and open the native share sheet directly.
+  // Challenge send-back: create a return challenge from the recipient's
+  // played hand, then open the native share sheet. The comparison sheet
+  // STAYS VISIBLE throughout — share completion (success, fail, cancel)
+  // all return the user to the same sheet so they can pick another CTA.
+  //
+  // Errors are thrown (not swallowed) so the sheet's button can catch
+  // them and render an inline banner — "never silent" per the spec.
   const sendItBackInFlightRef = useRef(false);
   const handleSendItBack = useCallback(async () => {
     if (sendItBackInFlightRef.current) return;
     sendItBackInFlightRef.current = true;
     try {
-      // Capture a real-looking name once per user, store in localStorage.
-      // The auto-generated nickname is a placeholder — we re-prompt when it
-      // would fail isRealName (Player_*, Guest_*, hex, digit-only, <2 chars).
-      // Per spec: soft re-prompt on first fail, then accept whatever they
-      // type to keep friction at zero.
+      // Capture a real-looking name once per user. Auto-generated nickname
+      // (CrimsonSwish_8753 etc.) fails isRealName → prompt. Soft re-prompt
+      // on first fail, then accept whatever they type so friction stays at
+      // zero (per the speed-over-polish principle).
       let nickname = getNickname();
       if (typeof window !== "undefined" && !isRealName(nickname)) {
         const first = window.prompt("What should we call you?");
-        if (!first || !first.trim()) { setShowChallengeComparison(false); return; }
+        if (!first || !first.trim()) return; // user cancelled prompt — leave sheet up, no error
         let candidate = first.trim().slice(0, 32);
         if (!isRealName(candidate)) {
           const second = window.prompt("Try something we can actually call you.");
@@ -761,15 +764,12 @@ export function GameView({ adapter, challengeCtx }: Props) {
         nickname = candidate;
         setNickname(nickname);
       }
-      setShowChallengeComparison(false);
 
       const resolvedRoster = rosterRef.current as import("@shared/types/index").GeneratedCard[];
       const fp = resolvedRoster.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0);
       const badges = resolvedRoster.flatMap((c: any) => c.achievements ?? []);
       const trigger = evaluateTrigger({ roster: resolvedRoster, totalFp: fp, winTier: winTier ?? "BUST", badges, winTiersMap: adapter.winTiersMap });
       const season = challengeCtx?.season ?? "";
-      // Sport adapter may provide a big-game / season-reel headline; fall back
-      // to the generic trigger headline for sports that don't (yet).
       const shareHeadline = typeof (sportAdapter as any).getShareHeadline === "function"
         ? (sportAdapter as any).getShareHeadline({ roster: resolvedRoster, season })
         : trigger.headline;
@@ -791,18 +791,30 @@ export function GameView({ adapter, challengeCtx }: Props) {
         headers: { "Content-Type": "application/json", ...authHeader },
         body: JSON.stringify(body),
       });
-      if (!resp.ok) throw new Error("Create failed");
+      if (!resp.ok) {
+        const text = await resp.text().catch(() => "");
+        throw new Error(`server ${resp.status}${text ? `: ${text.slice(0, 80)}` : ""}`);
+      }
       const data = await resp.json();
+      if (!data?.challenge_id) throw new Error("no challenge_id returned");
       const url = `${window.location.origin}/${sportKey}/challenge/${data.challenge_id}`;
       track("challenges", "challenge_create", { challenge_id: data.challenge_id, sport: sportKey, trigger: trigger.trigger, target_score: fp });
 
+      // Share path: navigator.share when available, clipboard fallback.
+      // The OS share sheet cancel is not an error — swallow only AbortError.
       if (navigator.share) {
-        try { await navigator.share({ title: trigger.headline, text: trigger.headline, url }); } catch { /* user cancelled */ }
+        try {
+          await navigator.share({ title: shareHeadline || trigger.headline, text: shareHeadline || trigger.headline, url });
+        } catch (shareErr: any) {
+          if (shareErr?.name !== "AbortError") {
+            throw new Error(shareErr?.message || "share failed");
+          }
+        }
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
       } else {
-        try { await navigator.clipboard.writeText(url); alert("Link copied!"); } catch { /* ignore */ }
+        throw new Error("Share + clipboard both unavailable");
       }
-    } catch (e) {
-      console.error("[challenge] send-it-back failed:", e);
     } finally {
       sendItBackInFlightRef.current = false;
     }

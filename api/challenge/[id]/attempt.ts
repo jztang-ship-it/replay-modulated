@@ -24,26 +24,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const isSelfFarm = user_id && user_id === challenge.created_by;
 
-  // For signed-in users: enforce one attempt per user
+  // Replay detection: if this user_id has a prior attempt row, the new one
+  // is a practice attempt — insert it normally so the user sees the
+  // comparison sheet, but skip the challenge-level counter bumps so
+  // attempt_count / winner_count only reflect *first* attempts per user.
+  // (Lifted from the previous "one attempt per user" gate, which blocked
+  // replays entirely. Replays are now first-class.)
+  let isReplay = false;
   if (user_id) {
-    const { data: existing } = await supabaseAdmin
+    const { count } = await supabaseAdmin
       .from("challenge_attempts")
-      .select("attempt_id, score, is_winner")
+      .select("attempt_id", { count: "exact", head: true })
       .eq("challenge_id", challengeId)
-      .eq("user_id", user_id)
-      .maybeSingle();
-
-    if (existing) {
-      return res.status(200).json({
-        attempt_id: existing.attempt_id,
-        already_attempted: true,
-        score: existing.score,
-        is_winner: existing.is_winner,
-      });
-    }
+      .eq("user_id", user_id);
+    if ((count ?? 0) > 0) isReplay = true;
   }
 
-  // Insert the attempt
+  // Insert the attempt (always — replays land too, they just don't count
+  // toward challenge stats).
   const { data: attempt, error: insertErr } = await supabaseAdmin
     .from("challenge_attempts")
     .insert({
@@ -62,13 +60,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: "Failed to insert attempt" });
   }
 
-  // Atomic counter update (always increment attempt_count)
-  // Self-farm: don't update best_score/winner_count/best_user_name
   const newScore = Number(score);
   const prevBest = Number(challenge.best_score ?? 0);
-  const isBest = newScore > prevBest;
+  // is_best is meaningful only for counted (non-replay, non-self-farm) attempts.
+  const isCountedAttempt = !isSelfFarm && !isReplay;
+  const isBest = isCountedAttempt && newScore > prevBest;
 
-  if (!isSelfFarm) {
+  if (isCountedAttempt) {
     await supabaseAdmin.rpc("increment_challenge_counters", {
       p_challenge_id: challengeId,
       p_is_winner: Boolean(is_winner),
@@ -76,7 +74,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       p_user_name: user_name ?? "Anonymous",
     }).then(({ error: rpcErr }) => {
       if (rpcErr) {
-        // Fallback: raw UPDATE (no race condition guard, but won't lose the attempt)
+        // Fallback: raw UPDATE (no race-condition guard, but won't lose
+        // the attempt — the row already inserted above)
         const updates: Record<string, any> = {
           attempt_count: (challenge.attempt_count ?? 0) + 1,
           last_attempt_at: new Date().toISOString(),
@@ -86,8 +85,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         supabaseAdmin.from("shared_challenges").update(updates).eq("challenge_id", challengeId).then(() => {});
       }
     });
-  } else {
-    // Self-farm: still increment attempt_count only
+  } else if (isSelfFarm && !isReplay) {
+    // Self-farm, but first attempt: bump attempt_count only (existing
+    // anti-farm behavior). Replays from self also skip this.
     await supabaseAdmin
       .from("shared_challenges")
       .update({ attempt_count: (challenge.attempt_count ?? 0) + 1, last_attempt_at: new Date().toISOString() })
@@ -103,7 +103,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   return res.status(200).json({
     attempt_id: attempt.attempt_id,
-    is_best: isBest && !isSelfFarm,
+    is_best: isBest,
+    is_practice: isReplay,
     attempt_count: updated?.attempt_count ?? 0,
     winner_count: updated?.winner_count ?? 0,
     best_score: updated?.best_score ?? null,

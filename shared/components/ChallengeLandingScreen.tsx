@@ -4,6 +4,8 @@ import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
 import type { GeneratedCard } from "@shared/types/index";
 import { track } from "@shared/analytics/analytics";
 import { hasAttemptedChallenge } from "@shared/hooks/useChallengeShare";
+// (replays are unlimited — hasAttemptedChallenge is still imported below as
+//  a hint label for the CTA, never as a block.)
 import { isRealName } from "@shared/utils/isRealName";
 
 interface ChallengeData {
@@ -155,22 +157,18 @@ export function ChallengeLandingScreen({ challengeId, sport, deserializeRoster, 
             ))}
           </div>
 
-          {/* Accept CTA */}
-          {alreadyAttempted ? (
-            <div style={{ textAlign: "center", color: "rgba(255,255,255,0.5)", fontSize: 14, marginBottom: 12 }}>
-              You've already attempted this challenge.
-            </div>
-          ) : (
-            <button
-              onClick={handleAccept}
-              style={{
-                width: "100%", padding: "16px", borderRadius: 14,
-                background: "#FFB14A", border: "none",
-                color: "#070A12", fontSize: 17, fontWeight: 900, cursor: "pointer",
-                marginBottom: 10,
-              }}
-            >Accept Challenge</button>
-          )}
+          {/* Accept CTA — replays are unlimited. When the user has played
+              this challenge before, label the button "Play Again" so the
+              context is clear, but never block. */}
+          <button
+            onClick={handleAccept}
+            style={{
+              width: "100%", padding: "16px", borderRadius: 14,
+              background: "#FFB14A", border: "none",
+              color: "#070A12", fontSize: 17, fontWeight: 900, cursor: "pointer",
+              marginBottom: 10,
+            }}
+          >{alreadyAttempted ? "Play Again" : "Accept Challenge"}</button>
 
           {/* Small attribution + (optional) stats — minor below the CTA. */}
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", textAlign: "center" }}>

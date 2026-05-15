@@ -121,72 +121,77 @@ const DEV_4THWALL: string[] = [
 //
 // {name} and {delta} are template tokens substituted at output time.
 
+// Trash talk lines never duplicate the FP delta — the comparison sheet's
+// headline already shows it. These lines carry the emotional payoff
+// only, and avoid "them"/"they" pronouns (real name or "your friend"
+// surfaces only).
+
 // Win big — delta ≥ 15. Tone: ruthless, "send the receipt" energy.
 const TRASH_WIN_BIG_NAMED: string[] = [
-  "You buried {name} by {delta}. Send the receipt.",
-  "{name} got cooked. Don't let them forget it.",
-  "By {delta}? Ruthless. Make them try again.",
-  "{delta} FP clear. {name}'s reaching for the rematch button.",
+  "{name} got cooked. Send the receipt.",
+  "Ruthless. Run it again.",
+  "{name}'s reaching for the rematch button.",
+  "{name}'s gonna want this back.",
 ];
 const TRASH_WIN_BIG_UNNAMED: string[] = [
-  "You buried your friend by {delta}. Send the receipt.",
-  "Your friend got cooked. Don't let them forget it.",
-  "By {delta}? Ruthless. Make them try again.",
-  "{delta} FP clear. Your friend's reaching for the rematch button.",
+  "Your friend got cooked. Send the receipt.",
+  "Ruthless. Run it again.",
+  "Your friend's reaching for the rematch button.",
+  "Your friend's gonna want this back.",
 ];
 
 // Win narrow — 1 < delta < 15. Tone: "stole it", needle the rival's worry.
 const TRASH_WIN_NARROW_NAMED: string[] = [
-  "By {delta}. Stole it. Send it before {name} sees.",
-  "{delta} FP. {name}'s not gonna sleep tonight.",
-  "Razor-thin. {name} knows they were a redraw away.",
-  "By {delta}. Send it back before they regroup.",
+  "{name}'s not gonna sleep tonight.",
+  "Stole it. Send it before {name} sees.",
+  "{name} was a redraw away.",
+  "Razor-thin. Send it back.",
 ];
 const TRASH_WIN_NARROW_UNNAMED: string[] = [
-  "By {delta}. Stole it. Send it before your friend sees.",
-  "{delta} FP. Your friend's not gonna sleep tonight.",
-  "Razor-thin. Your friend knows they were a redraw away.",
-  "By {delta}. Send it back before they regroup.",
+  "Your friend's not gonna sleep tonight.",
+  "Stole it. Send it before your friend sees.",
+  "Your friend was a redraw away.",
+  "Razor-thin. Send it back.",
 ];
 
 // Loss big — delta ≤ −15. Tone: honest, name the rival's gloating, push forward.
 const TRASH_LOSS_BIG_NAMED: string[] = [
-  "{name} had your number. Build your own and call them out.",
-  "Rough. {name}'s gonna gloat. Shut them up with a fresh slate.",
-  "Got cooked. The hand was there — your reads weren't. Run a real one.",
-  "Down {delta}. {name}'s living rent-free in your hand history. Run another.",
+  "{name} had your number. Build your own and call {name} out.",
+  "Rough. {name}'s gonna gloat. Shut that up with a fresh slate.",
+  "Got cooked. The reads weren't there.",
+  "{name}'s living rent-free. Run another.",
 ];
 const TRASH_LOSS_BIG_UNNAMED: string[] = [
-  "Your friend had your number. Build your own and call them out.",
-  "Rough. Your friend's gonna gloat. Shut them up with a fresh slate.",
-  "Got cooked. The hand was there — your reads weren't. Run a real one.",
-  "Down {delta}. Your friend's living rent-free in your hand history. Run another.",
+  "Your friend had your number. Build your own and run another.",
+  "Rough. Your friend's gonna gloat. Shut that up with a fresh slate.",
+  "Got cooked. The reads weren't there.",
+  "Your friend's living rent-free. Run another.",
 ];
 
 // Loss narrow — −15 < delta < −1. Tone: "right there", name the rival's sweat, forward verb.
 const TRASH_LOSS_NARROW_NAMED: string[] = [
-  "By {delta}. The kind of loss that haunts you. Run it back.",
-  "Right there. {delta} FP from owning them. Try another hand.",
-  "Almost. {name}'s sweating — but they still won. Cook a real one.",
-  "{delta} FP. Brutal. Build a fresh hand and come back for them.",
+  "The kind of loss that haunts you. Run it back.",
+  "Right there. Try another hand.",
+  "Almost. {name}'s sweating — but still won. Cook a real one.",
+  "Brutal. Build a fresh hand.",
 ];
 const TRASH_LOSS_NARROW_UNNAMED: string[] = [
-  "By {delta}. The kind of loss that haunts you. Run it back.",
-  "Right there. {delta} FP from owning them. Try another hand.",
-  "Almost. Your friend's sweating — but they still won. Cook a real one.",
-  "{delta} FP. Brutal. Build a fresh hand and come back for them.",
+  "The kind of loss that haunts you. Run it back.",
+  "Right there. Try another hand.",
+  "Almost. Your friend's sweating — but still won. Cook a real one.",
+  "Brutal. Build a fresh hand.",
 ];
 
 // Photo finish — |delta| ≤ 1. Tone: drama, one more hand.
 const TRASH_PHOTO_FINISH_NAMED: string[] = [
   "Tied. Run another to break it.",
   "Photo finish. Settle it on a fresh slate.",
-  "Within {delta}. Brutal. Go again.",
+  "Razor margin. One more hand.",
 ];
 const TRASH_PHOTO_FINISH_UNNAMED: string[] = [
   "Tied. Run another to break it.",
   "Photo finish. Settle it on a fresh slate.",
-  "Within {delta}. Brutal. Go again.",
+  "Razor margin. One more hand.",
 ];
 
 export type TrashTalkBucket =
