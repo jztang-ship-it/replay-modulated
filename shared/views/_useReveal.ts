@@ -248,84 +248,30 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
   }, []);
 
   // ── runSpring ──────────────────────────────────────────────────────
+  // Used to be a 4-segment oscillation that animated the bar from the
+  // 5-card total up to the final FP while the anchor's card-face number
+  // had already settled. Now that runningTotalFp INCLUDES the anchor's
+  // per-tick visibleFp, the bar arrives at finalFp in lockstep with the
+  // card's count animation — there's nothing left to "spring." This
+  // function survives as a brief settle gate: a short timer that fires
+  // the original onSettled callback (tier audio, payout, leaderboard
+  // submission). The springFp state stays null so the bar continues
+  // following runningTotalFp uninterrupted.
   const runSpring = useCallback((finalFp: number, onSettled: () => void) => {
     cancelAnimationFrame(springRafRef.current);
     springTimersRef.current.forEach(clearTimeout);
     springTimersRef.current = [];
-
-    // Bar is currently at the 5-card total (frozen during anchor count-up).
-    // The anchor card's number has already settled on the card face.
-    // Now the tier bar does one smooth spring motion adding card 6's FP.
-    const startFp = frozenBarFpRef.current ?? latestGaugeFpRef.current;
-    const anchorFp = finalFp - startFp; // card 6's contribution
-
-    // Overshoot = 10% of the anchor card's FP (proportional, not fixed)
-    const overshoot = anchorFp * 0.10;
-    const tier = springTiers.find(t => finalFp >= t.lo && finalFp < t.hi)
-      ?? springTiers[springTiers.length - 1];
-    const headroom = tier.hi - finalFp - 0.5;
-    const clampedOvershoot = Math.min(overshoot, Math.max(0.5, headroom));
-
-    // Waypoints — each is a direction change, fully extended before reversing:
-    // A: startFp → finalFp + overshoot  (shoot up past target)
-    // B: peak → finalFp - undershoot     (back down below target)
-    // C: bottom → finalFp + tiny         (small rise above)
-    // D: settle at finalFp
-    const damping = 0.4;
-    const peak = finalFp + clampedOvershoot;
-    const bottom = finalFp - clampedOvershoot * damping;
-    const smallUp = finalFp + clampedOvershoot * damping * damping;
-
-    // Timing: each segment decelerates (longer duration for smaller moves)
-    // Total ~2000ms, considerably slower than the card-by-card gauge roll
-    const segA = 700;   // longest — the main sweep
-    const segB = 500;   // recoil
-    const segC = 400;   // small bounce
-    const segD = 300;   // settle
-    const TOTAL_MS = segA + segB + segC + segD;
-    const segments = [
-      { from: startFp, to: peak, dur: segA },
-      { from: peak, to: bottom, dur: segB },
-      { from: bottom, to: smallUp, dur: segC },
-      { from: smallUp, to: finalFp, dur: segD },
-    ];
-
-    let startTime: number | null = null;
-    setSpringFp(startFp);
+    void springTiers; // intentionally unused — old overshoot clamp lived here
+    setSpringFp(null);
     setSpringSettled(false);
-
-    function tick(now: number) {
-      if (startTime === null) startTime = now;
-      const elapsed = now - startTime;
-
-      if (elapsed >= TOTAL_MS) {
-        lockedGaugeFpRef.current = finalFp;
-        frozenBarFpRef.current = null;
-        setSpringFp(null);
-        setSpringSettled(true);
-        onSettled();
-        return;
-      }
-
-      // Find which segment we're in
-      let cumulative = 0;
-      let fp = finalFp;
-      for (const seg of segments) {
-        if (elapsed < cumulative + seg.dur) {
-          const segElapsed = elapsed - cumulative;
-          const t = segElapsed / seg.dur;
-          // Deceleration easing — each move slows as it reaches its peak
-          const eased = 1 - Math.pow(1 - t, 3); // cubic ease-out
-          fp = seg.from + (seg.to - seg.from) * eased;
-          break;
-        }
-        cumulative += seg.dur;
-      }
-
-      setSpringFp(fp);
-      springRafRef.current = requestAnimationFrame(tick);
-    }
-    springRafRef.current = requestAnimationFrame(tick);
+    frozenBarFpRef.current = null;
+    const SETTLE_DELAY_MS = 220;
+    const t = window.setTimeout(() => {
+      lockedGaugeFpRef.current = finalFp;
+      setSpringSettled(true);
+      onSettled();
+    }, SETTLE_DELAY_MS);
+    springTimersRef.current.push(t);
   }, [setSpringFp, setSpringSettled, springTiers]);
 
   // ── onCardFpStart ──────────────────────────────────────────────────

@@ -266,32 +266,21 @@ export function useEmotionalReveal(params: Params) {
   }, [visibleFpMap]);
 
   const runningTotalFp = useMemo(() => {
-    // Exclude the TRUE anchor — the card whose FP is delivered by the spring
-    // at the end of REVEAL rather than by the per-card bar tick. Including it
-    // would double-count: the bar ticks during the anchor's count-up, then
-    // the spring tries to deliver its FP and has nothing left to animate.
-    //
-    // In tap mode with held cards, revealOrder filters out held cards, so
-    // revealOrder[last] is the highest-salary NON-HELD card — not the real
-    // anchor. The spring fires for the highest-salary HELD card (see
-    // revealHeldCards), and that's what we must exclude here.
-    //
-    // Without this fix, the 2nd-to-last reveal (highest non-held) was being
-    // wrongly excluded — its FP never entered the bar — and the held anchor
-    // was wrongly included, causing a no-op spring at the end that flickered
-    // the bar.
-    const heldCards = cards.filter(c => (c as any).wasHeld);
-    const trueAnchorId = (revealMode === "tap" && heldCards.length > 0)
-      ? [...heldCards].sort((a, b) => (a.salary ?? 0) - (b.salary ?? 0))[heldCards.length - 1].cardId
-      : revealOrder[revealOrder.length - 1]?.cardId ?? null;
+    // Bar tracks EVERY card's per-tick visibleFp — including the anchor.
+    // Earlier iterations excluded the anchor so the spring could "deliver"
+    // its FP at the end, but that caused the team FP to linger at the
+    // (N−1)-card total while the anchor's number rolled up on the card
+    // face. Crisp per-card sequencing requires the bar to roll in lockstep
+    // with each card's count, no exceptions. The spring is now a brief
+    // settle gate (see runSpring in _useReveal) that fires tier audio /
+    // payout side effects right after the bar arrives.
     let sum = seedFp;
     for (const c of cards) {
-      if (c.cardId === trueAnchorId) continue;
       const v = getVisibleFp(c.cardId);
       if (typeof v === "number" && Number.isFinite(v)) sum += v;
     }
     return sum;
-  }, [cards, getVisibleFp, seedFp, revealOrder, revealMode]);
+  }, [cards, getVisibleFp, seedFp]);
 
   const pulseMap = useMemo(() => {
     const m = new Map<string, number>();

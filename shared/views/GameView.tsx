@@ -553,12 +553,12 @@ export function GameView({ adapter, challengeCtx }: Props) {
     if (gameState !== "HOLD") return;
     challengeIntroShownRef.current = true;
     // Real challenger name → name-prefixed line. Generic placeholder
-    // → use "Someone" so the line still acknowledges the challenge
-    // context (not just a flat FP description).
+    // → "Your friend" so the chip still names a sender even without a
+    // real name attached.
     const target = challengeCtx.targetScore.toFixed(1);
     const subject = isRealName(challengeCtx.challengerName)
       ? challengeCtx.challengerName
-      : "Someone";
+      : "Your friend";
     const introLine = `${subject} put up ${target} FP on this hand. Hold what you trust, redraw the rest.`;
     setFtueCommentaryOverride({ parts: [introLine], sticky: true });
   }, [challengeCtx, gameState]); // eslint-disable-line
@@ -637,20 +637,25 @@ export function GameView({ adapter, challengeCtx }: Props) {
     return () => clearTimeout(t);
   }, [handCount, tryClaimAttention]);
 
-  // First rookie win — fires at RESULTS
+  // First rookie win — fires at RESULTS. Skipped for challenge recipients
+  // (their first impression of the game shouldn't be a tutorial-style
+  // Chad nudge about ROOKIE tier rules).
   useEffect(() => {
-    if (isFTUE) return;
+    if (isFTUE || challengeCtx) return;
     if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
     if (winTier !== "ROOKIE") return;
     if (localStorage.getItem("rm_usher_rookie_first_win") === "1") return;
     localStorage.setItem("rm_usher_rookie_first_win", "1");
     setLegendGold(true);
     setFtueCommentaryOverride({ parts: [chadMessage("rookie_first_win")], sticky: true });
-  }, [gameState, winTier, isFTUE]); // eslint-disable-line
+  }, [gameState, winTier, isFTUE, challengeCtx]); // eslint-disable-line
 
-  // All other Chad messages — evaluated once per IDLE
+  // All other Chad messages — evaluated once per IDLE.
+  // Challenge recipients don't see retention/auth-nudge Chad lines — the
+  // intro chip and the comparison sheet are the only Chad surfaces in the
+  // challenge flow.
   useEffect(() => {
-    if (isFTUE || gameState !== "IDLE") return;
+    if (isFTUE || challengeCtx || gameState !== "IDLE") return;
     if (chadFiredThisIdleRef.current) return;
     if (chadLastHandRef.current === handCount) return;
 
@@ -707,21 +712,23 @@ export function GameView({ adapter, challengeCtx }: Props) {
     }
   }, [gameState, handCount, isFTUE, isAnonymous, bigWinFired, tryOpenAuthModal, tryClaimAttention, releaseAttention]); // eslint-disable-line
 
-  // Auth nudge — MVP+ hand while anonymous
+  // Auth nudge — MVP+ hand while anonymous.
+  // Challenge recipients are guests landing through a deep link — pushing a
+  // sign-in modal on top of the comparison sheet kills the moment. Skip.
   useEffect(() => {
-    if (!isAnonymous || isFTUE) return;
+    if (!isAnonymous || isFTUE || challengeCtx) return;
     if (gameState !== "IDLE") return;
     if (winTier !== "MVP" && winTier !== "LEGEND") return;
     return tryOpenAuthModal("big_win", 2500, { tier: winTier ?? "" });
-  }, [winTier, isAnonymous, isFTUE, gameState, tryOpenAuthModal]);
+  }, [winTier, isAnonymous, isFTUE, gameState, tryOpenAuthModal, challengeCtx]);
 
-  // Auth nudge — fallback at hand 5
+  // Auth nudge — fallback at hand 5. Same challenge-mode skip as above.
   useEffect(() => {
-    if (!isAnonymous || isFTUE) return;
+    if (!isAnonymous || isFTUE || challengeCtx) return;
     if (gameState !== "IDLE") return;
     if (handCount < 5) return;
     return tryOpenAuthModal("hand_5", 3500);
-  }, [handCount, isAnonymous, isFTUE, gameState, tryOpenAuthModal]);
+  }, [handCount, isAnonymous, isFTUE, gameState, tryOpenAuthModal, challengeCtx]);
 
   // Challenge send-back: bypass the share-prompt sheet entirely. Prompt
   // anonymous users for a name (one-shot, stored in localStorage), then

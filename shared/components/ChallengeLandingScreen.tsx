@@ -131,14 +131,11 @@ export function ChallengeLandingScreen({ challengeId, sport, deserializeRoster, 
           )}
 
           {/* Score callout */}
-          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
             <span style={{ fontSize: 68, fontWeight: 950, color: "#FFB14A", lineHeight: 1, fontStyle: "italic" }}>
               {data.target_score.toFixed(1)}
             </span>
             <span style={{ fontSize: 22, color: "rgba(255,255,255,0.45)", fontWeight: 700 }}>FP</span>
-          </div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "rgba(255,255,255,0.75)", marginBottom: 6 }}>
-            on this hand.
           </div>
           <div style={{ fontSize: 20, fontWeight: 800, color: "#EAF0FF", marginBottom: 22 }}>
             Think you can beat it?
