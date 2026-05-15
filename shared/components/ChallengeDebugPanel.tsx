@@ -157,9 +157,15 @@ export function ChallengeDebugPanel({ challengeId: challengeIdFromProps, userId,
         }}
       />
 
-      {challengeId && (
+      {/* Always render the section so QA can see what resolved (or didn't).
+          When no challenge id is in scope, show a hint pointing at the
+          manual input above instead of hiding everything — the previous
+          gate left the panel feeling empty on the bare /basketball/?debug=1
+          route where no challengeCtx + no URL slug + no localStorage
+          markers means the auto-resolve chain returns undefined. */}
+      {sectionHeader("Current Challenge")}
+      {challengeId ? (
         <>
-          {sectionHeader("Current Challenge")}
           {row("challenge_id", chShort)}
           {statsError && row("error", <span style={{ color: "#FCA5A5" }}>{statsError}</span>)}
           {stats && (
@@ -169,8 +175,11 @@ export function ChallengeDebugPanel({ challengeId: challengeIdFromProps, userId,
               {row("best_score", stats.best_score == null ? "—" : `${stats.best_score} (${stats.best_user_name ?? "?"})`)}
             </>
           )}
+          {refreshing && !stats && row("status", <span style={{ color: "rgba(255,255,255,0.55)" }}>fetching…</span>)}
           {row("is_practice (you)", String(isPractice))}
         </>
+      ) : (
+        row("status", <span style={{ color: "rgba(255,255,255,0.55)" }}>no id in scope — paste above</span>)
       )}
 
       {sectionHeader("Current User")}
