@@ -1,0 +1,1132 @@
+{
+  "generated": "2026-05-15",
+  "description": "Curated player headshots replacing busy-bg action shots / post-career photos in the NBA pool. Each entry maps a basePlayerId to its source URL. Run curatedHeadshots.mjs to re-download all of these. The silhouette is a special _silhouette entry used as the runtime fallback.",
+  "excludedDoNotRestore": [
+    {
+      "id": "906",
+      "name": "Haywoode Workman",
+      "url": "https://www.2kratings.com/wp-content/uploads/Haywoode-Workman.png"
+    },
+    {
+      "id": "202962",
+      "name": "Greg Smith",
+      "url": "https://www.2kratings.com/wp-content/uploads/Greg-Smith.png"
+    },
+    {
+      "id": "1114",
+      "name": "Jaren Jackson",
+      "url": "https://www.2kratings.com/wp-content/uploads/Jaren-Jackson.png"
+    },
+    {
+      "id": "1601",
+      "name": "Rusty LaRue",
+      "url": "https://www.2kratings.com/wp-content/uploads/Rusty-LaRue.png"
+    }
+  ],
+  "entries": [
+    {
+      "basePlayerId": "_silhouette",
+      "name": "Generic fallback silhouette",
+      "source": "https://cdn.nba.com/headshots/nba/latest/260x190/0.png",
+      "notes": "NBA official placeholder, darkened from RGB(142,145,150) to RGB(30,30,32). Used for any player whose photo is in the silhouette manifest."
+    },
+    {
+      "basePlayerId": "467",
+      "name": "Jason Kidd",
+      "source": "https://www.2kratings.com/wp-content/uploads/Jason-Kidd-Nets.png",
+      "notes": "curated from 2kratings (manual)"
+    },
+    {
+      "basePlayerId": "711",
+      "name": "Jerry Stackhouse",
+      "source": "https://www.2kratings.com/wp-content/uploads/Jerry-Stackhouse-2K.png",
+      "notes": "curated from 2kratings (manual)"
+    },
+    {
+      "basePlayerId": "979",
+      "name": "Jermaine ONeal",
+      "source": "https://www.2kratings.com/wp-content/uploads/Jermaine-ONeal-Pacers.png",
+      "notes": "curated from 2kratings (manual)"
+    },
+    {
+      "basePlayerId": "1716",
+      "name": "Larry Hughes",
+      "source": "https://www.2kratings.com/wp-content/uploads/Larry-Hughes.png",
+      "notes": "curated from 2kratings (manual)"
+    },
+    {
+      "basePlayerId": "1712",
+      "name": "Antawn Jamison",
+      "source": "https://www.2kratings.com/wp-content/uploads/Antawn-Jamison.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "363",
+      "name": "Christian Laettner",
+      "source": "https://www.2kratings.com/wp-content/uploads/Christian-Laettner.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "1733",
+      "name": "Al Harrington",
+      "source": "https://www.2kratings.com/wp-content/uploads/Al-Harrington.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "101115",
+      "name": "Andrew Bynum",
+      "source": "https://www.2kratings.com/wp-content/uploads/Andrew-Bynum-2K.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "270",
+      "name": "Horace Grant",
+      "source": "https://www.2kratings.com/wp-content/uploads/Horace-Grant-2K.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "101154",
+      "name": "Andray Blatche",
+      "source": "https://www.2kratings.com/wp-content/uploads/Andray-Blatche-2K.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "84",
+      "name": "Latrell Sprewell",
+      "source": "https://www.2kratings.com/wp-content/uploads/Latrell-Sprewell.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "296",
+      "name": "Rick Fox",
+      "source": "https://www.2kratings.com/wp-content/uploads/Rick-Fox.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "717",
+      "name": "Arvydas Sabonis",
+      "source": "https://www.2kratings.com/wp-content/uploads/Arvydas-Sabonis.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "1888",
+      "name": "Richard Hamilton",
+      "source": "https://www.2kratings.com/wp-content/uploads/Richard-Hamilton.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "349",
+      "name": "Mark Jackson",
+      "source": "https://www.2kratings.com/wp-content/uploads/Mark-Jackson-2K.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "1740",
+      "name": "Rashard Lewis",
+      "source": "https://www.2kratings.com/wp-content/uploads/Rashard-Lewis.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "2246",
+      "name": "Mehmet Okur",
+      "source": "https://www.2kratings.com/wp-content/uploads/Mehmet-Okur.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "2740",
+      "name": "Andris Biedrins",
+      "source": "https://www.2kratings.com/wp-content/uploads/Andris-Biedrins.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "923",
+      "name": "Donyell Marshall",
+      "source": "https://www.2kratings.com/wp-content/uploads/Donyell-Marshall.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "2072",
+      "name": "Michael Redd",
+      "source": "https://www.2kratings.com/wp-content/uploads/Michael-Redd.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "2202",
+      "name": "Jason Richardson",
+      "source": "https://www.2kratings.com/wp-content/uploads/Jason-Richardson.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "96",
+      "name": "Detlef Schrempf",
+      "source": "https://www.2kratings.com/wp-content/uploads/Detlef-Schrempf.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "896",
+      "name": "Tim Hardaway",
+      "source": "https://www.2kratings.com/wp-content/uploads/Tim-Hardaway.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "1536",
+      "name": "Stephen Jackson",
+      "source": "https://www.2kratings.com/wp-content/uploads/Stephen-Jackson-2K.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "339",
+      "name": "Tom Gugliotta",
+      "source": "https://www.2kratings.com/wp-content/uploads/Tom-Gugliotta.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "452",
+      "name": "Vin Baker",
+      "source": "https://www.2kratings.com/wp-content/uploads/Vin-Baker.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "1905",
+      "name": "Andrei Kirilenko",
+      "source": "https://www.2kratings.com/wp-content/uploads/Andrei-Kirilenko.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "1894",
+      "name": "Corey Maggette",
+      "source": "https://www.2kratings.com/wp-content/uploads/Corey-Maggette.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "213",
+      "name": "Antonio Davis",
+      "source": "https://www.2kratings.com/wp-content/uploads/Antonio-Davis.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "938",
+      "name": "Rony Seikaly",
+      "source": "https://www.2kratings.com/wp-content/uploads/Rony-Seikaly.png",
+      "notes": "2kratings (probed, pass 1)"
+    },
+    {
+      "basePlayerId": "436",
+      "name": "Juwan Howard",
+      "source": "https://www.2kratings.com/wp-content/uploads/Juwan-Howard-Heat.png",
+      "notes": "2kratings (probed, pass 2 team-suffix)"
+    },
+    {
+      "basePlayerId": "2430",
+      "name": "Carlos Boozer",
+      "source": "https://www.2kratings.com/wp-content/uploads/Carlos-Boozer-Bulls.png",
+      "notes": "2kratings (probed, pass 2 team-suffix)"
+    },
+    {
+      "basePlayerId": "714",
+      "name": "Michael Finley",
+      "source": "https://www.2kratings.com/wp-content/uploads/Michael-Finley-Mavs.png",
+      "notes": "2kratings (probed, pass 2 team-suffix)"
+    },
+    {
+      "basePlayerId": "779",
+      "name": "Glen Rice",
+      "source": "https://www.2kratings.com/wp-content/uploads/Glen-Rice-Heat.png",
+      "notes": "2kratings (probed, pass 2 team-suffix)"
+    },
+    {
+      "basePlayerId": "243",
+      "name": "Aaron McKie",
+      "source": "https://www.2kratings.com/wp-content/uploads/Aaron-McKie.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "727",
+      "name": "Eric Snow",
+      "source": "https://www.2kratings.com/wp-content/uploads/Eric-Snow.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1541",
+      "name": "Alvin Williams",
+      "source": "https://www.2kratings.com/wp-content/uploads/Alvin-Williams.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "703",
+      "name": "Kurt Thomas",
+      "source": "https://www.2kratings.com/wp-content/uploads/Kurt-Thomas.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "788",
+      "name": "Kevin Willis",
+      "source": "https://www.2kratings.com/wp-content/uploads/Kevin-Willis.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1709",
+      "name": "Michael Olowokandi",
+      "source": "https://www.2kratings.com/wp-content/uploads/Michael-Olowokandi-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1000",
+      "name": "Shandon Anderson",
+      "source": "https://www.2kratings.com/wp-content/uploads/Shandon-Anderson.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "283",
+      "name": "Lindsey Hunter",
+      "source": "https://www.2kratings.com/wp-content/uploads/Lindsey-Hunter.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "179",
+      "name": "Bryant Stith",
+      "source": "https://www.2kratings.com/wp-content/uploads/Bryant-Stith-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "369",
+      "name": "Charlie Ward",
+      "source": "https://www.2kratings.com/wp-content/uploads/Charlie-Ward.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "990",
+      "name": "Malik Rose",
+      "source": "https://www.2kratings.com/wp-content/uploads/Malik-Rose.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2050",
+      "name": "Morris Peterson",
+      "source": "https://www.2kratings.com/wp-content/uploads/Morris-Peterson.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "317",
+      "name": "John Starks",
+      "source": "https://www.2kratings.com/wp-content/uploads/John-Starks.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "271",
+      "name": "Johnny Newman",
+      "source": "https://www.2kratings.com/wp-content/uploads/Johnny-Newman-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "911",
+      "name": "Ervin Johnson",
+      "source": "https://www.2kratings.com/wp-content/uploads/Ervin-Johnson-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "166",
+      "name": "Ron Harper",
+      "source": "https://www.2kratings.com/wp-content/uploads/Ron-Harper.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "251",
+      "name": "Sean Elliott",
+      "source": "https://www.2kratings.com/wp-content/uploads/Sean-Elliott.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2047",
+      "name": "Quentin Richardson",
+      "source": "https://www.2kratings.com/wp-content/uploads/Quentin-Richardson.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1800",
+      "name": "Damon Jones",
+      "source": "https://www.2kratings.com/wp-content/uploads/Damon-Jones.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "763",
+      "name": "Tony Massenburg",
+      "source": "https://www.2kratings.com/wp-content/uploads/Tony-Massenburg.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "21",
+      "name": "Greg Anthony",
+      "source": "https://www.2kratings.com/wp-content/uploads/Greg-Anthony.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1928",
+      "name": "Todd MacCulloch",
+      "source": "https://www.2kratings.com/wp-content/uploads/Todd-MacCulloch.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2038",
+      "name": "Joel Przybilla",
+      "source": "https://www.2kratings.com/wp-content/uploads/Joel-Przybilla.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2203",
+      "name": "Shane Battier",
+      "source": "https://www.2kratings.com/wp-content/uploads/Shane-Battier.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "965",
+      "name": "Derek Fisher",
+      "source": "https://www.2kratings.com/wp-content/uploads/Derek-Fisher.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2049",
+      "name": "Speedy Claxton",
+      "source": "https://www.2kratings.com/wp-content/uploads/Speedy-Claxton.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2217",
+      "name": "Brendan Haywood",
+      "source": "https://www.2kratings.com/wp-content/uploads/Brendan-Haywood.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2041",
+      "name": "Etan Thomas",
+      "source": "https://www.2kratings.com/wp-content/uploads/Etan-Thomas.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2429",
+      "name": "Dan Gadzuric",
+      "source": "https://www.2kratings.com/wp-content/uploads/Dan-Gadzuric-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2575",
+      "name": "Luke Walton",
+      "source": "https://www.2kratings.com/wp-content/uploads/Luke-Walton.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2484",
+      "name": "Devin Brown",
+      "source": "https://www.2kratings.com/wp-content/uploads/Devin-Brown.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2545",
+      "name": "Darko Milicic",
+      "source": "https://www.2kratings.com/wp-content/uploads/Darko-Milicic.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2566",
+      "name": "Travis Outlaw",
+      "source": "https://www.2kratings.com/wp-content/uploads/Travis-Outlaw.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "200758",
+      "name": "Ronnie Brewer",
+      "source": "https://www.2kratings.com/wp-content/uploads/Ronnie-Brewer.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "202361",
+      "name": "Landry Fields",
+      "source": "https://www.2kratings.com/wp-content/uploads/Landry-Fields.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "201957",
+      "name": "Byron Mullens",
+      "source": "https://www.2kratings.com/wp-content/uploads/Byron-Mullens.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "203115",
+      "name": "Will Barton",
+      "source": "https://www.2kratings.com/wp-content/uploads/Will-Barton.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "22",
+      "name": "Rik Smits",
+      "source": "https://www.2kratings.com/wp-content/uploads/Rik-Smits-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "899",
+      "name": "Mark Price",
+      "source": "https://www.2kratings.com/wp-content/uploads/Mark-Price.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "49",
+      "name": "Gheorghe Muresan",
+      "source": "https://www.2kratings.com/wp-content/uploads/Gheorghe-Muresan.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "26",
+      "name": "Luc Longley",
+      "source": "https://www.2kratings.com/wp-content/uploads/Luc-Longley.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "458",
+      "name": "Howard Eisley",
+      "source": "https://www.2kratings.com/wp-content/uploads/Howard-Eisley.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1513",
+      "name": "Scot Pollard",
+      "source": "https://www.2kratings.com/wp-content/uploads/Scot-Pollard.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1728",
+      "name": "Roshown McLeod",
+      "source": "https://www.2kratings.com/wp-content/uploads/Roshown-McLeod.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1916",
+      "name": "Calvin Booth",
+      "source": "https://www.2kratings.com/wp-content/uploads/Calvin-Booth.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "345",
+      "name": "Terry Porter",
+      "source": "https://www.2kratings.com/wp-content/uploads/Terry-Porter-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1521",
+      "name": "Jacque Vaughn",
+      "source": "https://www.2kratings.com/wp-content/uploads/Jacque-Vaughn.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2039",
+      "name": "Keyon Dooling",
+      "source": "https://www.2kratings.com/wp-content/uploads/Keyon-Dooling-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2054",
+      "name": "Jake Tsakalidis",
+      "source": "https://www.2kratings.com/wp-content/uploads/Jake-Tsakalidis.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "42",
+      "name": "Monty Williams",
+      "source": "https://www.2kratings.com/wp-content/uploads/Monty-Williams.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1908",
+      "name": "Jumaine Jones",
+      "source": "https://www.2kratings.com/wp-content/uploads/Jumaine-Jones.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "51",
+      "name": "Mahmoud Abdul-Rauf",
+      "source": "https://www.2kratings.com/wp-content/uploads/Mahmoud-Abdul-Rauf-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "64",
+      "name": "Sam Perkins",
+      "source": "https://www.2kratings.com/wp-content/uploads/Sam-Perkins.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "137",
+      "name": "Vernon Maxwell",
+      "source": "https://www.2kratings.com/wp-content/uploads/Vernon-Maxwell.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2059",
+      "name": "Eduardo Najera",
+      "source": "https://www.2kratings.com/wp-content/uploads/Eduardo-Najera.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1904",
+      "name": "Devean George",
+      "source": "https://www.2kratings.com/wp-content/uploads/Devean-George.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "201",
+      "name": "Chris Dudley",
+      "source": "https://www.2kratings.com/wp-content/uploads/Chris-Dudley.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1559",
+      "name": "Adrian Griffin",
+      "source": "https://www.2kratings.com/wp-content/uploads/Adrian-Griffin.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "239",
+      "name": "Darrick Martin",
+      "source": "https://www.2kratings.com/wp-content/uploads/Darrick-Martin.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2239",
+      "name": "Trenton Hassell",
+      "source": "https://www.2kratings.com/wp-content/uploads/Trenton-Hassell.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2215",
+      "name": "Jason Collins",
+      "source": "https://www.2kratings.com/wp-content/uploads/Jason-Collins.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1594",
+      "name": "Rick Brunson",
+      "source": "https://www.2kratings.com/wp-content/uploads/Rick-Brunson.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2402",
+      "name": "Dajuan Wagner",
+      "source": "https://www.2kratings.com/wp-content/uploads/Dajuan-Wagner.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2073",
+      "name": "Brian Cardinal",
+      "source": "https://www.2kratings.com/wp-content/uploads/Brian-Cardinal-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2553",
+      "name": "Jarvis Hayes",
+      "source": "https://www.2kratings.com/wp-content/uploads/Jarvis-Hayes.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2586",
+      "name": "Keith Bogans",
+      "source": "https://www.2kratings.com/wp-content/uploads/Keith-Bogans.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2407",
+      "name": "Jared Jeffries",
+      "source": "https://www.2kratings.com/wp-content/uploads/Jared-Jeffries.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2554",
+      "name": "Mickael Pietrus",
+      "source": "https://www.2kratings.com/wp-content/uploads/Mickael-Pietrus-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2443",
+      "name": "Darius Songaila",
+      "source": "https://www.2kratings.com/wp-content/uploads/Darius-Songaila.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2584",
+      "name": "Willie Green",
+      "source": "https://www.2kratings.com/wp-content/uploads/Willie-Green.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "101124",
+      "name": "Hakim Warrick",
+      "source": "https://www.2kratings.com/wp-content/uploads/Hakim-Warrick.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "101132",
+      "name": "Linas Kleiza",
+      "source": "https://www.2kratings.com/wp-content/uploads/Linas-Kleiza.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2137",
+      "name": "Ime Udoka",
+      "source": "https://www.2kratings.com/wp-content/uploads/Ime-Udoka.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "200789",
+      "name": "Daniel Gibson",
+      "source": "https://www.2kratings.com/wp-content/uploads/Daniel-Gibson.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "201141",
+      "name": "Greg Oden",
+      "source": "https://www.2kratings.com/wp-content/uploads/Greg-Oden.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "200769",
+      "name": "Shannon Brown",
+      "source": "https://www.2kratings.com/wp-content/uploads/Shannon-Brown-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "201958",
+      "name": "Rodrigue Beaubois",
+      "source": "https://www.2kratings.com/wp-content/uploads/Rodrigue-Beaubois-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "390",
+      "name": "Sasha Danilovic",
+      "source": "https://www.2kratings.com/wp-content/uploads/Sasha-Danilovic.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "760",
+      "name": "Jerome Kersey",
+      "source": "https://www.2kratings.com/wp-content/uploads/Jerome-Kersey-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "61",
+      "name": "Carl Herrera",
+      "source": "https://www.2kratings.com/wp-content/uploads/Carl-Herrera.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "724",
+      "name": "Cory Alexander",
+      "source": "https://www.2kratings.com/wp-content/uploads/Cory-Alexander.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "462",
+      "name": "J.R. Reid",
+      "source": "https://www.2kratings.com/wp-content/uploads/JR-Reid.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "906",
+      "name": "Haywoode Workman",
+      "source": "https://www.2kratings.com/wp-content/uploads/Haywoode-Workman.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "399",
+      "name": "Sean Rooks",
+      "source": "https://www.2kratings.com/wp-content/uploads/Sean-Rooks.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1683",
+      "name": "Larry Robinson",
+      "source": "https://www.2kratings.com/wp-content/uploads/Larry-Robinson.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1032",
+      "name": "Darvin Ham",
+      "source": "https://www.2kratings.com/wp-content/uploads/Darvin-Ham.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1741",
+      "name": "Jelani McCoy",
+      "source": "https://www.2kratings.com/wp-content/uploads/Jelani-McCoy.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2043",
+      "name": "Mateen Cleaves",
+      "source": "https://www.2kratings.com/wp-content/uploads/Mateen-Cleaves.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2067",
+      "name": "Eddie House",
+      "source": "https://www.2kratings.com/wp-content/uploads/Eddie-House.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1900",
+      "name": "Quincy Lewis",
+      "source": "https://www.2kratings.com/wp-content/uploads/Quincy-Lewis.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "146",
+      "name": "Jud Buechler",
+      "source": "https://www.2kratings.com/wp-content/uploads/Jud-Buechler.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1442",
+      "name": "Zeljko Rebraca",
+      "source": "https://www.2kratings.com/wp-content/uploads/Zeljko-Rebraca.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2063",
+      "name": "Jake Voskuhl",
+      "source": "https://www.2kratings.com/wp-content/uploads/Jake-Voskuhl.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1601",
+      "name": "Rusty LaRue",
+      "source": "https://www.2kratings.com/wp-content/uploads/Rusty-LaRue.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2212",
+      "name": "Steven Hunter",
+      "source": "https://www.2kratings.com/wp-content/uploads/Steven-Hunter.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2254",
+      "name": "Loren Woods",
+      "source": "https://www.2kratings.com/wp-content/uploads/Loren-Woods.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2243",
+      "name": "Brian Scalabrine",
+      "source": "https://www.2kratings.com/wp-content/uploads/Brian-Scalabrine.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1762",
+      "name": "Tremaine Fowlkes",
+      "source": "https://www.2kratings.com/wp-content/uploads/Tremaine-Fowlkes.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2366",
+      "name": "Mike Wilks",
+      "source": "https://www.2kratings.com/wp-content/uploads/Mike-Wilks.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2418",
+      "name": "Casey Jacobsen",
+      "source": "https://www.2kratings.com/wp-content/uploads/Casey-Jacobsen.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2457",
+      "name": "Jannero Pargo",
+      "source": "https://www.2kratings.com/wp-content/uploads/Jannero-Pargo.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2669",
+      "name": "Linton Johnson",
+      "source": "https://www.2kratings.com/wp-content/uploads/Linton-Johnson.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2562",
+      "name": "Sasha Pavlovic",
+      "source": "https://www.2kratings.com/wp-content/uploads/Sasha-Pavlovic.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2560",
+      "name": "Zarko Cabarkapa",
+      "source": "https://www.2kratings.com/wp-content/uploads/Zarko-Cabarkapa.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2761",
+      "name": "Jackson Vroman",
+      "source": "https://www.2kratings.com/wp-content/uploads/Jackson-Vroman.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2745",
+      "name": "Kirk Snyder",
+      "source": "https://www.2kratings.com/wp-content/uploads/Kirk-Snyder.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2767",
+      "name": "Royal Ivey",
+      "source": "https://www.2kratings.com/wp-content/uploads/Royal-Ivey.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2573",
+      "name": "Maciej Lampe",
+      "source": "https://www.2kratings.com/wp-content/uploads/Maciej-Lampe.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "101180",
+      "name": "Sarunas Jasikevicius",
+      "source": "https://www.2kratings.com/wp-content/uploads/Sarunas-Jasikevicius.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "101113",
+      "name": "Ike Diogu",
+      "source": "https://www.2kratings.com/wp-content/uploads/Ike-Diogu-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "101134",
+      "name": "Wayne Simien",
+      "source": "https://www.2kratings.com/wp-content/uploads/Wayne-Simien.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "101182",
+      "name": "Donell Taylor",
+      "source": "https://www.2kratings.com/wp-content/uploads/Donell-Taylor.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1752",
+      "name": "Sean Marks",
+      "source": "https://www.2kratings.com/wp-content/uploads/Sean-Marks.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "101183",
+      "name": "Shavlik Randolph",
+      "source": "https://www.2kratings.com/wp-content/uploads/Shavlik-Randolph.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "101160",
+      "name": "Lawrence Roberts",
+      "source": "https://www.2kratings.com/wp-content/uploads/Lawrence-Roberts.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "200764",
+      "name": "Renaldo Balkman",
+      "source": "https://www.2kratings.com/wp-content/uploads/Renaldo-Balkman-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "200818",
+      "name": "Justin Williams",
+      "source": "https://www.2kratings.com/wp-content/uploads/Justin-Williams-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "200796",
+      "name": "Leon Powe",
+      "source": "https://www.2kratings.com/wp-content/uploads/Leon-Powe.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "101143",
+      "name": "Travis Diener",
+      "source": "https://www.2kratings.com/wp-content/uploads/Travis-Diener.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "101144",
+      "name": "Von Wafer",
+      "source": "https://www.2kratings.com/wp-content/uploads/Von-Wafer.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "200753",
+      "name": "Patrick O'Bryant",
+      "source": "https://www.2kratings.com/wp-content/uploads/Patrick-OBryant.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "101194",
+      "name": "Anthony Roberson",
+      "source": "https://www.2kratings.com/wp-content/uploads/Anthony-Roberson.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "201953",
+      "name": "Eric Maynor",
+      "source": "https://www.2kratings.com/wp-content/uploads/Eric-Maynor.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "201632",
+      "name": "Hamed Haddadi",
+      "source": "https://www.2kratings.com/wp-content/uploads/Hamed-Haddadi.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "202345",
+      "name": "Damion James",
+      "source": "https://www.2kratings.com/wp-content/uploads/Damion-James-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "202351",
+      "name": "Lazar Hayward",
+      "source": "https://www.2kratings.com/wp-content/uploads/Lazar-Hayward-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "202346",
+      "name": "Dominique Jones",
+      "source": "https://www.2kratings.com/wp-content/uploads/Dominique-Jones-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "202354",
+      "name": "Dexter Pittman",
+      "source": "https://www.2kratings.com/wp-content/uploads/Dexter-Pittman.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "202366",
+      "name": "Jerome Jordan",
+      "source": "https://www.2kratings.com/wp-content/uploads/Jerome-Jordan.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "202729",
+      "name": "Josh Selby",
+      "source": "https://www.2kratings.com/wp-content/uploads/Josh-Selby.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "202962",
+      "name": "Greg Smith",
+      "source": "https://www.2kratings.com/wp-content/uploads/Greg-Smith.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "201986",
+      "name": "Nando De Colo",
+      "source": "https://www.2kratings.com/wp-content/uploads/Nando-De-Colo.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "894",
+      "name": "Ricky Pierce",
+      "source": "https://www.2kratings.com/wp-content/uploads/Ricky-Pierce-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "433",
+      "name": "Buck Williams",
+      "source": "https://www.2kratings.com/wp-content/uploads/Buck-Williams-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "698",
+      "name": "Eddie Johnson",
+      "source": "https://www.2kratings.com/wp-content/uploads/Eddie-Johnson.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "2",
+      "name": "Byron Scott",
+      "source": "https://www.2kratings.com/wp-content/uploads/Byron-Scott.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "181",
+      "name": "Kenny Smith",
+      "source": "https://www.2kratings.com/wp-content/uploads/Kenny-Smith.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1114",
+      "name": "Jaren Jackson",
+      "source": "https://www.2kratings.com/wp-content/uploads/Jaren-Jackson.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "82",
+      "name": "Bill Wennington",
+      "source": "https://www.2kratings.com/wp-content/uploads/Bill-Wennington.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "170",
+      "name": "Joe Kleine",
+      "source": "https://www.2kratings.com/wp-content/uploads/Joe-Kleine.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "982",
+      "name": "Martin Muursepp",
+      "source": "https://www.2kratings.com/wp-content/uploads/Martin-Muursepp.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "226",
+      "name": "Antonio Lang",
+      "source": "https://www.2kratings.com/wp-content/uploads/Antonio-Lang.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "418",
+      "name": "Scott Brooks",
+      "source": "https://www.2kratings.com/wp-content/uploads/Scott-Brooks.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1002",
+      "name": "Reggie Geary",
+      "source": "https://www.2kratings.com/wp-content/uploads/Reggie-Geary.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "456",
+      "name": "Chuck Person",
+      "source": "https://www.2kratings.com/wp-content/uploads/Chuck-Person.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "328",
+      "name": "Rick Mahorn",
+      "source": "https://www.2kratings.com/wp-content/uploads/Rick-Mahorn-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1847",
+      "name": "Thurl Bailey",
+      "source": "https://www.2kratings.com/wp-content/uploads/Thurl-Bailey-2K.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "1522",
+      "name": "Keith Booth",
+      "source": "https://www.2kratings.com/wp-content/uploads/Keith-Booth.png",
+      "notes": "2kratings (probed, lower tier)"
+    },
+    {
+      "basePlayerId": "927",
+      "name": "John Salley",
+      "source": "https://www.2kratings.com/wp-content/uploads/John-Salley.png",
+      "notes": "2kratings (probed, lower tier)"
+    }
+  ]
+}

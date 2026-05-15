@@ -21,3 +21,8 @@ basketball/src/utils/culture_failed.json
 baseball/src/utils/culture_failed.json
 scripts/commentary-output-*.txt
 football/public/debug-headshots/
+
+# Headshot PNGs are managed via Supabase Storage, not git.
+# Track only the canonical fallback silhouette (small, ships with code).
+basketball/public/headshots/*.png
+!basketball/public/headshots/_silhouette.png

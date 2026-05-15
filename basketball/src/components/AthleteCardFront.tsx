@@ -6,18 +6,26 @@
 import { useState } from "react";
 import { CardFront, type CardFrontProps, type CardFrontHeroProps } from "@shared/components/CardFront";
 import { headshotUrl } from "@shared/utils/headshotUrl";
+import { shouldRenderSilhouette } from "../data/silhouettePlayerIds";
 import type { PlayerCard } from "@shared/types";
+
+const SILHOUETTE_URL = headshotUrl("_silhouette");
 
 function BasketballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) {
   const [imgReady, setImgReady] = useState(false);
-  const headshotSrc = (() => {
-    const base = String((card as any)?.basePlayerId ?? "").trim();
-    return headshotUrl(base);
-  })();
+  const [imgFailed, setImgFailed] = useState(false);
+  const basePlayerId = String((card as any)?.basePlayerId ?? "").trim();
+  const useSilhouette = shouldRenderSilhouette(basePlayerId) || imgFailed;
+  const headshotSrc = useSilhouette ? SILHOUETTE_URL : headshotUrl(basePlayerId);
 
   return (
     <>
-      {headshotSrc ? (
+      {!useSilhouette && (
+        <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", fontSize: 32, fontWeight: 950, color: "rgba(255,255,255,0.70)", userSelect: "none" }}>
+          {initials}
+        </div>
+      )}
+      {headshotSrc && (
         <img
           key={headshotSrc}
           src={headshotSrc}
@@ -29,16 +37,12 @@ function BasketballHero({ card, initials, isActiveReveal }: CardFrontHeroProps) 
             position: "absolute",
             top: "12%", left: "-5%", width: "110%", height: "100%",
             objectFit: "cover", objectPosition: "50% 10%",
-            opacity: imgReady ? 1 : 0, transition: "opacity 0.2s ease",
+            opacity: useSilhouette || imgReady ? 1 : 0, transition: "opacity 0.2s ease",
           }}
           draggable={false}
           onLoad={() => setImgReady(true)}
-          onError={() => setImgReady(false)}
+          onError={() => { setImgReady(false); setImgFailed(true); }}
         />
-      ) : (
-        <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", fontSize: 32, fontWeight: 950, color: "rgba(255,255,255,0.70)", userSelect: "none" }}>
-          {initials}
-        </div>
       )}
     </>
   );
