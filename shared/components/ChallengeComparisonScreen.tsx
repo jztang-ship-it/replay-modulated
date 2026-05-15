@@ -100,8 +100,14 @@ export function ChallengeComparisonScreen({
   const userHasWon = attemptResult?.user_has_won ?? (delta > 0);
   const isWindowOpen = attemptResult?.is_window_open ?? true;
   const windowClosesAtMs = attemptResult?.window_closes_at_ms ?? null;
+  // Local "has played before" hint — useful as telemetry context on the
+  // attempt POST, but NEVER used to drive the practice-label display.
+  // The server's window math is authoritative: within-window replays
+  // are live attempts, not practice. Driving the chip off the local
+  // marker would falsely label every replay as practice during the
+  // brief window between sheet mount and the attempt response.
   const [localIsPractice] = useState(() => hasAttemptedChallenge(challengeCtx.challengeId));
-  const isPractice = attemptResult?.is_practice ?? localIsPractice;
+  const isPractice = attemptResult?.is_practice === true;
 
   const state: ComparisonState =
     userHasWon ? "WIN"
