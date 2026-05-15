@@ -118,12 +118,22 @@ function AppInner() {
   const [showProfile, setShowProfile] = useState(() => params?.get("profile") === "1");
 
   // Strip handoff params after mount so refresh doesn't re-fire them.
+  // SURGICAL: remove ONLY the handoff params (signin, play, profile).
+  // Preserve everything else — particularly `?debug=1` and `?skip_ftue=1`
+  // which testers need to survive across mount cycles. Replacing the
+  // whole search string with empty (the previous behavior) was nuking
+  // `?debug=1` whenever the user arrived via the chooser's `?play=1`,
+  // which is exactly when QA most wants the debug panel visible.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const search = window.location.search;
-    if (search.includes("signin=1") || search.includes("play=1") || search.includes("profile=1")) {
-      window.history.replaceState({}, "", window.location.pathname);
-    }
+    const sp = new URLSearchParams(window.location.search);
+    const HANDOFF = ["signin", "play", "profile"];
+    let dirty = false;
+    for (const k of HANDOFF) if (sp.has(k)) { sp.delete(k); dirty = true; }
+    if (!dirty) return;
+    const remaining = sp.toString();
+    const next = remaining ? `${window.location.pathname}?${remaining}` : window.location.pathname;
+    window.history.replaceState({}, "", next);
   }, []);
 
   // QA shortcut: ?skip_ftue=1 marks the basketball FTUE done in
