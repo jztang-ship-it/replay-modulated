@@ -61,6 +61,16 @@ function AppInner() {
   const [showFtueIntroFollowup] = useState(() => {
     if (typeof window === "undefined") return false;
     try {
+      // QA bypass — same params as useFTUE. When a tester is on
+      // `?skipFtue=1` / `?skip_ftue=1` / `?debug=1`, suppress the
+      // followup prompt this session too. We deliberately don't
+      // touch FTUE_INTRO_FOLLOWUP_KEY here — the persistence happens
+      // in the QA-shortcut effect below so all writes live in one
+      // place.
+      const sp = new URLSearchParams(window.location.search);
+      if (sp.get("skipFtue") === "1" || sp.get("skip_ftue") === "1" || sp.get("debug") === "1") {
+        return false;
+      }
       // Challenge acceptors don't see the followup THIS session — but leave
       // the seen flag alone so a fresh non-challenge hand later still fires it.
       if (challengeIdFromUrl) return false;
@@ -119,11 +129,12 @@ function AppInner() {
 
   // Strip handoff params after mount so refresh doesn't re-fire them.
   // SURGICAL: remove ONLY the handoff params (signin, play, profile).
-  // Preserve everything else — particularly `?debug=1` and `?skip_ftue=1`
-  // which testers need to survive across mount cycles. Replacing the
-  // whole search string with empty (the previous behavior) was nuking
-  // `?debug=1` whenever the user arrived via the chooser's `?play=1`,
-  // which is exactly when QA most wants the debug panel visible.
+  // Preserve everything else — particularly `?debug=1`, `?skipFtue=1`,
+  // `?skip_ftue=1`, and `?ftue=1` which testers need to survive across
+  // mount cycles. Replacing the whole search string with empty (the
+  // previous behavior) was nuking `?debug=1` whenever the user arrived
+  // via the chooser's `?play=1`, which is exactly when QA most wants
+  // the debug panel visible.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const sp = new URLSearchParams(window.location.search);
@@ -136,18 +147,32 @@ function AppInner() {
     window.history.replaceState({}, "", next);
   }, []);
 
-  // QA shortcut: ?skip_ftue=1 marks the basketball FTUE done in
-  // localStorage, dropping straight into normal play on this load.
-  // Persistent across reloads on the same browser (no re-stripping
-  // logic — the storage flag stays). Use ?ftue=1 to force FTUE back.
+  // QA shortcut: any of `?skipFtue=1`, `?skip_ftue=1`, or `?debug=1`
+  // marks the basketball FTUE flags done in localStorage, dropping
+  // straight into normal play on this load and on every subsequent
+  // reload from the same browser — even without the param. Bypasses
+  // both the main FTUE flow (CoachLayer overlays, tutorial state,
+  // payout adjustments via useFTUE) AND the "Look who decided to
+  // play for real" intro followup. `?debug=1` is bundled because
+  // testers always want the debug panel + FTUE-off together.
+  //
+  // Use `?ftue=1` to reset: clears both flags so the next load runs
+  // the full FTUE again. Symmetric with the bypass.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const sp = new URLSearchParams(window.location.search);
-    if (sp.get("skip_ftue") === "1") {
-      try { localStorage.setItem(`replaymod_ftue_${SPORT}`, "1"); } catch { /* ignore */ }
+    const skip = sp.get("skipFtue") === "1" || sp.get("skip_ftue") === "1" || sp.get("debug") === "1";
+    if (skip) {
+      try {
+        localStorage.setItem(`replaymod_ftue_${SPORT}`, "1");
+        localStorage.setItem(FTUE_INTRO_FOLLOWUP_KEY, "1");
+      } catch { /* ignore */ }
     }
     if (sp.get("ftue") === "1") {
-      try { localStorage.removeItem(`replaymod_ftue_${SPORT}`); } catch { /* ignore */ }
+      try {
+        localStorage.removeItem(`replaymod_ftue_${SPORT}`);
+        localStorage.removeItem(FTUE_INTRO_FOLLOWUP_KEY);
+      } catch { /* ignore */ }
     }
   }, []);
 
