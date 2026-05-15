@@ -170,6 +170,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "5239": { apiFootballId: 2700, local: true, processed: true },
   // Vahid Amiri (Iran)
   "5241": { apiFootballId: 2692, local: true, processed: true },
+  // Guillermo Varela Olivera (Uruguay)
+  "5264": { apiFootballId: 333516, local: true, processed: true },
   // Mateo Kovačić (Croatia)
   "5456": { apiFootballId: 429600, local: true, processed: true },
   // Luka Modrić (Croatia)
@@ -330,6 +332,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "11174": { apiFootballId: 386, local: true, processed: true },
   // Stephen Antunes Eustáquio (Canada)
   "11187": { apiFootballId: 35570, local: true, processed: true },
+  // Youssouf Fofana (France)
+  "11990": { apiFootballId: 193037, local: true, processed: true },
   // David Raum (Germany)
   "12034": { apiFootballId: 25158, local: true, processed: true },
   // João Félix Sequeira (Portugal)
