@@ -126,6 +126,21 @@ function AppInner() {
     }
   }, []);
 
+  // QA shortcut: ?skip_ftue=1 marks the basketball FTUE done in
+  // localStorage, dropping straight into normal play on this load.
+  // Persistent across reloads on the same browser (no re-stripping
+  // logic — the storage flag stays). Use ?ftue=1 to force FTUE back.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get("skip_ftue") === "1") {
+      try { localStorage.setItem(`replaymod_ftue_${SPORT}`, "1"); } catch { /* ignore */ }
+    }
+    if (sp.get("ftue") === "1") {
+      try { localStorage.removeItem(`replaymod_ftue_${SPORT}`); } catch { /* ignore */ }
+    }
+  }, []);
+
   const handlePlay = () => {
     try { localStorage.setItem(SKIP_LANDING_KEY, "1"); } catch { /* ignore */ }
     setView("game");

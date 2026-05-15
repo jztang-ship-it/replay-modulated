@@ -37,14 +37,19 @@ interface ApiLog {
   ts: number;
 }
 
-export function ChallengeDebugPanel({ challengeId, userId, userName }: Props) {
+export function ChallengeDebugPanel({ challengeId: challengeIdFromProps, userId, userName }: Props) {
+  // Local override so QA can paste an arbitrary challenge id and refetch.
+  // Falls through to the prop-resolved id when the input is blank.
+  const [manualId, setManualId] = useState("");
+  const challengeId = manualId.trim() || challengeIdFromProps;
+
   const [stats, setStats] = useState<ChallengeStats | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
   const [lastApi, setLastApi] = useState<ApiLog | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const refresh = useCallback(async () => {
-    if (!challengeId) { setStats(null); return; }
+    if (!challengeId) { setStats(null); setStatsError("No challenge id in scope. Paste one below to fetch."); return; }
     setRefreshing(true);
     setStatsError(null);
     const t0 = performance.now();
@@ -118,18 +123,39 @@ export function ChallengeDebugPanel({ challengeId, userId, userName }: Props) {
         <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1.5, color: "#FFB14A" }}>DEBUG</span>
         <button
           onClick={() => void refresh()}
-          disabled={refreshing || !challengeId}
+          disabled={refreshing}
           style={{
             background: "rgba(255,255,255,0.06)",
             border: "1px solid rgba(255,255,255,0.15)",
             borderRadius: 4, padding: "1px 6px",
             color: "rgba(255,255,255,0.7)", fontSize: 11,
-            cursor: refreshing || !challengeId ? "default" : "pointer",
+            cursor: refreshing ? "default" : "pointer",
             fontFamily: "inherit",
           }}
           title="Refetch GET /api/challenge/:id"
         >↻{refreshing ? " …" : ""}</button>
       </div>
+
+      {/* Manual challenge-id override — paste a uuid to query a specific
+          challenge without leaving the current route. Clearing the field
+          falls back to the prop-resolved id (ctx → URL → localStorage). */}
+      <input
+        type="text"
+        value={manualId}
+        onChange={(e) => setManualId(e.target.value)}
+        placeholder={challengeIdFromProps ? `using ${challengeIdFromProps.slice(0, 8)}…` : "paste challenge_id (uuid)"}
+        spellCheck={false}
+        autoComplete="off"
+        style={{
+          width: "100%", marginTop: 6, marginBottom: 2,
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          borderRadius: 4, padding: "3px 6px",
+          color: "#EAF0FF", fontSize: 10,
+          fontFamily: "inherit",
+          boxSizing: "border-box",
+        }}
+      />
 
       {challengeId && (
         <>
