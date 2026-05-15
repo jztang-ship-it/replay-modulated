@@ -1,9 +1,11 @@
 // shared/components/ChallengeComparisonScreen.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
 import { getPlayerUid, getNickname } from "@shared/utils/playerIdentity";
 import { markChallengeAttempted } from "@shared/hooks/useChallengeShare";
 import { track } from "@shared/analytics/analytics";
+import { isRealName } from "@shared/utils/isRealName";
+import { chadTrashTalk, trashTalkBucket } from "@shared/commentary/chad";
 
 interface AttemptResult {
   attempt_id: string;
@@ -20,6 +22,9 @@ interface Props {
   myScore: number;
   myWinTier: string;
   sport: string;
+  /** Tactical hand line from existing commentary system — riffs on holds,
+   *  redraws, anchor card, badges that fired. Rendered above the trash talk. */
+  tacticalLine?: string | null;
   onSendItBack: () => void;
   onPlayFresh: () => void;
 }
@@ -34,12 +39,22 @@ function challengeStatsLine(count: number, winners: number, best: number | null,
   return `${count} attempts · best ${best?.toFixed(1) ?? "?"} FP by ${bestName ?? "someone"}`;
 }
 
-export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sport, onSendItBack, onPlayFresh }: Props) {
+export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sport, tacticalLine, onSendItBack, onPlayFresh }: Props) {
   const [attemptResult, setAttemptResult] = useState<AttemptResult | null>(null);
   const [submitting, setSubmitting] = useState(true);
   const isNewUser = typeof window !== "undefined" && localStorage.getItem(`replaymod_ftue_${sport}`) !== "1";
 
   const isWinner = myScore > challengeCtx.targetScore;
+
+  // Outcome-bucket trash talk (Chad line 2). Computed once at mount so the
+  // line doesn't reshuffle on every render. Name routes to the unnamed bank
+  // when the challenger name fails isRealName (generic placeholder).
+  const trashTalk = useMemo(() => {
+    const delta = myScore - challengeCtx.targetScore;
+    const bucket = trashTalkBucket(delta);
+    const displayName = isRealName(challengeCtx.challengerName) ? challengeCtx.challengerName : null;
+    return chadTrashTalk(bucket, displayName, delta);
+  }, [myScore, challengeCtx.targetScore, challengeCtx.challengerName]);
 
   // Primary/secondary CTA labels — derived from (new vs existing) × (won vs lost)
   const ctas = (() => {
@@ -139,6 +154,21 @@ export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sp
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 4 }}>{challengeCtx.challengerName}</div>
           <div style={{ fontSize: 48, fontWeight: 950, color: isWinner ? "#EAF0FF" : "#FFB14A", fontStyle: "italic" }}>{challengeCtx.targetScore.toFixed(1)}</div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>FP</div>
+        </div>
+      </div>
+
+      {/* Chad two-line: tactical (line 1) + outcome trash talk (line 2). */}
+      <div style={{
+        maxWidth: 420, textAlign: "center", marginBottom: 24,
+        display: "flex", flexDirection: "column", gap: 8,
+      }}>
+        {tacticalLine && (
+          <div style={{ fontSize: 15, color: "rgba(255,255,255,0.78)", lineHeight: 1.4 }}>
+            {tacticalLine}
+          </div>
+        )}
+        <div style={{ fontSize: 15, fontWeight: 700, color: "#FFB14A", lineHeight: 1.4 }}>
+          {trashTalk}
         </div>
       </div>
 

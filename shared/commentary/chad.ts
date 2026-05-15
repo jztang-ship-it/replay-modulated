@@ -105,6 +105,142 @@ const DEV_4THWALL: string[] = [
   "Real talk for a second. This is the team, not Chad. You're one of the first hundred-ish people playing the full loop. We're grateful, nervous, and fixing things as we watch. Stay if the game's good, leave if it isn't. Either way — thanks for the data and the time.",
 ];
 
+// ── Challenge comparison: outcome-bucket trash talk (line 2) ──────────────
+//
+// Rendered on the comparison screen *underneath* the existing tactical hand
+// commentary. Always about the play/result, never about the player as a
+// person. Two banks per bucket: NAMED (real challenger name available) and
+// UNNAMED (anonymous / generic placeholder).
+//
+// Buckets selected by signed delta = mySCore − targetScore:
+//   |delta| ≤ 1            → photo_finish
+//   1 < delta < 15         → win_narrow
+//   delta ≥ 15             → win_big
+//   −15 < delta < −1       → loss_narrow
+//   delta ≤ −15            → loss_big
+//
+// {name} and {delta} are template tokens substituted at output time.
+
+const TRASH_WIN_BIG_NAMED: string[] = [
+  "You buried {name} by {delta}. Send the receipt.",
+  "{name} got cooked. Don't let them forget it.",
+  "{delta} FP daylight on {name}. Run it back and twist the knife.",
+  "You beat {name} by {delta}. That's not a win, that's a statement.",
+  "Embarrassed {name} by {delta}. Send it before you change your mind.",
+];
+const TRASH_WIN_BIG_UNNAMED: string[] = [
+  "Buried them by {delta}. Send the receipt.",
+  "They got cooked. Don't let it slide.",
+  "{delta} FP of daylight. Make them watch.",
+  "Cleared the bar by {delta}. That's a statement.",
+  "Beat them by {delta}. Run it back before they recover.",
+];
+
+const TRASH_WIN_NARROW_NAMED: string[] = [
+  "By {delta}. {name}'s gonna want a rematch.",
+  "Stole it. Send it before {name} sees this.",
+  "{delta} FP. {name} won't sleep on that one.",
+  "Slim margin on {name}. They'll be back — get ahead of it.",
+  "Edged {name} by {delta}. Run it before they cool off.",
+];
+const TRASH_WIN_NARROW_UNNAMED: string[] = [
+  "By {delta}. They'll want a rematch.",
+  "Stole it by {delta}. Send it before they see this.",
+  "Edged them by {delta}. Run it before they recover.",
+  "{delta} FP. They won't sleep on it.",
+  "Squeaked through. Lock it in and send it back.",
+];
+
+const TRASH_LOSS_BIG_NAMED: string[] = [
+  "{name} had your number. Build your own and call them out.",
+  "{name} got you by {delta}. Run a fresh hand and pick a new fight.",
+  "Rough one against {name}. Reset the board.",
+  "{name} took it by {delta}. Get cleaner cards and try again.",
+  "Off night. {name}'s gonna gloat — beat someone else.",
+];
+const TRASH_LOSS_BIG_UNNAMED: string[] = [
+  "Got cooked by {delta}. Run a fresh one.",
+  "Rough hand. Reset the board.",
+  "Down {delta}. Try someone else's slate.",
+  "Off night. Build your own and pick a new fight.",
+  "Lost by {delta}. Walk it off — fresh hand.",
+];
+
+const TRASH_LOSS_NARROW_NAMED: string[] = [
+  "By {delta}. Right there.",
+  "So close. {name} knows they got lucky.",
+  "{delta} FP shy of {name}. That's gonna bug you all night.",
+  "Off by {delta}. {name}'s gonna remember that — get them back later.",
+  "{name} squeaked by you. Built different next time.",
+];
+const TRASH_LOSS_NARROW_UNNAMED: string[] = [
+  "By {delta}. Right there.",
+  "{delta} FP short. That'll bug you.",
+  "So close. They got lucky.",
+  "Off by {delta}. Get clean cards and run it back.",
+  "Shy by {delta}. The slate had it — you didn't.",
+];
+
+const TRASH_PHOTO_FINISH_NAMED: string[] = [
+  "Tied with {name}. Run another to break it.",
+  "Photo finish. Settle it on a fresh slate.",
+  "Coin flip. {name} won't be ready for round two.",
+  "{delta} FP. Same slate, same energy needed for the rematch.",
+  "Dead heat against {name}. The next hand decides it.",
+];
+const TRASH_PHOTO_FINISH_UNNAMED: string[] = [
+  "Photo finish. Settle it on a fresh slate.",
+  "Coin flip. Run another to break it.",
+  "Dead heat. Next hand decides it.",
+  "Within {delta} FP. The slate had room — barely.",
+  "Razor margin. One more hand.",
+];
+
+export type TrashTalkBucket =
+  | "win_big" | "win_narrow"
+  | "loss_big" | "loss_narrow"
+  | "photo_finish";
+
+const TRASH_NAMED: Record<TrashTalkBucket, string[]> = {
+  win_big: TRASH_WIN_BIG_NAMED,
+  win_narrow: TRASH_WIN_NARROW_NAMED,
+  loss_big: TRASH_LOSS_BIG_NAMED,
+  loss_narrow: TRASH_LOSS_NARROW_NAMED,
+  photo_finish: TRASH_PHOTO_FINISH_NAMED,
+};
+const TRASH_UNNAMED: Record<TrashTalkBucket, string[]> = {
+  win_big: TRASH_WIN_BIG_UNNAMED,
+  win_narrow: TRASH_WIN_NARROW_UNNAMED,
+  loss_big: TRASH_LOSS_BIG_UNNAMED,
+  loss_narrow: TRASH_LOSS_NARROW_UNNAMED,
+  photo_finish: TRASH_PHOTO_FINISH_UNNAMED,
+};
+
+/** Pick the outcome bucket from a signed FP delta (my score − target). */
+export function trashTalkBucket(delta: number): TrashTalkBucket {
+  if (Math.abs(delta) <= 1) return "photo_finish";
+  if (delta >= 15) return "win_big";
+  if (delta > 1) return "win_narrow";
+  if (delta <= -15) return "loss_big";
+  return "loss_narrow";
+}
+
+/**
+ * Outcome-specific trash-talk line for the challenge comparison screen.
+ * Pass `name = null` (or any non-real-name) to use the UNNAMED bank.
+ */
+export function chadTrashTalk(bucket: TrashTalkBucket, name: string | null, delta: number): string {
+  const bank = name ? TRASH_NAMED[bucket] : TRASH_UNNAMED[bucket];
+  const line = pick(bank);
+  const d = Math.abs(delta).toFixed(1);
+  return line.replace(/{name}/g, name ?? "").replace(/{delta}/g, d);
+}
+
+/** Test/preview accessor — returns the raw bank lines for a bucket. */
+export function chadTrashTalkBank(bucket: TrashTalkBucket, named: boolean): string[] {
+  return [...(named ? TRASH_NAMED[bucket] : TRASH_UNNAMED[bucket])];
+}
+
 // ── Public API ─────────────────────────────────────────────────────────────
 
 export type ChadTopic =

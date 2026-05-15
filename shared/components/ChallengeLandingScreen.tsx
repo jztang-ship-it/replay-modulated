@@ -4,6 +4,7 @@ import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
 import type { GeneratedCard } from "@shared/types/index";
 import { track } from "@shared/analytics/analytics";
 import { hasAttemptedChallenge } from "@shared/hooks/useChallengeShare";
+import { isRealName } from "@shared/utils/isRealName";
 
 interface ChallengeData {
   challenge_id: string;
@@ -104,17 +105,33 @@ export function ChallengeLandingScreen({ challengeId, sport, deserializeRoster, 
       {loading && <div style={{ textAlign: "center", opacity: 0.5, marginTop: 80 }}>Loading challenge…</div>}
       {error && <div style={{ textAlign: "center", color: "#EF4444", marginTop: 80 }}>{error}</div>}
 
-      {data && (
+      {data && (() => {
+        const namedChallenger = isRealName(data.challenger_name);
+        return (
         <>
-          {/* Challenger + score */}
-          <div style={{ marginBottom: 8, fontSize: 13, color: "rgba(255,255,255,0.5)", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>
-            Challenge from
-          </div>
-          <div style={{ fontSize: 28, fontWeight: 900, color: "#EAF0FF", marginBottom: 4 }}>{data.challenger_name}</div>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 6 }}>
-            <span style={{ fontSize: 56, fontWeight: 950, color: "#FFB14A", lineHeight: 1, fontStyle: "italic" }}>{data.target_score.toFixed(1)}</span>
-            <span style={{ fontSize: 20, color: "rgba(255,255,255,0.4)", fontWeight: 700 }}>FP</span>
-          </div>
+          {/* Challenger + score. Named: "Challenge from {name}" → score.
+              Unnamed: score-first, name-less prompt. */}
+          {namedChallenger ? (
+            <>
+              <div style={{ marginBottom: 8, fontSize: 13, color: "rgba(255,255,255,0.5)", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>
+                Challenge from
+              </div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: "#EAF0FF", marginBottom: 4 }}>{data.challenger_name}</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 6 }}>
+                <span style={{ fontSize: 56, fontWeight: 950, color: "#FFB14A", lineHeight: 1, fontStyle: "italic" }}>{data.target_score.toFixed(1)}</span>
+                <span style={{ fontSize: 20, color: "rgba(255,255,255,0.4)", fontWeight: 700 }}>FP</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 8 }}>
+                <span style={{ fontSize: 64, fontWeight: 950, color: "#FFB14A", lineHeight: 1, fontStyle: "italic" }}>{data.target_score.toFixed(1)}</span>
+                <span style={{ fontSize: 22, color: "rgba(255,255,255,0.4)", fontWeight: 700 }}>FP</span>
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#EAF0FF", marginBottom: 4 }}>on this hand.</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "rgba(255,255,255,0.7)", marginBottom: 6 }}>Think you can beat it?</div>
+            </>
+          )}
           <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", marginBottom: 24 }}>
             {challengeStatsLine(data)}
           </div>
@@ -150,7 +167,8 @@ export function ChallengeLandingScreen({ challengeId, sport, deserializeRoster, 
             >Accept Challenge</button>
           )}
         </>
-      )}
+        );
+      })()}
     </div>
   );
 }

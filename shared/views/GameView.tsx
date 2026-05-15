@@ -129,6 +129,7 @@ const ChallengeComparisonScreen = lazy(() =>
   import("@shared/components/ChallengeComparisonScreen").then(m => ({ default: m.ChallengeComparisonScreen }))
 );
 import { chadMessage } from "@shared/commentary/chad";
+import { isRealName } from "@shared/utils/isRealName";
 import { useAuth } from "@shared/auth/useAuth";
 import { listMessages } from "@shared/inbox/inbox";
 import { ensureLoaded } from "@shared/engines/dataEngine";
@@ -727,13 +728,21 @@ export function GameView({ adapter, challengeCtx }: Props) {
     if (sendItBackInFlightRef.current) return;
     sendItBackInFlightRef.current = true;
     try {
+      // Capture a real-looking name once per user, store in localStorage.
+      // The auto-generated nickname is a placeholder — we re-prompt when it
+      // would fail isRealName (Player_*, Guest_*, hex, digit-only, <2 chars).
+      // Per spec: soft re-prompt on first fail, then accept whatever they
+      // type to keep friction at zero.
       let nickname = getNickname();
-      if (!nickname) {
-        const entered = typeof window !== "undefined"
-          ? window.prompt("Your name for the return challenge?")
-          : null;
-        if (!entered || !entered.trim()) { setShowChallengeComparison(false); return; }
-        nickname = entered.trim().slice(0, 32);
+      if (typeof window !== "undefined" && !isRealName(nickname)) {
+        const first = window.prompt("What should we call you?");
+        if (!first || !first.trim()) { setShowChallengeComparison(false); return; }
+        let candidate = first.trim().slice(0, 32);
+        if (!isRealName(candidate)) {
+          const second = window.prompt("Try something we can actually call you.");
+          if (second && second.trim()) candidate = second.trim().slice(0, 32);
+        }
+        nickname = candidate;
         setNickname(nickname);
       }
       setShowChallengeComparison(false);
@@ -2501,6 +2510,7 @@ export function GameView({ adapter, challengeCtx }: Props) {
             myScore={rosterRef.current.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0)}
             myWinTier={winTier ?? "BUST"}
             sport={sportKey}
+            tacticalLine={postRevealCopyRef.current?.primary ?? null}
             onSendItBack={handleSendItBack}
             onPlayFresh={() => { setShowChallengeComparison(false); handleButtonClick(); }}
           />

@@ -19,6 +19,19 @@ function formatStatLine(card: any): string {
   return `$${card.salary} · ${card.position}`;
 }
 
+// Inline copy of shared/utils/isRealName — api/ runs as serverless functions
+// and does not bundle from shared/. Keep in sync with that module.
+function isRealName(name: string | null | undefined): boolean {
+  if (!name) return false;
+  const trimmed = String(name).trim();
+  if (trimmed.length < 2) return false;
+  if (/^\d+$/.test(trimmed)) return false;
+  if (/^(player|guest|user)[_\s-]?\d*$/i.test(trimmed)) return false;
+  if (/^(player|guest|user)_/i.test(trimmed)) return false;
+  if (/[0-9a-f]{6,}/i.test(trimmed)) return false;
+  return true;
+}
+
 // Layout helper: splits rosterSize cards into rows per layout
 function getRows(cards: any[], layout: string): any[][] {
   if (layout === "3+2") return [cards.slice(0, 3), cards.slice(3, 5)];
@@ -43,7 +56,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const cards: any[] = (challenge.initial_roster as any)?.cards ?? [];
   const targetFp = Number(challenge.target_fp).toFixed(1);
   const challengerName = challenge.challenger_name ?? "Anonymous";
-  const headline = challenge.share_headline || `${targetFp} FP. Same slate. Beat them.`;
+  const namedChallenger = isRealName(challengerName);
+  // Named: keep stored headline. Unnamed: use a name-less variant so the
+  // card doesn't read "Player_8923 scored…" anywhere.
+  const headline = namedChallenger
+    ? (challenge.share_headline || `${targetFp} FP. Same slate. Beat them.`)
+    : `${targetFp} FP. Same slate. Beat it.`;
   const rows = getRows(cards, "3+2");
 
   // Build JSX element for satori (must be plain object style — no imports)
@@ -70,13 +88,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             ],
           },
         },
-        // Challenger name + score
+        // Challenger name + score. Drop the name block entirely for
+        // generic/placeholder names so the share image doesn't read
+        // "Player_8923" prominently. Score-first treatment in that case.
         {
           type: "div",
           props: {
             style: { display: "flex", flexDirection: "column", gap: "16px", marginBottom: "56px" },
             children: [
-              { type: "div", props: { style: { fontSize: "52px", fontWeight: 900, color: "#EAF0FF" }, children: challengerName } },
+              ...(namedChallenger
+                ? [{ type: "div", props: { style: { fontSize: "52px", fontWeight: 900, color: "#EAF0FF" }, children: challengerName } }]
+                : []),
               {
                 type: "div",
                 props: {
