@@ -216,6 +216,70 @@ const TRASH_UNNAMED: Record<TrashTalkBucket, string[]> = {
   photo_finish: TRASH_PHOTO_FINISH_UNNAMED,
 };
 
+// ── Challenge comparison: tactical line 1 ─────────────────────────────────
+//
+// When the recipient finishes a challenge attempt, Line 1 should observe
+// the play AS A CHALLENGE — referencing the target and how their hold /
+// redraw decisions played against it. Distinct from the generic post-hand
+// tactical commentary (selectCommentary) which reads as a standalone hand.
+
+export interface ChadChallengeTacticalArgs {
+  /** Highest-salary held card from the recipient's played hand, or null if
+   *  they held nothing. `delivered` = anchor.actualFp >= anchor.projectedFp. */
+  heldAnchor: { name: string; delivered: boolean } | null;
+  /** Signed FP delta (my score − target). */
+  delta: number;
+  /** Challenger's target score. */
+  target: number;
+  /** Challenger's name, or null when the captured name fails isRealName. */
+  challengerName: string | null;
+}
+
+export function chadChallengeTactical(args: ChadChallengeTacticalArgs): string {
+  const t = args.target.toFixed(1);
+  const possessive = args.challengerName ? `${args.challengerName}'s ` : "their ";
+  const a = args.heldAnchor;
+  const d = args.delta;
+
+  if (d >= 1) {
+    if (a?.delivered) return pick([
+      `Held ${a.name} for the anchor and ${a.name} delivered. Cleared ${possessive}${t}.`,
+      `${a.name} came through. Redraws didn't blink. Past ${possessive}${t}.`,
+      `Anchor on ${a.name} paid out, redraws stayed disciplined. Above ${possessive}${t}.`,
+    ]);
+    if (a) return pick([
+      `${a.name} didn't pop but the redraws found the gap. Cleared ${possessive}${t}.`,
+      `Held ${a.name} — quiet anchor, redraws picked up the slack. Above ${possessive}${t}.`,
+      `Anchor was muted; redraws ran the math. Past ${possessive}${t}.`,
+    ]);
+    return pick([
+      `No anchor — pure redraw run. Cleared ${possessive}${t}.`,
+      `Built from scratch and cleared ${possessive}${t}. Bold path worked.`,
+    ]);
+  }
+  if (d <= -1) {
+    if (a?.delivered) return pick([
+      `Held ${a.name} and ${a.name} did their part. Redraws were the gap to ${possessive}${t}.`,
+      `Anchor on ${a.name} cashed. Redraws didn't keep pace with ${possessive}${t}.`,
+      `${a.name} delivered; the rest of the run stalled short of ${possessive}${t}.`,
+    ]);
+    if (a) return pick([
+      `Held ${a.name} — solid call, but the redraws didn't keep pace with ${possessive}${t}.`,
+      `${a.name} didn't show up; redraws had to carry too much. ${possessive}${t} held.`,
+      `Anchor on ${a.name} sat quiet, redraws couldn't close to ${possessive}${t}.`,
+    ]);
+    return pick([
+      `No anchor to lean on — redraws came up short of ${possessive}${t}.`,
+      `Skipped the hold; redraws couldn't carry the load to ${possessive}${t}.`,
+    ]);
+  }
+  if (a) return pick([
+    `Held ${a.name}, ran the math the same way they did. Decimals from ${possessive}${t}.`,
+    `Anchor on ${a.name}, redraws stayed in line. Decimals from ${possessive}${t}.`,
+  ]);
+  return `Same starting cards, parallel decisions. Decimals from ${possessive}${t}.`;
+}
+
 /** Pick the outcome bucket from a signed FP delta (my score − target). */
 export function trashTalkBucket(delta: number): TrashTalkBucket {
   if (Math.abs(delta) <= 1) return "photo_finish";

@@ -18,12 +18,15 @@ interface Props {
   winTiersMap: WinTierMap;
   serializeRoster: (cards: GeneratedCard[]) => Record<string, unknown>;
   triggerResult: TriggerResult;
+  /** Caption stored on the challenge (big-game or season-reel copy).
+   *  Rendered on the landing page and the share-card PNG. */
+  shareHeadline?: string;
   onDismiss?: () => void;
 }
 
 export function ChallengeSharePrompt({
   sport, season, totalFp, winTier, roster, initialRoster,
-  badges, winTiersMap, serializeRoster, triggerResult, onDismiss,
+  badges, winTiersMap, serializeRoster, triggerResult, shareHeadline, onDismiss,
 }: Props) {
   const [copied, setCopied] = useState(false);
   const { isCreating, challengeId, error, createChallenge, shareChallenge } = useChallengeShare(sport);
@@ -39,6 +42,7 @@ export function ChallengeSharePrompt({
         sport, season, totalFp, winTier, roster, initialRoster, badges, winTiersMap,
         challengerName: getNickname() || "Anonymous",
         serializeRoster,
+        shareHeadline,
       });
     }
     if (!cid) return;

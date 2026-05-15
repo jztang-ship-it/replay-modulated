@@ -29,6 +29,9 @@ function isRealName(name: string | null | undefined): boolean {
   if (/^(player|guest|user)[_\s-]?\d*$/i.test(trimmed)) return false;
   if (/^(player|guest|user)_/i.test(trimmed)) return false;
   if (/[0-9a-f]{6,}/i.test(trimmed)) return false;
+  if (/_\d+$/.test(trimmed)) return false;
+  const lastUnderscore = trimmed.lastIndexOf("_");
+  if (lastUnderscore > 0 && /^\d+$/.test(trimmed.slice(lastUnderscore + 1))) return false;
   return true;
 }
 

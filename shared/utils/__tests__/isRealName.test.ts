@@ -42,4 +42,21 @@ describe("isRealName", () => {
     expect(isRealName("Mike22")).toBe(true);
     expect(isRealName("J23")).toBe(true);
   });
+
+  it("rejects auto-generated nickname patterns (camelcase_digits)", () => {
+    expect(isRealName("CrimsonSwish_8753")).toBe(false);
+    expect(isRealName("ShadowHoops_1234")).toBe(false);
+    expect(isRealName("BlueHawk_1234")).toBe(false);
+    expect(isRealName("IceFire_42")).toBe(false);
+  });
+
+  it("rejects names where everything after final underscore is numeric", () => {
+    expect(isRealName("Coach_Mike_42")).toBe(false);
+    expect(isRealName("a_b_c_99")).toBe(false);
+  });
+
+  it("still accepts realistic names with underscores but no trailing digits", () => {
+    expect(isRealName("Coach_Mike")).toBe(true);
+    expect(isRealName("DJ_Pat")).toBe(true);
+  });
 });

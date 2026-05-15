@@ -132,7 +132,15 @@ export function ChallengeLandingScreen({ challengeId, sport, deserializeRoster, 
               <div style={{ fontSize: 22, fontWeight: 800, color: "rgba(255,255,255,0.7)", marginBottom: 6 }}>Think you can beat it?</div>
             </>
           )}
-          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", marginBottom: 24 }}>
+          {data.share_headline && (
+            <div style={{
+              fontSize: 14, fontStyle: "italic", color: "rgba(255,255,255,0.7)",
+              marginBottom: 10, lineHeight: 1.4,
+            }}>
+              — {data.share_headline}
+            </div>
+          )}
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", marginBottom: 24 }}>
             {challengeStatsLine(data)}
           </div>
 

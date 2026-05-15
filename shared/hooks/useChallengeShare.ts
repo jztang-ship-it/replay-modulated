@@ -28,6 +28,10 @@ export interface CreateChallengeArgs {
   challengerName: string;
   winTiersMap: WinTierMap;
   serializeRoster: (cards: GeneratedCard[]) => Record<string, unknown>;
+  /** Optional caption override stored in `share_headline`. When provided,
+   *  used instead of evaluateTrigger().headline so big-game / season-reel
+   *  copy lands on the landing page + share card. */
+  shareHeadline?: string;
 }
 
 const CHALLENGE_ATTEMPTED_KEY = "rm_challenge_attempted";
@@ -73,7 +77,7 @@ export function useChallengeShare(sportKey: string) {
         initial_roster: args.serializeRoster(args.initialRoster),
         challenger_name: args.challengerName,
         trigger_type: trigger.trigger,
-        share_headline: trigger.headline,
+        share_headline: args.shareHeadline ?? trigger.headline,
       };
       const resp = await fetch("/api/challenge/create", {
         method: "POST",

@@ -8,6 +8,7 @@ import { tierFromSalary, DEFAULT_ECONOMY_CONFIG, type EconomyConfig } from "../e
 import { tierRank } from "@shared/theme";
 import topGames from "../../public/data/topGames.json";
 import careerHighs from "../../public/data/careerHighs.json";
+import seasonIntros from "../data/seasonIntros.json";
 // Side-effect import: registers the basketball sound pack with the shared
 // soundPackLoader at module-load time. Without this, basketball plays silently.
 import "../utils/soundPack";
@@ -226,6 +227,31 @@ export class SportAdapter {
     const cards = (snapshot as any).cards;
     if (!Array.isArray(cards) || cards.length !== this.rosterSize) return false;
     return cards.every((c: any) => c.basePlayerId && c.name && c.tier && c.salary !== undefined);
+  }
+
+  /** Build the caption stored as `share_headline` on a created challenge.
+   *  Big-game badge → big-game line; else → season-reel copy from
+   *  seasonIntros (stripped of the "Today we're going back to…/Good luck."
+   *  scaffolding so it reads as a caption, not a greeting). */
+  getShareHeadline(args: {
+    roster: import("@shared/types/index").GeneratedCard[];
+    season: string;
+  }): string {
+    const RECORD_BADGE_IDS = ["TOP_GAME", "CAREER_HIGH", "NBA_RECORD", "SEASON_RECORD", "PB"];
+    const hasBigGame = args.roster.some((c: any) =>
+      (c.achievements ?? []).some((b: any) =>
+        RECORD_BADGE_IDS.some(rid => String(b.id ?? "").includes(rid))
+      )
+    );
+    if (hasBigGame) return "Pulled a legendary game on this slate. Beat it.";
+    const intro = (seasonIntros as Record<string, string>)[args.season];
+    if (intro) {
+      return intro
+        .replace(/^Today we're going back to\s+/, "")
+        .replace(/\s*Good luck\.?\s*$/, "")
+        .trim();
+    }
+    return "Same starting cards. Your decisions.";
   }
 
   getComparisonValue(result: import("@shared/adapters/challengeTypes").HandResult): number {

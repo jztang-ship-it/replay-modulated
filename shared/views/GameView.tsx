@@ -552,12 +552,13 @@ export function GameView({ adapter, challengeCtx }: Props) {
     if (challengeIntroShownRef.current) return;
     if (gameState !== "HOLD") return;
     challengeIntroShownRef.current = true;
-    setFtueCommentaryOverride({
-      parts: [
-        `${challengeCtx.challengerName} put up ${challengeCtx.targetScore.toFixed(1)} FP. Hold what you trust, redraw the rest.`,
-      ],
-      sticky: true,
-    });
+    // Real challenger name → name-prefixed line. Generic placeholder
+    // (e.g. CrimsonSwish_8753) → drop the name and lead with the FP target.
+    const target = challengeCtx.targetScore.toFixed(1);
+    const introLine = isRealName(challengeCtx.challengerName)
+      ? `${challengeCtx.challengerName} put up ${target} FP. Hold what you trust, redraw the rest.`
+      : `${target} FP on this hand. Hold what you trust, redraw the rest.`;
+    setFtueCommentaryOverride({ parts: [introLine], sticky: true });
   }, [challengeCtx, gameState]); // eslint-disable-line
 
   // Dismiss the challenge intro chip on first card interaction (any hold)
@@ -751,18 +752,24 @@ export function GameView({ adapter, challengeCtx }: Props) {
       const fp = resolvedRoster.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0);
       const badges = resolvedRoster.flatMap((c: any) => c.achievements ?? []);
       const trigger = evaluateTrigger({ roster: resolvedRoster, totalFp: fp, winTier: winTier ?? "BUST", badges, winTiersMap: adapter.winTiersMap });
+      const season = challengeCtx?.season ?? "";
+      // Sport adapter may provide a big-game / season-reel headline; fall back
+      // to the generic trigger headline for sports that don't (yet).
+      const shareHeadline = typeof (sportAdapter as any).getShareHeadline === "function"
+        ? (sportAdapter as any).getShareHeadline({ roster: resolvedRoster, season })
+        : trigger.headline;
 
       const { data: { session } } = await supabase.auth.getSession();
       const authHeader = session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {};
       const body = {
         hand_id: crypto.randomUUID(),
         sport: sportKey,
-        season: challengeCtx?.season ?? "",
+        season,
         target_score: fp,
         initial_roster: sportAdapter.serializeRoster(initialRosterRef.current as any),
         challenger_name: nickname,
         trigger_type: trigger.trigger,
-        share_headline: trigger.headline,
+        share_headline: shareHeadline,
       };
       const resp = await fetch("/api/challenge/create", {
         method: "POST",
@@ -1817,7 +1824,8 @@ export function GameView({ adapter, challengeCtx }: Props) {
                 color: "#FFB14A", fontSize: 11, fontWeight: 900, letterSpacing: 0.8,
                 fontFamily: "'Inter', system-ui, sans-serif",
               }}>
-                TARGET: {challengeCtx.targetScore.toFixed(1)} — {challengeCtx.challengerName}
+                TARGET: {challengeCtx.targetScore.toFixed(1)}
+                {isRealName(challengeCtx.challengerName) && ` — ${challengeCtx.challengerName}`}
               </div>
             ) : (
               <>
@@ -2494,13 +2502,20 @@ export function GameView({ adapter, challengeCtx }: Props) {
             winTiersMap={adapter.winTiersMap}
             serializeRoster={(cards) => sportAdapter.serializeRoster(cards)}
             triggerResult={challengeTrigger}
+            shareHeadline={typeof (sportAdapter as any).getShareHeadline === "function"
+              ? (sportAdapter as any).getShareHeadline({
+                  roster: rosterRef.current,
+                  season: (rosterRef.current[0] as any)?.season ?? "",
+                })
+              : undefined}
             onDismiss={() => setChallengeTrigger(null)}
           />
         </Suspense>
       )}
 
-      {/* ChallengeComparisonScreen — full-screen overlay shown at RESULTS
-          when the user is playing a received challenge (challengeCtx present).
+      {/* ChallengeComparisonScreen — bottom sheet shown at RESULTS when
+          the user is playing a received challenge (challengeCtx present).
+          Played hand + game bar (with TARGET) stay visible behind the sheet.
           Submits the attempt, shows score vs. challenger, and offers
           Send It Back or Play Fresh. */}
       {showChallengeComparison && challengeCtx && (
@@ -2510,7 +2525,13 @@ export function GameView({ adapter, challengeCtx }: Props) {
             myScore={rosterRef.current.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0)}
             myWinTier={winTier ?? "BUST"}
             sport={sportKey}
-            tacticalLine={postRevealCopyRef.current?.primary ?? null}
+            playedRoster={rosterRef.current.map((c: any) => ({
+              name: String(c.name ?? ""),
+              actualFp: Number(c.actualFp ?? 0),
+              projectedFp: Number(c.projectedFp ?? 0),
+              wasHeld: Boolean(c.wasHeld ?? false),
+              salary: Number(c.salary ?? 0),
+            }))}
             onSendItBack={handleSendItBack}
             onPlayFresh={() => { setShowChallengeComparison(false); handleButtonClick(); }}
           />
