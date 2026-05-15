@@ -97,17 +97,22 @@ export function ChallengeDebugPanel({ challengeId, userId, userName }: Props) {
 
   return (
     <div style={{
-      position: "fixed", bottom: 12, left: 12, zIndex: 99999,
+      // Top-left, NOT bottom — the basketball app shell renders a
+      // green diagnostic bar at bottom:0 / zIndex:100000 in debug mode,
+      // and the post-result challenge action bar also lives bottom-
+      // fixed when a challenge sheet is dismissed. Either would occlude
+      // a bottom-anchored panel. Top-left is unambiguously visible.
+      position: "fixed", top: "calc(12px + env(safe-area-inset-top, 0px))", left: 12, zIndex: 200000,
       width: 280, maxWidth: "calc(100vw - 24px)",
-      background: "rgba(7,10,18,0.92)",
-      border: "1px solid rgba(255,177,74,0.35)",
+      background: "rgba(7,10,18,0.94)",
+      border: "1px solid rgba(255,177,74,0.55)",
       borderRadius: 8,
       padding: "8px 10px 10px",
       fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
       fontSize: 11,
       color: "#EAF0FF",
       pointerEvents: "auto",
-      boxShadow: "0 4px 14px rgba(0,0,0,0.45)",
+      boxShadow: "0 4px 14px rgba(0,0,0,0.55)",
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
         <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1.5, color: "#FFB14A" }}>DEBUG</span>

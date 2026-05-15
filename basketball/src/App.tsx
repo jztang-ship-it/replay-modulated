@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { LandingPage } from "./components/LandingPage";
 import GameView from "./views/GameView";
 import { DailySeasonReelGate } from "./components/DailySeasonReelGate";
@@ -15,13 +15,11 @@ import { ChallengeLandingScreen } from "@shared/components/ChallengeLandingScree
 import type { ChallengeCtx, ChallengeBackCtx } from "@shared/adapters/challengeTypes";
 import { sportAdapter } from "./adapters/SportAdapter";
 
-// Lazy-loaded ?debug=1 overlay. Mounted at the app shell level so it
-// renders on every route — chooser landing, challenge landing, FTUE,
-// game view. (Previously it lived inside GameView so it didn't surface
-// until the user actually entered a hand.)
-const ChallengeDebugPanel = lazy(() =>
-  import("@shared/components/ChallengeDebugPanel").then(m => ({ default: m.ChallengeDebugPanel }))
-);
+// ?debug=1 overlay. Eager import (not lazy) so a chunk-load failure
+// can't silently hide it behind a null Suspense fallback. Mounted at
+// the app shell level so it renders on every route — chooser landing,
+// challenge landing, FTUE, game view.
+import { ChallengeDebugPanel } from "@shared/components/ChallengeDebugPanel";
 
 const SPORT = "basketball";
 const SKIP_LANDING_KEY = "replay_skip_landing_basketball";
@@ -136,13 +134,11 @@ function AppInner() {
           in-game. challengeId is the active replay ctx when present;
           when absent the panel shows identity + last API call only. */}
       {showDebug && (
-        <Suspense fallback={null}>
-          <ChallengeDebugPanel
-            challengeId={challengeCtx?.challengeId}
-            userId={uid || undefined}
-            userName={getNickname() || "anonymous"}
-          />
-        </Suspense>
+        <ChallengeDebugPanel
+          challengeId={challengeCtx?.challengeId}
+          userId={uid || undefined}
+          userName={getNickname() || "anonymous"}
+        />
       )}
       {view === "landing" ? (
         <LandingPage
