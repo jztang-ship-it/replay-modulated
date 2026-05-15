@@ -111,7 +111,21 @@ function tierFromSalary(salary: number): string {
   return s >= 73 ? "RED" : s >= 58 ? "ORANGE" : s >= 44 ? "PURPLE" : s >= 30 ? "BLUE" : s >= 23 ? "GREEN" : "WHITE";
 }
 
-export default function GameView({ challengeCtx }: { challengeCtx?: import("@shared/adapters/challengeTypes").ChallengeCtx }) {
+interface GameViewWrapperProps {
+  challengeCtx?: import("@shared/adapters/challengeTypes").ChallengeCtx;
+  challengeBackCtx?: import("@shared/adapters/challengeTypes").ChallengeBackCtx;
+  clearChallengeCtx?: () => void;
+  setChallengeBackCtx?: (ctx: import("@shared/adapters/challengeTypes").ChallengeBackCtx) => void;
+  clearChallengeBackCtx?: () => void;
+}
+
+export default function GameView({
+  challengeCtx,
+  challengeBackCtx,
+  clearChallengeCtx,
+  setChallengeBackCtx,
+  clearChallengeBackCtx,
+}: GameViewWrapperProps) {
   // Track active season + FTUE state so the adapter rebuilds with the right
   // win-tier thresholds when:
   //   - the daily reel swaps seasons (setActiveSeason → active-season-change)
@@ -173,5 +187,14 @@ export default function GameView({ challengeCtx }: { challengeCtx?: import("@sha
     SlateChipComponent: isSlateV2Enabled("basketball") ? BasketballSlateChip : undefined,
   }), [activeSeason, ftueTick]);
 
-  return <SharedGameView adapter={adapter} challengeCtx={challengeCtx} />;
+  return (
+    <SharedGameView
+      adapter={adapter}
+      challengeCtx={challengeCtx}
+      challengeBackCtx={challengeBackCtx}
+      clearChallengeCtx={clearChallengeCtx}
+      setChallengeBackCtx={setChallengeBackCtx}
+      clearChallengeBackCtx={clearChallengeBackCtx}
+    />
+  );
 }

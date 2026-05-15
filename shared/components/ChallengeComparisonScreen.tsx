@@ -1,5 +1,22 @@
 // shared/components/ChallengeComparisonScreen.tsx
-import { useEffect, useMemo, useState } from "react";
+//
+// Bottom sheet shown when a challenge recipient finishes a hand. The
+// sheet has THREE states that diverge on layout + CTAs:
+//
+//   WIN          — user's best-in-window beat the target. CTAs:
+//                  "Send It Back" (fresh hand + challengeBackCtx) + Dismiss.
+//   LOSS_OPEN    — best-in-window did NOT beat target AND window is still
+//                  open. Live "N minutes to flip this" countdown.
+//                  CTAs: "Try Again" (replays the snapshot) + Dismiss.
+//   LOSS_CLOSED  — window closed without a win. Pure-practice framing.
+//                  CTAs: "Play your own hand" + Dismiss (both clear
+//                  challengeCtx and go to normal play).
+//
+// State source-of-truth is the attempt API response (user_has_won,
+// is_window_open, window_closes_at_ms). Until the response lands we
+// default to optimistic values derived from props.
+
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
 import { getPlayerUid, getNickname } from "@shared/utils/playerIdentity";
 import { hasAttemptedChallenge, markChallengeAttempted } from "@shared/hooks/useChallengeShare";
@@ -10,27 +27,15 @@ import { chadTrashTalk, trashTalkBucket } from "@shared/commentary/chad";
 interface AttemptResult {
   attempt_id: string;
   is_best: boolean;
-  /** Server-determined: this attempt fell outside the user's 1-hour
-   *  replay window. UI shows a "Practice — won't change your
-   *  scorecard" affordance. */
   is_practice?: boolean;
-  /** Whether this attempt set the user's new personal best for this
-   *  challenge. Drives the score-callout highlight in Push 2. */
   is_personal_best?: boolean;
-  /** True when this attempt flipped the challenge-level winner_count
-   *  from a prior loss to a win for this user. */
   winner_count_flipped?: boolean;
-  /** True when this attempt bumped the challenger's defended counter
-   *  (losing attempt within window, non-self). */
   defended_bumped?: boolean;
-  /** ISO timestamp when this user's replay window closes. Drives the
-   *  "47 minutes to flip this" countdown in Push 2. */
   window_closes_at?: string;
   window_closes_at_ms?: number;
   is_window_open?: boolean;
   user_best_score?: number | null;
   user_has_won?: boolean;
-  /** Challenge totals */
   attempt_count: number;
   winner_count: number;
   best_score: number | null;
@@ -43,169 +48,59 @@ interface Props {
   myScore: number;
   myWinTier: string;
   sport: string;
-  /** Pre-creation hook: silently creates the return-challenge row on
-   *  the server when the sheet mounts and returns the share payload.
-   *  The sheet stores the result so the tap handler can call
-   *  navigator.share() synchronously, preserving the user-gesture
-   *  context (Safari/Chrome reject async-then-share). */
-  prepareChallenge: () => Promise<{ url: string; text: string; title: string }>;
-  onPlayFresh: () => void;
+  /** Fired from win-state primary CTA. Caller clears challengeCtx,
+   *  sets challengeBackCtx, closes the sheet, and deals a fresh
+   *  normal hand. The share prompt auto-fires at that hand's RESULTS. */
+  onSendItBack: () => void;
+  /** Fired from loss-window-open primary CTA. Caller closes the sheet
+   *  and re-deals the same challenge snapshot. challengeCtx stays set. */
+  onTryAgain: () => void;
+  /** Fired from any Dismiss CTA AND from the loss-window-closed
+   *  primary ("Play your own hand"). Caller clears challengeCtx and
+   *  closes the sheet — Push 2b adds a persistent action bar so the
+   *  user can still reach DEAL after this. */
+  onDismiss: () => void;
 }
 
-export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sport, prepareChallenge, onPlayFresh }: Props) {
-  void myWinTier; // tier label removed from sheet — kept on props for caller compat / future use
+export function ChallengeComparisonScreen({
+  challengeCtx, myScore, myWinTier, sport,
+  onSendItBack, onTryAgain, onDismiss,
+}: Props) {
+  void myWinTier; // tier label removed from sheet — kept for caller compat
+
   const [attemptResult, setAttemptResult] = useState<AttemptResult | null>(null);
-  const [, setSubmitting] = useState(true);
-  // Pre-created share payload. null = still creating; non-null = ready.
-  const [sharePayload, setSharePayload] = useState<{ url: string; text: string; title: string } | null>(null);
-  const [shareError, setShareError] = useState<string | null>(null);
-  const [shareInfo, setShareInfo] = useState<string | null>(null);
-  const [retrying, setRetrying] = useState(false);
-  const isNewUser = typeof window !== "undefined" && localStorage.getItem(`replaymod_ftue_${sport}`) !== "1";
+  const submittedRef = useRef(false);
 
-  const isWinner = myScore > challengeCtx.targetScore;
+  const delta = myScore - challengeCtx.targetScore;
+  const absDelta = Math.abs(delta);
+  const isPhotoFinish = absDelta <= 1;
+
   const namedChallenger = isRealName(challengeCtx.challengerName) ? challengeCtx.challengerName : null;
-  // Practice flag — initially seeded from the local "this user already
-  // played this challenge" marker, then overwritten by the server's
-  // authoritative `is_practice` verdict once the attempt response lands.
-  // The server knows the window state (per-user 1-hour window keyed to
-  // first_attempt_at) and is the source of truth.
-  const [isPractice, setIsPractice] = useState(() => hasAttemptedChallenge(challengeCtx.challengeId));
+  // Server truth, with optimistic fallbacks while the attempt POST is in flight:
+  const userHasWon = attemptResult?.user_has_won ?? (delta > 0);
+  const isWindowOpen = attemptResult?.is_window_open ?? true;
+  const windowClosesAtMs = attemptResult?.window_closes_at_ms ?? null;
+  // Server's authoritative is_practice; falls back to the local hint.
+  const [localIsPractice] = useState(() => hasAttemptedChallenge(challengeCtx.challengeId));
+  const isPractice = attemptResult?.is_practice ?? localIsPractice;
 
-  // Chad's outcome-bucket trash talk — the sheet's only commentary line.
-  // The tactical "line 1" used to live here too, but it now lands as a
-  // Chad chip on the game surface ~1.5s before this sheet slides up.
-  // Routes through the unnamed bank when the challenger name fails
-  // isRealName (generic placeholder).
+  // Three-way state derived once the server response lands.
+  const state: "WIN" | "LOSS_OPEN" | "LOSS_CLOSED" =
+    userHasWon ? "WIN"
+    : isWindowOpen ? "LOSS_OPEN"
+    : "LOSS_CLOSED";
+
+  // Chad's outcome-bucket trash talk. Tactical line 1 fires as a chip
+  // on the game surface ~1.5s before this sheet slides up.
   const trashTalk = useMemo(() => {
-    const delta = myScore - challengeCtx.targetScore;
     const bucket = trashTalkBucket(delta);
     return chadTrashTalk(bucket, namedChallenger, delta);
-  }, [myScore, challengeCtx.targetScore, namedChallenger]);
+  }, [delta, namedChallenger]);
 
-  // Pre-create the return challenge on mount so navigator.share() can fire
-  // synchronously from the tap handler.
+  // Submit attempt POST exactly once on mount.
   useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const payload = await prepareChallenge();
-        if (!cancelled) setSharePayload(payload);
-      } catch (e: any) {
-        if (!cancelled) setShareError(e?.message ? String(e.message) : "Couldn't prepare the challenge.");
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []); // eslint-disable-line
-
-  // Synchronous Send-It-Back: invokes navigator.share() in the tap handler
-  // body, no async work before the call. Falls back to clipboard, then to
-  // an inline URL display if both APIs are unavailable.
-  const SEND_BACK_SENTINEL = "__send_it_back__";
-  const handleSendItBack = () => {
-    setShareError(null);
-    setShareInfo(null);
-
-    // Capture the URL once — if the share API rejects async, fallbacks can
-    // still surface the URL without re-fetching.
-    const payload = sharePayload;
-    if (!payload) {
-      // Pre-creation failed (or hasn't completed). Retry on-tap as a
-      // graceful degradation. This branch may fail on Safari due to the
-      // post-await user-gesture issue, but we still want to try.
-      setRetrying(true);
-      void (async () => {
-        try {
-          const fresh = await prepareChallenge();
-          setSharePayload(fresh);
-          // Try navigator.share — likely to fail on Safari here but worth
-          // attempting on browsers that allow post-await share.
-          if (navigator.share) {
-            try { await navigator.share({ title: fresh.title, text: fresh.text, url: fresh.url }); return; }
-            catch (err: any) { if (err?.name !== "AbortError") throw err; return; }
-          }
-          throw new Error("Share API unavailable");
-        } catch (e: any) {
-          // Clipboard fallback (also fine to be async on retry path)
-          if (navigator.clipboard?.writeText && sharePayload?.url) {
-            try {
-              await navigator.clipboard.writeText(`${sharePayload.url}\n${sharePayload.text}`);
-              setShareInfo("Link copied — paste it anywhere.");
-              return;
-            } catch { /* fall through */ }
-          }
-          setShareError(`Couldn't share. ${e?.message ?? ""}`.trim());
-        } finally {
-          setRetrying(false);
-        }
-      })();
-      return;
-    }
-
-    // Fast path — pre-creation already complete. Invoke navigator.share
-    // synchronously (no awaits before this call) to keep the user gesture.
-    if (navigator.share) {
-      navigator
-        .share({ title: payload.title, text: payload.text, url: payload.url })
-        .catch((err: any) => {
-          if (err?.name === "AbortError") return;
-          // Browser rejected the share (e.g. no app, permission). Try clipboard.
-          if (navigator.clipboard?.writeText) {
-            navigator.clipboard
-              .writeText(`${payload.url}\n${payload.text}`)
-              .then(() => setShareInfo("Link copied — paste it anywhere."))
-              .catch(() => setShareError(`Couldn't share. Copy this URL: ${payload.url}`));
-          } else {
-            setShareError(`Couldn't share. Copy this URL: ${payload.url}`);
-          }
-        });
-      return;
-    }
-
-    // No Web Share API — clipboard path.
-    if (navigator.clipboard?.writeText) {
-      navigator.clipboard
-        .writeText(`${payload.url}\n${payload.text}`)
-        .then(() => setShareInfo("Link copied — paste it anywhere."))
-        .catch(() => setShareError(`Couldn't copy. URL: ${payload.url}`));
-      return;
-    }
-
-    // Last resort — show URL inline for manual copy.
-    setShareError(`Share unavailable. Copy this URL: ${payload.url}`);
-  };
-
-  // Primary/secondary CTA labels — derived from (new vs existing) × (won vs lost).
-  // Pronoun-free: use the challenger's name when real, otherwise "Your Friend".
-  const opponentNoun = namedChallenger ?? "Your Friend";
-  const ctas = (() => {
-    if (isWinner) {
-      // Won: both new and existing → Send It Back primary, Play Fresh secondary
-      return {
-        primaryLabel: "Send It Back",
-        primaryAction: SEND_BACK_SENTINEL,
-        secondaryLabel: "Play a Fresh Hand",
-        secondaryAction: onPlayFresh,
-      };
-    }
-    // Lost
-    if (isNewUser) {
-      return {
-        primaryLabel: "Try a Fresh Hand",
-        primaryAction: onPlayFresh,
-        secondaryLabel: "Send It Back Anyway",
-        secondaryAction: SEND_BACK_SENTINEL,
-      };
-    }
-    return {
-      primaryLabel: `Make ${opponentNoun} Prove It Again`,
-      primaryAction: SEND_BACK_SENTINEL,
-      secondaryLabel: "Play a Fresh Hand",
-      secondaryAction: onPlayFresh,
-    };
-  })();
-
-  useEffect(() => {
+    if (submittedRef.current) return;
+    submittedRef.current = true;
     const uid = getPlayerUid();
     const name = getNickname() || "Anonymous";
     markChallengeAttempted(challengeCtx.challengeId);
@@ -215,8 +110,8 @@ export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sp
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         score: myScore,
-        is_winner: isWinner,
-        is_practice: isPractice,
+        is_winner: delta > 0,
+        is_practice: localIsPractice,
         user_id: uid || undefined,
         user_name: name,
       }),
@@ -224,35 +119,91 @@ export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sp
       .then(r => r.json())
       .then((d: AttemptResult) => {
         setAttemptResult(d);
-        setSubmitting(false);
-        // Overwrite the client-side hint with the server verdict — the
-        // server is the source of truth on window state.
-        if (typeof d.is_practice === "boolean") setIsPractice(d.is_practice);
-        track("challenges", isWinner ? "challenge_win" : "challenge_loss", {
+        track("challenges", (delta > 0) ? "challenge_win" : "challenge_loss", {
           challenge_id: challengeCtx.challengeId,
           sport,
-          score_delta: Math.round((myScore - challengeCtx.targetScore) * 10) / 10,
+          score_delta: Math.round(delta * 10) / 10,
           attempt_count: d.attempt_count,
-          is_practice: d.is_practice ?? isPractice,
+          is_practice: d.is_practice ?? localIsPractice,
           winner_flipped: d.winner_count_flipped ?? false,
           is_personal_best: d.is_personal_best ?? false,
           window_open: d.is_window_open ?? null,
         });
         track("challenges", "challenge_attempt_complete", {
           challenge_id: challengeCtx.challengeId, sport,
-          is_winner: isWinner, score: myScore,
-          is_practice: d.is_practice ?? isPractice,
+          is_winner: delta > 0, score: myScore,
+          is_practice: d.is_practice ?? localIsPractice,
         });
       })
-      .catch(() => setSubmitting(false));
+      .catch(() => { /* silent — UI still works with optimistic defaults */ });
   }, []); // eslint-disable-line
 
-  void attemptResult; // server stats line removed per spec; kept for future head-to-head wiring
+  // Live countdown — updates every 30s so the "47 minutes" label stays
+  // close to true without burning CPU.
+  const [nowMs, setNowMs] = useState(Date.now());
+  useEffect(() => {
+    if (state !== "LOSS_OPEN" || !windowClosesAtMs) return;
+    const id = setInterval(() => setNowMs(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, [state, windowClosesAtMs]);
+  const minutesLeft = windowClosesAtMs
+    ? Math.max(0, Math.round((windowClosesAtMs - nowMs) / 60_000))
+    : null;
 
-  // Opposite-side label in the score comparison row. Real name → name;
-  // generic placeholder → "FRIEND" (not "CHALLENGE") so the column header
-  // reads as a person, not a thing.
+  // Pronoun-free labels — the comparison frame never uses "them"/"they".
+  const opponentLong = namedChallenger ?? "your friend";
   const opponentLabel = (namedChallenger ?? "FRIEND").toUpperCase();
+
+  // Headline copy + color per state.
+  const headline = (() => {
+    if (isPhotoFinish) return "Photo finish";
+    if (state === "WIN") return `You beat ${opponentLong} by ${absDelta.toFixed(1)} FP`;
+    return `Off by ${absDelta.toFixed(1)} FP`;
+  })();
+  const headlineColor =
+    state === "WIN" ? "#22C55E"
+    : isPhotoFinish ? "#FFB14A"
+    : state === "LOSS_OPEN" ? "#EF4444"
+    : "#EAF0FF"; // closed window: neutral
+
+  // CTA matrix per state. Send-back tap → analytics → onSendItBack;
+  // try-again tap → analytics → onTryAgain; dismiss → onDismiss.
+  const ctas = (() => {
+    if (state === "WIN") {
+      return {
+        primaryLabel: "Send It Back",
+        primaryAction: () => {
+          track("challenges", "challenge_send_back", { challenge_id: challengeCtx.challengeId, sport });
+          onSendItBack();
+        },
+        secondaryLabel: "Dismiss",
+        secondaryAction: onDismiss,
+      };
+    }
+    if (state === "LOSS_OPEN") {
+      return {
+        primaryLabel: "Try Again",
+        primaryAction: () => {
+          track("challenges", "challenge_try_again", { challenge_id: challengeCtx.challengeId, sport, minutes_left: minutesLeft ?? -1 });
+          onTryAgain();
+        },
+        secondaryLabel: "Dismiss",
+        secondaryAction: onDismiss,
+      };
+    }
+    // LOSS_CLOSED — "Play your own hand" and "Dismiss" both route to
+    // onDismiss (clear challengeCtx, normal play). Keeping two CTAs for
+    // visual hierarchy per spec.
+    return {
+      primaryLabel: "Play your own hand",
+      primaryAction: () => {
+        track("challenges", "challenge_play_own", { challenge_id: challengeCtx.challengeId, sport });
+        onDismiss();
+      },
+      secondaryLabel: "Dismiss",
+      secondaryAction: onDismiss,
+    };
+  })();
 
   return (
     <>
@@ -263,16 +214,15 @@ export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sp
         }
       `}</style>
 
-      {/* Backdrop — half-opacity over the game surface. Played hand and
-          game bar (with TARGET) remain visible behind. */}
+      {/* Backdrop — half-opacity over the game surface. */}
       <div style={{
         position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 9499,
       }} />
 
-      {/* Bottom sheet — slides up over the game. Not a full page. */}
+      {/* Bottom sheet */}
       <div style={{
         position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 9500,
-        maxHeight: "82vh", overflowY: "auto",
+        maxHeight: "85vh", overflowY: "auto",
         background: "#0D1117",
         borderTop: "1px solid rgba(255,255,255,0.1)",
         borderRadius: "16px 16px 0 0",
@@ -287,26 +237,13 @@ export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sp
           background: "rgba(255,255,255,0.18)", marginBottom: 14,
         }} />
 
-        {/* Result headline — head-to-head delta leads. Names the rival
-            instead of using "them" / "they" pronouns. Tier label removed
-            per spec — challenge mode means the matchup IS the verdict. */}
-        {(() => {
-          const delta = myScore - challengeCtx.targetScore;
-          const absDelta = Math.abs(delta).toFixed(1);
-          const isPhotoFinish = Math.abs(delta) <= 1;
-          const opponent = namedChallenger ?? "your friend";
-          const headline = isPhotoFinish
-            ? "Photo finish"
-            : delta > 0
-              ? `You beat ${opponent} by ${absDelta} FP`
-              : `Off by ${absDelta} FP`;
-          const color = isPhotoFinish ? "#FFB14A" : delta > 0 ? "#22C55E" : "#EF4444";
-          return (
-            <div style={{ fontSize: 26, fontWeight: 950, color, marginBottom: 10, textAlign: "center" }}>
-              {headline}
-            </div>
-          );
-        })()}
+        {/* Headline — head-to-head delta or "Photo finish". Pronoun-free. */}
+        <div style={{ fontSize: 26, fontWeight: 950, color: headlineColor, marginBottom: 10, textAlign: "center" }}>
+          {headline}
+        </div>
+
+        {/* Practice indicator — only when the server says this attempt
+            doesn't count. Compact pill above the score row. */}
         {isPractice && (
           <div style={{
             fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase",
@@ -315,133 +252,67 @@ export function ChallengeComparisonScreen({ challengeCtx, myScore, myWinTier, sp
           }}>Practice hand — doesn't change the score</div>
         )}
 
-        {/* Score comparison */}
+        {/* Score side-by-side */}
         <div style={{
           display: "flex", gap: 20, marginBottom: 18, marginTop: 10,
           background: "rgba(255,255,255,0.04)", borderRadius: 14, padding: "14px 24px",
         }}>
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 4 }}>You</div>
-            <div style={{ fontSize: 38, fontWeight: 950, color: isWinner ? "#22C55E" : "#EAF0FF", fontStyle: "italic" }}>{myScore.toFixed(1)}</div>
+            <div style={{ fontSize: 38, fontWeight: 950, color: state === "WIN" ? "#22C55E" : "#EAF0FF", fontStyle: "italic" }}>{myScore.toFixed(1)}</div>
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>FP</div>
           </div>
           <div style={{ width: 1, background: "rgba(255,255,255,0.12)", alignSelf: "stretch" }} />
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 4 }}>{opponentLabel}</div>
-            <div style={{ fontSize: 38, fontWeight: 950, color: isWinner ? "#EAF0FF" : "#FFB14A", fontStyle: "italic" }}>{challengeCtx.targetScore.toFixed(1)}</div>
+            <div style={{ fontSize: 38, fontWeight: 950, color: state === "WIN" ? "#EAF0FF" : "#FFB14A", fontStyle: "italic" }}>{challengeCtx.targetScore.toFixed(1)}</div>
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>FP</div>
           </div>
         </div>
 
-        {/* Chad's outcome-bucket trash talk. Tactical Line 1 fires on the
-            game surface ~1.5s before this sheet slides up. */}
-        <div style={{ maxWidth: 420, textAlign: "center", marginBottom: 18 }}>
+        {/* Trash-talk line — no delta number, no them/they pronouns. */}
+        <div style={{ maxWidth: 420, textAlign: "center", marginBottom: 14 }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: "#FFB14A", lineHeight: 1.4 }}>
             {trashTalk}
           </div>
         </div>
 
-        {/* (Phase 2 will add a head-to-head section here.) */}
-
-        {/* Status banners. shareInfo is a soft positive toast (e.g. "Link
-            copied"). shareError is a hard failure. Tapping either dismisses. */}
-        {shareInfo && (
-          <div
-            onClick={() => setShareInfo(null)}
-            style={{
-              width: "100%", maxWidth: 360, marginBottom: 10,
-              padding: "10px 12px", borderRadius: 10,
-              background: "rgba(34,197,94,0.12)",
-              border: "1px solid rgba(34,197,94,0.45)",
-              color: "#86EFAC", fontSize: 13, fontWeight: 700,
-              cursor: "pointer", textAlign: "center",
-            }}
-          >
-            {shareInfo}
-          </div>
-        )}
-        {shareError && (
-          <div
-            onClick={() => setShareError(null)}
-            style={{
-              width: "100%", maxWidth: 360, marginBottom: 10,
-              padding: "10px 12px", borderRadius: 10,
-              background: "rgba(239,68,68,0.12)",
-              border: "1px solid rgba(239,68,68,0.45)",
-              color: "#FCA5A5", fontSize: 13, fontWeight: 700,
-              cursor: "pointer", textAlign: "center",
-              wordBreak: "break-all",
-            }}
-            role="alert"
-          >
-            {shareError} <span style={{ opacity: 0.7, fontWeight: 500 }}>— tap to dismiss</span>
+        {/* Urgency framing — only when state === LOSS_OPEN. Live minute
+            countdown that ticks every 30s. Red+bold under 5 minutes. */}
+        {state === "LOSS_OPEN" && minutesLeft != null && (
+          <div style={{
+            maxWidth: 360, marginBottom: 18, padding: "10px 14px",
+            borderRadius: 10,
+            background: minutesLeft < 5 ? "rgba(239,68,68,0.12)" : "rgba(255,177,74,0.10)",
+            border: `1px solid ${minutesLeft < 5 ? "rgba(239,68,68,0.45)" : "rgba(255,177,74,0.35)"}`,
+            color: minutesLeft < 5 ? "#FCA5A5" : "#FFB14A",
+            fontSize: minutesLeft < 5 ? 16 : 14,
+            fontWeight: minutesLeft < 5 ? 900 : 800,
+            textAlign: "center",
+          }}>
+            {minutesLeft === 0
+              ? "Window closing — last shot."
+              : `${minutesLeft} minute${minutesLeft === 1 ? "" : "s"} to flip this.`}
           </div>
         )}
 
-        {/* CTAs.
-            Send-It-Back buttons stay tappable; pre-creation runs in the
-            background. While the URL is still being prepared, the button
-            reads "Preparing…" and the tap initiates a slower retry path. */}
+        {/* CTAs */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 360 }}>
-          {(() => {
-            const isSendBackPrimary = ctas.primaryAction === SEND_BACK_SENTINEL;
-            const preparing = isSendBackPrimary && !sharePayload && !shareError;
-            const busy = isSendBackPrimary && retrying;
-            const label = preparing && !busy
-              ? `${ctas.primaryLabel} — preparing…`
-              : busy
-                ? "Sharing…"
-                : ctas.primaryLabel;
-            return (
-              <button
-                onClick={() => {
-                  if (isSendBackPrimary) {
-                    track("challenges", "challenge_send_back", { challenge_id: challengeCtx.challengeId, sport });
-                    handleSendItBack();
-                  } else {
-                    (ctas.primaryAction as () => void)();
-                  }
-                }}
-                disabled={isSendBackPrimary && busy}
-                style={{
-                  padding: "15px", borderRadius: 12, background: "#FFB14A",
-                  border: "none", color: "#070A12", fontSize: 16, fontWeight: 900,
-                  cursor: busy ? "default" : "pointer",
-                  opacity: preparing || busy ? 0.85 : 1,
-                }}
-              >{label}</button>
-            );
-          })()}
-          {(() => {
-            const isSendBackSecondary = ctas.secondaryAction === SEND_BACK_SENTINEL;
-            const preparing = isSendBackSecondary && !sharePayload && !shareError;
-            const busy = isSendBackSecondary && retrying;
-            const label = preparing && !busy
-              ? `${ctas.secondaryLabel} — preparing…`
-              : busy
-                ? "Sharing…"
-                : ctas.secondaryLabel;
-            return (
-              <button
-                onClick={() => {
-                  if (isSendBackSecondary) {
-                    track("challenges", "challenge_send_back", { challenge_id: challengeCtx.challengeId, sport });
-                    handleSendItBack();
-                  } else {
-                    (ctas.secondaryAction as () => void)();
-                  }
-                }}
-                disabled={isSendBackSecondary && busy}
-                style={{
-                  padding: "13px", borderRadius: 12, background: "transparent",
-                  border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.7)",
-                  fontSize: 14, fontWeight: 700,
-                  cursor: busy ? "default" : "pointer",
-                  opacity: preparing || busy ? 0.7 : 1,
-                }}
-              >{label}</button>
-            );
-          })()}
+          <button
+            onClick={ctas.primaryAction}
+            style={{
+              padding: "15px", borderRadius: 12, background: "#FFB14A",
+              border: "none", color: "#070A12", fontSize: 16, fontWeight: 900, cursor: "pointer",
+            }}
+          >{ctas.primaryLabel}</button>
+          <button
+            onClick={ctas.secondaryAction}
+            style={{
+              padding: "13px", borderRadius: 12, background: "transparent",
+              border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.7)",
+              fontSize: 14, fontWeight: 700, cursor: "pointer",
+            }}
+          >{ctas.secondaryLabel}</button>
         </div>
       </div>
     </>

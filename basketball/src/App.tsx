@@ -12,7 +12,7 @@ import { getPlayerUid } from "@shared/utils/playerIdentity";
 import { AchievementWall } from "@shared/components/AchievementWall";
 import { useAchievements } from "@shared/hooks/useAchievements";
 import { ChallengeLandingScreen } from "@shared/components/ChallengeLandingScreen";
-import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
+import type { ChallengeCtx, ChallengeBackCtx } from "@shared/adapters/challengeTypes";
 import { sportAdapter } from "./adapters/SportAdapter";
 
 const SPORT = "basketball";
@@ -55,6 +55,11 @@ function AppInner() {
   const { user, uid, isAuthenticated, isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
   const profileUserId = getProfileUserId();
   const [challengeCtx, setChallengeCtx] = useState<ChallengeCtx | null>(null);
+  // Rivalry-continuation context. Set when a recipient wins a challenge
+  // and taps "Send It Back" — they're routed to a fresh normal hand and
+  // the share prompt auto-fires at RESULTS framed as a back-challenge.
+  // Cleared once the user dismisses or shares the resulting challenge.
+  const [challengeBackCtx, setChallengeBackCtx] = useState<ChallengeBackCtx | null>(null);
   const [showChallengeLanding, setShowChallengeLanding] = useState(!!challengeIdFromUrl);
   const { unlockedIds: ownUnlockedIds } = useAchievements();
   const skipFTUE = isAuthenticated && !isAnonymous;
@@ -127,7 +132,13 @@ function AppInner() {
         />
       ) : (
         <DailySeasonReelGate bypass={isFTUE || !!challengeCtx} showFtueIntroFollowup={showFtueIntroFollowup}>
-          <GameView challengeCtx={challengeCtx ?? undefined} />
+          <GameView
+            challengeCtx={challengeCtx ?? undefined}
+            challengeBackCtx={challengeBackCtx ?? undefined}
+            clearChallengeCtx={() => setChallengeCtx(null)}
+            setChallengeBackCtx={(ctx) => setChallengeBackCtx(ctx)}
+            clearChallengeBackCtx={() => setChallengeBackCtx(null)}
+          />
         </DailySeasonReelGate>
       )}
       {showSignIn && (
@@ -155,6 +166,7 @@ function AppInner() {
         <ChallengeLandingScreen
           challengeId={challengeIdFromUrl}
           sport={SPORT}
+          currentUserId={isAuthenticated && !isAnonymous ? (uid ?? null) : null}
           deserializeRoster={(snap) => sportAdapter.deserializeRoster(snap)}
           validateRosterSnapshot={(snap) => sportAdapter.validateRosterSnapshot(snap)}
           onAccept={(ctx) => {

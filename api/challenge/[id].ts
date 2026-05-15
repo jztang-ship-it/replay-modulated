@@ -26,6 +26,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "public, max-age=30");
   return res.status(200).json({
     challenge_id: data.challenge_id,
+    // created_by is the challenger's auth user_id (uuid) or null for
+    // legacy/anonymous-created rows. Used by the landing screen to detect
+    // self-match — when the current viewer is the original challenger,
+    // we render a "This is your challenge" surface instead of the accept
+    // flow.
+    created_by: data.created_by ?? null,
     challenger_name: data.challenger_name ?? "Anonymous",
     target_score: Number(data.target_fp),
     sport: data.sport,

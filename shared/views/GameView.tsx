@@ -318,6 +318,20 @@ function BonusPoolPill({ betAmount, betNonce, onAmountChange, sportKey, competit
 interface Props {
   adapter: GameAdapter;
   challengeCtx?: import("@shared/adapters/challengeTypes").ChallengeCtx;
+  /** Rivalry-continuation context. When set, the fresh hand that the user
+   *  is about to play is the result of a win-state "Send It Back" — the
+   *  share prompt auto-fires at RESULTS framed as a back-challenge. */
+  challengeBackCtx?: import("@shared/adapters/challengeTypes").ChallengeBackCtx;
+  /** Clears challengeCtx in the parent. Called from comparison-sheet
+   *  Dismiss / "Play your own hand" / "Send It Back" (which then
+   *  installs challengeBackCtx via the setter below). */
+  clearChallengeCtx?: () => void;
+  /** Installs challengeBackCtx in the parent. Called from win-state
+   *  "Send It Back" to mark the upcoming fresh hand as a return-fire. */
+  setChallengeBackCtx?: (ctx: import("@shared/adapters/challengeTypes").ChallengeBackCtx) => void;
+  /** Clears challengeBackCtx once the rivalry-continuation hand resolves
+   *  + the user shares or dismisses. */
+  clearChallengeBackCtx?: () => void;
 }
 
 function createPlaceholders(rosterSize: number): PlayerCard[] {
@@ -341,7 +355,7 @@ function createPlaceholders(rosterSize: number): PlayerCard[] {
   }));
 }
 
-export function GameView({ adapter, challengeCtx }: Props) {
+export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallengeCtx, setChallengeBackCtx, clearChallengeBackCtx }: Props) {
   const {
     sportKey,
     sportAdapter,
@@ -739,61 +753,12 @@ export function GameView({ adapter, challengeCtx }: Props) {
     return tryOpenAuthModal("hand_5", 3500);
   }, [handCount, isAnonymous, isFTUE, gameState, tryOpenAuthModal, challengeCtx]);
 
-  // Send It Back uses a pre-creation pattern to keep the user-gesture
-  // context intact when navigator.share() fires. The flow:
-  //   1. Comparison sheet mounts → silently calls prepareChallenge()
-  //      which hits POST /api/challenge/create with the recipient's
-  //      played hand and returns the URL + share text.
-  //   2. User taps Send It Back → sheet calls navigator.share()
-  //      SYNCHRONOUSLY with the pre-created data (no async work in
-  //      the tap handler before the share API call).
-  // This avoids the Safari/Chrome NotAllowedError that hits when the
-  // share fires after an `await` breaks the user-gesture chain.
-  const prepareChallenge = useCallback(async (): Promise<{ url: string; text: string; title: string }> => {
-    const nickname = getNickname() || "Anonymous";
-    const resolvedRoster = rosterRef.current as import("@shared/types/index").GeneratedCard[];
-    const fp = resolvedRoster.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0);
-    const badges = resolvedRoster.flatMap((c: any) => c.achievements ?? []);
-    const trigger = evaluateTrigger({ roster: resolvedRoster, totalFp: fp, winTier: winTier ?? "BUST", badges, winTiersMap: adapter.winTiersMap });
-    const season = challengeCtx?.season ?? "";
-    const shareHeadline = typeof (sportAdapter as any).getShareHeadline === "function"
-      ? (sportAdapter as any).getShareHeadline({ roster: resolvedRoster, season })
-      : trigger.headline;
-
-    const { data: { session } } = await supabase.auth.getSession();
-    const authHeader = session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {};
-    const body = {
-      hand_id: crypto.randomUUID(),
-      sport: sportKey,
-      season,
-      target_score: fp,
-      initial_roster: sportAdapter.serializeRoster(initialRosterRef.current as any),
-      challenger_name: nickname,
-      trigger_type: trigger.trigger,
-      share_headline: shareHeadline,
-    };
-    const resp = await fetch("/api/challenge/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeader },
-      body: JSON.stringify(body),
-    });
-    if (!resp.ok) {
-      const errText = await resp.text().catch(() => "");
-      throw new Error(`server ${resp.status}${errText ? `: ${errText.slice(0, 80)}` : ""}`);
-    }
-    const data = await resp.json();
-    if (!data?.challenge_id) throw new Error("no challenge_id returned");
-    const url = `${window.location.origin}/${sportKey}/challenge/${data.challenge_id}`;
-    track("challenges", "challenge_create", {
-      challenge_id: data.challenge_id, sport: sportKey,
-      trigger: trigger.trigger, target_score: fp,
-    });
-    return {
-      url,
-      title: "ReplayIFS Challenge",
-      text: `I scored ${fp.toFixed(1)} FP. Same starting lineup. Beat me.`,
-    };
-  }, [adapter.winTiersMap, winTier, challengeCtx, sportKey]); // eslint-disable-line
+  // (prepareChallenge removed in push 2a. Send It Back from the
+  // comparison sheet no longer shares from the played hand directly —
+  // it routes the user into a FRESH normal hand with challengeBackCtx
+  // set, and the share prompt at that hand's RESULTS does the create
+  // synchronously from its own tap handler. The Web-Share user-gesture
+  // chain is preserved by ChallengeSharePrompt's own pre-creation flow.)
 
   const pendingCelebration = useRef<{ totalFp: number } | null>(null);
   /** FTUE: roster sum can read 0 briefly in RESULTS — keep last resolved hand FP for TierGauge */
@@ -1694,6 +1659,12 @@ export function GameView({ adapter, challengeCtx }: Props) {
   // At RESULTS (reached via score-row double-tap), challengeTrigger persists from
   // WIN_CELEBRATION. At IDLE (replay button), challengeTrigger is cleared.
   // Guard: skip when playing a received challenge (challengeCtx present).
+  //
+  // Rivalry-continuation: when challengeBackCtx is set (user just tapped
+  // "Send It Back" on a win), force the prompt to render even if the
+  // fresh hand wouldn't otherwise qualify. Tag the result with a virtual
+  // "rivalry_back" trigger type so isSpecial fires and the prominent
+  // prompt strip renders (not the small corner icon).
   useEffect(() => {
     if (gameState === "WIN_CELEBRATION" && !challengeCtx) {
       const resolvedRoster = rosterRef.current as import("@shared/types/index").GeneratedCard[];
@@ -1701,11 +1672,19 @@ export function GameView({ adapter, challengeCtx }: Props) {
       const fp = resolvedRoster.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0);
       const tier = winTier ?? calculateWinTier(fp) ?? "BUST";
       const result = evaluateTrigger({ roster: resolvedRoster, totalFp: fp, winTier: tier, badges, winTiersMap: adapter.winTiersMap });
-      setChallengeTrigger(result);
+      if (challengeBackCtx) {
+        const targetName = challengeBackCtx.challengerName ?? "your friend";
+        setChallengeTrigger({
+          trigger: "rivalry_back" as any,
+          headline: `Send to ${targetName}.`,
+        });
+      } else {
+        setChallengeTrigger(result);
+      }
     } else if (gameState === "IDLE") {
       setChallengeTrigger(null);
     }
-  }, [gameState]); // eslint-disable-line
+  }, [gameState, challengeBackCtx]); // eslint-disable-line
 
   // Challenge mode post-reveal continuity:
   //   1. WIN_CELEBRATION fires (reveal done, gauge settled, springSettled=true).
@@ -2578,7 +2557,8 @@ export function GameView({ adapter, challengeCtx }: Props) {
 
       {/* ChallengeSharePrompt — fires at RESULTS/WIN_CELEBRATION when a
           trigger is evaluated and the user is not in FTUE. Challenge mode
-          guard (challengeCtx check) added in Task 10. */}
+          guard (challengeCtx check) added in Task 10. Rivalry-back framing
+          when challengeBackCtx is set (Push 2a). */}
       {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && challengeTrigger && !isFTUE && (
         <Suspense fallback={null}>
           <ChallengeSharePrompt
@@ -2592,13 +2572,20 @@ export function GameView({ adapter, challengeCtx }: Props) {
             winTiersMap={adapter.winTiersMap}
             serializeRoster={(cards) => sportAdapter.serializeRoster(cards)}
             triggerResult={challengeTrigger}
+            rivalryTargetName={challengeBackCtx?.challengerName ?? null}
             shareHeadline={typeof (sportAdapter as any).getShareHeadline === "function"
               ? (sportAdapter as any).getShareHeadline({
                   roster: rosterRef.current,
                   season: (rosterRef.current[0] as any)?.season ?? "",
                 })
               : undefined}
-            onDismiss={() => setChallengeTrigger(null)}
+            onDismiss={() => {
+              setChallengeTrigger(null);
+              // Rivalry continuation ends when the user dismisses the
+              // back-share prompt — they're returning to normal play
+              // without lingering rivalry context.
+              if (challengeBackCtx) clearChallengeBackCtx?.();
+            }}
           />
         </Suspense>
       )}
@@ -2615,8 +2602,40 @@ export function GameView({ adapter, challengeCtx }: Props) {
             myScore={rosterRef.current.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0)}
             myWinTier={winTier ?? "BUST"}
             sport={sportKey}
-            prepareChallenge={prepareChallenge}
-            onPlayFresh={() => { setShowChallengeComparison(false); handleButtonClick(); }}
+            onSendItBack={() => {
+              // Win-state Send It Back: route into a fresh normal hand
+              // with challengeBackCtx set. The challenge replay state
+              // (challengeCtx) is dropped; the user is no longer in
+              // recipient mode. Share auto-fires at the fresh hand's
+              // RESULTS.
+              if (setChallengeBackCtx && challengeCtx) {
+                setChallengeBackCtx({
+                  challengerUserId: null, // GET /:id doesn't expose this to the client yet
+                  challengerName: challengeCtx.challengerName ?? null,
+                  originatingChallengeId: challengeCtx.challengeId,
+                });
+              }
+              clearChallengeCtx?.();
+              setShowChallengeComparison(false);
+              handleButtonClick();
+            }}
+            onTryAgain={() => {
+              // Loss-window-open Try Again: re-deal the SAME challenge
+              // snapshot. challengeCtx stays set so the IDLE deal branch
+              // uses challengeCtx.initialRoster (push 1 wiring).
+              setShowChallengeComparison(false);
+              handleButtonClick();
+            }}
+            onDismiss={() => {
+              // Dismiss / Play-your-own-hand: clear the challenge state
+              // and close the sheet. Push 2b adds a persistent action
+              // bar to reach DEAL after this; for now the user is left
+              // on the played-cards surface and can tap the game bar's
+              // action button (which will deal a fresh normal hand
+              // since challengeCtx is now null).
+              clearChallengeCtx?.();
+              setShowChallengeComparison(false);
+            }}
           />
         </Suspense>
       )}

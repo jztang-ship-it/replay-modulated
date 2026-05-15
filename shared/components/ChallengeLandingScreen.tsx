@@ -10,6 +10,10 @@ import { isRealName } from "@shared/utils/isRealName";
 
 interface ChallengeData {
   challenge_id: string;
+  /** Challenger's auth user_id. Used to detect self-match — when the
+   *  current viewer is the original challenger, we render an alternate
+   *  surface instead of the accept flow. */
+  created_by: string | null;
   challenger_name: string;
   target_score: number;
   sport: string;
@@ -27,6 +31,12 @@ interface ChallengeData {
 interface Props {
   challengeId: string;
   sport: string;
+  /** Current signed-in user's auth uid, or null for anonymous viewers.
+   *  When non-null and matches challenge.created_by, the screen renders
+   *  the self-match surface ("This is your challenge"). Anonymous
+   *  viewers always fall through to the normal accept flow — the
+   *  server's anti-self-farm guard still protects counter integrity. */
+  currentUserId?: string | null;
   deserializeRoster: (snapshot: Record<string, unknown>) => GeneratedCard[];
   validateRosterSnapshot: (snapshot: Record<string, unknown>) => boolean;
   onAccept: (ctx: ChallengeCtx) => void;
@@ -51,7 +61,7 @@ const TIER_ACCENT: Record<string, string> = {
   BLUE: "#3B82F6", GREEN: "#22C55E", WHITE: "#9CA3AF",
 };
 
-export function ChallengeLandingScreen({ challengeId, sport, deserializeRoster, validateRosterSnapshot, onAccept, onClose }: Props) {
+export function ChallengeLandingScreen({ challengeId, sport, currentUserId, deserializeRoster, validateRosterSnapshot, onAccept, onClose }: Props) {
   const [data, setData] = useState<ChallengeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -112,6 +122,24 @@ export function ChallengeLandingScreen({ challengeId, sport, deserializeRoster, 
       {data && (() => {
         const namedChallenger = isRealName(data.challenger_name);
         const statsLine = challengeStatsLine(data);
+        // Self-match: only triggers for signed-in users whose uid matches
+        // data.created_by. Anonymous viewers fall through to the normal
+        // accept flow (the server's anti-self-farm guard catches them).
+        const isSelfMatch = !!(currentUserId && data.created_by && currentUserId === data.created_by);
+
+        if (isSelfMatch) {
+          return (
+            <SelfMatchView
+              data={data}
+              cards={cards}
+              statsLine={statsLine}
+              challengeId={challengeId}
+              sport={sport}
+              onBack={onClose}
+            />
+          );
+        }
+
         return (
         <>
           {/* Hierarchy (top → bottom):
@@ -180,5 +208,125 @@ export function ChallengeLandingScreen({ challengeId, sport, deserializeRoster, 
         );
       })()}
     </div>
+  );
+}
+
+// ── Self-match surface ────────────────────────────────────────────────────
+//
+// Rendered when the current viewer is the challenge's original creator.
+// No "Accept" path — the user can't play their own challenge from the
+// UI. The server's anti-self-farm guard remains as belt-and-suspenders;
+// this UI prevents reaching that path in the first place.
+
+interface SelfMatchProps {
+  data: ChallengeData;
+  cards: any[];
+  statsLine: string | null;
+  challengeId: string;
+  sport: string;
+  onBack: () => void;
+}
+
+function SelfMatchView({ data, cards, statsLine, challengeId, sport, onBack }: SelfMatchProps) {
+  const [copied, setCopied] = useState(false);
+  const shareUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/${sport}/challenge/${challengeId}`
+    : "";
+  const realBestName = isRealName(data.best_user_name) ? data.best_user_name : null;
+  // Custom stats line for the self-match: lead with attempts + defenses,
+  // not the "be the first" framing. winner_count = attackers who beat
+  // the target; "defenses" = attempts that didn't beat the target.
+  const defenses = Math.max(0, (data.attempt_count ?? 0) - (data.winner_count ?? 0));
+  const composedStats = `${data.attempt_count} attempt${data.attempt_count === 1 ? "" : "s"} · ${defenses} defense${defenses === 1 ? "" : "s"}`;
+  const bestLine = data.best_score != null
+    ? ` · best ${data.best_score.toFixed(1)} FP by ${realBestName ?? "anonymous"}`
+    : "";
+
+  function handleReshare() {
+    if (typeof navigator === "undefined") return;
+    track("challenges", "self_match_reshare", { challenge_id: challengeId, sport });
+    if (navigator.share) {
+      navigator
+        .share({
+          title: "ReplayIFS Challenge",
+          text: `I put up ${data.target_score.toFixed(1)} FP. Same starting lineup. Beat me.`,
+          url: shareUrl,
+        })
+        .catch((err: any) => {
+          if (err?.name === "AbortError") return;
+          // Fall back to clipboard
+          if (navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(shareUrl)
+              .then(() => { setCopied(true); setTimeout(() => setCopied(false), 2500); })
+              .catch(() => { /* ignore */ });
+          }
+        });
+      return;
+    }
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(shareUrl)
+        .then(() => { setCopied(true); setTimeout(() => setCopied(false), 2500); })
+        .catch(() => { /* ignore */ });
+    }
+  }
+
+  return (
+    <>
+      <div style={{
+        fontSize: 14, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase",
+        color: "rgba(255,177,74,0.85)", marginBottom: 8,
+      }}>Your Challenge</div>
+      <div style={{ fontSize: 30, fontWeight: 900, color: "#EAF0FF", marginBottom: 6, lineHeight: 1.2 }}>
+        This is your challenge.
+      </div>
+      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginBottom: 18, lineHeight: 1.4 }}>
+        {composedStats}{bestLine || (statsLine ? ` · ${statsLine}` : "")}
+      </div>
+
+      {/* Score callout — your target */}
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 22 }}>
+        <span style={{ fontSize: 58, fontWeight: 950, color: "#FFB14A", lineHeight: 1, fontStyle: "italic" }}>
+          {data.target_score.toFixed(1)}
+        </span>
+        <span style={{ fontSize: 18, color: "rgba(255,255,255,0.45)", fontWeight: 700 }}>FP</span>
+        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginLeft: 6 }}>— your target</span>
+      </div>
+
+      {/* Card spread (same visual as accept flow) */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 24, justifyContent: "center" }}>
+        {cards.map((card: any, i: number) => (
+          <div key={i} style={{
+            background: "rgba(255,255,255,0.04)", border: `1.5px solid ${TIER_ACCENT[card.tier] ?? "#9CA3AF"}`,
+            borderRadius: 10, padding: "10px 14px", minWidth: 120, textAlign: "center",
+          }}>
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.5, color: TIER_ACCENT[card.tier] ?? "#9CA3AF", textTransform: "uppercase", marginBottom: 4 }}>{card.tier}</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: "#EAF0FF" }}>{card.name}</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{card.team} · ${card.salary}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Primary: re-share the same link */}
+      <button
+        onClick={handleReshare}
+        style={{
+          width: "100%", padding: "16px", borderRadius: 14,
+          background: "#FFB14A", border: "none",
+          color: "#070A12", fontSize: 17, fontWeight: 900, cursor: "pointer",
+          marginBottom: 10,
+        }}
+      >{copied ? "Link Copied ✓" : "Share this challenge again"}</button>
+
+      {/* Secondary: back to game home */}
+      <button
+        onClick={onBack}
+        style={{
+          width: "100%", padding: "13px", borderRadius: 12,
+          background: "transparent",
+          border: "1px solid rgba(255,255,255,0.18)",
+          color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: 700, cursor: "pointer",
+        }}
+      >Back to game</button>
+    </>
   );
 }

@@ -21,17 +21,27 @@ interface Props {
   /** Caption stored on the challenge (big-game or season-reel copy).
    *  Rendered on the landing page and the share-card PNG. */
   shareHeadline?: string;
+  /** When set, the prompt is in rivalry-continuation mode (the player
+   *  just beat a challenge and is sending a back-fire from a fresh
+   *  hand). Surfaces "Send to {name}" framing instead of generic
+   *  trigger labels. null → use existing trigger-driven copy. */
+  rivalryTargetName?: string | null;
   onDismiss?: () => void;
 }
 
 export function ChallengeSharePrompt({
   sport, season, totalFp, winTier, roster, initialRoster,
-  badges, winTiersMap, serializeRoster, triggerResult, shareHeadline, onDismiss,
+  badges, winTiersMap, serializeRoster, triggerResult, shareHeadline,
+  rivalryTargetName, onDismiss,
 }: Props) {
   const [copied, setCopied] = useState(false);
   const { isCreating, challengeId, error, createChallenge, shareChallenge } = useChallengeShare(sport);
 
-  const isSpecial = triggerResult.trigger !== "default";
+  // Rivalry-back mode forces the prominent prompt regardless of the
+  // underlying trigger (default-trigger fresh hands would otherwise
+  // render as the small corner icon).
+  const isRivalryBack = !!rivalryTargetName || (triggerResult.trigger as string) === "rivalry_back";
+  const isSpecial = isRivalryBack || triggerResult.trigger !== "default";
 
   async function handleChallenge() {
     track("challenges", "challenge_create", { sport, trigger: triggerResult.trigger });
@@ -98,7 +108,9 @@ export function ChallengeSharePrompt({
       {/* Header row: label + dismiss */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
         <span style={{ fontSize: 12, fontWeight: 700, color: isSpecial ? "#FFB14A" : "rgba(255,255,255,0.4)", letterSpacing: 0.5 }}>
-          {isSpecial ? TRIGGER_LABEL[triggerResult.trigger] ?? "CHALLENGE" : "CHALLENGE A FRIEND"}
+          {isRivalryBack
+            ? `↩ CHALLENGE ${(rivalryTargetName ?? "Your Friend").toUpperCase()} BACK`
+            : isSpecial ? TRIGGER_LABEL[triggerResult.trigger] ?? "CHALLENGE" : "CHALLENGE A FRIEND"}
         </span>
         {onDismiss && (
           <button
@@ -113,7 +125,9 @@ export function ChallengeSharePrompt({
       </div>
       {isSpecial && (
         <div style={{ fontSize: 14, color: "#EAF0FF", marginBottom: 12, lineHeight: 1.4 }}>
-          {triggerResult.headline}
+          {isRivalryBack
+            ? `${totalFp.toFixed(1)} FP on a fresh slate. Send it to ${rivalryTargetName ?? "your friend"}.`
+            : triggerResult.headline}
         </div>
       )}
       {error && (
@@ -133,7 +147,13 @@ export function ChallengeSharePrompt({
           cursor: isCreating ? "default" : "pointer", letterSpacing: 0.5,
         }}
       >
-        {isCreating ? "Creating..." : copied ? "Link Copied! ✓" : "Challenge a Friend"}
+        {isCreating
+          ? "Creating..."
+          : copied
+            ? "Link Copied! ✓"
+            : isRivalryBack
+              ? `Send to ${rivalryTargetName ?? "your friend"}`
+              : "Challenge a Friend"}
       </button>
     </div>
   );
