@@ -10,12 +10,14 @@
 // every losing non-self attempt while the attempter's window is open.
 // No per-user dedup: 6 losing replays = 6 defended bumps.
 //
-// Anonymous users (no valid auth uuid) get a degraded path: every
-// attempt is treated as a first attempt because we have no stable
-// identity to cluster them by. The defended counter is not bumped for
-// anonymous losses against authenticated challengers (we can't track
-// the window). Phase 2 introduces stable anonymous identity to close
-// this gap.
+// Identity clustering: signed-in users key off the Supabase auth uuid
+// (challenge_attempts.user_id). Anonymous users key off a stable
+// per-browser anon_uid sent by the client (the localStorage rm_uid;
+// stored in challenge_attempts.anon_uid as of migration 010). Both
+// paths feed the same first_attempt_at / window math, so anonymous QA
+// gets a real countdown. Truly identity-less attempts (neither
+// present) still degrade to "treat as first attempt" so the request
+// can't error — those skip the defended-counter bump.
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { supabaseAdmin } from "../../hand/lib/supabaseServer.js";
@@ -31,7 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "Missing or invalid id" });
   }
 
-  const { score, score_breakdown, is_winner, user_id, user_name } = req.body ?? {};
+  const { score, score_breakdown, is_winner, user_id, user_name, anon_uid } = req.body ?? {};
   if (score == null || is_winner == null) {
     return res.status(400).json({ error: "score and is_winner required" });
   }
@@ -42,6 +44,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const safeUserId: string | null = (typeof user_id === "string" && UUID_RE.test(user_id))
     ? user_id
     : null;
+
+  // Anonymous identity fallback — the client's localStorage rm_uid. Used
+  // only when there's no auth uuid. This is what makes the 1-hour replay
+  // window work for un-signed-in QA: clustering "is this the user's first
+  // attempt?" by anon_uid instead of degrading to "treat every attempt as
+  // first" (the pre-migration-010 behavior). Trim + length-cap so a
+  // junk-stuffed body can't write huge values.
+  const safeAnonUid: string | null = (typeof anon_uid === "string" && anon_uid.length > 0 && anon_uid.length <= 64)
+    ? anon_uid.trim()
+    : null;
+  // The single identity we cluster on for this attempt. Auth wins when
+  // available; anon_uid fills the gap. Either anchors the window math.
+  const clusterIdentity: { kind: "auth" | "anon"; value: string } | null =
+    safeUserId !== null ? { kind: "auth", value: safeUserId } :
+    safeAnonUid !== null ? { kind: "anon", value: safeAnonUid } :
+    null;
 
   const { data: challenge, error: fetchErr } = await supabaseAdmin
     .from("shared_challenges")
@@ -73,13 +91,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     attemptCountForUser: 0,
   };
 
-  if (safeUserId !== null && !isSelfFarm) {
-    const { data: rows } = await supabaseAdmin
+  if (clusterIdentity !== null && !isSelfFarm) {
+    // Cluster by whichever identity is in scope: auth uuid for signed-in
+    // users (queried against user_id), anon_uid for anonymous (queried
+    // against the TEXT column added in migration 010). The window math
+    // downstream is identical — both paths feed userPrior.firstAt.
+    let q = supabaseAdmin
       .from("challenge_attempts")
       .select("score, is_winner, created_at")
       .eq("challenge_id", challengeId)
-      .eq("user_id", safeUserId)
       .order("created_at", { ascending: true });
+    q = clusterIdentity.kind === "auth"
+      ? q.eq("user_id", clusterIdentity.value)
+      : q.eq("anon_uid", clusterIdentity.value);
+    const { data: rows } = await q;
     if (rows && rows.length) {
       userPrior.attemptCountForUser = rows.length;
       userPrior.firstAt = rows[0].created_at as string;
@@ -95,12 +120,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Insert the attempt row first — we always want the audit trail even
-  // if downstream counter logic decides to no-op.
+  // if downstream counter logic decides to no-op. anon_uid is set only
+  // when there's no auth uuid; on signed-in attempts it stays null so
+  // the per-user query stays exclusively on user_id.
   const { data: attempt, error: insertErr } = await supabaseAdmin
     .from("challenge_attempts")
     .insert({
       challenge_id: challengeId,
       user_id: safeUserId,
+      anon_uid: safeUserId === null ? safeAnonUid : null,
       user_name: safeUserName,
       score: newScore,
       score_breakdown: score_breakdown ?? null,
@@ -133,9 +161,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // the comparison sheet's countdown stuck on the optimistic 60-min
   // fallback regardless of the user's actual first_attempt_at.
   const isCountedAttempt = !isSelfFarm && !isPractice;
-  // Anonymous attempters don't get per-user window math. Treat each
-  // attempt as a first attempt — the only safe degradation.
-  const treatAsFirstAttempt = isFirstAttempt || safeUserId === null;
+  // Truly identity-less attempts (no auth uuid AND no anon_uid) can't
+  // anchor a window — treat them as first attempts so they at least
+  // get one fair shot. Auth users and anon-uid-backed users both
+  // resolve through clusterIdentity above, so isFirstAttempt is
+  // already correct for them.
+  const treatAsFirstAttempt = isFirstAttempt || clusterIdentity === null;
 
   // Counter logic. Self-farm: counters untouched. Practice (post-window
   // replay): counters untouched. Otherwise apply the window-aware rules.

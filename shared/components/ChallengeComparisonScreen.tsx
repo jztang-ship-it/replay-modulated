@@ -127,6 +127,16 @@ export function ChallengeComparisonScreen({
     const name = getNickname() || "Anonymous";
     markChallengeAttempted(challengeCtx.challengeId);
 
+    // The server needs an identity to anchor the 1-hour replay window
+    // to. For signed-in players the Supabase auth uuid (a real uuid)
+    // lands in user_id. For anonymous players getPlayerUid returns the
+    // localStorage rm_uid (e.g. "u_abc123def") — not a uuid, so we send
+    // it as anon_uid so the server can still cluster prior attempts by
+    // this browser. Sending both is harmless: the server uses user_id
+    // when it parses as a uuid and only falls back to anon_uid
+    // otherwise. (See attempt.ts and migration 010.)
+    const isAuthUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uid);
+
     fetch(`/api/challenge/${challengeCtx.challengeId}/attempt`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -134,7 +144,8 @@ export function ChallengeComparisonScreen({
         score: myScore,
         is_winner: delta > 0,
         is_practice: localIsPractice,
-        user_id: uid || undefined,
+        user_id: isAuthUuid ? uid : undefined,
+        anon_uid: isAuthUuid ? undefined : uid,
         user_name: name,
       }),
     })
