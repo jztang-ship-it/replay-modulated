@@ -169,15 +169,30 @@ export function ChallengeComparisonScreen({
   }, [attemptResult, state, trashTalk, windowClosesAtMs, onResolved]);
 
   // Live countdown — updates every 30s.
+  //
+  // The countdown must be visible as soon as the sheet appears for a
+  // loss-within-window. The server's window_closes_at_ms is the truth,
+  // but it only arrives after the attempt POST resolves (300–1000ms).
+  // To bridge that gap we fall back to an optimistic value pinned to
+  // sheet mount + 1 hour. This is exactly right for a first attempt
+  // (the window just opened) and a small over-estimate for replays
+  // (briefly shows a higher number until the server response lands and
+  // corrects it). Either way the countdown is visible from the first
+  // paint instead of popping in.
+  const ONE_HOUR_MS_CONST = 60 * 60 * 1000;
+  const [sheetMountTimeMs] = useState(() => Date.now());
+  const effectiveWindowClosesAtMs = windowClosesAtMs ?? (sheetMountTimeMs + ONE_HOUR_MS_CONST);
+
   const [nowMs, setNowMs] = useState(Date.now());
   useEffect(() => {
-    if (state !== "LOSS_OPEN" || !windowClosesAtMs) return;
+    if (state !== "LOSS_OPEN") return;
     const id = setInterval(() => setNowMs(Date.now()), 30_000);
     return () => clearInterval(id);
-  }, [state, windowClosesAtMs]);
-  const minutesLeft = windowClosesAtMs
-    ? Math.max(0, Math.round((windowClosesAtMs - nowMs) / 60_000))
-    : null;
+  }, [state]);
+  const minutesLeft = Math.max(
+    0,
+    Math.round((effectiveWindowClosesAtMs - nowMs) / 60_000),
+  );
 
   const opponentLong = namedChallenger ?? "your friend";
   const opponentLabel = (namedChallenger ?? "FRIEND").toUpperCase();
@@ -207,7 +222,7 @@ export function ChallengeComparisonScreen({
       return {
         primaryLabel: "Try Again",
         primaryAction: () => {
-          track("challenges", "challenge_try_again", { challenge_id: challengeCtx.challengeId, sport, minutes_left: minutesLeft ?? -1 });
+          track("challenges", "challenge_try_again", { challenge_id: challengeCtx.challengeId, sport, minutes_left: minutesLeft });
           onTryAgain();
         },
       };
@@ -347,7 +362,7 @@ export function ChallengeComparisonScreen({
           </div>
         </div>
 
-        {state === "LOSS_OPEN" && minutesLeft != null && (
+        {state === "LOSS_OPEN" && (
           <div style={{
             maxWidth: 360, marginBottom: 18, padding: "10px 14px",
             borderRadius: 10,
