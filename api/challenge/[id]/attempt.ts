@@ -226,17 +226,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         defendedBumped = true;
       }
     }
-  } else if (isSelfFarm && treatAsFirstAttempt) {
-    // Self-farm first-time attempt: still bump attempt_count so the row
-    // reflects total attempts. Preserves the existing anti-farm posture.
-    await supabaseAdmin
+  } else if (isSelfFarm) {
+    // Self-farm: the challenger is replaying their own hand. We hold
+    // the line on the gameable counters — attempt_count and
+    // winner_count drive social proof and would be trivially inflated
+    // by a creator looping their own challenge. But best_score /
+    // best_user_name are a record of "highest score ever recorded
+    // against this hand"; including the creator's score is genuinely
+    // informative (and surfaces them at the top of the leaderboard
+    // exactly as they would for any other player).
+    //
+    // Bump attempt_count only on the user's first self-attempt.
+    const prevChallengeBest = Number(challenge.best_score ?? -1);
+    const setNewChallengeBest = newScore > prevChallengeBest;
+    const updates: Record<string, any> = {
+      last_attempt_at: new Date().toISOString(),
+    };
+    if (treatAsFirstAttempt) {
+      updates.attempt_count = (Number(challenge.attempt_count ?? 0)) + 1;
+      attemptCountBumped = true;
+    }
+    if (setNewChallengeBest) {
+      updates.best_score = newScore;
+      updates.best_user_name = safeUserName;
+    }
+    const { error: upErr } = await supabaseAdmin
       .from("shared_challenges")
-      .update({
-        attempt_count: (Number(challenge.attempt_count ?? 0)) + 1,
-        last_attempt_at: new Date().toISOString(),
-      })
+      .update(updates)
       .eq("challenge_id", challengeId);
-    attemptCountBumped = true;
+    if (upErr) console.error("[attempt] self-farm challenge update failed:", upErr);
   }
 
   // In-app notification for the challenger. Fires only when this attempt
@@ -272,6 +290,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     .select("attempt_count, winner_count, best_score, best_user_name")
     .eq("challenge_id", challengeId)
     .single();
+
+  // Diagnostic log — emits which branch fired and why, so QA can read
+  // the Vercel function log when the counters don't behave as expected.
+  // Cheap, single line, only on counted attempts and self-farm paths
+  // (the branches that touch the row).
+  console.info("[attempt] branch summary", {
+    challenge_id: challengeId,
+    identity: clusterIdentity?.kind ?? "none",
+    is_self_farm: isSelfFarm,
+    is_first_attempt: isFirstAttempt,
+    is_practice: isPractice,
+    is_window_open: isWindowOpen,
+    new_is_winner: newIsWinner,
+    new_score: newScore,
+    prev_best_was_win: userPrior.prevBestWasWin,
+    attempt_count_bumped: attemptCountBumped,
+    winner_count_flipped: winnerCountFlipped,
+    defended_bumped: defendedBumped,
+    is_personal_best: isPersonalBest,
+    counters_after: updated,
+  });
 
   return res.status(200).json({
     attempt_id: attempt.attempt_id,
