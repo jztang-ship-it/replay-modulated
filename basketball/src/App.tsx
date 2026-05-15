@@ -87,23 +87,6 @@ function AppInner() {
   const showDebug = typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("debug") === "1";
 
-  // Diagnostic — one-shot console log on mount so we can see in DevTools
-  // exactly what the React-side URL state looks like vs the address bar.
-  // Earlier reports of "panel disappears" were almost certainly the
-  // URL-strip effect nuking ?debug=1 alongside ?play=1, but if the panel
-  // STILL doesn't render this log will tell us whether the gate is even
-  // evaluating true.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    // eslint-disable-next-line no-console
-    console.log("[debug-panel-gate]", {
-      showDebug,
-      href: window.location.href,
-      search: window.location.search,
-      debugParam: new URLSearchParams(window.location.search).get("debug"),
-    });
-  }, [showDebug]);
-
   // The flippable-card landing is a marketing-direct-link surface only.
   // The chooser appends ?play=1 to bypass it, and we set a sticky flag so
   // the user never sees that page again on direct visits either.
@@ -187,23 +170,6 @@ function AppInner() {
           stickyFlag={typeof window !== "undefined" ? localStorage.getItem(SKIP_LANDING_KEY) || "unset" : "ssr"} | ftueDone={typeof window !== "undefined" ? localStorage.getItem("replaymod_ftue_basketball") || "unset" : "ssr"}
         </div>
       )}
-      {/* UNMISSABLE SENTINEL — gated on the exact same showDebug flag as
-          the panel. If you see this magenta bar but no panel below it,
-          the gate is firing correctly and the panel's render path is at
-          fault. If you DON'T see this bar with ?debug=1 in the URL, the
-          URL itself is being mangled before showDebug evaluates. Top-of
-          document, zIndex above everything. */}
-      {showDebug && (
-        <div style={{
-          position: "fixed", top: 0, left: 0, right: 0,
-          zIndex: 999999,
-          background: "#FF00AA", color: "#FFFFFF",
-          fontFamily: "monospace", fontSize: 11, fontWeight: 900,
-          padding: "3px 8px", textAlign: "center",
-          pointerEvents: "none",
-        }}>DEBUG MODE — ?debug=1 active</div>
-      )}
-
       {/* ?debug=1 challenge overlay — renders on every route, not just
           in-game. challengeId resolves to:
             1. challengeCtx after Accept (in-game)

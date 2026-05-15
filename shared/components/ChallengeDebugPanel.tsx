@@ -38,20 +38,6 @@ interface ApiLog {
 }
 
 export function ChallengeDebugPanel({ challengeId: challengeIdFromProps, userId, userName }: Props) {
-  // Mount log — confirms in DevTools whether React is actually calling
-  // this component when ?debug=1 is set. If "[debug-panel] component
-  // mounted" never logs, the gate above (showDebug in App.tsx) isn't
-  // firing. If it logs but no panel appears on screen, position:fixed
-  // is being clipped by a transformed ancestor stacking context.
-  useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log("[debug-panel] component mounted", {
-      challengeIdFromProps,
-      userId,
-      userName,
-    });
-  }, []); // eslint-disable-line
-
   // Local override so QA can paste an arbitrary challenge id and refetch.
   // Falls through to the prop-resolved id when the input is blank.
   const [manualId, setManualId] = useState("");
