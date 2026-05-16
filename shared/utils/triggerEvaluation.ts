@@ -88,15 +88,18 @@ export function evaluateTrigger(input: TriggerInput): TriggerResult {
     }
   }
 
-  // 4. bad_beat — BUST or ROOKIE with 2+ RED/ORANGE cards (revised from 1+).
-  //    One premium card busting isn't surprising; the share-worthy story is
-  //    "stacked lineup got cooked", which needs ≥2 high-tier cards.
+  // 4. bad_beat — BUST or ROOKIE with 2+ RED/ORANGE cards that the user
+  //    actually HELD. "Stacked lineup got cooked" is a story about the
+  //    user's deliberate picks busting, not RNG dropping high-tier
+  //    cards into the redraw. Earlier versions counted all roster slots
+  //    regardless of wasHeld, which fired bad_beat on hands the user
+  //    didn't actually stack.
   if (winTier === "BUST" || winTier === "ROOKIE") {
-    const highTierCount = roster.reduce(
-      (n, c) => n + (c.tier === "RED" || c.tier === "ORANGE" ? 1 : 0),
+    const highTierHeldCount = roster.reduce(
+      (n, c: any) => n + (c.wasHeld === true && (c.tier === "RED" || c.tier === "ORANGE") ? 1 : 0),
       0,
     );
-    if (highTierCount >= 2) {
+    if (highTierHeldCount >= 2) {
       return {
         trigger: "bad_beat",
         headline: `Brutal hand. See if they survive the same slate.`,

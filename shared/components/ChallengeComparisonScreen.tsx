@@ -39,6 +39,8 @@ interface AttemptResult {
   is_personal_best?: boolean;
   winner_count_flipped?: boolean;
   defended_bumped?: boolean;
+  first_attempt_at?: string;
+  first_attempt_at_ms?: number;
   window_closes_at?: string;
   window_closes_at_ms?: number;
   is_window_open?: boolean;
@@ -97,7 +99,16 @@ export function ChallengeComparisonScreen({
   const isPhotoFinish = absDelta <= 1;
 
   const namedChallenger = isRealName(challengeCtx.challengerName) ? challengeCtx.challengerName : null;
-  const userHasWon = attemptResult?.user_has_won ?? (delta > 0);
+  // [Comparison:v2] State machine drives off the CURRENT attempt's
+  // outcome, NOT the user's cumulative historical state. Earlier
+  // versions read attemptResult.user_has_won which is "newIsWinner ||
+  // prevBestWasWin" — cumulative — so a user who'd previously won this
+  // challenge would see the WIN frame (green headline, Send-It-Back
+  // CTA) on a losing replay. Per-attempt outcome means: this score >
+  // target = WIN, else loss-with-window-state. Cumulative state stays
+  // on the counters (winner_count, best_score) — those remain
+  // historical.
+  const userWonThisAttempt = delta > 0;
   const isWindowOpen = attemptResult?.is_window_open ?? true;
   const windowClosesAtMs = attemptResult?.window_closes_at_ms ?? null;
   // Local "has played before" hint — useful as telemetry context on the
@@ -110,7 +121,7 @@ export function ChallengeComparisonScreen({
   const isPractice = attemptResult?.is_practice === true;
 
   const state: ComparisonState =
-    userHasWon ? "WIN"
+    userWonThisAttempt ? "WIN"
     : isWindowOpen ? "LOSS_OPEN"
     : "LOSS_CLOSED";
 
@@ -179,26 +190,55 @@ export function ChallengeComparisonScreen({
     onResolved?.({ state, trashTalk, windowClosesAtMs });
   }, [attemptResult, state, trashTalk, windowClosesAtMs, onResolved]);
 
-  // Live countdown — updates every second.
+  // [Timer:v3] Live countdown — anchored to the SERVER'S first_attempt_at.
   //
-  // The countdown must be visible as soon as the sheet appears for a
-  // loss-within-window. The server's window_closes_at_ms is the truth,
-  // but it only arrives after the attempt POST resolves (300–1000ms).
-  // To bridge that gap we fall back to an optimistic value pinned to
-  // sheet mount + 1 hour. This is exactly right for a first attempt
-  // (the window just opened) and a small over-estimate for replays
-  // (briefly shows a higher number until the server response lands and
-  // corrects it). Either way the countdown is visible from the first
-  // paint instead of popping in.
+  // The server returns first_attempt_at_ms (anchor) and window_closes_at_ms
+  // (= first_attempt_at_ms + 1h) on every attempt POST. Both values are
+  // STABLE across replays by the same identity within the same window —
+  // they reflect the user's earliest attempt for this challenge, not the
+  // current attempt's timestamp. The timer reads window_closes_at_ms
+  // and decrements via 1Hz nowMs tick.
   //
-  // Tick rate is 1s and display is mm:ss during the QA phase so the
-  // decrement is visibly happening every second. The original 30s
-  // tick + Math.round(minutes) produced a counter that looked frozen
-  // — the value stayed at "60" for the full first minute of decay
-  // because round(59.5) is 60. mm:ss eliminates that ambiguity.
+  // Optimistic fallback: only used when this is the user's KNOWN FIRST
+  // attempt (no localStorage marker for this challenge). For known
+  // replays (marker present) we suppress the 60:00 fallback so the
+  // timer doesn't briefly mislead while the POST is in flight — better
+  // to show "—:—" for 300-1000ms than to flash a wrong value. If the
+  // POST fails (server bug, network), the timer stays "—:—" and that's
+  // a visible signal something's wrong.
+  //
+  // Canary log fires every time attemptResult lands. If you see
+  //   [Timer:v3] anchor first_attempt_at=...  source=server
+  // and the first_attempt_at_iso is IDENTICAL across consecutive
+  // replays within the same window, the anchor is stable (correct).
+  // If it CHANGES across replays, the server's prior-attempt lookup
+  // is missing the earlier row — most likely cause: migration 010
+  // not applied (anon path) or rm_uid changing between sessions.
   const ONE_HOUR_MS_CONST = 60 * 60 * 1000;
   const [sheetMountTimeMs] = useState(() => Date.now());
-  const effectiveWindowClosesAtMs = windowClosesAtMs ?? (sheetMountTimeMs + ONE_HOUR_MS_CONST);
+  const isKnownReplay = localIsPractice;
+  // server value when present; otherwise optimistic fallback only on
+  // first attempt; null (= "—:—") on known replay while waiting.
+  const effectiveWindowClosesAtMs: number | null =
+    windowClosesAtMs ??
+    (isKnownReplay ? null : sheetMountTimeMs + ONE_HOUR_MS_CONST);
+
+  useEffect(() => {
+    if (!attemptResult) return;
+    // eslint-disable-next-line no-console
+    console.info("[Timer:v3] anchor", {
+      source: attemptResult.window_closes_at_ms ? "server" : "fallback",
+      first_attempt_at: attemptResult.first_attempt_at ?? null,
+      first_attempt_at_ms: attemptResult.first_attempt_at_ms ?? null,
+      window_closes_at: attemptResult.window_closes_at ?? null,
+      window_closes_at_ms: attemptResult.window_closes_at_ms ?? null,
+      remaining_seconds: attemptResult.window_closes_at_ms
+        ? Math.max(0, Math.floor((attemptResult.window_closes_at_ms - Date.now()) / 1000))
+        : null,
+      is_known_replay: isKnownReplay,
+      sheet_mount_time_ms: sheetMountTimeMs,
+    });
+  }, [attemptResult, isKnownReplay, sheetMountTimeMs]);
 
   const [nowMs, setNowMs] = useState(Date.now());
   useEffect(() => {
@@ -206,15 +246,17 @@ export function ChallengeComparisonScreen({
     const id = setInterval(() => setNowMs(Date.now()), 1_000);
     return () => clearInterval(id);
   }, [state]);
-  const secondsLeft = Math.max(
-    0,
-    Math.floor((effectiveWindowClosesAtMs - nowMs) / 1000),
-  );
-  const mm = Math.floor(secondsLeft / 60);
-  const ss = secondsLeft % 60;
-  const countdownLabel = `${mm}:${ss.toString().padStart(2, "0")}`;
+  const secondsLeft = effectiveWindowClosesAtMs == null
+    ? null
+    : Math.max(0, Math.floor((effectiveWindowClosesAtMs - nowMs) / 1000));
+  const mm = secondsLeft == null ? null : Math.floor(secondsLeft / 60);
+  const ss = secondsLeft == null ? null : secondsLeft % 60;
+  const countdownLabel = secondsLeft == null
+    ? "—:—"
+    : `${mm}:${ss!.toString().padStart(2, "0")}`;
   // Urgency threshold uses the original 5-minute boundary for color/size.
-  const isUrgent = secondsLeft < 5 * 60;
+  // Null seconds (waiting for server on a replay) = not urgent.
+  const isUrgent = secondsLeft != null && secondsLeft < 5 * 60;
 
   const opponentLong = namedChallenger ?? "your friend";
   const opponentLabel = (namedChallenger ?? "FRIEND").toUpperCase();
@@ -398,7 +440,9 @@ export function ChallengeComparisonScreen({
           }}>
             {secondsLeft === 0
               ? "Window closing — last shot."
-              : `${countdownLabel} to flip this.`}
+              : secondsLeft == null
+                ? "—:— to flip this."
+                : `${countdownLabel} to flip this.`}
           </div>
         )}
 

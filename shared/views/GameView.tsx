@@ -705,9 +705,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
   // First rookie win — fires at RESULTS. Skipped for challenge recipients
   // (their first impression of the game shouldn't be a tutorial-style
-  // Chad nudge about ROOKIE tier rules).
+  // Chad nudge about ROOKIE tier rules). onChallengeUrl covers pre-Accept.
   useEffect(() => {
-    if (isFTUE || challengeCtx) return;
+    if (isFTUE || challengeCtx || onChallengeUrl) return;
     if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
     if (winTier !== "ROOKIE") return;
     if (localStorage.getItem("rm_usher_rookie_first_win") === "1") return;
@@ -719,9 +719,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // All other Chad messages — evaluated once per IDLE.
   // Challenge recipients don't see retention/auth-nudge Chad lines — the
   // intro chip and the comparison sheet are the only Chad surfaces in the
-  // challenge flow.
+  // challenge flow. onChallengeUrl gate covers pre-Accept (challengeCtx
+  // null but landing screen open).
   useEffect(() => {
-    if (isFTUE || challengeCtx || gameState !== "IDLE") return;
+    if (isFTUE || challengeCtx || onChallengeUrl || gameState !== "IDLE") return;
     if (chadFiredThisIdleRef.current) return;
     if (chadLastHandRef.current === handCount) return;
 
@@ -778,23 +779,31 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     }
   }, [gameState, handCount, isFTUE, isAnonymous, bigWinFired, tryOpenAuthModal, tryClaimAttention, releaseAttention]); // eslint-disable-line
 
-  // Auth nudge — MVP+ hand while anonymous.
+  // [Auth:challenge-skip] Auth nudge — MVP+ hand while anonymous.
   // Challenge recipients are guests landing through a deep link — pushing a
-  // sign-in modal on top of the comparison sheet kills the moment. Skip.
+  // sign-in modal kills the moment. Skip during ALL challenge flow:
+  //   - challengeCtx truthy   → post-Accept (replay in progress)
+  //   - challengeIdFromUrl    → pre-Accept (landing screen visible,
+  //                             challengeCtx still null but GameView
+  //                             is mounted underneath)
+  // Earlier versions only checked challengeCtx, which let the nudge fire
+  // for return users (handCount>=5) on the landing screen.
+  const onChallengeUrl = typeof window !== "undefined" &&
+    /\/basketball\/challenge\/[0-9a-f-]{36}/i.test(window.location.pathname);
   useEffect(() => {
-    if (!isAnonymous || isFTUE || challengeCtx) return;
+    if (!isAnonymous || isFTUE || challengeCtx || onChallengeUrl) return;
     if (gameState !== "IDLE") return;
     if (winTier !== "MVP" && winTier !== "LEGEND") return;
     return tryOpenAuthModal("big_win", 2500, { tier: winTier ?? "" });
-  }, [winTier, isAnonymous, isFTUE, gameState, tryOpenAuthModal, challengeCtx]);
+  }, [winTier, isAnonymous, isFTUE, gameState, tryOpenAuthModal, challengeCtx, onChallengeUrl]);
 
   // Auth nudge — fallback at hand 5. Same challenge-mode skip as above.
   useEffect(() => {
-    if (!isAnonymous || isFTUE || challengeCtx) return;
+    if (!isAnonymous || isFTUE || challengeCtx || onChallengeUrl) return;
     if (gameState !== "IDLE") return;
     if (handCount < 5) return;
     return tryOpenAuthModal("hand_5", 3500);
-  }, [handCount, isAnonymous, isFTUE, gameState, tryOpenAuthModal, challengeCtx]);
+  }, [handCount, isAnonymous, isFTUE, gameState, tryOpenAuthModal, challengeCtx, onChallengeUrl]);
 
   // (prepareChallenge removed in push 2a. Send It Back from the
   // comparison sheet no longer shares from the played hand directly —
@@ -1737,13 +1746,14 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       // browser console without re-deriving the math. Skipped in
       // challenge mode (already gated by the outer challengeCtx check).
       // eslint-disable-next-line no-console
-      console.info("[trigger] hand evaluation", {
+      console.info("[Trigger:v2] hand evaluation", {
         fp: Math.round(fp * 10) / 10,
         winTier: tier,
         topGameTier,
-        per_card_badges: resolvedRoster.map((c: any) => ({
+        per_card: resolvedRoster.map((c: any) => ({
           name: c.name,
           tier: c.tier,
+          wasHeld: c.wasHeld === true,
           badge_ids: (c.achievements ?? []).map((a: any) => a.id),
         })),
         trigger: result.trigger,

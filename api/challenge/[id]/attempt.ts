@@ -343,6 +343,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     winner_count_flipped: winnerCountFlipped,
     defended_bumped: defendedBumped,
     // Window state (epoch ms is easiest for the client to count down on)
+    first_attempt_at: new Date(firstAtMs).toISOString(),
+    first_attempt_at_ms: firstAtMs,
     window_closes_at: new Date(windowClosesAtMs).toISOString(),
     window_closes_at_ms: windowClosesAtMs,
     is_window_open: isWindowOpen,
