@@ -75,8 +75,11 @@ function pickBiasedLog(card: GeneratedCard, logsByKey: Map<string, RawLog[]>, ad
   if (!base) return null;
   const season = parseSeasonNum(card.season);
   const tier = card.tier;
-  let candidates: RawLog[] = season !== null ? (logsByKey.get(`${base}|${season}`) ?? []) : [];
+  const seasonKey = season !== null ? `${base}|${season}` : null;
+  let candidates: RawLog[] = seasonKey ? (logsByKey.get(seasonKey) ?? []) : [];
+  const seasonKeyHits = candidates.length;
   if (!candidates.length) candidates = logsByKey.get(base) ?? [];
+  const beforeFilter = candidates.length;
   // Filter out garbage logs:
   // 1. Must have at least one positive stat value (all-zero = DNP or corrupt data)
   // 2. If minutes field exists, must meet minMinutes threshold from config
@@ -101,7 +104,37 @@ function pickBiasedLog(card: GeneratedCard, logsByKey: Map<string, RawLog[]>, ad
     if (adapter.isLogValidForCard && !adapter.isLogValidForCard(card.position, l)) return false;
     return true;
   });
-  if (!candidates.length) return null;
+  // Diagnostic — when a card resolves to no candidates, log enough to
+  // pin the cause from the browser console. Three failure modes:
+  //   1. seasonKeyHits=0, beforeFilter=0: lookup never matched. Either
+  //      logsByKey has no entry for this base|season (wrong active
+  //      season loaded?) and no fallback for the base-only key
+  //      either (player not in any loaded season's logs?).
+  //   2. beforeFilter=0 but seasonKeyHits>0: shouldn't happen — would
+  //      mean candidates was non-empty and is now empty without the
+  //      filter running. Indicates a logic bug below this line.
+  //   3. beforeFilter>0, candidates.length=0: filter rejected every
+  //      candidate. Bug 1 patterns: missing min field on every log,
+  //      all stats zero, or adapter.isLogValidForCard returning false
+  //      for every log (sport with role validation).
+  // Gated on null result so we don't spam logs for normal resolves.
+  if (!candidates.length) {
+    // eslint-disable-next-line no-console
+    console.warn("[resolveEngine] pickBiasedLog returning null", {
+      basePlayerId: base,
+      card_season: card.season,
+      card_position: card.position,
+      card_tier: tier,
+      parsed_season_num: season,
+      lookup_key: seasonKey,
+      season_key_hits: seasonKeyHits,
+      before_filter: beforeFilter,
+      after_filter: 0,
+      min_minutes_threshold: minMinutes,
+      logs_by_key_size: logsByKey.size,
+    });
+    return null;
+  }
   if (candidates.length === 1) return candidates[0];
   const sorted = [...candidates].sort((a, b) => sumStats(b.stats) - sumStats(a.stats));
   const n = sorted.length;
