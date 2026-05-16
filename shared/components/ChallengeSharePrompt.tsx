@@ -53,6 +53,11 @@ export function ChallengeSharePrompt({
         challengerName: getNickname() || "Anonymous",
         serializeRoster,
         shareHeadline,
+        // Pass the pre-evaluated trigger through so the DB row's
+        // trigger_type matches what fired on the prompt. Without this,
+        // useChallengeShare's re-evaluation misses topGameTier and
+        // rare_pull hands record as default.
+        triggerResult,
       });
     }
     if (!cid) return;

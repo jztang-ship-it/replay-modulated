@@ -32,6 +32,13 @@ export interface CreateChallengeArgs {
    *  used instead of evaluateTrigger().headline so big-game / season-reel
    *  copy lands on the landing page + share card. */
   shareHeadline?: string;
+  /** Pre-evaluated trigger from GameView. When provided, createChallenge
+   *  uses it directly instead of re-evaluating — keeps the prompt's
+   *  trigger consistent with what gets stored as `trigger_type` on the
+   *  challenge row. Without this, re-evaluation here misses topGameTier
+   *  (which only GameView has access to) and rare_pull hands get
+   *  recorded as `trigger_type='default'`. */
+  triggerResult?: TriggerResult;
 }
 
 // Per-challenge marker: rm_challenge_attempted_<id>. Used as a UI hint
@@ -64,7 +71,11 @@ export function useChallengeShare(sportKey: string) {
 
   const createChallenge = useCallback(async (args: CreateChallengeArgs): Promise<string | null> => {
     setState(s => ({ ...s, isCreating: true, error: null }));
-    const trigger = evaluateTrigger({
+    // Prefer the pre-evaluated trigger from the prompt's parent (GameView
+    // passes triggerResult through ChallengeSharePrompt). Re-evaluating
+    // here without topGameTier would mis-record rare_pull hands as
+    // default, since topGameTier only flows through GameView's call site.
+    const trigger: TriggerResult = args.triggerResult ?? evaluateTrigger({
       roster: args.roster, totalFp: args.totalFp, winTier: args.winTier as any,
       badges: args.badges, winTiersMap: args.winTiersMap,
     });

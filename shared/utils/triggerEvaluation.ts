@@ -4,12 +4,23 @@ import type { WinTierMap, WinTierKey } from "./payoutLogic";
 
 const RECORD_BADGE_IDS = ["TOP_GAME", "CAREER_HIGH", "NBA_RECORD", "SEASON_RECORD", "PB"];
 
+/** Top-game tiers from shared/data/recordDetector.ts. All three are
+ *  "rare-pull" worthy — a record, a career high, or a season top-10 are
+ *  the share-worthy moments rare_pull is supposed to surface. */
+export type TopGameTier = "record" | "career" | "season";
+
 export interface TriggerInput {
   roster: GeneratedCard[];
   totalFp: number;
   winTier: WinTierKey | string;
   badges: Array<{ id: string; icon: string; label: string; fp: number }>;
   winTiersMap: WinTierMap;
+  /** topGame tier of the hand's star card (from recordDetector). Set when
+   *  the star pulled a "record" / "career" / "season" game. This is the
+   *  authoritative input for rare_pull — the badge-substring check below
+   *  is a redundant fallback in case a future code path puts a record
+   *  badge directly on card.achievements (none do today). */
+  topGameTier?: TopGameTier | null;
 }
 
 export interface TriggerResult {
@@ -24,11 +35,22 @@ export interface TriggerResult {
 const NEAR_MISS_WINDOW = 5;
 
 export function evaluateTrigger(input: TriggerInput): TriggerResult {
-  const { roster, totalFp, winTier, badges, winTiersMap } = input;
+  const { roster, totalFp, winTier, badges, winTiersMap, topGameTier } = input;
   const fp = Math.round(totalFp * 10) / 10;
 
-  // 1. rare_pull — any record/top-game badge
-  if (badges.some(b => RECORD_BADGE_IDS.some(rid => b.id.includes(rid)))) {
+  // 1. rare_pull — star card pulled a record / career-high / season top-10
+  //    game. Two paths into this branch:
+  //      (a) topGameTier passed in directly — the canonical signal,
+  //          sourced from detectTopGame() at the GameView call site.
+  //      (b) Substring match against RECORD_BADGE_IDS in the badge list —
+  //          retained as a fallback in case a future code path emits a
+  //          synthetic record badge on card.achievements. No badge with
+  //          these IDs is written today (basketballConfig only emits
+  //          stat-based badges like GOD_MODE / TRIPLE_DBL), so this path
+  //          is dormant; the (a) path is what actually fires now.
+  const hasRecordBadge = badges.some(b => RECORD_BADGE_IDS.some(rid => b.id.includes(rid)));
+  const hasTopGame = topGameTier === "record" || topGameTier === "career" || topGameTier === "season";
+  if (hasRecordBadge || hasTopGame) {
     return {
       trigger: "rare_pull",
       headline: `You pulled a legendary game. Challenge someone to beat this.`,

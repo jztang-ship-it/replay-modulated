@@ -1720,7 +1720,36 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       const badges = resolvedRoster.flatMap((c: any) => c.achievements ?? []);
       const fp = resolvedRoster.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0);
       const tier = winTier ?? calculateWinTier(fp) ?? "BUST";
-      const result = evaluateTrigger({ roster: resolvedRoster, totalFp: fp, winTier: tier, badges, winTiersMap: adapter.winTiersMap });
+      const topGameTier = (topGameInfoHolder.current?.topGame?.tier ?? null) as
+        import("@shared/utils/triggerEvaluation").TopGameTier | null;
+      const result = evaluateTrigger({
+        roster: resolvedRoster,
+        totalFp: fp,
+        winTier: tier,
+        badges,
+        winTiersMap: adapter.winTiersMap,
+        topGameTier,
+      });
+
+      // QA diagnostic — one log per hand. Includes the inputs the
+      // evaluator gates on plus the trigger it chose, so future "why
+      // did/didn't the prompt fire?" questions are answerable from the
+      // browser console without re-deriving the math. Skipped in
+      // challenge mode (already gated by the outer challengeCtx check).
+      // eslint-disable-next-line no-console
+      console.info("[trigger] hand evaluation", {
+        fp: Math.round(fp * 10) / 10,
+        winTier: tier,
+        topGameTier,
+        per_card_badges: resolvedRoster.map((c: any) => ({
+          name: c.name,
+          tier: c.tier,
+          badge_ids: (c.achievements ?? []).map((a: any) => a.id),
+        })),
+        trigger: result.trigger,
+        headline: result.headline,
+      });
+
       if (challengeBackCtx) {
         const targetName = challengeBackCtx.challengerName ?? "your friend";
         setChallengeTrigger({
@@ -2698,10 +2727,14 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       })()}
 
       {/* ChallengeSharePrompt — fires at RESULTS/WIN_CELEBRATION when a
-          trigger is evaluated and the user is not in FTUE. Challenge mode
-          guard (challengeCtx check) added in Task 10. Rivalry-back framing
-          when challengeBackCtx is set (Push 2a). */}
-      {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && challengeTrigger && !isFTUE && (
+          NAMED trigger is evaluated (rare_pull / big_score / near_miss /
+          bad_beat / rivalry_back) and the user is not in FTUE. The
+          `trigger !== "default"` exclusion matches the commentary-
+          override gate at line 1261 — without it, every hand fires a
+          share prompt regardless of whether anything share-worthy
+          happened, including plain STARTER hands with no pulls. Challenge
+          mode guard (challengeCtx) added in Task 10. */}
+      {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && challengeTrigger && challengeTrigger.trigger !== "default" && !isFTUE && (
         <Suspense fallback={null}>
           <ChallengeSharePrompt
             sport={sportKey}
