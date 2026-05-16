@@ -29,22 +29,34 @@ function relativeTime(iso: string): string {
   } catch { return ""; }
 }
 
-function notificationCopy(n: ChallengeNotification): { title: string; sub: string } {
+// [NotifCopy:v2] Win/loss differentiation in BOTH title and CTA.
+// Earlier versions said "Challenge them back?" on losses — which is
+// nonsense, since "back" implies they beat you. Spec:
+//   Won  → "B beat your challenge by X FP."   CTA: "Run it back" → routes Send It Back
+//   Lost → "B took a swing and missed by X FP." CTA: "View attempt" → just opens, no routing
+// `actionable` here distinguishes whether the tap should route into a
+// rivalry-continuation flow (won) or just dismiss (lost).
+function notificationCopy(n: ChallengeNotification): { title: string; sub: string; actionable: boolean } {
   if (n.type === "challenge_attempted") {
     const p = n.payload ?? {};
     const realName = isRealName(p.attempter_name) ? p.attempter_name : null;
     const subject = realName ?? "Someone";
     const isWinner = Boolean(p.is_winner);
-    const delta = isWinner
-      ? Math.abs(Number(p.attempter_score ?? 0) - Number(p.target_score ?? 0)).toFixed(1)
-      : Math.abs(Number(p.target_score ?? 0) - Number(p.attempter_score ?? 0)).toFixed(1);
-    const title = isWinner
-      ? `${subject} beat your challenge by ${delta} FP.`
-      : `${subject} took a swing at your challenge and missed.`;
-    const sub = isWinner ? "Run it back?" : "Challenge them back?";
-    return { title, sub };
+    const delta = Math.abs(Number(p.attempter_score ?? 0) - Number(p.target_score ?? 0)).toFixed(1);
+    if (isWinner) {
+      return {
+        title: `${subject} beat your challenge by ${delta} FP.`,
+        sub: "Run it back?",
+        actionable: true,
+      };
+    }
+    return {
+      title: `${subject} took a swing at your challenge and missed by ${delta} FP.`,
+      sub: "View attempt",
+      actionable: false,
+    };
   }
-  return { title: "Notification", sub: "" };
+  return { title: "Notification", sub: "", actionable: false };
 }
 
 export function NotificationsPanel({ notifications, onClose, onTapNotification }: Props) {
@@ -95,7 +107,7 @@ export function NotificationsPanel({ notifications, onClose, onTapNotification }
         ) : (
           <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
             {notifications.map(n => {
-              const { title, sub } = notificationCopy(n);
+              const { title, sub, actionable } = notificationCopy(n);
               const unread = n.read_at == null;
               return (
                 <li key={n.notification_id}>

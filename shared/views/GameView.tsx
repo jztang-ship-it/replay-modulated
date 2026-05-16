@@ -143,6 +143,7 @@ import {
   chadChallengeIntro,
   chadChallengeTactical,
   chadNormalPlayWelcome,
+  chadRivalryBackIntro,
 } from "@shared/commentary/chad";
 import { isRealName } from "@shared/utils/isRealName";
 import { useAuth } from "@shared/auth/useAuth";
@@ -633,6 +634,36 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // or any state transition past HOLD.
   useEffect(() => {
     if (!challengeIntroShownRef.current) return;
+    if (lockedCardIds.size > 0 || (gameState !== "HOLD" && gameState !== "IDLE")) {
+      setFtueCommentaryOverride(null);
+    }
+  }, [lockedCardIds, gameState]); // eslint-disable-line
+
+  // [Chad:rivalry-back] Fresh-hand intro chip after Send-It-Back.
+  // Mirrors the incoming-challenge intro pattern (chip lands at HOLD,
+  // dismisses on first card interaction) but framing flips outbound:
+  // "this hand is going back to {name}". Distinguishing signal is
+  // challengeBackCtx (rivalry continuation) being set with no inbound
+  // challengeCtx — the user just left a win and is on a fresh deal.
+  const rivalryBackChipFiredRef = useRef(false);
+  useEffect(() => {
+    if (!challengeBackCtx || challengeCtx) {
+      rivalryBackChipFiredRef.current = false;
+      return;
+    }
+    if (rivalryBackChipFiredRef.current) return;
+    if (gameState !== "HOLD") return;
+    rivalryBackChipFiredRef.current = true;
+    const namedChallenger = isRealName(challengeBackCtx.challengerName)
+      ? challengeBackCtx.challengerName
+      : null;
+    const line = chadRivalryBackIntro({ challengerName: namedChallenger });
+    setFtueCommentaryOverride({ parts: [line], sticky: true });
+  }, [challengeBackCtx, challengeCtx, gameState]); // eslint-disable-line
+  // Dismiss on first hold or past-HOLD transition (same gate as the
+  // inbound intro chip).
+  useEffect(() => {
+    if (!rivalryBackChipFiredRef.current) return;
     if (lockedCardIds.size > 0 || (gameState !== "HOLD" && gameState !== "IDLE")) {
       setFtueCommentaryOverride(null);
     }
@@ -2644,9 +2675,23 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             onTapNotification={(n: ChallengeNotification) => {
               if (n.type !== "challenge_attempted") return;
               const p = n.payload ?? {};
-              // Set the rivalry-continuation context targeting the
-              // attempter, then deal a fresh normal hand. Share auto-
-              // fires at that hand's RESULTS framed as a back-fire.
+              const isWinner = Boolean(p.is_winner);
+              // [NotifCopy:v2] Tap routing splits on isWinner:
+              //  - WON  (attempter beat your target): set rivalry-back ctx
+              //    targeting attempter, deal a fresh normal hand. Share
+              //    auto-fires at RESULTS as a back-challenge.
+              //  - LOST (attempter missed): no Send-It-Back routing — they
+              //    haven't beaten you yet, so the back-challenge framing
+              //    is nonsense. Just close the panel and mark read. Future
+              //    work: open a stats/attempt detail view.
+              setShowNotifications(false);
+              void markNotificationsRead();
+              setNotifRefreshNonce(x => x + 1);
+              track("challenges", "notification_tap", { type: n.type, actionable: isWinner });
+              if (!isWinner) {
+                // Loss path: dismiss only, no deal trigger.
+                return;
+              }
               if (setChallengeBackCtx) {
                 setChallengeBackCtx({
                   challengerUserId: typeof p.attempter_user_id === "string" ? p.attempter_user_id : null,
@@ -2654,10 +2699,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                   originatingChallengeId: typeof p.challenge_id === "string" ? p.challenge_id : "",
                 });
               }
-              setShowNotifications(false);
-              void markNotificationsRead();
-              setNotifRefreshNonce(x => x + 1);
-              track("challenges", "notification_tap", { type: n.type });
               // Trigger deal via the standard action button. challengeCtx
               // is already null (we're in normal play); the IDLE branch
               // deals from today's slate.

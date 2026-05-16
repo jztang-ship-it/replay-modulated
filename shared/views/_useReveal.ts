@@ -247,31 +247,58 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     isSkippingRefHolder.current = src;
   }, []);
 
-  // ── runSpring ──────────────────────────────────────────────────────
-  // Used to be a 4-segment oscillation that animated the bar from the
-  // 5-card total up to the final FP while the anchor's card-face number
-  // had already settled. Now that runningTotalFp INCLUDES the anchor's
-  // per-tick visibleFp, the bar arrives at finalFp in lockstep with the
-  // card's count animation — there's nothing left to "spring." This
-  // function survives as a brief settle gate: a short timer that fires
-  // the original onSettled callback (tier audio, payout, leaderboard
-  // submission). The springFp state stays null so the bar continues
-  // following runningTotalFp uninterrupted.
+  // [Spring:v2] runSpring — damped-sinusoid bounce after the anchor lands.
+  //
+  // The anchor's count animation drives the running total up to finalFp
+  // in lockstep with the bar. Without an overlay, the bar just stops
+  // dead at finalFp — flat. This function overlays a damped-sinusoid
+  // impulse on top, so the bar visibly bounces (peak ~5-8 FP above
+  // final, dips slightly below, settles) over ~700ms. springFp is
+  // consumed by computeDisplayFp, which the gauge and the team-FP
+  // readout both read — so the bar AND the FP total oscillate together.
+  //
+  // Clamped to springTiers so the overshoot can't visually cross into
+  // the next tier (a near-miss STARTER hand shouldn't briefly flash
+  // ALL-STAR styling during the bounce).
   const runSpring = useCallback((finalFp: number, onSettled: () => void) => {
     cancelAnimationFrame(springRafRef.current);
     springTimersRef.current.forEach(clearTimeout);
     springTimersRef.current = [];
-    void springTiers; // intentionally unused — old overshoot clamp lived here
     setSpringFp(null);
     setSpringSettled(false);
     frozenBarFpRef.current = null;
-    const SETTLE_DELAY_MS = 220;
-    const t = window.setTimeout(() => {
-      lockedGaugeFpRef.current = finalFp;
-      setSpringSettled(true);
-      onSettled();
-    }, SETTLE_DELAY_MS);
-    springTimersRef.current.push(t);
+
+    // Tier clamp — keep peak below next tier's lo so styling stays put.
+    const tier = springTiers.find(t => finalFp >= t.lo && finalFp < t.hi);
+    const headroom = tier ? Math.max(0, tier.hi - finalFp - 0.1) : Number.POSITIVE_INFINITY;
+    const PEAK_BASE = 7;        // FP units at the visible apex
+    const peak = Math.min(PEAK_BASE, headroom);
+    const DURATION_MS = 700;
+    const ZETA = 0.28;          // damping ratio — visible bounces
+    const WN = 14;              // natural freq → ~2.2 Hz, ~2 visible peaks in 700ms
+    const wd = WN * Math.sqrt(1 - ZETA * ZETA);
+    const startMs = performance.now();
+
+    const step = () => {
+      const elapsedMs = performance.now() - startMs;
+      if (elapsedMs >= DURATION_MS || peak <= 0) {
+        setSpringFp(null);
+        lockedGaugeFpRef.current = finalFp;
+        setSpringSettled(true);
+        onSettled();
+        return;
+      }
+      // Damped-sinusoid impulse: starts at 0, peaks at +peak, oscillates
+      // back through 0 with decaying amplitude. sin(0)=0 ensures the
+      // bar starts exactly where the count landed (no visual jump).
+      const t = elapsedMs / 1000;
+      const envelope = Math.exp(-ZETA * WN * t);
+      const offset = peak * envelope * Math.sin(wd * t);
+      setSpringFp(finalFp + offset);
+      springRafRef.current = requestAnimationFrame(step);
+    };
+
+    springRafRef.current = requestAnimationFrame(step);
   }, [setSpringFp, setSpringSettled, springTiers]);
 
   // ── onCardFpStart ──────────────────────────────────────────────────

@@ -384,6 +384,11 @@ export interface ChadTriggerFramingArgs {
   nearMissNextTier?: string;
 }
 
+// [Chad:trigger-v2] Curated banks per trigger type. Each branch is
+// situation-specific — references the actual stat that fired the
+// trigger (gap for near_miss, tier name for big_score, etc.) rather
+// than generic share copy. Treat these as carefully as FTUE copy:
+// they're the moment that determines whether the user shares.
 export function chadTriggerFraming(args: ChadTriggerFramingArgs): string {
   const fp = args.fp.toFixed(1);
   const tierName = args.tier.replace("_", "-");
@@ -393,6 +398,11 @@ export function chadTriggerFraming(args: ChadTriggerFramingArgs): string {
         `Hit ${tierName} on this slate. The kind of score that needs an audience.`,
         `${tierName} on the board with ${fp}. Don't sit on it.`,
         `${fp} FP — ${tierName} tier. Pick someone and send the receipt.`,
+        `${tierName}. ${fp}. Half this app dreams about that line. Share it.`,
+        `Big board, big number. ${fp} FP, ${tierName}. Find a victim.`,
+        `${tierName} confirmed. ${fp} FP. The bragging window is open.`,
+        `That's a ${tierName} flag plant. ${fp} FP. Let somebody chase it.`,
+        `${fp} FP. ${tierName}. Don't let this one go unwitnessed.`,
       ]);
     case "rare_pull": {
       const what = args.badgeLabel ?? "A record game";
@@ -400,6 +410,10 @@ export function chadTriggerFraming(args: ChadTriggerFramingArgs): string {
         `${what} showed up in your lineup. Worth showing off.`,
         `${what}. The kind of moment that doesn't repeat. Send it.`,
         `${what} just landed for you. Pin it before it fades.`,
+        `${what} in your roster. The slate handed you a story.`,
+        `${what} — that's the share. Forget the FP, the headline is the game.`,
+        `Some hands you play. This one you frame. ${what}.`,
+        `${what}. Slates like this don't come back. Get it out the door.`,
       ]);
     }
     case "near_miss": {
@@ -409,6 +423,10 @@ export function chadTriggerFraming(args: ChadTriggerFramingArgs): string {
         `By ${gap} FP. Brutal. Someone else might close the gap.`,
         `${gap} FP short of ${next}. Pass the slate — see who finishes it.`,
         `So close. ${gap} FP. Make somebody finish what you started.`,
+        `${gap} FP from ${next}. The slate's right there. Hand it off.`,
+        `Off by ${gap}. ${next} is one good redraw away. See if they get it.`,
+        `${gap} FP. That's a friend's roll-of-the-dice away from ${next}. Send it.`,
+        `Heartbreak math: ${gap} FP. Let someone else taste it.`,
       ]);
     }
     case "bad_beat":
@@ -416,8 +434,40 @@ export function chadTriggerFraming(args: ChadTriggerFramingArgs): string {
         `Looked stacked on paper. Got cooked. Share the misery.`,
         `Premium roster, premium disaster. Send it — let them try.`,
         `Stars went cold. Make somebody else feel that one.`,
+        `Held the right cards, got the wrong games. Pass the curse.`,
+        `On paper it was a coronation. The court said no. Share it.`,
+        `Your picks, your faith, your loss. Let them see if they can fix it.`,
+        `The roster wasn't the problem. The dice were. Curious who else gets these dice?`,
       ]);
   }
+}
+
+// ── Send-It-Back fresh-deal intro chip ────────────────────────────────────
+//
+// [Chad:rivalry-back] Fires once when the user taps "Send It Back" on a
+// won challenge → routes into a fresh normal hand. Sets challengeBackCtx
+// (rivalry continuation) and lands the user in HOLD with this chip
+// sticky. Distinct from chadChallengeIntro (which fires for INCOMING
+// challenge replays) — this is the OUTGOING rivalry continuation. The
+// share prompt at RESULTS auto-fires with rivalry framing.
+const RIVALRY_BACK_NAMED: string[] = [
+  "Okay champ, fresh deal. Build something worth sending back to {name}.",
+  "Fresh slate, same target. Whatever you cook here, it's going to {name}.",
+  "Today's cards. {name}'s name on the receipt. Play the build.",
+  "Rivalry math: this hand goes back to {name}. Pick like you mean it.",
+  "New hand, old rival. Make {name} sweat the reply.",
+];
+const RIVALRY_BACK_UNNAMED: string[] = [
+  "Okay champ, fresh deal. Build something worth sending back.",
+  "Fresh slate, same target. Whatever you cook, it's going back to them.",
+  "Today's cards, their name on the receipt. Play the build.",
+  "Rivalry math: this hand fires right back. Pick like you mean it.",
+];
+
+export function chadRivalryBackIntro(args: { challengerName: string | null }): string {
+  const bank = args.challengerName ? RIVALRY_BACK_NAMED : RIVALRY_BACK_UNNAMED;
+  const line = pick(bank);
+  return line.replace(/{name}/g, args.challengerName ?? "");
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────
