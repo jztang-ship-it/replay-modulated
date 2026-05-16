@@ -19,6 +19,13 @@ export interface CommentaryRosterCard {
   basePlayerId?: string;
   statLine?: Record<string, any>;
   opponent?: string;
+  /** The player's OWN team for this specific game's season (3-letter code,
+   *  e.g. "CHI" for a Michael Jordan card from his Bulls years vs "WAS"
+   *  for his Wizards years). Used by the culture lookup's teamEras overlay
+   *  to surface era-specific framing for multi-tenure players. Distinct
+   *  from `opponent` (the team they faced) and `teams` (all teams they
+   *  played for this season). */
+  team?: string;
   /** Distinct teams the player was on this season (chronological). When the
    *  game opponent appears in this list, the player is facing a former team
    *  — surfaces a culture.formerTeam commentary line. */

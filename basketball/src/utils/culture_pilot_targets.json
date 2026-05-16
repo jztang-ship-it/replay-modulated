@@ -1,0 +1,91 @@
+{
+  "players": [
+    {
+      "basePlayerId": "1718",
+      "name": "Paul Pierce",
+      "lastNameKey": "pierce",
+      "qualifyingTeams": [
+        "BOS"
+      ]
+    },
+    {
+      "basePlayerId": "200746",
+      "name": "LaMarcus Aldridge",
+      "lastNameKey": "aldridge",
+      "qualifyingTeams": [
+        "POR",
+        "SAS"
+      ]
+    },
+    {
+      "basePlayerId": "2200",
+      "name": "Pau Gasol",
+      "lastNameKey": "gasol",
+      "qualifyingTeams": [
+        "CHI",
+        "LAL",
+        "MEM"
+      ]
+    },
+    {
+      "basePlayerId": "1713",
+      "name": "Vince Carter",
+      "lastNameKey": "carter",
+      "qualifyingTeams": [
+        "NJN",
+        "TOR"
+      ]
+    },
+    {
+      "basePlayerId": "950",
+      "name": "Stephon Marbury",
+      "lastNameKey": "marbury",
+      "qualifyingTeams": [
+        "MIN",
+        "NJN",
+        "NYK",
+        "PHX"
+      ]
+    },
+    {
+      "basePlayerId": "397",
+      "name": "Reggie Miller",
+      "lastNameKey": "miller",
+      "qualifyingTeams": [
+        "IND"
+      ]
+    },
+    {
+      "basePlayerId": "304",
+      "name": "John Stockton",
+      "lastNameKey": "stockton",
+      "qualifyingTeams": [
+        "UTA"
+      ]
+    },
+    {
+      "basePlayerId": "165",
+      "name": "Hakeem Olajuwon",
+      "lastNameKey": "olajuwon",
+      "qualifyingTeams": [
+        "HOU"
+      ]
+    },
+    {
+      "basePlayerId": "896",
+      "name": "Tim Hardaway",
+      "lastNameKey": "hardaway",
+      "qualifyingTeams": [
+        "MIA"
+      ]
+    },
+    {
+      "basePlayerId": "1938",
+      "name": "Manu Ginobili",
+      "lastNameKey": "ginobili",
+      "qualifyingTeams": [
+        "SAS"
+      ]
+    }
+  ]
+}

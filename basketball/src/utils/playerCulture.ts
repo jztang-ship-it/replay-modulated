@@ -1,10 +1,31 @@
 /**
  * playerCulture.ts — Basketball player culture database.
- * Keyed by normalized last name (lowercase).
+ * Keyed by `<lastname>_<basePlayerId>` (e.g. jordan_893, gasol_2585).
+ * The basePlayerId discriminator resolves last-name collisions
+ * (Ben/Rasheed/Gerald Wallace, Marc/Pau Gasol, Jordan/DeAndre Jordan,
+ * etc.). The selectCommentary lookup uses `${normalize(name)}_${basePlayerId}`
+ * via the roster card's basePlayerId field; falls back to legacy
+ * last-name lookup with a warning log if basePlayerId is missing.
+ *
  * Used by the commentary system for personalized, opinionated post-reveal copy.
  */
 
+export interface TeamEra {
+  /** 2-3 lines of era-specific framing. Replaces (or weighted higher than)
+   *  generic tier1/tier2 lines when the card's team matches. */
+  framing: string[];
+  /** Single line replacing bigGame[0] for this era. */
+  bigGameVariant?: string;
+  /** Single line replacing quietGame[0] for this era. */
+  quietGameVariant?: string;
+  /** Lines surfaced via the Jordan-only "always-fire secondary" path. */
+  secondary?: string[];
+}
+
 export interface PlayerCulture {
+  /** The player's basePlayerId — same value as the key suffix. Authoritative
+   *  identity field; never derived from name. */
+  basePlayerId: string;
   nicknames: string[];
   knownFor: string;
   salaryTier: "max" | "star" | "role" | "value" | "flier";
@@ -29,11 +50,23 @@ export interface PlayerCulture {
   salaryNarrative?: string[];
   teamContext?: string[];
   draftAndPath?: string[];
+  /** Per-team-tenure era flavor. Keyed by 3-letter team code (e.g. "CHI",
+   *  "WAS"). Only populated for tenures where the player reached PURPLE+. */
+  teamEras?: Record<string, TeamEra>;
+  /** Hard-coded exemption: when true, this player's `secondaryAlways` lines
+   *  fire as a secondary commentary slot whenever they're on the roster but
+   *  NOT the star. Currently set only on Michael Jordan. */
+  alwaysFireSecondary?: boolean;
+  /** Lines surfaced when alwaysFireSecondary is true and the player is on
+   *  the roster but isn't the focused star. Generic fallback when no
+   *  matching teamEras[team].secondary exists. */
+  secondaryAlways?: string[];
 }
 
 export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
 // Nikola Jokić (DEN, $89, ORANGE)
-  jokic: {
+  jokic_203999: {
+    basePlayerId: "203999",
     nicknames: ["The Joker", "Big Honey"],
     knownFor: "Two-time MVP who revolutionized the center position with his playmaking genius.",
     salaryTier: "max",
@@ -67,7 +100,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Giannis Antetokounmpo (MIL, $79, ORANGE)
-  antetokounmpo: {
+  antetokounmpo_203507: {
+    basePlayerId: "203507",
     nicknames: ["Greek Freak", "The Alphabet"],
     knownFor: "Two-time MVP who runs through defenders like a freight train with handles.",
     salaryTier: "max",
@@ -135,7 +169,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Luka Dončić (DAL, $73, ORANGE)
-  doncic: {
+  doncic_1629029: {
+    basePlayerId: "1629029",
     nicknames: ["Luka Magic", "Don Luka"],
     knownFor: "Slovenian wonderkid who plays like Larry Bird with better handles.",
     salaryTier: "max",
@@ -169,7 +204,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Victor Wembanyama (SAS, $72, ORANGE)
-  wembanyama: {
+  wembanyama_1641705: {
+    basePlayerId: "1641705",
     nicknames: ["Wemby", "The Alien"],
     knownFor: "7'4\" unicorn redefining what's possible at his size",
     salaryTier: "max",
@@ -203,7 +239,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Anthony Davis (LAL, $70, PURPLE)
-  davis: {
+  davis_203076: {
+    basePlayerId: "203076",
     nicknames: ["AD", "The Brow"],
     knownFor: "Elite two-way big who can't stay healthy for full seasons",
     salaryTier: "max",
@@ -237,7 +274,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // LeBron James (LAL, $67, PURPLE)
-  james: {
+  james_2544: {
+    basePlayerId: "2544",
     nicknames: ["The King", "The Chosen One", "Bron"],
     knownFor: "Four-time champion who's still terrorizing defenders at 40 years old.",
     salaryTier: "max",
@@ -271,7 +309,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Jayson Tatum (BOS, $67, PURPLE)
-  tatum: {
+  tatum_1628369: {
+    basePlayerId: "1628369",
     nicknames: ["JT", "The Truth Jr."],
     knownFor: "Silky smooth scorer who finally got his championship ring in 2024.",
     salaryTier: "max",
@@ -305,7 +344,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Cade Cunningham (DET, $67, PURPLE)
-  cunningham: {
+  cunningham_1630595: {
+    basePlayerId: "1630595",
     nicknames: ["Cade"],
     knownFor: "Triple-double machine carrying Detroit's rebuild on his shoulders",
     salaryTier: "max",
@@ -339,7 +379,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Karl-Anthony Towns (MIN, $64, PURPLE)
-  towns: {
+  towns_1626157: {
+    basePlayerId: "1626157",
     nicknames: ["KAT"],
     knownFor: "Silky smooth big man who can drop 62 points or grab 22 boards on any night",
     salaryTier: "max",
@@ -373,7 +414,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // James Harden (LAC, $63, PURPLE)
-  harden: {
+  harden_201935: {
+    basePlayerId: "201935",
     nicknames: ["The Beard"],
     knownFor: "Step-back three maestro who forced the NBA to change the rules",
     salaryTier: "max",
@@ -407,7 +449,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Domantas Sabonis (SAC, $63, PURPLE)
-  sabonis: {
+  sabonis_1627734: {
+    basePlayerId: "1627734",
     nicknames: ["Domas"],
     knownFor: "Triple-double machine with the softest hands at center",
     salaryTier: "max",
@@ -441,7 +484,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Anthony Edwards (MIN, $62, PURPLE)
-  edwards: {
+  edwards_1630162: {
+    basePlayerId: "1630162",
     nicknames: ["Ant", "Ant-Man"],
     knownFor: "The explosive shooting guard who talks like MJ and plays like prime D-Wade.",
     salaryTier: "max",
@@ -475,7 +519,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Trae Young (ATL, $62, PURPLE)
-  young: {
+  young_1629027: {
+    basePlayerId: "1629027",
     nicknames: ["Ice Trae", "The Villain"],
     knownFor: "The deep-range assassin who turned Madison Square Garden into his personal playground.",
     salaryTier: "max",
@@ -509,7 +554,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Zion Williamson (NOP, $62, PURPLE)
-  williamson: {
+  williamson_1629627: {
+    basePlayerId: "1629627",
     nicknames: ["Zion", "Z", "The Mountain"],
     knownFor: "Generational athlete whose body keeps betraying his talent.",
     salaryTier: "max",
@@ -543,7 +589,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Paolo Banchero (ORL, $60, PURPLE)
-  banchero: {
+  banchero_1631094: {
+    basePlayerId: "1631094",
     nicknames: ["Paolo", "PB", "The Duke Prodigy"],
     knownFor: "Rookie of the Year who immediately became Orlando's franchise centerpiece.",
     salaryTier: "max",
@@ -577,7 +624,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Damian Lillard (MIL, $60, PURPLE)
-  lillard: {
+  lillard_203081: {
+    basePlayerId: "203081",
     nicknames: ["Dame", "Logo Lillard"],
     knownFor: "Deep three-pointers and clutch playoff series-ending shots",
     salaryTier: "max",
@@ -611,7 +659,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Tyrese Maxey (PHI, $60, PURPLE)
-  maxey: {
+  maxey_1630178: {
+    basePlayerId: "1630178",
     nicknames: ["Mad Maxey", "The Franchise"],
     knownFor: "Lightning-quick drives and clutch fourth-quarter scoring bursts",
     salaryTier: "max",
@@ -645,7 +694,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Jalen Brunson (NYK, $59, PURPLE)
-  brunson: {
+  brunson_1628973: {
+    basePlayerId: "1628973",
     nicknames: ["JB", "The Captain"],
     knownFor: "Villanova winner turned Knicks savior who left Dallas for hometown glory.",
     salaryTier: "max",
@@ -679,7 +729,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Devin Booker (PHX, $59, PURPLE)
-  booker: {
+  booker_1626164: {
+    basePlayerId: "1626164",
     nicknames: ["Book", "D-Book", "Wet Like Book"],
     knownFor: "Pure scorer who finally escaped basketball hell in Phoenix desert.",
     salaryTier: "max",
@@ -713,7 +764,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Kevin Durant (PHX, $59, PURPLE)
-  durant: {
+  durant_201142: {
+    basePlayerId: "201142",
     nicknames: ["KD", "The Slim Reaper", "Easy Money Sniper"],
     knownFor: "The most unguardable scorer in NBA history with a 7-foot frame and deadly pull-up jumper.",
     salaryTier: "max",
@@ -747,7 +799,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Joel Embiid (PHI, $59, PURPLE)
-  embiid: {
+  embiid_203954: {
+    basePlayerId: "203954",
     nicknames: ["The Process", "JoJo"],
     knownFor: "Dominant two-way center who embodies Philadelphia's 'Trust the Process' rebuild with elite scoring and rim protection.",
     salaryTier: "max",
@@ -781,7 +834,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Alperen Sengun (HOU, $58, PURPLE)
-  sengun: {
+  sengun_1630578: {
+    basePlayerId: "1630578",
     nicknames: ["Turkish Delight", "The Big Cat"],
     knownFor: "Turkish center with Jokic-level passing who can fill every box score category",
     salaryTier: "max",
@@ -815,7 +869,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Tyrese Haliburton (IND, $58, PURPLE)
-  haliburton: {
+  haliburton_1630169: {
+    basePlayerId: "1630169",
     nicknames: ["T-Hal", "Point God"],
     knownFor: "Unselfish floor general who can drop 20 assists as easily as 40 points",
     salaryTier: "max",
@@ -849,7 +904,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Jalen Johnson (ATL, $57, PURPLE)
-  johnson: {
+  johnson_1630552: {
+    basePlayerId: "1630552",
     nicknames: ["JJ"],
     knownFor: "Point forward who figured it out after Duke declared him a bust",
     salaryTier: "max",
@@ -882,7 +938,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Scottie Barnes (TOR, $57, PURPLE)
-  barnes: {
+  barnes_1630567: {
+    basePlayerId: "1630567",
     nicknames: ["Scottie"],
     knownFor: "2022 Rookie of Year who plays every position except consistent shooter",
     salaryTier: "max",
@@ -915,7 +972,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // LaMelo Ball (CHA, $57, PURPLE)
-  ball: {
+  ball_1630163: {
+    basePlayerId: "1630163",
     nicknames: ["Melo", "Young Melo"],
     knownFor: "Flashy point guard with unlimited range and highlight-reel passes",
     salaryTier: "max",
@@ -949,7 +1007,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Stephen Curry (GSW, $57, PURPLE)
-  curry: {
+  curry_201939: {
+    basePlayerId: "201939",
     nicknames: ["Chef Curry", "Baby-Faced Assassin", "The Human Torch"],
     knownFor: "Revolutionary shooter who changed basketball forever with his range",
     salaryTier: "max",
@@ -983,7 +1042,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Kyrie Irving (DAL, $57, PURPLE)
-  irving: {
+  irving_202681: {
+    basePlayerId: "202681",
     nicknames: ["Uncle Drew", "Kai"],
     knownFor: "Handles so smooth they should be illegal in all 50 states.",
     salaryTier: "max",
@@ -1017,7 +1077,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Franz Wagner (ORL, $56, PURPLE)
-  wagner: {
+  wagner_1630532: {
+    basePlayerId: "1630532",
     nicknames: ["Franz", "The German"],
     knownFor: "Smooth German engineering meets Orlando Magic development program.",
     salaryTier: "max",
@@ -1051,7 +1112,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Bam Adebayo (MIA, $56, PURPLE)
-  adebayo: {
+  adebayo_1628389: {
+    basePlayerId: "1628389",
     nicknames: ["Bam"],
     knownFor: "The modern center who guards point guards and runs the break like Magic Johnson.",
     salaryTier: "max",
@@ -1085,7 +1147,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Jalen Williams (OKC, $56, PURPLE)
-  williams: {
+  williams_1631114: {
+    basePlayerId: "1631114",
     nicknames: ["J-Dub"],
     knownFor: "The steal of the 2022 draft who became OKC's Swiss Army knife overnight.",
     salaryTier: "max",
@@ -1119,7 +1182,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Donovan Mitchell (CLE, $55, PURPLE)
-  mitchell: {
+  mitchell_1628378: {
+    basePlayerId: "1628378",
     nicknames: ["Spida"],
     knownFor: "Electric scorer who turned Cleveland into a legitimate contender overnight.",
     salaryTier: "max",
@@ -1153,7 +1217,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Ja Morant (MEM, $55, PURPLE)
-  morant: {
+  morant_1629630: {
+    basePlayerId: "1629630",
     nicknames: ["Ja"],
     knownFor: "Electric point guard whose off-court issues derailed his superstar trajectory.",
     salaryTier: "max",
@@ -1186,7 +1251,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Tyler Herro (MIA, $55, PURPLE)
-  herro: {
+  herro_1629639: {
+    basePlayerId: "1629639",
     nicknames: ["Baby Goat", "Bucket"],
     knownFor: "Sixth Man of the Year turned Heat starting guard with bucket-getting DNA",
     salaryTier: "max",
@@ -1220,7 +1286,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Ivica Zubac (LAC, $55, PURPLE)
-  zubac: {
+  zubac_1627826: {
+    basePlayerId: "1627826",
     nicknames: ["Zu", "Big Zu"],
     knownFor: "Croatian center who became the Clippers' most reliable big man",
     salaryTier: "max",
@@ -1254,7 +1321,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // De'Aaron Fox (SAC, $56, PURPLE)
-  fox: {
+  fox_1628368: {
+    basePlayerId: "1628368",
     nicknames: ["The Fox", "Swipa"],
     knownFor: "Blazing speed and clutch scoring for Sacramento's resurgence",
     salaryTier: "max",
@@ -1288,7 +1356,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   },
 
 // Evan Mobley (CLE, $55, PURPLE)
-  mobley: {
+  mobley_1630596: {
+    basePlayerId: "1630596",
     nicknames: ["The Tower", "Mobley"],
     knownFor: "Unicorn big man who guards all five positions effortlessly",
     salaryTier: "max",
@@ -1325,7 +1394,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
   // Compact entries — nicknames, knownFor, tier intros, and signature games
   // are the load-bearing fields for commentary attribution.
 
-  jordan: {
+  jordan_893: {
+    basePlayerId: "893",
     nicknames: ["Air Jordan", "MJ", "His Airness", "Black Cat"],
     knownFor: "Six-time NBA champion and the consensus GOAT — the standard every star is measured against.",
     salaryTier: "max",
@@ -1351,7 +1421,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     draftAndPath: ["Third pick in 1984. Two players went ahead of him.", "Cut from his high school varsity. Held that grudge into history."],
   },
 
-  bryant: {
+  bryant_977: {
+    basePlayerId: "977",
     nicknames: ["Black Mamba", "Mamba", "Vino", "Kobe", "KB24", "Mamba Mentality"],
     knownFor: "Five-time NBA champion, 18-time All-Star, the closest spiritual successor to Jordan — and the bridge from MJ's era to LeBron's.",
     salaryTier: "max",
@@ -1377,7 +1448,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     draftAndPath: ["13th pick out of high school. Hornets traded him for Vlade Divac.", "Italian upbringing — fluent in three languages, hooper from age 6."],
   },
 
-  oneal: {
+  oneal_406: {
+    basePlayerId: "406",
     nicknames: ["Shaq", "The Big Diesel", "Shaq Diesel", "The Big Aristotle", "Superman", "Big Shamrock"],
     knownFor: "Most physically dominant center of his era — four rings, three Finals MVPs, 15-time All-Star.",
     salaryTier: "max",
@@ -1403,7 +1475,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     draftAndPath: ["First pick in 1992 after LSU. Magic, Lakers, Heat, Suns, Cavs, Celtics.", "Movies, music, doctorate, sheriff. The post-NBA empire was always the plan."],
   },
 
-  duncan: {
+  duncan_1495: {
+    basePlayerId: "1495",
     nicknames: ["The Big Fundamental", "Timmy", "Old Man Riverwalk", "Groundhog Day"],
     knownFor: "Five-time NBA champion, 15-time All-Star, the most consistent and quietly dominant power forward ever.",
     salaryTier: "max",
@@ -1429,7 +1502,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     draftAndPath: ["First pick in 1997. Wake Forest. Stayed all four years like a pre-1989 prospect.", "Spurs lifer — never left, never asked to leave."],
   },
 
-  malone: {
+  malone_252: {
+    basePlayerId: "252",
     nicknames: ["The Mailman", "Karl Malone"],
     knownFor: "Second all-time leading scorer at retirement (now 3rd), two-time MVP, the relentless engine of Stockton-Malone Utah.",
     salaryTier: "max",
@@ -1454,7 +1528,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     draftAndPath: ["13th pick in 1985 — Louisiana Tech. Twelve teams passed.", "Played 18 of 19 seasons with Utah. Final year with the Lakers ended in injury."],
   },
 
-  iverson: {
+  iverson_947: {
+    basePlayerId: "947",
     nicknames: ["The Answer", "A.I.", "Bubba Chuck"],
     knownFor: "Four-time scoring champion, MVP, the smallest superstar to ever lead his team to the Finals — culture and game in one package.",
     salaryTier: "max",
@@ -1479,7 +1554,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     draftAndPath: ["First pick in 1996. Georgetown. Bowling alley fight backstory.", "Six teams over 14 seasons. Sixers icon, Pistons walk-off."],
   },
 
-  nowitzki: {
+  nowitzki_1717: {
+    basePlayerId: "1717",
     nicknames: ["Dirk", "The German", "The Big German", "Wirzburg Wizard", "Tall Baller from the G"],
     knownFor: "2007 MVP, 2011 Finals MVP, the European pioneer who made the seven-foot stretch four normal.",
     salaryTier: "max",
@@ -1504,7 +1580,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     draftAndPath: ["9th pick in 1998. Milwaukee took him, immediately traded to Dallas.", "Spent his entire 21-season career with the Mavericks."],
   },
 
-  garnett: {
+  garnett_708: {
+    basePlayerId: "708",
     nicknames: ["KG", "The Big Ticket", "Da Kid", "KG Da Kid", "The Big Crocodile"],
     knownFor: "MVP, Defensive Player of the Year, 2008 NBA champion — emotional engine and defensive anchor of an era.",
     salaryTier: "max",
@@ -1529,7 +1606,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     draftAndPath: ["5th pick in 1995. First high-schooler since the 70s to go straight to the NBA.", "12 years in Minnesota, two in Boston, two in Brooklyn, ring with the Celts."],
   },
 
-  wade: {
+  wade_2548: {
+    basePlayerId: "2548",
     nicknames: ["Flash", "D-Wade", "Three", "The Way of Wade"],
     knownFor: "Three-time NBA champion, Finals MVP at 24, the engine of every Heat era he was a part of.",
     salaryTier: "max",
@@ -1554,7 +1632,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     draftAndPath: ["5th pick in 2003. The famous draft — LeBron, Melo, Bosh, Wade.", "Marquette product. Heat lifer minus a brief Bulls/Cavs stint."],
   },
 
-  paul: {
+  paul_101108: {
+    basePlayerId: "101108",
     nicknames: ["CP3", "The Point God", "The Skate", "Chris Paul"],
     knownFor: "11-time All-Star, all-time steals leader candidate, the most surgical floor general of his generation — never won a ring.",
     salaryTier: "max",
@@ -1579,7 +1658,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     draftAndPath: ["4th pick in 2005. Wake Forest. Hornets snapped him up.", "11 seasons across six franchises. Still hunting that ring."],
   },
 
-  kidd: {
+  kidd_467: {
+    basePlayerId: "467",
     nicknames: ["Ason Kidd", "J-Kidd", "Captain Kidd"],
     knownFor: "Triple-double machine, two-time All-Defense, 2011 NBA champion — best pure point guard of his generation.",
     salaryTier: "max",
@@ -1604,7 +1684,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     draftAndPath: ["2nd pick in 1994. Cal-Berkeley. Co-Rookie of the Year.", "Mavs, Suns, Nets, Mavs again, Knicks. Won ring in his second Dallas stint."],
   },
 
-  payton: {
+  payton_56: {
+    basePlayerId: "56",
     nicknames: ["The Glove", "GP", "Mitten"],
     knownFor: "1996 Defensive Player of the Year, nine-time All-Star, 2006 NBA champion — best defensive point guard in NBA history.",
     salaryTier: "max",
@@ -1629,7 +1710,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     draftAndPath: ["2nd pick in 1990. Oregon State. Sonics lifer at heart.", "Sonics, Bucks, Lakers, Celtics, Heat — won ring in 2006 with Miami."],
   },
 
-  mcgrady: {
+  mcgrady_1503: {
+    basePlayerId: "1503",
     nicknames: ["T-Mac", "Tracy McGrady"],
     knownFor: "Two-time scoring champion, seven-time All-Star, the most gifted offensive player of his era — never made it past the first round.",
     salaryTier: "max",
@@ -1654,7 +1736,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     draftAndPath: ["9th pick in 1997 out of high school. Raptors first.", "Magic, Rockets, Knicks, Pistons, Hawks. Body never let him win."],
   },
 
-  westbrook: {
+  westbrook_201566: {
+    basePlayerId: "201566",
     nicknames: ["Russ", "Brodie", "Mr. Triple-Double", "Why Not"],
     knownFor: "2017 MVP, all-time triple-doubles leader, the most explosive guard of his generation.",
     salaryTier: "max",
@@ -1679,7 +1762,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     draftAndPath: ["4th pick in 2008. UCLA. Thunder originals with Durant.", "Thunder, Rockets, Wizards, Lakers, Clippers, Nuggets. Long road, ring chase ongoing."],
   },
 
-  howard: {
+  howard_2730: {
+    basePlayerId: "2730",
     nicknames: ["Superman", "D-Howard", "D-12", "The Big Aristotle Jr."],
     knownFor: "Three-time DPOY, eight-time All-Star, 2020 NBA champion — most dominant defensive center of his prime.",
     salaryTier: "max",
@@ -1704,7 +1788,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     draftAndPath: ["1st pick in 2004 out of high school. Magic franchise.", "Magic, Lakers, Rockets, Hawks, Hornets, Sixers, Lakers (ring), Wizards. Long road."],
   },
 
-  hill: {
+  hill_255: {
+    basePlayerId: "255",
     nicknames: ["Grant Hill", "GHill"],
     knownFor: "Seven-time All-Star, Rookie of the Year — one of the great 'what ifs' before injuries shifted his career.",
     salaryTier: "max",
@@ -1728,7 +1813,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     draftAndPath: ["3rd pick in 1994. Duke product. Pistons franchise face.", "Magic, Suns, Clippers — late-career rebirth, Hall of Fame ahead of injuries."],
   },
 
-  webber: {
+  webber_185: {
+    basePlayerId: "185",
     nicknames: ["C-Webb", "Mayce", "Chris Webber"],
     knownFor: "Five-time All-Star, MVP runner-up 2001, the offensive engine of the legendary Kings teams.",
     salaryTier: "max",
@@ -1753,7 +1839,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     draftAndPath: ["1st pick in 1993 out of Michigan. Warriors first.", "Bullets, Kings, Sixers, Pistons, Warriors. Sacramento was the canonical era."],
   },
 
-  cousins: {
+  cousins_202326: {
+    basePlayerId: "202326",
     nicknames: ["Boogie", "DMC", "DeMarcus Cousins"],
     knownFor: "Four-time All-Star, the most physically gifted offensive center of his era — Achilles tear changed everything.",
     salaryTier: "max",
@@ -1778,7 +1865,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     draftAndPath: ["5th pick in 2010. Kentucky. Kings, Pelicans (Achilles), Warriors, Lakers, Rockets."],
   },
 
-  griffin: {
+  griffin_201933: {
+    basePlayerId: "201933",
     nicknames: ["BG", "Blake", "Lob City"],
     knownFor: "Six-time All-Star, Rookie of the Year, the dunk-highlight engine of Lob City.",
     salaryTier: "max",
@@ -1803,7 +1891,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     draftAndPath: ["1st pick in 2009. Oklahoma. Lob City Clippers icon.", "Clippers, Pistons, Nets, Celtics. Career ended quietly."],
   },
 
-  love: {
+  love_201567: {
+    basePlayerId: "201567",
     nicknames: ["K-Love", "Outlet Pass God"],
     knownFor: "Five-time All-Star, 2016 NBA champion — best outlet passer of his era and the heart of the Cavs' title rotation.",
     salaryTier: "max",
@@ -1828,7 +1917,8 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     draftAndPath: ["5th pick in 2008. UCLA. Memphis traded him to Minnesota immediately.", "Wolves, Cavs, Heat. Won ring in 2016. Long career, important voice."],
   },
 
-  gilgeousalexander: {
+  gilgeousalexander_1628983: {
+    basePlayerId: "1628983",
     nicknames: ["SGA", "Shai", "The Canadian"],
     knownFor: "MVP candidate, multi-time All-Star, the Thunder's franchise face — the modern mid-range artist who reads defense like sheet music.",
     salaryTier: "max",

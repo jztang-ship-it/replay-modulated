@@ -1174,6 +1174,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       projectedFp: Number(c?.projectedFp ?? 0) || 0,
       cardTier: String(c?.tier ?? ""),
       basePlayerId: String(c?.basePlayerId ?? ""),
+      // Player's own team for this game's season (e.g. "CHI" for a Bulls-
+      // era Jordan card). Drives the culture lookup's teamEras overlay
+      // for multi-tenure players. Distinct from opponent (faced team).
+      team: String(c?.team ?? ""),
       statLine: (c?.statLine ?? {}) as Record<string, any>,
       gameDate: String(c?.gameInfo?.date ?? ""),
     }));
