@@ -235,6 +235,14 @@ function AppInner() {
              via the normal manifest path so today's daily season is
              still pinned for any later non-challenge hands they play. */
           skipReel={!!challengeIdFromUrl}
+          /* When the bypass is fired by challengeCtx (recipient accepted
+             a challenge), pin the data engine to the CHALLENGE'S season,
+             not FTUE_SEASON_KEY. Without this, retired players in the
+             snapshot (e.g. Aldridge in a 1617 challenge) score 0 FP
+             because logsByKey only contains 2024-25 entries. FTUE
+             bypass passes null here so the gate falls back to its
+             FTUE_SEASON_KEY default. */
+          bypassSeasonKey={challengeCtx?.season ?? null}
           showFtueIntroFollowup={showFtueIntroFollowup}
         >
           <GameView
