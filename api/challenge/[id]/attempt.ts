@@ -295,9 +295,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // the Vercel function log when the counters don't behave as expected.
   // Cheap, single line, only on counted attempts and self-farm paths
   // (the branches that touch the row).
+  //
+  // Window-anchor fields (first_attempt_at_iso / window_closes_at_iso /
+  // window_remaining_s / prior_attempt_count_for_user / cluster_value_short)
+  // are the diagnostic for "is the 1-hour replay window staying anchored
+  // across replays?" — first_attempt_at_iso should be IDENTICAL across
+  // every replay by the same identity within the same hour; only
+  // window_remaining_s should drift down. If first_attempt_at_iso
+  // changes between attempts, the prior-attempt query (line 76-110)
+  // isn't finding the earlier row — usually because anon_uid differs
+  // (different rm_uid) or the earlier insert never persisted (e.g.
+  // pre-migration-010 attempts threw PGRST204).
   console.info("[attempt] branch summary", {
     challenge_id: challengeId,
     identity: clusterIdentity?.kind ?? "none",
+    // Truncated identity value so QA can confirm consecutive replays
+    // are clustering by the same identity. Auth uuids: first 8 chars.
+    // anon_uids: first 12 chars of "u_abc123def…". Safe to log.
+    cluster_value_short: clusterIdentity
+      ? (clusterIdentity.kind === "auth"
+          ? clusterIdentity.value.slice(0, 8)
+          : clusterIdentity.value.slice(0, 12))
+      : null,
+    prior_attempt_count_for_user: userPrior.attemptCountForUser,
+    first_attempt_at_iso: new Date(firstAtMs).toISOString(),
+    window_closes_at_iso: new Date(windowClosesAtMs).toISOString(),
+    window_remaining_s: Math.max(0, Math.floor((windowClosesAtMs - nowMs) / 1000)),
     is_self_farm: isSelfFarm,
     is_first_attempt: isFirstAttempt,
     is_practice: isPractice,
