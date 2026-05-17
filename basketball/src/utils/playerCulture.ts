@@ -1673,7 +1673,7 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     defensive: ["10-time All-Defense. Pestered MVPs nightly.", "Best perimeter defender at point guard for a decade."],
     bigGame: ["Game 6 vs. Heat 2011 — clinched the title for Dallas.", "Triple-double averages multiple seasons. Casual."],
     quietGame: ["Quiet Kidd was 12 dimes and a triple-double tease.", "Off nights still produced winning basketball."],
-    controversy: ["Domestic incident in 2001. The Nets-to-Mavs trade saga.", "DUI cost him a season-end suspension late career."],
+    controversy: ["The triple-double machine who never quite figured out shooting. 35% from three for his prime.", "Forced his way out of New Jersey, then forced his way out of Dallas. The 'I want a trade' move was Kidd's signature off-court.", "Got his first ring at 38 in Dallas. The point guard who needed Dirk and a decade to figure out winning."],
     famousGameHint: ["The 2011 Finals — Mavs over Heat. Kidd defended LeBron.", "Triple-doubles in Game 1s of three different playoff series."],
     streakLines: ["Made the All-Star team 10 times.", "Triple-double seasons multiple times — including in his late 30s."],
     milestones: ["NBA champion 2011, 10 All-Stars, 5x All-NBA First Team."],

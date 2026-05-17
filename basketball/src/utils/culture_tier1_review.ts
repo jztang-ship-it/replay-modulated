@@ -53,7 +53,7 @@
     },
   },
 
-// Nikola Vučević — basePlayerId 202696 — teams: CHI/ORL
+// Nikola Vučević — basePlayerId 202696 — teams: ORL/CHI
   vucevic_202696: {
     basePlayerId: "202696",
     nicknames: ["Vooch", "Big V"],
@@ -100,7 +100,7 @@
     },
   },
 
-// DeMar DeRozan — basePlayerId 201942 — teams: CHI/SAC/SAS/TOR
+// DeMar DeRozan — basePlayerId 201942 — teams: TOR/SAS/CHI/SAC
   derozan_201942: {
     basePlayerId: "201942",
     nicknames: ["DeMar DeRozan", "Deebo", "Compton's Finest"],
@@ -157,7 +157,7 @@
     },
   },
 
-// Paul George — basePlayerId 202331 — teams: IND/LAC/OKC/PHI
+// Paul George — basePlayerId 202331 — teams: IND/OKC/LAC/PHI
   george_202331: {
     basePlayerId: "202331",
     nicknames: ["PG-13", "Playoff P"],
@@ -214,7 +214,7 @@
     },
   },
 
-// Antawn Jamison — basePlayerId 1712 — teams: CLE/GSW/WAS
+// Antawn Jamison — basePlayerId 1712 — teams: GSW/WAS/CLE
   jamison_1712: {
     basePlayerId: "1712",
     nicknames: ["Tawn", "AJ"],
@@ -266,7 +266,7 @@
     },
   },
 
-// Chris Bosh — basePlayerId 2547 — teams: MIA/TOR
+// Chris Bosh — basePlayerId 2547 — teams: TOR/MIA
   bosh_2547: {
     basePlayerId: "2547",
     nicknames: ["CB4", "The Big Dinosaur"],
@@ -425,7 +425,7 @@
     },
   },
 
-// Zach Randolph — basePlayerId 2216 — teams: LAC/MEM/NYK/POR
+// Zach Randolph — basePlayerId 2216 — teams: POR/NYK/LAC/MEM
   randolph_2216: {
     basePlayerId: "2216",
     nicknames: ["Z-Bo", "The Grizzly"],
@@ -482,7 +482,7 @@
     },
   },
 
-// Baron Davis — basePlayerId 1884 — teams: CHH/GSW/LAC/NOH
+// Baron Davis — basePlayerId 1884 — teams: CHH/NOH/GSW/LAC
   davis_1884: {
     basePlayerId: "1884",
     nicknames: ["B-Diddy", "The Baron", "Boom Dizzle"],
@@ -539,7 +539,7 @@
     },
   },
 
-// CJ McCollum — basePlayerId 203468 — teams: NOP/POR
+// CJ McCollum — basePlayerId 203468 — teams: POR/NOP
   mccollum_203468: {
     basePlayerId: "203468",
     nicknames: ["CJ", "3J", "The Collector"],
@@ -586,7 +586,7 @@
     },
   },
 
-// John Wall — basePlayerId 202322 — teams: HOU/WAS
+// John Wall — basePlayerId 202322 — teams: WAS/HOU
   wall_202322: {
     basePlayerId: "202322",
     nicknames: ["The Flash", "Wiz Kid"],
@@ -633,7 +633,7 @@
     },
   },
 
-// Kyle Lowry — basePlayerId 200768 — teams: HOU/MIA/TOR
+// Kyle Lowry — basePlayerId 200768 — teams: HOU/TOR/MIA
   lowry_200768: {
     basePlayerId: "200768",
     nicknames: ["K-Low", "The Bulldog"],
@@ -778,7 +778,7 @@
     },
   },
 
-// Al Jefferson — basePlayerId 2744 — teams: BOS/CHA/MIN/UTA
+// Al Jefferson — basePlayerId 2744 — teams: BOS/MIN/UTA/CHA
   jefferson_2744: {
     basePlayerId: "2744",
     nicknames: ["Big Al"],
@@ -881,7 +881,7 @@
     },
   },
 
-// Carlos Boozer — basePlayerId 2430 — teams: CHI/CLE/UTA
+// Carlos Boozer — basePlayerId 2430 — teams: CLE/UTA/CHI
   boozer_2430: {
     basePlayerId: "2430",
     nicknames: ["Booz"],
@@ -985,7 +985,7 @@
     },
   },
 
-// Kawhi Leonard — basePlayerId 202695 — teams: LAC/SAS/TOR
+// Kawhi Leonard — basePlayerId 202695 — teams: SAS/TOR/LAC
   leonard_202695: {
     basePlayerId: "202695",
     nicknames: ["The Claw", "Board Man", "Fun Guy"],
@@ -1037,7 +1037,7 @@
     },
   },
 
-// Kemba Walker — basePlayerId 202689 — teams: BOS/CHA
+// Kemba Walker — basePlayerId 202689 — teams: CHA/BOS
   walker_202689: {
     basePlayerId: "202689",
     nicknames: ["Cardiac Kemba"],
@@ -1131,7 +1131,7 @@
     },
   },
 
-// Marcus Camby — basePlayerId 948 — teams: DEN/LAC/NYK/POR/TOR
+// Marcus Camby — basePlayerId 948 — teams: TOR/NYK/DEN/LAC/POR
   camby_948: {
     basePlayerId: "948",
     nicknames: ["Camby", "The Defensive Eraser"],
@@ -1240,7 +1240,7 @@
     },
   },
 
-// Rudy Gobert — basePlayerId 203497 — teams: MIN/UTA
+// Rudy Gobert — basePlayerId 203497 — teams: UTA/MIN
   gobert_203497: {
     basePlayerId: "203497",
     nicknames: ["The Stifle Tower", "The French Rejection"],
@@ -1287,7 +1287,7 @@
     },
   },
 
-// Andre Drummond — basePlayerId 203083 — teams: CLE/DET/LAL
+// Andre Drummond — basePlayerId 203083 — teams: DET/CLE/LAL
   drummond_203083: {
     basePlayerId: "203083",
     nicknames: ["Big Penguin"],
@@ -1339,7 +1339,7 @@
     },
   },
 
-// Bradley Beal — basePlayerId 203078 — teams: PHX/WAS
+// Bradley Beal — basePlayerId 203078 — teams: WAS/PHX
   beal_203078: {
     basePlayerId: "203078",
     nicknames: ["Big Panda", "BB"],
@@ -1433,7 +1433,7 @@
     },
   },
 
-// Kristaps Porziņģis — basePlayerId 204001 — teams: BOS/DAL/NYK/WAS
+// Kristaps Porziņģis — basePlayerId 204001 — teams: NYK/DAL/WAS/BOS
   porzingis_204001: {
     basePlayerId: "204001",
     nicknames: ["The Unicorn", "KP", "Tingus Pingus"],
@@ -1482,14 +1482,14 @@
     },
   },
 
-// Lamar Odom — basePlayerId 1885 — teams: LAC/LAL/MIA
+// Lamar Odom — basePlayerId 1885 — teams: LAC/MIA/LAL
   odom_1885: {
     basePlayerId: "1885",
     nicknames: ["LO", "The Candy Man"],
     knownFor: "Point forward before it was cool. Sixth Man of the Year, two rings, one reality show.",
     salaryTier: "star",
     tier1: ["6'10\" with guard skills and a heroin problem. The talent was undeniable.", "Two championships as the Lakers' ultimate glue guy. Kobe's favorite teammate."],
-    tier2: ["Sixth Man of the Year in 2011. Could play all five positions in a pinch.", "The Kardashian marriage made him tabloid famous. Basketball took a backseat."],
+    tier2: ["Sixth Man of the Year in 2011. Could play all five positions in a pinch.", "Two rings as the glue guy who made the triangle offense hum."],
     tier3: ["Twelve career triple-doubles. The versatility stats don't capture his impact."],
     overperform: ["Peak Lamar was magic. Triple-double threat every night.", "These are the games that made Phil Jackson call him essential.", "The basketball IQ on full display. Sees plays three passes ahead."],
     underperform: ["When LO checked out mentally, it was painful to watch.", "The drug issues were obvious before anyone admitted them.", "Inconsistency defined his career. All-Star one night, invisible the next."],
@@ -1499,7 +1499,7 @@
     bigGame: ["30 points, 19 rebounds, 11 assists against Sacramento in 2004.", "The triple-double that showcased everything he could do.", "Point forward perfection. This is why Phil Jackson loved him."],
     quietGame: ["Disappeared for stretches. The talent made the no-shows more frustrating.", "These games made you wonder if he cared as much as his teammates."],
     famousGameHint: ["March 24th, 2008 against Golden State was vintage Lamar.", "23 points, 21 rebounds, 5 blocks in 53 minutes. Everything but the assists.", "The kind of stat line that only he could produce."],
-    controversy: ["The drug addiction was an open secret for years in NBA circles.", "Reality TV made him more famous than basketball ever did.", "The 2011 trade to Dallas broke him. Never recovered from leaving LA.", "Found unconscious in a Nevada brothel in 2015. Rock bottom on live TV.", "The Kardashian marriage turned him into a punchline. Basketball became secondary."],
+    controversy: ["The drug addiction was an open secret for years in NBA circles.", "The 2011 trade to Dallas broke him. Never recovered from leaving LA.", "Found unconscious in a Nevada brothel in 2015. Rock bottom on live TV."],
     formerTeam: ["Returns to Miami were awkward after the early struggles.", "The Clippers gave him his first real shot. Always grateful."],
     rivalry: ["Lakers-Celtics Finals in 2008 and 2010. He was crucial in '09 and '10.", "The Boston rivalry defined his legacy. Came up big when it mattered."],
     milestones: ["Only player in NBA history with 15,000 points and 1,000 three-pointers off the bench.", "Twelve career triple-doubles. The versatility was unprecedented for a forward."],
@@ -1580,7 +1580,7 @@
     },
   },
 
-// Shawn Marion — basePlayerId 1890 — teams: MIA/PHX
+// Shawn Marion — basePlayerId 1890 — teams: PHX/MIA
   marion_1890: {
     basePlayerId: "1890",
     nicknames: ["The Matrix", "Marion the Librarian"],
@@ -1627,9 +1627,9 @@
     },
   },
 
-// Tony Parker — basePlayerId 2225 — teams: undefined
+// Tony Parker — basePlayerId 2225 — teams: SAS
   parker_2225: {
-    basePlayerId: 2225,
+    basePlayerId: "2225",
     nicknames: ["TP", "The French Flash"],
     knownFor: "The French point guard who drove through everyone for four rings in San Antonio.",
     salaryTier: "value",
@@ -1644,7 +1644,7 @@
     bigGame: ["55 points against Minnesota in '08. Career-high that came out of nowhere.", "The 42-point, 9-assist game vs OKC in '12. Prime Parker.", "Triple-double vs Houston: 27-12-12. The complete performance."],
     quietGame: ["Even quiet Parker nights meant 8 assists. The system never stopped.", "Bad shooting nights happened. Pop trusted him anyway."],
     famousGameHint: ["That 55-point explosion vs Minnesota. November '08, when nobody saw it coming.", "The Finals MVP performance in '07. Swept LeBron's first Finals appearance."],
-    controversy: ["Left San Antonio for Charlotte. Eighteen years wasn't enough, apparently.", "The Eva Longoria marriage. TMZ loved it more than ESPN did.", "Teammates' wives were off-limits. Parker didn't always remember that rule."],
+    controversy: ["Left San Antonio for Charlotte. Eighteen years wasn't enough, apparently.", "The Big Three brand was Duncan-Ginobili-Parker. When the other two retired, Parker became a footnote on his own franchise.", "At 35 the floater stopped dropping and the legs stopped working. He stayed two seasons too long. The decline was public."],
     formerTeam: ["Never played his former team. San Antonio was home for eighteen years."],
     rivalry: ["The Lakers rivalry defined the 2000s. Parker vs Fisher in the trenches."],
     milestones: ["First European Finals MVP. Broke barriers nobody knew existed."],
@@ -1667,9 +1667,9 @@
     },
   },
 
-// Amar'e Stoudemire — basePlayerId 2405 — teams: undefined
+// Amar'e Stoudemire — basePlayerId 2405 — teams: PHX/NYK
   stoudemire_2405: {
-    basePlayerId: 2405,
+    basePlayerId: "2405",
     nicknames: ["STAT", "The Black Jesus"],
     knownFor: "The explosive power forward who ran with Nash and punched fire extinguishers in New York.",
     salaryTier: "value",
@@ -1863,7 +1863,7 @@
     },
   },
 
-// Deron Williams — basePlayerId 101114 — teams: BKN/NJN/UTA
+// Deron Williams — basePlayerId 101114 — teams: UTA/NJN/BKN
   williams_101114: {
     basePlayerId: "101114",
     nicknames: ["D-Will", "The Point God"],
@@ -1915,7 +1915,7 @@
     },
   },
 
-// Glenn Robinson — basePlayerId 299 — teams: ATL/MIL
+// Glenn Robinson — basePlayerId 299 — teams: MIL/ATL
   robinson_299: {
     basePlayerId: "299",
     nicknames: ["Big Dog", "The Dog"],
@@ -2098,7 +2098,7 @@
     },
   },
 
-// Monta Ellis — basePlayerId 101145 — teams: DAL/GSW/MIL
+// Monta Ellis — basePlayerId 101145 — teams: GSW/MIL/DAL
   ellis_101145: {
     basePlayerId: "101145",
     nicknames: ["Have It All"],
@@ -2150,7 +2150,7 @@
     },
   },
 
-// Pascal Siakam — basePlayerId 1627783 — teams: IND/TOR
+// Pascal Siakam — basePlayerId 1627783 — teams: TOR/IND
   siakam_1627783: {
     basePlayerId: "1627783",
     nicknames: ["Spicy P"],
@@ -2244,7 +2244,7 @@
     },
   },
 
-// Rashard Lewis — basePlayerId 1740 — teams: ORL/SEA
+// Rashard Lewis — basePlayerId 1740 — teams: SEA/ORL
   lewis_1740: {
     basePlayerId: "1740",
     nicknames: ["R-Lew"],
@@ -2348,7 +2348,7 @@
     },
   },
 
-// Shareef Abdur-Rahim — basePlayerId 949 — teams: ATL/VAN
+// Shareef Abdur-Rahim — basePlayerId 949 — teams: VAN/ATL
   abdurrahim_949: {
     basePlayerId: "949",
     nicknames: ["Reef"],
@@ -2526,7 +2526,7 @@
     },
   },
 
-// D'Angelo Russell — basePlayerId 1626156 — teams: BKN/LAL/MIN
+// D'Angelo Russell — basePlayerId 1626156 — teams: LAL/BKN/MIN
   russell_1626156: {
     basePlayerId: "1626156",
     nicknames: ["DLo", "Ice in My Veins"],
@@ -2543,7 +2543,7 @@
     bigGame: ["82.3 fantasy points: 52 points, 9 rebounds, 5 assists against Minnesota in November 2019.", "Peak Brooklyn DLo. The Nets were 4-7 when he dropped this nuclear performance at home.", "73.8 points vs Sacramento: 44p/12a in March 2019. The All-Star season's signature moment."],
     quietGame: ["Quiet DLo still attempts 12 shots. The confidence never dims, even when the results do.", "Off nights usually feature 3-for-11 shooting. The shot selection stays aggressive regardless."],
     famousGameHint: ["52 points against his future team Minnesota. Brooklyn fans knew they were watching something special.", "44 points, 12 assists against Sacramento in March 2019. The complete floor general performance.", "The Lakers farewell tour featured 39 points against Portland. Too little, too late for LA."],
-    controversy: ["The Nick Young video scandal. Recorded his teammate admitting to cheating, then leaked it.", "Lakers traded him after two seasons. Magic Johnson called him out publicly for leadership issues.", "Brooklyn gave him the bag, then traded him to Golden State. The honeymoon lasted exactly one season.", "Minnesota traded him, got him back, then extended him. The relationship status is complicated.", "Never lived up to second overall pick expectations. Nine seasons later, still chasing potential."],
+    controversy: ["Locker room trust issues followed him from LA to Brooklyn.", "Lakers traded him after two seasons. Magic Johnson called him out publicly for leadership issues.", "Brooklyn gave him the bag, then traded him to Golden State. The honeymoon lasted exactly one season.", "Minnesota traded him, got him back, then extended him. The relationship status is complicated.", "Never lived up to second overall pick expectations. Nine seasons later, still chasing potential."],
     formerTeam: ["Facing former teams means extra motivation and questionable shot selection. The emotions run hot.", "Every Lakers matchup is personal. Magic's comments still sting after all these years."],
     rivalry: ["No real rivalries, just personal vendettas. The Nick Young incident created more enemies than basketball.", "Lakers games feel like therapy sessions. Working through abandonment issues in real time."],
     milestones: ["2019 All-Star selection. The one season where everything clicked in Brooklyn's system.", "Career-high 52 points against Minnesota. Peak DLo was appointment television for one night."],
@@ -2578,9 +2578,9 @@
     },
   },
 
-// David Lee — basePlayerId 101135 — teams: undefined
+// David Lee — basePlayerId 101135 — teams: NYK/GSW
   lee_101135: {
-    basePlayerId: 101135,
+    basePlayerId: "101135",
     nicknames: ["D-Lee"],
     knownFor: "The double-double machine who averaged 20 and 10 when nobody was watching.",
     salaryTier: "role",
@@ -2625,9 +2625,9 @@
     },
   },
 
-// David West — basePlayerId 2561 — teams: undefined
+// David West — basePlayerId 2561 — teams: NOH/NOK/IND
   west_2561: {
-    basePlayerId: 2561,
+    basePlayerId: "2561",
     nicknames: ["D-West"],
     knownFor: "The midrange assassin who chose rings over money in his final years.",
     salaryTier: "value",
@@ -2774,7 +2774,7 @@
     },
   },
 
-// Eric Bledsoe — basePlayerId 202339 — teams: MIL/PHX
+// Eric Bledsoe — basePlayerId 202339 — teams: PHX/MIL
   bledsoe_202339: {
     basePlayerId: "202339",
     nicknames: ["Mini LeBron"],
@@ -2913,7 +2913,7 @@
     },
   },
 
-// Gordon Hayward — basePlayerId 202330 — teams: BOS/CHA/UTA
+// Gordon Hayward — basePlayerId 202330 — teams: UTA/BOS/CHA
   hayward_202330: {
     basePlayerId: "202330",
     nicknames: ["G-Time"],
@@ -3143,7 +3143,7 @@
     },
   },
 
-// Paul Millsap — basePlayerId 200794 — teams: ATL/UTA
+// Paul Millsap — basePlayerId 200794 — teams: UTA/ATL
   millsap_200794: {
     basePlayerId: "200794",
     nicknames: ["The Milkman"],
@@ -3190,7 +3190,7 @@
     },
   },
 
-// Rasheed Wallace — basePlayerId 739 — teams: DET/POR
+// Rasheed Wallace — basePlayerId 739 — teams: POR/DET
   wallace_739: {
     basePlayerId: "739",
     nicknames: ["Sheed"],
@@ -3556,7 +3556,7 @@
     },
   },
 
-// Chauncey Billups — basePlayerId 1497 — teams: DEN/DET
+// Chauncey Billups — basePlayerId 1497 — teams: DET/DEN
   billups_1497: {
     basePlayerId: "1497",
     nicknames: ["Mr. Big Shot"],
@@ -3603,7 +3603,7 @@
     },
   },
 
-// Clint Capela — basePlayerId 203991 — teams: ATL/HOU
+// Clint Capela — basePlayerId 203991 — teams: HOU/ATL
   capela_203991: {
     basePlayerId: "203991",
     nicknames: ["The Swiss Wall"],
@@ -3650,7 +3650,7 @@
     },
   },
 
-// Dejounte Murray — basePlayerId 1627749 — teams: ATL/NOP/SAS
+// Dejounte Murray — basePlayerId 1627749 — teams: SAS/ATL/NOP
   murray_1627749: {
     basePlayerId: "1627749",
     nicknames: ["The Point God", "DJ"],
@@ -3702,9 +3702,9 @@
     },
   },
 
-// Dikembe Mutombo — basePlayerId 87 — teams: undefined
+// Dikembe Mutombo — basePlayerId 87 — teams: ATL/PHI
   mutombo_87: {
-    basePlayerId: 87,
+    basePlayerId: "87",
     nicknames: ["Mount Mutombo", "The Finger Wag"],
     knownFor: "The finger wag pioneer who turned shot-blocking into a global language.",
     salaryTier: "star",
@@ -3749,9 +3749,9 @@
     },
   },
 
-// Draymond Green — basePlayerId 203110 — teams: undefined
+// Draymond Green — basePlayerId 203110 — teams: GSW
   green_203110: {
-    basePlayerId: 203110,
+    basePlayerId: "203110",
     nicknames: ["The Engine", "Backpack Dray"],
     knownFor: "The versatile defensive anchor who turned positionless basketball into championship formula.",
     salaryTier: "role",
@@ -3791,7 +3791,7 @@
     },
   },
 
-// Fred VanVleet — basePlayerId 1627832 — teams: HOU/TOR
+// Fred VanVleet — basePlayerId 1627832 — teams: TOR/HOU
   vanvleet_1627832: {
     basePlayerId: "1627832",
     nicknames: ["Steady Freddy", "FVV"],
@@ -4246,7 +4246,7 @@
     },
   },
 
-// Tyreke Evans — basePlayerId 201936 — teams: MEM/NOP/SAC
+// Tyreke Evans — basePlayerId 201936 — teams: SAC/NOP/MEM
   evans_201936: {
     basePlayerId: "201936",
     nicknames: ["Reke"],
@@ -4298,7 +4298,7 @@
     },
   },
 
-// Victor Oladipo — basePlayerId 203506 — teams: IND/MIA/ORL
+// Victor Oladipo — basePlayerId 203506 — teams: ORL/IND/MIA
   oladipo_203506: {
     basePlayerId: "203506",
     nicknames: ["V.O.", "Dipo"],
