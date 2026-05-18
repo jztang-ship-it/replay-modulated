@@ -14,6 +14,8 @@
  * tonal constraints, and is sized to a different attention budget.
  */
 
+import { scoreRepeatPenalty, recordUsage } from "./antiRepeat";
+
 function pick(arr: string[]): string {
   return arr[Math.floor(Math.random() * arr.length)] ?? arr[0];
 }
@@ -377,3 +379,183 @@ export function chadRivalryBackIntro(args: { challengerName: string | null }): s
   const bank = args.challengerName ? RIVALRY_BACK_NAMED : RIVALRY_BACK_UNNAMED;
   const line = pick(bank);
   return line.replace(/{name}/g, args.challengerName ?? "");
+}
+
+// ── Challenge initiation — Chad's framing as user posts their hand ────────
+//
+// Fires when the user has played a hand and the share prompt is preparing
+// to surface. Voice: outbound, talking TO the poster about the slate
+// they're about to send. Tone graduates by bucket:
+//   - bad_beat:  held strong cards, hand underperformed → share-the-misery
+//   - flex:      RED/ALL-STAR+/rare_pull → "make them try"
+//   - statement: STARTER+ honest hand → "I dare you"
+//   - default:   everything else → baseline
+//
+// Culture-aware variants fire ONLY when the star card had a meaningful
+// performance (overperformed projection OR landed a top-game tier). When
+// applicable, they replace {name} with the star's name. The lift over
+// generic should feel earned — never random-fact-drop.
+
+const INITIATION_BAD_BEAT: string[] = [
+  "Held two studs and they brought you a casserole. Send it — someone has to suffer with you.",
+  "Premium picks, premium disappointment. Make a friend feel this hand.",
+  "You picked the right cards. The basketball didn't read the memo. Pass the slate.",
+  "Stars on paper, role players on the floor. Find a victim with the same delusions.",
+  "The build was right. The game was rude. Forward the receipt.",
+  "Held the names, missed the production. Someone in your contacts deserves this slate.",
+  "Locked in two anchors and they showed up empty-handed. Pass the misery.",
+  "The math said win. The math doesn't watch basketball. Share the loss.",
+  "Right reads, wrong night. See if anyone can flip the script you couldn't.",
+  "Cooked by your own anchor picks. Find out who you respect enough to send this to.",
+];
+
+const INITIATION_FLEX: string[] = [
+  "That's not a hand — that's a flag plant. Hand the slate to someone and watch them blink.",
+  "Three big-money cards delivered. Pick a friend who thinks they could match it.",
+  "Numbers like that need an audience. Send. Wait. Enjoy the silence.",
+  "A score this clean doesn't repeat. Lock it in, then pick someone to chase it.",
+  "MVP-tier night. The slate is yours; give it to whoever still thinks they're a hooper.",
+  "Hand of the day candidate. Pick a friend, send it, watch them fold.",
+  "You painted the corner. Now pick someone with paint on their hands.",
+  "Receipts like this don't unread themselves. Pass it along.",
+  "Set your calendar — this is the high you'll measure against for a month. Find a challenger.",
+  "Top-shelf execution. Don't sit on it — see who in your group can come close.",
+];
+
+const INITIATION_STATEMENT: string[] = [
+  "Not the ceiling, but the floor was furniture-store quality. See if your group can stand on it.",
+  "Solid build, clean execution. Someone in your contacts thinks they could do better — find out.",
+  "The line is the line. Make a friend prove they can clear it.",
+  "Good hand, not a great one. Plenty of room for someone to fail at it.",
+  "STARTER tier doesn't carry itself. Pass the slate; see who can carry it past you.",
+  "Came up short of the trophy, but the build was honest. Make someone prove they can do the work.",
+  "Decent line. Decent line gets shared too — see who treats it like a layup and misses.",
+  "You set a bar. It's not the ceiling. Find someone who claims they can step on it.",
+  "Above average is still above. Send it and see who falls below.",
+  "Workman's hand. Pass it along — the talkers in your group can show their work.",
+];
+
+const INITIATION_DEFAULT: string[] = [
+  "You played the hand. Now play the friend. Send it.",
+  "Same slate, your decisions. Pick a victim.",
+  "The cards are the cards. Pass them along and find out who you're really competing with.",
+  "Receipt's printed. Forward it.",
+  "Hand's in the books. Pick someone and see what they do with the same paper.",
+  "You took your swing. Now find out if your friends can hit it.",
+  "Score's locked. Slate's portable. Find a recipient.",
+  "Hand for hand. Who in your contacts thinks they're better at this?",
+  "Posted. Pick the friend who'll have an opinion about it.",
+  "Done deal. Now find someone whose deal would have been worse.",
+  "The slate doesn't change. The hand does. Share both.",
+  "Your number. Their slate. See who blinks first.",
+];
+
+// Culture-aware variants — fire only when the star card had a meaningful
+// performance. {name} interpolates the star's first or last name (caller
+// decides which feels more natural for the bank). Pool kept tight so the
+// lift over generic only happens when the moment earns it.
+
+const INITIATION_CULTURE_FLEX: string[] = [
+  "{name} dropped a vintage line. Send the slate to someone who needs reminding.",
+  "{name} just put one on the wall. Pick a friend who can't match this.",
+  "That's a {name} kind of night — the kind that makes box scores collectibles. Send it.",
+  "{name} delivered the season-high. Slate's got receipts; find a recipient.",
+  "Pull-of-the-year material from {name}. Forward it; let your group try to top it.",
+  "When {name} hits like that, the rest of the league watches. Make a friend watch too.",
+  "{name} cleared their own career bar. Your turn — find someone who'll try to clear yours.",
+  "{name} carried it. Your job now is finding someone whose anchor won't.",
+];
+
+const INITIATION_CULTURE_BAD_BEAT: string[] = [
+  "{name} clocked in and left early. Send the slate to someone who needs the same lesson.",
+  "Held {name}, got nothing. Pass the slate and let a friend try the same trust fall.",
+  "{name} on the marquee, no show on the floor. Find a victim.",
+  "Locked in {name}'s salary. Got role-player production. Make somebody else write that check.",
+  "{name} no-showed. The hand can't be rebuilt — pass the rubble.",
+  "Big name, small night. See if a friend gets a different version of {name}.",
+];
+
+// ── Selection ────────────────────────────────────────────────────────────
+
+export type InitiationBucket = "bad_beat" | "flex" | "statement" | "default";
+
+export interface ChallengeInitiationArgs {
+  /** Win tier of the hand (BUST | ROOKIE | STARTER | ALL_STAR | MVP | LEGEND). */
+  winTier: string;
+  /** Resolved roster — used to detect held R/O cards for bad_beat. */
+  roster: Array<{ tier?: string; wasHeld?: boolean }>;
+  /** Top-game tier of the star card from recordDetector, if any. */
+  topGameTier?: "record" | "career" | "season" | null;
+  /** The star card's display name (typically last name or first-last). */
+  starName?: string | null;
+  /** True when the star card's actualFp meaningfully exceeded projection
+   *  OR the star landed a record/career topGame. Drives whether the
+   *  culture-aware bank is eligible to fire. */
+  starHadMeaningfulPerformance?: boolean;
+}
+
+/** Maps hand state to the appropriate initiation bucket. Mirrors the
+ *  trigger evaluator rules (bad_beat requires 2+ HELD high-tier cards;
+ *  flex covers ALL_STAR+ tiers + topGame record/career). */
+function selectInitiationBucket(args: ChallengeInitiationArgs): InitiationBucket {
+  const tier = args.winTier;
+  if (tier === "BUST" || tier === "ROOKIE") {
+    const heldHigh = args.roster.filter(
+      c => c.wasHeld === true && (c.tier === "RED" || c.tier === "ORANGE")
+    ).length;
+    if (heldHigh >= 2) return "bad_beat";
+  }
+  if (tier === "ALL_STAR" || tier === "MVP" || tier === "LEGEND") return "flex";
+  if (args.topGameTier === "record" || args.topGameTier === "career") return "flex";
+  if (tier === "STARTER") return "statement";
+  return "default";
+}
+
+/** Pick a line from a bank with anti-repeat scoring. Records the pick
+ *  back to the shared antiRepeat history so subsequent calls (init or
+ *  share-payload) penalize re-use. */
+function pickWithAntiRepeat(bank: string[]): string {
+  // Score each candidate; lower penalty = more recently fresh.
+  let bestLine = bank[0];
+  let bestScore = Number.POSITIVE_INFINITY;
+  for (const line of bank) {
+    const { total } = scoreRepeatPenalty(line);
+    if (total < bestScore) { bestScore = total; bestLine = line; }
+  }
+  recordUsage(bestLine);
+  return bestLine;
+}
+
+/** Top-level: returns Chad's initiation line for the just-played hand.
+ *  Culture-aware bank fires only when the star had a meaningful
+ *  performance AND has a name to interpolate; otherwise generic bank. */
+export function selectChallengeInitiation(args: ChallengeInitiationArgs): string {
+  const bucket = selectInitiationBucket(args);
+
+  // Culture-aware path: only when star meaningfully performed + named.
+  if (args.starName && args.starHadMeaningfulPerformance) {
+    if (bucket === "flex") {
+      return pickWithAntiRepeat(INITIATION_CULTURE_FLEX).replace(/\{name\}/g, args.starName);
+    }
+    if (bucket === "bad_beat") {
+      return pickWithAntiRepeat(INITIATION_CULTURE_BAD_BEAT).replace(/\{name\}/g, args.starName);
+    }
+  }
+
+  switch (bucket) {
+    case "bad_beat":  return pickWithAntiRepeat(INITIATION_BAD_BEAT);
+    case "flex":      return pickWithAntiRepeat(INITIATION_FLEX);
+    case "statement": return pickWithAntiRepeat(INITIATION_STATEMENT);
+    case "default":   return pickWithAntiRepeat(INITIATION_DEFAULT);
+  }
+}
+
+/** Expose bank arrays for testing / preview. */
+export function chadInitiationBank(bucket: InitiationBucket): string[] {
+  switch (bucket) {
+    case "bad_beat":  return [...INITIATION_BAD_BEAT];
+    case "flex":      return [...INITIATION_FLEX];
+    case "statement": return [...INITIATION_STATEMENT];
+    case "default":   return [...INITIATION_DEFAULT];
+  }
+}
