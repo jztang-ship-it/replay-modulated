@@ -195,6 +195,12 @@
     "pctTrans": 55.23,
     "pctFaceTrans": 7.56
   },
+  "3532": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 53.57,
+    "pctFaceTrans": 1.67
+  },
   "3533": {
     "quality": "cleanCutout",
     "mode": "whiteStudio",
@@ -738,6 +744,12 @@
     "mode": "whiteStudio",
     "pctTrans": 54.59,
     "pctFaceTrans": 1.03
+  },
+  "7551": {
+    "quality": "cleanCutout",
+    "mode": "whiteStudio",
+    "pctTrans": 54.13,
+    "pctFaceTrans": 0.14
   },
   "7796": {
     "quality": "cleanCutout",

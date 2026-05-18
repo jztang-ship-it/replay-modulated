@@ -102,6 +102,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "3500": { apiFootballId: 1464, local: true, processed: true },
   // Thibaut Courtois (Belgium)
   "3509": { apiFootballId: 730, local: true, processed: true },
+  // Jordan Brian Henderson (England)
+  "3532": { apiFootballId: 292, local: true, processed: true },
   // Xherdan Shaqiri (Switzerland)
   "3533": { apiFootballId: 307, local: true, processed: true },
   // Faustino Marcos Alberto Rojo (Argentina)
@@ -284,6 +286,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "7439": { apiFootballId: 21998, local: true, processed: true },
   // Jawad El Yamiq (Morocco)
   "7459": { apiFootballId: 31386, local: true, processed: true },
+  // Enzo Ebosse (Cameroon)
+  "7551": { apiFootballId: 20656, local: true, processed: true },
   // Silvan Widmer (Switzerland)
   "7796": { apiFootballId: 48378, local: true, processed: true },
   // Mason Mount (England)
