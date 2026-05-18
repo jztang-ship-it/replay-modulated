@@ -19,6 +19,9 @@ import { useDailySlate, slateSignature } from "@shared/hooks/useDailySlate";
 import { SlateChip } from "@shared/components/SlateChip";
 import { ensureLoaded, getPlayers, getActiveSeason } from "@shared/engines/dataEngine";
 import { headshotUrl } from "@shared/utils/headshotUrl";
+import { shouldRenderSilhouette } from "../data/silhouettePlayerIds";
+
+const SILHOUETTE_URL = headshotUrl("_silhouette");
 import { sportAdapter } from "../adapters/SportAdapter";
 import { getTodaysStars } from "../adapters/gameAdapter";
 import type { TierColor } from "@shared/types";
@@ -57,7 +60,8 @@ const BasketballCardThumb: React.FC<{ playerId: string; isAnchor: boolean; index
 }) => {
   const [imgFailed, setImgFailed] = useState(false);
   const meta = index.get(playerId);
-  const url = headshotUrl(meta?.photoCode ?? playerId);
+  const useSilhouette = shouldRenderSilhouette(meta?.photoCode ?? playerId) || imgFailed;
+  const url = useSilhouette ? SILHOUETTE_URL : headshotUrl(meta?.photoCode ?? playerId);
   const tier = getTier(meta?.tier ?? "WHITE");
   // Tier color lives on the avatar circle (not the card body) per design:
   // headshots have transparent background, so the tier gradient shows through
@@ -67,7 +71,10 @@ const BasketballCardThumb: React.FC<{ playerId: string; isAnchor: boolean; index
   // when the headshot is missing or fails to load, so the user can still see
   // the card's quality at a glance.
   const ring = `2px solid ${tier.accent}`;
-  const showImage = !!url && !imgFailed;
+  // For silhouette URLs we always show the image (it's a static asset with no
+  // 404 risk in normal operation). For real photos, fall back to initials text
+  // if the photo errors AND we don't escalate to silhouette.
+  const showImage = !!url && (useSilhouette || !imgFailed);
   return (
     <div
       className={`basketball-thumb ${isAnchor ? "is-anchor" : ""}`}
