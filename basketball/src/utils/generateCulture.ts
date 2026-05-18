@@ -32,6 +32,12 @@
  *   export ANTHROPIC_API_KEY=sk-ant-...
  *   export CULTURE_MODE=pilot
  *   npx tsx basketball/src/utils/generateCulture.ts
+ *
+ * For expand mode, CULTURE_BATCH controls which target file is read and
+ * which review/failed files are written. Defaults to "tier1" for back-compat.
+ *   export CULTURE_MODE=expand
+ *   export CULTURE_BATCH=tier2   # reads culture_tier2_targets.json
+ *   npx tsx basketball/src/utils/generateCulture.ts
  */
 
 import fs from "fs";
@@ -50,22 +56,23 @@ const MODEL = "claude-sonnet-4-20250514";
 
 type Mode = "pilot" | "enrich" | "expand";
 const MODE: Mode = ((process.env.CULTURE_MODE as Mode) || "pilot");
+// In expand mode, CULTURE_BATCH selects which target file to read. Default
+// "tier1" preserves pre-tier2 behavior; set to "tier2" for the Tier 2 run.
+const BATCH: string = (process.env.CULTURE_BATCH || "tier1");
 
 const SEASONS_DIR = path.join(process.cwd(), "basketball/public/data/seasons");
 const PILOT_TARGETS = path.join(__dirname, "culture_pilot_targets.json");
 const PILOT_TEAMS = path.join(__dirname, "culture_pilot_teams.json");
-// In expand mode we read the Tier 1 target file for this run. Future
-// tiers will swap this path (or we'll add a CULTURE_BATCH env var).
-const EXPAND_TARGETS = path.join(__dirname, "culture_tier1_targets.json");
+const EXPAND_TARGETS = path.join(__dirname, `culture_${BATCH}_targets.json`);
 
 function reviewPathFor(m: Mode): string {
-  // Expand mode writes to the Tier 1 review/failed paths for this run.
-  // Pilot/enrich keep mode-name-based filenames.
-  if (m === "expand") return path.join(__dirname, "culture_tier1_review.ts");
+  // Expand mode writes to a batch-scoped review file. Pilot/enrich keep
+  // mode-name-based filenames.
+  if (m === "expand") return path.join(__dirname, `culture_${BATCH}_review.ts`);
   return path.join(__dirname, `culture_${m}_review.ts`);
 }
 function failedPathFor(m: Mode): string {
-  if (m === "expand") return path.join(__dirname, "culture_tier1_failed.json");
+  if (m === "expand") return path.join(__dirname, `culture_${BATCH}_failed.json`);
   return path.join(__dirname, `culture_${m}_failed.json`);
 }
 
