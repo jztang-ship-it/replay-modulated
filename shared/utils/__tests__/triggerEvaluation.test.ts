@@ -66,10 +66,14 @@ describe("evaluateTrigger", () => {
     expect(result.trigger).not.toBe("near_miss");
   });
 
-  it("returns bad_beat for BUST with 2+ RED/ORANGE cards", () => {
+  it("returns bad_beat for BUST with 2+ held RED/ORANGE cards", () => {
+    // Per the May 16 "held-only gate" fix: bad_beat is the share-worthy
+    // "I stacked my lineup and it cooked" story. The 2+ R/O threshold
+    // counts only cards the user actually held — RNG-drawn high-tier
+    // cards are not a stack-and-bust narrative.
     const roster = [
-      card({ slotIndex: 0, tier: "RED", actualFp: 8 }),
-      card({ slotIndex: 1, tier: "ORANGE", actualFp: 8 }),
+      card({ slotIndex: 0, tier: "RED", actualFp: 8, wasHeld: true }),
+      card({ slotIndex: 1, tier: "ORANGE", actualFp: 8, wasHeld: true }),
       card({ slotIndex: 2, tier: "WHITE", actualFp: 8 }),
       card({ slotIndex: 3, tier: "WHITE", actualFp: 8 }),
       card({ slotIndex: 4, tier: "WHITE", actualFp: 8 }),
@@ -78,11 +82,26 @@ describe("evaluateTrigger", () => {
     expect(result.trigger).toBe("bad_beat");
   });
 
-  it("does NOT fire bad_beat for BUST with only 1 RED/ORANGE card", () => {
-    // Tightened: one premium card busting isn't share-worthy.
+  it("does NOT fire bad_beat for BUST with only 1 held RED/ORANGE card", () => {
+    // Threshold test: 1 held R/O is below the 2-card floor.
     const roster = [
-      card({ slotIndex: 0, tier: "RED", actualFp: 8 }),
+      card({ slotIndex: 0, tier: "RED", actualFp: 8, wasHeld: true }),
       card({ slotIndex: 1, tier: "WHITE", actualFp: 8 }),
+      card({ slotIndex: 2, tier: "WHITE", actualFp: 8 }),
+      card({ slotIndex: 3, tier: "WHITE", actualFp: 8 }),
+      card({ slotIndex: 4, tier: "WHITE", actualFp: 8 }),
+    ];
+    const result = evaluateTrigger({ roster, totalFp: 40, winTier: "BUST", badges: [], winTiersMap: TIERS });
+    expect(result.trigger).toBe("default");
+  });
+
+  it("does NOT fire bad_beat when 2+ RED/ORANGE cards are NOT held", () => {
+    // Held-only gate: RNG-drawn high-tier cards aren't a "stacked lineup
+    // got cooked" story. Even with two R/O slots in the lineup, if neither
+    // was wasHeld, bad_beat must not fire.
+    const roster = [
+      card({ slotIndex: 0, tier: "RED", actualFp: 8, wasHeld: false }),
+      card({ slotIndex: 1, tier: "ORANGE", actualFp: 8, wasHeld: false }),
       card({ slotIndex: 2, tier: "WHITE", actualFp: 8 }),
       card({ slotIndex: 3, tier: "WHITE", actualFp: 8 }),
       card({ slotIndex: 4, tier: "WHITE", actualFp: 8 }),
