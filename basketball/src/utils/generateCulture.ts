@@ -116,6 +116,11 @@ interface PilotTarget {
   name: string;
   lastNameKey: string;
   qualifyingTeams: string[];
+  /** Optional per-player framing constraints injected into the prompt.
+   *  Use sparingly — for players whose default culture leans on angles
+   *  the voice spec excludes (substance, mental health, personal life)
+   *  and need explicit redirection to basketball-context only. */
+  framingRestrictions?: string[];
 }
 
 interface PilotTargetsFile {
@@ -244,6 +249,7 @@ interface BatchInput {
   tier: string;
   qualifyingTeams: string[];
   gameDataSummary: string;
+  framingRestrictions?: string[];
 }
 
 async function generateBatch(players: BatchInput[]): Promise<Array<{ key: string; basePlayerId: string; name: string; [k: string]: any }>> {
@@ -251,6 +257,10 @@ async function generateBatch(players: BatchInput[]): Promise<Array<{ key: string
     let s = `── ${p.name} (basePlayerId: ${p.basePlayerId}, lastNameKey: ${p.lastNameKey})`;
     s += `\nMost recent team/tier: ${p.team} / ${p.tier} / $${p.salary} (salaryTier: ${salaryTier(p.salary)})`;
     s += `\nqualifyingTeams (write teamEras for these only): ${JSON.stringify(p.qualifyingTeams)}`;
+    if (p.framingRestrictions && p.framingRestrictions.length > 0) {
+      s += `\n\nFRAMING RESTRICTIONS (override defaults — apply to ALL fields):\n` +
+        p.framingRestrictions.map(r => `  - ${r}`).join("\n");
+    }
     s += `\n\nGAME DATA:\n${p.gameDataSummary}`;
     return s;
   }).join("\n\n─────────────────────────────────────────\n\n");
@@ -476,6 +486,7 @@ async function main() {
       tier: last.tier,
       qualifyingTeams: t.qualifyingTeams,
       gameDataSummary: buildSummary(rollup?.logs ?? []),
+      framingRestrictions: t.framingRestrictions,
     };
   });
 
