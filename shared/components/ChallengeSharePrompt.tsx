@@ -100,7 +100,13 @@ export function ChallengeSharePrompt({
     }
     if (!cid) return;
     const url = `${window.location.origin}/${sport}/challenge/${cid}`;
-    await shareChallenge(triggerResult.headline, url, "");
+    // Share text is the recipient-facing chad trash-talk (same string
+    // stored as share_headline on the DB row, propagated to the landing
+    // screen + OG card). Falls back to the poster-facing prompt
+    // headline only when shareHeadline is missing — preserves
+    // pre-trash-talk-wiring behavior for sports without
+    // adapter.getShareHeadline implemented.
+    await shareChallenge(shareHeadline ?? triggerResult.headline, url, "");
     if (!navigator.share) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);

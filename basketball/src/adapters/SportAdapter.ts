@@ -8,7 +8,7 @@ import { tierFromSalary, DEFAULT_ECONOMY_CONFIG, type EconomyConfig } from "../e
 import { tierRank } from "@shared/theme";
 import topGames from "../../public/data/topGames.json";
 import careerHighs from "../../public/data/careerHighs.json";
-import seasonIntros from "../data/seasonIntros.json";
+import { chadShareTrashTalk } from "@shared/commentary/chadChallenge";
 // Side-effect import: registers the basketball sound pack with the shared
 // soundPackLoader at module-load time. Without this, basketball plays silently.
 import "../utils/soundPack";
@@ -230,28 +230,39 @@ export class SportAdapter {
   }
 
   /** Build the caption stored as `share_headline` on a created challenge.
-   *  Big-game badge → big-game line; else → season-reel copy from
-   *  seasonIntros (stripped of the "Today we're going back to…/Good luck."
-   *  scaffolding so it reads as a caption, not a greeting). */
+   *  Delegates to chadShareTrashTalk, which returns a recipient-facing
+   *  dare from one of four trigger-keyed sub-banks (bad_beat / flex /
+   *  statement / default). The string flows through to:
+   *    - the navigator.share text body (mobile)
+   *    - the clipboard payload (desktop)
+   *    - ChallengeLandingScreen header
+   *    - the OG share-card image
+   *
+   *  All four surfaces share the same line per challenge. roster/season
+   *  args remain on the signature for API stability across sports —
+   *  basketball doesn't read them anymore, but the call site passes them
+   *  and other sports (when they implement getShareHeadline) might.
+   *
+   *  trigger arg drives the sub-bank — recipient copy points at the
+   *  same emotional frame the sender JUST saw on their prompt
+   *  (rare_pull/big_score → flex, bad_beat → bad_beat, near_miss or
+   *  STARTER → statement, else → default). winTier is a secondary signal
+   *  used for comfortable-STARTER wins that come through as
+   *  trigger="default".
+   *
+   *  Caller responsibility: memoize this call. Each invocation rolls a
+   *  fresh pick from the chosen bank (with shared anti-repeat ring
+   *  buffer). GameView wraps the call in useMemo([challengeTrigger,
+   *  winTier]) so the headline is stable across the multi-render RESULTS
+   *  phase and the user gets one line per challenge, not a flicker. */
   getShareHeadline(args: {
     roster: import("@shared/types/index").GeneratedCard[];
     season: string;
+    winTier: string;
+    trigger?: string;
   }): string {
-    const RECORD_BADGE_IDS = ["TOP_GAME", "CAREER_HIGH", "NBA_RECORD", "SEASON_RECORD", "PB"];
-    const hasBigGame = args.roster.some((c: any) =>
-      (c.achievements ?? []).some((b: any) =>
-        RECORD_BADGE_IDS.some(rid => String(b.id ?? "").includes(rid))
-      )
-    );
-    if (hasBigGame) return "Pulled a legendary game on this slate. Beat it.";
-    const intro = (seasonIntros as Record<string, string>)[args.season];
-    if (intro) {
-      return intro
-        .replace(/^Today we're going back to\s+/, "")
-        .replace(/\s*Good luck\.?\s*$/, "")
-        .trim();
-    }
-    return "Same starting cards. Your decisions.";
+    void args.roster; void args.season;
+    return chadShareTrashTalk({ trigger: args.trigger, winTier: args.winTier });
   }
 
   getComparisonValue(result: import("@shared/adapters/challengeTypes").HandResult): number {

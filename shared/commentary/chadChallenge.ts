@@ -938,50 +938,105 @@ export function chadResolutionBank(outcome: ResolutionOutcome, flavor: Resolutio
 // Chad's line carries the dare. No {name}/{delta} interpolation because
 // the recipient sees the slate details elsewhere on the card.
 //
-// Two tone tiers selected from the poster's win tier so a LEGEND share
-// brags differently than a STARTER share. Default bank covers everything
-// in between.
+// Four trigger-keyed sub-banks (mirror selectChallengeInitiation's
+// bucket structure — same emotional taxonomy on both sender prompt
+// and recipient share):
+//   bad_beat  — sender stacked R/O cards and got cooked; share-the-pain
+//   flex      — sender hit ALL_STAR+/rare_pull/big_score; brag and dare
+//   statement — sender cleared STARTER honestly OR near-missed next
+//               tier; set the floor, beat it
+//   default   — everything else; cold provocation, play the slate
 
-const SHARE_TT_BRAG: string[] = [
-  "Cleared the bar. Now find out how short you are.",
-  "Trophy hand. Your turn — show me you can match it.",
-  "Top-shelf night. The slate is yours; the ceiling is mine.",
+const SHARE_TT_BAD_BEAT: string[] = [
+  "Held two anchors. Got nothing. Try not to make my mistake.",
+  "Stacked the lineup, came up empty. Same cards. Your decisions.",
+  "Got cooked on premium picks. The slate's not the problem — find out.",
+  "Brutal hand. See if you read it better.",
+  "Spent the budget on RED, got handed a punch in the mouth. Your turn.",
+  "Two anchors, no production. The math says rebound; the math also says good luck.",
+  "Slate looked perfect on paper. Paper got eaten. See if your hand survives.",
+  "Built the dream lineup. Watched it die. Pass the receipt; let's see if it dies twice.",
+  "When the high-tier cards no-show, there's no salvaging it. Try anyway.",
+  "Took the swings, missed everything. Find out if you do better — odds say maybe.",
+];
+
+const SHARE_TT_FLEX: string[] = [
+  "Cleared the bar. Find out how short you are.",
   "Hand of the day candidate. Try not to be the photo-finish loss.",
-  "MVP-tier output. I dare you to come within five.",
+  "Top-shelf night. The slate's yours; the ceiling is mine.",
+  "MVP-tier output. Don't come within five and call it close.",
   "Set the high. See if you can touch it.",
+  "Anyone who beats this is lying. Make me look stupid — I dare you.",
+  "Built it, won it, posted it. Your move.",
   "Don't embarrass yourself, but if you do, I want pictures.",
+  "Trophy hand on a Tuesday. See if you can do it on a weeknight too.",
+  "Receipts say I cooked. Let's see what yours says.",
+];
+
+const SHARE_TT_STATEMENT: string[] = [
+  "Above the line. See if you can clear the same height.",
+  "STARTER on the board. Either you match or you don't. The math doesn't grade on style.",
+  "Solid hand, not the ceiling. Plenty of room for you to fall short.",
+  "Workman's night. The kind your group chat respects until somebody beats it.",
+  "Decent floor. Find out if you're better at this than you think.",
+  "Made it past the rookie line. Now make it past me.",
+  "Honest hand. The honest question is whether you can match it.",
+  "Solid night. Pick a friend, hand them the slate, watch them sweat.",
+  "Set the bar somewhere between possible and annoying. Make me look easy.",
+  "Above average is above. Find out if you are.",
 ];
 
 const SHARE_TT_DEFAULT: string[] = [
   "Same slate, your turn. Show your work.",
   "Beat this. Don't make me regret sending it.",
   "Played a hand. Made it your problem now.",
-  "Sent you a slate. Whoever scores higher gets bragging rights for a week.",
-  "Try this. I want to see how you'd play it.",
+  "Sent you a slate. Whoever scores higher wins the group chat for a week.",
   "Hand's on the table. Your move.",
   "Same names, same numbers. Different hand if you're smart.",
   "Run the slate. Send back the receipt.",
   "Built one. Curious if yours holds up.",
   "Tap in. The slate is the slate; the score is yours to chase.",
-  "I'll wait. Show me your version of this hand.",
-  "Try clearing what I just did. Lower bar than it sounds.",
-  "Sent you the same cards. Different night if you read it right.",
   "Don't overthink it. Don't underthink it either. Just play.",
 ];
 
+export type ShareTrashTalkBucket = "bad_beat" | "flex" | "statement" | "default";
+
+/** Map trigger (+ winTier as secondary signal) to share-bank bucket.
+ *  Mirrors selectInitiationBucket above so sender prompt and recipient
+ *  share copy point at the same emotional frame.
+ *
+ *  Trigger-only mapping covers most cases; winTier=STARTER pulls
+ *  comfortable-STARTER wins (which evaluate to trigger="default") into
+ *  the statement bucket so they don't get the cold/generic default
+ *  pool. */
+function shareTrashTalkBucket(trigger?: string, winTier?: string): ShareTrashTalkBucket {
+  if (trigger === "rare_pull" || trigger === "big_score") return "flex";
+  if (trigger === "bad_beat") return "bad_beat";
+  if (trigger === "near_miss" || winTier === "STARTER") return "statement";
+  return "default";
+}
+
 /** Top-level: returns Chad's recipient-facing trash talk for the share
- *  payload. Tone tier graduates with the poster's win tier — LEGEND/MVP
- *  shares brag, STARTER+ shares default. Anti-repeat shared with other
- *  Chad surfaces so the same line doesn't recur back-to-back. */
-export function chadShareTrashTalk(args: { winTier?: string } = {}): string {
-  const t = args.winTier;
-  if (t === "MVP" || t === "LEGEND" || t === "ALL_STAR") {
-    return pickWithAntiRepeat(SHARE_TT_BRAG);
+ *  payload. Trigger-aware (mirrors selectChallengeInitiation) so a
+ *  bad_beat share recipient reads "share the pain" copy, a flex share
+ *  recipient reads "match this if you can" copy, etc. Anti-repeat
+ *  shared with other Chad surfaces. */
+export function chadShareTrashTalk(args: { trigger?: string; winTier?: string } = {}): string {
+  const bucket = shareTrashTalkBucket(args.trigger, args.winTier);
+  switch (bucket) {
+    case "bad_beat":  return pickWithAntiRepeat(SHARE_TT_BAD_BEAT);
+    case "flex":      return pickWithAntiRepeat(SHARE_TT_FLEX);
+    case "statement": return pickWithAntiRepeat(SHARE_TT_STATEMENT);
+    case "default":   return pickWithAntiRepeat(SHARE_TT_DEFAULT);
   }
-  return pickWithAntiRepeat(SHARE_TT_DEFAULT);
 }
 
 /** Expose bank arrays for testing / preview. */
-export function chadShareTrashTalkBank(tier: "brag" | "default"): string[] {
-  return tier === "brag" ? [...SHARE_TT_BRAG] : [...SHARE_TT_DEFAULT];
+export function chadShareTrashTalkBank(bucket: ShareTrashTalkBucket): string[] {
+  switch (bucket) {
+    case "bad_beat":  return [...SHARE_TT_BAD_BEAT];
+    case "flex":      return [...SHARE_TT_FLEX];
+    case "statement": return [...SHARE_TT_STATEMENT];
+    case "default":   return [...SHARE_TT_DEFAULT];
+  }
 }

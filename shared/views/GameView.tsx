@@ -1812,6 +1812,34 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     }
   }, [gameState, challengeBackCtx]); // eslint-disable-line
 
+  // Share-headline pick — fires once per (challengeTrigger, winTier).
+  //
+  // sportAdapter.getShareHeadline now delegates to chadShareTrashTalk
+  // (random pick from a brag/default bank) for basketball. Without memo,
+  // the inline call would re-roll on every render of the RESULTS phase
+  // (animation ticks, state changes, etc.) — the user would see the
+  // headline flicker, and the chad ring buffer would burn entries.
+  //
+  // challengeTrigger is set exactly once per hand (lines ~1803/1808/1811)
+  // via setState with a fresh object, then preserved across renders by
+  // React state until the next IDLE clears it. Same for winTier. So
+  // [challengeTrigger, winTier] is the stable identity key: pick fires
+  // once when a new trigger lands, sticks until next hand.
+  //
+  // Returns undefined when there's no trigger (prompt isn't mounted) or
+  // the adapter doesn't implement getShareHeadline (baseball / football
+  // today — fallthrough preserved per the existing typeof guard).
+  const computedShareHeadline = useMemo(() => {
+    if (!challengeTrigger) return undefined;
+    if (typeof (sportAdapter as any).getShareHeadline !== "function") return undefined;
+    return (sportAdapter as any).getShareHeadline({
+      roster: rosterRef.current,
+      season: (rosterRef.current[0] as any)?.season ?? "",
+      winTier: winTier ?? "BUST",
+      trigger: challengeTrigger.trigger,
+    });
+  }, [challengeTrigger, winTier]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Challenge mode post-reveal continuity:
   //   1. WIN_CELEBRATION fires (reveal done, gauge settled, springSettled=true).
   //   2. Tactical Chad chip lands as the commentary override — challenge-aware
@@ -2806,12 +2834,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             serializeRoster={(cards) => sportAdapter.serializeRoster(cards)}
             triggerResult={challengeTrigger}
             rivalryTargetName={challengeBackCtx?.challengerName ?? null}
-            shareHeadline={typeof (sportAdapter as any).getShareHeadline === "function"
-              ? (sportAdapter as any).getShareHeadline({
-                  roster: rosterRef.current,
-                  season: (rosterRef.current[0] as any)?.season ?? "",
-                })
-              : undefined}
+            shareHeadline={computedShareHeadline}
             onDismiss={() => {
               setChallengeTrigger(null);
               // Rivalry continuation ends when the user dismisses the
