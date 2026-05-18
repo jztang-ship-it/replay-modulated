@@ -1,0 +1,192 @@
+[
+  {
+    "rank": 4,
+    "basePlayerId": "38803",
+    "name": "Gon\u00e7alo Matias Ramos",
+    "team": "Portugal",
+    "position": "FWD",
+    "salary": 60,
+    "tier": "ORANGE",
+    "avgFP": 50.2
+  },
+  {
+    "rank": 9,
+    "basePlayerId": "8511",
+    "name": "Thilo Kehrer",
+    "team": "Germany",
+    "position": "DEF",
+    "salary": 60,
+    "tier": "ORANGE",
+    "avgFP": 43.4
+  },
+  {
+    "rank": 13,
+    "basePlayerId": "27163",
+    "name": "Juan Pablo Vargas Campos",
+    "team": "Costa Rica",
+    "position": "MID",
+    "salary": 57,
+    "tier": "ORANGE",
+    "avgFP": 41.8
+  },
+  {
+    "rank": 17,
+    "basePlayerId": "28559",
+    "name": "Enner Remberto Valencia Lastra",
+    "team": "Ecuador",
+    "position": "FWD",
+    "salary": 60,
+    "tier": "ORANGE",
+    "avgFP": 39.5
+  },
+  {
+    "rank": 21,
+    "basePlayerId": "12034",
+    "name": "David Raum",
+    "team": "Germany",
+    "position": "DEF",
+    "salary": 56,
+    "tier": "ORANGE",
+    "avgFP": 38.2
+  },
+  {
+    "rank": 26,
+    "basePlayerId": "17033",
+    "name": "Mohammed Kudus",
+    "team": "Ghana",
+    "position": "FWD",
+    "salary": 60,
+    "tier": "ORANGE",
+    "avgFP": 37.3
+  },
+  {
+    "rank": 30,
+    "basePlayerId": "20750",
+    "name": "Cody Math\u00e8s Gakpo",
+    "team": "Netherlands",
+    "position": "MID",
+    "salary": 51,
+    "tier": "PURPLE",
+    "avgFP": 36.7
+  },
+  {
+    "rank": 34,
+    "basePlayerId": "20033",
+    "name": "Luuk de Jong",
+    "team": "Netherlands",
+    "position": "DEF",
+    "salary": 53,
+    "tier": "ORANGE",
+    "avgFP": 36.1
+  },
+  {
+    "rank": 38,
+    "basePlayerId": "39565",
+    "name": "Jamal Musiala",
+    "team": "Germany",
+    "position": "FWD",
+    "salary": 60,
+    "tier": "ORANGE",
+    "avgFP": 35.7
+  },
+  {
+    "rank": 42,
+    "basePlayerId": "10868",
+    "name": "Ricardo Jorge Luz Horta",
+    "team": "Portugal",
+    "position": "DEF",
+    "salary": 52,
+    "tier": "ORANGE",
+    "avgFP": 35.2
+  },
+  {
+    "rank": 46,
+    "basePlayerId": "8400",
+    "name": "Serge Gnabry",
+    "team": "Germany",
+    "position": "FWD",
+    "salary": 59,
+    "tier": "ORANGE",
+    "avgFP": 33.3
+  },
+  {
+    "rank": 50,
+    "basePlayerId": "3176",
+    "name": "Thomas Meunier",
+    "team": "Belgium",
+    "position": "DEF",
+    "salary": 47,
+    "tier": "PURPLE",
+    "avgFP": 32.1
+  },
+  {
+    "rank": 54,
+    "basePlayerId": "6704",
+    "name": "Theo Bernard Fran\u00e7ois Hern\u00e1ndez",
+    "team": "France",
+    "position": "DEF",
+    "salary": 45,
+    "tier": "PURPLE",
+    "avgFP": 30.6
+  },
+  {
+    "rank": 58,
+    "basePlayerId": "6945",
+    "name": "Alex Sandro Lobo Silva",
+    "team": "Brazil",
+    "position": "DEF",
+    "salary": 44,
+    "tier": "PURPLE",
+    "avgFP": 30.1
+  },
+  {
+    "rank": 63,
+    "basePlayerId": "3457",
+    "name": "Michy Batshuayi Tunga",
+    "team": "Belgium",
+    "position": "FWD",
+    "salary": 53,
+    "tier": "ORANGE",
+    "avgFP": 29.6
+  },
+  {
+    "rank": 67,
+    "basePlayerId": "22097",
+    "name": "Randal Kolo Muani",
+    "team": "France",
+    "position": "FWD",
+    "salary": 50,
+    "tier": "PURPLE",
+    "avgFP": 28.4
+  },
+  {
+    "rank": 71,
+    "basePlayerId": "3089",
+    "name": "Kevin De Bruyne",
+    "team": "Belgium",
+    "position": "FWD",
+    "salary": 49,
+    "tier": "PURPLE",
+    "avgFP": 27.6
+  },
+  {
+    "rank": 76,
+    "basePlayerId": "5669",
+    "name": "Wojciech Szcz\u0119sny",
+    "team": "Poland",
+    "position": "GK",
+    "salary": 42,
+    "tier": "PURPLE",
+    "avgFP": 24.5
+  },
+  {
+    "rank": 80,
+    "basePlayerId": "8108",
+    "name": "Lawrence Ati-Zigi",
+    "team": "Ghana",
+    "position": "GK",
+    "salary": 37,
+    "tier": "BLUE",
+    "avgFP": 21
+  }
+]

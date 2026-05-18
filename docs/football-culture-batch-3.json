@@ -1,0 +1,182 @@
+[
+  {
+    "rank": 5,
+    "basePlayerId": "7426",
+    "name": "Jean-Charles Castelletto",
+    "team": "Cameroon",
+    "position": "DEF",
+    "salary": 60,
+    "tier": "ORANGE",
+    "avgFP": 50
+  },
+  {
+    "rank": 10,
+    "basePlayerId": "3831",
+    "name": "Du\u0161an Tadi\u0107",
+    "team": "Serbia",
+    "position": "MID",
+    "salary": 59,
+    "tier": "ORANGE",
+    "avgFP": 42.9
+  },
+  {
+    "rank": 14,
+    "basePlayerId": "3621",
+    "name": "Eden Hazard",
+    "team": "Belgium",
+    "position": "MID",
+    "salary": 57,
+    "tier": "ORANGE",
+    "avgFP": 41.4
+  },
+  {
+    "rank": 18,
+    "basePlayerId": "5539",
+    "name": "Carlos Henrique Casimiro",
+    "team": "Brazil",
+    "position": "MID",
+    "salary": 54,
+    "tier": "ORANGE",
+    "avgFP": 39.3
+  },
+  {
+    "rank": 22,
+    "basePlayerId": "28825",
+    "name": "Luis Gerardo Ch\u00e1vez Magall\u00f3n",
+    "team": "Mexico",
+    "position": "MID",
+    "salary": 53,
+    "tier": "ORANGE",
+    "avgFP": 38.2
+  },
+  {
+    "rank": 27,
+    "basePlayerId": "7439",
+    "name": "Axel Disasi",
+    "team": "France",
+    "position": "DEF",
+    "salary": 54,
+    "tier": "ORANGE",
+    "avgFP": 37.2
+  },
+  {
+    "rank": 31,
+    "basePlayerId": "7104",
+    "name": "Math\u00edas Olivera Miramontes",
+    "team": "Uruguay",
+    "position": "DEF",
+    "salary": 54,
+    "tier": "ORANGE",
+    "avgFP": 36.7
+  },
+  {
+    "rank": 35,
+    "basePlayerId": "23910",
+    "name": "Youssef Msakni",
+    "team": "Tunisia",
+    "position": "MID",
+    "salary": 50,
+    "tier": "PURPLE",
+    "avgFP": 36.1
+  },
+  {
+    "rank": 39,
+    "basePlayerId": "5226",
+    "name": "Mehdi Taremi",
+    "team": "Iran",
+    "position": "MID",
+    "salary": 49,
+    "tier": "PURPLE",
+    "avgFP": 35.6
+  },
+  {
+    "rank": 43,
+    "basePlayerId": "3767",
+    "name": "Ellyes Joris Skhiri",
+    "team": "Tunisia",
+    "position": "MID",
+    "salary": 48,
+    "tier": "PURPLE",
+    "avgFP": 34.8
+  },
+  {
+    "rank": 47,
+    "basePlayerId": "7796",
+    "name": "Silvan Widmer",
+    "team": "Switzerland",
+    "position": "DEF",
+    "salary": 49,
+    "tier": "PURPLE",
+    "avgFP": 33.1
+  },
+  {
+    "rank": 51,
+    "basePlayerId": "33018",
+    "name": "Jo\u0161ko Gvardiol",
+    "team": "Croatia",
+    "position": "DEF",
+    "salary": 47,
+    "tier": "PURPLE",
+    "avgFP": 31.9
+  },
+  {
+    "rank": 55,
+    "basePlayerId": "5245",
+    "name": "Achraf Hakimi Mouh",
+    "team": "Morocco",
+    "position": "DEF",
+    "salary": 45,
+    "tier": "PURPLE",
+    "avgFP": 30.4
+  },
+  {
+    "rank": 59,
+    "basePlayerId": "5600",
+    "name": "Francisco Javier Calvo Quesada",
+    "team": "Costa Rica",
+    "position": "DEF",
+    "salary": 44,
+    "tier": "PURPLE",
+    "avgFP": 30.1
+  },
+  {
+    "rank": 64,
+    "basePlayerId": "40542",
+    "name": "Gue-Sung Cho",
+    "team": "South Korea",
+    "position": "FWD",
+    "salary": 52,
+    "tier": "ORANGE",
+    "avgFP": 29.2
+  },
+  {
+    "rank": 68,
+    "basePlayerId": "5571",
+    "name": "Hirving Rodrigo Lozano Bahena",
+    "team": "Mexico",
+    "position": "FWD",
+    "salary": 50,
+    "tier": "PURPLE",
+    "avgFP": 28.3
+  },
+  {
+    "rank": 73,
+    "basePlayerId": "18395",
+    "name": "Vin\u00edcius Jos\u00e9 Paix\u00e3o de Oliveira J\u00fanior",
+    "team": "Brazil",
+    "position": "FWD",
+    "salary": 47,
+    "tier": "PURPLE",
+    "avgFP": 26.4
+  },
+  {
+    "rank": 77,
+    "basePlayerId": "5577",
+    "name": "Francisco Guillermo Ochoa Maga\u00f1a",
+    "team": "Mexico",
+    "position": "GK",
+    "salary": 40,
+    "tier": "PURPLE",
+    "avgFP": 23.3
+  }
+]

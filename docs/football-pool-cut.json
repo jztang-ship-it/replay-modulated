@@ -1,0 +1,6242 @@
+[
+  {
+    "id": "3090_2018",
+    "name": "Nicol\u00e1s Hern\u00e1n Otamendi",
+    "team": "Argentina",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 17.3
+  },
+  {
+    "id": "6349_2018",
+    "name": "Federico Juli\u00e1n Fazio",
+    "team": "Argentina",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 6.5
+  },
+  {
+    "id": "5499_2018",
+    "name": "Maximiliano Eduardo Meza",
+    "team": "Argentina",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 45,
+    "tier": "PURPLE",
+    "avgFP": 25.2
+  },
+  {
+    "id": "5496_2018",
+    "name": "Cristian David Pav\u00f3n",
+    "team": "Argentina",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 4.2
+  },
+  {
+    "id": "5513_2018",
+    "name": "Eduardo Antonio Salvio",
+    "team": "Argentina",
+    "season": "2018",
+    "position": "MID",
+    "salary": 32,
+    "tier": "BLUE",
+    "avgFP": 23.2
+  },
+  {
+    "id": "19597_2018",
+    "name": "Marcos Javier Acu\u00f1a",
+    "team": "Argentina",
+    "season": "2018",
+    "position": "MID",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 18.8
+  },
+  {
+    "id": "5497_2018",
+    "name": "Gonzalo Gerardo Higua\u00edn",
+    "team": "Argentina",
+    "season": "2018",
+    "position": "MID",
+    "salary": 21,
+    "tier": "GREEN",
+    "avgFP": 14.7
+  },
+  {
+    "id": "5741_2018",
+    "name": "Enzo Nicol\u00e1s P\u00e9rez",
+    "team": "Argentina",
+    "season": "2018",
+    "position": "MID",
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 11.9
+  },
+  {
+    "id": "5510_2018",
+    "name": "Lucas Rodrigo Biglia",
+    "team": "Argentina",
+    "season": "2018",
+    "position": "MID",
+    "salary": 11,
+    "tier": "WHITE",
+    "avgFP": 7
+  },
+  {
+    "id": "5743_2018",
+    "name": "Paulo Bruno Exequiel Dybala",
+    "team": "Argentina",
+    "season": "2018",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 6.2
+  },
+  {
+    "id": "3659_2018",
+    "name": "Wilfredo Daniel Caballero",
+    "team": "Argentina",
+    "season": "2018",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 1.2
+  },
+  {
+    "id": "5488_2018",
+    "name": "Mark Milligan",
+    "team": "Australia",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 15.7
+  },
+  {
+    "id": "5491_2018",
+    "name": "Tom Rogi\u0107",
+    "team": "Australia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 32,
+    "tier": "BLUE",
+    "avgFP": 23.2
+  },
+  {
+    "id": "15957_2018",
+    "name": "Milo\u0161 Degenek",
+    "team": "Australia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 17.2
+  },
+  {
+    "id": "5494_2018",
+    "name": "Robbie Kruse",
+    "team": "Australia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.5
+  },
+  {
+    "id": "5486_2018",
+    "name": "Andrew Nabbout",
+    "team": "Australia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 20,
+    "tier": "GREEN",
+    "avgFP": 14.3
+  },
+  {
+    "id": "5483_2018",
+    "name": "Daniel Arzani",
+    "team": "Australia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 18,
+    "tier": "GREEN",
+    "avgFP": 12.7
+  },
+  {
+    "id": "5490_2018",
+    "name": "Jackson Irvine",
+    "team": "Australia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 5.5
+  },
+  {
+    "id": "9980_2018",
+    "name": "Jamie MacLaren",
+    "team": "Australia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 4.4
+  },
+  {
+    "id": "6332_2018",
+    "name": "Thomas Vermaelen",
+    "team": "Belgium",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 9.3
+  },
+  {
+    "id": "5630_2018",
+    "name": "Dries Mertens",
+    "team": "Belgium",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 46,
+    "tier": "PURPLE",
+    "avgFP": 25.9
+  },
+  {
+    "id": "3296_2018",
+    "name": "Marouane Fellaini-Bakkioui",
+    "team": "Belgium",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 30,
+    "tier": "BLUE",
+    "avgFP": 16.9
+  },
+  {
+    "id": "3037_2018",
+    "name": "Mousa Sidi Yaya Demb\u00e9l\u00e9",
+    "team": "Belgium",
+    "season": "2018",
+    "position": "MID",
+    "salary": 41,
+    "tier": "PURPLE",
+    "avgFP": 29.3
+  },
+  {
+    "id": "4831_2018",
+    "name": "Nacer Chadli",
+    "team": "Belgium",
+    "season": "2018",
+    "position": "MID",
+    "salary": 40,
+    "tier": "PURPLE",
+    "avgFP": 28.8
+  },
+  {
+    "id": "3089_2018",
+    "name": "Kevin De Bruyne",
+    "team": "Belgium",
+    "season": "2018",
+    "position": "MID",
+    "salary": 38,
+    "tier": "BLUE",
+    "avgFP": 27.6
+  },
+  {
+    "id": "5642_2018",
+    "name": "Axel Witsel",
+    "team": "Belgium",
+    "season": "2018",
+    "position": "MID",
+    "salary": 33,
+    "tier": "BLUE",
+    "avgFP": 24
+  },
+  {
+    "id": "5633_2018",
+    "name": "Yannick Ferreira Carrasco",
+    "team": "Belgium",
+    "season": "2018",
+    "position": "MID",
+    "salary": 32,
+    "tier": "BLUE",
+    "avgFP": 23.3
+  },
+  {
+    "id": "3289_2018",
+    "name": "Romelu Lukaku Menama",
+    "team": "Belgium",
+    "season": "2018",
+    "position": "MID",
+    "salary": 32,
+    "tier": "BLUE",
+    "avgFP": 23
+  },
+  {
+    "id": "3077_2018",
+    "name": "Jan Vertonghen",
+    "team": "Belgium",
+    "season": "2018",
+    "position": "MID",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 19.8
+  },
+  {
+    "id": "5632_2018",
+    "name": "Thorgan Hazard",
+    "team": "Belgium",
+    "season": "2018",
+    "position": "MID",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 18.3
+  },
+  {
+    "id": "20005_2018",
+    "name": "Toby Alderweireld",
+    "team": "Belgium",
+    "season": "2018",
+    "position": "MID",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 17
+  },
+  {
+    "id": "5551_2018",
+    "name": "Jo\u00e3o Miranda de Souza Filho",
+    "team": "Brazil",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 18.2
+  },
+  {
+    "id": "3202_2018",
+    "name": "Gabriel Fernando de Jesus",
+    "team": "Brazil",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 36,
+    "tier": "BLUE",
+    "avgFP": 20.2
+  },
+  {
+    "id": "3472_2018",
+    "name": "Willian Borges da Silva",
+    "team": "Brazil",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 15.8
+  },
+  {
+    "id": "3054_2018",
+    "name": "Fernando Luiz Rosa",
+    "team": "Brazil",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 18,
+    "tier": "GREEN",
+    "avgFP": 9.4
+  },
+  {
+    "id": "5542_2018",
+    "name": "Jos\u00e9 Paulo Bezzera Maciel J\u00fanior",
+    "team": "Brazil",
+    "season": "2018",
+    "position": "MID",
+    "salary": 33,
+    "tier": "BLUE",
+    "avgFP": 23.6
+  },
+  {
+    "id": "9904_2018",
+    "name": "Frederico Rodrigues Santos",
+    "team": "Brazil",
+    "season": "2018",
+    "position": "MID",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 18.9
+  },
+  {
+    "id": "3535_2018",
+    "name": "Roberto Firmino Barbosa de Oliveira",
+    "team": "Brazil",
+    "season": "2018",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.7
+  },
+  {
+    "id": "3063_2018",
+    "name": "Danilo Luiz da Silva",
+    "team": "Brazil",
+    "season": "2018",
+    "position": "MID",
+    "salary": 19,
+    "tier": "GREEN",
+    "avgFP": 12.9
+  },
+  {
+    "id": "5553_2018",
+    "name": "Renato Soares de Oliveira Augusto",
+    "team": "Brazil",
+    "season": "2018",
+    "position": "MID",
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 11.6
+  },
+  {
+    "id": "4372_2018",
+    "name": "Marcos Ao\u00e1s Corr\u00eaa",
+    "team": "Brazil",
+    "season": "2018",
+    "position": "MID",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 10.3
+  },
+  {
+    "id": "3494_2018",
+    "name": "Davinson S\u00e1nchez Mina",
+    "team": "Colombia",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 17.1
+  },
+  {
+    "id": "3445_2018",
+    "name": "Radamel Falcao Garc\u00eda Z\u00e1rate",
+    "team": "Colombia",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 34,
+    "tier": "BLUE",
+    "avgFP": 18.9
+  },
+  {
+    "id": "5688_2018",
+    "name": "Carlos Arturo Bacca Ahumada",
+    "team": "Colombia",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 4.6
+  },
+  {
+    "id": "6193_2018",
+    "name": "Andr\u00e9s Mateus Uribe Villa",
+    "team": "Colombia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 39,
+    "tier": "BLUE",
+    "avgFP": 28.2
+  },
+  {
+    "id": "3279_2018",
+    "name": "Jos\u00e9 Heriberto Izquierdo Mena",
+    "team": "Colombia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 33,
+    "tier": "BLUE",
+    "avgFP": 23.6
+  },
+  {
+    "id": "5680_2018",
+    "name": "Oscar Fabi\u00e1n Murillo Murillo",
+    "team": "Colombia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 30,
+    "tier": "BLUE",
+    "avgFP": 21.4
+  },
+  {
+    "id": "6334_2018",
+    "name": "Luis Fernando Muriel Fruto",
+    "team": "Colombia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 16,
+    "tier": "GREEN",
+    "avgFP": 11.2
+  },
+  {
+    "id": "5685_2018",
+    "name": "Carlos Alberto S\u00e1nchez Moreno",
+    "team": "Colombia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 11,
+    "tier": "WHITE",
+    "avgFP": 7.3
+  },
+  {
+    "id": "6192_2018",
+    "name": "Abel Enrique Aguilar Tapia",
+    "team": "Colombia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 3
+  },
+  {
+    "id": "5602_2018",
+    "name": "Cristian Gamboa Luna",
+    "team": "Costa Rica",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 17.8
+  },
+  {
+    "id": "5590_2018",
+    "name": "Johnny Acosta Zamora",
+    "team": "Costa Rica",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 16,
+    "tier": "GREEN",
+    "avgFP": 10.3
+  },
+  {
+    "id": "5584_2018",
+    "name": "Giancarlo Gonz\u00e1lez Castro",
+    "team": "Costa Rica",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 9.7
+  },
+  {
+    "id": "5586_2018",
+    "name": "Marcos Danilo Ure\u00f1a Porras",
+    "team": "Costa Rica",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 18,
+    "tier": "GREEN",
+    "avgFP": 9.4
+  },
+  {
+    "id": "5593_2018",
+    "name": "Christian Bola\u00f1os Navarro",
+    "team": "Costa Rica",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 3.9
+  },
+  {
+    "id": "6328_2018",
+    "name": "Kendall Jamaal Waston Manley",
+    "team": "Costa Rica",
+    "season": "2018",
+    "position": "MID",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 22.5
+  },
+  {
+    "id": "5599_2018",
+    "name": "David Alberto Guzm\u00e1n P\u00e9rez",
+    "team": "Costa Rica",
+    "season": "2018",
+    "position": "MID",
+    "salary": 30,
+    "tier": "BLUE",
+    "avgFP": 21.1
+  },
+  {
+    "id": "5581_2018",
+    "name": "Joel Nathaniel Campbell Samuels",
+    "team": "Costa Rica",
+    "season": "2018",
+    "position": "MID",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 17.2
+  },
+  {
+    "id": "3471_2018",
+    "name": "Dejan Lovren",
+    "team": "Croatia",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 18.5
+  },
+  {
+    "id": "5457_2018",
+    "name": "Ivan Strini\u0107",
+    "team": "Croatia",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 14.7
+  },
+  {
+    "id": "5465_2018",
+    "name": "Ante Rebi\u0107",
+    "team": "Croatia",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 40,
+    "tier": "PURPLE",
+    "avgFP": 22.2
+  },
+  {
+    "id": "5460_2018",
+    "name": "Andrej Kramari\u0107",
+    "team": "Croatia",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 32,
+    "tier": "BLUE",
+    "avgFP": 17.6
+  },
+  {
+    "id": "5739_2018",
+    "name": "Vedran \u0106orluka",
+    "team": "Croatia",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 7.6
+  },
+  {
+    "id": "5456_2018",
+    "name": "Mateo Kova\u010di\u0107",
+    "team": "Croatia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 47,
+    "tier": "PURPLE",
+    "avgFP": 34.3
+  },
+  {
+    "id": "6309_2018",
+    "name": "Tin Jedvaj",
+    "team": "Croatia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 43,
+    "tier": "PURPLE",
+    "avgFP": 31.2
+  },
+  {
+    "id": "5469_2018",
+    "name": "Marcelo Brozovi\u0107",
+    "team": "Croatia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 41,
+    "tier": "PURPLE",
+    "avgFP": 29.3
+  },
+  {
+    "id": "6307_2018",
+    "name": "Duje \u0106aleta-Car",
+    "team": "Croatia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 33,
+    "tier": "BLUE",
+    "avgFP": 23.9
+  },
+  {
+    "id": "16531_2018",
+    "name": "Dominik Livakovi\u0107",
+    "team": "Croatia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 17.5
+  },
+  {
+    "id": "5459_2018",
+    "name": "Marko Pjaca",
+    "team": "Croatia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 9.8
+  },
+  {
+    "id": "6310_2018",
+    "name": "Filip Bradari\u0107",
+    "team": "Croatia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 3.9
+  },
+  {
+    "id": "6355_2018",
+    "name": "Jonas Knudsen",
+    "team": "Denmark",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 20,
+    "tier": "GREEN",
+    "avgFP": 13.4
+  },
+  {
+    "id": "5516_2018",
+    "name": "Pione Sisto Ifolo Emirmija",
+    "team": "Denmark",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 17.2
+  },
+  {
+    "id": "5522_2018",
+    "name": "Nicolai J\u00f8rgensen",
+    "team": "Denmark",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 14.9
+  },
+  {
+    "id": "5732_2018",
+    "name": "Andreas Evald Cornelius",
+    "team": "Denmark",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 8.1
+  },
+  {
+    "id": "4447_2018",
+    "name": "Martin Braithwaite Christensen",
+    "team": "Denmark",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 7.5
+  },
+  {
+    "id": "3959_2018",
+    "name": "Andreas Christensen",
+    "team": "Denmark",
+    "season": "2018",
+    "position": "MID",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 19.3
+  },
+  {
+    "id": "6303_2018",
+    "name": "Viktor Fischer",
+    "team": "Denmark",
+    "season": "2018",
+    "position": "MID",
+    "salary": 19,
+    "tier": "GREEN",
+    "avgFP": 12.9
+  },
+  {
+    "id": "6302_2018",
+    "name": "Kasper Dolberg",
+    "team": "Denmark",
+    "season": "2018",
+    "position": "MID",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 10.2
+  },
+  {
+    "id": "5517_2018",
+    "name": "William Vitved Kvist J\u00f8rgensen",
+    "team": "Denmark",
+    "season": "2018",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 2.4
+  },
+  {
+    "id": "5254_2018",
+    "name": "Ali Gabr",
+    "team": "Egypt",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 19,
+    "tier": "GREEN",
+    "avgFP": 12.4
+  },
+  {
+    "id": "3568_2018",
+    "name": "Mohamed Naser Elsayed Elneny",
+    "team": "Egypt",
+    "season": "2018",
+    "position": "MID",
+    "salary": 35,
+    "tier": "BLUE",
+    "avgFP": 25.3
+  },
+  {
+    "id": "5262_2018",
+    "name": "Tarek Hamed",
+    "team": "Egypt",
+    "season": "2018",
+    "position": "MID",
+    "salary": 32,
+    "tier": "BLUE",
+    "avgFP": 23.2
+  },
+  {
+    "id": "3878_2018",
+    "name": "Sam Morsy",
+    "team": "Egypt",
+    "season": "2018",
+    "position": "MID",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 18.8
+  },
+  {
+    "id": "5253_2018",
+    "name": "Amr Medhat Warda",
+    "team": "Egypt",
+    "season": "2018",
+    "position": "MID",
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 12
+  },
+  {
+    "id": "3536_2018",
+    "name": "Ramadan Sobhi Ramadan Ahmed",
+    "team": "Egypt",
+    "season": "2018",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 2.7
+  },
+  {
+    "id": "3645_2018",
+    "name": "Gary Cahill",
+    "team": "England",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 5.2
+  },
+  {
+    "id": "3504_2018",
+    "name": "Ruben Loftus-Cheek",
+    "team": "England",
+    "season": "2018",
+    "position": "MID",
+    "salary": 44,
+    "tier": "PURPLE",
+    "avgFP": 31.9
+  },
+  {
+    "id": "4597_2018",
+    "name": "Fabian Delph",
+    "team": "England",
+    "season": "2018",
+    "position": "MID",
+    "salary": 42,
+    "tier": "PURPLE",
+    "avgFP": 30.6
+  },
+  {
+    "id": "10955_2018",
+    "name": "Harry Kane",
+    "team": "England",
+    "season": "2018",
+    "position": "MID",
+    "salary": 38,
+    "tier": "BLUE",
+    "avgFP": 27.5
+  },
+  {
+    "id": "3532_2018",
+    "name": "Jordan Brian Henderson",
+    "team": "England",
+    "season": "2018",
+    "position": "MID",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 21.9
+  },
+  {
+    "id": "3612_2018",
+    "name": "Ashley Young",
+    "team": "England",
+    "season": "2018",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 17.4
+  },
+  {
+    "id": "10956_2018",
+    "name": "Eric Dier",
+    "team": "England",
+    "season": "2018",
+    "position": "MID",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 16.9
+  },
+  {
+    "id": "3594_2018",
+    "name": "Danny Rose",
+    "team": "England",
+    "season": "2018",
+    "position": "MID",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 16.8
+  },
+  {
+    "id": "3205_2018",
+    "name": "Kyle Walker",
+    "team": "England",
+    "season": "2018",
+    "position": "MID",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 16.7
+  },
+  {
+    "id": "3233_2018",
+    "name": "Raheem Sterling",
+    "team": "England",
+    "season": "2018",
+    "position": "MID",
+    "salary": 23,
+    "tier": "GREEN",
+    "avgFP": 16.1
+  },
+  {
+    "id": "3664_2018",
+    "name": "Trent Alexander-Arnold",
+    "team": "England",
+    "season": "2018",
+    "position": "MID",
+    "salary": 23,
+    "tier": "GREEN",
+    "avgFP": 16.1
+  },
+  {
+    "id": "5485_2018",
+    "name": "Rapha\u00ebl Varane",
+    "team": "France",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 11.4
+  },
+  {
+    "id": "5477_2018",
+    "name": "Ousmane Demb\u00e9l\u00e9",
+    "team": "France",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 30,
+    "tier": "BLUE",
+    "avgFP": 16.6
+  },
+  {
+    "id": "4375_2018",
+    "name": "Blaise Matuidi",
+    "team": "France",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 16
+  },
+  {
+    "id": "5480_2018",
+    "name": "Corentin Tolisso",
+    "team": "France",
+    "season": "2018",
+    "position": "MID",
+    "salary": 35,
+    "tier": "BLUE",
+    "avgFP": 25.1
+  },
+  {
+    "id": "3245_2018",
+    "name": "Thomas Lemar",
+    "team": "France",
+    "season": "2018",
+    "position": "MID",
+    "salary": 35,
+    "tier": "BLUE",
+    "avgFP": 25
+  },
+  {
+    "id": "3446_2018",
+    "name": "Djibril Sidib\u00e9",
+    "team": "France",
+    "season": "2018",
+    "position": "MID",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 19.8
+  },
+  {
+    "id": "2948_2018",
+    "name": "Nabil Fekir",
+    "team": "France",
+    "season": "2018",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.6
+  },
+  {
+    "id": "5737_2018",
+    "name": "Steven N''Kemboanza Mike Christopher Nzonzi",
+    "team": "France",
+    "season": "2018",
+    "position": "MID",
+    "salary": 16,
+    "tier": "GREEN",
+    "avgFP": 10.9
+  },
+  {
+    "id": "2999_2018",
+    "name": "Presnel Kimpembe",
+    "team": "France",
+    "season": "2018",
+    "position": "MID",
+    "salary": 13,
+    "tier": "WHITE",
+    "avgFP": 9
+  },
+  {
+    "id": "3261_2018",
+    "name": "Benjamin Mendy",
+    "team": "France",
+    "season": "2018",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 6.8
+  },
+  {
+    "id": "3167_2018",
+    "name": "Antonio R\u00fcdiger",
+    "team": "Germany",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 9.5
+  },
+  {
+    "id": "5562_2018",
+    "name": "Thomas M\u00fcller",
+    "team": "Germany",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 13.3
+  },
+  {
+    "id": "5565_2018",
+    "name": "Mario G\u00f3mez Garc\u00eda",
+    "team": "Germany",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 18,
+    "tier": "GREEN",
+    "avgFP": 9.6
+  },
+  {
+    "id": "5566_2018",
+    "name": "Sami Khedira",
+    "team": "Germany",
+    "season": "2018",
+    "position": "MID",
+    "salary": 33,
+    "tier": "BLUE",
+    "avgFP": 23.8
+  },
+  {
+    "id": "10287_2018",
+    "name": "\u0130lkay G\u00fcndo\u011fan",
+    "team": "Germany",
+    "season": "2018",
+    "position": "MID",
+    "salary": 32,
+    "tier": "BLUE",
+    "avgFP": 22.8
+  },
+  {
+    "id": "5559_2018",
+    "name": "Marco Reus",
+    "team": "Germany",
+    "season": "2018",
+    "position": "MID",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 22.1
+  },
+  {
+    "id": "6324_2018",
+    "name": "Leon Goretzka",
+    "team": "Germany",
+    "season": "2018",
+    "position": "MID",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 18.6
+  },
+  {
+    "id": "6322_2018",
+    "name": "Niklas S\u00fcle",
+    "team": "Germany",
+    "season": "2018",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.6
+  },
+  {
+    "id": "6039_2018",
+    "name": "Sebastian Rudy",
+    "team": "Germany",
+    "season": "2018",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 6
+  },
+  {
+    "id": "5569_2018",
+    "name": "Marvin Plattenhardt",
+    "team": "Germany",
+    "season": "2018",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 4.8
+  },
+  {
+    "id": "5508_2018",
+    "name": "Birkir M\u00e1r S\u00e6varsson",
+    "team": "Iceland",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 16.4
+  },
+  {
+    "id": "5831_2018",
+    "name": "Sverrir Ingi Ingason",
+    "team": "Iceland",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 16
+  },
+  {
+    "id": "5500_2018",
+    "name": "Bj\u00f6rn Bergmann Sigur\u00f0arson",
+    "team": "Iceland",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 2.5
+  },
+  {
+    "id": "5509_2018",
+    "name": "Birkir Bjarnason",
+    "team": "Iceland",
+    "season": "2018",
+    "position": "MID",
+    "salary": 48,
+    "tier": "PURPLE",
+    "avgFP": 35
+  },
+  {
+    "id": "3720_2018",
+    "name": "Johann Berg Gu\u00f0munds\u00adson",
+    "team": "Iceland",
+    "season": "2018",
+    "position": "MID",
+    "salary": 44,
+    "tier": "PURPLE",
+    "avgFP": 32.2
+  },
+  {
+    "id": "5495_2018",
+    "name": "R\u00farik G\u00edslason",
+    "team": "Iceland",
+    "season": "2018",
+    "position": "MID",
+    "salary": 18,
+    "tier": "GREEN",
+    "avgFP": 12.7
+  },
+  {
+    "id": "5228_2018",
+    "name": "Seyed Majid Hosseini",
+    "team": "Iran",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 23,
+    "tier": "GREEN",
+    "avgFP": 15.3
+  },
+  {
+    "id": "5220_2018",
+    "name": "Morteza Pouraliganji",
+    "team": "Iran",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 20,
+    "tier": "GREEN",
+    "avgFP": 13.3
+  },
+  {
+    "id": "5222_2018",
+    "name": "Roozbeh Cheshmi",
+    "team": "Iran",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 9
+  },
+  {
+    "id": "5225_2018",
+    "name": "Omid Ebrahimi",
+    "team": "Iran",
+    "season": "2018",
+    "position": "MID",
+    "salary": 48,
+    "tier": "PURPLE",
+    "avgFP": 34.9
+  },
+  {
+    "id": "5239_2018",
+    "name": "Alireza Jahanbakhsh",
+    "team": "Iran",
+    "season": "2018",
+    "position": "MID",
+    "salary": 38,
+    "tier": "BLUE",
+    "avgFP": 27.5
+  },
+  {
+    "id": "5722_2018",
+    "name": "Saeid Ezatolahi Afagh",
+    "team": "Iran",
+    "season": "2018",
+    "position": "MID",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 19
+  },
+  {
+    "id": "5231_2018",
+    "name": "Karim Ansarifard",
+    "team": "Iran",
+    "season": "2018",
+    "position": "MID",
+    "salary": 13,
+    "tier": "WHITE",
+    "avgFP": 8.6
+  },
+  {
+    "id": "124161_2018",
+    "name": "Mehdi Torabi",
+    "team": "Iran",
+    "season": "2018",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 6.4
+  },
+  {
+    "id": "5240_2018",
+    "name": "Saman Ghoddos",
+    "team": "Iran",
+    "season": "2018",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 5.6
+  },
+  {
+    "id": "3530_2018",
+    "name": "Hiroki Sakai",
+    "team": "Japan",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 9
+  },
+  {
+    "id": "5697_2018",
+    "name": "Genki Haraguchi",
+    "team": "Japan",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 32,
+    "tier": "BLUE",
+    "avgFP": 17.5
+  },
+  {
+    "id": "5683_2018",
+    "name": "Keisuke Honda",
+    "team": "Japan",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 14.6
+  },
+  {
+    "id": "5693_2018",
+    "name": "Gaku Shibasaki",
+    "team": "Japan",
+    "season": "2018",
+    "position": "MID",
+    "salary": 44,
+    "tier": "PURPLE",
+    "avgFP": 31.7
+  },
+  {
+    "id": "5681_2018",
+    "name": "Makoto Hasebe",
+    "team": "Japan",
+    "season": "2018",
+    "position": "MID",
+    "salary": 38,
+    "tier": "BLUE",
+    "avgFP": 27.7
+  },
+  {
+    "id": "6337_2018",
+    "name": "Yoshinori Muto",
+    "team": "Japan",
+    "season": "2018",
+    "position": "MID",
+    "salary": 35,
+    "tier": "BLUE",
+    "avgFP": 25.4
+  },
+  {
+    "id": "6339_2018",
+    "name": "Gotoku Sakai",
+    "team": "Japan",
+    "season": "2018",
+    "position": "MID",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 22.1
+  },
+  {
+    "id": "5694_2018",
+    "name": "Hotaru Yamaguchi",
+    "team": "Japan",
+    "season": "2018",
+    "position": "MID",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 20
+  },
+  {
+    "id": "6338_2018",
+    "name": "Tomoaki Makino",
+    "team": "Japan",
+    "season": "2018",
+    "position": "MID",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 10.2
+  },
+  {
+    "id": "3810_2018",
+    "name": "Shinji Okazaki",
+    "team": "Japan",
+    "season": "2018",
+    "position": "MID",
+    "salary": 13,
+    "tier": "WHITE",
+    "avgFP": 8.6
+  },
+  {
+    "id": "5573_2018",
+    "name": "H\u00e9ctor Alfredo Moreno Herrera",
+    "team": "Mexico",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 19,
+    "tier": "GREEN",
+    "avgFP": 12.5
+  },
+  {
+    "id": "5556_2018",
+    "name": "Miguel Arturo Lay\u00fan Prado",
+    "team": "Mexico",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 17.2
+  },
+  {
+    "id": "5985_2018",
+    "name": "Jes\u00fas Manuel Corona Ru\u00edz",
+    "team": "Mexico",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 2.2
+  },
+  {
+    "id": "5561_2018",
+    "name": "Hugo Ayala Castro",
+    "team": "Mexico",
+    "season": "2018",
+    "position": "MID",
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 20.4
+  },
+  {
+    "id": "5563_2018",
+    "name": "Jos\u00e9 Andr\u00e9s Guardado Hern\u00e1ndez",
+    "team": "Mexico",
+    "season": "2018",
+    "position": "MID",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 19.6
+  },
+  {
+    "id": "6357_2018",
+    "name": "Jonathan dos Santos Ram\u00edrez",
+    "team": "Mexico",
+    "season": "2018",
+    "position": "MID",
+    "salary": 19,
+    "tier": "GREEN",
+    "avgFP": 13
+  },
+  {
+    "id": "5558_2018",
+    "name": "Rafael M\u00e1rquez \u00c1lvarez",
+    "team": "Mexico",
+    "season": "2018",
+    "position": "MID",
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 11.5
+  },
+  {
+    "id": "6317_2018",
+    "name": "Marco Jhonfai Fabi\u00e1n De La Mora",
+    "team": "Mexico",
+    "season": "2018",
+    "position": "MID",
+    "salary": 13,
+    "tier": "WHITE",
+    "avgFP": 8.6
+  },
+  {
+    "id": "5568_2018",
+    "name": "Ra\u00fal Alonso Jim\u00e9nez Rodr\u00edguez",
+    "team": "Mexico",
+    "season": "2018",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 4.2
+  },
+  {
+    "id": "5244_2018",
+    "name": "Medhi Amine El Mouttaqi Benatia",
+    "team": "Morocco",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 18,
+    "tier": "GREEN",
+    "avgFP": 11.6
+  },
+  {
+    "id": "3302_2018",
+    "name": "Nordin Amrabat",
+    "team": "Morocco",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 15.5
+  },
+  {
+    "id": "5229_2018",
+    "name": "Ayoub El Kaabi",
+    "team": "Morocco",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 1.9
+  },
+  {
+    "id": "5234_2018",
+    "name": "Sofyan Amrabat",
+    "team": "Morocco",
+    "season": "2018",
+    "position": "MID",
+    "salary": 37,
+    "tier": "BLUE",
+    "avgFP": 27
+  },
+  {
+    "id": "5242_2018",
+    "name": "Youn\u00e8s Belhanda",
+    "team": "Morocco",
+    "season": "2018",
+    "position": "MID",
+    "salary": 34,
+    "tier": "BLUE",
+    "avgFP": 24.3
+  },
+  {
+    "id": "5219_2018",
+    "name": "Romain Sa\u00efss",
+    "team": "Morocco",
+    "season": "2018",
+    "position": "MID",
+    "salary": 30,
+    "tier": "BLUE",
+    "avgFP": 21.5
+  },
+  {
+    "id": "6785_2018",
+    "name": "Yassine Bounou",
+    "team": "Morocco",
+    "season": "2018",
+    "position": "MID",
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 21
+  },
+  {
+    "id": "5724_2018",
+    "name": "Fay\u00e7al Fajr",
+    "team": "Morocco",
+    "season": "2018",
+    "position": "MID",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 19.8
+  },
+  {
+    "id": "6301_2018",
+    "name": "Youssef En-Nesyri",
+    "team": "Morocco",
+    "season": "2018",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.8
+  },
+  {
+    "id": "3708_2018",
+    "name": "Kelechi Promise Iheanacho",
+    "team": "Nigeria",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 21,
+    "tier": "GREEN",
+    "avgFP": 11.4
+  },
+  {
+    "id": "3338_2018",
+    "name": "Onyinye Wilfred Ndidi",
+    "team": "Nigeria",
+    "season": "2018",
+    "position": "MID",
+    "salary": 44,
+    "tier": "PURPLE",
+    "avgFP": 31.6
+  },
+  {
+    "id": "5832_2018",
+    "name": "Tyronne Ebuehi",
+    "team": "Nigeria",
+    "season": "2018",
+    "position": "MID",
+    "salary": 40,
+    "tier": "PURPLE",
+    "avgFP": 29.2
+  },
+  {
+    "id": "5462_2018",
+    "name": "Brian Oladapo Idowu",
+    "team": "Nigeria",
+    "season": "2018",
+    "position": "MID",
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 21
+  },
+  {
+    "id": "3647_2018",
+    "name": "Alex Iwobi",
+    "team": "Nigeria",
+    "season": "2018",
+    "position": "MID",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 19.7
+  },
+  {
+    "id": "5471_2018",
+    "name": "Abdullahi Shehu",
+    "team": "Nigeria",
+    "season": "2018",
+    "position": "MID",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 19.4
+  },
+  {
+    "id": "5638_2018",
+    "name": "Fidel Escobar Mendieta",
+    "team": "Panama",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 19.2
+  },
+  {
+    "id": "6140_2018",
+    "name": "Abdiel Arroyo Molinar",
+    "team": "Panama",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 12,
+    "tier": "WHITE",
+    "avgFP": 6.4
+  },
+  {
+    "id": "5628_2018",
+    "name": "Jos\u00e9 Luis Rodr\u00edguez Francis",
+    "team": "Panama",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 12,
+    "tier": "WHITE",
+    "avgFP": 6.2
+  },
+  {
+    "id": "6138_2018",
+    "name": "Ricardo Guardia Avila",
+    "team": "Panama",
+    "season": "2018",
+    "position": "MID",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 21.9
+  },
+  {
+    "id": "6346_2018",
+    "name": "Adolfo Abdiel Machado",
+    "team": "Panama",
+    "season": "2018",
+    "position": "MID",
+    "salary": 30,
+    "tier": "BLUE",
+    "avgFP": 21.6
+  },
+  {
+    "id": "5644_2018",
+    "name": "Ismael D\u00edaz De Le\u00f3n",
+    "team": "Panama",
+    "season": "2018",
+    "position": "MID",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 18.4
+  },
+  {
+    "id": "6139_2018",
+    "name": "Felipe Abdiel Baloy Ram\u00edrez",
+    "team": "Panama",
+    "season": "2018",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 17.7
+  },
+  {
+    "id": "6344_2018",
+    "name": "Luis Carlos Ovalle Victoria",
+    "team": "Panama",
+    "season": "2018",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 17.4
+  },
+  {
+    "id": "5629_2018",
+    "name": "Gabriel Arturo Torres Tejada",
+    "team": "Panama",
+    "season": "2018",
+    "position": "MID",
+    "salary": 19,
+    "tier": "GREEN",
+    "avgFP": 13.5
+  },
+  {
+    "id": "6343_2018",
+    "name": "Harold Oshkaly Cummings Segura",
+    "team": "Panama",
+    "season": "2018",
+    "position": "MID",
+    "salary": 11,
+    "tier": "WHITE",
+    "avgFP": 7.1
+  },
+  {
+    "id": "5643_2018",
+    "name": "Luis Carlos Tejada Hansell",
+    "team": "Panama",
+    "season": "2018",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 4.8
+  },
+  {
+    "id": "5530_2018",
+    "name": "Christian Guillermo Mart\u00edn Ramos Garagay",
+    "team": "Peru",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 21,
+    "tier": "GREEN",
+    "avgFP": 13.8
+  },
+  {
+    "id": "5532_2018",
+    "name": "Alberto Junior Rodr\u00edguez Valdelomar",
+    "team": "Peru",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 5.2
+  },
+  {
+    "id": "5525_2018",
+    "name": "\u00c9dison Michael Flores Peralta",
+    "team": "Peru",
+    "season": "2018",
+    "position": "MID",
+    "salary": 36,
+    "tier": "BLUE",
+    "avgFP": 25.8
+  },
+  {
+    "id": "5523_2018",
+    "name": "Renato Fabrizio Tapia Cortijo",
+    "team": "Peru",
+    "season": "2018",
+    "position": "MID",
+    "salary": 35,
+    "tier": "BLUE",
+    "avgFP": 25.4
+  },
+  {
+    "id": "5531_2018",
+    "name": "Jefferson Agust\u00edn Farf\u00e1n Guadalupe",
+    "team": "Peru",
+    "season": "2018",
+    "position": "MID",
+    "salary": 30,
+    "tier": "BLUE",
+    "avgFP": 21.8
+  },
+  {
+    "id": "6315_2018",
+    "name": "Christopher Paolo C\u00e9sar Hurtado Huertas",
+    "team": "Peru",
+    "season": "2018",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 17.5
+  },
+  {
+    "id": "5529_2018",
+    "name": "V\u00edctor Yoshimar Yot\u00fan Flores",
+    "team": "Peru",
+    "season": "2018",
+    "position": "MID",
+    "salary": 21,
+    "tier": "GREEN",
+    "avgFP": 14.7
+  },
+  {
+    "id": "5670_2018",
+    "name": "Micha\u0142 Pazdan",
+    "team": "Poland",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 14.8
+  },
+  {
+    "id": "5667_2018",
+    "name": "Kamil Grosicki",
+    "team": "Poland",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 44,
+    "tier": "PURPLE",
+    "avgFP": 24.6
+  },
+  {
+    "id": "5666_2018",
+    "name": "Dawid Kownacki",
+    "team": "Poland",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 9.2
+  },
+  {
+    "id": "3637_2018",
+    "name": "Grzegorz Krychowiak",
+    "team": "Poland",
+    "season": "2018",
+    "position": "MID",
+    "salary": 35,
+    "tier": "BLUE",
+    "avgFP": 25.3
+  },
+  {
+    "id": "4685_2018",
+    "name": "Artur J\u0119drzejczyk",
+    "team": "Poland",
+    "season": "2018",
+    "position": "MID",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 22.4
+  },
+  {
+    "id": "5673_2018",
+    "name": "Bartosz Bereszy\u0144ski",
+    "team": "Poland",
+    "season": "2018",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 17.4
+  },
+  {
+    "id": "5662_2018",
+    "name": "Thiago Rangel Cionek",
+    "team": "Poland",
+    "season": "2018",
+    "position": "MID",
+    "salary": 20,
+    "tier": "GREEN",
+    "avgFP": 14.3
+  },
+  {
+    "id": "5665_2018",
+    "name": "Arkadiusz Milik",
+    "team": "Poland",
+    "season": "2018",
+    "position": "MID",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 10
+  },
+  {
+    "id": "5663_2018",
+    "name": "Jakub B\u0142aszczykowski",
+    "team": "Poland",
+    "season": "2018",
+    "position": "MID",
+    "salary": 13,
+    "tier": "WHITE",
+    "avgFP": 8.6
+  },
+  {
+    "id": "3960_2018",
+    "name": "Jos\u00e9 Miguel da Rocha Fonte",
+    "team": "Portugal",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 16.2
+  },
+  {
+    "id": "4367_2018",
+    "name": "Gon\u00e7alo Manuel Ganchinho Guedes",
+    "team": "Portugal",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 21,
+    "tier": "GREEN",
+    "avgFP": 11.2
+  },
+  {
+    "id": "3193_2018",
+    "name": "Bernardo Mota Veiga de Carvalho e Silva",
+    "team": "Portugal",
+    "season": "2018",
+    "position": "MID",
+    "salary": 33,
+    "tier": "BLUE",
+    "avgFP": 23.5
+  },
+  {
+    "id": "5215_2018",
+    "name": "Ricardo Andrade Quaresma Bernardo",
+    "team": "Portugal",
+    "season": "2018",
+    "position": "MID",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 20
+  },
+  {
+    "id": "4272_2018",
+    "name": "Jo\u00e3o M\u00e1rio Naval da Costa Eduardo",
+    "team": "Portugal",
+    "season": "2018",
+    "position": "MID",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 18.6
+  },
+  {
+    "id": "5214_2018",
+    "name": "William Silva de Carvalho",
+    "team": "Portugal",
+    "season": "2018",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 18
+  },
+  {
+    "id": "5206_2018",
+    "name": "R\u00faben Santos Gato Alves Dias",
+    "team": "Portugal",
+    "season": "2018",
+    "position": "MID",
+    "salary": 23,
+    "tier": "GREEN",
+    "avgFP": 16.6
+  },
+  {
+    "id": "6352_2018",
+    "name": "Ricardo Domingos Barbosa Pereira",
+    "team": "Portugal",
+    "season": "2018",
+    "position": "MID",
+    "salary": 21,
+    "tier": "GREEN",
+    "avgFP": 14.4
+  },
+  {
+    "id": "5723_2018",
+    "name": "Gelson Dany Batalha Martins",
+    "team": "Portugal",
+    "season": "2018",
+    "position": "MID",
+    "salary": 18,
+    "tier": "GREEN",
+    "avgFP": 12.6
+  },
+  {
+    "id": "6298_2018",
+    "name": "Igor Smolnikov",
+    "team": "Russia",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 1.2
+  },
+  {
+    "id": "5194_2018",
+    "name": "Fyodor Smolov",
+    "team": "Russia",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 16.3
+  },
+  {
+    "id": "5170_2018",
+    "name": "M\u00e1rio Figueira Fernandes",
+    "team": "Russia",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 14.8
+  },
+  {
+    "id": "5182_2018",
+    "name": "Aleksandr Samedov",
+    "team": "Russia",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 21,
+    "tier": "GREEN",
+    "avgFP": 11.4
+  },
+  {
+    "id": "5179_2018",
+    "name": "Daler Kuzyaev",
+    "team": "Russia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 37,
+    "tier": "BLUE",
+    "avgFP": 26.9
+  },
+  {
+    "id": "5181_2018",
+    "name": "Yury Gazinskiy",
+    "team": "Russia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 22.5
+  },
+  {
+    "id": "6354_2018",
+    "name": "Aleksandr Erokhin",
+    "team": "Russia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 23,
+    "tier": "GREEN",
+    "avgFP": 16.4
+  },
+  {
+    "id": "5193_2018",
+    "name": "Yuri Zhirkov",
+    "team": "Russia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.3
+  },
+  {
+    "id": "6353_2018",
+    "name": "Vladimir Granat",
+    "team": "Russia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 10.6
+  },
+  {
+    "id": "5180_2018",
+    "name": "Alan Dzagoev",
+    "team": "Russia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 12,
+    "tier": "WHITE",
+    "avgFP": 7.8
+  },
+  {
+    "id": "5715_2018",
+    "name": "Ali Albulayhi",
+    "team": "Saudi Arabia",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 20,
+    "tier": "GREEN",
+    "avgFP": 13.5
+  },
+  {
+    "id": "5713_2018",
+    "name": "Mohammed Kanoo",
+    "team": "Saudi Arabia",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 18,
+    "tier": "GREEN",
+    "avgFP": 9.7
+  },
+  {
+    "id": "5196_2018",
+    "name": "Mohammad Ibrahim Al Sahlawi",
+    "team": "Saudi Arabia",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 7.6
+  },
+  {
+    "id": "5190_2018",
+    "name": "Fahad Mosaed Al Muwallad Al Harbi",
+    "team": "Saudi Arabia",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 12,
+    "tier": "WHITE",
+    "avgFP": 6.3
+  },
+  {
+    "id": "5197_2018",
+    "name": "Omar Ibrahim Omar Othman Hawsawi",
+    "team": "Saudi Arabia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 17.5
+  },
+  {
+    "id": "6290_2018",
+    "name": "Motaz Ali Hassan Hawsawi",
+    "team": "Saudi Arabia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.2
+  },
+  {
+    "id": "5192_2018",
+    "name": "Yehya Sulaiman Ali Al-Shehri",
+    "team": "Saudi Arabia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 18,
+    "tier": "GREEN",
+    "avgFP": 12.2
+  },
+  {
+    "id": "5176_2018",
+    "name": "Mohanad Aseri Abu Radiah",
+    "team": "Saudi Arabia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 11.6
+  },
+  {
+    "id": "5185_2018",
+    "name": "Taisir Jabir Al Jassim",
+    "team": "Saudi Arabia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 16,
+    "tier": "GREEN",
+    "avgFP": 11.2
+  },
+  {
+    "id": "5664_2018",
+    "name": "Salif San\u00e9",
+    "team": "Senegal",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 34,
+    "tier": "BLUE",
+    "avgFP": 22.6
+  },
+  {
+    "id": "2941_2018",
+    "name": "Isma\u00efla Sarr",
+    "team": "Senegal",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 33,
+    "tier": "BLUE",
+    "avgFP": 18.5
+  },
+  {
+    "id": "3603_2018",
+    "name": "Mame Biram Diouf",
+    "team": "Senegal",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 16,
+    "tier": "GREEN",
+    "avgFP": 8.6
+  },
+  {
+    "id": "5676_2018",
+    "name": "Cheikh N''Doye",
+    "team": "Senegal",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 2.8
+  },
+  {
+    "id": "4277_2018",
+    "name": "Papa Alioune N''Diaye",
+    "team": "Senegal",
+    "season": "2018",
+    "position": "MID",
+    "salary": 32,
+    "tier": "BLUE",
+    "avgFP": 22.8
+  },
+  {
+    "id": "3684_2018",
+    "name": "Cheikhou Kouyat\u00e9",
+    "team": "Senegal",
+    "season": "2018",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 17.7
+  },
+  {
+    "id": "5671_2018",
+    "name": "Alfred John Momar N''Diaye",
+    "team": "Senegal",
+    "season": "2018",
+    "position": "MID",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 17.1
+  },
+  {
+    "id": "5603_2018",
+    "name": "Nikola Milenkovi\u0107",
+    "team": "Serbia",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 32,
+    "tier": "BLUE",
+    "avgFP": 21.7
+  },
+  {
+    "id": "5591_2018",
+    "name": "Filip Kosti\u0107",
+    "team": "Serbia",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 32,
+    "tier": "BLUE",
+    "avgFP": 18
+  },
+  {
+    "id": "5587_2018",
+    "name": "Adem Ljaji\u0107",
+    "team": "Serbia",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 14
+  },
+  {
+    "id": "6318_2018",
+    "name": "Andrija \u017divkovi\u0107",
+    "team": "Serbia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 21
+  },
+  {
+    "id": "3455_2018",
+    "name": "Luka Milivojevi\u0107",
+    "team": "Serbia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 17.6
+  },
+  {
+    "id": "6321_2018",
+    "name": "Milos Veljkovic",
+    "team": "Serbia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 18,
+    "tier": "GREEN",
+    "avgFP": 12.5
+  },
+  {
+    "id": "5833_2018",
+    "name": "Nemanja Radonji\u0107",
+    "team": "Serbia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 10.3
+  },
+  {
+    "id": "6319_2018",
+    "name": "Luka Jovi\u0107",
+    "team": "Serbia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 11,
+    "tier": "WHITE",
+    "avgFP": 7.2
+  },
+  {
+    "id": "5610_2018",
+    "name": "Min-Woo Kim",
+    "team": "South Korea",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 16.7
+  },
+  {
+    "id": "5606_2018",
+    "name": "Hyun-Soo Jang",
+    "team": "South Korea",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 20,
+    "tier": "GREEN",
+    "avgFP": 12.8
+  },
+  {
+    "id": "5609_2018",
+    "name": "Joo-Ho Park",
+    "team": "South Korea",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 3.2
+  },
+  {
+    "id": "5989_2018",
+    "name": "Seon-Min Moon",
+    "team": "South Korea",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 14.4
+  },
+  {
+    "id": "5618_2018",
+    "name": "Woo-Young Jung",
+    "team": "South Korea",
+    "season": "2018",
+    "position": "MID",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 19.9
+  },
+  {
+    "id": "5616_2018",
+    "name": "Seung-Woo Lee",
+    "team": "South Korea",
+    "season": "2018",
+    "position": "MID",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 18.6
+  },
+  {
+    "id": "5627_2018",
+    "name": "Ja-Cheol Koo",
+    "team": "South Korea",
+    "season": "2018",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 17.4
+  },
+  {
+    "id": "6323_2018",
+    "name": "Young-Sun Yun",
+    "team": "South Korea",
+    "season": "2018",
+    "position": "MID",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 16.9
+  },
+  {
+    "id": "37641_2018",
+    "name": "Seung-Gyu Kim",
+    "team": "South Korea",
+    "season": "2018",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.3
+  },
+  {
+    "id": "5626_2018",
+    "name": "Shin-Wook Kim",
+    "team": "South Korea",
+    "season": "2018",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 4.2
+  },
+  {
+    "id": "5211_2018",
+    "name": "Jordi Alba Ramos",
+    "team": "Spain",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 20.6
+  },
+  {
+    "id": "3064_2018",
+    "name": "David Josu\u00e9 Jim\u00e9nez Silva",
+    "team": "Spain",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 35,
+    "tier": "BLUE",
+    "avgFP": 19.6
+  },
+  {
+    "id": "5200_2018",
+    "name": "Lucas V\u00e1zquez Iglesias",
+    "team": "Spain",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 19,
+    "tier": "GREEN",
+    "avgFP": 10
+  },
+  {
+    "id": "5199_2018",
+    "name": "Jorge Resurrecci\u00f3n Merodio",
+    "team": "Spain",
+    "season": "2018",
+    "position": "MID",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 19.2
+  },
+  {
+    "id": "5721_2018",
+    "name": "Daniel Carvajal Ramos",
+    "team": "Spain",
+    "season": "2018",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 18.1
+  },
+  {
+    "id": "5208_2018",
+    "name": "Thiago Alc\u00e2ntara do Nascimento",
+    "team": "Spain",
+    "season": "2018",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.3
+  },
+  {
+    "id": "5719_2018",
+    "name": "Marco Asensio Willemsen",
+    "team": "Spain",
+    "season": "2018",
+    "position": "MID",
+    "salary": 21,
+    "tier": "GREEN",
+    "avgFP": 14.6
+  },
+  {
+    "id": "3702_2018",
+    "name": "Victor Nilsson Lindel\u00f6f",
+    "team": "Sweden",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 14.8
+  },
+  {
+    "id": "6358_2018",
+    "name": "Emil Krafth",
+    "team": "Sweden",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 21,
+    "tier": "GREEN",
+    "avgFP": 13.8
+  },
+  {
+    "id": "4417_2018",
+    "name": "Ola Toivonen",
+    "team": "Sweden",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 17.4
+  },
+  {
+    "id": "5615_2018",
+    "name": "Isaac Kiese Thelin",
+    "team": "Sweden",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 1.3
+  },
+  {
+    "id": "5617_2018",
+    "name": "Sebastian Larsson",
+    "team": "Sweden",
+    "season": "2018",
+    "position": "MID",
+    "salary": 32,
+    "tier": "BLUE",
+    "avgFP": 22.8
+  },
+  {
+    "id": "4709_2018",
+    "name": "Pontus Jansson",
+    "team": "Sweden",
+    "season": "2018",
+    "position": "MID",
+    "salary": 13,
+    "tier": "WHITE",
+    "avgFP": 8.6
+  },
+  {
+    "id": "5605_2018",
+    "name": "Oscar Hiljemark",
+    "team": "Sweden",
+    "season": "2018",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 6
+  },
+  {
+    "id": "6038_2018",
+    "name": "John Guidetti",
+    "team": "Sweden",
+    "season": "2018",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 5.7
+  },
+  {
+    "id": "3576_2018",
+    "name": "Martin Olsson",
+    "team": "Sweden",
+    "season": "2018",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 4.8
+  },
+  {
+    "id": "5544_2018",
+    "name": "Ricardo Iv\u00e1n Rodr\u00edguez Araya",
+    "team": "Switzerland",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 18.7
+  },
+  {
+    "id": "5541_2018",
+    "name": "Stephan Lichtsteiner",
+    "team": "Switzerland",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 15.9
+  },
+  {
+    "id": "6359_2018",
+    "name": "Johan Danon Djourou-Gbadjere",
+    "team": "Switzerland",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 6.1
+  },
+  {
+    "id": "5545_2018",
+    "name": "Breel-Donald Embolo",
+    "team": "Switzerland",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 40,
+    "tier": "PURPLE",
+    "avgFP": 22.2
+  },
+  {
+    "id": "5835_2018",
+    "name": "Josip Drmic",
+    "team": "Switzerland",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 36,
+    "tier": "BLUE",
+    "avgFP": 20
+  },
+  {
+    "id": "3500_2018",
+    "name": "Granit Xhaka",
+    "team": "Switzerland",
+    "season": "2018",
+    "position": "MID",
+    "salary": 33,
+    "tier": "BLUE",
+    "avgFP": 23.5
+  },
+  {
+    "id": "8814_2018",
+    "name": "Nico Elvedi",
+    "team": "Switzerland",
+    "season": "2018",
+    "position": "MID",
+    "salary": 32,
+    "tier": "BLUE",
+    "avgFP": 23.3
+  },
+  {
+    "id": "5834_2018",
+    "name": "Mario Gavranovi\u0107",
+    "team": "Switzerland",
+    "season": "2018",
+    "position": "MID",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 18.5
+  },
+  {
+    "id": "5543_2018",
+    "name": "Haris Seferovi\u0107",
+    "team": "Switzerland",
+    "season": "2018",
+    "position": "MID",
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 11.5
+  },
+  {
+    "id": "5538_2018",
+    "name": "Denis Lemi Zakaria Lako Lado",
+    "team": "Switzerland",
+    "season": "2018",
+    "position": "MID",
+    "salary": 12,
+    "tier": "WHITE",
+    "avgFP": 7.8
+  },
+  {
+    "id": "5655_2018",
+    "name": "Dylan Daniel Mahmoud Bronn",
+    "team": "Tunisia",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 17.6
+  },
+  {
+    "id": "5654_2018",
+    "name": "Fakhreddine Ben Youssef",
+    "team": "Tunisia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 42,
+    "tier": "PURPLE",
+    "avgFP": 30.4
+  },
+  {
+    "id": "5936_2018",
+    "name": "Hamdi Nagguez",
+    "team": "Tunisia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 39,
+    "tier": "BLUE",
+    "avgFP": 27.9
+  },
+  {
+    "id": "2974_2018",
+    "name": "Sa\u00eef-Eddine Khaoui",
+    "team": "Tunisia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 38,
+    "tier": "BLUE",
+    "avgFP": 27.6
+  },
+  {
+    "id": "3557_2018",
+    "name": "Na\u00efm Sliti",
+    "team": "Tunisia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 36,
+    "tier": "BLUE",
+    "avgFP": 26
+  },
+  {
+    "id": "5649_2018",
+    "name": "Anice Badri",
+    "team": "Tunisia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 36,
+    "tier": "BLUE",
+    "avgFP": 25.8
+  },
+  {
+    "id": "5650_2018",
+    "name": "Ferjani Sassi",
+    "team": "Tunisia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 35,
+    "tier": "BLUE",
+    "avgFP": 25.5
+  },
+  {
+    "id": "4826_2018",
+    "name": "Yohan Benalouane",
+    "team": "Tunisia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 30,
+    "tier": "BLUE",
+    "avgFP": 21.7
+  },
+  {
+    "id": "6345_2018",
+    "name": "Rami Bedoui",
+    "team": "Tunisia",
+    "season": "2018",
+    "position": "MID",
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 11.4
+  },
+  {
+    "id": "5248_2018",
+    "name": "Jos\u00e9 Mart\u00edn C\u00e1ceres Silva",
+    "team": "Uruguay",
+    "season": "2018",
+    "position": "DEF",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 18.6
+  },
+  {
+    "id": "5246_2018",
+    "name": "Luis Alberto Su\u00e1rez D\u00edaz",
+    "team": "Uruguay",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 38,
+    "tier": "BLUE",
+    "avgFP": 21.1
+  },
+  {
+    "id": "5268_2018",
+    "name": "Carlos Andr\u00e9s S\u00e1nchez Arcosa",
+    "team": "Uruguay",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 37,
+    "tier": "BLUE",
+    "avgFP": 20.9
+  },
+  {
+    "id": "5247_2018",
+    "name": "Nahitan Michel N\u00e1ndez Acosta",
+    "team": "Uruguay",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 9.1
+  },
+  {
+    "id": "5256_2018",
+    "name": "Cristian Gabriel Rodr\u00edguez Barrotti",
+    "team": "Uruguay",
+    "season": "2018",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 2.7
+  },
+  {
+    "id": "5255_2018",
+    "name": "Mat\u00edas Vecino Falero",
+    "team": "Uruguay",
+    "season": "2018",
+    "position": "MID",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 17.3
+  },
+  {
+    "id": "6351_2018",
+    "name": "Cristhian Ricardo Stuani Curbelo",
+    "team": "Uruguay",
+    "season": "2018",
+    "position": "MID",
+    "salary": 20,
+    "tier": "GREEN",
+    "avgFP": 14.2
+  },
+  {
+    "id": "6297_2018",
+    "name": "Maximiliano G\u00f3mez Gonz\u00e1lez",
+    "team": "Uruguay",
+    "season": "2018",
+    "position": "MID",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 10
+  },
+  {
+    "id": "6300_2018",
+    "name": "Sebasti\u00e1n Coates Ni\u00f3n",
+    "team": "Uruguay",
+    "season": "2018",
+    "position": "MID",
+    "salary": 12,
+    "tier": "WHITE",
+    "avgFP": 8.4
+  },
+  {
+    "id": "29201_2022",
+    "name": "Nahuel Molina Lucero",
+    "team": "Argentina",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 16.8
+  },
+  {
+    "id": "20572_2022",
+    "name": "Cristian Gabriel Romero",
+    "team": "Argentina",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 15.7
+  },
+  {
+    "id": "28268_2022",
+    "name": "Exequiel Alejandro Palacios",
+    "team": "Argentina",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 6.2
+  },
+  {
+    "id": "11456_2022",
+    "name": "Lautaro Javier Mart\u00ednez",
+    "team": "Argentina",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 4.2
+  },
+  {
+    "id": "7006_2022",
+    "name": "Alejandro Dar\u00edo G\u00f3mez",
+    "team": "Argentina",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 3.1
+  },
+  {
+    "id": "7797_2022",
+    "name": "Rodrigo Javier De Paul",
+    "team": "Argentina",
+    "season": "2022",
+    "position": "MID",
+    "salary": 38,
+    "tier": "BLUE",
+    "avgFP": 27.7
+  },
+  {
+    "id": "16308_2022",
+    "name": "Leandro Daniel Paredes",
+    "team": "Argentina",
+    "season": "2022",
+    "position": "MID",
+    "salary": 30,
+    "tier": "BLUE",
+    "avgFP": 21.6
+  },
+  {
+    "id": "28263_2022",
+    "name": "Gonzalo Ariel Montiel",
+    "team": "Argentina",
+    "season": "2022",
+    "position": "MID",
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 20.5
+  },
+  {
+    "id": "27768_2022",
+    "name": "Lisandro Mart\u00ednez",
+    "team": "Argentina",
+    "season": "2022",
+    "position": "MID",
+    "salary": 16,
+    "tier": "GREEN",
+    "avgFP": 10.8
+  },
+  {
+    "id": "26404_2022",
+    "name": "Guido Rodr\u00edguez",
+    "team": "Argentina",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 6.6
+  },
+  {
+    "id": "5743_2022",
+    "name": "Paulo Bruno Exequiel Dybala",
+    "team": "Argentina",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 6.2
+  },
+  {
+    "id": "22293_2022",
+    "name": "Harry Souttar",
+    "team": "Australia",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 17.1
+  },
+  {
+    "id": "33495_2022",
+    "name": "Kye Rowles",
+    "team": "Australia",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 20,
+    "tier": "GREEN",
+    "avgFP": 13.1
+  },
+  {
+    "id": "5490_2022",
+    "name": "Jackson Irvine",
+    "team": "Australia",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 11,
+    "tier": "WHITE",
+    "avgFP": 5.5
+  },
+  {
+    "id": "9980_2022",
+    "name": "Jamie MacLaren",
+    "team": "Australia",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 4.4
+  },
+  {
+    "id": "33488_2022",
+    "name": "Keanu Baccus",
+    "team": "Australia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 21
+  },
+  {
+    "id": "33477_2022",
+    "name": "Riley McGree",
+    "team": "Australia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 19.8
+  },
+  {
+    "id": "8859_2022",
+    "name": "Ajdin Hrustic",
+    "team": "Australia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 9.4
+  },
+  {
+    "id": "9430_2022",
+    "name": "Jason Cummings",
+    "team": "Australia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 6
+  },
+  {
+    "id": "20005_2022",
+    "name": "Toby Alderweireld",
+    "team": "Belgium",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 17
+  },
+  {
+    "id": "6989_2022",
+    "name": "Timothy Castagne",
+    "team": "Belgium",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 20,
+    "tier": "GREEN",
+    "avgFP": 13.1
+  },
+  {
+    "id": "5632_2022",
+    "name": "Thorgan Hazard",
+    "team": "Belgium",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 33,
+    "tier": "BLUE",
+    "avgFP": 18.3
+  },
+  {
+    "id": "16559_2022",
+    "name": "Leandro Trossard",
+    "team": "Belgium",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 5.3
+  },
+  {
+    "id": "5642_2022",
+    "name": "Axel Witsel",
+    "team": "Belgium",
+    "season": "2022",
+    "position": "MID",
+    "salary": 33,
+    "tier": "BLUE",
+    "avgFP": 24
+  },
+  {
+    "id": "5633_2022",
+    "name": "Yannick Ferreira Carrasco",
+    "team": "Belgium",
+    "season": "2022",
+    "position": "MID",
+    "salary": 32,
+    "tier": "BLUE",
+    "avgFP": 23.3
+  },
+  {
+    "id": "48347_2022",
+    "name": "Amadou Onana",
+    "team": "Belgium",
+    "season": "2022",
+    "position": "MID",
+    "salary": 23,
+    "tier": "GREEN",
+    "avgFP": 16.4
+  },
+  {
+    "id": "6331_2022",
+    "name": "Leander Dendoncker",
+    "team": "Belgium",
+    "season": "2022",
+    "position": "MID",
+    "salary": 21,
+    "tier": "GREEN",
+    "avgFP": 14.4
+  },
+  {
+    "id": "4372_2022",
+    "name": "Marcos Ao\u00e1s Corr\u00eaa",
+    "team": "Brazil",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 16,
+    "tier": "GREEN",
+    "avgFP": 10.3
+  },
+  {
+    "id": "18395_2022",
+    "name": "Vin\u00edcius Jos\u00e9 Paix\u00e3o de Oliveira J\u00fanior",
+    "team": "Brazil",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 47,
+    "tier": "PURPLE",
+    "avgFP": 26.4
+  },
+  {
+    "id": "3202_2022",
+    "name": "Gabriel Fernando de Jesus",
+    "team": "Brazil",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 36,
+    "tier": "BLUE",
+    "avgFP": 20.2
+  },
+  {
+    "id": "10595_2022",
+    "name": "Raphael Dias Belloli",
+    "team": "Brazil",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 36,
+    "tier": "BLUE",
+    "avgFP": 19.9
+  },
+  {
+    "id": "25104_2022",
+    "name": "Rodrygo Silva de Goes",
+    "team": "Brazil",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 16
+  },
+  {
+    "id": "22600_2022",
+    "name": "Lucas Tolentino Coelho de Lima",
+    "team": "Brazil",
+    "season": "2022",
+    "position": "MID",
+    "salary": 41,
+    "tier": "PURPLE",
+    "avgFP": 30
+  },
+  {
+    "id": "13620_2022",
+    "name": "\u00c9der Gabriel Milit\u00e3o",
+    "team": "Brazil",
+    "season": "2022",
+    "position": "MID",
+    "salary": 32,
+    "tier": "BLUE",
+    "avgFP": 23.3
+  },
+  {
+    "id": "25363_2022",
+    "name": "Antony Matheus dos Santos",
+    "team": "Brazil",
+    "season": "2022",
+    "position": "MID",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 22.5
+  },
+  {
+    "id": "9904_2022",
+    "name": "Frederico Rodrigues Santos",
+    "team": "Brazil",
+    "season": "2022",
+    "position": "MID",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 18.9
+  },
+  {
+    "id": "11493_2022",
+    "name": "Gleison Bremer Silva Nascimento",
+    "team": "Brazil",
+    "season": "2022",
+    "position": "MID",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 18.4
+  },
+  {
+    "id": "4324_2022",
+    "name": "Daniel Alves da Silva",
+    "team": "Brazil",
+    "season": "2022",
+    "position": "MID",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 16.8
+  },
+  {
+    "id": "25154_2022",
+    "name": "\u00c9verton Augusto de Barros Ribeiro",
+    "team": "Brazil",
+    "season": "2022",
+    "position": "MID",
+    "salary": 19,
+    "tier": "GREEN",
+    "avgFP": 13
+  },
+  {
+    "id": "25142_2022",
+    "name": "Bruno Guimar\u00e3es Rodriguez Moura",
+    "team": "Brazil",
+    "season": "2022",
+    "position": "MID",
+    "salary": 16,
+    "tier": "GREEN",
+    "avgFP": 11
+  },
+  {
+    "id": "25305_2022",
+    "name": "Pedro Guilherme Abreu dos Santos",
+    "team": "Brazil",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 6.4
+  },
+  {
+    "id": "11183_2022",
+    "name": "Alex Nicolao Telles",
+    "team": "Brazil",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 5.8
+  },
+  {
+    "id": "7472_2022",
+    "name": "Nicolas Alexis Julio N'Koulou Ndoubena",
+    "team": "Cameroon",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 16.9
+  },
+  {
+    "id": "3551_2022",
+    "name": "Karl Brillant Toko Ekambi",
+    "team": "Cameroon",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 13,
+    "tier": "WHITE",
+    "avgFP": 7.1
+  },
+  {
+    "id": "46903_2022",
+    "name": "Christian Mougang Bassogog",
+    "team": "Cameroon",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 0.2
+  },
+  {
+    "id": "3141_2022",
+    "name": "Andr\u00e9-Frank Zambo Anguissa",
+    "team": "Cameroon",
+    "season": "2022",
+    "position": "MID",
+    "salary": 33,
+    "tier": "BLUE",
+    "avgFP": 23.4
+  },
+  {
+    "id": "30016_2022",
+    "name": "Martin Hongla Yma II",
+    "team": "Cameroon",
+    "season": "2022",
+    "position": "MID",
+    "salary": 32,
+    "tier": "BLUE",
+    "avgFP": 23.3
+  },
+  {
+    "id": "7551_2022",
+    "name": "Enzo Ebosse",
+    "team": "Cameroon",
+    "season": "2022",
+    "position": "MID",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 22.1
+  },
+  {
+    "id": "74588_2022",
+    "name": "Christopher Wooh",
+    "team": "Cameroon",
+    "season": "2022",
+    "position": "MID",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 19.7
+  },
+  {
+    "id": "8591_2022",
+    "name": "Samuel Yves Oum Gwet",
+    "team": "Cameroon",
+    "season": "2022",
+    "position": "MID",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 17.2
+  },
+  {
+    "id": "10530_2022",
+    "name": "Jules Olivier Ntcham",
+    "team": "Cameroon",
+    "season": "2022",
+    "position": "MID",
+    "salary": 21,
+    "tier": "GREEN",
+    "avgFP": 15.1
+  },
+  {
+    "id": "28966_2022",
+    "name": "Ga\u00ebl Ondoua",
+    "team": "Cameroon",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 4.2
+  },
+  {
+    "id": "16120_2022",
+    "name": "Richie Laryea",
+    "team": "Canada",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 23,
+    "tier": "GREEN",
+    "avgFP": 15.2
+  },
+  {
+    "id": "11846_2022",
+    "name": "Steven de Sousa Vitoria",
+    "team": "Canada",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 19,
+    "tier": "GREEN",
+    "avgFP": 12.1
+  },
+  {
+    "id": "31684_2022",
+    "name": "Atiba Hutchinson",
+    "team": "Canada",
+    "season": "2022",
+    "position": "MID",
+    "salary": 23,
+    "tier": "GREEN",
+    "avgFP": 15.9
+  },
+  {
+    "id": "16252_2022",
+    "name": "Mark Anthony Kaye",
+    "team": "Canada",
+    "season": "2022",
+    "position": "MID",
+    "salary": 21,
+    "tier": "GREEN",
+    "avgFP": 14.8
+  },
+  {
+    "id": "29758_2022",
+    "name": "Sam Adekugbe",
+    "team": "Canada",
+    "season": "2022",
+    "position": "MID",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 10.4
+  },
+  {
+    "id": "12770_2022",
+    "name": "Jonathan Osorio",
+    "team": "Canada",
+    "season": "2022",
+    "position": "MID",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 9.4
+  },
+  {
+    "id": "133229_2022",
+    "name": "Ismael Kon\u00e9",
+    "team": "Canada",
+    "season": "2022",
+    "position": "MID",
+    "salary": 11,
+    "tier": "WHITE",
+    "avgFP": 7.1
+  },
+  {
+    "id": "5836_2022",
+    "name": "Bryan Oviedo",
+    "team": "Costa Rica",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 34,
+    "tier": "BLUE",
+    "avgFP": 22.6
+  },
+  {
+    "id": "6328_2022",
+    "name": "Kendall Jamaal Waston Manley",
+    "team": "Costa Rica",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 33,
+    "tier": "BLUE",
+    "avgFP": 22.5
+  },
+  {
+    "id": "132497_2022",
+    "name": "Gerson Torres Barrantes",
+    "team": "Costa Rica",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 7.2
+  },
+  {
+    "id": "108340_2022",
+    "name": "Brandon Aguilera Zamora",
+    "team": "Costa Rica",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 11,
+    "tier": "WHITE",
+    "avgFP": 5.4
+  },
+  {
+    "id": "132728_2022",
+    "name": "Jewison Bennette",
+    "team": "Costa Rica",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 3.8
+  },
+  {
+    "id": "5582_2022",
+    "name": "Celso Borges Mora",
+    "team": "Costa Rica",
+    "season": "2022",
+    "position": "MID",
+    "salary": 35,
+    "tier": "BLUE",
+    "avgFP": 25
+  },
+  {
+    "id": "5592_2022",
+    "name": "Bryan Ruiz Gonz\u00e1lez",
+    "team": "Costa Rica",
+    "season": "2022",
+    "position": "MID",
+    "salary": 33,
+    "tier": "BLUE",
+    "avgFP": 23.6
+  },
+  {
+    "id": "5595_2022",
+    "name": "Johan Alberto Venegas Ulloa",
+    "team": "Costa Rica",
+    "season": "2022",
+    "position": "MID",
+    "salary": 23,
+    "tier": "GREEN",
+    "avgFP": 15.9
+  },
+  {
+    "id": "132271_2022",
+    "name": "Carlos Manuel Mart\u00ednez Castro",
+    "team": "Costa Rica",
+    "season": "2022",
+    "position": "MID",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 10.2
+  },
+  {
+    "id": "184468_2022",
+    "name": "\u00c1lvaro Jos\u00e9 Zamora Mata",
+    "team": "Costa Rica",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 3.6
+  },
+  {
+    "id": "37148_2022",
+    "name": "Josip \u0160utalo",
+    "team": "Croatia",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 9.4
+  },
+  {
+    "id": "3441_2022",
+    "name": "Nikola Vla\u0161i\u0107",
+    "team": "Croatia",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 12,
+    "tier": "WHITE",
+    "avgFP": 6
+  },
+  {
+    "id": "7693_2022",
+    "name": "Bruno Petkovi\u0107",
+    "team": "Croatia",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 3.8
+  },
+  {
+    "id": "28914_2022",
+    "name": "Lovro Majer",
+    "team": "Croatia",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 2.1
+  },
+  {
+    "id": "11127_2022",
+    "name": "Borna Bari\u0161i\u0107",
+    "team": "Croatia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 34,
+    "tier": "BLUE",
+    "avgFP": 24.4
+  },
+  {
+    "id": "29163_2022",
+    "name": "Josip Juranovi\u0107",
+    "team": "Croatia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 33,
+    "tier": "BLUE",
+    "avgFP": 23.7
+  },
+  {
+    "id": "5468_2022",
+    "name": "Domagoj Vida",
+    "team": "Croatia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 18.7
+  },
+  {
+    "id": "3471_2022",
+    "name": "Dejan Lovren",
+    "team": "Croatia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 18.5
+  },
+  {
+    "id": "5460_2022",
+    "name": "Andrej Kramari\u0107",
+    "team": "Croatia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 17.6
+  },
+  {
+    "id": "12625_2022",
+    "name": "Borna Sosa",
+    "team": "Croatia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 16.8
+  },
+  {
+    "id": "11603_2022",
+    "name": "Mario Pa\u0161ali\u0107",
+    "team": "Croatia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 21,
+    "tier": "GREEN",
+    "avgFP": 14.6
+  },
+  {
+    "id": "8654_2022",
+    "name": "Ante Budimir",
+    "team": "Croatia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 16,
+    "tier": "GREEN",
+    "avgFP": 10.9
+  },
+  {
+    "id": "16554_2022",
+    "name": "Joakim M\u00e6hle",
+    "team": "Denmark",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 18.6
+  },
+  {
+    "id": "16190_2022",
+    "name": "Rasmus Nissen Kristensen",
+    "team": "Denmark",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 23,
+    "tier": "GREEN",
+    "avgFP": 14.9
+  },
+  {
+    "id": "6302_2022",
+    "name": "Kasper Dolberg",
+    "team": "Denmark",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 19,
+    "tier": "GREEN",
+    "avgFP": 10.2
+  },
+  {
+    "id": "5732_2022",
+    "name": "Andreas Evald Cornelius",
+    "team": "Denmark",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 8.1
+  },
+  {
+    "id": "4447_2022",
+    "name": "Martin Braithwaite Christensen",
+    "team": "Denmark",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 7.5
+  },
+  {
+    "id": "16294_2022",
+    "name": "Robert Skov",
+    "team": "Denmark",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 2.4
+  },
+  {
+    "id": "5527_2022",
+    "name": "Thomas Delaney",
+    "team": "Denmark",
+    "season": "2022",
+    "position": "MID",
+    "salary": 36,
+    "tier": "BLUE",
+    "avgFP": 26.2
+  },
+  {
+    "id": "3570_2022",
+    "name": "Pierre-Emile H\u00f8jbjerg",
+    "team": "Denmark",
+    "season": "2022",
+    "position": "MID",
+    "salary": 30,
+    "tier": "BLUE",
+    "avgFP": 21.3
+  },
+  {
+    "id": "5534_2022",
+    "name": "Simon Thorup Kj\u00e6r",
+    "team": "Denmark",
+    "season": "2022",
+    "position": "MID",
+    "salary": 30,
+    "tier": "BLUE",
+    "avgFP": 21.3
+  },
+  {
+    "id": "18722_2022",
+    "name": "Mathias Jensen",
+    "team": "Denmark",
+    "season": "2022",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 17.5
+  },
+  {
+    "id": "24443_2022",
+    "name": "Mikkel Damsgaard",
+    "team": "Denmark",
+    "season": "2022",
+    "position": "MID",
+    "salary": 23,
+    "tier": "GREEN",
+    "avgFP": 16
+  },
+  {
+    "id": "17043_2022",
+    "name": "Victor Nelsson",
+    "team": "Denmark",
+    "season": "2022",
+    "position": "MID",
+    "salary": 16,
+    "tier": "GREEN",
+    "avgFP": 10.7
+  },
+  {
+    "id": "38004_2022",
+    "name": "Piero Mart\u00edn Hincapi\u00e9 Reyna",
+    "team": "Ecuador",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 33,
+    "tier": "BLUE",
+    "avgFP": 22.4
+  },
+  {
+    "id": "30111_2022",
+    "name": "Felix Eduardo Torres Caicedo",
+    "team": "Ecuador",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 21,
+    "tier": "GREEN",
+    "avgFP": 13.8
+  },
+  {
+    "id": "34396_2022",
+    "name": "Michael Steveen Estrada Mart\u00ednez",
+    "team": "Ecuador",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 11,
+    "tier": "WHITE",
+    "avgFP": 5.4
+  },
+  {
+    "id": "91090_2022",
+    "name": "Djorkaeff Neicer Reasco Gonz\u00e1lez",
+    "team": "Ecuador",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 0.4
+  },
+  {
+    "id": "12583_2022",
+    "name": "Carlos Armando Gruezo Arboleda",
+    "team": "Ecuador",
+    "season": "2022",
+    "position": "MID",
+    "salary": 18,
+    "tier": "GREEN",
+    "avgFP": 12.8
+  },
+  {
+    "id": "12803_2022",
+    "name": "Romario Andr\u00e9s Ibarra Mina",
+    "team": "Ecuador",
+    "season": "2022",
+    "position": "MID",
+    "salary": 18,
+    "tier": "GREEN",
+    "avgFP": 12.8
+  },
+  {
+    "id": "37945_2022",
+    "name": "Alan Steven Franco Palma",
+    "team": "Ecuador",
+    "season": "2022",
+    "position": "MID",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 10
+  },
+  {
+    "id": "36148_2022",
+    "name": "Jos\u00e9 Adoni Cifuentes Charcopa",
+    "team": "Ecuador",
+    "season": "2022",
+    "position": "MID",
+    "salary": 12,
+    "tier": "WHITE",
+    "avgFP": 8.1
+  },
+  {
+    "id": "3336_2022",
+    "name": "Harry Maguire",
+    "team": "England",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 16.2
+  },
+  {
+    "id": "3244_2022",
+    "name": "John Stones",
+    "team": "England",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 15.8
+  },
+  {
+    "id": "3318_2022",
+    "name": "Marcus Rashford",
+    "team": "England",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 39,
+    "tier": "BLUE",
+    "avgFP": 21.7
+  },
+  {
+    "id": "4354_2022",
+    "name": "Philip Foden",
+    "team": "England",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 17.3
+  },
+  {
+    "id": "3233_2022",
+    "name": "Raheem Sterling",
+    "team": "England",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 16.1
+  },
+  {
+    "id": "9638_2022",
+    "name": "Jack Grealish",
+    "team": "England",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 19,
+    "tier": "GREEN",
+    "avgFP": 10.1
+  },
+  {
+    "id": "3532_2022",
+    "name": "Jordan Brian Henderson",
+    "team": "England",
+    "season": "2022",
+    "position": "MID",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 21.9
+  },
+  {
+    "id": "3664_2022",
+    "name": "Trent Alexander-Arnold",
+    "team": "England",
+    "season": "2022",
+    "position": "MID",
+    "salary": 23,
+    "tier": "GREEN",
+    "avgFP": 16.1
+  },
+  {
+    "id": "3943_2022",
+    "name": "Declan Rice",
+    "team": "England",
+    "season": "2022",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.7
+  },
+  {
+    "id": "4706_2022",
+    "name": "Kalvin Phillips",
+    "team": "England",
+    "season": "2022",
+    "position": "MID",
+    "salary": 20,
+    "tier": "GREEN",
+    "avgFP": 14.3
+  },
+  {
+    "id": "3616_2022",
+    "name": "Callum Wilson",
+    "team": "England",
+    "season": "2022",
+    "position": "MID",
+    "salary": 20,
+    "tier": "GREEN",
+    "avgFP": 14.2
+  },
+  {
+    "id": "6704_2022",
+    "name": "Theo Bernard Fran\u00e7ois Hern\u00e1ndez",
+    "team": "France",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 45,
+    "tier": "PURPLE",
+    "avgFP": 30.6
+  },
+  {
+    "id": "8519_2022",
+    "name": "Dayotchanculle Upamecano",
+    "team": "France",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 39,
+    "tier": "BLUE",
+    "avgFP": 26.4
+  },
+  {
+    "id": "4445_2022",
+    "name": "Jules Kound\u00e9",
+    "team": "France",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 35,
+    "tier": "BLUE",
+    "avgFP": 23.5
+  },
+  {
+    "id": "5485_2022",
+    "name": "Rapha\u00ebl Varane",
+    "team": "France",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 11.4
+  },
+  {
+    "id": "3604_2022",
+    "name": "Olivier Giroud",
+    "team": "France",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 17.4
+  },
+  {
+    "id": "5477_2022",
+    "name": "Ousmane Demb\u00e9l\u00e9",
+    "team": "France",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 30,
+    "tier": "BLUE",
+    "avgFP": 16.6
+  },
+  {
+    "id": "2972_2022",
+    "name": "Marcus Thuram",
+    "team": "France",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 20,
+    "tier": "GREEN",
+    "avgFP": 10.6
+  },
+  {
+    "id": "11990_2022",
+    "name": "Youssouf Fofana",
+    "team": "France",
+    "season": "2022",
+    "position": "MID",
+    "salary": 32,
+    "tier": "BLUE",
+    "avgFP": 22.9
+  },
+  {
+    "id": "5476_2022",
+    "name": "Benjamin Pavard",
+    "team": "France",
+    "season": "2022",
+    "position": "MID",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 19.7
+  },
+  {
+    "id": "8217_2022",
+    "name": "Kingsley Coman",
+    "team": "France",
+    "season": "2022",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 18
+  },
+  {
+    "id": "17592_2022",
+    "name": "William Saliba",
+    "team": "France",
+    "season": "2022",
+    "position": "MID",
+    "salary": 13,
+    "tier": "WHITE",
+    "avgFP": 8.8
+  },
+  {
+    "id": "7153_2022",
+    "name": "Jordan Veretout",
+    "team": "France",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 6.9
+  },
+  {
+    "id": "7345_2022",
+    "name": "Matt\u00e9o Guendouzi Oli\u00e9",
+    "team": "France",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 1.2
+  },
+  {
+    "id": "6322_2022",
+    "name": "Niklas S\u00fcle",
+    "team": "Germany",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 15.6
+  },
+  {
+    "id": "3167_2022",
+    "name": "Antonio R\u00fcdiger",
+    "team": "Germany",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 9.5
+  },
+  {
+    "id": "8507_2022",
+    "name": "Lukas Klostermann",
+    "team": "Germany",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 2.4
+  },
+  {
+    "id": "8400_2022",
+    "name": "Serge Gnabry",
+    "team": "Germany",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 59,
+    "tier": "ORANGE",
+    "avgFP": 33.3
+  },
+  {
+    "id": "5562_2022",
+    "name": "Thomas M\u00fcller",
+    "team": "Germany",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 13.3
+  },
+  {
+    "id": "8804_2022",
+    "name": "Jonas Hofmann",
+    "team": "Germany",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 18,
+    "tier": "GREEN",
+    "avgFP": 9.4
+  },
+  {
+    "id": "8227_2022",
+    "name": "Mario G\u00f6tze",
+    "team": "Germany",
+    "season": "2022",
+    "position": "MID",
+    "salary": 34,
+    "tier": "BLUE",
+    "avgFP": 24.4
+  },
+  {
+    "id": "10287_2022",
+    "name": "\u0130lkay G\u00fcndo\u011fan",
+    "team": "Germany",
+    "season": "2022",
+    "position": "MID",
+    "salary": 32,
+    "tier": "BLUE",
+    "avgFP": 22.8
+  },
+  {
+    "id": "6324_2022",
+    "name": "Leon Goretzka",
+    "team": "Germany",
+    "season": "2022",
+    "position": "MID",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 18.6
+  },
+  {
+    "id": "12325_2022",
+    "name": "Abdul Rahman Baba",
+    "team": "Ghana",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 21
+  },
+  {
+    "id": "23615_2022",
+    "name": "Gideon Mensah",
+    "team": "Ghana",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 15.6
+  },
+  {
+    "id": "35658_2022",
+    "name": "Kamaldeen Sulemana",
+    "team": "Ghana",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 20,
+    "tier": "GREEN",
+    "avgFP": 10.6
+  },
+  {
+    "id": "6393_2022",
+    "name": "I\u00f1aki Williams Arthuer",
+    "team": "Ghana",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 12,
+    "tier": "WHITE",
+    "avgFP": 6.1
+  },
+  {
+    "id": "2989_2022",
+    "name": "Alexander Djiku",
+    "team": "Ghana",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 5
+  },
+  {
+    "id": "3347_2022",
+    "name": "Andr\u00e9 Ayew Pel\u00e9",
+    "team": "Ghana",
+    "season": "2022",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 18
+  },
+  {
+    "id": "44225_2022",
+    "name": "Osman Bukari",
+    "team": "Ghana",
+    "season": "2022",
+    "position": "MID",
+    "salary": 16,
+    "tier": "GREEN",
+    "avgFP": 10.7
+  },
+  {
+    "id": "5220_2022",
+    "name": "Morteza Pouraliganji",
+    "team": "Iran",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 20,
+    "tier": "GREEN",
+    "avgFP": 13.3
+  },
+  {
+    "id": "5240_2022",
+    "name": "Saman Ghoddos",
+    "team": "Iran",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 11,
+    "tier": "WHITE",
+    "avgFP": 5.6
+  },
+  {
+    "id": "23538_2022",
+    "name": "Sadegh Moharrami",
+    "team": "Iran",
+    "season": "2022",
+    "position": "MID",
+    "salary": 34,
+    "tier": "BLUE",
+    "avgFP": 24.2
+  },
+  {
+    "id": "124167_2022",
+    "name": "Ahmad Nourollahi",
+    "team": "Iran",
+    "season": "2022",
+    "position": "MID",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 22.2
+  },
+  {
+    "id": "23874_2022",
+    "name": "Ali Gholizadeh",
+    "team": "Iran",
+    "season": "2022",
+    "position": "MID",
+    "salary": 30,
+    "tier": "BLUE",
+    "avgFP": 21.6
+  },
+  {
+    "id": "5722_2022",
+    "name": "Saeid Ezatolahi Afagh",
+    "team": "Iran",
+    "season": "2022",
+    "position": "MID",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 19
+  },
+  {
+    "id": "5230_2022",
+    "name": "Ehsan Hajsafi",
+    "team": "Iran",
+    "season": "2022",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.6
+  },
+  {
+    "id": "125818_2022",
+    "name": "Ali Karimi",
+    "team": "Iran",
+    "season": "2022",
+    "position": "MID",
+    "salary": 18,
+    "tier": "GREEN",
+    "avgFP": 12.8
+  },
+  {
+    "id": "5222_2022",
+    "name": "Roozbeh Cheshmi",
+    "team": "Iran",
+    "season": "2022",
+    "position": "MID",
+    "salary": 13,
+    "tier": "WHITE",
+    "avgFP": 9
+  },
+  {
+    "id": "124175_2022",
+    "name": "Mohammad Hossein Kanani Zadegan",
+    "team": "Iran",
+    "season": "2022",
+    "position": "MID",
+    "salary": 13,
+    "tier": "WHITE",
+    "avgFP": 8.9
+  },
+  {
+    "id": "124161_2022",
+    "name": "Mehdi Torabi",
+    "team": "Iran",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 6.4
+  },
+  {
+    "id": "37211_2022",
+    "name": "Kaoru Mitoma",
+    "team": "Japan",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 17.7
+  },
+  {
+    "id": "5690_2022",
+    "name": "Yuto Nagatomo",
+    "team": "Japan",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 16.6
+  },
+  {
+    "id": "23730_2022",
+    "name": "Takehiro Tomiyasu",
+    "team": "Japan",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 21,
+    "tier": "GREEN",
+    "avgFP": 14
+  },
+  {
+    "id": "37215_2022",
+    "name": "Shogo Taniguchi",
+    "team": "Japan",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 9.7
+  },
+  {
+    "id": "30628_2022",
+    "name": "Daizen Maeda",
+    "team": "Japan",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 14.1
+  },
+  {
+    "id": "9411_2022",
+    "name": "Daichi Kamada",
+    "team": "Japan",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 13.5
+  },
+  {
+    "id": "3530_2022",
+    "name": "Hiroki Sakai",
+    "team": "Japan",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 9
+  },
+  {
+    "id": "37221_2022",
+    "name": "Hidemasa Morita",
+    "team": "Japan",
+    "season": "2022",
+    "position": "MID",
+    "salary": 33,
+    "tier": "BLUE",
+    "avgFP": 23.9
+  },
+  {
+    "id": "3175_2022",
+    "name": "Eiji Kawashima",
+    "team": "Japan",
+    "season": "2022",
+    "position": "MID",
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 21
+  },
+  {
+    "id": "38285_2022",
+    "name": "Ayase Ueda",
+    "team": "Japan",
+    "season": "2022",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 17.6
+  },
+  {
+    "id": "31090_2022",
+    "name": "Takefusa Kubo",
+    "team": "Japan",
+    "season": "2022",
+    "position": "MID",
+    "salary": 20,
+    "tier": "GREEN",
+    "avgFP": 13.7
+  },
+  {
+    "id": "37122_2022",
+    "name": "Yuki Soma",
+    "team": "Japan",
+    "season": "2022",
+    "position": "MID",
+    "salary": 18,
+    "tier": "GREEN",
+    "avgFP": 12.8
+  },
+  {
+    "id": "37209_2022",
+    "name": "Miki Yamane",
+    "team": "Japan",
+    "season": "2022",
+    "position": "MID",
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 11.8
+  },
+  {
+    "id": "95272_2022",
+    "name": "Hiroki Ito",
+    "team": "Japan",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 6.2
+  },
+  {
+    "id": "30500_2022",
+    "name": "Kevin Nahin \u00c1lvarez Campos",
+    "team": "Mexico",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 14.4
+  },
+  {
+    "id": "5573_2022",
+    "name": "H\u00e9ctor Alfredo Moreno Herrera",
+    "team": "Mexico",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 19,
+    "tier": "GREEN",
+    "avgFP": 12.5
+  },
+  {
+    "id": "26301_2022",
+    "name": "Ernesto Alexis Vega Rojas",
+    "team": "Mexico",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 12.9
+  },
+  {
+    "id": "15452_2022",
+    "name": "Carlos Uriel Antuna Romero",
+    "team": "Mexico",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 8.1
+  },
+  {
+    "id": "5568_2022",
+    "name": "Ra\u00fal Alonso Jim\u00e9nez Rodr\u00edguez",
+    "team": "Mexico",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 4.2
+  },
+  {
+    "id": "5567_2022",
+    "name": "Edson Omar \u00c1lvarez Vel\u00e1zquez",
+    "team": "Mexico",
+    "season": "2022",
+    "position": "MID",
+    "salary": 35,
+    "tier": "BLUE",
+    "avgFP": 25.4
+  },
+  {
+    "id": "15872_2022",
+    "name": "\u00c9rick Gabriel Guti\u00e9rrez Galaviz",
+    "team": "Mexico",
+    "season": "2022",
+    "position": "MID",
+    "salary": 30,
+    "tier": "BLUE",
+    "avgFP": 21.3
+  },
+  {
+    "id": "5563_2022",
+    "name": "Jos\u00e9 Andr\u00e9s Guardado Hern\u00e1ndez",
+    "team": "Mexico",
+    "season": "2022",
+    "position": "MID",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 19.6
+  },
+  {
+    "id": "11388_2022",
+    "name": "N\u00e9stor Alejandro Ara\u00fajo Razo",
+    "team": "Mexico",
+    "season": "2022",
+    "position": "MID",
+    "salary": 19,
+    "tier": "GREEN",
+    "avgFP": 13.5
+  },
+  {
+    "id": "26297_2022",
+    "name": "Carlos Alberto Rodr\u00edguez G\u00f3mez",
+    "team": "Mexico",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 3.2
+  },
+  {
+    "id": "15890_2022",
+    "name": "Noussair Mazraoui",
+    "team": "Morocco",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 18.7
+  },
+  {
+    "id": "31295_2022",
+    "name": "Yahia Attiyat allah",
+    "team": "Morocco",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 18,
+    "tier": "GREEN",
+    "avgFP": 11.6
+  },
+  {
+    "id": "7459_2022",
+    "name": "Jawad El Yamiq",
+    "team": "Morocco",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 9.4
+  },
+  {
+    "id": "67700_2022",
+    "name": "Badr Banoun",
+    "team": "Morocco",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 0.6
+  },
+  {
+    "id": "5233_2022",
+    "name": "Munir Mohand Mohamedi",
+    "team": "Morocco",
+    "season": "2022",
+    "position": "MID",
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 21
+  },
+  {
+    "id": "23774_2022",
+    "name": "Selim Amallah",
+    "team": "Morocco",
+    "season": "2022",
+    "position": "MID",
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 20.6
+  },
+  {
+    "id": "3625_2022",
+    "name": "Sofiane Boufal",
+    "team": "Morocco",
+    "season": "2022",
+    "position": "MID",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 19.9
+  },
+  {
+    "id": "149714_2022",
+    "name": "Abdessamad Ezzalzouli",
+    "team": "Morocco",
+    "season": "2022",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 17.7
+  },
+  {
+    "id": "12149_2022",
+    "name": "Nayef Aguerd",
+    "team": "Morocco",
+    "season": "2022",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 17.7
+  },
+  {
+    "id": "3634_2022",
+    "name": "Abdelhamid Sabiri",
+    "team": "Morocco",
+    "season": "2022",
+    "position": "MID",
+    "salary": 23,
+    "tier": "GREEN",
+    "avgFP": 16.5
+  },
+  {
+    "id": "156734_2022",
+    "name": "Bilal El Khannous",
+    "team": "Morocco",
+    "season": "2022",
+    "position": "MID",
+    "salary": 16,
+    "tier": "GREEN",
+    "avgFP": 10.8
+  },
+  {
+    "id": "296254_2022",
+    "name": "Walid Cheddira",
+    "team": "Morocco",
+    "season": "2022",
+    "position": "MID",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 10.2
+  },
+  {
+    "id": "21214_2022",
+    "name": "Ilias Chair",
+    "team": "Morocco",
+    "season": "2022",
+    "position": "MID",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 9.8
+  },
+  {
+    "id": "59493_2022",
+    "name": "Abderrazak Hamdallah",
+    "team": "Morocco",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 6.8
+  },
+  {
+    "id": "131037_2022",
+    "name": "Anass Zaroury",
+    "team": "Morocco",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 6.8
+  },
+  {
+    "id": "8125_2022",
+    "name": "Denzel Dumfries",
+    "team": "Netherlands",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 34,
+    "tier": "BLUE",
+    "avgFP": 23.1
+  },
+  {
+    "id": "3669_2022",
+    "name": "Virgil van Dijk",
+    "team": "Netherlands",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 18.9
+  },
+  {
+    "id": "3306_2022",
+    "name": "Nathan Ak\u00e9",
+    "team": "Netherlands",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 17.8
+  },
+  {
+    "id": "6994_2022",
+    "name": "Marten de Roon",
+    "team": "Netherlands",
+    "season": "2022",
+    "position": "MID",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 20.1
+  },
+  {
+    "id": "3264_2022",
+    "name": "Vincent Janssen",
+    "team": "Netherlands",
+    "season": "2022",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.6
+  },
+  {
+    "id": "4318_2022",
+    "name": "Davy Klaassen",
+    "team": "Netherlands",
+    "season": "2022",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.4
+  },
+  {
+    "id": "7745_2022",
+    "name": "Steven Berghuis",
+    "team": "Netherlands",
+    "season": "2022",
+    "position": "MID",
+    "salary": 19,
+    "tier": "GREEN",
+    "avgFP": 13
+  },
+  {
+    "id": "8069_2022",
+    "name": "Matthijs de Ligt",
+    "team": "Netherlands",
+    "season": "2022",
+    "position": "MID",
+    "salary": 18,
+    "tier": "GREEN",
+    "avgFP": 12.8
+  },
+  {
+    "id": "3034_2022",
+    "name": "Kamil Glik",
+    "team": "Poland",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 14.8
+  },
+  {
+    "id": "44166_2022",
+    "name": "Jakub Piotr Kiwior",
+    "team": "Poland",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 9.3
+  },
+  {
+    "id": "4664_2022",
+    "name": "Sebastian Szyma\u0144ski",
+    "team": "Poland",
+    "season": "2022",
+    "position": "MID",
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 20.6
+  },
+  {
+    "id": "4626_2022",
+    "name": "Jan Bednarek",
+    "team": "Poland",
+    "season": "2022",
+    "position": "MID",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 19.3
+  },
+  {
+    "id": "11737_2022",
+    "name": "Krystian Bielik",
+    "team": "Poland",
+    "season": "2022",
+    "position": "MID",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 18.8
+  },
+  {
+    "id": "7979_2022",
+    "name": "Przemys\u0142aw Frankowski",
+    "team": "Poland",
+    "season": "2022",
+    "position": "MID",
+    "salary": 23,
+    "tier": "GREEN",
+    "avgFP": 16.6
+  },
+  {
+    "id": "31955_2022",
+    "name": "Jakub Kami\u0144ski",
+    "team": "Poland",
+    "season": "2022",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.5
+  },
+  {
+    "id": "28453_2022",
+    "name": "Micha\u0142 Sk\u00f3ra\u015b",
+    "team": "Poland",
+    "season": "2022",
+    "position": "MID",
+    "salary": 16,
+    "tier": "GREEN",
+    "avgFP": 11
+  },
+  {
+    "id": "5665_2022",
+    "name": "Arkadiusz Milik",
+    "team": "Poland",
+    "season": "2022",
+    "position": "MID",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 10
+  },
+  {
+    "id": "50502_2022",
+    "name": "Nicola Zalewski",
+    "team": "Poland",
+    "season": "2022",
+    "position": "MID",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 10
+  },
+  {
+    "id": "12493_2022",
+    "name": "Krzysztof Pi\u0105tek",
+    "team": "Poland",
+    "season": "2022",
+    "position": "MID",
+    "salary": 11,
+    "tier": "WHITE",
+    "avgFP": 7.2
+  },
+  {
+    "id": "8714_2022",
+    "name": "Damian Szyma\u0144ski",
+    "team": "Poland",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 2.7
+  },
+  {
+    "id": "20016_2022",
+    "name": "Kl\u00e9per Laveran Lima Ferreira",
+    "team": "Portugal",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 33,
+    "tier": "BLUE",
+    "avgFP": 22.1
+  },
+  {
+    "id": "7005_2022",
+    "name": "Jo\u00e3o Pedro Cavaco Cancelo",
+    "team": "Portugal",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 21.1
+  },
+  {
+    "id": "13621_2022",
+    "name": "Danilo Lu\u00eds H\u00e9lio Pereira",
+    "team": "Portugal",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 30,
+    "tier": "BLUE",
+    "avgFP": 20.1
+  },
+  {
+    "id": "5206_2022",
+    "name": "R\u00faben Santos Gato Alves Dias",
+    "team": "Portugal",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 16.6
+  },
+  {
+    "id": "41092_2022",
+    "name": "Nuno Mendes",
+    "team": "Portugal",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 11
+  },
+  {
+    "id": "5204_2022",
+    "name": "Bruno Miguel Borges Fernandes",
+    "team": "Portugal",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 42,
+    "tier": "PURPLE",
+    "avgFP": 23.8
+  },
+  {
+    "id": "4272_2022",
+    "name": "Jo\u00e3o M\u00e1rio Naval da Costa Eduardo",
+    "team": "Portugal",
+    "season": "2022",
+    "position": "MID",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 18.6
+  },
+  {
+    "id": "5214_2022",
+    "name": "William Silva de Carvalho",
+    "team": "Portugal",
+    "season": "2022",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 18
+  },
+  {
+    "id": "5218_2022",
+    "name": "Andr\u00e9 Miguel Valente Silva",
+    "team": "Portugal",
+    "season": "2022",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.6
+  },
+  {
+    "id": "9927_2022",
+    "name": "R\u00faben Diogo Da Silva Neves",
+    "team": "Portugal",
+    "season": "2022",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.3
+  },
+  {
+    "id": "34639_2022",
+    "name": "Vitor Machado Ferreira",
+    "team": "Portugal",
+    "season": "2022",
+    "position": "MID",
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 12
+  },
+  {
+    "id": "12169_2022",
+    "name": "Jo\u00e3o Maria Lobo Alves Palhinha Gon\u00e7alves",
+    "team": "Portugal",
+    "season": "2022",
+    "position": "MID",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 10.1
+  },
+  {
+    "id": "18360_2022",
+    "name": "Rafael Alexandre Concei\u00e7\u00e3o Le\u00e3o",
+    "team": "Portugal",
+    "season": "2022",
+    "position": "MID",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 9.4
+  },
+  {
+    "id": "143854_2022",
+    "name": "Ant\u00f3nio Jo\u00e3o Pereira Albuquerque Tavares Silva",
+    "team": "Portugal",
+    "season": "2022",
+    "position": "MID",
+    "salary": 11,
+    "tier": "WHITE",
+    "avgFP": 7.2
+  },
+  {
+    "id": "40874_2022",
+    "name": "Matheus Luiz Nunes",
+    "team": "Portugal",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 5
+  },
+  {
+    "id": "124506_2022",
+    "name": "Pedro Miguel Correia",
+    "team": "Qatar",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 16.7
+  },
+  {
+    "id": "124900_2022",
+    "name": "Homam Alamin Ahmed",
+    "team": "Qatar",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 14.3
+  },
+  {
+    "id": "124901_2022",
+    "name": "Mohammed Muntari",
+    "team": "Qatar",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 3.8
+  },
+  {
+    "id": "124514_2022",
+    "name": "Abdulaziz Hatem Mohammed Abdullah",
+    "team": "Qatar",
+    "season": "2022",
+    "position": "MID",
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 12
+  },
+  {
+    "id": "124492_2022",
+    "name": "Karim Boudiaf",
+    "team": "Qatar",
+    "season": "2022",
+    "position": "MID",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 9.8
+  },
+  {
+    "id": "149463_2022",
+    "name": "Ali Assadalla Thaimn Qambar",
+    "team": "Qatar",
+    "season": "2022",
+    "position": "MID",
+    "salary": 12,
+    "tier": "WHITE",
+    "avgFP": 8.4
+  },
+  {
+    "id": "124496_2022",
+    "name": "Saad Abdullah Al Sheeb",
+    "team": "Qatar",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 0.6
+  },
+  {
+    "id": "51470_2022",
+    "name": "Riyadh Sharahili",
+    "team": "Saudi Arabia",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 30,
+    "tier": "BLUE",
+    "avgFP": 19.8
+  },
+  {
+    "id": "5188_2022",
+    "name": "Hattan Babhir",
+    "team": "Saudi Arabia",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 16.2
+  },
+  {
+    "id": "5715_2022",
+    "name": "Ali Albulayhi",
+    "team": "Saudi Arabia",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 20,
+    "tier": "GREEN",
+    "avgFP": 13.5
+  },
+  {
+    "id": "57620_2022",
+    "name": "Sultan Abdullah Salim Al Ghannam",
+    "team": "Saudi Arabia",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 18,
+    "tier": "GREEN",
+    "avgFP": 12
+  },
+  {
+    "id": "51705_2022",
+    "name": "Abdulrahman Al-Obood",
+    "team": "Saudi Arabia",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 9.2
+  },
+  {
+    "id": "51710_2022",
+    "name": "Saud Abdullah Abdul Hamid",
+    "team": "Saudi Arabia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 34,
+    "tier": "BLUE",
+    "avgFP": 24.3
+  },
+  {
+    "id": "5191_2022",
+    "name": "Mohammed Al Burayk",
+    "team": "Saudi Arabia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 33,
+    "tier": "BLUE",
+    "avgFP": 24
+  },
+  {
+    "id": "56755_2022",
+    "name": "Abdulelah Saad Hameed Al-Malki",
+    "team": "Saudi Arabia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 17.3
+  },
+  {
+    "id": "51099_2022",
+    "name": "Firas Tariq Nasser Al Albirakan",
+    "team": "Saudi Arabia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 20,
+    "tier": "GREEN",
+    "avgFP": 13.7
+  },
+  {
+    "id": "54144_2022",
+    "name": "Nawaf Shaker Al Abid",
+    "team": "Saudi Arabia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 10.4
+  },
+  {
+    "id": "51103_2022",
+    "name": "Abdullah Mohammed Madu",
+    "team": "Saudi Arabia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 9.7
+  },
+  {
+    "id": "51632_2022",
+    "name": "Sami Khalil Al Naji",
+    "team": "Saudi Arabia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 9.2
+  },
+  {
+    "id": "51096_2022",
+    "name": "Ali Al Hassan",
+    "team": "Saudi Arabia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 5.7
+  },
+  {
+    "id": "8553_2022",
+    "name": "Abdou Diallo",
+    "team": "Senegal",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 19,
+    "tier": "GREEN",
+    "avgFP": 12.1
+  },
+  {
+    "id": "80484_2022",
+    "name": "Iliman Ndiaye",
+    "team": "Senegal",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 18,
+    "tier": "GREEN",
+    "avgFP": 9.5
+  },
+  {
+    "id": "88123_2022",
+    "name": "Cheikh Ahmadou Bamba Mbacke Dieng",
+    "team": "Senegal",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 11,
+    "tier": "WHITE",
+    "avgFP": 5.7
+  },
+  {
+    "id": "15970_2022",
+    "name": "Pape Abou Ciss\u00e9",
+    "team": "Senegal",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 3.2
+  },
+  {
+    "id": "20758_2022",
+    "name": "Kr\u00e9pin Diatta",
+    "team": "Senegal",
+    "season": "2022",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 18.1
+  },
+  {
+    "id": "3684_2022",
+    "name": "Cheikhou Kouyat\u00e9",
+    "team": "Senegal",
+    "season": "2022",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 17.7
+  },
+  {
+    "id": "4506_2022",
+    "name": "Nampalys Mendy",
+    "team": "Senegal",
+    "season": "2022",
+    "position": "MID",
+    "salary": 23,
+    "tier": "GREEN",
+    "avgFP": 16.1
+  },
+  {
+    "id": "50498_2022",
+    "name": "Pape Matar Sarr",
+    "team": "Senegal",
+    "season": "2022",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.3
+  },
+  {
+    "id": "31751_2022",
+    "name": "Path\u00e9 Isma\u00ebl Ciss",
+    "team": "Senegal",
+    "season": "2022",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.3
+  },
+  {
+    "id": "5591_2022",
+    "name": "Filip Kosti\u0107",
+    "team": "Serbia",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 18
+  },
+  {
+    "id": "6321_2022",
+    "name": "Milos Veljkovic",
+    "team": "Serbia",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 19,
+    "tier": "GREEN",
+    "avgFP": 12.5
+  },
+  {
+    "id": "5833_2022",
+    "name": "Nemanja Radonji\u0107",
+    "team": "Serbia",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 16,
+    "tier": "GREEN",
+    "avgFP": 10.3
+  },
+  {
+    "id": "16489_2022",
+    "name": "Nemanja Gudelj",
+    "team": "Serbia",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 11,
+    "tier": "WHITE",
+    "avgFP": 6.7
+  },
+  {
+    "id": "6319_2022",
+    "name": "Luka Jovi\u0107",
+    "team": "Serbia",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 7.2
+  },
+  {
+    "id": "6687_2022",
+    "name": "Sa\u0161a Luki\u0107",
+    "team": "Serbia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 23,
+    "tier": "GREEN",
+    "avgFP": 16.6
+  },
+  {
+    "id": "30179_2022",
+    "name": "Ivan Ili\u0107",
+    "team": "Serbia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.4
+  },
+  {
+    "id": "7993_2022",
+    "name": "Filip Mladenovi\u0107",
+    "team": "Serbia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 16,
+    "tier": "GREEN",
+    "avgFP": 11.3
+  },
+  {
+    "id": "7117_2022",
+    "name": "Filip \u0110uri\u010di\u0107",
+    "team": "Serbia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 5.6
+  },
+  {
+    "id": "10477_2022",
+    "name": "Stefan Mitrovi\u0107",
+    "team": "Serbia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 3.9
+  },
+  {
+    "id": "7145_2022",
+    "name": "Darko Lazovi\u0107",
+    "team": "Serbia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 0.6
+  },
+  {
+    "id": "43565_2022",
+    "name": "Min Jae Kim",
+    "team": "South Korea",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 15.6
+  },
+  {
+    "id": "22740_2022",
+    "name": "Kang-In Lee",
+    "team": "South Korea",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 14.7
+  },
+  {
+    "id": "41711_2022",
+    "name": "Sang-Ho Na",
+    "team": "South Korea",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 20,
+    "tier": "GREEN",
+    "avgFP": 11
+  },
+  {
+    "id": "29966_2022",
+    "name": "Ui-Jo Hwang",
+    "team": "South Korea",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 3.8
+  },
+  {
+    "id": "23264_2022",
+    "name": "Seung-Ho Paik",
+    "team": "South Korea",
+    "season": "2022",
+    "position": "MID",
+    "salary": 35,
+    "tier": "BLUE",
+    "avgFP": 25.2
+  },
+  {
+    "id": "23763_2022",
+    "name": "In-Beom Hwang",
+    "team": "South Korea",
+    "season": "2022",
+    "position": "MID",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 22.3
+  },
+  {
+    "id": "40558_2022",
+    "name": "Jun-Ho Son",
+    "team": "South Korea",
+    "season": "2022",
+    "position": "MID",
+    "salary": 30,
+    "tier": "BLUE",
+    "avgFP": 21.1
+  },
+  {
+    "id": "5618_2022",
+    "name": "Woo-Young Jung",
+    "team": "South Korea",
+    "season": "2022",
+    "position": "MID",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 19.9
+  },
+  {
+    "id": "40564_2022",
+    "name": "Kyung-Won Kwon",
+    "team": "South Korea",
+    "season": "2022",
+    "position": "MID",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 18.7
+  },
+  {
+    "id": "22067_2022",
+    "name": "Woo-Yeong Jeong",
+    "team": "South Korea",
+    "season": "2022",
+    "position": "MID",
+    "salary": 19,
+    "tier": "GREEN",
+    "avgFP": 12.9
+  },
+  {
+    "id": "3135_2022",
+    "name": "Chang-Hoon Kwon",
+    "team": "South Korea",
+    "season": "2022",
+    "position": "MID",
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 11.6
+  },
+  {
+    "id": "5619_2022",
+    "name": "Hyeon-Woo Jo",
+    "team": "South Korea",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 1.5
+  },
+  {
+    "id": "39161_2022",
+    "name": "Alejandro Balde Mart\u00ednez",
+    "team": "Spain",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 15.9
+  },
+  {
+    "id": "4353_2022",
+    "name": "Aymeric Laporte",
+    "team": "Spain",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 19,
+    "tier": "GREEN",
+    "avgFP": 12.5
+  },
+  {
+    "id": "6748_2022",
+    "name": "Ferr\u00e1n Torres Garc\u00eda",
+    "team": "Spain",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 33,
+    "tier": "BLUE",
+    "avgFP": 18.3
+  },
+  {
+    "id": "5719_2022",
+    "name": "Marco Asensio Willemsen",
+    "team": "Spain",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 14.6
+  },
+  {
+    "id": "68574_2022",
+    "name": "Nicholas Williams Arthuer",
+    "team": "Spain",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 5.2
+  },
+  {
+    "id": "30756_2022",
+    "name": "Anssumane Fati",
+    "team": "Spain",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 0.2
+  },
+  {
+    "id": "133353_2022",
+    "name": "Pablo Mart\u00edn P\u00e1ez Gavira",
+    "team": "Spain",
+    "season": "2022",
+    "position": "MID",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 19.8
+  },
+  {
+    "id": "6583_2022",
+    "name": "Carlos Soler Barrag\u00e1n",
+    "team": "Spain",
+    "season": "2022",
+    "position": "MID",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 19.2
+  },
+  {
+    "id": "5199_2022",
+    "name": "Jorge Resurrecci\u00f3n Merodio",
+    "team": "Spain",
+    "season": "2022",
+    "position": "MID",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 19.2
+  },
+  {
+    "id": "5721_2022",
+    "name": "Daniel Carvajal Ramos",
+    "team": "Spain",
+    "season": "2022",
+    "position": "MID",
+    "salary": 25,
+    "tier": "GREEN",
+    "avgFP": 18.1
+  },
+  {
+    "id": "6892_2022",
+    "name": "Pau Francisco Torres",
+    "team": "Spain",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 1.2
+  },
+  {
+    "id": "5549_2022",
+    "name": "Manuel Obafemi Akanji",
+    "team": "Switzerland",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 31,
+    "tier": "BLUE",
+    "avgFP": 20.7
+  },
+  {
+    "id": "5544_2022",
+    "name": "Ricardo Iv\u00e1n Rodr\u00edguez Araya",
+    "team": "Switzerland",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 18.7
+  },
+  {
+    "id": "30401_2022",
+    "name": "Ruben Vargas",
+    "team": "Switzerland",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 21,
+    "tier": "GREEN",
+    "avgFP": 11.4
+  },
+  {
+    "id": "5538_2022",
+    "name": "Denis Lemi Zakaria Lako Lado",
+    "team": "Switzerland",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 7.8
+  },
+  {
+    "id": "29006_2022",
+    "name": "Noah Okafor",
+    "team": "Switzerland",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 12,
+    "tier": "WHITE",
+    "avgFP": 6.2
+  },
+  {
+    "id": "16026_2022",
+    "name": "Djibril Sow",
+    "team": "Switzerland",
+    "season": "2022",
+    "position": "MID",
+    "salary": 19,
+    "tier": "GREEN",
+    "avgFP": 13.3
+  },
+  {
+    "id": "3913_2022",
+    "name": "Edimilson Fernandes",
+    "team": "Switzerland",
+    "season": "2022",
+    "position": "MID",
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 12.1
+  },
+  {
+    "id": "5543_2022",
+    "name": "Haris Seferovi\u0107",
+    "team": "Switzerland",
+    "season": "2022",
+    "position": "MID",
+    "salary": 17,
+    "tier": "GREEN",
+    "avgFP": 11.5
+  },
+  {
+    "id": "29012_2022",
+    "name": "Eray Ervin C\u00f6mert",
+    "team": "Switzerland",
+    "season": "2022",
+    "position": "MID",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 9.2
+  },
+  {
+    "id": "12326_2022",
+    "name": "Renato Steffen",
+    "team": "Switzerland",
+    "season": "2022",
+    "position": "MID",
+    "salary": 13,
+    "tier": "WHITE",
+    "avgFP": 8.6
+  },
+  {
+    "id": "8561_2022",
+    "name": "Fabian Frei",
+    "team": "Switzerland",
+    "season": "2022",
+    "position": "MID",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 4.5
+  },
+  {
+    "id": "5651_2022",
+    "name": "Yassine Meriah",
+    "team": "Tunisia",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 19.2
+  },
+  {
+    "id": "5655_2022",
+    "name": "Dylan Daniel Mahmoud Bronn",
+    "team": "Tunisia",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 17.6
+  },
+  {
+    "id": "105944_2022",
+    "name": "Wajdi Kechrida",
+    "team": "Tunisia",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 19,
+    "tier": "GREEN",
+    "avgFP": 12.4
+  },
+  {
+    "id": "3767_2022",
+    "name": "Ellyes Joris Skhiri",
+    "team": "Tunisia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 48,
+    "tier": "PURPLE",
+    "avgFP": 34.8
+  },
+  {
+    "id": "44955_2022",
+    "name": "A\u00efssa Bilal La\u00efdouni",
+    "team": "Tunisia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 40,
+    "tier": "PURPLE",
+    "avgFP": 29.1
+  },
+  {
+    "id": "5647_2022",
+    "name": "Ali Ma\u00e2loul",
+    "team": "Tunisia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 38,
+    "tier": "BLUE",
+    "avgFP": 27.7
+  },
+  {
+    "id": "3557_2022",
+    "name": "Na\u00efm Sliti",
+    "team": "Tunisia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 36,
+    "tier": "BLUE",
+    "avgFP": 26
+  },
+  {
+    "id": "5650_2022",
+    "name": "Ferjani Sassi",
+    "team": "Tunisia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 35,
+    "tier": "BLUE",
+    "avgFP": 25.5
+  },
+  {
+    "id": "25582_2022",
+    "name": "Nader Ghandri",
+    "team": "Tunisia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 18.7
+  },
+  {
+    "id": "102816_2022",
+    "name": "Mohamed Ali Ben Romdhane",
+    "team": "Tunisia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.5
+  },
+  {
+    "id": "35592_2022",
+    "name": "Anis Ben Slimane",
+    "team": "Tunisia",
+    "season": "2022",
+    "position": "MID",
+    "salary": 22,
+    "tier": "GREEN",
+    "avgFP": 15.3
+  },
+  {
+    "id": "12524_2022",
+    "name": "Walker Zimmerman",
+    "team": "United States",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 27,
+    "tier": "GREEN",
+    "avgFP": 18
+  },
+  {
+    "id": "34339_2022",
+    "name": "Giovanni Reyna",
+    "team": "United States",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 29,
+    "tier": "BLUE",
+    "avgFP": 15.8
+  },
+  {
+    "id": "24243_2022",
+    "name": "Brenden Aaronson",
+    "team": "United States",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 7.5
+  },
+  {
+    "id": "22433_2022",
+    "name": "Jesus Ferreira",
+    "team": "United States",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 1.4
+  },
+  {
+    "id": "15971_2022",
+    "name": "Cameron Carter-Vickers",
+    "team": "United States",
+    "season": "2022",
+    "position": "MID",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 18.2
+  },
+  {
+    "id": "22008_2022",
+    "name": "Haji Wright",
+    "team": "United States",
+    "season": "2022",
+    "position": "MID",
+    "salary": 23,
+    "tier": "GREEN",
+    "avgFP": 16.6
+  },
+  {
+    "id": "8526_2022",
+    "name": "Weston McKennie",
+    "team": "United States",
+    "season": "2022",
+    "position": "MID",
+    "salary": 21,
+    "tier": "GREEN",
+    "avgFP": 14.8
+  },
+  {
+    "id": "13035_2022",
+    "name": "Kellyn Kai Perry-Acosta",
+    "team": "United States",
+    "season": "2022",
+    "position": "MID",
+    "salary": 11,
+    "tier": "WHITE",
+    "avgFP": 7.6
+  },
+  {
+    "id": "5248_2022",
+    "name": "Jos\u00e9 Mart\u00edn C\u00e1ceres Silva",
+    "team": "Uruguay",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 28,
+    "tier": "BLUE",
+    "avgFP": 18.6
+  },
+  {
+    "id": "32478_2022",
+    "name": "Darwin Gabriel N\u00fa\u00f1ez Ribeiro",
+    "team": "Uruguay",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 8.1
+  },
+  {
+    "id": "36288_2022",
+    "name": "Facundo Pellistri Rebollo",
+    "team": "Uruguay",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 12,
+    "tier": "WHITE",
+    "avgFP": 6.3
+  },
+  {
+    "id": "5258_2022",
+    "name": "Giorgian Daniel De Arrascaeta Benedetti",
+    "team": "Uruguay",
+    "season": "2022",
+    "position": "MID",
+    "salary": 39,
+    "tier": "BLUE",
+    "avgFP": 27.9
+  },
+  {
+    "id": "5264_2022",
+    "name": "Guillermo Varela Olivera",
+    "team": "Uruguay",
+    "season": "2022",
+    "position": "MID",
+    "salary": 32,
+    "tier": "BLUE",
+    "avgFP": 22.8
+  },
+  {
+    "id": "5255_2022",
+    "name": "Mat\u00edas Vecino Falero",
+    "team": "Uruguay",
+    "season": "2022",
+    "position": "MID",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 17.3
+  },
+  {
+    "id": "5267_2022",
+    "name": "N\u00e9stor Fernando Muslera Micol",
+    "team": "Uruguay",
+    "season": "2022",
+    "position": "MID",
+    "salary": 20,
+    "tier": "GREEN",
+    "avgFP": 14
+  },
+  {
+    "id": "6297_2022",
+    "name": "Maximiliano G\u00f3mez Gonz\u00e1lez",
+    "team": "Uruguay",
+    "season": "2022",
+    "position": "MID",
+    "salary": 15,
+    "tier": "WHITE",
+    "avgFP": 10
+  },
+  {
+    "id": "28729_2022",
+    "name": "Diego Nicol\u00e1s De La Cruz Arcosa",
+    "team": "Uruguay",
+    "season": "2022",
+    "position": "MID",
+    "salary": 13,
+    "tier": "WHITE",
+    "avgFP": 9
+  },
+  {
+    "id": "6300_2022",
+    "name": "Sebasti\u00e1n Coates Ni\u00f3n",
+    "team": "Uruguay",
+    "season": "2022",
+    "position": "MID",
+    "salary": 12,
+    "tier": "WHITE",
+    "avgFP": 8.4
+  },
+  {
+    "id": "3086_2022",
+    "name": "Ben Davies",
+    "team": "Wales",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 24,
+    "tier": "GREEN",
+    "avgFP": 15.8
+  },
+  {
+    "id": "4774_2022",
+    "name": "Connor Roberts",
+    "team": "Wales",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 14,
+    "tier": "WHITE",
+    "avgFP": 8.9
+  },
+  {
+    "id": "29377_2022",
+    "name": "Brennan Johnson",
+    "team": "Wales",
+    "season": "2022",
+    "position": "DEF",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 6.5
+  },
+  {
+    "id": "11252_2022",
+    "name": "Daniel James",
+    "team": "Wales",
+    "season": "2022",
+    "position": "FWD",
+    "salary": 10,
+    "tier": "WHITE",
+    "avgFP": 3.1
+  },
+  {
+    "id": "10931_2022",
+    "name": "Joe Allen",
+    "team": "Wales",
+    "season": "2022",
+    "position": "MID",
+    "salary": 26,
+    "tier": "GREEN",
+    "avgFP": 18.3
+  },
+  {
+    "id": "22074_2022",
+    "name": "Joseff Morrell",
+    "team": "Wales",
+    "season": "2022",
+    "position": "MID",
+    "salary": 12,
+    "tier": "WHITE",
+    "avgFP": 8.2
+  }
+]
