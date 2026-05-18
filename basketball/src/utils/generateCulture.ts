@@ -291,20 +291,50 @@ Return a JSON array with one object per player. Each object MUST start with thes
   }
 }`;
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY ?? "",
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      max_tokens: MAX_TOKENS,
-      system: SYSTEM,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
+  // Retry-with-backoff. Network-layer errors ("fetch failed") and 5xx
+  // responses get up to 3 attempts with exponential backoff (1s → 2s → 4s).
+  // 4xx responses are NOT retried — auth / bad-request errors don't
+  // self-heal and retrying just burns time.
+  const MAX_ATTEMPTS = 3;
+  let res!: Response;
+  let lastErr: unknown = null;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": process.env.ANTHROPIC_API_KEY ?? "",
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          max_tokens: MAX_TOKENS,
+          system: SYSTEM,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      if (res.status >= 500 && attempt < MAX_ATTEMPTS) {
+        // 5xx — server-side, retryable
+        const backoff = 1000 * Math.pow(2, attempt - 1);
+        console.log(`  (5xx on attempt ${attempt}, retrying in ${backoff}ms)`);
+        await new Promise(r => setTimeout(r, backoff));
+        continue;
+      }
+      break; // 2xx, 3xx, or final-attempt 5xx falls through to !res.ok handler
+    } catch (err) {
+      lastErr = err;
+      if (attempt < MAX_ATTEMPTS) {
+        const backoff = 1000 * Math.pow(2, attempt - 1);
+        const msg = err instanceof Error ? err.message : String(err);
+        console.log(`  (network error "${msg}" on attempt ${attempt}, retrying in ${backoff}ms)`);
+        await new Promise(r => setTimeout(r, backoff));
+        continue;
+      }
+      throw err;
+    }
+  }
+  if (!res) throw (lastErr ?? new Error("fetch failed after retries"));
 
   if (!res.ok) {
     const err = await res.text();
