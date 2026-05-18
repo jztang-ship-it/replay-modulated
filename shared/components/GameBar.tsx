@@ -119,6 +119,12 @@ type Props = {
   ftueReplayPulse?: boolean;
   /** FTUE: hide balance+wage+legend row until after DRAW */
   ftueHideBalance?: boolean;
+  /** Challenge mode: the recipient is playing a friend's hand. Hides
+   *  the bet-multiplier selector AND the balance/wallet display since
+   *  the matchup is decided by head-to-head score comparison, not by
+   *  bet payout. Internally the effective multiplier is locked to 1x
+   *  by the caller (GameView) — this prop only controls visibility. */
+  challengeMode?: boolean;
   /** FTUE: CoachLayer spotlight target for primary action (Deal / Draw / replay) */
   dataFtuePrimaryAnchor?: "deal" | "draw";
   /** Hide the built-in TierBar — use when an external TierGauge is shown */
@@ -156,6 +162,9 @@ type Props = {
    * behavior (bonus row shown when todaysStars is non-empty).
    */
   sportKey?: string;
+  /** Challenge mode: when present, replace the tier-countdown label with
+   *  "TARGET: {fp} — {name}" so the recipient knows the score to beat. */
+  challengeTarget?: { name: string; fp: number };
 };
 
 const MULTIPLIERS = [1, 3, 5, 10];
@@ -392,6 +401,7 @@ function CoinBurst({ active, color }: { active: boolean; color: string }) {
 function TierBar({
   totalFp, gameState, winTiers, isCelebration,
   lastCardProgress, lastCardFp, onOvershootSettled, ftuePulseNearMiss = false,
+  challengeTarget,
 }: {
   totalFp: number;
   gameState: GameStateLabel;
@@ -401,6 +411,7 @@ function TierBar({
   lastCardFp: number;
   onOvershootSettled: () => void;
   ftuePulseNearMiss?: boolean;
+  challengeTarget?: { name: string; fp: number };
 }) {
   const { label, fillPct, color, glow, fptNeeded } = getTierState(totalFp, winTiers);
   const showBar = gameState !== "IDLE";
@@ -499,11 +510,17 @@ function TierBar({
         </span>
         <span style={{
           fontSize: 11, fontWeight: 700, letterSpacing: 0.1, fontFamily: FF,
-          color: showBar ? (fptNeeded === 0 ? displayColor : "rgba(255,255,255,0.50)") : "rgba(255,255,255,0.30)",
+          color: challengeTarget
+            ? "#FFB14A"
+            : showBar
+              ? (fptNeeded === 0 ? displayColor : "rgba(255,255,255,0.50)")
+              : "rgba(255,255,255,0.30)",
         }}>
-          {showBar
-            ? fptNeeded > 0 ? `${fptNeeded.toFixed(1)} FP to ${label}` : `✓ ${label}`
-            : `${winTiers[0].minFp} FP to ${winTiers[0].label}`}
+          {challengeTarget
+            ? `TARGET: ${challengeTarget.fp.toFixed(1)} — ${challengeTarget.name}`
+            : showBar
+              ? fptNeeded > 0 ? `${fptNeeded.toFixed(1)} FP to ${label}` : `✓ ${label}`
+              : `${winTiers[0].minFp} FP to ${winTiers[0].label}`}
         </span>
       </div>
 
@@ -1328,6 +1345,7 @@ export function GameBar({
   ftueReplayBlocked = false,
   ftueReplayPulse = false,
   ftueHideBalance = false,
+  challengeMode = false,
   dataFtuePrimaryAnchor,
   hideTierBar = false,
   tierGaugeSlot,
@@ -1340,6 +1358,7 @@ export function GameBar({
   onLegendOpened,
   onTrophyOpened,
   sportKey,
+  challengeTarget,
 }: Props) {
   // Trophy button: 36×36 circular, sits absolutely positioned right of the
   // action button row's container. Border + icon flip to gold once the user
@@ -1562,18 +1581,19 @@ export function GameBar({
 
           {/* Action row — 👛 wallet left, button center, legend+trophy right */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "relative", paddingTop: 2, minHeight: 44 }}>
-            {/* Wallet chip — left */}
-            <div style={{ position: "absolute", left: 0, display: "flex", alignItems: "center", gap: 4, opacity: ftueHideBalance ? 0 : 1, transition: "opacity 0.3s ease" }}>
-
-              <span style={{
-                fontSize: 14, fontWeight: 900, lineHeight: 1, fontVariantNumeric: "tabular-nums",
-                color: balanceColor === "win" ? "#22C55E" : balanceColor === "loss" ? "#FF3B30" : "#FFFFFF",
-                filter: balanceColor !== "default" ? `drop-shadow(0 0 5px ${balanceColor === "win" ? "#22C55E88" : "#FF3B3088"})` : "none",
-                transition: "color 300ms ease, filter 300ms ease",
-              }}>
-                $<RollingNumber value={displayBalance} decimals={0} duration={1200} />
-              </span>
-            </div>
+            {/* Wallet chip — left. Hidden in challenge mode (no wager). */}
+            {!challengeMode && (
+              <div style={{ position: "absolute", left: 0, display: "flex", alignItems: "center", gap: 4, opacity: ftueHideBalance ? 0 : 1, transition: "opacity 0.3s ease" }}>
+                <span style={{
+                  fontSize: 14, fontWeight: 900, lineHeight: 1, fontVariantNumeric: "tabular-nums",
+                  color: balanceColor === "win" ? "#22C55E" : balanceColor === "loss" ? "#FF3B30" : "#FFFFFF",
+                  filter: balanceColor !== "default" ? `drop-shadow(0 0 5px ${balanceColor === "win" ? "#22C55E88" : "#FF3B3088"})` : "none",
+                  transition: "color 300ms ease, filter 300ms ease",
+                }}>
+                  $<RollingNumber value={displayBalance} decimals={0} duration={1200} />
+                </span>
+              </div>
+            )}
 
             <button
               onClick={onAction}
@@ -1669,7 +1689,7 @@ export function GameBar({
           document.body
         )}
         {ReactDOM.createPortal(
-          splitMultiplierRowVisible ? multiplierRow : <></>,
+          splitMultiplierRowVisible && !challengeMode ? multiplierRow : <></>,
           splitFooter!.multipliersHost as Element
         )}
         {ReactDOM.createPortal(controlsFooter, splitFooter!.controlsHost as Element)}
@@ -1707,6 +1727,7 @@ export function GameBar({
             lastCardFp={lastCardFp}
             onOvershootSettled={() => setOvershootSettled(true)}
             ftuePulseNearMiss={ftuePulseNearMiss}
+            challengeTarget={challengeTarget}
           />
         </div>}
 
@@ -1741,9 +1762,9 @@ export function GameBar({
             transition: "filter 0.35s ease, opacity 0.35s ease",
             pointerEvents: showCelebContent ? "none" : "auto",
           }}>
-            {multiplierRow}
+            {!challengeMode && multiplierRow}
 
-            <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 6, marginBottom: 6, opacity: ftueHideBalance ? 0 : 1, pointerEvents: ftueHideBalance ? "none" as const : "auto" as const, transition: "opacity 0.3s ease" }}>
+            <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 6, marginBottom: 6, opacity: (ftueHideBalance || challengeMode) ? 0 : 1, pointerEvents: (ftueHideBalance || challengeMode) ? "none" as const : "auto" as const, transition: "opacity 0.3s ease" }}>
               {/* Balance — left */}
               <div ref={walletRef} style={{ flexShrink: 0 }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>

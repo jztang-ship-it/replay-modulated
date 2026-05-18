@@ -1,89 +1,86 @@
 /**
- * chad.ts — The voice of ReplayMod.
+ * chad.ts — Chad voice, general (non-challenge) commentary surfaces.
  *
- * Chad is the game's personality layer. Norman Chad energy: dry wit,
- * acts unimpressed but clearly loves the game, talks to you like a
- * buddy at a sportsbook who's seen it all.
+ * Topic-keyed banks for the Chad-commentary system: welcome, daily-return,
+ * win-back, streak intro, ROOKIE first-win, leaderboard intro/explainer,
+ * big-win, retention, MVP thanks, dev 4th-wall.
  *
- * This file is the SINGLE source for all non-results commentary.
- * Results commentary lives in the template bank / Claude pipeline.
- * Chad handles: greetings, nudges, promotions, streaks, milestones.
- *
- * Each category has multiple variants — pick randomly to avoid repetition.
- * Keep every message ≤ 150 chars (3 lines at 12px on mobile).
+ * Challenge-specific surfaces (intro chip, comparison tactical line,
+ * trash-talk strip, trigger framing, rivalry-back chip, normal-play
+ * handoff welcome) live in chadChallenge.ts. Split per the post-Tier-1
+ * culture work — challenge flows have their own voice ergonomics
+ * (recipient-facing, two-step rivalry continuation) that diverge from
+ * single-player Chad surfaces.
  */
-
-// ── Helpers ────────────────────────────────────────────────────────────────
 
 function pick(arr: string[]): string {
   return arr[Math.floor(Math.random() * arr.length)] ?? arr[0];
 }
 
-// ── Categories ─────────────────────────────────────────────────────────────
 
 /** First time transitioning from FTUE to real game */
 const WELCOME: string[] = [
-  "Look who decided to play for real. Tap the gold icon to see all the scoring rules and your target to beat.",
-  "Training wheels are off. Tap the gold icon to see all the scoring rules and your target to beat.",
-  "Alright, you're in. Tap the gold icon to see all the scoring rules and your target to beat.",
+  "Tutorial's over. Tap the gold icon — that's where the rules and your target live. Don't make me explain twice.",
+  "Training wheels off. Gold icon up top is the scoring rules and the bar to beat. Memorize it.",
+  "You're playing for coins now. Tap the gold icon — rules, targets, payouts. Know them or wing it.",
 ];
 
 /** User returns within 24hrs */
 const DAILY_RETURN: string[] = [
-  "You're back. Good. New bonus players loaded — one of them might actually show up tonight.",
-  "Another day, another roster. Bonus players rotated — same rules, different names.",
-  "Back for more. Bonus lineup refreshed overnight — might want to peek before you deal.",
-  "The regulars are here. Bonus players swapped — tap the gold icon to see today's lineup.",
+  "You're back. Bonus pool rotated overnight — one of them might actually clock in tonight, the rest will disappoint you.",
+  "New day, new bonus pool. Same rules, different chances to overpay for the wrong guy.",
+  "Back for more. Bonus pool refreshed; peek before you deal or learn the hard way.",
+  "Regulars are back. Bonus pool swapped — tap the gold icon and see who's bumped tonight.",
 ];
 
 /** User returns after 3+ days away */
 const WIN_BACK: string[] = [
-  "Stranger. Bonus pool's been growing without you. Three players are juiced up — might want to look.",
-  "Oh you remembered we exist. Daily bonuses refreshed, leaderboard's wide open.",
-  "Been a minute. Bonus players rotated a few times since you left. Today's lineup looks decent.",
+  "Stranger. Pool's been compounding without you. Three players are juiced up — coward play is ignoring them.",
+  "You remembered we exist. Daily bonuses refreshed, leaderboard's wide open — top 10 split coins, your spot's been empty.",
+  "Been a minute. Bonus pool's cycled a few times since you bailed. Tonight's lineup is honest — read it.",
 ];
 
 /** First time hitting a 2-win streak */
 const STREAK_INTRO: string[] = [
-  "Two in a row — now we're cooking. Keep it going and the multiplier kicks in. Don't get cocky.",
-  "Back to back wins. See those fire emojis? Three in a row hits 1.3x. No pressure.",
-  "Two straight. Streak multiplier is warming up — one more and the bonus kicks in.",
+  "Two straight. Fire emojis are real — one more win, multiplier hits 1.3x. Don't trip on the way.",
+  "Back to back. Multiplier wakes up at three straight. Stack another or watch it die.",
+  "Two in a row. The multiplier's warming up; ice it with one more or restart from zero.",
 ];
 
 /** First time landing a ROOKIE win — explain the half-money-back rule and
  *  point at the legend modal so the user can see the full payout table. */
 const ROOKIE_FIRST_WIN: string[] = [
-  "You didn't win, but you didn't lose all of it either — half your money's back. Tap the gold icon for the full scoring rules.",
-  "Rookie tier. Not a payout, not a bust — half of your bet comes back. Tap the gold icon to see how the tiers stack.",
-  "Half-back. Rookie tier means you didn't get there but you didn't get cooked either. Tap the legend icon — the rules are worth knowing.",
+  "Didn't win. Didn't get cooked. Half your bet's back — that's ROOKIE tier. Tap the gold icon if you want to chase the real money.",
+  "Rookie tier, half-back. Not a win, not a loss — just rent paid. Tap the gold icon and see what the actual tiers pay.",
+  "Half your bet, returned to sender. ROOKIE tier exists so the floor doesn't eat you alive — tap the legend icon and learn how to clear it.",
 ];
 
 /** First time qualifying for leaderboard (anonymous user) */
 const LEADERBOARD_INTRO: string[] = [
-  "Well well, you made the board. Top 10 split the bonus pool — might want to drop an email so nobody steals your spot.",
-  "You qualified for the leaderboard. Don't celebrate yet — check where you actually landed.",
-  "Look at that, you're on the board. Tap to get coins — add an email to lock in your claim.",
+  "You made the board. Top 10 split the bonus pool — drop an email or watch some stranger inherit your spot.",
+  "Qualified. Don't celebrate — go look where you actually landed before you start texting people.",
+  "On the board. Tap to claim coins; without an email it's just decoration.",
 ];
 
 /** How the leaderboard + bonus pool works — shown after 3rd hand */
 const LEADERBOARD_EXPLAINER: string[] = [
-  "See that bonus pool up top? Every bet feeds it. End of the day, top 10 hands and session scores split the pot. Play more, pool grows, everybody eats.",
-  "Here's the deal — 5% of every bet goes into the bonus pool. Best single hand and best total session score make the leaderboard. Top 10 get paid.",
-  "That bonus pool isn't decoration. It's real coins. Best hands of the day split it — so every hand you play is a shot at the board.",
+  "See the bonus pool up top? Every bet feeds it. Top 10 hands and top 10 sessions split it at midnight — more hands, bigger pool, everybody eats.",
+  "5% of every bet feeds the pool. Best single hand makes one board, best session score makes another. Top 10 each get paid — show up or don't.",
+  "The pool isn't decoration — it's real coins, paid at midnight. Every hand you play is a swing at the board.",
 ];
 
 /** Big win nudge (anonymous, hit ALL_STAR+) */
 const BIG_WIN: string[] = [
-  "That's a real score right there. Might want to save your account before luck runs out.",
-  "Solid hit. Would be a shame to lose that progress — save your account.",
-  "Nice hand. Your coins are real but your account isn't — might want to fix that.",
+  "That's a real score. Save your account before variance comes back to collect.",
+  "Solid hit. Lose this device, lose this hand — save your account.",
+  "Nice hand. Coins are real, account isn't — fix it before the browser does.",
 ];
 
 /** Retention nudge (12+ hands, still anonymous) */
 const RETENTION: string[] = [
-  "You've been at this a while. Save your account — play on any device, keep your coins.",
-  "12 hands deep and still anonymous. Your streak and coins deserve a real account.",
-  "At this point you're a regular. Save your progress — it takes 10 seconds.",
+  "You're not a tourist anymore. Save your account or risk feeding the next hand to a stranger's browser.",
+  "12 hands deep, still anonymous. The streak you're building isn't backed up — fix that.",
+  "At this point you're a regular. Save the progress — 10 seconds to lock it, forever to lose it.",
 ];
 
 /** MVP-test personal thanks — fires once after 5+ hands.
@@ -105,7 +102,7 @@ const DEV_4THWALL: string[] = [
   "Real talk for a second. This is the team, not Chad. You're one of the first hundred-ish people playing the full loop. We're grateful, nervous, and fixing things as we watch. Stay if the game's good, leave if it isn't. Either way — thanks for the data and the time.",
 ];
 
-// ── Public API ─────────────────────────────────────────────────────────────
+// ── Public API ────────────────────────────────────────────────────────────
 
 export type ChadTopic =
   | "welcome"

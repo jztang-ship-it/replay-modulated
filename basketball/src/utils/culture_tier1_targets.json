@@ -1,0 +1,844 @@
+{
+  "players": [
+    {
+      "basePlayerId": "2546",
+      "name": "Carmelo Anthony",
+      "lastNameKey": "anthony",
+      "qualifyingTeams": [
+        "DEN",
+        "NYK"
+      ]
+    },
+    {
+      "basePlayerId": "202696",
+      "name": "Nikola Vu\u010devi\u0107",
+      "lastNameKey": "vucevic",
+      "qualifyingTeams": [
+        "CHI",
+        "ORL"
+      ]
+    },
+    {
+      "basePlayerId": "201942",
+      "name": "DeMar DeRozan",
+      "lastNameKey": "derozan",
+      "qualifyingTeams": [
+        "CHI",
+        "SAC",
+        "SAS",
+        "TOR"
+      ]
+    },
+    {
+      "basePlayerId": "202331",
+      "name": "Paul George",
+      "lastNameKey": "george",
+      "qualifyingTeams": [
+        "IND",
+        "LAC",
+        "OKC",
+        "PHI"
+      ]
+    },
+    {
+      "basePlayerId": "1712",
+      "name": "Antawn Jamison",
+      "lastNameKey": "jamison",
+      "qualifyingTeams": [
+        "CLE",
+        "GSW",
+        "WAS"
+      ]
+    },
+    {
+      "basePlayerId": "2547",
+      "name": "Chris Bosh",
+      "lastNameKey": "bosh",
+      "qualifyingTeams": [
+        "MIA",
+        "TOR"
+      ]
+    },
+    {
+      "basePlayerId": "202710",
+      "name": "Jimmy Butler III",
+      "lastNameKey": "butler",
+      "qualifyingTeams": [
+        "CHI",
+        "GSW",
+        "MIA",
+        "MIN",
+        "PHI"
+      ]
+    },
+    {
+      "basePlayerId": "201950",
+      "name": "Jrue Holiday",
+      "lastNameKey": "holiday",
+      "qualifyingTeams": [
+        "MIL",
+        "NOP",
+        "PHI"
+      ]
+    },
+    {
+      "basePlayerId": "2216",
+      "name": "Zach Randolph",
+      "lastNameKey": "randolph",
+      "qualifyingTeams": [
+        "LAC",
+        "MEM",
+        "NYK",
+        "POR"
+      ]
+    },
+    {
+      "basePlayerId": "1884",
+      "name": "Baron Davis",
+      "lastNameKey": "davis",
+      "qualifyingTeams": [
+        "CHH",
+        "GSW",
+        "LAC",
+        "NOH"
+      ]
+    },
+    {
+      "basePlayerId": "203468",
+      "name": "CJ McCollum",
+      "lastNameKey": "mccollum",
+      "qualifyingTeams": [
+        "NOP",
+        "POR"
+      ]
+    },
+    {
+      "basePlayerId": "202322",
+      "name": "John Wall",
+      "lastNameKey": "wall",
+      "qualifyingTeams": [
+        "HOU",
+        "WAS"
+      ]
+    },
+    {
+      "basePlayerId": "200768",
+      "name": "Kyle Lowry",
+      "lastNameKey": "lowry",
+      "qualifyingTeams": [
+        "HOU",
+        "MIA",
+        "TOR"
+      ]
+    },
+    {
+      "basePlayerId": "959",
+      "name": "Steve Nash",
+      "lastNameKey": "nash",
+      "qualifyingTeams": [
+        "DAL",
+        "PHX"
+      ]
+    },
+    {
+      "basePlayerId": "201143",
+      "name": "Al Horford",
+      "lastNameKey": "horford",
+      "qualifyingTeams": [
+        "ATL",
+        "BOS"
+      ]
+    },
+    {
+      "basePlayerId": "2744",
+      "name": "Al Jefferson",
+      "lastNameKey": "jefferson",
+      "qualifyingTeams": [
+        "BOS",
+        "CHA",
+        "MIN",
+        "UTA"
+      ]
+    },
+    {
+      "basePlayerId": "952",
+      "name": "Antoine Walker",
+      "lastNameKey": "walker",
+      "qualifyingTeams": [
+        "BOS",
+        "DAL"
+      ]
+    },
+    {
+      "basePlayerId": "2430",
+      "name": "Carlos Boozer",
+      "lastNameKey": "boozer",
+      "qualifyingTeams": [
+        "CHI",
+        "CLE",
+        "UTA"
+      ]
+    },
+    {
+      "basePlayerId": "1882",
+      "name": "Elton Brand",
+      "lastNameKey": "brand",
+      "qualifyingTeams": [
+        "CHI",
+        "LAC",
+        "PHI"
+      ]
+    },
+    {
+      "basePlayerId": "202695",
+      "name": "Kawhi Leonard",
+      "lastNameKey": "leonard",
+      "qualifyingTeams": [
+        "LAC",
+        "SAS",
+        "TOR"
+      ]
+    },
+    {
+      "basePlayerId": "202689",
+      "name": "Kemba Walker",
+      "lastNameKey": "walker",
+      "qualifyingTeams": [
+        "BOS",
+        "CHA"
+      ]
+    },
+    {
+      "basePlayerId": "201188",
+      "name": "Marc Gasol",
+      "lastNameKey": "gasol",
+      "qualifyingTeams": [
+        "MEM",
+        "TOR"
+      ]
+    },
+    {
+      "basePlayerId": "948",
+      "name": "Marcus Camby",
+      "lastNameKey": "camby",
+      "qualifyingTeams": [
+        "DEN",
+        "LAC",
+        "NYK",
+        "POR",
+        "TOR"
+      ]
+    },
+    {
+      "basePlayerId": "951",
+      "name": "Ray Allen",
+      "lastNameKey": "allen",
+      "qualifyingTeams": [
+        "MIL",
+        "SEA"
+      ]
+    },
+    {
+      "basePlayerId": "203497",
+      "name": "Rudy Gobert",
+      "lastNameKey": "gobert",
+      "qualifyingTeams": [
+        "MIN",
+        "UTA"
+      ]
+    },
+    {
+      "basePlayerId": "203083",
+      "name": "Andre Drummond",
+      "lastNameKey": "drummond",
+      "qualifyingTeams": [
+        "CLE",
+        "DET",
+        "LAL"
+      ]
+    },
+    {
+      "basePlayerId": "203078",
+      "name": "Bradley Beal",
+      "lastNameKey": "beal",
+      "qualifyingTeams": [
+        "PHX",
+        "WAS"
+      ]
+    },
+    {
+      "basePlayerId": "2746",
+      "name": "Josh Smith",
+      "lastNameKey": "smith",
+      "qualifyingTeams": [
+        "ATL",
+        "DET"
+      ]
+    },
+    {
+      "basePlayerId": "204001",
+      "name": "Kristaps Porzi\u0146\u0123is",
+      "lastNameKey": "porzingis",
+      "qualifyingTeams": [
+        "BOS",
+        "DAL",
+        "NYK",
+        "WAS"
+      ]
+    },
+    {
+      "basePlayerId": "1885",
+      "name": "Lamar Odom",
+      "lastNameKey": "odom",
+      "qualifyingTeams": [
+        "LAC",
+        "LAL",
+        "MIA"
+      ]
+    },
+    {
+      "basePlayerId": "200752",
+      "name": "Rudy Gay",
+      "lastNameKey": "gay",
+      "qualifyingTeams": [
+        "MEM",
+        "SAC",
+        "TOR"
+      ]
+    },
+    {
+      "basePlayerId": "1890",
+      "name": "Shawn Marion",
+      "lastNameKey": "marion",
+      "qualifyingTeams": [
+        "MIA",
+        "PHX"
+      ]
+    },
+    {
+      "basePlayerId": "2225",
+      "name": "Tony Parker",
+      "lastNameKey": "parker",
+      "qualifyingTeams": [
+        "SAS"
+      ]
+    },
+    {
+      "basePlayerId": "2405",
+      "name": "Amar'e Stoudemire",
+      "lastNameKey": "stoudemire",
+      "qualifyingTeams": [
+        "NYK",
+        "PHX"
+      ]
+    },
+    {
+      "basePlayerId": "1889",
+      "name": "Andre Miller",
+      "lastNameKey": "miller",
+      "qualifyingTeams": [
+        "CLE",
+        "DEN",
+        "PHI"
+      ]
+    },
+    {
+      "basePlayerId": "201572",
+      "name": "Brook Lopez",
+      "lastNameKey": "lopez",
+      "qualifyingTeams": [
+        "BKN",
+        "MIL",
+        "NJN"
+      ]
+    },
+    {
+      "basePlayerId": "1629028",
+      "name": "Deandre Ayton",
+      "lastNameKey": "ayton",
+      "qualifyingTeams": [
+        "PHX",
+        "POR"
+      ]
+    },
+    {
+      "basePlayerId": "101114",
+      "name": "Deron Williams",
+      "lastNameKey": "williams",
+      "qualifyingTeams": [
+        "BKN",
+        "NJN",
+        "UTA"
+      ]
+    },
+    {
+      "basePlayerId": "299",
+      "name": "Glenn Robinson",
+      "lastNameKey": "robinson",
+      "qualifyingTeams": [
+        "ATL",
+        "MIL"
+      ]
+    },
+    {
+      "basePlayerId": "979",
+      "name": "Jermaine O'Neal",
+      "lastNameKey": "oneal",
+      "qualifyingTeams": [
+        "IND"
+      ]
+    },
+    {
+      "basePlayerId": "203944",
+      "name": "Julius Randle",
+      "lastNameKey": "randle",
+      "qualifyingTeams": [
+        "MIN",
+        "NOP",
+        "NYK"
+      ]
+    },
+    {
+      "basePlayerId": "714",
+      "name": "Michael Finley",
+      "lastNameKey": "finley",
+      "qualifyingTeams": [
+        "DAL"
+      ]
+    },
+    {
+      "basePlayerId": "101145",
+      "name": "Monta Ellis",
+      "lastNameKey": "ellis",
+      "qualifyingTeams": [
+        "DAL",
+        "GSW",
+        "MIL"
+      ]
+    },
+    {
+      "basePlayerId": "1627783",
+      "name": "Pascal Siakam",
+      "lastNameKey": "siakam",
+      "qualifyingTeams": [
+        "IND",
+        "TOR"
+      ]
+    },
+    {
+      "basePlayerId": "200765",
+      "name": "Rajon Rondo",
+      "lastNameKey": "rondo",
+      "qualifyingTeams": [
+        "BOS",
+        "SAC"
+      ]
+    },
+    {
+      "basePlayerId": "1740",
+      "name": "Rashard Lewis",
+      "lastNameKey": "lewis",
+      "qualifyingTeams": [
+        "ORL",
+        "SEA"
+      ]
+    },
+    {
+      "basePlayerId": "208",
+      "name": "Sam Cassell",
+      "lastNameKey": "cassell",
+      "qualifyingTeams": [
+        "LAC",
+        "MIL",
+        "MIN",
+        "NJN"
+      ]
+    },
+    {
+      "basePlayerId": "949",
+      "name": "Shareef Abdur-Rahim",
+      "lastNameKey": "abdurrahim",
+      "qualifyingTeams": [
+        "ATL",
+        "VAN"
+      ]
+    },
+    {
+      "basePlayerId": "203897",
+      "name": "Zach LaVine",
+      "lastNameKey": "lavine",
+      "qualifyingTeams": [
+        "CHI",
+        "SAC"
+      ]
+    },
+    {
+      "basePlayerId": "2738",
+      "name": "Andre Iguodala",
+      "lastNameKey": "iguodala",
+      "qualifyingTeams": [
+        "PHI"
+      ]
+    },
+    {
+      "basePlayerId": "1112",
+      "name": "Ben Wallace",
+      "lastNameKey": "wallace",
+      "qualifyingTeams": [
+        "DET"
+      ]
+    },
+    {
+      "basePlayerId": "1626156",
+      "name": "D'Angelo Russell",
+      "lastNameKey": "russell",
+      "qualifyingTeams": [
+        "BKN",
+        "LAL",
+        "MIN"
+      ]
+    },
+    {
+      "basePlayerId": "101135",
+      "name": "David Lee",
+      "lastNameKey": "lee",
+      "qualifyingTeams": [
+        "GSW",
+        "NYK"
+      ]
+    },
+    {
+      "basePlayerId": "2561",
+      "name": "David West",
+      "lastNameKey": "west",
+      "qualifyingTeams": [
+        "IND",
+        "NOH",
+        "NOK"
+      ]
+    },
+    {
+      "basePlayerId": "201599",
+      "name": "DeAndre Jordan",
+      "lastNameKey": "jordan",
+      "qualifyingTeams": [
+        "LAC",
+        "NYK"
+      ]
+    },
+    {
+      "basePlayerId": "224",
+      "name": "Eddie Jones",
+      "lastNameKey": "jones",
+      "qualifyingTeams": [
+        "CHH",
+        "LAL",
+        "MIA"
+      ]
+    },
+    {
+      "basePlayerId": "202339",
+      "name": "Eric Bledsoe",
+      "lastNameKey": "bledsoe",
+      "qualifyingTeams": [
+        "MIL",
+        "PHX"
+      ]
+    },
+    {
+      "basePlayerId": "2222",
+      "name": "Gerald Wallace",
+      "lastNameKey": "wallace",
+      "qualifyingTeams": [
+        "CHA",
+        "POR"
+      ]
+    },
+    {
+      "basePlayerId": "2240",
+      "name": "Gilbert Arenas",
+      "lastNameKey": "arenas",
+      "qualifyingTeams": [
+        "GSW",
+        "WAS"
+      ]
+    },
+    {
+      "basePlayerId": "202330",
+      "name": "Gordon Hayward",
+      "lastNameKey": "hayward",
+      "qualifyingTeams": [
+        "BOS",
+        "CHA",
+        "UTA"
+      ]
+    },
+    {
+      "basePlayerId": "1627750",
+      "name": "Jamal Murray",
+      "lastNameKey": "murray",
+      "qualifyingTeams": [
+        "DEN"
+      ]
+    },
+    {
+      "basePlayerId": "1627759",
+      "name": "Jaylen Brown",
+      "lastNameKey": "brown",
+      "qualifyingTeams": [
+        "BOS"
+      ]
+    },
+    {
+      "basePlayerId": "203114",
+      "name": "Khris Middleton",
+      "lastNameKey": "middleton",
+      "qualifyingTeams": [
+        "MIL"
+      ]
+    },
+    {
+      "basePlayerId": "1897",
+      "name": "Metta World Peace",
+      "lastNameKey": "peace",
+      "qualifyingTeams": [
+        "HOU",
+        "IND",
+        "SAC"
+      ]
+    },
+    {
+      "basePlayerId": "200794",
+      "name": "Paul Millsap",
+      "lastNameKey": "millsap",
+      "qualifyingTeams": [
+        "ATL",
+        "UTA"
+      ]
+    },
+    {
+      "basePlayerId": "739",
+      "name": "Rasheed Wallace",
+      "lastNameKey": "wallace",
+      "qualifyingTeams": [
+        "DET",
+        "POR"
+      ]
+    },
+    {
+      "basePlayerId": "1883",
+      "name": "Steve Francis",
+      "lastNameKey": "francis",
+      "qualifyingTeams": [
+        "HOU",
+        "ORL"
+      ]
+    },
+    {
+      "basePlayerId": "210",
+      "name": "Terrell Brandon",
+      "lastNameKey": "brandon",
+      "qualifyingTeams": [
+        "CLE",
+        "MIL",
+        "MIN"
+      ]
+    },
+    {
+      "basePlayerId": "202699",
+      "name": "Tobias Harris",
+      "lastNameKey": "harris",
+      "qualifyingTeams": [
+        "LAC",
+        "PHI"
+      ]
+    },
+    {
+      "basePlayerId": "2397",
+      "name": "Yao Ming",
+      "lastNameKey": "ming",
+      "qualifyingTeams": [
+        "HOU"
+      ]
+    },
+    {
+      "basePlayerId": "297",
+      "name": "Alonzo Mourning",
+      "lastNameKey": "mourning",
+      "qualifyingTeams": [
+        "MIA"
+      ]
+    },
+    {
+      "basePlayerId": "686",
+      "name": "Antonio McDyess",
+      "lastNameKey": "mcdyess",
+      "qualifyingTeams": [
+        "DEN",
+        "PHX"
+      ]
+    },
+    {
+      "basePlayerId": "1627742",
+      "name": "Brandon Ingram",
+      "lastNameKey": "ingram",
+      "qualifyingTeams": [
+        "NOP"
+      ]
+    },
+    {
+      "basePlayerId": "1497",
+      "name": "Chauncey Billups",
+      "lastNameKey": "billups",
+      "qualifyingTeams": [
+        "DEN",
+        "DET"
+      ]
+    },
+    {
+      "basePlayerId": "203991",
+      "name": "Clint Capela",
+      "lastNameKey": "capela",
+      "qualifyingTeams": [
+        "ATL",
+        "HOU"
+      ]
+    },
+    {
+      "basePlayerId": "1627749",
+      "name": "Dejounte Murray",
+      "lastNameKey": "murray",
+      "qualifyingTeams": [
+        "ATL",
+        "NOP",
+        "SAS"
+      ]
+    },
+    {
+      "basePlayerId": "87",
+      "name": "Dikembe Mutombo",
+      "lastNameKey": "mutombo",
+      "qualifyingTeams": [
+        "ATL",
+        "PHI"
+      ]
+    },
+    {
+      "basePlayerId": "203110",
+      "name": "Draymond Green",
+      "lastNameKey": "green",
+      "qualifyingTeams": [
+        "GSW"
+      ]
+    },
+    {
+      "basePlayerId": "1627832",
+      "name": "Fred VanVleet",
+      "lastNameKey": "vanvleet",
+      "qualifyingTeams": [
+        "HOU",
+        "TOR"
+      ]
+    },
+    {
+      "basePlayerId": "202328",
+      "name": "Greg Monroe",
+      "lastNameKey": "monroe",
+      "qualifyingTeams": [
+        "DET",
+        "MIL"
+      ]
+    },
+    {
+      "basePlayerId": "202355",
+      "name": "Hassan Whiteside",
+      "lastNameKey": "whiteside",
+      "qualifyingTeams": [
+        "MIA",
+        "POR"
+      ]
+    },
+    {
+      "basePlayerId": "711",
+      "name": "Jerry Stackhouse",
+      "lastNameKey": "stackhouse",
+      "qualifyingTeams": [
+        "DET",
+        "PHI",
+        "WAS"
+      ]
+    },
+    {
+      "basePlayerId": "2207",
+      "name": "Joe Johnson",
+      "lastNameKey": "johnson",
+      "qualifyingTeams": [
+        "ATL"
+      ]
+    },
+    {
+      "basePlayerId": "1628381",
+      "name": "John Collins",
+      "lastNameKey": "collins",
+      "qualifyingTeams": [
+        "ATL",
+        "UTA"
+      ]
+    },
+    {
+      "basePlayerId": "436",
+      "name": "Juwan Howard",
+      "lastNameKey": "howard",
+      "qualifyingTeams": [
+        "DAL",
+        "DEN",
+        "WAS"
+      ]
+    },
+    {
+      "basePlayerId": "202691",
+      "name": "Klay Thompson",
+      "lastNameKey": "thompson",
+      "qualifyingTeams": [
+        "GSW"
+      ]
+    },
+    {
+      "basePlayerId": "2072",
+      "name": "Michael Redd",
+      "lastNameKey": "redd",
+      "qualifyingTeams": [
+        "MIL"
+      ]
+    },
+    {
+      "basePlayerId": "1710",
+      "name": "Mike Bibby",
+      "lastNameKey": "bibby",
+      "qualifyingTeams": [
+        "SAC",
+        "VAN"
+      ]
+    },
+    {
+      "basePlayerId": "201936",
+      "name": "Tyreke Evans",
+      "lastNameKey": "evans",
+      "qualifyingTeams": [
+        "MEM",
+        "NOP",
+        "SAC"
+      ]
+    },
+    {
+      "basePlayerId": "203506",
+      "name": "Victor Oladipo",
+      "lastNameKey": "oladipo",
+      "qualifyingTeams": [
+        "IND",
+        "MIA",
+        "ORL"
+      ]
+    }
+  ]
+}

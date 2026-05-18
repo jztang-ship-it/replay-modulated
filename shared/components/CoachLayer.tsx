@@ -598,15 +598,11 @@ export function CoachLayer({
           const intro = cfg?.anchorIntroText ?? "Now for your anchor card — he's the star, and what you're depending on to really push you over the top.";
           onCommentaryText?.([intro], true);
           if (anchorIntroTimer.current) clearTimeout(anchorIntroTimer.current);
-          // Short beat (was 2200ms) — the coach text begins typing and the
-          // anchor reveal kicks off in parallel. Long delay made the team FP
-          // sit at the partial total for ~2s before the anchor's roll-up
-          // started, which the user perceived as "rolling with previous total
-          // for a few secs before rolling up." Crisp single roll-up wins over
-          // an isolated text beat here.
+          // Wait for the typewriter to finish before revealing the anchor card.
+          // At 20ms/char the intro text takes ~1.8s to type; add 300ms breath.
           anchorIntroTimer.current = setTimeout(() => {
             onResumeHeldReveal?.();
-          }, 600);
+          }, Math.round(intro.length * 20) + 300);
         } else {
           onResumeHeldReveal?.();
         }
@@ -626,26 +622,13 @@ export function CoachLayer({
       position: cardPos,
       onDismiss: () => {
         if (isLastNonAnchor) {
-          // Sequence the anchor moment: show the intro text first, let it
-          // type out and breathe, THEN resume the held reveal so the anchor
-          // card flip lands AFTER the user has read the line. Earlier
-          // behavior fired both at once (resume + intro), so the anchor
-          // card was already flipping while the line was still typing —
-          // readers missed it. The 2200ms beat = ~1.8s typewriter + ~0.4s
-          // pause. The intro lands sticky in the commentary area first,
-          // then the reveal kicks off.
           const intro = cfg?.anchorIntroText ?? "Now for your anchor card — he's the star, and what you're depending on to really push you over the top.";
           onCommentaryText?.([intro], true);
           if (anchorIntroTimer.current) clearTimeout(anchorIntroTimer.current);
-          // Short beat (was 2200ms) — the coach text begins typing and the
-          // anchor reveal kicks off in parallel. Long delay made the team FP
-          // sit at the partial total for ~2s before the anchor's roll-up
-          // started, which the user perceived as "rolling with previous total
-          // for a few secs before rolling up." Crisp single roll-up wins over
-          // an isolated text beat here.
+          // Wait for the typewriter to finish before revealing the anchor card.
           anchorIntroTimer.current = setTimeout(() => {
             onResumeHeldReveal?.();
-          }, 600);
+          }, Math.round(intro.length * 20) + 300);
         } else {
           // Non-final card: resume reveal immediately, no intro to sequence.
           onResumeHeldReveal?.();

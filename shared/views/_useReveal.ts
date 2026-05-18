@@ -247,85 +247,58 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     isSkippingRefHolder.current = src;
   }, []);
 
-  // ── runSpring ──────────────────────────────────────────────────────
+  // [Spring:v2] runSpring — damped-sinusoid bounce after the anchor lands.
+  //
+  // The anchor's count animation drives the running total up to finalFp
+  // in lockstep with the bar. Without an overlay, the bar just stops
+  // dead at finalFp — flat. This function overlays a damped-sinusoid
+  // impulse on top, so the bar visibly bounces (peak ~5-8 FP above
+  // final, dips slightly below, settles) over ~700ms. springFp is
+  // consumed by computeDisplayFp, which the gauge and the team-FP
+  // readout both read — so the bar AND the FP total oscillate together.
+  //
+  // Clamped to springTiers so the overshoot can't visually cross into
+  // the next tier (a near-miss STARTER hand shouldn't briefly flash
+  // ALL-STAR styling during the bounce).
   const runSpring = useCallback((finalFp: number, onSettled: () => void) => {
     cancelAnimationFrame(springRafRef.current);
     springTimersRef.current.forEach(clearTimeout);
     springTimersRef.current = [];
-
-    // Bar is currently at the 5-card total (frozen during anchor count-up).
-    // The anchor card's number has already settled on the card face.
-    // Now the tier bar does one smooth spring motion adding card 6's FP.
-    const startFp = frozenBarFpRef.current ?? latestGaugeFpRef.current;
-    const anchorFp = finalFp - startFp; // card 6's contribution
-
-    // Overshoot = 10% of the anchor card's FP (proportional, not fixed)
-    const overshoot = anchorFp * 0.10;
-    const tier = springTiers.find(t => finalFp >= t.lo && finalFp < t.hi)
-      ?? springTiers[springTiers.length - 1];
-    const headroom = tier.hi - finalFp - 0.5;
-    const clampedOvershoot = Math.min(overshoot, Math.max(0.5, headroom));
-
-    // Waypoints — each is a direction change, fully extended before reversing:
-    // A: startFp → finalFp + overshoot  (shoot up past target)
-    // B: peak → finalFp - undershoot     (back down below target)
-    // C: bottom → finalFp + tiny         (small rise above)
-    // D: settle at finalFp
-    const damping = 0.4;
-    const peak = finalFp + clampedOvershoot;
-    const bottom = finalFp - clampedOvershoot * damping;
-    const smallUp = finalFp + clampedOvershoot * damping * damping;
-
-    // Timing: each segment decelerates (longer duration for smaller moves)
-    // Total ~2000ms, considerably slower than the card-by-card gauge roll
-    const segA = 700;   // longest — the main sweep
-    const segB = 500;   // recoil
-    const segC = 400;   // small bounce
-    const segD = 300;   // settle
-    const TOTAL_MS = segA + segB + segC + segD;
-    const segments = [
-      { from: startFp, to: peak, dur: segA },
-      { from: peak, to: bottom, dur: segB },
-      { from: bottom, to: smallUp, dur: segC },
-      { from: smallUp, to: finalFp, dur: segD },
-    ];
-
-    let startTime: number | null = null;
-    setSpringFp(startFp);
+    setSpringFp(null);
     setSpringSettled(false);
+    frozenBarFpRef.current = null;
 
-    function tick(now: number) {
-      if (startTime === null) startTime = now;
-      const elapsed = now - startTime;
+    // Tier clamp — keep peak below next tier's lo so styling stays put.
+    const tier = springTiers.find(t => finalFp >= t.lo && finalFp < t.hi);
+    const headroom = tier ? Math.max(0, tier.hi - finalFp - 0.1) : Number.POSITIVE_INFINITY;
+    const PEAK_BASE = 7;        // FP units at the visible apex
+    const peak = Math.min(PEAK_BASE, headroom);
+    const DURATION_MS = 700;
+    const ZETA = 0.28;          // damping ratio — visible bounces
+    const WN = 14;              // natural freq → ~2.2 Hz, ~2 visible peaks in 700ms
+    const wd = WN * Math.sqrt(1 - ZETA * ZETA);
+    const startMs = performance.now();
 
-      if (elapsed >= TOTAL_MS) {
-        lockedGaugeFpRef.current = finalFp;
-        frozenBarFpRef.current = null;
+    const step = () => {
+      const elapsedMs = performance.now() - startMs;
+      if (elapsedMs >= DURATION_MS || peak <= 0) {
         setSpringFp(null);
+        lockedGaugeFpRef.current = finalFp;
         setSpringSettled(true);
         onSettled();
         return;
       }
+      // Damped-sinusoid impulse: starts at 0, peaks at +peak, oscillates
+      // back through 0 with decaying amplitude. sin(0)=0 ensures the
+      // bar starts exactly where the count landed (no visual jump).
+      const t = elapsedMs / 1000;
+      const envelope = Math.exp(-ZETA * WN * t);
+      const offset = peak * envelope * Math.sin(wd * t);
+      setSpringFp(finalFp + offset);
+      springRafRef.current = requestAnimationFrame(step);
+    };
 
-      // Find which segment we're in
-      let cumulative = 0;
-      let fp = finalFp;
-      for (const seg of segments) {
-        if (elapsed < cumulative + seg.dur) {
-          const segElapsed = elapsed - cumulative;
-          const t = segElapsed / seg.dur;
-          // Deceleration easing — each move slows as it reaches its peak
-          const eased = 1 - Math.pow(1 - t, 3); // cubic ease-out
-          fp = seg.from + (seg.to - seg.from) * eased;
-          break;
-        }
-        cumulative += seg.dur;
-      }
-
-      setSpringFp(fp);
-      springRafRef.current = requestAnimationFrame(tick);
-    }
-    springRafRef.current = requestAnimationFrame(tick);
+    springRafRef.current = requestAnimationFrame(step);
   }, [setSpringFp, setSpringSettled, springTiers]);
 
   // ── onCardFpStart ──────────────────────────────────────────────────

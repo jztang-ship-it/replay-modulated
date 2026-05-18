@@ -70,6 +70,15 @@ function badgeBonus(s) {
 }
 function fp(s) { return approxFp(s) + badgeBonus(s); }
 
+// Models a "balanced" recipient — recognizes stars, but doesn't max-stack
+// the roster. Picks from a wider band than the strict top-5 to mimic the
+// real slate generator's mix of anchors + supporting cast + filler. The
+// previous top-5 picker over-fit eras with deeper mid-tier talent
+// (1819+, where ~12 mid-priced stars fit under the cap together) and
+// drove ROOKIE thresholds 50+ FP above neighbouring seasons despite
+// near-identical underlying log distributions. Top-12 is wide enough to
+// reach genuine fillers and produces consistent bal_mean across eras.
+const PICK_BAND = 12;
 function pickRoster(byPos, pool, rng) {
   const used = new Set(), roster = [];
   let totalSal = 0;
@@ -80,7 +89,7 @@ function pickRoster(byPos, pool, rng) {
     const affordable = candidates.filter(p => totalSal + p.salary <= CAP - remaining * SALARY_MIN);
     const final = affordable.length ? affordable : candidates;
     const sorted = [...final].sort((a, b) => b.salary - a.salary);
-    const pick = sorted[Math.floor(rng() * Math.min(sorted.length, 5))];
+    const pick = sorted[Math.floor(rng() * Math.min(sorted.length, PICK_BAND))];
     roster.push(pick);
     used.add(pick.id);
     totalSal += pick.salary;

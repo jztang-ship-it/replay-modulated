@@ -1,0 +1,311 @@
+{
+  "1718": {
+    "name": "Paul Pierce",
+    "qualifyingTeams": [
+      "BOS"
+    ],
+    "skippedTeams": [
+      "BKN",
+      "LAC",
+      "WAS"
+    ],
+    "tierBySeasonByTeam": {
+      "BOS": {
+        "2000-01": "PURPLE",
+        "2001-02": "ORANGE",
+        "2002-03": "ORANGE",
+        "2003-04": "PURPLE",
+        "2004-05": "PURPLE",
+        "2005-06": "ORANGE",
+        "2006-07": "PURPLE",
+        "2007-08": "PURPLE",
+        "2008-09": "PURPLE",
+        "2009-10": "BLUE",
+        "2010-11": "PURPLE",
+        "2011-12": "PURPLE",
+        "2012-13": "PURPLE",
+        "1998-99": "PURPLE",
+        "1999-00": "PURPLE"
+      },
+      "BKN": {
+        "2013-14": "BLUE"
+      },
+      "WAS": {
+        "2014-15": "GREEN"
+      },
+      "LAC": {
+        "2015-16": "WHITE",
+        "2016-17": "WHITE"
+      }
+    }
+  },
+  "200746": {
+    "name": "LaMarcus Aldridge",
+    "qualifyingTeams": [
+      "POR",
+      "SAS"
+    ],
+    "skippedTeams": [
+      "BKN"
+    ],
+    "tierBySeasonByTeam": {
+      "POR": {
+        "2006-07": "GREEN",
+        "2007-08": "PURPLE",
+        "2008-09": "PURPLE",
+        "2009-10": "PURPLE",
+        "2010-11": "PURPLE",
+        "2011-12": "PURPLE",
+        "2012-13": "PURPLE",
+        "2013-14": "ORANGE",
+        "2014-15": "ORANGE"
+      },
+      "SAS": {
+        "2015-16": "PURPLE",
+        "2016-17": "PURPLE",
+        "2017-18": "PURPLE",
+        "2018-19": "PURPLE",
+        "2019-20": "PURPLE"
+      },
+      "BKN": {
+        "2020-21": "BLUE",
+        "2021-22": "BLUE"
+      }
+    }
+  },
+  "2200": {
+    "name": "Pau Gasol",
+    "qualifyingTeams": [
+      "CHI",
+      "LAL",
+      "MEM"
+    ],
+    "skippedTeams": [
+      "MIL",
+      "SAS"
+    ],
+    "tierBySeasonByTeam": {
+      "MEM": {
+        "2001-02": "PURPLE",
+        "2002-03": "PURPLE",
+        "2003-04": "PURPLE",
+        "2004-05": "PURPLE",
+        "2005-06": "ORANGE",
+        "2006-07": "ORANGE"
+      },
+      "LAL": {
+        "2007-08": "PURPLE",
+        "2008-09": "PURPLE",
+        "2009-10": "PURPLE",
+        "2010-11": "PURPLE",
+        "2011-12": "PURPLE",
+        "2012-13": "PURPLE",
+        "2013-14": "PURPLE"
+      },
+      "CHI": {
+        "2014-15": "PURPLE",
+        "2015-16": "PURPLE"
+      },
+      "SAS": {
+        "2016-17": "BLUE",
+        "2017-18": "BLUE"
+      },
+      "MIL": {
+        "2018-19": "WHITE"
+      }
+    }
+  },
+  "1713": {
+    "name": "Vince Carter",
+    "qualifyingTeams": [
+      "NJN",
+      "TOR"
+    ],
+    "skippedTeams": [
+      "ATL",
+      "DAL",
+      "MEM",
+      "ORL",
+      "PHX",
+      "SAC"
+    ],
+    "tierBySeasonByTeam": {
+      "TOR": {
+        "2000-01": "ORANGE",
+        "2001-02": "PURPLE",
+        "2002-03": "PURPLE",
+        "2003-04": "PURPLE",
+        "1998-99": "PURPLE",
+        "1999-00": "ORANGE"
+      },
+      "NJN": {
+        "2004-05": "PURPLE",
+        "2005-06": "PURPLE",
+        "2006-07": "ORANGE",
+        "2007-08": "PURPLE",
+        "2008-09": "PURPLE"
+      },
+      "ORL": {
+        "2009-10": "BLUE"
+      },
+      "PHX": {
+        "2010-11": "BLUE"
+      },
+      "DAL": {
+        "2011-12": "GREEN",
+        "2012-13": "BLUE",
+        "2013-14": "BLUE"
+      },
+      "MEM": {
+        "2014-15": "WHITE",
+        "2015-16": "WHITE",
+        "2016-17": "GREEN"
+      },
+      "SAC": {
+        "2017-18": "WHITE"
+      },
+      "ATL": {
+        "2018-19": "WHITE",
+        "2019-20": "WHITE"
+      }
+    }
+  },
+  "950": {
+    "name": "Stephon Marbury",
+    "qualifyingTeams": [
+      "MIN",
+      "NJN",
+      "NYK",
+      "PHX"
+    ],
+    "skippedTeams": [],
+    "tierBySeasonByTeam": {
+      "NJN": {
+        "2000-01": "PURPLE",
+        "1998-99": "PURPLE",
+        "1999-00": "PURPLE"
+      },
+      "PHX": {
+        "2001-02": "PURPLE",
+        "2002-03": "PURPLE"
+      },
+      "NYK": {
+        "2003-04": "PURPLE",
+        "2004-05": "PURPLE",
+        "2005-06": "BLUE",
+        "2006-07": "BLUE"
+      },
+      "MIN": {
+        "1996-97": "PURPLE",
+        "1997-98": "PURPLE"
+      }
+    }
+  },
+  "397": {
+    "name": "Reggie Miller",
+    "qualifyingTeams": [
+      "IND"
+    ],
+    "skippedTeams": [],
+    "tierBySeasonByTeam": {
+      "IND": {
+        "2000-01": "BLUE",
+        "2001-02": "BLUE",
+        "2002-03": "GREEN",
+        "2003-04": "GREEN",
+        "2004-05": "BLUE",
+        "1996-97": "PURPLE",
+        "1997-98": "BLUE",
+        "1998-99": "BLUE",
+        "1999-00": "BLUE"
+      }
+    }
+  },
+  "304": {
+    "name": "John Stockton",
+    "qualifyingTeams": [
+      "UTA"
+    ],
+    "skippedTeams": [],
+    "tierBySeasonByTeam": {
+      "UTA": {
+        "2000-01": "BLUE",
+        "2001-02": "PURPLE",
+        "2002-03": "BLUE",
+        "1996-97": "PURPLE",
+        "1997-98": "BLUE",
+        "1998-99": "BLUE",
+        "1999-00": "BLUE"
+      }
+    }
+  },
+  "165": {
+    "name": "Hakeem Olajuwon",
+    "qualifyingTeams": [
+      "HOU"
+    ],
+    "skippedTeams": [
+      "TOR"
+    ],
+    "tierBySeasonByTeam": {
+      "HOU": {
+        "2000-01": "BLUE",
+        "1996-97": "ORANGE",
+        "1997-98": "PURPLE",
+        "1998-99": "PURPLE",
+        "1999-00": "BLUE"
+      },
+      "TOR": {
+        "2001-02": "GREEN"
+      }
+    }
+  },
+  "896": {
+    "name": "Tim Hardaway",
+    "qualifyingTeams": [
+      "MIA"
+    ],
+    "skippedTeams": [
+      "DEN"
+    ],
+    "tierBySeasonByTeam": {
+      "MIA": {
+        "2000-01": "BLUE",
+        "1996-97": "PURPLE",
+        "1997-98": "PURPLE",
+        "1998-99": "PURPLE",
+        "1999-00": "BLUE"
+      },
+      "DEN": {
+        "2001-02": "GREEN"
+      }
+    }
+  },
+  "1938": {
+    "name": "Manu Ginobili",
+    "qualifyingTeams": [
+      "SAS"
+    ],
+    "skippedTeams": [],
+    "tierBySeasonByTeam": {
+      "SAS": {
+        "2002-03": "WHITE",
+        "2003-04": "BLUE",
+        "2004-05": "BLUE",
+        "2005-06": "BLUE",
+        "2006-07": "BLUE",
+        "2007-08": "PURPLE",
+        "2008-09": "BLUE",
+        "2009-10": "BLUE",
+        "2010-11": "PURPLE",
+        "2011-12": "BLUE",
+        "2012-13": "BLUE",
+        "2013-14": "BLUE",
+        "2014-15": "BLUE",
+        "2015-16": "GREEN",
+        "2016-17": "GREEN",
+        "2017-18": "WHITE"
+      }
+    }
+  }
+}

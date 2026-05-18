@@ -49,6 +49,7 @@ import type { PlayerCard } from "@shared/types";
 import { getPlayerUid, getNickname, getSessionId } from "@shared/utils/playerIdentity";
 import { supabase } from "@shared/lib/supabase";
 import { addBigWinMessage } from "@shared/inbox/inbox";
+import { useAchievements } from "@shared/hooks/useAchievements";
 import type { GameAdapter } from "./GameAdapter";
 
 export type GameState =
@@ -121,6 +122,9 @@ export function useSharedGameState(
   options: UseSharedGameStateOptions,
 ) {
   const { rosterSize } = options;
+
+  // ── Achievement tracking ───────────────────────────────────────────
+  const { unlockedIds: unlockedAchievementIds, newlyUnlocked: newlyUnlockedAchievements, evaluateAndSave: evaluateAchievementsAndSave, clearNewlyUnlocked: clearNewlyUnlockedAchievements } = useAchievements();
 
   // ── Core flow ──────────────────────────────────────────────────────
   const [gameState, setGameState] = useState<GameState>("IDLE");
@@ -301,6 +305,7 @@ export function useSharedGameState(
     streakAtPlay: number,
     handId?: string,
   ) => {
+    const season = String((rosterArg[0] as any)?.season ?? "");
     try {
       const uid = getPlayerUid();
       if (!uid || uid.startsWith("u_")) return; // Only log with real Supabase UID
@@ -318,6 +323,8 @@ export function useSharedGameState(
         payout,
         streak_at_play: streakAtPlay,
         verified,
+        sport: adapter.sportKey,
+        season,
       });
       // Trigger inbox big-win recap for elite tiers
       if (tier === "MVP+" || tier === "LEGEND") {
@@ -325,7 +332,33 @@ export function useSharedGameState(
         await addBigWinMessage(uid, { tier, fp: totalFp, hand_id });
       }
     } catch { /* silent — audit trail is best-effort */ }
-  }, []);
+
+    // Fire-and-forget: evaluate + persist any newly unlocked achievements.
+    // Runs after the hand_log insert but never blocks or throws.
+    const isWin = !["BUST", "ROOKIE"].includes(tier);
+    const newStreak = isWin ? streakAtPlay + 1 : 0;
+    void evaluateAchievementsAndSave({
+      sport: adapter.sportKey,
+      season,
+      handId: handId ?? "",
+      totalFp,
+      fpTier: tier,
+      isWin,
+      rosterIds: rosterArg.map((c: any) => String(c.basePlayerId ?? "")).filter(Boolean),
+      cards: rosterArg.map((c: any) => ({
+        fp: Number(c.actualFp ?? 0),
+        stats: (c.statLine ?? {}) as Record<string, unknown>,
+        position: String(c.position ?? ""),
+        name: String(c.name ?? ""),
+        team: String(c.team ?? ""),
+        tier: String(c.tier ?? "WHITE"),
+        season: String(c.season ?? ""),
+        photoCode: c.photoCode ?? undefined,
+      })),
+      streak: newStreak,
+      handsPlayed: handCount,
+    });
+  }, [adapter, evaluateAchievementsAndSave, handCount]);
 
   return {
     // Core flow
@@ -391,6 +424,11 @@ export function useSharedGameState(
     incrementStreak,
     resetStreak,
     incrementHandCount,
+
+    // Achievement state (fire-and-forget evaluation happens inside logHandToDb)
+    unlockedAchievementIds,
+    newlyUnlockedAchievements,
+    clearNewlyUnlockedAchievements,
   };
 }
 

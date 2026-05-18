@@ -839,32 +839,139 @@ function isIconicNickname(nick: string, fullName: string): boolean {
  *    BLUE, GREEN, WHITE   → never (prevents misattribution like
  *                            "Anthony Carter" → Vince Carter's "Vinsanity")
  *    undefined/missing    → permissive (legacy/test paths) */
+// Track legacy-fallback warnings so we don't spam the console — log each
+// missing basePlayerId once per session.
+const _cultureFallbackWarned = new Set<string>();
+
+/** Strip accents + non-alphanumerics from the last-name token. Mirrors the
+ *  normalization used to mint the new culture keys (`lastname_basePlayerId`). */
+function normalizeLastForKey(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  const suffixes = new Set(["II", "III", "IV", "V", "Jr.", "Jr", "Sr.", "Sr"]);
+  while (parts.length > 1 && suffixes.has(parts[parts.length - 1])) parts.pop();
+  const last = (parts[parts.length - 1] ?? "");
+  return last
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .toLowerCase();
+}
+
+/** Era overlay: when the player's culture entry has a `teamEras[team]`
+ *  block matching the card's team, return a copy of the culture object
+ *  with era-specific framing replacing tier1/bigGame[0]/quietGame[0].
+ *  Other fields pass through unchanged. */
+function applyEraOverlay(culture: any, team: string | undefined): any {
+  if (!team || !culture?.teamEras) return culture;
+  const era = culture.teamEras[team.toUpperCase()];
+  if (!era) return culture;
+  const overlay: any = { ...culture };
+  if (Array.isArray(era.framing) && era.framing.length) {
+    overlay.tier1 = era.framing;  // era framing replaces generic tier1 lines
+  }
+  if (era.bigGameVariant && Array.isArray(culture.bigGame)) {
+    overlay.bigGame = [era.bigGameVariant, ...culture.bigGame.slice(1)];
+  }
+  if (era.quietGameVariant && Array.isArray(culture.quietGame)) {
+    overlay.quietGame = [era.quietGameVariant, ...culture.quietGame.slice(1)];
+  }
+  return overlay;
+}
+
 function lookupCulture(
   name: string,
   sport: string,
   cardTier?: string,
   seed = 0,
+  basePlayerId?: string,
+  team?: string,
 ): CultureShape | null {
   const tier = (cardTier ?? "").toUpperCase();
   if (tier === "BLUE" || tier === "GREEN" || tier === "WHITE") return null;
 
   const db = _cultureDb[sport];
   if (!db) return null;
-  const parts = name.trim().split(/\s+/);
-  const suffixes = new Set(["II", "III", "IV", "V", "Jr.", "Jr", "Sr.", "Sr"]);
-  while (parts.length > 1 && suffixes.has(parts[parts.length - 1])) parts.pop();
-  const last = (parts[parts.length - 1] ?? "").toLowerCase();
-  const culture = db[last] ?? null;
+
+  const last = normalizeLastForKey(name);
+  let culture: any = null;
+
+  // [CULTURE_LOOKUP_V2] Primary: composite key `lastname_basePlayerId` so
+  // multi-player last names (Wallace, Gasol, Jordan, Davis, etc.) disambiguate
+  // cleanly. Falls back to legacy last-name lookup with a once-per-session
+  // warning when basePlayerId is missing or absent from the culture DB.
+  if (basePlayerId) {
+    const compositeKey = `${last}_${basePlayerId}`;
+    culture = db[compositeKey] ?? null;
+    if (!culture) {
+      const fallbackKey = `legacy:${last}:${basePlayerId}`;
+      if (!_cultureFallbackWarned.has(fallbackKey)) {
+        _cultureFallbackWarned.add(fallbackKey);
+        // eslint-disable-next-line no-console
+        console.warn(`[culture] no entry for ${compositeKey}; falling back to last-name lookup`);
+      }
+      culture = db[last] ?? null;
+    }
+  } else {
+    const fallbackKey = `legacy:${last}:nobid`;
+    if (!_cultureFallbackWarned.has(fallbackKey)) {
+      _cultureFallbackWarned.add(fallbackKey);
+      // eslint-disable-next-line no-console
+      console.warn(`[culture] missing basePlayerId for "${name}"; using last-name lookup`);
+    }
+    culture = db[last] ?? null;
+  }
+
   if (!culture) return null;
 
   if (tier === "PURPLE") {
-    const hasIconic = (culture.nicknames ?? []).some(n => isIconicNickname(n, name));
+    const hasIconic = (culture.nicknames ?? []).some((n: string) => isIconicNickname(n, name));
     if (!hasIconic) return null;
     // ~30% probabilistic gate — keep PURPLE culture rare and signal-y
     const gate = Math.abs(Math.floor(seed / 13)) % 10;
     if (gate >= 3) return null;
   }
-  return culture;
+
+  // Apply era overlay AFTER tier gate so the gate logic sees generic culture.
+  return applyEraOverlay(culture, team);
+}
+
+/** [JORDAN_EXEMPTION_V1] Always-fire-secondary surfacing. Returns a single
+ *  Chad-voice line when the roster contains a player flagged with
+ *  `alwaysFireSecondary: true` and that player is NOT the focused star.
+ *  Currently only Michael Jordan (basePlayerId 893) carries the flag, but
+ *  the gate is generic — adding another exemption is just setting the flag
+ *  + populating secondaryAlways on a different entry. Line resolution
+ *  prefers era-specific `teamEras[team].secondary[]` over generic
+ *  `secondaryAlways[]`. Returns null when the roster has no flagged
+ *  non-star or when the flagged player has no usable lines.
+ *
+ *  The caller appends the returned line to the commentary output's
+ *  secondary slot — distinct from the primary tactical line — so the
+ *  star's commentary still owns the lead. */
+export function selectAlwaysFireSecondary(
+  roster: CommentaryRosterCard[],
+  star: CommentaryRosterCard | null,
+  sport: string,
+  seed = 0,
+): string | null {
+  const db = _cultureDb[sport];
+  if (!db) return null;
+  for (const card of roster) {
+    if (!card.basePlayerId) continue;
+    if (star && card.basePlayerId === star.basePlayerId) continue;
+    const compositeKey = `${normalizeLastForKey(card.name)}_${card.basePlayerId}`;
+    const culture: any = db[compositeKey];
+    if (!culture?.alwaysFireSecondary) continue;
+    // Prefer era-specific secondary, fall back to generic
+    const eraSecondary = (card.team && culture.teamEras?.[card.team.toUpperCase()]?.secondary) || null;
+    const generic = culture.secondaryAlways ?? null;
+    const pool: string[] | null =
+      (Array.isArray(eraSecondary) && eraSecondary.length) ? eraSecondary :
+      (Array.isArray(generic) && generic.length) ? generic : null;
+    if (!pool) continue;
+    return pickSeeded(pool, seed, 0);
+  }
+  return null;
 }
 
 // ── Team flavor lookup (basketball only) ───────────────────────────────────
@@ -1256,7 +1363,7 @@ export function selectCommentary(
   const { details, recordEvents } = selectStory(input, seed, sport);
 
   // Step 5: Build template data
-  const culture = star ? lookupCulture(star.name, sport, star.cardTier, seed) : null;
+  const culture = star ? lookupCulture(star.name, sport, star.cardTier, seed, star.basePlayerId, star.team) : null;
   const teamFlavor = star ? lookupTeamFlavor(star.opponent, sport) : null;
   const templateData = buildTemplateData(star, input, recordEvents, culture, costar);
 

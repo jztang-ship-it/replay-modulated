@@ -1,0 +1,366 @@
+{
+  "jokic": {
+    "newKey": "jokic_203999",
+    "basePlayerId": "203999",
+    "verifiedBy": "single_candidate",
+    "fullName": "Nikola Joki\u0107"
+  },
+  "antetokounmpo": {
+    "newKey": "antetokounmpo_203507",
+    "basePlayerId": "203507",
+    "verifiedBy": "single_candidate",
+    "fullName": "Giannis Antetokounmpo"
+  },
+  "doncic": {
+    "newKey": "doncic_1629029",
+    "basePlayerId": "1629029",
+    "verifiedBy": "single_candidate",
+    "fullName": "Luka Don\u010di\u0107"
+  },
+  "wembanyama": {
+    "newKey": "wembanyama_1641705",
+    "basePlayerId": "1641705",
+    "verifiedBy": "single_candidate",
+    "fullName": "Victor Wembanyama"
+  },
+  "davis": {
+    "newKey": "davis_203076",
+    "basePlayerId": "203076",
+    "verifiedBy": "user_pick",
+    "fullName": "Anthony Davis"
+  },
+  "james": {
+    "newKey": "james_2544",
+    "basePlayerId": "2544",
+    "verifiedBy": "first_name_match",
+    "fullName": "LeBron James",
+    "score": 3,
+    "other_candidates": [
+      {
+        "basePlayerId": "2229",
+        "fullName": "Mike James",
+        "score": 0
+      }
+    ]
+  },
+  "tatum": {
+    "newKey": "tatum_1628369",
+    "basePlayerId": "1628369",
+    "verifiedBy": "single_candidate",
+    "fullName": "Jayson Tatum"
+  },
+  "cunningham": {
+    "newKey": "cunningham_1630595",
+    "basePlayerId": "1630595",
+    "verifiedBy": "single_candidate",
+    "fullName": "Cade Cunningham"
+  },
+  "towns": {
+    "newKey": "towns_1626157",
+    "basePlayerId": "1626157",
+    "verifiedBy": "single_candidate",
+    "fullName": "Karl-Anthony Towns"
+  },
+  "harden": {
+    "newKey": "harden_201935",
+    "basePlayerId": "201935",
+    "verifiedBy": "single_candidate",
+    "fullName": "James Harden"
+  },
+  "sabonis": {
+    "newKey": "sabonis_1627734",
+    "basePlayerId": "1627734",
+    "verifiedBy": "claude_correction_arvydas_was_a_reference_not_subject",
+    "fullName": "Domantas Sabonis"
+  },
+  "edwards": {
+    "newKey": "edwards_1630162",
+    "basePlayerId": "1630162",
+    "verifiedBy": "single_candidate",
+    "fullName": "Anthony Edwards"
+  },
+  "young": {
+    "newKey": "young_1629027",
+    "basePlayerId": "1629027",
+    "verifiedBy": "first_name_match",
+    "fullName": "Trae Young",
+    "score": 1,
+    "other_candidates": [
+      {
+        "basePlayerId": "201152",
+        "fullName": "Thaddeus Young",
+        "score": 0
+      }
+    ]
+  },
+  "williamson": {
+    "newKey": "williamson_1629627",
+    "basePlayerId": "1629627",
+    "verifiedBy": "single_candidate",
+    "fullName": "Zion Williamson"
+  },
+  "banchero": {
+    "newKey": "banchero_1631094",
+    "basePlayerId": "1631094",
+    "verifiedBy": "single_candidate",
+    "fullName": "Paolo Banchero"
+  },
+  "lillard": {
+    "newKey": "lillard_203081",
+    "basePlayerId": "203081",
+    "verifiedBy": "single_candidate",
+    "fullName": "Damian Lillard"
+  },
+  "maxey": {
+    "newKey": "maxey_1630178",
+    "basePlayerId": "1630178",
+    "verifiedBy": "single_candidate",
+    "fullName": "Tyrese Maxey"
+  },
+  "brunson": {
+    "newKey": "brunson_1628973",
+    "basePlayerId": "1628973",
+    "verifiedBy": "single_candidate",
+    "fullName": "Jalen Brunson"
+  },
+  "booker": {
+    "newKey": "booker_1626164",
+    "basePlayerId": "1626164",
+    "verifiedBy": "single_candidate",
+    "fullName": "Devin Booker"
+  },
+  "durant": {
+    "newKey": "durant_201142",
+    "basePlayerId": "201142",
+    "verifiedBy": "single_candidate",
+    "fullName": "Kevin Durant"
+  },
+  "embiid": {
+    "newKey": "embiid_203954",
+    "basePlayerId": "203954",
+    "verifiedBy": "single_candidate",
+    "fullName": "Joel Embiid"
+  },
+  "sengun": {
+    "newKey": "sengun_1630578",
+    "basePlayerId": "1630578",
+    "verifiedBy": "single_candidate",
+    "fullName": "Alperen Sengun"
+  },
+  "haliburton": {
+    "newKey": "haliburton_1630169",
+    "basePlayerId": "1630169",
+    "verifiedBy": "single_candidate",
+    "fullName": "Tyrese Haliburton"
+  },
+  "johnson": {
+    "newKey": "johnson_1630552",
+    "basePlayerId": "1630552",
+    "verifiedBy": "claude_pick_from_text",
+    "fullName": "Jalen Johnson"
+  },
+  "barnes": {
+    "newKey": "barnes_1630567",
+    "basePlayerId": "1630567",
+    "verifiedBy": "single_candidate",
+    "fullName": "Scottie Barnes"
+  },
+  "ball": {
+    "newKey": "ball_1630163",
+    "basePlayerId": "1630163",
+    "verifiedBy": "user_pick",
+    "fullName": "LaMelo Ball"
+  },
+  "curry": {
+    "newKey": "curry_201939",
+    "basePlayerId": "201939",
+    "verifiedBy": "single_candidate",
+    "fullName": "Stephen Curry"
+  },
+  "irving": {
+    "newKey": "irving_202681",
+    "basePlayerId": "202681",
+    "verifiedBy": "single_candidate",
+    "fullName": "Kyrie Irving"
+  },
+  "wagner": {
+    "newKey": "wagner_1630532",
+    "basePlayerId": "1630532",
+    "verifiedBy": "single_candidate",
+    "fullName": "Franz Wagner"
+  },
+  "adebayo": {
+    "newKey": "adebayo_1628389",
+    "basePlayerId": "1628389",
+    "verifiedBy": "single_candidate",
+    "fullName": "Bam Adebayo"
+  },
+  "williams": {
+    "newKey": "williams_1631114",
+    "basePlayerId": "1631114",
+    "verifiedBy": "claude_pick_from_text_FLAGGED",
+    "fullName": "Jalen Williams"
+  },
+  "mitchell": {
+    "newKey": "mitchell_1628378",
+    "basePlayerId": "1628378",
+    "verifiedBy": "single_candidate",
+    "fullName": "Donovan Mitchell"
+  },
+  "morant": {
+    "newKey": "morant_1629630",
+    "basePlayerId": "1629630",
+    "verifiedBy": "single_candidate",
+    "fullName": "Ja Morant"
+  },
+  "herro": {
+    "newKey": "herro_1629639",
+    "basePlayerId": "1629639",
+    "verifiedBy": "single_candidate",
+    "fullName": "Tyler Herro"
+  },
+  "zubac": {
+    "newKey": "zubac_1627826",
+    "basePlayerId": "1627826",
+    "verifiedBy": "single_candidate",
+    "fullName": "Ivica Zubac"
+  },
+  "fox": {
+    "newKey": "fox_1628368",
+    "basePlayerId": "1628368",
+    "verifiedBy": "user_pick",
+    "fullName": "De'Aaron Fox"
+  },
+  "mobley": {
+    "newKey": "mobley_1630596",
+    "basePlayerId": "1630596",
+    "verifiedBy": "user_pick",
+    "fullName": "Evan Mobley"
+  },
+  "jordan": {
+    "newKey": "jordan_893",
+    "basePlayerId": "893",
+    "verifiedBy": "user_pick",
+    "fullName": "Michael Jordan"
+  },
+  "bryant": {
+    "newKey": "bryant_977",
+    "basePlayerId": "977",
+    "verifiedBy": "single_candidate",
+    "fullName": "Kobe Bryant"
+  },
+  "oneal": {
+    "newKey": "oneal_406",
+    "basePlayerId": "406",
+    "verifiedBy": "user_pick",
+    "fullName": "Shaquille O'Neal"
+  },
+  "duncan": {
+    "newKey": "duncan_1495",
+    "basePlayerId": "1495",
+    "verifiedBy": "single_candidate",
+    "fullName": "Tim Duncan"
+  },
+  "malone": {
+    "newKey": "malone_252",
+    "basePlayerId": "252",
+    "verifiedBy": "single_candidate",
+    "fullName": "Karl Malone"
+  },
+  "iverson": {
+    "newKey": "iverson_947",
+    "basePlayerId": "947",
+    "verifiedBy": "single_candidate",
+    "fullName": "Allen Iverson"
+  },
+  "nowitzki": {
+    "newKey": "nowitzki_1717",
+    "basePlayerId": "1717",
+    "verifiedBy": "single_candidate",
+    "fullName": "Dirk Nowitzki"
+  },
+  "garnett": {
+    "newKey": "garnett_708",
+    "basePlayerId": "708",
+    "verifiedBy": "single_candidate",
+    "fullName": "Kevin Garnett"
+  },
+  "wade": {
+    "newKey": "wade_2548",
+    "basePlayerId": "2548",
+    "verifiedBy": "single_candidate",
+    "fullName": "Dwyane Wade"
+  },
+  "paul": {
+    "newKey": "paul_101108",
+    "basePlayerId": "101108",
+    "verifiedBy": "single_candidate",
+    "fullName": "Chris Paul"
+  },
+  "kidd": {
+    "newKey": "kidd_467",
+    "basePlayerId": "467",
+    "verifiedBy": "single_candidate",
+    "fullName": "Jason Kidd"
+  },
+  "payton": {
+    "newKey": "payton_56",
+    "basePlayerId": "56",
+    "verifiedBy": "single_candidate",
+    "fullName": "Gary Payton"
+  },
+  "mcgrady": {
+    "newKey": "mcgrady_1503",
+    "basePlayerId": "1503",
+    "verifiedBy": "single_candidate",
+    "fullName": "Tracy McGrady"
+  },
+  "westbrook": {
+    "newKey": "westbrook_201566",
+    "basePlayerId": "201566",
+    "verifiedBy": "single_candidate",
+    "fullName": "Russell Westbrook"
+  },
+  "howard": {
+    "newKey": "howard_2730",
+    "basePlayerId": "2730",
+    "verifiedBy": "user_pick",
+    "fullName": "Dwight Howard"
+  },
+  "hill": {
+    "newKey": "hill_255",
+    "basePlayerId": "255",
+    "verifiedBy": "single_candidate",
+    "fullName": "Grant Hill"
+  },
+  "webber": {
+    "newKey": "webber_185",
+    "basePlayerId": "185",
+    "verifiedBy": "single_candidate",
+    "fullName": "Chris Webber"
+  },
+  "cousins": {
+    "newKey": "cousins_202326",
+    "basePlayerId": "202326",
+    "verifiedBy": "single_candidate",
+    "fullName": "DeMarcus Cousins"
+  },
+  "griffin": {
+    "newKey": "griffin_201933",
+    "basePlayerId": "201933",
+    "verifiedBy": "single_candidate",
+    "fullName": "Blake Griffin"
+  },
+  "love": {
+    "newKey": "love_201567",
+    "basePlayerId": "201567",
+    "verifiedBy": "single_candidate",
+    "fullName": "Kevin Love"
+  },
+  "gilgeousalexander": {
+    "newKey": "gilgeousalexander_1628983",
+    "basePlayerId": "1628983",
+    "verifiedBy": "single_candidate",
+    "fullName": "Shai Gilgeous-Alexander"
+  }
+}

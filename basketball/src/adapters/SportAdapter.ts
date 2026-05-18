@@ -8,9 +8,12 @@ import { tierFromSalary, DEFAULT_ECONOMY_CONFIG, type EconomyConfig } from "../e
 import { tierRank } from "@shared/theme";
 import topGames from "../../public/data/topGames.json";
 import careerHighs from "../../public/data/careerHighs.json";
+import seasonIntros from "../data/seasonIntros.json";
 // Side-effect import: registers the basketball sound pack with the shared
 // soundPackLoader at module-load time. Without this, basketball plays silently.
 import "../utils/soundPack";
+// Side-effect import: registers basketball achievements with the shared registry.
+import "../achievements/predicates";
 
 registerRecordSources("basketball", {
   topGames: topGames as any,
@@ -159,6 +162,119 @@ export class SportAdapter {
     return 0;
   }
   clamp(value: number, min: number, max: number): number { return Math.max(min, Math.min(max, value)); }
+
+  private static readonly TIER_ACCENT: Record<string, string> = {
+    RED: "#EF4444", ORANGE: "#FB923C", PURPLE: "#C084FC",
+    BLUE: "#3B82F6", GREEN: "#22C55E", WHITE: "#9CA3AF",
+  };
+
+  private static readonly TIER_BG: Record<string, string> = {
+    RED: "rgba(239,68,68,0.18)", ORANGE: "rgba(251,146,60,0.18)",
+    PURPLE: "rgba(192,132,252,0.18)", BLUE: "rgba(59,130,246,0.14)",
+    GREEN: "rgba(34,197,94,0.14)", WHITE: "rgba(156,163,175,0.08)",
+  };
+
+  serializeRoster(cards: import("@shared/types/index").GeneratedCard[]): Record<string, unknown> {
+    return {
+      v: 1,
+      sport: "basketball",
+      cards: cards.map((c: any) => ({
+        id: c.id,
+        basePlayerId: c.basePlayerId,
+        personKey: c.personKey,
+        cardId: c.cardId,
+        name: c.name,
+        team: c.team,
+        season: c.season,
+        position: c.position,
+        photoCode: c.photoCode ?? null,
+        salary: c.salary,
+        tier: c.tier,
+        slotIndex: c.slotIndex ?? 0,
+        projectedFp: c.projectedFp,
+      })),
+    };
+  }
+
+  deserializeRoster(snapshot: Record<string, unknown>): import("@shared/types/index").GeneratedCard[] {
+    const cards = (snapshot.cards as any[]) ?? [];
+    return cards.map((c: any, i: number) => ({
+      id: c.id ?? c.basePlayerId,
+      basePlayerId: c.basePlayerId,
+      personKey: c.personKey ?? c.basePlayerId,
+      cardId: c.cardId ?? `${c.basePlayerId}-ch${i}`,
+      name: c.name,
+      team: c.team,
+      season: c.season,
+      position: c.position,
+      photoCode: c.photoCode ?? undefined,
+      salary: Number(c.salary),
+      tier: c.tier,
+      slotIndex: c.slotIndex ?? i,
+      projectedFp: Number(c.projectedFp ?? 0),
+      actualFp: 0,
+      fpDelta: 0,
+      statLine: {},
+      gameInfo: { date: "", opponent: "" },
+      achievements: [],
+      wasHeld: false,
+    }));
+  }
+
+  validateRosterSnapshot(snapshot: Record<string, unknown>): boolean {
+    if (!snapshot || typeof snapshot !== "object") return false;
+    if ((snapshot as any).v !== 1 || (snapshot as any).sport !== "basketball") return false;
+    const cards = (snapshot as any).cards;
+    if (!Array.isArray(cards) || cards.length !== this.rosterSize) return false;
+    return cards.every((c: any) => c.basePlayerId && c.name && c.tier && c.salary !== undefined);
+  }
+
+  /** Build the caption stored as `share_headline` on a created challenge.
+   *  Big-game badge → big-game line; else → season-reel copy from
+   *  seasonIntros (stripped of the "Today we're going back to…/Good luck."
+   *  scaffolding so it reads as a caption, not a greeting). */
+  getShareHeadline(args: {
+    roster: import("@shared/types/index").GeneratedCard[];
+    season: string;
+  }): string {
+    const RECORD_BADGE_IDS = ["TOP_GAME", "CAREER_HIGH", "NBA_RECORD", "SEASON_RECORD", "PB"];
+    const hasBigGame = args.roster.some((c: any) =>
+      (c.achievements ?? []).some((b: any) =>
+        RECORD_BADGE_IDS.some(rid => String(b.id ?? "").includes(rid))
+      )
+    );
+    if (hasBigGame) return "Pulled a legendary game on this slate. Beat it.";
+    const intro = (seasonIntros as Record<string, string>)[args.season];
+    if (intro) {
+      return intro
+        .replace(/^Today we're going back to\s+/, "")
+        .replace(/\s*Good luck\.?\s*$/, "")
+        .trim();
+    }
+    return "Same starting cards. Your decisions.";
+  }
+
+  getComparisonValue(result: import("@shared/adapters/challengeTypes").HandResult): number {
+    return result.totalFp;
+  }
+
+  formatComparisonValue(value: number): string {
+    return `${value.toFixed(1)} FP`;
+  }
+
+  getShareCardConfig(): import("@shared/adapters/challengeTypes").ShareCardConfig {
+    const ACCENT = SportAdapter.TIER_ACCENT;
+    const BG = SportAdapter.TIER_BG;
+    return {
+      sport: "basketball",
+      rosterSize: this.rosterSize,
+      cardLayout: "3+2",
+      statLabel: (card: any) => `$${card.salary}`,
+      tierAccentColor: (tier) => ACCENT[tier] ?? "#9CA3AF",
+      tierLabel: (tier) => tier,
+      tierBgColor: (tier) => BG[tier] ?? "rgba(0,0,0,0.15)",
+    };
+  }
 
   // ---------------------------------------------------------------------
   // Slate v2 — basketball-bound slate methods (flag-gated at the call site).
