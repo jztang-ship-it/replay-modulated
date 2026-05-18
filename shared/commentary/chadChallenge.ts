@@ -754,3 +754,63 @@ export function selectChallengeResolution(args: ChallengeResolutionArgs): string
 export function chadResolutionBank(outcome: ResolutionOutcome, flavor: ResolutionFlavor): string[] {
   return [...RESOLUTION_BANKS[outcome][flavor]];
 }
+
+// ── Share-payload trash talk — what ships IN the share card / share text ──
+//
+// Rendered onto the @vercel/og share card and included in default share
+// copy. Distinct surface from the comparison-sheet trash talk
+// (chadTrashTalk above): that one fires for the poster AFTER seeing the
+// recipient's score; this one is the cold provocation a recipient reads
+// BEFORE they've played.
+//
+// Generic by design — the share card already shows poster name and FP.
+// Chad's line carries the dare. No {name}/{delta} interpolation because
+// the recipient sees the slate details elsewhere on the card.
+//
+// Two tone tiers selected from the poster's win tier so a LEGEND share
+// brags differently than a STARTER share. Default bank covers everything
+// in between.
+
+const SHARE_TT_BRAG: string[] = [
+  "Cleared the bar. Now find out how short you are.",
+  "Trophy hand. Your turn — show me you can match it.",
+  "Top-shelf night. The slate is yours; the ceiling is mine.",
+  "Hand of the day candidate. Try not to be the photo-finish loss.",
+  "MVP-tier output. I dare you to come within five.",
+  "Set the high. See if you can touch it.",
+  "Don't embarrass yourself, but if you do, I want pictures.",
+];
+
+const SHARE_TT_DEFAULT: string[] = [
+  "Same slate, your turn. Show your work.",
+  "Beat this. Don't make me regret sending it.",
+  "Played a hand. Made it your problem now.",
+  "Sent you a slate. Whoever scores higher gets bragging rights for a week.",
+  "Try this. I want to see how you'd play it.",
+  "Hand's on the table. Your move.",
+  "Same names, same numbers. Different hand if you're smart.",
+  "Run the slate. Send back the receipt.",
+  "Built one. Curious if yours holds up.",
+  "Tap in. The slate is the slate; the score is yours to chase.",
+  "I'll wait. Show me your version of this hand.",
+  "Try clearing what I just did. Lower bar than it sounds.",
+  "Sent you the same cards. Different night if you read it right.",
+  "Don't overthink it. Don't underthink it either. Just play.",
+];
+
+/** Top-level: returns Chad's recipient-facing trash talk for the share
+ *  payload. Tone tier graduates with the poster's win tier — LEGEND/MVP
+ *  shares brag, STARTER+ shares default. Anti-repeat shared with other
+ *  Chad surfaces so the same line doesn't recur back-to-back. */
+export function chadShareTrashTalk(args: { winTier?: string } = {}): string {
+  const t = args.winTier;
+  if (t === "MVP" || t === "LEGEND" || t === "ALL_STAR") {
+    return pickWithAntiRepeat(SHARE_TT_BRAG);
+  }
+  return pickWithAntiRepeat(SHARE_TT_DEFAULT);
+}
+
+/** Expose bank arrays for testing / preview. */
+export function chadShareTrashTalkBank(tier: "brag" | "default"): string[] {
+  return tier === "brag" ? [...SHARE_TT_BRAG] : [...SHARE_TT_DEFAULT];
+}
