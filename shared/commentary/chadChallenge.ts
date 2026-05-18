@@ -559,3 +559,198 @@ export function chadInitiationBank(bucket: InitiationBucket): string[] {
     case "default":   return [...INITIATION_DEFAULT];
   }
 }
+
+// ── Challenge resolution — Chad's verdict to the recipient ────────────────
+//
+// Fires after the recipient finishes their attempt at the slate and the
+// ChallengeComparisonScreen reveals the gap. Voice: directly to the
+// recipient about THEIR result vs the original poster's hand.
+//
+// 5 outcome buckets, signed delta = recipientFp − posterFp:
+//   delta ≥ 15            → you_won_big
+//   1  < delta < 15       → you_won_narrow
+//   |delta| ≤ 1           → photo_finish
+//   -15 < delta < -1      → you_lost_narrow
+//   delta ≤ -15           → you_lost_big
+//
+// Two flavors per bucket:
+//   tactical     — comments on the gap, math, or build choices
+//   personality  — comments on the social/relationship dynamic; requires
+//                  posterName to interpolate (else fall back to tactical)
+//
+// Template tokens substituted at output time:
+//   {name}  → poster's display name
+//   {delta} → absolute FP gap (integer)
+
+const RES_YOU_WON_BIG_TACTICAL: string[] = [
+  "Ran them off the floor by {delta}. Different builds, same slate — yours hit harder.",
+  "Cooked them by {delta}. The same names, a sharper hand.",
+  "{delta}-point gap doesn't come from luck. You read the room better.",
+  "Crushed by {delta}. That's the kind of margin people screenshot.",
+  "Slate said it was possible. You said yes by {delta}.",
+  "You found {delta} extra points in cards they had access to. That's the whole game.",
+  "Math says decisive. Decisive says {delta}.",
+  "{delta} points means the holds and the swings all hit. Clean execution.",
+];
+
+const RES_YOU_WON_BIG_PERSONALITY: string[] = [
+  "{name}'s gonna feel that one. Run it back when they're ready to try again.",
+  "{name} just got a basketball reality check. Send it back, twist the knife.",
+  "Put {name} in the dirt by {delta}. Don't be modest about it.",
+  "{name} sent you a challenge. You sent them a lesson.",
+  "Hand back to {name} — let them carry the {delta}-point bruise around for a day.",
+  "{name} thought this was competitive. You corrected that assumption.",
+  "{name} just learned what your hand looks like on a good night.",
+  "Hope {name} is sitting down. {delta} is not a polite margin.",
+];
+
+const RES_YOU_WON_NARROW_TACTICAL: string[] = [
+  "By {delta}. One different decision and it flips — that's the line you walked.",
+  "Won by {delta}. Tight, but math doesn't grade on style.",
+  "{delta}-point margin. The slate is honest; you were honester.",
+  "Squeaked it by {delta}. Two cards swung the whole hand.",
+  "Closer than the screen makes it look — {delta} is real but fragile.",
+  "Your build edged theirs by {delta}. Single-game variance kind of margin.",
+  "Pulled it off by {delta}. Don't bank on the rematch being this kind.",
+  "Math says win. Math also says it was close. Take the W.",
+];
+
+const RES_YOU_WON_NARROW_PERSONALITY: string[] = [
+  "{name} kept it close. You kept it closer.",
+  "Beat {name} by a sneeze ({delta} points). They'll demand a rematch — give them one.",
+  "{name} is allowed to be salty. You're allowed to be smug.",
+  "Tight one against {name}. Send it back before they cool off.",
+  "{name} brought a fight. You brought one more point. Or {delta}.",
+  "{name} didn't lose. {name} just didn't win.",
+  "Edge against {name}. Make them earn the rematch.",
+  "{name} can claim it was close. The leaderboard doesn't care.",
+];
+
+const RES_PHOTO_FINISH_TACTICAL: string[] = [
+  "Within a free throw. Both hands were honest — the slate cooperated with both of you.",
+  "Photo finish. The math couldn't separate you, neither could the slate.",
+  "Dead even in real terms. {delta} point gap is rounding error.",
+  "Tied in spirit. You both played the same cards the same well.",
+  "If this had a longer slate, somebody would be embarrassed. Today, neither of you is.",
+  "Same hand, same answer. Run a different slate to settle it.",
+  "Inside the noise. Take the photo, don't bet on the rematch.",
+  "Slate handed out two clean lines. Coin flip would've called the same shot.",
+];
+
+const RES_PHOTO_FINISH_PERSONALITY: string[] = [
+  "{name} ran it perfect. You ran it perfect-er. Barely.",
+  "{name} and you read the slate identically. Run it again on different cards.",
+  "{name} is mad about a tie. So are you.",
+  "Bragging rights are off the table. Send {name} the slate again and break the tie.",
+  "Inside the margin against {name}. The next one decides it.",
+  "{name} is going to want a rematch on a different slate. Give them one.",
+  "Tie days against {name} are the worst days. Settle it tomorrow.",
+  "{name} and you cancel out. The slate had no opinion.",
+];
+
+const RES_YOU_LOST_NARROW_TACTICAL: string[] = [
+  "Cost yourself {delta}. Read the slate one more time tomorrow.",
+  "Lost by {delta}. One different swap and it's a different story.",
+  "{delta} points off. That's a single-card miss. Find it.",
+  "Slate had answers; you found most of them. Not all.",
+  "Closer than the trophy makes it look — but losing is losing.",
+  "Down {delta}. The hand was right; the timing wasn't.",
+  "Margin of {delta}. Two more correct holds, totally different night.",
+  "Build was honest. Execution was almost. Almost gets you {delta} short.",
+];
+
+const RES_YOU_LOST_NARROW_PERSONALITY: string[] = [
+  "{name} had one decision you didn't. Send a rebuttal.",
+  "Down to {name} by {delta}. Petty rematch is the only correct response.",
+  "{name} won this one. Don't let them think it's a pattern.",
+  "Margin of {delta} to {name}. You owe them — and yourself — a comeback.",
+  "{name} will remind you about this for a week. Quiet them next slate.",
+  "Lost to {name} by a possession. That's the kind of loss that compounds if you let it.",
+  "{name} earned this round. Take the slate they sent — give one back.",
+  "{name} is celebrating {delta} points. Make tomorrow's hand louder.",
+];
+
+const RES_YOU_LOST_BIG_TACTICAL: string[] = [
+  "Cooked by {delta}. The slate had answers; you missed them.",
+  "Down {delta}. The build never had a chance — wrong reads at the wrong tier.",
+  "{delta}-point gap is structural. Not a miss — a mismatch.",
+  "Slate said try this. You tried that. {delta} points apart.",
+  "Lost by {delta}. The math wasn't unfair; the choices were.",
+  "Decisive loss. {delta} doesn't lie. Take it as data.",
+  "Margin of {delta} means the hand wasn't close at any point.",
+  "{delta} points down. Different slate next time, different lessons.",
+];
+
+const RES_YOU_LOST_BIG_PERSONALITY: string[] = [
+  "{name} is texting about it. Owe them a rematch.",
+  "Took {delta} from {name}. Don't pretend it didn't sting.",
+  "{name} cooked you. Send a new slate; don't send a peace offering.",
+  "{name} will dine on this one for a week. Earn back the next night.",
+  "Lost to {name} by {delta}. The only correct move is petty.",
+  "{name} just bought themselves bragging rights. You can repossess them tomorrow.",
+  "{name} put {delta} on you. Frame the receipt — you'll need the motivation.",
+  "{name} got the better of you. Run it back; don't dwell.",
+];
+
+// ── Selection ────────────────────────────────────────────────────────────
+
+export type ResolutionOutcome =
+  | "you_won_big"
+  | "you_won_narrow"
+  | "photo_finish"
+  | "you_lost_narrow"
+  | "you_lost_big";
+
+export type ResolutionFlavor = "tactical" | "personality";
+
+export interface ChallengeResolutionArgs {
+  /** Recipient's hand FP. */
+  myScore: number;
+  /** Original poster's hand FP. */
+  posterScore: number;
+  /** Original poster's display name, if known. Required for personality flavor. */
+  posterName?: string | null;
+  /** Force flavor selection (for testing). Default: random when posterName set. */
+  forceFlavor?: ResolutionFlavor;
+}
+
+const RESOLUTION_BANKS: Record<ResolutionOutcome, Record<ResolutionFlavor, string[]>> = {
+  you_won_big:     { tactical: RES_YOU_WON_BIG_TACTICAL,     personality: RES_YOU_WON_BIG_PERSONALITY },
+  you_won_narrow:  { tactical: RES_YOU_WON_NARROW_TACTICAL,  personality: RES_YOU_WON_NARROW_PERSONALITY },
+  photo_finish:    { tactical: RES_PHOTO_FINISH_TACTICAL,    personality: RES_PHOTO_FINISH_PERSONALITY },
+  you_lost_narrow: { tactical: RES_YOU_LOST_NARROW_TACTICAL, personality: RES_YOU_LOST_NARROW_PERSONALITY },
+  you_lost_big:    { tactical: RES_YOU_LOST_BIG_TACTICAL,    personality: RES_YOU_LOST_BIG_PERSONALITY },
+};
+
+function selectResolutionOutcome(delta: number): ResolutionOutcome {
+  if (Math.abs(delta) <= 1) return "photo_finish";
+  if (delta >= 15)          return "you_won_big";
+  if (delta > 0)            return "you_won_narrow";
+  if (delta > -15)          return "you_lost_narrow";
+  return "you_lost_big";
+}
+
+/** Top-level: returns Chad's resolution line for the recipient's attempt.
+ *  Personality flavor is only eligible when posterName is provided;
+ *  otherwise falls back to tactical. When both eligible, 50/50 random
+ *  unless forceFlavor is supplied. */
+export function selectChallengeResolution(args: ChallengeResolutionArgs): string {
+  const delta = args.myScore - args.posterScore;
+  const outcome = selectResolutionOutcome(delta);
+  const personalityEligible = !!args.posterName;
+  const flavor: ResolutionFlavor =
+    args.forceFlavor
+      ?? (personalityEligible && Math.random() < 0.5 ? "personality" : "tactical");
+  const effectiveFlavor: ResolutionFlavor =
+    flavor === "personality" && !personalityEligible ? "tactical" : flavor;
+  const bank = RESOLUTION_BANKS[outcome][effectiveFlavor];
+  const raw = pickWithAntiRepeat(bank);
+  return raw
+    .replace(/\{name\}/g, args.posterName ?? "")
+    .replace(/\{delta\}/g, String(Math.abs(delta)));
+}
+
+/** Expose bank arrays for testing / preview. */
+export function chadResolutionBank(outcome: ResolutionOutcome, flavor: ResolutionFlavor): string[] {
+  return [...RESOLUTION_BANKS[outcome][flavor]];
+}
