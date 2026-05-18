@@ -1465,18 +1465,33 @@ export function selectCommentary(
     return { primary: fallbackLine };
   }
 
-  // Step 7: Score candidates with anti-repeat
-  const scored = candidates.map((line, i) => {
-    const resolved = resolveTemplate(line.template, templateData);
-    const penalty = scoreRepeatPenalty(line.id, matchedArchetype, tone, resolved);
-    const quality = line.qualityScore ?? 7;
-    const jitter = 0.9 + seededRandom(seed, i) * 0.2;
-    return {
-      line,
-      resolved,
-      score: quality * penalty.score * jitter,
-    };
-  });
+  // Step 7: Score candidates with anti-repeat.
+  // resolveTemplate returns "" when the template references a string var
+  // that's empty (e.g., {topStat} with no topGame data) — those templates
+  // would render with orphan scaffold punctuation. Filter them out so the
+  // scorer only ranks renderable candidates.
+  const scored = candidates
+    .map((line, i) => {
+      const resolved = resolveTemplate(line.template, templateData);
+      if (!resolved) return null; // unrenderable — empty required var
+      const penalty = scoreRepeatPenalty(line.id, matchedArchetype, tone, resolved);
+      const quality = line.qualityScore ?? 7;
+      const jitter = 0.9 + seededRandom(seed, i) * 0.2;
+      return {
+        line,
+        resolved,
+        score: quality * penalty.score * jitter,
+      };
+    })
+    .filter((s): s is NonNullable<typeof s> => s !== null);
+
+  // All candidates were unrenderable — drop to the absolute fallback rather
+  // than picking a "least bad" empty render. Same fallback as Step 6's
+  // empty-candidates branch.
+  if (scored.length === 0) {
+    const fallbackLine = register === "win" ? "Good hand." : "Tough night.";
+    return { primary: fallbackLine };
+  }
 
   // Sort by score descending, pick the best non-blocked
   scored.sort((a, b) => b.score - a.score);
