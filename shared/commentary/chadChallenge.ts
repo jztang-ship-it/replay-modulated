@@ -14,8 +14,6 @@
  * tonal constraints, and is sized to a different attention budget.
  */
 
-import { scoreRepeatPenalty, recordUsage } from "./antiRepeat";
-
 function pick(arr: string[]): string {
   return arr[Math.floor(Math.random() * arr.length)] ?? arr[0];
 }
@@ -564,19 +562,35 @@ function selectInitiationBucket(args: ChallengeInitiationArgs): InitiationBucket
   return "default";
 }
 
-/** Pick a line from a bank with anti-repeat scoring. Records the pick
- *  back to the shared antiRepeat history so subsequent calls (init or
- *  share-payload) penalize re-use. */
+/** Local ring-buffer anti-repeat for chad initiation / resolution /
+ *  trash-talk banks.
+ *
+ *  Earlier versions of pickWithAntiRepeat called shared/commentary/
+ *  antiRepeat's scoreRepeatPenalty + recordUsage with a single-arg
+ *  signature, but those functions require (lineId, archetype, tone,
+ *  resolvedLine). Calling with one arg left resolvedLine undefined,
+ *  and the internal extractOpeningPhrase(undefined).split() crashed
+ *  the renderer the first time the path actually fired (on a rare_pull
+ *  reveal once selectChallengeInitiation got wired into the prompt).
+ *
+ *  The shared antiRepeat module is built for the rich commentary
+ *  archetype/tone system; chad banks have a different shape (no
+ *  archetypes, no tones). A local 8-deep ring buffer keyed by line
+ *  content is the right anti-repeat surface for these banks: simple,
+ *  no cross-module coupling, no crash risk. */
+const _recentChadLines: string[] = [];
+const _CHAD_RECENT_WINDOW = 8;
+
 function pickWithAntiRepeat(bank: string[]): string {
-  // Score each candidate; lower penalty = more recently fresh.
-  let bestLine = bank[0];
-  let bestScore = Number.POSITIVE_INFINITY;
-  for (const line of bank) {
-    const { total } = scoreRepeatPenalty(line);
-    if (total < bestScore) { bestScore = total; bestLine = line; }
-  }
-  recordUsage(bestLine);
-  return bestLine;
+  // Filter out lines used in the last N picks. If all bank lines were
+  // recent (small bank, long session), fall through to the full pool so
+  // we don't pin on a single line forever.
+  const fresh = bank.filter(line => !_recentChadLines.includes(line));
+  const pool = fresh.length > 0 ? fresh : bank;
+  const pick = pool[Math.floor(Math.random() * pool.length)] ?? bank[0];
+  _recentChadLines.push(pick);
+  while (_recentChadLines.length > _CHAD_RECENT_WINDOW) _recentChadLines.shift();
+  return pick;
 }
 
 /** Filter INITIATION_RARE_PULL down to lines whose template variables are
