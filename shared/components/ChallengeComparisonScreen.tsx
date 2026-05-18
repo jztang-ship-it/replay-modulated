@@ -30,7 +30,7 @@ import { getPlayerUid, getNickname } from "@shared/utils/playerIdentity";
 import { hasAttemptedChallenge, markChallengeAttempted } from "@shared/hooks/useChallengeShare";
 import { track } from "@shared/analytics/analytics";
 import { isRealName } from "@shared/utils/isRealName";
-import { chadTrashTalk, trashTalkBucket } from "@shared/commentary/chadChallenge";
+import { chadTrashTalk, trashTalkBucket, selectChallengeResolution } from "@shared/commentary/chadChallenge";
 
 interface AttemptResult {
   attempt_id: string;
@@ -125,6 +125,22 @@ export function ChallengeComparisonScreen({
     : isWindowOpen ? "LOSS_OPEN"
     : "LOSS_CLOSED";
 
+  // Two commentary surfaces, independent banks:
+  //   resolutionLine — substantive two-clause WHY shown ON the sheet
+  //                    (selectChallengeResolution). Routes by signed
+  //                    delta so photo-finish +1 celebrates and -1
+  //                    commiserates.
+  //   trashTalk      — punchy short callout mirrored to the post-result
+  //                    chip on GameView via onResolved. Pill-friendly.
+  //                    Unchanged behavior; lives on its own random pool.
+  const resolutionLine = useMemo(
+    () => selectChallengeResolution({
+      myScore,
+      posterScore: challengeCtx.targetScore,
+      posterName: namedChallenger,
+    }),
+    [myScore, challengeCtx.targetScore, namedChallenger],
+  );
   const trashTalk = useMemo(() => {
     const bucket = trashTalkBucket(delta);
     return chadTrashTalk(bucket, namedChallenger, delta);
@@ -420,9 +436,16 @@ export function ChallengeComparisonScreen({
           </div>
         </div>
 
+        {/* Resolution commentary — sheet's primary WHY line. Substantive
+            two-clause output from selectChallengeResolution; routed by
+            signed delta so +1 / -1 photo-finish moments diverge. The
+            short pill-shaped trash-talk lives on the post-result chip
+            (mirrored via onResolved); this slot was previously the
+            short trash-talk callout and is now suppressed in favor of
+            the WHY line — see PR notes for the "occluded bubble" cut. */}
         <div style={{ maxWidth: 420, textAlign: "center", marginBottom: 14 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "#FFB14A", lineHeight: 1.4 }}>
-            {trashTalk}
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#FFB14A", lineHeight: 1.45 }}>
+            {resolutionLine}
           </div>
         </div>
 

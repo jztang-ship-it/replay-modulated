@@ -626,7 +626,12 @@ const RES_YOU_WON_NARROW_PERSONALITY: string[] = [
   "{name} can claim it was close. The leaderboard doesn't care.",
 ];
 
-const RES_PHOTO_FINISH_TACTICAL: string[] = [
+// Photo finish — split by sign so +1 (very narrow win) and -1 (very narrow
+// loss) get emotionally distinct copy. True ties (|delta| < 0.05, which
+// catches delta=0 and float-rounding noise from FP-component sums) keep
+// the neutral tie banks.
+
+const RES_PHOTO_FINISH_TIE_TACTICAL: string[] = [
   "Within a free throw. Both hands were honest — the slate cooperated with both of you.",
   "Photo finish. The math couldn't separate you, neither could the slate.",
   "Dead even in real terms. {delta} point gap is rounding error.",
@@ -637,8 +642,7 @@ const RES_PHOTO_FINISH_TACTICAL: string[] = [
   "Slate handed out two clean lines. Coin flip would've called the same shot.",
 ];
 
-const RES_PHOTO_FINISH_PERSONALITY: string[] = [
-  "{name} ran it perfect. You ran it perfect-er. Barely.",
+const RES_PHOTO_FINISH_TIE_PERSONALITY: string[] = [
   "{name} and you read the slate identically. Run it again on different cards.",
   "{name} is mad about a tie. So are you.",
   "Bragging rights are off the table. Send {name} the slate again and break the tie.",
@@ -646,6 +650,49 @@ const RES_PHOTO_FINISH_PERSONALITY: string[] = [
   "{name} is going to want a rematch on a different slate. Give them one.",
   "Tie days against {name} are the worst days. Settle it tomorrow.",
   "{name} and you cancel out. The slate had no opinion.",
+];
+
+const RES_PHOTO_FINISH_WIN_TACTICAL: string[] = [
+  "Edged it by {delta}. The closest you can get and still win.",
+  "Won by less than a possession. Take the W; don't ask questions.",
+  "Stuck the landing by {delta} — smaller than a free throw, bigger than zero.",
+  "Smallest legal margin. The slate said no, the column said yes.",
+  "Photo finish, but you're in the photo. Don't squint at the margin.",
+  "Squeaked past by {delta} — the kind of win that makes the rematch feel mandatory.",
+  "Took it by a sneeze. Don't sit on it.",
+  "Won by a {delta}-point bounce. Bank it; run it back.",
+];
+
+const RES_PHOTO_FINISH_WIN_PERSONALITY: string[] = [
+  "{name} ran it perfect. You ran it perfect-er. Barely.",
+  "{name} got walked off by one possession. Salt the wound politely.",
+  "By a fingernail. {name} will say it was lucky — and it was. So what.",
+  "{name} can complain. The column still says you won.",
+  "Edged {name} by {delta} — they'll ask for a rematch, give them one.",
+  "{name} brought it to the wire. You brought it across the wire first.",
+  "{name} is one breath from tying you. Don't let them get a second breath.",
+  "Took {name} down by less than a possession. Hand back; let them stew.",
+];
+
+const RES_PHOTO_FINISH_LOSS_TACTICAL: string[] = [
+  "Lost by {delta}. The slate was right there — one card away from flipping it.",
+  "Off by less than a possession. The kind of loss that haunts you.",
+  "{delta} short. Single-card swing and you walk away with the W.",
+  "Photo finish, wrong side of it. Painful but recoverable.",
+  "Down to the wire, down by a hair. {delta} is the worst margin to lose by.",
+  "Closer than the score column makes it look — but losing is losing.",
+  "Inside the noise, on the wrong side. Sharper reads next slate.",
+  "Lost by {delta}. A different swap wins the next one.",
+];
+
+const RES_PHOTO_FINISH_LOSS_PERSONALITY: string[] = [
+  "{name} got it by less than a possession. They'll never let you forget — pre-empt them.",
+  "Down by a fingernail to {name}. The right kind of mad to fuel a rematch.",
+  "{name} won this one by literally nothing. Win the next one by literally something.",
+  "{name} edged you by {delta}. Coin flip plus one for them; plus one for you next time.",
+  "{name} got the slimmer side of a coin flip. Recover faster than they can brag.",
+  "Lost to {name} by a sneeze. Rematch them while their guard is down.",
+  "{name} took the photo finish. You take the next one.",
 ];
 
 const RES_YOU_LOST_NARROW_TACTICAL: string[] = [
@@ -697,7 +744,9 @@ const RES_YOU_LOST_BIG_PERSONALITY: string[] = [
 export type ResolutionOutcome =
   | "you_won_big"
   | "you_won_narrow"
-  | "photo_finish"
+  | "photo_finish_win"
+  | "photo_finish_tie"
+  | "photo_finish_loss"
   | "you_lost_narrow"
   | "you_lost_big";
 
@@ -715,18 +764,26 @@ export interface ChallengeResolutionArgs {
 }
 
 const RESOLUTION_BANKS: Record<ResolutionOutcome, Record<ResolutionFlavor, string[]>> = {
-  you_won_big:     { tactical: RES_YOU_WON_BIG_TACTICAL,     personality: RES_YOU_WON_BIG_PERSONALITY },
-  you_won_narrow:  { tactical: RES_YOU_WON_NARROW_TACTICAL,  personality: RES_YOU_WON_NARROW_PERSONALITY },
-  photo_finish:    { tactical: RES_PHOTO_FINISH_TACTICAL,    personality: RES_PHOTO_FINISH_PERSONALITY },
-  you_lost_narrow: { tactical: RES_YOU_LOST_NARROW_TACTICAL, personality: RES_YOU_LOST_NARROW_PERSONALITY },
-  you_lost_big:    { tactical: RES_YOU_LOST_BIG_TACTICAL,    personality: RES_YOU_LOST_BIG_PERSONALITY },
+  you_won_big:       { tactical: RES_YOU_WON_BIG_TACTICAL,       personality: RES_YOU_WON_BIG_PERSONALITY },
+  you_won_narrow:    { tactical: RES_YOU_WON_NARROW_TACTICAL,    personality: RES_YOU_WON_NARROW_PERSONALITY },
+  photo_finish_win:  { tactical: RES_PHOTO_FINISH_WIN_TACTICAL,  personality: RES_PHOTO_FINISH_WIN_PERSONALITY },
+  photo_finish_tie:  { tactical: RES_PHOTO_FINISH_TIE_TACTICAL,  personality: RES_PHOTO_FINISH_TIE_PERSONALITY },
+  photo_finish_loss: { tactical: RES_PHOTO_FINISH_LOSS_TACTICAL, personality: RES_PHOTO_FINISH_LOSS_PERSONALITY },
+  you_lost_narrow:   { tactical: RES_YOU_LOST_NARROW_TACTICAL,   personality: RES_YOU_LOST_NARROW_PERSONALITY },
+  you_lost_big:      { tactical: RES_YOU_LOST_BIG_TACTICAL,      personality: RES_YOU_LOST_BIG_PERSONALITY },
 };
 
+/** Sign-aware bucket selector. `photo_finish_tie` covers true ties incl.
+ *  float-rounding noise from FP-component sums (epsilon = 0.05). The
+ *  win/loss variants of photo_finish handle the emotionally distinct +1
+ *  and -1 cases — a possession-and-change win celebrates, a possession-
+ *  and-change loss commiserates. */
 function selectResolutionOutcome(delta: number): ResolutionOutcome {
-  if (Math.abs(delta) <= 1) return "photo_finish";
-  if (delta >= 15)          return "you_won_big";
-  if (delta > 0)            return "you_won_narrow";
-  if (delta > -15)          return "you_lost_narrow";
+  if (Math.abs(delta) < 0.05) return "photo_finish_tie";
+  if (Math.abs(delta) <= 1)   return delta > 0 ? "photo_finish_win" : "photo_finish_loss";
+  if (delta >= 15)            return "you_won_big";
+  if (delta > 0)              return "you_won_narrow";
+  if (delta > -15)            return "you_lost_narrow";
   return "you_lost_big";
 }
 
@@ -747,7 +804,7 @@ export function selectChallengeResolution(args: ChallengeResolutionArgs): string
   const raw = pickWithAntiRepeat(bank);
   return raw
     .replace(/\{name\}/g, args.posterName ?? "")
-    .replace(/\{delta\}/g, String(Math.abs(delta)));
+    .replace(/\{delta\}/g, Math.abs(delta).toFixed(1));
 }
 
 /** Expose bank arrays for testing / preview. */
