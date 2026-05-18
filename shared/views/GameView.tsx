@@ -137,14 +137,14 @@ const ChallengePostResultBar = lazy(() =>
 const NotificationsPanel = lazy(() =>
   import("@shared/components/NotificationsPanel").then(m => ({ default: m.NotificationsPanel }))
 );
+import { chadMessage } from "@shared/commentary/chad";
 import {
-  chadMessage,
   chadTriggerFraming,
   chadChallengeIntro,
   chadChallengeTactical,
   chadNormalPlayWelcome,
   chadRivalryBackIntro,
-} from "@shared/commentary/chad";
+} from "@shared/commentary/chadChallenge";
 import { isRealName } from "@shared/utils/isRealName";
 import { useAuth } from "@shared/auth/useAuth";
 import { listMessages } from "@shared/inbox/inbox";

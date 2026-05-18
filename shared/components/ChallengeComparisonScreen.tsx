@@ -30,7 +30,7 @@ import { getPlayerUid, getNickname } from "@shared/utils/playerIdentity";
 import { hasAttemptedChallenge, markChallengeAttempted } from "@shared/hooks/useChallengeShare";
 import { track } from "@shared/analytics/analytics";
 import { isRealName } from "@shared/utils/isRealName";
-import { chadTrashTalk, trashTalkBucket } from "@shared/commentary/chad";
+import { chadTrashTalk, trashTalkBucket } from "@shared/commentary/chadChallenge";
 
 interface AttemptResult {
   attempt_id: string;
