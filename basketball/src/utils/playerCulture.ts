@@ -110,7 +110,46 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Steven Adams — basePlayerId 203500 — teams: OKC
+  adams_203500: {
+    basePlayerId: "203500",
+    nicknames: ["The Stache", "Aquaman"],
+    knownFor: "The bruising center who sets the hardest screens in basketball. Thunder legend.",
+    salaryTier: "value",
+    tier1: ["The screen-setter who turns pick-and-rolls into car crashes.", "Never met a rebound he couldn't grab or a screen he couldn't set harder."],
+    tier2: ["The Thunder's enforcer during the Westbrook-Durant era.", "Kiwi accent, lumberjack beard, old-school center mentality."],
+    tier3: ["23 rebounds against Sacramento on New Year's Day. Still going strong at 30."],
+    overperform: ["When Adams is active on the glass, he can dominate without scoring.", "19 points, 17 rebounds against Denver. The complete two-way night."],
+    underperform: ["Limited offensive range means quiet nights when the rebounds aren't there.", "Foul trouble neutralizes his physical advantage completely."],
+    onPace: ["Double-digit rebounds, solid screens, veteran leadership. Exactly as advertised.", "The definition of knowing your role and excelling at it."],
+    turnovers: ["Ball-handling was never the point. He's there to rebound and screen."],
+    defensive: ["Rim protection and rebounding. The anchor every defense needs inside."],
+    bigGame: ["19 points, 17 rebounds against Denver in 2020. Dominated both ends.", "Five blocks against the Clippers. The rim protector showed up when needed."],
+    quietGame: ["When the shots aren't falling inside, Adams can disappear offensively."],
+    famousGameHint: ["That monster rebounding night against Denver came in a Thunder win.", "Sometimes the best games happen when you do the dirty work perfectly."],
+    controversy: ["Never generated drama despite playing the most physical position.", "The quiet professional who let his screens do the talking.", "If there's controversy, it's wondering why he never got All-Star recognition."],
+    formerTeam: ["The OKC return was emotional. Ten assists against his former teammates."],
+    rivalry: ["Physical play generates respect, not rivalries. Too professional for beef."],
+    milestones: ["Over 7,000 career rebounds before age 30. The foundation is built."],
+    streakLines: ["When Adams is rebounding everything, the second-chance points pile up.", "Cold stretches mean fewer touches inside. Limited offensive options show."],
+    salaryNarrative: ["Twenty million for a center who does everything except score in volume.", "The perfect value contract for teams that understand what winning looks like."],
+    teamContext: ["Traded around as teams realized his value in different systems."],
+    draftAndPath: ["Twelfth pick in 2013. The Thunder found gold in the lottery's middle."],
+    opponentFlavor: { DEN: "19 points, 17 rebounds in 2020. Outworked Jokic on the glass.", HOU: "23 points against his future team. Showed them what they were getting.", LAC: "Five blocks against the Clippers. Rim protection at its finest.", OKC: "Triple-double against his former team. Emotional homecoming game." },
+    signatureGames: [
+      { date: "2020-02-21", opponent: "DEN", fp: 60.4, line: "19p/17r/2a/4s/2b" },
+      { date: "2022-03-06", opponent: "HOU", fp: 56.9, line: "23p/12r/5a/1s/3b" },
+      { date: "2018-03-16", opponent: "LAC", fp: 56.3, line: "18p/14r/1a/3s/5b" },
+      { date: "2021-01-06", opponent: "OKC", fp: 39.2, line: "10p/11r/10a" },
+    ],
+    teamEras: {
+      OKC: {
+        framing: ["The Thunder years. Adams was the enforcer for Westbrook and Durant.", "Seven seasons of the hardest screens and toughest rebounds in the West."],
+        bigGameVariant: "When OKC needed physicality, Adams delivered every single night.",
+        quietGameVariant: "Even quiet nights meant elite screens and rebounding effort.",
+      },
+    },
+  },
 // Bam Adebayo (MIA, $56, PURPLE)
   adebayo_1628389: {
     basePlayerId: "1628389",
@@ -145,7 +184,47 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-01-24", opponent: "MEM", fp: 63, line: "Six-block party in Memphis showing defensive dominance" },
     ],
   },
-
+// Tony Allen — basePlayerId 2754 — teams: MEM
+  allen_2754: {
+    basePlayerId: "2754",
+    nicknames: ["The Grindfather", "TA"],
+    knownFor: "First Team All-Defense who made offense optional and winning mandatory.",
+    salaryTier: "role",
+    tier1: ["Defense-first wing who turned lockdown into an art form. Offense was a bonus.", "Six All-Defensive teams speak louder than any scoring average ever could."],
+    tier2: ["The face of Grit and Grind Memphis. That culture started with his intensity.", "Boston's defensive specialist who knew his role and played it perfectly.", "Made all-stars uncomfortable for a decade. The ultimate role player."],
+    tier3: ["Remember when he locked up Kevin Durant in the playoffs? Made KD look human."],
+    overperform: ["When Tony Allen scored 20, something special was happening. Defense plus offense was unfair.", "The steal games were vintage TA. Six steals meant chaos for the other team.", "Playoff Tony Allen was a different beast. The intensity amplified everything."],
+    underperform: ["Single-digit scoring was normal. The offense was never the point anyway.", "When the steals dried up, he became invisible. Defense was his only calling card.", "Shooting slumps didn't matter. Teams respected his other contributions."],
+    onPace: ["Normal Tony Allen was 8 points, 4 rebounds, and elite perimeter defense.", "The consistency on defense never wavered. You knew what you were getting."],
+    turnovers: ["Aggressive defense sometimes meant reaching fouls. The intensity was a double-edged sword."],
+    defensive: ["The prototype wing defender. Made offensive superstars work for every shot.", "Six All-Defensive teams don't lie. This is what elite defense looks like.", "Could guard multiple positions before it was fashionable. The versatility was rare."],
+    bigGame: ["19 points, 11 rebounds, 6 assists, and 6 steals against Indiana in 2011.", "Complete two-way performance when Memphis needed everything from him.", "62 fantasy points from a defense-first player. The ceiling was always there."],
+    quietGame: ["Even quiet Tony Allen games featured quality defense. The impact wasn't always statistical.", "Single-digit scoring was expected. The value came from what he prevented."],
+    famousGameHint: ["That 2011 game against Indiana showcased everything. 19/11/6/6 steals was peak Tony Allen.", "The complete stat sheet reminded everyone he could do more than just defend.", "March 2011 was his month. Multiple dominant two-way performances."],
+    controversy: ["Never a superstar, never complained about role. The ultimate team-first mentality.", "Boston fans still argue he was underutilized. The defensive impact was undeniable.", "Memphis built their identity around his intensity. Grit and Grind started with TA.", "The Kevin Durant playoff battles were appointment television. Elite defender versus elite scorer."],
+    formerTeam: ["Boston games carried extra motivation. Proving his value to the team that let him go.", "No bitterness publicly, but the intensity was always higher against the Celtics."],
+    rivalry: ["Thunder playoff battles defined an era. Tony Allen versus Kevin Durant was appointment viewing."],
+    milestones: ["Six All-Defensive teams from a second-round pick. The recognition was earned.", "1,100 career steals quietly accumulated. The consistency on defense never wavered."],
+    streakLines: ["Multiple-steal games came in bunches. When he was hunting, nobody was safe.", "The defensive intensity never had cold streaks. Consistent disruption for a decade.", "Scoring streaks were rare but memorable. Defense-first players don't hunt buckets."],
+    salaryNarrative: ["30 dollars for elite defense and championship experience. The value was always there.", "Role player salary for All-Defensive team impact. Teams knew what they were getting.", "Defense doesn't show up in box scores but wins matter. TA delivered winning basketball."],
+    teamContext: ["Memphis built their entire defensive identity around his intensity and approach.", "The Grit and Grind era needed a face. Tony Allen was the perfect symbol."],
+    draftAndPath: ["Second-round pick who carved out a decade-plus career. The work ethic was everything.", "Boston development turned him into a defensive specialist. Sometimes limitations become strengths."],
+    opponentFlavor: { BOS: "Always played extra hard against his former team. The defensive intensity was personal.", OKC: "Kevin Durant matchups were must-see basketball. David versus Goliath defensive battles.", LAC: "Chris Paul hated facing Tony Allen. The pressure disrupted CP3's rhythm completely.", SAS: "Spurs games were defensive clinics. Fundamental basketball at its finest.", GSW: "Warriors' motion offense gave him problems. Too much switching and movement." },
+    signatureGames: [
+      { date: "2011-03-19", opponent: "IND", fp: 62.2, line: "19p/11r/6a/6s/1b" },
+      { date: "2011-02-08", opponent: "OKC", fp: 57.3, line: "27p/4r/1a/5s/3b" },
+      { date: "2007-01-07", opponent: "ORL", fp: 54.3, line: "21p/9r/3a/7s/1b" },
+      { date: "2016-03-07", opponent: "CLE", fp: 50.4, line: "26p/2r/4a/5s/1b" },
+      { date: "2012-04-23", opponent: "CLE", fp: 50.1, line: "13p/8r/1a/8s/1b" },
+    ],
+    teamEras: {
+      MEM: {
+        framing: ["The Grindfather era in Memphis. That defensive culture started with his intensity.", "Peak Grit and Grind basketball with TA setting the tone every single night.", "Made Memphis must-watch playoff basketball. The defensive battles were appointment viewing.", "Randolph and Gasol got the headlines, but Allen was the heart of those teams."],
+        bigGameVariant: "27 points against OKC showed Memphis fans he could do everything when needed.",
+        quietGameVariant: "Even quiet Memphis games featured elite defense. The impact never disappeared.",
+      },
+    },
+  },
 // Ray Allen — basePlayerId 951 — teams: MIL/SEA
   allen_951: {
     basePlayerId: "951",
@@ -192,7 +271,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Giannis Antetokounmpo (MIL, $79, ORANGE)
   antetokounmpo_203507: {
     basePlayerId: "203507",
@@ -227,7 +305,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-01-22", opponent: "DET", fp: 79.4, line: "Triple-double dominance in the Motor City" },
     ],
   },
-
 // Carmelo Anthony — basePlayerId 2546 — teams: DEN/NYK
   anthony_2546: {
     basePlayerId: "2546",
@@ -274,7 +351,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Gilbert Arenas — basePlayerId 2240 — teams: GSW/WAS
   arenas_2240: {
     basePlayerId: "2240",
@@ -321,7 +397,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Deandre Ayton — basePlayerId 1629028 — teams: PHX/POR
   ayton_1629028: {
     basePlayerId: "1629028",
@@ -368,7 +443,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // LaMelo Ball (CHA, $57, PURPLE)
   ball_1630163: {
     basePlayerId: "1630163",
@@ -403,7 +477,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-11-25", opponent: "ORL", fp: 64.3, line: "44 points on Thanksgiving weekend - gave fans something to be thankful for" },
     ],
   },
-
 // Paolo Banchero (ORL, $60, PURPLE)
   banchero_1631094: {
     basePlayerId: "1631094",
@@ -438,7 +511,88 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-01-07", opponent: "ATL", fp: 63, line: "35 points in 45 minutes showed his stamina and will." },
     ],
   },
-
+// Andrea Bargnani — basePlayerId 200745 — teams: TOR
+  bargnani_200745: {
+    basePlayerId: "200745",
+    nicknames: ["Il Mago", "Primo"],
+    knownFor: "The first European drafted first overall who proved draft position isn't everything.",
+    salaryTier: "flier",
+    tier1: ["Drafted first overall in 2006 ahead of LaMarcus Aldridge and Brandon Roy.", "The Raptors thought they were getting Dirk 2.0. They got something else entirely.", "Seven-footer who shot threes and avoided contact like it was contagious."],
+    tier2: ["The Knicks traded a first-rounder for him in 2013. Peak Knicks.", "Career 15.2 PPG shooter who disappeared in big moments more than Houdini.", "Made one All-Star team in 2007, then spent the rest proving it was a fluke."],
+    tier3: ["The poster child for why European bigs scared NBA scouts for a decade.", "Soft as tissue paper, but could stroke it from deep when nobody was watching."],
+    overperform: ["When Bargnani got hot, he looked like the player Toronto drafted first.", "41 points against the Knicks in 2010. For one night, the pick made sense.", "Those rare games where the shot fell and he remembered he was seven feet tall."],
+    underperform: ["Most first overall picks have bad games. Bargnani had bad seasons.", "The Raptors waited seven years for consistency that never came.", "You drafted him hoping for Dirk, got someone afraid of his own shadow instead."],
+    onPace: ["Meeting Bargnani expectations meant 15 points and disappearing in traffic.", "Exactly what you'd expect: some threes, zero toughness, maximum frustration."],
+    turnovers: ["For a shooter, he gave the ball away like he was allergic to it.", "Soft hands for shooting, butterfingers for everything else."],
+    defensive: [],
+    bigGame: ["41 points and 7 rebounds against the Knicks on December 8th, 2010.", "One of those nights where everything fell and he looked unstoppable.", "Reminded everyone why Toronto took him first, then promptly forgot again."],
+    quietGame: ["The disappearing act was his signature move in big spots.", "Seven feet tall, invisible in crunch time."],
+    famousGameHint: ["That 41-point explosion against New York should've been the blueprint.", "Instead it became the exception that proved the frustrating rule.", "One perfect game in a career full of almosts and what-ifs."],
+    controversy: ["Being drafted ahead of LaMarcus Aldridge and Brandon Roy haunted his entire career.", "The soft label stuck because he earned it nightly with his play style.", "Toronto fans still debate whether he was unlucky or just overmatched.", "The Knicks trade somehow made both teams worse, peak basketball comedy.", "Became the cautionary tale scouts pointed to whenever Europeans got hyped."],
+    formerTeam: ["Never really got the chance to face Toronto after the trade.", "Would've been awkward watching him try to score on his old teammates."],
+    rivalry: ["No real rivalries when you're soft enough to avoid contact.", "Hard to develop beef when you spend half the game on the perimeter."],
+    milestones: ["First European drafted number one overall, a distinction he'd probably trade back.", "One All-Star appearance in 2007, then seven years of proving it was wrong."],
+    streakLines: ["Hot streaks made you remember why he went first overall.", "Cold streaks made you question everything about modern scouting.", "The consistency was in the inconsistency, which was perfectly Bargnani."],
+    salaryNarrative: ["At $14, he's lottery ticket pricing for a former lottery pick.", "Still cheaper than admitting the first overall selection was a mistake.", "Value play if you need threes and can live with everything else missing."],
+    teamContext: ["Brooklyn picked him up after New York gave up trying to make it work.", "Every team thought they could unlock the potential Toronto couldn't find."],
+    draftAndPath: ["First overall in 2006, ahead of Aldridge and Roy. The Raptors are still recovering.", "European big man with a shooter's touch and a center's reluctance to bang inside."],
+    opponentFlavor: { NYK: "Torched them for 41 once, then got traded there for his troubles.", NJN: "Had some of his better games against Jersey, which says something.", DEN: "Always seemed to find his range against Western Conference teams.", PHX: "Another team that brought out his occasional shooting brilliance.", DET: "Multiple solid performances, probably his most consistent opponent." },
+    signatureGames: [
+      { date: "2010-12-08", opponent: "NYK", fp: 63.4, line: "41p/7r/6a - The night Il Mago remembered magic" },
+      { date: "2010-12-17", opponent: "NJN", fp: 54.8, line: "32p/9r/2a - Back-to-back brilliance that never lasted" },
+      { date: "2008-12-31", opponent: "DEN", fp: 53.7, line: "26p/6r/5b - New Year's Eve blocks party" },
+      { date: "2012-01-24", opponent: "PHX", fp: 53.2, line: "36p/6r/2a - Vintage shooting display in Phoenix" },
+      { date: "2013-11-08", opponent: "CHA", fp: 53.1, line: "25p/8r/5b - Rare defensive effort with the offense" },
+    ],
+    teamEras: {
+      TOR: {
+        framing: ["The Colangelo era's biggest swing and miss. First overall, infinite frustration.", "Seven years of waiting for consistency that lived in flashes, not seasons.", "The pick that made Raptors fans gun-shy about European big men for years."],
+        bigGameVariant: "41 points against the Knicks was vintage Toronto hope: brilliant and fleeting.",
+        quietGameVariant: "Disappeared more than a magician, fitting for Il Mago's nickname.",
+      },
+    },
+  },
+// Charles Barkley — basePlayerId 787 — teams: HOU
+  barkley_787: {
+    basePlayerId: "787",
+    nicknames: ["The Round Mound of Rebound", "Sir Charles", "Chuck"],
+    knownFor: "The undersized power forward who out-rebounded giants and never met a microphone he didn't like.",
+    salaryTier: "max",
+    tier1: ["6'6\" power forward who grabbed 33 rebounds in a game. Physics didn't apply to Chuck.", "The '93 MVP who carried Phoenix to the Finals. MJ had other plans.", "Averaged 22 and 12 for his career despite being built like a bowling ball."],
+    tier2: ["Threw a guy through a bar window in '97. The fine was pocket change compared to the headlines.", "Called San Antonio women fat on TNT. The city's tourism board sent him churros.", "Shot 26% from three but kept firing. Confidence never left the building."],
+    tier3: ["The Dream Team's most quotable member. 'I am not a role model' became a Nike campaign.", "Retired without a ring but with more memorable lines than most champions."],
+    overperform: ["43 points at 34 years old against Golden State. The old legs still had rockets in them.", "Triple-double with 27 and 17 against the Warriors. Father Time got dunked on.", "33 rebounds against Phoenix, his old team. Revenge tastes like offensive boards."],
+    underperform: ["The quiet nights came when Chuck couldn't find his jumper. 15 shots, 6 makes, 2 quotes.", "Age finally caught the Round Mound. Some games the rebounds just wouldn't bounce his way.", "When the legs went, the mouth stayed. At least the entertainment value held steady."],
+    onPace: ["Chuck being Chuck. Twenty points, twelve boards, and three sound bites for the highlight reel.", "Routine excellence from the most unroutine superstar. The quotes were still elite."],
+    turnovers: ["Seven turnovers in 58 minutes against the Lakers. Even Chuck couldn't handle Chuck sometimes.", "The ball-handling of a power forward who thought he was Magic Johnson. Results varied wildly."],
+    defensive: ["Undersized but immovable. Chuck planted himself in the paint like a fire hydrant with attitude.", "Defense was about positioning and want-to. Chuck had both when the mood struck."],
+    bigGame: ["75.4 fantasy points with a triple-double against Golden State. Chuck at his most complete.", "43 points and 15 rebounds on 39 minutes. The old man still had young man explosiveness.", "27 points, 17 rebounds, 12 assists in November '96. The full Chuck experience in one box score."],
+    quietGame: ["The quiet Chuck game barely existed. Even 15 points came with 12 rebounds and hot takes.", "When Chuck struggled, he struggled loudly. The effort meter never moved off maximum."],
+    famousGameHint: ["33 rebounds against Phoenix in November '96. Revenge games hit different when you're Chuck.", "That triple-double against Golden State lives in Rockets lore. 27-17-12 at 33 years old.", "The 43-point explosion against the Warriors. Chuck proving age was just a number on his jersey."],
+    controversy: ["Threw a guy through a window in '97. Charges were dropped. Chuck stayed Chuck.", "The gambling stories followed him everywhere. Chuck bet on everything except his own mouth staying shut.", "Called modern players soft while cashing TNT checks. The hypocrisy was part of the charm.", "The 'I'm not a role model' campaign turned honesty into branding.", "The weight jokes wrote themselves. Chuck embraced them before anyone else could."],
+    formerTeam: ["Facing Phoenix meant extra motivation. Chuck made sure the Suns remembered what they traded away.", "Every Sixers matchup was personal. Philadelphia drafted him, Houston got his prime years."],
+    rivalry: ["The Lakers games were heavyweight fights. Chuck vs Shaq in the paint was appointment television.", "Portland matchups brought out vintage Chuck. The Blazers never had an answer for his motor."],
+    milestones: ["20,000 points and 12,000 rebounds as an undersized big man. Physics textbooks need updating.", "The Hall of Fame speech thanked everyone except his jump shot. Self-awareness was always Chuck's strength."],
+    streakLines: ["Hot Chuck was must-see TV. Five straight games of 25 and 10 while cracking jokes.", "Cold shooting Chuck was still entertaining Chuck. The commentary never slowed down.", "Triple-double capable at 34. Chuck's basketball IQ aged better than his knees."],
+    salaryNarrative: ["$55 million for entertainment value alone. Chuck delivered laughs and buckets in equal measure.", "Max money for maximum personality. The Rockets got a player and a one-man comedy show.", "Worth every penny for the soundbites. Chuck's press conferences were better than most games."],
+    teamContext: ["Houston traded for instant credibility. Chuck brought championship expectations and ESPN quotes.", "Hakeem needed a running mate. Chuck provided rebounds, scoring, and all the attention Hakeem didn't want."],
+    draftAndPath: ["Fifth pick by Philadelphia in '84. The Sixers got a Hall of Famer disguised as a bowling ball.", "Phoenix trade brought his peak years. Houston got the victory lap version with bonus entertainment."],
+    opponentFlavor: { GSW: "43 points against the Warriors. Chuck treating Golden State like a personal highlight reel.", PHX: "33 rebounds against his old team. Phoenix learned what they gave up the hard way.", LAL: "33 points in 58 minutes against the Lakers. Chuck matching Shaq bucket for bucket.", BOS: "27 rebounds in Boston Garden. The ghosts of Celtics past got out-rebounded.", SAS: "Solid numbers against the Spurs. Even Chuck respected Pop's system." },
+    signatureGames: [
+      { date: "1996-11-23", opponent: "GSW", fp: 75.4, line: "27p/17r/12a/3s/1b - Triple-double perfection" },
+      { date: "1997-11-29", opponent: "GSW", fp: 71.5, line: "43p/15r/3a/4s - Season-high scoring explosion" },
+      { date: "1996-11-02", opponent: "PHX", fp: 65.6, line: "20p/33r/2a - Revenge rebounding clinic" },
+      { date: "1996-11-26", opponent: "POR", fp: 64.8, line: "30p/14r/4a/5s - Complete two-way dominance" },
+      { date: "1996-11-12", opponent: "LAL", fp: 61.7, line: "33p/16r/5a - Matching Shaq shot for shot" },
+    ],
+    teamEras: {
+      HOU: {
+        framing: ["The championship chase years. Chuck joined Hakeem for one last title run.", "Peak entertainment value. The Rockets got vintage Chuck with age-adjusted expectations.", "Two seasons of brilliance before the back gave out. The quotes outlasted the knees."],
+        bigGameVariant: "33 rebounds against Phoenix wearing Houston red. Revenge tastes better in Texas.",
+        quietGameVariant: "Even quiet Chuck was loud Chuck. Houston fans got their money's worth every night.",
+      },
+    },
+  },
 // Scottie Barnes (TOR, $57, PURPLE)
   barnes_1630567: {
     basePlayerId: "1630567",
@@ -472,7 +626,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-10-28", opponent: "DEN", fp: 62.9, line: "Near triple-double with 5 steals against championship core" },
     ],
   },
-
 // Bradley Beal — basePlayerId 203078 — teams: WAS/PHX
   beal_203078: {
     basePlayerId: "203078",
@@ -519,7 +672,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Mike Bibby — basePlayerId 1710 — teams: SAC/VAN
   bibby_1710: {
     basePlayerId: "1710",
@@ -565,7 +717,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Chauncey Billups — basePlayerId 1497 — teams: DET/DEN
   billups_1497: {
     basePlayerId: "1497",
@@ -612,7 +763,47 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Mookie Blaylock — basePlayerId 302 — teams: ATL
+  blaylock_302: {
+    basePlayerId: "302",
+    nicknames: ["Mookie"],
+    knownFor: "Point guard who averaged three steals per game and inspired Pearl Jam's name.",
+    salaryTier: "star",
+    tier1: ["Led the league in steals twice. Hands quicker than his mouth was loud.", "The assist-to-steal combo that made coaches weep with joy."],
+    tier2: ["Pearl Jam was originally named after his jersey number. The band outlasted his career.", "Six seasons of 200+ steals. The pickpocket era of point guard play."],
+    tier3: ["Shot 32% from three on eight attempts per game. Volume shooter with selective accuracy."],
+    overperform: ["When Mookie got hot, the steals multiplied and the turnovers disappeared.", "Double-digit assists with eight steals? That's the Blaylock special working overtime."],
+    underperform: ["The shooting percentage cratered but the steal attempts stayed constant.", "Bad shooting Mookie still gambled on defense. At least he was consistent."],
+    onPace: ["Steady Mookie: six assists, two steals, questionable shot selection.", "The reliable chaos agent. You knew what you were getting."],
+    turnovers: ["Gambled with passes like he gambled on steals. High risk, mixed reward."],
+    defensive: ["The steal king of the 90s. Three per game for his career, which is absurd.", "Turned defense into offense before anyone called it transition basketball."],
+    bigGame: ["10 steals with 11 assists against Philly in '98. The all-time chaos line.", "39 points against Cleveland in '96. When the shots fell, the man was unstoppable.", "19 assists with seven steals against Atlanta. Former team, maximum disrespect."],
+    quietGame: ["Quiet Mookie still found ways to impact winning. Usually involved pickpocketing.", "Even off-nights featured three steals. The man couldn't help himself."],
+    famousGameHint: ["April 1998 against Philadelphia: the 10-steal, 11-assist masterpiece.", "The triple-double with 10 steals. Yes, that actually happened."],
+    controversy: ["Left Oklahoma under academic clouds. The talent was never questioned.", "The Hawks years ended messily. Front office politics met stubborn point guard.", "Shot-happy point guard who sometimes forgot the 'point' part of his position."],
+    formerTeam: ["Facing Atlanta after the messy exit. 19 assists with seven steals says everything."],
+    rivalry: ["Every opposing point guard was a rivalry. Mookie made it personal with the steals."],
+    milestones: ["Career leader in steals per game at 2.9. The record that might never fall."],
+    streakLines: ["Hot-streak Mookie meant 15+ assists with minimal turnovers. Rare but beautiful.", "Cold shooting, hot hands on defense. The steals never stopped coming.", "Four triple-doubles in his career. Three involved double-digit steals or assists."],
+    salaryNarrative: ["Star-tier salary for the steal machine. You're paying for chaos and upside.", "The gambling defense comes with gambling offense. High floor, volatile ceiling."],
+    teamContext: ["Golden State grabbed him for veteran leadership and defensive intensity.", "The steal numbers travel. Every team needs a pickpocket."],
+    draftAndPath: ["Oklahoma product who left college early. The NBA suited his gambling style better."],
+    opponentFlavor: { PHI: "Torched Philly repeatedly. 10 steals in one game, multiple 60+ FP efforts.", CLE: "Career-high 39 points against Cleveland. The shooting display of his life.", TOR: "Raptors couldn't handle the gambling defense. Easy pickings for Mookie.", DEN: "29 points, 12 rebounds against Denver. The complete stat-sheet takeover.", LAC: "26 points, zero turnovers against the Clippers. Rare perfect efficiency." },
+    signatureGames: [
+      { date: "1998-04-14", opponent: "PHI", fp: 69.1, line: "14p/8r/11a/10s" },
+      { date: "1996-11-12", opponent: "CLE", fp: 63.6, line: "39p/8r/8a/2s" },
+      { date: "1999-12-10", opponent: "ATL", fp: 62.3, line: "9p/4r/19a/7s" },
+      { date: "1998-01-29", opponent: "PHI", fp: 60.9, line: "17p/7r/13a/5s" },
+      { date: "1997-02-12", opponent: "TOR", fp: 60.1, line: "19p/8r/11a/6s" },
+    ],
+    teamEras: {
+      ATL: {
+        framing: ["The Hawks years where he became the steal king of the league.", "Six seasons of 200+ steals, questionable shots, and playoff runs.", "Left Atlanta on bad terms but gave them the best years of his career."],
+        bigGameVariant: "19 assists with seven steals against his former team. Maximum disrespect.",
+        quietGameVariant: "Even quiet Hawks Mookie found three steals per game. Muscle memory.",
+      },
+    },
+  },
 // Eric Bledsoe — basePlayerId 202339 — teams: PHX/MIL
   bledsoe_202339: {
     basePlayerId: "202339",
@@ -658,7 +849,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Devin Booker (PHX, $59, PURPLE)
   booker_1626164: {
     basePlayerId: "1626164",
@@ -693,7 +883,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-10-31", opponent: "LAC", fp: 65, line: "Season-opening statement with 3 steals" },
     ],
   },
-
 // Carlos Boozer — basePlayerId 2430 — teams: CLE/UTA/CHI
   boozer_2430: {
     basePlayerId: "2430",
@@ -745,7 +934,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Chris Bosh — basePlayerId 2547 — teams: TOR/MIA
   bosh_2547: {
     basePlayerId: "2547",
@@ -792,7 +980,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Elton Brand — basePlayerId 1882 — teams: CHI/LAC/PHI
   brand_1882: {
     basePlayerId: "1882",
@@ -844,7 +1031,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Terrell Brandon — basePlayerId 210 — teams: CLE/MIL/MIN
   brandon_210: {
     basePlayerId: "210",
@@ -896,7 +1082,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Jaylen Brown — basePlayerId 1627759 — teams: BOS
   brown_1627759: {
     basePlayerId: "1627759",
@@ -938,7 +1123,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Jalen Brunson (NYK, $59, PURPLE)
   brunson_1628973: {
     basePlayerId: "1628973",
@@ -973,7 +1157,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2023-11-30", opponent: "DET", fp: 63.2, line: "Efficient 42-point clinic" },
     ],
   },
-
   bryant_977: {
     basePlayerId: "977",
     nicknames: ["Black Mamba", "Mamba", "Vino", "Kobe", "KB24", "Mamba Mentality"],
@@ -1000,7 +1183,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["13th pick out of high school. Hornets traded him for Vlade Divac.", "Italian upbringing — fluent in three languages, hooper from age 6."],
   },
-
 // Jimmy Butler III — basePlayerId 202710 — teams: CHI/GSW/MIA/MIN/PHI
   butler_202710: {
     basePlayerId: "202710",
@@ -1060,7 +1242,47 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Caron Butler — basePlayerId 2406 — teams: WAS
+  butler_2406: {
+    basePlayerId: "2406",
+    nicknames: ["Tough Juice", "Tuff Juice"],
+    knownFor: "The quintessential glue guy who could score 20 and grab 10 without anyone noticing.",
+    salaryTier: "value",
+    tier1: ["Averaged 17 and 5 across a 14-year career. The definition of steady.", "Could guard three positions before positionless basketball was trendy."],
+    tier2: ["Three triple-doubles in 2007-08, all with double-digit assists. Point forward before it was cool.", "Shot 38% from three one season, 28% the next. Kept shooting anyway.", "The Wizards years were his peak. Gil and Caron, back when DC had hope."],
+    tier3: ["Wore number 4 because of Adrian Dantley. Deep cut respect."],
+    overperform: ["When Tough Juice got cooking, 30 and 10 looked effortless.", "Those assist numbers weren't flukes. He saw the floor like a point guard.", "The steals came in bunches. Active hands, veteran timing."],
+    underperform: ["The shot selection could get questionable in tight games.", "Some nights the rebounds just weren't there. Effort-based production has off days.", "Turnovers climbed when he tried to do too much. Good player, not great player limits."],
+    onPace: ["Seventeen points, five boards, three assists. Set your calendar.", "The most reliable 35 minutes in the rotation. Coaches loved him for a reason."],
+    turnovers: ["Tried to thread passes his handle couldn't support. Good intentions, mixed results."],
+    defensive: ["Switched everything before it was mandatory. Tough, smart, annoying to play against.", "The steals came from anticipation, not athleticism. Basketball IQ in action."],
+    bigGame: ["40 points against Milwaukee in January 2008. Career-high on 51 minutes of pure grind.", "That 30-13-5 line against Chicago in March 2004 was vintage Tough Juice.", "When he got hot, the shot chart looked like modern analytics. Threes and drives."],
+    quietGame: ["Even quiet nights meant 12 and 4. The floor was always there.", "Shot-making variance defined his ceiling and his basement."],
+    famousGameHint: ["That 40-point explosion in Milwaukee might've been his masterpiece.", "The triple-double against Golden State showed the full skillset. 26-11-10.", "Career-high 40 came with five steals. Complete two-way destruction."],
+    controversy: ["Never had beef with anyone. Model professional in an era of prima donnas.", "The injury luck wasn't great, but he never made excuses.", "Some said he was a compiler. Those people never watched him anchor a defense.", "The Wizards tenure ended quietly. Sometimes that's how good players fade."],
+    formerTeam: ["Never burned bridges. The kind of guy organizations invite back for ceremonies."],
+    rivalry: ["No real enemies. Hard to hate a guy who just showed up and worked."],
+    milestones: ["Those three triple-doubles in one season showed he was more than a scorer."],
+    streakLines: ["When the shot was falling, he'd string together 20-point games for weeks.", "Cold spells meant contested jumpers and forced drives. Still found ways to contribute.", "The good stretches always included defense. Effort translated across the stat sheet."],
+    salaryNarrative: ["At $16, he's the definition of value. Production without the price tag.", "Role players who actually play multiple roles are underpriced in every era.", "The kind of contract that wins you leagues. Steady floor, surprise ceiling."],
+    teamContext: ["Landed in Detroit late in his career. Motor City appreciated the work ethic.", "The veteran presence every young team needs. Teaches winning habits."],
+    draftAndPath: ["Miami took him 10th in 2002. Pat Riley saw the toughness early.", "Bounced around but always found minutes. Good players find ways to contribute."],
+    opponentFlavor: { CHI: "Always seemed to cook the Bulls. Something about that matchup.", GSW: "Golden State saw his best nights. Must've liked that pace.", MIL: "The 40-burger in Milwaukee. They remember that one.", LAL: "That triple-double against Kobe's Lakers meant something.", BOS: "39 points against the Celtics in April 2009. Big-game player." },
+    signatureGames: [
+      { date: "2008-01-27", opponent: "MIL", fp: 65.6, line: "40p/8r/2a/5s" },
+      { date: "2004-03-29", opponent: "CHI", fp: 67.1, line: "30p/13r/5a/3s/2b" },
+      { date: "2007-12-19", opponent: "CHI", fp: 63.2, line: "29p/11r/10a" },
+      { date: "2006-02-08", opponent: "GSW", fp: 66, line: "34p/15r/4a/3s" },
+      { date: "2007-11-23", opponent: "GSW", fp: 58.2, line: "26p/11r/10a" },
+    ],
+    teamEras: {
+      WAS: {
+        framing: ["The Gil Arena years. DC's most fun team in decades, and Caron was the steady hand.", "Three triple-doubles in one season showed he was more than a complementary piece.", "When the Wizards were relevant, Tough Juice was a big reason why."],
+        bigGameVariant: "That 40-point explosion was peak Wizards-era Butler. Pure bucket-getting.",
+        quietGameVariant: "Even quiet Washington nights meant solid two-way contributions.",
+      },
+    },
+  },
 // Marcus Camby — basePlayerId 948 — teams: TOR/NYK/DEN/LAC/POR
   camby_948: {
     basePlayerId: "948",
@@ -1122,7 +1344,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Clint Capela — basePlayerId 203991 — teams: HOU/ATL
   capela_203991: {
     basePlayerId: "203991",
@@ -1169,7 +1390,52 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Vince Carter — basePlayerId 1713 — teams: TOR/NJN
+  carter_1713: {
+    basePlayerId: "1713",
+    nicknames: ["Vinsanity", "Half-Man Half-Amazing", "Air Canada"],
+    knownFor: "The dunk contest king who brought poetry to posterization and drama to Toronto.",
+    salaryTier: "max",
+    tier1: ["The 2000 dunk contest changed basketball forever. Gravity became optional.", "Eight teams, 22 seasons, infinite highlight reels. Longevity with style.", "Dunked over seven-footers when dunking still mattered. Athletic artistry."],
+    tier2: ["Graduation speech over the French national team in 2000. Olympic poetry.", "The half-man, half-amazing era in Toronto. Canada's first basketball star.", "Jersey retirement in two cities. Not many wings pull that off."],
+    tier3: ["First player to play in four different decades. Father Time got dunked on too.", "Career 37% from three after athletic prime ended. Smart evolution."],
+    overperform: ["Peak Vinsanity meant appointment television. Must-see dunking with skills.", "When the athleticism met the jumper, nobody had an answer.", "Triple-double nights showed the complete package. More than just highlights."],
+    underperform: ["The quiet nights reminded you he was human after all. Gravity won sometimes.", "When shots weren't falling, Toronto fans felt every miss. Expectations ran high.", "Off nights meant relying on athleticism alone. That well eventually dried up."],
+    onPace: ["Consistent excellence with viral moments sprinkled in. The Carter special.", "Meeting expectations while creating new ones. Hall of Fame trajectory."],
+    turnovers: ["Creative passing came with creative mistakes. The highlights made you forget.", "Ball handling matched the athleticism early. Later years required more care."],
+    defensive: ["Blocks came naturally with that wingspan. Rim protection from the wing.", "Steal numbers reflected good hands and better anticipation."],
+    bigGame: ["46 points, 16 rebounds, 10 assists against Washington in 2007. Complete dominance.", "Triple-double at 30 years old when most wings were declining. Peak evolution.", "The kind of line that made you remember why he was once unstoppable."],
+    quietGame: ["Even Vinsanity had human moments. The dunks couldn't solve everything.", "Quiet nights were rare but humbling. Basketball requires more than athleticism."],
+    famousGameHint: ["December 2001 against Denver. 42 points, 15 boards when big games mattered most.", "The kind of stat line that made Toronto believe in championship dreams.", "Peak athletic prime meeting peak basketball IQ. Dangerous combination."],
+    controversy: ["The Toronto exit wasn't clean. Half-speed dunks and trade demands.", "Admitted to not giving full effort in his final Raptors season. Honest but painful.", "Brooklyn represented redemption. Sometimes fresh starts work for everyone.", "The graduation dunk over France sparked international incident. Olympic theater.", "Twenty-two seasons but questions about competing when it mattered most."],
+    formerTeam: ["Facing Toronto meant mixed emotions. The city that made him never forgot.", "Brooklyn games carried extra weight. Proving the trade worked both ways."],
+    rivalry: ["Iverson-Carter defined athletic wing play for a generation. Must-see television.", "Toronto-New York battles when both cities cared about basketball."],
+    milestones: ["25,000 career points spanning four decades. Longevity meets excellence.", "Most games played in NBA history when he retired. Iron man with style."],
+    streakLines: ["Hot streaks meant SportsCenter highlights for weeks. Prime appointment viewing.", "Cold spells never lasted long. Athletic ability bought time to find rhythm.", "Dunk contest form carried into games. Some players just perform differently."],
+    salaryNarrative: ["Max money for max entertainment value. The highlights paid for themselves.", "$60 gets you two decades of must-see basketball. Investment in athletic artistry.", "Peak salary for peak Vinsanity. Some players are worth the price of admission."],
+    teamContext: ["Toronto's first basketball superstar. Put an entire country on the map.", "Brooklyn trade gave him fresh start when both sides needed change."],
+    draftAndPath: ["Fifth overall in '98 when athletic wings still had to prove they could play.", "North Carolina product who brought college highlights to professional stages."],
+    opponentFlavor: { PHI: "Iverson battles defined early 2000s East Coast basketball. Pure theater.", MIL: "Always brought extra bounce against the Bucks. Something about that building.", BOS: "Celtic fans appreciated the artistry even while getting dunked on.", DET: "Pistons made him work for every bucket. No easy highlights against Wallace.", MIA: "Heat matchups featured athletic chess matches. Wade vs Carter classics." },
+    signatureGames: [
+      { date: "2007-04-07", opponent: "WAS", fp: 87.2, line: "46p/16r/10a, complete excellence" },
+      { date: "2001-12-07", opponent: "DEN", fp: 86, line: "42p/15r/6a, peak athletic prime" },
+      { date: "2000-11-18", opponent: "MIL", fp: 79, line: "48p/10r/4a, vintage scoring explosion" },
+      { date: "2005-12-09", opponent: "CLE", fp: 74.2, line: "38p/11r/6a, LeBron welcome party" },
+      { date: "2004-03-21", opponent: "NOH", fp: 72.2, line: "42p/6r/12a, floor general mode" },
+    ],
+    teamEras: {
+      TOR: {
+        framing: ["Vinsanity put Toronto basketball on the map. Canada's first hoops hero.", "The dunk contest years when highlight reels mattered more than wins.", "Six seasons of athletic poetry that ended with trade demands and questions."],
+        bigGameVariant: "48 points against Milwaukee in 2000. Peak Toronto dominance on display.",
+        quietGameVariant: "Even Air Canada had turbulence. The dunks couldn't solve everything.",
+      },
+      NJN: {
+        framing: ["The mature evolution. Less dunking, more winning basketball.", "Brooklyn years proved he was more than highlights. Complete player development.", "Playoff runs that Toronto never saw. Sometimes change benefits everyone."],
+        bigGameVariant: "46-16-10 against Washington in 2007. Complete basketball mastery.",
+        quietGameVariant: "Veteran savvy on off nights. Experience taught him other ways to contribute.",
+      },
+    },
+  },
 // Sam Cassell — basePlayerId 208 — teams: LAC/MIL/MIN/NJN
   cassell_208: {
     basePlayerId: "208",
@@ -1226,7 +1492,52 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Derrick Coleman — basePlayerId 934 — teams: CHH/PHI
+  coleman_934: {
+    basePlayerId: "934",
+    nicknames: ["DC", "Big D"],
+    knownFor: "The talented big man who never quite lived up to the hype or his own potential.",
+    salaryTier: "star",
+    tier1: ["First overall pick in 1990 who could pass, rebound, and score from anywhere.", "The prototype modern big man a decade before the league was ready for it."],
+    tier2: ["Rookie of the Year, then spent the rest of his career hearing about what could have been.", "Peak seasons in New Jersey showed flashes of greatness between the injuries and attitude questions."],
+    tier3: ["Shot threes when centers weren't supposed to. The league caught up to his vision eventually."],
+    overperform: ["35 points and 16 rebounds against Sacramento in '97. Vintage DC dominance.", "When Coleman locked in, he was unstoppable. Five blocks and 20 rebounds happened regularly.", "Peak performance meant triple-double potential every night. The talent was never in question."],
+    underperform: ["Too many games where the motor ran cold. Talent without consistency.", "The rebounds were always there. Everything else depended on his mood.", "Star salary, role player effort. Coaches pulled their hair out watching the film."],
+    onPace: ["Double-double with decent percentages. What the contract said he'd deliver.", "When DC played to expectations, he reminded you why he went first overall."],
+    turnovers: ["Big man passing came with big man turnovers. The vision was there, the execution wasn't always."],
+    defensive: ["Eight blocks against Dallas in '99. When he wanted to protect the rim, nobody scored inside."],
+    bigGame: ["79 fantasy points versus Sacramento with 35-16-6. Peak Coleman dominance.", "21 points, 18 rebounds, 8 blocks against Dallas. Complete two-way destruction.", "20-rebound games happened regularly. The motor ran hot when it counted."],
+    quietGame: ["Single-digit scoring with the rebounds still there. Half-engaged Coleman basketball."],
+    famousGameHint: ["That 35-point, 16-rebound performance against Sacramento was DC at his absolute peak.", "Five blocks and 16 rebounds on the same night. When the motor ran hot, he was unstoppable."],
+    controversy: ["Never lived up to being the first overall pick. Talent versus effort debates followed him everywhere.", "Attitude questions started early and never really stopped. Coaches wanted more, fans expected more.", "The prototype stretch big a decade early. Revolutionary vision, inconsistent execution.", "Injuries derailed prime years, but effort questions lingered even when healthy."],
+    formerTeam: ["Every team became a former team eventually. Never quite found the right fit anywhere."],
+    rivalry: ["Every power forward was competition. Coleman just didn't always rise to meet it."],
+    milestones: ["Rookie of the Year in 1991. The ceiling was always championship-level talent."],
+    streakLines: ["Hot streak meant 20 rebounds and five blocks every night. Dominant stretches were spectacular.", "Cold streak meant the talent disappeared. Coaches never knew which Coleman would show up."],
+    salaryNarrative: ["Star tier at $47 million reflects the peak talent, not the consistency questions.", "When Coleman showed up, he was worth every penny. The 'when' was always the problem."],
+    teamContext: ["Bounced between teams looking for the right system. Never quite found it."],
+    draftAndPath: ["Syracuse product who went first overall to New Jersey in 1990. The expectations were immediate."],
+    opponentFlavor: { SAC: "Owned Sacramento. Career-high 35 points and multiple dominant performances.", DAL: "Always seemed to find extra blocks against Dallas. Rim protection showcase games.", BOS: "34 points at Boston Garden. Even Celtics fans had to respect the talent.", SEA: "20-rebound games against the Sonics. Peak glass-cleaning performances." },
+    signatureGames: [
+      { date: "1997-01-05", opponent: "SAC", fp: 79.2, line: "35p/16r/5b peak dominance" },
+      { date: "1999-11-17", opponent: "DAL", fp: 66.1, line: "21p/18r/8b two-way destruction" },
+      { date: "1998-03-29", opponent: "BOS", fp: 65.9, line: "34p/12r at Boston Garden" },
+      { date: "1997-02-20", opponent: "LAC", fp: 63.5, line: "21p/20r/4b glass-cleaning clinic" },
+      { date: "1997-01-02", opponent: "SEA", fp: 61.5, line: "22p/20r/5b complete effort" },
+    ],
+    teamEras: {
+      CHH: {
+        framing: ["The Charlotte years where talent met opportunity but motivation remained questionable.", "Peak statistical seasons in teal and purple. When DC engaged, he dominated.", "20-rebound games and 35-point outbursts. The talent was never in question here."],
+        bigGameVariant: "79 fantasy points in Charlotte. Peak DC unleashed on Sacramento.",
+        quietGameVariant: "The rebounds were there, everything else was optional. Classic Charlotte Coleman.",
+      },
+      PHI: {
+        framing: ["The Philadelphia experiment. Veteran leadership that came with veteran inconsistency.", "Still capable of dominant nights, but the motor ran cold more often than not."],
+        bigGameVariant: "Vintage blocks and boards when the Sixers needed it most.",
+        quietGameVariant: "Quiet offense, steady defense. The Philadelphia version of Coleman basketball.",
+      },
+    },
+  },
 // John Collins — basePlayerId 1628381 — teams: ATL/UTA
   collins_1628381: {
     basePlayerId: "1628381",
@@ -1273,7 +1584,52 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Mike Conley — basePlayerId 201144 — teams: MEM/UTA
+  conley_201144: {
+    basePlayerId: "201144",
+    nicknames: [],
+    knownFor: "The smooth point guard who turned Memphis into a playoff team and never made an All-Star game until Utah.",
+    salaryTier: "role",
+    tier1: ["Grit and Grind Memphis doesn't happen without Conley running the show.", "The most underrated point guard of the 2010s, finally got his All-Star nod at 31."],
+    tier2: ["Forty points against Portland in 2019, proving the Utah move was right.", "Son of an Olympic triple jumper who chose basketball and found his own way to fly."],
+    tier3: ["Fifteen assists against Portland in 2013. That's peak floor general work."],
+    overperform: ["When Conley got hot, the assist numbers jumped and the steals followed.", "Six steals against Chicago in 2013 while dropping 26 and nine assists."],
+    underperform: ["Cold Conley meant the offense stalled and Memphis became predictable.", "The injury years in Memphis cost him All-Star appearances he deserved."],
+    onPace: ["Eighteen and six with solid shooting was vintage Conley reliability.", "The consistency that made him the backbone of two different playoff teams."],
+    turnovers: ["Conservative with the ball, sometimes to a fault in crucial moments.", "Sub-three turnovers was the norm, even when pushing pace."],
+    defensive: ["Underrated defender who made Grit and Grind work at the point of attack.", "Seven steals in Minnesota back in 2010, setting the defensive tone early."],
+    bigGame: ["Twenty-six points, six rebounds, nine assists, six steals against Chicago.", "December 30th, 2013 was Conley at his two-way peak.", "The kind of complete game that made you wonder why he wasn't an All-Star yet."],
+    quietGame: ["Twelve and five was Conley managing the game without forcing shots.", "Even quiet nights came with smart decisions and solid defense."],
+    famousGameHint: ["January 2017 against Phoenix tells the Utah story before it happened.", "Thirty-eight points on efficient shooting, showing what he could do unleashed.", "The game that made Jerry Sloan's ghost smile about point guard play."],
+    controversy: ["Never really had controversy, which was almost controversial itself.", "The All-Star snubs were the closest thing to drama in his career.", "Clean player, smart decisions, boring in the best possible way.", "The Utah trade raised eyebrows until he proved it was perfect."],
+    formerTeam: ["Memphis games always had extra meaning after the Utah trade.", "The Grizzlies fans gave him standing ovations, which said everything."],
+    rivalry: ["Clippers matchups were always intense during the Grit and Grind era.", "Chris Paul comparisons followed him for years, mostly unfairly."],
+    milestones: ["First All-Star appearance in 2021 at age 33, long overdue.", "Eleven seasons in Memphis, the longest tenure for any Grizzlies player."],
+    streakLines: ["Hot Conley meant efficient scoring and creative assists for weeks.", "Cold stretches usually coincided with team-wide offensive struggles.", "The consistency was the point, not the peaks and valleys."],
+    salaryNarrative: ["Twenty-eight million for steady point guard play in a market that overpays for flash.", "The salary reflects reliability more than ceiling, which is fine by Minnesota.", "Veterans who take care of the ball and make smart plays earn their money."],
+    teamContext: ["Fourth pick in 2007, stayed in Memphis longer than anyone expected.", "The Jazz trade was perfect timing for both sides and his legacy."],
+    draftAndPath: ["Ohio State one-and-done who developed into a franchise cornerstone.", "Skipped the McDonald's All-American game, then proved rankings don't matter."],
+    opponentFlavor: { CHI: "Six steals and 26 points against the Bulls. Peak two-way Conley.", PHX: "Thirty-eight points in Phoenix showed the scoring ceiling.", POR: "Fifteen assists against Portland, running the offense like a maestro.", IND: "Thirty-six points against the Pacers with four steals added.", BKN: "Thirty-seven and ten in Brooklyn during the Utah prime." },
+    signatureGames: [
+      { date: "2013-12-30", opponent: "CHI", fp: 63.7, line: "26p/9a/6s complete game" },
+      { date: "2017-01-30", opponent: "PHX", fp: 62.7, line: "38p/9a scoring explosion" },
+      { date: "2017-03-29", opponent: "IND", fp: 59.6, line: "36p/6a/4s efficient night" },
+      { date: "2018-11-30", opponent: "BKN", fp: 58, line: "37p/10a in Brooklyn" },
+      { date: "2019-03-05", opponent: "POR", fp: 52.8, line: "40p career high" },
+    ],
+    teamEras: {
+      MEM: {
+        framing: ["The Memphis years built the reputation and the winning culture.", "Eleven seasons of steady leadership that turned the Grizzlies into a playoff team.", "Grit and Grind doesn't work without a point guard who understood the assignment."],
+        bigGameVariant: "Six steals against Chicago while dropping 26 and nine assists. Peak Grit and Grind.",
+        quietGameVariant: "Even quiet Conley nights meant smart decisions and defensive pressure.",
+      },
+      UTA: {
+        framing: ["The Utah years unlocked the scoring and finally got him All-Star recognition.", "Perfect fit for a system that needed veteran leadership and playoff experience.", "Forty points against Portland proved the trade was genius for both sides."],
+        bigGameVariant: "Thirty-eight points against Phoenix, showing what Utah unleashed.",
+        quietGameVariant: "Managing Donovan Mitchell and the offense without forcing his own shots.",
+      },
+    },
+  },
   cousins_202326: {
     basePlayerId: "202326",
     nicknames: ["Boogie", "DMC", "DeMarcus Cousins"],
@@ -1299,7 +1655,51 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["5th pick in 2010. Kentucky. Kings, Pelicans (Achilles), Warriors, Lakers, Rockets."],
   },
-
+// Jamal Crawford — basePlayerId 2037 — teams: CHI/NYK
+  crawford_2037: {
+    basePlayerId: "2037",
+    nicknames: ["J-Crossover", "The Human Torch"],
+    knownFor: "The crossover king who turned streetball moves into NBA buckets for two decades.",
+    salaryTier: "value",
+    tier1: ["Three Sixth Man awards, zero All-Star games. The bench scorer who never quite broke through.", "The crossover was a weapon of mass ankle destruction. Ask anyone who guarded him in 2004."],
+    tier2: ["Four 50-point games across 20 seasons. When he got hot, scoreboards couldn't keep up.", "Played for nine teams without ever being the guy. The basketball nomad who found buckets everywhere."],
+    tier3: ["The 2019 comeback at 39 was vintage Crawford. Fifty-one against Dallas like time stood still."],
+    overperform: ["When Crawford catches fire, math becomes irrelevant. Fifty from the bench at 39 years old.", "The crossover still works. Age can't guard handles that were never about athleticism anyway."],
+    underperform: ["The shot selection that made him legendary also made coaches gray. Hero ball has consequences.", "Twenty years, never made it past the second round as a featured player. Streetball doesn't scale."],
+    onPace: ["Crawford at his average is still appointment television. The crossover alone is worth admission.", "Steady buckets off the bench. He's been doing this since Bush was president. The first one."],
+    turnovers: ["The fancy passes came with fancy turnovers. Style points don't show up in the box score."],
+    defensive: [],
+    bigGame: ["Fifty-two against Miami in '07. The Garden went silent watching pure artistry.", "Four different 50-point games spanning fifteen years. When Crawford heated up, defenses melted."],
+    quietGame: ["Even Crawford's quiet nights had highlight crossovers. The show never really stopped."],
+    famousGameHint: ["That 2004 night in Toronto when he dropped 50 and reminded everyone why Seattle traded for him.", "Or maybe the 2019 Dallas game that proved 39 was just a number to a pure scorer."],
+    controversy: ["Never made an All-Star team despite three Sixth Man awards. The snub that defined his career.", "Shot selection debates followed him everywhere. Beautiful misses don't count the same as ugly makes.", "The loyalty question: nine teams in twenty seasons. Was he a mercenary or just unlucky?", "Teammates loved him, coaches tolerated him. The walking contradiction of modern NBA basketball."],
+    formerTeam: ["Facing former teams was Crawford's specialty. Nothing personal, just buckets."],
+    rivalry: ["No real rivalries, just individual matchups. The crossover made everyone a victim eventually."],
+    milestones: ["Three Sixth Man awards tell the story. The bench scorer who redefined the role."],
+    streakLines: ["Hot Crawford was basketball poetry. Cold Crawford was expensive poetry.", "When the shot was falling, he'd hunt forty. When it wasn't, he'd hunt forty anyway."],
+    salaryNarrative: ["Twenty-one dollars for a three-time Sixth Man winner. The value pick that still breaks ankles.", "Crawford at this price is highway robbery. The crossover alone is worth double."],
+    teamContext: ["Phoenix signed the 39-year-old for one last dance. The desert became his final stage."],
+    draftAndPath: ["Straight from high school to Chicago in 2000. The teenage crossover that went nationwide."],
+    opponentFlavor: { TOR: "Dropped 50 on them twice. The Raptors never figured out the crossover.", MIA: "That 52-point masterpiece in '07. Wade watched from the bench shaking his head.", CHA: "Another 50-burger in '08. The Hornets had no answer for vintage Crawford.", DAL: "Fifty-one at 39 years old. Dirk retired rather than keep guarding this man." },
+    signatureGames: [
+      { date: "2004-04-11", opponent: "TOR", fp: 67.4, line: "50p/7r/2a - Toronto learned about Seattle's new weapon" },
+      { date: "2007-01-26", opponent: "MIA", fp: 60.1, line: "52p/3r/1a - The Garden witnessed pure scoring artistry" },
+      { date: "2008-12-20", opponent: "CHA", fp: 61.9, line: "50p/2r/5a - Another night, another 50-piece from the bench" },
+      { date: "2019-04-09", opponent: "DAL", fp: 66.5, line: "51p/5r/5a - At 39, proving age is just a number to pure scorers" },
+    ],
+    teamEras: {
+      CHI: {
+        framing: ["The teenage phenom with handles from another planet. Chicago's glimpse of streetball's future.", "Baby-faced assassin learning to score at the highest level. The crossover was already legendary."],
+        bigGameVariant: "Forty-two against Washington as a kid. The Garden City faithful saw greatness coming.",
+        quietGameVariant: "Even quiet Chicago nights featured ankle-breaking highlights. The show never stopped.",
+      },
+      NYK: {
+        framing: ["The Garden homecoming that never quite clicked. New York loved him, the wins didn't follow.", "Vintage Crawford in the world's most famous arena. The crossover deserved Broadway billing."],
+        bigGameVariant: "Madison Square Garden was Crawford's personal highlight reel. Every night was showtime.",
+        quietGameVariant: "Quiet nights in New York still drew standing ovations. The crossover transcended box scores.",
+      },
+    },
+  },
 // Cade Cunningham (DET, $67, PURPLE)
   cunningham_1630595: {
     basePlayerId: "1630595",
@@ -1334,7 +1734,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-11-17", opponent: "WAS", fp: 64, line: "Triple-double with 5 steals" },
     ],
   },
-
 // Stephen Curry (GSW, $57, PURPLE)
   curry_201939: {
     basePlayerId: "201939",
@@ -1369,7 +1768,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-01-27", opponent: "LAL", fp: 59.1, line: "46 points in Lakers showdown - primetime Curry at his finest" },
     ],
   },
-
 // Baron Davis — basePlayerId 1884 — teams: CHH/NOH/GSW/LAC
   davis_1884: {
     basePlayerId: "1884",
@@ -1426,7 +1824,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Anthony Davis (LAL, $70, PURPLE)
   davis_203076: {
     basePlayerId: "203076",
@@ -1461,7 +1858,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-02-29", opponent: "WAS", fp: 75, line: "Efficient 40-point night showing vintage form" },
     ],
   },
-
 // DeMar DeRozan — basePlayerId 201942 — teams: TOR/SAS/CHI/SAC
   derozan_201942: {
     basePlayerId: "201942",
@@ -1518,7 +1914,93 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Boris Diaw — basePlayerId 2564 — teams: PHX
+  diaw_2564: {
+    basePlayerId: "2564",
+    nicknames: ["The French Boris", "Boris the Blade"],
+    knownFor: "The Swiss Army knife who could play all five positions and pass like Magic.",
+    salaryTier: "value",
+    tier1: ["Six triple-doubles in his Phoenix prime. The point-forward before it was cool.", "Could run point, bang in the post, or spot up from three. Basketball IQ off the charts.", "The Spurs knew what they were getting when they traded for him in 2012."],
+    tier2: ["Phoenix made him their primary facilitator for two seasons. It actually worked.", "16 assists against Golden State in '06. From a power forward. Peak Seven Seconds or Less.", "The prototype for today's positionless basketball, just twenty years early."],
+    tier3: ["His coffee obsession was legendary. Opened cafes in San Antonio during his Spurs years."],
+    overperform: ["When Boris hit his ceiling, it was appointment television. Pure basketball artistry.", "The triple-double against Philly in '11 reminded everyone what he could still do.", "Point-forward duties at 6'8\" with surgeon-level precision. Poetry in motion."],
+    underperform: ["The frustrating part was knowing he had another gear he rarely used.", "Sometimes played too cute, looking for the perfect pass instead of the easy bucket.", "Load management before it had a name. The talent was always there."],
+    onPace: ["Boris being Boris. The steady hand that kept offenses humming.", "Exactly what you penciled in. Professional basketball at its finest."],
+    turnovers: ["Aggressive passer who sometimes threw passes only he could see coming."],
+    defensive: ["Smart positional defense. Never the quickest, always in the right spot."],
+    bigGame: ["62.7 fantasy points against Philly with the triple-double. Vintage Boris magic.", "25 points, 11 boards, 11 assists in January '11. The complete package.", "When he locked in, nobody else on the floor could do what he did."],
+    quietGame: ["Even quiet Boris games included three assists and perfect rotations."],
+    famousGameHint: ["16 assists against Golden State in April '06. A power forward orchestrating Symphony.", "The night he reminded everyone that basketball positions are just suggestions.", "Steve Nash probably watched that game and took notes."],
+    controversy: ["Never controversial on the court. Pure basketball, zero drama.", "The closest thing to controversy was playing too unselfishly.", "Critics said he was too laid-back. Teammates called it basketball zen.", "Phoenix fans still wonder what happens if they keep him past '08."],
+    formerTeam: ["Never burned bridges. Every former team still speaks highly of Boris."],
+    rivalry: ["Too classy for real rivalries. Respected every opponent he faced."],
+    milestones: ["Six career triple-doubles. Not bad for a guy who wasn't supposed to handle the rock."],
+    streakLines: ["Hot-streak Boris was appointment viewing. The ball never stuck.", "Cold shooting nights didn't matter. He'd find ten other ways to impact winning.", "Even slumping Boris gave you 7 rebounds and 6 assists minimum."],
+    salaryNarrative: ["Value tier pricing for a basketball savant. The definition of hidden upside.", "$15 for a guy who could run your entire offense. Highway robbery.", "Smart money always found Boris. The casual fan never understood the price."],
+    teamContext: ["Landed in Utah as a veteran presence. Still had tricks up his sleeve."],
+    draftAndPath: ["Hawks drafted him 21st in 2003. French import with unlimited basketball IQ."],
+    opponentFlavor: { GSW: "Torched them twice in '06. Warriors had no answer for the point-forward.", PHI: "The 25-11-11 triple-double in '11. Sixers got a masterclass.", CLE: "26 and 11 assists against Cleveland in March '11. Clinic time.", TOR: "57 fantasy points in Toronto. The Raptors couldn't guard all five positions.", MIN: "31-point explosion against Minnesota. Even Boris could get buckets." },
+    signatureGames: [
+      { date: "2011-01-17", opponent: "PHI", fp: 62.7, line: "25p/11r/11a" },
+      { date: "2006-04-14", opponent: "GSW", fp: 58.2, line: "11p/11r/16a" },
+      { date: "2006-03-31", opponent: "TOR", fp: 57.1, line: "26p/8r/9a" },
+      { date: "2011-03-30", opponent: "CLE", fp: 56.9, line: "26p/7r/11a" },
+      { date: "2006-12-15", opponent: "GSW", fp: 55.8, line: "21p/14r/10a" },
+    ],
+    teamEras: {
+      PHX: {
+        framing: ["The Seven Seconds or Less era. Boris as the ultimate system player.", "Six triple-doubles in two seasons. Point-forward before it was trendy.", "The perfect complement to Nash's pace. Basketball at light speed."],
+        bigGameVariant: "16 assists against the Warriors. Point-forward perfection in '06.",
+        quietGameVariant: "Even quiet Phoenix Boris moved the ball and found cutters.",
+      },
+    },
+  },
+// Vlade Divac — basePlayerId 124 — teams: CHH/SAC
+  divac_124: {
+    basePlayerId: "124",
+    nicknames: ["Vlade", "The Flopper"],
+    knownFor: "The passing center who pioneered Euro basketball and almost cost the Lakers Kobe.",
+    salaryTier: "star",
+    tier1: ["The center who could thread bounce passes like Magic Johnson with size.", "NBA's first great European big man who paved the road for Dirk and Pau."],
+    tier2: ["Traded for Kobe's draft rights in 1996. The Lakers still think about it.", "12 blocks against New Jersey in 1997. Shot-blocking clinic from beyond the arc."],
+    tier3: ["The flopping pioneer who made Harden look subtle by comparison."],
+    overperform: ["23 points, 18 rebounds, 9 assists against Boston. The complete center package.", "When Vlade locked in, he stuffed every statistical category available."],
+    underperform: ["Five-turnover games where the fancy passes found the wrong jerseys.", "The shot-blocking disappeared some nights, leaving lanes wide open."],
+    onPace: ["Double-double with 4 blocks and 6 assists. The Divac standard.", "Steady production that made coaches trust the Euro passing experiment."],
+    turnovers: ["The price of ambition. Creative passing meant occasional disasters.", "Five-turnover games when the Magic Johnson comparisons backfired."],
+    defensive: ["12-block explosion against New Jersey. Swat party in the paint.", "Shot-blocking numbers that made opposing guards reconsider driving lanes."],
+    bigGame: ["23 points, 18 rebounds, 9 assists, 4 blocks against Boston. Complete domination.", "12 blocks against New Jersey in February 1997. The rim was his property.", "Four triple-doubles including 15-14-10 against Boston. Point-center prototype."],
+    quietGame: ["Even off-nights included 8 rebounds and 3 assists. The floor stayed high.", "Quiet Vlade meant 12 points, 6 boards, and perfect screen-setting."],
+    famousGameHint: ["That 23-18-9-4 line against Boston remains the passing center blueprint.", "The 12-block game against New Jersey. Hakeem-level rim protection from Europe."],
+    controversy: ["The flop king who made acting look like basketball strategy decades early.", "Traded for Kobe's draft rights. The Lakers' eternal 'what if' haunts them.", "Euro-foul calls that had American fans questioning referee integrity nightly.", "The passing center experiment that half the league couldn't understand yet."],
+    formerTeam: ["Facing the Lakers meant extra motivation. The trade haunted both sides."],
+    rivalry: [],
+    milestones: ["First European center to average 15-10-5. The template for modern bigs."],
+    streakLines: ["March 1997 run included three games with 60-plus fantasy points.", "Hot streaks meant double-doubles with 8 assists and 5 blocks nightly.", "The triple-double stretch in 2002 proved passing centers could work."],
+    salaryNarrative: ["At $42, you're paying for the complete European center experience with blocks.", "Star salary for the passing big man who pioneered position-less basketball."],
+    teamContext: ["The European experiment that worked before anyone knew what to call it."],
+    draftAndPath: ["Drafted straight from Yugoslavia. The original Euro-NBA success story."],
+    opponentFlavor: { LAL: "Former trade chip who reminded them what they gave up for Kobe.", BOS: "Celtic killer with that 23-18-9-4 masterpiece in March 1997.", NJN: "12-block demolition job that New Jersey never saw coming.", PHX: "34-point explosion that proved European centers could score too.", GSW: "Seven blocks and nine assists. The complete two-way showcase." },
+    signatureGames: [
+      { date: "1997-03-06", opponent: "BOS", fp: 74.1, line: "23p/18r/9a/2s/4b" },
+      { date: "1997-02-12", opponent: "NJN", fp: 64.8, line: "18p/9r/2a/0s/12b" },
+      { date: "2001-01-02", opponent: "PHX", fp: 62.4, line: "34p/12r/6a/1s/2b" },
+      { date: "1997-03-22", opponent: "GSW", fp: 65.9, line: "10p/12r/9a/4s/7b" },
+      { date: "1999-05-05", opponent: "VAN", fp: 60.4, line: "29p/17r/4a/2s/1b" },
+    ],
+    teamEras: {
+      CHH: {
+        framing: ["The Charlotte experiment with Europe's first great center export.", "Hornets fans got the passing big man preview before anyone understood it."],
+        bigGameVariant: "23-18-9-4 in Charlotte teal. The complete center showcase.",
+        quietGameVariant: "Quiet Charlotte nights still meant 10 boards and 4 assists.",
+      },
+      SAC: {
+        framing: ["The Sacramento years where Divac perfected the Euro passing center role.", "Kings fans witnessed the blueprint for every European big who followed."],
+        bigGameVariant: "34 points against Phoenix in Kings purple. The scoring touch revealed.",
+        quietGameVariant: "Sacramento quiet meant steady doubles and perfect screen-setting.",
+      },
+    },
+  },
 // Luka Dončić (DAL, $73, ORANGE)
   doncic_1629029: {
     basePlayerId: "1629029",
@@ -1553,7 +2035,93 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-02-27", opponent: "CLE", fp: 84.8, line: "Clutch performance that reminded everyone of his ceiling" },
     ],
   },
-
+// Goran Dragic — basePlayerId 201609 — teams: MIA/PHX
+  dragic_201609: {
+    basePlayerId: "201609",
+    nicknames: ["The Dragon"],
+    knownFor: "The crafty European who turned Phoenix into must-see TV before becoming Miami's postseason engine.",
+    salaryTier: "value",
+    tier1: ["17 assists against Boston in 2016, vintage floor general stuff.", "The Dragon breathed fire in two different decades. European craftsmanship meets NBA chaos."],
+    tier2: ["2014 Most Improved Player when Phoenix went from lottery to playoff hunt.", "Triple-double at 33 against Dallas. Old man game with young legs somehow."],
+    tier3: ["18 assists in Portland, 2013. Peak point-god numbers in the desert."],
+    overperform: ["When the Dragon gets hot, he stays hot for weeks.", "2013 Phoenix run came from nowhere. 48 wins with Goran running point."],
+    underperform: ["The shots stop falling and the assists dry up. Still hunting passes nobody wants.", "Father Time catches European guards too. The craftiness can't save every night."],
+    onPace: ["Steady 15 and 6. Professional basketball from a professional basketball player.", "The Dragon delivers exactly what you expect. No more, no less."],
+    turnovers: ["Gets fancy with the passes when the game's already decided. Old habits."],
+    defensive: ["Smart positioning, active hands. Won't lock down anyone but won't get hunted either."],
+    bigGame: ["59.9 FP against Boston with 17 assists. The Dragon setting up teammates all night.", "40 points in New Orleans, 2014. Sometimes the point guard takes over himself."],
+    quietGame: ["Single-digit scoring, hunting assists that aren't there. The engine stalls sometimes."],
+    famousGameHint: ["March 2019 triple-double against Dallas at 33 years old.", "That 40-point explosion in New Orleans when Phoenix needed every bucket."],
+    controversy: ["The Phoenix exit wasn't pretty. Goran wanted max money, Suns wanted younger legs.", "Miami got him for pennies after the Suns let him walk. Front office malpractice.", "2020 Finals run proved he still had juice. The Dragon's last great moment."],
+    formerTeam: ["Phoenix games hit different. The Dragon remembers who let him go."],
+    rivalry: ["Spurs matchups were always chess matches. Two smart organizations grinding."],
+    milestones: ["Most Improved Player at 28. Late bloomers bloom differently."],
+    streakLines: ["Hot Dragon means 20 and 8 for two weeks straight. The assists flow like wine.", "Cold streaks mean forcing shots and hunting fouls. European stubbornness kicks in."],
+    salaryNarrative: ["$17M for proven playoff production. The Dragon earned every dollar in Miami.", "Value contract for a guy who knows how to run an offense when it matters."],
+    teamContext: ["Milwaukee's veteran insurance policy. The Dragon providing backup point guard wisdom."],
+    draftAndPath: ["45th pick in 2008. European sleeper who took five years to bloom fully."],
+    opponentFlavor: { BOS: "17 assists in the Garden. The Dragon dissecting Celtic pride.", SAC: "Kings got torched multiple times. Easy pickings for the veteran.", GSW: "34 points against the Warriors in 2014. Pre-dynasty Golden State.", DAL: "Triple-double in Dallas at 33. Dirk's replacement getting schooled." },
+    signatureGames: [
+      { date: "2016-11-28", opponent: "BOS", fp: 59.9, line: "27p/2r/17a" },
+      { date: "2013-03-08", opponent: "SAC", fp: 57.8, line: "17p/4r/16a" },
+      { date: "2019-03-28", opponent: "DAL", fp: 56.9, line: "23p/12r/11a" },
+      { date: "2014-02-08", opponent: "GSW", fp: 54.4, line: "34p/2r/10a" },
+      { date: "2014-02-28", opponent: "NOP", fp: 48.1, line: "40p/3r/5a" },
+    ],
+    teamEras: {
+      MIA: {
+        framing: ["The Heat years were his championship window. 2020 Finals run at 34.", "Riley's type of player. Tough, smart, clutch when the lights got brightest."],
+        bigGameVariant: "Playoff Dragon mode. 17 assists when Miami needed every possession.",
+        quietGameVariant: "Even quiet Dragon nights meant veteran leadership. The intangibles showed.",
+      },
+      PHX: {
+        framing: ["The desert years were his peak. 2014 Most Improved Player, 48-win playoff push.", "The Dragon turned Phoenix into appointment television. European flair in the desert."],
+        bigGameVariant: "40 points when the Suns needed their point guard to be a scorer.",
+        quietGameVariant: "Even off-nights meant 8 assists. The Dragon always fed teammates first.",
+      },
+    },
+  },
+// Clyde Drexler — basePlayerId 17 — teams: HOU
+  drexler_17: {
+    basePlayerId: "17",
+    nicknames: ["Clyde the Glide", "The Glide"],
+    knownFor: "The smooth operator who finally got his ring alongside Hakeem in Houston.",
+    salaryTier: "star",
+    tier1: ["The most underrated member of the 1992 Dream Team by far.", "Ten All-Star games, one ring, and a Hall of Fame glide to the basket.", "Portland's best player during their most relevant decade."],
+    tier2: ["The Houston trade reunited college teammates and delivered a championship.", "Always played in Jordan's shadow despite putting up similar numbers.", "Could fill up a stat sheet like few guards in NBA history."],
+    tier3: ["The 1990 Finals loss to Detroit still haunts Trail Blazers fans.", "Phi Slama Jama's NBA success story alongside Hakeem Olajuwon."],
+    overperform: ["43 points against the Clippers in '97 - vintage Glide at age 35.", "Ten steals against Sacramento proved the defensive instincts never faded.", "When Drexler got hot, he could carry entire playoff series by himself."],
+    underperform: ["The 1990 Finals haunted him until he got his Houston ring.", "Could disappear in big moments despite all the regular season magic.", "Age caught up to the gliding ability faster than anyone expected."],
+    onPace: ["Steady Clyde meant 20 points, 6 rebounds, 5 assists without breaking a sweat.", "The most reliable All-Star production of the early 90s not named Jordan."],
+    turnovers: ["Seven turnovers against Sacramento showed even legends have off nights.", "The flashy passes sometimes went to nobody in particular."],
+    defensive: ["Ten steals in one game against Sacramento - the hands were still elite late in his career.", "Could lock down opposing guards when the game mattered most."],
+    bigGame: ["25 points, 10 rebounds, 9 assists, 10 steals against Sacramento - a near quadruple-double at age 34.", "36 points and 8 assists against Minnesota proved the shot was still pure.", "43 points against the Clippers in '97 - the Glide was still gliding at 35."],
+    quietGame: ["Quiet Drexler nights still usually meant solid all-around production.", "Even his off games featured at least two categories stuffed."],
+    famousGameHint: ["That near quadruple-double against Sacramento in November '96.", "Ten steals in a single game at age 34 - the defensive instincts never left.", "One assist short of basketball immortality on a random Tuesday night."],
+    controversy: ["The Portland exit was messy - demanded a trade to chase a ring in Houston.", "Always felt disrespected compared to Jordan despite similar statistical production.", "The Dream Team snub still rankles NBA historians who know the numbers.", "Could never shake the 'Jordan-lite' label despite a Hall of Fame career.", "The 1990 Finals loss defined his legacy until the Houston championship."],
+    formerTeam: ["Portland games were bittersweet - the city that made him, then let him chase a ring.", "Trail Blazers fans understood the trade but never fully forgave the departure."],
+    rivalry: ["The Lakers battles defined Northwest basketball in the early 90s.", "Chicago games were measuring sticks against the greatest of all time."],
+    milestones: ["The 1995 championship validated everything about his Houston decision.", "Ten All-Star selections spanning two different decades of excellence."],
+    streakLines: ["Hot shooting streaks reminded everyone why he was automatic for a decade.", "Could string together weeks of triple-double threats at age 35.", "The consistency never wavered even as the athleticism gradually faded."],
+    salaryNarrative: ["Houston paid him $50 in today's money and got a championship in return.", "Star money for championship production - the rare perfect value proposition.", "The Rockets proved that aging superstars can still deliver when properly motivated."],
+    teamContext: ["The Houston trade reunited college teammates and created instant championship chemistry.", "Joining Hakeem was the final piece in a title puzzle years in the making."],
+    draftAndPath: ["Portland's lottery pick turned into a franchise cornerstone for over a decade.", "The University of Houston pipeline delivered two Hall of Famers to the pros."],
+    opponentFlavor: { LAL: "Lakers games brought out the showtime in both him and Magic's squad.", CHI: "Bulls matchups were personal - he wanted to prove he belonged with Jordan.", POR: "Facing his former team carried extra emotional weight every time.", SAC: "Sacramento caught the brunt of vintage Drexler multiple times.", MIN: "Timberwolves games were automatic buckets for the aging Glide." },
+    signatureGames: [
+      { date: "1996-11-01", opponent: "SAC", fp: 73.5, line: "25p/10r/9a/10s" },
+      { date: "1996-12-10", opponent: "MIN", fp: 69.2, line: "36p/6r/8a/3s/2b" },
+      { date: "1998-01-03", opponent: "POR", fp: 64.7, line: "34p/6r/5a/5s/1b" },
+      { date: "1997-11-05", opponent: "LAC", fp: 60.8, line: "43p/4r/6a/2s" },
+      { date: "1997-12-16", opponent: "VAN", fp: 59.2, line: "22p/6r/10a/5s/1b" },
+    ],
+    teamEras: {
+      HOU: {
+        framing: ["The championship years alongside Hakeem - college teammates turned title winners.", "Finally got his ring at age 33 after years of Portland frustration.", "Proved that veteran superstars could still be the missing piece on title teams."],
+        bigGameVariant: "Championship Drexler was still capable of signature performances at age 35.",
+        quietGameVariant: "Even quiet nights in Houston meant steady veteran leadership toward a title.",
+      },
+    },
+  },
 // Andre Drummond — basePlayerId 203083 — teams: DET/CLE/LAL
   drummond_203083: {
     basePlayerId: "203083",
@@ -1605,7 +2173,46 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Joe Dumars — basePlayerId 247 — teams: DET
+  dumars_247: {
+    basePlayerId: "247",
+    nicknames: ["Joe D", "The Microwave"],
+    knownFor: "The Bad Boys' smooth operator who could score in bunches and lock down Jordan when needed.",
+    salaryTier: "role",
+    tier1: ["Six Finals appearances, three rings, the steady hand in Detroit's chaos.", "Could drop 30 on you or hold you to 12. The complete two-way guard."],
+    tier2: ["Finals MVP in '89 averaging 27 against the Lakers. Outplayed Magic when it mattered.", "The anti-Isiah. Never complained, never demanded trades, just showed up and won."],
+    tier3: ["Retired his jersey before Isiah's. That tells you everything about Detroit's priorities."],
+    overperform: ["When Joe gets hot, the building knows it. 26 points with 8 assists, vintage precision.", "The veteran still has the touch. Efficient shooting, smart passes, zero wasted possessions."],
+    underperform: ["Father Time catches everyone. Single-digit scoring from a Hall of Famer stings.", "The legs aren't there for 40 minutes anymore. Role player minutes, role player impact."],
+    onPace: ["Steady Joe doing steady Joe things. 15 points, 5 assists, solid defense.", "The most reliable Piston ever delivers exactly what you expect."],
+    turnovers: ["Two decades in the league, still taking care of the ball like a rookie coach taught him."],
+    defensive: ["Jordan's toughest assignment in the East. Made MJ work for every bucket in those playoff wars."],
+    bigGame: ["26 points and 8 assists against the Clippers, vintage efficiency on display.", "The veteran shows he can still get buckets when Detroit needs them most."],
+    quietGame: ["Off nights happen at 35. The leadership and defense still matter when shots don't fall."],
+    famousGameHint: ["44 fantasy points in February '99 might not ring bells, but Joe D specialists remember.", "The Clippers game where he reminded everyone why Detroit never worried about scoring droughts."],
+    controversy: ["The cleanest player from the dirtiest team. Never threw an elbow, never started a fight.", "He was the only Bad Boy without a mean streak. Won three rings without throwing one elbow.", "Outlasted Isiah as team president. Front office politics are messier than playoffs."],
+    formerTeam: ["One team, one career, one city. The dying breed of franchise loyalty."],
+    rivalry: ["The Celtics-Pistons wars were personal. Joe kept his cool while everyone else lost theirs."],
+    milestones: ["Six All-Star appearances, Hall of Fame induction. The quiet superstar got his due."],
+    streakLines: ["When Joe gets in rhythm, those mid-range jumpers start falling like clockwork.", "Cold shooting nights are rare. Two decades of consistency don't lie."],
+    salaryNarrative: ["At $27, you're paying for 20 years of knowledge and clutch gene activation.", "The veteran minimum gets you Finals experience and zero drama. Bargain shopping done right."],
+    teamContext: ["Drafted by Detroit, retired in Detroit. The model of franchise loyalty in free agency era."],
+    draftAndPath: ["18th pick in 1985. Isiah saw the talent before anyone else did."],
+    opponentFlavor: { CHI: "Jordan's most respected Eastern Conference opponent. Mutual respect through combat.", LAL: "Finals MVP against Magic's Lakers. The moment that defined his legacy.", BOS: "Never backed down from Bird's Celtics. Earned their grudging respect.", CLE: "Dropped 26 on the Cavs in '99. Even rebuilding teams got the full Joe D treatment." },
+    signatureGames: [
+      { date: "1999-02-24", opponent: "CLE", fp: 44.7, line: "26p/1r/5a/4s vintage efficiency" },
+      { date: "1997-03-28", opponent: "LAC", fp: 44.6, line: "26p/8a perfect veteran game" },
+      { date: "1996-11-01", opponent: "IND", fp: 39.1, line: "27p/3s against conference rival" },
+      { date: "1998-04-09", opponent: "WAS", fp: 34.2, line: "33p season-high scoring burst" },
+    ],
+    teamEras: {
+      DET: {
+        framing: ["The Bad Boys' smooth operator. Six Finals, three rings, zero controversy.", "Could score 27 or lock down Jordan. The complete player Detroit needed."],
+        bigGameVariant: "Vintage Joe D efficiency. 26 points, 8 assists, exactly what Detroit drafted.",
+        quietGameVariant: "Off nights at 35 happen. The leadership and defense still anchor Detroit.",
+      },
+    },
+  },
   duncan_1495: {
     basePlayerId: "1495",
     nicknames: ["The Big Fundamental", "Timmy", "Old Man Riverwalk", "Groundhog Day"],
@@ -1632,7 +2239,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["First pick in 1997. Wake Forest. Stayed all four years like a pre-1989 prospect.", "Spurs lifer — never left, never asked to leave."],
   },
-
 // Kevin Durant (PHX, $59, PURPLE)
   durant_201142: {
     basePlayerId: "201142",
@@ -1667,7 +2273,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-02-08", opponent: "UTA", fp: 63.1, line: "31/8/7 with 3 steals - the complete game every GM dreams about" },
     ],
   },
-
 // Anthony Edwards (MIN, $62, PURPLE)
   edwards_1630162: {
     basePlayerId: "1630162",
@@ -1702,7 +2307,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2025-02-05", opponent: "CHI", fp: 65.3, line: "49 points and 9 boards against his hometown Bulls" },
     ],
   },
-
 // Monta Ellis — basePlayerId 101145 — teams: GSW/MIL/DAL
   ellis_101145: {
     basePlayerId: "101145",
@@ -1754,7 +2358,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Joel Embiid (PHI, $59, PURPLE)
   embiid_203954: {
     basePlayerId: "203954",
@@ -1789,7 +2392,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2023-11-27", opponent: "LAL", fp: 62.7, line: "Triple-double against LeBron - showing his complete skill set" },
     ],
   },
-
 // Tyreke Evans — basePlayerId 201936 — teams: SAC/NOP/MEM
   evans_201936: {
     basePlayerId: "201936",
@@ -1841,7 +2443,47 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Patrick Ewing — basePlayerId 121 — teams: NYK
+  ewing_121: {
+    basePlayerId: "121",
+    nicknames: ["The Big Fella"],
+    knownFor: "The Georgetown legend who carried New York for 15 years but never quite reached the mountaintop.",
+    salaryTier: "star",
+    tier1: ["The anchor of '90s Knicks basketball. MSG was his house for a decade and a half.", "11 All-Star games, zero rings. The gap between greatness and championships.", "Averaged 21 and 10 for his career. Consistency was never Patrick's problem."],
+    tier2: ["The '94 Finals loss to Houston still haunts Manhattan. Hakeem outplayed him when it mattered most.", "Draft lottery conspiracy theories started with the frozen envelope. New York needed Patrick, and got him.", "Georgetown's intimidator became New York's franchise player. The evolution was seamless."],
+    tier3: ["John Thompson's favorite son. The Hoyas connection ran deeper than basketball.", "Retired with more blocked shots than anyone expected from a jump-shooting center."],
+    overperform: ["82 fantasy points with 34 and 25 against the Lakers. Prime Ewing dominating both ends.", "Seven blocks against Orlando in November '96. The paint belonged to Patrick that night.", "32 points with six blocks against Milwaukee. Ewing showing his complete skill set."],
+    underperform: ["The quiet Ewing game meant the Knicks were in trouble. Twenty minutes, 12 points, long faces.", "When Patrick's jumper went cold, New York's offense froze with it. No Plan B in sight.", "The playoff struggles were real. May and June brought out Ewing's limitations."],
+    onPace: ["Classic Ewing. Twenty-four points, 11 rebounds, three blocks, and a Knicks win.", "The reliable superstar. Patrick delivering exactly what MSG expected for 15 years."],
+    turnovers: ["Six turnovers against the Lakers in 51 minutes. Even Patrick couldn't handle that workload perfectly.", "The post-up turnovers came from double-teams. Everyone knew where the ball was going."],
+    defensive: ["Seven blocks against Orlando. The paint was Patrick's office with a 'No Trespassing' sign.", "Rim protection before anyone called it that. Ewing altered more shots than he blocked."],
+    bigGame: ["82 fantasy points against the Lakers. 34 points, 25 rebounds, five blocks in 51 minutes.", "Seven blocks against Orlando with 24 points. Ewing controlling both ends of the floor.", "32 points and six blocks against Milwaukee. The complete center performance MSG loved."],
+    quietGame: ["Quiet Patrick meant the Knicks were struggling. Eighteen points felt like a drought at MSG.", "The off nights were rare but memorable. When Ewing disappeared, so did New York's chances."],
+    famousGameHint: ["That 82-point fantasy explosion against the Lakers in February '97. Ewing's masterpiece performance.", "Seven blocks against Orlando while scoring 24. The defensive clinic that reminded everyone who owned the paint.", "25 rebounds against the Lakers. Ewing grabbing everything that came off the rim in 51 minutes."],
+    controversy: ["The frozen envelope conspiracy launched a thousand theories. Did the NBA fix the lottery for New York?", "Never won a championship despite 15 years of excellence. The ringless superstar debate starts here.", "The '94 Finals haunted his legacy. Hakeem outplayed him when Patrick needed to be perfect.", "Spat with teammates made headlines. Leadership came harder than basketball for Patrick.", "The retirement tour lacked fanfare. Fifteen years of greatness deserved a better ending."],
+    formerTeam: [],
+    rivalry: ["Boston games were personal. The Celtics-Knicks hatred ran through Patrick's entire career.", "Indiana matchups defined '90s basketball. Reggie Miller made Patrick's life miserable for years."],
+    milestones: ["20,000 points as a Knick. The franchise numbers that matter most in Manhattan.", "Retired as the greatest player to never win a championship. The burden was real."],
+    streakLines: ["Hot Ewing meant championship talk in New York. Five straight games of 25 and 12.", "When Patrick's jumper was falling, the Knicks were unbeatable. MSG believed every time.", "The block party streaks made highlights. Three games with five-plus blocks each."],
+    salaryNarrative: ["$43 million for 15 years of excellence. Patrick earned every dollar carrying New York's hopes.", "Star money for franchise-player production. The Knicks never questioned Ewing's worth.", "Championship expectations came with the contract. Patrick delivered everything except rings."],
+    teamContext: ["The lottery gave New York its cornerstone. Patrick became Mr. Knick from day one.", "Fifteen years, one team, zero titles. The loyalty was rewarded with eternal love from MSG."],
+    draftAndPath: ["First overall pick in '85. The frozen envelope conspiracy theories started immediately.", "Georgetown to MSG was a natural fit. Patrick brought Big East toughness to the big stage."],
+    opponentFlavor: { LAL: "82 fantasy points against the Lakers. Ewing showing Shaq how centers used to dominate.", ORL: "Seven blocks against Orlando. The Magic learned why MSG was Patrick's house.", MIA: "Solid numbers against Miami. Riley knew how to use Ewing, even as an opponent.", BOS: "39 points in Boston Garden. Ewing always rose to the occasion against the Celtics.", IND: "37 points against Indiana. The Pacers-Knicks rivalry brought out vintage Patrick." },
+    signatureGames: [
+      { date: "1997-02-23", opponent: "LAL", fp: 82, line: "34p/25r/4a/5b - Career-defining performance" },
+      { date: "1997-01-05", opponent: "MIL", fp: 73.7, line: "32p/11r/6b - Two-way dominance" },
+      { date: "1996-11-19", opponent: "ORL", fp: 72.7, line: "24p/16r/7b - Defensive masterclass" },
+      { date: "1999-03-30", opponent: "IND", fp: 65.5, line: "37p/15r - Rivalry game excellence" },
+      { date: "1999-03-02", opponent: "MIA", fp: 67.2, line: "31p/16r/6b - Complete center show" },
+    ],
+    teamEras: {
+      NYK: {
+        framing: ["The franchise fifteen. Ewing defined Knicks basketball for an entire generation.", "Mr. Madison Square Garden. Patrick made the World's Most Famous Arena his personal stage.", "The ringless king of New York. Fifteen years of excellence, zero championships, infinite respect."],
+        bigGameVariant: "82 fantasy points wearing Knicks blue. The Garden erupted for vintage Patrick.",
+        quietGameVariant: "When Patrick struggled, so did the city. MSG held its breath on his off nights.",
+      },
+    },
+  },
 // Michael Finley — basePlayerId 714 — teams: DAL
   finley_714: {
     basePlayerId: "714",
@@ -1883,7 +2525,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // De'Aaron Fox (SAC, $56, PURPLE)
   fox_1628368: {
     basePlayerId: "1628368",
@@ -1918,7 +2559,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-02-03", opponent: "CHI", fp: 63.8, line: "41pts/4reb/4ast/5stl" },
     ],
   },
-
 // Steve Francis — basePlayerId 1883 — teams: HOU/ORL
   francis_1883: {
     basePlayerId: "1883",
@@ -1965,7 +2605,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
   garnett_708: {
     basePlayerId: "708",
     nicknames: ["KG", "The Big Ticket", "Da Kid", "KG Da Kid", "The Big Crocodile"],
@@ -1991,7 +2630,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["5th pick in 1995. First high-schooler since the 70s to go straight to the NBA.", "12 years in Minnesota, two in Boston, two in Brooklyn, ring with the Celts."],
   },
-
 // Marc Gasol — basePlayerId 201188 — teams: MEM/TOR
   gasol_201188: {
     basePlayerId: "201188",
@@ -2038,7 +2676,57 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Pau Gasol — basePlayerId 2200 — teams: MEM/LAL/CHI
+  gasol_2200: {
+    basePlayerId: "2200",
+    nicknames: ["Pau Pau", "The Tower of Spain"],
+    knownFor: "Skilled seven-footer whose Lakers years proved European bigs could anchor championships.",
+    salaryTier: "value",
+    tier1: ["Two rings as Kobe's perfect co-star. The skilled big man every contender covets.", "Six All-Star games, Rookie of the Year, Hall of Fame resume. Spain's greatest export."],
+    tier2: ["The Memphis trade to LA changed everything. Kobe finally had his Tim Duncan.", "Could face-up, post-up, pass, and protect the rim. The complete package at seven feet.", "Brother Marc followed his path. The Gasol family revolutionized European basketball."],
+    tier3: ["Shot 36% from three late in his career. The range kept extending with age."],
+    overperform: ["Peak Gasol was 20-10-4 with blocks and basketball IQ off the charts.", "When the jumper was falling, he was unguardable. Too big for wings, too skilled for centers.", "The passing ability separated him from every other seven-footer. Court vision was elite."],
+    underperform: ["Soft reputation dogged him unfairly. Two Finals MVPs beside Kobe proved otherwise.", "The Bulls years showed age catching up. Father Time is undefeated eventually.", "Sometimes disappeared in physical playoff series. The finesse game had limits."],
+    onPace: ["Steady Pau meant 18-9-3 with smart basketball. Never flashy, always productive.", "Value signing at this stage. The basketball IQ never declined with age."],
+    turnovers: ["Gasol's turnovers usually came from trying the spectacular pass. Risk worth taking.", "Three turnovers meant he was facilitating. The vision sometimes exceeded the execution."],
+    defensive: ["Underrated rim protector who could switch onto smaller players. Versatile defender.", "The blocks came naturally. Long arms and good instincts trumped pure athleticism."],
+    bigGame: ["46 points against Milwaukee in his Chicago days. Vintage Gasol takeover at 34.", "January 2015, proving age was just a number. The shot was still wet.", "Old-school post moves mixed with modern range. Beautiful basketball to watch."],
+    quietGame: ["Quiet Gasol still meant rebounds and assists. Impact beyond the box score.", "Never forced shots even when cold. Team-first mentality throughout his career."],
+    famousGameHint: ["27-18-7 with four blocks against Utah in '06. Prime Memphis Gasol was special.", "Check the Lakers championship runs. Gasol's fingerprints were on every big win.", "The triple-double against Seattle showed the complete skill set. All-around brilliance."],
+    controversy: ["Called soft by American media who couldn't appreciate European finesse basketball.", "The Lakers trade was supposedly lopsided. Marc Gasol proved Memphis won long-term.", "Kobe's sidekick narrative undersold his individual excellence. Two Finals MVPs deserved more credit.", "Never complained about role changes or reduced minutes. Professional throughout.", "The international game evolved because of players like Gasol. Skill over athleticism."],
+    formerTeam: ["Facing Memphis was emotional. The Grindhouse years launched his career.", "Lakers fans still cheered when he returned. Championship bonds run deep."],
+    rivalry: ["Lakers-Celtics brought out Gasol's best. Big-game performer when it mattered.", "San Antonio battles were chess matches. Gasol versus Duncan defined an era."],
+    milestones: ["20,894 career points across four teams. International basketball's greatest ambassador.", "Two Olympic silver medals with Spain. The national team success mattered most."],
+    streakLines: ["Hot shooting Gasol was automatic from mid-range. The turnaround jumper never missed.", "Even cold stretches meant rebounds and assists. Impact transcended scoring.", "January games brought out vintage performances. Something about the new year."],
+    salaryNarrative: ["Value money for a Hall of Fame skill set. Gasol at $19 was championship experience.", "The international credentials and veteran leadership cost extra. Worth every penny.", "Never chased max contracts. Prioritized winning and role over dollars throughout."],
+    teamContext: ["Third overall pick in '01, spent prime years building Memphis into relevance.", "The Lakers trade created a championship window. Perfect timing for both sides."],
+    draftAndPath: ["Spanish sensation who proved European prospects could anchor NBA franchises.", "The pathway from Memphis to LA to Chicago showed adaptability and professionalism."],
+    opponentFlavor: { UTA: "Utah's frontcourt couldn't handle prime Gasol. Too many moves in the toolkit.", MIL: "Milwaukee saw both vintage Memphis Gasol and aged Chicago version. Different eras.", SAS: "San Antonio appreciated the fundamental soundness. Spurs basketball in a Lakers uniform.", POR: "Portland's defense had no answer for the passing ability. 14 assists proved the point.", SEA: "Seattle caught prime Gasol's triple-double magic. The complete performance." },
+    signatureGames: [
+      { date: "2006-01-06", opponent: "UTA", fp: 72.1, line: "27p/18r/7a with 4 blocks. Prime Memphis Gasol." },
+      { date: "2015-01-10", opponent: "MIL", fp: 72.1, line: "46 points at age 34. The Chicago renaissance game." },
+      { date: "2006-03-08", opponent: "SEA", fp: 71.4, line: "21p/12r/12a triple-double. Complete performance." },
+      { date: "2010-02-08", opponent: "SAS", fp: 71.8, line: "21p/19r/8a with 5 blocks. Peak Lakers Gasol." },
+      { date: "2016-02-27", opponent: "POR", fp: 71.2, line: "22p/16r/14a. The passing clinic at 35." },
+    ],
+    teamEras: {
+      MEM: {
+        framing: ["The Memphis years established Gasol as a legitimate NBA star. Grit and Grind began here.", "Seven seasons building the Grizzlies from expansion afterthought to playoff contender.", "The trade to LA was inevitable. Small markets can't keep stars forever."],
+        bigGameVariant: "27-18-7 against Utah wearing Grizzlies blue. Prime Memphis Gasol was special.",
+        quietGameVariant: "Even quiet Memphis nights meant the Grizzlies stayed competitive. Franchise cornerstone.",
+      },
+      LAL: {
+        framing: ["The Lakers era defined Gasol's legacy. Kobe's perfect co-star, two championships.", "Six seasons in purple and gold, two Finals MVPs. The European big man blueprint.", "Proved international players could anchor championship runs. Changed the game forever."],
+        bigGameVariant: "21-19-8 with 5 blocks against San Antonio in Lakers gold. Championship basketball.",
+        quietGameVariant: "Quiet Lakers games meant Kobe handled the scoring. Perfect role player mentality.",
+      },
+      CHI: {
+        framing: ["The Chicago years showed Gasol could still contribute at 34. Professional veteran presence.", "Three seasons mentoring young Bulls while chasing another ring. Leadership mattered.", "46 points against Milwaukee proved the skill set remained elite. Age couldn't stop fundamentals."],
+        bigGameVariant: "46 points in Chicago red at age 34. Vintage Gasol in the fourth quarter of his career.",
+        quietGameVariant: "Even quiet Chicago nights meant veteran leadership and basketball IQ. Invaluable presence.",
+      },
+    },
+  },
 // Rudy Gay — basePlayerId 200752 — teams: MEM/SAC/TOR
   gay_200752: {
     basePlayerId: "200752",
@@ -2090,7 +2778,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Paul George — basePlayerId 202331 — teams: IND/OKC/LAC/PHI
   george_202331: {
     basePlayerId: "202331",
@@ -2147,7 +2834,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
   gilgeousalexander_1628983: {
     basePlayerId: "1628983",
     nicknames: ["SGA", "Shai", "The Canadian"],
@@ -2173,7 +2859,47 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["11th pick in 2018. Kentucky. Clippers traded him to OKC for Paul George.", "OKC franchise. Won the 2024-25 title and looking like the next dynasty."],
   },
-
+// Manu Ginobili — basePlayerId 1938 — teams: SAS
+  ginobili_1938: {
+    basePlayerId: "1938",
+    nicknames: ["Manu", "The Magician", "El Contusión"],
+    knownFor: "The sixth man who made chaos beautiful and turned clutch into an art form.",
+    salaryTier: "value",
+    tier1: ["Four rings coming off the bench. The best sixth man argument ends here.", "Left-handed wizard who made impossible shots look routine for two decades."],
+    tier2: ["The 2004 Olympics gold that broke Team USA's streak. Argentina's basketball Jesus.", "Blocked Harden's dunk at 39 years old. Some reflexes don't fade with age."],
+    tier3: ["The bald spot that became iconic. Losing hair, never losing clutch gene."],
+    overperform: ["48 points against Phoenix in 2005. The sixth man ceiling officially shattered.", "When Manu caught fire, Pop just let the beautiful chaos unfold."],
+    underperform: ["The turnover games that made Pop's jaw clench visibly on camera.", "High-risk basketball means some nights the risks don't pay off."],
+    onPace: ["Steady Manu was almost scarier than explosive Manu. Controlled chaos.", "The baseline for greatness: 15 points, 5 assists, three momentum swings."],
+    turnovers: ["The cost of magic. Every no-look pass risked becoming a lowlight reel."],
+    defensive: ["Sneaky steal numbers that doubled as transition offense starters.", "The charge-taking that made bigger players think twice about driving."],
+    bigGame: ["46 points, 8 assists against Cleveland in February 2008. Poetry in left-handed motion.", "The 48-point explosion against Phoenix remains the sixth man gold standard.", "15 rebounds as a guard against Toronto. Manu collected everything that bounced."],
+    quietGame: ["Even quiet Manu nights included two impossible shots and one steal.", "Single-digit scoring that still changed games. Impact beyond numbers."],
+    famousGameHint: ["2005 Finals, Game 7. The drive and dish that sealed Detroit's fate.", "That blocked Harden dunk in 2017. Father Time got eurostep'd."],
+    controversy: ["The flop master who pioneered drawing charges before it was cool.", "Euro-foul calls that had American fans screaming at referees for years.", "The retirement fake-out that kept Spurs fans on emotional roller coasters.", "Left-handed drives that somehow always got favorable whistle treatment."],
+    formerTeam: [],
+    rivalry: ["Lakers-Spurs battles where Manu always seemed to hit the dagger."],
+    milestones: ["Four championships, Olympic gold, Hall of Fame. The international blueprint."],
+    streakLines: ["Hot Manu streaks lasted weeks and destroyed playoff brackets.", "Cold shooting meant more passing. The assist numbers never suffered.", "February 2008 run included three games over 60 fantasy points."],
+    salaryNarrative: ["At $22, he's priced like role depth but plays like vintage championship DNA.", "The value pick that wins leagues. Four rings don't lie about clutch factor."],
+    teamContext: ["Pop's perfect sixth man who made the Spurs system beautiful for 16 years."],
+    draftAndPath: ["57th pick who became the international template for NBA success."],
+    opponentFlavor: { LAL: "Lakers killer who thrived under the brightest lights.", MIA: "Heat check personified against LeBron's super teams.", PHX: "48-point statement game that Nash's Suns never forgot.", DET: "Finals destroyer who broke the Bad Boys' spiritual successors.", HOU: "The Harden block heard 'round the world at age 39." },
+    signatureGames: [
+      { date: "2008-02-13", opponent: "CLE", fp: 75, line: "46p/5r/8a/3s/1b" },
+      { date: "2005-01-21", opponent: "PHX", fp: 63, line: "48p/5r/6a/1s/0b" },
+      { date: "2008-02-11", opponent: "TOR", fp: 65, line: "34p/15r/6a/2s/0b" },
+      { date: "2009-11-09", opponent: "TOR", fp: 66.8, line: "36p/4r/8a/1s/4b" },
+      { date: "2004-11-12", opponent: "MIA", fp: 64.9, line: "29p/7r/7a/6s/1b" },
+    ],
+    teamEras: {
+      SAS: {
+        framing: ["The Spur who made chaos systematic. Four rings, one team, pure magic.", "Pop's favorite wild card who turned the sixth man role into championship art."],
+        bigGameVariant: "46 points in Spurs silver and black. The AT&T Center still remembers.",
+        quietGameVariant: "Quiet Manu nights still included two highlight plays and one steal.",
+      },
+    },
+  },
 // Rudy Gobert — basePlayerId 203497 — teams: UTA/MIN
   gobert_203497: {
     basePlayerId: "203497",
@@ -2220,7 +2946,45 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Horace Grant — basePlayerId 270 — teams: ORL
+  grant_270: {
+    basePlayerId: "270",
+    nicknames: ["The General"],
+    knownFor: "The glue guy who turned dirty work into championship rings beside Jordan and Shaq.",
+    salaryTier: "role",
+    tier1: ["Four championship rings, zero Finals MVPs. The ultimate supporting actor who knew his role.", "Those goggles weren't a fashion statement. Grant's vision problems became his trademark look."],
+    tier2: ["Left Chicago for Orlando money, then watched Jordan win three more. The 'what if' departure.", "Anchored the Magic frontcourt when they took Jordan's Bulls to six. Almost spoiled the comeback story."],
+    tier3: ["The 1998 twenty-rebound game against Toronto. Thirty-three years old, still dominating the glass."],
+    overperform: ["Grant's ceiling was always higher than his reputation. Twenty rebounds at 33 proved he still had it.", "When he dominated the glass, teams couldn't get second chances. The quiet force that controlled games."],
+    underperform: ["Some nights the effort was there but the production wasn't. Father Time caught everyone eventually.", "The jump shot never quite developed. Grant lived in the paint his entire career."],
+    onPace: ["Classic Grant: double-digit rebounds, solid defense, zero drama. The professional's professional.", "Fifteen and ten with lockdown defense. Grant delivered exactly what the scouting report promised."],
+    turnovers: ["Grant kept the ball moving and his mistakes minimal. Four turnovers was a rough night for him."],
+    defensive: ["The help defender who made everyone else look better. Grant's positioning was textbook perfect.", "Weak-side blocks and timely steals. The glue guy who did everything that didn't show in highlights."],
+    bigGame: ["Twenty rebounds against Toronto in '98. At 33, still controlling the glass like a young bull.", "Twenty-six and fifteen against New Jersey. The veteran showing kids how to work in the paint."],
+    quietGame: ["Even Grant's quiet nights featured perfect fundamentals. The coach's dream role player."],
+    famousGameHint: ["That February '98 game when he grabbed twenty boards and reminded everyone why Orlando paid him.", "Or maybe the January '97 performance that had Magic fans wondering what could have been."],
+    controversy: ["The anonymous book about Jordan's Bulls. Grant never confirmed authorship but never denied it either.", "Leaving Chicago for Orlando money looked like betrayal until Jordan retired. Then it looked smart.", "The quiet leader who spoke up when it mattered. Not everyone appreciated Grant's honesty."],
+    formerTeam: ["Grant never showed emotion facing Chicago, but everyone knew. The professional exterior hid everything."],
+    rivalry: ["No personal rivalries, just basketball. Grant let his play do the talking for two decades."],
+    milestones: ["Four championship rings spanning two dynasties. The ultimate glue guy who found winning everywhere."],
+    streakLines: [],
+    salaryNarrative: ["Thirty-four dollars for a four-time champion. Grant's resume alone justifies the investment.", "The glue guy who made everyone better. Championship experience never goes on sale."],
+    teamContext: ["Seattle's veteran presence in their championship window. Grant brought rings and leadership north."],
+    draftAndPath: ["Clemson to Chicago in '87. Grant's fundamentals were NBA-ready from day one."],
+    opponentFlavor: { CHI: "Facing his championship teammates was always complicated. Respect mixed with competition.", TOR: "Dominated the Raptors throughout the '90s. Twenty rebounds in '98 was just Tuesday for Horace.", NJN: "New Jersey never figured out how to handle Grant's fundamentals. He ate them alive inside.", MIN: "The Timberwolves learned about veteran savvy the hard way. Grant schooled their young bigs." },
+    signatureGames: [
+      { date: "1998-02-27", opponent: "TOR", fp: 61, line: "20p/20r/4a - At 33, showing kids how to control the paint" },
+      { date: "1997-01-13", opponent: "NJN", fp: 59, line: "26p/15r/6a - Veteran mastery against overmatched youngsters" },
+      { date: "1998-02-18", opponent: "MIN", fp: 56.6, line: "26p/8r/4b - The defensive anchor shutting down lanes" },
+    ],
+    teamEras: {
+      ORL: {
+        framing: ["The post-Jordan chapter that almost worked. Grant anchored Orlando's title run that fell just short.", "Shaq's perfect frontcourt partner before Kobe arrived. The veteran who understood championship basketball."],
+        bigGameVariant: "Twenty rebounds at 33 proved Orlando got their money's worth. Vintage Grant in the paint.",
+        quietGameVariant: "Even quiet Orlando nights featured championship-level fundamentals. The professional never took plays off.",
+      },
+    },
+  },
 // Draymond Green — basePlayerId 203110 — teams: GSW
   green_203110: {
     basePlayerId: "203110",
@@ -2262,7 +3026,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
   griffin_201933: {
     basePlayerId: "201933",
     nicknames: ["BG", "Blake", "Lob City"],
@@ -2288,7 +3051,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["1st pick in 2009. Oklahoma. Lob City Clippers icon.", "Clippers, Pistons, Nets, Celtics. Career ended quietly."],
   },
-
 // Tyrese Haliburton (IND, $58, PURPLE)
   haliburton_1630169: {
     basePlayerId: "1630169",
@@ -2323,7 +3085,93 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2025-01-02", opponent: "MIA", fp: 70.5, line: "Another Miami massacre with 15 dimes" },
     ],
   },
-
+// Anfernee Hardaway — basePlayerId 358 — teams: ORL/PHX
+  hardaway_358: {
+    basePlayerId: "358",
+    nicknames: ["Penny"],
+    knownFor: "Magic's heir apparent until the injuries rewrote the story.",
+    salaryTier: "star",
+    tier1: ["Six-eight point guard who could do everything until his body said no.", "The Shaq-Penny Magic were appointment television before it fell apart.", "Four All-Stars, zero Finals trips. The what-if that haunts Orlando."],
+    tier2: ["Memphis kid who put on a show with Lil Penny commercials.", "The knee injuries turned a potential Hall of Famer into a role player.", "Phoenix gave him a second act, but the first act was the masterpiece."],
+    tier3: ["Coached high school ball in Memphis after hanging it up."],
+    overperform: ["Thirteen rebounds against Indiana, thirty points against the Knicks.", "The old Penny magic still flickered in Phoenix.", "Triple-double against Denver proved the court vision never left."],
+    underperform: ["The explosiveness was gone, but the basketball IQ remained.", "Some nights the body couldn't cash the checks the mind wrote."],
+    onPace: ["Solid veteran doing exactly what Phoenix needed.", "The reliable second option in the desert years."],
+    turnovers: ["The fancy passes sometimes went to the wrong team.", "High-wire act point forward play came with risks."],
+    defensive: ["Seven steals against New Jersey. The length still bothered guards."],
+    bigGame: ["Thirty points, ten boards against the Knicks. Vintage Penny in the Garden.", "Seven steals against Jersey. The defensive instincts never left.", "Triple-double against Denver. The old point forward magic."],
+    quietGame: ["The knees couldn't deliver what the mind remembered.", "Even legends have nights when the body wins the argument."],
+    famousGameHint: ["That February night in '99 when he dropped seven steals on Jersey.", "New Jersey learned why Orlando drafted him over Chris Webber.", "The kind of all-around line that made scouts drool in '93."],
+    controversy: ["The injuries turned a superstar into a cautionary tale.", "Orlando fans still wonder what happens if Penny stays healthy.", "Shaq left partly because the Magic couldn't get Penny right.", "The knee problems started early and never really stopped."],
+    formerTeam: ["Orlando games were painful reminders of what slipped away.", "Magic fans still stood and cheered when Penny touched the ball."],
+    rivalry: ["The Heat series in '97. Playoff basketball before the body betrayed him."],
+    milestones: ["Four All-Star games, three All-NBA selections.", "15,666 career points. Every bucket earned despite the knees."],
+    streakLines: ["When Penny was healthy, Phoenix became dangerous.", "The cold streaks reminded everyone what the injuries cost.", "Triple-double capability never fully left, just became rarer."],
+    salaryNarrative: ["Forty-nine million for damaged goods with Hall of Fame upside.", "Phoenix bet on the basketball IQ outlasting the knee problems."],
+    teamContext: ["Orlando drafted him to pair with Shaq and build a dynasty.", "Phoenix signed him hoping desert air could heal damaged knees."],
+    draftAndPath: ["Third overall in '93. Orlando traded Chris Webber to get him.", "Memphis to Orlando to Phoenix. The talent traveled despite the injuries."],
+    opponentFlavor: { LAL: "Shaq's former running mate showing what might have been.", CHI: "Jordan faced the next version of Magic Johnson.", NYK: "The Garden always brought out Penny's best performances.", SAS: "Tim Duncan respected the basketball IQ.", IND: "Reggie Miller knew talent when he saw it." },
+    signatureGames: [
+      { date: "1999-02-10", opponent: "NJN", fp: 60.6, line: "21p/8r/6a/7s — Seven steals, vintage defensive instincts" },
+      { date: "1999-02-26", opponent: "IND", fp: 60.1, line: "23p/13r/5a/3s/2b — Thirteen boards from the point forward" },
+      { date: "1999-04-06", opponent: "NYK", fp: 59, line: "30p/10r/8a/3s — Thirty and ten in the Garden" },
+      { date: "2001-12-29", opponent: "DEN", fp: 53.5, line: "12p/10r/11a/4s — Triple-double magic in Phoenix" },
+      { date: "1997-04-08", opponent: "MIL", fp: 58.2, line: "30p/1r/10a/3s — Perfect shooting night, ten dimes" },
+    ],
+    teamEras: {
+      ORL: {
+        framing: ["The point forward who was supposed to deliver Orlando its first championship.", "Shaq's running mate until injuries derailed the dynasty.", "Four All-Stars in Orlando. The what-if that still haunts Central Florida."],
+        bigGameVariant: "The '97 playoffs reminded everyone why Orlando drafted him third.",
+        quietGameVariant: "Even young Penny had nights when the knee barked early.",
+      },
+      PHX: {
+        framing: ["The reclamation project who gave Phoenix four solid seasons.", "Not the explosive Penny of Orlando, but still a basketball genius.", "Desert basketball suited the older, wiser version of his game."],
+        bigGameVariant: "Triple-double against Denver. The old Magic still flickered in the desert.",
+        quietGameVariant: "Some Phoenix nights, the body couldn't match the basketball mind.",
+      },
+    },
+  },
+// Tim Hardaway — basePlayerId 896 — teams: MIA
+  hardaway_896: {
+    basePlayerId: "896",
+    nicknames: ["Tim Bug", "The Bug"],
+    knownFor: "The crossover king who broke ankles before the term existed.",
+    salaryTier: "star",
+    tier1: ["The UTEP two-step that left defenders reaching for air.", "Five All-Stars, zero rings. The Warriors years were special; the Heat years were close."],
+    tier2: ["Run TMC in Golden State was appointment television.", "Miami's best point guard until Wade learned to facilitate.", "The crossover highlight reel that launched a thousand imitators."],
+    tier3: ["Coached his son at Detroit Mercy. The apple landed close to the tree."],
+    overperform: ["Sixteen assists against Detroit, eight steals against Atlanta.", "The old legs still had one more gear when Miami needed it most."],
+    underperform: ["The ankle injuries caught up eventually.", "Some nights the crossover worked better in memory than reality."],
+    onPace: ["Still running the offense like a metronome.", "The reliable veteran doing exactly what Pat Riley expected."],
+    turnovers: ["The fancy dribbling came with a price.", "High-risk, high-reward point guard play from the beginning."],
+    defensive: ["Undersized but scrappy. Eight steals against Atlanta proved the effort."],
+    bigGame: ["45 points against Washington in '97. The Bug still had bite.", "Sixteen assists against Detroit. The old-school floor general clinic.", "Eight steals in one game. Still hunting at 33."],
+    quietGame: ["Even legends have off nights.", "The crossover couldn't cure every cold shooting spell."],
+    famousGameHint: ["That March night in '97 when he dropped 45 on the Bullets.", "Washington learned why Miami traded for him.", "Fifty-one minutes of vintage Tim Bug basketball."],
+    controversy: ["Heat-Knicks playoffs every spring were chair-throwing affairs. He gave better than he got.", "First-team All-NBA in '97 over names twice his size. The crossover was the resume."],
+    formerTeam: ["Warriors games were family reunions with highlight reels.", "Don Nelson still smiled watching his old point guard work."],
+    rivalry: ["The Knicks series in '97. Playoff basketball at its finest."],
+    milestones: ["Five All-Star games, five All-NBA selections.", "17,287 career points. The crossover counted for all of them."],
+    streakLines: ["When Tim was cooking, the Heat became must-watch television.", "Cold spells meant the fancy stuff wasn't falling.", "The veteran knew when to take over and when to facilitate."],
+    salaryNarrative: ["Forty million for the crossover king. Miami paid for playoff experience.", "Pat Riley knew what veteran leadership cost in South Beach."],
+    teamContext: ["The Warriors couldn't keep Run TMC together.", "Riley traded for him to teach Mourning how to win."],
+    draftAndPath: ["Fourteenth overall in '89. Golden State found gold in the lottery.", "UTEP to the Bay Area to Miami. The crossover traveled well."],
+    opponentFlavor: { NYK: "Broke too many Knicks ankles to count.", LAL: "Magic's heir apparent in the point guard fraternity.", CHI: "Jordan respected the crossover. High praise.", IND: "Reggie Miller knew the threat from deep.", SAS: "Tim Duncan faced Tim Hardaway. Different Tims, same excellence." },
+    signatureGames: [
+      { date: "1997-03-07", opponent: "WAS", fp: 69.9, line: "45p/7r/7a/4s — The Bug's Miami masterpiece" },
+      { date: "1997-12-20", opponent: "ATL", fp: 71.7, line: "18p/6r/13a/8s — Eight steals and thirteen dimes" },
+      { date: "1997-03-04", opponent: "DET", fp: 56.8, line: "28p/4r/16a/1s — Sixteen assists, vintage floor general" },
+      { date: "1997-12-12", opponent: "IND", fp: 63.4, line: "28p/2r/10a/5s — Perfect shooting night in Indianapolis" },
+      { date: "1999-02-11", opponent: "TOR", fp: 59.9, line: "27p/7r/9a/4s — The old legs still had springs" },
+    ],
+    teamEras: {
+      MIA: {
+        framing: ["The veteran point guard Pat Riley imported to legitimize the Heat.", "Five playoff appearances, no ring. The missing piece Miami couldn't find.", "Taught a young franchise what playoff basketball looked like."],
+        bigGameVariant: "45 points against Washington. The Bug proved he still had Miami bite.",
+        quietGameVariant: "Even the crossover king had off nights in South Beach.",
+      },
+    },
+  },
 // James Harden (LAC, $63, PURPLE)
   harden_201935: {
     basePlayerId: "201935",
@@ -2358,7 +3206,52 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-11-27", opponent: "WAS", fp: 63.3, line: "Vintage efficiency with 43 points in 32 minutes" },
     ],
   },
-
+// Al Harrington — basePlayerId 1733 — teams: ATL/NYK
+  harrington_1733: {
+    basePlayerId: "1733",
+    nicknames: ["Big Al"],
+    knownFor: "The prep-to-pro pioneer who carved out fifteen seasons as a stretch four before anyone called it that.",
+    salaryTier: "value",
+    tier1: ["Straight from high school to the league in '98. The blueprint before LeBron made it cool.", "Six-eight with range and handles. The modern four trapped in a post-up era."],
+    tier2: ["Fifteen seasons, seven teams, zero All-Star games. The definition of steady contributor.", "His best years came in Indiana when nobody was watching. 18 and 6 in the shadow of bigger names."],
+    tier3: ["The Pacers thought he was their missing piece after Malice at the Palace. He was just missing pieces."],
+    overperform: ["When Big Al gets hot, he turns into Durant for three quarters. The stroke is pure vintage.", "Forty-plus points out of nowhere. Your opponent's scouting report just became toilet paper."],
+    underperform: ["The disappearing act special. Seventeen minutes, four shots, wondering where the aggression went.", "Some nights he plays like he forgot he's six-eight with a jumper. Maddening doesn't cover it."],
+    onPace: ["Fifteen and seven with a couple threes. The Al Harrington experience in a nutshell.", "Exactly what you penciled in during draft prep. Boring has never felt so reliable."],
+    turnovers: ["The ball-handling forward who sometimes forgets he's not Magic Johnson. Three turnovers, same spin move."],
+    defensive: [],
+    bigGame: ["Forty-one points and ten boards against Denver in '09. The three-ball was falling from Fort Wayne.", "Vintage Big Al explosion. Six threes, confident stroke, reminded everyone what he could do healthy."],
+    quietGame: ["Seven points in thirty minutes. The jump shot betrayed him and he never found Plan B."],
+    famousGameHint: ["That December night in '02 against Atlanta when he dropped 40. The Garden was rocking rare.", "Young Al serving notice to his future employers. Sometimes the audition tape writes itself."],
+    controversy: ["Never made an All-Star team despite averaging 18 and 6 multiple seasons. The East had no excuse.", "Bounced around seven teams in fifteen years. Either unlucky or harder to coach than advertised.", "The Warriors traded him twice. Same franchise, different decades, same result.", "His peak years were wasted on bad Indiana teams. Timing is everything in this league."],
+    formerTeam: ["Facing old teams brought out vintage Big Al. The motivation was obvious, the execution elite."],
+    rivalry: ["Never had a true rival. Hard to develop beef when you're changing jerseys every two years."],
+    milestones: ["Fifteen seasons played, fourteen without an All-Star nod. The ultimate compiler who never compiled enough."],
+    streakLines: ["When Al gets in rhythm, the ball doesn't touch rim for three games straight. Pure shooter's streak.", "Cold streaks hit him like a flu. Two weeks of contested long twos and prayer follow-throughs."],
+    salaryNarrative: ["Seventeen million for fifteen and seven. The definition of getting what you pay for.", "Never quite worth the max, always worth more than the minimum. The NBA's middle class personified."],
+    teamContext: ["Indiana's Plan B after Ron Artest imploded. Sometimes the backup plan works out fine."],
+    draftAndPath: ["First round straight from high school in '98. The Pacers bet on potential over pedigree."],
+    opponentFlavor: { DEN: "Owned the Nuggets his entire career. Something about that altitude agreed with his jumper.", BOS: "The Celtics saw him twice a year and never figured out the scouting report.", CLE: "Torched LeBron's Cavs regularly. The King remembers those Indiana nights.", UTA: "Utah's defense had no answer for his size-speed combo. Forty points, different uniforms.", WAS: "The Wizards made him look like an All-Star. That's not a compliment to Washington." },
+    signatureGames: [
+      { date: "2009-11-27", opponent: "DEN", fp: 65.5, line: "41p/10r/1a - The three-point barrage that reminded everyone he could score" },
+      { date: "2008-12-10", opponent: "NJN", fp: 61.1, line: "39p/13r/3a - Big Al bullying the Nets for forty-six minutes of domination" },
+      { date: "2005-12-06", opponent: "DEN", fp: 60.8, line: "35p/9r/4a - The Nuggets again. Something about Denver brought out his best" },
+      { date: "2002-12-23", opponent: "ATL", fp: 55.3, line: "40p/9r/1a - Christmas Eve massacre. The Hawks had no answers for young Al" },
+      { date: "2009-10-31", opponent: "PHI", fp: 48.2, line: "42p/6r/2a - Halloween night, season-high 42. The treats were all for Indiana fans" },
+    ],
+    teamEras: {
+      ATL: {
+        framing: ["The Atlanta years were peak Big Al. Eighteen points, six boards, nobody noticed.", "Hawks fans remember the jumper, not the wins. He filled it up for bad teams."],
+        bigGameVariant: "Forty-one in the Georgia Dome. The Hawks couldn't stop the three-point parade.",
+        quietGameVariant: "Some nights even Atlanta's offense couldn't wake him up. Brutal stretches.",
+      },
+      NYK: {
+        framing: ["The Knicks got vintage Al for exactly one season. The Garden appreciated pure shooting.", "Madison Square Garden crowds loved his range. The wins were optional, the threes were mandatory."],
+        bigGameVariant: "Garden magic. When the lights got bright, Big Al's shot got pure.",
+        quietGameVariant: "Even New York's energy couldn't save him from cold shooting nights.",
+      },
+    },
+  },
 // Tobias Harris — basePlayerId 202699 — teams: LAC/PHI
   harris_202699: {
     basePlayerId: "202699",
@@ -2405,7 +3298,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Gordon Hayward — basePlayerId 202330 — teams: UTA/BOS/CHA
   hayward_202330: {
     basePlayerId: "202330",
@@ -2457,7 +3349,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Tyler Herro (MIA, $55, PURPLE)
   herro_1629639: {
     basePlayerId: "1629639",
@@ -2492,7 +3383,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2025-01-27", opponent: "ORL", fp: 55.6, line: "30 points, 12 assists in 48-minute marathon" },
     ],
   },
-
   hill_255: {
     basePlayerId: "255",
     nicknames: ["Grant Hill", "GHill"],
@@ -2517,7 +3407,47 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["3rd pick in 1994. Duke product. Pistons franchise face.", "Magic, Suns, Clippers — late-career rebirth, Hall of Fame ahead of injuries."],
   },
-
+// Kirk Hinrich — basePlayerId 2550 — teams: CHI
+  hinrich_2550: {
+    basePlayerId: "2550",
+    nicknames: ["Captain Kirk", "The Admiral"],
+    knownFor: "The Bulls point guard who played defense first and asked questions later.",
+    salaryTier: "flier",
+    tier1: ["Defense-first point guard who could run an offense without turning it over.", "Made the All-Rookie team, then spent a decade making life hell for opposing guards."],
+    tier2: ["Shot 40% from three his rookie year, then never again. The league adjusted.", "Started 82 games as a rookie and set the tone for a decade of Bulls basketball."],
+    tier3: ["Two triple-doubles in his entire career. Point guards weren't supposed to rebound in 2004."],
+    overperform: ["30 points and 13 rebounds against Minnesota in '06. Guards didn't grab boards like that.", "When Captain Kirk got hot, opposing coaches called timeout just to cool him down."],
+    underperform: ["The shots stopped falling after year one. Still played 40 minutes a night anyway.", "Never met a contested jumper he wouldn't take. Coaches loved the confidence, not the percentage."],
+    onPace: ["Steady 12-and-6 with minimal turnovers. The most reliable kind of boring.", "Defense, ball security, occasional hot streak. Exactly what the scouting report said."],
+    turnovers: ["Zero turnovers in multiple games with double-digit assists. That's point guard craft."],
+    defensive: ["Made opposing point guards work for every possession. The steals were just a bonus."],
+    bigGame: ["68 fantasy points against Minnesota with 30-13-9. Guards don't stuff the stat sheet like that.", "38 points and 10 assists versus Indiana in '08. Peak Captain Kirk efficiency.", "17 assists against Minnesota without breaking a sweat. Vintage floor general work."],
+    quietGame: ["Single digits, few assists, still played lockdown defense. The intangibles game."],
+    famousGameHint: ["That triple-double against the Knicks in December '07 was pure point guard poetry.", "15-12-14 with three blocks. When Captain Kirk filled up the stat sheet completely."],
+    controversy: ["Never had one. The most controversy was fans wanting him to shoot less.", "Clean career, clean game, clean reputation. Boring in the best possible way.", "Critics said he was too conservative. Coaches said he was exactly what they wanted."],
+    formerTeam: ["Never faced a former team. One franchise, one jersey, one identity."],
+    rivalry: ["Every good point guard was a rival. Hinrich made them all work harder."],
+    milestones: ["All-Rookie team in 2004. The foundation of post-Jordan Bulls basketball."],
+    streakLines: ["Hot streak meant five threes in a quarter. Cold streak meant the same shots, different result.", "When Captain Kirk got rolling, the assists came in bunches. Pure floor general mode."],
+    salaryNarrative: ["Flier tier at $11 million reflects the post-prime reality. Still worth it for the defense.", "Veterans who know how to play don't come cheaper than this."],
+    teamContext: ["Fourth overall pick by Chicago in 2003. The post-Jordan rebuild started here."],
+    draftAndPath: ["Kansas product who translated college leadership directly to the NBA level."],
+    opponentFlavor: { MIN: "Owned the Timberwolves. Career-high assists and rebounds both came against them.", IND: "Career-high 38 points against Indiana. Reggie Miller approved from the broadcast booth.", NYK: "Triple-double at Madison Square Garden. Even New York fans had to respect it.", ORL: "Always seemed to find extra assists against the Magic. Court vision showcase games." },
+    signatureGames: [
+      { date: "2006-02-28", opponent: "MIN", fp: 68.1, line: "30p/13r/9a perfect efficiency game" },
+      { date: "2008-01-23", opponent: "IND", fp: 63.4, line: "38p/10a career-high scoring night" },
+      { date: "2007-12-14", opponent: "NYK", fp: 61.4, line: "15p/12r/14a triple-double at MSG" },
+      { date: "2006-01-11", opponent: "MIN", fp: 53.1, line: "17a career-high dimes showcase" },
+      { date: "2005-11-29", opponent: "ORL", fp: 55, line: "20p/14a/5s complete floor game" },
+    ],
+    teamEras: {
+      CHI: {
+        framing: ["The point guard who bridged the post-Jordan years to the Rose era.", "Defense-first, turnover-averse, exactly what the Bulls needed after the chaos years.", "Made All-Rookie team and spent a decade proving it wasn't a fluke."],
+        bigGameVariant: "68 fantasy points in United Center red. Captain Kirk at full power.",
+        quietGameVariant: "Single digits but lockdown defense. The intangibles Bulls game.",
+      },
+    },
+  },
 // Jrue Holiday — basePlayerId 201950 — teams: MIL/NOP/PHI
   holiday_201950: {
     basePlayerId: "201950",
@@ -2569,7 +3499,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Al Horford — basePlayerId 201143 — teams: ATL/BOS
   horford_201143: {
     basePlayerId: "201143",
@@ -2615,7 +3544,47 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Robert Horry — basePlayerId 109 — teams: LAL
+  horry_109: {
+    basePlayerId: "109",
+    nicknames: ["Big Shot Rob", "Big Shot Bob"],
+    knownFor: "Seven rings across three franchises. The clutch role player who never missed when it mattered.",
+    salaryTier: "role",
+    tier1: ["Seven championship rings with the Rockets, Lakers, and Spurs. The ultimate glue guy.", "Shot .404 from three in the playoffs. When the lights got brightest, so did he."],
+    tier2: ["Never an All-Star, never needed to be. Built for June, not February.", "The hip check on Steve Nash changed a Finals. Suspensions followed, rings didn't."],
+    tier3: ["More rings than Shaq, Kobe, Duncan individually. Role players can write history too."],
+    overperform: ["Big Shot Rob showed up when the script called for it. Vintage clutch gene activation.", "The supporting cast just carried the leads. This is how championships get built."],
+    underperform: ["Even Big Shot Rob had quiet nights. The clutch gene takes maintenance breaks.", "Role players live in the margins. Tonight the margins were thin."],
+    onPace: ["Horry doing exactly what Horry does. Solid minutes, timely shots, championship DNA.", "The steady hand in the rotation. Seven rings weren't built on flash."],
+    turnovers: ["Big Shot Rob kept the ball moving. Role players don't hunt their own shots."],
+    defensive: ["The help defender who rotated early and fouled when necessary. Smart, not spectacular."],
+    bigGame: ["23 points, 13 boards against Vancouver in March '98. Big Shot Rob had range.", "The clutch reputation was built one random Tuesday at a time. This was one of those nights.", "When role players explode, championships follow. The supporting cast just led the show."],
+    quietGame: ["Big Shot Rob disappeared into the rotation. Even clutch legends need maintenance games."],
+    famousGameHint: ["The Kings series, Game 4, 2002. The three that broke Sacramento's heart.", "Or maybe the Pistons, 2005 Finals, Game 5. Big shots have big moments.", "Seven rings means seven different June memories. Pick your favorite clutch dagger."],
+    controversy: ["The hip check on Nash in 2007. Suspensions flew, the Suns' title window closed.", "Threw a towel at Danny Ainge, got ejected. The role player who never backed down.", "Called out Kobe and Shaq during the Lakers' dysfunction. Seven rings buy credibility.", "The enforcer disguised as a shooter. Physical when the game required it."],
+    formerTeam: ["Big Shot Rob never faced former teams in the data. Seven rings across three stops."],
+    rivalry: ["Lakers-Kings was personal. The 2002 series lives in Sacramento's nightmares forever."],
+    milestones: ["Seven championship rings across three franchises. The role player Mount Rushmore."],
+    streakLines: ["Big Shot Rob heating up means June is coming early. The clutch gene activates in streaks.", "Even role players get hot. Seven rings weren't built on single nights alone.", "The steady hand finding his rhythm. Championship DNA doesn't take long breaks."],
+    salaryNarrative: ["At $25, Big Shot Rob is championship insurance. Role players who deliver rings earn their keep.", "Seven rings justify any salary. The clutch gene doesn't depreciate with age."],
+    teamContext: ["The Lakers acquired a proven winner. Seven rings speak louder than scouting reports."],
+    draftAndPath: ["11th pick in 1992, turned into seven championships. The draft steal who kept delivering rings."],
+    opponentFlavor: { SAC: "The Kings series dagger. Sacramento still has nightmares.", DET: "Game 5, 2005 Finals. The three that clinched it all.", UTA: "Stockton and Malone knew his clutch reputation. They couldn't stop it.", SAS: "Joined them after beating them. If you can't beat Big Shot Rob, sign him.", PHX: "The hip check series. Nash never saw it coming." },
+    signatureGames: [
+      { date: "1998-03-15", opponent: "VAN", fp: 55.1, line: "23p/13r/3a/4s" },
+      { date: "1997-10-31", opponent: "UTA", fp: 59.1, line: "11p/13r/7a/3s/5b" },
+      { date: "2005-04-09", opponent: "LAC", fp: 56.6, line: "15p/8r/4a/6s/3b" },
+      { date: "1999-04-19", opponent: "VAN", fp: 51.4, line: "17p/12r/6a/2s/2b" },
+      { date: "2002-03-17", opponent: "DAL", fp: 51.1, line: "19p/8r/3a/2s/4b" },
+    ],
+    teamEras: {
+      LAL: {
+        framing: ["The Shaq-Kobe era role player. Three rings, countless clutch shots, zero ego.", "Big Shot Rob at his most famous. The Lakers dynasty needed his steady hand.", "From role player to Lakers legend. The clutch gene found its perfect stage."],
+        bigGameVariant: "Big Shot Rob in Lakers purple. The clutch gene activated when it mattered most.",
+        quietGameVariant: "Even Big Shot Rob had quiet Lakers nights. Seven rings buy patience.",
+      },
+    },
+  },
   howard_2730: {
     basePlayerId: "2730",
     nicknames: ["Superman", "D-Howard", "D-12", "The Big Aristotle Jr."],
@@ -2641,7 +3610,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["1st pick in 2004 out of high school. Magic franchise.", "Magic, Lakers, Rockets, Hawks, Hornets, Sixers, Lakers (ring), Wizards. Long road."],
   },
-
 // Juwan Howard — basePlayerId 436 — teams: DAL/DEN/WAS
   howard_436: {
     basePlayerId: "436",
@@ -2687,7 +3655,52 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Larry Hughes — basePlayerId 1716 — teams: GSW/WAS
+  hughes_1716: {
+    basePlayerId: "1716",
+    nicknames: ["L-Train"],
+    knownFor: "The athletic wing who could steal your lunch money and drop 40 the same night.",
+    salaryTier: "role",
+    tier1: ["Six steals against Detroit, 44 points against Denver. Peak athleticism.", "The defensive havoc creator who could explode for 40 any given night."],
+    tier2: ["LeBron's running mate in Cleveland never quite clicked the way they hoped.", "That triple-double against Toronto showed glimpses of what could've been."],
+    tier3: ["The Warriors tenure was about proving he still had something left."],
+    overperform: ["44 points against Denver, 43 against Philly. Vintage Hughes explosions.", "Six-steal games happened regularly. Defense was never the question."],
+    underperform: ["The Cleveland contract expectations never matched the production.", "Injuries derailed what should've been his prime years."],
+    onPace: ["Solid wing production with elite steal numbers. Role player perfection.", "The 15-point, 5-steal guy every contender needed."],
+    turnovers: ["Gambling for steals sometimes meant giving up easy buckets."],
+    defensive: ["Elite steal numbers and active hands. Made point guards work for everything."],
+    bigGame: ["44 points, 7 assists against Denver. The L-Train at full speed.", "Six steals and 30 points vs Detroit. Two-way dominance at its peak."],
+    quietGame: ["Quiet Hughes games still meant three steals and solid defense."],
+    famousGameHint: ["That 44-point explosion against Denver might be the best scoring night you forgot.", "Six steals against Detroit in 2004. Prime Hughes defensive clinic."],
+    controversy: ["The Cleveland signing looked like overpaying from day one.", "LeBron needed a reliable second option. Hughes was streaky at best.", "Injuries piled up right when he should've been entering his prime."],
+    formerTeam: ["Every Washington return carried extra motivation after the trade."],
+    rivalry: ["Lakers games always brought out his best scoring performances."],
+    milestones: ["That triple-double against Toronto proved he could run an offense."],
+    streakLines: ["Hot Hughes could drop 30 for a week straight. Defense never cooled off.", "Cold shooting streaks hurt, but the steals kept coming regardless."],
+    salaryNarrative: ["At $36, you're buying athleticism and defensive upside with scoring pop.", "Role player money for a guy who can still explode for 30 any night."],
+    teamContext: ["Golden State was the veteran addition to a young, athletic core."],
+    draftAndPath: ["Straight from high school to the league. Athletic tools over polish."],
+    opponentFlavor: { DEN: "The 44-point masterpiece happened here. Peak Hughes unleashed.", DET: "Six steals against the defensive Pistons. Chaos personified.", PHI: "43 points in Philly. The athletic ceiling on full display.", LAL: "41 points against Kobe's Lakers. Statement game material." },
+    signatureGames: [
+      { date: "2000-04-09", opponent: "DEN", fp: 70.7, line: "44p/6r/7a/3s" },
+      { date: "2004-12-29", opponent: "DET", fp: 68.3, line: "30p/4r/7a/6s/2b" },
+      { date: "2004-01-10", opponent: "PHI", fp: 68, line: "43p/5r/2a/5s" },
+      { date: "2004-11-28", opponent: "TOR", fp: 64, line: "33p/10r/10a" },
+      { date: "2000-03-09", opponent: "LAL", fp: 61.1, line: "41p/3r/3a/3s" },
+    ],
+    teamEras: {
+      GSW: {
+        framing: ["The veteran wing addition to the young Warriors core.", "Defensive experience for a team learning to win consistently."],
+        bigGameVariant: "Vintage Hughes explosion when the Warriors needed it most.",
+        quietGameVariant: "Warriors Hughes was about steady defense and veteran savvy.",
+      },
+      WAS: {
+        framing: ["The athletic wing who could take over games in the nation's capital.", "Six-steal nights and 40-point explosions. Peak Hughes basketball."],
+        bigGameVariant: "44 points against Denver. Washington Hughes at his absolute peak.",
+        quietGameVariant: "Even quiet Washington nights meant elite steal numbers.",
+      },
+    },
+  },
 // Andre Iguodala — basePlayerId 2738 — teams: PHI
   iguodala_2738: {
     basePlayerId: "2738",
@@ -2729,7 +3742,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Brandon Ingram — basePlayerId 1627742 — teams: NOP
   ingram_1627742: {
     basePlayerId: "1627742",
@@ -2771,7 +3783,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Kyrie Irving (DAL, $57, PURPLE)
   irving_202681: {
     basePlayerId: "202681",
@@ -2806,7 +3817,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-02-14", opponent: "SAS", fp: 63.3, line: "Efficient 34pts in just 33 minutes of work" },
     ],
   },
-
   iverson_947: {
     basePlayerId: "947",
     nicknames: ["The Answer", "A.I.", "Bubba Chuck"],
@@ -2832,7 +3842,93 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["First pick in 1996. Georgetown. Bowling alley fight backstory.", "Six teams over 14 seasons. Sixers icon, Pistons walk-off."],
   },
-
+// Stephen Jackson — basePlayerId 1536 — teams: CHA/GSW
+  jackson_1536: {
+    basePlayerId: "1536",
+    nicknames: ["Captain Jack", "Stak5"],
+    knownFor: "The Malice participant who could fill every stat sheet and start every argument.",
+    salaryTier: "value",
+    tier1: ["Versatile wing who averaged 20 and 5 for multiple seasons.", "The Malice at the Palace made him infamous. The talent made him valuable."],
+    tier2: ["Two triple-doubles in his database, both against Phoenix.", "43 points against Houston in 2010. Prime Captain Jack was unguardable."],
+    tier3: ["Fifteen assists against Minnesota shows the playmaking nobody expected."],
+    overperform: ["Jackson's ceiling was All-Star level. 64 fantasy points happened regularly.", "The triple-double games reminded you why he started for champions."],
+    underperform: ["Bad Jackson games came with technical fouls and frustrated teammates.", "The talent never matched the consistency. Peak Jack was worth the gamble."],
+    onPace: ["Steady Jackson was the most dangerous version. No drama, just production."],
+    turnovers: ["Four turnovers in a triple-double shows the aggressive decision-making."],
+    defensive: ["Six steals against Philadelphia in 2004. The hands were legitimately quick."],
+    bigGame: ["43 points, 8 rebounds, 3 assists against Houston in January 2010.", "Prime Captain Jack could take over games when the mood struck."],
+    quietGame: ["Quiet Jackson nights usually meant someone else was handling the offense."],
+    famousGameHint: ["30-11-10 against Phoenix in February 2009. The complete stat-sheet game.", "Two career triple-doubles, both worth remembering for different reasons."],
+    controversy: ["The Malice at the Palace participant who went into the stands swinging.", "Multiple suspensions throughout his career for on-court incidents.", "The Warriors title run was his basketball peak. Everything else was chaos.", "Outspoken about officials, teammates, and management. Never held back."],
+    formerTeam: ["Facing Indiana after the Malice was pure awkwardness for everyone involved."],
+    rivalry: ["The Lakers series in 2009 was his playoff masterpiece moment."],
+    milestones: ["NBA champion with Golden State in 2007. The title that validated everything."],
+    streakLines: ["Hot streaks made him look like an All-Star. 40-point games weren't rare.", "Cold streaks came with technical fouls and locker room tension."],
+    salaryNarrative: ["At $18, you're getting championship-level talent at role-player prices.", "Value tier pricing for a player who could start on any contender."],
+    teamContext: ["Journeyman who found his best basketball with the right situations."],
+    draftAndPath: ["Undrafted out of Oak Hill Academy. The chip on his shoulder never left."],
+    opponentFlavor: { PHX: "Two triple-doubles against the Suns. Phoenix brought out his best.", HOU: "43 points against the Rockets in 2010. Career-high theater.", SAS: "33 points and 11 assists against San Antonio shows the versatility.", NYK: "35-6-10 at Madison Square Garden. Perfect venue for Captain Jack.", LAL: "The Lakers rivalry brought out his competitive fire every time." },
+    signatureGames: [
+      { date: "2010-01-12", opponent: "HOU", fp: 64.1, line: "43p/8r/3a/3s" },
+      { date: "2009-02-02", opponent: "SAS", fp: 63.5, line: "33p/5r/11a/4s" },
+      { date: "2009-02-04", opponent: "PHX", fp: 63.2, line: "30p/11r/10a" },
+      { date: "2009-02-10", opponent: "NYK", fp: 63.2, line: "35p/6r/10a" },
+      { date: "2004-03-12", opponent: "WAS", fp: 61.9, line: "42p/2r/7a" },
+    ],
+    teamEras: {
+      CHA: {
+        framing: ["The Charlotte years were his statistical peak. 20 points and 5 boards nightly.", "Bobcats Jackson was the most complete version. Still volatile, more focused."],
+        bigGameVariant: "43 points against Houston as a Bobcat. Peak Captain Jack chaos.",
+        quietGameVariant: "Charlotte quiet games meant someone else was scoring.",
+      },
+      GSW: {
+        framing: ["The championship run in 2007. We Believe Warriors' emotional leader.", "Baron Davis got the credit, but Jackson was the heart of that upset run."],
+        bigGameVariant: "The playoff buckets against Dallas made him a Warrior legend forever.",
+        quietGameVariant: "Warriors quiet games were rare. That team was built for chaos.",
+      },
+    },
+  },
+// Mark Jackson — basePlayerId 349 — teams: IND
+  jackson_349: {
+    basePlayerId: "349",
+    nicknames: ["The Preacher"],
+    knownFor: "The point guard who ran offense like Sunday service and dished assists like communion.",
+    salaryTier: "role",
+    tier1: ["Pure point guard in an era when that meant something. Seventeen seasons, 10,334 assists.", "The Pacers' floor general during their best years. Reggie got the shots, Mark got the credit."],
+    tier2: ["Number two all-time in assists when he retired. Stockton was first, everyone else was distant.", "The '97 Pacers with Jackson running point were appointment television. That was beautiful basketball."],
+    tier3: ["Twenty-two assists against New Jersey in '97. The record books remember, casual fans don't."],
+    overperform: ["When Jackson orchestrated, everyone ate. Fifteen assists, zero turnovers, the offense hummed.", "Triple-double from the point guard position when it actually mattered. Pure floor general work."],
+    underperform: ["Some nights the passes didn't connect and the shots wouldn't fall. Even maestros have off-keys.", "When his legs went, the assists stayed but the defense disappeared. Father Time is undefeated."],
+    onPace: ["Twelve points, ten assists, three rebounds. The Mark Jackson special for seventeen years.", "Steady as sunrise. The offense started and stopped with his decision-making."],
+    turnovers: ["Conservative with the ball for a pass-first guy. The flashy play wasn't worth the risk."],
+    defensive: ["Smart positional defense, slow feet. He made up for athleticism with basketball IQ."],
+    bigGame: ["Twenty-two assists against New Jersey in '97. The ball never stuck in his hands once.", "Pure point guard artistry. Every Pacer scored, every possession had purpose, basketball poetry."],
+    quietGame: ["Five points, five assists in thirty minutes. Even the best conductors have quiet movements."],
+    famousGameHint: ["That January night in '97 when he set the tone for Indiana's best season. Twenty-two dimes.", "The assist record that stood for years. Pacers fans who were there still talk about it."],
+    controversy: ["The Knicks traded him to Indiana and immediately regretted it. Short-sighted front office work.", "Never won a championship despite running elite offenses for two decades. The rings went elsewhere.", "His coaching stint with Golden State was rocky. Better at running plays than drawing them up.", "The Warriors fired him right before their championship run. Timing is cruel in sports."],
+    formerTeam: ["Playing the Knicks meant everything to him. Twenty-eight points at MSG spoke volumes about motivation."],
+    rivalry: ["The battles with John Stockton were clinic-level basketball. Two pure points going at it."],
+    milestones: ["Retired second all-time in assists. The mountain Stockton built had one other visitor near the peak."],
+    streakLines: ["When Jackson found his rhythm, assists came in bunches. Fifteen helpers three games straight.", "Cold stretches meant forced shots and bad decisions. The veteran knew better but did it anyway."],
+    salaryNarrative: ["Thirty-six million for a pure point guard was steep. The assists were worth it, the defense wasn't.", "You paid for seventeen years of experience and 10,000 career assists. The resume justified the check."],
+    teamContext: ["Indiana's best trade acquisition ever. The Knicks' loss became the Pacers' championship window."],
+    draftAndPath: ["St. John's legend who brought New York toughness to Indianapolis. The perfect cultural fit."],
+    opponentFlavor: { NJN: "The Nets never solved his pick-and-roll. Twenty-two assists in one game proved it.", VAN: "Those Vancouver games were Mark Jackson highlight reels. The Grizzlies had no answers.", LAL: "Even Magic's Lakers respected his court vision. That's elite company for a point guard.", CHI: "Jordan's Bulls saw him twice a year. MJ knew greatness when he guarded it.", NYK: "Facing his former team brought extra motivation. The Knicks always got his best effort." },
+    signatureGames: [
+      { date: "1997-01-20", opponent: "NJN", fp: 60.4, line: "21p/7r/22a - The assist clinic that defined his legacy" },
+      { date: "1997-01-22", opponent: "VAN", fp: 58.2, line: "15p/16r/12a - Triple-double perfection against the Grizzlies" },
+      { date: "1997-03-02", opponent: "LAL", fp: 57.5, line: "17p/10r/15a - Outdueling Magic's successors at their own game" },
+      { date: "1996-12-23", opponent: "PHX", fp: 56.1, line: "14p/8r/17a - Christmas basketball, point guard style" },
+      { date: "2002-01-03", opponent: "DAL", fp: 50.1, line: "5p/8r/17a - Veteran savvy, seventeen dimes without the scoring" },
+    ],
+    teamEras: {
+      IND: {
+        framing: ["The Indiana years were Jackson's masterpiece. Reggie got headlines, Mark got wins.", "Peak Pacers basketball ran through his hands. The '90s Indiana offense was pure art."],
+        bigGameVariant: "Twenty-two assists in Conseco Fieldhouse. The crowd knew they saw history.",
+        quietGameVariant: "Even great conductors have quiet nights. The orchestra played softer without him.",
+      },
+    },
+  },
 // LeBron James (LAL, $67, PURPLE)
   james_2544: {
     basePlayerId: "2544",
@@ -2867,7 +3963,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2023-12-05", opponent: "PHX", fp: 70.1, line: "31 points with 5 steals - defensive showcase masterpiece" },
     ],
   },
-
 // Antawn Jamison — basePlayerId 1712 — teams: GSW/WAS/CLE
   jamison_1712: {
     basePlayerId: "1712",
@@ -2919,7 +4014,47 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Richard Jefferson — basePlayerId 2210 — teams: NJN
+  jefferson_2210: {
+    basePlayerId: "2210",
+    nicknames: ["RJ"],
+    knownFor: "The Nets wing who could fill up a box score but never quite became a star.",
+    salaryTier: "value",
+    tier1: ["Six-foot-seven wing who could score, rebound, and pass in equal doses.", "The Nets' third option behind Kidd and Carter who quietly put up numbers."],
+    tier2: ["Made the Finals twice with New Jersey but never got past the Spurs or Lakers.", "Triple-double against Houston in '03 showed the complete game that made scouts drool.", "Peaked at 22 points per game but never quite figured out how to be the guy."],
+    tier3: ["Lasted 17 seasons by adapting his role and accepting smaller minutes gracefully."],
+    overperform: ["When RJ gets hot, the shots come from everywhere and the rebounds pile up.", "The complete stat sheet games remind you why he was a lottery pick.", "Vintage Jefferson means 25-8-5 nights that catch opponents off guard."],
+    underperform: ["Disappearing acts were always the knock against his game.", "When the shots aren't falling, he tends to drift instead of finding other ways.", "The ceiling was always higher than the floor with Jefferson."],
+    onPace: ["Steady RJ means 15-6-4 with efficient shooting and solid defense.", "The veteran reliability that kept him employed for nearly two decades."],
+    turnovers: ["Always tried to do too much with the ball for a wing player.", "The 11-turnover game against Chicago was peak overambitious Jefferson."],
+    defensive: ["Long arms and smart positioning made him a solid team defender.", "Never a stopper but rarely got targeted as a weak link either."],
+    bigGame: ["42 points against Cleveland in December '04, vintage Jefferson efficiency.", "The 68-point fantasy explosion with 22-15-7 against Portland showed his ceiling.", "When he was locked in, RJ could fill every column of the box score."],
+    quietGame: ["Single-digit scoring from a wing who should be more aggressive.", "The games where he deferred too much and forgot he could shoot."],
+    famousGameHint: ["That triple-double against Houston where he looked like the complete player.", "11 assists from the small forward spot, threading passes like a point guard.", "The kind of game that made you think he could be more than just a role player."],
+    controversy: ["Never really had any major drama, just the quiet frustration of unfulfilled potential.", "The trade demands and team-hopping later in his career rubbed fans the wrong way.", "Always a good teammate. Too comfortable being the third option.", "The Finals losses with New Jersey weren't his fault but he never got his ring."],
+    formerTeam: ["Never really had the dramatic returns since most moves were trades.", "Professional approach to facing old teammates, no extra motivation needed."],
+    rivalry: ["Part of those Nets-Pistons playoff battles in the mid-2000s.", "The Eastern Conference wars when New Jersey was actually relevant."],
+    milestones: ["17 seasons in the league without ever making an All-Star team.", "Two Finals appearances but no rings to show for it."],
+    streakLines: ["When Jefferson gets in rhythm, the shots come from all three levels.", "Hot RJ means efficient scoring and active rebounding for weeks at a time.", "Cold stretches usually mean too much settling for jumpers instead of attacking."],
+    salaryNarrative: ["Value contract for a veteran who can still contribute across the board.", "At $15, you're paying for experience and versatility, not star production.", "The kind of salary that makes sense for a bench piece who won't hurt you."],
+    teamContext: ["Journeyman veteran who landed in Cleveland for the championship chase.", "The ring-hunting phase of a career that never quite reached its peak."],
+    draftAndPath: ["13th pick in 2001 who looked like a steal early in his Nets tenure.", "Classic case of good player, wrong situation for superstar development."],
+    opponentFlavor: { CLE: "Dropped 42 on them in '04, his career-high scoring performance.", CHI: "The 21-rebound game that proved he could crash the glass with anyone.", POR: "68 fantasy points with the complete stat sheet showing.", HOU: "His only career triple-double, 30-10-11 in prime Jefferson fashion.", BOS: "Always seemed to play well against the Celtics in the Eastern Conference." },
+    signatureGames: [
+      { date: "2002-12-11", opponent: "POR", fp: 68.5, line: "22p/15r/7a/4s/3b" },
+      { date: "2004-11-05", opponent: "CHI", fp: 65.7, line: "26p/21r/9a/3s/1b" },
+      { date: "2004-12-22", opponent: "CLE", fp: 62.7, line: "42p/6r/7a/1s/1b" },
+      { date: "2003-03-31", opponent: "HOU", fp: 57.5, line: "30p/10r/11a (triple-double)" },
+      { date: "2006-04-06", opponent: "CHA", fp: 59.7, line: "40p/11r/3a/1s" },
+    ],
+    teamEras: {
+      NJN: {
+        framing: ["The peak Jefferson years when he was the versatile third option.", "Two Finals runs with Kidd and Carter, putting up 20-7-4 efficiently.", "The version of RJ that made you think he could be a borderline All-Star."],
+        bigGameVariant: "42 points against Cleveland, the peak of his Nets scoring prime.",
+        quietGameVariant: "The games where Kidd and Carter took over and RJ disappeared.",
+      },
+    },
+  },
 // Al Jefferson — basePlayerId 2744 — teams: BOS/MIN/UTA/CHA
   jefferson_2744: {
     basePlayerId: "2744",
@@ -2975,7 +4110,52 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Brandon Jennings — basePlayerId 201943 — teams: MIL/DET
+  jennings_201943: {
+    basePlayerId: "201943",
+    nicknames: ["BJ", "Young Money"],
+    knownFor: "55 points in his 7th NBA game. The overseas-to-NBA pioneer who peaked early.",
+    salaryTier: "role",
+    tier1: ["Dropped 55 points as a rookie against Golden State. Still the youngest to do it.", "Skipped college for Europe, then torched the league immediately. The blueprint others followed."],
+    tier2: ["Led Milwaukee to the playoffs as a 20-year-old. That first-round upset of Atlanta.", "The Achilles injury in Detroit changed everything. Never quite the same explosive scorer."],
+    tier3: ["First American to skip college for European pro ball since the one-and-done rule."],
+    overperform: ["When he's on fire, he's unconscious. 13 assists with 6 steals against Boston.", "The hot streak version averages 20 and 8. Vintage Young Money flashing."],
+    underperform: ["Shot selection becomes shot destruction. 4-for-18 nights with 7 turnovers.", "The injury robbed him of that first-step explosion. Half-speed Jennings isn't the same."],
+    onPace: ["Solid backup point guard production. 12 points, 6 assists, manageable turnovers.", "The veteran version knows his role. Less flash, more efficiency."],
+    turnovers: ["Always played fast, sometimes too fast. The Young Money tax on possessions."],
+    defensive: [],
+    bigGame: ["65 fantasy points with 8 assists and 4 steals against Philly. The complete floor general.", "55 points against Golden State as a rookie. Basketball history in his 7th game.", "31 points with 8 assists against Miami's Big Three. Young Money wasn't intimidated."],
+    quietGame: ["Single-digit scoring from your point guard. The shot just isn't falling tonight."],
+    famousGameHint: ["November 14th, 2009 against Golden State. His 7th NBA game ever.", "55 points on 21-of-34 shooting. Youngest player to score 55+ in NBA history.", "From Rome's professional league to NBA record books in six months."],
+    controversy: ["The college skip sparked NCAA debates. Opened the European route for others.", "Never lived up to that rookie explosion. The 55-point game set impossible expectations.", "Attitude questions in Milwaukee's later years. Young star, veteran leadership issues.", "The Achilles injury conspiracy theories. Some questioned the recovery timeline.", "Shot selection was always polarizing. Hero ball that sometimes worked spectacularly."],
+    formerTeam: ["Milwaukee games always had extra juice. The franchise that drafted his potential."],
+    rivalry: ["Chicago battles were personal. Two explosive point guards, one city's basketball soul."],
+    milestones: ["Youngest player to score 55+ points in NBA history. The Rome-to-records pipeline."],
+    streakLines: ["Hot shooting Jennings averages 25 a game. The Young Money explosion mode.", "When the shot's not falling, he keeps shooting. Confidence or stubbornness, you decide.", "Three straight 20-point games. The vintage scoring burst is still there."],
+    salaryNarrative: ["$26 for a former lottery pick. The injury and inconsistency dropped his market value.", "Backup point guard money for a guy who once scored 55. Basketball's cruel economics."],
+    teamContext: ["Every team hoped they'd unlock the 55-point game version. Most got the inconsistent one."],
+    draftAndPath: ["10th pick after the European experiment. Rome to Milwaukee, the unconventional route."],
+    opponentFlavor: { GSW: "The franchise that gave up 55 to a rookie. They probably remember that night.", MIA: "Went at the Big Three fearlessly. LeBron respected the young gun's confidence.", BOS: "Pierce always liked his game. Veteran recognition of the scoring mentality.", CHI: "Rose comparisons were inevitable. Two explosive Chicago-area point guards.", LAL: "Kobe appreciated the fearless shooting. Mamba mentality recognized mamba mentality." },
+    signatureGames: [
+      { date: "2012-11-12", opponent: "PHI", fp: 65, line: "33p/8a/4s - The complete floor general performance" },
+      { date: "2009-11-14", opponent: "GSW", fp: 64.5, line: "55p/5a - NBA history in his 7th game" },
+      { date: "2012-02-01", opponent: "MIA", fp: 59.8, line: "31p/8a/4s - Fearless against the Big Three" },
+      { date: "2012-11-02", opponent: "BOS", fp: 58.9, line: "21p/13a/6s - The complete playmaker showcase" },
+      { date: "2014-02-08", opponent: "DEN", fp: 58.2, line: "35p/12a - Vintage Young Money explosion" },
+    ],
+    teamEras: {
+      MIL: {
+        framing: ["The Young Money era. 55 points as a rookie, playoff upset of Atlanta.", "Skipped college for Rome, then torched the NBA immediately as a Buck.", "The franchise cornerstone who never quite became the franchise player they needed."],
+        bigGameVariant: "55 points against Golden State in his 7th game. Basketball history in Milwaukee.",
+        quietGameVariant: "When the shot's not falling, Milwaukee's offense stagnates. One-man system problems.",
+      },
+      DET: {
+        framing: ["The bounce-back attempt that ended with an Achilles injury. What could have been.", "Showed flashes of the old explosiveness before the injury changed everything.", "Motor City was supposed to be his revival tour. Instead it became his career turning point."],
+        bigGameVariant: "35 points with 12 assists against Denver. Vintage Young Money in Detroit.",
+        quietGameVariant: "Post-injury limitations showing. The explosion just isn't there anymore.",
+      },
+    },
+  },
 // Jalen Johnson (ATL, $57, PURPLE)
   johnson_1630552: {
     basePlayerId: "1630552",
@@ -3009,7 +4189,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-12-26", opponent: "CHI", fp: 58, line: "Season-high 30 points on Christmas week showcase" },
     ],
   },
-
 // Joe Johnson — basePlayerId 2207 — teams: ATL
   johnson_2207: {
     basePlayerId: "2207",
@@ -3051,7 +4230,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Nikola Jokić (DEN, $89, ORANGE)
   jokic_203999: {
     basePlayerId: "203999",
@@ -3086,7 +4264,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-12-30", opponent: "UTA", fp: 88.9, line: "Dominated Gobert on both ends" },
     ],
   },
-
 // Eddie Jones — basePlayerId 224 — teams: CHH/LAL/MIA
   jones_224: {
     basePlayerId: "224",
@@ -3138,7 +4315,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // DeAndre Jordan — basePlayerId 201599 — teams: LAC/NYK
   jordan_201599: {
     basePlayerId: "201599",
@@ -3185,7 +4361,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
   jordan_893: {
     basePlayerId: "893",
     nicknames: ["Air Jordan", "MJ", "His Airness", "Black Cat"],
@@ -3212,7 +4387,52 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["Third pick in 1984. Two players went ahead of him.", "Cut from his high school varsity. Held that grudge into history."],
   },
-
+// Shawn Kemp — basePlayerId 431 — teams: SEA/CLE
+  kemp_431: {
+    basePlayerId: "431",
+    nicknames: ["The Reign Man", "Shawn Kemp Sr."],
+    knownFor: "The athletic freak who made dunking an art form before derailing his own career.",
+    salaryTier: "star",
+    tier1: ["The original poster boy for raw athleticism over basketball IQ.", "Six All-Star games, zero rings, infinite highlight reels.", "Peak Kemp was appointment television every night."],
+    tier2: ["The Sonics years were magic until Payton couldn't carry him anymore.", "Cleveland paid him like a franchise player and got a cautionary tale.", "Lost 40 pounds between seasons and gained it back by Christmas."],
+    tier3: ["The dunk over Alton Lister still plays on loop somewhere.", "Made more babies than All-NBA teams in his career."],
+    overperform: ["When Kemp showed up in shape, he was unstoppable for three-week stretches.", "31 points and 20 rebounds against Portland in '98 - vintage Reign Man.", "The athletic ceiling was always there. The consistency never was."],
+    underperform: ["Showed up to training camp looking like he ate the old Shawn Kemp.", "Cleveland fans paid star money to watch him lumber up and down the court.", "The talent was undeniable. The work ethic was deniable daily."],
+    onPace: ["When Kemp hit his averages, it meant he was trying that night.", "Steady Kemp was the best-case scenario for most franchises."],
+    turnovers: ["Athletic gifts couldn't cure his basketball decision-making.", "Tried to dunk through triple teams and wondered why it didn't work."],
+    defensive: ["Could block shots when he felt like it, which wasn't often enough.", "All the tools, half the effort on the defensive end."],
+    bigGame: ["31 points, 20 rebounds against Portland in January '98. Peak athleticism meets actual production.", "34 points in 50 minutes against Washington - when he wanted it, nobody could stop him.", "27 points, 13 rebounds, 8 assists against New Jersey. The complete Kemp was terrifying."],
+    quietGame: ["Quiet Kemp nights meant he was thinking too much instead of just playing.", "The motor ran cold more often than any superstar should allow."],
+    famousGameHint: ["That 66.6 fantasy point explosion against New Jersey in February '98.", "Eight assists from a power forward who usually passed to nobody.", "The rare night when all the physical tools clicked with actual basketball."],
+    controversy: ["Showed up to Cleveland looking like he'd been eating for two cities.", "The cocaine allegations followed him everywhere after Seattle.", "Fathered seven kids with six women during his peak earning years.", "Weight ballooned from 245 to 280 and somehow kept climbing.", "The Cavaliers overpaid for name recognition and got a broken-down shell."],
+    formerTeam: ["Seattle games were awkward family reunions nobody wanted to attend.", "Sonics fans booed the man who helped define their franchise for a decade."],
+    rivalry: ["The Sonics-Lakers battles made him a household name.", "Portland games carried extra intensity from the Northwest division days."],
+    milestones: ["Six All-Star appearances before age 30, then nothing.", "The 1996 Finals run was his career peak and final relevant moment."],
+    streakLines: ["Hot streaks reminded everyone why he was a max player once upon a time.", "Cold streaks lasted months and cost franchises playoff appearances.", "The athleticism faded gradually, then all at once by age 30."],
+    salaryNarrative: ["Cleveland paid him $47 in today's money for name recognition and got buyer's remorse.", "Star-level salary for role-player effort in his final seasons.", "The Cavaliers learned the hard way that athletic primes don't last forever."],
+    teamContext: ["Cleveland took a swing on faded stardom and whiffed spectacularly.", "The Cavs thought they were getting vintage Kemp and got clearance rack instead."],
+    draftAndPath: ["Straight from high school to the pros when that was still revolutionary.", "Seattle developed the raw talent into a superstar, then watched it all fall apart."],
+    opponentFlavor: { LAL: "Tried to dunk on everyone in purple and gold, succeeded half the time.", CHI: "Jordan's Bulls brought out the best and worst in him.", POR: "Trail Blazers games were personal - he wanted to embarrass his old division.", NJN: "The Nets caught peak Kemp multiple times in the late 90s.", WAS: "Washington became his favorite punching bag during the Cleveland years." },
+    signatureGames: [
+      { date: "1998-02-20", opponent: "NJN", fp: 66.6, line: "27p/13r/8a/4s/1b" },
+      { date: "1998-01-20", opponent: "POR", fp: 65.5, line: "31p/20r/3a/3b" },
+      { date: "1996-11-20", opponent: "WAS", fp: 64.4, line: "34p/12r/2a/3s/3b" },
+      { date: "1999-04-13", opponent: "WAS", fp: 63.9, line: "32p/17r/1a/2s/2b" },
+      { date: "1999-12-15", opponent: "NJN", fp: 46.5, line: "36p/5r/1a/1s/1b" },
+    ],
+    teamEras: {
+      SEA: {
+        framing: ["The Sonics years were basketball poetry in motion.", "Peak athleticism meets Gary Payton's passing - the Northwest was electric.", "Six All-Stars, one Finals trip, infinite highlight reels before it all went wrong."],
+        bigGameVariant: "The Reign Man in his natural habitat - athletic dominance in the Northwest.",
+        quietGameVariant: "Even quiet Kemp in Seattle was better than most players' best nights.",
+      },
+      CLE: {
+        framing: ["The Cleveland years were a slow-motion train wreck with cameras rolling.", "Paid like a superstar, played like someone who'd given up years ago.", "Cavs fans deserved better than watching their franchise player lumber up court."],
+        bigGameVariant: "Rare flashes of the old Kemp reminded everyone what Cleveland thought they were buying.",
+        quietGameVariant: "Quiet nights in Cleveland meant another wasted evening for paying customers.",
+      },
+    },
+  },
   kidd_467: {
     basePlayerId: "467",
     nicknames: ["Ason Kidd", "J-Kidd", "Captain Kidd"],
@@ -3238,7 +4458,88 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["2nd pick in 1994. Cal-Berkeley. Co-Rookie of the Year.", "Mavs, Suns, Nets, Mavs again, Knicks. Won ring in his second Dallas stint."],
   },
-
+// Andrei Kirilenko — basePlayerId 1905 — teams: UTA
+  kirilenko_1905: {
+    basePlayerId: "1905",
+    nicknames: ["AK-47"],
+    knownFor: "The stat-sheet stuffer who averaged 3.3 blocks and 1.8 steals while shooting threes.",
+    salaryTier: "value",
+    tier1: ["AK-47 could guard all five positions before positionless basketball was cool.", "The only player to average 2+ in steals, blocks, and threes. Math that shouldn't exist."],
+    tier2: ["In 2004, he nearly averaged 3 blocks and 2 steals per game. Peak switchability.", "Jerry Sloan's dream defender who could also handle the ball and space the floor."],
+    tier3: ["Shot 38% from three in '04 while anchoring Utah's defense. The prototype arrived early."],
+    overperform: ["When AK got hot, the stat sheet looked like a video game glitch.", "Six steals and four blocks in the same game was just Tuesday for him."],
+    underperform: ["The shot disappeared some nights, but the defense never did.", "Even quiet AK games featured three stocks. Different kind of floor."],
+    onPace: ["Steady AK meant 14 points, 8 boards, 5 assists, 2 steals, 2 blocks.", "The most predictably unpredictable stat line in the league."],
+    turnovers: ["Ball-handling forwards turn it over. AK was no exception to physics."],
+    defensive: ["The original position-less defender who made Draymond possible.", "Could switch onto Shaq or Steve Nash and make both uncomfortable."],
+    bigGame: ["79.7 fantasy points against the Lakers with 20-11-11 plus six steals and four blocks.", "Triple-double with defensive stats that read like a typo. Peak AK-47 chaos."],
+    quietGame: ["Even quiet AK nights featured two steals and a block. The floor was different."],
+    famousGameHint: ["November 30, 2007 against the Lakers. The stat line that broke fantasy algorithms.", "Six steals, four blocks, and a triple-double. Kobe couldn't have drawn this up."],
+    controversy: ["Left the Jazz for the Timberwolves, then flamed out completely. Bad read of the room.", "The Brooklyn stint was a victory lap nobody asked to watch. Father Time won.", "Complained about playing time in Minnesota while shooting 31% from the field. Math.", "The Russian national team drama overshadowed his NBA peak. Politics ruined legacy."],
+    formerTeam: [],
+    rivalry: ["The Spurs-Jazz battles featured AK guarding three different positions per possession."],
+    milestones: ["First player to record 2+ steals, blocks, and threes per game in a season."],
+    streakLines: ["When AK got five stocks in three straight games, the league took notice.", "Cold shooting stretches didn't matter. The defense was automatic."],
+    salaryNarrative: ["At $18, you're paying for the stocks and hoping the shot falls.", "Value play with upside. When AK hit, he hit different than anyone."],
+    teamContext: ["Jerry Sloan saw the future and plugged AK into the Jazz system perfectly."],
+    draftAndPath: ["Late first-round pick who became Utah's defensive identity for eight seasons."],
+    opponentFlavor: { LAL: "Gave Kobe and Shaq different kinds of problems on the same possession.", SAS: "Tim Duncan respected the fundamentals. The steals were just a bonus.", PHX: "Nash-era Suns couldn't solve the length and switching. Perfect counter.", HOU: "T-Mac and Yao had to account for help from everywhere. Disruptive.", WAS: "Made Gilbert Arenas work harder than he wanted to. Agent Zero irritated." },
+    signatureGames: [
+      { date: "2007-11-30", opponent: "LAL", fp: 79.7, line: "20p/11r/11a/6s/4b" },
+      { date: "2006-01-03", opponent: "LAL", fp: 75.1, line: "14p/8r/9a/6s/7b" },
+      { date: "2005-12-14", opponent: "POR", fp: 72.7, line: "21p/16r/3a/2s/8b" },
+      { date: "2003-12-03", opponent: "HOU", fp: 71.5, line: "19p/5r/7a/8s/5b" },
+      { date: "2006-01-17", opponent: "TOR", fp: 70.7, line: "18p/16r/11a/3s/4b" },
+    ],
+    teamEras: {
+      UTA: {
+        framing: ["The Jazz AK was the original positionless defender.", "Eight seasons of making Utah's defense unpredictable and switchable."],
+        bigGameVariant: "The Lakers never figured out how to handle AK's length and activity.",
+        quietGameVariant: "Even off nights in Utah featured defensive highlights.",
+      },
+    },
+  },
+// Toni Kukoc — basePlayerId 389 — teams: CHI
+  kukoc_389: {
+    basePlayerId: "389",
+    nicknames: ["The Pink Panther", "The Croatian Sensation"],
+    knownFor: "European maestro who came off the bench for three Bulls championships.",
+    salaryTier: "star",
+    tier1: ["The original European import who actually worked. Skilled before it was cool.", "Three rings as the Bulls' sixth man. Instant offense off the pine."],
+    tier2: ["Jerry Krause's European obsession that actually paid off. The exception to the rule.", "Could play three positions and pass from all of them. Positionless basketball pioneer."],
+    tier3: ["EuroBasket MVP before NBA Sixth Man. The pedigree was always there."],
+    overperform: ["Peak Kukoc meant 30 points with 10 assists. The complete offensive takeover.", "When the shot was falling, he became unguardable. European flair meets Chicago execution."],
+    underperform: ["Off-nights featured too much passing, not enough aggression. Sometimes too unselfish.", "The shot selection got questionable when he pressed. European creativity, American results."],
+    onPace: ["Steady Toni: 18 points, six assists, solid shooting. The reliable sixth man special.", "Even average Kukoc games featured something crafty. The basketball IQ never disappeared."],
+    turnovers: ["Fancy passes sometimes got too fancy. The price of European creativity."],
+    defensive: ["Sneaky shot-blocker with good instincts. Four blocks against Washington in '98.", "Not lockdown but smart positioning. Team defense over individual brilliance."],
+    bigGame: ["33 points, 10 assists against Washington in 2000. The complete floor general performance.", "26 points with three blocks against the Clippers. When he was feeling it, unstoppable.", "Triple-double against Detroit with 29 points. The Croatian taking over completely."],
+    quietGame: ["Quiet Toni still found ways to contribute. Usually involved a crafty assist or two.", "Even off-nights featured smart basketball. The IQ never went away."],
+    famousGameHint: ["January 2000 against Washington: 33 points, 10 assists in 39 minutes.", "The Bulls bench mob days when he was the primary creator. Peak sixth man energy."],
+    controversy: ["The Krause pet project who succeeded when others failed. Vindicated the GM's vision.", "Sometimes disappeared in big moments. Great regular season, playoff question marks.", "Left Chicago after the dynasty ended. The breakup nobody wanted to discuss.", "European style clashed with some American teammates early. Cultural adjustment period."],
+    formerTeam: ["Never played his former teams in the NBA. The European departure was permanent."],
+    rivalry: ["Every playoff series became personal. The Croatian proving himself on American stages."],
+    milestones: ["Three championship rings as the Bulls' sixth man. The European success story."],
+    streakLines: ["Hot-streak Toni meant 25+ points with eight assists. The complete offensive package.", "Triple-double capable when everything clicked. Three in his career, all dominant.", "The shot-making runs where European flair met Chicago championships."],
+    salaryNarrative: ["Star salary for the championship experience. You're buying rings and basketball IQ.", "The European import who earned every dollar. Three rings justify the price tag."],
+    teamContext: ["Philadelphia grabbed the veteran for playoff experience and offensive creation.", "Every contender needs a Kukoc type. Instant offense, championship pedigree."],
+    draftAndPath: ["European route to the NBA when it was still rare. Blazed the trail others followed."],
+    opponentFlavor: { WAS: "Washington got torched repeatedly. Career-high 33 points, multiple big games.", LAC: "The Clippers couldn't handle the European moves. 26 points, three blocks.", MIL: "Milwaukee saw peak Kukoc. 31 points, 10 assists, vintage performance.", DET: "Detroit got the triple-double treatment. 29 points, 10 rebounds, 10 assists.", MIA: "Miami faced the complete game. 22 points, 12 assists, playoff atmosphere." },
+    signatureGames: [
+      { date: "2000-01-07", opponent: "WAS", fp: 64.4, line: "33p/2r/10a/3s/2b" },
+      { date: "2003-04-09", opponent: "LAC", fp: 60.4, line: "26p/7r/8a/2s/3b" },
+      { date: "2001-03-25", opponent: "MIL", fp: 55.8, line: "31p/4r/10a/2s" },
+      { date: "2001-03-17", opponent: "DET", fp: 55, line: "29p/10r/10a" },
+      { date: "1999-05-01", opponent: "MIA", fp: 54.8, line: "22p/9r/12a/2s" },
+    ],
+    teamEras: {
+      CHI: {
+        framing: ["The Bulls sixth man who helped deliver three championships in the second threepeat.", "European basketball genius who made Krause look smart. Instant offense off the bench.", "The Croatian connection to dynasty basketball. Rings validate everything."],
+        bigGameVariant: "Championship Kukoc: 20+ points, eight assists, clutch shots when it mattered.",
+        quietGameVariant: "Even quiet Bulls Kukoc contributed. Championship teams need reliable depth.",
+      },
+    },
+  },
 // Zach LaVine — basePlayerId 203897 — teams: CHI/SAC
   lavine_203897: {
     basePlayerId: "203897",
@@ -3285,7 +4586,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // David Lee — basePlayerId 101135 — teams: NYK/GSW
   lee_101135: {
     basePlayerId: "101135",
@@ -3332,7 +4632,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Kawhi Leonard — basePlayerId 202695 — teams: SAS/TOR/LAC
   leonard_202695: {
     basePlayerId: "202695",
@@ -3384,7 +4683,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Rashard Lewis — basePlayerId 1740 — teams: SEA/ORL
   lewis_1740: {
     basePlayerId: "1740",
@@ -3431,7 +4729,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Damian Lillard (MIL, $60, PURPLE)
   lillard_203081: {
     basePlayerId: "203081",
@@ -3466,7 +4763,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-03-17", opponent: "PHX", fp: 60, line: "16 assists showing his Portland playmaking translated perfectly" },
     ],
   },
-
 // Brook Lopez — basePlayerId 201572 — teams: BKN/MIL/NJN
   lopez_201572: {
     basePlayerId: "201572",
@@ -3518,7 +4814,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
   love_201567: {
     basePlayerId: "201567",
     nicknames: ["K-Love", "Outlet Pass God"],
@@ -3544,7 +4839,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["5th pick in 2008. UCLA. Memphis traded him to Minnesota immediately.", "Wolves, Cavs, Heat. Won ring in 2016. Long career, important voice."],
   },
-
 // Kyle Lowry — basePlayerId 200768 — teams: HOU/TOR/MIA
   lowry_200768: {
     basePlayerId: "200768",
@@ -3596,7 +4890,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
   malone_252: {
     basePlayerId: "252",
     nicknames: ["The Mailman", "Karl Malone"],
@@ -3622,7 +4915,62 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["13th pick in 1985 — Louisiana Tech. Twelve teams passed.", "Played 18 of 19 seasons with Utah. Final year with the Lakers ended in injury."],
   },
-
+// Stephon Marbury — basePlayerId 950 — teams: MIN/NJN/NYK/PHX
+  marbury_950: {
+    basePlayerId: "950",
+    nicknames: ["Starbury", "Steph"],
+    knownFor: "The Brooklyn point guard who could score 40 and throw 12 assists but never figured out how to win.",
+    salaryTier: "max",
+    tier1: ["The most talented point guard to never win a playoff series.", "Four All-Star games, zero championships, infinite what-ifs."],
+    tier2: ["50 points and 12 assists against Shaq's Lakers in 2001.", "The Knicks gave him $100 million to save the franchise. He buried it instead."],
+    tier3: ["Became a folk hero in China after the NBA stopped calling."],
+    overperform: ["When Starbury got hot, he'd drop 40 and dish 10 like it was casual Friday.", "The ceiling was always there. The floor was the problem."],
+    underperform: ["The talent never matched the team success. Four franchises, same result.", "Could put up MVP numbers in December and be on the bench by April."],
+    onPace: ["Peak Marbury was 25 and 8 with the occasional explosion.", "Reliable production, unreliable teammate chemistry."],
+    turnovers: ["The assist-to-turnover ratio told you everything about his shot selection.", "Hero ball had consequences. Starbury paid them nightly."],
+    defensive: ["Defense was optional. Offense was mandatory."],
+    bigGame: ["74.5 fantasy points against Atlanta in 2007. 38 points, 9 assists, 5 steals.", "The Knicks were 23-59 that season. Marbury was still putting up video game numbers.", "Prime Starbury could fill up a stat sheet like few guards ever have."],
+    quietGame: ["Even quiet nights usually meant 15 and 6. The talent was never the question.", "Bad Marbury games were more about the shots he didn't take."],
+    famousGameHint: ["50 points and 12 assists against the Lakers. Kobe was watching.", "That triple-double against Chicago showcased everything he could do."],
+    controversy: ["The Knicks tenure was a slow-motion disaster with Spike Lee cameras on it.", "Isiah Thomas traded for him, then couldn't coach him.", "Four teams in 13 years tells you about his locker room reputation.", "The talent was All-NBA. The personality was All-Drama.", "Left the NBA for China and became more popular there than he ever was here."],
+    formerTeam: ["Facing Minnesota was personal. They traded their hometown kid too early."],
+    rivalry: ["The Knicks-Heat matchups were appointment television in the mid-2000s."],
+    milestones: ["Two-time All-Star before his 25th birthday. The potential was obvious."],
+    streakLines: ["Hot-streak Marbury was must-see TV. Cold-streak Marbury was unwatchable.", "When he got rolling, 40-point games came in clusters.", "The difference between good Starbury and great Starbury was shot selection."],
+    salaryNarrative: ["$56 salary reflects the peak years. Max money, max expectations.", "The Knicks paid him like a franchise player. He played like an individual talent."],
+    teamContext: ["Brooklyn kid who wanted to play for the hometown team. Got his wish in 2004."],
+    draftAndPath: ["Fourth overall in 1996. Higher than Kobe, lower than expectations."],
+    opponentFlavor: { LAL: "Dropped 50 on peak Shaq and Kobe. The Lakers noticed.", SAS: "Tim Duncan's Spurs were his playoff kryptonite every time.", ATL: "His biggest fantasy game came against the Hawks in 2007.", CHI: "That triple-double against Chicago was vintage Starbury showmanship.", DAL: "41 and 11 against Dirk's Mavs in 2003. Prime stuff." },
+    signatureGames: [
+      { date: "2007-03-03", opponent: "ATL", fp: 74.5, line: "38p/9a/5s" },
+      { date: "2001-02-13", opponent: "LAL", fp: 66.6, line: "50p/12a" },
+      { date: "2003-12-29", opponent: "LAC", fp: 71.3, line: "40p/9a/5s" },
+      { date: "2001-01-20", opponent: "CHI", fp: 66.2, line: "33p/11r/12a" },
+      { date: "1999-02-17", opponent: "HOU", fp: 68.8, line: "40p/12a" },
+    ],
+    teamEras: {
+      MIN: {
+        framing: ["The hometown hero years. Rookie contract, All-Star talent, playoff heartbreak.", "Kevin Garnett's sidekick before he demanded to be the lead."],
+        bigGameVariant: "40 and 12 against Houston as a second-year pro. The future was bright.",
+        quietGameVariant: "Even learning years in Minnesota showed the scoring bursts.",
+      },
+      NJN: {
+        framing: ["The Jason Kidd trade. Two point guards, one basketball, zero championships.", "New Jersey was supposed to be the veteran years. Lasted one season."],
+        bigGameVariant: "The Nets experiment ended quickly. The talent was still there.",
+        quietGameVariant: "Brief stop in Jersey before the Knicks came calling.",
+      },
+      NYK: {
+        framing: ["The homecoming that nobody wanted. $100 million, infinite drama, zero playoff series.", "Isiah Thomas's biggest mistake in a career full of them.", "MSG was supposed to be his stage. It became his grave."],
+        bigGameVariant: "74 fantasy points against Atlanta. Empty stats on a 23-win team.",
+        quietGameVariant: "Even his quiet nights in New York came with controversy.",
+      },
+      PHX: {
+        framing: ["The Steve Nash backup plan. Ring-chasing at 32 with nothing left to chase.", "Mike D'Antoni tried to resurrect him. The magic was gone."],
+        bigGameVariant: "Phoenix was about spot minutes and veteran leadership.",
+        quietGameVariant: "The Suns years were about accepting a reduced role.",
+      },
+    },
+  },
 // Shawn Marion — basePlayerId 1890 — teams: PHX/MIA
   marion_1890: {
     basePlayerId: "1890",
@@ -3669,7 +5017,144 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Kenyon Martin — basePlayerId 2030 — teams: NJN/DEN
+  martin_2030: {
+    basePlayerId: "2030",
+    nicknames: ["K-Mart", "The Enforcer"],
+    knownFor: "The defensive anchor with anger issues who punched first and asked questions later.",
+    salaryTier: "value",
+    tier1: ["First overall pick who played like he had something to prove every night.", "The defensive foundation for two Finals runs. Intimidation was the specialty."],
+    tier2: ["Fifteen rebounds and eleven assists in the same game. The complete package on rare nights.", "Six blocks against Chicago in April 2003. The paint was closed for business."],
+    tier3: ["Only triple-double came against Milwaukee with the full stat sheet filled."],
+    overperform: ["When K-Mart got engaged defensively, entire offenses adjusted their approach.", "Twenty-one rebounds against Milwaukee. The boards belonged to him that night."],
+    underperform: ["Inconsistent motor made coaches crazy. The talent was never the question.", "Foul trouble killed his rhythm. Six fouls in twenty-eight minutes was possible."],
+    onPace: ["Fifteen and eight with elite defense. The foundation for winning basketball.", "Steady K-Mart meant the defense had an identity. Everything built around him."],
+    turnovers: ["Forced passes when angry. Emotions and ball security didn't mix well."],
+    defensive: ["The rim protector who made guards think twice about driving.", "Six blocks and five steals in the same game. Complete defensive domination."],
+    bigGame: ["Twenty-nine points and six blocks against Chicago in the 2003 playoffs run.", "The triple-double against Milwaukee - 18/15/11 with five defensive stats.", "Twenty-one rebounds against Milwaukee. The glass was his personal property."],
+    quietGame: ["Quiet K-Mart meant someone else had to anchor the defense. Usually didn't work."],
+    famousGameHint: ["March 2001 against Milwaukee - the only triple-double of his career.", "Eighteen points, fifteen boards, eleven assists. The complete package on display."],
+    controversy: ["The technical fouls came in bunches. Refs knew to watch him closely.", "Left New Jersey on bad terms after promising to be a Net for life.", "The Denver years were about proving Jason Kidd wasn't the only reason he succeeded.", "Team chemistry suffered when his mood went south. Leadership was complicated."],
+    formerTeam: ["Played his former teams like personal vendettas. The motivation was obvious."],
+    rivalry: ["Detroit Pistons brought out his best defensive instincts. Real playoff hatred."],
+    milestones: ["First overall pick who justified the selection with defense and leadership."],
+    streakLines: ["Hot defensive stretches changed series. Entire offenses had to adjust.", "Cold stretches meant technical fouls and frustration. The mood swings were predictable."],
+    salaryNarrative: ["Twenty million for defensive anchor and emotional leader. The intangibles cost extra.", "Value tier for a former number one pick. The market adjusted to reality."],
+    teamContext: ["The Knicks signed him for veteran toughness. Playoffs needed his intensity."],
+    draftAndPath: ["Cincinnati to number one overall. The Big East Player of the Year who delivered."],
+    opponentFlavor: { DET: "The Pistons matched his intensity. Playoff wars every meeting.", SAS: "Duncan schooled him on fundamentals. The education was painful.", LAL: "Shaq made him look small. Physics won those battles.", MIL: "Career-best games came against Milwaukee. Perfect matchup victim." },
+    signatureGames: [
+      { date: "2003-04-11", opponent: "CHI", fp: 67.6, line: "29p/8r/6b playoff intensity" },
+      { date: "2001-03-05", opponent: "MIL", fp: 63.5, line: "18p/15r/11a triple-double" },
+      { date: "2003-12-05", opponent: "MIL", fp: 60.7, line: "20p/21r dominant glass" },
+      { date: "2004-01-02", opponent: "CLE", fp: 61.1, line: "16p/13r/5s/5a complete" },
+      { date: "2009-01-15", opponent: "PHX", fp: 58.6, line: "24p/7s Denver defense" },
+    ],
+    teamEras: {
+      NJN: {
+        framing: ["The New Jersey years built his reputation. Two Finals runs on his defense.", "Kidd made him better, but K-Mart was the foundation everything was built on."],
+        bigGameVariant: "Twenty-nine and six blocks in the Chi-town playoff war. Peak intensity.",
+        quietGameVariant: "Quiet nights in Jersey meant the defense lost its identity. Kidd couldn't fix everything.",
+      },
+      DEN: {
+        framing: ["The Denver years proved he could anchor defense without Jason Kidd.", "Carmelo's Nuggets needed his toughness. The perfect complement to offensive talent."],
+        bigGameVariant: "Seven steals against Phoenix in 2009. The veteran defensive master class.",
+        quietGameVariant: "Mile High altitude couldn't cure inconsistent motor. Some things never change.",
+      },
+    },
+  },
+// Kevin Martin — basePlayerId 2755 — teams: SAC/HOU
+  martin_2755: {
+    basePlayerId: "2755",
+    nicknames: ["K-Mart", "The Microwave"],
+    knownFor: "The rail-thin scorer who shot lefty jumpers at impossible angles and somehow made them.",
+    salaryTier: "value",
+    tier1: ["Twenty points per game for six straight seasons on pure shooting touch.", "The skinniest guy in the league who refused to get bullied off his spots."],
+    tier2: ["Shot 38% from three on eight attempts per game during the analytics revolution.", "The prototype stretch four before anyone called it that - just happened to be 6'7\"."],
+    tier3: ["Averaged more free throws than field goal attempts in 2009. The ultimate foul-drawer."],
+    overperform: ["When K-Mart gets hot, scorebooks melt. Fifty-point games from a stick figure.", "The microwave nickname wasn't marketing - he could torch you in three minutes."],
+    underperform: ["Disappears when teams get physical. October Kevin and April Kevin are different players.", "The playoffs exposed every defensive weakness he spent 82 games hiding."],
+    onPace: ["Steady twenty and five with three triples. The human metronome.", "K-Mart hitting his averages meant someone was getting cooked nightly."],
+    turnovers: ["Ball security was optional. The price of hunting buckets at weird angles."],
+    defensive: [],
+    bigGame: ["48 points against Memphis in 2009. The Grizzlies had no answer for lefty jumpers.", "Fifty against Golden State on 46 minutes of pure shot-making.", "37 and 8 assists against Denver. The complete offensive package."],
+    quietGame: ["Some nights the angles don't work. Physics wins occasionally."],
+    famousGameHint: ["November 2009 against Memphis - 48 points in 52 minutes of work.", "The Kings needed every bucket. K-Mart delivered from everywhere."],
+    controversy: ["Never stayed anywhere long enough to build real loyalty.", "The human trade chip. Six teams in eleven seasons tells the story.", "Sacramento fans still wonder what could've been with consistent health."],
+    formerTeam: ["Always played his former teams extra hard. Proving points was the specialty."],
+    rivalry: ["No real rivalries. Hard to hate a guy who just wanted to shoot."],
+    milestones: ["Fifteen thousand career points on pure shooting touch. The lefty legend."],
+    streakLines: ["Hot Kevin Martin was appointment television. Book your evening.", "Cold stretches meant forcing shots until something fell. The confidence never wavered."],
+    salaryNarrative: ["Nineteen million for instant offense off the bench. The microwave gets expensive.", "Value tier pricing for a guy who could drop thirty any given Tuesday."],
+    teamContext: ["The Spurs signed him for playoff shooting. Pop believed in the lefty touch."],
+    draftAndPath: ["Western Carolina to lottery pick. The small school scorer who made it big."],
+    opponentFlavor: { LAL: "Kobe respected the shot selection. High praise.", SAS: "Duncan made him work for everything. The education was free.", PHX: "Nash kept finding him open. The chemistry was instant.", GSW: "Perfect victim for his best scoring nights. No defense, all offense." },
+    signatureGames: [
+      { date: "2009-11-02", opponent: "MEM", fp: 72, line: "48p/5r/4a/4s in 52min" },
+      { date: "2009-04-01", opponent: "GSW", fp: 59.1, line: "50p/3r/3a career-high" },
+      { date: "2008-03-07", opponent: "MIN", fp: 55.7, line: "48p/6r pure scoring" },
+      { date: "2011-02-07", opponent: "DEN", fp: 58.3, line: "37p/7a complete game" },
+      { date: "2015-04-07", opponent: "SAC", fp: 57, line: "37p/8a veteran leadership" },
+    ],
+    teamEras: {
+      SAC: {
+        framing: ["The Sacramento years made his reputation. Twenty per game on bad teams.", "Kings fans got the pure scorer version. No playoffs, all buckets."],
+        bigGameVariant: "Fifty against Golden State in the purple and black. Peak K-Mart.",
+        quietGameVariant: "Even quiet nights in Sacramento meant eighteen shots. The green light was permanent.",
+      },
+      HOU: {
+        framing: ["The Rockets thought he'd be the missing piece. Chemistry was harder than shooting.", "Morey Ball in theory. The analytics said it should've worked better."],
+        bigGameVariant: "Thirty-seven and seven assists in Houston red. The complete offensive showing.",
+        quietGameVariant: "Houston nights when the threes wouldn't fall. The system exposed everything.",
+      },
+    },
+  },
+// Anthony Mason — basePlayerId 193 — teams: CHH/MIA
+  mason_193: {
+    basePlayerId: "193",
+    nicknames: ["Mase", "The Enforcer"],
+    knownFor: "The bruising forward who could pass like Magic and rebound like Rodman.",
+    salaryTier: "star",
+    tier1: ["Listed at 6'7 but played bigger than most centers. The original point forward.", "Seven triple-doubles in Charlotte. Pat Riley knew what he was getting."],
+    tier2: ["The Knicks let him walk after '96. He made them regret it immediately.", "22 rebounds and 10 assists against Dallas. Name another forward doing that."],
+    tier3: ["Wore number 14 everywhere except Miami. Riley made him earn his digits."],
+    overperform: ["31 points, 14 boards, 11 assists against Toronto. Peak Mason right there.", "The triple-double machine nobody saw coming. Seven in two seasons."],
+    underperform: ["Some nights the shot wouldn't fall. The hustle never wavered.", "Turnovers came with the territory when you handle that much rock."],
+    onPace: ["The steady 15-and-10 guy who made everyone around him better.", "Consistency was the calling card. Good for 44 minutes any night."],
+    turnovers: ["High-risk, high-reward passing. The crosscourt bullet that sometimes missed."],
+    defensive: ["Physical defense before they legislated it out. Made scorers earn everything."],
+    bigGame: ["31 points, 14 rebounds, 11 assists vs Toronto, March 2000. Complete takeover.", "22 rebounds and 10 dimes against Dallas. The stat sheet couldn't handle it."],
+    quietGame: ["Even quiet Mason nights meant 12 boards and solid defense."],
+    famousGameHint: ["That 62-point fantasy performance against Toronto might be the best you've never heard of.", "Ask any Hornets fan about the Dallas triple-double. They'll know the one."],
+    controversy: ["Left New York after Riley promised him the world, then didn't deliver.", "The Knicks thought they could replace his production. They thought wrong.", "Physical play that walked the line. Refs knew his name for all reasons."],
+    formerTeam: ["Every Knicks game was personal. Made them remember what they lost."],
+    rivalry: ["Miami-New York had extra edge when Mason switched sides."],
+    milestones: ["Seven triple-doubles proved big men could orchestrate offense too."],
+    streakLines: ["When Mason got hot, the entire offense flowed through him.", "Cold shooting streaks couldn't kill his impact. Defense and boards never slept."],
+    salaryNarrative: ["At $42, you're paying for triple-double upside and guaranteed effort.", "Star money for the guy who does everything but score 25 nightly."],
+    teamContext: ["Charlotte got him in his prime. Miami got the championship experience."],
+    draftAndPath: ["Tennessee State product who proved small-school guys could dominate."],
+    opponentFlavor: { NYK: "Revenge games against his former team always hit different.", MIA: "Riley knew exactly what he was getting. Championship DNA.", BOS: "12 assists against the Celtics. Point forward perfection.", DAL: "The 22-rebound, 10-assist masterpiece happened here." },
+    signatureGames: [
+      { date: "2000-03-31", opponent: "TOR", fp: 62.3, line: "31p/14r/11a" },
+      { date: "1997-02-25", opponent: "DAL", fp: 60.4, line: "15p/22r/10a" },
+      { date: "1997-03-06", opponent: "BOS", fp: 60.8, line: "19p/14r/12a" },
+      { date: "1997-01-15", opponent: "NJN", fp: 62.4, line: "20p/17r/8a" },
+      { date: "1999-12-10", opponent: "DEN", fp: 62.4, line: "21p/12r/8a/5s" },
+    ],
+    teamEras: {
+      CHH: {
+        framing: ["The Charlotte years where Mason became a household name.", "Seven triple-doubles in two seasons. The point forward blueprint."],
+        bigGameVariant: "31-14-11 vs Toronto. The complete Charlotte Mason experience.",
+        quietGameVariant: "Even quiet Charlotte nights meant double-digit boards.",
+      },
+      MIA: {
+        framing: ["Riley's championship gamble. Veteran leadership for young stars.", "The enforcer role in South Beach. Less stats, more impact."],
+        bigGameVariant: "Playoff basketball at its finest. Riley knew what he was getting.",
+        quietGameVariant: "Miami Mason was about winning, not stat sheets.",
+      },
+    },
+  },
 // Tyrese Maxey (PHI, $60, PURPLE)
   maxey_1630178: {
     basePlayerId: "1630178",
@@ -3704,7 +5189,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-12-08", opponent: "CHI", fp: 59.2, line: "His only triple-double showcasing improved playmaking" },
     ],
   },
-
 // CJ McCollum — basePlayerId 203468 — teams: POR/NOP
   mccollum_203468: {
     basePlayerId: "203468",
@@ -3751,7 +5235,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Antonio McDyess — basePlayerId 686 — teams: DEN/PHX
   mcdyess_686: {
     basePlayerId: "686",
@@ -3798,7 +5281,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
   mcgrady_1503: {
     basePlayerId: "1503",
     nicknames: ["T-Mac", "Tracy McGrady"],
@@ -3824,7 +5306,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["9th pick in 1997 out of high school. Raptors first.", "Magic, Rockets, Knicks, Pistons, Hawks. Body never let him win."],
   },
-
 // Khris Middleton — basePlayerId 203114 — teams: MIL
   middleton_203114: {
     basePlayerId: "203114",
@@ -3866,7 +5347,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Andre Miller — basePlayerId 1889 — teams: CLE/DEN/PHI
   miller_1889: {
     basePlayerId: "1889",
@@ -3918,7 +5398,87 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Mike Miller — basePlayerId 2034 — teams: MEM
+  miller_2034: {
+    basePlayerId: "2034",
+    nicknames: ["Matrix"],
+    knownFor: "The three-point specialist who could rebound and pass. Role player with star moments.",
+    salaryTier: "flier",
+    tier1: ["The prototypical stretch four before stretch fours were cool.", "Shot 40% from three over twelve seasons while grabbing eight boards a night."],
+    tier2: ["Rookie of the Year in 2001, then spent a decade proving he belonged.", "The clutch shooter Miami needed for their 2012 title run."],
+    tier3: ["45 points against Golden State in '07. The Matrix had range."],
+    overperform: ["When Miller gets hot, the defense has no answer for 6'8\" shooting threes.", "19 rebounds against Miami in '02. The man could do everything."],
+    underperform: ["The shot selection can get questionable when he's forcing it.", "Turnover-prone when trying to create instead of letting the game come to him."],
+    onPace: ["Exactly what you expect: efficient shooting, solid rebounding, veteran presence.", "The definition of steady production from the role player tier."],
+    turnovers: ["Ball-handling was never his strength. Catch and shoot, not create and drive."],
+    defensive: ["Solid team defender who understood rotations. No lockdown rep, but did his job."],
+    bigGame: ["45 points against Golden State in February '07. Shot the lights out.", "Triple-double against Sacramento with 21-10-10. The complete game showed up."],
+    quietGame: ["When the shot isn't falling, Miller can disappear completely."],
+    famousGameHint: ["That 45-point explosion against the Warriors came in a loss.", "Sometimes the best individual nights happen when the team falls short."],
+    controversy: ["Never generated headlines for the wrong reasons.", "The consummate professional who let his game do the talking.", "If there's controversy, it's wondering why he never got more recognition."],
+    formerTeam: ["Never had the dramatic reunions. Moved on quietly, professionally."],
+    rivalry: ["Too much of a role player to generate real rivalries."],
+    milestones: ["Rookie of the Year in 2001. The foundation for everything that followed."],
+    streakLines: ["When Miller heats up from three, he can single-handedly swing momentum.", "Cold streaks mean invisible nights. No other way to impact winning."],
+    salaryNarrative: ["Seven million for a proven shooter who won't hurt you anywhere else.", "The veteran minimum guy every contender wants on the roster."],
+    teamContext: ["Journeyman who found spots wherever shooting was needed."],
+    draftAndPath: ["Fifth overall in 2000. High draft pick who became the perfect role player."],
+    opponentFlavor: { GSW: "45 points in '07. Still his career high.", MIA: "19 rebounds against his future championship team.", SAC: "The triple-double game that showed his complete skill set.", BOS: "14 assists against the Celtics. Point-forward mode activated." },
+    signatureGames: [
+      { date: "2007-02-21", opponent: "GSW", fp: 57, line: "45p/5r/6a" },
+      { date: "2006-01-10", opponent: "SAC", fp: 56, line: "21p/10r/10a" },
+      { date: "2002-11-24", opponent: "MIA", fp: 55.3, line: "31p/19r/3a" },
+      { date: "2007-01-05", opponent: "BOS", fp: 50.2, line: "24p/6r/14a" },
+    ],
+    teamEras: {
+      MEM: {
+        framing: ["The Grindhouse years. Miller brought shooting to a defense-first team.", "Veteran presence who understood his role in Memphis's identity."],
+        bigGameVariant: "When Memphis needed offense, Miller delivered from deep.",
+        quietGameVariant: "Invisible nights hurt more in Memphis's grind-it-out style.",
+      },
+    },
+  },
+// Reggie Miller — basePlayerId 397 — teams: IND
+  miller_397: {
+    basePlayerId: "397",
+    nicknames: ["The Knick Killer", "Clutch"],
+    knownFor: "The trash-talking sharpshooter who turned Madison Square Garden into his personal stage.",
+    salaryTier: "role",
+    tier1: ["Eight points in nine seconds against the Knicks. The Garden never recovered.", "Career .395 from three when it still meant something. Pioneer work.", "Clutch shooting with a mouth to match. Spike Lee's personal nightmare."],
+    tier2: ["Five threes in the fourth quarter of Game 1, '95 Eastern semis. Poetry.", "25,000 career points, all in a Pacers uniform. Loyalty with results.", "The choke sign to Spike Lee. Garden security should've charged him rent."],
+    tier3: ["Led the league in three-point percentage twice when defenses still slept on it.", "Never won a ring, but owned New York for two decades. Ask any Knicks fan."],
+    overperform: ["When Reggie got hot, arenas got quiet. The clutch gene ran in his family.", "Playoff Reggie was a different species. Regular season was just warmup.", "Big moments made him bigger. Physics didn't apply in the fourth quarter."],
+    underperform: ["The quiet nights were rare but memorable. Even legends go cold.", "When the threes weren't falling, the Pacers felt every miss.", "Off nights meant relying on teammates who couldn't match his theater."],
+    onPace: ["Steady excellence with occasional fireworks. The Pacers Way personified.", "Consistent enough to build around, clutch enough to steal games."],
+    turnovers: ["Ball security over flash. Rarely gave away possessions he could use for daggers.", "Smart with the rock because every possession might need a prayer three."],
+    defensive: [],
+    bigGame: ["41 points against Milwaukee in 2000. Peak Reggie at 35 years old.", "Eight threes when they still counted double. Vintage clutch shooting.", "Age was just a number when the Garden lights came on."],
+    quietGame: ["Even legends have human nights. The threes don't always fall.", "Quiet Reggie still found ways to hurt you. Veterans know the angles."],
+    famousGameHint: ["December '96 against Orlando. 34 and 12 when big men still mattered.", "The kind of line that made coaches rethink everything about spacing.", "Before small ball had a name, Reggie was writing the blueprint."],
+    controversy: ["The trash talk was art form. NBA before they sanitized the fun.", "Spike Lee made him famous. Miller returned the favor with interest.", "Never backed down from anybody's building. Garden security knew him by name.", "The choke sign heard 'round the world. Madison Square Garden's villain.", "Clutch shots with a side of theater. The NBA hasn't been the same since."],
+    formerTeam: ["Played his whole career in Indianapolis. Loyalty is a lost art."],
+    rivalry: ["Knicks-Pacers defined '90s basketball. Miller wrote most of the headlines.", "Spike Lee created a monster. Twenty years of Garden nightmares followed."],
+    milestones: ["First player to hit 2,500 career threes. The arc belonged to him.", "Hall of Fame shooter before everyone had green light from deep."],
+    streakLines: ["Hot streaks meant opposing coaches called timeout just to slow him down.", "Cold streaks never lasted long. Clutch shooters find their rhythm.", "The Garden brought out his best. Some venues just fit certain players."],
+    salaryNarrative: ["Role player money for a Hall of Fame resume. Inflation wasn't kind to legends.", "$38 gets you 25,000 points and infinite clutch moments. Steal of the draft.", "The value play who defined an era. Some bargains write their own stories."],
+    teamContext: ["Born a Pacer, died a Pacer. Indianapolis never had to wonder about loyalty.", "Small market star who never needed bright lights. Indiana was stage enough."],
+    draftAndPath: ["Third round pick in 1987. Turns out shooting translates at every level.", "UCLA product who brought West Coast flair to Midwest grit."],
+    opponentFlavor: { NYK: "Personal playground. Eight points in nine seconds lives forever.", CHI: "Jordan's Bulls met their match in the playoffs. Reggie never blinked.", LAL: "Finals heartbreak in 2000. Kobe got the rings, Reggie got respect.", MIA: "Pat Riley's Heat couldn't cool him down in the '90s wars.", DET: "Bad Boys era survivor. Tougher than his shooting stroke suggested." },
+    signatureGames: [
+      { date: "1996-12-18", opponent: "ORL", fp: 57.9, line: "34p/12r/7a, vintage clutch" },
+      { date: "2000-11-08", opponent: "MIL", fp: 52.9, line: "41p/2r/5a, age-defying excellence" },
+      { date: "1997-03-28", opponent: "CHH", fp: 51.1, line: "39p/3r/3a, pure shooting display" },
+      { date: "2000-11-15", opponent: "DET", fp: 50.4, line: "30p/2r/8a, floor general mode" },
+      { date: "1997-11-12", opponent: "ATL", fp: 50.3, line: "30p/4r/5a, complete two-way game" },
+    ],
+    teamEras: {
+      IND: {
+        framing: ["The only Pacer who mattered for two decades. Indianapolis royalty.", "Small market star who made Madison Square Garden his personal stage.", "Clutch shooting with a side of trash talk. The Garden's greatest villain."],
+        bigGameVariant: "41 points at 35 against Milwaukee. Indiana legends age differently.",
+        quietGameVariant: "Even in Indy, legends have off nights. The threes don't always cooperate.",
+      },
+    },
+  },
 // Paul Millsap — basePlayerId 200794 — teams: UTA/ATL
   millsap_200794: {
     basePlayerId: "200794",
@@ -3965,7 +5525,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Yao Ming — basePlayerId 2397 — teams: HOU
   ming_2397: {
     basePlayerId: "2397",
@@ -4007,7 +5566,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Donovan Mitchell (CLE, $55, PURPLE)
   mitchell_1628378: {
     basePlayerId: "1628378",
@@ -4042,7 +5600,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-11-11", opponent: "CHI", fp: 60.6, line: "Perfect game - 36 points with zero turnovers" },
     ],
   },
-
 // Evan Mobley (CLE, $55, PURPLE)
   mobley_1630596: {
     basePlayerId: "1630596",
@@ -4081,7 +5638,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2023-11-28", opponent: "ATL", fp: 61.3, line: "17pts/19reb/1ast/7blk" },
     ],
   },
-
 // Greg Monroe — basePlayerId 202328 — teams: DET/MIL
   monroe_202328: {
     basePlayerId: "202328",
@@ -4128,7 +5684,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Ja Morant (MEM, $55, PURPLE)
   morant_1629630: {
     basePlayerId: "1629630",
@@ -4162,7 +5717,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2023-12-19", opponent: "NOP", fp: 57.2, line: "Division rival domination with 34-point outburst" },
     ],
   },
-
 // Alonzo Mourning — basePlayerId 297 — teams: MIA
   mourning_297: {
     basePlayerId: "297",
@@ -4204,7 +5758,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Dejounte Murray — basePlayerId 1627749 — teams: SAS/ATL/NOP
   murray_1627749: {
     basePlayerId: "1627749",
@@ -4256,7 +5809,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Jamal Murray — basePlayerId 1627750 — teams: DEN
   murray_1627750: {
     basePlayerId: "1627750",
@@ -4298,7 +5850,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Dikembe Mutombo — basePlayerId 87 — teams: ATL/PHI
   mutombo_87: {
     basePlayerId: "87",
@@ -4345,7 +5896,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Steve Nash — basePlayerId 959 — teams: DAL/PHX
   nash_959: {
     basePlayerId: "959",
@@ -4392,7 +5942,88 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Nene — basePlayerId 2403 — teams: DEN
+  nene_2403: {
+    basePlayerId: "2403",
+    nicknames: ["The Brazilian Blur"],
+    knownFor: "Smooth big man who ran the floor like a guard and finished like a center.",
+    salaryTier: "flier",
+    tier1: ["Brazilian center who could handle the ball and shoot from range before it was trendy.", "Ran the break like a point guard in a 6'11\" frame. Nuggets fast breaks were must-see TV."],
+    tier2: ["That 2009 playoff run with Denver was his peak. Carmelo got the headlines, Nene got buckets.", "The mid-range jumper was automatic for years. Fundamentally sound footwork.", "Never met a screen he couldn't roll hard to the rim. Pick-and-roll poetry."],
+    tier3: ["Goes by one name like a soccer star. The Brazilian way."],
+    overperform: ["When the blocks and steals came in bunches, he looked like a defensive anchor.", "Those assist numbers were real. Could find cutters and shooters from the elbow.", "20-10-5 games happened more than you remember. Complete statistical stuffing."],
+    underperform: ["The injury luck was never great. Hard to stay consistent when you can't stay healthy.", "Some nights the shot wouldn't fall and the rebounds weren't there either.", "Foul trouble limited minutes in key games. Playoff basketball got physical fast."],
+    onPace: ["Fifteen and eight with solid defense. Exactly what you drafted him for.", "The consistency was underrated. Professional approach every night."],
+    turnovers: ["Tried to make passes his size couldn't support. Good vision, shaky handle in traffic."],
+    defensive: ["Shot-blocking came in spurts. Could erase mistakes when locked in.", "Those steal numbers were legit. Quick hands for a big man, read passing lanes well."],
+    bigGame: ["20-10-5 with four steals and four blocks against Toronto in November 2009.", "That line against Memphis in December 2010: 27-11-6. Complete two-way dominance.", "Six steals against Portland in 2004. Big men aren't supposed to do that."],
+    quietGame: ["Even off nights usually meant eight rebounds and solid screen-setting.", "The floor was always there. Professional big man who knew his role."],
+    famousGameHint: ["That four-block, four-steal game against Toronto was defensive perfection.", "The 17-rebound night against Detroit showed pure motor and positioning.", "Six steals in one game as a center. The Brazilian Blur nickname made sense."],
+    controversy: ["Never caused drama. Model professional in every stop.", "The injuries piled up but he never complained publicly.", "Some questioned his playoff intensity. Regular season player narrative followed him.", "Left money on the table to chase rings. Respect the priority switch."],
+    formerTeam: ["Never burned bridges. The kind of veteran teams bring back for leadership.", "Denver fans still appreciate what he brought to those playoff runs."],
+    rivalry: ["No real beef with anyone. Competed hard but kept it professional."],
+    milestones: ["That six-steal game as a center belongs in the record books somewhere."],
+    streakLines: ["Hot streaks meant 20-10 nightly with defensive stats filling up the sheet.", "Cold spells were mostly about the shot not falling. Effort stats stayed consistent.", "When healthy, he'd string together months of solid two-way production."],
+    salaryNarrative: ["At $13, he's pure upside on minimum investment. Health is the only question.", "Veteran big men who can still move are undervalued. Experience matters in the playoffs.", "The kind of flier that wins leagues if the body holds up for 60 games."],
+    teamContext: ["Houston signed him for veteran leadership and playoff experience.", "The kind of locker room presence that teaches young bigs how to be professional."],
+    draftAndPath: ["Seventh overall by New York in 2002, traded immediately to Denver.", "The Nuggets development program turned him into a legitimate NBA center."],
+    opponentFlavor: { TOR: "That 20-10-5 with four blocks and steals. Raptors remember that one.", MEM: "Cooked the Grizzlies for 27-11-6 in December 2010. Grit-and-grind met skill.", POR: "Six steals against Portland as a center. Ridiculous defensive display.", DET: "Seventeen rebounds in the Palace. Old-school big man work.", SAC: "Always seemed to have big nights against Sacramento's smaller lineups." },
+    signatureGames: [
+      { date: "2009-11-17", opponent: "TOR", fp: 61.5, line: "20p/10r/5a/4s/4b" },
+      { date: "2010-12-05", opponent: "MEM", fp: 60.2, line: "27p/11r/6a/2s/2b" },
+      { date: "2004-02-02", opponent: "POR", fp: 59.7, line: "20p/6r/7a/6s/2b" },
+      { date: "2007-03-26", opponent: "DET", fp: 57.4, line: "21p/17r/4a/2s/2b" },
+      { date: "2005-01-03", opponent: "LAC", fp: 58.6, line: "20p/13r/4a/3s/3b" },
+    ],
+    teamEras: {
+      DEN: {
+        framing: ["The Carmelo years in Denver. Nene was the perfect pick-and-roll partner for chaos offense.", "Those playoff runs were built on his ability to run the floor and finish in traffic.", "When Denver was at its most fun, the Brazilian was setting screens and rolling hard."],
+        bigGameVariant: "That four-block, four-steal masterpiece was peak Nuggets Nene. Defense and energy.",
+        quietGameVariant: "Even quiet Denver nights meant solid screens and professional rebounding.",
+      },
+    },
+  },
+// Joakim Noah — basePlayerId 201149 — teams: CHI
+  noah_201149: {
+    basePlayerId: "201149",
+    nicknames: ["Jo"],
+    knownFor: "The emotional center who turned defense into performance art and screamed his way to a Defensive Player of the Year award.",
+    salaryTier: "role",
+    tier1: ["2014 Defensive Player of the Year with a motor that never quit.", "The Bulls' heart and soul during the Rose era, bringing chaos energy to every possession."],
+    tier2: ["Seven triple-doubles in his prime, including blocks in three of them.", "The French-born son of a tennis legend who chose basketball and Chicago chose him back."],
+    tier3: ["30 and 23 against Detroit in 2012. Centers don't do that anymore."],
+    overperform: ["When Jo was locked in, he'd stuff every column on the stat sheet.", "The assists always surprised you until you remembered he grew up watching European ball."],
+    underperform: ["The shoulder surgeries caught up eventually, turning the motor into a sputter.", "Post-Chicago Noah was a different player entirely, and everyone knew it."],
+    onPace: ["Fifteen and twelve with three blocks was Noah being Noah.", "The energy was always there, even when the knees weren't."],
+    turnovers: ["Overpassing was the price of ambition. He saw cuts that weren't there.", "Three turnovers meant he was trying too hard to make something happen."],
+    defensive: ["The anchor who made Tom Thibodeau's system work.", "Eleven blocks against Philly in 2013. That's not a typo."],
+    bigGame: ["23 points, 21 rebounds, 11 blocks against Philadelphia on February 28th, 2013.", "Triple-double with blocks. The rarest kind, and Noah made it look routine.", "Forty-five minutes of pure chaos energy that left the Sixers questioning reality."],
+    quietGame: ["Single-digit scoring meant the offense ran through someone else that night.", "Even quiet Noah games came with defensive disruption and hustle plays."],
+    famousGameHint: ["December 2012 against Detroit tells the whole Noah story in one box score.", "Thirty points and twenty-three rebounds from a center who wasn't supposed to score.", "The kind of line that makes you check if the stats guy made a mistake."],
+    controversy: ["The ankle injury in the 2012 playoffs changed everything for the Bulls.", "Never quite the same player after the shoulder surgeries piled up.", "The Knicks tenure was painful to watch for anyone who remembered prime Noah.", "LeBron called him out during the Miami years, and Noah never forgot it."],
+    formerTeam: ["Never really had a former team until Chicago moved on from him.", "The Bulls retirement ceremony will happen eventually, and it'll be emotional."],
+    rivalry: ["Miami was the enemy, and Noah wore that hatred on his sleeve.", "Every Heat matchup felt personal during the Big Three era."],
+    milestones: ["Defensive Player of the Year in 2014, beating out DeAndre Jordan.", "Two All-Star appearances and a fourth-place MVP finish that nobody saw coming."],
+    streakLines: ["Hot Noah meant triple-doubles and defensive chaos for weeks at a time.", "Cold stretches usually meant the shoulder was barking again.", "The energy was consistent even when the production wasn't."],
+    salaryNarrative: ["Twenty-seven million for what Noah used to be, not what he is now.", "The salary reflects past glory more than present production.", "Still worth it for the leadership and defensive IQ, but barely."],
+    teamContext: ["Chicago drafted him ninth in 2007 and never regretted it.", "The perfect fit for Thibs' defense-first philosophy from day one."],
+    draftAndPath: ["Florida's back-to-back championships made him a lottery pick.", "Chose defense and energy over polish, and it worked perfectly in Chicago."],
+    opponentFlavor: { MIA: "Peak Noah versus peak LeBron was appointment television.", DET: "Thirty and twenty-three in Detroit. The Pistons had no answer.", PHI: "Eleven blocks against the Sixers. That's a video game number.", MIL: "Always played the Bucks tough, even in down years.", NYK: "Fourteen assists at Madison Square Garden. The crowd didn't know what to do." },
+    signatureGames: [
+      { date: "2013-02-28", opponent: "PHI", fp: 88.7, line: "23p/21r/11b triple-double" },
+      { date: "2012-12-07", opponent: "DET", fp: 76.6, line: "30p/23r/6a monster game" },
+      { date: "2014-03-15", opponent: "SAC", fp: 70.2, line: "23p/11r/8a/5b complete line" },
+      { date: "2014-02-11", opponent: "ATL", fp: 62.7, line: "19p/16r/11a triple-double" },
+      { date: "2014-03-02", opponent: "NYK", fp: 59.4, line: "14a at Madison Square Garden" },
+    ],
+    teamEras: {
+      CHI: {
+        framing: ["The Bulls era is the only Noah era that matters.", "Nine seasons of defensive excellence and emotional leadership that defined a franchise.", "The Rose injury years where Noah carried the team on his back and his motor."],
+        bigGameVariant: "Twenty-three, twenty-one, and eleven blocks at the United Center. Peak Bulls Noah.",
+        quietGameVariant: "Even quiet Noah nights came with hustle plays and defensive anchoring.",
+      },
+    },
+  },
   nowitzki_1717: {
     basePlayerId: "1717",
     nicknames: ["Dirk", "The German", "The Big German", "Wirzburg Wizard", "Tall Baller from the G"],
@@ -4418,7 +6049,52 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["9th pick in 1998. Milwaukee took him, immediately traded to Dallas.", "Spent his entire 21-season career with the Mavericks."],
   },
-
+// Jusuf Nurkić — basePlayerId 203994 — teams: PHX/POR
+  nurkic_203994: {
+    basePlayerId: "203994",
+    nicknames: ["The Bosnian Beast", "Nurk"],
+    knownFor: "The ultimate low-post throwback who can pass like a guard when he's healthy.",
+    salaryTier: "role",
+    tier1: ["Seven feet of old-school post moves in a pace-and-space league. The math works when he's right.", "Triple-double threat from the center spot. How many bigs are hunting assists like this?"],
+    tier2: ["The Blazers made the conference finals with him anchoring everything in 2019.", "Broke his leg on live TV, came back meaner. The rehab turned him into a different player.", "Phoenix traded for him thinking they needed size. They got size and surprisingly good hands."],
+    tier3: ["Remember when Denver let him walk for nothing? Jokić's backup became Portland's starter."],
+    overperform: ["When Nurk gets 20 and 15, somebody's getting embarrassed in the paint.", "The passing opens up everything. Teams forget he can thread needles until he does.", "Vintage big man numbers in 2024. This is what centers used to look like."],
+    underperform: ["The foul trouble kills him. Hard to anchor defense from the bench.", "When his touch is off, those post-ups become wasted possessions.", "Conditioning questions follow him everywhere. The motor runs hot and cold."],
+    onPace: ["Solid Nurk is 15 and 10 with decent defense. Not spectacular, totally useful.", "The consistency has improved since the injury. Lower ceiling, higher floor."],
+    turnovers: ["Ambitious passer for a center. Sometimes the vision exceeds the execution.", "Post-up turnovers are the worst kind. Getting stripped down low kills momentum."],
+    defensive: ["Rim protection when he's engaged. The length bothers shooters around the basket.", "Lateral movement is the weakness. Pick-and-roll switches expose him."],
+    bigGame: ["24 points, 23 rebounds, 7 assists against Sacramento on New Year's Day 2019.", "Five steals and five blocks in the same game. When was the last time you saw that?", "88 fantasy points. The Bosnian Beast ate everything that night."],
+    quietGame: ["Single-digit scoring from your starting center hurts. Especially at his salary.", "The quiet games usually mean foul trouble. Can't impact winning from the bench."],
+    famousGameHint: ["That 2019 New Year's game against Sacramento might be the most complete center performance you'll see.", "24/23/7 with 5 steals and 5 blocks. Wilt numbers in the modern era.", "The rebounding explosion against OKC this year reminded everyone why he matters."],
+    controversy: ["Left Denver as soon as he could. The Jokić shadow was real.", "The injury comeback took longer than expected. Portland fans questioned his commitment.", "Phoenix traded for him thinking they needed traditional size. Mixed results so far.", "European big men carry different expectations. The motor questions follow him everywhere."],
+    formerTeam: ["Denver games hit different. They chose Jokić, he found stardom in Portland.", "No hard feelings publicly. The results speak for themselves."],
+    rivalry: ["Lakers matchups in the bubble were playoff basketball. Davis versus Nurk in the paint."],
+    milestones: ["That triple-double in 2019 was special. Centers don't hunt assists like that anymore.", "5,000 career rebounds quietly approaching. The consistency adds up."],
+    streakLines: ["When he's rolling, the double-doubles pile up fast. Traditional big man dominance.", "The shooting slumps are brutal to watch. Post moves only work when you're making them.", "Health streaks matter more than hot streaks. Availability is his biggest asset."],
+    salaryNarrative: ["Role player money for a guy who can give you star performances. The value is there.", "33 dollars gets you a potential 20-15 night. Not many centers offer that upside.", "The injury history keeps the price reasonable. High reward if he stays healthy."],
+    teamContext: ["Charlotte took a flyer on the veteran presence. Young team needed an anchor.", "The fit makes sense on paper. Size, passing, post presence they were missing."],
+    draftAndPath: ["Denver draft pick who found his identity after the trade. Sometimes change works.", "The European development path shows. Passing skills you can't teach."],
+    opponentFlavor: { DEN: "Facing his former team that chose Jokić over him. The motivation is obvious.", LAL: "Battles with Anthony Davis in the paint. Old-school versus new-school centers.", SAC: "That 2019 masterpiece happened against Sacramento. Still owns them down low.", GSW: "The Warriors' small-ball lineups give him problems. Too much switching required.", OKC: "31 rebounds against them in 2024. Sometimes the matchups just work perfectly." },
+    signatureGames: [
+      { date: "2019-01-01", opponent: "SAC", fp: 88.1, line: "24p/23r/7a/5s/5b" },
+      { date: "2017-03-09", opponent: "PHI", fp: 85, line: "28p/20r/8a/2s/6b" },
+      { date: "2019-03-25", opponent: "BKN", fp: 75.7, line: "32p/16r/5a/2s/4b" },
+      { date: "2022-12-26", opponent: "CHA", fp: 66, line: "28p/15r/6a/2s/3b" },
+      { date: "2024-03-03", opponent: "OKC", fp: 55.2, line: "14p/31r/4a/0s/1b" },
+    ],
+    teamEras: {
+      PHX: {
+        framing: ["The Suns experiment with traditional size. Mixed results but he brought effort.", "Phoenix thought they needed a big body for the playoffs. The theory was sound.", "Deandre Ayton's replacement who played nothing like Ayton. Different skill set entirely."],
+        bigGameVariant: "28 and 15 against Charlotte showed Phoenix what they traded for.",
+        quietGameVariant: "The quiet games in Phoenix usually meant foul trouble or conditioning issues.",
+      },
+      POR: {
+        framing: ["Peak Nurk happened in Portland. The conference finals run was his coming-out party.", "Dame's perfect frontcourt partner. The pick-and-roll chemistry was instant.", "The leg injury happened in a Blazers uniform. The comeback story belongs to Portland.", "Rip City loved his passing and fire. European big with American intensity."],
+        bigGameVariant: "That 2019 New Year's masterpiece defined his Portland legacy. 24/23/7 with everything.",
+        quietGameVariant: "Portland quiet games meant Dame carried extra weight. The balance suffered.",
+      },
+    },
+  },
 // Lamar Odom — basePlayerId 1885 — teams: LAC/MIA/LAL
   odom_1885: {
     basePlayerId: "1885",
@@ -4464,7 +6140,47 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Mehmet Okur — basePlayerId 2246 — teams: UTA
+  okur_2246: {
+    basePlayerId: "2246",
+    nicknames: ["The Turkish Hammer", "Money"],
+    knownFor: "The first European to hit a game-winner in the playoffs. Utah's stretch-five pioneer.",
+    salaryTier: "role",
+    tier1: ["The Turkish center who could shoot threes before it was trendy. Money from anywhere.", "Anchored Utah's Western Conference Finals run in '07. Sloan's perfect system player."],
+    tier2: ["First international player to hit a playoff game-winner. That step-back three in '08.", "Averaged 18 and 7 for three straight seasons. The original stretch big before Bosh."],
+    tier3: ["Drafted by Detroit, buried on their bench until the Jazz trade. Sloan saw the vision."],
+    overperform: ["43 points against Indiana in '09. The Turkish Hammer at full swing.", "When he gets hot from three, he stays hot. Book those double-doubles."],
+    underperform: ["The Achilles injury in '10 changed everything. Never quite the same player after.", "Sometimes disappears in big moments. The game-winner was the exception, not the rule."],
+    onPace: ["Solid 15 and 8 with two threes. The kind of consistency Sloan loved.", "Not flashy, just effective. The Turkish reliability."],
+    turnovers: ["Centers who handle the ball lose the ball. The price of versatility."],
+    defensive: ["Decent rim protection, questionable pick-and-roll defense. The stretch-five trade-off."],
+    bigGame: ["61.4 fantasy points with 33 and 17 against Chicago. The Turkish double-double special.", "43 points against Indiana on 9 threes. When Money gets cooking, defenses panic.", "That 17-rebound night against Houston. Big men still gotta rebound."],
+    quietGame: ["Single-digit scoring from a stretch big. The threes aren't falling tonight."],
+    famousGameHint: ["April 28th, 2008 against Houston. Game 4, first round.", "Step-back three with 2.2 seconds left. First international playoff game-winner ever.", "Jerry Sloan's perfect play call. The Turkish Hammer delivers when it matters."],
+    controversy: ["The injury timing was suspicious to some. Happened right before the playoffs in '10.", "Never quite lived up to the max contract Utah gave him. Good player, not great money.", "Some questioned his playoff toughness before the Houston game-winner shut them up."],
+    formerTeam: ["Never faced Detroit much after the trade. They probably regret letting him walk."],
+    rivalry: ["Lakers-Jazz was always physical. Okur's range kept them honest on defense."],
+    milestones: ["First Turkish player to score 20+ in a playoff game. International basketball history."],
+    streakLines: ["When he's hitting threes, the Jazz offense becomes unstoppable. Spacing nightmare.", "Cold stretches mean crowded paint. The entire system depends on his shot.", "Five straight games with a three-pointer. The Turkish consistency at work."],
+    salaryNarrative: ["$38 for a proven stretch big. The Turkish reliability at a discount price.", "Role player money for a former max contract guy. The injury changed his market."],
+    teamContext: ["Utah's offensive system maximized his unique skill set. Perfect fit in Salt Lake."],
+    draftAndPath: ["Second round pick who became a starter. Detroit's development, Utah's breakthrough."],
+    opponentFlavor: { LAL: "Kobe always respected his range. Smart shooters recognize smart shooters.", SAS: "Duncan's pick-and-pop battles. Two fundamentally sound big men going to work.", HOU: "The game-winner franchise. That step-back three lives in Jazz lore forever.", DEN: "Mountain altitude shootouts. Okur thrived in the thin air matchups.", PHX: "Nash vs Nash's former teammate. The point guard connection showed." },
+    signatureGames: [
+      { date: "2005-11-12", opponent: "CHI", fp: 61.4, line: "33p/17r/4a - The complete Turkish package" },
+      { date: "2009-01-12", opponent: "IND", fp: 60.3, line: "43p/9r/3a - Career-high scoring explosion" },
+      { date: "2005-12-27", opponent: "HOU", fp: 56.9, line: "20p/17r/4b - Glass-cleaning masterclass" },
+      { date: "2007-01-15", opponent: "WAS", fp: 54.8, line: "38p/9r/2a - Turkish Hammer at full swing" },
+      { date: "2006-12-20", opponent: "ATL", fp: 54.5, line: "30p/10r/3s - The versatile big man special" },
+    ],
+    teamEras: {
+      UTA: {
+        framing: ["The Jerry Sloan era's perfect stretch big. Before everyone else figured it out.", "Game-winner against Houston, Western Conference Finals, three-point revolution.", "The Turkish cornerstone of Utah's most successful post-Malone years."],
+        bigGameVariant: "43 points with 9 threes against Indiana. The Turkish explosion in Salt Lake.",
+        quietGameVariant: "When the threes don't fall, the Jazz offense gets crowded. System player problems.",
+      },
+    },
+  },
 // Victor Oladipo — basePlayerId 203506 — teams: ORL/IND/MIA
   oladipo_203506: {
     basePlayerId: "203506",
@@ -4516,7 +6232,47 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Hakeem Olajuwon — basePlayerId 165 — teams: HOU
+  olajuwon_165: {
+    basePlayerId: "165",
+    nicknames: ["The Dream", "Hakeem the Dream"],
+    knownFor: "The smoothest center ever, with footwork that made prime Shaq look clumsy.",
+    salaryTier: "role",
+    tier1: ["Two rings when Jordan retired. The Dream Shake was unstoppable.", "Mid-90s Hakeem was basketball poetry in the post. Ask David Robinson."],
+    tier2: ["Outdueled Shaq, Robinson, and Ewing in consecutive playoffs. Peak was untouchable.", "The only center to lead the league in blocks and steals the same season."],
+    tier3: ["Learned basketball at 17. Imagine if he'd started earlier."],
+    overperform: ["48 points against Denver at age 34. The footwork ages like fine wine.", "Still dropping 40-burgers when most centers are collecting social security."],
+    underperform: ["Seven turnovers against Utah means the double-teams finally worked.", "Even legends have nights where the Dream becomes a nightmare."],
+    onPace: ["32 and 16 against Chicago. Vintage Dream numbers.", "The consistency that built two championships."],
+    turnovers: ["The price of being the only option. Seven against Utah hurt."],
+    defensive: ["Blocks and steals leader the same year. Defensive unicorn.", "The Dream Shake worked both ways."],
+    bigGame: ["48 points on 43 minutes against Denver. The Dream at his most ruthless.", "39 points and 11 boards versus Minnesota. Poetry in the post.", "32-16-4 with 5 blocks against Jordan's Bulls. Statement game."],
+    quietGame: ["13 points happens when the legs are 34 and the schedule is 82.", "Even The Dream takes nights off."],
+    famousGameHint: ["That 48-point explosion in January '97 was vintage Dream footwork.", "The triple-double against the Clippers was pure basketball IQ."],
+    controversy: ["Never controversial. The most likeable superstar of the 90s.", "While Jordan and Shaq feuded, Hakeem just played basketball.", "The anti-diva. Two rings, zero drama."],
+    formerTeam: [],
+    rivalry: ["Shaq got schooled in '95. The student became the teacher."],
+    milestones: ["Two Finals MVPs when it mattered most. Jordan's retirement window."],
+    streakLines: ["Three straight 40-point games in '97. The Dream was lucid dreaming.", "When Hakeem got hot, double-teams became prayer circles."],
+    salaryNarrative: ["At $34, you're getting Hall of Fame footwork at veteran minimum prices.", "The Dream Shake comes with a discount now."],
+    teamContext: ["Houston's franchise player through two championships and beyond."],
+    draftAndPath: ["First overall in '84. Portland took Bowie instead. Oops."],
+    opponentFlavor: { CHI: "32-16 with 5 blocks. Made Jordan's Bulls look ordinary.", DEN: "48 points at 34. The Nuggets never had an answer.", UTA: "41 points against Malone's Jazz. Peak vs peak.", LAC: "Triple-double at will. The Clippers were practice." },
+    signatureGames: [
+      { date: "1997-01-30", opponent: "DEN", fp: 67.5, line: "48p/10r/3a" },
+      { date: "1997-03-25", opponent: "MIN", fp: 76.2, line: "39p/11r/4a/6b" },
+      { date: "1997-01-19", opponent: "CHI", fp: 82.2, line: "32p/16r/4a/5b" },
+      { date: "1997-01-25", opponent: "UTA", fp: 73, line: "41p/15r/6a" },
+      { date: "1997-03-04", opponent: "LAC", fp: 67.2, line: "22p/16r/10a" },
+    ],
+    teamEras: {
+      HOU: {
+        framing: ["The Rockets legend. Two rings, two Finals MVPs, one Dream Shake.", "Jordan's retirement opened the door. Hakeem walked through it."],
+        bigGameVariant: "48 points in Houston. The Toyota Center remembers this one.",
+        quietGameVariant: "Even in Houston, The Dream had off nights.",
+      },
+    },
+  },
   oneal_406: {
     basePlayerId: "406",
     nicknames: ["Shaq", "The Big Diesel", "Shaq Diesel", "The Big Aristotle", "Superman", "Big Shamrock"],
@@ -4543,7 +6299,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["First pick in 1992 after LSU. Magic, Lakers, Heat, Suns, Cavs, Celtics.", "Movies, music, doctorate, sheriff. The post-NBA empire was always the plan."],
   },
-
 // Jermaine O'Neal — basePlayerId 979 — teams: IND
   oneal_979: {
     basePlayerId: "979",
@@ -4585,7 +6340,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Tony Parker — basePlayerId 2225 — teams: SAS
   parker_2225: {
     basePlayerId: "2225",
@@ -4625,7 +6379,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
   paul_101108: {
     basePlayerId: "101108",
     nicknames: ["CP3", "The Point God", "The Skate", "Chris Paul"],
@@ -4651,7 +6404,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["4th pick in 2005. Wake Forest. Hornets snapped him up.", "11 seasons across six franchises. Still hunting that ring."],
   },
-
   payton_56: {
     basePlayerId: "56",
     nicknames: ["The Glove", "GP", "Mitten"],
@@ -4677,7 +6429,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["2nd pick in 1990. Oregon State. Sonics lifer at heart.", "Sonics, Bucks, Lakers, Celtics, Heat — won ring in 2006 with Miami."],
   },
-
 // Metta World Peace — basePlayerId 1897 — teams: HOU/IND/SAC
   peace_1897: {
     basePlayerId: "1897",
@@ -4729,7 +6480,91 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Paul Pierce — basePlayerId 1718 — teams: BOS
+  pierce_1718: {
+    basePlayerId: "1718",
+    nicknames: ["The Truth", "The Captain"],
+    knownFor: "Celtic lifer who carried Boston through the post-Bird era and delivered banner 17.",
+    salaryTier: "star",
+    tier1: ["The Truth. Kobe gave him the nickname, the Finals MVP validated it.", "Eighteen seasons in green, one championship, zero drama. Rare breed."],
+    tier2: ["Stabbed eleven times in 2000, played all 82 games the next season. Built different.", "The clutch gene was real. Game 6 versus LeBron, wheelchair game versus the Lakers.", "Doc Rivers called him uncoachable early on. Pierce just needed the right coach."],
+    tier3: ["Shot 37% from three in the '08 Finals. Peak Pierce was automatic from anywhere."],
+    overperform: ["Pierce at his best was 25-7-4 with lockdown defense and ice in his veins.", "The jumper looked broken but went in. Every contender needed a Pierce-type closer.", "When he got hot, the Garden stood up before the shot even left his hands."],
+    underperform: ["The Truth had off nights like everyone else, but rarely in moments that mattered.", "Sometimes the shot selection was questionable. Doc learned to live with it.", "Age caught up eventually. The legs went before the competitive fire did."],
+    onPace: ["Vintage Pierce. 20-6-4 with clutch buckets when the game slowed down.", "Steady production, zero maintenance. The kind of star every franchise wants."],
+    turnovers: ["Pierce wasn't careless with the rock, just aggressive when it mattered.", "Four turnovers meant he was hunting for something special. Usually found it."],
+    defensive: ["Underrated defender who could guard three positions. The steals came naturally.", "Never made an All-Defense team. The reputation was built on playoff moments."],
+    bigGame: ["48 points against New Jersey in December '01. The Garden was electric.", "Prime Pierce meant 40+ any given night. The Nets learned that the hard way.", "December games in Boston hit different when Pierce was feeling it."],
+    quietGame: ["Even quiet Pierce nights usually meant someone else on Boston ate well.", "The Truth saved his energy for fourth quarters. Smart basketball."],
+    famousGameHint: ["50 points against Cleveland on a Wednesday in February. Vintage Pierce takeover.", "The wheelchair game gets the headlines, but the scoring explosions were routine.", "Check the '06 season. Pierce was unconscious that year."],
+    controversy: ["Called himself better than LeBron after the '08 title. Nobody was mad at the confidence.", "The wheelchair game looked dramatic, but Pierce was genuinely hurt. Adrenaline is real.", "Never got the superstar calls other wings received. Made shots anyway.", "Retired his number immediately after leaving Boston. Some traditions you don't mess with.", "The Truth was never a villain. Just a Celtic who played like one mattered."],
+    formerTeam: [],
+    rivalry: ["Lakers-Celtics was personal. Pierce made sure Kobe knew The Truth was real.", "LeBron's Heat provided the perfect foil. Pierce never backed down."],
+    milestones: ["26,397 career points, all in a Celtic uniform until the very end.", "Ten All-Star games, one Finals MVP. The resume speaks for itself."],
+    streakLines: ["Hot Pierce was unstoppable. The jumper looked identical every time.", "Cold stretches were rare. Pierce found ways to impact winning even off nights.", "December was Pierce season. Something about Boston winters brought out his best."],
+    salaryNarrative: ["Star money for a star player. Pierce at $49 was championship equity.", "The clutch gene costs extra. Boston paid happily for eighteen seasons.", "Never complained about the contract, never complained about the city. Model franchise player."],
+    teamContext: ["Drafted fifth in '98, stayed loyal when Boston was rebuilding. Rare in the modern era.", "The post-Bird, pre-KG bridge. Pierce kept Celtic pride alive through lean years."],
+    draftAndPath: ["Kansas product who fell to Boston at five. Danny Ainge's best draft pick.", "Could've left for bigger markets. Chose to be the face of a historic franchise."],
+    opponentFlavor: { LAL: "Torched Kobe's Lakers in '08. The Finals MVP was earned.", NJN: "The Nets caught vintage Pierce regularly. 48-point games weren't accidents.", CLE: "LeBron's Cavs saw Pierce's best and worst. Usually his best.", CHI: "Chicago's defense couldn't contain prime Pierce. Too many weapons.", MIL: "Milwaukee was a regular victim of Pierce explosions. Bad timing." },
+    signatureGames: [
+      { date: "2001-12-01", opponent: "NJN", fp: 74.9, line: "48p/12r/1a in 49 minutes. The Garden was on its feet." },
+      { date: "2003-12-13", opponent: "CLE", fp: 74.8, line: "41p/9r/6a with 4 steals. Prime Pierce was a problem." },
+      { date: "2006-02-15", opponent: "CLE", fp: 66.4, line: "50 points in 54 minutes. Season-high scoring explosion." },
+      { date: "2002-12-20", opponent: "MIN", fp: 73.8, line: "42p/14r/4a. Minnesota had no answers." },
+      { date: "2005-02-02", opponent: "NJN", fp: 69, line: "28p/10r/10a triple-double. The Truth did everything." },
+    ],
+    teamEras: {
+      BOS: {
+        framing: ["The Celtic Pierce is the only Pierce that matters. Eighteen seasons in green.", "From lottery team centerpiece to championship leader. The arc was perfect.", "Banner 17 happens with Pierce as Finals MVP. The city will never forget."],
+        bigGameVariant: "48 points in the Garden wearing Celtic green. How it was meant to be.",
+        quietGameVariant: "Even quiet nights in Boston meant someone else on the Celtics prospered.",
+      },
+    },
+  },
+// Scottie Pippen — basePlayerId 937 — teams: CHI/HOU
+  pippen_937: {
+    basePlayerId: "937",
+    nicknames: ["Pip", "The Glider", "No Tippin' Pippen"],
+    knownFor: "The best second banana in NBA history, perfected the art of elite defense and timely offense.",
+    salaryTier: "star",
+    tier1: ["Six rings as Jordan's wingman. The Bulls dynasty doesn't happen without him.", "All-NBA defense eight times. Made lockdown perimeter defense an art form.", "Led the '94 Bulls to 55 wins without MJ. Proved he wasn't just a passenger."],
+    tier2: ["Dream Team starter at 27. Earned his spot on merit, not reputation.", "The '91 Finals switchoff on Magic was basketball poetry. Showtime officially ended.", "Ten All-Star games, seven All-NBA teams. The resume that Jordan truthers ignore."],
+    tier3: ["Shot 32% from three for his career. The one hole in an otherwise complete game."],
+    overperform: ["Triple-double with six steals against the Clippers. This is vintage Pip.", "47 points against Denver, career-high. When the shots fall, he's unstoppable.", "Leading by example at 38. The young Blazers needed this version of leadership."],
+    underperform: ["The migraine game in '98. Went out with a whimper when the Bulls needed him.", "Shot 41% in the Finals. Good thing Jordan was there to clean up the mess.", "Five turnovers with the game on the line. Even legends have off nights."],
+    onPace: ["Solid across the board. The consistency that made six rings possible.", "This is the Pippen you expected: defense, boards, facilitating. Vintage glue guy."],
+    turnovers: ["Always been loose with the ball. Four turnovers was a typical Tuesday for Pip.", "The fast break vision sometimes got ahead of his teammates. Risk/reward player."],
+    defensive: ["Perimeter lockdown artist. Could guard 1-4 and make it look effortless.", "Six steals against the Clippers. This is why Phil trusted him on every assignment."],
+    bigGame: ["47 points against Denver, career night. When Pip got hot, nobody could stop him.", "63.7 fantasy points with 11 assists and six steals. The complete Pippen game.", "Triple-double with six steals. This is what elite two-way basketball looks like."],
+    quietGame: ["Even quiet Pippen games included defense and hustle. Never truly invisible.", "The shots didn't fall but the effort never wavered. That's championship DNA."],
+    famousGameHint: ["47 points in February '97. The Bulls were cruising, Pip was cooking.", "Career-high against a Nuggets team that had no answer for his versatility.", "This might be the best individual game of his post-Jordan Chicago years."],
+    controversy: ["The migraine game in Utah. Sat out the final 1.8 seconds of Game 6 in '98.", "Refused to go back in when Phil drew up a play for Kukoc. Team-first guy, usually.", "Called Jordan 'selfish' in his book. Twenty years later, still has things to say.", "The Portland years were messy. Demanded trades, questioned coaching, classic vet drama.", "Houston was supposed to be his ring chase. Lasted 23 games before bailing out."],
+    formerTeam: ["Facing the Bulls after the breakup. Mixed emotions, pure basketball.", "Chicago fans never forgot. Neither did he. The applause said everything."],
+    rivalry: ["Pistons games were personal. Bad Boys era grudges never fully healed.", "Knicks battles in the '90s. Pat Riley's defense met Phil's triangle offense."],
+    milestones: ["Top 50 all-time in steals and assists. The versatility numbers that matter.", "Six rings, eight All-Defensive teams. The resume speaks for itself."],
+    streakLines: ["Three 60+ fantasy point games in six days. Peak Pippen was appointment television.", "The February '97 hot streak that reminded everyone he wasn't just Jordan's sidekick.", "When Pip got rolling, the Bulls became unbeatable. This was one of those stretches."],
+    salaryNarrative: ["$43M for a Hall of Famer with six rings. This is where experience pays dividends.", "Star-tier pricing for a player who defined what it meant to be the perfect complement.", "At this salary, you're paying for championship DNA and elite defense. Worth every penny."],
+    teamContext: ["Landed in Portland chasing one more ring. The Jail Blazers needed veteran leadership.", "The Houston experiment lasted 23 games. Sometimes fit matters more than talent."],
+    draftAndPath: ["Fifth overall in '87. The Sonics passed on him twice. Seattle's loss, Chicago's dynasty.", "Small-college kid from Arkansas who became the prototype for modern versatile wings."],
+    opponentFlavor: { DEN: "47 points against the Nuggets. Career night in the Mile High City.", ORL: "Always brought it against Shaq's Magic. Size advantage meant nothing.", LAC: "Triple-double with six steals. The Clippers never had an answer for him.", BOS: "27 points, 11 boards against the Celtics. Made the Garden his personal playground.", HOU: "20 points, five blocks against his future team. Ironic, in hindsight." },
+    signatureGames: [
+      { date: "1997-02-18", opponent: "DEN", fp: 64, line: "47p/5r/4a/2s/0b/1to" },
+      { date: "1997-02-16", opponent: "ORL", fp: 63.7, line: "22p/6r/11a/6s/1b/3to" },
+      { date: "1996-11-20", opponent: "PHX", fp: 63.1, line: "37p/8r/7a/1s/2b/3to" },
+      { date: "1999-04-23", opponent: "LAC", fp: 63, line: "23p/10r/10a/6s/0b/5to" },
+      { date: "1998-03-23", opponent: "BOS", fp: 60.2, line: "27p/11r/6a/2s/2b/1to" },
+    ],
+    teamEras: {
+      CHI: {
+        framing: ["The Jordan era sidekick who proved he was more than that. Six rings, unlimited respect.", "The perfect complement: elite defense, clutch offense, championship leadership.", "Post-MJ Bulls captain who led them to 55 wins. The '94 season that validated everything."],
+        bigGameVariant: "47 points without Jordan watching. This was Pip's team, Pip's moment.",
+        quietGameVariant: "Even quiet nights included elite defense. Championship habits never fade.",
+      },
+      HOU: {
+        framing: ["The ring chase that lasted 23 games. Barkley was retired, Hakeem was done, Pip bailed.", "Supposed to be the missing piece for another title run. Instead, it was a footnote."],
+      },
+    },
+  },
 // Kristaps Porziņģis — basePlayerId 204001 — teams: NYK/DAL/WAS/BOS
   porzingis_204001: {
     basePlayerId: "204001",
@@ -4778,7 +6613,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Julius Randle — basePlayerId 203944 — teams: MIN/NOP/NYK
   randle_203944: {
     basePlayerId: "203944",
@@ -4830,7 +6664,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Zach Randolph — basePlayerId 2216 — teams: POR/NYK/LAC/MEM
   randolph_2216: {
     basePlayerId: "2216",
@@ -4887,7 +6720,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Michael Redd — basePlayerId 2072 — teams: MIL
   redd_2072: {
     basePlayerId: "2072",
@@ -4928,7 +6760,134 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Glen Rice — basePlayerId 779 — teams: CHH
+  rice_779: {
+    basePlayerId: "779",
+    nicknames: ["G-Money"],
+    knownFor: "Pure shooter who could score 30 from anywhere on the court with the smoothest release in basketball.",
+    salaryTier: "role",
+    tier1: ["Three All-Star appearances and the smoothest jumper this side of Bird. The shot was automatic.", "Career 40% from three when the line was shorter and defenses were slower. Ahead of his time."],
+    tier2: ["All-Star Game MVP in 1997 with 26 points in 25 minutes. Rice treating the exhibition like target practice.", "Led Miami in scoring four straight seasons. The Heat's offensive identity before Pat Riley changed everything."],
+    tier3: ["Shot 47% from the field for his career despite taking difficult shots. The definition of a pure shooter."],
+    overperform: ["48 points against Boston in March '97. Rice unconscious from everywhere, including another zip code.", "42 points on back-to-back nights against Houston and Cleveland. The hot hand personified.", "When Rice got cooking, the basketball looked like it was on a string to the rim."],
+    underperform: ["Under 20 points usually meant Rice was settling for bad shots or the defense was face-guarding him.", "Cold shooting nights exposed Rice's limitations. When the jumper wasn't falling, he disappeared."],
+    onPace: ["25 points on 45% shooting was baseline Rice. The man was a walking bucket for a decade.", "Consistent production from a player who understood his role: get open, catch, shoot, repeat."],
+    turnovers: ["Low turnover rate for a primary scorer. Rice knew his job was shooting, not creating."],
+    defensive: [],
+    bigGame: ["48 points against Boston on 19-of-35 shooting. Rice treating the Garden like his personal playground.", "42 points against Houston in January '97. The Rockets had no answer for Rice's shooting range.", "36 points with four steals against Phoenix. When Rice was locked in, he was unstoppable."],
+    quietGame: ["Single-digit scoring was almost impossible for Rice. Even off nights usually meant 15 points.", "Bad shooting nights meant Rice was forcing shots. The confidence that made him great also hurt him."],
+    famousGameHint: ["March 6th, 1997 against Boston might be Rice at his most ridiculous. 48 points in 53 minutes of pure shooting.", "The Garden crowd couldn't believe what they were seeing. Rice shooting over everyone like they weren't there."],
+    controversy: ["Never won a championship as a primary option. The individual scoring without team success debate.", "Reputation for hunting his own shot sometimes hurt team chemistry. Great scorers can be selfish scorers.", "The Charlotte years ended with trade demands. Rice wanted to win, and the Hornets couldn't deliver.", "Lakers stint was brief but effective. Rice proving he could contribute to winning when properly utilized."],
+    formerTeam: ["Miami games had edge after the trade. Rice showing the Heat what they gave up for cap flexibility."],
+    rivalry: ["No deep rivalries, but Rice always elevated his game against elite defenders. He loved the challenge."],
+    milestones: ["15,000 career points reached with trademark efficiency. Rice never wasted shots or possessions."],
+    streakLines: [],
+    salaryNarrative: ["At $35, Rice offers elite shooting at a reasonable price. The purest stroke money can buy at this tier.", "Role player salary for a former All-Star. The shooting ability never left, just the usage rate."],
+    teamContext: ["Charlotte needed a go-to scorer after the franchise started. Rice became their offensive identity immediately."],
+    draftAndPath: ["Fourth overall by Miami in 1989. The Heat building around Rice's shooting before discovering defense."],
+    opponentFlavor: { BOS: "The Garden brought out Rice's best shooting performances. Something about that parquet floor.", NYK: "Knicks fans respected Rice's pure stroke. Hard to hate someone who made basketball look that easy.", MIA: "Facing his former team always carried extra motivation. Rice proving Miami shouldn't have let him go.", ORL: "High-scoring affairs with the Magic. Rice and Scott Skiles connecting for easy buckets." },
+    signatureGames: [
+      { date: "1997-02-19", opponent: "PHX", fp: 60.7, line: "36p/6r/5a/4s" },
+      { date: "1997-01-21", opponent: "HOU", fp: 57.6, line: "42p/8r/4a" },
+      { date: "1997-01-20", opponent: "ATL", fp: 56.9, line: "33p/7r/1a/4b" },
+      { date: "1997-03-06", opponent: "BOS", fp: 54.3, line: "48p/4r/1a" },
+      { date: "1997-04-05", opponent: "PHI", fp: 53.6, line: "41p/3r/2a" },
+    ],
+    teamEras: {
+      CHH: {
+        framing: ["The Charlotte years were Rice at his purest. Four All-Star appearances and 26 points per game.", "Peak Rice in teal and purple. The expansion Hornets built their offense around his shooting range."],
+        bigGameVariant: "48 points against Boston was vintage Charlotte Rice. The jumper that put the Hornets on the map.",
+        quietGameVariant: "Off nights in Charlotte meant the Hornets offense stalled. Rice was their only reliable scorer.",
+      },
+    },
+  },
+// Jason Richardson — basePlayerId 2202 — teams: GSW/CHA
+  richardson_2202: {
+    basePlayerId: "2202",
+    nicknames: ["J-Rich"],
+    knownFor: "The dunk contest champion who could light it up from deep but never found consistency.",
+    salaryTier: "role",
+    tier1: ["Back-to-back dunk contest winner who brought highlight reels and three-point bombs.", "Athletic shooting guard who could explode for 40 but disappear the next night.", "The Warriors' best player in the dark years before the dynasty arrived."],
+    tier2: ["Averaged 21 points per game twice but never made an All-Star team somehow.", "The Charlotte years showed he could be a legitimate second option when healthy.", "Career 37% from three on high volume, ahead of his time as a shooter."],
+    tier3: ["Won dunk contests in '02 and '03 when the competition was actually fierce."],
+    overperform: ["When J-Rich gets hot, he's pulling up from 28 feet and throwing down windmills.", "The explosiveness could take over games and make terrible teams watchable.", "Peak Richardson means 35-point nights with dunks and threes in equal measure."],
+    underperform: ["Inconsistency was always the issue with Richardson's shot selection.", "Bad J-Rich means forcing shots and settling for contested threes all night.", "The athleticism couldn't mask decision-making lapses when he was off."],
+    onPace: ["Solid J-Rich means 18-5-3 with a couple threes and highlight plays.", "The baseline production that made him a reliable scoring option for a decade."],
+    turnovers: ["Never a great decision-maker with the ball in his hands.", "Tried to do too much off the dribble for a shooting guard."],
+    defensive: ["Athletic enough to stay with most wings but often lost focus on that end.", "The steal numbers were good but he gambled too much for easy buckets."],
+    bigGame: ["44 points against Miami, vintage J-Rich explosion from all over the court.", "The 8-steal game against New Jersey showed his disruptive potential.", "When locked in, he could single-handedly change the pace of games."],
+    quietGame: ["Single-digit scoring from a player who should be hunting shots.", "The nights where the athleticism was there but the shots wouldn't fall."],
+    famousGameHint: ["That 42-point explosion against Denver where every shot looked effortless.", "Three threes and athletic finishes that reminded everyone why he won dunk contests.", "The kind of night that made you wonder why he couldn't do it every game."],
+    controversy: ["Never had major off-court issues, just the frustration of wasted potential.", "The injury problems in Charlotte derailed what should have been his prime years.", "Always a good teammate. Too inconsistent to build around.", "The Warriors years were rough but he was their most entertaining player."],
+    formerTeam: ["Professional approach to facing Golden State, no drama or extra motivation.", "The Charlotte return was quiet since most fans understood the trade."],
+    rivalry: ["Part of those Warriors-Kings battles when both teams were rebuilding.", "The Pacific Division basement fights that nobody talks about anymore."],
+    milestones: ["Two dunk contest championships when the event still mattered.", "Career 37% three-point shooter on high volume, ahead of his era."],
+    streakLines: ["Hot J-Rich means deep threes and poster dunks for weeks at a time.", "When he's feeling it, the shot selection becomes less important than results.", "Cold stretches usually feature too many contested threes and frustrated body language."],
+    salaryNarrative: ["Role player money for a former star who can still provide instant offense.", "At $29, you're paying for shooting and experience, not consistency.", "The salary makes sense if you need a spark off the bench who won't break the budget."],
+    teamContext: ["Veteran shooter brought in to provide depth and three-point shooting.", "The journeyman phase where he's accepted his role as a bench contributor."],
+    draftAndPath: ["Fifth pick in 2001 who showed flashes of stardom but never sustained it.", "Classic case of athleticism and shooting that couldn't overcome inconsistency."],
+    opponentFlavor: { NJN: "70 fantasy points with the complete stat sheet against New Jersey.", MEM: "38-14-4 with blocks, showing the complete two-way potential.", DEN: "42 points against the Nuggets, vintage J-Rich scoring explosion.", SAC: "40-point games against Sacramento when he was feeling it.", LAL: "Always seemed to elevate his game against the Lakers' athletes." },
+    signatureGames: [
+      { date: "2008-04-15", opponent: "NJN", fp: 70, line: "31p/10r/4a/8s" },
+      { date: "2008-01-19", opponent: "MEM", fp: 68.8, line: "38p/14r/4a/3b" },
+      { date: "2005-01-17", opponent: "DEN", fp: 68.6, line: "42p/3r/8a/3s/1b" },
+      { date: "2006-03-10", opponent: "MIA", fp: 52.7, line: "44p/6r/3a (season high)" },
+      { date: "2007-04-15", opponent: "MIN", fp: 67.9, line: "32p/12r/7a/3s/1b" },
+    ],
+    teamEras: {
+      GSW: {
+        framing: ["The pre-dynasty Warriors when J-Rich was their most exciting player.", "Peak Richardson putting up 21 points per game on terrible teams.", "The dunk contest years when Golden State had highlights but no wins."],
+        bigGameVariant: "42 points against Denver, peak Warriors J-Rich taking over games.",
+        quietGameVariant: "The nights where bad shots and hero ball made everyone groan.",
+      },
+      CHA: {
+        framing: ["The Charlotte years where injuries limited what should have been his prime.", "Still capable of explosive nights when healthy enough to play.", "The version that showed he could be a legitimate second option when available."],
+        bigGameVariant: "38-14-4 against Memphis, showing the complete Charlotte J-Rich.",
+        quietGameVariant: "Injury-shortened games that never let him find rhythm.",
+      },
+    },
+  },
+// Mitch Richmond — basePlayerId 782 — teams: SAC
+  richmond_782: {
+    basePlayerId: "782",
+    nicknames: ["The Rock"],
+    knownFor: "Pure scorer who carried Sacramento through the lean years with textbook shooting form.",
+    salaryTier: "role",
+    tier1: ["Six All-Star appearances, zero playoff series wins. The numbers were beautiful, the team results weren't.", "Shot 45% from the field for his career when league average was 44%. Efficient before efficiency mattered."],
+    tier2: ["Run TMC in Golden State lasted exactly two seasons. The Warriors broke up perfection for cap space.", "Averaged 23 points per game over eight seasons. The definition of reliable production on bad teams."],
+    tier3: ["Made the Hall of Fame despite never winning a playoff series as the primary option."],
+    overperform: ["The triple-double against Detroit wasn't supposed to happen. Richmond getting ten assists was rarer than snow.", "41 points against the Clippers in February '97. The Rock found another gear when Sacramento needed it most."],
+    underperform: ["The quiet nights usually meant Richmond was forcing shots. When the touch left, the attempts didn't.", "Under 20 points felt like a system failure. Sacramento's offense lived and died with his jumper."],
+    onPace: ["25 and 5 was the Richmond baseline. Clockwork production from a fundamentally sound player.", "The consistency that made him valuable also made him predictable. Reliable, never spectacular."],
+    turnovers: ["Career 3.1 turnovers per game. The Rock protected the ball like his Hall of Fame case depended on it."],
+    defensive: ["Solid perimeter defender who understood angles. Not flashy, but opponents had to work for their shots."],
+    bigGame: ["38 points, 10 rebounds, 10 assists against Detroit in January '97. The only triple-double of his career.", "41 points on 15-of-25 shooting versus the Clippers. The Rock at his most explosive.", "35 points and 13 rebounds against Denver. Richmond doing everything for a Kings team that needed everything."],
+    quietGame: ["Under 15 points meant Richmond was either hurt or the defense had solved Sacramento's offense.", "The rare off nights usually came against elite perimeter defenders who could match his physicality."],
+    famousGameHint: ["January 22nd, 1997 against Detroit might be the most complete game of his career. 38-10-10 in 46 minutes.", "The performance had everything: scoring, rebounding, playmaking. The Rock showing his full repertoire."],
+    controversy: ["Never made it past the first round as a primary option. The individual accolades without team success debate.", "Run TMC breakup still stings Warriors fans. Richmond, Hardaway, and Mullin could've been special together.", "Hall of Fame selection raised eyebrows among voters who prioritize winning over individual statistics.", "The Sacramento years were productive but largely meaningless. Great numbers on teams nobody watched."],
+    formerTeam: ["Golden State games carried extra weight. Richmond proving the Warriors made a mistake letting him go."],
+    rivalry: ["No real rivalries when your team never made the playoffs. Hard to develop hatred without stakes."],
+    milestones: ["20,000 career points reached quietly, like most of Richmond's accomplishments. Excellence without fanfare."],
+    streakLines: ["Hot streaks meant 30-point games for weeks. Richmond's jumper was either money or completely cold.", "Cold spells exposed Sacramento's offensive limitations. When Richmond struggled, the Kings had no Plan B.", "Six straight 20-point games wasn't unusual. The Rock's consistency was his calling card."],
+    salaryNarrative: ["At $37, Richmond represents reliable scoring production without the star premium. Known quantity.", "Role player pricing for a former All-Star. The Hall of Fame credentials at a discount rate."],
+    teamContext: ["Sacramento needed a franchise player after moving from Kansas City. Richmond became their identity."],
+    draftAndPath: ["Fifth overall by Golden State in 1988. Run TMC lasted two years before the Warriors chose cap space."],
+    opponentFlavor: { GSW: "Facing his former team always brought out vintage Richmond. The Warriors never forgot what they lost.", LAL: "Kobe respected Richmond's fundamentals. Two pure scorers who understood the craft.", PHX: "The Suns' fast pace suited Richmond perfectly. More possessions meant more shot attempts.", DEN: "High-altitude shootouts where Richmond could showcase his range. The thin air helped everyone's jumper." },
+    signatureGames: [
+      { date: "1997-01-25", opponent: "WAS", fp: 70.6, line: "38p/8r/6a/6s" },
+      { date: "1997-01-22", opponent: "DET", fp: 63, line: "38p/10r/10a" },
+      { date: "1997-02-13", opponent: "LAC", fp: 60.7, line: "41p/6r/7a" },
+      { date: "1998-02-13", opponent: "GSW", fp: 60.4, line: "35p/7r/6a" },
+      { date: "1997-02-01", opponent: "DEN", fp: 59.6, line: "35p/13r/4a" },
+    ],
+    teamEras: {
+      SAC: {
+        framing: ["The Sacramento years defined Richmond's legacy. Eight seasons carrying a franchise that couldn't help him win.", "23 points per game in purple and black. Individual excellence on teams that barely mattered."],
+        bigGameVariant: "The triple-double against Detroit was peak Sacramento Richmond. Doing everything for a team that needed everything.",
+        quietGameVariant: "Quiet nights in Sacramento meant the Kings had no chance. Richmond was their entire offense.",
+      },
+    },
+  },
 // Glenn Robinson — basePlayerId 299 — teams: MIL/ATL
   robinson_299: {
     basePlayerId: "299",
@@ -4975,7 +6934,47 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// David Robinson — basePlayerId 764 — teams: SAS
+  robinson_764: {
+    basePlayerId: "764",
+    nicknames: ["The Admiral"],
+    knownFor: "Navy discipline meets athletic freak. Two rings as Tim Duncan's wingman.",
+    salaryTier: "star",
+    tier1: ["The most athletic center of his era. Could run the floor like a guard.", "MVP in '95, then got schooled by Hakeem in the playoffs. Timing is everything."],
+    tier2: ["The quadruple-double guy. 71 points on the last day for the scoring title.", "Naval Academy product who brought military precision to the paint."],
+    tier3: ["Served two years in the Navy before joining the Spurs. Honor first."],
+    overperform: ["33-18 against Sacramento shows the Admiral still had artillery.", "Eight blocks against Golden State. The rim was under naval protection."],
+    underperform: ["Five turnovers means the double-teams worked. Rare Admiral miscalculation.", "Even military precision has human error margins."],
+    onPace: ["29-22 against Detroit. The Admiral reporting for duty as expected.", "Consistent excellence was the Naval Academy way."],
+    turnovers: ["Five against Denver was uncharacteristic. The Admiral runs a tight ship."],
+    defensive: ["Eight blocks against the Warriors. The paint was classified territory.", "Defensive Player of the Year when defense still mattered."],
+    bigGame: ["33 points and 18 boards against Sacramento. The Admiral in full command.", "Eight blocks versus Golden State. Naval blockade in the paint.", "29-22 against Detroit. Vintage Robinson dominance."],
+    quietGame: ["21 points means the legs were feeling those Navy miles.", "Even Admirals have calm seas occasionally."],
+    famousGameHint: ["That 71-point game for the scoring title lives in Spurs lore forever.", "The quadruple-double was peak Admiral athleticism on display."],
+    controversy: ["Got outplayed by Hakeem in '95 when it mattered most.", "The scoring title chase on the final day raised eyebrows.", "Clean career otherwise. Military discipline shows.", "Duncan's arrival made him the second option. Handled it perfectly."],
+    formerTeam: [],
+    rivalry: ["Hakeem owned him in '95. The Admiral's toughest battle."],
+    milestones: ["Two rings with Duncan. The passing of the torch done right."],
+    streakLines: ["Back-to-back 74-point fantasy games shows the Admiral was locked in.", "When Robinson got rolling, the paint became a no-fly zone."],
+    salaryNarrative: ["At $54, you're paying for proven championship pedigree and naval precision.", "The Admiral's leadership comes at star-level pricing."],
+    teamContext: ["San Antonio's anchor before Duncan arrived. Passed the torch gracefully."],
+    draftAndPath: ["First overall in '87 after Naval commitment. Worth the two-year wait."],
+    opponentFlavor: { SAC: "33-18 versus Sacramento. The Kings had no naval defense.", GSW: "Eight blocks against Golden State. The Warriors got sunk.", DET: "29-22 versus Detroit. Made the Pistons look landlocked.", PHX: "31-18 against Phoenix. The desert couldn't stop the Admiral." },
+    signatureGames: [
+      { date: "1998-02-01", opponent: "SAC", fp: 74.6, line: "33p/18r/4a/3b" },
+      { date: "1998-04-04", opponent: "GSW", fp: 74.6, line: "24p/18r/2a/7b" },
+      { date: "2001-01-06", opponent: "DET", fp: 73.9, line: "29p/22r/1a/5b" },
+      { date: "1999-04-05", opponent: "GSW", fp: 72.7, line: "25p/16r/1a/8b" },
+      { date: "2000-02-21", opponent: "PHX", fp: 70.1, line: "31p/18r/3a/4b" },
+    ],
+    teamEras: {
+      SAS: {
+        framing: ["The foundation of Spurs excellence. MVP, two rings, perfect teammate.", "From franchise player to Duncan's co-pilot. Ego never got in the way."],
+        bigGameVariant: "33-18 in San Antonio. The Alamodome was Admiral territory.",
+        quietGameVariant: "Quiet nights in San Antonio were tactical retreats.",
+      },
+    },
+  },
 // Rajon Rondo — basePlayerId 200765 — teams: BOS/SAC
   rondo_200765: {
     basePlayerId: "200765",
@@ -5022,7 +7021,87 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Derrick Rose — basePlayerId 201565 — teams: CHI
+  rose_201565: {
+    basePlayerId: "201565",
+    nicknames: ["D-Rose", "Pooh", "The Windy City Assassin"],
+    knownFor: "The youngest MVP ever whose career became a cautionary tale about knees and what-ifs.",
+    salaryTier: "value",
+    tier1: ["22 years old, MVP trophy, the world at his feet. Then the knees betrayed him.", "50 points at Madison Square Garden in 2018. Father Time met the old explosiveness."],
+    tier2: ["Four ACL surgeries later, still hunting that championship he was destined for.", "Chicago's prodigal son who came home to find the city had moved on."],
+    tier3: ["The 2011 playoffs against Miami were his peak. LeBron still had nightmares about those drives."],
+    overperform: ["When Rose finds that old burst, defenses panic. 30 points with 11 assists, vintage MVP form.", "The knees cooperated tonight. Explosive drives, crafty finishes, reminders of what was."],
+    underperform: ["Father Time and surgical scars catch up. Single-digit scoring from an ex-MVP hurts.", "The explosiveness comes and goes now. When it's gone, Rose becomes very ordinary."],
+    onPace: ["Solid veteran production. 16 points, 5 assists, managing the body wisely.", "The new Rose: efficient, smart, no longer trying to dunk through everyone."],
+    turnovers: ["Still hunting those impossible passes through traffic. The vision remains; execution varies."],
+    defensive: [],
+    bigGame: ["68 fantasy points against Houston in 2010. MVP-caliber dominance at 22 years old.", "11 assists, 5 steals, complete floor general performance. This was the future once."],
+    quietGame: ["The body betrays him sometimes. When the burst isn't there, Rose struggles to impact games."],
+    famousGameHint: ["December 4th, 2010 against Houston. 68 fantasy points of pure MVP excellence.", "That triple-double against Memphis in January 2011. The complete point guard performance."],
+    controversy: ["The comeback attempts became painful theater. Everyone wanted the fairy tale ending.", "Sitting out wins in 2012 while teammates battled. 'I don't want to be hurt for my son's graduation.'", "Chicago fans turned on their golden boy. The relationship never fully healed.", "Multiple teams, multiple fresh starts. The wandering superstar searching for relevance."],
+    formerTeam: ["Facing Chicago hurts every time. The city that crowned him and then watched him break."],
+    rivalry: ["The LeBron duels that could have defined a decade. Injuries wrote a different story."],
+    milestones: ["Youngest MVP in history at 22. The record that will probably stand forever."],
+    streakLines: ["When Rose gets cooking, those driving lanes open up like they did in 2011.", "Cold stretches hit harder now. The margin for error disappeared with the athleticism."],
+    salaryNarrative: ["At $15M, you're betting on flashes of the old Rose. High risk, higher ceiling.", "Value play with MVP upside. The knees are lottery tickets at this price point."],
+    teamContext: ["The hometown kid who was supposed to bring Chicago its first title since Jordan."],
+    draftAndPath: ["Number one pick in 2008. Chicago won the lottery and thought they won a championship."],
+    opponentFlavor: { MIA: "The LeBron battles that never reached their potential. Injuries ended the rivalry early.", BOS: "39 points in the 2009 playoffs. Announced his arrival against the defending champs.", UTA: "50 points at MSG in 2018. The night that reminded everyone what we lost.", HOU: "68 fantasy points in 2010. Peak Rose destroying a playoff team." },
+    signatureGames: [
+      { date: "2010-12-04", opponent: "HOU", fp: 68.9, line: "30p/7r/11a/5s MVP dominance" },
+      { date: "2018-10-31", opponent: "UTA", fp: 63.8, line: "50p at MSG resurrection game" },
+      { date: "2011-04-02", opponent: "TOR", fp: 62.6, line: "36p/10a peak Bulls form" },
+      { date: "2011-01-17", opponent: "MEM", fp: 57, line: "22p/10r/12a triple-double perfection" },
+    ],
+    teamEras: {
+      CHI: {
+        framing: ["The youngest MVP ever, Chicago's chosen one before the knees gave out.", "Four ACL surgeries later, the what-if that haunts the United Center."],
+        bigGameVariant: "68 fantasy points against Houston. This was peak Rose, peak Bulls potential.",
+        quietGameVariant: "The body betrays him in Chicago. Ghosts of explosiveness lost to surgery.",
+      },
+    },
+  },
+// Brandon Roy — basePlayerId 200750 — teams: POR
+  roy_200750: {
+    basePlayerId: "200750",
+    nicknames: ["B-Roy", "The Natural", "Yellow Mamba"],
+    knownFor: "The smoothest scorer Portland ever had, until knees stole what could've been legendary.",
+    salaryTier: "role",
+    tier1: ["Rookie of the Year, three All-Star games, then done by 27. Knee cartilage doesn't regenerate.", "The 2009 playoffs comeback against Dallas is required viewing. Down 23, Roy said no."],
+    tier2: ["Could've been the face of the franchise for a decade. Instead got five seasons and infinite what-ifs.", "That smooth jumper from anywhere on the court. Roy made difficult shots look conversational."],
+    tier3: ["The retirement press conference had grown men crying. Portland knew they lost something special."],
+    overperform: ["Every healthy B-Roy game was gravy after the injuries piled up. Peak efficiency when available.", "52 points against Phoenix in 2008. Roy reminded everyone what prime looked like."],
+    underperform: ["The comeback attempts never stuck. Some careers end on your terms, others on your knees.", "Those final seasons were hard to watch. The Natural became unnatural real quick."],
+    onPace: ["Vintage Roy was automatic from midrange. The shot selection looked reckless, percentages said otherwise.", "Even average Roy games had those two or three shots that defied physics. Poetry in motion."],
+    turnovers: ["Roy took care of the ball like a point guard. Ball security came naturally to The Natural."],
+    defensive: ["Underrated defender with active hands. That 10-steal game against Washington wasn't luck."],
+    bigGame: ["52 points against Phoenix, perfect shooting night. Roy turned basketball into art that evening.", "10 steals against Washington in 2009. Defense and offense clicking simultaneously."],
+    quietGame: ["Quiet Roy games still had those signature midrange daggers. Efficiency over flash, always."],
+    famousGameHint: ["Game 4, 2009 playoffs against Dallas. Down 23 in the fourth quarter, Roy scored 18 straight.", "The comeback that announced Roy as Portland royalty. Some performances transcend basketball."],
+    controversy: ["The comeback attempts divided Portland. The body said one thing, the heart said another.", "Greg Oden and Roy both drafted injured. Portland's medical staff faced serious questions.", "The Minnesota stint felt like watching someone you love make a mistake. Roy deserved better."],
+    formerTeam: ["Roy only knew Portland. No former team drama, just loyalty rewarded with heartbreak."],
+    rivalry: ["The Lakers series could've been legendary. Kobe vs Roy was appointment television potential."],
+    milestones: ["Three All-Star appearances before 27. Roy packed a career's worth of excellence into five seasons."],
+    streakLines: ["Hot Roy stretches felt inevitable. That smooth stroke from anywhere made defenses hopeless.", "The injury-shortened seasons created cold streaks by default. Rust from inactivity, not talent."],
+    salaryNarrative: ["At $29, Roy represents the ultimate nostalgia play. That smooth stroke never really leaves.", "The price reflects reality—knees don't lie. But muscle memory of greatness intrigues everyone."],
+    teamContext: ["Roy IS Portland basketball. The franchise's greatest what-if, forever linked to Rip City."],
+    draftAndPath: ["Sixth overall in 2006. Minnesota drafted him, immediately traded him to Portland for cash."],
+    opponentFlavor: { DAL: "The 2009 playoff comeback against Dallas. Roy authored Portland legend in one quarter.", PHX: "52 points against the Suns in 2008. Steve Nash watched Roy dissect defenses masterfully.", WAS: "10 steals against Washington. Roy picked pockets like he picked apart defenses.", GSW: "Multiple big games against Golden State. Roy owned Northern California matchups.", LAC: "38 points in that 2008 OT thriller. Roy and the Clippers produced instant classics." },
+    signatureGames: [
+      { date: "2009-01-24", opponent: "WAS", fp: 73.5, line: "22p/5r/7a/10s/2b" },
+      { date: "2008-12-18", opponent: "PHX", fp: 70, line: "52p/5r/6a/0s/1b" },
+      { date: "2008-12-12", opponent: "LAC", fp: 61.3, line: "38p/4r/9a/0s/2b" },
+      { date: "2010-03-11", opponent: "GSW", fp: 60.1, line: "41p/8r/3a/2s/1b" },
+      { date: "2008-01-13", opponent: "TOR", fp: 59, line: "33p/5r/10a/2s/0b" },
+    ],
+    teamEras: {
+      POR: {
+        framing: ["The Portland era was Roy's entire NBA story. Five magnificent seasons, then medical reality.", "From Rookie of the Year to retirement at 27. Roy gave Rip City everything he had."],
+        bigGameVariant: "52 against Phoenix, 10 steals against Washington. Portland witnessed pure basketball talent.",
+        quietGameVariant: "Even quiet Roy games had those signature midrange daggers falling softly.",
+      },
+    },
+  },
 // D'Angelo Russell — basePlayerId 1626156 — teams: LAL/BKN/MIN
   russell_1626156: {
     basePlayerId: "1626156",
@@ -5074,7 +7153,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Domantas Sabonis (SAC, $63, PURPLE)
   sabonis_1627734: {
     basePlayerId: "1627734",
@@ -5109,7 +7187,47 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2023-11-15", opponent: "LAL", fp: 66.7, line: "Prime time performance against LeBron's Lakers" },
     ],
   },
-
+// Arvydas Sabonis — basePlayerId 717 — teams: POR
+  sabonis_717: {
+    basePlayerId: "717",
+    nicknames: ["The Lithuanian Legend"],
+    knownFor: "The European big who arrived in Portland at 31 and still dominated for seven seasons.",
+    salaryTier: "role",
+    tier1: ["Sabonis at 31 was better than most centers at 25. The Soviet years were stolen time.", "Could pass like Magic and shoot like Bird from seven feet tall. Different sport."],
+    tier2: ["The Blazers built their offense around a 32-year-old rookie who couldn't jump anymore.", "Shot 37% from three while averaging 12 rebounds. The prototype nobody saw coming."],
+    tier3: ["Played his prime years behind the Iron Curtain. The NBA got the epilogue, not the story."],
+    overperform: ["When Sabonis got 20 and 20, you remembered why he was legendary in Europe.", "The passing clinic would break out without warning. Point center before the term existed."],
+    underperform: ["Bad Sabonis nights meant the Blazers had no interior presence or offensive flow.", "The Achilles injuries caught up eventually. Father Time collected the Soviet debt."],
+    onPace: ["Standard Sabonis: 16 points, 10 rebounds, 3 assists, and one impossible pass.", "Steady excellence from a body held together by basketball IQ and stubbornness."],
+    turnovers: ["The passes were too ambitious sometimes. High-risk, high-reward at 7 feet."],
+    defensive: ["Couldn't move his feet anymore but the positioning was always perfect.", "Shot-blocking by committee. The help defense IQ was generational."],
+    bigGame: ["70.5 fantasy points with 28 and 20 against Minnesota. Peak old-man game.", "The Timberwolves had no answer for the passing or the post moves. Clinic."],
+    quietGame: ["Quiet Sabonis games still featured three assists and perfect positioning."],
+    famousGameHint: ["March 12, 1998 against Minnesota. The 28-20 performance that proved age was just math.", "Kevin Garnett watched a masterclass in old-school center play. Different generation."],
+    controversy: ["The Soviet system cost the NBA ten years of prime Sabonis. Political tragedy.", "Blazers fans wondered what could've been if he'd arrived at 21, not 31.", "The injuries were already there when Portland got him. Damaged goods with genius IQ.", "Trail Blazers management knew the risk but took it anyway. Worth every game."],
+    formerTeam: [],
+    rivalry: ["Lakers-Blazers battles featured Sabonis outthinking Shaq with positioning and passes."],
+    milestones: ["Hall of Fame induction represented the career that transcended political barriers."],
+    streakLines: ["When Sabonis got hot, the assists came in bunches and the threes started falling.", "The passing streaks were appointment television. Point center clinic nights."],
+    salaryNarrative: ["At $38, you're paying for basketball IQ and interior presence from a different era.", "Role player money for a legend who arrived a decade too late to show his true peak."],
+    teamContext: ["Portland took the gamble on damaged goods and got seven years of excellence."],
+    draftAndPath: ["Drafted by Atlanta in '85, finally arrived in Portland eleven years later. Political prisoner."],
+    opponentFlavor: { MIN: "KG respected the old-school fundamentals and passing vision completely.", GSW: "Warriors had no answer for the size and skill combination. Different era.", SAS: "Tim Duncan saw a preview of his own future. Fundamental excellence.", CHI: "Jordan-era Bulls faced European basketball IQ in a seven-foot frame.", DEN: "Nuggets couldn't match the interior presence or court vision. Outclassed." },
+    signatureGames: [
+      { date: "1998-03-12", opponent: "MIN", fp: 70.5, line: "28p/20r/3a/2s/3b" },
+      { date: "2001-04-06", opponent: "GSW", fp: 65, line: "32p/10r/2a/1s/6b" },
+      { date: "1999-02-14", opponent: "GSW", fp: 59.9, line: "23p/17r/3a/2s/2b" },
+      { date: "1997-11-14", opponent: "PHX", fp: 59.5, line: "31p/10r/7a/1s/2b" },
+      { date: "1998-01-18", opponent: "DEN", fp: 59.5, line: "14p/20r/5a/5s/1b" },
+    ],
+    teamEras: {
+      POR: {
+        framing: ["The Trail Blazers Sabonis was a shadow of his European prime but still dominant.", "Seven seasons of proving basketball IQ doesn't age like athleticism does."],
+        bigGameVariant: "The Minnesota masterclass showed Portland what they'd been missing for a decade.",
+        quietGameVariant: "Even quiet nights featured impossible passes and perfect positioning.",
+      },
+    },
+  },
 // Alperen Sengun (HOU, $58, PURPLE)
   sengun_1630578: {
     basePlayerId: "1630578",
@@ -5144,7 +7262,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2023-12-23", opponent: "NOP", fp: 63.2, line: "Christmas week masterpiece with 37 points" },
     ],
   },
-
 // Pascal Siakam — basePlayerId 1627783 — teams: TOR/IND
   siakam_1627783: {
     basePlayerId: "1627783",
@@ -5191,7 +7308,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Josh Smith — basePlayerId 2746 — teams: ATL/DET
   smith_2746: {
     basePlayerId: "2746",
@@ -5238,7 +7354,93 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// JR Smith — basePlayerId 2747 — teams: NYK
+  smith_2747: {
+    basePlayerId: "2747",
+    nicknames: ["JR", "Swish"],
+    knownFor: "The most talented sixth man to ever forget the score in a Finals game.",
+    salaryTier: "value",
+    tier1: ["Sixth Man of the Year in 2013. Game 1 of the 2018 Finals in the next breath.", "When he was on, nobody was more unconscious from three."],
+    tier2: ["The Cavaliers title run doesn't happen without his shot-making.", "Eight threes in a playoff game against Boston. Pure microwave scoring."],
+    tier3: ["Untied his shoes mid-game to protest a foul call."],
+    overperform: ["Peak JR was appointment television. Six threes, zero conscience.", "When the shot was falling, he'd single-handedly swing playoff games."],
+    underperform: ["Bad JR nights were 2-for-11 from three with questionable decisions.", "The ceiling was All-Star level. The floor was DNP-CD material."],
+    onPace: ["Solid JR was 12 points off the bench with two made threes.", "Consistent role player when he stayed in his lane."],
+    turnovers: ["Hero ball turnovers came with the territory. Live by the shot, die by it."],
+    defensive: ["Defense was effort-based. Some nights he had it, most nights he didn't."],
+    bigGame: ["58.5 fantasy points against Washington in 2009. 40 points in 35 minutes.", "45 points against Sacramento on 30 minutes of court time.", "When JR got nuclear, he could single-handedly carry an offense."],
+    quietGame: ["Quiet JR nights were still dangerous. The next shot was always going in.", "Even 0-for-6 JR would launch the seventh attempt with full confidence."],
+    famousGameHint: ["That 45-point explosion in Sacramento came out of nowhere.", "The 40-burger against Washington was peak microwave scoring."],
+    controversy: ["Game 1 of the 2018 Finals. LeBron's face said everything.", "The untied shoe protest became a meme before memes were everything.", "Sixteen seasons of highlights and lowlights in equal measure.", "Peak JR could win you a game. Playoff JR could lose you a series.", "The talent was undeniable. The decision-making was unforgivable."],
+    formerTeam: ["Never had strong former-team narratives. Too many stops, not enough feelings."],
+    rivalry: ["The Knicks-Heat playoff battles showcased peak JR shot-making."],
+    milestones: ["Sixth Man of the Year in 2013. The talent was always obvious."],
+    streakLines: ["Hot-streak JR was unstoppable. Cold-streak JR was unplayable.", "When he got rolling, three-pointers came in bunches.", "The difference between good JR and great JR was shot selection discipline."],
+    salaryNarrative: ["$22 value salary reflects the role player years. Bench production at bench prices.", "Never got max money because nobody trusted him with max responsibility."],
+    teamContext: ["Journeyman who found his best role as a spark plug off the bench."],
+    draftAndPath: ["Straight from high school in 2004. The talent was obvious from day one."],
+    opponentFlavor: { WAS: "Dropped 40 on the Wizards in 2009. Pure unconscious shooting.", SAC: "45 points against Sacramento in 30 minutes. Video game stuff.", CHI: "Chicago saw both sides of JR. The good was very good.", BOS: "Eight threes in a playoff game against the Celtics. Legendary.", MIL: "30 and 10 against Milwaukee was the complete JR package." },
+    signatureGames: [
+      { date: "2009-03-20", opponent: "WAS", fp: 58.5, line: "40p/5r/3a/3s" },
+      { date: "2009-04-13", opponent: "SAC", fp: 54.3, line: "45p/4r" },
+      { date: "2008-02-22", opponent: "CHI", fp: 53.5, line: "43p/5r" },
+      { date: "2013-01-01", opponent: "POR", fp: 55.7, line: "28p/11r/5a/3s" },
+      { date: "2013-04-11", opponent: "CHI", fp: 50.8, line: "28p/14r/4a" },
+    ],
+    teamEras: {
+      NYK: {
+        framing: ["The Sixth Man of the Year season in 2013. Peak JR microwave scoring.", "Carmelo's wingman in the playoff years before the wheels fell off.", "MSG loved him until they didn't. The shots kept flying either way."],
+        bigGameVariant: "58 fantasy points against Washington. Pure unconscious shooting at MSG.",
+        quietGameVariant: "Even quiet nights in New York came with three-point attempts.",
+      },
+    },
+  },
+// Latrell Sprewell — basePlayerId 84 — teams: GSW/NYK
+  sprewell_84: {
+    basePlayerId: "84",
+    nicknames: ["Spree"],
+    knownFor: "The warrior who choked his coach and refused to feed his family on $21 million.",
+    salaryTier: "star",
+    tier1: ["Four All-Star games, one championship run, infinite baggage.", "The most talented headcase of the '90s. That's saying something."],
+    tier2: ["46 points against Dallas in '97, triple-doubles when he felt like it.", "The Knicks run to the Finals was his masterpiece. Everything else was chaos."],
+    tier3: ["Retired at 34 because Minnesota's offer was insulting. Never played again."],
+    overperform: ["When Spree locked in, he was unguardable. 83 fantasy points happened.", "The triple-double nights reminded you why teams kept taking the risk."],
+    underperform: ["The talent was always there. The focus came and went like the wind.", "Bad Sprewell games felt personal. Like he was bored with basketball."],
+    onPace: ["Steady Spree was the most dangerous version. No headlines, just buckets."],
+    turnovers: ["Six turnovers in a 48-point game tells you everything about his approach."],
+    defensive: ["Five steals against Orlando in 2003. The hands were as quick as the temper."],
+    bigGame: ["46 points, 6 rebounds, 10 assists against Dallas in January '97.", "That's MVP-level production wrapped in maximum controversy."],
+    quietGame: ["Quiet Spree games were rare. Even his bad nights made noise."],
+    famousGameHint: ["Two triple-doubles in his database, both against Phoenix.", "The 28-11-11 line in 2003 came with five steals. Peak Spree chaos."],
+    controversy: ["Choked P.J. Carlesimo at practice in 1997. The incident that defined him.", "Refused Minnesota's three-year, $21 million extension. Said he had a family to feed.", "The Warriors suspension lasted 68 games. The reputation damage lasted forever.", "New York embraced the villain act. Madison Square Garden loved dangerous.", "Retired rather than accept a reduced role. Pride over paycheck, every time."],
+    formerTeam: ["Facing the Warriors after the choking incident was pure theater."],
+    rivalry: ["The Pacers rivalry brought out his best and worst simultaneously."],
+    milestones: ["Four All-Star games despite missing a full season for assault."],
+    streakLines: ["Hot streaks made him untouchable. 40-point games felt routine.", "Cold streaks came with technical fouls and postgame drama."],
+    salaryNarrative: ["At $44, you're paying for the peak games and praying the chaos stays contained.", "Star money for a player who could disappear or explode at any moment."],
+    teamContext: ["The Knicks traded for him knowing exactly what they were getting."],
+    draftAndPath: ["Straight from Alabama to the Warriors. The talent was obvious immediately."],
+    opponentFlavor: { LAL: "Kobe respected the dog in him. Mutual admiration society.", SAS: "Duncan never understood the drama. Basketball was simpler in San Antonio.", IND: "The Pacers-Knicks wars were perfect for Sprewell's energy.", MIA: "Pat Riley would've either loved him or cut him immediately.", BOS: "41 points in the Garden in '97. Celtic mystique meant nothing to Spree." },
+    signatureGames: [
+      { date: "1997-01-21", opponent: "DAL", fp: 83.2, line: "46p/6r/10a/5s" },
+      { date: "2003-02-28", opponent: "ORL", fp: 77.7, line: "28p/11r/11a/5s" },
+      { date: "1997-02-19", opponent: "BOS", fp: 71, line: "41p/5r/8a/4s" },
+      { date: "2002-01-26", opponent: "MIL", fp: 65.4, line: "48p/7r/6a" },
+      { date: "2001-12-11", opponent: "BOS", fp: 55.9, line: "49p/7r/1a" },
+    ],
+    teamEras: {
+      GSW: {
+        framing: ["The Run TMC era's angry young man. Explosive scorer, explosive personality.", "The P.J. Carlesimo incident happened here. Basketball's most infamous assault."],
+        bigGameVariant: "46 points against Dallas as a Warrior. Peak Golden State Spree.",
+        quietGameVariant: "Quiet Warriors games usually meant something was brewing.",
+      },
+      NYK: {
+        framing: ["The Finals run in '99. Madison Square Garden's perfect villain-hero.", "New York embraced the baggage. The city understood complicated stars."],
+        bigGameVariant: "28-11-11 against Orlando in 2003. Triple-double theater at MSG.",
+        quietGameVariant: "Quiet nights at the Garden felt like missed opportunities.",
+      },
+    },
+  },
 // Jerry Stackhouse — basePlayerId 711 — teams: DET/PHI/WAS
   stackhouse_711: {
     basePlayerId: "711",
@@ -5289,7 +7491,47 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// John Stockton — basePlayerId 304 — teams: UTA
+  stockton_304: {
+    basePlayerId: "304",
+    nicknames: ["Stock", "The Mailman's Mailman"],
+    knownFor: "The all-time assists and steals leader who turned pick-and-rolls into pure art.",
+    salaryTier: "star",
+    tier1: ["19 seasons, one team, 15,806 assists. The longevity numbers that will never be touched.", "All-time steals leader with 3,265. Made passing lanes his personal property for two decades.", "Ten All-Star games, nine consecutive. The consistency that defined '90s excellence."],
+    tier2: ["Dream Team floor general at 30. Proved he belonged with the legends on the biggest stage.", "Two Finals appearances with Malone. The pick-and-roll duo that couldn't get over the hump.", "Shot 51.5% from the field for his career. Point guards weren't supposed to be that efficient."],
+    tier3: ["Played in all 82 games for 17 straight seasons. The iron man record that gets overlooked.", "Never won a ring despite 19 tries. The greatest player ever to never taste championship champagne."],
+    overperform: ["31 points against the Nets, career high. When Stock got aggressive, few could stop him.", "18 assists against Chicago's defense. Made the Bulls' pressure look like a suggestion.", "Eight steals against Portland. This is what elite anticipation looks like in practice."],
+    underperform: ["Six turnovers against Minnesota. Even the most careful point guards have careless nights.", "Shot 3-for-12 from the field. The efficiency machine occasionally broke down.", "Three assists in 36 minutes. Sometimes the teammates just couldn't finish the job."],
+    onPace: ["Double-digit assists, handful of steals. Standard Tuesday night for the all-time leader.", "This is the Stockton you expected: surgical precision, no wasted motion, pure point guard basketball."],
+    turnovers: ["Six against Minnesota was rare. Stock protected the ball like his own wallet.", "Career 2.8 turnovers per game. Exceptional ball security for a guy who touched it constantly."],
+    defensive: ["Eight steals against Portland. Made passing lanes dangerous for 19 seasons.", "All-time steals leader who made defense an art form. Anticipation over athleticism, every time."],
+    bigGame: ["31 points, 11 assists against New Jersey. Career scoring high at age 35.", "18 assists against the Bulls. Made Jordan's team look ordinary in the process.", "Eight steals, seven assists against Portland. The complete two-way floor general performance."],
+    quietGame: ["Even quiet Stockton nights included crisp passing and smart defense. Never truly invisible.", "The shots weren't falling but the basketball IQ never wavered. Pure point guard instincts."],
+    famousGameHint: ["31 points in March '97 against the Nets. Career-high scoring at age 35.", "This might be the best individual offensive game of his entire 19-year career.", "Proved he could score when needed, even in the twilight of his prime years."],
+    controversy: ["The Pippen screen in '98 was dirty. He'd do it again.", "Never won a ring despite 19 seasons of excellence. The great 'what if' of the '90s.", "Refused to leave Utah for a contender. Loyalty or stubbornness? Depends who you ask.", "The Finals losses to Chicago hurt more because Stock was so obviously great.", "Some say he was too unselfish. Maybe a little more selfishness wins a championship."],
+    formerTeam: [],
+    rivalry: ["Bulls battles in the Finals. Jordan got the rings, but Stock never backed down.", "Lakers games were always special. Magic vs. Stock, old school vs. new school."],
+    milestones: ["15,806 assists, 3,265 steals. The records that will outlive us all.", "Hall of Fame lock who redefined what longevity and consistency could look like."],
+    streakLines: ["Three straight 60+ fantasy point games in March. Peak Stockton at age 35.", "The late-career surge that reminded everyone he was still elite at the position.", "When Stock got hot, the Jazz became unbeatable. This was one of those stretches."],
+    salaryNarrative: ["$43M for the all-time assists leader. This is where sustained excellence pays off.", "Star-tier pricing for a player who redefined consistency at the position.", "At this salary, you're paying for 19 years of elite point guard play. Safe investment."],
+    teamContext: ["19 seasons in Utah. The loyalty that defined an era before player movement.", "Could have chased rings elsewhere but stayed home. Loyalty over championships, every time."],
+    draftAndPath: ["16th overall in '84. The Blazers passed on him for Sam Bowie. Portland's other draft mistake.", "Gonzaga product who proved small-school guards could dominate at the highest level."],
+    opponentFlavor: { NJN: "31 points against the Nets. Career scoring high at the perfect time.", CHI: "18 assists against Jordan's Bulls. Made their championship defense look helpless.", POR: "Eight steals against the Blazers. Turned their offense into his highlight reel.", HOU: "26 points, 11 assists against Hakeem's Rockets. Championship-level performance.", LAL: "21 points, 14 assists against the Lakers. Made Showtime look like slow motion." },
+    signatureGames: [
+      { date: "1997-03-12", opponent: "NJN", fp: 62.7, line: "31p/6r/11a/3s/0b/1to" },
+      { date: "1996-12-20", opponent: "ORL", fp: 62.5, line: "22p/5r/15a/4s/1b/3to" },
+      { date: "1999-03-02", opponent: "POR", fp: 60.7, line: "15p/6r/7a/8s/2b/2to" },
+      { date: "1998-02-04", opponent: "CHI", fp: 59.6, line: "17p/3r/18a/5s/0b/3to" },
+      { date: "1997-01-25", opponent: "HOU", fp: 58.7, line: "26p/1r/11a/6s/0b/3to" },
+    ],
+    teamEras: {
+      UTA: {
+        framing: ["Nineteen seasons, one team, ultimate loyalty. The Jazz lifer who defined consistency.", "The Malone pick-and-roll partnership that terrorized the league for 18 seasons.", "Two Finals appearances, no rings. The great 'what if' of the Jordan era."],
+        bigGameVariant: "31 points at age 35. Reminded everyone he could score when Utah needed it most.",
+        quietGameVariant: "Even quiet nights included perfect point guard fundamentals. Never wasted a possession.",
+      },
+    },
+  },
 // Amar'e Stoudemire — basePlayerId 2405 — teams: PHX/NYK
   stoudemire_2405: {
     basePlayerId: "2405",
@@ -5334,7 +7576,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Jayson Tatum (BOS, $67, PURPLE)
   tatum_1628369: {
     basePlayerId: "1628369",
@@ -5369,7 +7610,52 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-02-13", opponent: "BKN", fp: 72.3, line: "41 points, 14 rebounds - dominated both ends of the floor" },
     ],
   },
-
+// Isaiah Thomas — basePlayerId 202738 — teams: BOS/SAC
+  thomas_202738: {
+    basePlayerId: "202738",
+    nicknames: ["IT", "King in the Fourth", "The Little Guy"],
+    knownFor: "Five-foot-nine assassin who carried Boston on his back through a playoff run nobody saw coming.",
+    salaryTier: "role",
+    tier1: ["29.9 points per game in 2016-17. At 5'9\", he turned every Celtic possession into a physics experiment.", "The last pick in 2011 who became an All-Star starter. Height limits, talent doesn't."],
+    tier2: ["Played the 2017 playoffs on a dislocated hip. Sister died, tooth chipped, still dropped 53 on Washington.", "Boston traded him for Kyrie eight months after he carried them to the Conference Finals. Business is cold."],
+    tier3: ["The Brinks truck comment aged poorly. Sometimes betting on yourself costs everything."],
+    overperform: ["Nobody projects a 60th pick to lead playoff scoring. IT wrote the manual on exceeding expectations.", "Every 44-point game is a reminder that the 59 guys drafted ahead of him got it wrong."],
+    underperform: ["The hip injury stole his explosiveness. Going from All-NBA to minimum deals is brutal math.", "Cleveland was supposed to be the coronation. Instead it was the beginning of the end."],
+    onPace: ["Even average IT games carry that chip-on-shoulder energy. The height jokes never get old to him.", "At $27, he's still hunting for that one more run. The fire hasn't dimmed."],
+    turnovers: ["Aggressive scorers turn it over. When you're hunting 30 nightly, some possessions get away from you."],
+    defensive: [],
+    bigGame: ["52 points against Miami in 2016. Zero assists, didn't matter. Pure bucket-getting at its finest.", "44 points against Memphis that same season. The fourth quarter belonged to the little guy."],
+    quietGame: ["Even quiet IT nights involve someone getting crossed up. The highlights don't take breaks."],
+    famousGameHint: ["Game 2 against Washington, 2017 playoffs. 53 points the day after his sister's funeral.", "That performance turned IT from underdog story into basketball folklore. Grief and greatness."],
+    controversy: ["The Celtics traded him after he played hurt for them. Loyalty in the NBA is a one-way street.", "Called out teammates in Cleveland for not accepting his role. Fair point, wrong timing.", "The Brinks truck comment became a meme when max money never came. Confidence costs sometimes.", "Beef with Shaq about height got personal. IT doesn't back down from anyone, including legends."],
+    formerTeam: ["Every Sacramento return carries extra weight. The Kings let him walk for nothing."],
+    rivalry: ["The Wizards playoff series made John Wall vs IT appointment television. Speed kills."],
+    milestones: ["First player under 6 feet to score 50+ since Calvin Murphy. History respects no height limits."],
+    streakLines: ["When IT gets hot, fourth quarters become automatic. The King in the Fourth earned his crown.", "Cold IT streaks hurt double—no size advantage to fall back on when shots don't drop."],
+    salaryNarrative: ["At $27, IT represents value hunting. Former All-Stars don't stay cheap forever.", "The price reflects the injury concerns. The talent suggests the market missed something."],
+    teamContext: ["Washington signed him hoping for fourth-quarter magic. The height works when the shots fall."],
+    draftAndPath: ["Last pick in 2011. The entire league passed on him twice. Motivation for life."],
+    opponentFlavor: { WAS: "53 points in the playoffs. Washington learned about fourth-quarter IT the hard way.", MIA: "52-point explosion in 2016. Zero assists, all buckets. Miami had no answers.", LAC: "36 and 11 assists against the Clippers. Even Chris Paul had to respect the vision.", HOU: "38 points against the Rockets. Harden watched IT do his thing in clutch time.", TOR: "44 points in Toronto. The Raptors couldn't solve the height mismatch problem." },
+    signatureGames: [
+      { date: "2016-12-20", opponent: "MEM", fp: 64.6, line: "44p/3r/6a/2s" },
+      { date: "2016-12-30", opponent: "MIA", fp: 55.4, line: "52p/2r/0a/1s" },
+      { date: "2017-01-03", opponent: "UTA", fp: 58.3, line: "29p/4r/15a/1s" },
+      { date: "2017-02-01", opponent: "TOR", fp: 56.3, line: "44p/4r/7a/0s" },
+      { date: "2016-02-10", opponent: "LAC", fp: 58.3, line: "36p/4r/11a/1s" },
+    ],
+    teamEras: {
+      BOS: {
+        framing: ["The Celtic years were IT's masterpiece. Carried a rebuilding team to the Conference Finals.", "29.9 points per game, All-NBA, and a playoff run nobody saw coming. Boston magic at 5'9\"."],
+        bigGameVariant: "52 against Miami, 44 against Memphis. The Garden witnessed pure scoring artistry.",
+        quietGameVariant: "Even quiet Celtic IT nights involved someone getting their ankles broken.",
+      },
+      SAC: {
+        framing: ["The Sacramento years were IT's apprenticeship. Raw talent learning to hunt buckets professionally.", "DeMarcus Cousins' sidekick before anyone knew IT could carry teams. The Kings let greatness walk."],
+        bigGameVariant: "27 points and 5 steals against Phoenix. Sacramento glimpsed what Boston would maximize.",
+        quietGameVariant: "Young IT quiet games still had that fearless pull-up three energy.",
+      },
+    },
+  },
 // Klay Thompson — basePlayerId 202691 — teams: GSW
   thompson_202691: {
     basePlayerId: "202691",
@@ -5411,7 +7697,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Karl-Anthony Towns (MIN, $64, PURPLE)
   towns_1626157: {
     basePlayerId: "1626157",
@@ -5446,7 +7731,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2025-01-03", opponent: "OKC", fp: 56.4, line: "22 rebounds against Thunder length" },
     ],
   },
-
 // Fred VanVleet — basePlayerId 1627832 — teams: TOR/HOU
   vanvleet_1627832: {
     basePlayerId: "1627832",
@@ -5493,7 +7777,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Nikola Vučević — basePlayerId 202696 — teams: ORL/CHI
   vucevic_202696: {
     basePlayerId: "202696",
@@ -5540,7 +7823,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
   wade_2548: {
     basePlayerId: "2548",
     nicknames: ["Flash", "D-Wade", "Three", "The Way of Wade"],
@@ -5566,7 +7848,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["5th pick in 2003. The famous draft — LeBron, Melo, Bosh, Wade.", "Marquette product. Heat lifer minus a brief Bulls/Cavs stint."],
   },
-
 // Franz Wagner (ORL, $56, PURPLE)
   wagner_1630532: {
     basePlayerId: "1630532",
@@ -5601,7 +7882,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-11-29", opponent: "BKN", fp: 56.6, line: "29pts, 8ast - perfect point forward display" },
     ],
   },
-
 // Kemba Walker — basePlayerId 202689 — teams: CHA/BOS
   walker_202689: {
     basePlayerId: "202689",
@@ -5648,7 +7928,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Antoine Walker — basePlayerId 952 — teams: BOS/DAL
   walker_952: {
     basePlayerId: "952",
@@ -5695,7 +7974,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // John Wall — basePlayerId 202322 — teams: WAS/HOU
   wall_202322: {
     basePlayerId: "202322",
@@ -5742,7 +8020,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Ben Wallace — basePlayerId 1112 — teams: DET
   wallace_1112: {
     basePlayerId: "1112",
@@ -5784,7 +8061,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Gerald Wallace — basePlayerId 2222 — teams: CHA/POR
   wallace_2222: {
     basePlayerId: "2222",
@@ -5830,7 +8106,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Rasheed Wallace — basePlayerId 739 — teams: POR/DET
   wallace_739: {
     basePlayerId: "739",
@@ -5877,7 +8152,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
   webber_185: {
     basePlayerId: "185",
     nicknames: ["C-Webb", "Mayce", "Chris Webber"],
@@ -5903,7 +8177,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["1st pick in 1993 out of Michigan. Warriors first.", "Bullets, Kings, Sixers, Pistons, Warriors. Sacramento was the canonical era."],
   },
-
 // Victor Wembanyama (SAS, $72, ORANGE)
   wembanyama_1641705: {
     basePlayerId: "1641705",
@@ -5938,7 +8211,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-03-29", opponent: "NYK", fp: 79.5, line: "40/20 double-double silenced the Garden" },
     ],
   },
-
 // David West — basePlayerId 2561 — teams: NOH/NOK/IND
   west_2561: {
     basePlayerId: "2561",
@@ -5988,7 +8260,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
   westbrook_201566: {
     basePlayerId: "201566",
     nicknames: ["Russ", "Brodie", "Mr. Triple-Double", "Why Not"],
@@ -6014,7 +8285,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
     ],
     draftAndPath: ["4th pick in 2008. UCLA. Thunder originals with Durant.", "Thunder, Rockets, Wizards, Lakers, Clippers, Nuggets. Long road, ring chase ongoing."],
   },
-
 // Hassan Whiteside — basePlayerId 202355 — teams: MIA/POR
   whiteside_202355: {
     basePlayerId: "202355",
@@ -6060,7 +8330,52 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
+// Andrew Wiggins — basePlayerId 203952 — teams: GSW/MIN
+  wiggins_203952: {
+    basePlayerId: "203952",
+    nicknames: ["Maple Jordan", "Wiggs"],
+    knownFor: "The #1 pick who found his purpose as Golden State's lockdown wing in their 2022 title run.",
+    salaryTier: "star",
+    tier1: ["2022 champion and All-Star. The Minnesota bust became Golden State's missing piece.", "40-point games in three different seasons. The athleticism was never the question."],
+    tier2: ["Guarded everyone from Tatum to Luka in the 2022 playoffs. Defense unlocked everything.", "Minnesota's max contract became Golden State's perfect complement. Change of scenery worked."],
+    tier3: ["47 points against the Lakers in 2016. Peak Minnesota Wiggins hunting buckets."],
+    overperform: ["All-Star Wiggins is a different player. The shots fall, the defense locks in.", "2022 playoff run was career-defining. Finally looked like the #1 pick everyone expected."],
+    underperform: ["The disappearing act returns. 12 points on 15 shots, hunting fouls that don't come.", "Minnesota Wiggins could vanish for weeks. The talent never matched the motor."],
+    onPace: ["Solid 18 and 5. The role player version of a former #1 pick.", "Consistent wing production. Not spectacular, but Golden State knew what they were getting."],
+    turnovers: ["Still gets loose with the handle in traffic. The Minnesota habits die hard."],
+    defensive: ["2022 playoffs proved he could guard anyone. Length, athleticism, finally engaged."],
+    bigGame: ["65.6 FP against Memphis with 40 points and 4 steals. All-Star Wiggins arrived.", "42 points in Charlotte this season. The explosiveness still shows up occasionally."],
+    quietGame: ["Single-digit scoring on terrible efficiency. The #1 pick disappearing again."],
+    famousGameHint: ["47-point explosion against the Lakers in Minnesota. Peak bucket-hunting mode.", "That All-Star season opener against Memphis when everything clicked."],
+    controversy: ["The Minnesota years were painful to watch. Max money, minimal impact, endless criticism.", "Trade to Golden State saved his career. Sometimes you need the right system.", "2022 championship run silenced every doubter. Defense and timely scoring when it mattered.", "The #1 pick expectations never really went away. Still hunting that consistent superstar level."],
+    formerTeam: ["Minnesota games carry extra weight. Proving the trade was addition by subtraction."],
+    rivalry: ["Lakers matchups mean more after 2022. Championship pedigree vs championship pedigree."],
+    milestones: ["2022 All-Star at 27. Better late than never for the former #1 pick."],
+    streakLines: ["Hot Wiggins means 25 points on elite efficiency for two weeks. The tools finally click.", "Cold streaks bring back Minnesota memories. Hunting difficult shots, forcing everything."],
+    salaryNarrative: ["$42M for a championship contributor. The Golden State years justify the investment.", "Star money for role player production. The #1 pick premium never goes away."],
+    teamContext: ["Miami's reclamation project. Pat Riley betting on talent and veteran leadership."],
+    draftAndPath: ["#1 pick in 2014 ahead of Jabari Parker. The Canadian prodigy with endless potential."],
+    opponentFlavor: { MEM: "40 points and 4 steals. Peak Wiggins against the young Grizzlies.", GSW: "40 points against his future team in Minnesota. The irony writes itself.", OKC: "Vintage 40-piece against the Thunder. Hunting buckets in the prairie.", LAL: "47 points against LeBron's Lakers. Minnesota Wiggins at his peak." },
+    signatureGames: [
+      { date: "2021-03-19", opponent: "MEM", fp: 65.6, line: "40p/8r/4a" },
+      { date: "2019-11-08", opponent: "GSW", fp: 65.5, line: "40p/5r/7a" },
+      { date: "2019-01-08", opponent: "OKC", fp: 63, line: "40p/10r/4a" },
+      { date: "2025-03-23", opponent: "CHA", fp: 60.1, line: "42p/3r/5a" },
+      { date: "2016-11-13", opponent: "LAL", fp: 57.3, line: "47p/4r/3a" },
+    ],
+    teamEras: {
+      GSW: {
+        framing: ["The Warriors years unlocked everything. 2022 champion, All-Star, defensive stopper.", "Perfect system fit. Curry and Klay created space, Wiggins provided length and athleticism."],
+        bigGameVariant: "Championship Wiggins mode. 40 points when Golden State needed a closer.",
+        quietGameVariant: "Even quiet nights meant elite defense. The Warriors valued what didn't show up in stats.",
+      },
+      MIN: {
+        framing: ["The Minnesota years were painful for everyone. Max money, minimal wins, endless questions.", "Peak athleticism, inconsistent effort. The #1 pick burden was too heavy for too long."],
+        bigGameVariant: "Vintage bucket-hunting Wiggins. 47 points when the Wolves had nothing else.",
+        quietGameVariant: "Disappearing act in Minnesota. The talent never matched the motor consistently.",
+      },
+    },
+  },
 // Deron Williams — basePlayerId 101114 — teams: UTA/NJN/BKN
   williams_101114: {
     basePlayerId: "101114",
@@ -6112,7 +8427,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       },
     },
   },
-
 // Jalen Williams (OKC, $56, PURPLE)
   williams_1631114: {
     basePlayerId: "1631114",
@@ -6147,7 +8461,88 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-11-19", opponent: "SAS", fp: 60.5, line: "Five-steal performance in the Wemby matchup" },
     ],
   },
-
+// Jason Williams — basePlayerId 1715 — teams: MEM
+  williams_1715: {
+    basePlayerId: "1715",
+    nicknames: ["White Chocolate", "J-Will"],
+    knownFor: "The streetball wizard who made the impossible pass look routine and winning look hard.",
+    salaryTier: "role",
+    tier1: ["Sacramento's flashy point guard who prioritized highlights over wins.", "Every behind-the-back pass was SportsCenter gold, every season was disappointment.", "The gap between his talent and basketball IQ was wider than the Grand Canyon."],
+    tier2: ["Miami's role player version actually won a championship in 2006.", "Took him leaving Sacramento to figure out team basketball existed.", "The poster child for style over substance until Pat Riley fixed him."],
+    tier3: ["AND1 mixtape energy in an NBA body, for better and worse.", "Made Chris Webber's Kings simultaneously must-watch TV and playoff chokers."],
+    overperform: ["38 points and 11 assists against Houston in 2001, peak White Chocolate.", "When the circus shots fell, he was unguardable and unmissable.", "Those games where the fancy passes led to easy baskets instead of turnovers."],
+    underperform: ["Turned the ball over like he was paid by the opposing team.", "All the flash meant nothing when Sacramento needed fundamental basketball.", "Playoff basketball exposed every weakness in his highlight-reel game."],
+    onPace: ["Classic J-Will meant 15 points, 8 assists, and 4 turnovers nightly.", "Exactly what you expected: breathtaking passes mixed with head-scratching decisions."],
+    turnovers: ["Threw the ball away trying passes that belonged on YouTube, not in games.", "Every gorgeous assist came with two bone-headed giveaways attached."],
+    defensive: ["Defense was optional in his Kings days, mandatory in his Heat years.", "Pat Riley made him guard people. Revolutionary concept for White Chocolate."],
+    bigGame: ["38 points, 6 rebounds, and 11 assists against Houston on November 30th, 2001.", "The perfect blend of scoring and facilitating that made him special.", "Peak Kings basketball: beautiful, explosive, and ultimately meaningless."],
+    quietGame: ["When the passes weren't falling, he'd disappear for quarters at a time.", "Quiet J-Will games meant Sacramento's offense ran through mud."],
+    famousGameHint: ["That 19-assist performance against Golden State in March 2002 was pure art.", "Every pass was a highlight, every possession was appointment television.", "The kind of game that made you forget why Sacramento never won anything."],
+    controversy: ["Sacramento traded him for Mike Bibby because winning mattered more than SportsCenter.", "The Kings chose fundamentals over flash, boring over beautiful, rings over reels.", "His Miami championship proved Sacramento was right to move on.", "Critics said he cared more about mixtapes than wins. The Kings years proved it.", "Pat Riley turned him into a winner by killing the playground stuff first."],
+    formerTeam: ["Facing Sacramento after the trade was awkward for everyone involved.", "Kings fans booed the flash they used to love, proving basketball is complicated."],
+    rivalry: ["The Lakers always hated his showboating style in those Kings playoff series.", "Every Kobe matchup became a statement game about substance versus style."],
+    milestones: ["That 2006 championship with Miami validated the Pat Riley reclamation project.", "Rookie of the Year runner-up in 1999, when the potential still seemed limitless."],
+    streakLines: ["Hot streaks meant every pass was perfect and every shot was falling.", "Cold streaks exposed why Sacramento traded away all that talent.", "The consistency came in Miami, when winning finally mattered more than highlights."],
+    salaryNarrative: ["At $38, you're paying for the name recognition and championship pedigree.", "Role player pricing for someone who used to be must-see television.", "Decent value if you need a backup who won't embarrass you in big moments."],
+    teamContext: ["Memphis grabbed him in his twilight years for veteran leadership.", "Every team after Miami was chasing the ghost of White Chocolate's prime."],
+    draftAndPath: ["Seventh overall in 1998, when the Kings still believed in potential over production.", "The Florida product who brought streetball flair to NBA courts, for better and worse."],
+    opponentFlavor: { HOU: "Had some of his biggest games against Houston, including that 38-point masterpiece.", GSW: "The 19-assist game against Golden State was peak White Chocolate artistry.", NOH: "Always seemed to find extra gear against New Orleans hornets.", MIL: "Milwaukee brought out his best two-way performances late in his career.", CLE: "That 18-assist game against Cleveland was pure point guard perfection." },
+    signatureGames: [
+      { date: "2001-11-30", opponent: "HOU", fp: 70.7, line: "38p/6r/11a - White Chocolate at his absolute peak" },
+      { date: "2002-03-30", opponent: "GSW", fp: 62.1, line: "22p/3r/19a - The assist clinic that broke Golden State" },
+      { date: "2002-04-05", opponent: "HOU", fp: 60, line: "23p/5r/16a - Another Houston masterclass in facilitation" },
+      { date: "2003-01-06", opponent: "NOH", fp: 56.4, line: "28p/7r/14a - Complete game against the Hornets" },
+      { date: "2005-01-15", opponent: "MIL", fp: 54.4, line: "25p/2r/8a/5s - Miami-era efficiency on display" },
+    ],
+    teamEras: {
+      MEM: {
+        framing: ["The veteran mentor years. White Chocolate without the circus, wisdom over wizardry.", "Memphis got the Pat Riley version: smart passes, fewer turnovers, actual defense.", "Twilight tour teaching young guards that fundamentals beat flash every time."],
+        bigGameVariant: "Even in Memphis, glimpses of the old magic still surfaced occasionally.",
+        quietGameVariant: "Grizzlies J-Will was quietly effective, emphasis on quiet.",
+      },
+    },
+  },
+// Mo Williams — basePlayerId 2590 — teams: MIL
+  williams_2590: {
+    basePlayerId: "2590",
+    nicknames: ["Mo Gotti", "Mo Money"],
+    knownFor: "The trigger-happy point guard who could get you 20 on any given night.",
+    salaryTier: "value",
+    tier1: ["52 points against Indiana in 2015. At age 32. The shot-maker's shot-maker.", "LeBron's running mate in Cleveland. All-Star in '09 averaging 17 and 4.", "Never met a shot he didn't like. Sometimes that was good, sometimes not."],
+    tier2: ["The 44-point explosion against Phoenix in '09. Peak Mo Williams confidence.", "Came back from retirement to help Cleveland's title run. Veteran leadership.", "Shot 43% from three that '09 All-Star season. When he was on, he was automatic."],
+    tier3: ["Only one career triple-double. Not a natural facilitator, just pure scorer.", "His 15-assist game against Chicago shows what he could do when locked in."],
+    overperform: ["52-point night in Indiana at age 32. Father Time got posterized.", "When Mo caught fire, it was bucket after bucket. Pure shot-making artistry.", "The Cleveland comeback from retirement was vintage Mo. Still had it."],
+    underperform: ["The nine-turnover game in Miami. When the shot wasn't falling, chaos followed.", "Too many hero-ball possessions. Sometimes forgot there were four other guys.", "Streaky shooter who lived and died by the three. No in-between."],
+    onPace: ["Solid Mo meant 15 points and 5 assists. Professional basketball.", "Hit his projections with vintage shot-making. Exactly what you drafted."],
+    turnovers: ["Nine turnovers against Miami in '07. When Mo forced it, ugly happened."],
+    defensive: [],
+    bigGame: ["52 points against Indiana in 2015. Age 32 and still nuclear.", "44 against Phoenix in his All-Star year. Peak Mo Williams confidence.", "When he got hot, the rim looked like an ocean. Unconscious shooting."],
+    quietGame: ["Quiet Mo games usually meant the shots weren't falling. No plan B."],
+    famousGameHint: ["The 52-point explosion in Indiana. Vintage Mo at age 32.", "Nine three-pointers that night. The Pacers couldn't cool him down.", "Sometimes the old legs still had rocket fuel in them."],
+    controversy: ["Never controversial off the court. Just a shot-happy point guard.", "The retirement-comeback-retirement cycle raised eyebrows. Make up your mind.", "Cleveland fans wondered if he was the right fit next to LeBron.", "Too much gunner, not enough facilitator for some tastes."],
+    formerTeam: ["Came back to Cleveland from retirement. The homecoming nobody expected."],
+    rivalry: ["No real rivalries. Just a scorer trying to get his shots up."],
+    milestones: ["2009 All-Star selection. The peak of the Mo Williams experience.", "Career-high 52 points at age 32. The old dog still had tricks."],
+    streakLines: ["Hot-streak Mo was appointment television. The threes kept falling.", "Cold Mo was painful to watch. Force-feeding shots that weren't there.", "When the stroke was pure, he could carry any offense for stretches."],
+    salaryNarrative: ["$20 for vintage Mo Williams. The shot-making upside was always there.", "Value pricing on a guy who could still get buckets. Veteran minimum magic.", "Smart money knew Mo could still score. The casual fan had moved on."],
+    teamContext: ["Came back to Cleveland to help with the championship push. Full circle."],
+    draftAndPath: ["Jazz picked him 47th in 2003. Second-round steal who found his shot."],
+    opponentFlavor: { IND: "52-point masterpiece in 2015. Pacers got torched by the veteran.", PHX: "44 points in '09. Suns learned about Mo Williams confidence.", SAC: "43 and 11 assists against Sacramento. Complete Mo performance.", CLE: "29 points and 13 assists against his future team in '08.", MIA: "38 points but 9 turnovers against the Heat. Peak Mo chaos." },
+    signatureGames: [
+      { date: "2015-01-13", opponent: "IND", fp: 64.3, line: "52p/4r/7a" },
+      { date: "2009-02-11", opponent: "PHX", fp: 64.9, line: "44p/2r/7a" },
+      { date: "2009-01-27", opponent: "SAC", fp: 67.1, line: "43p/8r/11a" },
+      { date: "2015-03-27", opponent: "WAS", fp: 59.8, line: "26p/9r/10a" },
+      { date: "2008-03-22", opponent: "CLE", fp: 56.5, line: "29p/5r/13a" },
+    ],
+    teamEras: {
+      MIL: {
+        framing: ["Peak Mo Williams territory. The shot-happy point guard in his prime.", "30+ point games were routine. When Mo was cooking, Milwaukee was must-watch.", "The gunner years. Sometimes brilliant, sometimes frustrating, never boring."],
+        bigGameVariant: "33 points and 9 assists against the Knicks. Peak Milwaukee Mo.",
+        quietGameVariant: "Even quiet Mo games featured five three-point attempts minimum.",
+      },
+    },
+  },
 // Zion Williamson (NOP, $62, PURPLE)
   williamson_1629627: {
     basePlayerId: "1629627",
@@ -6182,7 +8577,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-02-14", opponent: "WAS", fp: 57.2, line: "36 points of pure dominance against overmatched frontcourts." },
     ],
   },
-
 // Trae Young (ATL, $62, PURPLE)
   young_1629027: {
     basePlayerId: "1629027",
@@ -6217,7 +8611,6 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2024-11-27", opponent: "CLE", fp: 52.8, line: "22 assists - the purest point guard performance in years" },
     ],
   },
-
 // Ivica Zubac (LAC, $55, PURPLE)
   zubac_1627826: {
     basePlayerId: "1627826",
@@ -6256,5 +8649,4 @@ export const PLAYER_CULTURE: Record<string, PlayerCulture> = {
       { date: "2025-04-09", opponent: "HOU", fp: 49.2, line: "Historic Croatian triple-double: 20/11/10" },
     ],
   },
-
 };
