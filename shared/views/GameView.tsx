@@ -1766,6 +1766,8 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       const tier = winTier ?? calculateWinTier(fp) ?? "BUST";
       const topGameTier = (topGameInfoHolder.current?.topGame?.tier ?? null) as
         import("@shared/utils/triggerEvaluation").TopGameTier | null;
+      const starBasePlayerId =
+        (topGameInfoHolder.current?.star?.basePlayerId as string | undefined) ?? null;
       const result = evaluateTrigger({
         roster: resolvedRoster,
         totalFp: fp,
@@ -1773,6 +1775,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         badges,
         winTiersMap: adapter.winTiersMap,
         topGameTier,
+        starBasePlayerId,
       });
 
       // QA diagnostic — one log per hand. Includes the inputs the

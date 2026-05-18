@@ -21,6 +21,12 @@ export interface TriggerInput {
    *  is a redundant fallback in case a future code path puts a record
    *  badge directly on card.achievements (none do today). */
   topGameTier?: TopGameTier | null;
+  /** basePlayerId of the anchor card (typically the star identified by
+   *  selectStar at the call site). Threaded through to
+   *  TriggerResult.anchorBasePlayerId so rare_pull surfaces can locate
+   *  the anchor in roster without re-running selectStar. Only meaningful
+   *  when topGameTier is also set. */
+  starBasePlayerId?: string | null;
 }
 
 export interface TriggerResult {
@@ -30,12 +36,19 @@ export interface TriggerResult {
   nearMissGap?: number;
   /** Which tier was just missed (near_miss only) */
   nearMissNextTier?: string;
+  /** rare_pull only — basePlayerId of the anchor card so the prompt can
+   *  look it up in roster to read name / actualFp / projectedFp for
+   *  anchor-aware copy. Mirrors the TriggerInput.starBasePlayerId input. */
+  anchorBasePlayerId?: string | null;
+  /** rare_pull only — passed through so the prompt can route to the
+   *  rare_pull initiation bank. */
+  topGameTier?: TopGameTier | null;
 }
 
 const NEAR_MISS_WINDOW = 5;
 
 export function evaluateTrigger(input: TriggerInput): TriggerResult {
-  const { roster, totalFp, winTier, badges, winTiersMap, topGameTier } = input;
+  const { roster, totalFp, winTier, badges, winTiersMap, topGameTier, starBasePlayerId } = input;
   const fp = Math.round(totalFp * 10) / 10;
 
   // 1. rare_pull — star card pulled a record / career-high / season top-10
@@ -53,7 +66,13 @@ export function evaluateTrigger(input: TriggerInput): TriggerResult {
   if (hasRecordBadge || hasTopGame) {
     return {
       trigger: "rare_pull",
+      // Headline is a fallback for callers that don't render via
+      // selectChallengeInitiation. The prompt path replaces this with
+      // an anchor-aware line from the rare_pull initiation bank when
+      // anchorCardId + topGameTier are both available downstream.
       headline: `You pulled a legendary game. Challenge someone to beat this.`,
+      anchorBasePlayerId: starBasePlayerId ?? null,
+      topGameTier: topGameTier ?? null,
     };
   }
 

@@ -1,11 +1,12 @@
 // shared/components/ChallengeSharePrompt.tsx
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { GeneratedCard } from "@shared/types/index";
 import type { WinTierMap } from "@shared/utils/payoutLogic";
 import type { TriggerResult } from "@shared/utils/triggerEvaluation";
 import { useChallengeShare } from "@shared/hooks/useChallengeShare";
 import { getNickname } from "@shared/utils/playerIdentity";
 import { track } from "@shared/analytics/analytics";
+import { selectChallengeInitiation } from "@shared/commentary/chadChallenge";
 
 interface Props {
   sport: string;
@@ -42,6 +43,43 @@ export function ChallengeSharePrompt({
   // render as the small corner icon).
   const isRivalryBack = !!rivalryTargetName || (triggerResult.trigger as string) === "rivalry_back";
   const isSpecial = isRivalryBack || triggerResult.trigger !== "default";
+
+  // Rare-pull headline: when the trigger evaluator threaded anchor data
+  // through (anchorBasePlayerId + topGameTier), look up the anchor card
+  // in roster and ask selectChallengeInitiation for an anchor-aware line
+  // from the INITIATION_RARE_PULL bank. Replaces the static
+  // triggerResult.headline ("You pulled a legendary game...") that the
+  // evaluator ships as a fallback for callers without this wiring.
+  //
+  // Anchor identity uses basePlayerId not cardId because topGameInfo's
+  // star object (in GameView) only carries basePlayerId. A slate doesn't
+  // double-up players, so this lookup is unambiguous.
+  //
+  // useMemo so the line is stable across re-renders within a single hand
+  // — recomputing would change the picked line on every parent re-render,
+  // which would burn the anti-repeat history and surface different copy
+  // on each render of the same hand.
+  const rarePullHeadline = useMemo(() => {
+    if (triggerResult.trigger !== "rare_pull") return null;
+    if (!triggerResult.anchorBasePlayerId || !triggerResult.topGameTier) return null;
+    const anchor = roster.find(c => c.basePlayerId === triggerResult.anchorBasePlayerId);
+    if (!anchor) return null;
+    // lastName extraction matches the existing commentary-layer convention
+    // (templateResolver.ts lastName(name) — split on whitespace, take last).
+    const last = String(anchor.name ?? "").trim().split(/\s+/).pop() ?? anchor.name ?? "";
+    return selectChallengeInitiation({
+      winTier,
+      roster: roster as Array<{ tier?: string; wasHeld?: boolean }>,
+      topGameTier: triggerResult.topGameTier,
+      starName: last,
+      starHadMeaningfulPerformance: true,
+      starAchievementType: triggerResult.topGameTier,
+      starAnchorFp: anchor.actualFp,
+      starProjectedFp: anchor.projectedFp,
+    });
+  }, [triggerResult.trigger, triggerResult.anchorBasePlayerId, triggerResult.topGameTier, roster, winTier]);
+
+  const headlineText = rarePullHeadline ?? triggerResult.headline;
 
   async function handleChallenge() {
     track("challenges", "challenge_create", { sport, trigger: triggerResult.trigger });
@@ -132,7 +170,7 @@ export function ChallengeSharePrompt({
         <div style={{ fontSize: 14, color: "#EAF0FF", marginBottom: 12, lineHeight: 1.4 }}>
           {isRivalryBack
             ? `${totalFp.toFixed(1)} FP on a fresh slate. Send it to ${rivalryTargetName ?? "your friend"}.`
-            : triggerResult.headline}
+            : headlineText}
         </div>
       )}
       {error && (

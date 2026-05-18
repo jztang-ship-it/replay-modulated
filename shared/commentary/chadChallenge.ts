@@ -475,9 +475,40 @@ const INITIATION_CULTURE_BAD_BEAT: string[] = [
   "Big name, small night. See if a friend gets a different version of {name}.",
 ];
 
+// ── Rare-pull initiation bank ────────────────────────────────────────────
+//
+// Fires when triggerResult.trigger === "rare_pull" — the star card pulled
+// a record / career-high / season top-10 game. Routed by the
+// starAchievementType field on ChallengeInitiationArgs; preempts the
+// generic flex bucket.
+//
+// Template tokens (substituted at output time):
+//   {name}             — anchor card's last name (e.g., "Wembanyama")
+//   {achievementLabel} — "season high" | "career high" | "new record"
+//                        (lowercase no-article; templates supply grammar)
+//   {anchorFp}         — Math.round(anchor.actualFp), e.g. "86"
+//   {fpDelta}          — Math.round(actualFp - projectedFp); always > 0
+//                        when emitted (selector filters lines requiring
+//                        {fpDelta} when projection is missing or delta ≤ 0)
+
+const INITIATION_RARE_PULL: string[] = [
+  "{name} just set a {achievementLabel}. Anyone who beats this is lying.",
+  "{name} dropped {anchorFp}. Most of your group chat couldn't get there with a forklift.",
+  "+{fpDelta} over his average. That's not a hot hand, that's a problem.",
+  "{achievementLabel} on the {name} card. Half your group chat couldn't clear this on their best night.",
+  "Post it. Wait. Count how many try.",
+  "Send this to the friend who thinks he knows ball. Watch him fold.",
+  "{achievementLabel} on {name}. Screenshot it. Frame it. Send it.",
+  "Send to your group chat. Wait for the silence.",
+  "{name} doesn't drop this twice a year. You just made him do it on a Tuesday.",
+  "{anchorFp} from {name}. That's not a stat line. That's a receipt.",
+  "+{fpDelta} over his average. That's not luck, that's somebody's nightmare.",
+  "{achievementLabel} on {name}. The card knows. Now make your friends know.",
+];
+
 // ── Selection ────────────────────────────────────────────────────────────
 
-export type InitiationBucket = "bad_beat" | "flex" | "statement" | "default";
+export type InitiationBucket = "bad_beat" | "flex" | "statement" | "default" | "rare_pull";
 
 export interface ChallengeInitiationArgs {
   /** Win tier of the hand (BUST | ROOKIE | STARTER | ALL_STAR | MVP | LEGEND). */
@@ -492,12 +523,34 @@ export interface ChallengeInitiationArgs {
    *  OR the star landed a record/career topGame. Drives whether the
    *  culture-aware bank is eligible to fire. */
   starHadMeaningfulPerformance?: boolean;
+  /** Set when the anchor card pulled a record / career-high / season top-10
+   *  game. Routes the bucket selector to INITIATION_RARE_PULL, preempting
+   *  flex. Maps 1:1 to topGameTier — separate field so callers explicitly
+   *  opt into the rare_pull bank (some flex paths don't want the
+   *  anchor-aware framing even when topGameTier is set). */
+  starAchievementType?: "record" | "career" | "season" | null;
+  /** Anchor card actualFp. Required for {anchorFp}-templated lines. */
+  starAnchorFp?: number | null;
+  /** Anchor card projectedFp. Required for {fpDelta}-templated lines —
+   *  selector filters those lines when this is missing or
+   *  (actualFp - projectedFp) ≤ 0. */
+  starProjectedFp?: number | null;
+}
+
+/** Map a topGameTier value to the lowercase no-article achievement label
+ *  the rare_pull templates expect. */
+function achievementLabelFor(tier: "record" | "career" | "season"): string {
+  if (tier === "record") return "new record";
+  if (tier === "career") return "career high";
+  return "season high";
 }
 
 /** Maps hand state to the appropriate initiation bucket. Mirrors the
  *  trigger evaluator rules (bad_beat requires 2+ HELD high-tier cards;
- *  flex covers ALL_STAR+ tiers + topGame record/career). */
+ *  flex covers ALL_STAR+ tiers + topGame record/career). rare_pull
+ *  preempts everything when starAchievementType is set. */
 function selectInitiationBucket(args: ChallengeInitiationArgs): InitiationBucket {
+  if (args.starAchievementType) return "rare_pull";
   const tier = args.winTier;
   if (tier === "BUST" || tier === "ROOKIE") {
     const heldHigh = args.roster.filter(
@@ -526,15 +579,60 @@ function pickWithAntiRepeat(bank: string[]): string {
   return bestLine;
 }
 
+/** Filter INITIATION_RARE_PULL down to lines whose template variables are
+ *  all renderable for this set of args. Lines using {fpDelta} are skipped
+ *  when projectedFp is missing or the delta is ≤ 0 (rare_pull on a sub-
+ *  par night doesn't read right with a "+0 over average" line). Lines
+ *  using {anchorFp} are skipped when actualFp is missing — though that
+ *  shouldn't happen when rare_pull is fired by upstream code, the filter
+ *  defends the surface anyway. */
+function rarePullCandidates(args: ChallengeInitiationArgs): string[] {
+  const hasAnchorFp = typeof args.starAnchorFp === "number" && args.starAnchorFp > 0;
+  const delta = (typeof args.starAnchorFp === "number" && typeof args.starProjectedFp === "number")
+    ? args.starAnchorFp - args.starProjectedFp
+    : null;
+  const hasUsableDelta = delta !== null && delta > 0;
+  return INITIATION_RARE_PULL.filter(line => {
+    if (line.includes("{fpDelta}") && !hasUsableDelta) return false;
+    if (line.includes("{anchorFp}") && !hasAnchorFp) return false;
+    return true;
+  });
+}
+
 /** Top-level: returns Chad's initiation line for the just-played hand.
- *  Culture-aware bank fires only when the star had a meaningful
- *  performance AND has a name to interpolate; otherwise generic bank. */
+ *  Routing precedence (highest first):
+ *    1. rare_pull  — starAchievementType set (preempts all other buckets)
+ *    2. culture-aware flex/bad_beat — starName + starHadMeaningfulPerformance
+ *    3. generic bucket via selectInitiationBucket
+ */
 export function selectChallengeInitiation(args: ChallengeInitiationArgs): string {
   const bucket = selectInitiationBucket(args);
 
+  // Rare-pull path: anchor-aware templated lines. Falls back to flex
+  // culture-aware bank if anchor data is incomplete enough that no
+  // RARE_PULL line is renderable.
+  if (bucket === "rare_pull") {
+    const candidates = rarePullCandidates(args);
+    if (candidates.length > 0) {
+      const raw = pickWithAntiRepeat(candidates);
+      const delta = (typeof args.starAnchorFp === "number" && typeof args.starProjectedFp === "number")
+        ? Math.round(args.starAnchorFp - args.starProjectedFp)
+        : 0;
+      const anchorFpStr = typeof args.starAnchorFp === "number" ? String(Math.round(args.starAnchorFp)) : "";
+      const labelStr = args.starAchievementType ? achievementLabelFor(args.starAchievementType) : "";
+      return raw
+        .replace(/\{name\}/g, args.starName ?? "")
+        .replace(/\{achievementLabel\}/g, labelStr)
+        .replace(/\{anchorFp\}/g, anchorFpStr)
+        .replace(/\{fpDelta\}/g, String(delta));
+    }
+    // No renderable rare_pull line (e.g., anchor data missing). Fall through
+    // to flex so a generic culture-aware or generic-flex line still fires.
+  }
+
   // Culture-aware path: only when star meaningfully performed + named.
   if (args.starName && args.starHadMeaningfulPerformance) {
-    if (bucket === "flex") {
+    if (bucket === "flex" || bucket === "rare_pull") {
       return pickWithAntiRepeat(INITIATION_CULTURE_FLEX).replace(/\{name\}/g, args.starName);
     }
     if (bucket === "bad_beat") {
@@ -543,6 +641,7 @@ export function selectChallengeInitiation(args: ChallengeInitiationArgs): string
   }
 
   switch (bucket) {
+    case "rare_pull": return pickWithAntiRepeat(INITIATION_FLEX); // final fallback
     case "bad_beat":  return pickWithAntiRepeat(INITIATION_BAD_BEAT);
     case "flex":      return pickWithAntiRepeat(INITIATION_FLEX);
     case "statement": return pickWithAntiRepeat(INITIATION_STATEMENT);
@@ -553,6 +652,7 @@ export function selectChallengeInitiation(args: ChallengeInitiationArgs): string
 /** Expose bank arrays for testing / preview. */
 export function chadInitiationBank(bucket: InitiationBucket): string[] {
   switch (bucket) {
+    case "rare_pull": return [...INITIATION_RARE_PULL];
     case "bad_beat":  return [...INITIATION_BAD_BEAT];
     case "flex":      return [...INITIATION_FLEX];
     case "statement": return [...INITIATION_STATEMENT];
