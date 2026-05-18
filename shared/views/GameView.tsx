@@ -144,6 +144,7 @@ import {
   chadNormalPlayWelcome,
   chadRivalryBackIntro,
   selectChallengeInitiation,
+  firstShareInvitation,
 } from "@shared/commentary/chadChallenge";
 import { isRealName } from "@shared/utils/isRealName";
 import { useAuth } from "@shared/auth/useAuth";
@@ -1296,6 +1297,36 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           };
           return { primary: staticMap[winTier] ?? staticMap.STARTER, secondary: "" };
         })();
+
+    // First-share invitation override — early-discovery one-shot.
+    //
+    // Gate: handCount >= 3 && !isFTUE && !challengeCtx (the latter is
+    // already guaranteed by the outer challengeCtx short-circuit at the
+    // top of this useMemo). The flag is identity-scoped via localStorage.
+    //
+    // This block PREEMPTS the named-trigger override below — so a user
+    // whose first share-eligible reveal is also their first rare_pull
+    // sees the invitation copy once (this hand) and the anchor-aware
+    // rare_pull copy from there on. Per WS3 Part 3B design: invitation
+    // is treated as a challenge-ripe state regardless of the underlying
+    // trigger.
+    //
+    // Known property: handCount counts ALL completed reveals (solo +
+    // challenge replays), but this override only evaluates during solo
+    // reveals due to the outer !challengeCtx gate. Users whose hand
+    // count grows mostly via challenge replays see the invitation on
+    // their first solo reveal after handCount >= 3, or never if they
+    // never play solo.
+    const FIRST_SHARE_FLAG = "rm_usher_first_share_invitation";
+    let firstShareSeen = false;
+    try { firstShareSeen = localStorage.getItem(FIRST_SHARE_FLAG) === "1"; } catch { /* SSR */ }
+    if (!isFTUE && handCount >= 3 && !firstShareSeen) {
+      try { localStorage.setItem(FIRST_SHARE_FLAG, "1"); } catch { /* SSR */ }
+      const invitationLine = firstShareInvitation({ winTier });
+      const framed = { primary: invitationLine, secondary: baseCopy.secondary ?? "" };
+      postRevealCopyRef.current = framed as any;
+      return framed as any;
+    }
 
     // Trigger-aware framing override (standalone play only — challenge
     // recipients see ChallengeComparisonScreen with its own Chad lines).

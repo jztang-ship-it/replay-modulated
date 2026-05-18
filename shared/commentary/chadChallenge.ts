@@ -958,3 +958,55 @@ export function chadShareTrashTalkBank(bucket: ShareTrashTalkBucket): string[] {
     case "default":   return [...SHARE_TT_DEFAULT];
   }
 }
+
+// ── First-share invitation — early-discovery one-shot ─────────────────────
+//
+// Fires ONCE per identity, in the post-reveal commentary slot, when the
+// engagement gate trips:
+//   handCount >= 3  &&  !isFTUE  &&  !challengeCtx  &&  flag-not-set
+//
+// Caller (GameView's postRevealCopy useMemo) evaluates the gate, fires
+// this function, sets localStorage rm_usher_first_share_invitation="1",
+// and treats the returned string as the post-reveal primary line. Bank
+// preempts the named-trigger override (workstream 2) for that one
+// reveal — so a user whose first share-eligible hand is ALSO a rare_pull
+// sees the invitation copy, not the anchor-aware line, this one time.
+//
+// Two sub-buckets keyed on winTier:
+//   BUST       → FIRST_SHARE_BUST  (own the bust, name the competition)
+//   anything else → FIRST_SHARE_HIT  (ride the heat, name the competition)
+//
+// Voice: ASSERTS the competition premise as a fact about the game, not
+// a pitch. No "what's more fun is if you can…" hedging.
+
+const FIRST_SHARE_HIT: string[] = [
+  "Game's better when somebody you know is sweating the same slate. Send it.",
+  "You played the slate. Now make your buddy play the slate. That's the whole thing.",
+  "This is the part where you find out if your friends are any good. Pick one.",
+  "You just played this slate. Don't keep it — make a friend run it too.",
+  "The point of the game is somebody you know taking a swing at the same cards. Now's the time.",
+  "Score's on the board. Now find out who in your group chat can clear it.",
+];
+
+const FIRST_SHARE_BUST: string[] = [
+  "Rough one. Now go cook somebody else on it.",
+  "Got cooked. Cook a friend with the same slate.",
+  "Bust hand. The fun part: pass it to a friend and watch them eat it too.",
+  "That was ugly. Make a friend look at the same ugly cards. Misery is portable.",
+  "Hand died. Forward the autopsy. See who else can fail the same way.",
+  "The slate punched you. Now find out if it punches your friends too.",
+];
+
+/** Returns one line from FIRST_SHARE_HIT (or FIRST_SHARE_BUST for BUST).
+ *  Fires at most ONCE per identity via the one-shot flag the caller
+ *  manages. Uses the shared anti-repeat ring buffer for consistency,
+ *  though anti-repeat barely matters at one-shot scale. */
+export function firstShareInvitation(args: { winTier: string }): string {
+  if (args.winTier === "BUST") return pickWithAntiRepeat(FIRST_SHARE_BUST);
+  return pickWithAntiRepeat(FIRST_SHARE_HIT);
+}
+
+/** Expose bank arrays for testing / preview. */
+export function firstShareInvitationBank(bucket: "hit" | "bust"): string[] {
+  return bucket === "bust" ? [...FIRST_SHARE_BUST] : [...FIRST_SHARE_HIT];
+}
