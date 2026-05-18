@@ -139,11 +139,11 @@ const NotificationsPanel = lazy(() =>
 );
 import { chadMessage } from "@shared/commentary/chad";
 import {
-  chadTriggerFraming,
   chadChallengeIntro,
   chadChallengeTactical,
   chadNormalPlayWelcome,
   chadRivalryBackIntro,
+  selectChallengeInitiation,
 } from "@shared/commentary/chadChallenge";
 import { isRealName } from "@shared/utils/isRealName";
 import { useAuth } from "@shared/auth/useAuth";
@@ -1300,20 +1300,36 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     // Trigger-aware framing override (standalone play only — challenge
     // recipients see ChallengeComparisonScreen with its own Chad lines).
     // When a named trigger fires (rare_pull/big_score/near_miss/bad_beat),
-    // Chad references the share-worthy nature of the moment rather than the
-    // tier-by-numbers commentary.
+    // the post-reveal commentary slot delegates to selectChallengeInitiation
+    // — same banks the share prompt uses, so the reveal-screen line and the
+    // share-strip headline point at the same emotional frame. Internal
+    // bucket selector maps winTier+roster to bad_beat / flex / statement /
+    // default; rare_pull is signaled via starAchievementType (anchor-aware
+    // INITIATION_RARE_PULL bank with name / achievementLabel / anchorFp /
+    // fpDelta templated in).
+    //
+    // Default trigger is filtered out by the outer guard — those hands
+    // keep the basketball.json baseline copy from selectCommentary (the
+    // workstream-4 spice target).
     if (!challengeCtx && challengeTrigger && challengeTrigger.trigger !== "default") {
-      const recordBadge = (rosterRef.current as any[])
-        .flatMap(c => c.achievements ?? [])
-        .find((b: any) => ["TOP_GAME", "CAREER_HIGH", "NBA_RECORD", "SEASON_RECORD", "PB"]
-          .some(rid => String(b.id ?? "").includes(rid)));
-      const framingLine = chadTriggerFraming({
-        trigger: challengeTrigger.trigger as any,
-        fp,
-        tier: winTier,
-        badgeLabel: recordBadge?.label,
-        nearMissGap: challengeTrigger.nearMissGap,
-        nearMissNextTier: challengeTrigger.nearMissNextTier,
+      // Resolve the anchor card (rare_pull only) so the bank can template
+      // {name}/{anchorFp}/{fpDelta}/{achievementLabel}. Same lookup pattern
+      // as ChallengeSharePrompt's rarePullHeadline useMemo.
+      const anchor = (challengeTrigger.anchorBasePlayerId
+        ? (rosterRef.current as any[]).find(c => c.basePlayerId === challengeTrigger.anchorBasePlayerId)
+        : null);
+      const anchorLast = anchor
+        ? (String(anchor.name ?? "").trim().split(/\s+/).pop() ?? anchor.name ?? "")
+        : null;
+      const framingLine = selectChallengeInitiation({
+        winTier,
+        roster: rosterRef.current as Array<{ tier?: string; wasHeld?: boolean }>,
+        topGameTier: challengeTrigger.topGameTier,
+        starName: anchorLast,
+        starHadMeaningfulPerformance: !!anchor,
+        starAchievementType: challengeTrigger.trigger === "rare_pull" ? challengeTrigger.topGameTier : null,
+        starAnchorFp: anchor?.actualFp ?? null,
+        starProjectedFp: anchor?.projectedFp ?? null,
       });
       const framed = { primary: framingLine, secondary: baseCopy.secondary ?? "" };
       postRevealCopyRef.current = framed as any;
