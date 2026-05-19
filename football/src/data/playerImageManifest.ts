@@ -84,6 +84,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "3308": { apiFootballId: 169, local: true, processed: true },
   // Daley Blind (Netherlands)
   "3311": { apiFootballId: 531, local: true, processed: true },
+  // Marcus Rashford (England)
+  "3318": { apiFootballId: 909, local: true, processed: true },
   // Harry Maguire (England)
   "3336": { apiFootballId: 2935, local: true, processed: true },
   // Luke Shaw (England)
@@ -102,6 +104,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "3500": { apiFootballId: 1464, local: true, processed: true },
   // Thibaut Courtois (Belgium)
   "3509": { apiFootballId: 730, local: true, processed: true },
+  // Aaron Ramsey (Wales)
+  "3517": { apiFootballId: 1459, local: true, processed: true },
   // Jordan Brian Henderson (England)
   "3532": { apiFootballId: 292, local: true, processed: true },
   // Xherdan Shaqiri (Switzerland)
@@ -114,6 +118,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "3637": { apiFootballId: 481, local: true, processed: true },
   // Virgil van Dijk (Netherlands)
   "3669": { apiFootballId: 290, local: true, processed: true },
+  // Daniel Amartey (Ghana)
+  "3709": { apiFootballId: 3421, local: true, processed: true },
   // Ellyes Joris Skhiri (Tunisia)
   "3767": { apiFootballId: 21587, local: true, processed: true },
   // Kasper Schmeichel (Denmark)
@@ -360,6 +366,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "16028": { apiFootballId: 187931, local: true, processed: true },
   // Rasmus Nissen Kristensen (Denmark)
   "16190": { apiFootballId: 533, local: true, processed: true },
+  // Leandro Daniel Paredes (Argentina)
+  "16308": { apiFootballId: 271, local: true, processed: true },
   // Nemanja Gudelj (Serbia)
   "16489": { apiFootballId: 1489, local: true, processed: true },
   // Mislav Oršić (Croatia)
@@ -392,6 +400,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "22600": { apiFootballId: 303263, local: true, processed: true },
   // Sadegh Moharrami (Iran)
   "23538": { apiFootballId: 1311, local: true, processed: true },
+  // Ali Gholizadeh (Iran)
+  "23874": { apiFootballId: 8564, local: true, processed: true },
   // Youssef Msakni (Tunisia)
   "23910": { apiFootballId: 2964, local: true, processed: true },
   // Tajon Buchanan (Canada)
