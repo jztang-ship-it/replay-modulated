@@ -1725,8 +1725,15 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
   function onWinCelebrationComplete() {
     if (!isFTUE) {
-      const next = incrementHandCount();
-      if (next >= 3 && !localStorage.getItem("replaymod_name_prompted")) {
+      // handCount is already post-incremented here — the increment now
+      // fires in _useReveal at hand resolution (single source of truth),
+      // not here. Prior to that move, this branch called
+      // incrementHandCount() inline, but the celebration-area-tap path was
+      // only one of three exits from WIN_CELEBRATION, so handCount-gated
+      // surfaces (this name_prompt, chad nudges, PWA install,
+      // first_share_invitation, etc.) silently never fired for users who
+      // advanced via the action/play-again button.
+      if (handCount >= 3 && !localStorage.getItem("replaymod_name_prompted")) {
         // Attention mutex: defer to a later IDLE if another surface is
         // already in-flight. Do NOT set replaymod_name_prompted yet so this
         // can fire on a subsequent celebration when the moment is clear.

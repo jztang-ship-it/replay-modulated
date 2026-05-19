@@ -203,7 +203,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     setGameState, setBalance,
     persistBalance,
     submitToLeaderboard, checkLeaderboardRank, logHandToDb,
-    incrementStreak, resetStreak,
+    incrementStreak, resetStreak, incrementHandCount,
   } = state;
 
   // ── Tier flip / near-miss timers (state stays in useSharedGameState;
@@ -418,6 +418,15 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
         }, 1200);
         springTimersRef.current.push(t);
       } else {
+        // Increment the persistent hand counter at hand-resolution — single
+        // source of truth, independent of which user-action path exits
+        // WIN_CELEBRATION later. Prior site (onWinCelebrationComplete) was
+        // bypassed when the user advanced via the action/play-again button
+        // instead of tapping the celebration area, leaving all handCount-
+        // gated surfaces (name_prompt, chad nudges, PWA install prompt,
+        // first_share_invitation, etc.) silently broken. FTUE hands stay
+        // excluded — the outer if (isFTUE) above gates this branch.
+        incrementHandCount();
         pendingBalanceUpdateRef.current = () => {
           if (payout > 0) {
             setBalance(prev => { const next = prev + payout; persistBalance(next); return next; });
@@ -487,7 +496,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     runSpring, calculateWinTier, calculatePayoutWithStreak,
     setWinTier, setWinPayout, setBalance, persistBalance, setGameState,
     submitToLeaderboard, checkLeaderboardRank, logHandToDb,
-    incrementStreak, resetStreak,
+    incrementStreak, resetStreak, incrementHandCount,
     setBigWinFired, gameAnalytics, getTopGameInfo,
     recordHandPlayed, recordHandWon, recordHandLost, recordTierReached,
     recordStreakWin, recordStreakBust, recordBonusPlayerUsed, recordMultiplierUsed,
