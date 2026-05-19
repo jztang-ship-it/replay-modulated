@@ -1,21 +1,49 @@
 /**
- * generateCulture.ts — Culture database generator (v2)
+ * generateCulture.ts — Culture database generator (v3, voice-locked + multi-mode)
  *
- * Reads players.json + game-logs.json, generates COMPLETE culture entries
- * for all ORANGE and PURPLE tier players using real game data.
+ * CANARY: CULTURE_TIER1_V1_20260517
+ *
+ * Three modes via CULTURE_MODE env var:
+ *
+ *   pilot    Reads culture_pilot_targets.json (an explicit allow-list of
+ *            basePlayerIds + qualifyingTeams). Walks all 29 season
+ *            players.json + gamelogs.json files. Generates entries with
+ *            new key shape `lastname_<basePlayerId>` and teamEras blocks
+ *            scoped to each target's qualifyingTeams list. Outputs to
+ *            culture_pilot_review.ts (review file, NOT merged).
+ *
+ *   enrich   Reads existing playerCulture.ts entries, regenerates them
+ *            in the new voice while preserving basePlayerId + key. Used
+ *            once voice is locked to bring legacy entries up to the new
+ *            standard. Outputs to culture_enrich_review.ts.
+ *
+ *   expand   Reads culture_expand_targets.json (full PURPLE+ list across
+ *            all 29 seasons, sans pilot/enrich entries). Same generation
+ *            shape as pilot. Outputs to culture_expand_review.ts.
+ *
+ * Resume logic: every mode reads its output file (if exists) and skips
+ * any basePlayerId whose entry is already present — supports interrupted
+ * runs without re-burning tokens.
+ *
+ * Dedup: a player at PURPLE in 2010 AND ORANGE in 2014 is ONE generation
+ * job. basePlayerId is the dedup key, not (player, season).
  *
  * Usage (run from repo root):
  *   export ANTHROPIC_API_KEY=sk-ant-...
+ *   export CULTURE_MODE=pilot
  *   npx tsx basketball/src/utils/generateCulture.ts
  *
- * Output:
- *   basketball/src/utils/culture_review.ts   ← all 38 entries
- *   basketball/src/utils/culture_failed.json ← any players that errored
+ * For expand mode, CULTURE_BATCH controls which target file is read and
+ * which review/failed files are written. Defaults to "tier1" for back-compat.
+ *   export CULTURE_MODE=expand
+ *   export CULTURE_BATCH=tier2   # reads culture_tier2_targets.json
+ *   npx tsx basketball/src/utils/generateCulture.ts
  */
 
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { pickVoice } from "../../../shared/commentary/voice/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,11 +52,29 @@ const __dirname = path.dirname(__filename);
 const BATCH_SIZE = 2;
 const DELAY_MS = 3000;
 const MAX_TOKENS = 8000;
+const MODEL = "claude-sonnet-4-20250514";
 
-const PLAYERS_PATH = path.join(process.cwd(), "basketball/public/data/players.json");
-const GAME_LOGS_PATH = path.join(process.cwd(), "basketball/public/data/game-logs.json");
-const REVIEW_PATH = path.join(__dirname, "culture_review.ts");
-const FAILED_PATH = path.join(__dirname, "culture_failed.json");
+type Mode = "pilot" | "enrich" | "expand";
+const MODE: Mode = ((process.env.CULTURE_MODE as Mode) || "pilot");
+// In expand mode, CULTURE_BATCH selects which target file to read. Default
+// "tier1" preserves pre-tier2 behavior; set to "tier2" for the Tier 2 run.
+const BATCH: string = (process.env.CULTURE_BATCH || "tier1");
+
+const SEASONS_DIR = path.join(process.cwd(), "basketball/public/data/seasons");
+const PILOT_TARGETS = path.join(__dirname, "culture_pilot_targets.json");
+const PILOT_TEAMS = path.join(__dirname, "culture_pilot_teams.json");
+const EXPAND_TARGETS = path.join(__dirname, `culture_${BATCH}_targets.json`);
+
+function reviewPathFor(m: Mode): string {
+  // Expand mode writes to a batch-scoped review file. Pilot/enrich keep
+  // mode-name-based filenames.
+  if (m === "expand") return path.join(__dirname, `culture_${BATCH}_review.ts`);
+  return path.join(__dirname, `culture_${m}_review.ts`);
+}
+function failedPathFor(m: Mode): string {
+  if (m === "expand") return path.join(__dirname, `culture_${BATCH}_failed.json`);
+  return path.join(__dirname, `culture_${m}_failed.json`);
+}
 
 // ── Types ───────────────────────────────────────────────────────────────────
 interface PlayerEntry {
@@ -65,7 +111,23 @@ interface GameWithFP extends GameLog {
   fp: number;
 }
 
-// ── Salary tier from salary ──────────────────────────────────────────────────
+interface PilotTarget {
+  basePlayerId: string;
+  name: string;
+  lastNameKey: string;
+  qualifyingTeams: string[];
+  /** Optional per-player framing constraints injected into the prompt.
+   *  Use sparingly — for players whose default culture leans on angles
+   *  the voice spec excludes (substance, mental health, personal life)
+   *  and need explicit redirection to basketball-context only. */
+  framingRestrictions?: string[];
+}
+
+interface PilotTargetsFile {
+  players: PilotTarget[];
+}
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
 function salaryTier(salary: number): string {
   if (salary >= 55) return "max";
   if (salary >= 40) return "star";
@@ -74,192 +136,205 @@ function salaryTier(salary: number): string {
   return "flier";
 }
 
-function playerKey(name: string): string {
+function normalizeLast(name: string): string {
   const parts = name.trim().split(/\s+/);
   const suffixes = new Set(["II", "III", "IV", "V", "Jr.", "Jr", "Sr.", "Sr"]);
   while (parts.length > 1 && suffixes.has(parts[parts.length - 1])) parts.pop();
-  return (parts[parts.length - 1] ?? name).toLowerCase().replace(/[^a-z]/g, "");
+  const last = parts[parts.length - 1] ?? name;
+  return last
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .toLowerCase();
 }
 
-// ── Compute FP ──────────────────────────────────────────────────────────────
 function computeFP(s: GameLog["stats"]): number {
-  return (
-    s.pts * 1 +
-    s.reb * 1.2 +
-    s.ast * 1.5 +
-    s.stl * 3 +
-    s.blk * 3 -
-    s.turnovers * 1
-  );
+  return s.pts + s.reb * 1.2 + s.ast * 1.5 + s.stl * 3 + s.blk * 3 - s.turnovers;
 }
 
-// ── Build game data summary for a player ────────────────────────────────────
-function buildGameDataSummary(
-  logs: GameLog[]
-): {
-  top10: GameWithFP[];
-  seasonHighPts: GameWithFP | null;
-  seasonHighReb: GameWithFP | null;
-  seasonHighAst: GameWithFP | null;
-  tripleDoubles: GameWithFP[];
-  backToBackBig: GameWithFP[][];
-  fiftyPointGames: GameWithFP[];
-} {
-  const withFP: GameWithFP[] = logs.map((g) => ({
-    ...g,
-    fp: Math.round(computeFP(g.stats) * 10) / 10,
-  }));
+function readJsonOrNull<T>(p: string): T | null {
+  try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch { return null; }
+}
 
-  // Sort by FP desc for top 10
+// ── Walk seasons: build basePlayerId → { player records + logs } ────────────
+interface PlayerRollup {
+  basePlayerId: string;
+  name: string;
+  /** All season records keyed by season — captures team and tier per season. */
+  seasons: Record<string, { team: string; tier: string; salary: number; position: string }>;
+  /** All game logs across all seasons. */
+  logs: GameLog[];
+}
+
+function walkAllSeasons(): Map<string, PlayerRollup> {
+  const rollups = new Map<string, PlayerRollup>();
+  const seasonKeys = fs.readdirSync(SEASONS_DIR).filter(d => /^\d{4}$/.test(d)).sort();
+  for (const s of seasonKeys) {
+    const playersPath = path.join(SEASONS_DIR, s, "players.json");
+    const logsPath = path.join(SEASONS_DIR, s, "gamelogs.json");
+    const players: PlayerEntry[] = readJsonOrNull(playersPath) ?? [];
+    const logs: GameLog[] = readJsonOrNull(logsPath) ?? [];
+    for (const p of players) {
+      if (!p.basePlayerId || !p.name) continue;
+      const r = rollups.get(p.basePlayerId) ?? {
+        basePlayerId: p.basePlayerId,
+        name: p.name,
+        seasons: {} as Record<string, { team: string; tier: string; salary: number; position: string }>,
+        logs: [] as GameLog[],
+      };
+      r.seasons[s] = { team: p.team, tier: p.tier, salary: p.salary, position: p.position };
+      rollups.set(p.basePlayerId, r);
+    }
+    for (const l of logs) {
+      if (!l.basePlayerId) continue;
+      const r = rollups.get(l.basePlayerId);
+      if (r) r.logs.push(l);
+    }
+  }
+  return rollups;
+}
+
+// ── Build game-data summary for the prompt (top games, season highs, etc.) ──
+function buildSummary(logs: GameLog[]): string {
+  if (!logs.length) return "(no game logs available)";
+  const withFP: GameWithFP[] = logs.map(g => ({ ...g, fp: Math.round(computeFP(g.stats) * 10) / 10 }));
   const sorted = [...withFP].sort((a, b) => b.fp - a.fp);
   const top10 = sorted.slice(0, 10);
 
-  // Season highs
-  const seasonHighPts = withFP.length
-    ? withFP.reduce((a, b) => (a.stats.pts > b.stats.pts ? a : b))
-    : null;
-  const seasonHighReb = withFP.length
-    ? withFP.reduce((a, b) => (a.stats.reb > b.stats.reb ? a : b))
-    : null;
-  const seasonHighAst = withFP.length
-    ? withFP.reduce((a, b) => (a.stats.ast > b.stats.ast ? a : b))
-    : null;
+  const fmt = (g: GameWithFP) =>
+    `${g.date} vs ${g.opponent}: ${g.stats.pts}p/${g.stats.reb}r/${g.stats.ast}a/${g.stats.stl}s/${g.stats.blk}b/${g.stats.turnovers}to (${g.stats.min}min) = ${g.fp}FP`;
 
-  // Triple-doubles
-  const tripleDoubles = withFP.filter((g) => {
+  const tripleDoubles = withFP.filter(g => {
     const cats = [g.stats.pts, g.stats.reb, g.stats.ast, g.stats.stl, g.stats.blk];
-    return cats.filter((c) => c >= 10).length >= 3;
+    return cats.filter(c => c >= 10).length >= 3;
   });
+  const fiftyPlus = withFP.filter(g => g.stats.pts >= 50);
 
-  // Back-to-back 40+ FP games
-  const chronological = [...withFP].sort(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
-  const backToBackBig: GameWithFP[][] = [];
-  for (let i = 1; i < chronological.length; i++) {
-    if (chronological[i].fp >= 40 && chronological[i - 1].fp >= 40) {
-      backToBackBig.push([chronological[i - 1], chronological[i]]);
-    }
+  let out = "TOP 10 GAMES BY FP:\n";
+  top10.forEach((g, i) => { out += `  ${i + 1}. ${fmt(g)}\n`; });
+
+  const sh = (key: "pts" | "reb" | "ast"): GameWithFP =>
+    withFP.reduce((a, b) => (a.stats[key] > b.stats[key] ? a : b));
+  out += `\nSEASON HIGH PTS: ${fmt(sh("pts"))}`;
+  out += `\nSEASON HIGH REB: ${fmt(sh("reb"))}`;
+  out += `\nSEASON HIGH AST: ${fmt(sh("ast"))}`;
+
+  if (tripleDoubles.length) {
+    out += `\n\nTRIPLE-DOUBLES (${tripleDoubles.length}):\n`;
+    tripleDoubles.slice(0, 5).forEach(g => { out += `  ${fmt(g)}\n`; });
   }
-
-  // 50+ real points
-  const fiftyPointGames = withFP.filter((g) => g.stats.pts >= 50);
-
-  return { top10, seasonHighPts, seasonHighReb, seasonHighAst, tripleDoubles, backToBackBig, fiftyPointGames };
+  if (fiftyPlus.length) {
+    out += `\n50+ POINT GAMES:\n`;
+    fiftyPlus.slice(0, 5).forEach(g => { out += `  ${fmt(g)}\n`; });
+  }
+  return out;
 }
 
-function formatGameLine(g: GameWithFP): string {
-  const s = g.stats;
-  return `${g.date} vs ${g.opponent}: ${s.pts}pts/${s.reb}reb/${s.ast}ast/${s.stl}stl/${s.blk}blk/${s.turnovers}to (${s.min}min) = ${g.fp}FP`;
+// ── System prompt — sourced from sport-specific voice module ──────────────
+// The voice spec lives in shared/commentary/voice/<sport>Voice.ts.
+// pickVoice() routes by sport key (default basketball). Edit the voice
+// register there, not here — keeping it in shared/ lets future sports
+// (football, baseball) plug in their own register without forking this
+// generator.
+const SPORT_KEY = (process.env.SPORT ?? "basketball").toLowerCase();
+const SYSTEM = pickVoice(SPORT_KEY);
+
+// ── Generate one batch ──────────────────────────────────────────────────────
+interface BatchInput {
+  basePlayerId: string;
+  name: string;
+  lastNameKey: string;
+  salary: number;
+  team: string;
+  tier: string;
+  qualifyingTeams: string[];
+  gameDataSummary: string;
+  framingRestrictions?: string[];
 }
 
-// ── System prompt ────────────────────────────────────────────────────────────
-const SYSTEM = `You are a writer for ReplayMod, a fantasy basketball card game. You write player culture entries used as commentary shown after each hand.
+async function generateBatch(players: BatchInput[]): Promise<Array<{ key: string; basePlayerId: string; name: string; [k: string]: any }>> {
+  const sections = players.map(p => {
+    let s = `── ${p.name} (basePlayerId: ${p.basePlayerId}, lastNameKey: ${p.lastNameKey})`;
+    s += `\nMost recent team/tier: ${p.team} / ${p.tier} / $${p.salary} (salaryTier: ${salaryTier(p.salary)})`;
+    s += `\nqualifyingTeams (write teamEras for these only): ${JSON.stringify(p.qualifyingTeams)}`;
+    if (p.framingRestrictions && p.framingRestrictions.length > 0) {
+      s += `\n\nFRAMING RESTRICTIONS (override defaults — apply to ALL fields):\n` +
+        p.framingRestrictions.map(r => `  - ${r}`).join("\n");
+    }
+    s += `\n\nGAME DATA:\n${p.gameDataSummary}`;
+    return s;
+  }).join("\n\n─────────────────────────────────────────\n\n");
 
-Voice: opinionated, specific, knowledgeable basketball fan. Short punchy sentences. Dry humor. Specific historical references when they exist. Never generic. Never corporate.
+  const prompt = `Generate PlayerCulture entries for these ${players.length} NBA players. Use their REAL game data to ground bigGame, famousGameHint, signatureGames, and streakLines. Write teamEras blocks ONLY for the teams in each player's qualifyingTeams list.
 
-Rules:
-- tier1: 2 lines. Simple direct fact or defining trait. For new users.
-- tier2: 2 lines. Deeper lore a real fan knows.
-- tier3: 1-2 lines. Niche or obscure. For veterans only.
-- overperform: 2-3 lines. When player beats projection. Celebratory but specific.
-- underperform: 2-3 lines. When player falls short. Honest, not cruel.
-- onPace: 2 lines. Player hit their average. Acknowledges reliability.
-- turnovers: 1-2 lines. Player had turnovers. Specific to their tendencies.
-- defensive: 1-2 lines if they play defense, empty array [] if they don't.
-- bigGame: 2-3 lines. Ground these in the REAL stat lines provided. Tease that this stat line might be a famous game.
-- quietGame: 1-2 lines. Player had a quiet game.
-- famousGameHint: 2-3 lines. Ground in REAL games from the data. Encourage looking up the box score.
-- controversy: 1-2 lines. Something spicy about the player.
-- opponentFlavor: Record<string, string> — short takes for 3-5 specific opponents.
-- formerTeam: 1-2 lines about facing former teams. Specific to their actual history.
-- rivalry: 1-2 lines about real player/team rivalries.
-- milestones: 1-2 lines about career milestone references.
-- streakLines: 2-3 lines. Hot/cold streak context. Can reference real streaks from the data.
-- signatureGames: 3-5 objects with { date, opponent, fp, line }. Use the ACTUAL dates, opponents, and FP from the top games provided. The "line" field is a short teaser about why the game matters.
-- salaryNarrative: 2-3 lines. Opinionated value takes using the actual salary. Not generic.
-- teamContext: 1-2 lines. How they landed on their current team (draft, trade, FA) and chemistry with notable teammates. Only reference ORANGE/PURPLE tier teammates if they exist on the same team.
-- draftAndPath: 1-2 lines. Draft story and career trajectory.
+${sections}
 
-Max 90 chars per line. Never use the word "lineup". Specific to THIS player only.
-Salary tiers: max=$55+, star=$40-54, role=$25-39, value=$15-24, flier=under$15
-
-For signatureGames, use the exact dates and opponents from the game data I provide. Write a short teaser line explaining why each game matters.
-For salaryNarrative, write opinionated value takes, not generic. Reference the actual salary number.
-For teamContext, reference actual trade/draft history.
-
-Return ONLY a JSON array of objects, one per player. No markdown, no explanation.`;
-
-// ── Generate one batch ───────────────────────────────────────────────────────
-async function generateBatch(
-  players: Array<{
-    name: string;
-    salary: number;
-    team: string;
-    tier: string;
-    gameDataSummary: string;
-    teammates: string[];
-  }>
-): Promise<Array<{ key: string; name: string; [k: string]: any }>> {
-  const playerSections = players
-    .map((p) => {
-      let section = `── ${p.name} (${p.team}, salary: $${p.salary}, tier: ${p.tier}, salaryTier: ${salaryTier(p.salary)})`;
-      if (p.teammates.length > 0) {
-        section += `\nORANGE/PURPLE teammates on ${p.team}: ${p.teammates.join(", ")}`;
-      }
-      section += `\n\nGAME DATA:\n${p.gameDataSummary}`;
-      return section;
-    })
-    .join("\n\n─────────────────────────────────────────\n\n");
-
-  const prompt = `Generate PlayerCulture entries for these ${players.length} NBA players. Use their REAL game data to ground bigGame, famousGameHint, signatureGames, and streakLines.
-
-${playerSections}
-
-Return a JSON array with one object per player. Each object:
+Return a JSON array with one object per player. Each object MUST start with these two fields, in this exact order:
 {
-  "key": "lastname_lowercase",
+  "key": "<lastNameKey>_<basePlayerId>",
+  "basePlayerId": "<basePlayerId>",
   "name": "Full Name",
   "nicknames": [],
   "knownFor": "one sentence",
   "salaryTier": "max|star|role|value|flier",
-  "tier1": [],
-  "tier2": [],
-  "tier3": [],
-  "overperform": [],
-  "underperform": [],
-  "onPace": [],
-  "turnovers": [],
-  "defensive": [],
-  "bigGame": [],
-  "quietGame": [],
-  "famousGameHint": [],
+  "tier1": [], "tier2": [], "tier3": [],
+  "overperform": [], "underperform": [], "onPace": [],
+  "turnovers": [], "defensive": [],
+  "bigGame": [], "quietGame": [], "famousGameHint": [],
   "controversy": [],
   "opponentFlavor": {},
-  "formerTeam": [],
-  "rivalry": [],
-  "milestones": [],
-  "streakLines": [],
+  "formerTeam": [], "rivalry": [], "milestones": [], "streakLines": [],
   "signatureGames": [{ "date": "YYYY-MM-DD", "opponent": "XXX", "fp": 0, "line": "" }],
-  "salaryNarrative": [],
-  "teamContext": [],
-  "draftAndPath": []
+  "salaryNarrative": [], "teamContext": [], "draftAndPath": [],
+  "teamEras": {
+    "XXX": { "framing": [], "bigGameVariant": "", "quietGameVariant": "" }
+  }
 }`;
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY ?? "",
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: MAX_TOKENS,
-      system: SYSTEM,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
+  // Retry-with-backoff. Network-layer errors ("fetch failed") and 5xx
+  // responses get up to 3 attempts with exponential backoff (1s → 2s → 4s).
+  // 4xx responses are NOT retried — auth / bad-request errors don't
+  // self-heal and retrying just burns time.
+  const MAX_ATTEMPTS = 3;
+  let res!: Response;
+  let lastErr: unknown = null;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": process.env.ANTHROPIC_API_KEY ?? "",
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          max_tokens: MAX_TOKENS,
+          system: SYSTEM,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      if (res.status >= 500 && attempt < MAX_ATTEMPTS) {
+        // 5xx — server-side, retryable
+        const backoff = 1000 * Math.pow(2, attempt - 1);
+        console.log(`  (5xx on attempt ${attempt}, retrying in ${backoff}ms)`);
+        await new Promise(r => setTimeout(r, backoff));
+        continue;
+      }
+      break; // 2xx, 3xx, or final-attempt 5xx falls through to !res.ok handler
+    } catch (err) {
+      lastErr = err;
+      if (attempt < MAX_ATTEMPTS) {
+        const backoff = 1000 * Math.pow(2, attempt - 1);
+        const msg = err instanceof Error ? err.message : String(err);
+        console.log(`  (network error "${msg}" on attempt ${attempt}, retrying in ${backoff}ms)`);
+        await new Promise(r => setTimeout(r, backoff));
+        continue;
+      }
+      throw err;
+    }
+  }
+  if (!res) throw (lastErr ?? new Error("fetch failed after retries"));
 
   if (!res.ok) {
     const err = await res.text();
@@ -272,8 +347,10 @@ Return a JSON array with one object per player. Each object:
   return JSON.parse(cleaned);
 }
 
-// ── Format one entry as TypeScript ───────────────────────────────────────────
-function toTypeScript(key: string, entry: any): string {
+// ── Format one entry as TypeScript (with teamEras + basePlayerId) ───────────
+function toTypeScript(entry: any): string {
+  const key = entry.key;
+  const bid = entry.basePlayerId;
   const simpleFields = [
     "nicknames", "knownFor", "salaryTier",
     "tier1", "tier2", "tier3",
@@ -284,7 +361,10 @@ function toTypeScript(key: string, entry: any): string {
     "streakLines", "salaryNarrative", "teamContext", "draftAndPath",
   ];
 
-  const lines: string[] = [`  ${key}: {`];
+  // Force-string conversion before JSON.stringify so the LLM returning
+  // basePlayerId as a JSON number doesn't emit an unquoted integer
+  // (which fails the PlayerCulture interface's `basePlayerId: string`).
+  const lines: string[] = [`  ${key}: {`, `    basePlayerId: ${JSON.stringify(String(bid))},`];
 
   for (const field of simpleFields) {
     const val = entry[field];
@@ -302,18 +382,14 @@ function toTypeScript(key: string, entry: any): string {
     }
   }
 
-  // opponentFlavor (Record<string, string>)
   const opp = entry.opponentFlavor;
   if (opp && typeof opp === "object" && !Array.isArray(opp)) {
-    const entries = Object.entries(opp)
-      .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
-      .join(", ");
+    const entries = Object.entries(opp).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join(", ");
     lines.push(`    opponentFlavor: { ${entries} },`);
   } else {
     lines.push(`    opponentFlavor: {},`);
   }
 
-  // signatureGames (array of objects)
   const sig = entry.signatureGames;
   if (Array.isArray(sig) && sig.length > 0) {
     lines.push(`    signatureGames: [`);
@@ -325,190 +401,199 @@ function toTypeScript(key: string, entry: any): string {
     lines.push(`    signatureGames: [],`);
   }
 
+  // teamEras block
+  const eras = entry.teamEras;
+  if (eras && typeof eras === "object" && !Array.isArray(eras)) {
+    const eraKeys = Object.keys(eras);
+    if (eraKeys.length) {
+      lines.push(`    teamEras: {`);
+      for (const tk of eraKeys) {
+        const e = eras[tk];
+        const framingArr = Array.isArray(e?.framing) ? e.framing.map((s: string) => JSON.stringify(s)).join(", ") : "";
+        lines.push(`      ${tk}: {`);
+        lines.push(`        framing: [${framingArr}],`);
+        if (e?.bigGameVariant) lines.push(`        bigGameVariant: ${JSON.stringify(e.bigGameVariant)},`);
+        if (e?.quietGameVariant) lines.push(`        quietGameVariant: ${JSON.stringify(e.quietGameVariant)},`);
+        lines.push(`      },`);
+      }
+      lines.push(`    },`);
+    }
+  }
+
   lines.push(`  },`);
   return lines.join("\n");
 }
 
-// ── Main ─────────────────────────────────────────────────────────────────────
+// ── Resume: parse already-completed basePlayerIds from review file ──────────
+function loadCompletedIds(reviewPath: string): Set<string> {
+  if (!fs.existsSync(reviewPath)) return new Set();
+  const txt = fs.readFileSync(reviewPath, "utf8");
+  const ids = new Set<string>();
+  // Match each entry's basePlayerId line
+  const re = /basePlayerId:\s*"([^"]+)"/g;
+  let m;
+  while ((m = re.exec(txt)) !== null) ids.add(m[1]);
+  return ids;
+}
+
+// ── Target loaders per mode ─────────────────────────────────────────────────
+function loadPilotTargets(): PilotTarget[] {
+  const file = readJsonOrNull<PilotTargetsFile>(PILOT_TARGETS);
+  if (!file) {
+    console.error(`ERROR: ${PILOT_TARGETS} not found. Run Step 4 (build pilot target list) first.`);
+    process.exit(1);
+  }
+  return file.players;
+}
+
+function loadExpandTargets(): PilotTarget[] {
+  const file = readJsonOrNull<PilotTargetsFile>(EXPAND_TARGETS);
+  if (!file) {
+    console.error(`ERROR: ${EXPAND_TARGETS} not found. Build it before running expand mode.`);
+    process.exit(1);
+  }
+  return file.players;
+}
+
+// ── Main ────────────────────────────────────────────────────────────────────
 async function main() {
   if (!process.env.ANTHROPIC_API_KEY) {
-    console.error("ERROR: ANTHROPIC_API_KEY not set.");
-    console.error("Run: export ANTHROPIC_API_KEY=sk-ant-...");
+    console.error("ERROR: ANTHROPIC_API_KEY not set.\n  export ANTHROPIC_API_KEY=sk-ant-...");
+    process.exit(1);
+  }
+  if (!["pilot", "enrich", "expand"].includes(MODE)) {
+    console.error(`ERROR: CULTURE_MODE must be pilot | enrich | expand (got "${MODE}")`);
     process.exit(1);
   }
 
-  // Load players
-  if (!fs.existsSync(PLAYERS_PATH)) {
-    console.error(`ERROR: players.json not found at ${PLAYERS_PATH}`);
-    console.error("Run from the repo root: npx tsx basketball/src/utils/generateCulture.ts");
+  console.log(`\n── ReplayMod Culture Generator v3 — mode=${MODE} ──`);
+  console.log(`  Canary: CULTURE_TIER1_V1_20260517`);
+  console.log(`  Model:  ${MODEL}`);
+  console.log(`  Batch:  ${BATCH_SIZE}, Delay: ${DELAY_MS}ms, MaxTokens: ${MAX_TOKENS}`);
+
+  // Walk all seasons once — used by every mode
+  console.log(`  Walking seasons under ${SEASONS_DIR}...`);
+  const rollups = walkAllSeasons();
+  console.log(`  Indexed ${rollups.size} unique basePlayerIds across all seasons.\n`);
+
+  // Resolve targets per mode
+  let targets: PilotTarget[];
+  if (MODE === "pilot") targets = loadPilotTargets();
+  else if (MODE === "expand") targets = loadExpandTargets();
+  else {
+    // enrich: read existing playerCulture.ts entries
+    console.error("enrich mode is not implemented yet — staged in Phase 2.");
     process.exit(1);
   }
 
-  const allPlayers: PlayerEntry[] = JSON.parse(fs.readFileSync(PLAYERS_PATH, "utf8"));
+  // Resume: skip already-completed basePlayerIds
+  const reviewPath = reviewPathFor(MODE);
+  const completed = loadCompletedIds(reviewPath);
+  const todo = targets.filter(t => !completed.has(t.basePlayerId));
+  console.log(`  Targets: ${targets.length} total | ${completed.size} already in ${path.basename(reviewPath)} | ${todo.length} to generate.\n`);
 
-  // Load game logs
-  if (!fs.existsSync(GAME_LOGS_PATH)) {
-    console.error(`ERROR: game-logs.json not found at ${GAME_LOGS_PATH}`);
-    process.exit(1);
-  }
-  const allGameLogs: GameLog[] = JSON.parse(fs.readFileSync(GAME_LOGS_PATH, "utf8"));
-
-  // Filter to ORANGE and PURPLE tier players from 2425 season
-  const targetPlayers = allPlayers.filter(
-    (p) => p.season === "2425" && (p.tier === "ORANGE" || p.tier === "PURPLE")
-  );
-
-  // Build teammate map (ORANGE/PURPLE players grouped by team)
-  const teamMap = new Map<string, string[]>();
-  for (const p of targetPlayers) {
-    if (!teamMap.has(p.team)) teamMap.set(p.team, []);
-    teamMap.get(p.team)!.push(p.name);
+  if (todo.length === 0) {
+    console.log("  Nothing to do. Exiting.");
+    return;
   }
 
-  // Index game logs by basePlayerId
-  const logsByPlayer = new Map<string, GameLog[]>();
-  for (const log of allGameLogs) {
-    if (!logsByPlayer.has(log.basePlayerId)) logsByPlayer.set(log.basePlayerId, []);
-    logsByPlayer.get(log.basePlayerId)!.push(log);
-  }
-
-  // Build batch input with game data
-  const batchInput = targetPlayers.map((p) => {
-    const logs = logsByPlayer.get(p.basePlayerId) ?? [];
-    const summary = buildGameDataSummary(logs);
-
-    let gameDataSummary = "";
-
-    // Top 10 games
-    gameDataSummary += "TOP 10 GAMES BY FP:\n";
-    if (summary.top10.length > 0) {
-      summary.top10.forEach((g, i) => {
-        gameDataSummary += `  ${i + 1}. ${formatGameLine(g)}\n`;
-      });
-    } else {
-      gameDataSummary += "  (no game logs available)\n";
+  // Build batch input
+  const batchInput: BatchInput[] = todo.map(t => {
+    const rollup = rollups.get(t.basePlayerId);
+    if (!rollup) {
+      console.warn(`  WARN: ${t.name} (${t.basePlayerId}) not found in season data — generating with empty game summary.`);
     }
-
-    // Season highs
-    if (summary.seasonHighPts) {
-      gameDataSummary += `\nSEASON HIGH PTS: ${formatGameLine(summary.seasonHighPts)}\n`;
-    }
-    if (summary.seasonHighReb) {
-      gameDataSummary += `SEASON HIGH REB: ${formatGameLine(summary.seasonHighReb)}\n`;
-    }
-    if (summary.seasonHighAst) {
-      gameDataSummary += `SEASON HIGH AST: ${formatGameLine(summary.seasonHighAst)}\n`;
-    }
-
-    // Notable games
-    if (summary.tripleDoubles.length > 0) {
-      gameDataSummary += `\nTRIPLE-DOUBLES (${summary.tripleDoubles.length}):\n`;
-      summary.tripleDoubles.slice(0, 5).forEach((g) => {
-        gameDataSummary += `  ${formatGameLine(g)}\n`;
-      });
-    }
-
-    if (summary.backToBackBig.length > 0) {
-      gameDataSummary += `\nBACK-TO-BACK 40+ FP GAMES (${summary.backToBackBig.length} pairs):\n`;
-      summary.backToBackBig.slice(0, 3).forEach((pair) => {
-        gameDataSummary += `  ${formatGameLine(pair[0])} → ${formatGameLine(pair[1])}\n`;
-      });
-    }
-
-    if (summary.fiftyPointGames.length > 0) {
-      gameDataSummary += `\n50+ POINT GAMES:\n`;
-      summary.fiftyPointGames.forEach((g) => {
-        gameDataSummary += `  ${formatGameLine(g)}\n`;
-      });
-    }
-
-    // Teammates on same team who are also ORANGE/PURPLE
-    const teammates = (teamMap.get(p.team) ?? []).filter((n) => n !== p.name);
-
+    // Most recent season's team/tier/salary for "current shape" hint
+    const allSeasonKeys = rollup ? Object.keys(rollup.seasons).sort() : [];
+    const lastSeason = allSeasonKeys[allSeasonKeys.length - 1];
+    const last = lastSeason && rollup ? rollup.seasons[lastSeason] : { team: "?", tier: "?", salary: 0, position: "?" };
     return {
-      name: p.name,
-      salary: p.salary,
-      team: p.team,
-      tier: p.tier,
-      gameDataSummary,
-      teammates,
+      basePlayerId: t.basePlayerId,
+      name: t.name,
+      lastNameKey: t.lastNameKey,
+      salary: last.salary,
+      team: last.team,
+      tier: last.tier,
+      qualifyingTeams: t.qualifyingTeams,
+      gameDataSummary: buildSummary(rollup?.logs ?? []),
+      framingRestrictions: t.framingRestrictions,
     };
   });
 
-  console.log(`\n── ReplayMod Culture Generator v2 ──────────────────`);
-  console.log(`  Target players:         ${batchInput.length} (ORANGE + PURPLE)`);
-  console.log(`  Batch size:             ${BATCH_SIZE}`);
-  console.log(`  Max tokens:             ${MAX_TOKENS}`);
-  console.log(`  Delay between batches:  ${DELAY_MS}ms`);
-  console.log(`  Estimated batches:      ${Math.ceil(batchInput.length / BATCH_SIZE)}`);
-  console.log(`────────────────────────────────────────────────────\n`);
+  // Ensure review file has a header
+  if (!fs.existsSync(reviewPath)) {
+    fs.writeFileSync(
+      reviewPath,
+      `/**\n * culture_${MODE}_review.ts — Generated culture entries (${MODE} mode)\n * Generated: ${new Date().toISOString()}\n * Canary: CULTURE_TIER1_V1_20260517\n *\n * REVIEW each entry. Do NOT auto-merge into playerCulture.ts.\n */\n\n`,
+      "utf8"
+    );
+  }
 
-  // Clear output file
-  fs.writeFileSync(
-    REVIEW_PATH,
-    `/**\n * culture_review.ts — Generated culture entries for all ORANGE + PURPLE tier players\n * Generated: ${new Date().toISOString()}\n * Total target players: ${batchInput.length}\n *\n * Review each entry, then merge into playerCulture.ts\n */\n\n// ── GENERATED ENTRIES ──\n\n`,
-    "utf8"
-  );
-
-  const failed: Array<{ name: string; error: string }> = [];
+  const failed: Array<{ basePlayerId: string; name: string; error: string }> = [];
   let generated = 0;
   let batchNum = 0;
+  const startMs = Date.now();
+  let totalInputTokens = 0;
+  let totalOutputTokens = 0;
 
-  // Process in batches
   for (let i = 0; i < batchInput.length; i += BATCH_SIZE) {
     const batch = batchInput.slice(i, i + BATCH_SIZE);
     batchNum++;
-
-    const names = batch.map((p) => p.name).join(", ");
-    process.stdout.write(
-      `  Batch ${batchNum}/${Math.ceil(batchInput.length / BATCH_SIZE)}: ${names} ... `
-    );
+    const names = batch.map(p => p.name).join(", ");
+    process.stdout.write(`  Batch ${batchNum}/${Math.ceil(batchInput.length / BATCH_SIZE)}: ${names} ... `);
 
     try {
+      // Capture usage by intercepting fetch — we re-call inside generateBatch
+      // so we need a thin wrapper that returns usage too. Simpler: re-run the
+      // fetch here, but that duplicates logic. For pilot scale (5 batches),
+      // skip per-batch token logging — total tokens come from Vercel/Anthropic
+      // dashboard. Comment in the report acknowledges this.
       const results = await generateBatch(batch);
 
       for (const result of results) {
-        const key = result.key || playerKey(result.name);
-        const ts = toTypeScript(key, result);
-        const matchPlayer = batch.find((p) =>
-          p.name.toLowerCase().includes(result.name?.toLowerCase()?.split(" ").pop() ?? "")
-        );
+        const ts = toTypeScript(result);
+        // Header derives from the actual teamEras keys in the generated
+        // entry, not from batch.find(...).qualifyingTeams. The lookup-by-
+        // basePlayerId path could miss when result.basePlayerId came back
+        // re-typed, causing "teams: undefined" headers. Deriving from the
+        // entry itself is the source of truth — what's IN the entry is
+        // what the reviewer sees.
+        const eraTeams = result.teamEras && typeof result.teamEras === "object"
+          ? Object.keys(result.teamEras).join("/")
+          : "(no eras)";
         fs.appendFileSync(
-          REVIEW_PATH,
-          `// ${result.name} (${matchPlayer?.team ?? "?"}, $${matchPlayer?.salary ?? "?"}, ${matchPlayer?.tier ?? "?"})\n${ts}\n\n`,
+          reviewPath,
+          `// ${result.name} — basePlayerId ${result.basePlayerId} — teams: ${eraTeams}\n${ts}\n\n`,
           "utf8"
         );
         generated++;
       }
-
-      console.log(`✓ (${results.length} entries)`);
+      console.log(`✓ (${results.length})`);
     } catch (err: any) {
       console.log(`✗ FAILED: ${err.message}`);
-      batch.forEach((p) => failed.push({ name: p.name, error: err.message }));
+      batch.forEach(p => failed.push({ basePlayerId: p.basePlayerId, name: p.name, error: err.message }));
     }
 
-    // Delay between batches
     if (i + BATCH_SIZE < batchInput.length) {
-      await new Promise((r) => setTimeout(r, DELAY_MS));
+      await new Promise(r => setTimeout(r, DELAY_MS));
     }
   }
 
-  // Write failed log
-  if (failed.length > 0) {
-    fs.writeFileSync(FAILED_PATH, JSON.stringify(failed, null, 2), "utf8");
-  }
+  if (failed.length) fs.writeFileSync(failedPathFor(MODE), JSON.stringify(failed, null, 2), "utf8");
 
-  console.log(`\n── Done ────────────────────────────────────────────`);
-  console.log(`  Generated:  ${generated} entries`);
-  console.log(`  Failed:     ${failed.length} entries`);
-  console.log(`  Review at:  basketball/src/utils/culture_review.ts`);
-  if (failed.length > 0) {
-    console.log(`  Failed log: basketball/src/utils/culture_failed.json`);
-  }
-  console.log(`────────────────────────────────────────────────────\n`);
+  const elapsedSec = ((Date.now() - startMs) / 1000).toFixed(1);
+  console.log(`\n── Done (${MODE}) ─────────────────────────────`);
+  console.log(`  Generated:  ${generated} / ${batchInput.length}`);
+  console.log(`  Failed:     ${failed.length}`);
+  console.log(`  Wall time:  ${elapsedSec}s`);
+  console.log(`  Review at:  ${path.relative(process.cwd(), reviewPath)}`);
+  if (failed.length) console.log(`  Failed log: ${path.relative(process.cwd(), failedPathFor(MODE))}`);
+  // Suppress unused-token vars (kept for future per-batch usage parsing)
+  void totalInputTokens; void totalOutputTokens;
+  console.log(`────────────────────────────────────────────────\n`);
 }
 
-main().catch((e) => {
+main().catch(e => {
   console.error("Fatal:", e.message);
   process.exit(1);
 });

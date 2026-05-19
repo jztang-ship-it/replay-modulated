@@ -266,10 +266,14 @@ export function useEmotionalReveal(params: Params) {
   }, [visibleFpMap]);
 
   const runningTotalFp = useMemo(() => {
-    // Include EVERY card via its visibleFp — held cards roll up just like
-    // non-held cards during revealHeldCards. Bar starts at 0 and grows one
-    // card at a time across the full sequence. seedFp is still honored for
-    // backward compat with other adapters, but basketball passes 0 now.
+    // Bar tracks EVERY card's per-tick visibleFp — including the anchor.
+    // Earlier iterations excluded the anchor so the spring could "deliver"
+    // its FP at the end, but that caused the team FP to linger at the
+    // (N−1)-card total while the anchor's number rolled up on the card
+    // face. Crisp per-card sequencing requires the bar to roll in lockstep
+    // with each card's count, no exceptions. The spring is now a brief
+    // settle gate (see runSpring in _useReveal) that fires tier audio /
+    // payout side effects right after the bar arrives.
     let sum = seedFp;
     for (const c of cards) {
       const v = getVisibleFp(c.cardId);

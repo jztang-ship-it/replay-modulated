@@ -1,0 +1,59 @@
+{
+  "players": [
+    {
+      "basePlayerId": "1627732",
+      "name": "Ben Simmons",
+      "lastNameKey": "simmons",
+      "qualifyingTeams": [
+        "PHI"
+      ],
+      "framingRestrictions": [
+        "STRICT BASKETBALL-ONLY framing. Do NOT touch mental health, depression, anxiety, or therapy in ANY field.",
+        "Fill the controversy field from: the 2021 Philadelphia holdout, the trade demand, the on-court free-throw / mid-range / dunk avoidance, the Game 7 vs Atlanta passing-up-an-open-dunk moment, the contract-vs-production gap with Brooklyn, the constant trade-rumor churn.",
+        "If you cannot fill 4-5 controversy lines without referencing mental health, fill 3 lines and stop — empty slots are preferable to off-spec content.",
+        "knownFor must focus on the unique position-violating Australian point-forward archetype and the never-resolved shooting question; not on personal-life angles."
+      ]
+    },
+    {
+      "basePlayerId": "200746",
+      "name": "LaMarcus Aldridge",
+      "lastNameKey": "aldridge",
+      "qualifyingTeams": [
+        "POR",
+        "SAS"
+      ]
+    },
+    {
+      "basePlayerId": "978",
+      "name": "Peja Stojakovic",
+      "lastNameKey": "stojakovic",
+      "qualifyingTeams": [
+        "SAC"
+      ]
+    },
+    {
+      "basePlayerId": "2045",
+      "name": "Hedo Turkoglu",
+      "lastNameKey": "turkoglu",
+      "qualifyingTeams": [
+        "ORL"
+      ]
+    },
+    {
+      "basePlayerId": "2736",
+      "name": "Luol Deng",
+      "lastNameKey": "deng",
+      "qualifyingTeams": [
+        "CHI"
+      ]
+    },
+    {
+      "basePlayerId": "2731",
+      "name": "Emeka Okafor",
+      "lastNameKey": "okafor",
+      "qualifyingTeams": [
+        "CHA"
+      ]
+    }
+  ]
+}

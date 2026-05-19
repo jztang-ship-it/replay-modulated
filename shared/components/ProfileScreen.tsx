@@ -9,6 +9,8 @@ import { getMyReferralCode, buildShareUrl, shareReferralLink, getReferrerCode } 
 import { track } from "@shared/analytics/analytics";
 import { InboxCard } from "@shared/inbox/InboxCard";
 import { useAuth } from "@shared/auth/useAuth";
+import { AchievementWall } from "./AchievementWall";
+import { YourChallengesPanel } from "./YourChallengesPanel";
 
 const FF = "'Rajdhani', 'Arial Narrow', sans-serif";
 
@@ -36,6 +38,7 @@ export function ProfileScreen({ currentUid, sport, onClose, isAnonymous, onSaveA
   const [editValue, setEditValue] = useState(nickname);
   const [ranks, setRanks] = useState<Record<string, { rank: number | null; score: number | null }>>({});
   const [signingOut, setSigningOut] = useState(false);
+  const [profileTab, setProfileTab] = useState<"stats" | "achievements" | "challenges">("stats");
 
   const handleSignOut = async () => {
     if (signingOut) return;
@@ -118,32 +121,83 @@ export function ProfileScreen({ currentUid, sport, onClose, isAnonymous, onSaveA
       overflow: "hidden",
     }}>
       {/* Header */}
-      <div style={{
-        display: "flex", justifyContent: "space-between", alignItems: "center",
-        padding: "14px 16px 10px",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
-      }}>
-        <span style={{ fontSize: 18, fontWeight: 800, color: "#EAF0FF", fontFamily: FF }}>
-          PROFILE
-        </span>
-        <button
-          onClick={onClose}
-          style={{
-            background: "rgba(255,255,255,0.07)",
-            border: "1px solid rgba(255,255,255,0.12)",
-            borderRadius: 8,
-            padding: "5px 10px",
-            color: "rgba(255,255,255,0.5)",
-            fontSize: 13,
-            cursor: "pointer",
-            fontFamily: FF,
-          }}
-        >
-          Done
-        </button>
+      <div style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          padding: "14px 16px 10px",
+        }}>
+          <span style={{ fontSize: 18, fontWeight: 800, color: "#EAF0FF", fontFamily: FF }}>
+            PROFILE
+          </span>
+          <button
+            onClick={onClose}
+            style={{
+              background: "rgba(255,255,255,0.07)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: 8,
+              padding: "5px 10px",
+              color: "rgba(255,255,255,0.5)",
+              fontSize: 13,
+              cursor: "pointer",
+              fontFamily: FF,
+            }}
+          >
+            Done
+          </button>
+        </div>
+        {/* Tab bar */}
+        <div style={{ display: "flex", padding: "0 16px" }}>
+          {(["stats", "achievements"] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setProfileTab(tab)}
+              style={{
+                padding: "8px 16px",
+                background: "transparent",
+                border: "none",
+                borderBottom: profileTab === tab ? "2px solid #FFB14A" : "2px solid transparent",
+                color: profileTab === tab ? "#FFB14A" : "rgba(255,255,255,0.45)",
+                fontSize: 13,
+                fontWeight: profileTab === tab ? 800 : 600,
+                cursor: "pointer",
+                textTransform: "capitalize",
+                transition: "color 150ms ease",
+              }}
+            >
+              {tab}
+            </button>
+          ))}
+          <button
+            onClick={() => setProfileTab("challenges")}
+            style={{
+              flex: 1, padding: "8px 0", background: "transparent", border: "none",
+              borderBottom: profileTab === "challenges" ? "2px solid #FFB14A" : "2px solid transparent",
+              color: profileTab === "challenges" ? "#FFB14A" : "rgba(255,255,255,0.45)",
+              fontSize: 12, fontWeight: 700, cursor: "pointer", letterSpacing: 0.5,
+            }}
+          >Challenges</button>
+        </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 16 }}>
+      {profileTab === "achievements" && (
+        <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", minHeight: 0 }}>
+          <AchievementWall
+            sport={sport}
+            isSelf={true}
+            totalHands={totalHands ? Number(totalHands) : undefined}
+            lifetimeBestFp={bestHand ? Number(bestHand) : undefined}
+            currentStreak={parseInt(localStorage.getItem(sport === "basketball" ? "replaymod_streak" : `${sport}_replaymod_streak`) ?? "0", 10)}
+          />
+        </div>
+      )}
+
+      {profileTab === "challenges" && (
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          <YourChallengesPanel sport={sport} currentUid={currentUid} />
+        </div>
+      )}
+
+      {profileTab === "stats" && <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 16 }}>
         {/* Section 1 — Identity card */}
         <div
           onClick={() => { if (!editing) { setEditValue(nickname); setEditing(true); } }}
@@ -368,7 +422,7 @@ export function ProfileScreen({ currentUid, sport, onClose, isAnonymous, onSaveA
             </button>
           </div>
         )}
-      </div>
+      </div>}
     </div>
   );
 }

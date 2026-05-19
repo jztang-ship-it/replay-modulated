@@ -191,6 +191,16 @@ function BasketballSlatePanelInner({ playerIndex }: { playerIndex: Map<string, R
   // visible totals add up to slateSize.
   const rotatingPlayers = slate.players.filter(p => !p.isAnchor);
 
+  // Dedupe: when an anchor and a bonus star resolve to the same
+  // player (LeBron in 1920 is both a RED anchor and the day's bonus
+  // star, for example), the panel was rendering the card twice — once
+  // in the anchor row, once in the bonus row with its gold-orange
+  // bonus wash. Anchor presence wins; the player keeps their tier
+  // color and is hidden from the bonus row. Bonus reward still
+  // applies at deal time — this is a display-only dedupe.
+  const anchorIdSet = new Set(anchors.map(a => a.id));
+  const dedupedBonusPlayers = bonusPlayers.filter(b => !anchorIdSet.has(b.id));
+
   const themeMetadata = slate.themeKey
     ? (sportAdapter as any).getThemeMetadata?.(slate.themeKey) ?? null
     : null;
@@ -207,7 +217,7 @@ function BasketballSlatePanelInner({ playerIndex }: { playerIndex: Map<string, R
   const adapter: SlatePanelAdapter = {
     themeMetadata,
     anchors: anchors.map(p => ({ id: p.id, name: p.name, tier: p.tier as TierColor })),
-    bonusPlayers,
+    bonusPlayers: dedupedBonusPlayers,
     rotatingCount: rotatingPlayers.length,
     msUntilRotation: slate.msUntilRotation,
     CardThumb,

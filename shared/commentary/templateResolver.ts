@@ -276,7 +276,44 @@ function dedupeTopLabel(rawLabel: string, topStat: string): string {
   return cleaned.length >= 3 ? cleaned : rawLabel;
 }
 
+/** Variables in the topGame / record family. Templates that reference
+ *  these design their scaffolding AROUND them (e.g., "{topStat}. The
+ *  {topRankPhrase}. Read the line.") — when the data is empty, the
+ *  scaffold leaks as orphan punctuation. Other vars like {opp}, {badge},
+ *  {costar*} are designed to render gracefully empty (e.g., "{name}
+ *  went off{opp}." → "Jokić went off."), so they stay out of this set.
+ *
+ *  Number-typed vars ({streak}, {gap}, {recordValue}) are NOT in this set —
+ *  they have valid zero/falsy states the templates handle. */
+const STRING_VARS_REQUIRING_VALUE: Array<keyof TemplateData> = [
+  "topStat", "topLabel", "topCategory", "topRank", "topRankPhrase",
+  "seasonBestStat",
+  "record", "recordHolder",
+];
+
+const VAR_REF_RE = /\{(\w+)\}/g;
+
+/** Returns true if the template references a string variable that resolves
+ *  to empty in `data`. Used to short-circuit templates that would render
+ *  with orphan scaffold punctuation around missing variables. */
+function templateHasEmptyRequiredVariable(template: string, data: TemplateData): boolean {
+  for (const match of template.matchAll(VAR_REF_RE)) {
+    const varName = match[1] as keyof TemplateData;
+    if (!STRING_VARS_REQUIRING_VALUE.includes(varName)) continue;
+    const value = data[varName];
+    if (typeof value !== "string" || value === "") return true;
+  }
+  return false;
+}
+
 export function resolveTemplate(template: string, data: TemplateData): string {
+  // Guard: refuse to render templates whose referenced string vars are
+  // empty. Returning "" signals the caller (selectCommentary's scoring
+  // step) to skip this candidate. Without this guard, "{topStat}. The
+  // {topRankPhrase}. Read the line." renders as ". The . Read the line."
+  // when topGame data is incomplete — the punctuation scaffold leaks.
+  if (templateHasEmptyRequiredVariable(template, data)) return "";
+
   const usesBoth = template.includes("{topStat}") && template.includes("{topLabel}");
   const topLabel = usesBoth ? dedupeTopLabel(data.topLabel ?? "", data.topStat) : (data.topLabel ?? "");
   return template

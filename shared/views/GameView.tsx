@@ -73,6 +73,7 @@ import {
 import { GameBar as SharedGameBar, type CelebrationData } from "@shared/components/GameBar";
 import { featureFlags } from "@shared/featureFlags";
 import { selectCommentary } from "@shared/commentary/selectCommentary";
+import { evaluateTrigger } from "@shared/utils/triggerEvaluation";
 import { detectTopGame } from "@shared/data/recordDetector";
 import { selectStar } from "@shared/commentary/storySelector";
 import { useGameAnalytics } from "@shared/analytics/useGameAnalytics";
@@ -121,10 +122,35 @@ const BellSheet = lazy(() =>
 const FeedbackModal = lazy(() =>
   import("@shared/inbox/FeedbackModal").then(m => ({ default: m.FeedbackModal }))
 );
+const ChallengeSharePrompt = lazy(() =>
+  import("@shared/components/ChallengeSharePrompt").then(m => ({ default: m.ChallengeSharePrompt }))
+);
+const ChallengeComparisonScreen = lazy(() =>
+  import("@shared/components/ChallengeComparisonScreen").then(m => ({ default: m.ChallengeComparisonScreen }))
+);
+const ChallengePostResultBar = lazy(() =>
+  import("@shared/components/ChallengePostResultBar").then(m => ({ default: m.ChallengePostResultBar }))
+);
+// (ChallengeDebugPanel is mounted at the basketball app-shell level so
+// it surfaces on every route including the chooser landing before this
+// component mounts. Imported there, not here.)
+const NotificationsPanel = lazy(() =>
+  import("@shared/components/NotificationsPanel").then(m => ({ default: m.NotificationsPanel }))
+);
 import { chadMessage } from "@shared/commentary/chad";
+import {
+  chadTriggerFraming,
+  chadChallengeIntro,
+  chadChallengeTactical,
+  chadNormalPlayWelcome,
+  chadRivalryBackIntro,
+} from "@shared/commentary/chadChallenge";
+import { isRealName } from "@shared/utils/isRealName";
 import { useAuth } from "@shared/auth/useAuth";
 import { listMessages } from "@shared/inbox/inbox";
+import { useChallengeNotifications, type ChallengeNotification } from "@shared/hooks/useChallengeNotifications";
 import { ensureLoaded } from "@shared/engines/dataEngine";
+import { supabase } from "@shared/lib/supabase";
 
 // ── Reveal mode toggle ─────────────────────────────────────────────────────
 // "auto" = cards flip automatically in sequence (original behaviour)
@@ -300,6 +326,21 @@ function BonusPoolPill({ betAmount, betNonce, onAmountChange, sportKey, competit
 
 interface Props {
   adapter: GameAdapter;
+  challengeCtx?: import("@shared/adapters/challengeTypes").ChallengeCtx;
+  /** Rivalry-continuation context. When set, the fresh hand that the user
+   *  is about to play is the result of a win-state "Send It Back" — the
+   *  share prompt auto-fires at RESULTS framed as a back-challenge. */
+  challengeBackCtx?: import("@shared/adapters/challengeTypes").ChallengeBackCtx;
+  /** Clears challengeCtx in the parent. Called from comparison-sheet
+   *  Dismiss / "Play your own hand" / "Send It Back" (which then
+   *  installs challengeBackCtx via the setter below). */
+  clearChallengeCtx?: () => void;
+  /** Installs challengeBackCtx in the parent. Called from win-state
+   *  "Send It Back" to mark the upcoming fresh hand as a return-fire. */
+  setChallengeBackCtx?: (ctx: import("@shared/adapters/challengeTypes").ChallengeBackCtx) => void;
+  /** Clears challengeBackCtx once the rivalry-continuation hand resolves
+   *  + the user shares or dismisses. */
+  clearChallengeBackCtx?: () => void;
 }
 
 function createPlaceholders(rosterSize: number): PlayerCard[] {
@@ -323,7 +364,7 @@ function createPlaceholders(rosterSize: number): PlayerCard[] {
   }));
 }
 
-export function GameView({ adapter }: Props) {
+export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallengeCtx, setChallengeBackCtx, clearChallengeBackCtx }: Props) {
   const {
     sportKey,
     sportAdapter,
@@ -410,6 +451,8 @@ export function GameView({ adapter }: Props) {
     ftueHoldSpotlight, setFtueHoldSpotlight,
     setFtueCoachBubbleKey,
     incrementHandCount,
+    newlyUnlockedAchievements,
+    clearNewlyUnlockedAchievements,
   } = shared;
 
   const {
@@ -445,9 +488,32 @@ export function GameView({ adapter }: Props) {
   const { user, isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
   const [bellOpen, setBellOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  // Notification panel state + hook. Anonymous users skip the fetch
+  // entirely (the RLS policy would return nothing anyway).
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifRefreshNonce, setNotifRefreshNonce] = useState(0);
+  const {
+    notifications: challengeNotifications,
+    unreadCount: challengeUnreadCount,
+    markAllRead: markNotificationsRead,
+  } = useChallengeNotifications({
+    enabled: !!user && !isAnonymous,
+    refreshNonce: notifRefreshNonce,
+  });
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [bigWinFired, setBigWinFired] = useState(false);
+  const [challengeTrigger, setChallengeTrigger] = useState<import("@shared/utils/triggerEvaluation").TriggerResult | null>(null);
+  const [showChallengeComparison, setShowChallengeComparison] = useState(false);
+  // Sheet visibility split into "mounted" (showChallengeComparison) vs
+  // "rendered on-screen" (!comparisonCollapsed). Dismiss gestures toggle
+  // collapsed; the sheet stays mounted so attempt POST fires only once.
+  const [comparisonCollapsed, setComparisonCollapsed] = useState(false);
+  // Mirrored from the sheet via onResolved so the post-result action
+  // bar + trash-talk chip have the same state without rerunning the
+  // attempt POST. Cleared when the user enters a fresh hand.
+  const [postResultState, setPostResultState] = useState<"WIN" | "LOSS_OPEN" | "LOSS_CLOSED" | null>(null);
+  const [postResultTrashTalk, setPostResultTrashTalk] = useState<string | null>(null);
   const sessionCount = useRef(parseInt(localStorage.getItem("rm_session_count") ?? "0", 10));
 
   useEffect(() => {
@@ -468,10 +534,13 @@ export function GameView({ adapter }: Props) {
   }, [user, isAnonymous, bellOpen]);
 
   const [gameError, setGameError] = useState<string | null>(null);
-  const { isFTUE, completeFTUE } = useFTUE(sportKey);
+  const { isFTUE: isFTUERaw, completeFTUE } = useFTUE(sportKey);
+  // Challenge acceptors bypass FTUE entirely — drop straight into the deal.
+  const isFTUE = isFTUERaw && !challengeCtx;
   const isFTUERef = useRef(isFTUE);
   useEffect(() => { isFTUERef.current = isFTUE; }, [isFTUE]);
   const coachDismissRef = useRef<(() => void) | null>(null);
+  const initialRosterRef = useRef<import("@shared/types/index").GeneratedCard[]>([]);
   /** Legend icon gold-filled when pre-game msg is active OR daily bonus unseen */
   const [legendGold, setLegendGold] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -505,11 +574,100 @@ export function GameView({ adapter }: Props) {
     if (isFTUE) return;
     if (gameState !== "IDLE") return;
     if (localStorage.getItem(`replaymod_pregame_intro_${sportKey}`) === "1") return;
+    // Challenge acceptors get their own intro chip instead. Skip firing
+    // the welcome HERE, but leave the flag alone — when they later play
+    // a fresh non-challenge hand, the welcome should fire normally.
+    if (challengeCtx) return;
     localStorage.setItem(`replaymod_pregame_intro_${sportKey}`, "1");
     chadFiredThisIdleRef.current = true;
     setLegendGold(true);
     setFtueCommentaryOverride({ parts: [chadMessage("welcome")], sticky: true });
   }, [isFTUE, gameState]); // eslint-disable-line
+
+  // ── Challenge mode: auto-deal on accept + intro chip ──
+  // Accept Challenge → instant deal. No DEAL button tap required.
+  const challengeAutoDealtRef = useRef(false);
+  // Explicit "the next IDLE deal should use challengeCtx.initialRoster"
+  // intent. Set true at the two points that legitimately want the
+  // challenge snapshot replayed: the Accept auto-deal (below) and the
+  // "Try Again" buttons on the comparison sheet + post-result action
+  // bar. The IDLE branch of onPrimaryAction reads this and resets it.
+  //
+  // Without an explicit intent, `if (challengeCtx)` alone misroutes
+  // any post-dismiss DEAL tap (e.g. the main GameBar's button while
+  // the post-result action bar is hidden, or the user tapping
+  // through after the API failed to produce postResultState) back
+  // into the challenge snapshot. Stale challengeCtx is cleared in
+  // the IDLE branch when this flag is false.
+  const challengeNextDealRef = useRef(false);
+  useEffect(() => {
+    if (!challengeCtx) { challengeAutoDealtRef.current = false; return; }
+    if (challengeAutoDealtRef.current) return;
+    if (gameState !== "IDLE") return;
+    challengeAutoDealtRef.current = true;
+    challengeNextDealRef.current = true;
+    void onPrimaryAction();
+  }, [challengeCtx, gameState]); // eslint-disable-line
+
+  // Challenge intro chip: fires once when the deal lands in HOLD. Persists
+  // until the user touches a card (first hold). Sets sticky chad commentary
+  // with target FP + challenger name so the recipient knows the bar to beat.
+  const challengeIntroShownRef = useRef(false);
+  useEffect(() => {
+    if (!challengeCtx) { challengeIntroShownRef.current = false; return; }
+    if (challengeIntroShownRef.current) return;
+    if (gameState !== "HOLD") return;
+    challengeIntroShownRef.current = true;
+    // Trash-talk-energy chip: randomized bank, no instructional copy.
+    // Hold/redraw mechanic teaches itself via the UI affordances.
+    const namedChallenger = isRealName(challengeCtx.challengerName)
+      ? challengeCtx.challengerName
+      : null;
+    const introLine = chadChallengeIntro({
+      challengerName: namedChallenger,
+      targetScore: challengeCtx.targetScore,
+    });
+    setFtueCommentaryOverride({ parts: [introLine], sticky: true });
+  }, [challengeCtx, gameState]); // eslint-disable-line
+
+  // Dismiss the challenge intro chip on first card interaction (any hold)
+  // or any state transition past HOLD.
+  useEffect(() => {
+    if (!challengeIntroShownRef.current) return;
+    if (lockedCardIds.size > 0 || (gameState !== "HOLD" && gameState !== "IDLE")) {
+      setFtueCommentaryOverride(null);
+    }
+  }, [lockedCardIds, gameState]); // eslint-disable-line
+
+  // [Chad:rivalry-back] Fresh-hand intro chip after Send-It-Back.
+  // Mirrors the incoming-challenge intro pattern (chip lands at HOLD,
+  // dismisses on first card interaction) but framing flips outbound:
+  // "this hand is going back to {name}". Distinguishing signal is
+  // challengeBackCtx (rivalry continuation) being set with no inbound
+  // challengeCtx — the user just left a win and is on a fresh deal.
+  const rivalryBackChipFiredRef = useRef(false);
+  useEffect(() => {
+    if (!challengeBackCtx || challengeCtx) {
+      rivalryBackChipFiredRef.current = false;
+      return;
+    }
+    if (rivalryBackChipFiredRef.current) return;
+    if (gameState !== "HOLD") return;
+    rivalryBackChipFiredRef.current = true;
+    const namedChallenger = isRealName(challengeBackCtx.challengerName)
+      ? challengeBackCtx.challengerName
+      : null;
+    const line = chadRivalryBackIntro({ challengerName: namedChallenger });
+    setFtueCommentaryOverride({ parts: [line], sticky: true });
+  }, [challengeBackCtx, challengeCtx, gameState]); // eslint-disable-line
+  // Dismiss on first hold or past-HOLD transition (same gate as the
+  // inbound intro chip).
+  useEffect(() => {
+    if (!rivalryBackChipFiredRef.current) return;
+    if (lockedCardIds.size > 0 || (gameState !== "HOLD" && gameState !== "IDLE")) {
+      setFtueCommentaryOverride(null);
+    }
+  }, [lockedCardIds, gameState]); // eslint-disable-line
 
   // ── Attention-surface mutex (single lock, all auto-fired surfaces) ──
   //
@@ -576,20 +734,26 @@ export function GameView({ adapter }: Props) {
     return () => clearTimeout(t);
   }, [handCount, tryClaimAttention]);
 
-  // First rookie win — fires at RESULTS
+  // First rookie win — fires at RESULTS. Skipped for challenge recipients
+  // (their first impression of the game shouldn't be a tutorial-style
+  // Chad nudge about ROOKIE tier rules). onChallengeUrl covers pre-Accept.
   useEffect(() => {
-    if (isFTUE) return;
+    if (isFTUE || challengeCtx || onChallengeUrl) return;
     if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
     if (winTier !== "ROOKIE") return;
     if (localStorage.getItem("rm_usher_rookie_first_win") === "1") return;
     localStorage.setItem("rm_usher_rookie_first_win", "1");
     setLegendGold(true);
     setFtueCommentaryOverride({ parts: [chadMessage("rookie_first_win")], sticky: true });
-  }, [gameState, winTier, isFTUE]); // eslint-disable-line
+  }, [gameState, winTier, isFTUE, challengeCtx]); // eslint-disable-line
 
-  // All other Chad messages — evaluated once per IDLE
+  // All other Chad messages — evaluated once per IDLE.
+  // Challenge recipients don't see retention/auth-nudge Chad lines — the
+  // intro chip and the comparison sheet are the only Chad surfaces in the
+  // challenge flow. onChallengeUrl gate covers pre-Accept (challengeCtx
+  // null but landing screen open).
   useEffect(() => {
-    if (isFTUE || gameState !== "IDLE") return;
+    if (isFTUE || challengeCtx || onChallengeUrl || gameState !== "IDLE") return;
     if (chadFiredThisIdleRef.current) return;
     if (chadLastHandRef.current === handCount) return;
 
@@ -646,21 +810,38 @@ export function GameView({ adapter }: Props) {
     }
   }, [gameState, handCount, isFTUE, isAnonymous, bigWinFired, tryOpenAuthModal, tryClaimAttention, releaseAttention]); // eslint-disable-line
 
-  // Auth nudge — MVP+ hand while anonymous
+  // [Auth:challenge-skip] Auth nudge — MVP+ hand while anonymous.
+  // Challenge recipients are guests landing through a deep link — pushing a
+  // sign-in modal kills the moment. Skip during ALL challenge flow:
+  //   - challengeCtx truthy   → post-Accept (replay in progress)
+  //   - challengeIdFromUrl    → pre-Accept (landing screen visible,
+  //                             challengeCtx still null but GameView
+  //                             is mounted underneath)
+  // Earlier versions only checked challengeCtx, which let the nudge fire
+  // for return users (handCount>=5) on the landing screen.
+  const onChallengeUrl = typeof window !== "undefined" &&
+    /\/basketball\/challenge\/[0-9a-f-]{36}/i.test(window.location.pathname);
   useEffect(() => {
-    if (!isAnonymous || isFTUE) return;
+    if (!isAnonymous || isFTUE || challengeCtx || onChallengeUrl) return;
     if (gameState !== "IDLE") return;
     if (winTier !== "MVP" && winTier !== "LEGEND") return;
     return tryOpenAuthModal("big_win", 2500, { tier: winTier ?? "" });
-  }, [winTier, isAnonymous, isFTUE, gameState, tryOpenAuthModal]);
+  }, [winTier, isAnonymous, isFTUE, gameState, tryOpenAuthModal, challengeCtx, onChallengeUrl]);
 
-  // Auth nudge — fallback at hand 5
+  // Auth nudge — fallback at hand 5. Same challenge-mode skip as above.
   useEffect(() => {
-    if (!isAnonymous || isFTUE) return;
+    if (!isAnonymous || isFTUE || challengeCtx || onChallengeUrl) return;
     if (gameState !== "IDLE") return;
     if (handCount < 5) return;
     return tryOpenAuthModal("hand_5", 3500);
-  }, [handCount, isAnonymous, isFTUE, gameState, tryOpenAuthModal]);
+  }, [handCount, isAnonymous, isFTUE, gameState, tryOpenAuthModal, challengeCtx, onChallengeUrl]);
+
+  // (prepareChallenge removed in push 2a. Send It Back from the
+  // comparison sheet no longer shares from the played hand directly —
+  // it routes the user into a FRESH normal hand with challengeBackCtx
+  // set, and the share prompt at that hand's RESULTS does the create
+  // synchronously from its own tap handler. The Web-Share user-gesture
+  // chain is preserved by ChallengeSharePrompt's own pre-creation flow.)
 
   const pendingCelebration = useRef<{ totalFp: number } | null>(null);
   /** FTUE: roster sum can read 0 briefly in RESULTS — keep last resolved hand FP for TierGauge */
@@ -729,7 +910,13 @@ export function GameView({ adapter }: Props) {
   // (see handleCardRevealStart), this gives the per-card rollup feel the
   // user asked for, regardless of auto / tap / mixed reveal path.
   const heldFpAtDraw = 0;
-  const currentBet = BASE_BET * betMultiplier;
+  // In challenge mode there's no wager — win/loss is the head-to-head
+  // comparison. Lock the effective multiplier to 1x so all downstream
+  // bet math (payout, animations, FTUE seeds) reads 1x even if the
+  // user's preferred multiplier from a prior session is higher. The UI
+  // hides the multiplier selector entirely so it can't drift from this.
+  const effectiveBetMultiplier = challengeCtx ? 1 : betMultiplier;
+  const currentBet = BASE_BET * effectiveBetMultiplier;
   const gameAnalytics = useGameAnalytics(sportKey);
 
   // ── Reveal + spring orchestration ──────────────────────────────────
@@ -752,7 +939,7 @@ export function GameView({ adapter }: Props) {
     ) => number,
     ftueAnchorId: FTUE_ANCHOR_ID,
     currentBet,
-    betMultiplier,
+    betMultiplier: effectiveBetMultiplier,
     rosterRef,
     isFTUE,
     ftueLastHandFpRef,
@@ -898,7 +1085,7 @@ export function GameView({ adapter }: Props) {
     const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
     const tierMult = winTiersMap[winTier]?.multiplier ?? 0;
     const isLoss = winTier === "BUST";
-    const lossAmount = winTier === "BUST" ? BASE_BET * betMultiplier : 0;
+    const lossAmount = winTier === "BUST" ? BASE_BET * effectiveBetMultiplier : 0;
     const streakMult = getStreakMultiplier(streak);
     return {
       tierLabel: formatTierLabel(winTier),
@@ -907,14 +1094,14 @@ export function GameView({ adapter }: Props) {
       payout: winPayout,
       streak,
       isBust: winTier === "BUST",
-      betMultiplier,
+      betMultiplier: effectiveBetMultiplier,
       tierMultiplier: tierMult,
       streakMultiplier: streakMult,
       baseBet: BASE_BET,
       isLoss,
       lossAmount,
     };
-  }, [gameState, winTier, winPayout, streak, betMultiplier]); // eslint-disable-line
+  }, [gameState, winTier, winPayout, streak, effectiveBetMultiplier]); // eslint-disable-line
 
   const capUsed = useMemo(() => sumSalary(roster), [roster]);
 
@@ -987,6 +1174,10 @@ export function GameView({ adapter }: Props) {
       projectedFp: Number(c?.projectedFp ?? 0) || 0,
       cardTier: String(c?.tier ?? ""),
       basePlayerId: String(c?.basePlayerId ?? ""),
+      // Player's own team for this game's season (e.g. "CHI" for a Bulls-
+      // era Jordan card). Drives the culture lookup's teamEras overlay
+      // for multi-tenure players. Distinct from opponent (faced team).
+      team: String(c?.team ?? ""),
       statLine: (c?.statLine ?? {}) as Record<string, any>,
       gameDate: String(c?.gameInfo?.date ?? ""),
     }));
@@ -1053,6 +1244,10 @@ export function GameView({ adapter }: Props) {
     if (isFTUE) {
       return null;
     }
+    // Challenge mode: the tactical chad chip + auto-rising comparison sheet
+    // own the post-reveal moment. Skip the standard tier commentary so it
+    // doesn't speak over the challenge-aware framing.
+    if (challengeCtx) return null;
     const fp = lockedGaugeFpRef.current ?? displayFp;
     const gaugeSnap = computeGaugeState(fp, gaugeThresholds, winTier, 8);
 
@@ -1087,23 +1282,47 @@ export function GameView({ adapter }: Props) {
     };
 
     const copy = selectCommentary(copyInput as any);
-    if (!copy?.primary) {
-      const fpStr = fp.toFixed(1);
-      const staticMap: Record<string, string> = {
-        BUST: "Off night. The numbers don't lie.",
-        ROOKIE: `${fpStr} on the board. Take it.`,
-        STARTER: `${fpStr} — that's a real hand.`,
-        ALL_STAR: `${fpStr}. Now we're talking.`,
-        MVP: `${fpStr}. That's a number.`,
-        LEGEND: `${fpStr}. Insane.`,
-      };
-      const staticCopy = { primary: staticMap[winTier] ?? staticMap.STARTER, secondary: "" };
-      postRevealCopyRef.current = staticCopy;
-      return staticCopy;
+    const baseCopy = copy?.primary
+      ? copy
+      : (() => {
+          const fpStr = fp.toFixed(1);
+          const staticMap: Record<string, string> = {
+            BUST: "Off night. The numbers don't lie.",
+            ROOKIE: `${fpStr} on the board. Take it.`,
+            STARTER: `${fpStr} — that's a real hand.`,
+            ALL_STAR: `${fpStr}. Now we're talking.`,
+            MVP: `${fpStr}. That's a number.`,
+            LEGEND: `${fpStr}. Insane.`,
+          };
+          return { primary: staticMap[winTier] ?? staticMap.STARTER, secondary: "" };
+        })();
+
+    // Trigger-aware framing override (standalone play only — challenge
+    // recipients see ChallengeComparisonScreen with its own Chad lines).
+    // When a named trigger fires (rare_pull/big_score/near_miss/bad_beat),
+    // Chad references the share-worthy nature of the moment rather than the
+    // tier-by-numbers commentary.
+    if (!challengeCtx && challengeTrigger && challengeTrigger.trigger !== "default") {
+      const recordBadge = (rosterRef.current as any[])
+        .flatMap(c => c.achievements ?? [])
+        .find((b: any) => ["TOP_GAME", "CAREER_HIGH", "NBA_RECORD", "SEASON_RECORD", "PB"]
+          .some(rid => String(b.id ?? "").includes(rid)));
+      const framingLine = chadTriggerFraming({
+        trigger: challengeTrigger.trigger as any,
+        fp,
+        tier: winTier,
+        badgeLabel: recordBadge?.label,
+        nearMissGap: challengeTrigger.nearMissGap,
+        nearMissNextTier: challengeTrigger.nearMissNextTier,
+      });
+      const framed = { primary: framingLine, secondary: baseCopy.secondary ?? "" };
+      postRevealCopyRef.current = framed as any;
+      return framed as any;
     }
-    postRevealCopyRef.current = copy;
-    return copy;
-  }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct]); // eslint-disable-line
+
+    postRevealCopyRef.current = baseCopy as any;
+    return baseCopy;
+  }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct, challengeTrigger, challengeCtx]); // eslint-disable-line
 
   const regularFinalGaugeKick = false;
 
@@ -1243,6 +1462,7 @@ export function GameView({ adapter }: Props) {
       if (balance < currentBet) { alert("Insufficient balance!"); return; }
       resetReveal();
       resetAllOverlays();
+      initialRosterRef.current = [];
       completedCardsRef.current = new Set();
       setDisplayTier("BUST");
       setTierResultPhase(1);
@@ -1276,7 +1496,22 @@ export function GameView({ adapter }: Props) {
       })();
       let res: any;
       try {
-        res = ftueStillActive ? await ftueDealRoster() : await dealInitialRoster();
+        // Challenge snapshot replay requires BOTH: a present challengeCtx
+        // AND an explicit "this deal is a challenge replay" intent set by
+        // either the Accept auto-deal effect or a "Try Again" button.
+        // challengeCtx alone is not enough — it persists across the
+        // RESULTS → IDLE transition, and dismissing the comparison sheet
+        // doesn't clear it. Treating `if (challengeCtx)` alone as "replay
+        // the snapshot" misrouted any post-dismiss DEAL tap back into the
+        // same challenge. When the intent isn't set, clear the stale
+        // challengeCtx and deal a fresh hand (FTUE-aware).
+        if (challengeCtx && challengeNextDealRef.current) {
+          res = { roster: challengeCtx.initialRoster };
+          challengeNextDealRef.current = false;
+        } else {
+          if (challengeCtx) clearChallengeCtx?.();
+          res = ftueStillActive ? await ftueDealRoster() : await dealInitialRoster();
+        }
       } catch (e) {
         // Surface the real error to the console — the on-screen banner is
         // intentionally generic, but the underlying message (server 4xx, auth
@@ -1287,6 +1522,7 @@ export function GameView({ adapter }: Props) {
         return;
       }
       const nextRoster = (res?.roster ?? res?.cards ?? []) as PlayerCard[];
+      initialRosterRef.current = nextRoster as import("@shared/types/index").GeneratedCard[];
       if (!nextRoster.length) {
         setGameError("Couldn't build a roster. Tap to try again.");
         setGameState("IDLE");
@@ -1473,7 +1709,9 @@ export function GameView({ adapter }: Props) {
   // through their own revealHeldCards flow after the unheld sequence
   // completes (handled inside the reveal hook).
   function autoFlipAll() {
-    const unheld = (revealableCards as any[]).filter(c => !c.wasHeld);
+    const unheld = (revealableCards as any[])
+      .filter(c => !c.wasHeld)
+      .sort((a, b) => (Number(a.salary ?? 0)) - (Number(b.salary ?? 0)));
     for (const c of unheld) {
       if (!tappedCardIds.has(c.cardId)) {
         tapRevealCard(c.cardId);
@@ -1508,6 +1746,164 @@ export function GameView({ adapter }: Props) {
       }
     }
   }, [performanceTagMap, gameState, isFTUE]); // eslint-disable-line
+
+  // Evaluate challenge trigger at WIN_CELEBRATION entry — winTier is valid here
+  // (setWinTier fires 1200ms before setGameState("WIN_CELEBRATION") in _useReveal.ts).
+  // At RESULTS (reached via score-row double-tap), challengeTrigger persists from
+  // WIN_CELEBRATION. At IDLE (replay button), challengeTrigger is cleared.
+  // Guard: skip when playing a received challenge (challengeCtx present).
+  //
+  // Rivalry-continuation: when challengeBackCtx is set (user just tapped
+  // "Send It Back" on a win), force the prompt to render even if the
+  // fresh hand wouldn't otherwise qualify. Tag the result with a virtual
+  // "rivalry_back" trigger type so isSpecial fires and the prominent
+  // prompt strip renders (not the small corner icon).
+  useEffect(() => {
+    if (gameState === "WIN_CELEBRATION" && !challengeCtx) {
+      const resolvedRoster = rosterRef.current as import("@shared/types/index").GeneratedCard[];
+      const badges = resolvedRoster.flatMap((c: any) => c.achievements ?? []);
+      const fp = resolvedRoster.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0);
+      const tier = winTier ?? calculateWinTier(fp) ?? "BUST";
+      const topGameTier = (topGameInfoHolder.current?.topGame?.tier ?? null) as
+        import("@shared/utils/triggerEvaluation").TopGameTier | null;
+      const starBasePlayerId =
+        (topGameInfoHolder.current?.star?.basePlayerId as string | undefined) ?? null;
+      const result = evaluateTrigger({
+        roster: resolvedRoster,
+        totalFp: fp,
+        winTier: tier,
+        badges,
+        winTiersMap: adapter.winTiersMap,
+        topGameTier,
+        starBasePlayerId,
+      });
+
+      // QA diagnostic — one log per hand. Includes the inputs the
+      // evaluator gates on plus the trigger it chose, so future "why
+      // did/didn't the prompt fire?" questions are answerable from the
+      // browser console without re-deriving the math. Skipped in
+      // challenge mode (already gated by the outer challengeCtx check).
+      // eslint-disable-next-line no-console
+      console.info("[Trigger:v2] hand evaluation", {
+        fp: Math.round(fp * 10) / 10,
+        winTier: tier,
+        topGameTier,
+        per_card: resolvedRoster.map((c: any) => ({
+          name: c.name,
+          tier: c.tier,
+          wasHeld: c.wasHeld === true,
+          badge_ids: (c.achievements ?? []).map((a: any) => a.id),
+        })),
+        trigger: result.trigger,
+        headline: result.headline,
+      });
+
+      if (challengeBackCtx) {
+        const targetName = challengeBackCtx.challengerName ?? "your friend";
+        setChallengeTrigger({
+          trigger: "rivalry_back" as any,
+          headline: `Send to ${targetName}.`,
+        });
+      } else {
+        setChallengeTrigger(result);
+      }
+    } else if (gameState === "IDLE") {
+      setChallengeTrigger(null);
+    }
+  }, [gameState, challengeBackCtx]); // eslint-disable-line
+
+  // Challenge mode post-reveal continuity:
+  //   1. WIN_CELEBRATION fires (reveal done, gauge settled, springSettled=true).
+  //   2. Tactical Chad chip lands as the commentary override — challenge-aware
+  //      framing referencing the matchup.
+  //   3. 1500ms later, the comparison sheet auto-slides up on top of the
+  //      game surface. No tap required to see the rivalry result.
+  //
+  // If the user reaches RESULTS directly (e.g. via the score-row double-tap
+  // codepath), show the sheet immediately — they're past the breath beat.
+  useEffect(() => {
+    if (!challengeCtx) return;
+
+    if (gameState === "WIN_CELEBRATION") {
+      const resolvedRoster = rosterRef.current as any[];
+      const myScore = resolvedRoster.reduce(
+        (s: number, c: any) => s + Number(c.actualFp ?? 0), 0,
+      );
+      const delta = myScore - challengeCtx.targetScore;
+      const heldSorted = resolvedRoster
+        .filter((c: any) => c.wasHeld)
+        .sort((a: any, b: any) => (a.salary ?? 0) - (b.salary ?? 0));
+      const topHeld = heldSorted[heldSorted.length - 1];
+      const heldAnchor = topHeld
+        ? {
+            name: String(topHeld.name ?? ""),
+            delivered:
+              Number(topHeld.actualFp ?? 0) >= Number(topHeld.projectedFp ?? 0),
+          }
+        : null;
+      const namedChallenger = isRealName(challengeCtx.challengerName)
+        ? challengeCtx.challengerName
+        : null;
+      const tacticalLine = chadChallengeTactical({
+        heldAnchor,
+        delta,
+        target: challengeCtx.targetScore,
+        challengerName: namedChallenger,
+      });
+      setFtueCommentaryOverride({ parts: [tacticalLine], sticky: true });
+
+      // Reset collapse + post-result mirrors for the new attempt.
+      setComparisonCollapsed(false);
+      setPostResultState(null);
+      setPostResultTrashTalk(null);
+
+      const t = setTimeout(() => setShowChallengeComparison(true), 1500);
+      return () => clearTimeout(t);
+    }
+
+    if (gameState === "RESULTS") {
+      setShowChallengeComparison(true);
+      setComparisonCollapsed(false);
+    }
+  }, [gameState, challengeCtx]); // eslint-disable-line
+
+  // Clear the post-result UI when the user actually starts playing again
+  // (DEAL → IDLE/DEALING/HOLD). The sheet + bar should not bleed into
+  // the next hand.
+  useEffect(() => {
+    if (gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD") {
+      if (showChallengeComparison) setShowChallengeComparison(false);
+      if (comparisonCollapsed) setComparisonCollapsed(false);
+      if (postResultState) setPostResultState(null);
+      if (postResultTrashTalk) setPostResultTrashTalk(null);
+    }
+  }, [gameState]); // eslint-disable-line
+
+  // Chad welcome on first transition from challenge play to normal play.
+  // Fires once per browser per sport when:
+  //   1. The user has been in challenge mode (challengeCtx was set this
+  //      session), AND
+  //   2. They're now in normal play (challengeCtx + challengeBackCtx
+  //      both null), AND
+  //   3. Game state is IDLE / DEALING (entering a new hand), AND
+  //   4. The local seen-flag hasn't been set yet.
+  // Plays via setFtueCommentaryOverride so it lands as a chip on the
+  // game surface alongside the daily season-reel intro.
+  const enteredChallengeModeRef = useRef(false);
+  useEffect(() => {
+    if (challengeCtx) enteredChallengeModeRef.current = true;
+  }, [challengeCtx]);
+  useEffect(() => {
+    if (challengeCtx || challengeBackCtx) return;
+    if (!enteredChallengeModeRef.current) return;
+    if (gameState !== "IDLE" && gameState !== "DEALING") return;
+    const key = `replaymod_normal_play_welcome_seen_${sportKey}`;
+    try {
+      if (localStorage.getItem(key) === "1") return;
+      localStorage.setItem(key, "1");
+    } catch { return; }
+    setFtueCommentaryOverride({ parts: [chadNormalPlayWelcome()], sticky: true });
+  }, [gameState, challengeCtx, challengeBackCtx, sportKey]); // eslint-disable-line
 
   // ── JSX ───────────────────────────────────────────────────────────
   // NOTE: this useMemo MUST stay above the early returns below. React's
@@ -1640,25 +2036,56 @@ export function GameView({ adapter }: Props) {
           }}>
             <AppHeader
               onCollect={() => setShowCollect(true)}
-              onProfile={() => setShowProfile(true)}
+              onProfile={() => {
+                setShowProfile(true);
+                clearNewlyUnlockedAchievements();
+                track("profile", "profile_self_view", { sport: adapter.sportKey });
+              }}
               hasUncollected={taskStates.some(t => t.progress >= t.target && !t.collected)}
-              unreadInboxCount={unreadCount}
-              onBell={() => { setBellOpen(true); track('nav', 'bell_clicked', { unread_count: unreadCount }, 'system'); }}
+              // Combined unread count: inbox messages + challenge
+              // notifications. Bell badge surfaces both signals.
+              unreadInboxCount={unreadCount + challengeUnreadCount}
+              onBell={() => {
+                // Route challenge notifications to NotificationsPanel.
+                // If there are unread challenge notifications, open
+                // that surface; otherwise fall back to the existing
+                // inbox sheet so legacy inbox messages stay reachable.
+                if (challengeUnreadCount > 0) {
+                  setShowNotifications(true);
+                  track("nav", "bell_clicked", { unread_count: challengeUnreadCount, source: "notifications" }, "system");
+                } else {
+                  setBellOpen(true);
+                  track("nav", "bell_clicked", { unread_count: unreadCount, source: "inbox" }, "system");
+                }
+              }}
+              hasNewAchievements={newlyUnlockedAchievements.length > 0}
             />
           </div>
           <div data-ftue-chrome="true" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "0 12px" }}>
-            <BonusPoolPill
-              betAmount={currentBet}
-              betNonce={betNonce}
-              sportKey={sportKey}
-              competition={adapter.competition}
-              onAmountChange={(v) => { bonusPoolRef.current = v; }}
-            />
-            {/* Slate v2 chip — only mounts when the sport wrapper passes a
-                SlateChipComponent (which it only does when the slate-v2
-                flag is ON for this sport). Flag-OFF: this branch is
-                undefined and zero slate code runs from the in-game path. */}
-            {SlateChipComponent && <SlateChipComponent />}
+            {challengeCtx ? (
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "4px 10px", borderRadius: 999,
+                background: "rgba(255,177,74,0.10)",
+                border: "1px solid rgba(255,177,74,0.35)",
+                color: "#FFB14A", fontSize: 11, fontWeight: 900, letterSpacing: 0.8,
+                fontFamily: "'Inter', system-ui, sans-serif",
+              }}>
+                TARGET: {challengeCtx.targetScore.toFixed(1)}
+                {isRealName(challengeCtx.challengerName) && ` — ${challengeCtx.challengerName}`}
+              </div>
+            ) : (
+              <>
+                <BonusPoolPill
+                  betAmount={currentBet}
+                  betNonce={betNonce}
+                  sportKey={sportKey}
+                  competition={adapter.competition}
+                  onAmountChange={(v) => { bonusPoolRef.current = v; }}
+                />
+                {SlateChipComponent && <SlateChipComponent />}
+              </>
+            )}
           </div>
         </div>
 
@@ -1815,7 +2242,7 @@ export function GameView({ adapter }: Props) {
                   </>
                 )}
                 {tierResultPhase === 2 && (() => {
-                  const amountWagered = BASE_BET * betMultiplier;
+                  const amountWagered = BASE_BET * effectiveBetMultiplier;
                   const net = winPayout - amountWagered;
                   const netPositive = net > 0;
                   const netColor = netPositive ? "#7FFF00" : "#FF3B30";
@@ -1847,9 +2274,11 @@ export function GameView({ adapter }: Props) {
                             {ceilingPct}% ceiling
                           </span>
                         )}
-                        <span style={{ fontSize: 20, fontWeight: 700, color: netColor, fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
-                          {netLabel}
-                        </span>
+                        {!challengeCtx && (
+                          <span style={{ fontSize: 20, fontWeight: 700, color: netColor, fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                            {netLabel}
+                          </span>
+                        )}
                       </div>
                     </>
                   );
@@ -1912,7 +2341,7 @@ export function GameView({ adapter }: Props) {
                     );
                   })()}
                 </div>
-                {gameState === "HOLD" && !isFTUE && (
+                {gameState === "HOLD" && !isFTUE && !challengeCtx && (
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
                     <span style={{ fontSize: 16, fontWeight: 400, color: "rgba(255,255,255,0.5)", lineHeight: 1 }}>
                       {BASE_BET} × {betMultiplier}x =
@@ -2170,8 +2599,9 @@ export function GameView({ adapter }: Props) {
         capUsed={capUsed}
         lockedSalary={lockedSalary}
         revealedSalary={revealedSalary}
-        betMultiplier={betMultiplier}
+        betMultiplier={effectiveBetMultiplier}
         baseBet={BASE_BET}
+        challengeMode={!!challengeCtx}
         winTiers={gameBarWinTiers}
         legend={legendWithStars}
         sportKey={sportKey}
@@ -2239,6 +2669,51 @@ export function GameView({ adapter }: Props) {
           />
         )}
 
+        {showNotifications && user && (
+          <NotificationsPanel
+            notifications={challengeNotifications}
+            onClose={() => {
+              // Mark everything read when the panel closes so the badge
+              // clears. Backend update happens via markNotificationsRead.
+              void markNotificationsRead();
+              setShowNotifications(false);
+              setNotifRefreshNonce(n => n + 1);
+            }}
+            onTapNotification={(n: ChallengeNotification) => {
+              if (n.type !== "challenge_attempted") return;
+              const p = n.payload ?? {};
+              const isWinner = Boolean(p.is_winner);
+              // [NotifCopy:v2] Tap routing splits on isWinner:
+              //  - WON  (attempter beat your target): set rivalry-back ctx
+              //    targeting attempter, deal a fresh normal hand. Share
+              //    auto-fires at RESULTS as a back-challenge.
+              //  - LOST (attempter missed): no Send-It-Back routing — they
+              //    haven't beaten you yet, so the back-challenge framing
+              //    is nonsense. Just close the panel and mark read. Future
+              //    work: open a stats/attempt detail view.
+              setShowNotifications(false);
+              void markNotificationsRead();
+              setNotifRefreshNonce(x => x + 1);
+              track("challenges", "notification_tap", { type: n.type, actionable: isWinner });
+              if (!isWinner) {
+                // Loss path: dismiss only, no deal trigger.
+                return;
+              }
+              if (setChallengeBackCtx) {
+                setChallengeBackCtx({
+                  challengerUserId: typeof p.attempter_user_id === "string" ? p.attempter_user_id : null,
+                  challengerName: typeof p.attempter_name === "string" ? p.attempter_name : null,
+                  originatingChallengeId: typeof p.challenge_id === "string" ? p.challenge_id : "",
+                });
+              }
+              // Trigger deal via the standard action button. challengeCtx
+              // is already null (we're in normal play); the IDLE branch
+              // deals from today's slate.
+              handleButtonClick();
+            }}
+          />
+        )}
+
         {showProfile && (
           <ProfileScreen
             currentUid={getPlayerUid()}
@@ -2285,8 +2760,11 @@ export function GameView({ adapter }: Props) {
         )}
       </Suspense>
 
-      {/* PostHandSheet — optional, sport-specific overlay */}
-      {PostHandSheet && !isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && springSettled && (() => {
+      {/* PostHandSheet — optional, sport-specific overlay. Suppressed in
+          challenge mode so it doesn't collide with ChallengeComparisonScreen.
+          The challenge head-to-head sheet IS the post-hand surface for the
+          recipient; running both would double-up the result frame. */}
+      {PostHandSheet && !isFTUE && !challengeCtx && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && springSettled && (() => {
         const gaugeSnap = computeGaugeState(displayFp, gaugeThresholds, winTier, NEAR_MISS_FP);
         return (
           <PostHandSheet
@@ -2305,6 +2783,147 @@ export function GameView({ adapter }: Props) {
           />
         );
       })()}
+
+      {/* ChallengeSharePrompt — fires at RESULTS/WIN_CELEBRATION when a
+          NAMED trigger is evaluated (rare_pull / big_score / near_miss /
+          bad_beat / rivalry_back) and the user is not in FTUE. The
+          `trigger !== "default"` exclusion matches the commentary-
+          override gate at line 1261 — without it, every hand fires a
+          share prompt regardless of whether anything share-worthy
+          happened, including plain STARTER hands with no pulls. Challenge
+          mode guard (challengeCtx) added in Task 10. */}
+      {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && challengeTrigger && challengeTrigger.trigger !== "default" && !isFTUE && (
+        <Suspense fallback={null}>
+          <ChallengeSharePrompt
+            sport={sportKey}
+            season={(rosterRef.current[0] as any)?.season ?? ""}
+            totalFp={rosterRef.current.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0)}
+            winTier={winTier ?? "BUST"}
+            roster={rosterRef.current as import("@shared/types/index").GeneratedCard[]}
+            initialRoster={initialRosterRef.current}
+            badges={rosterRef.current.flatMap((c: any) => c.achievements ?? [])}
+            winTiersMap={adapter.winTiersMap}
+            serializeRoster={(cards) => sportAdapter.serializeRoster(cards)}
+            triggerResult={challengeTrigger}
+            rivalryTargetName={challengeBackCtx?.challengerName ?? null}
+            shareHeadline={typeof (sportAdapter as any).getShareHeadline === "function"
+              ? (sportAdapter as any).getShareHeadline({
+                  roster: rosterRef.current,
+                  season: (rosterRef.current[0] as any)?.season ?? "",
+                })
+              : undefined}
+            onDismiss={() => {
+              setChallengeTrigger(null);
+              // Rivalry continuation ends when the user dismisses the
+              // back-share prompt — they're returning to normal play
+              // without lingering rivalry context.
+              if (challengeBackCtx) clearChallengeBackCtx?.();
+            }}
+          />
+        </Suspense>
+      )}
+
+      {/* ChallengeComparisonScreen — bottom sheet shown at RESULTS when
+          the user is playing a received challenge (challengeCtx present).
+          Played hand + game bar (with TARGET) stay visible behind the sheet.
+          Submits the attempt, shows score vs. challenger, and offers
+          Send It Back or Play Fresh. */}
+      {showChallengeComparison && challengeCtx && (
+        <Suspense fallback={null}>
+          <ChallengeComparisonScreen
+            challengeCtx={challengeCtx}
+            myScore={rosterRef.current.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0)}
+            myWinTier={winTier ?? "BUST"}
+            sport={sportKey}
+            collapsed={comparisonCollapsed}
+            onCollapse={() => setComparisonCollapsed(true)}
+            onSendItBack={() => {
+              // Win-state Send It Back: route into a fresh normal hand
+              // with challengeBackCtx set. challengeCtx is dropped.
+              if (setChallengeBackCtx && challengeCtx) {
+                setChallengeBackCtx({
+                  challengerUserId: null,
+                  challengerName: challengeCtx.challengerName ?? null,
+                  originatingChallengeId: challengeCtx.challengeId,
+                });
+              }
+              clearChallengeCtx?.();
+              setShowChallengeComparison(false);
+              setComparisonCollapsed(false);
+              handleButtonClick();
+            }}
+            onTryAgain={() => {
+              // Loss-window-open Try Again: re-deal the SAME challenge
+              // snapshot. challengeCtx stays set AND we set the
+              // next-deal intent so the IDLE branch picks the snapshot.
+              challengeNextDealRef.current = true;
+              setShowChallengeComparison(false);
+              setComparisonCollapsed(false);
+              handleButtonClick();
+            }}
+            onResolved={({ state, trashTalk }) => {
+              setPostResultState(state);
+              setPostResultTrashTalk(trashTalk);
+            }}
+          />
+        </Suspense>
+      )}
+
+      {/* Persistent post-result action bar — visible when the comparison
+          sheet has been collapsed via gesture (×, swipe, backdrop) or
+          inner "Dismiss" CTA. challengeCtx stays set so cards remain on
+          the game surface. The bar persists until the user enters a
+          new hand. */}
+      {challengeCtx && comparisonCollapsed && postResultState && (
+        gameState === "RESULTS" || gameState === "WIN_CELEBRATION"
+      ) && (
+        <Suspense fallback={null}>
+          <ChallengePostResultBar
+            state={postResultState}
+            trashTalk={postResultTrashTalk}
+            onSeeResult={() => setComparisonCollapsed(false)}
+            onSendItBack={() => {
+              if (setChallengeBackCtx && challengeCtx) {
+                setChallengeBackCtx({
+                  challengerUserId: null,
+                  challengerName: challengeCtx.challengerName ?? null,
+                  originatingChallengeId: challengeCtx.challengeId,
+                });
+              }
+              clearChallengeCtx?.();
+              setShowChallengeComparison(false);
+              setComparisonCollapsed(false);
+              handleButtonClick();
+            }}
+            onTryAgain={() => {
+              // Post-result bar Try Again: re-deal the challenge
+              // snapshot. Set the next-deal intent so the IDLE branch
+              // recognizes this as a replay (not a stale challengeCtx).
+              challengeNextDealRef.current = true;
+              setShowChallengeComparison(false);
+              setComparisonCollapsed(false);
+              handleButtonClick();
+            }}
+            onDeal={() => {
+              // DEAL on the action bar: clear challenge mode entirely
+              // and deal a fresh normal hand. The IDLE branch uses
+              // dealInitialRoster (today's slate) once challengeCtx is
+              // null.
+              clearChallengeCtx?.();
+              setShowChallengeComparison(false);
+              setComparisonCollapsed(false);
+              setPostResultState(null);
+              setPostResultTrashTalk(null);
+              handleButtonClick();
+            }}
+          />
+        </Suspense>
+      )}
+
+      {/* ?debug=1 overlay lives at the app shell level (basketball/src/App.tsx)
+          so it renders on every route, including the chooser landing and
+          the challenge landing screen before GameView mounts. Don't
+          re-render here — would stack two copies in-game. */}
 
     </div>
   );

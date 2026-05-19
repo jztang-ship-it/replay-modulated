@@ -27,8 +27,18 @@ function readFtueActive(KEY: string): boolean {
   if (typeof window === "undefined") return false;
   try {
     const params = new URLSearchParams(window.location.search);
+    // ?ftue=1 forces FTUE on (overrides everything else).
     if (params.get("ftue") === "1") return true;
+    // QA bypasses — any of these turns FTUE off synchronously, no
+    // localStorage write needed for the in-memory flag. App.tsx also
+    // writes localStorage on these so subsequent reloads without the
+    // param stay skipped. `?debug=1` is bundled because the debug
+    // panel + FTUE coexist poorly during QA — testers always want
+    // both at once.
     if (params.get("skip") === "1") return false;
+    if (params.get("skipFtue") === "1") return false;
+    if (params.get("skip_ftue") === "1") return false;
+    if (params.get("debug") === "1") return false;
     if (localStorage.getItem(KEY) === "1") return false;
     return true;
   } catch {

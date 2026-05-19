@@ -34,6 +34,7 @@ type Props = {
   onBell?: () => void;
   hasUncollected?: boolean;
   unreadInboxCount?: number;
+  hasNewAchievements?: boolean;
 };
 
 export function AppHeader({
@@ -43,6 +44,7 @@ export function AppHeader({
   onBell,
   hasUncollected,
   unreadInboxCount = 0,
+  hasNewAchievements,
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>("home");
   const [muted, setMuted] = useState(soundManager.isMuted());
@@ -134,6 +136,14 @@ export function AppHeader({
                   position: "absolute", top: 0, right: 2,
                   width: 7, height: 7, borderRadius: "50%",
                   background: "#EF4444", border: "1.5px solid #070A12",
+                  pointerEvents: "none",
+                }} />
+              )}
+              {id === "profile" && hasNewAchievements && (
+                <div style={{
+                  position: "absolute", top: 0, right: 2,
+                  width: 7, height: 7, borderRadius: "50%",
+                  background: "#FFB14A", border: "1.5px solid #070A12",
                   pointerEvents: "none",
                 }} />
               )}
