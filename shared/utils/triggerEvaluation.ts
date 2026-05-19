@@ -30,11 +30,13 @@ export interface TriggerInput {
 }
 
 export interface TriggerResult {
-  trigger: "rare_pull" | "big_score" | "near_miss" | "bad_beat" | "default";
+  trigger: "rare_pull" | "big_score" | "miss" | "bad_beat" | "default";
   headline: string;
-  /** How many FP short of the next tier (near_miss only) */
+  /** How many FP short of the next tier (miss only).
+   *  Field name preserved for DB column compatibility (near_miss_gap). */
   nearMissGap?: number;
-  /** Which tier was just missed (near_miss only) */
+  /** Which tier was just missed (miss only).
+   *  Field name preserved for DB column compatibility. */
   nearMissNextTier?: string;
   /** rare_pull only — basePlayerId of the anchor card so the prompt can
    *  look it up in roster to read name / actualFp / projectedFp for
@@ -45,7 +47,7 @@ export interface TriggerResult {
   topGameTier?: TopGameTier | null;
 }
 
-const NEAR_MISS_WINDOW = 5;
+const MISS_WINDOW = 5;
 
 export function evaluateTrigger(input: TriggerInput): TriggerResult {
   const { roster, totalFp, winTier, badges, winTiersMap, topGameTier, starBasePlayerId } = input;
@@ -85,9 +87,9 @@ export function evaluateTrigger(input: TriggerInput): TriggerResult {
     };
   }
 
-  // 3. near_miss — within NEAR_MISS_WINDOW FP of next tier AND current tier
-  //    is STARTER+. We don't fire near_miss on BUST→ROOKIE transitions — a
-  //    BUST hand isn't share-worthy just because it almost cleared ROOKIE.
+  // 3. miss — within MISS_WINDOW FP of next tier AND current tier is
+  //    STARTER+. We don't fire miss on BUST→ROOKIE transitions — a BUST
+  //    hand isn't share-worthy just because it almost cleared ROOKIE.
   const tierOrder: WinTierKey[] = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "LEGEND"];
   const STARTER_IDX = tierOrder.indexOf("STARTER");
   const currentIdx = tierOrder.indexOf(winTier as WinTierKey);
@@ -96,9 +98,9 @@ export function evaluateTrigger(input: TriggerInput): TriggerResult {
     const nextMin = winTiersMap[nextTier]?.minFp;
     if (nextMin !== undefined) {
       const gap = Math.round((nextMin - fp) * 10) / 10;
-      if (gap > 0 && gap <= NEAR_MISS_WINDOW) {
+      if (gap > 0 && gap <= MISS_WINDOW) {
         return {
-          trigger: "near_miss",
+          trigger: "miss",
           headline: `You missed ${nextTier.replace("_", "-")} by ${gap} FP. See if they finish the job.`,
           nearMissGap: gap,
           nearMissNextTier: nextTier,

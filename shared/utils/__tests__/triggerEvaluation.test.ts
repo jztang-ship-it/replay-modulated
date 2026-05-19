@@ -43,27 +43,28 @@ describe("evaluateTrigger", () => {
     expect(result.trigger).toBe("big_score");
   });
 
-  it("returns near_miss when STARTER within 5 FP of ALL_STAR", () => {
+  it("returns miss when STARTER within 5 FP of ALL_STAR", () => {
     // 222 FP — STARTER (needs 225 for ALL_STAR) — gap = 3
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 44.4 }));
     const result = evaluateTrigger({ roster, totalFp: 222, winTier: "STARTER", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).toBe("near_miss");
+    expect(result.trigger).toBe("miss");
     expect(result.nearMissGap).toBeCloseTo(3, 0);
+    expect(result.nearMissNextTier).toBe("ALL_STAR");
   });
 
-  it("does NOT fire near_miss for BUST→ROOKIE transitions", () => {
+  it("does NOT fire miss for BUST→ROOKIE transitions", () => {
     // 184 FP — BUST 1 FP below ROOKIE threshold. Tightened logic: no
-    // near_miss below STARTER, since BUST hands aren't share-worthy.
+    // miss below STARTER, since BUST hands aren't share-worthy.
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 36.8 }));
     const result = evaluateTrigger({ roster, totalFp: 184, winTier: "BUST", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).not.toBe("near_miss");
+    expect(result.trigger).not.toBe("miss");
   });
 
-  it("does NOT fire near_miss for ROOKIE→STARTER transitions", () => {
+  it("does NOT fire miss for ROOKIE→STARTER transitions", () => {
     // 202 FP — ROOKIE 3 FP below STARTER. Same rule: needs STARTER+.
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 40.4 }));
     const result = evaluateTrigger({ roster, totalFp: 202, winTier: "ROOKIE", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).not.toBe("near_miss");
+    expect(result.trigger).not.toBe("miss");
   });
 
   it("returns bad_beat for BUST with 2+ held RED/ORANGE cards", () => {
