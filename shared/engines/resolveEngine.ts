@@ -136,25 +136,13 @@ function pickBiasedLog(card: GeneratedCard, logsByKey: Map<string, RawLog[]>, ad
     return null;
   }
   if (candidates.length === 1) return candidates[0];
-  const sorted = [...candidates].sort((a, b) => sumStats(b.stats) - sumStats(a.stats));
-  const n = sorted.length;
-  const t = (tier ?? "").toUpperCase();
-  let lo: number, hi: number;
-  // RED treated same as ORANGE for log sampling — RED is a visual/strategic tier,
-  // not a performance tier. Making RED samples tighter (top 30%) would make the
-  // "bug" players even more dominant, which is the opposite of what we want.
-  if      (t === "RED" || t === "ORANGE") { lo = 0;                       hi = Math.max(1, Math.ceil(n * 0.40)); }
-  else if (t === "PURPLE") { lo = 0;                       hi = Math.max(1, Math.ceil(n * 0.55)); }
-  else if (t === "BLUE")   { lo = Math.floor(n * 0.20);    hi = Math.min(n, Math.ceil(n * 0.70)); }
-  else if (t === "GREEN")  { lo = Math.floor(n * 0.30);    hi = Math.min(n, Math.ceil(n * 0.80)); }
-  else                     { lo = Math.floor(n * 0.40);    hi = n; }
-  lo = Math.max(0, lo); hi = Math.min(n, Math.max(lo + 1, hi));
-  const window = sorted.slice(lo, hi);
-  return window[Math.floor(rnd() * window.length)];
-}
-
-function sumStats(stats: Record<string, any>): number {
-  return Object.values(stats).filter(v => typeof v === "number" && v > 0).reduce((s: number, v) => s + (v as number), 0);
+  // Uniform sampling across the player's season log, post-filter. Replaced the
+  // prior tier-windowed bias (RED/ORANGE top 40%, PURPLE top 55%, BLUE 20-70%,
+  // GREEN 30-80%, WHITE bottom 40-100%). Card tier no longer constrains the log
+  // window — matchup, opponent, season-arc variance are now meaningful inputs
+  // to hold/redraw decisions. Win-tier thresholds were re-derived per season
+  // against this distribution; do not reintroduce bias without recalibrating.
+  return candidates[Math.floor(rnd() * candidates.length)];
 }
 
 function parseSeasonNum(v: any): number | null {

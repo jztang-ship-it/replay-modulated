@@ -73,12 +73,14 @@ function makeRng(seed = 12345) {
   };
 }
 
-// ── Biased log sampling — mirrors resolveEngine.pickBiasedLog ────────────
-function sumStats(stats: Record<string, any>): number {
-  return Object.values(stats).filter(v => typeof v === "number" && v > 0).reduce((s: number, v) => s + (v as number), 0);
-}
-
-function pickBiasedLog(logs: any[], tier: string, rnd: () => number, minMinutes = 10, isProtected = false, top80 = false): any {
+// ── Uniform log sampling — mirrors resolveEngine.pickBiasedLog ───────────
+// Card tier no longer constrains the log window. The tier/isProtected/top80
+// params are retained to keep the existing CLI flag plumbing compatible, but
+// they're no-ops after the production sampler shift. --protected and --top80
+// flags are kept callable so existing scripts don't break; they no longer
+// alter behavior. Remove together with the resolveEngine sampler change
+// rationale in a follow-up cleanup.
+function pickBiasedLog(logs: any[], _tier: string, rnd: () => number, minMinutes = 10, _isProtected = false, _top80 = false): any {
   // Filter out garbage: must have positive stats and meet minute threshold
   const filtered = logs.filter(l => {
     const stats = l.stats ?? l;
@@ -92,24 +94,7 @@ function pickBiasedLog(logs: any[], tier: string, rnd: () => number, minMinutes 
     return true;
   });
   if (!filtered.length) return logs[Math.floor(rnd() * logs.length)];
-  if (filtered.length === 1) return filtered[0];
-
-  const sorted = [...filtered].sort((a, b) => sumStats(b.stats ?? b) - sumStats(a.stats ?? a));
-  const n = sorted.length;
-  const t = (tier ?? "").toUpperCase();
-  let lo: number, hi: number;
-  // isProtected mirrors resolveEngine: hands 2-30 → all tiers sample top 60%
-  if      (isProtected)    { lo = 0;                    hi = Math.max(1, Math.ceil(n * 0.60)); }
-  else if (top80)          { lo = 0;                    hi = Math.max(1, Math.ceil(n * 0.80)); }  // top 80% floor: no bottom-20% games
-  else if (t === "ORANGE") { lo = 0;                    hi = Math.max(1, Math.ceil(n * 0.40)); }
-  else if (t === "PURPLE") { lo = 0;                    hi = Math.max(1, Math.ceil(n * 0.55)); }
-  else if (t === "BLUE")   { lo = Math.floor(n * 0.20); hi = Math.min(n, Math.ceil(n * 0.70)); }
-  else if (t === "GREEN")  { lo = Math.floor(n * 0.30); hi = Math.min(n, Math.ceil(n * 0.80)); }
-  else                     { lo = Math.floor(n * 0.40); hi = n; }
-  lo = Math.max(0, lo);
-  hi = Math.min(n, Math.max(lo + 1, hi));
-  const window = sorted.slice(lo, hi);
-  return window[Math.floor(rnd() * window.length)];
+  return filtered[Math.floor(rnd() * filtered.length)];
 }
 
 // ── Weighted random by salary² ────────────────────────────────────────────
