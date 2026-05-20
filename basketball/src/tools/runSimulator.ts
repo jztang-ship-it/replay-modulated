@@ -152,31 +152,37 @@ function main() {
   const rawLogs: any[] = JSON.parse(fs.readFileSync(logsFile, "utf8"));
   console.log(`Loaded ${players.length.toLocaleString()} players, ${rawLogs.length.toLocaleString()} game logs`);
 
-  // Build log map: basePlayerId → logs[] (2425 season preferred)
+  // Season under simulation. Overridable via SIMULATE_SEASON env var
+  // (e.g. SIMULATE_SEASON=2324) so calibration jobs can iterate seasons.
+  // Default 2425 preserves the legacy behavior for unflagged invocations.
+  const SEASON = process.env.SIMULATE_SEASON ?? "2425";
+
+  // Build log map: basePlayerId → logs[] for the target season
   const logMap = new Map<string, any[]>();
-  const logMap2425 = new Map<string, any[]>();
+  const logMapSeason = new Map<string, any[]>();
   for (const log of rawLogs) {
     const key = String(log.basePlayerId ?? "");
     if (!key || key === "0") continue;
     if (!logMap.has(key)) logMap.set(key, []);
     logMap.get(key)!.push(log);
     const season = String(log.season ?? log.seasonId ?? "");
-    if (season === "2425" || season === "2024-25" || season === "2024") {
-      if (!logMap2425.has(key)) logMap2425.set(key, []);
-      logMap2425.get(key)!.push(log);
+    if (season === SEASON) {
+      if (!logMapSeason.has(key)) logMapSeason.set(key, []);
+      logMapSeason.get(key)!.push(log);
     }
   }
-  console.log(`Built log map: ${logMap.size.toLocaleString()} unique players with logs`);
+  console.log(`Built log map: ${logMap.size.toLocaleString()} unique players with logs (season=${SEASON})`);
 
-  // ── Player pool: only 2425-season players with salary ───────────────────
+  // ── Player pool: only target-season players with salary ─────────────────
+  const seasonSuffix = `_${SEASON}`;
   const playablePool = players.filter(p => {
     const key = String(p.basePlayerId ?? "");
     const hasSalary = (p.salary ?? 0) > 0;
-    const has2425 = String(p.id ?? "").includes("_2425");
-    const hasLogs = (logMap2425.get(key)?.length ?? logMap.get(key)?.length ?? 0) > 0;
-    return hasSalary && has2425 && hasLogs;
+    const hasSeason = String(p.id ?? "").includes(seasonSuffix);
+    const hasLogs = (logMapSeason.get(key)?.length ?? logMap.get(key)?.length ?? 0) > 0;
+    return hasSalary && hasSeason && hasLogs;
   });
-  console.log(`Playable pool: ${playablePool.length.toLocaleString()} players (2425 season, have salary + logs)`);
+  console.log(`Playable pool: ${playablePool.length.toLocaleString()} players (season ${SEASON}, have salary + logs)`);
 
   if (playablePool.length < 6) {
     console.error("❌ Not enough playable players. Check your data.");
@@ -309,7 +315,7 @@ function main() {
       // Derive tier from salary — must match gameAdapter.toPlayerEval (not stale JSON tier field)
       const sal = Number(player.salary ?? 0);
       const tier = sal >= 73 ? "RED" : sal >= 58 ? "ORANGE" : sal >= 44 ? "PURPLE" : sal >= 30 ? "BLUE" : sal >= 23 ? "GREEN" : "WHITE";
-      const allLogs = logMap2425.get(key) ?? logMap.get(key) ?? [];
+      const allLogs = logMapSeason.get(key) ?? logMap.get(key) ?? [];
       if (!allLogs.length) continue;
 
       let log: any;
@@ -333,6 +339,14 @@ function main() {
   const elapsed = ((Date.now() - start) / 1000).toFixed(2);
   allFps.sort((a, b) => a - b);
   allSalaries.sort((a, b) => a - b);
+
+  // Optional FP-array dump for calibration. Sets DUMP_FPS=<filename> to
+  // write the full sorted FP array as JSON for downstream threshold derivation.
+  const dumpFps = process.env.DUMP_FPS;
+  if (dumpFps) {
+    fs.writeFileSync(dumpFps, JSON.stringify(allFps));
+    console.log(`Dumped ${allFps.length} sorted FPs → ${dumpFps}`);
+  }
 
   const handsBuilt = allFps.length;
   const avg    = allFps.reduce((s, v) => s + v, 0) / handsBuilt;
