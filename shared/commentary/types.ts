@@ -115,7 +115,18 @@ export type DetailId =
   | "streak_proximity"
   | "streak_broken"
   | "extreme_game"
-  | "season_best_stat";
+  | "season_best_stat"
+  // ── Low-minute outcome details (introduced alongside the tier-aware filter
+  //    that lets sub-10-min games surface on premium-tier cards). Detected
+  //    by checking each resolved card for `statLine.min < 10`. Mutually
+  //    exclusive at fire time: ejected > injured > ambiguous.
+  //    `injured` and `ejected` are gated on `statLine._injured` /
+  //    `statLine._ejected`, which today's ingestion never populates — see
+  //    RawLog comment in shared/types/index.ts. Until that plumbing lands,
+  //    100% of sub-10-min outcomes fire `low_min_ambiguous`.
+  | "injured"
+  | "ejected"
+  | "low_min_ambiguous";
 
 export interface RecordEvent {
   type: "record_broken" | "near_record" | "career_milestone";

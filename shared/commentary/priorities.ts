@@ -19,11 +19,14 @@ export const WIN_DETAIL_PRIORITY: DetailId[] = [
   "record_event",
   "rare_badge",
   "extreme_game",
+  "ejected",            // low-min status — high specificity if flag set
+  "injured",            // low-min status — high specificity if flag set
   "near_miss_win",
   "high_stats",
   "common_badge",
   "streak_event",
   "streak_proximity",
+  "low_min_ambiguous",  // catch-all for sub-10-min outcomes without flags
   "culture_hit",
   "held_card_paid",
 ];
@@ -35,7 +38,10 @@ export const LOSS_DETAIL_PRIORITY: DetailId[] = [
   "record_event",
   "rare_badge",
   "extreme_game",
+  "ejected",            // low-min status — fires if ejection flag set
+  "injured",            // low-min status — fires if injury flag set
   "zero_card",
+  "low_min_ambiguous",  // catch-all; suppresses zero_card when both apply
   "streak_broken",
   "near_miss_loss",
   "turnover_problem",
