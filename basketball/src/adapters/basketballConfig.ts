@@ -136,6 +136,21 @@ export const BasketballSportConfig = {
   },
 
   badges: [
+    // ── Status flags — render FIRST in the badge list when present.
+    //    fp: 0 because they're flavor markers, not score modifiers — the
+    //    "did the player even play tonight" signal sits next to the
+    //    achievement badges but doesn't shift FP. Today's ingestion does
+    //    not populate the underlying log.injured / log.ejected flags
+    //    (see RawLog comment in shared/types/index.ts), so these are
+    //    dormant infrastructure — they will never fire until the
+    //    playbyplayv2 ingestion workstream lands. When that ships, they
+    //    light up automatically; nothing else has to change.
+    //    _injured / _ejected are injected onto the stats object by
+    //    shared/engines/resolveEngine.ts:resolveCards from the underlying
+    //    log's top-level fields. Same `_`-prefix convention as _position.
+    { id: 'INJURED', icon: '🤕', label: 'Injured', fp: 0, test: (s: Record<string,any>) => s._injured === true },
+    { id: 'EJECTED', icon: '🟥', label: 'Ejected', fp: 0, test: (s: Record<string,any>) => s._ejected === true },
+
     // Scoring
     { id: 'GOD_MODE',         icon: '⚡',  label: 'God Mode',         fp: 10, test: (s: Record<string,any>) => Number(s.pts) >= 50 },
     { id: 'FIRE',             icon: '🔥',  label: 'Fire',             fp: 5,  test: (s: Record<string,any>) => Number(s.pts) >= 40 && Number(s.pts) < 50 },

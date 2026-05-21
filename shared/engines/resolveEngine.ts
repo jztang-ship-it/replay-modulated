@@ -38,8 +38,17 @@ export function resolveCards(cards: GeneratedCard[], logsByKey: Map<string, RawL
   const resolved: ResolvedCard[] = cards.map(card => {
     const log = pickBiasedLog(card, logsByKey, adapter, rnd, config.minMinutes ?? 8);
     const stats = log?.stats ?? {};
-    // Inject _position BEFORE FP calc so positionProjectionWeights are used
-    const statsWithPosition = { ...stats, _position: card.position ?? "" };
+    // Inject _position BEFORE FP calc so positionProjectionWeights are used.
+    // Also propagate log-level metadata (injured/ejected) onto the stats object
+    // so badge tests can read them — same `_`-prefixed convention as _position.
+    // Both default to false when absent from the log (today's ingestion never
+    // populates them; pending playbyplayv2 enrichment workstream).
+    const statsWithPosition = {
+      ...stats,
+      _position: card.position ?? "",
+      _injured: log?.injured === true,
+      _ejected: log?.ejected === true,
+    };
     const rawFp = extractFpFromStats(statsWithPosition, adapter);
     const scaledFp = rawFp * config.fpScale;
     const achievements = adapter.computeBadges(statsWithPosition);
