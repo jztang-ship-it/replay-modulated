@@ -9,6 +9,7 @@ import { tierRank } from "@shared/theme";
 import topGames from "../../public/data/topGames.json";
 import careerHighs from "../../public/data/careerHighs.json";
 import { chadShareTrashTalk } from "@shared/commentary/chadChallenge";
+import { computeBasketballCareerFp } from "./careerFp";
 // Side-effect import: registers the basketball sound pack with the shared
 // soundPackLoader at module-load time. Without this, basketball plays silently.
 import "../utils/soundPack";
@@ -303,34 +304,17 @@ export class SportAdapter {
   /** Sport identity used by isSlateV2Enabled() and slate cache keys. */
   get sportKey(): string { return (this.config as any).sportKey ?? "basketball"; }
 
-  /** Career FP for a single player, summed across logs with last-2-seasons ×2 weight. */
+  /** Career FP for a single player, summed across logs with last-2-seasons ×2
+   *  weight. Thin wrapper around computeBasketballCareerFp — the pure helper
+   *  the calibration sim also calls. Reading dataEngine state stays here so
+   *  callers can use the (playerId)-only signature; the formula lives in the
+   *  helper so sim-production parity is structural, not by convention. */
   getCareerFPById(playerId: string): number {
-    const logsByKey = getLogsByKey();
-    const id = String(playerId).trim();
-    if (!id) return 0;
-    // dataEngine indexes logs by basePlayerId (and basePlayerId|season). Use the
-    // basePlayerId-only key to get all seasons in one pass.
-    const logs = logsByKey.get(id) ?? [];
-    if (!logs.length) return 0;
-    const currentYear = new Date().getUTCFullYear();
-    let total = 0;
-    for (const log of logs) {
-      const stats = (log as any).stats ?? {};
-      const fp = this.computeFantasyPoints(stats);
-      const seasonRaw = (log as any).season;
-      // Basketball seasons are stored as concat 4-digit codes (e.g. 2425 → 2025).
-      // Take the trailing 2 digits as YY (2-digit year) and resolve to 20YY.
-      const seasonNum = Number(seasonRaw);
-      let yearOfLog = currentYear;
-      if (Number.isFinite(seasonNum) && seasonNum > 0) {
-        const yy = Math.round(seasonNum) % 100;
-        yearOfLog = 2000 + yy;
-      }
-      const seasonAge = currentYear - yearOfLog;
-      const weight = seasonAge <= 1 ? 2.0 : 1.0;
-      total += fp * weight;
-    }
-    return total;
+    return computeBasketballCareerFp(
+      playerId,
+      getLogsByKey(),
+      stats => this.computeFantasyPoints(stats),
+    );
   }
 
   /** Games-played floor for slate eligibility. Removes cup-of-coffee players
