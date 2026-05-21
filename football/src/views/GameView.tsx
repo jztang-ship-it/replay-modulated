@@ -23,6 +23,7 @@ import {
   calculatePayoutWithStreak,
   getStreakMultiplier,
   FOOTBALL_WIN_TIERS,
+  STREAK_TIERS,
 } from "../utils/payoutLogic";
 import { SoccerCard, resetAllOverlays } from "../components/SoccerCard";
 import {
@@ -131,6 +132,7 @@ export default function GameView() {
     calculatePayoutWithStreak,
     winTiersMap: FOOTBALL_WIN_TIERS,
     getStreakMultiplier,
+    streakTiers: STREAK_TIERS,
     gameBarWinTiers: WIN_TIERS,
     gameBarLegend: LEGEND_DATA,
     // gameAdapter functions use the local football PlayerCard type (no "RED" tier);

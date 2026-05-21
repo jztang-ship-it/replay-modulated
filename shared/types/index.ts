@@ -113,6 +113,18 @@ export type RawLog = {
   };
   stats: Record<string, any>;
   events?: Record<string, any>;
+  /** True if the player suffered a within-game injury that limited or ended
+   *  their participation in this specific game. Default false / treated as
+   *  false when absent. Today's ingestion (extractNbaSeason.mjs → stats.nba.com
+   *  leaguegamelog) doesn't populate this flag — sub-10-min outcomes default
+   *  to "ambiguous" and the coach-DNP commentary path fires. Will be plumbed
+   *  through once playbyplayv2 ingestion + injury-source enrichment lands. */
+  injured?: boolean;
+  /** True if the player was ejected from this specific game. Default false /
+   *  treated as false when absent. Today's ingestion doesn't populate this
+   *  flag — see `injured` note above. Will be plumbed via playbyplayv2 in a
+   *  follow-up workstream (event type 11 ejection events). */
+  ejected?: boolean;
 };
 
 export interface TierThreshold {
@@ -135,6 +147,14 @@ export interface RosterConfig {
   rosterSize: number;
   slotRequirements: SlotRequirement[];
   excludeFromFlex?: string[];
+  /** Whether the sport enforces positional roster slots. Default true.
+   *  Set false on sports whose positions accumulate the same stat
+   *  categories (basketball). Position-agnostic sports skip the
+   *  per-position pool logic in generateRoster + redrawRoster; the
+   *  rest of the pipeline (anchor pick, cap enforcement, tier-floor
+   *  guarantee) still runs against the full eval pool. See
+   *  CLAUDE.md "Positional requirements rule". */
+  positionAware?: boolean;
 }
 
 export interface PlayerEval {
@@ -193,6 +213,10 @@ export interface SportConfigShape {
   rosterSize?: number;
   maxPlayers?: number;
   excludeFromFlex?: string[];
+  /** Whether the sport enforces positional roster slots. Default true.
+   *  Basketball sets this to false (all positions accumulate the same
+   *  stat categories — see CLAUDE.md "Positional requirements rule"). */
+  positionAware?: boolean;
   salaryCap: number;
   economyConfig?: {
     capMax: number;

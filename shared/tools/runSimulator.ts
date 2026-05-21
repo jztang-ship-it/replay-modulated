@@ -138,11 +138,50 @@ function pct(a: number[], p: number) { return a[Math.min(Math.floor(a.length * p
 function avg(a: number[]) { return a.length ? a.reduce((s,v)=>s+v,0)/a.length : 0; }
 function bar(r: number, w = 25) { const f = Math.round(Math.min(r,50)/50*w); return "[" + "#".repeat(f) + ".".repeat(w-f) + "]"; }
 
+/** Resolve the sport workspace directory from a sport-name positional arg.
+ *  Walks up from process.cwd() looking for a directory that contains a
+ *  matching <sport>/package.json — that directory is the repo root.
+ *  Returns the absolute path to <repoRoot>/<sport>, or null on miss. */
+function resolveSportWorkspace(sport: string, startDir: string): string | null {
+  let dir = startDir;
+  for (let i = 0; i < 10; i++) {
+    const candidate = path.join(dir, sport);
+    if (fs.existsSync(path.join(candidate, "package.json"))) return candidate;
+    const parent = path.dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+  return null;
+}
+
 async function main() {
-  const N = parseInt(process.argv[2] ?? "1000", 10);
-  const verbose = process.argv.includes("--verbose");
-  const slateV2 = process.argv.includes("--slate-v2");
-  const cwd = process.cwd();
+  const KNOWN_SPORTS = ["basketball", "baseball", "football", "worldcup"];
+  const argv = process.argv.slice(2);
+  const flags = argv.filter(a => a.startsWith("--"));
+  const positional = argv.filter(a => !a.startsWith("--"));
+
+  let sportArg: string | null = null;
+  let N = 1000;
+  for (const arg of positional) {
+    if (KNOWN_SPORTS.includes(arg)) { sportArg = arg; continue; }
+    const n = parseInt(arg, 10);
+    if (Number.isFinite(n) && n > 0) { N = n; continue; }
+    console.warn(`[runSimulator] Ignored unrecognized positional arg: ${arg}`);
+  }
+
+  const verbose = flags.includes("--verbose");
+  const slateV2 = flags.includes("--slate-v2");
+
+  let cwd = process.cwd();
+  if (sportArg) {
+    const resolved = resolveSportWorkspace(sportArg, cwd);
+    if (!resolved) {
+      console.error(`[runSimulator] Could not find sport workspace "${sportArg}" — walked up from ${cwd}.`);
+      process.exit(1);
+    }
+    cwd = resolved;
+    console.log(`Sport workspace: ${cwd}`);
+  }
 
   const config = await loadSportConfig(cwd);
   const sportName = config.sportLabel ?? config.name ?? "Sport";

@@ -77,6 +77,21 @@ function roll(seed: number, index: number): number {
   return (raw < 0 ? raw + 233280 : raw) / 233280;
 }
 
+// Find a card whose resolved log was sub-10-min. Returns the most expensive
+// such card (the "story" card — the user trusted them with cap dollars and
+// got 4 minutes). When multiple cards qualify, the highest-salary one wins.
+// Returns null if no card has min < 10 (the universal case under the old
+// pre-tier-aware-filter behavior; now possible on PURPLE+ cards).
+function findLowMinCard(roster: CommentaryRosterCard[]): CommentaryRosterCard | null {
+  const candidates = roster.filter(c => {
+    const min = Number(c.statLine?.min ?? 0);
+    return min > 0 && min < 10;
+  });
+  if (!candidates.length) return null;
+  candidates.sort((a, b) => (b.salary ?? 0) - (a.salary ?? 0));
+  return candidates[0];
+}
+
 function assembleWinDetails(
   input: CommentaryInput,
   star: CommentaryRosterCard | null,
@@ -122,6 +137,25 @@ function assembleWinDetails(
   if (input.streak === 2) candidates.push({ id: "streak_proximity", probability: 0.30 });
   if (input.streak === 4) candidates.push({ id: "streak_proximity", probability: 0.80 });
   if (input.streak >= 8 && input.streak < 10) candidates.push({ id: "streak_proximity", probability: 0.90 });
+
+  // Low-minute outcome on any resolved card. Detected via statLine.min < 10
+  // (PURPLE+ tier cards now surface these via the tier-aware resolve filter).
+  // Mutually exclusive at fire time: ejected > injured > ambiguous.
+  // TODO: ingestion enrichment for injured/ejected flags — see
+  // shared/types/index.ts RawLog comment. Today both flags are always false,
+  // so 100% of low-min outcomes fire `low_min_ambiguous`.
+  const lowMinCardWin = findLowMinCard(input.roster);
+  if (lowMinCardWin) {
+    if (lowMinCardWin.statLine?._ejected === true) {
+      candidates.push({ id: "ejected", probability: 1.0 });
+    } else if (lowMinCardWin.statLine?._injured === true) {
+      candidates.push({ id: "injured", probability: 1.0 });
+    } else {
+      // Win + low-min = lower fire rate. The hand cleared a tier despite
+      // the bench cameo; it's interesting but not the headline.
+      candidates.push({ id: "low_min_ambiguous", probability: 0.35 });
+    }
+  }
 
   candidates.push({ id: "culture_hit", probability: 0.40 });
 
@@ -183,8 +217,26 @@ function assembleLossDetails(
   if (tier1Card) candidates.push({ id: "extreme_game", probability: 1.0 });
   else if (tier2Card) candidates.push({ id: "extreme_game", probability: 0.40 });
 
+  // Low-minute outcome detection (loss path). Same logic as the win-path
+  // assembler. Suppresses `zero_card` when both would apply — the low-min
+  // detail is the more specific story ("he played 4 minutes" is causal;
+  // "someone gave you nothing" is just descriptive).
+  // TODO: ingestion enrichment for injured/ejected flags — see
+  // shared/types/index.ts RawLog comment.
+  const lowMinCardLoss = findLowMinCard(input.roster);
+  let pushZeroCard = true;
+  if (lowMinCardLoss) {
+    pushZeroCard = false;
+    if (lowMinCardLoss.statLine?._ejected === true) {
+      candidates.push({ id: "ejected", probability: 1.0 });
+    } else if (lowMinCardLoss.statLine?._injured === true) {
+      candidates.push({ id: "injured", probability: 1.0 });
+    } else {
+      candidates.push({ id: "low_min_ambiguous", probability: 0.75 });
+    }
+  }
   const zeroCard = input.roster.find(c => c.actualFp <= 1.0);
-  if (zeroCard) candidates.push({ id: "zero_card", probability: 0.60 });
+  if (zeroCard && pushZeroCard) candidates.push({ id: "zero_card", probability: 0.60 });
 
   if (input.prevStreak >= 5) candidates.push({ id: "streak_broken", probability: 0.15 });
   candidates.push({ id: "culture_loss", probability: 0.40 });

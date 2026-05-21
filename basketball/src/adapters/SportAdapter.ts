@@ -9,6 +9,9 @@ import { tierRank } from "@shared/theme";
 import topGames from "../../public/data/topGames.json";
 import careerHighs from "../../public/data/careerHighs.json";
 import { chadShareTrashTalk } from "@shared/commentary/chadChallenge";
+import { computeBasketballCareerFp } from "./careerFp";
+import { computeBasketballFp, computeBasketballFpDetailed } from "./fantasyPoints";
+import { computeBasketballBadges } from "./badges";
 // Side-effect import: registers the basketball sound pack with the shared
 // soundPackLoader at module-load time. Without this, basketball plays silently.
 import "../utils/soundPack";
@@ -38,6 +41,12 @@ export class SportAdapter {
   get salaryCapMin(): number { return Math.floor(Number(this.config.salaryCap) * 0.956); }
   get rosterSize(): number { return this.config.maxPlayers; }
   get positions(): string[] { return this.config.positions; }
+
+  /** Whether the sport enforces positional roster slots. Basketball returns
+   *  false — all five floor positions accumulate the same stat categories,
+   *  so the deal is N undifferentiated cards under cap. See
+   *  CLAUDE.md "Positional requirements rule". */
+  get positionAware(): boolean { return (this.config as any).positionAware !== false; }
 
   // Required by tierFromSalary() and slateSelector. basketballConfig doesn't
   // ship its own thresholds, so fall back to the shared defaults
@@ -98,45 +107,15 @@ export class SportAdapter {
   }
 
   computeFantasyPoints(stats: Record<string, any>): number {
-    return this.computeFantasyPointsDetailed(stats).total;
+    return computeBasketballFp(stats, this.config.projectionWeights);
   }
 
   computeFantasyPointsDetailed(stats: Record<string, any>): { total: number; breakdown: Record<string, number> } {
-    const weights = this.config.projectionWeights;
-    const breakdown: Record<string, number> = {};
-    let fp = 0;
-    for (const [key, w] of Object.entries(weights)) {
-      const weight = Number(w);
-      if (!Number.isFinite(weight) || weight === 0) continue;
-      const value = this.getStatValue(stats, key);
-      const contrib = value * weight;
-      if (Number.isFinite(contrib) && contrib !== 0) { breakdown[key] = contrib; fp += contrib; }
-    }
-    return { total: Number.isFinite(fp) ? fp : 0, breakdown };
-  }
-
-  private getStatValue(stats: Record<string, any>, key: string): number {
-    if (stats[key] !== undefined) return this.coerceNumber(stats[key]);
-    for (const v of [key.toLowerCase(), key.replace(/_([a-z])/g, (_, c) => c.toUpperCase()), key.replace(/_/g, "")]) {
-      if (stats[v] !== undefined) return this.coerceNumber(stats[v]);
-    }
-    return 0;
+    return computeBasketballFpDetailed(stats, this.config.projectionWeights);
   }
 
   computeBadges(stats: Record<string, any>): Array<{ id: string; icon: string; label: string; fp: number }> {
-    const defs = (this.config as any).badges ?? [];
-    const earned: Array<{ id: string; icon: string; label: string; fp: number }> = [];
-    for (const badge of defs) {
-      try { if (badge.test(stats)) earned.push({ id: badge.id, icon: badge.icon, label: badge.label, fp: badge.fp }); }
-      catch {}
-    }
-    const seen = new Set<string>();
-    return earned.filter(b => {
-      const cat = (b.id === 'TD' || b.id === 'DD') ? 'DOUBLE' : b.id;
-      if (seen.has(cat)) return false;
-      seen.add(cat);
-      return true;
-    });
+    return computeBasketballBadges(stats, (this.config as any).badges ?? []) as Array<{ id: string; icon: string; label: string; fp: number }>;
   }
 
   getHeadshotUrl(playerId: string): string | null {
@@ -156,11 +135,6 @@ export class SportAdapter {
 
   get statCategories(): string[] { return this.config.statCategories || []; }
   isValidStatCategory(stat: string): boolean { return this.statCategories.includes(stat); }
-  private coerceNumber(value: unknown): number {
-    if (typeof value === "number" && Number.isFinite(value)) return value;
-    if (typeof value === "string") { const n = Number(value); if (Number.isFinite(n)) return n; }
-    return 0;
-  }
   clamp(value: number, min: number, max: number): number { return Math.max(min, Math.min(max, value)); }
 
   private static readonly TIER_ACCENT: Record<string, string> = {
@@ -297,34 +271,17 @@ export class SportAdapter {
   /** Sport identity used by isSlateV2Enabled() and slate cache keys. */
   get sportKey(): string { return (this.config as any).sportKey ?? "basketball"; }
 
-  /** Career FP for a single player, summed across logs with last-2-seasons ×2 weight. */
+  /** Career FP for a single player, summed across logs with last-2-seasons ×2
+   *  weight. Thin wrapper around computeBasketballCareerFp — the pure helper
+   *  the calibration sim also calls. Reading dataEngine state stays here so
+   *  callers can use the (playerId)-only signature; the formula lives in the
+   *  helper so sim-production parity is structural, not by convention. */
   getCareerFPById(playerId: string): number {
-    const logsByKey = getLogsByKey();
-    const id = String(playerId).trim();
-    if (!id) return 0;
-    // dataEngine indexes logs by basePlayerId (and basePlayerId|season). Use the
-    // basePlayerId-only key to get all seasons in one pass.
-    const logs = logsByKey.get(id) ?? [];
-    if (!logs.length) return 0;
-    const currentYear = new Date().getUTCFullYear();
-    let total = 0;
-    for (const log of logs) {
-      const stats = (log as any).stats ?? {};
-      const fp = this.computeFantasyPoints(stats);
-      const seasonRaw = (log as any).season;
-      // Basketball seasons are stored as concat 4-digit codes (e.g. 2425 → 2025).
-      // Take the trailing 2 digits as YY (2-digit year) and resolve to 20YY.
-      const seasonNum = Number(seasonRaw);
-      let yearOfLog = currentYear;
-      if (Number.isFinite(seasonNum) && seasonNum > 0) {
-        const yy = Math.round(seasonNum) % 100;
-        yearOfLog = 2000 + yy;
-      }
-      const seasonAge = currentYear - yearOfLog;
-      const weight = seasonAge <= 1 ? 2.0 : 1.0;
-      total += fp * weight;
-    }
-    return total;
+    return computeBasketballCareerFp(
+      playerId,
+      getLogsByKey(),
+      stats => this.computeFantasyPoints(stats),
+    );
   }
 
   /** Games-played floor for slate eligibility. Removes cup-of-coffee players

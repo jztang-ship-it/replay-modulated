@@ -17,15 +17,31 @@ import {
   calculateWinTier as _calculateWinTier,
   calculatePayout  as _calculatePayout,
   calculatePayoutWithStreak as _calculatePayoutWithStreak,
-  getStreakMultiplier,
-  getNextStreakTier,
-  STREAK_TIERS,
+  getStreakMultiplier as _getStreakMultiplier,
+  getNextStreakTier as _getNextStreakTier,
 } from "@shared/utils/payoutLogic";
 import type { WinTierKey, WinTierMap, StreakTier } from "@shared/utils/payoutLogic";
 import { getActiveSeason } from "@shared/engines/dataEngine";
 import perSeasonThresholds from "../data/winThresholds.json";
 
-export { getStreakMultiplier, getNextStreakTier, STREAK_TIERS };
+// Basketball streak schedule.
+// Rebalanced from 1.3/1.7/2.5 → 1.2/1.5/2.0 alongside LEGEND 50× → 20× to
+// land basketball RTP near the ~90% target. The streak resets on bust;
+// multipliers apply to non-bust wins only.
+export const STREAK_TIERS: StreakTier[] = [
+  { wins: 10, multiplier: 2.0 },
+  { wins: 5,  multiplier: 1.5 },
+  { wins: 3,  multiplier: 1.2 },
+];
+
+/** Basketball streak multiplier — sport-bound wrapper. */
+export function getStreakMultiplier(streak: number): number {
+  return _getStreakMultiplier(streak, STREAK_TIERS);
+}
+/** Basketball next-streak-tier — sport-bound wrapper. */
+export function getNextStreakTier(streak: number): StreakTier | null {
+  return _getNextStreakTier(streak, STREAK_TIERS);
+}
 export type { StreakTier };
 
 import type { WinTierDisplay } from "@shared/components/GameBar";
@@ -35,7 +51,7 @@ export type { WinTierKey };
 export type WinTier = WinTierKey;
 
 const MULTIPLIERS: Record<WinTierKey, number> = {
-  LEGEND: 50, MVP: 8, ALL_STAR: 3, STARTER: 1.5, ROOKIE: 0.5, BUST: 0,
+  LEGEND: 20, MVP: 8, ALL_STAR: 3, STARTER: 1.5, ROOKIE: 0.5, BUST: 0,
 };
 
 // Fallback thresholds — used when active season is unset (e.g. unit tests,
@@ -120,7 +136,7 @@ export function calculatePayout(tier: WinTierKey, betAmount: number): number {
 }
 
 export function calculatePayoutWithStreak(tier: WinTierKey, betAmount: number, streak: number): number {
-  return _calculatePayoutWithStreak(tier, betAmount, getBasketballWinTiers(), streak);
+  return _calculatePayoutWithStreak(tier, betAmount, getBasketballWinTiers(), streak, STREAK_TIERS);
 }
 
 // Display arrays — derived from the same per-season thresholds so the gauge

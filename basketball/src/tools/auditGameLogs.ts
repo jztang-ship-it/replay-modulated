@@ -129,7 +129,7 @@ function main() {
     console.log("\n⚠️  All logs skipped — no declared FP field found.");
     console.log("Your game-logs.json may store only raw stats without a pre-computed FP value.");
     console.log("That is FINE — it means FP is computed at runtime from raw stats, which is the correct architecture.");
-    console.log("Run the simulator instead: npx ts-node --project tsconfig.sim.json src/tools/runSimulator.ts 1000");
+    console.log("Run the simulator instead: npx tsx ../shared/tools/runSimulator.ts basketball 1000");
   }
 }
 
