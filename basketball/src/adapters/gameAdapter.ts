@@ -10,21 +10,17 @@ import { resolveCards } from "../engines/resolveEngine";
 import { DEFAULT_ECONOMY_CONFIG } from "../engines/economyEngine";
 import { buildDailyBonusMap, getDailyBonusPlayers, type DailyBonusPlayer } from "@shared/utils/dailyBonus";
 import { getDealPool } from "@shared/utils/dealGate";
-import { SessionRepeatLimit, DEFAULT_REPEAT_LIMIT } from "@shared/utils/sessionRepeatLimit";
 import { getCachedSlate } from "@shared/utils/slateSelector";
 import { isSlateV2Enabled } from "@shared/featureFlags";
-import { track } from "@shared/analytics/analytics";
 import type { PlayerCard } from "./types";
 import type { PlayerEval, GeneratedCard } from "../engines/rosterEngine";
 import type { EconomyConfig } from "../engines/economyEngine";
 
-/** Module-level session singleton — sliding window of recent draws. No-op when
- *  no records have been pushed; `record()` populates it after each deal.
- *  onRelaxed → fires the internal-only `repeat_limit_relaxed` event so we can
- *  see when the soft cap is being undermined by a too-small pool floor. */
-const repeatLimit = new SessionRepeatLimit(() => {
-  track("slate", "repeat_limit_relaxed", {}, "basketball");
-});
+// Note: basketball no longer uses SessionRepeatLimit. The 60-player daily
+// slate (getCachedSlate) provides the day-to-day variety previously needed
+// from the session repeat-limit, without the within-session narrowing
+// dynamic that cost ~0.5–1.5 FP of late-session drift. Baseball and
+// football still use SessionRepeatLimit via their own gameAdapters.
 
 /** Single canonical key used everywhere player identity is compared.
  *  basePlayerId is always preferred; id is the fallback (may include season suffix).
@@ -164,14 +160,10 @@ export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
   // Slate v2 gate (no-op when feature flag is OFF — returns input unchanged).
   // Each player needs basePlayerId for the gate; cast is safe because RawPlayer
   // includes optional basePlayerId and we fall back to id when missing.
-  const slatePool = getDealPool(
+  const players = getDealPool(
     sportAdapter as any,
     allPlayers.map((p: any) => ({ ...p, basePlayerId: String(p.basePlayerId ?? p.id ?? "").trim() })),
   );
-  // Repeat limit — sliding window with pool-floor relaxation (no-op on first deal).
-  const players = isSlateV2Enabled("basketball")
-    ? repeatLimit.filter(slatePool, DEFAULT_REPEAT_LIMIT)
-    : slatePool;
 
   const { projByBaseId } = buildProjections(players);
   const evalPool = buildEvalPool(players, logs, projByBaseId);
@@ -190,14 +182,6 @@ export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {
     console.log(`[roster] DEALT orange: ${orangeDealt.map((c: any) => c.name).join(", ")}`);
   }
 
-  // Record drawn cards for the repeat-limit window.
-  if (isSlateV2Enabled("basketball")) {
-    repeatLimit.record(
-      cards.map((c: any) => String(c.basePlayerId ?? "")).filter(Boolean),
-      DEFAULT_REPEAT_LIMIT,
-    );
-  }
-
   return { roster: cards as unknown as PlayerCard[] };
 }
 
@@ -212,14 +196,11 @@ export async function redrawRoster({
   const logs = getLogsByKey();
   // Per-season dataEngine: pool is already scoped to today's active season.
 
-  // Slate v2 gate + repeat-limit (no-op when feature flag is OFF).
-  const slatePool = getDealPool(
+  // Slate v2 gate (no-op when feature flag is OFF — returns input unchanged).
+  const players = getDealPool(
     sportAdapter as any,
     allPlayers.map((p: any) => ({ ...p, basePlayerId: String(p.basePlayerId ?? p.id ?? "").trim() })),
   );
-  const players = isSlateV2Enabled("basketball")
-    ? repeatLimit.filter(slatePool, DEFAULT_REPEAT_LIMIT)
-    : slatePool;
 
   const { projByBaseId } = buildProjections(players);
   const evalPool = buildEvalPool(players, logs, projByBaseId);
@@ -246,14 +227,6 @@ export async function redrawRoster({
     getEconomyConfig(),
     rnd,
   );
-
-  // Record drawn cards for the repeat-limit window (held + redrawn cards).
-  if (isSlateV2Enabled("basketball")) {
-    repeatLimit.record(
-      cards.map((c: any) => String(c.basePlayerId ?? "")).filter(Boolean),
-      DEFAULT_REPEAT_LIMIT,
-    );
-  }
 
   return { roster: cards as unknown as PlayerCard[] };
 }
