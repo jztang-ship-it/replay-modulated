@@ -25,6 +25,16 @@ export function generateRoster(evalPool: PlayerEval[], config: RosterConfig, eco
   const cap = economyConfig.capMax;
   const minSalary = Math.min(...evalPool.map(p => p.salary));
   const byPos = buildPositionPools(evalPool);
+
+  // Position-agnostic path — basketball-style deals. The sport sets
+  // positionAware=false; we pick N undifferentiated cards under cap (anchor
+  // pick + salary²-weighted fillers), then run the same cap-enforcement and
+  // tier-floor guarantee against the full eval pool.
+  // See CLAUDE.md "Positional requirements rule".
+  if (config.positionAware === false) {
+    return generateRosterPositionAgnostic(evalPool, rosterSize, cap, minSalary, byPos, economyConfig, rnd);
+  }
+
   const usedPeople = new Set<string>();
   const roster: Array<GeneratedCard | null> = Array(rosterSize).fill(null);
 
@@ -108,6 +118,12 @@ export function generateRoster(evalPool: PlayerEval[], config: RosterConfig, eco
 }
 
 export function redrawRoster(current: GeneratedCard[], heldSlots: Set<number>, evalPool: PlayerEval[], config: RosterConfig, economyConfig: EconomyConfig, rnd: () => number): GeneratedCard[] {
+  // Position-agnostic redraw — held cards stay; unheld slots refill from the
+  // full eval pool. See CLAUDE.md "Positional requirements rule".
+  if (config.positionAware === false) {
+    return redrawRosterPositionAgnostic(current, heldSlots, evalPool, economyConfig, rnd);
+  }
+
   const heldMask = current.map((_, i) => heldSlots.has(i));
   const usedPeople = new Set<string>();
   const result = current.map((c, i) => { if (heldMask[i]) { usedPeople.add(c.personKey); return { ...c, wasHeld: true }; } return { ...c, wasHeld: false }; });
@@ -213,6 +229,119 @@ function guaranteeTierFloor(roster: GeneratedCard[], evalPool: PlayerEval[], eco
   }
   return result;
 }
+
+// ── Position-agnostic deal path ───────────────────────────────────────────
+// Basketball deals N undifferentiated cards under cap. The flow mirrors the
+// position-aware path conceptually (anchor → fill → cap enforce → tier-floor
+// guarantee) but does not bucket by position. Slot indices are assigned in
+// pick order; UI position labels come from the player's own `position` field.
+function generateRosterPositionAgnostic(
+  evalPool: PlayerEval[],
+  rosterSize: number,
+  cap: number,
+  minSalary: number,
+  byPos: Record<string, PlayerEval[]>,
+  economyConfig: EconomyConfig,
+  rnd: () => number,
+): GeneratedCard[] {
+  const usedPeople = new Set<string>();
+  const lineup: GeneratedCard[] = [];
+  let budgetRemaining = cap;
+
+  // 1. Anchor — RED/ORANGE-tier, salary²-weighted, salary cap respected.
+  //    Fallback to salary-threshold (>= ORANGE.minSalary) for sports whose
+  //    JSON lacks tier info.
+  const anchorThreshold = economyConfig.tierThresholds.find(t => t.tier === "ORANGE")?.minSalary ?? 52;
+  const maxAnchorSalary = cap - (rosterSize - 1) * minSalary;
+  const isAnchorTier = (p: PlayerEval) => {
+    const t = String(p.tier ?? "").toUpperCase();
+    return t === "RED" || t === "ORANGE";
+  };
+  const tierAnchorPool = evalPool.filter(p => isAnchorTier(p) && p.salary <= maxAnchorSalary);
+  const anchorPool = tierAnchorPool.length > 0
+    ? tierAnchorPool
+    : evalPool.filter(p => p.salary >= anchorThreshold && p.salary <= maxAnchorSalary);
+  if (anchorPool.length) {
+    const anchor = pickWeightedRandom(anchorPool, usedPeople, rnd) ?? anchorPool[0];
+    usedPeople.add(anchor.personKey);
+    budgetRemaining -= anchor.salary;
+    lineup.push(toGeneratedCard(anchor, lineup.length));
+  }
+
+  // 2. Fill remaining slots — salary²-weighted across the whole eval pool.
+  while (lineup.length < rosterSize) {
+    const slotsLeft = rosterSize - lineup.length;
+    const maxForSlot = budgetRemaining - (slotsLeft - 1) * minSalary;
+    const candidates = evalPool.filter(p => !usedPeople.has(p.personKey) && p.salary <= maxForSlot);
+    const picked = candidates.length
+      ? (pickWeightedRandom(candidates, usedPeople, rnd) ?? candidates[candidates.length - 1])
+      : cheapestAvailable(evalPool, usedPeople, maxForSlot);
+    if (!picked) break;
+    usedPeople.add(picked.personKey);
+    budgetRemaining -= picked.salary;
+    lineup.push(toGeneratedCard(picked, lineup.length));
+  }
+
+  // 3. Fallback fill — absolute cheapest unused players if budget squeezed.
+  while (lineup.length < rosterSize) {
+    const fallback = [...evalPool]
+      .filter(p => !usedPeople.has(p.personKey))
+      .sort((a, b) => a.salary - b.salary)[0]
+      ?? evalPool[0];
+    usedPeople.add(fallback.personKey);
+    budgetRemaining -= fallback.salary;
+    lineup.push(toGeneratedCard(fallback, lineup.length));
+  }
+
+  // 4. Cap enforcement (use all-FLEX slot requirements so the replacement
+  //    pool isn't restricted to a per-position bucket) + tier-floor guarantee.
+  const flexSlots: SlotRequirement[] = Array(rosterSize).fill("FLEX");
+  const result = enforceCapWithReplacement(lineup, evalPool, byPos, flexSlots, economyConfig, rnd);
+  const guaranteed = guaranteeTierFloor(result, evalPool, economyConfig, rnd, []);
+  const finalTotal = totalSalary(guaranteed.map(c => c.salary));
+  if (finalTotal > cap) console.warn(`[RosterEngine] CAP BREACH: $${finalTotal} > $${cap}`);
+  return guaranteed;
+}
+
+function redrawRosterPositionAgnostic(
+  current: GeneratedCard[],
+  heldSlots: Set<number>,
+  evalPool: PlayerEval[],
+  economyConfig: EconomyConfig,
+  rnd: () => number,
+): GeneratedCard[] {
+  const heldMask = current.map((_, i) => heldSlots.has(i));
+  const usedPeople = new Set<string>();
+  const result = current.map((c, i) => {
+    if (heldMask[i]) { usedPeople.add(c.personKey); return { ...c, wasHeld: true }; }
+    return { ...c, wasHeld: false };
+  });
+  const heldSalary = current.reduce((sum, c, i) => heldMask[i] ? sum + c.salary : sum, 0);
+  let budgetRemaining = economyConfig.capMax - heldSalary;
+  let openSlotsRemaining = heldMask.filter(h => !h).length;
+  const minSalary = Math.min(...evalPool.map(p => p.salary));
+
+  for (let i = 0; i < result.length; i++) {
+    if (heldMask[i]) continue;
+    const maxForSlot = budgetRemaining - (openSlotsRemaining - 1) * minSalary;
+    const candidates = evalPool.filter(p => !usedPeople.has(p.personKey) && p.salary <= maxForSlot);
+    const picked = candidates.length
+      ? (pickWeightedRandom(candidates, usedPeople, rnd) ?? candidates[candidates.length - 1])
+      : (cheapestAvailable(evalPool, usedPeople, maxForSlot)
+          ?? [...evalPool].filter(p => !usedPeople.has(p.personKey)).sort((a, b) => a.salary - b.salary)[0]
+          ?? evalPool[0]);
+    usedPeople.add(picked.personKey);
+    budgetRemaining -= picked.salary;
+    openSlotsRemaining--;
+    result[i] = { ...toGeneratedCard(picked, i), wasHeld: false };
+  }
+
+  const flexSlots: SlotRequirement[] = Array(current.length).fill("FLEX");
+  const byPos = buildPositionPools(evalPool);
+  const afterCap = enforceCapWithReplacement(result as GeneratedCard[], evalPool, byPos, flexSlots, economyConfig, rnd, heldMask);
+  return guaranteeTierFloor(afterCap, evalPool, economyConfig, rnd, heldMask);
+}
+
 function cheapestAvailable(pool: PlayerEval[], usedPeople: Set<string>, maxSalary: number): PlayerEval | null {
   return pool.filter(p => !usedPeople.has(p.personKey) && p.salary <= maxSalary).sort((a, b) => a.salary - b.salary)[0] ?? null;
 }

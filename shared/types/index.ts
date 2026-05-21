@@ -135,6 +135,14 @@ export interface RosterConfig {
   rosterSize: number;
   slotRequirements: SlotRequirement[];
   excludeFromFlex?: string[];
+  /** Whether the sport enforces positional roster slots. Default true.
+   *  Set false on sports whose positions accumulate the same stat
+   *  categories (basketball). Position-agnostic sports skip the
+   *  per-position pool logic in generateRoster + redrawRoster; the
+   *  rest of the pipeline (anchor pick, cap enforcement, tier-floor
+   *  guarantee) still runs against the full eval pool. See
+   *  CLAUDE.md "Positional requirements rule". */
+  positionAware?: boolean;
 }
 
 export interface PlayerEval {
@@ -193,6 +201,10 @@ export interface SportConfigShape {
   rosterSize?: number;
   maxPlayers?: number;
   excludeFromFlex?: string[];
+  /** Whether the sport enforces positional roster slots. Default true.
+   *  Basketball sets this to false (all positions accumulate the same
+   *  stat categories — see CLAUDE.md "Positional requirements rule"). */
+  positionAware?: boolean;
   salaryCap: number;
   economyConfig?: {
     capMax: number;

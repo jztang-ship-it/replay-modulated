@@ -39,6 +39,12 @@ export class SportAdapter {
   get rosterSize(): number { return this.config.maxPlayers; }
   get positions(): string[] { return this.config.positions; }
 
+  /** Whether the sport enforces positional roster slots. Basketball returns
+   *  false — all five floor positions accumulate the same stat categories,
+   *  so the deal is N undifferentiated cards under cap. See
+   *  CLAUDE.md "Positional requirements rule". */
+  get positionAware(): boolean { return (this.config as any).positionAware !== false; }
+
   // Required by tierFromSalary() and slateSelector. basketballConfig doesn't
   // ship its own thresholds, so fall back to the shared defaults
   // (RED $73+ / ORANGE $58+ / PURPLE $44+ / BLUE $30+ / GREEN $23+ / WHITE $0+).

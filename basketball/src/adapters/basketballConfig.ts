@@ -17,6 +17,12 @@ export const BasketballSportConfig = {
   positions:    ['PG', 'SG', 'SF', 'PF', 'C'] as string[],
   rosterSlots:  ['PG', 'SG', 'SF', 'PF', 'C', 'FLEX'] as string[],
   excludeFromFlex: [] as string[],
+  // All five basketball positions accumulate the same stat categories
+  // (pts/reb/ast/stl/blk/etc.), so the deal does NOT enforce positional
+  // slots. positions + rosterSlots stay populated for UI labeling (card
+  // front shows "PG"/"SG"/etc.) but the deal pulls N undifferentiated
+  // cards under cap. See CLAUDE.md "Positional requirements rule".
+  positionAware: false,
 
   // Maps legacy or alternate strings -> canonical position
   positionAliases: {
