@@ -24,12 +24,14 @@ import type { WinTierKey, WinTierMap, StreakTier } from "@shared/utils/payoutLog
 import { getActiveSeason } from "@shared/engines/dataEngine";
 import perSeasonThresholds from "../data/winThresholds.json";
 
-// Basketball streak schedule. Initially preserved at the historical
-// 3/5/10 → 1.3/1.7/2.5 values — Commit 2b adjusts these.
+// Basketball streak schedule.
+// Rebalanced from 1.3/1.7/2.5 → 1.2/1.5/2.0 alongside LEGEND 50× → 20× to
+// land basketball RTP near the ~90% target. The streak resets on bust;
+// multipliers apply to non-bust wins only.
 export const STREAK_TIERS: StreakTier[] = [
-  { wins: 10, multiplier: 2.5 },
-  { wins: 5,  multiplier: 1.7 },
-  { wins: 3,  multiplier: 1.3 },
+  { wins: 10, multiplier: 2.0 },
+  { wins: 5,  multiplier: 1.5 },
+  { wins: 3,  multiplier: 1.2 },
 ];
 
 /** Basketball streak multiplier — sport-bound wrapper. */
@@ -49,7 +51,7 @@ export type { WinTierKey };
 export type WinTier = WinTierKey;
 
 const MULTIPLIERS: Record<WinTierKey, number> = {
-  LEGEND: 50, MVP: 8, ALL_STAR: 3, STARTER: 1.5, ROOKIE: 0.5, BUST: 0,
+  LEGEND: 20, MVP: 8, ALL_STAR: 3, STARTER: 1.5, ROOKIE: 0.5, BUST: 0,
 };
 
 // Fallback thresholds — used when active season is unset (e.g. unit tests,
