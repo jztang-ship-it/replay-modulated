@@ -21,6 +21,7 @@ import { fileURLToPath } from "node:url";
 import { generateRoster, mulberry32 } from "../../../shared/engines/rosterEngine";
 import { resolveCards } from "../../../shared/engines/resolveEngine";
 import { getCachedSlate, _resetSlateCache } from "../../../shared/utils/slateSelector";
+import { buildDailyBonusMap } from "../../../shared/utils/dailyBonus";
 import { computeBasketballCareerFp } from "../adapters/careerFp";
 import { computeBasketballFp } from "../adapters/fantasyPoints";
 import { computeBasketballBadges } from "../adapters/badges";
@@ -254,6 +255,22 @@ function runSeason(season: string): SeasonResult | null {
     if (evalPool.length < 6) continue;
     const roster = generateRoster(evalPool, ROSTER_CONFIG, ECONOMY_CONFIG, rng);
     if (roster.length < 6) continue;
+    // Daily bonus: production picks 3 slate-eligible players per UTC day
+    // (+20/+10/+5 FP, ORANGE/PURPLE/BLUE/GREEN only). Build the pool from
+    // the same slate that fed the deal; buildDailyBonusMap handles tier
+    // filter + deterministic shuffle + bonus assignment. Each sim hand is
+    // a fresh UTC day → fresh rotation.
+    const bonusPool: Array<{ basePlayerId: string; name: string; tier: string }> = [];
+    for (const id of slateIds) {
+      const p = data.playerById.get(id);
+      if (!p) continue;
+      bonusPool.push({
+        basePlayerId: id,
+        name: String(p.name ?? ""),
+        tier: String(p.tier ?? "WHITE").toUpperCase(),
+      });
+    }
+    const dailyBonusMap = buildDailyBonusMap(bonusPool, date);
     // Production-parity resolve: real resolveCards / pickBiasedLog. The
     // tier-aware minutes filter (premium ≥ 0, non-premium ≥ 10) lives
     // inside pickBiasedLog, so the sim sees the same log distribution
@@ -262,7 +279,7 @@ function runSeason(season: string): SeasonResult | null {
     const { resolved } = resolveCards(
       roster,
       data.logsByPlayerRaw,
-      { fpScale: 1, minMinutes: MIN_MINUTES_LOG },
+      { fpScale: 1, minMinutes: MIN_MINUTES_LOG, dailyBonusMap },
       RESOLVE_ADAPTER,
       rng,
     );

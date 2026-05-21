@@ -34,6 +34,7 @@ import { fileURLToPath } from "node:url";
 import { generateRoster, mulberry32 } from "../../../shared/engines/rosterEngine";
 import { resolveCards } from "../../../shared/engines/resolveEngine";
 import { getCachedSlate, _resetSlateCache } from "../../../shared/utils/slateSelector";
+import { buildDailyBonusMap } from "../../../shared/utils/dailyBonus";
 import type { PlayerEval, EconomyConfig, TierColor, SlotRequirement } from "../../../shared/types";
 import { computeBasketballCareerFp } from "../adapters/careerFp";
 import { computeBasketballFp } from "../adapters/fantasyPoints";
@@ -282,11 +283,14 @@ function runSeason(season: string, mode: "slate" | "full"): SeasonResult | null 
   // Production-parity resolve: real resolveCards / pickBiasedLog. Tier-aware
   // minutes filter (premium ≥ 0, non-premium ≥ 10) is applied inside
   // pickBiasedLog. minMinutes: 10 mirrors basketballConfig.historicalLogFilters.
-  const processRoster = (roster: any[]) => {
+  // Slate mode also passes dailyBonusMap so the +20/+10/+5 daily-bonus
+  // bonuses are applied additively, matching production. Full mode is the
+  // pre-slate baseline and keeps no daily bonus for clean comparison.
+  const processRoster = (roster: any[], dailyBonusMap?: Map<string, number>) => {
     const { resolved } = resolveCards(
       roster,
       data.logsByPlayerRaw,
-      { fpScale: 1, minMinutes: MIN_MINUTES_LOG },
+      { fpScale: 1, minMinutes: MIN_MINUTES_LOG, dailyBonusMap },
       RESOLVE_ADAPTER,
       rng,
     );
@@ -314,7 +318,15 @@ function runSeason(season: string, mode: "slate" | "full"): SeasonResult | null 
       if (evalPool.length < 6) { skipped++; continue; }
       const roster = generateRoster(evalPool, ROSTER_CONFIG, ECONOMY_CONFIG, rng);
       if (roster.length < 6) { skipped++; continue; }
-      processRoster(roster);
+      // Build per-day bonus pool from slate IDs.
+      const bonusPool: Array<{ basePlayerId: string; name: string; tier: string }> = [];
+      for (const id of slateIds) {
+        const p = data.playerById.get(id);
+        if (!p) continue;
+        bonusPool.push({ basePlayerId: id, name: String(p.name ?? ""), tier: String(p.tier ?? "WHITE").toUpperCase() });
+      }
+      const dailyBonusMap = buildDailyBonusMap(bonusPool, date);
+      processRoster(roster, dailyBonusMap);
     }
   }
   if (skipped > 0) console.warn(`  ${season} [${mode}]: skipped ${skipped}/${HANDS}`);
