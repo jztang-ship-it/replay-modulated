@@ -19,8 +19,12 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { generateRoster, mulberry32 } from "../../../shared/engines/rosterEngine";
+import { resolveCards } from "../../../shared/engines/resolveEngine";
 import { getCachedSlate, _resetSlateCache } from "../../../shared/utils/slateSelector";
 import { computeBasketballCareerFp } from "../adapters/careerFp";
+import { computeBasketballFp } from "../adapters/fantasyPoints";
+import { computeBasketballBadges } from "../adapters/badges";
+import { BasketballSportConfig } from "../adapters/basketballConfig";
 import type { PlayerEval, EconomyConfig, TierColor, SlotRequirement } from "../../../shared/types";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -68,39 +72,32 @@ const TIER_ORDER = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "LEGEND"] as
 // Task 6 full-pool thresholds (for the 2425 comparison row).
 const TASK6_2425 = { ROOKIE: 174, STARTER: 203, ALL_STAR: 233, MVP: 249, LEGEND: 276 };
 
-// ── FP / badge / log filter / eligibility (same as slateAwareCalibrate) ─────
-function computeFp(s: Record<string, any>): number {
-  const g = (k: string) => Number(s[k] ?? s[k.toLowerCase()] ?? 0);
-  return g("pts") * 1.0 + g("reb") * 1.2 + g("ast") * 1.5
-       + g("stl") * 2.0 + g("blk") * 2.0 + g("turnovers") * -1.0;
-}
-function computeBadgeBonus(s: Record<string, any>): number {
-  const g = (k: string) => Number(s[k] ?? s[k.toLowerCase()] ?? 0);
-  const pts = g("pts"), reb = g("reb"), ast = g("ast"), stl = g("stl"), blk = g("blk"), to = g("turnovers");
-  let b = 0;
-  if (pts >= 50) b += 10; else if (pts >= 40) b += 5; else if (pts >= 30) b += 2;
-  if (reb >= 15) b += 5; else if (reb >= 10) b += 3;
-  if (ast >= 15) b += 5; else if (ast >= 10) b += 3;
-  if (stl >= 5) b += 4; else if (stl >= 3) b += 2;
-  if (blk >= 5) b += 4; else if (blk >= 3) b += 2;
-  if (ast >= 10 && to === 0) b += 8; else if (ast >= 5 && to === 0) b += 3;
-  if (to >= 6) b -= 6; else if (to >= 4) b -= 3;
-  const cats = [pts, reb, ast, stl, blk].filter(v => v >= 10).length;
-  if (cats >= 4) b += 30; else if (cats >= 3) b += 8; else if (cats >= 2) b += 2;
-  if ([pts, reb, ast, stl, blk].every(v => v >= 5)) b += 15;
-  return b;
-}
-function logPlayable(l: any): boolean {
-  const s = l?.stats ?? {};
-  const hasPositive = Object.values(s).some((v: any) => typeof v === "number" && v > 0);
-  if (!hasPositive) return false;
-  const mp = s.mp ?? s.minutes ?? s.min ?? s.MIN ?? s.minutesPlayed;
-  if (mp !== undefined && mp !== null) {
+// ── FP / badges via production helpers (sim-production parity). ─────────────
+// The resolve sim builds a ResolveAdapter that delegates to the same pure
+// helpers that basketball/src/adapters/SportAdapter.ts calls in production.
+// pickBiasedLog (called from resolveCards) handles tier-aware filtering;
+// no log pre-filter at season-load.
+const RESOLVE_ADAPTER = {
+  computeFantasyPoints: (stats: Record<string, any>) =>
+    computeBasketballFp(stats, BasketballSportConfig.projectionWeights),
+  computeBadges: (stats: Record<string, any>) =>
+    computeBasketballBadges(stats, (BasketballSportConfig as any).badges ?? []),
+};
+// Career-FP helper still needs a "is this log countable" probe to decide
+// eligibility; uses positive-minutes only (the broader of the two tier
+// filters) so any player who could resolve a premium-tier card is eligible.
+function hasAnyPositiveMinutesLog(logs: any[]): boolean {
+  for (const l of logs) {
+    const s = l?.stats ?? {};
+    const hasPositive = Object.values(s).some((v: any) => typeof v === "number" && v > 0);
+    if (!hasPositive) continue;
+    const mp = s.mp ?? s.minutes ?? s.min ?? s.MIN ?? s.minutesPlayed;
+    if (mp === undefined || mp === null) return true; // no minute field → trust stats
     const str = String(mp);
     const mins = str.includes(":") ? parseFloat(str.split(":")[0]) : parseFloat(str);
-    if (Number.isFinite(mins) && mins < MIN_MINUTES_LOG) return false;
+    if (Number.isFinite(mins) && mins > 0) return true;
   }
-  return true;
+  return false;
 }
 function pctileAt(sorted: number[], p: number): number {
   const i = Math.min(Math.floor(sorted.length * p / 100), sorted.length - 1);
@@ -119,10 +116,9 @@ function tierOf(fp: number, t: { ROOKIE: number; STARTER: number; ALL_STAR: numb
 interface SeasonData {
   season: string;
   playerById: Map<string, any>;
-  logsByPlayer: Map<string, any[]>;
+  logsByPlayerRaw: Map<string, any[]>;       // unfiltered — fed to resolveCards (production's filter is at resolve)
   eligible: string[];
-  careerFpById: Map<string, number>;        // via production helper
-  logsByPlayerRaw: Map<string, any[]>;       // unfiltered — career-FP source
+  careerFpById: Map<string, number>;         // via production helper
   byTier: Map<string, string[]>;
 }
 function loadSeason(season: string): SeasonData {
@@ -131,17 +127,13 @@ function loadSeason(season: string): SeasonData {
   const logsJson: any[] = JSON.parse(fs.readFileSync(path.join(seasonDir, "gamelogs.json"), "utf8"));
 
   const totalGamesById = new Map<string, number>();
-  const logsByPlayer = new Map<string, any[]>();        // filtered for sampling
-  const logsByPlayerRaw = new Map<string, any[]>();     // unfiltered — production-parity career-FP source
+  const logsByPlayerRaw = new Map<string, any[]>();     // unfiltered — production resolveCards/pickBiasedLog filters at resolve time
   for (const l of logsJson) {
     const k = String(l.basePlayerId ?? "");
     if (!k) continue;
     totalGamesById.set(k, (totalGamesById.get(k) ?? 0) + 1);
     if (!logsByPlayerRaw.has(k)) logsByPlayerRaw.set(k, []);
     logsByPlayerRaw.get(k)!.push(l);
-    if (!logPlayable(l)) continue;
-    if (!logsByPlayer.has(k)) logsByPlayer.set(k, []);
-    logsByPlayer.get(k)!.push(l);
   }
   const playerById = new Map<string, any>();
   for (const p of playersJson) {
@@ -149,21 +141,27 @@ function loadSeason(season: string): SeasonData {
     if (!id) continue;
     playerById.set(id, p);
   }
+  // Eligibility: salary > 0, ≥30 games this season, has at least one log
+  // with positive minutes (the broader of the two tier-aware filters in
+  // production's pickBiasedLog). Cards whose logs are all sub-10-min will
+  // still get drawn — they resolve to 0 FP for non-premium tiers, which
+  // matches production's pickBiasedLog returning null.
   const eligible: string[] = [];
   for (const [id, p] of playerById) {
     if (!(p.salary > 0)) continue;
     if ((totalGamesById.get(id) ?? 0) < MIN_GAMES_THIS_SEASON) continue;
-    if (!logsByPlayer.has(id) || logsByPlayer.get(id)!.length === 0) continue;
+    const logs = logsByPlayerRaw.get(id) ?? [];
+    if (!hasAnyPositiveMinutesLog(logs)) continue;
     eligible.push(id);
   }
   // Career FP via production's computeBasketballCareerFp helper. Walks the
   // RAW (unfiltered) logs map — matches production's dataEngine, which
   // builds its index from pre-filter logs and lets getCareerFPById see
-  // sub-10-min appearances. Eliminates the prior proxy's bias against
-  // players with many low-minute games.
+  // sub-10-min appearances.
   const careerFpById = new Map<string, number>();
   for (const id of eligible) {
-    careerFpById.set(id, computeBasketballCareerFp(id, logsByPlayerRaw, computeFp));
+    careerFpById.set(id, computeBasketballCareerFp(id, logsByPlayerRaw,
+      stats => computeBasketballFp(stats, BasketballSportConfig.projectionWeights)));
   }
   const byTier = new Map<string, string[]>();
   for (const id of eligible) {
@@ -171,7 +169,7 @@ function loadSeason(season: string): SeasonData {
     if (!byTier.has(t)) byTier.set(t, []);
     byTier.get(t)!.push(id);
   }
-  return { season, playerById, logsByPlayer, logsByPlayerRaw, eligible, careerFpById, byTier };
+  return { season, playerById, logsByPlayerRaw, eligible, careerFpById, byTier };
 }
 
 // ── Inline SlateAdapter ───────────────────────────────────────────────────
@@ -208,7 +206,8 @@ function buildEvalFromIds(ids: string[], data: SeasonData, season: string): Play
     const p = data.playerById.get(id);
     if (!p) continue;
     if (!(p.salary > 0)) continue;
-    if (!data.logsByPlayer.has(id) || data.logsByPlayer.get(id)!.length === 0) continue;
+    const logs = data.logsByPlayerRaw.get(id) ?? [];
+    if (!hasAnyPositiveMinutesLog(logs)) continue;
     out.push({
       id, basePlayerId: id, personKey: id, cardId: id + "_card",
       name: String(p.name ?? ""), team: String(p.team ?? ""),
@@ -255,14 +254,20 @@ function runSeason(season: string): SeasonResult | null {
     if (evalPool.length < 6) continue;
     const roster = generateRoster(evalPool, ROSTER_CONFIG, ECONOMY_CONFIG, rng);
     if (roster.length < 6) continue;
+    // Production-parity resolve: real resolveCards / pickBiasedLog. The
+    // tier-aware minutes filter (premium ≥ 0, non-premium ≥ 10) lives
+    // inside pickBiasedLog, so the sim sees the same log distribution
+    // production does. minMinutes: 10 mirrors basketball's
+    // historicalLogFilters.minMinutes (basketballConfig.ts).
+    const { resolved } = resolveCards(
+      roster,
+      data.logsByPlayerRaw,
+      { fpScale: 1, minMinutes: MIN_MINUTES_LOG },
+      RESOLVE_ADAPTER,
+      rng,
+    );
     let handFp = 0;
-    for (const card of roster) {
-      const logs = data.logsByPlayer.get(card.basePlayerId) ?? [];
-      if (!logs.length) continue;
-      const log = logs[Math.floor(rng() * logs.length)];
-      const stats = log.stats ?? {};
-      handFp += computeFp(stats) + computeBadgeBonus(stats);
-    }
+    for (const c of resolved) handFp += c.actualFp;
     fps.push(handFp);
   }
   if (fps.length < HANDS / 2) return null;
