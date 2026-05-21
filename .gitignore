@@ -8,6 +8,9 @@ dist/
 .DS_Store
 *.log
 *.zip
+# Reasoning-Claude session-bootstrap zip from scripts/buildDigest.mjs
+# (covered by *.zip above; listed explicitly so its purpose is greppable).
+replaymod-digest-*.zip
 *.tar.gz
 *.tar
 .vite/
