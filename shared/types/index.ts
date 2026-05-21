@@ -113,6 +113,18 @@ export type RawLog = {
   };
   stats: Record<string, any>;
   events?: Record<string, any>;
+  /** True if the player suffered a within-game injury that limited or ended
+   *  their participation in this specific game. Default false / treated as
+   *  false when absent. Today's ingestion (extractNbaSeason.mjs → stats.nba.com
+   *  leaguegamelog) doesn't populate this flag — sub-10-min outcomes default
+   *  to "ambiguous" and the coach-DNP commentary path fires. Will be plumbed
+   *  through once playbyplayv2 ingestion + injury-source enrichment lands. */
+  injured?: boolean;
+  /** True if the player was ejected from this specific game. Default false /
+   *  treated as false when absent. Today's ingestion doesn't populate this
+   *  flag — see `injured` note above. Will be plumbed via playbyplayv2 in a
+   *  follow-up workstream (event type 11 ejection events). */
+  ejected?: boolean;
 };
 
 export interface TierThreshold {
