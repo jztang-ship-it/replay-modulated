@@ -107,19 +107,13 @@ outside the healthy 88-95% band. The dominant pressure is LEGEND 50×
 combined with the streak boost: LEGEND alone contributes ~12pp of
 RTP at a 0.2% hit rate, and is sensitive to small drift (0.3% LEGEND
 share would add another ~5pp). Tier shares + thresholds are tight;
-the multiplier schedule is the lever. **Adjusting the multiplier
-schedule is a separate workstream** — not gated on this calibration
-landing, but worth taking before any production rollout that would
-absorb the RTP exposure at scale.
+the multiplier schedule is the lever. Multiplier rebalance and RTP
+validation: see section below.
 
 Open items at the end of this workstream:
 - **Stamps smoke test** is pending (separate worktree
   `feat/team-stamps`, untouched throughout calibration). Merges
   before stamps smoke.
-- **Multiplier schedule decision** is open. Reducing LEGEND from 50×
-  or softening streaks (e.g., 1.2/1.5/2.0) would land RTP closer to
-  92-95%; either is a small numeric edit, but both need a product
-  call.
 - **Sim Migration B** is deferred — the shared sport-agnostic
   `shared/tools/runSimulator.ts` still reimplements the deal loop
   rather than calling `generateRoster` directly (per CLAUDE.md
@@ -138,3 +132,104 @@ lives in pure helpers that both `SportAdapter` and the sim import.
 That arrangement is the load-bearing decision; the threshold numbers
 themselves will move as the game evolves, but the parity discipline
 should not.
+
+---
+
+## 2026-05-21 — Multiplier rebalance and RTP validation
+
+The calibration-overhaul entry above ended on the RTP finding:
+back-of-envelope total RTP under the (then-current) 0.5 / 1.5 / 3 / 8 / 50
+tier schedule plus 1.3 / 1.7 / 2.5 streak schedule landed near 101% —
+meaningfully outside the healthy 88-95% band. The bulk of the pressure
+came from LEGEND 50× layered on the streak boost: LEGEND alone
+contributed ~12pp of RTP at a 0.2% hit rate, and the streak schedule
+added another ~16% boost to the winning-tier slice on top. Tier shares
+and thresholds were tight; the multiplier schedule was the lever.
+
+The follow-up workstream rebalanced basketball only: LEGEND 50× → 20×,
+streaks 1.3 / 1.7 / 2.5 → 1.2 / 1.5 / 2.0. Tier and streak schedules
+preserved at their current "feels meaningful" values for the other
+intermediate tiers (ROOKIE 0.5×, STARTER 1.5×, ALL_STAR 3×, MVP 8×).
+LEGEND remains the rarest-and-most-rewarding moment in the deal, but
+20× is enough that a once-in-500-hands LEGEND still feels like a real
+event without being the dominant economic pressure on the house edge.
+
+The structural change that enabled the rebalance is worth flagging
+separately: `STREAK_TIERS` was previously a shared constant in
+`shared/utils/payoutLogic.ts`, which meant any basketball multiplier
+adjustment would silently re-tune baseball and football too. Sport
+divergence at the data level (different thresholds, different roster
+shape, different stats) coupled with sport convergence at the schedule
+level was a real architectural mismatch. Commit `441772c` moved the
+`STREAK_TIERS` constant out of shared into each sport's own
+`payoutLogic.ts`, kept the `StreakTier` type and the helper functions
+in shared, and threaded the per-sport tiers through the shared GameBar
+and commentary consumers via a new `streakTiers` field on `GameAdapter`
+and on `CommentaryInput`. Basketball / baseball / football now each
+hold their own schedule. Baseball and football were preserved at the
+historical 1.3 / 1.7 / 2.5 values pending their own RTP audits;
+basketball moved to 1.2 / 1.5 / 2.0 in `c74eb57`.
+
+RTP validation methodology: a new sim (`basketball/src/tools/rtpSim.ts`)
+runs the same 29-season × 10k-hand pipeline as the threshold sim
+(slate-aware deal + production `resolveCards` + tier-aware filter +
+daily bonus + true career FP) but emits the dollar payout per hand
+instead of the FP outcome. Each hand pays `bet × tierMultiplier ×
+streakMultiplier`. RTP as a ratio is bet-invariant — both numerator
+and denominator scale together — so the sim uses a constant $1 bet
+per hand and the ratio holds under any production bet sizing that
+scales linearly. If a future workstream wants EV-per-session under
+realistic variable-bet behavior (where users alter bet size with
+streak length or confidence), that's a session-layer simulation on
+top of this RTP measurement.
+
+Measured aggregate RTP under the rebalanced schedule lands at
+**89.4%** across all 290k hands, with a per-season range of 83.6%
+to 93.7% and a median of 89.2%. Inside the 88-95% band, conservative
+end — exactly where a slot-machine-shaped economy wants to live.
+Streak boosts contribute 33.8% of total payout across the 1.2× /
+1.5× / 2.0× buckets (down from ~14pp at the old schedule), with the
+remaining 66.2% from non-streak hands. By tier, STARTER is the
+workhorse at 39.3% of payout — exactly where the bulk of
+player-felt wins should land. LEGEND contribution dropped from
+the back-of-envelope ~12pp at 50× to 5.0% measured at 20×, which
+is the dominant-pressure relief the rebalance was meant to deliver.
+
+A note on per-season variance: per-season threshold calibration
+intentionally does not equalize RTP across seasons. Thresholds are
+derived per-season against each season's own FP distribution so the
+tier-share targets land cleanly within season; the multiplier schedule
+is then applied uniformly. Older-era seasons (1996-1012ish) cluster
+~86-88% RTP — their tighter FP distributions land more hands at
+boundary thresholds where small share differences swing payout
+meaningfully. Recent seasons (1718+) cluster ~89-93%. The 29-season
+aggregate at 89.4% is the load-bearing number; per-season variance
+within the band is acceptable and the outliers (e.g., 1011 at 83.6%)
+don't warrant their own threshold re-derivation pass.
+
+Cosmetic drift acknowledged and deliberately deferred:
+`shared/commentary/chad.ts:45` has a literal "1.3x" mid-sentence in
+one chad-message variant ("Two straight. Fire emojis are real — one
+more win, multiplier hits 1.3x. Don't trip on the way."). Templating
+this requires plumbing the basketball streak-3 multiplier value
+through the chad call site, which is more invasive than the value of
+fixing one chad-line variant. Tracked as a cleanup, not a blocker.
+
+Open items after this workstream:
+
+Baseball and football were left structurally separated from
+basketball's schedule but still on the historical 1.3 / 1.7 / 2.5
+streak schedule and 50× LEGEND multiplier (their `BASEBALL_WIN_TIERS`
+/ `FOOTBALL_WIN_TIERS` were untouched). Whether they want their own
+rebalance depends on per-sport RTP audits that haven't been run yet.
+The infrastructure to run them is in place (`rtpSim.ts` template can
+be lifted into per-sport variants), but the calibration call belongs
+to the workstream that picks them up.
+
+Stamps smoke test on `feat/team-stamps` remains pending. The
+calibration + payout workstream is complete and ready to merge; the
+stamps work was deliberately kept on a separate worktree and is
+untouched throughout. Stamps smoke can run against the merged tier
+schedule (will rev as the basketball Legend modal copy and live
+production payouts reflect the new 20× LEGEND and softer streaks),
+or against the current branch state — both are valid sequences.
