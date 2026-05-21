@@ -18,6 +18,7 @@ import type { JSX as ReactJSX } from "react";
 import { track } from "@shared/analytics/analytics";
 import { formatBonusCountdown, getMsUntilNextBonusRotation } from "@shared/utils/dailyBonus";
 import { isSlateV2Enabled } from "@shared/featureFlags";
+import type { StreakTier } from "@shared/utils/payoutLogic";
 
 /** Live countdown string to next UTC midnight (daily bonus rotation). */
 function formatBonusCountdownLocal(): string {
@@ -150,6 +151,10 @@ type Props = {
   trophyPulsing?: boolean;
   /** Current win streak for fire emoji display under balance */
   streak?: number;
+  /** Sport-specific streak schedule (e.g., 3-win/5-win/10-win tiers with their
+   *  multipliers). Drives the fire-row label text. Optional for back-compat;
+   *  when omitted, labels show "1x" fallbacks. */
+  streakTiers?: StreakTier[];
   /** Called when user opens the legend modal — parent can clear pulse state */
   onLegendOpened?: () => void;
   /** Called when user taps the trophy/leaderboard icon — parent can clear pulse state */
@@ -220,13 +225,25 @@ function isDisabled(state: GameStateLabel): boolean {
 }
 
 // ── Streak fire row with flash (light-up) and extinguish (streak-break) effects ──
-// All 10 emojis on one line: [🔥🔥🔥 1.3x] [🔥🔥 1.7x] [🔥🔥🔥🔥🔥 2.5x]
+// Layout: 3 / 5 / 10 flames, multiplier label above the threshold flame.
 // Tiers unlock progressively: tier 2 appears at 3 wins, tier 3 at 5 wins.
-// Numbers must match STREAK_TIERS in shared/utils/payoutLogic.ts.
+// Labels derive from the sport's STREAK_TIERS, passed in via the
+// streakTiers prop — basketball / baseball / football may schedule
+// different multipliers.
 
-const STREAK_LABELS: Record<number, string> = { 3: "1.3x", 5: "1.7x", 10: "2.5x" };
+function buildStreakLabels(streakTiers: StreakTier[] | undefined): Record<number, string> {
+  // Sane fallback if streakTiers is missing (defensive — shared GameView
+  // always passes it in production).
+  if (!streakTiers || streakTiers.length === 0) {
+    return { 3: "1x", 5: "1x", 10: "1x" };
+  }
+  const labels: Record<number, string> = {};
+  for (const t of streakTiers) labels[t.wins] = `${t.multiplier}x`;
+  return labels;
+}
 
-function StreakFireRow({ streak, prevStreak }: { streak: number; prevStreak: number }) {
+function StreakFireRow({ streak, prevStreak, streakTiers }: { streak: number; prevStreak: number; streakTiers?: StreakTier[] }) {
+  const STREAK_LABELS = buildStreakLabels(streakTiers);
   const totalFlames = streak >= 5 ? 10 : streak >= 3 ? 5 : 3;
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2 }}>
@@ -1355,6 +1372,7 @@ export function GameBar({
   legendPulsing = false,
   trophyPulsing = false,
   streak = 0,
+  streakTiers,
   onLegendOpened,
   onTrophyOpened,
   sportKey,
@@ -1575,7 +1593,7 @@ export function GameBar({
           {/* Streak row — stretched across line, tiers unlock progressively */}
           {streak != null && !ftueHideSkip && (
             <div style={{ display: "flex", alignItems: "center", paddingBottom: 4 }}>
-              <StreakFireRow streak={streak} prevStreak={prevStreakRef.current} />
+              <StreakFireRow streak={streak} prevStreak={prevStreakRef.current} streakTiers={streakTiers} />
             </div>
           )}
 

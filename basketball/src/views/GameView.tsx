@@ -48,6 +48,7 @@ import {
   getBasketballWinTiers,
   getGaugeThresholds,
   getGameBarWinTiers,
+  STREAK_TIERS,
 } from "../utils/payoutLogic";
 
 /** Build the legend modal's payout rows from the active season's win-tier
@@ -160,6 +161,7 @@ export default function GameView({
     calculatePayoutWithStreak,
     winTiersMap: getBasketballWinTiers(),
     getStreakMultiplier,
+    streakTiers: STREAK_TIERS,
     gameBarWinTiers: getGameBarWinTiers(),
     gameBarLegend: { ...LEGEND_DATA_STATIC, payoutRows: buildPayoutRows() },
     dealInitialRoster,

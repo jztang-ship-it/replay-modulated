@@ -375,6 +375,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     calculatePayoutWithStreak,
     winTiersMap,
     getStreakMultiplier,
+    streakTiers,
     gameBarWinTiers,
     gameBarLegend,
     dealInitialRoster,
@@ -1280,6 +1281,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       handCount,
       sport: sportKey,
       topGame: topGameInfo.topGame,
+      streakTiers,
     };
 
     const copy = selectCommentary(copyInput as any);
@@ -2720,6 +2722,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         legendPulsing={legendGold && !isFTUE}
         trophyPulsing={trophyPulsing && !isFTUE}
         streak={streak}
+        streakTiers={streakTiers}
         onLegendOpened={() => {
           const today = new Date().toISOString().slice(0, 10);
           localStorage.setItem("replaymod_legend_seen_date", today);

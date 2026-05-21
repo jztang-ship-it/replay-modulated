@@ -17,15 +17,29 @@ import {
   calculateWinTier as _calculateWinTier,
   calculatePayout  as _calculatePayout,
   calculatePayoutWithStreak as _calculatePayoutWithStreak,
-  getStreakMultiplier,
-  getNextStreakTier,
-  STREAK_TIERS,
+  getStreakMultiplier as _getStreakMultiplier,
+  getNextStreakTier as _getNextStreakTier,
 } from "@shared/utils/payoutLogic";
 import type { WinTierKey, WinTierMap, StreakTier } from "@shared/utils/payoutLogic";
 import { getActiveSeason } from "@shared/engines/dataEngine";
 import perSeasonThresholds from "../data/winThresholds.json";
 
-export { getStreakMultiplier, getNextStreakTier, STREAK_TIERS };
+// Basketball streak schedule. Initially preserved at the historical
+// 3/5/10 → 1.3/1.7/2.5 values — Commit 2b adjusts these.
+export const STREAK_TIERS: StreakTier[] = [
+  { wins: 10, multiplier: 2.5 },
+  { wins: 5,  multiplier: 1.7 },
+  { wins: 3,  multiplier: 1.3 },
+];
+
+/** Basketball streak multiplier — sport-bound wrapper. */
+export function getStreakMultiplier(streak: number): number {
+  return _getStreakMultiplier(streak, STREAK_TIERS);
+}
+/** Basketball next-streak-tier — sport-bound wrapper. */
+export function getNextStreakTier(streak: number): StreakTier | null {
+  return _getNextStreakTier(streak, STREAK_TIERS);
+}
 export type { StreakTier };
 
 import type { WinTierDisplay } from "@shared/components/GameBar";
@@ -120,7 +134,7 @@ export function calculatePayout(tier: WinTierKey, betAmount: number): number {
 }
 
 export function calculatePayoutWithStreak(tier: WinTierKey, betAmount: number, streak: number): number {
-  return _calculatePayoutWithStreak(tier, betAmount, getBasketballWinTiers(), streak);
+  return _calculatePayoutWithStreak(tier, betAmount, getBasketballWinTiers(), streak, STREAK_TIERS);
 }
 
 // Display arrays — derived from the same per-season thresholds so the gauge

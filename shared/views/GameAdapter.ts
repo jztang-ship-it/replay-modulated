@@ -18,6 +18,7 @@ import type { FTUETextConfig } from "@shared/components/CoachLayer";
 import type {
   WinTierKey,
   WinTierMap,
+  StreakTier,
 } from "@shared/utils/payoutLogic";
 import type { WinTierDisplay, LegendData } from "@shared/components/GameBar";
 import type { TierThreshold as GaugeTierThreshold } from "@shared/components/TierGauge";
@@ -63,8 +64,14 @@ export interface GameAdapter {
   ) => number;
   /** Win-tier table — used by the celebration banner for tier multipliers. */
   winTiersMap: WinTierMap;
-  /** Streak multiplier function (1.0 → 1.3 → 1.7 → 2.5). */
+  /** Streak multiplier function. Reads the sport's per-sport STREAK_TIERS
+   *  internally — caller passes streak count only. */
   getStreakMultiplier: (streak: number) => number;
+  /** The sport's streak schedule (e.g., 3-win/5-win/10-win tiers with their
+   *  multipliers). Used by shared GameBar (display labels) and shared
+   *  CommentaryInput (streak_proximity nudges) so the UI/copy match the
+   *  active sport's schedule. */
+  streakTiers: StreakTier[];
 
   // ── GameBar visual config (per-sport thresholds, colors, legend copy) ──
   /** Win-tier visual rows (label, minFp, color, glow) for the tier bar. */

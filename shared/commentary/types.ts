@@ -6,6 +6,8 @@
  * selector (selectCommentary) renders templated copy from libraries/*.json.
  */
 
+import type { StreakTier } from "@shared/utils/payoutLogic";
+
 export type WinTier = "BUST" | "ROOKIE" | "STARTER" | "ALL_STAR" | "MVP" | "LEGEND";
 
 export interface CommentaryRosterCard {
@@ -66,6 +68,9 @@ export interface CommentaryInput {
   leaderboard?: CommentaryLeaderboard;
   /** Pre-computed Top Games tier for the star card. Optional for backward compat. */
   topGame?: TopGameResult;
+  /** Sport-specific streak schedule, sorted descending by wins. Optional for
+   *  backward compat — when omitted, streak_proximity templates return "". */
+  streakTiers?: StreakTier[];
 }
 
 

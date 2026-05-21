@@ -44,36 +44,30 @@ export function calculatePayout(tier: WinTierKey, betAmount: number, tiers: WinT
 
 // ── Streak multiplier system ────────────────────────────────────────────────
 // Consecutive non-bust wins boost payouts. Losing resets streak to 0.
-//   3 wins → 1.3x | 5 wins → 1.7x | 10 wins → 2.5x
+//
+// The STREAK_TIERS array is sport-specific (basketball / baseball / football
+// each define their own in their per-sport payoutLogic.ts). The shape and
+// the helpers below are shared infrastructure; pass the sport's tiers in.
 
 export interface StreakTier {
   wins: number;
   multiplier: number;
 }
 
-// Streak multipliers — rewarding win runs without over-subsidizing.
-// Bumped from 1.2/1.5/2.0 → 1.3/1.7/2.5 to make streaks feel substantial
-// for MVP-test retention. Aggregate edge impact ~1-2pt; perceived
-// big-moment reward is much larger.
-export const STREAK_TIERS: StreakTier[] = [
-  { wins: 10, multiplier: 2.5 },
-  { wins: 5,  multiplier: 1.7 },
-  { wins: 3,  multiplier: 1.3 },
-];
-
-/** Get the active streak multiplier for a given win count. */
-export function getStreakMultiplier(streak: number): number {
-  for (const tier of STREAK_TIERS) {
+/** Get the active streak multiplier for a given win count.
+ *  streakTiers must be sorted descending by wins. */
+export function getStreakMultiplier(streak: number, streakTiers: StreakTier[]): number {
+  for (const tier of streakTiers) {
     if (streak >= tier.wins) return tier.multiplier;
   }
   return 1.0;
 }
 
 /** Get the next streak tier the player is working toward (null if at max). */
-export function getNextStreakTier(streak: number): StreakTier | null {
-  // STREAK_TIERS is sorted descending; find the lowest tier not yet reached
-  for (let i = STREAK_TIERS.length - 1; i >= 0; i--) {
-    if (streak < STREAK_TIERS[i].wins) return STREAK_TIERS[i];
+export function getNextStreakTier(streak: number, streakTiers: StreakTier[]): StreakTier | null {
+  // streakTiers is sorted descending; find the lowest tier not yet reached
+  for (let i = streakTiers.length - 1; i >= 0; i--) {
+    if (streak < streakTiers[i].wins) return streakTiers[i];
   }
   return null; // at max
 }
@@ -84,7 +78,8 @@ export function calculatePayoutWithStreak(
   betAmount: number,
   tiers: WinTierMap,
   streak: number,
+  streakTiers: StreakTier[],
 ): number {
   const basePayout = calculatePayout(tier, betAmount, tiers);
-  return Math.round(basePayout * getStreakMultiplier(streak));
+  return Math.round(basePayout * getStreakMultiplier(streak, streakTiers));
 }

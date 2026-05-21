@@ -51,6 +51,7 @@ import {
   calculatePayoutWithStreak,
   getStreakMultiplier,
   BASEBALL_WIN_TIERS,
+  STREAK_TIERS,
 } from "../utils/payoutLogic";
 
 // Tier gauge thresholds — baseball-specific FP cutoffs.
@@ -175,6 +176,7 @@ export default function GameView() {
     calculatePayoutWithStreak,
     winTiersMap: BASEBALL_WIN_TIERS,
     getStreakMultiplier,
+    streakTiers: STREAK_TIERS,
     gameBarWinTiers: WIN_TIERS,
     gameBarLegend: LEGEND_DATA,
     dealInitialRoster,

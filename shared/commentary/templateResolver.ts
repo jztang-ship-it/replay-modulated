@@ -387,7 +387,12 @@ const DETAIL_SNIPPETS: Record<string, (data: TemplateData) => string> = {
     // +1 boundary for a tier, the nudge fires deterministically (teaches the
     // mechanic). Subsequent times at the same boundary, fires 1 in 3 hands so
     // it stays "in passing" instead of nagging.
-    // Multipliers must match STREAK_TIERS in shared/utils/payoutLogic.ts.
+    // Multipliers are sport-specific — read from d.streakTiers (populated
+    // by the per-sport payoutLogic). Returns "" when streakTiers is missing
+    // (backward-compat) or when streak isn't 1 short of any tier threshold.
+    if (!d.streakTiers || d.streakTiers.length === 0) return "";
+    const nextTier = d.streakTiers.find(t => d.streak === t.wins - 1);
+    if (!nextTier) return "";
     const seenKey = (tier: number) => `replaymod_streak_nudge_seen_${tier}`;
     const shouldFire = (tier: number): boolean => {
       try {
@@ -398,10 +403,12 @@ const DETAIL_SNIPPETS: Record<string, (data: TemplateData) => string> = {
       } catch { /* private mode → behave as first-encounter every time */ return true; }
       return Math.random() < 1 / 3;
     };
-    if (d.streak === 2 && shouldFire(3))  return "One more win unlocks the 1.3x streak bonus.";
-    if (d.streak === 4 && shouldFire(5))  return "One more win and you hit 1.7x streak.";
-    if (d.streak === 9 && shouldFire(10)) return "One more win to 2.5x streak.";
-    return "";
+    if (!shouldFire(nextTier.wins)) return "";
+    const m = nextTier.multiplier;
+    if (nextTier.wins === 3)  return `One more win unlocks the ${m}x streak bonus.`;
+    if (nextTier.wins === 5)  return `One more win and you hit ${m}x streak.`;
+    if (nextTier.wins === 10) return `One more win to ${m}x streak.`;
+    return `One more win unlocks the ${m}x streak bonus.`;
   },
   streak_broken: () => "The streak is done.",
   extreme_game: (d) => d.extremeDescription || "",
