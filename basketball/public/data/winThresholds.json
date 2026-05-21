@@ -1,205 +1,205 @@
 {
   "1011": {
-    "ROOKIE": 162,
+    "ROOKIE": 163,
     "STARTER": 190,
-    "ALL_STAR": 218,
-    "MVP": 234,
-    "LEGEND": 258
+    "ALL_STAR": 219,
+    "MVP": 235,
+    "LEGEND": 262
   },
   "1112": {
     "ROOKIE": 162,
     "STARTER": 189,
     "ALL_STAR": 218,
-    "MVP": 234,
-    "LEGEND": 260
+    "MVP": 235,
+    "LEGEND": 263
   },
   "1213": {
     "ROOKIE": 159,
-    "STARTER": 185,
-    "ALL_STAR": 213,
+    "STARTER": 186,
+    "ALL_STAR": 214,
     "MVP": 229,
-    "LEGEND": 260
+    "LEGEND": 252
   },
   "1314": {
     "ROOKIE": 165,
     "STARTER": 193,
-    "ALL_STAR": 221,
-    "MVP": 236,
-    "LEGEND": 264
+    "ALL_STAR": 222,
+    "MVP": 237,
+    "LEGEND": 262
   },
   "1415": {
     "ROOKIE": 165,
     "STARTER": 193,
-    "ALL_STAR": 221,
-    "MVP": 236,
-    "LEGEND": 259
+    "ALL_STAR": 222,
+    "MVP": 238,
+    "LEGEND": 266
   },
   "1516": {
     "ROOKIE": 166,
-    "STARTER": 192,
-    "ALL_STAR": 221,
-    "MVP": 237,
-    "LEGEND": 263
+    "STARTER": 194,
+    "ALL_STAR": 222,
+    "MVP": 238,
+    "LEGEND": 265
   },
   "1617": {
     "ROOKIE": 170,
-    "STARTER": 196,
-    "ALL_STAR": 224,
-    "MVP": 239,
-    "LEGEND": 263
+    "STARTER": 198,
+    "ALL_STAR": 225,
+    "MVP": 240,
+    "LEGEND": 269
   },
   "1718": {
     "ROOKIE": 168,
     "STARTER": 196,
-    "ALL_STAR": 225,
+    "ALL_STAR": 226,
     "MVP": 242,
-    "LEGEND": 266
+    "LEGEND": 270
   },
   "1819": {
     "ROOKIE": 170,
     "STARTER": 198,
     "ALL_STAR": 227,
-    "MVP": 244,
-    "LEGEND": 271
+    "MVP": 242,
+    "LEGEND": 273
   },
   "1920": {
-    "ROOKIE": 169,
+    "ROOKIE": 170,
     "STARTER": 198,
-    "ALL_STAR": 227,
-    "MVP": 242,
-    "LEGEND": 267
+    "ALL_STAR": 228,
+    "MVP": 243,
+    "LEGEND": 269
   },
   "2021": {
     "ROOKIE": 169,
     "STARTER": 197,
     "ALL_STAR": 226,
-    "MVP": 241,
-    "LEGEND": 269
+    "MVP": 240,
+    "LEGEND": 268
   },
   "2122": {
     "ROOKIE": 170,
-    "STARTER": 197,
-    "ALL_STAR": 226,
-    "MVP": 242,
-    "LEGEND": 271
+    "STARTER": 199,
+    "ALL_STAR": 229,
+    "MVP": 245,
+    "LEGEND": 270
   },
   "2223": {
     "ROOKIE": 169,
-    "STARTER": 197,
-    "ALL_STAR": 226,
-    "MVP": 242,
-    "LEGEND": 271
-  },
-  "2324": {
-    "ROOKIE": 170,
     "STARTER": 198,
     "ALL_STAR": 228,
-    "MVP": 243,
-    "LEGEND": 270
-  },
-  "2425": {
-    "ROOKIE": 170,
-    "STARTER": 198,
-    "ALL_STAR": 228,
-    "MVP": 244,
+    "MVP": 245,
     "LEGEND": 275
   },
+  "2324": {
+    "ROOKIE": 171,
+    "STARTER": 199,
+    "ALL_STAR": 228,
+    "MVP": 245,
+    "LEGEND": 273
+  },
+  "2425": {
+    "ROOKIE": 171,
+    "STARTER": 200,
+    "ALL_STAR": 228,
+    "MVP": 244,
+    "LEGEND": 272
+  },
   "9697": {
-    "ROOKIE": 168,
-    "STARTER": 197,
-    "ALL_STAR": 226,
-    "MVP": 241,
-    "LEGEND": 268
+    "ROOKIE": 167,
+    "STARTER": 196,
+    "ALL_STAR": 225,
+    "MVP": 242,
+    "LEGEND": 272
   },
   "9798": {
     "ROOKIE": 165,
     "STARTER": 193,
-    "ALL_STAR": 222,
-    "MVP": 237,
-    "LEGEND": 264
-  },
-  "9899": {
-    "ROOKIE": 164,
-    "STARTER": 191,
-    "ALL_STAR": 218,
-    "MVP": 234,
-    "LEGEND": 261
-  },
-  "9900": {
-    "ROOKIE": 167,
-    "STARTER": 194,
     "ALL_STAR": 221,
     "MVP": 237,
-    "LEGEND": 265
+    "LEGEND": 268
+  },
+  "9899": {
+    "ROOKIE": 165,
+    "STARTER": 192,
+    "ALL_STAR": 219,
+    "MVP": 234,
+    "LEGEND": 263
+  },
+  "9900": {
+    "ROOKIE": 166,
+    "STARTER": 194,
+    "ALL_STAR": 222,
+    "MVP": 237,
+    "LEGEND": 268
   },
   "0001": {
-    "ROOKIE": 169,
+    "ROOKIE": 168,
     "STARTER": 196,
     "ALL_STAR": 225,
     "MVP": 240,
-    "LEGEND": 266
+    "LEGEND": 267
   },
   "0102": {
     "ROOKIE": 167,
-    "STARTER": 195,
-    "ALL_STAR": 223,
-    "MVP": 239,
-    "LEGEND": 268
+    "STARTER": 194,
+    "ALL_STAR": 224,
+    "MVP": 240,
+    "LEGEND": 267
   },
   "0203": {
     "ROOKIE": 169,
     "STARTER": 196,
-    "ALL_STAR": 223,
-    "MVP": 237,
-    "LEGEND": 267
+    "ALL_STAR": 224,
+    "MVP": 240,
+    "LEGEND": 263
   },
   "0304": {
-    "ROOKIE": 163,
-    "STARTER": 192,
-    "ALL_STAR": 221,
-    "MVP": 237,
-    "LEGEND": 267
+    "ROOKIE": 164,
+    "STARTER": 193,
+    "ALL_STAR": 222,
+    "MVP": 239,
+    "LEGEND": 264
   },
   "0405": {
-    "ROOKIE": 167,
+    "ROOKIE": 166,
     "STARTER": 195,
-    "ALL_STAR": 223,
-    "MVP": 239,
-    "LEGEND": 263
+    "ALL_STAR": 224,
+    "MVP": 238,
+    "LEGEND": 265
   },
   "0506": {
     "ROOKIE": 167,
-    "STARTER": 196,
-    "ALL_STAR": 224,
-    "MVP": 238,
-    "LEGEND": 264
+    "STARTER": 194,
+    "ALL_STAR": 223,
+    "MVP": 239,
+    "LEGEND": 266
   },
   "0607": {
     "ROOKIE": 165,
     "STARTER": 193,
-    "ALL_STAR": 224,
-    "MVP": 240,
-    "LEGEND": 266
+    "ALL_STAR": 223,
+    "MVP": 239,
+    "LEGEND": 270
   },
   "0708": {
-    "ROOKIE": 165,
-    "STARTER": 193,
-    "ALL_STAR": 221,
-    "MVP": 237,
-    "LEGEND": 268
+    "ROOKIE": 166,
+    "STARTER": 194,
+    "ALL_STAR": 222,
+    "MVP": 238,
+    "LEGEND": 264
   },
   "0809": {
     "ROOKIE": 166,
-    "STARTER": 193,
-    "ALL_STAR": 222,
+    "STARTER": 194,
+    "ALL_STAR": 223,
     "MVP": 238,
-    "LEGEND": 260
+    "LEGEND": 267
   },
   "0910": {
-    "ROOKIE": 164,
-    "STARTER": 192,
-    "ALL_STAR": 221,
-    "MVP": 237,
-    "LEGEND": 261
+    "ROOKIE": 163,
+    "STARTER": 191,
+    "ALL_STAR": 219,
+    "MVP": 236,
+    "LEGEND": 266
   }
 }
