@@ -82,13 +82,21 @@ function pickBiasedLog(card: GeneratedCard, logsByKey: Map<string, RawLog[]>, ad
   const beforeFilter = candidates.length;
   // Filter out garbage logs:
   // 1. Must have at least one positive stat value (all-zero = DNP or corrupt data)
-  // 2. If minutes field exists, must meet minMinutes threshold from config
-  //    (defaults to 8 if not set; basketballConfig sets 10)
-  // 3. If no minutes field, trust the stats — valid game, just missing metadata
+  // 2. Tier-aware minutes threshold (NEW):
+  //    - Premium tiers (RED/ORANGE/PURPLE): require min > 0 only. Sub-10-min
+  //      games are eligible and surface at their natural rate. Lets storylines
+  //      like "your $90 anchor fouled out in 4 min" / "ejected at the half"
+  //      reach the user on the cards where that bad night is most painful.
+  //    - Non-premium tiers (BLUE/GREEN/WHITE/missing): keep the existing
+  //      configured minMinutes floor (basketball: 10). The bottom of the
+  //      roster shouldn't surface garbage time — it's flavor, not story.
+  // 3. If no minutes field, trust the stats — valid game, just missing metadata.
   // 4. Role-aware: adapter.isLogValidForCard rejects wrong-role lines (e.g. a
   //    baseball BAT card pulling a pitcher's stat line for a two-way player).
   //    Sports without roles (basketball) leave this hook unset → all logs pass.
   const minMins = minMinutes;
+  const tierUpper = String(tier ?? "").toUpperCase();
+  const isPremiumTier = tierUpper === "RED" || tierUpper === "ORANGE" || tierUpper === "PURPLE";
   candidates = candidates.filter(l => {
     const stats = l.stats ?? {};
     // Must have at least one positive numeric stat value (all-zero = DNP or corrupt).
@@ -99,7 +107,15 @@ function pickBiasedLog(card: GeneratedCard, logsByKey: Map<string, RawLog[]>, ad
     if (mp !== undefined && mp !== null) {
       const mpStr = String(mp);
       const mins = mpStr.includes(":") ? parseFloat(mpStr.split(":")[0]) : parseFloat(mpStr);
-      if (Number.isFinite(mins) && mins < minMins) return false;
+      if (Number.isFinite(mins)) {
+        if (isPremiumTier) {
+          // Premium: any positive minutes count. Surfaces sub-10-min outcomes.
+          if (mins <= 0) return false;
+        } else {
+          // Non-premium: existing minimum-minutes floor.
+          if (mins < minMins) return false;
+        }
+      }
     }
     if (adapter.isLogValidForCard && !adapter.isLogValidForCard(card.position, l)) return false;
     return true;
