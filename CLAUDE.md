@@ -177,3 +177,9 @@ Eventually we want all of these. Today only the first one is enforced by tooling
 | Daily-bonus eligible player list | `adapter.buildBonusPool()` | Different player set |
 | Audio bed sound | `adapter.soundPack` (registered) | Different audio asset; no asset → silence |
 | Win tier slam animation | `shared/views/GameView.tsx` (target) | Identical animation, different threshold values
+
+## Sport design rules
+
+### Positional requirements rule
+
+A sport has positional roster slots if and only if its positions accumulate different stats (e.g. goalkeeper saves, pitcher pitch counts). Basketball does NOT have positional slots — all players accumulate the same stat categories (pts/reb/ast/stl/blk/etc.). Football, baseball, and soccer DO have positional slots because of position-unique stats. When implementing or modifying deal-generation, stat-tracking, or roster logic, do not introduce positional structure to basketball even if shared code suggests it. Basketball's deal is N undifferentiated cards under cap, period.
