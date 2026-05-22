@@ -85,6 +85,7 @@ const CollectScreen = lazy(() =>
   import("@shared/engagement/CollectScreen").then(m => ({ default: m.CollectScreen }))
 );
 import { TierGauge, computeGaugeState } from "@shared/components/TierGauge";
+import { TeamStamp } from "@shared/components/TeamStamp";
 import { useEngagement } from "@shared/engagement/useEngagement";
 import { soundManager } from "@shared/utils/soundManager";
 import { getBonusPool, contributeBet } from "@shared/utils/bonusPoolStore";
@@ -1332,7 +1333,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
     // Trigger-aware framing override (standalone play only — challenge
     // recipients see ChallengeComparisonScreen with its own Chad lines).
-    // When a named trigger fires (rare_pull/big_score/near_miss/bad_beat),
+    // When a named trigger fires (rare_pull/big_score/miss/bad_beat),
     // the post-reveal commentary slot delegates to selectChallengeInitiation
     // — same banks the share prompt uses, so the reveal-screen line and the
     // share-strip headline point at the same emotional frame. Internal
@@ -2332,18 +2333,41 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                   const netColor = netPositive ? "#7FFF00" : "#FF3B30";
                   const netLabel = netPositive ? `+$${net}` : `-$${Math.abs(net)}`;
                   const FF = "'Rajdhani','Oswald','Arial Narrow',sans-serif";
+                  const tierMult = winTiersMap[winTier as WinTierKey]?.multiplier ?? 0;
+                  const streakMult = getStreakMultiplier(streak);
+                  const showStreakFactor = streakMult > 1;
+                  const stampKind =
+                    challengeTrigger?.trigger === "bad_beat" ? "bad_beat" :
+                    challengeTrigger?.trigger === "miss" ? "miss" :
+                    null;
                   return (
                     <>
-                      <img
-                        key={`tier-stay-${winTier}`}
-                        src={`${import.meta.env.BASE_URL}${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
-                        alt={formatTierLabel(winTier)}
-                        style={{
-                          maxHeight: 52, maxWidth: "100%", objectFit: "contain",
-                          filter: `${TIER_IMAGE_HUE[winTier] ?? ""} drop-shadow(0 0 12px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`.trim(),
-                          transform: "scale(0.65)",
-                        }}
-                      />
+                      <div style={{ position: "relative", display: "inline-flex", maxWidth: "100%" }}>
+                        <img
+                          key={`tier-stay-${winTier}`}
+                          src={`${import.meta.env.BASE_URL}${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
+                          alt={formatTierLabel(winTier)}
+                          style={{
+                            maxHeight: 52, maxWidth: "100%", objectFit: "contain",
+                            filter: `${TIER_IMAGE_HUE[winTier] ?? ""} drop-shadow(0 0 12px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`.trim(),
+                            transform: "scale(0.65)",
+                          }}
+                        />
+                        {stampKind && (
+                          <div style={{
+                            position: "absolute",
+                            left: "50%", top: "50%",
+                            pointerEvents: "none",
+                            zIndex: 5,
+                          }}>
+                            <TeamStamp
+                              kind={stampKind}
+                              missTier={challengeTrigger?.nearMissNextTier}
+                              delayMs={200}
+                            />
+                          </div>
+                        )}
+                      </div>
                       <div style={{ animation: "tierInfoFadeIn 300ms ease both", display: "flex", justifyContent: "center", alignItems: "center", gap: 20, marginTop: 4, width: "100%" }}>
                         <span style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
                           {displayFp.toFixed(1)} FP
@@ -2359,9 +2383,20 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                           </span>
                         )}
                         {!challengeCtx && (
-                          <span style={{ fontSize: 20, fontWeight: 700, color: netColor, fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
-                            {netLabel}
-                          </span>
+                          winTier === "BUST" ? (
+                            <span style={{ fontSize: 20, fontWeight: 700, color: netColor, fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                              {netLabel}
+                            </span>
+                          ) : (
+                            <span style={{ display: "inline-flex", alignItems: "baseline", gap: 6, fontFamily: FF }}>
+                              <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.55)", lineHeight: 1, letterSpacing: 0.3, fontVariantNumeric: "tabular-nums" }}>
+                                {tierMult}×{showStreakFactor ? ` × ${streakMult}×` : ""} →
+                              </span>
+                              <span style={{ fontSize: 20, fontWeight: 700, color: "#7FFF00", lineHeight: 1, letterSpacing: "-0.5px", fontVariantNumeric: "tabular-nums" }}>
+                                +${winPayout}
+                              </span>
+                            </span>
+                          )
                         )}
                       </div>
                     </>
@@ -2870,7 +2905,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       })()}
 
       {/* ChallengeSharePrompt — fires at RESULTS/WIN_CELEBRATION when a
-          NAMED trigger is evaluated (rare_pull / big_score / near_miss /
+          NAMED trigger is evaluated (rare_pull / big_score / miss /
           bad_beat / rivalry_back) and the user is not in FTUE. The
           `trigger !== "default"` exclusion matches the commentary-
           override gate at line 1261 — without it, every hand fires a

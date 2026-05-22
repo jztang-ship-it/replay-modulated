@@ -144,10 +144,17 @@ export function ChallengeSharePrompt({
     }
   }
 
+  // Static labels for the fixed-text triggers. The miss trigger is
+  // rendered dynamically below so the chip can carry the tier prefix
+  // (e.g. "😤 ALL STAR MISS") sourced from triggerResult.nearMissNextTier.
   const TRIGGER_LABEL: Record<string, string> = {
     rare_pull: "⚡ RARE PULL", big_score: "🔥 BIG SCORE",
-    near_miss: "😤 NEAR MISS", bad_beat: "💀 BAD BEAT",
+    bad_beat: "💀 BAD BEAT",
   };
+  function missChipLabel(missTier?: string): string {
+    const t = (missTier ?? "").replace(/_/g, " ").trim().toUpperCase();
+    return t ? `😤 ${t} MISS` : "😤 MISS";
+  }
 
   // Modal mount — same instance handles both CTA paths (corner icon
   // for default trigger, prominent strip for named triggers). Lives at
@@ -182,7 +189,7 @@ export function ChallengeSharePrompt({
 
   // Default trigger: render a small corner icon only — discoverable for
   // users who want to share a mid hand, but not pushed on them. Named
-  // triggers (rare_pull / big_score / near_miss / bad_beat) keep the
+  // triggers (rare_pull / big_score / miss / bad_beat) keep the
   // prominent share strip.
   if (!isSpecial) {
     return (
@@ -226,7 +233,11 @@ export function ChallengeSharePrompt({
         <span style={{ fontSize: 12, fontWeight: 700, color: isSpecial ? "#FFB14A" : "rgba(255,255,255,0.4)", letterSpacing: 0.5 }}>
           {isRivalryBack
             ? `↩ CHALLENGE ${(rivalryTargetName ?? "Your Friend").toUpperCase()} BACK`
-            : isSpecial ? TRIGGER_LABEL[triggerResult.trigger] ?? "CHALLENGE" : "CHALLENGE A FRIEND"}
+            : isSpecial
+              ? (triggerResult.trigger === "miss"
+                  ? missChipLabel(triggerResult.nearMissNextTier)
+                  : TRIGGER_LABEL[triggerResult.trigger] ?? "CHALLENGE")
+              : "CHALLENGE A FRIEND"}
         </span>
         {onDismiss && (
           <button

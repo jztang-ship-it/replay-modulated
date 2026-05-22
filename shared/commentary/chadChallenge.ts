@@ -930,7 +930,7 @@ export type ShareTrashTalkBucket = "bad_beat" | "flex" | "statement" | "default"
 function shareTrashTalkBucket(trigger?: string, winTier?: string): ShareTrashTalkBucket {
   if (trigger === "rare_pull" || trigger === "big_score") return "flex";
   if (trigger === "bad_beat") return "bad_beat";
-  if (trigger === "near_miss" || winTier === "STARTER") return "statement";
+  if (trigger === "miss" || winTier === "STARTER") return "statement";
   return "default";
 }
 
