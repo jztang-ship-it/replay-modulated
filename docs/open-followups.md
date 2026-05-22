@@ -4,7 +4,6 @@ Living document. Each entry: short title, context, priority hint, suggested next
 
 ## User-visible bugs (highest priority)
 
-- **Position data wrong for several players** — Embiid listed as PF should be C; KAT listed as PF should be C; Ben Simmons listed as SG should be SF/PF. Observed during stamps smoke test 2026-05-22 (hands 6, 14). Likely a roster-generation mapping bug or upstream data source error. Diagnose: where does position metadata come from in `generateRoster` / `dataEngine`, is the data source wrong or the mapping?
 - **Hand-5 transition state UX** — clicking through win resolution transitions before user can read win tier + coins won. Animation/state-machine timing in `shared/views/GameView.tsx`. Spec: pause transition until user has read the result, or persist the data in a visible place post-transition.
 - **Position icon + badge legibility** — position icons and badge "+N" numbers on player cards hard to read. UI polish, basketball/ player card component.
 - **Audio 404s** — 13 files under `/api/audio/basketball/` return 404 (full list in smoke-test doc anomalies log). Files missing from `public/`, wrong path resolution, or proxy not serving audio directory. Diagnose path of one file end-to-end.
@@ -34,3 +33,12 @@ Living document. Each entry: short title, context, priority hint, suggested next
 - Worktree audit — 4 unrelated pre-existing worktrees noted during final state check. Enumerate and decide which still active.
 - Session-state doc update discipline — after stamps lands, add a "Stamps — SHIPPED" pointer section. Treat as a per-workstream methodology rule.
 - Login / Google auth popup overlay conflict — user-reported, not diagnosed this session. Symptom needs detail. Could be z-index, modal-stacking, or auth-flow timing.
+
+## Path-2 / Path-3 followups from prior shipped fixes
+
+- **Position override map for residual hyphenated-position errors** — small basePlayerId-keyed map for high-salience players where the systematic POS_MAP rule produces a wrong simplified position. Confirmed residuals: Ben Simmons (G-F → SF, canonical PG), Luka Dončić (F-G → SG, canonical PG), Scottie Pippen (F-G → SG, canonical SF), Kyle Anderson (F-G → SG, canonical SF), Scottie Barnes (F-G → SG, canonical SF), Amen Thompson (G-F → SF, canonical PG). Plus any others surfaced by play observation. Low priority — improvement on a partial improvement.
+- **Consider dropping the simplified-position field entirely** — have UI consume `positionFull` directly. NBA hyphenated positions don't reliably collapse to a single letter; the systematic rule applied 2026-05-22 fixed the majority of cases but leaves a residual the override map can only patch player-by-player. Path-3 is the larger UI redesign that removes the collapse step entirely. Real consideration if position-display continues to surface accuracy complaints after the override map is in place.
+
+## Shipped this session
+
+- **Position data fix** (2026-05-22) — flipped POS_MAP simplification rule from secondary-letter-wins to primary-letter-wins for hyphenated positions: `C-F → C` (was PF, affected 81 players incl. Embiid, KAT, Duncan, Howard, Pau Gasol), `G-F → SF` (was SG, affected 114 players incl. Vince Carter, McGrady, Iguodala, Marion, DeMar DeRozan). `F-C → PF` and `F-G → SG` left unchanged (were already correct). Re-ran `fetchHistoricalPositions.mjs` + `mergePositions.mjs`, updated `nba-positions.json` and all 29 per-season `players.json` files. Acknowledged residual errors captured above as path-2 override-map followup.

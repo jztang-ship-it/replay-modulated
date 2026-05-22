@@ -28,7 +28,7 @@
     "positionFull": "PG/SG"
   },
   "Aaron Nesmith": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1630174
   },
@@ -48,7 +48,7 @@
     "personId": 1642349
   },
   "Al Horford": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 201143
   },
@@ -84,13 +84,14 @@
     "positionFull": "C"
   },
   "Amen Thompson": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1641708
   },
   "Amir Coffey": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 1629599
   },
   "Andre Drummond": {
     "position": "C",
@@ -102,7 +103,7 @@
     "personId": 1641748
   },
   "Andrew Nembhard": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1629614
   },
@@ -133,12 +134,12 @@
     "personId": 1629717
   },
   "Ashton Hagans": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1630204
   },
   "Ausar Thompson": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1641709
   },
@@ -163,7 +164,7 @@
     "personId": 1641767
   },
   "Ben Simmons": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1627732
   },
@@ -196,7 +197,7 @@
     "positionFull": "SF"
   },
   "Bol Bol": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1629626
   },
@@ -246,8 +247,9 @@
     "positionFull": "C"
   },
   "Bruce Brown": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 1628971
   },
   "Bruno Fernando": {
     "position": "PF",
@@ -319,12 +321,12 @@
     "positionFull": "SF"
   },
   "Charles Bassey": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1629646
   },
   "Chet Holmgren": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1631096
   },
@@ -423,12 +425,12 @@
     "positionFull": "PG/SG"
   },
   "DaQuan Jeffries": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1629610
   },
   "Daeqwon Plowden": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1631342
   },
@@ -483,8 +485,9 @@
     "positionFull": "PF/C"
   },
   "Dariq Whitehead": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 1641727
   },
   "Darius Bazley": {
     "position": "SF",
@@ -528,7 +531,7 @@
     "positionFull": "PG/SG"
   },
   "DeMar DeRozan": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 201942
   },
@@ -584,7 +587,7 @@
     "positionFull": "PG/SG"
   },
   "Dillon Brooks": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1628415
   },
@@ -679,8 +682,9 @@
     "positionFull": "SF"
   },
   "Evan Fournier": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 203095
   },
   "Evan Mobley": {
     "position": "C",
@@ -700,8 +704,9 @@
     "positionFull": "PG/SG"
   },
   "Furkan Korkmaz": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 1627788
   },
   "GG Jackson": {
     "position": "SF",
@@ -713,8 +718,9 @@
     "positionFull": "PG/SG"
   },
   "Garrett Temple": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 202066
   },
   "Garrison Mathews": {
     "position": "PG",
@@ -742,7 +748,7 @@
     "personId": 1627777
   },
   "Goga Bitadze": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1629048
   },
@@ -751,8 +757,9 @@
     "positionFull": "SF/PF"
   },
   "Gradey Dick": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 1641711
   },
   "Grant Williams": {
     "position": "SF",
@@ -795,7 +802,7 @@
     "positionFull": "PG"
   },
   "Isaiah Hartenstein": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1628392
   },
@@ -928,8 +935,9 @@
     "positionFull": "PG/SG"
   },
   "Jalen Williams": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 1631114
   },
   "Jalen Wilson": {
     "position": "SF",
@@ -1007,7 +1015,7 @@
     "personId": 1629750
   },
   "Jaxson Hayes": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1629637
   },
@@ -1016,8 +1024,9 @@
     "positionFull": "C"
   },
   "Jaylen Brown": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 1627759
   },
   "Jaylen Clark": {
     "position": "PG",
@@ -1050,8 +1059,9 @@
     "personId": 1631119
   },
   "Jaylon Tyson": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 1642281
   },
   "Jeff Dowtin Jr.": {
     "position": "PG",
@@ -1099,7 +1109,7 @@
     "positionFull": "C"
   },
   "Joe Harris": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 203925
   },
@@ -1146,7 +1156,7 @@
     "personId": 1642367
   },
   "Jontay Porter": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1629007
   },
@@ -1233,7 +1243,7 @@
     "positionFull": "PF"
   },
   "Justin Champagnie": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1630551
   },
@@ -1260,7 +1270,7 @@
     "positionFull": "PG/SG"
   },
   "Kai Jones": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1630539
   },
@@ -1309,7 +1319,7 @@
     "personId": 1631254
   },
   "Kenrich Williams": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1629026
   },
@@ -1333,8 +1343,9 @@
     "positionFull": "SF/PF"
   },
   "Kevin Huerter": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 1628989
   },
   "Kevin Knox II": {
     "position": "SF",
@@ -1345,8 +1356,9 @@
     "positionFull": "PF/C"
   },
   "Kevin Porter Jr.": {
-    "position": "SG",
-    "positionFull": "PG/SG"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 1629645
   },
   "Kevon Looney": {
     "position": "SF",
@@ -1450,8 +1462,9 @@
     "positionFull": "SG/SF"
   },
   "Lonnie Walker IV": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 1629022
   },
   "Lonzo Ball": {
     "position": "PG",
@@ -1473,7 +1486,7 @@
     "personId": 1628379
   },
   "Luke Kornet": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1628436
   },
@@ -1554,8 +1567,9 @@
     "positionFull": "SF/PF"
   },
   "Matisse Thybulle": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 1629680
   },
   "Matt Hurt": {
     "position": "SF",
@@ -1572,8 +1586,9 @@
     "personId": 1631108
   },
   "Max Strus": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 1629622
   },
   "Maxi Kleber": {
     "position": "SF",
@@ -1606,7 +1621,7 @@
     "positionFull": "SF/PF"
   },
   "Mitchell Robinson": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1629011
   },
@@ -1669,7 +1684,7 @@
     "positionFull": "C"
   },
   "Naz Reid": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1629675
   },
@@ -1695,7 +1710,7 @@
     "personId": 1629638
   },
   "Nicolas Batum": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 201587
   },
@@ -1866,8 +1881,9 @@
     "personId": 1630564
   },
   "Rayan Rupert": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 1641712
   },
   "Reece Beekman": {
     "position": "PG",
@@ -1878,7 +1894,7 @@
     "positionFull": "PG/SG"
   },
   "Reggie Bullock Jr.": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 203493
   },
@@ -1905,7 +1921,7 @@
     "positionFull": "SF/PF"
   },
   "Robert Williams III": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1629057
   },
@@ -1936,7 +1952,7 @@
     "personId": 1631157
   },
   "Saddiq Bey": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1630180
   },
@@ -2015,8 +2031,9 @@
     "positionFull": "C"
   },
   "Svi Mykhailiuk": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 1629004
   },
   "T.J. McConnell": {
     "position": "PG",
@@ -2056,12 +2073,14 @@
     "personId": 1631386
   },
   "Terance Mann": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 1629611
   },
   "Terrence Shannon Jr.": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 1630545
   },
   "Thaddeus Young": {
     "position": "SF",
@@ -2073,7 +2092,7 @@
     "positionFull": "PG/SG"
   },
   "Thomas Bryant": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1628418
   },
@@ -2082,8 +2101,9 @@
     "positionFull": "SF/PF"
   },
   "Tim Hardaway Jr.": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 203501
   },
   "Timmy Allen": {
     "position": "SF",
@@ -2094,7 +2114,7 @@
     "positionFull": "SF/PF"
   },
   "Tony Bradley": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1628396
   },
@@ -2124,7 +2144,7 @@
     "positionFull": "PG/SG"
   },
   "Trendon Watford": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1630570
   },
@@ -2151,7 +2171,7 @@
     "positionFull": "SG/SF"
   },
   "Tristan Thompson": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 202684
   },
@@ -2165,12 +2185,12 @@
     "positionFull": "SF/PF"
   },
   "Troy Brown Jr.": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1628972
   },
   "Ty Jerome": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1629660
   },
@@ -2214,7 +2234,7 @@
     "positionFull": "C"
   },
   "Wendell Carter Jr.": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1628976
   },
@@ -2247,7 +2267,7 @@
     "positionFull": "PG"
   },
   "Yuta Watanabe": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1629139
   },
@@ -2306,13 +2326,14 @@
     "personId": 1630162
   },
   "Bam Adebayo": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1628389
   },
   "Bennedict Mathurin": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 1631097
   },
   "Cade Cunningham": {
     "position": "PG",
@@ -2362,8 +2383,9 @@
     "personId": 1626164
   },
   "Devin Vassell": {
-    "position": "SG",
-    "positionFull": "SG/SF"
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 1630170
   },
   "Domantas Sabonis": {
     "position": "PF",
@@ -2424,7 +2446,7 @@
     "personId": 1628369
   },
   "Joel Embiid": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 203954
   },
@@ -2433,7 +2455,7 @@
     "positionFull": "C"
   },
   "Karl-Anthony Towns": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1626157
   },
@@ -2480,12 +2502,12 @@
     "positionFull": "SF/PF"
   },
   "Mikal Bridges": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1628969
   },
   "Myles Turner": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1626167
   },
@@ -2741,7 +2763,7 @@
     "personId": 202332
   },
   "LaMarcus Aldridge": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 200746
   },
@@ -2846,7 +2868,7 @@
     "personId": 951
   },
   "Tony Allen": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2754
   },
@@ -2956,12 +2978,12 @@
     "personId": 944
   },
   "Greg Anderson": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 246
   },
   "James Anderson": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 202341
   },
@@ -3016,12 +3038,12 @@
     "personId": 201583
   },
   "Shandon Anderson": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1000
   },
   "Willie Anderson": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 335
   },
@@ -3041,7 +3063,7 @@
     "personId": 76049
   },
   "Ike Anigbogu": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1628387
   },
@@ -3331,7 +3353,7 @@
     "personId": 101235
   },
   "Udoka Azubuike": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1628962
   },
@@ -3356,7 +3378,7 @@
     "personId": 76080
   },
   "Dwayne Bacon": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1628407
   },
@@ -3516,7 +3538,7 @@
     "personId": 200826
   },
   "Andrea Bargnani": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 200745
   },
@@ -3766,7 +3788,7 @@
     "personId": 76127
   },
   "Aron Baynes": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 203382
   },
@@ -3776,7 +3798,7 @@
     "personId": 76128
   },
   "Kent Bazemore": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 203145
   },
@@ -3891,7 +3913,7 @@
     "personId": 76144
   },
   "DeAndre' Bembry": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1627761
   },
@@ -3936,7 +3958,7 @@
     "personId": 1120
   },
   "Mario Bennett": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 712
   },
@@ -4171,7 +4193,7 @@
     "personId": 76179
   },
   "DeJuan Blair": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 201971
   },
@@ -4211,7 +4233,7 @@
     "personId": 76184
   },
   "Andray Blatche": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 101154
   },
@@ -4256,7 +4278,7 @@
     "personId": 916
   },
   "Mark Blount": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1548
   },
@@ -4266,7 +4288,7 @@
     "personId": 203505
   },
   "Trevon Bluiett": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1629129
   },
@@ -4296,7 +4318,7 @@
     "personId": 76192
   },
   "Keith Bogans": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2586
   },
@@ -4386,7 +4408,7 @@
     "personId": 41
   },
   "Matt Bonner": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 2588
   },
@@ -4741,7 +4763,7 @@
     "personId": 76247
   },
   "Corey Brewer": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 201147
   },
@@ -4776,7 +4798,7 @@
     "personId": 76250
   },
   "Frank Brickowski": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 783
   },
@@ -4856,7 +4878,7 @@
     "personId": 201972
   },
   "Ryan Broekhoff": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1629151
   },
@@ -4886,7 +4908,7 @@
     "personId": 76265
   },
   "MarShon Brooks": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 202705
   },
@@ -4996,7 +5018,7 @@
     "personId": 76276
   },
   "Kedrick Brown": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2208
   },
@@ -5041,7 +5063,7 @@
     "personId": 203900
   },
   "Mike Brown": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1479
   },
@@ -5086,7 +5108,7 @@
     "personId": 76285
   },
   "Sterling Brown": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1628425
   },
@@ -5221,7 +5243,7 @@
     "personId": 76298
   },
   "Jud Buechler": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 146
   },
@@ -5256,7 +5278,7 @@
     "personId": 76303
   },
   "Pat Burke": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 2469
   },
@@ -5326,7 +5348,7 @@
     "personId": 76313
   },
   "Deonte Burton": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1629126
   },
@@ -5411,7 +5433,7 @@
     "personId": 202779
   },
   "Derrick Byars": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 201182
   },
@@ -5541,7 +5563,7 @@
     "personId": 76337
   },
   "Marcus Camby": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 948
   },
@@ -5551,7 +5573,7 @@
     "personId": 1630267
   },
   "Elden Campbell": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 922
   },
@@ -5741,7 +5763,7 @@
     "personId": 76361
   },
   "Vince Carter": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1713
   },
@@ -5931,7 +5953,7 @@
     "personId": 1629147
   },
   "Calbert Cheaney": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 384
   },
@@ -6021,7 +6043,7 @@
     "personId": 1642353
   },
   "Doug Christie": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 57
   },
@@ -6086,7 +6108,7 @@
     "personId": 203546
   },
   "Keon Clark": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1721
   },
@@ -6201,7 +6223,7 @@
     "personId": 76412
   },
   "Derrick Coleman": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 934
   },
@@ -6376,7 +6398,7 @@
     "personId": 76438
   },
   "Brian Cook": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 2567
   },
@@ -6441,7 +6463,7 @@
     "personId": 1641645
   },
   "Jack Cooley": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 204022
   },
@@ -6606,7 +6628,7 @@
     "personId": 76465
   },
   "Allen Crabbe": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 203459
   },
@@ -6751,7 +6773,7 @@
     "personId": 1642385
   },
   "Jarrett Culver": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1629633
   },
@@ -6826,7 +6848,7 @@
     "personId": 76492
   },
   "Dell Curry": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 209
   },
@@ -6946,7 +6968,7 @@
     "personId": 76507
   },
   "Yinka Dare": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 212
   },
@@ -7041,12 +7063,12 @@
     "personId": 76519
   },
   "Dale Davis": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 905
   },
   "Deyonta Davis": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1627738
   },
@@ -7056,7 +7078,7 @@
     "personId": 76521
   },
   "Ed Davis": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 202334
   },
@@ -7151,7 +7173,7 @@
     "personId": 1629056
   },
   "Terry Davis": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 426
   },
@@ -7211,7 +7233,7 @@
     "personId": 76542
   },
   "Todd Day": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 103
   },
@@ -7306,12 +7328,12 @@
     "personId": 1627098
   },
   "Bison Dele": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 183
   },
   "Carlos Delfino": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2568
   },
@@ -7431,7 +7453,7 @@
     "personId": 1628977
   },
   "Boris Diaw": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 2564
   },
@@ -7621,7 +7643,7 @@
     "personId": 76587
   },
   "Joey Dorsey": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 201595
   },
@@ -7711,7 +7733,7 @@
     "personId": 1628495
   },
   "PJ Dozier": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1628408
   },
@@ -7726,7 +7748,7 @@
     "personId": 201609
   },
   "Zoran Dragic": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 204054
   },
@@ -7766,7 +7788,7 @@
     "personId": 17
   },
   "Nate Driggers": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1041
   },
@@ -7866,7 +7888,7 @@
     "personId": 76615
   },
   "Tim Duncan": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1495
   },
@@ -8001,7 +8023,7 @@
     "personId": 1630693
   },
   "Jarell Eddie": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 204067
   },
@@ -8041,7 +8063,7 @@
     "personId": 76646
   },
   "Blue Edwards": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 898
   },
@@ -8146,7 +8168,7 @@
     "personId": 76653
   },
   "Mario Elie": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 53
   },
@@ -8191,7 +8213,7 @@
     "personId": 76664
   },
   "Dale Ellis": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 107
   },
@@ -8226,7 +8248,7 @@
     "personId": 101145
   },
   "Pervis Ellison": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 442
   },
@@ -8236,7 +8258,7 @@
     "personId": 600010
   },
   "Francisco Elson": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1922
   },
@@ -8246,7 +8268,7 @@
     "personId": 76667
   },
   "Melvin Ely": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 2408
   },
@@ -8381,7 +8403,7 @@
     "personId": 76685
   },
   "Jacob Evans": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1628980
   },
@@ -8396,7 +8418,7 @@
     "personId": 202379
   },
   "Maurice Evans": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2230
   },
@@ -8406,12 +8428,12 @@
     "personId": 76686
   },
   "Reggie Evans": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 2501
   },
   "Tyreke Evans": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 201936
   },
@@ -8571,7 +8593,7 @@
     "personId": 1626245
   },
   "Carrick Felix": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 203467
   },
@@ -8666,7 +8688,7 @@
     "personId": 76713
   },
   "Landry Fields": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 202361
   },
@@ -8686,7 +8708,7 @@
     "personId": 76716
   },
   "Michael Finley": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 714
   },
@@ -8811,7 +8833,7 @@
     "personId": 76731
   },
   "Jeff Foote": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 202880
   },
@@ -8901,7 +8923,7 @@
     "personId": 202622
   },
   "Danny Fortson": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1504
   },
@@ -9026,7 +9048,7 @@
     "personId": 1626187
   },
   "Melvin Frazier Jr.": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1628982
   },
@@ -9051,7 +9073,7 @@
     "personId": 202683
   },
   "Joel Freeland": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 200777
   },
@@ -9226,7 +9248,7 @@
     "personId": 76774
   },
   "Kevin Gamble": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 333
   },
@@ -9246,7 +9268,7 @@
     "personId": 2092
   },
   "Alex Garcia": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2682
   },
@@ -9256,7 +9278,7 @@
     "personId": 1643158
   },
   "Francisco Garcia": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 101128
   },
@@ -9286,7 +9308,7 @@
     "personId": 76780
   },
   "Patricio Garino": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1627868
   },
@@ -9326,7 +9348,7 @@
     "personId": 1831
   },
   "Billy Garrett": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1628656
   },
@@ -9396,7 +9418,7 @@
     "personId": 201188
   },
   "Pau Gasol": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 2200
   },
@@ -9411,7 +9433,7 @@
     "personId": 1629232
   },
   "Chris Gatling": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 423
   },
@@ -9436,7 +9458,7 @@
     "personId": 1845
   },
   "Michael Gbinije": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1627771
   },
@@ -9746,7 +9768,7 @@
     "personId": 2732
   },
   "Drew Gordon": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 204079
   },
@@ -9821,12 +9843,12 @@
     "personId": 76842
   },
   "Stephen Graham": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 101211
   },
   "Treveon Graham": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1626203
   },
@@ -9996,7 +10018,7 @@
     "personId": 201980
   },
   "Devin Green": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 101209
   },
@@ -10006,7 +10028,7 @@
     "personId": 203475
   },
   "Gerald Green": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 101123
   },
@@ -10146,7 +10168,7 @@
     "personId": 76887
   },
   "Adrian Griffin": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1559
   },
@@ -10436,7 +10458,7 @@
     "personId": 76925
   },
   "Daniel Hamilton": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1627772
   },
@@ -10446,7 +10468,7 @@
     "personId": 76926
   },
   "Jordan Hamilton": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 202706
   },
@@ -10566,7 +10588,7 @@
     "personId": 76941
   },
   "Travis Hansen": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2580
   },
@@ -10586,7 +10608,7 @@
     "personId": 202376
   },
   "Anfernee Hardaway": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 358
   },
@@ -10671,7 +10693,7 @@
     "personId": 166
   },
   "Ron Harper Jr.": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1631199
   },
@@ -10926,7 +10948,7 @@
     "personId": 76978
   },
   "Chuck Hayes": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 101236
   },
@@ -11141,7 +11163,7 @@
     "personId": 77007
   },
   "Dewan Hernandez": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1629608
   },
@@ -11151,7 +11173,7 @@
     "personId": 1627823
   },
   "Willy Hernangomez": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1626195
   },
@@ -11231,7 +11253,7 @@
     "personId": 77017
   },
   "JJ Hickson": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 201581
   },
@@ -11251,7 +11273,7 @@
     "personId": 77019
   },
   "Sean Higgins": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 925
   },
@@ -11361,7 +11383,7 @@
     "personId": 77030
   },
   "Nate Hinton": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1630207
   },
@@ -11456,7 +11478,7 @@
     "personId": 77041
   },
   "John Holland": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 204066
   },
@@ -11541,7 +11563,7 @@
     "personId": 1967
   },
   "Rodney Hood": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 203918
   },
@@ -11646,7 +11668,7 @@
     "personId": 77065
   },
   "Dwight Howard": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 2730
   },
@@ -11821,7 +11843,7 @@
     "personId": 77083
   },
   "Chris Hunter": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 201805
   },
@@ -11911,7 +11933,7 @@
     "personId": 201586
   },
   "Andre Iguodala": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2738
   },
@@ -12051,7 +12073,7 @@
     "personId": 754
   },
   "Josh Jackson": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1628367
   },
@@ -12146,7 +12168,7 @@
     "personId": 2418
   },
   "Sam Jacobson": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1734
   },
@@ -12196,7 +12218,7 @@
     "personId": 1744
   },
   "Justin James": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1629713
   },
@@ -12271,7 +12293,7 @@
     "personId": 2423
   },
   "Othyus Jeffers": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 201785
   },
@@ -12381,7 +12403,7 @@
     "personId": 1628993
   },
   "Amir Johnson": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 101161
   },
@@ -12431,7 +12453,7 @@
     "personId": 201291
   },
   "Chaney Johnson": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1643052
   },
@@ -12541,7 +12563,7 @@
     "personId": 201949
   },
   "Joe Johnson": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2207
   },
@@ -12671,7 +12693,7 @@
     "personId": 1642848
   },
   "Trey Johnson": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 201234
   },
@@ -12766,7 +12788,7 @@
     "personId": 1642938
   },
   "Dahntay Jones": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2563
   },
@@ -12811,7 +12833,7 @@
     "personId": 77183
   },
   "Eddie Jones": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 224
   },
@@ -12841,7 +12863,7 @@
     "personId": 1627883
   },
   "James Jones": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2592
   },
@@ -13106,7 +13128,7 @@
     "personId": 2574
   },
   "Sergey Karasev": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 203508
   },
@@ -13241,7 +13263,7 @@
     "personId": 77242
   },
   "D.J. Kennedy": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 202810
   },
@@ -13306,7 +13328,7 @@
     "personId": 77251
   },
   "Lari Ketner": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1930
   },
@@ -13421,7 +13443,7 @@
     "personId": 1628994
   },
   "Gerard King": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1562
   },
@@ -13546,7 +13568,7 @@
     "personId": 77290
   },
   "Bob Knight": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 77287
   },
@@ -13606,7 +13628,7 @@
     "personId": 77293
   },
   "Kon Knueppel": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1642851
   },
@@ -13661,7 +13683,7 @@
     "personId": 101117
   },
   "Kyle Korver": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2594
   },
@@ -13836,7 +13858,7 @@
     "personId": 77327
   },
   "Raef LaFrentz": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1711
   },
@@ -13901,7 +13923,7 @@
     "personId": 203117
   },
   "Jeremy Lamb": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 203087
   },
@@ -13976,7 +13998,7 @@
     "personId": 101247
   },
   "Romeo Langford": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1629641
   },
@@ -14156,7 +14178,7 @@
     "personId": 201584
   },
   "Damion Lee": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1627814
   },
@@ -14346,7 +14368,7 @@
     "personId": 1641721
   },
   "Quincy Lewis": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1900
   },
@@ -14406,7 +14428,7 @@
     "personId": 77389
   },
   "Alton Lister": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 175
   },
@@ -14526,7 +14548,7 @@
     "personId": 26
   },
   "Felipe Lopez": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1732
   },
@@ -14671,12 +14693,12 @@
     "personId": 1630994
   },
   "Seth Lundy": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1641754
   },
   "Timothe Luwawu-Cabarrot": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1627789
   },
@@ -14701,7 +14723,7 @@
     "personId": 77427
   },
   "Sheldon Mac": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1627815
   },
@@ -14746,7 +14768,7 @@
     "personId": 77432
   },
   "Sam Mack": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 694
   },
@@ -14866,7 +14888,7 @@
     "personId": 328
   },
   "Dan Majerle": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 105
   },
@@ -15006,7 +15028,7 @@
     "personId": 77463
   },
   "Shawn Marion": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1890
   },
@@ -15056,7 +15078,7 @@
     "personId": 203088
   },
   "Rawle Marshall": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 101185
   },
@@ -15096,7 +15118,7 @@
     "personId": 201858
   },
   "Cuonzo Martin": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 733
   },
@@ -15196,7 +15218,7 @@
     "personId": 193
   },
   "Desmond Mason": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2046
   },
@@ -15276,7 +15298,7 @@
     "personId": 77490
   },
   "Sean May": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 101118
   },
@@ -15411,7 +15433,7 @@
     "personId": 77506
   },
   "Kelly McCarty": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1820
   },
@@ -15541,7 +15563,7 @@
     "personId": 77523
   },
   "KJ McDaniels": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 203909
   },
@@ -15596,7 +15618,7 @@
     "personId": 203956
   },
   "JaVale McGee": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 201580
   },
@@ -15621,7 +15643,7 @@
     "personId": 77533
   },
   "Tracy McGrady": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1503
   },
@@ -15766,7 +15788,7 @@
     "personId": 77551
   },
   "Nate McMillan": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 203
   },
@@ -15851,7 +15873,7 @@
     "personId": 201177
   },
   "Jack McVeigh": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1629098
   },
@@ -15986,7 +16008,7 @@
     "personId": 77584
   },
   "Loren Meyer": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 684
   },
@@ -16006,7 +16028,7 @@
     "personId": 77588
   },
   "Jordan Mickey": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1626175
   },
@@ -16021,7 +16043,7 @@
     "personId": 2036
   },
   "Eric Mika": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1628450
   },
@@ -16096,7 +16118,7 @@
     "personId": 77603
   },
   "Brad Miller": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1802
   },
@@ -16136,12 +16158,12 @@
     "personId": 1631159
   },
   "Malcolm Miller": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1626259
   },
   "Mike Miller": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2034
   },
@@ -16176,12 +16198,12 @@
     "personId": 77606
   },
   "Terry Mills": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 371
   },
   "Elijah Millsap": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 202407
   },
@@ -16211,7 +16233,7 @@
     "personId": 77610
   },
   "Greg Minor": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 65
   },
@@ -16581,7 +16603,7 @@
     "personId": 1628405
   },
   "Hanno Mottola": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 2069
   },
@@ -16616,7 +16638,7 @@
     "personId": 77658
   },
   "Shabazz Muhammad": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 203498
   },
@@ -16766,7 +16788,7 @@
     "personId": 203315
   },
   "Dzanan Musa": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1629058
   },
@@ -16791,7 +16813,7 @@
     "personId": 982
   },
   "Pete Myers": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 939
   },
@@ -17051,7 +17073,7 @@
     "personId": 1096
   },
   "Ira Newble": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1956
   },
@@ -17171,7 +17193,7 @@
     "personId": 200786
   },
   "Nerlens Noel": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 203457
   },
@@ -17236,7 +17258,7 @@
     "personId": 77732
   },
   "Zach Norvell Jr.": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1629668
   },
@@ -17296,7 +17318,7 @@
     "personId": 77738
   },
   "David Nwaba": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1628021
   },
@@ -17376,7 +17398,7 @@
     "personId": 77766
   },
   "Jermaine O'Neal": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 979
   },
@@ -17391,7 +17413,7 @@
     "personId": 77767
   },
   "Kyle O'Quinn": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 203124
   },
@@ -17456,7 +17478,7 @@
     "personId": 77751
   },
   "Tim Ohlbrecht": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 203317
   },
@@ -17471,7 +17493,7 @@
     "personId": 2731
   },
   "Jahlil Okafor": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1626143
   },
@@ -17491,7 +17513,7 @@
     "personId": 1629644
   },
   "Mehmet Okur": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 2246
   },
@@ -17586,7 +17608,7 @@
     "personId": 1641807
   },
   "Miye Oni": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1629671
   },
@@ -17906,7 +17928,7 @@
     "personId": 1629672
   },
   "Anžejs Pasečņiks": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1628394
   },
@@ -17936,7 +17958,7 @@
     "personId": 77811
   },
   "Lamar Patterson": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 203934
   },
@@ -17991,7 +18013,7 @@
     "personId": 77817
   },
   "Sasha Pavlovic": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2562
   },
@@ -18046,7 +18068,7 @@
     "personId": 77826
   },
   "Micah Peavy": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1642877
   },
@@ -18091,7 +18113,7 @@
     "personId": 77829
   },
   "Noah Penda": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1642869
   },
@@ -18121,7 +18143,7 @@
     "personId": 2570
   },
   "Sam Perkins": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 64
   },
@@ -18166,7 +18188,7 @@
     "personId": 456
   },
   "Wesley Person": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 445
   },
@@ -18291,7 +18313,7 @@
     "personId": 184
   },
   "Eric Piatkowski": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 15
   },
@@ -18341,7 +18363,7 @@
     "personId": 77861
   },
   "Theo Pinson": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1629033
   },
@@ -18371,7 +18393,7 @@
     "personId": 202354
   },
   "Zoran Planinic": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2565
   },
@@ -18401,7 +18423,7 @@
     "personId": 2750
   },
   "Vincent Poirier": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1629738
   },
@@ -18416,7 +18438,7 @@
     "personId": 77867
   },
   "Scot Pollard": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1513
   },
@@ -18426,7 +18448,7 @@
     "personId": 77868
   },
   "Olden Polynice": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 178
   },
@@ -18456,7 +18478,7 @@
     "personId": 77870
   },
   "Mark Pope": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 998
   },
@@ -18501,12 +18523,12 @@
     "personId": 1899
   },
   "Lavor Postell": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2068
   },
   "Vitaly Potapenko": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 958
   },
@@ -18521,7 +18543,7 @@
     "personId": 200796
   },
   "Drake Powell": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1642962
   },
@@ -18641,7 +18663,7 @@
     "personId": 1642878
   },
   "Laron Profit": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1919
   },
@@ -18946,7 +18968,7 @@
     "personId": 77923
   },
   "Josh Reaves": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1629729
   },
@@ -19111,7 +19133,7 @@
     "personId": 77944
   },
   "Cam Reynolds": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1629244
   },
@@ -19131,14 +19153,14 @@
     "personId": 77947
   },
   "Rodrick Rhodes": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1518
   },
   "Glen Rice": {
-    "position": "SG",
-    "positionFull": "F-G",
-    "personId": 779
+    "position": "SF",
+    "positionFull": "G-F",
+    "personId": 203318
   },
   "Chris Richard": {
     "position": "SF",
@@ -19166,7 +19188,7 @@
     "personId": 2202
   },
   "Jeremy Richardson": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 200978
   },
@@ -19331,7 +19353,7 @@
     "personId": 1641857
   },
   "Andre Roberson": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 203460
   },
@@ -19406,7 +19428,7 @@
     "personId": 77984
   },
   "Bernard Robinson": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2774
   },
@@ -19636,7 +19658,7 @@
     "personId": 399
   },
   "Jalen Rose": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 147
   },
@@ -19666,12 +19688,12 @@
     "personId": 78020
   },
   "Quinton Ross": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2624
   },
   "Terrence Ross": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 203082
   },
@@ -19746,7 +19768,7 @@
     "personId": 78033
   },
   "Clifford Rozier": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 32
   },
@@ -19821,7 +19843,7 @@
     "personId": 474
   },
   "Brandon Rush": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 201575
   },
@@ -19836,7 +19858,7 @@
     "personId": 78049
   },
   "Bryon Russell": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 935
   },
@@ -19886,7 +19908,7 @@
     "personId": 78051
   },
   "John Salley": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 927
   },
@@ -19971,7 +19993,7 @@
     "personId": 202336
   },
   "Melvin Sanders": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2684
   },
@@ -20306,7 +20328,7 @@
     "personId": 1578
   },
   "Malik Sealy": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 907
   },
@@ -20351,7 +20373,7 @@
     "personId": 202729
   },
   "Wayne Selden": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1627782
   },
@@ -20491,7 +20513,7 @@
     "personId": 1745
   },
   "Marial Shayok": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1629621
   },
@@ -20696,7 +20718,7 @@
     "personId": 1630250
   },
   "Dickey Simpkins": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 54
   },
@@ -20731,7 +20753,7 @@
     "personId": 78159
   },
   "Henry Sims": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 203156
   },
@@ -21321,7 +21343,7 @@
     "personId": 78231
   },
   "Tiago Splitter": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 201168
   },
@@ -21426,7 +21448,7 @@
     "personId": 1735
   },
   "DJ Stephens": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 203474
   },
@@ -21691,7 +21713,7 @@
     "personId": 78277
   },
   "Jared Sullinger": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 203096
   },
@@ -21821,7 +21843,7 @@
     "personId": 1136
   },
   "Wally Szczerbiak": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1887
   },
@@ -21846,7 +21868,7 @@
     "personId": 78291
   },
   "Dragan Tarlac": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1434
   },
@@ -22071,7 +22093,7 @@
     "personId": 78314
   },
   "Adonis Thomas": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 203519
   },
@@ -22151,7 +22173,7 @@
     "personId": 1629017
   },
   "Kurt Thomas": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 703
   },
@@ -22216,7 +22238,7 @@
     "personId": 78326
   },
   "Dijon Thompson": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 101159
   },
@@ -22231,7 +22253,7 @@
     "personId": 78327
   },
   "Hollis Thompson": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 203138
   },
@@ -22251,7 +22273,7 @@
     "personId": 78329
   },
   "LaSalle Thompson": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 78
   },
@@ -22301,7 +22323,7 @@
     "personId": 1628414
   },
   "Otis Thorpe": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 901
   },
@@ -22446,7 +22468,7 @@
     "personId": 78358
   },
   "Oscar Torres": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2351
   },
@@ -22466,7 +22488,7 @@
     "personId": 78360
   },
   "Axel Toupane": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1626253
   },
@@ -22641,7 +22663,7 @@
     "personId": 78378
   },
   "Evan Turner": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 202323
   },
@@ -22716,12 +22738,12 @@
     "personId": 202775
   },
   "Ekpe Udoh": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 202327
   },
   "Ime Udoka": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2137
   },
@@ -22766,7 +22788,7 @@
     "personId": 202386
   },
   "Robert Vaden": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 201987
   },
@@ -22801,7 +22823,7 @@
     "personId": 78399
   },
   "Butch Van Breda Kolff": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 78401
   },
@@ -23196,7 +23218,7 @@
     "personId": 1641775
   },
   "Matt Walsh": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 101190
   },
@@ -23491,7 +23513,7 @@
     "personId": 1627821
   },
   "Chris Webber": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 185
   },
@@ -23546,7 +23568,7 @@
     "personId": 78486
   },
   "Bonzi Wells": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1719
   },
@@ -23621,7 +23643,7 @@
     "personId": 2753
   },
   "Doug West": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 28
   },
@@ -23706,12 +23728,12 @@
     "personId": 78509
   },
   "Jahidi White": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1751
   },
   "James White": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 200778
   },
@@ -23831,7 +23853,7 @@
     "personId": 78522
   },
   "Joe Wieskamp": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1630580
   },
@@ -23911,7 +23933,7 @@
     "personId": 78533
   },
   "Damien Wilkins": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 2863
   },
@@ -23926,7 +23948,7 @@
     "personId": 78534
   },
   "Gerald Wilkins": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 786
   },
@@ -23946,7 +23968,7 @@
     "personId": 2366
   },
   "Aaron Williams": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 1425
   },
@@ -24096,7 +24118,7 @@
     "personId": 2398
   },
   "Jayson Williams": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 420
   },
@@ -24136,7 +24158,7 @@
     "personId": 78556
   },
   "Lorenzo Williams": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 31
   },
@@ -24226,7 +24248,7 @@
     "personId": 78569
   },
   "Scott Williams": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 281
   },
@@ -24246,7 +24268,7 @@
     "personId": 200761
   },
   "Shelden Williams": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 200749
   },
@@ -24256,7 +24278,7 @@
     "personId": 78570
   },
   "Terrence Williams": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 201944
   },
@@ -24311,7 +24333,7 @@
     "personId": 1631351
   },
   "Kevin Willis": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 788
   },
@@ -24406,7 +24428,7 @@
     "personId": 78590
   },
   "Dylan Windler": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 1629685
   },
@@ -24421,7 +24443,7 @@
     "personId": 78592
   },
   "David Wingate": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 766
   },
@@ -24506,7 +24528,7 @@
     "personId": 1642874
   },
   "Joe Wolf": {
-    "position": "PF",
+    "position": "C",
     "positionFull": "C-F",
     "personId": 341
   },
@@ -24761,7 +24783,7 @@
     "personId": 1642443
   },
   "James Young": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 203923
   },
@@ -24781,7 +24803,7 @@
     "personId": 78634
   },
   "Nick Young": {
-    "position": "SG",
+    "position": "SF",
     "positionFull": "G-F",
     "personId": 201156
   },
