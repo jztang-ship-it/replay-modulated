@@ -17,12 +17,13 @@ If a feature is mentioned in conversation but not described in `docs/replaymod-d
 
 ### Session-start ritual (run before any work)
 
-Every Claude Code session starts with these four checks. Report each result before proceeding to the user's task.
+Every Claude Code session starts with these five checks. Report each result before proceeding to the user's task.
 
 1. **`pwd`** — confirm working directory. Stamps work must run in `.claude/worktrees/feat-team-stamps`. Main work in `/Users/john/Desktop/ReplayMod/basketball/`. The `feat+achievements-and-challenges` worktree is unrelated and must not be touched for non-achievements work.
 2. **`git branch --show-current`** — confirm branch matches the feature. If the worktree and branch don't match expectations, stop and surface the mismatch.
 3. **`git log origin/main..main --oneline`** — confirm local-vs-remote state. **Do not trust the design doc's "current state" section over what git actually says.** The doc can drift; git can't.
 4. **`git status`** — confirm working tree state. Uncommitted changes from a previous session should be surfaced, not silently inherited.
+5. **Cross-worktree scan** — before any merge, branch delete, or new workstream start, scan ALL worktrees for uncommitted modifications and untracked files in tracked paths, not just the current one. Run `git worktree list`, then `git -C <path> status` for each. Watch especially for divergence in `docs/` and `CLAUDE.md` — parallel evolution across worktrees is the highest-frequency source of mid-merge reconciliation work. If divergence exists, plan reconciliation **before** the merge, not during it. *(Lesson source: 2026-05-22 — `docs/replaymod-design-decisions.md` had parallel evolution between main's working tree and an untracked 518-line version, discovered mid-merge. Pre-merge discovery would have collapsed the reconciliation into a single deliberate planning step instead of mid-merge improvisation.)*
 
 If any of these surface something unexpected, stop and report. Do not proceed with the user's task until state is reconciled.
 
