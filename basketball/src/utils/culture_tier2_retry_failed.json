@@ -1,0 +1,32 @@
+[
+  {
+    "basePlayerId": "1627732",
+    "name": "Ben Simmons",
+    "error": "fetch failed"
+  },
+  {
+    "basePlayerId": "200746",
+    "name": "LaMarcus Aldridge",
+    "error": "fetch failed"
+  },
+  {
+    "basePlayerId": "978",
+    "name": "Peja Stojakovic",
+    "error": "fetch failed"
+  },
+  {
+    "basePlayerId": "2045",
+    "name": "Hedo Turkoglu",
+    "error": "fetch failed"
+  },
+  {
+    "basePlayerId": "2736",
+    "name": "Luol Deng",
+    "error": "fetch failed"
+  },
+  {
+    "basePlayerId": "2731",
+    "name": "Emeka Okafor",
+    "error": "fetch failed"
+  }
+]
