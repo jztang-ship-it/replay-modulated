@@ -2,11 +2,53 @@
 
 Living document. Each entry: short title, context, priority hint, suggested next action. Address in dedicated sessions, not bundled.
 
-## Open from 2026-05-24 (this session)
+## Open from 2026-05-25 (smoke-driven post-amend findings)
+
+- **PURPLE-tier inclusion question for bad_beat predicate** — User-flagged 2026-05-24: hands with 2+ PURPLE held cards on BUST/ROOKIE feel bad-beat-worthy to user, but current predicate requires RED/ORANGE. Decision deferred to calibration arc — broadening to PURPLE may push bad_beat frequency too high. Decide post-frequency-analysis: if current rate <30%, consider broadening; if >50%, keep narrow.
+
+- **Inline RARE_PULL sub-tier chip color should match card-level achievement-banner color** — chip currently uses generic green (rare_pull family color); card's SEASON HIGH / CAREER HIGH / RECORD banner uses the card's tier color (e.g. purple for ALL_STAR-tier cards). Future polish: chip background reads from card-tier-color rather than hardcoded family color. Confirmed on 2026-05-24 smoke (Image 2, Robinson).
+
+- **Win-tier threshold recalibration** — post-game-data-broadening (all games, not top-40%), FP distribution has shifted upward. 30+ smoke hands on 2026-05-24 produced zero big_score triggers (no ALL_STAR+ wins). TOP_BIG_SCORE bank and win_tier inline chip are effectively dead code until thresholds are recalibrated. Use slateAwareCalibrate.ts and slateAwareThresholds.ts to re-derive thresholds against the broader distribution. Multi-session work; standalone calibration arc.
+
+- **Bad_beat trigger frequency post-broadening** — empirical observation needed. Predicate broadened from `>= 2 R/O held cards on BUST/ROOKIE` to `>= 1 R/O held card on BUST/ROOKIE` (2026-05-24 amend). Frequency target unknown; user-stated mental model is "any premium-held hand that BUSTs or barely ROOKIEs is a bad beat." Future session should play 15-30 hands, count bad_beat firing rate, evaluate whether 30-50% feels right or whether predicate needs tightening (e.g. require BUST rather than BUST||ROOKIE, or require RED specifically rather than RED||ORANGE). If too frequent, tighten; if still feels right, lock.
+
+- **TOP_BAD_BEAT copy second-pass rewrite** — broadened bad_beat predicate (2026-05-24 amend) means held cards may have overperformed while lineup still fell short. Bank copy patches landed tonight cover the worst mismatches but the bank could benefit from a fuller rewrite that explicitly handles both "held underperformed" and "held overperformed but lineup couldn't lift" textures. Future copy session, possibly with voice-polish tooling.
+
+- **Voice-polish tool integration** — chat-drafted bank copy reads written rather than spoken; voice-pass AI tool or human pass before shipping is a methodology improvement worth investing in. Bucket 2 piece B copy and any future copy work would benefit.
+
+- **Inferred dismissal cascade on panel TeamStamp / missTier surfaces** — when user dismisses ChallengeSharePrompt, the dismiss handler nulls `challengeTrigger`. Code reading suggests this also clears the win-tier panel TeamStamp (kind goes null at `GameView.tsx:2403-2406`) and the missTier props on TierGauge (~L2570) / TeamStamp (~L2429). Not observed broken during 2026-05-24 smoke — user reported only the TOP-slot symptom (Finding A, fixed Option-B style this session). Verify whether these surfaces actually clear on dismissal; if yes, decide whether they should persist like the TOP slot now does, or whether dismissal should retain the "clear everything chip-shaped" UX. Touches the dismissal handler at `shared/views/GameView.tsx:2995-3001`.
+
+## Bucket 1 scope — bad_beat predicate redefinition
+
+- **bad_beat predicate broadens to "held N high-tier cards but low result"** — current predicate (`shared/utils/triggerEvaluation.ts` ~L152-163):
+
+  ```ts
+  if (winTier === "BUST" || winTier === "ROOKIE") {
+    const highTierHeldCount = roster.reduce(
+      (n, c: any) => n + (c.wasHeld === true && (c.tier === "RED" || c.tier === "ORANGE") ? 1 : 0),
+      0,
+    );
+    if (highTierHeldCount >= 2) {
+      return {
+        trigger: "bad_beat",
+        headline: `Brutal hand. See if they survive the same slate.`,
+      };
+    }
+  }
+  ```
+
+  Distilled: fires iff `winTier ∈ {"BUST", "ROOKIE"}` AND `count(c => c.wasHeld === true && c.tier ∈ {"RED", "ORANGE"}) >= 2`. Doesn't match user mental model. User-stated rule (locked 2026-05-24 chat): "Whenever user gets two top cards, regardless if they performed, that's a bad beat in their minds." Two example hands surfaced during smoke: (a) Webber held +3 FP, hand BUST at 162.4 FP. (b) Iverson held +1 FP, Duncan held +5 FP, hand ROOKIE at 194.2 FP. Both feel like bad beats to user; neither fires under current predicate. Bucket 1 work: define "top tier" (RED only? RED+ORANGE? confirm product vocabulary for high-tier cards), thresholds, interaction with current predicate (replace, extend, new trigger concept). Cascade implications: existing TOP_BAD_BEAT bank copy assumes held-card-underperformance — lines like "premium disappointment from both" don't read right for hands where held cards beat projection. Either copy rewrite or sub-bank split needed if predicate broadens. Estimated work: 1-2 dedicated bucket-1 sessions.
+
+## Open from 2026-05-24 (real-copy session — piece B landed)
 
 - **First-share invitation BOTTOM-wiring** — gated by Q2 LOCKED, deferred from bucket 2 piece D-min. Today first-share is unwired post-regression-fix; future session decides ChallengeSharePrompt prop boundary + trigger/first-share precedence. Site: `shared/views/GameView.tsx` ~L1304 (TODO comment in place; `firstShareInvitation` no longer imported there; `localStorage` flag `rm_usher_first_share_invitation` intentionally untouched so users who already saw the pre-fix invitation aren't re-presented when the wire-up lands).
-- **Bucket 2 piece B copy drafting** — TOP-slot sub-banks (`TOP_BAD_BEAT` / `TOP_MISS` / `TOP_BIG_SCORE` / `TOP_RARE_PULL` / `TOP_DEFAULT` in `shared/commentary/chadChallenge.ts`) are populated with PLACEHOLDER lines so the parts-array wiring is smoke-testable end-to-end. Real copy lands in a chat-Claude session per Q4 LOCKED split. Wiring includes `selectTopSlotFraming` + inline DEAL/DRAW-style stamp render in `TierGauge.tsx` + GameView trigger override at ~L1330.
-- **Big-score inline stamp tier prefix** — `TierGauge` resolves big_score stamps' tier label from its `winTier` prop, but GameView's TierGauge mount passes `winTier={undefined}` (existing animation-semantics decision). Today big_score chips render as bare "BIG SCORE" without prefix. If the real-copy session wants tier-prefixed big_score chips (e.g. "ALL STAR BIG SCORE"), thread the resolved hand winTier into TierGauge through a new prop (don't repurpose existing `winTier` — it gates animation behavior). Comment captured at `TierGauge.tsx` missTier prop docstring.
+- **Big-score inline stamp tier prefix** — `TierGauge` resolves big_score stamps' tier label from its `winTier` prop, but GameView's TierGauge mount passes `winTier={undefined}` (existing animation-semantics decision). Today big_score chips render as bare "BIG SCORE" without prefix. If a future copy session wants tier-prefixed big_score chips (e.g. "ALL STAR BIG SCORE"), thread the resolved hand winTier into TierGauge through a new prop (don't repurpose existing `winTier` — it gates animation behavior). Comment captured at `TierGauge.tsx` missTier prop docstring.
+- **TOP_BIG_SCORE starName resolution** — locked design has `{starName}` resolving to anchor (`challengeTrigger.anchorBasePlayerId`). Bank reads strongest when it resolves to the top FP contributor on the hand. These diverge when anchor underperforms and a role-player explodes (user wins big on the role-player's back; bank names the disappointing anchor). Investigate where the right resolution lives — trigger eval picks a smarter basePlayerId for the big_score case, OR selector takes a separate "topContributor" arg. Tested copy quality is OK either way but the right semantics win.
+- **TOP_DEFAULT bank unreachable** — placeholder lines scaffolded in 4bd0c89 are never selected at runtime per GameView L1330 filter (`challengeTrigger.trigger !== "default"`). Bank exists for shape consistency with locked Q1 design. Future routing changes that send default-trigger hands to TOP slot would require drafting real copy. Today: no work needed; leave placeholders. Comment block at the bank def in `chadChallenge.ts` documents the unreachability.
+- **useChallengeShare evaluateTrigger lacks topGame context** — the share-prompt path's `evaluateTrigger` call (`useChallengeShare.ts:63`) doesn't receive topGame data, so rare_pull triggers from that path fire without `TopGameReason`. Selector falls back to RECORD bank per Q3.1 spec. Acceptable degradation since the user will have already seen full season-tier framing on the original reveal. If this path ever drives primary user perception of rare_pull, thread topGame through useChallengeShare.
+- **postRevealCopy cache-key invalidation lacks integration test** — the cache-key invalidation fix at `GameView.tsx` (bucket 2 piece B smoke 2026-05-24) has no test guarding against regression. Extracting the `useMemo` body into a `usePostRevealCopy` hook would make it testable via `@testing-library/react` `renderHook` + `rerender`. Worth doing as a future tech-debt pass; risks bundling structural refactor into unrelated commits if done opportunistically. Verbose comment block at the useMemo site documents the bug fingerprint + reset-effect coupling so the next maintainer has the full context.
+- **selectTopSlotFraming `starName: null` frequency** — observed null on a clear bad_beat hand during smoke (Webber 65.8 FP as heavy lifter, anchor potentially unset). Selector handled gracefully via unnamed lines, but TOP-slot banks are 70/30 weighted toward named lines. If anchor-null is common in production, lines will frequently fall back to the 30% unnamed pool, losing per-hand personalization. Investigate whether anchor is consistently set during draft, and consider whether the bank should derive starName from top-FP contributor when anchor is null (related to TOP_BIG_SCORE starName resolution followup above).
+- **`useAchievements.ts:59` 409 Conflict** — observed during 2026-05-24 piece B smoke. Separate system from challenge / bucket 2; not investigated this session. Likely benign (duplicate-write race on achievement persistence) but worth a diagnostic pass when next touching the achievements layer.
 
 ## Resolved 2026-05-23 (this session)
 

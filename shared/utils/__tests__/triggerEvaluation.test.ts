@@ -83,11 +83,43 @@ describe("evaluateTrigger", () => {
     expect(result.trigger).toBe("bad_beat");
   });
 
-  it("does NOT fire bad_beat for BUST with only 1 held RED/ORANGE card", () => {
-    // Threshold test: 1 held R/O is below the 2-card floor.
+  it("fires bad_beat for BUST with 1 held RED card (broadened threshold, 2026-05-25)", () => {
+    // Threshold dropped from >= 2 to >= 1 (bucket 2 piece B final
+    // amend) to match user mental model: "any premium-held hand that
+    // BUSTs is a bad beat." Empirical frequency calibration tracked
+    // as open followup. This test guards against accidental revert.
     const roster = [
       card({ slotIndex: 0, tier: "RED", actualFp: 8, wasHeld: true }),
       card({ slotIndex: 1, tier: "WHITE", actualFp: 8 }),
+      card({ slotIndex: 2, tier: "WHITE", actualFp: 8 }),
+      card({ slotIndex: 3, tier: "WHITE", actualFp: 8 }),
+      card({ slotIndex: 4, tier: "WHITE", actualFp: 8 }),
+    ];
+    const result = evaluateTrigger({ roster, totalFp: 40, winTier: "BUST", badges: [], winTiersMap: TIERS });
+    expect(result.trigger).toBe("bad_beat");
+  });
+
+  it("fires bad_beat for ROOKIE with 1 held ORANGE card (broadened threshold)", () => {
+    // Mirrors the Webber-style hand: single held premium card,
+    // ROOKIE outcome. Pre-broadening this returned "default".
+    const roster = [
+      card({ slotIndex: 0, tier: "ORANGE", actualFp: 30, wasHeld: true }),
+      card({ slotIndex: 1, tier: "WHITE", actualFp: 35 }),
+      card({ slotIndex: 2, tier: "WHITE", actualFp: 35 }),
+      card({ slotIndex: 3, tier: "WHITE", actualFp: 35 }),
+      card({ slotIndex: 4, tier: "WHITE", actualFp: 35 }),
+    ];
+    const result = evaluateTrigger({ roster, totalFp: 200, winTier: "ROOKIE", badges: [], winTiersMap: TIERS });
+    expect(result.trigger).toBe("bad_beat");
+  });
+
+  it("does NOT fire bad_beat for BUST with 0 held RED/ORANGE cards", () => {
+    // After broadening, the floor is still HELD >= 1 R/O. RNG-drawn
+    // R/O cards in the lineup don't count — the "stacked lineup got
+    // cooked" story requires deliberate user holds.
+    const roster = [
+      card({ slotIndex: 0, tier: "RED", actualFp: 8, wasHeld: false }),
+      card({ slotIndex: 1, tier: "ORANGE", actualFp: 8, wasHeld: false }),
       card({ slotIndex: 2, tier: "WHITE", actualFp: 8 }),
       card({ slotIndex: 3, tier: "WHITE", actualFp: 8 }),
       card({ slotIndex: 4, tier: "WHITE", actualFp: 8 }),
@@ -116,5 +148,39 @@ describe("evaluateTrigger", () => {
     const badges = [{ id: "TOP_GAME", icon: "🏆", label: "Top Game", fp: 10 }];
     const result = evaluateTrigger({ roster, totalFp: 235, winTier: "MVP", badges, winTiersMap: TIERS });
     expect(result.trigger).toBe("rare_pull");
+  });
+
+  it("propagates topGamePrimaryReason and topGameAllReasons on rare_pull (Bucket 2 Q3.1)", () => {
+    const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 47 }));
+    const reasons = [
+      { category: "fifty_plus_game", label: "Top-rarity: 50-point game", value: 1 },
+      { category: "pts", label: "1st highest scoring game of the season (57 pts)", value: 57, rank: 1 },
+    ];
+    const result: TriggerResult = evaluateTrigger({
+      roster, totalFp: 235, winTier: "MVP", badges: [], winTiersMap: TIERS,
+      topGameTier: "season",
+      topGamePrimaryReason: reasons[0],
+      topGameAllReasons: reasons,
+    });
+    expect(result.trigger).toBe("rare_pull");
+    expect(result.topGameTier).toBe("season");
+    expect(result.topGamePrimaryReason?.category).toBe("fifty_plus_game");
+    expect(result.topGameAllReasons).toHaveLength(2);
+    expect(result.topGameAllReasons?.[1].category).toBe("pts");
+  });
+
+  it("rare_pull without TopGameReason context yields null fields (degradation path)", () => {
+    // useChallengeShare.evaluateTrigger call doesn't carry topGame
+    // context — confirm graceful null-out so downstream selector
+    // routes to RECORD fallback per Q3.1 spec.
+    const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 47 }));
+    const result: TriggerResult = evaluateTrigger({
+      roster, totalFp: 235, winTier: "MVP", badges: [], winTiersMap: TIERS,
+      topGameTier: "season",
+      // no topGamePrimaryReason / topGameAllReasons
+    });
+    expect(result.trigger).toBe("rare_pull");
+    expect(result.topGamePrimaryReason).toBeNull();
+    expect(result.topGameAllReasons).toBeNull();
   });
 });

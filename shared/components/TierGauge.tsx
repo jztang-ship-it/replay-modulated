@@ -350,7 +350,7 @@ function Typewriter({ text, style, onDone, msPerChar = 25, rush = false, start =
 // read as one visual family. Slant / thud animation are panel-only; the
 // inline form is flat by spec.
 
-const INLINE_STAMP_STYLE_ID = "tg-inline-stamp-styles-v1";
+const INLINE_STAMP_STYLE_ID = "tg-inline-stamp-styles-v2";
 if (typeof document !== "undefined" && !document.getElementById(INLINE_STAMP_STYLE_ID)) {
   const st = document.createElement("style");
   st.id = INLINE_STAMP_STYLE_ID;
@@ -373,14 +373,13 @@ if (typeof document !== "undefined" && !document.getElementById(INLINE_STAMP_STY
       background: linear-gradient(135deg, #fde68a 0%, #f59e0b 55%, #b45309 100%);
       color: #3a2000;
     }
-    .tg-inline-stamp-big-score {
-      background: #3AA0FF;
-      color: #000;
-    }
     .tg-inline-stamp-rare-pull {
       background: linear-gradient(135deg, #7FFF00 0%, #5BBE00 100%);
       color: #070A12;
     }
+    /* win_tier chip — background is dynamic from TIER_CFG, applied via
+       inline style at render time. No static class background here so
+       the inline-style override is the source of truth. */
     @keyframes tgInlineStampPop {
       0%   { transform: scale(0.4); opacity: 0; }
       60%  { transform: scale(1.15); opacity: 1; }
@@ -393,14 +392,28 @@ if (typeof document !== "undefined" && !document.getElementById(INLINE_STAMP_STY
 const INLINE_STAMP_KIND_CLASS: Record<StampToken["stamp"], string> = {
   bad_beat:  "tg-inline-stamp-bad-beat",
   miss:      "tg-inline-stamp-miss",
-  big_score: "tg-inline-stamp-big-score",
+  // win_tier intentionally has no static class — color is sourced from
+  // TIER_CFG at render time via inline style. See InlineStampChip.
+  win_tier:  "",
   rare_pull: "tg-inline-stamp-rare-pull",
 };
 
 const INLINE_STAMP_BASE_LABEL: Record<StampToken["stamp"], string> = {
   bad_beat:  "BAD BEAT",
   miss:      "MISS",
-  big_score: "BIG SCORE",
+  // win_tier chip is just the tier label (e.g. "ALL STAR"); no suffix
+  // by design (Bucket 2 smoke revision 2026-05-24). When token.tier
+  // and winTier prop are both missing, the chip falls back to "" —
+  // an empty pill. Shouldn't happen in practice because the trigger
+  // evaluator gates big_score (which produces win_tier stamps) to
+  // ALL_STAR+ wins where winTier is always populated.
+  win_tier:  "",
+  // rare_pull chip displays the sub-tier ("RECORD" / "CAREER HIGH" /
+  // "SEASON HIGH") instead of the internal "RARE PULL" vocabulary
+  // (Bucket 2 piece B final amend 2026-05-25). When token.tier is
+  // missing, falls back to the "RARE PULL" base label — defensive,
+  // shouldn't happen post-substitution. See stampLabel() rare_pull
+  // branch.
   rare_pull: "RARE PULL",
 };
 
@@ -409,30 +422,67 @@ function formatTier(raw: string | undefined): string {
   return raw.replace(/_/g, " ").trim().toUpperCase();
 }
 
+// rare_pull sub-tier display map (Bucket 2 piece B final amend
+// 2026-05-25). Mirrors the card-level achievement vocabulary users
+// already see on player cards. Internal "RARE PULL" reserved as
+// fallback when token.tier isn't populated.
+const RARE_PULL_TIER_LABEL: Record<string, string> = {
+  record: "RECORD",
+  career: "CAREER HIGH",
+  season: "SEASON HIGH",
+};
+
 /** Resolve the visible label for a StampToken from runtime context
- *  (model-(b) tier substitution — see StampToken type def in
- *  chadChallenge.ts). The token itself carries no tier; this function
- *  looks up the tier from winTier (big_score) or missTier (miss) and
- *  formats the label accordingly. Token's `tier` field is an escape
- *  hatch — when set, it overrides the context lookup. */
+ *  (hybrid model — see StampToken type def in chadChallenge.ts).
+ *  Token's `tier` field is checked first; on the miss/win_tier
+ *  variants, falls back to missTier/winTier context props. */
 function stampLabel(token: StampToken, winTier: string | undefined, missTier: string | undefined): string {
   const explicit = token.tier ? formatTier(token.tier) : "";
   if (token.stamp === "miss") {
     const prefix = explicit || formatTier(missTier);
     return prefix ? `${prefix} MISS` : "MISS";
   }
-  if (token.stamp === "big_score") {
+  if (token.stamp === "win_tier") {
+    // No suffix — the chip IS the tier label.
     const prefix = explicit || formatTier(winTier);
-    return prefix ? `${prefix} BIG SCORE` : "BIG SCORE";
+    return prefix;
+  }
+  if (token.stamp === "rare_pull") {
+    // Sub-tier display: chip text comes from RARE_PULL_TIER_LABEL
+    // keyed by the substituted achievement type. Falls back to base
+    // "RARE PULL" if tier is absent (defensive; shouldn't happen
+    // post-substitution).
+    const key = token.tier ? String(token.tier).trim().toLowerCase() : "";
+    const label = RARE_PULL_TIER_LABEL[key];
+    return label ?? INLINE_STAMP_BASE_LABEL.rare_pull;
   }
   return INLINE_STAMP_BASE_LABEL[token.stamp];
+}
+
+/** Resolve the inline-style background color for a win_tier chip from
+ *  the same TIER_CFG used elsewhere in this component for tier-label
+ *  rendering. Single source of truth for tier color. Bucket 2 smoke
+ *  revision 2026-05-24. */
+function winTierChipColor(tier: string | undefined): string | undefined {
+  if (!tier) return undefined;
+  const normalized = tier.trim().replace(/ /g, "_").toUpperCase();
+  return TIER_CFG[normalized]?.color;
 }
 
 function InlineStampChip({ token, winTier, missTier }: {
   token: StampToken; winTier?: string; missTier?: string;
 }) {
+  const isWinTier = token.stamp === "win_tier";
+  // For win_tier, resolve the effective tier (explicit on token, else
+  // winTier prop) and pull its color from TIER_CFG. White text reads
+  // well across the TIER_CFG palette (red/orange/purple/blue/green/gray).
+  const effectiveTier = isWinTier ? (token.tier || winTier) : undefined;
+  const inlineStyle = isWinTier
+    ? { background: winTierChipColor(effectiveTier), color: "#fff" }
+    : undefined;
+  const classes = `tg-inline-stamp ${INLINE_STAMP_KIND_CLASS[token.stamp]}`.trim();
   return (
-    <span className={`tg-inline-stamp ${INLINE_STAMP_KIND_CLASS[token.stamp]}`}>
+    <span className={classes} style={inlineStyle}>
       {stampLabel(token, winTier, missTier)}
     </span>
   );

@@ -1,6 +1,7 @@
 // shared/utils/triggerEvaluation.ts
 import type { GeneratedCard } from "../types/index";
 import type { WinTierMap, WinTierKey } from "./payoutLogic";
+import type { TopGameReason } from "../commentary/types";
 
 const RECORD_BADGE_IDS = ["TOP_GAME", "CAREER_HIGH", "NBA_RECORD", "SEASON_RECORD", "PB"];
 
@@ -27,6 +28,18 @@ export interface TriggerInput {
    *  the anchor in roster without re-running selectStar. Only meaningful
    *  when topGameTier is also set. */
   starBasePlayerId?: string | null;
+  /** rare_pull only — the primary TopGameReason from detectTopGame
+   *  (= topGame.primaryReason on the call-site TopGameResult). Threaded
+   *  through to TriggerResult so downstream copy surfaces can read the
+   *  category/label/value/rank for statLabel extraction without
+   *  re-running detectTopGame. Bucket 2 Q3.1 LOCKED 2026-05-24. */
+  topGamePrimaryReason?: TopGameReason | null;
+  /** rare_pull only — the full reasons array from detectTopGame
+   *  (= topGame.allReasons). Needed so the bank-side selector can
+   *  prefer a stat-typed reason (rank defined) over a composite/flag
+   *  reason when both coexist for the same hand. Bucket 2 Q3.1
+   *  LOCKED 2026-05-24. */
+  topGameAllReasons?: TopGameReason[] | null;
 }
 
 export interface TriggerResult {
@@ -45,12 +58,26 @@ export interface TriggerResult {
   /** rare_pull only — passed through so the prompt can route to the
    *  rare_pull initiation bank. */
   topGameTier?: TopGameTier | null;
+  /** rare_pull only — passes the primary TopGameReason through so the
+   *  TOP-slot framing selector (chadChallenge.selectTopSlotFraming) can
+   *  extract {statLabel} for the RARE_PULL_SEASON bank. Bucket 2 Q3.1
+   *  LOCKED 2026-05-24. */
+  topGamePrimaryReason?: TopGameReason | null;
+  /** rare_pull only — passes the full reasons array through so the
+   *  selector can prefer a stat-typed reason (rank defined) over a
+   *  composite/flag reason for statLabel extraction. Bucket 2 Q3.1
+   *  LOCKED 2026-05-24. */
+  topGameAllReasons?: TopGameReason[] | null;
 }
 
 const MISS_WINDOW = 5;
 
 export function evaluateTrigger(input: TriggerInput): TriggerResult {
-  const { roster, totalFp, winTier, badges, winTiersMap, topGameTier, starBasePlayerId } = input;
+  const {
+    roster, totalFp, winTier, badges, winTiersMap,
+    topGameTier, starBasePlayerId,
+    topGamePrimaryReason, topGameAllReasons,
+  } = input;
   const fp = Math.round(totalFp * 10) / 10;
 
   // 1. rare_pull — star card pulled a record / career-high / season top-10
@@ -75,6 +102,13 @@ export function evaluateTrigger(input: TriggerInput): TriggerResult {
       headline: `You pulled a legendary game. Challenge someone to beat this.`,
       anchorBasePlayerId: starBasePlayerId ?? null,
       topGameTier: topGameTier ?? null,
+      // Propagate TopGameReason data for chadChallenge.selectTopSlotFraming
+      // statLabel extraction on the RARE_PULL_SEASON bank. Null when the
+      // caller doesn't have topGame context (e.g. useChallengeShare path
+      // — selector falls back to RECORD bank per Q3.1 spec). Bucket 2
+      // Q3.1 LOCKED 2026-05-24.
+      topGamePrimaryReason: topGamePrimaryReason ?? null,
+      topGameAllReasons: topGameAllReasons ?? null,
     };
   }
 
@@ -109,9 +143,17 @@ export function evaluateTrigger(input: TriggerInput): TriggerResult {
     }
   }
 
-  // 4. bad_beat — BUST or ROOKIE with 2+ RED/ORANGE cards that the user
-  //    actually HELD. "Stacked lineup got cooked" is a story about the
-  //    user's deliberate picks busting, not RNG dropping high-tier
+  // 4. bad_beat — BUST or ROOKIE with 1+ RED/ORANGE card that the user
+  //    actually HELD. Threshold broadened from 2 to 1 on 2026-05-25
+  //    (bucket 2 piece B final amend) per user mental model: "any
+  //    premium-held hand that BUSTs or barely ROOKIEs is a bad beat."
+  //    Trigger frequency was too low in smoke (~1 in 15 hands); broaden
+  //    to ship a feature that actually fires. Empirical calibration
+  //    (whether 30-50% feels right, or whether we tighten back to RED
+  //    only / BUST only) is tracked as an open followup.
+  //
+  //    The wasHeld gate stays — "stacked lineup got cooked" is a story
+  //    about the user's deliberate picks, not RNG dropping high-tier
   //    cards into the redraw. Earlier versions counted all roster slots
   //    regardless of wasHeld, which fired bad_beat on hands the user
   //    didn't actually stack.
@@ -120,7 +162,7 @@ export function evaluateTrigger(input: TriggerInput): TriggerResult {
       (n, c: any) => n + (c.wasHeld === true && (c.tier === "RED" || c.tier === "ORANGE") ? 1 : 0),
       0,
     );
-    if (highTierHeldCount >= 2) {
+    if (highTierHeldCount >= 1) {
       return {
         trigger: "bad_beat",
         headline: `Brutal hand. See if they survive the same slate.`,

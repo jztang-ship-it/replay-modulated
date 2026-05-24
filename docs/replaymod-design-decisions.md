@@ -233,7 +233,7 @@ The previous TOP-slot source was a function called `chadTriggerFraming` (removed
 
 This is **reversion + rewrite**, not a pure additive copy task. The slot-split restoration is code; the bank rewrite is copy.
 
-### Bucket 2 (S1 slot-split restoration) — LOCKED (open questions resolved 2026-05-23)
+### Bucket 2 (S1 slot-split restoration) — LOCKED (open questions resolved 2026-05-23; bank-shape refinements 2026-05-24)
 
 Four open questions from session 2 were resolved in a chat-Claude session today. Locking them here as authoritative before the implementation session.
 
@@ -241,6 +241,33 @@ Four open questions from session 2 were resolved in a chat-Claude session today.
 - **Q2 — First-share preempt:** locked as fold-in. First-share invitation routes to BOTTOM slot only; TOP retains trigger-aware celebration on that hand. The L1326-1332 first-share preempt in `shared/views/GameView.tsx` changes to write BOTTOM, not the whole reveal copy.
 - **Q3 — DEAL/DRAW token rendering:** locked as option B (pre-segment at bank level). `postRevealCopy.primary` grows from string to parts array matching the FTUE override pattern at `TierGauge.tsx` L714-768. New render branch under L769 walks parts: strings go through Typewriter, stamp tokens render as inline DEAL/DRAW-style styled blocks. Typewriter itself unchanged.
 - **Q4 — Copy-drafting venue:** locked as split. Code work (pieces A, C, D, E, F in the `open-followups.md` bucket-2 section) happens in the Code session. Copy drafting (piece B — ~50 lines across 5 sub-banks) happens in a separate chat session.
+
+#### Refinements locked 2026-05-24 (real-copy session)
+
+Surfaced during piece B real-copy drafting. Each grows scope of the bank shape beyond the 2026-05-23 Q1 lock; resolutions below supersede Q1 where stated.
+
+- **Q1.1 — TOP_BAD_BEAT split:** locked. TOP_BAD_BEAT splits into `TOP_BAD_BEAT_HELD` (user held ≥1 card on the hand) and `TOP_BAD_BEAT_NO_HOLDS` (user held nothing; anchor still cratered). Emotional texture differs sharply — held-card disappointment ("you backed the right horse") vs. no-hold anchor-failure ("the call was right, the call called in sick"). Selector inspects `roster.some(c => c.wasHeld === true)` to route. Net sub-bank count grows from 5 to 6.
+- **Q1.2 — TOP_RARE_PULL split:** locked. TOP_RARE_PULL splits into `TOP_RARE_PULL_RECORD`, `TOP_RARE_PULL_CAREER`, `TOP_RARE_PULL_SEASON`. Routed via `starAchievementType` (= `challengeTrigger.topGameTier`, value `"record" | "career" | "season"`). Texture differs by tier: record = all-time league framing ("the league will be talking about for decades"); career = personal-arc framing ("best game of his entire career"); season = league-comparative single-stat framing ("one of the best {statLabel} performances of the season"). Net sub-bank count after Q1.1+Q1.2: 8 (HELD, NO_HOLDS, MISS, BIG_SCORE, RARE_PULL_RECORD, RARE_PULL_CAREER, RARE_PULL_SEASON, DEFAULT).
+- **Q1.3 — TOP_DEFAULT unreachable (finding, not structural change):** confirmed. `GameView.tsx` trigger-override gate (`challengeTrigger.trigger !== "default"`) filters default-trigger hands out before the TOP-slot framing call. TOP_DEFAULT is never selected at runtime. Bank retained for shape consistency with the type union; placeholder copy from `4bd0c89` stays in place — real copy not drafted. Reachable-by-construction comment lives at the bank def in `chadChallenge.ts`. Future routing change that sends default-trigger hands to the TOP slot would require drafting real copy here.
+- **Q3.1 — `{statLabel}` substitution for RARE_PULL_SEASON:** locked. Season-tier lines reference the stat that drove the rare_pull (e.g. *"best `{statLabel}` performances of the season"* with `{statLabel}` ∈ `"scoring" | "rebounding" | "passing" | ...`). Implementation:
+  - `evaluateTrigger` rare_pull branch propagates `TopGameReason` data through `TriggerResult` as two fields: `topGamePrimaryReason: TopGameReason | null` and `topGameAllReasons: TopGameReason[] | null` (mirrors upstream `topGame.primaryReason` / `topGame.allReasons` shape).
+  - `selectTopSlotFraming` receives a combined `topGame: { primaryReason: TopGameReason | null; allReasons: TopGameReason[] | null } | null` arg (mirrors `TopGameResult` exactly; caller passes `triggerResult` fields wrapped). Selector extracts `statLabel` by walking `allReasons` and **preferring stat-typed reasons** (where `rank` is defined) over composite/flag reasons. Reason: `detectTopGame` returns the first reason as primary, which for high-scoring games is often a composite like `fifty_plus_game` — the stat-typed sibling (`pts`) maps to a cleaner label.
+  - `STAT_LABEL_MAP` lives in `chadChallenge.ts` (next to the bank). Keys are the authoritative category values from `basketball/public/data/topGames.json` + careerCategories + NBA_SINGLE_GAME_RECORDS:
+    - **Stat-typed:** `pts→"scoring"`, `reb→"rebounding"`, `ast→"passing"`, `stl→"steals"`, `blk→"blocks"`, `threes→"3-point shooting"`, `turnovers→"turnovers"` (turnovers reads ironically; left intentional pending feature-polish review).
+    - **Composite fallbacks** (used only when no stat-typed reason exists in allReasons): `fifty_plus_game→"scoring"`, `five_by_five→"all-around"`, `td_30_20_20→"triple-double"`, `td_60_10_10→"scoring"`.
+  - `{statLabel}` is a bare token (no leading article/preposition); bank lines provide surrounding grammar. Same substitution discipline as `{starName}` elsewhere.
+  - Fallback when `statLabel` is null (`allReasons` empty or all categories unmapped): log warn, route to `TOP_RARE_PULL_RECORD` bank (closest texturally), surface as smoke-test anomaly. Do not silently skip or use placeholder copy.
+- **Q4 (tier substitution model refinement):** the 2026-05-23 code session landed pure model-(b) for tier substitution (renderer reads tier from props; bank lines carry no tier values). Real-copy bank lines for `TOP_MISS` write `{ stamp: "miss", tier: "{missTier}" }` — a literal sentinel that mirrors the `{starName}` / `{statLabel}` substitution discipline. **Hybrid model now locked:** `StampToken.tier` widens to `WinTier | string` to permit the sentinel. Selector substitutes `"{missTier}"` with the actual `missTier` value at selection time (model-(a) for these lines). Renderer's existing escape hatch — `token.tier` overrides `missTier` prop — handles substituted values. When `token.tier` is absent (unset, or post-strip), renderer falls back to the `missTier` prop (model-(b) preserved). Doc note at the `StampToken` type def updates to: *"Selector substitutes tier when bank line specifies a sentinel; renderer falls back to context lookup when token.tier is absent."*
+
+#### Selector signature after refinements
+
+`selectTopSlotFraming` takes:
+- `trigger: "bad_beat" | "miss" | "big_score" | "rare_pull" | "default"` — bank-family selector
+- `roster: Array<{ tier?: string; wasHeld?: boolean }>` — for Q1.1 HELD/NO_HOLDS routing
+- `starAchievementType: "record" | "career" | "season" | null` — for Q1.2 RARE_PULL routing
+- `starName: string | null` — `{starName}` substitution into bank lines
+- `missTier: string | null` — sentinel substitution for `{ tier: "{missTier}" }` in MISS bank
+- `topGame: { primaryReason: TopGameReason | null; allReasons: TopGameReason[] | null } | null` — for `{statLabel}` extraction in SEASON bank (selector internally walks `allReasons` preferring stat-typed)
 
 ### Win-tier panel multiplier legibility — LOCKED (folds with stamps build)
 
