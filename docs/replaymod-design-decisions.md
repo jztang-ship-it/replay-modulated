@@ -1,7 +1,7 @@
 # ReplayMod — Design Decisions & Session State
 
-**Last updated:** May 19 2026 (session 2 — post-investigation lock-ins)
-**Status:** main synced with origin; closure-bug fix shipped; stamps build investigation complete; implementation plan approved; pre-existing TeamStamp work adopted; 8-edit implementation pending
+**Last updated:** 2026-05-23
+**Status:** stamps feature shipped 2026-05-22 (merge `ce9c277`); position-data fix shipped 2026-05-22 (`87742bb`); cross-worktree-scan ritual added then superseded today by `docs/worktree-registry.md`; bucket 2 (S1 slot-split restoration) open questions resolved and queued as the next code workstream
 **Purpose:** home-base document for the ReplayMod project. Every chat in this project should start with this in context. Update at the end of each session — *and during the session, whenever a decision is locked.*
 
 ---
@@ -62,6 +62,14 @@ Recipient side:
 - **R3** — Results page (win or lose, with retry timer).
 - **R4** — First landing in normal game (post-challenge).
 - **R5** — Persistent challenge floating icon (if lost, hangs over normal-game play).
+
+---
+
+## Recently shipped — stamps + position fix + worktree registry (2026-05-22 → 2026-05-23)
+
+- **Stamps feature** (shipped 2026-05-22, merge commit `ce9c277`) — team-level stamps in win-tier panel: BAD BEAT and [TIER] MISS render visually; `big_score` and `rare_pull` correctly suppress panel stamps. `near_miss` → `miss` rename throughout the trigger-evaluation system. Smoke-tested on 1718-season slate. Full record at `docs/smoke-tests/2026-05-22-stamps-smoke.md`.
+- **Position-data fix** (shipped 2026-05-22, commit `87742bb`) — POS_MAP simplification rule flipped: C-F → C (was PF, 81 players incl. Embiid/KAT/Duncan), G-F → SF (was SG, 114 players incl. Carter/McGrady/Tatum). F-C → PF and F-G → SG unchanged. Residual errors captured as path-2 override-map followup.
+- **Cross-worktree-scan ritual** (added 2026-05-22, commit `4c09b00`; superseded today 2026-05-23) — session-start ritual item 5 now points at `docs/worktree-registry.md` per today's housekeeping pass.
 
 ---
 
@@ -225,6 +233,15 @@ The previous TOP-slot source was a function called `chadTriggerFraming` (removed
 
 This is **reversion + rewrite**, not a pure additive copy task. The slot-split restoration is code; the bank rewrite is copy.
 
+### Bucket 2 (S1 slot-split restoration) — LOCKED (open questions resolved 2026-05-23)
+
+Four open questions from session 2 were resolved in a chat-Claude session today. Locking them here as authoritative before the implementation session.
+
+- **Q1 — TOP-slot bank shape:** locked. `type StampToken = { stamp: "bad_beat" | "miss" | "big_score" | "rare_pull"; tier?: WinTier }; type LinePart = string | StampToken; type Line = LinePart[]`. Five sub-banks: `TOP_BAD_BEAT`, `TOP_MISS`, `TOP_BIG_SCORE`, `TOP_RARE_PULL`, `TOP_DEFAULT`. ~10 lines per sub-bank. Selector `selectTopSlotFraming(args)` parallels `selectChallengeInitiation`. Anti-repeat: reuse `pickWithAntiRepeat`.
+- **Q2 — First-share preempt:** locked as fold-in. First-share invitation routes to BOTTOM slot only; TOP retains trigger-aware celebration on that hand. The L1326-1332 first-share preempt in `shared/views/GameView.tsx` changes to write BOTTOM, not the whole reveal copy.
+- **Q3 — DEAL/DRAW token rendering:** locked as option B (pre-segment at bank level). `postRevealCopy.primary` grows from string to parts array matching the FTUE override pattern at `TierGauge.tsx` L714-768. New render branch under L769 walks parts: strings go through Typewriter, stamp tokens render as inline DEAL/DRAW-style styled blocks. Typewriter itself unchanged.
+- **Q4 — Copy-drafting venue:** locked as split. Code work (pieces A, C, D, E, F in the `open-followups.md` bucket-2 section) happens in the Code session. Copy drafting (piece B — ~50 lines across 5 sub-banks) happens in a separate chat session.
+
 ### Win-tier panel multiplier legibility — LOCKED (folds with stamps build)
 
 - Currently the multiplier chain is buried in the +$X line
@@ -272,6 +289,7 @@ Process rules now live in `/Users/john/Desktop/ReplayMod/CLAUDE.md` at the repo 
 5. Confirm `pwd` and `git branch --show-current` at the start of every Claude Code session
 6. Process rules belong in CLAUDE.md; design state belongs in this doc
 7. (Added session 2, post-investigation) If investigation reveals the build prompt's architectural assumptions are wrong (e.g., wrong file path, wrong component location), STOP and surface — do not silently work around. This rule comes from the WinCelebration.tsx mismap finding.
+8. (Added 2026-05-23) Worktree state lives in `docs/worktree-registry.md`. See CLAUDE.md ritual item 5.
 
 ---
 
@@ -338,19 +356,17 @@ Process rules now live in `/Users/john/Desktop/ReplayMod/CLAUDE.md` at the repo 
 
 ---
 
-## Build sequence — revised session 2
+## Build sequence — revised 2026-05-23
 
-1. **Stamps build (panel + multiplier legibility + MISS rename)** — *in progress*. Dedicated worktree `feat-team-stamps` off main. Investigation complete; implementation plan approved; 8-edit implementation pending across 3 atomic commits (A: vocab rename; B: TeamStamp component update; C: panel wiring update).
+1. **S1 slot-split restoration (bucket 2)** — *active workstream, next code session*. Reverts WS2's TOP-slot collapse and rebuilds TOP-slot copy against the stricter S1 slot rules. Open questions resolved 2026-05-23 (see "Bucket 2 (S1 slot-split restoration) — LOCKED" above). Pieces A, C, D, E, F are code; piece B (~50 lines of bank copy) is a separate chat-drafting session.
 
 2. **MISS firing-rate analysis** — parallelizable with #1 (separate session). Code-driven data analysis on recent hand outcomes. Output is a recommended percentage for the MISS window. After analysis, lock the number in this doc.
 
 3. **MISS firing-condition reconciliation** — design call. Quick chat session. Resolves doc-vs-code contradiction on which tier promotions fire MISS.
 
-4. **S1 slot-split restoration** — code change. Revert WS2's TOP-slot collapse. Restore (or create new) hand-celebration source for TOP slot. Depends on #1 (stamp tokens need to exist before TOP can render them inline).
+4. **S1 bank rewrite (piece B of bucket 2)** — copy work. Draft TOP-slot hand-celebration banks with stamp tokens, BOTTOM-slot push-to-send banks. Depends on #1's bank shape being in place.
 
-5. **S1 bank rewrite** — copy work. Draft TOP-slot hand-celebration banks with stamp tokens, BOTTOM-slot push-to-send banks. Depends on #4.
-
-6. **WinCelebration.tsx cleanup** — investigation + decision in separate session: delete the dormant modal, repurpose, or document as intentionally retained.
+5. **WinCelebration.tsx cleanup** — investigation + decision in separate session: delete the dormant modal, repurpose, or document as intentionally retained.
 
 ---
 
@@ -498,11 +514,7 @@ Three files have uncommitted changes from a prior session, found during investig
 - Process rules expanded (7 total session-2 additions); two-doc split locked: CLAUDE.md for process, this doc for state
 - Stamps build implementation plan: 8 edits in 3 atomic commits (vocab rename, TeamStamp component update, panel wiring update)
 
-**Pending:**
-- Stamps build implementation (8 edits, 3 commits) in `feat-team-stamps` worktree
-- Verification checklist against this doc's LOCKED stamps section
-- Full `npm test` + manual smoke + push
-- CLAUDE.md was updated session 2 with new process-discipline section at top
+**Pending:** none. Stamps build shipped 2026-05-22 (`ce9c277`); session 2's pending items are all resolved. CLAUDE.md process-discipline section landed.
 
 **Process learnings (session 2):**
 - The design doc and the code can disagree, and the code wins by default unless someone checks. WS2 regression confirms this.

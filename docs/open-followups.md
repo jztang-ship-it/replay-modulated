@@ -2,6 +2,11 @@
 
 Living document. Each entry: short title, context, priority hint, suggested next action. Address in dedicated sessions, not bundled.
 
+## Resolved 2026-05-23 (this session)
+
+- Worktree drift audit — full inventory now lives in `docs/worktree-registry.md`. Four worktrees classified: `feat/basketball-perseason-layout` (active-parked, partial supersedence on main for headshot pipeline), `refactor/shared-card-face` (active-parked, no main equivalent), `fix/badge-label-match` (archive-candidate, work shipped via PR #98 + chunkReload), `worktree-feat+achievements-and-challenges` (mergeable but retained per existing rule).
+- May 18 culture-tier2 retry-run output safekept on achievements branch as commit `d810983`.
+
 ## User-visible bugs (highest priority)
 
 - **Hand-5 transition state UX** — clicking through win resolution transitions before user can read win tier + coins won. Animation/state-machine timing in `shared/views/GameView.tsx`. Spec: pause transition until user has read the result, or persist the data in a visible place post-transition.
@@ -33,10 +38,8 @@ Living document. Each entry: short title, context, priority hint, suggested next
 
 ## Methodology / housekeeping
 
-- Football culture tier 1 WIP stash (currently `stash@{0}`) — sitting since May, untouched throughout calibration. Evaluate or discard.
-- Worktree audit — 4 unrelated pre-existing worktrees noted during final state check. Enumerate and decide which still active.
-- **DO NOT DELETE `feat+achievements-and-challenges` worktree or branch** until challenge feature is fully shipped (all 3 buckets) AND verified working in production. Per 2026-05-22 diagnosis, branch is likely fully-merged-to-main (HEAD `34735d6` is an ancestor of main, all 20 "unpushed" commits reachable via the calibration arc), but worktree stays as safety net until live feature is confirmed good.
-- Session-state doc update discipline — after stamps lands, add a "Stamps — SHIPPED" pointer section. Treat as a per-workstream methodology rule.
+- Football culture tier 1 WIP stash (currently `stash@{0}` in `~/Desktop/ReplayMod-basketball`) — sitting since May, untouched throughout calibration. Evaluate or discard. Stash is also recorded in `docs/worktree-registry.md` under the `feat/basketball-perseason-layout` entry.
+- **DO NOT DELETE `feat+achievements-and-challenges` worktree or branch** until challenge feature is fully shipped (all 3 buckets) AND verified working in production. Per 2026-05-22 diagnosis, branch is likely fully-merged-to-main (HEAD `34735d6` is an ancestor of main, all 20 "unpushed" commits reachable via the calibration arc), but worktree stays as safety net until live feature is confirmed good. Today's safekeeping commit `d810983` advances the HEAD with the May 18 tier-2 culture-retry artifacts — also recorded in `docs/worktree-registry.md`.
 - Login / Google auth popup overlay conflict — user-reported, not diagnosed this session. Symptom needs detail. Could be z-index, modal-stacking, or auth-flow timing.
 
 ## Bucket 2 starting context — S1 slot-split restoration + bank rewrite
@@ -58,12 +61,14 @@ Scoped 2026-05-22, deferred to fresh session for execution. Bucket 1 (MISS firin
 | E | BOTTOM slot (`ChallengeSharePrompt`) | No change. Already pulls from `selectChallengeInitiation`, the correct BOTTOM-slot bank by design. | n/a |
 | F | DEAL/DRAW token visual sourcing | Design doc references "DEAL/DRAW token style" from FTUE as the inline stamp visual idiom. Need to locate existing DEAL/DRAW token code in FTUE for shape + styling reference before piece C is implementable. | FTUE source + design doc inspection |
 
-### Open questions to resolve before drafting code
+### Open questions — RESOLVED 2026-05-23
 
-1. Lock the bank shape — 10 lines per sub-bank, 4 sub-banks + 1 fallback (50 lines total) before drafting copy?
-2. First-share preempt — inside this workstream or deferred?
-3. DEAL/DRAW token rendering — extend the typewriter or segment the line?
-4. Draft the bank copy in the implementation session, or carve it into its own copy-only session?
+Resolved in a chat-Claude session today. Authoritative versions live in `docs/replaymod-design-decisions.md` under "Bucket 2 (S1 slot-split restoration) — LOCKED". Compact form here for quick reference:
+
+1. **Bank shape** — locked. `Line = Array<string | StampToken>`; 5 sub-banks (`TOP_BAD_BEAT` / `TOP_MISS` / `TOP_BIG_SCORE` / `TOP_RARE_PULL` / `TOP_DEFAULT`) × ~10 lines each. Selector `selectTopSlotFraming(args)` parallels `selectChallengeInitiation`; reuse `pickWithAntiRepeat`.
+2. **First-share preempt** — fold-in. First-share routes to BOTTOM only; TOP keeps trigger-aware celebration on that hand. L1326-1332 in `GameView.tsx` writes BOTTOM only.
+3. **DEAL/DRAW token rendering** — option B (pre-segment at bank level). Parts model matches FTUE override pattern at `TierGauge.tsx` L714-768; new render branch under L769 walks parts.
+4. **Copy-drafting venue** — split. Pieces A, C, D, E, F in code session; piece B (~50 lines across 5 sub-banks) in a separate chat session.
 
 ### Code site references
 
