@@ -144,9 +144,9 @@ import {
   chadChallengeTactical,
   chadNormalPlayWelcome,
   chadRivalryBackIntro,
-  selectChallengeInitiation,
-  firstShareInvitation,
+  selectTopSlotFraming,
 } from "@shared/commentary/chadChallenge";
+import type { TopSlotTrigger } from "@shared/commentary/chadChallenge";
 import { isRealName } from "@shared/utils/isRealName";
 import { useAuth } from "@shared/auth/useAuth";
 import { listMessages } from "@shared/inbox/inbox";
@@ -1301,69 +1301,48 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           return { primary: staticMap[winTier] ?? staticMap.STARTER, secondary: "" };
         })();
 
-    // First-share invitation override — early-discovery one-shot.
+    // First-share invitation — UNWIRED (bucket 2 piece D-min, 2026-05-24).
     //
-    // Gate: handCount >= 3 && !isFTUE && !challengeCtx (the latter is
-    // already guaranteed by the outer challengeCtx short-circuit at the
-    // top of this useMemo). The flag is identity-scoped via localStorage.
+    // Removed: TOP-slot preempt that wrote the firstShareInvitation()
+    // line into postRevealCopy.primary. Violated bucket 2 Q2 LOCKED
+    // ("First-share invitation routes to BOTTOM slot only; TOP retains
+    // trigger-aware celebration on that hand") — first-share copy is
+    // push-to-send, which the S1 slot split places in BOTTOM.
     //
-    // This block PREEMPTS the named-trigger override below — so a user
-    // whose first share-eligible reveal is also their first rare_pull
-    // sees the invitation copy once (this hand) and the anchor-aware
-    // rare_pull copy from there on. Per WS3 Part 3B design: invitation
-    // is treated as a challenge-ripe state regardless of the underlying
-    // trigger.
-    //
-    // Known property: handCount counts ALL completed reveals (solo +
-    // challenge replays), but this override only evaluates during solo
-    // reveals due to the outer !challengeCtx gate. Users whose hand
-    // count grows mostly via challenge replays see the invitation on
-    // their first solo reveal after handCount >= 3, or never if they
-    // never play solo.
-    const FIRST_SHARE_FLAG = "rm_usher_first_share_invitation";
-    let firstShareSeen = false;
-    try { firstShareSeen = localStorage.getItem(FIRST_SHARE_FLAG) === "1"; } catch { /* SSR */ }
-    if (!isFTUE && handCount >= 3 && !firstShareSeen) {
-      try { localStorage.setItem(FIRST_SHARE_FLAG, "1"); } catch { /* SSR */ }
-      const invitationLine = firstShareInvitation({ winTier });
-      const framed = { primary: invitationLine, secondary: baseCopy.secondary ?? "" };
-      postRevealCopyRef.current = framed as any;
-      return framed as any;
-    }
+    // TODO (deferred to a future session): wire firstShareInvitation()
+    // into BOTTOM (ChallengeSharePrompt) per Q2. Today the one-shot
+    // engagement gate is intentionally inactive — surfaced as an open
+    // followup in docs/open-followups.md ("First-share invitation
+    // BOTTOM-wiring — gated by Q2 LOCKED, deferred from bucket 2 piece
+    // D-min"). The localStorage flag (rm_usher_first_share_invitation)
+    // is left untouched so users who already saw the invitation
+    // pre-regression-fix aren't re-presented when the wire-up lands.
 
-    // Trigger-aware framing override (standalone play only — challenge
-    // recipients see ChallengeComparisonScreen with its own Chad lines).
-    // When a named trigger fires (rare_pull/big_score/miss/bad_beat),
-    // the post-reveal commentary slot delegates to selectChallengeInitiation
-    // — same banks the share prompt uses, so the reveal-screen line and the
-    // share-strip headline point at the same emotional frame. Internal
-    // bucket selector maps winTier+roster to bad_beat / flex / statement /
-    // default; rare_pull is signaled via starAchievementType (anchor-aware
-    // INITIATION_RARE_PULL bank with name / achievementLabel / anchorFp /
-    // fpDelta templated in).
+    // Trigger-aware TOP-slot framing override (standalone play only —
+    // challenge recipients see ChallengeComparisonScreen with its own
+    // Chad lines). When a named trigger fires
+    // (rare_pull/big_score/miss/bad_beat), the post-reveal TOP slot
+    // delegates to selectTopSlotFraming — TOP-slot hand-celebration
+    // copy with inline trigger stamps (DEAL/DRAW-style chips rendered
+    // mid-sentence). Returned `primary` is a Line (Array<string |
+    // StampToken>); TierGauge's render path walks parts, threading
+    // strings through Typewriter and rendering StampTokens as inline
+    // chips. Tier labels on miss/big_score stamps are resolved at
+    // render time from runtime context (winTier prop +
+    // challengeTrigger.nearMissNextTier via missTier prop) — see
+    // model-(b) note at StampToken type def in chadChallenge.ts.
     //
     // Default trigger is filtered out by the outer guard — those hands
     // keep the basketball.json baseline copy from selectCommentary (the
     // workstream-4 spice target).
+    //
+    // S1 slot split (bucket 2 LOCKED): TOP = hand + trigger event with
+    // inline stamps; BOTTOM (ChallengeSharePrompt, mounted separately)
+    // = push-to-send. Reversing WS2 (5f4ae5e) which had TOP also pulling
+    // selectChallengeInitiation — that bank now feeds BOTTOM only.
     if (!challengeCtx && challengeTrigger && challengeTrigger.trigger !== "default") {
-      // Resolve the anchor card (rare_pull only) so the bank can template
-      // {name}/{anchorFp}/{fpDelta}/{achievementLabel}. Same lookup pattern
-      // as ChallengeSharePrompt's rarePullHeadline useMemo.
-      const anchor = (challengeTrigger.anchorBasePlayerId
-        ? (rosterRef.current as any[]).find(c => c.basePlayerId === challengeTrigger.anchorBasePlayerId)
-        : null);
-      const anchorLast = anchor
-        ? (String(anchor.name ?? "").trim().split(/\s+/).pop() ?? anchor.name ?? "")
-        : null;
-      const framingLine = selectChallengeInitiation({
-        winTier,
-        roster: rosterRef.current as Array<{ tier?: string; wasHeld?: boolean }>,
-        topGameTier: challengeTrigger.topGameTier,
-        starName: anchorLast,
-        starHadMeaningfulPerformance: !!anchor,
-        starAchievementType: challengeTrigger.trigger === "rare_pull" ? challengeTrigger.topGameTier : null,
-        starAnchorFp: anchor?.actualFp ?? null,
-        starProjectedFp: anchor?.projectedFp ?? null,
+      const framingLine = selectTopSlotFraming({
+        trigger: challengeTrigger.trigger as TopSlotTrigger,
       });
       const framed = { primary: framingLine, secondary: baseCopy.secondary ?? "" };
       postRevealCopyRef.current = framed as any;
@@ -2503,6 +2482,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               regularFinalCardKick={regularFinalGaugeKick}
               onTierCross={undefined}
               postRevealCopy={postRevealCopy}
+              missTier={challengeTrigger?.nearMissNextTier ?? undefined}
               ftueTypewriter={isFTUE}
               stickyLastOverride={isFTUE && ftueReplayReady}
               commentaryOverride={(showCollect || showLeaderboard || showProfile) ? null : ftueCommentaryOverride}

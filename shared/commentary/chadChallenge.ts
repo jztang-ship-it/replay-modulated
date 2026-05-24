@@ -14,9 +14,36 @@
  * tonal constraints, and is sized to a different attention budget.
  */
 
+import type { WinTier } from "./types";
+
 function pick(arr: string[]): string {
   return arr[Math.floor(Math.random() * arr.length)] ?? arr[0];
 }
+
+// ── TOP-slot parts model — bucket 2 (S1 slot-split restoration) ──────────
+//
+// TOP slot lines mix prose with inline trigger stamps. Bank lines are
+// authored as an array of LinePart: strings flow through Typewriter at
+// render time, StampToken values render as inline DEAL/DRAW-style chips.
+//
+// Tier substitution model — option (b): the renderer (TierGauge) resolves
+// each StampToken's visible tier label at render time from runtime context
+// (winTier for big_score; nearMissNextTier passed as missTier prop for
+// miss). The bank line stays purely structural — no runtime values baked
+// in — so anti-repeat dedup via JSON.stringify keys on bank shape, not on
+// per-hand tier values. Bank authors never think about tier; they place
+// a `{ stamp: "miss" }` token and the renderer fills in the label.
+
+export type StampToken = {
+  stamp: "bad_beat" | "miss" | "big_score" | "rare_pull";
+  /** Optional tier override. Normally unset on bank lines — the renderer
+   *  resolves the tier label from runtime context (see model-(b) note
+   *  above). Present here as an escape hatch only. */
+  tier?: WinTier;
+};
+
+export type LinePart = string | StampToken;
+export type Line = LinePart[];
 
 // Buckets selected by signed delta = mySCore − targetScore:
 //   |delta| ≤ 1            → photo_finish
@@ -499,14 +526,21 @@ function selectInitiationBucket(args: ChallengeInitiationArgs): InitiationBucket
 const _recentChadLines: string[] = [];
 const _CHAD_RECENT_WINDOW = 8;
 
-function pickWithAntiRepeat(bank: string[]): string {
+/** Generic over T so the same ring buffer dedups string banks (BOTTOM-slot
+ *  initiation, resolution, trash-talk) and Line banks (TOP-slot framing,
+ *  bucket 2). Default keyFn = String preserves every existing string-bank
+ *  call site. For Line[] banks, callers pass JSON.stringify so the dedup
+ *  key reflects the structural bank line. Because tier substitution is
+ *  done at render time (model-(b)), JSON.stringify on a bank line is
+ *  stable across hands — the same authored line dedups consistently. */
+function pickWithAntiRepeat<T>(bank: T[], keyFn: (item: T) => string = String): T {
   // Filter out lines used in the last N picks. If all bank lines were
   // recent (small bank, long session), fall through to the full pool so
   // we don't pin on a single line forever.
-  const fresh = bank.filter(line => !_recentChadLines.includes(line));
+  const fresh = bank.filter(item => !_recentChadLines.includes(keyFn(item)));
   const pool = fresh.length > 0 ? fresh : bank;
   const pick = pool[Math.floor(Math.random() * pool.length)] ?? bank[0];
-  _recentChadLines.push(pick);
+  _recentChadLines.push(keyFn(pick));
   while (_recentChadLines.length > _CHAD_RECENT_WINDOW) _recentChadLines.shift();
   return pick;
 }
@@ -590,6 +624,102 @@ export function chadInitiationBank(bucket: InitiationBucket): string[] {
     case "statement": return [...INITIATION_STATEMENT];
     case "default":   return [...INITIATION_DEFAULT];
   }
+}
+
+// ── TOP-slot framing banks (bucket 2 — S1 slot-split restoration) ────────
+//
+// Hand-celebration copy for the TOP slot of the post-reveal screen when
+// a challenge surface is firing. Mirrors the trigger taxonomy of the
+// challenge-trigger system (bad_beat / miss / big_score / rare_pull +
+// default fallback). Each bank line is a Line (array of LinePart) so
+// inline trigger stamps can render as DEAL/DRAW-style chips mid-sentence.
+//
+// CRITICAL — slot semantics (S1 LOCKED rules):
+//   - TOP slot is about the user's HAND and the TRIGGER EVENT that made
+//     it shareable. Never references the friend or the send action.
+//   - BOTTOM slot (selectChallengeInitiation, separate file region above)
+//     owns push-to-send copy.
+//
+// Tier substitution: bank lines carry bare `{ stamp: "..." }` tokens.
+// The renderer (TierGauge) resolves the visible tier label at render
+// time from runtime context (model-(b), see StampToken type above).
+//
+// PLACEHOLDER COPY — piece B of bucket 2. Real copy drafting is a
+// separate chat-Claude session (Q4 split per design-decisions LOCKED).
+// These placeholders are wiring-only: enough lines per bank to exercise
+// the parts-array rendering path end-to-end. Do not interpret as
+// reference voice for the bank rewrite session.
+
+const TOP_BAD_BEAT: Line[] = [
+  ["TOP_BAD_BEAT placeholder 1 — ", { stamp: "bad_beat" }, " — held the names, missed the production."],
+  ["Stars on paper, role players on the floor. ", { stamp: "bad_beat" }, ", placeholder 2."],
+  ["TOP_BAD_BEAT placeholder 3. The build was right. ", { stamp: "bad_beat" }, "."],
+  [{ stamp: "bad_beat" }, " — TOP_BAD_BEAT placeholder 4, leading stamp."],
+];
+
+const TOP_MISS: Line[] = [
+  ["TOP_MISS placeholder 1 — ", { stamp: "miss" }, " by a possession."],
+  ["Right there. ", { stamp: "miss" }, ", placeholder 2."],
+  ["TOP_MISS placeholder 3. One redraw and it flips. ", { stamp: "miss" }, "."],
+  [{ stamp: "miss" }, " — TOP_MISS placeholder 4, leading stamp."],
+];
+
+const TOP_BIG_SCORE: Line[] = [
+  ["TOP_BIG_SCORE placeholder 1 — ", { stamp: "big_score" }, " hand. Clean execution."],
+  ["That's the ceiling. ", { stamp: "big_score" }, ", placeholder 2."],
+  ["TOP_BIG_SCORE placeholder 3. Trophy night. ", { stamp: "big_score" }, "."],
+  [{ stamp: "big_score" }, " — TOP_BIG_SCORE placeholder 4, leading stamp."],
+];
+
+const TOP_RARE_PULL: Line[] = [
+  ["TOP_RARE_PULL placeholder 1 — ", { stamp: "rare_pull" }, ". The card hit on its biggest day."],
+  ["Anchor cooked. ", { stamp: "rare_pull" }, ", placeholder 2."],
+  ["TOP_RARE_PULL placeholder 3. Vintage line. ", { stamp: "rare_pull" }, "."],
+  [{ stamp: "rare_pull" }, " — TOP_RARE_PULL placeholder 4, leading stamp."],
+];
+
+// Defensive fallback. Today's GameView trigger-override gate
+// (challengeTrigger.trigger !== "default") prevents this bank from
+// firing through the normal path — included so selectTopSlotFraming is
+// total over the trigger union.
+const TOP_DEFAULT: Line[] = [
+  ["TOP_DEFAULT placeholder 1. Played the hand."],
+  ["TOP_DEFAULT placeholder 2. The slate gave you a line."],
+  ["TOP_DEFAULT placeholder 3. Solid hand on the books."],
+];
+
+export type TopSlotTrigger = "bad_beat" | "miss" | "big_score" | "rare_pull" | "default";
+
+export interface TopSlotFramingArgs {
+  /** The fired trigger from the challenge-trigger evaluator. */
+  trigger: TopSlotTrigger;
+}
+
+/** Pick a hand-celebration line for the TOP slot of the post-reveal
+ *  screen. Returns a Line (parts array) — strings render through
+ *  Typewriter at the call-site, StampToken parts render as inline
+ *  DEAL/DRAW-style chips. Tier labels on miss / big_score stamps are
+ *  resolved by the renderer from runtime context (model-(b)); the bank
+ *  carries no tier values. JSON.stringify-based dedup keys on the raw
+ *  bank line — stable across tiers and across hands. */
+export function selectTopSlotFraming(args: TopSlotFramingArgs): Line {
+  const bank = topSlotBankFor(args.trigger);
+  return pickWithAntiRepeat(bank, line => JSON.stringify(line));
+}
+
+function topSlotBankFor(trigger: TopSlotTrigger): Line[] {
+  switch (trigger) {
+    case "bad_beat":  return TOP_BAD_BEAT;
+    case "miss":      return TOP_MISS;
+    case "big_score": return TOP_BIG_SCORE;
+    case "rare_pull": return TOP_RARE_PULL;
+    case "default":   return TOP_DEFAULT;
+  }
+}
+
+/** Expose bank arrays for testing / preview. */
+export function topSlotFramingBank(trigger: TopSlotTrigger): Line[] {
+  return topSlotBankFor(trigger).map(line => [...line]);
 }
 
 // ── Challenge resolution — Chad's verdict to the recipient ────────────────

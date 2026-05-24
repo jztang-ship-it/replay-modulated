@@ -2,6 +2,12 @@
 
 Living document. Each entry: short title, context, priority hint, suggested next action. Address in dedicated sessions, not bundled.
 
+## Open from 2026-05-24 (this session)
+
+- **First-share invitation BOTTOM-wiring** — gated by Q2 LOCKED, deferred from bucket 2 piece D-min. Today first-share is unwired post-regression-fix; future session decides ChallengeSharePrompt prop boundary + trigger/first-share precedence. Site: `shared/views/GameView.tsx` ~L1304 (TODO comment in place; `firstShareInvitation` no longer imported there; `localStorage` flag `rm_usher_first_share_invitation` intentionally untouched so users who already saw the pre-fix invitation aren't re-presented when the wire-up lands).
+- **Bucket 2 piece B copy drafting** — TOP-slot sub-banks (`TOP_BAD_BEAT` / `TOP_MISS` / `TOP_BIG_SCORE` / `TOP_RARE_PULL` / `TOP_DEFAULT` in `shared/commentary/chadChallenge.ts`) are populated with PLACEHOLDER lines so the parts-array wiring is smoke-testable end-to-end. Real copy lands in a chat-Claude session per Q4 LOCKED split. Wiring includes `selectTopSlotFraming` + inline DEAL/DRAW-style stamp render in `TierGauge.tsx` + GameView trigger override at ~L1330.
+- **Big-score inline stamp tier prefix** — `TierGauge` resolves big_score stamps' tier label from its `winTier` prop, but GameView's TierGauge mount passes `winTier={undefined}` (existing animation-semantics decision). Today big_score chips render as bare "BIG SCORE" without prefix. If the real-copy session wants tier-prefixed big_score chips (e.g. "ALL STAR BIG SCORE"), thread the resolved hand winTier into TierGauge through a new prop (don't repurpose existing `winTier` — it gates animation behavior). Comment captured at `TierGauge.tsx` missTier prop docstring.
+
 ## Resolved 2026-05-23 (this session)
 
 - Worktree drift audit — full inventory now lives in `docs/worktree-registry.md`. Four worktrees classified: `feat/basketball-perseason-layout` (active-parked, partial supersedence on main for headshot pipeline), `refactor/shared-card-face` (active-parked, no main equivalent), `fix/badge-label-match` (archive-candidate, work shipped via PR #98 + chunkReload), `worktree-feat+achievements-and-challenges` (mergeable but retained per existing rule).

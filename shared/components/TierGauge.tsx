@@ -32,6 +32,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import type { Line, LinePart, StampToken } from "@shared/commentary/chadChallenge";
 
 export type GaugeTier = "LEGEND" | "MVP" | "ALL_STAR" | "STARTER" | "ROOKIE" | "BUST" | "NONE";
 export interface TierThreshold { tier: GaugeTier; minFP: number; }
@@ -59,8 +60,28 @@ interface TierGaugeProps {
   isAnchorReveal?: boolean;
   /** Called when the animated gauge bar crosses a tier boundary — used for tier name flip */
   onTierCross?: (tier: string) => void;
-  /** Smart post-reveal copy — replaces gap callout after results settle */
-  postRevealCopy?: { primary: string; secondary?: string } | null;
+  /** Smart post-reveal copy — replaces gap callout after results settle.
+   *  `primary` may be a plain string (legacy/baseline path) or a Line
+   *  (parts array: strings + inline StampToken chips) when a TOP-slot
+   *  trigger framing fires (bucket 2 S1 slot-split). The renderer below
+   *  walks parts when given a Line. */
+  postRevealCopy?: { primary: string | Line; secondary?: string } | null;
+  /** Tier label for inline StampToken renders of stamp="miss". Sourced
+   *  by GameView from challengeTrigger.nearMissNextTier. Mirrors
+   *  TeamStamp's missTier prop — same source-of-truth pattern for both
+   *  panel and inline stamps (bucket 2 model-(b) tier substitution).
+   *  When absent on a miss-stamp render, the chip falls back to bare
+   *  "MISS" with no tier prefix.
+   *
+   *  Note on stamp="big_score": the renderer uses winTier (this
+   *  component's existing prop) for the tier prefix. Today GameView
+   *  passes winTier={undefined} to this component, so big_score chips
+   *  render as bare "BIG SCORE" without prefix. That's acceptable for
+   *  placeholder copy; a real-copy session that wants tier-prefixed
+   *  big_score chips will need to thread the resolved hand winTier in
+   *  through a separate prop (existing winTier carries animation
+   *  semantics — best not to repurpose it). */
+  missTier?: string;
   /** FTUE: use typewriter reveal for commentary text */
   ftueTypewriter?: boolean;
   /** When true, the last commentary override part stays visible (no dismiss, no "TAP TO CONTINUE") */
@@ -287,12 +308,15 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
   document.head.appendChild(st);
 }
 
-function Typewriter({ text, style, onDone, msPerChar = 25, rush = false, start = true }: {
+function Typewriter({ text, style, onDone, msPerChar = 25, rush = false, start = true, inline = false }: {
   text: string; style: React.CSSProperties; onDone?: () => void; msPerChar?: number; rush?: boolean;
   /** When false, the typewriter pauses at charCount=0 until flipped true.
    *  Used to chain a secondary line behind the primary so they don't both
    *  type out simultaneously. */
   start?: boolean;
+  /** Render as <span> instead of <div>. Used by the parts-walker so
+   *  string segments and inline stamp chips share one wrapping row. */
+  inline?: boolean;
 }) {
   const [charCount, setCharCount] = useState(0);
   const doneRef = useRef(false);
@@ -311,8 +335,181 @@ function Typewriter({ text, style, onDone, msPerChar = 25, rush = false, start =
   useEffect(() => { setCharCount(0); doneRef.current = false; }, [text]);
   // <div> (block) so primary + secondary always stack top-to-bottom regardless
   // of parent layout. <span> (inline) was sometimes letting a short secondary
-  // line wrap onto the primary's last row.
+  // line wrap onto the primary's last row. `inline` mode opts into <span>
+  // for the parts-walker, where multiple segments share one row.
+  if (inline) return <span style={style}>{text.slice(0, charCount)}</span>;
   return <div style={style}>{text.slice(0, charCount)}</div>;
+}
+
+// ── Inline trigger stamps (bucket 2 — S1 slot-split restoration) ─────────
+//
+// Visual idiom adapted from FTUE DEAL/DRAW chips in CoachLayer.tsx
+// (inline-block, fontWeight 900, fontSize 11, letterSpacing .10em,
+// uppercase, lineHeight 1.2, vertical-align middle). Per-trigger color
+// palette mirrors the win-tier panel TeamStamp so inline + panel stamps
+// read as one visual family. Slant / thud animation are panel-only; the
+// inline form is flat by spec.
+
+const INLINE_STAMP_STYLE_ID = "tg-inline-stamp-styles-v1";
+if (typeof document !== "undefined" && !document.getElementById(INLINE_STAMP_STYLE_ID)) {
+  const st = document.createElement("style");
+  st.id = INLINE_STAMP_STYLE_ID;
+  st.textContent = `
+    .tg-inline-stamp {
+      display: inline-block; vertical-align: middle;
+      padding: 1px 6px; border-radius: 4px;
+      font-weight: 900; font-size: 11px; letter-spacing: .10em;
+      text-transform: uppercase; line-height: 1.2;
+      white-space: nowrap;
+      font-family: 'Rajdhani','Oswald','Arial Narrow',sans-serif;
+      margin: 0 2px;
+      animation: tgInlineStampPop 220ms cubic-bezier(0.22, 1.4, 0.36, 1) both;
+    }
+    .tg-inline-stamp-bad-beat {
+      background: linear-gradient(135deg, #ef4444 0%, #b91c1c 60%, #7f1d1d 100%);
+      color: #fff5f5;
+    }
+    .tg-inline-stamp-miss {
+      background: linear-gradient(135deg, #fde68a 0%, #f59e0b 55%, #b45309 100%);
+      color: #3a2000;
+    }
+    .tg-inline-stamp-big-score {
+      background: #3AA0FF;
+      color: #000;
+    }
+    .tg-inline-stamp-rare-pull {
+      background: linear-gradient(135deg, #7FFF00 0%, #5BBE00 100%);
+      color: #070A12;
+    }
+    @keyframes tgInlineStampPop {
+      0%   { transform: scale(0.4); opacity: 0; }
+      60%  { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(1);    opacity: 1; }
+    }
+  `;
+  document.head.appendChild(st);
+}
+
+const INLINE_STAMP_KIND_CLASS: Record<StampToken["stamp"], string> = {
+  bad_beat:  "tg-inline-stamp-bad-beat",
+  miss:      "tg-inline-stamp-miss",
+  big_score: "tg-inline-stamp-big-score",
+  rare_pull: "tg-inline-stamp-rare-pull",
+};
+
+const INLINE_STAMP_BASE_LABEL: Record<StampToken["stamp"], string> = {
+  bad_beat:  "BAD BEAT",
+  miss:      "MISS",
+  big_score: "BIG SCORE",
+  rare_pull: "RARE PULL",
+};
+
+function formatTier(raw: string | undefined): string {
+  if (!raw) return "";
+  return raw.replace(/_/g, " ").trim().toUpperCase();
+}
+
+/** Resolve the visible label for a StampToken from runtime context
+ *  (model-(b) tier substitution — see StampToken type def in
+ *  chadChallenge.ts). The token itself carries no tier; this function
+ *  looks up the tier from winTier (big_score) or missTier (miss) and
+ *  formats the label accordingly. Token's `tier` field is an escape
+ *  hatch — when set, it overrides the context lookup. */
+function stampLabel(token: StampToken, winTier: string | undefined, missTier: string | undefined): string {
+  const explicit = token.tier ? formatTier(token.tier) : "";
+  if (token.stamp === "miss") {
+    const prefix = explicit || formatTier(missTier);
+    return prefix ? `${prefix} MISS` : "MISS";
+  }
+  if (token.stamp === "big_score") {
+    const prefix = explicit || formatTier(winTier);
+    return prefix ? `${prefix} BIG SCORE` : "BIG SCORE";
+  }
+  return INLINE_STAMP_BASE_LABEL[token.stamp];
+}
+
+function InlineStampChip({ token, winTier, missTier }: {
+  token: StampToken; winTier?: string; missTier?: string;
+}) {
+  return (
+    <span className={`tg-inline-stamp ${INLINE_STAMP_KIND_CLASS[token.stamp]}`}>
+      {stampLabel(token, winTier, missTier)}
+    </span>
+  );
+}
+
+/** Render a Line (parts array) as one inline-wrapping row. String parts
+ *  flow through Typewriter (inline=true) and chain via revealedIdx;
+ *  StampToken parts pop in as inline chips as soon as the preceding
+ *  string finishes (or immediately if they lead the line). Fires onDone
+ *  once the last part is revealed. Click-to-rush is handled by the
+ *  parent wrapper toggling `rush`. */
+function PartsLine({ parts, rush, winTier, missTier, style, onDone }: {
+  parts: Line;
+  rush: boolean;
+  winTier?: string;
+  missTier?: string;
+  style: React.CSSProperties;
+  onDone?: () => void;
+}) {
+  const [revealedIdx, setRevealedIdx] = useState(0);
+
+  // Auto-advance past stamp tokens — they pop instantly, no typing wait.
+  useEffect(() => {
+    if (revealedIdx >= parts.length) return;
+    const part = parts[revealedIdx];
+    if (typeof part !== "string") {
+      setRevealedIdx(i => i + 1);
+    }
+  }, [revealedIdx, parts]);
+
+  // Rush: snap everything visible.
+  useEffect(() => {
+    if (rush && revealedIdx < parts.length) setRevealedIdx(parts.length);
+  }, [rush, parts.length, revealedIdx]);
+
+  // Fire onDone once when the line is fully revealed.
+  const doneRef = useRef(false);
+  useEffect(() => {
+    if (revealedIdx >= parts.length && !doneRef.current) {
+      doneRef.current = true;
+      onDone?.();
+    }
+  }, [revealedIdx, parts.length, onDone]);
+
+  // Reset on parts identity change (new hand → new bank pick).
+  useEffect(() => { setRevealedIdx(0); doneRef.current = false; }, [parts]);
+
+  return (
+    <div style={style}>
+      {parts.map((part: LinePart, i: number) => {
+        const fullyVisible = i < revealedIdx;
+        const isActiveString = i === revealedIdx && typeof part === "string";
+        if (typeof part === "string") {
+          if (fullyVisible) return <span key={i}>{part}</span>;
+          if (isActiveString) {
+            return (
+              <Typewriter
+                key={i}
+                inline
+                text={part}
+                rush={rush}
+                style={{ display: "inline" }}
+                msPerChar={18}
+                onDone={() => setRevealedIdx(idx => Math.max(idx, i + 1))}
+              />
+            );
+          }
+          return null; // hidden — not yet reached
+        }
+        // stamp token
+        if (fullyVisible) {
+          return <InlineStampChip key={i} token={part} winTier={winTier} missTier={missTier} />;
+        }
+        return null;
+      })}
+    </div>
+  );
 }
 
 export function TierGauge({
@@ -328,6 +525,7 @@ export function TierGauge({
   isAnchorReveal = false,
   onTierCross,
   postRevealCopy,
+  missTier,
   ftueTypewriter = false,
   stickyLastOverride = false,
   onCommentaryDone,
@@ -771,17 +969,32 @@ export function TierGauge({
               onClick={() => { if (!commentaryRushed) setCommentaryRushed(true); }}
               style={{ padding: "4px 0 2px", display: "flex", flexDirection: "column", alignItems: "stretch", gap: 2, maxWidth: "100%", height: "100%", cursor: "pointer" }}
             >
-              <Typewriter
-                text={postRevealCopy.primary}
-                rush={commentaryRushed}
-                style={{
-                  fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.92)",
-                  fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
-                  textAlign: "left", maxWidth: "100%",
-                }}
-                msPerChar={18}
-                onDone={() => setPrimaryDone(true)}
-              />
+              {Array.isArray(postRevealCopy.primary) ? (
+                <PartsLine
+                  parts={postRevealCopy.primary}
+                  rush={commentaryRushed}
+                  winTier={winTierProp}
+                  missTier={missTier}
+                  style={{
+                    fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.92)",
+                    fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
+                    textAlign: "left", maxWidth: "100%",
+                  }}
+                  onDone={() => setPrimaryDone(true)}
+                />
+              ) : (
+                <Typewriter
+                  text={postRevealCopy.primary}
+                  rush={commentaryRushed}
+                  style={{
+                    fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.92)",
+                    fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.5,
+                    textAlign: "left", maxWidth: "100%",
+                  }}
+                  msPerChar={18}
+                  onDone={() => setPrimaryDone(true)}
+                />
+              )}
               {postRevealCopy.secondary && (
                 <Typewriter
                   text={postRevealCopy.secondary}
