@@ -19,6 +19,11 @@ export class SportAdapter {
 
   get excludeFromFlex(): string[] { return this.config.excludeFromFlex ?? []; }
 
+  /** Whether the sport enforces positional roster slots. Default true for
+   *  backward compat — sports that don't set the flag continue with the
+   *  position-aware deal logic. Basketball overrides to false. */
+  get positionAware(): boolean { return this.config.positionAware !== false; }
+
   get rosterSlots(): readonly string[] {
     const explicit = this.config.rosterSlots;
     if (explicit && explicit.length) return explicit;

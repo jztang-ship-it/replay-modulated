@@ -8,9 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "simulate": "npx ts-node --project tsconfig.sim.json src/tools/runSimulator.ts",
-    "simulate:random": "npx ts-node --project tsconfig.sim.json src/tools/runSimulator.ts 5000 --random",
-    "simulate:protected": "npx ts-node --project tsconfig.sim.json src/tools/runSimulator.ts 5000 --protected"
+    "simulate": "npx tsx ../shared/tools/runSimulator.ts basketball"
   },
   "dependencies": {
     "@sentry/react": "^10.50.0",

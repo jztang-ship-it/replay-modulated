@@ -2,6 +2,110 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+
+## Process discipline (READ BEFORE ANY CODE WORK)
+
+**This section is non-negotiable and overrides any general-purpose workflow assumptions, including those introduced by third-party Claude Code frameworks (SuperClaude personas, slash-command workflows, etc.). When a framework's default behavior conflicts with the rules below, these rules win.**
+
+### The two source-of-truth docs
+
+- **This file (`CLAUDE.md`)** — process rules, vocabulary, session rituals. Stable across features. Auto-loaded by Claude Code at session start.
+- **`docs/replaymod-design-decisions.md`** — feature design state. What's locked, what's pending, what shipped. Updated mid-session whenever a decision is locked; consolidated at session end. **Read this in full before doing any feature work.** It contains LOCKED decisions that must not be re-litigated, OPEN questions that need resolution before related code, and the current build sequence.
+
+If a feature is mentioned in conversation but not described in `docs/replaymod-design-decisions.md`, the design is not yet locked. Surface the gap; do not invent the design.
+
+### Session-start ritual (run before any work)
+
+Every Claude Code session starts with these five checks. Report each result before proceeding to the user's task.
+
+1. **`pwd`** — confirm working directory. Stamps work must run in `.claude/worktrees/feat-team-stamps`. Main work in `/Users/john/Desktop/ReplayMod/basketball/`. The `feat+achievements-and-challenges` worktree is unrelated and must not be touched for non-achievements work.
+2. **`git branch --show-current`** — confirm branch matches the feature. If the worktree and branch don't match expectations, stop and surface the mismatch.
+3. **`git log origin/main..main --oneline`** — confirm local-vs-remote state. **Do not trust the design doc's "current state" section over what git actually says.** The doc can drift; git can't.
+4. **`git status`** — confirm working tree state. Uncommitted changes from a previous session should be surfaced, not silently inherited.
+5. **Cross-worktree scan via registry** — `docs/worktree-registry.md` is the single source of truth for worktree state. At session start, run `git worktree list` and compare to the registry:
+   - **New worktree not in registry?** Add an entry before proceeding with the user's task. Don't operate on undocumented worktrees.
+   - **Worktree in registry?** If its `last reviewed` date is more than 7 days old OR you're about to do anything destructive (merge, branch delete, worktree remove, force-push), refresh its entry: re-run `git status --short`, `git log main..<branch> --oneline | wc -l`, `git stash list`, and update the entry. Watch especially for divergence in `docs/` and `CLAUDE.md` — parallel evolution across worktrees is the highest-frequency source of mid-merge surprise.
+   - **About to delete a branch or worktree?** Read the entry's "What it carries" and "Equivalence on main" sections. If equivalence is unverified, verify before deletion. SHA divergence is not the same as work divergence — a branch with N unique commits can still have zero unique work if those commits were re-landed on main via PR-squash or cherry-pick. The registry's "archive-candidate" vs "active-parked" distinction is exactly this check.
+   - **Uncommitted files in a parked worktree?** They are at risk. The registry should already list them under "Uncommitted state." If you find untracked files not in the registry, that's drift — investigate origin before any clean operation.
+
+   *(Lesson sources: 2026-05-22 design-decisions parallel evolution discovered mid-merge; 2026-05-23 four worktrees mis-categorized as "dormant" before content was read, including one with 23 unique commits + a stash, another with 2 unique commits of a never-landed CardFace refactor.)*
+
+If any of these surface something unexpected, stop and report. Do not proceed with the user's task until state is reconciled.
+
+### Investigation-first rule
+
+Before any wiring, refactor, or feature work:
+
+1. Diagnose. Read the relevant files. Map current behavior.
+2. Surface findings as a written report — file paths, line numbers, git commit hashes where relevant.
+3. Get direction confirmation from the user.
+4. *Then* write code.
+
+This applies even when the task seems small. The WS2 regression (commit `5f4ae5e`, May 19 2026) happened because a "small wiring change" replaced an entire content source without anyone noticing the slot-content implication. Investigation-first would have caught it.
+
+### Scope is strict
+
+- Do what was asked. Do not auto-extend.
+- No "while I'm in here" fixes. Surface them as candidates for the next session; never silently add them to the current commit.
+- If during investigation you find a regression, bug, or design violation outside the current scope: surface it, do not fix it as part of this work.
+
+### Verification checklist at completion
+
+Every build prompt must end with a verification checklist drawn from the relevant LOCKED section of `docs/replaymod-design-decisions.md`. Before considering the work done, walk the checklist item-by-item and report pass/fail for each.
+
+If the user's prompt does not include a checklist, ask for one before completing the work. Do not assume you can verify against the spec without an explicit checklist — the spec lives in the design doc, but mapping spec to verification is per-build.
+
+### Doc-before-code
+
+A design decision is "locked" only when written into `docs/replaymod-design-decisions.md`. Discussing it in chat or in a Code session and saying "yes" is not enough — chat history does not load into future Code contexts. If a decision is reached during a session and there's no corresponding doc edit, the decision is at risk of being lost.
+
+When a decision is reached but not yet in the doc: pause implementation work, surface the gap to the user, and either request a doc update or write the decision into a clearly-marked "Pending doc update — session X" section at the top of the design doc. **Never proceed to implementation on a doc-less decision.**
+
+### Pre-merge verification
+
+- Full `npm test` from the repo root before any push. Never scoped vitest (`npx vitest run <path>`) as a substitute.
+- Manual smoke test against the relevant smoke checklist in `docs/replaymod-design-decisions.md` before push.
+- If `npm test` fails on something unrelated to the current work, stop and surface — do not push around it.
+
+### End-of-session ritual
+
+Before considering a session complete:
+
+1. Report a deliberate doc diff: every locked decision added, every pending item resolved, every vocabulary change. Surface this to the user as a list, not buried in prose.
+2. Confirm the design doc reflects current reality. If it doesn't, update it now, not "next session."
+3. Confirm what's pushed vs what's local. If something is intentionally push-held, name it explicitly.
+
+### Vocabulary (use these exactly)
+
+- **Edit** — file changed in working directory, not in git
+- **Commit** — local snapshot, not pushed
+- **Push** / **shipped** — uploaded to origin, visible to production (deployment pipeline permitting)
+- **Applied** — file changed on disk, not necessarily committed
+- **Push held** — commits exist locally, deliberately not pushed (must be explicitly stated; not the default)
+- **Stamps** — `BAD BEAT`, `[TIER] MISS`, `CAREER HI`, `RECORD`, `SEASON HI`. Not synonymous with badges (the 19 stat markers) or tiers (BUST/ROOKIE/STARTER/ALL STAR/MVP/LEGEND).
+- **MISS** (formerly `NEAR MISS`) — locked vocabulary change. Tier-prefixed in stamp form: `STARTER MISS`, `ALL STAR MISS`, etc.
+- Slate is the day's player pool; not a synonym for roster swap.
+
+When current code uses old vocabulary (e.g. `near_miss` in trigger names), rename as part of the relevant feature work — do not perpetuate drift.
+
+### Worktree discipline
+
+This repo uses multiple worktrees under `.claude/worktrees/`:
+
+- `feat+achievements-and-challenges` — unrelated to main work. Do not touch for non-achievements tasks.
+- `feat-team-stamps` (or similar feature-named worktrees) — dedicated per-feature build environments.
+
+Confirm worktree at session start (step 1 of the session-start ritual). Cross-worktree confusion has caused real regressions; the dedicated-worktree-per-feature pattern is how we avoid it.
+
+### Third-party framework note (SuperClaude, etc.)
+
+SuperClaude and similar frameworks add slash commands (`/sc:*`), specialized agents, and behavioral injection at session start. They are useful for exploration, brainstorming, and research tasks. They are **not** authoritative on this project's process. When a SuperClaude default workflow and the rules in this document disagree, this document wins.
+
+In particular: do not let `/sc:analyze`, `/sc:brainstorm`, agent personas, or framework "modes" bypass the investigation-first rule, the doc-before-code rule, or the verification checklist requirement.
+
+---
+
 ## Repository shape
 
 A multi-app monorepo deployed as a single Vercel project:
@@ -177,3 +281,23 @@ Eventually we want all of these. Today only the first one is enforced by tooling
 | Daily-bonus eligible player list | `adapter.buildBonusPool()` | Different player set |
 | Audio bed sound | `adapter.soundPack` (registered) | Different audio asset; no asset → silence |
 | Win tier slam animation | `shared/views/GameView.tsx` (target) | Identical animation, different threshold values
+
+## Sport design rules
+
+### Positional requirements rule
+
+A sport has positional roster slots if and only if its positions accumulate different stats (e.g. goalkeeper saves, pitcher pitch counts). Basketball does NOT have positional slots — all players accumulate the same stat categories (pts/reb/ast/stl/blk/etc.). Football, baseball, and soccer DO have positional slots because of position-unique stats. When implementing or modifying deal-generation, stat-tracking, or roster logic, do not introduce positional structure to basketball even if shared code suggests it. Basketball's deal is N undifferentiated cards under cap, period.
+
+## Communication Mode
+
+Default to concise implementation-focused responses:
+- minimal filler
+- short execution-oriented answers
+- concise bullets/checklists
+- no long summaries unless requested
+
+Do NOT reduce reasoning quality for product/design discussions.
+
+## Session bootstrap for reasoning Claudes
+
+Chat-based reasoning sessions (chat.claude.ai) lack filesystem access by default but can process zip uploads. At the start of a new reasoning-Claude session about this project, run `npm run digest` (or `node scripts/buildDigest.mjs`) to produce a project digest zip. Upload that single file to the reasoning session. Refresh the digest when the branch state changes during the conversation. The digest is gitignored.

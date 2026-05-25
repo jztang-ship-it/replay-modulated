@@ -109,8 +109,15 @@ for (const row of rs.rowSet) {
     "PG": "PG", "SG": "SG", "SF": "SF", "PF": "PF", "C": "C",
     "G": "PG",   // pure guard → PG fallback (rare)
     "F": "SF",   // pure forward → SF fallback
-    "G-F": "SG", "F-G": "SG",
-    "F-C": "PF", "C-F": "PF",
+    // Hyphenated positions: primary letter wins.
+    // NBA convention is "primary-secondary"; pre-2026-05-22 map collapsed
+    // both sides to the secondary, mis-categorizing 195 players across all
+    // seasons (e.g. Embiid C-F → PF, Pippen G-F → SG). Acknowledged residual
+    // errors for ~5 high-salience players where canonical position contradicts
+    // NBA hyphenation tracked in docs/open-followups.md as a path-2 override-map
+    // followup.
+    "G-F": "SF", "F-G": "SG",
+    "F-C": "PF", "C-F": "C",
   };
   const position = POS_MAP[rawPos] ?? "SF";
   const positionFull = rawPos;

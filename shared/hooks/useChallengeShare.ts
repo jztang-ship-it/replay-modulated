@@ -123,9 +123,18 @@ export function useChallengeShare(sportKey: string) {
     track("challenges", "share_action_taken", { sport: sportKey, url });
     try {
       if (navigator.share) {
+        // Mobile: title goes to the share-sheet preview, text becomes
+        // the message body, url gets its own link/preview slot. Three
+        // separate fields; the OS handles composition.
         await navigator.share({ title, text: title, url });
       } else {
-        await navigator.clipboard.writeText(url);
+        // Desktop clipboard fallback: combine text + URL so paste into
+        // iMessage / Slack / Twitter delivers BOTH the trash-talk line
+        // and the link. Previously wrote URL only — recipient pasted
+        // a bare link with no context. Blank line between so messaging
+        // apps render text-then-preview-card cleanly.
+        const clipboardPayload = title ? `${title}\n\n${url}` : url;
+        await navigator.clipboard.writeText(clipboardPayload);
         // Caller should show a "Link copied!" toast
       }
     } catch { /* user cancelled share */ }

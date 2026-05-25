@@ -4,9 +4,11 @@ import type { GeneratedCard } from "@shared/types/index";
 import type { WinTierMap } from "@shared/utils/payoutLogic";
 import type { TriggerResult } from "@shared/utils/triggerEvaluation";
 import { useChallengeShare } from "@shared/hooks/useChallengeShare";
-import { getNickname } from "@shared/utils/playerIdentity";
+import { getNickname, setNickname } from "@shared/utils/playerIdentity";
+import { isRealName } from "@shared/utils/isRealName";
 import { track } from "@shared/analytics/analytics";
 import { selectChallengeInitiation } from "@shared/commentary/chadChallenge";
+import { NameCaptureModal, type NameCaptureMode } from "@shared/components/NameCaptureModal";
 
 interface Props {
   sport: string;
@@ -81,7 +83,36 @@ export function ChallengeSharePrompt({
 
   const headlineText = rarePullHeadline ?? triggerResult.headline;
 
-  async function handleChallenge() {
+  // ── Name capture (Workstream 3 Part 3A) ──────────────────────────────
+  // Gate the share on a name-confirmation step:
+  //   - no stored real name → FRESH modal ("Who's challenging?")
+  //   - stored real name    → CONFIRM modal ("That's you, right? {name}")
+  //   - user cancels        → proceed with current localStorage state
+  //                           (anonymous if auto-mint placeholder, named
+  //                           if they had a real name and just dismissed)
+  // The modal never blocks the send — every exit path leads to the
+  // share continuing.
+  const [nameModalOpen, setNameModalOpen] = useState(false);
+  const [nameModalMode, setNameModalMode] = useState<NameCaptureMode>("fresh");
+  const [storedName, setStoredName] = useState<string | null>(null);
+
+  function onCtaTap() {
+    const stored = getNickname();
+    if (isRealName(stored)) {
+      setStoredName(stored);
+      setNameModalMode("confirm");
+    } else {
+      setStoredName(null);
+      setNameModalMode("fresh");
+    }
+    setNameModalOpen(true);
+  }
+
+  // Continuation after the modal closes — fires the existing share path.
+  // Pulled out of the original handleChallenge so both submit and cancel
+  // routes converge here. getNickname() is re-read at this point so the
+  // updated value (if user submitted) flows through automatically.
+  async function continueShareAfterName() {
     track("challenges", "challenge_create", { sport, trigger: triggerResult.trigger });
     let cid = challengeId;
     if (!cid) {
@@ -100,48 +131,97 @@ export function ChallengeSharePrompt({
     }
     if (!cid) return;
     const url = `${window.location.origin}/${sport}/challenge/${cid}`;
-    await shareChallenge(triggerResult.headline, url, "");
+    // Share text is the recipient-facing chad trash-talk (same string
+    // stored as share_headline on the DB row, propagated to the landing
+    // screen + OG card). Falls back to the poster-facing prompt
+    // headline only when shareHeadline is missing — preserves
+    // pre-trash-talk-wiring behavior for sports without
+    // adapter.getShareHeadline implemented.
+    await shareChallenge(shareHeadline ?? triggerResult.headline, url, "");
     if (!navigator.share) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     }
   }
 
+  // Static labels for the fixed-text triggers. The miss trigger is
+  // rendered dynamically below so the chip can carry the tier prefix
+  // (e.g. "😤 ALL STAR MISS") sourced from triggerResult.nearMissNextTier.
   const TRIGGER_LABEL: Record<string, string> = {
     rare_pull: "⚡ RARE PULL", big_score: "🔥 BIG SCORE",
-    near_miss: "😤 NEAR MISS", bad_beat: "💀 BAD BEAT",
+    bad_beat: "💀 BAD BEAT",
   };
+  function missChipLabel(missTier?: string): string {
+    const t = (missTier ?? "").replace(/_/g, " ").trim().toUpperCase();
+    return t ? `😤 ${t} MISS` : "😤 MISS";
+  }
+
+  // Modal mount — same instance handles both CTA paths (corner icon
+  // for default trigger, prominent strip for named triggers). Lives at
+  // the top of the return tree so React doesn't unmount it when the
+  // outer container switches shape.
+  const nameModal = (
+    <NameCaptureModal
+      isOpen={nameModalOpen}
+      mode={nameModalMode}
+      currentName={storedName ?? undefined}
+      // Challenge-specific copy overrides (modal defaults are generic).
+      freshHeading="Who's challenging?"
+      confirmHeading="That's you, right?"
+      submitLabel="Send"
+      editSubmitLabel="Save & send"
+      confirmLabel="That's me"
+      onSubmit={(name) => {
+        setNickname(name);
+        setNameModalOpen(false);
+        void continueShareAfterName();
+      }}
+      onCancel={() => {
+        setNameModalOpen(false);
+        // Anonymous fallback: existing localStorage value flows through.
+        // For fresh mode that's the auto-mint placeholder → recipient
+        // sees Anonymous. For confirm mode the existing real name stays.
+        // Either way the share continues with the current stored value.
+        void continueShareAfterName();
+      }}
+    />
+  );
 
   // Default trigger: render a small corner icon only — discoverable for
   // users who want to share a mid hand, but not pushed on them. Named
-  // triggers (rare_pull / big_score / near_miss / bad_beat) keep the
+  // triggers (rare_pull / big_score / miss / bad_beat) keep the
   // prominent share strip.
   if (!isSpecial) {
     return (
-      <button
-        onClick={handleChallenge}
-        disabled={isCreating}
-        aria-label="Challenge a friend with this hand"
-        style={{
-          position: "fixed",
-          right: 14,
-          bottom: "calc(14px + env(safe-area-inset-bottom, 0px))",
-          zIndex: 9000,
-          width: 40, height: 40, borderRadius: 20,
-          background: "rgba(255,177,74,0.14)",
-          border: "1px solid rgba(255,177,74,0.4)",
-          color: "#FFB14A", fontSize: 18, fontWeight: 900,
-          cursor: isCreating ? "default" : "pointer",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          lineHeight: 1,
-        }}
-      >
-        {isCreating ? "…" : copied ? "✓" : "↗"}
-      </button>
+      <>
+        {nameModal}
+        <button
+          onClick={onCtaTap}
+          disabled={isCreating}
+          aria-label="Challenge a friend with this hand"
+          style={{
+            position: "fixed",
+            right: 14,
+            bottom: "calc(14px + env(safe-area-inset-bottom, 0px))",
+            zIndex: 9000,
+            width: 40, height: 40, borderRadius: 20,
+            background: "rgba(255,177,74,0.14)",
+            border: "1px solid rgba(255,177,74,0.4)",
+            color: "#FFB14A", fontSize: 18, fontWeight: 900,
+            cursor: isCreating ? "default" : "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            lineHeight: 1,
+          }}
+        >
+          {isCreating ? "…" : copied ? "✓" : "↗"}
+        </button>
+      </>
     );
   }
 
   return (
+    <>
+    {nameModal}
     <div style={{
       position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9000,
       background: "linear-gradient(0deg, #0D1628 0%, rgba(13,22,40,0.97) 100%)",
@@ -153,7 +233,11 @@ export function ChallengeSharePrompt({
         <span style={{ fontSize: 12, fontWeight: 700, color: isSpecial ? "#FFB14A" : "rgba(255,255,255,0.4)", letterSpacing: 0.5 }}>
           {isRivalryBack
             ? `↩ CHALLENGE ${(rivalryTargetName ?? "Your Friend").toUpperCase()} BACK`
-            : isSpecial ? TRIGGER_LABEL[triggerResult.trigger] ?? "CHALLENGE" : "CHALLENGE A FRIEND"}
+            : isSpecial
+              ? (triggerResult.trigger === "miss"
+                  ? missChipLabel(triggerResult.nearMissNextTier)
+                  : TRIGGER_LABEL[triggerResult.trigger] ?? "CHALLENGE")
+              : "CHALLENGE A FRIEND"}
         </span>
         {onDismiss && (
           <button
@@ -179,7 +263,7 @@ export function ChallengeSharePrompt({
         </div>
       )}
       <button
-        onClick={handleChallenge}
+        onClick={onCtaTap}
         disabled={isCreating}
         style={{
           width: "100%", padding: isSpecial ? "14px" : "10px", borderRadius: 12,
@@ -199,5 +283,6 @@ export function ChallengeSharePrompt({
               : "Challenge a Friend"}
       </button>
     </div>
+    </>
   );
 }

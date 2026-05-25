@@ -14,9 +14,20 @@ export const BasketballSportConfig = {
   sportLabel: 'Basketball',
   sportKey: "basketball" as const,
 
+  // `positions` is real data about the players themselves — drives the
+  // position-aliases mapping and the card.position label rendered on each
+  // card's front. Kept.
   positions:    ['PG', 'SG', 'SF', 'PF', 'C'] as string[],
-  rosterSlots:  ['PG', 'SG', 'SF', 'PF', 'C', 'FLEX'] as string[],
+  // Roster slots are all-FLEX because basketball's deal is position-agnostic
+  // (see `positionAware: false` below). Declared as 6 FLEX entries so the
+  // shared simulator + any downstream consumer that iterates slotRequirements
+  // sees a real array of the right length, not a misleading positional list.
+  rosterSlots:  ['FLEX', 'FLEX', 'FLEX', 'FLEX', 'FLEX', 'FLEX'] as string[],
   excludeFromFlex: [] as string[],
+  // All five basketball positions accumulate the same stat categories
+  // (pts/reb/ast/stl/blk/etc.), so the deal does NOT enforce positional
+  // slots. See CLAUDE.md "Positional requirements rule".
+  positionAware: false,
 
   // Maps legacy or alternate strings -> canonical position
   positionAliases: {
@@ -125,6 +136,21 @@ export const BasketballSportConfig = {
   },
 
   badges: [
+    // ── Status flags — render FIRST in the badge list when present.
+    //    fp: 0 because they're flavor markers, not score modifiers — the
+    //    "did the player even play tonight" signal sits next to the
+    //    achievement badges but doesn't shift FP. Today's ingestion does
+    //    not populate the underlying log.injured / log.ejected flags
+    //    (see RawLog comment in shared/types/index.ts), so these are
+    //    dormant infrastructure — they will never fire until the
+    //    playbyplayv2 ingestion workstream lands. When that ships, they
+    //    light up automatically; nothing else has to change.
+    //    _injured / _ejected are injected onto the stats object by
+    //    shared/engines/resolveEngine.ts:resolveCards from the underlying
+    //    log's top-level fields. Same `_`-prefix convention as _position.
+    { id: 'INJURED', icon: '🤕', label: 'Injured', fp: 0, test: (s: Record<string,any>) => s._injured === true },
+    { id: 'EJECTED', icon: '🟥', label: 'Ejected', fp: 0, test: (s: Record<string,any>) => s._ejected === true },
+
     // Scoring
     { id: 'GOD_MODE',         icon: '⚡',  label: 'God Mode',         fp: 10, test: (s: Record<string,any>) => Number(s.pts) >= 50 },
     { id: 'FIRE',             icon: '🔥',  label: 'Fire',             fp: 5,  test: (s: Record<string,any>) => Number(s.pts) >= 40 && Number(s.pts) < 50 },

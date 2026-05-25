@@ -387,7 +387,12 @@ const DETAIL_SNIPPETS: Record<string, (data: TemplateData) => string> = {
     // +1 boundary for a tier, the nudge fires deterministically (teaches the
     // mechanic). Subsequent times at the same boundary, fires 1 in 3 hands so
     // it stays "in passing" instead of nagging.
-    // Multipliers must match STREAK_TIERS in shared/utils/payoutLogic.ts.
+    // Multipliers are sport-specific — read from d.streakTiers (populated
+    // by the per-sport payoutLogic). Returns "" when streakTiers is missing
+    // (backward-compat) or when streak isn't 1 short of any tier threshold.
+    if (!d.streakTiers || d.streakTiers.length === 0) return "";
+    const nextTier = d.streakTiers.find(t => d.streak === t.wins - 1);
+    if (!nextTier) return "";
     const seenKey = (tier: number) => `replaymod_streak_nudge_seen_${tier}`;
     const shouldFire = (tier: number): boolean => {
       try {
@@ -398,10 +403,12 @@ const DETAIL_SNIPPETS: Record<string, (data: TemplateData) => string> = {
       } catch { /* private mode → behave as first-encounter every time */ return true; }
       return Math.random() < 1 / 3;
     };
-    if (d.streak === 2 && shouldFire(3))  return "One more win unlocks the 1.3x streak bonus.";
-    if (d.streak === 4 && shouldFire(5))  return "One more win and you hit 1.7x streak.";
-    if (d.streak === 9 && shouldFire(10)) return "One more win to 2.5x streak.";
-    return "";
+    if (!shouldFire(nextTier.wins)) return "";
+    const m = nextTier.multiplier;
+    if (nextTier.wins === 3)  return `One more win unlocks the ${m}x streak bonus.`;
+    if (nextTier.wins === 5)  return `One more win and you hit ${m}x streak.`;
+    if (nextTier.wins === 10) return `One more win to ${m}x streak.`;
+    return `One more win unlocks the ${m}x streak bonus.`;
   },
   streak_broken: () => "The streak is done.",
   extreme_game: (d) => d.extremeDescription || "",
@@ -410,7 +417,51 @@ const DETAIL_SNIPPETS: Record<string, (data: TemplateData) => string> = {
   injury_cost: () => "Limited minutes from a key card hurt.",
   culture_hit: () => "",
   culture_loss: () => "",
+  // ── Low-minute outcome details (fires when a resolved card has min < 10).
+  //    Variants picked via Math.random() at template time. Voice register:
+  //    genuine fan reaction, NOT system narration. Avoid telling the user
+  //    a fact they can already see (the card's minutes are right there on
+  //    the front). Lean into confusion/sarcasm.
+  //
+  //    TODO: ingestion enrichment for injured/ejected flags — see
+  //    shared/types/index.ts RawLog comment. Until that lands, `injured`
+  //    and `ejected` are dormant (their guards never pass). All low-min
+  //    outcomes fire `low_min_ambiguous`.
+  injured: () => pickVariant([
+    "Pulled something early — looked like he never recovered.",
+    "Tweaked the hammy in the second. Trainer's table from there.",
+    "Out by halftime — whatever it was, he wasn't running through it.",
+    "Limped off and didn't come back. Bad night to need him.",
+    "Whatever the trainers were looking at, it ended his night.",
+    "Down early. The bench got more minutes than your card did.",
+  ]),
+  ejected: () => pickVariant([
+    "Don't think he's sending the ref any Christmas cards.",
+    "Got T'd up out of the game. Your night went with him.",
+    "Two technicals and a long walk. That's on him.",
+    "Ejected. The locker-room couch got more minutes than he did.",
+    "Couldn't keep his mouth shut. The ref ran out of patience.",
+    "Tossed early. You can't score from the tunnel.",
+  ]),
+  low_min_ambiguous: () => pickVariant([
+    "Man, he bombed today — what happened?",
+    "Yikes, where was he tonight?",
+    "Tough night for him. No idea what was going on.",
+    "Whatever that was, you don't want to see it again.",
+    "Coach didn't trust him, the refs didn't toss him — pick your theory.",
+    "He was on the bench more than the floor.",
+    "Couldn't tell you what happened. Couldn't tell you why.",
+    "Short night. No story. Bad result.",
+  ]),
 };
+
+// Deterministic-enough pick for the low-min copy variants. Uses Math.random
+// directly (matches the streak_proximity pattern earlier in this file).
+// Stable within a single template-resolve call because the dispatcher only
+// invokes each handler once per hand.
+function pickVariant(variants: string[]): string {
+  return variants[Math.floor(Math.random() * variants.length)] ?? "";
+}
 
 // ─── Compose final message ──────────────────────────────────────────────────
 

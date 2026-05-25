@@ -85,6 +85,7 @@ const CollectScreen = lazy(() =>
   import("@shared/engagement/CollectScreen").then(m => ({ default: m.CollectScreen }))
 );
 import { TierGauge, computeGaugeState } from "@shared/components/TierGauge";
+import { TeamStamp } from "@shared/components/TeamStamp";
 import { useEngagement } from "@shared/engagement/useEngagement";
 import { soundManager } from "@shared/utils/soundManager";
 import { getBonusPool, contributeBet } from "@shared/utils/bonusPoolStore";
@@ -139,12 +140,13 @@ const NotificationsPanel = lazy(() =>
 );
 import { chadMessage } from "@shared/commentary/chad";
 import {
-  chadTriggerFraming,
   chadChallengeIntro,
   chadChallengeTactical,
   chadNormalPlayWelcome,
   chadRivalryBackIntro,
+  selectTopSlotFraming,
 } from "@shared/commentary/chadChallenge";
+import type { TopSlotTrigger } from "@shared/commentary/chadChallenge";
 import { isRealName } from "@shared/utils/isRealName";
 import { useAuth } from "@shared/auth/useAuth";
 import { listMessages } from "@shared/inbox/inbox";
@@ -374,6 +376,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     calculatePayoutWithStreak,
     winTiersMap,
     getStreakMultiplier,
+    streakTiers,
     gameBarWinTiers,
     gameBarLegend,
     dealInitialRoster,
@@ -504,6 +507,22 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [bigWinFired, setBigWinFired] = useState(false);
   const [challengeTrigger, setChallengeTrigger] = useState<import("@shared/utils/triggerEvaluation").TriggerResult | null>(null);
+  // TOP-slot snapshot of the last non-null challengeTrigger for the
+  // current hand. Survives the ChallengeSharePrompt dismiss handler's
+  // setChallengeTrigger(null) (~L2995) so the TOP-slot bank line
+  // continues to render after the prompt is dismissed (Finding A fix,
+  // 2026-05-25). Synced inside the postRevealCopy useMemo so reads are
+  // current with the latest hand's trigger. Cleared at hand-start
+  // alongside other hand-scoped refs.
+  //
+  // Other surfaces (panel TeamStamp, missTier props on TierGauge /
+  // TeamStamp) intentionally keep reading the live challengeTrigger
+  // and continue clearing on dismiss — that's pre-bucket-2 behavior
+  // and we preserve it scope-strict. The cascade impact on those
+  // surfaces is inferred from code reading, not observed; tracked
+  // in docs/open-followups.md as "Inferred dismissal cascade on panel
+  // TeamStamp / missTier surfaces".
+  const topSlotTriggerRef = useRef<import("@shared/utils/triggerEvaluation").TriggerResult | null>(null);
   const [showChallengeComparison, setShowChallengeComparison] = useState(false);
   // Sheet visibility split into "mounted" (showChallengeComparison) vs
   // "rendered on-screen" (!comparisonCollapsed). Dismiss gestures toggle
@@ -1235,11 +1254,53 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // in postRevealCopyRef so subsequent renders return the SAME copy
   // (preventing mid-results re-rolls of the random commentary lines).
   // The ref is reset to null on phase changes back to IDLE so the next
-  // hand picks fresh copy. If you change the deps array below or the
-  // ref-reset point, double-check both: stale-copy bugs are subtle.
+  // hand picks fresh copy.
+  //
+  // CACHE-KEY INVALIDATION (added 2026-05-24, bucket 2 piece B smoke
+  // diagnosis): the cached copy is keyed on the challengeTrigger?.trigger
+  // value that was active at cache time. If the cache was populated
+  // BEFORE the trigger arrived (gameState/winTier/springSettled flip
+  // true first, then evaluateTrigger fires a tick later — common
+  // ordering on big_score/miss/rare_pull/bad_beat hands), the cache
+  // would hold baseCopy and short-circuit forever. The key ref forces
+  // a recompute when the trigger value the cache was computed against
+  // no longer matches the current trigger.
+  //
+  // Expected per-hand fingerprint:
+  //   - default-trigger hands: 1 recompute, key="default" or "_none_"
+  //   - named-trigger hands  : 2 recomputes (first with key="_none_"
+  //     pre-trigger; second with key="big_score"/"miss"/etc.). The
+  //     first recompute calls selectCommentary only (no chad-anti-
+  //     repeat side effect); the second recompute calls
+  //     selectTopSlotFraming which DOES push to the chad ring buffer
+  //     — exactly once per hand, matching no-race behavior.
+  //
+  // See docs/smoke-tests/2026-05-24-s1-slot-split-real-copy-smoke.md
+  // for the diagnostic fingerprint that motivated this fix.
+  //
+  // If you change the deps array below or the ref-reset point or the
+  // key-derivation, double-check all three: stale-copy bugs are
+  // subtle and the smoke fingerprint is the only integration check
+  // for this race today (open-followup tracked: extract useMemo body
+  // into a usePostRevealCopy hook for renderHook coverage).
   const postRevealCopyRef = useRef<ReturnType<typeof selectCommentary> | null>(null);
+  const postRevealCopyKeyRef = useRef<string | null>(null);
   const postRevealCopy = useMemo(() => {
-    if (postRevealCopyRef.current) return postRevealCopyRef.current;
+    // Sync the TOP-slot trigger snapshot. When challengeTrigger is
+    // non-null, capture it; when null (post-dismissal), keep the prior
+    // snapshot so the TOP-slot bank line persists. The sync lives
+    // inside the useMemo (rather than a useEffect) so the snapshot is
+    // current synchronously with the deps-driven re-run — avoids a
+    // one-render lag where the override block would otherwise read a
+    // stale ref on the very first hand-resolution render.
+    if (challengeTrigger) topSlotTriggerRef.current = challengeTrigger;
+    // Cache key derives from the snapshot, not the live state — so the
+    // null→null transition on dismiss doesn't invalidate the cache and
+    // re-pick a new bank line.
+    const currentKey = topSlotTriggerRef.current?.trigger ?? "_none_";
+    if (postRevealCopyRef.current && postRevealCopyKeyRef.current === currentKey) {
+      return postRevealCopyRef.current;
+    }
     if ((gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") || !winTier || !springSettled) return null;
     if (isFTUE) {
       return null;
@@ -1279,6 +1340,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       handCount,
       sport: sportKey,
       topGame: topGameInfo.topGame,
+      streakTiers,
     };
 
     const copy = selectCommentary(copyInput as any);
@@ -1297,30 +1359,115 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           return { primary: staticMap[winTier] ?? staticMap.STARTER, secondary: "" };
         })();
 
-    // Trigger-aware framing override (standalone play only — challenge
-    // recipients see ChallengeComparisonScreen with its own Chad lines).
-    // When a named trigger fires (rare_pull/big_score/near_miss/bad_beat),
-    // Chad references the share-worthy nature of the moment rather than the
-    // tier-by-numbers commentary.
-    if (!challengeCtx && challengeTrigger && challengeTrigger.trigger !== "default") {
-      const recordBadge = (rosterRef.current as any[])
-        .flatMap(c => c.achievements ?? [])
-        .find((b: any) => ["TOP_GAME", "CAREER_HIGH", "NBA_RECORD", "SEASON_RECORD", "PB"]
-          .some(rid => String(b.id ?? "").includes(rid)));
-      const framingLine = chadTriggerFraming({
-        trigger: challengeTrigger.trigger as any,
-        fp,
-        tier: winTier,
-        badgeLabel: recordBadge?.label,
-        nearMissGap: challengeTrigger.nearMissGap,
-        nearMissNextTier: challengeTrigger.nearMissNextTier,
+    // First-share invitation — UNWIRED (bucket 2 piece D-min, 2026-05-24).
+    //
+    // Removed: TOP-slot preempt that wrote the firstShareInvitation()
+    // line into postRevealCopy.primary. Violated bucket 2 Q2 LOCKED
+    // ("First-share invitation routes to BOTTOM slot only; TOP retains
+    // trigger-aware celebration on that hand") — first-share copy is
+    // push-to-send, which the S1 slot split places in BOTTOM.
+    //
+    // TODO (deferred to a future session): wire firstShareInvitation()
+    // into BOTTOM (ChallengeSharePrompt) per Q2. Today the one-shot
+    // engagement gate is intentionally inactive — surfaced as an open
+    // followup in docs/open-followups.md ("First-share invitation
+    // BOTTOM-wiring — gated by Q2 LOCKED, deferred from bucket 2 piece
+    // D-min"). The localStorage flag (rm_usher_first_share_invitation)
+    // is left untouched so users who already saw the invitation
+    // pre-regression-fix aren't re-presented when the wire-up lands.
+
+    // Trigger-aware TOP-slot framing override (standalone play only —
+    // challenge recipients see ChallengeComparisonScreen with its own
+    // Chad lines). When a named trigger fires
+    // (rare_pull/big_score/miss/bad_beat), the post-reveal TOP slot
+    // delegates to selectTopSlotFraming — TOP-slot hand-celebration
+    // copy with inline trigger stamps (DEAL/DRAW-style chips rendered
+    // mid-sentence). Returned `primary` is a Line (Array<string |
+    // StampToken>); TierGauge's render path walks parts, threading
+    // strings through Typewriter and rendering StampTokens as inline
+    // chips.
+    //
+    // Tier label resolution uses the hybrid model (Q4 refinement
+    // 2026-05-24): selector substitutes `tier: "{missTier}"` sentinels
+    // on MISS bank lines; renderer falls back to context lookup
+    // (winTier prop / missTier prop) when token.tier is absent. See
+    // chadChallenge.ts StampToken type for the full model.
+    //
+    // Default trigger is filtered out by the outer guard — those hands
+    // keep the basketball.json baseline copy from selectCommentary (the
+    // workstream-4 spice target). TOP_DEFAULT bank is unreachable
+    // through this path (bucket 2 Q1.3 LOCKED 2026-05-24).
+    //
+    // S1 slot split (bucket 2 LOCKED): TOP = hand + trigger event with
+    // inline stamps; BOTTOM (ChallengeSharePrompt, mounted separately)
+    // = push-to-send. Reversing WS2 (5f4ae5e) which had TOP also pulling
+    // selectChallengeInitiation — that bank now feeds BOTTOM only.
+    // Read the trigger from the TOP-slot snapshot (synced above), not
+    // the live challengeTrigger state. This way the override block
+    // continues to fire after the ChallengeSharePrompt dismiss handler
+    // nulls challengeTrigger — preserving the TOP-slot bank line
+    // post-dismissal (Finding A fix, 2026-05-25).
+    const tt = topSlotTriggerRef.current;
+    if (!challengeCtx && tt && tt.trigger !== "default") {
+      // Resolve anchor display name (last name) for {starName}
+      // substitution. Same lookup pattern as ChallengeSharePrompt's
+      // rarePullHeadline useMemo.
+      const anchor = (tt.anchorBasePlayerId
+        ? (rosterRef.current as any[]).find(c => c.basePlayerId === tt.anchorBasePlayerId)
+        : null);
+      const lastNameOf = (c: any): string | null =>
+        c ? (String(c.name ?? "").trim().split(/\s+/).pop() ?? c.name ?? "") : null;
+      const anchorLast = lastNameOf(anchor);
+      // Derive {starName1} / {starName2} for TOP_BAD_BEAT_HELD_TWO_PLUS.
+      // Rule per bucket 2 smoke revision 2026-05-24: if anchor is one
+      // of the held cards, anchor → starName1 regardless of FP order
+      // (headline-priority). Then FP-descending among the remaining
+      // held cards. If anchor is NOT held, pure FP-descending.
+      const anchorBpId = tt.anchorBasePlayerId ?? null;
+      const heldCards = (rosterRef.current as any[]).filter(c => c?.wasHeld === true);
+      const anchorIsHeld = !!(anchorBpId && heldCards.some(c => c?.basePlayerId === anchorBpId));
+      const sortedHeld = anchorIsHeld
+        ? [
+            heldCards.find(c => c?.basePlayerId === anchorBpId),
+            ...heldCards
+              .filter(c => c?.basePlayerId !== anchorBpId)
+              .sort((a, b) => (Number(b?.actualFp ?? 0)) - (Number(a?.actualFp ?? 0))),
+          ]
+        : [...heldCards].sort((a, b) => (Number(b?.actualFp ?? 0)) - (Number(a?.actualFp ?? 0)));
+      const starName1 = sortedHeld[0] ? lastNameOf(sortedHeld[0]) : null;
+      const starName2 = sortedHeld[1] ? lastNameOf(sortedHeld[1]) : null;
+      const framingLine = selectTopSlotFraming({
+        trigger: tt.trigger as TopSlotTrigger,
+        roster: rosterRef.current as Array<{ tier?: string; wasHeld?: boolean }>,
+        starAchievementType: tt.topGameTier ?? null,
+        // For bad_beat: the trigger result doesn't carry
+        // anchorBasePlayerId today, and bad_beat is semantically about
+        // the user's held picks anyway. Use the headline held card
+        // (starName1, derived from sortedHeld[0] above) as starName so
+        // HELD_ONE bank lines don't render empty {starName}. Fallback
+        // to anchorLast for defensive safety. For other triggers
+        // (big_score / miss / rare_pull) the anchor-derived starName
+        // is correct (Bug #1 fix, bucket 2 piece B smoke 2026-05-25).
+        starName: tt.trigger === "bad_beat" ? (starName1 ?? anchorLast) : anchorLast,
+        starName1,
+        starName2,
+        winTier: (winTier ?? null) as any,
+        missTier: tt.nearMissNextTier ?? null,
+        topGame: (tt.topGamePrimaryReason || tt.topGameAllReasons)
+          ? {
+              primaryReason: tt.topGamePrimaryReason ?? null,
+              allReasons: tt.topGameAllReasons ?? null,
+            }
+          : null,
       });
       const framed = { primary: framingLine, secondary: baseCopy.secondary ?? "" };
       postRevealCopyRef.current = framed as any;
+      postRevealCopyKeyRef.current = currentKey;
       return framed as any;
     }
 
     postRevealCopyRef.current = baseCopy as any;
+    postRevealCopyKeyRef.current = currentKey;
     return baseCopy;
   }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct, challengeTrigger, challengeCtx]); // eslint-disable-line
 
@@ -1369,6 +1516,8 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       frozenBarFpRef.current = null;
       anchorFpCallCountRef.current = 0;
       postRevealCopyRef.current = null;
+      postRevealCopyKeyRef.current = null;
+      topSlotTriggerRef.current = null;
     }
   }, [gameState]); // eslint-disable-line
 
@@ -1678,8 +1827,15 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
   function onWinCelebrationComplete() {
     if (!isFTUE) {
-      const next = incrementHandCount();
-      if (next >= 3 && !localStorage.getItem("replaymod_name_prompted")) {
+      // handCount is already post-incremented here — the increment now
+      // fires in _useReveal at hand resolution (single source of truth),
+      // not here. Prior to that move, this branch called
+      // incrementHandCount() inline, but the celebration-area-tap path was
+      // only one of three exits from WIN_CELEBRATION, so handCount-gated
+      // surfaces (this name_prompt, chad nudges, PWA install,
+      // first_share_invitation, etc.) silently never fired for users who
+      // advanced via the action/play-again button.
+      if (handCount >= 3 && !localStorage.getItem("replaymod_name_prompted")) {
         // Attention mutex: defer to a later IDLE if another surface is
         // already in-flight. Do NOT set replaymod_name_prompted yet so this
         // can fire on a subsequent celebration when the moment is clear.
@@ -1749,8 +1905,15 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
   // Evaluate challenge trigger at WIN_CELEBRATION entry — winTier is valid here
   // (setWinTier fires 1200ms before setGameState("WIN_CELEBRATION") in _useReveal.ts).
-  // At RESULTS (reached via score-row double-tap), challengeTrigger persists from
-  // WIN_CELEBRATION. At IDLE (replay button), challengeTrigger is cleared.
+  // challengeTrigger is set exactly once per hand resolution (the three
+  // setChallengeTrigger sites below). It persists from WIN_CELEBRATION
+  // through RESULTS unchanged. The only mid-hand clear is the
+  // ChallengeSharePrompt dismiss handler (~L2995 — sets null on dismiss).
+  // Between hands the state isn't explicitly cleared at IDLE — it carries
+  // its prior value through IDLE/DEALING/HOLD/DRAWING until the next
+  // resolution overwrites. (Comment updated 2026-05-25 to descriptive
+  // form; prior "At IDLE, challengeTrigger is cleared" wording was
+  // aspirational — no IDLE-phase clearer exists in the code.)
   // Guard: skip when playing a received challenge (challengeCtx present).
   //
   // Rivalry-continuation: when challengeBackCtx is set (user just tapped
@@ -1768,6 +1931,11 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         import("@shared/utils/triggerEvaluation").TopGameTier | null;
       const starBasePlayerId =
         (topGameInfoHolder.current?.star?.basePlayerId as string | undefined) ?? null;
+      // Bucket 2 Q3.1 LOCKED 2026-05-24 — propagate the TopGameReason
+      // data so selectTopSlotFraming can extract {statLabel} for the
+      // RARE_PULL_SEASON bank.
+      const topGamePrimaryReason = topGameInfoHolder.current?.topGame?.primaryReason ?? null;
+      const topGameAllReasons = topGameInfoHolder.current?.topGame?.allReasons ?? null;
       const result = evaluateTrigger({
         roster: resolvedRoster,
         totalFp: fp,
@@ -1776,6 +1944,8 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         winTiersMap: adapter.winTiersMap,
         topGameTier,
         starBasePlayerId,
+        topGamePrimaryReason,
+        topGameAllReasons,
       });
 
       // QA diagnostic — one log per hand. Includes the inputs the
@@ -1811,6 +1981,34 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       setChallengeTrigger(null);
     }
   }, [gameState, challengeBackCtx]); // eslint-disable-line
+
+  // Share-headline pick — fires once per (challengeTrigger, winTier).
+  //
+  // sportAdapter.getShareHeadline now delegates to chadShareTrashTalk
+  // (random pick from a brag/default bank) for basketball. Without memo,
+  // the inline call would re-roll on every render of the RESULTS phase
+  // (animation ticks, state changes, etc.) — the user would see the
+  // headline flicker, and the chad ring buffer would burn entries.
+  //
+  // challengeTrigger is set exactly once per hand (lines ~1803/1808/1811)
+  // via setState with a fresh object, then preserved across renders by
+  // React state until the next IDLE clears it. Same for winTier. So
+  // [challengeTrigger, winTier] is the stable identity key: pick fires
+  // once when a new trigger lands, sticks until next hand.
+  //
+  // Returns undefined when there's no trigger (prompt isn't mounted) or
+  // the adapter doesn't implement getShareHeadline (baseball / football
+  // today — fallthrough preserved per the existing typeof guard).
+  const computedShareHeadline = useMemo(() => {
+    if (!challengeTrigger) return undefined;
+    if (typeof (sportAdapter as any).getShareHeadline !== "function") return undefined;
+    return (sportAdapter as any).getShareHeadline({
+      roster: rosterRef.current,
+      season: (rosterRef.current[0] as any)?.season ?? "",
+      winTier: winTier ?? "BUST",
+      trigger: challengeTrigger.trigger,
+    });
+  }, [challengeTrigger, winTier]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Challenge mode post-reveal continuity:
   //   1. WIN_CELEBRATION fires (reveal done, gauge settled, springSettled=true).
@@ -2248,18 +2446,41 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                   const netColor = netPositive ? "#7FFF00" : "#FF3B30";
                   const netLabel = netPositive ? `+$${net}` : `-$${Math.abs(net)}`;
                   const FF = "'Rajdhani','Oswald','Arial Narrow',sans-serif";
+                  const tierMult = winTiersMap[winTier as WinTierKey]?.multiplier ?? 0;
+                  const streakMult = getStreakMultiplier(streak);
+                  const showStreakFactor = streakMult > 1;
+                  const stampKind =
+                    challengeTrigger?.trigger === "bad_beat" ? "bad_beat" :
+                    challengeTrigger?.trigger === "miss" ? "miss" :
+                    null;
                   return (
                     <>
-                      <img
-                        key={`tier-stay-${winTier}`}
-                        src={`${import.meta.env.BASE_URL}${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
-                        alt={formatTierLabel(winTier)}
-                        style={{
-                          maxHeight: 52, maxWidth: "100%", objectFit: "contain",
-                          filter: `${TIER_IMAGE_HUE[winTier] ?? ""} drop-shadow(0 0 12px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`.trim(),
-                          transform: "scale(0.65)",
-                        }}
-                      />
+                      <div style={{ position: "relative", display: "inline-flex", maxWidth: "100%" }}>
+                        <img
+                          key={`tier-stay-${winTier}`}
+                          src={`${import.meta.env.BASE_URL}${TIER_IMAGE_MAP[winTier] ?? "bust1.png"}`}
+                          alt={formatTierLabel(winTier)}
+                          style={{
+                            maxHeight: 52, maxWidth: "100%", objectFit: "contain",
+                            filter: `${TIER_IMAGE_HUE[winTier] ?? ""} drop-shadow(0 0 12px ${(CELEBRATION_TIER_COLORS[winTier] ?? CELEBRATION_TIER_COLORS.BUST).glow})`.trim(),
+                            transform: "scale(0.65)",
+                          }}
+                        />
+                        {stampKind && (
+                          <div style={{
+                            position: "absolute",
+                            left: "50%", top: "50%",
+                            pointerEvents: "none",
+                            zIndex: 5,
+                          }}>
+                            <TeamStamp
+                              kind={stampKind}
+                              missTier={challengeTrigger?.nearMissNextTier}
+                              delayMs={200}
+                            />
+                          </div>
+                        )}
+                      </div>
                       <div style={{ animation: "tierInfoFadeIn 300ms ease both", display: "flex", justifyContent: "center", alignItems: "center", gap: 20, marginTop: 4, width: "100%" }}>
                         <span style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
                           {displayFp.toFixed(1)} FP
@@ -2275,9 +2496,20 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                           </span>
                         )}
                         {!challengeCtx && (
-                          <span style={{ fontSize: 20, fontWeight: 700, color: netColor, fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
-                            {netLabel}
-                          </span>
+                          winTier === "BUST" ? (
+                            <span style={{ fontSize: 20, fontWeight: 700, color: netColor, fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                              {netLabel}
+                            </span>
+                          ) : (
+                            <span style={{ display: "inline-flex", alignItems: "baseline", gap: 6, fontFamily: FF }}>
+                              <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.55)", lineHeight: 1, letterSpacing: 0.3, fontVariantNumeric: "tabular-nums" }}>
+                                {tierMult}×{showStreakFactor ? ` × ${streakMult}×` : ""} →
+                              </span>
+                              <span style={{ fontSize: 20, fontWeight: 700, color: "#7FFF00", lineHeight: 1, letterSpacing: "-0.5px", fontVariantNumeric: "tabular-nums" }}>
+                                +${winPayout}
+                              </span>
+                            </span>
+                          )
                         )}
                       </div>
                     </>
@@ -2384,6 +2616,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               regularFinalCardKick={regularFinalGaugeKick}
               onTierCross={undefined}
               postRevealCopy={postRevealCopy}
+              missTier={challengeTrigger?.nearMissNextTier ?? undefined}
               ftueTypewriter={isFTUE}
               stickyLastOverride={isFTUE && ftueReplayReady}
               commentaryOverride={(showCollect || showLeaderboard || showProfile) ? null : ftueCommentaryOverride}
@@ -2638,6 +2871,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         legendPulsing={legendGold && !isFTUE}
         trophyPulsing={trophyPulsing && !isFTUE}
         streak={streak}
+        streakTiers={streakTiers}
         onLegendOpened={() => {
           const today = new Date().toISOString().slice(0, 10);
           localStorage.setItem("replaymod_legend_seen_date", today);
@@ -2785,7 +3019,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       })()}
 
       {/* ChallengeSharePrompt — fires at RESULTS/WIN_CELEBRATION when a
-          NAMED trigger is evaluated (rare_pull / big_score / near_miss /
+          NAMED trigger is evaluated (rare_pull / big_score / miss /
           bad_beat / rivalry_back) and the user is not in FTUE. The
           `trigger !== "default"` exclusion matches the commentary-
           override gate at line 1261 — without it, every hand fires a
@@ -2806,12 +3040,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             serializeRoster={(cards) => sportAdapter.serializeRoster(cards)}
             triggerResult={challengeTrigger}
             rivalryTargetName={challengeBackCtx?.challengerName ?? null}
-            shareHeadline={typeof (sportAdapter as any).getShareHeadline === "function"
-              ? (sportAdapter as any).getShareHeadline({
-                  roster: rosterRef.current,
-                  season: (rosterRef.current[0] as any)?.season ?? "",
-                })
-              : undefined}
+            shareHeadline={computedShareHeadline}
             onDismiss={() => {
               setChallengeTrigger(null);
               // Rivalry continuation ends when the user dismisses the

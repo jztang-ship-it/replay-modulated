@@ -38,8 +38,17 @@ export function resolveCards(cards: GeneratedCard[], logsByKey: Map<string, RawL
   const resolved: ResolvedCard[] = cards.map(card => {
     const log = pickBiasedLog(card, logsByKey, adapter, rnd, config.minMinutes ?? 8);
     const stats = log?.stats ?? {};
-    // Inject _position BEFORE FP calc so positionProjectionWeights are used
-    const statsWithPosition = { ...stats, _position: card.position ?? "" };
+    // Inject _position BEFORE FP calc so positionProjectionWeights are used.
+    // Also propagate log-level metadata (injured/ejected) onto the stats object
+    // so badge tests can read them — same `_`-prefixed convention as _position.
+    // Both default to false when absent from the log (today's ingestion never
+    // populates them; pending playbyplayv2 enrichment workstream).
+    const statsWithPosition = {
+      ...stats,
+      _position: card.position ?? "",
+      _injured: log?.injured === true,
+      _ejected: log?.ejected === true,
+    };
     const rawFp = extractFpFromStats(statsWithPosition, adapter);
     const scaledFp = rawFp * config.fpScale;
     const achievements = adapter.computeBadges(statsWithPosition);
@@ -82,13 +91,21 @@ function pickBiasedLog(card: GeneratedCard, logsByKey: Map<string, RawLog[]>, ad
   const beforeFilter = candidates.length;
   // Filter out garbage logs:
   // 1. Must have at least one positive stat value (all-zero = DNP or corrupt data)
-  // 2. If minutes field exists, must meet minMinutes threshold from config
-  //    (defaults to 8 if not set; basketballConfig sets 10)
-  // 3. If no minutes field, trust the stats — valid game, just missing metadata
+  // 2. Tier-aware minutes threshold (NEW):
+  //    - Premium tiers (RED/ORANGE/PURPLE): require min > 0 only. Sub-10-min
+  //      games are eligible and surface at their natural rate. Lets storylines
+  //      like "your $90 anchor fouled out in 4 min" / "ejected at the half"
+  //      reach the user on the cards where that bad night is most painful.
+  //    - Non-premium tiers (BLUE/GREEN/WHITE/missing): keep the existing
+  //      configured minMinutes floor (basketball: 10). The bottom of the
+  //      roster shouldn't surface garbage time — it's flavor, not story.
+  // 3. If no minutes field, trust the stats — valid game, just missing metadata.
   // 4. Role-aware: adapter.isLogValidForCard rejects wrong-role lines (e.g. a
   //    baseball BAT card pulling a pitcher's stat line for a two-way player).
   //    Sports without roles (basketball) leave this hook unset → all logs pass.
   const minMins = minMinutes;
+  const tierUpper = String(tier ?? "").toUpperCase();
+  const isPremiumTier = tierUpper === "RED" || tierUpper === "ORANGE" || tierUpper === "PURPLE";
   candidates = candidates.filter(l => {
     const stats = l.stats ?? {};
     // Must have at least one positive numeric stat value (all-zero = DNP or corrupt).
@@ -99,7 +116,15 @@ function pickBiasedLog(card: GeneratedCard, logsByKey: Map<string, RawLog[]>, ad
     if (mp !== undefined && mp !== null) {
       const mpStr = String(mp);
       const mins = mpStr.includes(":") ? parseFloat(mpStr.split(":")[0]) : parseFloat(mpStr);
-      if (Number.isFinite(mins) && mins < minMins) return false;
+      if (Number.isFinite(mins)) {
+        if (isPremiumTier) {
+          // Premium: any positive minutes count. Surfaces sub-10-min outcomes.
+          if (mins <= 0) return false;
+        } else {
+          // Non-premium: existing minimum-minutes floor.
+          if (mins < minMins) return false;
+        }
+      }
     }
     if (adapter.isLogValidForCard && !adapter.isLogValidForCard(card.position, l)) return false;
     return true;
@@ -136,25 +161,13 @@ function pickBiasedLog(card: GeneratedCard, logsByKey: Map<string, RawLog[]>, ad
     return null;
   }
   if (candidates.length === 1) return candidates[0];
-  const sorted = [...candidates].sort((a, b) => sumStats(b.stats) - sumStats(a.stats));
-  const n = sorted.length;
-  const t = (tier ?? "").toUpperCase();
-  let lo: number, hi: number;
-  // RED treated same as ORANGE for log sampling — RED is a visual/strategic tier,
-  // not a performance tier. Making RED samples tighter (top 30%) would make the
-  // "bug" players even more dominant, which is the opposite of what we want.
-  if      (t === "RED" || t === "ORANGE") { lo = 0;                       hi = Math.max(1, Math.ceil(n * 0.40)); }
-  else if (t === "PURPLE") { lo = 0;                       hi = Math.max(1, Math.ceil(n * 0.55)); }
-  else if (t === "BLUE")   { lo = Math.floor(n * 0.20);    hi = Math.min(n, Math.ceil(n * 0.70)); }
-  else if (t === "GREEN")  { lo = Math.floor(n * 0.30);    hi = Math.min(n, Math.ceil(n * 0.80)); }
-  else                     { lo = Math.floor(n * 0.40);    hi = n; }
-  lo = Math.max(0, lo); hi = Math.min(n, Math.max(lo + 1, hi));
-  const window = sorted.slice(lo, hi);
-  return window[Math.floor(rnd() * window.length)];
-}
-
-function sumStats(stats: Record<string, any>): number {
-  return Object.values(stats).filter(v => typeof v === "number" && v > 0).reduce((s: number, v) => s + (v as number), 0);
+  // Uniform sampling across the player's season log, post-filter. Replaced the
+  // prior tier-windowed bias (RED/ORANGE top 40%, PURPLE top 55%, BLUE 20-70%,
+  // GREEN 30-80%, WHITE bottom 40-100%). Card tier no longer constrains the log
+  // window — matchup, opponent, season-arc variance are now meaningful inputs
+  // to hold/redraw decisions. Win-tier thresholds were re-derived per season
+  // against this distribution; do not reintroduce bias without recalibrating.
+  return candidates[Math.floor(rnd() * candidates.length)];
 }
 
 function parseSeasonNum(v: any): number | null {

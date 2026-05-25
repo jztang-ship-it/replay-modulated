@@ -14,9 +14,59 @@
  * tonal constraints, and is sized to a different attention budget.
  */
 
+import type { WinTier, TopGameReason } from "./types";
+
 function pick(arr: string[]): string {
   return arr[Math.floor(Math.random() * arr.length)] ?? arr[0];
 }
+
+// ── TOP-slot parts model — bucket 2 (S1 slot-split restoration) ──────────
+//
+// TOP slot lines mix prose with inline trigger stamps. Bank lines are
+// authored as an array of LinePart: strings flow through Typewriter at
+// render time, StampToken values render as inline DEAL/DRAW-style chips.
+//
+// Tier substitution model (HYBRID — bucket 2 Q4 refinement locked
+// 2026-05-24; extended for win_tier 2026-05-24 evening): the selector
+// substitutes tier when a bank line specifies a sentinel
+// (`tier: "{missTier}"` or `tier: "{winTier}"`); the renderer
+// (TierGauge) falls back to context lookup when `token.tier` is
+// absent.
+//
+// - Bank line writes `{ stamp: "miss", tier: "{missTier}" }` → selector
+//   replaces `"{missTier}"` with the actual missTier value at selection
+//   time. Renderer sees a concrete tier on the token and uses it
+//   directly.
+// - Bank line writes `{ stamp: "win_tier", tier: "{winTier}" }` →
+//   same pattern with the winTier arg. The win_tier stamp REPLACES the
+//   former "big_score" stamp variant (2026-05-24 evening design
+//   change): chip renders as `[ALL STAR]` / `[MVP]` / `[LEGEND]` in
+//   the matching TIER_CFG color, no "BIG SCORE" suffix.
+// - Bank line writes `{ stamp: "miss" }` (no tier) → renderer reads
+//   missTier from props (model-(b) preserved). Same fallback path
+//   exists for win_tier reading from a winTier context.
+//
+// Anti-repeat: JSON.stringify on the unsubstituted bank line (before
+// selector substitution) keys the dedup ring buffer so the same
+// authored line dedups consistently across hands regardless of which
+// tier/name/statLabel gets substituted in.
+
+export type StampToken = {
+  stamp: "bad_beat" | "miss" | "win_tier" | "rare_pull";
+  /** Tier label. Three forms:
+   *   - `WinTier` value (e.g. "ALL_STAR") — explicit override, renderer
+   *     uses directly.
+   *   - Sentinel string (e.g. "{missTier}") on bank lines — selector
+   *     substitutes with actual tier at selection time.
+   *   - `undefined` — renderer falls back to context lookup (winTier
+   *     prop for big_score; missTier prop for miss).
+   *  Widened from strict `WinTier` to permit the sentinel form per
+   *  the 2026-05-24 hybrid model refinement. */
+  tier?: WinTier | string;
+};
+
+export type LinePart = string | StampToken;
+export type Line = LinePart[];
 
 // Buckets selected by signed delta = mySCore − targetScore:
 //   |delta| ≤ 1            → photo_finish
@@ -269,88 +319,6 @@ export function chadTrashTalkBank(bucket: TrashTalkBucket, named: boolean): stri
   return [...(named ? TRASH_NAMED[bucket] : TRASH_UNNAMED[bucket])];
 }
 
-// ── Trigger-aware framing (results screen, standalone play) ───────────────
-//
-// When a named challenge trigger fires on the results screen (rare_pull /
-// big_score / near_miss / bad_beat), Chad's primary commentary should
-// reference the share-worthy nature of the moment, not just describe what
-// happened. This produces that line; the share prompt then becomes the
-
-// natural next action below the commentary.
-
-export type ChallengeTriggerKind =
-  | "rare_pull" | "big_score" | "near_miss" | "bad_beat";
-
-export interface ChadTriggerFramingArgs {
-  trigger: ChallengeTriggerKind;
-  fp: number;
-  tier: string;
-  /** rare_pull only — the badge that fired (e.g. "career high", "top game"). */
-  badgeLabel?: string;
-  /** near_miss only — FP gap to the next tier. */
-  nearMissGap?: number;
-  /** near_miss only — the tier that was just missed. */
-  nearMissNextTier?: string;
-}
-
-// [Chad:trigger-v2] Curated banks per trigger type. Each branch is
-// situation-specific — references the actual stat that fired the
-// trigger (gap for near_miss, tier name for big_score, etc.) rather
-// than generic share copy. Treat these as carefully as FTUE copy:
-// they're the moment that determines whether the user shares.
-export function chadTriggerFraming(args: ChadTriggerFramingArgs): string {
-  const fp = args.fp.toFixed(1);
-  const tierName = args.tier.replace("_", "-");
-  switch (args.trigger) {
-    case "big_score":
-      return pick([
-        `Hit ${tierName} on this slate. The kind of score that needs an audience.`,
-        `${tierName} on the board with ${fp}. Don't sit on it.`,
-        `${fp} FP — ${tierName} tier. Pick someone and send the receipt.`,
-        `${tierName}. ${fp}. Half this app dreams about that line. Share it.`,
-        `Big board, big number. ${fp} FP, ${tierName}. Find a victim.`,
-        `${tierName} confirmed. ${fp} FP. The bragging window is open.`,
-        `That's a ${tierName} flag plant. ${fp} FP. Let somebody chase it.`,
-        `${fp} FP. ${tierName}. Don't let this one go unwitnessed.`,
-      ]);
-    case "rare_pull": {
-      const what = args.badgeLabel ?? "A record game";
-      return pick([
-        `${what} showed up in your lineup. Worth showing off.`,
-        `${what}. The kind of moment that doesn't repeat. Send it.`,
-        `${what} just landed for you. Pin it before it fades.`,
-        `${what} in your roster. The slate handed you a story.`,
-        `${what} — that's the share. Forget the FP, the headline is the game.`,
-        `Some hands you play. This one you frame. ${what}.`,
-        `${what}. Slates like this don't come back. Get it out the door.`,
-      ]);
-    }
-    case "near_miss": {
-      const gap = (args.nearMissGap ?? 0).toFixed(1);
-      const next = (args.nearMissNextTier ?? "the next tier").replace("_", "-");
-      return pick([
-        `By ${gap} FP. Brutal. Someone else might close the gap.`,
-        `${gap} FP short of ${next}. Pass the slate — see who finishes it.`,
-        `So close. ${gap} FP. Make somebody finish what you started.`,
-        `${gap} FP from ${next}. The slate's right there. Hand it off.`,
-        `Off by ${gap}. ${next} is one good redraw away. See if they get it.`,
-        `${gap} FP. That's a friend's roll-of-the-dice away from ${next}. Send it.`,
-        `Heartbreak math: ${gap} FP. Let someone else taste it.`,
-      ]);
-    }
-    case "bad_beat":
-      return pick([
-        `Looked stacked on paper. Got cooked. Share the misery.`,
-        `Premium roster, premium disaster. Send it — let them try.`,
-        `Stars went cold. Make somebody else feel that one.`,
-        `Held the right cards, got the wrong games. Pass the curse.`,
-        `On paper it was a coronation. The court said no. Share it.`,
-        `Your picks, your faith, your loss. Let them see if they can fix it.`,
-        `The roster wasn't the problem. The dice were. Curious who else gets these dice?`,
-      ]);
-  }
-}
-
 // ── Send-It-Back fresh-deal intro chip ────────────────────────────────────
 //
 // [Chad:rivalry-back] Fires once when the user taps "Send It Back" on a
@@ -581,14 +549,21 @@ function selectInitiationBucket(args: ChallengeInitiationArgs): InitiationBucket
 const _recentChadLines: string[] = [];
 const _CHAD_RECENT_WINDOW = 8;
 
-function pickWithAntiRepeat(bank: string[]): string {
+/** Generic over T so the same ring buffer dedups string banks (BOTTOM-slot
+ *  initiation, resolution, trash-talk) and Line banks (TOP-slot framing,
+ *  bucket 2). Default keyFn = String preserves every existing string-bank
+ *  call site. For Line[] banks, callers pass JSON.stringify so the dedup
+ *  key reflects the structural bank line. Because tier substitution is
+ *  done at render time (model-(b)), JSON.stringify on a bank line is
+ *  stable across hands — the same authored line dedups consistently. */
+function pickWithAntiRepeat<T>(bank: T[], keyFn: (item: T) => string = String): T {
   // Filter out lines used in the last N picks. If all bank lines were
   // recent (small bank, long session), fall through to the full pool so
   // we don't pin on a single line forever.
-  const fresh = bank.filter(line => !_recentChadLines.includes(line));
+  const fresh = bank.filter(item => !_recentChadLines.includes(keyFn(item)));
   const pool = fresh.length > 0 ? fresh : bank;
   const pick = pool[Math.floor(Math.random() * pool.length)] ?? bank[0];
-  _recentChadLines.push(pick);
+  _recentChadLines.push(keyFn(pick));
   while (_recentChadLines.length > _CHAD_RECENT_WINDOW) _recentChadLines.shift();
   return pick;
 }
@@ -672,6 +647,446 @@ export function chadInitiationBank(bucket: InitiationBucket): string[] {
     case "statement": return [...INITIATION_STATEMENT];
     case "default":   return [...INITIATION_DEFAULT];
   }
+}
+
+// ── TOP-slot framing banks (bucket 2 — S1 slot-split restoration) ────────
+//
+// Hand-celebration copy for the TOP slot of the post-reveal screen when
+// a challenge surface is firing. Mirrors the trigger taxonomy of the
+// challenge-trigger system. Each bank line is a Line (array of LinePart)
+// so inline trigger stamps render as DEAL/DRAW-style chips mid-sentence.
+//
+// CRITICAL — slot semantics (S1 LOCKED rules):
+//   - TOP slot is about the user's HAND and the TRIGGER EVENT that made
+//     it shareable. Never references the friend or the send action.
+//   - BOTTOM slot (selectChallengeInitiation above) owns push-to-send copy.
+//
+// Sub-bank structure (bucket 2 Q1.1 + Q1.2 LOCKED 2026-05-24, smoke
+// revisions 2026-05-24 evening):
+//   TOP_BAD_BEAT_HELD_ONE       — bad_beat, heldCount === 1, low-tier outcome
+//   TOP_BAD_BEAT_HELD_TWO_PLUS  — bad_beat, heldCount >= 2, low-tier outcome
+//   TOP_BAD_BEAT_NO_HOLDS       — bad_beat, heldCount === 0 (or fallback when
+//                                  HELD banks are tier-gated out)
+//   TOP_MISS                    — miss (any tier missed)
+//   TOP_BIG_SCORE               — big_score trigger (renders win_tier stamp)
+//   TOP_RARE_PULL_RECORD        — rare_pull, topGameTier=record
+//   TOP_RARE_PULL_CAREER        — rare_pull, topGameTier=career
+//   TOP_RARE_PULL_SEASON        — rare_pull, topGameTier=season (uses {statLabel})
+//   TOP_DEFAULT                 — unreachable per GameView gate (see comment at def)
+//
+// Substitution tokens (resolved by selector at selection time):
+//   {starName}    — anchor card's last name (or first-last); used by
+//                   HELD_ONE / NO_HOLDS and other non-2+-held banks
+//   {starName1}   — first held player (anchor-priority, then FP-desc);
+//                   used by HELD_TWO_PLUS only
+//   {starName2}   — second held player; used by HELD_TWO_PLUS only
+//   {winTierLow}  — title-case winTier ("Rookie", "Starter", "Bust");
+//                   used by HELD_ONE / HELD_TWO_PLUS / NO_HOLDS to
+//                   contrast premium picks with the low outcome
+//   {statLabel}   — conversational form of TopGameReason.category for SEASON
+//   "{missTier}"  — sentinel in StampToken.tier for miss
+//   "{winTier}"   — sentinel in StampToken.tier for win_tier
+
+const TOP_BAD_BEAT_HELD_ONE: Line[] = [
+  ["You held {starName} as your conviction pick and walked away with a {winTierLow} scrape — ", { stamp: "bad_beat" }, " — that's a bad beat if I've ever seen one."],
+  ["Premium pick on {starName}, premium result not in the cards — ", { stamp: "bad_beat" }, " — call it what it is."],
+  ["You held {starName} expecting a real night and got the kind that pays in coupons — ", { stamp: "bad_beat" }, " — textbook bad beat."],
+  ["{starName} on your held card. {winTierLow} on the scoreboard. ", { stamp: "bad_beat" }, ". That's the definition."],
+  ["You doubled down on {starName} and the conviction came back as a flat stat line — ", { stamp: "bad_beat" }, " — that's the textbook one."],
+  ["You held {starName} expecting fireworks and got a sparkler — ", { stamp: "bad_beat" }, " — bad beat with a capital B."],
+  [{ stamp: "bad_beat" }, ". You held {starName} as your big play and he came in like the deep bench."],
+  ["A {winTierLow} hand off a held card on {starName}. ", { stamp: "bad_beat" }, ". Pure bad beat."],
+  ["{starName} on the held card, lineup couldn't lift it — ", { stamp: "bad_beat" }, " — what else do you call it."],
+  ["You read it. You held {starName}. {starName} held, result didn't read the script. ", { stamp: "bad_beat" }, ". Bad beat."],
+];
+
+const TOP_BAD_BEAT_HELD_TWO_PLUS: Line[] = [
+  ["You counted on {starName1} and {starName2}, and walked away with a {winTierLow} scrape — ", { stamp: "bad_beat" }, " — that's a bad beat if I've ever seen one."],
+  ["You stacked {starName1} and {starName2} and they delivered the kind of night that pays in coupons — ", { stamp: "bad_beat" }, " — textbook bad beat."],
+  ["You held {starName1} and {starName2} expecting fireworks and got a sparkler — ", { stamp: "bad_beat" }, " — call it what it is."],
+  ["{starName1} and {starName2} on your held cards, {winTierLow} on the scoreboard. ", { stamp: "bad_beat" }, "."],
+  ["You doubled down on {starName1} and {starName2} and the {winTierLow} came in anyway — ", { stamp: "bad_beat" }, " — that's the textbook one."],
+  [{ stamp: "bad_beat" }, ". You counted on {starName1} AND {starName2} and the lineup still came in like role players."],
+  ["Premium picks on {starName1} and {starName2}, premium result not in the cards — ", { stamp: "bad_beat" }, " — what else do you call it."],
+  ["A {winTierLow} hand off held cards on {starName1} and {starName2}. ", { stamp: "bad_beat" }, ". That's the definition."],
+  ["{starName1} and {starName2} on the held cards, lineup couldn't lift it — ", { stamp: "bad_beat" }, " — bad beat with a capital B."],
+  ["You read it. You held it. {starName1} and {starName2} held, result didn't read the script. ", { stamp: "bad_beat" }, ". Pure bad beat."],
+];
+
+const TOP_BAD_BEAT_NO_HOLDS: Line[] = [
+  ["You drew {starName} as your big play and walked away with a {winTierLow} scrape — ", { stamp: "bad_beat" }, " — that's a bad beat if I've ever seen one."],
+  ["Premium pick on {starName}, premium disappointment from him — ", { stamp: "bad_beat" }, " — call it what it is."],
+  ["You drew the right names for the right slate and the right names had the wrong night — ", { stamp: "bad_beat" }, " — textbook bad beat."],
+  ["{starName} as your headline. {winTierLow} as your finish. ", { stamp: "bad_beat" }, ". That's the definition."],
+  ["You built this lineup around {starName} and {starName} forgot what he was here for — ", { stamp: "bad_beat" }, " — that's the textbook one."],
+  ["You drew {starName} expecting fireworks and got a sparkler — ", { stamp: "bad_beat" }, " — bad beat with a capital B."],
+  [{ stamp: "bad_beat" }, ". You drew {starName} as your big play and he came in like the deep bench."],
+  ["A {winTierLow} hand off a lineup that looked like a winner on paper. ", { stamp: "bad_beat" }, ". Pure bad beat."],
+  ["Stars on paper, role players on the floor — the whole lineup ghosted you — ", { stamp: "bad_beat" }, " — what else do you call it."],
+  ["You read the slate. You picked the right names. The right names didn't read the script. ", { stamp: "bad_beat" }, ". Bad beat."],
+];
+
+const TOP_MISS: Line[] = [
+  ["{starName} got you close — ", { stamp: "miss", tier: "{missTier}" }, " — couple more buckets and you're in a different tier."],
+  ["Right names, right night, just a few points short of where this was going. ", { stamp: "miss", tier: "{missTier}" }, "."],
+  ["{starName} did his part. The math came up a hair shy — ", { stamp: "miss", tier: "{missTier}" }, " — that's how thin the line is."],
+  ["You were one possession away from a different conversation. ", { stamp: "miss", tier: "{missTier}" }, "."],
+  ["{starName} carried this thing right up to the door — ", { stamp: "miss", tier: "{missTier}" }, " — door didn't open."],
+  [{ stamp: "miss", tier: "{missTier}" }, ". {starName} got you to the edge and the edge held."],
+  ["Three or four plays from a totally different night — ", { stamp: "miss", tier: "{missTier}" }, " — that's the cruelty of the cut line."],
+  ["{starName} brought enough for almost the whole climb. ", { stamp: "miss", tier: "{missTier}" }, "."],
+  ["You felt this one bumping the next tier all the way through — ", { stamp: "miss", tier: "{missTier}" }, " — fell back to earth at the buzzer."],
+  ["Same effort, same picks, six more points: completely different story. ", { stamp: "miss", tier: "{missTier}" }, "."],
+];
+
+const TOP_BIG_SCORE: Line[] = [
+  ["{starName} cooked, and you were sitting at the table with a knife and fork — ", { stamp: "win_tier", tier: "{winTier}" }, " — read of the night."],
+  ["{starName} dropped an absolute number on these guys and you saw it coming — ", { stamp: "win_tier", tier: "{winTier}" }, " — that's the call."],
+  ["{starName} took the whole game by the collar and you were riding shotgun — ", { stamp: "win_tier", tier: "{winTier}" }, " — you called this one."],
+  ["You stacked the right names and the right names brought the whole circus. ", { stamp: "win_tier", tier: "{winTier}" }, "."],
+  ["{starName} torched the entire opposing lineup tonight — ", { stamp: "win_tier", tier: "{winTier}" }, " — you saw this coming a mile out."],
+  [{ stamp: "win_tier", tier: "{winTier}" }, ". {starName} went absolutely nuclear and you were holding the detonator."],
+  ["Top to bottom, the lineup ran it back like they owed you money — ", { stamp: "win_tier", tier: "{winTier}" }, " — pure read."],
+  ["{starName} put up the kind of stat line you screenshot. You were on it. ", { stamp: "win_tier", tier: "{winTier}" }, "."],
+  ["{starName} ate, and the whole roster ate after him — ", { stamp: "win_tier", tier: "{winTier}" }, " — buffet-line read."],
+  ["You looked at the slate, you picked the heater, the heater turned the building into a sauna. ", { stamp: "win_tier", tier: "{winTier}" }, "."],
+];
+
+const TOP_RARE_PULL_RECORD: Line[] = [
+  ["{starName} carved his name into the record book tonight — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — you didn't pick the game, you picked history."],
+  ["{starName} just put up a game the league will be talking about for decades — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — and you were holding the ticket."],
+  ["You just watched {starName} do something the rest of the league has never done — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — that's not luck, that's the read."],
+  ["{starName} hung a number on the league tonight that nobody alive has matched. You called it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+  ["{starName} dropped one of the games they'll cut highlight reels around — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — you were in the right seat for it."],
+  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {starName} just made the record book and you handed him the pen."],
+  ["{starName} put together an all-time individual performance and you were the one stacking him — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — pure read."],
+  ["You picked the right night to back the right player. The record book agreed. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+  ["{starName} did something on the floor tonight that lives in the history of the league — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — read of the year."],
+  ["{starName} just produced a stat line that goes in a museum somewhere. You owned it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+];
+
+const TOP_RARE_PULL_CAREER: Line[] = [
+  ["{starName} just played the best game of his entire career and you had him locked in — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — that's a read."],
+  ["{starName} set a new personal high tonight and you were the one cashing on it — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — read of the season."],
+  ["{starName} just outdid every version of himself that came before — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — and you saw it coming."],
+  ["Years in the league and tonight was the one he'll tell his grandkids about. You called it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+  ["{starName} ran into his own ceiling tonight and put a hole in it — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — pure read."],
+  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {starName} just rewrote his own best and you were the one who knew tonight was the night."],
+  ["{starName} has been chasing this number his whole career. Tonight it caught him — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — and you were riding shotgun."],
+  ["You picked {starName} on the night he topped his own number. Stamp it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+  ["{starName} showed up as the best version of himself you've ever seen on tape — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — and you were already there."],
+  ["{starName} has played hundreds of games. None of them looked like tonight. You called it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+];
+
+const TOP_RARE_PULL_SEASON: Line[] = [
+  ["{starName} put together one of the best {statLabel} performances of the season tonight. You picked him. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+  ["{starName} just had one of the highest {statLabel} nights of the entire season and you were stacked behind him — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — that's a read."],
+  ["{starName} just dropped one of the biggest {statLabel} games anyone's put up this year — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — you called it."],
+  ["{starName} produced one of the best {statLabel} games the league has seen all year. You were on it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+  ["You picked the right night to back the right player and the {statLabel} backed it up — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — pure read."],
+  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {starName} just had one of the bigger {statLabel} games anyone has put up this season and you saw it coming."],
+  ["{starName} delivered a {statLabel} performance almost nobody in the league has matched this year — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — read of the month."],
+  ["{starName} put up {statLabel} numbers that rank with the best of the season. You called it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+  ["{starName} just had one of the best {statLabel} nights the league has seen this year and you had him locked in — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — that's the call."],
+  ["You picked {starName} on the night he put up one of the biggest {statLabel} games of the season. Stamp it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+];
+
+// UNREACHABLE per GameView L1330 trigger-override gate
+// (`challengeTrigger.trigger !== "default"` filters default-trigger hands
+// out before the TOP-slot framing call). Bank retained for shape
+// consistency with the trigger union; placeholder copy left in place
+// from 4bd0c89 — real copy not drafted per Bucket 2 Q1.3 LOCKED
+// 2026-05-24. Future routing change that sends default-trigger hands to
+// the TOP slot would require drafting real copy here.
+const TOP_DEFAULT: Line[] = [
+  ["TOP_DEFAULT placeholder 1. Played the hand."],
+  ["TOP_DEFAULT placeholder 2. The slate gave you a line."],
+  ["TOP_DEFAULT placeholder 3. Solid hand on the books."],
+];
+
+/** Raw stat-key → conversational label mapping. Keys are the authoritative
+ *  category values that land in TopGameReason.category, sourced from:
+ *    - basketball/public/data/topGames.json (season tier — verified
+ *      enumeration: pts, reb, ast, stl, blk + composite/flag forms)
+ *    - basketball SportAdapter careerCategories (career tier: pts, reb,
+ *      ast, threes)
+ *    - shared/data/nbaRecords.ts NBA_SINGLE_GAME_RECORDS (record tier:
+ *      pts, ast, reb, stl, blk, threes, turnovers)
+ *  Bucket 2 Q3.1 LOCKED 2026-05-24. */
+export const STAT_LABEL_MAP: Record<string, string> = {
+  // Stat-typed reasons (preferred — extractStatLabel walks allReasons
+  // and prefers these over composite/flag siblings when both exist)
+  pts:       "scoring",
+  reb:       "rebounding",
+  ast:       "passing",
+  stl:       "steals",
+  blk:       "blocks",
+  threes:    "3-point shooting",
+  // rare_pull on turnovers is data-permissible but reads ironically;
+  // left intentional pending feature-polish review.
+  turnovers: "turnovers",
+  // Composite/flag fallbacks — used only when no stat-typed reason
+  // exists in allReasons (pure five_by_five / td_X_Y_Z games with no
+  // per-stat top-10 ranking that hand).
+  fifty_plus_game: "scoring",
+  five_by_five:    "all-around",
+  td_30_20_20:     "triple-double",
+  td_60_10_10:     "scoring",
+};
+
+/** Walk allReasons preferring a stat-typed reason (rank defined) over a
+ *  composite/flag reason (no rank), then map its category through
+ *  STAT_LABEL_MAP. Returns null when no reasons exist or all categories
+ *  are unmapped. */
+export function extractStatLabel(
+  topGame: { primaryReason: TopGameReason | null; allReasons: TopGameReason[] | null } | null,
+): string | null {
+  if (!topGame) return null;
+  const all = topGame.allReasons ?? (topGame.primaryReason ? [topGame.primaryReason] : []);
+  if (all.length === 0) return null;
+  // Prefer stat-typed (rank defined). Fall through to first available.
+  const preferred = all.find(r => typeof r.rank === "number") ?? all[0];
+  const label = STAT_LABEL_MAP[preferred.category];
+  return label ?? null;
+}
+
+/** Title-case formatter for {winTierLow} substitution into BAD_BEAT
+ *  bank lines (e.g. `ROOKIE → "Rookie"`, `ALL_STAR → "All Star"`).
+ *  Distinct from formatTier() at the renderer (which uppercases for
+ *  stamp-chip display); this lives at the selector for in-line prose
+ *  use. Bucket 2 piece B smoke revision 2026-05-24. */
+function formatWinTierLow(t: string | undefined | null): string {
+  if (!t) return "";
+  return t
+    .split("_")
+    .map(w => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : ""))
+    .join(" ");
+}
+
+export type TopSlotTrigger = "bad_beat" | "miss" | "big_score" | "rare_pull" | "default";
+
+export interface TopSlotFramingArgs {
+  /** The fired trigger from the challenge-trigger evaluator. */
+  trigger: TopSlotTrigger;
+  /** Resolved roster — used to count held cards for bad_beat routing
+   *  (Q1.1 + 2026-05-24 smoke split: HELD_ONE / HELD_TWO_PLUS /
+   *  NO_HOLDS). */
+  roster: Array<{ tier?: string; wasHeld?: boolean }>;
+  /** rare_pull only — routes RECORD / CAREER / SEASON sub-banks
+   *  (Q1.2). Mirrors triggerResult.topGameTier. */
+  starAchievementType?: "record" | "career" | "season" | null;
+  /** Anchor card display name (typically last name or first-last) for
+   *  `{starName}` substitution. Used by HELD_ONE / NO_HOLDS / MISS /
+   *  RARE_PULL_* / BIG_SCORE banks. When null, lines containing
+   *  `{starName}` still substitute the empty string. */
+  starName?: string | null;
+  /** First held-card name for `{starName1}` substitution. Used by
+   *  TOP_BAD_BEAT_HELD_TWO_PLUS only. Caller computes per the
+   *  anchor-priority + FP-descending rule:
+   *  if anchor is in the held set, anchor → starName1; otherwise the
+   *  highest-FP held card → starName1. Bucket 2 smoke revision
+   *  2026-05-24. */
+  starName1?: string | null;
+  /** Second held-card name for `{starName2}` substitution. Used by
+   *  TOP_BAD_BEAT_HELD_TWO_PLUS only. Caller computes per the same
+   *  rule: the next highest-FP held card (excluding the one already
+   *  used as starName1). */
+  starName2?: string | null;
+  /** Resolved hand winTier. Drives:
+   *   - tier-gate filter for HELD_ONE / HELD_TWO_PLUS (these banks
+   *     only fire on BUST/ROOKIE/STARTER; ALL_STAR+ routes to
+   *     NO_HOLDS so the {winTierLow}-bearing copy doesn't read
+   *     contradictorily on a big-tier "bad beat").
+   *   - `{winTierLow}` substitution into BAD_BEAT bank lines.
+   *   - `tier: "{winTier}"` sentinel substitution into win_tier
+   *     StampTokens (TOP_BIG_SCORE).
+   *  Bucket 2 smoke revision 2026-05-24. */
+  winTier?: WinTier | null;
+  /** Which tier was missed (miss only). Sentinel substitution for
+   *  `tier: "{missTier}"` on MISS bank lines. Display-formatted in the
+   *  StampToken (underscore → space) by the renderer. */
+  missTier?: string | null;
+  /** rare_pull only — TopGameReason data for {statLabel} extraction on
+   *  the SEASON sub-bank. Combined shape mirrors TopGameResult. When
+   *  null on a SEASON-tier call, selector logs warn and falls back to
+   *  the RECORD bank per Q3.1 fallback spec. */
+  topGame?: { primaryReason: TopGameReason | null; allReasons: TopGameReason[] | null } | null;
+}
+
+/** Pick a hand-celebration line for the TOP slot of the post-reveal
+ *  screen. Returns a Line (parts array) — strings render through
+ *  Typewriter at the call-site, StampToken parts render as inline
+ *  DEAL/DRAW-style chips.
+ *
+ *  Substitution happens at selection time AFTER anti-repeat dedup
+ *  (which keys on the raw bank line via JSON.stringify):
+ *   - String parts: `{starName}`, `{starName1}`, `{starName2}`,
+ *     `{statLabel}`, `{winTierLow}`.
+ *   - StampToken parts: `tier: "{missTier}"` or `tier: "{winTier}"`
+ *     sentinels.
+ *  Selector substitution mirrors how selectChallengeInitiation
+ *  substitutes `{name}` / `{anchorFp}` etc. */
+export function selectTopSlotFraming(args: TopSlotFramingArgs): Line {
+  // Routing: pick the sub-bank for the trigger (+ qualifiers for splits).
+  let bank: Line[];
+  let resolvedAchievementType = args.starAchievementType ?? null;
+
+  switch (args.trigger) {
+    case "bad_beat": {
+      const heldCount = args.roster.filter(c => c.wasHeld === true).length;
+      // Tier-gate filter: HELD_ONE / HELD_TWO_PLUS banks lean on the
+      // {winTierLow} contrast ("premium picks, {winTierLow} scrape").
+      // The mechanic breaks if a bad_beat hand also cleared ALL_STAR+
+      // — at higher tiers, the NO_HOLDS bank's "right pick, wrong
+      // night" framing reads cleaner. Defensive: the trigger evaluator
+      // currently only fires bad_beat on BUST/ROOKIE, so this gate
+      // only matters if firing conditions ever loosen.
+      const isLowTier = args.winTier === "BUST" || args.winTier === "ROOKIE" || args.winTier === "STARTER";
+      if (heldCount === 0 || !isLowTier) {
+        bank = TOP_BAD_BEAT_NO_HOLDS;
+      } else if (heldCount === 1) {
+        bank = TOP_BAD_BEAT_HELD_ONE;
+      } else {
+        bank = TOP_BAD_BEAT_HELD_TWO_PLUS;
+      }
+      break;
+    }
+    case "miss":
+      bank = TOP_MISS;
+      break;
+    case "big_score":
+      bank = TOP_BIG_SCORE;
+      break;
+    case "rare_pull": {
+      if (resolvedAchievementType === "record") bank = TOP_RARE_PULL_RECORD;
+      else if (resolvedAchievementType === "career") bank = TOP_RARE_PULL_CAREER;
+      else if (resolvedAchievementType === "season") {
+        // SEASON requires statLabel. If null (topGame missing or
+        // category unmapped), log warn and fall back to RECORD bank
+        // per Q3.1 spec — closest texturally; better than placeholder.
+        const statLabel = extractStatLabel(args.topGame ?? null);
+        if (!statLabel) {
+          // eslint-disable-next-line no-console
+          console.warn(
+            "[selectTopSlotFraming] rare_pull season trigger fired without statLabel; " +
+            "trigger eval may not be propagating TopGameReason. Falling back to RECORD bank.",
+            { topGame: args.topGame ?? null }
+          );
+          bank = TOP_RARE_PULL_RECORD;
+          resolvedAchievementType = "record"; // for downstream consistency
+        } else {
+          bank = TOP_RARE_PULL_SEASON;
+        }
+      } else {
+        // rare_pull fired but no topGameTier supplied — shouldn't happen
+        // through GameView path, but defend the surface. Use RECORD as
+        // safe default texturally.
+        bank = TOP_RARE_PULL_RECORD;
+      }
+      break;
+    }
+    case "default":
+      bank = TOP_DEFAULT;
+      break;
+  }
+
+  // Anti-repeat dedups on the raw bank line (pre-substitution) so the
+  // ring buffer reflects bank shape, not per-hand substituted values.
+  const raw = pickWithAntiRepeat(bank, line => JSON.stringify(line));
+
+  // Substitute {starName} / {statLabel} / {winTierLow} / etc. in
+  // string parts, and replace tier sentinels in StampToken parts.
+  // Build statLabel once here so both the bank-routing path above
+  // (SEASON branch) and substitution path use the same extracted value.
+  const statLabel = args.trigger === "rare_pull" && resolvedAchievementType === "season"
+    ? extractStatLabel(args.topGame ?? null)
+    : null;
+
+  return substituteLine(raw, {
+    starName: args.starName ?? "",
+    starName1: args.starName1 ?? "",
+    starName2: args.starName2 ?? "",
+    statLabel: statLabel ?? "",
+    missTier: args.missTier ?? "",
+    winTier: args.winTier ?? "",
+    winTierLow: formatWinTierLow(args.winTier),
+    rarePullTier: args.starAchievementType ?? "",
+  });
+}
+
+interface LineSubstitutions {
+  starName: string;
+  starName1: string;
+  starName2: string;
+  statLabel: string;
+  missTier: string;
+  winTier: string;
+  winTierLow: string;
+  rarePullTier: string;
+}
+
+/** Substitute tokens into each LinePart. Strings: `{starName}`,
+ *  `{starName1}`, `{starName2}`, `{statLabel}`, `{winTierLow}`
+ *  (global replace). StampTokens: `tier: "{missTier}"` and
+ *  `tier: "{winTier}"` sentinels → actual values (or stripped to
+ *  undefined when empty, so renderer falls back to context lookup).
+ *
+ *  Ordering note: `{starName}` regex is `\{starName\}` which won't
+ *  match `{starName1}` or `{starName2}` (the trailing digits prevent
+ *  match). Substitutions are mutually non-overlapping; order
+ *  doesn't matter. */
+function substituteLine(line: Line, subs: LineSubstitutions): Line {
+  return line.map((part): LinePart => {
+    if (typeof part === "string") {
+      return part
+        .replace(/\{starName1\}/g, subs.starName1)
+        .replace(/\{starName2\}/g, subs.starName2)
+        .replace(/\{starName\}/g, subs.starName)
+        .replace(/\{statLabel\}/g, subs.statLabel)
+        .replace(/\{winTierLow\}/g, subs.winTierLow);
+    }
+    // StampToken: handle tier sentinel substitution.
+    if (part.tier === "{missTier}") {
+      if (subs.missTier) return { stamp: part.stamp, tier: subs.missTier };
+      // Strip the sentinel so renderer falls back to missTier prop.
+      return { stamp: part.stamp };
+    }
+    if (part.tier === "{winTier}") {
+      if (subs.winTier) return { stamp: part.stamp, tier: subs.winTier };
+      // Strip the sentinel so renderer falls back to winTier prop.
+      return { stamp: part.stamp };
+    }
+    if (part.tier === "{rarePullTier}") {
+      if (subs.rarePullTier) return { stamp: part.stamp, tier: subs.rarePullTier };
+      // Strip the sentinel; renderer falls back to base "RARE PULL" label.
+      return { stamp: part.stamp };
+    }
+    return part;
+  });
+}
+
+/** Expose bank arrays for testing / preview. */
+export type TopSlotBankKey =
+  | "bad_beat_held_one" | "bad_beat_held_two_plus" | "bad_beat_no_holds"
+  | "miss" | "big_score"
+  | "rare_pull_record" | "rare_pull_career" | "rare_pull_season"
+  | "default";
+
+export function topSlotFramingBank(key: TopSlotBankKey): Line[] {
+  const bank = (() => {
+    switch (key) {
+      case "bad_beat_held_one":      return TOP_BAD_BEAT_HELD_ONE;
+      case "bad_beat_held_two_plus": return TOP_BAD_BEAT_HELD_TWO_PLUS;
+      case "bad_beat_no_holds":      return TOP_BAD_BEAT_NO_HOLDS;
+      case "miss":                   return TOP_MISS;
+      case "big_score":              return TOP_BIG_SCORE;
+      case "rare_pull_record":       return TOP_RARE_PULL_RECORD;
+      case "rare_pull_career":       return TOP_RARE_PULL_CAREER;
+      case "rare_pull_season":       return TOP_RARE_PULL_SEASON;
+      case "default":                return TOP_DEFAULT;
+    }
+  })();
+  return bank.map(line => [...line]);
 }
 
 // ── Challenge resolution — Chad's verdict to the recipient ────────────────
@@ -938,50 +1353,157 @@ export function chadResolutionBank(outcome: ResolutionOutcome, flavor: Resolutio
 // Chad's line carries the dare. No {name}/{delta} interpolation because
 // the recipient sees the slate details elsewhere on the card.
 //
-// Two tone tiers selected from the poster's win tier so a LEGEND share
-// brags differently than a STARTER share. Default bank covers everything
-// in between.
+// Four trigger-keyed sub-banks (mirror selectChallengeInitiation's
+// bucket structure — same emotional taxonomy on both sender prompt
+// and recipient share):
+//   bad_beat  — sender stacked R/O cards and got cooked; share-the-pain
+//   flex      — sender hit ALL_STAR+/rare_pull/big_score; brag and dare
+//   statement — sender cleared STARTER honestly OR near-missed next
+//               tier; set the floor, beat it
+//   default   — everything else; cold provocation, play the slate
 
-const SHARE_TT_BRAG: string[] = [
-  "Cleared the bar. Now find out how short you are.",
-  "Trophy hand. Your turn — show me you can match it.",
-  "Top-shelf night. The slate is yours; the ceiling is mine.",
+const SHARE_TT_BAD_BEAT: string[] = [
+  "Held two anchors. Got nothing. Try not to make my mistake.",
+  "Stacked the lineup, came up empty. Same cards. Your decisions.",
+  "Got cooked on premium picks. The slate's not the problem — find out.",
+  "Brutal hand. See if you read it better.",
+  "Spent the budget on RED, got handed a punch in the mouth. Your turn.",
+  "Two anchors, no production. The math says rebound; the math also says good luck.",
+  "Slate looked perfect on paper. Paper got eaten. See if your hand survives.",
+  "Built the dream lineup. Watched it die. Pass the receipt; let's see if it dies twice.",
+  "When the high-tier cards no-show, there's no salvaging it. Try anyway.",
+  "Took the swings, missed everything. Find out if you do better — odds say maybe.",
+];
+
+const SHARE_TT_FLEX: string[] = [
+  "Cleared the bar. Find out how short you are.",
   "Hand of the day candidate. Try not to be the photo-finish loss.",
-  "MVP-tier output. I dare you to come within five.",
+  "Top-shelf night. The slate's yours; the ceiling is mine.",
+  "MVP-tier output. Don't come within five and call it close.",
   "Set the high. See if you can touch it.",
+  "Anyone who beats this is lying. Make me look stupid — I dare you.",
+  "Built it, won it, posted it. Your move.",
   "Don't embarrass yourself, but if you do, I want pictures.",
+  "Trophy hand on a Tuesday. See if you can do it on a weeknight too.",
+  "Receipts say I cooked. Let's see what yours says.",
+];
+
+const SHARE_TT_STATEMENT: string[] = [
+  "Above the line. See if you can clear the same height.",
+  "STARTER on the board. Either you match or you don't. The math doesn't grade on style.",
+  "Solid hand, not the ceiling. Plenty of room for you to fall short.",
+  "Workman's night. The kind your group chat respects until somebody beats it.",
+  "Decent floor. Find out if you're better at this than you think.",
+  "Made it past the rookie line. Now make it past me.",
+  "Honest hand. The honest question is whether you can match it.",
+  "Solid night. Pick a friend, hand them the slate, watch them sweat.",
+  "Set the bar somewhere between possible and annoying. Make me look easy.",
+  "Above average is above. Find out if you are.",
 ];
 
 const SHARE_TT_DEFAULT: string[] = [
   "Same slate, your turn. Show your work.",
   "Beat this. Don't make me regret sending it.",
   "Played a hand. Made it your problem now.",
-  "Sent you a slate. Whoever scores higher gets bragging rights for a week.",
-  "Try this. I want to see how you'd play it.",
+  "Sent you a slate. Whoever scores higher wins the group chat for a week.",
   "Hand's on the table. Your move.",
   "Same names, same numbers. Different hand if you're smart.",
   "Run the slate. Send back the receipt.",
   "Built one. Curious if yours holds up.",
   "Tap in. The slate is the slate; the score is yours to chase.",
-  "I'll wait. Show me your version of this hand.",
-  "Try clearing what I just did. Lower bar than it sounds.",
-  "Sent you the same cards. Different night if you read it right.",
   "Don't overthink it. Don't underthink it either. Just play.",
 ];
 
+export type ShareTrashTalkBucket = "bad_beat" | "flex" | "statement" | "default";
+
+/** Map trigger (+ winTier as secondary signal) to share-bank bucket.
+ *  Mirrors selectInitiationBucket above so sender prompt and recipient
+ *  share copy point at the same emotional frame.
+ *
+ *  Trigger-only mapping covers most cases; winTier=STARTER pulls
+ *  comfortable-STARTER wins (which evaluate to trigger="default") into
+ *  the statement bucket so they don't get the cold/generic default
+ *  pool. */
+function shareTrashTalkBucket(trigger?: string, winTier?: string): ShareTrashTalkBucket {
+  if (trigger === "rare_pull" || trigger === "big_score") return "flex";
+  if (trigger === "bad_beat") return "bad_beat";
+  if (trigger === "miss" || winTier === "STARTER") return "statement";
+  return "default";
+}
+
 /** Top-level: returns Chad's recipient-facing trash talk for the share
- *  payload. Tone tier graduates with the poster's win tier — LEGEND/MVP
- *  shares brag, STARTER+ shares default. Anti-repeat shared with other
- *  Chad surfaces so the same line doesn't recur back-to-back. */
-export function chadShareTrashTalk(args: { winTier?: string } = {}): string {
-  const t = args.winTier;
-  if (t === "MVP" || t === "LEGEND" || t === "ALL_STAR") {
-    return pickWithAntiRepeat(SHARE_TT_BRAG);
+ *  payload. Trigger-aware (mirrors selectChallengeInitiation) so a
+ *  bad_beat share recipient reads "share the pain" copy, a flex share
+ *  recipient reads "match this if you can" copy, etc. Anti-repeat
+ *  shared with other Chad surfaces. */
+export function chadShareTrashTalk(args: { trigger?: string; winTier?: string } = {}): string {
+  const bucket = shareTrashTalkBucket(args.trigger, args.winTier);
+  switch (bucket) {
+    case "bad_beat":  return pickWithAntiRepeat(SHARE_TT_BAD_BEAT);
+    case "flex":      return pickWithAntiRepeat(SHARE_TT_FLEX);
+    case "statement": return pickWithAntiRepeat(SHARE_TT_STATEMENT);
+    case "default":   return pickWithAntiRepeat(SHARE_TT_DEFAULT);
   }
-  return pickWithAntiRepeat(SHARE_TT_DEFAULT);
 }
 
 /** Expose bank arrays for testing / preview. */
-export function chadShareTrashTalkBank(tier: "brag" | "default"): string[] {
-  return tier === "brag" ? [...SHARE_TT_BRAG] : [...SHARE_TT_DEFAULT];
+export function chadShareTrashTalkBank(bucket: ShareTrashTalkBucket): string[] {
+  switch (bucket) {
+    case "bad_beat":  return [...SHARE_TT_BAD_BEAT];
+    case "flex":      return [...SHARE_TT_FLEX];
+    case "statement": return [...SHARE_TT_STATEMENT];
+    case "default":   return [...SHARE_TT_DEFAULT];
+  }
+}
+
+// ── First-share invitation — early-discovery one-shot ─────────────────────
+//
+// Fires ONCE per identity, in the post-reveal commentary slot, when the
+// engagement gate trips:
+//   handCount >= 3  &&  !isFTUE  &&  !challengeCtx  &&  flag-not-set
+//
+// Caller (GameView's postRevealCopy useMemo) evaluates the gate, fires
+// this function, sets localStorage rm_usher_first_share_invitation="1",
+// and treats the returned string as the post-reveal primary line. Bank
+// preempts the named-trigger override (workstream 2) for that one
+// reveal — so a user whose first share-eligible hand is ALSO a rare_pull
+// sees the invitation copy, not the anchor-aware line, this one time.
+//
+// Two sub-buckets keyed on winTier:
+//   BUST       → FIRST_SHARE_BUST  (own the bust, name the competition)
+//   anything else → FIRST_SHARE_HIT  (ride the heat, name the competition)
+//
+// Voice: ASSERTS the competition premise as a fact about the game, not
+// a pitch. No "what's more fun is if you can…" hedging.
+
+const FIRST_SHARE_HIT: string[] = [
+  "Game's better when somebody you know is sweating the same slate. Send it.",
+  "You played the slate. Now make your buddy play the slate. That's the whole thing.",
+  "This is the part where you find out if your friends are any good. Pick one.",
+  "You just played this slate. Don't keep it — make a friend run it too.",
+  "The point of the game is somebody you know taking a swing at the same cards. Now's the time.",
+  "Score's on the board. Now find out who in your group chat can clear it.",
+];
+
+const FIRST_SHARE_BUST: string[] = [
+  "Rough one. Now go cook somebody else on it.",
+  "Got cooked. Cook a friend with the same slate.",
+  "Bust hand. The fun part: pass it to a friend and watch them eat it too.",
+  "That was ugly. Make a friend look at the same ugly cards. Misery is portable.",
+  "Hand died. Forward the autopsy. See who else can fail the same way.",
+  "The slate punched you. Now find out if it punches your friends too.",
+];
+
+/** Returns one line from FIRST_SHARE_HIT (or FIRST_SHARE_BUST for BUST).
+ *  Fires at most ONCE per identity via the one-shot flag the caller
+ *  manages. Uses the shared anti-repeat ring buffer for consistency,
+ *  though anti-repeat barely matters at one-shot scale. */
+export function firstShareInvitation(args: { winTier: string }): string {
+  if (args.winTier === "BUST") return pickWithAntiRepeat(FIRST_SHARE_BUST);
+  return pickWithAntiRepeat(FIRST_SHARE_HIT);
+}
+
+/** Expose bank arrays for testing / preview. */
+export function firstShareInvitationBank(bucket: "hit" | "bust"): string[] {
+  return bucket === "bust" ? [...FIRST_SHARE_BUST] : [...FIRST_SHARE_HIT];
 }
