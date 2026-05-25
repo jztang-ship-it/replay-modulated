@@ -400,6 +400,8 @@ export const PLAYER_IMAGE_MANIFEST: Record<string, ExternalIds> = {
   "22600": { apiFootballId: 303263, local: true, processed: true },
   // Sadegh Moharrami (Iran)
   "23538": { apiFootballId: 1311, local: true, processed: true },
+  // Jhegson Sebastián Méndez Carabalí (Ecuador)
+  "23830": { apiFootballId: 555333, local: true, processed: true },
   // Ali Gholizadeh (Iran)
   "23874": { apiFootballId: 8564, local: true, processed: true },
   // Youssef Msakni (Tunisia)
