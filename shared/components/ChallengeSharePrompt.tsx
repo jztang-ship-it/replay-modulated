@@ -29,13 +29,27 @@ interface Props {
    *  hand). Surfaces "Send to {name}" framing instead of generic
    *  trigger labels. null → use existing trigger-driven copy. */
   rivalryTargetName?: string | null;
+  /** The audit handId that logHandToDb just persisted to
+   *  hand_log.hand_id for this hand. Threaded from GameView via
+   *  _useSharedGameState.currentHandIdRef. Reusing it here makes
+   *  shared_challenges.hand_id point at the actual hand_log row,
+   *  which is what the H2H sender-hand endpoint joins on.
+   *
+   *  Omitting (or passing undefined) falls back to a fresh UUID —
+   *  shouldn't happen under normal flow since RESULTS state is only
+   *  entered after logHandToDb has set the ref, but the fallback
+   *  keeps the prompt mountable without a hard dependency. Challenges
+   *  created via the fallback path will surface as legacy on the
+   *  sender-hand endpoint (no matching hand_log row → routed to the
+   *  legacy fallback). */
+  handId?: string;
   onDismiss?: () => void;
 }
 
 export function ChallengeSharePrompt({
   sport, season, totalFp, winTier, roster, initialRoster,
   badges, winTiersMap, serializeRoster, triggerResult, shareHeadline,
-  rivalryTargetName, onDismiss,
+  rivalryTargetName, handId, onDismiss,
 }: Props) {
   const [copied, setCopied] = useState(false);
   const { isCreating, challengeId, error, createChallenge, shareChallenge } = useChallengeShare(sport);
@@ -117,7 +131,15 @@ export function ChallengeSharePrompt({
     let cid = challengeId;
     if (!cid) {
       cid = await createChallenge({
-        handId: crypto.randomUUID(),
+        // Prefer the audit handId threaded through from GameView — it
+        // matches the hand_log.hand_id logHandToDb just persisted, which
+        // is what the H2H sender-hand endpoint joins on. Fresh UUID
+        // fallback only kicks in if the ref wasn't populated (legacy
+        // mount paths / future ChallengeSharePrompt callers without the
+        // wiring); those challenges will surface as legacy on the
+        // sender-hand endpoint per docs/h2h-reveal-arc-design.md
+        // "Legacy fallback" origin (b).
+        handId: handId ?? crypto.randomUUID(),
         sport, season, totalFp, winTier, roster, initialRoster, badges, winTiersMap,
         challengerName: getNickname() || "Anonymous",
         serializeRoster,

@@ -59,6 +59,45 @@ export type GameState =
 const STARTING_BALANCE = 5000;
 const MIN_BALANCE_FLOOR = 500;
 
+/**
+ * Serialize a resolved roster into a JSONB-safe blob mirroring GeneratedCard
+ * (shared/types/index.ts:178-186). Written to hand_log.final_roster at
+ * logHandToDb time and read back verbatim by the sender-hand endpoint
+ * (api/challenge/[id]/sender-hand.ts).
+ *
+ * Explicit field picker — additions to GeneratedCard should land here
+ * intentionally, not implicitly. statLine + achievements are passed through
+ * as-is (already JSON-safe per their production producers) so per-card
+ * box scores and badge details survive the round-trip.
+ */
+function serializeResolvedRoster(roster: any[]): Array<Record<string, any>> {
+  return roster.map((c: any) => ({
+    id: String(c.id ?? ""),
+    basePlayerId: String(c.basePlayerId ?? ""),
+    personKey: String(c.personKey ?? c.basePlayerId ?? ""),
+    cardId: String(c.cardId ?? c.id ?? ""),
+    name: String(c.name ?? ""),
+    team: String(c.team ?? ""),
+    season: String(c.season ?? ""),
+    position: String(c.position ?? ""),
+    photoCode: c.photoCode != null ? String(c.photoCode) : null,
+    salary: Number(c.salary ?? 0),
+    tier: String(c.tier ?? "WHITE"),
+    projectedFp: Number(c.projectedFp ?? 0),
+    slotIndex: Number(c.slotIndex ?? 0),
+    wasHeld: c.wasHeld === true,
+    actualFp: Number(c.actualFp ?? 0),
+    fpDelta: Number(c.fpDelta ?? 0),
+    gameInfo: {
+      date: String(c.gameInfo?.date ?? ""),
+      opponent: String(c.gameInfo?.opponent ?? ""),
+      ...(c.gameInfo?.homeAway != null ? { homeAway: String(c.gameInfo.homeAway) } : {}),
+    },
+    statLine: (c.statLine && typeof c.statLine === "object") ? c.statLine : {},
+    achievements: Array.isArray(c.achievements) ? c.achievements : [],
+  }));
+}
+
 /** The fields the hook actually reads off the adapter. Keeping the
  *  parameter narrowed to a Pick<> means call sites can pass a partial
  *  literal during the multi-PR lift instead of constructing dummy
@@ -297,6 +336,14 @@ export function useSharedGameState(
     return next;
   }, []);
 
+  // Latest handId persisted via logHandToDb. Exposed so downstream surfaces
+  // (specifically ChallengeSharePrompt) can reuse the same audit ID when
+  // creating a challenge from this hand — without this, the prompt would
+  // mint a fresh UUID and shared_challenges.hand_id would have no matching
+  // hand_log row, breaking the H2H reveal arc's sender-hand endpoint
+  // premise. See docs/h2h-reveal-arc-design.md "handId threading fix".
+  const currentHandIdRef = useRef<string | null>(null);
+
   const logHandToDb = useCallback(async (
     rosterArg: any[],
     totalFp: number,
@@ -305,6 +352,12 @@ export function useSharedGameState(
     streakAtPlay: number,
     handId?: string,
   ) => {
+    // Write to the shared ref first so the ChallengeSharePrompt mount —
+    // which reads from this ref at RESULTS — sees the correct ID even if
+    // the network insert below races / fails. The audit-DB write being
+    // best-effort doesn't change the contract: the handId associated with
+    // *this* hand is whatever _useReveal generated and passed in.
+    if (handId) currentHandIdRef.current = handId;
     const season = String((rosterArg[0] as any)?.season ?? "");
     try {
       const uid = getPlayerUid();
@@ -314,6 +367,15 @@ export function useSharedGameState(
         .filter(Boolean);
       const { data: { session } } = await supabase.auth.getSession();
       const verified = !!session?.access_token;
+      // final_roster: GeneratedCard-shaped per-card resolved data, populated
+      // on every hand from 2026-05-26 forward. Consumed by the H2H reveal
+      // arc data path (GET /api/challenge/{id}/sender-hand). Pre-cutover
+      // rows are NULL → endpoint returns sender_resolved:false with
+      // reason:"legacy_pre_h2h_capture". Field picker is explicit so future
+      // GeneratedCard additions don't accidentally bloat the JSONB without
+      // an intentional decision. See docs/h2h-reveal-arc-design.md
+      // "Data model gap — RESOLVED for phase 1" for the locked schema.
+      const finalRoster = serializeResolvedRoster(rosterArg);
       await supabase.from("hand_log").insert({
         player_id: uid,
         hand_id: handId ?? null,
@@ -325,6 +387,7 @@ export function useSharedGameState(
         verified,
         sport: adapter.sportKey,
         season,
+        final_roster: finalRoster,
       });
       // Trigger inbox big-win recap for elite tiers
       if (tier === "MVP+" || tier === "LEGEND") {
@@ -384,6 +447,7 @@ export function useSharedGameState(
     winPayout, setWinPayout,
     streak, setStreak,
     handCount, setHandCount,
+    currentHandIdRef,
 
     // Reveal state
     revealIndex, setRevealIndex,

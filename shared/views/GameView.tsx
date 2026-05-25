@@ -429,6 +429,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     winPayout, setWinPayout,
     streak,
     handCount,
+    currentHandIdRef,
     revealIndex,
     revealedSalary, setRevealedSalary,
     lastRevealedCardId, setLastRevealedCardId,
@@ -3041,6 +3042,14 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             triggerResult={challengeTrigger}
             rivalryTargetName={challengeBackCtx?.challengerName ?? null}
             shareHeadline={computedShareHeadline}
+            // handId — reuse the audit ID logHandToDb just persisted to
+            // hand_log.hand_id so the resulting shared_challenges row's
+            // hand_id matches. Required for the H2H sender-hand endpoint
+            // to find the corresponding hand_log row at recipient DEAL
+            // time. Pre-fix challenges minted a fresh UUID here and the
+            // link was broken on every challenge ever created. See
+            // docs/h2h-reveal-arc-design.md "handId threading fix".
+            handId={currentHandIdRef.current ?? undefined}
             onDismiss={() => {
               setChallengeTrigger(null);
               // Rivalry continuation ends when the user dismisses the
