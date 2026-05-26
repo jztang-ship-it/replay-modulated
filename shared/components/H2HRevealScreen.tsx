@@ -1,9 +1,16 @@
 /**
  * shared/components/H2HRevealScreen.tsx
  *
- * Phase 2 of the H2H reveal arc — static end-state with mock data. No
- * animation, no per-matchup choreography, no real-data wiring. Locks
- * the visual structure before phase 3's animation work.
+ * H2H reveal arc screen. Renders the head-to-head matchup visual:
+ * battlefield with two heroes + per-side hand strips + running totals.
+ *
+ * Two render modes:
+ * - Static (phase 2 default): pass `sender`, `recipient`, `renderCard`.
+ *   Renders the end-state (final matchup + final totals).
+ * - Animated (phase 3): pass a `reveal` from `useH2HReveal`. Battlefield
+ *   cards walk through matchups, FPs roll up, scores tick, mini-cards
+ *   dim during their matchup. Falls back to the static end-state when
+ *   `reveal.phase === "done"`.
  *
  * Full-viewport. Owns the entire screen — no header, no nav, no profile
  * chrome. Same "takeover" model as a single-player win celebration.
@@ -53,7 +60,15 @@
  * the locked decisions this component encodes.
  */
 
-import React from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import type { UseH2HRevealReturn } from "./useH2HReveal";
+import {
+  CARD_LAY_MS,
+  CARD_TRAVEL_MS,
+  ENERGY_PULSE_MS,
+  BATTLEFIELD_TRAVEL_DURATION_MS,
+  type EntranceStage,
+} from "./useH2HReveal";
 
 // ── Public types ─────────────────────────────────────────────────────────
 
@@ -97,8 +112,16 @@ export interface H2HHand {
  *  hand-strip cells. The same component renders in both zones; the
  *  container's size determines the visual scale. Basketball passes its
  *  AthleteCard, matching how LandingPage already mounts the same
- *  CardComponent at small sizes (shared/components/LandingPage.tsx:369). */
-export type CardRenderer = (card: H2HCard) => React.ReactNode;
+ *  CardComponent at small sizes (shared/components/LandingPage.tsx:369).
+ *
+ *  `options.visibleFp` (phase 3): when set, drives the card's FP
+ *  rollup animation. Hand-strip cells render with options=undefined
+ *  (static); battlefield cells during reveal pass the current
+ *  animated FP from useH2HReveal's visibleFpMap. The renderer is
+ *  responsible for forwarding the value to its sport-card's
+ *  `visibleFp` prop (basketball: AthleteCard.visibleFp → CardFront's
+ *  internal RAF interpolation). */
+export type CardRenderer = (card: H2HCard, options?: { visibleFp?: number }) => React.ReactNode;
 
 export interface H2HRevealScreenProps {
   sender: H2HHand;
@@ -106,9 +129,17 @@ export interface H2HRevealScreenProps {
   renderCard: CardRenderer;
   /** Which matchup pair to display in the battlefield zone. Defaults to
    *  the last slotIndex (the final reveal slot per the swap-then-held
-   *  order). Phase 3 will animate through pairs; phase 2 just static-
-   *  renders one. */
+   *  order). Phase 2 static path; ignored when `reveal` is provided. */
   battlefieldSlotIndex?: number;
+  /** Phase 3 animation state from `useH2HReveal`. When provided,
+   *  overrides battlefieldSlotIndex: battlefield cards come from
+   *  `reveal.activeMatchup`, scores tick from
+   *  `reveal.{sender,recipient}RunningTotal`, and battlefield cards'
+   *  FP rolls up from `reveal.visibleFpMap`. Hand strip dims the
+   *  mini-card whose cardId matches the active matchup. When
+   *  `reveal.phase === "done"`, this renders the same end-state as
+   *  the phase-2 static path. */
+  reveal?: UseH2HRevealReturn;
 }
 
 // ── Tier colors ──────────────────────────────────────────────────────────
@@ -248,19 +279,97 @@ function ZonePanel({ children }: { children: React.ReactNode }) {
 interface HandStripProps {
   cards: H2HCard[];
   renderCard: CardRenderer;
-  /** Which slotIndex is currently in the battlefield zone. The
-   *  matching mini-cell in this strip dims to signal "this card is
-   *  out of the hand, in battle." Phase 3 (animation choreography)
-   *  will drive this dynamically as the reveal walks through
-   *  matchups; in phase 2 it tracks the battlefield's static slot. */
-  activeSlotIndex?: number;
+  /** Cell whose `cardId` matches dims to signal "this card is out of
+   *  the hand, in battle." Phase 2 derives this from the static
+   *  battlefield slot; phase 3 from `reveal.activeMatchup`. Matching by
+   *  cardId (not slotIndex) survives the case where deal order and
+   *  reveal order differ — phase 4's real data is deal-ordered, but
+   *  the reveal walks in (wasHeld, salary) order. */
+  activeCardId?: string | null;
+  /** Per-stage_index entrance stage array from useH2HReveal. Length =
+   *  cards.length. When omitted (static phase 2 path), all cells
+   *  render as "settled." stage_index 0 = first to lay (cheapest swap
+   *  per the reveal order). */
+  entranceStages?: EntranceStage[];
+  /** Reveal-order array for THIS side. Same array exposed by the hook
+   *  as `senderRevealOrder` / `recipientRevealOrder`. Used to map
+   *  each card → its stage_index in entranceStages. Pass-through from
+   *  the static phase-2 path is undefined, in which case all cells
+   *  fall through to "settled". */
+  revealOrder?: H2HCard[];
+  /** Drives entrance Y direction. Sender strip is at the top of the
+   *  viewport; sender cards translate DOWN into the upper battlefield
+   *  slot during the middle phase. Recipient strip is at the bottom;
+   *  cards translate UP into the lower battlefield slot. */
+  side: "sender" | "recipient";
+  /** When true, the entrance animation is skipped (per
+   *  prefers-reduced-motion). Cells render directly at landed state. */
+  reducedMotion: boolean;
+  /** Phase 3.9 anticipation beat — when true, each cell applies a
+   *  tier-colored glow pulse animation. Hook gates this flag to the
+   *  ENERGY_PULSE_MS window of the anticipating phase. */
+  pulseActive: boolean;
 }
 
-function HandStrip({ cards, renderCard, activeSlotIndex }: HandStripProps) {
+// Entrance "middle" scale and Y offsets — during the LAY/BEAT phases,
+// the card is scaled up to hero size (~125px wide vs ~55px mini) and
+// translated to the middle of the screen. Two Y offsets approximate the
+// battlefield hero row positions (upper for sender, lower for recipient)
+// — sender card visually appears at the upper-middle band and recipient
+// at the lower-middle band, so they stack vertically rather than
+// overlapping at a single point.
+// Translate X is computed per-cell from viewport width so each card
+// crosses to the horizontal center regardless of its strip column.
+const HERO_CARD_SCALE = 0.83;
+// Sender strip is near the top of the screen; cards translate DOWN
+// (positive Y) into the upper battlefield slot. Recipient strip near
+// the bottom; cards translate UP into the lower battlefield slot. The
+// magnitudes are calibrated so the two visuals land in their
+// respective battlefield rows rather than overlapping at viewport
+// center — see docs/h2h-reveal-arc-design.md "Phase 3.8 — sequential
+// dealing" for the positioning rationale.
+const MIDDLE_TRANSLATE_Y_SENDER_PX = 110;
+const MIDDLE_TRANSLATE_Y_RECIPIENT_PX = -110;
+
+// Compute the translateX needed to bring a cell's scaled-visual center
+// to viewport horizontal center. cell_left ≈ innerColLeft + 16 + 4 +
+// displayPos*59 on mobile; we read viewport width at render time so
+// desktop's wider inner column stays aligned.
+function computeMiddleTranslateX(displayPos: number): number {
+  if (typeof window === "undefined") return 0;
+  const vw = window.innerWidth;
+  const innerColW = Math.min(480, vw);
+  const innerColLeft = (vw - innerColW) / 2;
+  const cellLeft = innerColLeft + 16 + 4 + displayPos * 59;
+  const scaledHeroHalfWidth = (STRIP_CARD_NATURAL_WIDTH_PX * HERO_CARD_SCALE) / 2;
+  return vw / 2 - cellLeft - scaledHeroHalfWidth;
+}
+
+function HandStrip({ cards, renderCard, activeCardId, entranceStages, revealOrder, side, reducedMotion, pulseActive }: HandStripProps) {
   const ordered = [...cards].sort((a, b) => a.slotIndex - b.slotIndex);
+  const N = ordered.length;
+  // Default to "all settled" when the static phase-2 caller doesn't pass
+  // entrance state.
+  const stages = entranceStages ?? new Array(N).fill("settled" as const);
+  // Build cardId → reveal-order index lookup. When revealOrder isn't
+  // provided (static phase 2), fall back to slotIndex order — which
+  // for the mock fixture happens to match reveal order (slot 0 =
+  // cheapest swap). Phase 4 real data passes revealOrder explicitly.
+  const stageIndexByCardId = useMemo(() => {
+    const map = new Map<string, number>();
+    if (revealOrder) {
+      for (let i = 0; i < revealOrder.length; i++) {
+        map.set(revealOrder[i].cardId, i);
+      }
+    } else {
+      ordered.forEach((c, i) => map.set(c.cardId, i));
+    }
+    return map;
+  }, [revealOrder, ordered]);
   return (
     <div
       data-h2h-hand-strip="true"
+      data-side={side}
       style={{
         display: "flex",
         justifyContent: "center",
@@ -270,33 +379,139 @@ function HandStrip({ cards, renderCard, activeSlotIndex }: HandStripProps) {
         width: "100%",
       }}
     >
-      {ordered.map(card => {
-        const isActiveInBattlefield = activeSlotIndex !== undefined && card.slotIndex === activeSlotIndex;
+      {ordered.map((card, displayPos) => {
+        const isActiveInBattlefield = !!activeCardId && card.cardId === activeCardId;
+        // Stage_index is the card's position in the REVEAL ORDER (same
+        // direction on both sides — cheapest swap = stage_index 0).
+        // Both strips' stage_index 0 cards animate together. The
+        // displayPos comes from slotIndex order, which may differ from
+        // reveal order in phase 4 — the lookup via revealOrder keeps
+        // the entrance order consistent with the reveal arc.
+        const stageIndex = stageIndexByCardId.get(card.cardId) ?? displayPos;
+        const stage: EntranceStage = stages[stageIndex] ?? "settled";
+
+        // Compute the "middle of screen" transform target for this cell.
+        // Each cell shifts to the viewport horizontal center + a Y
+        // offset toward the battlefield row.
+        const middleTranslateX = computeMiddleTranslateX(displayPos);
+        const middleTranslateY = side === "sender"
+          ? MIDDLE_TRANSLATE_Y_SENDER_PX
+          : MIDDLE_TRANSLATE_Y_RECIPIENT_PX;
+        const middleTransform =
+          `translate(${middleTranslateX}px, ${middleTranslateY}px) scale(${HERO_CARD_SCALE})`;
+        const slotTransform = `scale(${STRIP_CARD_SCALE})`;
+
+        // Stage → visual mapping.
+        // pre:      invisible, pre-positioned at middle (no transition)
+        // lay:      fade in at middle (opacity transition)
+        // beat:     hold at middle, full opacity
+        // travel:   transform animates from middle to slot
+        // settled:  at slot, normal opacity (dimmed if in-battlefield)
+        let cardOpacity: number;
+        let cardTransform: string;
+        let cardTransition: string;
+        let placeholderOpacity: number;
+        let placeholderTransition: string;
+        let cardZIndex: number;
+        switch (stage) {
+          case "pre":
+            cardOpacity = 0;
+            cardTransform = middleTransform;
+            cardTransition = "none";
+            placeholderOpacity = 1;
+            placeholderTransition = "none";
+            cardZIndex = 1;
+            break;
+          case "lay":
+            cardOpacity = 1;
+            cardTransform = middleTransform;
+            cardTransition = reducedMotion ? "none" : `opacity ${CARD_LAY_MS}ms ease-out`;
+            placeholderOpacity = 1;
+            placeholderTransition = "none";
+            cardZIndex = 100;
+            break;
+          case "beat":
+            cardOpacity = 1;
+            cardTransform = middleTransform;
+            cardTransition = "none";
+            placeholderOpacity = 1;
+            placeholderTransition = "none";
+            cardZIndex = 100;
+            break;
+          case "travel":
+            cardOpacity = 1;
+            cardTransform = slotTransform;
+            cardTransition = reducedMotion ? "none" : `transform ${CARD_TRAVEL_MS}ms cubic-bezier(0.4, 0.0, 0.2, 1)`;
+            placeholderOpacity = 1;
+            placeholderTransition = "none";
+            cardZIndex = 100;
+            break;
+          case "settled":
+          default:
+            cardOpacity = isActiveInBattlefield ? 0.35 : 1;
+            cardTransform = slotTransform;
+            cardTransition = "none";
+            placeholderOpacity = 0;
+            placeholderTransition = reducedMotion ? "none" : `opacity ${CARD_LAY_MS}ms ease-out`;
+            cardZIndex = 1;
+            break;
+        }
+        // Pulse animation: fires once when pulseActive flips true.
+        // CSS var(--h2h-pulse-color) carries this card's tier color
+        // into the @keyframes h2h-card-pulse box-shadow + scale ramp.
+        const pulseColor = TIER_ACCENT[card.tier] ?? "rgba(255,255,255,0.5)";
+        const pulseAnimation = (pulseActive && stage === "settled" && !reducedMotion)
+          ? `h2h-card-pulse ${ENERGY_PULSE_MS}ms ease-in-out 1`
+          : "none";
         return (
           <div
             key={card.cardId}
             data-h2h-mini-cell="true"
             data-card-id={card.cardId}
             data-active-in-battlefield={isActiveInBattlefield ? "true" : "false"}
+            data-h2h-cell-stage={stage}
+            data-h2h-cell-stage-index={String(stageIndex)}
+            data-h2h-pulse={pulseActive ? "true" : "false"}
             style={{
               height: "100%",
               aspectRatio: "329 / 478",
               flexShrink: 1,
               minWidth: 0,
               position: "relative",
-              overflow: "hidden",
-              // Dim the mini-cell when its card is currently in the
-              // battlefield zone. Subtle treatment — the cell stays in
-              // its slot (no layout shift), but the eye reads it as
-              // "moved out of the hand."
-              opacity: isActiveInBattlefield ? 0.35 : 1,
-              transition: "opacity 200ms ease",
+              // overflow visible so card content in LAY/BEAT/TRAVEL
+              // phases can render outside its strip cell (at the
+              // middle of the screen and along the travel path).
+              overflow: "visible",
+              boxSizing: "border-box",
+              borderRadius: 6,
+              animation: pulseAnimation,
+              // Per-card tier color piped into the pulse keyframe.
+              ["--h2h-pulse-color" as any]: pulseColor,
             }}
           >
-            {/* Render the renderCard output at its natural comfortable
-                size, then apply transform: scale() so internal content
-                (salary chip, headshot, name, FP, badges) scales
-                proportionally to fit the cell. */}
+            {/* Placeholder layer — dim outline anchored at the slot
+                position. Visible BEFORE the card settles (through
+                pre/lay/beat/travel); fades out when the card lands
+                at the slot. */}
+            <div
+              data-h2h-mini-placeholder="true"
+              style={{
+                position: "absolute",
+                inset: 0,
+                border: "1px dashed rgba(255,255,255,0.18)",
+                borderRadius: 6,
+                background: "rgba(255,255,255,0.04)",
+                opacity: placeholderOpacity,
+                transition: placeholderTransition,
+                pointerEvents: "none",
+                boxSizing: "border-box",
+              }}
+            />
+            {/* Card content — walks through pre → lay → beat → travel
+                → settled. During LAY/BEAT it renders at the middle of
+                the screen, scaled to hero size; during TRAVEL it
+                transitions to the slot position + mini scale; on
+                SETTLE the placeholder fades out beneath it. */}
             <div
               style={{
                 position: "absolute",
@@ -304,8 +519,12 @@ function HandStrip({ cards, renderCard, activeSlotIndex }: HandStripProps) {
                 left: 0,
                 width: STRIP_CARD_NATURAL_WIDTH_PX,
                 height: STRIP_CARD_NATURAL_HEIGHT_PX,
-                transform: `scale(${STRIP_CARD_SCALE})`,
+                transform: cardTransform,
                 transformOrigin: "top left",
+                opacity: cardOpacity,
+                transition: cardTransition,
+                zIndex: cardZIndex,
+                pointerEvents: "none",
               }}
             >
               {renderCard(card)}
@@ -315,6 +534,93 @@ function HandStrip({ cards, renderCard, activeSlotIndex }: HandStripProps) {
       })}
     </div>
   );
+}
+
+// ── prefers-reduced-motion hook ──────────────────────────────────────────
+// All H2H phase-3 animations (entrance lay-down, battlefield card-pull)
+// gate on this. CardFront's internal FP rollup is unaffected — it
+// belongs to the single-player animation system, and the user spec
+// scoped reduced-motion fixes to "only the new phase-3 animations".
+
+export function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState<boolean>(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  });
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
+    if (typeof mq.addEventListener === "function") {
+      mq.addEventListener("change", handler);
+      return () => mq.removeEventListener("change", handler);
+    }
+    // Safari fallback
+    mq.addListener?.(handler);
+    return () => mq.removeListener?.(handler);
+  }, []);
+  return reduced;
+}
+
+// ── Battlefield card-pull keyframes ──────────────────────────────────────
+// Inlined as a singleton <style> tag at the top of H2HRevealScreen. Each
+// matchup-card swap mounts a fresh wrapper with `animation: h2h-bf-enter-*`,
+// which fires the keyframe sequence (slide+grow into position). The
+// previous matchup's card stays mounted for BATTLEFIELD_TRAVEL_DURATION_MS
+// with `animation: h2h-bf-exit-*` (slide+shrink away), then unmounts.
+//
+// translateY direction: top card flies in from above (-110px), bottom
+// card flies in from below (+110px). Scale 0.4→1 mimics "card grew as it
+// approached" without needing per-card DOM measurements.
+//
+// Outgoing uses ease-in (accelerate away); incoming uses ease-out
+// (decelerate into position). Combined: feels like cards continuously
+// flowing in and out of the battlefield rather than discrete reveals.
+
+const BATTLEFIELD_TRAVEL_OFFSET_PX = 110;
+const BATTLEFIELD_TRAVEL_SCALE_FROM = 0.4;
+
+const BF_KEYFRAMES_CSS = `
+@keyframes h2h-bf-enter-top {
+  from { transform: translateY(-${BATTLEFIELD_TRAVEL_OFFSET_PX}px) scale(${BATTLEFIELD_TRAVEL_SCALE_FROM}); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes h2h-bf-enter-bottom {
+  from { transform: translateY(${BATTLEFIELD_TRAVEL_OFFSET_PX}px) scale(${BATTLEFIELD_TRAVEL_SCALE_FROM}); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes h2h-bf-exit-top {
+  from { transform: translateY(0) scale(1); opacity: 1; }
+  to { transform: translateY(-${BATTLEFIELD_TRAVEL_OFFSET_PX}px) scale(${BATTLEFIELD_TRAVEL_SCALE_FROM}); opacity: 0; }
+}
+@keyframes h2h-bf-exit-bottom {
+  from { transform: translateY(0) scale(1); opacity: 1; }
+  to { transform: translateY(${BATTLEFIELD_TRAVEL_OFFSET_PX}px) scale(${BATTLEFIELD_TRAVEL_SCALE_FROM}); opacity: 0; }
+}
+/* Pre-reveal anticipation pulse — single rise/peak/fade. Each cell
+   sets its own --h2h-pulse-color (tier-keyed) via inline style, so
+   the same keyframe drives different colors across cards. */
+@keyframes h2h-card-pulse {
+  0% { box-shadow: 0 0 0 0 transparent; transform: scale(1); }
+  50% { box-shadow: 0 0 18px 6px var(--h2h-pulse-color, transparent); transform: scale(1.025); }
+  100% { box-shadow: 0 0 0 0 transparent; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-h2h-bf-anim], [data-h2h-pulse] { animation: none !important; }
+}
+`;
+
+// One-shot keyframes injection. Idempotent — re-mounts of H2HRevealScreen
+// don't duplicate the style tag.
+let bfKeyframesInjected = false;
+function ensureKeyframesInjected() {
+  if (bfKeyframesInjected) return;
+  if (typeof document === "undefined") return;
+  const tag = document.createElement("style");
+  tag.setAttribute("data-h2h-keyframes", "true");
+  tag.textContent = BF_KEYFRAMES_CSS;
+  document.head.appendChild(tag);
+  bfKeyframesInjected = true;
 }
 
 // ── Zone header — just the display name ──────────────────────────────────
@@ -370,9 +676,14 @@ function ZoneHeader({ hand }: ZoneHeaderProps) {
 interface BattlefieldCardProps {
   card: H2HCard;
   renderCard: CardRenderer;
+  /** Optional animated FP. When set, the sport renderer forwards it
+   *  to the card's `visibleFp` prop (CardFront's internal RAF
+   *  interpolation runs and the FP digit ticks up). When undefined
+   *  (phase 2 static), the card shows its final actualFp. */
+  visibleFp?: number;
 }
 
-function BattlefieldCard({ card, renderCard }: BattlefieldCardProps) {
+function BattlefieldCard({ card, renderCard, visibleFp }: BattlefieldCardProps) {
   return (
     <div
       data-h2h-battlefield-card="true"
@@ -384,7 +695,7 @@ function BattlefieldCard({ card, renderCard }: BattlefieldCardProps) {
         overflow: "visible",
       }}
     >
-      {renderCard(card)}
+      {renderCard(card, { visibleFp })}
       {/* SWAP indicator — top-right corner pill on non-held cards. The
           held indicator (gold corner triangle) is drawn inside CardFront
           itself when locked={card.wasHeld} is passed. The SWAP pill's
@@ -423,10 +734,15 @@ function BattlefieldCard({ card, renderCard }: BattlefieldCardProps) {
 // win/loss state. Rendered inside a right-rail grid cell; the cell's
 // flex centering positions the score vertically next to its card.
 
-function TeamScore({ total, isLeading }: { total: number; isLeading: boolean }) {
+function TeamScore({ total, displayTotal, isLeading }: { total: number; displayTotal?: number; isLeading: boolean }) {
+  // `displayTotal` is the currently-animated value driven by useH2HReveal
+  // (running total ticking as each matchup's FP rolls). When undefined
+  // (phase 2 static path), fall back to `total` (the final FP).
+  const shown = displayTotal !== undefined ? displayTotal : total;
   return (
     <div
       data-h2h-team-score="true"
+      data-h2h-team-score-display={shown.toFixed(1)}
       style={{
         textAlign: "center",
         lineHeight: 1.05,
@@ -441,7 +757,7 @@ function TeamScore({ total, isLeading }: { total: number; isLeading: boolean }) 
           letterSpacing: -0.5,
         }}
       >
-        {total.toFixed(1)}
+        {shown.toFixed(1)}
       </div>
     </div>
   );
@@ -554,8 +870,156 @@ function MidRailContent({ senderCard, recipientCard, senderTotal, recipientTotal
 // center their contents within their cell and apply the card's
 // max-width cap.
 
-function CardCenterCell({ card, renderCard }: { card: H2HCard | null; renderCard: CardRenderer }) {
-  if (!card) return null;
+function CardCenterCell({
+  card,
+  renderCard,
+  visibleFp,
+  side,
+  reducedMotion,
+}: {
+  card: H2HCard | null;
+  renderCard: CardRenderer;
+  visibleFp?: number;
+  /** "top" = sender row (card flies in from above). "bottom" =
+   *  recipient row (card flies in from below). */
+  side: "top" | "bottom";
+  reducedMotion: boolean;
+}) {
+  return (
+    <BattlefieldSlot
+      card={card}
+      renderCard={renderCard}
+      visibleFp={visibleFp}
+      side={side}
+      reducedMotion={reducedMotion}
+    />
+  );
+}
+
+// ── BattlefieldSlot — card-pull motion wrapper ───────────────────────────
+// Tracks the currently-rendered card AND the previously-rendered card
+// during a transition. When `card` prop changes from a non-null value
+// to another non-null value (matchup → matchup transition), the old
+// card stays mounted with an exit animation while the new card mounts
+// with an enter animation. After BATTLEFIELD_TRAVEL_DURATION_MS, the
+// old card unmounts.
+//
+// Null → card or card → null transitions skip the cross-fade and just
+// mount/unmount immediately (no card to fly away from / to).
+//
+// The exiting card renders with `visibleFp` undefined so CardFront's
+// phase=RESULTS path displays actualFp statically (no fresh RAF rollup
+// on a re-mounted CardFront instance). The entering card carries the
+// hook's sentinel from visibleFpMap → CardFront rolls 0 → actualFp as
+// usual.
+
+interface BattlefieldSlotProps {
+  card: H2HCard | null;
+  renderCard: CardRenderer;
+  visibleFp?: number;
+  side: "top" | "bottom";
+  reducedMotion: boolean;
+}
+
+function BattlefieldSlot({ card, renderCard, visibleFp, side, reducedMotion }: BattlefieldSlotProps) {
+  // Singleton keyframes for h2h-bf-enter-*/exit-* — injected lazily
+  // on first render of any BattlefieldSlot.
+  useEffect(() => {
+    ensureKeyframesInjected();
+  }, []);
+
+  const [renderedCard, setRenderedCard] = useState<H2HCard | null>(card);
+  const [exitingCard, setExitingCard] = useState<H2HCard | null>(null);
+  const exitTimerRef = useRef<number>(0);
+  // Tracks whether THIS slot has processed a real card transition.
+  // False on initial mount (the end-state cards render at their final
+  // positions without an entry keyframe — otherwise the user sees them
+  // "fly in from outside" before the arc has even started). Flips true
+  // the first time the card prop changes, so all subsequent matchup
+  // transitions get the full card-pull keyframe.
+  const hasTransitionedRef = useRef(false);
+
+  useEffect(() => {
+    const newId = card?.cardId ?? null;
+    const oldId = renderedCard?.cardId ?? null;
+    if (newId === oldId) return;
+
+    // First real transition unlocks the keyframes. Set before scheduling
+    // any state update so the next render reads the new value.
+    hasTransitionedRef.current = true;
+
+    // Cancel any outstanding exit cleanup — a rapid second transition
+    // shouldn't leave a stale exiting card around.
+    if (exitTimerRef.current) {
+      clearTimeout(exitTimerRef.current);
+      exitTimerRef.current = 0;
+    }
+
+    if (renderedCard !== null && card !== null && !reducedMotion) {
+      // Matchup → matchup transition: outgoing card overlays incoming
+      // for BATTLEFIELD_TRAVEL_DURATION_MS, then unmounts.
+      setExitingCard(renderedCard);
+      setRenderedCard(card);
+      exitTimerRef.current = window.setTimeout(() => {
+        setExitingCard(null);
+        exitTimerRef.current = 0;
+      }, BATTLEFIELD_TRAVEL_DURATION_MS);
+      return () => {
+        if (exitTimerRef.current) {
+          clearTimeout(exitTimerRef.current);
+          exitTimerRef.current = 0;
+        }
+      };
+    }
+
+    // null↔card transition, or reduced-motion path: skip cross-fade.
+    setRenderedCard(card);
+    setExitingCard(null);
+  }, [card, renderedCard, reducedMotion]);
+
+  // Cleanup on unmount
+  useEffect(() => () => {
+    if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+  }, []);
+
+  // When card transitions to null (entering phase, replay), bail out
+  // immediately on the visible card layer — but render an invisible
+  // placeholder of the same dimensions so the battlefield grid row
+  // keeps its height. Without this, the row collapses to 0 during
+  // entering, pulling the hand strips toward each other and breaking
+  // the strip-relative coordinates the entrance translateY values
+  // calibrate against.
+  if ((card === null && exitingCard === null) || (!renderedCard && !exitingCard)) {
+    return (
+      <div
+        data-h2h-bf-placeholder="true"
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minWidth: 0,
+        }}
+      >
+        <div
+          style={{
+            width: "100%",
+            maxWidth: BATTLEFIELD_CARD_MAX_WIDTH,
+            aspectRatio: "329 / 478",
+            visibility: "hidden",
+          }}
+        />
+      </div>
+    );
+  }
+
+  const animationsEnabled = hasTransitionedRef.current && !reducedMotion;
+  const enterAnimation = animationsEnabled
+    ? `h2h-bf-enter-${side} ${BATTLEFIELD_TRAVEL_DURATION_MS}ms cubic-bezier(0.2, 0.7, 0.2, 1)`
+    : "none";
+  const exitAnimation = animationsEnabled
+    ? `h2h-bf-exit-${side} ${BATTLEFIELD_TRAVEL_DURATION_MS}ms cubic-bezier(0.6, 0, 0.8, 0.3) forwards`
+    : "none";
+
   return (
     <div
       style={{
@@ -567,17 +1031,51 @@ function CardCenterCell({ card, renderCard }: { card: H2HCard | null; renderCard
     >
       <div
         style={{
+          position: "relative",
           width: "100%",
           maxWidth: BATTLEFIELD_CARD_MAX_WIDTH,
         }}
       >
-        <BattlefieldCard card={card} renderCard={renderCard} />
+        {/* Exiting card: absolute-positioned overlay. Renders only
+            during the transition window. visibleFp deliberately
+            undefined so CardFront's RESULTS+undefined path shows the
+            actualFp statically — no fresh RAF rollup on this mount. */}
+        {exitingCard && (
+          <div
+            key={`exit-${exitingCard.cardId}`}
+            data-h2h-bf-anim="exit"
+            style={{
+              position: "absolute",
+              inset: 0,
+              animation: exitAnimation,
+              willChange: "transform, opacity",
+              pointerEvents: "none",
+            }}
+          >
+            <BattlefieldCard card={exitingCard} renderCard={renderCard} visibleFp={undefined} />
+          </div>
+        )}
+        {/* Entering / settled card. `key` forces remount on cardId
+            change so the keyframe animation re-fires for each new
+            matchup. visibleFp is the live sentinel from the hook. */}
+        {renderedCard && (
+          <div
+            key={`enter-${renderedCard.cardId}`}
+            data-h2h-bf-anim="enter"
+            style={{
+              animation: enterAnimation,
+              willChange: "transform, opacity",
+            }}
+          >
+            <BattlefieldCard card={renderedCard} renderCard={renderCard} visibleFp={visibleFp} />
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function ScoreCell({ total, isLeading }: { total: number; isLeading: boolean }) {
+function ScoreCell({ total, displayTotal, isLeading }: { total: number; displayTotal?: number; isLeading: boolean }) {
   return (
     <div
       style={{
@@ -586,7 +1084,7 @@ function ScoreCell({ total, isLeading }: { total: number; isLeading: boolean }) 
         alignItems: "center",
       }}
     >
-      <TeamScore total={total} isLeading={isLeading} />
+      <TeamScore total={total} displayTotal={displayTotal} isLeading={isLeading} />
     </div>
   );
 }
@@ -594,14 +1092,49 @@ function ScoreCell({ total, isLeading }: { total: number; isLeading: boolean }) 
 // ── H2HRevealScreen ──────────────────────────────────────────────────────
 
 export function H2HRevealScreen(props: H2HRevealScreenProps) {
-  const { sender, recipient, renderCard, battlefieldSlotIndex } = props;
-  const maxSlot = Math.max(...sender.cards.map(c => c.slotIndex), ...recipient.cards.map(c => c.slotIndex));
-  const slotIdx = battlefieldSlotIndex ?? maxSlot;
-  const senderBattle = getSlotCard(sender, slotIdx);
-  const recipientBattle = getSlotCard(recipient, slotIdx);
+  const { sender, recipient, renderCard, battlefieldSlotIndex, reveal } = props;
+  const reducedMotion = usePrefersReducedMotion();
 
-  const recipientLeading = recipient.totalFp > sender.totalFp;
-  const senderLeading = sender.totalFp > recipient.totalFp;
+  // Resolve battlefield + display state from either the reveal hook
+  // (phase 3 animated) or the static slot fallback (phase 2). Branches
+  // are explicit so the static path stays untouched when no reveal is
+  // wired; phase 3 mocks pass `reveal` and inherit the animated values.
+  let senderBattle: H2HCard | null;
+  let recipientBattle: H2HCard | null;
+  let senderDisplayTotal: number;
+  let recipientDisplayTotal: number;
+  let senderVisibleFp: number | undefined;
+  let recipientVisibleFp: number | undefined;
+  let senderActiveCardId: string | null;
+  let recipientActiveCardId: string | null;
+
+  if (reveal !== undefined) {
+    senderBattle = reveal.activeMatchup.sender;
+    recipientBattle = reveal.activeMatchup.recipient;
+    senderDisplayTotal = reveal.senderRunningTotal;
+    recipientDisplayTotal = reveal.recipientRunningTotal;
+    senderVisibleFp = senderBattle ? reveal.visibleFpMap.get(senderBattle.cardId) : undefined;
+    recipientVisibleFp = recipientBattle ? reveal.visibleFpMap.get(recipientBattle.cardId) : undefined;
+    senderActiveCardId = senderBattle?.cardId ?? null;
+    recipientActiveCardId = recipientBattle?.cardId ?? null;
+  } else {
+    const maxSlot = Math.max(...sender.cards.map(c => c.slotIndex), ...recipient.cards.map(c => c.slotIndex));
+    const slotIdx = battlefieldSlotIndex ?? maxSlot;
+    senderBattle = getSlotCard(sender, slotIdx);
+    recipientBattle = getSlotCard(recipient, slotIdx);
+    senderDisplayTotal = sender.totalFp;
+    recipientDisplayTotal = recipient.totalFp;
+    senderVisibleFp = undefined;
+    recipientVisibleFp = undefined;
+    senderActiveCardId = senderBattle?.cardId ?? null;
+    recipientActiveCardId = recipientBattle?.cardId ?? null;
+  }
+
+  // Leading/trailing color tracks the CURRENT animated totals, not the
+  // finals — the user sees the score colors flip as the running totals
+  // overtake each other during the reveal.
+  const recipientLeading = recipientDisplayTotal > senderDisplayTotal;
+  const senderLeading = senderDisplayTotal > recipientDisplayTotal;
 
   return (
     <div
@@ -626,7 +1159,8 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
         paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)",
         boxSizing: "border-box",
       }}
-      data-h2h-reveal-phase="2-static-mock"
+      data-h2h-reveal-phase={reveal !== undefined ? `3-${reveal.phase}` : "2-static-mock"}
+      data-h2h-matchup-index={reveal !== undefined ? String(reveal.matchupIndex) : undefined}
     >
       {/* Inner column — caps content at 480px on wide viewports and
           centers it horizontally. Matches single-player's GameView
@@ -653,7 +1187,16 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
         {/* ── OPPONENT ZONE (top, glass panel) ───────────────────────── */}
         <ZonePanel>
           <ZoneHeader hand={sender} />
-          <HandStrip cards={sender.cards} renderCard={renderCard} activeSlotIndex={slotIdx} />
+          <HandStrip
+            cards={sender.cards}
+            renderCard={renderCard}
+            activeCardId={senderActiveCardId}
+            entranceStages={reveal?.entranceStages}
+            revealOrder={reveal?.senderRevealOrder}
+            side="sender"
+            reducedMotion={reducedMotion}
+            pulseActive={!!reveal?.pulseActive}
+          />
         </ZonePanel>
 
         {/* ── BATTLEFIELD (hero, open — no panel) ────────────────────── */}
@@ -681,8 +1224,16 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
         >
           {/* Row 1: opponent's battlefield card + score */}
           <div aria-hidden="true" />
-          <CardCenterCell card={senderBattle} renderCard={renderCard} />
-          {senderBattle ? <ScoreCell total={sender.totalFp} isLeading={senderLeading} /> : <div />}
+          <CardCenterCell
+            card={senderBattle}
+            renderCard={renderCard}
+            visibleFp={senderVisibleFp}
+            side="top"
+            reducedMotion={reducedMotion}
+          />
+          {senderBattle
+            ? <ScoreCell total={sender.totalFp} displayTotal={senderDisplayTotal} isLeading={senderLeading} />
+            : <div />}
 
           {/* Row 2: mid-rail in center column (cards' x-center) */}
           <div aria-hidden="true" />
@@ -690,21 +1241,38 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
             <MidRailContent
               senderCard={senderBattle}
               recipientCard={recipientBattle}
-              senderTotal={sender.totalFp}
-              recipientTotal={recipient.totalFp}
+              senderTotal={senderDisplayTotal}
+              recipientTotal={recipientDisplayTotal}
             />
           </div>
           <div aria-hidden="true" />
 
           {/* Row 3: recipient's battlefield card + score */}
           <div aria-hidden="true" />
-          <CardCenterCell card={recipientBattle} renderCard={renderCard} />
-          {recipientBattle ? <ScoreCell total={recipient.totalFp} isLeading={recipientLeading} /> : <div />}
+          <CardCenterCell
+            card={recipientBattle}
+            renderCard={renderCard}
+            visibleFp={recipientVisibleFp}
+            side="bottom"
+            reducedMotion={reducedMotion}
+          />
+          {recipientBattle
+            ? <ScoreCell total={recipient.totalFp} displayTotal={recipientDisplayTotal} isLeading={recipientLeading} />
+            : <div />}
         </div>
 
         {/* ── YOUR ZONE (bottom, glass panel) ────────────────────────── */}
         <ZonePanel>
-          <HandStrip cards={recipient.cards} renderCard={renderCard} activeSlotIndex={slotIdx} />
+          <HandStrip
+            cards={recipient.cards}
+            renderCard={renderCard}
+            activeCardId={recipientActiveCardId}
+            entranceStages={reveal?.entranceStages}
+            revealOrder={reveal?.recipientRevealOrder}
+            side="recipient"
+            reducedMotion={reducedMotion}
+            pulseActive={!!reveal?.pulseActive}
+          />
           <ZoneHeader hand={recipient} />
         </ZonePanel>
       </div>

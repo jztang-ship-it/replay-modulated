@@ -347,6 +347,22 @@ export function CardFront(props: CardFrontProps) {
   const animStartRef = useRef<number | null>(null);
   const animatingRef = useRef(false);
 
+  // CardKey reset must be declared BEFORE the visibleFp animation effect. When
+  // both card AND visibleFp change in the same render (the H2H per-matchup
+  // pattern: battlefield card swaps to the next matchup AND its visibleFp goes
+  // undefined→0.001), effects fire in declaration order. If visibleFp ran
+  // first, its RAF would be cancelled by the cardKey reset moments later. With
+  // cardKey first, reset clears stale state and the visibleFp effect then
+  // starts a clean RAF that survives. Single-player is unaffected — its
+  // cardKey is stable after the deal.
+  useEffect(() => {
+    cancelAnimationFrame(animRafRef.current);
+    animatingRef.current = false;
+    animStartRef.current = null;
+    setRollComplete(false); setDisplayedFp(0); setIsRolling(false); setFpRevealed(false);
+    setTopGameThudFired(false); setTopGameShake(false);
+  }, [cardKey]);
+
   // Triggered once when visibleFp first becomes a defined non-zero value — runs
   // its own RAF loop to completion. Never cancelled by other cards tapping (no
   // revealActive in deps). Negative actualFp (bad pitching outing) animates as
@@ -397,14 +413,6 @@ export function CardFront(props: CardFrontProps) {
     // No cleanup cancellation — intentional. Cancelling on dep change would kill
     // this card's animation when other cards are tapped. Reset only on cardKey change.
   }, [visibleFp]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    cancelAnimationFrame(animRafRef.current);
-    animatingRef.current = false;
-    animStartRef.current = null;
-    setRollComplete(false); setDisplayedFp(0); setIsRolling(false); setFpRevealed(false);
-    setTopGameThudFired(false); setTopGameShake(false);
-  }, [cardKey]);
 
   // Top Games thud — IMPACT-SYNCED sequence; fires for every tier (record/career/season).
   //   +200ms after rollComplete: stamp mounts and begins its 420ms entrance

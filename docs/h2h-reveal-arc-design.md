@@ -250,6 +250,216 @@ For future phases to extend without re-deriving:
 - **Import pattern:** static import + `import.meta.env.DEV` guard at the usage site (`App.tsx` `if (import.meta.env.DEV && devSlug === "h2h-reveal-mock")`). NOT `React.lazy()` — an earlier lazy attempt surfaced a fragility where stale Vite dev-server state (regenerated optimizeDeps with new `?v=` hash, HMR boundary mismatch after the dev/ directory landed mid-session, browser-cached chunk URLs that no longer exist) caused the lazy chunk fetch to 404 with the Suspense boundary hanging silently. Static import sidesteps that entire surface; production builds strip the branch via DCE (Vite constant-folds DEV → `false`, Rollup removes the unreferenced import). Bundle impact in production: ~4 KB residual after tree-shaking (acceptable; the dev-only mock fixture is small).
 - **Phase 4 swap-in path:** in real challenge flow, replace the mock fixture with a `fetch('/api/challenge/{id}/sender-hand')` call. The mount component (which becomes the real recipient flow's reveal mount) keeps the same shape: `<H2HRevealScreen sender={...} recipient={...} renderCard={AthleteCardLike} />`.
 
+### Phase 3.9 — entrance order invariant + pre-reveal anticipation beat
+
+Two refinements layered on phase 3.8.
+
+**Both strips lay leftmost-first (same direction, paired by reveal order).** The phase 3.8 implementation mapped sender's stage_index by mirrored display position so the user saw bottom-left + top-right cards land first. Reverting that — both strips now follow the SAME entrance order as the reveal arc (cheapest swap first, working up through swaps, then held cards by salary). When card 1 lays at the middle, BOTH sides' card 1 land at the same instant; same for cards 2-6.
+
+Implementation: HandStrip looks up each card's stage_index via `revealOrder.indexOf(card)`. The hook exposes `senderRevealOrder` and `recipientRevealOrder`; both are passed through to their respective HandStrip. For the mock fixture (where `slotIndex` happens to match reveal order), this maps to `stage_index = displayPos` on both sides. Phase 4's real data — where slotIndex is deal-order and reveal-order is recomputed — gets the same invariant for free.
+
+**Pre-reveal anticipation beat.** A new `"anticipating"` phase between `entering` and `revealing`. Three sub-phases:
+
+| Sub-phase   | Duration                          | Behavior                                                  |
+|-------------|-----------------------------------|-----------------------------------------------------------|
+| Stillness   | `POST_ENTRANCE_STILLNESS_MS` = 700ms | Silent hold. Cards in slots, no animation. Anticipation. |
+| Pulse       | `ENERGY_PULSE_MS` = 700ms         | `pulseActive` = true. All 12 cells glow with their tier color via a single rise/peak/fade @keyframes (`h2h-card-pulse`). Subtle scale pulse 1.0 → 1.025 → 1.0 synced with the glow. |
+| Settle      | `POST_PULSE_SETTLE_MS` = 250ms    | `pulseActive` = false. Glow fades; brief breath before matchup 0. |
+
+Total beat: ~1.65s. Replaces the prior single `PRE_REVEAL_PAUSE_MS = 700ms` pause.
+
+Tier color is piped per cell via `--h2h-pulse-color` CSS variable (set inline from `TIER_ACCENT[card.tier]`); the same `@keyframes h2h-card-pulse` rule drives every card with `box-shadow: 0 0 18px 6px var(--h2h-pulse-color)` at the 50% peak. Collective effect: a multicolored "charging for battle" moment, not a single uniform glow.
+
+**Hook state additions:**
+- `pulseActive: boolean` — true during the `ENERGY_PULSE_MS` window only.
+- `phase: "anticipating"` — added between entering and revealing.
+- `activeMatchup` returns `{null, null}` during anticipating (battlefield empty; BattlefieldSlot's placeholder keeps grid row height).
+- Reduced-motion path unchanged — skips entrance AND anticipation beat.
+
+**Dev controls.** During `anticipating`, the progress string reads `still` then `pulse`, then transitions to `1/6` when matchup 0 starts.
+
+### Phase 3.8 — sequential dealing (lay-down at middle → travel to strip)
+
+The phase 3.7 strip-local lay-down was replaced with a sequential dealing motion the user can track with their eye, card-by-card.
+
+**Per-card lifecycle.** Each card walks through five stages:
+
+1. **PRE** — invisible, pre-positioned at the middle of the screen (no transition).
+2. **LAY** (`CARD_LAY_MS = 200ms`) — fades in (opacity 0 → 1) at the middle, rendered at hero scale (~125px wide, vs ~55px mini).
+3. **BEAT** (`CARD_LAY_BEAT_MS = 200ms`) — sits at the middle, full opacity, hero-sized. Beat is long enough for the user's eye to register the card.
+4. **TRAVEL** (`CARD_TRAVEL_MS = 350ms`) — transform animates from `translate(middleX, middleY) scale(heroScale)` to `scale(stripScale)` (back to slot). Card visibly travels from middle to its hand-strip slot, shrinking en route.
+5. **SETTLED** — at slot, mini scale. Placeholder fades out beneath.
+
+**Paired across sides; sequential within an arc.** Sender's stage_index 0 (top-right cell) and recipient's stage_index 0 (bottom-left cell) walk through stages together. Stage_index 1 starts after stage_index 0 fully settles + `CARD_STAGGER_MS = 150ms`. So card N+1 begins its LAY only after card N has settled — no overlapping cards in the middle.
+
+Per-card cycle: `CARD_CYCLE_MS = 200 + 200 + 350 + 150 = 900ms`. Total entrance for a 6-card hand: `5 × 900 + 750 = 5250ms` ≈ 5.25s. Intentionally slow.
+
+**Middle position is two slots.** Sender card translates `translateY(+110)` from its strip cell into the upper battlefield slot. Recipient card translates `translateY(-110)` into the lower battlefield slot. Both lay simultaneously but at different vertical positions (so they don't overlap). `translateX` is computed per-cell to bring each card's scaled-visual center to the viewport horizontal center.
+
+**Layout stabilization.** During the entering phase, the BattlefieldSlot renders an invisible placeholder of the same aspect ratio as a hero card, so the battlefield grid rows keep their full height. Without this the rows collapsed to the mid-rail's content height (~30px), pulling the hand strips toward each other and breaking the strip-relative coordinates the entrance translateY values calibrate against.
+
+**Reduced motion.** When `prefers-reduced-motion: reduce` is set, the hook skips the entrance schedule entirely. All cards snap to "settled" immediately; matchup 0 starts after a 200ms fixed delay. The H2HRevealScreen detects via `usePrefersReducedMotion` and passes the flag down to the hook.
+
+**Hook state.** `entranceStages: EntranceStage[]` (length N) replaces the prior `entranceLandedCount: number`. Each cell looks up its stage from `entranceStages[stage_index]`. The hook schedules 4 setTimeouts per card (LAY, BEAT, TRAVEL, SETTLED transitions) — 4N timeouts per arc, tracked under a `timersRef` set for cancellation.
+
+### Phase 3.7 — strip-local entrance, no center traversal
+
+Refines the lay-down motion so the eye stays in the strip zones throughout the entrance. Two changes:
+
+**BattlefieldSlot skips its enter keyframe on initial mount.** The wrapper used to apply `animation: h2h-bf-enter-{top,bottom}` unconditionally — so on first paint of the end-state, the battlefield cards visibly flew in from translateY(±110px). The user (reasonably) read this as "cards traveling from above/below the battlefield into the center." Fix: `BattlefieldSlot` tracks a `hasTransitionedRef` that flips true the FIRST time the `card` prop changes. Until then, the wrapper renders with `animation: none`, so the initial end-state paint shows cards directly at their final positions. After play() fires (card → null → matchup0), the ref is true and the enter keyframe runs for all matchup transitions.
+
+**Hand-strip cells now slide ~12px into their slots.** Pure opacity fade-in didn't read as "card being placed." Each cell's card content now carries a `transform: translateY(±12px)` when not landed (negative for sender, positive for recipient), transitioning to 0 on landing. Combined with `scale(STRIP_CARD_SCALE)`. Cell `overflow: hidden` clips the overshoot — motion stays inside the strip zone, never extends into the center.
+
+**Side fix in BattlefieldSlot:** added an early-return when `card === null && exitingCard === null` so during play()'s batched state update, the slot doesn't render a stale `renderedCard` for the one-frame gap before its useEffect catches up. Eliminates a brief flash of the previous matchup during the entering phase.
+
+### Phase 3.6 — direct-to-slot lay-down + deliberate pacing
+
+Refines the phase-3.5 entrance: cards lay directly into hand-strip placeholder slots, not "in the middle of the screen." Slows all timings to feel like a deliberate game moment instead of a function call.
+
+**Placeholder slots.** Each hand-strip cell renders TWO stacked layers:
+- A dim placeholder (1px dashed border + 4% white background) — visible BEFORE the card lands. Forms the strip's empty skeleton at t=0.
+- The card content layer (renderCard output, scaled to fit). Fades in over the placeholder when `landed` flips to true.
+
+This gives the user a structural anchor: "empty slot waiting for a card → card placed onto that slot." No relocation phase after lay-down.
+
+**Pacing constants (all at the top of `useH2HReveal.ts`).**
+
+| Constant | Old | New | Purpose |
+|---|---|---|---|
+| `ENTRANCE_LAY_MS` | 130 | **220** | Per-card slide-in |
+| `INTER_CARD_STAGGER_MS` | 100 | **175** | Gap between consecutive cards |
+| `PRE_REVEAL_PAUSE_MS` | 400 | **700** | Entrance → matchup 0 |
+| `MATCHUP_RESOLVE_PAUSE_MS` | 350 | **850** | Between intermediate matchups |
+| `END_OF_ARC_HOLD_MS` | — | **1700** | After final matchup, before "done" |
+| `BATTLEFIELD_TRAVEL_DURATION_MS` | 320 | **420** | Card-pull travel window |
+| `MATCHUP_DURATION_MS` | 1500 | 1500 | (unchanged) per-matchup rollup |
+
+Total arc time for a 6-card hand: ~16.75s. Intentionally longer than the previous ~10s.
+
+**End-of-arc hold phase.** New `phase: "end-hold"` between the last matchup's `onMatchupResolved` and the final `setPhase("done")` + `onArcResolved`. During the hold (1.7s):
+- The static end-state is visible (last matchup's heroes, final totals).
+- `onArcResolved` is deferred — phase 5 commentary / phase 6 results-overlay triggers won't fire during the hold.
+- Dev-route controls hide BOTH the Replay and Skip buttons. Reappear when phase transitions to "done."
+
+This prevents next-step UI from rushing past the climax. The user sees the final result, breathes, then the next step engages.
+
+### Phase 3.5 — entrance + card-pull animations
+
+Two motion layers added on top of the base phase-3 reveal arc:
+
+**Entrance choreography (poker lay-down).** When `play()` is called, all N hand-strip cards reset to a pre-landed state (`opacity: 0`, vertical offset away from the strip resting position) and stagger-animate into position. Stage map:
+- Recipient (bottom strip): `stage = displayPos` — leftmost-to-rightmost lay-down (user's POV).
+- Sender (top strip): `stage = (N-1) - displayPos` — mirrored from opp's dealing POV (rightmost-to-leftmost from user's POV).
+- Both sides advance via the same `entranceLandedCount` counter, so stage 0 on each side fires simultaneously (the user's bottom-left card + the opponent's top-right card land at the same instant).
+
+Timing: `ENTRANCE_CARD_DURATION_MS = 130ms` per card, `ENTRANCE_STAGE_GAP_MS = 100ms` stagger, total ~625ms for 6-card hands, then `ENTRANCE_TO_REVEAL_PAUSE_MS = 400ms` settle before matchup 0 begins.
+
+**Per-matchup card-pull motion.** When `activeMatchup` transitions, both battlefield cards swap with a cross-fade keyframe pair:
+- The OUTGOING matchup card stays mounted with `h2h-bf-exit-{top,bottom}` keyframes (slide back toward its hand strip + shrink 1.0 → 0.4).
+- The INCOMING card mounts in parallel with `h2h-bf-enter-{top,bottom}` (slide from the hand strip + grow 0.4 → 1.0).
+
+Both run for `BATTLEFIELD_TRAVEL_DURATION_MS = 320ms`, which fits within `MATCHUP_PAUSE_MS = 350ms`. Per-side simultaneous: top card flies down to enter / up to exit; bottom card flies up to enter / down to exit.
+
+**Reduced motion.** Both animations gate on `prefers-reduced-motion: reduce` via a `usePrefersReducedMotion` hook + a CSS `@media` rule that disables the battlefield keyframes. CardFront's internal FP rollup is unaffected — scoped out per the spec ("if single-player doesn't respect this, log as a followup and don't fix here").
+
+**Hook state additions:**
+- `phase: "entering"` between `play()` and matchup 0.
+- `entranceLandedCount: number` separate from `matchupIndex`; HandStrip flips each cell's "landed" flag based on this + the side-specific stage map.
+
+**Implementation notes:**
+- Battlefield keyframes injected via a singleton `<style>` tag (`ensureKeyframesInjected()` in H2HRevealScreen.tsx). Idempotent.
+- BattlefieldSlot tracks `renderedCard` + `exitingCard` state. The exiting card renders with `visibleFp=undefined` so CardFront's `phase=RESULTS` path shows actualFp directly (no fresh RAF rollup on the re-mounted CardFront instance).
+- Hand-strip cells use inline `transition: opacity + transform 130ms ease-out` driven by `landed` flag changes. The staggered timing comes from the hook's setTimeout chain incrementing `entranceLandedCount` at 100ms intervals.
+
+### Phase 3 — reveal sequence choreography (in-progress)
+
+Phase 2 ships the static end-state of the arc. Phase 3 wires the animation that walks through all matchups and lands on that end-state.
+
+**Reveal order (per the original Reveal sequence spec).**
+- Each player's cards sort independently by `(wasHeld ASC, salary ASC)`: swap cards first (cheapest → most expensive), then held cards (cheapest → most expensive).
+- Matchup N pairs `senderOrder[N]` with `recipientOrder[N]`. Pairs may not align by player identity or salary across columns; that's accepted by design (the design doc's "Reveal sequence" section calls this out).
+- The mock fixture's `slotIndex` happens to match the reveal-order index (slot 0 = cheapest swap, slot N-1 = most expensive held), but the H2H hook re-sorts independently so phase 4's real data (where `slotIndex` may be deal-order) works correctly.
+
+**Animation primitives reused from single-player.**
+- **`visibleFp` prop on CardFront/AthleteCard** drives the per-card FP rollup animation. `shared/components/CardFront.tsx:354-399` runs an internal RAF loop interpolating from 0 → actualFp when `visibleFp` first transitions undefined → defined. H2H reuses this verbatim — passes `visibleFp` to each battlefield card during its matchup.
+- **`visibleFpMap: Map<cardId, currentFp>` pattern** mirrors `shared/hooks/useEmotionalReveal.ts:182,476-495`. H2H builds its own visibleFpMap inside the new orchestration hook; the values flow into AthleteCard's `visibleFp` prop via the renderCard call site.
+- **RAF driveTick pattern** from `useEmotionalReveal.ts:481-525` (ease-out cubic, 16ms ticks). H2H's hook uses the same shape; the difference is two cards per tick instead of one.
+
+**NOT reused from single-player.**
+- `useEmotionalReveal` hook itself — too coupled to single-player flow (sequential reveal, anchor concept, `flipState.beginReveal()`, achievement gating). H2H has matchup pairs and parallel two-card animation; the orchestrator is its own hook.
+- `_useReveal.ts` — single-player coordinator with gauge spring, FTUE, payouts, leaderboard. None of this applies to H2H phase 3.
+
+**New hook: `useH2HReveal`** (lives in `shared/components/useH2HReveal.ts`).
+
+Inputs:
+```ts
+interface UseH2HRevealArgs {
+  sender: H2HHand;
+  recipient: H2HHand;
+  onMatchupResolved?: (index: number, matchup: { sender: H2HCard; recipient: H2HCard }, state: { senderTotal: number; recipientTotal: number }) => void;
+  onArcResolved?: (finalState: { senderTotal: number; recipientTotal: number }) => void;
+}
+```
+
+Outputs:
+```ts
+interface UseH2HRevealReturn {
+  phase: "idle" | "revealing" | "paused" | "done";
+  /** Index into the reveal-order matchup array. -1 when idle. */
+  matchupIndex: number;
+  /** Total matchups (= sender.cards.length, assuming both sides are equal-N). */
+  matchupCount: number;
+  /** Per-cardId current FP — drives both battlefield cards' `visibleFp` props during a matchup. */
+  visibleFpMap: Map<string, number>;
+  /** Animated running totals — drive TeamScore.displayTotal during reveal. */
+  senderRunningTotal: number;
+  recipientRunningTotal: number;
+  /** The active matchup pair (or the final matchup when phase==="done"). */
+  activeMatchup: { sender: H2HCard | null; recipient: H2HCard | null };
+  /** Start the arc from the beginning. */
+  play: () => void;
+  /** Reset to idle (clears visibleFpMap, totals, matchupIndex). */
+  reset: () => void;
+  /** Skip to end-state instantly (visibleFpMap fully populated, totals at final values). For dev iteration; phase 6+ defines the production "skip" behavior. */
+  skipToEnd: () => void;
+}
+```
+
+**Callback contract:**
+- `onMatchupResolved(index, matchup, state)` — fires after each matchup's FP rollup completes, BEFORE the inter-matchup pause. `state.senderTotal`/`recipientTotal` reflect the running totals AFTER this matchup is added in. Phase 5 will wire commentary trigger evaluation here.
+- `onArcResolved(finalState)` — fires after the last matchup's pause completes. `finalState.senderTotal`/`recipientTotal` equal `sender.totalFp`/`recipient.totalFp`. Phase 5 fires the end-of-arc summary commentary here. Phase 6 will use this to transition to the results overlay.
+
+**Timing budget:**
+- `MATCHUP_DURATION_MS = 1500` — both FP rollups + score-rail updates happen simultaneously within this window.
+- `MATCHUP_PAUSE_MS = 350` — breathing room between matchups.
+- Total for 6-card hand: 6 × 1500 + 5 × 350 = 10,750ms (~10.75s). Within the design doc's 10-14s spec.
+
+**Renderer prop change (small but breaking):**
+```ts
+// before phase 3
+export type CardRenderer = (card: H2HCard) => React.ReactNode;
+// phase 3
+export type CardRenderer = (card: H2HCard, options?: { visibleFp?: number }) => React.ReactNode;
+```
+
+Mock route's renderCard wires `options.visibleFp` → AthleteCard's `visibleFp` prop. Hand-strip cells pass no options (static); battlefield cells pass `{ visibleFp: visibleFpMap.get(card.cardId) }` from the hook.
+
+**TeamScore animation:**
+- New optional `displayTotal?: number` prop. When set, overrides the static `total` for display.
+- H2HRevealScreen passes the animated running total during reveal phases; static `hand.totalFp` after.
+
+**Dev-route enhancement:**
+- `basketball/src/dev/H2HRevealMockRoute.tsx` adds three controls in a fixed footer:
+  - **Play** — kicks off the arc from idle.
+  - **Replay** — resets + plays.
+  - **Skip to end** — instantly populates the end-state (for layout iteration without watching the full arc).
+- Optional `?autoplay=1` URL flag triggers Play on mount.
+
+**Out of scope for phase 3:**
+- Card "rise from hand strip into battlefield" positional animation. Phase 3 cross-fades via the existing dim treatment (mini-card dims at active slot; battlefield shows the active slot's cards). Positional motion is a phase-3-polish or phase-4 concern.
+- Skip-mid-arc behavior beyond the dev-route Skip button. Production "no skip ever" lock is per the design doc; the dev Skip is for iteration.
+- Commentary firing — callbacks fire but only `console.info` in this PR.
+
 ### Visual chrome — reuses single-player's pattern (post-eighth-smoke amendment)
 
 The H2H reveal screen brings the same visual chrome single-player uses for its game view, so the two read as one product family. Investigation summary captured in the phase-2 smoke artifact; key reuse:

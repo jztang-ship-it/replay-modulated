@@ -224,9 +224,13 @@ describe("H2HRevealScreen — static layout", () => {
     expect(activeCells.length).toBe(2);
     // Remaining 5 per side = 10 total.
     expect(inactiveCells.length).toBe(10);
-    // Active cells render with reduced opacity in their inline style.
+    // Active cells' card-content layer renders at reduced opacity
+    // (the inner scaled div containing renderCard's output). The OUTER
+    // cell stays at full opacity so its placeholder structure persists;
+    // only the card content dims to signal "in battle."
     for (const cell of Array.from(activeCells)) {
-      const style = (cell as HTMLElement).getAttribute("style") || "";
+      const cardLayer = cell.querySelector(":scope > div:not([data-h2h-mini-placeholder])") as HTMLElement | null;
+      const style = cardLayer?.getAttribute("style") ?? "";
       expect(style).toMatch(/opacity:\s*0\.\d+/);
     }
   });
@@ -250,6 +254,331 @@ describe("H2HRevealScreen — static layout", () => {
     expect(active.length).toBe(2);
     expect(active[0].getAttribute("data-card-id")).toBe("s-2");
     expect(active[1].getAttribute("data-card-id")).toBe("r-2");
+  });
+
+  it("phase 3: reveal prop overrides battlefieldSlotIndex (activeMatchup wins)", () => {
+    // Sender has 6 cards; reveal-order last (per (wasHeld, salary)) is
+    // s-5 by default. If we hand it a synthetic `reveal` object naming
+    // s-2 as activeMatchup.sender, the battlefield should render s-2,
+    // not s-5.
+    const sender = makeHand({
+      cards: Array.from({ length: 6 }, (_, i) =>
+        makeCard({ slotIndex: i, cardId: `s-${i}`, actualFp: i * 10 })
+      ),
+    });
+    const recipient = makeHand({
+      cards: Array.from({ length: 6 }, (_, i) =>
+        makeCard({ slotIndex: i, cardId: `r-${i}`, actualFp: i * 12 })
+      ),
+    });
+    const reveal = {
+      phase: "revealing" as const,
+      matchupIndex: 2,
+      matchupCount: 6,
+      visibleFpMap: new Map([["s-2", 0.001], ["r-2", 0.001]]),
+      senderRunningTotal: 30,
+      recipientRunningTotal: 36,
+      activeMatchup: { sender: sender.cards[2], recipient: recipient.cards[2] },
+      senderRevealOrder: sender.cards,
+      recipientRevealOrder: recipient.cards,
+      entranceStages: new Array(6).fill("settled" as const),
+      entranceSettledCount: 6,
+      pulseActive: false,
+      play: () => {},
+      skipToEnd: () => {},
+    };
+    const { container } = render(
+      <H2HRevealScreen
+        sender={sender}
+        recipient={recipient}
+        renderCard={makeStub()}
+        reveal={reveal}
+      />
+    );
+    const battleCells = container.querySelectorAll('[data-h2h-battlefield-card="true"]');
+    expect(battleCells[0].getAttribute("data-card-id")).toBe("s-2");
+    expect(battleCells[1].getAttribute("data-card-id")).toBe("r-2");
+    // Active dim follows activeMatchup card id, not slotIndex.
+    const active = container.querySelectorAll('[data-h2h-mini-cell="true"][data-active-in-battlefield="true"]');
+    expect(active.length).toBe(2);
+    expect(active[0].getAttribute("data-card-id")).toBe("s-2");
+    expect(active[1].getAttribute("data-card-id")).toBe("r-2");
+  });
+
+  it("phase 3: TeamScore displays the running total (displayTotal), not the final total", () => {
+    const sender = makeHand({ totalFp: 178.4 });
+    const recipient = makeHand({ totalFp: 182.4 });
+    const reveal = {
+      phase: "revealing" as const,
+      matchupIndex: 0,
+      matchupCount: 6,
+      visibleFpMap: new Map(),
+      // Running totals mid-arc, BELOW the finals.
+      senderRunningTotal: 42.3,
+      recipientRunningTotal: 51.7,
+      activeMatchup: { sender: sender.cards[0], recipient: recipient.cards[0] },
+      senderRevealOrder: sender.cards,
+      recipientRevealOrder: recipient.cards,
+      entranceStages: new Array(6).fill("settled" as const),
+      entranceSettledCount: 6,
+      pulseActive: false,
+      play: () => {},
+      skipToEnd: () => {},
+    };
+    render(
+      <H2HRevealScreen
+        sender={sender}
+        recipient={recipient}
+        renderCard={makeStub()}
+        reveal={reveal}
+      />
+    );
+    // Running totals visible — finals are NOT (would conflict mid-arc).
+    expect(screen.getByText("42.3")).toBeTruthy();
+    expect(screen.getByText("51.7")).toBeTruthy();
+    expect(screen.queryByText("178.4")).toBeNull();
+    expect(screen.queryByText("182.4")).toBeNull();
+  });
+
+  it("phase 3: when reveal.activeMatchup is {null,null} (idle), battlefield is empty", () => {
+    const sender = makeHand();
+    const recipient = makeHand();
+    const reveal = {
+      phase: "idle" as const,
+      matchupIndex: -1,
+      matchupCount: 6,
+      visibleFpMap: new Map(),
+      senderRunningTotal: 0,
+      recipientRunningTotal: 0,
+      activeMatchup: { sender: null, recipient: null },
+      senderRevealOrder: sender.cards,
+      recipientRevealOrder: recipient.cards,
+      entranceStages: new Array(6).fill("settled" as const),
+      entranceSettledCount: 6,
+      pulseActive: false,
+      play: () => {},
+      skipToEnd: () => {},
+    };
+    const { container } = render(
+      <H2HRevealScreen
+        sender={sender}
+        recipient={recipient}
+        renderCard={makeStub()}
+        reveal={reveal}
+      />
+    );
+    const battleCells = container.querySelectorAll('[data-h2h-battlefield-card="true"]');
+    expect(battleCells.length).toBe(0);
+    // No mini-cell should be active either (no card in battle).
+    const active = container.querySelectorAll('[data-h2h-mini-cell="true"][data-active-in-battlefield="true"]');
+    expect(active.length).toBe(0);
+  });
+
+  it("phase 3 entrance: both sides lay leftmost-first by reveal order", () => {
+    // Phase 3.9 update: both strips now lay in the SAME direction
+    // (cheapest first by reveal order, mapped by cardId). For the
+    // mock fixture's slotIndex-ordered revealOrder, stage_index N
+    // corresponds to displayPos N on BOTH strips. So with stages
+    // = ["settled","settled","settled","travel","pre","pre"]:
+    //   recipient (bottom): displayPos 0/1/2 settled, 3 traveling, 4/5 pre.
+    //   sender (top):       displayPos 0/1/2 settled, 3 traveling, 4/5 pre.
+    // Both sides' card 1 (cheapest) settles together, etc.
+    const sender = makeHand({
+      cards: Array.from({ length: 6 }, (_, i) =>
+        makeCard({ slotIndex: i, cardId: `s-${i}` })
+      ),
+    });
+    const recipient = makeHand({
+      cards: Array.from({ length: 6 }, (_, i) =>
+        makeCard({ slotIndex: i, cardId: `r-${i}` })
+      ),
+    });
+    const reveal = {
+      phase: "entering" as const,
+      matchupIndex: -1,
+      matchupCount: 6,
+      visibleFpMap: new Map(),
+      senderRunningTotal: 0,
+      recipientRunningTotal: 0,
+      activeMatchup: { sender: null, recipient: null },
+      senderRevealOrder: sender.cards,
+      recipientRevealOrder: recipient.cards,
+      entranceStages: ["settled", "settled", "settled", "travel", "pre", "pre"] as import("../useH2HReveal").EntranceStage[],
+      entranceSettledCount: 3,
+      pulseActive: false,
+      play: () => {},
+      skipToEnd: () => {},
+    };
+    const { container } = render(
+      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} reveal={reveal} />
+    );
+    // Recipient strip — displayPos = stage_index.
+    const recipientStrip = container.querySelector('[data-h2h-hand-strip="true"][data-side="recipient"]');
+    const recipientCells = recipientStrip?.querySelectorAll('[data-h2h-mini-cell="true"]') ?? [];
+    expect(recipientCells.length).toBe(6);
+    expect(recipientCells[0].getAttribute("data-h2h-cell-stage")).toBe("settled");
+    expect(recipientCells[2].getAttribute("data-h2h-cell-stage")).toBe("settled");
+    expect(recipientCells[3].getAttribute("data-h2h-cell-stage")).toBe("travel");
+    expect(recipientCells[5].getAttribute("data-h2h-cell-stage")).toBe("pre");
+    // Sender strip — displayPos = stage_index (same direction as recipient).
+    const senderStrip = container.querySelector('[data-h2h-hand-strip="true"][data-side="sender"]');
+    const senderCells = senderStrip?.querySelectorAll('[data-h2h-mini-cell="true"]') ?? [];
+    expect(senderCells.length).toBe(6);
+    expect(senderCells[0].getAttribute("data-h2h-cell-stage")).toBe("settled");
+    expect(senderCells[2].getAttribute("data-h2h-cell-stage")).toBe("settled");
+    expect(senderCells[3].getAttribute("data-h2h-cell-stage")).toBe("travel");
+    expect(senderCells[5].getAttribute("data-h2h-cell-stage")).toBe("pre");
+    // Battlefield is empty during entering phase.
+    const battleCells = container.querySelectorAll('[data-h2h-battlefield-card="true"]');
+    expect(battleCells.length).toBe(0);
+  });
+
+  it("phase 3 entrance: placeholder slots are visible before cards land, hidden after", () => {
+    // Mid-entrance synthetic state: only the first 2 cards have landed
+    // on each side. The remaining 4 cells should expose their dim
+    // placeholder layer (data-h2h-mini-placeholder="true" with non-zero
+    // opacity) so the user sees "empty slots waiting for cards" rather
+    // than "cards appearing in the middle of the screen."
+    const sender = makeHand({
+      cards: Array.from({ length: 6 }, (_, i) =>
+        makeCard({ slotIndex: i, cardId: `s-${i}` })
+      ),
+    });
+    const recipient = makeHand({
+      cards: Array.from({ length: 6 }, (_, i) =>
+        makeCard({ slotIndex: i, cardId: `r-${i}` })
+      ),
+    });
+    const reveal = {
+      phase: "entering" as const,
+      matchupIndex: -1,
+      matchupCount: 6,
+      visibleFpMap: new Map(),
+      senderRunningTotal: 0,
+      recipientRunningTotal: 0,
+      activeMatchup: { sender: null, recipient: null },
+      senderRevealOrder: sender.cards,
+      recipientRevealOrder: recipient.cards,
+      entranceStages: ["settled", "settled", "pre", "pre", "pre", "pre"] as import("../useH2HReveal").EntranceStage[],
+      entranceSettledCount: 2,
+      pulseActive: false,
+      play: () => {},
+      skipToEnd: () => {},
+    };
+    const { container } = render(
+      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} reveal={reveal} />
+    );
+    // Every cell renders a placeholder div.
+    const placeholders = container.querySelectorAll('[data-h2h-mini-placeholder="true"]');
+    expect(placeholders.length).toBe(12);
+    // Cells in "settled" stage: placeholder opacity 0 (hidden);
+    // cells in pre/lay/beat/travel: placeholder opacity 1 (visible).
+    const cells = container.querySelectorAll('[data-h2h-mini-cell="true"]');
+    let visibleCount = 0;
+    let hiddenCount = 0;
+    for (const cell of Array.from(cells)) {
+      const stage = cell.getAttribute("data-h2h-cell-stage");
+      const placeholder = cell.querySelector('[data-h2h-mini-placeholder="true"]') as HTMLElement | null;
+      const style = placeholder?.getAttribute("style") ?? "";
+      if (stage === "settled") {
+        expect(style).toMatch(/opacity:\s*0\b/);
+        hiddenCount++;
+      } else {
+        expect(style).toMatch(/opacity:\s*1\b/);
+        visibleCount++;
+      }
+    }
+    // 2 settled on each side = 4 hidden placeholders; rest = 8 visible.
+    expect(hiddenCount).toBe(4);
+    expect(visibleCount).toBe(8);
+  });
+
+  it("phase 3 anticipation pulse: pulseActive=true applies tier-colored pulse animation to all cells", () => {
+    const sender = makeHand({
+      cards: Array.from({ length: 6 }, (_, i) =>
+        makeCard({ slotIndex: i, cardId: `s-${i}`, tier: i === 0 ? "GREEN" : i === 5 ? "RED" : "PURPLE" })
+      ),
+    });
+    const recipient = makeHand({
+      cards: Array.from({ length: 6 }, (_, i) =>
+        makeCard({ slotIndex: i, cardId: `r-${i}`, tier: i === 0 ? "GREEN" : i === 5 ? "RED" : "PURPLE" })
+      ),
+    });
+    const reveal = {
+      phase: "anticipating" as const,
+      matchupIndex: -1,
+      matchupCount: 6,
+      visibleFpMap: new Map(),
+      senderRunningTotal: 0,
+      recipientRunningTotal: 0,
+      activeMatchup: { sender: null, recipient: null },
+      senderRevealOrder: sender.cards,
+      recipientRevealOrder: recipient.cards,
+      entranceStages: new Array(6).fill("settled" as const) as import("../useH2HReveal").EntranceStage[],
+      entranceSettledCount: 6,
+      pulseActive: true,
+      play: () => {},
+      skipToEnd: () => {},
+    };
+    const { container } = render(
+      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} reveal={reveal} />
+    );
+    const cells = container.querySelectorAll('[data-h2h-mini-cell="true"]');
+    expect(cells.length).toBe(12);
+    // All 12 cells should have data-h2h-pulse="true" + an animation
+    // applied via inline style.
+    for (const cell of Array.from(cells)) {
+      expect(cell.getAttribute("data-h2h-pulse")).toBe("true");
+      const style = (cell as HTMLElement).getAttribute("style") ?? "";
+      expect(style).toMatch(/animation:\s*h2h-card-pulse/);
+      // Tier color is piped via --h2h-pulse-color CSS variable.
+      expect(style).toMatch(/--h2h-pulse-color/);
+    }
+  });
+
+  it("phase 3 anticipation pulse: pulseActive=false does NOT apply pulse animation", () => {
+    const sender = makeHand();
+    const recipient = makeHand();
+    const reveal = {
+      phase: "anticipating" as const,
+      matchupIndex: -1,
+      matchupCount: 6,
+      visibleFpMap: new Map(),
+      senderRunningTotal: 0,
+      recipientRunningTotal: 0,
+      activeMatchup: { sender: null, recipient: null },
+      senderRevealOrder: sender.cards,
+      recipientRevealOrder: recipient.cards,
+      entranceStages: new Array(6).fill("settled" as const) as import("../useH2HReveal").EntranceStage[],
+      entranceSettledCount: 6,
+      pulseActive: false,
+      play: () => {},
+      skipToEnd: () => {},
+    };
+    const { container } = render(
+      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} reveal={reveal} />
+    );
+    const cells = container.querySelectorAll('[data-h2h-mini-cell="true"]');
+    for (const cell of Array.from(cells)) {
+      expect(cell.getAttribute("data-h2h-pulse")).toBe("false");
+      const style = (cell as HTMLElement).getAttribute("style") ?? "";
+      expect(style).toMatch(/animation:\s*none/);
+    }
+  });
+
+  it("phase 3 entrance: when reveal omits entranceStages (static), all cells render settled", () => {
+    // Static phase 2 path: no reveal prop → HandStrip's entranceStages
+    // is undefined → all cells treated as "settled".
+    const sender = makeHand();
+    const recipient = makeHand();
+    const { container } = render(
+      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} />
+    );
+    const cells = container.querySelectorAll('[data-h2h-mini-cell="true"]');
+    expect(cells.length).toBe(12);
+    for (const cell of Array.from(cells)) {
+      expect(cell.getAttribute("data-h2h-cell-stage")).toBe("settled");
+    }
   });
 
   it("hand-strip cell count scales with N (sport-agnostic — N=11 football-shape sanity check)", () => {
