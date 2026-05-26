@@ -1,52 +1,61 @@
 /**
  * basketball/src/dev/H2HRevealMockRoute.tsx
  *
- * Dev-only mount for the H2H reveal arc. Wires the basketball mock
- * fixture into the sport-agnostic H2HRevealScreen with AthleteCard as
- * the battlefield card renderer.
+ * Dev-only mount for the H2H reveal arc + results overlay loop.
  *
- * Phase 2 (static): mounted unchanged below — H2HRevealScreen with no
- *   `reveal` prop renders the end-state.
- * Phase 3 (animated): also mounts useH2HReveal alongside, passes it to
- *   the screen via the `reveal` prop. Dev controls (Play/Replay/Skip)
- *   overlay in the bottom-right. Optional `?autoplay=1` URL flag fires
- *   `play()` on mount.
+ * Phase 2/3: H2HRevealScreen driven by useH2HReveal hook + mock fixture.
+ * Phase 4: when the hook lands in `done`, this route renders
+ *   H2HResultsOverlay above the screen. Dev controls toggle
+ *   WIN / LOSS_OPEN / LOSS_CLOSED + margin bucket (photo_finish /
+ *   narrow / blowout) so the overlay variants can be iterated without
+ *   touching live data. Phase 4 mock-only — CTAs no-op to console.
  *
  * Mounted at pathname /basketball/dev/h2h-reveal-mock via regex match
  * in basketball/src/App.tsx. Production users have no entry point to
  * /dev/* paths.
  *
- * Phase 4 will replace the fixture import with a fetch against
- * /api/challenge/{id}/sender-hand; the same renderCard wiring + the
- * same H2HRevealScreen component + the same hook carry forward.
+ * Phase 5 will replace the fixture import with a fetch against
+ * /api/challenge/{id}/sender-hand; the same renderCard wiring + same
+ * H2HRevealScreen + hook carry forward.
  */
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   H2HRevealScreen,
   usePrefersReducedMotion,
   type H2HCard,
   type CardRenderer,
+  type H2HHand,
 } from "@shared/components/H2HRevealScreen";
 import {
   useH2HReveal,
   MATCHUP_DURATION_MS,
 } from "@shared/components/useH2HReveal";
+import {
+  H2HResultsOverlay,
+  OVERLAY_CROSSFADE_MS,
+  type ResultsOverlayState,
+} from "@shared/components/H2HResultsOverlay";
 import { AthleteCard } from "../components/AthleteCard";
 import { SENDER_HAND, RECIPIENT_HAND } from "./h2hMockFixture";
 import type { PlayerCard } from "../adapters/types";
+import { getShakeType } from "@shared/hooks/useEmotionalReveal";
 
-// AthleteCard wrapper. Static end-state and animated reveal both flow
-// through this single renderer; the difference is whether `visibleFp`
-// is set.
-//
-// Static (options=undefined): visibleFp prop is undefined → with
-//   phase=RESULTS, CardFront shows actualFp directly (CardFront.tsx:448).
-// Animated (options.visibleFp=0.001 sentinel): CardFront's internal
-//   visibleFp effect fires → kicks off its RAF rollup 0→actualFp using
-//   fpCountUpMs as the duration. We pass MATCHUP_DURATION_MS so the
-//   per-card animation finishes at the same instant the hook's running
-//   totals settle.
+// Amend6 bug B fix (2026-05-27): derive `cardShakeType` from the
+// card's actualFp/projectedFp ratio so PlayerCardShell triggers the
+// SMOKING HOT / ON FIRE / ICE COLD / FREEZING stamp + the CardFront
+// fire/ice visual effects. Single-player wires this through
+// useEmotionalReveal's cardShakeTypeMap; H2H computes it directly
+// from the card data because each card's actualFp is already known
+// at fixture load. `isAnchor=false` since H2H doesn't have the same
+// "final card forced to big" notion the single-player anchor uses.
+const shakeForCard = (card: H2HCard) =>
+  getShakeType(card as unknown as { projectedFp: number; actualFp: number; cardId: string }, false);
+
+// AthleteCard wrapper used during the reveal ARC. Static end-state and
+// animated reveal both flow through this single renderer; the
+// difference is whether `visibleFp` is set. canFlip=false during the
+// arc — flip is an overlay-only affordance.
 const renderBattlefieldCard: CardRenderer = (card: H2HCard, options) => (
   <AthleteCard
     card={card as unknown as PlayerCard}
@@ -58,29 +67,156 @@ const renderBattlefieldCard: CardRenderer = (card: H2HCard, options) => (
     badges={card.achievements}
     visibleFp={options?.visibleFp}
     fpCountUpMs={MATCHUP_DURATION_MS}
+    cardShakeType={shakeForCard(card)}
   />
 );
 
-// Read `?autoplay=1` once at module load. Browsers without window
-// (vitest/SSR smoke) get false.
-function readAutoplay(): boolean {
-  if (typeof window === "undefined") return false;
+// Read URL query params once at module load. Powers dev smoke capture
+// — headless Chrome can't easily click buttons, but it can load a URL
+// with the desired state baked in.
+//
+// Supported params:
+//   ?autoplay=1        — start the reveal arc immediately on mount.
+//   ?overlay=1         — bypass the arc, mount with the overlay shown.
+//   ?variant=…         — WIN | LOSS_OPEN | LOSS_CLOSED. Default WIN.
+//   ?margin=…          — photo_finish | narrow | blowout. Default narrow.
+//   ?topFlipped=cardId    — seed the TOP strip's selection (sender card).
+//   ?bottomFlipped=cardId — seed the BOTTOM strip's selection (recipient card).
+interface DevUrlParams {
+  autoplay: boolean;
+  overlay: boolean;
+  variant: OverlayVariantKey;
+  margin: MarginBucketKey;
+  topFlippedId: string | null;
+  bottomFlippedId: string | null;
+}
+function readDevParams(): DevUrlParams {
+  const defaults: DevUrlParams = {
+    autoplay: false,
+    overlay: false,
+    variant: "WIN",
+    margin: "narrow",
+    topFlippedId: null,
+    bottomFlippedId: null,
+  };
+  if (typeof window === "undefined") return defaults;
   try {
-    return new URLSearchParams(window.location.search).get("autoplay") === "1";
+    const sp = new URLSearchParams(window.location.search);
+    const variant = sp.get("variant");
+    const margin = sp.get("margin");
+    const topFlipped = sp.get("topFlipped");
+    const bottomFlipped = sp.get("bottomFlipped");
+    return {
+      autoplay: sp.get("autoplay") === "1",
+      overlay: sp.get("overlay") === "1",
+      variant: (variant === "LOSS_OPEN" || variant === "LOSS_CLOSED" || variant === "WIN")
+        ? variant
+        : defaults.variant,
+      margin: (margin === "photo_finish" || margin === "narrow" || margin === "blowout")
+        ? margin
+        : defaults.margin,
+      topFlippedId: topFlipped && topFlipped.trim() !== "" ? topFlipped.trim() : null,
+      bottomFlippedId: bottomFlipped && bottomFlipped.trim() !== "" ? bottomFlipped.trim() : null,
+    };
   } catch {
-    return false;
+    return defaults;
   }
 }
 
+// ── Phase 4 result-variant simulation ─────────────────────────────────────
+// The overlay's state machine + margin bucket drive headline copy + CTA
+// availability + countdown visibility. The dev controls let the user
+// pick a variant + margin and synthesize the corresponding (sender,
+// recipient) hands by mutating only `totalFp` — leaving the card-level
+// `actualFp` data alone. The reveal arc still plays the existing
+// 178.4 vs 182.4 mock (a `win_narrow` scenario); the overlay reads its
+// state independently from the dev controls. This is acceptable
+// inconsistency for phase 4 — phase 5 derives variant + margin from
+// actual data, so the mismatch evaporates.
+
+type OverlayVariantKey = "WIN" | "LOSS_OPEN" | "LOSS_CLOSED";
+type MarginBucketKey = "photo_finish" | "narrow" | "blowout";
+
+interface SyntheticHands {
+  sender: H2HHand;
+  recipient: H2HHand;
+}
+
+/** Synthesize sender + recipient totals for the chosen variant.
+ *  Card identities + per-card actualFp stay verbatim from the mock —
+ *  only `totalFp` shifts. Phase 5 stops calling this and uses the real
+ *  resolved hands' totals directly. */
+function synthesizeHands(
+  state: OverlayVariantKey,
+  margin: MarginBucketKey,
+): SyntheticHands {
+  // Pick a magnitude per margin bucket. Photo finish lands at ~1 FP,
+  // narrow at ~4-5 FP, blowout at ~20+ FP.
+  const magnitude =
+    margin === "photo_finish" ? 0.8
+    : margin === "narrow" ? 4.5
+    : 22.0;
+  // Sign by state: WIN means recipient > sender (positive signed delta).
+  const sign = state === "WIN" ? 1 : -1;
+  const signedDelta = magnitude * sign;
+  // Anchor sender at the existing mock total; shift recipient by the
+  // signed delta so the overlay's `recipient.totalFp - sender.totalFp`
+  // resolves to the chosen variant + margin combination.
+  const senderTotal = SENDER_HAND.totalFp;
+  const recipientTotal = Math.round((senderTotal + signedDelta) * 10) / 10;
+  return {
+    sender: { ...SENDER_HAND, totalFp: senderTotal },
+    recipient: { ...RECIPIENT_HAND, totalFp: recipientTotal },
+  };
+}
+
+const ONE_HOUR_MS = 60 * 60 * 1000;
+
 export function H2HRevealMockRoute() {
   const reducedMotion = usePrefersReducedMotion();
+  const initialParams = useMemo(readDevParams, []);
+
+  // ── Overlay variant + margin toggles (dev-only) ────────────────────────
+  const [overlayVariant, setOverlayVariant] = useState<OverlayVariantKey>(initialParams.variant);
+  const [overlayMargin, setOverlayMargin] = useState<MarginBucketKey>(initialParams.margin);
+  const synthetic = useMemo(
+    () => synthesizeHands(overlayVariant, overlayMargin),
+    [overlayVariant, overlayMargin],
+  );
+
+  // ── Manual "Skip to overlay" override ──────────────────────────────────
+  // When the user wants to iterate the overlay without watching the
+  // ~22s arc, they tap "Skip to overlay" which sets this true and
+  // bypasses the reveal arc end-state gate. Replay clears it.
+  // ?overlay=1 URL param seeds this true so smoke captures land
+  // directly on the overlay.
+  const [forceOverlay, setForceOverlay] = useState(initialParams.overlay);
+
+  // ── Dismissed flag ─────────────────────────────────────────────────────
+  // When the user taps × or Dismiss on the overlay, this flips true and
+  // the overlay's `visible` prop drops to false (crossfade out). After
+  // the crossfade completes, we unmount the overlay so the underlying
+  // arc end-state is fully visible again. Replay clears it.
+  const [dismissed, setDismissed] = useState(false);
+
+  // ── Initial-flipped seeds for smoke captures ───────────────────────────
+  // ?topFlipped=cardId / ?bottomFlipped=cardId URL params seed each
+  // strip's initial flip state on FIRST mount. Phase 4 fix 3 has per-
+  // strip flip — both slots can be filled simultaneously. Re-mount on
+  // Replay/Skip-to-overlay bumps `overlayMountKey` so the seeds are
+  // dropped (next visit starts with both hero slots empty).
+  const initialTopFlippedCardId = initialParams.topFlippedId;
+  const initialBottomFlippedCardId = initialParams.bottomFlippedId;
+
+  // Reveal hook drives the arc. The OVERLAY's data (synthetic hands) is
+  // independent of the hook's hands — the hook always plays the
+  // existing mock arc (178.4 vs 182.4) so the reveal choreography is
+  // stable regardless of which variant the user is iterating.
   const reveal = useH2HReveal({
     sender: SENDER_HAND,
     recipient: RECIPIENT_HAND,
     reducedMotion,
     onMatchupResolved: (index, _matchup, state) => {
-      // Phase 5 will wire commentary here; for dev iteration we just
-      // log so the hook's callback contract is exercised.
       // eslint-disable-next-line no-console
       console.info("[h2h-mock] matchup resolved", index, state);
     },
@@ -91,11 +227,86 @@ export function H2HRevealMockRoute() {
   });
 
   useEffect(() => {
-    if (readAutoplay()) reveal.play();
-    // Intentionally one-shot on mount — `reveal.play` identity isn't
-    // stable, but we only want to autoplay once per page load.
+    if (initialParams.autoplay) reveal.play();
+    if (initialParams.overlay) reveal.skipToEnd();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── Overlay visibility ──────────────────────────────────────────────────
+  // The overlay shows when:
+  //   (a) the arc has fully resolved (phase === "done"), OR
+  //   (b) the user pressed "Skip to overlay" (forceOverlay=true).
+  // AND has not been dismissed. Phase 4 ships a crossfade (350ms)
+  // between arc end-state and overlay landing — phase 6 replaces with
+  // the real win/loss climax animation.
+  const shouldShowOverlay = (forceOverlay || reveal.phase === "done") && !dismissed;
+  const { mounted: overlayMounted, visible: overlayVisible } =
+    useCrossfade(shouldShowOverlay, OVERLAY_CROSSFADE_MS);
+
+  // ── Window timer for LOSS_OPEN ──────────────────────────────────────────
+  // Mock the server's `window_closes_at_ms`: 60 minutes from the moment
+  // the overlay would first appear. Phase 5 reads from the real
+  // `/attempt` response. Locked at first show so the timer doesn't
+  // reset when the user toggles variants.
+  const [windowOpenedAtMs] = useState(() => Date.now());
+  const windowClosesAtMs = windowOpenedAtMs + ONE_HOUR_MS;
+
+  // ── Renderer for the OVERLAY cards ──────────────────────────────────────
+  // Distinct from `renderBattlefieldCard` — the overlay's renderer
+  // reads `options.flipped` (passed by the overlay's LineupStrip,
+  // which now owns the flip state). canFlip=true so PlayerCardShell
+  // renders the back face when flipped=true; no onToggleFlip — the
+  // cell wrapper inside the overlay owns the click. The card-back
+  // (BackBStats) renders from the existing gameInfo + statLine fields
+  // in the mock fixture — no fixture extensions needed.
+  const renderOverlayCard: CardRenderer = useCallback((card: H2HCard, options) => (
+    <AthleteCard
+      card={card as unknown as PlayerCard}
+      phase={"RESULTS" as any}
+      isFlipped={options?.flipped ?? false}
+      canFlip={true}
+      locked={card.wasHeld}
+      heldFpVisible={true}
+      badges={card.achievements}
+      cardShakeType={shakeForCard(card)}
+    />
+  ), []);
+
+  // ── CTA handlers (phase 4 console.info — phase 5 wires for real) ───────
+  const noop = useCallback((label: string) => () => {
+    // eslint-disable-next-line no-console
+    console.info(`[h2h-mock] CTA "${label}" pressed (phase 4 no-op)`);
+  }, []);
+  const onSendItBack = useMemo(() => noop("Send It Back"), [noop]);
+  const onTryAgain = useMemo(() => noop("Try Again"), [noop]);
+  const onPlayOwnHand = useMemo(() => noop("Play your own hand"), [noop]);
+  const onDismiss = useCallback(() => {
+    // eslint-disable-next-line no-console
+    console.info('[h2h-mock] CTA "Dismiss" pressed — fading overlay back to arc end-state');
+    setDismissed(true);
+  }, []);
+
+  // Bumped on each Replay so the overlay re-mounts cleanly (resets its
+  // internal flip state); also seeds initial flipped ids from the
+  // ?flipped= URL param on the FIRST mount via the `key` prop below.
+  const [overlayMountKey, setOverlayMountKey] = useState(0);
+
+  // ── Replay handlers ────────────────────────────────────────────────────
+  const handleReplay = useCallback(() => {
+    setForceOverlay(false);
+    setDismissed(false);
+    setOverlayMountKey(k => k + 1);
+    reveal.play();
+  }, [reveal]);
+
+  const handleSkipToOverlay = useCallback(() => {
+    setForceOverlay(true);
+    setDismissed(false);
+    setOverlayMountKey(k => k + 1);
+    // Also jump the hook to its end state so any subsequent Replay
+    // starts from a clean slate.
+    reveal.skipToEnd();
+  }, [reveal]);
 
   return (
     <>
@@ -105,14 +316,39 @@ export function H2HRevealMockRoute() {
         renderCard={renderBattlefieldCard}
         reveal={reveal}
       />
+      {overlayMounted && (
+        <H2HResultsOverlay
+          key={overlayMountKey}
+          sender={synthetic.sender}
+          recipient={synthetic.recipient}
+          renderCard={renderOverlayCard}
+          state={overlayVariant satisfies ResultsOverlayState}
+          windowClosesAtMs={
+            overlayVariant === "LOSS_OPEN" ? windowClosesAtMs : null
+          }
+          visible={overlayVisible}
+          initialTopFlippedCardId={overlayMountKey === 0 ? initialTopFlippedCardId : null}
+          initialBottomFlippedCardId={overlayMountKey === 0 ? initialBottomFlippedCardId : null}
+          onSendItBack={onSendItBack}
+          onTryAgain={onTryAgain}
+          onPlayOwnHand={onPlayOwnHand}
+          onDismiss={onDismiss}
+        />
+      )}
       <DevControls
         phase={reveal.phase}
         matchupIndex={reveal.matchupIndex}
         matchupCount={reveal.matchupCount}
         entranceSettledCount={reveal.entranceSettledCount}
         pulseActive={reveal.pulseActive}
-        onPlay={reveal.play}
+        showOverlay={shouldShowOverlay}
+        overlayVariant={overlayVariant}
+        overlayMargin={overlayMargin}
+        onPlay={handleReplay}
         onSkip={reveal.skipToEnd}
+        onSkipToOverlay={handleSkipToOverlay}
+        onSetVariant={setOverlayVariant}
+        onSetMargin={setOverlayMargin}
       />
     </>
   );
@@ -121,7 +357,7 @@ export function H2HRevealMockRoute() {
 // ── Dev-only control overlay ──────────────────────────────────────────────
 // Bottom-right fixed cluster. Buttons are intentionally small + low-
 // contrast so they don't dominate the visual smoke screenshots; the
-// reveal screen itself is the artifact being evaluated.
+// reveal surface is the artifact being evaluated.
 
 interface DevControlsProps {
   phase: string;
@@ -129,25 +365,36 @@ interface DevControlsProps {
   matchupCount: number;
   entranceSettledCount: number;
   pulseActive: boolean;
+  showOverlay: boolean;
+  overlayVariant: OverlayVariantKey;
+  overlayMargin: MarginBucketKey;
   onPlay: () => void;
   onSkip: () => void;
+  onSkipToOverlay: () => void;
+  onSetVariant: (v: OverlayVariantKey) => void;
+  onSetMargin: (m: MarginBucketKey) => void;
 }
 
-function DevControls({ phase, matchupIndex, matchupCount, entranceSettledCount, pulseActive, onPlay, onSkip }: DevControlsProps) {
+function DevControls({
+  phase, matchupIndex, matchupCount, entranceSettledCount, pulseActive,
+  showOverlay, overlayVariant, overlayMargin,
+  onPlay, onSkip, onSkipToOverlay, onSetVariant, onSetMargin,
+}: DevControlsProps) {
   const isAnimating = phase === "entering" || phase === "anticipating" || phase === "revealing" || phase === "paused" || phase === "end-hold";
-  const playLabel = phase === "done" ? "Replay" : "Play";
+  const playLabel = phase === "done" || showOverlay ? "Replay" : "Play";
   // Replay button is hidden during end-hold so the user can absorb the
   // climax without next-step UI appearing. Skip is also hidden in the
   // hold (skipping a settle period isn't meaningful).
   const showPlay = phase !== "end-hold";
-  const showSkip = phase !== "end-hold";
-  // Phase-specific progress string. "entering" shows settled/total
-  // cards; "anticipating" shows still/pulse/settle sub-state.
-  const progress = phase === "entering"
-    ? `${entranceSettledCount}/${matchupCount} dealt`
-    : phase === "anticipating"
-      ? (pulseActive ? "pulse" : "still")
-      : `${matchupIndex + 1}/${matchupCount}`;
+  const showSkipArc = phase !== "end-hold" && !showOverlay;
+  // Phase-specific progress string.
+  const progress = showOverlay
+    ? `overlay ${overlayVariant.toLowerCase()}`
+    : phase === "entering"
+      ? `${entranceSettledCount}/${matchupCount} dealt`
+      : phase === "anticipating"
+        ? (pulseActive ? "pulse" : "still")
+        : `${matchupIndex + 1}/${matchupCount}`;
   return (
     <div
       data-h2h-dev-controls="true"
@@ -155,51 +402,134 @@ function DevControls({ phase, matchupIndex, matchupCount, entranceSettledCount, 
         position: "fixed",
         bottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)",
         right: 12,
-        zIndex: 9100,
+        zIndex: 9200,
         display: "flex",
-        flexDirection: "row",
-        gap: 8,
-        alignItems: "center",
-        padding: "6px 8px",
+        flexDirection: "column",
+        gap: 6,
+        alignItems: "stretch",
+        padding: "8px 10px",
         borderRadius: 10,
-        background: "rgba(0,0,0,0.55)",
+        background: "rgba(0,0,0,0.65)",
         border: "1px solid rgba(255,255,255,0.15)",
         backdropFilter: "blur(8px)",
         WebkitBackdropFilter: "blur(8px)",
         fontFamily: "'Inter', system-ui, sans-serif",
         fontSize: 11,
         color: "rgba(255,255,255,0.85)",
+        maxWidth: 320,
       }}
     >
-      <span
-        data-h2h-dev-phase={phase}
-        style={{ fontVariantNumeric: "tabular-nums", opacity: 0.7 }}
-      >
-        {phase} · {progress}
-      </span>
-      {showPlay && (
-        <button
-          type="button"
-          data-h2h-dev-play="true"
-          onClick={onPlay}
-          style={controlButtonStyle}
+      {/* Row 1: phase/progress + Play/Replay + Skip(arc) + Skip-to-overlay */}
+      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+        <span
+          data-h2h-dev-phase={phase}
+          style={{ fontVariantNumeric: "tabular-nums", opacity: 0.7, flex: 1 }}
         >
-          {playLabel}
-        </button>
+          {phase} · {progress}
+        </span>
+        {showPlay && (
+          <button
+            type="button"
+            data-h2h-dev-play="true"
+            onClick={onPlay}
+            style={controlButtonStyle}
+          >
+            {playLabel}
+          </button>
+        )}
+        {showSkipArc && (
+          <button
+            type="button"
+            data-h2h-dev-skip="true"
+            onClick={onSkip}
+            disabled={!isAnimating}
+            style={{ ...controlButtonStyle, opacity: isAnimating ? 1 : 0.4 }}
+          >
+            Skip
+          </button>
+        )}
+        {!showOverlay && (
+          <button
+            type="button"
+            data-h2h-dev-skip-to-overlay="true"
+            onClick={onSkipToOverlay}
+            style={controlButtonStyle}
+          >
+            →&nbsp;Overlay
+          </button>
+        )}
+      </div>
+
+      {/* Row 2: variant toggle. Only shown when overlay is up so the
+          controls don't clutter the arc surface. */}
+      {showOverlay && (
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <span style={{ opacity: 0.55, width: 50 }}>Variant</span>
+          {(["WIN", "LOSS_OPEN", "LOSS_CLOSED"] as const).map(v => (
+            <button
+              key={v}
+              type="button"
+              data-h2h-dev-variant={v}
+              onClick={() => onSetVariant(v)}
+              style={{
+                ...controlButtonStyle,
+                background: overlayVariant === v ? "rgba(255,177,74,0.25)" : "rgba(255,255,255,0.08)",
+                borderColor: overlayVariant === v ? "rgba(255,177,74,0.6)" : "rgba(255,255,255,0.25)",
+              }}
+            >
+              {v === "WIN" ? "win" : v === "LOSS_OPEN" ? "loss·open" : "loss·closed"}
+            </button>
+          ))}
+        </div>
       )}
-      {showSkip && (
-        <button
-          type="button"
-          data-h2h-dev-skip="true"
-          onClick={onSkip}
-          disabled={!isAnimating}
-          style={{ ...controlButtonStyle, opacity: isAnimating ? 1 : 0.4 }}
-        >
-          Skip
-        </button>
+
+      {/* Row 3: margin toggle. */}
+      {showOverlay && (
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <span style={{ opacity: 0.55, width: 50 }}>Margin</span>
+          {(["photo_finish", "narrow", "blowout"] as const).map(m => (
+            <button
+              key={m}
+              type="button"
+              data-h2h-dev-margin={m}
+              onClick={() => onSetMargin(m)}
+              style={{
+                ...controlButtonStyle,
+                background: overlayMargin === m ? "rgba(255,177,74,0.25)" : "rgba(255,255,255,0.08)",
+                borderColor: overlayMargin === m ? "rgba(255,177,74,0.6)" : "rgba(255,255,255,0.25)",
+              }}
+            >
+              {m === "photo_finish" ? "photo" : m}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );
+}
+
+// ── Crossfade hook ────────────────────────────────────────────────────────
+// Generic show/hide-with-crossfade primitive. Returns `mounted` (DOM
+// presence) + `visible` (opacity target). When `shouldShow` flips
+// true: mount immediately, then visible=true on the next animation
+// frame so the CSS opacity transition fires from 0 to 1. When it
+// flips false: visible=false (transition runs), then unmount after
+// `duration` ms.
+function useCrossfade(shouldShow: boolean, duration: number) {
+  const [mounted, setMounted] = useState(shouldShow);
+  const [visible, setVisible] = useState(shouldShow);
+  useEffect(() => {
+    if (shouldShow) {
+      setMounted(true);
+      const id = requestAnimationFrame(() => setVisible(true));
+      return () => cancelAnimationFrame(id);
+    } else {
+      setVisible(false);
+      const id = window.setTimeout(() => setMounted(false), duration);
+      return () => clearTimeout(id);
+    }
+  }, [shouldShow, duration]);
+  return { mounted, visible };
 }
 
 const controlButtonStyle: React.CSSProperties = {

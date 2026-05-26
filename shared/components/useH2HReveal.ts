@@ -511,17 +511,38 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
   }, [cancelAll, matchups.length, sender.totalFp, recipient.totalFp]);
 
   const activeMatchup = useMemo(() => {
-    if (phase === "idle" || phase === "entering" || phase === "anticipating" || matchupIndex < 0) {
+    if (phase === "idle") {
       return { sender: null, recipient: null };
     }
-    // During end-hold and done, anchor on the final matchup (matchupIndex
-    // is already N-1 in both cases, but the explicit clamp is defensive).
-    const idx = phase === "done" || phase === "end-hold"
-      ? matchups.length - 1
-      : matchupIndex;
+    // Phase 4 amend5 fix 1 (2026-05-27): during `entering`, show
+    // matchups[0] in the hero zone as soon as the deck has emptied
+    // (i.e., the last card has at least started laying — no
+    // "pre"-stage cards remain). This eliminates the ~750ms empty-
+    // middle window between deck depletion and the
+    // `setPhase("anticipating")` tick that previously held the
+    // hero zone visually empty while the last card was still mid-
+    // flight to its strip slot. The deck has handed off all its
+    // cards; the hero slots reveal who the first matchup is.
+    if (phase === "entering") {
+      const deckEmpty = !entranceStages.some(s => s === "pre");
+      if (!deckEmpty) {
+        return { sender: null, recipient: null };
+      }
+      const m0 = matchups[0];
+      return m0 ? { sender: m0.sender, recipient: m0.recipient } : { sender: null, recipient: null };
+    }
+    // Amend4: during `anticipating`, anchor on matchups[0] so the
+    // pre-reveal pulse window has hero cards visible.
+    const idx = phase === "anticipating"
+      ? 0
+      : phase === "done" || phase === "end-hold"
+        ? matchups.length - 1
+        : matchupIndex < 0
+          ? 0
+          : matchupIndex;
     const m = matchups[idx];
     return m ? { sender: m.sender, recipient: m.recipient } : { sender: null, recipient: null };
-  }, [phase, matchupIndex, matchups]);
+  }, [phase, matchupIndex, matchups, entranceStages]);
 
   const entranceSettledCount = useMemo(
     () => entranceStages.filter(s => s === "settled").length,

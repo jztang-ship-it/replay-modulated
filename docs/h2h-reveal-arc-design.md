@@ -109,18 +109,35 @@ End-of-arc gets a big summary commentary line that lands in the rail before tran
 
 Replaces the current `ChallengeComparisonScreen.tsx` bottom-sheet. Full-viewport overlay.
 
-**Required content:**
-- Big headline differentiating win vs loss (winner sees celebration framing, loser sees a different framing).
-- Both lineups displayed, each with team FP total.
-- Each card on the overlay is **flippable** — reuses existing single-player card-flip mechanic to reveal back (opponent, date, box score / game log context). Card flip is the existing component; new surface uses it.
-- Action CTAs preserved from existing sheet: Send It Back, Try Again (if applicable), Dismiss.
-- 1-hour window countdown timer logic preserved from existing sheet.
-- Trash-talk line still fires (existing `TRASH_NAMED` / `TRASH_UNNAMED` banks, picked by signed delta bucket).
-- Existing state-machine (WIN / LOSS_OPEN / LOSS_CLOSED) preserved; expressed as overlay variants instead of sheet variants.
+**Locked structure (2026-05-27 phase 4 restructure) — the overlay IS the H2H layout in a "result state," not a separate layout. The middle zone of the H2H layout reorganizes into three columns (text / hero slots / scores). Phase 3 arc layout is also updated to keep the overlay's structure visually consistent with the arc's end-state.**
 
-**The comparison sheet's "resolution line" (substantive recap copy) is now redundant** because the reveal arc's commentary rail already narrated the hand. Compress or remove. Trash-talk line stays as emotional punchline.
+The reveal arc's three-zone vertical layout (top strip / middle / bottom strip) carries into the overlay. The MIDDLE zone reorganizes into three columns:
 
-**Win/loss visual differentiation, headline copy structure, lineup display layout** — designed in a future session, not locked here. The overlay is scoped, not designed in detail.
+- **Top strip:** opponent's lineup — same hand-strip density (~55×80) as the arc's hand strip. All N cards visible, tappable.
+- **Middle / Left zone (~120-150px on mobile):** Headline + trash-talk. Text-only, no chrome around them. Headline color tracks variant (green WIN / red LOSS_OPEN / muted LOSS_CLOSED / amber photo_finish). Spans the full hero-zone vertical range.
+- **Middle / Center zone (two hero card slots):** Empty by default. Each strip has independent flip state — tapping a top-strip card flips it at the TOP hero slot; tapping a bottom-strip card flips it at the BOTTOM hero slot. Both slots can be filled simultaneously for 1v1 card-back comparison. The strip cell whose card is currently shown dims to ~0.35 opacity. Card backs render at full hero card size via the existing `BackBStats` pipeline.
+- **Middle / Right zone (~64px wide):** Two FP totals stacked vertically. Top FP anchored to top hero slot Y; bottom FP anchored to bottom hero slot Y. No matchup-delta pill in the middle of this zone — the arc has already moved the delta into its right rail (see "Arc layout adjustments" above), and removing it from the overlay keeps the rail content focused on the two totals.
+- **Bottom strip:** user's lineup, symmetric with the top strip.
+- **CTA row (below bottom strip):** Primary CTA only — `Send It Back` (WIN) / `Try Again` (LOSS_OPEN) / `Play your own hand` (LOSS_CLOSED). Full-width orange button. **Dismiss CTA removed** — the × close button in the top-right handles dismiss exclusively. LOSS_OPEN countdown pill sits above the primary CTA.
+
+**Rail widening during arc → overlay transition.** The arc's left rail is 80px (MVP placeholder for commentary). The overlay's left rail is ~100-110px to hold the headline + trash-talk legibly. The transition between arc end-state and overlay can incorporate this widening as part of the crossfade; phase 4 ships fixed widths in each state with the crossfade animating opacity only. Phase 6's climax animation may layer the rail widening on top.
+
+**State machine + CTAs (preserved from `ChallengeComparisonScreen`):**
+
+| Variant       | When                       | Headline tone   | Primary CTA          | Timer |
+|---------------|----------------------------|-----------------|----------------------|-------|
+| `WIN`         | `delta > 0`                | celebration     | `Send It Back`       | —     |
+| `LOSS_OPEN`   | `delta ≤ 0`, window open   | revenge         | `Try Again`          | 1h    |
+| `LOSS_CLOSED` | `delta ≤ 0`, window closed | pure practice   | `Play your own hand` | —     |
+
+Margin bucket sub-divides headline copy (`win_blowout` / `win_narrow` / `photo_finish` / `loss_narrow` / `loss_blowout`); buckets reuse `trashTalkBucket(delta)` internal names. Polish in phase 8.
+
+**Removed from the comparison sheet:**
+- The substantive "resolution line" two-clause WHY copy. Phase 7's commentary rail carries that load in the arc; the overlay's left rail holds the punchier trash-talk instead.
+- Bottom-sheet gestures (swipe-down dismiss, backdrop tap, swipe handle). Full-viewport overlay → dropped. Dismiss is an explicit CTA + an × close button.
+- The `POST /api/challenge/{id}/attempt` call. Phase 5 wires this.
+
+**Removed mid-phase-4 (failed iterations now superseded):** two-row lineup display, headline-at-top + lineups-below structure, scale-up-on-tap hack for back-face legibility, multi-flip support. The structured H2H layout above replaces all of them.
 
 ## Wagering / stakes
 
@@ -226,15 +243,16 @@ No "5" or "6" hardcoded anywhere in the H2H reveal arc design.
 
 ## Implementation scoping (high-level only)
 
-Real code work, broken into shippable phases:
+Real code work, broken into shippable phases. Sequence reordered mid-build (2026-05-26 session) to put the full async loop in front of an end-to-end smoke before late wiring.
 
-1. **Phase 1 — Data layer (shipped 2026-05-26, commit d827337):** sender-hand endpoint + write-side population. See "Data model gap — RESOLVED for phase 1" above.
-2. **Phase 2 — Static H2H reveal screen with mock data (this PR):** full-viewport component, 3-zone vertical layout (opponent / battlefield / your), 2 rails (scores+delta / commentary placeholder). No animation, no real-data wiring. Mounted via dev-only route. Locks the visual structure before timing/animation work in phase 3.
-3. **Phase 3 — Animation + per-matchup choreography:** cards flip, FP rolls, scores update, swap-first then held-last reveal order, simultaneous-within-matchup.
-4. **Phase 4 — DEAL transition + real-endpoint wiring:** animated reshape from hold/swap UI into H2H layout (~500ms); recipient client fetches the phase-1 endpoint at DEAL time and drives the sender column from real data.
-5. **Phase 5 — Commentary engine:** trigger taxonomy + evaluation + bank integration + rail rendering. Reuses existing banks where possible.
-6. **Phase 6 — Results overlay:** refactor existing `ChallengeComparisonScreen` from bottom-sheet to full-viewport overlay. Add flippable lineup display. Migrate trash-talk + CTAs + state-machine. Compress/remove resolution line.
-7. **Phase 7 — Win/loss climax animation** between end-of-arc and results overlay.
+1. **Phase 1 — Data layer (shipped, commit d827337):** sender-hand endpoint + write-side population.
+2. **Phase 2 — Static H2H reveal screen with mock data (shipped, commit 3de3585):** sport-agnostic component, 3-zone vertical layout, dev-only route mount.
+3. **Phase 3 — Animation + per-matchup choreography (shipped, commit 135a90f):** entrance (sequential dealing → middle → travel to strip), pre-reveal anticipation pulse, per-matchup FP rollup + score tick, card-pull motion, end-of-arc hold. Phase 3.5–3.9 amendments documented inline below.
+4. **Phase 4 — Results overlay with mock data (this PR):** full-viewport overlay replacing the existing `ChallengeComparisonScreen` bottom-sheet. Flippable lineup display, win/loss state machine, trash-talk punchline, 1-hour countdown timer. Dev-route extended to show the full async loop (reveal arc → overlay) with variant + margin toggles. Mock data only — no `/attempt` POST, no real CTA actions; CTAs render and are clickable but no-op (or console.info) for this phase.
+5. **Phase 5 — DEAL transition + real-endpoint wiring:** animated reshape from hold/swap UI into H2H layout (~500ms); recipient client fetches the phase-1 endpoint at DEAL time, drives the sender column from real data, replaces the dev-route mock with the production mount.
+6. **Phase 6 — Win/loss climax animation** between end-of-arc and the results overlay. Phase 4 ships with a simple cut/fade placeholder; the real animation lands here.
+7. **Phase 7 — Commentary engine:** trigger taxonomy + evaluation + bank integration + rail rendering. Reuses existing banks where possible. The "resolution line" copy that lived on the comparison sheet pre-phase-4 is now this rail's responsibility — the overlay no longer carries expository recap.
+8. **Phase 8 — Polish pass:** copy refinement, motion tuning, accessibility audit, visual treatment cleanup across the whole arc + overlay surface. Catch-all for everything deferred during functional builds.
 
 **Single-player code path unchanged** throughout. Tier panels, single-player reveals, etc. stay as-is. H2H is a parallel path branching at DEAL time when in challenge mode.
 
@@ -249,6 +267,240 @@ For future phases to extend without re-deriving:
 - **Dev route mount (basketball):** `basketball/src/dev/H2HRevealMockRoute.tsx`. Wires fixture → `<H2HRevealScreen>` → `<AthleteCard>` as the card renderer. Hosted at pathname `/basketball/dev/h2h-reveal-mock` via regex match in `basketball/src/App.tsx` (matches existing convention for `/basketball/profile/:uuid` and `/basketball/challenge/:uuid`). Production users have no entry point to `/dev/*` paths.
 - **Import pattern:** static import + `import.meta.env.DEV` guard at the usage site (`App.tsx` `if (import.meta.env.DEV && devSlug === "h2h-reveal-mock")`). NOT `React.lazy()` — an earlier lazy attempt surfaced a fragility where stale Vite dev-server state (regenerated optimizeDeps with new `?v=` hash, HMR boundary mismatch after the dev/ directory landed mid-session, browser-cached chunk URLs that no longer exist) caused the lazy chunk fetch to 404 with the Suspense boundary hanging silently. Static import sidesteps that entire surface; production builds strip the branch via DCE (Vite constant-folds DEV → `false`, Rollup removes the unreferenced import). Bundle impact in production: ~4 KB residual after tree-shaking (acceptable; the dev-only mock fixture is small).
 - **Phase 4 swap-in path:** in real challenge flow, replace the mock fixture with a `fetch('/api/challenge/{id}/sender-hand')` call. The mount component (which becomes the real recipient flow's reveal mount) keeps the same shape: `<H2HRevealScreen sender={...} recipient={...} renderCard={AthleteCardLike} />`.
+
+### Phase 4 integration anchors (locked, this PR)
+
+**Component (sport-agnostic):** `shared/components/H2HResultsOverlay.tsx`. Full-viewport overlay (`position: fixed; inset: 0; z-index: 9000+`). Takes resolved sender + recipient hands (same `H2HHand` shape phase 2/3 already use) plus a `renderCard` prop, plus the result variant + CTA wiring. Same visual chrome as `H2HRevealScreen` — gradient background, inner column `maxWidth: min(480px, 100%)`, glass panel chrome on zone wrappers — so the overlay feels like the same surface as the arc.
+
+**State machine (preserved from `ChallengeComparisonScreen`):**
+
+| Variant       | When                                     | Headline framing | Primary CTA          | Notes                                         |
+|---------------|------------------------------------------|------------------|----------------------|-----------------------------------------------|
+| `WIN`         | `delta > 0`                              | celebration      | `Send It Back`       | green accent on user total                    |
+| `LOSS_OPEN`   | `delta ≤ 0` && window open               | revenge framing  | `Try Again`          | shows 1-hour countdown                        |
+| `LOSS_CLOSED` | `delta ≤ 0` && window closed             | pure practice    | `Play your own hand` | no countdown, "doesn't change the score" tag |
+
+Margin nuance further subdivides each variant for the headline copy:
+
+| Margin bucket  | Delta threshold                  | Headline tone                |
+|----------------|----------------------------------|------------------------------|
+| `photo_finish` | `|delta| ≤ 1`                    | drama, settle-it-on-fresh    |
+| `win_narrow`   | `1 < delta < 15`                 | edged-it, keep-the-pressure  |
+| `win_blowout`  | `delta ≥ 15`                     | dominant, run-it-back        |
+| `loss_narrow`  | `-15 < delta < -1`               | so close, one-more-hand      |
+| `loss_blowout` | `delta ≤ -15`                    | rebuild-then-revenge         |
+
+Buckets reuse `trashTalkBucket(delta)` from `shared/commentary/chadChallenge.ts`. Existing internal names use `_big`/`_narrow` rather than the spec's `_blowout` — the overlay maps the existing buckets transparently. The same buckets pick a `chadTrashTalk(bucket, name, delta)` line as the emotional punchline near the headline.
+
+**Headline copy (phase 4 placeholders — polish in phase 8):**
+
+| Variant + bucket           | Headline                                          |
+|----------------------------|---------------------------------------------------|
+| `WIN` + `win_blowout`      | `Cooked. +{delta} FP over {name}.`                |
+| `WIN` + `win_narrow`       | `Got 'em by {delta}.`                             |
+| `WIN`/`LOSS` + `photo_finish` | `Photo finish — {delta} FP.`                    |
+| `LOSS_OPEN` + `loss_narrow`   | `Off by {delta}. Window's still open.`         |
+| `LOSS_OPEN` + `loss_blowout`  | `Off by {delta}. One more swing in the window.` |
+| `LOSS_CLOSED` + `loss_narrow` | `Came up {delta} short. Window closed.`        |
+| `LOSS_CLOSED` + `loss_blowout`| `Off by {delta}. Window closed.`               |
+
+These are placeholders — locked enough to ship phase 4. Polish pass (phase 8) re-tones them.
+
+**Lineup display:** both hands rendered as horizontal strips of N cards. Same `renderCard` prop pattern as the reveal screen; phase 4 mocks pass an `AthleteCard` renderer with `canFlip={true}` so each card is tap-to-flip. Card back uses the existing `BackBStats` (basketball) / `CardBackGeneric` (sport-agnostic) rendering pipeline — no overlay-specific back layout. The phase 4 mock fixture already includes `gameInfo` + full `statLine` per card, so the back face renders out-of-the-box; **no mock-fixture extensions needed**.
+
+**CTAs preserved from `ChallengeComparisonScreen`:** `Send It Back` (WIN), `Try Again` (LOSS_OPEN), `Play your own hand` (LOSS_CLOSED), plus a `Dismiss` button on every variant. Phase 4 wires these to `console.info` only — real action handlers (clear challengeCtx, navigate, etc.) come in phase 5 when the overlay replaces the production sheet.
+
+**Timer:** 1-hour countdown anchored to a `windowClosesAtMs` prop. Phase 4 mocks supply a 60-minute window from mount. 1Hz interval tick. Urgency styling (red, larger text) at < 5 minutes — same threshold as `ChallengeComparisonScreen.tsx:275`. LOSS_OPEN only.
+
+**Removed from the comparison sheet:**
+- The `resolutionLine` substantive two-clause WHY copy is **gone**. Phase 7's commentary rail in the arc carries narrative load; the overlay would duplicate.
+- Bottom-sheet gestures (swipe-down dismiss, backdrop tap-to-collapse, swipe handle). Full-viewport overlay → drop. Dismiss stays as an explicit CTA + an × button top-right.
+- `POST /api/challenge/{id}/attempt` and the AttemptResult-driven state. Phase 4 mocks the relevant fields (windowClosesAtMs, isWindowOpen) via dev-route controls.
+
+**Simple transition placeholder (phase 4 → phase 6).** Phase 4 ships with a hard cut from arc-end to overlay mount: `phase === "done"` in `useH2HReveal` triggers the dev route to render `<H2HResultsOverlay>` at z-index above the arc. No animation. This is an explicit placeholder for the phase 6 win/loss climax animation.
+
+**Dev-route integration (basketball):** `H2HRevealMockRoute.tsx` extends to host the full loop. New controls:
+- `Replay` — restarts arc + overlay from the entrance.
+- `Skip to overlay` — bypasses the arc, lands directly on the overlay (for iterating overlay copy/layout without watching the full ~22s arc).
+- Variant toggle: `WIN` / `LOSS_OPEN` / `LOSS_CLOSED`.
+- Margin toggle: `photo_finish` / `narrow` / `blowout`. (Drives synthetic deltas to exercise headline + trash-talk variants.)
+- Overlay reads variant + margin from a small `useResultsVariant` state hook in the route, NOT from the H2H reveal hook (which doesn't know about win/loss). Phase 5 replaces this with derived state from `myScore - challengeCtx.targetScore`.
+
+### Phase 3.10 — entrance revert to slot-direct lay-down
+
+Phase 3.8 introduced "lay at center-stage → travel to slot" choreography. Phase 4 smoke surfaced that the bottom strip's lay-at-middle visual reads as "card appearing at center of screen, then jumping into the strip" rather than "card being placed onto the strip." Reverted to phase 3.7-style slot-direct lay-down: cards lay into their hand-strip slot positions directly with a small fade + slide-from-above (sender) / slide-from-below (recipient) offset (`HAND_STRIP_LAY_OFFSET_PX = 16`).
+
+The TRAVEL stage is now visually a no-op (already at slot from LAY); the stage state machine is preserved in `useH2HReveal` so the pre-reveal anticipation pulse + arc pacing remain stable. `MIDDLE_TRANSLATE_Y_*` constants + `computeMiddleTranslateX` are removed.
+
+### Phase 4 amend6 — fix hero photo mismatch + wire fire/ice tier effects (2026-05-27)
+
+Two bug fixes documented as known issues in amend5; landed as the first amend after the phase 4 force-push.
+
+**Bug A — hero photo mismatch (root cause: wrong basePlayerIds in fixture).** `BasketballHero` builds the headshot URL from `card.basePlayerId` via `headshotUrl(basePlayerId)`. Three fixture rows had copy-paste-wrong NBA IDs:
+- Naz Reid: `1629029` (Luka Dončić's ID) → corrected to `1629675`.
+- Bobby Portis: `1629638` (Nickeil Alexander-Walker) → corrected to `1626171`.
+- Tyrese Maxey: `1629680` (Matisse Thybulle) → corrected to `1630178`.
+
+The user's perception that "the strip cell showed the correct headshot" was a small-scale illusion — strip cells use the same `BasketballHero` and same wrong URL; at ~55px wide the wrong face is hard to recognize, while at hero scale (~125px) the Lakers jersey gave it away.
+
+**Bug B — fire/ice regression (root cause: `cardShakeType` not forwarded from H2H renderers).** Single-player passes `cardShakeType` from `useEmotionalReveal.cardShakeTypeMap` to each card; `PlayerCardShell` turns it into an `OverlayStamp` (SMOKING HOT / ON FIRE / ICE COLD / FREEZING) when the FP rollup completes; `CardFront` reads the stamp and renders the fire/ice gradient. The two H2H renderers (`renderBattlefieldCard` arc + `renderOverlayCard` overlay) were never passing the prop. Fix: import `getShakeType` from `@shared/hooks/useEmotionalReveal`, derive `cardShakeType = getShakeType(card, false)` per card, pass to both renderers. To get a FIRE-class card in the mock for demonstration, Giannis's `projectedFp` was lowered 54 → 40 (display-only field; totalFp is summed from actualFps so totals are unaffected).
+
+Known limitation: chrome `--headless --virtual-time-budget` doesn't reliably advance the per-matchup RAF rollup past matchup 0, so headless captures can't easily land at the moment stamp + gradient appear. Verification requires live-browser observation of each matchup completing its rollup.
+
+---
+
+### Phase 4 amend5 — hero visible while deck depleted + invert mini-card brightness (2026-05-27)
+
+Two fixes on top of amend4.
+
+**Hero zone occupied throughout the entrance.** Amend4 fixed the empty-middle during `anticipating` but a ~750ms gap remained during `entering`: between the moment the last `pre` card transitioned to `lay` (deck visual depleted to 0) and the moment phase transitioned to `anticipating`. Fix: `useH2HReveal.activeMatchup` now returns `matchups[0]` during `entering` as soon as `entranceStages.some(s => s === "pre")` is false. `H2HRevealScreen` switches its conditional from `isEntering` to `showEntranceDeck = isEntering && deckHasPreCards` — the deck visual renders only while cards remain; otherwise CardCenterCell renders matchup-0 hero cards. Net: the hero zone is occupied by the deck OR the matchup-0 cards at every instant of the arc.
+
+**Mini-card brightness inverted.** Previously the active mini-card (whose card was in the hero slot) was dimmed and the other 10 were bright — the user's eye was drawn to inactive cards. New rule: active = bright (opacity 1), others on the same strip = dimmed (opacity 0.35). When no card is active on a strip (overlay default state, no flip), all 6 cards on that strip render bright. Top + bottom strips are independent — on the overlay, flipping a card in only one strip brightens that strip's selection and dims its other 5 cells without affecting the other strip.
+
+---
+
+### Phase 4 amend4 — eliminate empty-middle state + pixel-identical hero-cell heights (2026-05-27)
+
+Two bug fixes on top of amend3.
+
+**Empty-middle state during `anticipating` eliminated.** `useH2HReveal.activeMatchup` returned `{ sender: null, recipient: null }` for `anticipating` phase. The hero zone rendered as empty placeholders for the ~1.65s pre-reveal pulse window. Fix: `activeMatchup` anchors on `matchups[0]` during `anticipating`. The matchup-0 hero cards appear the moment the entrance settles; the pulse plays on the strip cells while the heroes wait above. No URL param, dev control, or normal flow can produce a strips-present-middle-empty render anymore.
+
+**Pixel-identical hero cell heights.** The overlay's `HeroCell` collapsed to `minHeight: 60px` when empty, while the arc's `CardCenterCell` always renders at `aspectRatio: "329 / 478"` regardless of card presence. That mismatch (~240px difference across 2 rows) pulled the overlay's bottom strip up by ~240px relative to the arc, breaking the locked-geometry invariant. Fix: empty hero cells in the overlay also use `aspectRatio: "329 / 478"`. The cell reserves the same Y span whether empty or occupied. `EMPTY_HERO_CELL_MIN_HEIGHT_PX` constant removed.
+
+Verified pixel-parity at 390×844: top strip Y, both hero slot Ys, bottom strip Y all agree within ±2px between arc and overlay captures.
+
+---
+
+### Phase 4 amend3 — tight top-to-bottom composition + reserved space BELOW bottom strip (2026-05-27)
+
+Correction to the locked-geometry model from amend2: the flex-grow reserved space sat BETWEEN the bottom hero and the bottom strip, which pushed the bottom strip to the viewport bottom and stretched the hero zone. That's wrong.
+
+The correct model:
+
+> **The top-strip → hero-pair → bottom-strip block is ONE tight vertical composition near the top of the viewport. Strips are positioned relative to the hero cards with fixed small gaps, not pulled to viewport edges. ALL remaining viewport space sits BELOW the bottom strip.**
+
+Layout from top to bottom (locked across entrance / arc / overlay):
+
+```
+safe-area + 20 paddingTop
+↓
+Top strip (MIKE header + 6 cards)              ← ~110-130px
+↓ 18px fixed gap
+Top hero slot                                   ← full hero card
+↓ 14px sliver
+Bottom hero slot                                ← full hero card
+↓ 18px fixed gap
+Bottom strip (6 cards + YOU header)             ← ~110-130px
+↓
+Reserved bottom space (flex: 1 1 auto)
+  on arc: empty
+  on overlay: countdown (if LOSS_OPEN) + primary CTA
+              anchored flex-end + paddingTop:16 so it
+              hugs the bottom for thumb position
+↓
+safe-area + 20 paddingBottom
+```
+
+The reserved space's `flex: 1 1 auto` absorbs all extra viewport height. Result: the tight top block stays anchored near the top regardless of viewport tallness, hero content, or variant.
+
+Locked invariant (still): top strip Y, both hero slot Ys, and bottom strip Y are pixel-identical between the arc and the overlay. Only what fills the hero slots (active matchup vs flipped backs) and what sits below the bottom strip (empty vs CTA) changes.
+
+---
+
+### Phase 4 amend2 — real-deck entrance + locked geometry + TIE/EVEN removal (2026-05-27)
+
+Four corrections to the first phase 4 restructure (below), landed as a second amend on top of `c2e78fb`.
+
+**Real face-up deck (replaces face-down placeholders).** The `EntranceDeck` no longer renders an N-tall stack of `CardBackGeneric` placeholders. Instead, each deck shows the **real cards still in `pre` state**, layered with a small Y offset so the stack reads as a depth pile. The TOP of each stack is the next-to-deal card — its **full FRONT** is visible (player photo, tier color, name, salary). As that card's stage transitions `pre → lay`, it flies out (rendered in `HandStrip` via `deckTransform`) and the next card underneath becomes the new visible top. Visual model: a dealer's stack. The deck visibly depletes; when the last card flies, both decks unmount.
+
+Implementation: `EntranceDeck` props are now `{ cards: H2HCard[], entranceStages: EntranceStage[], renderCard: CardRenderer }`. It filters `cards` to the `pre`-stage subset and renders them stacked, ordered by stage_index so the lowest-index card sits on top. Each layer below the top gets `translateY(layer * 4px)` + a small opacity dim. Reveal-orders (`senderRevealOrder`, `recipientRevealOrder`) come from `useH2HReveal`; each side renders its own deck.
+
+**Transient TIE / EVEN insignia removed.** The final-margin pill ("TIE / EVEN / +N.N YOU / +N.N OPP") was removed from `MidRailContent` entirely. It flashed as "TIE / EVEN" for an instant at the start of `revealing` when both running totals were still 0 (the rolling totals animate in over `BATTLEFIELD_TRAVEL_DURATION_MS`). The overall margin is conveyed by the two FP totals themselves; the user does not need a separate readout. `MidRailContent` now renders ONLY the per-matchup delta.
+
+**Locked geometry between arc and overlay.** This is the load-bearing invariant of the amend:
+
+> The TOP STRIP, both HERO SLOTS, and the BOTTOM STRIP render at IDENTICAL pixel positions on the arc and the overlay. Nothing moves between states. Only the **content** of those zones changes.
+
+Both `H2HRevealScreen` and `H2HResultsOverlay` now use the same outer flex column with `justifyContent: "flex-start"`, the same paired `safe-area + 36px` paddings, the same `LEFT_RAIL_WIDTH_PX (100)` + `RIGHT_RAIL_WIDTH_PX (80)` columns, and the same `BATTLEFIELD_ROW_GAP_PX (14)` sliver between the two hero rows.
+
+Layout structure (identical on both surfaces):
+
+```
+[ safe-area + 36 padding ]
+[ Top zone: MIKE header + top strip ]                       ← anchored to TOP
+[ Battlefield grid (2 rows, sliver gap):
+    ┌─ left rail ─┬─ top hero ──┬─ top score ─┐
+    │             ├─ sliver ────┤             │
+    │             ├─ bottom hero ┤  bottom    │
+    │             │             │  score      │
+    └─────────────┴─────────────┴─────────────┘
+    Left rail content swaps per state:
+      arc → empty
+      overlay → headline + trash-talk (spans both rows)
+    Right rail content:
+      arc → FP totals + absolute matchup-delta float
+      overlay → FP totals only
+    Hero cells content:
+      arc → active matchup cards (CardCenterCell or EntranceDeck)
+      overlay → flipped card backs (per-strip flip, both can be filled)
+]
+[ Reserved bottom space (flex: 1 1 auto, fills slack) ]    ← empty on arc; CTA on overlay
+[ Bottom zone: bottom strip + YOU header ]                  ← anchored to BOTTOM via flex-grow above
+[ safe-area + 36 padding ]
+```
+
+The per-matchup delta (matchup readout) renders on the arc only, **absolutely positioned** inside the battlefield grid at `right: 0, top: 50%, transform: translateY(-50%)`. Absolute = doesn't push the hero rows apart, so the sliver gap stays consistent.
+
+The reserved bottom space is the geometry-locking spacer: `flex: 1 1 auto` absorbs any extra viewport height so the bottom strip sits at a fixed Y from the safe-area bottom regardless of variant, viewport tallness, or hero-zone content.
+
+**Safe-area floor bumped 24 → 36.** Both surfaces' `paddingTop` and `paddingBottom` floors increase so the MIKE/YOU player headers never sit tight to a notch or viewport edge on real iOS devices.
+
+---
+
+### Phase 4 restructure — deck entrance + arc layout tighten + overlay 3-zone middle + per-strip flip
+
+Three connected restructures to phase 3 + phase 4, landed in a single amend on 2026-05-27.
+
+**Deck-metaphor entrance (replaces phase 3.10 slot-direct lay-down).** When the entering phase begins, two card-back deck stacks render at the top and bottom hero-card positions (existing `CardBackGeneric` reused — diamond grid + center emblem + REPLAY IFS wordmark). Each deck shows N face-down cards stacked (basketball N=6). As each stage_index advances `pre → lay`, the corresponding card flies out from its deck to its strip slot. Both sides' stage_index 0 cards fly simultaneously (same pairing invariant from phase 3.9). As cards leave, the deck visibly shrinks (count = number of stage_indexes still in "pre"). When the last card flies, both decks unmount and the anticipation beat (stillness → pulse → matchup 0) begins.
+
+The flight animation: the strip cell's content transforms from deck position (hero-zone center, hero-card scale) to slot position (strip cell, mini scale) over `CARD_LAY_MS`. Re-uses the phase 3.8 "lay at middle then travel" geometry — the difference from the prior phase 3.8 attempt is that the deck visualization at the source point makes the motion read as "card emerging from a stack" rather than "card appearing in the middle of the screen for no reason." The deck supplies the missing context.
+
+The "TIE / EVEN" insignia + per-matchup delta in the middle row of the battlefield grid is hidden during the entering phase. The mid-rail content only renders when matchups are active (`phase === "revealing"` or `paused`).
+
+**Arc layout adjustments.** Two changes to the battlefield-zone layout during the reveal phase + end-state:
+- The per-matchup delta (e.g., "-3.7 MATCHUP" / "+11.0 OPP") moves OUT of the mid-rail (between the two hero cards) and into the RIGHT RAIL, positioned between the two FP totals. Right-rail vertical order: sender total → matchup delta → recipient total.
+- The two hero cards tighten together — the mid-rail row shrinks to a thin sliver. The hero cards remain visibly separated (do not touch) but read as one clash unit. Implementation: `BATTLEFIELD_ROW_GAP_PX` reduced and the mid-rail row's content (delta + margin pill) removed.
+- Top strip ("MIKE") and bottom strip ("YOU") stay at their exact current vertical positions. Bottom hero moves UP to close the gap with the top hero, opening up unused vertical space below the bottom hero before the bottom strip. The unused space is intentional — it becomes the CTA band in the overlay (see below).
+
+**Results overlay — 3-zone middle structure.** The arc's static end-state structure carries into the overlay (top strip → middle → bottom strip), but the middle's content rearranges into three zones rendered as columns in the existing battlefield grid:
+- **Left zone (~120-150px on mobile):** Headline + trash-talk. Text-only, no glass-panel chrome. Headline color tracks variant (green WIN / red LOSS_OPEN / muted LOSS_CLOSED / amber photo_finish). Spans the full hero-zone vertical range.
+- **Center zone (two hero card slots):** Empty by default. Tapping a strip card flips it at the matching hero slot.
+- **Right zone (~64px):** Two FP totals stacked vertically. Top FP anchored to top hero slot Y; bottom FP anchored to bottom hero slot Y. NO matchup-delta pill in the middle — the result is implicit from the two totals (and the new arc layout already moved the delta into the right rail, so removing it from the overlay's right zone keeps the rail content stable).
+
+Strip positions in the overlay match the arc's static end-state exactly — no jump on transition.
+
+**Per-strip card flip (replaces single-flip-across-both-strips).** Independent flip state per side:
+- One card in the TOP strip can be flipped at a time; tapping a top-strip card sets the TOP hero slot. Tap another top-strip card → swap. Tap the same card → unflip top.
+- One card in the BOTTOM strip can be flipped at a time, independently from top.
+- BOTH hero slots can be filled simultaneously, enabling 1v1 card-back comparison across players.
+- The flipped strip cell dims to ~0.35 opacity to signal "currently shown."
+- Card backs render at full hero card size in the matching hero slot — no scale-up hack. Reuses existing `BackBStats` pipeline.
+
+**CTA placement.** The vertical space below the bottom strip houses the primary CTA — `Send It Back` (WIN) / `Try Again` (LOSS_OPEN) / `Play your own hand` (LOSS_CLOSED). Full-width orange button. Dismiss CTA REMOVED — the × button in the top-right handles dismiss exclusively. For LOSS_OPEN, the countdown pill sits above the primary CTA.
+
+### Phase 4 amendment — strip-density lineup + scale-up flip + crossfade
+
+Three layered fixes after the initial phase 4 smoke:
+
+**Lineups at hand-strip density.** The initial overlay rendered cards at ~150px tall in two-row strips that overflowed the viewport, occluded each other, and blocked the LOSS_OPEN countdown. Reverted to hand-strip density (~55px wide × 80px tall — same as `H2HRevealScreen.HandStrip`) so all 12 cards fit on mobile, no overlap, full visual continuity with the arc.
+
+**Scale-up on flip.** At hand-strip density the back face is illegible. Tap-to-flip now scales the cell's content up by `FLIPPED_SCALE_BOOST = 2.4×` (visual goes ~55px → ~130px wide). Combined with `z-index: 100` on the flipped cell, the enlarged card pops above neighbors and the back-face stats are readable. Tap again returns to strip density.
+
+**Overlay-owned flip state.** Lifted `flippedIds` out of the dev route and into `H2HResultsOverlay` itself. Callers don't thread flip state. The `CardRenderer` signature extends with an `options.flipped` flag; the cell wrapper owns the click. Tests verify toggle-on-click and `initialFlippedIds` seed prop.
+
+**Crossfade arc → overlay (350ms placeholder for phase 6).** Phase 4 originally hard-cut from arc end-state to overlay mount. The overlay now accepts a `visible` prop; when false it fades to `opacity: 0` + `pointer-events: none` over `OVERLAY_CROSSFADE_MS = 350ms`. The dev route's `useCrossfade` hook coordinates mount/unmount with the same duration. Phase 6's win/loss climax animation replaces this placeholder with the real transition.
+
+**Dev-route dismissed flag.** Added a `dismissed` state in the dev route. The × button and Dismiss CTA both flip it true → overlay crossfades out → underlying arc end-state is visible again. Replay clears it.
 
 ### Phase 3.9 — entrance order invariant + pre-reveal anticipation beat
 

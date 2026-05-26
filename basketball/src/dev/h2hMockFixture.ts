@@ -42,7 +42,11 @@ function gi(date: string, opp: string, homeAway: "home" | "away"): { date: strin
 const SENDER_CARDS: H2HCard[] = [
   // ── Swap cards: 0 (cheapest) → 3 (most expensive swap) ──
   {
-    id: "1629029", basePlayerId: "1629029", personKey: "1629029", cardId: "1629029_card",
+    // Amend6 bug A fix (2026-05-27): basePlayerId was 1629029
+    // (Luka Dončić's NBA stats ID) — caused the hero photo to render
+    // Luka in a Lakers jersey while the rest of the card was Naz Reid.
+    // Correct Naz Reid NBA stats ID is 1629675.
+    id: "1629675", basePlayerId: "1629675", personKey: "1629675", cardId: "1629675_card",
     name: "Naz Reid", team: "MIN", season: "2425", position: "C",
     photoCode: "reidna01", salary: 22, tier: "GREEN", projectedFp: 18.0,
     slotIndex: 0, wasHeld: false, actualFp: 11.3, fpDelta: -6.7,
@@ -105,7 +109,10 @@ const SENDER_CARDS: H2HCard[] = [
 const RECIPIENT_CARDS: H2HCard[] = [
   // ── Swap cards: 0 (cheapest) → 3 (most expensive swap) ──
   {
-    id: "1629638", basePlayerId: "1629638", personKey: "1629638", cardId: "1629638_card",
+    // Amend6 bug A fix (2026-05-27): basePlayerId was 1629638
+    // (Nickeil Alexander-Walker's NBA stats ID). Correct Bobby Portis
+    // NBA stats ID is 1626171.
+    id: "1626171", basePlayerId: "1626171", personKey: "1626171", cardId: "1626171_card",
     name: "Bobby Portis", team: "MIL", season: "2425", position: "PF",
     photoCode: "portibo01", salary: 19, tier: "GREEN", projectedFp: 16.0,
     slotIndex: 0, wasHeld: false, actualFp: 6.9, fpDelta: -9.1,
@@ -123,7 +130,10 @@ const RECIPIENT_CARDS: H2HCard[] = [
     achievements: [],
   },
   {
-    id: "1629680", basePlayerId: "1629680", personKey: "1629680", cardId: "1629680_card",
+    // Amend6 bug A fix (2026-05-27): basePlayerId was 1629680
+    // (Matisse Thybulle's NBA stats ID). Correct Tyrese Maxey
+    // NBA stats ID is 1630178.
+    id: "1630178", basePlayerId: "1630178", personKey: "1630178", cardId: "1630178_card",
     name: "Tyrese Maxey", team: "PHI", season: "2425", position: "PG",
     photoCode: "maxeyty01", salary: 46, tier: "PURPLE", projectedFp: 36.0,
     slotIndex: 2, wasHeld: false, actualFp: 28.4, fpDelta: -7.6,
@@ -151,9 +161,15 @@ const RECIPIENT_CARDS: H2HCard[] = [
     achievements: [],
   },
   {
+    // Amend6 bug B prep (2026-05-27): projectedFp lowered 54 → 40 so
+    // Giannis's actualFp (62.8) lands at ratio 1.57 → "big" → ON FIRE
+    // stamp. Without this, the entire mock fixture's ratios sit in the
+    // cold/frozen band and there's no FIRE-affected card to demonstrate
+    // the fix. totalFp is summed from actualFps so this projected-only
+    // change doesn't shift any totals.
     id: "203507", basePlayerId: "203507", personKey: "203507", cardId: "203507_card",
     name: "Giannis Antetokounmpo", team: "MIL", season: "2425", position: "PF",
-    photoCode: "antetgi01", salary: 92, tier: "RED", projectedFp: 54.0,
+    photoCode: "antetgi01", salary: 92, tier: "RED", projectedFp: 40.0,
     slotIndex: 5, wasHeld: true, actualFp: 62.8, fpDelta: 8.8,
     gameInfo: gi("2025-01-14", "MIA", "home"),
     statLine: statLine(36, 13, 5, 2, 2, 3, 38),

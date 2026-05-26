@@ -150,28 +150,28 @@ describe("H2HRevealScreen — static layout", () => {
     expect(swapPills.length).toBeGreaterThan(0);
   });
 
-  it("shows the final margin pill with correct sign + leader hint when you are ahead", () => {
+  // Phase 4 fix 2 amend2 (2026-05-27): the final-margin pill (TIE /
+  // EVEN / +N) was removed. The total margin is conveyed by the two
+  // FP scores themselves; the per-matchup delta still renders.
+  it("renders the per-matchup delta in the right rail (the +N matchup readout)", () => {
     const sender = makeHand({ totalFp: 178.4, displayName: "Mike" });
     const recipient = makeHand({ totalFp: 182.4, displayName: "You" });
-    render(<H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} />);
-    expect(screen.getByText("+4.0")).toBeTruthy();
-    expect(screen.getByText("you")).toBeTruthy();
+    const { container } = render(<H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} />);
+    const midRail = container.querySelector('[data-h2h-mid-rail="true"]');
+    expect(midRail).toBeTruthy();
+    expect(midRail?.textContent?.toLowerCase()).toMatch(/matchup/);
   });
 
-  it("shows OPP leader hint when opponent is ahead", () => {
-    const sender = makeHand({ totalFp: 200.0 });
-    const recipient = makeHand({ totalFp: 180.0 });
-    render(<H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} />);
-    expect(screen.getByText("+20.0")).toBeTruthy();
-    expect(screen.getByText("opp")).toBeTruthy();
-  });
-
-  it("shows TIE state when scores are equal", () => {
+  it("does NOT render the legacy final-margin pill text (TIE / EVEN / YOU / OPP)", () => {
     const sender = makeHand({ totalFp: 175.0 });
     const recipient = makeHand({ totalFp: 175.0 });
-    render(<H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} />);
-    expect(screen.getByText("TIE")).toBeTruthy();
-    expect(screen.getByText("even")).toBeTruthy();
+    const { container } = render(<H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} />);
+    // None of the legacy pill labels should appear anywhere in the DOM.
+    expect(screen.queryByText("TIE")).toBeNull();
+    expect(screen.queryByText("even")).toBeNull();
+    expect(screen.queryByText("you")).toBeNull();
+    expect(screen.queryByText("opp")).toBeNull();
+    expect(container.querySelector('[data-h2h-overlay-margin="true"]')).toBeNull();
   });
 
   it("defaults battlefield to the highest slotIndex (final reveal pair per design doc)", () => {
@@ -209,26 +209,28 @@ describe("H2HRevealScreen — static layout", () => {
     expect(battleCells[1].getAttribute("data-card-id")).toBe("r-2");
   });
 
-  it("dims the hand-strip mini-cell whose slotIndex is currently in the battlefield (active slot)", () => {
-    // Battlefield default = highest slotIndex (5 for a 6-card hand).
-    // The matching mini-cell on each side should render with the
-    // data-active-in-battlefield="true" marker; all other cells get
-    // "false". Phase 3 (animation choreography) will drive this
-    // dynamically as the reveal walks through matchups.
+  it("brightens the active mini-cell (in battlefield) and dims the inactive cells", () => {
+    // Phase 4 amend5 fix 2 (2026-05-27): brightness invariant —
+    // active mini-card is BRIGHT (opacity 1); the OTHER cards on
+    // the same strip are DIMMED (opacity 0.35). User's eye is
+    // drawn to the bright card. When no card is active on the
+    // strip (none in battlefield), all cards are bright.
     const sender = makeHand();    // 6 cards default, slots 0-5
     const recipient = makeHand();
     const { container } = render(<H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} />);
     const activeCells = container.querySelectorAll('[data-h2h-mini-cell="true"][data-active-in-battlefield="true"]');
     const inactiveCells = container.querySelectorAll('[data-h2h-mini-cell="true"][data-active-in-battlefield="false"]');
-    // One active per side = 2 total.
     expect(activeCells.length).toBe(2);
-    // Remaining 5 per side = 10 total.
     expect(inactiveCells.length).toBe(10);
-    // Active cells' card-content layer renders at reduced opacity
-    // (the inner scaled div containing renderCard's output). The OUTER
-    // cell stays at full opacity so its placeholder structure persists;
-    // only the card content dims to signal "in battle."
+    // Active cells render their card content at full opacity (1).
     for (const cell of Array.from(activeCells)) {
+      const cardLayer = cell.querySelector(":scope > div:not([data-h2h-mini-placeholder])") as HTMLElement | null;
+      const style = cardLayer?.getAttribute("style") ?? "";
+      expect(style).toMatch(/opacity:\s*1\b/);
+    }
+    // Inactive cells (on a strip that has an active card) render
+    // at reduced opacity (0.35).
+    for (const cell of Array.from(inactiveCells)) {
       const cardLayer = cell.querySelector(":scope > div:not([data-h2h-mini-placeholder])") as HTMLElement | null;
       const style = cardLayer?.getAttribute("style") ?? "";
       expect(style).toMatch(/opacity:\s*0\.\d+/);

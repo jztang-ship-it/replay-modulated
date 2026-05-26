@@ -69,6 +69,7 @@ import {
   BATTLEFIELD_TRAVEL_DURATION_MS,
   type EntranceStage,
 } from "./useH2HReveal";
+import { CardBackGeneric } from "./CardBackGeneric";
 
 // ── Public types ─────────────────────────────────────────────────────────
 
@@ -121,7 +122,10 @@ export interface H2HHand {
  *  responsible for forwarding the value to its sport-card's
  *  `visibleFp` prop (basketball: AthleteCard.visibleFp → CardFront's
  *  internal RAF interpolation). */
-export type CardRenderer = (card: H2HCard, options?: { visibleFp?: number }) => React.ReactNode;
+export type CardRenderer = (
+  card: H2HCard,
+  options?: { visibleFp?: number; flipped?: boolean },
+) => React.ReactNode;
 
 export interface H2HRevealScreenProps {
   sender: H2HHand;
@@ -220,22 +224,27 @@ const BATTLEFIELD_CARD_MAX_WIDTH = "min(145px, 32vw)";
 // column" rather than "tag attached to the card."
 const SCORE_COLUMN_WIDTH_PX = 80;
 
-// Left-rail reserved width. Matches SCORE_COLUMN_WIDTH_PX so the
-// battlefield grid is symmetric: [80 left rail | 1fr center | 80 right
-// rail]. With the hero card centered in the 1fr center column, the
-// card sits at the visual center of the viewport (left rail + right
-// rail balance the layout around the card).
+// Left-rail reserved width. Wider than the right rail to give the
+// overlay's headline + trash-talk enough horizontal room to read
+// without ellipsis at 390px viewport.
 //
-// Phase 2: left rail is empty (no commentary content yet). Phase 5
-// will populate the left rail with commentary; if commentary needs
-// more horizontal space than 80px the layout must adapt — see the
-// "left-rail expansion" followup in docs/h2h-reveal-arc-design.md.
-const LEFT_RAIL_WIDTH_PX = 80;
+// Phase 4 fix 3 (2026-05-27, amend2): widened from 80 → 100 so the
+// arc and the overlay share IDENTICAL left-rail geometry. On the
+// arc the left rail is empty (no commentary content yet); on the
+// overlay it holds headline + trash-talk anchored to the same hero
+// vertical bounds.
+const LEFT_RAIL_WIDTH_PX = 100;
 
-// Vertical gap between battlefield rows (top card row, mid-rail row,
-// bottom card row). Tight by design — the two cards + mid-rail should
-// read as one matchup unit.
-const BATTLEFIELD_ROW_GAP_PX = 6;
+// Vertical gap between the two hero rows. Phase 4 fix 3 amend2
+// (2026-05-27): bumped to 14px because the matchup-delta readout
+// now FLOATS in this gap via absolute positioning (it does not
+// contribute to row heights). 14px is the visible sliver between
+// the two hero cards — the user-requested "thin sliver, don't
+// touch" target.
+// Earlier history: 6 → 2 when the mid-rail moved to the right rail
+// (still as a grid row), and 2 → 14 when it became absolutely
+// positioned so it no longer contributed to row height.
+const BATTLEFIELD_ROW_GAP_PX = 14;
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -311,31 +320,27 @@ interface HandStripProps {
   pulseActive: boolean;
 }
 
-// Entrance "middle" scale and Y offsets — during the LAY/BEAT phases,
-// the card is scaled up to hero size (~125px wide vs ~55px mini) and
-// translated to the middle of the screen. Two Y offsets approximate the
-// battlefield hero row positions (upper for sender, lower for recipient)
-// — sender card visually appears at the upper-middle band and recipient
-// at the lower-middle band, so they stack vertically rather than
-// overlapping at a single point.
-// Translate X is computed per-cell from viewport width so each card
-// crosses to the horizontal center regardless of its strip column.
+// Phase 4 fix 1 (2026-05-27) — DECK-METAPHOR ENTRANCE. Two face-down
+// card-back deck stacks render at the top and bottom hero-card
+// positions during the entering phase. Cards fly OUT of the deck
+// during their LAY stage and land at their hand-strip slot. The deck
+// visualization provides the missing context for the "card appears in
+// the middle of the screen" motion — without it, cards looked like
+// they emerged from nowhere (the reason we reverted phase 3.8 in
+// phase 3.10). With the deck visual, cards visibly emerge from the
+// stack and zoom to their strip slots.
 const HERO_CARD_SCALE = 0.83;
-// Sender strip is near the top of the screen; cards translate DOWN
-// (positive Y) into the upper battlefield slot. Recipient strip near
-// the bottom; cards translate UP into the lower battlefield slot. The
-// magnitudes are calibrated so the two visuals land in their
-// respective battlefield rows rather than overlapping at viewport
-// center — see docs/h2h-reveal-arc-design.md "Phase 3.8 — sequential
-// dealing" for the positioning rationale.
-const MIDDLE_TRANSLATE_Y_SENDER_PX = 110;
-const MIDDLE_TRANSLATE_Y_RECIPIENT_PX = -110;
+// Vertical offset from a strip cell's slot position to its side's
+// deck position. Sender (top strip) deck sits BELOW the top strip in
+// the hero zone (positive Y); recipient (bottom strip) deck sits
+// ABOVE the bottom strip in the hero zone (negative Y).
+const ENTRANCE_DECK_TRANSLATE_Y_TOP_PX = 110;
+const ENTRANCE_DECK_TRANSLATE_Y_BOTTOM_PX = -110;
 
-// Compute the translateX needed to bring a cell's scaled-visual center
-// to viewport horizontal center. cell_left ≈ innerColLeft + 16 + 4 +
-// displayPos*59 on mobile; we read viewport width at render time so
-// desktop's wider inner column stays aligned.
-function computeMiddleTranslateX(displayPos: number): number {
+// Compute translateX needed to bring a strip cell's scaled-visual
+// center to viewport horizontal center (= deck center X). cell_left ≈
+// innerColLeft + 16 + 4 + displayPos*59 on mobile.
+function computeDeckTranslateX(displayPos: number): number {
   if (typeof window === "undefined") return 0;
   const vw = window.innerWidth;
   const innerColW = Math.min(480, vw);
@@ -381,6 +386,19 @@ function HandStrip({ cards, renderCard, activeCardId, entranceStages, revealOrde
     >
       {ordered.map((card, displayPos) => {
         const isActiveInBattlefield = !!activeCardId && card.cardId === activeCardId;
+        // Phase 4 amend5 fix 2 (2026-05-27): brightness invariant —
+        // the user's eye is drawn to BRIGHT cards. The active mini-
+        // card (whose card is in the hero slot) is the one we want
+        // attention on. So: active = bright (1.0); others on this
+        // strip when ANYTHING is active = dimmed (0.35). When no
+        // card is active on this strip (activeCardId === null), the
+        // strip has no focal point — all cards render bright.
+        const stripHasActive = !!activeCardId;
+        const settledCardOpacity = !stripHasActive
+          ? 1
+          : isActiveInBattlefield
+            ? 1
+            : 0.35;
         // Stage_index is the card's position in the REVEAL ORDER (same
         // direction on both sides — cheapest swap = stage_index 0).
         // Both strips' stage_index 0 cards animate together. The
@@ -390,23 +408,25 @@ function HandStrip({ cards, renderCard, activeCardId, entranceStages, revealOrde
         const stageIndex = stageIndexByCardId.get(card.cardId) ?? displayPos;
         const stage: EntranceStage = stages[stageIndex] ?? "settled";
 
-        // Compute the "middle of screen" transform target for this cell.
-        // Each cell shifts to the viewport horizontal center + a Y
-        // offset toward the battlefield row.
-        const middleTranslateX = computeMiddleTranslateX(displayPos);
-        const middleTranslateY = side === "sender"
-          ? MIDDLE_TRANSLATE_Y_SENDER_PX
-          : MIDDLE_TRANSLATE_Y_RECIPIENT_PX;
-        const middleTransform =
-          `translate(${middleTranslateX}px, ${middleTranslateY}px) scale(${HERO_CARD_SCALE})`;
+        // Deck-metaphor entrance (phase 4 fix 1, 2026-05-27). Cards
+        // fly from the deck position (hero zone, scaled to hero size)
+        // to the strip slot (mini scale). Each side has its own deck:
+        // sender→top deck, recipient→bottom deck.
+        const deckTranslateX = computeDeckTranslateX(displayPos);
+        const deckTranslateY = side === "sender"
+          ? ENTRANCE_DECK_TRANSLATE_Y_TOP_PX
+          : ENTRANCE_DECK_TRANSLATE_Y_BOTTOM_PX;
         const slotTransform = `scale(${STRIP_CARD_SCALE})`;
+        const deckTransform =
+          `translate(${deckTranslateX}px, ${deckTranslateY}px) scale(${HERO_CARD_SCALE})`;
 
-        // Stage → visual mapping.
-        // pre:      invisible, pre-positioned at middle (no transition)
-        // lay:      fade in at middle (opacity transition)
-        // beat:     hold at middle, full opacity
-        // travel:   transform animates from middle to slot
-        // settled:  at slot, normal opacity (dimmed if in-battlefield)
+        // Stage → visual mapping (deck-flight).
+        // pre:      invisible at deck position (deck visual covers).
+        // lay:      fade in + animate from deck → slot.
+        // beat:     hold at slot, full opacity.
+        // travel:   visually identical to settled (legacy stage,
+        //           preserved for timing-budget continuity).
+        // settled:  at slot, normal opacity (dimmed if in-battlefield).
         let cardOpacity: number;
         let cardTransform: string;
         let cardTransition: string;
@@ -415,40 +435,48 @@ function HandStrip({ cards, renderCard, activeCardId, entranceStages, revealOrde
         let cardZIndex: number;
         switch (stage) {
           case "pre":
+            // Card hidden at the deck position. The deck visual at
+            // that position covers it.
             cardOpacity = 0;
-            cardTransform = middleTransform;
+            cardTransform = deckTransform;
             cardTransition = "none";
             placeholderOpacity = 1;
             placeholderTransition = "none";
             cardZIndex = 1;
             break;
           case "lay":
+            // Fade in + fly from deck to slot. cardZIndex above the
+            // deck (z=10 below) so the flying card renders on top.
             cardOpacity = 1;
-            cardTransform = middleTransform;
-            cardTransition = reducedMotion ? "none" : `opacity ${CARD_LAY_MS}ms ease-out`;
+            cardTransform = slotTransform;
+            cardTransition = reducedMotion
+              ? "none"
+              : `opacity ${CARD_LAY_MS}ms ease-out, transform ${CARD_LAY_MS}ms cubic-bezier(0.4, 0.0, 0.2, 1)`;
             placeholderOpacity = 1;
             placeholderTransition = "none";
             cardZIndex = 100;
             break;
           case "beat":
             cardOpacity = 1;
-            cardTransform = middleTransform;
+            cardTransform = slotTransform;
             cardTransition = "none";
             placeholderOpacity = 1;
             placeholderTransition = "none";
-            cardZIndex = 100;
+            cardZIndex = 1;
             break;
           case "travel":
+            // Visually identical to settled (no-op in slot-direct path).
+            // Kept distinct so the hook's state machine stays unchanged.
             cardOpacity = 1;
             cardTransform = slotTransform;
-            cardTransition = reducedMotion ? "none" : `transform ${CARD_TRAVEL_MS}ms cubic-bezier(0.4, 0.0, 0.2, 1)`;
+            cardTransition = "none";
             placeholderOpacity = 1;
             placeholderTransition = "none";
-            cardZIndex = 100;
+            cardZIndex = 1;
             break;
           case "settled":
           default:
-            cardOpacity = isActiveInBattlefield ? 0.35 : 1;
+            cardOpacity = settledCardOpacity;
             cardTransform = slotTransform;
             cardTransition = "none";
             placeholderOpacity = 0;
@@ -638,6 +666,99 @@ interface ZoneHeaderProps {
   hand: H2HHand;
 }
 
+// ── Entrance deck ────────────────────────────────────────────────────────
+// Phase 4 fix 1 (2026-05-27, corrected). Two REAL face-UP deck stacks
+// render at the top and bottom hero positions during
+// `phase === "entering"`. Each stack shows the cards that haven't been
+// dealt yet, layered with a small Y offset so the stack reads as a
+// pile of depth. The TOP of each stack shows the FRONT of the
+// next-to-deal card (player photo + tier + stats). As that card's
+// stage transitions pre → lay, it flies out (rendered in HandStrip
+// using deckTransform) and the next card becomes the new visible top.
+//
+// Visual model: a dealer's stack. The dealer's hand shows the next
+// card; as it's dealt, the next one underneath becomes visible.
+
+interface EntranceDeckProps {
+  /** Side's reveal-ordered cards. Index in this array = stage_index. */
+  cards: H2HCard[];
+  /** Per-stage-index entrance state. */
+  entranceStages: EntranceStage[];
+  /** Same renderer the rest of the screen uses — renders the card front. */
+  renderCard: CardRenderer;
+}
+
+function EntranceDeck({ cards, entranceStages, renderCard }: EntranceDeckProps) {
+  // Pre-stage cards remaining in the deck, paired with stage_index.
+  // Lowest stage_index = next to deal = top of the stack.
+  const remaining: Array<{ card: H2HCard; stageIndex: number }> = [];
+  for (let i = 0; i < cards.length; i++) {
+    if (entranceStages[i] === "pre") {
+      remaining.push({ card: cards[i], stageIndex: i });
+    }
+  }
+  if (remaining.length === 0) return null;
+
+  // Render bottom-of-stack first → top-of-stack last so DOM order
+  // matches z-order. Each card gets a small downward offset relative
+  // to the TOP card so the stack reads as a pile peeking out.
+  const OFFSET_PER_LAYER_PX = 4;
+  return (
+    <div
+      data-h2h-entrance-deck="true"
+      data-cards-remaining={String(remaining.length)}
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minWidth: 0,
+      }}
+    >
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          maxWidth: BATTLEFIELD_CARD_MAX_WIDTH,
+          aspectRatio: "329 / 478",
+        }}
+      >
+        {remaining
+          .slice()
+          .reverse() // bottom of pile rendered first
+          .map(({ card, stageIndex }, depthFromTop) => {
+            // depthFromTop=0 is the visible TOP. Higher = deeper in
+            // the pile.
+            const layerFromTop = remaining.length - 1 - depthFromTop;
+            const isTop = layerFromTop === 0;
+            return (
+              <div
+                key={card.cardId}
+                data-h2h-deck-card-stage={String(stageIndex)}
+                data-h2h-deck-card-top={isTop ? "true" : "false"}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  transform: `translateY(${layerFromTop * OFFSET_PER_LAYER_PX}px)`,
+                  // Top of stack on TOP (highest z). Cards below it
+                  // get progressively lower z so the visible peek is
+                  // just the offset.
+                  zIndex: 100 - layerFromTop,
+                  // Cards under the top get a small opacity dim so
+                  // the pile reads as a real stack rather than a
+                  // single card with a weird shadow.
+                  opacity: isTop ? 1 : 0.92,
+                  pointerEvents: "none",
+                }}
+              >
+                {renderCard(card)}
+              </div>
+            );
+          })}
+      </div>
+    </div>
+  );
+}
+
 function ZoneHeader({ hand }: ZoneHeaderProps) {
   return (
     <div
@@ -774,90 +895,44 @@ function TeamScore({ total, displayTotal, isLeading }: { total: number; displayT
 interface MidRailContentProps {
   senderCard: H2HCard | null;
   recipientCard: H2HCard | null;
-  senderTotal: number;
-  recipientTotal: number;
 }
 
-function MidRailContent({ senderCard, recipientCard, senderTotal, recipientTotal }: MidRailContentProps) {
-  const recipientLeading = recipientTotal > senderTotal;
-  const senderLeading = senderTotal > recipientTotal;
-  const finalMargin = Math.round(Math.abs(recipientTotal - senderTotal) * 10) / 10;
-  const matchupDelta = senderCard && recipientCard
-    ? Math.round((recipientCard.actualFp - senderCard.actualFp) * 10) / 10
-    : 0;
+function MidRailContent({ senderCard, recipientCard }: MidRailContentProps) {
+  // Phase 4 fix 2 (2026-05-27): renders ONLY the per-matchup delta in
+  // the right rail between the two FP totals. The prior final-margin
+  // pill (TIE / EVEN / +N pill) was removed — it caused a transient
+  // "TIE / EVEN" flash at the start of `revealing` when both running
+  // totals were still 0, before the rolling totals had ticked. The
+  // overall margin is conveyed by the two FP totals themselves; the
+  // user does not need a separate readout.
+  if (!senderCard || !recipientCard) {
+    return <div aria-hidden="true" />;
+  }
+  const matchupDelta = Math.round((recipientCard.actualFp - senderCard.actualFp) * 10) / 10;
   const matchupSign = matchupDelta > 0 ? "+" : matchupDelta < 0 ? "" : "";
   return (
     <div
       data-h2h-mid-rail="true"
       style={{
         display: "flex",
-        flexDirection: "row",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: 10,
       }}
     >
-      {/* Matchup delta */}
       <div
         style={{
           fontSize: 11,
           fontWeight: 800,
           color: matchupDelta > 0 ? WINNING_COLOR : matchupDelta < 0 ? TRAILING_COLOR : DELTA_NEUTRAL,
           fontVariantNumeric: "tabular-nums",
-          opacity: senderCard && recipientCard ? 1 : 0,
-          textAlign: "right",
+          textAlign: "center",
           lineHeight: 1.1,
         }}
       >
-        {senderCard && recipientCard ? (
-          <>
-            <div>{matchupSign}{matchupDelta.toFixed(1)}</div>
-            <div style={{ fontSize: 7, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: 1, textTransform: "uppercase" }}>
-              matchup
-            </div>
-          </>
-        ) : null}
-      </div>
-      {/* Final-margin pill */}
-      <div
-        style={{
-          padding: "3px 8px",
-          borderRadius: 6,
-          background:
-            recipientLeading || senderLeading
-              ? "rgba(34,197,94,0.12)"
-              : "rgba(255,255,255,0.05)",
-          border: `1px solid ${
-            recipientLeading || senderLeading
-              ? "rgba(34,197,94,0.35)"
-              : "rgba(255,255,255,0.15)"
-          }`,
-          textAlign: "center",
-          minWidth: 50,
-        }}
-      >
-        <div
-          style={{
-            fontSize: 13,
-            fontWeight: 950,
-            color: WINNING_COLOR,
-            fontVariantNumeric: "tabular-nums",
-            lineHeight: 1,
-          }}
-        >
-          {finalMargin === 0 ? "TIE" : `+${finalMargin.toFixed(1)}`}
-        </div>
-        <div
-          style={{
-            fontSize: 7,
-            fontWeight: 700,
-            color: "rgba(255,255,255,0.5)",
-            letterSpacing: 1,
-            textTransform: "uppercase",
-            marginTop: 1,
-          }}
-        >
-          {recipientLeading ? "you" : senderLeading ? "opp" : "even"}
+        <div>{matchupSign}{matchupDelta.toFixed(1)}</div>
+        <div style={{ fontSize: 7, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: 1, textTransform: "uppercase" }}>
+          matchup
         </div>
       </div>
     </div>
@@ -1136,6 +1211,19 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
   const recipientLeading = recipientDisplayTotal > senderDisplayTotal;
   const senderLeading = senderDisplayTotal > recipientDisplayTotal;
 
+  // Phase 4 amend5 fix 1 (2026-05-27): the deck visual renders ONLY
+  // while at least one card is still in "pre" stage. Once the deck
+  // is empty (last card already in flight to its strip), we switch
+  // to CardCenterCell with matchup-0 hero cards (`useH2HReveal`
+  // returns matchups[0] in activeMatchup as soon as deck empties).
+  // This eliminates the empty-middle window between deck depletion
+  // and matchup 0 starting — the hero zone is occupied by the deck
+  // OR the matchup-0 cards at every instant of the arc.
+  const isEntering = reveal !== undefined && reveal.phase === "entering";
+  const deckHasPreCards =
+    reveal !== undefined && (reveal.entranceStages ?? []).some(s => s === "pre");
+  const showEntranceDeck = isEntering && deckHasPreCards;
+
   return (
     <div
       style={{
@@ -1151,12 +1239,14 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
         userSelect: "none",
         overflow: "hidden",
         // Safe-area-aware vertical padding. Additive: env(safe-area-inset)
-        // + a 24px floor, so notched iOS devices get notch height + 24
-        // (e.g. ~71px on iPhone 14) while non-notched and headless test
-        // environments get 24px. Helps clear iOS Safari URL bar overlay
-        // on initial page load before user scrolls to dismiss it.
-        paddingTop: "calc(env(safe-area-inset-top, 0px) + 24px)",
-        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)",
+        // + a 20px floor. Phase 4 amend3 (2026-05-27): floor reduced
+        // from 36 → 20 so the top strip sits close to the viewport
+        // top — the user-requested tight composition. The bottom
+        // padding is symmetric; the empty space BELOW the bottom
+        // strip absorbs viewport slack instead of being a top-and-
+        // bottom margin.
+        paddingTop: "calc(env(safe-area-inset-top, 0px) + 20px)",
+        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)",
         boxSizing: "border-box",
       }}
       data-h2h-reveal-phase={reveal !== undefined ? `3-${reveal.phase}` : "2-static-mock"}
@@ -1179,9 +1269,19 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
           boxSizing: "border-box",
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
+          // Phase 4 amend3 (2026-05-27): the top-strip → hero-pair →
+          // bottom-strip block is a single TIGHT composition. The
+          // outer column's `gap: 18` sets the small fixed gaps
+          // between (top strip ↔ battlefield) and (battlefield ↔
+          // bottom strip). The reserved bottom space (flex-grow=1)
+          // sits AFTER the bottom strip and absorbs all remaining
+          // viewport height. On the overlay, that space holds the
+          // primary CTA. On the arc, it's empty. Geometry is LOCKED
+          // between the two surfaces — top strip Y, both hero slot
+          // Ys, and bottom strip Y are pixel-identical on both.
+          justifyContent: "flex-start",
           alignItems: "stretch",
-          gap: 14,
+          gap: 18,
         }}
       >
         {/* ── OPPONENT ZONE (top, glass panel) ───────────────────────── */}
@@ -1200,68 +1300,110 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
         </ZonePanel>
 
         {/* ── BATTLEFIELD (hero, open — no panel) ────────────────────── */}
-        {/* 3-column × 3-row grid:
-              ┌────────────┬───────────────┬────────────┐
-              │ left rail  │  hero card    │ right rail │  row 1: top card + score
-              ├────────────┼───────────────┼────────────┤
-              │ (empty)    │  mid-rail     │ (empty)    │  row 2: matchup info
-              ├────────────┼───────────────┼────────────┤
-              │ left rail  │  hero card    │ right rail │  row 3: bottom card + score
-              └────────────┴───────────────┴────────────┘
-            Symmetric left/right rail widths put the center column at
-            viewport horizontal center; hero cards in the center column
-            are visually centered. Matches single-player's card-stage
-            pattern: cards in the open with no panel chrome. */}
+        {/* Phase 4 fix 3 (2026-05-27, amend2): 3-column × 2-row grid.
+            Hero cards sit in adjacent rows separated by a thin sliver
+            (BATTLEFIELD_ROW_GAP_PX). The matchup-delta readout floats
+            in the right-rail GAP between the two score cells via
+            absolute positioning — it does not contribute to row
+            heights, so the hero cards stay tight.
+              ┌────────────┬───────────────┬──────────────────────┐
+              │ left rail  │  hero card    │ score                │ row 1
+              │ (empty on  │  (top hero)   │ (sender total)       │
+              │  arc)      ├ sliver gap ───┼ matchup delta float ─┤
+              │            │  hero card    │ score                │ row 2
+              │            │  (bottom)     │ (recipient total)    │
+              └────────────┴───────────────┴──────────────────────┘
+            The LEFT RAIL is reserved (empty on the arc; on the overlay
+            it holds headline + trash-talk anchored to the same hero
+            vertical bounds). Locked geometry: this grid renders at the
+            same Y on the arc and the overlay. Only its content
+            changes between states. */}
         <div
           data-h2h-battlefield="true"
           style={{
+            position: "relative",
             flex: "0 0 auto",
             display: "grid",
             gridTemplateColumns: `${LEFT_RAIL_WIDTH_PX}px 1fr ${SCORE_COLUMN_WIDTH_PX}px`,
+            gridTemplateRows: "auto auto",
             rowGap: BATTLEFIELD_ROW_GAP_PX,
             width: "100%",
           }}
         >
+          {/* Left rail — empty on the arc. Spans both hero rows so the
+              overlay's headline + trash-talk land at the same vertical
+              bounds. */}
+          <div aria-hidden="true" style={{ gridRow: "1 / span 2" }} />
+
           {/* Row 1: opponent's battlefield card + score */}
-          <div aria-hidden="true" />
-          <CardCenterCell
-            card={senderBattle}
-            renderCard={renderCard}
-            visibleFp={senderVisibleFp}
-            side="top"
-            reducedMotion={reducedMotion}
-          />
-          {senderBattle
+          {showEntranceDeck && reveal !== undefined
+            ? <EntranceDeck
+                cards={reveal.senderRevealOrder}
+                entranceStages={reveal.entranceStages}
+                renderCard={renderCard}
+              />
+            : <CardCenterCell
+                card={senderBattle}
+                renderCard={renderCard}
+                visibleFp={senderVisibleFp}
+                side="top"
+                reducedMotion={reducedMotion}
+              />}
+          {senderBattle && !showEntranceDeck
             ? <ScoreCell total={sender.totalFp} displayTotal={senderDisplayTotal} isLeading={senderLeading} />
             : <div />}
 
-          {/* Row 2: mid-rail in center column (cards' x-center) */}
-          <div aria-hidden="true" />
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <MidRailContent
-              senderCard={senderBattle}
-              recipientCard={recipientBattle}
-              senderTotal={senderDisplayTotal}
-              recipientTotal={recipientDisplayTotal}
-            />
-          </div>
-          <div aria-hidden="true" />
-
-          {/* Row 3: recipient's battlefield card + score */}
-          <div aria-hidden="true" />
-          <CardCenterCell
-            card={recipientBattle}
-            renderCard={renderCard}
-            visibleFp={recipientVisibleFp}
-            side="bottom"
-            reducedMotion={reducedMotion}
-          />
-          {recipientBattle
+          {/* Row 2: recipient's battlefield card + score */}
+          {showEntranceDeck && reveal !== undefined
+            ? <EntranceDeck
+                cards={reveal.recipientRevealOrder}
+                entranceStages={reveal.entranceStages}
+                renderCard={renderCard}
+              />
+            : <CardCenterCell
+                card={recipientBattle}
+                renderCard={renderCard}
+                visibleFp={recipientVisibleFp}
+                side="bottom"
+                reducedMotion={reducedMotion}
+              />}
+          {recipientBattle && !showEntranceDeck
             ? <ScoreCell total={recipient.totalFp} displayTotal={recipientDisplayTotal} isLeading={recipientLeading} />
             : <div />}
+
+          {/* Matchup delta — floats in the right-rail GAP between the
+              two score cells. Absolute so it does not push the hero
+              rows apart. Visible during revealing / paused / end-hold
+              / done (i.e. whenever an active matchup exists). */}
+          {(!reveal
+            || reveal.phase === "revealing"
+            || reveal.phase === "paused"
+            || reveal.phase === "end-hold"
+            || reveal.phase === "done") && (
+            <div
+              data-h2h-mid-rail-float="true"
+              style={{
+                position: "absolute",
+                top: "50%",
+                right: 0,
+                width: SCORE_COLUMN_WIDTH_PX,
+                transform: "translateY(-50%)",
+                pointerEvents: "none",
+              }}
+            >
+              <MidRailContent
+                senderCard={senderBattle}
+                recipientCard={recipientBattle}
+              />
+            </div>
+          )}
         </div>
 
-        {/* ── YOUR ZONE (bottom, glass panel) ────────────────────────── */}
+        {/* ── YOUR ZONE (bottom, glass panel) ──────────────────────────
+            Phase 4 amend3 (2026-05-27): bottom strip sits IMMEDIATELY
+            below the bottom hero with the outer column's small fixed
+            gap. No flex-grow spacer between them — the bottom strip
+            hugs the hero pair to form a tight composition. */}
         <ZonePanel>
           <HandStrip
             cards={recipient.cards}
@@ -1275,6 +1417,20 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
           />
           <ZoneHeader hand={recipient} />
         </ZonePanel>
+
+        {/* ── RESERVED BOTTOM SPACE ────────────────────────────────────
+            Phase 4 amend3 (2026-05-27): flex-grow region BELOW the
+            bottom strip. Empty on the arc; holds the primary CTA +
+            countdown pill on the overlay. This is the geometry-
+            locking spacer — it absorbs ALL remaining viewport height
+            so the entire top-strip → hero-pair → bottom-strip block
+            sits as a tight composition near the top of the viewport.
+            Identical position on arc and overlay. */}
+        <div
+          data-h2h-reserved-bottom="true"
+          aria-hidden="true"
+          style={{ flex: "1 1 auto", minHeight: 0 }}
+        />
       </div>
     </div>
   );
