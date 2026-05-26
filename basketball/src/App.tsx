@@ -1,5 +1,21 @@
 import { useEffect, useState } from "react";
 import { LandingPage } from "./components/LandingPage";
+
+// Dev-only mock route. Static import + import.meta.env.DEV guard at the
+// usage site below. Production builds dead-code-eliminate the branch
+// (Vite constant-folds DEV → false), which leaves H2HRevealMockRoute
+// unreferenced; Rollup tree-shakes it out of the production bundle.
+//
+// Why not lazy(): the original attempt at code-splitting via lazy() +
+// Suspense kept the bundle clean but introduced a fragility — under a
+// stale Vite dev-server state (regenerated optimizeDeps with a new ?v=
+// hash, HMR boundary mismatch after the dev/ directory landed mid-
+// session, browser-cached chunk URLs that no longer exist), the dynamic
+// chunk fetch 404s and the Suspense boundary hangs with no surfaced
+// error. Phase 2 smoke surfaced exactly this on the user's session.
+// Static import sidesteps the entire dynamic-chunk surface; the dev
+// route is too narrow to justify the lazy mechanism's failure modes.
+import H2HRevealMockRoute from "./dev/H2HRevealMockRoute";
 import GameView from "./views/GameView";
 import { DailySeasonReelGate } from "./components/DailySeasonReelGate";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -55,7 +71,33 @@ function getChallengeId(): string | null {
   return match ? match[1] : null;
 }
 
+/** Dev-only route detector. Matches /basketball/dev/<slug> paths and
+ *  returns the slug. Production users have no entry point here.
+ *
+ *  Currently used by the H2H reveal arc phase 2 mock at
+ *  /basketball/dev/h2h-reveal-mock. New dev routes append a case to
+ *  the switch below. See docs/h2h-reveal-arc-design.md "Phase 2
+ *  integration anchors" for the locked dev-route convention. */
+function getDevRouteSlug(): string | null {
+  if (typeof window === "undefined") return null;
+  const match = window.location.pathname.match(/\/basketball\/dev\/([a-z0-9-]+)$/);
+  return match ? match[1] : null;
+}
+
 function AppInner() {
+  // Dev-route short-circuit. Renders before any app-shell work (auth,
+  // FTUE, daily reel gate, GameView) so the dev surface is isolated
+  // from production state. The `import.meta.env.DEV` guard ensures the
+  // whole branch (and the H2HRevealMockRoute static import at the top
+  // of this file) gets dead-code-eliminated in production builds.
+  // Production users have no entry point to /dev/* paths regardless;
+  // the guard is defense-in-depth + the mechanism Rollup uses to
+  // prune the dev-only import from the prod bundle.
+  const devSlug = getDevRouteSlug();
+  if (import.meta.env.DEV && devSlug === "h2h-reveal-mock") {
+    return <H2HRevealMockRoute />;
+  }
+
   const { isFTUE } = useFTUE(SPORT);
   const challengeIdFromUrl = getChallengeId();
   const [showFtueIntroFollowup] = useState(() => {
