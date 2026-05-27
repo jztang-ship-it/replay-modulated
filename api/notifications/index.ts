@@ -13,8 +13,8 @@
 //                                        as read.
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { supabaseAdmin } from "../hand/lib/supabaseServer.js";
-import { verifyAuth } from "../hand/lib/auth.js";
+import { supabaseAdmin } from "../hand/_lib/supabaseServer.js";
+import { verifyAuth } from "../hand/_lib/auth.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { user, error: authErr } = await verifyAuth(req);

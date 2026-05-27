@@ -20,7 +20,7 @@
 // can't error — those skip the defended-counter bump.
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { supabaseAdmin } from "../../hand/lib/supabaseServer.js";
+import { supabaseAdmin } from "../../hand/_lib/supabaseServer.js";
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

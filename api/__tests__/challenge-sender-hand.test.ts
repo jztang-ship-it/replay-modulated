@@ -47,7 +47,7 @@ const { mockResponses, makeBuilder } = vi.hoisted(() => {
   return { mockResponses, makeBuilder };
 });
 
-vi.mock("../hand/lib/supabaseServer.js", () => ({
+vi.mock("../hand/_lib/supabaseServer.js", () => ({
   supabaseAdmin: {
     from: vi.fn((table: string) => makeBuilder(table as any)),
   },

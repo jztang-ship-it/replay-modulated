@@ -1,7 +1,7 @@
 // api/share/card.ts
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { ImageResponse } from "@vercel/og";
-import { supabaseAdmin } from "../hand/lib/supabaseServer.js";
+import { supabaseAdmin } from "../hand/_lib/supabaseServer.js";
 
 // Tier accent colors for card backgrounds
 const TIER_ACCENT: Record<string, string> = {

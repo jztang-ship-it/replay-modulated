@@ -1,6 +1,6 @@
 // api/challenge/[id].ts
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { supabaseAdmin } from "../hand/lib/supabaseServer.js";
+import { supabaseAdmin } from "../hand/_lib/supabaseServer.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") return res.status(405).json({ error: "GET required" });

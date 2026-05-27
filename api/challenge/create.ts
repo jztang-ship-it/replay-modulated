@@ -1,7 +1,7 @@
 // api/challenge/create.ts
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { supabaseAdmin } from "../hand/lib/supabaseServer.js";
-import { verifyAuth } from "../hand/lib/auth.js";
+import { supabaseAdmin } from "../hand/_lib/supabaseServer.js";
+import { verifyAuth } from "../hand/_lib/auth.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST required" });
