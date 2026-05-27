@@ -385,6 +385,18 @@ function HandStrip({ cards, renderCard, activeCardId, revealedCardIds, entranceS
   const ordered = revealOrder
     ? [...revealOrder]
     : [...cards].sort((a, b) => a.slotIndex - b.slotIndex);
+  // [h2h-sort] diagnostic instrumentation (2026-05-28) — revert after
+  // production sort-order bug is root-caused.
+  // eslint-disable-next-line no-console
+  console.log("[h2h-sort] arc-handstrip", {
+    side,
+    revealOrderPresent: !!revealOrder,
+    revealOrderLength: revealOrder?.length ?? 0,
+    cardsLength: cards.length,
+    ordered: ordered.map(c => ({
+      name: c.name, salary: c.salary, wasHeld: c.wasHeld, slotIndex: c.slotIndex,
+    })),
+  });
   const N = ordered.length;
   // Default to "all settled" when the static phase-2 caller doesn't pass
   // entrance state.
