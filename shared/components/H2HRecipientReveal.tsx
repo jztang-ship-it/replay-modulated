@@ -198,6 +198,8 @@ function H2HRecipientRevealInner(props: InnerProps) {
           onTryAgain={onTryAgain}
           onPlayOwnHand={onPlayOwnHand}
           onDismiss={onDismiss}
+          senderRevealOrder={reveal?.senderRevealOrder}
+          recipientRevealOrder={reveal?.recipientRevealOrder}
         />
       )}
     </div>

@@ -332,6 +332,25 @@ Phase 3.8 introduced "lay at center-stage → travel to slot" choreography. Phas
 
 The TRAVEL stage is now visually a no-op (already at slot from LAY); the stage state machine is preserved in `useH2HReveal` so the pre-reveal anticipation pulse + arc pacing remain stable. `MIDDLE_TRANSLATE_Y_*` constants + `computeMiddleTranslateX` are removed.
 
+### Phase 5a amend2 — overlay strip also sorted by revealOrder (2026-05-27)
+
+Production verification of amend1 appeared to show the bug persisting after deploy. Root cause: amend1 fixed `H2HRevealScreen`'s `HandStrip` (the arc strips) but missed the parallel render layer in `H2HResultsOverlay`'s `ResultsStrip` (the overlay strips). The overlay is what's visible AFTER the arc completes — it crossfades in at `reveal.phase === "done"` and covers the arc with its own strip rendering. The user's screenshots showing held cards in the leftmost slot were of the OVERLAY, not the arc.
+
+Both renderers share the same data + same design rule but had independent sort implementations; amend1's fix at one site was a half-fix.
+
+**Surface observation:** post-amend1 production showed the strip-order bug surviving exactly because the user reads strip order AFTER the arc crossfade lands, i.e. on the overlay. The arc strips were already correct from amend1; the overlay strips were not.
+
+Fix shape mirrors amend1 exactly:
+- `H2HResultsOverlay`'s `ResultsStrip` accepts an optional `revealOrder?: H2HCard[]` prop and prefers it in its `ordered` `useMemo`, falling back to `slotIndex` sort for static dev/test paths.
+- `H2HResultsOverlay` accepts top-level `senderRevealOrder?` + `recipientRevealOrder?` props and threads each into the corresponding `ResultsStrip` call site.
+- `H2HRecipientReveal` (the production wrapper) passes `reveal?.senderRevealOrder` + `reveal?.recipientRevealOrder` into the overlay, drawing from the same `useH2HReveal` hook return already in scope.
+
+**Locked invariant (extended from amend1):** `revealOrder` is the canonical sort for ALL strip surfaces, not just the arc. Any new strip-rendering component MUST accept and prefer `revealOrder` over `slotIndex`. The two strip render paths now share a uniform sort rule even though their implementations remain independent.
+
+Regression-lock test: `H2HResultsOverlay.test.tsx` adds a deliberately misaligned-`slotIndex` fixture and asserts the overlay strip displays in revealOrder, not slotIndex order. Parallel to amend1's `HandStrip` test.
+
+---
+
 ### Phase 5a amend1 — strip display sorted by revealOrder, not slotIndex (2026-05-27)
 
 Production-data verification of f6f8d05 surfaced a sort-order bug: HandStrip rendered cards by `slotIndex`, but production `hand_log.final_roster` stores `slotIndex` as deal-positional (basketball's PG/SG/SF/PF/C/FLEX), not in reveal-order. The mock fixture coincidentally had `slotIndex` match `(wasHeld, salary)`, hiding the bug during dev. The first real recipient hand showed a held $57 card in the leftmost strip slot and the cheapest swap displaced to the right.

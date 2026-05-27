@@ -103,6 +103,13 @@ export interface H2HResultsOverlayProps {
   /** Seeds the BOTTOM strip's selection on initial mount. Card id must
    *  belong to the recipient hand. */
   initialBottomFlippedCardId?: string | null;
+  /** Phase 5a amend2 (2026-05-27): canonical strip ordering produced by
+   *  useH2HReveal's buildRevealOrder (wasHeld ASC, salary ASC). When
+   *  provided, ResultsStrip displays cards in this order; otherwise
+   *  falls back to slotIndex for static dev/test paths. Mirrors the
+   *  same prop on H2HRevealScreen's HandStrip. */
+  senderRevealOrder?: H2HCard[];
+  recipientRevealOrder?: H2HCard[];
 }
 
 /** Cross-fade duration. */
@@ -237,12 +244,22 @@ interface ResultsStripProps {
   renderCard: CardRenderer;
   selectedCardId: string | null;
   onCardTap: (cardId: string) => void;
+  revealOrder?: H2HCard[];
 }
 
-function ResultsStrip({ cards, renderCard, selectedCardId, onCardTap }: ResultsStripProps) {
+function ResultsStrip({ cards, renderCard, selectedCardId, onCardTap, revealOrder }: ResultsStripProps) {
+  // Phase 5a amend2 (2026-05-27): use server-computed revealOrder
+  // (wasHeld ASC, salary ASC per buildRevealOrder) when provided —
+  // canonical sort matching H2HRevealScreen's HandStrip. Production
+  // slotIndex is deal-positional (PG/SG/SF/PF/C/FLEX), NOT reveal-
+  // order, so trusting it puts held cards in arbitrary positions.
+  // Amend1 fixed this on the arc; amend2 closes the same gap on the
+  // overlay, which is what's visible after the arc crossfade.
   const ordered = useMemo(
-    () => [...cards].sort((a, b) => a.slotIndex - b.slotIndex),
-    [cards],
+    () => revealOrder
+      ? [...revealOrder]
+      : [...cards].sort((a, b) => a.slotIndex - b.slotIndex),
+    [cards, revealOrder],
   );
   return (
     <div
@@ -451,6 +468,8 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
     visible = true,
     initialTopFlippedCardId = null,
     initialBottomFlippedCardId = null,
+    senderRevealOrder,
+    recipientRevealOrder,
   } = props;
 
   // Per-strip flip (phase 4 fix 3, 2026-05-27). Each strip has its OWN
@@ -611,6 +630,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             renderCard={renderCard}
             selectedCardId={topSelectedCardId}
             onCardTap={handleTopCardTap}
+            revealOrder={senderRevealOrder}
           />
         </ZonePanel>
 
@@ -693,6 +713,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             renderCard={renderCard}
             selectedCardId={bottomSelectedCardId}
             onCardTap={handleBottomCardTap}
+            revealOrder={recipientRevealOrder}
           />
           <ZoneHeader hand={recipient} />
         </ZonePanel>

@@ -498,3 +498,49 @@ describe("H2HResultsOverlay — crossfade visibility", () => {
     expect(style).toMatch(/pointer-events:\s*auto/);
   });
 });
+
+// Phase 5a amend2 contract lock (2026-05-27): ResultsStrip must sort by
+// revealOrder when provided, mirroring the rule on H2HRevealScreen's
+// HandStrip. Production hand_log.final_roster stores slotIndex deal-
+// positional (PG/SG/SF/PF/C/FLEX), not in reveal-order — amend1 fixed
+// the arc strip; amend2 closes the same gap on the overlay strip,
+// which is what's visible after the arc → overlay crossfade.
+describe("H2HResultsOverlay — revealOrder contract", () => {
+  it("ResultsStrip displays cards in revealOrder when provided, regardless of slotIndex", () => {
+    // Deliberately misaligned: held card at slotIndex 0 (would be leftmost
+    // under slotIndex sort), cheapest swap at slotIndex 5.
+    const senderCards: H2HCard[] = [
+      makeCard({ cardId: "card-A", name: "A held $57", basePlayerId: "pA", wasHeld: true,  salary: 57, slotIndex: 0 }),
+      makeCard({ cardId: "card-B", name: "B swap $29", basePlayerId: "pB", wasHeld: false, salary: 29, slotIndex: 5 }),
+      makeCard({ cardId: "card-C", name: "C swap $34", basePlayerId: "pC", wasHeld: false, salary: 34, slotIndex: 1 }),
+      makeCard({ cardId: "card-D", name: "D swap $52", basePlayerId: "pD", wasHeld: false, salary: 52, slotIndex: 2 }),
+      makeCard({ cardId: "card-E", name: "E held $40", basePlayerId: "pE", wasHeld: true,  salary: 40, slotIndex: 3 }),
+      makeCard({ cardId: "card-F", name: "F swap $37", basePlayerId: "pF", wasHeld: false, salary: 37, slotIndex: 4 }),
+    ];
+    // Expected (wasHeld ASC, salary ASC):
+    //   swaps cheap → exp:  B ($29), C ($34), F ($37), D ($52)
+    //   held cheap → exp:   E ($40), A ($57)
+    const senderRevealOrder = [
+      senderCards[1], senderCards[2], senderCards[5], senderCards[3], senderCards[4], senderCards[0],
+    ];
+    const { container } = render(
+      <H2HResultsOverlay
+        sender={makeHand("Mike", 178.4, { cards: senderCards })}
+        recipient={makeHand("You", 182.4)}
+        renderCard={stubRender()}
+        state="WIN"
+        senderRevealOrder={senderRevealOrder}
+      />
+    );
+    const opponentCells = container.querySelectorAll(
+      '[data-h2h-overlay-zone="opponent"] [data-h2h-overlay-cell="true"]'
+    );
+    expect(opponentCells.length).toBe(6);
+    expect(opponentCells[0].getAttribute("data-card-id")).toBe("card-B"); // cheapest swap
+    expect(opponentCells[1].getAttribute("data-card-id")).toBe("card-C");
+    expect(opponentCells[2].getAttribute("data-card-id")).toBe("card-F");
+    expect(opponentCells[3].getAttribute("data-card-id")).toBe("card-D"); // most-expensive swap
+    expect(opponentCells[4].getAttribute("data-card-id")).toBe("card-E"); // cheapest held
+    expect(opponentCells[5].getAttribute("data-card-id")).toBe("card-A"); // most-expensive held
+  });
+});
