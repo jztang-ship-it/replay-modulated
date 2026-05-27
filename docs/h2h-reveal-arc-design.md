@@ -367,6 +367,42 @@ Regression-lock test: `H2HResultsOverlay.test.tsx` adds a deliberately misaligne
 
 ---
 
+### Lessons learned during phase 5a (2026-05-27)
+
+Three architectural lessons surfaced during the amend1 / amend2 / amend3 fix loop. Capturing them here alongside the fixes themselves so future surfaces don't repeat the same bug shapes.
+
+#### Lesson 1: Arc and overlay are parallel render surfaces.
+
+`H2HRevealScreen` (arc) and `H2HResultsOverlay` (overlay) both render hand strips. Fixing one does not fix the other — the amend1/amend2 split was caused by exactly this oversight, and the user lost two verification rounds reading the strip from the overlay after only the arc had been patched. Future strip-like surfaces (sender flow, summary cards, replay viewer) must accept and respect the same sort contract from inception.
+
+#### Lesson 2: Mock fixture coincidences hide bugs.
+
+`h2hMockFixture.ts`'s `slotIndex` was hand-authored to match `buildRevealOrder`'s `(wasHeld, salary)` output. That coincidence hid the slotIndex-vs-revealOrder bug from every round of dev testing — both the arc strips and the overlay strips looked correct against the mock because the two orderings happened to agree. When authoring future test fixtures, deliberately misalign data shape from sort-order expectation when both are independently variable in production. The amend1 and amend2 contract-lock tests now embed this discipline (misaligned `slotIndex` on purpose).
+
+#### Lesson 3: Dev defaults can be production traps.
+
+`useH2HReveal`'s `phase = "done"` default was correct for the dev mock route's static end-state rendering, but caused the amend3 spoiler flash in production because the wrapper inherited the default. When a hook has dev-affordance defaults, prefer explicit opt-in from the production caller (`initialPhase: "idle"`) rather than default-inheritance. The dev route gets the convenience default; production declares its starting state at the call site.
+
+---
+
+### Locked invariant — strip-component sort contract
+
+Any component that renders an `H2HCard`-shaped array in a horizontal strip MUST:
+
+- Accept `revealOrder` (or equivalent) as a prop.
+- Prefer `revealOrder` over `slotIndex` (or any other intrinsic sort) when provided.
+- Fall back to a deterministic default (`slotIndex` ascending) only for static/dev/test surfaces where `revealOrder` is not computed.
+
+**Rationale:** `slotIndex` is deal-positional in production data (basketball: PG/SG/SF/PF/C/FLEX), NOT display-order. The mock fixture's `slotIndex` matches `revealOrder` by coincidence; production data does not. Trusting `slotIndex` for display means held cards land wherever they sat in the deal — including the leftmost strip slot.
+
+**Components currently honoring this contract:**
+- `HandStrip` (inside `H2HRevealScreen`) — fixed by amend1.
+- `ResultsStrip` (inside `H2HResultsOverlay`) — fixed by amend2.
+
+**New strip-like surfaces (sender-side overlay, summary cards, replay viewer, future analytics dashboards) must include this contract from inception.** The contract-lock tests on both existing components serve as the template — deliberately misaligned `slotIndex` against the design rule, asserted via DOM order.
+
+---
+
 ### Phase 5a amend1 — strip display sorted by revealOrder, not slotIndex (2026-05-27)
 
 Production-data verification of f6f8d05 surfaced a sort-order bug: HandStrip rendered cards by `slotIndex`, but production `hand_log.final_roster` stores `slotIndex` as deal-positional (basketball's PG/SG/SF/PF/C/FLEX), not in reveal-order. The mock fixture coincidentally had `slotIndex` match `(wasHeld, salary)`, hiding the bug during dev. The first real recipient hand showed a held $57 card in the leftmost strip slot and the cheapest swap displaced to the right.
