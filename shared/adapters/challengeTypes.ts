@@ -17,6 +17,26 @@ export interface HandResult {
   roster: GeneratedCard[];
 }
 
+/**
+ * Sender's resolved final roster for an H2H reveal. Mirrors the
+ * phase-1 endpoint's `sender` object shape when `sender_resolved:true`
+ * (api/challenge/[id]/sender-hand.ts:96-105). `cards` is the JSONB
+ * from hand_log.final_roster verbatim — same shape the client wrote
+ * via logHandToDb, so the TypeScript type is GeneratedCard[].
+ *
+ * Phase 5a commit 2 (2026-05-27): added as ChallengeCtx's optional
+ * field, populated by App.tsx's onAccept prefetch on resolve. Stays
+ * undefined for legacy challenges (sender_resolved:false) and
+ * network/4xx/5xx failures — commit 3's H2H wrapper detects undefined
+ * and falls back to ChallengeComparisonScreen.
+ */
+export interface SenderHand {
+  handId: string;
+  totalFp: number;
+  tier: string;
+  cards: GeneratedCard[];
+}
+
 export interface ChallengeCtx {
   challengeId: string;
   initialRoster: GeneratedCard[];
@@ -24,6 +44,11 @@ export interface ChallengeCtx {
   challengerName: string;
   sport: string;
   season: string;
+  /** Phase 5a commit 2: populated by the App-level prefetch fired at
+   *  ChallengeLandingScreen onAccept time. Optional — undefined while
+   *  the prefetch is in flight, on legacy challenges, and on any fetch
+   *  failure. Commit 3's H2H wrapper gates its mount on this field. */
+  resolvedSenderHand?: SenderHand;
 }
 
 /**

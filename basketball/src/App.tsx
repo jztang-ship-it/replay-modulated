@@ -329,6 +329,34 @@ function AppInner() {
             setShowChallengeLanding(false);
             try { localStorage.setItem(SKIP_LANDING_KEY, "1"); } catch {}
             setView("game");
+            // Phase 5a commit 2 (2026-05-27): non-blocking sender-hand
+            // prefetch. The existing flow proceeds unchanged
+            // (auto-deal → HOLD → DEAL → reveal → results). Commit 3's
+            // H2H wrapper reads challengeCtx.resolvedSenderHand to
+            // decide whether to mount the H2H reveal arc or fall back
+            // to ChallengeComparisonScreen. Failure modes — network,
+            // 4xx/5xx, legacy `sender_resolved:false` — all leave
+            // resolvedSenderHand undefined, which commit 3 treats as
+            // the fallback signal.
+            fetch(`/api/challenge/${ctx.challengeId}/sender-hand`)
+              .then(r => r.ok ? r.json() : Promise.reject(`http_${r.status}`))
+              .then((d) => {
+                if (d.sender_resolved === false) {
+                  // eslint-disable-next-line no-console
+                  console.warn("[h2h] sender hand legacy fallback:", d.reason);
+                  return;
+                }
+                // Functional setState guards against re-navigation
+                // races: if the user cleared/replaced challengeCtx
+                // between prefetch start and resolve, drop the
+                // response.
+                setChallengeCtx((prev) => prev && prev.challengeId === ctx.challengeId
+                  ? { ...prev, resolvedSenderHand: d.sender }
+                  : prev,
+                );
+              })
+              // eslint-disable-next-line no-console
+              .catch((err) => console.warn("[h2h] sender hand prefetch failed:", err));
           }}
           onClose={() => { setShowChallengeLanding(false); window.history.pushState({}, "", "/basketball/"); }}
         />
