@@ -155,6 +155,43 @@ describe("useH2HReveal — initial state", () => {
     expect(result.current.activeMatchup.sender?.cardId).toBe("s-1");
     expect(result.current.activeMatchup.recipient?.cardId).toBe("r-1");
   });
+
+  // Phase 5a amend3 (2026-05-27): production wrapper passes
+  // initialPhase: "idle" to fix the HOLD-to-arc spoiler flash. The
+  // hook must initialize in pre-play state (zero totals, no entrance
+  // staged) and transition cleanly to "entering" when play() fires.
+  it("initialPhase='idle' starts in pre-play state; play() then transitions to 'entering'", () => {
+    const sender = makeHand([
+      makeCard({ cardId: "s-0", wasHeld: false, salary: 50, actualFp: 10 }),
+      makeCard({ cardId: "s-1", wasHeld: true, salary: 100, actualFp: 20 }),
+    ]);
+    const recipient = makeHand([
+      makeCard({ cardId: "r-0", wasHeld: false, salary: 40, actualFp: 15 }),
+      makeCard({ cardId: "r-1", wasHeld: true, salary: 90, actualFp: 25 }),
+    ]);
+    const { result } = renderHook(() =>
+      useH2HReveal({ sender, recipient, initialPhase: "idle" })
+    );
+    // Initial: pre-play. No totals, no entrance progress, matchup index
+    // unset. visibleFpMap still empty (same as "done" default — see the
+    // CardFront RESULTS-with-undefined path note).
+    expect(result.current.phase).toBe("idle");
+    expect(result.current.matchupIndex).toBe(-1);
+    expect(result.current.senderRunningTotal).toBe(0);
+    expect(result.current.recipientRunningTotal).toBe(0);
+    expect(result.current.entranceStages).toEqual(["pre", "pre"]);
+    expect(result.current.entranceSettledCount).toBe(0);
+    expect(result.current.visibleFpMap.size).toBe(0);
+    // play() from idle resets like it does from done — no carry-over.
+    act(() => {
+      result.current.play();
+    });
+    expect(result.current.phase).toBe("entering");
+    expect(result.current.matchupIndex).toBe(-1);
+    expect(result.current.senderRunningTotal).toBe(0);
+    expect(result.current.recipientRunningTotal).toBe(0);
+    expect(result.current.entranceStages.every(s => s === "pre")).toBe(true);
+  });
 });
 
 describe("useH2HReveal — play()", () => {

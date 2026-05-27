@@ -245,13 +245,9 @@ interface ResultsStripProps {
   selectedCardId: string | null;
   onCardTap: (cardId: string) => void;
   revealOrder?: H2HCard[];
-  /** Instrumentation-only (2026-05-28). Identifies which strip this is
-   *  in the [h2h-sort] diagnostic log. Revert when the instrumentation
-   *  is removed. */
-  side?: "opponent" | "user";
 }
 
-function ResultsStrip({ cards, renderCard, selectedCardId, onCardTap, revealOrder, side }: ResultsStripProps) {
+function ResultsStrip({ cards, renderCard, selectedCardId, onCardTap, revealOrder }: ResultsStripProps) {
   // Phase 5a amend2 (2026-05-27): use server-computed revealOrder
   // (wasHeld ASC, salary ASC per buildRevealOrder) when provided —
   // canonical sort matching H2HRevealScreen's HandStrip. Production
@@ -265,18 +261,6 @@ function ResultsStrip({ cards, renderCard, selectedCardId, onCardTap, revealOrde
       : [...cards].sort((a, b) => a.slotIndex - b.slotIndex),
     [cards, revealOrder],
   );
-  // [h2h-sort] diagnostic instrumentation (2026-05-28) — revert after
-  // production sort-order bug is root-caused.
-  // eslint-disable-next-line no-console
-  console.log("[h2h-sort] overlay-resultsstrip", {
-    side,
-    revealOrderPresent: !!revealOrder,
-    revealOrderLength: revealOrder?.length ?? 0,
-    cardsLength: cards.length,
-    ordered: ordered.map(c => ({
-      name: c.name, salary: c.salary, wasHeld: c.wasHeld, slotIndex: c.slotIndex,
-    })),
-  });
   return (
     <div
       data-h2h-overlay-strip="true"
@@ -647,7 +631,6 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             selectedCardId={topSelectedCardId}
             onCardTap={handleTopCardTap}
             revealOrder={senderRevealOrder}
-            side="opponent"
           />
         </ZonePanel>
 
@@ -731,7 +714,6 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             selectedCardId={bottomSelectedCardId}
             onCardTap={handleBottomCardTap}
             revealOrder={recipientRevealOrder}
-            side="user"
           />
           <ZoneHeader hand={recipient} />
         </ZonePanel>

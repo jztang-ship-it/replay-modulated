@@ -332,6 +332,22 @@ Phase 3.8 introduced "lay at center-stage → travel to slot" choreography. Phas
 
 The TRAVEL stage is now visually a no-op (already at slot from LAY); the stage state machine is preserved in `useH2HReveal` so the pre-reveal anticipation pulse + arc pacing remain stable. `MIDDLE_TRANSLATE_Y_*` constants + `computeMiddleTranslateX` are removed.
 
+### Phase 5a amend3 — spoiler flash fix on transition (2026-05-27)
+
+Production verification of f6f8d05 + amend1 + amend2 surfaced a ~250ms window during the HOLD-to-arc crossfade where the user briefly saw the fully-resolved state (final scores, headline, CTA) before entrance choreography began. Defeated the purpose of the reveal — the user saw the answer before the question.
+
+**Root cause:** `useH2HReveal` defaults `phase = "done"` on mount (originally designed so the dev-route phase-2 static end-state could render correctly without ever calling `play()`). The production wrapper inherited that default. `H2HRecipientReveal`'s outer `<div>` mounts with `opacity: 0`, then the wrapper's rAF flips `visible=true` and CSS transitions opacity 0 → 1 over `HOLD_TO_ARC_CROSSFADE_MS=250ms`. During that 250ms ramp, both `H2HRevealScreen` AND `H2HResultsOverlay` are already rendering underneath — the hook says we're done, so `showOverlay = (reveal.phase === "done")` is true on the first frame and `useCrossfade` mounts the overlay visible immediately. After the 250ms ramp, `reveal.play()` finally fires and hard-resets state to `phase="entering"` + zero totals. The user sees the resolved overlay fade in, then snap back to the entrance.
+
+**Fix:** `useH2HReveal` now accepts an `initialPhase?: "idle" | "done"` option, defaulting to `"done"`. Production wrappers (`H2HRecipientReveal`) pass `"idle"`. When idle, the initial state is: `phase="idle"`, `matchupIndex=-1`, `senderRunningTotal=0`, `recipientRunningTotal=0`, `entranceStages` all `"pre"`. `showOverlay = (phase === "done")` is now `false` on mount, so `useCrossfade` doesn't mount the overlay visible during the wrapper crossfade-in. The arc renders the entrance-pre state behind the wrapper opacity. `reveal.play()` fires after the 250ms crossfade as before, transitioning `idle → entering` with no visual jump because the visible state was already pre-play.
+
+The dev mock route does not pass `initialPhase` and so inherits the `"done"` default — its phase-2 static end-state behavior is preserved bit-for-bit.
+
+**Locked invariant:** Production wrapper always passes `initialPhase: "idle"`. The hook's `"done"` default is reserved for static-end-state callers (dev route, future server-rendered preview cards, etc.). Only `"idle"` and `"done"` produce stable starting states; other phases require state machinery only `play()` populates.
+
+Regression-lock test: `useH2HReveal.test.tsx` adds a test asserting `initialPhase: "idle"` mounts with zero totals + all-`"pre"` entrance stages, and `play()` cleanly transitions to `"entering"`.
+
+---
+
 ### Phase 5a amend2 — overlay strip also sorted by revealOrder (2026-05-27)
 
 Production verification of amend1 appeared to show the bug persisting after deploy. Root cause: amend1 fixed `H2HRevealScreen`'s `HandStrip` (the arc strips) but missed the parallel render layer in `H2HResultsOverlay`'s `ResultsStrip` (the overlay strips). The overlay is what's visible AFTER the arc completes — it crossfades in at `reveal.phase === "done"` and covers the arc with its own strip rendering. The user's screenshots showing held cards in the leftmost slot were of the OVERLAY, not the arc.

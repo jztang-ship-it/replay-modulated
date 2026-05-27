@@ -286,6 +286,18 @@ export interface UseH2HRevealArgs {
    *  end-of-arc summary commentary here; phase 6 transitions to the
    *  results overlay. */
   onArcResolved?: (state: ResolvedMatchupState) => void;
+  /** Phase 5a amend3 (2026-05-27): controls the hook's initial state.
+   *  Defaults to "done" — preserves the dev-route phase-2 invariant
+   *  that mounting the hook without calling play() renders the static
+   *  end-state (final totals, all cards settled, last matchup active).
+   *  Production wrappers (`H2HRecipientReveal`) pass "idle" so the
+   *  initial paint shows a pre-play state (zero totals, no entrance
+   *  staged) — eliminates the spoiler flash during the HOLD-to-arc
+   *  crossfade where the overlay would otherwise mount visible at
+   *  `phase === "done"`. Only "idle" and "done" produce stable
+   *  starting states; other phases require runtime state that play()
+   *  populates. */
+  initialPhase?: "idle" | "done";
 }
 
 export interface UseH2HRevealReturn {
@@ -382,7 +394,8 @@ export function buildMatchups(sender: H2HCard[], recipient: H2HCard[]): Matchup[
 }
 
 export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
-  const { sender, recipient, reducedMotion, onMatchupResolved, onArcResolved } = args;
+  const { sender, recipient, reducedMotion, onMatchupResolved, onArcResolved, initialPhase = "done" } = args;
+  const startIdle = initialPhase === "idle";
 
   // Reveal-order matchups. Memoized on the card arrays so static-prop
   // mocks don't churn; phase-4 data fetches will produce stable
@@ -394,23 +407,26 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
   const senderRevealOrder = useMemo(() => buildRevealOrder(sender.cards), [sender.cards]);
   const recipientRevealOrder = useMemo(() => buildRevealOrder(recipient.cards), [recipient.cards]);
 
-  // INITIAL state = end-state. The H2HRevealScreen renders the final
-  // matchup with full totals before any animation runs, matching
-  // phase 2 exactly. `visibleFpMap` is intentionally EMPTY here:
-  // CardFront's `phase=RESULTS` path renders `actualFp` directly when
-  // visibleFp is undefined (CardFront.tsx:446-449), so the static
-  // end-state shows correctly without populated entries. Populating
-  // entries would re-trigger CardFront's RAF on mount.
-  const [phase, setPhase] = useState<RevealPhase>("done");
-  const [matchupIndex, setMatchupIndex] = useState(matchups.length - 1);
+  // INITIAL state — branches on `initialPhase` (default "done").
+  //   - "done" (default; dev-route phase-2): end-state on mount.
+  //     The H2HRevealScreen renders the final matchup with full
+  //     totals before any animation runs. `visibleFpMap` stays
+  //     EMPTY: CardFront's `phase=RESULTS` path renders `actualFp`
+  //     directly when visibleFp is undefined (CardFront.tsx:446-449),
+  //     so the static end-state shows correctly without populated
+  //     entries. Populating entries would re-trigger CardFront's RAF.
+  //   - "idle" (phase 5a amend3; production wrapper): pre-play
+  //     state on mount. Zero totals, all entrance stages "pre".
+  //     `showOverlay = phase === "done"` is false, so the overlay
+  //     doesn't mount visible during the wrapper's HOLD-to-arc
+  //     crossfade — fixes the spoiler flash.
+  const [phase, setPhase] = useState<RevealPhase>(initialPhase);
+  const [matchupIndex, setMatchupIndex] = useState(startIdle ? -1 : matchups.length - 1);
   const [visibleFpMap, setVisibleFpMap] = useState<Map<string, number>>(() => new Map());
-  const [senderRunningTotal, setSenderRunningTotal] = useState(sender.totalFp);
-  const [recipientRunningTotal, setRecipientRunningTotal] = useState(recipient.totalFp);
-  // Initial: all cards "settled" at their strip slots (matches the
-  // static end-state). play() resets all to "pre" and re-staggers
-  // through lay → beat → travel → settled per card.
+  const [senderRunningTotal, setSenderRunningTotal] = useState(startIdle ? 0 : sender.totalFp);
+  const [recipientRunningTotal, setRecipientRunningTotal] = useState(startIdle ? 0 : recipient.totalFp);
   const [entranceStages, setEntranceStages] = useState<EntranceStage[]>(() =>
-    new Array(matchups.length).fill("settled" as const),
+    new Array(matchups.length).fill((startIdle ? "pre" : "settled") as const),
   );
   const [pulseActive, setPulseActive] = useState(false);
   // Per-side shake + glow state. Pre-rollup beat (shake + blast) fires

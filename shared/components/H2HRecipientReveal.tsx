@@ -141,7 +141,11 @@ function H2HRecipientRevealInner(props: InnerProps) {
     displayName: getNickname() || "You",
   }), [myScore, myWinTier, myRoster]);
 
-  const reveal = useH2HReveal({ sender, recipient, reducedMotion });
+  // initialPhase: "idle" (phase 5a amend3, 2026-05-27) — the production
+  // wrapper mounts with the hook in pre-play state so the HOLD-to-arc
+  // crossfade doesn't expose final totals/CTA/headline. The dev mock
+  // route inherits the "done" default for its phase-2 static behavior.
+  const reveal = useH2HReveal({ sender, recipient, reducedMotion, initialPhase: "idle" });
 
   // Crossfade-in from the underlying GameView surface. setVisible
   // flips on the next animation frame so the CSS opacity transition
