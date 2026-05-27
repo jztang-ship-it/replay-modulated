@@ -15,6 +15,7 @@ import type { SportAdapter as SharedSportAdapter } from "@shared/adapters/SportA
 import type { PlayerCard } from "@shared/types";
 import type { RosterGridCardProps } from "@shared/components/RosterGrid";
 import type { FTUETextConfig } from "@shared/components/CoachLayer";
+import type { CardRenderer } from "@shared/components/H2HRevealScreen";
 import type {
   WinTierKey,
   WinTierMap,
@@ -151,4 +152,20 @@ export interface GameAdapter {
    *  in-game header. Sport wrappers gate this slot by isSlateV2Enabled
    *  so flag-OFF callers pass undefined and no slate code mounts. */
   SlateChipComponent?: ComponentType<{}>;
+
+  // ── H2H reveal renderers (phase 5a commit 3) ───────────────────────
+  // Sport-specific card renderers consumed by H2HRecipientReveal — the
+  // recipient flow's H2H arc + results overlay. Both are optional:
+  // sports without H2H wired up leave them undefined and the shared
+  // GameView's H2HRecipientReveal mount returns null. Basketball
+  // populates these with AthleteCard-wrapping renderers.
+  /** Renderer for the reveal arc (battlefield + strip cells). Reads
+   *  options.visibleFp / shakeType / glowActive / revealed to drive
+   *  per-card state. Strip cells receive no visibleFp; the active
+   *  battlefield card receives the rollup sentinel. */
+  h2hArcRenderer?: CardRenderer;
+  /** Renderer for the results overlay. Reads options.flipped to drive
+   *  the back-face render. Cards mount in resolved end-state (no
+   *  visibleFp; staticEndState=true). */
+  h2hOverlayRenderer?: CardRenderer;
 }

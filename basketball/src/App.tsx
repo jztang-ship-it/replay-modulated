@@ -329,6 +329,38 @@ function AppInner() {
             setShowChallengeLanding(false);
             try { localStorage.setItem(SKIP_LANDING_KEY, "1"); } catch {}
             setView("game");
+
+            // Dev affordance — phase 5a commit 3 (2026-05-27).
+            // When `?mockSenderHand=1` is in the URL AND we're in a
+            // dev build, populate resolvedSenderHand from the mock
+            // fixture instead of hitting the real endpoint. Lets us
+            // verify the full H2H wrapper chain locally until the
+            // phase-1 endpoint deploys. `import.meta.env.DEV` causes
+            // Rollup to dead-code-eliminate this branch + the
+            // dynamic import in production builds.
+            try {
+              const sp = new URLSearchParams(window.location.search);
+              if (import.meta.env.DEV && sp.get("mockSenderHand") === "1") {
+                // eslint-disable-next-line no-console
+                console.warn("[h2h] DEV: using mock fixture via ?mockSenderHand=1");
+                import("./dev/h2hMockFixture").then(({ SENDER_HAND }) => {
+                  setChallengeCtx((prev) => prev && prev.challengeId === ctx.challengeId
+                    ? {
+                        ...prev,
+                        resolvedSenderHand: {
+                          handId: "dev-mock",
+                          totalFp: SENDER_HAND.totalFp,
+                          tier: SENDER_HAND.tier,
+                          cards: SENDER_HAND.cards as unknown as import("@shared/types/index").GeneratedCard[],
+                        },
+                      }
+                    : prev,
+                  );
+                }).catch(() => { /* dev-only path; failure is non-fatal — fallback to ChallengeComparisonScreen */ });
+                return; // skip the real fetch
+              }
+            } catch { /* URL parse failure — fall through to real fetch */ }
+
             // Phase 5a commit 2 (2026-05-27): non-blocking sender-hand
             // prefetch. The existing flow proceeds unchanged
             // (auto-deal → HOLD → DEAL → reveal → results). Commit 3's

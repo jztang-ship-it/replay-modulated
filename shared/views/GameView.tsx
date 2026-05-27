@@ -132,6 +132,9 @@ const ChallengeComparisonScreen = lazy(() =>
 const ChallengePostResultBar = lazy(() =>
   import("@shared/components/ChallengePostResultBar").then(m => ({ default: m.ChallengePostResultBar }))
 );
+const H2HRecipientReveal = lazy(() =>
+  import("@shared/components/H2HRecipientReveal").then(m => ({ default: m.H2HRecipientReveal }))
+);
 // (ChallengeDebugPanel is mounted at the basketball app-shell level so
 // it surfaces on every route including the chooser landing before this
 // component mounts. Imported there, not here.)
@@ -3125,7 +3128,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           Played hand + game bar (with TARGET) stay visible behind the sheet.
           Submits the attempt, shows score vs. challenger, and offers
           Send It Back or Play Fresh. */}
-      {showChallengeComparison && challengeCtx && (
+      {showChallengeComparison && challengeCtx && !challengeCtx.resolvedSenderHand && (
         <Suspense fallback={null}>
           <ChallengeComparisonScreen
             challengeCtx={challengeCtx}
@@ -3140,6 +3143,34 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               setPostResultState(state);
               setPostResultTrashTalk(trashTalk);
             }}
+          />
+        </Suspense>
+      )}
+
+      {/* H2H reveal arc + results overlay — phase 5a commit 3 (2026-05-27).
+          Mount-gated on resolvedSenderHand presence; the comparison
+          sheet above is gated on its ABSENCE. Mutual exclusion prevents
+          both surfaces from firing the useChallengeAttempt POST in the
+          common case. Adapter renderers required — sports without H2H
+          wired leave them undefined and the wrapper returns null. */}
+      {challengeCtx
+        && (gameState === "REVEALING" || gameState === "RESULTS")
+        && adapter.h2hArcRenderer
+        && adapter.h2hOverlayRenderer && (
+        <Suspense fallback={null}>
+          <H2HRecipientReveal
+            challengeCtx={challengeCtx}
+            myScore={rosterRef.current.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0)}
+            myRoster={rosterRef.current as import("@shared/types/index").GeneratedCard[]}
+            myWinTier={winTier ?? "BUST"}
+            gameState={gameState}
+            sport={sportKey}
+            renderBattlefieldCard={adapter.h2hArcRenderer}
+            renderOverlayCard={adapter.h2hOverlayRenderer}
+            onSendItBack={handleSendItBack}
+            onTryAgain={handleTryAgain}
+            onPlayOwnHand={handlePlayOwnHand}
+            onDismiss={handlePlayOwnHand}
           />
         </Suspense>
       )}

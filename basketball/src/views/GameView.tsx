@@ -28,6 +28,10 @@ import { BASKETBALL_FTUE_CONFIG } from "@shared/components/CoachLayer";
 import { isSlateV2Enabled } from "@shared/featureFlags";
 import { BasketballSlateChip } from "../components/BasketballSlatePanel";
 import { sportAdapter } from "../adapters/SportAdapter";
+import type { CardRenderer, H2HCard } from "@shared/components/H2HRevealScreen";
+import { MATCHUP_DURATION_MS } from "@shared/components/useH2HReveal";
+import { getShakeType } from "@shared/hooks/useEmotionalReveal";
+import type { PlayerCard } from "@shared/types";
 import {
   dealInitialRoster,
   redrawRoster,
@@ -112,6 +116,57 @@ function tierFromSalary(salary: number): string {
   return s >= 73 ? "RED" : s >= 58 ? "ORANGE" : s >= 44 ? "PURPLE" : s >= 30 ? "BLUE" : s >= 23 ? "GREEN" : "WHITE";
 }
 
+// ── H2H reveal renderers (phase 5a commit 3) ──────────────────────
+// Basketball-specific renderers passed via GameAdapter to the shared
+// H2HRecipientReveal wrapper. Both wrap AthleteCard, mirroring the
+// dev mock route at basketball/src/dev/H2HRevealMockRoute.tsx:59-83
+// + :296-313 — production wraps the same components with the same
+// props, just sourced from real data (resolvedSenderHand + recipient
+// roster) instead of the mock fixture.
+
+const shakeForCard = (card: H2HCard) =>
+  getShakeType(card as unknown as { projectedFp: number; actualFp: number; cardId: string }, false);
+
+const h2hArcRenderer: CardRenderer = (card: H2HCard, options) => {
+  const isRevealed = options?.revealed ?? false;
+  return (
+    <AthleteCard
+      card={card as unknown as PlayerCard}
+      phase={"RESULTS" as any}
+      isFlipped={false}
+      canFlip={false}
+      locked={card.wasHeld}
+      heldFpVisible={true}
+      badges={isRevealed ? card.achievements : []}
+      visibleFp={options?.visibleFp}
+      fpCountUpMs={MATCHUP_DURATION_MS}
+      cardShakeType={isRevealed ? shakeForCard(card) : null}
+      isRevealing={!isRevealed}
+      ignoreHeldStatus={true}
+      staticEndState={isRevealed && options?.visibleFp === undefined}
+      shakeType={options?.shakeType ?? null}
+      glowActive={options?.glowActive ?? false}
+      glowTier={options?.glowTier ?? "WHITE"}
+      glowDurationMs={options?.glowDurationMs ?? 700}
+    />
+  );
+};
+
+const h2hOverlayRenderer: CardRenderer = (card: H2HCard, options) => (
+  <AthleteCard
+    card={card as unknown as PlayerCard}
+    phase={"RESULTS" as any}
+    isFlipped={options?.flipped ?? false}
+    canFlip={true}
+    locked={card.wasHeld}
+    heldFpVisible={true}
+    badges={card.achievements}
+    cardShakeType={shakeForCard(card)}
+    staticEndState={true}
+    ignoreHeldStatus={true}
+  />
+);
+
 interface GameViewWrapperProps {
   challengeCtx?: import("@shared/adapters/challengeTypes").ChallengeCtx;
   challengeBackCtx?: import("@shared/adapters/challengeTypes").ChallengeBackCtx;
@@ -187,6 +242,9 @@ export default function GameView({
     // SlateChipComponent stays undefined and the shared GameView renders
     // nothing in the chip slot, so no slate-v2 code runs in-game.
     SlateChipComponent: isSlateV2Enabled("basketball") ? BasketballSlateChip : undefined,
+    // H2H reveal renderers — phase 5a commit 3 (2026-05-27).
+    h2hArcRenderer,
+    h2hOverlayRenderer,
   }), [activeSeason, ftueTick]);
 
   return (
