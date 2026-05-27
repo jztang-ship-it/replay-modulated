@@ -265,6 +265,14 @@ export interface CardFrontProps {
   visibleBadgeCount?: number;
   isRevealing?: boolean;
   revealActive?: boolean;
+  /** Override the held-card carve-out in the `isPreReveal` computation.
+   *  In single-player, held cards (`card.wasHeld === true`) are carried
+   *  over from a prior hand and skip the pre-reveal projected-FP view —
+   *  hence the `!isHeldCard` clause in the gate at the top of this
+   *  component. H2H treats all 12 cards as first-time reveals regardless
+   *  of `wasHeld`, so the H2H renderers set this true to bypass that
+   *  carve-out. Single-player must leave this unset / false. */
+  ignoreHeldStatus?: boolean;
   /** Top Games tier for the star card. null or 'career' → no visual. */
   topGameTier?: TopGameTier | null;
   pulse?: PulseStyle;
@@ -307,7 +315,7 @@ export function CardFront(props: CardFrontProps) {
     isFlipped, heldFpVisible, isTapTarget,
     pulse, fpCountUpMs, stamp, onRollComplete, badges, renderHero,
     glowActive, glowSrc, glowDurationMs, glowTier, perfPct, displayPosition,
-    hideNotchSeason,
+    hideNotchSeason, ignoreHeldStatus,
   } = props;
 
   const name = clampText((card as any)?.name);
@@ -332,7 +340,7 @@ export function CardFront(props: CardFrontProps) {
   const dailyBonus = Number((card as any)?.dailyBonus ?? (stableCard as any)?.dailyBonus ?? 0);
   const isHeldCard = !!(card as any).wasHeld;
   const isDrawing = phase === ("DRAWING" as any);
-  const isPreReveal = !!(isRevealing && !isHeldCard && visibleFp === undefined);
+  const isPreReveal = !!(isRevealing && (!isHeldCard || ignoreHeldStatus) && visibleFp === undefined);
   const showResults = !isPreReveal && (phase === "RESULTS" || isHeldCard);
   const showTierColors = (!isFlipped && !isPreReveal) || revealActive || isLocked || isRevealing || isDrawing;
 

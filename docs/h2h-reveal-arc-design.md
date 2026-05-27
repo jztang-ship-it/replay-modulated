@@ -332,6 +332,66 @@ Phase 3.8 introduced "lay at center-stage → travel to slot" choreography. Phas
 
 The TRAVEL stage is now visually a no-op (already at slot from LAY); the stage state machine is preserved in `useH2HReveal` so the pre-reveal anticipation pulse + arc pacing remain stable. `MIDDLE_TRANSLATE_Y_*` constants + `computeMiddleTranslateX` are removed.
 
+### Phase 4 amend9 — shake + blast emotional reveal with band-vs-dead-band contrast (2026-05-27)
+
+After amend8, cards arrived in the hero slot and rolled up FP directly with no pre-rollup buildup. Single-player's emotional reveal language (shake before reveal, blast at the moment of stamp) was absent in H2H. The user's rule: match single-player's shake + blast for band-tier cards (cardShakeType ∈ `{legendary, big, cold, frozen}`); give dead-band cards (cardShakeType `null`) a short plain "hype" shake — no blast — so band cards feel meaningfully bigger by contrast.
+
+Per-matchup gating: the rollup waits for the slower of sender + recipient pre-rollup beats so each 1v1 pair completes before the next set begins.
+
+**Fix landed:**
+- `useH2HReveal` adds per-side state: `senderShakeInfo`, `recipientShakeInfo`, `senderGlowState`, `recipientGlowState` — parallel to single-player's `setShakeInfo` / `setGlowState`, which are single-card by design.
+- New `planRevealBeats(card)` helper computes per-card beat plan: `shakeType`, `shakePre`, `blastEnabled`, `glowTier`, `glowDurationMs`, `postBlastDelay`, `legendaryCelebrationShake`. Band-tier shake durations match single-player's `SHAKE_DURATION_MS_*` constants (400 / 550 / 700). Dead-band returns `shakeType="hype"`, `shakePre=200`, `blastEnabled=false`.
+- `runMatchup` restructured: at matchup-enter, apply shake + (conditional) blast immediately. Compute `maxShakePre + maxPostBlastDelay` across both cards. At `T=maxShakePre`, clear shake props. At `T=maxShakePre + maxPostBlastDelay`, begin rollup (existing sentinel write + RAF tick run inside this deferred callback).
+- Glow duration formula ported verbatim from `shared/views/GameView.tsx:999-1033` (base tier value + shake-type modifier; no skip-mode override since H2H always runs full duration).
+- Legendary cards get a post-rollup celebration shake re-firing per-side `setShakeInfo` for `SHAKE_DURATION_MS_DEFAULT` (mirrors single-player `useEmotionalReveal.ts:459-465`).
+- All shake/glow timers integrate with the existing run-id cancel pattern via `scheduleTimeout`.
+
+**Locked invariants:**
+- **Matchup gating.** Both cards' pre-rollup beats must complete before the rollup begins. Arc duration becomes variable based on shake-type distribution — a hand of dead-band cards plays faster than a hand of band-tier cards.
+- **`"hype"` is reserved for H2H dead-band.** Single-player does not produce `"hype"` from `getShakeType` (verified at `useEmotionalReveal.ts:156-171`); the keyframe at `PlayerCardShell.tsx:98-110` + the type-union slot at `useEmotionalReveal.ts:30` are H2H's exclusively.
+- **No blast for dead-band cards.** Blast is the "this matters" beat; reserving it for band-tier cards keeps the visual hierarchy clear.
+
+---
+
+### Phase 4 amend8 — pre-reveal rule + Option β brightness (2026-05-27)
+
+After amend7, ALL post-reveal content (FP, badges, fire/ice) was visible on all 12 cards from arc-start, regardless of whether that specific card had taken its turn in the hero zone. The user's rule: H2H should match single-player's reveal language exactly — no post-reveal content visible until the card has been revealed in the hero slot.
+
+Root cause: H2H renderers passed `phase="RESULTS"` plus full card data from arc-start, so CardFront's post-reveal layer was visible from frame zero. CardFront's `isPreReveal` gate at `L335` additionally carved out held cards via `!isHeldCard`, which would have prevented the State B visual from applying to the 4 of 12 H2H cards marked `wasHeld=true`.
+
+**Fix landed:**
+- `useH2HReveal` exposes new `revealedCardIds: Set<string>` derived from `visibleFpMap` (entry exists AND `visibleFp >= actualFp`).
+- `H2HRevealScreen` threads `revealed` through `CardRenderer` options to every renderCard call (strip, hero, entrance deck).
+- `renderBattlefieldCard` gates badges + cardShakeType on `isRevealed`: pre-reveal cells get `badges=[]` and `cardShakeType=null`; revealed cells get `card.achievements` + `shakeForCard(card)`.
+- `renderBattlefieldCard` passes `isRevealing={!isRevealed}` so CardFront's State B path activates for pre-reveal cards.
+- New `ignoreHeldStatus` prop on CardFront + PlayerCardShell. When true, the `isPreReveal` gate at `CardFront.tsx:335` ignores the `!isHeldCard` carve-out — held cards in H2H follow the same pre-reveal rule as non-held cards. H2H renderers always pass `ignoreHeldStatus=true`; single-player call sites do not pass this prop (default false; behavior preserved).
+
+**Brightness invariant (Option β — supersedes amend5's rule):**
+- **Bright** (opacity 1) = active card OR pre-reveal card
+- **Dim** (opacity 0.35) = post-revealed card that is NOT currently active
+- Three reveal states collapse to two visual bands. Top + bottom strips remain independent (amend5 invariant preserved).
+
+**Locked invariant:** H2H always overrides single-player's held-card optimization. Held cards in H2H follow the same reveal choreography as non-held cards — there is no held-card carve-out in H2H.
+
+---
+
+### Phase 4 amend7 — fire/ice live-render fix (2026-05-27)
+
+Amend6 wired `cardShakeType` through both H2H renderers but no fire/ice gradient appeared in live browser. Live-browser console instrumentation surfaced TWO defects:
+
+**Defect A:** H2H strip + overlay renderers passed `visibleFp=undefined`, causing PlayerCardShell's stamp effect at `L393-413` to bail at `if (visibleFp === undefined) return;` for 20 of 24 card mounts. The amend6 wiring was correct as documented, but the stamp-firing PRECONDITION (`visibleFp` must reach `actualFp`) was never satisfiable for static cells.
+
+**Defect B:** `useH2HReveal.runMatchup` wrote `visibleFp=0.001` as a one-shot sentinel meant to TRIGGER CardFront's RAF, but PlayerCardShell's stamp effect reads `visibleFp` as a LIVE-COUNTING value and waits for it to reach `actualFp`. The hook never advanced the map past 0.001, so the actively-rolling battlefield card also failed to fire its stamp.
+
+**Fix landed:**
+- New optional `staticEndState` prop on PlayerCardShell + `CardShellProps`. When true AND `cardShakeType` is set, the stamp effect fires immediately on mount, bypassing the rollup-complete precondition. Single-player call sites do NOT pass this prop (default `false`; behavior preserved).
+- H2H renderers pass `staticEndState=true` for static strip + overlay cells via `renderBattlefieldCard` + `renderOverlayCard`.
+- `useH2HReveal.runMatchup` tick closure now advances `visibleFpMap` each tick via `setVisibleFpMap(prev => new Map(prev).set(cardId, eased * target))`, mirroring `useEmotionalReveal.ts:490`. Terminal tick locks to `actualFp` mirroring `L495`. CardFront's internal RAF ignores these post-trigger updates (per the `animatingRef` gate at `CardFront.tsx:379`) so the visual count-up is unaffected; only the stamp pipeline gains the signal.
+
+**Locked invariant:** PlayerCardShell's stamp effect is a two-branch state machine — `rollupComplete` (existing path) for animated reveals, OR `staticEndState` (new branch) for callers that know no rollup will arrive. Single-player keeps the existing path; H2H is the only current caller of the new branch.
+
+---
+
 ### Phase 4 amend6 — fix hero photo mismatch + wire fire/ice tier effects (2026-05-27)
 
 Two bug fixes documented as known issues in amend5; landed as the first amend after the phase 4 force-push.

@@ -40,6 +40,109 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { H2HCard, H2HHand } from "./H2HRevealScreen";
+import type { ShakeType } from "@shared/components/types";
+
+/** Per-side shake state. Mirrors `ShakeInfo` from useEmotionalReveal.ts:31
+ *  but tracked per-side (sender / recipient) so the two cards in a matchup
+ *  can shake in parallel. */
+export type H2HShakeInfo = { cardId: string; type: ShakeType } | null;
+
+/** Per-side glow state. Mirrors GameView's `glowState` shape (the
+ *  `cardId` field is implicit per side and not stored). */
+export type H2HGlowState = { tier: string; durationMs: number } | null;
+
+// ── Shake / blast durations ────────────────────────────────────────────────
+// Re-declared locally (not imported) to avoid coupling to useEmotionalReveal's
+// internal constants. Source-of-truth: useEmotionalReveal.ts:86-88.
+const SP_SHAKE_DURATION_MS_DEFAULT = 400;
+const SP_SHAKE_DURATION_MS_BIG = 550;
+const SP_SHAKE_DURATION_MS_LEGENDARY = 700;
+
+/** H2H dead-band hype shake. Cards outside the fire/ice bands
+ *  (cardShakeType === null) fire a short plain wobble using the
+ *  pcs-shake-hype keyframe (PlayerCardShell.tsx:155). The CSS keyframe
+ *  is 600ms long but we clear the class at 200ms so only the first
+ *  third of the wobble plays — a quick visual acknowledgment that
+ *  distinguishes the moment of reveal without competing with the
+ *  band-tier emphasis. */
+const H2H_HYPE_SHAKE_MS = 200;
+
+/** Glow (blast) duration formula — port of GameView.handleCardRevealStart
+ *  at shared/views/GameView.tsx:1014-1033. Base value per tier; modifier
+ *  per shake type. RED falls through to the default (250). H2H always
+ *  runs full duration; no skip-mode override. */
+function glowDurationForTier(tier: string, shakeType: ShakeType): number {
+  const t = (tier ?? "").toUpperCase();
+  const base = t === "ORANGE" ? 900
+    : t === "PURPLE" ? 700
+      : t === "BLUE" ? 400
+        : t === "GREEN" ? 350
+          : 250;
+  const modifier = shakeType === "legendary" ? 300
+    : shakeType === "big" ? 150
+      : shakeType === "frozen" ? -100
+        : shakeType === "cold" ? -50
+          : 0;
+  return Math.max(150, base + modifier);
+}
+
+interface RevealBeatPlan {
+  shakeType: ShakeType;
+  shakePre: number;
+  blastEnabled: boolean;
+  glowTier: string;
+  glowDurationMs: number;
+  postBlastDelay: number;
+  legendaryCelebrationShake: boolean;
+}
+
+/** Compute the pre-rollup beat plan for a single card. Band-tier cards
+ *  (cardShakeType ∈ {legendary, big, cold, frozen}) get the full single-
+ *  player treatment — shake + blast + (legendary only) post-rollup
+ *  celebration shake. Dead-band cards get a short plain hype wobble
+ *  with no blast. Cardshake classification mirrors getShakeType at
+ *  useEmotionalReveal.ts:156-171 (ratio thresholds 1.6 / 1.4 / 0.8 / 0.6). */
+function planRevealBeats(card: H2HCard): RevealBeatPlan {
+  const proj = Number(card.projectedFp ?? 0);
+  const actual = Number(card.actualFp ?? 0);
+  let cardShakeType: ShakeType = null;
+  if (proj > 0) {
+    const ratio = actual / proj;
+    if (ratio >= 1.6) cardShakeType = "legendary";
+    else if (ratio >= 1.4) cardShakeType = "big";
+    else if (ratio <= 0.6) cardShakeType = "frozen";
+    else if (ratio <= 0.8) cardShakeType = "cold";
+  }
+  const tier = String((card as any).tier ?? "WHITE").toUpperCase();
+  if (cardShakeType === null) {
+    return {
+      shakeType: "hype",
+      shakePre: H2H_HYPE_SHAKE_MS,
+      blastEnabled: false,
+      glowTier: tier,
+      glowDurationMs: 0,
+      postBlastDelay: 0,
+      legendaryCelebrationShake: false,
+    };
+  }
+  const shakePre =
+    cardShakeType === "legendary" ? SP_SHAKE_DURATION_MS_LEGENDARY
+      : cardShakeType === "big" ? SP_SHAKE_DURATION_MS_BIG
+        : SP_SHAKE_DURATION_MS_DEFAULT;
+  const glowDurationMs = glowDurationForTier(tier, cardShakeType);
+  // postBlastDelay = min(200, max(0, glowMs - flipMs)). H2H has no flip
+  // → flipMs = 0 → simplifies to min(200, glowMs).
+  const postBlastDelay = Math.min(200, Math.max(0, glowDurationMs));
+  return {
+    shakeType: cardShakeType,
+    shakePre,
+    blastEnabled: true,
+    glowTier: tier,
+    glowDurationMs,
+    postBlastDelay,
+    legendaryCelebrationShake: cardShakeType === "legendary",
+  };
+}
 
 // ─── Timing constants ──────────────────────────────────────────────────────
 // All animation durations live here so the arc can be re-paced from one
@@ -214,6 +317,26 @@ export interface UseH2HRevealReturn {
    *  animated have no entry; CardFront sees `visibleFp === undefined`
    *  and (with `phase=RESULTS`) renders `actualFp` directly. */
   visibleFpMap: Map<string, number>;
+  /** Cards whose per-card rollup has completed (`visibleFp >= actualFp`).
+   *  Consumed by H2HRevealScreen + the H2H renderers to drive the
+   *  pre-reveal vs post-reveal visual split — pre-reveal cards show
+   *  greyed projected FP / no badges / no stamp; post-reveal cards
+   *  show actual FP / badges / stamp (same as the overlay end-state).
+   *  Derived from `visibleFpMap`; updates on every render tick that
+   *  advances a card past actualFp. */
+  revealedCardIds: Set<string>;
+  /** Per-side shake state. Non-null while a card is shaking (during
+   *  the pre-rollup band-tier shake OR dead-band hype wobble OR the
+   *  legendary post-rollup celebration shake). Consumed by
+   *  H2HRevealScreen → BattlefieldSlot → renderCard → AthleteCard's
+   *  `shakeType` prop (which drives the pcs-shake-* CSS class). */
+  senderShakeInfo: H2HShakeInfo;
+  recipientShakeInfo: H2HShakeInfo;
+  /** Per-side blast (glow) state. Non-null only for band-tier cards
+   *  while their tier-colored blast is animating. Drives the
+   *  `glowActive` / `glowTier` / `glowDurationMs` props on AthleteCard. */
+  senderGlowState: H2HGlowState;
+  recipientGlowState: H2HGlowState;
   /** Animated sender running total — feeds TeamScore's displayTotal. */
   senderRunningTotal: number;
   recipientRunningTotal: number;
@@ -290,6 +413,14 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
     new Array(matchups.length).fill("settled" as const),
   );
   const [pulseActive, setPulseActive] = useState(false);
+  // Per-side shake + glow state. Pre-rollup beat (shake + blast) fires
+  // simultaneously on both sides at matchup entry; both clear before
+  // the rollup begins. Legendary cards get a post-rollup celebration
+  // shake re-using the same per-side slot.
+  const [senderShakeInfo, setSenderShakeInfo] = useState<H2HShakeInfo>(null);
+  const [recipientShakeInfo, setRecipientShakeInfo] = useState<H2HShakeInfo>(null);
+  const [senderGlowState, setSenderGlowState] = useState<H2HGlowState>(null);
+  const [recipientGlowState, setRecipientGlowState] = useState<H2HGlowState>(null);
 
   // Run-id pattern from useEmotionalReveal: bump on every cancel so
   // in-flight callbacks short-circuit. Survives strict-mode double-
@@ -342,35 +473,84 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
     setMatchupIndex(index);
     setPhase("revealing");
 
-    // Trigger CardFront's internal RAF for both battlefield cards.
-    // CardFront ignores the sentinel value — it animates 0→actualFp
-    // using its own duration (fpCountUpMs).
-    setVisibleFpMap(prev => {
-      const next = new Map(prev);
-      next.set(m.sender.cardId, VISIBLE_FP_TRIGGER);
-      next.set(m.recipient.cardId, VISIBLE_FP_TRIGGER);
-      return next;
+    // ── Pre-rollup beats (post-prior-turn pre-reveal-rule, 2026-05-27) ──
+    // Match single-player's reveal language: shake (+ blast for band-tier
+    // cards) fires BEFORE the rollup. Both cards' shakes run in parallel;
+    // the matchup waits for the slower of the two to finish, plus a
+    // postBlastDelay, before the rollup begins. See planRevealBeats above
+    // for the band vs dead-band branching.
+    const senderBeats = planRevealBeats(m.sender);
+    const recipientBeats = planRevealBeats(m.recipient);
+
+    setSenderShakeInfo({ cardId: m.sender.cardId, type: senderBeats.shakeType });
+    setRecipientShakeInfo({ cardId: m.recipient.cardId, type: recipientBeats.shakeType });
+    if (senderBeats.blastEnabled) {
+      setSenderGlowState({ tier: senderBeats.glowTier, durationMs: senderBeats.glowDurationMs });
+      scheduleTimeout(senderBeats.glowDurationMs + 50, () => {
+        if (myRunId !== runIdRef.current) return;
+        setSenderGlowState(null);
+      });
+    }
+    if (recipientBeats.blastEnabled) {
+      setRecipientGlowState({ tier: recipientBeats.glowTier, durationMs: recipientBeats.glowDurationMs });
+      scheduleTimeout(recipientBeats.glowDurationMs + 50, () => {
+        if (myRunId !== runIdRef.current) return;
+        setRecipientGlowState(null);
+      });
+    }
+
+    const maxShakePre = Math.max(senderBeats.shakePre, recipientBeats.shakePre);
+    const maxPostBlastDelay = Math.max(senderBeats.postBlastDelay, recipientBeats.postBlastDelay);
+
+    // Clear pre-rollup shake props together at the slower card's
+    // shakePre boundary.
+    scheduleTimeout(maxShakePre, () => {
+      if (myRunId !== runIdRef.current) return;
+      setSenderShakeInfo(null);
+      setRecipientShakeInfo(null);
     });
 
-    // Pre-totals = sum of all prior matchups' actualFps. Running totals
-    // animate from pre-total → pre-total + this matchup's actualFp.
-    let senderPrevTotal = 0;
-    let recipientPrevTotal = 0;
-    for (let i = 0; i < index; i++) {
-      senderPrevTotal += matchups[i].sender.actualFp;
-      recipientPrevTotal += matchups[i].recipient.actualFp;
-    }
-    const senderTarget = m.sender.actualFp;
-    const recipientTarget = m.recipient.actualFp;
+    // Defer the rollup itself until both shakes (and the post-blast
+    // settle) have completed.
+    scheduleTimeout(maxShakePre + maxPostBlastDelay, () => {
+      if (myRunId !== runIdRef.current) return;
 
-    const startTime = performance.now();
-    const tick = () => {
+      // Trigger CardFront's internal RAF for both battlefield cards.
+      // CardFront ignores the sentinel value — it animates 0→actualFp
+      // using its own duration (fpCountUpMs).
+      setVisibleFpMap(prev => {
+        const next = new Map(prev);
+        next.set(m.sender.cardId, VISIBLE_FP_TRIGGER);
+        next.set(m.recipient.cardId, VISIBLE_FP_TRIGGER);
+        return next;
+      });
+
+      // Pre-totals = sum of all prior matchups' actualFps. Running totals
+      // animate from pre-total → pre-total + this matchup's actualFp.
+      let senderPrevTotal = 0;
+      let recipientPrevTotal = 0;
+      for (let i = 0; i < index; i++) {
+        senderPrevTotal += matchups[i].sender.actualFp;
+        recipientPrevTotal += matchups[i].recipient.actualFp;
+      }
+      const senderTarget = m.sender.actualFp;
+      const recipientTarget = m.recipient.actualFp;
+
+      const startTime = performance.now();
+      const tick = () => {
       if (myRunId !== runIdRef.current) return;
       const elapsed = Math.min((performance.now() - startTime) / MATCHUP_DURATION_MS, 1);
       // Ease-out cubic — same curve as useEmotionalReveal.ts:484.
       const eased = 1 - Math.pow(1 - elapsed, 3);
       setSenderRunningTotal(senderPrevTotal + senderTarget * eased);
       setRecipientRunningTotal(recipientPrevTotal + recipientTarget * eased);
+      // Advance per-card visibleFp so PlayerCardShell's stamp effect can
+      // observe rollup completion. Mirrors useEmotionalReveal.ts:490 — the
+      // single-player advance. CardFront ignores these updates after its
+      // first-trigger RAF latches (CardFront.tsx:379), so the visual
+      // count-up is unaffected; only the stamp pipeline gains the signal.
+      setVisibleFpMap(prev => new Map(prev).set(m.sender.cardId, senderTarget * eased));
+      setVisibleFpMap(prev => new Map(prev).set(m.recipient.cardId, recipientTarget * eased));
 
       if (elapsed < 1) {
         rafRef.current = requestAnimationFrame(tick);
@@ -380,6 +560,27 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
         const newRecipientTotal = recipientPrevTotal + recipientTarget;
         setSenderRunningTotal(newSenderTotal);
         setRecipientRunningTotal(newRecipientTotal);
+        // Lock per-card visibleFp at actualFp — mirrors useEmotionalReveal.ts:495.
+        setVisibleFpMap(prev => new Map(prev).set(m.sender.cardId, senderTarget));
+        setVisibleFpMap(prev => new Map(prev).set(m.recipient.cardId, recipientTarget));
+
+        // Legendary post-rollup celebration shake — mirrors single-player
+        // useEmotionalReveal.ts:459-465. Re-uses the same per-side shake
+        // slot; auto-clears after SHAKE_DURATION_MS_DEFAULT.
+        if (senderBeats.legendaryCelebrationShake) {
+          setSenderShakeInfo({ cardId: m.sender.cardId, type: "legendary" });
+          scheduleTimeout(SP_SHAKE_DURATION_MS_DEFAULT, () => {
+            if (myRunId !== runIdRef.current) return;
+            setSenderShakeInfo(null);
+          });
+        }
+        if (recipientBeats.legendaryCelebrationShake) {
+          setRecipientShakeInfo({ cardId: m.recipient.cardId, type: "legendary" });
+          scheduleTimeout(SP_SHAKE_DURATION_MS_DEFAULT, () => {
+            if (myRunId !== runIdRef.current) return;
+            setRecipientShakeInfo(null);
+          });
+        }
 
         // Phase 5 hook — commentary engine wires here.
         onMatchupResolvedRef.current?.(index, m, {
@@ -405,7 +606,8 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
         });
       }
     };
-    rafRef.current = requestAnimationFrame(tick);
+      rafRef.current = requestAnimationFrame(tick);
+    });
   }, [matchups, scheduleTimeout]);
 
   const play = useCallback(() => {
@@ -420,6 +622,10 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
     setSenderRunningTotal(0);
     setRecipientRunningTotal(0);
     setPulseActive(false);
+    setSenderShakeInfo(null);
+    setRecipientShakeInfo(null);
+    setSenderGlowState(null);
+    setRecipientGlowState(null);
     const N = matchups.length;
 
     if (reducedMotion) {
@@ -508,6 +714,10 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
     setRecipientRunningTotal(recipient.totalFp);
     setEntranceStages(new Array(matchups.length).fill("settled" as const));
     setPulseActive(false);
+    setSenderShakeInfo(null);
+    setRecipientShakeInfo(null);
+    setSenderGlowState(null);
+    setRecipientGlowState(null);
   }, [cancelAll, matchups.length, sender.totalFp, recipient.totalFp]);
 
   const activeMatchup = useMemo(() => {
@@ -549,6 +759,23 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
     [entranceStages],
   );
 
+  // Cards whose rollup has reached actualFp. Mirrors the per-card check
+  // used by PlayerCardShell's stamp effect; consumed by H2HRevealScreen
+  // to drive the pre-reveal vs post-reveal visual split.
+  const revealedCardIds = useMemo(() => {
+    const set = new Set<string>();
+    const check = (c: H2HCard) => {
+      const v = visibleFpMap.get(c.cardId);
+      if (v === undefined) return;
+      const target = c.actualFp;
+      const done = target === 0 ? true : target > 0 ? v >= target : v <= target;
+      if (done) set.add(c.cardId);
+    };
+    sender.cards.forEach(check);
+    recipient.cards.forEach(check);
+    return set;
+  }, [visibleFpMap, sender.cards, recipient.cards]);
+
   return {
     phase,
     matchupIndex,
@@ -557,6 +784,11 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
     entranceSettledCount,
     pulseActive,
     visibleFpMap,
+    revealedCardIds,
+    senderShakeInfo,
+    recipientShakeInfo,
+    senderGlowState,
+    recipientGlowState,
     senderRunningTotal,
     recipientRunningTotal,
     activeMatchup,

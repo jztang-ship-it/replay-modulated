@@ -56,20 +56,54 @@ const shakeForCard = (card: H2HCard) =>
 // animated reveal both flow through this single renderer; the
 // difference is whether `visibleFp` is set. canFlip=false during the
 // arc — flip is an overlay-only affordance.
-const renderBattlefieldCard: CardRenderer = (card: H2HCard, options) => (
-  <AthleteCard
-    card={card as unknown as PlayerCard}
-    phase={"RESULTS" as any}
-    isFlipped={false}
-    canFlip={false}
-    locked={card.wasHeld}
-    heldFpVisible={true}
-    badges={card.achievements}
-    visibleFp={options?.visibleFp}
-    fpCountUpMs={MATCHUP_DURATION_MS}
-    cardShakeType={shakeForCard(card)}
-  />
-);
+const renderBattlefieldCard: CardRenderer = (card: H2HCard, options) => {
+  // Post-amend6 pre-reveal rule (2026-05-27): a card is in the pre-reveal
+  // band until its rollup completes (visibleFp >= actualFp). Pre-reveal
+  // cards show the State B visual (greyed projected FP, no badges, no
+  // stamp); post-reveal cards show the full post-reveal content. The
+  // mid-rollup hero card is "not yet revealed" — `isRevealed` flips true
+  // at the rollup-terminal write inside useH2HReveal.
+  const isRevealed = options?.revealed ?? false;
+  return (
+    <AthleteCard
+      card={card as unknown as PlayerCard}
+      phase={"RESULTS" as any}
+      isFlipped={false}
+      canFlip={false}
+      locked={card.wasHeld}
+      heldFpVisible={true}
+      // Badge / shake gating mirrors single-player's visibleBadgesMap +
+      // post-rollup stamp pattern (useEmotionalReveal.ts:503-505 +
+      // PlayerCardShell stamp-effect). Pre-reveal: empty badges, null
+      // shake → no stamp fires. Post-reveal: real badges + computed shake.
+      badges={isRevealed ? card.achievements : []}
+      visibleFp={options?.visibleFp}
+      fpCountUpMs={MATCHUP_DURATION_MS}
+      cardShakeType={isRevealed ? shakeForCard(card) : null}
+      // Drive State B (front-face pre-reveal) for not-yet-revealed cards.
+      // CardFront's gate requires isRevealing=true AND visibleFp=undefined.
+      // For the mid-rollup hero, visibleFp is defined → isPreReveal=false →
+      // post-reveal visual still resolves correctly.
+      isRevealing={!isRevealed}
+      // H2H treats every card as a first-time reveal regardless of wasHeld.
+      // Held cards (4 of 12 in the mock) would otherwise be excluded from
+      // the pre-reveal gate by CardFront's `!isHeldCard` clause.
+      ignoreHeldStatus={true}
+      // Stamp-on-mount only when a card is already revealed AND has no
+      // active rollup (strip cell after its matchup completed). The
+      // actively-rolling card hits PlayerCardShell's rollupComplete path
+      // via the per-tick visibleFp advance from useH2HReveal.
+      staticEndState={isRevealed && options?.visibleFp === undefined}
+      // Shake + blast props — only passed by the BattlefieldCard renderer
+      // call site (strip cells + deck cells leave these undefined →
+      // shakeType=null, glowActive=false → no shake, no blast).
+      shakeType={options?.shakeType ?? null}
+      glowActive={options?.glowActive ?? false}
+      glowTier={options?.glowTier ?? "WHITE"}
+      glowDurationMs={options?.glowDurationMs ?? 700}
+    />
+  );
+};
 
 // Read URL query params once at module load. Powers dev smoke capture
 // — headless Chrome can't easily click buttons, but it can load a URL
@@ -269,6 +303,12 @@ export function H2HRevealMockRoute() {
       heldFpVisible={true}
       badges={card.achievements}
       cardShakeType={shakeForCard(card)}
+      // Overlay never animates a rollup — every card is resolved end-state.
+      staticEndState={true}
+      // Same held-card override as the arc renderer — overlay also shows
+      // all 12 cards as first-time reveals (the held flag is sort-order
+      // data, not a carry-over signal in H2H).
+      ignoreHeldStatus={true}
     />
   ), []);
 

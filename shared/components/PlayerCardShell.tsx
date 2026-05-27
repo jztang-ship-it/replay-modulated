@@ -284,6 +284,20 @@ export interface CardShellProps {
   glowActive?: boolean;
   glowTier?: string;
   glowDurationMs?: number;
+  /** Caller signals that no rollup animation will arrive at this mount —
+   *  fire the stamp immediately if `cardShakeType` is set. Used by H2H
+   *  renderers for strip mini-cards and the results-overlay cards, which
+   *  render in a resolved end-state. Single-player must NOT set this:
+   *  during REVEALING gameState, cards whose individual reveal hasn't
+   *  started yet would prematurely stamp (phase resolves to "RESULTS" and
+   *  cardShakeType is pre-computed before the per-card animation fires). */
+  staticEndState?: boolean;
+  /** Forwarded to CardFront. Bypasses the `!isHeldCard` clause in
+   *  CardFront's `isPreReveal` gate so H2H can drive the pre-reveal
+   *  visual on cards with `wasHeld === true` (every card in H2H is a
+   *  first-time reveal; the held flag is sort-order data, not a
+   *  carry-over signal). Single-player leaves this unset. */
+  ignoreHeldStatus?: boolean;
   /** Sport provides its own front face */
   renderFront: (props: CardFrontProps) => React.ReactNode;
   /** Sport provides its stats back face (only used when canFlip=true) */
@@ -329,6 +343,8 @@ export function PlayerCardShell(props: CardShellProps) {
     isSpotlight, spotlightLevel, isDimmed, onRollComplete,
     heldFpVisible, isTapTarget, isFTUE,
     glowActive, glowTier, glowDurationMs,
+    staticEndState = false,
+    ignoreHeldStatus = false,
     renderFront, renderBack,
   } = props;
 
@@ -393,6 +409,21 @@ export function PlayerCardShell(props: CardShellProps) {
   useEffect(() => {
     if (stampFiredRef.current) return;
     if (!cardShakeType) return;
+    const stamp: OverlayStamp =
+      cardShakeType === "legendary" ? "SMOKING HOT" :
+        cardShakeType === "big" ? "ON FIRE" :
+          cardShakeType === "frozen" ? "FREEZING" :
+            cardShakeType === "cold" ? "ICE COLD" : null;
+    // staticEndState: caller (H2H strip/overlay) guarantees no rollup will
+    // arrive — fire immediately. Must be ahead of the visibleFp-undefined
+    // bail so the H2H static cards stamp on mount.
+    if (staticEndState) {
+      stampFiredRef.current = true;
+      const next: OverlayState = { stamp, stamping: true };
+      overlayMap.set(id, next);
+      setOverlay(next);
+      return;
+    }
     if (visibleFp === undefined) return;
     // Roll-up direction depends on actualFp's sign. Positive rolls 0 → actualFp
     // (done when visibleFp >= actualFp); negative rolls 0 → actualFp going down
@@ -402,15 +433,10 @@ export function PlayerCardShell(props: CardShellProps) {
       : actualFp > 0 ? visibleFp >= actualFp : visibleFp <= actualFp;
     if (!rollupComplete) return;
     stampFiredRef.current = true;
-    const stamp: OverlayStamp =
-      cardShakeType === "legendary" ? "SMOKING HOT" :
-        cardShakeType === "big" ? "ON FIRE" :
-          cardShakeType === "frozen" ? "FREEZING" :
-            cardShakeType === "cold" ? "ICE COLD" : null;
     const next: OverlayState = { stamp, stamping: true };
     overlayMap.set(id, next);
     setOverlay(next);
-  }, [visibleFp, cardShakeType, id, actualFp]);
+  }, [visibleFp, cardShakeType, id, actualFp, staticEndState]);
 
   // onRollComplete fires when CardFront's FP animation finishes.
   // Fire unconditionally — the stamp animation is purely visual and must not
@@ -525,6 +551,7 @@ export function PlayerCardShell(props: CardShellProps) {
     glowTier:
       glowTier
       ?? String((stableCard as any).tier ?? (card as any).tier ?? "WHITE").toUpperCase(),
+    ignoreHeldStatus,
   };
 
   return (

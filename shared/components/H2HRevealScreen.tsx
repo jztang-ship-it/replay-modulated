@@ -62,6 +62,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { UseH2HRevealReturn } from "./useH2HReveal";
+import type { ShakeType } from "@shared/components/types";
 import {
   CARD_LAY_MS,
   CARD_TRAVEL_MS,
@@ -124,7 +125,22 @@ export interface H2HHand {
  *  internal RAF interpolation). */
 export type CardRenderer = (
   card: H2HCard,
-  options?: { visibleFp?: number; flipped?: boolean },
+  options?: {
+    visibleFp?: number;
+    flipped?: boolean;
+    revealed?: boolean;
+    /** Live shake signal (post-amend6 shake/blast rule, 2026-05-27).
+     *  Drives PCS's `pcs-shake-*` CSS class for the duration this is
+     *  non-null. Passed only at the active hero card; strip cells and
+     *  deck cards leave it undefined. */
+    shakeType?: ShakeType | null;
+    /** Blast (tier-colored radial burst) — set true while the active
+     *  hero card's blast is animating. Pairs with `glowTier` and
+     *  `glowDurationMs` to drive PlayerCardShell's `pcs-glow-*` class. */
+    glowActive?: boolean;
+    glowTier?: string;
+    glowDurationMs?: number;
+  },
 ) => React.ReactNode;
 
 export interface H2HRevealScreenProps {
@@ -295,6 +311,11 @@ interface HandStripProps {
    *  reveal order differ — phase 4's real data is deal-ordered, but
    *  the reveal walks in (wasHeld, salary) order. */
   activeCardId?: string | null;
+  /** Per-card revealed status from `useH2HReveal.revealedCardIds`.
+   *  Drives both (a) the renderer's pre-reveal vs post-reveal visual
+   *  via `options.revealed`, and (b) Option β brightness — pre-reveal
+   *  cards stay bright, post-reveal-non-active cards dim to 0.35. */
+  revealedCardIds?: Set<string>;
   /** Per-stage_index entrance stage array from useH2HReveal. Length =
    *  cards.length. When omitted (static phase 2 path), all cells
    *  render as "settled." stage_index 0 = first to lay (cheapest swap
@@ -350,7 +371,7 @@ function computeDeckTranslateX(displayPos: number): number {
   return vw / 2 - cellLeft - scaledHeroHalfWidth;
 }
 
-function HandStrip({ cards, renderCard, activeCardId, entranceStages, revealOrder, side, reducedMotion, pulseActive }: HandStripProps) {
+function HandStrip({ cards, renderCard, activeCardId, revealedCardIds, entranceStages, revealOrder, side, reducedMotion, pulseActive }: HandStripProps) {
   const ordered = [...cards].sort((a, b) => a.slotIndex - b.slotIndex);
   const N = ordered.length;
   // Default to "all settled" when the static phase-2 caller doesn't pass
@@ -386,19 +407,17 @@ function HandStrip({ cards, renderCard, activeCardId, entranceStages, revealOrde
     >
       {ordered.map((card, displayPos) => {
         const isActiveInBattlefield = !!activeCardId && card.cardId === activeCardId;
-        // Phase 4 amend5 fix 2 (2026-05-27): brightness invariant —
-        // the user's eye is drawn to BRIGHT cards. The active mini-
-        // card (whose card is in the hero slot) is the one we want
-        // attention on. So: active = bright (1.0); others on this
-        // strip when ANYTHING is active = dimmed (0.35). When no
-        // card is active on this strip (activeCardId === null), the
-        // strip has no focal point — all cards render bright.
-        const stripHasActive = !!activeCardId;
-        const settledCardOpacity = !stripHasActive
-          ? 1
-          : isActiveInBattlefield
-            ? 1
-            : 0.35;
+        const isRevealed = revealedCardIds?.has(card.cardId) ?? false;
+        // Phase 4 post-amend6 (2026-05-27): Option β brightness —
+        // bright = active card OR pre-reveal card; dim = post-revealed
+        // card that is not currently active. Pre-reveal cards stay
+        // bright so the user's eye tracks "what's yet to be revealed"
+        // alongside the active hero. At end-state (no active rolling
+        // card), only the matchup hero stays bright; all 5 others on
+        // the strip are post-revealed-non-active → dim, matching
+        // amend5's end-state visual.
+        const settledCardOpacity =
+          isActiveInBattlefield || !isRevealed ? 1 : 0.35;
         // Stage_index is the card's position in the REVEAL ORDER (same
         // direction on both sides — cheapest swap = stage_index 0).
         // Both strips' stage_index 0 cards animate together. The
@@ -555,7 +574,7 @@ function HandStrip({ cards, renderCard, activeCardId, entranceStages, revealOrde
                 pointerEvents: "none",
               }}
             >
-              {renderCard(card)}
+              {renderCard(card, { revealed: isRevealed })}
             </div>
           </div>
         );
@@ -750,7 +769,7 @@ function EntranceDeck({ cards, entranceStages, renderCard }: EntranceDeckProps) 
                   pointerEvents: "none",
                 }}
               >
-                {renderCard(card)}
+                {renderCard(card, { revealed: false })}
               </div>
             );
           })}
@@ -802,9 +821,23 @@ interface BattlefieldCardProps {
    *  interpolation runs and the FP digit ticks up). When undefined
    *  (phase 2 static), the card shows its final actualFp. */
   visibleFp?: number;
+  /** Per-card revealed flag (from `useH2HReveal.revealedCardIds`).
+   *  Forwarded to the renderer; mid-rollup hero cards pass false until
+   *  the rollup terminal write flips it true. */
+  revealed?: boolean;
+  /** Live shake signal — drives PCS's pcs-shake-* CSS class. Non-null
+   *  while this card is shaking. Pre-rollup shake (band-tier or
+   *  hype) fires on matchup entry; legendary post-rollup celebration
+   *  shake fires at rollup terminal. */
+  shakeType?: ShakeType | null;
+  /** Blast props — only meaningful for band-tier cards; dead-band
+   *  cards leave glowActive=false (no blast). */
+  glowActive?: boolean;
+  glowTier?: string;
+  glowDurationMs?: number;
 }
 
-function BattlefieldCard({ card, renderCard, visibleFp }: BattlefieldCardProps) {
+function BattlefieldCard({ card, renderCard, visibleFp, revealed, shakeType, glowActive, glowTier, glowDurationMs }: BattlefieldCardProps) {
   return (
     <div
       data-h2h-battlefield-card="true"
@@ -816,7 +849,7 @@ function BattlefieldCard({ card, renderCard, visibleFp }: BattlefieldCardProps) 
         overflow: "visible",
       }}
     >
-      {renderCard(card, { visibleFp })}
+      {renderCard(card, { visibleFp, revealed, shakeType, glowActive, glowTier, glowDurationMs })}
       {/* SWAP indicator — top-right corner pill on non-held cards. The
           held indicator (gold corner triangle) is drawn inside CardFront
           itself when locked={card.wasHeld} is passed. The SWAP pill's
@@ -949,12 +982,22 @@ function CardCenterCell({
   card,
   renderCard,
   visibleFp,
+  revealed,
+  shakeType,
+  glowActive,
+  glowTier,
+  glowDurationMs,
   side,
   reducedMotion,
 }: {
   card: H2HCard | null;
   renderCard: CardRenderer;
   visibleFp?: number;
+  revealed?: boolean;
+  shakeType?: ShakeType | null;
+  glowActive?: boolean;
+  glowTier?: string;
+  glowDurationMs?: number;
   /** "top" = sender row (card flies in from above). "bottom" =
    *  recipient row (card flies in from below). */
   side: "top" | "bottom";
@@ -965,6 +1008,11 @@ function CardCenterCell({
       card={card}
       renderCard={renderCard}
       visibleFp={visibleFp}
+      revealed={revealed}
+      shakeType={shakeType}
+      glowActive={glowActive}
+      glowTier={glowTier}
+      glowDurationMs={glowDurationMs}
       side={side}
       reducedMotion={reducedMotion}
     />
@@ -992,11 +1040,16 @@ interface BattlefieldSlotProps {
   card: H2HCard | null;
   renderCard: CardRenderer;
   visibleFp?: number;
+  revealed?: boolean;
+  shakeType?: ShakeType | null;
+  glowActive?: boolean;
+  glowTier?: string;
+  glowDurationMs?: number;
   side: "top" | "bottom";
   reducedMotion: boolean;
 }
 
-function BattlefieldSlot({ card, renderCard, visibleFp, side, reducedMotion }: BattlefieldSlotProps) {
+function BattlefieldSlot({ card, renderCard, visibleFp, revealed, shakeType, glowActive, glowTier, glowDurationMs, side, reducedMotion }: BattlefieldSlotProps) {
   // Singleton keyframes for h2h-bf-enter-*/exit-* — injected lazily
   // on first render of any BattlefieldSlot.
   useEffect(() => {
@@ -1127,7 +1180,7 @@ function BattlefieldSlot({ card, renderCard, visibleFp, side, reducedMotion }: B
               pointerEvents: "none",
             }}
           >
-            <BattlefieldCard card={exitingCard} renderCard={renderCard} visibleFp={undefined} />
+            <BattlefieldCard card={exitingCard} renderCard={renderCard} visibleFp={undefined} revealed={true} />
           </div>
         )}
         {/* Entering / settled card. `key` forces remount on cardId
@@ -1142,7 +1195,16 @@ function BattlefieldSlot({ card, renderCard, visibleFp, side, reducedMotion }: B
               willChange: "transform, opacity",
             }}
           >
-            <BattlefieldCard card={renderedCard} renderCard={renderCard} visibleFp={visibleFp} />
+            <BattlefieldCard
+              card={renderedCard}
+              renderCard={renderCard}
+              visibleFp={visibleFp}
+              revealed={revealed}
+              shakeType={shakeType}
+              glowActive={glowActive}
+              glowTier={glowTier}
+              glowDurationMs={glowDurationMs}
+            />
           </div>
         )}
       </div>
@@ -1210,6 +1272,40 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
   // overtake each other during the reveal.
   const recipientLeading = recipientDisplayTotal > senderDisplayTotal;
   const senderLeading = senderDisplayTotal > recipientDisplayTotal;
+
+  // Per-card revealed status from the hook (post-amend6 pre-reveal rule,
+  // 2026-05-27). Strips consume the full Set for both renderer-options
+  // gating and the Option β brightness rule. Hero cells consume the
+  // per-side flag derived from the active matchup's cardId.
+  //
+  // Static phase-2 path (no `reveal` hook wired): all cards are treated
+  // as revealed because the static path renders the end-state of the
+  // arc — the battlefield shows the chosen matchup, all 12 mini-cards
+  // show post-reveal content, and the brightness rule's dim-others
+  // behavior depends on every non-active card being in the revealed
+  // set. Phase 3+ path: use the hook's live Set.
+  const revealedCardIds = useMemo(() => {
+    if (reveal?.revealedCardIds !== undefined) return reveal.revealedCardIds;
+    const set = new Set<string>();
+    for (const c of sender.cards) set.add(c.cardId);
+    for (const c of recipient.cards) set.add(c.cardId);
+    return set;
+  }, [reveal?.revealedCardIds, sender.cards, recipient.cards]); // eslint-disable-line react-hooks/exhaustive-deps
+  const senderBattleRevealed = senderBattle ? revealedCardIds.has(senderBattle.cardId) : false;
+  const recipientBattleRevealed = recipientBattle ? revealedCardIds.has(recipientBattle.cardId) : false;
+
+  // Per-side shake + glow (post-amend6 shake/blast rule, 2026-05-27).
+  // Pulled from the reveal hook's per-side slots so both cards in a
+  // matchup can animate simultaneously. Strip cells receive no shake/glow
+  // — only the hero zone reads these.
+  const senderShakeType = reveal?.senderShakeInfo?.type ?? null;
+  const recipientShakeType = reveal?.recipientShakeInfo?.type ?? null;
+  const senderGlowActive = reveal?.senderGlowState != null;
+  const recipientGlowActive = reveal?.recipientGlowState != null;
+  const senderGlowTier = reveal?.senderGlowState?.tier;
+  const recipientGlowTier = reveal?.recipientGlowState?.tier;
+  const senderGlowDurationMs = reveal?.senderGlowState?.durationMs;
+  const recipientGlowDurationMs = reveal?.recipientGlowState?.durationMs;
 
   // Phase 4 amend5 fix 1 (2026-05-27): the deck visual renders ONLY
   // while at least one card is still in "pre" stage. Once the deck
@@ -1291,6 +1387,7 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
             cards={sender.cards}
             renderCard={renderCard}
             activeCardId={senderActiveCardId}
+            revealedCardIds={revealedCardIds}
             entranceStages={reveal?.entranceStages}
             revealOrder={reveal?.senderRevealOrder}
             side="sender"
@@ -1346,6 +1443,11 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
                 card={senderBattle}
                 renderCard={renderCard}
                 visibleFp={senderVisibleFp}
+                revealed={senderBattleRevealed}
+                shakeType={senderShakeType}
+                glowActive={senderGlowActive}
+                glowTier={senderGlowTier}
+                glowDurationMs={senderGlowDurationMs}
                 side="top"
                 reducedMotion={reducedMotion}
               />}
@@ -1364,6 +1466,11 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
                 card={recipientBattle}
                 renderCard={renderCard}
                 visibleFp={recipientVisibleFp}
+                revealed={recipientBattleRevealed}
+                shakeType={recipientShakeType}
+                glowActive={recipientGlowActive}
+                glowTier={recipientGlowTier}
+                glowDurationMs={recipientGlowDurationMs}
                 side="bottom"
                 reducedMotion={reducedMotion}
               />}
@@ -1409,6 +1516,7 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
             cards={recipient.cards}
             renderCard={renderCard}
             activeCardId={recipientActiveCardId}
+            revealedCardIds={revealedCardIds}
             entranceStages={reveal?.entranceStages}
             revealOrder={reveal?.recipientRevealOrder}
             side="recipient"

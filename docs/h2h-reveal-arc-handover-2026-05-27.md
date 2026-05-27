@@ -4,19 +4,21 @@ For the next Code-Claude session picking up the H2H reveal arc work.
 
 ## TL;DR — where we are
 
-Phase 4 of the H2H reveal arc is committed and pushed to `origin/main` as `692a96f` (force-pushed twice tonight after six amendments). It delivers:
+Phase 4 of the H2H reveal arc has been amended through amend9 (2026-05-27 session — code/docs committed locally, push held for explicit user direction). It delivers:
 
 - Full reveal arc choreography (entrance with depleting face-up decks → anticipation pulse → 6 paired matchups → end-hold).
 - Full-viewport results overlay with per-strip independent card flip, headline + trash-talk on the left, FP totals on the right, single primary CTA below the bottom strip.
 - Locked vertical geometry: top strip / both hero slots / bottom strip pixel-identical between arc and overlay.
-- Brightness invariant: active mini-card bright, others dimmed; per-strip on the overlay.
-- Mock fixture with the right NBA player IDs.
+- Brightness invariant (Option β — amend8, supersedes amend5): bright = active OR pre-reveal; dim = post-revealed and not active. Top + bottom strips independent.
+- **Pre-reveal rule (amend8):** cards show State B (greyed projected FP, no badges, no fire/ice) until each card has taken its turn in the hero zone. No held-card carve-out (new `ignoreHeldStatus` prop).
+- **All emotional reveal effects (shake, blast, band-vs-dead-band contrast) now match single-player (amend9).** Band-tier cards get the full single-player treatment (shake + blast); dead-band cards get a short plain "hype" wobble; per-matchup gating waits for the slower of the two pre-rollup beats.
+- Mock fixture with the right NBA player IDs (amend6).
 
-103 tests pass across 7 component test files.
+570 tests pass across 49 test files (full repo).
 
-## The one outstanding bug
+## Fire/ice — RESOLVED (amend7)
 
-**Fire/ice tier visual effects don't render on H2H cards.** `cardShakeType` is now wired through the H2H renderers (amend6) but the gradient overlay from `CardFront.tsx:668-786` doesn't appear in live browser. The photo fix landed; the fire/ice attempt is a no-op visually but is incremental progress toward the fix. Root cause investigation is incomplete — see `docs/smoke-tests/2026-05-27-h2h-phase4-amend6-photo-fireice-smoke.md` for the candidate hypotheses to start from.
+The amend6 outstanding bug shipped this session. Two-defect root cause: (A) H2H static cells passed `visibleFp=undefined` so PlayerCardShell's stamp effect bailed at the undefined check; (B) `useH2HReveal.runMatchup` never advanced `visibleFp` past the 0.001 sentinel so even the active hero card never satisfied the rollup-complete precondition. Fix: new `staticEndState` prop on PlayerCardShell (immediate stamp fire when caller knows no rollup is coming) + per-tick `visibleFpMap` advance inside the hook's tick closure (mirrors `useEmotionalReveal.ts:490`). See design-doc amend7 section for the full trace.
 
 ## What's done — file-by-file
 
@@ -42,23 +44,23 @@ Phase 4 of the H2H reveal arc is committed and pushed to `origin/main` as `692a9
 
 ## What's not done — open followups, in priority order
 
-1. **Fire/ice tier effects don't render in live browser (amend6 attempt was a no-op).** Hypotheses to investigate are listed in the amend6 smoke artifact. Start by instrumenting `console.log(card.name, cardShakeType, visibleFp)` in `renderBattlefieldCard` and `console.log(stamp, cardShakeType, visibleFp, actualFp, rollComplete)` inside `PlayerCardShell.useEffect@393`. Observe what fires when matchup 0 rolls up.
+1. **Right-rail FP totals (178.4 / 182.4) clip at 390 wide.** Pre-existing condition since phase 3. The `ScoreCell` renders in the 80px right column but is obscured by horizontally-overflowing strip cells in mobile captures. Not addressed in phase 4.
 
-2. **Right-rail FP totals (178.4 / 182.4) clip at 390 wide.** Pre-existing condition since phase 3. The `ScoreCell` renders in the 80px right column but is obscured by horizontally-overflowing strip cells in mobile captures. Not addressed in phase 4.
+2. **Right-edge clipping of the 6th strip card at 390 wide.** Cards 4-6 of each strip partially clip past the strip's right edge. Pre-existing.
 
-3. **Right-edge clipping of the 6th strip card at 390 wide.** Cards 4-6 of each strip partially clip past the strip's right edge. Pre-existing.
+3. **Hero card overflow on overlay flip.** `AthleteCard` back face renders at its natural 329px width inside a 145-max wrapper, so flipped hero cards visually overflow their column. Pre-existing.
 
-4. **Hero card overflow on overlay flip.** `AthleteCard` back face renders at its natural 329px width inside a 145-max wrapper, so flipped hero cards visually overflow their column. Pre-existing.
+4. **Phase 5 — wire to real data.** Replace the fixture import in the dev route with a fetch against `/api/challenge/{id}/sender-hand`. The dev route's renderer wiring carries forward. Synthetic-hand toggles (variant + margin) get replaced by deriving from real data.
 
-5. **Phase 5 — wire to real data.** Replace the fixture import in the dev route with a fetch against `/api/challenge/{id}/sender-hand`. The dev route's renderer wiring carries forward. Synthetic-hand toggles (variant + margin) get replaced by deriving from real data.
+5. **Phase 6 — climax animation between arc end-hold and overlay mount.** Currently a 350ms placeholder crossfade. Phase 6 replaces with the real win/loss climax.
 
-6. **Phase 6 — climax animation between arc end-hold and overlay mount.** Currently a 350ms placeholder crossfade. Phase 6 replaces with the real win/loss climax.
+6. **Phase 7 — commentary engine.** Trash-talk strings are currently picked from `chadChallenge.ts`. Phase 7 evolves into a real generative engine.
 
-7. **Phase 7 — commentary engine.** Trash-talk strings are currently picked from `chadChallenge.ts`. Phase 7 evolves into a real generative engine.
+7. **Phase 8 — copy polish on headlines + trash-talk.** Deferred from phase 4.
 
-8. **Phase 8 — copy polish on headlines + trash-talk.** Deferred from phase 4.
+8. **Production dismiss destination.** Phase 4 logs `[h2h-mock] CTA "Dismiss" pressed` to console. Phase 5+ wires the real navigation.
 
-9. **Production dismiss destination.** Phase 4 logs `[h2h-mock] CTA "Dismiss" pressed` to console. Phase 5+ wires the real navigation.
+9. **Amend7 fire/ice smoke artifact.** Live-browser verification was performed but no smoke-test file was authored. Future cleanup: capture screenshots + write `docs/smoke-tests/2026-05-27-h2h-phase4-amend7-fireice-fix-smoke.md` referencing them.
 
 ## Mental model — key invariants to preserve
 
