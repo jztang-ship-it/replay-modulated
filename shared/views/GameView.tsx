@@ -2078,6 +2078,65 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     }
   }, [gameState]); // eslint-disable-line
 
+  // ── Challenge CTA handlers ────────────────────────────────────────────
+  // Phase 5a commit 1 (2026-05-27): lifted from inline JSX arrows on
+  // ChallengeComparisonScreen + ChallengePostResultBar so phase 5a
+  // commits 2/3 can pass the same refs to the H2H results overlay.
+  // Each handler body is a verbatim copy of the inline version it
+  // replaced.
+
+  // Win-state Send It Back: route into a fresh normal hand with
+  // challengeBackCtx set. challengeCtx is dropped.
+  //
+  // Plain arrow (re-created each render) — useCallback was used in the
+  // initial lift but trapped first-render scope, causing handleButtonClick
+  // and its onPrimaryAction chain to read stale challengeCtx/gameState
+  // values. Re-creating each render mirrors the original inline-arrow
+  // semantics exactly. See prior-turn investigation report.
+  const handleSendItBack = () => {
+    if (setChallengeBackCtx && challengeCtx) {
+      setChallengeBackCtx({
+        challengerUserId: null,
+        challengerName: challengeCtx.challengerName ?? null,
+        originatingChallengeId: challengeCtx.challengeId,
+      });
+    }
+    clearChallengeCtx?.();
+    setShowChallengeComparison(false);
+    setComparisonCollapsed(false);
+    handleButtonClick();
+  };
+
+  // Loss-window-open Try Again: re-deal the SAME challenge snapshot.
+  // challengeCtx stays set AND we set the next-deal intent so the
+  // IDLE branch picks the snapshot.
+  const handleTryAgain = () => {
+    challengeNextDealRef.current = true;
+    setShowChallengeComparison(false);
+    setComparisonCollapsed(false);
+    handleButtonClick();
+  };
+
+  // Action-bar DEAL / LOSS_CLOSED "Play your own hand": clear
+  // challenge mode entirely and deal a fresh normal hand. The IDLE
+  // branch uses dealInitialRoster (today's slate) once challengeCtx is
+  // null.
+  const handlePlayOwnHand = () => {
+    clearChallengeCtx?.();
+    setShowChallengeComparison(false);
+    setComparisonCollapsed(false);
+    setPostResultState(null);
+    setPostResultTrashTalk(null);
+    handleButtonClick();
+  };
+
+  // Sheet collapse (×, swipe, backdrop, inner Dismiss CTA). Does NOT
+  // clear challengeCtx — the played-hand surface stays mounted with
+  // the persistent ChallengePostResultBar action bar.
+  const handleChallengeCollapse = () => {
+    setComparisonCollapsed(true);
+  };
+
   // Chad welcome on first transition from challenge play to normal play.
   // Fires once per browser per sport when:
   //   1. The user has been in challenge mode (challengeCtx was set this
@@ -3074,31 +3133,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             myWinTier={winTier ?? "BUST"}
             sport={sportKey}
             collapsed={comparisonCollapsed}
-            onCollapse={() => setComparisonCollapsed(true)}
-            onSendItBack={() => {
-              // Win-state Send It Back: route into a fresh normal hand
-              // with challengeBackCtx set. challengeCtx is dropped.
-              if (setChallengeBackCtx && challengeCtx) {
-                setChallengeBackCtx({
-                  challengerUserId: null,
-                  challengerName: challengeCtx.challengerName ?? null,
-                  originatingChallengeId: challengeCtx.challengeId,
-                });
-              }
-              clearChallengeCtx?.();
-              setShowChallengeComparison(false);
-              setComparisonCollapsed(false);
-              handleButtonClick();
-            }}
-            onTryAgain={() => {
-              // Loss-window-open Try Again: re-deal the SAME challenge
-              // snapshot. challengeCtx stays set AND we set the
-              // next-deal intent so the IDLE branch picks the snapshot.
-              challengeNextDealRef.current = true;
-              setShowChallengeComparison(false);
-              setComparisonCollapsed(false);
-              handleButtonClick();
-            }}
+            onCollapse={handleChallengeCollapse}
+            onSendItBack={handleSendItBack}
+            onTryAgain={handleTryAgain}
             onResolved={({ state, trashTalk }) => {
               setPostResultState(state);
               setPostResultTrashTalk(trashTalk);
@@ -3120,40 +3157,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             state={postResultState}
             trashTalk={postResultTrashTalk}
             onSeeResult={() => setComparisonCollapsed(false)}
-            onSendItBack={() => {
-              if (setChallengeBackCtx && challengeCtx) {
-                setChallengeBackCtx({
-                  challengerUserId: null,
-                  challengerName: challengeCtx.challengerName ?? null,
-                  originatingChallengeId: challengeCtx.challengeId,
-                });
-              }
-              clearChallengeCtx?.();
-              setShowChallengeComparison(false);
-              setComparisonCollapsed(false);
-              handleButtonClick();
-            }}
-            onTryAgain={() => {
-              // Post-result bar Try Again: re-deal the challenge
-              // snapshot. Set the next-deal intent so the IDLE branch
-              // recognizes this as a replay (not a stale challengeCtx).
-              challengeNextDealRef.current = true;
-              setShowChallengeComparison(false);
-              setComparisonCollapsed(false);
-              handleButtonClick();
-            }}
-            onDeal={() => {
-              // DEAL on the action bar: clear challenge mode entirely
-              // and deal a fresh normal hand. The IDLE branch uses
-              // dealInitialRoster (today's slate) once challengeCtx is
-              // null.
-              clearChallengeCtx?.();
-              setShowChallengeComparison(false);
-              setComparisonCollapsed(false);
-              setPostResultState(null);
-              setPostResultTrashTalk(null);
-              handleButtonClick();
-            }}
+            onSendItBack={handleSendItBack}
+            onTryAgain={handleTryAgain}
+            onDeal={handlePlayOwnHand}
           />
         </Suspense>
       )}

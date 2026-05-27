@@ -26,34 +26,16 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
-import { getPlayerUid, getNickname } from "@shared/utils/playerIdentity";
-import { hasAttemptedChallenge, markChallengeAttempted } from "@shared/hooks/useChallengeShare";
 import { track } from "@shared/analytics/analytics";
 import { isRealName } from "@shared/utils/isRealName";
 import { chadTrashTalk, trashTalkBucket, selectChallengeResolution } from "@shared/commentary/chadChallenge";
+import { useChallengeAttempt, type ChallengeAttemptState } from "@shared/hooks/useChallengeAttempt";
 
-interface AttemptResult {
-  attempt_id: string;
-  is_best: boolean;
-  is_practice?: boolean;
-  is_personal_best?: boolean;
-  winner_count_flipped?: boolean;
-  defended_bumped?: boolean;
-  first_attempt_at?: string;
-  first_attempt_at_ms?: number;
-  window_closes_at?: string;
-  window_closes_at_ms?: number;
-  is_window_open?: boolean;
-  user_best_score?: number | null;
-  user_has_won?: boolean;
-  attempt_count: number;
-  winner_count: number;
-  best_score: number | null;
-  best_user_name: string | null;
-  already_attempted?: boolean;
-}
-
-export type ComparisonState = "WIN" | "LOSS_OPEN" | "LOSS_CLOSED";
+// Re-exported under the original name so existing call sites that
+// import ComparisonState continue to compile. Phase 5a commit 1
+// (2026-05-27) extracted the attempt-POST + state-derivation into
+// useChallengeAttempt; the type lives there now.
+export type ComparisonState = ChallengeAttemptState;
 
 interface Props {
   challengeCtx: ChallengeCtx;
@@ -90,40 +72,29 @@ export function ChallengeComparisonScreen({
 }: Props) {
   void myWinTier;
 
-  const [attemptResult, setAttemptResult] = useState<AttemptResult | null>(null);
-  const submittedRef = useRef(false);
+  // Phase 5a commit 1 (2026-05-27): attempt POST + state derivation
+  // lifted into useChallengeAttempt. The hook fires POST-on-mount
+  // (enabled=true) with the same request shape, response handling,
+  // and state-machine logic this component had inline.
+  const {
+    state,
+    delta,
+    absDelta,
+    isPhotoFinish,
+    windowClosesAtMs,
+    attemptResult,
+    localIsPractice,
+  } = useChallengeAttempt({
+    challengeId: challengeCtx.challengeId,
+    myScore,
+    targetScore: challengeCtx.targetScore,
+    sport,
+    enabled: true,
+  });
   const resolvedRef = useRef(false);
 
-  const delta = myScore - challengeCtx.targetScore;
-  const absDelta = Math.abs(delta);
-  const isPhotoFinish = absDelta <= 1;
-
   const namedChallenger = isRealName(challengeCtx.challengerName) ? challengeCtx.challengerName : null;
-  // [Comparison:v2] State machine drives off the CURRENT attempt's
-  // outcome, NOT the user's cumulative historical state. Earlier
-  // versions read attemptResult.user_has_won which is "newIsWinner ||
-  // prevBestWasWin" — cumulative — so a user who'd previously won this
-  // challenge would see the WIN frame (green headline, Send-It-Back
-  // CTA) on a losing replay. Per-attempt outcome means: this score >
-  // target = WIN, else loss-with-window-state. Cumulative state stays
-  // on the counters (winner_count, best_score) — those remain
-  // historical.
-  const userWonThisAttempt = delta > 0;
-  const isWindowOpen = attemptResult?.is_window_open ?? true;
-  const windowClosesAtMs = attemptResult?.window_closes_at_ms ?? null;
-  // Local "has played before" hint — useful as telemetry context on the
-  // attempt POST, but NEVER used to drive the practice-label display.
-  // The server's window math is authoritative: within-window replays
-  // are live attempts, not practice. Driving the chip off the local
-  // marker would falsely label every replay as practice during the
-  // brief window between sheet mount and the attempt response.
-  const [localIsPractice] = useState(() => hasAttemptedChallenge(challengeCtx.challengeId));
   const isPractice = attemptResult?.is_practice === true;
-
-  const state: ComparisonState =
-    userWonThisAttempt ? "WIN"
-    : isWindowOpen ? "LOSS_OPEN"
-    : "LOSS_CLOSED";
 
   // Two commentary surfaces, independent banks:
   //   resolutionLine — substantive two-clause WHY shown ON the sheet
@@ -145,58 +116,6 @@ export function ChallengeComparisonScreen({
     const bucket = trashTalkBucket(delta);
     return chadTrashTalk(bucket, namedChallenger, delta);
   }, [delta, namedChallenger]);
-
-  // Submit attempt POST exactly once on mount.
-  useEffect(() => {
-    if (submittedRef.current) return;
-    submittedRef.current = true;
-    const uid = getPlayerUid();
-    const name = getNickname() || "Anonymous";
-    markChallengeAttempted(challengeCtx.challengeId);
-
-    // The server needs an identity to anchor the 1-hour replay window
-    // to. For signed-in players the Supabase auth uuid (a real uuid)
-    // lands in user_id. For anonymous players getPlayerUid returns the
-    // localStorage rm_uid (e.g. "u_abc123def") — not a uuid, so we send
-    // it as anon_uid so the server can still cluster prior attempts by
-    // this browser. Sending both is harmless: the server uses user_id
-    // when it parses as a uuid and only falls back to anon_uid
-    // otherwise. (See attempt.ts and migration 010.)
-    const isAuthUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uid);
-
-    fetch(`/api/challenge/${challengeCtx.challengeId}/attempt`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        score: myScore,
-        is_winner: delta > 0,
-        is_practice: localIsPractice,
-        user_id: isAuthUuid ? uid : undefined,
-        anon_uid: isAuthUuid ? undefined : uid,
-        user_name: name,
-      }),
-    })
-      .then(r => r.json())
-      .then((d: AttemptResult) => {
-        setAttemptResult(d);
-        track("challenges", (delta > 0) ? "challenge_win" : "challenge_loss", {
-          challenge_id: challengeCtx.challengeId,
-          sport,
-          score_delta: Math.round(delta * 10) / 10,
-          attempt_count: d.attempt_count,
-          is_practice: d.is_practice ?? localIsPractice,
-          winner_flipped: d.winner_count_flipped ?? false,
-          is_personal_best: d.is_personal_best ?? false,
-          window_open: d.is_window_open ?? null,
-        });
-        track("challenges", "challenge_attempt_complete", {
-          challenge_id: challengeCtx.challengeId, sport,
-          is_winner: delta > 0, score: myScore,
-          is_practice: d.is_practice ?? localIsPractice,
-        });
-      })
-      .catch(() => { /* silent — UI still works with optimistic defaults */ });
-  }, []); // eslint-disable-line
 
   // Mirror the resolved state up to GameView once.
   useEffect(() => {
