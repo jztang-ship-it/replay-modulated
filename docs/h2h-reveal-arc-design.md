@@ -332,6 +332,18 @@ Phase 3.8 introduced "lay at center-stage → travel to slot" choreography. Phas
 
 The TRAVEL stage is now visually a no-op (already at slot from LAY); the stage state machine is preserved in `useH2HReveal` so the pre-reveal anticipation pulse + arc pacing remain stable. `MIDDLE_TRANSLATE_Y_*` constants + `computeMiddleTranslateX` are removed.
 
+### Phase 5a amend1 — strip display sorted by revealOrder, not slotIndex (2026-05-27)
+
+Production-data verification of f6f8d05 surfaced a sort-order bug: HandStrip rendered cards by `slotIndex`, but production `hand_log.final_roster` stores `slotIndex` as deal-positional (basketball's PG/SG/SF/PF/C/FLEX), not in reveal-order. The mock fixture coincidentally had `slotIndex` match `(wasHeld, salary)`, hiding the bug during dev. The first real recipient hand showed a held $57 card in the leftmost strip slot and the cheapest swap displaced to the right.
+
+Fix: HandStrip's `ordered` computation at `H2HRevealScreen.tsx:374-388` now sorts by `revealOrder` (server-computed via `buildRevealOrder` at `useH2HReveal.ts:366-371`, already threaded through props as `senderRevealOrder` / `recipientRevealOrder`) when provided. Falls back to `slotIndex` sort for the static phase-2 dev/test path that doesn't compute revealOrder. Production callers always pass revealOrder; legacy phase-2 callers don't change.
+
+**Locked invariant:** `revealOrder` is the canonical display + reveal sequence for the H2H strips. `slotIndex` is deal-positional and not display-relevant except as a fallback for dev surfaces.
+
+Regression-lock test: `H2HRevealScreen.test.tsx` adds a fixture with `slotIndex` deliberately misaligned from `(wasHeld, salary)` and asserts the strip displays in revealOrder, not slotIndex order. A future change that reverts to slotIndex-driven sorting now fails loudly.
+
+---
+
 ### Phase 4 amend9 — shake + blast emotional reveal with band-vs-dead-band contrast (2026-05-27)
 
 After amend8, cards arrived in the hero slot and rolled up FP directly with no pre-rollup buildup. Single-player's emotional reveal language (shake before reveal, blast at the moment of stamp) was absent in H2H. The user's rule: match single-player's shake + blast for band-tier cards (cardShakeType ∈ `{legendary, big, cold, frozen}`); give dead-band cards (cardShakeType `null`) a short plain "hype" shake — no blast — so band cards feel meaningfully bigger by contrast.

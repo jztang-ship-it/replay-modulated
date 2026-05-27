@@ -598,4 +598,60 @@ describe("H2HRevealScreen — static layout", () => {
     const stripCells = container.querySelectorAll('[data-h2h-mini-cell="true"]');
     expect(stripCells.length).toBe(22); // 11 × 2
   });
+
+  // Phase 5a amend1 contract lock (2026-05-27): HandStrip must sort by
+  // revealOrder when provided. Production hand_log.final_roster stores
+  // slotIndex deal-positional (PG/SG/SF/PF/C/FLEX), not in reveal-order;
+  // the mock fixture's slotIndex coincidentally matched (wasHeld, salary)
+  // which hid the bug during dev. This test pins the rule with
+  // deliberately misaligned slotIndex so a regression to slotIndex-driven
+  // sorting fails loudly.
+  it("HandStrip displays cards in revealOrder when provided, regardless of slotIndex", () => {
+    // Deliberately misaligned: held card at slotIndex 0 (would be leftmost
+    // under slotIndex sort), cheapest swap at slotIndex 5.
+    const senderCards: H2HCard[] = [
+      makeCard({ cardId: "card-A", name: "A held $57", basePlayerId: "pA", wasHeld: true,  salary: 57, slotIndex: 0 }),
+      makeCard({ cardId: "card-B", name: "B swap $29", basePlayerId: "pB", wasHeld: false, salary: 29, slotIndex: 5 }),
+      makeCard({ cardId: "card-C", name: "C swap $34", basePlayerId: "pC", wasHeld: false, salary: 34, slotIndex: 1 }),
+      makeCard({ cardId: "card-D", name: "D swap $52", basePlayerId: "pD", wasHeld: false, salary: 52, slotIndex: 2 }),
+      makeCard({ cardId: "card-E", name: "E held $40", basePlayerId: "pE", wasHeld: true,  salary: 40, slotIndex: 3 }),
+      makeCard({ cardId: "card-F", name: "F swap $37", basePlayerId: "pF", wasHeld: false, salary: 37, slotIndex: 4 }),
+    ];
+    const sender = makeHand({ cards: senderCards });
+    const recipient = makeHand();
+    // Expected (wasHeld ASC, salary ASC):
+    //   swaps cheap → exp:  B ($29), C ($34), F ($37), D ($52)
+    //   held cheap → exp:   E ($40), A ($57)
+    const revealOrder = [
+      senderCards[1], senderCards[2], senderCards[5], senderCards[3], senderCards[4], senderCards[0],
+    ];
+    const reveal = {
+      phase: "done" as const,
+      matchupIndex: 5,
+      matchupCount: 6,
+      visibleFpMap: new Map(),
+      senderRunningTotal: 0,
+      recipientRunningTotal: 0,
+      activeMatchup: { sender: null, recipient: null },
+      senderRevealOrder: revealOrder,
+      recipientRevealOrder: recipient.cards,
+      entranceStages: new Array(6).fill("settled") as import("../useH2HReveal").EntranceStage[],
+      entranceSettledCount: 6,
+      pulseActive: false,
+      play: () => {},
+      skipToEnd: () => {},
+    };
+    const { container } = render(
+      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} reveal={reveal as any} />
+    );
+    const senderStrip = container.querySelector('[data-h2h-hand-strip="true"][data-side="sender"]');
+    const senderCells = senderStrip?.querySelectorAll('[data-h2h-mini-cell="true"]') ?? [];
+    expect(senderCells.length).toBe(6);
+    expect(senderCells[0].getAttribute("data-card-id")).toBe("card-B"); // cheapest swap
+    expect(senderCells[1].getAttribute("data-card-id")).toBe("card-C");
+    expect(senderCells[2].getAttribute("data-card-id")).toBe("card-F");
+    expect(senderCells[3].getAttribute("data-card-id")).toBe("card-D"); // most-expensive swap
+    expect(senderCells[4].getAttribute("data-card-id")).toBe("card-E"); // cheapest held
+    expect(senderCells[5].getAttribute("data-card-id")).toBe("card-A"); // most-expensive held
+  });
 });

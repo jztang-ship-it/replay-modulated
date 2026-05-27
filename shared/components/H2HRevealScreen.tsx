@@ -372,7 +372,19 @@ function computeDeckTranslateX(displayPos: number): number {
 }
 
 function HandStrip({ cards, renderCard, activeCardId, revealedCardIds, entranceStages, revealOrder, side, reducedMotion, pulseActive }: HandStripProps) {
-  const ordered = [...cards].sort((a, b) => a.slotIndex - b.slotIndex);
+  // Phase 5a amend1 (2026-05-27): use server-computed revealOrder
+  // (wasHeld ASC, salary ASC per buildRevealOrder) when provided —
+  // this is the canonical display + reveal sequence per the design
+  // rule "swap cards first, cheapest to most expensive; held cards
+  // last, cheapest to most expensive." Fall back to slotIndex sort
+  // for the static phase-2 dev/test path which doesn't pass
+  // revealOrder. Production data's slotIndex is deal-positional
+  // (PG/SG/SF/PF/C/FLEX), NOT reveal-order — trusting it for display
+  // surfaced in production verification of f6f8d05 as held cards
+  // appearing in the leftmost strip slots.
+  const ordered = revealOrder
+    ? [...revealOrder]
+    : [...cards].sort((a, b) => a.slotIndex - b.slotIndex);
   const N = ordered.length;
   // Default to "all settled" when the static phase-2 caller doesn't pass
   // entrance state.
