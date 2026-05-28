@@ -332,6 +332,97 @@ Phase 3.8 introduced "lay at center-stage → travel to slot" choreography. Phas
 
 The TRAVEL stage is now visually a no-op (already at slot from LAY); the stage state machine is preserved in `useH2HReveal` so the pre-reveal anticipation pulse + arc pacing remain stable. `MIDDLE_TRANSLATE_Y_*` constants + `computeMiddleTranslateX` are removed.
 
+### Phase 5b — attempter-roster delivery path (locked 2026-05-28)
+
+Sender-side overlay needs the attempter's resolved roster to render. Locked decision: deliver it through the existing `user_notifications.payload` JSONB column. No new serverless function; no payload bloat beyond the ~6KB roster blob.
+
+**Investigation findings before locking (2026-05-28 session):**
+- `challenge_attempts` has `score_breakdown jsonb` column (confirmed via `information_schema`). Plumbed through the write path at `api/challenge/[id]/attempt.ts:36` (destructured from request body) and `attempt.ts:134` (inserted into the row). Currently every row writes `null` — the column is scaffolded but unused.
+- `user_notifications` has `payload jsonb` (confirmed via `information_schema`). The notification INSERT lives in the same handler at `attempt.ts:268`, inside the attempt-POST transaction-adjacent flow. The attempter's resolved roster is in scope at this point in the handler.
+- No existing API endpoint reads `challenge_attempts` (verified via `grep -rln "challenge_attempts" --include="*.ts" api/ shared/` → only the POST file). Any new read path would require a new serverless function.
+- Vercel Hobby function-count cap is 12. Current count is 11 (per `b6e338a` end-state from phase 5a session). One slot of headroom remains; the function-count constraint is binding for any new endpoint.
+
+**Locked write path:**
+- The recipient client's attempt-POST is widened to include `score_breakdown: <serialized GeneratedCard[]>` in the request body. Shape mirrors `hand_log.final_roster` exactly (one element per slot, fields per design doc line 170-173). The attempt POST handler requires no code change — `score_breakdown` is already plumbed through.
+- The notification INSERT at `attempt.ts:268` is widened to include the attempter's resolved roster inside `user_notifications.payload` JSONB, alongside the existing fields (`challenge_id`, `attempter_score`, `is_winner`).
+- Both writes happen in the same handler with the same data in scope. No threading change.
+
+**Locked read path:**
+- Sender-side wrapper reads from its own notification row via the existing `GET /api/user/notifications` endpoint (already shipped per the 2026-05-27 audit). No new endpoint.
+- The sender's own hand is fetched via the existing `GET /api/challenge/{id}/sender-hand` — the sender retrieves their own resolved roster the same way the recipient retrieves the sender's roster on the recipient overlay.
+
+**Legacy fallback:**
+- Notifications written before this cutover have no roster in their payload. Sender tap routes to a text-only fallback summary card (no overlay choreography).
+- Parallels the phase 1 `sender_resolved: false` legacy pattern (this doc, "Legacy fallback" subsection of the data-model gap resolution).
+- No backfill of historical notifications. Cutover state, like phase 1, is a clean point-forward boundary.
+
+**`challenge_attempts.score_breakdown` is also written** with the same roster blob, even though phase 5b's overlay reads from the notification payload. Rationale: the column already exists, the write path is already plumbed, the cost is zero, and the data lands at its canonical home. Future surfaces (e.g., the parked "challenge history" rollup) can read from `score_breakdown` without needing the notification.
+
+**What this locks out:**
+- No new serverless function. Function count stays at 11/12. The remaining slot is reserved for a future challenge-history endpoint or for a real attempt-roster endpoint if a non-notification entry point ever needs one.
+- No payload migration on `user_notifications` (column was already `jsonb`).
+
+**Row-size watchpoint:** notification rows grow ~6KB per attempt. Same growth rate the `hand_log.final_roster` watchpoint flags (Phase 1, "Followups parked from this work"). Not blocking; revisit if storage or query performance flags it.
+
+---
+
+### Phase 5b — sender's view of opponent (locked 2026-05-28)
+
+Sender overlay uses the same top/bottom strip semantics as the recipient overlay. **Universal rule across all H2H overlay surfaces: top strip = your opponent in this overlay; bottom strip = you, the viewer.**
+
+On the sender side this means top = attempter, bottom = sender. On the recipient side it means top = sender, bottom = recipient. The rule survives independent of which side is viewing.
+
+**Geometry and invariants inherited unchanged from phase 4 / phase 5a:**
+- Pixel-identical Ys on top strip / hero slot row / bottom strip (see phase 4 locked geometry).
+- Per-strip flip mechanic. Both hero slots can be filled simultaneously for 1v1 card-back comparison.
+- Brightness inversion: active mini-card opacity 1.0, others 0.35. Top and bottom strips drive independently.
+- Strip-component sort contract: both strips honor `revealOrder` over `slotIndex`. Sender-side overlay is exactly the kind of "new strip-like surface" the locked invariant section names as bound to this contract from inception.
+
+**Reveal-order symmetry:**
+- `buildRevealOrder` (`useH2HReveal.ts:366-371`) is symmetric — it produces a deterministic display order from any resolved roster via `(wasHeld, salary)`.
+- Sender wrapper computes `attempterRevealOrder` from the attempter's roster (received via notification payload per Q2 lock above) at mount time. Identical to how the recipient wrapper computes `senderRevealOrder` from the sender's roster.
+- No new sort logic. No new sort surface. The contract that landed in amend1 / amend2 covers the sender side by construction.
+
+**FP totals and color binding** (per the layout-structure section's "Right rail" rule):
+- Top FP cell = attempter's total, anchored to top hero slot Y.
+- Bottom FP cell = sender's total, anchored to bottom hero slot Y.
+- "Green if ahead, dimmed if behind" applies to the bottom (sender, the viewer's own row), symmetric to the recipient overlay's binding.
+
+**What this locks out:**
+- No inverted layout (option 3B from the 2026-05-28 design session) — top stays opponent, bottom stays "you."
+- No "historical" visual treatment on the sender's own strip (option 3C from the same session) — the sender's strip uses the same rendering as the recipient's own strip. Emotional fit of the sender's retrospective view (the sender already played their hand; the overlay is a review of a completed event from their perspective) is addressed in copy register (headline tone, trash-talk wording), not in layout. Deferred to phase 8 copy polish.
+
+**Implementation note:** the sender-side wrapper component is the analog of `H2HRecipientReveal`. It composes the overlay only — no arc, per locked decision E from the 2026-05-26 phase-5 design session (this doc, "Sender flow" section). The arc is recipient-only because the sender already played their hand and doesn't need the reveal choreography; they need the result.
+
+---
+
+### Phase 5b — sender CTA copy parked for phase 8 polish (deferred 2026-05-28)
+
+The sender-side overlay's primary CTA(s) are intentionally deferred to phase 8 copy polish. Phase 5b ships with a placeholder CTA so the surface is functional but the copy/strategy is not yet locked.
+
+**Why deferred:** the CTA decision is the load-bearing social-loop question for the entire H2H feature. It is too important to lock without (a) seeing the surface live and (b) cross-product research into successful async-result-share loops (Wordle, Words with Friends, Strava, BeReal, Snapchat streaks, Pokémon GO raid invites, etc.). The 2026-05-28 design session explicitly identified this as a psychology question, not a mechanical-design question, and called for the social-loop study to inform it rather than designing in the dark.
+
+**Constraint locked for phase 8:**
+- Social effectiveness is the load-bearing requirement. Simplicity (single CTA) is secondary.
+- Multi-button CTA row is acceptable if effectiveness gains justify it.
+- Bringing the user back into the loop (continue playing, initiate another challenge) is the goal, not minimizing chrome.
+- The × close in the top-right is preserved (inherited from recipient overlay).
+
+**Candidate framings considered, none locked:**
+- **1A — variant-aware single CTA (3 labels by WIN / LOSS_OPEN / LOSS_CLOSED):** mirrors recipient state machine; high familiarity; loses social punch.
+- **1B — single CTA, outcome-agnostic:** simplest; minimal social leverage.
+- **1C — WIN-only CTA, LOSS no CTA:** matches emotional asymmetry; breaks layout invariant (CTA-present-or-absent geometry not designed).
+- **1D — two CTAs, both social, primary + ghost secondary:** `Challenge them back` primary, `Challenge someone else` secondary; leverages warm recipient + captures new-friend intent.
+- **1E — three CTAs, full menu:** social + social + inward; decision paralysis risk.
+- **1F — two CTAs, both outward-social, no inward option:** structural message of "social is the only action."
+- **1G — primary social + secondary inward:** `Challenge them back` primary, `Play another hand` secondary; trades direct "someone else" path for inward-loop retention.
+
+**Phase 5b placeholder CTA:** single button `Play another hand` routing to a fresh single-player deal. Reasoning: lowest-decision option, gives the surface a functional button to validate against, matches today's win-path notification-tap behavior so behavior is not regressed during the cutover.
+
+**Social-loop study (referenced in parallel work):** structured analysis of async-result-share loops in successful and failed products, to inform the phase 8 lock. Out of scope for phase 5b implementation.
+
+---
+
 ### Phase 5a amend3 — spoiler flash fix on transition (2026-05-27)
 
 Production verification of f6f8d05 + amend1 + amend2 surfaced a ~250ms window during the HOLD-to-arc crossfade where the user briefly saw the fully-resolved state (final scores, headline, CTA) before entrance choreography began. Defeated the purpose of the reveal — the user saw the answer before the question.
