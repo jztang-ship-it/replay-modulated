@@ -50,6 +50,7 @@ import { getPlayerUid, getNickname, getSessionId } from "@shared/utils/playerIde
 import { supabase } from "@shared/lib/supabase";
 import { addBigWinMessage } from "@shared/inbox/inbox";
 import { useAchievements } from "@shared/hooks/useAchievements";
+import { serializeResolvedRoster } from "@shared/utils/resolvedRosterSerialization";
 import type { GameAdapter } from "./GameAdapter";
 
 export type GameState =
@@ -58,45 +59,6 @@ export type GameState =
 
 const STARTING_BALANCE = 5000;
 const MIN_BALANCE_FLOOR = 500;
-
-/**
- * Serialize a resolved roster into a JSONB-safe blob mirroring GeneratedCard
- * (shared/types/index.ts:178-186). Written to hand_log.final_roster at
- * logHandToDb time and read back verbatim by the sender-hand endpoint
- * (api/challenge/[id]/sender-hand.ts).
- *
- * Explicit field picker — additions to GeneratedCard should land here
- * intentionally, not implicitly. statLine + achievements are passed through
- * as-is (already JSON-safe per their production producers) so per-card
- * box scores and badge details survive the round-trip.
- */
-function serializeResolvedRoster(roster: any[]): Array<Record<string, any>> {
-  return roster.map((c: any) => ({
-    id: String(c.id ?? ""),
-    basePlayerId: String(c.basePlayerId ?? ""),
-    personKey: String(c.personKey ?? c.basePlayerId ?? ""),
-    cardId: String(c.cardId ?? c.id ?? ""),
-    name: String(c.name ?? ""),
-    team: String(c.team ?? ""),
-    season: String(c.season ?? ""),
-    position: String(c.position ?? ""),
-    photoCode: c.photoCode != null ? String(c.photoCode) : null,
-    salary: Number(c.salary ?? 0),
-    tier: String(c.tier ?? "WHITE"),
-    projectedFp: Number(c.projectedFp ?? 0),
-    slotIndex: Number(c.slotIndex ?? 0),
-    wasHeld: c.wasHeld === true,
-    actualFp: Number(c.actualFp ?? 0),
-    fpDelta: Number(c.fpDelta ?? 0),
-    gameInfo: {
-      date: String(c.gameInfo?.date ?? ""),
-      opponent: String(c.gameInfo?.opponent ?? ""),
-      ...(c.gameInfo?.homeAway != null ? { homeAway: String(c.gameInfo.homeAway) } : {}),
-    },
-    statLine: (c.statLine && typeof c.statLine === "object") ? c.statLine : {},
-    achievements: Array.isArray(c.achievements) ? c.achievements : [],
-  }));
-}
 
 /** The fields the hook actually reads off the adapter. Keeping the
  *  parameter narrowed to a Pick<> means call sites can pass a partial

@@ -26,6 +26,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
+import type { GeneratedCard } from "@shared/types";
 import { track } from "@shared/analytics/analytics";
 import { isRealName } from "@shared/utils/isRealName";
 import { chadTrashTalk, trashTalkBucket, selectChallengeResolution } from "@shared/commentary/chadChallenge";
@@ -40,6 +41,12 @@ export type ComparisonState = ChallengeAttemptState;
 interface Props {
   challengeCtx: ChallengeCtx;
   myScore: number;
+  /** Recipient's resolved roster (post-RESOLVE). Phase 5b commit 2
+   *  (2026-05-28): threaded through to useChallengeAttempt so the
+   *  legacy comparison-sheet path also populates
+   *  challenge_attempts.score_breakdown + user_notifications.payload.
+   *  attempter_roster, parity with the H2HRecipientReveal path. */
+  myRoster: GeneratedCard[];
   myWinTier: string;
   sport: string;
   /** When true the sheet is rendered off-screen (display continues to
@@ -66,7 +73,7 @@ interface Props {
 }
 
 export function ChallengeComparisonScreen({
-  challengeCtx, myScore, myWinTier, sport,
+  challengeCtx, myScore, myRoster, myWinTier, sport,
   collapsed = false,
   onCollapse, onSendItBack, onTryAgain, onResolved,
 }: Props) {
@@ -90,6 +97,7 @@ export function ChallengeComparisonScreen({
     targetScore: challengeCtx.targetScore,
     sport,
     enabled: true,
+    resolvedRoster: myRoster,
   });
   const resolvedRef = useRef(false);
 

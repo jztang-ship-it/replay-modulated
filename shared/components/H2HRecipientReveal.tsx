@@ -115,6 +115,7 @@ function H2HRecipientRevealInner(props: InnerProps) {
     targetScore: challengeCtx.targetScore,
     sport,
     enabled: true,
+    resolvedRoster: myRoster,
   });
 
   // Compose H2HHand objects from the resolved sender data + the

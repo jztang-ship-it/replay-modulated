@@ -3133,6 +3133,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           <ChallengeComparisonScreen
             challengeCtx={challengeCtx}
             myScore={rosterRef.current.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0)}
+            myRoster={rosterRef.current as import("@shared/types/index").GeneratedCard[]}
             myWinTier={winTier ?? "BUST"}
             sport={sportKey}
             collapsed={comparisonCollapsed}

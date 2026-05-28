@@ -15,8 +15,10 @@
 // (isWindowOpen ?? true, etc.) when `attemptResult` stays null.
 
 import { useEffect, useRef, useState } from "react";
+import type { GeneratedCard } from "@shared/types";
 import { getPlayerUid, getNickname } from "@shared/utils/playerIdentity";
 import { hasAttemptedChallenge, markChallengeAttempted } from "@shared/hooks/useChallengeShare";
+import { serializeResolvedRoster } from "@shared/utils/resolvedRosterSerialization";
 import { track } from "@shared/analytics/analytics";
 
 export interface AttemptResult {
@@ -54,6 +56,15 @@ export interface UseChallengeAttemptArgs {
    *  ChallengeComparisonScreen always passes true (POST-on-mount
    *  behavior); phase 5a's H2H wrapper waits for the arc to settle. */
   enabled: boolean;
+  /** Recipient's resolved roster after their hand resolves. Phase 5b
+   *  commit 2 (2026-05-28): when provided, the POST body includes
+   *  score_breakdown = serializeResolvedRoster(resolvedRoster). The
+   *  server writes that blob to both challenge_attempts.score_breakdown
+   *  and user_notifications.payload.attempter_roster (see
+   *  api/challenge/[id]/attempt.ts). Optional so the hook stays usable
+   *  in pre-resolve call paths; in those cases score_breakdown is
+   *  omitted and the server's existing `?? null` default applies. */
+  resolvedRoster?: GeneratedCard[];
 }
 
 export interface UseChallengeAttemptReturn {
@@ -84,7 +95,7 @@ export interface UseChallengeAttemptReturn {
 }
 
 export function useChallengeAttempt(args: UseChallengeAttemptArgs): UseChallengeAttemptReturn {
-  const { challengeId, myScore, targetScore, sport, enabled } = args;
+  const { challengeId, myScore, targetScore, sport, enabled, resolvedRoster } = args;
 
   const [attemptResult, setAttemptResult] = useState<AttemptResult | null>(null);
   const [error, setError] = useState<Error | null>(null);
@@ -148,6 +159,12 @@ export function useChallengeAttempt(args: UseChallengeAttemptArgs): UseChallenge
         user_id: isAuthUuid ? uid : undefined,
         anon_uid: isAuthUuid ? undefined : uid,
         user_name: name,
+        // Phase 5b commit 2 (2026-05-28): when a resolved roster is in
+        // scope at the call site, ship it as score_breakdown. Server
+        // persists to challenge_attempts.score_breakdown AND
+        // user_notifications.payload.attempter_roster so the sender-side
+        // overlay (phase 5b commits 3-4) can render the attempter's hand.
+        score_breakdown: resolvedRoster ? serializeResolvedRoster(resolvedRoster) : undefined,
       }),
     })
       .then(r => r.json())

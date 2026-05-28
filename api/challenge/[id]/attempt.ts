@@ -275,6 +275,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             attempter_score: newScore,
             target_score: targetFp,
             is_winner: newIsWinner,
+            // Phase 5b commit 2 (2026-05-28): attempter_roster is the
+            // same GeneratedCard[]-shaped blob just written to
+            // challenge_attempts.score_breakdown (line 134). Powers the
+            // sender-side overlay (phase 5b commits 3-4), which reads
+            // its own notification rows via GET /api/user/notifications
+            // and renders the attempter's resolved hand. Null on legacy
+            // notifications (pre-cutover) — sender wrapper falls back
+            // to text-only summary per the lock's legacy-fallback rule.
+            attempter_roster: score_breakdown ?? null,
           },
         });
       if (notifErr) console.error("[attempt] notification insert failed (non-fatal):", notifErr);
