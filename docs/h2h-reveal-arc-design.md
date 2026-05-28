@@ -423,6 +423,35 @@ The sender-side overlay's primary CTA(s) are intentionally deferred to phase 8 c
 
 ---
 
+### Phase 5b — sender-side requires sign-in (locked 2026-05-28)
+
+Issuing a challenge requires an authenticated user. Anonymous users do not see the share/challenge surface at all.
+
+**Rationale:**
+- Anonymous senders cannot receive notifications. The `user_notifications` table keys on `user_id`; without one, the sender-side reveal flow built in phase 5b commits 1-4 has no delivery target. An anonymous-sender challenge would fire into the void.
+- Anonymous identity (`anon_uid` cookies) does not survive device changes, cache clears, or reinstalls. The sender loses access to their own challenges. This breaks the "see who attempted my challenge" loop that is the centerpiece of the feature.
+- Anonymous challenges add noise to the challenge graph without contributing to the loop the feature is designed around.
+
+**Server-side state (current, retained):**
+- `api/challenge/create.ts:9-10` calls `verifyAuth(req)` and returns 401 if no valid session. `created_by` is set to `user.id` on line 28 — no nullable fallback, no anonymous path. This is correct and aligned with the lock.
+
+**Client-side state (current, requires work):**
+- `useChallengeShare.ts:83-86` attempts the POST without an auth header for anonymous users. The 401 surfaces as a generic "Create failed" error via `useChallengeShare.ts:102`.
+- The share surface (Challenge a Friend button + surrounding prompt) is not pre-gated on session presence. Anonymous users can land on it (e.g., MVP win on hand 1 if they dismiss the auth-prompt modal at `GameView.tsx:854-870`), tap the button, and see a generic error.
+
+**Required client-side change (separate commit, not phase 5b commit 4):**
+- The share/challenge surface must not render for anonymous users. Either hide the Challenge a Friend button entirely or replace it with a sign-in CTA that opens the existing auth-prompt modal.
+- The existing auth-prompt triggers at `GameView.tsx:854-870` (MVP/LEGEND wins, hand-count ≥ 5) already convert most anonymous users before they reach the share surface, but the edge case (anonymous user who dismissed the modal) currently produces broken UX.
+- Implementation deferred to a focused commit after phase 5b commit 4 ships. Tracked here so it isn't lost.
+
+**What this locks out:**
+- No anonymous-sender path is to be added to the challenge feature. If a future product decision wants to revisit this, it requires explicit reversal of this lock (and a redesign of the sender-notification delivery model, since `user_notifications` cannot serve anonymous users without changes).
+
+**Connection to phase 8 (parked Q1 — sender CTA):**
+- The phase 8 social-loop study should treat sign-in as a precondition on the sender side. CTA designs that assume an authed sender are correct; CTA designs that try to also serve anonymous senders are not in scope.
+
+---
+
 ### Phase 5a amend3 — spoiler flash fix on transition (2026-05-27)
 
 Production verification of f6f8d05 + amend1 + amend2 surfaced a ~250ms window during the HOLD-to-arc crossfade where the user briefly saw the fully-resolved state (final scores, headline, CTA) before entrance choreography began. Defeated the purpose of the reveal — the user saw the answer before the question.
