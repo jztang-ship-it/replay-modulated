@@ -135,6 +135,9 @@ const ChallengePostResultBar = lazy(() =>
 const H2HRecipientReveal = lazy(() =>
   import("@shared/components/H2HRecipientReveal").then(m => ({ default: m.H2HRecipientReveal }))
 );
+const H2HSenderReveal = lazy(() =>
+  import("@shared/components/H2HSenderReveal").then(m => ({ default: m.H2HSenderReveal }))
+);
 // (ChallengeDebugPanel is mounted at the basketball app-shell level so
 // it surfaces on every route including the chooser landing before this
 // component mounts. Imported there, not here.)
@@ -499,6 +502,13 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // entirely (the RLS policy would return nothing anyway).
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifRefreshNonce, setNotifRefreshNonce] = useState(0);
+  // Phase 5b commit 3 (2026-05-28): when set, the sender-side H2H
+  // surface mounts for this notification. Replaces today's win-path
+  // (set challengeBackCtx + deal-fresh) AND loss-path (dismiss-only)
+  // routing in the notification tap handler — both paths now mount the
+  // wrapper. The placeholder CTA's challengeBackCtx-setting (preserved
+  // for is_winner=true only per Strategy A) moves into the CTA handler.
+  const [senderRevealNotification, setSenderRevealNotification] = useState<ChallengeNotification | null>(null);
   const {
     notifications: challengeNotifications,
     unreadCount: challengeUnreadCount,
@@ -2140,6 +2150,35 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     setComparisonCollapsed(true);
   };
 
+  // Phase 5b commit 3 (2026-05-28): sender-side overlay CTA handler.
+  // Wired to H2HSenderReveal's placeholder "Play another hand" button
+  // AND to SenderLegacyFallbackCard's CTA when the modern path falls
+  // back. Strategy A (commit 3 investigation report H): preserves
+  // today's is_winner=true tap behavior (setChallengeBackCtx +
+  // handleButtonClick → fresh deal + auto-share as back-challenge)
+  // exactly. On is_winner=false, the loss-path CTA is a clean fresh
+  // deal with no rivalry-back framing — placeholder behavior that
+  // phase 8's social-loop study replaces without unwinding anything.
+  const handleSenderPlayAnother = () => {
+    const n = senderRevealNotification;
+    setSenderRevealNotification(null);
+    if (!n) {
+      handleButtonClick();
+      return;
+    }
+    const p = n.payload ?? {};
+    if (Boolean(p.is_winner) && setChallengeBackCtx) {
+      setChallengeBackCtx({
+        challengerUserId: typeof p.attempter_user_id === "string" ? p.attempter_user_id : null,
+        challengerName: typeof p.attempter_name === "string" ? p.attempter_name : null,
+        originatingChallengeId: typeof p.challenge_id === "string" ? p.challenge_id : "",
+      });
+    }
+    // challengeCtx is null in normal play; IDLE branch deals from
+    // today's slate. Same call shape today's win-path tap used.
+    handleButtonClick();
+  };
+
   // Chad welcome on first transition from challenge play to normal play.
   // Fires once per browser per sport when:
   //   1. The user has been in challenge mode (challengeCtx was set this
@@ -2978,35 +3017,21 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             }}
             onTapNotification={(n: ChallengeNotification) => {
               if (n.type !== "challenge_attempted") return;
-              const p = n.payload ?? {};
-              const isWinner = Boolean(p.is_winner);
-              // [NotifCopy:v2] Tap routing splits on isWinner:
-              //  - WON  (attempter beat your target): set rivalry-back ctx
-              //    targeting attempter, deal a fresh normal hand. Share
-              //    auto-fires at RESULTS as a back-challenge.
-              //  - LOST (attempter missed): no Send-It-Back routing — they
-              //    haven't beaten you yet, so the back-challenge framing
-              //    is nonsense. Just close the panel and mark read. Future
-              //    work: open a stats/attempt detail view.
+              const isWinner = Boolean(n.payload?.is_winner);
+              // Phase 5b commit 3 (2026-05-28): both paths now mount the
+              // sender-side overlay (H2HSenderReveal). The win-path's
+              // setChallengeBackCtx + handleButtonClick block moved into
+              // handleSenderPlayAnother below — fires only when the
+              // user taps the placeholder CTA, AND only when
+              // is_winner=true (Strategy A: preserve today's win-path
+              // behavior exactly; loss-path CTA is a clean new placeholder
+              // with no rivalry-back baked in, leaving the social-loop
+              // decision to phase 8 per the parked Q1 lock).
               setShowNotifications(false);
               void markNotificationsRead();
               setNotifRefreshNonce(x => x + 1);
               track("challenges", "notification_tap", { type: n.type, actionable: isWinner });
-              if (!isWinner) {
-                // Loss path: dismiss only, no deal trigger.
-                return;
-              }
-              if (setChallengeBackCtx) {
-                setChallengeBackCtx({
-                  challengerUserId: typeof p.attempter_user_id === "string" ? p.attempter_user_id : null,
-                  challengerName: typeof p.attempter_name === "string" ? p.attempter_name : null,
-                  originatingChallengeId: typeof p.challenge_id === "string" ? p.challenge_id : "",
-                });
-              }
-              // Trigger deal via the standard action button. challengeCtx
-              // is already null (we're in normal play); the IDLE branch
-              // deals from today's slate.
-              handleButtonClick();
+              setSenderRevealNotification(n);
             }}
           />
         )}
@@ -3172,6 +3197,24 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             onTryAgain={handleTryAgain}
             onPlayOwnHand={handlePlayOwnHand}
             onDismiss={handlePlayOwnHand}
+          />
+        </Suspense>
+      )}
+
+      {/* H2H sender-side overlay — phase 5b commit 3 (2026-05-28).
+          Mounted when the user taps a `challenge_attempted` notification.
+          The wrapper handles its own loading + legacy fallback states
+          internally (fetches its own sender-hand, falls back to
+          SenderLegacyFallbackCard on miss). Adapter renderer required
+          — sports without H2H wired leave h2hOverlayRenderer undefined
+          and the wrapper doesn't mount. */}
+      {senderRevealNotification && adapter.h2hOverlayRenderer && (
+        <Suspense fallback={null}>
+          <H2HSenderReveal
+            payload={senderRevealNotification.payload}
+            renderCard={adapter.h2hOverlayRenderer}
+            onPlayAnother={handleSenderPlayAnother}
+            onDismiss={() => setSenderRevealNotification(null)}
           />
         </Suspense>
       )}

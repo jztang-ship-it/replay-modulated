@@ -110,6 +110,16 @@ export interface H2HResultsOverlayProps {
    *  same prop on H2HRevealScreen's HandStrip. */
   senderRevealOrder?: H2HCard[];
   recipientRevealOrder?: H2HCard[];
+  /** Phase 5b commit 3 (2026-05-28): tactical escape hatch for the
+   *  sender-side wrapper. When supplied, replaces the state-derived
+   *  primary CTA wholesale — `state` still drives headline color, copy
+   *  bucket, etc. Sender-side surface needs ONE uniform "Play another
+   *  hand" CTA regardless of state per the locked placeholder; the
+   *  recipient surface keeps its three state-driven CTAs unchanged.
+   *  Surfaced for next session: phase 8 should refactor CTA config to a
+   *  regular prop and lift the state-derived logic into the recipient
+   *  wrapper, avoiding the override pattern compounding. */
+  primaryCtaOverride?: { label: string; handler?: () => void };
 }
 
 /** Cross-fade duration. */
@@ -470,6 +480,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
     initialBottomFlippedCardId = null,
     senderRevealOrder,
     recipientRevealOrder,
+    primaryCtaOverride,
   } = props;
 
   // Per-strip flip (phase 4 fix 3, 2026-05-27). Each strip has its OWN
@@ -524,8 +535,13 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
   const recipientLeading = recipient.totalFp > sender.totalFp;
   const senderLeading = sender.totalFp > recipient.totalFp;
 
-  // Primary CTA per state.
-  const primaryCta = (() => {
+  // Primary CTA per state. Phase 5b commit 3 (2026-05-28): when the
+  // caller passes primaryCtaOverride, it replaces the state-derived
+  // pick wholesale — `state` still drives headline color/copy. The
+  // sender-side wrapper uses this for the uniform "Play another hand"
+  // placeholder; recipient-side callers leave the override undefined
+  // and keep today's three state-driven CTAs.
+  const primaryCta = primaryCtaOverride ?? (() => {
     if (state === "WIN") return { label: "Send It Back", handler: onSendItBack };
     if (state === "LOSS_OPEN") return { label: "Try Again", handler: onTryAgain };
     return { label: "Play your own hand", handler: onPlayOwnHand };
