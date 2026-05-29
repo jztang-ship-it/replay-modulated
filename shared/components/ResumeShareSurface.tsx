@@ -81,6 +81,16 @@ export function ResumeShareSurface() {
   // Mount-time read of sessionStorage. Re-run whenever isAnonymous flips
   // so a user who authenticates mid-session (e.g., right after the
   // redirect) sees the surface activate.
+  //
+  // Phase 5b post-piece-2c fix (2026-05-30): do NOT clear the payload
+  // while isAnonymous is true. The initial render ALWAYS sees
+  // isAnonymous = true (AuthProvider's default before getSession /
+  // INITIAL_SESSION resolves). The prior code eagerly called
+  // clearPending() in this branch, wiping the payload before the auth
+  // state had a chance to flip — every post-redirect run lost the
+  // payload it was supposed to restore. Staleness is handled inside
+  // readPending() via PENDING_SHARE_TTL_MS (15min) and by
+  // sessionStorage's tab-scoped lifetime; no eager clear is needed.
   useEffect(() => {
     const payload = readPending();
     if (!payload) {
@@ -88,10 +98,9 @@ export function ResumeShareSurface() {
       return;
     }
     if (isAnonymous) {
-      // Auth never completed (redirect race, user cancelled OAuth, etc.).
-      // Clear the stale entry and stay silent — the user gets no error,
-      // no surfaced state. They land on whatever screen App.tsx renders.
-      clearPending();
+      // Auth has not yet resolved (or the user genuinely cancelled).
+      // Leave the payload in place — the effect re-runs on
+      // isAnonymous flip; TTL handles abandonment.
       setPending(null);
       return;
     }

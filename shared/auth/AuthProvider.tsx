@@ -42,6 +42,14 @@ export interface AuthContextValue {
   /** Phase 5b piece 1 — U4-g trigger. RegisterModal's "Forgot password?"
    *  link calls this. Increments passwordResetRequestTick. */
   requestPasswordReset: () => void;
+  /** Phase 5b post-piece-2c (2026-05-30): post-OAuth-redirect error
+   *  surfaced from the URL. Supabase returns identity-collision and
+   *  similar callback failures as `?error=...&error_description=...`.
+   *  Without surfacing it, users land back on the home screen silently
+   *  signed-out and have no way to know why. RegisterModal can read this
+   *  and render the message inline if the user re-opens the modal.
+   *  Cleared after read (one-shot). */
+  oauthError: string | null;
 }
 
 function getLocalUid(): string {
@@ -94,6 +102,7 @@ export const AuthContext = createContext<AuthContextValue>({
   resetPasswordForEmail: async () => ({ error: null }),
   passwordResetRequestTick: 0,
   requestPasswordReset: () => { /* no-op default */ },
+  oauthError: null,
 });
 
 /** Phase 5b piece 1 — Item B helper (2026-05-28, doc lock edc58d9).
@@ -128,6 +137,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // requestPasswordReset() which increments this. PasswordResetSurface's
   // useEffect detects the change and transitions to its email-entry state.
   const [passwordResetRequestTick, setPasswordResetRequestTick] = useState(0);
+  // Phase 5b post-piece-2c (2026-05-30): post-OAuth error surfaced from URL.
+  // Supabase callback failures (e.g., identity collision, provider rejection)
+  // return as `?error=...&error_description=...`. Parsed once on mount and
+  // the URL params stripped so a refresh doesn't re-surface them.
+  const [oauthError, setOauthError] = useState<string | null>(null);
   const localUid = useRef(getLocalUid());
   // Once-only promotion guard so the B5 write doesn't fire on every
   // re-emission of SIGNED_IN events (Supabase emits these on token refresh).
@@ -141,6 +155,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
     let subscription: { unsubscribe: () => void } | null = null;
 
+    // Phase 5b post-piece-2c (2026-05-30) — Bug A supplementary: scan URL
+    // for OAuth-callback errors (Supabase returns identity-collision and
+    // similar as `?error=...&error_description=...`). One-shot read; the
+    // params are stripped so a refresh doesn't re-surface them.
+    try {
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has("error")) {
+          const msg = params.get("error_description") || params.get("error") || "OAuth failed";
+          setOauthError(msg);
+          console.warn("[auth] OAuth callback returned error:", msg);
+          const url = new URL(window.location.href);
+          url.searchParams.delete("error");
+          url.searchParams.delete("error_description");
+          url.searchParams.delete("error_code");
+          window.history.replaceState({}, "", url.toString());
+        }
+      }
+    } catch (e) {
+      console.warn("[auth] URL error scan failed:", e);
+    }
+
+    // Helper: set user + upsert profile + fetch FTUE flag (non-anon only).
+    // Shared between the INITIAL_SESSION existing-session path and the
+    // signInAnonymously success path.
+    const onSessionEstablished = (sessionUser: User) => {
+      if (!mounted) return;
+      setUser(sessionUser);
+      try {
+        supabase.from("player_profiles").upsert({
+          id: sessionUser.id,
+          nickname: getNickname(),
+          is_anonymous: sessionUser.is_anonymous ?? true,
+        }, { onConflict: "id" }).then(({ error }) => {
+          if (error) console.warn("[auth] Failed to upsert profile:", error.message);
+        });
+      } catch (e) { console.warn("[auth] profile upsert threw:", e); }
+      // Phase 5b piece 1 — Item B (2026-05-28, doc lock edc58d9):
+      // populate ftueCompleted from the profile for signed-in users on
+      // initial page-load. Anonymous users leave ftueCompleted as null —
+      // useFTUE falls back to localStorage in that case per B3/B4.
+      if (!sessionUser.is_anonymous) {
+        try {
+          supabase.from("player_profiles")
+            .select("ftue_completed")
+            .eq("id", sessionUser.id)
+            .maybeSingle()
+            .then(({ data, error }) => {
+              if (error) console.warn("[auth] FTUE flag fetch failed:", error.message);
+              else if (mounted) setFtueCompleted((data?.ftue_completed as boolean | null | undefined) ?? null);
+            });
+        } catch (e) { console.warn("[auth] FTUE flag fetch threw:", e); }
+      }
+    };
+
     // Every Supabase-touching path is wrapped. Auth is never allowed to blank
     // the screen: the app must render with the localStorage fallback UID if
     // anything here fails.
@@ -148,6 +217,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const sub = supabase.auth.onAuthStateChange((event, session) => {
         try {
           if (mounted) setUser(session?.user ?? null);
+
+          // Phase 5b post-piece-2c (2026-05-30) — Bug A fix: bootstrap is
+          // gated on INITIAL_SESSION instead of a racing IIFE. The prior
+          // code called getSession() then signInAnonymously() in an IIFE;
+          // when the user returned from an OAuth redirect, getSession()
+          // could return null (SDK hadn't finished URL-hash exchange yet)
+          // and signInAnonymously() then overwrote the in-flight Google
+          // session. INITIAL_SESSION fires once the SDK has completed URL
+          // session detection — by then any redirect session is already
+          // resolved, so the anon-fallback decision is safe.
+          if (event === "INITIAL_SESSION") {
+            console.info("[auth] INITIAL_SESSION →", session?.user
+              ? { id: session.user.id, is_anonymous: session.user.is_anonymous, email: session.user.email || null }
+              : "no session");
+            if (session?.user) {
+              onSessionEstablished(session.user);
+            } else {
+              try {
+                supabase.auth.signInAnonymously().then(({ data, error }) => {
+                  if (error) {
+                    console.error("[auth] signInAnonymously FAILED — user will run on localStorage UID only (no Supabase row):", error);
+                    return;
+                  }
+                  console.info("[auth] signInAnonymously OK →", data.user ? { id: data.user.id, is_anonymous: data.user.is_anonymous } : "no user returned");
+                  if (data.user) onSessionEstablished(data.user);
+                }).catch((e) => {
+                  console.error("[auth] signInAnonymously threw — falling back to local UID:", e);
+                });
+              } catch (e) {
+                console.error("[auth] signInAnonymously failed to start:", e);
+              }
+            }
+          }
+
           if (event === "SIGNED_IN" && session?.user && !session.user.is_anonymous) {
             const provider = session.user.app_metadata?.provider ?? "unknown";
             track("auth", "signin_success", { provider });
@@ -187,65 +290,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       console.warn("[auth] onAuthStateChange subscribe failed:", e);
     }
-
-    (async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.info("[auth] getSession →", session?.user
-          ? { id: session.user.id, is_anonymous: session.user.is_anonymous, email: session.user.email || null }
-          : "no session");
-        if (session?.user) {
-          if (mounted) setUser(session.user);
-          try {
-            supabase.from("player_profiles").upsert({
-              id: session.user.id,
-              nickname: getNickname(),
-              is_anonymous: session.user.is_anonymous ?? true,
-            }, { onConflict: "id" }).then(({ error }) => {
-              if (error) console.warn("[auth] Failed to upsert profile:", error.message);
-            });
-          } catch (e) { console.warn("[auth] profile upsert threw:", e); }
-          // Phase 5b piece 1 — Item B (2026-05-28, doc lock edc58d9):
-          // populate ftueCompleted from the profile for signed-in users on
-          // initial page-load so useFTUE has the right gate immediately.
-          // Anonymous users leave ftueCompleted as null — useFTUE falls
-          // back to localStorage in that case per B3/B4.
-          if (!session.user.is_anonymous) {
-            try {
-              supabase.from("player_profiles")
-                .select("ftue_completed")
-                .eq("id", session.user.id)
-                .maybeSingle()
-                .then(({ data, error }) => {
-                  if (error) console.warn("[auth] FTUE flag fetch failed:", error.message);
-                  else if (mounted) setFtueCompleted((data?.ftue_completed as boolean | null | undefined) ?? null);
-                });
-            } catch (e) { console.warn("[auth] FTUE flag fetch threw:", e); }
-          }
-          return;
-        }
-        const { data, error } = await supabase.auth.signInAnonymously();
-        if (error) {
-          console.error("[auth] signInAnonymously FAILED — user will run on localStorage UID only (no Supabase row):", error);
-          return;
-        }
-        console.info("[auth] signInAnonymously OK →", data.user ? { id: data.user.id, is_anonymous: data.user.is_anonymous } : "no user returned");
-        if (mounted && data.user) {
-          setUser(data.user);
-          try {
-            supabase.from("player_profiles").upsert({
-              id: data.user.id,
-              nickname: getNickname(),
-              is_anonymous: data.user.is_anonymous ?? true,
-            }, { onConflict: "id" }).then(({ error }) => {
-              if (error) console.warn("[auth] Failed to upsert profile:", error.message);
-            });
-          } catch (e) { console.warn("[auth] profile upsert threw:", e); }
-        }
-      } catch (e) {
-        console.error("[auth] session bootstrap threw — falling back to local UID:", e);
-      }
-    })();
 
     return () => {
       mounted = false;
@@ -383,7 +427,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, uid, isAuthenticated, isAnonymous, ftueCompleted, signUp, linkGoogle, signIn, signInGoogle, signOut, resetPasswordForEmail, passwordResetRequestTick, requestPasswordReset }}>
+    <AuthContext.Provider value={{ user, uid, isAuthenticated, isAnonymous, ftueCompleted, signUp, linkGoogle, signIn, signInGoogle, signOut, resetPasswordForEmail, passwordResetRequestTick, requestPasswordReset, oauthError }}>
       {children}
     </AuthContext.Provider>
   );

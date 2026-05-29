@@ -94,14 +94,31 @@ describe("ResumeShareSurface mount behavior", () => {
     expect(container.querySelector("[role='dialog']")).toBeNull();
   });
 
-  it("renders null when payload is present but user is still anonymous (auth never completed)", async () => {
+  // Phase 5b post-piece-2c fix (2026-05-30, Bug B): the prior eager
+  // clearPending() on the initial isAnonymous=true mount destroyed the
+  // payload before auth had a chance to resolve. New behavior: render
+  // null but PRESERVE the payload — the effect re-runs on isAnonymous
+  // flip and surfaces the resume modal then.
+  it("preserves payload while isAnonymous is true (auth not yet resolved)", async () => {
     writePendingChallengeShare(samplePayload());
     render(withAuth({ isAnonymous: true }, <ResumeShareSurface />));
-    // Surface clears sessionStorage and renders null on mount.
-    await waitFor(() => {
-      expect(sessionStorage.getItem(PENDING_SHARE_KEY)).toBeNull();
-    });
     expect(screen.queryByRole("button", { name: /send challenge/i })).toBeNull();
+    // Payload is NOT cleared — TTL inside readPending() + sessionStorage's
+    // tab-scoped lifetime handle staleness; the surface does not.
+    expect(sessionStorage.getItem(PENDING_SHARE_KEY)).toBeTruthy();
+  });
+
+  it("surfaces the resume modal when isAnonymous flips false (post-redirect auth resolves)", async () => {
+    writePendingChallengeShare(samplePayload());
+    // Initial mount: anonymous (auth not yet resolved post-redirect).
+    const { rerender } = render(withAuth({ isAnonymous: true }, <ResumeShareSurface />));
+    expect(screen.queryByRole("button", { name: /send challenge/i })).toBeNull();
+    // Auth resolves; re-render with non-anon context — the effect re-runs
+    // on isAnonymous flip, finds the still-present payload, surfaces it.
+    rerender(withAuth({ isAnonymous: false, user: signedInUser }, <ResumeShareSurface />));
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: /send challenge/i })).toBeTruthy();
+    });
   });
 
   it("renders the resume modal when signed-in + valid payload", () => {
