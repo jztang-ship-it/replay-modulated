@@ -423,6 +423,75 @@ The sender-side overlay's primary CTA(s) are intentionally deferred to phase 8 c
 
 ---
 
+### Phase 5b piece 1 — U4 second amendment + password reset (locked 2026-05-28, supersedes U4-b and U4-d of the prior U4 amendment; adds U4-g for recovery)
+
+**Revision rationale:** the prior U4 amendment (locked at `1ad3797`) intended in-place reveal and visual continuity across the auth seam. The implementation at `216bf5f` did not fully honor U4-b — post-auth swaps the body content (auth section disappears, name + Send appears) rather than appending the name section below a now-confirmed auth section. The post-auth heading also kept the pre-auth copy verbatim, which reads stale once auth is done.
+
+A third issue surfaced in the same verification: email auth has no recovery path. Supabase prevents duplicate accounts server-side ("User already registered" / "Invalid login credentials" errors), so the original framing of "accidental duplicate creation" was wrong. The actual gap is users with forgotten passwords have no path forward — they hit the error and abandon.
+
+**Locked rules (these replace U4-b and U4-d of the prior amendment; U4-a, U4-c, U4-e, U4-f remain in force):**
+
+**U4-b (revised) — Post-auth reveals BELOW the auth section, not in place of it.** When auth completes (Path α email in-modal, Path β Google redirect-and-return):
+- The auth section (Google button, email/password fields, "or use email" divider) transitions to a confirmation state. Minimum: a small "Signed in as: <user identifier>" line replaces the input fields. Visual chrome of the auth section's container stays.
+- A name input section APPEARS BELOW the now-confirmed auth section, within the same modal frame. Modal grows downward to accommodate.
+- The user perceives the modal having added content, not having swapped content.
+
+This binding is stronger than original U4-b's "stays mounted" language. Swap-style implementation violates it; append-style implementation honors it.
+
+**U4-d (revised) — Heading copy transitions post-auth.**
+- **Pre-auth heading (challenge context):** "Sign up/in to send to your friend" (unchanged from prior U4-d).
+- **Post-auth heading (challenge context):** "Add your name to send"
+- **Subheading:** pre-auth keeps "Your friends need a way to find your challenge." Post-auth subheading either removed or replaced with brief continuation; implementation can pick.
+- **Email submit button:** "Sign up with email" / "Sign in with email" per mode (unchanged).
+- **Continue button (post-auth):** "Send challenge" (unchanged).
+- **Toggle link, dismiss link:** unchanged.
+
+Chrome (modal frame, dismiss affordance, font/color/spacing) stays continuous across the heading swap. The only thing changing is heading text and the auth-section-becomes-confirmation transition from U4-b.
+
+**U4-g (new) — Password recovery surface.** Email auth users with forgotten passwords need a path forward. Lock:
+
+- **AuthContext exposes `resetPasswordForEmail(email)` method** wrapping Supabase's same-named call.
+- **"Forgot password?" link** appears in RegisterModal when in sign-in mode (visible regardless of context — normal AND challenge). Tapping mounts a recovery surface.
+- **Recovery surface flow:**
+  1. User taps "Forgot password?" → recovery surface shows email field + Send button.
+  2. User enters email → tap Send → call `resetPasswordForEmail` → surface transitions to confirmation ("Check your email").
+  3. User clicks email link → lands at the configured redirect URL on the app with a recovery session.
+  4. App detects recovery session (Supabase emits `PASSWORD_RECOVERY` auth event) → mounts a new-password form.
+  5. User enters new password → `supabase.auth.updateUser({ password })` → password updated → user is signed in with the new password.
+- **Recovery surface is a separate component** (`PasswordResetSurface.tsx`), mounted at App.tsx level analog to `ResumeShareSurface`. Visual chrome matches RegisterModal for continuity.
+
+**User-task dependencies (Supabase dashboard, not in repo):**
+- Enable "Reset Password" email template under Auth → Email Templates.
+- Add redirect URL allowlist entries under Auth → URL Configuration: `https://replayifs.com/**` plus any preview/local URLs.
+- Without these dashboard settings, `resetPasswordForEmail` will either fail silently or send unstyled emails to non-allowlisted URLs. Implementation commit ships regardless of dashboard state; recovery flow only works end-to-end once dashboard is configured.
+
+**Framing correction for Issue 3:**
+- Supabase prevents duplicate-account creation server-side. The risk this lock addresses is NOT duplicate-prevention; it IS recovery for forgotten-password users.
+- The current "User already registered" error and "Invalid login credentials" error are kept; recovery is additive, not replacing existing error handling.
+
+**What this locks out:**
+- No swap-style post-auth rendering — append-style only.
+- No keeping pre-auth heading post-auth.
+- No leaving users stranded on auth errors — recovery path required.
+
+**What this preserves:**
+- U4-a (name field hidden pre-auth).
+- U4-c (visual continuity, ResumeShareSurface as controller).
+- U4-e (Continue gating).
+- U4-f (dismiss semantics).
+- All other Item B / R1-R5 / U1-U8 rules.
+
+**Implementation commit (separate, follows this doc lock):**
+- Rewrite RegisterModal post-auth render: auth section transitions to confirmation state, name section appears below.
+- Update heading copy per U4-d (revised).
+- Expose `resetPasswordForEmail` on AuthContext.
+- Add "Forgot password?" link in RegisterModal sign-in mode.
+- Build PasswordResetSurface component (email entry + confirmation state + recovery-landing new-password form).
+- Mount PasswordResetSurface at App.tsx level (analog of ResumeShareSurface).
+- Tests for all three fix surfaces.
+
+---
+
 ### Phase 5b piece 1 — FTUE bypass for signed-in users (locked 2026-05-28, Item B)
 
 **Rationale:** live verification of piece 1's auth flow surfaced that the FTUE (First-Time User Experience) re-fires for signed-in users on fresh browsers, after local-storage clears, or on new devices. Today the FTUE-completion flag lives in local storage only; it doesn't consult auth state. This produces a bad experience for the most engaged users — those who took the trouble to sign up — because their FTUE state doesn't follow them.
