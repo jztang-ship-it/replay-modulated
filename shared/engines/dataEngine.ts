@@ -46,19 +46,50 @@ export function configurePerSeason(cfg: { seasonsBaseUrl: string }): void {
 }
 
 /**
+ * Normalize a season identifier to the 4-digit directory-key form used by
+ * the per-season data files (e.g., `seasons/2425/players.json`).
+ *
+ * Accepts:
+ *   - "2425"           → "2425" (already short form, idempotent)
+ *   - "2024-25"        → "2425" (label form, hyphenated)
+ *   - "1999-00"        → "9900" (Y2K crossover)
+ *   - "1999-2000"      → "9900" (4-digit second part)
+ *   - anything else    → returned unchanged (pass-through for safety)
+ *
+ * Why: challenge records and some adapter paths historically stored the
+ * label form ("2024-25") while the data files live under the directory
+ * key ("2425"). Recipients landing on a challenge with a label-form
+ * season would 404 on /basketball/data/seasons/2024-25/players.json.
+ * Normalizing at the boundary handles legacy challenges AND any future
+ * accidental drift.
+ */
+export function normalizeSeasonKey(input: string): string {
+  if (!input) return input;
+  if (/^\d{4}$/.test(input)) return input;
+  const m = input.match(/^(\d{4})-(\d{2,4})$/);
+  if (!m) return input;
+  return m[1].slice(-2) + m[2].slice(-2);
+}
+
+/**
  * Pin the active season for per-season-mode loads. Idempotent — calling
  * with the same key is a no-op. Calling with a different key invalidates
  * the cache so the next ensureLoaded() pulls the new season's files.
+ *
+ * The input is normalized via normalizeSeasonKey so label-form values
+ * ("2024-25") map to the directory-key form ("2425") used by the static
+ * data files.
  */
 export function setActiveSeason(key: string): void {
-  if (key === activeSeasonKey) return;
-  activeSeasonKey = key;
+  const normalized = normalizeSeasonKey(key);
+  if (normalized === activeSeasonKey) return;
+  activeSeasonKey = normalized;
   invalidateCache();
   // Notify subscribers (GameView) so they can re-run ensureLoaded.
   // Without this, the FTUE→reel transition swaps the season key, blanks
   // the cache, but leaves dataReady=true — the next deal throws.
   if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("replaymod:active-season-change", { detail: { key } }));
+    window.dispatchEvent(new CustomEvent("replaymod:active-season-change", { detail: { key: normalized } }));
   }
 }
 
