@@ -1,5 +1,5 @@
 // shared/components/ChallengeSharePrompt.tsx
-import { useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import type { GeneratedCard } from "@shared/types/index";
 import type { WinTierMap } from "@shared/utils/payoutLogic";
 import type { TriggerResult } from "@shared/utils/triggerEvaluation";
@@ -9,6 +9,7 @@ import { isRealName } from "@shared/utils/isRealName";
 import { track } from "@shared/analytics/analytics";
 import { selectChallengeInitiation } from "@shared/commentary/chadChallenge";
 import { NameCaptureModal, type NameCaptureMode } from "@shared/components/NameCaptureModal";
+import { AuthContext } from "@shared/auth/AuthProvider";
 
 interface Props {
   sport: string;
@@ -44,13 +45,28 @@ interface Props {
    *  legacy fallback). */
   handId?: string;
   onDismiss?: () => void;
+  /** Phase 5b piece 1 (2026-05-28, doc lock 3da7f02): R2 wiring. Anon
+   *  user taps Challenge a Friend → name overlay opens in anon mode →
+   *  Sign up CTA fires this callback. Caller opens the existing auth
+   *  surface (RegisterModal at GameView). */
+  onRequestSignUp?: () => void;
+  /** R2 wiring (companion to onRequestSignUp). Anon user's Sign in CTA
+   *  fires this. Caller opens RegisterModal in signInMode. */
+  onRequestSignIn?: () => void;
 }
 
 export function ChallengeSharePrompt({
   sport, season, totalFp, winTier, roster, initialRoster,
   badges, winTiersMap, serializeRoster, triggerResult, shareHeadline,
   rivalryTargetName, handId, onDismiss,
+  onRequestSignUp, onRequestSignIn,
 }: Props) {
+  // Phase 5b piece 1: isAnonymous drives R2 tap-time gating. Anonymous
+  // users see the share surface (R1) but the name overlay opens in anon
+  // mode (no input pre-auth). useContext rather than the useAuth hook
+  // export so this component doesn't have to chase the consumer hook's
+  // module path through the AuthProvider boundary.
+  const { isAnonymous } = useContext(AuthContext);
   const [copied, setCopied] = useState(false);
   const { isCreating, challengeId, error, createChallenge, shareChallenge } = useChallengeShare(sport);
 
@@ -111,6 +127,16 @@ export function ChallengeSharePrompt({
   const [storedName, setStoredName] = useState<string | null>(null);
 
   function onCtaTap() {
+    // Phase 5b piece 1 R2: anon users hit the tap-time gate. The modal
+    // opens in "anon" mode (sign-up/sign-in CTAs, no input). Post-auth
+    // the useEffect below flips mode to fresh/confirm and the user
+    // continues without needing to re-tap the share button.
+    if (isAnonymous) {
+      setStoredName(null);
+      setNameModalMode("anon");
+      setNameModalOpen(true);
+      return;
+    }
     const stored = getNickname();
     if (isRealName(stored)) {
       setStoredName(stored);
@@ -121,6 +147,25 @@ export function ChallengeSharePrompt({
     }
     setNameModalOpen(true);
   }
+
+  // Phase 5b piece 1 R2 — post-auth mode flip. When the user signs up /
+  // signs in via the stacked RegisterModal, isAnonymous transitions to
+  // false. If the name overlay is open in anon mode, flip it to the
+  // appropriate next mode (fresh if no real stored name, confirm if
+  // there is) so the user can complete the share without re-tapping.
+  useEffect(() => {
+    if (!nameModalOpen) return;
+    if (nameModalMode !== "anon") return;
+    if (isAnonymous) return;
+    const stored = getNickname();
+    if (isRealName(stored)) {
+      setStoredName(stored);
+      setNameModalMode("confirm");
+    } else {
+      setStoredName(null);
+      setNameModalMode("fresh");
+    }
+  }, [isAnonymous, nameModalOpen, nameModalMode]);
 
   // Continuation after the modal closes — fires the existing share path.
   // Pulled out of the original handleChallenge so both submit and cancel
@@ -193,17 +238,40 @@ export function ChallengeSharePrompt({
       submitLabel="Send"
       editSubmitLabel="Save & send"
       confirmLabel="That's me"
+      // Phase 5b piece 1 R2 anon-mode copy + CTAs.
+      anonHeading="Sign in to send"
+      anonSubheading="Your friends need a way to find your challenge — sign up or sign in to send."
+      signUpLabel="Sign up"
+      signInLabel="Sign in"
+      onSignUp={() => {
+        // Stacked: RegisterModal mounts above this modal. On success,
+        // isAnonymous flips and the useEffect above flips mode to
+        // fresh/confirm. The user completes the share without
+        // re-tapping. On dismiss of RegisterModal, this modal stays
+        // open in anon mode — user can retry or dismiss to abandon.
+        onRequestSignUp?.();
+      }}
+      onSignIn={() => {
+        onRequestSignIn?.();
+      }}
       onSubmit={(name) => {
         setNickname(name);
         setNameModalOpen(false);
         void continueShareAfterName();
       }}
       onCancel={() => {
+        // Phase 5b piece 1 R2: anon-mode dismiss = abandon. The lock
+        // is explicit: "Dismiss at any point returns the user to the
+        // game with no challenge created (no anonymous-send path
+        // exists)." So in anon mode we just close — do NOT call
+        // continueShareAfterName (which would 401 against the server's
+        // verifyAuth gate and surface the generic "Create failed"
+        // error). For fresh/confirm modes the existing behavior is
+        // preserved: cancel still fires the share with whatever name
+        // is in localStorage.
+        const wasAnon = nameModalMode === "anon";
         setNameModalOpen(false);
-        // Anonymous fallback: existing localStorage value flows through.
-        // For fresh mode that's the auto-mint placeholder → recipient
-        // sees Anonymous. For confirm mode the existing real name stays.
-        // Either way the share continues with the current stored value.
+        if (wasAnon) return;
         void continueShareAfterName();
       }}
     />
@@ -277,6 +345,25 @@ export function ChallengeSharePrompt({
           {isRivalryBack
             ? `${totalFp.toFixed(1)} FP on a fresh slate. Send it to ${rivalryTargetName ?? "your friend"}.`
             : headlineText}
+        </div>
+      )}
+      {/* Phase 5b piece 1 R1 (2026-05-28, doc lock 3da7f02): placeholder
+          commentary copy in the bottom-slot region. Hardcoded; phase 7
+          (commentary engine) replaces with engine-driven copy that
+          adapts per-challenge or per-context. Universal — renders for
+          anonymous and signed-in users alike, gated only by isSpecial
+          (the small corner-icon variant has no copy region to host it). */}
+      {isSpecial && (
+        <div
+          data-h2h-share-bottom-slot="placeholder"
+          style={{
+            fontSize: 12,
+            color: "rgba(234,240,255,0.65)",
+            lineHeight: 1.45,
+            marginBottom: 12,
+          }}
+        >
+          the best part of our game is you can compete with your friends to see who can pull the best games
         </div>
       )}
       {error && (

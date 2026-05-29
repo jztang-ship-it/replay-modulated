@@ -519,6 +519,14 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   });
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  // Phase 5b piece 1 (2026-05-28, doc lock 3da7f02): R2 wiring. The
+  // share-CTA name overlay's two anon-mode CTAs each preselect the
+  // initial RegisterModal pane via this state. Sign Up → false (default
+  // sign-up pane); Sign In → true (sign-in pane). RegisterModal's
+  // internal toggle (line 148-151 of RegisterModal.tsx) is a subtle
+  // 12px gray text link; preselection protects returning users from
+  // landing on the sign-up form and missing the toggle.
+  const [registerSignInMode, setRegisterSignInMode] = useState(false);
   const [bigWinFired, setBigWinFired] = useState(false);
   const [challengeTrigger, setChallengeTrigger] = useState<import("@shared/utils/triggerEvaluation").TriggerResult | null>(null);
   // TOP-slot snapshot of the last non-null challengeTrigger for the
@@ -3076,6 +3084,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             onSuccess={() => setShowRegisterModal(false)}
             signUp={signUp}
             linkGoogle={linkGoogle}
+            signInMode={registerSignInMode}
             signIn={signIn}
             signInGoogle={signInGoogle}
           />
@@ -3143,6 +3152,20 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               // back-share prompt — they're returning to normal play
               // without lingering rivalry context.
               if (challengeBackCtx) clearChallengeBackCtx?.();
+            }}
+            // Phase 5b piece 1 R2 wiring. Anon-mode CTAs in the name
+            // overlay open RegisterModal. Sign Up preselects the
+            // sign-up pane (signInMode=false); Sign In preselects the
+            // sign-in pane (signInMode=true). RegisterModal's internal
+            // toggle still works, but preselection lands the user on
+            // the right initial pane.
+            onRequestSignUp={() => {
+              setRegisterSignInMode(false);
+              setShowRegisterModal(true);
+            }}
+            onRequestSignIn={() => {
+              setRegisterSignInMode(true);
+              setShowRegisterModal(true);
             }}
           />
         </Suspense>
