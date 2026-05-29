@@ -423,6 +423,73 @@ The sender-side overlay's primary CTA(s) are intentionally deferred to phase 8 c
 
 ---
 
+### Phase 5b piece 2b+2c — recipient-play on H2H surface + drawing mechanic (locked 2026-05-28)
+
+**Rationale:** the current recipient flow is two disjoint UIs — recipient taps challenge link → lands on normal game UI → plays hand there → transitions to H2H reveal arc + overlay. First-time recipients have no context for what's happening when the UI swaps mid-experience. Locked solution: recipient lands DIRECTLY on the H2H surface in a new "playing" mode, draws and holds their hand there, then transitions to reveal arc + overlay without changing surfaces. Single coherent experience.
+
+2b (playing-mode infrastructure + routing) and 2c (drawing animation) are bundled in this lock because playing mode without drawing mechanics is an empty room; shipping them together produces a working flow.
+
+**Locked rules:**
+
+**P1 — Challenge-link tap routes to H2H surface directly.** When any user (anonymous, signed-in, first-time, returning) taps a challenge link, the app routes them to the H2H surface in "playing" mode. NO landing on the normal game UI first.
+
+**P2 — H2H surface gains a new "playing" mode.** The surface's mode state machine extends to include:
+- **`playing`** (NEW) — recipient is drawing and holding their roster.
+- `arc-reveal` — existing mid-reveal animation phase.
+- `overlay` — existing post-reveal results state.
+
+Mode transitions:
+- Mount in `playing` mode by default when the surface is entered via a challenge link.
+- `playing → arc-reveal` when the recipient finishes their roster (all 6 slots filled) and triggers the reveal (implementation detail: explicit "Reveal" tap, or automatic on slot 6 fill — to be decided in implementation).
+- `arc-reveal → overlay` as today.
+
+**P3 — Playing-mode layout (inherits piece 2a geometry):**
+- **Top strip:** sender's roster, face-DOWN (cards are present at all 6 positions, showing card backs). Sender already played; their hand is fixed but hidden from the recipient during play. This frames the "you vs them" matchup visually without spoiling cards before reveal.
+- **Hero zone (mid-section):** used for brief instructional copy in playing mode ONLY. Examples: "Draw a card to fill your roster" → "Tap to hold" → "Slot N of 6" or similar. Exact copy is placeholder for 2e to refine; lock the BEHAVIOR — hero zone displays guidance during playing mode, returns to its standard role (housing the active flipped card) post-playing.
+- **Bottom strip:** recipient's roster, populating left-to-right as cards are drawn. Empty slots show as placeholders (dim outlines, no card). Each drawn card occupies its mini-slot position with the card face visible (since recipient holds/discards based on what they see).
+- **Bottom CTA slot:** Draw button lives here during playing mode. Replaces the reveal-overlay's Try Again / Send It Back / etc. CTAs which only render in `overlay` mode.
+
+**P4 — Drawing mechanic.** When the recipient taps Draw:
+- A new card animates into the next empty mini-slot position in the bottom strip.
+- The animation REPLACES the existing normal-game-mode mechanism of cards going from hero slot → mini slot. The recipient-play surface never uses the hero slot for the deal-flow (hero is reserved for instructional copy in playing mode).
+- The card lands in the slot face-up (recipient sees what they drew immediately).
+- Recipient then taps to hold (per 2d, separate piece) or implicitly accepts and taps Draw again for the next slot.
+
+**P5 — Anonymous recipients welcome.** Anonymous users can play challenges as recipients (per the prior R5 lock). On entering the H2H surface in playing mode, they don't see auth prompts — playing through is allowed. Post-challenge nudge to sign up is a separate concern (Item B's normal-context triggers fire as today after the challenge ends, IF user is anonymous AND completes a notable hand).
+
+**P6 — Top strip face-down stays face-down through playing mode.** No tap-to-flip on top strip during playing mode (preserves the surprise for the reveal arc). Top strip becomes interactive (tap-to-flip per phase 4) only on entering `arc-reveal` / `overlay` modes.
+
+**P7 — Hold/unhold mechanic (deferred to piece 2d).** This lock names that holds happen at mini-slot positions on the bottom strip. Implementation details (visual indicator, tap behavior, drag) are 2d's scope. P4's drawing produces cards that can be held in their slots — the hold UI is 2d.
+
+**P8 — Mode handoff transition (deferred to piece 2f).** This lock names that playing → arc-reveal handoff happens after the recipient finishes their roster. The specific transition animation (fade, slide, hold-then-trigger) is 2f's scope. Sufficient for 2b+2c: when handoff fires, the surface stops accepting Draw taps and enters arc-reveal mode.
+
+**P9 — Reveal trigger.** A specific decision needed at implementation: does arc-reveal trigger automatically when slot 6 fills, OR require explicit user tap ("Reveal" button)? Default for implementation: **automatic on slot 6 fill, with a brief 800ms hold pause before arc starts** (gives the recipient a moment to see their full roster before reveal kicks off). Implementation surfaces this for verification; if 800ms feels wrong in live testing, refine.
+
+**P10 — Challenge-context state.** Whatever state today's normal-game UI tracks during a recipient's challenge play (sender hand reference, target score, etc.) gets threaded into the playing-mode H2H surface. The bottom-strip card draws use the same deck/draw logic as normal game — only the SURFACE changes, not the game-state engine.
+
+**What this locks out:**
+- No "challenge link → normal game UI → swap to H2H" routing. Direct landing only.
+- No hero-slot card animation during playing mode (hero is for instructional copy, not deal flow).
+- No tap-to-flip on top strip during playing mode.
+- No anonymous-recipient auth gate for playing challenges.
+
+**What this preserves:**
+- Piece 2a geometry (top/hero locked, bottom strip + reserved CTA space per G1-G7).
+- Strip-component sort contract (always, per the locked invariant).
+- Existing reveal-arc + overlay behavior (only the entry into arc changes — from "normal-game-complete" to "playing-mode-complete").
+- Anonymous recipients fully supported.
+
+**Implementation commit (separate, follows this doc lock):**
+- Routing change for challenge-link entry.
+- New "playing" mode added to H2H surface state machine.
+- Playing-mode layout: top strip face-down, hero instructional placeholder, bottom strip with empty mini-slot placeholders, Draw button in CTA slot.
+- Drawing animation: card → next empty mini-slot.
+- Reveal trigger on slot 6 fill (800ms pause then arc starts).
+- Anonymous-recipient path verified (no auth gate during playing).
+- Investigation surfaces: where current recipient routing lives, what state today's normal-game UI tracks during challenge play, whether the game-state engine can decouple cleanly from the surface.
+
+---
+
 ### Phase 5b piece 2a — geometry re-lock + CTA clipping fix (locked 2026-05-28)
 
 **Rationale:** the bottom strip currently clips the bottom CTA button (live verification screenshot evidence — orange "Try Again" / "Send It Back" button's top edge is overlapped by the strip's bottom border). This is a pre-existing bug since phase 4 locked the geometry. Piece 2a fixes it AND re-derives the bottom-strip Y to accommodate piece 2's upcoming requirements (Draw button in the CTA slot during recipient-play mode, sync PvP indicator sharing the slot when both players play live).
