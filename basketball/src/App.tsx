@@ -38,7 +38,7 @@ import { sportAdapter } from "./adapters/SportAdapter";
 // inside the basketball GameView wrapper; they're now imported here so
 // the App can mount H2HRecipientPlay without going through GameView.
 import { h2hArcRenderer, h2hOverlayRenderer } from "./views/GameView";
-import { resolveRoster } from "./adapters/gameAdapter";
+import { redrawRoster, resolveRoster } from "./adapters/gameAdapter";
 import { calculateWinTier } from "./utils/payoutLogic";
 
 // ?debug=1 overlay. Eager import (not lazy) so a chunk-load failure
@@ -299,8 +299,15 @@ function AppInner() {
           key={h2hPlayKey}
           challengeCtx={challengeCtx}
           sport={SPORT}
+          redrawRoster={redrawRoster}
           resolveRoster={resolveRoster}
           calculateWinTier={calculateWinTier as (totalFp: number) => string}
+          /* h2hArcRenderer's pre-reveal branch (revealed=false →
+             isRevealing=true on AthleteCard) is exactly the rich
+             pre-reveal visual the playing-mode strip wants — photo,
+             salary, position, AVG, no FP. Reusing it avoids a
+             second strip renderer on the basketball side. */
+          renderPlayingStripCard={h2hArcRenderer}
           renderBattlefieldCard={h2hArcRenderer}
           renderOverlayCard={h2hOverlayRenderer}
           onSendItBack={() => {
