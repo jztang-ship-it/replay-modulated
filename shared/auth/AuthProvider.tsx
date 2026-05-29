@@ -417,15 +417,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
+  // Phase 5b post-piece-2c (2026-05-30, third iteration): for ANONYMOUS
+  // users, use signInWithOAuth instead of linkIdentity. linkIdentity
+  // adds Google as an additional identity to the current anon user; if
+  // the Google account is already linked to ANY prior Supabase user
+  // (returning user who lost session, developer re-testing, etc.) it
+  // fails with `identity_already_exists` and the user lands signed-out
+  // with no clean recovery — the earlier auto-retry path also tripped
+  // on this (signInWithOAuth on an active anon session can still try to
+  // link). signInWithOAuth on a fresh OAuth flow has no link semantics:
+  // it signs the user in to the existing Google-linked Supabase user
+  // (or creates one if none exists), replacing the anon session.
+  //
+  // Tradeoff: any prior anon hand_log entries stay attached to the anon
+  // uid and don't auto-transfer. For the CURRENT share flow this is
+  // fine — the payload lives in sessionStorage via
+  // writePendingChallengeShare and ResumeShareSurface restores it
+  // regardless of which uid resolves. Longer-term anon-data migration
+  // is a separate concern (carry-forward).
+  //
+  // For NON-anonymous users (e.g., an email-authed user wanting to add
+  // Google as an additional sign-in option), keep linkIdentity — that
+  // path is correct and doesn't have the collision class.
   const linkGoogle = async () => {
     const wasAnonymous = user?.is_anonymous ?? true;
+    if (wasAnonymous) {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: oauthRedirectUrl() },
+      });
+      if (!error) {
+        track("auth", "signin_google_from_anon", { hand_number: handCountForAuthEvent() });
+        track("auth", "account_linked_from_anon", { method: "google", hand_number: handCountForAuthEvent() });
+      } else {
+        track("auth", "link_google_failed", { reason: (error as AuthError).message });
+      }
+      return { error: error as AuthError | null };
+    }
     const { error } = await supabase.auth.linkIdentity({
       provider: "google",
       options: { redirectTo: oauthRedirectUrl() },
     });
     if (!error) {
-      track("auth", "link_google", { from_anonymous: wasAnonymous, hand_number: handCountForAuthEvent() });
-      if (wasAnonymous) track("auth", "account_linked_from_anon", { method: "google", hand_number: handCountForAuthEvent() });
+      track("auth", "link_google", { from_anonymous: false, hand_number: handCountForAuthEvent() });
     } else {
       track("auth", "link_google_failed", { reason: (error as AuthError).message });
     }
