@@ -277,7 +277,7 @@ function getSlotCard(hand: H2HHand, slotIndex: number): H2HCard | null {
 // zone stays "open" (no panel) to match single-player's card-stage pattern
 // where cards are the focal element without surrounding chrome.
 
-function ZonePanel({ children }: { children: React.ReactNode }) {
+function ZonePanel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <div
       style={{
@@ -292,6 +292,7 @@ function ZonePanel({ children }: { children: React.ReactNode }) {
         backdropFilter: "blur(10px)",
         WebkitBackdropFilter: "blur(10px)",
         padding: "8px 12px",
+        ...style,
       }}
     >
       {children}
@@ -1378,22 +1379,25 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
           display: "flex",
           flexDirection: "column",
           // Phase 4 amend3 (2026-05-27): the top-strip → hero-pair →
-          // bottom-strip block is a single TIGHT composition. The
-          // outer column's `gap: 18` sets the small fixed gaps
-          // between (top strip ↔ battlefield) and (battlefield ↔
-          // bottom strip). The reserved bottom space (flex-grow=1)
-          // sits AFTER the bottom strip and absorbs all remaining
-          // viewport height. On the overlay, that space holds the
-          // primary CTA. On the arc, it's empty. Geometry is LOCKED
-          // between the two surfaces — top strip Y, both hero slot
-          // Ys, and bottom strip Y are pixel-identical on both.
+          // bottom-strip block is a single TIGHT composition. Piece 2a
+          // (2026-05-28, doc lock a5d7e43): gap removed from the outer
+          // column; each child carries explicit marginBottom so per-
+          // pair gaps can be tuned independently. Top-strip → hero gap
+          // stays 18 (hero Y locked by phase 4). Hero → bottom-strip
+          // gap reduced 18 → 4 (bottom strip moves up 14px). Bottom-
+          // strip → reserved gap reduced 18 → 0 (reserved gets 18px
+          // more height). New geometry is identical between arc and
+          // overlay per G5 of the lock; the changes here mirror those
+          // in H2HResultsOverlay's inner column. Pre-existing CTA
+          // clipping bug is resolved on the overlay; arc's reserved
+          // space is empty so no visible change to the arc itself.
           justifyContent: "flex-start",
           alignItems: "stretch",
-          gap: 18,
+          gap: 0,
         }}
       >
         {/* ── OPPONENT ZONE (top, glass panel) ───────────────────────── */}
-        <ZonePanel>
+        <ZonePanel style={{ marginBottom: 18 }}>
           <ZoneHeader hand={sender} />
           <HandStrip
             cards={sender.cards}
@@ -1437,6 +1441,10 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
             gridTemplateRows: "auto auto",
             rowGap: BATTLEFIELD_ROW_GAP_PX,
             width: "100%",
+            // Piece 2a (2026-05-28, doc lock a5d7e43): mirrors the
+            // overlay — hero → bottom-strip gap 18 → 4. Bottom strip
+            // moves up by 14px.
+            marginBottom: 4,
           }}
         >
           {/* Left rail — empty on the arc. Spans both hero rows so the
@@ -1520,10 +1528,10 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
 
         {/* ── YOUR ZONE (bottom, glass panel) ──────────────────────────
             Phase 4 amend3 (2026-05-27): bottom strip sits IMMEDIATELY
-            below the bottom hero with the outer column's small fixed
-            gap. No flex-grow spacer between them — the bottom strip
-            hugs the hero pair to form a tight composition. */}
-        <ZonePanel>
+            below the bottom hero. Piece 2a (2026-05-28, doc lock
+            a5d7e43): explicit marginBottom: 0 — no gap to reserved
+            space. Mirrors the overlay. */}
+        <ZonePanel style={{ marginBottom: 0 }}>
           <HandStrip
             cards={recipient.cards}
             renderCard={renderCard}

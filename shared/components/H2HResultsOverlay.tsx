@@ -190,7 +190,7 @@ function selectHeadline(args: {
 
 // ── Zone panel — glass chrome (matches arc) ──────────────────────────────
 
-function ZonePanel({ children, dataAttr }: { children: React.ReactNode; dataAttr?: string }) {
+function ZonePanel({ children, dataAttr, style }: { children: React.ReactNode; dataAttr?: string; style?: React.CSSProperties }) {
   return (
     <div
       data-h2h-overlay-zone={dataAttr}
@@ -206,6 +206,7 @@ function ZonePanel({ children, dataAttr }: { children: React.ReactNode; dataAttr
         backdropFilter: "blur(10px)",
         WebkitBackdropFilter: "blur(10px)",
         padding: "8px 12px",
+        ...style,
       }}
     >
       {children}
@@ -629,17 +630,25 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
           boxSizing: "border-box",
           display: "flex",
           flexDirection: "column",
-          // Phase 4 amend3 (2026-05-27): mirrors the arc EXACTLY.
-          // gap=18 between top strip ↔ battlefield ↔ bottom strip
-          // creates the tight composition; the flex-grow reserved
-          // space sits AFTER the bottom strip and holds the CTA.
+          // Phase 4 amend3 (2026-05-27): the top-strip → hero-pair →
+          // bottom-strip block is a single TIGHT composition.
+          // Piece 2a (2026-05-28, doc lock a5d7e43): gap removed from
+          // the outer column; each child carries explicit marginBottom
+          // so per-pair gaps can be tuned independently. Top-strip →
+          // hero gap stays 18px (hero Y locked by phase 4). Hero →
+          // bottom-strip gap reduced 18 → 4 (Strategy α G1: bottom
+          // strip moves up by 14px). Bottom-strip → reserved gap
+          // reduced 18 → 0 (reserved gets 18px more height). Combined
+          // with reserved paddingTop 16 → 8, the CTA gets 40px more
+          // unclipped headroom on safe-area-inset viewports — the
+          // pre-existing clipping bug is resolved.
           justifyContent: "flex-start",
           alignItems: "stretch",
-          gap: 18,
+          gap: 0,
         }}
       >
         {/* ── TOP STRIP — opponent's lineup ──────────────────────────── */}
-        <ZonePanel dataAttr="opponent">
+        <ZonePanel dataAttr="opponent" style={{ marginBottom: 18 }}>
           <ZoneHeader hand={sender} />
           <ResultsStrip
             cards={sender.cards}
@@ -667,6 +676,10 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             gridTemplateRows: "auto auto",
             rowGap: HERO_ROW_GAP_PX,
             width: "100%",
+            // Piece 2a (2026-05-28, doc lock a5d7e43): hero → bottom-strip
+            // gap reduced 18 → 4. Bottom strip moves up by 14px,
+            // creating reserved-space room for the CTA.
+            marginBottom: 4,
           }}
         >
           {/* Left rail spans both rows — holds headline + trash-talk. */}
@@ -720,10 +733,11 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
 
         {/* ── BOTTOM STRIP — user's lineup ─────────────────────────────
             Phase 4 amend3 (2026-05-27): bottom strip sits IMMEDIATELY
-            below the bottom hero with the outer column's small fixed
-            gap (18px). No flex-grow spacer between them — the bottom
-            strip hugs the hero pair to form a tight composition. */}
-        <ZonePanel dataAttr="user">
+            below the bottom hero. Piece 2a (2026-05-28, doc lock
+            a5d7e43): explicit marginBottom: 0 — no gap to the reserved
+            space below. The strip flushes directly against reserved,
+            which then provides paddingTop: 8 (was 16) for the CTA. */}
+        <ZonePanel dataAttr="user" style={{ marginBottom: 0 }}>
           <ResultsStrip
             cards={recipient.cards}
             renderCard={renderCard}
@@ -753,7 +767,12 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             flexDirection: "column",
             justifyContent: "flex-end",
             alignItems: "stretch",
-            paddingTop: 16,
+            // Piece 2a (2026-05-28, doc lock a5d7e43): reserved paddingTop
+            // 16 → 8 contributes 8px of CTA breathing room. Combined with
+            // bottom-strip Y moving up by 14px and the bottom-strip →
+            // reserved gap going to 0, the CTA gets ~40px more unclipped
+            // headroom on safe-area-inset viewports.
+            paddingTop: 8,
           }}
         >
           <div
