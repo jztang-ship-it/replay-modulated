@@ -547,6 +547,104 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
   });
 });
 
+// ── 7b. Top-strip sender-face pre-reveal (additive fix) ────────────
+//
+// The arc's "both lineups face-up, pre-reveal" state requires the top
+// strip to show the SENDER'S real cards at pre-reveal scale once the
+// column-flip pass exposes them — not a generic "?" placeholder. Tests
+// here pin (a) face-down before each column's flip stage, and (b) real
+// sender card identity rendered via renderPlayingStripCard at column
+// pass end. Path-β assertions on the BOTTOM replacement cells are
+// independent of this fix and are covered earlier in the suite.
+
+describe("H2HRecipientPlay — top strip renders sender faces pre-reveal", () => {
+  it("at column-pass end, each top cell renders its sender card (Sender-N), NOT the placeholder", async () => {
+    const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
+    const { container } = render(
+      <H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />
+    );
+    fireEvent.click(screen.getByText("Deal"));
+    await waitFor(() => expect(screen.queryByText("Draw")).not.toBeNull(), { timeout: 2000 });
+    fireEvent.click(screen.getByText("Draw"));
+    // Walk to column-pass end (last top-strip-up appears).
+    await waitFor(
+      () => expect(screen.queryByTestId("top-strip-up-5")).not.toBeNull(),
+      { timeout: 4000 },
+    );
+    // Real sender card identities are in the DOM, one per top cell.
+    for (let i = 0; i < 6; i++) {
+      const topCell = container.querySelector(`[data-h2h-play-top-cell="${i}"]`);
+      expect(topCell).not.toBeNull();
+      // Sender card identity rendered inside this specific top cell.
+      const senderText = topCell?.textContent ?? "";
+      expect(senderText).toContain(`Sender-${i}`);
+      // Placeholder "?" is NOT in this cell (it's only the fallback).
+      expect(senderText.includes("?")).toBe(false);
+    }
+  });
+
+  it("top cell N is face-DOWN before column N's flip, face-UP after — sender face appears at the flip", async () => {
+    // Use fake timers so we can observe specific column boundaries.
+    vi.useFakeTimers();
+    const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
+    const { container } = render(
+      <H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />
+    );
+    fireEvent.click(screen.getByText("Deal"));
+    await act(async () => {
+      vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 8);
+    });
+    // No holds, tap Draw straight through.
+    fireEvent.click(screen.getByText("Draw"));
+    // Redraw resolves on a microtask.
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    // First column kicks off at delay=0 → revealedColumns=1.
+    await act(async () => { vi.advanceTimersByTime(0); });
+    // Slot 0 has flipped face-up; slot 0 should show Sender-0.
+    expect(screen.queryByTestId("top-strip-up-0")).not.toBeNull();
+    const topCell0 = container.querySelector(`[data-h2h-play-top-cell="0"]`);
+    expect(topCell0?.textContent ?? "").toContain("Sender-0");
+    // Slots 1..5 still face-DOWN; their sender names not in DOM yet
+    // (front face only mounts when face-up).
+    for (let i = 1; i < 6; i++) {
+      expect(screen.queryByTestId(`top-strip-back-${i}`)).not.toBeNull();
+      const cell = container.querySelector(`[data-h2h-play-top-cell="${i}"]`);
+      expect(cell?.textContent ?? "").not.toContain(`Sender-${i}`);
+    }
+    // Advance through column 1's flip.
+    await act(async () => {
+      vi.advanceTimersByTime(COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS + 1);
+    });
+    expect(screen.queryByTestId("top-strip-up-1")).not.toBeNull();
+    const topCell1 = container.querySelector(`[data-h2h-play-top-cell="1"]`);
+    expect(topCell1?.textContent ?? "").toContain("Sender-1");
+    // Slot 2 still face-down at this point.
+    expect(screen.queryByTestId("top-strip-back-2")).not.toBeNull();
+  });
+
+  it("falls back to the '?' placeholder when resolvedSenderHand is absent", async () => {
+    // ctx has NO resolvedSenderHand — top cells should land in their
+    // flipped-up state with the placeholder content, not crash.
+    const { container } = render(
+      <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />
+    );
+    fireEvent.click(screen.getByText("Deal"));
+    await waitFor(() => expect(screen.queryByText("Draw")).not.toBeNull(), { timeout: 2000 });
+    fireEvent.click(screen.getByText("Draw"));
+    await waitFor(
+      () => expect(screen.queryByTestId("top-strip-up-0")).not.toBeNull(),
+      { timeout: 4000 },
+    );
+    const topCell0 = container.querySelector(`[data-h2h-play-top-cell="0"]`);
+    // Placeholder character present; no sender name present.
+    expect(topCell0?.textContent ?? "").toContain("?");
+    expect(topCell0?.textContent ?? "").not.toContain("Sender-0");
+  });
+});
+
 // ── 8. Try Again remount → pre_deal (App.tsx h2hPlayKey bump) ───────
 
 describe("H2HRecipientPlay — Try Again remount lands in pre_deal", () => {

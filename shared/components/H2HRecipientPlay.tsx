@@ -507,28 +507,28 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
             height: MINI_CELL_HEIGHT_PX,
           }}
         >
-          {Array.from({ length: ROSTER_SIZE }).map((_, i) => (
-            <TopStripCell
-              key={`top-${i}`}
-              i={i}
-              faceUp={topCellFaceUp(i)}
-              card={
-                topCellFaceUp(i)
-                  // Top strip face-up content during column-flip is the
-                  // SENDER'S hand. We don't have the sender's roster
-                  // here in playing mode (it's threaded into the arc
-                  // via challengeCtx.resolvedSenderHand) — for the
-                  // playing-mode column-flip pass we render a generic
-                  // face-up placeholder. The recipient's eye is on
-                  // their own bottom strip during this beat; the
-                  // sender's card faces in detail are the arc's
-                  // responsibility (state 4). The flip itself signals
-                  // "matchup formed", which is what we need.
-                  ? null
-                  : null
-              }
-            />
-          ))}
+          {Array.from({ length: ROSTER_SIZE }).map((_, i) => {
+            // Sender hand identities come from challengeCtx.resolvedSenderHand
+            // — the same payload the arc consumes (H2HRecipientReveal mounts
+            // with senderResolved at handoff). When the column flip reaches
+            // slot i, the top cell flips to a PRE-REVEAL render of the
+            // sender's card at that slot — photo/salary/position/AVG via the
+            // same renderPlayingStripCard the bottom strip uses, with
+            // revealed=false so FP/badges/fire-ice stay sealed for state 4.
+            // Falls back to a generic placeholder if resolvedSenderHand is
+            // not yet present (rare — sender-hand prefetch typically lands
+            // before the recipient finishes hold_select).
+            const senderCard = challengeCtx.resolvedSenderHand?.cards[i] ?? null;
+            return (
+              <TopStripCell
+                key={`top-${i}`}
+                i={i}
+                faceUp={topCellFaceUp(i)}
+                card={senderCard as unknown as H2HCard | null}
+                renderCard={renderPlayingStripCard}
+              />
+            );
+          })}
         </div>
 
         {/* Hero zone — guidance copy */}
@@ -684,21 +684,31 @@ function deriveCta(state: PlayingState): {
 }
 
 /** Top strip cell — sender slot. Face-down by default. Flips face-up
- *  during the column_flip pass per column index. Path β: the face-up
- *  content during playing mode is intentionally generic — the sender's
- *  detailed face is the arc's responsibility (state 4). */
+ *  during the column_flip pass per column index. Face-up content is a
+ *  pre-reveal render of the sender's card via the SAME renderer the
+ *  bottom strip uses — photo / salary / position / AVG, no FP / badges
+ *  / fire-ice (those are state-4's job). Mirrors the bottom strip's
+ *  3D flip scaffold (back face rotated 180 + backface-visibility hidden;
+ *  front face mounted only when face-up).
+ *
+ *  When card is null (sender hand not yet present in challengeCtx —
+ *  rare in production; the prefetch typically lands before the
+ *  recipient finishes hold_select), falls back to a generic
+ *  "?" placeholder. */
 function TopStripCell({
   i,
   faceUp,
-  card: _card,
+  card,
+  renderCard,
 }: {
   i: number;
   faceUp: boolean;
   card: H2HCard | null;
+  renderCard: CardRenderer;
 }) {
-  // testId is dual-purpose: tests assert that face-down cells exist
-  // during pre-arc states, and face-up sender cells appear after the
-  // column-flip pass for each index.
+  // testId is dual-purpose: tests assert face-down cells exist during
+  // pre-arc states, and face-up sender cells appear after each column's
+  // flip stage.
   const testId = faceUp ? `top-strip-up-${i}` : `top-strip-back-${i}`;
   return (
     <div
@@ -721,8 +731,54 @@ function TopStripCell({
           transform: faceUp ? "rotateY(0deg)" : "rotateY(180deg)",
         }}
       >
-        <CardBack side="front-when-down" />
-        <SenderUpPlaceholder />
+        {/* Back face (card-back). Rotated 180 + backface-hidden so it's
+            visible only when the wrapper itself is at rotateY(180deg). */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backfaceVisibility: "hidden",
+            WebkitBackfaceVisibility: "hidden",
+            transform: "rotateY(180deg)",
+          }}
+        >
+          <CardBack side="back" />
+        </div>
+        {/* Front face — sender card pre-reveal, mounted only when face-up.
+            Matches BottomStripCell's front-face scaffold so the visual
+            anchor at handoff is identical on both strips. */}
+        {faceUp && (
+          <div
+            data-h2h-play-top-front="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
+              border: "1px solid rgba(255,255,255,0.10)",
+              borderRadius: 6,
+              boxSizing: "border-box",
+              overflow: "hidden",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {card ? (
+              <div
+                style={{
+                  width: STRIP_CARD_NATURAL_WIDTH_PX,
+                  transform: `scale(${STRIP_CARD_SCALE})`,
+                  transformOrigin: "top left",
+                }}
+              >
+                {renderCard(card, { revealed: false })}
+              </div>
+            ) : (
+              <SenderUpPlaceholder />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -868,19 +924,17 @@ function CardBack({ side: _side }: { side: "back" | "front-when-down" }) {
   );
 }
 
-/** Generic face-up placeholder for top strip during column-flip pass.
- *  The sender's per-card visual is the arc's job (state 4); here we
- *  only need a visible flip target. */
+/** Fallback for the rare case where challengeCtx.resolvedSenderHand
+ *  is not yet populated when the top strip first flips face-up. Rendered
+ *  inside the TopStripCell front-face container, so positioning + flip
+ *  scaffolding are owned by the parent — this is content only. */
 function SenderUpPlaceholder() {
   return (
     <div
       style={{
-        position: "absolute",
-        inset: 0,
-        backfaceVisibility: "hidden",
-        WebkitBackfaceVisibility: "hidden",
+        width: "100%",
+        height: "100%",
         borderRadius: 6,
-        border: "1px solid rgba(255,177,74,0.55)",
         background: "linear-gradient(160deg, #2a1f10 0%, #1a140a 100%)",
         display: "flex",
         alignItems: "center",
