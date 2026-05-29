@@ -40,11 +40,11 @@ import {
   type ResultsOverlayState,
 } from "./H2HResultsOverlay";
 import {
-  buildRevealOrder,
   type H2HCard,
   type H2HHand,
   type CardRenderer,
 } from "./H2HRevealScreen";
+import { buildRevealOrder } from "./useH2HReveal";
 import { SenderLegacyFallbackCard } from "./SenderLegacyFallbackCard";
 import { isRealName } from "@shared/utils/isRealName";
 import { getNickname } from "@shared/utils/playerIdentity";
