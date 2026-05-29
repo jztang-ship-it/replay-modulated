@@ -1,8 +1,18 @@
 // shared/components/RegisterModal.tsx
-import { useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import type { AuthError } from "@supabase/supabase-js";
 import { addWelcomeMessage } from "@shared/inbox/inbox";
 import { supabase } from "@shared/lib/supabase";
+import { AuthContext } from "@shared/auth/AuthProvider";
+import { deriveDisplayName } from "@shared/utils/deriveDisplayName";
+
+/** Phase 5b piece 1 auth-surface unification (2026-05-29, doc lock 2caa7a3).
+ *  "normal" = MVP/LEGEND wins, hand≥5 nudges (existing behavior — auth only).
+ *  "challenge" = Anonymous user taps Challenge a Friend. Auth fields PLUS a
+ *  name input on the same modal. Pre-auth: name disabled. Post-auth (modal
+ *  observes useAuth().isAnonymous flipping to false): auth UI hidden, name
+ *  input enabled + populated via deriveDisplayName, Continue posts. */
+export type RegisterModalContext = "normal" | "challenge";
 
 interface RegisterModalProps {
   onClose: () => void;
@@ -12,6 +22,20 @@ interface RegisterModalProps {
   signInMode?: boolean;
   signIn?: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signInGoogle?: () => Promise<{ error: AuthError | null }>;
+  /** Phase 5b piece 1: surface variant per the unification lock (U2). */
+  context?: RegisterModalContext;
+  /** Phase 5b piece 1: fires synchronously BEFORE either Google call. The
+   *  caller uses this hook to persist mid-flow state (sessionStorage) so
+   *  the post-redirect ResumeShareSurface can pick up the share. Path β
+   *  for Google means the React tree unmounts during OAuth; this hook is
+   *  the only chance to checkpoint share state before that happens. */
+  onBeforeGoogleRedirect?: () => void;
+  /** Phase 5b piece 1: challenge-context only. Fired when user has authed
+   *  (path α email path within this same modal session) AND entered a
+   *  name AND tapped the unified Continue. Caller wires this to fire the
+   *  share-POST. NOT used on the Google path — that flow exits via the
+   *  redirect; resume happens in ResumeShareSurface. */
+  onChallengeAuthComplete?: (displayName: string) => void | Promise<void>;
 }
 
 /** Translate raw Supabase auth errors into friendly user-facing copy. */
@@ -39,7 +63,10 @@ function friendlyAuthError(err: AuthError | { message?: string }, isSignIn: bool
   return (err as any)?.message ?? (isSignIn ? "Sign in failed" : "Sign up failed");
 }
 
-export function RegisterModal({ onClose, onSuccess, signUp, linkGoogle, signInMode, signIn, signInGoogle }: RegisterModalProps) {
+export function RegisterModal({
+  onClose, onSuccess, signUp, linkGoogle, signInMode, signIn, signInGoogle,
+  context = "normal", onBeforeGoogleRedirect, onChallengeAuthComplete,
+}: RegisterModalProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -48,7 +75,30 @@ export function RegisterModal({ onClose, onSuccess, signUp, linkGoogle, signInMo
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSignIn, setIsSignIn] = useState(signInMode ?? false);
 
-  const handleSubmit = async () => {
+  // Phase 5b piece 1: observe auth state internally so the challenge-context
+  // post-auth render shape kicks in automatically once email-path auth
+  // completes (or on remount via ResumeShareSurface).
+  const { user, isAnonymous } = useContext(AuthContext);
+  const isChallengeContext = context === "challenge";
+
+  // Phase 5b piece 1: name field state for challenge context. Initialized
+  // post-auth via deriveDisplayName; user can edit.
+  const initialChallengeName = useMemo(() => isAnonymous ? "" : deriveDisplayName(user), [isAnonymous, user]);
+  const [challengeName, setChallengeName] = useState(initialChallengeName);
+  // Keep name in sync with auth state — if user authenticates mid-modal,
+  // populate the name field from the new session metadata. Does not
+  // overwrite a name the user has actively edited (tracked via the
+  // userEditedName flag).
+  const [userEditedName, setUserEditedName] = useState(false);
+  useEffect(() => {
+    if (!isChallengeContext) return;
+    if (userEditedName) return;
+    if (isAnonymous) return;
+    const derived = deriveDisplayName(user);
+    if (derived) setChallengeName(derived);
+  }, [isChallengeContext, isAnonymous, user, userEditedName]);
+
+  const handleEmailSubmit = async () => {
     if (!email.trim() || !password.trim()) { setError("Email and password required"); return; }
     setLoading(true);
     setError(null);
@@ -66,6 +116,12 @@ export function RegisterModal({ onClose, onSuccess, signUp, linkGoogle, signInMo
       const { data: { user } } = await supabase.auth.getUser();
       if (user) await addWelcomeMessage(user.id);
     }
+    // Phase 5b piece 1: in challenge context, do NOT auto-close. The modal
+    // stays mounted, auth flips isAnonymous, the name field appears, the
+    // user enters/confirms a name, and the unified Continue button posts
+    // the challenge. In normal context, preserve today's behavior:
+    // celebratory pause then close.
+    if (isChallengeContext) return;
     setShowSuccess(true);
     setTimeout(() => { onSuccess(); onClose(); }, 1500);
   };
@@ -73,21 +129,37 @@ export function RegisterModal({ onClose, onSuccess, signUp, linkGoogle, signInMo
   const handleGoogle = async () => {
     setLoading(true);
     setError(null);
-    console.log("[auth] google path — isSignIn:", isSignIn);
+    // Phase 5b piece 1: persist mid-flow state BEFORE Google's redirect
+    // tears down the React tree. The persistence happens synchronously so
+    // the sessionStorage write lands before window.location changes. The
+    // caller (ChallengeSharePrompt in challenge context) wires this to
+    // serialize the share-POST payload.
+    if (isChallengeContext) onBeforeGoogleRedirect?.();
     const result = isSignIn
       ? await signInGoogle?.() ?? { error: { message: "Google sign in not available" } as any }
       : await linkGoogle();
     setLoading(false);
-    console.log("[auth] google result:", result);
     if (result.error) {
       console.error("[auth] google path failed:", result.error);
       setError(`Google: ${result.error.message}`);
     } else {
-      // Fire-and-forget: insert welcome message for the new/upgraded user
+      // Fire-and-forget welcome message. The redirect may have already
+      // started, but this is non-blocking so a non-redirect race is fine.
       if (!isSignIn) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) await addWelcomeMessage(user.id);
       }
+    }
+  };
+
+  const handleChallengeContinue = async () => {
+    const trimmed = challengeName.trim();
+    if (trimmed.length < 2) return;
+    setLoading(true);
+    try {
+      await onChallengeAuthComplete?.(trimmed);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -101,56 +173,127 @@ export function RegisterModal({ onClose, onSuccess, signUp, linkGoogle, signInMo
     );
   }
 
+  // Phase 5b piece 1: render shape branches on (context, isAnonymous).
+  // Challenge context + signed-in = post-auth state (auth UI hidden,
+  // name field + Continue). Challenge context + anonymous = pre-auth
+  // (auth UI shown, name field disabled). Normal context = existing
+  // RegisterModal layout regardless of auth state.
+  const showAuthUi = !isChallengeContext || isAnonymous;
+  const showChallengeNameField = isChallengeContext;
+  const showChallengeContinue = isChallengeContext && !isAnonymous;
+  const showEmailSubmit = showAuthUi;
+
+  const heading = (() => {
+    if (isChallengeContext && !isAnonymous) return "Almost there";
+    if (isChallengeContext) return "Sign in to send";
+    return isSignIn ? "Welcome back" : "Save your progress";
+  })();
+  const subheading = (() => {
+    if (isChallengeContext && !isAnonymous) return "Confirm your name and we'll send the challenge.";
+    if (isChallengeContext) return "Your friends need a way to find your challenge. Sign in to send.";
+    return isSignIn ? "Sign in to restore your account" : "Play on any device. Never lose your wins.";
+  })();
+
   return (
     <div
       style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div style={{ background: "#1a1a2e", borderRadius: "16px 16px 0 0", padding: "24px 20px 32px", width: "100%", maxWidth: 420, color: "#fff" }}>
-        <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>
-          {isSignIn ? "Welcome back" : "Save your progress"}
-        </div>
-        <div style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>
-          {isSignIn ? "Sign in to restore your account" : "Play on any device. Never lose your wins."}
-        </div>
-        <button onClick={handleGoogle} disabled={loading} style={{ width: "100%", padding: "13px", borderRadius: 8, border: "none", background: "#fff", color: "#1f2937", fontSize: 15, fontWeight: 700, cursor: loading ? "wait" : "pointer", marginBottom: 18, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-          <span style={{ fontSize: 16, fontWeight: 900, color: "#4285F4" }}>G</span>
-          {isSignIn ? "Sign in with Google" : "Continue with Google"}
-        </button>
-        <div style={{ textAlign: "center", color: "#64748b", fontSize: 11, marginBottom: 14, letterSpacing: 1 }}>or use email</div>
-        <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 14, marginBottom: 8, boxSizing: "border-box" }} />
-        <div style={{ position: "relative", marginBottom: 12 }}>
-          <input
-            type={showPassword ? "text" : "password"}
-            placeholder="Password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            onKeyDown={e => { if (e.key === "Enter") handleSubmit(); }}
-            style={{ width: "100%", padding: "10px 40px 10px 12px", borderRadius: 8, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 14, boxSizing: "border-box" }}
-          />
+        <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{heading}</div>
+        <div style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>{subheading}</div>
+
+        {showAuthUi && (
+          <>
+            <button onClick={handleGoogle} disabled={loading} style={{ width: "100%", padding: "13px", borderRadius: 8, border: "none", background: "#fff", color: "#1f2937", fontSize: 15, fontWeight: 700, cursor: loading ? "wait" : "pointer", marginBottom: 18, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+              <span style={{ fontSize: 16, fontWeight: 900, color: "#4285F4" }}>G</span>
+              {isSignIn ? "Sign in with Google" : "Continue with Google"}
+            </button>
+            <div style={{ textAlign: "center", color: "#64748b", fontSize: 11, marginBottom: 14, letterSpacing: 1 }}>or use email</div>
+            <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 14, marginBottom: 8, boxSizing: "border-box" }} />
+            <div style={{ position: "relative", marginBottom: 12 }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") handleEmailSubmit(); }}
+                style={{ width: "100%", padding: "10px 40px 10px 12px", borderRadius: 8, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 14, boxSizing: "border-box" }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(v => !v)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                style={{
+                  position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)",
+                  background: "none", border: "none", cursor: "pointer",
+                  color: "#94a3b8", fontSize: 16, padding: "6px 8px", lineHeight: 1,
+                }}
+              >
+                {showPassword ? "🙈" : "👁"}
+              </button>
+            </div>
+          </>
+        )}
+
+        {showChallengeNameField && (
+          <>
+            <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: "#64748b", marginBottom: 6 }}>
+              Your name
+            </div>
+            <input
+              type="text"
+              placeholder={isAnonymous ? "Sign in to set your name" : "Your name"}
+              value={challengeName}
+              disabled={isAnonymous}
+              onChange={e => { setChallengeName(e.target.value); setUserEditedName(true); }}
+              maxLength={32}
+              autoCapitalize="words"
+              autoComplete="off"
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: 8,
+                border: "1px solid #334155",
+                background: isAnonymous ? "#0a0f1c" : "#0f172a",
+                color: isAnonymous ? "#475569" : "#fff",
+                fontSize: 14, marginBottom: 12, boxSizing: "border-box",
+                cursor: isAnonymous ? "not-allowed" : "text",
+              }}
+            />
+          </>
+        )}
+
+        {error && <div style={{ color: "#EF4444", fontSize: 13, marginBottom: 8 }}>{error}</div>}
+
+        {showEmailSubmit && (
+          <button onClick={handleEmailSubmit} disabled={loading} style={{ width: "100%", padding: "11px", borderRadius: 8, border: "1px solid #334155", background: "transparent", color: "#cbd5e1", fontSize: 14, fontWeight: 600, cursor: loading ? "wait" : "pointer" }}>
+            {loading ? "..." : isSignIn ? "Sign in with email" : "Save with email"}
+          </button>
+        )}
+
+        {showChallengeContinue && (
           <button
-            type="button"
-            onClick={() => setShowPassword(v => !v)}
-            aria-label={showPassword ? "Hide password" : "Show password"}
+            onClick={handleChallengeContinue}
+            disabled={loading || challengeName.trim().length < 2}
             style={{
-              position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)",
-              background: "none", border: "none", cursor: "pointer",
-              color: "#94a3b8", fontSize: 16, padding: "6px 8px", lineHeight: 1,
+              width: "100%", padding: "13px", borderRadius: 8, border: "none",
+              background: (loading || challengeName.trim().length < 2) ? "rgba(255,177,74,0.3)" : "#FFB14A",
+              color: (loading || challengeName.trim().length < 2) ? "rgba(7,10,18,0.5)" : "#070A12",
+              fontSize: 15, fontWeight: 900,
+              cursor: (loading || challengeName.trim().length < 2) ? "default" : "pointer",
             }}
           >
-            {showPassword ? "🙈" : "👁"}
+            {loading ? "Sending..." : "Send challenge"}
           </button>
-        </div>
-        {error && <div style={{ color: "#EF4444", fontSize: 13, marginBottom: 8 }}>{error}</div>}
-        <button onClick={handleSubmit} disabled={loading} style={{ width: "100%", padding: "11px", borderRadius: 8, border: "1px solid #334155", background: "transparent", color: "#cbd5e1", fontSize: 14, fontWeight: 600, cursor: loading ? "wait" : "pointer" }}>
-          {loading ? "..." : isSignIn ? "Sign in with email" : "Save with email"}
-        </button>
+        )}
+
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16 }}>
-          <button onClick={() => setIsSignIn(!isSignIn)} style={{ background: "none", border: "none", color: "#64748b", fontSize: 12, cursor: "pointer", padding: 0 }}>
-            {isSignIn ? "Create new account" : "Already have an account?"}
-          </button>
+          {showAuthUi ? (
+            <button onClick={() => setIsSignIn(!isSignIn)} style={{ background: "none", border: "none", color: "#64748b", fontSize: 12, cursor: "pointer", padding: 0 }}>
+              {isSignIn ? "Create new account" : "Already have an account?"}
+            </button>
+          ) : <span />}
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#64748b", fontSize: 12, cursor: "pointer", padding: 0 }}>
-            Maybe later
+            {isChallengeContext && !isAnonymous ? "Cancel" : "Maybe later"}
           </button>
         </div>
       </div>

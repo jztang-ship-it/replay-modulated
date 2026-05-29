@@ -1,5 +1,5 @@
 // shared/components/ChallengeSharePrompt.tsx
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import type { GeneratedCard } from "@shared/types/index";
 import type { WinTierMap } from "@shared/utils/payoutLogic";
 import type { TriggerResult } from "@shared/utils/triggerEvaluation";
@@ -9,6 +9,8 @@ import { isRealName } from "@shared/utils/isRealName";
 import { track } from "@shared/analytics/analytics";
 import { selectChallengeInitiation } from "@shared/commentary/chadChallenge";
 import { NameCaptureModal, type NameCaptureMode } from "@shared/components/NameCaptureModal";
+import { RegisterModal } from "@shared/components/RegisterModal";
+import { writePendingChallengeShare } from "@shared/components/ResumeShareSurface";
 import { AuthContext } from "@shared/auth/AuthProvider";
 
 interface Props {
@@ -45,28 +47,20 @@ interface Props {
    *  legacy fallback). */
   handId?: string;
   onDismiss?: () => void;
-  /** Phase 5b piece 1 (2026-05-28, doc lock 3da7f02): R2 wiring. Anon
-   *  user taps Challenge a Friend → name overlay opens in anon mode →
-   *  Sign up CTA fires this callback. Caller opens the existing auth
-   *  surface (RegisterModal at GameView). */
-  onRequestSignUp?: () => void;
-  /** R2 wiring (companion to onRequestSignUp). Anon user's Sign in CTA
-   *  fires this. Caller opens RegisterModal in signInMode. */
-  onRequestSignIn?: () => void;
 }
 
 export function ChallengeSharePrompt({
   sport, season, totalFp, winTier, roster, initialRoster,
   badges, winTiersMap, serializeRoster, triggerResult, shareHeadline,
   rivalryTargetName, handId, onDismiss,
-  onRequestSignUp, onRequestSignIn,
 }: Props) {
-  // Phase 5b piece 1: isAnonymous drives R2 tap-time gating. Anonymous
-  // users see the share surface (R1) but the name overlay opens in anon
-  // mode (no input pre-auth). useContext rather than the useAuth hook
-  // export so this component doesn't have to chase the consumer hook's
-  // module path through the AuthProvider boundary.
-  const { isAnonymous } = useContext(AuthContext);
+  // Phase 5b piece 1 auth-surface unification (2026-05-29, doc lock
+  // 2caa7a3). Anonymous users see the share surface (R1) but tapping
+  // Challenge a Friend routes directly to RegisterModal in challenge
+  // context — no intermediate NameCaptureModal anon mode. signUp /
+  // linkGoogle / signIn / signInGoogle pulled from AuthContext to feed
+  // the unified RegisterModal.
+  const { isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useContext(AuthContext);
   const [copied, setCopied] = useState(false);
   const { isCreating, challengeId, error, createChallenge, shareChallenge } = useChallengeShare(sport);
 
@@ -125,18 +119,24 @@ export function ChallengeSharePrompt({
   const [nameModalOpen, setNameModalOpen] = useState(false);
   const [nameModalMode, setNameModalMode] = useState<NameCaptureMode>("fresh");
   const [storedName, setStoredName] = useState<string | null>(null);
+  // Phase 5b piece 1 auth-surface unification (2026-05-29, doc lock
+  // 2caa7a3): anonymous tap opens RegisterModal directly in challenge
+  // context. No intermediate NameCaptureModal anon mode; that mode was
+  // removed per U3 of the unification lock.
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   function onCtaTap() {
-    // Phase 5b piece 1 R2: anon users hit the tap-time gate. The modal
-    // opens in "anon" mode (sign-up/sign-in CTAs, no input). Post-auth
-    // the useEffect below flips mode to fresh/confirm and the user
-    // continues without needing to re-tap the share button.
+    // Anonymous user: unified auth surface in challenge context (U2/U4).
+    // Path α (email): RegisterModal observes auth flip in-modal, swaps
+    // to post-auth state with name input enabled. Path β (Google): the
+    // onBeforeGoogleRedirect hook persists share state to sessionStorage,
+    // OAuth redirects the tree, ResumeShareSurface re-mounts the post-
+    // auth half on return.
     if (isAnonymous) {
-      setStoredName(null);
-      setNameModalMode("anon");
-      setNameModalOpen(true);
+      setAuthModalOpen(true);
       return;
     }
+    // Signed-in user: existing NameCaptureModal confirm/edit flow (U6).
     const stored = getNickname();
     if (isRealName(stored)) {
       setStoredName(stored);
@@ -148,30 +148,15 @@ export function ChallengeSharePrompt({
     setNameModalOpen(true);
   }
 
-  // Phase 5b piece 1 R2 — post-auth mode flip. When the user signs up /
-  // signs in via the stacked RegisterModal, isAnonymous transitions to
-  // false. If the name overlay is open in anon mode, flip it to the
-  // appropriate next mode (fresh if no real stored name, confirm if
-  // there is) so the user can complete the share without re-tapping.
-  useEffect(() => {
-    if (!nameModalOpen) return;
-    if (nameModalMode !== "anon") return;
-    if (isAnonymous) return;
-    const stored = getNickname();
-    if (isRealName(stored)) {
-      setStoredName(stored);
-      setNameModalMode("confirm");
-    } else {
-      setStoredName(null);
-      setNameModalMode("fresh");
-    }
-  }, [isAnonymous, nameModalOpen, nameModalMode]);
-
   // Continuation after the modal closes — fires the existing share path.
   // Pulled out of the original handleChallenge so both submit and cancel
   // routes converge here. getNickname() is re-read at this point so the
   // updated value (if user submitted) flows through automatically.
-  async function continueShareAfterName() {
+  //
+  // Phase 5b piece 1 (2026-05-29): accepts an optional override so the
+  // path-α (email) RegisterModal flow can pass the user's entered name
+  // directly. When omitted, getNickname() is read at POST time as before.
+  async function continueShareAfterName(nameOverride?: string) {
     track("challenges", "challenge_create", { sport, trigger: triggerResult.trigger });
     let cid = challengeId;
     if (!cid) {
@@ -186,7 +171,7 @@ export function ChallengeSharePrompt({
         // "Legacy fallback" origin (b).
         handId: handId ?? crypto.randomUUID(),
         sport, season, totalFp, winTier, roster, initialRoster, badges, winTiersMap,
-        challengerName: getNickname() || "Anonymous",
+        challengerName: nameOverride ?? getNickname() ?? "Anonymous",
         serializeRoster,
         shareHeadline,
         // Pass the pre-evaluated trigger through so the DB row's
@@ -238,41 +223,57 @@ export function ChallengeSharePrompt({
       submitLabel="Send"
       editSubmitLabel="Save & send"
       confirmLabel="That's me"
-      // Phase 5b piece 1 R2 anon-mode copy + CTAs.
-      anonHeading="Sign in to send"
-      anonSubheading="Your friends need a way to find your challenge — sign up or sign in to send."
-      signUpLabel="Sign up"
-      signInLabel="Sign in"
-      onSignUp={() => {
-        // Stacked: RegisterModal mounts above this modal. On success,
-        // isAnonymous flips and the useEffect above flips mode to
-        // fresh/confirm. The user completes the share without
-        // re-tapping. On dismiss of RegisterModal, this modal stays
-        // open in anon mode — user can retry or dismiss to abandon.
-        onRequestSignUp?.();
-      }}
-      onSignIn={() => {
-        onRequestSignIn?.();
-      }}
       onSubmit={(name) => {
         setNickname(name);
         setNameModalOpen(false);
-        void continueShareAfterName();
+        void continueShareAfterName(name);
       }}
       onCancel={() => {
-        // Phase 5b piece 1 R2: anon-mode dismiss = abandon. The lock
-        // is explicit: "Dismiss at any point returns the user to the
-        // game with no challenge created (no anonymous-send path
-        // exists)." So in anon mode we just close — do NOT call
-        // continueShareAfterName (which would 401 against the server's
-        // verifyAuth gate and surface the generic "Create failed"
-        // error). For fresh/confirm modes the existing behavior is
-        // preserved: cancel still fires the share with whatever name
-        // is in localStorage.
-        const wasAnon = nameModalMode === "anon";
+        // Signed-in user flow (NameCaptureModal is only mounted for
+        // signed-in users post-unification). Cancel falls back to the
+        // existing localStorage nickname.
         setNameModalOpen(false);
-        if (wasAnon) return;
         void continueShareAfterName();
+      }}
+    />
+  );
+
+  // Phase 5b piece 1 auth-surface unification (2026-05-29, doc lock
+  // 2caa7a3): anonymous tap path. Mounts RegisterModal in challenge
+  // context. Path α (email) completes in-modal — onChallengeAuthComplete
+  // fires the share-POST with the user's entered name. Path β (Google)
+  // exits via onBeforeGoogleRedirect, which persists the full share-POST
+  // payload to sessionStorage; ResumeShareSurface (mounted at App.tsx
+  // level) picks up the resumed flow on return.
+  const handlePersistBeforeGoogleRedirect = () => {
+    writePendingChallengeShare({
+      hand_id: handId ?? crypto.randomUUID(),
+      sport,
+      season,
+      total_fp: totalFp,
+      initial_roster_serialized: serializeRoster(initialRoster),
+      trigger_type: triggerResult.trigger,
+      share_headline: shareHeadline ?? triggerResult.headline ?? "",
+    });
+  };
+  const authModal = authModalOpen && (
+    <RegisterModal
+      context="challenge"
+      onClose={() => setAuthModalOpen(false)}
+      onSuccess={() => setAuthModalOpen(false)}
+      signUp={signUp}
+      linkGoogle={linkGoogle}
+      signIn={signIn}
+      signInGoogle={signInGoogle}
+      onBeforeGoogleRedirect={handlePersistBeforeGoogleRedirect}
+      onChallengeAuthComplete={async (displayName) => {
+        // Path α (email): the user authed in-modal, entered/confirmed
+        // a name, tapped Continue. Fire the share-POST with that name
+        // (overrides getNickname). Persist to localStorage so future
+        // shares skip the name capture.
+        setNickname(displayName);
+        setAuthModalOpen(false);
+        await continueShareAfterName(displayName);
       }}
     />
   );
@@ -285,6 +286,7 @@ export function ChallengeSharePrompt({
     return (
       <>
         {nameModal}
+        {authModal}
         <button
           onClick={onCtaTap}
           disabled={isCreating}
@@ -312,6 +314,7 @@ export function ChallengeSharePrompt({
   return (
     <>
     {nameModal}
+    {authModal}
     <div style={{
       position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9000,
       background: "linear-gradient(0deg, #0D1628 0%, rgba(13,22,40,0.97) 100%)",

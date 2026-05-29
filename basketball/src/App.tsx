@@ -23,6 +23,7 @@ import { useFTUE } from "@shared/hooks/useFTUE";
 import { AuthProvider } from "@shared/auth/AuthProvider";
 import { useAuth } from "@shared/auth/useAuth";
 import { RegisterModal } from "@shared/components/RegisterModal";
+import { ResumeShareSurface } from "@shared/components/ResumeShareSurface";
 import { ProfileScreen } from "@shared/components/ProfileScreen";
 import { getPlayerUid, getNickname } from "@shared/utils/playerIdentity";
 import { AchievementWall } from "@shared/components/AchievementWall";
@@ -225,6 +226,12 @@ function AppInner() {
 
   return (
     <>
+      {/* Phase 5b piece 1 auth-surface unification (2026-05-29, doc lock
+          2caa7a3): path-β resume controller. Anonymous user → Challenge a
+          Friend → Google → redirect → tree rebuilds → this surface picks
+          up the persisted share state and renders the post-auth half of
+          the unified modal. Silent no-op when there's no pending share. */}
+      <ResumeShareSurface />
       {showDebug && (
         <div style={{
           position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100000,

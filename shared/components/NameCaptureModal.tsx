@@ -18,65 +18,47 @@
 
 import { useEffect, useRef, useState } from "react";
 
-export type NameCaptureMode = "fresh" | "confirm" | "anon";
+export type NameCaptureMode = "fresh" | "confirm";
 
 interface Props {
   /** Render gate. False = modal not in DOM (backdrop closed). */
   isOpen: boolean;
   /** "fresh" → empty input. "confirm" → shows currentName + confirm button.
-   *  "anon" → no input; renders sign-up + sign-in CTAs only. Phase 5b
-   *  piece 1 (2026-05-28, doc lock 3da7f02): R2 — tap-time gating on
-   *  the share-CTA surface. Caller picks "anon" when isAnonymous. */
+   *  The earlier "anon" mode was removed in piece 1's auth-surface
+   *  unification commit (doc lock 2caa7a3): anonymous taps route directly
+   *  to RegisterModal in challenge context instead. */
   mode: NameCaptureMode;
-  /** Required when mode === "confirm". Ignored in fresh and anon modes. */
+  /** Required when mode === "confirm". Ignored in fresh mode. */
   currentName?: string;
   /** Fires with trimmed name. In confirm mode and the user pressed the
    *  confirm button, fires with currentName trimmed. In fresh mode or
-   *  confirm→edit submit, fires with the typed value trimmed. Not fired
-   *  in anon mode (anon CTAs use onSignUp / onSignIn instead). */
+   *  confirm→edit submit, fires with the typed value trimmed. */
   onSubmit: (name: string) => void;
   /** Fires on X tap, backdrop tap, or Escape. Caller decides whether
    *  to fall back to anonymous, retain prior name, etc. The modal does
    *  not know. */
   onCancel: () => void;
-  /** Fires when the user taps the sign-up CTA in anon mode. Caller
-   *  opens the existing auth surface (e.g., RegisterModal in sign-up
-   *  pane). Required when mode === "anon". */
-  onSignUp?: () => void;
-  /** Fires when the user taps the sign-in CTA in anon mode. Caller
-   *  opens the existing auth surface in sign-in mode. Required when
-   *  mode === "anon". */
-  onSignIn?: () => void;
   /** Copy overrides — caller-provided so the modal stays surface-agnostic.
    *  Reusable for the deferred auth-gate post-share signup nudge etc.
    *  Defaults are generic; caller overrides what's action-specific. */
   freshHeading?: string;     // shown in fresh mode + confirm→edit branch
   confirmHeading?: string;   // shown in confirm mode (before edit toggle)
-  anonHeading?: string;      // shown in anon mode (above sign-up/sign-in CTAs)
-  anonSubheading?: string;   // optional explainer line shown below anonHeading
   placeholder?: string;      // input placeholder text
   submitLabel?: string;      // primary button label in fresh mode
   editSubmitLabel?: string;  // primary button label in confirm→edit branch
   confirmLabel?: string;     // primary button label in confirm mode
   editLabel?: string;        // secondary button in confirm mode
-  signUpLabel?: string;      // primary CTA label in anon mode
-  signInLabel?: string;      // secondary CTA label in anon mode
 }
 
 export function NameCaptureModal({
   isOpen, mode, currentName, onSubmit, onCancel,
-  onSignUp, onSignIn,
   freshHeading = "What's your name?",
   confirmHeading = "Is this you?",
-  anonHeading = "Sign in to send",
-  anonSubheading,
   placeholder = "Your name",
   submitLabel = "Continue",
   editSubmitLabel = "Save",
   confirmLabel = "Yes",
   editLabel = "Edit",
-  signUpLabel = "Sign up",
-  signInLabel = "Sign in",
 }: Props) {
   // Edit branch toggles inside confirm mode — the user tapped [Edit]
   // and now sees the same input UX as fresh mode, pre-filled.
@@ -175,44 +157,6 @@ export function NameCaptureModal({
           }}
         >×</button>
 
-        {mode === "anon" ? (
-          // Phase 5b piece 1 (2026-05-28): tap-time auth gate. The
-          // share-CTA button is universal (renders for everyone), but
-          // anonymous tappers land here and must auth before the
-          // challenge POST can fire. No input field pre-auth.
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.3 }}>
-              {anonHeading}
-            </div>
-            {anonSubheading && (
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.4 }}>
-                {anonSubheading}
-              </div>
-            )}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 4 }}>
-              <button
-                type="button"
-                onClick={onSignUp}
-                style={{
-                  padding: "13px", borderRadius: 12,
-                  background: "#FFB14A", border: "none", color: "#070A12",
-                  fontSize: 15, fontWeight: 900, cursor: "pointer",
-                }}
-              >{signUpLabel}</button>
-              <button
-                type="button"
-                onClick={onSignIn}
-                style={{
-                  padding: "13px", borderRadius: 12,
-                  background: "transparent",
-                  border: "1px solid rgba(255,255,255,0.2)",
-                  color: "rgba(255,255,255,0.85)",
-                  fontSize: 14, fontWeight: 800, cursor: "pointer",
-                }}
-              >{signInLabel}</button>
-            </div>
-          </div>
-        ) : (
         <form onSubmit={handleFormSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {/* Heading — copy comes from caller props */}
           <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.3 }}>
@@ -289,7 +233,6 @@ export function NameCaptureModal({
             )}
           </div>
         </form>
-        )}
       </div>
     </>
   );
