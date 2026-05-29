@@ -484,6 +484,34 @@ The sender-side overlay's primary CTA(s) are intentionally deferred to phase 8 c
 **Surfaced but not addressed (footer, not in scope of this lock):**
 - Piece 2d (hold/unhold UI) may need reframing once this canvas changes. Not drafting 2d / 2e / 2f until this rework lands and is live-verified.
 
+**EDIT 2026-05-30 (after investigation against f38eee3 — engine/determinism correction, targets S2 and S6):** the original S2 and S6 text describes the recipient's starting hand as coming from a deterministic `dealInitialRoster()` engine call. This is **factually wrong** and must not be implemented as written. Corrections:
+
+- **S2 — "same hand as opponent" is a SNAPSHOT READ, not a deterministic re-derivation.** The recipient does NOT deal. The state 1 → state 2 transition is a read of `challengeCtx.initialRoster` — the server-side snapshot of the sender's deal, captured at challenge-create time (`api/challenge/create.ts:14-34`), persisted, and returned to the recipient via `/api/challenge/[id]` (`api/challenge/[id].ts:41`). The "same hand as opponent" guarantee comes from reading that snapshot, not from any property of the engine. `dealInitialRoster()` is in fact **non-deterministic** — it seeds `mulberry32(randomSeed())` per call, and `randomSeed()` is `Date.now() ^ Math.floor(Math.random() * 1e9)` (`shared/engines/rosterEngine.ts:14`). Calling it on the recipient would yield a different hand from the sender's.
+
+- **S6 — `dealInitialRoster()` is NOT a reused engine call for state 1 → state 2.** Remove that claim. The recipient surface's actual engine calls are:
+  - `redrawRoster()` — drives state 2 → state 3 (atomic replacement of unheld cards; the returned roster is held in surface state so the SURFACE controls reveal timing per path β; operates on `challengeCtx.initialRoster` as `currentCards`).
+  - `resolveRoster()` — drives state 3 → state 4 handoff (relocated from the 2b+2c P4-α slot-6 effect into the new `handoff_resolving` state; runs ONCE on the post-redraw roster, NOT on `initialRoster`).
+
+The "engine reuse" framing in S6 only fits state 2 → state 3 (`redrawRoster`) and state 3 → state 4 (`resolveRoster`). State 1 → state 2 is a snapshot read, not an engine call. Original S2 and S6 text is preserved per append-only convention; treat this EDIT as the source of truth for the engine integration.
+
+**EDIT 2026-05-30 (subsection addendum — Interaction with the DO-NOT-VIOLATE strip-sort contract, item 4 reconciliation):**
+
+The S5 held-card position invariant requires states 1–3 to render the recipient's bottom strip in **deal/positional (slotIndex) order**, with held cards staying in their original positions. The codebase's existing "Locked invariant — strip-component sort contract" (`revealOrder` over `slotIndex` for all strip surfaces) was written when every strip in the H2H system was a reveal-participating strip — no pre-reveal positional strip existed. The two locked invariants appear to collide; the collision is resolved by scoping, not by relaxation.
+
+**Scope clarification (NOT a relaxation):**
+
+- The strip-sort contract governs **reveal-participating strip surfaces** — `HandStrip` inside `H2HRevealScreen` (the arc), `ResultsStrip` inside `H2HResultsOverlay` (the post-arc), and any future strip that participates in the reveal sequence. These surfaces continue to bind to `revealOrder`-over-`slotIndex` as locked, with no change.
+- States 1–3 of the playing-mode rework use a **dedicated playing-mode strip** that renders in deal/positional (`slotIndex`) order by design. This is required by S5 and is **explicitly out of scope of the strip-sort contract**. The playing-mode strip is NOT a reveal-participating surface; it exists to give the recipient a stable mental anchor before the reveal begins.
+- State 4 of the playing-mode rework mounts the existing reveal surface (`H2HRevealScreen` → `HandStrip`), and the strip-sort contract applies there **unchanged**. The handoff between the playing-mode strip and the reveal `HandStrip` is the boundary where the contract takes over.
+
+Every reveal-participating strip still binds to `revealOrder`-over-`slotIndex`. Nothing locked in the existing invariant is relaxed; only the contract's scope is named precisely. The contract-lock tests on `HandStrip` and `ResultsStrip` remain authoritative; no parallel contract-lock test on the playing-mode strip is implied (its positional rendering is part of S5, not part of this contract).
+
+**EDIT 2026-05-30 (piece 2d scope re-scoped):** the rework INCLUDES a minimum-viable functional hold/unhold tap — tap-to-toggle on bottom-strip cells, state 2 only. This is **load-bearing for the Deal → Hold → Draw state machine**; the rework cannot function without it. The functional tap (toggle a slot's held/unheld state, drive into `redrawRoster`'s `lockedCardIds`) ships as part of the rework.
+
+Piece 2d is therefore **re-scoped to the VISUAL refinement of the hold mechanic** — hold indicator styling, tap affordance, hold-state animation polish, any micro-interactions on the cell itself. Not the functional tap. 2d / 2e / 2f remain deferred (no prompts drafted) until the rework lands and is live-verified — that deferral is unchanged.
+
+This EDIT does not change the original P7 entry in the 2b+2c lock (which already deferred hold/unhold to 2d). It clarifies that the rework, by its state machine, requires a minimum-viable functional tap that the original 2b+2c surface did not need (because 2b+2c had no hold step — recipient drew all 6 with no choices).
+
 ---
 
 ### Phase 5b piece 2b+2c — recipient-play on H2H surface + drawing mechanic (locked 2026-05-28)
@@ -1012,6 +1040,8 @@ Any component that renders an `H2HCard`-shaped array in a horizontal strip MUST:
 - `ResultsStrip` (inside `H2HResultsOverlay`) — fixed by amend2.
 
 **New strip-like surfaces (sender-side overlay, summary cards, replay viewer, future analytics dashboards) must include this contract from inception.** The contract-lock tests on both existing components serve as the template — deliberately misaligned `slotIndex` against the design rule, asserted via DOM order.
+
+**EDIT 2026-05-30 (scope clarification, not a relaxation):** this contract governs reveal-participating strip surfaces only. The Phase 5b piece 2 playing-mode rework introduces a dedicated pre-reveal positional strip (states 1–3) that renders in `slotIndex` order by design (per the S5 held-card position invariant) and is **out of scope of this contract**. See the rework section's "Interaction with the DO-NOT-VIOLATE strip-sort contract" subsection for the full scope statement. Every reveal-participating strip still binds to `revealOrder`-over-`slotIndex` as locked above.
 
 ---
 
