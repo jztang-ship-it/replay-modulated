@@ -423,6 +423,67 @@ The sender-side overlay's primary CTA(s) are intentionally deferred to phase 8 c
 
 ---
 
+### Phase 5b piece 2a — geometry re-lock + CTA clipping fix (locked 2026-05-28)
+
+**Rationale:** the bottom strip currently clips the bottom CTA button (live verification screenshot evidence — orange "Try Again" / "Send It Back" button's top edge is overlapped by the strip's bottom border). This is a pre-existing bug since phase 4 locked the geometry. Piece 2a fixes it AND re-derives the bottom-strip Y to accommodate piece 2's upcoming requirements (Draw button in the CTA slot during recipient-play mode, sync PvP indicator sharing the slot when both players play live).
+
+**Locked constraints (unchanged from phase 4):**
+
+- **Top strip Y, top mini-card row Y, hero slot row Y, hero slot dimensions** — all locked. No movement allowed.
+- **Bottom strip's card dimensions** — locked at current size.
+- **Top FP anchored to top hero slot Y, bottom FP anchored to bottom hero slot Y** — anchor relationships preserved.
+
+**Locked changes (new):**
+
+**G1 — Bottom strip moves up.** The bottom strip's Y position shifts upward to create reserved space for the bottom CTA. The exact pixel delta is determined by the geometry budget below; implementation derives it.
+
+**G2 — Bottom CTA reserved space.** Defined as: bottom CTA button height + bottom screen margin + future sync PvP indicator vertical allowance. Investigation determines the cleanest constants; the rule is the CTA gets enough room to render fully visible without strip overlap on ALL viewport widths in the supported range (390px-tablet).
+
+**G3 — Investigation order for the new Y:**
+1. Read the current bottom-strip Y constant + bottom CTA button height + screen-bottom margin from the layout code.
+2. Compute the minimum delta needed for the CTA to render unclipped.
+3. Add headroom for sync PvP indicator (~30-40px reserved, even though indicator doesn't render today).
+4. Round to a clean number (e.g., multiples of 8px per design system convention if one exists).
+
+**G4 — Hero slot row size: last-resort shrink only.** If G1's bottom-strip move alone doesn't create enough room, the hero slot row CAN shrink slightly (e.g., reduce hero card size by 5-10px). This is a LAST RESORT. Implementation tries G1 alone first; only invokes G4 if G1 + the constraint that "top stuff stays locked" mathematically can't satisfy the CTA reserved space.
+
+If G4 fires, surface the decision in the implementation commit message + flag for phase 8 review.
+
+**G5 — Apply across all H2H surfaces that share the locked geometry.** The new bottom-strip Y applies to:
+- The H2H reveal arc (mid-game state during reveal animation)
+- The H2H results overlay (post-arc state)
+- Any future recipient-play surface (piece 2b onward)
+
+All surfaces use the new Y. Smoke verification confirms the existing arc + overlay still render correctly at the new Y before any piece 2b work proceeds.
+
+**G6 — Sort contract invariant unchanged.** The strip-component sort contract (`revealOrder` over `slotIndex`, locked at phase 5a amend1/amend2) is unaffected by Y changes. Strips at any Y honor the sort contract.
+
+**G7 — Smoke verification gate.** Implementation commit must include screenshots of:
+- The H2H reveal arc with new geometry, mid-reveal frame.
+- The H2H results overlay with new geometry, both WIN and LOSS variants.
+- Confirmation the bottom CTA is fully unclipped on 390px viewport (mobile reference width).
+
+These ship as a smoke artifact (per phase 4/5 smoke-test pattern in `docs/smoke-tests/`).
+
+**What this locks out:**
+- No movement of top strip, top mini-card row, hero slot row, or hero slot dimensions (G constraints).
+- No CTA height changes (the strip moves; the CTA stays its current size).
+- No removal of the sort contract (G6).
+
+**What this enables:**
+- Piece 2b can place a Draw button in the now-cleared CTA slot during recipient-play mode.
+- Future sync PvP indicator can share the slot.
+- The pre-existing CTA clipping bug is resolved.
+
+**Implementation commit (separate, follows this doc lock):**
+- Investigation to compute new bottom-strip Y per G3.
+- Update layout constants/code that drive the bottom-strip Y.
+- Confirm all three surfaces (arc, overlay, any test mounts) render correctly at the new Y.
+- Smoke artifact per G7.
+- If G4 fires (hero-slot shrink invoked), surface clearly in commit message.
+
+---
+
 ### Phase 5b piece 1 — U4 second amendment + password reset (locked 2026-05-28, supersedes U4-b and U4-d of the prior U4 amendment; adds U4-g for recovery)
 
 **Revision rationale:** the prior U4 amendment (locked at `1ad3797`) intended in-place reveal and visual continuity across the auth seam. The implementation at `216bf5f` did not fully honor U4-b — post-auth swaps the body content (auth section disappears, name + Send appears) rather than appending the name section below a now-confirmed auth section. The post-auth heading also kept the pre-auth copy verbatim, which reads stale once auth is done.
