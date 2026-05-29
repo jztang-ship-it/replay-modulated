@@ -423,6 +423,69 @@ The sender-side overlay's primary CTA(s) are intentionally deferred to phase 8 c
 
 ---
 
+### Phase 5b piece 2 — playing-mode layout rework (locked 2026-05-30, supersedes P3 and P4 of the 2b+2c lock below)
+
+**Rationale:** live verification of `f38eee3` (the 2b+2c implementation) showed the shipped slot-by-slot Draw mini-UI is wrong against intent. First-time recipients have no anchor to what a "starting hand" means when cards trickle into empty slots one Draw tap at a time, and there is no preserved "this is the same hand your opponent had" framing. The recipient playing-mode flow is re-derived to mirror the normal-game hand layout on the H2H surface: a 4-state machine with a locked reveal sequence, reusing the existing engine `dealInitialRoster()` and `redrawRoster()` calls. This rework supersedes P3 (playing-mode layout) and P4 (drawing mechanic, including the same-day P4-α implementation reinterpretation) of the 2b+2c lock. P1, P2, P5–P10 of 2b+2c are unaffected and remain in force.
+
+**Locked rules:**
+
+**S1 — State 1: Pre-deal (initial mount).**
+- Top strip: sender's roster, all 6 face-DOWN.
+- Hero zone (mid-section): guidance text — "Hit deal to see your starting deck".
+- Bottom strip: 6 empty positional placeholders, laid out in the normal-game-style positioning (full strip visible from mount, NOT slot-by-slot fill).
+- CTA: **Deal**.
+
+**S2 — State 2: Post-deal, pre-hold.**
+- Top strip: still face-DOWN (no change from S1).
+- Bottom strip: 6 cards animate in one-by-one, face-UP, with full pre-reveal details (photo, salary, position, AVG). Same starting roster as the sender's hand — `dealInitialRoster()` is deterministic, so the recipient's deal matches the sender's initial deal as a property of the engine, not as a per-card copy.
+- Hero zone: "Here's the same starting hand as your opponent, choose the cards you want to hold, unheld cards will be replaced".
+- CTA: **Draw**.
+
+**S3 — State 3: Post-draw transition (path β, strict, no-flicker).**
+- On Draw tap: unheld cards flip face-DOWN immediately. Held cards stay face-up in their original slots — NO rearrangement, NO position shift.
+- Engine `redrawRoster()` (atomic replacement of unheld cards) runs WHILE the replacement slots are face-down. The recipient must NOT see any replacement value before the column-flip pass — no brief visible replacement state, no flicker. This is a hard constraint on the implementation, not a "best effort" guideline.
+- Column-by-column flip pass, LEFT-TO-RIGHT, columns 1 → 6:
+  - **Held column:** top (opponent) card flips face-up; bottom does nothing (held card is already face-up from S2).
+  - **Replacement column:** top (opponent) card AND bottom (replacement) card flip face-up IN UNISON.
+- After the full pass: both lineups are face-up, pre-reveal. No held-card rearrangement at any point.
+
+**S4 — State 4: 1v1 hero-slot reveal arc (EXISTING, UNCHANGED).**
+- Cards move into the hero slot; FP / badges / fire-ice animations play per existing arc design.
+- The existing `revealOrder` contract handles "held last, salary-sorted" — this is what preserves the dramatic reveal of held cards, so VISUAL POSITION on the strip does NOT also need to encode reveal order. Reveal-order signaling is the `revealOrder` contract's responsibility, not the layout's.
+- After per-card reveal, the smaller card falls back to its slot position with all details proportionally showing.
+
+**S5 — Held-card position invariant (design invariant, recorded explicitly).**
+- Held cards do NOT move. They stay in their original deal positions throughout S2 → S3 → S4.
+- Reveal-order — "held revealed last" — is handled SOLELY by the existing `revealOrder` contract in state 4.
+- **Why:** decided this session after weighing mental-anchor preservation vs. reveal-order telegraphing. Anchor preservation won — the recipient's spatial memory of "where my hand is" must survive the transition into reveal, so position cannot double as a reveal-order signal. The existing `revealOrder` contract already covers reveal-order; layering the same signal into position would be redundant at best and confusing at worst.
+
+**S6 — Engine reuse (note, not new work).**
+- `dealInitialRoster()` — atomic deal of all 6 cards (drives S1 → S2 transition).
+- `redrawRoster()` — atomic replacement of unheld cards (drives S2 → S3 transition).
+- Both already exist in the engine. The playing-mode surface is the new work; the engine calls are reuse. This explicitly closes the P4-α "pace-the-deal facade" tension noted in the 2b+2c implementation note — the new flow uses engine calls atomically, not paced per-tap.
+
+**Retained from 2b+2c, NOT superseded by this rework:**
+- P1 (challenge-link tap routes to H2H surface directly).
+- P2 (H2H surface gains a "playing" mode in its state machine).
+- P5 (anonymous recipients welcome, no auth gate during playing).
+- P6 (top strip face-down stays face-down through playing mode).
+- P7 (hold/unhold deferred to piece 2d — but see "Surfaced but not addressed" below).
+- P8 (mode handoff transition deferred to piece 2f).
+- P9 (reveal trigger — automatic on full lineup, with hold pause).
+- P10 (challenge-context state threading).
+- `bypassGameStateGate` plumbing on `H2HRecipientReveal` stays (still needed for handoff into the reveal arc without a GameView underneath).
+
+**What this locks out:**
+- No slot-by-slot per-tap fill animation as the deal mechanic. The deal is a single Deal CTA → 6-card cascade into the existing strip layout.
+- No visible intermediate state during redraw — replacement values must never flash pre-flip. If the implementation cannot guarantee this with the current strip-component, the strip-component contract is the thing that gives, not the no-flicker rule.
+- No held-card rearrangement to encode reveal order. Position is anchor; `revealOrder` is sequence.
+- No reuse of the slot-by-slot drawing animation shipped in `f38eee3`.
+
+**Surfaced but not addressed (footer, not in scope of this lock):**
+- Piece 2d (hold/unhold UI) may need reframing once this canvas changes. Not drafting 2d / 2e / 2f until this rework lands and is live-verified.
+
+---
+
 ### Phase 5b piece 2b+2c — recipient-play on H2H surface + drawing mechanic (locked 2026-05-28)
 
 **Rationale:** the current recipient flow is two disjoint UIs — recipient taps challenge link → lands on normal game UI → plays hand there → transitions to H2H reveal arc + overlay. First-time recipients have no context for what's happening when the UI swaps mid-experience. Locked solution: recipient lands DIRECTLY on the H2H surface in a new "playing" mode, draws and holds their hand there, then transitions to reveal arc + overlay without changing surfaces. Single coherent experience.
@@ -499,6 +562,10 @@ Hold (P7) being deferred to piece 2d means 2b+2c's recipient makes no strategic 
 One small consequence of P4-α: the resolveRoster call may fail (network, 4xx). The implementation falls through to using `initialRoster` as-is, which may have stale or 0 actualFp from the original sender-side serialization. This is observability noise, not a correctness break — the arc still mounts and renders.
 
 Mount-gate change on `H2HRecipientReveal`: the wrapper today gates on `gameState ∈ {REVEALING, RESULTS}` (from the underlying GameView state). The playing-mode handoff has no GameView underneath; a `bypassGameStateGate?: boolean` prop was added to the wrapper interface so the playing surface can mount the reveal directly. The senderResolved gate still applies — the bypass only skips the GameView-coupled half of the mount condition.
+
+**EDIT 2026-05-30 (after live verification of f38eee3 — piece 2 layout rework):** P3 (playing-mode layout) and P4 (drawing mechanic, including the same-day "Implementation note — P4 reinterpretation" / path P4-α above) are **superseded** by the "Phase 5b piece 2 — playing-mode layout rework" lock that appears immediately above this section in the document. Original P3 and P4 text — and the P4-α implementation note — are preserved here per the append-only convention; treat the rework lock as the source of truth for playing-mode layout and drawing behavior. P1, P2, P5, P6, P7, P8, P9, P10 remain as locked above; only P3 and P4 are superseded.
+
+Rationale for the supersession: live verification of `f38eee3` showed the shipped slot-by-slot Draw mini-UI is wrong against intent — no preserved "this is the same starting hand your opponent had" framing, and the per-tap fill removes the spatial anchor a recipient needs before deciding what to hold. The rework re-derives the flow as Deal → Hold → Draw with atomic engine calls (`dealInitialRoster()` / `redrawRoster()`) and a strict, no-flicker column-flip transition, matching the normal-game hand layout. Mount-gate `bypassGameStateGate` plumbing on `H2HRecipientReveal` is retained, not superseded.
 
 ---
 
