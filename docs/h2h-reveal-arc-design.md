@@ -423,6 +423,65 @@ The sender-side overlay's primary CTA(s) are intentionally deferred to phase 8 c
 
 ---
 
+### Phase 5b piece 1 — U4 amendment (locked 2026-05-28, supersedes U4 of the same-day "auth surface unification" lock)
+
+**Revision rationale:** the original U4 was correct in intent (one modal experience, auth + name combined) but under-specified two implementation details that produced bad UX when `f95aa57` shipped:
+
+1. **Pre-auth name field treatment.** U4 said "may be disabled or hidden until auth completes; this is an implementation detail to surface during investigation." The shipped implementation chose "disabled and visible" with the placeholder "Sign in to set your name." Live verification showed users read this as a broken form (an unclickable text input in an otherwise-interactive surface) rather than as a forward-pointing UI affordance.
+2. **Single-modal continuity across the Google auth round-trip.** U4 said "single Continue button performs the post-auth challenge POST … No second modal between auth and POST." This was honored in code via `ResumeShareSurface`, but the implementation rendered the post-auth state as a visually-distinct surface ("Almost there. Confirm your name and we'll send the challenge.") rather than as a continuation of the original modal. The user perceives two screens, not one progressive experience.
+
+A third issue surfaced in the same verification — verb register inconsistency ("Sign in to send" heading + "Save with email" button + "Already have an account?" toggle) — also gets locked here, even though it's a copy issue rather than a layout one, because it's part of the same "single coherent surface" goal.
+
+**Locked rules (these replace U4 in full; U1, U2, U3, U5, U6, U7, U8 remain in force):**
+
+**U4-a — Name field hidden pre-auth.** In `"challenge"` context, the name input field is NOT rendered while the user is still anonymous (`isAnonymous === true`). The pre-auth modal contains: heading, subheading, Google button, "or use email" divider, email field, password field, primary button, toggle link, dismiss link. No name field, no "YOUR NAME" label, no placeholder for a not-yet-meaningful name input.
+
+**U4-b — Name field reveals in-place post-auth.** When auth completes (Path α email auth: `isAnonymous` flips from `true` to `false` in-modal; Path β Google: redirect-and-rebuild lands the user on the same modal in a now-signed-in state via `ResumeShareSurface` OR via `RegisterModal` re-mounting with the persisted state — see implementation note), the modal renders ADDITIONALLY a name input section that appears below the auth section. The auth section transitions to a completed/confirmation state ("Signed in as: <user identifier>") so the user sees both the completed step AND the new step on the same surface.
+
+The transition is in-place: same modal, same chrome (heading, dismiss link, modal frame), same visual identity. The user perceives one modal that progressively reveals more of itself, not two separate screens.
+
+**U4-c — Visual continuity for path β (Google).** The Google redirect-rebuild case currently uses a separate `ResumeShareSurface` component. After this amendment, `ResumeShareSurface` must render as visually indistinguishable from `RegisterModal` in challenge-context post-auth state. The user landing back from Google should see "the same modal they left, now post-auth" — same heading text (or a minimal continuation like "Sign up/in to send to your friend" preserved), same visual chrome, same dismiss affordance.
+
+Implementation options for U4-c (the implementation session resolves which):
+- **Option α — Fold `ResumeShareSurface` into `RegisterModal`.** `RegisterModal` in challenge-context detects the post-redirect resume state (signed-in + pending sessionStorage payload) and renders accordingly. `ResumeShareSurface` as a separate component is deleted. The single source of truth for the challenge-context modal is `RegisterModal`.
+- **Option β — Keep `ResumeShareSurface` as a separate component but render it as a visual clone.** Identical chrome, identical heading, identical dismiss affordance, identical layout structure as `RegisterModal` in challenge-context. The user can't tell from looking at it that it's a different component.
+
+Option α is the cleaner default. Option β is acceptable if investigation reveals folding is harder than expected (e.g., resuming requires App.tsx-level mount that `RegisterModal` doesn't have today). The implementation session reports which it chose with reasoning.
+
+**U4-d — Verb register: heading uses "Sign up/in to send to your friend" as the placeholder phrasing.** This uses both verbs together to acknowledge that the modal serves both sign-up and sign-in flows from the same surface, and that the user's specific intent (new account vs. returning) is something they resolve via the toggle, not something the heading needs to pre-judge.
+
+- **Heading (challenge context):** "Sign up/in to send to your friend"
+- **Subheading:** kept brief and consistent — something like "Your friends need a way to find your challenge." (Don't repeat "sign up or sign in" — the heading and the buttons handle that.)
+- **Primary email button:** "Sign up with email" if user is in sign-up mode (default), "Sign in with email" if user toggled to sign-in mode. **Do NOT use "Save with email."** The word "save" is wrong for this surface.
+- **Toggle link:** existing pattern preserved — "Already have an account?" / "Create new account" toggles between sign-up and sign-in mode.
+- **Post-auth state heading:** continues to read "Sign up/in to send to your friend" or transitions to a state-of-the-flow heading like "Confirm your name to send." Implementation session can pick; the rule is the post-auth heading must read as a continuation, not a different modal.
+
+These copy choices are placeholders. Phase 8 copy polish revisits them. The rule this amendment locks is the **register** — not "save," not three different verbs across one modal, single consistent voice. The exact wording can be refined in phase 8.
+
+**U4-e — Continue button gating, unchanged from original U4.** The Continue button (in the post-auth name section) is disabled until: auth is complete (`isAnonymous === false`) AND the name field has a non-empty value matching `NameCaptureModal`'s existing minimum-length rule. On tap: fires the share-POST callback. (This rule is restated for completeness; the original U4 had this and it stays.)
+
+**U4-f — Dismiss semantics, unchanged from original U4.** Dismiss at any point returns the user to the game with no challenge POST fired (even if auth succeeded earlier — dismiss is the cancel signal). (Restated for completeness.)
+
+**What this locks out:**
+- No "disabled-and-visible" pre-auth name field. Either hidden or fully interactive — never the in-between state.
+- No visually-distinct post-auth modal. The continuity rule is binding: it must read as the same modal.
+- No "Save with email" button copy. "Save" is reserved for normal-context auth nudge ("Save your progress"); challenge-context uses the explicit sign-up/sign-in verbs.
+- No mixed verb register across one modal. The heading, button, and toggle all align with the modal's current mode.
+
+**What this preserves from the original U4:**
+- Single modal experience.
+- Auth + name combined on one surface.
+- Single Continue button fires the share-POST.
+- Dismiss = no POST.
+
+**Implementation commit (separate, follows this doc lock AND the Item B doc lock):**
+- Rewrite `RegisterModal` challenge-context rendering: hide name field pre-auth, reveal in-place post-auth (auth section transitions to confirmation state).
+- Address U4-c by folding `ResumeShareSurface` into `RegisterModal` (option α default) OR rendering `ResumeShareSurface` as a visual clone (option β if folding is harder than expected).
+- Update copy per U4-d.
+- Implementation commit bundles with Item B (FTUE bypass) per the session plan.
+
+---
+
 ### Phase 5b piece 1 — auth surface unification (locked 2026-05-28, supersedes R6 of the same-day "sender-side sign-in nudge revised" lock)
 
 **Revision rationale:** piece 1's implementation (`babd079`, with `a4b74b0` fixing a build break) shipped `NameCaptureModal` in an anonymous mode that, on Sign up / Sign in tap, opens the existing `RegisterModal` on top of itself. Two modals visible simultaneously, second one partially clipped by the first. Live verification confirmed the experience is bad enough to warrant immediate unification rather than the "parked" treatment R6 originally specified.
@@ -482,6 +541,10 @@ Both contexts present the same auth fields (Google sign-in + email/password + to
 - Update `GameView.tsx:854-870` to pass `context="normal"` to the unified auth surface.
 - Delete `NameCaptureModal` anon mode + its anon-specific tests.
 - Post-auth in challenge context: name field auto-populates and becomes editable; single Continue posts the challenge.
+
+**EDIT 2026-05-28 (added same day — third revision of piece 1):** U4's "disabled or hidden" pre-auth name field choice and its under-specified single-modal continuity have been **superseded** by a more precise rule. See the subsequent "Phase 5b piece 1 — U4 amendment" lock below. U1, U2, U3, U5, U6, U7, U8 remain as locked above; only U4 is superseded.
+
+The amendment's motivation: live verification of `f95aa57` revealed that "disabled but visible" reads as broken UX (the user sees "Sign in to set your name" as placeholder in an unclickable field — they conclude the form is buggy), and that `ResumeShareSurface` shipped as a visually-distinct second modal rather than a continuation of the first. The amendment locks "hidden pre-auth, progressive reveal in the same surface" and addresses the verb register inconsistency surfaced in the same verification.
 
 ---
 
