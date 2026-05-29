@@ -62,15 +62,34 @@ describe("RegisterModal — normal context (existing behavior)", () => {
 });
 
 describe("RegisterModal — challenge context, anonymous (pre-auth)", () => {
-  it("renders auth UI + disabled name field with the placeholder", () => {
+  it("renders auth UI but NOT a name field (U4-a: hidden pre-auth)", () => {
     render(withAuth({ isAnonymous: true }, (
       <RegisterModal {...requiredProps} context="challenge" />
     )));
     expect(screen.getByRole("button", { name: /continue with google/i })).toBeTruthy();
-    const nameInput = screen.getByPlaceholderText(/sign in to set your name/i) as HTMLInputElement;
-    expect(nameInput.disabled).toBe(true);
+    // U4-a: name field is NOT rendered pre-auth (no "disabled-and-visible"
+    // intermediate state). Only the email input remains.
+    expect(screen.queryByPlaceholderText(/your name/i)).toBeNull();
+    expect(screen.queryByPlaceholderText(/sign in to set your name/i)).toBeNull();
     // No "Send challenge" button yet (gated on signed-in state)
     expect(screen.queryByRole("button", { name: /send challenge/i })).toBeNull();
+  });
+
+  it("uses the unified U4-d heading copy (no 'Sign in to send' nor 'Almost there' variants)", () => {
+    render(withAuth({ isAnonymous: true }, (
+      <RegisterModal {...requiredProps} context="challenge" />
+    )));
+    expect(screen.getByText(/sign up\/in to send to your friend/i)).toBeTruthy();
+    expect(screen.queryByText(/^sign in to send$/i)).toBeNull();
+    expect(screen.queryByText(/almost there/i)).toBeNull();
+  });
+
+  it("uses 'Sign up with email' button copy in challenge context, not 'Save with email' (U4-d)", () => {
+    render(withAuth({ isAnonymous: true }, (
+      <RegisterModal {...requiredProps} context="challenge" />
+    )));
+    expect(screen.getByRole("button", { name: /sign up with email/i })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /save with email/i })).toBeNull();
   });
 
   it("fires onBeforeGoogleRedirect synchronously when Google button tapped", async () => {
@@ -106,7 +125,10 @@ describe("RegisterModal — challenge context, signed-in (post-auth)", () => {
     const nameInput = screen.getByDisplayValue("Alice Wonder") as HTMLInputElement;
     expect(nameInput.disabled).toBe(false);
     expect(screen.getByRole("button", { name: /send challenge/i })).toBeTruthy();
-    expect(screen.getByText(/almost there/i)).toBeTruthy();
+    // U4-c: heading stays CONSTANT across the auth seam — same copy as
+    // pre-auth, no "Almost there" variant.
+    expect(screen.getByText(/sign up\/in to send to your friend/i)).toBeTruthy();
+    expect(screen.queryByText(/almost there/i)).toBeNull();
   });
 
   it("Send challenge button is enabled when name has 2+ chars", () => {

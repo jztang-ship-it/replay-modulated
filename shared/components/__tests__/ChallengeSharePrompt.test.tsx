@@ -92,16 +92,16 @@ describe("R1 — placeholder commentary copy", () => {
 });
 
 describe("U1/U2/U4 — anonymous tap opens RegisterModal in challenge context", () => {
-  it("anonymous user taps Challenge a Friend → unified auth surface appears (Google + email + name field)", () => {
+  it("anonymous user taps Challenge a Friend → unified auth surface appears (Google + email; name field hidden pre-auth)", () => {
     render(withAuth(true, (
       <ChallengeSharePrompt {...baseProps} triggerResult={makeTrigger("bad_beat")} />
     )));
     fireEvent.click(screen.getByRole("button", { name: /challenge a friend/i }));
-    // RegisterModal challenge-context pre-auth state: Google button,
-    // email/password inputs, disabled name field.
+    // RegisterModal challenge-context pre-auth state per U4-a (2026-05-28
+    // amendment): Google button, email/password inputs, NO name field.
     expect(screen.getByRole("button", { name: /continue with google/i })).toBeTruthy();
     expect(screen.getByPlaceholderText(/email/i)).toBeTruthy();
-    expect(screen.getByPlaceholderText(/sign in to set your name/i)).toBeTruthy();
+    expect(screen.queryByPlaceholderText(/your name/i)).toBeNull();
   });
 
   it("does NOT open the legacy NameCaptureModal anon mode (gone post-unification)", () => {

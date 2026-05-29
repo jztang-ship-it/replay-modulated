@@ -9,6 +9,18 @@ export interface AuthContextValue {
   uid: string;
   isAuthenticated: boolean;
   isAnonymous: boolean;
+  /** Phase 5b piece 1 — Item B (FTUE bypass, doc lock edc58d9).
+   *  Server-side FTUE-completion flag for signed-in users, fetched from
+   *  player_profiles.ftue_completed on session resolve.
+   *  - `null` = loading OR user is anonymous (consumers should treat the
+   *    anonymous case as "use local-storage gate" per B3/B4).
+   *  - `true` = completed (signed-in user has finished FTUE on some
+   *    device).
+   *  - `false` = needs FTUE (only set if a future code path explicitly
+   *    clears it; not used today).
+   *  Per B7's bias rule: NULL on a signed-in user is treated as completed
+   *  by useFTUE — pre-rule existing accounts don't re-see FTUE. */
+  ftueCompleted: boolean | null;
   signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   linkGoogle: () => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
@@ -57,6 +69,7 @@ export const AuthContext = createContext<AuthContextValue>({
   uid: "",
   isAuthenticated: false,
   isAnonymous: true,
+  ftueCompleted: null,
   signUp: async () => ({ error: null }),
   linkGoogle: async () => ({ error: null }),
   signIn: async () => ({ error: null }),
@@ -64,9 +77,37 @@ export const AuthContext = createContext<AuthContextValue>({
   signOut: async () => ({ error: null }),
 });
 
+/** Phase 5b piece 1 — Item B helper (2026-05-28, doc lock edc58d9).
+ *  B5: scan localStorage for any per-sport FTUE-completion flag set to "1".
+ *  Used at the anonymous→signed-in transition to decide whether to promote
+ *  the user's local FTUE state to their server-side profile. Per the lock,
+ *  ANY sport's local completion satisfies the promotion (the profile-level
+ *  flag is sport-agnostic; B1 reads "signed-in users never see FTUE"
+ *  globally, not per-sport). */
+export function anyLocalFtueCompleted(): boolean {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith("replaymod_ftue_")) continue;
+      if (localStorage.getItem(key) === "1") return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  // Phase 5b piece 1 — Item B (2026-05-28, doc lock edc58d9). Server-side
+  // FTUE-completion flag for signed-in users. NULL while loading or for
+  // anonymous users; populated from player_profiles.ftue_completed on
+  // signed-in session resolve and on anon→signed transition (B5 promotion).
+  const [ftueCompleted, setFtueCompleted] = useState<boolean | null>(null);
   const localUid = useRef(getLocalUid());
+  // Once-only promotion guard so the B5 write doesn't fire on every
+  // re-emission of SIGNED_IN events (Supabase emits these on token refresh).
+  const ftuePromotedRef = useRef(false);
 
   const uid = user?.id ?? localUid.current;
   const isAuthenticated = user !== null;
@@ -86,6 +127,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (event === "SIGNED_IN" && session?.user && !session.user.is_anonymous) {
             const provider = session.user.app_metadata?.provider ?? "unknown";
             track("auth", "signin_success", { provider });
+            // Phase 5b piece 1 — Item B B5 (2026-05-28, doc lock edc58d9):
+            // anon→signed-in transition promotes any local FTUE-completion
+            // to the server-side profile so the user doesn't re-see FTUE
+            // post-signup. Guarded so we only promote once per session
+            // (Supabase emits SIGNED_IN on every token refresh).
+            if (!ftuePromotedRef.current && anyLocalFtueCompleted()) {
+              ftuePromotedRef.current = true;
+              supabase.from("player_profiles")
+                .update({ ftue_completed: true })
+                .eq("id", session.user.id)
+                .then(({ error }) => {
+                  if (error) console.warn("[auth] FTUE promotion failed:", error.message);
+                  else if (mounted) setFtueCompleted(true);
+                });
+            } else if (!ftuePromotedRef.current) {
+              // No local flag to promote — fetch the existing profile flag so
+              // B4 read precedence has fresh data after sign-in.
+              ftuePromotedRef.current = true;
+              supabase.from("player_profiles")
+                .select("ftue_completed")
+                .eq("id", session.user.id)
+                .maybeSingle()
+                .then(({ data, error }) => {
+                  if (error) console.warn("[auth] FTUE flag fetch failed:", error.message);
+                  else if (mounted) setFtueCompleted((data?.ftue_completed as boolean | null | undefined) ?? null);
+                });
+            }
           }
         } catch (e) {
           console.warn("[auth] onAuthStateChange handler failed:", e);
@@ -113,6 +181,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               if (error) console.warn("[auth] Failed to upsert profile:", error.message);
             });
           } catch (e) { console.warn("[auth] profile upsert threw:", e); }
+          // Phase 5b piece 1 — Item B (2026-05-28, doc lock edc58d9):
+          // populate ftueCompleted from the profile for signed-in users on
+          // initial page-load so useFTUE has the right gate immediately.
+          // Anonymous users leave ftueCompleted as null — useFTUE falls
+          // back to localStorage in that case per B3/B4.
+          if (!session.user.is_anonymous) {
+            try {
+              supabase.from("player_profiles")
+                .select("ftue_completed")
+                .eq("id", session.user.id)
+                .maybeSingle()
+                .then(({ data, error }) => {
+                  if (error) console.warn("[auth] FTUE flag fetch failed:", error.message);
+                  else if (mounted) setFtueCompleted((data?.ftue_completed as boolean | null | undefined) ?? null);
+                });
+            } catch (e) { console.warn("[auth] FTUE flag fetch threw:", e); }
+          }
           return;
         }
         const { data, error } = await supabase.auth.signInAnonymously();
@@ -254,7 +339,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, uid, isAuthenticated, isAnonymous, signUp, linkGoogle, signIn, signInGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, uid, isAuthenticated, isAnonymous, ftueCompleted, signUp, linkGoogle, signIn, signInGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   );

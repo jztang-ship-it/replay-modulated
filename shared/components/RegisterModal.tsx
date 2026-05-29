@@ -173,24 +173,26 @@ export function RegisterModal({
     );
   }
 
-  // Phase 5b piece 1: render shape branches on (context, isAnonymous).
-  // Challenge context + signed-in = post-auth state (auth UI hidden,
-  // name field + Continue). Challenge context + anonymous = pre-auth
-  // (auth UI shown, name field disabled). Normal context = existing
-  // RegisterModal layout regardless of auth state.
+  // Phase 5b piece 1 — U4 amendment (2026-05-28, doc lock 1ad3797):
+  // Challenge context renders ONE coherent surface across the auth seam.
+  // Pre-auth: auth UI shown, no name field at all (U4-a — no
+  // "disabled-and-visible" intermediate state). Post-auth (modal observes
+  // isAnonymous flipping OR remounts via ResumeShareSurface post-redirect):
+  // auth UI hidden, name field revealed in-place, Continue posts.
+  // Heading/subheading stay CONSTANT across the seam (U4-b/c) so the user
+  // perceives one progressive modal, not two screens.
   const showAuthUi = !isChallengeContext || isAnonymous;
-  const showChallengeNameField = isChallengeContext;
+  const showChallengeNameField = isChallengeContext && !isAnonymous;
   const showChallengeContinue = isChallengeContext && !isAnonymous;
   const showEmailSubmit = showAuthUi;
 
   const heading = (() => {
-    if (isChallengeContext && !isAnonymous) return "Almost there";
-    if (isChallengeContext) return "Sign in to send";
+    // U4-c: challenge context uses one heading across both states.
+    if (isChallengeContext) return "Sign up/in to send to your friend";
     return isSignIn ? "Welcome back" : "Save your progress";
   })();
   const subheading = (() => {
-    if (isChallengeContext && !isAnonymous) return "Confirm your name and we'll send the challenge.";
-    if (isChallengeContext) return "Your friends need a way to find your challenge. Sign in to send.";
+    if (isChallengeContext) return "Your friends need a way to find your challenge.";
     return isSignIn ? "Sign in to restore your account" : "Play on any device. Never lose your wins.";
   })();
 
@@ -243,9 +245,8 @@ export function RegisterModal({
             </div>
             <input
               type="text"
-              placeholder={isAnonymous ? "Sign in to set your name" : "Your name"}
+              placeholder="Your name"
               value={challengeName}
-              disabled={isAnonymous}
               onChange={e => { setChallengeName(e.target.value); setUserEditedName(true); }}
               maxLength={32}
               autoCapitalize="words"
@@ -253,10 +254,9 @@ export function RegisterModal({
               style={{
                 width: "100%", padding: "10px 12px", borderRadius: 8,
                 border: "1px solid #334155",
-                background: isAnonymous ? "#0a0f1c" : "#0f172a",
-                color: isAnonymous ? "#475569" : "#fff",
+                background: "#0f172a",
+                color: "#fff",
                 fontSize: 14, marginBottom: 12, boxSizing: "border-box",
-                cursor: isAnonymous ? "not-allowed" : "text",
               }}
             />
           </>
@@ -266,7 +266,11 @@ export function RegisterModal({
 
         {showEmailSubmit && (
           <button onClick={handleEmailSubmit} disabled={loading} style={{ width: "100%", padding: "11px", borderRadius: 8, border: "1px solid #334155", background: "transparent", color: "#cbd5e1", fontSize: 14, fontWeight: 600, cursor: loading ? "wait" : "pointer" }}>
-            {loading ? "..." : isSignIn ? "Sign in with email" : "Save with email"}
+            {/* U4-d (2026-05-28): "Sign up with email" replaces "Save with email"
+                in challenge context — "save" is wrong verb for the share-CTA
+                flow. Normal context keeps "Save with email" for the existing
+                save-your-progress framing. */}
+            {loading ? "..." : isSignIn ? "Sign in with email" : isChallengeContext ? "Sign up with email" : "Save with email"}
           </button>
         )}
 
