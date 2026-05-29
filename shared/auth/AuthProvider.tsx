@@ -26,6 +26,22 @@ export interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signInGoogle: () => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
+  /** Phase 5b piece 1 — U4-g (2026-05-28, doc lock 8004211). Wraps
+   *  supabase.auth.resetPasswordForEmail. Triggers a password-reset email
+   *  to the given address. Caller is typically PasswordResetSurface's
+   *  email-entry state. Recovery email sends only if the Supabase project
+   *  dashboard has the "Reset Password" email template enabled + the
+   *  redirect URL allowlist includes the current origin. */
+  resetPasswordForEmail: (email: string) => Promise<{ error: AuthError | null }>;
+  /** Phase 5b piece 1 — U4-g trigger. Counter incremented by
+   *  requestPasswordReset(). PasswordResetSurface observes increments via
+   *  useEffect and transitions to its email-entry state. Counter-based
+   *  signal sidesteps the "how do we reset the flag" question — each call
+   *  is a fresh trigger. */
+  passwordResetRequestTick: number;
+  /** Phase 5b piece 1 — U4-g trigger. RegisterModal's "Forgot password?"
+   *  link calls this. Increments passwordResetRequestTick. */
+  requestPasswordReset: () => void;
 }
 
 function getLocalUid(): string {
@@ -75,6 +91,9 @@ export const AuthContext = createContext<AuthContextValue>({
   signIn: async () => ({ error: null }),
   signInGoogle: async () => ({ error: null }),
   signOut: async () => ({ error: null }),
+  resetPasswordForEmail: async () => ({ error: null }),
+  passwordResetRequestTick: 0,
+  requestPasswordReset: () => { /* no-op default */ },
 });
 
 /** Phase 5b piece 1 — Item B helper (2026-05-28, doc lock edc58d9).
@@ -104,6 +123,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // anonymous users; populated from player_profiles.ftue_completed on
   // signed-in session resolve and on anon→signed transition (B5 promotion).
   const [ftueCompleted, setFtueCompleted] = useState<boolean | null>(null);
+  // Phase 5b piece 1 — U4-g (2026-05-28, doc lock 8004211). Counter trigger
+  // for PasswordResetSurface. RegisterModal's "Forgot password?" link calls
+  // requestPasswordReset() which increments this. PasswordResetSurface's
+  // useEffect detects the change and transitions to its email-entry state.
+  const [passwordResetRequestTick, setPasswordResetRequestTick] = useState(0);
   const localUid = useRef(getLocalUid());
   // Once-only promotion guard so the B5 write doesn't fire on every
   // re-emission of SIGNED_IN events (Supabase emits these on token refresh).
@@ -315,6 +339,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error as AuthError | null };
   };
 
+  // Phase 5b piece 1 — U4-g (2026-05-28, doc lock 8004211). Wraps Supabase's
+  // resetPasswordForEmail with the standard redirectTo. Recovery email
+  // sends only if the Supabase project's email template is enabled and the
+  // redirect URL is allowlisted in the dashboard.
+  const resetPasswordForEmail = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: oauthRedirectUrl(),
+    });
+    if (!error) track("auth", "password_reset_requested", {});
+    else track("auth", "password_reset_failed", { reason: (error as AuthError).message });
+    return { error: error as AuthError | null };
+  };
+
+  // Phase 5b piece 1 — U4-g trigger. Increments the counter that
+  // PasswordResetSurface observes. RegisterModal's "Forgot password?" tap
+  // calls this; surface picks up the change via useEffect.
+  const requestPasswordReset = () => {
+    setPasswordResetRequestTick(n => n + 1);
+  };
+
   // Sign out then immediately re-anon so the app never lands without a session.
   // Local UID stays as the playerIdentity fallback if the re-anon call fails.
   const signOut = async () => {
@@ -339,7 +383,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, uid, isAuthenticated, isAnonymous, ftueCompleted, signUp, linkGoogle, signIn, signInGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, uid, isAuthenticated, isAnonymous, ftueCompleted, signUp, linkGoogle, signIn, signInGoogle, signOut, resetPasswordForEmail, passwordResetRequestTick, requestPasswordReset }}>
       {children}
     </AuthContext.Provider>
   );

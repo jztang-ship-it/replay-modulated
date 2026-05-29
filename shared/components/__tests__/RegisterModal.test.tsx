@@ -116,18 +116,29 @@ describe("RegisterModal — challenge context, signed-in (post-auth)", () => {
     created_at: "2026-01-01",
   } as User;
 
-  it("hides auth UI, shows enabled name input populated via deriveDisplayName, shows Send challenge", () => {
+  it("post-auth: auth controls are gone but confirmation line is present (append-style per U4-b revised)", () => {
     render(withAuth({ isAnonymous: false, user: signedInUser }, (
       <RegisterModal {...requiredProps} context="challenge" />
     )));
+    // Auth controls gone.
     expect(screen.queryByRole("button", { name: /continue with google/i })).toBeNull();
     expect(screen.queryByPlaceholderText(/^email$/i)).toBeNull();
+    // U4-b revised: confirmation line present in place of auth controls.
+    expect(screen.getByText(/signed in as/i)).toBeTruthy();
+    expect(screen.getByText("alice@example.com")).toBeTruthy();
+    // Name field + Send challenge appear BELOW.
     const nameInput = screen.getByDisplayValue("Alice Wonder") as HTMLInputElement;
     expect(nameInput.disabled).toBe(false);
     expect(screen.getByRole("button", { name: /send challenge/i })).toBeTruthy();
-    // U4-c: heading stays CONSTANT across the auth seam — same copy as
-    // pre-auth, no "Almost there" variant.
-    expect(screen.getByText(/sign up\/in to send to your friend/i)).toBeTruthy();
+  });
+
+  it("post-auth heading transitions to 'Add your name to send' (U4-d revised)", () => {
+    render(withAuth({ isAnonymous: false, user: signedInUser }, (
+      <RegisterModal {...requiredProps} context="challenge" />
+    )));
+    expect(screen.getByText(/add your name to send/i)).toBeTruthy();
+    // Pre-auth heading is gone.
+    expect(screen.queryByText(/^sign up\/in to send to your friend$/i)).toBeNull();
     expect(screen.queryByText(/almost there/i)).toBeNull();
   });
 
@@ -167,5 +178,40 @@ describe("RegisterModal — challenge context, signed-in (post-auth)", () => {
     fireEvent.change(nameInput, { target: { value: "Alice Edit" } });
     fireEvent.click(screen.getByRole("button", { name: /send challenge/i }));
     expect(onComplete).toHaveBeenCalledWith("Alice Edit");
+  });
+});
+
+describe("RegisterModal — U4-g 'Forgot password?' link (sign-in mode only)", () => {
+  it("not visible in sign-up mode (default)", () => {
+    render(withAuth({ isAnonymous: true }, (
+      <RegisterModal {...requiredProps} context="challenge" />
+    )));
+    expect(screen.queryByRole("button", { name: /forgot password/i })).toBeNull();
+  });
+
+  it("visible after toggling to sign-in mode", () => {
+    render(withAuth({ isAnonymous: true }, (
+      <RegisterModal {...requiredProps} context="challenge" />
+    )));
+    fireEvent.click(screen.getByRole("button", { name: /already have an account/i }));
+    expect(screen.getByRole("button", { name: /forgot password/i })).toBeTruthy();
+  });
+
+  it("visible in normal context sign-in mode too", () => {
+    render(withAuth({ isAnonymous: true }, (
+      <RegisterModal {...requiredProps} context="normal" signInMode={true} />
+    )));
+    expect(screen.getByRole("button", { name: /forgot password/i })).toBeTruthy();
+  });
+
+  it("tapping the link calls requestPasswordReset on the AuthContext", () => {
+    const requestPasswordReset = vi.fn();
+    render(
+      <AuthContext.Provider value={{ ...baseAuth, isAnonymous: true, isAuthenticated: false, requestPasswordReset } as any}>
+        <RegisterModal {...requiredProps} context="challenge" signInMode={true} />
+      </AuthContext.Provider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /forgot password/i }));
+    expect(requestPasswordReset).toHaveBeenCalledTimes(1);
   });
 });

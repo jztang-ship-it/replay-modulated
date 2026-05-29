@@ -24,6 +24,7 @@ import { AuthProvider } from "@shared/auth/AuthProvider";
 import { useAuth } from "@shared/auth/useAuth";
 import { RegisterModal } from "@shared/components/RegisterModal";
 import { ResumeShareSurface } from "@shared/components/ResumeShareSurface";
+import { PasswordResetSurface } from "@shared/components/PasswordResetSurface";
 import { ProfileScreen } from "@shared/components/ProfileScreen";
 import { getPlayerUid, getNickname } from "@shared/utils/playerIdentity";
 import { AchievementWall } from "@shared/components/AchievementWall";
@@ -232,6 +233,12 @@ function AppInner() {
           up the persisted share state and renders the post-auth half of
           the unified modal. Silent no-op when there's no pending share. */}
       <ResumeShareSurface />
+      {/* Phase 5b piece 1 U4-g (2026-05-28, doc lock 8004211): password
+          recovery surface. Self-managed state machine: email-entry
+          (triggered by RegisterModal's Forgot password link via
+          AuthContext counter), confirmation, recovery-landing (triggered
+          by Supabase PASSWORD_RECOVERY event). Silent no-op otherwise. */}
+      <PasswordResetSurface />
       {showDebug && (
         <div style={{
           position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100000,

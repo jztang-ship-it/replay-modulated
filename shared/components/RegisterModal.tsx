@@ -77,8 +77,9 @@ export function RegisterModal({
 
   // Phase 5b piece 1: observe auth state internally so the challenge-context
   // post-auth render shape kicks in automatically once email-path auth
-  // completes (or on remount via ResumeShareSurface).
-  const { user, isAnonymous } = useContext(AuthContext);
+  // completes (or on remount via ResumeShareSurface). U4-g: pull
+  // requestPasswordReset for the "Forgot password?" link.
+  const { user, isAnonymous, requestPasswordReset } = useContext(AuthContext);
   const isChallengeContext = context === "challenge";
 
   // Phase 5b piece 1: name field state for challenge context. Initialized
@@ -173,28 +174,44 @@ export function RegisterModal({
     );
   }
 
-  // Phase 5b piece 1 — U4 amendment (2026-05-28, doc lock 1ad3797):
-  // Challenge context renders ONE coherent surface across the auth seam.
-  // Pre-auth: auth UI shown, no name field at all (U4-a — no
-  // "disabled-and-visible" intermediate state). Post-auth (modal observes
-  // isAnonymous flipping OR remounts via ResumeShareSurface post-redirect):
-  // auth UI hidden, name field revealed in-place, Continue posts.
-  // Heading/subheading stay CONSTANT across the seam (U4-b/c) so the user
-  // perceives one progressive modal, not two screens.
-  const showAuthUi = !isChallengeContext || isAnonymous;
+  // Phase 5b piece 1 — U4 second amendment (2026-05-28, doc lock 8004211).
+  // Challenge context renders APPEND-STYLE across the auth seam (not swap):
+  //   Pre-auth (anon): auth controls (Google + email + password fields +
+  //                    email submit + toggle link). No name field.
+  //   Post-auth (!anon): auth section transitions to a confirmation line
+  //                      ("Signed in as: <user.email>"). Name input + Send
+  //                      challenge appear BELOW. User perceives the modal
+  //                      adding content, not swapping it. Modal grows
+  //                      vertically; no scroll needed.
+  // Heading transitions post-auth from "Sign up/in to send to your friend"
+  // (pre-auth) to "Add your name to send" (post-auth) per U4-d revised.
+  // Chrome (frame, dismiss, font, spacing) stays continuous.
+  const showAuthControls = !isChallengeContext || isAnonymous;
+  const showChallengeAuthConfirmation = isChallengeContext && !isAnonymous;
   const showChallengeNameField = isChallengeContext && !isAnonymous;
   const showChallengeContinue = isChallengeContext && !isAnonymous;
-  const showEmailSubmit = showAuthUi;
+  const showEmailSubmit = showAuthControls;
+  // U4-g: "Forgot password?" link visible in sign-in mode only (any
+  // context). Triggers PasswordResetSurface via AuthContext.
+  const showForgotPasswordLink = showAuthControls && isSignIn;
 
   const heading = (() => {
-    // U4-c: challenge context uses one heading across both states.
+    if (isChallengeContext && !isAnonymous) return "Add your name to send";
     if (isChallengeContext) return "Sign up/in to send to your friend";
     return isSignIn ? "Welcome back" : "Save your progress";
   })();
   const subheading = (() => {
+    // Post-auth challenge context: brief continuation. Pre-auth challenge:
+    // friend-facing framing. Normal context: existing copy.
+    if (isChallengeContext && !isAnonymous) return "Confirm your name to finish.";
     if (isChallengeContext) return "Your friends need a way to find your challenge.";
     return isSignIn ? "Sign in to restore your account" : "Play on any device. Never lose your wins.";
   })();
+
+  // U4-b revised: confirmation identifier. Prefer email (strongest identity
+  // signal for both email-auth and Google-auth users); fall back to derived
+  // display name if somehow no email is set.
+  const confirmationIdentifier = user?.email || deriveDisplayName(user) || "your account";
 
   return (
     <div
@@ -205,7 +222,7 @@ export function RegisterModal({
         <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{heading}</div>
         <div style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>{subheading}</div>
 
-        {showAuthUi && (
+        {showAuthControls && (
           <>
             <button onClick={handleGoogle} disabled={loading} style={{ width: "100%", padding: "13px", borderRadius: 8, border: "none", background: "#fff", color: "#1f2937", fontSize: 15, fontWeight: 700, cursor: loading ? "wait" : "pointer", marginBottom: 18, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
               <span style={{ fontSize: 16, fontWeight: 900, color: "#4285F4" }}>G</span>
@@ -236,6 +253,28 @@ export function RegisterModal({
               </button>
             </div>
           </>
+        )}
+
+        {showChallengeAuthConfirmation && (
+          // U4-b revised (2026-05-28, doc lock 8004211): post-auth, the
+          // auth section transitions to a confirmation line so the user
+          // sees the completed step ABOVE the new name step. Append-style,
+          // not swap.
+          <div
+            data-h2h-challenge-auth-confirmation="true"
+            style={{
+              padding: "12px 14px", borderRadius: 8,
+              background: "rgba(34,197,94,0.08)",
+              border: "1px solid rgba(34,197,94,0.25)",
+              color: "#22C55E", fontSize: 13, fontWeight: 600,
+              marginBottom: 18, display: "flex", alignItems: "center", gap: 8,
+            }}
+          >
+            <span style={{ fontSize: 14, lineHeight: 1 }}>✓</span>
+            <span style={{ color: "rgba(255,255,255,0.75)", fontWeight: 500 }}>
+              Signed in as <span style={{ color: "#fff", fontWeight: 700 }}>{confirmationIdentifier}</span>
+            </span>
+          </div>
         )}
 
         {showChallengeNameField && (
@@ -274,6 +313,26 @@ export function RegisterModal({
           </button>
         )}
 
+        {showForgotPasswordLink && (
+          // U4-g (2026-05-28, doc lock 8004211): "Forgot password?" link
+          // in sign-in mode. Tapping increments AuthContext's
+          // passwordResetRequestTick; PasswordResetSurface (mounted at
+          // App.tsx level) observes the change and transitions to its
+          // email-entry state.
+          <div style={{ textAlign: "center", marginTop: 10 }}>
+            <button
+              type="button"
+              onClick={() => requestPasswordReset()}
+              style={{
+                background: "none", border: "none", padding: 0,
+                color: "#64748b", fontSize: 12, cursor: "pointer",
+              }}
+            >
+              Forgot password?
+            </button>
+          </div>
+        )}
+
         {showChallengeContinue && (
           <button
             onClick={handleChallengeContinue}
@@ -291,7 +350,7 @@ export function RegisterModal({
         )}
 
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16 }}>
-          {showAuthUi ? (
+          {showAuthControls ? (
             <button onClick={() => setIsSignIn(!isSignIn)} style={{ background: "none", border: "none", color: "#64748b", fontSize: 12, cursor: "pointer", padding: 0 }}>
               {isSignIn ? "Create new account" : "Already have an account?"}
             </button>
