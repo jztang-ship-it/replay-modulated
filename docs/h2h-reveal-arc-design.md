@@ -423,6 +423,68 @@ The sender-side overlay's primary CTA(s) are intentionally deferred to phase 8 c
 
 ---
 
+### Phase 5b piece 1 — auth surface unification (locked 2026-05-28, supersedes R6 of the same-day "sender-side sign-in nudge revised" lock)
+
+**Revision rationale:** piece 1's implementation (`babd079`, with `a4b74b0` fixing a build break) shipped `NameCaptureModal` in an anonymous mode that, on Sign up / Sign in tap, opens the existing `RegisterModal` on top of itself. Two modals visible simultaneously, second one partially clipped by the first. Live verification confirmed the experience is bad enough to warrant immediate unification rather than the "parked" treatment R6 originally specified.
+
+The unification also resolves a related insight surfaced during live verification: the anonymous user, after authenticating, would otherwise see a *second* modal (the name confirm step) before being able to share. Even when the modals don't stack, the sequential "auth → name confirm → share" flow is more friction than the moment supports. The locked solution is a single modal that contains both auth fields AND the name input on one screen — eliminating both the stacking and the sequential friction.
+
+**Locked rules (these replace R6 of the prior section; R1-R5 of that section remain in force):**
+
+**U1 — Single unified auth surface.** A single component (referred to here as the "auth surface" — likely `RegisterModal` extended with a context prop, but investigation in the implementation commit may surface that a fresh component is cleaner) handles BOTH normal-game auth nudges AND challenge-tap auth nudges. No more two-modal stacking.
+
+**U2 — Context-driven copy and field set.** The unified auth surface takes a context indicating which trigger fired:
+- `"normal"`: today's "Save your progress / Play on any device. Never lose your wins." copy. Fires from `GameView.tsx:854-870` triggers (MVP/LEGEND wins, hand-count ≥ 5). **Auth fields only. No name input field.**
+- `"challenge"`: today's "Sign in to send / Your friends need a way to find your challenge — sign up or sign in to send." copy. Fires from the Challenge a Friend tap by an anonymous user. **Auth fields PLUS a name input field on the same modal (see U4).**
+
+Both contexts present the same auth fields (Google sign-in + email/password + toggle to existing-account). The challenge context adds the name field; the normal context does not.
+
+**U3 — `NameCaptureModal` anon mode is removed.** The mode added in `babd079` (the bridge that opens `RegisterModal` on top of itself) is deleted along with its anon-specific tests. The `mode` type returns to `"fresh" | "confirm"`. Anonymous users tapping Challenge a Friend route directly to the unified auth surface in `"challenge"` context — no `NameCaptureModal` mounted at that step.
+
+**U4 — Challenge context: single modal with auth + name combined.** In `"challenge"` context, the modal renders auth fields AND a name input field on the same screen. Behavior:
+- Pre-auth: auth fields are interactive (Google button, email + password fields). The name input field is present in the layout but may be disabled or hidden until auth completes; this is an implementation detail to surface during investigation. Continue button is disabled until both auth succeeds and a name is entered.
+- On successful auth (Google round-trip returns, or email/password validates): the modal stays mounted. The name input auto-populates with the user's authed display name from the auth provider (Google name for Google auth, or a sensible default for email auth). The user can edit it.
+- Single Continue button performs the post-auth challenge POST using the (possibly edited) display name. No second modal between auth and POST.
+- Dismiss at any point: returns the user to the game, no challenge POST fires (even if auth succeeded earlier in the same modal session — the dismiss is the cancel signal).
+
+**Implementation surfaces (the implementation commit will need to resolve):**
+- How Google auth's redirect round-trip interacts with keeping the modal mounted (popup vs. redirect, modal survives or remounts, state preserved). Investigation must confirm before locking implementation shape.
+- Whether the name field shows pre-auth (disabled) or only appears post-auth.
+- Where the auth provider's display name comes from (Google profile name, email local-part default, anonymous-state fallback).
+
+**U5 — Normal context: auth only, no name field.** In `"normal"` context (MVP/LEGEND wins, hand-count ≥ 5), the modal renders auth options only — Google, email/password, toggle to existing account. No name input. Single Continue (or "Save with email" or equivalent) button completes the auth. Dismiss = no behavioral change, game continues, anonymous user remains anonymous. This matches today's `RegisterModal` behavior; the only change for normal context is invocation site (it's now invoked via the unified surface's `context="normal"` rather than a hardcoded mount).
+
+**U6 — Signed-in users on Challenge a Friend: unchanged.** Signed-in users tapping the Challenge a Friend button continue to see `NameCaptureModal` in `"fresh"` or `"confirm"` mode for their name confirm/edit step before the challenge POSTs. The unification work targets the anonymous flow; signed-in users keep their existing behavior. The unified auth surface is never shown to signed-in users (they're already authed).
+
+**U7 — `GameView.tsx:854-870` trigger logic stays, but its target changes.** Today those triggers mount `RegisterModal` directly with the normal-context copy hardcoded. After this commit, they mount the unified auth surface with `context="normal"`. Trigger conditions themselves (MVP/LEGEND wins, hand-count ≥ 5) are unchanged. The existing `signInMode` / `signUpMode` toggle behavior inside the unified surface is preserved or extended; investigation will confirm shape.
+
+**U8 — Server-side enforcement is the source of truth.** The 401 wall at `api/challenge/create.ts:9-10` remains. Client-side unification (U1-U7) is the UX layer; server-side gating stays untouched. (Inherited from R4 of the prior lock.)
+
+**What this locks out:**
+- No two-modal stacking. Single surface always.
+- No anon-specific intermediate modal between the share-CTA tap and the auth surface.
+- No sequential "auth modal → name confirm modal" flow for the anonymous-to-challenge path. Both happen on one modal.
+- For signed-in users, no change to their existing flow.
+
+**What this preserves from the prior lock:**
+- R1 (share button renders for all users).
+- R2's principle: anonymous users gated at button tap, not at button render. The gate now invokes the unified auth surface directly in `"challenge"` context.
+- R3 (signed-in users unchanged) — strengthened by U6.
+- R4 (server-side enforcement) — restated as U8.
+- R5 (anonymous recipients still allowed).
+
+**Commentary placeholder dependency:** R1's bottom-slot placeholder copy ("the best part of our game is you can compete with your friends to see who can pull the best games") is unchanged. Still hardcoded. Phase 7 commentary engine replaces it later. (Inherited from R1 of the prior lock.)
+
+**Implementation commit (separate, follows this doc lock):**
+- Extend or refactor `RegisterModal` to take a `context: "normal" | "challenge"` prop, with `"challenge"` context adding a name input field per U4.
+- Investigation must resolve Google auth round-trip behavior with respect to modal continuity (U4 surfaces).
+- Update the Challenge a Friend tap path: anonymous tap → opens unified auth surface in `"challenge"` context (skipping `NameCaptureModal` anon mode entirely). Signed-in tap → existing `NameCaptureModal` flow (U6 preserves).
+- Update `GameView.tsx:854-870` to pass `context="normal"` to the unified auth surface.
+- Delete `NameCaptureModal` anon mode + its anon-specific tests.
+- Post-auth in challenge context: name field auto-populates and becomes editable; single Continue posts the challenge.
+
+---
+
 ### Phase 5b — sender-side sign-in nudge revised (locked 2026-05-28, supersedes the same-day "sender-side requires sign-in" lock)
 
 **Revision rationale:** the prior lock ("anonymous users do not see the share surface at all") prioritized clean enforcement but produced a poor discoverability story. Anonymous users had no path to even see the challenge feature exists; they'd encounter it accidentally if at all. The revised approach surfaces the feature to everyone, then gates the *action* rather than the *button*.
@@ -454,6 +516,8 @@ The sender-side overlay's primary CTA(s) are intentionally deferred to phase 8 c
 - Modify the name overlay to detect `!session` and render in anonymous mode (sign-up/sign-in CTAs only, no name input pre-auth).
 - Post-auth: existing confirm/edit name flow runs normally.
 - All other auth flows (existing trigger conditions at `GameView.tsx:854-870`) unchanged. Unification is parked per R6.
+
+**EDIT 2026-05-28 (added same day — second revision):** R6's parking decision has been revised. The two-modal stacking experience surfaced during live verification of piece 1's implementation (`babd079`, followed by `a4b74b0` for the build fix) was bad enough that the unification work the original R6 deferred is now the next commit. See the subsequent "Phase 5b piece 1 — auth surface unification" lock below. R1, R2, R3, R4, R5 remain as locked above; only R6 is superseded.
 
 ---
 
