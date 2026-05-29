@@ -423,6 +423,59 @@ The sender-side overlay's primary CTA(s) are intentionally deferred to phase 8 c
 
 ---
 
+### Phase 5b piece 1 — FTUE bypass for signed-in users (locked 2026-05-28, Item B)
+
+**Rationale:** live verification of piece 1's auth flow surfaced that the FTUE (First-Time User Experience) re-fires for signed-in users on fresh browsers, after local-storage clears, or on new devices. Today the FTUE-completion flag lives in local storage only; it doesn't consult auth state. This produces a bad experience for the most engaged users — those who took the trouble to sign up — because their FTUE state doesn't follow them.
+
+**Translation note (carry forward into implementation):** in this codebase, every user has a Supabase session — anonymous users included, via `AuthProvider.tsx:118`'s `signInAnonymously()` bootstrap. The condition "the user is signed in" is therefore `isAnonymous === false`, NOT `!session`. The lock language below uses `isAnonymous` throughout. The implementation must use the same.
+
+**Locked rules:**
+
+**B1 — Signed-in users never see FTUE.** If `isAnonymous === false`, the FTUE shall not fire, regardless of local-storage state. This is a hard rule: session presence overrides local storage. Source of truth for "did this user complete FTUE" is the user's server-side profile, not local storage.
+
+**B2 — FTUE-completion is stored on the user profile (server-side) for signed-in users.** The flag lives on `player_profiles` (or wherever the user profile table is — investigation in the implementation commit confirms the exact column / table name). For signed-in users, FTUE-completion is read from and written to the profile, not local storage.
+
+**B3 — Local-storage flag remains as the anonymous-user fallback.** Anonymous users continue to use local storage for FTUE-completion, preserving today's "FTUE-once-per-browser" behavior for users who haven't signed up. The two storage mechanisms coexist: server-side profile for signed-in users, local storage for anonymous users. No data migration of existing local-storage flags is required (B5 below handles the upgrade case).
+
+**B4 — Read precedence for the FTUE-completion check.** When deciding whether to show FTUE:
+1. If `isAnonymous === false`: read from server-side profile flag. If flag is true → don't show FTUE. If flag is false → show FTUE (this user has never completed it, even if they have a local-storage flag from a different anonymous session). After they complete FTUE in this session, write the flag to the profile.
+2. If `isAnonymous === true`: read from local-storage flag. Behavior unchanged from today.
+
+The implementation must NOT show FTUE to a signed-in user under any condition. B1 is binding even in edge cases (e.g., the profile flag is unset because the user signed up before this rule shipped — in that case, treat the unset state as "completed" for the upgrade-on-sign-in case, see B5).
+
+**B5 — Sign-in upgrade promotion.** When an anonymous user transitions to non-anonymous (via `signUp`, `linkGoogle`, `signIn` of an existing account into the current anonymous session, etc.), if the anonymous user had completed FTUE locally, the local-storage flag SHALL be promoted to the server-side profile. This prevents the case where:
+
+1. Anonymous user plays, completes FTUE → local-storage flag = true.
+2. User signs up → transitions to non-anonymous.
+3. B1 kicks in: FTUE check now consults server-side profile, which is empty (this is the user's first time signed in).
+4. Without the promotion, FTUE would re-fire post-sign-up. Bad UX.
+
+The promotion happens once, at the auth transition. After promotion, the local-storage flag can be cleared (or left untouched — local storage is irrelevant for signed-in users per B1). Investigation determines the cleanest write site (likely the same `AuthProvider` callback that fires on auth state transitions).
+
+**B6 — One-way promotion only.** B5 promotes local → profile at sign-in. The reverse (profile → local on sign-out, if sign-out is even possible in this app's flow) is not in scope. A signed-in user who somehow becomes anonymous again would re-see FTUE — but that's a degenerate case the product doesn't currently support, and locking against it pre-emptively would over-spec.
+
+**B7 — Edge case: signed-in user with unset profile flag (pre-rule existing accounts).** Some users signed up before this rule shipped and have no profile-side FTUE flag. They should NOT see FTUE — they've been around long enough that the assumption is "they've completed it." Implementation: treat unset profile flag for an existing pre-rule account as "completed."
+
+How to distinguish a pre-rule existing account from a newly-signed-up account: investigation may surface a clean signal (e.g., account age, profile creation date). If no clean signal exists, the default behavior is "unset profile flag = treat as completed" — bias toward not re-firing FTUE for existing users, accepting that a fresh signup who somehow hits this code path without the promotion (B5 failure) won't see FTUE either. The downside of that failure is minor; the downside of re-firing FTUE for an existing user is the bug we're fixing.
+
+**What this locks out:**
+- Signed-in users seeing FTUE under any condition.
+- Local-storage-only FTUE-completion checks for signed-in users.
+- Re-firing FTUE post-sign-up for users who completed it anonymously (B5 prevents).
+
+**What this preserves:**
+- Anonymous-user FTUE behavior is unchanged. Local storage drives it as today.
+- No migration of existing local-storage flags. Anonymous users keep their flag locally; signed-in users get their flag from the profile (with B5 handling the transition for users who sign up after completing FTUE anonymously).
+
+**Implementation commit (separate, follows this doc lock and the U4 amendment doc lock):**
+- Investigation: find FTUE's current gate. Read `getNickname` / `setNickname` patterns (per `playerIdentity.ts:23-29` referenced in prior session reports), then trace how FTUE-completion is checked today. Likely a `localStorage.getItem("replaymod_ftue_completed")` or similar.
+- Investigation: find the `player_profiles` table schema. Confirm whether an FTUE-completed column already exists, or whether a migration is needed (small column add — `ftue_completed_at timestamp with time zone` or `ftue_completed boolean`).
+- Refactor the FTUE-check to follow B4's precedence rule.
+- Wire the sign-in upgrade promotion per B5 — likely in `AuthProvider.tsx`'s auth-state-change callback that already runs on `signUp` / `linkGoogle` / `signIn`.
+- Test coverage for B1-B5 cases.
+
+---
+
 ### Phase 5b piece 1 — U4 amendment (locked 2026-05-28, supersedes U4 of the same-day "auth surface unification" lock)
 
 **Revision rationale:** the original U4 was correct in intent (one modal experience, auth + name combined) but under-specified two implementation details that produced bad UX when `f95aa57` shipped:
