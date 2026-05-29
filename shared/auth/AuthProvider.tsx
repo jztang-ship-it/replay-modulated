@@ -44,12 +44,17 @@ export interface AuthContextValue {
   requestPasswordReset: () => void;
   /** Phase 5b post-piece-2c (2026-05-30): post-OAuth-redirect error
    *  surfaced from the URL. Supabase returns identity-collision and
-   *  similar callback failures as `?error=...&error_description=...`.
-   *  Without surfacing it, users land back on the home screen silently
-   *  signed-out and have no way to know why. RegisterModal can read this
-   *  and render the message inline if the user re-opens the modal.
-   *  Cleared after read (one-shot). */
+   *  similar callback failures as `#error=...&error_description=...`
+   *  (implicit-flow standard) or `?error=...` (query-flow fallback).
+   *  AuthProvider scans both. Human-readable message. */
   oauthError: string | null;
+  /** Machine-readable Supabase error code. Used for branching:
+   *   - `identity_already_exists` triggers an auto-retry via
+   *     signInWithOAuth (see AuthProvider.tsx). The intent of the
+   *     original linkIdentity tap was "use this Google account";
+   *     when the account is already linked elsewhere, signing the
+   *     user in to that existing account fulfills the intent. */
+  oauthErrorCode: string | null;
 }
 
 function getLocalUid(): string {
@@ -103,6 +108,7 @@ export const AuthContext = createContext<AuthContextValue>({
   passwordResetRequestTick: 0,
   requestPasswordReset: () => { /* no-op default */ },
   oauthError: null,
+  oauthErrorCode: null,
 });
 
 /** Phase 5b piece 1 — Item B helper (2026-05-28, doc lock edc58d9).
@@ -138,10 +144,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // useEffect detects the change and transitions to its email-entry state.
   const [passwordResetRequestTick, setPasswordResetRequestTick] = useState(0);
   // Phase 5b post-piece-2c (2026-05-30): post-OAuth error surfaced from URL.
-  // Supabase callback failures (e.g., identity collision, provider rejection)
-  // return as `?error=...&error_description=...`. Parsed once on mount and
-  // the URL params stripped so a refresh doesn't re-surface them.
+  // Supabase implicit-flow returns errors in the URL HASH
+  // (#error=...&error_description=...&error_code=...). The query-string
+  // form also appears in some flows. AuthProvider scans both; the code
+  // is exposed separately so consumers can branch (e.g., auto-retry on
+  // identity_already_exists).
   const [oauthError, setOauthError] = useState<string | null>(null);
+  const [oauthErrorCode, setOauthErrorCode] = useState<string | null>(null);
   const localUid = useRef(getLocalUid());
   // Once-only promotion guard so the B5 write doesn't fire on every
   // re-emission of SIGNED_IN events (Supabase emits these on token refresh).
@@ -156,20 +165,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let subscription: { unsubscribe: () => void } | null = null;
 
     // Phase 5b post-piece-2c (2026-05-30) — Bug A supplementary: scan URL
-    // for OAuth-callback errors (Supabase returns identity-collision and
-    // similar as `?error=...&error_description=...`). One-shot read; the
-    // params are stripped so a refresh doesn't re-surface them.
+    // for OAuth-callback errors. Supabase's implicit flow returns errors
+    // in the URL HASH (`#error=...&error_description=...&error_code=...`).
+    // The query-string form (`?error=...`) is also observed in some flows.
+    // Scan both: prefer the hash (canonical for implicit) and fall back
+    // to query. One-shot read; the matched params are stripped so a
+    // refresh doesn't re-surface them.
+    //
+    // Diagnosed via live verification (2026-05-30): the prior query-only
+    // scan was insufficient — the user's identity-collision error landed
+    // in the hash and the surface stayed null.
     try {
       if (typeof window !== "undefined") {
-        const params = new URLSearchParams(window.location.search);
-        if (params.has("error")) {
-          const msg = params.get("error_description") || params.get("error") || "OAuth failed";
+        let errParams: URLSearchParams | null = null;
+        let foundInHash = false;
+        const hash = window.location.hash;
+        if (hash && hash.length > 1) {
+          const hashStr = hash.charAt(0) === "#" ? hash.slice(1) : hash;
+          const hp = new URLSearchParams(hashStr);
+          if (hp.has("error")) {
+            errParams = hp;
+            foundInHash = true;
+          }
+        }
+        if (!errParams) {
+          const sp = new URLSearchParams(window.location.search);
+          if (sp.has("error")) errParams = sp;
+        }
+        if (errParams) {
+          const code = errParams.get("error_code") || errParams.get("error") || "unknown";
+          const msg = errParams.get("error_description") || code || "OAuth failed";
           setOauthError(msg);
-          console.warn("[auth] OAuth callback returned error:", msg);
+          setOauthErrorCode(code);
+          console.warn("[auth] OAuth callback returned error:", { code, msg });
           const url = new URL(window.location.href);
-          url.searchParams.delete("error");
-          url.searchParams.delete("error_description");
-          url.searchParams.delete("error_code");
+          if (foundInHash) {
+            url.hash = "";
+          } else {
+            url.searchParams.delete("error");
+            url.searchParams.delete("error_description");
+            url.searchParams.delete("error_code");
+          }
           window.history.replaceState({}, "", url.toString());
         }
       }
@@ -311,6 +347,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, uid, isAuthenticated, isAnonymous]);
 
+  // Phase 5b post-piece-2c (2026-05-30) — Bug A recovery: when linkIdentity
+  // fails because the Google identity is already linked to a different
+  // Supabase user (`identity_already_exists`), the original tap's intent
+  // was "use this Google account." signInWithOAuth signs the user in to
+  // the EXISTING Google-linked account, fulfilling the intent. One-shot
+  // guard via sessionStorage prevents loops if the retry itself fails.
+  // The session-storage key dies with the tab; opening a fresh tab gets
+  // a fresh attempt budget.
+  useEffect(() => {
+    if (oauthErrorCode !== "identity_already_exists") return;
+    if (typeof window === "undefined") return;
+    const RETRY_KEY = "replaymod_oauth_collision_retry_v1";
+    try {
+      if (sessionStorage.getItem(RETRY_KEY) === "1") {
+        console.info("[auth] identity_already_exists — retry already attempted this tab; not looping");
+        return;
+      }
+      sessionStorage.setItem(RETRY_KEY, "1");
+    } catch { /* sessionStorage may be unavailable */ }
+    console.info("[auth] identity_already_exists — auto-retrying as signInWithOAuth to sign in to existing account");
+    try {
+      supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: oauthRedirectUrl() },
+      }).catch((e) => console.error("[auth] auto-retry signInWithOAuth failed:", e));
+    } catch (e) {
+      console.error("[auth] auto-retry signInWithOAuth threw:", e);
+    }
+  }, [oauthErrorCode]);
+
   const handCountForAuthEvent = () => {
     try { return parseInt(localStorage.getItem("replaymod_hand_count") ?? "0", 10); }
     catch { return 0; }
@@ -427,7 +493,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, uid, isAuthenticated, isAnonymous, ftueCompleted, signUp, linkGoogle, signIn, signInGoogle, signOut, resetPasswordForEmail, passwordResetRequestTick, requestPasswordReset, oauthError }}>
+    <AuthContext.Provider value={{ user, uid, isAuthenticated, isAnonymous, ftueCompleted, signUp, linkGoogle, signIn, signInGoogle, signOut, resetPasswordForEmail, passwordResetRequestTick, requestPasswordReset, oauthError, oauthErrorCode }}>
       {children}
     </AuthContext.Provider>
   );
