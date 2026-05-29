@@ -30,8 +30,16 @@ import { getPlayerUid, getNickname } from "@shared/utils/playerIdentity";
 import { AchievementWall } from "@shared/components/AchievementWall";
 import { useAchievements } from "@shared/hooks/useAchievements";
 import { ChallengeLandingScreen } from "@shared/components/ChallengeLandingScreen";
+import { H2HRecipientPlay } from "@shared/components/H2HRecipientPlay";
 import type { ChallengeCtx, ChallengeBackCtx } from "@shared/adapters/challengeTypes";
 import { sportAdapter } from "./adapters/SportAdapter";
+// Phase 5b piece 2b+2c (2026-05-30): challenge-link tap routes to the
+// H2H surface directly (P1). Renderers + adapters previously lived only
+// inside the basketball GameView wrapper; they're now imported here so
+// the App can mount H2HRecipientPlay without going through GameView.
+import { h2hArcRenderer, h2hOverlayRenderer } from "./views/GameView";
+import { resolveRoster } from "./adapters/gameAdapter";
+import { calculateWinTier } from "./utils/payoutLogic";
 
 // ?debug=1 overlay. Eager import (not lazy) so a chunk-load failure
 // can't silently hide it behind a null Suspense fallback. Mounted at
@@ -136,6 +144,12 @@ function AppInner() {
   // Cleared once the user dismisses or shares the resulting challenge.
   const [challengeBackCtx, setChallengeBackCtx] = useState<ChallengeBackCtx | null>(null);
   const [showChallengeLanding, setShowChallengeLanding] = useState(!!challengeIdFromUrl);
+  // Phase 5b piece 2b+2c (2026-05-30): recipient-play surface gate.
+  // Set on challenge accept (P1) so H2HRecipientPlay mounts instead of
+  // GameView. h2hPlayKey is bumped on Try Again to force a clean re-mount
+  // of the playing surface (drawnCount→0, fresh resolve).
+  const [h2hPlayingMode, setH2hPlayingMode] = useState(false);
+  const [h2hPlayKey, setH2hPlayKey] = useState(0);
   const { unlockedIds: ownUnlockedIds } = useAchievements();
   const skipFTUE = isAuthenticated && !isAnonymous;
   const showDebug = typeof window !== "undefined" &&
@@ -273,7 +287,54 @@ function AppInner() {
           userName={getNickname() || "anonymous"}
         />
       )}
-      {view === "landing" ? (
+      {h2hPlayingMode && challengeCtx ? (
+        /* Phase 5b piece 2b+2c (2026-05-30): recipient-play surface.
+           Replaces GameView for the entire challenge play through
+           reveal + overlay. The inner H2HRecipientReveal mounts after
+           the 800ms slot-6-fill hold + resolveRoster. CTA handlers
+           drop back to GameView with appropriate state (clear ctx +
+           h2hPlayingMode for Dismiss/PlayOwnHand; set challengeBackCtx
+           for Send It Back; key bump for Try Again). */
+        <H2HRecipientPlay
+          key={h2hPlayKey}
+          challengeCtx={challengeCtx}
+          sport={SPORT}
+          resolveRoster={resolveRoster}
+          calculateWinTier={calculateWinTier as (totalFp: number) => string}
+          renderBattlefieldCard={h2hArcRenderer}
+          renderOverlayCard={h2hOverlayRenderer}
+          onSendItBack={() => {
+            // Mirror GameView.handleSendItBack: set rivalry context
+            // so the fresh-hand RESULTS share prompt frames as
+            // challenge-back. challengeCtx clears so the next IDLE
+            // deal is a fresh hand, not a snapshot replay.
+            setChallengeBackCtx({
+              challengerUserId: null,
+              challengerName: challengeCtx.challengerName ?? null,
+              originatingChallengeId: challengeCtx.challengeId,
+            });
+            setChallengeCtx(null);
+            setH2hPlayingMode(false);
+          }}
+          onTryAgain={() => {
+            // Key bump re-mounts H2HRecipientPlay with fresh state
+            // (drawnCount=0, no resolved roster). The recipient plays
+            // the same challenge snapshot again.
+            setH2hPlayKey(k => k + 1);
+          }}
+          onPlayOwnHand={() => {
+            // Drop into normal game with a fresh deal (no challenge).
+            setChallengeCtx(null);
+            setH2hPlayingMode(false);
+          }}
+          onDismiss={() => {
+            // Exit H2H entirely. challengeCtx clears; user lands in
+            // normal game-view IDLE state.
+            setChallengeCtx(null);
+            setH2hPlayingMode(false);
+          }}
+        />
+      ) : view === "landing" ? (
         <LandingPage
           onPlay={handlePlay}
           onShowProfile={() => setShowProfile(true)}
@@ -343,6 +404,12 @@ function AppInner() {
             setShowChallengeLanding(false);
             try { localStorage.setItem(SKIP_LANDING_KEY, "1"); } catch {}
             setView("game");
+            // P1 (2b+2c): challenge-link tap routes to H2H surface
+            // directly, not the normal game UI. setView("game") stays
+            // above so the post-H2H flow (Send It Back / Play Own Hand
+            // / Dismiss) drops back into GameView without re-routing.
+            setH2hPlayingMode(true);
+            setH2hPlayKey(k => k + 1);
 
             // Dev affordance — phase 5a commit 3 (2026-05-27).
             // When `?mockSenderHand=1` is in the URL AND we're in a

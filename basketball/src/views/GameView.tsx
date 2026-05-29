@@ -127,7 +127,7 @@ function tierFromSalary(salary: number): string {
 const shakeForCard = (card: H2HCard) =>
   getShakeType(card as unknown as { projectedFp: number; actualFp: number; cardId: string }, false);
 
-const h2hArcRenderer: CardRenderer = (card: H2HCard, options) => {
+export const h2hArcRenderer: CardRenderer = (card: H2HCard, options) => {
   const isRevealed = options?.revealed ?? false;
   return (
     <AthleteCard
@@ -152,7 +152,7 @@ const h2hArcRenderer: CardRenderer = (card: H2HCard, options) => {
   );
 };
 
-const h2hOverlayRenderer: CardRenderer = (card: H2HCard, options) => (
+export const h2hOverlayRenderer: CardRenderer = (card: H2HCard, options) => (
   <AthleteCard
     card={card as unknown as PlayerCard}
     phase={"RESULTS" as any}

@@ -488,6 +488,18 @@ Mode transitions:
 - Anonymous-recipient path verified (no auth gate during playing).
 - Investigation surfaces: where current recipient routing lives, what state today's normal-game UI tracks during challenge play, whether the game-state engine can decouple cleanly from the surface.
 
+**Implementation note — P4 reinterpretation (appended 2026-05-30 during implementation, NOT a lock revision):**
+
+Investigation surfaced a tension between P4 as written and the existing engine. The lock describes a per-Draw-tap, slot-by-slot fill mechanic. The engine today (`shared/views/GameView.tsx:1623-1708`) has no per-card draw — `dealInitialRoster()` returns the full 6-card roster in a single call, and `redrawRoster()` redraws all unheld cards atomically. There is no API for "draw one more card."
+
+The implementation adopts **path P4-α (pace-the-deal facade):** the playing-mode surface reads from `challengeCtx.initialRoster` (the snapshot already threaded through the existing challenge-mode path) and reveals one card per Draw tap into the next empty bottom-strip slot. No per-card engine call. The engine's `resolveRoster()` runs ONCE during the 800ms slot-6-fill hold, to ensure actualFp is fresh for the arc-reveal. This satisfies P4's UX behavior literally while preserving the existing engine surface. P4-β (new draw endpoint) was considered and rejected as out-of-scope for 2b+2c; P4-γ (single Draw tap deals all 6 cards animated in sequence) was rejected as contradicting the lock's literal *"taps Draw again for the next slot"* language.
+
+Hold (P7) being deferred to piece 2d means 2b+2c's recipient makes no strategic choices — they Draw 6 times to reveal `initialRoster`, then the arc-reveal shows their actualFp totals. The lineup itself is fixed by the lock (= the sender's initial deal, used as the recipient's hand, per the existing GameView challenge-mode path at `shared/views/GameView.tsx:1671-1673`). Piece 2d will reintroduce strategic decisions by adding hold/redraw at mini-slot positions on the bottom strip.
+
+One small consequence of P4-α: the resolveRoster call may fail (network, 4xx). The implementation falls through to using `initialRoster` as-is, which may have stale or 0 actualFp from the original sender-side serialization. This is observability noise, not a correctness break — the arc still mounts and renders.
+
+Mount-gate change on `H2HRecipientReveal`: the wrapper today gates on `gameState ∈ {REVEALING, RESULTS}` (from the underlying GameView state). The playing-mode handoff has no GameView underneath; a `bypassGameStateGate?: boolean` prop was added to the wrapper interface so the playing surface can mount the reveal directly. The senderResolved gate still applies — the bypass only skips the GameView-coupled half of the mount condition.
+
 ---
 
 ### Phase 5b piece 2a — geometry re-lock + CTA clipping fix (locked 2026-05-28)

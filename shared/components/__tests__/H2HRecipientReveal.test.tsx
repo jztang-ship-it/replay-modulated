@@ -124,6 +124,35 @@ describe("H2HRecipientReveal — mount gate", () => {
     );
     expect(container.querySelector("[data-h2h-recipient-reveal]")).not.toBeNull();
   });
+
+  // Phase 5b piece 2b+2c (2026-05-30): bypassGameStateGate allows the
+  // wrapper to mount under non-REVEALING/RESULTS gameStates. Used by
+  // H2HRecipientPlay's handoff — the playing-mode surface has no
+  // GameView underneath, so gameState is synthetic.
+  it("bypassGameStateGate=true mounts under IDLE gameState (sender resolved)", () => {
+    const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
+    const { container } = render(
+      <H2HRecipientReveal
+        {...baseProps}
+        challengeCtx={ctx}
+        gameState="IDLE"
+        bypassGameStateGate
+      />
+    );
+    expect(container.querySelector("[data-h2h-recipient-reveal]")).not.toBeNull();
+  });
+
+  it("bypassGameStateGate does NOT override the senderResolved gate", () => {
+    const { container } = render(
+      <H2HRecipientReveal
+        {...baseProps}
+        challengeCtx={makeCtx()}  // no resolvedSenderHand
+        gameState="IDLE"
+        bypassGameStateGate
+      />
+    );
+    expect(container.querySelector("[data-h2h-recipient-reveal]")).toBeNull();
+  });
 });
 
 describe("H2HRecipientReveal — composition", () => {

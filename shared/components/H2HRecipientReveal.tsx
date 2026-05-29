@@ -67,6 +67,13 @@ export interface H2HRecipientRevealProps {
    *  conformance and future use. */
   myWinTier: string;
   gameState: GameState;
+  /** Phase 5b piece 2b+2c (2026-05-30): when true, the gameState
+   *  REVEALING/RESULTS check is skipped. Used by H2HRecipientPlay's
+   *  handoff: the playing-mode surface has no GameView underneath
+   *  (App.tsx mounts H2HRecipientPlay directly on challenge accept),
+   *  so gameState is meaningless in that path. The senderResolved gate
+   *  still applies; mount is gated on senderResolved + bypass flag. */
+  bypassGameStateGate?: boolean;
   sport: string;
   /** Sport-specific renderer for the reveal arc (battlefield + strip
    *  cells). Basketball passes a renderer that returns an AthleteCard
@@ -83,11 +90,11 @@ export interface H2HRecipientRevealProps {
 }
 
 export function H2HRecipientReveal(props: H2HRecipientRevealProps) {
-  const { challengeCtx, gameState } = props;
+  const { challengeCtx, gameState, bypassGameStateGate } = props;
   const senderResolved = challengeCtx.resolvedSenderHand;
   const isInRevealOrResults = gameState === "REVEALING" || gameState === "RESULTS";
 
-  if (!senderResolved || !isInRevealOrResults) return null;
+  if (!senderResolved || (!isInRevealOrResults && !bypassGameStateGate)) return null;
 
   // Inner component so the hooks below only fire when the gate passes.
   // (React's rules of hooks require unconditional calls — splitting the
