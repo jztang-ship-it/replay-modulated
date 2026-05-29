@@ -423,6 +423,40 @@ The sender-side overlay's primary CTA(s) are intentionally deferred to phase 8 c
 
 ---
 
+### Phase 5b — sender-side sign-in nudge revised (locked 2026-05-28, supersedes the same-day "sender-side requires sign-in" lock)
+
+**Revision rationale:** the prior lock ("anonymous users do not see the share surface at all") prioritized clean enforcement but produced a poor discoverability story. Anonymous users had no path to even see the challenge feature exists; they'd encounter it accidentally if at all. The revised approach surfaces the feature to everyone, then gates the *action* rather than the *button*.
+
+**Locked rules:**
+
+**R1 — Anonymous users see the share/challenge surface.** The Challenge a Friend button renders for all users, signed-in or not. The bottom-slot copy area on this surface (the existing slot that sits near the Challenge a Friend button — paired with the top-slot hand-explainer copy) displays placeholder commentary text: "the best part of our game is you can compete with your friends to see who can pull the best games". This is hardcoded for now; wired to the commentary engine when phase 7 ships.
+
+**R2 — Anonymous users gated at button tap, not at button render.** When an anonymous user taps Challenge a Friend, the existing name overlay appears in **anonymous mode**: sign-up/sign-in CTAs are the only path forward. The name input field does NOT appear pre-auth for anonymous users — it appears only AFTER successful sign-up/sign-in, as the existing confirm/edit step. Dismiss at any point returns the user to the game with no challenge created (no anonymous-send path exists).
+
+**R3 — Signed-in users: behavior unchanged.** Tapping the button → name overlay's existing confirm/edit step → challenge POST fires. As before.
+
+**R4 — Server-side enforcement is the source of truth.** The 401 wall at `api/challenge/create.ts:9-10` (the `verifyAuth(req)` call) remains. Client-side gating (R2) is the UX layer; server-side gating is the security/data-integrity layer. Both stay.
+
+**R5 — Anonymous users can still accept challenges as recipients.** This is unchanged from the prior lock. The sender side requires sign-in (server-side enforced); the recipient side does not. An anonymous recipient who completes a challenge exits the H2H surface into the normal game flow (per piece 2 design — see future phase 5b piece 2 sections). Post-challenge sign-up nudging for anonymous recipients is parked for the broader sign-up/sign-in cleanup work, not in scope for this lock.
+
+**R6 — Re-trigger conditions for the sign-up overlay are NOT unified with the new R2 overlay in this commit.** The existing auth-prompt triggers at `GameView.tsx:854-870` (MVP/LEGEND wins, hand-count ≥ 5) remain as a separate code path. Both surfaces exist in parallel for now. Unification + UX smoothing is parked for the broader sign-up/sign-in bulldozing work, which is its own future commit.
+
+**What this locks out:**
+- No hiding the share button from anonymous users (reverses the prior lock's render-time gating rule).
+- No bypassing the name-overlay sign-up flow for anonymous tappers — they must auth before the challenge POST fires.
+- No anonymous-send path: dismiss = abandon challenge.
+- No relaxing server-side enforcement.
+
+**Commentary placeholder dependency:** R1's bottom-slot copy is a hardcoded string. Phase 7 (commentary engine) is expected to replace it with engine-driven copy that adapts per-challenge or per-context. Tracked here so the placeholder is not mistaken for a permanent decision.
+
+**Implementation commit (separate, follows this doc lock):**
+- Add R1's placeholder copy to the share-CTA surface's bottom-slot area.
+- Modify the name overlay to detect `!session` and render in anonymous mode (sign-up/sign-in CTAs only, no name input pre-auth).
+- Post-auth: existing confirm/edit name flow runs normally.
+- All other auth flows (existing trigger conditions at `GameView.tsx:854-870`) unchanged. Unification is parked per R6.
+
+---
+
 ### Phase 5b — sender-side requires sign-in (locked 2026-05-28)
 
 Issuing a challenge requires an authenticated user. Anonymous users do not see the share/challenge surface at all.
@@ -449,6 +483,8 @@ Issuing a challenge requires an authenticated user. Anonymous users do not see t
 
 **Connection to phase 8 (parked Q1 — sender CTA):**
 - The phase 8 social-loop study should treat sign-in as a precondition on the sender side. CTA designs that assume an authed sender are correct; CTA designs that try to also serve anonymous senders are not in scope.
+
+**EDIT 2026-05-28 (added same day):** The "no rendering for anonymous users" rule above has been **superseded** by the subsequent "sender-side sign-in nudge revised" lock below. See that section. The rationale (sign-in required to issue challenges) is preserved; the enforcement mechanism shifted from render-time gating to tap-time gating, with the existing name overlay serving as the sign-up/sign-in surface.
 
 ---
 
