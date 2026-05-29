@@ -65,6 +65,11 @@ When a decision is reached but not yet in the doc: pause implementation work, su
 ### Pre-merge verification
 
 - Full `npm test` from the repo root before any push. Never scoped vitest (`npx vitest run <path>`) as a substitute.
+- Production-equivalent build before push:
+  - Routine single-sport commits: `npm --prefix basketball run build` (basketball SPA; faster iteration).
+  - Commits touching shared infrastructure (anything in `shared/`, `api/`, or cross-sport components) OR any push approaching a release: `bash scripts/build-vercel.sh` (builds all sports as Vercel does).
+
+  Either command catches missing-export and other production-bundler errors that `npm test` and `tsc` don't surface — see Item C / commit `a4b74b0` for the precedent regression. Root `npm run build` is a no-op; do not use it.
 - Manual smoke test against the relevant smoke checklist in `docs/replaymod-design-decisions.md` before push.
 - If `npm test` fails on something unrelated to the current work, stop and surface — do not push around it.
 
