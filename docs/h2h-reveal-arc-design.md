@@ -534,6 +534,57 @@ Both corrections are NON-RELAXATIONS — every behavior the lock originally requ
 - No "fade in from black at opacity 0" effect from the reveal's wrapper landing on an empty viewport. The playing root's gradient + locked geometry stays beneath; the reveal fades in OVER it.
 - No re-deriving of the held-position invariant to mean "held cards keep deal positions on the reveal strip too" — that contradicts the strip-sort contract and was never the intent.
 
+**EDIT 2026-05-30 (after live verification of a88128d — states 1–3 render on the SAME framed board as state 4; supersedes the "dedicated playing-mode strip" model):** live verification of Fix B + Fix C2 surfaced that the rework's core visual requirement was never captured in the lock. The current implementation renders states 1–3 on a BARE layout — face-down cards jammed at the top, an empty middle, a thin strip of cells at the bottom — and only at state 4 does the REAL H2H board appear (framed opponent container at top with the opponent's name labeled, framed recipient container at bottom with the recipient's name labeled, hero zone between, slots inside each frame). The two layouts are visually disjoint even on the same DOM canvas with shared geometry constants. This EDIT captures the missing requirement explicitly.
+
+**The user-facing requirement:**
+
+States 1–3 must render on the **EXACT SAME framed board** as state 4. Same framed top container, same opponent-name label, same framed bottom container, same recipient-name label, same hero zone, same slot positions. Deal / hold / draw all happen ON that board. State 4 is the same board with the hero zone *activating*, not a transition to a different layout. "Single coherent surface" means **one visual board** from the first Deal tap through the final reveal — not merely one mounted DOM tree.
+
+**Corrections to the rework lock above:**
+
+**B1 — The "dedicated playing-mode strip" model is SUPERSEDED.** S1, S2, and S3 above describe a bare top/bottom strip layout with a hero zone between. The "dedicated playing-mode strip" subsection (added in the 2026-05-30 strip-sort scope EDIT above, which named states 1–3's strip as a separate component from `HandStrip`) is **superseded as a layout decision**. States 1–3 render on the SAME framed board the reveal uses. The slots in the bottom frame ARE the playing-mode "strip"; there is no parallel bare strip.
+
+The strip-sort scope clarification itself (revealOrder governs reveal-participating strips; states 1–3 render in positional order) **remains in force** — this EDIT only changes the visual SHELL the slots live in, not the sort rule that applies to them. The bottom container's slots render in `slotIndex` order for states 1–3 by design (S5 invariant); they re-order to `revealOrder` at the S3 → S4 boundary per the prior EDIT.
+
+**B2 — Per-state mapping on the framed board:**
+
+- **State 1 (pre_deal):** recipient's 6 slots **empty** in the bottom framed container; opponent's 6 cards **face-DOWN** in the top framed container; hero zone shows "Hit deal to see your starting deck"; CTA Deal.
+- **State 2 (deal_in → hold_select):** recipient's 6 cards land **face-up** into the bottom framed container's slots, in positional (slotIndex) order, one-by-one — read from `challengeCtx.initialRoster` (server snapshot per the engine-correction EDIT above); opponent stays face-down in the top frame; hero zone shows hold-prompt copy; the bottom container's cells accept hold taps; CTA Draw.
+- **State 3 (redraw_running → column_flip):** unheld bottom-frame cards flip face-down in place; engine `redrawRoster` runs under cover (path β no-flicker); LEFT→RIGHT column flips reveal replacements (bottom) and opponent faces (top) per the existing column-flip sequence — all **WITHIN the framed containers**, NOT on a separate strip.
+- **State 4 (reveal arc):** SAME board; hero zone activates per the existing arc design. NO layout change between states 3 and 4. The only visual change at the S3 → S4 boundary is the hero zone coming alive and the strip-sort contract re-asserting (slot positions re-flow from positional → revealOrder inside the framed containers, per the prior EDIT).
+
+**B3 — Name labels on the framed containers (locked, all states):**
+
+- The top framed container carries the opponent's name label in **all states** (not only at reveal). Sourced from `challengeCtx.challengerName` via the existing `isRealName` gate (falls back to a generic label when the name is not real, same as elsewhere in the H2H system).
+- The bottom framed container carries the recipient's name label in **all states**. Sourced from the same identity path the reveal currently uses for the bottom strip (`getNickname()` per `H2HRecipientReveal.tsx:149`).
+- "All states" includes state 1 (pre_deal): the recipient sees the labeled framed board immediately on landing, before tapping Deal.
+
+**B4 — Component-reuse intent (note for implementation; mechanism is investigation-scope):**
+
+The intent is that states 1–3 **REUSE** the reveal board's framed-container layout rather than build a parallel layout. The board must be literally identical across all four states because the user reads any visual divergence as a UI swap (even with shared geometry constants, divergent visual containers register as different surfaces). The exact mechanism — reuse `H2HRevealScreen`'s board shell with a "playing-mode" prop / phase, or extract a shared `H2HBoardShell` component that both `H2HRecipientPlay` (states 1–3) and `H2HRevealScreen` (state 4) mount, or some third path — is **for the implementation investigation to determine**. Record the requirement as: **reuse, don't rebuild; mechanism TBD by investigation.**
+
+This is the same locked-pattern as Fix B's "copy the working scaffold" rule in CLAUDE.md, scaled up from a single strip cell's render scaffold to the whole board shell.
+
+**B5 — S5 / held-position invariant, restated in framed-slot terms:**
+
+- S5 (held cards do not move S1 → S2 → S3) now reads: **held cards stay in their bottom-container SLOT positions** throughout states 1–3. The "deal positions" referenced in S5 are the bottom framed container's slots, not a bare strip.
+- revealOrder still takes over at S4 per the prior EDIT — held cards re-flow to revealOrder positions inside the same bottom framed container at the S3 → S4 boundary.
+- The S3 → S4 boundary still happens on the SAME canvas (Fix C2) and on the SAME framed board (this EDIT). The visual transition at the boundary is: hero zone activates + slots re-flow inside the bottom frame to revealOrder. No frame swap; no name-label re-flow; no container re-mount.
+
+**What this locks out (additive to the prior EDITs):**
+
+- No bare top/bottom strip layout in states 1–3. The framed containers + name labels + hero zone are present from state 1 onwards.
+- No "lazy reveal" of the framed board at state 4. The board mounts at state 1 and stays mounted; only its hero zone and the slot sort change across states.
+- No parallel re-implementation of the framed-container layout. If the implementation finds the shell is hard to reuse, that's a design discrepancy to surface BEFORE shipping a parallel shell — not a license to rebuild.
+- No removal of name labels in states 1–3 ("they're only meaningful at reveal" is not the locked behavior — the labeled frames are the anchor the recipient reads as "this is the matchup board" from the moment they land).
+
+**Status of prior EDITs:**
+
+- The 2026-05-30 engine-correction EDIT (S2/S6) — unchanged.
+- The 2026-05-30 strip-sort scope EDIT — partially superseded. The strip-sort contract scope statement (revealOrder governs reveal-participating strips; states 1–3 render in positional order) is unchanged. The "dedicated playing-mode strip" implementation framing is superseded by this EDIT (B1).
+- The 2026-05-30 piece-2d scope re-scope EDIT — unchanged.
+- The 2026-05-30 S3→S4 surface-continuity + S5-scope EDIT (Fix C2 + S5 corrections) — unchanged. Fix C2 (single mounted canvas) and the S5 scope boundary (S5 governs through S3; revealOrder at S4) both hold. This EDIT layers on top of Fix C2: not only is the canvas single, the framed board on that canvas is single too.
+
 ---
 
 ### Phase 5b piece 2b+2c — recipient-play on H2H surface + drawing mechanic (locked 2026-05-28)
