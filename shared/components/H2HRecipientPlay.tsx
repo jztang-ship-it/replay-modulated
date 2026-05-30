@@ -50,7 +50,7 @@
 // DEAL_CASCADE_INTERVAL_MS are NOT design-locked. Starting values
 // chosen for the rewrite are tunable in live verification.
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GeneratedCard } from "@shared/types";
 import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
 import { H2HRecipientReveal } from "./H2HRecipientReveal";
@@ -465,7 +465,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // a loading or error treatment. Same shell, same labels, only the
   // hero copy + CTA shift — the user never sees a separate "loading
   // screen."
-  let headline: ReactNode = deriveHeadline(state, namedChallenger);
+  let headline: string = deriveHeadline(state, namedChallenger);
   let cta = deriveCta(state);
   if (dataLoadError || engineError !== null) {
     headline = "Couldn't load challenge data. Try again.";
@@ -639,6 +639,14 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // arc-composite (H2HRecipientReveal) renders its battlefield grid
   // INSIDE the shell's same hero region via its own H2HBoardShell
   // mount (Fix C2 + EDIT B2 — no layout change at the S3→S4 boundary).
+  // #3 hardened (2026-05-31): the VS treatment renders as a sibling of
+  // (not a child of) the headline div, so the headline div's typography
+  // (fontSize 22, fontWeight 800, maxWidth 360) cannot collide with the
+  // VS glyph's own typography (fontSize 56, fontWeight 900) and the
+  // headline's content-width sizing cannot squash the VS into a sub-
+  // optimal width. Explicit color on the VS block so it does not depend
+  // on inherited foreground color from any ancestor.
+  const isVsBeat = state.kind === "handoff_resolving";
   const heroSlot = (
     <div
       data-h2h-play-hero-zone="true"
@@ -651,23 +659,63 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         padding: "0 20px",
       }}
     >
-      <div
-        data-h2h-play-headline="true"
-        style={{
-          fontSize: 22,
-          fontWeight: 800,
-          lineHeight: 1.3,
-          maxWidth: 360,
-          opacity:
-            state.kind === "redraw_running" ||
-            state.kind === "column_flip"
-              ? 0.7
-              : 1,
-          transition: "opacity 200ms ease",
-        }}
-      >
-        {headline}
-      </div>
+      {isVsBeat ? (
+        <div
+          data-h2h-play-vs="true"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            color: "#EAF0FF",
+            width: "100%",
+            opacity: 1,
+          }}
+        >
+          <span
+            data-h2h-play-vs-glyph="true"
+            style={{
+              fontSize: 56,
+              fontWeight: 900,
+              lineHeight: 1,
+              letterSpacing: "0.04em",
+              color: "#EAF0FF",
+            }}
+          >
+            VS
+          </span>
+          <span
+            data-h2h-play-vs-sub="true"
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              opacity: 0.75,
+              color: "#EAF0FF",
+            }}
+          >
+            Comparing…
+          </span>
+        </div>
+      ) : (
+        <div
+          data-h2h-play-headline="true"
+          style={{
+            fontSize: 22,
+            fontWeight: 800,
+            lineHeight: 1.3,
+            maxWidth: 360,
+            opacity:
+              state.kind === "redraw_running" ||
+              state.kind === "column_flip"
+                ? 0.7
+                : 1,
+            transition: "opacity 200ms ease",
+          }}
+        >
+          {headline}
+        </div>
+      )}
     </div>
   );
 
@@ -778,7 +826,7 @@ type BottomSlot =
 function deriveHeadline(
   state: PlayingState,
   namedChallenger: string | null,
-): ReactNode {
+): string {
   switch (state.kind) {
     case "pre_deal":
       return "Hit deal to see your starting deck.";
@@ -790,45 +838,11 @@ function deriveHeadline(
     case "column_flip":
       return "Drawing…";
     case "handoff_resolving":
-      // #3 (2026-05-30): VS separator. During the existing handoff_resolving
-      // beat (~1250ms, the pre-reveal hold), replace the "Calculating…"
-      // copy with a "VS" treatment — large weight-900 "VS" + small
-      // "Comparing…" sub-label, centered in the existing hero slot.
-      // Inline only; no new state, no new timer.
-      return (
-        <div
-          data-h2h-play-vs="true"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 6,
-          }}
-        >
-          <span
-            data-h2h-play-vs-glyph="true"
-            style={{
-              fontSize: 56,
-              fontWeight: 900,
-              lineHeight: 1,
-              letterSpacing: "0.04em",
-            }}
-          >
-            VS
-          </span>
-          <span
-            data-h2h-play-vs-sub="true"
-            style={{
-              fontSize: 14,
-              fontWeight: 600,
-              opacity: 0.75,
-            }}
-          >
-            Comparing…
-          </span>
-        </div>
-      );
+      // #3 (2026-05-30, hardened 2026-05-31): the VS treatment renders as
+      // a sibling of the headline div (see heroSlot below). deriveHeadline
+      // returns empty so the headline div collapses and only the VS block
+      // is visible during this beat.
+      return "";
     case "arc":
       return "";
   }

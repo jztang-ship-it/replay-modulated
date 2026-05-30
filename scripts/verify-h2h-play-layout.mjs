@@ -354,8 +354,92 @@ async function runPlayHarness(browser) {
   const topLabel_s3 = (await page.locator(`[data-h2h-board-zone-label="top"]`).first().textContent())?.trim().toUpperCase() ?? "";
   const bottomLabel_s3 = (await page.locator(`[data-h2h-board-zone-label="bottom"]`).first().textContent())?.trim().toUpperCase() ?? "";
 
+  // ── Mid handoff_resolving (#3 VS treatment) ─────────────────────
+  // The 800ms pre-reveal hold opens with state="handoff_resolving" and
+  // the playing-mode hero zone showing the VS treatment (weight-900 "VS"
+  // + "Comparing…" sub-label) IN PLACE of the prior "Calculating…" copy.
+  // Sample atomically ~300ms into the beat — well inside the 800ms
+  // window and BEFORE the arc-composite crossfade starts. Asserts:
+  //   (a) state IS handoff_resolving (we're in the right window)
+  //   (b) [data-h2h-play-vs] is present with text "VSComparing…"
+  //   (c) the VS glyph reads "VS" and is rendered with size ≥ 40px +
+  //       opacity ≥ 0.9 (no rendered-but-invisible regressions)
+  //   (d) the VS block has a non-zero bounding box (not collapsed)
+  //   (e) the headline div is NOT mounted (lifted-out structure: VS is
+  //       a sibling, not a child of the headline wrapper)
+  await page.waitForTimeout(300);
+  const vsSnap = await page.evaluate(() => {
+    const root = document.querySelector("[data-h2h-recipient-play]");
+    const vs = document.querySelector("[data-h2h-play-vs]");
+    const glyph = document.querySelector("[data-h2h-play-vs-glyph]");
+    const sub = document.querySelector("[data-h2h-play-vs-sub]");
+    const headline = document.querySelector("[data-h2h-play-headline]");
+    const vsRect = vs?.getBoundingClientRect();
+    const glyphCs = glyph ? getComputedStyle(glyph) : null;
+    return {
+      state: root?.getAttribute("data-playing-state"),
+      vsPresent: !!vs,
+      vsText: vs?.textContent ?? null,
+      vsBoxWidth: vsRect?.width ?? 0,
+      vsBoxHeight: vsRect?.height ?? 0,
+      glyphText: glyph?.textContent ?? null,
+      glyphFontSize: glyphCs ? parseFloat(glyphCs.fontSize) : 0,
+      glyphFontWeight: glyphCs?.fontWeight ?? null,
+      glyphOpacity: glyphCs ? parseFloat(glyphCs.opacity) : 0,
+      glyphVisibility: glyphCs?.visibility ?? null,
+      subText: sub?.textContent ?? null,
+      headlineMounted: !!headline,
+    };
+  });
+  record(
+    `#3 VS: state is "handoff_resolving" during pre-reveal beat`,
+    vsSnap.state === "handoff_resolving",
+    `state="${vsSnap.state}"`,
+  );
+  record(
+    `#3 VS: [data-h2h-play-vs] element present`,
+    vsSnap.vsPresent === true,
+  );
+  record(
+    `#3 VS: text content = "VSComparing…"`,
+    vsSnap.vsText === "VSComparing…",
+    `text="${vsSnap.vsText}"`,
+  );
+  record(
+    `#3 VS: glyph text === "VS"`,
+    vsSnap.glyphText === "VS",
+    `glyph="${vsSnap.glyphText}"`,
+  );
+  record(
+    `#3 VS: glyph fontSize >= 40px (catches collapse-to-inherited-22)`,
+    vsSnap.glyphFontSize >= 40,
+    `fontSize=${vsSnap.glyphFontSize}`,
+  );
+  record(
+    `#3 VS: glyph computed visibility=visible + opacity >= 0.9`,
+    vsSnap.glyphVisibility === "visible" && vsSnap.glyphOpacity >= 0.9,
+    `visibility="${vsSnap.glyphVisibility}" opacity=${vsSnap.glyphOpacity}`,
+  );
+  record(
+    `#3 VS: bounding box width >= 60px AND height >= 60px (not collapsed)`,
+    vsSnap.vsBoxWidth >= 60 && vsSnap.vsBoxHeight >= 60,
+    `w=${vsSnap.vsBoxWidth} h=${vsSnap.vsBoxHeight}`,
+  );
+  record(
+    `#3 VS: sub-label "Comparing…" present`,
+    vsSnap.subText === "Comparing…",
+    `sub="${vsSnap.subText}"`,
+  );
+  record(
+    `#3 VS: headline div NOT mounted during handoff_resolving (VS is a sibling)`,
+    vsSnap.headlineMounted === false,
+    `headlineMounted=${vsSnap.headlineMounted}`,
+  );
+
   // ── State 4 (arc): Fix C2 single canvas + S3→S4 no-shift ──
-  await page.waitForTimeout(PRE_REVEAL_HOLD_MS + ARC_COMPOSITE_CROSSFADE_MS + 200);
+  // Already 300ms into handoff_resolving — finish the remaining hold +
+  // composite crossfade window so the arc has fully landed.
+  await page.waitForTimeout(PRE_REVEAL_HOLD_MS - 300 + ARC_COMPOSITE_CROSSFADE_MS + 200);
 
   const playStateArc = await page.locator("[data-h2h-recipient-play]").getAttribute("data-playing-state");
   record(`state="arc" reached (got "${playStateArc}")`, playStateArc === "arc");

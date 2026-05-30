@@ -603,6 +603,59 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
     expect(inner?.style.pointerEvents).toBe("none");
   });
 
+  // #3 hardened (2026-05-31): VS treatment renders as a SIBLING of the
+  // headline div during handoff_resolving, with explicit color +
+  // explicit fontSize/fontWeight on the glyph (no inheritance from the
+  // 22px/800-weight headline wrapper). JSDOM cannot compute styles, but
+  // it CAN check element presence + the inline-style attribute.
+  it("#3 VS: during handoff_resolving, VS block is mounted as a sibling of the headline (and the headline is NOT)", { timeout: 10000 }, async () => {
+    // Slow resolveRoster so we can sample inside the handoff_resolving
+    // window deterministically. The hook holds 800ms before awaiting
+    // resolve; a 5000ms resolve gives us a wide assertion window.
+    let resolveFn: (v: any) => void = () => {};
+    const props = baseProps({
+      resolveRoster: vi.fn(() => new Promise((res) => { resolveFn = res; })),
+    } as any);
+    const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
+    const { container } = render(
+      <H2HRecipientPlay {...props} challengeCtx={ctx} />
+    );
+    fireEvent.click(screen.getByText("Deal"));
+    await waitFor(
+      () => expect(screen.queryByText("Draw")).not.toBeNull(),
+      { timeout: 2000 },
+    );
+    fireEvent.click(screen.getByText("Draw"));
+    // Wait until the VS element appears (handoff_resolving entered).
+    await waitFor(
+      () => expect(container.querySelector("[data-h2h-play-vs]")).not.toBeNull(),
+      { timeout: 6000 },
+    );
+    // Lifted-out structure: VS exists, headline does NOT (deriveHeadline
+    // returns "" for handoff_resolving and the conditional in heroSlot
+    // mounts only the VS branch).
+    const vs = container.querySelector("[data-h2h-play-vs]");
+    const glyph = container.querySelector("[data-h2h-play-vs-glyph]");
+    const sub = container.querySelector("[data-h2h-play-vs-sub]");
+    const headline = container.querySelector("[data-h2h-play-headline]");
+    expect(vs).not.toBeNull();
+    expect(glyph?.textContent).toBe("VS");
+    expect(sub?.textContent).toBe("Comparing…");
+    expect(headline).toBeNull();
+    // Explicit color + fontSize on the inline-style attribute (catches
+    // regressions where someone strips the explicit values and the VS
+    // collapses to inherited 22px or to a near-bg color).
+    const glyphStyle = (glyph as HTMLElement).getAttribute("style") ?? "";
+    expect(glyphStyle).toMatch(/font-size:\s*56px/);
+    expect(glyphStyle).toMatch(/font-weight:\s*900/);
+    expect(glyphStyle).toMatch(/color:\s*(#EAF0FF|rgb\(234,\s*240,\s*255\))/i);
+    // State attribute confirms we sampled during handoff_resolving.
+    const root = container.querySelector("[data-h2h-recipient-play]");
+    expect(root?.getAttribute("data-playing-state")).toBe("handoff_resolving");
+    // Unblock the resolve so the test tears down cleanly.
+    resolveFn({ roster: makeRoster() });
+  });
+
   it("FIX 2 guardrail: when resolveRoster throws, NO reveal mounts and Try Again appears", { timeout: 10000 }, async () => {
     // The prior behavior (silently falling through to finalRoster with
     // actualFp:0) is now blocked — the engine-error guardrail surfaces
