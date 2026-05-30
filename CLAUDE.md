@@ -73,6 +73,17 @@ When a decision is reached but not yet in the doc: pause implementation work, su
 - Manual smoke test against the relevant smoke checklist in `docs/replaymod-design-decisions.md` before push.
 - If `npm test` fails on something unrelated to the current work, stop and surface — do not push around it.
 
+#### Visual / layout changes — real-browser verification required
+
+The vitest suite runs in JSDOM. JSDOM does NOT compute CSS transforms, `scale()`, `transformOrigin`, flex/grid layout, or visual position — `getBoundingClientRect()` returns zeros. DOM-presence assertions (`getByText`, `getByTestId`) only prove an element exists in the tree; they do NOT prove it renders inside the visible viewport. A bug class slipped through this gap: a strip card scaffold rendered scaled content at negative pixel coordinates and `overflow: hidden` clipped everything, while every JSDOM presence assertion stayed green. See the rework section of `docs/h2h-reveal-arc-design.md` for the precedent.
+
+Two rules apply to any visual / layout change:
+
+1. **Reuse working scaffolds before deriving new ones.** When an equivalent layout (sized card in a sized cell, scaled card in a strip, overlay positioned over a fixed canvas, etc.) is already working elsewhere in the codebase, COPY that scaffold. Do not hand-write a parallel one — divergences in `transformOrigin`, `display: flex` vs `position: absolute`, or natural-width constants will not be caught by JSDOM tests.
+2. **Real-browser bounding-box check required.** Before claiming a visual / layout change verified, run a real-browser check that asserts each rendered element's `getBoundingClientRect()` falls inside its container's rect (Playwright or equivalent). DOM presence and snapshot assertions do not satisfy this. The check should walk the relevant state(s) and verify visible layout, not just mount.
+
+This rule applies to: strip cells, hand-strip-style scaled card surfaces, hero-zone composition, overlay positioning, fixed/absolute stacking decisions, and any new component that mounts a sport-provided `renderCard` inside a sized box.
+
 ### End-of-session ritual
 
 Before considering a session complete:

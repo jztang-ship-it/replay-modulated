@@ -512,6 +512,28 @@ Piece 2d is therefore **re-scoped to the VISUAL refinement of the hold mechanic*
 
 This EDIT does not change the original P7 entry in the 2b+2c lock (which already deferred hold/unhold to 2d). It clarifies that the rework, by its state machine, requires a minimum-viable functional tap that the original 2b+2c surface did not need (because 2b+2c had no hold step — recipient drew all 6 with no choices).
 
+**EDIT 2026-05-30 (after live verification of a6f158c + 874b6ad — S3→S4 surface continuity + S5 scope, two corrections):** live verification on localhost surfaced two issues that the lock as written did not unambiguously resolve, so it produced a non-conforming implementation. The first build correctly interpreted "mounts the existing reveal surface" (from the strip-sort scope EDIT above) as "unmount the playing canvas and mount H2HRevealScreen as a full replacement" — which is a SURFACE SWAP, not the "single coherent experience" the 2b+2c rationale (line 519) requires. The lock contradicted itself; this EDIT resolves the contradiction.
+
+**S4 surface continuity — clarification:**
+
+- The S3 → S4 handoff happens on the SAME mounted canvas. The playing-mode root (the surface that displays states 1–3) stays mounted across state 4. `H2HRecipientReveal` (which composes `H2HRevealScreen` + `H2HResultsOverlay`) is COMPOSITED INSIDE the playing canvas as a child, not returned in place of it.
+- "Mounts the existing reveal surface (`H2HRevealScreen`)" in the strip-sort scope EDIT means **REUSE the `H2HRevealScreen` component** to render the reveal arc — NOT replace / unmount the playing canvas. The component is shared between phase-4-original and phase-5b-rework callers; the mounting POINT differs (sibling-of-playing → child-of-playing).
+- The playing-mode inner content (top strip + hero zone + bottom strip + CTA) fades to opacity 0 as the reveal fades in (lockstep 250ms cross-fades, matching `H2HRecipientReveal`'s existing `HOLD_TO_ARC_CROSSFADE_MS`). The playing root's background, padding, and locked piece-2a geometry stay constant throughout.
+- This satisfies the 2b+2c rationale literally ("transitions to reveal arc + overlay without changing surfaces — single coherent experience"). The cards re-order from positional (slotIndex) to revealOrder per the strip-sort scope EDIT — that re-ordering happens on the SAME canvas, not via a UI swap.
+
+**S5 scope — tightening:**
+
+- The literal S5 wording ("Held cards … stay in their original deal positions throughout S2 → S3 → S4") is too strong. Read together with the strip-sort scope EDIT (state 4 uses `revealOrder`), the coherent scope is: **S5 positional invariant governs through S3; revealOrder takes over at S4.**
+- Effectively: held cards stay in their original deal positions throughout states 1 → 2 → 3 (the playing-mode strip). At the S3 → S4 boundary, the strip-sort contract reasserts and held cards move to their revealOrder positions (held-last, salary-sorted) on the reveal `HandStrip`. The recipient's spatial anchor is the playing-mode strip itself, not the cards' absolute position across the boundary.
+- The "through S4" phrasing in the original S5 is hereby **scoped to "through S3"** for the purpose of resolving the contradiction with the strip-sort scope EDIT. The held-position invariant is NOT relaxed within its scope — only its scope is named precisely.
+
+Both corrections are NON-RELAXATIONS — every behavior the lock originally required is still required; only the surface-continuity intent and the S5 scope boundary are stated precisely so an implementation cannot accidentally pick the surface-swap reading again.
+
+**What this locks out (additive):**
+- No unmount of the playing canvas at the S3 → S4 boundary. The root stays mounted; the reveal is a descendant.
+- No "fade in from black at opacity 0" effect from the reveal's wrapper landing on an empty viewport. The playing root's gradient + locked geometry stays beneath; the reveal fades in OVER it.
+- No re-deriving of the held-position invariant to mean "held cards keep deal positions on the reveal strip too" — that contradicts the strip-sort contract and was never the intent.
+
 ---
 
 ### Phase 5b piece 2b+2c — recipient-play on H2H surface + drawing mechanic (locked 2026-05-28)

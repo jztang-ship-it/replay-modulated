@@ -16,6 +16,7 @@ import { LandingPage } from "./components/LandingPage";
 // Static import sidesteps the entire dynamic-chunk surface; the dev
 // route is too narrow to justify the lazy mechanism's failure modes.
 import H2HRevealMockRoute from "./dev/H2HRevealMockRoute";
+import H2HPlayMockRoute from "./dev/H2HPlayMockRoute";
 import GameView from "./views/GameView";
 import { DailySeasonReelGate } from "./components/DailySeasonReelGate";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -107,6 +108,9 @@ function AppInner() {
   if (import.meta.env.DEV && devSlug === "h2h-reveal-mock") {
     return <H2HRevealMockRoute />;
   }
+  if (import.meta.env.DEV && devSlug === "h2h-play-mock") {
+    return <H2HPlayMockRoute />;
+  }
 
   const { isFTUE } = useFTUE(SPORT);
   const challengeIdFromUrl = getChallengeId();
@@ -144,10 +148,11 @@ function AppInner() {
   // Cleared once the user dismisses or shares the resulting challenge.
   const [challengeBackCtx, setChallengeBackCtx] = useState<ChallengeBackCtx | null>(null);
   const [showChallengeLanding, setShowChallengeLanding] = useState(!!challengeIdFromUrl);
-  // Phase 5b piece 2b+2c (2026-05-30): recipient-play surface gate.
-  // Set on challenge accept (P1) so H2HRecipientPlay mounts instead of
-  // GameView. h2hPlayKey is bumped on Try Again to force a clean re-mount
-  // of the playing surface (drawnCount→0, fresh resolve).
+  // Phase 5b piece 2 (rework 2026-05-30, a6f158c + 874b6ad + Fix B/C2):
+  // recipient-play surface gate. Set on challenge accept (P1) so
+  // H2HRecipientPlay mounts instead of GameView. h2hPlayKey is bumped
+  // on Try Again to force a clean re-mount of the playing surface
+  // (state machine resets to pre_deal, fresh resolve).
   const [h2hPlayingMode, setH2hPlayingMode] = useState(false);
   const [h2hPlayKey, setH2hPlayKey] = useState(0);
   const { unlockedIds: ownUnlockedIds } = useAchievements();
@@ -325,7 +330,7 @@ function AppInner() {
           }}
           onTryAgain={() => {
             // Key bump re-mounts H2HRecipientPlay with fresh state
-            // (drawnCount=0, no resolved roster). The recipient plays
+            // (state machine resets to pre_deal). The recipient plays
             // the same challenge snapshot again.
             setH2hPlayKey(k => k + 1);
           }}

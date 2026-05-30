@@ -77,6 +77,12 @@ export const COLUMN_FLIP_INTERSTITIAL_MS = 150;
  *  tunable. */
 export const PRE_REVEAL_HOLD_MS = 800;
 
+/** Cross-fade window for the playing-strip inner content when state
+ *  advances to "arc" (Fix C2). Matches H2HRecipientReveal's own
+ *  HOLD_TO_ARC_CROSSFADE_MS so the playing fade-out and the reveal
+ *  fade-in finish in lockstep on the same canvas. */
+export const ARC_COMPOSITE_CROSSFADE_MS = 250;
+
 // Mini-cell dimensions — matches HAND_STRIP_HEIGHT_PX (80) and the
 // derived STRIP_CARD_DISPLAY_WIDTH_PX ((80 * 329) / 478 ≈ 55) used by
 // H2HRevealScreen's HandStrip. Same Y/X footprint so the eye doesn't
@@ -85,12 +91,16 @@ const MINI_CELL_WIDTH_PX = 55;
 const MINI_CELL_HEIGHT_PX = 80;
 const STRIP_GAP_PX = 4;
 
-// Strip-scale factor — matches H2HRevealScreen's STRIP_CARD_SCALE so a
-// hero-sized AthleteCard renders at strip footprint when injected via
-// renderPlayingStripCard. The renderer itself is sport-agnostic; the
-// container's scale determines the visual size (same model the arc
-// HandStrip uses).
-const STRIP_CARD_NATURAL_WIDTH_PX = 329;
+// Strip-scale factor — VALUES COPIED FROM H2HRevealScreen.tsx:215-218
+// (the working strip scaffold). Do not hand-derive: the natural-width
+// constant + transform-origin combo is layout-sensitive, and JSDOM
+// tests don't catch off-cell rendering caused by divergent values.
+// 150 (not 329) is the deliberate strip-pattern wrap width — the
+// renderer's intrinsic content sizes against 150 × 218, then a CSS
+// scale shrinks the rendered output to MINI_CELL_WIDTH_PX × MINI_CELL_HEIGHT_PX.
+// See the "Visual / layout changes" rule in CLAUDE.md.
+const STRIP_CARD_NATURAL_WIDTH_PX = 150;
+const STRIP_CARD_NATURAL_HEIGHT_PX = (STRIP_CARD_NATURAL_WIDTH_PX * 478) / 329;
 const STRIP_CARD_SCALE = MINI_CELL_WIDTH_PX / STRIP_CARD_NATURAL_WIDTH_PX;
 
 // Per piece 2a geometry (smoke artifact 2026-05-28): top strip
@@ -360,26 +370,19 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     };
   }, [state]);
 
-  // ── Mount the reveal arc once resolved ──────────────────────────
-  if (state.kind === "arc") {
-    return (
-      <H2HRecipientReveal
-        challengeCtx={challengeCtx}
-        myScore={state.resolvedScore}
-        myRoster={state.resolvedRoster}
-        myWinTier={state.resolvedTier}
-        gameState={"REVEALING" as any}
-        bypassGameStateGate
-        sport={sport}
-        renderBattlefieldCard={renderBattlefieldCard}
-        renderOverlayCard={renderOverlayCard}
-        onSendItBack={onSendItBack}
-        onTryAgain={onTryAgain}
-        onPlayOwnHand={onPlayOwnHand}
-        onDismiss={onDismiss}
-      />
-    );
-  }
+  // ── Arc-composite flag (state 4) ────────────────────────────────
+  // Per Fix C2 (lock rationale "without changing surfaces / single
+  // coherent experience"; doc EDIT 2026-05-30 clarifying that S4
+  // "mounts the existing reveal surface" means REUSE the
+  // H2HRevealScreen COMPONENT, not unmount the playing canvas):
+  // when state.kind === "arc", we DO NOT early-return / unmount the
+  // playing canvas. The root <div data-h2h-recipient-play> stays
+  // mounted with its locked piece-2a geometry, and
+  // <H2HRecipientReveal> renders as a child later in DOM order. The
+  // playing inner content fades to opacity 0 in parallel with the
+  // reveal's own opacity-0→1 crossfade so the user sees a single
+  // canvas transitioning, not two surfaces swapping.
+  const arcComposite = state.kind === "arc";
 
   // ── Derived render state ────────────────────────────────────────
   const namedChallenger = isRealName(challengeCtx.challengerName)
@@ -483,7 +486,14 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         boxSizing: "border-box",
       }}
     >
+      {/* Playing strip inner content — top + hero + bottom + CTA.
+          Fades to opacity 0 over the arc-composite crossfade window
+          when state advances to "arc". The OUTER root <div> stays
+          mounted (Fix C2, single coherent canvas); only this inner
+          subtree fades out. pointerEvents drops to none during the
+          fade so taps go to nothing (CTA is disabled anyway). */}
       <div
+        data-h2h-play-inner="true"
         style={{
           width: "100%",
           maxWidth: "min(480px, 100%)",
@@ -493,6 +503,9 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
           display: "flex",
           flexDirection: "column",
           height: "100%",
+          opacity: arcComposite ? 0 : 1,
+          transition: `opacity ${ARC_COMPOSITE_CROSSFADE_MS}ms ease-in`,
+          pointerEvents: arcComposite ? "none" : "auto",
         }}
       >
         {/* Top strip — sender's roster, face-down until column-flip pass */}
@@ -627,6 +640,33 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         </div>
       </div>
 
+      {/* State-4 composite — Fix C2: <H2HRecipientReveal/> mounts as a
+          CHILD of this same canvas (not as a replacement return), so
+          the playing root stays mounted and the reveal fades in over
+          it on identical piece-2a geometry. H2HRecipientReveal owns
+          its own opacity-0→1 wrapper transition (HOLD_TO_ARC_CROSSFADE_MS),
+          which finishes in lockstep with the playing-inner fade-out
+          above. Both surfaces share the same gradient background, so
+          the perceptible effect is "cards on playing strip fade →
+          cards on reveal strip fade in," not a UI swap. */}
+      {arcComposite && state.kind === "arc" && (
+        <H2HRecipientReveal
+          challengeCtx={challengeCtx}
+          myScore={state.resolvedScore}
+          myRoster={state.resolvedRoster}
+          myWinTier={state.resolvedTier}
+          gameState={"REVEALING" as any}
+          bypassGameStateGate
+          sport={sport}
+          renderBattlefieldCard={renderBattlefieldCard}
+          renderOverlayCard={renderOverlayCard}
+          onSendItBack={onSendItBack}
+          onTryAgain={onTryAgain}
+          onPlayOwnHand={onPlayOwnHand}
+          onDismiss={onDismiss}
+        />
+      )}
+
       {/* Flip animation keyframe + 3D scaffold styles */}
       <style>{flipCss(COLUMN_FLIP_DURATION_MS)}</style>
     </div>
@@ -745,8 +785,9 @@ function TopStripCell({
           <CardBack side="back" />
         </div>
         {/* Front face — sender card pre-reveal, mounted only when face-up.
-            Matches BottomStripCell's front-face scaffold so the visual
-            anchor at handoff is identical on both strips. */}
+            Matches BottomStripCell's front-face scaffold byte-for-byte
+            (see comment there for the rationale on the absolute /
+            top-left / explicit-height scaffold). */}
         {faceUp && (
           <div
             data-h2h-play-top-front="true"
@@ -759,17 +800,19 @@ function TopStripCell({
               borderRadius: 6,
               boxSizing: "border-box",
               overflow: "hidden",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
             }}
           >
             {card ? (
               <div
                 style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
                   width: STRIP_CARD_NATURAL_WIDTH_PX,
+                  height: STRIP_CARD_NATURAL_HEIGHT_PX,
                   transform: `scale(${STRIP_CARD_SCALE})`,
                   transformOrigin: "top left",
+                  pointerEvents: "none",
                 }}
               >
                 {renderCard(card, { revealed: false })}
@@ -864,7 +907,13 @@ function BottomStripCell({
         </div>
         {/* Front face (sport renderer). ONLY mounted when face-up —
             path β: replacement values must not be in the DOM until the
-            column-flip exposes them. */}
+            column-flip exposes them.
+            Inner scaffold matches H2HRevealScreen.tsx:575-591 exactly:
+            position:absolute + top/left:0 + explicit natural width AND
+            height + transform:scale + transformOrigin:"top left". The
+            outer is NOT a flex container — flex-centering with
+            transformOrigin:top-left positions the scaled card off the
+            visible cell (negative coords clipped by overflow:hidden). */}
         {faceUp && (
           <div
             data-h2h-play-front="true"
@@ -879,16 +928,18 @@ function BottomStripCell({
               borderRadius: 6,
               boxSizing: "border-box",
               overflow: "hidden",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
             }}
           >
             <div
               style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
                 width: STRIP_CARD_NATURAL_WIDTH_PX,
+                height: STRIP_CARD_NATURAL_HEIGHT_PX,
                 transform: `scale(${STRIP_CARD_SCALE})`,
                 transformOrigin: "top left",
+                pointerEvents: "none",
               }}
             >
               {renderCard(slot.card as unknown as H2HCard, { revealed: false })}

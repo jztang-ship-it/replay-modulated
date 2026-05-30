@@ -502,7 +502,7 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
     expect(arg.finalCards[0].name).toBe("Final-0");
   });
 
-  it("mounts H2HRecipientReveal with bypassGameStateGate after handoff completes", async () => {
+  it("mounts H2HRecipientReveal INSIDE the still-mounted playing canvas (Fix C2 single-canvas continuity)", async () => {
     const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
     const { container } = render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />
@@ -520,8 +520,25 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
       () => expect(container.querySelector("[data-h2h-recipient-reveal]")).not.toBeNull(),
       { timeout: 8000 },
     );
-    // Playing surface has unmounted.
-    expect(container.querySelector("[data-h2h-recipient-play]")).toBeNull();
+    // Fix C2: the playing canvas root STAYS mounted; the reveal
+    // composites inside it. This is the locked-in contract that
+    // produces "one coherent surface" — verifying both ways here so
+    // a regression that reintroduces the unmount-and-swap fails loud.
+    const playingRoot = container.querySelector("[data-h2h-recipient-play]");
+    const revealRoot = container.querySelector("[data-h2h-recipient-reveal]");
+    expect(playingRoot).not.toBeNull();
+    expect(revealRoot).not.toBeNull();
+    // Stacking: reveal is a DESCENDANT of the playing root (compose,
+    // don't swap).
+    expect(playingRoot?.contains(revealRoot)).toBe(true);
+    // State attribute reflects arc.
+    expect(playingRoot?.getAttribute("data-playing-state")).toBe("arc");
+    // Playing-inner subtree is faded out (opacity 0). Tests against
+    // the inline style attribute since JSDOM doesn't compute style
+    // but does preserve the inline declaration.
+    const inner = container.querySelector("[data-h2h-play-inner]") as HTMLElement;
+    expect(inner?.style.opacity).toBe("0");
+    expect(inner?.style.pointerEvents).toBe("none");
   });
 
   it("handoff still occurs when resolveRoster throws (falls through to finalRoster)", async () => {
