@@ -195,7 +195,18 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     setActiveSeason(challengeCtx.season);
   }, [challengeCtx.season]);
 
-  const initialRoster = challengeCtx.initialRoster;
+  // Recipient's starting hand carries NO held state — invariant.
+  // challengeCtx.initialRoster is the SENDER's serialized initial deal;
+  // in production basketball's deserializeRoster already zeros wasHeld,
+  // but the dev mock route bypasses that path AND any future snapshot
+  // regression could re-introduce wasHeld. Zeroing here is the source-
+  // of-truth guarantee: the recipient never inherits hold flags.
+  // lockedCardIds below builds off this array via cardId, so the zeroed
+  // hand still resolves correctly to the engine's held-set logic.
+  const initialRoster = useMemo(
+    () => challengeCtx.initialRoster.map((c) => ({ ...c, wasHeld: false })),
+    [challengeCtx.initialRoster],
+  );
 
   const [state, setState] = useState<PlayingState>({ kind: "pre_deal" });
 
@@ -940,7 +951,20 @@ function BottomStripCell({
                 pointerEvents: "none",
               }}
             >
-              {renderCard(slot.card as unknown as H2HCard, { revealed: false })}
+              {/* H badge is wired to slot.held (the user's tap state) by
+                  overriding wasHeld on the card object handed to the
+                  renderer. CardFront's H indicator reads card.wasHeld via
+                  h2hArcRenderer's `locked` mapping; left to the snapshot,
+                  the badge tracks the SENDER's holds, not the recipient's
+                  taps. State 2 starts with state.held empty (no badges);
+                  taps toggle slot.held; H badge follows. The
+                  redraw/resolve chain is unaffected — lockedCardIds is
+                  built from state.held above and still resolves cardIds
+                  off the zeroed initialRoster. */}
+              {renderCard(
+                { ...(slot.card as unknown as H2HCard), wasHeld: slot.held },
+                { revealed: false },
+              )}
             </div>
           </div>
         )}

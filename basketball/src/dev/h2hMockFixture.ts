@@ -181,6 +181,36 @@ function sumFp(cards: H2HCard[]): number {
   return Math.round(cards.reduce((s, c) => s + c.actualFp, 0) * 10) / 10;
 }
 
+// ── Initial recipient hand (pre-redraw, pre-resolve) ─────────────────────
+// The recipient's PLAYING-MODE starting hand. Same 6 players as
+// RECIPIENT_CARDS (the resolved end-state hand) but zeroed: wasHeld
+// false on ALL slots (no holds yet — the recipient hasn't chosen),
+// actualFp/fpDelta/statLine/achievements zeroed (no game has been
+// resolved against this hand yet). Used by the H2HRecipientPlay dev
+// mock route as challengeCtx.initialRoster so the playing surface
+// renders what a real recipient sees at deal-in: no pre-held cards,
+// no FP, no badges.
+//
+// RECIPIENT_CARDS (end-state, with holds + actualFp + badges) stays
+// untouched for the arc / overlay dev routes that test the resolved
+// reveal flow.
+const INITIAL_RECIPIENT_CARDS: H2HCard[] = RECIPIENT_CARDS.map((c) => ({
+  ...c,
+  wasHeld: false,
+  actualFp: 0,
+  fpDelta: 0,
+  statLine: {},
+  achievements: [],
+}));
+
+export const INITIAL_RECIPIENT_HAND: H2HHand = {
+  handId: "mock-initial-recipient-hand-001",
+  totalFp: 0,
+  tier: "ROOKIE",
+  cards: INITIAL_RECIPIENT_CARDS,
+  displayName: "You",
+};
+
 // SENDER_HAND / RECIPIENT_HAND are typed as H2HHand (the same interface
 // the H2H component expects) so any field-name drift between the mock
 // and the component is caught by tsc at build time.

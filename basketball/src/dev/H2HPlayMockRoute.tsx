@@ -23,7 +23,7 @@ import type { GeneratedCard } from "@shared/types";
 import { h2hArcRenderer, h2hOverlayRenderer } from "../views/GameView";
 import { redrawRoster, resolveRoster } from "../adapters/gameAdapter";
 import { calculateWinTier } from "../utils/payoutLogic";
-import { SENDER_HAND, RECIPIENT_HAND } from "./h2hMockFixture";
+import { SENDER_HAND, INITIAL_RECIPIENT_HAND } from "./h2hMockFixture";
 
 const MOCK_CHALLENGE_ID = "dev-mock-challenge";
 
@@ -34,10 +34,13 @@ const MOCK_CHALLENGE_ID = "dev-mock-challenge";
  *  end. The challenger name is overridable via ?challengerName=… for
  *  the visual harness's label-text assertions. */
 function buildMockCtx(): ChallengeCtx {
-  // RECIPIENT_HAND.cards is H2HCard[]; structurally compatible with
-  // GeneratedCard[] for the recipient-play surface (slotIndex is the
-  // load-bearing field; renderer reads name/photoCode/salary/position).
-  const initialRoster = RECIPIENT_HAND.cards as unknown as GeneratedCard[];
+  // INITIAL_RECIPIENT_HAND.cards is the pre-redraw / pre-resolve fixture
+  // (wasHeld:false on all 6, actualFp:0, no badges). This is what a real
+  // recipient receives at deal-in via deserializeRoster. Using the
+  // resolved end-state RECIPIENT_HAND instead would leak its
+  // wasHeld:true flags into the playing surface — the bug e6fe662
+  // surfaced in live verification.
+  const initialRoster = INITIAL_RECIPIENT_HAND.cards as unknown as GeneratedCard[];
   let challengerName = SENDER_HAND.displayName;
   if (typeof window !== "undefined") {
     const sp = new URLSearchParams(window.location.search);

@@ -124,6 +124,18 @@ const nameRenderer: CardRenderer = (card: H2HCard) => (
   <div data-stub-card="true">{card.name}</div>
 );
 
+/** Renderer that ALSO emits an H-badge marker when card.wasHeld is true
+ *  — mirrors basketball's h2hArcRenderer which passes
+ *  locked={card.wasHeld} to AthleteCard → CardFront's `<span>H</span>`
+ *  indicator. Tests targeting the badge use this renderer instead of
+ *  the plain nameRenderer so the badge surface is testable in JSDOM. */
+const badgeRenderer: CardRenderer = (card: H2HCard) => (
+  <div data-stub-card="true">
+    {card.name}
+    {card.wasHeld ? <span data-h-badge="true">H</span> : null}
+  </div>
+);
+
 function baseProps(overrides: Partial<React.ComponentProps<typeof H2HRecipientPlay>> = {}) {
   return {
     sport: "basketball",
@@ -334,7 +346,11 @@ describe("H2HRecipientPlay — state 3a (redraw_running) — path β", () => {
     fireEvent.click(screen.getByText("Draw"));
     await waitFor(() => expect(props.redrawRoster).toHaveBeenCalledTimes(1));
     const callArg = props.redrawRoster.mock.calls[0][0];
-    expect(callArg.currentCards).toBe(ctx.initialRoster);
+    // Fix 2 (Bug 1 invariant): H2HRecipientPlay derives a wasHeld-zeroed
+    // copy of ctx.initialRoster via useMemo. So callArg.currentCards is
+    // NOT referentially equal to ctx.initialRoster — it's the same
+    // content with wasHeld zeroed. Use toEqual for content equality.
+    expect(callArg.currentCards).toEqual(ctx.initialRoster.map((c) => ({ ...c, wasHeld: false })));
     // lockedCardIds is the cardId-set of held slots only.
     expect(callArg.lockedCardIds).toBeInstanceOf(Set);
     expect(callArg.lockedCardIds.size).toBe(2);
@@ -714,5 +730,111 @@ describe("H2HRecipientPlay — anonymous path (P5)", () => {
     );
     expect(container.querySelector("[data-register-modal]")).toBeNull();
     expect(container.querySelector("[data-h2h-recipient-play]")).not.toBeNull();
+  });
+});
+
+// ── 10. Bottom-strip H badge wired to user's tap state, NOT snapshot ───
+//
+// Bug surfaced during live verification of 118d375: the dev mock
+// fixture reused the resolved RECIPIENT_HAND (wasHeld:true on slots
+// 4 and 5) as challengeCtx.initialRoster. The bottom-strip renderer
+// (h2hArcRenderer with revealed=false) passed locked={card.wasHeld}
+// straight to CardFront, so the H badge appeared on slots 4 and 5
+// at deal-in despite state.held being empty.
+//
+// Existing tests asserted [data-held] (the orange-ring border bound
+// to state.held) but NEVER the H badge surface — that's why this
+// shipped green. These tests close the gap: they target the badge
+// the user actually reads, and they exercise the leak-shape so a
+// regression that re-introduces snapshot wasHeld into the render
+// path fails loud.
+
+describe("H2HRecipientPlay — bottom-strip H badge regression-locks", () => {
+  function makeLeakyCtx(): ChallengeCtx {
+    // Build initialRoster with wasHeld:true on slots 4/5 — mirrors the
+    // dev-mock-fixture leak shape that surfaced live.
+    const roster = Array.from({ length: 6 }, (_, i) =>
+      makeCard({
+        cardId: `init-${i}`,
+        name: `Init-${i}`,
+        wasHeld: i === 4 || i === 5,
+      }, i),
+    );
+    return {
+      challengeId: "leaky-test",
+      initialRoster: roster,
+      targetScore: 175,
+      challengerName: "Mike",
+      sport: "basketball",
+      season: "2425",
+    };
+  }
+
+  it("Fix 2 leak-immunity: even with snapshot wasHeld:true, NO H badge renders at deal-in / hold_select", async () => {
+    vi.useFakeTimers();
+    const props = baseProps({ renderPlayingStripCard: badgeRenderer } as any);
+    const { container } = render(
+      <H2HRecipientPlay {...props} challengeCtx={makeLeakyCtx()} />,
+    );
+    fireEvent.click(screen.getByText("Deal"));
+    await act(async () => {
+      vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 8);
+    });
+    // hold_select: every bottom cell face-up, but state.held is empty
+    // and the Fix-2 useMemo zeroed initialRoster.wasHeld. Snapshot
+    // leak (wasHeld:true on slots 4/5) MUST NOT survive into the
+    // render — zero H badges anywhere on the bottom strip.
+    const badgesAfterDeal = container.querySelectorAll(
+      `[data-h2h-play-bottom-cell] [data-h-badge]`,
+    );
+    expect(badgesAfterDeal.length).toBe(0);
+  });
+
+  it("Fix 1 tap drives badge: tap slot 2 → H badge appears in cell 2; untap → gone", async () => {
+    vi.useFakeTimers();
+    const props = baseProps({ renderPlayingStripCard: badgeRenderer } as any);
+    const { container } = render(
+      <H2HRecipientPlay {...props} challengeCtx={makeLeakyCtx()} />,
+    );
+    fireEvent.click(screen.getByText("Deal"));
+    await act(async () => {
+      vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 8);
+    });
+    // Pre-tap: no badges.
+    expect(container.querySelectorAll(`[data-h2h-play-bottom-cell] [data-h-badge]`).length).toBe(0);
+
+    // Tap slot 2 → H badge inside cell 2, nowhere else.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    const badgesAfterTap = container.querySelectorAll(`[data-h2h-play-bottom-cell] [data-h-badge]`);
+    expect(badgesAfterTap.length).toBe(1);
+    const cell2 = container.querySelector(`[data-h2h-play-bottom-cell="2"]`);
+    expect(cell2?.querySelector(`[data-h-badge]`)).not.toBeNull();
+
+    // Untap → badge gone.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    expect(container.querySelectorAll(`[data-h2h-play-bottom-cell] [data-h-badge]`).length).toBe(0);
+  });
+
+  it("end-to-end tap → lockedCardIds: tap slot 2; Draw; redrawRoster receives EXACTLY [initialRoster[2].cardId]", async () => {
+    vi.useFakeTimers();
+    const ctx = makeLeakyCtx();
+    // initialRoster[2].cardId in the leaky ctx is "init-2".
+    const props = baseProps({ renderPlayingStripCard: badgeRenderer } as any);
+    render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
+    fireEvent.click(screen.getByText("Deal"));
+    await act(async () => {
+      vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 8);
+    });
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    vi.useRealTimers();
+    fireEvent.click(screen.getByText("Draw"));
+    await waitFor(() => expect(props.redrawRoster).toHaveBeenCalledTimes(1));
+    const callArg = props.redrawRoster.mock.calls[0][0];
+    // Pins the chain: only the user's tap (slot 2) — NOT slots 4/5
+    // (which had snapshot wasHeld:true) — reaches redrawRoster.
+    expect(callArg.lockedCardIds.size).toBe(1);
+    expect(callArg.lockedCardIds.has("init-2")).toBe(true);
+    expect(callArg.lockedCardIds.has("init-4")).toBe(false);
+    expect(callArg.lockedCardIds.has("init-5")).toBe(false);
   });
 });

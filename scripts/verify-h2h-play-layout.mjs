@@ -272,6 +272,48 @@ async function runPlayHarness(browser) {
     record(`S2 bottom cell ${i} inside bottom zone`, rectContains(bottomZoneRect_s2, cellRect), `zone=${fmtRect(bottomZoneRect_s2)} cell=${fmtRect(cellRect)}`);
   }
 
+  // ── H badge regression-lock (Bug 1 / Fix 1 / Fix 2) ──
+  // The H badge is the corner triangle + "H" span CardFront renders
+  // when isLocked=true (shared/components/CardFront.tsx:873-883). In
+  // the real browser we query by the SVG polygon fill which CardFront
+  // emits exclusively for the H indicator.
+  //   Pre-tap (hold_select): 0 H badges across the bottom strip.
+  //   Post-tap on slot N: exactly 1 H badge, located inside cell N.
+  const hBadgeSelectorBottom = `[data-h2h-play-bottom-cell] svg polygon[fill="#F5C850"]`;
+  const hBadgeCountPreTap = await page.locator(hBadgeSelectorBottom).count();
+  record(
+    `H badge count == 0 on bottom strip at hold_select pre-tap (Bug 1 / Fix 2 regression-lock)`,
+    hBadgeCountPreTap === 0,
+    `count=${hBadgeCountPreTap}`,
+  );
+
+  // Tap slot 2 → assert exactly 1 H badge total, inside cell 2.
+  await page.locator(`[data-h2h-play-bottom-cell="2"]`).click();
+  await page.waitForTimeout(50); // React commit
+  const hBadgeCountAfterTap = await page.locator(hBadgeSelectorBottom).count();
+  record(
+    `H badge count == 1 on bottom strip after tap on slot 2 (Fix 1 regression-lock)`,
+    hBadgeCountAfterTap === 1,
+    `count=${hBadgeCountAfterTap}`,
+  );
+  const hBadgeInsideCell2 = await page
+    .locator(`[data-h2h-play-bottom-cell="2"] svg polygon[fill="#F5C850"]`)
+    .count();
+  record(
+    `H badge is inside cell 2 specifically (Fix 1 regression-lock)`,
+    hBadgeInsideCell2 === 1,
+    `count_in_cell_2=${hBadgeInsideCell2}`,
+  );
+  // Untap → 0 badges.
+  await page.locator(`[data-h2h-play-bottom-cell="2"]`).click();
+  await page.waitForTimeout(50);
+  const hBadgeCountAfterUntap = await page.locator(hBadgeSelectorBottom).count();
+  record(
+    `H badge count == 0 after untapping slot 2 (Fix 1 regression-lock)`,
+    hBadgeCountAfterUntap === 0,
+    `count=${hBadgeCountAfterUntap}`,
+  );
+
   // ── State 3: tap Draw → column-flip pass ──
   await page.click("[data-h2h-play-cta][data-cta-label='Draw']");
   const totalColumnFlipMs = ROSTER_SIZE * (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS);
