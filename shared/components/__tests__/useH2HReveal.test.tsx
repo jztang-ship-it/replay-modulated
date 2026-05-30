@@ -192,6 +192,35 @@ describe("useH2HReveal — initial state", () => {
     expect(result.current.recipientRunningTotal).toBe(0);
     expect(result.current.entranceStages.every(s => s === "pre")).toBe(true);
   });
+
+  // FIX A (2026-05-30): composited-canvas reveal skips the deck-to-hand
+  // entrance. play() goes idle → revealing (not "entering") and
+  // entranceStages init "settled" so HandStrip renders at strip slot
+  // immediately. Used by H2HRecipientReveal only.
+  it("skipEntrance=true: entranceStages init 'settled'; play() transitions idle → revealing (NOT 'entering')", () => {
+    const sender = makeHand([
+      makeCard({ cardId: "s-0", wasHeld: false, salary: 50, actualFp: 10 }),
+      makeCard({ cardId: "s-1", wasHeld: true, salary: 100, actualFp: 20 }),
+    ]);
+    const recipient = makeHand([
+      makeCard({ cardId: "r-0", wasHeld: false, salary: 40, actualFp: 15 }),
+      makeCard({ cardId: "r-1", wasHeld: true, salary: 90, actualFp: 25 }),
+    ]);
+    const { result } = renderHook(() =>
+      useH2HReveal({ sender, recipient, initialPhase: "idle", skipEntrance: true })
+    );
+    // Initial: idle phase but settled stages (no deck-position visual).
+    expect(result.current.phase).toBe("idle");
+    expect(result.current.entranceStages).toEqual(["settled", "settled"]);
+    // play() goes straight to revealing, NOT entering. The 200ms timer
+    // scheduling runMatchup runs asynchronously; the phase transition
+    // itself is synchronous on the play() call.
+    act(() => {
+      result.current.play();
+    });
+    expect(result.current.phase).toBe("revealing");
+    expect(result.current.entranceStages).toEqual(["settled", "settled"]);
+  });
 });
 
 describe("useH2HReveal — play()", () => {

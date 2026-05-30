@@ -153,7 +153,15 @@ function H2HRecipientRevealInner(props: InnerProps) {
   // wrapper mounts with the hook in pre-play state so the HOLD-to-arc
   // crossfade doesn't expose final totals/CTA/headline. The dev mock
   // route inherits the "done" default for its phase-2 static behavior.
-  const reveal = useH2HReveal({ sender, recipient, reducedMotion, initialPhase: "idle" });
+  // FIX A (2026-05-30): skipEntrance=true. This wrapper is the ONLY
+  // composited-canvas reveal consumer (H2HRecipientPlay mounts it via
+  // compositeOverlay; cards are already at strip slots on the
+  // still-mounted playing canvas — the deck entrance would re-deal
+  // cards that are visibly there). H2HSenderReveal does NOT set this
+  // — sender's reveal is a standalone notification view and the deck
+  // entrance is correct there. The standalone reveal mock route uses
+  // initialPhase:"done" + no skipEntrance — phase-2 static end-state.
+  const reveal = useH2HReveal({ sender, recipient, reducedMotion, initialPhase: "idle", skipEntrance: true });
 
   // Crossfade-in from the underlying GameView surface. setVisible
   // flips on the next animation frame so the CSS opacity transition

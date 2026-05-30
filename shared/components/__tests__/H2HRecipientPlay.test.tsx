@@ -28,6 +28,27 @@
 
 import { describe, it, expect, vi, beforeAll, afterEach } from "vitest";
 import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
+
+// FIX 1 — mock dataEngine so ensureLoaded resolves immediately. The
+// real dataEngine fetches JSON files which isn't possible under JSDOM.
+// We preserve the rest of the module surface (setActiveSeason,
+// isLoaded, etc.) — only ensureLoaded is stubbed.
+vi.mock("@shared/engines/dataEngine", async () => {
+  const actual = await vi.importActual<typeof import("@shared/engines/dataEngine")>(
+    "@shared/engines/dataEngine",
+  );
+  return {
+    ...actual,
+    // isLoaded() defaults to true so the component's sync short-circuit
+    // sets dataReady immediately on mount — existing tests can render →
+    // tap Deal in the same tick. Tests that want to exercise the load
+    // gate explicitly can call (isLoaded as Mock).mockReturnValueOnce(false)
+    // + (ensureLoaded as Mock).mockImplementationOnce(...).
+    isLoaded: vi.fn(() => true),
+    ensureLoaded: vi.fn(() => Promise.resolve()),
+  };
+});
+
 import {
   H2HRecipientPlay,
   PRE_REVEAL_HOLD_MS,
@@ -582,8 +603,12 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
     expect(inner?.style.pointerEvents).toBe("none");
   });
 
-  it("handoff still occurs when resolveRoster throws (falls through to finalRoster)", async () => {
-    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+  it("FIX 2 guardrail: when resolveRoster throws, NO reveal mounts and Try Again appears", { timeout: 10000 }, async () => {
+    // The prior behavior (silently falling through to finalRoster with
+    // actualFp:0) is now blocked — the engine-error guardrail surfaces
+    // a "Try again" CTA on the same board instead of dropping the user
+    // into a degenerate zeroed reveal. Regression-lock for the C/D root.
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
     const props = baseProps({
       resolveRoster: vi.fn(async () => { throw new Error("boom"); }),
     } as any);
@@ -598,9 +623,13 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
     );
     fireEvent.click(screen.getByText("Draw"));
     await waitFor(
-      () => expect(container.querySelector("[data-h2h-recipient-reveal]")).not.toBeNull(),
+      () => expect(container.querySelector("[data-h2h-play-cta][data-cta-label='Try again']")).not.toBeNull(),
       { timeout: 8000 },
     );
+    // Reveal MUST NOT mount when the engine fell over.
+    expect(container.querySelector("[data-h2h-recipient-reveal]")).toBeNull();
+    // The error WAS logged (console.error, per Fix 2 promotion).
+    expect(consoleSpy).toHaveBeenCalled();
     consoleSpy.mockRestore();
   });
 });
@@ -836,5 +865,128 @@ describe("H2HRecipientPlay — bottom-strip H badge regression-locks", () => {
     expect(callArg.lockedCardIds.has("init-2")).toBe(true);
     expect(callArg.lockedCardIds.has("init-4")).toBe(false);
     expect(callArg.lockedCardIds.has("init-5")).toBe(false);
+  });
+});
+
+// ── 11. FIX 1 — data-engine load gate (ensureLoaded called; CTA gated) ─
+
+describe("H2HRecipientPlay — FIX 1 ensureLoaded gate", () => {
+  /** Helper: force the async load path by stubbing isLoaded → false for
+   *  the duration of one test. Returns a cleanup function. */
+  async function forceAsyncLoadPath() {
+    const dataEngine = await import("@shared/engines/dataEngine");
+    const isLoadedMock = dataEngine.isLoaded as ReturnType<typeof vi.fn>;
+    const ensureLoadedMock = dataEngine.ensureLoaded as ReturnType<typeof vi.fn>;
+    isLoadedMock.mockReturnValue(false);
+    return {
+      isLoadedMock,
+      ensureLoadedMock,
+      restore: () => isLoadedMock.mockReturnValue(true),
+    };
+  }
+
+  it("calls ensureLoaded on mount when data isn't already loaded", async () => {
+    const { ensureLoadedMock, restore } = await forceAsyncLoadPath();
+    ensureLoadedMock.mockClear();
+    ensureLoadedMock.mockReturnValueOnce(Promise.resolve());
+    render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
+    expect(ensureLoadedMock).toHaveBeenCalledTimes(1);
+    restore();
+  });
+
+  it("Deal CTA is disabled and loading copy is shown while data is not ready", async () => {
+    const { ensureLoadedMock, restore } = await forceAsyncLoadPath();
+    // Hold the promise so we can observe the pre-resolve render.
+    let resolveLoad!: () => void;
+    const heldLoad = new Promise<void>((r) => { resolveLoad = r; });
+    ensureLoadedMock.mockReturnValueOnce(heldLoad);
+
+    const { container } = render(
+      <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />,
+    );
+    // Loading state: headline copy + Deal disabled.
+    expect(container.textContent?.toLowerCase()).toContain("loading challenge data");
+    const cta = container.querySelector("[data-h2h-play-cta]") as HTMLButtonElement;
+    expect(cta?.disabled).toBe(true);
+
+    // Resolve the held promise → dataReady flips true → Deal enabled.
+    await act(async () => {
+      resolveLoad();
+      await Promise.resolve();
+    });
+    const cta2 = container.querySelector("[data-h2h-play-cta]") as HTMLButtonElement;
+    expect(cta2?.disabled).toBe(false);
+    restore();
+  });
+
+  it("ensureLoaded rejects → 'Try again' CTA + reveal NOT mounted", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    const { ensureLoadedMock, restore } = await forceAsyncLoadPath();
+    ensureLoadedMock.mockReturnValueOnce(Promise.reject(new Error("network blip")));
+    const { container } = render(
+      <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />,
+    );
+    await waitFor(
+      () => expect(container.querySelector("[data-h2h-play-cta][data-cta-label='Try again']")).not.toBeNull(),
+    );
+    expect(container.querySelector("[data-h2h-recipient-reveal]")).toBeNull();
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
+    restore();
+  });
+
+  it("sync short-circuit: when isLoaded() is true, ensureLoaded is NOT called", async () => {
+    const dataEngine = await import("@shared/engines/dataEngine");
+    const ensureLoadedMock = dataEngine.ensureLoaded as ReturnType<typeof vi.fn>;
+    ensureLoadedMock.mockClear();
+    // Default isLoaded mock returns true; no override needed.
+    render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
+    expect(ensureLoadedMock).not.toHaveBeenCalled();
+  });
+});
+
+// ── 12. FIX 1/2 happy-path end-to-end — pins C/D fixed ─────────────
+
+describe("H2HRecipientPlay — happy-path E2E (regression-lock for C/D fixed)", () => {
+  it("tap slots 1+5, Draw → reveal receives wasHeld:true on 1,5; non-zero score", { timeout: 10000 }, async () => {
+    // Mock redrawRoster to honor lockedCardIds (set wasHeld:true on
+    // locked slots, leave others as-is) and resolveRoster to populate
+    // actualFp:30 on every card. This exercises the chain that was
+    // SILENTLY broken pre-fix: a successful engine produces a roster
+    // with wasHeld + actualFp populated, and that roster is what
+    // reaches H2HRecipientReveal as myRoster.
+    const props = baseProps({
+      redrawRoster: vi.fn(async ({ currentCards, lockedCardIds }: any) => ({
+        roster: currentCards.map((c: any) => ({
+          ...c,
+          wasHeld: lockedCardIds.has(c.cardId),
+        })),
+      })),
+      resolveRoster: vi.fn(async ({ finalCards }: any) => ({
+        roster: finalCards.map((c: any) => ({ ...c, actualFp: 30, fpDelta: 30 - (c.projectedFp ?? 0) })),
+      })),
+    } as any);
+    const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
+    const { container } = render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
+
+    fireEvent.click(screen.getByText("Deal"));
+    await waitFor(() => expect(screen.queryByText("Draw")).not.toBeNull(), { timeout: 2000 });
+    fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-5"));
+    fireEvent.click(screen.getByText("Draw"));
+
+    await waitFor(() => expect(props.resolveRoster).toHaveBeenCalledTimes(1), { timeout: 6000 });
+    const resolveArg = props.resolveRoster.mock.calls[0][0];
+    // Engine HAPPY path: held slots carry wasHeld:true into resolveRoster.
+    expect(resolveArg.finalCards[1].wasHeld).toBe(true);
+    expect(resolveArg.finalCards[5].wasHeld).toBe(true);
+    expect(resolveArg.finalCards[0].wasHeld).toBe(false);
+
+    // The reveal mounts (engine succeeded — Fix 2 guardrail is NOT
+    // tripped). Score is non-zero (6 × 30 = 180).
+    await waitFor(
+      () => expect(container.querySelector("[data-h2h-recipient-reveal]")).not.toBeNull(),
+      { timeout: 8000 },
+    );
   });
 });

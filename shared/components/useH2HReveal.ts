@@ -298,6 +298,21 @@ export interface UseH2HRevealArgs {
    *  starting states; other phases require runtime state that play()
    *  populates. */
   initialPhase?: "idle" | "done";
+  /** FIX A (2026-05-30 — composited-canvas H2H, doc EDIT B2 + Fix C2).
+   *  When true, play() SKIPS the entering phase entirely and goes
+   *  idle → revealing directly. entranceStages init as "settled" so
+   *  HandStrip cells render at their strip-slot position with no
+   *  deck-to-hand animation. showEntranceDeck (gated on
+   *  phase === "entering") never triggers. Used by H2HRecipientReveal
+   *  when the reveal is composited onto an H2HRecipientPlay canvas
+   *  where the column-flip pass has already placed cards on the strip
+   *  slots — the deck entrance would re-deal cards that are already
+   *  there. Standalone reveal callers (H2HSenderReveal, dev mock
+   *  routes) leave this undefined to preserve the existing deck
+   *  entrance behavior. The BattlefieldSlot card-pull animation
+   *  handles the board-slot → hero-slot move per matchup, which is
+   *  the locked motion for this surface. */
+  skipEntrance?: boolean;
 }
 
 export interface UseH2HRevealReturn {
@@ -394,7 +409,7 @@ export function buildMatchups(sender: H2HCard[], recipient: H2HCard[]): Matchup[
 }
 
 export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
-  const { sender, recipient, reducedMotion, onMatchupResolved, onArcResolved, initialPhase = "done" } = args;
+  const { sender, recipient, reducedMotion, onMatchupResolved, onArcResolved, initialPhase = "done", skipEntrance = false } = args;
   const startIdle = initialPhase === "idle";
 
   // Reveal-order matchups. Memoized on the card arrays so static-prop
@@ -425,8 +440,13 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
   const [visibleFpMap, setVisibleFpMap] = useState<Map<string, number>>(() => new Map());
   const [senderRunningTotal, setSenderRunningTotal] = useState(startIdle ? 0 : sender.totalFp);
   const [recipientRunningTotal, setRecipientRunningTotal] = useState(startIdle ? 0 : recipient.totalFp);
+  // FIX A: when skipEntrance is true, init entranceStages to "settled"
+  // even for the idle starting phase. HandStrip cells then render at
+  // their strip-slot position from mount — no per-cell deck-stage
+  // translate. (Without this, idle-mount cells would render at the
+  // deck Y until play() ran, briefly flashing the deck position.)
   const [entranceStages, setEntranceStages] = useState<EntranceStage[]>(() =>
-    new Array(matchups.length).fill((startIdle ? "pre" : "settled") as const),
+    new Array(matchups.length).fill((startIdle && !skipEntrance ? "pre" : "settled") as const),
   );
   const [pulseActive, setPulseActive] = useState(false);
   // Per-side shake + glow state. Pre-rollup beat (shake + blast) fires
@@ -632,7 +652,6 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
     const myRunId = runIdRef.current;
     // Clean slate — visibleFpMap empty so CardFront's reset path runs
     // when the matchup switches in. Totals at zero.
-    setPhase("entering");
     setMatchupIndex(-1);
     setVisibleFpMap(new Map());
     setSenderRunningTotal(0);
@@ -643,6 +662,25 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
     setSenderGlowState(null);
     setRecipientGlowState(null);
     const N = matchups.length;
+
+    if (skipEntrance) {
+      // FIX A: composited-canvas path. Cards are already at strip
+      // slots on the still-mounted H2HRecipientPlay canvas; the deck
+      // entrance would re-deal cards that are visibly there. Skip
+      // phase "entering" entirely, mark stages settled, and proceed
+      // straight to matchup 0. The BattlefieldSlot card-pull
+      // animation per matchup handles the board-slot → hero-slot
+      // move, which is the locked motion for this surface.
+      setPhase("revealing");
+      setEntranceStages(new Array(N).fill("settled" as const));
+      scheduleTimeout(200, () => {
+        if (myRunId !== runIdRef.current) return;
+        runMatchup(0, myRunId);
+      });
+      return;
+    }
+
+    setPhase("entering");
 
     if (reducedMotion) {
       // Reduced-motion path: skip the entrance schedule + anticipation
@@ -718,7 +756,7 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
       if (myRunId !== runIdRef.current) return;
       runMatchup(0, myRunId);
     });
-  }, [cancelAll, scheduleTimeout, matchups.length, runMatchup, reducedMotion]);
+  }, [cancelAll, scheduleTimeout, matchups.length, runMatchup, reducedMotion, skipEntrance]);
 
   const skipToEnd = useCallback(() => {
     cancelAll();

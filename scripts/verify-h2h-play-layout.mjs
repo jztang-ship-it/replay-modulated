@@ -314,6 +314,17 @@ async function runPlayHarness(browser) {
     `count=${hBadgeCountAfterUntap}`,
   );
 
+  // ── Hold 2 cards before Draw — pin C/D fixed (badges + score at reveal). ──
+  await page.locator(`[data-h2h-play-bottom-cell="2"]`).click();
+  await page.locator(`[data-h2h-play-bottom-cell="5"]`).click();
+  await page.waitForTimeout(50);
+  const hBadgeCountTwoHeld = await page.locator(hBadgeSelectorBottom).count();
+  record(
+    `H badge count == 2 after holding slots 2 and 5 (multi-hold tap)`,
+    hBadgeCountTwoHeld === 2,
+    `count=${hBadgeCountTwoHeld}`,
+  );
+
   // ── State 3: tap Draw → column-flip pass ──
   await page.click("[data-h2h-play-cta][data-cta-label='Draw']");
   const totalColumnFlipMs = ROSTER_SIZE * (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS);
@@ -389,6 +400,53 @@ async function runPlayHarness(browser) {
   record(`S1→S3 top zone rect unchanged`, rectMatches(topRect_s1, topRect_s3));
   record(`S1→S3 bottom zone rect unchanged`, rectMatches(bottomRect_s1, bottomRect_s3));
   record(`S1→S3 hero region rect unchanged`, rectMatches(heroRect_s1, heroRect_s3));
+
+  // ── C/D regression-locks (post-FIX 1/2) — reveal-side end-state ──
+  // Wait long enough for the full per-matchup reveal arc to complete.
+  // Six matchups × ~600ms each, plus end-hold buffer. The harness used
+  // ~6s of holds before reaching here, so the arc may already be near
+  // end-state; we poll for the recipient TeamScore reading > 0 with a
+  // generous timeout.
+  await page.waitForFunction(
+    () => {
+      const reveals = document.querySelectorAll(`[data-h2h-recipient-reveal] [data-h2h-team-score]`);
+      if (reveals.length < 2) return false;
+      // Recipient score = second [data-h2h-team-score] inside the reveal.
+      const recipientEl = reveals[1];
+      const display = recipientEl.getAttribute("data-h2h-team-score-display");
+      const n = parseFloat(display ?? "0");
+      return Number.isFinite(n) && n > 0;
+    },
+    {},
+    { timeout: 15000 },
+  ).then(
+    () => {
+      // C/D regression-lock #1: recipient score > 0 at state="arc" end.
+      record(`C/D: recipient TeamScore > 0 at reveal end-state`, true);
+    },
+    () => {
+      // Failure path — still capture what we can for diagnostics.
+      record(
+        `C/D: recipient TeamScore > 0 at reveal end-state`,
+        false,
+        `recipient score never exceeded 0 within timeout`,
+      );
+    },
+  );
+
+  // C/D regression-lock #2: ≥2 H badges in the recipient's reveal strip
+  // (we held slots 2 and 5 before Draw — both should be HOLD at reveal).
+  // Target the bottom zone INSIDE the reveal (recipient's strip) so we
+  // don't conflate with the top (sender) strip's wasHeld badges, which
+  // come from a different data path.
+  const revealRecipientHBadgeCount = await page
+    .locator(`[data-h2h-recipient-reveal] [data-h2h-board-zone="bottom"] svg polygon[fill="#F5C850"]`)
+    .count();
+  record(
+    `C/D: ≥2 H badges on recipient reveal strip (2 cards were held pre-Draw)`,
+    revealRecipientHBadgeCount >= 2,
+    `count=${revealRecipientHBadgeCount}`,
+  );
 
   await page.close();
 }

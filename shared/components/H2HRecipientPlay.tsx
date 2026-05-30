@@ -50,12 +50,12 @@
 // DEAL_CASCADE_INTERVAL_MS are NOT design-locked. Starting values
 // chosen for the rewrite are tunable in live verification.
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GeneratedCard } from "@shared/types";
 import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
 import { H2HRecipientReveal } from "./H2HRecipientReveal";
 import type { CardRenderer, H2HCard } from "./H2HRevealScreen";
-import { setActiveSeason } from "@shared/engines/dataEngine";
+import { setActiveSeason, ensureLoaded, isLoaded } from "@shared/engines/dataEngine";
 import { isRealName } from "@shared/utils/isRealName";
 import { getNickname } from "@shared/utils/playerIdentity";
 import { H2HBoardShell } from "./H2HBoardShell";
@@ -188,12 +188,56 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     onSendItBack, onTryAgain, onPlayOwnHand, onDismiss,
   } = props;
 
-  // Pin the data engine to the challenge's season on mount —
-  // DailySeasonReelGate normally does this for GameView, but the
-  // playing-mode surface bypasses the gate.
+  // FIX 1 — data-engine load gate. The playing surface mounts OUTSIDE
+  // DailySeasonReelGate (App.tsx left-branches into H2HRecipientPlay
+  // when h2hPlayingMode && challengeCtx), so the data engine is NOT
+  // pre-loaded by the gate. setActiveSeason() invalidates whatever
+  // was previously loaded (when seasons differ — or freshly null on
+  // first mount), so we must call ensureLoaded() before any engine
+  // call (redrawRoster, resolveRoster). State machine is gated on
+  // dataReady; engineError surfaces a recoverable error state to the
+  // user. ensureLoaded is idempotent (dataEngine has isLoaded() guard
+  // at shared/engines/dataEngine.ts:119), so a same-season remount
+  // doesn't re-fetch.
+  // dataReady starts true if the engine is ALREADY loaded for this
+  // season (e.g., the user previously navigated through DailySeasonReelGate
+  // with a matching season). Synchronous short-circuit avoids a
+  // useless re-render and lets the tests render → tap Deal without a
+  // microtask flush in between.
+  const [dataReady, setDataReady] = useState(() => isLoaded());
+  const [dataLoadError, setDataLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   useEffect(() => {
     setActiveSeason(challengeCtx.season);
-  }, [challengeCtx.season]);
+    // setActiveSeason invalidates the cache when keys differ — re-check
+    // and short-circuit if we're still loaded after the pin.
+    if (isLoaded()) {
+      setDataReady(true);
+      setDataLoadError(false);
+      return;
+    }
+    let cancelled = false;
+    setDataReady(false);
+    setDataLoadError(false);
+    ensureLoaded()
+      .then(() => { if (!cancelled) setDataReady(true); })
+      .catch((err) => {
+        if (cancelled) return;
+        // eslint-disable-next-line no-console
+        console.error("[h2h-play] dataEngine load failed:", err);
+        setDataLoadError(true);
+      });
+    return () => { cancelled = true; };
+  }, [challengeCtx.season, loadAttempt]);
+  // FIX 2 — engine error guardrail. Set when redrawRoster or
+  // resolveRoster throws (or returns invalid). Surfaces the same
+  // error state on the shell so the user is never dropped into a
+  // degenerate zeroed reveal.
+  const [engineError, setEngineError] = useState<null | "redraw" | "resolve">(null);
+  const retryDataLoad = useCallback(() => {
+    setEngineError(null);
+    setLoadAttempt((n) => n + 1);
+  }, []);
 
   // Recipient's starting hand carries NO held state — invariant.
   // challengeCtx.initialRoster is the SENDER's serialized initial deal;
@@ -280,6 +324,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     let cancelled = false;
     (async () => {
       let finalRoster: GeneratedCard[] = initialRoster;
+      let redrawThrew = false;
       try {
         const res = await redrawRef.current({
           currentCards: initialRoster,
@@ -287,14 +332,20 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         });
         finalRoster = (res?.roster ?? res?.cards ?? initialRoster) as GeneratedCard[];
       } catch (err) {
-        // Non-fatal: fall through to initialRoster. The column-flip
-        // pass still runs; replacement cells reveal initialRoster
-        // entries (visually identical to "no redraw happened"). The
-        // recipient still hands off to the arc.
+        // FIX 2 guardrail: a redraw throw means the engine is unavailable
+        // (most often dataEngine not loaded — but covers any future
+        // failure mode). We do NOT fall through to a zeroed reveal —
+        // setEngineError surfaces the error state to the user via the
+        // shell's hero copy + retry CTA below.
         // eslint-disable-next-line no-console
-        console.warn("[h2h-play] redrawRoster failed; falling back to initialRoster:", err);
+        console.error("[h2h-play] redrawRoster failed:", err);
+        redrawThrew = true;
       }
       if (cancelled) return;
+      if (redrawThrew) {
+        setEngineError("redraw");
+        return;
+      }
       setState({
         kind: "column_flip",
         revealedColumns: 0,
@@ -358,16 +409,23 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     let cancelled = false;
     const id = window.setTimeout(async () => {
       let resolved: GeneratedCard[] = final;
+      let resolveThrew = false;
       try {
         const res = await resolveRef.current({ finalCards: final });
         resolved = (res?.roster ?? res?.cards ?? final) as GeneratedCard[];
       } catch (err) {
-        // Non-fatal: fall through to finalRoster (may have stale
-        // actualFp). Arc still mounts.
+        // FIX 2 guardrail: resolve throw → same surface treatment as
+        // redraw throw. Do NOT fall through to a degenerate reveal
+        // where actualFp is silently 0 on every card.
         // eslint-disable-next-line no-console
-        console.warn("[h2h-play] resolveRoster failed; using finalRoster as-is:", err);
+        console.error("[h2h-play] resolveRoster failed:", err);
+        resolveThrew = true;
       }
       if (cancelled) return;
+      if (resolveThrew) {
+        setEngineError("resolve");
+        return;
+      }
       const score = resolved.reduce((s, c: any) => s + Number(c.actualFp ?? 0), 0);
       const tier = calcTierRef.current(score) ?? "BUST";
       setState({
@@ -401,8 +459,21 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   const namedChallenger = isRealName(challengeCtx.challengerName)
     ? challengeCtx.challengerName
     : null;
-  const headline = deriveHeadline(state, namedChallenger);
-  const cta = deriveCta(state);
+  // Headline + CTA default to the state-machine-derived values. The
+  // load gate (Fix 1) and engine-error guardrail (Fix 2) override them
+  // when those flags are set, replacing the normal pre_deal copy with
+  // a loading or error treatment. Same shell, same labels, only the
+  // hero copy + CTA shift — the user never sees a separate "loading
+  // screen."
+  let headline = deriveHeadline(state, namedChallenger);
+  let cta = deriveCta(state);
+  if (dataLoadError || engineError !== null) {
+    headline = "Couldn't load challenge data. Try again.";
+    cta = { label: "Try again", disabled: false, onClick: "retry" };
+  } else if (!dataReady) {
+    headline = "Loading challenge data…";
+    cta = { label: "Deal", disabled: true, onClick: null };
+  }
 
   const topCellFaceUp = (i: number): boolean => {
     if (state.kind === "column_flip") return i < state.revealedColumns;
@@ -463,7 +534,21 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // ── Event handlers ──────────────────────────────────────────────
   const handleDeal = () => {
     if (state.kind !== "pre_deal") return;
+    // FIX 1: don't allow the cascade to start until data is loaded.
+    // The CTA is disabled in that state, but belt-and-suspenders.
+    if (!dataReady) return;
+    if (dataLoadError || engineError !== null) return;
     setState({ kind: "deal_in", cardsLanded: 0 });
+  };
+
+  const handleRetry = () => {
+    // FIX 2: on Try Again, route through the parent's onTryAgain so
+    // the playing root is remounted with a clean state (parent bumps
+    // h2hPlayKey). The new mount re-runs the ensureLoaded effect from
+    // scratch. For transient data-load failures (network blip) this
+    // recovers cleanly; for persistent failures the user sees the
+    // same error state again. Either way, no degenerate reveal.
+    onTryAgain();
   };
 
   const handleDraw = () => {
@@ -605,7 +690,12 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         data-h2h-play-cta="true"
         data-cta-label={cta.label}
         disabled={cta.disabled}
-        onClick={cta.onClick === "deal" ? handleDeal : cta.onClick === "draw" ? handleDraw : undefined}
+        onClick={
+          cta.onClick === "deal" ? handleDeal
+            : cta.onClick === "draw" ? handleDraw
+            : cta.onClick === "retry" ? handleRetry
+            : undefined
+        }
         style={{
           padding: "16px 32px",
           borderRadius: 14,
@@ -710,7 +800,7 @@ function deriveHeadline(
 function deriveCta(state: PlayingState): {
   label: string;
   disabled: boolean;
-  onClick: "deal" | "draw" | null;
+  onClick: "deal" | "draw" | "retry" | null;
 } {
   switch (state.kind) {
     case "pre_deal":
