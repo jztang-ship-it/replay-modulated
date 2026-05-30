@@ -1,33 +1,38 @@
 #!/usr/bin/env node
 // scripts/verify-h2h-play-layout.mjs
 //
-// Real-browser bounding-box verification for the H2HRecipientPlay
-// rework (CLAUDE.md "Visual / layout changes" rule). Walks the
-// state machine on the dev mock route + asserts:
+// Real-browser bounding-box verification for the H2H playing-mode
+// rework (CLAUDE.md "Visual / layout changes" rule).
 //
-//   1. Each bottom-strip cell's `[data-h2h-play-front]` (rendered
-//      AthleteCard at strip scale) has a non-zero bounding rect AND
-//      that rect falls inside the cell's rect. This is the regression
-//      that produced the empty-strip live bug — JSDOM couldn't catch it.
-//   2. Each top-strip cell that has a sender card flipped face-up at
-//      column-pass end also has a non-zero front-face rect inside the
-//      cell.
-//   3. At state.kind === "arc", the playing-mode root
-//      [data-h2h-recipient-play] STAYS mounted (Fix C2 single-canvas
-//      continuity) and [data-h2h-recipient-reveal] is a DESCENDANT of
-//      it, not a sibling/replacement.
+// Modes:
+//   (default)        — full verification: reveal-baseline check + play harness.
+//   --baseline       — capture reveal-mock rects+labels to
+//                      scripts/.h2h-reveal-baseline.json (PRE-EXTRACTION
+//                      truth, used as the post-extraction baseline).
+//   --play-only      — skip reveal-baseline check; only run play harness.
 //
 // Usage:
-//   1. Start the basketball dev server:
-//        npm run dev
-//   2. Run this script:
-//        node scripts/verify-h2h-play-layout.mjs
+//   1. Start dev server: npm run dev
+//   2. Run: node scripts/verify-h2h-play-layout.mjs [--baseline|--play-only]
 //
 // Exits 0 on PASS, 1 on FAIL. Prints a per-assertion summary either way.
 
 import { chromium } from "playwright";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
 
-const BASE_URL = process.env.H2H_PLAY_BASE_URL ?? "http://localhost:5173/basketball/dev/h2h-play-mock";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const BASELINE_PATH = resolve(__dirname, ".h2h-reveal-baseline.json");
+
+const args = process.argv.slice(2);
+const MODE_BASELINE = args.includes("--baseline");
+const MODE_PLAY_ONLY = args.includes("--play-only");
+const CHALLENGER_NAME = "Mike";
+
+const ORIGIN = process.env.H2H_PLAY_ORIGIN ?? "http://localhost:5173";
+const REVEAL_URL = `${ORIGIN}/basketball/dev/h2h-reveal-mock`;
+const PLAY_URL = `${ORIGIN}/basketball/dev/h2h-play-mock?challengerName=${encodeURIComponent(CHALLENGER_NAME)}`;
 const VIEWPORT = { width: 390, height: 844 }; // iPhone 14 portrait
 
 // Layout timing constants — match shared/components/H2HRecipientPlay.tsx.
@@ -35,6 +40,7 @@ const DEAL_CASCADE_INTERVAL_MS = 120;
 const COLUMN_FLIP_DURATION_MS = 250;
 const COLUMN_FLIP_INTERSTITIAL_MS = 150;
 const PRE_REVEAL_HOLD_MS = 800;
+const ARC_COMPOSITE_CROSSFADE_MS = 250;
 const ROSTER_SIZE = 6;
 
 const failures = [];
@@ -69,111 +75,244 @@ function rectContains(outer, inner, tolerancePx = 1) {
   );
 }
 
-async function main() {
-  const browser = await chromium.launch();
+/** rectMatches(a, b, tolerance): same rect within tolerance px. */
+function rectMatches(a, b, tolerancePx = 1) {
+  if (!a || !b) return false;
+  return (
+    Math.abs(a.x - b.x) <= tolerancePx &&
+    Math.abs(a.y - b.y) <= tolerancePx &&
+    Math.abs(a.width - b.width) <= tolerancePx &&
+    Math.abs(a.height - b.height) <= tolerancePx
+  );
+}
+
+function fmtRect(r) {
+  return r ? `(${Math.round(r.x)},${Math.round(r.y)},${Math.round(r.width)}x${Math.round(r.height)})` : "null";
+}
+
+async function newPage(browser) {
   const page = await browser.newPage({ viewport: VIEWPORT });
-  page.on("pageerror", (err) => {
-    console.error("[browser-error]", err.message);
-  });
+  page.on("pageerror", (err) => console.error("[browser-error]", err.message));
+  return page;
+}
+
+async function loadAndWaitForReveal(page) {
+  await page.goto(REVEAL_URL, { waitUntil: "networkidle", timeout: 30000 });
+  await page.waitForSelector(`[data-h2h-board-zone="top"]`, { timeout: 5000 });
+  await page.waitForSelector(`[data-h2h-board-zone="bottom"]`, { timeout: 5000 });
+  await page.waitForSelector(`[data-h2h-board-zone="hero"]`, { timeout: 5000 });
+  // The reveal mock route is the static-end-state arc (no entrance
+  // animation); let one frame settle.
+  await page.waitForTimeout(100);
+}
+
+async function captureRevealRects(page) {
+  const topRect = await page.locator(`[data-h2h-board-zone="top"]`).boundingBox();
+  const bottomRect = await page.locator(`[data-h2h-board-zone="bottom"]`).boundingBox();
+  const heroRect = await page.locator(`[data-h2h-board-zone="hero"]`).boundingBox();
+  // Target the ZoneHeader spans directly (data-h2h-board-zone-label)
+  // so the captured text is JUST the label, not the entire zone's
+  // textContent (which would include strip-cell text too).
+  const topLabel = (await page.locator(`[data-h2h-board-zone-label="top"]`).first().textContent())?.trim() ?? "";
+  const bottomLabel = (await page.locator(`[data-h2h-board-zone-label="bottom"]`).first().textContent())?.trim() ?? "";
+  return { topRect, bottomRect, heroRect, topLabel, bottomLabel };
+}
+
+// ── --baseline mode: capture reveal rects + labels to disk ─────────
+
+async function runBaselineCapture(browser) {
+  console.log(`\nCapturing reveal baseline — ${REVEAL_URL}\n`);
+  const page = await newPage(browser);
+  try {
+    await loadAndWaitForReveal(page);
+  } catch (err) {
+    console.error(`\nFAIL — could not load reveal mock at ${REVEAL_URL}`);
+    console.error("Is the dev server running?  npm run dev");
+    console.error("Underlying error:", err.message);
+    throw err;
+  }
+  const captured = await captureRevealRects(page);
+  // Strip text down to the first identifiable label tokens — the
+  // baseline targets identity, not exact whitespace.
+  const baseline = {
+    capturedAt: new Date().toISOString(),
+    sourceUrl: REVEAL_URL,
+    viewport: VIEWPORT,
+    revealZones: {
+      top: captured.topRect,
+      bottom: captured.bottomRect,
+      hero: captured.heroRect,
+    },
+    // Reveal mock uses h2hMockFixture names — capture them as identity
+    // strings so post-extraction can verify the label text survives.
+    labels: {
+      topContains: "MIKE", // SENDER_HAND.displayName
+      bottomContains: "YOU", // RECIPIENT_HAND.displayName
+    },
+  };
+  writeFileSync(BASELINE_PATH, JSON.stringify(baseline, null, 2));
+  console.log(`Baseline written: ${BASELINE_PATH}`);
+  console.log(`  top    = ${fmtRect(captured.topRect)}`);
+  console.log(`  bottom = ${fmtRect(captured.bottomRect)}`);
+  console.log(`  hero   = ${fmtRect(captured.heroRect)}`);
+  console.log(`  topLabel    contains "${captured.topLabel}"`);
+  console.log(`  bottomLabel contains "${captured.bottomLabel}"`);
+}
+
+// ── default mode: full verification (reveal-baseline + play harness) ─
+
+async function runRevealBaselineCheck(browser) {
+  console.log(`\nVerifying reveal surface against baseline — ${REVEAL_URL}\n`);
+  if (!existsSync(BASELINE_PATH)) {
+    record("reveal-baseline file exists", false, `${BASELINE_PATH} missing — run --baseline first`);
+    return;
+  }
+  const baseline = JSON.parse(readFileSync(BASELINE_PATH, "utf8"));
+  const page = await newPage(browser);
+  await loadAndWaitForReveal(page);
+  const live = await captureRevealRects(page);
+
+  record(
+    "#14 reveal top zone rect matches baseline (±1px)",
+    rectMatches(baseline.revealZones.top, live.topRect),
+    `baseline=${fmtRect(baseline.revealZones.top)} live=${fmtRect(live.topRect)}`,
+  );
+  record(
+    "#14 reveal bottom zone rect matches baseline (±1px)",
+    rectMatches(baseline.revealZones.bottom, live.bottomRect),
+    `baseline=${fmtRect(baseline.revealZones.bottom)} live=${fmtRect(live.bottomRect)}`,
+  );
+  record(
+    "#14 reveal hero region rect matches baseline (±1px)",
+    rectMatches(baseline.revealZones.hero, live.heroRect),
+    `baseline=${fmtRect(baseline.revealZones.hero)} live=${fmtRect(live.heroRect)}`,
+  );
+  record(
+    `#14 reveal top label contains "${baseline.labels.topContains}"`,
+    live.topLabel.toUpperCase().includes(baseline.labels.topContains.toUpperCase()),
+    `label="${live.topLabel}"`,
+  );
+  record(
+    `#14 reveal bottom label contains "${baseline.labels.bottomContains}"`,
+    live.bottomLabel.toUpperCase().includes(baseline.labels.bottomContains.toUpperCase()),
+    `label="${live.bottomLabel}"`,
+  );
+  await page.close();
+}
+
+async function runPlayHarness(browser) {
+  console.log(`\nVerifying play surface — ${PLAY_URL}\n`);
+  const page = await newPage(browser);
   page.on("console", (msg) => {
     if (msg.type() === "error") console.error("[browser-console]", msg.text());
   });
 
-  console.log(`\nVisual-layout verification — ${BASE_URL}\n`);
-
   try {
-    await page.goto(BASE_URL, { waitUntil: "networkidle", timeout: 30000 });
+    await page.goto(PLAY_URL, { waitUntil: "networkidle", timeout: 30000 });
   } catch (err) {
-    console.error(`\nFAIL — could not load ${BASE_URL}`);
+    console.error(`\nFAIL — could not load ${PLAY_URL}`);
     console.error("Is the dev server running?  npm run dev");
     console.error("Underlying error:", err.message);
-    await browser.close();
-    process.exit(2);
+    throw err;
   }
 
-  // ── Pre-deal: confirm playing root mounted + 6 empty bottom cells ──
+  // ── State 1 (pre_deal): playing root + framed board + labels ──
   await page.waitForSelector("[data-h2h-recipient-play]", { timeout: 5000 });
   const playStateInitial = await page.locator("[data-h2h-recipient-play]").getAttribute("data-playing-state");
   record(`state-1: playing root mounted in pre_deal state (got "${playStateInitial}")`, playStateInitial === "pre_deal");
 
-  // ── Deal: tap Deal CTA, wait for cascade ──
+  // Framed-board presence — top, bottom, hero zones all present at S1.
+  const topZoneCount_s1 = await page.locator(`[data-h2h-board-zone="top"]`).count();
+  const bottomZoneCount_s1 = await page.locator(`[data-h2h-board-zone="bottom"]`).count();
+  const heroZoneCount_s1 = await page.locator(`[data-h2h-board-zone="hero"]`).count();
+  record("S1 framed board: top zone present", topZoneCount_s1 >= 1);
+  record("S1 framed board: bottom zone present", bottomZoneCount_s1 >= 1);
+  record("S1 framed board: hero region present", heroZoneCount_s1 >= 1);
+
+  // Labels at S1 — opponent name (challengerName) top, recipient (nickname) bottom.
+  // Target the ZoneHeader spans by data-h2h-board-zone-label so we capture
+  // just the label, not the whole zone's textContent.
+  const topLabel_s1 = (await page.locator(`[data-h2h-board-zone-label="top"]`).first().textContent())?.trim().toUpperCase() ?? "";
+  const bottomLabel_s1 = (await page.locator(`[data-h2h-board-zone-label="bottom"]`).first().textContent())?.trim().toUpperCase() ?? "";
+  record(`S1 top label contains "${CHALLENGER_NAME.toUpperCase()}"`, topLabel_s1.includes(CHALLENGER_NAME.toUpperCase()), `label="${topLabel_s1}"`);
+  // Bottom label is recipient identity; default fallback "YOU" when no nickname set.
+  record("S1 bottom label present (non-empty)", bottomLabel_s1.length > 0, `label="${bottomLabel_s1}"`);
+
+  // Capture top/bottom/hero zone rects at end of S1 for the S3→S4 no-shift check below.
+  const topRect_s1 = await page.locator(`[data-h2h-board-zone="top"]`).boundingBox();
+  const bottomRect_s1 = await page.locator(`[data-h2h-board-zone="bottom"]`).boundingBox();
+  const heroRect_s1 = await page.locator(`[data-h2h-board-zone="hero"]`).boundingBox();
+
+  // ── State 2 (deal_in → hold_select) ──
   await page.click("[data-h2h-play-cta][data-cta-label='Deal']");
   await page.waitForTimeout(DEAL_CASCADE_INTERVAL_MS * (ROSTER_SIZE + 2));
-
   const playStateAfterDeal = await page.locator("[data-h2h-recipient-play]").getAttribute("data-playing-state");
   record(`state-2 → hold_select reached after cascade (got "${playStateAfterDeal}")`, playStateAfterDeal === "hold_select");
 
-  // ── Fix B regression-lock: bottom-strip front faces are INSIDE their cells ──
+  // Fix B regression-lock: bottom cells' front faces inside their cells.
   for (let i = 0; i < ROSTER_SIZE; i++) {
     const cellHandle = page.locator(`[data-h2h-play-bottom-cell="${i}"]`);
     const frontHandle = cellHandle.locator("[data-h2h-play-front]");
     const cellRect = await cellHandle.boundingBox();
     const frontRect = await frontHandle.boundingBox();
-    const ok = rectContains(cellRect, frontRect);
-    const detail = ok ? "" :
-      `cell=${cellRect ? `(${cellRect.x},${cellRect.y},${cellRect.width}x${cellRect.height})` : "null"} ` +
-      `front=${frontRect ? `(${frontRect.x},${frontRect.y},${frontRect.width}x${frontRect.height})` : "null"}`;
-    record(`bottom cell ${i} front-face rect inside cell rect`, ok, detail);
+    record(`bottom cell ${i} front-face rect inside cell rect`, rectContains(cellRect, frontRect), `cell=${fmtRect(cellRect)} front=${fmtRect(frontRect)}`);
   }
-
-  // Also assert the rendered card (renderer subtree) is non-zero +
-  // inside the cell — this is the exact failure mode that surfaced
-  // live (scale + transformOrigin pushed the renderer off-cell while
-  // JSDOM tests stayed green).
   for (let i = 0; i < ROSTER_SIZE; i++) {
     const cellHandle = page.locator(`[data-h2h-play-bottom-cell="${i}"]`);
     const cardHandle = cellHandle.locator("[data-h2h-play-front] > div").first();
     const cellRect = await cellHandle.boundingBox();
     const cardRect = await cardHandle.boundingBox();
-    const ok = rectContains(cellRect, cardRect);
-    const detail = ok ? "" :
-      `cell=${cellRect ? `(${cellRect.x},${cellRect.y},${cellRect.width}x${cellRect.height})` : "null"} ` +
-      `card=${cardRect ? `(${cardRect.x},${cardRect.y},${cardRect.width}x${cardRect.height})` : "null"}`;
-    record(`bottom cell ${i} rendered card rect inside cell rect (Fix B regression-lock)`, ok, detail);
+    record(`bottom cell ${i} rendered card rect inside cell rect (Fix B regression-lock)`, rectContains(cellRect, cardRect), `cell=${fmtRect(cellRect)} card=${fmtRect(cardRect)}`);
   }
 
-  // ── Walk to column-flip end → assert top-strip front faces inside cells ──
+  // Cells-inside-zone (new) — bottom cells inside the bottom-zone container.
+  const bottomZoneRect_s2 = await page.locator(`[data-h2h-board-zone="bottom"]`).boundingBox();
+  for (let i = 0; i < ROSTER_SIZE; i++) {
+    const cellRect = await page.locator(`[data-h2h-play-bottom-cell="${i}"]`).boundingBox();
+    record(`S2 bottom cell ${i} inside bottom zone`, rectContains(bottomZoneRect_s2, cellRect), `zone=${fmtRect(bottomZoneRect_s2)} cell=${fmtRect(cellRect)}`);
+  }
+
+  // ── State 3: tap Draw → column-flip pass ──
   await page.click("[data-h2h-play-cta][data-cta-label='Draw']");
   const totalColumnFlipMs = ROSTER_SIZE * (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS);
-  // Wait through redraw promise + full column-flip pass + handoff hold.
   await page.waitForTimeout(totalColumnFlipMs + 100);
 
+  // Sender faces inside top-zone cells at column-pass end.
+  const topZoneRect_s3 = await page.locator(`[data-h2h-board-zone="top"]`).boundingBox();
   for (let i = 0; i < ROSTER_SIZE; i++) {
     const cellHandle = page.locator(`[data-h2h-play-top-cell="${i}"]`);
     const frontHandle = cellHandle.locator("[data-h2h-play-top-front]");
     const cellRect = await cellHandle.boundingBox();
     const frontCount = await frontHandle.count();
     if (frontCount === 0) {
-      // No front face means cell is still face-down; skip — column-flip
-      // pass should have completed all 6.
       record(`top cell ${i} sender face mounted at column-pass end`, false, "no [data-h2h-play-top-front] mounted");
       continue;
     }
     const frontRect = await frontHandle.boundingBox();
-    const ok = rectContains(cellRect, frontRect);
-    const detail = ok ? "" :
-      `cell=${cellRect ? `(${cellRect.x},${cellRect.y},${cellRect.width}x${cellRect.height})` : "null"} ` +
-      `front=${frontRect ? `(${frontRect.x},${frontRect.y},${frontRect.width}x${frontRect.height})` : "null"}`;
-    record(`top cell ${i} sender face rect inside cell rect`, ok, detail);
+    record(`top cell ${i} sender face rect inside cell rect`, rectContains(cellRect, frontRect), `cell=${fmtRect(cellRect)} front=${fmtRect(frontRect)}`);
+    record(`top cell ${i} inside top zone`, rectContains(topZoneRect_s3, cellRect));
   }
 
-  // ── Wait for handoff to arc, then verify Fix C2 single canvas ──
-  await page.waitForTimeout(PRE_REVEAL_HOLD_MS + 500);
+  // Capture rects at end of S3 (just before handoff_resolving → arc) for the
+  // no-shift check.
+  const topRect_s3 = await page.locator(`[data-h2h-board-zone="top"]`).boundingBox();
+  const bottomRect_s3 = await page.locator(`[data-h2h-board-zone="bottom"]`).boundingBox();
+  const heroRect_s3 = await page.locator(`[data-h2h-board-zone="hero"]`).boundingBox();
+  const topLabel_s3 = (await page.locator(`[data-h2h-board-zone-label="top"]`).first().textContent())?.trim().toUpperCase() ?? "";
+  const bottomLabel_s3 = (await page.locator(`[data-h2h-board-zone-label="bottom"]`).first().textContent())?.trim().toUpperCase() ?? "";
+
+  // ── State 4 (arc): Fix C2 single canvas + S3→S4 no-shift ──
+  await page.waitForTimeout(PRE_REVEAL_HOLD_MS + ARC_COMPOSITE_CROSSFADE_MS + 200);
 
   const playStateArc = await page.locator("[data-h2h-recipient-play]").getAttribute("data-playing-state");
   record(`state="arc" reached (got "${playStateArc}")`, playStateArc === "arc");
 
-  // Fix C2 single-canvas regression-lock:
-  //   - playing root STAYS mounted (no unmount-and-swap)
-  //   - reveal root is a DESCENDANT of playing root (composited inside)
   const playingMounted = (await page.locator("[data-h2h-recipient-play]").count()) === 1;
   record("Fix C2: playing canvas root STAYS mounted at arc state", playingMounted);
 
   const revealDescendant = await page.locator("[data-h2h-recipient-play] [data-h2h-recipient-reveal]").count();
   record("Fix C2: reveal mounted as descendant of playing root (single canvas)", revealDescendant >= 1);
 
-  // Sibling-mount regression check: there should be NO reveal that is
-  // a sibling/cousin of the playing root.
   const revealSibling = await page.evaluate(() => {
     const playing = document.querySelector("[data-h2h-recipient-play]");
     const allReveals = Array.from(document.querySelectorAll("[data-h2h-recipient-reveal]"));
@@ -181,12 +320,52 @@ async function main() {
   });
   record("Fix C2: no reveal mounted OUTSIDE the playing root", revealSibling === 0);
 
-  // Playing-inner subtree faded out (opacity 0).
   const innerOpacity = await page.locator("[data-h2h-play-inner]").evaluate((el) => getComputedStyle(el).opacity);
   record("playing inner content faded to opacity 0", parseFloat(innerOpacity) === 0, `opacity=${innerOpacity}`);
 
-  await browser.close();
+  // S3→S4 NO LAYOUT SHIFT — top/bottom/hero zone rects unchanged.
+  // After arc-composite, the reveal's zones are descendants of the playing
+  // root; the reveal's reduced markers + the playing canvas's markers
+  // coexist. Query the OUTERMOST [data-h2h-board-zone] hits which belong
+  // to the still-mounted playing shell (those are the ones whose rect we
+  // captured in S3 above) — locator.first() will resolve to the first match
+  // in DOM order which is the playing-shell zone.
+  const topRect_arc = await page.locator(`[data-h2h-board-zone="top"]`).first().boundingBox();
+  const bottomRect_arc = await page.locator(`[data-h2h-board-zone="bottom"]`).first().boundingBox();
+  const heroRect_arc = await page.locator(`[data-h2h-board-zone="hero"]`).first().boundingBox();
+  const topLabel_arc = (await page.locator(`[data-h2h-board-zone-label="top"]`).first().textContent())?.trim().toUpperCase() ?? "";
+  const bottomLabel_arc = (await page.locator(`[data-h2h-board-zone-label="bottom"]`).first().textContent())?.trim().toUpperCase() ?? "";
 
+  record(`S3→S4 top zone rect unchanged ±1px`, rectMatches(topRect_s3, topRect_arc), `s3=${fmtRect(topRect_s3)} arc=${fmtRect(topRect_arc)}`);
+  record(`S3→S4 bottom zone rect unchanged ±1px`, rectMatches(bottomRect_s3, bottomRect_arc), `s3=${fmtRect(bottomRect_s3)} arc=${fmtRect(bottomRect_arc)}`);
+  record(`S3→S4 hero region rect unchanged ±1px`, rectMatches(heroRect_s3, heroRect_arc), `s3=${fmtRect(heroRect_s3)} arc=${fmtRect(heroRect_arc)}`);
+  record(`S3→S4 top label unchanged`, topLabel_s3 === topLabel_arc, `s3="${topLabel_s3}" arc="${topLabel_arc}"`);
+  record(`S3→S4 bottom label unchanged`, bottomLabel_s3 === bottomLabel_arc, `s3="${bottomLabel_s3}" arc="${bottomLabel_arc}"`);
+
+  // Bonus regression-lock: S1 rects should also match S3 rects (board is
+  // present from state 1 onwards; no rect movement during cascade).
+  record(`S1→S3 top zone rect unchanged`, rectMatches(topRect_s1, topRect_s3));
+  record(`S1→S3 bottom zone rect unchanged`, rectMatches(bottomRect_s1, bottomRect_s3));
+  record(`S1→S3 hero region rect unchanged`, rectMatches(heroRect_s1, heroRect_s3));
+
+  await page.close();
+}
+
+async function main() {
+  const browser = await chromium.launch();
+  try {
+    if (MODE_BASELINE) {
+      await runBaselineCapture(browser);
+      console.log("\nDone (baseline capture mode).");
+      process.exit(0);
+    }
+    if (!MODE_PLAY_ONLY) {
+      await runRevealBaselineCheck(browser);
+    }
+    await runPlayHarness(browser);
+  } finally {
+    await browser.close();
+  }
   console.log(`\n${passes.length} passed, ${failures.length} failed.`);
   if (failures.length > 0) {
     console.log("\nFailures:");

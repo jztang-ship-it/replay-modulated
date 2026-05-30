@@ -198,6 +198,31 @@ describe("H2HRecipientPlay — state 1 (pre_deal)", () => {
       expect(screen.queryByText(`Final-${i}`)).toBeNull();
     }
   });
+
+  it("renders framed top + bottom + hero zones in pre_deal (doc EDIT B1/B3)", () => {
+    const { container } = render(
+      <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx({ challengerName: "Mike" })} />,
+    );
+    // Doc lock e6fe662: states 1–3 render on the SAME framed board as
+    // state 4. The shared shell emits zone markers in ALL states.
+    expect(container.querySelector(`[data-h2h-board-zone="top"]`)).not.toBeNull();
+    expect(container.querySelector(`[data-h2h-board-zone="bottom"]`)).not.toBeNull();
+    expect(container.querySelector(`[data-h2h-board-zone="hero"]`)).not.toBeNull();
+    // Top zone carries the challenger name label; bottom zone the
+    // recipient nickname (or "You" fallback) — both in ALL states.
+    const topZoneText = container.querySelector(`[data-h2h-board-zone="top"]`)?.textContent ?? "";
+    const bottomZoneText = container.querySelector(`[data-h2h-board-zone="bottom"]`)?.textContent ?? "";
+    expect(topZoneText.toUpperCase()).toContain("MIKE");
+    expect(bottomZoneText.length).toBeGreaterThan(0);
+  });
+
+  it("falls back to 'your friend' label when challengerName is not a real name (doc EDIT B3)", () => {
+    const { container } = render(
+      <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx({ challengerName: null as any })} />,
+    );
+    const topZoneText = (container.querySelector(`[data-h2h-board-zone="top"]`)?.textContent ?? "").toLowerCase();
+    expect(topZoneText).toContain("your friend");
+  });
 });
 
 // ── 2. Deal cascade (state deal_in) ────────────────────────────────

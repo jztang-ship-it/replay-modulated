@@ -57,6 +57,8 @@ import { H2HRecipientReveal } from "./H2HRecipientReveal";
 import type { CardRenderer, H2HCard } from "./H2HRevealScreen";
 import { setActiveSeason } from "@shared/engines/dataEngine";
 import { isRealName } from "@shared/utils/isRealName";
+import { getNickname } from "@shared/utils/playerIdentity";
+import { H2HBoardShell } from "./H2HBoardShell";
 
 const ROSTER_SIZE = 6;
 
@@ -468,208 +470,201 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     });
   };
 
-  return (
+  // Compute name labels once near the top of the render so they're
+  // byte-identical to what H2HRecipientReveal computes downstream
+  // (no flicker across the S3→S4 boundary). Per doc EDIT B3 (lock
+  // e6fe662): name labels show in ALL states, not only at reveal.
+  const topLabel = isRealName(challengeCtx.challengerName)
+    ? (challengeCtx.challengerName as string)
+    : "your friend";
+  const bottomLabel = getNickname() || "You";
+
+  // Top strip slot — sender's roster cells inside the shell's top frame.
+  // Per doc EDIT B1, the bottom container's slots ARE the playing-mode
+  // "strip" — no parallel bare strip. The cells (TopStripCell /
+  // BottomStripCell) keep their Fix B scaffold; only WHERE they
+  // render moves into the shell.
+  const topStripSlot = (
     <div
-      data-h2h-recipient-play="true"
-      data-playing-state={state.kind}
+      data-h2h-play-top-strip="true"
       style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 9000,
-        background: "linear-gradient(180deg, #070A12 0%, #0A1020 38%, #070A12 100%)",
-        color: "#EAF0FF",
-        fontFamily: "'Inter', system-ui, sans-serif",
-        userSelect: "none",
-        overflow: "hidden",
-        paddingTop: "calc(env(safe-area-inset-top, 0px) + 20px)",
-        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)",
-        boxSizing: "border-box",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: STRIP_GAP_PX,
+        height: MINI_CELL_HEIGHT_PX,
       }}
     >
-      {/* Playing strip inner content — top + hero + bottom + CTA.
-          Fades to opacity 0 over the arc-composite crossfade window
-          when state advances to "arc". The OUTER root <div> stays
-          mounted (Fix C2, single coherent canvas); only this inner
-          subtree fades out. pointerEvents drops to none during the
-          fade so taps go to nothing (CTA is disabled anyway). */}
+      {Array.from({ length: ROSTER_SIZE }).map((_, i) => {
+        const senderCard = challengeCtx.resolvedSenderHand?.cards[i] ?? null;
+        return (
+          <TopStripCell
+            key={`top-${i}`}
+            i={i}
+            faceUp={topCellFaceUp(i)}
+            card={senderCard as unknown as H2HCard | null}
+            renderCard={renderPlayingStripCard}
+          />
+        );
+      })}
+    </div>
+  );
+
+  const bottomStripSlot = (
+    <div
+      data-h2h-play-bottom-strip="true"
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: STRIP_GAP_PX,
+        height: MINI_CELL_HEIGHT_PX,
+      }}
+    >
+      {Array.from({ length: ROSTER_SIZE }).map((_, i) => {
+        const slot = bottomCellSlot(i);
+        return (
+          <BottomStripCell
+            key={`bottom-${i}`}
+            i={i}
+            slot={slot}
+            renderCard={renderPlayingStripCard}
+            tappable={state.kind === "hold_select"}
+            onTap={() => toggleHold(i)}
+          />
+        );
+      })}
+    </div>
+  );
+
+  // Hero slot — guidance copy in states 1–3. The shell's hero region
+  // has a locked minHeight so the bottom zone never jumps up when the
+  // copy is short. At state="arc", the hero copy is empty ("") and the
+  // arc-composite (H2HRecipientReveal) renders its battlefield grid
+  // INSIDE the shell's same hero region via its own H2HBoardShell
+  // mount (Fix C2 + EDIT B2 — no layout change at the S3→S4 boundary).
+  const heroSlot = (
+    <div
+      data-h2h-play-hero-zone="true"
+      style={{
+        flex: "1 1 auto",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center",
+        padding: "0 20px",
+      }}
+    >
       <div
-        data-h2h-play-inner="true"
+        data-h2h-play-headline="true"
         style={{
-          width: "100%",
-          maxWidth: "min(480px, 100%)",
-          margin: "0 auto",
-          padding: "0 12px",
-          boxSizing: "border-box",
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-          opacity: arcComposite ? 0 : 1,
-          transition: `opacity ${ARC_COMPOSITE_CROSSFADE_MS}ms ease-in`,
-          pointerEvents: arcComposite ? "none" : "auto",
+          fontSize: 22,
+          fontWeight: 800,
+          lineHeight: 1.3,
+          maxWidth: 360,
+          opacity:
+            state.kind === "redraw_running" ||
+            state.kind === "column_flip" ||
+            state.kind === "handoff_resolving"
+              ? 0.7
+              : 1,
+          transition: "opacity 200ms ease",
         }}
       >
-        {/* Top strip — sender's roster, face-down until column-flip pass */}
-        <div
-          data-h2h-play-top-strip="true"
-          style={{
-            marginBottom: TOP_STRIP_MARGIN_BOTTOM_PX,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: STRIP_GAP_PX,
-            height: MINI_CELL_HEIGHT_PX,
-          }}
-        >
-          {Array.from({ length: ROSTER_SIZE }).map((_, i) => {
-            // Sender hand identities come from challengeCtx.resolvedSenderHand
-            // — the same payload the arc consumes (H2HRecipientReveal mounts
-            // with senderResolved at handoff). When the column flip reaches
-            // slot i, the top cell flips to a PRE-REVEAL render of the
-            // sender's card at that slot — photo/salary/position/AVG via the
-            // same renderPlayingStripCard the bottom strip uses, with
-            // revealed=false so FP/badges/fire-ice stay sealed for state 4.
-            // Falls back to a generic placeholder if resolvedSenderHand is
-            // not yet present (rare — sender-hand prefetch typically lands
-            // before the recipient finishes hold_select).
-            const senderCard = challengeCtx.resolvedSenderHand?.cards[i] ?? null;
-            return (
-              <TopStripCell
-                key={`top-${i}`}
-                i={i}
-                faceUp={topCellFaceUp(i)}
-                card={senderCard as unknown as H2HCard | null}
-                renderCard={renderPlayingStripCard}
-              />
-            );
-          })}
-        </div>
-
-        {/* Hero zone — guidance copy */}
-        <div
-          data-h2h-play-hero-zone="true"
-          style={{
-            marginBottom: HERO_ZONE_MARGIN_BOTTOM_PX,
-            flex: "1 1 auto",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-            padding: "0 20px",
-            minHeight: 200,
-          }}
-        >
-          <div
-            data-h2h-play-headline="true"
-            style={{
-              fontSize: 22,
-              fontWeight: 800,
-              lineHeight: 1.3,
-              maxWidth: 360,
-              opacity:
-                state.kind === "redraw_running" ||
-                state.kind === "column_flip" ||
-                state.kind === "handoff_resolving"
-                  ? 0.7
-                  : 1,
-              transition: "opacity 200ms ease",
-            }}
-          >
-            {headline}
-          </div>
-        </div>
-
-        {/* Bottom strip — recipient's hand */}
-        <div
-          data-h2h-play-bottom-strip="true"
-          style={{
-            marginBottom: BOTTOM_STRIP_MARGIN_BOTTOM_PX,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: STRIP_GAP_PX,
-            height: MINI_CELL_HEIGHT_PX,
-          }}
-        >
-          {Array.from({ length: ROSTER_SIZE }).map((_, i) => {
-            const slot = bottomCellSlot(i);
-            return (
-              <BottomStripCell
-                key={`bottom-${i}`}
-                i={i}
-                slot={slot}
-                renderCard={renderPlayingStripCard}
-                tappable={state.kind === "hold_select"}
-                onTap={() => toggleHold(i)}
-              />
-            );
-          })}
-        </div>
-
-        {/* Reserved CTA space */}
-        <div
-          data-h2h-play-reserved="true"
-          style={{
-            paddingTop: RESERVED_PADDING_TOP_PX,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "flex-start",
-            minHeight: RESERVED_MIN_HEIGHT_PX,
-          }}
-        >
-          <button
-            data-h2h-play-cta="true"
-            data-cta-label={cta.label}
-            disabled={cta.disabled}
-            onClick={cta.onClick === "deal" ? handleDeal : cta.onClick === "draw" ? handleDraw : undefined}
-            style={{
-              padding: "16px 32px",
-              borderRadius: 14,
-              background: cta.disabled ? "rgba(255,177,74,0.25)" : "#FFB14A",
-              border: "none",
-              color: "#070A12",
-              fontSize: 17,
-              fontWeight: 900,
-              cursor: cta.disabled ? "default" : "pointer",
-              minWidth: 200,
-              fontFamily: "inherit",
-              transition: "background 150ms ease",
-            }}
-          >
-            {cta.label}
-          </button>
-        </div>
+        {headline}
       </div>
-
-      {/* State-4 composite — Fix C2: <H2HRecipientReveal/> mounts as a
-          CHILD of this same canvas (not as a replacement return), so
-          the playing root stays mounted and the reveal fades in over
-          it on identical piece-2a geometry. H2HRecipientReveal owns
-          its own opacity-0→1 wrapper transition (HOLD_TO_ARC_CROSSFADE_MS),
-          which finishes in lockstep with the playing-inner fade-out
-          above. Both surfaces share the same gradient background, so
-          the perceptible effect is "cards on playing strip fade →
-          cards on reveal strip fade in," not a UI swap. */}
-      {arcComposite && state.kind === "arc" && (
-        <H2HRecipientReveal
-          challengeCtx={challengeCtx}
-          myScore={state.resolvedScore}
-          myRoster={state.resolvedRoster}
-          myWinTier={state.resolvedTier}
-          gameState={"REVEALING" as any}
-          bypassGameStateGate
-          sport={sport}
-          renderBattlefieldCard={renderBattlefieldCard}
-          renderOverlayCard={renderOverlayCard}
-          onSendItBack={onSendItBack}
-          onTryAgain={onTryAgain}
-          onPlayOwnHand={onPlayOwnHand}
-          onDismiss={onDismiss}
-        />
-      )}
-
-      {/* Flip animation keyframe + 3D scaffold styles */}
-      <style>{flipCss(COLUMN_FLIP_DURATION_MS)}</style>
     </div>
+  );
+
+  // Reserved CTA — sits BELOW the bottom zone, inside the shell's
+  // reserved-bottom spacer region (via H2HBoardShell's belowBoard slot).
+  const belowBoardSlot = (
+    <div
+      data-h2h-play-reserved="true"
+      style={{
+        paddingTop: RESERVED_PADDING_TOP_PX,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "flex-start",
+        minHeight: RESERVED_MIN_HEIGHT_PX,
+        width: "100%",
+      }}
+    >
+      <button
+        data-h2h-play-cta="true"
+        data-cta-label={cta.label}
+        disabled={cta.disabled}
+        onClick={cta.onClick === "deal" ? handleDeal : cta.onClick === "draw" ? handleDraw : undefined}
+        style={{
+          padding: "16px 32px",
+          borderRadius: 14,
+          background: cta.disabled ? "rgba(255,177,74,0.25)" : "#FFB14A",
+          border: "none",
+          color: "#070A12",
+          fontSize: 17,
+          fontWeight: 900,
+          cursor: cta.disabled ? "default" : "pointer",
+          minWidth: 200,
+          fontFamily: "inherit",
+          transition: "background 150ms ease",
+        }}
+      >
+        {cta.label}
+      </button>
+    </div>
+  );
+
+  // State-4 composite — Fix C2: <H2HRecipientReveal/> mounts INSIDE
+  // the playing shell's outer fixed div (via the compositeOverlay slot)
+  // so the reveal is a DESCENDANT of the playing root (Fix C2 assertion
+  // `playingRoot.contains(revealRoot)`). The reveal then renders its
+  // own H2HBoardShell internally via H2HRevealScreen — identical chrome,
+  // identical labels (via challengeCtx threading through the same
+  // isRealName + getNickname paths). The user sees one coherent framed
+  // board across the S3→S4 boundary; only the slot CONTENTS visibly
+  // transition (playing-inner fades to 0; reveal arc fades in).
+  const compositeOverlay = arcComposite && state.kind === "arc" ? (
+    <H2HRecipientReveal
+      challengeCtx={challengeCtx}
+      myScore={state.resolvedScore}
+      myRoster={state.resolvedRoster}
+      myWinTier={state.resolvedTier}
+      gameState={"REVEALING" as any}
+      bypassGameStateGate
+      sport={sport}
+      renderBattlefieldCard={renderBattlefieldCard}
+      renderOverlayCard={renderOverlayCard}
+      onSendItBack={onSendItBack}
+      onTryAgain={onTryAgain}
+      onPlayOwnHand={onPlayOwnHand}
+      onDismiss={onDismiss}
+    />
+  ) : null;
+
+  return (
+    <>
+      <H2HBoardShell
+        surfaceKind="playing"
+        topLabel={topLabel}
+        bottomLabel={bottomLabel}
+        topStrip={topStripSlot}
+        bottomStrip={bottomStripSlot}
+        hero={heroSlot}
+        belowBoard={belowBoardSlot}
+        rootDataAttrs={{
+          "data-h2h-recipient-play": "true",
+          "data-playing-state": state.kind,
+        }}
+        innerOpacity={arcComposite ? 0 : 1}
+        innerTransitionMs={ARC_COMPOSITE_CROSSFADE_MS}
+        innerDataAttr="data-h2h-play-inner"
+        compositeOverlay={compositeOverlay}
+      />
+      {/* Flip animation keyframe + 3D scaffold styles. Lives outside
+          the shell so the <style> element doesn't interact with the
+          shell's flex children — it's a sibling of the shell. */}
+      <style>{flipCss(COLUMN_FLIP_DURATION_MS)}</style>
+    </>
   );
 }
 
@@ -758,6 +753,7 @@ function TopStripCell({
       style={{
         width: MINI_CELL_WIDTH_PX,
         height: MINI_CELL_HEIGHT_PX,
+        flexShrink: 0,
         perspective: 600,
       }}
     >
@@ -854,6 +850,7 @@ function BottomStripCell({
         style={{
           width: MINI_CELL_WIDTH_PX,
           height: MINI_CELL_HEIGHT_PX,
+          flexShrink: 0,
           borderRadius: 6,
           border: "1px dashed rgba(255,255,255,0.18)",
           background: "transparent",
@@ -877,6 +874,7 @@ function BottomStripCell({
       style={{
         width: MINI_CELL_WIDTH_PX,
         height: MINI_CELL_HEIGHT_PX,
+        flexShrink: 0,
         perspective: 600,
         cursor: tappable ? "pointer" : "default",
       }}

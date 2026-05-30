@@ -31,17 +31,24 @@ const MOCK_CHALLENGE_ID = "dev-mock-challenge";
  *  reuses RECIPIENT_HAND.cards (cast to GeneratedCard) so the cascade
  *  has 6 deterministic cards to lay down. resolvedSenderHand carries
  *  SENDER_HAND so the top strip's sender faces appear at column-flip
- *  end. */
+ *  end. The challenger name is overridable via ?challengerName=… for
+ *  the visual harness's label-text assertions. */
 function buildMockCtx(): ChallengeCtx {
   // RECIPIENT_HAND.cards is H2HCard[]; structurally compatible with
   // GeneratedCard[] for the recipient-play surface (slotIndex is the
   // load-bearing field; renderer reads name/photoCode/salary/position).
   const initialRoster = RECIPIENT_HAND.cards as unknown as GeneratedCard[];
+  let challengerName = SENDER_HAND.displayName;
+  if (typeof window !== "undefined") {
+    const sp = new URLSearchParams(window.location.search);
+    const overrideName = sp.get("challengerName");
+    if (overrideName && overrideName.length > 0) challengerName = overrideName;
+  }
   return {
     challengeId: MOCK_CHALLENGE_ID,
     initialRoster,
     targetScore: SENDER_HAND.totalFp,
-    challengerName: SENDER_HAND.displayName,
+    challengerName,
     sport: "basketball",
     season: "2425",
     resolvedSenderHand: {

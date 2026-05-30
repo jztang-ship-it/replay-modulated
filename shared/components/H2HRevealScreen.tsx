@@ -71,6 +71,7 @@ import {
   type EntranceStage,
 } from "./useH2HReveal";
 import { CardBackGeneric } from "./CardBackGeneric";
+import { H2HBoardShell } from "./H2HBoardShell";
 
 // ── Public types ─────────────────────────────────────────────────────────
 
@@ -195,8 +196,9 @@ const DELTA_NEUTRAL = "#E5E7EB";   // off-white — tie state
 // strip, NOT as wider cells (which would lose the "mini" register).
 const HAND_STRIP_HEIGHT_PX = 80;
 const HAND_STRIP_GAP_PX = 4;
-const ZONE_HEADER_HEIGHT_PX = 24;
-const ZONE_GAP_PX = 4;
+// ZONE_HEADER_HEIGHT_PX and ZONE_GAP_PX now live in H2HBoardShell (the
+// chrome owns them — H2HRevealScreen only uses HandStrip-cell geometry
+// below this point).
 
 // Mini-card "natural" rendering size — the inner AthleteCard renders at
 // this width and a CSS transform: scale() shrinks it to fit the strip
@@ -268,37 +270,10 @@ function getSlotCard(hand: H2HHand, slotIndex: number): H2HCard | null {
   return hand.cards.find(c => c.slotIndex === slotIndex) ?? null;
 }
 
-// ── Zone panel — glass-chrome wrapper for hand-strip zones ───────────────
-// Mirrors single-player's header-panel chrome (shared/views/GameView.tsx:2228-2235):
-//   borderRadius: 16, border: 1px solid rgba(255,255,255,0.10),
-//   background: rgba(255,255,255,0.05), boxShadow: 0 8px 24px rgba(0,0,0,0.28),
-//   backdropFilter: blur(10px).
-// Hand-strip zones (opponent + your) wrap in this panel; the battlefield
-// zone stays "open" (no panel) to match single-player's card-stage pattern
-// where cards are the focal element without surrounding chrome.
-
-function ZonePanel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return (
-    <div
-      style={{
-        flex: "0 0 auto",
-        display: "flex",
-        flexDirection: "column",
-        gap: ZONE_GAP_PX,
-        borderRadius: 16,
-        border: "1px solid rgba(255,255,255,0.10)",
-        background: "rgba(255,255,255,0.05)",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
-        backdropFilter: "blur(10px)",
-        WebkitBackdropFilter: "blur(10px)",
-        padding: "8px 12px",
-        ...style,
-      }}
-    >
-      {children}
-    </div>
-  );
-}
+// ZonePanel + ZoneHeader live in H2HBoardShell (the shared shell that
+// owns the framed-board chrome). This file's render uses H2HBoardShell
+// directly and passes content slots — the panels and headers come from
+// the shell, not from local sub-components.
 
 // ── Hand strip — height-capped flex row, same renderCard as battlefield ──
 
@@ -694,9 +669,7 @@ function ensureKeyframesInjected() {
 // Reduced to just the display name at a more prominent 18px so the
 // zone identity reads cleanly.
 
-interface ZoneHeaderProps {
-  hand: H2HHand;
-}
+// ZoneHeader props live in H2HBoardShell now.
 
 // ── Entrance deck ────────────────────────────────────────────────────────
 // Phase 4 fix 1 (2026-05-27, corrected). Two REAL face-UP deck stacks
@@ -791,32 +764,7 @@ function EntranceDeck({ cards, entranceStages, renderCard }: EntranceDeckProps) 
   );
 }
 
-function ZoneHeader({ hand }: ZoneHeaderProps) {
-  return (
-    <div
-      style={{
-        padding: "0 6px",
-        height: ZONE_HEADER_HEIGHT_PX,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-      }}
-    >
-      <span
-        style={{
-          fontSize: 18,
-          fontWeight: 900,
-          color: "rgba(255,255,255,0.95)",
-          letterSpacing: 1,
-          textTransform: "uppercase",
-        }}
-      >
-        {hand.displayName}
-      </span>
-    </div>
-  );
-}
+// ZoneHeader moved to H2HBoardShell (the shared chrome).
 
 // ── Battlefield card frame ───────────────────────────────────────────────
 // Wrapper matches single-player's RosterGrid card-slot pattern:
@@ -1333,120 +1281,56 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
     reveal !== undefined && (reveal.entranceStages ?? []).some(s => s === "pre");
   const showEntranceDeck = isEntering && deckHasPreCards;
 
-  return (
+  // Top + bottom strips and the battlefield grid render as content slots
+  // INSIDE H2HBoardShell. The shell owns the chrome — outer fixed
+  // gradient div, inner column, framed top/bottom containers with name
+  // labels, hero region with locked minHeight, reserved-bottom spacer.
+  // All reveal-specific behavior (deck-metaphor entrance, matchup
+  // state, MidRail, glow/shake) stays here, flowing through the slots.
+
+  const topStripSlot = (
+    <HandStrip
+      cards={sender.cards}
+      renderCard={renderCard}
+      activeCardId={senderActiveCardId}
+      revealedCardIds={revealedCardIds}
+      entranceStages={reveal?.entranceStages}
+      revealOrder={reveal?.senderRevealOrder}
+      side="sender"
+      reducedMotion={reducedMotion}
+      pulseActive={!!reveal?.pulseActive}
+    />
+  );
+
+  const bottomStripSlot = (
+    <HandStrip
+      cards={recipient.cards}
+      renderCard={renderCard}
+      activeCardId={recipientActiveCardId}
+      revealedCardIds={revealedCardIds}
+      entranceStages={reveal?.entranceStages}
+      revealOrder={reveal?.recipientRevealOrder}
+      side="recipient"
+      reducedMotion={reducedMotion}
+      pulseActive={!!reveal?.pulseActive}
+    />
+  );
+
+  const heroSlot = (
     <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 9000,
-        // Same gradient as single-player GameView (shared/views/GameView.tsx:2181):
-        // 0% / 38% / 100% color stops. Brings the visual language of the game
-        // to the H2H takeover screen — same background, same product family.
-        background: "linear-gradient(180deg, #070A12 0%, #0A1020 38%, #070A12 100%)",
-        color: "#EAF0FF",
-        fontFamily: "'Inter', system-ui, sans-serif",
-        userSelect: "none",
-        overflow: "hidden",
-        // Safe-area-aware vertical padding. Additive: env(safe-area-inset)
-        // + a 20px floor. Phase 4 amend3 (2026-05-27): floor reduced
-        // from 36 → 20 so the top strip sits close to the viewport
-        // top — the user-requested tight composition. The bottom
-        // padding is symmetric; the empty space BELOW the bottom
-        // strip absorbs viewport slack instead of being a top-and-
-        // bottom margin.
-        paddingTop: "calc(env(safe-area-inset-top, 0px) + 20px)",
-        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)",
-        boxSizing: "border-box",
-      }}
+      data-h2h-battlefield="true"
       data-h2h-reveal-phase={reveal !== undefined ? `3-${reveal.phase}` : "2-static-mock"}
       data-h2h-matchup-index={reveal !== undefined ? String(reveal.matchupIndex) : undefined}
+      style={{
+        position: "relative",
+        flex: "0 0 auto",
+        display: "grid",
+        gridTemplateColumns: `${LEFT_RAIL_WIDTH_PX}px 1fr ${SCORE_COLUMN_WIDTH_PX}px`,
+        gridTemplateRows: "auto auto",
+        rowGap: BATTLEFIELD_ROW_GAP_PX,
+        width: "100%",
+      }}
     >
-      {/* Inner column — caps content at 480px on wide viewports and
-          centers it horizontally. Matches single-player's GameView
-          (shared/views/GameView.tsx:2212): `maxWidth: min(480px, 100%);
-          margin: 0 auto`. Above 480px viewports, the H2H composition
-          sits in a 480px-wide column with the gradient bg flanking on
-          either side — same column shape as single-player. */}
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "min(480px, 100%)",
-          height: "100%",
-          margin: "0 auto",
-          paddingLeft: 16,
-          paddingRight: 16,
-          boxSizing: "border-box",
-          display: "flex",
-          flexDirection: "column",
-          // Phase 4 amend3 (2026-05-27): the top-strip → hero-pair →
-          // bottom-strip block is a single TIGHT composition. Piece 2a
-          // (2026-05-28, doc lock a5d7e43): gap removed from the outer
-          // column; each child carries explicit marginBottom so per-
-          // pair gaps can be tuned independently. Top-strip → hero gap
-          // stays 18 (hero Y locked by phase 4). Hero → bottom-strip
-          // gap reduced 18 → 4 (bottom strip moves up 14px). Bottom-
-          // strip → reserved gap reduced 18 → 0 (reserved gets 18px
-          // more height). New geometry is identical between arc and
-          // overlay per G5 of the lock; the changes here mirror those
-          // in H2HResultsOverlay's inner column. Pre-existing CTA
-          // clipping bug is resolved on the overlay; arc's reserved
-          // space is empty so no visible change to the arc itself.
-          justifyContent: "flex-start",
-          alignItems: "stretch",
-          gap: 0,
-        }}
-      >
-        {/* ── OPPONENT ZONE (top, glass panel) ───────────────────────── */}
-        <ZonePanel style={{ marginBottom: 18 }}>
-          <ZoneHeader hand={sender} />
-          <HandStrip
-            cards={sender.cards}
-            renderCard={renderCard}
-            activeCardId={senderActiveCardId}
-            revealedCardIds={revealedCardIds}
-            entranceStages={reveal?.entranceStages}
-            revealOrder={reveal?.senderRevealOrder}
-            side="sender"
-            reducedMotion={reducedMotion}
-            pulseActive={!!reveal?.pulseActive}
-          />
-        </ZonePanel>
-
-        {/* ── BATTLEFIELD (hero, open — no panel) ────────────────────── */}
-        {/* Phase 4 fix 3 (2026-05-27, amend2): 3-column × 2-row grid.
-            Hero cards sit in adjacent rows separated by a thin sliver
-            (BATTLEFIELD_ROW_GAP_PX). The matchup-delta readout floats
-            in the right-rail GAP between the two score cells via
-            absolute positioning — it does not contribute to row
-            heights, so the hero cards stay tight.
-              ┌────────────┬───────────────┬──────────────────────┐
-              │ left rail  │  hero card    │ score                │ row 1
-              │ (empty on  │  (top hero)   │ (sender total)       │
-              │  arc)      ├ sliver gap ───┼ matchup delta float ─┤
-              │            │  hero card    │ score                │ row 2
-              │            │  (bottom)     │ (recipient total)    │
-              └────────────┴───────────────┴──────────────────────┘
-            The LEFT RAIL is reserved (empty on the arc; on the overlay
-            it holds headline + trash-talk anchored to the same hero
-            vertical bounds). Locked geometry: this grid renders at the
-            same Y on the arc and the overlay. Only its content
-            changes between states. */}
-        <div
-          data-h2h-battlefield="true"
-          style={{
-            position: "relative",
-            flex: "0 0 auto",
-            display: "grid",
-            gridTemplateColumns: `${LEFT_RAIL_WIDTH_PX}px 1fr ${SCORE_COLUMN_WIDTH_PX}px`,
-            gridTemplateRows: "auto auto",
-            rowGap: BATTLEFIELD_ROW_GAP_PX,
-            width: "100%",
-            // Piece 2a (2026-05-28, doc lock a5d7e43): mirrors the
-            // overlay — hero → bottom-strip gap 18 → 4. Bottom strip
-            // moves up by 14px.
-            marginBottom: 4,
-          }}
-        >
           {/* Left rail — empty on the arc. Spans both hero rows so the
               overlay's headline + trash-talk land at the same vertical
               bounds. */}
@@ -1525,42 +1409,17 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
             </div>
           )}
         </div>
+  );
 
-        {/* ── YOUR ZONE (bottom, glass panel) ──────────────────────────
-            Phase 4 amend3 (2026-05-27): bottom strip sits IMMEDIATELY
-            below the bottom hero. Piece 2a (2026-05-28, doc lock
-            a5d7e43): explicit marginBottom: 0 — no gap to reserved
-            space. Mirrors the overlay. */}
-        <ZonePanel style={{ marginBottom: 0 }}>
-          <HandStrip
-            cards={recipient.cards}
-            renderCard={renderCard}
-            activeCardId={recipientActiveCardId}
-            revealedCardIds={revealedCardIds}
-            entranceStages={reveal?.entranceStages}
-            revealOrder={reveal?.recipientRevealOrder}
-            side="recipient"
-            reducedMotion={reducedMotion}
-            pulseActive={!!reveal?.pulseActive}
-          />
-          <ZoneHeader hand={recipient} />
-        </ZonePanel>
-
-        {/* ── RESERVED BOTTOM SPACE ────────────────────────────────────
-            Phase 4 amend3 (2026-05-27): flex-grow region BELOW the
-            bottom strip. Empty on the arc; holds the primary CTA +
-            countdown pill on the overlay. This is the geometry-
-            locking spacer — it absorbs ALL remaining viewport height
-            so the entire top-strip → hero-pair → bottom-strip block
-            sits as a tight composition near the top of the viewport.
-            Identical position on arc and overlay. */}
-        <div
-          data-h2h-reserved-bottom="true"
-          aria-hidden="true"
-          style={{ flex: "1 1 auto", minHeight: 0 }}
-        />
-      </div>
-    </div>
+  return (
+    <H2HBoardShell
+      surfaceKind="reveal"
+      topLabel={sender.displayName}
+      bottomLabel={recipient.displayName}
+      topStrip={topStripSlot}
+      bottomStrip={bottomStripSlot}
+      hero={heroSlot}
+    />
   );
 }
 
