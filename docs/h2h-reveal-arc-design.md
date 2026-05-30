@@ -455,9 +455,11 @@ The sender-side overlay's primary CTA(s) are intentionally deferred to phase 8 c
 - After per-card reveal, the smaller card falls back to its slot position with all details proportionally showing.
 
 **S5 — Held-card position invariant (design invariant, recorded explicitly).**
-- Held cards do NOT move. They stay in their original deal positions throughout S2 → S3 → S4.
-- Reveal-order — "held revealed last" — is handled SOLELY by the existing `revealOrder` contract in state 4.
-- **Why:** decided this session after weighing mental-anchor preservation vs. reveal-order telegraphing. Anchor preservation won — the recipient's spatial memory of "where my hand is" must survive the transition into reveal, so position cannot double as a reveal-order signal. The existing `revealOrder` contract already covers reveal-order; layering the same signal into position would be redundant at best and confusing at worst.
+- Held cards stay in their `slotIndex` positions S1 → S2 → S3 → S4 → results. They do NOT move spatially under any phase, including the reveal arc.
+- `revealOrder` governs only the **TIME** each reveal fires — never the spatial position of cells on the strip. SPACE = `slotIndex`; TIME = `revealOrder`. The two axes are decoupled.
+- "Held revealed last" is enforced entirely on the time axis: `buildRevealOrder` puts held cards at the tail of the temporal sequence consumed by `buildMatchups` / `activeMatchup` / `revealedCardIds`. Cells animate (pull, pulse, light up) in `revealOrder`; cells render (left-to-right placement) in `slotIndex`.
+- **Why:** decided this session after weighing mental-anchor preservation vs. reveal-order telegraphing. Anchor preservation won — the recipient's spatial memory of "where my hand is" must survive the transition into reveal, so position cannot double as a reveal-order signal. The existing `revealOrder` contract already covers reveal-order in time; layering the same signal into position would be redundant at best and confusing at worst.
+- **Implementation note (refinement #4, 2026-05-30):** the amend1/amend2 strip-sort fix originally collapsed both axes into `revealOrder`, dragging held cells to the rightmost slots at reveal end-state and breaking this invariant. The fix-of-the-fix lands the layout axis back on `slotIndex` while keeping the temporal axis on `revealOrder`. See the "Locked invariant — strip-component sort contract" section's EDIT 2026-05-30 (axis split) note for the full statement and contract-lock test inversion.
 
 **S6 — Engine reuse (note, not new work).**
 - `dealInitialRoster()` — atomic deal of all 6 cards (drives S1 → S2 transition).
@@ -1115,6 +1117,19 @@ Any component that renders an `H2HCard`-shaped array in a horizontal strip MUST:
 **New strip-like surfaces (sender-side overlay, summary cards, replay viewer, future analytics dashboards) must include this contract from inception.** The contract-lock tests on both existing components serve as the template — deliberately misaligned `slotIndex` against the design rule, asserted via DOM order.
 
 **EDIT 2026-05-30 (scope clarification, not a relaxation):** this contract governs reveal-participating strip surfaces only. The Phase 5b piece 2 playing-mode rework introduces a dedicated pre-reveal positional strip (states 1–3) that renders in `slotIndex` order by design (per the S5 held-card position invariant) and is **out of scope of this contract**. See the rework section's "Interaction with the DO-NOT-VIOLATE strip-sort contract" subsection for the full scope statement. Every reveal-participating strip still binds to `revealOrder`-over-`slotIndex` as locked above.
+
+**EDIT 2026-05-30 (refinement #4 — axis split: LAYOUT vs. TIME):** strip-component LAYOUT is `slotIndex`-only on every strip — including the reveal-participating `HandStrip` (inside `H2HRevealScreen`) and `ResultsStrip` (inside `H2HResultsOverlay`). `revealOrder` is the **TEMPORAL** contract — it dictates the order in which matchups fire over time (consumed by `buildMatchups`, `activeMatchup`, `revealedCardIds`, and `stageIndexByCardId` for the sender-entrance path). It does NOT dictate cell position.
+
+The original locked invariant (amend1/amend2) conflated two axes. Production-data debugging surfaced a visible regression at the reveal end-state: because `buildRevealOrder` sorts held cards last in time, laying out cells in the same order shoved every held card to the rightmost slot — directly contradicting S5 (held cards stay in their original deal positions). Held cards no longer occupied their hold-select positions when the reveal arc began, breaking the recipient's spatial memory of "where my hand is" at the moment the reveal-vs-playing canvases share continuity (Fix C2).
+
+Resolution (additive, supersedes the spatial half of amend1/amend2):
+- LAYOUT: cells render in ascending `slotIndex` order on every strip. Held cards remain in their deal-position slots throughout S1 → S2 → S3 → S4 → results.
+- TIME: `revealOrder` continues to drive sequencing — which card pulls into the hero zone first, which lights up next, which is "held last in the finale block."
+- `revealOrder` props on strip components stay on the public surface (for backward compatibility with consumer threading and any future temporal-only consumer inside a strip), but the strip's spatial render no longer consults them. `H2HRevealScreen.HandStrip` keeps `stageIndexByCardId` keyed on `revealOrder` because the sender-entrance phase animates cells onto the strip in reveal-order; the `entranceStages` map remains the only `revealOrder`-keyed surface inside the strip.
+
+Why this is not a contract rewrite: the amend1/amend2 production fix — "production data's `slotIndex` is deal-positional, NOT display-order" — is still true. The fix landed in the wrong dimension. Held cards belong in deal-position slots; the reveal sequence (cheapest swap first, held finale last) lives entirely in the TIME axis, not the SPACE axis. S5 was always supposed to govern space; `revealOrder` was always supposed to govern time. The two had been collapsed into a single sort.
+
+Contract-lock tests updated correspondingly: the prior assertions ("`HandStrip` displays in `revealOrder` regardless of `slotIndex`" and the parallel ResultsStrip assertion) now invert — the strips render in `slotIndex` order regardless of `revealOrder` prop, and the new test fixtures intentionally misalign the two so a future regression to spatial `revealOrder` fails loudly. A separate unit test on `buildRevealOrder` pins the temporal contract (unheld asc by salary → held asc by salary).
 
 ---
 

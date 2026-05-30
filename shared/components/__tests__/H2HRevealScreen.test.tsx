@@ -599,16 +599,20 @@ describe("H2HRevealScreen — static layout", () => {
     expect(stripCells.length).toBe(22); // 11 × 2
   });
 
-  // Phase 5a amend1 contract lock (2026-05-27): HandStrip must sort by
-  // revealOrder when provided. Production hand_log.final_roster stores
-  // slotIndex deal-positional (PG/SG/SF/PF/C/FLEX), not in reveal-order;
-  // the mock fixture's slotIndex coincidentally matched (wasHeld, salary)
-  // which hid the bug during dev. This test pins the rule with
-  // deliberately misaligned slotIndex so a regression to slotIndex-driven
-  // sorting fails loudly.
-  it("HandStrip displays cards in revealOrder when provided, regardless of slotIndex", () => {
-    // Deliberately misaligned: held card at slotIndex 0 (would be leftmost
-    // under slotIndex sort), cheapest swap at slotIndex 5.
+  // #4 contract lock (2026-05-30, INVERTS amend1's spatial assertion):
+  // HandStrip LAYOUT is `slotIndex`-only on every strip — even when a
+  // `revealOrder` is provided. `revealOrder` is the TEMPORAL contract
+  // (consumed by buildMatchups / activeMatchup / revealedCardIds /
+  // stageIndexByCardId for entrance), never the spatial one. See
+  // docs/h2h-reveal-arc-design.md "Locked invariant — strip-component
+  // sort contract" EDIT 2026-05-30 (axis split).
+  //
+  // Held cards stay in their slotIndex positions S1 → S4 (the S5
+  // invariant); the prior amend1 collapse dragged held cells to the
+  // rightmost slots and broke S5. This test fixture intentionally
+  // misaligns slotIndex against revealOrder so a regression back to
+  // spatial revealOrder fails loudly.
+  it("HandStrip displays cards in slotIndex order regardless of revealOrder", () => {
     const senderCards: H2HCard[] = [
       makeCard({ cardId: "card-A", name: "A held $57", basePlayerId: "pA", wasHeld: true,  salary: 57, slotIndex: 0 }),
       makeCard({ cardId: "card-B", name: "B swap $29", basePlayerId: "pB", wasHeld: false, salary: 29, slotIndex: 5 }),
@@ -619,9 +623,9 @@ describe("H2HRevealScreen — static layout", () => {
     ];
     const sender = makeHand({ cards: senderCards });
     const recipient = makeHand();
-    // Expected (wasHeld ASC, salary ASC):
-    //   swaps cheap → exp:  B ($29), C ($34), F ($37), D ($52)
-    //   held cheap → exp:   E ($40), A ($57)
+    // revealOrder follows the canonical (wasHeld ASC, salary ASC) rule.
+    // Held cards (A, E) are last in TIME, but their SPATIAL position is
+    // still their slotIndex (A at slot 0 = leftmost; E at slot 3).
     const revealOrder = [
       senderCards[1], senderCards[2], senderCards[5], senderCards[3], senderCards[4], senderCards[0],
     ];
@@ -647,11 +651,12 @@ describe("H2HRevealScreen — static layout", () => {
     const senderStrip = container.querySelector('[data-h2h-hand-strip="true"][data-side="sender"]');
     const senderCells = senderStrip?.querySelectorAll('[data-h2h-mini-cell="true"]') ?? [];
     expect(senderCells.length).toBe(6);
-    expect(senderCells[0].getAttribute("data-card-id")).toBe("card-B"); // cheapest swap
-    expect(senderCells[1].getAttribute("data-card-id")).toBe("card-C");
-    expect(senderCells[2].getAttribute("data-card-id")).toBe("card-F");
-    expect(senderCells[3].getAttribute("data-card-id")).toBe("card-D"); // most-expensive swap
-    expect(senderCells[4].getAttribute("data-card-id")).toBe("card-E"); // cheapest held
-    expect(senderCells[5].getAttribute("data-card-id")).toBe("card-A"); // most-expensive held
+    // slotIndex order: A (0), C (1), D (2), E (3), F (4), B (5).
+    expect(senderCells[0].getAttribute("data-card-id")).toBe("card-A"); // slot 0 — held stays leftmost
+    expect(senderCells[1].getAttribute("data-card-id")).toBe("card-C"); // slot 1
+    expect(senderCells[2].getAttribute("data-card-id")).toBe("card-D"); // slot 2
+    expect(senderCells[3].getAttribute("data-card-id")).toBe("card-E"); // slot 3 — held stays mid-strip
+    expect(senderCells[4].getAttribute("data-card-id")).toBe("card-F"); // slot 4
+    expect(senderCells[5].getAttribute("data-card-id")).toBe("card-B"); // slot 5
   });
 });

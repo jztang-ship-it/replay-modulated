@@ -50,7 +50,7 @@
 // DEAL_CASCADE_INTERVAL_MS are NOT design-locked. Starting values
 // chosen for the rewrite are tunable in live verification.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { GeneratedCard } from "@shared/types";
 import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
 import { H2HRecipientReveal } from "./H2HRecipientReveal";
@@ -465,7 +465,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // a loading or error treatment. Same shell, same labels, only the
   // hero copy + CTA shift — the user never sees a separate "loading
   // screen."
-  let headline = deriveHeadline(state, namedChallenger);
+  let headline: ReactNode = deriveHeadline(state, namedChallenger);
   let cta = deriveCta(state);
   if (dataLoadError || engineError !== null) {
     headline = "Couldn't load challenge data. Try again.";
@@ -660,8 +660,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
           maxWidth: 360,
           opacity:
             state.kind === "redraw_running" ||
-            state.kind === "column_flip" ||
-            state.kind === "handoff_resolving"
+            state.kind === "column_flip"
               ? 0.7
               : 1,
           transition: "opacity 200ms ease",
@@ -779,7 +778,7 @@ type BottomSlot =
 function deriveHeadline(
   state: PlayingState,
   namedChallenger: string | null,
-): string {
+): ReactNode {
   switch (state.kind) {
     case "pre_deal":
       return "Hit deal to see your starting deck.";
@@ -791,7 +790,45 @@ function deriveHeadline(
     case "column_flip":
       return "Drawing…";
     case "handoff_resolving":
-      return "Calculating…";
+      // #3 (2026-05-30): VS separator. During the existing handoff_resolving
+      // beat (~1250ms, the pre-reveal hold), replace the "Calculating…"
+      // copy with a "VS" treatment — large weight-900 "VS" + small
+      // "Comparing…" sub-label, centered in the existing hero slot.
+      // Inline only; no new state, no new timer.
+      return (
+        <div
+          data-h2h-play-vs="true"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+          }}
+        >
+          <span
+            data-h2h-play-vs-glyph="true"
+            style={{
+              fontSize: 56,
+              fontWeight: 900,
+              lineHeight: 1,
+              letterSpacing: "0.04em",
+            }}
+          >
+            VS
+          </span>
+          <span
+            data-h2h-play-vs-sub="true"
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              opacity: 0.75,
+            }}
+          >
+            Comparing…
+          </span>
+        </div>
+      );
     case "arc":
       return "";
   }

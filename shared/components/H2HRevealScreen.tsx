@@ -348,19 +348,17 @@ function computeDeckTranslateX(displayPos: number): number {
 }
 
 function HandStrip({ cards, renderCard, activeCardId, revealedCardIds, entranceStages, revealOrder, side, reducedMotion, pulseActive }: HandStripProps) {
-  // Phase 5a amend1 (2026-05-27): use server-computed revealOrder
-  // (wasHeld ASC, salary ASC per buildRevealOrder) when provided —
-  // this is the canonical display + reveal sequence per the design
-  // rule "swap cards first, cheapest to most expensive; held cards
-  // last, cheapest to most expensive." Fall back to slotIndex sort
-  // for the static phase-2 dev/test path which doesn't pass
-  // revealOrder. Production data's slotIndex is deal-positional
-  // (PG/SG/SF/PF/C/FLEX), NOT reveal-order — trusting it for display
-  // surfaced in production verification of f6f8d05 as held cards
-  // appearing in the leftmost strip slots.
-  const ordered = revealOrder
-    ? [...revealOrder]
-    : [...cards].sort((a, b) => a.slotIndex - b.slotIndex);
+  // #4 (2026-05-30): strip LAYOUT is slotIndex-only. revealOrder is the
+  // TEMPORAL contract (used below for stage-index keying + by the hook
+  // for buildMatchups / activeMatchup / revealedCardIds), never spatial.
+  // Held cards stay in their slotIndex positions (S5 invariant); the
+  // reveal sequence advances over time independently. Prior code laid
+  // cells in revealOrder when provided, which dragged held cards to the
+  // rightmost slots since `buildRevealOrder` puts held last — visually
+  // wrong per S5 and reported in production verification of 2a95718.
+  // See docs/h2h-reveal-arc-design.md "Strip-component sort contract"
+  // (EDIT note appended 2026-05-30).
+  const ordered = [...cards].sort((a, b) => a.slotIndex - b.slotIndex);
   const N = ordered.length;
   // Default to "all settled" when the static phase-2 caller doesn't pass
   // entrance state.

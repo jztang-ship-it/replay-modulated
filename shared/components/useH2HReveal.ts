@@ -385,11 +385,20 @@ export interface UseH2HRevealReturn {
   skipToEnd: () => void;
 }
 
-/** Reveal-order sort: swap cards first (cheapest → most expensive),
- *  then held cards (cheapest → most expensive). Per the design doc's
- *  "Reveal sequence" section. The H2H component re-sorts independently
- *  rather than trusting `slotIndex`, so phase 4's real data (where
- *  slotIndex may be deal-order, not reveal-order) works correctly. */
+/** Reveal-order sort: **unheld ascending by salary, then held ascending
+ *  by salary**. Held cards form a finale block at the end of the reveal
+ *  sequence; within each group, the cheapest card reveals first.
+ *
+ *  This is the TEMPORAL contract — it dictates the ORDER in which
+ *  matchups fire over time. It does NOT dictate the SPATIAL ORDER of
+ *  cells on the strip; cells render in `slotIndex` order regardless
+ *  (post-2026-05-30 strip-sort EDIT — see doc lock in
+ *  docs/h2h-reveal-arc-design.md "Strip-component sort contract").
+ *
+ *  Per the doc lock's reveal sequence: "swap cards first, cheapest to
+ *  most expensive; held cards last, cheapest to most expensive."
+ *  Stated in current vocabulary as: unheld asc by salary → held asc
+ *  by salary. */
 export function buildRevealOrder(cards: H2HCard[]): H2HCard[] {
   return [...cards].sort((a, b) => {
     if (a.wasHeld !== b.wasHeld) return a.wasHeld ? 1 : -1;

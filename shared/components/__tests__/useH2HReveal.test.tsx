@@ -83,6 +83,31 @@ describe("buildRevealOrder — (wasHeld ASC, salary ASC)", () => {
     buildRevealOrder(cards);
     expect(cards).toEqual(original);
   });
+
+  // #1 pin (2026-05-30): TEMPORAL contract in current vocabulary.
+  // Unheld cards ascending by salary, then held cards ascending by salary.
+  // Pin survives any future vocabulary churn around "swap" vs "unheld"
+  // by asserting the canonical (wasHeld, salary) ordering across a
+  // bigger fixture with multiple of each kind.
+  it("pins canonical TEMPORAL order: unheld asc by salary → held asc by salary", () => {
+    const cards = [
+      makeCard({ cardId: "held-mid",      wasHeld: true,  salary: 40 }),
+      makeCard({ cardId: "unheld-high",   wasHeld: false, salary: 99 }),
+      makeCard({ cardId: "held-low",      wasHeld: true,  salary: 22 }),
+      makeCard({ cardId: "unheld-low",    wasHeld: false, salary: 12 }),
+      makeCard({ cardId: "held-high",     wasHeld: true,  salary: 75 }),
+      makeCard({ cardId: "unheld-mid",    wasHeld: false, salary: 55 }),
+    ];
+    const order = buildRevealOrder(cards);
+    expect(order.map(c => c.cardId)).toEqual([
+      "unheld-low",  // unheld $12
+      "unheld-mid",  // unheld $55
+      "unheld-high", // unheld $99
+      "held-low",    // held $22
+      "held-mid",    // held $40
+      "held-high",   // held $75
+    ]);
+  });
 });
 
 describe("buildMatchups", () => {
@@ -107,6 +132,52 @@ describe("buildMatchups", () => {
     const sender = [makeCard(), makeCard(), makeCard()];
     const recipient = [makeCard(), makeCard()];
     expect(buildMatchups(sender, recipient)).toHaveLength(2);
+  });
+
+  // #2 pin (2026-05-30, LOCKED design): matchups are independent rank-
+  // for-rank — sender goes through its own buildRevealOrder, recipient
+  // goes through its own, then they pair by rank index. Pairing is NOT
+  // slotIndex-aligned. This test deliberately misaligns slotIndex
+  // between sides so a future regression to slot-aligned pairing fails
+  // loudly.
+  it("pairs independently rank-for-rank, NOT by slotIndex", () => {
+    // Sender: slotIndex 0 holds the most-expensive HELD card; slotIndex
+    // 3 holds the cheapest swap. Sender's buildRevealOrder rotates this
+    // to [cheap-swap-S, ..., expensive-held-S].
+    const sender = [
+      makeCard({ cardId: "s-held-expensive",  wasHeld: true,  salary: 90, slotIndex: 0 }),
+      makeCard({ cardId: "s-swap-mid",        wasHeld: false, salary: 50, slotIndex: 1 }),
+      makeCard({ cardId: "s-held-cheap",      wasHeld: true,  salary: 25, slotIndex: 2 }),
+      makeCard({ cardId: "s-swap-cheap",      wasHeld: false, salary: 15, slotIndex: 3 }),
+    ];
+    // Recipient: deliberately MIRRORED slotIndex layout (cheapest swap
+    // at slot 0, most-expensive held at slot 3). Recipient's own
+    // buildRevealOrder produces the same temporal sequence shape:
+    // [cheap-swap-R, mid-swap-R, cheap-held-R, expensive-held-R].
+    const recipient = [
+      makeCard({ cardId: "r-swap-cheap",      wasHeld: false, salary: 18, slotIndex: 0 }),
+      makeCard({ cardId: "r-held-cheap",      wasHeld: true,  salary: 30, slotIndex: 1 }),
+      makeCard({ cardId: "r-swap-mid",        wasHeld: false, salary: 55, slotIndex: 2 }),
+      makeCard({ cardId: "r-held-expensive",  wasHeld: true,  salary: 88, slotIndex: 3 }),
+    ];
+    const matchups = buildMatchups(sender, recipient);
+    expect(matchups).toHaveLength(4);
+    // Rank 0: each side's cheapest swap.
+    expect(matchups[0].sender.cardId).toBe("s-swap-cheap");
+    expect(matchups[0].recipient.cardId).toBe("r-swap-cheap");
+    // Rank 1: each side's mid swap.
+    expect(matchups[1].sender.cardId).toBe("s-swap-mid");
+    expect(matchups[1].recipient.cardId).toBe("r-swap-mid");
+    // Rank 2: each side's cheapest held.
+    expect(matchups[2].sender.cardId).toBe("s-held-cheap");
+    expect(matchups[2].recipient.cardId).toBe("r-held-cheap");
+    // Rank 3: each side's most-expensive held.
+    expect(matchups[3].sender.cardId).toBe("s-held-expensive");
+    expect(matchups[3].recipient.cardId).toBe("r-held-expensive");
+    // Regression assertion: if pairing were slot-aligned, matchup 0
+    // would pair sender's slot-0 ("s-held-expensive") with recipient's
+    // slot-0 ("r-swap-cheap") — explicitly not what we want.
+    expect(matchups[0].sender.cardId).not.toBe("s-held-expensive");
   });
 });
 

@@ -448,6 +448,69 @@ async function runPlayHarness(browser) {
     `count=${revealRecipientHBadgeCount}`,
   );
 
+  // ── #4 regression-lock (2026-05-30): strip LAYOUT = slotIndex, not revealOrder ──
+  // We held slots 2 and 5 pre-Draw. With the strip-sort fix, the H-badged
+  // cells must remain at DOM-positions 2 and 5 in the recipient reveal
+  // strip — NOT clustered at the rightmost positions (which would happen
+  // if revealOrder drove spatial layout: held cards go last in time, so
+  // a `[...revealOrder]` spread placed them at indices 4 and 5).
+  //
+  // Strategy: walk the recipient strip's mini-cells in DOM order, record
+  // which contain an H-badge polygon, and check rect.x ordering. Asserts:
+  //   (a) H-badge cells at DOM-indices {2, 5} (slotIndex layout), NOT
+  //       DOM-indices {4, 5} (revealOrder layout).
+  //   (b) Cell rect.x strictly increases left-to-right (sanity: no
+  //       cells overlap, layout is a horizontal strip).
+  const recipientMiniCells = await page
+    .locator(`[data-h2h-recipient-reveal] [data-h2h-hand-strip][data-side="recipient"] [data-h2h-mini-cell="true"]`)
+    .all();
+  const cellInfo = [];
+  for (const cell of recipientMiniCells) {
+    const rect = await cell.boundingBox();
+    const hBadgeCount = await cell.locator(`svg polygon[fill="#F5C850"]`).count();
+    cellInfo.push({ rect, hasHBadge: hBadgeCount > 0 });
+  }
+  record(
+    `#4: recipient reveal strip mounts exactly ${ROSTER_SIZE} mini-cells`,
+    cellInfo.length === ROSTER_SIZE,
+    `count=${cellInfo.length}`,
+  );
+  const heldDomIndices = cellInfo
+    .map((info, i) => (info.hasHBadge ? i : -1))
+    .filter((i) => i >= 0);
+  record(
+    `#4: held cells at DOM-indices {2, 5} (slotIndex layout) — NOT {4, 5} (revealOrder layout)`,
+    heldDomIndices.length === 2 && heldDomIndices[0] === 2 && heldDomIndices[1] === 5,
+    `got DOM-indices=${JSON.stringify(heldDomIndices)}`,
+  );
+  // Sanity: strictly-increasing rect.x left-to-right.
+  let strictlyIncreasing = true;
+  for (let i = 1; i < cellInfo.length; i++) {
+    if (!cellInfo[i].rect || !cellInfo[i - 1].rect) { strictlyIncreasing = false; break; }
+    if (cellInfo[i].rect.x <= cellInfo[i - 1].rect.x) { strictlyIncreasing = false; break; }
+  }
+  record(
+    `#4: recipient strip cells render in strict left-to-right order`,
+    strictlyIncreasing,
+    `xs=${JSON.stringify(cellInfo.map((c) => c.rect ? Math.round(c.rect.x) : null))}`,
+  );
+  // The two held cells' rect.x positions should match their slotIndex
+  // positions on the strip (cell-2.x and cell-5.x), not be shoved to
+  // the right two slots.
+  if (cellInfo.length === ROSTER_SIZE) {
+    const heldXs = heldDomIndices.map((i) => cellInfo[i].rect?.x ?? null);
+    const slot2x = cellInfo[2].rect?.x ?? null;
+    const slot5x = cellInfo[5].rect?.x ?? null;
+    record(
+      `#4: held-cell rect.x positions == slot2/slot5 cell rect.x (±1px)`,
+      heldXs.length === 2 &&
+        slot2x != null && slot5x != null &&
+        Math.abs(heldXs[0] - slot2x) <= 1 &&
+        Math.abs(heldXs[1] - slot5x) <= 1,
+      `heldXs=${JSON.stringify(heldXs)} slot2x=${slot2x} slot5x=${slot5x}`,
+    );
+  }
+
   await page.close();
 }
 

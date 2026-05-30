@@ -499,16 +499,15 @@ describe("H2HResultsOverlay — crossfade visibility", () => {
   });
 });
 
-// Phase 5a amend2 contract lock (2026-05-27): ResultsStrip must sort by
-// revealOrder when provided, mirroring the rule on H2HRevealScreen's
-// HandStrip. Production hand_log.final_roster stores slotIndex deal-
-// positional (PG/SG/SF/PF/C/FLEX), not in reveal-order — amend1 fixed
-// the arc strip; amend2 closes the same gap on the overlay strip,
-// which is what's visible after the arc → overlay crossfade.
-describe("H2HResultsOverlay — revealOrder contract", () => {
-  it("ResultsStrip displays cards in revealOrder when provided, regardless of slotIndex", () => {
-    // Deliberately misaligned: held card at slotIndex 0 (would be leftmost
-    // under slotIndex sort), cheapest swap at slotIndex 5.
+// #4 contract lock (2026-05-30, INVERTS amend2's spatial assertion):
+// ResultsStrip LAYOUT is `slotIndex`-only — `revealOrder` is the
+// TEMPORAL contract, never spatial. Mirrors the HandStrip inversion
+// (S5 invariant: held cards stay in their slotIndex positions through
+// reveal → results). See docs/h2h-reveal-arc-design.md "Locked
+// invariant — strip-component sort contract" EDIT 2026-05-30
+// (axis split).
+describe("H2HResultsOverlay — strip layout contract", () => {
+  it("ResultsStrip displays cards in slotIndex order regardless of revealOrder", () => {
     const senderCards: H2HCard[] = [
       makeCard({ cardId: "card-A", name: "A held $57", basePlayerId: "pA", wasHeld: true,  salary: 57, slotIndex: 0 }),
       makeCard({ cardId: "card-B", name: "B swap $29", basePlayerId: "pB", wasHeld: false, salary: 29, slotIndex: 5 }),
@@ -517,9 +516,9 @@ describe("H2HResultsOverlay — revealOrder contract", () => {
       makeCard({ cardId: "card-E", name: "E held $40", basePlayerId: "pE", wasHeld: true,  salary: 40, slotIndex: 3 }),
       makeCard({ cardId: "card-F", name: "F swap $37", basePlayerId: "pF", wasHeld: false, salary: 37, slotIndex: 4 }),
     ];
-    // Expected (wasHeld ASC, salary ASC):
-    //   swaps cheap → exp:  B ($29), C ($34), F ($37), D ($52)
-    //   held cheap → exp:   E ($40), A ($57)
+    // revealOrder follows the canonical temporal rule (wasHeld ASC,
+    // salary ASC); the strip MUST ignore it for SPATIAL layout and
+    // render in slotIndex order.
     const senderRevealOrder = [
       senderCards[1], senderCards[2], senderCards[5], senderCards[3], senderCards[4], senderCards[0],
     ];
@@ -536,11 +535,12 @@ describe("H2HResultsOverlay — revealOrder contract", () => {
       '[data-h2h-overlay-zone="opponent"] [data-h2h-overlay-cell="true"]'
     );
     expect(opponentCells.length).toBe(6);
-    expect(opponentCells[0].getAttribute("data-card-id")).toBe("card-B"); // cheapest swap
-    expect(opponentCells[1].getAttribute("data-card-id")).toBe("card-C");
-    expect(opponentCells[2].getAttribute("data-card-id")).toBe("card-F");
-    expect(opponentCells[3].getAttribute("data-card-id")).toBe("card-D"); // most-expensive swap
-    expect(opponentCells[4].getAttribute("data-card-id")).toBe("card-E"); // cheapest held
-    expect(opponentCells[5].getAttribute("data-card-id")).toBe("card-A"); // most-expensive held
+    // slotIndex order: A (0), C (1), D (2), E (3), F (4), B (5).
+    expect(opponentCells[0].getAttribute("data-card-id")).toBe("card-A"); // slot 0 — held stays leftmost
+    expect(opponentCells[1].getAttribute("data-card-id")).toBe("card-C"); // slot 1
+    expect(opponentCells[2].getAttribute("data-card-id")).toBe("card-D"); // slot 2
+    expect(opponentCells[3].getAttribute("data-card-id")).toBe("card-E"); // slot 3 — held stays mid-strip
+    expect(opponentCells[4].getAttribute("data-card-id")).toBe("card-F"); // slot 4
+    expect(opponentCells[5].getAttribute("data-card-id")).toBe("card-B"); // slot 5
   });
 });

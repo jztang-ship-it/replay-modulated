@@ -258,19 +258,17 @@ interface ResultsStripProps {
   revealOrder?: H2HCard[];
 }
 
-function ResultsStrip({ cards, renderCard, selectedCardId, onCardTap, revealOrder }: ResultsStripProps) {
-  // Phase 5a amend2 (2026-05-27): use server-computed revealOrder
-  // (wasHeld ASC, salary ASC per buildRevealOrder) when provided —
-  // canonical sort matching H2HRevealScreen's HandStrip. Production
-  // slotIndex is deal-positional (PG/SG/SF/PF/C/FLEX), NOT reveal-
-  // order, so trusting it puts held cards in arbitrary positions.
-  // Amend1 fixed this on the arc; amend2 closes the same gap on the
-  // overlay, which is what's visible after the arc crossfade.
+function ResultsStrip({ cards, renderCard, selectedCardId, onCardTap, revealOrder: _revealOrder }: ResultsStripProps) {
+  // #4 (2026-05-30): strip LAYOUT is slotIndex-only — matches HandStrip.
+  // revealOrder is the TEMPORAL contract (kept on the props surface for
+  // backward compatibility with H2HRecipientReveal's threading) but no
+  // longer drives spatial order. Held cards stay in their slotIndex
+  // positions (S5 invariant). Prior code laid cells in revealOrder when
+  // provided, which dragged held cards to the rightmost slots since
+  // `buildRevealOrder` puts held last.
   const ordered = useMemo(
-    () => revealOrder
-      ? [...revealOrder]
-      : [...cards].sort((a, b) => a.slotIndex - b.slotIndex),
-    [cards, revealOrder],
+    () => [...cards].sort((a, b) => a.slotIndex - b.slotIndex),
+    [cards],
   );
   return (
     <div
