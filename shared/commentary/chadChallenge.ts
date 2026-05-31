@@ -15,6 +15,8 @@
  */
 
 import type { WinTier, TopGameReason } from "./types";
+import { lookupCulture, type CultureShape } from "./selectCommentary";
+import type { GeneratedCard } from "../types/index";
 
 function pick(arr: string[]): string {
   return arr[Math.floor(Math.random() * arr.length)] ?? arr[0];
@@ -1506,4 +1508,635 @@ export function firstShareInvitation(args: { winTier: string }): string {
 /** Expose bank arrays for testing / preview. */
 export function firstShareInvitationBank(bucket: "hit" | "bust"): string[] {
   return bucket === "bust" ? [...FIRST_SHARE_BUST] : [...FIRST_SHARE_HIT];
+}
+
+// ── Recipient contextual intro (Phase 5c S3) ──────────────────────────────
+//
+// Two-stage trash-talk that fires inside H2HRecipientPlay's hero zone during
+// the `hold_select` state. Stage 1 (intro paragraph) is the "set the stage"
+// beat; Stage 2 (deal nudge) is the "go" beat once cards are held. Both
+// banks live here; selection is keyed on the sender's `triggerType` from
+// the GET /api/challenge/{id} response (M3/M4 plumbing).
+//
+// T6 VOICE GUARDRAIL — DO NOT VIOLATE:
+//   - Bank frames carry RECIPIENT/SITUATION trash talk ONLY. The only
+//     real-player material is {cultureLine} substituted at render time
+//     from the vetted PLAYER_CULTURE DB (~207 basketball entries,
+//     hand-authored + reviewed). DO NOT invent fresh harsh claims about
+//     real players in these strings — that exposes liability the vetted
+//     bank doesn't.
+//   - bad_beat draws cultureLine from `controversy ∪ underperform`
+//     (the harsher pools); big_score / rare_pull from `overperform ∪
+//     signatureGames`; rare_pull additionally from `milestones ∪
+//     streakLines`.
+//   - NEVER name broadcasters, podcasters, or media personalities. The
+//     Chad voice speaks AT the recipient about the sender's cards. No
+//     "as Barkley said", no "Bill Simmons take".
+//   - Stay in player-perspective (anchor name, performance) or situation-
+//     perspective (sender's hand, recipient's deal). Out-of-game refs
+//     stay sourced from PLAYER_CULTURE, not punditry.
+//
+// ⚠️ TONE-REVIEW — banks below are a FIRST DRAFT for a human tone pass.
+// Voice sharpening (snap, rhythm, redundancy) is a follow-up, not part
+// of this commit's scope. The structural locks (T2/T5 fallback, T6
+// guardrails) hold regardless of how the lines themselves get tuned.
+
+/** Anchor card chosen by selectIntroAnchor for the recipient intro. The
+ *  shape mirrors the slice of GeneratedCard the intro selectors actually
+ *  read, plus the resolved culture entry. Optional fields stay optional
+ *  here so a Path-A-derived anchor (where the persisted basePlayerId
+ *  resolved but the card came back missing some metadata) still
+ *  satisfies the type. */
+export interface RecipientIntroAnchor {
+  name: string;
+  basePlayerId: string;
+  team?: string;
+  tier?: string;
+  actualFp?: number;
+  projectedFp?: number;
+  wasHeld?: boolean;
+  salary?: number;
+  gameInfo?: { date: string; opponent: string };
+  /** Culture entry from lookupCulture(name, sport, tier, 0, basePlayerId,
+   *  team). Null when the anchor's tier gates culture out (BLUE/GREEN/
+   *  WHITE), when no DB entry exists, or when the PURPLE iconic-nickname
+   *  gate trips. NAME-only fallback bank fires in that case. */
+  culture: CultureShape | null;
+  /** rare_pull only — threaded from challengeCtx.topGameTier through
+   *  selectIntroAnchor's caller. NEVER fabricated by the derivation
+   *  fallback; legacy rows with no persisted tier leave this null and
+   *  the chip renderer falls back to the "RARE PULL" base label. */
+  topGameTier?: "record" | "career" | "season" | null;
+}
+
+export interface SelectIntroAnchorArgs {
+  triggerType?: ChallengeCtxTriggerType | null;
+  /** ChallengeCtx.resolvedSenderHand.cards — undefined on legacy / fetch
+   *  failures. Empty array also routes to null-return path A. */
+  senderCards?: GeneratedCard[];
+  /** ChallengeCtx.anchorBasePlayerId — Path A primary key. Null on
+   *  legacy rows or non-anchor triggers (miss/default). */
+  anchorBasePlayerId?: string | null;
+  /** ChallengeCtx.topGameTier — rare_pull only. Attached to the anchor
+   *  so downstream banks can render the rare_pull chip's sub-tier label.
+   *  Never fabricated by the derivation fallback. */
+  topGameTier?: "record" | "career" | "season" | null;
+  sport: string;
+}
+
+type ChallengeCtxTriggerType = "rare_pull" | "big_score" | "miss" | "bad_beat" | "default";
+
+/** Path-A-first anchor resolver. Returns null for miss/default (no anchor
+ *  concept by T2). For bad_beat / big_score / rare_pull:
+ *    1. Resolve persisted anchorBasePlayerId against senderCards.
+ *    2. On null/no-match, fall back to client-side derivation per T2
+ *       (the M5/Path-A fallback for legacy or null-column rows).
+ *  Culture is attached via the now-exported lookupCulture (Phase 5c S3
+ *  Deliverable 1). For rare_pull, topGameTier is plumbed onto the
+ *  returned anchor object via the caller's threading — selectIntroAnchor
+ *  itself never fabricates topGameTier in the derivation fallback. */
+export function selectIntroAnchor(args: SelectIntroAnchorArgs): RecipientIntroAnchor | null {
+  const { triggerType, senderCards, anchorBasePlayerId, sport, topGameTier } = args;
+  if (!triggerType) return null;
+  if (triggerType === "miss" || triggerType === "default") return null;
+  if (!senderCards || senderCards.length === 0) return null;
+
+  let card: GeneratedCard | null = null;
+
+  // Path A primary: persisted id → card.
+  if (anchorBasePlayerId) {
+    card = senderCards.find(c => c.basePlayerId === anchorBasePlayerId) ?? null;
+  }
+
+  // Derivation fallback (legacy / null-column / id-not-on-roster).
+  if (!card) {
+    if (triggerType === "bad_beat") {
+      const held = senderCards.filter(c => c.wasHeld === true);
+      if (held.length === 0) return null;
+      held.sort((a, b) => {
+        const da = (a.actualFp ?? 0) - (a.projectedFp ?? 0);
+        const db = (b.actualFp ?? 0) - (b.projectedFp ?? 0);
+        if (da !== db) return da - db; // most-negative first
+        return (b.salary ?? 0) - (a.salary ?? 0); // tiebreak salary desc
+      });
+      card = held[0];
+    } else if (triggerType === "big_score") {
+      const sorted = [...senderCards].sort((a, b) => (b.actualFp ?? 0) - (a.actualFp ?? 0));
+      const top = sorted[0];
+      if (!top) return null;
+      // Prefer wasHeld within 1 FP of top — small recency window so the
+      // anchor reads as "the one you were betting on" when possible.
+      const heldNearTop = sorted.find(
+        c => c.wasHeld === true && Math.abs((top.actualFp ?? 0) - (c.actualFp ?? 0)) <= 1,
+      );
+      card = heldNearTop ?? top;
+    } else if (triggerType === "rare_pull") {
+      // Don't fabricate a topGameTier — caller threads it from ctx, and
+      // it'll be null in the legacy fallback. Renderer's RARE_PULL_TIER_LABEL
+      // map handles missing-tier gracefully (falls back to "RARE PULL").
+      const sorted = [...senderCards].sort((a, b) => (b.actualFp ?? 0) - (a.actualFp ?? 0));
+      card = sorted[0] ?? null;
+    }
+  }
+
+  if (!card) return null;
+
+  const culture = lookupCulture(card.name, sport, card.tier, 0, card.basePlayerId, card.team);
+  return {
+    name: card.name,
+    basePlayerId: card.basePlayerId,
+    team: card.team,
+    tier: card.tier,
+    actualFp: card.actualFp,
+    projectedFp: card.projectedFp,
+    wasHeld: card.wasHeld,
+    salary: card.salary,
+    gameInfo: card.gameInfo ? { date: card.gameInfo.date, opponent: card.gameInfo.opponent } : undefined,
+    culture,
+    // Path A: forward the persisted ctx.topGameTier (rare_pull only).
+    // Derivation fallback never fabricates this — rare_pull anchors
+    // derived client-side carry topGameTier === undefined and the chip
+    // renderer falls back to "RARE PULL".
+    topGameTier: triggerType === "rare_pull" ? (topGameTier ?? null) : null,
+  };
+}
+
+// ── Recipient Stage 1 banks ───────────────────────────────────────────────
+//
+// Substitution tokens (replaced at selection time after anti-repeat dedup):
+//   {name}            anchor card's display name
+//   {cultureLine}     vetted line from PLAYER_CULTURE pool (CULTURE bank only)
+//   {challengerName}  sender's display name, or "your friend"
+//   {targetScore}     sender's totalFp, one decimal
+//   {nearMissGap}     integer FP gap (MISS bank only, with-gap path)
+//   {nearMissNextTier} title-cased target tier (MISS bank only, with-gap path)
+// StampToken tiers:
+//   "{rarePullTier}"  sentinel replaced by anchor's topGameTier
+//   "{nearMissNextTier}" sentinel replaced by ctx.nearMissNextTier
+//   win_tier StampTokens leave tier undefined — renderer falls back to
+//     the winTier prop H2HRecipientPlay passes (senderHand.tier).
+
+const INTRO_BAD_BEAT_CULTURE: Line[] = [
+  ["{challengerName} stacked {name} for {targetScore} and got cooked anyway — ", { stamp: "bad_beat" }, " — {cultureLine}"],
+  ["{name} on the held card, {targetScore} on the scoreboard. {cultureLine} ", { stamp: "bad_beat" }, ". Run the same hand and read it better."],
+  ["Held {name} for the conviction pick, lineup folded around them — ", { stamp: "bad_beat" }, " — {cultureLine} Your turn."],
+  ["{name} was {challengerName}'s anchor for {targetScore}. {cultureLine} ", { stamp: "bad_beat" }, ". Same six cards. Cook it."],
+  [{ stamp: "bad_beat" }, ". {challengerName} bet on {name} and got {targetScore}. {cultureLine} You've got the redraws."],
+  ["{cultureLine} {name} let {challengerName} down for {targetScore} — ", { stamp: "bad_beat" }, " — your shot at the same slate."],
+];
+
+const INTRO_BAD_BEAT_NAME: Line[] = [
+  ["{challengerName} held {name} and the lineup couldn't lift it — ", { stamp: "bad_beat" }, " — {targetScore} on the board. Your move."],
+  ["{name} on the held card. {targetScore} as the finish. ", { stamp: "bad_beat" }, ". Cook it cleaner."],
+  ["Premium pick on {name}, premium disappointment — ", { stamp: "bad_beat" }, " — {challengerName}'s leaving you {targetScore} to chase."],
+  [{ stamp: "bad_beat" }, ". {challengerName} stacked {name} for {targetScore}. Same six cards. Read the slate."],
+  ["{challengerName} bet big on {name} and walked away with {targetScore} — ", { stamp: "bad_beat" }, " — your hand to play."],
+];
+
+const INTRO_BAD_BEAT_GENERIC: Line[] = [
+  ["{challengerName} got cooked by their own holds — ", { stamp: "bad_beat" }, " — {targetScore} on the board. Your turn."],
+  [{ stamp: "bad_beat" }, ". Same six cards, {challengerName} couldn't get past {targetScore}. Cook it."],
+  ["The lineup looked like a winner on paper for {challengerName} — ", { stamp: "bad_beat" }, " — {targetScore} is what it actually paid out."],
+  ["{challengerName} read the slate, slate didn't read the script — ", { stamp: "bad_beat" }, " — {targetScore} to beat."],
+];
+
+const INTRO_BIG_SCORE_CULTURE: Line[] = [
+  ["{name} cooked, {challengerName} was holding the detonator — ", { stamp: "win_tier" }, ". {cultureLine} {targetScore} to clear."],
+  ["{challengerName} stacked {name} on the right night — ", { stamp: "win_tier" }, ". {cultureLine} Same six cards, {targetScore} on the board."],
+  ["{cultureLine} {name} put {challengerName} on the leaderboard at {targetScore} — ", { stamp: "win_tier" }, ". Your shot."],
+  [{ stamp: "win_tier" }, ". {name} took the building down for {challengerName}. {cultureLine} {targetScore} to beat."],
+  ["{name} ate, {challengerName} ate after — ", { stamp: "win_tier" }, " — {targetScore} on the receipt. {cultureLine} Your turn at the wheel."],
+];
+
+const INTRO_BIG_SCORE_NAME: Line[] = [
+  ["{name} cooked and {challengerName} was sitting at the table — ", { stamp: "win_tier" }, " — {targetScore} on the board. Same six cards."],
+  ["{challengerName} stacked the right name on the right night. {name} ate. ", { stamp: "win_tier" }, ". {targetScore} to clear."],
+  [{ stamp: "win_tier" }, ". {name} took the lineup by the collar for {challengerName}. {targetScore} on the receipt."],
+  ["{name} torched the whole opposing lineup — ", { stamp: "win_tier" }, " — {challengerName} cleared {targetScore}. Your move."],
+];
+
+const INTRO_BIG_SCORE_GENERIC: Line[] = [
+  ["{challengerName} cooked the whole slate — ", { stamp: "win_tier" }, " — {targetScore} on the board."],
+  [{ stamp: "win_tier" }, ". {challengerName} stacked the right names and ate. {targetScore} to beat."],
+  ["The whole lineup ran for {challengerName} — ", { stamp: "win_tier" }, " — {targetScore} is what it paid out."],
+  ["{challengerName} put up {targetScore} on these cards — ", { stamp: "win_tier" }, " — your turn at the wheel."],
+];
+
+const INTRO_RARE_PULL_CULTURE: Line[] = [
+  ["{name} just did something the league hasn't seen in years — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". {cultureLine} {challengerName} was holding the ticket at {targetScore}."],
+  ["{cultureLine} {name} carved {challengerName}'s name into the leaderboard — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". {targetScore} to chase."],
+  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {name} hung a number on the league for {challengerName}. {cultureLine} {targetScore} on the receipt."],
+  ["{challengerName} caught {name} on the night the stat sheet broke — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — {cultureLine} {targetScore} is your bar."],
+  ["{name} just made the highlight reel for {challengerName}. {cultureLine} ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". {targetScore} to clear."],
+];
+
+const INTRO_RARE_PULL_NAME: Line[] = [
+  ["{name} just did something the league hasn't seen in years — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — {challengerName} was holding the ticket. {targetScore} to chase."],
+  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {name} carved {challengerName}'s name into the leaderboard at {targetScore}. Same six cards."],
+  ["{challengerName} caught {name} on the night the stat sheet broke — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — {targetScore} on the board."],
+  ["{name} hung a historic number for {challengerName} — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — {targetScore} is the bar."],
+];
+
+const INTRO_RARE_PULL_GENERIC: Line[] = [
+  ["{challengerName} caught one of those nights — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — {targetScore} on the receipt."],
+  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". The slate handed {challengerName} a historic number. {targetScore} to chase."],
+  ["The lineup ran historic for {challengerName} — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — {targetScore} is what it paid."],
+];
+
+const INTRO_MISS_WITH_GAP: Line[] = [
+  ["{challengerName} got {targetScore} on the board — ", { stamp: "miss", tier: "{nearMissNextTier}" }, " — {nearMissGap} FP short of the next tier. Take it from them."],
+  ["{nearMissGap} FP from a different conversation for {challengerName}. ", { stamp: "miss", tier: "{nearMissNextTier}" }, ". {targetScore} on the board. Your turn."],
+  [{ stamp: "miss", tier: "{nearMissNextTier}" }, ". {challengerName} left {nearMissGap} FP on the floor at {targetScore}. Cook the cleaner read."],
+  ["{challengerName} bumped the cut line and fell back — ", { stamp: "miss", tier: "{nearMissNextTier}" }, " — {nearMissGap} FP short. {targetScore} to clear."],
+];
+
+const INTRO_MISS_GENERIC: Line[] = [
+  ["{challengerName} got close on this slate — ", { stamp: "miss" }, " — {targetScore} on the board. Your shot."],
+  [{ stamp: "miss" }, ". {challengerName} ran it right up to the door at {targetScore}. Door didn't open. Try it yourself."],
+  ["{challengerName} was a possession from a different night — ", { stamp: "miss" }, " — {targetScore} to chase."],
+];
+
+const INTRO_DEFAULT: Line[] = [
+  ["{challengerName} played the slate and walked away with {targetScore}. Same six cards. Cook it."],
+  ["{targetScore} on the board from {challengerName}. Your turn at the wheel."],
+  ["{challengerName} sent {targetScore}. Your shot at the same cards."],
+];
+
+// ── Recipient Stage 2 banks (Deal nudges — verb-first, shorter) ──────────
+
+const NUDGE_BAD_BEAT_CULTURE: Line[] = [
+  ["Lock in your reads. ", { stamp: "bad_beat" }, " — {cultureLine} Draw."],
+  ["Hold the cards {challengerName} should have. {cultureLine} Send it."],
+  ["Pick the holds. ", { stamp: "bad_beat" }, " on {name}. {cultureLine} Your draw."],
+];
+
+const NUDGE_BAD_BEAT_NAME: Line[] = [
+  ["Lock the holds. ", { stamp: "bad_beat" }, " on {name} — your draw to redeem it."],
+  ["Pick the conviction. {challengerName} got cooked by {name}. Draw."],
+  ["Hold what {challengerName} should have. ", { stamp: "bad_beat" }, ". Send it."],
+];
+
+const NUDGE_BAD_BEAT_GENERIC: Line[] = [
+  ["Lock in your reads. ", { stamp: "bad_beat" }, " on {challengerName}'s board. Draw."],
+  ["Pick your holds and redeem the slate. Send it."],
+  ["Hold sharper than {challengerName} did. Draw."],
+];
+
+const NUDGE_BIG_SCORE_CULTURE: Line[] = [
+  ["Stack the right names. {cultureLine} Draw."],
+  ["Hold the heater. ", { stamp: "win_tier" }, " on {name}. {cultureLine} Draw."],
+  ["Lock your reads. {cultureLine} Send it."],
+];
+
+const NUDGE_BIG_SCORE_NAME: Line[] = [
+  ["Hold {name} like {challengerName} did. ", { stamp: "win_tier" }, ". Draw."],
+  ["Lock the heater. {name} cooked for {challengerName} — your turn."],
+  ["Stack the right name. {targetScore} to clear. Draw."],
+];
+
+const NUDGE_BIG_SCORE_GENERIC: Line[] = [
+  ["Lock in the heat. ", { stamp: "win_tier" }, " to clear. Draw."],
+  ["Stack the right names. Your turn at {targetScore}."],
+  ["Hold sharper than {challengerName} did. Send it."],
+];
+
+const NUDGE_RARE_PULL_CULTURE: Line[] = [
+  ["Hold the history card. {cultureLine} Draw."],
+  ["Lock {name}. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". {cultureLine} Send it."],
+  ["Stack on {name}. {cultureLine} Draw."],
+];
+
+const NUDGE_RARE_PULL_NAME: Line[] = [
+  ["Hold {name}. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". Draw."],
+  ["Lock the history pull. {name} did it for {challengerName} — your turn."],
+  ["Stack on {name}. {targetScore} to chase. Draw."],
+];
+
+const NUDGE_RARE_PULL_GENERIC: Line[] = [
+  ["Lock your reads. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " to chase. Draw."],
+  ["Hold sharper than {challengerName} did. {targetScore} on the board."],
+  ["Stack the slate. Send it."],
+];
+
+const NUDGE_MISS: Line[] = [
+  ["Lock the holds. {challengerName} fell short — your shot to clear. Draw."],
+  ["Hold tighter than {challengerName} did. {targetScore} on the board."],
+  ["Pick your reads. Send it past {targetScore}."],
+];
+
+const NUDGE_DEFAULT: Line[] = [
+  ["Lock the holds. {targetScore} on the board. Draw."],
+  ["Pick your reads. Send it past {challengerName}."],
+  ["Hold what you trust. {targetScore} to clear."],
+];
+
+// ── Selectors ────────────────────────────────────────────────────────────
+
+export interface SelectRecipientIntroArgs {
+  triggerType?: ChallengeCtxTriggerType | null;
+  challengerName: string | null;
+  targetScore: number;
+  anchor: RecipientIntroAnchor | null;
+  nearMissGap?: number | null;
+  nearMissNextTier?: string | null;
+}
+
+export interface SelectRecipientDealNudgeArgs {
+  triggerType?: ChallengeCtxTriggerType | null;
+  challengerName: string | null;
+  targetScore: number;
+  anchor: RecipientIntroAnchor | null;
+}
+
+/** Stage 1 — recipient contextual intro paragraph. Fires on hero zone
+ *  entry into `hold_select`. T5 four-level fallback:
+ *    1. anchor + culture entry + cultureLine resolved → CULTURE bank
+ *    2. anchor + (no culture entry OR no cultureLine renderable) → NAME bank
+ *    3. anchor-trigger but no anchor → GENERIC per-trigger bank
+ *    4. miss with NULL gap → MISS_GENERIC; legacy (no triggerType) →
+ *       chadChallengeIntro wrapped as single-string Line. */
+export function selectRecipientIntro(args: SelectRecipientIntroArgs): Line {
+  const t = args.triggerType ?? null;
+  const challengerLabel = args.challengerName ?? "Your friend";
+  const targetStr = args.targetScore.toFixed(1);
+
+  // Level 4 legacy fallback: pre-S1 / missing triggerType.
+  if (!t) {
+    const legacy = chadChallengeIntro({ challengerName: args.challengerName, targetScore: args.targetScore });
+    return [legacy];
+  }
+
+  // miss bucket — uses gap framing, not anchor.
+  if (t === "miss") {
+    if (typeof args.nearMissGap === "number" && args.nearMissNextTier) {
+      const line = pickWithAntiRepeat(INTRO_MISS_WITH_GAP, l => JSON.stringify(l));
+      return substituteRecipientLine(line, {
+        name: "",
+        cultureLine: "",
+        challengerName: challengerLabel,
+        targetScore: targetStr,
+        nearMissGap: String(Math.round(args.nearMissGap)),
+        nearMissNextTier: args.nearMissNextTier,
+        rarePullTier: "",
+      });
+    }
+    const line = pickWithAntiRepeat(INTRO_MISS_GENERIC, l => JSON.stringify(l));
+    return substituteRecipientLine(line, {
+      name: "",
+      cultureLine: "",
+      challengerName: challengerLabel,
+      targetScore: targetStr,
+      nearMissGap: "",
+      nearMissNextTier: "",
+      rarePullTier: "",
+    });
+  }
+
+  // default bucket — generic framing.
+  if (t === "default") {
+    const line = pickWithAntiRepeat(INTRO_DEFAULT, l => JSON.stringify(l));
+    return substituteRecipientLine(line, {
+      name: "",
+      cultureLine: "",
+      challengerName: challengerLabel,
+      targetScore: targetStr,
+      nearMissGap: "",
+      nearMissNextTier: "",
+      rarePullTier: "",
+    });
+  }
+
+  // Anchor-bearing triggers: bad_beat / big_score / rare_pull.
+  const anchor = args.anchor;
+  let bank: Line[];
+  let cultureLine = "";
+
+  if (!anchor) {
+    bank = t === "bad_beat" ? INTRO_BAD_BEAT_GENERIC
+      : t === "big_score" ? INTRO_BIG_SCORE_GENERIC
+      : INTRO_RARE_PULL_GENERIC;
+  } else {
+    const resolved = anchor.culture ? getCultureLine(anchor, t) : null;
+    if (anchor.culture && resolved) {
+      cultureLine = resolved;
+      bank = t === "bad_beat" ? INTRO_BAD_BEAT_CULTURE
+        : t === "big_score" ? INTRO_BIG_SCORE_CULTURE
+        : INTRO_RARE_PULL_CULTURE;
+    } else {
+      bank = t === "bad_beat" ? INTRO_BAD_BEAT_NAME
+        : t === "big_score" ? INTRO_BIG_SCORE_NAME
+        : INTRO_RARE_PULL_NAME;
+    }
+  }
+
+  const line = pickWithAntiRepeat(bank, l => JSON.stringify(l));
+  return substituteRecipientLine(line, {
+    name: anchor?.name ?? "",
+    cultureLine,
+    challengerName: challengerLabel,
+    targetScore: targetStr,
+    nearMissGap: "",
+    nearMissNextTier: "",
+    // rare_pull only — Path A: topGameTier persisted on ctx, attached
+    // to the anchor by selectIntroAnchor. Derivation-fallback anchors
+    // (legacy rows) leave this null; sentinel strips to undefined and
+    // the chip renderer falls back to the "RARE PULL" base label.
+    rarePullTier: anchor?.topGameTier ?? "",
+  });
+}
+
+/** Stage 2 — deal nudge. Same trigger-branched bank, distinct templates.
+ *  Fires when held.size > 0 in hold_select. */
+export function selectRecipientDealNudge(args: SelectRecipientDealNudgeArgs): Line {
+  const t = args.triggerType ?? null;
+  const challengerLabel = args.challengerName ?? "Your friend";
+  const targetStr = args.targetScore.toFixed(1);
+
+  if (!t || t === "default") {
+    const line = pickWithAntiRepeat(NUDGE_DEFAULT, l => JSON.stringify(l));
+    return substituteRecipientLine(line, {
+      name: "", cultureLine: "", challengerName: challengerLabel, targetScore: targetStr,
+      nearMissGap: "", nearMissNextTier: "", rarePullTier: "",
+    });
+  }
+
+  if (t === "miss") {
+    const line = pickWithAntiRepeat(NUDGE_MISS, l => JSON.stringify(l));
+    return substituteRecipientLine(line, {
+      name: "", cultureLine: "", challengerName: challengerLabel, targetScore: targetStr,
+      nearMissGap: "", nearMissNextTier: "", rarePullTier: "",
+    });
+  }
+
+  const anchor = args.anchor;
+  let bank: Line[];
+  let cultureLine = "";
+
+  if (!anchor) {
+    bank = t === "bad_beat" ? NUDGE_BAD_BEAT_GENERIC
+      : t === "big_score" ? NUDGE_BIG_SCORE_GENERIC
+      : NUDGE_RARE_PULL_GENERIC;
+  } else {
+    const resolved = anchor.culture ? getCultureLine(anchor, t) : null;
+    if (anchor.culture && resolved) {
+      cultureLine = resolved;
+      bank = t === "bad_beat" ? NUDGE_BAD_BEAT_CULTURE
+        : t === "big_score" ? NUDGE_BIG_SCORE_CULTURE
+        : NUDGE_RARE_PULL_CULTURE;
+    } else {
+      bank = t === "bad_beat" ? NUDGE_BAD_BEAT_NAME
+        : t === "big_score" ? NUDGE_BIG_SCORE_NAME
+        : NUDGE_RARE_PULL_NAME;
+    }
+  }
+
+  const line = pickWithAntiRepeat(bank, l => JSON.stringify(l));
+  return substituteRecipientLine(line, {
+    name: anchor?.name ?? "",
+    cultureLine,
+    challengerName: challengerLabel,
+    targetScore: targetStr,
+    nearMissGap: "",
+    nearMissNextTier: "",
+    rarePullTier: anchor?.topGameTier ?? "",
+  });
+}
+
+/** Resolve {cultureLine} for an anchor + trigger. Prefers a signatureGames
+ *  date+opp match against the anchor's gameInfo over the trigger-appropriate
+ *  generic pool. Returns null when no renderable line exists (NAME bank
+ *  fallback fires upstream). Reads `controversy` / `underperform` /
+ *  `overperform` via `as any` per the CultureShape's intentionally loose
+ *  shape (sport-specific fields not declared on the shared interface). */
+function getCultureLine(anchor: RecipientIntroAnchor, triggerType: ChallengeCtxTriggerType): string | null {
+  const c = anchor.culture;
+  if (!c) return null;
+
+  // Signature-game preferred match — exact date+opp on the anchor's gameInfo.
+  if (anchor.gameInfo && c.signatureGames?.length) {
+    const date = anchor.gameInfo.date.slice(0, 10);
+    const opp = anchor.gameInfo.opponent.toUpperCase();
+    const sig = c.signatureGames.find(g => g.date === date && g.opponent.toUpperCase() === opp);
+    if (sig?.line) return sig.line;
+  }
+
+  // Trigger-appropriate pool. The intentionally loose CultureShape doesn't
+  // declare overperform/underperform/controversy on the shared interface;
+  // sport-specific PlayerCulture entries carry them.
+  const ca = c as any;
+  const sigLines = (c.signatureGames ?? []).map(g => g.line).filter((l): l is string => !!l);
+  let pool: string[] = [];
+
+  if (triggerType === "bad_beat") {
+    pool = [
+      ...(Array.isArray(ca.controversy) ? ca.controversy : []),
+      ...(Array.isArray(ca.underperform) ? ca.underperform : []),
+    ];
+  } else if (triggerType === "big_score") {
+    pool = [
+      ...(Array.isArray(ca.overperform) ? ca.overperform : []),
+      ...sigLines,
+    ];
+  } else if (triggerType === "rare_pull") {
+    pool = [
+      ...sigLines,
+      ...(Array.isArray(ca.overperform) ? ca.overperform : []),
+      ...(c.milestones ?? []),
+      ...(c.streakLines ?? []),
+    ];
+  }
+
+  if (pool.length === 0) return null;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+interface RecipientLineSubstitutions {
+  name: string;
+  cultureLine: string;
+  challengerName: string;
+  targetScore: string;
+  nearMissGap: string;
+  nearMissNextTier: string;
+  rarePullTier: string;
+}
+
+/** Substitute tokens into each LinePart for the recipient intro / nudge
+ *  banks. Mirrors substituteLine (above) but with the recipient-intro
+ *  token set. StampToken sentinels handled: "{rarePullTier}" and
+ *  "{nearMissNextTier}". win_tier StampTokens leave tier undefined here —
+ *  H2HRecipientPlay passes `winTier={senderHand.tier}` to PartsLine and
+ *  the renderer reads it from props. */
+function substituteRecipientLine(line: Line, subs: RecipientLineSubstitutions): Line {
+  return line.map((part): LinePart => {
+    if (typeof part === "string") {
+      return part
+        .replace(/\{cultureLine\}/g, subs.cultureLine)
+        .replace(/\{challengerName\}/g, subs.challengerName)
+        .replace(/\{targetScore\}/g, subs.targetScore)
+        .replace(/\{nearMissGap\}/g, subs.nearMissGap)
+        .replace(/\{nearMissNextTier\}/g, subs.nearMissNextTier)
+        .replace(/\{name\}/g, subs.name);
+    }
+    if (part.tier === "{rarePullTier}") {
+      if (subs.rarePullTier) return { stamp: part.stamp, tier: subs.rarePullTier };
+      return { stamp: part.stamp };
+    }
+    if (part.tier === "{nearMissNextTier}") {
+      if (subs.nearMissNextTier) return { stamp: part.stamp, tier: subs.nearMissNextTier };
+      return { stamp: part.stamp };
+    }
+    return part;
+  });
+}
+
+/** Expose recipient banks for testing / preview. */
+export type RecipientIntroBankKey =
+  | "bad_beat_culture" | "bad_beat_name" | "bad_beat_generic"
+  | "big_score_culture" | "big_score_name" | "big_score_generic"
+  | "rare_pull_culture" | "rare_pull_name" | "rare_pull_generic"
+  | "miss_with_gap" | "miss_generic" | "default";
+
+export function recipientIntroBank(key: RecipientIntroBankKey): Line[] {
+  const bank = (() => {
+    switch (key) {
+      case "bad_beat_culture":  return INTRO_BAD_BEAT_CULTURE;
+      case "bad_beat_name":     return INTRO_BAD_BEAT_NAME;
+      case "bad_beat_generic":  return INTRO_BAD_BEAT_GENERIC;
+      case "big_score_culture": return INTRO_BIG_SCORE_CULTURE;
+      case "big_score_name":    return INTRO_BIG_SCORE_NAME;
+      case "big_score_generic": return INTRO_BIG_SCORE_GENERIC;
+      case "rare_pull_culture": return INTRO_RARE_PULL_CULTURE;
+      case "rare_pull_name":    return INTRO_RARE_PULL_NAME;
+      case "rare_pull_generic": return INTRO_RARE_PULL_GENERIC;
+      case "miss_with_gap":     return INTRO_MISS_WITH_GAP;
+      case "miss_generic":      return INTRO_MISS_GENERIC;
+      case "default":           return INTRO_DEFAULT;
+    }
+  })();
+  return bank.map(line => [...line]);
+}
+
+export type RecipientNudgeBankKey =
+  | "bad_beat_culture" | "bad_beat_name" | "bad_beat_generic"
+  | "big_score_culture" | "big_score_name" | "big_score_generic"
+  | "rare_pull_culture" | "rare_pull_name" | "rare_pull_generic"
+  | "miss" | "default";
+
+export function recipientDealNudgeBank(key: RecipientNudgeBankKey): Line[] {
+  const bank = (() => {
+    switch (key) {
+      case "bad_beat_culture":  return NUDGE_BAD_BEAT_CULTURE;
+      case "bad_beat_name":     return NUDGE_BAD_BEAT_NAME;
+      case "bad_beat_generic":  return NUDGE_BAD_BEAT_GENERIC;
+      case "big_score_culture": return NUDGE_BIG_SCORE_CULTURE;
+      case "big_score_name":    return NUDGE_BIG_SCORE_NAME;
+      case "big_score_generic": return NUDGE_BIG_SCORE_GENERIC;
+      case "rare_pull_culture": return NUDGE_RARE_PULL_CULTURE;
+      case "rare_pull_name":    return NUDGE_RARE_PULL_NAME;
+      case "rare_pull_generic": return NUDGE_RARE_PULL_GENERIC;
+      case "miss":              return NUDGE_MISS;
+      case "default":           return NUDGE_DEFAULT;
+    }
+  })();
+  return bank.map(line => [...line]);
 }

@@ -494,7 +494,7 @@ function InlineStampChip({ token, winTier, missTier }: {
  *  string finishes (or immediately if they lead the line). Fires onDone
  *  once the last part is revealed. Click-to-rush is handled by the
  *  parent wrapper toggling `rush`. */
-function PartsLine({ parts, rush, winTier, missTier, style, onDone }: {
+export function PartsLine({ parts, rush, winTier, missTier, style, onDone }: {
   parts: Line;
   rush: boolean;
   winTier?: string;

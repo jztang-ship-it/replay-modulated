@@ -59,6 +59,13 @@ import { setActiveSeason, ensureLoaded, isLoaded } from "@shared/engines/dataEng
 import { isRealName } from "@shared/utils/isRealName";
 import { getNickname } from "@shared/utils/playerIdentity";
 import { H2HBoardShell } from "./H2HBoardShell";
+import { PartsLine } from "./TierGauge";
+import {
+  selectIntroAnchor,
+  selectRecipientIntro,
+  selectRecipientDealNudge,
+  type Line,
+} from "@shared/commentary/chadChallenge";
 
 const ROSTER_SIZE = 6;
 
@@ -253,6 +260,84 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   );
 
   const [state, setState] = useState<PlayingState>({ kind: "pre_deal" });
+
+  // Phase 5c S3 — recipient contextual intro. Flag flips true on first
+  // hold-tap; sticky so Stage 1 doesn't re-appear if the user un-holds
+  // every card back to held.size === 0. Past `hold_select`, both Stage 1
+  // and Stage 2 collapse — VS treatment + existing headline take over.
+  const [introDismissed, setIntroDismissed] = useState(false);
+
+  // Anchor + intro Lines — memoized so PartsLine receives stable parts
+  // arrays across renders (its identity-keyed reset effect would
+  // otherwise re-fire on every keystroke equivalent). Anchor identity is
+  // keyed on ctx fields the selector actually reads.
+  const introAnchor = useMemo(
+    () =>
+      selectIntroAnchor({
+        triggerType: challengeCtx.triggerType,
+        senderCards: challengeCtx.resolvedSenderHand?.cards,
+        anchorBasePlayerId: challengeCtx.anchorBasePlayerId ?? null,
+        topGameTier: challengeCtx.topGameTier ?? null,
+        sport,
+      }),
+    [
+      challengeCtx.triggerType,
+      challengeCtx.resolvedSenderHand,
+      challengeCtx.anchorBasePlayerId,
+      challengeCtx.topGameTier,
+      sport,
+    ],
+  );
+
+  // Stage 1/Stage 2 lines: lock the picked Line into a ref keyed on a
+  // STABLE string signature, not the object refs. selectRecipientIntro /
+  // selectRecipientDealNudge call pickWithAntiRepeat internally, which
+  // is RANDOM — a useMemo whose deps include resolvedSenderHand (an
+  // object that the parent may rebuild every render) would re-fire the
+  // pick on every parent rerender and swap the displayed paragraph
+  // mid-hold. Ref + signature comparison guarantees one pick per
+  // mounted (ctx + anchor) tuple. The anchor useMemo above is fine —
+  // selectIntroAnchor is deterministic (same inputs → same output).
+  const introSig = [
+    challengeCtx.triggerType ?? "",
+    challengeCtx.resolvedSenderHand?.handId ?? "",
+    challengeCtx.anchorBasePlayerId ?? "",
+    challengeCtx.topGameTier ?? "",
+    challengeCtx.nearMissGap ?? "",
+    challengeCtx.nearMissNextTier ?? "",
+    challengeCtx.challengerName ?? "",
+    String(challengeCtx.targetScore),
+  ].join("|");
+
+  const stage1Ref = useRef<{ sig: string; line: Line }>({ sig: "", line: [""] });
+  if (stage1Ref.current.sig !== introSig) {
+    stage1Ref.current = {
+      sig: introSig,
+      line: selectRecipientIntro({
+        triggerType: challengeCtx.triggerType,
+        challengerName: challengeCtx.challengerName,
+        targetScore: challengeCtx.targetScore,
+        anchor: introAnchor,
+        nearMissGap: challengeCtx.nearMissGap,
+        nearMissNextTier: challengeCtx.nearMissNextTier,
+      }),
+    };
+  }
+  const stage1Line = stage1Ref.current.line;
+
+  const stage2Ref = useRef<{ sig: string; line: Line }>({ sig: "", line: [""] });
+  if (stage2Ref.current.sig !== introSig) {
+    stage2Ref.current = {
+      sig: introSig,
+      line: selectRecipientDealNudge({
+        triggerType: challengeCtx.triggerType,
+        challengerName: challengeCtx.challengerName,
+        targetScore: challengeCtx.targetScore,
+        anchor: introAnchor,
+      }),
+    };
+  }
+  const stage2Line = stage2Ref.current.line;
 
   // Stable callback refs — prevent effect cleanups from clearing
   // pending timers when parent re-renders churn prop identity.
@@ -558,6 +643,10 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
 
   const toggleHold = (i: number) => {
     if (state.kind !== "hold_select") return;
+    // Phase 5c S3 — sticky dismiss of the Stage 1 intro paragraph on the
+    // first hold-tap. setIntroDismissed is idempotent (React bails on
+    // identical state), so calling it on every tap is fine.
+    setIntroDismissed(true);
     setState((s) => {
       if (s.kind !== "hold_select") return s;
       const next = new Set(s.held);
@@ -647,6 +736,24 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // optimal width. Explicit color on the VS block so it does not depend
   // on inherited foreground color from any ancestor.
   const isVsBeat = state.kind === "handoff_resolving";
+  // Phase 5c S3 — Stage 1/2 gating during hold_select. Stage 1 fires on
+  // entry (no holds yet, intro not yet dismissed); Stage 2 fires once
+  // the recipient has held at least one card. Outside hold_select both
+  // collapse and the existing headline / VS block render as before.
+  const heldCount = state.kind === "hold_select" ? state.held.size : 0;
+  const showStage2 = state.kind === "hold_select" && heldCount > 0;
+  const showStage1 = state.kind === "hold_select" && heldCount === 0 && !introDismissed;
+  // Sender's resolved win tier — drives the win_tier inline stamp chip
+  // color on big_score banks. Null on legacy/prefetch-failed challenges.
+  const senderWinTier = challengeCtx.resolvedSenderHand?.tier;
+  const missTierLabel = challengeCtx.nearMissNextTier ?? undefined;
+  const introTypography: React.CSSProperties = {
+    fontSize: 22,
+    fontWeight: 800,
+    lineHeight: 1.3,
+    maxWidth: 360,
+  };
+
   const heroSlot = (
     <div
       data-h2h-play-hero-zone="true"
@@ -697,14 +804,33 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
             Comparing…
           </span>
         </div>
+      ) : showStage2 ? (
+        <div data-h2h-play-intro="stage2">
+          <PartsLine
+            key="recipient-stage2"
+            parts={stage2Line}
+            rush
+            winTier={senderWinTier}
+            missTier={missTierLabel}
+            style={introTypography}
+          />
+        </div>
+      ) : showStage1 ? (
+        <div data-h2h-play-intro="stage1">
+          <PartsLine
+            key="recipient-stage1"
+            parts={stage1Line}
+            rush
+            winTier={senderWinTier}
+            missTier={missTierLabel}
+            style={introTypography}
+          />
+        </div>
       ) : (
         <div
           data-h2h-play-headline="true"
           style={{
-            fontSize: 22,
-            fontWeight: 800,
-            lineHeight: 1.3,
-            maxWidth: 360,
+            ...introTypography,
             opacity:
               state.kind === "redraw_running" ||
               state.kind === "column_flip"
