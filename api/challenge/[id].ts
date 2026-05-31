@@ -24,6 +24,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     .then(() => {});
 
   res.setHeader("Cache-Control", "public, max-age=30");
+  // KEEP this response object explicit. supabase select("*") above auto-
+  // picks up new columns; returning `data` verbatim would leak the raw
+  // snake_case column names past the camelCase ChallengeCtx contract.
+  // Always whitelist the response shape here.
   return res.status(200).json({
     challenge_id: data.challenge_id,
     // created_by is the challenger's auth user_id (uuid) or null for
@@ -45,6 +49,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     winner_count: data.winner_count ?? 0,
     best_score: data.best_score ?? null,
     best_user_name: data.best_user_name ?? null,
+    // Phase 5c S1 (2026-05-31): trigger-detail fields surfaced to the
+    // recipient flow for the contextual intro selector. NULL on legacy
+    // rows (pre-migration 012 and rows where the trigger didn't emit the
+    // field, e.g. anchor_base_player_id on non-rare_pull). Recipient
+    // degrades to per-trigger generic when null per the design lock.
+    near_miss_gap: data.near_miss_gap ?? null,
+    near_miss_next_tier: data.near_miss_next_tier ?? null,
+    anchor_base_player_id: data.anchor_base_player_id ?? null,
+    top_game_tier: data.top_game_tier ?? null,
     card_url: `https://replayifs.com/api/share/card?challenge_id=${data.challenge_id}`,
   });
 }

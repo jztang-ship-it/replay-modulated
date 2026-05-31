@@ -49,6 +49,18 @@ export interface ChallengeCtx {
    *  the prefetch is in flight, on legacy challenges, and on any fetch
    *  failure. Commit 3's H2H wrapper gates its mount on this field. */
   resolvedSenderHand?: SenderHand;
+  /** Phase 5c S1 (2026-05-31): five trigger-detail fields surfaced from
+   *  the GET /api/challenge/{id} response so the recipient intro selector
+   *  can branch on the sender's challenge type without re-deriving it.
+   *  All optional — legacy rows (pre-migration 012, or rows where the
+   *  trigger didn't emit the field) carry null/undefined; recipient
+   *  intro degrades to per-trigger generic fallback per the design lock
+   *  (docs/h2h-reveal-arc-design.md Phase 5c). */
+  triggerType?: "rare_pull" | "big_score" | "miss" | "bad_beat" | "default";
+  nearMissGap?: number | null;
+  nearMissNextTier?: string | null;
+  anchorBasePlayerId?: string | null;
+  topGameTier?: "record" | "career" | "season" | null;
 }
 
 /**

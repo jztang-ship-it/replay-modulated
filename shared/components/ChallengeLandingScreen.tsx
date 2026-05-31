@@ -26,6 +26,14 @@ interface ChallengeData {
   winner_count: number;
   best_score: number | null;
   best_user_name: string | null;
+  // Phase 5c S1 (2026-05-31): trigger-detail fields. Optional on the wire
+  // for backward compat with legacy clients/responses; null on legacy
+  // rows (pre-migration 012) and on rows where the trigger didn't emit
+  // the field.
+  near_miss_gap?: number | null;
+  near_miss_next_tier?: string | null;
+  anchor_base_player_id?: string | null;
+  top_game_tier?: "record" | "career" | "season" | null;
 }
 
 interface Props {
@@ -92,6 +100,14 @@ export function ChallengeLandingScreen({ challengeId, sport, currentUserId, dese
       challengerName: data.challenger_name,
       sport: data.sport,
       season: data.season,
+      // Phase 5c S1 (2026-05-31): thread trigger-detail through to the
+      // recipient flow. All optional/null-safe — the recipient intro
+      // selector handles null values via per-trigger generic fallback.
+      triggerType: data.trigger_type as ChallengeCtx["triggerType"],
+      nearMissGap: data.near_miss_gap ?? null,
+      nearMissNextTier: data.near_miss_next_tier ?? null,
+      anchorBasePlayerId: data.anchor_base_player_id ?? null,
+      topGameTier: data.top_game_tier ?? null,
     });
   }
 
