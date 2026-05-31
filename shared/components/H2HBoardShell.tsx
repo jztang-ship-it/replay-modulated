@@ -78,7 +78,7 @@ export function ZonePanel({
         borderRadius: 16,
         border: "1px solid rgba(255,255,255,0.10)",
         background: "rgba(255,255,255,0.05)",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.20)",
         backdropFilter: "blur(10px)",
         WebkitBackdropFilter: "blur(10px)",
         padding: "8px 12px",
