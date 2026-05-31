@@ -589,6 +589,134 @@ This is the same locked-pattern as Fix B's "copy the working scaffold" rule in C
 
 ---
 
+### Phase 5c — Recipient contextual trash talk (locked 2026-05-31)
+
+**Rationale:** the current recipient intro chip is a single generic line picked from `INTRO_NAMED` / `INTRO_UNNAMED` in `chadChallenge.ts:181-195` — `"{name} put up {target}. Think you've got better in you?"`. It names the challenger and the score, but it does not name a single player on the sender's hand, and it does not vary by what KIND of hand the sender posted. Recipients see the same flavor whether the sender bricked with a held LeBron, dropped LEGEND on a Wemby season-high, or scraped a STARTER from a balanced line.
+
+The investigation pass (2026-05-31) confirmed three things that make a richer intro a near-freebie:
+
+1. **The trigger axis already exists end-to-end on the wire.** `evaluateTrigger()` (`shared/utils/triggerEvaluation.ts`) produces `trigger: "rare_pull" | "big_score" | "miss" | "bad_beat" | "default"` at sender share-prompt time. `create.ts:36` persists it to `shared_challenges.trigger_type`. `GET /api/challenge/{id}:39` returns it. `ChallengeLandingScreen.tsx:21` types it. But the landing screen DROPS it at the `onAccept(ctx)` handoff (line 88-95) and the recipient flow never sees it. Wiring is ~3 lines.
+
+2. **The sender's resolved hand carries everything needed to name a specific player + their performance + a reputation hook.** `ChallengeCtx.resolvedSenderHand.cards` is a `GeneratedCard[]` whose serialization (`shared/utils/resolvedRosterSerialization.ts`) preserves `basePlayerId`, `name`, `team`, `actualFp`, `projectedFp`, `wasHeld`, `tier`, `salary`, `achievements`, `statLine`, and `gameInfo: { date, opponent }`. Per-card date-specific signature-game references re-derive client-side via `card.gameInfo` × `PLAYER_CULTURE[key].signatureGames` — no server change. ~207 basketball culture entries (`basketball/src/utils/playerCulture.ts`) carry `nicknames`, `controversy`, `underperform`, `overperform`, `signatureGames`, `formerTeam`, `rivalry`, `teamEras` etc., already vetted and authored.
+
+3. **Two trigger-payload fields ARE NOT on the wire and would be useful enough to add.** `evaluateTrigger` produces `nearMissGap` + `nearMissNextTier` (for `miss`) and `anchorBasePlayerId` + `topGameTier` (for `rare_pull`). Today only `trigger_type` is persisted. For `miss` we have no clean client-side recompute (gap is a function of `totalFp` + `nextTier.minFp` + `winTiersMap`, all derivable but ugly to re-thread); for `rare_pull` we can re-derive client-side via achievement-badge scan but it's brittle. Locked decision: add four nullable columns to `shared_challenges` so the recipient reads them as published facts, not recomputed guesses. See M1 below.
+
+**Locked rules — trash-talk system (T-series):**
+
+**T1 — `trigger_type` flows into ChallengeCtx.** Add `triggerType?: "rare_pull" | "big_score" | "miss" | "bad_beat" | "default"` to `ChallengeCtx`. `ChallengeLandingScreen` writes it on `onAccept`. Optional because legacy rows + unknown server values fall through to `"default"` at the consumer.
+
+**T2 — Mapping locked: trigger_type → intro flavor.**
+
+| trigger_type | intro flavor | anchor | uses culture |
+|---|---|---|---|
+| `bad_beat` | "the bet-on player betrayed you" | held card with most-negative `actualFp − projectedFp` (tiebreak: highest `salary`) | `underperform`, `controversy`, `quietGame` |
+| `big_score` | "they cooked" | highest-`actualFp` card; BRANCH on balance — when top card > 1.3× second card, name the leader; otherwise "whole hand cooked" flavor (no anchor name) | `overperform`, `signatureGames` (date+opp match), `nicknames` |
+| `rare_pull` | "a historic pull" | card carrying record/career/season top-game; tier order record > career > season; tiebreak highest `actualFp` | `signatureGames`, `overperform`, `milestones`, `streakLines` |
+| `miss` | "they almost finished it" | NO player anchor — uses `near_miss_gap` + `near_miss_next_tier` (added in M1) | n/a — pure gap framing |
+| `default` | generic | no anchor | n/a |
+
+**T3 — Two-stage rendering.** The intro is two beats, not one:
+- **Stage 1 — Intro paragraph nudge.** Multi-clause: game context → specific brag (anchor + culture hook) → provocation imperative. Fires on `H2HRecipientPlay`'s `hold_select` state. Sticky in the **hero zone** of `H2HBoardShell`. Dismisses on first hold-tap or on transition past `hold_select`. Mirror the existing GameView dismiss pattern (`GameView.tsx:668-673`) — `lockedCardIds.size > 0 || state ≠ hold_select`. **NEW mount inside `H2HRecipientPlay`**; do NOT route through GameView's `setFtueCommentaryOverride` path (H2H surface bypasses GameView). Existing hero zone scaffold proven by the #3 VS treatment (`H2HRecipientPlay.tsx:isVsBeat ternary, hero zone, 2026-05-31`) — same slot, different content.
+- **Stage 2 — Deal-step nudge.** Shorter, verb-first, one or two clauses. Fires when the recipient has made hold selections and the CTA is about to advance (precisely: rendered alongside `state === "hold_select"` + `cta.label === "Draw"` — i.e. cards held, Draw armed). Same trigger-branched bank, distinct templates. Stage 2 is NOT a replay of Stage 1; it's the "go" beat after the "set the stage" beat.
+
+**T4 — Content assembly.** A new export in `shared/commentary/chadChallenge.ts`: `selectRecipientIntro({ triggerType, challengerName, targetScore, anchor, nearMissGap?, nearMissNextTier? })` and `selectRecipientDealNudge({ triggerType, challengerName, anchor })`. Each takes a pre-selected anchor (the H2H surface does the selection per T2; the chad function does template selection + culture lookup + token substitution). Anchor selection is a separate utility (e.g. `selectIntroAnchor({ triggerType, senderCards, achievements })`) co-located with the chad functions; pure, deterministic, testable in isolation.
+
+**T5 — Culture-aware with generic fallback.**
+- When anchor exists AND `PLAYER_CULTURE[\`${normalize(last)}_${basePlayerId}\`]` exists → use the culture-aware template branch with `{cultureLine}` substituted from the trigger-appropriate culture pool (`underperform` for bad_beat; `overperform`/`signatureGames` for big_score/rare_pull). When `gameInfo.date` + `gameInfo.opponent` match a `signatureGames` entry, prefer the signature-game line over generic `overperform`/`underperform`.
+- When anchor exists but no culture entry → name-only template branch (substitutes `{name}` + flavor, no culture quip). ~207-entry coverage is solid for named stars; the per-card fallback degrades gracefully.
+- When anchor selection itself returns null (no held cards for bad_beat, balanced-line for big_score, no achievement-bearing card for rare_pull) → trigger-flavored generic template (no `{name}`, no `{cultureLine}`).
+- When `resolvedSenderHand` is absent (legacy challenge, sender_resolved:false, prefetch failed) → fall through to the existing `chadChallengeIntro` bank (`{challengerName}` + `{targetScore}` only). Mount point still fires; bank rotates to the legacy generic.
+
+**T6 — Voice guardrail (encode at the top of the new chad export as a comment block, mirroring T2):**
+- Lean on PLAYER_CULTURE-authored material: `nicknames[]`, `controversy[]`, `overperform[]`, `underperform[]`, `signatureGames[]`, `rivalry[]`, `formerTeam[]`. These ~207 entries are hand-authored and reviewed.
+- **DO NOT invent new harsher claims about real players.** "Pulled Harden, Harden's a no-show" is fine ONLY when it's drawn verbatim from culture data (Harden's `controversy` includes "Quit on three teams in three seasons"; his `underperform` includes "The playoff demons are always lurking"). Inventing fresh dirt is out of scope and exposes us to liability the vetted bank doesn't.
+- **NEVER invoke broadcasters, podcasters, or media personalities by name.** No "as Charles Barkley said", no "Bill Simmons take." The Chad voice speaks AT the recipient about the sender's cards — it does not quote third parties.
+- Player-perspective + situation-perspective only. Stay in the second-person ("{name} cooked you"), the player-action ("Harden put up X"), and the cards-on-the-board ("same six cards"). Out-of-game references stay sourced from culture data, not punditry.
+
+**T7 — Mount + dismissal contract.** `H2HRecipientPlay` reads `challengeCtx.triggerType` + `challengeCtx.resolvedSenderHand` at mount, runs anchor selection once (memoized on `[triggerType, resolvedSenderHand]`), passes the resulting `{ anchor, triggerType, ... }` into the new intro renderer. Intro renderer sits in `heroSlot` alongside the existing headline div + VS treatment — same conditional structure as the VS lift-out (#3 hardened 2026-05-31). The intro paragraph displaces the existing `headline` div during `hold_select` and the Deal nudge displaces it just before Draw fires. Dismissal: same trigger as the existing intro chip — first hold-tap OR transition past `hold_select`.
+
+**Locked rules — schema migration (M-series):**
+
+**M1 — Four nullable additive columns on `shared_challenges`.** All ALLOW NULL, all carry defaults of NULL, all additive — no NOT NULL, no DEFAULT that triggers a row-rewrite, no FK constraints. Existing rows continue to function with NULL across all four.
+
+| column | type | source | trigger gate |
+|---|---|---|---|
+| `near_miss_gap` | numeric | `TriggerResult.nearMissGap` | `miss` only |
+| `near_miss_next_tier` | text | `TriggerResult.nearMissNextTier` | `miss` only |
+| `anchor_base_player_id` | text | `TriggerResult.anchorBasePlayerId` | `rare_pull` only (today); design-forward for future per-trigger anchors |
+| `top_game_tier` | text | `TriggerResult.topGameTier` (`"record" | "career" | "season"`) | `rare_pull` only |
+
+The four cover both the `miss` framing (gap + next-tier label) and the `rare_pull` anchor identity (the card + the tier of its top game). The recipient reads these as published facts. Bad_beat anchor + big_score anchor stay client-side derived from `resolvedSenderHand.cards` — both are deterministic per the T2 rules and don't need persistence.
+
+**M2 — Write path.** `api/challenge/create.ts:36` (the same row insert that writes `trigger_type`) extends to write the four new fields from the `TriggerResult` it already receives. NULL-write when the trigger doesn't carry the corresponding field (`near_miss_gap` is NULL on every non-miss row; `anchor_base_player_id` is NULL on every non-rare_pull row).
+
+**M3 — Read path.** `api/challenge/[id].ts:27-49` extends its return object with the four fields, all `?? null`. Same null-safe pattern as the existing `trigger_type: data.trigger_type ?? "default"`.
+
+**M4 — ChallengeCtx threading.** `ChallengeCtx` gains four optional fields mirroring the column names in camelCase: `triggerType?`, `nearMissGap?`, `nearMissNextTier?`, `anchorBasePlayerId?`, `topGameTier?`. (Five total counting `triggerType` from T1.) All optional. `ChallengeLandingScreen.onAccept` reads them from the GET response and forwards.
+
+**M5 — Backward compat — locked.** Legacy rows (pre-migration) and rows created between migration and the next `create.ts` deploy will have all four columns NULL. The recipient intro handles this gracefully: NULL → fall through to per-trigger generic template (no anchor name, no `signatureGames` overlay, no near-miss specifics). For `miss` with NULL gap, the bank rotates to the same generic `{trigger}-bucket fallback used when anchor is absent — never invent a gap.
+
+**Locked rules — backfill (B-series):**
+
+**B1 — Scope.** "Recent" = rows with `final_roster IS NOT NULL`. Per the sender-hand endpoint comment (`api/challenge/[id]/sender-hand.ts:68-86`), `final_roster` population started 2026-05-26; rows before that have NULL final_roster and stay NULL across all four new columns. Backfill runs ONLY against the populated subset. Estimate the row count BEFORE the dry-run (single SELECT count(*) WHERE `final_roster IS NOT NULL AND anchor_base_player_id IS NULL`) so the dry-run output volume is predictable.
+
+**B2 — Faithful recompute or NULL — no guessing.** For each in-scope row, recompute by running the exact same logic the live write path uses:
+- Reconstruct the inputs `evaluateTrigger` needs: `roster` (= `final_roster` cast to `GeneratedCard[]`), `totalFp` (= `hand_log.total_fp`), `winTier` (= `hand_log.tier`), `badges` (derivable from `roster[].achievements`), `winTiersMap` (sport-specific constant), `topGameTier` (re-run `detectTopGame` on the star card), `starBasePlayerId` (re-run `selectStar` on roster).
+- Run `evaluateTrigger(input)` → `TriggerResult`.
+- Write the four columns from `result.nearMissGap`, `result.nearMissNextTier`, `result.anchorBasePlayerId`, `result.topGameTier`. NULL when the field is absent (non-applicable trigger).
+- **If any input reconstruction step fails or returns ambiguously** (e.g. winTiersMap mismatch, basePlayerId missing on the star card, etc.) → SKIP the row, leave columns NULL, log the skip with `challenge_id` + reason. Degradation to generic > a written guess.
+
+**B3 — Mandatory dry-run before any write.** The backfill script runs in three explicit modes:
+- `--dry-run` (DEFAULT): compute + log `{ challenge_id, current_trigger_type, computed_near_miss_gap, computed_near_miss_next_tier, computed_anchor_base_player_id, computed_top_game_tier, skip_reason? }` per row. WRITES NOTHING. Output goes to a file under `~/Desktop/replaymod-handoff/<date>-trigger-backfill/dryrun.jsonl` per the handoff-dir convention. User reviews the file; only after sign-off does any real write happen.
+- `--sample N`: same as dry-run but limited to N rows for spot-checks.
+- `--execute`: applies the writes. ONLY after a dry-run that the user has reviewed. Hard-coded bound (e.g. max-rows guardrail) so a runaway backfill can't touch the whole table; require an explicit `--max-rows` flag with a sane default.
+
+**B4 — Recompute fidelity test.** For a freshly created challenge (created post-migration with the new write path live), running the backfill in dry-run against that row MUST produce the exact same four values that `create.ts` wrote. Pin this as an integration test in B's commit: create challenge → assert dry-run output == row data. If they diverge, the backfill is unfaithful and must be fixed before any execute.
+
+**Sequencing (S-series, gated commits):**
+
+**S1 — Migration + plumbing commit.** No backfill, no intro content yet. Touches:
+- SQL migration adding the four nullable columns to `shared_challenges`.
+- `api/challenge/create.ts` write path (writes new columns from the existing `TriggerResult`).
+- `api/challenge/[id].ts` GET return (null-safe new fields).
+- `ChallengeCtx` interface in `shared/adapters/challengeTypes.ts` (five optional fields counting `triggerType` from T1).
+- `ChallengeLandingScreen.onAccept` threading.
+
+**S1 verifiable:** new challenges populate the four columns end-to-end (sender creates → SELECT shows non-NULL values where applicable → recipient flow exposes them on `challengeCtx`). Existing rows continue to load with NULL columns; recipient intro continues to fire the existing generic `chadChallengeIntro` (no behavior regression). No new intro content yet — just plumbing live + falling through gracefully.
+
+**S2 — Backfill commit.** Touches:
+- Backfill script under `scripts/` (NOT in `api/` — one-off ops tool, not a Vercel function).
+- Three modes per B3: `--dry-run` (default), `--sample N`, `--execute --max-rows N`.
+- Recompute-fidelity integration test per B4.
+
+**S2 verifiable:** dry-run against a freshly created post-S1 challenge reproduces its exact written values (recompute is faithful). Spot-check on legacy rows shows expected NULLs for non-applicable triggers. User reviews dry-run JSONL output before any `--execute` run. After execute, recipient intro on backfilled rows works the same as on freshly created rows.
+
+**S3 — Intro banks + culture assembly + mount.** Touches:
+- New banks in `shared/commentary/chadChallenge.ts`: `INTRO_PARAGRAPH_BAD_BEAT_*`, `INTRO_PARAGRAPH_BIG_SCORE_*`, `INTRO_PARAGRAPH_RARE_PULL_*`, `INTRO_PARAGRAPH_MISS`, `INTRO_PARAGRAPH_DEFAULT`, and Stage-2 Deal-nudge banks (smaller, verb-first).
+- `selectRecipientIntro(...)` + `selectRecipientDealNudge(...)` exports.
+- `selectIntroAnchor({ triggerType, senderCards, anchorBasePlayerId, topGameTier })` utility.
+- Culture lookup helper that scans `signatureGames` by `(date, opponent)` and falls back to trigger-appropriate pools.
+- Mount inside `H2HRecipientPlay`: read `challengeCtx.triggerType` + `resolvedSenderHand`, run anchor selection (memoized), render the chosen intro inside `heroSlot` via the same conditional pattern as the VS treatment (`isVsBeat ternary`).
+- Voice guardrail comment block at the top of the new exports (T6 verbatim).
+- Tests: `__tests__/chadChallenge.test.tsx` covers the new selectors + anchor utility deterministically; H2HRecipientPlay integration test verifies the chip mounts during `hold_select` and dismisses on first hold-tap + transition past `hold_select`.
+
+**S3 verifiable:** real-browser harness extends with the intro chip presence assertion (analogous to the VS check pattern). Voice sharpened against the example paragraphs the user pre-approved during the doc-lock investigation. No new harsher claims about real players — every culture-sourced clause cross-references a vetted bank entry in `PLAYER_CULTURE`.
+
+**What this locks out:**
+- No promoting bad_beat anchor or big_score anchor to persisted columns. Both are deterministic from `resolvedSenderHand.cards`. Persisting them duplicates state and creates a freshness skew if `resolvedSenderHand` ever changes shape.
+- No inventing intro lines that reference real players outside what `PLAYER_CULTURE` has already authored. The culture DB is the bank; chad templates substitute, never invent.
+- No mounting the intro through GameView. The H2H playing surface bypasses GameView; the chip lives inside `H2HRecipientPlay`'s heroSlot.
+- No swap of the Stage 1 / Stage 2 rendering surfaces. Both fire in the same heroSlot via conditional rendering; Stage 1 during `hold_select` (no held cards yet or before Draw is armed), Stage 2 after holds are made + Draw armed. Both dismiss on transition past `hold_select`.
+- No optional NOT-NULL columns or DEFAULT values that trigger row-rewrites. M1 is strict additive nullable.
+- No unbounded backfill writes. B3 hard-requires dry-run review + `--max-rows` guardrail before any `--execute`.
+- No "best-effort" backfill that writes guesses when inputs are ambiguous. B2 leaves columns NULL on any uncertainty; degradation is the intended fallback.
+- No backfill against rows with `final_roster IS NULL`. Those stay NULL forever — the recipient intro generic fallback exists exactly for these.
+- No content writes in S1 or S2. The first two commits are pure infrastructure + data; voice goes live only at S3.
+
+**Status of prior EDITs:** none affected. The 2026-05-30 EDITs on the strip-sort contract, the S3→S4 surface continuity, the S5 held-card invariant, and the 2026-05-31 #3 VS treatment hardening all stand. Phase 5c is additive to the H2H rework, not modifying it.
+
+---
+
 ### Phase 5b piece 2b+2c — recipient-play on H2H surface + drawing mechanic (locked 2026-05-28)
 
 **Rationale:** the current recipient flow is two disjoint UIs — recipient taps challenge link → lands on normal game UI → plays hand there → transitions to H2H reveal arc + overlay. First-time recipients have no context for what's happening when the UI swaps mid-experience. Locked solution: recipient lands DIRECTLY on the H2H surface in a new "playing" mode, draws and holds their hand there, then transitions to reveal arc + overlay without changing surfaces. Single coherent experience.
