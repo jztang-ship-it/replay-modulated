@@ -42,7 +42,7 @@ Culture entries are 3rd-person ABOUT a player (generated from the per-sport voic
 
 - **F1 — Second person.** Frames talk TO the recipient, trash-talking the sender's hand. The 3rd-person player take is the `{cultureLine}`'s job.
 - **F2 — Graceful handoff.** `{cultureLine}` is randomly chosen; the frame must read clean in front of or behind ANY culture line. Never assume its content. The seam is the #1 robotic tell.
-- **F3 — No gamified jargon.** Banned: "lock in your reads," "cook it," "your turn at the wheel," "run it back," bare "Draw." as a sentence. Chad doesn't speak in UI verbs.
+- **F3 — No gamified jargon.** Banned: "lock in your reads," "cook it," "your turn at the wheel," bare "Draw." as a sentence. Chad doesn't speak in UI verbs. Surface-aware clarification: rematch CTAs ("run it back," "send it back," "run another") are idiomatic sports trash-talk and remain allowed on the comparison-sheet / rivalry surfaces; only UI-verb jargon ("lock in your reads," bare "Draw.") is banned.
 - **F4 — Nudge surfaces** (Stage 2 / CTA-adjacent) run shorter than 12–22 words but still carry a take, never a naked command.
 
 ---
