@@ -1043,3 +1043,97 @@ describe("H2HRecipientPlay — happy-path E2E (regression-lock for C/D fixed)", 
     );
   });
 });
+
+// ── 10. Recipient contextual intro (Phase 5c S3) ───────────────────────
+
+describe("H2HRecipientPlay — Stage 1/2 intro mount (Phase 5c S3)", () => {
+  async function dealThroughCtx(ctx: ChallengeCtx) {
+    vi.useFakeTimers();
+    const utils = render(<H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />);
+    fireEvent.click(screen.getByText("Deal"));
+    await act(async () => {
+      vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
+    });
+    return utils;
+  }
+
+  function s3Ctx(over: Partial<ChallengeCtx> = {}): ChallengeCtx {
+    return makeCtx({
+      // big_score trigger keeps the test independent of culture lookup
+      // (the NAME bank path fires for any non-elite tier card, since
+      // lookupCulture returns null for our PURPLE/GREEN test cards
+      // without iconic nicknames in the real culture DB).
+      triggerType: "big_score",
+      resolvedSenderHand: makeSenderHand(),
+      anchorBasePlayerId: "p3", // matches makeRoster's basePlayerId pattern
+      ...over,
+    });
+  }
+
+  it("mounts Stage 1 intro during hold_select entry (no holds yet)", async () => {
+    const { container } = await dealThroughCtx(s3Ctx());
+    const stage1 = container.querySelector('[data-h2h-play-intro="stage1"]');
+    expect(stage1).not.toBeNull();
+    // Existing instructional headline is displaced by the intro.
+    expect(container.querySelector("[data-h2h-play-headline]")).toBeNull();
+  });
+
+  it("swaps Stage 1 → Stage 2 on first hold-tap", async () => {
+    const { container } = await dealThroughCtx(s3Ctx());
+    expect(container.querySelector('[data-h2h-play-intro="stage1"]')).not.toBeNull();
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    expect(container.querySelector('[data-h2h-play-intro="stage1"]')).toBeNull();
+    expect(container.querySelector('[data-h2h-play-intro="stage2"]')).not.toBeNull();
+  });
+
+  it("Stage 1 stays dismissed after un-hold back to held.size === 0", async () => {
+    const { container } = await dealThroughCtx(s3Ctx());
+    // Hold then un-hold the same cell.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    // Neither stage shows; existing headline takes back over.
+    expect(container.querySelector('[data-h2h-play-intro="stage1"]')).toBeNull();
+    expect(container.querySelector('[data-h2h-play-intro="stage2"]')).toBeNull();
+    expect(container.querySelector("[data-h2h-play-headline]")).not.toBeNull();
+  });
+
+  it("does not mount intro on pre_deal", () => {
+    const { container } = render(
+      <H2HRecipientPlay {...baseProps()} challengeCtx={s3Ctx()} />,
+    );
+    expect(container.querySelector('[data-h2h-play-intro="stage1"]')).toBeNull();
+    expect(container.querySelector('[data-h2h-play-intro="stage2"]')).toBeNull();
+  });
+
+  it("collapses past hold_select (handoff_resolving → VS treatment takes over)", async () => {
+    // Use real timers so the async redraw + resolve chain advances.
+    const ctx = s3Ctx();
+    const props = baseProps();
+    const { container } = render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
+    fireEvent.click(screen.getByText("Deal"));
+    // Wait for hold_select.
+    await waitFor(() => expect(screen.queryByText("Draw")).not.toBeNull(), { timeout: 3000 });
+    fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
+    expect(container.querySelector('[data-h2h-play-intro="stage2"]')).not.toBeNull();
+    fireEvent.click(screen.getByText("Draw"));
+    // Eventually transitions past hold_select; the VS block mounts and
+    // both intro stages collapse.
+    await waitFor(
+      () => expect(container.querySelector("[data-h2h-play-vs]")).not.toBeNull(),
+      { timeout: 6000 },
+    );
+    expect(container.querySelector('[data-h2h-play-intro="stage1"]')).toBeNull();
+    expect(container.querySelector('[data-h2h-play-intro="stage2"]')).toBeNull();
+  });
+
+  it("mounts Stage 1 via the legacy chadChallengeIntro path when triggerType is absent", async () => {
+    // T5 level 4 fallback: no triggerType, no anchor, no resolvedSenderHand
+    // → selectRecipientIntro returns a single-string Line wrapping
+    // chadChallengeIntro. The mount still fires. Content of the
+    // legacy line (challenger name + target) is verified in
+    // recipientIntro.test.ts; here we only confirm the mount survives
+    // the legacy data shape (no flat error / null Line).
+    const { container } = await dealThroughCtx(makeCtx());
+    expect(container.querySelector('[data-h2h-play-intro="stage1"]')).not.toBeNull();
+  });
+});

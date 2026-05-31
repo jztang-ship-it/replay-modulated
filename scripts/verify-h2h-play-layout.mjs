@@ -287,6 +287,38 @@ async function runPlayHarness(browser) {
     `count=${hBadgeCountPreTap}`,
   );
 
+  // Phase 5c S3 — recipient contextual intro presence. Mirrors the VS
+  // check pattern below. Pre-tap (hold_select, held.size === 0,
+  // intro not yet dismissed): Stage 1 paragraph mounts in heroSlot;
+  // existing instructional headline is displaced.
+  const stage1Snap = await page.evaluate(() => {
+    const stage1 = document.querySelector('[data-h2h-play-intro="stage1"]');
+    const stage2 = document.querySelector('[data-h2h-play-intro="stage2"]');
+    const headline = document.querySelector("[data-h2h-play-headline]");
+    return {
+      stage1Mounted: !!stage1,
+      stage1NonEmpty: (stage1?.textContent ?? "").trim().length > 0,
+      stage2Mounted: !!stage2,
+      headlineMounted: !!headline,
+    };
+  });
+  record(
+    `S3 Stage 1: [data-h2h-play-intro="stage1"] mounted at hold_select pre-tap`,
+    stage1Snap.stage1Mounted === true,
+  );
+  record(
+    `S3 Stage 1: paragraph has non-empty text content`,
+    stage1Snap.stage1NonEmpty === true,
+  );
+  record(
+    `S3 Stage 1: Stage 2 element NOT mounted pre-tap`,
+    stage1Snap.stage2Mounted === false,
+  );
+  record(
+    `S3 Stage 1: existing instructional headline displaced`,
+    stage1Snap.headlineMounted === false,
+  );
+
   // Tap slot 2 → assert exactly 1 H badge total, inside cell 2.
   await page.locator(`[data-h2h-play-bottom-cell="2"]`).click();
   await page.waitForTimeout(50); // React commit
@@ -295,6 +327,30 @@ async function runPlayHarness(browser) {
     `H badge count == 1 on bottom strip after tap on slot 2 (Fix 1 regression-lock)`,
     hBadgeCountAfterTap === 1,
     `count=${hBadgeCountAfterTap}`,
+  );
+
+  // Phase 5c S3 — Stage 1 → Stage 2 swap on first hold-tap. held.size
+  // is now 1; Stage 1 collapses, Stage 2 (deal nudge) takes its place.
+  const stage2Snap = await page.evaluate(() => {
+    const stage1 = document.querySelector('[data-h2h-play-intro="stage1"]');
+    const stage2 = document.querySelector('[data-h2h-play-intro="stage2"]');
+    return {
+      stage1Mounted: !!stage1,
+      stage2Mounted: !!stage2,
+      stage2NonEmpty: (stage2?.textContent ?? "").trim().length > 0,
+    };
+  });
+  record(
+    `S3 Stage 2: [data-h2h-play-intro="stage2"] mounted after first hold-tap`,
+    stage2Snap.stage2Mounted === true,
+  );
+  record(
+    `S3 Stage 2: Stage 1 element collapsed after first hold-tap`,
+    stage2Snap.stage1Mounted === false,
+  );
+  record(
+    `S3 Stage 2: deal nudge has non-empty text content`,
+    stage2Snap.stage2NonEmpty === true,
   );
   const hBadgeInsideCell2 = await page
     .locator(`[data-h2h-play-bottom-cell="2"] svg polygon[fill="#F5C850"]`)

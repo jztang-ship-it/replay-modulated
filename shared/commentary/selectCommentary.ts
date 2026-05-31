@@ -878,7 +878,7 @@ function applyEraOverlay(culture: any, team: string | undefined): any {
   return overlay;
 }
 
-function lookupCulture(
+export function lookupCulture(
   name: string,
   sport: string,
   cardTier?: string,
