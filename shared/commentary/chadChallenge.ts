@@ -129,15 +129,15 @@ const TRASH_LOSS_BIG_UNNAMED: string[] = [
 // Loss narrow — −15 < delta < −1. Tone: "right there", name the rival's sweat, forward verb.
 const TRASH_LOSS_NARROW_NAMED: string[] = [
   "The kind of loss that haunts you. Run it back.",
-  "Right there. Try another hand.",
+  "Right there and gone. Go get the next one.",
   "Almost. {name}'s sweating — but still won. Cook a real one.",
-  "Brutal. Build a fresh hand.",
+  "Brutal margin. Cook a cleaner one.",
 ];
 const TRASH_LOSS_NARROW_UNNAMED: string[] = [
   "The kind of loss that haunts you. Run it back.",
-  "Right there. Try another hand.",
+  "Right there and gone. Go get the next one.",
   "Almost. Your friend's sweating — but still won. Cook a real one.",
-  "Brutal. Build a fresh hand.",
+  "Brutal margin. Cook a cleaner one.",
 ];
 
 // Photo finish — |delta| ≤ 1. Tone: drama, one more hand.

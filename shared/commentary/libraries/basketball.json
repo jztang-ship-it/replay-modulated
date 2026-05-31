@@ -1381,7 +1381,7 @@
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "bk_0099",
@@ -1441,7 +1441,7 @@
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "bk_0104",
@@ -1513,7 +1513,7 @@
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "bk_0110",
@@ -1621,7 +1621,7 @@
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "bk_0119",
@@ -1657,7 +1657,7 @@
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "bk_0122",
@@ -1705,7 +1705,7 @@
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "bk_0126",
@@ -2017,6 +2017,150 @@
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
+      "enabled": true
+    },
+    {
+      "id": "bk_0284",
+      "sport": "basketball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "hype",
+      "template": "Six guys, one number, zero heroes — {last}'s roster won this like a relay, everybody ran their leg.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_0285",
+      "sport": "basketball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "hype",
+      "template": "No fireworks from {nick}, no problem. The whole rotation chipped in and the hand never broke a sweat.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_0286",
+      "sport": "basketball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "warm",
+      "template": "Some nights the star sits back and lets the room work. {nick} did exactly that, and it paid.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_0287",
+      "sport": "basketball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "warm",
+      "template": "{last} didn't need to be the guy tonight — the roster had five other answers and used all of them.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_0288",
+      "sport": "basketball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "{nick} mailed it in and the postman still got paid. Depth is a beautiful thing.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_0289",
+      "sport": "basketball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "culture_wry",
+      "template": "No main character in this box score, and {last}'s hand cashed anyway. The committee says you're welcome.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_0290",
+      "sport": "basketball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "observational",
+      "template": "Nobody on {last}'s slate cleared twenty, and nobody had to. Even production, clean result.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_0291",
+      "sport": "basketball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "observational",
+      "template": "The stat sheet around {nick} reads like a group project where everyone actually did the work.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_0292",
+      "sport": "basketball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "analytical",
+      "template": "Variance hit the anchor and the roster ate it. {last}'s floor was high enough that the cold night never mattered.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_0293",
+      "sport": "basketball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "analytical",
+      "template": "Spread the production thin enough and no single cold card sinks you. That's the math {nick}'s hand just ran.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_0294",
+      "sport": "basketball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "Star sat out, statistically speaking. {last}'s roster didn't notice. Hand cashed.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 8,
+      "enabled": true
+    },
+    {
+      "id": "bk_0295",
+      "sport": "basketball",
+      "archetype": "balanced_win",
+      "register": "win",
+      "tone": "deadpan",
+      "template": "No hero around {nick} tonight. The total didn't ask for one.",
+      "tags": [],
+      "humorStyle": [],
+      "qualityScore": 8,
       "enabled": true
     }
   ],
@@ -3597,7 +3741,7 @@
       "archetype": "badge_explosion",
       "register": "win",
       "tone": "culture_wry",
-      "template": "{last} put up a {badge}{opp} and honestly the rest of the league should be taking notes right now.",
+      "template": "{last} put up a {badge}{opp}. The kind of line that makes the group chat go quiet.",
       "tags": [],
       "humorStyle": [],
       "qualityScore": 7,
