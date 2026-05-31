@@ -13,6 +13,11 @@ const CREATE_VERSION = "phase5c-S1-bumped-2026-06-01";
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST required" });
 
+  // One-line version log per request — surfaces in Vercel function logs.
+  // Cheap permanent marker so future "is the new code actually deployed?"
+  // questions can be answered without re-instrumenting.
+  console.info("[create.ts]", CREATE_VERSION);
+
   const { user, error: authErr } = await verifyAuth(req);
   if (authErr) return res.status(authErr.status).json({ error: "UNAUTHORIZED" });
 
@@ -57,65 +62,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     top_game_tier: top_game_tier ?? null,
   };
 
-  // Server-side diagnostic — Vercel function logs. Proves: (a) which
-  // version of this handler is running; (b) what the destructure
-  // produced from req.body for the four detail fields; (c) what the
-  // insert payload contains for the four detail fields immediately
-  // before being passed to supabase. If this log shows non-null values
-  // AND the prod DB row is still null, the drop is downstream of the
-  // .insert() call — almost certainly the PostgREST schema cache (see
-  // README footer of this file).
-  console.info("[create.ts]", {
-    version: CREATE_VERSION,
-    body_keys: Object.keys(req.body ?? {}),
-    received: {
-      trigger_type,
-      near_miss_gap,
-      near_miss_next_tier,
-      anchor_base_player_id,
-      top_game_tier,
-    },
-    insert_payload_detail: {
-      trigger_type: insertPayload.trigger_type,
-      near_miss_gap: insertPayload.near_miss_gap,
-      near_miss_next_tier: insertPayload.near_miss_next_tier,
-      anchor_base_player_id: insertPayload.anchor_base_player_id,
-      top_game_tier: insertPayload.top_game_tier,
-    },
-  });
-
   const { data, error } = await supabaseAdmin
     .from("shared_challenges")
     .insert(insertPayload)
-    .select("challenge_id, anchor_base_player_id, top_game_tier, near_miss_gap, near_miss_next_tier")
+    .select("challenge_id")
     .single();
 
   if (error || !data) {
     console.error("[challenge/create]", error);
     return res.status(500).json({ error: "Failed to create challenge" });
   }
-
-  // Post-insert verification — fetches the four detail fields back
-  // from the row we just wrote. If insert_payload_detail above showed
-  // non-null values AND this echoes null, the round-trip through
-  // PostgREST silently dropped the column writes — schema-cache miss
-  // is the canonical Supabase cause. The mitigation is to NOTIFY
-  // PostgREST to reload its schema from the SQL editor:
-  //
-  //   NOTIFY pgrst, 'reload schema';
-  //
-  // (or restart the project from the Supabase dashboard). The schema
-  // cache stale window can persist after a migration if nothing has
-  // triggered a reload; the migration itself doesn't auto-reload.
-  console.info("[create.ts] post_insert", {
-    challenge_id: data.challenge_id,
-    persisted_detail: {
-      anchor_base_player_id: (data as any).anchor_base_player_id,
-      top_game_tier: (data as any).top_game_tier,
-      near_miss_gap: (data as any).near_miss_gap,
-      near_miss_next_tier: (data as any).near_miss_next_tier,
-    },
-  });
 
   const challengeId = data.challenge_id;
   const shareUrl = `https://replayifs.com/${sport}/challenge/${challengeId}`;

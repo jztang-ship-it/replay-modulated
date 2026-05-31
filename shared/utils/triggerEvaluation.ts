@@ -92,29 +92,7 @@ const MISS_WINDOW = 5;
  *  hatch rather than an expected outcome). */
 function selectBadBeatAnchor(roster: GeneratedCard[]): string | null {
   const held = roster.filter(c => c.wasHeld === true);
-  // TEMP-DEBUG (Phase 5c diagnostic, removable). Logs what the helper
-  // received and what it chose. heldCount=0 with a "BUST + held R/O"
-  // trigger gate means wasHeld is being scrubbed somewhere between
-  // hold-resolution and trigger eval.
-  // eslint-disable-next-line no-console
-  console.log("[DBG] badbeat-anchor input", {
-    rosterLen: roster.length,
-    heldCount: held.length,
-    held: held.map(c => ({
-      id: c.basePlayerId,
-      name: (c as any).name,
-      actualFp: c.actualFp,
-      projectedFp: c.projectedFp,
-      delta: (c.actualFp ?? 0) - (c.projectedFp ?? 0),
-      salary: c.salary,
-      wasHeld: c.wasHeld,
-    })),
-  });
-  if (held.length === 0) {
-    // eslint-disable-next-line no-console
-    console.log("[DBG] badbeat-anchor chosen", { result: null, reason: "no-held" });
-    return null;
-  }
+  if (held.length === 0) return null;
   let best = held[0];
   let bestDelta = (best.actualFp ?? 0) - (best.projectedFp ?? 0);
   let bestSalary = best.salary ?? 0;
@@ -128,37 +106,14 @@ function selectBadBeatAnchor(roster: GeneratedCard[]): string | null {
       bestSalary = salary;
     }
   }
-  const chosen = best.basePlayerId ?? null;
-  // eslint-disable-next-line no-console
-  console.log("[DBG] badbeat-anchor chosen", {
-    result: chosen,
-    name: (best as any).name,
-    delta: bestDelta,
-    salary: bestSalary,
-  });
-  return chosen;
+  return best.basePlayerId ?? null;
 }
 
 /** big_score anchor: the card that drove the win. Pick highest actualFp; when
  *  the runner-up is within 1 FP, prefer the wasHeld card (bet-on player gets
  *  credit over a hot replacement). Returns null on empty roster. */
 function selectBigScoreAnchor(roster: GeneratedCard[]): string | null {
-  // TEMP-DEBUG (Phase 5c diagnostic, removable).
-  // eslint-disable-next-line no-console
-  console.log("[DBG] bigscore-anchor input", {
-    rosterLen: roster.length,
-    cards: roster.map(c => ({
-      id: c.basePlayerId,
-      name: (c as any).name,
-      actualFp: c.actualFp,
-      wasHeld: c.wasHeld,
-    })),
-  });
-  if (roster.length === 0) {
-    // eslint-disable-next-line no-console
-    console.log("[DBG] bigscore-anchor chosen", { result: null, reason: "empty-roster" });
-    return null;
-  }
+  if (roster.length === 0) return null;
   let topFp = -Infinity;
   for (const c of roster) {
     const fp = c.actualFp ?? 0;
@@ -175,16 +130,7 @@ function selectBigScoreAnchor(roster: GeneratedCard[]): string | null {
   for (let i = 1; i < pool.length; i++) {
     if ((pool[i].actualFp ?? 0) > (best.actualFp ?? 0)) best = pool[i];
   }
-  const chosen = best.basePlayerId ?? null;
-  // eslint-disable-next-line no-console
-  console.log("[DBG] bigscore-anchor chosen", {
-    result: chosen,
-    name: (best as any).name,
-    topFp,
-    withinWindow: within.length,
-    heldWithin: heldWithin.length,
-  });
-  return chosen;
+  return best.basePlayerId ?? null;
 }
 
 export function evaluateTrigger(input: TriggerInput): TriggerResult {
