@@ -737,6 +737,29 @@ Trigger-emit matrix after Path A:
 
 **Status of prior EDITs:** none affected. The 2026-05-30 EDITs on the strip-sort contract, the S3→S4 surface continuity, the S5 held-card invariant, and the 2026-05-31 #3 VS treatment hardening all stand. Phase 5c is additive to the H2H rework, not modifying it.
 
+**S3 pre-implementation amendment — investigation confirmation + two constraints (2026-05-31):** a read pass ahead of S3 confirms the S1/M plumbing is live and the recipient-side populate seam is intact end-to-end, and records two additive constraints for the S3 banks plus two footer nits. **No T/M/B/S decision changes** — status + additive only; everything below cross-references existing locks rather than restating them.
+
+- **S1/M plumbing — read-side seam verified.** Path A (2026-06-01 EDIT) established write-side anchor persistence + the bad_beat non-null confirm. The recipient READ side is now also confirmed at the code level: M3 read path (`[id].ts` returns all five `?? null`) and M4 threading (`ChallengeLandingScreen.onAccept`, lines 96–111) map all five snake→camel onto `ChallengeCtx` with no dropped field. Residual before S3 ships: the read side is code-correct but not yet *live*-confirmed — verify `ctx.anchorBasePlayerId` arrives non-null in `H2HRecipientPlay` on a real prod challenge that fired (e.g. a rare_pull). Light check per the standing live-verification gate, not a blocker.
+
+- **S3 CONSTRAINT — anti-repeat must reuse the LOCAL ring buffer (scar tissue, net-new to this section).** The T4/S3 banks (`selectRecipientIntro` / `selectRecipientDealNudge`) dedup via the local `pickWithAntiRepeat` already in `chadChallenge.ts`, NOT the shared `shared/commentary/antiRepeat` module. The shared module requires `(lineId, archetype, tone, resolvedLine)`; called with the chad banks' shape it leaves `resolvedLine` undefined and crashed the renderer the first time `selectChallengeInitiation`'s rare_pull path fired live. For the `Line`-shaped paragraph banks (inline `StampToken`), pass `JSON.stringify` as the key fn, matching the existing `Line` banks. This is the same green-but-null class the T/M/B locks already guard — here in the render layer.
+
+- **S3 naming reconciliation.** The phase-5c handover summary calls the new export `chadChallengeRecipientIntro`. The canonical names are this section's T4/S3 names: `selectRecipientIntro`, `selectRecipientDealNudge`, `selectIntroAnchor`. Doc names win; the handover phrasing was loose.
+
+- **Footer (out of scope, NOT actioned here):** (1) `api/challenge/[id].ts:27–30` comment claims the handler whitelists *to camelCase*, but the body emits snake_case — harmless today (the real snake→camel conversion is M4, in `ChallengeLandingScreen`), but it will misdirect a future debugger to the wrong file; worth a one-line comment correction sometime. (2) `ChallengeLandingScreen.tsx:106` casts `data.trigger_type` (typed `string`) into the `triggerType` union via `as` with no runtime guard — safe only because `create.ts` constrains writes; a stray DB value would pass through unvalidated.
+
+**SHIPPED & live-verified — 2026-05-31, commit `15396a5` (merged to main via `02cd0e6`).** S3 lands per the T/M/B/S locks + the pre-implementation amendment above. Verification:
+- **Build:** 659/659 vitest pass, `tsc --noEmit` clean, `bash scripts/build-vercel.sh` builds all three sport trees, function count still 11/12 (no new serverless function).
+- **Live confirm on a real prod `bad_beat` challenge** (DeRozan anchor — Path A persisted at create time, picked up on recipient ctx as non-null `anchorBasePlayerId`). Five behaviors observed in the browser:
+  1. Anchor resolved via Path A id, not derivation fallback (the bad_beat ctx delivered `anchorBasePlayerId` non-null per the 2026-06-01 EDIT).
+  2. Culture-aware paragraph rendered (T5 level 1 — anchor + culture entry + cultureLine substituted from the vetted DB; T6 voice guardrail holds).
+  3. Inline stamp rendered (`bad_beat` chip via `PartsLine` → existing `tg-inline-stamp` axis from `TierGauge`).
+  4. Stage swap working — Stage 1 paragraph on `hold_select` entry, Stage 2 deal nudge on first hold-tap, both collapse past `hold_select`.
+  5. Ref-pinned line stable across re-holds — the `useRef` + string-signature pattern (see `feedback_react_random_selectors.md`) prevents `pickWithAntiRepeat` from re-firing on parent rerenders. Caught + applied at code-review before ship.
+- **Visual harness:** intro-presence assertions added to `scripts/verify-h2h-play-layout.mjs` (Stage 1 mounted pre-tap; Stage 2 mounted post-tap; existing headline displaced). Not re-run at merge time — replaced by the live browser pass above. Reusable for future regression checks.
+- **Tone:** banks are first-draft with the `⚠️ TONE-REVIEW` marker on the T6 voice guardrail block. Human tone pass is the natural follow-up; structural locks (anti-repeat, fallback chain, anchor resolution) hold regardless of how lines get tuned.
+
+What this leaves open: the two footer nits (api/challenge/[id].ts comment correction + ChallengeLandingScreen.tsx:106 runtime guard) explicitly out of scope per the amendment; not actioned. S2 backfill stays parked — `--execute` deferred, un-park gate unchanged. Phase 5c is functionally complete at S1+S3 plumbing + content; S2 backfill is the rows-without-anchors mop-up, separate trigger.
+
 ---
 
 ### Phase 5b piece 2b+2c — recipient-play on H2H surface + drawing mechanic (locked 2026-05-28)
