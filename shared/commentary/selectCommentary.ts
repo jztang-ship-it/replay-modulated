@@ -769,17 +769,27 @@ function applyFraming(
     ? joinBeats(main, usableFraming, seed, 17, true)
     : main;
 
+  // Defect fix (2026): modes 3 and 5 previously discarded a wantsChad-produced
+  // analogy unconditionally, causing ~17% of STARTER_normal hands to render
+  // bare one-clause despite the assembler having a non-empty analogy ready.
+  // Both modes now route through withAnalogy() — which is a no-op when
+  // analogy === "" (see line 719), so the "no-analogy" shapes are preserved
+  // intact for wantsChad=false hands. The achievement modes-2/3 restriction
+  // (above) is unchanged; only the behavior of mode 3 is widened.
   switch (mode) {
     case 5:
-      // framing → main, no analogy
-      return usableFraming ? lead() : main;
+      // framing → main → optional trailing analogy (no-op when analogy === "")
+      return withAnalogy(usableFraming ? lead() : main);
     case 4:
       // analogy → main, no framing
       if (analogy) return joinBeats(analogy, main, seed, 23, false);
       return withAnalogy(lead());
     case 3:
-      // bare main, no framing, no analogy (compact)
-      return main;
+      // main → optional trailing analogy (no-op when analogy === "")
+      // Previously: bare main alone; the fix preserves that shape only when
+      // no analogy was produced (wantsChad=false), eliminating the silent
+      // discard when one was.
+      return withAnalogy(main);
     case 2:
       // no framing, trailing analogy
       return withAnalogy(main);
