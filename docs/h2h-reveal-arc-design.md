@@ -656,6 +656,28 @@ The four cover both the `miss` framing (gap + next-tier label) and the `rare_pul
 
 **M5 — Backward compat — locked.** Legacy rows (pre-migration) and rows created between migration and the next `create.ts` deploy will have all four columns NULL. The recipient intro handles this gracefully: NULL → fall through to per-trigger generic template (no anchor name, no `signatureGames` overlay, no near-miss specifics). For `miss` with NULL gap, the bank rotates to the same generic `{trigger}-bucket fallback used when anchor is absent — never invent a gap.
 
+**EDIT 2026-06-01 (Path A — anchor persisted for bad_beat + big_score too, supersedes the rare_pull-only restriction on M1 and the client-side-derived rationale):** the M1 trigger-gate on `anchor_base_player_id` is widened from "rare_pull only (today)" to **"rare_pull + bad_beat + big_score"**. The "Bad_beat anchor + big_score anchor stay client-side derived from `resolvedSenderHand.cards`" paragraph at the end of M1 is superseded — anchor is persisted at create time for all three persistable triggers; client-side derivation is reserved as a fallback path only for legacy or null-column rows (the M5 graceful-degradation rule unchanged).
+
+The change was driven by a post-S1-deploy prod observation: a freshly-created `bad_beat` challenge persisted `anchor_base_player_id = NULL`, because `evaluateTrigger`'s `bad_beat` branch (and `big_score` branch) returned only `{ trigger, headline }` and never emitted `anchorBasePlayerId`. The asymmetry between `rare_pull` (anchor persisted) and `bad_beat`/`big_score` (anchor null, intended for client-side derivation) became visibly unattractive in the row. Closing the asymmetry by persisting at create time is cheaper than carrying client-side anchor selection in S3 forever, and makes anchor available as a published fact for any future surface that wants it (notifications, OG cards, analytics).
+
+Trigger-emit matrix after Path A:
+
+| trigger | `anchorBasePlayerId` | `topGameTier` | `nearMissGap` | `nearMissNextTier` |
+|---|---|---|---|---|
+| `rare_pull` | ✅ from `starBasePlayerId` input | ✅ from `topGameTier` input | — | — |
+| `big_score` | ✅ highest `actualFp`, prefer `wasHeld` within 1 FP | — | — | — |
+| `miss` | — | — | ✅ computed | ✅ computed |
+| `bad_beat` | ✅ worst held `actualFp − projectedFp`, tiebreak `salary` | — | — | — |
+| `default` | — | — | — | — |
+
+`default` continues to carry no anchor (no anchor concept by design — generic "{fp} FP on the board" framing only). `miss` continues to carry only gap + next_tier (no player anchor — gap framing is the bucket).
+
+**B-rule update (anchor scope on the backfill):** S2's backfill scope extends to recompute anchor for `bad_beat` and `big_score` rows, not just `rare_pull`. The faithful-recompute gate is unchanged: write only when today's `evaluateTrigger(reconstruct(row)).trigger === row.trigger_type`. Expected effect on the dry-run row counts: most backfill-eligible rows fall in `bad_beat` or `big_score`, so this materially increases the rows that will get an anchor written compared to the rare_pull-only scope. Worth noting in the dry-run review so the user expects the larger write set.
+
+**Test pattern (the lesson):** S1's tests proved propagation (mock → body) but never proved emission (real input → evaluateTrigger → body). The bad_beat null-anchor bug shipped past green tests because the bad_beat test was structured as `mock = { trigger: "bad_beat", headline }` → assert body fields null, which faithfully tested the OLD design. Path A's tests close the gap with an end-to-end pattern: build a real `TriggerInput`, call REAL `evaluateTrigger`, pass the result into `createChallenge`, assert the POST body's `anchor_base_player_id` is the expected `basePlayerId`. Every future trigger-detail field added to this system MUST land with an emission test of this shape; propagation-only coverage is insufficient.
+
+**Status of prior EDITs:** all 2026-05-30 EDITs and the 2026-05-31 #3 VS hardening unaffected. The "all five Phase 5c locks (T/M/B/S series) hold" statement still applies, EXCEPT the rare_pull-only restriction on M1 and the client-side-derived paragraph, both of which this EDIT supersedes verbatim above.
+
 **Locked rules — backfill (B-series):**
 
 **B1 — Scope.** "Recent" = rows with `final_roster IS NOT NULL`. Per the sender-hand endpoint comment (`api/challenge/[id]/sender-hand.ts:68-86`), `final_roster` population started 2026-05-26; rows before that have NULL final_roster and stay NULL across all four new columns. Backfill runs ONLY against the populated subset. Estimate the row count BEFORE the dry-run (single SELECT count(*) WHERE `final_roster IS NOT NULL AND anchor_base_player_id IS NULL`) so the dry-run output volume is predictable.

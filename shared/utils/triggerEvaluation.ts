@@ -72,6 +72,67 @@ export interface TriggerResult {
 
 const MISS_WINDOW = 5;
 
+// ── Anchor selection helpers (Phase 5c Path A, 2026-06-01) ─────────────────
+//
+// Per the doc lock T2 anchor-selection rule (docs/h2h-reveal-arc-design.md
+// Phase 5c), bad_beat and big_score now persist anchorBasePlayerId at create
+// time alongside rare_pull. The recipient intro reads the anchor as a
+// published fact rather than re-deriving on every render.
+//
+// The selectors are deterministic and pure — same inputs always produce the
+// same anchor. Both tolerate missing fields on roster cards (defensive
+// `?? 0` / `?? null`) so legacy or partially-populated rosters degrade
+// without throwing.
+
+/** bad_beat anchor: the held card the sender was relying on that disappointed
+ *  most. Filter to wasHeld===true; pick most-negative (actualFp - projectedFp);
+ *  tiebreak highest salary (bigger conviction = bigger betrayal). Returns null
+ *  when there are no held cards on the roster (the trigger guarantees ≥1
+ *  high-tier held card upstream, so this null path is a defensive escape
+ *  hatch rather than an expected outcome). */
+function selectBadBeatAnchor(roster: GeneratedCard[]): string | null {
+  const held = roster.filter(c => c.wasHeld === true);
+  if (held.length === 0) return null;
+  let best = held[0];
+  let bestDelta = (best.actualFp ?? 0) - (best.projectedFp ?? 0);
+  let bestSalary = best.salary ?? 0;
+  for (let i = 1; i < held.length; i++) {
+    const c = held[i];
+    const delta = (c.actualFp ?? 0) - (c.projectedFp ?? 0);
+    const salary = c.salary ?? 0;
+    if (delta < bestDelta || (delta === bestDelta && salary > bestSalary)) {
+      best = c;
+      bestDelta = delta;
+      bestSalary = salary;
+    }
+  }
+  return best.basePlayerId ?? null;
+}
+
+/** big_score anchor: the card that drove the win. Pick highest actualFp; when
+ *  the runner-up is within 1 FP, prefer the wasHeld card (bet-on player gets
+ *  credit over a hot replacement). Returns null on empty roster. */
+function selectBigScoreAnchor(roster: GeneratedCard[]): string | null {
+  if (roster.length === 0) return null;
+  let topFp = -Infinity;
+  for (const c of roster) {
+    const fp = c.actualFp ?? 0;
+    if (fp > topFp) topFp = fp;
+  }
+  // Cards within 1 FP of the top — the tiebreak window.
+  const within = roster.filter(c => Math.abs((c.actualFp ?? 0) - topFp) <= 1);
+  // Prefer wasHeld inside the tiebreak window; among held candidates pick the
+  // highest actualFp. When no held cards are within the window, pick the
+  // outright highest actualFp.
+  const heldWithin = within.filter(c => c.wasHeld === true);
+  const pool = heldWithin.length > 0 ? heldWithin : within;
+  let best = pool[0];
+  for (let i = 1; i < pool.length; i++) {
+    if ((pool[i].actualFp ?? 0) > (best.actualFp ?? 0)) best = pool[i];
+  }
+  return best.basePlayerId ?? null;
+}
+
 export function evaluateTrigger(input: TriggerInput): TriggerResult {
   const {
     roster, totalFp, winTier, badges, winTiersMap,
@@ -118,6 +179,11 @@ export function evaluateTrigger(input: TriggerInput): TriggerResult {
     return {
       trigger: "big_score",
       headline: `You hit ${label}. Same slate. Beat them.`,
+      // Phase 5c Path A (2026-06-01): anchor persisted at create time so the
+      // recipient intro reads "X cooked" without re-deriving the leader on
+      // every render. selectBigScoreAnchor picks the highest-actualFp card,
+      // preferring wasHeld inside the 1-FP tiebreak window.
+      anchorBasePlayerId: selectBigScoreAnchor(roster),
     };
   }
 
@@ -166,6 +232,14 @@ export function evaluateTrigger(input: TriggerInput): TriggerResult {
       return {
         trigger: "bad_beat",
         headline: `Brutal hand. See if they survive the same slate.`,
+        // Phase 5c Path A (2026-06-01): anchor persisted at create time. The
+        // bad_beat trigger gates on ≥1 held RED/ORANGE card; the anchor is
+        // the held card whose actualFp - projectedFp landed worst (tiebreak
+        // highest salary). selectBadBeatAnchor reads from any held card on
+        // the roster, not just RED/ORANGE — the held-tier gate above is for
+        // firing the trigger; the anchor narrative is "which held card
+        // disappointed most." See doc lock M1 EDIT 2026-06-01 + T2.
+        anchorBasePlayerId: selectBadBeatAnchor(roster),
       };
     }
   }

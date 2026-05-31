@@ -183,4 +183,102 @@ describe("evaluateTrigger", () => {
     expect(result.topGamePrimaryReason).toBeNull();
     expect(result.topGameAllReasons).toBeNull();
   });
+
+  // ── Phase 5c Path A (2026-06-01): real-input anchor emission tests ────
+  // Closes the mock-vs-real gap from S1: previous tests only verified that
+  // a pre-set mock's anchor field propagates to the result. These tests
+  // verify that evaluateTrigger ACTUALLY EMITS the anchor for a real-shape
+  // TriggerInput. Same pattern (real input, real evaluator) goes for the
+  // end-to-end emission test in useChallengeShare.test.tsx.
+
+  it("bad_beat emits anchorBasePlayerId = worst-delta held card's basePlayerId", () => {
+    // Two held cards: harden underperforms by 20 FP, lebron by 5 FP. Anchor
+    // should be harden (worst delta). The non-held cards on the roster
+    // (even ones with worse deltas) are excluded.
+    const roster = [
+      card({ slotIndex: 0, basePlayerId: "harden",  tier: "RED",    actualFp: 30, projectedFp: 50, salary: 65, wasHeld: true  }),
+      card({ slotIndex: 1, basePlayerId: "lebron",  tier: "ORANGE", actualFp: 45, projectedFp: 50, salary: 60, wasHeld: true  }),
+      card({ slotIndex: 2, basePlayerId: "rng-low", tier: "RED",    actualFp: 10, projectedFp: 50, salary: 70, wasHeld: false }), // worse delta but not held — ignored
+      card({ slotIndex: 3, basePlayerId: "filler",  tier: "WHITE",  actualFp: 8 }),
+      card({ slotIndex: 4, basePlayerId: "filler2", tier: "WHITE",  actualFp: 8 }),
+    ];
+    const result = evaluateTrigger({ roster, totalFp: 101, winTier: "BUST", badges: [], winTiersMap: TIERS });
+    expect(result.trigger).toBe("bad_beat");
+    expect(result.anchorBasePlayerId).toBe("harden");
+  });
+
+  it("bad_beat tiebreaks equal deltas by highest salary", () => {
+    // Two held cards with identical -20 FP delta. Tiebreak: pick higher-
+    // salary card (bigger conviction = bigger betrayal narrative).
+    const roster = [
+      card({ slotIndex: 0, basePlayerId: "expensive", tier: "RED", actualFp: 30, projectedFp: 50, salary: 70, wasHeld: true }),
+      card({ slotIndex: 1, basePlayerId: "cheaper",   tier: "RED", actualFp: 30, projectedFp: 50, salary: 50, wasHeld: true }),
+      card({ slotIndex: 2, basePlayerId: "filler",    tier: "WHITE", actualFp: 8 }),
+      card({ slotIndex: 3, basePlayerId: "filler2",   tier: "WHITE", actualFp: 8 }),
+      card({ slotIndex: 4, basePlayerId: "filler3",   tier: "WHITE", actualFp: 8 }),
+    ];
+    const result = evaluateTrigger({ roster, totalFp: 84, winTier: "BUST", badges: [], winTiersMap: TIERS });
+    expect(result.trigger).toBe("bad_beat");
+    expect(result.anchorBasePlayerId).toBe("expensive");
+  });
+
+  it("big_score emits anchorBasePlayerId = highest-actualFp card", () => {
+    const roster = [
+      card({ slotIndex: 0, basePlayerId: "leader",  actualFp: 62 }),
+      card({ slotIndex: 1, basePlayerId: "second",  actualFp: 50 }),
+      card({ slotIndex: 2, basePlayerId: "filler1", actualFp: 45 }),
+      card({ slotIndex: 3, basePlayerId: "filler2", actualFp: 42 }),
+      card({ slotIndex: 4, basePlayerId: "filler3", actualFp: 36 }),
+    ];
+    const result = evaluateTrigger({ roster, totalFp: 235, winTier: "MVP", badges: [], winTiersMap: TIERS });
+    expect(result.trigger).toBe("big_score");
+    expect(result.anchorBasePlayerId).toBe("leader");
+  });
+
+  it("big_score prefers wasHeld inside the 1-FP tiebreak window", () => {
+    // Top scorer (62 FP) was NOT held; held card at 61.5 FP is within 1 FP.
+    // Tiebreak: prefer the held one for the "bet-on player gets credit"
+    // narrative. The 0.5-FP delta is inside the window.
+    const roster = [
+      card({ slotIndex: 0, basePlayerId: "hot-replacement", actualFp: 62,   wasHeld: false }),
+      card({ slotIndex: 1, basePlayerId: "held-star",       actualFp: 61.5, wasHeld: true  }),
+      card({ slotIndex: 2, basePlayerId: "filler1",         actualFp: 45 }),
+      card({ slotIndex: 3, basePlayerId: "filler2",         actualFp: 42 }),
+      card({ slotIndex: 4, basePlayerId: "filler3",         actualFp: 36 }),
+    ];
+    const result = evaluateTrigger({ roster, totalFp: 246.5, winTier: "ALL_STAR", badges: [], winTiersMap: TIERS });
+    expect(result.trigger).toBe("big_score");
+    expect(result.anchorBasePlayerId).toBe("held-star");
+  });
+
+  it("big_score keeps the unheld leader when the next-highest held card is OUTSIDE the 1-FP window", () => {
+    // Top scorer (62 FP) was NOT held; the highest-held card is 59 FP —
+    // 3 FP behind, outside the tiebreak window. The unheld leader keeps
+    // the anchor; the held-preference rule doesn't apply.
+    const roster = [
+      card({ slotIndex: 0, basePlayerId: "hot-replacement", actualFp: 62, wasHeld: false }),
+      card({ slotIndex: 1, basePlayerId: "held-mid",        actualFp: 59, wasHeld: true  }),
+      card({ slotIndex: 2, basePlayerId: "filler1",         actualFp: 45 }),
+      card({ slotIndex: 3, basePlayerId: "filler2",         actualFp: 42 }),
+      card({ slotIndex: 4, basePlayerId: "filler3",         actualFp: 36 }),
+    ];
+    const result = evaluateTrigger({ roster, totalFp: 244, winTier: "ALL_STAR", badges: [], winTiersMap: TIERS });
+    expect(result.trigger).toBe("big_score");
+    expect(result.anchorBasePlayerId).toBe("hot-replacement");
+  });
+
+  it("default trigger continues to emit no anchor (no per-trigger anchor for default)", () => {
+    // default has no anchor concept by design — verify it stays unpopulated
+    // even with a clearly-leading card.
+    const roster = [
+      card({ slotIndex: 0, basePlayerId: "leader", actualFp: 50 }),
+      card({ slotIndex: 1, basePlayerId: "two",    actualFp: 35 }),
+      card({ slotIndex: 2, basePlayerId: "three",  actualFp: 30 }),
+      card({ slotIndex: 3, basePlayerId: "four",   actualFp: 30 }),
+      card({ slotIndex: 4, basePlayerId: "five",   actualFp: 35 }),
+    ];
+    const result = evaluateTrigger({ roster, totalFp: 180, winTier: "STARTER", badges: [], winTiersMap: TIERS });
+    expect(result.trigger).toBe("default");
+    expect(result.anchorBasePlayerId).toBeUndefined();
+  });
 });
