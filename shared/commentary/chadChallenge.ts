@@ -1677,157 +1677,157 @@ export function selectIntroAnchor(args: SelectIntroAnchorArgs): RecipientIntroAn
 //     the winTier prop H2HRecipientPlay passes (senderHand.tier).
 
 const INTRO_BAD_BEAT_CULTURE: Line[] = [
-  ["{challengerName} stacked {name} for {targetScore} and got cooked anyway — ", { stamp: "bad_beat" }, " — {cultureLine}"],
-  ["{name} on the held card, {targetScore} on the scoreboard. {cultureLine} ", { stamp: "bad_beat" }, ". Run the same hand and read it better."],
-  ["Held {name} for the conviction pick, lineup folded around them — ", { stamp: "bad_beat" }, " — {cultureLine} Your turn."],
-  ["{name} was {challengerName}'s anchor for {targetScore}. {cultureLine} ", { stamp: "bad_beat" }, ". Same six cards. Cook it."],
-  [{ stamp: "bad_beat" }, ". {challengerName} bet on {name} and got {targetScore}. {cultureLine} You've got the redraws."],
-  ["{cultureLine} {name} let {challengerName} down for {targetScore} — ", { stamp: "bad_beat" }, " — your shot at the same slate."],
+  ["{challengerName} bet the whole hand on {name} and still got buried — ", { stamp: "bad_beat" }, ". {cultureLine} Same six cards are right here."],
+  ["{challengerName} held {name} and watched {targetScore} come up short. ", { stamp: "bad_beat" }, " — {cultureLine} See if you read it cleaner."],
+  ["The conviction pick was {name}, and the conviction was misplaced — ", { stamp: "bad_beat" }, ". {cultureLine} Your hand now."],
+  ["{challengerName} leaned the whole {targetScore} on {name} and it tipped over. ", { stamp: "bad_beat" }, " — {cultureLine}"],
+  [{ stamp: "bad_beat" }, ". {challengerName} trusted {name} and got {targetScore} for it. {cultureLine} You get the better look."],
+  ["{cultureLine} That's the {name} {challengerName} hung {targetScore} on — ", { stamp: "bad_beat" }, ". Your shot at the same slate."],
 ];
 
 const INTRO_BAD_BEAT_NAME: Line[] = [
-  ["{challengerName} held {name} and the lineup couldn't lift it — ", { stamp: "bad_beat" }, " — {targetScore} on the board. Your move."],
-  ["{name} on the held card. {targetScore} as the finish. ", { stamp: "bad_beat" }, ". Cook it cleaner."],
-  ["Premium pick on {name}, premium disappointment — ", { stamp: "bad_beat" }, " — {challengerName}'s leaving you {targetScore} to chase."],
-  [{ stamp: "bad_beat" }, ". {challengerName} stacked {name} for {targetScore}. Same six cards. Read the slate."],
-  ["{challengerName} bet big on {name} and walked away with {targetScore} — ", { stamp: "bad_beat" }, " — your hand to play."],
+  ["{challengerName} held {name} and the rest of the hand quit on him — ", { stamp: "bad_beat" }, ", {targetScore} on the board. Beat it."],
+  ["{name} was supposed to be the safe one. ", { stamp: "bad_beat" }, " — {challengerName} settled for {targetScore}."],
+  ["Premium pick, premium letdown. {challengerName} rode {name} to a ", { stamp: "bad_beat" }, " and left you {targetScore} to chase."],
+  [{ stamp: "bad_beat" }, ". {challengerName} stacked {name} for {targetScore} and the math never showed. Same six cards."],
+  ["{challengerName} bet big on {name} and walked off with {targetScore} — ", { stamp: "bad_beat" }, ". Your hand to fix it."],
 ];
 
 const INTRO_BAD_BEAT_GENERIC: Line[] = [
-  ["{challengerName} got cooked by their own holds — ", { stamp: "bad_beat" }, " — {targetScore} on the board. Your turn."],
-  [{ stamp: "bad_beat" }, ". Same six cards, {challengerName} couldn't get past {targetScore}. Cook it."],
-  ["The lineup looked like a winner on paper for {challengerName} — ", { stamp: "bad_beat" }, " — {targetScore} is what it actually paid out."],
-  ["{challengerName} read the slate, slate didn't read the script — ", { stamp: "bad_beat" }, " — {targetScore} to beat."],
+  ["{challengerName} got cooked by his own holds — ", { stamp: "bad_beat" }, ", {targetScore} on the board. Do better."],
+  [{ stamp: "bad_beat" }, ". {challengerName} couldn't drag the same six past {targetScore}. Your turn to try."],
+  ["Looked like a winner on paper for {challengerName}. ", { stamp: "bad_beat" }, " — {targetScore} is what it actually paid."],
+  ["{challengerName} read the slate; the slate didn't read the script — ", { stamp: "bad_beat" }, ", {targetScore} to beat."],
 ];
 
 const INTRO_BIG_SCORE_CULTURE: Line[] = [
-  ["{name} cooked, {challengerName} was holding the detonator — ", { stamp: "win_tier" }, ". {cultureLine} {targetScore} to clear."],
-  ["{challengerName} stacked {name} on the right night — ", { stamp: "win_tier" }, ". {cultureLine} Same six cards, {targetScore} on the board."],
-  ["{cultureLine} {name} put {challengerName} on the leaderboard at {targetScore} — ", { stamp: "win_tier" }, ". Your shot."],
+  ["{name} went off and {challengerName} was holding the ticket — ", { stamp: "win_tier" }, ". {cultureLine} {targetScore} to clear."],
+  ["{challengerName} stacked {name} on exactly the right night — ", { stamp: "win_tier" }, ". {cultureLine} Same six cards, {targetScore} on the board."],
+  ["{cultureLine} That's the night {name} put {challengerName} at {targetScore} — ", { stamp: "win_tier" }, ". Your move."],
   [{ stamp: "win_tier" }, ". {name} took the building down for {challengerName}. {cultureLine} {targetScore} to beat."],
-  ["{name} ate, {challengerName} ate after — ", { stamp: "win_tier" }, " — {targetScore} on the receipt. {cultureLine} Your turn at the wheel."],
+  ["{name} ate; {challengerName} ate right after — ", { stamp: "win_tier" }, ", {targetScore} on the receipt. {cultureLine}"],
 ];
 
 const INTRO_BIG_SCORE_NAME: Line[] = [
-  ["{name} cooked and {challengerName} was sitting at the table — ", { stamp: "win_tier" }, " — {targetScore} on the board. Same six cards."],
-  ["{challengerName} stacked the right name on the right night. {name} ate. ", { stamp: "win_tier" }, ". {targetScore} to clear."],
-  [{ stamp: "win_tier" }, ". {name} took the lineup by the collar for {challengerName}. {targetScore} on the receipt."],
-  ["{name} torched the whole opposing lineup — ", { stamp: "win_tier" }, " — {challengerName} cleared {targetScore}. Your move."],
+  ["{name} cooked and {challengerName} was sitting at the table — ", { stamp: "win_tier" }, ", {targetScore} on the board. Same six."],
+  ["{challengerName} put the right name on the right night. {name} delivered — ", { stamp: "win_tier" }, ", {targetScore} to clear."],
+  [{ stamp: "win_tier" }, ". {name} carried the hand for {challengerName} and left you {targetScore} to answer."],
+  ["{name} torched the slate and {challengerName} cleared {targetScore} — ", { stamp: "win_tier" }, ". Your move."],
 ];
 
 const INTRO_BIG_SCORE_GENERIC: Line[] = [
-  ["{challengerName} cooked the whole slate — ", { stamp: "win_tier" }, " — {targetScore} on the board."],
-  [{ stamp: "win_tier" }, ". {challengerName} stacked the right names and ate. {targetScore} to beat."],
-  ["The whole lineup ran for {challengerName} — ", { stamp: "win_tier" }, " — {targetScore} is what it paid out."],
-  ["{challengerName} put up {targetScore} on these cards — ", { stamp: "win_tier" }, " — your turn at the wheel."],
+  ["{challengerName} caught the whole slate hot — ", { stamp: "win_tier" }, ", {targetScore} on the board."],
+  [{ stamp: "win_tier" }, ". {challengerName} stacked the right names and got paid. {targetScore} to beat."],
+  ["The whole hand ran for {challengerName} — ", { stamp: "win_tier" }, ", {targetScore} is what it returned."],
+  ["{challengerName} hung {targetScore} on these cards — ", { stamp: "win_tier" }, ". Your turn to match it."],
 ];
 
 const INTRO_RARE_PULL_CULTURE: Line[] = [
-  ["{name} just did something the league hasn't seen in years — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". {cultureLine} {challengerName} was holding the ticket at {targetScore}."],
-  ["{cultureLine} {name} carved {challengerName}'s name into the leaderboard — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". {targetScore} to chase."],
-  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {name} hung a number on the league for {challengerName}. {cultureLine} {targetScore} on the receipt."],
-  ["{challengerName} caught {name} on the night the stat sheet broke — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — {cultureLine} {targetScore} is your bar."],
-  ["{name} just made the highlight reel for {challengerName}. {cultureLine} ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". {targetScore} to clear."],
+  ["{name} did something the box score had to double-check for {challengerName} — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". {cultureLine} {targetScore} to chase."],
+  ["{cultureLine} {name} carved {challengerName} into the record sheet — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ", {targetScore} to chase."],
+  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {name} hung a number on the whole league for {challengerName}. {cultureLine} {targetScore} on the receipt."],
+  ["{challengerName} caught {name} on the night the stat sheet broke — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". {cultureLine} {targetScore} is the bar."],
+  ["{name} made the highlight reel and {challengerName} cashed it — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". {cultureLine} {targetScore} to clear."],
 ];
 
 const INTRO_RARE_PULL_NAME: Line[] = [
-  ["{name} just did something the league hasn't seen in years — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — {challengerName} was holding the ticket. {targetScore} to chase."],
-  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {name} carved {challengerName}'s name into the leaderboard at {targetScore}. Same six cards."],
-  ["{challengerName} caught {name} on the night the stat sheet broke — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — {targetScore} on the board."],
-  ["{name} hung a historic number for {challengerName} — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — {targetScore} is the bar."],
+  ["{name} did something the league hadn't seen in years, and {challengerName} had the ticket — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ", {targetScore} to chase."],
+  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {name} carved {challengerName} into the record books at {targetScore}. Same six cards."],
+  ["{challengerName} caught {name} on the night the stat sheet broke — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ", {targetScore} on the board."],
+  ["{name} hung a historic number for {challengerName} — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ", {targetScore} is the bar."],
 ];
 
 const INTRO_RARE_PULL_GENERIC: Line[] = [
-  ["{challengerName} caught one of those nights — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — {targetScore} on the receipt."],
-  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". The slate handed {challengerName} a historic number. {targetScore} to chase."],
-  ["The lineup ran historic for {challengerName} — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — {targetScore} is what it paid."],
+  ["{challengerName} caught one of those nights — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ", {targetScore} on the receipt."],
+  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". The slate handed {challengerName} a number people screenshot. {targetScore} to chase."],
+  ["The whole hand ran historic for {challengerName} — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ", {targetScore} is what it paid."],
 ];
 
 const INTRO_MISS_WITH_GAP: Line[] = [
-  ["{challengerName} got {targetScore} on the board — ", { stamp: "miss", tier: "{nearMissNextTier}" }, " — {nearMissGap} FP short of the next tier. Take it from them."],
-  ["{nearMissGap} FP from a different conversation for {challengerName}. ", { stamp: "miss", tier: "{nearMissNextTier}" }, ". {targetScore} on the board. Your turn."],
-  [{ stamp: "miss", tier: "{nearMissNextTier}" }, ". {challengerName} left {nearMissGap} FP on the floor at {targetScore}. Cook the cleaner read."],
-  ["{challengerName} bumped the cut line and fell back — ", { stamp: "miss", tier: "{nearMissNextTier}" }, " — {nearMissGap} FP short. {targetScore} to clear."],
+  ["{challengerName} put up {targetScore} and stalled — ", { stamp: "miss", tier: "{nearMissNextTier}" }, ", {nearMissGap} FP from the next tier. Take it from him."],
+  ["{nearMissGap} FP from a different conversation for {challengerName}. ", { stamp: "miss", tier: "{nearMissNextTier}" }, " — {targetScore} on the board. Your turn."],
+  [{ stamp: "miss", tier: "{nearMissNextTier}" }, ". {challengerName} left {nearMissGap} FP on the floor at {targetScore}. Find the cleaner read."],
+  ["{challengerName} bumped the cut line and slid back — ", { stamp: "miss", tier: "{nearMissNextTier}" }, ", {nearMissGap} FP short. {targetScore} to clear."],
 ];
 
 const INTRO_MISS_GENERIC: Line[] = [
-  ["{challengerName} got close on this slate — ", { stamp: "miss" }, " — {targetScore} on the board. Your shot."],
-  [{ stamp: "miss" }, ". {challengerName} ran it right up to the door at {targetScore}. Door didn't open. Try it yourself."],
-  ["{challengerName} was a possession from a different night — ", { stamp: "miss" }, " — {targetScore} to chase."],
+  ["{challengerName} got close and no closer — ", { stamp: "miss" }, ", {targetScore} on the board. Your shot."],
+  [{ stamp: "miss" }, ". {challengerName} walked it right up to the door at {targetScore}. Door stayed shut."],
+  ["{challengerName} was a possession from a different night — ", { stamp: "miss" }, ", {targetScore} to chase."],
 ];
 
 const INTRO_DEFAULT: Line[] = [
-  ["{challengerName} played the slate and walked away with {targetScore}. Same six cards. Cook it."],
-  ["{targetScore} on the board from {challengerName}. Your turn at the wheel."],
-  ["{challengerName} sent {targetScore}. Your shot at the same cards."],
+  ["{challengerName} played the slate and walked with {targetScore}. Same six cards — see what you've got."],
+  ["{targetScore} on the board from {challengerName}. Your move."],
+  ["{challengerName} sent {targetScore}. Same cards, your shot."],
 ];
 
 // ── Recipient Stage 2 banks (Deal nudges — verb-first, shorter) ──────────
 
 const NUDGE_BAD_BEAT_CULTURE: Line[] = [
-  ["Lock in your reads. ", { stamp: "bad_beat" }, " — {cultureLine} Draw."],
-  ["Hold the cards {challengerName} should have. {cultureLine} Send it."],
-  ["Pick the holds. ", { stamp: "bad_beat" }, " on {name}. {cultureLine} Your draw."],
+  ["{challengerName} already found the trap door. ", { stamp: "bad_beat" }, " — {cultureLine} Your draw."],
+  ["Hold what {challengerName} wishes he had. {cultureLine}"],
+  ["{name} sank {challengerName} once — ", { stamp: "bad_beat" }, ". {cultureLine} Hold smarter."],
 ];
 
 const NUDGE_BAD_BEAT_NAME: Line[] = [
-  ["Lock the holds. ", { stamp: "bad_beat" }, " on {name} — your draw to redeem it."],
-  ["Pick the conviction. {challengerName} got cooked by {name}. Draw."],
-  ["Hold what {challengerName} should have. ", { stamp: "bad_beat" }, ". Send it."],
+  ["Hold {name} — {challengerName} did, and ate a ", { stamp: "bad_beat" }, " for it. Your draw to fix it."],
+  ["{challengerName} got cooked by {name}. Pick the holds he should have."],
+  ["Hold what {challengerName} didn't. ", { stamp: "bad_beat" }, " says he guessed wrong."],
 ];
 
 const NUDGE_BAD_BEAT_GENERIC: Line[] = [
-  ["Lock in your reads. ", { stamp: "bad_beat" }, " on {challengerName}'s board. Draw."],
-  ["Pick your holds and redeem the slate. Send it."],
-  ["Hold sharper than {challengerName} did. Draw."],
+  ["{challengerName}'s board already broke — ", { stamp: "bad_beat" }, ". Your draw."],
+  ["Pick the holds and redeem the slate {challengerName} fumbled."],
+  ["Hold sharper than {challengerName} did. That's the whole game."],
 ];
 
 const NUDGE_BIG_SCORE_CULTURE: Line[] = [
-  ["Stack the right names. {cultureLine} Draw."],
-  ["Hold the heater. ", { stamp: "win_tier" }, " on {name}. {cultureLine} Draw."],
-  ["Lock your reads. {cultureLine} Send it."],
+  ["{challengerName} caught {name} on the right night. {cultureLine} Match it."],
+  ["Hold the heater — ", { stamp: "win_tier" }, " on {name}. {cultureLine} Your draw."],
+  ["{cultureLine} Stack like {challengerName} did and see if it repeats."],
 ];
 
 const NUDGE_BIG_SCORE_NAME: Line[] = [
-  ["Hold {name} like {challengerName} did. ", { stamp: "win_tier" }, ". Draw."],
-  ["Lock the heater. {name} cooked for {challengerName} — your turn."],
-  ["Stack the right name. {targetScore} to clear. Draw."],
+  ["Hold {name} like {challengerName} did — ", { stamp: "win_tier" }, ". Your draw."],
+  ["{name} cooked for {challengerName}. Catch the same fire."],
+  ["Stack the right name. {targetScore} is the number."],
 ];
 
 const NUDGE_BIG_SCORE_GENERIC: Line[] = [
-  ["Lock in the heat. ", { stamp: "win_tier" }, " to clear. Draw."],
-  ["Stack the right names. Your turn at {targetScore}."],
-  ["Hold sharper than {challengerName} did. Send it."],
+  ["{challengerName} found the heat — ", { stamp: "win_tier" }, " to clear. Your draw."],
+  ["Stack the right names and chase {targetScore}."],
+  ["Hold sharper than {challengerName} and the number's yours."],
 ];
 
 const NUDGE_RARE_PULL_CULTURE: Line[] = [
-  ["Hold the history card. {cultureLine} Draw."],
-  ["Lock {name}. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". {cultureLine} Send it."],
-  ["Stack on {name}. {cultureLine} Draw."],
+  ["Hold the history card. {cultureLine} Your draw."],
+  ["Lock {name} — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". {cultureLine} Go."],
+  ["{cultureLine} Stack {name} and chase the ghost."],
 ];
 
 const NUDGE_RARE_PULL_NAME: Line[] = [
-  ["Hold {name}. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". Draw."],
-  ["Lock the history pull. {name} did it for {challengerName} — your turn."],
-  ["Stack on {name}. {targetScore} to chase. Draw."],
+  ["Hold {name} — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " says it was special. Your draw."],
+  ["{name} did it for {challengerName}. See if lightning repeats."],
+  ["Stack {name}. {targetScore} to chase."],
 ];
 
 const NUDGE_RARE_PULL_GENERIC: Line[] = [
-  ["Lock your reads. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " to chase. Draw."],
-  ["Hold sharper than {challengerName} did. {targetScore} on the board."],
-  ["Stack the slate. Send it."],
+  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, " to chase. Pick your holds."],
+  ["Hold sharper than {challengerName} — {targetScore} on the board."],
+  ["Stack the slate and chase the number."],
 ];
 
 const NUDGE_MISS: Line[] = [
-  ["Lock the holds. {challengerName} fell short — your shot to clear. Draw."],
-  ["Hold tighter than {challengerName} did. {targetScore} on the board."],
-  ["Pick your reads. Send it past {targetScore}."],
+  ["{challengerName} fell a hair short. Your draw to clear it."],
+  ["Hold tighter than {challengerName} did — {targetScore}'s right there."],
+  ["Pick your reads and push past {targetScore}."],
 ];
 
 const NUDGE_DEFAULT: Line[] = [
-  ["Lock the holds. {targetScore} on the board. Draw."],
-  ["Pick your reads. Send it past {challengerName}."],
-  ["Hold what you trust. {targetScore} to clear."],
+  ["Pick your holds — {targetScore} on the board. Your draw."],
+  ["Hold what you trust and pass {challengerName}."],
+  ["{targetScore} to clear. Your move."],
 ];
 
 // ── Selectors ────────────────────────────────────────────────────────────
