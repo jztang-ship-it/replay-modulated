@@ -58,7 +58,10 @@ import type { CardRenderer, H2HCard } from "./H2HRevealScreen";
 import { setActiveSeason, ensureLoaded, isLoaded } from "@shared/engines/dataEngine";
 import { isRealName } from "@shared/utils/isRealName";
 import { getNickname } from "@shared/utils/playerIdentity";
-import { H2HBoardShell } from "./H2HBoardShell";
+import {
+  H2HBoardShell,
+  HERO_MIN_HEIGHT_HOLD_SELECT_CSS,
+} from "./H2HBoardShell";
 import { PartsLine } from "./TierGauge";
 import {
   selectIntroAnchor,
@@ -122,6 +125,26 @@ const HERO_ZONE_MARGIN_BOTTOM_PX = 4;
 const BOTTOM_STRIP_MARGIN_BOTTOM_PX = 0;
 const RESERVED_PADDING_TOP_PX = 8;
 const RESERVED_MIN_HEIGHT_PX = 77;
+
+// hold_select vertical-budget fix
+// (docs/holdselect-vertical-budget-design-lock.md §2, 2026-06-01).
+// Levers (1)–(5) are all state-scoped to hold_select. Outside
+// hold_select the surface renders exactly as today (lock §4).
+//
+// (1) Fluid intro text + 3-line clamp. INTRO_FONT_CLAMP scales the
+// font on viewport width so tight phones read 16px and roomy phones
+// read up to 22px. The 3-line budget is reserved at the container so
+// the stage-text height is DETERMINISTIC (kills the 64↔92px
+// randomization).
+const INTRO_FONT_CLAMP = "clamp(16px, 4.2vw, 22px)";
+const INTRO_LINE_HEIGHT = 1.28;
+const INTRO_3LINE_BUDGET_CSS = `calc((${INTRO_FONT_CLAMP}) * ${INTRO_LINE_HEIGHT} * 3)`;
+
+// (4) Fluid inter-zone margin: TOP_ZONE marginBottom shrinks on tight
+// viewports. Default (other states) remains 18 per the shell constant;
+// during hold_select the shell receives a clamp() override.
+const HOLD_SELECT_TOP_ZONE_MARGIN_CSS = "clamp(8px, 2.6vw, 18px)";
+const HOLD_SELECT_HERO_MARGIN_CSS = "clamp(2px, 1vw, 4px)";
 
 // Hold-state visual — accent ring + light scale. Visual polish is
 // 2d-scope (re-scoped to VISUAL refinement per the 2026-05-30 EDIT);
@@ -695,16 +718,34 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // Stage text typography (introTypography hoisted up here so it's in
   // scope for the topStripSlot composition below). Both Stage 1/2 banks
   // and the instructional fallback share it.
+  //
+  // hold_select vertical-budget fix (docs/holdselect-vertical-budget-
+  // design-lock.md §2(1), 2026-06-01): font is fluid via clamp() so
+  // tight viewports tighten and roomy ones render generous. lineHeight
+  // 1.28 (slightly tighter than the prior 1.3 to maximize legibility
+  // within the 3-line budget). The 3-line budget is reserved at the
+  // CONTAINER level (see topStripSlot below) so the stage-text height
+  // is DETERMINISTIC regardless of which bank line was picked —
+  // killing the 64↔92px randomization that wedged the prior layout.
+  // Words are unchanged; this is display-only.
   const heldCount = state.kind === "hold_select" ? state.held.size : 0;
   const showStage2 = state.kind === "hold_select" && heldCount > 0;
   const showStage1 = state.kind === "hold_select" && heldCount === 0 && !introDismissed;
   const senderWinTier = challengeCtx.resolvedSenderHand?.tier;
   const missTierLabel = challengeCtx.nearMissNextTier ?? undefined;
   const introTypography: React.CSSProperties = {
-    fontSize: 22,
+    fontSize: INTRO_FONT_CLAMP,
     fontWeight: 800,
-    lineHeight: 1.3,
+    lineHeight: INTRO_LINE_HEIGHT,
     maxWidth: 360,
+    // -webkit-line-clamp triad — caps at 3 lines if a bank line ever
+    // exceeds the budget (vetted banks shouldn't, but this is
+    // belt-and-suspenders so the layout never destabilizes on a
+    // surprise long line).
+    display: "-webkit-box",
+    WebkitLineClamp: 3,
+    WebkitBoxOrient: "vertical" as const,
+    overflow: "hidden",
   };
 
   // Top strip slot — sender's roster cells inside the shell's top frame.
@@ -715,25 +756,48 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   //
   // Polish #11 (2026-06-01, docs/11-preview-then-hold-design-lock.md §2/§10):
   // during hold_select the stage text (Stage 1 / Stage 2 / instructional
-  // headline) is relocated INTO the top ZonePanel beneath the opponent
-  // face-down strip. The hero region is freed up to host the preview
-  // card. The text is rendered as a sibling of the strip (still inside
-  // the shell's `topStrip` slot via a Fragment) so the existing
-  // ZonePanel flex-column layout naturally stacks: label → strip → text.
-  // §10 arrangement choice: text BELOW the face-down strip (option a) —
-  // preserves the strip's pre-reveal position (no show/hide gymnastics
-  // when state transitions out of hold_select) and reads as a natural
-  // bridge between opponent setup and recipient action zone.
+  // headline) is relocated INTO the top ZonePanel. The hero region is
+  // freed up to host the preview card.
+  //
+  // hold_select vertical-budget fix (lock §2(2), 2026-06-01): six
+  // face-down opponent backs convey zero info during hold_select, so
+  // the strip flex row is collapsed to ZERO HEIGHT (overflow:hidden,
+  // opacity 0, aria-hidden, pointer-events none) — reclaiming the 80px
+  // mini-strip + 4px gap from the budget. The TopStripCell components
+  // STAY MOUNTED so their rotateY(180deg) transform is fully primed in
+  // the CSS style cache by the time column_flip starts the flip
+  // animation. The wrapper expands back to full height instantly on
+  // state exit; the visible appearance is "the strip wasn't there →
+  // the strip is here, face-down" with no flicker because the cells
+  // were rendered the whole time, just behind a height:0 clip mask.
+  //
+  // §10 arrangement choice (re-resolved by this lock): with the strip
+  // visually gone, the stage text sits directly under the opponent
+  // name label, occupying the freed-up space. The text container
+  // reserves a DETERMINISTIC 3-line budget (INTRO_3LINE_BUDGET_CSS)
+  // so different bank lines don't drive different topZone heights —
+  // killing the 64↔92px randomization.
+  const inHoldSelect = state.kind === "hold_select";
   const topStripSlot = (
     <>
       <div
         data-h2h-play-top-strip="true"
+        data-h2h-play-top-strip-collapsed={inHoldSelect ? "true" : undefined}
+        aria-hidden={inHoldSelect ? "true" : undefined}
         style={{
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
           gap: STRIP_GAP_PX,
-          height: MINI_CELL_HEIGHT_PX,
+          height: inHoldSelect ? 0 : MINI_CELL_HEIGHT_PX,
+          overflow: "hidden",
+          opacity: inHoldSelect ? 0 : 1,
+          pointerEvents: inHoldSelect ? "none" : "auto",
+          // Restore animation runs in parallel with the hero-region
+          // expansion (lock §2(3)) so column_flip's first beat reads as
+          // one coherent unfolding: strip pops back face-down, hero
+          // expands to its grid floor.
+          transition: `height ${COLUMN_FLIP_DURATION_MS}ms ease, opacity ${COLUMN_FLIP_DURATION_MS}ms ease`,
         }}
       >
         {Array.from({ length: ROSTER_SIZE }).map((_, i) => {
@@ -752,20 +816,32 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
       {/* Polish #11 — stage text rendered inside the top ZonePanel
           during hold_select only. Outside hold_select this slot is
           empty (other states keep their headline copy in the hero
-          region — see heroSlot below). */}
-      {state.kind === "hold_select" && (
+          region — see heroSlot below).
+          Lock §2(1): outer container reserves a deterministic 3-line
+          budget via INTRO_3LINE_BUDGET_CSS so the topZone height stays
+          stable regardless of which bank line was picked. */}
+      {inHoldSelect && (
         <div
           data-h2h-play-stage-text="true"
           style={{
             display: "flex",
             justifyContent: "center",
             textAlign: "center",
-            padding: "8px 12px 0",
+            paddingLeft: 12,
+            paddingRight: 12,
             color: "#EAF0FF",
+            // Deterministic budget — kills the 64↔92px randomization.
+            // 3 lines at the fluid font-size's natural lineHeight.
+            // overflow:hidden caps any surprise long-line, but vetted
+            // banks fit within 3 lines. content-box so the line-clamp
+            // budget is the FULL height (padding doesn't eat into it).
+            height: INTRO_3LINE_BUDGET_CSS,
+            boxSizing: "content-box",
+            overflow: "hidden",
           }}
         >
           {showStage1 ? (
-            <div data-h2h-play-intro="stage1">
+            <div data-h2h-play-intro="stage1" style={{ width: "100%" }}>
               <PartsLine
                 key="recipient-stage1"
                 parts={stage1Line}
@@ -776,7 +852,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
               />
             </div>
           ) : showStage2 ? (
-            <div data-h2h-play-intro="stage2">
+            <div data-h2h-play-intro="stage2" style={{ width: "100%" }}>
               <PartsLine
                 key="recipient-stage2"
                 parts={stage2Line}
@@ -1059,6 +1135,34 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         innerTransitionMs={ARC_COMPOSITE_CROSSFADE_MS}
         innerDataAttr="data-h2h-play-inner"
         compositeOverlay={compositeOverlay}
+        // hold_select vertical-budget overrides (lock §2(3)(4) + §3
+        // scroll fallback). Outside hold_select these all fall back to
+        // the shell defaults, so reveal/redraw/resolve render exactly
+        // as today (lock §4 invariant). Inside hold_select:
+        //   - hero minHeight collapses to the one-card footprint;
+        //     animated back to HERO_MIN_HEIGHT_CSS on state exit via
+        //     the shell's min-height transition (250ms = one
+        //     COLUMN_FLIP_DURATION_MS, absorbed into column_flip's
+        //     natural choreography).
+        //   - inter-zone margins clamp() to fluid values that tighten
+        //     on small viewports and stay generous on roomy ones.
+        //   - inner column gets overflow-y:auto and the CTA wrapper
+        //     becomes position:sticky bottom:0 — engaging naturally
+        //     only when content overflows the available height (i.e.
+        //     "below the comfortable floor" per lock §3). Above the
+        //     floor: no scroll, sticky degrades to relative, no
+        //     visible change.
+        heroMinHeight={
+          inHoldSelect ? HERO_MIN_HEIGHT_HOLD_SELECT_CSS : undefined
+        }
+        topZoneMarginBottom={
+          inHoldSelect ? HOLD_SELECT_TOP_ZONE_MARGIN_CSS : undefined
+        }
+        heroMarginBottom={
+          inHoldSelect ? HOLD_SELECT_HERO_MARGIN_CSS : undefined
+        }
+        innerScrollable={inHoldSelect}
+        belowBoardSticky={inHoldSelect}
       />
       {/* Flip animation keyframe + 3D scaffold styles. Lives outside
           the shell so the <style> element doesn't interact with the
