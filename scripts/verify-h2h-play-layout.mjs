@@ -319,12 +319,16 @@ async function runPlayHarness(browser) {
     stage1Snap.headlineMounted === false,
   );
 
-  // Tap slot 2 → assert exactly 1 H badge total, inside cell 2.
+  // Polish #11 (docs/11-preview-then-hold-design-lock.md §3): tap on a
+  // non-previewed cell sets preview; tap again on the same cell holds.
+  // So confirming hold of slot 2 requires TWO taps.
   await page.locator(`[data-h2h-play-bottom-cell="2"]`).click();
-  await page.waitForTimeout(50); // React commit
+  await page.waitForTimeout(50); // React commit (preview-only)
+  await page.locator(`[data-h2h-play-bottom-cell="2"]`).click();
+  await page.waitForTimeout(50); // React commit (hold)
   const hBadgeCountAfterTap = await page.locator(hBadgeSelectorBottom).count();
   record(
-    `H badge count == 1 on bottom strip after tap on slot 2 (Fix 1 regression-lock)`,
+    `H badge count == 1 on bottom strip after tap-tap on slot 2 (Polish #11 preview-then-hold)`,
     hBadgeCountAfterTap === 1,
     `count=${hBadgeCountAfterTap}`,
   );
@@ -360,18 +364,28 @@ async function runPlayHarness(browser) {
     hBadgeInsideCell2 === 1,
     `count_in_cell_2=${hBadgeInsideCell2}`,
   );
-  // Untap → 0 badges.
+  // Untap → 0 badges. Under #11, slot 2 is currently previewed AND held,
+  // so a single tap on it unholds (it's the already-previewed card).
   await page.locator(`[data-h2h-play-bottom-cell="2"]`).click();
   await page.waitForTimeout(50);
   const hBadgeCountAfterUntap = await page.locator(hBadgeSelectorBottom).count();
   record(
-    `H badge count == 0 after untapping slot 2 (Fix 1 regression-lock)`,
+    `H badge count == 0 after untap on slot 2 (Polish #11 third-tap unholds)`,
     hBadgeCountAfterUntap === 0,
     `count=${hBadgeCountAfterUntap}`,
   );
 
   // ── Hold 2 cards before Draw — pin C/D fixed (badges + score at reveal). ──
+  // After the untap above the state is: previewedSlotIndex=2, held=∅.
+  //   Step 1: tap slot 2 → slot 2 is the already-previewed cell, not held
+  //           → flips to held. State: previewed=2, held={2}.
+  //   Step 2: tap slot 5 → slot 5 not previewed → moves preview to 5.
+  //   Step 3: tap slot 5 again → slot 5 is now the previewed cell, not
+  //           held → flips to held. State: previewed=5, held={2,5}.
   await page.locator(`[data-h2h-play-bottom-cell="2"]`).click();
+  await page.waitForTimeout(20);
+  await page.locator(`[data-h2h-play-bottom-cell="5"]`).click();
+  await page.waitForTimeout(20);
   await page.locator(`[data-h2h-play-bottom-cell="5"]`).click();
   await page.waitForTimeout(50);
   const hBadgeCountTwoHeld = await page.locator(hBadgeSelectorBottom).count();

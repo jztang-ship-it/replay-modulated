@@ -132,7 +132,18 @@ const HOLD_ACCENT_RING_PX = 2;
 type PlayingState =
   | { kind: "pre_deal" }
   | { kind: "deal_in"; cardsLanded: number }
-  | { kind: "hold_select"; held: Set<number> }
+  | {
+      kind: "hold_select";
+      held: Set<number>;
+      /** Polish #11 — currently-previewed slot index (preview-then-hold
+       *  interaction model). `null` on entry; tap on a non-previewed cell
+       *  moves preview here without changing `held`; tap on the already-
+       *  previewed cell flips its `held` bit. This field is orthogonal
+       *  to `held` and is NOT threaded into redraw_running / column_flip /
+       *  handoff_resolving — only `held` carries through. See
+       *  docs/11-preview-then-hold-design-lock.md §5/§8. */
+      previewedSlotIndex: number | null;
+    }
   | { kind: "redraw_running"; held: Set<number> }
   | {
       kind: "column_flip";
@@ -372,7 +383,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     const finalId = window.setTimeout(() => {
       setState((s) =>
         s.kind === "deal_in" && s.cardsLanded === ROSTER_SIZE
-          ? { kind: "hold_select", held: new Set() }
+          ? { kind: "hold_select", held: new Set(), previewedSlotIndex: null }
           : s,
       );
     }, DEAL_CASCADE_INTERVAL_MS * (ROSTER_SIZE + 1));
@@ -641,17 +652,34 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     setState({ kind: "redraw_running", held: state.held });
   };
 
-  const toggleHold = (i: number) => {
+  /** Polish #11 — preview-then-hold tap dispatch (per design-lock §3 truth table).
+   *
+   *  Truth table:
+   *    previewedSlotIndex !== i  → set previewedSlotIndex = i        (preview)
+   *    else if !held.has(i)      → held.add(i)                       (hold)
+   *    else                      → held.delete(i)                    (unhold)
+   *
+   *  Moving the preview NEVER changes `held` — only the second tap on the
+   *  same card (the confirmed-tap) toggles hold. Preview-only cards are
+   *  excluded from the redraw payload at Draw time (per §8 invariant 2).
+   *
+   *  Intro dismissal fires on FIRST preview tap (any tap moves preview,
+   *  so any tap dismisses). Idempotent — React bails on identical state.
+   *  Stage 1 → Stage 2 swap continues to key on `held.size > 0` (existing
+   *  logic naturally fires on the first confirmed hold). */
+  const onTap = (i: number) => {
     if (state.kind !== "hold_select") return;
-    // Phase 5c S3 — sticky dismiss of the Stage 1 intro paragraph on the
-    // first hold-tap. setIntroDismissed is idempotent (React bails on
-    // identical state), so calling it on every tap is fine.
     setIntroDismissed(true);
     setState((s) => {
       if (s.kind !== "hold_select") return s;
+      if (s.previewedSlotIndex !== i) {
+        // Preview or move-preview. No hold change.
+        return { kind: "hold_select", held: s.held, previewedSlotIndex: i };
+      }
+      // Second tap on the already-previewed card: flip its held bit.
       const next = new Set(s.held);
       if (next.has(i)) next.delete(i); else next.add(i);
-      return { kind: "hold_select", held: next };
+      return { kind: "hold_select", held: next, previewedSlotIndex: s.previewedSlotIndex };
     });
   };
 
@@ -664,35 +692,108 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     : "your friend";
   const bottomLabel = getNickname() || "You";
 
+  // Stage text typography (introTypography hoisted up here so it's in
+  // scope for the topStripSlot composition below). Both Stage 1/2 banks
+  // and the instructional fallback share it.
+  const heldCount = state.kind === "hold_select" ? state.held.size : 0;
+  const showStage2 = state.kind === "hold_select" && heldCount > 0;
+  const showStage1 = state.kind === "hold_select" && heldCount === 0 && !introDismissed;
+  const senderWinTier = challengeCtx.resolvedSenderHand?.tier;
+  const missTierLabel = challengeCtx.nearMissNextTier ?? undefined;
+  const introTypography: React.CSSProperties = {
+    fontSize: 22,
+    fontWeight: 800,
+    lineHeight: 1.3,
+    maxWidth: 360,
+  };
+
   // Top strip slot — sender's roster cells inside the shell's top frame.
   // Per doc EDIT B1, the bottom container's slots ARE the playing-mode
   // "strip" — no parallel bare strip. The cells (TopStripCell /
   // BottomStripCell) keep their Fix B scaffold; only WHERE they
   // render moves into the shell.
+  //
+  // Polish #11 (2026-06-01, docs/11-preview-then-hold-design-lock.md §2/§10):
+  // during hold_select the stage text (Stage 1 / Stage 2 / instructional
+  // headline) is relocated INTO the top ZonePanel beneath the opponent
+  // face-down strip. The hero region is freed up to host the preview
+  // card. The text is rendered as a sibling of the strip (still inside
+  // the shell's `topStrip` slot via a Fragment) so the existing
+  // ZonePanel flex-column layout naturally stacks: label → strip → text.
+  // §10 arrangement choice: text BELOW the face-down strip (option a) —
+  // preserves the strip's pre-reveal position (no show/hide gymnastics
+  // when state transitions out of hold_select) and reads as a natural
+  // bridge between opponent setup and recipient action zone.
   const topStripSlot = (
-    <div
-      data-h2h-play-top-strip="true"
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        gap: STRIP_GAP_PX,
-        height: MINI_CELL_HEIGHT_PX,
-      }}
-    >
-      {Array.from({ length: ROSTER_SIZE }).map((_, i) => {
-        const senderCard = challengeCtx.resolvedSenderHand?.cards[i] ?? null;
-        return (
-          <TopStripCell
-            key={`top-${i}`}
-            i={i}
-            faceUp={topCellFaceUp(i)}
-            card={senderCard as unknown as H2HCard | null}
-            renderCard={renderPlayingStripCard}
-          />
-        );
-      })}
-    </div>
+    <>
+      <div
+        data-h2h-play-top-strip="true"
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: STRIP_GAP_PX,
+          height: MINI_CELL_HEIGHT_PX,
+        }}
+      >
+        {Array.from({ length: ROSTER_SIZE }).map((_, i) => {
+          const senderCard = challengeCtx.resolvedSenderHand?.cards[i] ?? null;
+          return (
+            <TopStripCell
+              key={`top-${i}`}
+              i={i}
+              faceUp={topCellFaceUp(i)}
+              card={senderCard as unknown as H2HCard | null}
+              renderCard={renderPlayingStripCard}
+            />
+          );
+        })}
+      </div>
+      {/* Polish #11 — stage text rendered inside the top ZonePanel
+          during hold_select only. Outside hold_select this slot is
+          empty (other states keep their headline copy in the hero
+          region — see heroSlot below). */}
+      {state.kind === "hold_select" && (
+        <div
+          data-h2h-play-stage-text="true"
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            textAlign: "center",
+            padding: "8px 12px 0",
+            color: "#EAF0FF",
+          }}
+        >
+          {showStage1 ? (
+            <div data-h2h-play-intro="stage1">
+              <PartsLine
+                key="recipient-stage1"
+                parts={stage1Line}
+                rush
+                winTier={senderWinTier}
+                missTier={missTierLabel}
+                style={introTypography}
+              />
+            </div>
+          ) : showStage2 ? (
+            <div data-h2h-play-intro="stage2">
+              <PartsLine
+                key="recipient-stage2"
+                parts={stage2Line}
+                rush
+                winTier={senderWinTier}
+                missTier={missTierLabel}
+                style={introTypography}
+              />
+            </div>
+          ) : (
+            <div data-h2h-play-headline="true" style={introTypography}>
+              {headline}
+            </div>
+          )}
+        </div>
+      )}
+    </>
   );
 
   const bottomStripSlot = (
@@ -715,44 +816,52 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
             slot={slot}
             renderCard={renderPlayingStripCard}
             tappable={state.kind === "hold_select"}
-            onTap={() => toggleHold(i)}
+            onTap={() => onTap(i)}
           />
         );
       })}
     </div>
   );
 
-  // Hero slot — guidance copy in states 1–3. The shell's hero region
-  // has a locked minHeight so the bottom zone never jumps up when the
-  // copy is short. At state="arc", the hero copy is empty ("") and the
-  // arc-composite (H2HRecipientReveal) renders its battlefield grid
-  // INSIDE the shell's same hero region via its own H2HBoardShell
-  // mount (Fix C2 + EDIT B2 — no layout change at the S3→S4 boundary).
+  // Hero slot — Polish #11 (docs/11-preview-then-hold-design-lock.md §2/§C).
+  // The shell's hero region has a locked minHeight (sized for two
+  // hero cards stacked + gap, the reveal-time battlefield grid). Under
+  // #11, during hold_select the hero region hosts the PREVIEW WINDOW:
+  // a big card rendered via renderBattlefieldCard when previewedSlotIndex
+  // is non-null, OR a defined empty box (visible dashed border, not
+  // blank space) when previewedSlotIndex is null. Other states keep
+  // the existing headline div behavior in this region.
+  //
+  // VS treatment (handoff_resolving) still wins the conditional (per
+  // §8 invariant 6) — the preview-window beat fires only inside
+  // hold_select; the moment state transitions out, VS or headline takes
+  // over.
+  //
   // #3 hardened (2026-05-31): the VS treatment renders as a sibling of
-  // (not a child of) the headline div, so the headline div's typography
-  // (fontSize 22, fontWeight 800, maxWidth 360) cannot collide with the
-  // VS glyph's own typography (fontSize 56, fontWeight 900) and the
-  // headline's content-width sizing cannot squash the VS into a sub-
-  // optimal width. Explicit color on the VS block so it does not depend
-  // on inherited foreground color from any ancestor.
+  // (not a child of) the headline div. Explicit color on the VS block
+  // so it does not depend on inherited foreground color from any
+  // ancestor.
   const isVsBeat = state.kind === "handoff_resolving";
-  // Phase 5c S3 — Stage 1/2 gating during hold_select. Stage 1 fires on
-  // entry (no holds yet, intro not yet dismissed); Stage 2 fires once
-  // the recipient has held at least one card. Outside hold_select both
-  // collapse and the existing headline / VS block render as before.
-  const heldCount = state.kind === "hold_select" ? state.held.size : 0;
-  const showStage2 = state.kind === "hold_select" && heldCount > 0;
-  const showStage1 = state.kind === "hold_select" && heldCount === 0 && !introDismissed;
-  // Sender's resolved win tier — drives the win_tier inline stamp chip
-  // color on big_score banks. Null on legacy/prefetch-failed challenges.
-  const senderWinTier = challengeCtx.resolvedSenderHand?.tier;
-  const missTierLabel = challengeCtx.nearMissNextTier ?? undefined;
-  const introTypography: React.CSSProperties = {
-    fontSize: 22,
-    fontWeight: 800,
-    lineHeight: 1.3,
-    maxWidth: 360,
-  };
+
+  // Preview card size — matches one hero card's natural footprint per
+  // the shell's HERO_MIN_HEIGHT_CSS calc: width = min(145px, 32vw);
+  // height = width * (478/329). Same shape and aspect as the reveal-
+  // time hero cards, so the Area-G spacing pass measures against an
+  // already-final geometry.
+  const previewCardWidthCss = "min(145px, 32vw)";
+  const previewCardHeightCss = `calc(${previewCardWidthCss} * ${(478 / 329).toFixed(6)})`;
+  const previewedSlotIndex =
+    state.kind === "hold_select" ? state.previewedSlotIndex : null;
+  const previewedCard =
+    previewedSlotIndex !== null ? initialRoster[previewedSlotIndex] : null;
+  // Held state overlay on the previewed card. Mirrors BottomStripCell's
+  // pattern (line ~1232) — override wasHeld on the card object so the
+  // sport renderer's H-mark logic (CardFront's locked indicator) reads
+  // the recipient's tap state, not the sender's snapshot.
+  const previewedCardHeld =
+    previewedSlotIndex !== null && state.kind === "hold_select"
+      ? state.held.has(previewedSlotIndex)
+      : false;
 
   const heroSlot = (
     <div
@@ -804,28 +913,45 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
             Comparing…
           </span>
         </div>
-      ) : showStage2 ? (
-        <div data-h2h-play-intro="stage2">
-          <PartsLine
-            key="recipient-stage2"
-            parts={stage2Line}
-            rush
-            winTier={senderWinTier}
-            missTier={missTierLabel}
-            style={introTypography}
+      ) : state.kind === "hold_select" ? (
+        // Preview window. Either the previewed card (big, via
+        // renderBattlefieldCard) or a defined empty box with visible
+        // border. Card is wrapped in a sized container so both states
+        // occupy the same vertical footprint (no layout jump on first
+        // preview tap).
+        previewedSlotIndex !== null && previewedCard ? (
+          <div
+            data-h2h-play-preview="card"
+            data-h2h-play-preview-slot={previewedSlotIndex}
+            data-h2h-play-preview-held={previewedCardHeld ? "true" : "false"}
+            style={{
+              width: previewCardWidthCss,
+              height: previewCardHeightCss,
+              borderRadius: 8,
+              overflow: "hidden",
+              boxSizing: "border-box",
+            }}
+          >
+            {renderBattlefieldCard(
+              {
+                ...(previewedCard as unknown as H2HCard),
+                wasHeld: previewedCardHeld,
+              } as H2HCard,
+            )}
+          </div>
+        ) : (
+          <div
+            data-h2h-play-preview="empty"
+            style={{
+              width: previewCardWidthCss,
+              height: previewCardHeightCss,
+              borderRadius: 8,
+              border: "1px dashed rgba(255,255,255,0.18)",
+              background: "transparent",
+              boxSizing: "border-box",
+            }}
           />
-        </div>
-      ) : showStage1 ? (
-        <div data-h2h-play-intro="stage1">
-          <PartsLine
-            key="recipient-stage1"
-            parts={stage1Line}
-            rush
-            winTier={senderWinTier}
-            missTier={missTierLabel}
-            style={introTypography}
-          />
-        </div>
+        )
       ) : (
         <div
           data-h2h-play-headline="true"
@@ -959,7 +1085,11 @@ function deriveHeadline(
     case "deal_in":
       return `Here's the same starting hand as ${namedChallenger ?? "your friend"}.`;
     case "hold_select":
-      return "Choose the cards you want to hold. Unheld cards will be replaced.";
+      // Polish #11 — instructional copy describes the preview-then-hold
+      // interaction. Surfaced as the headline-fallback when Stage 1 has
+      // dismissed but no card is confirmed-held yet
+      // (heldCount===0 && introDismissed).
+      return "Tap a card to preview. Tap again to hold.";
     case "redraw_running":
     case "column_flip":
       return "Drawing…";

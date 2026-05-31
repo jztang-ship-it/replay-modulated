@@ -326,18 +326,31 @@ describe("H2HRecipientPlay — state 2 → hold_select (P7 MVP functional tap)",
     }
   });
 
-  it("tapping a face-up cell toggles its held attribute", async () => {
+  // Polish #11 (docs/11-preview-then-hold-design-lock.md §3): tap on a
+  // non-previewed cell sets preview (no hold change); tap on the
+  // already-previewed cell flips its held bit. So the hold-toggle
+  // cycle is THREE taps on the same cell: preview → hold → unhold.
+  it("tap cycle on a single cell: preview → hold → unhold", async () => {
     await dealThrough();
     const cell = screen.getByTestId("bottom-strip-up-2");
+    // 1st tap: preview only. data-held should remain "false".
     fireEvent.click(cell);
+    expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("false");
+    // 2nd tap on same cell: hold. data-held → "true".
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("true");
+    // 3rd tap on same cell: unhold. data-held → "false".
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("false");
   });
 
-  it("multiple holds + Draw CTA is enabled", async () => {
+  it("multiple holds + Draw CTA is enabled (tap-tap per cell under #11)", async () => {
     await dealThrough();
+    // Hold cell 1 (preview → hold).
     fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
+    // Hold cell 4 (preview moves to 4, then 2nd tap holds).
+    fireEvent.click(screen.getByTestId("bottom-strip-up-4"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-4"));
     expect(screen.getByTestId("bottom-strip-up-1").getAttribute("data-held")).toBe("true");
     expect(screen.getByTestId("bottom-strip-up-4").getAttribute("data-held")).toBe("true");
@@ -358,8 +371,10 @@ describe("H2HRecipientPlay — state 3a (redraw_running) — path β", () => {
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
-    // Hold slot 1 and slot 3.
+    // Hold slot 1 and slot 3 (tap-tap each per #11 preview-then-hold).
     fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-3"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-3"));
     // Switch to real timers so the async redrawRoster microtask
     // resolves cleanly.
@@ -394,7 +409,8 @@ describe("H2HRecipientPlay — state 3a (redraw_running) — path β", () => {
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
-    // Hold slot 2.
+    // Hold slot 2 (tap-tap per #11).
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     vi.useRealTimers();
     fireEvent.click(screen.getByText("Draw"));
@@ -428,6 +444,8 @@ describe("H2HRecipientPlay — state 3b (column_flip) — LEFT→RIGHT", () => {
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
+    // Polish #11 (preview-then-hold): two taps confirm the hold.
+    fireEvent.click(screen.getByTestId(`bottom-strip-up-${heldSlot}`));
     fireEvent.click(screen.getByTestId(`bottom-strip-up-${heldSlot}`));
     vi.useRealTimers();
     fireEvent.click(screen.getByText("Draw"));
@@ -520,8 +538,15 @@ describe("H2HRecipientPlay — S5 held-card position invariant", () => {
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
+    // Polish #11 (preview-then-hold): two taps to confirm hold of slot 3.
+    // First tap previews (also renders the card big in the hero zone via
+    // renderBattlefieldCard — so getByText("Init-3") now matches BOTH the
+    // mini cell and the big preview). Scope text queries to the bottom
+    // strip explicitly.
     fireEvent.click(screen.getByTestId("bottom-strip-up-3"));
-    expect(screen.getByText("Init-3").closest("[data-h2h-play-bottom-cell]")?.getAttribute("data-h2h-play-bottom-cell")).toBe("3");
+    fireEvent.click(screen.getByTestId("bottom-strip-up-3"));
+    const cell3 = document.querySelector(`[data-h2h-play-bottom-cell="3"]`) as HTMLElement;
+    expect(cell3.textContent).toContain("Init-3");
 
     vi.useRealTimers();
     fireEvent.click(screen.getByText("Draw"));
@@ -530,9 +555,10 @@ describe("H2HRecipientPlay — S5 held-card position invariant", () => {
       () => expect(screen.queryByTestId("top-strip-up-5")).not.toBeNull(),
       { timeout: 4000 },
     );
-    // Held card is still in slot 3, still showing Init-3.
-    const heldCell = screen.getByText("Init-3").closest("[data-h2h-play-bottom-cell]");
-    expect(heldCell?.getAttribute("data-h2h-play-bottom-cell")).toBe("3");
+    // Held card is still in slot 3, still showing Init-3 (S5 invariant:
+    // held card stays at its slot position).
+    const heldCell = document.querySelector(`[data-h2h-play-bottom-cell="3"]`) as HTMLElement;
+    expect(heldCell?.textContent).toContain("Init-3");
     expect(heldCell?.getAttribute("data-held")).toBe("true");
   });
 });
@@ -549,7 +575,8 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
       () => expect(screen.queryByText("Draw")).not.toBeNull(),
       { timeout: 2000 },
     );
-    // Hold slot 4.
+    // Hold slot 4 (tap-tap per #11).
+    fireEvent.click(screen.getByTestId("bottom-strip-up-4"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-4"));
     fireEvent.click(screen.getByText("Draw"));
 
@@ -872,7 +899,7 @@ describe("H2HRecipientPlay — bottom-strip H badge regression-locks", () => {
     expect(badgesAfterDeal.length).toBe(0);
   });
 
-  it("Fix 1 tap drives badge: tap slot 2 → H badge appears in cell 2; untap → gone", async () => {
+  it("Fix 1 tap drives badge under #11 preview-then-hold: first tap previews (no badge), second tap holds (badge in cell 2), third tap unholds (badge gone)", async () => {
     vi.useFakeTimers();
     const props = baseProps({ renderPlayingStripCard: badgeRenderer } as any);
     const { container } = render(
@@ -885,14 +912,18 @@ describe("H2HRecipientPlay — bottom-strip H badge regression-locks", () => {
     // Pre-tap: no badges.
     expect(container.querySelectorAll(`[data-h2h-play-bottom-cell] [data-h-badge]`).length).toBe(0);
 
-    // Tap slot 2 → H badge inside cell 2, nowhere else.
+    // 1st tap slot 2 → preview ONLY. No H badge on mini cells (held set is empty).
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
-    const badgesAfterTap = container.querySelectorAll(`[data-h2h-play-bottom-cell] [data-h-badge]`);
-    expect(badgesAfterTap.length).toBe(1);
+    expect(container.querySelectorAll(`[data-h2h-play-bottom-cell] [data-h-badge]`).length).toBe(0);
+
+    // 2nd tap on the previewed cell → hold. Badge appears in cell 2.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    const badgesAfterHold = container.querySelectorAll(`[data-h2h-play-bottom-cell] [data-h-badge]`);
+    expect(badgesAfterHold.length).toBe(1);
     const cell2 = container.querySelector(`[data-h2h-play-bottom-cell="2"]`);
     expect(cell2?.querySelector(`[data-h-badge]`)).not.toBeNull();
 
-    // Untap → badge gone.
+    // 3rd tap on the same previewed cell → unhold. Badge gone.
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     expect(container.querySelectorAll(`[data-h2h-play-bottom-cell] [data-h-badge]`).length).toBe(0);
   });
@@ -907,13 +938,15 @@ describe("H2HRecipientPlay — bottom-strip H badge regression-locks", () => {
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 8);
     });
+    // Polish #11: two taps to confirm hold of slot 2.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     vi.useRealTimers();
     fireEvent.click(screen.getByText("Draw"));
     await waitFor(() => expect(props.redrawRoster).toHaveBeenCalledTimes(1));
     const callArg = props.redrawRoster.mock.calls[0][0];
-    // Pins the chain: only the user's tap (slot 2) — NOT slots 4/5
-    // (which had snapshot wasHeld:true) — reaches redrawRoster.
+    // Pins the chain: only the user's confirmed hold (slot 2) — NOT
+    // slots 4/5 (which had snapshot wasHeld:true) — reaches redrawRoster.
     expect(callArg.lockedCardIds.size).toBe(1);
     expect(callArg.lockedCardIds.has("init-2")).toBe(true);
     expect(callArg.lockedCardIds.has("init-4")).toBe(false);
@@ -1024,7 +1057,12 @@ describe("H2HRecipientPlay — happy-path E2E (regression-lock for C/D fixed)", 
 
     fireEvent.click(screen.getByText("Deal"));
     await waitFor(() => expect(screen.queryByText("Draw")).not.toBeNull(), { timeout: 2000 });
+    // Polish #11: confirm hold of slot 1 with tap-tap, then slot 5 with
+    // tap-tap. (Tap-tap on a previously-previewed cell holds it; moving
+    // to a different cell only previews it, never holds.)
     fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-5"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-5"));
     fireEvent.click(screen.getByText("Draw"));
 
@@ -1078,20 +1116,38 @@ describe("H2HRecipientPlay — Stage 1/2 intro mount (Phase 5c S3)", () => {
     expect(container.querySelector("[data-h2h-play-headline]")).toBeNull();
   });
 
-  it("swaps Stage 1 → Stage 2 on first hold-tap", async () => {
+  // Polish #11 (§6): Stage 1 dismisses on FIRST PREVIEW tap; Stage 2
+  // swaps in on FIRST CONFIRMED HOLD (second tap on same cell).
+  it("first preview tap dismisses Stage 1 (but Stage 2 does NOT fire yet — no held card)", async () => {
     const { container } = await dealThroughCtx(s3Ctx());
     expect(container.querySelector('[data-h2h-play-intro="stage1"]')).not.toBeNull();
+    // 1st tap → preview only. Stage 1 dismisses; Stage 2 NOT yet.
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     expect(container.querySelector('[data-h2h-play-intro="stage1"]')).toBeNull();
-    expect(container.querySelector('[data-h2h-play-intro="stage2"]')).not.toBeNull();
+    expect(container.querySelector('[data-h2h-play-intro="stage2"]')).toBeNull();
+    // The instructional headline ("Tap a card to preview…") takes over
+    // during this preview-not-yet-held interval.
+    expect(container.querySelector("[data-h2h-play-headline]")).not.toBeNull();
   });
 
-  it("Stage 1 stays dismissed after un-hold back to held.size === 0", async () => {
+  it("Stage 2 swaps in on first confirmed hold (second tap on previewed cell)", async () => {
     const { container } = await dealThroughCtx(s3Ctx());
-    // Hold then un-hold the same cell.
+    // 1st tap: preview slot 2.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    // 2nd tap on same cell: hold. Stage 2 fires.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    expect(container.querySelector('[data-h2h-play-intro="stage2"]')).not.toBeNull();
+    expect(container.querySelector('[data-h2h-play-intro="stage1"]')).toBeNull();
+  });
+
+  it("Stage 1 stays dismissed after the preview-then-unhold round-trip", async () => {
+    const { container } = await dealThroughCtx(s3Ctx());
+    // Preview → hold → unhold the same cell.
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
-    // Neither stage shows; existing headline takes back over.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    // No cards held now (introDismissed is sticky); instructional
+    // headline (not Stage 1) takes over.
     expect(container.querySelector('[data-h2h-play-intro="stage1"]')).toBeNull();
     expect(container.querySelector('[data-h2h-play-intro="stage2"]')).toBeNull();
     expect(container.querySelector("[data-h2h-play-headline]")).not.toBeNull();
@@ -1113,6 +1169,8 @@ describe("H2HRecipientPlay — Stage 1/2 intro mount (Phase 5c S3)", () => {
     fireEvent.click(screen.getByText("Deal"));
     // Wait for hold_select.
     await waitFor(() => expect(screen.queryByText("Draw")).not.toBeNull(), { timeout: 3000 });
+    // Polish #11: tap-tap to confirm hold of slot 1.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
     expect(container.querySelector('[data-h2h-play-intro="stage2"]')).not.toBeNull();
     fireEvent.click(screen.getByText("Draw"));
@@ -1135,5 +1193,220 @@ describe("H2HRecipientPlay — Stage 1/2 intro mount (Phase 5c S3)", () => {
     // the legacy data shape (no flat error / null Line).
     const { container } = await dealThroughCtx(makeCtx());
     expect(container.querySelector('[data-h2h-play-intro="stage1"]')).not.toBeNull();
+  });
+});
+
+// ── 13. Polish #11 — preview-then-hold interaction (§9 of design lock) ─
+
+describe("H2HRecipientPlay — Polish #11 preview-then-hold", () => {
+  async function dealThroughPreview(ctx = makeCtx()) {
+    vi.useFakeTimers();
+    const props = baseProps({ renderPlayingStripCard: badgeRenderer } as any);
+    const utils = render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
+    fireEvent.click(screen.getByText("Deal"));
+    await act(async () => {
+      vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
+    });
+    return { ...utils, props };
+  }
+
+  // ── §9 — preview doesn't hold ──────────────────────────────────────
+  it("§9 — first tap on a non-previewed cell sets preview; held set unchanged; big card renders", async () => {
+    const { container } = await dealThroughPreview();
+    // Pre-tap: hero region shows the EMPTY preview placeholder.
+    expect(container.querySelector('[data-h2h-play-preview="empty"]')).not.toBeNull();
+    expect(container.querySelector('[data-h2h-play-preview="card"]')).toBeNull();
+
+    fireEvent.click(screen.getByTestId("bottom-strip-up-3"));
+
+    // Big preview now mounts for slot 3.
+    const previewCard = container.querySelector('[data-h2h-play-preview="card"]');
+    expect(previewCard).not.toBeNull();
+    expect(previewCard?.getAttribute("data-h2h-play-preview-slot")).toBe("3");
+    expect(previewCard?.getAttribute("data-h2h-play-preview-held")).toBe("false");
+
+    // The mini cell is NOT held (data-held still false; no H badge).
+    expect(screen.getByTestId("bottom-strip-up-3").getAttribute("data-held")).toBe("false");
+    expect(container.querySelectorAll(`[data-h2h-play-bottom-cell] [data-h-badge]`).length).toBe(0);
+  });
+
+  // ── §9 — second tap holds ──────────────────────────────────────────
+  it("§9 — second tap on the previewed cell holds it (yellow border + H mark)", async () => {
+    const { container } = await dealThroughPreview();
+    // Preview slot 3.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-3"));
+    // 2nd tap → hold.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-3"));
+
+    // Mini cell: data-held="true" + H badge.
+    expect(screen.getByTestId("bottom-strip-up-3").getAttribute("data-held")).toBe("true");
+    expect(container.querySelectorAll(`[data-h2h-play-bottom-cell] [data-h-badge]`).length).toBe(1);
+    const cell3 = container.querySelector(`[data-h2h-play-bottom-cell="3"]`);
+    expect(cell3?.querySelector(`[data-h-badge]`)).not.toBeNull();
+
+    // Big preview: data-h2h-play-preview-held="true" (the H-mark surface
+    // on the big card is driven by the same `wasHeld` override).
+    const previewCard = container.querySelector('[data-h2h-play-preview="card"]');
+    expect(previewCard?.getAttribute("data-h2h-play-preview-held")).toBe("true");
+  });
+
+  // ── §9 — third tap unholds ─────────────────────────────────────────
+  it("§9 — third tap on the same cell unholds it (markers clear)", async () => {
+    const { container } = await dealThroughPreview();
+    fireEvent.click(screen.getByTestId("bottom-strip-up-3")); // preview
+    fireEvent.click(screen.getByTestId("bottom-strip-up-3")); // hold
+    fireEvent.click(screen.getByTestId("bottom-strip-up-3")); // unhold
+
+    expect(screen.getByTestId("bottom-strip-up-3").getAttribute("data-held")).toBe("false");
+    expect(container.querySelectorAll(`[data-h2h-play-bottom-cell] [data-h-badge]`).length).toBe(0);
+    // Preview window: card still shown big (unhold doesn't move preview),
+    // but the held marker is cleared.
+    const previewCard = container.querySelector('[data-h2h-play-preview="card"]');
+    expect(previewCard?.getAttribute("data-h2h-play-preview-slot")).toBe("3");
+    expect(previewCard?.getAttribute("data-h2h-play-preview-held")).toBe("false");
+  });
+
+  // ── §9 — move-resets-cycle ─────────────────────────────────────────
+  it("§9 — moving preview A→B→A previews A (does NOT hold A); tapping A again holds it", async () => {
+    const { container } = await dealThroughPreview();
+    // Preview slot 1.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
+    // Move preview to slot 4 (cycle resets — slot 1 was never held, still isn't).
+    fireEvent.click(screen.getByTestId("bottom-strip-up-4"));
+    expect(container.querySelector('[data-h2h-play-preview="card"]')?.getAttribute("data-h2h-play-preview-slot")).toBe("4");
+    expect(screen.getByTestId("bottom-strip-up-1").getAttribute("data-held")).toBe("false");
+    expect(screen.getByTestId("bottom-strip-up-4").getAttribute("data-held")).toBe("false");
+
+    // Move back to slot 1. Per §3 this is a PREVIEW (slot 1 is no longer
+    // the currently-previewed card — slot 4 is). So tap on 1 = preview 1.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
+    expect(container.querySelector('[data-h2h-play-preview="card"]')?.getAttribute("data-h2h-play-preview-slot")).toBe("1");
+    expect(screen.getByTestId("bottom-strip-up-1").getAttribute("data-held")).toBe("false");
+
+    // Tap slot 1 AGAIN — now it IS the previewed cell, so this holds it.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
+    expect(screen.getByTestId("bottom-strip-up-1").getAttribute("data-held")).toBe("true");
+    expect(container.querySelector('[data-h2h-play-preview="card"]')?.getAttribute("data-h2h-play-preview-held")).toBe("true");
+  });
+
+  // ── §9 — held survives Draw ────────────────────────────────────────
+  it("§9 — held survives Draw: state.held at Draw time = only confirmed holds (preview-only excluded)", async () => {
+    const { props } = await dealThroughPreview();
+    // Preview slot 2, then move preview to slot 4 (slot 2 NEVER becomes held).
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-4"));
+    // Confirm hold of slot 4 (tap again on previewed cell).
+    fireEvent.click(screen.getByTestId("bottom-strip-up-4"));
+
+    vi.useRealTimers();
+    fireEvent.click(screen.getByText("Draw"));
+
+    await waitFor(() => expect(props.redrawRoster).toHaveBeenCalledTimes(1));
+    const callArg = props.redrawRoster.mock.calls[0][0];
+    // Only slot 4 is in lockedCardIds. Slot 2 was preview-only.
+    expect(callArg.lockedCardIds.size).toBe(1);
+    expect(callArg.lockedCardIds.has("init-4")).toBe(true);
+    expect(callArg.lockedCardIds.has("init-2")).toBe(false);
+  });
+
+  // ── §9 — intro dismiss on first preview ────────────────────────────
+  it("§9 — Stage 1 dismisses on first preview tap; Stage 2 does NOT fire until first confirmed hold", async () => {
+    vi.useFakeTimers();
+    const ctx = makeCtx({
+      triggerType: "big_score",
+      resolvedSenderHand: makeSenderHand(),
+      anchorBasePlayerId: "p3",
+    });
+    const { container } = render(<H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />);
+    fireEvent.click(screen.getByText("Deal"));
+    await act(async () => {
+      vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
+    });
+    // Stage 1 mounted on hold_select entry.
+    expect(container.querySelector('[data-h2h-play-intro="stage1"]')).not.toBeNull();
+    expect(container.querySelector('[data-h2h-play-intro="stage2"]')).toBeNull();
+
+    // First PREVIEW tap dismisses Stage 1; Stage 2 not yet (no hold).
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    expect(container.querySelector('[data-h2h-play-intro="stage1"]')).toBeNull();
+    expect(container.querySelector('[data-h2h-play-intro="stage2"]')).toBeNull();
+    expect(container.querySelector("[data-h2h-play-headline]")).not.toBeNull();
+
+    // Second tap on same cell = HOLD → Stage 2 fires.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    expect(container.querySelector('[data-h2h-play-intro="stage2"]')).not.toBeNull();
+  });
+
+  // ── §9 — introSig-pinned lines stable across preview taps (S3 regression guard) ──
+  it("§9 — introSig-pinned Stage 2 line stays byte-stable when preview moves to a different cell", async () => {
+    // The ref-pinning invariant (S3): the picked Stage 1/2 line is locked
+    // into a useRef keyed on introSig, which derives PURELY from ctx
+    // fields. Local state changes (held, previewedSlotIndex) must NOT
+    // re-trigger pickWithAntiRepeat. Verify this by confirming hold of
+    // one card → Stage 2 mounts → move preview to another card (no held
+    // change) → Stage 2 text is byte-identical. If the ref pin broke
+    // and pickWithAntiRepeat re-fired on the preview tap, the random
+    // selector would (probably) swap the line.
+    vi.useRealTimers(); // Typewriter rush needs real timers to paint
+    const ctx = makeCtx({
+      triggerType: "big_score",
+      resolvedSenderHand: makeSenderHand(),
+      anchorBasePlayerId: "p3",
+    });
+    const { container } = render(<H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />);
+    fireEvent.click(screen.getByText("Deal"));
+    await waitFor(() => expect(screen.queryByText("Draw")).not.toBeNull(), { timeout: 3000 });
+
+    // Confirm hold of slot 2 (tap-tap). Stage 2 mounts.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    await waitFor(
+      () => {
+        const el = container.querySelector('[data-h2h-play-intro="stage2"]');
+        expect(el?.textContent?.length ?? 0).toBeGreaterThan(20);
+      },
+      { timeout: 2000 },
+    );
+    const stage2A = container.querySelector('[data-h2h-play-intro="stage2"]')?.textContent ?? "";
+
+    // Move preview to slot 5 (no hold change; held.size still 1).
+    fireEvent.click(screen.getByTestId("bottom-strip-up-5"));
+    // Stage 2 still mounted (heldCount > 0). Text must be byte-identical
+    // — the introSig key is ctx-derived and the preview tap didn't
+    // touch ctx.
+    const stage2B = container.querySelector('[data-h2h-play-intro="stage2"]')?.textContent ?? "";
+    expect(stage2B).toBe(stage2A);
+
+    // Move preview again to slot 0. Still no hold change. Still pinned.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-0"));
+    const stage2C = container.querySelector('[data-h2h-play-intro="stage2"]')?.textContent ?? "";
+    expect(stage2C).toBe(stage2A);
+  });
+
+  // ── §9 — VS beat overrides preview render ──────────────────────────
+  it("§9 — VS beat (handoff_resolving) overrides preview render in the hero zone", async () => {
+    // Use real timers so the async redraw + resolve chain advances.
+    vi.useRealTimers();
+    const props = baseProps();
+    const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
+    const { container } = render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
+    fireEvent.click(screen.getByText("Deal"));
+    await waitFor(() => expect(screen.queryByText("Draw")).not.toBeNull(), { timeout: 3000 });
+
+    // Preview + hold slot 2 so the preview window is populated.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    expect(container.querySelector('[data-h2h-play-preview="card"]')).not.toBeNull();
+
+    // Draw transitions through redraw_running → column_flip → handoff_resolving.
+    fireEvent.click(screen.getByText("Draw"));
+
+    // VS treatment must take over the hero zone, displacing the preview.
+    await waitFor(
+      () => expect(container.querySelector("[data-h2h-play-vs]")).not.toBeNull(),
+      { timeout: 6000 },
+    );
+    expect(container.querySelector('[data-h2h-play-preview="card"]')).toBeNull();
+    expect(container.querySelector('[data-h2h-play-preview="empty"]')).toBeNull();
   });
 });
