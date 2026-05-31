@@ -103,6 +103,22 @@ export function useChallengeShare(sportKey: string) {
         anchor_base_player_id: trigger.anchorBasePlayerId ?? null,
         top_game_tier: trigger.topGameTier ?? null,
       };
+      // TEMP-DEBUG (Phase 5c diagnostic, removable). Logs the four
+      // trigger-detail values immediately before they go onto the wire.
+      // If trigger-result above shows anchorBasePlayerId set but this
+      // log shows null, the bug is in the body construction. If this
+      // log shows the anchor set and the prod row still has null, the
+      // bug is on the server side (create.ts destructure / insert).
+      // eslint-disable-next-line no-console
+      console.log("[DBG] create-body", {
+        trigger_type: body.trigger_type,
+        anchor_base_player_id: body.anchor_base_player_id,
+        top_game_tier: body.top_game_tier,
+        near_miss_gap: body.near_miss_gap,
+        near_miss_next_tier: body.near_miss_next_tier,
+        trigger_obj_keys: Object.keys(trigger),
+        trigger_obj_anchor: (trigger as any).anchorBasePlayerId,
+      });
       const resp = await fetch("/api/challenge/create", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeader },

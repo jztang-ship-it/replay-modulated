@@ -1950,6 +1950,40 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       // RARE_PULL_SEASON bank.
       const topGamePrimaryReason = topGameInfoHolder.current?.topGame?.primaryReason ?? null;
       const topGameAllReasons = topGameInfoHolder.current?.topGame?.allReasons ?? null;
+      // TEMP-DEBUG (Phase 5c diagnostic, removable). Logs the live
+      // evaluateTrigger input shape so we can see whether the per-card
+      // fields the bad_beat/big_score anchor helpers read (actualFp,
+      // projectedFp, wasHeld, salary, basePlayerId) actually exist on
+      // the production roster at this call site. Test rosters carry
+      // them; live rosters MAY not. Version marker proves the deployed
+      // bundle is post-Path-A.
+      // eslint-disable-next-line no-console
+      console.log("[DBG] trigger-input version=path-A-9c2844d", {
+        winTier: tier,
+        rosterLen: resolvedRoster?.length,
+        sampleCard: resolvedRoster?.[0] && {
+          basePlayerId: (resolvedRoster[0] as any).basePlayerId,
+          actualFp: (resolvedRoster[0] as any).actualFp,
+          projectedFp: (resolvedRoster[0] as any).projectedFp,
+          wasHeld: (resolvedRoster[0] as any).wasHeld,
+          salary: (resolvedRoster[0] as any).salary,
+          name: (resolvedRoster[0] as any).name,
+          tier: (resolvedRoster[0] as any).tier,
+          allKeys: Object.keys(resolvedRoster[0] as any),
+        },
+        heldCards: resolvedRoster
+          ?.filter((c: any) => c.wasHeld === true)
+          ?.map((c: any) => ({
+            basePlayerId: c.basePlayerId,
+            name: c.name,
+            tier: c.tier,
+            actualFp: c.actualFp,
+            projectedFp: c.projectedFp,
+            salary: c.salary,
+          })),
+        topGameTier,
+        starBasePlayerId,
+      });
       const result = evaluateTrigger({
         roster: resolvedRoster,
         totalFp: fp,
@@ -1960,6 +1994,17 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         starBasePlayerId,
         topGamePrimaryReason,
         topGameAllReasons,
+      });
+      // TEMP-DEBUG: log the FINAL evaluateTrigger return — proves
+      // whether evaluateTrigger emitted the anchor at all, or whether
+      // it's lost between here and the POST body.
+      // eslint-disable-next-line no-console
+      console.log("[DBG] trigger-result", {
+        trigger: result.trigger,
+        anchorBasePlayerId: result.anchorBasePlayerId,
+        topGameTier: result.topGameTier,
+        nearMissGap: result.nearMissGap,
+        nearMissNextTier: result.nearMissNextTier,
       });
 
       // QA diagnostic — one log per hand. Includes the inputs the
