@@ -51,6 +51,22 @@ export const BOTTOM_ZONE_MARGIN_BOTTOM_PX = 0;
  *  This is the load-bearing detail for S3→S4 no-shift (EDIT B2). */
 export const HERO_MIN_HEIGHT_CSS = `calc(min(145px, 32vw) * ${((478 / 329) * 2).toFixed(6)} + 14px)`;
 
+/** Hero region's reduced minHeight during the hold_select preview window
+ *  (docs/holdselect-vertical-budget-design-lock.md §2(3)). One hero-card
+ *  footprint (preview-card height) plus 24px breathing room. Reclaims
+ *  ~139–172px depending on viewport width while preserving a comfortable
+ *  surround around the centered preview card. Animated back to
+ *  HERO_MIN_HEIGHT_CSS via CSS transition when state transitions out of
+ *  hold_select — sized so the restoration finishes inside one
+ *  COLUMN_FLIP_DURATION_MS window (~250ms), absorbed into column_flip's
+ *  natural choreography so the recipient strip doesn't visibly lurch. */
+export const HERO_MIN_HEIGHT_HOLD_SELECT_CSS = `calc(min(145px, 32vw) * ${(478 / 329).toFixed(6)} + 24px)`;
+
+/** Duration of the hero-region minHeight restore transition. Synced with
+ *  COLUMN_FLIP_DURATION_MS (250ms) per the design lock so the expansion
+ *  feels like the first beat of the column_flip choreography. */
+export const HERO_MIN_HEIGHT_TRANSITION_MS = 250;
+
 // ── Sub-components (moved verbatim from H2HRevealScreen) ────────────
 
 /** Zone panel — glass-chrome wrapper for hand-strip zones. Mirrors
@@ -175,6 +191,31 @@ export interface H2HBoardShellProps {
    *  continuity — the reveal must be inside the playing root for
    *  `playingRoot.contains(revealRoot)` to hold). */
   compositeOverlay?: React.ReactNode;
+  /** hold_select vertical-budget fix (docs/holdselect-vertical-budget-
+   *  design-lock.md §2/§3). Optional override for the hero region's
+   *  minHeight — H2HRecipientPlay passes HERO_MIN_HEIGHT_HOLD_SELECT_CSS
+   *  while in hold_select, default HERO_MIN_HEIGHT_CSS in all other
+   *  states. CSS transition animates the restore on state exit so the
+   *  expansion folds into column_flip's natural choreography. */
+  heroMinHeight?: string;
+  /** Optional override for the top zone's marginBottom. H2HRecipientPlay
+   *  passes a fluid clamp() during hold_select; default
+   *  TOP_ZONE_MARGIN_BOTTOM_PX in all other states. */
+  topZoneMarginBottom?: number | string;
+  /** Optional override for the hero region's marginBottom. */
+  heroMarginBottom?: number | string;
+  /** When true (hold_select scroll fallback), the inner column gets
+   *  overflow-y:auto so content above the comfortable floor scrolls
+   *  rather than overflowing the viewport. No effect on viewports above
+   *  the floor — natural CSS behavior shows no scroll when content
+   *  fits. Adaptation is automatic; no hard pixel threshold. */
+  innerScrollable?: boolean;
+  /** When true (hold_select scroll fallback partner), the belowBoard
+   *  wrapper becomes position:sticky;bottom:0 so the Draw CTA stays
+   *  pinned to the visible bottom while the user scrolls the rest of
+   *  the content. No visual effect when content fits (sticky degrades to
+   *  relative). */
+  belowBoardSticky?: boolean;
 }
 
 // ── Shell ───────────────────────────────────────────────────────────
@@ -183,7 +224,11 @@ export function H2HBoardShell(props: H2HBoardShellProps) {
   const {
     topLabel, bottomLabel, topStrip, bottomStrip, hero, belowBoard, surfaceKind,
     rootDataAttrs, innerOpacity, innerTransitionMs, innerDataAttr, compositeOverlay,
+    heroMinHeight, topZoneMarginBottom, heroMarginBottom, innerScrollable, belowBoardSticky,
   } = props;
+  const resolvedHeroMinHeight = heroMinHeight ?? HERO_MIN_HEIGHT_CSS;
+  const resolvedTopZoneMargin = topZoneMarginBottom ?? TOP_ZONE_MARGIN_BOTTOM_PX;
+  const resolvedHeroMargin = heroMarginBottom ?? HERO_MARGIN_BOTTOM_PX;
   return (
     <div
       data-h2h-board-shell="true"
@@ -214,6 +259,7 @@ export function H2HBoardShell(props: H2HBoardShellProps) {
           with H2HRecipientReveal's wrapper crossfade (Fix C2). */}
       <div
         data-h2h-board-inner="true"
+        data-h2h-inner-scrollable={innerScrollable ? "true" : undefined}
         {...(innerDataAttr ? { [innerDataAttr]: "true" } : {})}
         style={{
           width: "100%",
@@ -228,6 +274,18 @@ export function H2HBoardShell(props: H2HBoardShellProps) {
           justifyContent: "flex-start",
           alignItems: "stretch",
           gap: 0,
+          // Scroll fallback (lock §3). When the viewport falls below the
+          // comfortable floor, content overflows the available height and
+          // overflow-y:auto engages. Above the floor, no scroll appears.
+          // Adaptation is automatic — natural CSS behavior, no JS
+          // threshold check. -webkit-overflow-scrolling for momentum on
+          // iOS.
+          ...(innerScrollable
+            ? {
+                overflowY: "auto" as const,
+                WebkitOverflowScrolling: "touch" as const,
+              }
+            : {}),
           ...(innerOpacity !== undefined ? {
             opacity: innerOpacity,
             transition: `opacity ${innerTransitionMs ?? 250}ms ease-in`,
@@ -236,20 +294,26 @@ export function H2HBoardShell(props: H2HBoardShellProps) {
         }}
       >
         {/* Top framed container (opponent zone) — header above strip */}
-        <ZonePanel zone="top" style={{ marginBottom: TOP_ZONE_MARGIN_BOTTOM_PX }}>
+        <ZonePanel zone="top" style={{ marginBottom: resolvedTopZoneMargin }}>
           <ZoneHeader label={topLabel} position="top" />
           {topStrip}
         </ZonePanel>
 
-        {/* Hero region — minHeight locked. Content centers vertically
-            so guidance copy reads at hero-center; battlefield grid
-            (natural-height ≈ minHeight) lands top-aligned. */}
+        {/* Hero region — minHeight defaults to HERO_MIN_HEIGHT_CSS but
+            H2HRecipientPlay overrides to HERO_MIN_HEIGHT_HOLD_SELECT_CSS
+            during hold_select (lock §2(3)). Transition animates the
+            restore on state exit so the expansion absorbs into
+            column_flip's natural choreography (no instant jump). Content
+            centers vertically so guidance copy reads at hero-center;
+            battlefield grid (natural-height ≈ minHeight) lands
+            top-aligned. */}
         <div
           data-h2h-board-zone="hero"
           style={{
             flex: "0 0 auto",
-            minHeight: HERO_MIN_HEIGHT_CSS,
-            marginBottom: HERO_MARGIN_BOTTOM_PX,
+            minHeight: resolvedHeroMinHeight,
+            marginBottom: resolvedHeroMargin,
+            transition: `min-height ${HERO_MIN_HEIGHT_TRANSITION_MS}ms ease`,
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
@@ -269,17 +333,54 @@ export function H2HBoardShell(props: H2HBoardShellProps) {
             strip. Empty on the reveal; holds the playing-mode CTA via
             belowBoard. Absorbs viewport slack so the top-strip → hero
             → bottom-strip block sits as a tight composition near the
-            top of the viewport. */}
+            top of the viewport.
+            Scroll-fallback partner (lock §3): when belowBoardSticky is
+            set, the wrapper around belowBoard becomes position:sticky
+            bottom:0 so the CTA stays pinned to the visible bottom while
+            content scrolls. Sticky degrades to relative when content
+            fits, so no visual effect above the floor. */}
         <div
           data-h2h-reserved-bottom="true"
           aria-hidden={belowBoard ? undefined : "true"}
           style={{
-            flex: "1 1 auto",
-            minHeight: 0,
-            display: belowBoard ? "flex" : undefined,
-            flexDirection: belowBoard ? "column" : undefined,
-            alignItems: belowBoard ? "center" : undefined,
-            justifyContent: belowBoard ? "flex-start" : undefined,
+            // Default reserved-bottom: flex:1 grows to fill remaining
+            // space (pushes CTA to viewport bottom when content fits).
+            // Scroll-fallback variant (lock §3): switch to content-sized
+            // + margin-top:auto + position:sticky:bottom:0. Why:
+            //   - flex:1 1 auto + minHeight:0 SHRINKS to 0 under overflow
+            //     (children render outside the box). When the CTA wrapper
+            //     was inside a sticky+flex:1 element, the sticky element
+            //     was 0px tall and the CTA rendered BELOW it,
+            //     off-screen.
+            //   - flex:0 0 auto sizes to content (~77px), so sticky's
+            //     bounding box matches the CTA's actual visual region.
+            //   - margin-top:auto pushes reserved-bottom to the bottom
+            //     of the flex column when there's leftover space (=
+            //     "no scroll" case), so the CTA visually sits at the
+            //     viewport bottom even when content doesn't overflow.
+            //   - When content overflows, sticky:bottom:0 pins reserved-
+            //     bottom to the visible scroll-port bottom (the CTA
+            //     stays pinned through any scroll position).
+            ...(belowBoardSticky && belowBoard
+              ? {
+                  flex: "0 0 auto",
+                  marginTop: "auto",
+                  position: "sticky" as const,
+                  bottom: 0,
+                  zIndex: 1,
+                  display: "flex",
+                  flexDirection: "column" as const,
+                  alignItems: "center" as const,
+                  justifyContent: "flex-start" as const,
+                }
+              : {
+                  flex: "1 1 auto",
+                  minHeight: 0,
+                  display: belowBoard ? "flex" : undefined,
+                  flexDirection: belowBoard ? "column" : undefined,
+                  alignItems: belowBoard ? "center" : undefined,
+                  justifyContent: belowBoard ? "flex-start" : undefined,
+                }),
           }}
         >
           {belowBoard}

@@ -33,7 +33,28 @@ const CHALLENGER_NAME = "Mike";
 const ORIGIN = process.env.H2H_PLAY_ORIGIN ?? "http://localhost:5173";
 const REVEAL_URL = `${ORIGIN}/basketball/dev/h2h-reveal-mock`;
 const PLAY_URL = `${ORIGIN}/basketball/dev/h2h-play-mock?challengerName=${encodeURIComponent(CHALLENGER_NAME)}`;
-const VIEWPORT = { width: 390, height: 844 }; // iPhone 14 portrait
+const VIEWPORT = { width: 390, height: 844 }; // iPhone 14 portrait (control)
+
+// hold_select vertical-budget fix (docs/holdselect-vertical-budget-
+// design-lock.md §5/§6, 2026-06-01). The pre-fix regression on da5af3b
+// passed at 390×844 alone — its only viewport — so the harness saw a
+// green layout while the bottom strip + CTA were off-screen on every
+// URL-bar-visible or webview iOS variant.
+//
+// Sweep: each viewport models a real iOS rendering scenario. safeTop /
+// safeBottom replace the shell's two `calc(env(safe-area-inset-*) + 20px)`
+// paddings — env() is a CSS function, not a custom property, so we
+// inject at the consumer (#18 pass).
+const HS_SWEEP_VIEWPORTS = [
+  { label: "390×844 iPhone 14 (control, no URL bar)", width: 390, height: 844, safeTop: 47, safeBottom: 34 },
+  { label: "390×700 iPhone 14 + URL bar",             width: 390, height: 700, safeTop: 47, safeBottom: 34 },
+  { label: "390×664 iPhone 14 mid-scroll",            width: 390, height: 664, safeTop: 47, safeBottom: 34 },
+  { label: "360×590 iPhone XR + URL bar",             width: 360, height: 590, safeTop: 44, safeBottom: 34 },
+  { label: "320×520 iPhone SE 1g + URL bar",          width: 320, height: 520, safeTop: 20, safeBottom:  0 },
+  { label: "390×580 in-app webview (~90 top chrome)", width: 390, height: 580, safeTop: 90, safeBottom:  0 },
+];
+
+const OUTER_PAD_EXTRA_PX = 20; // matches the shell's "+ 20px" budget.
 
 // Layout timing constants — match shared/components/H2HRecipientPlay.tsx.
 const DEAL_CASCADE_INTERVAL_MS = 120;
@@ -246,6 +267,12 @@ async function runPlayHarness(browser) {
   // ── State 2 (deal_in → hold_select) ──
   await page.click("[data-h2h-play-cta][data-cta-label='Deal']");
   await page.waitForTimeout(DEAL_CASCADE_INTERVAL_MS * (ROSTER_SIZE + 2));
+  // Settle hold_select transitions (top-strip 80→0; hero floor 377→205;
+  // opacity 1→0) — all 250ms. The bottom strip moves up as hero
+  // collapses; cell-rect assertions must measure after the transition
+  // ends or the cell's flex-positioned y races the absolute-positioned
+  // front-face's reported y.
+  await page.waitForTimeout(COLUMN_FLIP_DURATION_MS + 100);
   const playStateAfterDeal = await page.locator("[data-h2h-recipient-play]").getAttribute("data-playing-state");
   record(`state-2 → hold_select reached after cascade (got "${playStateAfterDeal}")`, playStateAfterDeal === "hold_select");
 
@@ -543,17 +570,30 @@ async function runPlayHarness(browser) {
   const topLabel_arc = (await page.locator(`[data-h2h-board-zone-label="top"]`).first().textContent())?.trim().toUpperCase() ?? "";
   const bottomLabel_arc = (await page.locator(`[data-h2h-board-zone-label="bottom"]`).first().textContent())?.trim().toUpperCase() ?? "";
 
-  record(`S3→S4 top zone rect unchanged ±1px`, rectMatches(topRect_s3, topRect_arc), `s3=${fmtRect(topRect_s3)} arc=${fmtRect(topRect_arc)}`);
-  record(`S3→S4 bottom zone rect unchanged ±1px`, rectMatches(bottomRect_s3, bottomRect_arc), `s3=${fmtRect(bottomRect_s3)} arc=${fmtRect(bottomRect_arc)}`);
-  record(`S3→S4 hero region rect unchanged ±1px`, rectMatches(heroRect_s3, heroRect_arc), `s3=${fmtRect(heroRect_s3)} arc=${fmtRect(heroRect_arc)}`);
-  record(`S3→S4 top label unchanged`, topLabel_s3 === topLabel_arc, `s3="${topLabel_s3}" arc="${topLabel_arc}"`);
-  record(`S3→S4 bottom label unchanged`, bottomLabel_s3 === bottomLabel_arc, `s3="${bottomLabel_s3}" arc="${bottomLabel_arc}"`);
+  // hold_select vertical-budget fix (lock §4 invariant, 2026-06-01):
+  // the "no-shift across hold_select ↔ reveal" rule from doc EDIT B2
+  // was a load-bearing contract for #11 and earlier. After the budget
+  // fix, hold_select INTENTIONALLY compresses (collapsed opponent
+  // strip, reduced hero floor, fluid intro budget) to fit the recipient
+  // strip + CTA on real iOS viewports. The compression unwinds (via
+  // the shell's min-height transition synced to COLUMN_FLIP_DURATION_MS)
+  // as state transitions out of hold_select, so by the time S4 (arc)
+  // is reached the layout is fully restored. The new invariant is
+  // S1 (pre_deal) ↔ S4 (arc): both share the un-compressed layout, so
+  // zone rects must match across them.
+  //
+  // S1↔S3 and S3↔S4 zone-equality assertions are intentionally NOT
+  // asserted post-fix because S3 (hold_select) is by-design smaller.
+  record(`S1↔S4 top zone rect unchanged ±1px`, rectMatches(topRect_s1, topRect_arc), `s1=${fmtRect(topRect_s1)} arc=${fmtRect(topRect_arc)}`);
+  record(`S1↔S4 bottom zone rect unchanged ±1px`, rectMatches(bottomRect_s1, bottomRect_arc), `s1=${fmtRect(bottomRect_s1)} arc=${fmtRect(bottomRect_arc)}`);
+  record(`S1↔S4 hero region rect unchanged ±1px`, rectMatches(heroRect_s1, heroRect_arc), `s1=${fmtRect(heroRect_s1)} arc=${fmtRect(heroRect_arc)}`);
+  record(`S1↔S4 top label unchanged`, topLabel_s1 === topLabel_arc, `s1="${topLabel_s1}" arc="${topLabel_arc}"`);
+  record(`S1↔S4 bottom label unchanged`, bottomLabel_s1 === bottomLabel_arc, `s1="${bottomLabel_s1}" arc="${bottomLabel_arc}"`);
 
-  // Bonus regression-lock: S1 rects should also match S3 rects (board is
-  // present from state 1 onwards; no rect movement during cascade).
-  record(`S1→S3 top zone rect unchanged`, rectMatches(topRect_s1, topRect_s3));
-  record(`S1→S3 bottom zone rect unchanged`, rectMatches(bottomRect_s1, bottomRect_s3));
-  record(`S1→S3 hero region rect unchanged`, rectMatches(heroRect_s1, heroRect_s3));
+  // Suppress unused-variable warning for the S3-zone captures (kept
+  // for future diagnostic logging).
+  void topRect_s3; void bottomRect_s3; void heroRect_s3;
+  void topLabel_s3; void bottomLabel_s3;
 
   // ── C/D regression-locks (post-FIX 1/2) — reveal-side end-state ──
   // Wait long enough for the full per-matchup reveal arc to complete.
@@ -668,6 +708,204 @@ async function runPlayHarness(browser) {
   await page.close();
 }
 
+// ── hold_select vertical-budget viewport sweep (lock §5 + §6) ────────
+//
+// For each (viewport, safe-area) tuple, drive the surface into
+// hold_select and step through the tap states (preview / first-hold /
+// move / multi-hold / unhold). After each step capture rects and assert
+// either §5a (above the comfortable floor: no scroll, recipient strip +
+// CTA contained within the viewport) or §5b (at/below the floor:
+// CTA pinned sticky + bottom strip reachable via scroll).
+//
+// Adaptation is automatic: §5a vs §5b is decided per-state by reading
+// whether the inner column is scrollable. No hard pixel threshold; the
+// floor falls where the fluid sizing's lower bound runs out of room.
+
+const HS_TAP_STATES = [
+  { id: "HS-0", label: "baseline (post-deal)",            tapSelector: null },
+  { id: "HS-1", label: "preview (tap slot 2)",            tapSelector: '[data-h2h-play-bottom-cell="2"]' },
+  { id: "HS-2", label: "first-hold (tap slot 2 again)",   tapSelector: '[data-h2h-play-bottom-cell="2"]' },
+  { id: "HS-3", label: "move (tap slot 5)",               tapSelector: '[data-h2h-play-bottom-cell="5"]' },
+  { id: "HS-4", label: "multi-hold (tap slot 5 again)",   tapSelector: '[data-h2h-play-bottom-cell="5"]' },
+  { id: "HS-5", label: "unhold (tap slot 5 a third time)",tapSelector: '[data-h2h-play-bottom-cell="5"]' },
+];
+
+async function injectSafeArea(page, safeTop, safeBottom) {
+  // The shell uses calc(env(safe-area-inset-*, 0px) + 20px) for top
+  // and bottom paddings. env() is a CSS function with no JS-overridable
+  // hook; we replace the consumer's padding directly.
+  await page.addStyleTag({
+    content: `
+      [data-h2h-board-shell] {
+        padding-top: ${safeTop + OUTER_PAD_EXTRA_PX}px !important;
+        padding-bottom: ${safeBottom + OUTER_PAD_EXTRA_PX}px !important;
+      }
+    `,
+  });
+  await page.waitForTimeout(30);
+}
+
+async function captureHoldSelectRects(page) {
+  return page.evaluate(() => {
+    const get = (sel) => {
+      const el = document.querySelector(sel);
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { x: r.x, y: r.y, width: r.width, height: r.height };
+    };
+    const inner = document.querySelector("[data-h2h-board-inner]");
+    const innerInfo = inner
+      ? {
+          scrollTop: inner.scrollTop,
+          scrollHeight: inner.scrollHeight,
+          clientHeight: inner.clientHeight,
+          overflowingY: inner.scrollHeight - inner.clientHeight > 1,
+        }
+      : null;
+    return {
+      topZone: get('[data-h2h-board-zone="top"]'),
+      topStrip: get('[data-h2h-play-top-strip]'),
+      bottomZone: get('[data-h2h-board-zone="bottom"]'),
+      bottomStrip: get('[data-h2h-play-bottom-strip]'),
+      cta: get('[data-h2h-play-cta]'),
+      previewEmpty: get('[data-h2h-play-preview="empty"]'),
+      previewCard: get('[data-h2h-play-preview="card"]'),
+      hero: get('[data-h2h-board-zone="hero"]'),
+      innerInfo,
+    };
+  });
+}
+
+async function scrollInnerTo(page, where /* "top" | "bottom" */) {
+  await page.evaluate((target) => {
+    const inner = document.querySelector("[data-h2h-board-inner]");
+    if (!inner) return;
+    inner.scrollTo({
+      top: target === "bottom" ? inner.scrollHeight : 0,
+      behavior: "instant",
+    });
+  }, where);
+  await page.waitForTimeout(30);
+}
+
+async function runHoldSelectViewportSweep(browser, vp) {
+  const tag = `[sweep ${vp.label}]`;
+  console.log(`\n${tag} starting`);
+  const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
+  page.on("pageerror", (err) => console.error(`${tag}[pageerror]`, err.message));
+
+  try {
+    await page.goto(PLAY_URL, { waitUntil: "networkidle", timeout: 30000 });
+  } catch (err) {
+    console.error(`${tag} FAIL — could not load ${PLAY_URL}: ${err.message}`);
+    await page.close();
+    record(`${vp.label}: page load`, false, err.message);
+    return;
+  }
+  await page.waitForSelector("[data-h2h-recipient-play]", { timeout: 10000 });
+
+  // Inject the iOS safe-area-inset values this device class would
+  // report. The pre-fix da5af3b layout depends on safe-area being 0
+  // (Playwright default); injecting realistic values reproduces the
+  // real-device overflow that the bug exhibits.
+  await injectSafeArea(page, vp.safeTop, vp.safeBottom);
+
+  // Drive deal cascade → hold_select.
+  await page.click("[data-h2h-play-cta][data-cta-label='Deal']");
+  await page.waitForTimeout(DEAL_CASCADE_INTERVAL_MS * (ROSTER_SIZE + 2));
+  // Settle the hold_select transitions (top-strip height 80→0; hero
+  // floor full→reduced; opacity 1→0). All three animate over
+  // COLUMN_FLIP_DURATION_MS = 250ms; add a small buffer so the layout
+  // is fully at rest before HS-0 captures rects.
+  await page.waitForTimeout(COLUMN_FLIP_DURATION_MS + 100);
+  const stateAtHoldSelect = await page.locator("[data-h2h-recipient-play]").getAttribute("data-playing-state");
+  record(`${vp.label}: hold_select reached after deal cascade`, stateAtHoldSelect === "hold_select", `state="${stateAtHoldSelect}"`);
+  if (stateAtHoldSelect !== "hold_select") {
+    await page.close();
+    return;
+  }
+
+  // Step through the 6 tap states; assert §5a (no-scroll fit) or §5b
+  // (scroll fallback) per state.
+  for (const ts of HS_TAP_STATES) {
+    if (ts.tapSelector) {
+      await page.locator(ts.tapSelector).click();
+      await page.waitForTimeout(50);
+    }
+    const rects = await captureHoldSelectRects(page);
+    const ctaBottom = rects.cta ? rects.cta.y + rects.cta.height : null;
+    const stripBottom = rects.bottomStrip ? rects.bottomStrip.y + rects.bottomStrip.height : null;
+    const topZoneTop = rects.topZone ? rects.topZone.y : null;
+    const scrollable = rects.innerInfo?.overflowingY === true;
+    const fitLabel = scrollable ? "§5b scroll fallback" : "§5a no-scroll fit";
+    const stateLabel = `${vp.label} ${ts.id} ${ts.label} ${fitLabel}`;
+
+    if (!scrollable) {
+      // §5a: content fits without scroll. All three containment + the
+      // no-scroll assertion must hold.
+      record(
+        `${stateLabel}: recipient-strip.bottom <= vh`,
+        stripBottom !== null && stripBottom <= vp.height + 1,
+        `stripBottom=${Math.round(stripBottom)} vh=${vp.height}`,
+      );
+      record(
+        `${stateLabel}: CTA.bottom <= vh`,
+        ctaBottom !== null && ctaBottom <= vp.height + 1,
+        `ctaBottom=${Math.round(ctaBottom)} vh=${vp.height}`,
+      );
+      record(
+        `${stateLabel}: top-zone.top >= 0`,
+        topZoneTop !== null && topZoneTop >= -1,
+        `topZoneTop=${Math.round(topZoneTop)}`,
+      );
+      record(
+        `${stateLabel}: inner does NOT scroll`,
+        !scrollable,
+        `scrollH=${rects.innerInfo?.scrollHeight} clientH=${rects.innerInfo?.clientHeight}`,
+      );
+    } else {
+      // §5b: content exceeds inner height; scroll engages. CTA must
+      // remain pinned (sticky bottom 0) at scrollTop=0 AND at
+      // scrollTop=max. Recipient strip must be reachable in the scroll.
+      await scrollInnerTo(page, "top");
+      const rectsAtTop = await captureHoldSelectRects(page);
+      const ctaBottomTop = rectsAtTop.cta ? rectsAtTop.cta.y + rectsAtTop.cta.height : null;
+      record(
+        `${stateLabel}: CTA pinned (bottom <= vh) at scrollTop=0`,
+        ctaBottomTop !== null && ctaBottomTop <= vp.height + 1,
+        `ctaBottom=${Math.round(ctaBottomTop)} vh=${vp.height}`,
+      );
+
+      await scrollInnerTo(page, "bottom");
+      const rectsAtBottom = await captureHoldSelectRects(page);
+      const ctaBottomBottom = rectsAtBottom.cta ? rectsAtBottom.cta.y + rectsAtBottom.cta.height : null;
+      record(
+        `${stateLabel}: CTA pinned (bottom <= vh) at scrollTop=max`,
+        ctaBottomBottom !== null && ctaBottomBottom <= vp.height + 1,
+        `ctaBottom=${Math.round(ctaBottomBottom)} vh=${vp.height}`,
+      );
+
+      // Recipient strip reachable: scroll it into view and assert it
+      // lands fully on-screen at that scroll position.
+      const stripReachable = await page.evaluate(() => {
+        const strip = document.querySelector('[data-h2h-play-bottom-strip]');
+        if (!strip) return { ok: false, reason: "strip not in DOM" };
+        strip.scrollIntoView({ block: "center", behavior: "instant" });
+        const r = strip.getBoundingClientRect();
+        return { ok: r.top >= -1 && r.bottom <= window.innerHeight + 1, top: r.top, bottom: r.bottom, vh: window.innerHeight };
+      });
+      record(
+        `${stateLabel}: bottom strip reachable in scroll`,
+        stripReachable.ok,
+        JSON.stringify(stripReachable),
+      );
+
+      await scrollInnerTo(page, "top");
+    }
+  }
+  await page.close();
+}
+
 async function main() {
   const browser = await chromium.launch();
   try {
@@ -680,6 +918,11 @@ async function main() {
       await runRevealBaselineCheck(browser);
     }
     await runPlayHarness(browser);
+    // Multi-viewport hold_select sweep (lock §5/§6). Runs across the
+    // device-class matrix with safe-area injection per viewport.
+    for (const vp of HS_SWEEP_VIEWPORTS) {
+      await runHoldSelectViewportSweep(browser, vp);
+    }
   } finally {
     await browser.close();
   }
