@@ -1,3 +1,4 @@
+// Master voice spec: docs/commentary-voice-system.md
 /**
  * basketballVoice.ts — Locked SYSTEM prompt for basketball culture entries.
  *

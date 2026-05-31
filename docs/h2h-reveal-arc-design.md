@@ -591,6 +591,8 @@ This is the same locked-pattern as Fix B's "copy the working scaffold" rule in C
 
 ### Phase 5c — Recipient contextual trash talk (locked 2026-05-31)
 
+S3 banks rewritten to canonical voice — see docs/commentary-voice-system.md
+
 **Rationale:** the current recipient intro chip is a single generic line picked from `INTRO_NAMED` / `INTRO_UNNAMED` in `chadChallenge.ts:181-195` — `"{name} put up {target}. Think you've got better in you?"`. It names the challenger and the score, but it does not name a single player on the sender's hand, and it does not vary by what KIND of hand the sender posted. Recipients see the same flavor whether the sender bricked with a held LeBron, dropped LEGEND on a Wemby season-high, or scraped a STARTER from a balanced line.
 
 The investigation pass (2026-05-31) confirmed three things that make a richer intro a near-freebie:
