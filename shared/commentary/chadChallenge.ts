@@ -426,11 +426,11 @@ const INITIATION_DEFAULT: string[] = [
 const INITIATION_CULTURE_FLEX: string[] = [
   "{name} dropped a vintage line. Send the slate to someone who needs reminding.",
   "{name} just put one on the wall. Pick a friend who can't match this.",
-  "That's a {name} kind of night — the kind that makes box scores collectibles. Send it.",
-  "{name} delivered the season-high. Slate's got receipts; find a recipient.",
-  "Pull-of-the-year material from {name}. Forward it; let your group try to top it.",
-  "When {name} hits like that, the rest of the league watches. Make a friend watch too.",
-  "{name} cleared their own career bar. Your turn — find someone who'll try to clear yours.",
+  "The kind of night that turns a box score into a collectible. Send it.",
+  "{name} delivered a night worth saving. Slate's got receipts; find a recipient.",
+  "{name} just filled the screenshot folder. Forward it; let your group try to top it.",
+  "A hand like that earns an audience. Make a friend watch too.",
+  "{name} cleared the bar by a mile. Your turn — find someone who'll try to clear yours.",
   "{name} carried it. Your job now is finding someone whose anchor won't.",
 ];
 
@@ -468,7 +468,7 @@ const INITIATION_RARE_PULL: string[] = [
   "Send this to the friend who thinks he knows ball. Watch him fold.",
   "{achievementLabel} on {name}. Screenshot it. Frame it. Send it.",
   "Send to your group chat. Wait for the silence.",
-  "{name} doesn't drop this twice a year. You just made him do it on a Tuesday.",
+  "A line like this doesn't show up often. You caught {name} on a Tuesday.",
   "{anchorFp} from {name}. That's not a stat line. That's a receipt.",
   "+{fpDelta} over his average. That's not luck, that's somebody's nightmare.",
   "{achievementLabel} on {name}. The card knows. Now make your friends know.",
