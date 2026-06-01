@@ -660,3 +660,187 @@ describe("H2HRevealScreen — static layout", () => {
     expect(senderCells[5].getAttribute("data-card-id")).toBe("card-B"); // slot 5
   });
 });
+
+describe("H2HRevealScreen — Phase 3 anchor-moment frame", () => {
+  // The anchor frame is gated by THREE conditions that must all hold:
+  //   1. phase === "paused"
+  //   2. matchupIndex === matchupCount - 2 (the second-to-last set
+  //      just resolved; the next set is the final).
+  //   3. isFinalSetDecisive returns decisive: true on the running
+  //      totals + final pair's actualFp.
+  //
+  // These tests construct a reveal mock at exactly that boundary with
+  // controlled running totals + final-pair actualFp so the helper's
+  // decisiveness can be deliberately alive or sealed.
+
+  /** Build a 6-set reveal mock at the penultimate paused boundary.
+   *  Caller controls the entering running totals + final pair's
+   *  actualFp; intermediate sets' actualFp values don't matter for the
+   *  frame's gate (only the FINAL pair feeds the decisiveness math). */
+  function buildPenultimatePaused(args: {
+    senderRunningTotal: number;
+    recipientRunningTotal: number;
+    finalSenderActualFp: number;
+    finalRecipientActualFp: number;
+    finalRecipientName?: string;
+  }) {
+    const senderCards = Array.from({ length: 6 }, (_, i) =>
+      makeCard({
+        slotIndex: i,
+        cardId: `s-${i}`,
+        name: `Sender Player ${i}`,
+        actualFp: i === 5 ? args.finalSenderActualFp : 10,
+      })
+    );
+    const recipientCards = Array.from({ length: 6 }, (_, i) =>
+      makeCard({
+        slotIndex: i,
+        cardId: `r-${i}`,
+        name: i === 5 ? (args.finalRecipientName ?? "Bruce Brown") : `Recipient Player ${i}`,
+        actualFp: i === 5 ? args.finalRecipientActualFp : 10,
+      })
+    );
+    const sender = makeHand({ cards: senderCards });
+    const recipient = makeHand({ cards: recipientCards });
+    // The reveal-order is what the hook publishes (post buildRevealOrder).
+    // For these tests it's fine to use the raw cards (all unheld, same
+    // salary → ordering doesn't matter; what matters is that index 5
+    // is the FINAL pair).
+    const reveal = {
+      phase: "paused" as const,
+      matchupIndex: 4, // matchupCount - 2 = 4 (the set N-2 just resolved)
+      matchupCount: 6,
+      visibleFpMap: new Map(),
+      senderRunningTotal: args.senderRunningTotal,
+      recipientRunningTotal: args.recipientRunningTotal,
+      deltaRunning: 0,
+      activeMatchup: { sender: senderCards[4], recipient: recipientCards[4] },
+      senderRevealOrder: senderCards,
+      recipientRevealOrder: recipientCards,
+      entranceStages: new Array(6).fill("settled" as const),
+      entranceSettledCount: 6,
+      pulseActive: false,
+      senderShakeInfo: null,
+      recipientShakeInfo: null,
+      senderGlowState: null,
+      recipientGlowState: null,
+      revealedCardIds: new Set<string>(),
+      play: () => {},
+      skipToEnd: () => {},
+    };
+    return { sender, recipient, reveal };
+  }
+
+  it("MOUNTS when game is still alive (trailing but catchable) — pre-fix-fail expected", () => {
+    // Recipient trailing by 10; final swing +15 → recipient overtakes.
+    const { sender, recipient, reveal } = buildPenultimatePaused({
+      senderRunningTotal: 100,
+      recipientRunningTotal: 90,
+      finalSenderActualFp: 5,
+      finalRecipientActualFp: 20,
+      finalRecipientName: "Bruce Brown",
+    });
+    const { container } = render(
+      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} reveal={reveal as any} />
+    );
+    const anchor = container.querySelector("[data-h2h-anchor-frame]");
+    expect(anchor).not.toBeNull();
+    expect(anchor?.getAttribute("data-h2h-anchor-framing")).toBe("overtake");
+    const name = container.querySelector("[data-h2h-anchor-name]")?.textContent;
+    expect(name).toContain("Bruce Brown");
+    const stat = container.querySelector("[data-h2h-anchor-stat-line]")?.textContent;
+    expect(stat).toContain("Need");
+    expect(stat).toContain("10.0");
+  });
+
+  it("MOUNTS in 'hold' framing when leading but vulnerable", () => {
+    // Recipient leading by 5; final swing -20 → recipient loses lead.
+    const { sender, recipient, reveal } = buildPenultimatePaused({
+      senderRunningTotal: 100,
+      recipientRunningTotal: 105,
+      finalSenderActualFp: 25,
+      finalRecipientActualFp: 5,
+    });
+    const { container } = render(
+      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} reveal={reveal as any} />
+    );
+    const anchor = container.querySelector("[data-h2h-anchor-frame]");
+    expect(anchor).not.toBeNull();
+    expect(anchor?.getAttribute("data-h2h-anchor-framing")).toBe("hold");
+    expect(container.querySelector("[data-h2h-anchor-stat-line]")?.textContent).toContain("Hold");
+  });
+
+  it("MOUNTS in 'tie' framing when entering tied", () => {
+    const { sender, recipient, reveal } = buildPenultimatePaused({
+      senderRunningTotal: 100,
+      recipientRunningTotal: 100,
+      finalSenderActualFp: 15,
+      finalRecipientActualFp: 20,
+    });
+    const { container } = render(
+      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} reveal={reveal as any} />
+    );
+    const anchor = container.querySelector("[data-h2h-anchor-frame]");
+    expect(anchor).not.toBeNull();
+    expect(anchor?.getAttribute("data-h2h-anchor-framing")).toBe("tie");
+    expect(container.querySelector("[data-h2h-anchor-stat-line]")?.textContent).toContain("TIED");
+  });
+
+  it("SUPPRESSED on a sealed/blowout game — trailing beyond reach", () => {
+    // Recipient down by 50; final swing only +10 → still loses.
+    const { sender, recipient, reveal } = buildPenultimatePaused({
+      senderRunningTotal: 150,
+      recipientRunningTotal: 100,
+      finalSenderActualFp: 5,
+      finalRecipientActualFp: 15,
+    });
+    const { container } = render(
+      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} reveal={reveal as any} />
+    );
+    expect(container.querySelector("[data-h2h-anchor-frame]")).toBeNull();
+  });
+
+  it("SUPPRESSED on a sealed/blowout game — leading insurmountably", () => {
+    const { sender, recipient, reveal } = buildPenultimatePaused({
+      senderRunningTotal: 100,
+      recipientRunningTotal: 150,
+      finalSenderActualFp: 30,
+      finalRecipientActualFp: 5,
+    });
+    const { container } = render(
+      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} reveal={reveal as any} />
+    );
+    expect(container.querySelector("[data-h2h-anchor-frame]")).toBeNull();
+  });
+
+  it("SUPPRESSED on non-penultimate paused (gate's matchupIndex check)", () => {
+    // Even on an alive game state, mounting at matchupIndex=2 (NOT
+    // matchupCount-2=4) should not show the anchor.
+    const { sender, recipient, reveal } = buildPenultimatePaused({
+      senderRunningTotal: 100,
+      recipientRunningTotal: 90,
+      finalSenderActualFp: 5,
+      finalRecipientActualFp: 20,
+    });
+    const altered = { ...reveal, matchupIndex: 2 };
+    const { container } = render(
+      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} reveal={altered as any} />
+    );
+    expect(container.querySelector("[data-h2h-anchor-frame]")).toBeNull();
+  });
+
+  it("SUPPRESSED outside paused phase (gate's phase check)", () => {
+    // Same alive state but phase still "revealing" → frame doesn't mount.
+    const { sender, recipient, reveal } = buildPenultimatePaused({
+      senderRunningTotal: 100,
+      recipientRunningTotal: 90,
+      finalSenderActualFp: 5,
+      finalRecipientActualFp: 20,
+    });
+    const altered = { ...reveal, phase: "revealing" as const };
+    const { container } = render(
+      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} reveal={altered as any} />
+    );
+    expect(container.querySelector("[data-h2h-anchor-frame]")).toBeNull();
+  });
+});

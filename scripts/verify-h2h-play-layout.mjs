@@ -715,6 +715,55 @@ async function runPlayHarness(browser) {
   const innerOpacity = await page.locator("[data-h2h-play-inner]").evaluate((el) => getComputedStyle(el).opacity);
   record("playing inner content faded to opacity 0", parseFloat(innerOpacity) === 0, `opacity=${innerOpacity}`);
 
+  // ── Relay-tension Phase 3 — anchor-moment CONSISTENCY guard ──────────
+  //
+  // The play-mock fixture's resolved roster varies between runs (the
+  // recipient hand picks up actualFp values from a non-deterministic
+  // path through resolveRoster + tap sequence). On some runs the final
+  // set is decisive (recipient overtakes); on others it's sealed
+  // (recipient stays trailing). Rather than pin a specific outcome, the
+  // harness asserts INTERNAL CONSISTENCY: at the penultimate paused,
+  // the anchor's presence must match the decisiveness predicate the
+  // helper would compute from the same running totals — AFTER also
+  // capturing the final totals so we know what the predicate's input
+  // SHOULD have evaluated to.
+  //
+  // The pre-fix-fail load is carried by unit tests in
+  // H2HRevealScreen.test.tsx (constructed-alive / constructed-sealed
+  // reveal mocks — pre-Phase-3 the AnchorFrame component doesn't exist
+  // and those tests fail with "anchor element is null").
+  //
+  // (P3-A) At paused-at-idx=4, capture (sender total, recipient total,
+  //        anchor presence, anchor's data-h2h-anchor-need). Defer the
+  //        consistency assertion until we also have the final totals.
+  let anchorPaused = null;
+  try {
+    await page.waitForFunction(
+      () => {
+        const battlefield = document.querySelector("[data-h2h-battlefield]");
+        const phase = battlefield?.getAttribute("data-h2h-reveal-phase") ?? "";
+        const idxAttr = battlefield?.getAttribute("data-h2h-matchup-index") ?? "";
+        const idx = Number.parseInt(idxAttr, 10);
+        return phase === "3-paused" && idx === 4;
+      },
+      {},
+      { timeout: 30000 },
+    );
+    anchorPaused = await page.evaluate(() => {
+      const anchor = document.querySelector("[data-h2h-anchor-frame]");
+      const scores = document.querySelectorAll("[data-h2h-team-score]");
+      return {
+        anchorPresent: !!anchor,
+        framing: anchor?.getAttribute("data-h2h-anchor-framing") ?? null,
+        anchorNeed: anchor?.getAttribute("data-h2h-anchor-need") ?? null,
+        oppEntering: parseFloat(scores[0]?.getAttribute("data-h2h-team-score-display") ?? "NaN"),
+        youEntering: parseFloat(scores[1]?.getAttribute("data-h2h-team-score-display") ?? "NaN"),
+      };
+    });
+  } catch (_err) {
+    anchorPaused = { anchorPresent: false, framing: null, anchorNeed: null, oppEntering: NaN, youEntering: NaN };
+  }
+
   // Note (design-lock §3 / §5): the prior S1↔S4 no-shift assertion is
   // OBSOLETE under the Layout A/B restructure. Layout A and Layout B
   // have intentionally different bottom-strip Y positions by design
@@ -757,6 +806,67 @@ async function runPlayHarness(browser) {
     },
   );
 
+  // Phase 3 (P3-4): anchor frame UNMOUNTS by phase === "done". The
+  // anchor lives in the paused window before the final set; once the
+  // final set runs and the arc completes, no residual anchor DOM
+  // should remain. This is the cross-surface handoff invariant for
+  // Phase 3 — the crossfade into results must not carry the anchor
+  // over. Anti-presence guard at the actual arc-complete state.
+  //
+  // CRITICAL: the prior C/D wait checks "recipient TeamScore > 0",
+  // which fires the moment ANY rollup increments — that can be as
+  // early as set 0, NOT the final done phase. Sample P3-4 (and
+  // capture final totals for the P3-A consistency check) only after
+  // explicitly reaching phase === "3-done".
+  try {
+    await page.waitForFunction(
+      () => {
+        const bf = document.querySelector("[data-h2h-battlefield]");
+        return bf?.getAttribute("data-h2h-reveal-phase") === "3-done";
+      },
+      {},
+      { timeout: 20000 },
+    );
+  } catch (_err) {
+    // If we couldn't reach done, both assertions below fail clearly.
+  }
+  const endStateSnap = await page.evaluate(() => {
+    const scores = document.querySelectorAll("[data-h2h-team-score]");
+    return {
+      anchorAtEndState: document.querySelectorAll("[data-h2h-anchor-frame]").length,
+      oppFinal: parseFloat(scores[0]?.getAttribute("data-h2h-team-score-display") ?? "NaN"),
+      youFinal: parseFloat(scores[1]?.getAttribute("data-h2h-team-score-display") ?? "NaN"),
+    };
+  });
+
+  // P3-A consistency check: anchor presence at paused-at-idx=4 must
+  // match the helper's decisiveness predicate computed from the
+  // captured entering totals + final totals. The predicate is
+  // structurally identical to `isFinalSetDecisive` (sign change OR
+  // entering tie); reproduced inline here so the harness doesn't
+  // import production code.
+  const sign = (x) => Math.abs(x) < 0.05 ? 0 : x > 0 ? 1 : -1;
+  const enteringGap = anchorPaused.youEntering - anchorPaused.oppEntering;
+  const finalGap = endStateSnap.youFinal - endStateSnap.oppFinal;
+  const enteringSign = sign(enteringGap);
+  const finalSign = sign(finalGap);
+  const expectedDecisive = enteringSign === 0 || enteringSign !== finalSign;
+  record(
+    `Phase 3 (P3-A): anchor presence at penultimate paused matches isFinalSetDecisive predicate`,
+    anchorPaused.anchorPresent === expectedDecisive,
+    `anchorPresent=${anchorPaused.anchorPresent} expected=${expectedDecisive} ` +
+      `enteringGap=${enteringGap.toFixed(1)} finalGap=${finalGap.toFixed(1)} ` +
+      `framing=${anchorPaused.framing} need=${anchorPaused.anchorNeed} ` +
+      `opp=${anchorPaused.oppEntering}→${endStateSnap.oppFinal} ` +
+      `you=${anchorPaused.youEntering}→${endStateSnap.youFinal}`,
+  );
+
+  record(
+    `Phase 3 (P3-4): anchor frame UNMOUNTED at phase === "done" (handoff invariant)`,
+    endStateSnap.anchorAtEndState === 0,
+    `count=${endStateSnap.anchorAtEndState}`,
+  );
+
   // C/D regression-lock #2: ≥2 H badges in the recipient's reveal strip
   // (we held slots 2 and 5 before Draw — both should be HOLD at reveal).
   // Target the bottom zone INSIDE the reveal (recipient's strip) so we
@@ -786,8 +896,18 @@ async function runPlayHarness(browser) {
     const reveal = document.querySelector("[data-h2h-recipient-reveal]");
     const battlefield = reveal?.querySelector("[data-h2h-battlefield]");
     const float = reveal?.querySelector("[data-h2h-mid-rail-float]");
+    // Query the ENTER (settled hero) cards specifically. BattlefieldSlot
+    // keeps BOTH the prior matchup's EXIT card AND the current ENTER
+    // card in DOM during the inter-set transition; without
+    // disambiguating, querySelectorAll matches up to 4 elements and
+    // cardRects[0]/[1] become exit transients instead of the resting
+    // hero pair. Phase 3's +1.5s anchor extension shifts timing such
+    // that exit cards more reliably persist at the harness sample
+    // moment — the brittleness is in the SELECTOR, not the layout.
+    // The float's expected position is the midpoint of the two ENTER
+    // hero cards (the actual settled battlefield), so target those.
     const cards = reveal
-      ? Array.from(reveal.querySelectorAll("[data-h2h-battlefield-card]"))
+      ? Array.from(reveal.querySelectorAll('[data-h2h-bf-anim="enter"] [data-h2h-battlefield-card]'))
       : [];
     const battlefieldRect = battlefield?.getBoundingClientRect();
     const floatRect = float?.getBoundingClientRect();

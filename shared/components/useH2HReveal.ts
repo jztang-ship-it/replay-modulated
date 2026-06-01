@@ -168,6 +168,84 @@ export function planRevealBeats(card: H2HCard): RevealBeatPlan {
   };
 }
 
+// ─── Phase 3: anchor-moment decisiveness ─────────────────────────────────
+//
+// Before the final set reveals, IF the game is still mathematically alive,
+// show an anticipation frame: "Remaining: NAME / Need: Y". Hosted in the
+// existing paused window between set N-2 and set N-1=last. If the outcome
+// is already determined entering the final set (blowout / sealed), the
+// frame is SUPPRESSED — no hopeless "Need: 81".
+//
+// Pure helper, unit-testable. Engine has access to the final pair's
+// `actualFp` (deterministic post-resolve) so it knows exactly whether
+// the last set's swing changes the winner. The predicate:
+//
+//   enteringGap   = recipientRunningTotal - senderRunningTotal
+//   finalSetSwing = finalRecipientActualFp - finalSenderActualFp
+//   finalGap      = enteringGap + finalSetSwing
+//
+//   decisive iff
+//     entering tied (any non-trivial final still creates suspense),
+//   OR sign(enteringGap) !== sign(finalGap) (winner changes).
+//
+// "Hold" / "Overtake" framing is from the RECIPIENT'S perspective (this
+// is the recipient reveal). needPoints is the absolute magnitude of the
+// entering gap in either framing — render layer decides "+X.X" prefix.
+
+/** Tolerance for the sign predicate. Floating-point rollup totals may
+ *  miss exact zero by epsilon; treat |x| < 0.05 FP as tied. */
+const FINAL_GAP_TIE_TOLERANCE = 0.05;
+
+export type FinalSetFraming = "overtake" | "hold" | "tie";
+
+export interface FinalSetDecisiveness {
+  /** True = anchor frame should mount during the paused window between
+   *  set N-2 and set N-1=last. False = suppress (sealed/blowout). */
+  decisive: boolean;
+  /** Framing from the recipient's perspective. "overtake" = recipient
+   *  trailing entering final, needs the gap (or more) from their
+   *  last card; "hold" = recipient leading, needs to not lose by more
+   *  than the margin; "tie" = exact tie entering final. */
+  framing: FinalSetFraming;
+  /** Absolute entering gap. The render layer prefixes "+" / "Need: " /
+   *  "Hold: " per framing. For "tie", needPoints is 0. */
+  needPoints: number;
+}
+
+export function isFinalSetDecisive(args: {
+  senderRunningTotal: number;
+  recipientRunningTotal: number;
+  finalSenderActualFp: number;
+  finalRecipientActualFp: number;
+}): FinalSetDecisiveness {
+  const enteringGap =
+    args.recipientRunningTotal - args.senderRunningTotal;
+  const finalSetSwing =
+    args.finalRecipientActualFp - args.finalSenderActualFp;
+  const finalGap = enteringGap + finalSetSwing;
+
+  const sign = (x: number): -1 | 0 | 1 =>
+    Math.abs(x) < FINAL_GAP_TIE_TOLERANCE ? 0 : x > 0 ? 1 : -1;
+  const enteringSign = sign(enteringGap);
+  const finalSign = sign(finalGap);
+
+  // Decisive: entering-tied always (final set is the whole game from
+  // the user's POV), OR the sign changes (winner flips, including
+  // flips to/from a tie).
+  const decisive = enteringSign === 0 || enteringSign !== finalSign;
+
+  const framing: FinalSetFraming =
+    enteringSign === 0
+      ? "tie"
+      : enteringSign > 0
+        ? "hold"     // recipient leading
+        : "overtake"; // recipient trailing
+
+  const needPoints = enteringSign === 0 ? 0 : Math.abs(enteringGap);
+
+  return { decisive, framing, needPoints };
+}
+
 // ─── Timing constants ──────────────────────────────────────────────────────
 // All animation durations live here so the arc can be re-paced from one
 // place. Defaults are calibrated for the "shared moment" feel — a 6-card
@@ -218,6 +296,17 @@ export const DELTA_ROLLUP_MS = 600;
  *  longer "suspense" tail, down for snappier landings. Applied to
  *  both the totals RAF and the delta RAF. */
 export const RELAY_EASING_POWER = 3;
+
+/** Phase 3 — paused-window extension for the deciding set's anchor
+ *  frame. Applied PER-CALLSITE: when set N-2 resolves AND
+ *  `isFinalSetDecisive` returns `decisive: true`, the paused window
+ *  before runMatchup(N-1=last) extends to at least this many ms so
+ *  the anchor frame can hold long enough to register the name + need.
+ *  Folds into the existing `intermediateAdvanceDelay = max(...)` —
+ *  no global pacing change; only the deciding-set transition is
+ *  affected. Suppressed (no extension) on sealed games and on every
+ *  non-deciding boundary. */
+export const ANCHOR_HOLD_MS = 1500;
 
 // ── Entrance per-card stage timings ────────────────────────────────────────
 // Each entrance card walks through PRE → LAY → BEAT → TRAVEL → SETTLED.
@@ -754,9 +843,33 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
             recipientBeats,
           );
           const isFinalMatchup = index + 1 >= matchups.length;
+          // Phase 3 — anchor hold per-callsite. When THIS resolution is
+          // set N-2 (so the NEXT set is the final one) AND the game is
+          // still mathematically alive, extend the paused window so the
+          // anchor frame holds long enough for the user to register
+          // the remaining player's name + "Need:" value. Suppressed on
+          // sealed games (helper returns decisive: false). The
+          // extension only affects this one boundary — every other
+          // paused window keeps its pre-Phase-3 duration.
+          const isPenultimateMatchup =
+            matchups.length >= 2 && index === matchups.length - 2;
+          let anchorHoldMs = 0;
+          if (isPenultimateMatchup) {
+            const finalMatchup = matchups[matchups.length - 1];
+            const anchor = isFinalSetDecisive({
+              senderRunningTotal: newSenderTotal,
+              recipientRunningTotal: newRecipientTotal,
+              finalSenderActualFp: finalMatchup.sender.actualFp,
+              finalRecipientActualFp: finalMatchup.recipient.actualFp,
+            });
+            if (anchor.decisive) {
+              anchorHoldMs = ANCHOR_HOLD_MS;
+            }
+          }
           const intermediateAdvanceDelay = Math.max(
             MATCHUP_RESOLVE_PAUSE_MS,
             pendingPostRollupMs,
+            anchorHoldMs,
           );
           setPhase(isFinalMatchup ? "end-hold" : "paused");
           scheduleTimeout(
