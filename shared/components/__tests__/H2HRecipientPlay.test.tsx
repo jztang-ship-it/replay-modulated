@@ -186,75 +186,100 @@ function baseProps(overrides: Partial<React.ComponentProps<typeof H2HRecipientPl
   };
 }
 
-// ── 1. Initial render (state pre_deal) ──────────────────────────────
+// ── 1. Initial render (loading → auto-advance into deal_in) ────────
+// Layout A/B restructure (design-lock §1): pre_deal is killed.
+// Challenge entry goes straight into Layout A's deal_in. The "loading"
+// state replaces pre_deal as the resting state when !dataReady; the
+// moment dataReady flips true (and the mock above sets isLoaded()→true
+// synchronously), the loading→deal_in auto-advance fires inside the
+// useEffect chain that render()'s act() flushes. So by the time
+// render returns, data-playing-state === "deal_in" with cardsLanded=0.
 
-describe("H2HRecipientPlay — state 1 (pre_deal)", () => {
-  it("mounts the playing surface with challengeCtx present", () => {
+describe("H2HRecipientPlay — initial render lands in deal_in", () => {
+  it("mounts the playing surface with challengeCtx present, in deal_in", () => {
+    vi.useFakeTimers();
     const { container } = render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />
     );
     const root = container.querySelector("[data-h2h-recipient-play]");
     expect(root).not.toBeNull();
-    expect(root?.getAttribute("data-playing-state")).toBe("pre_deal");
+    expect(root?.getAttribute("data-playing-state")).toBe("deal_in");
   });
 
-  it("renders 6 face-down cells on top strip", () => {
-    render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
-    for (let i = 0; i < 6; i++) {
-      expect(screen.getByTestId(`top-strip-back-${i}`)).toBeTruthy();
-    }
+  it("opponent strip is collapsed in Layout A (height:0, opacity:0, aria-hidden)", () => {
+    vi.useFakeTimers();
+    const { container } = render(
+      <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />
+    );
+    const stripWrapper = container.querySelector(
+      "[data-h2h-play-top-strip]",
+    ) as HTMLElement | null;
+    expect(stripWrapper).not.toBeNull();
+    expect(stripWrapper?.getAttribute("data-h2h-play-top-strip-collapsed")).toBe("true");
+    expect(stripWrapper?.getAttribute("aria-hidden")).toBe("true");
+    expect(stripWrapper?.style.height).toBe("0px");
+    expect(stripWrapper?.style.opacity).toBe("0");
   });
 
-  it("renders 6 empty placeholders on bottom strip", () => {
+  it("renders 6 empty placeholders on bottom strip at cardsLanded=0", () => {
+    vi.useFakeTimers();
     render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
     for (let i = 0; i < 6; i++) {
       expect(screen.getByTestId(`bottom-strip-empty-${i}`)).toBeTruthy();
     }
   });
 
-  it("renders Deal CTA enabled", () => {
-    render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
-    const btn = screen.getByText("Deal") as HTMLButtonElement;
-    expect(btn).toBeTruthy();
-    expect(btn.disabled).toBe(false);
-  });
-
-  it("guidance copy in hero zone references opener invitation", () => {
-    render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
-    const headline = screen.getByText(/Hit deal/i);
-    expect(headline).toBeTruthy();
+  it("renders Draw CTA disabled during deal_in (no Deal CTA — pre_deal killed)", () => {
+    vi.useFakeTimers();
+    const { container } = render(
+      <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />
+    );
+    expect(container.querySelector("[data-cta-label='Deal']")).toBeNull();
+    const drawBtn = container.querySelector("[data-cta-label='Draw']") as HTMLButtonElement | null;
+    expect(drawBtn).not.toBeNull();
+    expect(drawBtn?.disabled).toBe(true);
   });
 
   it("renders no replacement names (path β at rest)", () => {
+    vi.useFakeTimers();
     render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
     for (let i = 0; i < 6; i++) {
       expect(screen.queryByText(`Final-${i}`)).toBeNull();
     }
   });
 
-  it("renders framed top + bottom + hero zones in pre_deal (doc EDIT B1/B3)", () => {
+  it("renders framed top + bottom + hero zones in deal_in (doc EDIT B1/B3 carries forward)", () => {
+    vi.useFakeTimers();
     const { container } = render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx({ challengerName: "Mike" })} />,
     );
-    // Doc lock e6fe662: states 1–3 render on the SAME framed board as
-    // state 4. The shared shell emits zone markers in ALL states.
     expect(container.querySelector(`[data-h2h-board-zone="top"]`)).not.toBeNull();
     expect(container.querySelector(`[data-h2h-board-zone="bottom"]`)).not.toBeNull();
     expect(container.querySelector(`[data-h2h-board-zone="hero"]`)).not.toBeNull();
-    // Top zone carries the challenger name label; bottom zone the
-    // recipient nickname (or "You" fallback) — both in ALL states.
     const topZoneText = container.querySelector(`[data-h2h-board-zone="top"]`)?.textContent ?? "";
     const bottomZoneText = container.querySelector(`[data-h2h-board-zone="bottom"]`)?.textContent ?? "";
     expect(topZoneText.toUpperCase()).toContain("MIKE");
     expect(bottomZoneText.length).toBeGreaterThan(0);
   });
 
-  it("falls back to 'your friend' label when challengerName is not a real name (doc EDIT B3)", () => {
+  it("falls back to 'your friend' label when challengerName is not a real name", () => {
+    vi.useFakeTimers();
     const { container } = render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx({ challengerName: null as any })} />,
     );
     const topZoneText = (container.querySelector(`[data-h2h-board-zone="top"]`)?.textContent ?? "").toLowerCase();
     expect(topZoneText).toContain("your friend");
+  });
+
+  it("bottom label is the literal 'YOU' (design-lock §1: random handle killed)", () => {
+    vi.useFakeTimers();
+    const { container } = render(
+      <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />,
+    );
+    const bottomLabel = container.querySelector(
+      `[data-h2h-board-zone-label="bottom"]`,
+    )?.textContent ?? "";
+    expect(bottomLabel.trim()).toBe("YOU");
   });
 });
 
@@ -264,7 +289,10 @@ describe("H2HRecipientPlay — state 2 (deal_in cascade)", () => {
   it("Deal tap starts the cascade; first card lands within DEAL_CASCADE_INTERVAL_MS", async () => {
     vi.useFakeTimers();
     render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
-    fireEvent.click(screen.getByText("Deal"));
+    // Layout A/B restructure: pre_deal is killed; the loading →
+    // deal_in auto-advance fires synchronously inside the useEffect
+    // chain that render()'s act() flushes. The deal_in cascade is
+    // scheduled at that point — no Deal-button tap.
     // After first tick, slot 0 should be face-up with the initial roster card.
     await act(async () => { vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS); });
     expect(screen.getByTestId("bottom-strip-up-0")).toBeTruthy();
@@ -276,7 +304,10 @@ describe("H2HRecipientPlay — state 2 (deal_in cascade)", () => {
   it("cascade lands 6 face-up cells in positional order from initialRoster", async () => {
     vi.useFakeTimers();
     render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
-    fireEvent.click(screen.getByText("Deal"));
+    // Layout A/B restructure: pre_deal is killed; the loading →
+    // deal_in auto-advance fires synchronously inside the useEffect
+    // chain that render()'s act() flushes. The deal_in cascade is
+    // scheduled at that point — no Deal-button tap.
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
@@ -286,15 +317,16 @@ describe("H2HRecipientPlay — state 2 (deal_in cascade)", () => {
     }
   });
 
-  it("Deal CTA is disabled during cascade and replaced by Draw on completion", async () => {
+  it("Draw CTA stays disabled during deal_in cascade; enables on hold_select", async () => {
     vi.useFakeTimers();
     const { container } = render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
-    fireEvent.click(screen.getByText("Deal"));
-    // Mid-cascade: Deal exists but is disabled.
+    // Mid-cascade: Draw (the CTA slot for Layout A) is disabled.
+    // No "Deal" button exists — pre_deal is killed.
     await act(async () => { vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS); });
-    const dealBtn = container.querySelector("[data-cta-label='Deal']") as HTMLButtonElement;
-    expect(dealBtn?.disabled).toBe(true);
-    // After cascade: state → hold_select; CTA flips to Draw.
+    expect(container.querySelector("[data-cta-label='Deal']")).toBeNull();
+    const drawBtnMid = container.querySelector("[data-cta-label='Draw']") as HTMLButtonElement;
+    expect(drawBtnMid?.disabled).toBe(true);
+    // After cascade: state → hold_select; same CTA slot now enabled.
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
@@ -311,7 +343,10 @@ describe("H2HRecipientPlay — state 2 → hold_select (P7 MVP functional tap)",
     const utils = render(
       <H2HRecipientPlay {...baseProps(overrides)} challengeCtx={initialCtx} />
     );
-    fireEvent.click(screen.getByText("Deal"));
+    // Layout A/B restructure: pre_deal is killed; the loading →
+    // deal_in auto-advance fires synchronously inside the useEffect
+    // chain that render()'s act() flushes. The deal_in cascade is
+    // scheduled at that point — no Deal-button tap.
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
@@ -367,7 +402,10 @@ describe("H2HRecipientPlay — state 3a (redraw_running) — path β", () => {
     const ctx = makeCtx();
     const props = baseProps();
     render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
-    fireEvent.click(screen.getByText("Deal"));
+    // Layout A/B restructure: pre_deal is killed; the loading →
+    // deal_in auto-advance fires synchronously inside the useEffect
+    // chain that render()'s act() flushes. The deal_in cascade is
+    // scheduled at that point — no Deal-button tap.
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
@@ -405,7 +443,10 @@ describe("H2HRecipientPlay — state 3a (redraw_running) — path β", () => {
 
     vi.useFakeTimers();
     render(<H2HRecipientPlay {...props} challengeCtx={makeCtx()} />);
-    fireEvent.click(screen.getByText("Deal"));
+    // Layout A/B restructure: pre_deal is killed; the loading →
+    // deal_in auto-advance fires synchronously inside the useEffect
+    // chain that render()'s act() flushes. The deal_in cascade is
+    // scheduled at that point — no Deal-button tap.
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
@@ -433,14 +474,24 @@ describe("H2HRecipientPlay — state 3a (redraw_running) — path β", () => {
   });
 });
 
-// ── 5. Column-flip pass (state column_flip) ────────────────────────
+// ── 5. your_redraw_flip pass (Layout A/B restructure §3 step 2) ────
+//
+// Renamed from column_flip. The flip pass now applies ONLY to the
+// BOTTOM strip (your replacements) — the top strip is NOT touched
+// here (the opponent card-flip is killed per design-lock §1 / §3).
+// The TopStripCell flip scaffold (rotateY / perspective / back-face)
+// is gone; opponent cells render front-only when visible, and
+// visibility through Layout A is height:0 + opacity:0 on the strip
+// wrapper. So [data-testid="top-strip-back-N"] no longer exists;
+// only [data-testid="top-strip-up-N"] does, and during your_redraw_flip
+// (still Layout A) the strip wrapper is collapsed → top cells render
+// behind that clip.
 
-describe("H2HRecipientPlay — state 3b (column_flip) — LEFT→RIGHT", () => {
-  async function advanceToColumnFlip(heldSlot: number) {
+describe("H2HRecipientPlay — state 3b (your_redraw_flip) — LEFT→RIGHT bottom only", () => {
+  async function advanceToYourFlip(heldSlot: number) {
     vi.useFakeTimers();
     const props = baseProps();
     render(<H2HRecipientPlay {...props} challengeCtx={makeCtx()} />);
-    fireEvent.click(screen.getByText("Deal"));
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
@@ -451,80 +502,113 @@ describe("H2HRecipientPlay — state 3b (column_flip) — LEFT→RIGHT", () => {
     fireEvent.click(screen.getByText("Draw"));
     await waitFor(() => {
       const root = document.querySelector("[data-h2h-recipient-play]");
-      expect(root?.getAttribute("data-playing-state")).toBe("column_flip");
+      expect(root?.getAttribute("data-playing-state")).toBe("your_redraw_flip");
     });
     return props;
   }
 
-  it("revealed columns flip LEFT→RIGHT; held column flips top only", async () => {
-    const props = await advanceToColumnFlip(2);
-    // Walk to column 2 (the held one). Real timers; just wait for the
-    // top-strip-up-2 cell to appear.
-    await waitFor(
-      () => expect(screen.queryByTestId("top-strip-up-0")).not.toBeNull(),
-      { timeout: 2000 },
-    );
-    await waitFor(
-      () => expect(screen.queryByTestId("top-strip-up-2")).not.toBeNull(),
-      { timeout: 2000 },
-    );
-    // After column 2's flip stage:
-    //   - top-strip-up-2 exists (sender's card flipped)
-    //   - bottom slot 2 is still held face-up (no second flip)
-    expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("true");
-    expect(screen.getByText("Init-2")).toBeTruthy();
-    // Replacement names for OTHER (unheld) revealed columns appear by name.
+  it("bottom-strip flip pass LEFT→RIGHT; held column's bottom cell stays face-up", async () => {
+    const props = await advanceToYourFlip(2);
+    // Wait for slot 0's replacement (Final-0) to appear in the bottom
+    // strip — that's the first column completing its flip.
     await waitFor(
       () => expect(screen.queryByText("Final-0")).not.toBeNull(),
       { timeout: 2000 },
     );
+    // Held slot 2's bottom cell still shows Init-2.
+    expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("true");
+    const cell2 = document.querySelector(`[data-h2h-play-bottom-cell="2"]`) as HTMLElement;
+    expect(cell2.textContent).toContain("Init-2");
     void props;
   });
 
-  it("replacement column flips top + bottom in unison (replacement name appears)", async () => {
-    const props = await advanceToColumnFlip(5); // hold slot 5; slot 0 is replacement
+  it("opponent strip stays COLLAPSED throughout your_redraw_flip (Layout A — no opponent flip)", async () => {
+    const props = await advanceToYourFlip(5);
+    // Wait into your_redraw_flip mid-pass.
     await waitFor(
-      () => expect(screen.queryByTestId("top-strip-up-0")).not.toBeNull(),
+      () => expect(screen.queryByText("Final-0")).not.toBeNull(),
       { timeout: 2000 },
     );
-    // Slot 0's replacement name should now be in the DOM (bottom face-up).
-    expect(screen.queryByTestId("bottom-strip-up-0")).not.toBeNull();
-    expect(screen.getByText("Final-0")).toBeTruthy();
+    // The top-strip wrapper is the gate; it must remain collapsed.
+    const stripWrapper = document.querySelector(
+      "[data-h2h-play-top-strip]",
+    ) as HTMLElement | null;
+    expect(stripWrapper?.getAttribute("data-h2h-play-top-strip-collapsed")).toBe("true");
+    expect(stripWrapper?.style.height).toBe("0px");
+    expect(stripWrapper?.style.opacity).toBe("0");
     void props;
   });
 
-  it("column ordering: column N+1 begins ONLY after column N completes (fake-timer check)", async () => {
-    // Use the resolved-immediately redrawRoster mock so we land in
-    // column_flip quickly under fake timers.
+  it("column ordering: bottom column N+1 begins ONLY after column N completes (fake-timer check)", async () => {
     vi.useFakeTimers();
     const props = baseProps();
     render(<H2HRecipientPlay {...props} challengeCtx={makeCtx()} />);
-    fireEvent.click(screen.getByText("Deal"));
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
     // No holds; tap Draw straight through.
     fireEvent.click(screen.getByText("Draw"));
-    // The redraw async promise resolves on a microtask; flush.
     await act(async () => {
       await Promise.resolve();
       await Promise.resolve();
     });
-    // Step #0 → revealedColumns=1 fires on delay=0 setTimeout.
+    // Step #0 → revealedColumns=1 fires on delay=0 setTimeout — the
+    // bottom strip's slot 0 face-up Final-0 appears.
     await act(async () => { vi.advanceTimersByTime(0); });
-    expect(screen.queryByTestId("top-strip-up-0")).not.toBeNull();
-    expect(screen.queryByTestId("top-strip-back-1")).not.toBeNull();
-    // Mid-flip (250ms - 1ms after entry): column 1 has NOT advanced.
+    expect(screen.queryByText("Final-0")).not.toBeNull();
+    // Path-β: replacement values for slots NOT yet flipped are NOT in the DOM.
+    expect(screen.queryByText("Final-1")).toBeNull();
+    // Mid-flip (~249ms after entry): column 1 has NOT advanced.
     await act(async () => { vi.advanceTimersByTime(COLUMN_FLIP_DURATION_MS - 1); });
-    expect(screen.queryByTestId("top-strip-up-1")).toBeNull();
-    expect(screen.queryByTestId("top-strip-back-1")).not.toBeNull();
+    expect(screen.queryByText("Final-1")).toBeNull();
     // After full flip+interstitial: column 1 advanced.
     await act(async () => {
       vi.advanceTimersByTime(COLUMN_FLIP_INTERSTITIAL_MS + 2);
     });
-    expect(screen.queryByTestId("top-strip-up-1")).not.toBeNull();
+    expect(screen.queryByText("Final-1")).not.toBeNull();
   });
 });
+
+// ── 5b. A→B transition (new ab_transition state) ──────────────────
+// Design-lock §3 step 3: ~300ms coordinated beat after your_redraw_flip
+// completes. The opponent strip uncollapses (height:0→80px, opacity:0→1)
+// and the hero region expands (HOLD_SELECT floor → full floor). Both
+// motions animate via CSS transitions; this state exists to GATE which
+// values those transitions animate TO.
+
+describe("H2HRecipientPlay — ab_transition (Layout A → Layout B beat)", () => {
+  it("reaches ab_transition after your_redraw_flip; opponent strip uncollapses", async () => {
+    vi.useFakeTimers();
+    const props = baseProps();
+    render(<H2HRecipientPlay {...props} challengeCtx={makeCtx({ resolvedSenderHand: makeSenderHand() })} />);
+    await act(async () => {
+      vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
+    });
+    fireEvent.click(screen.getByText("Draw"));
+    // Flush redraw microtask + advance through the 6-column flip pass.
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(
+        ROSTER_SIZE_LOCAL * (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS),
+      );
+    });
+    const root = document.querySelector("[data-h2h-recipient-play]");
+    expect(root?.getAttribute("data-playing-state")).toBe("ab_transition");
+    // Opponent strip wrapper is no longer marked collapsed.
+    const stripWrapper = document.querySelector(
+      "[data-h2h-play-top-strip]",
+    ) as HTMLElement | null;
+    expect(stripWrapper?.getAttribute("data-h2h-play-top-strip-collapsed")).toBeNull();
+    expect(stripWrapper?.style.height).not.toBe("0px");
+    expect(stripWrapper?.style.opacity).toBe("1");
+    void props;
+  });
+});
+
+const ROSTER_SIZE_LOCAL = 6;
 
 // ── 6. Held-card position invariant (S5) ───────────────────────────
 
@@ -534,7 +618,10 @@ describe("H2HRecipientPlay — S5 held-card position invariant", () => {
     const props = baseProps();
     const ctx = makeCtx();
     render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
-    fireEvent.click(screen.getByText("Deal"));
+    // Layout A/B restructure: pre_deal is killed; the loading →
+    // deal_in auto-advance fires synchronously inside the useEffect
+    // chain that render()'s act() flushes. The deal_in cascade is
+    // scheduled at that point — no Deal-button tap.
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
@@ -570,9 +657,20 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
     const props = baseProps();
     // No fake timers — let the real timer flow drive transitions end-to-end.
     render(<H2HRecipientPlay {...props} challengeCtx={makeCtx()} />);
-    fireEvent.click(screen.getByText("Deal"));
+    // Layout A/B restructure: pre_deal is killed; the loading →
+    // deal_in auto-advance fires synchronously inside the useEffect
+    // chain that render()'s act() flushes. The deal_in cascade is
+    // scheduled at that point — no Deal-button tap.
     await waitFor(
-      () => expect(screen.queryByText("Draw")).not.toBeNull(),
+      () => {
+        // Layout A/B restructure: the "Draw" button now exists (disabled)
+        // during deal_in too — pre_deal is killed and the CTA sits in
+        // its Draw slot from the start. Wait for it to become ENABLED,
+        // which signals hold_select reached.
+        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        expect(btn).not.toBeNull();
+        expect(btn?.disabled).toBe(false);
+      },
       { timeout: 2000 },
     );
     // Hold slot 4 (tap-tap per #11).
@@ -596,9 +694,20 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
     const { container } = render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />
     );
-    fireEvent.click(screen.getByText("Deal"));
+    // Layout A/B restructure: pre_deal is killed; the loading →
+    // deal_in auto-advance fires synchronously inside the useEffect
+    // chain that render()'s act() flushes. The deal_in cascade is
+    // scheduled at that point — no Deal-button tap.
     await waitFor(
-      () => expect(screen.queryByText("Draw")).not.toBeNull(),
+      () => {
+        // Layout A/B restructure: the "Draw" button now exists (disabled)
+        // during deal_in too — pre_deal is killed and the CTA sits in
+        // its Draw slot from the start. Wait for it to become ENABLED,
+        // which signals hold_select reached.
+        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        expect(btn).not.toBeNull();
+        expect(btn?.disabled).toBe(false);
+      },
       { timeout: 2000 },
     );
     fireEvent.click(screen.getByText("Draw"));
@@ -630,15 +739,13 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
     expect(inner?.style.pointerEvents).toBe("none");
   });
 
-  // #3 hardened (2026-05-31): VS treatment renders as a SIBLING of the
-  // headline div during handoff_resolving, with explicit color +
-  // explicit fontSize/fontWeight on the glyph (no inheritance from the
-  // 22px/800-weight headline wrapper). JSDOM cannot compute styles, but
-  // it CAN check element presence + the inline-style attribute.
-  it("#3 VS: during handoff_resolving, VS block is mounted as a sibling of the headline (and the headline is NOT)", { timeout: 10000 }, async () => {
-    // Slow resolveRoster so we can sample inside the handoff_resolving
-    // window deterministically. The hook holds 800ms before awaiting
-    // resolve; a 5000ms resolve gives us a wide assertion window.
+  // Settle-pause (design-lock §3 step 4 / §5): during handoff_resolving
+  // the hero region renders TWO STACKED EMPTY HERO SLOTS (the dashed-
+  // border boxes — [data-h2h-play-settle-hero-slot="opponent"] and
+  // ="you"), NOT the prior VS treatment. Empty headline; stillness.
+  // Layout B is fully composed at this point: opponent strip face-up,
+  // your strip slid-down, both visible.
+  it("settle-pause: handoff_resolving renders two empty hero slots, no VS, Layout B composed", { timeout: 10000 }, async () => {
     let resolveFn: (v: any) => void = () => {};
     const props = baseProps({
       resolveRoster: vi.fn(() => new Promise((res) => { resolveFn = res; })),
@@ -647,35 +754,56 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
     const { container } = render(
       <H2HRecipientPlay {...props} challengeCtx={ctx} />
     );
-    fireEvent.click(screen.getByText("Deal"));
     await waitFor(
-      () => expect(screen.queryByText("Draw")).not.toBeNull(),
+      () => {
+        // Layout A/B restructure: the "Draw" button now exists (disabled)
+        // during deal_in too — pre_deal is killed and the CTA sits in
+        // its Draw slot from the start. Wait for it to become ENABLED,
+        // which signals hold_select reached.
+        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        expect(btn).not.toBeNull();
+        expect(btn?.disabled).toBe(false);
+      },
       { timeout: 2000 },
     );
     fireEvent.click(screen.getByText("Draw"));
-    // Wait until the VS element appears (handoff_resolving entered).
+    // Wait until handoff_resolving (settle-pause proper). The
+    // empty-hero composition renders during BOTH ab_transition and
+    // handoff_resolving (per inSettlePauseRender); waiting on the
+    // state attribute pins us to the actual settle-pause state.
     await waitFor(
-      () => expect(container.querySelector("[data-h2h-play-vs]")).not.toBeNull(),
+      () => {
+        const r = container.querySelector("[data-h2h-recipient-play]");
+        expect(r?.getAttribute("data-playing-state")).toBe("handoff_resolving");
+      },
       { timeout: 6000 },
     );
-    // Lifted-out structure: VS exists, headline does NOT (deriveHeadline
-    // returns "" for handoff_resolving and the conditional in heroSlot
-    // mounts only the VS branch).
-    const vs = container.querySelector("[data-h2h-play-vs]");
-    const glyph = container.querySelector("[data-h2h-play-vs-glyph]");
-    const sub = container.querySelector("[data-h2h-play-vs-sub]");
-    const headline = container.querySelector("[data-h2h-play-headline]");
-    expect(vs).not.toBeNull();
-    expect(glyph?.textContent).toBe("VS");
-    expect(sub?.textContent).toBe("Comparing…");
-    expect(headline).toBeNull();
-    // Explicit color + fontSize on the inline-style attribute (catches
-    // regressions where someone strips the explicit values and the VS
-    // collapses to inherited 22px or to a near-bg color).
-    const glyphStyle = (glyph as HTMLElement).getAttribute("style") ?? "";
-    expect(glyphStyle).toMatch(/font-size:\s*56px/);
-    expect(glyphStyle).toMatch(/font-weight:\s*900/);
-    expect(glyphStyle).toMatch(/color:\s*(#EAF0FF|rgb\(234,\s*240,\s*255\))/i);
+    expect(container.querySelector("[data-h2h-play-settle-hero]")).not.toBeNull();
+    // Empty-hero composition: opponent slot + your slot, both dashed-
+    // border boxes, no card content.
+    const opponentSlot = container.querySelector(
+      `[data-h2h-play-settle-hero-slot="opponent"]`,
+    );
+    const yourSlot = container.querySelector(
+      `[data-h2h-play-settle-hero-slot="you"]`,
+    );
+    expect(opponentSlot).not.toBeNull();
+    expect(yourSlot).not.toBeNull();
+    // VS is dead.
+    expect(container.querySelector("[data-h2h-play-vs]")).toBeNull();
+    expect(container.querySelector("[data-h2h-play-vs-glyph]")).toBeNull();
+    // Headline is collapsed (empty deriveHeadline + no headline div
+    // mounted under the settle-pause branch).
+    expect(container.querySelector("[data-h2h-play-headline]")).toBeNull();
+    // Layout B composition: opponent strip uncollapsed (face-up),
+    // your strip has all 6 cells face-up.
+    const stripWrapper = container.querySelector(
+      "[data-h2h-play-top-strip]",
+    ) as HTMLElement | null;
+    expect(stripWrapper?.style.opacity).toBe("1");
+    for (let i = 0; i < 6; i++) {
+      expect(container.querySelector(`[data-testid="bottom-strip-up-${i}"]`)).not.toBeNull();
+    }
     // State attribute confirms we sampled during handoff_resolving.
     const root = container.querySelector("[data-h2h-recipient-play]");
     expect(root?.getAttribute("data-playing-state")).toBe("handoff_resolving");
@@ -696,9 +824,20 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
     const { container } = render(
       <H2HRecipientPlay {...props} challengeCtx={ctx} />
     );
-    fireEvent.click(screen.getByText("Deal"));
+    // Layout A/B restructure: pre_deal is killed; the loading →
+    // deal_in auto-advance fires synchronously inside the useEffect
+    // chain that render()'s act() flushes. The deal_in cascade is
+    // scheduled at that point — no Deal-button tap.
     await waitFor(
-      () => expect(screen.queryByText("Draw")).not.toBeNull(),
+      () => {
+        // Layout A/B restructure: the "Draw" button now exists (disabled)
+        // during deal_in too — pre_deal is killed and the CTA sits in
+        // its Draw slot from the start. Wait for it to become ENABLED,
+        // which signals hold_select reached.
+        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        expect(btn).not.toBeNull();
+        expect(btn?.disabled).toBe(false);
+      },
       { timeout: 2000 },
     );
     fireEvent.click(screen.getByText("Draw"));
@@ -714,119 +853,98 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
   });
 });
 
-// ── 7b. Top-strip sender-face pre-reveal (additive fix) ────────────
+// ── 7b. Top-strip sender-face rendering (Layout A/B restructure) ───
 //
-// The arc's "both lineups face-up, pre-reveal" state requires the top
-// strip to show the SENDER'S real cards at pre-reveal scale once the
-// column-flip pass exposes them — not a generic "?" placeholder. Tests
-// here pin (a) face-down before each column's flip stage, and (b) real
-// sender card identity rendered via renderPlayingStripCard at column
-// pass end. Path-β assertions on the BOTTOM replacement cells are
-// independent of this fix and are covered earlier in the suite.
+// Layout A/B restructure: the opponent card-flip is killed
+// (design-lock §1 / §3). TopStripCell's rotateY scaffold is gone.
+// Visibility through Layout A is gated by the strip wrapper's
+// height:0 + opacity:0 clip — cells render face-up directly when the
+// strip uncollapses in Layout B. Tests here pin (a) sender card
+// identity rendered via renderPlayingStripCard once the wrapper is
+// uncollapsed in Layout B, and (b) "?" placeholder fallback when
+// resolvedSenderHand is absent.
 
-describe("H2HRecipientPlay — top strip renders sender faces pre-reveal", () => {
-  it("at column-pass end, each top cell renders its sender card (Sender-N), NOT the placeholder", async () => {
+describe("H2HRecipientPlay — top strip renders sender faces in Layout B", () => {
+  it("at Layout B (settle-pause / arc), each top cell renders its sender card (Sender-N), NOT the placeholder", async () => {
     const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
     const { container } = render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />
     );
-    fireEvent.click(screen.getByText("Deal"));
-    await waitFor(() => expect(screen.queryByText("Draw")).not.toBeNull(), { timeout: 2000 });
-    fireEvent.click(screen.getByText("Draw"));
-    // Walk to column-pass end (last top-strip-up appears).
     await waitFor(
-      () => expect(screen.queryByTestId("top-strip-up-5")).not.toBeNull(),
-      { timeout: 4000 },
+      () => {
+        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        expect(btn).not.toBeNull();
+        expect(btn?.disabled).toBe(false);
+      },
+      { timeout: 3000 },
+    );
+    fireEvent.click(screen.getByText("Draw"));
+    // Wait until the strip wrapper uncollapses (Layout B reached).
+    await waitFor(
+      () => {
+        const wrapper = container.querySelector(
+          "[data-h2h-play-top-strip]",
+        ) as HTMLElement | null;
+        return wrapper && wrapper.getAttribute("data-h2h-play-top-strip-collapsed") === null;
+      },
+      { timeout: 6000 },
     );
     // Real sender card identities are in the DOM, one per top cell.
     for (let i = 0; i < 6; i++) {
       const topCell = container.querySelector(`[data-h2h-play-top-cell="${i}"]`);
       expect(topCell).not.toBeNull();
-      // Sender card identity rendered inside this specific top cell.
       const senderText = topCell?.textContent ?? "";
       expect(senderText).toContain(`Sender-${i}`);
-      // Placeholder "?" is NOT in this cell (it's only the fallback).
       expect(senderText.includes("?")).toBe(false);
     }
   });
 
-  it("top cell N is face-DOWN before column N's flip, face-UP after — sender face appears at the flip", async () => {
-    // Use fake timers so we can observe specific column boundaries.
-    vi.useFakeTimers();
-    const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
-    const { container } = render(
-      <H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />
-    );
-    fireEvent.click(screen.getByText("Deal"));
-    await act(async () => {
-      vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 8);
-    });
-    // No holds, tap Draw straight through.
-    fireEvent.click(screen.getByText("Draw"));
-    // Redraw resolves on a microtask.
-    await act(async () => {
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-    // First column kicks off at delay=0 → revealedColumns=1.
-    await act(async () => { vi.advanceTimersByTime(0); });
-    // Slot 0 has flipped face-up; slot 0 should show Sender-0.
-    expect(screen.queryByTestId("top-strip-up-0")).not.toBeNull();
-    const topCell0 = container.querySelector(`[data-h2h-play-top-cell="0"]`);
-    expect(topCell0?.textContent ?? "").toContain("Sender-0");
-    // Slots 1..5 still face-DOWN; their sender names not in DOM yet
-    // (front face only mounts when face-up).
-    for (let i = 1; i < 6; i++) {
-      expect(screen.queryByTestId(`top-strip-back-${i}`)).not.toBeNull();
-      const cell = container.querySelector(`[data-h2h-play-top-cell="${i}"]`);
-      expect(cell?.textContent ?? "").not.toContain(`Sender-${i}`);
-    }
-    // Advance through column 1's flip.
-    await act(async () => {
-      vi.advanceTimersByTime(COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS + 1);
-    });
-    expect(screen.queryByTestId("top-strip-up-1")).not.toBeNull();
-    const topCell1 = container.querySelector(`[data-h2h-play-top-cell="1"]`);
-    expect(topCell1?.textContent ?? "").toContain("Sender-1");
-    // Slot 2 still face-down at this point.
-    expect(screen.queryByTestId("top-strip-back-2")).not.toBeNull();
-  });
-
   it("falls back to the '?' placeholder when resolvedSenderHand is absent", async () => {
-    // ctx has NO resolvedSenderHand — top cells should land in their
-    // flipped-up state with the placeholder content, not crash.
     const { container } = render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />
     );
-    fireEvent.click(screen.getByText("Deal"));
-    await waitFor(() => expect(screen.queryByText("Draw")).not.toBeNull(), { timeout: 2000 });
+    await waitFor(
+      () => {
+        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        expect(btn).not.toBeNull();
+        expect(btn?.disabled).toBe(false);
+      },
+      { timeout: 3000 },
+    );
     fireEvent.click(screen.getByText("Draw"));
     await waitFor(
-      () => expect(screen.queryByTestId("top-strip-up-0")).not.toBeNull(),
-      { timeout: 4000 },
+      () => {
+        const wrapper = container.querySelector(
+          "[data-h2h-play-top-strip]",
+        ) as HTMLElement | null;
+        return wrapper && wrapper.getAttribute("data-h2h-play-top-strip-collapsed") === null;
+      },
+      { timeout: 6000 },
     );
     const topCell0 = container.querySelector(`[data-h2h-play-top-cell="0"]`);
-    // Placeholder character present; no sender name present.
     expect(topCell0?.textContent ?? "").toContain("?");
     expect(topCell0?.textContent ?? "").not.toContain("Sender-0");
   });
 });
 
-// ── 8. Try Again remount → pre_deal (App.tsx h2hPlayKey bump) ───────
+// ── 8. Try Again remount → loading → deal_in (App.tsx h2hPlayKey bump) ─
 
-describe("H2HRecipientPlay — Try Again remount lands in pre_deal", () => {
-  it("re-rendering with a new React key resets to pre_deal", () => {
+describe("H2HRecipientPlay — Try Again remount lands in deal_in", () => {
+  it("re-rendering with a new React key resets to deal_in (loading auto-advances)", () => {
+    vi.useFakeTimers();
     const ctx = makeCtx();
     const { container, rerender } = render(
       <H2HRecipientPlay key="A" {...baseProps()} challengeCtx={ctx} />
     );
-    fireEvent.click(screen.getByText("Deal"));
     rerender(
       <H2HRecipientPlay key="B" {...baseProps()} challengeCtx={ctx} />
     );
     const root = container.querySelector("[data-h2h-recipient-play]");
-    expect(root?.getAttribute("data-playing-state")).toBe("pre_deal");
-    expect(screen.getByText("Deal")).toBeTruthy();
+    // dataReady is true on mount (isLoaded mock); loading → deal_in
+    // auto-advance fires inside the render's act() flush.
+    expect(root?.getAttribute("data-playing-state")).toBe("deal_in");
+    // No "Deal" CTA — pre_deal is killed.
+    expect(container.querySelector("[data-cta-label='Deal']")).toBeNull();
   });
 });
 
@@ -885,7 +1003,10 @@ describe("H2HRecipientPlay — bottom-strip H badge regression-locks", () => {
     const { container } = render(
       <H2HRecipientPlay {...props} challengeCtx={makeLeakyCtx()} />,
     );
-    fireEvent.click(screen.getByText("Deal"));
+    // Layout A/B restructure: pre_deal is killed; the loading →
+    // deal_in auto-advance fires synchronously inside the useEffect
+    // chain that render()'s act() flushes. The deal_in cascade is
+    // scheduled at that point — no Deal-button tap.
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 8);
     });
@@ -905,7 +1026,10 @@ describe("H2HRecipientPlay — bottom-strip H badge regression-locks", () => {
     const { container } = render(
       <H2HRecipientPlay {...props} challengeCtx={makeLeakyCtx()} />,
     );
-    fireEvent.click(screen.getByText("Deal"));
+    // Layout A/B restructure: pre_deal is killed; the loading →
+    // deal_in auto-advance fires synchronously inside the useEffect
+    // chain that render()'s act() flushes. The deal_in cascade is
+    // scheduled at that point — no Deal-button tap.
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 8);
     });
@@ -934,7 +1058,10 @@ describe("H2HRecipientPlay — bottom-strip H badge regression-locks", () => {
     // initialRoster[2].cardId in the leaky ctx is "init-2".
     const props = baseProps({ renderPlayingStripCard: badgeRenderer } as any);
     render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
-    fireEvent.click(screen.getByText("Deal"));
+    // Layout A/B restructure: pre_deal is killed; the loading →
+    // deal_in auto-advance fires synchronously inside the useEffect
+    // chain that render()'s act() flushes. The deal_in cascade is
+    // scheduled at that point — no Deal-button tap.
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 8);
     });
@@ -980,7 +1107,8 @@ describe("H2HRecipientPlay — FIX 1 ensureLoaded gate", () => {
     restore();
   });
 
-  it("Deal CTA is disabled and loading copy is shown while data is not ready", async () => {
+  it("CTA is disabled and loading copy is shown while data is not ready; state stays loading", async () => {
+    vi.useFakeTimers();
     const { ensureLoadedMock, restore } = await forceAsyncLoadPath();
     // Hold the promise so we can observe the pre-resolve render.
     let resolveLoad!: () => void;
@@ -990,18 +1118,28 @@ describe("H2HRecipientPlay — FIX 1 ensureLoaded gate", () => {
     const { container } = render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />,
     );
-    // Loading state: headline copy + Deal disabled.
+    // Loading state: headline copy + CTA disabled. The state-attribute
+    // is "loading" — the auto-advance is gated on dataReady, which is
+    // false until the held promise resolves.
     expect(container.textContent?.toLowerCase()).toContain("loading challenge data");
+    const root = container.querySelector("[data-h2h-recipient-play]");
+    expect(root?.getAttribute("data-playing-state")).toBe("loading");
     const cta = container.querySelector("[data-h2h-play-cta]") as HTMLButtonElement;
     expect(cta?.disabled).toBe(true);
 
-    // Resolve the held promise → dataReady flips true → Deal enabled.
+    // Resolve the held promise → dataReady flips true → loading
+    // auto-advances into deal_in.
     await act(async () => {
       resolveLoad();
       await Promise.resolve();
     });
+    const rootAfter = container.querySelector("[data-h2h-recipient-play]");
+    expect(rootAfter?.getAttribute("data-playing-state")).toBe("deal_in");
+    // CTA shifted to the "Draw" slot, still disabled until cascade
+    // settles (deal_in → hold_select enables it).
     const cta2 = container.querySelector("[data-h2h-play-cta]") as HTMLButtonElement;
-    expect(cta2?.disabled).toBe(false);
+    expect(cta2?.getAttribute("data-cta-label")).toBe("Draw");
+    expect(cta2?.disabled).toBe(true);
     restore();
   });
 
@@ -1055,8 +1193,18 @@ describe("H2HRecipientPlay — happy-path E2E (regression-lock for C/D fixed)", 
     const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
     const { container } = render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
 
-    fireEvent.click(screen.getByText("Deal"));
-    await waitFor(() => expect(screen.queryByText("Draw")).not.toBeNull(), { timeout: 2000 });
+    // Layout A/B restructure: pre_deal is killed; the loading →
+    // deal_in auto-advance fires synchronously inside the useEffect
+    // chain that render()'s act() flushes. The deal_in cascade is
+    // scheduled at that point — no Deal-button tap.
+    await waitFor(
+      () => {
+        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        expect(btn).not.toBeNull();
+        expect(btn?.disabled).toBe(false);
+      },
+      { timeout: 3000 },
+    );
     // Polish #11: confirm hold of slot 1 with tap-tap, then slot 5 with
     // tap-tap. (Tap-tap on a previously-previewed cell holds it; moving
     // to a different cell only previews it, never holds.)
@@ -1088,7 +1236,10 @@ describe("H2HRecipientPlay — Stage 1/2 intro mount (Phase 5c S3)", () => {
   async function dealThroughCtx(ctx: ChallengeCtx) {
     vi.useFakeTimers();
     const utils = render(<H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />);
-    fireEvent.click(screen.getByText("Deal"));
+    // Layout A/B restructure: pre_deal is killed; the loading →
+    // deal_in auto-advance fires synchronously inside the useEffect
+    // chain that render()'s act() flushes. The deal_in cascade is
+    // scheduled at that point — no Deal-button tap.
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
@@ -1153,31 +1304,41 @@ describe("H2HRecipientPlay — Stage 1/2 intro mount (Phase 5c S3)", () => {
     expect(container.querySelector("[data-h2h-play-headline]")).not.toBeNull();
   });
 
-  it("does not mount intro on pre_deal", () => {
+  it("does not mount Stage 1 / Stage 2 during deal_in (deal-intro placeholder slot occupies that beat instead)", () => {
+    vi.useFakeTimers();
     const { container } = render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={s3Ctx()} />,
     );
+    // At deal_in entry (right after the loading → deal_in auto-advance),
+    // the stage-text region exists but renders the deal-intro-placeholder
+    // branch — NOT Stage 1 / Stage 2.
+    expect(container.querySelector('[data-h2h-play-intro="deal-intro-placeholder"]')).not.toBeNull();
     expect(container.querySelector('[data-h2h-play-intro="stage1"]')).toBeNull();
     expect(container.querySelector('[data-h2h-play-intro="stage2"]')).toBeNull();
   });
 
-  it("collapses past hold_select (handoff_resolving → VS treatment takes over)", async () => {
-    // Use real timers so the async redraw + resolve chain advances.
+  it("collapses past hold_select (handoff_resolving → settle-pause; Stage 1/2 unmounted)", async () => {
     const ctx = s3Ctx();
     const props = baseProps();
     const { container } = render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
-    fireEvent.click(screen.getByText("Deal"));
     // Wait for hold_select.
-    await waitFor(() => expect(screen.queryByText("Draw")).not.toBeNull(), { timeout: 3000 });
+    await waitFor(
+      () => {
+        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        expect(btn).not.toBeNull();
+        expect(btn?.disabled).toBe(false);
+      },
+      { timeout: 3000 },
+    );
     // Polish #11: tap-tap to confirm hold of slot 1.
     fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
     expect(container.querySelector('[data-h2h-play-intro="stage2"]')).not.toBeNull();
     fireEvent.click(screen.getByText("Draw"));
-    // Eventually transitions past hold_select; the VS block mounts and
-    // both intro stages collapse.
+    // Eventually transitions past hold_select; the settle-pause empty-
+    // hero composition mounts and intro stages collapse.
     await waitFor(
-      () => expect(container.querySelector("[data-h2h-play-vs]")).not.toBeNull(),
+      () => expect(container.querySelector("[data-h2h-play-settle-hero]")).not.toBeNull(),
       { timeout: 6000 },
     );
     expect(container.querySelector('[data-h2h-play-intro="stage1"]')).toBeNull();
@@ -1203,7 +1364,10 @@ describe("H2HRecipientPlay — Polish #11 preview-then-hold", () => {
     vi.useFakeTimers();
     const props = baseProps({ renderPlayingStripCard: badgeRenderer } as any);
     const utils = render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
-    fireEvent.click(screen.getByText("Deal"));
+    // Layout A/B restructure: pre_deal is killed; the loading →
+    // deal_in auto-advance fires synchronously inside the useEffect
+    // chain that render()'s act() flushes. The deal_in cascade is
+    // scheduled at that point — no Deal-button tap.
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
@@ -1318,7 +1482,10 @@ describe("H2HRecipientPlay — Polish #11 preview-then-hold", () => {
       anchorBasePlayerId: "p3",
     });
     const { container } = render(<H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />);
-    fireEvent.click(screen.getByText("Deal"));
+    // Layout A/B restructure: pre_deal is killed; the loading →
+    // deal_in auto-advance fires synchronously inside the useEffect
+    // chain that render()'s act() flushes. The deal_in cascade is
+    // scheduled at that point — no Deal-button tap.
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
@@ -1354,8 +1521,18 @@ describe("H2HRecipientPlay — Polish #11 preview-then-hold", () => {
       anchorBasePlayerId: "p3",
     });
     const { container } = render(<H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />);
-    fireEvent.click(screen.getByText("Deal"));
-    await waitFor(() => expect(screen.queryByText("Draw")).not.toBeNull(), { timeout: 3000 });
+    // Layout A/B restructure: pre_deal is killed; the loading →
+    // deal_in auto-advance fires synchronously inside the useEffect
+    // chain that render()'s act() flushes. The deal_in cascade is
+    // scheduled at that point — no Deal-button tap.
+    await waitFor(
+      () => {
+        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        expect(btn).not.toBeNull();
+        expect(btn?.disabled).toBe(false);
+      },
+      { timeout: 3000 },
+    );
 
     // Confirm hold of slot 2 (tap-tap). Stage 2 mounts.
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
@@ -1383,30 +1560,38 @@ describe("H2HRecipientPlay — Polish #11 preview-then-hold", () => {
     expect(stage2C).toBe(stage2A);
   });
 
-  // ── §9 — VS beat overrides preview render ──────────────────────────
-  it("§9 — VS beat (handoff_resolving) overrides preview render in the hero zone", async () => {
-    // Use real timers so the async redraw + resolve chain advances.
+  // ── Settle-pause overrides preview render (post-VS restructure) ───
+  it("settle-pause empty-hero composition overrides preview render in the hero zone", async () => {
     vi.useRealTimers();
     const props = baseProps();
     const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
     const { container } = render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
-    fireEvent.click(screen.getByText("Deal"));
-    await waitFor(() => expect(screen.queryByText("Draw")).not.toBeNull(), { timeout: 3000 });
+    await waitFor(
+      () => {
+        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        expect(btn).not.toBeNull();
+        expect(btn?.disabled).toBe(false);
+      },
+      { timeout: 3000 },
+    );
 
     // Preview + hold slot 2 so the preview window is populated.
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     expect(container.querySelector('[data-h2h-play-preview="card"]')).not.toBeNull();
 
-    // Draw transitions through redraw_running → column_flip → handoff_resolving.
+    // Draw transitions through redraw_running → your_redraw_flip →
+    // ab_transition → handoff_resolving (settle-pause).
     fireEvent.click(screen.getByText("Draw"));
 
-    // VS treatment must take over the hero zone, displacing the preview.
+    // Settle-pause empty-hero composition must take over the hero zone,
+    // displacing the preview. No VS, no preview, no headline.
     await waitFor(
-      () => expect(container.querySelector("[data-h2h-play-vs]")).not.toBeNull(),
+      () => expect(container.querySelector("[data-h2h-play-settle-hero]")).not.toBeNull(),
       { timeout: 6000 },
     );
     expect(container.querySelector('[data-h2h-play-preview="card"]')).toBeNull();
     expect(container.querySelector('[data-h2h-play-preview="empty"]')).toBeNull();
+    expect(container.querySelector("[data-h2h-play-vs]")).toBeNull();
   });
 });

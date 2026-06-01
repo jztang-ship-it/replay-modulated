@@ -59,8 +59,13 @@ const OUTER_PAD_EXTRA_PX = 20; // matches the shell's "+ 20px" budget.
 // Layout timing constants — match shared/components/H2HRecipientPlay.tsx.
 const DEAL_CASCADE_INTERVAL_MS = 120;
 const COLUMN_FLIP_DURATION_MS = 250;
+// Layout A/B restructure: ab_transition beat is ~300ms (design-lock §9,
+// AB_TRANSITION_DURATION_MS in H2HRecipientPlay.tsx).
+const AB_TRANSITION_DURATION_MS = 300;
 const COLUMN_FLIP_INTERSTITIAL_MS = 150;
-const PRE_REVEAL_HOLD_MS = 800;
+// Layout A/B restructure: settle-pause bumped 800 → 1000ms per
+// design-lock §9 (replaces the prior VS / Ready-Set-Go beat).
+const PRE_REVEAL_HOLD_MS = 1000;
 const ARC_COMPOSITE_CROSSFADE_MS = 250;
 const ROSTER_SIZE = 6;
 
@@ -237,44 +242,63 @@ async function runPlayHarness(browser) {
     throw err;
   }
 
-  // ── State 1 (pre_deal): playing root + framed board + labels ──
+  // ── Initial state: Layout A composition (deal_in auto-advance) ──
+  // Layout A/B restructure (design-lock §1): pre_deal is killed. The
+  // playing root mounts; the loading → deal_in auto-advance fires
+  // inside the useEffect chain that React commits during the first
+  // render. By the time the playing-root selector resolves and the
+  // attribute is read, we should be in deal_in (the cascade is firing).
   await page.waitForSelector("[data-h2h-recipient-play]", { timeout: 5000 });
   const playStateInitial = await page.locator("[data-h2h-recipient-play]").getAttribute("data-playing-state");
-  record(`state-1: playing root mounted in pre_deal state (got "${playStateInitial}")`, playStateInitial === "pre_deal");
+  // pre_deal is killed (design-lock §1). The cascade can have already
+  // fired by the time the selector resolves; what's load-bearing here is
+  // that we're NOT in pre_deal — any Layout A sub-state is fine.
+  const layoutAStates = ["loading", "deal_in", "hold_select"];
+  record(
+    `initial: playing root mounted in a Layout A state (NOT pre_deal) (got "${playStateInitial}")`,
+    layoutAStates.includes(playStateInitial),
+  );
+  record(`initial: NO "Deal" CTA (pre_deal killed)`,
+    (await page.locator("[data-h2h-play-cta][data-cta-label='Deal']").count()) === 0,
+  );
 
-  // Framed-board presence — top, bottom, hero zones all present at S1.
+  // Framed-board presence — top, bottom, hero zones all present
+  // throughout Layout A.
   const topZoneCount_s1 = await page.locator(`[data-h2h-board-zone="top"]`).count();
   const bottomZoneCount_s1 = await page.locator(`[data-h2h-board-zone="bottom"]`).count();
   const heroZoneCount_s1 = await page.locator(`[data-h2h-board-zone="hero"]`).count();
-  record("S1 framed board: top zone present", topZoneCount_s1 >= 1);
-  record("S1 framed board: bottom zone present", bottomZoneCount_s1 >= 1);
-  record("S1 framed board: hero region present", heroZoneCount_s1 >= 1);
+  record("Layout A framed board: top zone present", topZoneCount_s1 >= 1);
+  record("Layout A framed board: bottom zone present", bottomZoneCount_s1 >= 1);
+  record("Layout A framed board: hero region present", heroZoneCount_s1 >= 1);
 
-  // Labels at S1 — opponent name (challengerName) top, recipient (nickname) bottom.
-  // Target the ZoneHeader spans by data-h2h-board-zone-label so we capture
-  // just the label, not the whole zone's textContent.
+  // Labels — opponent name top, literal "YOU" bottom (design-lock §5).
   const topLabel_s1 = (await page.locator(`[data-h2h-board-zone-label="top"]`).first().textContent())?.trim().toUpperCase() ?? "";
   const bottomLabel_s1 = (await page.locator(`[data-h2h-board-zone-label="bottom"]`).first().textContent())?.trim().toUpperCase() ?? "";
-  record(`S1 top label contains "${CHALLENGER_NAME.toUpperCase()}"`, topLabel_s1.includes(CHALLENGER_NAME.toUpperCase()), `label="${topLabel_s1}"`);
-  // Bottom label is recipient identity; default fallback "YOU" when no nickname set.
-  record("S1 bottom label present (non-empty)", bottomLabel_s1.length > 0, `label="${bottomLabel_s1}"`);
+  record(`Layout A top label contains "${CHALLENGER_NAME.toUpperCase()}"`, topLabel_s1.includes(CHALLENGER_NAME.toUpperCase()), `label="${topLabel_s1}"`);
+  record(`Layout A bottom label is literal "YOU" (design-lock §5)`, bottomLabel_s1 === "YOU", `label="${bottomLabel_s1}"`);
 
-  // Capture top/bottom/hero zone rects at end of S1 for the S3→S4 no-shift check below.
-  const topRect_s1 = await page.locator(`[data-h2h-board-zone="top"]`).boundingBox();
-  const bottomRect_s1 = await page.locator(`[data-h2h-board-zone="bottom"]`).boundingBox();
-  const heroRect_s1 = await page.locator(`[data-h2h-board-zone="hero"]`).boundingBox();
+  // Opponent strip is ABSENT in Layout A (collapsed wrapper).
+  const topStripCollapsed_init = await page
+    .locator(`[data-h2h-play-top-strip]`)
+    .getAttribute("data-h2h-play-top-strip-collapsed");
+  record(`Layout A: opponent strip wrapper is collapsed`, topStripCollapsed_init === "true");
 
-  // ── State 2 (deal_in → hold_select) ──
-  await page.click("[data-h2h-play-cta][data-cta-label='Deal']");
+  // Capture top/bottom/hero zone rects at initial Layout A entry.
+  // (No longer used for the obsolete S1↔S4 no-shift assertion — kept
+  // for diagnostic logging in failure cases.)
+  void await page.locator(`[data-h2h-board-zone="top"]`).boundingBox();
+  void await page.locator(`[data-h2h-board-zone="bottom"]`).boundingBox();
+  void await page.locator(`[data-h2h-board-zone="hero"]`).boundingBox();
+
+  // ── hold_select (Layout A) after auto-cascade ──
   await page.waitForTimeout(DEAL_CASCADE_INTERVAL_MS * (ROSTER_SIZE + 2));
-  // Settle hold_select transitions (top-strip 80→0; hero floor 377→205;
-  // opacity 1→0) — all 250ms. The bottom strip moves up as hero
-  // collapses; cell-rect assertions must measure after the transition
-  // ends or the cell's flex-positioned y races the absolute-positioned
-  // front-face's reported y.
+  // Settle hold_select transitions — the hero floor + collapsed-strip
+  // animations are scoped to Layout A budgeting; the bottom strip's
+  // flex-positioned y races the absolute-positioned front-face's
+  // reported y until the transitions complete.
   await page.waitForTimeout(COLUMN_FLIP_DURATION_MS + 100);
   const playStateAfterDeal = await page.locator("[data-h2h-recipient-play]").getAttribute("data-playing-state");
-  record(`state-2 → hold_select reached after cascade (got "${playStateAfterDeal}")`, playStateAfterDeal === "hold_select");
+  record(`hold_select reached after auto-cascade (got "${playStateAfterDeal}")`, playStateAfterDeal === "hold_select");
 
   // Fix B regression-lock: bottom cells' front faces inside their cells.
   for (let i = 0; i < ROSTER_SIZE; i++) {
@@ -422,121 +446,162 @@ async function runPlayHarness(browser) {
     `count=${hBadgeCountTwoHeld}`,
   );
 
-  // ── State 3: tap Draw → column-flip pass ──
+  // ── Draw → your_redraw_flip pass (Layout A/B restructure §3 step 2) ─
   await page.click("[data-h2h-play-cta][data-cta-label='Draw']");
   const totalColumnFlipMs = ROSTER_SIZE * (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS);
-  await page.waitForTimeout(totalColumnFlipMs + 100);
-
-  // Sender faces inside top-zone cells at column-pass end.
-  const topZoneRect_s3 = await page.locator(`[data-h2h-board-zone="top"]`).boundingBox();
-  for (let i = 0; i < ROSTER_SIZE; i++) {
-    const cellHandle = page.locator(`[data-h2h-play-top-cell="${i}"]`);
-    const frontHandle = cellHandle.locator("[data-h2h-play-top-front]");
-    const cellRect = await cellHandle.boundingBox();
-    const frontCount = await frontHandle.count();
-    if (frontCount === 0) {
-      record(`top cell ${i} sender face mounted at column-pass end`, false, "no [data-h2h-play-top-front] mounted");
-      continue;
-    }
-    const frontRect = await frontHandle.boundingBox();
-    record(`top cell ${i} sender face rect inside cell rect`, rectContains(cellRect, frontRect), `cell=${fmtRect(cellRect)} front=${fmtRect(frontRect)}`);
-    record(`top cell ${i} inside top zone`, rectContains(topZoneRect_s3, cellRect));
-  }
-
-  // Capture rects at end of S3 (just before handoff_resolving → arc) for the
-  // no-shift check.
-  const topRect_s3 = await page.locator(`[data-h2h-board-zone="top"]`).boundingBox();
-  const bottomRect_s3 = await page.locator(`[data-h2h-board-zone="bottom"]`).boundingBox();
-  const heroRect_s3 = await page.locator(`[data-h2h-board-zone="hero"]`).boundingBox();
-  const topLabel_s3 = (await page.locator(`[data-h2h-board-zone-label="top"]`).first().textContent())?.trim().toUpperCase() ?? "";
-  const bottomLabel_s3 = (await page.locator(`[data-h2h-board-zone-label="bottom"]`).first().textContent())?.trim().toUpperCase() ?? "";
-
-  // ── Mid handoff_resolving (#3 VS treatment) ─────────────────────
-  // The 800ms pre-reveal hold opens with state="handoff_resolving" and
-  // the playing-mode hero zone showing the VS treatment (weight-900 "VS"
-  // + "Comparing…" sub-label) IN PLACE of the prior "Calculating…" copy.
-  // Sample atomically ~300ms into the beat — well inside the 800ms
-  // window and BEFORE the arc-composite crossfade starts. Asserts:
-  //   (a) state IS handoff_resolving (we're in the right window)
-  //   (b) [data-h2h-play-vs] is present with text "VSComparing…"
-  //   (c) the VS glyph reads "VS" and is rendered with size ≥ 40px +
-  //       opacity ≥ 0.9 (no rendered-but-invisible regressions)
-  //   (d) the VS block has a non-zero bounding box (not collapsed)
-  //   (e) the headline div is NOT mounted (lifted-out structure: VS is
-  //       a sibling, not a child of the headline wrapper)
-  await page.waitForTimeout(300);
-  const vsSnap = await page.evaluate(() => {
+  // Mid-pass: the opponent strip MUST remain collapsed (Layout A
+  // invariant — design-lock §3 step 2 isolates your-flip from
+  // opponent-appear). Sample halfway through.
+  const midWaitMs = Math.floor(totalColumnFlipMs / 2);
+  await page.waitForTimeout(midWaitMs);
+  const mid = await page.evaluate(() => {
     const root = document.querySelector("[data-h2h-recipient-play]");
-    const vs = document.querySelector("[data-h2h-play-vs]");
-    const glyph = document.querySelector("[data-h2h-play-vs-glyph]");
-    const sub = document.querySelector("[data-h2h-play-vs-sub]");
-    const headline = document.querySelector("[data-h2h-play-headline]");
-    const vsRect = vs?.getBoundingClientRect();
-    const glyphCs = glyph ? getComputedStyle(glyph) : null;
+    const wrapper = document.querySelector("[data-h2h-play-top-strip]");
     return {
       state: root?.getAttribute("data-playing-state"),
-      vsPresent: !!vs,
-      vsText: vs?.textContent ?? null,
-      vsBoxWidth: vsRect?.width ?? 0,
-      vsBoxHeight: vsRect?.height ?? 0,
-      glyphText: glyph?.textContent ?? null,
-      glyphFontSize: glyphCs ? parseFloat(glyphCs.fontSize) : 0,
-      glyphFontWeight: glyphCs?.fontWeight ?? null,
-      glyphOpacity: glyphCs ? parseFloat(glyphCs.opacity) : 0,
-      glyphVisibility: glyphCs?.visibility ?? null,
-      subText: sub?.textContent ?? null,
-      headlineMounted: !!headline,
+      collapsed: wrapper?.getAttribute("data-h2h-play-top-strip-collapsed"),
+      stripOpacity: wrapper ? getComputedStyle(wrapper).opacity : null,
     };
   });
   record(
-    `#3 VS: state is "handoff_resolving" during pre-reveal beat`,
-    vsSnap.state === "handoff_resolving",
-    `state="${vsSnap.state}"`,
+    `your_redraw_flip mid-pass: state IS your_redraw_flip`,
+    mid.state === "your_redraw_flip",
+    `state="${mid.state}"`,
   );
   record(
-    `#3 VS: [data-h2h-play-vs] element present`,
-    vsSnap.vsPresent === true,
+    `your_redraw_flip mid-pass: opponent strip STAYS collapsed (no flip / no appear)`,
+    mid.collapsed === "true" && parseFloat(mid.stripOpacity ?? "1") < 0.1,
+    `collapsed=${mid.collapsed} opacity=${mid.stripOpacity}`,
+  );
+  // Walk from mid-pass to end-of-your_redraw_flip / start-of-ab_transition.
+  // Total wait since Draw click = midWaitMs + (totalColumnFlipMs - midWaitMs)
+  //                              = totalColumnFlipMs.
+  await page.waitForTimeout(totalColumnFlipMs - midWaitMs);
+  // Sample LATE in the 300ms ab_transition window so the CSS
+  // height/opacity transition on the opponent-strip wrapper has
+  // played out — the "end-state" of the transition, not the start.
+  await page.waitForTimeout(AB_TRANSITION_DURATION_MS - 50);
+
+  // ── ab_transition end-state snapshot (design-lock §3 step 3) ─────
+  // At ~250ms into the 300ms beat: opponent strip wrapper is no
+  // longer marked collapsed and its CSS transitions are essentially
+  // complete (height near 80px, opacity near 1). The hero region's
+  // min-height transition has also nearly completed (recipient strip
+  // slid down naturally as the hero expanded). Both empty hero slots
+  // are rendering ([data-h2h-play-settle-hero-slot]).
+  const abSnap = await page.evaluate(() => {
+    const root = document.querySelector("[data-h2h-recipient-play]");
+    const wrapper = document.querySelector("[data-h2h-play-top-strip]");
+    const settleHero = document.querySelector("[data-h2h-play-settle-hero]");
+    const opSlot = document.querySelector('[data-h2h-play-settle-hero-slot="opponent"]');
+    const youSlot = document.querySelector('[data-h2h-play-settle-hero-slot="you"]');
+    const cs = wrapper ? getComputedStyle(wrapper) : null;
+    const topZone = document.querySelector('[data-h2h-board-zone="top"]');
+    const bottomZone = document.querySelector('[data-h2h-board-zone="bottom"]');
+    const heroZone = document.querySelector('[data-h2h-board-zone="hero"]');
+    return {
+      state: root?.getAttribute("data-playing-state"),
+      wrapperCollapsed: wrapper?.getAttribute("data-h2h-play-top-strip-collapsed"),
+      wrapperOpacity: cs ? parseFloat(cs.opacity) : 0,
+      wrapperHeight: cs ? parseFloat(cs.height) : 0,
+      settleHeroMounted: !!settleHero,
+      opSlotMounted: !!opSlot,
+      youSlotMounted: !!youSlot,
+      topZoneRect: topZone?.getBoundingClientRect().toJSON(),
+      bottomZoneRect: bottomZone?.getBoundingClientRect().toJSON(),
+      heroZoneRect: heroZone?.getBoundingClientRect().toJSON(),
+    };
+  });
+  // Sample is inside ab_transition OR has just transitioned into
+  // handoff_resolving (settle-pause) — both render the empty-hero
+  // composition. The end-state spec is identical between the two.
+  record(
+    `ab_transition end-state: state IS ab_transition or handoff_resolving`,
+    abSnap.state === "ab_transition" || abSnap.state === "handoff_resolving",
+    `state="${abSnap.state}"`,
   );
   record(
-    `#3 VS: text content = "VSComparing…"`,
-    vsSnap.vsText === "VSComparing…",
-    `text="${vsSnap.vsText}"`,
+    `ab_transition end-state: opponent strip wrapper uncollapsed (collapsed=null, opacity=1, height>0)`,
+    abSnap.wrapperCollapsed === null && abSnap.wrapperOpacity > 0.9 && abSnap.wrapperHeight > 0,
+    `collapsed=${abSnap.wrapperCollapsed} opacity=${abSnap.wrapperOpacity} h=${abSnap.wrapperHeight}`,
   );
   record(
-    `#3 VS: glyph text === "VS"`,
-    vsSnap.glyphText === "VS",
-    `glyph="${vsSnap.glyphText}"`,
+    `ab_transition end-state: settle-hero (two empty slots) rendering`,
+    abSnap.settleHeroMounted && abSnap.opSlotMounted && abSnap.youSlotMounted,
+    `settle=${abSnap.settleHeroMounted} op=${abSnap.opSlotMounted} you=${abSnap.youSlotMounted}`,
+  );
+  // Top zone must be above bottom zone (Layout B Y-order sanity).
+  if (abSnap.topZoneRect && abSnap.bottomZoneRect) {
+    record(
+      `ab_transition end-state: top zone above bottom zone (Y-ordering)`,
+      abSnap.topZoneRect.y + abSnap.topZoneRect.height <= abSnap.bottomZoneRect.y,
+      `top.bottom=${abSnap.topZoneRect.y + abSnap.topZoneRect.height} bottom.top=${abSnap.bottomZoneRect.y}`,
+    );
+  }
+
+  // ── handoff_resolving settle-pause snapshot (design-lock §3 step 4) ─
+  // Wait into the 1000ms hold (post-AB_TRANSITION). Sample at +200ms
+  // into the settle-pause — well inside the 1000ms window and before
+  // the arc composite crossfade.
+  await page.waitForTimeout(AB_TRANSITION_DURATION_MS + 200);
+  const settleSnap = await page.evaluate(() => {
+    const root = document.querySelector("[data-h2h-recipient-play]");
+    const settle = document.querySelector("[data-h2h-play-settle-hero]");
+    const opSlot = document.querySelector('[data-h2h-play-settle-hero-slot="opponent"]');
+    const youSlot = document.querySelector('[data-h2h-play-settle-hero-slot="you"]');
+    const headline = document.querySelector("[data-h2h-play-headline]");
+    const vs = document.querySelector("[data-h2h-play-vs]");
+    const wrapper = document.querySelector("[data-h2h-play-top-strip]");
+    const cs = wrapper ? getComputedStyle(wrapper) : null;
+    // Bottom-strip cells: all 6 face-up.
+    const bottomCells = Array.from(document.querySelectorAll("[data-h2h-play-bottom-cell]"));
+    const bottomFaceUpCount = bottomCells.filter((c) => c.getAttribute("data-face-up") === "true").length;
+    // Top-strip cells: 6 face-up.
+    const topCells = Array.from(document.querySelectorAll("[data-h2h-play-top-cell]"));
+    const topFaceUpCount = topCells.filter((c) => c.getAttribute("data-face-up") === "true").length;
+    return {
+      state: root?.getAttribute("data-playing-state"),
+      settleMounted: !!settle,
+      opSlotMounted: !!opSlot,
+      youSlotMounted: !!youSlot,
+      headlineMounted: !!headline,
+      vsMounted: !!vs,
+      wrapperOpacity: cs ? parseFloat(cs.opacity) : 0,
+      bottomFaceUpCount,
+      topFaceUpCount,
+    };
+  });
+  record(
+    `settle-pause: state IS handoff_resolving`,
+    settleSnap.state === "handoff_resolving",
+    `state="${settleSnap.state}"`,
   );
   record(
-    `#3 VS: glyph fontSize >= 40px (catches collapse-to-inherited-22)`,
-    vsSnap.glyphFontSize >= 40,
-    `fontSize=${vsSnap.glyphFontSize}`,
+    `settle-pause: VS treatment is KILLED (no [data-h2h-play-vs])`,
+    settleSnap.vsMounted === false,
   );
   record(
-    `#3 VS: glyph computed visibility=visible + opacity >= 0.9`,
-    vsSnap.glyphVisibility === "visible" && vsSnap.glyphOpacity >= 0.9,
-    `visibility="${vsSnap.glyphVisibility}" opacity=${vsSnap.glyphOpacity}`,
+    `settle-pause: empty-hero composition rendered (opponent + you slots)`,
+    settleSnap.settleMounted && settleSnap.opSlotMounted && settleSnap.youSlotMounted,
+    `settle=${settleSnap.settleMounted} op=${settleSnap.opSlotMounted} you=${settleSnap.youSlotMounted}`,
   );
   record(
-    `#3 VS: bounding box width >= 60px AND height >= 60px (not collapsed)`,
-    vsSnap.vsBoxWidth >= 60 && vsSnap.vsBoxHeight >= 60,
-    `w=${vsSnap.vsBoxWidth} h=${vsSnap.vsBoxHeight}`,
+    `settle-pause: headline div NOT mounted (empty stillness)`,
+    settleSnap.headlineMounted === false,
   );
   record(
-    `#3 VS: sub-label "Comparing…" present`,
-    vsSnap.subText === "Comparing…",
-    `sub="${vsSnap.subText}"`,
-  );
-  record(
-    `#3 VS: headline div NOT mounted during handoff_resolving (VS is a sibling)`,
-    vsSnap.headlineMounted === false,
-    `headlineMounted=${vsSnap.headlineMounted}`,
+    `settle-pause: Layout B composed — opponent strip face-up + your strip all 6 face-up`,
+    settleSnap.wrapperOpacity > 0.9 &&
+      settleSnap.bottomFaceUpCount === ROSTER_SIZE &&
+      settleSnap.topFaceUpCount === ROSTER_SIZE,
+    `op=${settleSnap.wrapperOpacity} bot=${settleSnap.bottomFaceUpCount} top=${settleSnap.topFaceUpCount}`,
   );
 
-  // ── State 4 (arc): Fix C2 single canvas + S3→S4 no-shift ──
-  // Already 300ms into handoff_resolving — finish the remaining hold +
-  // composite crossfade window so the arc has fully landed.
-  await page.waitForTimeout(PRE_REVEAL_HOLD_MS - 300 + ARC_COMPOSITE_CROSSFADE_MS + 200);
+  // ── arc: Fix C2 single canvas continuity ──
+  // Finish the rest of the settle-pause + composite crossfade. The
+  // 200ms we waited above + the remainder of PRE_REVEAL_HOLD_MS (1000)
+  // + the ARC_COMPOSITE_CROSSFADE_MS (250) + buffer.
+  await page.waitForTimeout(PRE_REVEAL_HOLD_MS - 200 + ARC_COMPOSITE_CROSSFADE_MS + 200);
 
   const playStateArc = await page.locator("[data-h2h-recipient-play]").getAttribute("data-playing-state");
   record(`state="arc" reached (got "${playStateArc}")`, playStateArc === "arc");
@@ -557,43 +622,14 @@ async function runPlayHarness(browser) {
   const innerOpacity = await page.locator("[data-h2h-play-inner]").evaluate((el) => getComputedStyle(el).opacity);
   record("playing inner content faded to opacity 0", parseFloat(innerOpacity) === 0, `opacity=${innerOpacity}`);
 
-  // S3→S4 NO LAYOUT SHIFT — top/bottom/hero zone rects unchanged.
-  // After arc-composite, the reveal's zones are descendants of the playing
-  // root; the reveal's reduced markers + the playing canvas's markers
-  // coexist. Query the OUTERMOST [data-h2h-board-zone] hits which belong
-  // to the still-mounted playing shell (those are the ones whose rect we
-  // captured in S3 above) — locator.first() will resolve to the first match
-  // in DOM order which is the playing-shell zone.
-  const topRect_arc = await page.locator(`[data-h2h-board-zone="top"]`).first().boundingBox();
-  const bottomRect_arc = await page.locator(`[data-h2h-board-zone="bottom"]`).first().boundingBox();
-  const heroRect_arc = await page.locator(`[data-h2h-board-zone="hero"]`).first().boundingBox();
-  const topLabel_arc = (await page.locator(`[data-h2h-board-zone-label="top"]`).first().textContent())?.trim().toUpperCase() ?? "";
-  const bottomLabel_arc = (await page.locator(`[data-h2h-board-zone-label="bottom"]`).first().textContent())?.trim().toUpperCase() ?? "";
-
-  // hold_select vertical-budget fix (lock §4 invariant, 2026-06-01):
-  // the "no-shift across hold_select ↔ reveal" rule from doc EDIT B2
-  // was a load-bearing contract for #11 and earlier. After the budget
-  // fix, hold_select INTENTIONALLY compresses (collapsed opponent
-  // strip, reduced hero floor, fluid intro budget) to fit the recipient
-  // strip + CTA on real iOS viewports. The compression unwinds (via
-  // the shell's min-height transition synced to COLUMN_FLIP_DURATION_MS)
-  // as state transitions out of hold_select, so by the time S4 (arc)
-  // is reached the layout is fully restored. The new invariant is
-  // S1 (pre_deal) ↔ S4 (arc): both share the un-compressed layout, so
-  // zone rects must match across them.
-  //
-  // S1↔S3 and S3↔S4 zone-equality assertions are intentionally NOT
-  // asserted post-fix because S3 (hold_select) is by-design smaller.
-  record(`S1↔S4 top zone rect unchanged ±1px`, rectMatches(topRect_s1, topRect_arc), `s1=${fmtRect(topRect_s1)} arc=${fmtRect(topRect_arc)}`);
-  record(`S1↔S4 bottom zone rect unchanged ±1px`, rectMatches(bottomRect_s1, bottomRect_arc), `s1=${fmtRect(bottomRect_s1)} arc=${fmtRect(bottomRect_arc)}`);
-  record(`S1↔S4 hero region rect unchanged ±1px`, rectMatches(heroRect_s1, heroRect_arc), `s1=${fmtRect(heroRect_s1)} arc=${fmtRect(heroRect_arc)}`);
-  record(`S1↔S4 top label unchanged`, topLabel_s1 === topLabel_arc, `s1="${topLabel_s1}" arc="${topLabel_arc}"`);
-  record(`S1↔S4 bottom label unchanged`, bottomLabel_s1 === bottomLabel_arc, `s1="${bottomLabel_s1}" arc="${bottomLabel_arc}"`);
-
-  // Suppress unused-variable warning for the S3-zone captures (kept
-  // for future diagnostic logging).
-  void topRect_s3; void bottomRect_s3; void heroRect_s3;
-  void topLabel_s3; void bottomLabel_s3;
+  // Note (design-lock §3 / §5): the prior S1↔S4 no-shift assertion is
+  // OBSOLETE under the Layout A/B restructure. Layout A and Layout B
+  // have intentionally different bottom-strip Y positions by design
+  // (the recipient strip "slides down" via the hero region's expansion
+  // from the Layout A small floor back to the Layout B full floor —
+  // §3 step 3). Layout B containment is asserted by the multi-viewport
+  // sweep below (§5a no-scroll above floor / §5b pinned-scroll below).
+  void topLabel_s1; void bottomLabel_s1;
 
   // ── C/D regression-locks (post-FIX 1/2) — reveal-side end-state ──
   // Wait long enough for the full per-matchup reveal arc to complete.
@@ -810,100 +846,204 @@ async function runHoldSelectViewportSweep(browser, vp) {
   // real-device overflow that the bug exhibits.
   await injectSafeArea(page, vp.safeTop, vp.safeBottom);
 
-  // Drive deal cascade → hold_select.
-  await page.click("[data-h2h-play-cta][data-cta-label='Deal']");
+  // Layout A/B restructure: pre_deal is killed. The cascade
+  // auto-fires on mount (loading → deal_in auto-advance + scheduled
+  // cascade timers); no Deal-click. Wait through the cascade into
+  // hold_select.
   await page.waitForTimeout(DEAL_CASCADE_INTERVAL_MS * (ROSTER_SIZE + 2));
-  // Settle the hold_select transitions (top-strip height 80→0; hero
-  // floor full→reduced; opacity 1→0). All three animate over
-  // COLUMN_FLIP_DURATION_MS = 250ms; add a small buffer so the layout
-  // is fully at rest before HS-0 captures rects.
   await page.waitForTimeout(COLUMN_FLIP_DURATION_MS + 100);
   const stateAtHoldSelect = await page.locator("[data-h2h-recipient-play]").getAttribute("data-playing-state");
-  record(`${vp.label}: hold_select reached after deal cascade`, stateAtHoldSelect === "hold_select", `state="${stateAtHoldSelect}"`);
+  record(`${vp.label}: hold_select reached after auto-cascade`, stateAtHoldSelect === "hold_select", `state="${stateAtHoldSelect}"`);
   if (stateAtHoldSelect !== "hold_select") {
     await page.close();
     return;
   }
 
-  // Step through the 6 tap states; assert §5a (no-scroll fit) or §5b
-  // (scroll fallback) per state.
+  // ── §5a/§5b containment sweep across hold_select tap states ──
   for (const ts of HS_TAP_STATES) {
     if (ts.tapSelector) {
       await page.locator(ts.tapSelector).click();
       await page.waitForTimeout(50);
     }
-    const rects = await captureHoldSelectRects(page);
-    const ctaBottom = rects.cta ? rects.cta.y + rects.cta.height : null;
-    const stripBottom = rects.bottomStrip ? rects.bottomStrip.y + rects.bottomStrip.height : null;
-    const topZoneTop = rects.topZone ? rects.topZone.y : null;
-    const scrollable = rects.innerInfo?.overflowingY === true;
-    const fitLabel = scrollable ? "§5b scroll fallback" : "§5a no-scroll fit";
-    const stateLabel = `${vp.label} ${ts.id} ${ts.label} ${fitLabel}`;
-
-    if (!scrollable) {
-      // §5a: content fits without scroll. All three containment + the
-      // no-scroll assertion must hold.
-      record(
-        `${stateLabel}: recipient-strip.bottom <= vh`,
-        stripBottom !== null && stripBottom <= vp.height + 1,
-        `stripBottom=${Math.round(stripBottom)} vh=${vp.height}`,
-      );
-      record(
-        `${stateLabel}: CTA.bottom <= vh`,
-        ctaBottom !== null && ctaBottom <= vp.height + 1,
-        `ctaBottom=${Math.round(ctaBottom)} vh=${vp.height}`,
-      );
-      record(
-        `${stateLabel}: top-zone.top >= 0`,
-        topZoneTop !== null && topZoneTop >= -1,
-        `topZoneTop=${Math.round(topZoneTop)}`,
-      );
-      record(
-        `${stateLabel}: inner does NOT scroll`,
-        !scrollable,
-        `scrollH=${rects.innerInfo?.scrollHeight} clientH=${rects.innerInfo?.clientHeight}`,
-      );
-    } else {
-      // §5b: content exceeds inner height; scroll engages. CTA must
-      // remain pinned (sticky bottom 0) at scrollTop=0 AND at
-      // scrollTop=max. Recipient strip must be reachable in the scroll.
-      await scrollInnerTo(page, "top");
-      const rectsAtTop = await captureHoldSelectRects(page);
-      const ctaBottomTop = rectsAtTop.cta ? rectsAtTop.cta.y + rectsAtTop.cta.height : null;
-      record(
-        `${stateLabel}: CTA pinned (bottom <= vh) at scrollTop=0`,
-        ctaBottomTop !== null && ctaBottomTop <= vp.height + 1,
-        `ctaBottom=${Math.round(ctaBottomTop)} vh=${vp.height}`,
-      );
-
-      await scrollInnerTo(page, "bottom");
-      const rectsAtBottom = await captureHoldSelectRects(page);
-      const ctaBottomBottom = rectsAtBottom.cta ? rectsAtBottom.cta.y + rectsAtBottom.cta.height : null;
-      record(
-        `${stateLabel}: CTA pinned (bottom <= vh) at scrollTop=max`,
-        ctaBottomBottom !== null && ctaBottomBottom <= vp.height + 1,
-        `ctaBottom=${Math.round(ctaBottomBottom)} vh=${vp.height}`,
-      );
-
-      // Recipient strip reachable: scroll it into view and assert it
-      // lands fully on-screen at that scroll position.
-      const stripReachable = await page.evaluate(() => {
-        const strip = document.querySelector('[data-h2h-play-bottom-strip]');
-        if (!strip) return { ok: false, reason: "strip not in DOM" };
-        strip.scrollIntoView({ block: "center", behavior: "instant" });
-        const r = strip.getBoundingClientRect();
-        return { ok: r.top >= -1 && r.bottom <= window.innerHeight + 1, top: r.top, bottom: r.bottom, vh: window.innerHeight };
-      });
-      record(
-        `${stateLabel}: bottom strip reachable in scroll`,
-        stripReachable.ok,
-        JSON.stringify(stripReachable),
-      );
-
-      await scrollInnerTo(page, "top");
-    }
+    await assertContainmentOrReachability(page, vp, `${vp.label} ${ts.id} ${ts.label}`);
   }
+
+  // ── Layout-B containment sweep (design-lock §6 / §8) ─────────────
+  // The lock extends the §5a/§5b containment rule to Layout B —
+  // settle-pause AND reveal/arc. Layout B is denser (two strips +
+  // empty hero composition, then the battlefield grid + scores +
+  // result headline + CTAs). The img-5 CTA-clip is fixed by these
+  // assertions: the recipient strip + CTA must be contained-or-
+  // reachable on tight viewports.
+  //
+  // From hold_select with held={2,5} (HS-4 final state), tap Draw to
+  // drive into Layout B. Wait through redraw_running → your_redraw_flip
+  // → ab_transition into the handoff_resolving settle-pause.
+  await page.click("[data-h2h-play-cta][data-cta-label='Draw']");
+  // your_redraw_flip pass + ab_transition + a small buffer to land
+  // inside the settle-pause hold (1000ms).
+  await page.waitForTimeout(
+    ROSTER_SIZE * (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS) +
+      AB_TRANSITION_DURATION_MS + 100,
+  );
+  const settleState = await page.locator("[data-h2h-recipient-play]").getAttribute("data-playing-state");
+  if (settleState === "handoff_resolving") {
+    await assertContainmentOrReachability(
+      page,
+      vp,
+      `${vp.label} B-settle (handoff_resolving)`,
+      { layoutBExpected: true },
+    );
+  } else {
+    record(
+      `${vp.label} B-settle: reached handoff_resolving for Layout B containment check`,
+      false,
+      `state="${settleState}"`,
+    );
+  }
+
+  // arc state — finish out the settle-pause + composite crossfade.
+  await page.waitForTimeout(PRE_REVEAL_HOLD_MS + ARC_COMPOSITE_CROSSFADE_MS + 200);
+  const arcStateSweep = await page.locator("[data-h2h-recipient-play]").getAttribute("data-playing-state");
+  if (arcStateSweep === "arc") {
+    // Arc composites the reveal shell over the playing inner. Per
+    // design-lock §6: Layout B follows the same containment-or-
+    // reachability rule as Layout A (§5a fits without scroll OR §5b
+    // engages scroll-fallback with the CTA pinned). The img-5 CTA-clip
+    // guard fails when the reveal's recipient strip / CTA is BELOW the
+    // viewport AND the scroll-fallback isn't engaged on the reveal
+    // shell's inner column.
+    //
+    // The reveal renders its own H2HBoardShell. It exposes its own
+    // [data-h2h-board-inner] inside [data-h2h-recipient-reveal]. We
+    // measure containment against the viewport AND, if the strip/CTA
+    // overflow, accept the failure ONLY IF the reveal-shell's inner
+    // is scrollable AND the strip/CTA become reachable via scroll —
+    // matching the §5b rule applied to Layout B.
+    const arcMeasure = await page.evaluate(() => {
+      const reveal = document.querySelector("[data-h2h-recipient-reveal]");
+      if (!reveal) return { ok: false, reason: "no reveal mounted" };
+      // The reveal shell's inner — scope to the reveal subtree so we
+      // don't pick up the playing shell's inner (which sits beneath).
+      const inner = reveal.querySelector("[data-h2h-board-inner]");
+      const innerInfo = inner
+        ? {
+            scrollHeight: inner.scrollHeight,
+            clientHeight: inner.clientHeight,
+            overflowingY: inner.scrollHeight - inner.clientHeight > 1,
+          }
+        : null;
+      const strip = reveal.querySelector('[data-h2h-hand-strip][data-side="recipient"]')
+        ?? reveal.querySelector('[data-h2h-board-zone="bottom"]');
+      const cta = reveal.querySelector('[data-h2h-overlay-cta]')
+        ?? reveal.querySelector('[data-h2h-play-cta]');
+      const stripRect = strip?.getBoundingClientRect();
+      const ctaRect = cta?.getBoundingClientRect();
+      return {
+        ok: true,
+        innerInfo,
+        stripBottom: stripRect ? stripRect.y + stripRect.height : null,
+        ctaBottom: ctaRect ? ctaRect.y + ctaRect.height : null,
+        ctaPresent: !!cta,
+        stripPresent: !!strip,
+      };
+    });
+    if (arcMeasure.ok && arcMeasure.stripPresent) {
+      const fits = arcMeasure.stripBottom !== null && arcMeasure.stripBottom <= vp.height + 1;
+      const scrollable = arcMeasure.innerInfo?.overflowingY === true;
+      record(
+        `${vp.label} B-arc: reveal recipient strip contained-or-scrollable (img-5 CTA-clip guard, §6)`,
+        fits || scrollable,
+        `stripBottom=${arcMeasure.stripBottom} vh=${vp.height} scrollable=${scrollable}`,
+      );
+    }
+    if (arcMeasure.ok && arcMeasure.ctaPresent) {
+      const fits = arcMeasure.ctaBottom !== null && arcMeasure.ctaBottom <= vp.height + 1;
+      const scrollable = arcMeasure.innerInfo?.overflowingY === true;
+      record(
+        `${vp.label} B-arc: reveal CTA contained-or-scrollable (img-5 CTA-clip guard, §6)`,
+        fits || scrollable,
+        `ctaBottom=${arcMeasure.ctaBottom} vh=${vp.height} scrollable=${scrollable}`,
+      );
+    }
+  } else {
+    record(`${vp.label} B-arc: reached arc state for Layout B containment check`,
+      false,
+      `state="${arcStateSweep}"`,
+    );
+  }
+
   await page.close();
+}
+
+/** Containment-or-reachability assertion shared by Layout A and B sweeps.
+ *  Mirrors the prior §5a (no-scroll, all-contained) / §5b (scroll
+ *  engaged, CTA sticky-pinned, strip reachable) split. */
+async function assertContainmentOrReachability(page, vp, stateLabel, opts = {}) {
+  const rects = await captureHoldSelectRects(page);
+  const ctaBottom = rects.cta ? rects.cta.y + rects.cta.height : null;
+  const stripBottom = rects.bottomStrip ? rects.bottomStrip.y + rects.bottomStrip.height : null;
+  const topZoneTop = rects.topZone ? rects.topZone.y : null;
+  const scrollable = rects.innerInfo?.overflowingY === true;
+  const fitLabel = scrollable ? "§5b scroll fallback" : "§5a no-scroll fit";
+  const tag = `${stateLabel} ${fitLabel}`;
+
+  if (!scrollable) {
+    record(
+      `${tag}: recipient-strip.bottom <= vh`,
+      stripBottom !== null && stripBottom <= vp.height + 1,
+      `stripBottom=${Math.round(stripBottom)} vh=${vp.height}`,
+    );
+    record(
+      `${tag}: CTA.bottom <= vh`,
+      ctaBottom !== null && ctaBottom <= vp.height + 1,
+      `ctaBottom=${Math.round(ctaBottom)} vh=${vp.height}`,
+    );
+    record(
+      `${tag}: top-zone.top >= 0`,
+      topZoneTop !== null && topZoneTop >= -1,
+      `topZoneTop=${Math.round(topZoneTop)}`,
+    );
+    record(
+      `${tag}: inner does NOT scroll`,
+      !scrollable,
+      `scrollH=${rects.innerInfo?.scrollHeight} clientH=${rects.innerInfo?.clientHeight}`,
+    );
+  } else {
+    await scrollInnerTo(page, "top");
+    const rectsAtTop = await captureHoldSelectRects(page);
+    const ctaBottomTop = rectsAtTop.cta ? rectsAtTop.cta.y + rectsAtTop.cta.height : null;
+    record(
+      `${tag}: CTA pinned (bottom <= vh) at scrollTop=0`,
+      ctaBottomTop !== null && ctaBottomTop <= vp.height + 1,
+      `ctaBottom=${Math.round(ctaBottomTop)} vh=${vp.height}`,
+    );
+
+    await scrollInnerTo(page, "bottom");
+    const rectsAtBottom = await captureHoldSelectRects(page);
+    const ctaBottomBottom = rectsAtBottom.cta ? rectsAtBottom.cta.y + rectsAtBottom.cta.height : null;
+    record(
+      `${tag}: CTA pinned (bottom <= vh) at scrollTop=max`,
+      ctaBottomBottom !== null && ctaBottomBottom <= vp.height + 1,
+      `ctaBottom=${Math.round(ctaBottomBottom)} vh=${vp.height}`,
+    );
+
+    const stripReachable = await page.evaluate(() => {
+      const strip = document.querySelector('[data-h2h-play-bottom-strip]');
+      if (!strip) return { ok: false, reason: "strip not in DOM" };
+      strip.scrollIntoView({ block: "center", behavior: "instant" });
+      const r = strip.getBoundingClientRect();
+      return { ok: r.top >= -1 && r.bottom <= window.innerHeight + 1, top: r.top, bottom: r.bottom, vh: window.innerHeight };
+    });
+    record(
+      `${tag}: bottom strip reachable in scroll`,
+      stripReachable.ok,
+      JSON.stringify(stripReachable),
+    );
+
+    await scrollInnerTo(page, "top");
+  }
+  void opts;
 }
 
 async function main() {

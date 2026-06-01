@@ -1,54 +1,102 @@
 // shared/components/H2HRecipientPlay.tsx
 //
-// Phase 5b piece 2 — playing-mode layout rework (locked 2026-05-30,
-// docs/h2h-reveal-arc-design.md, commit 18f6376 + corrections 63fcd8d).
-// Supersedes the slot-by-slot drawing surface shipped in f38eee3.
+// Layout A / Layout B restructure
+// (docs/layout-a-b-restructure-design-lock.md, Pass 1 — STRUCTURAL).
+// Supersedes the prior single-fluid hold_select → column_flip → VS
+// arc by introducing two formal named layouts with an ordered
+// transition between them. Pre-deal is killed; the opponent card-flip
+// is killed; the VS / Ready-Set-Go beat is killed.
 //
-// 4-state machine — Deal → Hold → Draw → arc:
-//   pre_deal:          top 6 face-down, bottom 6 empty positional
-//                      placeholders, Deal CTA.
-//   deal_in:           bottom cards land one-by-one face-up from
-//                      challengeCtx.initialRoster (the SERVER SNAPSHOT
-//                      of the sender's deal — NOT a redraw, NOT a
-//                      deterministic engine call). Top stays face-down.
-//   hold_select:       6 face-up bottom cards, tap-to-toggle hold.
-//                      Draw CTA.
-//   redraw_running:    unheld flip face-down immediately on Draw tap;
-//                      held stay face-up in place (S5 invariant).
-//                      redrawRoster() runs ONCE, returns finalRoster
-//                      which is held in component state — front faces
-//                      for unheld slots are NOT mounted until the
-//                      column-flip stage (path β no-flicker).
-//   column_flip:       LEFT→RIGHT col 0→5. Held column: top flips up
-//                      only. Replacement column: top + bottom flip up
-//                      in unison — first time the replacement value
-//                      is in the DOM.
-//   handoff_resolving: 800ms hold, then resolveRoster() on
-//                      finalRoster (NOT initialRoster), then mount
-//                      H2HRecipientReveal with bypassGameStateGate.
+// State machine (8 states, ordered):
+//   loading:           !dataReady or load/engine error. Replaces the
+//                      former pre_deal entry — auto-advances to
+//                      deal_in the moment dataReady flips true and
+//                      no error is set. Hosts the engine-error path
+//                      that pre_deal used to host (loading copy +
+//                      Try Again CTA on error).
+//   deal_in:           Theatrical lay-down cascade. Bottom cards land
+//                      one-by-one face-up from challengeCtx.
+//                      initialRoster (server snapshot of the sender's
+//                      deal — NOT a redraw). Opponent strip ABSENT
+//                      throughout (Layout A). Stage-text slot in the
+//                      top zone hosts the deal-intro beat (Pass 1:
+//                      placeholder render; Pass 2 fills with the
+//                      templated {opponent}/{score} bank).
+//   hold_select:       6 face-up bottom cards; preview-then-hold
+//                      (#11). Stage 1 / Stage 2 / instructional copy
+//                      in the top-zone stage-text slot. Draw CTA.
+//                      Opponent strip ABSENT (Layout A).
+//   redraw_running:    Unheld flip face-down immediately on Draw tap;
+//                      held stay face-up in place (held-position
+//                      invariant). redrawRoster() runs ONCE; front
+//                      faces for unheld slots stay unmounted until
+//                      your_redraw_flip lights them up (path β
+//                      no-flicker). Opponent strip ABSENT.
+//   your_redraw_flip:  LEFT→RIGHT col 0→5 on the BOTTOM strip only.
+//                      Held column: bottom stays face-up. Replacement
+//                      column: bottom flips back→front (the recipient
+//                      sees their own redraw resolve). Opponent strip
+//                      is NOT touched here — design-lock §3 step 2.
+//                      Still Layout A.
+//   ab_transition:     ~250–300ms ONE coordinated beat. Opponent
+//                      strip + opponent hero slot fade/slide IN
+//                      face-up at the top (no flip — design lock §3
+//                      step 3 kills the opponent flip). Your hero
+//                      region expands from the Layout A small floor
+//                      back to the Layout B full floor; the flex
+//                      layout pushes your mini-strip down naturally
+//                      (the "slide DOWN" of §3 step 3 IS the hero
+//                      expansion). Opponent name stays fixed across
+//                      the beat (it lives in the shell's top zone
+//                      header through both layouts).
+//   handoff_resolving: ~1000ms settle-pause (§3 step 4). Layout B
+//                      fully composed: opponent strip face-up,
+//                      your strip slid-down, BOTH hero slots EMPTY
+//                      (two stacked dashed-border boxes). Empty
+//                      headline; stillness. Replaces the prior VS /
+//                      Ready-Set-Go beat. resolveRoster() fires
+//                      partway through this hold (as before) and
+//                      sets `arc` on resolve.
+//   arc:               H2HRecipientReveal mounts inside the still-
+//                      mounted playing canvas via compositeOverlay
+//                      (Fix C2 single-canvas continuity). Reveal +
+//                      results overlay take over from here.
 //
-// Engine reuse (per corrected lock 63fcd8d):
-//   - dealInitialRoster() is NOT called from the recipient surface.
-//     State 1 → 2 reads challengeCtx.initialRoster.
-//   - redrawRoster() — state 2 → 3 (atomic; returns new roster; the
-//     surface controls reveal timing).
-//   - resolveRoster() — state 3 → 4 handoff, on the POST-REDRAW
-//     finalRoster.
+// Engine reuse — UNCHANGED:
+//   - dealInitialRoster() is NOT called from the recipient surface;
+//     deal_in reads challengeCtx.initialRoster.
+//   - redrawRoster() runs once at hold_select → redraw_running.
+//   - resolveRoster() runs once during handoff_resolving (settle-
+//     pause) on the POST-REDRAW finalRoster.
 //
-// Strip-sort contract scope: states 1–3 use this DEDICATED positional
-// playing-mode strip (slotIndex order) by design per the S5 held-card
-// position invariant. The reveal-participating strip-sort contract
-// (revealOrder over slotIndex) governs HandStrip / ResultsStrip and is
-// unchanged — see "Locked invariant — strip-component sort contract"
-// in the design doc plus its 2026-05-30 EDIT for the scope statement.
+// The two flips — kept distinct:
+//   YOUR replacement flip (kept): BottomStripCell owns its own
+//     .h2h-play-flip-inner rotateY scaffold; driven by
+//     your_redraw_flip's revealedColumns counter.
+//   OPPONENT flip (killed): TopStripCell renders the sender card
+//     face-up DIRECTLY — no rotateY, no perspective, no back face.
+//     Visibility is gated by the strip-wrapper's height/opacity
+//     transition between Layout A (0px / 0) and Layout B (80px / 1).
 //
-// Held-position invariant (S5): held cards never change slot position
-// across states 1–3. wasHeld carries into state 4's revealOrder which
-// encodes "held revealed last" — position is anchor, not sequence.
+// Held-position invariant (carried forward): held cards never change
+// slot position across states 1–5. wasHeld carries into arc's
+// revealOrder which encodes "held revealed last" — position is
+// anchor, not sequence.
 //
-// Timings: COLUMN_FLIP_DURATION_MS / COLUMN_FLIP_INTERSTITIAL_MS /
-// DEAL_CASCADE_INTERVAL_MS are NOT design-locked. Starting values
-// chosen for the rewrite are tunable in live verification.
+// Carry-forward from the superseded hold_select-budget lock:
+//   - Fluid clamp() text sizing + 3-line deterministic clamp.
+//   - Hero floor smaller in Layout A states; full in Layout B states.
+//   - Comfortable floor + scroll fallback (overflow-y:auto +
+//     sticky-CTA) applies to ALL non-arc states (Layout A is denser
+//     than the previous hold_select-only treatment; Layout B is the
+//     densest — settle-pause + arc are where the floor most engages
+//     and where the old img-5 CTA clip is fixed).
+//
+// Timings: PRE_REVEAL_HOLD_MS is bumped 800 → 1000ms for the settle-
+// pause per design-lock §9. DEAL_CASCADE_INTERVAL_MS,
+// COLUMN_FLIP_DURATION_MS, COLUMN_FLIP_INTERSTITIAL_MS,
+// AB_TRANSITION_DURATION_MS are NOT design-locked; values here are
+// the starting points for live verification.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GeneratedCard } from "@shared/types";
@@ -57,7 +105,6 @@ import { H2HRecipientReveal } from "./H2HRecipientReveal";
 import type { CardRenderer, H2HCard } from "./H2HRevealScreen";
 import { setActiveSeason, ensureLoaded, isLoaded } from "@shared/engines/dataEngine";
 import { isRealName } from "@shared/utils/isRealName";
-import { getNickname } from "@shared/utils/playerIdentity";
 import {
   H2HBoardShell,
   HERO_MIN_HEIGHT_HOLD_SELECT_CSS,
@@ -84,10 +131,20 @@ export const COLUMN_FLIP_DURATION_MS = 250;
  *  beginning. Per design footer: not locked — live-verification tunable. */
 export const COLUMN_FLIP_INTERSTITIAL_MS = 150;
 
-/** Pause after the column-flip pass completes before transitioning to
- *  the arc. Same constant as the 2b+2c P9 hold; live-verification
- *  tunable. */
-export const PRE_REVEAL_HOLD_MS = 800;
+/** Settle-pause (design-lock §3 step 4 / §9): hold after the A→B
+ *  transition completes and before the reveal arc starts, with both
+ *  lineups composed face-up and both hero slots EMPTY. Replaces the
+ *  prior VS / Ready-Set-Go beat. Bumped 800 → 1000ms per the lock;
+ *  tunable on device pass. */
+export const PRE_REVEAL_HOLD_MS = 1000;
+
+/** A→B transition (design-lock §3 step 3 / §9): the single
+ *  coordinated beat where the opponent strip fades/slides in
+ *  face-up at the top while the hero region expands to its full
+ *  Layout B floor (the flex layout pushes the bottom strip down
+ *  naturally — that IS the "slide DOWN" of step 3). One beat; no
+ *  per-cell flip. Tunable on device pass. */
+export const AB_TRANSITION_DURATION_MS = 300;
 
 /** Cross-fade window for the playing-strip inner content when state
  *  advances to "arc" (Fix C2). Matches H2HRecipientReveal's own
@@ -153,7 +210,7 @@ const HOLD_ACCENT_RING_PX = 2;
 
 /** Sport-agnostic state model. */
 type PlayingState =
-  | { kind: "pre_deal" }
+  | { kind: "loading" }
   | { kind: "deal_in"; cardsLanded: number }
   | {
       kind: "hold_select";
@@ -162,20 +219,32 @@ type PlayingState =
        *  interaction model). `null` on entry; tap on a non-previewed cell
        *  moves preview here without changing `held`; tap on the already-
        *  previewed cell flips its `held` bit. This field is orthogonal
-       *  to `held` and is NOT threaded into redraw_running / column_flip /
-       *  handoff_resolving — only `held` carries through. See
-       *  docs/11-preview-then-hold-design-lock.md §5/§8. */
+       *  to `held` and is NOT threaded into redraw_running / your_redraw_flip /
+       *  ab_transition / handoff_resolving — only `held` carries through.
+       *  See docs/11-preview-then-hold-design-lock.md §5/§8. */
       previewedSlotIndex: number | null;
     }
   | { kind: "redraw_running"; held: Set<number> }
   | {
-      kind: "column_flip";
-      /** Number of columns whose flip animation has been kicked off. CSS
-       *  rotateY transition handles the actual 250ms flip animation per
-       *  column. Range: 0..ROSTER_SIZE. */
+      kind: "your_redraw_flip";
+      /** Number of columns whose flip animation has been kicked off ON
+       *  THE BOTTOM STRIP ONLY (your replacements). The top strip is
+       *  NOT touched here — design-lock §3 step 2 isolates your-flip
+       *  from opponent-appear. CSS rotateY transition handles the
+       *  actual 250ms flip animation per column. Range: 0..ROSTER_SIZE. */
       revealedColumns: number;
       held: Set<number>;
       finalRoster: GeneratedCard[];
+    }
+  | {
+      kind: "ab_transition";
+      /** Final roster + held carry through so the strip / Layout B
+       *  composition keeps rendering correctly during the transition
+       *  beat. The transition itself is CSS-animation-driven (height,
+       *  opacity, hero min-height); this state exists to gate WHICH
+       *  values those animations animate TO. */
+      finalRoster: GeneratedCard[];
+      held: Set<number>;
     }
   | { kind: "handoff_resolving"; finalRoster: GeneratedCard[]; held: Set<number> }
   | {
@@ -293,7 +362,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     [challengeCtx.initialRoster],
   );
 
-  const [state, setState] = useState<PlayingState>({ kind: "pre_deal" });
+  const [state, setState] = useState<PlayingState>({ kind: "loading" });
 
   // Phase 5c S3 — recipient contextual intro. Flag flips true on first
   // hold-tap; sticky so Stage 1 doesn't re-appear if the user un-holds
@@ -382,6 +451,21 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   useEffect(() => { resolveRef.current = resolveRoster; }, [resolveRoster]);
   useEffect(() => { calcTierRef.current = calculateWinTier; }, [calculateWinTier]);
 
+  // ── loading → deal_in auto-advance ──────────────────────────────
+  // pre_deal was killed (design-lock §1) — challenge entry goes
+  // straight into Layout A's deal-in. The "loading" state replaces
+  // pre_deal as the resting state when !dataReady; the moment
+  // dataReady flips true (and no error is set), we auto-advance into
+  // deal_in. Errors keep us in loading; the headline/CTA overrides
+  // below render the engine-error treatment that pre_deal used to
+  // host.
+  useEffect(() => {
+    if (state.kind !== "loading") return;
+    if (!dataReady) return;
+    if (dataLoadError || engineError !== null) return;
+    setState({ kind: "deal_in", cardsLanded: 0 });
+  }, [state, dataReady, dataLoadError, engineError]);
+
   // ── deal_in cascade ──────────────────────────────────────────────
   // All 6 lay-down timers + the hold_select handoff are scheduled
   // up-front the first time state enters deal_in (cardsLanded === 0).
@@ -389,10 +473,16 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // intermediate state advance) does NOT clear pending timers — early
   // versions used a cleanup that cancelled the whole cascade as soon
   // as the first card landed.
+  //
+  // The dataReady gate is belt-and-suspenders: the auto-advance above
+  // already only enters deal_in once dataReady is true, but a future
+  // refactor that allows entering deal_in another way must not race
+  // the engine load. Explicit guard.
   const cascadeTimersRef = useRef<number[]>([]);
   useEffect(() => {
     if (state.kind !== "deal_in") return;
     if (state.cardsLanded !== 0) return;
+    if (!dataReady) return;
     if (cascadeTimersRef.current.length > 0) return; // already scheduled
     const timers: number[] = [];
     for (let n = 1; n <= ROSTER_SIZE; n++) {
@@ -412,7 +502,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     }, DEAL_CASCADE_INTERVAL_MS * (ROSTER_SIZE + 1));
     timers.push(finalId);
     cascadeTimersRef.current = timers;
-  }, [state]);
+  }, [state, dataReady]);
   // Unmount-only cleanup for all cascade timers (Try Again key bump
   // remounts the surface; pending timers from a previous cascade get
   // cleared here).
@@ -421,7 +511,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     cascadeTimersRef.current = [];
   }, []);
 
-  // ── redraw_running → column_flip ────────────────────────────────
+  // ── redraw_running → your_redraw_flip ───────────────────────────
   // Held inside a ref so React 18 strict-mode double-invoke doesn't
   // double-fire the redraw API call. The effect captures the held set
   // at run time, fires redraw once, and transitions on resolution.
@@ -466,7 +556,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         return;
       }
       setState({
-        kind: "column_flip",
+        kind: "your_redraw_flip",
         revealedColumns: 0,
         held: heldSet,
         finalRoster,
@@ -476,13 +566,20 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     return () => { cancelled = true; };
   }, [state, initialRoster]);
 
-  // ── column_flip stepper ─────────────────────────────────────────
-  // All 6 column-flip advances + the handoff_resolving transition are
-  // scheduled up-front on entry (revealedColumns === 0). Timer IDs on
-  // a ref + unmount-only cleanup, same pattern as the deal_in cascade.
+  // ── your_redraw_flip stepper ────────────────────────────────────
+  // Design-lock §3 step 2: the column-by-column flip on the BOTTOM
+  // strip only (your replacements). Top strip is NOT touched here —
+  // it remains absent (Layout A's collapsed-height treatment).
+  //
+  // Scheduling is identical to the prior column_flip stepper, but the
+  // final transition targets ab_transition (step 3 of the sequence)
+  // instead of handoff_resolving. Same up-front timer scheduling +
+  // ref + unmount-only cleanup pattern (this component has timer-race
+  // scars — discrete-state transitions, not chained setTimeouts from
+  // a single handler).
   const columnTimersRef = useRef<number[]>([]);
   useEffect(() => {
-    if (state.kind !== "column_flip") return;
+    if (state.kind !== "your_redraw_flip") return;
     if (state.revealedColumns !== 0) return;
     if (columnTimersRef.current.length > 0) return;
     const timers: number[] = [];
@@ -493,16 +590,16 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
       const delay = (n - 1) * (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS);
       const id = window.setTimeout(() => {
         setState((s) =>
-          s.kind === "column_flip" ? { ...s, revealedColumns: n } : s,
+          s.kind === "your_redraw_flip" ? { ...s, revealedColumns: n } : s,
         );
       }, delay);
       timers.push(id);
     }
     const finalId = window.setTimeout(() => {
       setState((s) =>
-        s.kind === "column_flip" && s.revealedColumns === ROSTER_SIZE
+        s.kind === "your_redraw_flip" && s.revealedColumns === ROSTER_SIZE
           ? {
-              kind: "handoff_resolving",
+              kind: "ab_transition",
               finalRoster: s.finalRoster,
               held: s.held,
             }
@@ -517,7 +614,46 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     columnTimersRef.current = [];
   }, []);
 
-  // ── handoff_resolving: 800ms hold + resolveRoster ───────────────
+  // ── ab_transition → handoff_resolving (settle-pause) ────────────
+  // Design-lock §3 step 3: ONE coordinated ~250–300ms beat where the
+  // opponent strip + opponent hero slot fade/slide in face-up at the
+  // top, the hero region expands from the Layout A small floor back
+  // to the Layout B full floor (the flex layout pushes the bottom
+  // strip down naturally — that IS the §3 step 3 "slide DOWN"), and
+  // the opponent name stays fixed. All motion is CSS-driven (height,
+  // opacity, hero min-height transitions); this effect just times
+  // out the beat and advances to settle-pause.
+  const abTransitionTimerRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (state.kind !== "ab_transition") return;
+    if (abTransitionTimerRef.current !== null) return;
+    const id = window.setTimeout(() => {
+      setState((s) =>
+        s.kind === "ab_transition"
+          ? {
+              kind: "handoff_resolving",
+              finalRoster: s.finalRoster,
+              held: s.held,
+            }
+          : s,
+      );
+    }, AB_TRANSITION_DURATION_MS);
+    abTransitionTimerRef.current = id;
+  }, [state]);
+  useEffect(() => () => {
+    if (abTransitionTimerRef.current !== null) {
+      clearTimeout(abTransitionTimerRef.current);
+      abTransitionTimerRef.current = null;
+    }
+  }, []);
+
+  // ── handoff_resolving (settle-pause): 1000ms hold + resolveRoster ─
+  // Design-lock §3 step 4 / §9. The hold is repurposed as the
+  // settle-pause that replaces the prior VS / Ready-Set-Go beat.
+  // Mechanically: still fires resolveRoster() once partway through
+  // the timeout, still advances to arc on resolve. The change is
+  // semantic — the hero block renders TWO empty hero slots (not a
+  // VS treatment), and PRE_REVEAL_HOLD_MS bumped 800 → 1000ms.
   const handoffFiredRef = useRef(false);
   useEffect(() => {
     if (state.kind !== "handoff_resolving") return;
@@ -580,10 +716,10 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     : null;
   // Headline + CTA default to the state-machine-derived values. The
   // load gate (Fix 1) and engine-error guardrail (Fix 2) override them
-  // when those flags are set, replacing the normal pre_deal copy with
-  // a loading or error treatment. Same shell, same labels, only the
-  // hero copy + CTA shift — the user never sees a separate "loading
-  // screen."
+  // when those flags are set, surfacing a loading / error treatment
+  // inside the "loading" state's hero copy. Same shell, same labels,
+  // only the hero copy + CTA shift — the user never sees a separate
+  // "loading screen."
   let headline: string = deriveHeadline(state, namedChallenger);
   let cta = deriveCta(state);
   if (dataLoadError || engineError !== null) {
@@ -591,18 +727,45 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     cta = { label: "Try again", disabled: false, onClick: "retry" };
   } else if (!dataReady) {
     headline = "Loading challenge data…";
-    cta = { label: "Deal", disabled: true, onClick: null };
+    cta = { label: "Loading…", disabled: true, onClick: null };
   }
 
-  const topCellFaceUp = (i: number): boolean => {
-    if (state.kind === "column_flip") return i < state.revealedColumns;
-    if (state.kind === "handoff_resolving") return true;
-    return false;
-  };
+  // Layout A composition (design-lock §2): opponent strip absent,
+  // hero region at the smaller floor, your strip in the bottom zone.
+  // Layout B composition (design-lock §4): opponent strip present
+  // face-up, hero region at the full floor (which pushes your strip
+  // down naturally via flex layout), both visible.
+  //
+  // ab_transition is included in Layout B for rendering purposes —
+  // it's the beat WHERE the opponent strip animates in and the hero
+  // expands. The CSS transitions on height/opacity/min-height do the
+  // animation; classifying ab_transition as Layout B lets the strip
+  // wrapper read height:80px and the shell read the full hero
+  // min-height immediately on state entry, and the transitions
+  // animate the TO values.
+  const inLayoutA =
+    state.kind === "loading" ||
+    state.kind === "deal_in" ||
+    state.kind === "hold_select" ||
+    state.kind === "redraw_running" ||
+    state.kind === "your_redraw_flip";
+  const inLayoutB =
+    state.kind === "ab_transition" ||
+    state.kind === "handoff_resolving" ||
+    state.kind === "arc";
+  // Settle-pause: hero hosts two empty hero slots (both during the
+  // A→B transition beat — so the empty boxes are visible THROUGHOUT
+  // the slide — and during the settle-pause hold itself).
+  const inSettlePauseRender =
+    state.kind === "ab_transition" || state.kind === "handoff_resolving";
 
   const bottomCellSlot = (i: number): BottomSlot => {
     switch (state.kind) {
-      case "pre_deal":
+      case "loading":
+        // Empty placeholder cells while data loads / on engine error.
+        // Inherits the same dashed-empty treatment pre_deal used to
+        // host — the auto-advance to deal_in fires the moment data is
+        // ready, so this is normally a single render.
         return { mode: "empty" };
       case "deal_in":
         return i < state.cardsLanded
@@ -621,10 +784,10 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         // Path β: unheld slots are face-down WITHOUT mounting any
         // replacement value on the front face. The replacement card
         // for this slot is held in component state but not bound to
-        // the renderer until column_flip reaches it.
+        // the renderer until your_redraw_flip reaches it.
         return { mode: "face_down" };
       }
-      case "column_flip": {
+      case "your_redraw_flip": {
         if (state.held.has(i)) {
           return { mode: "face_up", card: initialRoster[i], held: true };
         }
@@ -639,7 +802,12 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         // Path β: still covered, still NOT in DOM.
         return { mode: "face_down" };
       }
+      case "ab_transition":
       case "handoff_resolving": {
+        // Layout B end-state composition: all 6 bottom cells face-up,
+        // held cells render initialRoster + held-marker, replacement
+        // cells render finalRoster. Held/replacement set matches what
+        // your_redraw_flip ended with.
         if (state.held.has(i)) {
           return { mode: "face_up", card: initialRoster[i], held: true };
         }
@@ -651,14 +819,9 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   };
 
   // ── Event handlers ──────────────────────────────────────────────
-  const handleDeal = () => {
-    if (state.kind !== "pre_deal") return;
-    // FIX 1: don't allow the cascade to start until data is loaded.
-    // The CTA is disabled in that state, but belt-and-suspenders.
-    if (!dataReady) return;
-    if (dataLoadError || engineError !== null) return;
-    setState({ kind: "deal_in", cardsLanded: 0 });
-  };
+  // handleDeal removed: pre_deal is killed (design-lock §1). The
+  // loading → deal_in auto-advance effect above replaces the Deal-CTA
+  // tap as the entry into the cascade.
 
   const handleRetry = () => {
     // FIX 2: on Try Again, route through the parent's onTryAgain so
@@ -713,7 +876,12 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   const topLabel = isRealName(challengeCtx.challengerName)
     ? (challengeCtx.challengerName as string)
     : "your friend";
-  const bottomLabel = getNickname() || "You";
+  // Design-lock §1 / §2 / §4 / §5: bottom-zone label is the literal
+  // string "YOU" across all states — not the random handle. The
+  // getNickname() resolution previously seeded a random nickname into
+  // the label when no real name was set; "YOU" makes the recipient
+  // unambiguous in both Layout A and Layout B.
+  const bottomLabel = "YOU";
 
   // Stage text typography (introTypography hoisted up here so it's in
   // scope for the topStripSlot composition below). Both Stage 1/2 banks
@@ -750,54 +918,59 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
 
   // Top strip slot — sender's roster cells inside the shell's top frame.
   // Per doc EDIT B1, the bottom container's slots ARE the playing-mode
-  // "strip" — no parallel bare strip. The cells (TopStripCell /
-  // BottomStripCell) keep their Fix B scaffold; only WHERE they
-  // render moves into the shell.
+  // "strip" — no parallel bare strip. The cells keep the Fix B scaffold;
+  // only WHERE they render moves into the shell.
   //
-  // Polish #11 (2026-06-01, docs/11-preview-then-hold-design-lock.md §2/§10):
-  // during hold_select the stage text (Stage 1 / Stage 2 / instructional
-  // headline) is relocated INTO the top ZonePanel. The hero region is
-  // freed up to host the preview card.
+  // Layout A / Layout B restructure (design-lock §2 / §4):
+  //   - Layout A states (loading, deal_in, hold_select, redraw_running,
+  //     your_redraw_flip): opponent strip ABSENT. The strip wrapper
+  //     collapses to ZERO HEIGHT (overflow:hidden, opacity 0, aria-hidden,
+  //     pointer-events none) — reclaiming the 80px + 4px gap from the
+  //     budget. The TopStripCell components stay mounted so the strip's
+  //     reappearance in B doesn't trigger a layout-thrash on first paint.
+  //   - Layout B states (ab_transition, handoff_resolving, arc): opponent
+  //     strip PRESENT face-up. The CSS height/opacity transition (300ms,
+  //     matched to AB_TRANSITION_DURATION_MS) animates the strip in
+  //     during the A→B beat. No per-cell flip — opponent appears face-up
+  //     directly (the recipient saw the lineup on the challenge landing
+  //     page before accepting).
   //
-  // hold_select vertical-budget fix (lock §2(2), 2026-06-01): six
-  // face-down opponent backs convey zero info during hold_select, so
-  // the strip flex row is collapsed to ZERO HEIGHT (overflow:hidden,
-  // opacity 0, aria-hidden, pointer-events none) — reclaiming the 80px
-  // mini-strip + 4px gap from the budget. The TopStripCell components
-  // STAY MOUNTED so their rotateY(180deg) transform is fully primed in
-  // the CSS style cache by the time column_flip starts the flip
-  // animation. The wrapper expands back to full height instantly on
-  // state exit; the visible appearance is "the strip wasn't there →
-  // the strip is here, face-down" with no flicker because the cells
-  // were rendered the whole time, just behind a height:0 clip mask.
+  // Polish #11 (carried forward, docs/11-preview-then-hold-design-lock.md
+  // §2/§10): the stage text (Stage 1 / Stage 2 / instructional headline)
+  // is relocated INTO the top ZonePanel during Layout A's hold_select
+  // sub-state, sitting directly under the opponent name label. The text
+  // container reserves a DETERMINISTIC 3-line budget
+  // (INTRO_3LINE_BUDGET_CSS) so different bank lines don't drive
+  // different topZone heights.
   //
-  // §10 arrangement choice (re-resolved by this lock): with the strip
-  // visually gone, the stage text sits directly under the opponent
-  // name label, occupying the freed-up space. The text container
-  // reserves a DETERMINISTIC 3-line budget (INTRO_3LINE_BUDGET_CSS)
-  // so different bank lines don't drive different topZone heights —
-  // killing the 64↔92px randomization.
-  const inHoldSelect = state.kind === "hold_select";
+  // Pass 1 (this lock) extends the stage-text region to render during
+  // deal_in too, as the deal-intro beat per §2 — Pass 1 renders a
+  // placeholder (the existing headline) so the structure is in place;
+  // Pass 2 fills the placeholder with the templated {opponent}/{score}
+  // bank.
+  const showStageTextRegion =
+    state.kind === "deal_in" || state.kind === "hold_select";
   const topStripSlot = (
     <>
       <div
         data-h2h-play-top-strip="true"
-        data-h2h-play-top-strip-collapsed={inHoldSelect ? "true" : undefined}
-        aria-hidden={inHoldSelect ? "true" : undefined}
+        data-h2h-play-top-strip-collapsed={inLayoutA ? "true" : undefined}
+        aria-hidden={inLayoutA ? "true" : undefined}
         style={{
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
           gap: STRIP_GAP_PX,
-          height: inHoldSelect ? 0 : MINI_CELL_HEIGHT_PX,
+          height: inLayoutA ? 0 : MINI_CELL_HEIGHT_PX,
           overflow: "hidden",
-          opacity: inHoldSelect ? 0 : 1,
-          pointerEvents: inHoldSelect ? "none" : "auto",
-          // Restore animation runs in parallel with the hero-region
-          // expansion (lock §2(3)) so column_flip's first beat reads as
-          // one coherent unfolding: strip pops back face-down, hero
-          // expands to its grid floor.
-          transition: `height ${COLUMN_FLIP_DURATION_MS}ms ease, opacity ${COLUMN_FLIP_DURATION_MS}ms ease`,
+          opacity: inLayoutA ? 0 : 1,
+          pointerEvents: inLayoutA ? "none" : "auto",
+          // Strip restore runs in lockstep with the hero expansion
+          // (HERO_MIN_HEIGHT_TRANSITION_MS = 250ms) and the
+          // AB_TRANSITION_DURATION_MS beat (300ms). All three motions
+          // animate together for the one coordinated A→B beat
+          // (design-lock §3 step 3).
+          transition: `height ${AB_TRANSITION_DURATION_MS}ms ease, opacity ${AB_TRANSITION_DURATION_MS}ms ease`,
         }}
       >
         {Array.from({ length: ROSTER_SIZE }).map((_, i) => {
@@ -806,21 +979,26 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
             <TopStripCell
               key={`top-${i}`}
               i={i}
-              faceUp={topCellFaceUp(i)}
               card={senderCard as unknown as H2HCard | null}
               renderCard={renderPlayingStripCard}
             />
           );
         })}
       </div>
-      {/* Polish #11 — stage text rendered inside the top ZonePanel
-          during hold_select only. Outside hold_select this slot is
-          empty (other states keep their headline copy in the hero
-          region — see heroSlot below).
+      {/* Stage-text region in the top ZonePanel.
+          - hold_select: Stage 1 / Stage 2 / instructional headline
+            (carried forward from #11).
+          - deal_in: PASS 1 PLACEHOLDER — renders the existing headline
+            ("Here's the same starting hand as {challenger}.") in the
+            same slot. PASS 2 (deal-intro bank) fills this branch with
+            the templated {opponent}/{score} line; the dismiss-on-state-
+            transition (deal_in → hold_select replaces deal-intro with
+            Stage 1 via state advance) is already wired by the
+            showStageTextRegion gate below.
           Lock §2(1): outer container reserves a deterministic 3-line
           budget via INTRO_3LINE_BUDGET_CSS so the topZone height stays
           stable regardless of which bank line was picked. */}
-      {inHoldSelect && (
+      {showStageTextRegion && (
         <div
           data-h2h-play-stage-text="true"
           style={{
@@ -840,7 +1018,28 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
             overflow: "hidden",
           }}
         >
-          {showStage1 ? (
+          {state.kind === "deal_in" ? (
+            // PASS 1 PLACEHOLDER — deal-intro beat. Pass 2 will replace
+            // this branch with a templated bank (selectRecipientDealIntro)
+            // that interpolates {opponent} and {score} via the existing
+            // substituteRecipientLine pipeline in chadChallenge.ts (the
+            // mechanism already supports {challengerName} / {targetScore}
+            // tokens — adding the bank + selector is the only Pass-2
+            // work needed here). For Pass 1, render the existing
+            // deriveHeadline copy ("Here's the same starting hand as
+            // {challenger}.") in the same slot so the structure is
+            // visually validated. The dismiss-on-state-transition is
+            // already wired: deal_in → hold_select naturally swaps in
+            // Stage 1 via the showStage1 branch below.
+            <div
+              data-h2h-play-intro="deal-intro-placeholder"
+              style={{ width: "100%" }}
+            >
+              <div data-h2h-play-headline="true" style={introTypography}>
+                {headline}
+              </div>
+            </div>
+          ) : showStage1 ? (
             <div data-h2h-play-intro="stage1" style={{ width: "100%" }}>
               <PartsLine
                 key="recipient-stage1"
@@ -899,31 +1098,38 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     </div>
   );
 
-  // Hero slot — Polish #11 (docs/11-preview-then-hold-design-lock.md §2/§C).
-  // The shell's hero region has a locked minHeight (sized for two
-  // hero cards stacked + gap, the reveal-time battlefield grid). Under
-  // #11, during hold_select the hero region hosts the PREVIEW WINDOW:
-  // a big card rendered via renderBattlefieldCard when previewedSlotIndex
-  // is non-null, OR a defined empty box (visible dashed border, not
-  // blank space) when previewedSlotIndex is null. Other states keep
-  // the existing headline div behavior in this region.
+  // Hero slot — Layout A / Layout B restructure (design-lock §2 / §4).
   //
-  // VS treatment (handoff_resolving) still wins the conditional (per
-  // §8 invariant 6) — the preview-window beat fires only inside
-  // hold_select; the moment state transitions out, VS or headline takes
-  // over.
+  // Layout A states render the preview window or a headline:
+  //   - hold_select: PREVIEW WINDOW — a big card via renderBattlefieldCard
+  //     when previewedSlotIndex !== null, or a defined empty box (dashed
+  //     border) when null. Carried forward from Polish #11.
+  //   - deal_in: empty preview box (the recipient hasn't tapped yet;
+  //     the design-lock §2 "Your single hero preview box — empty
+  //     bordered box" applies during deal-in too).
+  //   - loading / redraw_running / your_redraw_flip: fall through to the
+  //     headline div (loading copy / "Drawing…" / etc.).
   //
-  // #3 hardened (2026-05-31): the VS treatment renders as a sibling of
-  // (not a child of) the headline div. Explicit color on the VS block
-  // so it does not depend on inherited foreground color from any
-  // ancestor.
-  const isVsBeat = state.kind === "handoff_resolving";
+  // Layout B states (ab_transition + handoff_resolving / settle-pause)
+  // render TWO STACKED EMPTY HERO SLOTS — the visual "stillness"
+  // composition where both lineups are present but neither side's hero
+  // card has been revealed yet (§3 step 4). The boxes use the same
+  // dashed-border treatment the hold_select preview-empty uses, sized
+  // to one battlefield card each, with a gap matching the reveal-time
+  // grid.
+  //
+  // arc: composite overlay takes over (H2HRecipientReveal mounts as a
+  // descendant and renders the reveal arc); the inner content fades
+  // to opacity 0 so the hero block here is no longer visible.
+  //
+  // VS treatment (formerly handoff_resolving) is KILLED per
+  // design-lock §1 / §5 — settle-pause's empty-hero composition
+  // replaces it.
 
   // Preview card size — matches one hero card's natural footprint per
   // the shell's HERO_MIN_HEIGHT_CSS calc: width = min(145px, 32vw);
   // height = width * (478/329). Same shape and aspect as the reveal-
-  // time hero cards, so the Area-G spacing pass measures against an
-  // already-final geometry.
+  // time hero cards.
   const previewCardWidthCss = "min(145px, 32vw)";
   const previewCardHeightCss = `calc(${previewCardWidthCss} * ${(478 / 329).toFixed(6)})`;
   const previewedSlotIndex =
@@ -931,13 +1137,19 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   const previewedCard =
     previewedSlotIndex !== null ? initialRoster[previewedSlotIndex] : null;
   // Held state overlay on the previewed card. Mirrors BottomStripCell's
-  // pattern (line ~1232) — override wasHeld on the card object so the
-  // sport renderer's H-mark logic (CardFront's locked indicator) reads
-  // the recipient's tap state, not the sender's snapshot.
+  // pattern — override wasHeld on the card object so the sport
+  // renderer's H-mark logic (CardFront's locked indicator) reads the
+  // recipient's tap state, not the sender's snapshot.
   const previewedCardHeld =
     previewedSlotIndex !== null && state.kind === "hold_select"
       ? state.held.has(previewedSlotIndex)
       : false;
+  // Layout B settle-pause gap between the two stacked empty hero slots
+  // — matches H2HBoardShell.HERO_MIN_HEIGHT_CSS's "+ 14px" battlefield
+  // row gap so the empty composition lands at the same Y-bounds as the
+  // reveal arc's battlefield grid (no layout shift when the composite
+  // arc mounts).
+  const SETTLE_HERO_GAP_PX = 14;
 
   const heroSlot = (
     <div
@@ -951,51 +1163,55 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         padding: "0 20px",
       }}
     >
-      {isVsBeat ? (
+      {inSettlePauseRender ? (
+        // Layout B settle-pause: two stacked empty hero slots
+        // (opponent top, yours bottom). Dashed-border boxes, sized one
+        // battlefield card each; gap matches the reveal-time grid.
+        // Empty headline; stillness. Replaces the prior VS beat.
         <div
-          data-h2h-play-vs="true"
+          data-h2h-play-settle-hero="true"
           style={{
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            gap: 6,
-            color: "#EAF0FF",
+            gap: SETTLE_HERO_GAP_PX,
             width: "100%",
-            opacity: 1,
           }}
         >
-          <span
-            data-h2h-play-vs-glyph="true"
+          <div
+            data-h2h-play-settle-hero-slot="opponent"
             style={{
-              fontSize: 56,
-              fontWeight: 900,
-              lineHeight: 1,
-              letterSpacing: "0.04em",
-              color: "#EAF0FF",
+              width: previewCardWidthCss,
+              height: previewCardHeightCss,
+              borderRadius: 8,
+              border: "1px dashed rgba(255,255,255,0.18)",
+              background: "transparent",
+              boxSizing: "border-box",
             }}
-          >
-            VS
-          </span>
-          <span
-            data-h2h-play-vs-sub="true"
+          />
+          <div
+            data-h2h-play-settle-hero-slot="you"
             style={{
-              fontSize: 14,
-              fontWeight: 600,
-              opacity: 0.75,
-              color: "#EAF0FF",
+              width: previewCardWidthCss,
+              height: previewCardHeightCss,
+              borderRadius: 8,
+              border: "1px dashed rgba(255,255,255,0.18)",
+              background: "transparent",
+              boxSizing: "border-box",
             }}
-          >
-            Comparing…
-          </span>
+          />
         </div>
-      ) : state.kind === "hold_select" ? (
+      ) : state.kind === "hold_select" || state.kind === "deal_in" ? (
         // Preview window. Either the previewed card (big, via
         // renderBattlefieldCard) or a defined empty box with visible
-        // border. Card is wrapped in a sized container so both states
+        // border. Card wrapped in a sized container so both states
         // occupy the same vertical footprint (no layout jump on first
-        // preview tap).
-        previewedSlotIndex !== null && previewedCard ? (
+        // preview tap). deal_in always renders the empty variant —
+        // the recipient hasn't tapped yet, and the design-lock §2
+        // calls for "Your single hero preview box — empty bordered
+        // box" during deal-in.
+        state.kind === "hold_select" && previewedSlotIndex !== null && previewedCard ? (
           <div
             data-h2h-play-preview="card"
             data-h2h-play-preview-slot={previewedSlotIndex}
@@ -1029,13 +1245,17 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
           />
         )
       ) : (
+        // loading / redraw_running / your_redraw_flip / arc: headline
+        // div. arc fades to opacity 0 via the inner-content composite
+        // (compositeOverlay sibling owns the visible content); the
+        // headline div under it is empty (deriveHeadline returns "").
         <div
           data-h2h-play-headline="true"
           style={{
             ...introTypography,
             opacity:
               state.kind === "redraw_running" ||
-              state.kind === "column_flip"
+              state.kind === "your_redraw_flip"
                 ? 0.7
                 : 1,
             transition: "opacity 200ms ease",
@@ -1066,8 +1286,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         data-cta-label={cta.label}
         disabled={cta.disabled}
         onClick={
-          cta.onClick === "deal" ? handleDeal
-            : cta.onClick === "draw" ? handleDraw
+          cta.onClick === "draw" ? handleDraw
             : cta.onClick === "retry" ? handleRetry
             : undefined
         }
@@ -1135,38 +1354,46 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         innerTransitionMs={ARC_COMPOSITE_CROSSFADE_MS}
         innerDataAttr="data-h2h-play-inner"
         compositeOverlay={compositeOverlay}
-        // hold_select vertical-budget overrides (lock §2(3)(4) + §3
-        // scroll fallback). Outside hold_select these all fall back to
-        // the shell defaults, so reveal/redraw/resolve render exactly
-        // as today (lock §4 invariant). Inside hold_select:
-        //   - hero minHeight collapses to the one-card footprint;
-        //     animated back to HERO_MIN_HEIGHT_CSS on state exit via
-        //     the shell's min-height transition (250ms = one
-        //     COLUMN_FLIP_DURATION_MS, absorbed into column_flip's
-        //     natural choreography).
-        //   - inter-zone margins clamp() to fluid values that tighten
-        //     on small viewports and stay generous on roomy ones.
-        //   - inner column gets overflow-y:auto and the CTA wrapper
-        //     becomes position:sticky bottom:0 — engaging naturally
-        //     only when content overflows the available height (i.e.
-        //     "below the comfortable floor" per lock §3). Above the
-        //     floor: no scroll, sticky degrades to relative, no
-        //     visible change.
+        // Vertical-budget overrides — design-lock §6 / Carry-forward:
+        // the responsive sizing + scroll-floor rules now apply to BOTH
+        // Layout A AND Layout B (the prior lock scoped them to
+        // hold_select only). Hero floor stays compressed throughout
+        // Layout A (opponent strip absent; the single-card preview
+        // window sits at a smaller minHeight) and expands to the full
+        // two-card floor for Layout B (the expansion IS the §3 step 3
+        // "your strip slides down" — the flex layout pushes the bottom
+        // strip down naturally as the hero region grows). The shell's
+        // min-height transition (HERO_MIN_HEIGHT_TRANSITION_MS = 250ms)
+        // does the animation, synced with AB_TRANSITION_DURATION_MS.
+        //
+        // Inter-zone margins + scroll-fallback engage across ALL
+        // non-arc states. Layout B is denser (two strips + two empty
+        // hero slots in settle-pause; battlefield grid + scores +
+        // headline + CTAs in arc) — that's where the comfortable
+        // floor most engages and the prior img-5 CTA clip surfaces.
+        // Above the floor: no scroll, sticky degrades to relative,
+        // no visible change.
         heroMinHeight={
-          inHoldSelect ? HERO_MIN_HEIGHT_HOLD_SELECT_CSS : undefined
+          inLayoutA ? HERO_MIN_HEIGHT_HOLD_SELECT_CSS : undefined
         }
         topZoneMarginBottom={
-          inHoldSelect ? HOLD_SELECT_TOP_ZONE_MARGIN_CSS : undefined
+          inLayoutA ? HOLD_SELECT_TOP_ZONE_MARGIN_CSS : undefined
         }
         heroMarginBottom={
-          inHoldSelect ? HOLD_SELECT_HERO_MARGIN_CSS : undefined
+          inLayoutA ? HOLD_SELECT_HERO_MARGIN_CSS : undefined
         }
-        innerScrollable={inHoldSelect}
-        belowBoardSticky={inHoldSelect}
+        // Scroll fallback engages across all NON-arc states (arc
+        // composites the reveal shell over the playing inner, which
+        // fades to opacity 0 — making the playing inner scrollable
+        // beneath an invisible layer would only confuse touch routing).
+        innerScrollable={!arcComposite}
+        belowBoardSticky={!arcComposite}
       />
       {/* Flip animation keyframe + 3D scaffold styles. Lives outside
           the shell so the <style> element doesn't interact with the
-          shell's flex children — it's a sibling of the shell. */}
+          shell's flex children — it's a sibling of the shell. The
+          flip CSS now only governs BottomStripCell (your-redraw
+          flip); TopStripCell renders front-only with no flip. */}
       <style>{flipCss(COLUMN_FLIP_DURATION_MS)}</style>
     </>
   );
@@ -1184,24 +1411,33 @@ function deriveHeadline(
   namedChallenger: string | null,
 ): string {
   switch (state.kind) {
-    case "pre_deal":
-      return "Hit deal to see your starting deck.";
+    case "loading":
+      // Overridden by the !dataReady / dataLoadError / engineError
+      // block above to "Loading challenge data…" or the error copy.
+      // The bare loading state without those flags is only visible
+      // for a microtask before the auto-advance fires.
+      return "";
     case "deal_in":
+      // PASS 1 PLACEHOLDER: this copy renders in the top-zone stage-
+      // text region under the deal-intro-placeholder branch, NOT in
+      // the hero region (hero shows the empty preview box during
+      // deal_in per design-lock §2). PASS 2 swaps this copy out for
+      // a templated bank line interpolating {opponent}/{score}.
       return `Here's the same starting hand as ${namedChallenger ?? "your friend"}.`;
     case "hold_select":
       // Polish #11 — instructional copy describes the preview-then-hold
-      // interaction. Surfaced as the headline-fallback when Stage 1 has
-      // dismissed but no card is confirmed-held yet
-      // (heldCount===0 && introDismissed).
+      // interaction. Surfaced as the headline-fallback in the top
+      // stage-text region when Stage 1 has dismissed but no card is
+      // confirmed-held yet (heldCount===0 && introDismissed).
       return "Tap a card to preview. Tap again to hold.";
     case "redraw_running":
-    case "column_flip":
+    case "your_redraw_flip":
       return "Drawing…";
+    case "ab_transition":
     case "handoff_resolving":
-      // #3 (2026-05-30, hardened 2026-05-31): the VS treatment renders as
-      // a sibling of the headline div (see heroSlot below). deriveHeadline
-      // returns empty so the headline div collapses and only the VS block
-      // is visible during this beat.
+      // Design-lock §3 step 4: settle-pause is stillness — empty
+      // headline. The hero region renders the two stacked empty hero
+      // slots ([data-h2h-play-settle-hero]); no VS, no copy.
       return "";
     case "arc":
       return "";
@@ -1211,124 +1447,103 @@ function deriveHeadline(
 function deriveCta(state: PlayingState): {
   label: string;
   disabled: boolean;
-  onClick: "deal" | "draw" | "retry" | null;
+  onClick: "draw" | "retry" | null;
 } {
   switch (state.kind) {
-    case "pre_deal":
-      return { label: "Deal", disabled: false, onClick: "deal" };
+    case "loading":
+      // Overridden by the !dataReady / dataLoadError / engineError
+      // block above to "Loading…" disabled (or "Try again" enabled
+      // on error). The bare loading state without those flags is
+      // only visible for a microtask before the auto-advance fires.
+      return { label: "Loading…", disabled: true, onClick: null };
     case "deal_in":
-      return { label: "Deal", disabled: true, onClick: null };
+      // Deal CTA is killed (design-lock §1) — challenge entry goes
+      // straight into deal_in. The CTA sits in its Draw slot
+      // disabled until hold_select.
+      return { label: "Draw", disabled: true, onClick: null };
     case "hold_select":
       return { label: "Draw", disabled: false, onClick: "draw" };
     case "redraw_running":
-    case "column_flip":
+    case "your_redraw_flip":
       return { label: "Drawing…", disabled: true, onClick: null };
+    case "ab_transition":
     case "handoff_resolving":
+      // Settle-pause holds the CTA in its disabled slot. Empty label
+      // would leave a visually awkward empty footer; keeping
+      // "Revealing…" disabled communicates the imminent reveal beat
+      // without breaking the stillness invariant (no interactive
+      // affordance, no VS treatment).
       return { label: "Revealing…", disabled: true, onClick: null };
     case "arc":
       return { label: "", disabled: true, onClick: null };
   }
 }
 
-/** Top strip cell — sender slot. Face-down by default. Flips face-up
- *  during the column_flip pass per column index. Face-up content is a
- *  pre-reveal render of the sender's card via the SAME renderer the
- *  bottom strip uses — photo / salary / position / AVG, no FP / badges
- *  / fire-ice (those are state-4's job). Mirrors the bottom strip's
- *  3D flip scaffold (back face rotated 180 + backface-visibility hidden;
- *  front face mounted only when face-up).
+/** Top strip cell — sender slot. Always renders FACE-UP directly: no
+ *  rotateY flip, no perspective, no back-face scaffold. The opponent
+ *  card-flip is killed per design-lock §1 / §3 (the recipient saw the
+ *  lineup on the challenge landing page before accepting — they were
+ *  never face-down in the recipient flow).
+ *
+ *  Visibility in Layout A is owned by the parent strip-wrapper's
+ *  height/opacity transition (height:0 + opacity:0 during Layout A,
+ *  height:80 + opacity:1 during Layout B). The cells stay mounted
+ *  throughout so the strip's reappearance in B doesn't trigger a
+ *  layout-thrash on first paint.
  *
  *  When card is null (sender hand not yet present in challengeCtx —
  *  rare in production; the prefetch typically lands before the
- *  recipient finishes hold_select), falls back to a generic
- *  "?" placeholder. */
+ *  recipient finishes hold_select), falls back to the generic "?"
+ *  placeholder. */
 function TopStripCell({
   i,
-  faceUp,
   card,
   renderCard,
 }: {
   i: number;
-  faceUp: boolean;
   card: H2HCard | null;
   renderCard: CardRenderer;
 }) {
-  // testId is dual-purpose: tests assert face-down cells exist during
-  // pre-arc states, and face-up sender cells appear after each column's
-  // flip stage.
-  const testId = faceUp ? `top-strip-up-${i}` : `top-strip-back-${i}`;
   return (
     <div
-      data-testid={testId}
+      data-testid={`top-strip-up-${i}`}
       data-h2h-play-top-cell={i}
-      data-face-up={faceUp ? "true" : "false"}
+      data-face-up="true"
       style={{
         width: MINI_CELL_WIDTH_PX,
         height: MINI_CELL_HEIGHT_PX,
         flexShrink: 0,
-        perspective: 600,
+        position: "relative",
       }}
     >
       <div
-        className="h2h-play-flip-inner"
+        data-h2h-play-top-front="true"
         style={{
-          width: "100%",
-          height: "100%",
-          position: "relative",
-          transformStyle: "preserve-3d",
-          transform: faceUp ? "rotateY(0deg)" : "rotateY(180deg)",
+          position: "absolute",
+          inset: 0,
+          border: "1px solid rgba(255,255,255,0.10)",
+          borderRadius: 6,
+          boxSizing: "border-box",
+          overflow: "hidden",
         }}
       >
-        {/* Back face (card-back). Rotated 180 + backface-hidden so it's
-            visible only when the wrapper itself is at rotateY(180deg). */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            backfaceVisibility: "hidden",
-            WebkitBackfaceVisibility: "hidden",
-            transform: "rotateY(180deg)",
-          }}
-        >
-          <CardBack side="back" />
-        </div>
-        {/* Front face — sender card pre-reveal, mounted only when face-up.
-            Matches BottomStripCell's front-face scaffold byte-for-byte
-            (see comment there for the rationale on the absolute /
-            top-left / explicit-height scaffold). */}
-        {faceUp && (
+        {card ? (
           <div
-            data-h2h-play-top-front="true"
             style={{
               position: "absolute",
-              inset: 0,
-              backfaceVisibility: "hidden",
-              WebkitBackfaceVisibility: "hidden",
-              border: "1px solid rgba(255,255,255,0.10)",
-              borderRadius: 6,
-              boxSizing: "border-box",
-              overflow: "hidden",
+              top: 0,
+              left: 0,
+              width: STRIP_CARD_NATURAL_WIDTH_PX,
+              height: STRIP_CARD_NATURAL_HEIGHT_PX,
+              transform: `scale(${STRIP_CARD_SCALE})`,
+              transformOrigin: "top left",
+              pointerEvents: "none",
             }}
           >
-            {card ? (
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: STRIP_CARD_NATURAL_WIDTH_PX,
-                  height: STRIP_CARD_NATURAL_HEIGHT_PX,
-                  transform: `scale(${STRIP_CARD_SCALE})`,
-                  transformOrigin: "top left",
-                  pointerEvents: "none",
-                }}
-              >
-                {renderCard(card, { revealed: false })}
-              </div>
-            ) : (
-              <SenderUpPlaceholder />
-            )}
+            {renderCard(card, { revealed: false })}
           </div>
+        ) : (
+          <SenderUpPlaceholder />
         )}
       </div>
     </div>
