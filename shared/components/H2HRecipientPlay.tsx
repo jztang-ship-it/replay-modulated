@@ -1880,10 +1880,24 @@ function flipCss(durationMs: number) {
          the border ramped to the tier color too, which read as a
          "tier-colored box" rather than a "white box with tier-colored
          glow". The dashed white border belongs to the slot's identity;
-         the tier color is the energy. */
-      0%   { box-shadow: 0 0 0 0 transparent; transform: scale(1); border-color: rgba(255,255,255,0.18); }
-      60%  { box-shadow: 0 0 12px 4px var(--h2h-charge-color, transparent); transform: scale(1.012); border-color: rgba(255,255,255,0.18); }
-      100% { box-shadow: 0 0 24px 8px var(--h2h-charge-color, transparent); transform: scale(1.025); border-color: rgba(255,255,255,0.18); }
+         the tier color is the energy.
+
+         abc-8(a) follow-up: during the charge, switch the border from
+         the resting dashed faint-white (1px dashed rgba(255,255,255,0.18),
+         set inline at the slot) to a SOLID high-opacity white. The glow's
+         8px box-shadow spread paints a solid tier-colored band hugging
+         the box edge; on bright tiers (GREEN / ORANGE) the dashed faint
+         border was visually swallowed by that band and read as a tier-
+         colored edge. A solid bright-white edge holds its own over the
+         spread band. Animation cascade beats the inline shorthand —
+         keyframe-set border-style and border-color override the inline
+         "border: 1px dashed rgba(255,255,255,0.18)" only while the
+         animation is active (chargeActive). Resting / empty drop-zone
+         slots keep the inline dashed look. The glow (box-shadow values,
+         spread, color) is unchanged. */
+      0%   { box-shadow: 0 0 0 0 transparent; transform: scale(1); border-style: solid; border-color: rgba(255,255,255,0.95); }
+      60%  { box-shadow: 0 0 12px 4px var(--h2h-charge-color, transparent); transform: scale(1.012); border-style: solid; border-color: rgba(255,255,255,0.95); }
+      100% { box-shadow: 0 0 24px 8px var(--h2h-charge-color, transparent); transform: scale(1.025); border-style: solid; border-color: rgba(255,255,255,0.95); }
     }
     @media (prefers-reduced-motion: reduce) {
       [data-h2h-play-charge="true"] { animation: none !important; }
