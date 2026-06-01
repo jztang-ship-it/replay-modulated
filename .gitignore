@@ -47,3 +47,4 @@ basketball/src/utils/culture_*_retry_*.json
 basketball/public/headshots/*.png
 basketball/public/headshots/safe-headshot-map.json
 !basketball/public/headshots/_silhouette.png
+supabase/.temp/
