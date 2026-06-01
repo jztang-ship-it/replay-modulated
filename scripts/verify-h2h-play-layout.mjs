@@ -987,6 +987,51 @@ async function runHoldSelectViewportSweep(browser, vp) {
       `${vp.label} B-settle (handoff_resolving)`,
       { layoutBExpected: true },
     );
+
+    // Reveal-foundation Feature 1 — pre-reveal CHARGE assertion. The
+    // two empty hero slots ([data-h2h-play-settle-hero-slot]) must
+    // run the h2h-play-hero-charge animation during the settle-pause,
+    // with each slot's --h2h-charge-color set to its combatant's
+    // matchup-0 tier color. Reduced-motion is asserted in a separate
+    // pass after this block (re-injecting prefers-reduced-motion: reduce
+    // would conflict with the rest of the sweep, so the no-reduced-
+    // motion check fires here under the default media query).
+    const chargeSnap = await page.evaluate(() => {
+      const opSlot = document.querySelector('[data-h2h-play-settle-hero-slot="opponent"]');
+      const youSlot = document.querySelector('[data-h2h-play-settle-hero-slot="you"]');
+      const opCs = opSlot ? getComputedStyle(opSlot) : null;
+      const youCs = youSlot ? getComputedStyle(youSlot) : null;
+      return {
+        opPresent: !!opSlot,
+        youPresent: !!youSlot,
+        opChargeAttr: opSlot?.getAttribute("data-h2h-play-charge"),
+        youChargeAttr: youSlot?.getAttribute("data-h2h-play-charge"),
+        opAnimationName: opCs?.animationName ?? null,
+        youAnimationName: youCs?.animationName ?? null,
+        opChargeColor: opCs?.getPropertyValue("--h2h-charge-color")?.trim() ?? "",
+        youChargeColor: youCs?.getPropertyValue("--h2h-charge-color")?.trim() ?? "",
+      };
+    });
+    record(
+      `${vp.label} Feature 1 charge: opponent slot runs h2h-play-hero-charge animation`,
+      chargeSnap.opPresent && chargeSnap.opAnimationName === "h2h-play-hero-charge" && chargeSnap.opChargeAttr === "true",
+      `present=${chargeSnap.opPresent} attr=${chargeSnap.opChargeAttr} anim=${chargeSnap.opAnimationName}`,
+    );
+    record(
+      `${vp.label} Feature 1 charge: you slot runs h2h-play-hero-charge animation`,
+      chargeSnap.youPresent && chargeSnap.youAnimationName === "h2h-play-hero-charge" && chargeSnap.youChargeAttr === "true",
+      `present=${chargeSnap.youPresent} attr=${chargeSnap.youChargeAttr} anim=${chargeSnap.youAnimationName}`,
+    );
+    record(
+      `${vp.label} Feature 1 charge: opponent slot has --h2h-charge-color set (matchup-0 sender tier)`,
+      chargeSnap.opChargeColor.length > 0,
+      `color="${chargeSnap.opChargeColor}"`,
+    );
+    record(
+      `${vp.label} Feature 1 charge: you slot has --h2h-charge-color set (matchup-0 recipient tier)`,
+      chargeSnap.youChargeColor.length > 0,
+      `color="${chargeSnap.youChargeColor}"`,
+    );
   } else {
     record(
       `${vp.label} B-settle: reached handoff_resolving for Layout B containment check`,
@@ -1367,6 +1412,71 @@ async function runResultsOverlayViewportSweep(browser, vp) {
   await page.close();
 }
 
+/**
+ * Reveal-foundation Feature 1 reduced-motion path. Single-viewport
+ * check (390×844 control) with prefers-reduced-motion: reduce emulated
+ * at page launch. Asserts the charge animation is SKIPPED on the
+ * settle-hero slots (computed animationName === "none"). The animation
+ * keyframe is gated via @media (prefers-reduced-motion: reduce) in
+ * flipCss() — when the media query matches, the !important rule sets
+ * animation: none.
+ */
+async function runReducedMotionChargeCheck(browser) {
+  const tag = `[reduced-motion charge]`;
+  console.log(`\n${tag} starting`);
+  const ctx = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    reducedMotion: "reduce",
+  });
+  const page = await ctx.newPage();
+  page.on("pageerror", (err) => console.error(`${tag}[pageerror]`, err.message));
+  try {
+    await page.goto(PLAY_URL, { waitUntil: "networkidle", timeout: 30000 });
+  } catch (err) {
+    record(`reduced-motion: page load`, false, err.message);
+    await ctx.close();
+    return;
+  }
+  await page.waitForSelector("[data-h2h-recipient-play]", { timeout: 10000 });
+  // Drive into handoff_resolving: cascade → hold_select → Draw →
+  // your_redraw_flip → ab_transition → handoff_resolving.
+  await page.waitForTimeout(DEAL_CASCADE_INTERVAL_MS * (ROSTER_SIZE + 2) + COLUMN_FLIP_DURATION_MS + 100);
+  await page.click("[data-h2h-play-cta][data-cta-label='Draw']");
+  await page.waitForTimeout(
+    ROSTER_SIZE * (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS) +
+      AB_TRANSITION_DURATION_MS + 100,
+  );
+  const state = await page.locator("[data-h2h-recipient-play]").getAttribute("data-playing-state");
+  if (state !== "handoff_resolving") {
+    record(`reduced-motion: reached handoff_resolving`, false, `state="${state}"`);
+    await ctx.close();
+    return;
+  }
+  const snap = await page.evaluate(() => {
+    const opSlot = document.querySelector('[data-h2h-play-settle-hero-slot="opponent"]');
+    const youSlot = document.querySelector('[data-h2h-play-settle-hero-slot="you"]');
+    const opCs = opSlot ? getComputedStyle(opSlot) : null;
+    const youCs = youSlot ? getComputedStyle(youSlot) : null;
+    return {
+      opAnimationName: opCs?.animationName ?? null,
+      youAnimationName: youCs?.animationName ?? null,
+    };
+  });
+  // Under prefers-reduced-motion: reduce, the @media rule sets
+  // animation: none !important on the slots (charge keyframe skipped).
+  record(
+    `reduced-motion charge: opponent slot animation === "none"`,
+    snap.opAnimationName === "none",
+    `animationName="${snap.opAnimationName}"`,
+  );
+  record(
+    `reduced-motion charge: you slot animation === "none"`,
+    snap.youAnimationName === "none",
+    `animationName="${snap.youAnimationName}"`,
+  );
+  await ctx.close();
+}
+
 async function main() {
   const browser = await chromium.launch();
   try {
@@ -1388,6 +1498,8 @@ async function main() {
     for (const vp of HS_SWEEP_VIEWPORTS) {
       await runResultsOverlayViewportSweep(browser, vp);
     }
+    // Reveal-foundation Feature 1 reduced-motion path.
+    await runReducedMotionChargeCheck(browser);
   } finally {
     await browser.close();
   }

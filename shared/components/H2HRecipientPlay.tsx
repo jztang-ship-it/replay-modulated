@@ -102,7 +102,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GeneratedCard } from "@shared/types";
 import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
 import { H2HRecipientReveal } from "./H2HRecipientReveal";
-import type { CardRenderer, H2HCard } from "./H2HRevealScreen";
+import {
+  TIER_ACCENT,
+  usePrefersReducedMotion,
+  type CardRenderer,
+  type H2HCard,
+} from "./H2HRevealScreen";
 import { setActiveSeason, ensureLoaded, isLoaded } from "@shared/engines/dataEngine";
 import { isRealName } from "@shared/utils/isRealName";
 import {
@@ -759,6 +764,61 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   const inSettlePauseRender =
     state.kind === "ab_transition" || state.kind === "handoff_resolving";
 
+  // Reveal-foundation Feature 1 — pre-reveal CHARGE animation on the
+  // empty hero slots during settle-pause. Cloned (not reused) from
+  // H2HRevealScreen.tsx's h2h-card-pulse keyframe: a single rise/peak/
+  // fade pulse doesn't read like a charge. A "build, hold at peak,
+  // then release" shape feels like energy gathering before the reveal
+  // — see the @keyframes h2h-play-hero-charge in chargeAndFlipCss()
+  // below. The release is owned by the existing arc-composite
+  // crossfade (innerOpacity → 0 over ARC_COMPOSITE_CROSSFADE_MS when
+  // state transitions to "arc"), so the keyframe itself just ramps up
+  // and holds at peak.
+  //
+  // Tier color per slot: each combatant's own tier — the opponent slot
+  // glows the OPPONENT's matchup-0 card tier; the YOU slot glows the
+  // RECIPIENT's matchup-0 card tier. Matchup-0 is the FIRST card to
+  // reveal in the arc; reveal-order is unheld-asc-by-salary then held-
+  // asc-by-salary (see buildRevealOrder in useH2HReveal.ts).
+  //
+  // Reduced motion: skip the animation entirely — consistent with how
+  // useH2HReveal's reducedMotion path skips entrance + pulse beats.
+  const reducedMotion = usePrefersReducedMotion();
+  const matchup0Cards = useMemo(() => {
+    // Sender (opponent) matchup-0: lowest-salary unheld card in the
+    // sender hand's CARDS array. Falls back to lowest-salary card
+    // when every card is held.
+    const senderCards = challengeCtx.resolvedSenderHand?.cards ?? [];
+    const recipientFinal: GeneratedCard[] =
+      state.kind === "handoff_resolving" || state.kind === "ab_transition"
+        ? state.finalRoster
+        : initialRoster;
+    const firstReveal = <T extends { wasHeld?: boolean; salary: number }>(arr: T[]): T | null => {
+      if (arr.length === 0) return null;
+      const sorted = [...arr].sort((a, b) => {
+        const aHeld = a.wasHeld ? 1 : 0;
+        const bHeld = b.wasHeld ? 1 : 0;
+        if (aHeld !== bHeld) return aHeld - bHeld;
+        return a.salary - b.salary;
+      });
+      return sorted[0];
+    };
+    return {
+      opponent: firstReveal(senderCards as Array<{ wasHeld?: boolean; salary: number; tier: string }>),
+      you: firstReveal(recipientFinal as unknown as Array<{ wasHeld?: boolean; salary: number; tier: string }>),
+    };
+  }, [challengeCtx.resolvedSenderHand, state, initialRoster]);
+
+  const chargeOpponentColor =
+    (matchup0Cards.opponent as any)?.tier
+      ? TIER_ACCENT[(matchup0Cards.opponent as any).tier] ?? "rgba(255,255,255,0.5)"
+      : "rgba(255,255,255,0.5)";
+  const chargeYouColor =
+    (matchup0Cards.you as any)?.tier
+      ? TIER_ACCENT[(matchup0Cards.you as any).tier] ?? "rgba(255,255,255,0.5)"
+      : "rgba(255,255,255,0.5)";
+  const chargeActive = inSettlePauseRender && !reducedMotion;
+
   const bottomCellSlot = (i: number): BottomSlot => {
     switch (state.kind) {
       case "loading":
@@ -1214,6 +1274,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         >
           <div
             data-h2h-play-settle-hero-slot="opponent"
+            data-h2h-play-charge={chargeActive ? "true" : "false"}
             style={{
               width: previewCardWidthCss,
               height: previewCardHeightCss,
@@ -1221,10 +1282,18 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
               border: "1px dashed rgba(255,255,255,0.18)",
               background: "transparent",
               boxSizing: "border-box",
+              // Reveal-foundation Feature 1 — tier-colored charge that
+              // builds over the settle-pause hold (PRE_REVEAL_HOLD_MS).
+              // Skipped under prefers-reduced-motion.
+              animation: chargeActive
+                ? `h2h-play-hero-charge ${PRE_REVEAL_HOLD_MS}ms ease-in forwards`
+                : "none",
+              ["--h2h-charge-color" as any]: chargeOpponentColor,
             }}
           />
           <div
             data-h2h-play-settle-hero-slot="you"
+            data-h2h-play-charge={chargeActive ? "true" : "false"}
             style={{
               width: previewCardWidthCss,
               height: previewCardHeightCss,
@@ -1232,6 +1301,10 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
               border: "1px dashed rgba(255,255,255,0.18)",
               background: "transparent",
               boxSizing: "border-box",
+              animation: chargeActive
+                ? `h2h-play-hero-charge ${PRE_REVEAL_HOLD_MS}ms ease-in forwards`
+                : "none",
+              ["--h2h-charge-color" as any]: chargeYouColor,
             }}
           />
         </div>
@@ -1791,6 +1864,23 @@ function flipCss(durationMs: number) {
   return `
     .h2h-play-flip-inner {
       transition: transform ${durationMs}ms cubic-bezier(0.4, 0.0, 0.2, 1);
+    }
+    /* Reveal-foundation Feature 1 — pre-reveal CHARGE on the empty
+       hero slots during settle-pause. CLONED (not reused) from
+       H2HRevealScreen's h2h-card-pulse keyframe — that one is a
+       single rise/peak/fade pulse, while a CHARGE reads more like
+       energy gathering: a sustained build that holds at peak intensity
+       until the arc composite crossfades the slot away. Each slot sets
+       its own --h2h-charge-color via inline style (the matchup-0
+       sender / recipient card's tier color) so the two slots glow
+       independently in their own tier hues. */
+    @keyframes h2h-play-hero-charge {
+      0%   { box-shadow: 0 0 0 0 transparent; transform: scale(1); border-color: rgba(255,255,255,0.18); }
+      60%  { box-shadow: 0 0 12px 4px var(--h2h-charge-color, transparent); transform: scale(1.012); border-color: var(--h2h-charge-color, rgba(255,255,255,0.40)); }
+      100% { box-shadow: 0 0 24px 8px var(--h2h-charge-color, transparent); transform: scale(1.025); border-color: var(--h2h-charge-color, rgba(255,255,255,0.60)); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      [data-h2h-play-charge="true"] { animation: none !important; }
     }
   `;
 }

@@ -86,7 +86,7 @@ function glowDurationForTier(tier: string, shakeType: ShakeType): number {
   return Math.max(150, base + modifier);
 }
 
-interface RevealBeatPlan {
+export interface RevealBeatPlan {
   shakeType: ShakeType;
   shakePre: number;
   blastEnabled: boolean;
@@ -96,13 +96,37 @@ interface RevealBeatPlan {
   legendaryCelebrationShake: boolean;
 }
 
+/** Reveal-foundation Feature 2 — completion-gate computation. Returns
+ *  the max duration of any post-rollup effect that should keep the set
+ *  in-flight before runMatchup(N+1) advances. Today the only post-
+ *  rollup effect is the legendary celebration shake
+ *  (SP_SHAKE_DURATION_MS_DEFAULT = 400ms). Exported for unit-testability
+ *  + so future post-rollup beats (e.g. relay/lead-swing tail) can be
+ *  added in ONE place and propagate to the advance-gate formula.
+ *
+ *  Returns 0 when neither side has a post-rollup effect — the
+ *  advance falls back to MATCHUP_RESOLVE_PAUSE_MS as the structural
+ *  floor. */
+export function computePostRollupEffectMs(
+  senderBeats: RevealBeatPlan,
+  recipientBeats: RevealBeatPlan,
+): number {
+  const senderMs = senderBeats.legendaryCelebrationShake
+    ? SP_SHAKE_DURATION_MS_DEFAULT
+    : 0;
+  const recipientMs = recipientBeats.legendaryCelebrationShake
+    ? SP_SHAKE_DURATION_MS_DEFAULT
+    : 0;
+  return Math.max(senderMs, recipientMs);
+}
+
 /** Compute the pre-rollup beat plan for a single card. Band-tier cards
  *  (cardShakeType ∈ {legendary, big, cold, frozen}) get the full single-
  *  player treatment — shake + blast + (legendary only) post-rollup
  *  celebration shake. Dead-band cards get a short plain hype wobble
  *  with no blast. Cardshake classification mirrors getShakeType at
  *  useEmotionalReveal.ts:156-171 (ratio thresholds 1.6 / 1.4 / 0.8 / 0.6). */
-function planRevealBeats(card: H2HCard): RevealBeatPlan {
+export function planRevealBeats(card: H2HCard): RevealBeatPlan {
   const proj = Number(card.projectedFp ?? 0);
   const actual = Number(card.actualFp ?? 0);
   let cardShakeType: ShakeType = null;
@@ -633,22 +657,45 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
           recipientTotal: newRecipientTotal,
         });
 
-        // Last matchup uses end-hold; intermediates use the regular pause.
+        // Reveal-foundation Feature 2 — COMPLETION-GATE the per-set
+        // advance. Previously the next-set timer was fixed at
+        // MATCHUP_RESOLVE_PAUSE_MS regardless of any in-flight
+        // post-rollup effects; the legendary celebration shake
+        // (SP_SHAKE_DURATION_MS_DEFAULT = 400ms) only fit inside the
+        // 850ms pause COINCIDENTALLY, not structurally. The fix takes
+        // the max of the base pause and any pending post-rollup
+        // effect duration, so a set with a legendary card waits for
+        // its celebration shake to resolve before the next set begins;
+        // a plain set still advances on the base pause. This is the
+        // structural foundation for the relay/lead-swing tension —
+        // future post-rollup beats added to the matchup tail will
+        // automatically extend the gate without per-callsite work.
+        const pendingPostRollupMs = computePostRollupEffectMs(
+          senderBeats,
+          recipientBeats,
+        );
         const isFinalMatchup = index + 1 >= matchups.length;
+        const intermediateAdvanceDelay = Math.max(
+          MATCHUP_RESOLVE_PAUSE_MS,
+          pendingPostRollupMs,
+        );
         setPhase(isFinalMatchup ? "end-hold" : "paused");
-        scheduleTimeout(isFinalMatchup ? END_OF_ARC_HOLD_MS : MATCHUP_RESOLVE_PAUSE_MS, () => {
-          if (myRunId !== runIdRef.current) return;
-          if (!isFinalMatchup) {
-            runMatchup(index + 1, myRunId);
-          } else {
-            // End-hold complete — settle to "done" and fire onArcResolved.
-            setPhase("done");
-            onArcResolvedRef.current?.({
-              senderTotal: newSenderTotal,
-              recipientTotal: newRecipientTotal,
-            });
-          }
-        });
+        scheduleTimeout(
+          isFinalMatchup ? END_OF_ARC_HOLD_MS : intermediateAdvanceDelay,
+          () => {
+            if (myRunId !== runIdRef.current) return;
+            if (!isFinalMatchup) {
+              runMatchup(index + 1, myRunId);
+            } else {
+              // End-hold complete — settle to "done" and fire onArcResolved.
+              setPhase("done");
+              onArcResolvedRef.current?.({
+                senderTotal: newSenderTotal,
+                recipientTotal: newRecipientTotal,
+              });
+            }
+          },
+        );
       }
     };
       rafRef.current = requestAnimationFrame(tick);
