@@ -332,10 +332,20 @@ function ResultsStrip({ cards, renderCard, selectedCardId, onCardTap, revealOrde
             style={{
               height: "100%",
               aspectRatio: "329 / 478",
-              flexShrink: 0,
+              // Match HandStrip's cell model exactly so the reveal→results
+              // crossfade is byte-identical on X. HandStrip uses
+              // flexShrink:1 + overflow:visible: at viewports where the
+              // 6 natural-width cells + 5 gaps overflow the strip's
+              // available width (≤ ~422px wide, including iPhone 14
+              // 390×844), shrink fits the cells; overflow:visible lets
+              // the absolutely-positioned scaled card render inside the
+              // shrunk cell without right-edge clipping. flexShrink:1
+              // alone with overflow:hidden would clip the inner card's
+              // right ~3px on every cell.
+              flexShrink: 1,
               minWidth: 0,
               position: "relative",
-              overflow: "hidden",
+              overflow: "visible",
               cursor: "pointer",
               opacity: cellOpacity,
               transition: "opacity 180ms ease",

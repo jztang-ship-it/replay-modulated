@@ -2198,6 +2198,309 @@ async function runReducedMotionChargeCheck(browser) {
   await ctx.close();
 }
 
+// ── Cross-surface lineup-strip no-jump assertion ────────────────────
+//
+// Build step 1 of the results-page lock. The reveal arc's HandStrip and
+// the results overlay's ResultsStrip are TWO file-local components that
+// each duplicate the same geometry constants (STRIP_HEIGHT_PX,
+// STRIP_GAP_PX, STRIP_CARD_NATURAL_WIDTH_PX, STRIP_CARD_SCALE) by hand.
+// A future drift in one file would ship a 350ms before/after wipe on
+// the reveal→results crossfade — the strips would visibly jump under
+// the duplicate-constants hand-keyed parity contract. This assertion
+// captures both surfaces' strip geometry in one Playwright session and
+// fails CI if any computed dimension diverges.
+//
+// Drives /basketball/dev/h2h-reveal-mock?overlay=1 — the dev route's
+// `?overlay=1` param calls reveal.skipToEnd() on mount (so reveal.phase
+// resolves to "done" instantly) and mounts H2HResultsOverlay above the
+// reveal screen with the OVERLAY_CROSSFADE_MS (350ms) opacity transition.
+// Both surfaces are co-mounted at end-state in the same DOM, so a
+// single page can capture and compare both.
+//
+// Side mapping:
+//   sender    (top strip)    — reveal: [data-h2h-hand-strip][data-side="sender"]
+//                            — overlay: [data-h2h-overlay-zone='opponent'] [data-h2h-overlay-strip]
+//   recipient (bottom strip) — reveal: [data-h2h-hand-strip][data-side="recipient"]
+//                            — overlay: [data-h2h-overlay-zone='user'] [data-h2h-overlay-strip]
+
+// Matches H2HResultsOverlay.tsx:133 (export const OVERLAY_CROSSFADE_MS).
+const OVERLAY_CROSSFADE_MS_HARNESS = 350;
+
+const NO_JUMP_OUTER_TOL_PX = 0.5;
+const NO_JUMP_CELL_TOL_PX = 0.5;
+const NO_JUMP_SCALE_TOL = 0.001;
+
+async function captureLineupStripGeometry(page, kind /* "reveal" | "overlay" */) {
+  return page.evaluate((kindArg) => {
+    const fmt = (el) => {
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return {
+        left: r.left,
+        top: r.top,
+        right: r.right,
+        bottom: r.bottom,
+        width: r.width,
+        height: r.height,
+        centerX: r.left + r.width / 2,
+        centerY: r.top + r.height / 2,
+      };
+    };
+    // Parse computed `transform: matrix(a,b,c,d,e,f)` or
+    // `matrix3d(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p)` and return scale on
+    // the X (m11) and Y (m22) axes. The reveal cell's inner card
+    // wrapper uses `transform: scale(STRIP_CARD_SCALE)`, which the
+    // browser computes to `matrix(SCALE, 0, 0, SCALE, 0, 0)`. The
+    // overlay wrapper uses the identical recipe. Drift in either
+    // STRIP_CARD_SCALE value or STRIP_CARD_NATURAL_WIDTH_PX (which
+    // re-derives the scale) shows up here.
+    const matrixScale = (el) => {
+      if (!el) return null;
+      const t = getComputedStyle(el).transform;
+      if (!t || t === "none") return { m11: 1, m22: 1 };
+      const m = t.match(/^matrix\(([^)]+)\)$/);
+      if (m) {
+        const vals = m[1].split(",").map((s) => parseFloat(s.trim()));
+        return { m11: vals[0], m22: vals[3] };
+      }
+      const m3d = t.match(/^matrix3d\(([^)]+)\)$/);
+      if (m3d) {
+        const vals = m3d[1].split(",").map((s) => parseFloat(s.trim()));
+        return { m11: vals[0], m22: vals[5] };
+      }
+      return null;
+    };
+    const stripFor = (sideKey) => {
+      let outerSel, cellSel;
+      if (kindArg === "reveal") {
+        outerSel = `[data-h2h-hand-strip="true"][data-side="${sideKey}"]`;
+        cellSel = `${outerSel} > [data-h2h-mini-cell="true"]`;
+      } else {
+        const zoneAttr = sideKey === "sender" ? "opponent" : "user";
+        outerSel = `[data-h2h-overlay-zone='${zoneAttr}'] [data-h2h-overlay-strip="true"]`;
+        cellSel = `${outerSel} > [data-h2h-overlay-cell="true"]`;
+      }
+      const outer = document.querySelector(outerSel);
+      const cellEls = Array.from(document.querySelectorAll(cellSel));
+      const innerScales = cellEls.map((cell) => {
+        // Reveal cell has TWO children: [data-h2h-mini-placeholder]
+        // (dashed-border underlay) and the unmarked scaled-card
+        // wrapper. Overlay cell has ONE child: the unmarked scaled-
+        // card wrapper. Pick the non-placeholder child either way.
+        const inner = Array.from(cell.children).find(
+          (c) => !c.hasAttribute("data-h2h-mini-placeholder"),
+        );
+        return { rect: fmt(inner), scale: matrixScale(inner) };
+      });
+      return {
+        outer: fmt(outer),
+        cells: cellEls.map(fmt),
+        innerScales,
+      };
+    };
+    return {
+      sender: stripFor("sender"),
+      recipient: stripFor("recipient"),
+    };
+  }, kind);
+}
+
+function assertNoJumpForSide(sideLabel, reveal, overlay) {
+  if (!reveal.outer || !overlay.outer) {
+    record(
+      `no-jump ${sideLabel}: both strips present in DOM`,
+      false,
+      `revealPresent=${!!reveal.outer} overlayPresent=${!!overlay.outer}`,
+    );
+    return;
+  }
+  if (reveal.cells.length !== 6 || overlay.cells.length !== 6) {
+    record(
+      `no-jump ${sideLabel}: both strips have 6 cells`,
+      false,
+      `revealCells=${reveal.cells.length} overlayCells=${overlay.cells.length}`,
+    );
+    return;
+  }
+
+  const RECT_FIELDS = ["left", "top", "right", "bottom", "width", "height"];
+
+  // Outer container rect — every field equal within 0.5px.
+  for (const f of RECT_FIELDS) {
+    const a = reveal.outer[f];
+    const b = overlay.outer[f];
+    const dx = Math.abs(a - b);
+    record(
+      `no-jump ${sideLabel}: outer.${f} equal (±${NO_JUMP_OUTER_TOL_PX}px)`,
+      dx <= NO_JUMP_OUTER_TOL_PX,
+      `reveal=${a.toFixed(2)} overlay=${b.toFixed(2)} Δ=${dx.toFixed(2)}`,
+    );
+  }
+  // Derived geometry: X-center, Y (top), width — surfaced as separate
+  // assertions so a derived-only drift (e.g. center shifts but width
+  // matches) reads clearly in the harness output.
+  const derivedKeys = ["centerX", "centerY", "width", "height"];
+  for (const k of derivedKeys) {
+    const a = reveal.outer[k];
+    const b = overlay.outer[k];
+    const dx = Math.abs(a - b);
+    record(
+      `no-jump ${sideLabel}: outer derived.${k} equal (±${NO_JUMP_OUTER_TOL_PX}px)`,
+      dx <= NO_JUMP_OUTER_TOL_PX,
+      `reveal=${a.toFixed(2)} overlay=${b.toFixed(2)} Δ=${dx.toFixed(2)}`,
+    );
+  }
+
+  // Per-cell rect — each of the 6 cells in slotIndex order must land
+  // at the same x/y/w/h on both surfaces. The strips both sort by
+  // slotIndex, so cells[i] on reveal pairs with cells[i] on overlay.
+  for (let i = 0; i < 6; i++) {
+    const rc = reveal.cells[i];
+    const oc = overlay.cells[i];
+    for (const f of RECT_FIELDS) {
+      const a = rc[f];
+      const b = oc[f];
+      const dx = Math.abs(a - b);
+      record(
+        `no-jump ${sideLabel}: cell[${i}].${f} equal (±${NO_JUMP_CELL_TOL_PX}px)`,
+        dx <= NO_JUMP_CELL_TOL_PX,
+        `cell[${i}] reveal=${a.toFixed(2)} overlay=${b.toFixed(2)} Δ=${dx.toFixed(2)}`,
+      );
+    }
+  }
+
+  // Derived: gap = cells[1].left - cells[0].right. A constant drift in
+  // STRIP_GAP_PX changes this by exactly the diff; the per-cell rect
+  // assertions also catch it, but the gap-specific assertion isolates
+  // the failure mode.
+  const gapReveal = reveal.cells[1].left - reveal.cells[0].right;
+  const gapOverlay = overlay.cells[1].left - overlay.cells[0].right;
+  const gapDelta = Math.abs(gapReveal - gapOverlay);
+  record(
+    `no-jump ${sideLabel}: cell gap (cells[1].left − cells[0].right) equal (±${NO_JUMP_CELL_TOL_PX}px)`,
+    gapDelta <= NO_JUMP_CELL_TOL_PX,
+    `reveal=${gapReveal.toFixed(2)} overlay=${gapOverlay.toFixed(2)} Δ=${gapDelta.toFixed(2)}`,
+  );
+
+  // Derived: cell aspect ratio (width/height). The cell shell is
+  // aspectRatio: "329 / 478" on both surfaces — at 3-decimal precision
+  // any natural-width / height-derivation drift falls outside.
+  const aspectReveal = reveal.cells[0].width / reveal.cells[0].height;
+  const aspectOverlay = overlay.cells[0].width / overlay.cells[0].height;
+  record(
+    `no-jump ${sideLabel}: cell aspect (w/h) equal to 3 decimals`,
+    aspectReveal.toFixed(3) === aspectOverlay.toFixed(3),
+    `reveal=${aspectReveal.toFixed(4)} overlay=${aspectOverlay.toFixed(4)}`,
+  );
+
+  // Inner scaled-card transform matrix — m11 and m22 are the X and Y
+  // scale factors. Both surfaces compute STRIP_CARD_SCALE as
+  // STRIP_CARD_DISPLAY_WIDTH_PX / STRIP_CARD_NATURAL_WIDTH_PX where
+  // DISPLAY_WIDTH = STRIP_HEIGHT × 329 / 478. Drift in either constant
+  // (STRIP_HEIGHT_PX or STRIP_CARD_NATURAL_WIDTH_PX) re-derives the
+  // scale differently per file.
+  for (let i = 0; i < 6; i++) {
+    const rs = reveal.innerScales[i].scale;
+    const os = overlay.innerScales[i].scale;
+    if (!rs || !os) {
+      record(
+        `no-jump ${sideLabel}: inner scale matrix readable at cell[${i}]`,
+        false,
+        `reveal=${JSON.stringify(rs)} overlay=${JSON.stringify(os)}`,
+      );
+      continue;
+    }
+    const d11 = Math.abs(rs.m11 - os.m11);
+    const d22 = Math.abs(rs.m22 - os.m22);
+    record(
+      `no-jump ${sideLabel}: inner scale m11/m22 equal at cell[${i}] (±${NO_JUMP_SCALE_TOL})`,
+      d11 <= NO_JUMP_SCALE_TOL && d22 <= NO_JUMP_SCALE_TOL,
+      `cell[${i}] reveal=${rs.m11.toFixed(4)}/${rs.m22.toFixed(4)} overlay=${os.m11.toFixed(4)}/${os.m22.toFixed(4)} Δ=${d11.toFixed(4)}/${d22.toFixed(4)}`,
+    );
+  }
+}
+
+async function runNoJumpAssertion(browser) {
+  const tag = `[no-jump strip parity]`;
+  console.log(`\n${tag} starting`);
+  const page = await newPage(browser);
+  page.on("console", (msg) => {
+    if (msg.type() === "error") console.error(`${tag}[browser-console]`, msg.text());
+  });
+  const url = `${ORIGIN}/basketball/dev/h2h-reveal-mock?overlay=1&variant=WIN`;
+  try {
+    await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
+  } catch (err) {
+    record(`no-jump: page load`, false, err.message);
+    await page.close();
+    return;
+  }
+
+  // ?overlay=1 fires reveal.skipToEnd() in the mock route's mount
+  // effect (basketball/src/dev/H2HRevealMockRoute.tsx:263-267), which
+  // walks the hook to phase === "done" without animating. Wait for the
+  // battlefield to publish that phase before sampling the strips so
+  // the reveal-side capture is at rest, not mid-animation.
+  try {
+    await page.waitForFunction(
+      () => {
+        const bf = document.querySelector("[data-h2h-battlefield]");
+        return bf?.getAttribute("data-h2h-reveal-phase") === "3-done";
+      },
+      {},
+      { timeout: 10000 },
+    );
+    record(`no-jump: reveal reached phase === "done"`, true);
+  } catch (_err) {
+    const phase = await page
+      .locator("[data-h2h-battlefield]")
+      .getAttribute("data-h2h-reveal-phase")
+      .catch(() => null);
+    record(`no-jump: reveal reached phase === "done"`, false, `phase="${phase}"`);
+    await page.close();
+    return;
+  }
+
+  // Capture reveal-side at-rest geometry first. The overlay's
+  // crossfade-in runs concurrently; the reveal strips don't move
+  // during it (the underlying H2HBoardShell stays mounted), so
+  // capturing either before or after the wait yields the same values.
+  // Capturing before keeps the reveal sample chronologically grounded
+  // at the moment the user described in the spec.
+  const revealGeom = await captureLineupStripGeometry(page, "reveal");
+
+  // Wait for overlay to mount and reach visible:true (opacity 1).
+  // ?overlay=1 sets forceOverlay=true, which together with the
+  // useCrossfade hook mounts the overlay and flips visible on the
+  // next animation frame; the CSS opacity transition is
+  // OVERLAY_CROSSFADE_MS long. +100ms buffer absorbs RAF + transition
+  // commit jitter so the overlay is at rest when sampled.
+  try {
+    await page.waitForSelector("[data-h2h-results-overlay]", { timeout: 5000 });
+  } catch (err) {
+    record(`no-jump: overlay mounted`, false, err.message);
+    await page.close();
+    return;
+  }
+  await page.waitForTimeout(OVERLAY_CROSSFADE_MS_HARNESS + 100);
+  const overlayVisibleAttr = await page
+    .locator("[data-h2h-results-overlay]")
+    .getAttribute("data-h2h-overlay-visible");
+  record(
+    `no-jump: overlay reached visible:true after crossfade`,
+    overlayVisibleAttr === "true",
+    `data-h2h-overlay-visible="${overlayVisibleAttr}"`,
+  );
+
+  const overlayGeom = await captureLineupStripGeometry(page, "overlay");
+
+  // Per-side parity assertions.
+  assertNoJumpForSide("sender (top strip)", revealGeom.sender, overlayGeom.sender);
+  assertNoJumpForSide("recipient (bottom strip)", revealGeom.recipient, overlayGeom.recipient);
+
+  await page.close();
+}
+
 async function main() {
   const browser = await chromium.launch();
   try {
@@ -2221,6 +2524,11 @@ async function main() {
     }
     // Reveal-foundation Feature 1 reduced-motion path.
     await runReducedMotionChargeCheck(browser);
+    // Build step 1 of the results-page lock — cross-surface strip
+    // geometry parity. Catches a future drift in the duplicate
+    // HandStrip/ResultsStrip geometry constants before it ships a
+    // visible jump on the reveal→results crossfade.
+    await runNoJumpAssertion(browser);
   } finally {
     await browser.close();
   }
