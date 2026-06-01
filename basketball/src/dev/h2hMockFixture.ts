@@ -208,7 +208,11 @@ export const INITIAL_RECIPIENT_HAND: H2HHand = {
   totalFp: 0,
   tier: "ROOKIE",
   cards: INITIAL_RECIPIENT_CARDS,
-  displayName: "You",
+  // Bug 3 / Layout A/B restructure §5: recipient label reads literal
+  // "YOU" everywhere (play shell + reveal arc shell + results overlay).
+  // Mock fixture mirrors the production recipient hand built by
+  // H2HRecipientReveal.tsx:156.
+  displayName: "YOU",
 };
 
 // SENDER_HAND / RECIPIENT_HAND are typed as H2HHand (the same interface
@@ -227,5 +231,9 @@ export const RECIPIENT_HAND: H2HHand = {
   totalFp: sumFp(RECIPIENT_CARDS),  // = 182.4
   tier: "ROOKIE",
   cards: RECIPIENT_CARDS,
-  displayName: "You",
+  // Bug 3 / Layout A/B restructure §5: recipient label reads literal
+  // "YOU" everywhere (play shell + reveal arc shell + results overlay).
+  // Mock fixture mirrors the production recipient hand built by
+  // H2HRecipientReveal.tsx:156.
+  displayName: "YOU",
 };
