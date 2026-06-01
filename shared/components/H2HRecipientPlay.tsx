@@ -1302,6 +1302,13 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
 
   // Reserved CTA — sits BELOW the bottom zone, inside the shell's
   // reserved-bottom spacer region (via H2HBoardShell's belowBoard slot).
+  // Bug 4: gate the play-shell CTA on a non-empty label. ab_transition,
+  // handoff_resolving, and arc all return label="" from deriveCta — the
+  // wrapper STAYS (preserves the reserved bottom height so the layout
+  // doesn't jump when the results overlay crossfades in), but the
+  // button doesn't render. The wrapper's minHeight is what reserves
+  // the vertical slot; no flex jump.
+  const ctaVisible = cta.label !== "";
   const belowBoardSlot = (
     <div
       data-h2h-play-reserved="true"
@@ -1314,31 +1321,33 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         width: "100%",
       }}
     >
-      <button
-        data-h2h-play-cta="true"
-        data-cta-label={cta.label}
-        disabled={cta.disabled}
-        onClick={
-          cta.onClick === "draw" ? handleDraw
-            : cta.onClick === "retry" ? handleRetry
-            : undefined
-        }
-        style={{
-          padding: "16px 32px",
-          borderRadius: 14,
-          background: cta.disabled ? "rgba(255,177,74,0.25)" : "#FFB14A",
-          border: "none",
-          color: "#070A12",
-          fontSize: 17,
-          fontWeight: 900,
-          cursor: cta.disabled ? "default" : "pointer",
-          minWidth: 200,
-          fontFamily: "inherit",
-          transition: "background 150ms ease",
-        }}
-      >
-        {cta.label}
-      </button>
+      {ctaVisible && (
+        <button
+          data-h2h-play-cta="true"
+          data-cta-label={cta.label}
+          disabled={cta.disabled}
+          onClick={
+            cta.onClick === "draw" ? handleDraw
+              : cta.onClick === "retry" ? handleRetry
+              : undefined
+          }
+          style={{
+            padding: "16px 32px",
+            borderRadius: 14,
+            background: cta.disabled ? "rgba(255,177,74,0.25)" : "#FFB14A",
+            border: "none",
+            color: "#070A12",
+            fontSize: 17,
+            fontWeight: 900,
+            cursor: cta.disabled ? "default" : "pointer",
+            minWidth: 200,
+            fontFamily: "inherit",
+            transition: "background 150ms ease",
+          }}
+        >
+          {cta.label}
+        </button>
+      )}
     </div>
   );
 
@@ -1501,13 +1510,18 @@ function deriveCta(state: PlayingState): {
       return { label: "Drawing…", disabled: true, onClick: null };
     case "ab_transition":
     case "handoff_resolving":
-      // Settle-pause holds the CTA in its disabled slot. Empty label
-      // would leave a visually awkward empty footer; keeping
-      // "Revealing…" disabled communicates the imminent reveal beat
-      // without breaking the stillness invariant (no interactive
-      // affordance, no VS treatment).
-      return { label: "Revealing…", disabled: true, onClick: null };
     case "arc":
+      // Bug 4: settle-pause + reveal states have no real user action —
+      // the prior "Revealing…" disabled label was a dead placeholder
+      // (no onClick, no visual progress, just static text). HIDE the
+      // CTA entirely during these beats. The empty label is the
+      // structural signal to the render below not to mount the
+      // button — the reserved-bottom wrapper STAYS so the layout
+      // height is reserved (no jump when the results overlay
+      // crossfades in with its own CTA). When the play-shell fades
+      // out at arc-composite and H2HResultsOverlay mounts, the
+      // overlay's own primary CTA (Send It Back / Try Again /
+      // Play your own hand) takes over.
       return { label: "", disabled: true, onClick: null };
   }
 }

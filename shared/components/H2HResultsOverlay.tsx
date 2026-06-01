@@ -152,6 +152,30 @@ const STRIP_CARD_DISPLAY_WIDTH_PX = (STRIP_HEIGHT_PX * 329) / 478;
 const STRIP_CARD_SCALE = STRIP_CARD_DISPLAY_WIDTH_PX / STRIP_CARD_NATURAL_WIDTH_PX;
 
 const ZONE_HEADER_HEIGHT_PX = 24;
+
+// Bug 5 fix: scroll-clearance below the user-zone so the recipient
+// "YOU" label can scroll fully above the sticky CTA at scrollTop=max
+// without being visually occluded.
+//
+// Applied as marginBottom on the user ZonePanel (not as paddingBottom
+// on the scroll container) because position:sticky;bottom:0 measures
+// from the scroll container's content-box bottom — adding padding-
+// bottom to the inner just shrinks the content box, moving the sticky
+// pin UP by the same amount the user-zone moves UP, leaving the gap
+// unchanged.
+//
+// marginBottom on user-zone creates extra space BETWEEN the user-zone
+// and the reserved-bottom in the flex stack. In the overflow case,
+// at scrollTop=max the user-zone-bottom ends marginBottom pixels
+// above the sticky CTA's pinned position (verified empirically). In
+// the non-overflow case, the reserved-bottom's marginTop:auto still
+// pushes the CTA to the bottom of the inner column for thumb reach;
+// the marginBottom just adds visible breathing room above the CTA.
+//
+// Sized for the worst-case reserved-bottom block (paddingTop 8 +
+// countdown pill ~28px + gap 10 + CTA button ~46px ≈ 92px) plus a
+// small breathing margin (~8px).
+const RESERVED_BOTTOM_CLEARANCE_PX = 100;
 const ZONE_GAP_PX = 4;
 const URGENT_THRESHOLD_MS = 5 * 60 * 1000;
 
@@ -754,7 +778,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             a5d7e43): explicit marginBottom: 0 — no gap to the reserved
             space below. The strip flushes directly against reserved,
             which then provides paddingTop: 8 (was 16) for the CTA. */}
-        <ZonePanel dataAttr="user" style={{ marginBottom: 0 }}>
+        <ZonePanel dataAttr="user" style={{ marginBottom: RESERVED_BOTTOM_CLEARANCE_PX }}>
           <ResultsStrip
             cards={recipient.cards}
             renderCard={renderCard}
