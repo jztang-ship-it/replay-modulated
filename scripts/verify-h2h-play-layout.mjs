@@ -69,6 +69,17 @@ const PRE_REVEAL_HOLD_MS = 1000;
 const ARC_COMPOSITE_CROSSFADE_MS = 250;
 const ROSTER_SIZE = 6;
 
+// Bug 5 guard: minimum clearance between the recipient "YOU" label's
+// bottom and the sticky CTA's top in the overlay sweep. The user's
+// prescribed fix sizes the marginBottom on the user ZonePanel for
+// CTA-block height + safe-area-inset-bottom (~100px). A strict "no
+// overlap" gate (gap >= 0) passes on pre-fix because the bare layout
+// already has a thin ~17px gap — but the user reported visual
+// occlusion / cramming during scrolling. 50px is the threshold that
+// catches the bug (pre-fix 17px fails; post-fix 117px clears
+// comfortably) without being prescriptive about the exact clearance.
+const LABEL_CLEARANCE_MIN_PX = 50;
+
 const failures = [];
 const passes = [];
 
@@ -547,6 +558,9 @@ async function runPlayHarness(browser) {
     const topZone = document.querySelector('[data-h2h-board-zone="top"]');
     const bottomZone = document.querySelector('[data-h2h-board-zone="bottom"]');
     const heroZone = document.querySelector('[data-h2h-board-zone="hero"]');
+    // Bug 4 guard: the play-shell CTA element should NOT render during
+    // the ab_transition beat (no dead "Revealing…" placeholder).
+    const playCta = document.querySelector("[data-h2h-play-cta]");
     return {
       state: root?.getAttribute("data-playing-state"),
       wrapperCollapsed: wrapper?.getAttribute("data-h2h-play-top-strip-collapsed"),
@@ -555,6 +569,8 @@ async function runPlayHarness(browser) {
       settleHeroMounted: !!settleHero,
       opSlotMounted: !!opSlot,
       youSlotMounted: !!youSlot,
+      playCtaMounted: !!playCta,
+      playCtaLabel: playCta?.getAttribute("data-cta-label") ?? null,
       topZoneRect: topZone?.getBoundingClientRect().toJSON(),
       bottomZoneRect: bottomZone?.getBoundingClientRect().toJSON(),
       heroZoneRect: heroZone?.getBoundingClientRect().toJSON(),
@@ -577,6 +593,11 @@ async function runPlayHarness(browser) {
     `ab_transition end-state: settle-hero (two empty slots) rendering`,
     abSnap.settleHeroMounted && abSnap.opSlotMounted && abSnap.youSlotMounted,
     `settle=${abSnap.settleHeroMounted} op=${abSnap.opSlotMounted} you=${abSnap.youSlotMounted}`,
+  );
+  record(
+    `Bug 4: play-shell CTA HIDDEN during ab_transition (no dead "Revealing…" placeholder)`,
+    abSnap.playCtaMounted === false,
+    `mounted=${abSnap.playCtaMounted} label="${abSnap.playCtaLabel}"`,
   );
   // Top zone must be above bottom zone (Layout B Y-order sanity).
   if (abSnap.topZoneRect && abSnap.bottomZoneRect) {
@@ -615,6 +636,9 @@ async function runPlayHarness(browser) {
     const vs = document.querySelector("[data-h2h-play-vs]");
     const wrapper = document.querySelector("[data-h2h-play-top-strip]");
     const cs = wrapper ? getComputedStyle(wrapper) : null;
+    // Bug 4 guard: the play-shell CTA element should NOT render during
+    // the settle-pause (no dead "Revealing…" placeholder).
+    const playCta = document.querySelector("[data-h2h-play-cta]");
     // Bottom-strip cells: all 6 face-up.
     const bottomCells = Array.from(document.querySelectorAll("[data-h2h-play-bottom-cell]"));
     const bottomFaceUpCount = bottomCells.filter((c) => c.getAttribute("data-face-up") === "true").length;
@@ -628,6 +652,8 @@ async function runPlayHarness(browser) {
       youSlotMounted: !!youSlot,
       headlineMounted: !!headline,
       vsMounted: !!vs,
+      playCtaMounted: !!playCta,
+      playCtaLabel: playCta?.getAttribute("data-cta-label") ?? null,
       wrapperOpacity: cs ? parseFloat(cs.opacity) : 0,
       bottomFaceUpCount,
       topFaceUpCount,
@@ -650,6 +676,11 @@ async function runPlayHarness(browser) {
   record(
     `settle-pause: headline div NOT mounted (empty stillness)`,
     settleSnap.headlineMounted === false,
+  );
+  record(
+    `Bug 4: play-shell CTA HIDDEN during settle-pause (no dead "Revealing…" placeholder)`,
+    settleSnap.playCtaMounted === false,
+    `mounted=${settleSnap.playCtaMounted} label="${settleSnap.playCtaLabel}"`,
   );
   record(
     `settle-pause: Layout B composed — opponent strip face-up + your strip all 6 face-up`,
@@ -1074,21 +1105,29 @@ async function assertContainmentOrReachability(page, vp, stateLabel, opts = {}) 
   } else {
     await scrollInnerTo(page, "top");
     const rectsAtTop = await captureHoldSelectRects(page);
-    const ctaBottomTop = rectsAtTop.cta ? rectsAtTop.cta.y + rectsAtTop.cta.height : null;
-    record(
-      `${tag}: CTA pinned (bottom <= vh) at scrollTop=0`,
-      ctaBottomTop !== null && ctaBottomTop <= vp.height + 1,
-      `ctaBottom=${Math.round(ctaBottomTop)} vh=${vp.height}`,
-    );
+    // Bug 4 update: during settle-pause (Layout B states ab_transition /
+    // handoff_resolving / arc) the play-shell CTA is intentionally
+    // HIDDEN — there's no action available so the button is unmounted.
+    // The CTA-pinned assertion only applies when a CTA actually exists.
+    if (rectsAtTop.cta) {
+      const ctaBottomTop = rectsAtTop.cta.y + rectsAtTop.cta.height;
+      record(
+        `${tag}: CTA pinned (bottom <= vh) at scrollTop=0`,
+        ctaBottomTop <= vp.height + 1,
+        `ctaBottom=${Math.round(ctaBottomTop)} vh=${vp.height}`,
+      );
+    }
 
     await scrollInnerTo(page, "bottom");
     const rectsAtBottom = await captureHoldSelectRects(page);
-    const ctaBottomBottom = rectsAtBottom.cta ? rectsAtBottom.cta.y + rectsAtBottom.cta.height : null;
-    record(
-      `${tag}: CTA pinned (bottom <= vh) at scrollTop=max`,
-      ctaBottomBottom !== null && ctaBottomBottom <= vp.height + 1,
-      `ctaBottom=${Math.round(ctaBottomBottom)} vh=${vp.height}`,
-    );
+    if (rectsAtBottom.cta) {
+      const ctaBottomBottom = rectsAtBottom.cta.y + rectsAtBottom.cta.height;
+      record(
+        `${tag}: CTA pinned (bottom <= vh) at scrollTop=max`,
+        ctaBottomBottom <= vp.height + 1,
+        `ctaBottom=${Math.round(ctaBottomBottom)} vh=${vp.height}`,
+      );
+    }
 
     const stripReachable = await page.evaluate(() => {
       const strip = document.querySelector('[data-h2h-play-bottom-strip]');
@@ -1249,6 +1288,23 @@ async function runResultsOverlayViewportSweep(browser, vp) {
       !scrollable,
       `scrollH=${rects.innerInfo?.scrollHeight} clientH=${rects.innerInfo?.clientHeight}`,
     );
+    // Bug 5 guard (§5a no-scroll case): even when content fits, the
+    // "YOU" label must not overlap the CTA. label.bottom <= cta.top.
+    const labelVsCtaA = await page.evaluate(() => {
+      const label = document.querySelector("[data-h2h-overlay-zone-label='bottom']");
+      const cta = document.querySelector("[data-h2h-overlay-primary-cta]");
+      if (!label || !cta) return null;
+      const lr = label.getBoundingClientRect();
+      const cr = cta.getBoundingClientRect();
+      return { labelBottom: lr.bottom, ctaTop: cr.top, gap: cr.top - lr.bottom };
+    });
+    record(
+      `${stateTag} Bug 5: YOU label clears CTA (label.bottom <= CTA.top)`,
+      labelVsCtaA != null && labelVsCtaA.gap >= LABEL_CLEARANCE_MIN_PX,
+      labelVsCtaA
+        ? `label.bottom=${Math.round(labelVsCtaA.labelBottom)} cta.top=${Math.round(labelVsCtaA.ctaTop)} gap=${Math.round(labelVsCtaA.gap)}`
+        : "label or CTA missing",
+    );
   } else {
     await scrollOverlayInnerTo(page, "top");
     const rectsAtTop = await captureOverlayRects(page);
@@ -1266,6 +1322,28 @@ async function runResultsOverlayViewportSweep(browser, vp) {
       `${stateTag}: CTA pinned (bottom <= vh) at scrollTop=max`,
       ctaBottomBottom !== null && ctaBottomBottom <= vp.height + 1,
       `ctaBottom=${Math.round(ctaBottomBottom)} vh=${vp.height}`,
+    );
+
+    // Bug 5 guard: at scrollTop=max, the recipient "YOU" label must
+    // clear the sticky CTA's top edge (label.bottom <= cta.top). Pre-
+    // fix this had a ~17px gap on every overflowing viewport — the
+    // label was visually crammed against the CTA. The fix adds
+    // RESERVED_BOTTOM_CLEARANCE_PX (~100px) of marginBottom on the
+    // user ZonePanel so the label clears the CTA's pinned region.
+    const labelVsCta = await page.evaluate(() => {
+      const label = document.querySelector("[data-h2h-overlay-zone-label='bottom']");
+      const cta = document.querySelector("[data-h2h-overlay-primary-cta]");
+      if (!label || !cta) return null;
+      const lr = label.getBoundingClientRect();
+      const cr = cta.getBoundingClientRect();
+      return { labelBottom: lr.bottom, ctaTop: cr.top, gap: cr.top - lr.bottom };
+    });
+    record(
+      `${stateTag} Bug 5: YOU label clears sticky CTA at scrollTop=max (label.bottom <= CTA.top)`,
+      labelVsCta != null && labelVsCta.gap >= LABEL_CLEARANCE_MIN_PX,
+      labelVsCta
+        ? `label.bottom=${Math.round(labelVsCta.labelBottom)} cta.top=${Math.round(labelVsCta.ctaTop)} gap=${Math.round(labelVsCta.gap)}`
+        : "label or CTA missing",
     );
 
     // Bottom strip reachable via scrollIntoView.
