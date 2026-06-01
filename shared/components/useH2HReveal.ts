@@ -175,11 +175,49 @@ export function planRevealBeats(card: H2HCard): RevealBeatPlan {
 // call should feel. See docs/h2h-reveal-arc-design.md "Phase 3.5 — entrance
 // + card-pull animations" + the "Phase 3.6 — pacing" section.
 
-/** Per-matchup FP rollup window. Drives both CardFront's internal RAF
- *  (via the renderer passing fpCountUpMs) and this hook's running-total
- *  RAF, so the per-card display and the running total settle at the
- *  same instant. */
-export const MATCHUP_DURATION_MS = 1500;
+// ── Relay-tension pacing (Phase 2.6) ────────────────────────────────────
+// Tunable constants for the per-set reveal sequence:
+//
+//   cards reveal  →  totals roll (eased) and LAND
+//                 →  POST_TOTALS_HOLD_MS hold beat
+//                 →  delta rolls 0→value (eased) and LANDS
+//                 →  inter-set pause / next set
+//
+// The delta is a SEQUENCED punctuating beat after the totals settle —
+// NOT a parallel rollup. All four sub-phases run inside the same
+// runMatchup closure under one myRunId cancellation gate (totals RAF →
+// scheduleTimeout for hold → delta RAF → onMatchupResolved + phase
+// transition). One timing machine, deterministic ordering, no drift
+// between totals and delta.
+//
+// One place to tune; numbers are first-guess feel values. Lock them after
+// device verification. See docs/h2h-relay-tension-design-lock.md
+// "Phase 2.6" section.
+
+/** TOTALS rollup window. Drives both CardFront's internal RAF (via the
+ *  renderer passing fpCountUpMs) and this hook's running-total RAF, so
+ *  the per-card display and the running total settle at the same
+ *  instant. Phase 2.6 raised 1500 → 1800 so each set has room to read.
+ *  KEEP THIS EXPORT NAME — external consumers (GameView, the
+ *  H2HRevealMockRoute dev route) import it by this name. */
+export const MATCHUP_DURATION_MS = 1800;
+
+/** Hold beat between the totals landing and the delta starting to
+ *  roll. Separates the two beats so the delta reads as its own
+ *  verdict, not an extension of the totals. */
+export const POST_TOTALS_HOLD_MS = 250;
+
+/** Delta rollup window — from 0 → recipientCard.actualFp -
+ *  senderCard.actualFp. Eased on the same curve as the totals. Phase
+ *  2.6 introduced this; pre-Phase-2.6 the delta snapped to its final
+ *  value at set start (spoiling the outcome before the rollup ran). */
+export const DELTA_ROLLUP_MS = 600;
+
+/** Cubic ease-out exponent. `eased = 1 - (1 - elapsed)^N` with N=3
+ *  decelerates strongly at the landing (slow settle). Tune up for
+ *  longer "suspense" tail, down for snappier landings. Applied to
+ *  both the totals RAF and the delta RAF. */
+export const RELAY_EASING_POWER = 3;
 
 // ── Entrance per-card stage timings ────────────────────────────────────────
 // Each entrance card walks through PRE → LAY → BEAT → TRAVEL → SETTLED.
@@ -391,6 +429,21 @@ export interface UseH2HRevealReturn {
   /** Animated sender running total — feeds TeamScore's displayTotal. */
   senderRunningTotal: number;
   recipientRunningTotal: number;
+  /** Relay-tension Phase 2.6 — the per-set delta as a sequenced rollup.
+   *  Updates per matchup in three phases:
+   *    1. Resets to 0 at the START of runMatchup (before any in-set
+   *       animation). Cards reveal and totals roll while this stays
+   *       at 0 — no spoiler.
+   *    2. After totals land + POST_TOTALS_HOLD_MS hold, rolls from 0
+   *       to `recipientCard.actualFp − senderCard.actualFp` over
+   *       DELTA_ROLLUP_MS, eased on the same cubic-out curve as the
+   *       totals so it feels like a settle, not a snap.
+   *    3. Lands on the per-set value; held until the next set's
+   *       runMatchup resets to 0.
+   *  MidRailContent consumes this directly; the prior per-card
+   *  computation at the render layer is preserved only for the
+   *  static phase-2 mock path (no reveal hook wired). */
+  deltaRunning: number;
   /** The active matchup pair (or the final matchup when phase==="done").
    *  Returns {null, null} during idle/entering — battlefield empty
    *  during entrance. */
@@ -473,6 +526,19 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
   const [visibleFpMap, setVisibleFpMap] = useState<Map<string, number>>(() => new Map());
   const [senderRunningTotal, setSenderRunningTotal] = useState(startIdle ? 0 : sender.totalFp);
   const [recipientRunningTotal, setRecipientRunningTotal] = useState(startIdle ? 0 : recipient.totalFp);
+  // Phase 2.6 — deltaRunning. Initial state mirrors the running-totals
+  // pattern: 0 when starting idle (no set has resolved yet); the final
+  // per-set delta of the last matchup when starting at the "done" end-
+  // state. The "done" initial uses the LAST matchup's per-set delta
+  // (not the cumulative final-gap) so the reveal-side resting value at
+  // mount-as-done matches what the last in-arc landing produced; the
+  // overlay's final-gap is rendered via Phase 1's finalGapOverride
+  // mechanism, which OVERRIDES this value at end-hold/done.
+  const lastMatchup = matchups[matchups.length - 1];
+  const lastPerSetDelta = lastMatchup
+    ? lastMatchup.recipient.actualFp - lastMatchup.sender.actualFp
+    : 0;
+  const [deltaRunning, setDeltaRunning] = useState(startIdle ? 0 : lastPerSetDelta);
   // FIX A: when skipEntrance is true, init entranceStages to "settled"
   // even for the idle starting phase. HandStrip cells then render at
   // their strip-slot position from mount — no per-cell deck-stage
@@ -541,6 +607,12 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
 
     setMatchupIndex(index);
     setPhase("revealing");
+    // Phase 2.6 — reset deltaRunning to 0 at the START of each set so
+    // the previous set's value doesn't linger through this set's cards-
+    // reveal + totals-roll. The delta is held at 0 through the first
+    // two beats; the delta-rollup RAF below (after totals land + hold)
+    // climbs it to this set's per-set value.
+    setDeltaRunning(0);
 
     // ── Pre-rollup beats (post-prior-turn pre-reveal-rule, 2026-05-27) ──
     // Match single-player's reveal language: shake (+ blast for band-tier
@@ -609,8 +681,10 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
       const tick = () => {
       if (myRunId !== runIdRef.current) return;
       const elapsed = Math.min((performance.now() - startTime) / MATCHUP_DURATION_MS, 1);
-      // Ease-out cubic — same curve as useEmotionalReveal.ts:484.
-      const eased = 1 - Math.pow(1 - elapsed, 3);
+      // Ease-out — same curve as useEmotionalReveal.ts:484. Power
+      // exposed via RELAY_EASING_POWER so the totals + delta share
+      // the SAME deceleration character.
+      const eased = 1 - Math.pow(1 - elapsed, RELAY_EASING_POWER);
       setSenderRunningTotal(senderPrevTotal + senderTarget * eased);
       setRecipientRunningTotal(recipientPrevTotal + recipientTarget * eased);
       // Advance per-card visibleFp so PlayerCardShell's stamp effect can
@@ -633,69 +707,108 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
         setVisibleFpMap(prev => new Map(prev).set(m.sender.cardId, senderTarget));
         setVisibleFpMap(prev => new Map(prev).set(m.recipient.cardId, recipientTarget));
 
-        // Legendary post-rollup celebration shake — mirrors single-player
-        // useEmotionalReveal.ts:459-465. Re-uses the same per-side shake
-        // slot; auto-clears after SHAKE_DURATION_MS_DEFAULT.
-        if (senderBeats.legendaryCelebrationShake) {
-          setSenderShakeInfo({ cardId: m.sender.cardId, type: "legendary" });
-          scheduleTimeout(SP_SHAKE_DURATION_MS_DEFAULT, () => {
+        // Phase 2.6 — per-set sequence continues AFTER totals land.
+        // Order: hold beat → delta rolls 0→deltaTarget → onMatchupResolved
+        // + legendary celebration + phase transition + schedule next.
+        // The post-totals work was previously inline; it's now wrapped
+        // in afterDeltaLands() so the delta RAF can chain off the
+        // hold beat under one myRunId cancellation gate.
+        const deltaTarget = recipientTarget - senderTarget;
+
+        const afterDeltaLands = () => {
+          if (myRunId !== runIdRef.current) return;
+
+          // Legendary post-rollup celebration shake — fires AFTER the
+          // delta beat so it doesn't compete with the delta rollup for
+          // attention. Pre-Phase-2.6 this fired immediately at totals-
+          // land; the cadence shift is intentional.
+          if (senderBeats.legendaryCelebrationShake) {
+            setSenderShakeInfo({ cardId: m.sender.cardId, type: "legendary" });
+            scheduleTimeout(SP_SHAKE_DURATION_MS_DEFAULT, () => {
+              if (myRunId !== runIdRef.current) return;
+              setSenderShakeInfo(null);
+            });
+          }
+          if (recipientBeats.legendaryCelebrationShake) {
+            setRecipientShakeInfo({ cardId: m.recipient.cardId, type: "legendary" });
+            scheduleTimeout(SP_SHAKE_DURATION_MS_DEFAULT, () => {
+              if (myRunId !== runIdRef.current) return;
+              setRecipientShakeInfo(null);
+            });
+          }
+
+          // Phase 5 hook — commentary engine wires here.
+          onMatchupResolvedRef.current?.(index, m, {
+            senderTotal: newSenderTotal,
+            recipientTotal: newRecipientTotal,
+          });
+
+          // Reveal-foundation Feature 2 — COMPLETION-GATE the per-set
+          // advance. The intermediate pause is the breathing room
+          // between matchups (after revealing fully resolves). Phase
+          // 3's anchor moment will ride this paused window for the
+          // deciding set — Phase 2.6's in-set sequence keeps that
+          // window intact by living entirely inside `revealing`.
+          const pendingPostRollupMs = computePostRollupEffectMs(
+            senderBeats,
+            recipientBeats,
+          );
+          const isFinalMatchup = index + 1 >= matchups.length;
+          const intermediateAdvanceDelay = Math.max(
+            MATCHUP_RESOLVE_PAUSE_MS,
+            pendingPostRollupMs,
+          );
+          setPhase(isFinalMatchup ? "end-hold" : "paused");
+          scheduleTimeout(
+            isFinalMatchup ? END_OF_ARC_HOLD_MS : intermediateAdvanceDelay,
+            () => {
+              if (myRunId !== runIdRef.current) return;
+              if (!isFinalMatchup) {
+                runMatchup(index + 1, myRunId);
+              } else {
+                // End-hold complete — settle to "done" and fire onArcResolved.
+                setPhase("done");
+                onArcResolvedRef.current?.({
+                  senderTotal: newSenderTotal,
+                  recipientTotal: newRecipientTotal,
+                });
+              }
+            },
+          );
+        };
+
+        if (reducedMotion) {
+          // Reduced-motion: no hold, no delta RAF. Snap deltaRunning to
+          // the per-set target and immediately fire afterDeltaLands.
+          // Matches the pre-existing reduced-motion philosophy (skip
+          // suspense beats; keep the cadence intact).
+          setDeltaRunning(deltaTarget);
+          afterDeltaLands();
+        } else {
+          // Hold beat — totals are settled, the user reads them, THEN
+          // the delta rolls as its own verdict.
+          scheduleTimeout(POST_TOTALS_HOLD_MS, () => {
             if (myRunId !== runIdRef.current) return;
-            setSenderShakeInfo(null);
+            const deltaStartTime = performance.now();
+            const deltaTick = () => {
+              if (myRunId !== runIdRef.current) return;
+              const elapsedDelta = Math.min(
+                (performance.now() - deltaStartTime) / DELTA_ROLLUP_MS,
+                1,
+              );
+              const easedDelta = 1 - Math.pow(1 - elapsedDelta, RELAY_EASING_POWER);
+              setDeltaRunning(deltaTarget * easedDelta);
+              if (elapsedDelta < 1) {
+                rafRef.current = requestAnimationFrame(deltaTick);
+              } else {
+                // Exact-land lock — protects against rAF drift at t=1.
+                setDeltaRunning(deltaTarget);
+                afterDeltaLands();
+              }
+            };
+            rafRef.current = requestAnimationFrame(deltaTick);
           });
         }
-        if (recipientBeats.legendaryCelebrationShake) {
-          setRecipientShakeInfo({ cardId: m.recipient.cardId, type: "legendary" });
-          scheduleTimeout(SP_SHAKE_DURATION_MS_DEFAULT, () => {
-            if (myRunId !== runIdRef.current) return;
-            setRecipientShakeInfo(null);
-          });
-        }
-
-        // Phase 5 hook — commentary engine wires here.
-        onMatchupResolvedRef.current?.(index, m, {
-          senderTotal: newSenderTotal,
-          recipientTotal: newRecipientTotal,
-        });
-
-        // Reveal-foundation Feature 2 — COMPLETION-GATE the per-set
-        // advance. Previously the next-set timer was fixed at
-        // MATCHUP_RESOLVE_PAUSE_MS regardless of any in-flight
-        // post-rollup effects; the legendary celebration shake
-        // (SP_SHAKE_DURATION_MS_DEFAULT = 400ms) only fit inside the
-        // 850ms pause COINCIDENTALLY, not structurally. The fix takes
-        // the max of the base pause and any pending post-rollup
-        // effect duration, so a set with a legendary card waits for
-        // its celebration shake to resolve before the next set begins;
-        // a plain set still advances on the base pause. This is the
-        // structural foundation for the relay/lead-swing tension —
-        // future post-rollup beats added to the matchup tail will
-        // automatically extend the gate without per-callsite work.
-        const pendingPostRollupMs = computePostRollupEffectMs(
-          senderBeats,
-          recipientBeats,
-        );
-        const isFinalMatchup = index + 1 >= matchups.length;
-        const intermediateAdvanceDelay = Math.max(
-          MATCHUP_RESOLVE_PAUSE_MS,
-          pendingPostRollupMs,
-        );
-        setPhase(isFinalMatchup ? "end-hold" : "paused");
-        scheduleTimeout(
-          isFinalMatchup ? END_OF_ARC_HOLD_MS : intermediateAdvanceDelay,
-          () => {
-            if (myRunId !== runIdRef.current) return;
-            if (!isFinalMatchup) {
-              runMatchup(index + 1, myRunId);
-            } else {
-              // End-hold complete — settle to "done" and fire onArcResolved.
-              setPhase("done");
-              onArcResolvedRef.current?.({
-                senderTotal: newSenderTotal,
-                recipientTotal: newRecipientTotal,
-              });
-            }
-          },
-        );
       }
     };
       rafRef.current = requestAnimationFrame(tick);
@@ -712,6 +825,7 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
     setVisibleFpMap(new Map());
     setSenderRunningTotal(0);
     setRecipientRunningTotal(0);
+    setDeltaRunning(0);
     setPulseActive(false);
     setSenderShakeInfo(null);
     setRecipientShakeInfo(null);
@@ -901,6 +1015,7 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
     recipientGlowState,
     senderRunningTotal,
     recipientRunningTotal,
+    deltaRunning,
     activeMatchup,
     senderRevealOrder,
     recipientRevealOrder,

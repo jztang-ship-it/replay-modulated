@@ -808,6 +808,10 @@ async function runPlayHarness(browser) {
         ? cardRects[1].top + cardRects[1].height / 2
         : null,
       floatOpacity: floatCs?.opacity ?? null,
+      // Phase 2.6 — the animating delta value exposed by
+      // MidRailContent. "none" pre-Phase-2.6 (attribute not present);
+      // a numeric string post-fix.
+      floatRollingValue: float?.getAttribute("data-h2h-mid-rail-rolling-value") ?? null,
     };
   });
   record(
@@ -854,6 +858,35 @@ async function runPlayHarness(browser) {
     `relay-tension gap: reveal delta float computed opacity > 0 (visibility tripwire)`,
     revealDeltaSnap.floatOpacity != null && parseFloat(revealDeltaSnap.floatOpacity) > 0,
     `opacity=${revealDeltaSnap.floatOpacity}`,
+  );
+
+  // ── Relay-tension Phase 2.6 visual assertions ────────────────────────
+  //
+  // The per-set delta now ROLLS from 0 → recipientCard.actualFp -
+  // senderCard.actualFp (eased) as a sequenced beat AFTER the totals
+  // land. Pre-Phase-2.6, the delta was computed inline from the active
+  // matchup's cards and SNAPPED to its value at set start (spoiler bug).
+  // The hook now publishes `deltaRunning` and MidRailContent exposes it
+  // via the data-h2h-mid-rail-rolling-value attribute on the float.
+  //
+  // (P2.6-1) At arc end-state (the play-mock has reached phase==="done"
+  //          by this point), the rolling-value attribute is a FINITE
+  //          NUMERIC STRING. Pre-Phase-2.6 the attribute didn't exist →
+  //          assertion fails with `value="null"`. Post-fix it's the
+  //          last-matchup per-set delta as a number.
+  //
+  // Feel-based properties not asserted (left to device):
+  //   - "Starts at zero each set" — RAF timing within the 1800ms rollup
+  //     window is hard to sample reliably from the harness.
+  //   - "Sequenced after totals land" — same.
+  //   - "Decelerates / settles" — ease-out is a curve, not a static.
+  //   - Pacing-feels-right is the whole point of "TUNABLE" — device.
+  record(
+    `relay-tension Phase 2.6: reveal delta float exposes a finite numeric rolling-value at end-state`,
+    revealDeltaSnap.floatRollingValue != null &&
+      revealDeltaSnap.floatRollingValue !== "none" &&
+      Number.isFinite(parseFloat(revealDeltaSnap.floatRollingValue)),
+    `value="${revealDeltaSnap.floatRollingValue}"`,
   );
 
   // ── #4 regression-lock (2026-05-30): strip LAYOUT = slotIndex, not revealOrder ──
