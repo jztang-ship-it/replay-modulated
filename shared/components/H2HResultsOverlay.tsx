@@ -65,6 +65,14 @@ import {
   trashTalkBucket,
   type TrashTalkBucket,
 } from "../commentary/chadChallenge";
+import {
+  ScoreCell,
+  RIGHT_RAIL_WIDTH_PX,
+  LEFT_RAIL_WIDTH_PX,
+  WINNING_COLOR,
+  TRAILING_COLOR,
+  DELTA_NEUTRAL,
+} from "./H2HScoreRail";
 
 // ── Variant types ────────────────────────────────────────────────────────
 
@@ -127,18 +135,14 @@ export const OVERLAY_CROSSFADE_MS = 350;
 
 // ── Layout constants ────────────────────────────────────────────────────
 //
-// Phase 4 fix 3 amend2 (2026-05-27): geometry is LOCKED with the arc.
-// The arc's `H2HRevealScreen` exports the same grid widths + row gaps;
-// rather than import them (and create a coupling for the standalone
-// overlay use case), we redeclare with the same values + a guard
-// comment. Any change to one MUST be mirrored to the other or the
-// arc → overlay transition breaks the "no movement" invariant.
-//   - LEFT_RAIL = 100  (overlay headline + trash-talk; empty on arc)
-//   - RIGHT_RAIL = 80  (FP totals + arc's matchup-delta float)
-//   - BATTLEFIELD_ROW_GAP = 14  (sliver between hero cards)
+// LEFT_RAIL_WIDTH_PX (100) and RIGHT_RAIL_WIDTH_PX (80) are imported
+// from H2HScoreRail and shared with H2HRevealScreen so the arc → overlay
+// transition holds the "no movement" invariant by construction (rather
+// than by two-files-typed-the-same-by-hand, which is how the values
+// landed in the prior amend2). HERO_ROW_GAP_PX stays local — there's
+// no shared rail home for it and the value matches the arc's
+// BATTLEFIELD_ROW_GAP_PX by separate intent.
 
-const LEFT_RAIL_WIDTH_PX = 100;
-const RIGHT_RAIL_WIDTH_PX = 80;
 const HERO_ROW_GAP_PX = 14;
 const HERO_CARD_MAX_WIDTH = "min(145px, 32vw)"; // matches arc's BATTLEFIELD_CARD_MAX_WIDTH
 
@@ -179,10 +183,8 @@ const RESERVED_BOTTOM_CLEARANCE_PX = 100;
 const ZONE_GAP_PX = 4;
 const URGENT_THRESHOLD_MS = 5 * 60 * 1000;
 
-// Win/loss color treatment — matches the arc's right-rail palette.
-const WINNING_COLOR = "#22C55E";
-const TRAILING_COLOR = "#9CA3AF";
-const DELTA_NEUTRAL = "#E5E7EB";
+// Win/loss colors (WINNING_COLOR, TRAILING_COLOR, DELTA_NEUTRAL) are
+// imported from H2HScoreRail and shared with H2HRevealScreen.
 
 // ── Headline copy ────────────────────────────────────────────────────────
 //
@@ -412,34 +414,9 @@ function HeroCell({
   );
 }
 
-// ── Score cell (right-rail) ──────────────────────────────────────────────
-
-function ScoreCell({ total, isLeading }: { total: number; isLeading: boolean }) {
-  return (
-    <div
-      data-h2h-overlay-score="true"
-      data-h2h-overlay-score-value={total.toFixed(1)}
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <div
-        style={{
-          fontSize: 22,
-          fontWeight: 950,
-          color: isLeading ? WINNING_COLOR : TRAILING_COLOR,
-          fontVariantNumeric: "tabular-nums",
-          letterSpacing: -0.5,
-          textAlign: "center",
-        }}
-      >
-        {total.toFixed(1)}
-      </div>
-    </div>
-  );
-}
+// Score cell (right-rail) is now the shared ScoreCell imported from
+// H2HScoreRail. The overlay surface passes surface="overlay" to drive
+// the data-h2h-overlay-score* attribute namespace.
 
 // ── Countdown pill ───────────────────────────────────────────────────────
 
@@ -776,11 +753,11 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
 
           {/* Row 1: top hero cell + opp score (anchored to top hero Y). */}
           <HeroCell card={topSelectedCard} renderCard={renderCard} />
-          <ScoreCell total={sender.totalFp} isLeading={senderLeading} />
+          <ScoreCell total={sender.totalFp} isLeading={senderLeading} surface="overlay" />
 
           {/* Row 2: bottom hero cell + user score (anchored to bottom hero Y). */}
           <HeroCell card={bottomSelectedCard} renderCard={renderCard} />
-          <ScoreCell total={recipient.totalFp} isLeading={recipientLeading} />
+          <ScoreCell total={recipient.totalFp} isLeading={recipientLeading} surface="overlay" />
 
           {/* Layout-3 fix (b): final-score GAP floats in the right-rail
               gap between the two score cells — same position the arc's
@@ -950,11 +927,5 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
     </div>
   );
 }
-
-// Suppress an unused import lint — DELTA_NEUTRAL is reserved for the
-// post-phase-7 commentary expansion (will be used to color the trash-
-// talk line when state is exactly TIE). Phase 4 doesn't render a TIE
-// state but the constant is part of the locked color palette.
-void DELTA_NEUTRAL;
 
 export default H2HResultsOverlay;
