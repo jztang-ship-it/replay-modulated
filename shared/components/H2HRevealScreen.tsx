@@ -72,6 +72,14 @@ import {
 } from "./useH2HReveal";
 import { CardBackGeneric } from "./CardBackGeneric";
 import { H2HBoardShell } from "./H2HBoardShell";
+import {
+  ScoreCell,
+  RIGHT_RAIL_WIDTH_PX,
+  LEFT_RAIL_WIDTH_PX,
+  WINNING_COLOR,
+  TRAILING_COLOR,
+  DELTA_NEUTRAL,
+} from "./H2HScoreRail";
 
 // ── Public types ─────────────────────────────────────────────────────────
 
@@ -173,14 +181,8 @@ const TIER_ACCENT: Record<string, string> = {
   BLUE: "#3B82F6", GREEN: "#22C55E", WHITE: "#9CA3AF",
 };
 
-// ── Win/loss color treatment ─────────────────────────────────────────────
-// Leading side reads as winning (green-shifted), trailing as dimmed.
-// Matches "score+delta in right rail" + "leading bright, trailing dim"
-// from the design doc.
-
-const WINNING_COLOR = "#22C55E";   // green — leading total + positive delta
-const TRAILING_COLOR = "#9CA3AF";  // grey — losing total
-const DELTA_NEUTRAL = "#E5E7EB";   // off-white — tie state
+// Win/loss colors (WINNING_COLOR, TRAILING_COLOR, DELTA_NEUTRAL) are
+// imported from H2HScoreRail and shared with H2HResultsOverlay.
 
 // ── Layout sizing constants ──────────────────────────────────────────────
 // Set explicitly so visual hierarchy (battlefield hero, hand strips
@@ -236,22 +238,15 @@ const STRIP_CARD_SCALE = STRIP_CARD_DISPLAY_WIDTH_PX / STRIP_CARD_NATURAL_WIDTH_
 // the value now drives the CSS directly.
 const BATTLEFIELD_CARD_MAX_WIDTH = "min(145px, 32vw)";
 
-// Right-rail score-column width (one column adjacent to each battlefield
-// card row). Wider than the score text itself (~50px for "182.4" at
-// 22px font) so the score reads as "centered in a defined right-rail
-// column" rather than "tag attached to the card."
-const SCORE_COLUMN_WIDTH_PX = 80;
-
-// Left-rail reserved width. Wider than the right rail to give the
-// overlay's headline + trash-talk enough horizontal room to read
-// without ellipsis at 390px viewport.
-//
-// Phase 4 fix 3 (2026-05-27, amend2): widened from 80 → 100 so the
-// arc and the overlay share IDENTICAL left-rail geometry. On the
-// arc the left rail is empty (no commentary content yet); on the
-// overlay it holds headline + trash-talk anchored to the same hero
-// vertical bounds.
-const LEFT_RAIL_WIDTH_PX = 100;
+// Right-rail score-column width (RIGHT_RAIL_WIDTH_PX) and left-rail
+// reserved width (LEFT_RAIL_WIDTH_PX) are imported from H2HScoreRail
+// and shared with H2HResultsOverlay so the two surfaces share IDENTICAL
+// rail geometry. The arc's right rail wraps each battlefield card row
+// adjacent to its ScoreCell; the left rail is empty here today (no
+// commentary content) but matches the overlay's headline + trash-talk
+// column width so the surfaces line up cleanly. The "SCORE_COLUMN_
+// WIDTH_PX" name was retired in the rail-unify refactor — same value,
+// shared symbol.
 
 // Vertical gap between the two hero rows. Phase 4 fix 3 amend2
 // (2026-05-27): bumped to 14px because the matchup-delta readout
@@ -659,7 +654,7 @@ function ensureKeyframesInjected() {
 // ── Zone header — just the display name ──────────────────────────────────
 // Earlier iterations rendered `displayName + tier + totalFp` in the
 // header. Two problems surfaced in visual smoke: (1) the totalFp ALSO
-// renders next to its battlefield card via TeamScore, so the header
+// renders next to its battlefield card via ScoreCell, so the header
 // total was a duplicate; (2) the tier label sat in the visually-central
 // position, and the small 13px displayName at the left edge was easy
 // to miss, making the tier look like the zone's primary identifier
@@ -842,39 +837,9 @@ function BattlefieldCard({ card, renderCard, visibleFp, revealed, shakeType, glo
   );
 }
 
-// ── Score block (anchored next to a battlefield card) ────────────────────
-// Single team-total number, sized to read at-a-glance, color-coded by
-// win/loss state. Rendered inside a right-rail grid cell; the cell's
-// flex centering positions the score vertically next to its card.
-
-function TeamScore({ total, displayTotal, isLeading }: { total: number; displayTotal?: number; isLeading: boolean }) {
-  // `displayTotal` is the currently-animated value driven by useH2HReveal
-  // (running total ticking as each matchup's FP rolls). When undefined
-  // (phase 2 static path), fall back to `total` (the final FP).
-  const shown = displayTotal !== undefined ? displayTotal : total;
-  return (
-    <div
-      data-h2h-team-score="true"
-      data-h2h-team-score-display={shown.toFixed(1)}
-      style={{
-        textAlign: "center",
-        lineHeight: 1.05,
-      }}
-    >
-      <div
-        style={{
-          fontSize: 22,
-          fontWeight: 950,
-          color: isLeading ? WINNING_COLOR : TRAILING_COLOR,
-          fontVariantNumeric: "tabular-nums",
-          letterSpacing: -0.5,
-        }}
-      >
-        {shown.toFixed(1)}
-      </div>
-    </div>
-  );
-}
+// Score block (per-team total number, win/loss colored) is now the
+// shared ScoreCell imported from H2HScoreRail. The local TeamScore +
+// ScoreCell wrappers retired in the rail-unify refactor.
 
 // ── Matchup delta + final margin block (sits in the battlefield gap) ─────
 // Renders inside the center column of the battlefield grid (the same
@@ -1171,20 +1136,6 @@ function BattlefieldSlot({ card, renderCard, visibleFp, revealed, shakeType, glo
   );
 }
 
-function ScoreCell({ total, displayTotal, isLeading }: { total: number; displayTotal?: number; isLeading: boolean }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <TeamScore total={total} displayTotal={displayTotal} isLeading={isLeading} />
-    </div>
-  );
-}
-
 // ── H2HRevealScreen ──────────────────────────────────────────────────────
 
 export function H2HRevealScreen(props: H2HRevealScreenProps) {
@@ -1323,7 +1274,7 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
         position: "relative",
         flex: "0 0 auto",
         display: "grid",
-        gridTemplateColumns: `${LEFT_RAIL_WIDTH_PX}px 1fr ${SCORE_COLUMN_WIDTH_PX}px`,
+        gridTemplateColumns: `${LEFT_RAIL_WIDTH_PX}px 1fr ${RIGHT_RAIL_WIDTH_PX}px`,
         gridTemplateRows: "auto auto",
         rowGap: BATTLEFIELD_ROW_GAP_PX,
         width: "100%",
@@ -1354,7 +1305,7 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
                 reducedMotion={reducedMotion}
               />}
           {senderBattle && !showEntranceDeck
-            ? <ScoreCell total={sender.totalFp} displayTotal={senderDisplayTotal} isLeading={senderLeading} />
+            ? <ScoreCell total={sender.totalFp} displayTotal={senderDisplayTotal} isLeading={senderLeading} surface="reveal" />
             : <div />}
 
           {/* Row 2: recipient's battlefield card + score */}
@@ -1377,7 +1328,7 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
                 reducedMotion={reducedMotion}
               />}
           {recipientBattle && !showEntranceDeck
-            ? <ScoreCell total={recipient.totalFp} displayTotal={recipientDisplayTotal} isLeading={recipientLeading} />
+            ? <ScoreCell total={recipient.totalFp} displayTotal={recipientDisplayTotal} isLeading={recipientLeading} surface="reveal" />
             : <div />}
 
           {/* Matchup delta — floats in the right-rail GAP between the
@@ -1395,7 +1346,7 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
                 position: "absolute",
                 top: "50%",
                 right: 0,
-                width: SCORE_COLUMN_WIDTH_PX,
+                width: RIGHT_RAIL_WIDTH_PX,
                 transform: "translateY(-50%)",
                 pointerEvents: "none",
               }}
@@ -1425,5 +1376,5 @@ export default H2HRevealScreen;
 
 // TIER_ACCENT is exported only for tests / future callers that need the
 // canonical tier→color map. Internal usage in this component is limited
-// to the win/loss treatment in TeamScore + MidRail.
+// to the win/loss treatment in ScoreCell (H2HScoreRail) + MidRail.
 export { TIER_ACCENT };

@@ -1393,6 +1393,15 @@ async function runResultsOverlayViewportSweep(browser, vp) {
     const trashTalk = document.querySelector("[data-h2h-overlay-trash-talk]");
     const oppScore = document.querySelectorAll("[data-h2h-overlay-score]")[0];
     const youScore = document.querySelectorAll("[data-h2h-overlay-score]")[1];
+    // rail-unify: per-row hero cells, used to assert the score's
+    // vertical center sits on the same Y as its hero card row (the
+    // automatable half of the lineHeight reconciliation guard — the
+    // device-parity check carries the sub-pixel half).
+    const heroCells = document.querySelectorAll("[data-h2h-overlay-hero-cell]");
+    const topHeroCell = heroCells[0];
+    const bottomHeroCell = heroCells[1];
+    const topHeroCellRect = topHeroCell?.getBoundingClientRect();
+    const bottomHeroCellRect = bottomHeroCell?.getBoundingClientRect();
     const overlayRect = overlay?.getBoundingClientRect();
     const heroRect = hero?.getBoundingClientRect();
     const finalGapRect = finalGap?.getBoundingClientRect();
@@ -1430,6 +1439,14 @@ async function runResultsOverlayViewportSweep(browser, vp) {
       trashTalkTextAlign: trashTalkCs?.textAlign ?? null,
       oppScoreCenterX: oppScoreRect ? oppScoreRect.left + oppScoreRect.width / 2 : null,
       youScoreCenterX: youScoreRect ? youScoreRect.left + youScoreRect.width / 2 : null,
+      oppScoreCenterY: oppScoreRect ? oppScoreRect.top + oppScoreRect.height / 2 : null,
+      youScoreCenterY: youScoreRect ? youScoreRect.top + youScoreRect.height / 2 : null,
+      topHeroCenterY: topHeroCellRect
+        ? topHeroCellRect.top + topHeroCellRect.height / 2
+        : null,
+      bottomHeroCenterY: bottomHeroCellRect
+        ? bottomHeroCellRect.top + bottomHeroCellRect.height / 2
+        : null,
     };
   });
 
@@ -1474,6 +1491,40 @@ async function runResultsOverlayViewportSweep(browser, vp) {
     overlayLayout.finalGapValueAttr != null && !Number.isNaN(parseFloat(overlayLayout.finalGapValueAttr)),
     `value="${overlayLayout.finalGapValueAttr}"`,
   );
+
+  // rail-unify: the results-surface score number must be vertically
+  // centered on its hero card row. This is the automatable half of the
+  // lineHeight reconciliation guard — the refactor moved results from
+  // browser-default lineHeight (~1.2) to explicit 1.05, which changes
+  // the score box's line-box height. The flex parent (alignItems:
+  // center) re-centers the box, so the glyph SHOULD stay on the hero
+  // row's vertical center; this assertion catches a future regression
+  // where the score drifts off the hero center (the visible failure
+  // mode). The sub-pixel-shift question that the harness can't see
+  // is gated separately by the device-parity check called out in the
+  // refactor lock.
+  if (
+    overlayLayout.oppScoreCenterY != null &&
+    overlayLayout.topHeroCenterY != null
+  ) {
+    const dy = Math.abs(overlayLayout.oppScoreCenterY - overlayLayout.topHeroCenterY);
+    record(
+      `${vp.label} rail-unify: opponent score center-Y matches top hero row center-Y (±2px)`,
+      dy <= 2,
+      `oppScoreCenterY=${overlayLayout.oppScoreCenterY.toFixed(1)} topHeroCenterY=${overlayLayout.topHeroCenterY.toFixed(1)} Δ=${dy.toFixed(1)}`,
+    );
+  }
+  if (
+    overlayLayout.youScoreCenterY != null &&
+    overlayLayout.bottomHeroCenterY != null
+  ) {
+    const dy = Math.abs(overlayLayout.youScoreCenterY - overlayLayout.bottomHeroCenterY);
+    record(
+      `${vp.label} rail-unify: you score center-Y matches bottom hero row center-Y (±2px)`,
+      dy <= 2,
+      `youScoreCenterY=${overlayLayout.youScoreCenterY.toFixed(1)} bottomHeroCenterY=${overlayLayout.bottomHeroCenterY.toFixed(1)} Δ=${dy.toFixed(1)}`,
+    );
+  }
 
   // (c) Left rail centered + has symmetric padding (not cramped against
   // the left edge).
