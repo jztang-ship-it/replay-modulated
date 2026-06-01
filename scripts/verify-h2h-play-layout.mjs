@@ -446,21 +446,61 @@ async function runPlayHarness(browser) {
     `count=${hBadgeCountTwoHeld}`,
   );
 
+  // ── Bug-1 baseline: capture strip Y at hold_select PRE-Draw ─────
+  // Used by the post-Draw and mid-flip assertions below to confirm
+  // the recipient mini-strip is FROZEN at its hold_select Y through
+  // hold_select → redraw_running → your_redraw_flip. The deliberate
+  // slide fires only at ab_transition (asserted further down).
+  const stripHoldSelectRect = await page
+    .locator("[data-h2h-play-bottom-strip]")
+    .boundingBox();
+
   // ── Draw → your_redraw_flip pass (Layout A/B restructure §3 step 2) ─
   await page.click("[data-h2h-play-cta][data-cta-label='Draw']");
+  // Bug-1 immediate sample: strip Y at the FIRST commit after Draw.
+  // State is typically redraw_running for a microtask then transitions
+  // to your_redraw_flip on the next React batch (real-browser fires the
+  // first column timer at delay=0). Either state is Layout A and must
+  // hold the strip at hold_select Y.
+  await page.waitForTimeout(20);
+  const postDrawSnap = await page.evaluate(() => {
+    const root = document.querySelector("[data-h2h-recipient-play]");
+    const strip = document.querySelector("[data-h2h-play-bottom-strip]");
+    const r = strip?.getBoundingClientRect();
+    return {
+      state: root?.getAttribute("data-playing-state"),
+      stripTop: r?.top ?? null,
+      stripBottom: r?.bottom ?? null,
+    };
+  });
+  record(
+    `Bug-1 frozen-strip: hold_select → ${postDrawSnap.state} strip Y UNCHANGED ±1px (no jump on Draw)`,
+    stripHoldSelectRect != null &&
+      postDrawSnap.stripTop != null &&
+      Math.abs(stripHoldSelectRect.y - postDrawSnap.stripTop) <= 1,
+    `hs.top=${stripHoldSelectRect?.y} post.top=${postDrawSnap.stripTop} state="${postDrawSnap.state}"`,
+  );
+
   const totalColumnFlipMs = ROSTER_SIZE * (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS);
   // Mid-pass: the opponent strip MUST remain collapsed (Layout A
   // invariant — design-lock §3 step 2 isolates your-flip from
   // opponent-appear). Sample halfway through.
   const midWaitMs = Math.floor(totalColumnFlipMs / 2);
-  await page.waitForTimeout(midWaitMs);
+  // We already burned 20ms on the post-Draw sample above; account for
+  // that so the mid-pass sample lands at the same relative point in
+  // the column-flip window.
+  await page.waitForTimeout(midWaitMs - 20);
   const mid = await page.evaluate(() => {
     const root = document.querySelector("[data-h2h-recipient-play]");
     const wrapper = document.querySelector("[data-h2h-play-top-strip]");
+    const strip = document.querySelector("[data-h2h-play-bottom-strip]");
+    const stripRect = strip?.getBoundingClientRect();
     return {
       state: root?.getAttribute("data-playing-state"),
       collapsed: wrapper?.getAttribute("data-h2h-play-top-strip-collapsed"),
       stripOpacity: wrapper ? getComputedStyle(wrapper).opacity : null,
+      stripTop: stripRect?.top ?? null,
+      stripBottom: stripRect?.bottom ?? null,
     };
   });
   record(
@@ -472,6 +512,14 @@ async function runPlayHarness(browser) {
     `your_redraw_flip mid-pass: opponent strip STAYS collapsed (no flip / no appear)`,
     mid.collapsed === "true" && parseFloat(mid.stripOpacity ?? "1") < 0.1,
     `collapsed=${mid.collapsed} opacity=${mid.stripOpacity}`,
+  );
+  // Bug-1 mid-flip sample: strip Y still pinned to hold_select Y.
+  record(
+    `Bug-1 frozen-strip: mid your_redraw_flip strip Y UNCHANGED ±1px vs hold_select`,
+    stripHoldSelectRect != null &&
+      mid.stripTop != null &&
+      Math.abs(stripHoldSelectRect.y - mid.stripTop) <= 1,
+    `hs.top=${stripHoldSelectRect?.y} mid.top=${mid.stripTop}`,
   );
   // Walk from mid-pass to end-of-your_redraw_flip / start-of-ab_transition.
   // Total wait since Draw click = midWaitMs + (totalColumnFlipMs - midWaitMs)
@@ -536,6 +584,20 @@ async function runPlayHarness(browser) {
       `ab_transition end-state: top zone above bottom zone (Y-ordering)`,
       abSnap.topZoneRect.y + abSnap.topZoneRect.height <= abSnap.bottomZoneRect.y,
       `top.bottom=${abSnap.topZoneRect.y + abSnap.topZoneRect.height} bottom.top=${abSnap.bottomZoneRect.y}`,
+    );
+  }
+  // Bug-1 complement: the slide is the INTENDED motion. Confirm the
+  // recipient strip actually moved (slid DOWN) at ab_transition — so
+  // the no-jump rule above didn't accidentally freeze the strip
+  // through the transition too.
+  const abStripRect = await page
+    .locator("[data-h2h-play-bottom-strip]")
+    .boundingBox();
+  if (stripHoldSelectRect != null && abStripRect != null) {
+    record(
+      `Bug-1 complement: strip MOVES (slides down) at ab_transition (intended motion preserved)`,
+      abStripRect.y - stripHoldSelectRect.y > 20,
+      `hs.top=${stripHoldSelectRect.y} ab.top=${abStripRect.y} Δ=${abStripRect.y - stripHoldSelectRect.y}`,
     );
   }
 
