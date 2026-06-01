@@ -633,8 +633,20 @@ const BF_KEYFRAMES_CSS = `
   50% { box-shadow: 0 0 18px 6px var(--h2h-pulse-color, transparent); transform: scale(1.025); }
   100% { box-shadow: 0 0 0 0 transparent; transform: scale(1); }
 }
+/* Relay-tension Phase 1: per-set delta flash. The element is keyed by
+   matchupIndex so React remounts it on each set boundary, retriggering
+   this animation. Result: a quick scale pulse + brightness ramp that
+   reads as "this leg landed" — the sign of the delta (green/red) is
+   already in the steady color; this keyframe just punches it visually
+   for ~280ms. The element settles back to its steady color/scale at
+   100%. Reduced-motion path below disables the punch. */
+@keyframes h2h-mid-rail-flash {
+  0%   { transform: scale(1.0); filter: brightness(1.0); }
+  35%  { transform: scale(1.15); filter: brightness(1.6); }
+  100% { transform: scale(1.0); filter: brightness(1.0); }
+}
 @media (prefers-reduced-motion: reduce) {
-  [data-h2h-bf-anim], [data-h2h-pulse] { animation: none !important; }
+  [data-h2h-bf-anim], [data-h2h-pulse], [data-h2h-mid-rail-flash] { animation: none !important; }
 }
 `;
 
@@ -852,9 +864,28 @@ function BattlefieldCard({ card, renderCard, visibleFp, revealed, shakeType, glo
 interface MidRailContentProps {
   senderCard: H2HCard | null;
   recipientCard: H2HCard | null;
+  /** Relay-tension Phase 1: when set, drives a one-shot color flash +
+   *  scale pulse each time the active matchup advances. Passed by the
+   *  parent as `matchupIndex` so a key change forces remount and the
+   *  CSS animation retriggers on the next set boundary. Undefined on
+   *  the phase-2 static-mock path (no reveal hook wired) — no flash. */
+  flashKey?: number;
+  /** Relay-tension Phase 1, cross-surface handoff: at `phase === "done"
+   *  | "end-hold"`, the reveal-side delta switches from per-set sign
+   *  to FINAL-GAP sign so the color the user sees at the last reveal
+   *  frame matches what the results overlay will render at the first
+   *  results frame. Caller computes
+   *    finalGap = recipient.totalFp − sender.totalFp
+   *  and passes it; otherwise undefined (per-set mode). */
+  finalGapOverride?: number;
 }
 
-function MidRailContent({ senderCard, recipientCard }: MidRailContentProps) {
+function MidRailContent({
+  senderCard,
+  recipientCard,
+  flashKey,
+  finalGapOverride,
+}: MidRailContentProps) {
   // Phase 4 fix 2 (2026-05-27): renders ONLY the per-matchup delta in
   // the right rail between the two FP totals. The prior final-margin
   // pill (TIE / EVEN / +N pill) was removed — it caused a transient
@@ -865,8 +896,17 @@ function MidRailContent({ senderCard, recipientCard }: MidRailContentProps) {
   if (!senderCard || !recipientCard) {
     return <div aria-hidden="true" />;
   }
-  const matchupDelta = Math.round((recipientCard.actualFp - senderCard.actualFp) * 10) / 10;
+  // Per-set sign during revealing/paused; final-gap sign during done/
+  // end-hold (caller passes finalGapOverride for those phases). Both
+  // formulas resolve to a green/red/neutral color; the only difference
+  // is which delta the user sees at the moment of crossfade.
+  const rawDelta = finalGapOverride !== undefined
+    ? finalGapOverride
+    : recipientCard.actualFp - senderCard.actualFp;
+  const matchupDelta = Math.round(rawDelta * 10) / 10;
   const matchupSign = matchupDelta > 0 ? "+" : matchupDelta < 0 ? "" : "";
+  const deltaColor =
+    matchupDelta > 0 ? WINNING_COLOR : matchupDelta < 0 ? TRAILING_COLOR : DELTA_NEUTRAL;
   return (
     <div
       data-h2h-mid-rail="true"
@@ -877,19 +917,32 @@ function MidRailContent({ senderCard, recipientCard }: MidRailContentProps) {
         justifyContent: "center",
       }}
     >
+      {/* Inner block is keyed by flashKey so React remounts it on each
+          set boundary, retriggering the h2h-mid-rail-flash keyframe.
+          Per-set color + scale pulse fires once for ~250ms then settles
+          to the steady delta color. finalGapOverride mode (done/end-
+          hold) suppresses the flash by reusing flashKey as 'final' — no
+          remount → no animation. */}
       <div
+        key={finalGapOverride !== undefined ? "final" : `set-${flashKey ?? 0}`}
+        data-h2h-mid-rail-flash={finalGapOverride !== undefined ? "final" : "set"}
         style={{
           fontSize: 11,
           fontWeight: 800,
-          color: matchupDelta > 0 ? WINNING_COLOR : matchupDelta < 0 ? TRAILING_COLOR : DELTA_NEUTRAL,
+          color: deltaColor,
           fontVariantNumeric: "tabular-nums",
           textAlign: "center",
           lineHeight: 1.1,
+          animation:
+            finalGapOverride === undefined && flashKey !== undefined
+              ? `h2h-mid-rail-flash 280ms ease-out 1`
+              : "none",
+          transformOrigin: "center center",
         }}
       >
         <div>{matchupSign}{matchupDelta.toFixed(1)}</div>
         <div style={{ fontSize: 7, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: 1, textTransform: "uppercase" }}>
-          matchup
+          {finalGapOverride !== undefined ? "final" : "matchup"}
         </div>
       </div>
     </div>
@@ -1177,11 +1230,40 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
     recipientActiveCardId = recipientBattle?.cardId ?? null;
   }
 
-  // Leading/trailing color tracks the CURRENT animated totals, not the
-  // finals — the user sees the score colors flip as the running totals
-  // overtake each other during the reveal.
-  const recipientLeading = recipientDisplayTotal > senderDisplayTotal;
-  const senderLeading = senderDisplayTotal > recipientDisplayTotal;
+  // Relay-tension Phase 1: three-state lead treatment + Z1 sizeProgress.
+  //
+  // Both sides share the same `referenceTotal` (the larger of the two
+  // finals) so the leader's sizeProgress hits 1.0 at end-of-game while
+  // the trailer's sits at `trailer.final / leader.final < 1.0`. This
+  // makes "leader grows bigger" fall out of the formula naturally — no
+  // separate boost on top.
+  //
+  // Tie predicate uses a 0.05 FP tolerance to avoid a single-frame
+  // floating-point miss during the rollup tick (totals are eased reals,
+  // not integers). Requires both sides > 0 so the pre-reveal zero state
+  // isn't treated as a tie.
+  //
+  // At `phase === "done" | "end-hold"`, both displayTotals equal the
+  // finals — the same values the overlay surface computes — so the
+  // resting ScoreCell on the last reveal frame matches the overlay's
+  // first frame, by construction. No snap at the crossfade.
+  const referenceTotal = Math.max(sender.totalFp, recipient.totalFp, 0.0001);
+  const senderSizeProgress = senderDisplayTotal / referenceTotal;
+  const recipientSizeProgress = recipientDisplayTotal / referenceTotal;
+  const tied =
+    Math.abs(senderDisplayTotal - recipientDisplayTotal) < 0.05 &&
+    senderDisplayTotal > 0 &&
+    recipientDisplayTotal > 0;
+  const senderState: "leading" | "trailing" | "tied" = tied
+    ? "tied"
+    : senderDisplayTotal > recipientDisplayTotal
+      ? "leading"
+      : "trailing";
+  const recipientState: "leading" | "trailing" | "tied" = tied
+    ? "tied"
+    : recipientDisplayTotal > senderDisplayTotal
+      ? "leading"
+      : "trailing";
 
   // Per-card revealed status from the hook (post-amend6 pre-reveal rule,
   // 2026-05-27). Strips consume the full Set for both renderer-options
@@ -1305,7 +1387,7 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
                 reducedMotion={reducedMotion}
               />}
           {senderBattle && !showEntranceDeck
-            ? <ScoreCell total={sender.totalFp} displayTotal={senderDisplayTotal} isLeading={senderLeading} surface="reveal" />
+            ? <ScoreCell total={sender.totalFp} displayTotal={senderDisplayTotal} state={senderState} sizeProgress={senderSizeProgress} surface="reveal" />
             : <div />}
 
           {/* Row 2: recipient's battlefield card + score */}
@@ -1328,7 +1410,7 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
                 reducedMotion={reducedMotion}
               />}
           {recipientBattle && !showEntranceDeck
-            ? <ScoreCell total={recipient.totalFp} displayTotal={recipientDisplayTotal} isLeading={recipientLeading} surface="reveal" />
+            ? <ScoreCell total={recipient.totalFp} displayTotal={recipientDisplayTotal} state={recipientState} sizeProgress={recipientSizeProgress} surface="reveal" />
             : <div />}
 
           {/* Matchup delta — floats in the right-rail GAP between the
@@ -1354,6 +1436,12 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
               <MidRailContent
                 senderCard={senderBattle}
                 recipientCard={recipientBattle}
+                flashKey={reveal?.matchupIndex}
+                finalGapOverride={
+                  reveal && (reveal.phase === "done" || reveal.phase === "end-hold")
+                    ? recipient.totalFp - sender.totalFp
+                    : undefined
+                }
               />
             </div>
           )}

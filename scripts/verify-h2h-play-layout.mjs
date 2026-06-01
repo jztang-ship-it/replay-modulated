@@ -771,6 +771,91 @@ async function runPlayHarness(browser) {
     `count=${revealRecipientHBadgeCount}`,
   );
 
+  // ── relay-tension gap-fillers: reveal-side delta float position guards ──
+  // The reveal-side delta float ([data-h2h-mid-rail-float]) had NO harness
+  // coverage before the relay-tension build. These are standing guards: at
+  // arc end-state, the float must (1) sit in the RIGHT half of the
+  // battlefield grid (mirror of the results-side X-axis guard), (2) sit
+  // between the top and bottom hero rows on Y, and (3) be visible
+  // (opacity > 0). The relay-tension Phase 1 rework reshapes the right-
+  // column visual treatment; these guards catch a column-shift regression
+  // that the existing assertions would miss (recon, lesson #5 — the
+  // results-side delta column-shift bug was caught by a similar X-axis
+  // guard, but the reveal-side had no equivalent).
+  const revealDeltaSnap = await page.evaluate(() => {
+    const reveal = document.querySelector("[data-h2h-recipient-reveal]");
+    const battlefield = reveal?.querySelector("[data-h2h-battlefield]");
+    const float = reveal?.querySelector("[data-h2h-mid-rail-float]");
+    const cards = reveal
+      ? Array.from(reveal.querySelectorAll("[data-h2h-battlefield-card]"))
+      : [];
+    const battlefieldRect = battlefield?.getBoundingClientRect();
+    const floatRect = float?.getBoundingClientRect();
+    const cardRects = cards.map((c) => c.getBoundingClientRect());
+    const floatCs = float ? getComputedStyle(float) : null;
+    return {
+      battlefieldPresent: !!battlefield,
+      floatPresent: !!float,
+      cardCount: cards.length,
+      battlefieldLeft: battlefieldRect?.left ?? null,
+      battlefieldRight: battlefieldRect?.right ?? null,
+      floatCenterX: floatRect ? floatRect.left + floatRect.width / 2 : null,
+      floatCenterY: floatRect ? floatRect.top + floatRect.height / 2 : null,
+      topCardCenterY: cardRects[0]
+        ? cardRects[0].top + cardRects[0].height / 2
+        : null,
+      bottomCardCenterY: cardRects[1]
+        ? cardRects[1].top + cardRects[1].height / 2
+        : null,
+      floatOpacity: floatCs?.opacity ?? null,
+    };
+  });
+  record(
+    `relay-tension gap: reveal delta float present at end-state`,
+    revealDeltaSnap.floatPresent,
+    `floatPresent=${revealDeltaSnap.floatPresent}`,
+  );
+  if (
+    revealDeltaSnap.floatCenterX != null &&
+    revealDeltaSnap.battlefieldLeft != null &&
+    revealDeltaSnap.battlefieldRight != null
+  ) {
+    const battlefieldMid =
+      (revealDeltaSnap.battlefieldLeft + revealDeltaSnap.battlefieldRight) / 2;
+    record(
+      `relay-tension gap: reveal delta float center-X is in the right HALF of the battlefield (NOT the left rail)`,
+      revealDeltaSnap.floatCenterX > battlefieldMid,
+      `floatCenterX=${revealDeltaSnap.floatCenterX.toFixed(1)} battlefieldMid=${battlefieldMid.toFixed(1)}`,
+    );
+  }
+  if (
+    revealDeltaSnap.floatCenterY != null &&
+    revealDeltaSnap.topCardCenterY != null &&
+    revealDeltaSnap.bottomCardCenterY != null
+  ) {
+    // The float should sit between the two hero rows. Permissive tolerance:
+    // within ±20% of the row-to-row span around their midpoint. The float
+    // is a 14-line text block at the gap midpoint, so tight pixel tolerance
+    // isn't appropriate — but it must not have drifted onto either card.
+    const rowMid =
+      (revealDeltaSnap.topCardCenterY + revealDeltaSnap.bottomCardCenterY) / 2;
+    const rowSpan = Math.abs(
+      revealDeltaSnap.bottomCardCenterY - revealDeltaSnap.topCardCenterY,
+    );
+    const allowance = Math.max(rowSpan * 0.2, 30);
+    const dy = Math.abs(revealDeltaSnap.floatCenterY - rowMid);
+    record(
+      `relay-tension gap: reveal delta float center-Y is between the two hero rows (±${allowance.toFixed(0)}px of their midpoint)`,
+      dy <= allowance,
+      `floatCenterY=${revealDeltaSnap.floatCenterY.toFixed(1)} rowMid=${rowMid.toFixed(1)} Δ=${dy.toFixed(1)} allow=${allowance.toFixed(1)}`,
+    );
+  }
+  record(
+    `relay-tension gap: reveal delta float computed opacity > 0 (visibility tripwire)`,
+    revealDeltaSnap.floatOpacity != null && parseFloat(revealDeltaSnap.floatOpacity) > 0,
+    `opacity=${revealDeltaSnap.floatOpacity}`,
+  );
+
   // ── #4 regression-lock (2026-05-30): strip LAYOUT = slotIndex, not revealOrder ──
   // We held slots 2 and 5 pre-Draw. With the strip-sort fix, the H-badged
   // cells must remain at DOM-positions 2 and 5 in the recipient reveal
@@ -1417,6 +1502,8 @@ async function runResultsOverlayViewportSweep(browser, vp) {
     const headlineCs = headline ? getComputedStyle(headline) : null;
     const trashTalkCs = trashTalk ? getComputedStyle(trashTalk) : null;
     const leftRailCs = leftRail ? getComputedStyle(leftRail) : null;
+    // relay-tension gap: final-gap float visibility tripwire.
+    const finalGapCs = finalGap ? getComputedStyle(finalGap) : null;
     return {
       vw: window.innerWidth,
       overlayRight: overlayRect?.right ?? null,
@@ -1447,6 +1534,13 @@ async function runResultsOverlayViewportSweep(browser, vp) {
       bottomHeroCenterY: bottomHeroCellRect
         ? bottomHeroCellRect.top + bottomHeroCellRect.height / 2
         : null,
+      // relay-tension gap-fillers: final-gap float vertical center +
+      // visibility. Standing guards against a future regression that
+      // moves the gap-float off the row midpoint or hides it.
+      finalGapCenterY: finalGapRect
+        ? finalGapRect.top + finalGapRect.height / 2
+        : null,
+      finalGapOpacity: finalGapCs?.opacity ?? null,
     };
   });
 
@@ -1526,6 +1620,129 @@ async function runResultsOverlayViewportSweep(browser, vp) {
     );
   }
 
+  // relay-tension gap-fillers: final-gap float vertical centering + visibility.
+  // (1) Center-Y between the top and bottom hero rows — analogous to the
+  //     reveal-side gap-filler. The float should sit at the row midpoint.
+  // (2) Computed opacity > 0 — visibility tripwire.
+  if (
+    overlayLayout.finalGapCenterY != null &&
+    overlayLayout.topHeroCenterY != null &&
+    overlayLayout.bottomHeroCenterY != null
+  ) {
+    const rowMid =
+      (overlayLayout.topHeroCenterY + overlayLayout.bottomHeroCenterY) / 2;
+    const rowSpan = Math.abs(
+      overlayLayout.bottomHeroCenterY - overlayLayout.topHeroCenterY,
+    );
+    const allowance = Math.max(rowSpan * 0.2, 30);
+    const dy = Math.abs(overlayLayout.finalGapCenterY - rowMid);
+    record(
+      `${vp.label} relay-tension gap: results final-gap float center-Y is between the two hero rows (±${allowance.toFixed(0)}px of their midpoint)`,
+      dy <= allowance,
+      `finalGapCenterY=${overlayLayout.finalGapCenterY.toFixed(1)} rowMid=${rowMid.toFixed(1)} Δ=${dy.toFixed(1)} allow=${allowance.toFixed(1)}`,
+    );
+  }
+  record(
+    `${vp.label} relay-tension gap: results final-gap float computed opacity > 0 (visibility tripwire)`,
+    overlayLayout.finalGapOpacity != null && parseFloat(overlayLayout.finalGapOpacity) > 0,
+    `opacity=${overlayLayout.finalGapOpacity}`,
+  );
+
+  // ── Relay-tension Phase 1 visual assertions ──────────────────────────
+  // Three checks on the overlay's WIN-variant end-state (the standalone
+  // overlay mock URL is `?overlay=1&variant=WIN`, so recipient is the
+  // leader — `[data-h2h-overlay-score]` index 1 is the leading cell):
+  //
+  //   (i)  data-h2h-score-state attribute exists with value "leading"
+  //        on the recipient (winning) cell, "trailing" on the opponent
+  //        cell. Pre-Phase-1: attribute didn't exist. Post-Phase-1:
+  //        attribute set by the three-state model.
+  //   (ii) Leading cell's outer div has a non-"none" `filter` (Z2 leader
+  //        drop-shadow glow). Pre-Phase-1: no filter on the outer.
+  //        Post-Phase-1: `drop-shadow(...)` resolved by the browser to
+  //        a non-"none" computed value.
+  //   (iii) Leading cell's inner glyph has a `transform` matrix with
+  //         scale > 1 (Z1 size growth). Pre-Phase-1: no transform on
+  //         the inner. Post-Phase-1: `scale(N)` where N > 1.
+  //
+  // Feel-based properties (size-growth curve smoothness, glow intensity
+  // in tight races, tie-pulse pacing, crossfade snap) are NOT assertable
+  // here — left to the device-check per the refactor lock.
+  const phase1Snap = await page.evaluate(() => {
+    const scoreCells = document.querySelectorAll("[data-h2h-overlay-score]");
+    const opp = scoreCells[0];
+    const you = scoreCells[1];
+    const oppInner = opp?.firstElementChild;
+    const youInner = you?.firstElementChild;
+    const oppCs = opp ? getComputedStyle(opp) : null;
+    const youCs = you ? getComputedStyle(you) : null;
+    const oppInnerCs = oppInner ? getComputedStyle(oppInner) : null;
+    const youInnerCs = youInner ? getComputedStyle(youInner) : null;
+    return {
+      oppPresent: !!opp,
+      youPresent: !!you,
+      oppState: opp?.getAttribute("data-h2h-score-state") ?? null,
+      youState: you?.getAttribute("data-h2h-score-state") ?? null,
+      oppOuterFilter: oppCs?.filter ?? null,
+      youOuterFilter: youCs?.filter ?? null,
+      oppInnerTransform: oppInnerCs?.transform ?? null,
+      youInnerTransform: youInnerCs?.transform ?? null,
+    };
+  });
+
+  // Parse the matrix(a, b, c, d, e, f) string returned by getComputedStyle
+  // for a transform — for a pure scale(N), a === d === N. "none" means no
+  // transform, which counts as scale=1 for our purpose.
+  const parseTransformScale = (t) => {
+    if (!t || t === "none") return 1;
+    const m = t.match(/matrix\(\s*([-0-9.]+)\s*,/);
+    return m ? parseFloat(m[1]) : 1;
+  };
+
+  // (i) Three-state attribute. WIN variant → recipient leading, opponent
+  // trailing. Tie is not exercised by this fixture; that case relies on
+  // unit-test coverage + the dedicated state branch in the ScoreCell.
+  record(
+    `${vp.label} relay-tension Phase 1 (i): opponent score has data-h2h-score-state="trailing" (WIN variant)`,
+    phase1Snap.oppState === "trailing",
+    `oppState="${phase1Snap.oppState}"`,
+  );
+  record(
+    `${vp.label} relay-tension Phase 1 (i): you score has data-h2h-score-state="leading" (WIN variant)`,
+    phase1Snap.youState === "leading",
+    `youState="${phase1Snap.youState}"`,
+  );
+
+  // (ii) Z2 leader glow on the leading cell. Computed filter resolves
+  // a CSS `drop-shadow(0 0 8px rgba(...))` to something like
+  // `drop-shadow(rgba(34, 197, 94, 0.55) 0px 0px 8px)`. We just check
+  // it's not "none" (the pre-fix case).
+  record(
+    `${vp.label} relay-tension Phase 1 (ii): leading score outer has non-"none" filter (Z2 drop-shadow glow)`,
+    phase1Snap.youOuterFilter != null && phase1Snap.youOuterFilter !== "none",
+    `filter="${phase1Snap.youOuterFilter}"`,
+  );
+  // Trailer's filter must remain "none" — the absence of glow is the
+  // signal that the trailer isn't leading. This catches a regression
+  // where a future refactor accidentally applies leader treatment to
+  // both sides.
+  record(
+    `${vp.label} relay-tension Phase 1 (ii): trailing score outer has filter "none" (no leader glow)`,
+    phase1Snap.oppOuterFilter === "none",
+    `filter="${phase1Snap.oppOuterFilter}"`,
+  );
+
+  // (iii) Z1 size growth on the leading cell. At end-state with
+  // recipient leading, sizeProgress=1 → scale = 1 + 0.12 + 0.08 = 1.20.
+  // Use scale > 1.05 as the assertion so the test isn't brittle on the
+  // exact constant.
+  const youInnerScale = parseTransformScale(phase1Snap.youInnerTransform);
+  record(
+    `${vp.label} relay-tension Phase 1 (iii): leading score inner has scale > 1.05 (Z1 size growth)`,
+    youInnerScale > 1.05,
+    `transform="${phase1Snap.youInnerTransform}" parsedScale=${youInnerScale.toFixed(3)}`,
+  );
+
   // (c) Left rail centered + has symmetric padding (not cramped against
   // the left edge).
   record(
@@ -1533,11 +1750,10 @@ async function runResultsOverlayViewportSweep(browser, vp) {
     overlayLayout.headlineTextAlign === "center",
     `textAlign="${overlayLayout.headlineTextAlign}"`,
   );
-  record(
-    `${vp.label} Layout-3 (c): left-rail trash-talk textAlign === "center"`,
-    overlayLayout.trashTalkTextAlign === "center",
-    `textAlign="${overlayLayout.trashTalkTextAlign}"`,
-  );
+  // The Layout-3 (c) trash-talk-textAlign assertion was retired in the
+  // relay-tension Phase 1 commentary collapse — the trash-talk block is
+  // no longer rendered. The headline-textAlign check above carries the
+  // "left rail content is centered" intent for the surviving block.
   // Symmetric horizontal padding: paddingLeft > 0 AND paddingLeft ===
   // paddingRight. Pre-fix paddingLeft was 0, paddingRight was 4. Post-
   // fix both are 8.

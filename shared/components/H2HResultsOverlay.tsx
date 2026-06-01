@@ -61,7 +61,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import type { H2HCard, H2HHand, CardRenderer } from "./H2HRevealScreen";
 import {
-  chadTrashTalk,
   trashTalkBucket,
   type TrashTalkBucket,
 } from "../commentary/chadChallenge";
@@ -517,24 +516,45 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
     [bottomSelectedCardId, recipient.cards],
   );
 
-  // Headline + trash-talk inputs.
+  // Headline input. Relay-tension Phase 1 collapsed the two-block
+  // commentary to one block (headline only), so the trash-talk line
+  // is no longer rendered. The chadTrashTalk generator (shared/
+  // commentary/chadChallenge) is unchanged — we just stopped calling
+  // it here. Re-introducing the trash-talk render is a single
+  // useMemo + JSX node away if the relay frame dials back.
   const delta = recipient.totalFp - sender.totalFp;
   const bucket = trashTalkBucket(delta);
   const challengerName = sender.displayName || null;
   const headline = selectHeadline({ state, bucket, delta, challengerName });
-  const trashTalkLine = useMemo(
-    () => chadTrashTalk(bucket, challengerName, delta),
-    [bucket, challengerName, delta],
-  );
   const headlineColor =
     state === "WIN" ? WINNING_COLOR
     : bucket === "photo_finish" ? "#FFB14A"
     : state === "LOSS_OPEN" ? "#EF4444"
     : "#EAF0FF";
 
-  // Right-rail leading colors track the FINAL totals.
-  const recipientLeading = recipient.totalFp > sender.totalFp;
-  const senderLeading = sender.totalFp > recipient.totalFp;
+  // Right-rail score treatment tracks the FINAL totals via the shared
+  // ScoreCell three-state model (relay-tension Phase 1). Cross-surface
+  // handoff: the SAME formula runs on the reveal surface at phase===
+  // "done", with displayTotal === final total — so the last reveal
+  // frame's ScoreCell and the first overlay frame's ScoreCell render
+  // identically (same color, same glow, same scale).
+  const overlayReferenceTotal = Math.max(sender.totalFp, recipient.totalFp, 0.0001);
+  const senderSizeProgress = sender.totalFp / overlayReferenceTotal;
+  const recipientSizeProgress = recipient.totalFp / overlayReferenceTotal;
+  const overlayTied =
+    Math.abs(sender.totalFp - recipient.totalFp) < 0.05 &&
+    sender.totalFp > 0 &&
+    recipient.totalFp > 0;
+  const senderState: "leading" | "trailing" | "tied" = overlayTied
+    ? "tied"
+    : sender.totalFp > recipient.totalFp
+      ? "leading"
+      : "trailing";
+  const recipientState: "leading" | "trailing" | "tied" = overlayTied
+    ? "tied"
+    : recipient.totalFp > sender.totalFp
+      ? "leading"
+      : "trailing";
 
   // Primary CTA per state. Phase 5b commit 3 (2026-05-28): when the
   // caller passes primaryCtaOverride, it replaces the state-derived
@@ -700,15 +720,17 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             marginBottom: 4,
           }}
         >
-          {/* Left rail spans both rows — holds headline + trash-talk.
-              Layout-3 fix (c): center the text block within the rail
-              and give it symmetric padding so it isn't cramped against
-              the left edge. Previously padding was "0 4px 0 0" (right
-              only, zero left), so the text abutted the viewport edge.
-              Now: symmetric horizontal padding + text-align center so
-              both headline and trash-talk render centered within the
-              rail. Copy and two-tone hierarchy (white headline + orange
-              trash-talk) unchanged — this is layout/styling only. */}
+          {/* Left rail spans both rows — holds headline only after the
+              relay-tension Phase 1 commentary collapse. Previously this
+              block was two-block / two-tone (white headline + orange
+              trash-talk); the right column now does the storytelling
+              (Z1 size + Z2 leader glow + per-set delta flash), so the
+              two-tone left-column treatment was competing with the
+              number drama. Copy generator (shared/commentary/chad-
+              Challenge) is unchanged — the trash-talk line is still
+              produced; we just don't render it. Headline stays in
+              `headlineColor` (state-tinted white/green/red), centered
+              within the rail with symmetric padding. */}
           <div
             data-h2h-overlay-rail="left"
             style={{
@@ -736,28 +758,15 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             >
               {headline}
             </div>
-            <div
-              data-h2h-overlay-trash-talk="true"
-              style={{
-                fontSize: 12,
-                fontWeight: 700,
-                color: "#FFB14A",
-                lineHeight: 1.35,
-                wordBreak: "break-word",
-                textAlign: "center",
-              }}
-            >
-              {trashTalkLine}
-            </div>
           </div>
 
           {/* Row 1: top hero cell + opp score (anchored to top hero Y). */}
           <HeroCell card={topSelectedCard} renderCard={renderCard} />
-          <ScoreCell total={sender.totalFp} isLeading={senderLeading} surface="overlay" />
+          <ScoreCell total={sender.totalFp} state={senderState} sizeProgress={senderSizeProgress} surface="overlay" />
 
           {/* Row 2: bottom hero cell + user score (anchored to bottom hero Y). */}
           <HeroCell card={bottomSelectedCard} renderCard={renderCard} />
-          <ScoreCell total={recipient.totalFp} isLeading={recipientLeading} surface="overlay" />
+          <ScoreCell total={recipient.totalFp} state={recipientState} sizeProgress={recipientSizeProgress} surface="overlay" />
 
           {/* Layout-3 fix (b): final-score GAP floats in the right-rail
               gap between the two score cells — same position the arc's

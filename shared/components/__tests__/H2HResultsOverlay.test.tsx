@@ -162,8 +162,8 @@ describe("H2HResultsOverlay — state machine + CTAs", () => {
   });
 });
 
-describe("H2HResultsOverlay — headline + trash-talk in left rail", () => {
-  it("headline + trash-talk render in the left rail", () => {
+describe("H2HResultsOverlay — headline in left rail (relay-tension commentary collapse)", () => {
+  it("headline renders in the left rail; trash-talk block is intentionally absent", () => {
     const { container } = render(
       <H2HResultsOverlay
         sender={makeHand("Mike", 178.4)}
@@ -175,10 +175,17 @@ describe("H2HResultsOverlay — headline + trash-talk in left rail", () => {
     const leftRail = container.querySelector('[data-h2h-overlay-rail="left"]') as HTMLElement;
     expect(leftRail).toBeTruthy();
     const headline = leftRail.querySelector('[data-h2h-overlay-headline="true"]');
-    const trash = leftRail.querySelector('[data-h2h-overlay-trash-talk="true"]');
     expect(headline).toBeTruthy();
-    expect(trash).toBeTruthy();
-    expect((trash?.textContent ?? "").length).toBeGreaterThan(0);
+    expect((headline?.textContent ?? "").length).toBeGreaterThan(0);
+    // Relay-tension Phase 1 collapsed the two-block commentary to one
+    // block; the orange trash-talk render was retired so it doesn't
+    // compete with the right-column number drama (Z1 size + Z2 leader
+    // glow + per-set delta flash). The chadTrashTalk generator is
+    // unchanged in shared/commentary/chadChallenge — we just stopped
+    // calling it here. Guard the absence so a future re-add is a
+    // deliberate decision, not an accident.
+    const trash = leftRail.querySelector('[data-h2h-overlay-trash-talk="true"]');
+    expect(trash).toBeNull();
   });
 
   it("photo_finish margin bucket headline reads 'Photo finish'", () => {
