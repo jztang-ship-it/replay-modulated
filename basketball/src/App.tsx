@@ -330,8 +330,9 @@ function AppInner() {
           }}
           onTryAgain={() => {
             // Key bump re-mounts H2HRecipientPlay with fresh state
-            // (state machine resets to pre_deal). The recipient plays
-            // the same challenge snapshot again.
+            // (state machine resets to loading → deal_in per the
+            // Layout A/B restructure; pre_deal was killed). The
+            // recipient plays the same challenge snapshot again.
             setH2hPlayKey(k => k + 1);
           }}
           onPlayOwnHand={() => {
