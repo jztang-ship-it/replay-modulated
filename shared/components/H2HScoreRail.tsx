@@ -307,6 +307,16 @@ export function ScoreCell({
       {...surfaceAttrs}
       data-h2h-score-state={state}
       data-h2h-score-pop-kind={pop?.kind ?? "none"}
+      // Phase 2.5 dev-overlay-readability data-attrs. The RelayDebugOverlay
+      // observes these via DOM queries so it doesn't need to be threaded
+      // props through the relay path. Read-only; zero behavior impact.
+      // - rest-scale: the Phase 1 resting Z scale (pre-pop).
+      // - pop-magnitude / pop-duration-ms: the in-flight pop's parameters
+      //   (or "none" when no pop has fired for this set yet).
+      data-h2h-score-rest-scale={scale.toFixed(3)}
+      data-h2h-score-pop-magnitude={pop ? pop.magnitude.toFixed(3) : "none"}
+      data-h2h-score-pop-duration-ms={pop ? String(pop.durationMs) : "none"}
+      data-h2h-score-size-progress={sizeProgress.toFixed(3)}
       style={{
         display: "flex",
         justifyContent: "center",
