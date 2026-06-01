@@ -943,13 +943,35 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // (INTRO_3LINE_BUDGET_CSS) so different bank lines don't drive
   // different topZone heights.
   //
-  // Pass 1 (this lock) extends the stage-text region to render during
-  // deal_in too, as the deal-intro beat per §2 — Pass 1 renders a
-  // placeholder (the existing headline) so the structure is in place;
-  // Pass 2 fills the placeholder with the templated {opponent}/{score}
-  // bank.
+  // Pass 1 (Layout A/B restructure) extends the stage-text region to
+  // render during deal_in too, as the deal-intro beat per §2 — Pass 1
+  // renders a placeholder (the existing headline) so the structure is
+  // in place; Pass 2 fills the placeholder with the templated
+  // {opponent}/{score} bank.
+  //
+  // BUG-1 FIX (strip-jump): the region's container has a deterministic
+  // INTRO_3LINE_BUDGET_CSS height (~63px), so its mount/unmount changes
+  // the top-zone height by exactly that amount, which shifts the
+  // recipient mini-strip's Y-position. The previous gate
+  // ({deal_in, hold_select}) unmounted the region the moment Draw
+  // was tapped (hold_select → redraw_running), jumping the strip UP
+  // by ~67px BEFORE the deliberate ab_transition slide-down. The fix:
+  // keep the container MOUNTED with its full height-budget across all
+  // Layout A states EXCEPT loading (loading has no stage-text content
+  // — the hero region hosts the loading copy). Strip Y is then
+  // byte-identical across hold_select / redraw_running /
+  // your_redraw_flip. The region content goes empty during
+  // redraw_running / your_redraw_flip (the hero zone shows "Drawing…")
+  // — the empty placeholder keeps the container's height stable so the
+  // strip doesn't shift. The intended slide fires only at
+  // ab_transition (where the hero region expands from the Layout A
+  // small floor back to the Layout B full floor and the opponent strip
+  // uncollapses — that's where the strip is SUPPOSED to move).
   const showStageTextRegion =
-    state.kind === "deal_in" || state.kind === "hold_select";
+    state.kind === "deal_in" ||
+    state.kind === "hold_select" ||
+    state.kind === "redraw_running" ||
+    state.kind === "your_redraw_flip";
   const topStripSlot = (
     <>
       <div
@@ -1018,7 +1040,18 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
             overflow: "hidden",
           }}
         >
-          {state.kind === "deal_in" ? (
+          {state.kind === "redraw_running" || state.kind === "your_redraw_flip" ? (
+            // BUG-1 FIX: empty placeholder during the redraw beat so
+            // the container keeps its INTRO_3LINE_BUDGET_CSS reserved
+            // height (no strip Y-shift) without duplicating the
+            // "Drawing…" headline (which lives in the hero region for
+            // these states). The container itself owns the height
+            // budget; this inner is purely a layout-stable spacer.
+            <div
+              data-h2h-play-intro="redraw-empty-spacer"
+              style={{ width: "100%" }}
+            />
+          ) : state.kind === "deal_in" ? (
             // PASS 1 PLACEHOLDER — deal-intro beat. Pass 2 will replace
             // this branch with a templated bank (selectRecipientDealIntro)
             // that interpolates {opponent} and {score} via the existing
