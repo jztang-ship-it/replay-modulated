@@ -27,6 +27,7 @@ import {
   buildMatchups,
   computePostRollupEffectMs,
   planRevealBeats,
+  isFinalSetDecisive,
   MATCHUP_DURATION_MS,
   MATCHUP_RESOLVE_PAUSE_MS,
   CARD_LAY_MS,
@@ -547,5 +548,126 @@ describe("useH2HReveal — Feature 2 completion-gate (planRevealBeats + computeP
     const hypotheticalLongPostRollup = MATCHUP_RESOLVE_PAUSE_MS + 500;
     const advanceDelay = Math.max(MATCHUP_RESOLVE_PAUSE_MS, hypotheticalLongPostRollup);
     expect(advanceDelay).toBe(MATCHUP_RESOLVE_PAUSE_MS + 500);
+  });
+});
+
+describe("isFinalSetDecisive — Phase 3 anchor-frame gating", () => {
+  // Five edge cases per the design lock. All compute against the
+  // RECIPIENT's perspective (this is the recipient reveal):
+  //   enteringGap   = recipientRunningTotal - senderRunningTotal
+  //   finalSetSwing = finalRecipientActualFp - finalSenderActualFp
+  //   finalGap      = enteringGap + finalSetSwing
+  // Decisive iff entering tied OR sign(enteringGap) !== sign(finalGap).
+
+  it("(1) trailing but catchable — SHOW (sign flips from negative to positive)", () => {
+    // Recipient down by 10 entering final; their last card scores 15
+    // more than opp's → recipient overtakes by +5.
+    const result = isFinalSetDecisive({
+      senderRunningTotal: 110,
+      recipientRunningTotal: 100, // trailing by 10
+      finalSenderActualFp: 5,
+      finalRecipientActualFp: 20, // swing +15 → final gap = +5
+    });
+    expect(result.decisive).toBe(true);
+    expect(result.framing).toBe("overtake");
+    expect(result.needPoints).toBeCloseTo(10, 1);
+  });
+
+  it("(2) trailing beyond reach — SUPPRESS (sign stays negative; blowout)", () => {
+    // Recipient down by 50; final pair only swings +10 in their favor.
+    const result = isFinalSetDecisive({
+      senderRunningTotal: 150,
+      recipientRunningTotal: 100,
+      finalSenderActualFp: 5,
+      finalRecipientActualFp: 15, // swing +10 → final gap = -40
+    });
+    expect(result.decisive).toBe(false);
+    expect(result.framing).toBe("overtake"); // framing reflects entering state, not whether decisive
+    expect(result.needPoints).toBeCloseTo(50, 1);
+  });
+
+  it("(3) leading but vulnerable — SHOW (sign flips from positive to negative)", () => {
+    // Recipient up by 5 entering final; opp's last card massively
+    // outscores → recipient loses lead.
+    const result = isFinalSetDecisive({
+      senderRunningTotal: 100,
+      recipientRunningTotal: 105, // leading by 5
+      finalSenderActualFp: 25,
+      finalRecipientActualFp: 5, // swing -20 → final gap = -15
+    });
+    expect(result.decisive).toBe(true);
+    expect(result.framing).toBe("hold");
+    expect(result.needPoints).toBeCloseTo(5, 1);
+  });
+
+  it("(4) leading insurmountably — SUPPRESS (sign stays positive)", () => {
+    // Recipient up by 40; even worst-case opp can't catch them.
+    const result = isFinalSetDecisive({
+      senderRunningTotal: 100,
+      recipientRunningTotal: 140,
+      finalSenderActualFp: 25,
+      finalRecipientActualFp: 10, // swing -15 → final gap = +25
+    });
+    expect(result.decisive).toBe(false);
+    expect(result.framing).toBe("hold");
+    expect(result.needPoints).toBeCloseTo(40, 1);
+  });
+
+  it("(5) exact tie possible — SHOW (sign flips to zero)", () => {
+    // Recipient down by 12 entering final; final swing exactly +12.
+    const result = isFinalSetDecisive({
+      senderRunningTotal: 112,
+      recipientRunningTotal: 100,
+      finalSenderActualFp: 5,
+      finalRecipientActualFp: 17, // swing +12 → final gap = 0 (tie)
+    });
+    expect(result.decisive).toBe(true);
+    expect(result.framing).toBe("overtake");
+    expect(result.needPoints).toBeCloseTo(12, 1);
+  });
+
+  it("entering tie — SHOW (whole game decided by final set; needPoints=0)", () => {
+    const result = isFinalSetDecisive({
+      senderRunningTotal: 100,
+      recipientRunningTotal: 100,
+      finalSenderActualFp: 15,
+      finalRecipientActualFp: 20,
+    });
+    expect(result.decisive).toBe(true);
+    expect(result.framing).toBe("tie");
+    expect(result.needPoints).toBe(0);
+  });
+
+  it("entering tie with a final tie — STILL SHOW (suspense was maximal)", () => {
+    // Tied entering, tied exiting — the final set didn't break the tie,
+    // but the entering-tied case is always decisive (the user sits at
+    // dead-heat staring at the last card).
+    const result = isFinalSetDecisive({
+      senderRunningTotal: 80,
+      recipientRunningTotal: 80,
+      finalSenderActualFp: 12,
+      finalRecipientActualFp: 12,
+    });
+    expect(result.decisive).toBe(true);
+    expect(result.framing).toBe("tie");
+  });
+
+  it("floating-point near-zero tolerance: 0.04 entering = tied; 0.06 entering = trailing", () => {
+    // The tolerance is 0.05 FP — guards against rollup-RAF epsilon.
+    const tight = isFinalSetDecisive({
+      senderRunningTotal: 100.04,
+      recipientRunningTotal: 100,
+      finalSenderActualFp: 5,
+      finalRecipientActualFp: 5,
+    });
+    expect(tight.framing).toBe("tie");
+
+    const justOutside = isFinalSetDecisive({
+      senderRunningTotal: 100.06,
+      recipientRunningTotal: 100,
+      finalSenderActualFp: 5,
+      finalRecipientActualFp: 5,
+    });
+    expect(justOutside.framing).toBe("overtake");
   });
 });

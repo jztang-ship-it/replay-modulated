@@ -69,6 +69,7 @@ import {
   ENERGY_PULSE_MS,
   BATTLEFIELD_TRAVEL_DURATION_MS,
   planRevealBeats,
+  isFinalSetDecisive,
   type EntranceStage,
 } from "./useH2HReveal";
 import { CardBackGeneric } from "./CardBackGeneric";
@@ -664,8 +665,17 @@ const BF_KEYFRAMES_CSS = `
   68.8% { opacity: 1; transform: translate(0, 0); }     /* 330ms — hold ends */
   100%  { opacity: 0; transform: translate(0, -2px); }  /* 480ms — fade out done */
 }
+/* Phase 3 — anchor-moment frame. Fades in over 240ms when mounted
+   (during paused before the final set, only when game still alive).
+   Unmount is handled by React when the gating predicate flips false;
+   exit is unanimated because the final-set reveal kicks in
+   immediately and the eye is drawn to the cards moving. */
+@keyframes h2h-anchor-frame-enter {
+  0%   { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
 @media (prefers-reduced-motion: reduce) {
-  [data-h2h-bf-anim], [data-h2h-pulse], [data-h2h-mid-rail-flash], [data-h2h-momentum-tag] { animation: none !important; }
+  [data-h2h-bf-anim], [data-h2h-pulse], [data-h2h-mid-rail-flash], [data-h2h-momentum-tag], [data-h2h-anchor-frame] { animation: none !important; }
 }
 `;
 
@@ -985,6 +995,116 @@ function MidRailContent({
         <div style={{ fontSize: 7, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: 1, textTransform: "uppercase" }}>
           {finalGapOverride !== undefined ? "final" : "matchup"}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Phase 3 — anchor-moment frame ────────────────────────────────────────
+//
+// Renders during the paused window between set N-2 and set N-1=last
+// IFF `isFinalSetDecisive` returns decisive: true (game still alive).
+// Mounted as an absolutely-positioned child of the battlefield grid
+// (already position:relative). Covers the CENTER COLUMN only — the
+// left rail (empty on reveal) and right rail (score cells + delta
+// float) stay visible underneath so the user can cross-reference the
+// "Need:" value against the gap they've been watching.
+//
+// pointer-events: none — purely visual. Fade in/out via CSS keyframes
+// (`h2h-anchor-frame-enter` / `h2h-anchor-frame-exit`) so the frame
+// arrives and departs smoothly. Auto-unmounts when the parent's gate
+// goes false (phase advances to "revealing" for the final matchup, or
+// helper returns sealed). Leaves no residual DOM at done/end-hold.
+//
+// Copy:
+//   eyebrow:     "REMAINING"
+//   name:        recipient's final-set card display name (large)
+//   stat line:   trailing → "Need: +X.X"
+//                leading  → "Hold: X.X"
+//                tied     → "TIED"
+
+interface AnchorFrameProps {
+  playerName: string;
+  framing: "overtake" | "hold" | "tie";
+  needPoints: number;
+}
+
+function AnchorFrame({ playerName, framing, needPoints }: AnchorFrameProps) {
+  const statLine =
+    framing === "tie"
+      ? "TIED"
+      : framing === "overtake"
+        ? `Need: +${needPoints.toFixed(1)}`
+        : `Hold: ${needPoints.toFixed(1)}`;
+  const statColor =
+    framing === "overtake"
+      ? WINNING_COLOR
+      : framing === "hold"
+        ? "#FFB14A" // amber — "defend" feel
+        : DELTA_NEUTRAL;
+  return (
+    <div
+      data-h2h-anchor-frame="true"
+      data-h2h-anchor-framing={framing}
+      data-h2h-anchor-need={needPoints.toFixed(2)}
+      style={{
+        position: "absolute",
+        top: 0,
+        bottom: 0,
+        left: LEFT_RAIL_WIDTH_PX,
+        right: RIGHT_RAIL_WIDTH_PX,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 8,
+        background: "rgba(6, 10, 18, 0.72)",
+        backdropFilter: "blur(2px)",
+        WebkitBackdropFilter: "blur(2px)",
+        pointerEvents: "none",
+        animation: "h2h-anchor-frame-enter 240ms ease-out 1",
+        textAlign: "center",
+        padding: "0 12px",
+      }}
+    >
+      <div
+        style={{
+          fontSize: 9,
+          fontWeight: 800,
+          letterSpacing: 2,
+          color: "rgba(255,255,255,0.55)",
+          textTransform: "uppercase",
+          lineHeight: 1,
+        }}
+      >
+        Remaining
+      </div>
+      <div
+        data-h2h-anchor-name="true"
+        style={{
+          fontSize: 22,
+          fontWeight: 950,
+          color: "#EAF0FF",
+          letterSpacing: -0.3,
+          lineHeight: 1.05,
+          wordBreak: "break-word",
+        }}
+      >
+        {playerName}
+      </div>
+      <div
+        data-h2h-anchor-stat-line="true"
+        style={{
+          fontSize: 13,
+          fontWeight: 800,
+          color: statColor,
+          fontVariantNumeric: "tabular-nums",
+          letterSpacing: 0.5,
+          lineHeight: 1,
+          textTransform: "uppercase",
+        }}
+      >
+        {statLine}
       </div>
     </div>
   );
@@ -1666,6 +1786,47 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
               {popState.momentumTag.copy}
             </div>
           )}
+
+          {/* Relay-tension Phase 3 — anchor-moment frame. Mounts ONLY
+              when ALL of these hold:
+                1. `reveal` hook is wired (no anchor on the static mock).
+                2. phase === "paused" (between sets, not mid-rollup).
+                3. matchupIndex === matchupCount - 2 (the set that just
+                   resolved was the SECOND-to-last; the next is the
+                   final).
+                4. `isFinalSetDecisive` returns decisive: true (game
+                   still mathematically alive — sealed/blowout
+                   suppresses).
+              All conditions are derived from the hook's return; no new
+              state was added to feed this. The paused-window
+              extension to ~ANCHOR_HOLD_MS is applied SYMMETRICALLY in
+              the hook's afterDeltaLands so the frame has time to read
+              before the final set fires. Unmount = phase advances to
+              "revealing" for the final matchup (gate goes false). */}
+          {reveal && (() => {
+            const isPreFinalPause =
+              reveal.phase === "paused" &&
+              reveal.matchupCount >= 2 &&
+              reveal.matchupIndex === reveal.matchupCount - 2;
+            if (!isPreFinalPause) return null;
+            const finalRecipientCard = reveal.recipientRevealOrder[reveal.matchupCount - 1];
+            const finalSenderCard = reveal.senderRevealOrder[reveal.matchupCount - 1];
+            if (!finalRecipientCard || !finalSenderCard) return null;
+            const anchor = isFinalSetDecisive({
+              senderRunningTotal: reveal.senderRunningTotal,
+              recipientRunningTotal: reveal.recipientRunningTotal,
+              finalSenderActualFp: finalSenderCard.actualFp,
+              finalRecipientActualFp: finalRecipientCard.actualFp,
+            });
+            if (!anchor.decisive) return null;
+            return (
+              <AnchorFrame
+                playerName={finalRecipientCard.name}
+                framing={anchor.framing}
+                needPoints={anchor.needPoints}
+              />
+            );
+          })()}
         </div>
   );
 

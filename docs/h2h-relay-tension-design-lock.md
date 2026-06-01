@@ -308,3 +308,99 @@ The `?relayDebug=1` overlay now reads the new `data-h2h-mid-rail-rolling-value` 
 4. Pace isn't so slow it drags (watch sets 5–6) — flag if `MATCHUP_DURATION_MS` should drop.
 5. Crossfade into results still clean — reveal delta settles to the correct final value/color before done.
 6. Verify on a **lead-changing hand** (delta sign swings set-to-set) and on a **mix of big/dud sets**. Note the timing values that felt right so we can lock them.
+
+## Phase 3 — anchor-player moment (the emotional peak)
+
+Before the final set reveals, IF the game is still mathematically alive, an anticipation frame interrupts the right-column drama with **"Remaining: NAME / Need: Y"** — recipient's last player, with how many points they need to overtake (or the margin they need to hold). Then the final set reveals using the Phase 1/2/2.6 vocabulary (climb + lead-change pop + glow + delta-rollup beat) as the payoff. The game-winning-shot beat.
+
+### Locked decisions
+
+1. **Fires only on the LAST set boundary, and only when the outcome is still mathematically undetermined.** Suppressed entirely on blowout/sealed games — no hopeless "Need: 81".
+2. **Hosted in the existing per-matchup `paused` window before the final set** (Phase 2.6 confirmed `paused` is intact post-2.6 and retains its full `intermediateAdvanceDelay` headroom).
+3. **Player name from the recipient's reveal-ordered last card** (`reveal.recipientRevealOrder[matchupCount-1]`).
+4. **The final set's reveal then plays the existing relay beats** — NOT a net-new animation. The anchor frame is anticipation FRAMING; the relay vocabulary is the payoff.
+
+### The decisiveness predicate (pure, unit-tested)
+
+`isFinalSetDecisive` (`shared/components/useH2HReveal.ts`) is the gate. Inputs: running totals entering the final set + the final pair's `actualFp`. Predicate:
+
+```
+enteringGap   = recipientRunningTotal − senderRunningTotal
+finalSetSwing = finalRecipientActualFp − finalSenderActualFp
+finalGap      = enteringGap + finalSetSwing
+
+decisive = (entering tied)          OR   sign(enteringGap) !== sign(finalGap)
+```
+
+Returns `{ decisive, framing: "overtake" | "hold" | "tie", needPoints }`. Framing is from the recipient's perspective:
+- **trailing entering → "overtake"**, displayed as `Need: +X.X`.
+- **leading entering → "hold"**, displayed as `Hold: X.X`.
+- **entering tie → "tie"**, displayed as `TIED`.
+
+The leading-side wording (`Hold: X.X`) is the Phase-3-locked proposal — the design lock had specified `Need: 15.1` only for the trailing case. Open to re-tune on device.
+
+Edge-case unit tests (`shared/components/__tests__/useH2HReveal.test.tsx` — 8 helper tests):
+- Trailing but catchable → SHOW (sign flip neg→pos).
+- Trailing beyond reach → SUPPRESS (sign stays neg).
+- Leading but vulnerable → SHOW (sign flip pos→neg).
+- Leading insurmountably → SUPPRESS (sign stays pos).
+- Exact-tie possible → SHOW (sign flips to zero).
+- Entering tie → SHOW always.
+- Entering tie with final tie → SHOW (suspense was maximal).
+- Floating-point tolerance (|gap| < 0.05 = tied).
+
+### Per-callsite paused-window extension
+
+`ANCHOR_HOLD_MS = 1500` in the `RELAY_PACING` constants block. Applied **only** when:
+- `index === matchups.length - 2` (the resolution that just landed is set N-2; next runMatchup will be the final).
+- `isFinalSetDecisive(...)` returns `decisive: true`.
+
+Both conditions fold the extension into the existing `intermediateAdvanceDelay = Math.max(MATCHUP_RESOLVE_PAUSE_MS, pendingPostRollupMs, anchorHoldMs)`. No global pacing change; every other paused window keeps its pre-Phase-3 duration. Sealed games and non-deciding boundaries are unaffected.
+
+### Rendering — `AnchorFrame`
+
+`AnchorFrame` (in `H2HRevealScreen.tsx`) mounts inside the battlefield grid (already `position: relative`), absolutely-positioned to cover the CENTER COLUMN only:
+
+```
+top: 0; bottom: 0;
+left: LEFT_RAIL_WIDTH_PX;
+right: RIGHT_RAIL_WIDTH_PX;
+```
+
+The score rails on both sides stay visible underneath — the user can cross-reference the "Need:" value against the cumulative gap they've been watching. Semi-transparent dim background (`rgba(6,10,18,0.72)` + 2px backdrop blur) reduces visibility of the resolved set N-2 hero cards behind so the frame's text reads cleanly. `pointer-events: none`. Fade-in via `h2h-anchor-frame-enter` keyframe (240ms ease-out).
+
+Copy:
+- Eyebrow: `REMAINING` (9px, letterspaced, dim-white).
+- Player name (22px, weight 950, near-white).
+- Stat line: `Need: +X.X` / `Hold: X.X` / `TIED` (13px, framing-tinted color: green / amber / off-white).
+
+Mount gate (in `H2HRevealScreen` render):
+1. `reveal` is wired (no anchor on the static phase-2 mock path).
+2. `reveal.phase === "paused"`.
+3. `reveal.matchupIndex === reveal.matchupCount - 2`.
+4. `isFinalSetDecisive(...).decisive === true`.
+
+All four conditions read from the hook's existing return. No new state in `H2HRevealScreen` to feed the frame.
+
+### Cross-surface handoff (no new risk)
+
+The anchor lives in `paused` BEFORE the final set reveals. By `phase === "done"` it's long unmounted; by the time the reveal→results crossfade fires, no residual anchor DOM remains. The known last-set delta seam (Phase 1's `finalGapOverride` switch from per-set to cumulative at `done`) is unchanged — Phase 3 does NOT touch the delta float's render path.
+
+The visual harness asserts the handoff invariant directly: `[data-h2h-anchor-frame]` count must be 0 at `phase === "done"` (sampled after a dedicated `waitForFunction` on the done phase, NOT the prior C/D "recipient TeamScore > 0" wait which fires as early as set 0's rollup).
+
+### Harness
+
+- **Unit tests** carry the pre-Phase-3-fail load: 8 helper tests + 3 alive-mount AnchorFrame tests fail on pre-Phase-3 source (the helper doesn't exist, the AnchorFrame doesn't render). 4 absence tests pass trivially pre-fix (element-doesn't-exist matches expected-null).
+- **Visual harness — Phase 3 (P3-A)**: consistency check. At paused-at-idx=4, capture entering totals + anchor presence; at `phase === "done"`, capture final totals. Assert `anchorPresent === (enteringSign === 0 || enteringSign !== finalSign)`. The play-mock's resolved roster varies between runs (alive vs sealed), so a pinned-outcome assertion would be brittle; this consistency check is run-tolerant.
+- **Visual harness — Phase 3 (P3-4)**: at `phase === "done"`, `[data-h2h-anchor-frame]` count is 0 (handoff invariant).
+- "Feels like a game-winner" is feel-based — device-only.
+
+### Phase 3 device-check items
+
+1. Anchor frame appears before the final set ONLY when the game is still alive; player name matches the recipient's last card; "Need: Y" matches the actual gap (cross-check against the `?relayDebug=1` overlay's gap readout).
+2. Frame is SUPPRESSED in a blowout/sealed game (verify a lopsided hand shows NO anchor frame).
+3. Frame holds long enough (~1.5s) to register the name + need, then cleanly gives way to the final set's reveal.
+4. The final set's reveal lands as the payoff using the established beats (climb / pop / glow / delta) — feels like a game-winner, not just another set.
+5. Crossfade into results still clean — anchor fully gone before `done`; doesn't worsen the known last-set delta seam.
+
+Critical scenario: the anchor only fires on a **still-alive** last set, so the device check MUST use a challenge that's CLOSE entering the final leg (trailing-but-catchable, or a tight lead). A blowout will (correctly) suppress it and prove nothing.
