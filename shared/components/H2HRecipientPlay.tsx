@@ -1875,9 +1875,15 @@ function flipCss(durationMs: number) {
        sender / recipient card's tier color) so the two slots glow
        independently in their own tier hues. */
     @keyframes h2h-play-hero-charge {
+      /* Layout-3 fix (a): border stays NEUTRAL/WHITE through the whole
+         charge — only the GLOW (box-shadow) is tier-colored. Previously
+         the border ramped to the tier color too, which read as a
+         "tier-colored box" rather than a "white box with tier-colored
+         glow". The dashed white border belongs to the slot's identity;
+         the tier color is the energy. */
       0%   { box-shadow: 0 0 0 0 transparent; transform: scale(1); border-color: rgba(255,255,255,0.18); }
-      60%  { box-shadow: 0 0 12px 4px var(--h2h-charge-color, transparent); transform: scale(1.012); border-color: var(--h2h-charge-color, rgba(255,255,255,0.40)); }
-      100% { box-shadow: 0 0 24px 8px var(--h2h-charge-color, transparent); transform: scale(1.025); border-color: var(--h2h-charge-color, rgba(255,255,255,0.60)); }
+      60%  { box-shadow: 0 0 12px 4px var(--h2h-charge-color, transparent); transform: scale(1.012); border-color: rgba(255,255,255,0.18); }
+      100% { box-shadow: 0 0 24px 8px var(--h2h-charge-color, transparent); transform: scale(1.025); border-color: rgba(255,255,255,0.18); }
     }
     @media (prefers-reduced-motion: reduce) {
       [data-h2h-play-charge="true"] { animation: none !important; }
