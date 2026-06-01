@@ -232,3 +232,79 @@ Phase 1 device-check items (each on its own line):
 5. **Crossfade does NOT snap** — last reveal frame == first results frame: glow persists, no leftover scale, delta color continuous.
 
 Verify both a bright-tier scenario AND a tight-race scenario — these exercise the two-channel legibility and the handoff.
+
+## Phase 2.6 — per-set reveal pacing + delta-rollup fix (TUNABLE)
+
+Three coupled changes to the per-set reveal, all on the recipient reveal, all governed by a single named constants block in `useH2HReveal.ts`.
+
+### The bug being fixed
+
+Phase 1/2 left the reveal delta computed inline in `MidRailContent` from `recipientCard.actualFp − senderCard.actualFp`. The moment `matchupIndex` advances to set N, the active matchup updates, and the rendered delta SNAPS to set N's final value — visible the entire time set N's cards are flipping and the totals are rolling. That spoils the set's outcome before the rollup runs.
+
+### The new per-set sequence
+
+```
+  cards reveal  →  totals roll (eased) and LAND
+                →  POST_TOTALS_HOLD_MS hold beat
+                →  delta rolls 0→value (eased) and LANDS
+                →  inter-set pause / next set
+```
+
+All four sub-phases run inside the same `runMatchup` closure under one `myRunId` cancellation gate. The delta beat is **sequenced**, not synced: totals settle, the user reads them, THEN the delta arrives as its own verdict. The legendary celebration shake, `onMatchupResolved`, and the transition to `paused`/`end-hold` all fire AFTER the delta lands (previously they fired at totals-land — the cadence shift is intentional).
+
+### Tunable constants — `RELAY_PACING` block (`useH2HReveal.ts`)
+
+| Constant | First-guess value | Tunes |
+|---|---|---|
+| `MATCHUP_DURATION_MS` | **1800** (was 1500) | Totals rollup duration. |
+| `POST_TOTALS_HOLD_MS` | **250** | Beat between totals land and delta start. |
+| `DELTA_ROLLUP_MS` | **600** | Delta 0→target rollup duration. |
+| `RELAY_EASING_POWER` | **3** | Cubic ease-out applied to BOTH rollups (`1 − (1 − t)^N`). |
+
+One place to tune. Numbers are first-guess feel values; lock them after device verification.
+
+### Per-set time budget (vs Phase 3 anchor)
+
+- Per-set total: shake/pre-rollup beats + 1800ms totals + 250ms hold + 600ms delta + 600–850ms inter-set pause = ~3.3s per set (was ~2.4s). Six-set arc: ~20s + entrance + end-hold.
+- The new beats live INSIDE `revealing`. The `paused` phase is unchanged — preserves the headroom Phase 3's anchor moment will use on the deciding set via `intermediateAdvanceDelay`.
+- Flag: this is at the slow end. Watch sets 5–6 on device for "drag." If it drags, drop `MATCHUP_DURATION_MS` toward 1500 first (the longest slot).
+
+### Hook contract changes
+
+`useH2HReveal` publishes `deltaRunning: number` on its return, analogous to `senderRunningTotal`/`recipientRunningTotal`:
+
+- Resets to 0 at the start of every `runMatchup(index)` (so the previous set's value doesn't linger).
+- Held at 0 through cards-reveal + totals-roll + hold beat.
+- After totals land + hold, climbs from 0 → `recipientCard.actualFp − senderCard.actualFp` over `DELTA_ROLLUP_MS`, eased on `RELAY_EASING_POWER`.
+- Exact-land lock at `elapsed === 1` protects against RAF drift.
+
+`MidRailContent` consumes `deltaRunning` when defined; falls back to per-card computation only on the static phase-2 mock path with no reveal hook wired. `finalGapOverride` (Phase 1) still takes precedence at `phase === "done" | "end-hold"` for the cross-surface crossfade invariant — no change to that contract.
+
+The delta flash retrigger key changed from `matchupIndex` (set-start) to a `deltaLandedKey` driven by the parent's flip-detect effect (the moment `phase` enters `paused`/`end-hold` post-delta-RAF). Phase 1's flash was punching on a 0-valued delta at set start; Phase 2.6's flash punches on the just-landed value.
+
+### Reduced-motion
+
+Short-circuit: under `args.reducedMotion`, the hold beat and delta RAF are both skipped. `deltaRunning` snaps to the per-set target at totals-land, and `afterDeltaLands()` (legendary shake + `onMatchupResolved` + phase transition) fires immediately. Suspense gone; cadence preserved. Matches the pre-existing reduced-motion philosophy for the entrance + anticipation skip.
+
+### Cross-surface handoff
+
+Unchanged invariant: at `phase === "done" | "end-hold"`, `MidRailContent` switches to `finalGapOverride` (cumulative final-gap sign), matching what the results overlay's `data-h2h-overlay-final-gap-value` renders. The per-set rolling value lands on the LAST matchup's per-set delta inside `revealing`, then `finalGapOverride` engages at `end-hold` — same one-frame transition Phase 1 documented. No new snap introduced by Phase 2.6.
+
+### Harness
+
+- `relay-tension Phase 2.6: reveal delta float exposes a finite numeric rolling-value at end-state` — pre-fix-fail (the `data-h2h-mid-rail-rolling-value` data-attr didn't exist before Phase 2.6).
+- All Phase 1/2 visuals + gap-fillers + cross-surface invariants stay GREEN.
+- "Rolls from zero," "sequenced after totals," "decelerates" — these are feel-based / RAF-timed and not asserted by the harness. Device-verified.
+
+### Dev overlay
+
+The `?relayDebug=1` overlay now reads the new `data-h2h-mid-rail-rolling-value` attr and shows it on a `DELTA` line, distinct from the cumulative `GAP`. Watch the DELTA line tick from 0 → target on each set to confirm the rollup mechanic visually.
+
+### Phase 2.6 device-check items
+
+1. Delta no longer pre-prints — each set starts at 0 and rolls up; outcome not spoiled before the rollup.
+2. Sequence reads correctly: totals land first, brief hold, THEN delta rolls and lands as its own beat.
+3. The slower pace makes each set readable; numbers decelerate/settle rather than snap.
+4. Pace isn't so slow it drags (watch sets 5–6) — flag if `MATCHUP_DURATION_MS` should drop.
+5. Crossfade into results still clean — reveal delta settles to the correct final value/color before done.
+6. Verify on a **lead-changing hand** (delta sign swings set-to-set) and on a **mix of big/dud sets**. Note the timing values that felt right so we can lock them.

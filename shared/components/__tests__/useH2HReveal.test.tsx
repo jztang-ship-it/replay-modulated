@@ -401,8 +401,8 @@ describe("useH2HReveal — skipToEnd()", () => {
 });
 
 describe("useH2HReveal — timing constants (phase 3.8 pacing)", () => {
-  it("MATCHUP_DURATION_MS at the documented 1500ms", () => {
-    expect(MATCHUP_DURATION_MS).toBe(1500);
+  it("MATCHUP_DURATION_MS at the documented 1800ms (Phase 2.6 raised from 1500)", () => {
+    expect(MATCHUP_DURATION_MS).toBe(1800);
   });
   it("CARD_LAY_MS in the documented 200-250ms range", () => {
     expect(CARD_LAY_MS).toBeGreaterThanOrEqual(200);

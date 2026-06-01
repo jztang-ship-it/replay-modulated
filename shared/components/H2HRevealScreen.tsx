@@ -883,11 +883,16 @@ function BattlefieldCard({ card, renderCard, visibleFp, revealed, shakeType, glo
 interface MidRailContentProps {
   senderCard: H2HCard | null;
   recipientCard: H2HCard | null;
-  /** Relay-tension Phase 1: when set, drives a one-shot color flash +
-   *  scale pulse each time the active matchup advances. Passed by the
-   *  parent as `matchupIndex` so a key change forces remount and the
-   *  CSS animation retriggers on the next set boundary. Undefined on
-   *  the phase-2 static-mock path (no reveal hook wired) — no flash. */
+  /** Relay-tension Phase 1 + 2.6: drives a one-shot color flash + scale
+   *  pulse on the delta block. Phase 1 keyed this on `matchupIndex` so
+   *  the flash fired at SET START. Phase 2.6 changed the timing model
+   *  — the delta is held at 0 through cards-reveal + totals-roll, then
+   *  rolls 0→target as its own beat. The flash now fires when the
+   *  DELTA LANDS (parent passes `deltaLandedKey`, which it sets when
+   *  phase enters paused/end-hold post-delta-RAF), so the punch
+   *  lands on a value the user can read, not on the 0 that was just
+   *  reset for the new set. Undefined on the phase-2 static-mock path
+   *  (no reveal hook wired) — no flash. */
   flashKey?: number;
   /** Relay-tension Phase 1, cross-surface handoff: at `phase === "done"
    *  | "end-hold"`, the reveal-side delta switches from per-set sign
@@ -897,6 +902,15 @@ interface MidRailContentProps {
    *    finalGap = recipient.totalFp − sender.totalFp
    *  and passes it; otherwise undefined (per-set mode). */
   finalGapOverride?: number;
+  /** Relay-tension Phase 2.6 — the animated per-set delta value from
+   *  the hook's `deltaRunning`. When defined, it OVERRIDES the per-
+   *  card computation: the delta starts at 0 at set start, climbs to
+   *  `recipientCard.actualFp − senderCard.actualFp` via the hook's
+   *  delta RAF after the totals land. Undefined on the static phase-2
+   *  mock path — falls back to per-card computation. `finalGapOverride`
+   *  still takes precedence at end-hold/done for the crossfade
+   *  invariant. */
+  deltaRunning?: number;
 }
 
 function MidRailContent({
@@ -904,6 +918,7 @@ function MidRailContent({
   recipientCard,
   flashKey,
   finalGapOverride,
+  deltaRunning,
 }: MidRailContentProps) {
   // Phase 4 fix 2 (2026-05-27): renders ONLY the per-matchup delta in
   // the right rail between the two FP totals. The prior final-margin
@@ -915,13 +930,20 @@ function MidRailContent({
   if (!senderCard || !recipientCard) {
     return <div aria-hidden="true" />;
   }
-  // Per-set sign during revealing/paused; final-gap sign during done/
-  // end-hold (caller passes finalGapOverride for those phases). Both
-  // formulas resolve to a green/red/neutral color; the only difference
-  // is which delta the user sees at the moment of crossfade.
+  // Value resolution (priority order):
+  //   1. finalGapOverride — caller passes at phase===done|end-hold for
+  //      cross-surface handoff continuity (Phase 1).
+  //   2. deltaRunning — caller passes the hook's animated per-set delta
+  //      (Phase 2.6). Starts at 0 each set, rolls to per-set target
+  //      after the totals land. This is the load-bearing change vs
+  //      Phase 2: the delta no longer snaps at set start.
+  //   3. Per-card computation — only the static mock path (no reveal
+  //      hook wired) takes this branch.
   const rawDelta = finalGapOverride !== undefined
     ? finalGapOverride
-    : recipientCard.actualFp - senderCard.actualFp;
+    : deltaRunning !== undefined
+      ? deltaRunning
+      : recipientCard.actualFp - senderCard.actualFp;
   const matchupDelta = Math.round(rawDelta * 10) / 10;
   const matchupSign = matchupDelta > 0 ? "+" : matchupDelta < 0 ? "" : "";
   const deltaColor =
@@ -1321,6 +1343,12 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
     senderPop?: { magnitude: number; durationMs: number; kind: "scaled" | "lead-change"; key: number };
     recipientPop?: { magnitude: number; durationMs: number; kind: "scaled" | "lead-change"; key: number };
     momentumTag?: { copy: string; key: number };
+    /** Phase 2.6 — set this when the delta lands (phase enters paused/
+     *  end-hold for a new matchupIndex). MidRailContent uses it as its
+     *  flash retrigger key so the delta's color-pop fires WHEN THE
+     *  DELTA LANDS on its per-set value, not at the start of the set
+     *  (when the value is still 0 and the punch would land on nothing). */
+    deltaLandedKey?: number;
   }>({});
 
   useEffect(() => {
@@ -1387,7 +1415,7 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
     } : undefined;
 
     const momentumTag = flipped ? { copy: "TAKES THE LEAD", key: idx } : undefined;
-    setPopState({ senderPop, recipientPop, momentumTag });
+    setPopState({ senderPop, recipientPop, momentumTag, deltaLandedKey: idx });
   }, [
     reveal,
     reveal?.phase,
@@ -1570,6 +1598,16 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
             || reveal.phase === "done") && (
             <div
               data-h2h-mid-rail-float="true"
+              // Phase 2.5 dev-overlay-readability data-attr. Lets
+              // RelayDebugOverlay read the animating delta value via
+              // DOM without coupling to React state. Read-only, zero
+              // behavior impact. Mirrors data-h2h-team-score-display
+              // on the score cells.
+              data-h2h-mid-rail-rolling-value={
+                reveal?.deltaRunning !== undefined
+                  ? reveal.deltaRunning.toFixed(2)
+                  : "none"
+              }
               style={{
                 position: "absolute",
                 top: "50%",
@@ -1582,7 +1620,8 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
               <MidRailContent
                 senderCard={senderBattle}
                 recipientCard={recipientBattle}
-                flashKey={reveal?.matchupIndex}
+                flashKey={popState.deltaLandedKey}
+                deltaRunning={reveal?.deltaRunning}
                 finalGapOverride={
                   reveal && (reveal.phase === "done" || reveal.phase === "end-hold")
                     ? recipient.totalFp - sender.totalFp

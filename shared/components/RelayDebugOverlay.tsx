@@ -173,6 +173,12 @@ export function RelayDebugOverlay({
   // ── Per-frame observation state ────────────────────────────────────
   const [opp, setOpp] = useState<ObservedCell>(EMPTY_OBSERVED);
   const [you, setYou] = useState<ObservedCell>(EMPTY_OBSERVED);
+  // Phase 2.6 — the reveal-side delta float exposes its rolling value
+  // via data-h2h-mid-rail-rolling-value. Observed here so the overlay
+  // can show the in-flight delta separately from the cumulative gap
+  // (running totals diff). At rest the two are unrelated: the delta is
+  // PER-SET, the gap is CUMULATIVE.
+  const [midRailRollingValue, setMidRailRollingValue] = useState<string | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
@@ -186,10 +192,13 @@ export function RelayDebugOverlay({
         const { opp: oppEl, you: youEl } = findScoreCells();
         const nextOpp = observeCell(oppEl);
         const nextYou = observeCell(youEl);
+        const midRail = document.querySelector("[data-h2h-mid-rail-float]");
+        const nextMid = midRail?.getAttribute("data-h2h-mid-rail-rolling-value") ?? null;
         // Only re-render when something changed — avoids needless React
         // commits during the static end-state hold.
         setOpp((prev) => (cellEquals(prev, nextOpp) ? prev : nextOpp));
         setYou((prev) => (cellEquals(prev, nextYou) ? prev : nextYou));
+        setMidRailRollingValue((prev) => (prev === nextMid ? prev : nextMid));
       }
       raf = requestAnimationFrame(tick);
     };
@@ -333,7 +342,12 @@ export function RelayDebugOverlay({
         {"  "}eff={youEffective}px
       </div>
       <div style={{ marginTop: 4 }}>
-        GAP  {gapSign}{gap}  (me − opp)
+        GAP  {gapSign}{gap}  (me − opp, cumulative)
+      </div>
+      <div style={{ opacity: 0.85 }}>
+        DELTA  {midRailRollingValue === null || midRailRollingValue === "none"
+          ? "—"
+          : midRailRollingValue}{"  "}(per-set, rolling 0→target)
       </div>
       <div style={{ color: "#FFD86B", marginTop: 6, marginBottom: 2 }}>
         SET-BOUNDARY LOG (latest last)
