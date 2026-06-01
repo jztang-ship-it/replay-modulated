@@ -1108,6 +1108,187 @@ async function assertContainmentOrReachability(page, vp, stateLabel, opts = {}) 
   void opts;
 }
 
+// ── Results-overlay viewport sweep (Bug 2 + Bug 3 guard) ────────────
+//
+// The post-reveal RESULTS overlay (H2HResultsOverlay) is a SEPARATE
+// hand-rolled full-screen container (NOT an H2HBoardShell consumer).
+// The play harness's arc-state check above operates on the arc shell
+// itself; the overlay below the arc was never asserted strictly. The
+// recon flagged this as the source of the prior CTA-clip leak.
+//
+// This sweep drives the standalone reveal mock with ?overlay=1, which
+// skips the arc and renders the overlay at its end-state. For each
+// viewport + safe-area tuple we assert STRICT §5a/§5b:
+//   §5a (fits without scroll): bottomStrip.bottom <= vh AND
+//        CTA.bottom <= vh AND inner does NOT scroll.
+//   §5b (overflows): CTA pinned (bottom <= vh) at scrollTop=0 AND at
+//        scrollTop=max; bottom strip reachable via scrollIntoView.
+// Plus Bug 3 regression-guard: the overlay's recipient bottom-zone
+// label reads literal "YOU".
+
+const RESULTS_OVERLAY_URL =
+  `${ORIGIN}/basketball/dev/h2h-reveal-mock?overlay=1&variant=WIN`;
+
+async function injectOverlaySafeArea(page, safeTop, safeBottom) {
+  // The overlay container reads env(safe-area-inset-*) directly in
+  // its paddingTop/paddingBottom. We inject the same replacement the
+  // play harness does, scoped to the overlay's container marker.
+  await page.addStyleTag({
+    content: `
+      [data-h2h-results-overlay] {
+        padding-top: ${safeTop + OUTER_PAD_EXTRA_PX}px !important;
+        padding-bottom: ${safeBottom + OUTER_PAD_EXTRA_PX}px !important;
+      }
+    `,
+  });
+  await page.waitForTimeout(40);
+}
+
+async function captureOverlayRects(page) {
+  return page.evaluate(() => {
+    const get = (sel) => {
+      const el = document.querySelector(sel);
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { x: r.x, y: r.y, width: r.width, height: r.height };
+    };
+    const inner = document.querySelector("[data-h2h-overlay-inner]");
+    const innerInfo = inner
+      ? {
+          scrollTop: inner.scrollTop,
+          scrollHeight: inner.scrollHeight,
+          clientHeight: inner.clientHeight,
+          overflowingY: inner.scrollHeight - inner.clientHeight > 1,
+        }
+      : null;
+    return {
+      topZone: get("[data-h2h-overlay-zone='opponent']"),
+      bottomZone: get("[data-h2h-overlay-zone='user']"),
+      bottomStrip: get("[data-h2h-overlay-zone='user'] [data-h2h-overlay-strip]"),
+      cta: get("[data-h2h-overlay-primary-cta]"),
+      reserved: get("[data-h2h-overlay-reserved]"),
+      innerInfo,
+    };
+  });
+}
+
+async function scrollOverlayInnerTo(page, where /* "top" | "bottom" */) {
+  await page.evaluate((target) => {
+    const inner = document.querySelector("[data-h2h-overlay-inner]");
+    if (!inner) return;
+    inner.scrollTo({
+      top: target === "bottom" ? inner.scrollHeight : 0,
+      behavior: "instant",
+    });
+  }, where);
+  await page.waitForTimeout(30);
+}
+
+async function runResultsOverlayViewportSweep(browser, vp) {
+  const tag = `[overlay-sweep ${vp.label}]`;
+  console.log(`\n${tag} starting`);
+  const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
+  page.on("pageerror", (err) => console.error(`${tag}[pageerror]`, err.message));
+
+  try {
+    await page.goto(RESULTS_OVERLAY_URL, { waitUntil: "networkidle", timeout: 30000 });
+  } catch (err) {
+    console.error(`${tag} FAIL — could not load ${RESULTS_OVERLAY_URL}: ${err.message}`);
+    await page.close();
+    record(`${vp.label} overlay: page load`, false, err.message);
+    return;
+  }
+  await page.waitForSelector("[data-h2h-results-overlay]", { timeout: 10000 });
+  await injectOverlaySafeArea(page, vp.safeTop, vp.safeBottom);
+  // Settle the overlay's crossfade-in (350ms) so opacity/layout is at rest.
+  await page.waitForTimeout(400);
+
+  // Bug 3 regression-guard: the overlay's recipient bottom-zone label
+  // reads literal "YOU" (not the generated nickname). Page-evaluated
+  // (not page.locator) so the assertion REPORTS the missing-element
+  // case as a failure instead of hanging on Playwright's auto-wait;
+  // pre-fix the data-attr didn't exist on the overlay's ZoneHeader, so
+  // the harness must surface that as a fail, not a timeout.
+  const bottomLabel = await page.evaluate(() => {
+    const el = document.querySelector("[data-h2h-overlay-zone-label='bottom']");
+    return el ? (el.textContent ?? "").trim() : null;
+  });
+  record(
+    `${vp.label} overlay Bug-3: recipient label is literal "YOU"`,
+    bottomLabel === "YOU",
+    `label="${bottomLabel}"`,
+  );
+
+  // Strict §5a / §5b assertion against the overlay.
+  const rects = await captureOverlayRects(page);
+  const ctaBottom = rects.cta ? rects.cta.y + rects.cta.height : null;
+  const stripBottom = rects.bottomStrip ? rects.bottomStrip.y + rects.bottomStrip.height : null;
+  const topZoneTop = rects.topZone ? rects.topZone.y : null;
+  const scrollable = rects.innerInfo?.overflowingY === true;
+  const fitLabel = scrollable ? "§5b scroll fallback" : "§5a no-scroll fit";
+  const stateTag = `${vp.label} overlay ${fitLabel}`;
+
+  if (!scrollable) {
+    record(
+      `${stateTag}: bottom strip bottom <= vh`,
+      stripBottom !== null && stripBottom <= vp.height + 1,
+      `stripBottom=${Math.round(stripBottom)} vh=${vp.height}`,
+    );
+    record(
+      `${stateTag}: CTA.bottom <= vh`,
+      ctaBottom !== null && ctaBottom <= vp.height + 1,
+      `ctaBottom=${Math.round(ctaBottom)} vh=${vp.height}`,
+    );
+    record(
+      `${stateTag}: top-zone.top >= 0`,
+      topZoneTop !== null && topZoneTop >= -1,
+      `topZoneTop=${Math.round(topZoneTop)}`,
+    );
+    record(
+      `${stateTag}: inner does NOT scroll`,
+      !scrollable,
+      `scrollH=${rects.innerInfo?.scrollHeight} clientH=${rects.innerInfo?.clientHeight}`,
+    );
+  } else {
+    await scrollOverlayInnerTo(page, "top");
+    const rectsAtTop = await captureOverlayRects(page);
+    const ctaBottomTop = rectsAtTop.cta ? rectsAtTop.cta.y + rectsAtTop.cta.height : null;
+    record(
+      `${stateTag}: CTA pinned (bottom <= vh) at scrollTop=0`,
+      ctaBottomTop !== null && ctaBottomTop <= vp.height + 1,
+      `ctaBottom=${Math.round(ctaBottomTop)} vh=${vp.height}`,
+    );
+
+    await scrollOverlayInnerTo(page, "bottom");
+    const rectsAtBottom = await captureOverlayRects(page);
+    const ctaBottomBottom = rectsAtBottom.cta ? rectsAtBottom.cta.y + rectsAtBottom.cta.height : null;
+    record(
+      `${stateTag}: CTA pinned (bottom <= vh) at scrollTop=max`,
+      ctaBottomBottom !== null && ctaBottomBottom <= vp.height + 1,
+      `ctaBottom=${Math.round(ctaBottomBottom)} vh=${vp.height}`,
+    );
+
+    // Bottom strip reachable via scrollIntoView.
+    const stripReachable = await page.evaluate(() => {
+      const strip = document.querySelector("[data-h2h-overlay-zone='user'] [data-h2h-overlay-strip]")
+        ?? document.querySelector("[data-h2h-overlay-strip]");
+      if (!strip) return { ok: false, reason: "strip not in DOM" };
+      strip.scrollIntoView({ block: "center", behavior: "instant" });
+      const r = strip.getBoundingClientRect();
+      return { ok: r.top >= -1 && r.bottom <= window.innerHeight + 1, top: r.top, bottom: r.bottom, vh: window.innerHeight };
+    });
+    record(
+      `${stateTag}: bottom strip reachable via scrollIntoView`,
+      stripReachable.ok,
+      JSON.stringify(stripReachable),
+    );
+
+    await scrollOverlayInnerTo(page, "top");
+  }
+
+  await page.close();
+}
+
 async function main() {
   const browser = await chromium.launch();
   try {
@@ -1124,6 +1305,10 @@ async function main() {
     // device-class matrix with safe-area injection per viewport.
     for (const vp of HS_SWEEP_VIEWPORTS) {
       await runHoldSelectViewportSweep(browser, vp);
+    }
+    // Results-overlay strict §5a/§5b sweep + Bug 3 label guard.
+    for (const vp of HS_SWEEP_VIEWPORTS) {
+      await runResultsOverlayViewportSweep(browser, vp);
     }
   } finally {
     await browser.close();

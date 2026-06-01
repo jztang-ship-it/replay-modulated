@@ -47,7 +47,6 @@ import {
   OVERLAY_CROSSFADE_MS,
   type ResultsOverlayState,
 } from "./H2HResultsOverlay";
-import { getNickname } from "@shared/utils/playerIdentity";
 import { isRealName } from "@shared/utils/isRealName";
 
 /** Crossfade-in duration from the HOLD-phase grid into the H2H arc.
@@ -141,12 +140,20 @@ function H2HRecipientRevealInner(props: InnerProps) {
     displayName: namedChallenger ?? "your friend",
   }), [senderResolved, namedChallenger]);
 
+  // Bug 3: the recipient label in the reveal/results shell now reads
+  // the literal "YOU" — matching the Layout A/B restructure's playing-
+  // shell label rule (design-lock §1 / §5: "Random handle as your
+  // label → literal YOU"). Previously the reveal shell pulled from
+  // getNickname() which surfaced the generated nickname (e.g.
+  // "DELTAHOOPS_2927") in the recipient's bottom-zone header. The
+  // opponent's label (sender.displayName) stays as namedChallenger /
+  // "your friend" via the sender memo above.
   const recipient: H2HHand = useMemo(() => ({
     handId: "recipient",
     totalFp: myScore,
     tier: myWinTier as H2HHand["tier"],
     cards: myRoster as unknown as H2HCard[],
-    displayName: getNickname() || "You",
+    displayName: "YOU",
   }), [myScore, myWinTier, myRoster]);
 
   // initialPhase: "idle" (phase 5a amend3, 2026-05-27) — the production

@@ -214,9 +214,10 @@ function ZonePanel({ children, dataAttr, style }: { children: React.ReactNode; d
   );
 }
 
-function ZoneHeader({ hand }: { hand: H2HHand }) {
+function ZoneHeader({ hand, position }: { hand: H2HHand; position?: "top" | "bottom" }) {
   return (
     <div
+      data-h2h-overlay-zone-label={position}
       style={{
         padding: "0 6px",
         height: ZONE_HEADER_HEIGHT_PX,
@@ -618,6 +619,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             - right rail: FP totals on both; absolute matchup delta
               floats between scores on arc only. */}
       <div
+        data-h2h-overlay-inner="true"
         style={{
           width: "100%",
           maxWidth: "min(480px, 100%)",
@@ -628,6 +630,23 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
           boxSizing: "border-box",
           display: "flex",
           flexDirection: "column",
+          // Bug 2 fix (Layout A/B restructure carry-forward §6): the
+          // overlay's composition (two strips + hero grid + reserved
+          // CTA) genuinely overflows the available height on tight
+          // viewports (390×700+ with URL bar, 390×664 mid-scroll,
+          // 360×590, 320×520, in-app webviews). The play shell solved
+          // this via H2HBoardShell's innerScrollable / belowBoardSticky
+          // props (overflow-y:auto on the inner column + sticky-bottom
+          // on the reserved-CTA wrapper). H2HResultsOverlay is hand-
+          // rolled (not an H2HBoardShell consumer), so it gets its own
+          // copy of the same rule. Adaptation is automatic — natural
+          // CSS behavior shows no scroll when content fits (control
+          // viewports above the comfortable floor stay unchanged);
+          // below the floor, overflow-y:auto engages and the reserved-
+          // bottom's sticky:bottom:0 keeps the CTA pinned. iOS momentum
+          // via -webkit-overflow-scrolling.
+          overflowY: "auto" as const,
+          WebkitOverflowScrolling: "touch" as const,
           // Phase 4 amend3 (2026-05-27): the top-strip → hero-pair →
           // bottom-strip block is a single TIGHT composition.
           // Piece 2a (2026-05-28, doc lock a5d7e43): gap removed from
@@ -647,7 +666,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
       >
         {/* ── TOP STRIP — opponent's lineup ──────────────────────────── */}
         <ZonePanel dataAttr="opponent" style={{ marginBottom: 18 }}>
-          <ZoneHeader hand={sender} />
+          <ZoneHeader hand={sender} position="top" />
           <ResultsStrip
             cards={sender.cards}
             renderCard={renderCard}
@@ -743,7 +762,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             onCardTap={handleBottomCardTap}
             revealOrder={recipientRevealOrder}
           />
-          <ZoneHeader hand={recipient} />
+          <ZoneHeader hand={recipient} position="bottom" />
         </ZonePanel>
 
         {/* ── RESERVED BOTTOM SPACE (holds CTA + countdown) ────────────
@@ -759,18 +778,39 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
         <div
           data-h2h-overlay-reserved="true"
           style={{
-            flex: "1 1 auto",
-            minHeight: 0,
+            // Bug 2 fix (carry-forward of H2HBoardShell's
+            // belowBoardSticky pattern). The play harness already
+            // proved this exact mechanism in the play shell:
+            //   - flex:1 1 auto + minHeight:0 SHRINKS to 0 under
+            //     overflow (children render outside the box), so the
+            //     CTA wrapper renders BELOW the visible scroll-port.
+            //     That was the prior cause of the CTA clip.
+            //   - flex:0 0 auto sizes to content (~64px CTA + 8px
+            //     padding), so sticky's bounding box matches the CTA's
+            //     actual visual region.
+            //   - margin-top:auto pushes reserved-bottom to the bottom
+            //     of the flex column when there's leftover space
+            //     (= "no scroll / fits" case), so the CTA still
+            //     visually sits at the viewport bottom even on roomy
+            //     viewports — preserving the prior flex-end behavior.
+            //   - When content overflows, sticky:bottom:0 pins
+            //     reserved-bottom to the visible scroll-port bottom
+            //     (the CTA stays pinned through any scroll position).
+            flex: "0 0 auto",
+            marginTop: "auto",
+            position: "sticky" as const,
+            bottom: 0,
+            zIndex: 1,
             display: "flex",
             flexDirection: "column",
-            justifyContent: "flex-end",
             alignItems: "stretch",
-            // Piece 2a (2026-05-28, doc lock a5d7e43): reserved paddingTop
-            // 16 → 8 contributes 8px of CTA breathing room. Combined with
-            // bottom-strip Y moving up by 14px and the bottom-strip →
-            // reserved gap going to 0, the CTA gets ~40px more unclipped
-            // headroom on safe-area-inset viewports.
+            justifyContent: "flex-start",
             paddingTop: 8,
+            // Match the overlay outer's background so the sticky CTA
+            // strip has an opaque underlay when content scrolls behind
+            // it (otherwise the bottom strip would bleed through the
+            // CTA wrapper on tight viewports).
+            background: "linear-gradient(180deg, #070A12 0%, #070A12 100%)",
           }}
         >
           <div
