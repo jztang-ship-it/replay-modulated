@@ -723,7 +723,15 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             marginBottom: 4,
           }}
         >
-          {/* Left rail spans both rows — holds headline + trash-talk. */}
+          {/* Left rail spans both rows — holds headline + trash-talk.
+              Layout-3 fix (c): center the text block within the rail
+              and give it symmetric padding so it isn't cramped against
+              the left edge. Previously padding was "0 4px 0 0" (right
+              only, zero left), so the text abutted the viewport edge.
+              Now: symmetric horizontal padding + text-align center so
+              both headline and trash-talk render centered within the
+              rail. Copy and two-tone hierarchy (white headline + orange
+              trash-talk) unchanged — this is layout/styling only. */}
           <div
             data-h2h-overlay-rail="left"
             style={{
@@ -731,8 +739,9 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
+              alignItems: "stretch",
               gap: 8,
-              padding: "0 4px 0 0",
+              padding: "0 8px",
               minWidth: 0,
             }}
           >
@@ -745,6 +754,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
                 letterSpacing: -0.4,
                 lineHeight: 1.15,
                 wordBreak: "break-word",
+                textAlign: "center",
               }}
             >
               {headline}
@@ -757,6 +767,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
                 color: "#FFB14A",
                 lineHeight: 1.35,
                 wordBreak: "break-word",
+                textAlign: "center",
               }}
             >
               {trashTalkLine}
@@ -770,6 +781,70 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
           {/* Row 2: bottom hero cell + user score (anchored to bottom hero Y). */}
           <HeroCell card={bottomSelectedCard} renderCard={renderCard} />
           <ScoreCell total={recipient.totalFp} isLeading={recipientLeading} />
+
+          {/* Layout-3 fix (b): final-score GAP floats in the right-rail
+              gap between the two score cells — same position the arc's
+              per-matchup delta occupies via H2HRevealScreen's
+              MidRailContent. The right column reads top→bottom:
+                opponent score / final gap / my score.
+              The three metrics, all right, fixed position. The gap
+              previously had no separate readout at results (the value
+              was baked into the left-rail headline copy, which made
+              it read as if the delta had been moved to the left).
+              The hero zone is already position:relative (line 713), so
+              this absolute child anchors to it. */}
+          <div
+            data-h2h-overlay-final-gap-float="true"
+            style={{
+              position: "absolute",
+              top: "50%",
+              right: 0,
+              width: RIGHT_RAIL_WIDTH_PX,
+              transform: "translateY(-50%)",
+              pointerEvents: "none",
+            }}
+          >
+            <div
+              data-h2h-overlay-final-gap="true"
+              data-h2h-overlay-final-gap-value={(recipient.totalFp - sender.totalFp).toFixed(1)}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color:
+                    recipient.totalFp > sender.totalFp ? WINNING_COLOR
+                    : recipient.totalFp < sender.totalFp ? TRAILING_COLOR
+                    : DELTA_NEUTRAL,
+                  fontVariantNumeric: "tabular-nums",
+                  textAlign: "center",
+                  lineHeight: 1.1,
+                }}
+              >
+                <div>
+                  {recipient.totalFp - sender.totalFp > 0 ? "+" : ""}
+                  {(recipient.totalFp - sender.totalFp).toFixed(1)}
+                </div>
+                <div
+                  style={{
+                    fontSize: 7,
+                    fontWeight: 700,
+                    color: "rgba(255,255,255,0.4)",
+                    letterSpacing: 1,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  final
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* ── BOTTOM STRIP — user's lineup ─────────────────────────────

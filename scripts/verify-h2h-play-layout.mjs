@@ -1010,6 +1010,13 @@ async function runHoldSelectViewportSweep(browser, vp) {
         youAnimationName: youCs?.animationName ?? null,
         opChargeColor: opCs?.getPropertyValue("--h2h-charge-color")?.trim() ?? "",
         youChargeColor: youCs?.getPropertyValue("--h2h-charge-color")?.trim() ?? "",
+        // Layout-3 fix (a): the BORDER must stay neutral white through
+        // the whole charge — only the GLOW (box-shadow) is tier-colored.
+        // getComputedStyle returns the currently-rendered border color
+        // (post-keyframe-interpolation). rgba(255,255,255,0.18) resolves
+        // to "rgba(255, 255, 255, 0.18)" in the browser.
+        opBorderColor: opCs?.borderTopColor ?? null,
+        youBorderColor: youCs?.borderTopColor ?? null,
       };
     });
     record(
@@ -1031,6 +1038,35 @@ async function runHoldSelectViewportSweep(browser, vp) {
       `${vp.label} Feature 1 charge: you slot has --h2h-charge-color set (matchup-0 recipient tier)`,
       chargeSnap.youChargeColor.length > 0,
       `color="${chargeSnap.youChargeColor}"`,
+    );
+    // Layout-3 fix (a) regression-guard: border-color stays neutral white
+    // through the entire charge keyframe (rgba(255,255,255,0.18)). The
+    // previous keyframe ramped the border to var(--h2h-charge-color),
+    // making the box read as tier-colored rather than as a neutral box
+    // with a tier-colored glow. Mid-animation sampling here — if the
+    // keyframe regresses to tier-color interpolation, this assertion
+    // catches it because all three keyframe stops now resolve to the
+    // same neutral value.
+    const isNeutralWhiteBorder = (color) => {
+      if (!color) return false;
+      // Normalize: "rgba(255, 255, 255, 0.18)" → match the 0.18 alpha.
+      // Browsers may emit either "rgba(255, 255, 255, 0.18)" or with
+      // slight spacing differences. Match the 255/255/255 RGB and an
+      // alpha < 0.5 (clearly NOT the tier-color, which is fully opaque).
+      const m = color.match(/rgba?\(\s*255\s*,\s*255\s*,\s*255\s*,\s*([0-9.]+)\s*\)/);
+      if (!m) return false;
+      const alpha = parseFloat(m[1]);
+      return alpha > 0 && alpha < 0.5;
+    };
+    record(
+      `${vp.label} Layout-3 (a) charge: opponent slot border-color is neutral white (NOT tier-colored)`,
+      isNeutralWhiteBorder(chargeSnap.opBorderColor),
+      `borderColor="${chargeSnap.opBorderColor}"`,
+    );
+    record(
+      `${vp.label} Layout-3 (a) charge: you slot border-color is neutral white (NOT tier-colored)`,
+      isNeutralWhiteBorder(chargeSnap.youBorderColor),
+      `borderColor="${chargeSnap.youBorderColor}"`,
     );
   } else {
     record(
@@ -1302,6 +1338,144 @@ async function runResultsOverlayViewportSweep(browser, vp) {
     bottomLabel === "YOU",
     `label="${bottomLabel}"`,
   );
+
+  // Layout-3 fix (b): final-score gap floats in the right-rail gap,
+  // NOT in the left commentary column. The right column at results
+  // reads top→bottom: opponent score / final gap / my score — three
+  // metrics, all right, fixed position. The reveal arc's per-matchup
+  // delta uses the same right-rail-gap position; this guarantees the
+  // delta never relocates between reveal and results.
+  //
+  // Layout-3 fix (c): the left commentary block is centered within its
+  // column with symmetric padding (not cramped against the left edge).
+  const overlayLayout = await page.evaluate(() => {
+    const overlay = document.querySelector("[data-h2h-results-overlay]");
+    const hero = document.querySelector("[data-h2h-overlay-hero]");
+    const finalGap = document.querySelector("[data-h2h-overlay-final-gap-float]");
+    const leftRail = document.querySelector("[data-h2h-overlay-rail='left']");
+    const headline = document.querySelector("[data-h2h-overlay-headline]");
+    const trashTalk = document.querySelector("[data-h2h-overlay-trash-talk]");
+    const oppScore = document.querySelectorAll("[data-h2h-overlay-score]")[0];
+    const youScore = document.querySelectorAll("[data-h2h-overlay-score]")[1];
+    const overlayRect = overlay?.getBoundingClientRect();
+    const heroRect = hero?.getBoundingClientRect();
+    const finalGapRect = finalGap?.getBoundingClientRect();
+    const leftRailRect = leftRail?.getBoundingClientRect();
+    const headlineRect = headline?.getBoundingClientRect();
+    const trashTalkRect = trashTalk?.getBoundingClientRect();
+    const oppScoreRect = oppScore?.getBoundingClientRect();
+    const youScoreRect = youScore?.getBoundingClientRect();
+    const finalGapValueAttr =
+      document.querySelector("[data-h2h-overlay-final-gap]")?.getAttribute(
+        "data-h2h-overlay-final-gap-value",
+      ) ?? null;
+    const headlineCs = headline ? getComputedStyle(headline) : null;
+    const trashTalkCs = trashTalk ? getComputedStyle(trashTalk) : null;
+    const leftRailCs = leftRail ? getComputedStyle(leftRail) : null;
+    return {
+      vw: window.innerWidth,
+      overlayRight: overlayRect?.right ?? null,
+      heroLeft: heroRect?.left ?? null,
+      heroRight: heroRect?.right ?? null,
+      heroWidth: heroRect?.width ?? null,
+      finalGapPresent: !!finalGap,
+      finalGapLeft: finalGapRect?.left ?? null,
+      finalGapRight: finalGapRect?.right ?? null,
+      finalGapCenterX: finalGapRect ? finalGapRect.left + finalGapRect.width / 2 : null,
+      finalGapValueAttr,
+      leftRailLeft: leftRailRect?.left ?? null,
+      leftRailRight: leftRailRect?.right ?? null,
+      leftRailWidth: leftRailRect?.width ?? null,
+      leftRailPaddingLeft: leftRailCs?.paddingLeft ?? null,
+      leftRailPaddingRight: leftRailCs?.paddingRight ?? null,
+      headlineLeft: headlineRect?.left ?? null,
+      headlineRight: headlineRect?.right ?? null,
+      headlineTextAlign: headlineCs?.textAlign ?? null,
+      trashTalkTextAlign: trashTalkCs?.textAlign ?? null,
+      oppScoreCenterX: oppScoreRect ? oppScoreRect.left + oppScoreRect.width / 2 : null,
+      youScoreCenterX: youScoreRect ? youScoreRect.left + youScoreRect.width / 2 : null,
+    };
+  });
+
+  // (b) Final gap floats in the right column. Specifically:
+  //   - is present in the DOM
+  //   - its center-x is on the right HALF of the overlay (not in the
+  //     left rail; left rail spans 0..LEFT_RAIL_WIDTH_PX after the
+  //     16px outer padding)
+  //   - its center-x is approximately aligned with both score cells'
+  //     center-x (right column = same vertical axis as scores)
+  //   - its value-attribute reads as a numeric gap
+  record(
+    `${vp.label} Layout-3 (b): final-gap float is present in the overlay`,
+    overlayLayout.finalGapPresent,
+    `present=${overlayLayout.finalGapPresent}`,
+  );
+  if (overlayLayout.finalGapPresent && overlayLayout.heroLeft != null && overlayLayout.heroRight != null) {
+    const heroMid = (overlayLayout.heroLeft + overlayLayout.heroRight) / 2;
+    record(
+      `${vp.label} Layout-3 (b): final-gap center-x is in the right HALF of the hero zone (NOT the left commentary column)`,
+      overlayLayout.finalGapCenterX != null && overlayLayout.finalGapCenterX > heroMid,
+      `finalGapCenterX=${overlayLayout.finalGapCenterX?.toFixed(1)} heroMid=${heroMid.toFixed(1)}`,
+    );
+  }
+  if (
+    overlayLayout.finalGapCenterX != null &&
+    overlayLayout.oppScoreCenterX != null &&
+    overlayLayout.youScoreCenterX != null
+  ) {
+    // The right column = vertical axis of the two score cells.
+    // The final gap should sit on that axis (matching reveal-stage x).
+    const scoreColumnX = (overlayLayout.oppScoreCenterX + overlayLayout.youScoreCenterX) / 2;
+    const xMatchPx = Math.abs(overlayLayout.finalGapCenterX - scoreColumnX);
+    record(
+      `${vp.label} Layout-3 (b): final-gap center-x matches the score-column axis (±8px)`,
+      xMatchPx <= 8,
+      `finalGapCenterX=${overlayLayout.finalGapCenterX.toFixed(1)} scoreColumnX=${scoreColumnX.toFixed(1)} Δ=${xMatchPx.toFixed(1)}`,
+    );
+  }
+  record(
+    `${vp.label} Layout-3 (b): final-gap value attribute is a numeric gap`,
+    overlayLayout.finalGapValueAttr != null && !Number.isNaN(parseFloat(overlayLayout.finalGapValueAttr)),
+    `value="${overlayLayout.finalGapValueAttr}"`,
+  );
+
+  // (c) Left rail centered + has symmetric padding (not cramped against
+  // the left edge).
+  record(
+    `${vp.label} Layout-3 (c): left-rail headline textAlign === "center"`,
+    overlayLayout.headlineTextAlign === "center",
+    `textAlign="${overlayLayout.headlineTextAlign}"`,
+  );
+  record(
+    `${vp.label} Layout-3 (c): left-rail trash-talk textAlign === "center"`,
+    overlayLayout.trashTalkTextAlign === "center",
+    `textAlign="${overlayLayout.trashTalkTextAlign}"`,
+  );
+  // Symmetric horizontal padding: paddingLeft > 0 AND paddingLeft ===
+  // paddingRight. Pre-fix paddingLeft was 0, paddingRight was 4. Post-
+  // fix both are 8.
+  const parsePx = (v) => (v ? parseFloat(v) : NaN);
+  const pl = parsePx(overlayLayout.leftRailPaddingLeft);
+  const pr = parsePx(overlayLayout.leftRailPaddingRight);
+  record(
+    `${vp.label} Layout-3 (c): left-rail has symmetric horizontal padding > 0 (not cramped against left edge)`,
+    pl > 0 && pr > 0 && Math.abs(pl - pr) <= 1,
+    `paddingLeft=${overlayLayout.leftRailPaddingLeft} paddingRight=${overlayLayout.leftRailPaddingRight}`,
+  );
+  // Sanity: headline must fit within the rail width (not overflow).
+  if (
+    overlayLayout.leftRailLeft != null &&
+    overlayLayout.leftRailRight != null &&
+    overlayLayout.headlineLeft != null &&
+    overlayLayout.headlineRight != null
+  ) {
+    record(
+      `${vp.label} Layout-3 (c): left-rail headline is within rail bounds (no overflow)`,
+      overlayLayout.headlineLeft >= overlayLayout.leftRailLeft - 0.5 &&
+        overlayLayout.headlineRight <= overlayLayout.leftRailRight + 0.5,
+      `rail=[${overlayLayout.leftRailLeft.toFixed(1)},${overlayLayout.leftRailRight.toFixed(1)}] headline=[${overlayLayout.headlineLeft.toFixed(1)},${overlayLayout.headlineRight.toFixed(1)}]`,
+    );
+  }
 
   // Strict §5a / §5b assertion against the overlay.
   const rects = await captureOverlayRects(page);
