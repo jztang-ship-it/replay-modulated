@@ -1017,6 +1017,14 @@ async function runHoldSelectViewportSweep(browser, vp) {
         // to "rgba(255, 255, 255, 0.18)" in the browser.
         opBorderColor: opCs?.borderTopColor ?? null,
         youBorderColor: youCs?.borderTopColor ?? null,
+        // abc-8(a) follow-up: during charge, the border must be SOLID
+        // (not dashed) and high-alpha white so it holds its own over
+        // the glow's 8px tier-colored spread band on bright tiers
+        // (GREEN, ORANGE). Inline base is "1px dashed rgba(255,255,255,
+        // 0.18)" for the resting drop-zone look; the keyframe overrides
+        // border-style + border-color while the animation is active.
+        opBorderStyle: opCs?.borderTopStyle ?? null,
+        youBorderStyle: youCs?.borderTopStyle ?? null,
       };
     });
     record(
@@ -1040,23 +1048,24 @@ async function runHoldSelectViewportSweep(browser, vp) {
       `color="${chargeSnap.youChargeColor}"`,
     );
     // Layout-3 fix (a) regression-guard: border-color stays neutral white
-    // through the entire charge keyframe (rgba(255,255,255,0.18)). The
-    // previous keyframe ramped the border to var(--h2h-charge-color),
-    // making the box read as tier-colored rather than as a neutral box
-    // with a tier-colored glow. Mid-animation sampling here — if the
-    // keyframe regresses to tier-color interpolation, this assertion
-    // catches it because all three keyframe stops now resolve to the
-    // same neutral value.
+    // through the entire charge keyframe (originally rgba(255,255,255,
+    // 0.18); abc-8(a) follow-up raised this to rgba(255,255,255,0.95)
+    // for solidity over the tier glow). The previous keyframe ramped
+    // the border to var(--h2h-charge-color), making the box read as
+    // tier-colored rather than as a neutral box with a tier-colored
+    // glow. Mid-animation sampling here — if the keyframe regresses to
+    // tier-color interpolation, this assertion catches it because all
+    // three keyframe stops resolve to the same neutral white RGB.
     const isNeutralWhiteBorder = (color) => {
       if (!color) return false;
-      // Normalize: "rgba(255, 255, 255, 0.18)" → match the 0.18 alpha.
-      // Browsers may emit either "rgba(255, 255, 255, 0.18)" or with
-      // slight spacing differences. Match the 255/255/255 RGB and an
-      // alpha < 0.5 (clearly NOT the tier-color, which is fully opaque).
-      const m = color.match(/rgba?\(\s*255\s*,\s*255\s*,\s*255\s*,\s*([0-9.]+)\s*\)/);
+      // Normalize: "rgba(255, 255, 255, A)". Match the 255/255/255 RGB
+      // and any positive alpha (a tier color would NOT be 255/255/255).
+      // Alpha bounds are checked separately by the solid+high-alpha
+      // assertion below.
+      const m = color.match(/rgba?\(\s*255\s*,\s*255\s*,\s*255\s*(?:,\s*([0-9.]+)\s*)?\)/);
       if (!m) return false;
-      const alpha = parseFloat(m[1]);
-      return alpha > 0 && alpha < 0.5;
+      const alpha = m[1] !== undefined ? parseFloat(m[1]) : 1;
+      return alpha > 0;
     };
     record(
       `${vp.label} Layout-3 (a) charge: opponent slot border-color is neutral white (NOT tier-colored)`,
@@ -1067,6 +1076,33 @@ async function runHoldSelectViewportSweep(browser, vp) {
       `${vp.label} Layout-3 (a) charge: you slot border-color is neutral white (NOT tier-colored)`,
       isNeutralWhiteBorder(chargeSnap.youBorderColor),
       `borderColor="${chargeSnap.youBorderColor}"`,
+    );
+    // abc-8(a) follow-up regression-guard: during the charge the border
+    // must be SOLID (not dashed) and the white alpha must be high
+    // (≥0.8) so it visually holds over the glow's 8px tier-colored
+    // box-shadow spread band. The bug only bites on bright tiers
+    // (GREEN, ORANGE) where the spread band swallows a faint dashed
+    // edge and reads as a colored border. Asserting borderStyle ===
+    // "solid" AND alpha ≥ 0.8 against the computed style catches both
+    // a regression to the resting dashed look and a regression of the
+    // keyframe alpha back toward the original 0.18.
+    const isSolidHighAlphaWhiteBorder = (color, style) => {
+      if (style !== "solid") return false;
+      if (!color) return false;
+      const m = color.match(/rgba?\(\s*255\s*,\s*255\s*,\s*255\s*(?:,\s*([0-9.]+)\s*)?\)/);
+      if (!m) return false;
+      const alpha = m[1] !== undefined ? parseFloat(m[1]) : 1;
+      return alpha >= 0.8;
+    };
+    record(
+      `${vp.label} abc-8(a) charge: opponent slot border is solid + high-alpha white (holds over tier glow)`,
+      isSolidHighAlphaWhiteBorder(chargeSnap.opBorderColor, chargeSnap.opBorderStyle),
+      `borderStyle="${chargeSnap.opBorderStyle}" borderColor="${chargeSnap.opBorderColor}"`,
+    );
+    record(
+      `${vp.label} abc-8(a) charge: you slot border is solid + high-alpha white (holds over tier glow)`,
+      isSolidHighAlphaWhiteBorder(chargeSnap.youBorderColor, chargeSnap.youBorderStyle),
+      `borderStyle="${chargeSnap.youBorderStyle}" borderColor="${chargeSnap.youBorderColor}"`,
     );
   } else {
     record(
