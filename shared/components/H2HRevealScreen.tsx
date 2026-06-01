@@ -81,6 +81,12 @@ import {
   TRAILING_COLOR,
   DELTA_NEUTRAL,
 } from "./H2HScoreRail";
+// Phase 2.5 dev-only instrumentation. The import is referenced ONLY
+// from inside a `{import.meta.env.DEV && ...}` JSX gate below; Vite
+// constant-folds `import.meta.env.DEV` to `false` in prod and tree-
+// shakes the import away. The runtime querystring check inside the
+// overlay itself is the second layer of gating.
+import { RelayDebugOverlay, isRelayDebugEnabled } from "./RelayDebugOverlay";
 
 // ── Public types ─────────────────────────────────────────────────────────
 
@@ -1625,14 +1631,36 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
   );
 
   return (
-    <H2HBoardShell
-      surfaceKind="reveal"
-      topLabel={sender.displayName}
-      bottomLabel={recipient.displayName}
-      topStrip={topStripSlot}
-      bottomStrip={bottomStripSlot}
-      hero={heroSlot}
-    />
+    <>
+      <H2HBoardShell
+        surfaceKind="reveal"
+        topLabel={sender.displayName}
+        bottomLabel={recipient.displayName}
+        topStrip={topStripSlot}
+        bottomStrip={bottomStripSlot}
+        hero={heroSlot}
+      />
+      {/* Phase 2.5 dev-only relay debug overlay. JSX-gated on
+          `import.meta.env.DEV` so Vite constant-folds the expression
+          to `false && ...` in prod, tree-shaking both this element
+          and the RelayDebugOverlay import out of the bundle. The
+          `isRelayDebugEnabled()` runtime check inside the component
+          itself is the belt-and-suspenders second layer (requires
+          `?relayDebug=1` querystring even in dev). The overlay is
+          position:fixed + pointer-events:none, so it doesn't reach
+          relay layout or interaction. The values it consumes
+          (running totals, phase, matchupIndex, activeMatchup) are
+          already in this component's scope; no new state is added to
+          feed it. Per-cell scale / state / pop are DOM-observed by
+          the overlay itself via data-attributes + computed styles. */}
+      {((import.meta as any).env?.DEV === true) && isRelayDebugEnabled() && (
+        <RelayDebugOverlay
+          reveal={reveal}
+          senderFinalTotal={sender.totalFp}
+          recipientFinalTotal={recipient.totalFp}
+        />
+      )}
+    </>
   );
 }
 

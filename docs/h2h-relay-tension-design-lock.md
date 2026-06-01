@@ -213,6 +213,16 @@ Locked once for clarity:
 
 No Vercel preview — recipient reveal uses per-origin anon + the dev mock route is stripped. Device-verify on PROD after merge, once Production flips to the new merge hash and shows Ready.
 
+### Dev-only relay debug overlay (Phase 2.5)
+
+For verifying the relay's numeric values live (Z1 applied scale, leader glow on/off, pop kind/magnitude, set-boundary log), a dev-only overlay is available. It's instrumentation, not a feature.
+
+- **Activate locally:** start the dev server (`npm run dev`) and append `?relayDebug=1` to the basketball mock URL. Example: `http://localhost:5173/basketball/dev/h2h-play-mock?relayDebug=1`.
+- **Gating:** double-gated. `import.meta.env.DEV` constant-folds to `false` in prod builds (Vite tree-shakes the `RelayDebugOverlay` import out of the bundle entirely); even in a dev build the overlay requires the `?relayDebug=1` querystring before it renders. Cannot reach a real user.
+- **What it shows:** per-cell applied scale (live computed transform) + resting scale (data-attr) + effective rendered size in px + leader state + Z2 glow on/off + pop kind/magnitude/duration; both running totals + gap; a rolling log of the last 8 set-boundary events with flip/leader/pop info.
+- **Observation, not coupling:** reads existing state via the `reveal` prop + DOM data-attributes + `getComputedStyle`. The relay components were not given new state to feed the overlay. The only relay-side touch was adding `data-h2h-score-pop-magnitude`, `data-h2h-score-pop-duration-ms`, `data-h2h-score-rest-scale`, and `data-h2h-score-size-progress` data-attributes to `ScoreCell` — read-only, zero behavior impact.
+
+
 Phase 1 device-check items (each on its own line):
 
 1. The race READS live — numbers visibly climb and cross; the leader is clear via glow even when sizes are close (TWO-CHANNEL test — verify in a TIGHT race specifically).
