@@ -1743,6 +1743,97 @@ async function runResultsOverlayViewportSweep(browser, vp) {
     `transform="${phase1Snap.youInnerTransform}" parsedScale=${youInnerScale.toFixed(3)}`,
   );
 
+  // ── Relay-tension Phase 2 visual assertions ──────────────────────────
+  //
+  // (P2-1) The Phase 2 pop keyframe rule (`h2h-score-pop`) is loaded
+  //        in the document stylesheets. The actual pop animation runs
+  //        via Web Animations API per-cell (see H2HScoreRail.tsx); the
+  //        keyframe rule is documentary + acts as a presence-test that
+  //        Phase 2's pop capability shipped. Pre-Phase-2 main: rule not
+  //        declared → assertion fails. Post-Phase-2: present → passes.
+  //
+  // (P2-2) The Phase 2 momentum-tag keyframe rule (`h2h-momentum-tag-
+  //        anim`) is loaded. Same presence-test for the tag's fade-in/
+  //        hold/fade-out animation.
+  //
+  // (P2-3) At the static overlay end-state, the momentum tag element
+  //        is NOT in the DOM. The tag is set-boundary-only (fires on
+  //        a flip in the live arc); by the time the static overlay
+  //        renders, no tag should be lingering. This guards both the
+  //        "tag is transient" invariant and the cross-surface handoff
+  //        ("nothing left at done phase that the results overlay
+  //        doesn't expect"). Pre-Phase-2 main: tag doesn't exist at
+  //        all, so the assertion passes by absence too — meaning P2-3
+  //        is NOT a pre-fix-fail. The pre-fix-fail load is carried by
+  //        P2-1 + P2-2 (keyframe-rule presence).
+  //
+  // (P2-4) At the overlay end-state, the `data-h2h-score-pop-kind`
+  //        attribute equals "none" on BOTH score cells. This is the
+  //        cross-surface handoff invariant for Phase 2: pops are
+  //        cleared by the time results renders. Pre-Phase-2 main: no
+  //        such attribute → null → assertion fails. Post-Phase-2: both
+  //        cells set the attribute to "none" by default (no active
+  //        pop at end-state) → passes.
+  //
+  // Feel-based properties not asserted (left to device):
+  //   - Pop intensity / sharpness, scaled-magnitude feel.
+  //   - Lead-change pop firing only on the new leader (live transient,
+  //     ~300ms window — can't reliably sample from this static fixture).
+  //   - Tag timing relative to delta flash, tag legibility.
+  //   - Crossfade snap continuity.
+  const phase2Snap = await page.evaluate(() => {
+    const keyframeRules = new Set();
+    for (const sheet of Array.from(document.styleSheets)) {
+      let rules;
+      try {
+        rules = sheet.cssRules;
+      } catch {
+        continue;
+      }
+      for (const rule of Array.from(rules)) {
+        if (rule.type === CSSRule.KEYFRAMES_RULE) {
+          keyframeRules.add(rule.name);
+        }
+      }
+    }
+    const scoreCells = document.querySelectorAll("[data-h2h-overlay-score]");
+    const opp = scoreCells[0];
+    const you = scoreCells[1];
+    const tag = document.querySelector("[data-h2h-momentum-tag]");
+    return {
+      hasPopKeyframe: keyframeRules.has("h2h-score-pop"),
+      hasMomentumTagKeyframe: keyframeRules.has("h2h-momentum-tag-anim"),
+      tagPresent: !!tag,
+      oppPopKind: opp?.getAttribute("data-h2h-score-pop-kind") ?? null,
+      youPopKind: you?.getAttribute("data-h2h-score-pop-kind") ?? null,
+    };
+  });
+  record(
+    `${vp.label} relay-tension Phase 2 (P2-1): h2h-score-pop keyframe rule is loaded`,
+    phase2Snap.hasPopKeyframe,
+    `hasPopKeyframe=${phase2Snap.hasPopKeyframe}`,
+  );
+  record(
+    `${vp.label} relay-tension Phase 2 (P2-2): h2h-momentum-tag-anim keyframe rule is loaded`,
+    phase2Snap.hasMomentumTagKeyframe,
+    `hasMomentumTagKeyframe=${phase2Snap.hasMomentumTagKeyframe}`,
+  );
+  record(
+    `${vp.label} relay-tension Phase 2 (P2-3): momentum tag element is NOT mounted at overlay end-state (transient invariant)`,
+    !phase2Snap.tagPresent,
+    `tagPresent=${phase2Snap.tagPresent}`,
+  );
+  record(
+    `${vp.label} relay-tension Phase 2 (P2-4): opponent score data-h2h-score-pop-kind === "none" at overlay end-state (handoff invariant)`,
+    phase2Snap.oppPopKind === "none",
+    `oppPopKind="${phase2Snap.oppPopKind}"`,
+  );
+  record(
+    `${vp.label} relay-tension Phase 2 (P2-4): you score data-h2h-score-pop-kind === "none" at overlay end-state (handoff invariant)`,
+    phase2Snap.youPopKind === "none",
+    `youPopKind="${phase2Snap.youPopKind}"`,
+  );
+
   // (c) Left rail centered + has symmetric padding (not cramped against
   // the left edge).
   record(

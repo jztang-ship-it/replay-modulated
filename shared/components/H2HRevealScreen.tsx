@@ -68,6 +68,7 @@ import {
   CARD_TRAVEL_MS,
   ENERGY_PULSE_MS,
   BATTLEFIELD_TRAVEL_DURATION_MS,
+  planRevealBeats,
   type EntranceStage,
 } from "./useH2HReveal";
 import { CardBackGeneric } from "./CardBackGeneric";
@@ -645,8 +646,20 @@ const BF_KEYFRAMES_CSS = `
   35%  { transform: scale(1.15); filter: brightness(1.6); }
   100% { transform: scale(1.0); filter: brightness(1.0); }
 }
+/* Relay-tension Phase 2 — momentum tag on set-boundary flip. Fades
+   IN starting at 80ms (stagger from the delta flash at t=0 so the two
+   transients don't visually fight), holds for ~250ms, then fades OUT
+   over 150ms. Animation total = 480ms; the element is unmounted by
+   the parent after that via setTimeout. */
+@keyframes h2h-momentum-tag-anim {
+  0%    { opacity: 0; transform: translate(0, 4px); }
+  16.7% { opacity: 0; transform: translate(0, 4px); }   /* 80ms stagger */
+  29.2% { opacity: 1; transform: translate(0, 0); }     /* 140ms — fade in done */
+  68.8% { opacity: 1; transform: translate(0, 0); }     /* 330ms — hold ends */
+  100%  { opacity: 0; transform: translate(0, -2px); }  /* 480ms — fade out done */
+}
 @media (prefers-reduced-motion: reduce) {
-  [data-h2h-bf-anim], [data-h2h-pulse], [data-h2h-mid-rail-flash] { animation: none !important; }
+  [data-h2h-bf-anim], [data-h2h-pulse], [data-h2h-mid-rail-flash], [data-h2h-momentum-tag] { animation: none !important; }
 }
 `;
 
@@ -1265,6 +1278,133 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
       ? "leading"
       : "trailing";
 
+  // ── Relay-tension Phase 2: set-boundary pops + momentum tag ──────────
+  //
+  // Detection: the hook lands in phase "paused" (or "end-hold" for the
+  // final matchup) AFTER the rollup RAF locks the running totals at the
+  // settled values. `popMemoryRef.lastResolvedIndex` is keyed to
+  // matchupIndex so the boundary fires exactly once per set even though
+  // the effect's deps re-evaluate on every running-total tick.
+  //
+  // Flip detection: prevLeader is held in the same ref and compared
+  // against the new leader derived from the just-settled running totals.
+  // "Flip" requires both sides to be CONCRETE non-tied leaders (i.e.,
+  // not the first-set case where prevLeader is null, not a tie-to-X
+  // emergence). Conservative on purpose — keeps the swap meaningful;
+  // device-revisit can loosen later.
+  //
+  // Per-side scaled magnitude via `planRevealBeats(card).shakeType`
+  // (legendary/big → 1.15×280ms; hype/null → 1.06×200ms; cold/frozen →
+  // 1.03×180ms — locked in the design doc). On a flip, the new leader's
+  // pop is overridden with the lead-change values (1.20×300ms — bigger
+  // and longer than legendary so the swap is unmistakable). The
+  // previous leader (now trailer) keeps its own scaled pop.
+  //
+  // Cross-surface handoff: all pops settle inside the inter-matchup
+  // pause (max 300ms) or the end-of-arc hold (1700ms) before the
+  // reveal→results crossfade. Web Animations API runs with `fill:
+  // "none"` (see H2HScoreRail.tsx), so the inner glyph reverts to its
+  // inline `scale(restScale)` when each pop completes — no leftover
+  // transform at done phase.
+  type FlipLeader = "sender" | "recipient" | "tied" | null;
+  const popMemoryRef = useRef<{
+    lastResolvedIndex: number;
+    prevLeader: FlipLeader;
+  }>({ lastResolvedIndex: -1, prevLeader: null });
+  const [popState, setPopState] = useState<{
+    senderPop?: { magnitude: number; durationMs: number; kind: "scaled" | "lead-change"; key: number };
+    recipientPop?: { magnitude: number; durationMs: number; kind: "scaled" | "lead-change"; key: number };
+    momentumTag?: { copy: string; key: number };
+  }>({});
+
+  useEffect(() => {
+    if (!reveal) return;
+    const settled = reveal.phase === "paused" || reveal.phase === "end-hold";
+    if (!settled) return;
+    const idx = reveal.matchupIndex;
+    if (idx < 0) return;
+    if (popMemoryRef.current.lastResolvedIndex >= idx) return;
+    popMemoryRef.current.lastResolvedIndex = idx;
+
+    const sR = reveal.senderRunningTotal;
+    const rR = reveal.recipientRunningTotal;
+    const tiedNow = Math.abs(sR - rR) < 0.05 && sR > 0 && rR > 0;
+    const newLeader: FlipLeader =
+      tiedNow ? "tied" : sR > rR ? "sender" : rR > sR ? "recipient" : null;
+    const prevLeader = popMemoryRef.current.prevLeader;
+    popMemoryRef.current.prevLeader = newLeader;
+    const flipped =
+      prevLeader !== null && prevLeader !== "tied" &&
+      newLeader !== null && newLeader !== "tied" &&
+      prevLeader !== newLeader;
+
+    const scaledFor = (
+      shakeType: ShakeType | null,
+    ): { magnitude: number; durationMs: number } => {
+      if (shakeType === "legendary" || shakeType === "big") {
+        return { magnitude: 1.15, durationMs: 280 };
+      }
+      if (shakeType === "cold" || shakeType === "frozen") {
+        return { magnitude: 1.03, durationMs: 180 };
+      }
+      // hype + null (dead-band) fall here — small but always-present
+      // punch so every set has SOMETHING.
+      return { magnitude: 1.06, durationMs: 200 };
+    };
+    const senderCard = reveal.activeMatchup.sender;
+    const recipientCard = reveal.activeMatchup.recipient;
+    const senderScaled = senderCard ? scaledFor(planRevealBeats(senderCard).shakeType) : null;
+    const recipientScaled = recipientCard ? scaledFor(planRevealBeats(recipientCard).shakeType) : null;
+
+    const LEAD_CHANGE_MAGNITUDE = 1.20;
+    const LEAD_CHANGE_DURATION_MS = 300;
+
+    const senderPop = senderScaled ? {
+      magnitude: flipped && newLeader === "sender"
+        ? Math.max(senderScaled.magnitude, LEAD_CHANGE_MAGNITUDE)
+        : senderScaled.magnitude,
+      durationMs: flipped && newLeader === "sender"
+        ? Math.max(senderScaled.durationMs, LEAD_CHANGE_DURATION_MS)
+        : senderScaled.durationMs,
+      kind: (flipped && newLeader === "sender" ? "lead-change" : "scaled") as "scaled" | "lead-change",
+      key: idx,
+    } : undefined;
+    const recipientPop = recipientScaled ? {
+      magnitude: flipped && newLeader === "recipient"
+        ? Math.max(recipientScaled.magnitude, LEAD_CHANGE_MAGNITUDE)
+        : recipientScaled.magnitude,
+      durationMs: flipped && newLeader === "recipient"
+        ? Math.max(recipientScaled.durationMs, LEAD_CHANGE_DURATION_MS)
+        : recipientScaled.durationMs,
+      kind: (flipped && newLeader === "recipient" ? "lead-change" : "scaled") as "scaled" | "lead-change",
+      key: idx,
+    } : undefined;
+
+    const momentumTag = flipped ? { copy: "TAKES THE LEAD", key: idx } : undefined;
+    setPopState({ senderPop, recipientPop, momentumTag });
+  }, [
+    reveal,
+    reveal?.phase,
+    reveal?.matchupIndex,
+    reveal?.senderRunningTotal,
+    reveal?.recipientRunningTotal,
+    reveal?.activeMatchup,
+  ]);
+
+  // Auto-clear the momentum tag after its visible window. The tag's
+  // CSS keyframe has 80ms in-stagger + 250ms hold + 150ms fade-out =
+  // 480ms total. After that the element can be unmounted; this guards
+  // against the (rare) case where back-to-back boundaries fire faster
+  // than the tag can fade — the next set's setPopState will replace
+  // the tag with a fresh key, retriggering the animation cleanly.
+  useEffect(() => {
+    if (!popState.momentumTag) return;
+    const id = window.setTimeout(() => {
+      setPopState(prev => (prev.momentumTag ? { ...prev, momentumTag: undefined } : prev));
+    }, 480);
+    return () => window.clearTimeout(id);
+  }, [popState.momentumTag?.key]);
+
   // Per-card revealed status from the hook (post-amend6 pre-reveal rule,
   // 2026-05-27). Strips consume the full Set for both renderer-options
   // gating and the Option β brightness rule. Hero cells consume the
@@ -1387,7 +1527,7 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
                 reducedMotion={reducedMotion}
               />}
           {senderBattle && !showEntranceDeck
-            ? <ScoreCell total={sender.totalFp} displayTotal={senderDisplayTotal} state={senderState} sizeProgress={senderSizeProgress} surface="reveal" />
+            ? <ScoreCell total={sender.totalFp} displayTotal={senderDisplayTotal} state={senderState} sizeProgress={senderSizeProgress} surface="reveal" pop={popState.senderPop} />
             : <div />}
 
           {/* Row 2: recipient's battlefield card + score */}
@@ -1410,7 +1550,7 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
                 reducedMotion={reducedMotion}
               />}
           {recipientBattle && !showEntranceDeck
-            ? <ScoreCell total={recipient.totalFp} displayTotal={recipientDisplayTotal} state={recipientState} sizeProgress={recipientSizeProgress} surface="reveal" />
+            ? <ScoreCell total={recipient.totalFp} displayTotal={recipientDisplayTotal} state={recipientState} sizeProgress={recipientSizeProgress} surface="reveal" pop={popState.recipientPop} />
             : <div />}
 
           {/* Matchup delta — floats in the right-rail GAP between the
@@ -1443,6 +1583,42 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
                     : undefined
                 }
               />
+            </div>
+          )}
+
+          {/* Relay-tension Phase 2 — momentum tag on a set-boundary
+              flip. Mounted only when popState.momentumTag is non-
+              undefined (i.e., a flip just committed); auto-unmounted
+              ~480ms later by the parent setTimeout. Placement: top:
+              30%, right: 0 — ABOVE the delta float at top: 50%. Width
+              matches the right rail so the tag is visually anchored to
+              the score column. `key` ties to the matchup index so a
+              back-to-back flip remounts cleanly (animation re-fires
+              from 0%). Pointer-events disabled because the tag is
+              visual-only. */}
+          {popState.momentumTag && (
+            <div
+              key={popState.momentumTag.key}
+              data-h2h-momentum-tag="true"
+              style={{
+                position: "absolute",
+                top: "30%",
+                right: 0,
+                width: RIGHT_RAIL_WIDTH_PX,
+                transform: "translateY(-50%)",
+                pointerEvents: "none",
+                fontSize: 9,
+                fontWeight: 800,
+                color: WINNING_COLOR,
+                textAlign: "center",
+                letterSpacing: 1,
+                textTransform: "uppercase",
+                lineHeight: 1.1,
+                textShadow: `0 0 6px rgba(34, 197, 94, 0.55)`,
+                animation: `h2h-momentum-tag-anim 480ms ease-out 1`,
+              }}
+            >
+              {popState.momentumTag.copy}
             </div>
           )}
         </div>

@@ -24,7 +24,7 @@
  * test selectors keep working verbatim — no harness or test rewrites.
  */
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 
 // ─── Rail widths ──────────────────────────────────────────────────────────
 //
@@ -81,17 +81,34 @@ const MAX_SCALE = 1.30;
 // top of this baseline.
 const LEADER_TREATMENT_TRANSITION_MS = 200;
 
-// ─── Tie-glow keyframe injection ──────────────────────────────────────────
+// ─── Keyframe injection ───────────────────────────────────────────────────
 //
-// At dead-heat, both cells get a subtle pulsing glow in tie color
-// (charged neutral). Keyframe is module-level + idempotent inject — the
-// same pattern H2HRevealScreen uses for its battlefield-card keyframes.
+// Phase 1: h2h-score-tie-pulse — dead-heat pulsing tie-color glow on both
+// cells. Phase 2 keyframes are NOT here — the Phase 2 pop is driven by
+// Web Animations API (element.animate) so the keyframe doesn't need to
+// live in a stylesheet rule (and parametrizing peak-scale-vs-rest-scale
+// per cell is naturally expressed as JS keyframe arrays). Adding only
+// the document-level rule that the harness pre-fix-fail assertion looks
+// for: h2h-score-pop. The actual animation is run via WAAPI; the rule
+// is documentary + assertable.
 
 const SCORE_RAIL_KEYFRAMES_CSS = `
 @keyframes h2h-score-tie-pulse {
   0%   { opacity: 0.7; }
   50%  { opacity: 1.0; }
   100% { opacity: 0.7; }
+}
+/* Relay-tension Phase 2 — set-boundary pop. Documents the per-set
+   transient scale punch fired by the WAAPI call in ScoreCell. Each
+   cell's runtime animation interpolates between its OWN resting
+   scale (Phase 1 Z1 inline transform) and resting × magnitude, so
+   this stylesheet rule uses neutral 1.0/1.15/1.0 values — the WAAPI
+   call overrides them at runtime. The rule is here so its existence
+   is a presence-test for "Phase 2 ships with pop capability." */
+@keyframes h2h-score-pop {
+  0%   { transform: scale(1.0); }
+  35%  { transform: scale(1.15); }
+  100% { transform: scale(1.0); }
 }
 `;
 
@@ -167,6 +184,28 @@ interface ScoreCellProps {
    *  The choice is structural, not visual — the rendered glyph is
    *  identical across surfaces. */
   surface: "reveal" | "overlay";
+  /** Relay-tension Phase 2 — transient pop on the inner glyph fired
+   *  at a set boundary. `key` changes each time a new pop should
+   *  retrigger; the useEffect below watches it and calls
+   *  `glyph.animate(...)` programmatically. `magnitude` is the
+   *  multiplier applied on top of Phase 1's resting Z scale (so the
+   *  peak is `restScale × magnitude`), `durationMs` is the keyframe
+   *  duration. `kind` differentiates the lead-change-pop (which fires
+   *  ONLY on a flipped set's new leader) from a per-set scaled pop —
+   *  drives the `data-h2h-score-pop-kind` data attribute on the
+   *  outer cell so the harness can distinguish them. The animation
+   *  runs via Web Animations API without `fill: "forwards"`, so the
+   *  transform reverts to the inline scale(restScale) when the
+   *  animation completes. This is the cross-surface handoff
+   *  invariant: by `phase === "done"` the pop is over and the inner
+   *  glyph sits at its resting Phase 1 transform — the same value
+   *  the overlay surface renders. */
+  pop?: {
+    magnitude: number;
+    durationMs: number;
+    kind: "scaled" | "lead-change";
+    key: number;
+  };
 }
 
 export function ScoreCell({
@@ -175,8 +214,20 @@ export function ScoreCell({
   state,
   sizeProgress,
   surface,
+  pop,
 }: ScoreCellProps) {
   useEffect(ensureScoreRailKeyframesInjected, []);
+
+  // Ref to the inner glyph so the Phase 2 pop can fire via WAAPI on the
+  // EXACT scale-bearing element. Composing programmatically (instead of
+  // a CSS-class toggle) lets each pop bake its own peak value (rest ×
+  // magnitude) without needing per-cell CSS custom properties, AND
+  // lets the animation auto-revert to the inline `transform: scale(rest)`
+  // on completion (no `fill: forwards`), which is the cross-surface
+  // handoff invariant: by `phase === "done"` no pop transient is left
+  // on the element.
+  const innerRef = useRef<HTMLDivElement>(null);
+  const restScaleRef = useRef<number>(1);
 
   const shown = displayTotal !== undefined ? displayTotal : total;
   const shownStr = shown.toFixed(1);
@@ -198,6 +249,36 @@ export function ScoreCell({
   const rawScale =
     1 + Math.max(0, Math.min(1, sizeProgress)) * SIZE_PROGRESS_MAX + stateBonus;
   const scale = Math.min(MAX_SCALE, rawScale);
+  restScaleRef.current = scale;
+
+  // Phase 2 pop — WAAPI animation on the inner glyph, retriggered when
+  // pop.key changes. Peaks at restScale × magnitude so the pop COMPOSES
+  // with the Phase 1 resting Z transform (e.g., on the leader at end
+  // of game restScale ≈ 1.20, peak ≈ 1.38 at magnitude 1.15). No
+  // `fill: "forwards"` so the inline `transform: scale(restScale)`
+  // takes over again when the animation ends — that's how the cross-
+  // surface handoff invariant survives Phase 2's transient transforms.
+  useEffect(() => {
+    if (!pop) return;
+    const node = innerRef.current;
+    if (!node || typeof node.animate !== "function") return;
+    const rest = restScaleRef.current;
+    const peak = rest * pop.magnitude;
+    const animation = node.animate(
+      [
+        { transform: `scale(${rest.toFixed(3)})` },
+        { transform: `scale(${peak.toFixed(3)})`, offset: 0.35 },
+        { transform: `scale(${rest.toFixed(3)})` },
+      ],
+      { duration: pop.durationMs, easing: "ease-out", fill: "none" },
+    );
+    return () => {
+      // Cancel any in-flight pop if pop.key flips again before the
+      // animation completes (e.g., a second flip on a back-to-back
+      // boundary) — keeps the inline transform authoritative.
+      animation.cancel();
+    };
+  }, [pop?.key, pop?.magnitude, pop?.durationMs]);
 
   // Color + Z2 glow per state. Trailer is the absence-of-treatment case.
   const numberColor =
@@ -225,6 +306,7 @@ export function ScoreCell({
     <div
       {...surfaceAttrs}
       data-h2h-score-state={state}
+      data-h2h-score-pop-kind={pop?.kind ?? "none"}
       style={{
         display: "flex",
         justifyContent: "center",
@@ -235,6 +317,7 @@ export function ScoreCell({
       }}
     >
       <div
+        ref={innerRef}
         style={{
           fontSize: 22,
           fontWeight: 950,
