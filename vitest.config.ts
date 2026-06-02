@@ -14,7 +14,7 @@ export default defineConfig({
     dedupe: ['react', 'react-dom'],
   },
   test: {
-    include: ['api/_lib/**/__tests__/**/*.test.ts', 'api/__tests__/**/*.test.{js,ts}', 'shared/**/__tests__/**/*.test.{ts,tsx}'],
+    include: ['api/_lib/**/__tests__/**/*.test.ts', 'api/__tests__/**/*.test.{js,ts}', 'shared/**/__tests__/**/*.test.{ts,tsx}', 'basketball/src/**/__tests__/**/*.test.{ts,tsx}'],
     globals: true,
     environment: 'node',
   },

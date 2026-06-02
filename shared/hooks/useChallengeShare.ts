@@ -5,6 +5,7 @@ import { track } from "@shared/analytics/analytics";
 import type { GeneratedCard } from "@shared/types/index";
 import type { WinTierMap } from "@shared/utils/payoutLogic";
 import { supabase } from "@shared/lib/supabase";
+import { enrichInitialRosterForChallenge } from "@shared/utils/enrichInitialRosterForChallenge";
 
 export interface ChallengeShareState {
   triggerResult: TriggerResult | null;
@@ -89,12 +90,24 @@ export function useChallengeShare(sportKey: string) {
       // populated only when evaluateTrigger emitted them (miss → gap/
       // next_tier; rare_pull → anchor_base_player_id/top_game_tier).
       // Columns added by supabase/migrations/012_shared_challenges_trigger_detail.sql.
+      //
+      // Phase 0 challenge-snapshot-enrichment (2026-06-02, lock:
+      // docs/challenge-landing-v2-phase0-snapshot-enrichment-lock.md):
+      // args.initialRoster is the starting hand (deal-time objects, no
+      // wasHeld/actualFp set — its ref and rosterRef diverge after deal).
+      // Merge holds + outcomes from args.roster (resolved final roster)
+      // into the starting hand before serializing so the stored snapshot
+      // carries holdsRecorded:true with real per-card wasHeld/actualFp.
+      const enrichedInitialRoster = enrichInitialRosterForChallenge(
+        args.initialRoster,
+        args.roster,
+      );
       const body = {
         hand_id: args.handId,
         sport: args.sport,
         season: args.season,
         target_score: args.totalFp,
-        initial_roster: args.serializeRoster(args.initialRoster),
+        initial_roster: args.serializeRoster(enrichedInitialRoster),
         challenger_name: args.challengerName,
         trigger_type: trigger.trigger,
         share_headline: args.shareHeadline ?? trigger.headline,

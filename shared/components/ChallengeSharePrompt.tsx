@@ -12,6 +12,7 @@ import { NameCaptureModal, type NameCaptureMode } from "@shared/components/NameC
 import { RegisterModal } from "@shared/components/RegisterModal";
 import { writePendingChallengeShare } from "@shared/components/ResumeShareSurface";
 import { AuthContext } from "@shared/auth/AuthProvider";
+import { enrichInitialRosterForChallenge } from "@shared/utils/enrichInitialRosterForChallenge";
 
 interface Props {
   sport: string;
@@ -246,12 +247,19 @@ export function ChallengeSharePrompt({
   // payload to sessionStorage; ResumeShareSurface (mounted at App.tsx
   // level) picks up the resumed flow on return.
   const handlePersistBeforeGoogleRedirect = () => {
+    // Phase 0 challenge-snapshot-enrichment (2026-06-02): mirror the
+    // useChallengeShare create-path enrichment here. The sessionStorage
+    // payload is restored post-redirect by ResumeShareSurface and POSTed
+    // as-is to /api/challenge/create; if we don't enrich here too, path-β
+    // (anonymous → Google → resume) would write snapshots with
+    // holdsRecorded:true over all-false wasHeld, defeating the phase.
+    const enrichedInitialRoster = enrichInitialRosterForChallenge(initialRoster, roster);
     writePendingChallengeShare({
       hand_id: handId ?? crypto.randomUUID(),
       sport,
       season,
       total_fp: totalFp,
-      initial_roster_serialized: serializeRoster(initialRoster),
+      initial_roster_serialized: serializeRoster(enrichedInitialRoster),
       trigger_type: triggerResult.trigger,
       share_headline: shareHeadline ?? triggerResult.headline ?? "",
     });

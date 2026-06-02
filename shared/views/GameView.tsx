@@ -1669,7 +1669,15 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         // same challenge. When the intent isn't set, clear the stale
         // challengeCtx and deal a fresh hand (FTUE-aware).
         if (challengeCtx && challengeNextDealRef.current) {
-          res = { roster: challengeCtx.initialRoster };
+          // Phase 0 challenge-snapshot-enrichment bleed clear (2026-06-02,
+          // lock: docs/challenge-landing-v2-phase0-snapshot-enrichment-lock.md).
+          // The deserialized initialRoster now carries the SENDER's
+          // wasHeld (display-only on the landing) — strip it here so the
+          // recipient's own deal starts with all cards un-held. Mirrors
+          // the H2HRecipientPlay.tsx:371-374 defensive pattern; deal-site
+          // owns the clear so the invariant holds regardless of what
+          // deserializeRoster returns.
+          res = { roster: challengeCtx.initialRoster.map(c => ({ ...c, wasHeld: false })) };
           challengeNextDealRef.current = false;
         } else {
           if (challengeCtx) clearChallengeCtx?.();

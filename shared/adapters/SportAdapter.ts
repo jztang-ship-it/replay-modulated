@@ -242,9 +242,18 @@ export class SportAdapter {
   // ── Challenge / share methods ────────────────────────────────────────────
 
   serializeRoster(cards: import("../types/index").GeneratedCard[]): Record<string, unknown> {
+    // Phase 0 challenge-snapshot-enrichment (lock: docs/challenge-landing-v2-
+    // phase0-snapshot-enrichment-lock.md). wasHeld + actualFp per card and
+    // top-level holdsRecorded:true persist the sender's decisions+outcomes
+    // so the V2 landing can render hold badges + read held-card outcomes
+    // for disagreement copy. Caller is responsible for passing an enriched
+    // array (use enrichInitialRosterForChallenge) — this method stays a
+    // pure single-roster mapper. v stays at 1; the validator's required-
+    // field set is unchanged.
     return {
       v: 1,
       sport: this.sportKey,
+      holdsRecorded: true,
       cards: cards.map(c => ({
         id: c.id,
         basePlayerId: c.basePlayerId,
@@ -259,6 +268,8 @@ export class SportAdapter {
         tier: c.tier,
         slotIndex: (c as any).slotIndex ?? 0,
         projectedFp: c.projectedFp,
+        wasHeld: (c as any).wasHeld === true,
+        actualFp: Number((c as any).actualFp ?? 0),
       })),
     };
   }
@@ -279,12 +290,16 @@ export class SportAdapter {
       tier: c.tier,
       slotIndex: c.slotIndex ?? i,
       projectedFp: Number(c.projectedFp ?? 0),
-      actualFp: 0,
+      // Phase 0: read sender's outcome when present (new snapshots);
+      // fall back to 0 for legacy snapshots that pre-date the enrichment.
+      // wasHeld + actualFp describe the SENDER's hand and are display-only
+      // on the landing — recipient-deal sites zero wasHeld defensively.
+      actualFp: Number(c.actualFp ?? 0),
       fpDelta: 0,
       statLine: {},
       gameInfo: { date: "", opponent: "" },
       achievements: [],
-      wasHeld: false,
+      wasHeld: c.wasHeld === true,
     }));
   }
 
