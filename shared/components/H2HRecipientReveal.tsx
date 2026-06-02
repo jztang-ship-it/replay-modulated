@@ -47,6 +47,7 @@ import {
   OVERLAY_CROSSFADE_MS,
   type ResultsOverlayState,
 } from "./H2HResultsOverlay";
+import { H2HScoreGlide } from "./H2HScoreGlide";
 import { isRealName } from "@shared/utils/isRealName";
 
 /** Crossfade-in duration from the HOLD-phase grid into the H2H arc.
@@ -211,6 +212,32 @@ function H2HRecipientRevealInner(props: InnerProps) {
     user: false,
   });
 
+  // Step-4 glide / C3 — derived team state for the H2HScoreGlide
+  // clones at phase === "done". Same formula H2HResultsOverlay uses
+  // for its own ScoreCells (reference total = max of the two finals,
+  // tied if within ±0.05). The H2HRevealScreen also resolves to
+  // identical values at phase=done (its display-total tick has landed
+  // at the final), so clones and source share state/sizeProgress and
+  // therefore restScale + color + glow filter — they paint
+  // pixel-identically.
+  const overlayReferenceTotal = Math.max(myScore, senderResolved.totalFp, 0.0001);
+  const senderSizeProgress = senderResolved.totalFp / overlayReferenceTotal;
+  const recipientSizeProgress = myScore / overlayReferenceTotal;
+  const overlayTied =
+    Math.abs(senderResolved.totalFp - myScore) < 0.05 &&
+    senderResolved.totalFp > 0 &&
+    myScore > 0;
+  const senderGlideState: "leading" | "trailing" | "tied" = overlayTied
+    ? "tied"
+    : senderResolved.totalFp > myScore
+      ? "leading"
+      : "trailing";
+  const recipientGlideState: "leading" | "trailing" | "tied" = overlayTied
+    ? "tied"
+    : myScore > senderResolved.totalFp
+      ? "leading"
+      : "trailing";
+
   return (
     <div
       data-h2h-recipient-reveal="true"
@@ -246,6 +273,31 @@ function H2HRecipientRevealInner(props: InnerProps) {
           recipientRevealOrder={reveal?.recipientRevealOrder}
         />
       )}
+      {/* Step-4 glide / C3 — transition-layer scaffolding. Sibling of
+          the overlay inside the recipient-reveal wrapper so it is
+          OUTSIDE the overlay's opacity subtree (clone glyphs stay
+          opacity 1 through the 350 ms overlay crossfade) but INSIDE
+          the wrapper's stacking context so its z-index 9050 sits
+          BETWEEN the reveal contents (no inner z-index → paints in
+          flow) and the overlay (z 9100). C3 mounts the layer,
+          measures both endpoints, renders static clones at the start
+          position; no motion until C4. With glideHandoff still
+          { false, false }, the underlying reveal ScoreCells stay
+          visible and the C3 verification can compare clone rect vs
+          source rect directly. */}
+      <H2HScoreGlide
+        active={reveal.phase === "done"}
+        sender={{
+          total: senderResolved.totalFp,
+          state: senderGlideState,
+          sizeProgress: senderSizeProgress,
+        }}
+        recipient={{
+          total: myScore,
+          state: recipientGlideState,
+          sizeProgress: recipientSizeProgress,
+        }}
+      />
     </div>
   );
 }

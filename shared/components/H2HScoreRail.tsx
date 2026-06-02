@@ -53,8 +53,11 @@ export const DELTA_NEUTRAL = "#E5E7EB";   // off-white — tie state
 
 // Glow alphas derived from the base colors. Kept separate from the
 // solid colors so the glow can be tuned without re-tinting the number.
-const WINNING_GLOW = "rgba(34, 197, 94, 0.55)";  // matches WINNING_COLOR @ 0.55 alpha
-const TIE_GLOW = "rgba(229, 231, 235, 0.45)";    // matches DELTA_NEUTRAL @ 0.45 alpha
+// Exported for H2HScoreGlide (step-4 C3) so clone glyphs can match the
+// source ScoreCell's leader-glow filter + inner-glyph text-shadow
+// exactly — sharing the alphas so a future tune lands once.
+export const WINNING_GLOW = "rgba(34, 197, 94, 0.55)";  // matches WINNING_COLOR @ 0.55 alpha
+export const TIE_GLOW = "rgba(229, 231, 235, 0.45)";    // matches DELTA_NEUTRAL @ 0.45 alpha
 
 // ─── Z1 size model ────────────────────────────────────────────────────────
 //
@@ -70,10 +73,13 @@ const TIE_GLOW = "rgba(229, 231, 235, 0.45)";    // matches DELTA_NEUTRAL @ 0.45
 // Hard clamp at MAX_SCALE so a blowout doesn't make the number
 // unreadable or clip the right-rail column.
 
-const SIZE_PROGRESS_MAX = 0.12;
-const LEADER_BONUS = 0.08;
-const TIE_BONUS = 0.04;
-const MAX_SCALE = 1.30;
+// Exported for H2HScoreGlide (step-4 C3) — the clone glyph's rest
+// scale follows the SAME formula the source ScoreCell uses; any drift
+// between the two values would visibly misalign the clone.
+export const SIZE_PROGRESS_MAX = 0.12;
+export const LEADER_BONUS = 0.08;
+export const TIE_BONUS = 0.04;
+export const MAX_SCALE = 1.30;
 
 // Transition speed for state-driven visual changes (glow + scale). Slow
 // enough that a lead change feels intentional, fast enough that the
@@ -223,6 +229,14 @@ interface ScoreCellProps {
    *  pre-C2 component — the no-jump assertions and the reveal-side
    *  relay-tension feel both stay intact. */
   suppressed?: boolean;
+  /** Step-4 glide / C3 — team-position discriminator emitted as a
+   *  data attribute so the glide layer can target each side's source
+   *  ScoreCell deterministically without depending on DOM index.
+   *  Reveal-surface cells emit `data-h2h-team-score-position`;
+   *  overlay-surface cells emit `data-h2h-overlay-score-position`.
+   *  Optional for forward compat — existing callers that don't pass
+   *  it omit the attribute and behave exactly as before. */
+  teamPosition?: "opponent" | "user";
 }
 
 export function ScoreCell({
@@ -233,6 +247,7 @@ export function ScoreCell({
   surface,
   pop,
   suppressed,
+  teamPosition,
 }: ScoreCellProps) {
   useEffect(ensureScoreRailKeyframesInjected, []);
 
@@ -254,10 +269,14 @@ export function ScoreCell({
       ? {
           "data-h2h-team-score": "true",
           "data-h2h-team-score-display": shownStr,
+          // C3: per-team discriminator the glide layer queries on the
+          // reveal surface to locate the start endpoint deterministically.
+          ...(teamPosition ? { "data-h2h-team-score-position": teamPosition } : {}),
         }
       : {
           "data-h2h-overlay-score": "true",
           "data-h2h-overlay-score-value": shownStr,
+          ...(teamPosition ? { "data-h2h-overlay-score-position": teamPosition } : {}),
         };
 
   // Z1: size scale from sizeProgress + state bonus. Clamped at MAX_SCALE.

@@ -36,6 +36,7 @@ import {
   OVERLAY_CROSSFADE_MS,
   type ResultsOverlayState,
 } from "@shared/components/H2HResultsOverlay";
+import { H2HScoreGlide } from "@shared/components/H2HScoreGlide";
 import { AthleteCard } from "../components/AthleteCard";
 import { SENDER_HAND, RECIPIENT_HAND } from "./h2hMockFixture";
 import type { PlayerCard } from "../adapters/types";
@@ -375,6 +376,41 @@ export function H2HRevealMockRoute() {
           onDismiss={onDismiss}
         />
       )}
+      {/* Step-4 glide / C3 — mirror the production wrapper's mount of
+          H2HScoreGlide so the harness can verify the C3 measurement +
+          static-clone layer at the same ?overlay=1 surface it uses
+          for the existing no-jump assertions. Uses the SAME team-
+          state formula H2HRecipientReveal derives in production
+          (overlay-side max + tie-epsilon). The synthetic hands drive
+          the totals so the dev variant toggle affects the clones
+          too. */}
+      {(() => {
+        const ref = Math.max(synthetic.sender.totalFp, synthetic.recipient.totalFp, 0.0001);
+        const tied =
+          Math.abs(synthetic.sender.totalFp - synthetic.recipient.totalFp) < 0.05 &&
+          synthetic.sender.totalFp > 0 && synthetic.recipient.totalFp > 0;
+        const senderState: "leading" | "trailing" | "tied" = tied
+          ? "tied"
+          : synthetic.sender.totalFp > synthetic.recipient.totalFp ? "leading" : "trailing";
+        const recipientState: "leading" | "trailing" | "tied" = tied
+          ? "tied"
+          : synthetic.recipient.totalFp > synthetic.sender.totalFp ? "leading" : "trailing";
+        return (
+          <H2HScoreGlide
+            active={reveal.phase === "done"}
+            sender={{
+              total: synthetic.sender.totalFp,
+              state: senderState,
+              sizeProgress: synthetic.sender.totalFp / ref,
+            }}
+            recipient={{
+              total: synthetic.recipient.totalFp,
+              state: recipientState,
+              sizeProgress: synthetic.recipient.totalFp / ref,
+            }}
+          />
+        );
+      })()}
       <DevControls
         phase={reveal.phase}
         matchupIndex={reveal.matchupIndex}

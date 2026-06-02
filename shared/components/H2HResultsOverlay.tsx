@@ -372,6 +372,15 @@ function ZoneHeader({
         data-h2h-overlay-docked-score={position}
         data-h2h-overlay-docked-score-value={hand.totalFp.toFixed(1)}
         data-h2h-overlay-docked-score-settled={settled ? "true" : "false"}
+        // C3: per-team discriminator the glide layer queries to locate
+        // the end endpoint deterministically. Mirrors the
+        // "opponent" / "user" vocabulary used by glideHandoff and the
+        // ScoreCell teamPosition attr, so a single naming convention
+        // covers both endpoints of the glide. Derived from the
+        // top/bottom position prop without renaming the existing
+        // docked-score attr (the harness queries the existing one by
+        // attribute presence).
+        data-h2h-overlay-docked-score-team={position === "top" ? "opponent" : "user"}
         style={{
           position: "absolute",
           right: 6,                            // aligns with header padding
@@ -950,7 +959,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
           {/* Row 1 right rail: sender (opponent) score — stays in rail for
               step 3. Step 4 docks this into the opponent ZoneHeader via
               the glide. */}
-          <ScoreCell total={sender.totalFp} state={senderState} sizeProgress={senderSizeProgress} surface="overlay" />
+          <ScoreCell total={sender.totalFp} state={senderState} sizeProgress={senderSizeProgress} surface="overlay" teamPosition="opponent" />
 
           {/* Row-2 left-rail spacer. With the opponent HeroCell removed,
               CSS grid auto-flow would otherwise place the next in-flow
@@ -965,7 +974,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
           {/* Row 2: user hero cell (LOCKED — byte-identical X/Y vs prior
               step) + user score (stays in rail through step 3). */}
           <HeroCell card={bottomSelectedCard} renderCard={renderCard} />
-          <ScoreCell total={recipient.totalFp} state={recipientState} sizeProgress={recipientSizeProgress} surface="overlay" />
+          <ScoreCell total={recipient.totalFp} state={recipientState} sizeProgress={recipientSizeProgress} surface="overlay" teamPosition="user" />
         </div>
 
         {/* ── BOTTOM STRIP — user's lineup ─────────────────────────────

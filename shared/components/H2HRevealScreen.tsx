@@ -1740,7 +1740,7 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
                 reducedMotion={reducedMotion}
               />}
           {senderBattle && !showEntranceDeck
-            ? <ScoreCell total={sender.totalFp} displayTotal={senderDisplayTotal} state={senderState} sizeProgress={senderSizeProgress} surface="reveal" pop={popState.senderPop} suppressed={glideHandoff?.opponent ?? false} />
+            ? <ScoreCell total={sender.totalFp} displayTotal={senderDisplayTotal} state={senderState} sizeProgress={senderSizeProgress} surface="reveal" pop={popState.senderPop} suppressed={glideHandoff?.opponent ?? false} teamPosition="opponent" />
             : <div />}
 
           {/* Row 2: recipient's battlefield card + score */}
@@ -1763,7 +1763,7 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
                 reducedMotion={reducedMotion}
               />}
           {recipientBattle && !showEntranceDeck
-            ? <ScoreCell total={recipient.totalFp} displayTotal={recipientDisplayTotal} state={recipientState} sizeProgress={recipientSizeProgress} surface="reveal" pop={popState.recipientPop} suppressed={glideHandoff?.user ?? false} />
+            ? <ScoreCell total={recipient.totalFp} displayTotal={recipientDisplayTotal} state={recipientState} sizeProgress={recipientSizeProgress} surface="reveal" pop={popState.recipientPop} suppressed={glideHandoff?.user ?? false} teamPosition="user" />
             : <div />}
 
           {/* Matchup delta — floats in the right-rail GAP between the
