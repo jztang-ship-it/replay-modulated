@@ -293,6 +293,7 @@ function H2HRecipientRevealInner(props: InnerProps) {
           senderRevealOrder={reveal?.senderRevealOrder}
           recipientRevealOrder={reveal?.recipientRevealOrder}
           dockedScoreSettled={dockedScoreSettled}
+          glideHandoff={glideHandoff}
         />
       )}
       {/* Step-4 glide / C3 — transition-layer scaffolding. Sibling of

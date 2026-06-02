@@ -402,6 +402,7 @@ export function H2HRevealMockRoute() {
           onPlayOwnHand={onPlayOwnHand}
           onDismiss={onDismiss}
           dockedScoreSettled={mockDockedScoreSettled}
+          glideHandoff={mockGlideHandoff}
         />
       )}
       {/* Step-4 glide / C4 — mirror the production wrapper's

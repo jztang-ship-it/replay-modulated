@@ -135,6 +135,25 @@ export interface H2HResultsOverlayProps {
    *  glide's terminal frame so the populated glyph lands seamlessly
    *  on the same box the empty slot reserved. */
   dockedScoreSettled?: { opponent: boolean; user: boolean };
+  /** Step-4 glide / C5 overlay-rail-suppress: parent's glide-handoff
+   *  flag, re-threaded into the overlay so the rail-side ScoreCells
+   *  can hide their inner glyph at the moment the glide LIFTS OFF
+   *  (not at the moment it settles). Without this, the overlay's own
+   *  right-rail ScoreCells double-paint the same number alongside
+   *  the gliding clone for the entire 280 ms motion AND alongside
+   *  the docked glyph post-settle.
+   *
+   *  The overlay derives `railSuppressed = glideHandoff[t] ||
+   *  dockedScoreSettled[t]` per team so the rail glyph stays
+   *  invisible from t=0 through end-of-results. The OR is load-
+   *  bearing: glideHandoff alone goes false at the next reveal cycle
+   *  (e.g. Replay), and dockedScoreSettled alone wouldn't fire until
+   *  t=280 leaving 280 ms of doubling.
+   *
+   *  Default undefined → both flags false → rail glyph rendered as
+   *  pre-fix. The change is a true no-op for any caller that doesn't
+   *  wire this prop. */
+  glideHandoff?: { opponent: boolean; user: boolean };
 }
 
 /** Cross-fade duration. */
@@ -631,7 +650,21 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
     recipientRevealOrder,
     primaryCtaOverride,
     dockedScoreSettled,
+    glideHandoff,
   } = props;
+
+  // C5 overlay-rail-suppress: rail-side ScoreCell visibility per team.
+  // The reveal-side ScoreCells already get their `suppressed` from
+  // glideHandoff via H2HRevealScreen (C2). The overlay's OWN rail
+  // ScoreCells need the same hide-when-glide signal — at glide START
+  // (glideHandoff flips true) so the rail glyph hides the instant the
+  // clone lifts off. dockedScoreSettled is OR'd in so the rail stays
+  // hidden post-settle through end-of-results, even if a future
+  // refactor decouples the two glide flags.
+  const railSuppressed = {
+    opponent: !!(glideHandoff?.opponent || dockedScoreSettled?.opponent),
+    user: !!(glideHandoff?.user || dockedScoreSettled?.user),
+  };
 
   // Per-strip flip (phase 4 fix 3, 2026-05-27). Each strip has its OWN
   // selection — both slots can be filled simultaneously for 1v1 face-
@@ -956,10 +989,15 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             </div>
           </div>
 
-          {/* Row 1 right rail: sender (opponent) score — stays in rail for
-              step 3. Step 4 docks this into the opponent ZoneHeader via
-              the glide. */}
-          <ScoreCell total={sender.totalFp} state={senderState} sizeProgress={senderSizeProgress} surface="overlay" teamPosition="opponent" />
+          {/* Row 1 right rail: sender (opponent) score. The cell stays
+              mounted (its outer flex-center box holds the grid slot at
+              row 1 col 3 — unmount would let the user HeroCell auto-
+              flow into it and break the locked-hero invariant). The
+              INNER GLYPH hides via C2's `suppressed` once the glide
+              kicks off (railSuppressed.opponent), so the docked-score
+              becomes the only visible copy of the number from t=0
+              through end-of-results. */}
+          <ScoreCell total={sender.totalFp} state={senderState} sizeProgress={senderSizeProgress} surface="overlay" teamPosition="opponent" suppressed={railSuppressed.opponent} />
 
           {/* Row-2 left-rail spacer. With the opponent HeroCell removed,
               CSS grid auto-flow would otherwise place the next in-flow
@@ -972,9 +1010,11 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
           <div aria-hidden="true" style={{ gridRow: 2, gridColumn: 1 }} />
 
           {/* Row 2: user hero cell (LOCKED — byte-identical X/Y vs prior
-              step) + user score (stays in rail through step 3). */}
+              step) + user rail ScoreCell. Same suppress contract as
+              the opponent rail above — the cell stays mounted, the
+              inner glyph hides at glide lift-off. */}
           <HeroCell card={bottomSelectedCard} renderCard={renderCard} />
-          <ScoreCell total={recipient.totalFp} state={recipientState} sizeProgress={recipientSizeProgress} surface="overlay" teamPosition="user" />
+          <ScoreCell total={recipient.totalFp} state={recipientState} sizeProgress={recipientSizeProgress} surface="overlay" teamPosition="user" suppressed={railSuppressed.user} />
         </div>
 
         {/* ── BOTTOM STRIP — user's lineup ─────────────────────────────
