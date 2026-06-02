@@ -47,6 +47,7 @@ import { calculateWinTier } from "./utils/payoutLogic";
 // the app shell level so it renders on every route — chooser landing,
 // challenge landing, FTUE, game view.
 import { ChallengeDebugPanel } from "@shared/components/ChallengeDebugPanel";
+import { chDebug } from "@shared/lib/chDebug";
 
 const SPORT = "basketball";
 const SKIP_LANDING_KEY = "replay_skip_landing_basketball";
@@ -244,6 +245,28 @@ function AppInner() {
     setView("game");
   };
 
+  // [ch-debug] render-gate tripwire. Fires on every transition of the
+  // gate inputs. `branch` names what the JSX would mount next render —
+  // the primary signal for the ripe-challenge "drops to fresh deal"
+  // investigation: a transition where challengeCtx flips to null and
+  // branch lands on GameView is the bug. !!challengeCtx in the dep
+  // array (not challengeCtx itself) avoids re-firing on identity
+  // changes that don't flip presence.
+  useEffect(() => {
+    const branch = h2hPlayingMode && challengeCtx
+      ? "H2HRecipientPlay"
+      : view === "landing"
+        ? "LandingPage"
+        : "GameView";
+    chDebug("gate transition", {
+      h2hPlayingMode,
+      challengeCtx: challengeCtx?.challengeId ?? null,
+      view,
+      branch,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [h2hPlayingMode, !!challengeCtx, view]);
+
   return (
     <>
       {/* Phase 5b piece 1 auth-surface unification (2026-05-29, doc lock
@@ -320,6 +343,11 @@ function AppInner() {
             // so the fresh-hand RESULTS share prompt frames as
             // challenge-back. challengeCtx clears so the next IDLE
             // deal is a fresh hand, not a snapshot replay.
+            chDebug("setChallengeCtx", {
+              from: "onSendItBack",
+              prev: { challengeId: challengeCtx.challengeId, h2hPlayingMode },
+              next: { challengeId: null, h2hPlayingMode: false },
+            });
             setChallengeBackCtx({
               challengerUserId: null,
               challengerName: challengeCtx.challengerName ?? null,
@@ -337,12 +365,22 @@ function AppInner() {
           }}
           onPlayOwnHand={() => {
             // Drop into normal game with a fresh deal (no challenge).
+            chDebug("setChallengeCtx", {
+              from: "onPlayOwnHand",
+              prev: { challengeId: challengeCtx?.challengeId ?? null, h2hPlayingMode },
+              next: { challengeId: null, h2hPlayingMode: false },
+            });
             setChallengeCtx(null);
             setH2hPlayingMode(false);
           }}
           onDismiss={() => {
             // Exit H2H entirely. challengeCtx clears; user lands in
             // normal game-view IDLE state.
+            chDebug("setChallengeCtx", {
+              from: "onDismiss",
+              prev: { challengeId: challengeCtx?.challengeId ?? null, h2hPlayingMode },
+              next: { challengeId: null, h2hPlayingMode: false },
+            });
             setChallengeCtx(null);
             setH2hPlayingMode(false);
           }}
@@ -378,7 +416,14 @@ function AppInner() {
           <GameView
             challengeCtx={challengeCtx ?? undefined}
             challengeBackCtx={challengeBackCtx ?? undefined}
-            clearChallengeCtx={() => setChallengeCtx(null)}
+            clearChallengeCtx={() => {
+              chDebug("setChallengeCtx", {
+                from: "GameView.clearChallengeCtx",
+                prev: { challengeId: challengeCtx?.challengeId ?? null, h2hPlayingMode },
+                next: { challengeId: null, h2hPlayingMode },
+              });
+              setChallengeCtx(null);
+            }}
             setChallengeBackCtx={(ctx) => setChallengeBackCtx(ctx)}
             clearChallengeBackCtx={() => setChallengeBackCtx(null)}
           />
@@ -413,6 +458,11 @@ function AppInner() {
           deserializeRoster={(snap) => sportAdapter.deserializeRoster(snap)}
           validateRosterSnapshot={(snap) => sportAdapter.validateRosterSnapshot(snap)}
           onAccept={(ctx) => {
+            chDebug("setChallengeCtx", {
+              from: "onAccept",
+              prev: { challengeId: challengeCtx?.challengeId ?? null, h2hPlayingMode },
+              next: { challengeId: ctx.challengeId, h2hPlayingMode: true },
+            });
             setChallengeCtx(ctx);
             setShowChallengeLanding(false);
             try { localStorage.setItem(SKIP_LANDING_KEY, "1"); } catch {}
@@ -438,18 +488,27 @@ function AppInner() {
                 // eslint-disable-next-line no-console
                 console.warn("[h2h] DEV: using mock fixture via ?mockSenderHand=1");
                 import("./dev/h2hMockFixture").then(({ SENDER_HAND }) => {
-                  setChallengeCtx((prev) => prev && prev.challengeId === ctx.challengeId
-                    ? {
-                        ...prev,
-                        resolvedSenderHand: {
-                          handId: "dev-mock",
-                          totalFp: SENDER_HAND.totalFp,
-                          tier: SENDER_HAND.tier,
-                          cards: SENDER_HAND.cards as unknown as import("@shared/types/index").GeneratedCard[],
-                        },
-                      }
-                    : prev,
-                  );
+                  setChallengeCtx((prev) => {
+                    const match = !!(prev && prev.challengeId === ctx.challengeId);
+                    const next = match
+                      ? {
+                          ...prev!,
+                          resolvedSenderHand: {
+                            handId: "dev-mock",
+                            totalFp: SENDER_HAND.totalFp,
+                            tier: SENDER_HAND.tier,
+                            cards: SENDER_HAND.cards as unknown as import("@shared/types/index").GeneratedCard[],
+                          },
+                        }
+                      : prev;
+                    chDebug("setChallengeCtx", {
+                      from: "mockFixture",
+                      prev: prev ? { challengeId: prev.challengeId } : null,
+                      next: next ? { challengeId: next.challengeId, resolvedSenderHand: !!next.resolvedSenderHand } : null,
+                      match,
+                    });
+                    return next;
+                  });
                 }).catch(() => { /* dev-only path; failure is non-fatal — fallback to ChallengeComparisonScreen */ });
                 return; // skip the real fetch
               }
@@ -464,10 +523,25 @@ function AppInner() {
             // 4xx/5xx, legacy `sender_resolved:false` — all leave
             // resolvedSenderHand undefined, which commit 3 treats as
             // the fallback signal.
-            fetch(`/api/challenge/${ctx.challengeId}/sender-hand`)
-              .then(r => r.ok ? r.json() : Promise.reject(`http_${r.status}`))
+            const __chDebugPrefetchUrl = `/api/challenge/${ctx.challengeId}/sender-hand`;
+            const __chDebugPrefetchStart = Date.now();
+            chDebug("senderHand:start", { url: __chDebugPrefetchUrl });
+            fetch(__chDebugPrefetchUrl)
+              .then(r => {
+                chDebug("senderHand:response", {
+                  url: __chDebugPrefetchUrl,
+                  status: r.status,
+                  ok: r.ok,
+                  ms: Date.now() - __chDebugPrefetchStart,
+                });
+                return r.ok ? r.json() : Promise.reject(`http_${r.status}`);
+              })
               .then((d) => {
                 if (d.sender_resolved === false) {
+                  chDebug("senderHand:legacyFallback", {
+                    reason: d.reason,
+                    resolvedSenderHandUndefined: true,
+                  });
                   // eslint-disable-next-line no-console
                   console.warn("[h2h] sender hand legacy fallback:", d.reason);
                   return;
@@ -476,13 +550,31 @@ function AppInner() {
                 // races: if the user cleared/replaced challengeCtx
                 // between prefetch start and resolve, drop the
                 // response.
-                setChallengeCtx((prev) => prev && prev.challengeId === ctx.challengeId
-                  ? { ...prev, resolvedSenderHand: d.sender }
-                  : prev,
-                );
+                setChallengeCtx((prev) => {
+                  const match = !!(prev && prev.challengeId === ctx.challengeId);
+                  const next = match
+                    ? { ...prev!, resolvedSenderHand: d.sender }
+                    : prev;
+                  chDebug("setChallengeCtx", {
+                    from: "senderHandFetch",
+                    prev: prev ? { challengeId: prev.challengeId } : null,
+                    next: next ? { challengeId: next.challengeId, resolvedSenderHand: !!next.resolvedSenderHand } : null,
+                    match,
+                    resolvedSenderHandUndefined: !next || !next.resolvedSenderHand,
+                  });
+                  return next;
+                });
               })
-              // eslint-disable-next-line no-console
-              .catch((err) => console.warn("[h2h] sender hand prefetch failed:", err));
+              .catch((err) => {
+                chDebug("senderHand:catch", {
+                  url: __chDebugPrefetchUrl,
+                  error: String(err),
+                  ms: Date.now() - __chDebugPrefetchStart,
+                  resolvedSenderHandUndefined: true,
+                });
+                // eslint-disable-next-line no-console
+                console.warn("[h2h] sender hand prefetch failed:", err);
+              });
           }}
           onClose={() => { setShowChallengeLanding(false); window.history.pushState({}, "", "/basketball/"); }}
         />

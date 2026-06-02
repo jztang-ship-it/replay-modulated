@@ -20,6 +20,7 @@ import { getPlayerUid, getNickname } from "@shared/utils/playerIdentity";
 import { hasAttemptedChallenge, markChallengeAttempted } from "@shared/hooks/useChallengeShare";
 import { serializeResolvedRoster } from "@shared/utils/resolvedRosterSerialization";
 import { track } from "@shared/analytics/analytics";
+import { chDebug } from "@shared/lib/chDebug";
 
 export interface AttemptResult {
   attempt_id: string;
@@ -192,6 +193,10 @@ export function useChallengeAttempt(args: UseChallengeAttemptArgs): UseChallenge
         // captured on hook state for forward-compat (phase 5a commits
         // 2/3 may render fallback UI on error); existing consumers
         // don't read it.
+        chDebug("useChallengeAttempt:postFail", {
+          challengeId,
+          error: e instanceof Error ? e.message : String(e),
+        });
         setError(e instanceof Error ? e : new Error(String(e)));
       });
   }, [enabled, challengeId]); // eslint-disable-line react-hooks/exhaustive-deps
