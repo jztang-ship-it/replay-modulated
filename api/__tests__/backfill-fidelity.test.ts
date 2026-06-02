@@ -5,7 +5,7 @@
  *
  * The dry-run's live-vs-recompute fidelity check only covers
  * anchor_base_player_id (the 2 already-populated rows in production are both
- * big_score / bad_beat — anchor-only trigger types). The other three columns
+ * big_score / choke — anchor-only trigger types). The other three columns
  *
  *   - near_miss_gap
  *   - near_miss_next_tier
@@ -23,7 +23,7 @@
  * Coverage scope:
  *   - miss        — near_miss_gap + near_miss_next_tier (uncovered)
  *   - rare_pull   — top_game_tier (uncovered)
- *   - bad_beat    — anchor_base_player_id (covered live, included for parity)
+ *   - choke    — anchor_base_player_id (covered live, included for parity)
  *   - big_score   — anchor_base_player_id (covered live, included for parity)
  *
  * NOT a replacement for shared/utils/__tests__/triggerEvaluation.test.ts —
@@ -126,7 +126,10 @@ describe("backfill fidelity — miss (uncovered columns)", () => {
     expect(out.near_miss_next_tier).toBe("ALL_STAR");
   });
 
-  it("STARTER 5 FP shy of ALL_STAR (MISS_WINDOW upper edge) → near_miss_gap=5, near_miss_next_tier=ALL_STAR", () => {
+  it("STARTER 5 FP shy of ALL_STAR (old flat-5 edge; well inside new 5%-of-225 = 11.25) → near_miss_gap=5", () => {
+    // Phase 1 trigger split (2026-06-03): the old flat-5 MISS_WINDOW is
+    // now 5% of next tier's minFp. 5%-of-225 = 11.25, so gap=5 fires
+    // miss under both rules — control case.
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 44 }));
     const out = backfillRecompute({ roster, totalFp: 220, winTier: "STARTER" });
     expect(out.trigger).toBe("miss");
@@ -134,10 +137,20 @@ describe("backfill fidelity — miss (uncovered columns)", () => {
     expect(out.near_miss_next_tier).toBe("ALL_STAR");
   });
 
-  it("STARTER 6 FP shy of ALL_STAR (just past MISS_WINDOW) → trigger NOT miss", () => {
-    // 219 FP → gap 6 → outside window → falls through to default.
-    const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 43.8 }));
-    const out = backfillRecompute({ roster, totalFp: 219, winTier: "STARTER" });
+  it("STARTER 10 FP shy of ALL_STAR (NEW under 5%, would NOT have fired under flat-5) → trigger=miss", () => {
+    // Phase 1 trigger split — the contradiction-guard high-tier case:
+    // 5%-of-225 = 11.25, so gap=10 fires miss now (didn't before).
+    const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 43 }));
+    const out = backfillRecompute({ roster, totalFp: 215, winTier: "STARTER" });
+    expect(out.trigger).toBe("miss");
+    expect(out.near_miss_gap).toBe(10);
+    expect(out.near_miss_next_tier).toBe("ALL_STAR");
+  });
+
+  it("STARTER 12 FP shy of ALL_STAR (just past 5%-of-225 = 11.25) → trigger NOT miss", () => {
+    // 213 FP → gap 12 → outside new 5% window → falls through to default.
+    const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 42.6 }));
+    const out = backfillRecompute({ roster, totalFp: 213, winTier: "STARTER" });
     expect(out.trigger).not.toBe("miss");
     expect(out.near_miss_gap).toBeNull();
     expect(out.near_miss_next_tier).toBeNull();
@@ -209,11 +222,11 @@ describe("backfill fidelity — rare_pull (uncovered columns)", () => {
   });
 });
 
-// ── bad_beat: anchor parity (live-path covered) ──────────────────────────
+// ── choke: anchor parity (live-path covered) ──────────────────────────
 
-describe("backfill fidelity — bad_beat anchor (live-covered, parity check)", () => {
+describe("backfill fidelity — choke anchor (live-covered, parity check)", () => {
   it("BUST with one held RED + held ORANGE — anchor = held card with worst (actual-projected) delta", () => {
-    // Two held high-tier cards; the bad_beat anchor selects the one whose
+    // Two held high-tier cards; the choke anchor selects the one whose
     // (actualFp - projectedFp) landed most negative. p1 delta = -22,
     // p2 delta = -10. Expect p1.
     const roster = [
@@ -224,7 +237,7 @@ describe("backfill fidelity — bad_beat anchor (live-covered, parity check)", (
       card({ slotIndex: 4, tier: "WHITE",  basePlayerId: "p5", actualFp: 8 }),
     ];
     const out = backfillRecompute({ roster, totalFp: 47, winTier: "BUST" });
-    expect(out.trigger).toBe("bad_beat");
+    expect(out.trigger).toBe("choke");
     expect(out.anchor_base_player_id).toBe("p1");
     expect(out.near_miss_gap).toBeNull();
     expect(out.near_miss_next_tier).toBeNull();
@@ -241,7 +254,7 @@ describe("backfill fidelity — bad_beat anchor (live-covered, parity check)", (
       card({ slotIndex: 4, tier: "WHITE",  basePlayerId: "p5", actualFp: 8 }),
     ];
     const out = backfillRecompute({ roster, totalFp: 51, winTier: "BUST" });
-    expect(out.trigger).toBe("bad_beat");
+    expect(out.trigger).toBe("choke");
     expect(out.anchor_base_player_id).toBe("p2");
   });
 });

@@ -43,7 +43,7 @@ export interface TriggerInput {
 }
 
 export interface TriggerResult {
-  trigger: "rare_pull" | "big_score" | "miss" | "bad_beat" | "default";
+  trigger: "rare_pull" | "big_score" | "miss" | "choke" | "default";
   headline: string;
   /** How many FP short of the next tier (miss only).
    *  Field name preserved for DB column compatibility (near_miss_gap). */
@@ -70,7 +70,14 @@ export interface TriggerResult {
   topGameAllReasons?: TopGameReason[] | null;
 }
 
-const MISS_WINDOW = 5;
+// Phase 1 trigger split (2026-06-03, lock: docs/challenge-landing-v2-phase1-
+// trigger-split-lock.md). The miss window is now 5% of the next tier's minFp
+// — tier-aware so near-LEGEND misses (LEGEND minFp 235 → 11.75 FP band) and
+// near-ALL-STAR misses (ALL-STAR minFp 155 → 7.75 FP band) both feel like
+// "finish the job" instead of one band feeling generous and the other tight.
+// STARTER+ floor and gap>0 guard unchanged. Note the deliberate divergence
+// from TierGauge's NEAR_MISS_PTS (flat 8 FP) — see TierGauge.tsx:111.
+const MISS_PCT_OF_NEXT_MIN = 0.05;
 
 // ── Anchor selection helpers (Phase 5c Path A, 2026-06-01) ─────────────────
 //
@@ -84,13 +91,14 @@ const MISS_WINDOW = 5;
 // `?? 0` / `?? null`) so legacy or partially-populated rosters degrade
 // without throwing.
 
-/** bad_beat anchor: the held card the sender was relying on that disappointed
+/** choke anchor: the held card the sender was relying on that disappointed
  *  most. Filter to wasHeld===true; pick most-negative (actualFp - projectedFp);
  *  tiebreak highest salary (bigger conviction = bigger betrayal). Returns null
- *  when there are no held cards on the roster (the trigger guarantees ≥1
- *  high-tier held card upstream, so this null path is a defensive escape
- *  hatch rather than an expected outcome). */
-function selectBadBeatAnchor(roster: GeneratedCard[]): string | null {
+ *  when there are no held cards on the roster (the choke trigger guarantees
+ *  ≥2 high-tier held cards upstream, so this null path is a defensive escape
+ *  hatch rather than an expected outcome). Phase 1 renamed from
+ *  selectBadBeatAnchor — logic unchanged. */
+function selectChokeAnchor(roster: GeneratedCard[]): string | null {
   const held = roster.filter(c => c.wasHeld === true);
   if (held.length === 0) return null;
   let best = held[0];
@@ -187,9 +195,51 @@ export function evaluateTrigger(input: TriggerInput): TriggerResult {
     };
   }
 
-  // 3. miss — within MISS_WINDOW FP of next tier AND current tier is
-  //    STARTER+. We don't fire miss on BUST→ROOKIE transitions — a BUST
-  //    hand isn't share-worthy just because it almost cleared ROOKIE.
+  // 3. choke — BUST or ROOKIE with 2+ RED/ORANGE cards that the user
+  //    actually HELD. Phase 1 trigger split (2026-06-03, lock:
+  //    docs/challenge-landing-v2-phase1-trigger-split-lock.md): renamed
+  //    from bad_beat → choke and TIGHTENED ≥1 → ≥2. The 1-held-high-tier
+  //    case now drops to default — choke is rare and earned, and rarity
+  //    is what makes the stamp sting.
+  //
+  //    Precedence rule: choke OUTRANKS miss. Choke requires BUST/ROOKIE
+  //    and miss requires STARTER+, so today they can't overlap on the
+  //    same hand. But the 5% miss window (next block) widens the miss
+  //    band near LEGEND; ordering choke before miss locks the "held studs
+  //    and bricked is a sharper story than almost-cleared" preference for
+  //    any future overlap.
+  //
+  //    The wasHeld gate stays — "stacked lineup got cooked" is a story
+  //    about deliberate picks, not RNG dropping high-tier cards into the
+  //    redraw.
+  if (winTier === "BUST" || winTier === "ROOKIE") {
+    const highTierHeldCount = roster.reduce(
+      (n, c: any) => n + (c.wasHeld === true && (c.tier === "RED" || c.tier === "ORANGE") ? 1 : 0),
+      0,
+    );
+    if (highTierHeldCount >= 2) {
+      return {
+        trigger: "choke",
+        headline: `Brutal hand. See if they survive the same slate.`,
+        // Phase 5c Path A (2026-06-01): anchor persisted at create time. The
+        // choke trigger gates on ≥2 held RED/ORANGE cards; the anchor is the
+        // held card whose actualFp - projectedFp landed worst (tiebreak
+        // highest salary). selectChokeAnchor reads from any held card on the
+        // roster, not just RED/ORANGE — the held-tier gate above is for
+        // firing the trigger; the anchor narrative is "which held card
+        // disappointed most." See doc lock M1 EDIT 2026-06-01 + T2.
+        anchorBasePlayerId: selectChokeAnchor(roster),
+      };
+    }
+  }
+
+  // 4. miss — within 5% of next tier's minFp AND current tier is STARTER+.
+  //    We don't fire miss on BUST→ROOKIE transitions — a BUST hand isn't
+  //    share-worthy just because it almost cleared ROOKIE. The 5% rule
+  //    replaces the old flat 5 FP MISS_WINDOW: near LEGEND (235) that's
+  //    ~12 FP, near ALL-STAR (155) that's ~7.75 FP — both feel like
+  //    "finish the job" instead of one band feeling generous and the
+  //    other tight.
   const tierOrder: WinTierKey[] = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "LEGEND"];
   const STARTER_IDX = tierOrder.indexOf("STARTER");
   const currentIdx = tierOrder.indexOf(winTier as WinTierKey);
@@ -198,7 +248,7 @@ export function evaluateTrigger(input: TriggerInput): TriggerResult {
     const nextMin = winTiersMap[nextTier]?.minFp;
     if (nextMin !== undefined) {
       const gap = Math.round((nextMin - fp) * 10) / 10;
-      if (gap > 0 && gap <= MISS_WINDOW) {
+      if (gap > 0 && gap <= nextMin * MISS_PCT_OF_NEXT_MIN) {
         return {
           trigger: "miss",
           headline: `You missed ${nextTier.replace("_", "-")} by ${gap} FP. See if they finish the job.`,
@@ -206,41 +256,6 @@ export function evaluateTrigger(input: TriggerInput): TriggerResult {
           nearMissNextTier: nextTier,
         };
       }
-    }
-  }
-
-  // 4. bad_beat — BUST or ROOKIE with 1+ RED/ORANGE card that the user
-  //    actually HELD. Threshold broadened from 2 to 1 on 2026-05-25
-  //    (bucket 2 piece B final amend) per user mental model: "any
-  //    premium-held hand that BUSTs or barely ROOKIEs is a bad beat."
-  //    Trigger frequency was too low in smoke (~1 in 15 hands); broaden
-  //    to ship a feature that actually fires. Empirical calibration
-  //    (whether 30-50% feels right, or whether we tighten back to RED
-  //    only / BUST only) is tracked as an open followup.
-  //
-  //    The wasHeld gate stays — "stacked lineup got cooked" is a story
-  //    about the user's deliberate picks, not RNG dropping high-tier
-  //    cards into the redraw. Earlier versions counted all roster slots
-  //    regardless of wasHeld, which fired bad_beat on hands the user
-  //    didn't actually stack.
-  if (winTier === "BUST" || winTier === "ROOKIE") {
-    const highTierHeldCount = roster.reduce(
-      (n, c: any) => n + (c.wasHeld === true && (c.tier === "RED" || c.tier === "ORANGE") ? 1 : 0),
-      0,
-    );
-    if (highTierHeldCount >= 1) {
-      return {
-        trigger: "bad_beat",
-        headline: `Brutal hand. See if they survive the same slate.`,
-        // Phase 5c Path A (2026-06-01): anchor persisted at create time. The
-        // bad_beat trigger gates on ≥1 held RED/ORANGE card; the anchor is
-        // the held card whose actualFp - projectedFp landed worst (tiebreak
-        // highest salary). selectBadBeatAnchor reads from any held card on
-        // the roster, not just RED/ORANGE — the held-tier gate above is for
-        // firing the trigger; the anchor narrative is "which held card
-        // disappointed most." See doc lock M1 EDIT 2026-06-01 + T2.
-        anchorBasePlayerId: selectBadBeatAnchor(roster),
-      };
     }
   }
 

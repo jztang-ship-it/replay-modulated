@@ -167,7 +167,17 @@ const REVEAL_MODE: "auto" | "tap" = "tap";
 
 const BASE_BET = 10;
 
-const NEAR_MISS_FP = 5;
+// Phase 1 trigger split (2026-06-03, docs/challenge-landing-v2-phase1-
+// trigger-split-lock.md): the post-reveal "missed X by Y" copy and the
+// near-miss teasing animation now read off the same 5% of next tier's
+// minFp window that emits the MISS stamp (triggerEvaluation.MISS_PCT_OF_
+// NEXT_MIN). Was flat 5 FP. Tier-aware so near LEGEND (235 minFp → 11.75
+// FP band) and near ALL-STAR (155 minFp → 7.75 FP band) both surface the
+// "almost there" framing on the same threshold the stamp uses — no
+// "stamp fired but copy didn't" contradiction. TierGauge's spring stays
+// at flat 8 FP (NEAR_MISS_PTS) — that's a hand-tuned visual magnitude
+// and a deliberate divergence (see TierGauge.tsx:111).
+const NEAR_MISS_BAND: { pctOfNextMin: number } = { pctOfNextMin: 5 };
 
 const TIER_IMAGE_MAP: Record<string, string> = {
   BUST: "bust1.png",
@@ -1324,7 +1334,12 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     // doesn't speak over the challenge-aware framing.
     if (challengeCtx) return null;
     const fp = lockedGaugeFpRef.current ?? displayFp;
-    const gaugeSnap = computeGaugeState(fp, gaugeThresholds, winTier, 8);
+    // Phase 1 trigger split (2026-06-03): tracked NEAR_MISS_BAND with
+    // the post-reveal commentary path. Today gaugeSnap.isNearMiss is not
+    // consumed at this site (only nextTier/curMin/nextMin flow into
+    // copyInput); aligning the threshold now prevents a future change
+    // from creating an asymmetry against the stamp window.
+    const gaugeSnap = computeGaugeState(fp, gaugeThresholds, winTier, NEAR_MISS_BAND);
 
     const copyInput = {
       totalFp: fp,
@@ -1497,7 +1512,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       nearMissChoreTimersRef.current = [];
       setNearMissTeasing(false);
       setTierResultPhase(1);
-      const gaugeSnap = computeGaugeState(totalFp, gaugeThresholds, winTier, NEAR_MISS_FP);
+      const gaugeSnap = computeGaugeState(totalFp, gaugeThresholds, winTier, NEAR_MISS_BAND);
       if (gaugeSnap.isNearMiss && gaugeSnap.nextTier != null) {
         const t1 = setTimeout(() => setNearMissTeasing(true), 400);
         const t2 = setTimeout(() => setNearMissTeasing(false), 1200);
@@ -3105,7 +3120,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           The challenge head-to-head sheet IS the post-hand surface for the
           recipient; running both would double-up the result frame. */}
       {PostHandSheet && !isFTUE && !challengeCtx && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && springSettled && (() => {
-        const gaugeSnap = computeGaugeState(displayFp, gaugeThresholds, winTier, NEAR_MISS_FP);
+        const gaugeSnap = computeGaugeState(displayFp, gaugeThresholds, winTier, NEAR_MISS_BAND);
         return (
           <PostHandSheet
             totalFp={displayFp}

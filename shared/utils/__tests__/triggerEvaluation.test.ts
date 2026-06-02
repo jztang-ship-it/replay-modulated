@@ -1,4 +1,10 @@
 // shared/utils/__tests__/triggerEvaluation.test.ts
+//
+// Phase 1 trigger split (2026-06-03, docs/challenge-landing-v2-phase1-
+// trigger-split-lock.md): bad_beat → choke (rename + tighten ≥1 → ≥2),
+// miss window flat 5 FP → 5% of next tier's minFp, precedence choke
+// before miss. The deleted "BAD BEAT" stamp's old 1-held-RED/ORANGE case
+// now drops to default — choke is rare and earned.
 import { describe, it, expect } from "vitest";
 import { evaluateTrigger, type TriggerResult } from "../triggerEvaluation";
 import type { GeneratedCard } from "@shared/types/index";
@@ -43,8 +49,14 @@ describe("evaluateTrigger", () => {
     expect(result.trigger).toBe("big_score");
   });
 
-  it("returns miss when STARTER within 5 FP of ALL_STAR", () => {
-    // 222 FP — STARTER (needs 225 for ALL_STAR) — gap = 3
+  // ── miss — 5% of next tier's minFp window ──────────────────────────────
+  // Phase 1 trigger split (2026-06-03): MISS_WINDOW flat 5 FP →
+  // gap <= nextMin * 0.05. Tier-aware so near-LEGEND misses (LEGEND
+  // 255 minFp → 12.75 FP band) and near-ALL-STAR misses (ALL-STAR
+  // 225 minFp → 11.25 FP band) both feel like "finish the job."
+
+  it("returns miss when STARTER 3 FP shy of ALL_STAR (well inside 5%-of-225 = 11.25 FP)", () => {
+    // 222 FP — STARTER (needs 225 for ALL_STAR) — gap = 3, threshold = 11.25
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 44.4 }));
     const result = evaluateTrigger({ roster, totalFp: 222, winTier: "STARTER", badges: [], winTiersMap: TIERS });
     expect(result.trigger).toBe("miss");
@@ -52,26 +64,50 @@ describe("evaluateTrigger", () => {
     expect(result.nearMissNextTier).toBe("ALL_STAR");
   });
 
+  it("Phase 1 5%-vs-flat-5: STARTER 10 FP shy of ALL_STAR fires miss under 5% — would NOT have fired under flat-5", () => {
+    // The lock's contradiction-guard case. Under flat-5, gap=10 would
+    // miss the miss trigger (10 > 5). Under 5% of nextMin (ALL_STAR
+    // minFp 225 × 0.05 = 11.25), gap=10 fires miss. This is the high-
+    // tier case that motivates the change: the band widens proportionally
+    // with the next tier's minFp. The post-reveal "missed ALL-STAR by
+    // 10 FP" copy in GameView reads off the same 5% rule (NEAR_MISS_BAND
+    // at GameView:170) — the same threshold drives both the stamp and
+    // the copy, no "stamp fired but copy didn't" contradiction.
+    const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 43 }));
+    const result = evaluateTrigger({ roster, totalFp: 215, winTier: "STARTER", badges: [], winTiersMap: TIERS });
+    expect(result.trigger).toBe("miss");
+    expect(result.nearMissGap).toBeCloseTo(10, 0);
+    expect(result.nearMissNextTier).toBe("ALL_STAR");
+  });
+
+  it("Phase 1 5%-vs-flat-5: STARTER 4.9 FP shy of ALL_STAR fires miss under flat-5 AND under 5% (control)", () => {
+    // Under both rules, a 4.9 FP gap from ALL_STAR (225) fires miss.
+    // Flat 5: 4.9 ≤ 5. 5% of 225 = 11.25: 4.9 ≤ 11.25. Both fire.
+    const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 44.02 }));
+    const result = evaluateTrigger({ roster, totalFp: 220.1, winTier: "STARTER", badges: [], winTiersMap: TIERS });
+    expect(result.trigger).toBe("miss");
+  });
+
   it("does NOT fire miss for BUST→ROOKIE transitions", () => {
-    // 184 FP — BUST 1 FP below ROOKIE threshold. Tightened logic: no
-    // miss below STARTER, since BUST hands aren't share-worthy.
+    // 184 FP — BUST 1 FP below ROOKIE threshold. STARTER+ floor.
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 36.8 }));
     const result = evaluateTrigger({ roster, totalFp: 184, winTier: "BUST", badges: [], winTiersMap: TIERS });
     expect(result.trigger).not.toBe("miss");
   });
 
   it("does NOT fire miss for ROOKIE→STARTER transitions", () => {
-    // 202 FP — ROOKIE 3 FP below STARTER. Same rule: needs STARTER+.
+    // 202 FP — ROOKIE 3 FP below STARTER. Same STARTER+ floor.
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 40.4 }));
     const result = evaluateTrigger({ roster, totalFp: 202, winTier: "ROOKIE", badges: [], winTiersMap: TIERS });
     expect(result.trigger).not.toBe("miss");
   });
 
-  it("returns bad_beat for BUST with 2+ held RED/ORANGE cards", () => {
-    // Per the May 16 "held-only gate" fix: bad_beat is the share-worthy
-    // "I stacked my lineup and it cooked" story. The 2+ R/O threshold
-    // counts only cards the user actually held — RNG-drawn high-tier
-    // cards are not a stack-and-bust narrative.
+  // ── choke — Phase 1 trigger split (renamed from bad_beat, tightened ≥1 → ≥2) ──
+  // Choke is rare and earned: the held studs-and-bricked story. The
+  // 1-held-high-tier-card case drops to default; rarity is what makes
+  // the stamp sting.
+
+  it("returns choke for BUST with 2 held RED/ORANGE cards (boundary — exactly 2 fires)", () => {
     const roster = [
       card({ slotIndex: 0, tier: "RED", actualFp: 8, wasHeld: true }),
       card({ slotIndex: 1, tier: "ORANGE", actualFp: 8, wasHeld: true }),
@@ -80,14 +116,13 @@ describe("evaluateTrigger", () => {
       card({ slotIndex: 4, tier: "WHITE", actualFp: 8 }),
     ];
     const result = evaluateTrigger({ roster, totalFp: 40, winTier: "BUST", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).toBe("bad_beat");
+    expect(result.trigger).toBe("choke");
   });
 
-  it("fires bad_beat for BUST with 1 held RED card (broadened threshold, 2026-05-25)", () => {
-    // Threshold dropped from >= 2 to >= 1 (bucket 2 piece B final
-    // amend) to match user mental model: "any premium-held hand that
-    // BUSTs is a bad beat." Empirical frequency calibration tracked
-    // as open followup. This test guards against accidental revert.
+  it("does NOT fire choke at 1 held RED card on BUST (Phase 1 boundary — drops to default)", () => {
+    // Phase 1 trigger split: the 1-held case used to fire bad_beat
+    // (broadened threshold in May 2026); now it drops to default to
+    // reserve the choke stamp for the truly stacked-and-bricked case.
     const roster = [
       card({ slotIndex: 0, tier: "RED", actualFp: 8, wasHeld: true }),
       card({ slotIndex: 1, tier: "WHITE", actualFp: 8 }),
@@ -96,12 +131,10 @@ describe("evaluateTrigger", () => {
       card({ slotIndex: 4, tier: "WHITE", actualFp: 8 }),
     ];
     const result = evaluateTrigger({ roster, totalFp: 40, winTier: "BUST", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).toBe("bad_beat");
+    expect(result.trigger).toBe("default");
   });
 
-  it("fires bad_beat for ROOKIE with 1 held ORANGE card (broadened threshold)", () => {
-    // Mirrors the Webber-style hand: single held premium card,
-    // ROOKIE outcome. Pre-broadening this returned "default".
+  it("does NOT fire choke at 1 held ORANGE card on ROOKIE (Phase 1 boundary — drops to default)", () => {
     const roster = [
       card({ slotIndex: 0, tier: "ORANGE", actualFp: 30, wasHeld: true }),
       card({ slotIndex: 1, tier: "WHITE", actualFp: 35 }),
@@ -110,13 +143,11 @@ describe("evaluateTrigger", () => {
       card({ slotIndex: 4, tier: "WHITE", actualFp: 35 }),
     ];
     const result = evaluateTrigger({ roster, totalFp: 200, winTier: "ROOKIE", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).toBe("bad_beat");
+    expect(result.trigger).toBe("default");
   });
 
-  it("does NOT fire bad_beat for BUST with 0 held RED/ORANGE cards", () => {
-    // After broadening, the floor is still HELD >= 1 R/O. RNG-drawn
-    // R/O cards in the lineup don't count — the "stacked lineup got
-    // cooked" story requires deliberate user holds.
+  it("does NOT fire choke for BUST with 0 held RED/ORANGE cards", () => {
+    // Held-only gate: RNG-drawn R/O cards don't count.
     const roster = [
       card({ slotIndex: 0, tier: "RED", actualFp: 8, wasHeld: false }),
       card({ slotIndex: 1, tier: "ORANGE", actualFp: 8, wasHeld: false }),
@@ -128,10 +159,7 @@ describe("evaluateTrigger", () => {
     expect(result.trigger).toBe("default");
   });
 
-  it("does NOT fire bad_beat when 2+ RED/ORANGE cards are NOT held", () => {
-    // Held-only gate: RNG-drawn high-tier cards aren't a "stacked lineup
-    // got cooked" story. Even with two R/O slots in the lineup, if neither
-    // was wasHeld, bad_beat must not fire.
+  it("does NOT fire choke when 2+ RED/ORANGE cards are NOT held", () => {
     const roster = [
       card({ slotIndex: 0, tier: "RED", actualFp: 8, wasHeld: false }),
       card({ slotIndex: 1, tier: "ORANGE", actualFp: 8, wasHeld: false }),
@@ -141,6 +169,30 @@ describe("evaluateTrigger", () => {
     ];
     const result = evaluateTrigger({ roster, totalFp: 40, winTier: "BUST", badges: [], winTiersMap: TIERS });
     expect(result.trigger).toBe("default");
+  });
+
+  // ── precedence — choke before miss ──────────────────────────────────────
+  // Phase 1 lock: choke OUTRANKS miss. Today the natural winTier gates
+  // make them mutually exclusive (choke BUST/ROOKIE vs miss STARTER+),
+  // so a real hand can't match both. The evaluator's block ORDER still
+  // matters — if a future change makes the gates overlap (e.g. miss
+  // floor relaxed to ROOKIE), choke must win. This test pins the
+  // currently-firing case AND structurally asserts the block ordering
+  // via the source so a future reordering is caught.
+
+  it("precedence: choke fires on the BUST+2-held-R/O case (the dominant path)", () => {
+    const roster = [
+      card({ slotIndex: 0, tier: "RED", actualFp: 8, wasHeld: true }),
+      card({ slotIndex: 1, tier: "ORANGE", actualFp: 8, wasHeld: true }),
+      card({ slotIndex: 2, tier: "WHITE", actualFp: 8 }),
+      card({ slotIndex: 3, tier: "WHITE", actualFp: 8 }),
+      card({ slotIndex: 4, tier: "WHITE", actualFp: 8 }),
+    ];
+    // 184 FP — would be in BUST's near-ROOKIE band IF the miss floor
+    // were ever lowered. Today the miss STARTER+ check blocks miss
+    // from firing; choke wins by source-order anyway.
+    const result = evaluateTrigger({ roster, totalFp: 184, winTier: "BUST", badges: [], winTiersMap: TIERS });
+    expect(result.trigger).toBe("choke");
   });
 
   it("rare_pull wins over big_score", () => {
@@ -170,14 +222,10 @@ describe("evaluateTrigger", () => {
   });
 
   it("rare_pull without TopGameReason context yields null fields (degradation path)", () => {
-    // useChallengeShare.evaluateTrigger call doesn't carry topGame
-    // context — confirm graceful null-out so downstream selector
-    // routes to RECORD fallback per Q3.1 spec.
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 47 }));
     const result: TriggerResult = evaluateTrigger({
       roster, totalFp: 235, winTier: "MVP", badges: [], winTiersMap: TIERS,
       topGameTier: "season",
-      // no topGamePrimaryReason / topGameAllReasons
     });
     expect(result.trigger).toBe("rare_pull");
     expect(result.topGamePrimaryReason).toBeNull();
@@ -185,31 +233,21 @@ describe("evaluateTrigger", () => {
   });
 
   // ── Phase 5c Path A (2026-06-01): real-input anchor emission tests ────
-  // Closes the mock-vs-real gap from S1: previous tests only verified that
-  // a pre-set mock's anchor field propagates to the result. These tests
-  // verify that evaluateTrigger ACTUALLY EMITS the anchor for a real-shape
-  // TriggerInput. Same pattern (real input, real evaluator) goes for the
-  // end-to-end emission test in useChallengeShare.test.tsx.
 
-  it("bad_beat emits anchorBasePlayerId = worst-delta held card's basePlayerId", () => {
-    // Two held cards: harden underperforms by 20 FP, lebron by 5 FP. Anchor
-    // should be harden (worst delta). The non-held cards on the roster
-    // (even ones with worse deltas) are excluded.
+  it("choke emits anchorBasePlayerId = worst-delta held card's basePlayerId", () => {
     const roster = [
       card({ slotIndex: 0, basePlayerId: "harden",  tier: "RED",    actualFp: 30, projectedFp: 50, salary: 65, wasHeld: true  }),
       card({ slotIndex: 1, basePlayerId: "lebron",  tier: "ORANGE", actualFp: 45, projectedFp: 50, salary: 60, wasHeld: true  }),
-      card({ slotIndex: 2, basePlayerId: "rng-low", tier: "RED",    actualFp: 10, projectedFp: 50, salary: 70, wasHeld: false }), // worse delta but not held — ignored
+      card({ slotIndex: 2, basePlayerId: "rng-low", tier: "RED",    actualFp: 10, projectedFp: 50, salary: 70, wasHeld: false }),
       card({ slotIndex: 3, basePlayerId: "filler",  tier: "WHITE",  actualFp: 8 }),
       card({ slotIndex: 4, basePlayerId: "filler2", tier: "WHITE",  actualFp: 8 }),
     ];
     const result = evaluateTrigger({ roster, totalFp: 101, winTier: "BUST", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).toBe("bad_beat");
+    expect(result.trigger).toBe("choke");
     expect(result.anchorBasePlayerId).toBe("harden");
   });
 
-  it("bad_beat tiebreaks equal deltas by highest salary", () => {
-    // Two held cards with identical -20 FP delta. Tiebreak: pick higher-
-    // salary card (bigger conviction = bigger betrayal narrative).
+  it("choke tiebreaks equal deltas by highest salary", () => {
     const roster = [
       card({ slotIndex: 0, basePlayerId: "expensive", tier: "RED", actualFp: 30, projectedFp: 50, salary: 70, wasHeld: true }),
       card({ slotIndex: 1, basePlayerId: "cheaper",   tier: "RED", actualFp: 30, projectedFp: 50, salary: 50, wasHeld: true }),
@@ -218,7 +256,7 @@ describe("evaluateTrigger", () => {
       card({ slotIndex: 4, basePlayerId: "filler3",   tier: "WHITE", actualFp: 8 }),
     ];
     const result = evaluateTrigger({ roster, totalFp: 84, winTier: "BUST", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).toBe("bad_beat");
+    expect(result.trigger).toBe("choke");
     expect(result.anchorBasePlayerId).toBe("expensive");
   });
 
@@ -236,9 +274,6 @@ describe("evaluateTrigger", () => {
   });
 
   it("big_score prefers wasHeld inside the 1-FP tiebreak window", () => {
-    // Top scorer (62 FP) was NOT held; held card at 61.5 FP is within 1 FP.
-    // Tiebreak: prefer the held one for the "bet-on player gets credit"
-    // narrative. The 0.5-FP delta is inside the window.
     const roster = [
       card({ slotIndex: 0, basePlayerId: "hot-replacement", actualFp: 62,   wasHeld: false }),
       card({ slotIndex: 1, basePlayerId: "held-star",       actualFp: 61.5, wasHeld: true  }),
@@ -252,9 +287,6 @@ describe("evaluateTrigger", () => {
   });
 
   it("big_score keeps the unheld leader when the next-highest held card is OUTSIDE the 1-FP window", () => {
-    // Top scorer (62 FP) was NOT held; the highest-held card is 59 FP —
-    // 3 FP behind, outside the tiebreak window. The unheld leader keeps
-    // the anchor; the held-preference rule doesn't apply.
     const roster = [
       card({ slotIndex: 0, basePlayerId: "hot-replacement", actualFp: 62, wasHeld: false }),
       card({ slotIndex: 1, basePlayerId: "held-mid",        actualFp: 59, wasHeld: true  }),
@@ -268,8 +300,6 @@ describe("evaluateTrigger", () => {
   });
 
   it("default trigger continues to emit no anchor (no per-trigger anchor for default)", () => {
-    // default has no anchor concept by design — verify it stays unpopulated
-    // even with a clearly-leading card.
     const roster = [
       card({ slotIndex: 0, basePlayerId: "leader", actualFp: 50 }),
       card({ slotIndex: 1, basePlayerId: "two",    actualFp: 35 }),

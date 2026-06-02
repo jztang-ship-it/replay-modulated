@@ -108,6 +108,13 @@ const TIER_CFG: Record<string, { label: string; color: string; glow: string }> =
 };
 
 const FF = "'Rajdhani', 'Oswald', 'Arial Narrow', sans-serif";
+// Spring-overshoot visual threshold — deliberate flat-8 FP. NOT a semantic
+// claim about "near miss"; the stamp window and post-reveal "missed X by Y"
+// copy use a 5% of next tier's minFp band (triggerEvaluation.MISS_PCT_OF_
+// NEXT_MIN, GameView's computeGaugeState callers). This is a hand-tuned
+// magnitude for the gauge geometry — re-tuning it needs device review.
+// Unifying with the 5% rule is deferred to the gauge-polish pass; for now,
+// future readers should NOT "fix" this asymmetry by accident.
 const NEAR_MISS_PTS = 8;
 const MAX_FP = 235;   // LEGEND threshold, used for duration scaling
 const BIG_CARD_FP = 35;    // single card FP above this = "big card"
@@ -138,11 +145,19 @@ function sortedGaugeThresholds(thresholds: TierThreshold[]) {
     .sort((a, b) => a.minFP - b.minFP);
 }
 
+/** Near-miss threshold for the {@link computeGaugeState} `isNearMiss` output.
+ *  - Pass a number for a flat-FP window (the spring path — see
+ *    {@link NEAR_MISS_PTS}, deliberate flat-8 for the visual rubber-band).
+ *  - Pass `{ pctOfNextMin }` for a tier-aware percentage of the next tier's
+ *    minFp (the stamp/commentary path — agrees with the `miss` trigger's
+ *    5% rule in triggerEvaluation.MISS_PCT_OF_NEXT_MIN). */
+export type NearMissBand = number | { pctOfNextMin: number };
+
 export function computeGaugeState(
   fp: number,
   thresholds: TierThreshold[],
   winTierProp: string | null | undefined,
-  nearMissPts: number,
+  nearMissBand: NearMissBand,
 ) {
   const sorted = sortedGaugeThresholds(thresholds);
   let derivedTier = "BUST";
@@ -174,7 +189,10 @@ export function computeGaugeState(
   const targetCfg = isMaxLevel ? TIER_CFG.LEGEND : (TIER_CFG[nextTier ?? ""] ?? tierCfg);
 
   const gap = isMaxLevel ? 0 : Math.max(0, nextMin - fp);
-  const isNearMiss = !isMaxLevel && winTierProp != null && gap > 0 && gap <= nearMissPts;
+  const nearMissThreshold = typeof nearMissBand === "number"
+    ? nearMissBand
+    : nextMin * (nearMissBand.pctOfNextMin / 100);
+  const isNearMiss = !isMaxLevel && winTierProp != null && gap > 0 && gap <= nearMissThreshold;
 
   const tierSpan = Math.max(1, nextMin - curMin);
   const finalFill = isMaxLevel ? 1.0 : Math.min(1, Math.max(0, (fp - curMin) / tierSpan));
@@ -365,7 +383,11 @@ if (typeof document !== "undefined" && !document.getElementById(INLINE_STAMP_STY
       margin: 0 2px;
       animation: tgInlineStampPop 220ms cubic-bezier(0.22, 1.4, 0.36, 1) both;
     }
-    .tg-inline-stamp-bad-beat {
+    .tg-inline-stamp-choke {
+      /* Phase 1 trigger split (2026-06-03): renamed from .tg-inline-stamp-
+         bad-beat. Same savage-red gradient — the visual reads as an
+         accusation; only the label name changed. Matches
+         TeamStamp.tsx's .ts-stamp-choke. */
       background: linear-gradient(135deg, #ef4444 0%, #b91c1c 60%, #7f1d1d 100%);
       color: #fff5f5;
     }
@@ -390,7 +412,7 @@ if (typeof document !== "undefined" && !document.getElementById(INLINE_STAMP_STY
 }
 
 const INLINE_STAMP_KIND_CLASS: Record<StampToken["stamp"], string> = {
-  bad_beat:  "tg-inline-stamp-bad-beat",
+  choke:     "tg-inline-stamp-choke",
   miss:      "tg-inline-stamp-miss",
   // win_tier intentionally has no static class — color is sourced from
   // TIER_CFG at render time via inline style. See InlineStampChip.
@@ -399,7 +421,7 @@ const INLINE_STAMP_KIND_CLASS: Record<StampToken["stamp"], string> = {
 };
 
 const INLINE_STAMP_BASE_LABEL: Record<StampToken["stamp"], string> = {
-  bad_beat:  "BAD BEAT",
+  choke:     "CHOKE",
   miss:      "MISS",
   // win_tier chip is just the tier label (e.g. "ALL STAR"); no suffix
   // by design (Bucket 2 smoke revision 2026-05-24). When token.tier

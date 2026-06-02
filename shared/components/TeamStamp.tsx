@@ -2,7 +2,10 @@
  * TeamStamp — team-level shareable-moment marker on the win-tier panel.
  *
  * Two kinds:
- *   - bad_beat  → "BAD BEAT"
+ *   - choke     → "CHOKE"  (Phase 1 trigger split, 2026-06-03 — replaces
+ *                 the deleted "BAD BEAT" stamp. Internal key renamed from
+ *                 bad_beat → choke at the same time; see docs/challenge-
+ *                 landing-v2-phase1-trigger-split-lock.md.)
  *   - miss      → "{missTier} MISS"  (e.g. "ALL STAR MISS"); falls back
  *                 to bare "MISS" when missTier is absent/empty so a
  *                 partial wiring still renders sensibly.
@@ -20,13 +23,13 @@
 
 import React from "react";
 
-export type TeamStampKind = "bad_beat" | "miss";
+export type TeamStampKind = "choke" | "miss";
 
 interface Props {
   kind: TeamStampKind | null | undefined | string;
   /** Tier prefix for the miss kind, e.g. "ALL_STAR" or "ALL STAR".
    *  Display-formatted on render (underscore → space). Ignored for
-   *  bad_beat. When absent for a miss, renders bare "MISS". */
+   *  choke. When absent for a miss, renders bare "MISS". */
   missTier?: string;
   /** Delay before the thud entrance begins, in ms. Default 0. */
   delayMs?: number;
@@ -49,7 +52,10 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
       white-space: nowrap;
       font-family: 'Rajdhani','Oswald','Arial Narrow',sans-serif;
     }
-    .ts-stamp-bad-beat {
+    .ts-stamp-choke {
+      /* Savage red — visual family matches MVP MISS / ALL STAR MISS but
+         reads as an accusation. Carries forward the prior bad_beat
+         gradient (the spirit is right; the label is what changed). */
       background: linear-gradient(135deg, #ef4444 0%, #b91c1c 60%, #7f1d1d 100%);
       color: #fff5f5;
       text-shadow: 0 1px 2px rgba(0,0,0,0.55);
@@ -77,7 +83,7 @@ if (typeof document !== "undefined" && !document.getElementById(STYLE_ID)) {
 }
 
 const CLASS: Record<TeamStampKind, string> = {
-  bad_beat: "ts-stamp-bad-beat",
+  choke: "ts-stamp-choke",
   miss: "ts-stamp-miss",
 };
 
@@ -87,14 +93,14 @@ function formatTierPrefix(raw: string | undefined): string {
 }
 
 function labelFor(kind: TeamStampKind, missTier?: string): string {
-  if (kind === "bad_beat") return "BAD BEAT";
+  if (kind === "choke") return "CHOKE";
   // kind === "miss"
   const prefix = formatTierPrefix(missTier);
   return prefix ? `${prefix} MISS` : "MISS";
 }
 
 export function TeamStamp({ kind, missTier, delayMs = 0 }: Props) {
-  if (kind !== "bad_beat" && kind !== "miss") return null;
+  if (kind !== "choke" && kind !== "miss") return null;
   return (
     <span
       className="ts-stamp-wrap-thud"
