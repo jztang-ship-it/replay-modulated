@@ -1603,9 +1603,17 @@ async function runResultsOverlayViewportSweep(browser, vp) {
   // case as a failure instead of hanging on Playwright's auto-wait;
   // pre-fix the data-attr didn't exist on the overlay's ZoneHeader, so
   // the harness must surface that as a fail, not a timeout.
+  //
+  // Step-4 glide / C4: the ZoneHeader now contains TWO spans — the
+  // name AND the populated docked-score (after the glide settles).
+  // textContent on the zone-label concatenates both, yielding
+  // "YOU182.9". The Bug-3 guard targets just the name's identity, so
+  // read it from the first child (the name span) instead of the
+  // whole zone-label.
   const bottomLabel = await page.evaluate(() => {
     const el = document.querySelector("[data-h2h-overlay-zone-label='bottom']");
-    return el ? (el.textContent ?? "").trim() : null;
+    const nameSpan = el?.firstElementChild;
+    return nameSpan ? (nameSpan.textContent ?? "").trim() : null;
   });
   record(
     `${vp.label} overlay Bug-3: recipient label is literal "YOU"`,

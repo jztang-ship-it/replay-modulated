@@ -332,11 +332,37 @@ export function H2HRevealMockRoute() {
   // ?flipped= URL param on the FIRST mount via the `key` prop below.
   const [overlayMountKey, setOverlayMountKey] = useState(0);
 
+  // Step-4 glide / C4 — mirror H2HRecipientReveal's wiring exactly so
+  // the dev mock drives the same handoff sequence the production
+  // wrapper does. glideHandoff suppresses the reveal source glyphs at
+  // t=0; dockedScoreSettled populates the docked targets at landing.
+  // Both default to both-false and reset when the glide goes inactive.
+  const [mockGlideHandoff, setMockGlideHandoff] = useState<{ opponent: boolean; user: boolean }>({
+    opponent: false,
+    user: false,
+  });
+  const [mockDockedScoreSettled, setMockDockedScoreSettled] = useState<{ opponent: boolean; user: boolean }>({
+    opponent: false,
+    user: false,
+  });
+  const mockGlideActive = reveal.phase === "done";
+  useEffect(() => {
+    if (!mockGlideActive) {
+      setMockGlideHandoff({ opponent: false, user: false });
+      setMockDockedScoreSettled({ opponent: false, user: false });
+    }
+  }, [mockGlideActive]);
+
   // ── Replay handlers ────────────────────────────────────────────────────
   const handleReplay = useCallback(() => {
     setForceOverlay(false);
     setDismissed(false);
     setOverlayMountKey(k => k + 1);
+    // Reset glide gates explicitly. Replay drops the phase out of
+    // "done" so the active-driven reset above also fires, but
+    // belt-and-suspenders here keeps the next handoff clean.
+    setMockGlideHandoff({ opponent: false, user: false });
+    setMockDockedScoreSettled({ opponent: false, user: false });
     reveal.play();
   }, [reveal]);
 
@@ -356,6 +382,7 @@ export function H2HRevealMockRoute() {
         recipient={RECIPIENT_HAND}
         renderCard={renderBattlefieldCard}
         reveal={reveal}
+        glideHandoff={mockGlideHandoff}
       />
       {overlayMounted && (
         <H2HResultsOverlay
@@ -374,16 +401,15 @@ export function H2HRevealMockRoute() {
           onTryAgain={onTryAgain}
           onPlayOwnHand={onPlayOwnHand}
           onDismiss={onDismiss}
+          dockedScoreSettled={mockDockedScoreSettled}
         />
       )}
-      {/* Step-4 glide / C3 — mirror the production wrapper's mount of
-          H2HScoreGlide so the harness can verify the C3 measurement +
-          static-clone layer at the same ?overlay=1 surface it uses
-          for the existing no-jump assertions. Uses the SAME team-
-          state formula H2HRecipientReveal derives in production
-          (overlay-side max + tie-epsilon). The synthetic hands drive
-          the totals so the dev variant toggle affects the clones
-          too. */}
+      {/* Step-4 glide / C4 — mirror the production wrapper's
+          H2HRecipientReveal mount + wiring exactly: glideHandoff +
+          dockedScoreSettled state, with onGlideStart / onGlideSettle
+          callbacks flipping each. The harness verifies the C4 motion
+          + settle + unmount through this dev route at the same
+          ?overlay=1 surface it uses for the other no-jump assertions. */}
       {(() => {
         const ref = Math.max(synthetic.sender.totalFp, synthetic.recipient.totalFp, 0.0001);
         const tied =
@@ -408,6 +434,10 @@ export function H2HRevealMockRoute() {
               state: recipientState,
               sizeProgress: synthetic.recipient.totalFp / ref,
             }}
+            onGlideStart={() => setMockGlideHandoff({ opponent: true, user: true })}
+            onGlideSettle={(team) =>
+              setMockDockedScoreSettled((prev) => ({ ...prev, [team]: true }))
+            }
           />
         );
       })()}
