@@ -110,6 +110,7 @@ import {
   TIE_BONUS,
   MAX_SCALE,
 } from "./H2HScoreRail";
+import { usePrefersReducedMotion } from "./H2HRevealScreen";
 
 export type GlideTeamPosition = "opponent" | "user";
 export type GlideTeamState = "leading" | "trailing" | "tied";
@@ -224,6 +225,17 @@ export function H2HScoreGlide({
   onGlideStart,
   onGlideSettle,
 }: H2HScoreGlideProps) {
+  // C5 — prefers-reduced-motion gate. When true at the moment `active`
+  // flips true, the layer short-circuits the WAAPI translate entirely:
+  // clones never mount, the parent's onGlideStart + onGlideSettle fire
+  // synchronously inside the same RAF (and therefore the same React
+  // batch), so the docked score simply APPEARS in place with no
+  // motion and no beat. The end-state matches the motion path
+  // (source hidden, rail suppressed, docked populated) — just
+  // reached instantly. The 350 ms overlay crossfade is independent
+  // and already governed by the project's existing reduced-motion
+  // handling; C5 only kills the translate.
+  const reducedMotion = usePrefersReducedMotion();
   const [rects, setRects] = useState<ClonePack | null>(null);
   // motion: per-team flag that controls whether the clone is at
   // translate(0,0) (false) or translate(dx,dy) + transition (true).
@@ -286,9 +298,33 @@ export function H2HScoreGlide({
         setRects(null);
         return;
       }
-      // C4 t=0: kick off motion AND mount clones in the same React
-      // batch. The parent's handler flips C2.glideHandoff true in the
-      // same commit, so the lift-off paints without a double or a gap.
+      if (reducedMotion) {
+        // C5 reduced-motion short-circuit. SKIP the WAAPI translate
+        // and the clone mount entirely. Flip both parent flags
+        // synchronously so they batch into a single React commit:
+        //   onGlideStart       → glideHandoff = { true, true }
+        //                        (reveal source + overlay rail both
+        //                         suppressed, same as the motion path
+        //                         at t=0)
+        //   onGlideSettle(opp) → dockedScoreSettled.opponent = true
+        //                        (docked slot populates with the glyph)
+        //   onGlideSettle(usr) → dockedScoreSettled.user     = true
+        // No setRects → clones never mount → no transitionend → no
+        // duplicate settle path. End-state byte-identical to the
+        // motion path's post-settle: source hidden, rail hidden,
+        // cloneCount 0, docked populated. The one-visible-copy
+        // contract holds — middle phase collapsed to zero duration.
+        if (onGlideStart) onGlideStart();
+        if (onGlideSettle) {
+          onGlideSettle("opponent");
+          onGlideSettle("user");
+        }
+        return;
+      }
+      // C4 motion path: t=0 kick off motion AND mount clones in the
+      // same React batch. The parent's handler flips C2.glideHandoff
+      // true in the same commit, so the lift-off paints without a
+      // double or a gap.
       if (onGlideStart) onGlideStart();
       setRects({
         opponent: { start: oppStart, end: oppEnd },
@@ -299,7 +335,7 @@ export function H2HScoreGlide({
       cancelled = true;
       cancelAnimationFrame(rafId);
     };
-  }, [active, onGlideStart]);
+  }, [active, onGlideStart, onGlideSettle, reducedMotion]);
 
   // Second RAF — once the rects are set (and the first commit has
   // painted the clones at translate(0,0)), flip motion true. The next
