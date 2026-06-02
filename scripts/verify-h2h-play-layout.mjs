@@ -2351,6 +2351,73 @@ async function runNoJumpAssertion(browser) {
   assertNoJumpForSide("sender (top strip)", revealGeom.sender, overlayGeom.sender);
   assertNoJumpForSide("recipient (bottom strip)", revealGeom.recipient, overlayGeom.recipient);
 
+  // ── ZoneHeader name-position cross-surface parity ───────────────────
+  //
+  // Step 3 of the results-page lock had a blind spot: the step-1 no-jump
+  // assertion compared strip geometry only — name positions inside the
+  // ZoneHeader weren't checked. Step 3 restructured the overlay header to
+  // a flex row with a docked-score sibling, which pushed the name LEFT
+  // while the reveal-side header kept the name CENTERED. The result was
+  // a visible name-jump on the reveal→results crossfade that the harness
+  // didn't catch.
+  //
+  // This assertion locks the name X-centroid + Y across surfaces (±0.5px)
+  // for both headers. The mock fixture uses short names ("MIKE" + "YOU")
+  // that fit easily within any reasonable max-width cap, so this check
+  // is true byte-parity for the realistic case. Long-name parity is
+  // explicitly waived by design — the overlay truncates with ellipsis
+  // to prevent overlap with the absolute docked-score slot, which the
+  // reveal-side header has no equivalent of.
+  //
+  // Element identity: `firstElementChild` of the ZoneHeader is the name
+  // span on both surfaces — reveal has only that one child; overlay has
+  // [name, dockedScore] and the name is index 0 even after the
+  // restructure.
+  const labelRects = await page.evaluate(() => {
+    const fmt = (el) => {
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return {
+        centerX: r.left + r.width / 2,
+        centerY: r.top + r.height / 2,
+        left: r.left, right: r.right, top: r.top, bottom: r.bottom,
+        width: r.width, height: r.height,
+      };
+    };
+    const nameEl = (sel) => document.querySelector(sel)?.firstElementChild;
+    return {
+      revealTop: fmt(nameEl(`[data-h2h-board-zone-label="top"]`)),
+      revealBottom: fmt(nameEl(`[data-h2h-board-zone-label="bottom"]`)),
+      overlayTop: fmt(nameEl(`[data-h2h-overlay-zone-label="top"]`)),
+      overlayBottom: fmt(nameEl(`[data-h2h-overlay-zone-label="bottom"]`)),
+    };
+  });
+
+  const checkNameMatch = (side, reveal, overlay) => {
+    if (!reveal || !overlay) {
+      record(
+        `no-jump ${side}: both name spans present`,
+        false,
+        `revealPresent=${!!reveal} overlayPresent=${!!overlay}`,
+      );
+      return;
+    }
+    const dxCenter = Math.abs(reveal.centerX - overlay.centerX);
+    record(
+      `no-jump ${side}: name X-centroid equal (±0.5px)`,
+      dxCenter <= 0.5,
+      `reveal=${reveal.centerX.toFixed(2)} overlay=${overlay.centerX.toFixed(2)} Δ=${dxCenter.toFixed(2)}`,
+    );
+    const dyCenter = Math.abs(reveal.centerY - overlay.centerY);
+    record(
+      `no-jump ${side}: name Y-centroid equal (±0.5px)`,
+      dyCenter <= 0.5,
+      `reveal=${reveal.centerY.toFixed(2)} overlay=${overlay.centerY.toFixed(2)} Δ=${dyCenter.toFixed(2)}`,
+    );
+  };
+  checkNameMatch("sender (top header)", labelRects.revealTop, labelRects.overlayTop);
+  checkNameMatch("recipient (bottom header)", labelRects.revealBottom, labelRects.overlayBottom);
+
   await page.close();
 }
 

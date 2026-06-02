@@ -264,37 +264,53 @@ function ZoneHeader({
 }: {
   hand: H2HHand;
   position?: "top" | "bottom";
-  /** Step 3: three-state color for the docked-score target placeholder.
+  /** Three-state color for the docked-score target placeholder.
    *  Mirrors the existing right-rail ScoreCell logic (winner green / loser
    *  neutral / tie). Step 4 lands the glide that fills the placeholder;
    *  the color rendered here is what the glide will land into. */
   dockedScoreColor: string;
 }) {
+  // Outer + name recipe MUST match H2HBoardShell.ZoneHeader on the
+  // reveal side verbatim — padding "0 6px", height ZONE_HEADER_HEIGHT_PX,
+  // flex with justifyContent:center, font 18/900, color rgba(0.95),
+  // letterSpacing 1, uppercase. That parity is what the no-jump-name
+  // cross-surface assertion locks. Step 3's earlier name-left layout
+  // shifted the X-centroid ~34px and produced a visible name-jump on
+  // the reveal→results crossfade; this layout restores parity.
+  //
+  // The docked-score target is position:absolute so it does NOT consume
+  // flex space. The name span stays naturally centered by the flex
+  // parent regardless of the score's width.
   return (
     <div
       data-h2h-overlay-zone-label={position}
       style={{
+        position: "relative",                  // anchor for the absolute score
         padding: "0 6px",
         height: ZONE_HEADER_HEIGHT_PX,         // unchanged — strip Y depends on this
         display: "flex",
         alignItems: "center",
-        // Step 3: name left + docked-score target right. The name span
-        // truncates with ellipsis when long; the score slot holds its
-        // reserved width (flex:0 0 auto) and the name absorbs whatever
-        // space remains.
-        justifyContent: "space-between",
+        justifyContent: "center",              // matches reveal — name centered
         flexShrink: 0,
-        gap: 8,
       }}
     >
       <span
         style={{
-          flex: "1 1 auto",
-          minWidth: 0,
+          // Long-name guard: cap the name's max-width so it
+          // ellipsis-truncates BEFORE reaching the absolute score slot
+          // on the right. The score reserves DOCKED_SCORE_TARGET_MIN_WIDTH_PX
+          // on its side; we reserve the same on the left phantom side
+          // (× 2 in the calc) so the AVAILABLE-FOR-NAME band stays
+          // centered on the header. Short names (the realistic case,
+          // including the fixture's MIKE/YOU) render fully inside this
+          // band, fully centered. Long names truncate with ellipsis,
+          // their box still centered within the available band — name
+          // and score never overlap.
+          maxWidth: `calc(100% - 2 * (${DOCKED_SCORE_TARGET_MIN_WIDTH_PX}px + 8px))`,
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
-          textAlign: "left",
+          // Reveal-matching recipe (verbatim from H2HBoardShell):
           fontSize: 18,
           fontWeight: 900,
           color: "rgba(255,255,255,0.95)",
@@ -304,23 +320,32 @@ function ZoneHeader({
       >
         {hand.displayName}
       </span>
-      {/* Docked-score target. Step 3 reserves flex space only — content
-          is empty. Step 4 fills via the glide that animates from the
+      {/* Docked-score target. Absolutely positioned so it paints over
+          the row's right edge without consuming flex space — the name
+          stays centered independent of it. EMPTY in this step (content
+          omitted); step 4 fills via the glide that animates from the
           right-rail ScoreCell into this slot. data-attrs carry the
-          value already so a step-4 motion handler can read it without
-          re-deriving. */}
+          value so step 4's motion handler can read it without
+          re-deriving. pointer-events:none so an absent glyph never
+          intercepts taps meant for content below. */}
       <span
         data-h2h-overlay-docked-score={position}
         data-h2h-overlay-docked-score-value={hand.totalFp.toFixed(1)}
         style={{
-          flex: "0 0 auto",
+          position: "absolute",
+          right: 6,                            // aligns with header padding
+          top: 0,
+          bottom: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
           minWidth: DOCKED_SCORE_TARGET_MIN_WIDTH_PX,
-          textAlign: "right",
           color: dockedScoreColor,
           fontSize: 18,
           fontWeight: 900,
           letterSpacing: -0.3,
           fontVariantNumeric: "tabular-nums",
+          pointerEvents: "none",
         }}
       />
     </div>
