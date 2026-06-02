@@ -17,6 +17,7 @@ import { LandingPage } from "./components/LandingPage";
 // route is too narrow to justify the lazy mechanism's failure modes.
 import H2HRevealMockRoute from "./dev/H2HRevealMockRoute";
 import H2HPlayMockRoute from "./dev/H2HPlayMockRoute";
+import ChallengeLandingMockRoute from "./dev/ChallengeLandingMockRoute";
 import GameView from "./views/GameView";
 import { DailySeasonReelGate } from "./components/DailySeasonReelGate";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -111,6 +112,9 @@ function AppInner() {
   }
   if (import.meta.env.DEV && devSlug === "h2h-play-mock") {
     return <H2HPlayMockRoute />;
+  }
+  if (import.meta.env.DEV && devSlug === "challenge-landing-mock") {
+    return <ChallengeLandingMockRoute />;
   }
 
   const { isFTUE } = useFTUE(SPORT);

@@ -1,4 +1,11 @@
 // shared/components/ChallengeLandingScreen.tsx
+//
+// SHELL — owns fetch / self-match routing / error / loading / accept
+// wiring. The accept-flow render BODY (the V2 hierarchy: hook → hand →
+// outcome → disagreement → CTA) lives in ChallengeTakeCardLanding per
+// the Phase 2b lock. This file delegates to it; do not re-implement the
+// V2 hierarchy here.
+
 import { useEffect, useState } from "react";
 import { type ChallengeCtx, normalizeTriggerType } from "@shared/adapters/challengeTypes";
 import type { GeneratedCard } from "@shared/types/index";
@@ -8,6 +15,7 @@ import { hasAttemptedChallenge } from "@shared/hooks/useChallengeShare";
 // (replays are unlimited — hasAttemptedChallenge is still imported below as
 //  a hint label for the CTA, never as a block.)
 import { isRealName } from "@shared/utils/isRealName";
+import { ChallengeTakeCardLanding } from "./ChallengeTakeCardLanding";
 
 interface ChallengeData {
   challenge_id: string;
@@ -149,7 +157,6 @@ export function ChallengeLandingScreen({ challengeId, sport, currentUserId, dese
       {error && <div style={{ textAlign: "center", color: "#EF4444", marginTop: 80 }}>{error}</div>}
 
       {data && (() => {
-        const namedChallenger = isRealName(data.challenger_name);
         const statsLine = challengeStatsLine(data);
         // Self-match: only triggers for signed-in users whose uid matches
         // data.created_by. Anonymous viewers fall through to the normal
@@ -169,71 +176,17 @@ export function ChallengeLandingScreen({ challengeId, sport, currentUserId, dese
           );
         }
 
+        // Phase 2b: V2 hierarchy lives in ChallengeTakeCardLanding.
+        // This shell only routes data + accept-click; the score-first
+        // anti-pattern (giant 68px FP at the top, "Think you can beat
+        // it?") is gone — replaced by the take-card hierarchy.
         return (
-        <>
-          {/* Hierarchy (top → bottom):
-              1. Big-game / season-reel caption (em-dashed italic) — leads
-              2. Score callout: target FP "on this hand."
-              3. Sub-question: "Think you can beat it?"
-              4. Card spread
-              5. Accept Challenge
-              6. (optional) tiny stats line and "from {name}" attribution */}
-
-          {data.share_headline && (
-            <div style={{
-              fontSize: 22, fontStyle: "italic", fontWeight: 600,
-              color: "rgba(255,255,255,0.85)",
-              lineHeight: 1.35, marginBottom: 22, maxWidth: 540,
-            }}>
-              — {data.share_headline}
-            </div>
-          )}
-
-          {/* Score callout */}
-          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
-            <span style={{ fontSize: 68, fontWeight: 950, color: "#FFB14A", lineHeight: 1, fontStyle: "italic" }}>
-              {data.target_score.toFixed(1)}
-            </span>
-            <span style={{ fontSize: 22, color: "rgba(255,255,255,0.45)", fontWeight: 700 }}>FP</span>
-          </div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: "#EAF0FF", marginBottom: 22 }}>
-            Think you can beat it?
-          </div>
-
-          {/* Card spread */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 24, justifyContent: "center" }}>
-            {cards.map((card: any, i: number) => (
-              <div key={i} style={{
-                background: "rgba(255,255,255,0.04)", border: `1.5px solid ${TIER_ACCENT[card.tier] ?? "#9CA3AF"}`,
-                borderRadius: 10, padding: "10px 14px", minWidth: 120, textAlign: "center",
-              }}>
-                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.5, color: TIER_ACCENT[card.tier] ?? "#9CA3AF", textTransform: "uppercase", marginBottom: 4 }}>{card.tier}</div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: "#EAF0FF" }}>{card.name}</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{card.team} · ${card.salary}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Accept CTA — replays are unlimited. When the user has played
-              this challenge before, label the button "Play Again" so the
-              context is clear, but never block. */}
-          <button
-            onClick={handleAccept}
-            style={{
-              width: "100%", padding: "16px", borderRadius: 14,
-              background: "#FFB14A", border: "none",
-              color: "#070A12", fontSize: 17, fontWeight: 900, cursor: "pointer",
-              marginBottom: 10,
-            }}
-          >{alreadyAttempted ? "Play Again" : "Accept Challenge"}</button>
-
-          {/* Small attribution + (optional) stats — minor below the CTA. */}
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", textAlign: "center" }}>
-            {namedChallenger && <span>from {data.challenger_name}</span>}
-            {namedChallenger && statsLine && <span> · </span>}
-            {statsLine && <span>{statsLine}</span>}
-          </div>
-        </>
+          <ChallengeTakeCardLanding
+            data={data}
+            statsLine={statsLine}
+            alreadyAttempted={alreadyAttempted}
+            onAccept={handleAccept}
+          />
         );
       })()}
     </div>

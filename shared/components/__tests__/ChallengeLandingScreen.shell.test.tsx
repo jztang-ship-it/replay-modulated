@@ -1,0 +1,222 @@
+// @vitest-environment jsdom
+//
+// shared/components/__tests__/ChallengeLandingScreen.shell.test.tsx
+//
+// Phase 2b assert-the-neighbors: the shell's accept-body now delegates
+// to ChallengeTakeCardLanding, but the shell still owns fetch /
+// loading / error / self-match. This file pins that NONE of the
+// neighbor surfaces regressed:
+//   - loading state renders while the fetch is in flight,
+//   - fetch failure renders the error message and no take-card body,
+//   - self-match path still routes to SelfMatchView (NOT the V2
+//     landing — self-match is out of scope for the V2 redesign),
+//   - accept path on the V2 landing still threads ChallengeCtx through
+//     onAccept with normalizeTriggerType applied.
+
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { ChallengeLandingScreen } from "../ChallengeLandingScreen";
+
+function makeApiResponse(over: Partial<Record<string, unknown>> = {}) {
+  return {
+    challenge_id: "ch_shell_1",
+    created_by: "u_creator",
+    challenger_name: "Mike",
+    target_score: 142.0,
+    sport: "basketball",
+    season: "2425",
+    trigger_type: "choke",
+    share_headline: "",
+    initial_roster: {
+      v: 1, sport: "basketball", holdsRecorded: true,
+      cards: [
+        { id: "emb", basePlayerId: "emb", personKey: "emb", cardId: "emb_c",
+          name: "Embiid", team: "PHI", season: "2425", position: "C",
+          photoCode: null, salary: 80, tier: "RED", slotIndex: 0,
+          projectedFp: 50, wasHeld: true, actualFp: 22.0 },
+        { id: "voo", basePlayerId: "voo", personKey: "voo", cardId: "voo_c",
+          name: "Vucevic", team: "ORL", season: "2425", position: "C",
+          photoCode: null, salary: 65, tier: "PURPLE", slotIndex: 1,
+          projectedFp: 35, wasHeld: true, actualFp: 18.5 },
+        { id: "bro", basePlayerId: "bro", personKey: "bro", cardId: "bro_c",
+          name: "Brown", team: "BOS", season: "2425", position: "G",
+          photoCode: null, salary: 55, tier: "PURPLE", slotIndex: 2,
+          projectedFp: 30, wasHeld: false, actualFp: 0 },
+        { id: "cur", basePlayerId: "cur", personKey: "cur", cardId: "cur_c",
+          name: "Curry", team: "GSW", season: "2425", position: "G",
+          photoCode: null, salary: 75, tier: "RED", slotIndex: 3,
+          projectedFp: 42, wasHeld: false, actualFp: 0 },
+        { id: "bag", basePlayerId: "bag", personKey: "bag", cardId: "bag_c",
+          name: "Bagley", team: "WAS", season: "2425", position: "F",
+          photoCode: null, salary: 35, tier: "BLUE", slotIndex: 4,
+          projectedFp: 18, wasHeld: false, actualFp: 0 },
+        { id: "hol", basePlayerId: "hol", personKey: "hol", cardId: "hol_c",
+          name: "Holiday", team: "BOS", season: "2425", position: "G",
+          photoCode: null, salary: 25, tier: "GREEN", slotIndex: 5,
+          projectedFp: 14, wasHeld: false, actualFp: 0 },
+      ],
+    },
+    roster_size: 6,
+    attempt_count: 0,
+    winner_count: 0,
+    best_score: null,
+    best_user_name: null,
+    near_miss_gap: null,
+    near_miss_next_tier: null,
+    anchor_base_player_id: "voo",
+    top_game_tier: null,
+    ...over,
+  };
+}
+
+// Trivial sport-adapter stubs — the shell only calls these on
+// accept; we don't need real basketball logic to test routing.
+const stubDeserialize = (snap: Record<string, unknown>) => {
+  const cards = (snap as any).cards ?? [];
+  return cards.map((c: any) => ({
+    id: c.id, basePlayerId: c.basePlayerId, personKey: c.personKey,
+    cardId: c.cardId, name: c.name, team: c.team, season: c.season,
+    position: c.position, salary: c.salary, tier: c.tier,
+    slotIndex: c.slotIndex, projectedFp: c.projectedFp,
+    actualFp: c.actualFp ?? 0, wasHeld: c.wasHeld === true,
+    fpDelta: 0, statLine: {}, gameInfo: { date: "", opponent: "" }, achievements: [],
+  }));
+};
+const stubValidate = (_snap: Record<string, unknown>) => true;
+
+beforeEach(() => {
+  // Reset fetch between tests.
+  // @ts-expect-error global fetch stub
+  globalThis.fetch = vi.fn();
+});
+
+describe("ChallengeLandingScreen shell — neighbors intact (loading / error / self-match)", () => {
+  it("loading state renders while fetch is in flight (no take-card body yet)", () => {
+    // Pending fetch — never resolves during this test.
+    // @ts-expect-error global fetch stub
+    globalThis.fetch = vi.fn(() => new Promise(() => {}));
+    render(
+      <ChallengeLandingScreen
+        challengeId="ch_loading"
+        sport="basketball"
+        deserializeRoster={stubDeserialize}
+        validateRosterSnapshot={stubValidate}
+        onAccept={() => {}}
+        onClose={() => {}}
+      />
+    );
+    expect(screen.getByText(/Loading challenge/i)).toBeTruthy();
+    // V2 surface not mounted yet.
+    expect(screen.queryByTestId("challenge-take-card-landing")).toBeNull();
+  });
+
+  it("fetch failure renders the error message (no take-card body)", async () => {
+    // @ts-expect-error global fetch stub
+    globalThis.fetch = vi.fn(() => Promise.resolve({ ok: false, status: 404 }));
+    render(
+      <ChallengeLandingScreen
+        challengeId="ch_404"
+        sport="basketball"
+        deserializeRoster={stubDeserialize}
+        validateRosterSnapshot={stubValidate}
+        onAccept={() => {}}
+        onClose={() => {}}
+      />
+    );
+    await waitFor(() => expect(screen.getByText(/Challenge not found/i)).toBeTruthy());
+    expect(screen.queryByTestId("challenge-take-card-landing")).toBeNull();
+  });
+
+  it("self-match path renders SelfMatchView, NOT the V2 take-card landing", async () => {
+    // @ts-expect-error global fetch stub
+    globalThis.fetch = vi.fn(() => Promise.resolve({
+      ok: true, json: () => Promise.resolve(makeApiResponse({ created_by: "u_me", challenger_name: "Self" })),
+    }));
+    render(
+      <ChallengeLandingScreen
+        challengeId="ch_self"
+        sport="basketball"
+        currentUserId="u_me"
+        deserializeRoster={stubDeserialize}
+        validateRosterSnapshot={stubValidate}
+        onAccept={() => {}}
+        onClose={() => {}}
+      />
+    );
+    await waitFor(() => expect(screen.getByText(/This is your challenge/i)).toBeTruthy());
+    // V2 surface is gated out for self-match.
+    expect(screen.queryByTestId("challenge-take-card-landing")).toBeNull();
+  });
+
+  it("non-self viewer renders the V2 take-card landing (delegation works)", async () => {
+    // @ts-expect-error global fetch stub
+    globalThis.fetch = vi.fn(() => Promise.resolve({
+      ok: true, json: () => Promise.resolve(makeApiResponse()),
+    }));
+    render(
+      <ChallengeLandingScreen
+        challengeId="ch_other"
+        sport="basketball"
+        currentUserId={null}
+        deserializeRoster={stubDeserialize}
+        validateRosterSnapshot={stubValidate}
+        onAccept={() => {}}
+        onClose={() => {}}
+      />
+    );
+    await waitFor(() => expect(screen.getByTestId("challenge-take-card-landing")).toBeTruthy());
+    // Hook is rendered (the V2 hierarchy lit up, not the old score-first).
+    expect(screen.getByTestId("hook-headline").textContent?.length).toBeGreaterThan(0);
+  });
+
+  it("accept path threads ChallengeCtx through onAccept (CTA → handleAccept → onAccept)", async () => {
+    // @ts-expect-error global fetch stub
+    globalThis.fetch = vi.fn(() => Promise.resolve({
+      ok: true, json: () => Promise.resolve(makeApiResponse()),
+    }));
+    const onAccept = vi.fn();
+    render(
+      <ChallengeLandingScreen
+        challengeId="ch_accept"
+        sport="basketball"
+        currentUserId={null}
+        deserializeRoster={stubDeserialize}
+        validateRosterSnapshot={stubValidate}
+        onAccept={onAccept}
+        onClose={() => {}}
+      />
+    );
+    await waitFor(() => expect(screen.getByTestId("accept-cta")).toBeTruthy());
+    fireEvent.click(screen.getByTestId("accept-cta"));
+    await waitFor(() => expect(onAccept).toHaveBeenCalledTimes(1));
+    const ctx = onAccept.mock.calls[0][0];
+    expect(ctx.challengeId).toBe("ch_shell_1");
+    expect(ctx.challengerName).toBe("Mike");
+    expect(ctx.targetScore).toBe(142.0);
+    // Phase 1 alias applies — stored "choke" passes through as "choke".
+    expect(ctx.triggerType).toBe("choke");
+  });
+
+  it("legacy 'bad_beat' row routes through normalizeTriggerType → ctx.triggerType === 'choke'", async () => {
+    // @ts-expect-error global fetch stub
+    globalThis.fetch = vi.fn(() => Promise.resolve({
+      ok: true, json: () => Promise.resolve(makeApiResponse({ trigger_type: "bad_beat" })),
+    }));
+    const onAccept = vi.fn();
+    render(
+      <ChallengeLandingScreen
+        challengeId="ch_legacy"
+        sport="basketball"
+        currentUserId={null}
+        deserializeRoster={stubDeserialize}
+        validateRosterSnapshot={stubValidate}
+        onAccept={onAccept}
+        onClose={() => {}}
+      />
+    );
+    await waitFor(() => expect(screen.getByTestId("accept-cta")).toBeTruthy());
+    fireEvent.click(screen.getByTestId("accept-cta"));
+    await waitFor(() => expect(onAccept).toHaveBeenCalledTimes(1));
+    expect(onAccept.mock.calls[0][0].triggerType).toBe("choke");
+  });
+});
